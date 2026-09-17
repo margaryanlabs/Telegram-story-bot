@@ -38,19 +38,11 @@ function originFromRequest(req) {
   return `${proto}://${host}`;
 }
 
-function signFile(token, fileId) {
-  return crypto.createHmac('sha256', token).update(fileId).digest('hex');
-}
-
 function connectionMarker(id) {
   return `STORY_CONNECTION:${id}`;
 }
 
-function draftMarker(id) {
-  return `STORY_DRAFT_CONNECTION:${id}`;
-}
-
-function extractConnectionId(message) {
+function extractConnectionIdFromReply(message) {
   const candidates = [
     message?.reply_to_message?.text,
     message?.reply_to_message?.caption,
@@ -65,9 +57,42 @@ function extractConnectionId(message) {
   return null;
 }
 
-function extractDraftConnectionId(message) {
-  const match = String(message?.text || message?.caption || '').match(/STORY_DRAFT_CONNECTION:([^\s]+)/);
-  return match?.[1] || null;
+async function rememberBusinessConnection(token, chatId, connectionId, origin) {
+  const url = new URL('/studio.html', origin);
+  // Telegram stores this menu button per private chat. We use the URL as a tiny,
+  // persistent per-user session so future photos do not need replies/forwards.
+  url.searchParams.set('bc', connectionId);
+
+  await tg(token, 'setChatMenuButton', {
+    chat_id: chatId,
+    menu_button: {
+      type: 'web_app',
+      text: 'Story Studio',
+      web_app: { url: url.toString() },
+    },
+  });
+}
+
+async function resolveBusinessConnectionId(token, message, origin) {
+  if (message?.business_connection_id) return message.business_connection_id;
+
+  const fromReply = extractConnectionIdFromReply(message);
+  if (fromReply) {
+    await rememberBusinessConnection(token, message.chat.id, fromReply, origin).catch(() => {});
+    return fromReply;
+  }
+
+  try {
+    const menu = await tg(token, 'getChatMenuButton', { chat_id: message.chat.id });
+    if (menu?.type === 'web_app' && menu?.web_app?.url) {
+      const saved = new URL(menu.web_app.url).searchParams.get('bc');
+      if (saved) return saved;
+    }
+  } catch {
+    // Fall through to the one-time reconnect instruction below.
+  }
+
+  return null;
 }
 
 async function downloadTelegramFile(token, fileId) {
@@ -114,69 +139,13 @@ function startText() {
   return [
     '👋 Story Pilot готов.',
     '',
-    '1) Подключи бота через «Автоматизация чатов».',
-    '2) Дай право «Управление историями».',
-    '3) Ответь фотографией на сообщение STORY_CONNECTION.',
-    '4) Перед публикацией я покажу выбор:',
-    '   • быстро опубликовать;',
-    '   • запретить сохранение/скриншоты;',
-    '   • открыть родной редактор Telegram и выбрать аудиторию.',
+    'Главный режим теперь максимально простой:',
+    '📸 отправляешь мне фото обычным сообщением → я сразу публикую его в твою Story.',
     '',
-    'Сообщения самого бота отправляются без звука.',
+    'Никаких ответов на STORY_CONNECTION, форвардов и подтверждений после первичной привязки.',
+    '',
+    'Если бот ещё не сохранил твоё Business-подключение, один раз выключи и снова включи Story Pilot в «Автоматизация чатов». После этого всё работает автоматически.',
   ].join('\n');
-}
-
-async function handleCallback(token, callbackQuery) {
-  const action = callbackQuery.data;
-  const draftMessage = callbackQuery.message;
-  const chatId = draftMessage?.chat?.id;
-
-  await tg(token, 'answerCallbackQuery', {
-    callback_query_id: callbackQuery.id,
-    text: action === 'cancel' ? 'Отменено' : 'Публикую…',
-  }).catch(() => {});
-
-  if (action === 'cancel') {
-    if (chatId) await sendMessage(token, chatId, '🗑 Черновик отменён.');
-    return;
-  }
-
-  if (action !== 'publish' && action !== 'publish_protected') return;
-
-  const connectionId = extractDraftConnectionId(draftMessage);
-  const source = draftMessage?.reply_to_message;
-  const largestPhoto = source?.photo?.[source.photo.length - 1];
-
-  if (!connectionId || !largestPhoto) {
-    throw new Error('Не удалось восстановить черновик. Отправь фото ещё раз ответом на STORY_CONNECTION.');
-  }
-
-  const connection = await tg(token, 'getBusinessConnection', {
-    business_connection_id: connectionId,
-  });
-  if (!connection.is_enabled) throw new Error('Business connection is disabled');
-  if (!connection.rights?.can_manage_stories) {
-    throw new Error('Business connection does not have can_manage_stories permission');
-  }
-
-  if (chatId) await sendMessage(token, chatId, '⏳ Готовлю Story 1080×1920…');
-
-  const original = await downloadTelegramFile(token, largestPhoto.file_id);
-  const story = await postPhotoStory(
-    token,
-    connectionId,
-    original,
-    source.caption || '',
-    action === 'publish_protected'
-  );
-
-  if (chatId) {
-    await sendMessage(
-      token,
-      chatId,
-      `✅ Story опубликована. story_id: ${story.id}${action === 'publish_protected' ? '\n🔒 Сохранение, пересылка и скриншоты запрещены Telegram.' : ''}`
-    );
-  }
 }
 
 export default async function handler(req, res) {
@@ -208,17 +177,18 @@ export default async function handler(req, res) {
     }
   }
 
-  try {
-    if (update?.callback_query) {
-      await handleCallback(token, update.callback_query);
-      res.status(200).json({ ok: true });
-      return;
-    }
+  const origin = originFromRequest(req);
 
+  try {
     if (update?.business_connection) {
       const bc = update.business_connection;
+
       if (!bc.is_enabled) {
-        await sendMessage(token, bc.user_chat_id, '⚠️ Business-подключение отключено. Подключи бота снова.');
+        await tg(token, 'setChatMenuButton', {
+          chat_id: bc.user_chat_id,
+          menu_button: { type: 'default' },
+        }).catch(() => {});
+        await sendMessage(token, bc.user_chat_id, '⚠️ Story Pilot отключён от аккаунта.');
         res.status(200).json({ ok: true });
         return;
       }
@@ -233,10 +203,12 @@ export default async function handler(req, res) {
         return;
       }
 
+      await rememberBusinessConnection(token, bc.user_chat_id, bc.id, origin);
+
       await sendMessage(
         token,
         bc.user_chat_id,
-        `${connectionMarker(bc.id)}\n\n✅ Business-подключение готово.\n\nОтветь НА ЭТО СООБЩЕНИЕ фотографией. Ничего сразу публиковаться не будет — сначала появится экран подтверждения и выбор аудитории.`
+        `✅ Готово. Привязка сохранена.\n\nТеперь просто отправляй сюда фотографию — без ответа, без форварда, без кнопок. Фото сразу уйдёт в Story на 24 часа.\n\n${connectionMarker(bc.id)}`
       );
 
       res.status(200).json({ ok: true });
@@ -256,14 +228,14 @@ export default async function handler(req, res) {
     }
 
     if (message.photo?.length) {
-      const connectionId = extractConnectionId(message);
+      const connectionId = await resolveBusinessConnectionId(token, message, origin);
       if (!connectionId) {
         await sendMessage(
           token,
           message.chat.id,
-          'Фото получил, но не вижу Business Connection ID. Ответь фотографией именно на сообщение STORY_CONNECTION.'
+          'Нужна одноразовая перепривязка: Настройки → Автоматизация чатов → Story Pilot → выключи и снова включи подключение (с правом «Управление историями»). Потом просто присылай фото — больше никаких ответов/форвардов не потребуется.'
         );
-        res.status(200).json({ ok: true });
+        res.status(200).json({ ok: true, needs_rebind: true });
         return;
       }
 
@@ -276,46 +248,26 @@ export default async function handler(req, res) {
       }
 
       const largestPhoto = message.photo[message.photo.length - 1];
-      const origin = originFromRequest(req);
-      const sig = signFile(token, largestPhoto.file_id);
-      const studioUrl = new URL('/studio.html', origin);
-      studioUrl.searchParams.set('file_id', largestPhoto.file_id);
-      studioUrl.searchParams.set('sig', sig);
-      if (message.caption) studioUrl.searchParams.set('caption', message.caption.slice(0, 180));
+      const original = await downloadTelegramFile(token, largestPhoto.file_id);
+      const story = await postPhotoStory(token, connectionId, original, message.caption || '', false);
 
-      await sendMessage(
-        token,
-        message.chat.id,
-        `${draftMarker(connectionId)}\n\n📸 Фото готово. Пока ничего не опубликовано.\n\nВыбери способ публикации:\n\n⚡ «Опубликовать» — сразу через бота.\n🔒 «Опубликовать защищённо» — без пересылки, сохранения и скриншотов.\n👥 «Выбрать аудиторию» — откроется родной редактор Telegram: Все / Мои контакты / Близкие друзья / Выбранные контакты.\n\n🔕 Важно: Telegram не даёт API-флаг, который гарантированно отключает уведомления о самой Story у зрителей. Но сообщения Story Pilot тебе приходят без звука.`,
-        {
-          reply_parameters: { message_id: message.message_id },
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '⚡ Опубликовать', callback_data: 'publish' }],
-              [{ text: '🔒 Опубликовать защищённо', callback_data: 'publish_protected' }],
-              [{ text: '👥 Выбрать аудиторию', web_app: { url: studioUrl.toString() } }],
-              [{ text: '✖️ Отмена', callback_data: 'cancel' }],
-            ],
-          },
-        }
-      );
-
-      res.status(200).json({ ok: true, draft: true });
+      await sendMessage(token, message.chat.id, `✅ В Story. #${story.id}`);
+      res.status(200).json({ ok: true, story_id: story.id });
       return;
     }
 
-    await sendMessage(token, message.chat.id, 'Отправь /start. Для Story нужна фотография ответом на сообщение STORY_CONNECTION.');
+    await sendMessage(token, message.chat.id, '📸 Просто отправь фотографию — я сразу опубликую её в Story.');
     res.status(200).json({ ok: true });
   } catch (error) {
     console.error('Webhook error', error?.telegram || error);
 
-    const chatId = update?.callback_query?.message?.chat?.id || update?.message?.chat?.id || update?.business_connection?.user_chat_id;
+    const chatId = update?.message?.chat?.id || update?.business_connection?.user_chat_id;
     const description = error?.telegram?.description || error?.message || String(error);
 
     if (chatId) {
-      let text = `❌ Telegram отклонил действие.\n\n${description}`;
+      let text = `❌ Telegram отклонил публикацию.\n\n${description}`;
       if (/PREMIUM_ACCOUNT_REQUIRED/i.test(description)) {
-        text += '\n\nTelegram на сервере требует Premium для этого действия на данном аккаунте.';
+        text += '\n\nTelegram на сервере требует Premium для публикации Story на этом аккаунте.';
       }
       await sendMessage(token, chatId, text).catch(() => {});
     }
