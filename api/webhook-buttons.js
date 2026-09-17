@@ -44,27 +44,46 @@ function mtprotoConfigured() {
   return Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH);
 }
 
-function mainKeyboard() {
+function inlineMenu(settings = {}) {
+  const active = settings.audience || 'standard';
+  const mark = (mode, label) => (active === mode ? `✅ ${label}` : label);
   return {
-    keyboard: [
-      [{ text: '🌍 Все' }, { text: '👥 Мои контакты' }],
-      [{ text: '⭐ Близкие друзья' }, { text: '🎯 Выбранные' }],
+    inline_keyboard: [
+      [
+        { text: mark('all', '🌍 Все'), callback_data: 'aud:all' },
+        { text: mark('contacts', '👥 Мои контакты'), callback_data: 'aud:contacts' },
+      ],
+      [
+        { text: mark('close', '⭐ Близкие друзья'), callback_data: 'aud:close' },
+        { text: mark('selected', '🎯 Выбранные'), callback_data: 'aud:selected' },
+      ],
+      [
+        { text: mark('standard', '⚡ Стандарт'), callback_data: 'aud:standard' },
+        { text: '📊 Настройки', callback_data: 'settings' },
+      ],
+      [{ text: '📸 Как публиковать', callback_data: 'howto' }],
     ],
-    resize_keyboard: true,
-    is_persistent: true,
-    input_field_placeholder: 'Отправь фото → сразу в Story',
   };
 }
 
-async function sendMessage(token, chatId, text, extra = {}) {
+async function sendMessage(token, chatId, text, settings = null, extra = {}) {
   return tg(token, 'sendMessage', {
     chat_id: chatId,
     text,
     disable_notification: true,
     disable_web_page_preview: true,
-    reply_markup: mainKeyboard(),
+    ...(settings ? { reply_markup: inlineMenu(settings) } : {}),
     ...extra,
   });
+}
+
+async function removeOldReplyKeyboard(token, chatId) {
+  await tg(token, 'sendMessage', {
+    chat_id: chatId,
+    text: '✨ Обновляю панель Story Pilot…',
+    disable_notification: true,
+    reply_markup: { remove_keyboard: true },
+  }).catch(() => {});
 }
 
 async function getStoredSettings(token, chatId) {
@@ -178,7 +197,6 @@ async function postPhotoStoryMtproto(token, businessConnectionId, imageBuffer, c
 
   try {
     await client.start({ botAuthToken: token, onError: (error) => console.error('MTProto auth error', error) });
-
     const updates = await client.invoke(new Api.account.GetBotBusinessConnection({ connectionId: businessConnectionId }));
     const businessUpdate = updates?.updates?.find((item) => item?.connection?.connectionId === businessConnectionId);
     const businessUserId = businessUpdate?.connection?.userId;
@@ -207,37 +225,57 @@ async function postPhotoStoryMtproto(token, businessConnectionId, imageBuffer, c
       period: 86400,
     }));
 
-    const storyUpdate = result?.updates?.find((item) => item?.className === 'UpdateStoryID' || item?.randomId?.toString?.() === randomId.toString());
+    const storyUpdate = result?.updates?.find(
+      (item) => item?.className === 'UpdateStoryID' || item?.randomId?.toString?.() === randomId.toString()
+    );
     return { id: storyUpdate?.id ?? 'ok', transport: 'mtproto' };
   } finally {
     await client.disconnect().catch(() => {});
   }
 }
 
-async function chooseAudience(token, chatId, origin, audience) {
+async function setAudience(token, chatId, origin, audience) {
   const settings = await getStoredSettings(token, chatId);
   if (audience !== 'standard' && !mtprotoConfigured()) {
-    await sendMessage(token, chatId, '⚠️ Расширенная аудитория пока недоступна: MTProto не настроен.');
-    return;
+    await sendMessage(token, chatId, '⚠️ Расширенная аудитория пока недоступна: MTProto не настроен.', settings);
+    return settings;
   }
 
   if (audience === 'selected') {
-    await saveSettings(token, chatId, origin, { ...settings, picking: true });
-    await sendMessage(token, chatId, '🎯 Напиши одним сообщением @username людей, которым можно видеть Story.\n\nНапример: @anna @david @maria');
-    return;
+    const next = { ...settings, picking: true };
+    await saveSettings(token, chatId, origin, next);
+    await sendMessage(
+      token,
+      chatId,
+      '🎯 Напиши одним сообщением @username людей, которым можно видеть Story.\n\nНапример: @anna @david @maria',
+      next
+    );
+    return next;
   }
 
-  await saveSettings(token, chatId, origin, { ...settings, audience, picking: false });
-  await sendMessage(token, chatId, `✅ Готово. Теперь аудитория: ${audienceLabel(audience, settings.selected)}\n\nПросто отправь фото.`);
+  const next = { ...settings, audience, picking: false };
+  await saveSettings(token, chatId, origin, next);
+  await sendMessage(token, chatId, `✅ Готово. Теперь аудитория: ${audienceLabel(audience, next.selected)}\n\nПросто отправь фото.`, next);
+  return next;
 }
 
-function buttonToAudience(text) {
+function textButtonToAudience(text) {
   if (text === '🌍 Все') return 'all';
   if (text === '👥 Мои контакты') return 'contacts';
   if (text === '⭐ Близкие друзья') return 'close';
   if (text === '🎯 Выбранные') return 'selected';
   if (text === '⚡ Стандарт') return 'standard';
   return null;
+}
+
+async function showHome(token, chatId, settings, removeKeyboard = false) {
+  if (removeKeyboard) await removeOldReplyKeyboard(token, chatId);
+  await sendMessage(
+    token,
+    chatId,
+    `✨ Story Pilot\n\n📸 Отправь фото — оно сразу публикуется в Story на 24 часа.\n\nСейчас видят: ${audienceLabel(settings.audience, settings.selected)}\n\nВыбирай режим кнопками ниже 👇`,
+    settings
+  );
 }
 
 export default async function handler(req, res) {
@@ -284,12 +322,52 @@ export default async function handler(req, res) {
 
       await rememberBusinessConnection(token, bc.user_chat_id, bc.id, origin);
       const settings = await getStoredSettings(token, bc.user_chat_id);
-      await sendMessage(
-        token,
-        bc.user_chat_id,
-        `✅ Story Pilot подключён.\n\n📸 Отправляй фото — оно сразу идёт в Story.\n\nКто видит сейчас: ${audienceLabel(settings.audience, settings.selected)}\n\nАудиторию меняй кнопками снизу.`
-      );
+      await showHome(token, bc.user_chat_id, settings, true);
       res.status(200).json({ ok: true });
+      return;
+    }
+
+    if (update?.callback_query) {
+      const callback = update.callback_query;
+      const chatId = callback.message?.chat?.id;
+      const action = String(callback.data || '');
+      if (!chatId) {
+        res.status(200).json({ ok: true, ignored: true });
+        return;
+      }
+
+      await tg(token, 'answerCallbackQuery', { callback_query_id: callback.id }).catch(() => {});
+      const settings = await getStoredSettings(token, chatId);
+
+      if (action.startsWith('aud:')) {
+        await setAudience(token, chatId, origin, action.slice(4));
+        res.status(200).json({ ok: true, action });
+        return;
+      }
+
+      if (action === 'settings') {
+        await sendMessage(
+          token,
+          chatId,
+          `📊 Текущие настройки\n\nАудитория: ${audienceLabel(settings.audience, settings.selected)}\nBusiness connection: ${settings.bc ? '✅ подключён' : '❌ не найден'}\nMTProto: ${mtprotoConfigured() ? '✅ готов' : '❌ не настроен'}`,
+          settings
+        );
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      if (action === 'howto') {
+        await sendMessage(
+          token,
+          chatId,
+          '📸 Как публиковать\n\n1. Выбери аудиторию кнопками.\n2. Отправь обычную фотографию в этот чат.\n3. Story Pilot сам подготовит 9:16 и отправит в Story.\n\nНикаких reply и forward не нужно.',
+          settings
+        );
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      res.status(200).json({ ok: true, ignored: true });
       return;
     }
 
@@ -303,13 +381,16 @@ export default async function handler(req, res) {
     const text = String(message.text || '').trim();
     const settings = await getStoredSettings(token, chatId);
 
-    if (text === '/start' || text === '/help' || text === '📸 Как публиковать') {
-      await sendMessage(
-        token,
-        chatId,
-        `✨ Story Pilot\n\n📸 Отправь фото — оно сразу публикуется в Story на 24 часа.\n\nСейчас видят: ${audienceLabel(settings.audience, settings.selected)}\n\nВыбери аудиторию одной из 4 кнопок снизу.`
-      );
+    if (text === '/start' || text === '/help') {
+      await showHome(token, chatId, settings, true);
       res.status(200).json({ ok: true });
+      return;
+    }
+
+    const legacyAudience = textButtonToAudience(text);
+    if (legacyAudience) {
+      await setAudience(token, chatId, origin, legacyAudience);
+      res.status(200).json({ ok: true, audience: legacyAudience });
       return;
     }
 
@@ -317,34 +398,40 @@ export default async function handler(req, res) {
       await sendMessage(
         token,
         chatId,
-        `📊 Текущие настройки\n\nАудитория: ${audienceLabel(settings.audience, settings.selected)}\nBusiness connection: ${settings.bc ? '✅ подключён' : '❌ не найден'}\nMTProto: ${mtprotoConfigured() ? '✅ готов' : '❌ не настроен'}`
+        `📊 Текущие настройки\n\nАудитория: ${audienceLabel(settings.audience, settings.selected)}\nBusiness connection: ${settings.bc ? '✅ подключён' : '❌ не найден'}\nMTProto: ${mtprotoConfigured() ? '✅ готов' : '❌ не настроен'}`,
+        settings
       );
       res.status(200).json({ ok: true });
       return;
     }
 
-    const audience = buttonToAudience(text);
-    if (audience) {
-      await chooseAudience(token, chatId, origin, audience);
-      res.status(200).json({ ok: true, audience });
+    if (text === '📸 Как публиковать') {
+      await sendMessage(token, chatId, '📸 Просто выбери аудиторию и отправь фото обычным сообщением. Story Pilot сделает остальное.', settings);
+      res.status(200).json({ ok: true });
       return;
     }
 
     if (settings.picking && text) {
       const usernames = text.split(/[\s,;]+/).map(normalizeUsername).filter(Boolean);
       if (!usernames.length) {
-        await sendMessage(token, chatId, '🎯 Нужны @username. Например: @anna @david');
+        await sendMessage(token, chatId, '🎯 Нужны @username. Например: @anna @david', settings);
         res.status(200).json({ ok: true });
         return;
       }
-      await saveSettings(token, chatId, origin, {
+      const next = {
         ...settings,
         audience: 'selected',
         selected: [...new Set(usernames)].slice(0, 100),
         picking: false,
-      });
-      await sendMessage(token, chatId, `✅ Выбранные сохранены: ${usernames.map((u) => `@${u}`).join(', ')}\n\nТеперь просто отправь фото.`);
-      res.status(200).json({ ok: true, selected: usernames });
+      };
+      await saveSettings(token, chatId, origin, next);
+      await sendMessage(
+        token,
+        chatId,
+        `✅ Выбранные сохранены: ${next.selected.map((u) => `@${u}`).join(', ')}\n\nТеперь просто отправь фото.`,
+        next
+      );
+      res.status(200).json({ ok: true, selected: next.selected });
       return;
     }
 
@@ -352,7 +439,12 @@ export default async function handler(req, res) {
       const current = await getStoredSettings(token, chatId);
       const connectionId = message.business_connection_id || current.bc;
       if (!connectionId) {
-        await sendMessage(token, chatId, 'Нужно один раз переподключить Story Pilot: Настройки → Автоматизация чатов → выключить/включить бота с правом «Управление историями».');
+        await sendMessage(
+          token,
+          chatId,
+          'Нужно один раз переподключить Story Pilot: Настройки → Автоматизация чатов → выключить/включить бота с правом «Управление историями».',
+          current
+        );
         res.status(200).json({ ok: true, needs_rebind: true });
         return;
       }
@@ -367,21 +459,22 @@ export default async function handler(req, res) {
         ? await postPhotoStoryBotApi(token, connectionId, original, message.caption || '')
         : await postPhotoStoryMtproto(token, connectionId, original, message.caption || '', current.audience, current.selected);
 
-      await sendMessage(token, chatId, `✅ В Story\n👁 ${audienceLabel(current.audience, current.selected)}\n#${story.id}`);
+      await sendMessage(token, chatId, `✅ В Story\n👁 ${audienceLabel(current.audience, current.selected)}\n#${story.id}`, current);
       res.status(200).json({ ok: true, story_id: story.id, transport: story.transport });
       return;
     }
 
-    await sendMessage(token, chatId, '📸 Отправь фотографию или выбери аудиторию одной из кнопок снизу.');
+    await showHome(token, chatId, settings, false);
     res.status(200).json({ ok: true });
   } catch (error) {
     console.error('Webhook error', error?.telegram || error);
-    const chatId = update?.message?.chat?.id || update?.business_connection?.user_chat_id;
+    const chatId = update?.callback_query?.message?.chat?.id || update?.message?.chat?.id || update?.business_connection?.user_chat_id;
     const description = error?.telegram?.description || error?.message || String(error);
     if (chatId) {
+      const settings = await getStoredSettings(token, chatId).catch(() => null);
       let text = `❌ Telegram отклонил действие.\n\n${description}`;
       if (/PREMIUM_ACCOUNT_REQUIRED/i.test(description)) text += '\n\nTelegram сервером требует Premium для этой публикации.';
-      await sendMessage(token, chatId, text).catch(() => {});
+      await sendMessage(token, chatId, text, settings).catch(() => {});
     }
     res.status(200).json({ ok: false, error: description });
   }
