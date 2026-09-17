@@ -4,11 +4,11 @@ function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
 }
 
-async function tg(token, method, body) {
+async function tg(token, method, body = {}) {
   const response = await fetch(telegramUrl(token, method), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body ?? {}),
+    body: JSON.stringify(body),
   });
   const data = await response.json();
   if (!response.ok || !data.ok) throw new Error(`${method}: ${data.description || response.statusText}`);
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
-    res.status(500).json({ ok: false, error: 'TELEGRAM_BOT_TOKEN is missing in Vercel Environment Variables' });
+    res.status(500).json({ ok: false, error: 'TELEGRAM_BOT_TOKEN is missing' });
     return;
   }
 
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost || req.headers.host;
     const protoHeader = req.headers['x-forwarded-proto'];
     const proto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https';
-    const webhookUrl = `${proto}://${host}/api/webhook-v5`;
+    const webhookUrl = `${proto}://${host}/api/webhook-v6`;
     const secretToken = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
 
     const bot = await tg(token, 'getMe');
@@ -46,23 +46,35 @@ export default async function handler(req, res) {
     await tg(token, 'setMyCommands', {
       commands: [
         { command: 'start', description: '🚀 Открыть Story Pilot' },
+        { command: 'status', description: '📊 Проверить подключение и настройки' },
         { command: 'help', description: '📸 Как публиковать Story' },
       ],
     });
 
+    await tg(token, 'setMyShortDescription', {
+      short_description: 'Публикуй Telegram Stories через бота и выбирай аудиторию в пару нажатий.',
+    }).catch(() => {});
+
+    await tg(token, 'setMyDescription', {
+      description: 'Story Pilot помогает публиковать Stories через Telegram Business Connection. Выбери аудиторию, при необходимости исключи людей и просто отправь фото боту.',
+    }).catch(() => {});
+
     await tg(token, 'setChatMenuButton', {
       menu_button: { type: 'commands' },
     }).catch(() => {});
+
+    const webhookInfo = await tg(token, 'getWebhookInfo').catch(() => null);
 
     res.status(200).json({
       ok: true,
       bot: `@${bot.username}`,
       webhook,
       webhook_url: webhookUrl,
-      ui: 'single editable panel + native user picker',
+      active_webhook: webhookInfo?.url || null,
+      pending_updates: webhookInfo?.pending_update_count ?? null,
+      ui: 'single editable panel + temporary native user picker',
       mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
       public_bot: true,
-      next: 'Each user opens the bot, connects it in Chat Automation with Manage Stories, then publishes independently.',
     });
   } catch (error) {
     console.error(error);
