@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import v7Handler from './webhook-v7.js';
 
 function telegramUrl(token, method) {
@@ -75,6 +76,15 @@ function audienceLabel(state = {}) {
 
 export default async function handler(req, res) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
+
+  // v8 must never create Telegram-side effects before the webhook authenticity check.
+  if (req.method === 'POST' && token) {
+    const expectedSecret = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
+    if (req.headers['x-telegram-bot-api-secret-token'] !== expectedSecret) {
+      return v7Handler(req, res);
+    }
+  }
+
   let update = req.body;
   if (typeof update === 'string') {
     try { update = JSON.parse(update); } catch { update = null; }
