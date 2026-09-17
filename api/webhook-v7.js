@@ -70,6 +70,7 @@ function defaultSettings() {
     lastMessage: null,
     lastStory: null,
     processing: false,
+    protect: false,
   };
 }
 
@@ -91,6 +92,10 @@ function inlineMenu(settings = {}) {
       [
         { text: `🚫 Исключить${exc ? ` (${exc})` : ''}`, callback_data: 'pick:exclude' },
         { text: '🧹 Очистить', callback_data: 'exclude:clear' },
+      ],
+      [
+        { text: settings.protect ? '🛡 Защита: ВКЛ' : '🛡 Защита: ВЫКЛ', callback_data: 'protect:toggle' },
+        { text: settings.lastStory ? '🗑 Удалить Story' : '🗑 Нет Story', callback_data: 'story:delete' },
       ],
       [{ text: connectionText, callback_data: 'view:connect' }],
       [
@@ -138,6 +143,7 @@ async function getStoredSettings(token, chatId) {
         lastMessage: Number(url.searchParams.get('lm') || 0) || null,
         lastStory: url.searchParams.get('ls') || null,
         processing: url.searchParams.get('pr') === '1',
+        protect: url.searchParams.get('prot') === '1',
       };
     }
   } catch {}
@@ -156,6 +162,7 @@ async function saveSettings(token, chatId, origin, settings) {
   if (settings.lastMessage) url.searchParams.set('lm', String(settings.lastMessage));
   if (settings.lastStory) url.searchParams.set('ls', String(settings.lastStory));
   if (settings.processing) url.searchParams.set('pr', '1');
+  if (settings.protect) url.searchParams.set('prot', '1');
 
   await tg(token, 'setChatMenuButton', {
     chat_id: chatId,
@@ -189,14 +196,14 @@ function homeText(settings) {
   const hint = settings.bc
     ? '\n\n📸 Просто отправь фото или изображение-файл обычным сообщением.'
     : '\n\n🔗 Сначала подключи аккаунт кнопкой ниже.';
-  return `✨ Story Pilot\n\n👁 ${audienceLabel(settings.audience, settings.selected)}${excluded}\n🔌 Аккаунт: ${connected}${hint}`;
+  return `✨ Story Pilot\n\n👁 ${audienceLabel(settings.audience, settings.selected)}${excluded}\n🛡 Защита: ${settings.protect ? 'ВКЛ' : 'ВЫКЛ'}\n🔌 Аккаунт: ${connected}${hint}`;
 }
 
 function settingsText(settings, live = null) {
   let connection = settings.bc ? '✅ сохранено' : '❌ не найдено';
   if (live === true) connection = '✅ активно';
   if (live === false) connection = '❌ неактивно';
-  return `📊 Настройки Story Pilot\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🔌 Business connection: ${connection}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
+  return `📊 Настройки Story Pilot\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Business connection: ${connection}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
 }
 
 function connectText(settings, live = null) {
@@ -331,13 +338,14 @@ async function preparePhoto(buffer) {
   return out;
 }
 
-async function postPhotoStoryBotApi(token, businessConnectionId, imageBuffer, caption = '') {
+async function postPhotoStoryBotApi(token, businessConnectionId, imageBuffer, caption = '', protect = false) {
   const prepared = await preparePhoto(imageBuffer);
   const form = new FormData();
   form.set('business_connection_id', businessConnectionId);
   form.set('content', JSON.stringify({ type: 'photo', photo: 'attach://story' }));
   form.set('active_period', String(STORY_PERIOD_SECONDS));
   if (caption) form.set('caption', caption.slice(0, 2048));
+  if (protect) form.set('protect_content', 'true');
   form.set('story', new Blob([prepared], { type: 'image/jpeg' }), 'story.jpg');
 
   const response = await fetch(telegramUrl(token, 'postStory'), { method: 'POST', body: form });
@@ -387,7 +395,7 @@ function deterministicRandomId(connectionId, messageId) {
   return digest.readBigInt64BE(0);
 }
 
-async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, audience, selected, excluded, messageId) {
+async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, audience, selected, excluded, messageId, protect = false) {
   if (!mtprotoConfigured()) throw new Error('Расширенная приватность не настроена');
   const apiId = Number(process.env.TELEGRAM_API_ID);
   const apiHash = String(process.env.TELEGRAM_API_HASH || '');
@@ -422,6 +430,7 @@ async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, 
       privacyRules,
       randomId,
       period: STORY_PERIOD_SECONDS,
+      noforwards: Boolean(protect),
     }));
     const idUpdate = result?.updates?.find(item => item?.className === 'UpdateStoryID' || item?.randomId?.toString?.() === randomId.toString());
     return { id: idUpdate?.id ?? 'ok', transport: 'mtproto' };
@@ -445,6 +454,7 @@ function friendlyError(description = '') {
   if (/can_manage_stories|Нет права/i.test(d)) return 'Нет разрешения «Управление историями». Включи его в «Автоматизация чатов».';
   if (/PHOTO_INVALID_DIMENSIONS|IMAGE_PROCESS_FAILED|Input buffer contains unsupported image format/i.test(d)) return 'Telegram не принял изображение. Попробуй JPG, PNG или WEBP.';
   if (/STORY_PRIVACY_INVALID|PRIVACY/i.test(d)) return 'Telegram не принял выбранную аудиторию. Попробуй заново выбрать людей.';
+  if (/STORY_ID_INVALID|STORY_NOT_FOUND/i.test(d)) return 'Последняя Story уже удалена или больше недоступна.';
   if (/BOT_ACCESS_FORBIDDEN/i.test(d)) return 'Telegram запретил эту операцию через текущее Business-подключение.';
   return d;
 }
@@ -569,6 +579,24 @@ export default async function handler(req, res) {
         const next = { ...settings, excluded: [], picking: '' };
         await saveSettings(token, chatId, origin, next);
         await showPanel(token, chatId, origin, next, homeText(next), messageId);
+      } else if (action === 'protect:toggle') {
+        const next = { ...settings, protect: !settings.protect };
+        await saveSettings(token, chatId, origin, next);
+        await showPanel(token, chatId, origin, next, homeText(next), messageId);
+      } else if (action === 'story:delete') {
+        const refreshed = await refreshConnection(token, chatId, origin, settings);
+        const current = refreshed.settings;
+        const storyId = Number(current.lastStory);
+        if (!refreshed.live || !current.bc) {
+          await showPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Story Pilot.', messageId);
+        } else if (!Number.isInteger(storyId) || storyId <= 0) {
+          await showPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.', messageId);
+        } else {
+          await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
+          const next = { ...current, lastStory: null, lastMessage: null, processing: false };
+          await saveSettings(token, chatId, origin, next);
+          await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.', messageId);
+        }
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);
@@ -612,6 +640,24 @@ export default async function handler(req, res) {
     if (text === '/status') {
       const refreshed = await refreshConnection(token, chatId, origin, settings);
       await showPanel(token, chatId, origin, refreshed.settings, settingsText(refreshed.settings, refreshed.live));
+      res.status(200).json({ ok: true });
+      return;
+    }
+
+    if (text === '/delete') {
+      const refreshed = await refreshConnection(token, chatId, origin, settings);
+      const current = refreshed.settings;
+      const storyId = Number(current.lastStory);
+      if (!refreshed.live || !current.bc) {
+        await showPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Story Pilot.');
+      } else if (!Number.isInteger(storyId) || storyId <= 0) {
+        await showPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
+      } else {
+        await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
+        const next = { ...current, lastStory: null, lastMessage: null, processing: false };
+        await saveSettings(token, chatId, origin, next);
+        await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.');
+      }
       res.status(200).json({ ok: true });
       return;
     }
@@ -724,8 +770,8 @@ export default async function handler(req, res) {
 
       const original = await downloadTelegramFile(token, image.fileId);
       const story = pre.audience === 'standard'
-        ? await postPhotoStoryBotApi(token, connectionId, original, image.caption)
-        : await postPhotoStoryMtproto(token, connectionId, original, image.caption, pre.audience, pre.selected, pre.excluded, message.message_id);
+        ? await postPhotoStoryBotApi(token, connectionId, original, image.caption, pre.protect)
+        : await postPhotoStoryMtproto(token, connectionId, original, image.caption, pre.audience, pre.selected, pre.excluded, message.message_id, pre.protect);
 
       const next = {
         ...pre,
@@ -733,7 +779,7 @@ export default async function handler(req, res) {
         lastStory: String(story.id),
       };
       await saveSettings(token, chatId, origin, next);
-      await showPanel(token, chatId, origin, next, `✅ Story опубликована\n\n👁 ${audienceLabel(next.audience, next.selected)}${next.excluded?.length ? `\n🚫 Кроме: ${next.excluded.map(u => `@${u}`).join(', ')}` : ''}\n\n📸 Отправь следующее фото — настройки сохранятся.`);
+      await showPanel(token, chatId, origin, next, `✅ Story опубликована\n\n👁 ${audienceLabel(next.audience, next.selected)}${next.excluded?.length ? `\n🚫 Кроме: ${next.excluded.map(u => `@${u}`).join(', ')}` : ''}${next.protect ? '\n🛡 Защита включена' : ''}\n\n📸 Отправь следующее фото — настройки сохранятся.`);
       res.status(200).json({ ok: true, story_id: story.id, transport: story.transport });
       return;
     }
