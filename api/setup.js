@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
   try {
     const baseUrl = productionBaseUrl(req);
-    const webhookUrl = `${baseUrl}/api/webhook-v7`;
+    const webhookUrl = `${baseUrl}/api/webhook-v8`;
     const secretToken = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
 
     const bot = await tg(token, 'getMe');
@@ -90,7 +90,7 @@ export default async function handler(req, res) {
       ui: 'single editable panel + temporary native user picker',
       mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
       public_bot: true,
-      version: 'v7',
+      version: 'v8',
     });
   } catch (error) {
     console.error(error);
