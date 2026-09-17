@@ -11,9 +11,7 @@ async function tg(token, method, body) {
     body: JSON.stringify(body ?? {}),
   });
   const data = await response.json();
-  if (!response.ok || !data.ok) {
-    throw new Error(`${method}: ${data.description || response.statusText}`);
-  }
+  if (!response.ok || !data.ok) throw new Error(`${method}: ${data.description || response.statusText}`);
   return data.result;
 }
 
@@ -40,7 +38,7 @@ export default async function handler(req, res) {
     const bot = await tg(token, 'getMe');
     const webhook = await tg(token, 'setWebhook', {
       url: webhookUrl,
-      allowed_updates: ['message', 'business_connection'],
+      allowed_updates: ['message', 'business_connection', 'callback_query'],
       secret_token: secretToken,
       drop_pending_updates: false,
     });
@@ -52,9 +50,9 @@ export default async function handler(req, res) {
       bot: `@${bot.username}`,
       webhook,
       webhook_url: webhookUrl,
-      ui: 'persistent emoji keyboard',
+      ui: 'inline emoji buttons',
       mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
-      next: 'Open the bot and press Start once. After that audience controls are persistent buttons below the message field.',
+      next: 'Open the bot and press Start. The control buttons will be attached directly under the bot message.',
     });
   } catch (error) {
     console.error(error);
