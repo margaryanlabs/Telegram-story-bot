@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost || req.headers.host;
     const protoHeader = req.headers['x-forwarded-proto'];
     const proto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https';
-    const webhookUrl = `${proto}://${host}/api/webhook-buttons`;
+    const webhookUrl = `${proto}://${host}/api/webhook-v3`;
     const secretToken = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
 
     const bot = await tg(token, 'getMe');
@@ -43,16 +43,25 @@ export default async function handler(req, res) {
       drop_pending_updates: false,
     });
 
-    await tg(token, 'deleteMyCommands', {}).catch(() => {});
+    await tg(token, 'setMyCommands', {
+      commands: [
+        { command: 'start', description: '🚀 Открыть Story Pilot' },
+        { command: 'help', description: '📸 Как публиковать Story' },
+      ],
+    });
+
+    await tg(token, 'setChatMenuButton', {
+      menu_button: { type: 'commands' },
+    }).catch(() => {});
 
     res.status(200).json({
       ok: true,
       bot: `@${bot.username}`,
       webhook,
       webhook_url: webhookUrl,
-      ui: 'inline emoji buttons',
+      ui: 'inline controls + persistent Start menu',
       mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
-      next: 'Open the bot and press Start. The control buttons will be attached directly under the bot message.',
+      next: 'Use My Contacts, then Exclude to create “contacts except these people”.',
     });
   } catch (error) {
     console.error(error);
