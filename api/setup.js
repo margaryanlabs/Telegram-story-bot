@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost || req.headers.host;
     const protoHeader = req.headers['x-forwarded-proto'];
     const proto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https';
-    const webhookUrl = `${proto}://${host}/api/webhook-v3`;
+    const webhookUrl = `${proto}://${host}/api/webhook-v4`;
     const secretToken = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
 
     const bot = await tg(token, 'getMe');
@@ -59,9 +59,9 @@ export default async function handler(req, res) {
       bot: `@${bot.username}`,
       webhook,
       webhook_url: webhookUrl,
-      ui: 'inline controls + persistent Start menu',
+      ui: 'native user picker + inline controls',
       mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
-      next: 'Use My Contacts, then Exclude to create “contacts except these people”.',
+      next: 'Choose Contacts, then Exclude. Telegram opens its native people picker.',
     });
   } catch (error) {
     console.error(error);
