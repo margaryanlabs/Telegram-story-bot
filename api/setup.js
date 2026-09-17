@@ -44,15 +44,15 @@ export default async function handler(req, res) {
 
     const webhook = await tg(token, 'setWebhook', {
       url: webhookUrl,
-      allowed_updates: ['message', 'business_connection'],
+      allowed_updates: ['message', 'business_connection', 'callback_query'],
       secret_token: secretToken,
-      drop_pending_updates: true,
+      drop_pending_updates: false,
     });
 
     await tg(token, 'setMyCommands', {
       commands: [
         { command: 'start', description: 'Start Story Pilot' },
-        { command: 'help', description: 'How to test Stories' },
+        { command: 'help', description: 'How to publish Stories' },
       ],
     });
 
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       bot: `@${bot.username}`,
       webhook,
       webhook_url: webhookUrl,
-      next: 'Open the bot, send /start, then connect it as a Business bot with Manage Stories permission.',
+      next: 'Send a photo as a reply to the STORY_CONNECTION message. The bot will show a publish confirmation and privacy-editor option.',
     });
   } catch (error) {
     console.error(error);
