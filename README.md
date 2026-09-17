@@ -18,15 +18,21 @@ Telegram bot for publishing Stories through a connected Business account.
 
 No reply/forward workflow is required.
 
-## v7 reliability improvements
+## v8 UX and reliability improvements
 
+- The native Telegram user picker is kept only for the actual contact selection step.
+- Picker prompt / shared-user service messages are removed after the selection is processed, keeping the chat clean.
+- Sending a photo now creates visible near-photo progress (`⏳ Публикую Story…`) and a local success/failure confirmation, so the user does not need to scroll back to the main panel.
 - Duplicate webhook deliveries are suppressed before publishing, so the same Telegram message should not create duplicate Stories.
 - MTProto Story publishing uses a deterministic `random_id` derived from the Business Connection + Telegram message ID for extra idempotency.
 - `/status` validates the saved Business Connection live and clears stale connections automatically.
 - JPG, PNG and WEBP sent as image documents are accepted in addition to normal Telegram photos.
 - `/reset` clears audience / selected users / exclusions while preserving the Business Connection.
 - Story limit and privacy errors are translated into short user-facing messages.
-- The persistent `🚀 Start` Web App closes immediately and exists only as a lightweight per-chat state carrier.
+- `🛡 Protection` can prevent forwards/saving where Telegram supports it.
+- The last published Story can be deleted from Story Pilot with the delete control or `/delete`.
+- The persistent `🚀 Start` Web App closes immediately and exists only as a lightweight launcher/state carrier.
+- v8 performs the Telegram webhook secret verification before any Telegram-side UX action.
 
 ## Privacy modes
 
@@ -41,13 +47,14 @@ The native Telegram user picker is used for Selected / Excluded users. Telegram 
 - `TELEGRAM_BOT_TOKEN` — BotFather token
 - `TELEGRAM_API_ID` — app API ID from `my.telegram.org`
 - `TELEGRAM_API_HASH` — app API hash from `my.telegram.org`
+- `STORY_PILOT_BASE_URL` — optional canonical production base URL override
 
 Never commit secrets to GitHub.
 
 ## Production endpoints
 
 - `/api/setup` — idempotently registers the current webhook and bot metadata
-- `/api/webhook-v7` — current Telegram webhook
+- `/api/webhook-v8` — current Telegram webhook
 - `/api/health` — safe production health check
 
 ## Deploy
@@ -56,7 +63,7 @@ Deploy to Vercel with the environment variables above, then call:
 
 `https://YOUR-PROJECT.vercel.app/api/setup`
 
-The setup endpoint registers `/api/webhook-v7` and bot commands.
+The setup endpoint registers `/api/webhook-v8` and bot commands.
 
 ## Operational notes
 
