@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   const status = {
     ok: false,
     service: 'telegram-story-bot',
-    version: 'v7',
+    version: 'v8',
     token_configured: Boolean(token),
     mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
     bot: null,
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     status.webhook = webhook?.url || null;
     status.pending_updates = webhook?.pending_update_count ?? null;
     status.last_error = webhook?.last_error_message || null;
-    status.ok = Boolean(bot?.username && webhook?.url?.includes('/api/webhook-v7') && !status.last_error);
+    status.ok = Boolean(bot?.username && webhook?.url?.includes('/api/webhook-v8') && !status.last_error);
     res.status(status.ok ? 200 : 503).json(status);
   } catch (error) {
     status.last_error = error.message || String(error);
