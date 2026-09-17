@@ -1,31 +1,58 @@
-# Telegram Story Bot — POC
+# Story Pilot
 
-A minimal proof-of-concept for testing Telegram Bot API `postStory` through a Business Connection.
+Telegram bot for publishing Stories through a connected Business account.
 
-## What it tests
+## Current production flow
 
-1. User connects the bot as a Telegram Business bot with `Manage Stories` permission.
-2. Bot receives the `business_connection` update.
-3. Bot sends a special reply target containing the connection ID.
-4. User replies to that message with a photo.
-5. The bot crops/resizes the photo to 1080×1920 and calls the official `postStory` API.
-6. The bot reports Telegram's real server response, including `PREMIUM_ACCOUNT_REQUIRED` if Telegram rejects the account.
+1. User opens `@Storypilotlab_bot`.
+2. User connects Story Pilot in **Telegram → Settings → Chat Automation** and enables **Manage Stories**.
+3. Telegram sends the bot a unique `business_connection` for that user.
+4. User chooses a Story audience:
+   - Everyone
+   - My Contacts
+   - Close Friends
+   - Selected users
+   - Optional exclusions
+5. User sends a photo as a normal message.
+6. Story Pilot prepares a 1080×1920 Story image without destructive cropping and publishes it for 24 hours.
 
-## Required environment variable
+No reply/forward workflow is required.
 
-- `TELEGRAM_BOT_TOKEN` — token from @BotFather. Never commit it to GitHub.
+## Privacy modes
+
+The standard path uses Telegram Bot API `postStory`.
+
+Granular Story privacy uses MTProto `stories.sendStory` with `privacy_rules`. The bot uses the connected business account as the Story peer, as supported by Telegram's Business API.
+
+The native Telegram user picker is used for Selected / Excluded users. Telegram only exposes usernames for some selected users; users without an available `@username` currently require manual username input for automated MTProto privacy rules.
+
+## Environment variables
+
+- `TELEGRAM_BOT_TOKEN` — BotFather token
+- `TELEGRAM_API_ID` — app API ID from `my.telegram.org`
+- `TELEGRAM_API_HASH` — app API hash from `my.telegram.org`
+
+Never commit secrets to GitHub.
+
+## Production endpoints
+
+- `/api/setup` — idempotently registers the current webhook and bot metadata
+- `/api/webhook-v6` — current Telegram webhook
+- `/api/health` — safe production health check
 
 ## Deploy
 
-Deploy the repo to Vercel, add `TELEGRAM_BOT_TOKEN` for Production, then open:
+Deploy to Vercel with the environment variables above, then call:
 
 `https://YOUR-PROJECT.vercel.app/api/setup`
 
-The setup endpoint registers the Telegram webhook and bot commands.
+The setup endpoint registers `/api/webhook-v6` and bot commands.
 
-## Test
+## Operational notes
 
-- Open the bot and send `/start`.
-- Connect it in Telegram Business / Chatbots with Manage Stories enabled.
-- Reply to the bot's `STORY_CONNECTION:...` message with a photo.
-- Check the bot response and your Telegram profile.
+- Webhook requests are verified with Telegram's secret-token header.
+- Bot responses are sent silently where possible.
+- Audience settings are isolated per Telegram private chat.
+- The bot checks Business Connection status before publishing.
+- MTProto publishing calls `stories.canSendStory` before upload to surface Story limits early.
+- Telegram may still return server-side limits such as `PREMIUM_ACCOUNT_REQUIRED`, `STORIES_TOO_MUCH`, or flood limits.
