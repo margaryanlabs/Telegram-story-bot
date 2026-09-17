@@ -15,7 +15,23 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
+function productionBaseUrl(req) {
+  const configured = String(process.env.STORY_PILOT_BASE_URL || '').trim();
+  if (configured) return configured.replace(/\/$/, '');
+
+  const productionHost = String(process.env.VERCEL_PROJECT_PRODUCTION_URL || '').trim();
+  if (productionHost) {
+    return `https://${productionHost.replace(/^https?:\/\//, '').replace(/\/$/, '')}`;
+  }
+
+  const forwardedHost = req.headers['x-forwarded-host'];
+  const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost || req.headers.host;
+  return `https://${host}`;
+}
+
 export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.status(405).json({ ok: false, error: 'Method not allowed' });
     return;
@@ -28,11 +44,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const forwardedHost = req.headers['x-forwarded-host'];
-    const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost || req.headers.host;
-    const protoHeader = req.headers['x-forwarded-proto'];
-    const proto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https';
-    const webhookUrl = `${proto}://${host}/api/webhook-v7`;
+    const baseUrl = productionBaseUrl(req);
+    const webhookUrl = `${baseUrl}/api/webhook-v7`;
     const secretToken = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
 
     const bot = await tg(token, 'getMe');
