@@ -49,12 +49,10 @@ function mainKeyboard() {
     keyboard: [
       [{ text: '🌍 Все' }, { text: '👥 Мои контакты' }],
       [{ text: '⭐ Близкие друзья' }, { text: '🎯 Выбранные' }],
-      [{ text: '⚡ Стандарт' }, { text: '📊 Настройки' }],
-      [{ text: '📸 Как публиковать' }],
     ],
     resize_keyboard: true,
     is_persistent: true,
-    input_field_placeholder: 'Отправь фото — оно сразу пойдёт в Story',
+    input_field_placeholder: 'Отправь фото → сразу в Story',
   };
 }
 
@@ -309,7 +307,7 @@ export default async function handler(req, res) {
       await sendMessage(
         token,
         chatId,
-        `✨ Story Pilot\n\n📸 Отправь фото — оно сразу публикуется в Story на 24 часа.\n\nСейчас видят: ${audienceLabel(settings.audience, settings.selected)}\n\nНикаких команд не нужно — всё кнопками снизу.`
+        `✨ Story Pilot\n\n📸 Отправь фото — оно сразу публикуется в Story на 24 часа.\n\nСейчас видят: ${audienceLabel(settings.audience, settings.selected)}\n\nВыбери аудиторию одной из 4 кнопок снизу.`
       );
       res.status(200).json({ ok: true });
       return;
@@ -319,7 +317,7 @@ export default async function handler(req, res) {
       await sendMessage(
         token,
         chatId,
-        `📊 Текущие настройки\n\nАудитория: ${audienceLabel(settings.audience, settings.selected)}\nBusiness connection: ${settings.bc ? '✅ подключён' : '❌ не найден'}\nMTProto: ${mtprotoConfigured() ? '✅ готов' : '❌ не настроен'}\n\nПросто нажми нужную кнопку аудитории.`
+        `📊 Текущие настройки\n\nАудитория: ${audienceLabel(settings.audience, settings.selected)}\nBusiness connection: ${settings.bc ? '✅ подключён' : '❌ не найден'}\nMTProto: ${mtprotoConfigured() ? '✅ готов' : '❌ не настроен'}`
       );
       res.status(200).json({ ok: true });
       return;
@@ -374,7 +372,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    await sendMessage(token, chatId, '📸 Отправь фотографию или выбери аудиторию кнопками снизу.');
+    await sendMessage(token, chatId, '📸 Отправь фотографию или выбери аудиторию одной из кнопок снизу.');
     res.status(200).json({ ok: true });
   } catch (error) {
     console.error('Webhook error', error?.telegram || error);
