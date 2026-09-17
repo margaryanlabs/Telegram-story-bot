@@ -8,27 +8,36 @@
   <style>
     :root { color-scheme: dark light; }
     * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
     body {
-      margin: 0;
       min-height: 100vh;
       display: grid;
       place-items: center;
-      padding: 28px;
+      padding: 24px;
       font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       background: var(--tg-theme-bg-color,#111827);
       color: var(--tg-theme-text-color,#fff);
       text-align: center;
     }
-    .wrap { width: min(100%,380px); }
-    .icon { font-size: 44px; margin-bottom: 12px; }
-    h1 { margin: 0 0 10px; font-size: 25px; }
+    .fallback { opacity: 0; transition: opacity .18s ease; width: min(100%,360px); }
+    .fallback.show { opacity: 1; }
+    .spinner {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 14px;
+      border: 3px solid color-mix(in srgb, var(--tg-theme-hint-color,#9ca3af) 35%, transparent);
+      border-top-color: var(--tg-theme-button-color,#2ea6ff);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     p { margin: 0; color: var(--tg-theme-hint-color,#9ca3af); line-height: 1.45; }
     button {
-      margin-top: 22px;
+      margin-top: 18px;
       width: 100%;
       border: 0;
       border-radius: 14px;
-      padding: 15px 18px;
+      padding: 14px 18px;
       font-size: 16px;
       font-weight: 700;
       background: var(--tg-theme-button-color,#2ea6ff);
@@ -37,23 +46,34 @@
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="icon">🚀</div>
-    <h1>Открываю Story Pilot</h1>
-    <p>Возвращаю тебя в чат с кнопками аудитории и публикации.</p>
-    <button id="back">Вернуться в Story Pilot</button>
+  <main id="fallback" class="fallback" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Возвращаю в Story Pilot…</p>
+    <button id="back" type="button">Вернуться в чат</button>
   </main>
   <script>
     const tg = window.Telegram?.WebApp;
+    const fallback = document.getElementById('fallback');
+    const back = document.getElementById('back');
+    let sent = false;
+
     function goHome() {
-      if (!tg) return;
+      if (!tg || sent) return;
+      sent = true;
       try { tg.sendData('storypilot:home'); } catch (_) {}
-      setTimeout(() => { try { tg.close(); } catch (_) {} }, 120);
+      try { tg.close(); } catch (_) {}
+      setTimeout(() => { try { tg.close(); } catch (_) {} }, 80);
     }
+
     if (tg) {
-      tg.ready();
-      document.getElementById('back').addEventListener('click', goHome);
-      setTimeout(goHome, 180);
+      try { tg.ready(); } catch (_) {}
+      back.addEventListener('click', () => { sent = false; goHome(); });
+      goHome();
+      setTimeout(() => fallback.classList.add('show'), 650);
+    } else {
+      fallback.classList.add('show');
+      back.disabled = true;
+      back.textContent = 'Откройте внутри Telegram';
     }
   </script>
 </body>
