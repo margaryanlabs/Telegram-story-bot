@@ -25,10 +25,7 @@ export default async function handler(req, res) {
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
-    res.status(500).json({
-      ok: false,
-      error: 'TELEGRAM_BOT_TOKEN is missing in Vercel Environment Variables',
-    });
+    res.status(500).json({ ok: false, error: 'TELEGRAM_BOT_TOKEN is missing in Vercel Environment Variables' });
     return;
   }
 
@@ -52,7 +49,9 @@ export default async function handler(req, res) {
     await tg(token, 'setMyCommands', {
       commands: [
         { command: 'start', description: 'Start Story Pilot' },
-        { command: 'help', description: 'How to publish Stories' },
+        { command: 'audience', description: 'Choose default Story audience' },
+        { command: 'selected', description: 'Set selected @usernames for Stories' },
+        { command: 'help', description: 'How Story Pilot works' },
       ],
     });
 
@@ -61,7 +60,8 @@ export default async function handler(req, res) {
       bot: `@${bot.username}`,
       webhook,
       webhook_url: webhookUrl,
-      next: 'Send a photo as a reply to the STORY_CONNECTION message. The bot will show a publish confirmation and privacy-editor option.',
+      mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
+      next: 'Use /audience once, then just send photos. Explicit audience modes require TELEGRAM_API_ID and TELEGRAM_API_HASH.',
     });
   } catch (error) {
     console.error(error);
