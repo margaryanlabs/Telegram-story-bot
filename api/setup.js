@@ -34,34 +34,27 @@ export default async function handler(req, res) {
     const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost || req.headers.host;
     const protoHeader = req.headers['x-forwarded-proto'];
     const proto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https';
-    const webhookUrl = `${proto}://${host}/api/webhook`;
+    const webhookUrl = `${proto}://${host}/api/webhook-buttons`;
     const secretToken = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
 
     const bot = await tg(token, 'getMe');
-
     const webhook = await tg(token, 'setWebhook', {
       url: webhookUrl,
-      allowed_updates: ['message', 'business_connection', 'callback_query'],
+      allowed_updates: ['message', 'business_connection'],
       secret_token: secretToken,
       drop_pending_updates: false,
     });
 
-    await tg(token, 'setMyCommands', {
-      commands: [
-        { command: 'start', description: 'Start Story Pilot' },
-        { command: 'audience', description: 'Choose default Story audience' },
-        { command: 'selected', description: 'Set selected @usernames for Stories' },
-        { command: 'help', description: 'How Story Pilot works' },
-      ],
-    });
+    await tg(token, 'deleteMyCommands', {}).catch(() => {});
 
     res.status(200).json({
       ok: true,
       bot: `@${bot.username}`,
       webhook,
       webhook_url: webhookUrl,
+      ui: 'persistent emoji keyboard',
       mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
-      next: 'Use /audience once, then just send photos. Explicit audience modes require TELEGRAM_API_ID and TELEGRAM_API_HASH.',
+      next: 'Open the bot and press Start once. After that audience controls are persistent buttons below the message field.',
     });
   } catch (error) {
     console.error(error);
