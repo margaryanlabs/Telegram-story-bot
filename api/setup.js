@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost || req.headers.host;
     const protoHeader = req.headers['x-forwarded-proto'];
     const proto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https';
-    const webhookUrl = `${proto}://${host}/api/webhook-v6`;
+    const webhookUrl = `${proto}://${host}/api/webhook-v7`;
     const secretToken = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
 
     const bot = await tg(token, 'getMe');
@@ -47,6 +47,7 @@ export default async function handler(req, res) {
       commands: [
         { command: 'start', description: '🚀 Открыть Story Pilot' },
         { command: 'status', description: '📊 Проверить подключение и настройки' },
+        { command: 'reset', description: '♻️ Сбросить аудиторию и исключения' },
         { command: 'help', description: '📸 Как публиковать Story' },
       ],
     });
@@ -75,6 +76,7 @@ export default async function handler(req, res) {
       ui: 'single editable panel + temporary native user picker',
       mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
       public_bot: true,
+      version: 'v7',
     });
   } catch (error) {
     console.error(error);
