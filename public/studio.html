@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Story Pilot</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background: var(--tg-theme-bg-color,#111827);
+      color: var(--tg-theme-text-color,#fff);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card { width: min(100%, 420px); }
+    .eyebrow { opacity: .65; font-size: 13px; margin-bottom: 8px; }
+    h1 { margin: 0 0 12px; font-size: 28px; }
+    p { line-height: 1.45; color: var(--tg-theme-hint-color,#9ca3af); }
+    img {
+      width: 100%;
+      aspect-ratio: 9/16;
+      object-fit: cover;
+      border-radius: 22px;
+      display: block;
+      background: #000;
+      margin: 18px 0;
+      max-height: 58vh;
+    }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 15px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      background: var(--tg-theme-button-color,#2ea6ff);
+      color: var(--tg-theme-button-text-color,#fff);
+    }
+    .note { font-size: 13px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="eyebrow">STORY PILOT</div>
+    <h1>Кому показать Story?</h1>
+    <p>Нажми кнопку ниже. Откроется родной редактор Telegram, где перед публикацией можно выбрать: <b>Все</b>, <b>Мои контакты</b>, <b>Близкие друзья</b> или <b>Выбранные контакты</b>.</p>
+    <img id="preview" alt="Story preview" />
+    <button id="open">Открыть редактор Telegram</button>
+    <p class="note">Важно: Telegram не предоставляет отдельный флаг «публиковать Story без уведомлений». Ограничить охват можно через настройки аудитории в редакторе.</p>
+  </main>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    const params = new URLSearchParams(location.search);
+    const fileId = params.get('file_id');
+    const sig = params.get('sig');
+    const caption = params.get('caption') || '';
+    const mediaUrl = `${location.origin}/api/media?file_id=${encodeURIComponent(fileId || '')}&sig=${encodeURIComponent(sig || '')}`;
+    document.getElementById('preview').src = mediaUrl;
+
+    document.getElementById('open').addEventListener('click', () => {
+      if (!tg?.shareToStory) {
+        alert('Обнови официальный Telegram: этот клиент не поддерживает открытие редактора Story из Mini App.');
+        return;
+      }
+      tg.shareToStory(mediaUrl, caption ? { text: caption.slice(0, 200) } : undefined);
+    });
+  </script>
+</body>
+</html>
