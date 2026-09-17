@@ -1,12 +1,13 @@
 {
   "name": "telegram-story-bot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "vercel dev"
   },
   "dependencies": {
-    "sharp": "^0.34.0"
+    "sharp": "^0.34.0",
+    "telegram": "^2.26.22"
   }
 }
