@@ -60,6 +60,7 @@ export default async function handler(req, res) {
       commands: [
         { command: 'start', description: '🚀 Открыть Story Pilot' },
         { command: 'status', description: '📊 Проверить подключение и настройки' },
+        { command: 'delete', description: '🗑 Удалить последнюю Story' },
         { command: 'reset', description: '♻️ Сбросить аудиторию и исключения' },
         { command: 'help', description: '📸 Как публиковать Story' },
       ],
