@@ -10,6 +10,6 @@
   "dependencies": {
     "sharp": "0.34.5",
     "teleproto": "1.229.0",
-    "@vercel/oidc": "^2.0.0"
+    "@vercel/oidc": "^3.8.8"
   }
 }
