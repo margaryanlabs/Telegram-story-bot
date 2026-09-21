@@ -61,6 +61,7 @@ function audienceLabel(mode, selected = []) {
 function defaultSettings() {
   return {
     bc: null,
+    canStories: false,
     audience: 'standard',
     selected: [],
     excluded: [],
@@ -78,7 +79,19 @@ function inlineMenu(settings = {}) {
   const active = settings.audience || 'standard';
   const mark = (mode, label) => active === mode ? `✅ ${label}` : label;
   const exc = settings.excluded?.length || 0;
-  const connectionText = settings.bc ? '✅ Аккаунт подключён' : '🔗 Подключить аккаунт';
+  const ready = Boolean(settings.bc && settings.canStories);
+
+  if (!ready) {
+    return {
+      inline_keyboard: [
+        [{ text: settings.bc ? '⚠️ Разрешить управление Stories' : '🔗 Подключить Telegram', callback_data: 'view:connect' }],
+        [{ text: '✅ Я подключил — проверить', callback_data: 'connect:check' }],
+        [{ text: '📸 Как это работает', callback_data: 'view:howto' }],
+      ],
+    };
+  }
+
+  const connectionText = '✅ Telegram подключён';
   return {
     inline_keyboard: [
       [
@@ -132,8 +145,11 @@ async function getStoredSettings(token, chatId) {
     const menu = await tg(token, 'getChatMenuButton', { chat_id: chatId });
     if (menu?.type === 'web_app' && menu?.web_app?.url) {
       const url = new URL(menu.web_app.url);
+      const bc = url.searchParams.get('bc') || null;
+      const canStoriesParam = url.searchParams.get('cs');
       return {
-        bc: url.searchParams.get('bc') || null,
+        bc,
+        canStories: canStoriesParam === null ? Boolean(bc) : canStoriesParam === '1',
         audience: url.searchParams.get('aud') || 'standard',
         selected: (url.searchParams.get('sel') || '').split(',').map(normalizeUsername).filter(Boolean).slice(0, MAX_SAVED_USERS),
         excluded: (url.searchParams.get('exc') || '').split(',').map(normalizeUsername).filter(Boolean).slice(0, MAX_SAVED_USERS),
@@ -152,7 +168,10 @@ async function getStoredSettings(token, chatId) {
 
 async function saveSettings(token, chatId, origin, settings) {
   const url = new URL('/studio.html', origin);
-  if (settings.bc) url.searchParams.set('bc', settings.bc);
+  if (settings.bc) {
+    url.searchParams.set('bc', settings.bc);
+    url.searchParams.set('cs', settings.canStories ? '1' : '0');
+  }
   url.searchParams.set('aud', settings.audience || 'standard');
   if (settings.selected?.length) url.searchParams.set('sel', settings.selected.slice(0, MAX_SAVED_USERS).join(','));
   if (settings.excluded?.length) url.searchParams.set('exc', settings.excluded.slice(0, MAX_SAVED_USERS).join(','));
@@ -189,31 +208,45 @@ async function clearReplyKeyboard(token, chatId) {
 }
 
 function homeText(settings) {
-  const connected = settings.bc ? '✅ подключён' : '❌ не подключён';
+  if (!settings.bc) {
+    return '✨ Story Pilot\n\nПубликуй Stories в своём Telegram прямо из этого чата.\n\nНужно подключиться только один раз:\n\n1️⃣ Нажми «🔗 Подключить Telegram».\n2️⃣ В Telegram Business / «Автоматизация чатов» добавь @Storypilotlab_bot.\n3️⃣ Разреши «Управление историями».\n4️⃣ Вернись сюда и нажми «✅ Я подключил — проверить».\n\nПосле этого просто отправляй фото — Story Pilot опубликует его в твоём профиле.';
+  }
+
+  if (!settings.canStories) {
+    return '⚠️ Почти готово\n\nTelegram видит подключение Story Pilot, но у бота нет разрешения управлять Stories.\n\nОткрой Telegram → Настройки → Telegram Business / Автоматизация чатов → Story Pilot и включи «Управление историями».\n\nПотом нажми «✅ Я подключил — проверить».';
+  }
+
   const excluded = settings.excluded?.length
     ? `\n🚫 Не увидят: ${settings.excluded.map(u => `@${u}`).join(', ')}`
     : '';
-  const hint = settings.bc
-    ? '\n\n📸 Просто отправь фото или изображение-файл обычным сообщением.'
-    : '\n\n🔗 Сначала подключи аккаунт кнопкой ниже.';
-  return `✨ Story Pilot\n\n👁 ${audienceLabel(settings.audience, settings.selected)}${excluded}\n🛡 Защита: ${settings.protect ? 'ВКЛ' : 'ВЫКЛ'}\n🔌 Аккаунт: ${connected}${hint}`;
+  return `✨ Story Pilot\n\n✅ Telegram подключён\n👁 ${audienceLabel(settings.audience, settings.selected)}${excluded}\n🛡 Защита: ${settings.protect ? 'ВКЛ' : 'ВЫКЛ'}\n\n📸 Отправь фото или JPG/PNG/WEBP — опубликую его как Story.`;
 }
 
 function settingsText(settings, live = null) {
-  let connection = settings.bc ? '✅ сохранено' : '❌ не найдено';
-  if (live === true) connection = '✅ активно';
+  let connection = settings.bc
+    ? (settings.canStories ? '✅ активно, Stories разрешены' : '⚠️ подключено, но без доступа к Stories')
+    : '❌ не подключено';
   if (live === false) connection = '❌ неактивно';
-  return `📊 Настройки Story Pilot\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Business connection: ${connection}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
+  return `📊 Настройки Story Pilot\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
 }
 
 function connectText(settings, live = null) {
-  if (settings.bc && live !== false) {
-    return `✅ Аккаунт подключён\n\nStory Pilot может управлять Stories.\n\nЕсли публикация перестанет работать: Настройки Telegram → Автоматизация чатов → Story Pilot → проверь «Управление историями».`;
+  if (settings.bc && settings.canStories && live !== false) {
+    return '✅ Готово — Telegram подключён\n\nStory Pilot получил разрешение управлять Stories. Больше подключаться не нужно.\n\n📸 Теперь просто отправь фото в этот чат.';
   }
-  return `🔗 Подключение аккаунта\n\n1. Telegram → Настройки.\n2. Открой «Автоматизация чатов».\n3. Подключи @Storypilotlab_bot.\n4. Включи «Управление историями».\n5. Сохрани.\n\nПосле подключения эта панель сама обновится.`;
+
+  if (settings.bc && live !== false) {
+    return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → Story Pilot → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
+  }
+
+  return '🔗 Подключить Telegram\n\nЭто делается один раз для каждого пользователя:\n\n1️⃣ Открой Telegram → Настройки.\n2️⃣ Открой Telegram Business / «Автоматизация чатов».\n3️⃣ Добавь @Storypilotlab_bot как чат-бота.\n4️⃣ Разреши «Управление историями».\n5️⃣ Сохрани и вернись сюда.\n6️⃣ Нажми «✅ Я подключил — проверить».\n\nStory Pilot не получает пароль и не входит в аккаунт — публикация идёт через официальное Business-подключение Telegram.';
 }
 
 function howToText(settings) {
+  if (!settings.bc || !settings.canStories) {
+    return '📸 Как работает Story Pilot\n\n1. Один раз подключаешь Story Pilot через Telegram Business / «Автоматизация чатов».\n2. Разрешаешь управление Stories.\n3. Возвращаешься в бот и выбираешь аудиторию.\n4. Отправляешь фото обычным сообщением.\n5. Story появляется в твоём Telegram-профиле.\n\nКаждый пользователь подключает только свой аккаунт.';
+  }
+
   return `📸 Как публиковать\n\n1. Выбери аудиторию.\n2. Для «Мои контакты, кроме…» выбери «👥 Мои контакты» → «🚫 Исключить».\n3. Для конкретных людей нажми «🎯 Выбранные».\n4. Отправь фото обычным сообщением.\n\nБез reply, без forward, без подтверждений.\n\nСейчас: ${audienceLabel(settings.audience, settings.selected)}.`;
 }
 
@@ -291,19 +324,23 @@ async function beginNativePicker(token, chatId, origin, settings, kind) {
 }
 
 async function refreshConnection(token, chatId, origin, settings) {
-  if (!settings.bc) return { settings, live: false, rights: false };
+  if (!settings.bc) return { settings: { ...settings, canStories: false }, live: false, rights: false };
   try {
     const connection = await tg(token, 'getBusinessConnection', { business_connection_id: settings.bc });
     const live = Boolean(connection?.is_enabled);
     const rights = Boolean(connection?.rights?.can_manage_stories);
     if (!live) {
-      const next = { ...settings, bc: null };
+      const next = { ...settings, bc: null, canStories: false };
       await saveSettings(token, chatId, origin, next);
       return { settings: next, live: false, rights: false };
     }
-    return { settings, live: true, rights };
+    const next = { ...settings, canStories: rights };
+    if (next.canStories !== settings.canStories) {
+      await saveSettings(token, chatId, origin, next);
+    }
+    return { settings: next, live: true, rights };
   } catch {
-    const next = { ...settings, bc: null };
+    const next = { ...settings, bc: null, canStories: false };
     await saveSettings(token, chatId, origin, next).catch(() => {});
     return { settings: next, live: false, rights: false };
   }
@@ -492,6 +529,7 @@ async function resetSettings(token, chatId, origin, settings) {
   const next = {
     ...defaultSettings(),
     bc: settings.bc,
+    canStories: settings.canStories,
     panel: settings.panel,
   };
   await saveSettings(token, chatId, origin, next);
@@ -531,24 +569,24 @@ export default async function handler(req, res) {
       const settings = await getStoredSettings(token, bc.user_chat_id);
 
       if (!bc.is_enabled) {
-        const next = { ...settings, bc: null, processing: false };
+        const next = { ...settings, bc: null, canStories: false, processing: false };
         await saveSettings(token, bc.user_chat_id, origin, next);
         await showPanel(token, bc.user_chat_id, origin, next, '⚠️ Story Pilot отключён от аккаунта. Нажми «🔗 Подключить аккаунт», чтобы вернуть публикацию Stories.');
         res.status(200).json({ ok: true });
         return;
       }
       if (!bc.rights?.can_manage_stories) {
-        const next = { ...settings, bc: bc.id, processing: false };
+        const next = { ...settings, bc: bc.id, canStories: false, processing: false };
         await saveSettings(token, bc.user_chat_id, origin, next);
-        await showPanel(token, bc.user_chat_id, origin, next, '⚠️ Аккаунт подключён, но нет разрешения «Управление историями». Включи его в «Автоматизация чатов».');
+        await showFreshPanel(token, bc.user_chat_id, origin, next, connectText(next, true));
         res.status(200).json({ ok: true });
         return;
       }
 
       await clearReplyKeyboard(token, bc.user_chat_id);
-      const next = { ...settings, bc: bc.id, picking: '', pickerMessage: null, processing: false };
+      const next = { ...settings, bc: bc.id, canStories: true, picking: '', pickerMessage: null, processing: false };
       await saveSettings(token, bc.user_chat_id, origin, next);
-      await showPanel(token, bc.user_chat_id, origin, next);
+      await showFreshPanel(token, bc.user_chat_id, origin, next, connectText(next, true));
       res.status(200).json({ ok: true });
       return;
     }
@@ -608,6 +646,15 @@ export default async function handler(req, res) {
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);
+      } else if (action === 'connect:check') {
+        const refreshed = await refreshConnection(token, chatId, origin, settings);
+        if (refreshed.live && refreshed.rights) {
+          await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
+        } else if (refreshed.live) {
+          await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
+        } else {
+          await showPanel(token, chatId, origin, refreshed.settings, '⏳ Подключение пока не найдено.\n\nПроверь, что @Storypilotlab_bot добавлен в Telegram Business / «Автоматизация чатов» и включено «Управление историями». Затем нажми проверить ещё раз.', messageId);
+        }
       } else if (action === 'view:settings') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, settingsText(refreshed.settings, refreshed.live), messageId);
@@ -770,6 +817,7 @@ export default async function handler(req, res) {
       const pre = {
         ...current,
         bc: connectionId,
+        canStories: true,
         lastMessage: message.message_id,
         lastStory: null,
         processing: true,
