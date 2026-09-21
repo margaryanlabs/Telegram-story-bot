@@ -658,14 +658,14 @@ export default async function handler(req, res) {
       const current = refreshed.settings;
       const storyId = Number(current.lastStory);
       if (!refreshed.live || !current.bc) {
-        await showPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Story Pilot.');
+        await showFreshPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Story Pilot.');
       } else if (!Number.isInteger(storyId) || storyId <= 0) {
-        await showPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
+        await showFreshPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
       } else {
         await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
         const next = { ...current, lastStory: null, lastMessage: null, processing: false };
         await saveSettings(token, chatId, origin, next);
-        await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.');
+        await showFreshPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.');
       }
       res.status(200).json({ ok: true });
       return;
