@@ -67,11 +67,11 @@ export default async function handler(req, res) {
     });
 
     await tg(token, 'setMyShortDescription', {
-      short_description: 'Публикуй Telegram Stories через бота и выбирай аудиторию в пару нажатий.',
+      short_description: 'Подключи Telegram один раз и публикуй Stories прямо из чата.',
     }).catch(() => {});
 
     await tg(token, 'setMyDescription', {
-      description: 'Story Pilot помогает публиковать Stories через Telegram Business Connection. Выбери аудиторию, при необходимости исключи людей и просто отправь фото боту.',
+      description: 'Story Pilot публикует Stories в твоём Telegram-профиле. Один раз подключи бота через Telegram Business, разреши управление Stories, выбери аудиторию и просто отправляй фото.',
     }).catch(() => {});
 
     await tg(token, 'setChatMenuButton', {
