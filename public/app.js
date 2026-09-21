@@ -851,6 +851,15 @@
   setAvatar();
   render();
 
-  if (tg?.initData) refresh();
-  else showToast('Открой Story Pilot внутри Telegram для управления');
+  if (tg?.initData) {
+    refresh();
+    refreshViewerSync({ silent: true });
+    setInterval(() => {
+      if (currentScreen === 'viewers' && viewerState.session?.connected) {
+        refreshViewerSync({ silent: true });
+      }
+    }, 30000);
+  } else {
+    showToast('Открой Story Pilot внутри Telegram для управления');
+  }
 })();
