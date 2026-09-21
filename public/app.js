@@ -165,6 +165,53 @@
     return data;
   }
 
+  async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
+    if (!tg?.initData) throw new Error('Открой Story Pilot внутри Telegram');
+
+    const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
+    const options = {
+      method: action ? 'POST' : 'GET',
+      headers: {
+        'x-telegram-init-data': tg.initData,
+        'content-type':'application/json',
+      },
+    };
+    if (action) options.body = JSON.stringify({ action, ...payload });
+
+    const response = await fetch(`/api/viewer-sync${query}`, options);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) {
+      const error = new Error(data.error || 'Viewer Sync недоступен');
+      error.viewerData = data;
+      throw error;
+    }
+    return data;
+  }
+
+  async function refreshViewerSync({ silent = false } = {}) {
+    try {
+      const data = await viewerApi();
+      viewerState = {
+        configured: Boolean(data.config?.configured),
+        backgroundReady: Boolean(data.config?.backgroundReady),
+        session: data.session || null,
+        story: data.story || null,
+        viewers: data.viewers || [],
+        error: null,
+      };
+    } catch (error) {
+      const data = error.viewerData || {};
+      viewerState = {
+        ...viewerState,
+        configured: data.config?.configured === false ? false : viewerState.configured,
+        backgroundReady: Boolean(data.config?.backgroundReady),
+        error: error.message,
+      };
+      if (!silent && data.config?.configured !== false) showToast(error.message);
+    }
+    renderViewers();
+  }
+
   function renderConnection() {
     const ready = state.connection === 'ready';
     const permission = state.connection === 'needs_permission';
