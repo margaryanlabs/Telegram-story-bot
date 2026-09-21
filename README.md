@@ -82,3 +82,16 @@ The setup endpoint registers `/api/webhook-v8` and bot commands.
 - Disconnected users only see onboarding actions: connect, check connection, and how it works.
 - A connected account without Story rights is shown as a separate recoverable state instead of being presented as fully connected.
 - Successful Business Connection updates produce a fresh visible confirmation near the bottom of the chat.
+
+
+## Mini App
+
+The persistent **🚀 Старт** menu now opens a full Telegram Mini App instead of immediately closing back to chat.
+
+- Authenticates requests with Telegram Web App `initData`.
+- Shows live Business Connection and `can_manage_stories` status.
+- Lets the user change Story audience and content protection without leaving the Mini App.
+- Shows selected/excluded user counts and hands off to Telegram's native picker when those lists need editing.
+- Can delete the last Story from the dashboard.
+- Keeps the primary publish flow simple: configure in Mini App, close it, then send a photo to the bot chat.
+- Uses Telegram theme variables and safe-area insets for Android/iOS.
