@@ -305,8 +305,8 @@ async function removePicker(token, chatId, settings) {
 }
 
 async function beginNativePicker(token, chatId, origin, settings, kind) {
-  if (kind === 'exclude' && settings.audience === 'standard') {
-    return showPanel(token, chatId, origin, settings, '⚠️ Сначала выбери аудиторию — например «👥 Мои контакты» — затем нажми «🚫 Исключить».', settings.panel);
+  if (kind === 'exclude' && !['all', 'contacts'].includes(settings.audience)) {
+    return showPanel(token, chatId, origin, settings, '⚠️ Исключения работают для режимов «🌍 Все» и «👥 Мои контакты». Выбери один из них, затем нажми «🚫 Исключить».', settings.panel);
   }
 
   await clearReplyKeyboard(token, chatId);
@@ -491,16 +491,33 @@ async function buildPrivacyRules(client, Api, audience, selected, excluded) {
   let skippedExcluded = [];
   let skippedSelected = [];
 
-  if (excluded?.length) {
-    const resolved = await resolveUsers(client, Api, excluded);
-    skippedExcluded = resolved.skipped;
-    if (resolved.users.length) rules.push(new Api.InputPrivacyValueDisallowUsers({ users: resolved.users }));
-  }
+  // Telegram's story clients compose PUBLIC/CONTACTS privacy as the base
+  // allow rule first, followed by explicit disallow-user exceptions.
+  // The previous implementation reversed this order, which Telegram accepted
+  // but could cause the later allow rule to win over the exclusions.
+  if (audience === 'all') {
+    rules.push(new Api.InputPrivacyValueAllowAll({}));
 
-  if (audience === 'all') rules.push(new Api.InputPrivacyValueAllowAll({}));
-  else if (audience === 'contacts') rules.push(new Api.InputPrivacyValueAllowContacts({}));
-  else if (audience === 'close') rules.push(new Api.InputPrivacyValueAllowCloseFriends({}));
-  else if (audience === 'selected') {
+    if (excluded?.length) {
+      const resolved = await resolveUsers(client, Api, excluded);
+      skippedExcluded = resolved.skipped;
+      if (resolved.users.length) {
+        rules.push(new Api.InputPrivacyValueDisallowUsers({ users: resolved.users }));
+      }
+    }
+  } else if (audience === 'contacts') {
+    rules.push(new Api.InputPrivacyValueAllowContacts({}));
+
+    if (excluded?.length) {
+      const resolved = await resolveUsers(client, Api, excluded);
+      skippedExcluded = resolved.skipped;
+      if (resolved.users.length) {
+        rules.push(new Api.InputPrivacyValueDisallowUsers({ users: resolved.users }));
+      }
+    }
+  } else if (audience === 'close') {
+    rules.push(new Api.InputPrivacyValueAllowCloseFriends({}));
+  } else if (audience === 'selected') {
     if (!selected?.length) throw new Error('Список выбранных людей пуст');
     const resolved = await resolveUsers(client, Api, selected);
     skippedSelected = resolved.skipped;
@@ -511,6 +528,15 @@ async function buildPrivacyRules(client, Api, audience, selected, excluded) {
   } else {
     throw new Error(`Неизвестный режим аудитории: ${audience}`);
   }
+
+  console.log('Story Pilot privacy rules built', {
+    audience,
+    rule_order: rules.map(rule => rule?.className || rule?.constructor?.name || 'unknown'),
+    excluded_requested: excluded?.length || 0,
+    excluded_skipped: skippedExcluded.length,
+    selected_requested: selected?.length || 0,
+    selected_skipped: skippedSelected.length,
+  });
 
   return { rules, skippedExcluded, skippedSelected };
 }
