@@ -450,22 +450,36 @@ async function resolveUsers(client, Api, usernames) {
   const users = [];
   const valid = [];
   const skipped = [];
+  const unique = [...new Set((usernames || []).map(normalizeUsername).filter(Boolean))].slice(0, MAX_SAVED_USERS);
+  const batchSize = 5;
 
-  for (const username of usernames.slice(0, MAX_SAVED_USERS)) {
-    try {
-      const resolved = await client.invoke(new Api.contacts.ResolveUsername({ username }));
-      const user = resolved?.users?.find(item => item?.accessHash !== undefined) || resolved?.users?.[0];
-      if (!user?.id) throw new Error(`Не удалось найти @${username}`);
-      users.push(new Api.InputUser({ userId: user.id, accessHash: user.accessHash ?? BigInt(0) }));
-      valid.push(username);
-    } catch (error) {
-      const description = error?.errorMessage || error?.message || String(error);
-      if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID|Не удалось найти/i.test(description)) {
-        skipped.push(username);
-        console.warn('Story Pilot skipped stale privacy username', { username });
-        continue;
+  for (let offset = 0; offset < unique.length; offset += batchSize) {
+    const batch = unique.slice(offset, offset + batchSize);
+    const results = await Promise.all(batch.map(async (username) => {
+      try {
+        const resolved = await client.invoke(new Api.contacts.ResolveUsername({ username }));
+        const user = resolved?.users?.find(item => item?.accessHash !== undefined) || resolved?.users?.[0];
+        if (!user?.id) throw new Error(`Не удалось найти @${username}`);
+        return {
+          username,
+          input: new Api.InputUser({ userId: user.id, accessHash: user.accessHash ?? BigInt(0) }),
+        };
+      } catch (error) {
+        const description = error?.errorMessage || error?.message || String(error);
+        if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID|Не удалось найти/i.test(description)) {
+          console.warn('Story Pilot skipped stale privacy username', { username });
+          return { username, skipped: true };
+        }
+        throw error;
       }
-      throw error;
+    }));
+
+    for (const result of results) {
+      if (result.skipped) skipped.push(result.username);
+      else {
+        users.push(result.input);
+        valid.push(result.username);
+      }
     }
   }
 
@@ -526,6 +540,9 @@ async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, 
     const businessUser = updates?.users?.find(item => String(item?.id) === String(userId));
     const peer = new Api.InputPeerUser({ userId, accessHash: businessUser?.accessHash ?? BigInt(0) });
 
+    // Validate and clean privacy before doing image processing/upload work.
+    const privacy = await buildPrivacyRules(client, Api, audience, selected, excluded);
+
     // stories.canSendStory is not available to bot sessions and returns BOT_METHOD_INVALID.
     // stories.sendStory itself is explicitly business-bot capable when the controlled
     // business user's peer is supplied directly.
@@ -534,7 +551,6 @@ async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, 
       file: new CustomFile('story.jpg', prepared.length, '', prepared),
       workers: 1,
     });
-    const privacy = await buildPrivacyRules(client, Api, audience, selected, excluded);
     const randomId = deterministicRandomId(connectionId, messageId);
 
     const result = await client.invoke(new Api.stories.SendStory({
@@ -555,6 +571,24 @@ async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, 
     };
   } finally {
     await client.disconnect().catch(() => {});
+  }
+}
+
+function isTransientMtprotoError(error) {
+  const description = String(error?.errorMessage || error?.message || error || '');
+  return /ETIMEDOUT|ECONNRESET|EAI_AGAIN|socket hang up|connection closed|timed out|network error/i.test(description)
+    && !/FLOOD_WAIT|STORY_SEND_FLOOD/i.test(description);
+}
+
+async function postPhotoStoryMtprotoWithRetry(...args) {
+  try {
+    return await postPhotoStoryMtproto(...args);
+  } catch (error) {
+    if (!isTransientMtprotoError(error)) throw error;
+    console.warn('Story Pilot transient MTProto failure, retrying once', {
+      error: error?.errorMessage || error?.message || String(error),
+    });
+    return postPhotoStoryMtproto(...args);
   }
 }
 
@@ -905,7 +939,15 @@ export default async function handler(req, res) {
         processing: true,
       };
       await saveSettings(token, chatId, origin, pre);
-      await showPanel(token, chatId, origin, pre, '⏳ Публикую Story…');
+      await showPanel(
+        token,
+        chatId,
+        origin,
+        pre,
+        pre.audience === 'standard'
+          ? '⏳ Публикую Story через Telegram…'
+          : '⏳ Проверяю аудиторию и публикую Story…'
+      );
 
       console.log('Story Pilot publish start', {
         chat_id: chatId,
@@ -918,7 +960,7 @@ export default async function handler(req, res) {
       const original = await downloadTelegramFile(token, image.fileId);
       const story = pre.audience === 'standard'
         ? await postPhotoStoryBotApi(token, connectionId, original, image.caption, pre.protect)
-        : await postPhotoStoryMtproto(token, connectionId, original, image.caption, pre.audience, pre.selected, pre.excluded, message.message_id, pre.protect);
+        : await postPhotoStoryMtprotoWithRetry(token, connectionId, original, image.caption, pre.audience, pre.selected, pre.excluded, message.message_id, pre.protect);
 
       console.log('Story Pilot publish success', {
         chat_id: chatId,
