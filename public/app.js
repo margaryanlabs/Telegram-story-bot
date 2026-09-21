@@ -694,6 +694,10 @@
   $('profileButton').addEventListener('click', profileSheet);
   $('viewerSetupButton').addEventListener('click', viewerSetupSheet);
   $('viewerStoryPicker').addEventListener('click', viewerStorySheet);
+  $('viewerSearch').addEventListener('input', event => {
+    viewerSearchQuery = event.target.value || '';
+    renderViewers();
+  });
   $('sheetBackdrop').addEventListener('click', closeSheet);
 
   $('sheet').addEventListener('click', async event => {
