@@ -178,18 +178,19 @@
       <section class="viewer-sync-card" id="viewerSyncCard">
         <div class="sync-orbit"><span>◉</span></div>
         <span class="kicker">Viewer Sync</span>
-        <h2>Сохраняй список зрителей,<br>пока Telegram его отдаёт.</h2>
-        <p>Полный список viewers доступен через пользовательскую MTProto-сессию. Business Bot Connection сам по себе не может вызвать <code>stories.getStoryViewsList</code>.</p>
+        <h2 id="viewerSyncTitle">Подключи аналитику зрителей.</h2>
+        <p id="viewerSyncText">Viewer Sync использует отдельную пользовательскую MTProto-сессию владельца аккаунта. Код входа и 2FA используются только для авторизации и не сохраняются.</p>
         <div class="feature-tags">
-          <span>Имена и аватары</span>
+          <span>Имена</span>
           <span>Время просмотра</span>
           <span>Контакты</span>
           <span>Реакции</span>
-          <span>Публичные репосты</span>
-          <span>Поиск</span>
+          <span>Forwards</span>
+          <span>История</span>
         </div>
-        <button class="secondary-button" id="viewerSetupButton" type="button">Что нужно для Viewer Sync</button>
-        <small class="privacy-note">Stealth Mode не обходится: скрытые Telegram просмотры останутся скрытыми.</small>
+        <div class="viewer-sync-state" id="viewerSyncState">Проверяю состояние…</div>
+        <button class="secondary-button" id="viewerSetupButton" type="button">Подключить Viewer Sync</button>
+        <small class="privacy-note">Новый просмотр уведомляется сразу без личности. Имя показывается только если просмотр остаётся видимым после окна приватности Telegram. Если Telegram скрывает просмотр, уведомление анонимизируется.</small>
       </section>
 
       <section class="viewer-list-preview">
@@ -198,23 +199,28 @@
             <span class="kicker">Зрители</span>
             <h2>Список просмотров</h2>
           </div>
-          <span class="lock-badge">Viewer Sync</span>
+          <span class="lock-badge" id="viewerListBadge">Viewer Sync</span>
         </div>
-        <div class="fake-search">⌕ <span>Поиск по имени</span></div>
-        <div class="viewer-placeholder">
-          <span class="viewer-avatar-placeholder"></span>
-          <span><b></b><i></i></span>
-          <em></em>
-        </div>
-        <div class="viewer-placeholder">
-          <span class="viewer-avatar-placeholder"></span>
-          <span><b></b><i></i></span>
-          <em></em>
-        </div>
-        <div class="viewer-placeholder">
-          <span class="viewer-avatar-placeholder"></span>
-          <span><b></b><i></i></span>
-          <em></em>
+        <label class="viewer-search">
+          <span>⌕</span>
+          <input id="viewerSearch" type="search" autocomplete="off" placeholder="Поиск по имени или @username" />
+        </label>
+        <div id="viewerList">
+          <div class="viewer-placeholder">
+            <span class="viewer-avatar-placeholder"></span>
+            <span><b></b><i></i></span>
+            <em></em>
+          </div>
+          <div class="viewer-placeholder">
+            <span class="viewer-avatar-placeholder"></span>
+            <span><b></b><i></i></span>
+            <em></em>
+          </div>
+          <div class="viewer-placeholder">
+            <span class="viewer-avatar-placeholder"></span>
+            <span><b></b><i></i></span>
+            <em></em>
+          </div>
         </div>
       </section>
     </section>

@@ -39,6 +39,15 @@
   let currentScreen = 'publish';
   let selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
   let toastTimer = null;
+  let viewerSearchQuery = '';
+  let viewerState = {
+    configured: null,
+    backgroundReady: false,
+    session: null,
+    story: null,
+    viewers: [],
+    error: null,
+  };
 
   function audienceLabel(mode) {
     return ({
@@ -156,6 +165,53 @@
     return data;
   }
 
+  async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
+    if (!tg?.initData) throw new Error('Открой Story Pilot внутри Telegram');
+
+    const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
+    const options = {
+      method: action ? 'POST' : 'GET',
+      headers: {
+        'x-telegram-init-data': tg.initData,
+        'content-type':'application/json',
+      },
+    };
+    if (action) options.body = JSON.stringify({ action, ...payload });
+
+    const response = await fetch(`/api/viewer-sync${query}`, options);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) {
+      const error = new Error(data.error || 'Viewer Sync недоступен');
+      error.viewerData = data;
+      throw error;
+    }
+    return data;
+  }
+
+  async function refreshViewerSync({ silent = false } = {}) {
+    try {
+      const data = await viewerApi();
+      viewerState = {
+        configured: Boolean(data.config?.configured),
+        backgroundReady: Boolean(data.config?.backgroundReady),
+        session: data.session || null,
+        story: data.story || null,
+        viewers: data.viewers || [],
+        error: null,
+      };
+    } catch (error) {
+      const data = error.viewerData || {};
+      viewerState = {
+        ...viewerState,
+        configured: data.config?.configured === false ? false : viewerState.configured,
+        backgroundReady: Boolean(data.config?.backgroundReady),
+        error: error.message,
+      };
+      if (!silent && data.config?.configured !== false) showToast(error.message);
+    }
+    renderViewers();
+  }
+
   function renderConnection() {
     const ready = state.connection === 'ready';
     const permission = state.connection === 'needs_permission';
@@ -242,9 +298,90 @@
       $('viewerStoryTitle').textContent = 'Нет опубликованных Stories';
     }
 
-    $('viewerViews').textContent = '—';
-    $('viewerReactions').textContent = '—';
-    $('viewerForwards').textContent = '—';
+    const story = viewerState.story && String(viewerState.story.story_id) === String(selectedViewerStory)
+      ? viewerState.story
+      : null;
+    $('viewerViews').textContent = story ? String(story.last_views_count || 0) : '—';
+    $('viewerReactions').textContent = story ? String(story.last_reactions_count || 0) : '—';
+    $('viewerForwards').textContent = story ? String(story.last_forwards_count || 0) : '—';
+
+    const syncState = $('viewerSyncState');
+    const syncButton = $('viewerSetupButton');
+    const connected = viewerState.session?.connected === true;
+
+    syncState.className = 'viewer-sync-state';
+    if (viewerState.configured === false) {
+      $('viewerSyncTitle').textContent = 'Viewer Sync backend почти готов.';
+      $('viewerSyncText').textContent = 'Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.';
+      syncState.textContent = 'Нужно завершить серверную настройку Viewer Sync';
+      syncState.classList.add('warn');
+      syncButton.textContent = 'Что осталось подключить';
+    } else if (connected) {
+      const account = viewerState.session?.account || {};
+      $('viewerSyncTitle').textContent = 'Viewer Sync активен.';
+      $('viewerSyncText').textContent = 'Story Pilot снимает разрешённые Telegram snapshots и показывает только подтверждённых зрителей.';
+      syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'}`;
+      syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
+      syncButton.textContent = 'Управление Viewer Sync';
+    } else if (viewerState.session?.status === 'reauth_required') {
+      $('viewerSyncTitle').textContent = 'Нужно переподключить Viewer Sync.';
+      $('viewerSyncText').textContent = viewerState.session?.lastError || 'Telegram-сессия больше не авторизована.';
+      syncState.textContent = 'Требуется повторная авторизация';
+      syncState.classList.add('warn');
+      syncButton.textContent = 'Переподключить';
+    } else {
+      $('viewerSyncTitle').textContent = 'Подключи аналитику зрителей.';
+      $('viewerSyncText').textContent = 'Отдельная пользовательская MTProto-сессия нужна только для данных твоих собственных Stories. Код входа и 2FA не сохраняются.';
+      syncState.textContent = viewerState.configured === null ? 'Проверяю состояние…' : 'Не подключено';
+      syncButton.textContent = 'Подключить Viewer Sync';
+    }
+
+    const query = viewerSearchQuery.trim().toLowerCase();
+    const viewers = (viewerState.viewers || []).filter(viewer => {
+      if (!query) return true;
+      return [viewer.username, viewer.display_name]
+        .filter(Boolean)
+        .some(value => String(value).toLowerCase().includes(query));
+    });
+
+    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} confirmed` : 'Viewer Sync';
+
+    if (!connected) {
+      $('viewerList').innerHTML = '<div class="viewer-empty">Подключи Viewer Sync, чтобы видеть подтверждённых зрителей и историю взаимодействий.</div>';
+      return;
+    }
+
+    if (!selectedViewerStory) {
+      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Story Pilot.</div>';
+      return;
+    }
+
+    if (!viewers.length) {
+      $('viewerList').innerHTML = '<div class="viewer-empty">Подтверждённых зрителей пока нет. Новый просмотр сначала проходит окно приватности Telegram.</div>';
+      return;
+    }
+
+    $('viewerList').innerHTML = viewers.map(viewer => {
+      const name = viewer.display_name || (viewer.username ? '@' + viewer.username : 'Telegram user');
+      const username = viewer.username ? '@' + viewer.username : 'без username';
+      const viewedAt = viewer.viewed_at
+        ? new Date(viewer.viewed_at).toLocaleString('ru-RU', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' })
+        : '—';
+      const initials = String(viewer.display_name || viewer.username || 'TG').trim().slice(0, 2).toUpperCase();
+      const reaction = viewer.reaction_json?.value ? ` · ${viewer.reaction_json.value}` : '';
+      return `
+        <div class="viewer-row">
+          <div class="viewer-avatar">${initials}</div>
+          <div class="viewer-copy">
+            <strong>${name}</strong>
+            <span>${username}${viewer.is_contact ? ' · контакт' : ''}</span>
+          </div>
+          <div class="viewer-side">
+            <strong>${viewedAt}</strong>
+            <span>confirmed${reaction}</span>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   function renderAnalytics() {
@@ -305,11 +442,12 @@
 
   function switchScreen(name) {
     currentScreen = name;
-    $$('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
-    $$('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === name));
+    $('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
+    $('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === name));
     $('actionDock').classList.toggle('hidden', name !== 'publish');
     haptic();
     window.scrollTo({ top:0, behavior:'smooth' });
+    if (name === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
   }
 
   function openSheet(html) {
@@ -344,17 +482,90 @@
   }
 
   function viewerSetupSheet() {
+    if (viewerState.configured === false) {
+      openSheet(`
+        <span class="kicker">Viewer Sync</span>
+        <h2>Watcher уже в коде</h2>
+        <p>Осталось подключить отдельную серверную БД и ключ шифрования. До этого Story Pilot не будет просить Telegram-код: пользовательскую сессию нельзя хранить небезопасно.</p>
+        <div class="sheet-list">
+          <div class="sheet-item"><strong>Realtime watcher</strong><span>Проверка Stories по расписанию и уведомления уже реализованы.</span></div>
+          <div class="sheet-item"><strong>Privacy reconciliation</strong><span>Сразу приходит обезличенное уведомление. Имя появляется только если просмотр остаётся видимым после окна приватности.</span></div>
+          <div class="sheet-item"><strong>Storage</strong><span>Нужны server-only таблицы и AES-GCM master key для MTProto-сессии.</span></div>
+        </div>
+        <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
+      `);
+      return;
+    }
+
+    if (viewerState.session?.connected) {
+      const account = viewerState.session.account || {};
+      openSheet(`
+        <span class="kicker">Viewer Sync</span>
+        <h2>Подключено</h2>
+        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} используется только для чтения данных твоих собственных Stories.</p>
+        <div class="sheet-list">
+          <div class="sheet-item"><strong>Realtime notification</strong><span>Новый view → сразу обезличенное уведомление → reconciliation → подтверждённое имя или анонимизация.</span></div>
+          <div class="sheet-item"><strong>Последняя проверка</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
+        </div>
+        <div class="sheet-actions">
+          <button data-sheet-action="viewer-disconnect">Отключить Viewer Sync</button>
+          <button data-sheet-action="close">Закрыть</button>
+        </div>
+      `);
+      return;
+    }
+
     openSheet(`
       <span class="kicker">Viewer Sync</span>
-      <h2>Отдельный контур для viewers</h2>
-      <p>Публикация работает через Business Bot Connection. Но Telegram разрешает <code>stories.getStoryViewsList</code> только пользовательской MTProto-сессии владельца Story.</p>
-      <div class="sheet-list">
-        <div class="sheet-item"><strong>1. Авторизация пользователя</strong><span>Нужен безопасный вход в личную Telegram MTProto-сессию, отдельно от Bot Token.</span></div>
-        <div class="sheet-item"><strong>2. Серверное хранилище</strong><span>Сессию и снимки viewers нельзя хранить в URL Mini App. Нужна зашифрованная БД.</span></div>
-        <div class="sheet-item"><strong>3. Периодический snapshot</strong><span>Пока Telegram отдаёт список, сервер сохраняет viewers, реакции и публичные репосты.</span></div>
-        <div class="sheet-item"><strong>Ограничение Telegram</strong><span>Stealth Mode не раскрывается и уже исчезнувшие viewer-данные задним числом не восстанавливаются.</span></div>
+      <h2>Подключить Telegram</h2>
+      <p>Это отдельная пользовательская MTProto-сессия для чтения viewers твоих собственных Stories. Story Pilot не сохраняет код входа или 2FA-пароль.</p>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label for="viewerPhone">Номер Telegram</label>
+          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+374..." />
+        </div>
+        <div class="auth-help">Telegram отправит код в приложение или другим доступным способом.</div>
       </div>
-      <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
+    `);
+  }
+
+  function viewerCodeSheet(delivery) {
+    openSheet(`
+      <span class="kicker">Viewer Sync</span>
+      <h2>Введи код Telegram</h2>
+      <p>${delivery === 'telegram_app' ? 'Код отправлен в Telegram.' : 'Telegram выбрал доступный способ доставки кода.'}</p>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label for="viewerCode">Код</label>
+          <input id="viewerCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="12345" />
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-verify-code">Подтвердить</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
+    `);
+  }
+
+  function viewerPasswordSheet() {
+    openSheet(`
+      <span class="kicker">Двухэтапная защита</span>
+      <h2>Нужен 2FA-пароль</h2>
+      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Story Pilot.</p>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label for="viewerPassword">Telegram 2FA</label>
+          <input id="viewerPassword" type="password" autocomplete="current-password" placeholder="Пароль" />
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-verify-password">Подключить</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
     `);
   }
 
@@ -483,6 +694,10 @@
   $('profileButton').addEventListener('click', profileSheet);
   $('viewerSetupButton').addEventListener('click', viewerSetupSheet);
   $('viewerStoryPicker').addEventListener('click', viewerStorySheet);
+  $('viewerSearch').addEventListener('input', event => {
+    viewerSearchQuery = event.target.value || '';
+    renderViewers();
+  });
   $('sheetBackdrop').addEventListener('click', closeSheet);
 
   $('sheet').addEventListener('click', async event => {
@@ -519,10 +734,66 @@
         showToast(error.message);
       }
     }
+    if (action === 'viewer-send-code') {
+      const phone = $('viewerPhone')?.value || '';
+      try {
+        const data = await viewerApi('send_code', { phone }, null);
+        viewerCodeSheet(data.delivery);
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'viewer-verify-code') {
+      const code = $('viewerCode')?.value || '';
+      try {
+        const data = await viewerApi('verify_code', { code }, null);
+        if (data.needsPassword) {
+          viewerPasswordSheet();
+        } else {
+          closeSheet();
+          notify('success');
+          showToast('Viewer Sync подключён');
+          await refreshViewerSync({ silent: true });
+        }
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'viewer-verify-password') {
+      const password = $('viewerPassword')?.value || '';
+      try {
+        await viewerApi('verify_password', { password }, null);
+        closeSheet();
+        notify('success');
+        showToast('Viewer Sync подключён');
+        await refreshViewerSync({ silent: true });
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'viewer-disconnect') {
+      try {
+        await viewerApi('disconnect', {}, null);
+        closeSheet();
+        viewerState = {
+          configured: true,
+          backgroundReady: viewerState.backgroundReady,
+          session: null,
+          story: null,
+          viewers: [],
+          error: null,
+        };
+        renderViewers();
+        showToast('Viewer Sync отключён');
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
     if (storyId) {
       selectedViewerStory = storyId;
       closeSheet();
       renderViewers();
+      await refreshViewerSync({ silent: true });
     }
   });
 
@@ -580,6 +851,15 @@
   setAvatar();
   render();
 
-  if (tg?.initData) refresh();
-  else showToast('Открой Story Pilot внутри Telegram для управления');
+  if (tg?.initData) {
+    refresh();
+    refreshViewerSync({ silent: true });
+    setInterval(() => {
+      if (currentScreen === 'viewers' && viewerState.session?.connected) {
+        refreshViewerSync({ silent: true });
+      }
+    }, 30000);
+  } else {
+    showToast('Открой Story Pilot внутри Telegram для управления');
+  }
 })();

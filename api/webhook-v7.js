@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import sharp from 'sharp';
+import { trackPublishedStory, markStoryDeleted } from '../lib/viewer-sync-store.js';
 
 const PICK_SELECTED = 10101;
 const PICK_EXCLUDED = 10102;
@@ -826,6 +827,9 @@ export default async function handler(req, res) {
           await showPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.', messageId);
         } else {
           await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
+          await markStoryDeleted(chatId, storyId).catch(error => {
+            console.warn('Viewer Sync story delete tracking failed', error?.message || error);
+          });
           const next = {
             ...current,
             lastStory: null,
@@ -919,6 +923,9 @@ export default async function handler(req, res) {
         await showFreshPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
       } else {
         await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
+        await markStoryDeleted(chatId, storyId).catch(error => {
+          console.warn('Viewer Sync story delete tracking failed', error?.message || error);
+        });
         const next = {
           ...current,
           lastStory: null,
@@ -1080,6 +1087,22 @@ export default async function handler(req, res) {
       };
       next.history = appendHistory(next, story);
       await saveSettings(token, chatId, origin, next);
+
+      const postedAt = new Date();
+      const watchHours = Math.max(48, Number(process.env.VIEWER_WATCH_HOURS || 72));
+      await trackPublishedStory({
+        telegram_user_id: String(chatId),
+        story_id: Number(story.id),
+        posted_at: postedAt.toISOString(),
+        expires_at: new Date(postedAt.getTime() + STORY_PERIOD_SECONDS * 1000).toISOString(),
+        watch_until: new Date(postedAt.getTime() + watchHours * 60 * 60 * 1000).toISOString(),
+        audience: next.audience || 'standard',
+        protected: Boolean(next.protect),
+        active: true,
+        last_error: null,
+      }).catch(error => {
+        console.warn('Viewer Sync story tracking skipped', error?.message || error);
+      });
       const cleaned = [...skippedExcluded, ...skippedSelected];
       await showPanel(token, chatId, origin, next, `✅ Story опубликована\n\n👁 ${audienceLabel(next.audience, next.selected)}${next.excluded?.length ? `\n🚫 Кроме: ${next.excluded.map(u => `@${u}`).join(', ')}` : ''}${next.protect ? '\n🛡 Защита включена' : ''}${cleaned.length ? `\n\n🧹 Удалил из приватности неактуальные usernames: ${cleaned.map(u => `@${u}`).join(', ')}` : ''}\n\n📸 Отправь следующее фото — настройки сохранятся.`);
       res.status(200).json({ ok: true, story_id: story.id, transport: story.transport });
