@@ -9,6 +9,7 @@ import {
   saveAuthChallenge,
   deleteAuthChallenge,
   getViewerStoryData,
+  trackPublishedStory,
 } from '../lib/viewer-sync-store.js';
 import {
   beginUserAuth,
@@ -96,6 +97,39 @@ function setNoStore(res) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 }
 
+async function registerRecentStories(userId, stories) {
+  const now = Date.now();
+  const watchHours = Math.max(48, Number(process.env.VIEWER_WATCH_HOURS || 72));
+  const accepted = [];
+
+  for (const item of (Array.isArray(stories) ? stories : []).slice(0, 12)) {
+    if (item?.deleted) continue;
+
+    const storyId = Number(item?.id || 0);
+    const ts = Number(item?.ts || 0);
+    if (!Number.isInteger(storyId) || storyId <= 0 || !Number.isFinite(ts) || ts <= 0) continue;
+
+    const postedAtMs = ts * 1000;
+    const watchUntilMs = postedAtMs + watchHours * 60 * 60 * 1000;
+    if (watchUntilMs <= now) continue;
+
+    await trackPublishedStory({
+      telegram_user_id: String(userId),
+      story_id: storyId,
+      posted_at: new Date(postedAtMs).toISOString(),
+      expires_at: new Date(postedAtMs + 24 * 60 * 60 * 1000).toISOString(),
+      watch_until: new Date(watchUntilMs).toISOString(),
+      audience: String(item?.audience || 'standard').slice(0, 32),
+      protected: Boolean(item?.protect),
+      active: true,
+      last_error: null,
+    });
+    accepted.push(storyId);
+  }
+
+  return accepted;
+}
+
 export default async function handler(req, res) {
   setNoStore(res);
 
@@ -149,6 +183,18 @@ export default async function handler(req, res) {
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const action = String(body.action || '');
+
+    if (action === 'register_stories') {
+      const session = await getViewerSession(userId);
+      if (!session || session.status !== 'active') {
+        res.status(409).json({ ok: false, error: 'Сначала подключи Viewer Sync' });
+        return;
+      }
+
+      const registered = await registerRecentStories(userId, body.stories);
+      res.status(200).json({ ok: true, registered });
+      return;
+    }
 
     if (action === 'send_code') {
       const existing = await getAuthChallenge(userId);
