@@ -298,9 +298,90 @@
       $('viewerStoryTitle').textContent = 'Нет опубликованных Stories';
     }
 
-    $('viewerViews').textContent = '—';
-    $('viewerReactions').textContent = '—';
-    $('viewerForwards').textContent = '—';
+    const story = viewerState.story && String(viewerState.story.story_id) === String(selectedViewerStory)
+      ? viewerState.story
+      : null;
+    $('viewerViews').textContent = story ? String(story.last_views_count || 0) : '—';
+    $('viewerReactions').textContent = story ? String(story.last_reactions_count || 0) : '—';
+    $('viewerForwards').textContent = story ? String(story.last_forwards_count || 0) : '—';
+
+    const syncState = $('viewerSyncState');
+    const syncButton = $('viewerSetupButton');
+    const connected = viewerState.session?.connected === true;
+
+    syncState.className = 'viewer-sync-state';
+    if (viewerState.configured === false) {
+      $('viewerSyncTitle').textContent = 'Viewer Sync backend почти готов.';
+      $('viewerSyncText').textContent = 'Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.';
+      syncState.textContent = 'Нужно завершить серверную настройку Viewer Sync';
+      syncState.classList.add('warn');
+      syncButton.textContent = 'Что осталось подключить';
+    } else if (connected) {
+      const account = viewerState.session?.account || {};
+      $('viewerSyncTitle').textContent = 'Viewer Sync активен.';
+      $('viewerSyncText').textContent = 'Story Pilot снимает разрешённые Telegram snapshots и показывает только подтверждённых зрителей.';
+      syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'}`;
+      syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
+      syncButton.textContent = 'Управление Viewer Sync';
+    } else if (viewerState.session?.status === 'reauth_required') {
+      $('viewerSyncTitle').textContent = 'Нужно переподключить Viewer Sync.';
+      $('viewerSyncText').textContent = viewerState.session?.lastError || 'Telegram-сессия больше не авторизована.';
+      syncState.textContent = 'Требуется повторная авторизация';
+      syncState.classList.add('warn');
+      syncButton.textContent = 'Переподключить';
+    } else {
+      $('viewerSyncTitle').textContent = 'Подключи аналитику зрителей.';
+      $('viewerSyncText').textContent = 'Отдельная пользовательская MTProto-сессия нужна только для данных твоих собственных Stories. Код входа и 2FA не сохраняются.';
+      syncState.textContent = viewerState.configured === null ? 'Проверяю состояние…' : 'Не подключено';
+      syncButton.textContent = 'Подключить Viewer Sync';
+    }
+
+    const query = viewerSearchQuery.trim().toLowerCase();
+    const viewers = (viewerState.viewers || []).filter(viewer => {
+      if (!query) return true;
+      return [viewer.username, viewer.display_name]
+        .filter(Boolean)
+        .some(value => String(value).toLowerCase().includes(query));
+    });
+
+    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} confirmed` : 'Viewer Sync';
+
+    if (!connected) {
+      $('viewerList').innerHTML = '<div class="viewer-empty">Подключи Viewer Sync, чтобы видеть подтверждённых зрителей и историю взаимодействий.</div>';
+      return;
+    }
+
+    if (!selectedViewerStory) {
+      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Story Pilot.</div>';
+      return;
+    }
+
+    if (!viewers.length) {
+      $('viewerList').innerHTML = '<div class="viewer-empty">Подтверждённых зрителей пока нет. Новый просмотр сначала проходит окно приватности Telegram.</div>';
+      return;
+    }
+
+    $('viewerList').innerHTML = viewers.map(viewer => {
+      const name = viewer.display_name || (viewer.username ? '@' + viewer.username : 'Telegram user');
+      const username = viewer.username ? '@' + viewer.username : 'без username';
+      const viewedAt = viewer.viewed_at
+        ? new Date(viewer.viewed_at).toLocaleString('ru-RU', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' })
+        : '—';
+      const initials = String(viewer.display_name || viewer.username || 'TG').trim().slice(0, 2).toUpperCase();
+      const reaction = viewer.reaction_json?.value ? ` · ${viewer.reaction_json.value}` : '';
+      return `
+        <div class="viewer-row">
+          <div class="viewer-avatar">${initials}</div>
+          <div class="viewer-copy">
+            <strong>${name}</strong>
+            <span>${username}${viewer.is_contact ? ' · контакт' : ''}</span>
+          </div>
+          <div class="viewer-side">
+            <strong>${viewedAt}</strong>
+            <span>confirmed${reaction}</span>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   function renderAnalytics() {
