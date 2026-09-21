@@ -98,6 +98,61 @@ async function syncStory({ token, ownerId, story, client }) {
   let newCount = 0;
   let confirmedCount = 0;
 
+  // First sync establishes a baseline without flooding the owner with alerts
+  // for viewers that existed before Viewer Sync was connected.
+  if (!story.last_sync_at) {
+    for (const viewer of snapshot.viewers) {
+      const viewedAt = isoFromUnix(viewer.viewedAt);
+      await upsertViewerRow({
+        telegram_user_id: String(ownerId),
+        story_id: Number(story.story_id),
+        viewer_user_id: String(viewer.viewerUserId),
+        status: 'confirmed',
+        first_seen_at: viewedAt,
+        last_seen_at: new Date().toISOString(),
+        viewed_at: viewedAt,
+        confirmed_at: new Date().toISOString(),
+        username: viewer.user?.username || null,
+        display_name: viewer.user?.displayName || null,
+        is_contact: Boolean(viewer.user?.isContact),
+        reaction_json: viewer.reaction || null,
+        notification_message_id: null,
+      });
+    }
+
+    const baselineGap = Math.max(0, Number(snapshot.totalViews || 0) - Number(snapshot.identifiedViews || 0));
+
+    await insertSnapshot({
+      telegram_user_id: String(ownerId),
+      story_id: Number(story.story_id),
+      observed_at: new Date().toISOString(),
+      total_views: Number(snapshot.totalViews || 0),
+      identified_views: Number(snapshot.identifiedViews || 0),
+      forwards_count: Number(snapshot.forwardsCount || 0),
+      reactions_count: Number(snapshot.reactionsCount || 0),
+    });
+
+    await updateStoryStats(ownerId, story.story_id, {
+      last_views_count: Number(snapshot.totalViews || 0),
+      last_identified_count: Number(snapshot.identifiedViews || 0),
+      last_forwards_count: Number(snapshot.forwardsCount || 0),
+      last_reactions_count: Number(snapshot.reactionsCount || 0),
+      last_sync_at: new Date().toISOString(),
+      last_error: null,
+    });
+
+    return {
+      storyId: story.story_id,
+      baseline: true,
+      totalViews: snapshot.totalViews,
+      identifiedViews: snapshot.identifiedViews,
+      anonymousGap: baselineGap,
+      newCount: 0,
+      confirmedCount: snapshot.identifiedViews,
+      disappearedCount: 0,
+    };
+  }
+
   for (const row of rows) {
     const viewerId = String(row.viewer_user_id);
     if (!visible.has(viewerId) && ['provisional', 'confirmed'].includes(row.status)) {
