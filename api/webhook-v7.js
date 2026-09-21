@@ -500,8 +500,9 @@ async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, 
     const businessUser = updates?.users?.find(item => String(item?.id) === String(userId));
     const peer = new Api.InputPeerUser({ userId, accessHash: businessUser?.accessHash ?? BigInt(0) });
 
-    await client.invoke(new Api.stories.CanSendStory({ peer }));
-
+    // stories.canSendStory is not available to bot sessions and returns BOT_METHOD_INVALID.
+    // stories.sendStory itself is explicitly business-bot capable when the controlled
+    // business user's peer is supplied directly.
     const prepared = await preparePhoto(imageBuffer);
     const uploaded = await client.uploadFile({
       file: new CustomFile('story.jpg', prepared.length, '', prepared),
@@ -542,6 +543,7 @@ function friendlyError(description = '') {
   if (/PHOTO_INVALID_DIMENSIONS|IMAGE_PROCESS_FAILED|Input buffer contains unsupported image format/i.test(d)) return 'Telegram не принял изображение. Попробуй JPG, PNG или WEBP.';
   if (/STORY_PRIVACY_INVALID|PRIVACY/i.test(d)) return 'Telegram не принял выбранную аудиторию. Попробуй заново выбрать людей.';
   if (/STORY_ID_INVALID|STORY_NOT_FOUND/i.test(d)) return 'Последняя Story уже удалена или больше недоступна.';
+  if (/BOT_METHOD_INVALID.*CanSendStory/i.test(d)) return 'Внутренняя проверка Telegram была недоступна для business-бота. Story Pilot уже исправлен — отправь фото ещё раз.';
   if (/BOT_ACCESS_FORBIDDEN/i.test(d)) return 'Telegram запретил эту операцию через текущее Business-подключение.';
   return d;
 }
