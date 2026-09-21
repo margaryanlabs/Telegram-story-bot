@@ -4,6 +4,7 @@ import sharp from 'sharp';
 const PICK_SELECTED = 10101;
 const PICK_EXCLUDED = 10102;
 const MAX_SAVED_USERS = 100;
+const MAX_HISTORY = 12;
 const MAX_STORY_BYTES = 10 * 1024 * 1024;
 const STORY_PERIOD_SECONDS = 86400;
 
@@ -46,6 +47,63 @@ function parseUsernames(text) {
     .filter(Boolean))].slice(0, MAX_SAVED_USERS);
 }
 
+const AUDIENCE_CODE = {
+  standard: 's',
+  all: 'a',
+  contacts: 'c',
+  close: 'f',
+  selected: 'u',
+};
+
+const CODE_AUDIENCE = Object.fromEntries(Object.entries(AUDIENCE_CODE).map(([key, value]) => [value, key]));
+
+function encodeHistory(history = []) {
+  return history.slice(0, MAX_HISTORY).map(item => [
+    String(item.id || ''),
+    Math.max(0, Number(item.ts || 0)).toString(36),
+    AUDIENCE_CODE[item.audience] || 's',
+    Math.max(0, Number(item.excluded || 0)),
+    Math.max(0, Number(item.selected || 0)),
+    item.protect ? 1 : 0,
+    item.deleted ? 1 : 0,
+  ].join('.')).join('~');
+}
+
+function decodeHistory(value) {
+  return String(value || '').split('~').filter(Boolean).slice(0, MAX_HISTORY).map(chunk => {
+    const [id, ts36, audienceCode, excluded, selected, protect, deleted] = chunk.split('.');
+    return {
+      id: String(id || ''),
+      ts: parseInt(ts36 || '0', 36) || 0,
+      audience: CODE_AUDIENCE[audienceCode] || 'standard',
+      excluded: Number(excluded || 0) || 0,
+      selected: Number(selected || 0) || 0,
+      protect: protect === '1',
+      deleted: deleted === '1',
+    };
+  }).filter(item => item.id);
+}
+
+function appendHistory(settings, story) {
+  const record = {
+    id: String(story.id),
+    ts: Math.floor(Date.now() / 1000),
+    audience: settings.audience || 'standard',
+    excluded: settings.excluded?.length || 0,
+    selected: settings.selected?.length || 0,
+    protect: Boolean(settings.protect),
+    deleted: false,
+  };
+  return [
+    record,
+    ...(settings.history || []).filter(item => String(item.id) !== record.id),
+  ].slice(0, MAX_HISTORY);
+}
+
+function markHistoryDeleted(history, storyId) {
+  return (history || []).map(item => String(item.id) === String(storyId) ? { ...item, deleted: true } : item);
+}
+
 function mtprotoConfigured() {
   return Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH);
 }
@@ -70,6 +128,7 @@ function defaultSettings() {
     pickerMessage: null,
     lastMessage: null,
     lastStory: null,
+    history: [],
     processing: false,
     protect: false,
   };
@@ -158,6 +217,7 @@ async function getStoredSettings(token, chatId) {
         pickerMessage: Number(url.searchParams.get('pm') || 0) || null,
         lastMessage: Number(url.searchParams.get('lm') || 0) || null,
         lastStory: url.searchParams.get('ls') || null,
+        history: decodeHistory(url.searchParams.get('hist')),
         processing: url.searchParams.get('pr') === '1',
         protect: url.searchParams.get('prot') === '1',
       };
@@ -180,6 +240,7 @@ async function saveSettings(token, chatId, origin, settings) {
   if (settings.pickerMessage) url.searchParams.set('pm', String(settings.pickerMessage));
   if (settings.lastMessage) url.searchParams.set('lm', String(settings.lastMessage));
   if (settings.lastStory) url.searchParams.set('ls', String(settings.lastStory));
+  if (settings.history?.length) url.searchParams.set('hist', encodeHistory(settings.history));
   if (settings.processing) url.searchParams.set('pr', '1');
   if (settings.protect) url.searchParams.set('prot', '1');
 
@@ -667,6 +728,7 @@ async function resetSettings(token, chatId, origin, settings) {
     bc: settings.bc,
     canStories: settings.canStories,
     panel: settings.panel,
+    history: settings.history || [],
   };
   await saveSettings(token, chatId, origin, next);
   return next;
@@ -764,7 +826,13 @@ export default async function handler(req, res) {
           await showPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.', messageId);
         } else {
           await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
-          const next = { ...current, lastStory: null, lastMessage: null, processing: false };
+          const next = {
+            ...current,
+            lastStory: null,
+            lastMessage: null,
+            processing: false,
+            history: markHistoryDeleted(current.history, storyId),
+          };
           await saveSettings(token, chatId, origin, next);
           await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.', messageId);
         }
@@ -851,7 +919,13 @@ export default async function handler(req, res) {
         await showFreshPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
       } else {
         await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
-        const next = { ...current, lastStory: null, lastMessage: null, processing: false };
+        const next = {
+          ...current,
+          lastStory: null,
+          lastMessage: null,
+          processing: false,
+          history: markHistoryDeleted(current.history, storyId),
+        };
         await saveSettings(token, chatId, origin, next);
         await showFreshPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.');
       }
@@ -1004,6 +1078,7 @@ export default async function handler(req, res) {
         excluded: (pre.excluded || []).filter(u => !skippedExcluded.includes(u)),
         selected: (pre.selected || []).filter(u => !skippedSelected.includes(u)),
       };
+      next.history = appendHistory(next, story);
       await saveSettings(token, chatId, origin, next);
       const cleaned = [...skippedExcluded, ...skippedSelected];
       await showPanel(token, chatId, origin, next, `✅ Story опубликована\n\n👁 ${audienceLabel(next.audience, next.selected)}${next.excluded?.length ? `\n🚫 Кроме: ${next.excluded.map(u => `@${u}`).join(', ')}` : ''}${next.protect ? '\n🛡 Защита включена' : ''}${cleaned.length ? `\n\n🧹 Удалил из приватности неактуальные usernames: ${cleaned.map(u => `@${u}`).join(', ')}` : ''}\n\n📸 Отправь следующее фото — настройки сохранятся.`);
