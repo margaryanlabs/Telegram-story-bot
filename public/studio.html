@@ -884,14 +884,16 @@
       }
     }
 
-    function sendPicker(kind) {
+    async function sendPicker(kind) {
       if (!tg) return showToast('Открой Mini App внутри Telegram');
       haptic();
       try {
-        tg.sendData(kind === 'selected' ? 'storypilot:picker:selected' : 'storypilot:picker:exclude');
-        setTimeout(() => tg.close(), 120);
-      } catch (_) {
-        showToast('Вернись в чат Story Pilot и выбери людей там');
+        await api(kind === 'selected' ? 'picker_selected' : 'picker_exclude');
+        showToast('Открываю Telegram-пикер в чате');
+        setTimeout(() => tg.close(), 180);
+      } catch (error) {
+        showToast(error.message || 'Не удалось открыть выбор людей');
+        notify('error');
       }
     }
 
