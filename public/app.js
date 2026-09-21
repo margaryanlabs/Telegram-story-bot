@@ -730,10 +730,66 @@
         showToast(error.message);
       }
     }
+    if (action === 'viewer-send-code') {
+      const phone = $('viewerPhone')?.value || '';
+      try {
+        const data = await viewerApi('send_code', { phone }, null);
+        viewerCodeSheet(data.delivery);
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'viewer-verify-code') {
+      const code = $('viewerCode')?.value || '';
+      try {
+        const data = await viewerApi('verify_code', { code }, null);
+        if (data.needsPassword) {
+          viewerPasswordSheet();
+        } else {
+          closeSheet();
+          notify('success');
+          showToast('Viewer Sync подключён');
+          await refreshViewerSync({ silent: true });
+        }
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'viewer-verify-password') {
+      const password = $('viewerPassword')?.value || '';
+      try {
+        await viewerApi('verify_password', { password }, null);
+        closeSheet();
+        notify('success');
+        showToast('Viewer Sync подключён');
+        await refreshViewerSync({ silent: true });
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'viewer-disconnect') {
+      try {
+        await viewerApi('disconnect', {}, null);
+        closeSheet();
+        viewerState = {
+          configured: true,
+          backgroundReady: viewerState.backgroundReady,
+          session: null,
+          story: null,
+          viewers: [],
+          error: null,
+        };
+        renderViewers();
+        showToast('Viewer Sync отключён');
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
     if (storyId) {
       selectedViewerStory = storyId;
       closeSheet();
       renderViewers();
+      await refreshViewerSync({ silent: true });
     }
   });
 
