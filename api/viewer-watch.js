@@ -205,8 +205,7 @@ async function syncStory({ token, ownerId, story, client }) {
 
 function authorized(req) {
   const secret = String(process.env.CRON_SECRET || '');
-  if (!secret) return false;
-  return String(req.headers.authorization || '') === `Bearer ${secret}`;
+  return Boolean(secret) && String(req.headers.authorization || '') === `Bearer ${secret}`;
 }
 
 export default async function handler(req, res) {
@@ -215,13 +214,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (!authorized(req)) {
-    res.status(401).json({ ok: false, error: 'Unauthorized' });
+  const cronSecret = String(process.env.CRON_SECRET || '');
+  if (!cronSecret || !viewerDbConfigured()) {
+    res.status(200).json({
+      ok: true,
+      disabled: true,
+      reason: !cronSecret ? 'cron_secret_missing' : 'viewer_sync_storage_missing',
+    });
     return;
   }
 
-  if (!viewerDbConfigured()) {
-    res.status(503).json({ ok: false, error: 'Viewer Sync storage is not configured' });
+  if (!authorized(req)) {
+    res.status(401).json({ ok: false, error: 'Unauthorized' });
     return;
   }
 
