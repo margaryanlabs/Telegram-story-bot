@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "sharp": "0.34.5",
-    "telegram": "2.26.22"
+    "teleproto": "1.229.0"
   }
 }
