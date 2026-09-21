@@ -40,6 +40,7 @@
   let selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
   let toastTimer = null;
   let viewerSearchQuery = '';
+  let viewerRegisteredKey = '';
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -190,7 +191,17 @@
 
   async function refreshViewerSync({ silent = false } = {}) {
     try {
-      const data = await viewerApi();
+      let data = await viewerApi();
+
+      const history = (state.history || []).filter(item => !item.deleted && Number(item.ts || 0) > 0);
+      const historyKey = history.map(item => `${item.id}:${item.ts}:${item.deleted ? 1 : 0}`).join('|');
+
+      if (data.session?.connected && historyKey && historyKey !== viewerRegisteredKey) {
+        await viewerApi('register_stories', { stories: history }, null);
+        viewerRegisteredKey = historyKey;
+        data = await viewerApi();
+      }
+
       viewerState = {
         configured: Boolean(data.config?.configured),
         backgroundReady: Boolean(data.config?.backgroundReady),
