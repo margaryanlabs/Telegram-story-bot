@@ -3,972 +3,318 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
-  <meta name="theme-color" content="#0b1019" />
+  <meta name="theme-color" content="#080c13" />
   <title>Story Pilot</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: var(--tg-theme-bg-color, #0b1019);
-      --surface: var(--tg-theme-secondary-bg-color, #121925);
-      --surface-2: rgba(255,255,255,.055);
-      --surface-3: rgba(255,255,255,.085);
-      --text: var(--tg-theme-text-color, #f7f9fc);
-      --muted: var(--tg-theme-hint-color, #8f9bad);
-      --accent: var(--tg-theme-button-color, #2aabee);
-      --accent-text: var(--tg-theme-button-text-color, #ffffff);
-      --green: #35d07f;
-      --amber: #ffb84d;
-      --danger: #ff6278;
-      --line: rgba(255,255,255,.085);
-      --shadow: 0 18px 50px rgba(0,0,0,.28);
-      --radius: 24px;
-    }
-
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; min-height: 100%; background: var(--bg); }
-    body {
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: -120px -80px auto auto;
-      width: 300px;
-      height: 300px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(42,171,238,.22), rgba(42,171,238,0) 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      left: -90px;
-      bottom: 10%;
-      width: 250px;
-      height: 250px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(107,92,255,.12), rgba(107,92,255,0) 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    button {
-      font: inherit;
-      color: inherit;
-      cursor: pointer;
-    }
-
-    .app {
-      position: relative;
-      z-index: 1;
-      width: min(100%, 560px);
-      margin: 0 auto;
-      min-height: 100vh;
-      padding:
-        max(16px, env(safe-area-inset-top))
-        16px
-        calc(110px + env(safe-area-inset-bottom));
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .logo {
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
-      display: grid;
-      place-items: center;
-      font-weight: 900;
-      letter-spacing: -.03em;
-      background:
-        linear-gradient(135deg, rgba(255,255,255,.2), rgba(255,255,255,.03)),
-        linear-gradient(135deg, #27a8ee, #5d68ff);
-      box-shadow: 0 12px 28px rgba(42,171,238,.25);
-    }
-
-    .brand-copy { min-width: 0; }
-    .brand-title {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -.025em;
-      white-space: nowrap;
-    }
-    .brand-sub {
-      margin-top: 2px;
-      color: var(--muted);
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.13);
-      background: linear-gradient(135deg, #252d3b, #171e2a);
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      font-weight: 800;
-      color: #dfe9f7;
-    }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-    .hero {
-      border: 1px solid var(--line);
-      border-radius: 30px;
-      background:
-        linear-gradient(135deg, rgba(42,171,238,.14), transparent 52%),
-        rgba(255,255,255,.045);
-      padding: 22px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      right: -35px;
-      bottom: -55px;
-      width: 170px;
-      height: 170px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.08);
-      box-shadow:
-        0 0 0 24px rgba(255,255,255,.018),
-        0 0 0 48px rgba(255,255,255,.012);
-      pointer-events: none;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.065);
-      border: 1px solid rgba(255,255,255,.07);
-      color: #d9e4f2;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--muted);
-      box-shadow: 0 0 0 4px rgba(255,255,255,.04);
-    }
-    .status-dot.ready { background: var(--green); box-shadow: 0 0 0 4px rgba(53,208,127,.12); }
-    .status-dot.warn { background: var(--amber); box-shadow: 0 0 0 4px rgba(255,184,77,.11); }
-
-    h1 {
-      margin: 18px 0 8px;
-      max-width: 390px;
-      font-size: clamp(30px, 8vw, 46px);
-      line-height: .98;
-      letter-spacing: -.055em;
-      font-weight: 900;
-    }
-
-    .hero p {
-      margin: 0;
-      max-width: 430px;
-      color: var(--muted);
-      line-height: 1.5;
-      font-size: 14px;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 9px;
-      margin-top: 21px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .metric {
-      min-width: 0;
-      padding: 12px 10px;
-      border-radius: 17px;
-      background: rgba(8,13,22,.38);
-      border: 1px solid rgba(255,255,255,.065);
-    }
-    .metric strong {
-      display: block;
-      font-size: 15px;
-      letter-spacing: -.025em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .metric span {
-      display: block;
-      color: var(--muted);
-      font-size: 10px;
-      margin-top: 4px;
-      line-height: 1.15;
-    }
-
-    .section {
-      margin-top: 24px;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-      padding: 0 2px;
-    }
-
-    .section-title {
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: -.02em;
-    }
-
-    .section-caption {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255,255,255,.045);
-      overflow: hidden;
-    }
-
-    .connection {
-      padding: 17px;
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
-
-    .status-icon {
-      flex: 0 0 auto;
-      width: 44px;
-      height: 44px;
-      border-radius: 15px;
-      display: grid;
-      place-items: center;
-      font-size: 19px;
-      background: rgba(255,255,255,.065);
-      border: 1px solid rgba(255,255,255,.065);
-    }
-    .status-icon.ready { background: rgba(53,208,127,.12); }
-    .status-icon.warn { background: rgba(255,184,77,.12); }
-
-    .connection-copy { min-width: 0; flex: 1; }
-    .connection-title {
-      font-weight: 800;
-      font-size: 15px;
-      letter-spacing: -.02em;
-    }
-    .connection-text {
-      margin-top: 5px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.42;
-    }
-
-    .inline-btn {
-      margin-top: 12px;
-      border: 0;
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: rgba(255,255,255,.075);
-      font-weight: 750;
-      font-size: 12px;
-    }
-    .inline-btn:active { transform: scale(.98); }
-
-    .audience-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 9px;
-    }
-
-    .audience {
-      position: relative;
-      min-height: 92px;
-      padding: 15px;
-      border-radius: 21px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      text-align: left;
-      transition: transform .16s ease, border-color .16s ease, background .16s ease;
-    }
-    .audience:active { transform: scale(.975); }
-    .audience.active {
-      border-color: rgba(42,171,238,.55);
-      background: linear-gradient(135deg, rgba(42,171,238,.16), rgba(42,171,238,.055));
-      box-shadow: inset 0 0 0 1px rgba(42,171,238,.08);
-    }
-    .audience-icon { font-size: 22px; }
-    .audience-name {
-      margin-top: 10px;
-      font-size: 13px;
-      font-weight: 800;
-    }
-    .audience-meta {
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: 10px;
-    }
-    .check {
-      position: absolute;
-      top: 11px;
-      right: 11px;
-      width: 19px;
-      height: 19px;
-      border-radius: 50%;
-      display: none;
-      place-items: center;
-      background: var(--accent);
-      color: var(--accent-text);
-      font-size: 11px;
-      font-weight: 900;
-    }
-    .audience.active .check { display: grid; }
-
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-height: 67px;
-      padding: 13px 15px;
-      border-bottom: 1px solid var(--line);
-    }
-    .row:last-child { border-bottom: 0; }
-
-    .row-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 13px;
-      display: grid;
-      place-items: center;
-      background: var(--surface-2);
-      font-size: 17px;
-      flex: 0 0 auto;
-    }
-
-    .row-copy { min-width: 0; flex: 1; }
-    .row-title { font-size: 13px; font-weight: 750; }
-    .row-sub { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.35; }
-
-    .chevron {
-      color: var(--muted);
-      font-size: 20px;
-      margin-left: 2px;
-    }
-
-    .switch {
-      position: relative;
-      width: 48px;
-      height: 28px;
-      flex: 0 0 auto;
-    }
-    .switch input { display: none; }
-    .slider {
-      position: absolute;
-      inset: 0;
-      border-radius: 999px;
-      background: rgba(255,255,255,.12);
-      transition: .18s ease;
-      border: 1px solid rgba(255,255,255,.08);
-    }
-    .slider::after {
-      content: "";
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      left: 2px;
-      top: 2px;
-      border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 3px 8px rgba(0,0,0,.28);
-      transition: .18s ease;
-    }
-    .switch input:checked + .slider { background: var(--accent); }
-    .switch input:checked + .slider::after { transform: translateX(20px); }
-
-    .danger { color: #ff8a9a; }
-
-    .steps {
-      display: grid;
-      gap: 10px;
-      margin-top: 12px;
-    }
-    .step {
-      display: grid;
-      grid-template-columns: 31px 1fr;
-      gap: 11px;
-      align-items: center;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.4;
-    }
-    .step-num {
-      width: 31px;
-      height: 31px;
-      border-radius: 11px;
-      display: grid;
-      place-items: center;
-      color: var(--text);
-      background: var(--surface-2);
-      font-size: 11px;
-      font-weight: 800;
-    }
-
-    .bottom {
-      position: fixed;
-      z-index: 20;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      padding: 11px 16px calc(11px + env(safe-area-inset-bottom));
-      background: linear-gradient(180deg, rgba(11,16,25,0), rgba(11,16,25,.9) 26%, rgba(11,16,25,.98));
-      backdrop-filter: blur(10px);
-    }
-
-    .bottom-inner {
-      width: min(100%, 528px);
-      margin: 0 auto;
-    }
-
-    .primary {
-      width: 100%;
-      min-height: 54px;
-      border: 0;
-      border-radius: 18px;
-      background: linear-gradient(135deg, var(--accent), #5c6df8);
-      color: var(--accent-text);
-      font-size: 14px;
-      font-weight: 850;
-      letter-spacing: -.01em;
-      box-shadow: 0 13px 30px rgba(42,171,238,.22);
-      transition: transform .15s ease, opacity .15s ease;
-    }
-    .primary:active { transform: scale(.985); }
-    .primary:disabled { opacity: .6; cursor: default; }
-
-    .toast {
-      position: fixed;
-      z-index: 50;
-      left: 50%;
-      bottom: calc(82px + env(safe-area-inset-bottom));
-      transform: translate(-50%, 16px);
-      width: min(calc(100% - 36px), 420px);
-      padding: 12px 14px;
-      border-radius: 15px;
-      background: rgba(24,31,43,.96);
-      border: 1px solid rgba(255,255,255,.1);
-      box-shadow: var(--shadow);
-      color: var(--text);
-      font-size: 12px;
-      line-height: 1.35;
-      opacity: 0;
-      pointer-events: none;
-      transition: .2s ease;
-    }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-    .skeleton {
-      position: relative;
-      overflow: hidden;
-    }
-    .skeleton::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      transform: translateX(-100%);
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
-      animation: shimmer 1.25s infinite;
-      pointer-events: none;
-    }
-    @keyframes shimmer { to { transform: translateX(100%); } }
-
-    .disabled {
-      opacity: .5;
-      pointer-events: none;
-    }
-
-    @media (min-width: 520px) {
-      .app { padding-left: 20px; padding-right: 20px; }
-      .hero { padding: 26px; }
-    }
-  </style>
+  <link rel="stylesheet" href="/app.css" />
 </head>
 <body>
-  <main class="app">
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <main class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <div class="logo">ST</div>
+        <div class="brand-mark"><span>SP</span></div>
         <div class="brand-copy">
-          <div class="brand-title">Story Pilot</div>
-          <div class="brand-sub">Telegram Story control center</div>
+          <strong>Story Pilot</strong>
+          <span>Stories control center</span>
         </div>
       </div>
-      <div class="avatar" id="avatar">SP</div>
+      <button class="profile-button" id="profileButton" type="button" aria-label="Открыть статус аккаунта">
+        <span class="profile-avatar" id="avatar">SP</span>
+        <span class="live-dot" id="profileDot"></span>
+      </button>
     </header>
 
-    <section class="hero">
-      <div class="eyebrow">
-        <span class="status-dot" id="heroDot"></span>
-        <span id="heroStatus">Проверяю подключение</span>
-      </div>
-      <h1>Stories без лишних движений.</h1>
-      <p id="heroText">Выбери аудиторию один раз, отправляй фото в чат — Story Pilot сделает остальное.</p>
+    <section class="screen active" data-screen="publish">
+      <section class="hero-card">
+        <div class="hero-glow"></div>
+        <div class="hero-topline">
+          <span class="status-pill" id="heroStatusPill"><i></i><span>Проверяю Telegram</span></span>
+          <span class="story-id" id="heroStoryId">Story —</span>
+        </div>
+        <div class="hero-copy">
+          <h1 id="heroTitle">Stories.<br><span>Без лишнего.</span></h1>
+          <p id="heroText">Настрой аудиторию один раз и отправляй фото в чат. Story Pilot сделает остальное.</p>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <span>Telegram</span>
+            <strong id="metricAccount">—</strong>
+          </div>
+          <div>
+            <span>Аудитория</span>
+            <strong id="metricAudience">—</strong>
+          </div>
+          <div>
+            <span>Последняя</span>
+            <strong id="metricLast">—</strong>
+          </div>
+        </div>
+      </section>
 
-      <div class="hero-grid">
-        <div class="metric">
-          <strong id="metricAccount">—</strong>
-          <span>Telegram</span>
-        </div>
-        <div class="metric">
-          <strong id="metricAudience">—</strong>
-          <span>Аудитория</span>
-        </div>
-        <div class="metric">
-          <strong>24 ч</strong>
-          <span>Story period</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <div class="section-title">Подключение</div>
-        <div class="section-caption" id="connectionCaption">проверка…</div>
-      </div>
-      <div class="card connection skeleton" id="connectionCard">
-        <div class="status-icon" id="connectionIcon">◌</div>
+      <section class="connection-strip" id="connectionStrip">
+        <div class="connection-icon" id="connectionIcon">◌</div>
         <div class="connection-copy">
-          <div class="connection-title" id="connectionTitle">Проверяю Telegram</div>
-          <div class="connection-text" id="connectionText">Секунду — проверяем Business Connection и разрешение на управление Stories.</div>
-          <button class="inline-btn" id="checkButton" type="button">Проверить снова</button>
-          <div class="steps" id="connectSteps" hidden>
-            <div class="step"><div class="step-num">1</div><div>Telegram → Настройки → Telegram Business / «Автоматизация чатов».</div></div>
-            <div class="step"><div class="step-num">2</div><div>Выбери <b>@Storypilotlab_bot</b> и включи «Управление историями».</div></div>
-            <div class="step"><div class="step-num">3</div><div>Если бот уже выбран, выключи управление Stories и включи обратно один раз.</div></div>
+          <strong id="connectionTitle">Проверяю подключение</strong>
+          <span id="connectionText">Проверяем Business Connection и разрешение на Stories.</span>
+        </div>
+        <button class="text-button" id="checkButton" type="button">Проверить</button>
+      </section>
+
+      <section class="block" id="audienceBlock">
+        <div class="block-head">
+          <div>
+            <span class="kicker">Публикация</span>
+            <h2>Кто увидит Story</h2>
+          </div>
+          <span class="tiny-note">сохраняется</span>
+        </div>
+
+        <div class="audience-grid">
+          <button class="audience-card" data-audience="standard" type="button">
+            <span class="audience-icon">⚡</span>
+            <span class="audience-name">Стандарт</span>
+            <span class="audience-desc">Как в Telegram</span>
+            <span class="choice-dot">✓</span>
+          </button>
+          <button class="audience-card" data-audience="all" type="button">
+            <span class="audience-icon">◎</span>
+            <span class="audience-name">Все</span>
+            <span class="audience-desc">Публичная Story</span>
+            <span class="choice-dot">✓</span>
+          </button>
+          <button class="audience-card" data-audience="contacts" type="button">
+            <span class="audience-icon">◉</span>
+            <span class="audience-name">Контакты</span>
+            <span class="audience-desc">Твои контакты</span>
+            <span class="choice-dot">✓</span>
+          </button>
+          <button class="audience-card" data-audience="close" type="button">
+            <span class="audience-icon">✦</span>
+            <span class="audience-name">Близкие</span>
+            <span class="audience-desc">Close Friends</span>
+            <span class="choice-dot">✓</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="block" id="privacyBlock">
+        <div class="block-head">
+          <div>
+            <span class="kicker">Приватность</span>
+            <h2>Точный контроль</h2>
           </div>
         </div>
-      </div>
-    </section>
 
-    <section class="section" id="audienceSection">
-      <div class="section-head">
+        <div class="settings-card">
+          <button class="setting-row" id="selectedRow" type="button">
+            <span class="setting-icon violet">◎</span>
+            <span class="setting-copy">
+              <strong>Только выбранные</strong>
+              <small id="selectedMeta">Добавить людей</small>
+            </span>
+            <span class="setting-count" id="selectedCount">0</span>
+            <span class="chevron">›</span>
+          </button>
+
+          <button class="setting-row" id="excludeRow" type="button">
+            <span class="setting-icon rose">−</span>
+            <span class="setting-copy">
+              <strong>Исключить людей</strong>
+              <small id="excludedMeta">Для «Все» и «Контакты»</small>
+            </span>
+            <span class="setting-count" id="excludedCount">0</span>
+            <span class="chevron">›</span>
+          </button>
+
+          <div class="setting-row">
+            <span class="setting-icon cyan">⌁</span>
+            <span class="setting-copy">
+              <strong>Защита контента</strong>
+              <small>Ограничить пересылку и сохранение</small>
+            </span>
+            <label class="switch">
+              <input id="protectSwitch" type="checkbox" />
+              <span></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="last-story-card" id="lastStoryCard">
         <div>
-          <div class="section-title">Кто увидит Story</div>
-          <div class="section-caption">Сохраняется для следующих публикаций</div>
+          <span class="kicker">Последняя Story</span>
+          <strong id="lastStoryTitle">Пока нет публикаций</strong>
+          <small id="lastStoryMeta">Отправь фото в чат Story Pilot</small>
         </div>
-      </div>
-      <div class="audience-grid">
-        <button class="audience" data-audience="standard" type="button">
-          <span class="check">✓</span>
-          <div class="audience-icon">⚡</div>
-          <div class="audience-name">Стандарт</div>
-          <div class="audience-meta">Настройки Telegram</div>
-        </button>
-        <button class="audience" data-audience="all" type="button">
-          <span class="check">✓</span>
-          <div class="audience-icon">🌍</div>
-          <div class="audience-name">Все</div>
-          <div class="audience-meta">Все пользователи</div>
-        </button>
-        <button class="audience" data-audience="contacts" type="button">
-          <span class="check">✓</span>
-          <div class="audience-icon">👥</div>
-          <div class="audience-name">Контакты</div>
-          <div class="audience-meta">Мои контакты</div>
-        </button>
-        <button class="audience" data-audience="close" type="button">
-          <span class="check">✓</span>
-          <div class="audience-icon">⭐</div>
-          <div class="audience-name">Близкие</div>
-          <div class="audience-meta">Close Friends</div>
-        </button>
-      </div>
+        <button class="ghost-danger" id="deleteStory" type="button">Удалить</button>
+      </section>
     </section>
 
-    <section class="section" id="privacySection">
-      <div class="section-head">
-        <div class="section-title">Приватность</div>
+    <section class="screen" data-screen="viewers">
+      <div class="page-head">
+        <span class="kicker">Аудитория</span>
+        <h1>Viewers</h1>
+        <p>Просмотры, реакции, репосты и люди, которые смотрели твои Stories.</p>
       </div>
-      <div class="card">
-        <button class="row" id="selectedRow" type="button" style="width:100%;border-left:0;border-right:0;border-top:0;background:transparent;text-align:left;">
-          <div class="row-icon">🎯</div>
-          <div class="row-copy">
-            <div class="row-title">Только выбранные</div>
-            <div class="row-sub" id="selectedMeta">Можно добавлять группами по 10</div>
-          </div>
-          <div class="chevron">›</div>
-        </button>
 
-        <button class="row" id="excludeRow" type="button" style="width:100%;border-left:0;border-right:0;border-top:0;background:transparent;text-align:left;">
-          <div class="row-icon">🚫</div>
-          <div class="row-copy">
-            <div class="row-title">Исключить людей</div>
-            <div class="row-sub" id="excludedMeta">Можно добавлять группами по 10</div>
+      <section class="viewer-story-card">
+        <div class="viewer-story-top">
+          <div>
+            <span class="kicker">Выбранная Story</span>
+            <strong id="viewerStoryTitle">Нет Story</strong>
           </div>
-          <div class="chevron">›</div>
-        </button>
-
-        <div class="row">
-          <div class="row-icon">🛡</div>
-          <div class="row-copy">
-            <div class="row-title">Защита контента</div>
-            <div class="row-sub">Запрет пересылки/сохранения, где Telegram это поддерживает</div>
-          </div>
-          <label class="switch">
-            <input id="protectSwitch" type="checkbox" />
-            <span class="slider"></span>
-          </label>
+          <button class="mini-chip" id="viewerStoryPicker" type="button">Последняя ▾</button>
         </div>
-      </div>
+        <div class="viewer-metrics">
+          <div><strong id="viewerViews">—</strong><span>views</span></div>
+          <div><strong id="viewerReactions">—</strong><span>reactions</span></div>
+          <div><strong id="viewerForwards">—</strong><span>forwards</span></div>
+        </div>
+      </section>
+
+      <section class="viewer-sync-card" id="viewerSyncCard">
+        <div class="sync-orbit"><span>◉</span></div>
+        <span class="kicker">Viewer Sync</span>
+        <h2>Сохраняй список зрителей,<br>пока Telegram его отдаёт.</h2>
+        <p>Полный список viewers доступен через пользовательскую MTProto-сессию. Business Bot Connection сам по себе не может вызвать <code>stories.getStoryViewsList</code>.</p>
+        <div class="feature-tags">
+          <span>Имена и аватары</span>
+          <span>Время просмотра</span>
+          <span>Контакты</span>
+          <span>Реакции</span>
+          <span>Публичные репосты</span>
+          <span>Поиск</span>
+        </div>
+        <button class="secondary-button" id="viewerSetupButton" type="button">Что нужно для Viewer Sync</button>
+        <small class="privacy-note">Stealth Mode не обходится: скрытые Telegram просмотры останутся скрытыми.</small>
+      </section>
+
+      <section class="viewer-list-preview">
+        <div class="block-head compact">
+          <div>
+            <span class="kicker">Зрители</span>
+            <h2>Список просмотров</h2>
+          </div>
+          <span class="lock-badge">Viewer Sync</span>
+        </div>
+        <div class="fake-search">⌕ <span>Поиск по имени</span></div>
+        <div class="viewer-placeholder">
+          <span class="viewer-avatar-placeholder"></span>
+          <span><b></b><i></i></span>
+          <em></em>
+        </div>
+        <div class="viewer-placeholder">
+          <span class="viewer-avatar-placeholder"></span>
+          <span><b></b><i></i></span>
+          <em></em>
+        </div>
+        <div class="viewer-placeholder">
+          <span class="viewer-avatar-placeholder"></span>
+          <span><b></b><i></i></span>
+          <em></em>
+        </div>
+      </section>
     </section>
 
-    <section class="section">
-      <div class="section-head">
-        <div class="section-title">Story</div>
+    <section class="screen" data-screen="analytics">
+      <div class="page-head">
+        <span class="kicker">Инсайты</span>
+        <h1>Analytics</h1>
+        <p>Сейчас — аналитика публикаций Story Pilot. После Viewer Sync здесь появится аналитика аудитории.</p>
       </div>
-      <div class="card">
-        <div class="row">
-          <div class="row-icon">📷</div>
-          <div class="row-copy">
-            <div class="row-title">Публикация</div>
-            <div class="row-sub">JPG, PNG или WEBP. Фото автоматически готовится под 1080×1920.</div>
+
+      <div class="stat-grid">
+        <article class="stat-card primary-stat">
+          <span>Stories</span>
+          <strong id="analyticsStories">0</strong>
+          <small>в локальном архиве</small>
+        </article>
+        <article class="stat-card">
+          <span>Защищено</span>
+          <strong id="analyticsProtected">0</strong>
+          <small>с protect content</small>
+        </article>
+        <article class="stat-card">
+          <span>Исключения</span>
+          <strong id="analyticsExcluded">0</strong>
+          <small>суммарно в публикациях</small>
+        </article>
+        <article class="stat-card">
+          <span>Последняя</span>
+          <strong id="analyticsLast">—</strong>
+          <small>публикация</small>
+        </article>
+      </div>
+
+      <section class="analytics-card">
+        <div class="block-head compact">
+          <div>
+            <span class="kicker">Распределение</span>
+            <h2>Режимы аудитории</h2>
           </div>
         </div>
-        <button class="row danger" id="deleteStory" type="button" style="width:100%;border-left:0;border-right:0;border-top:0;border-bottom:0;background:transparent;text-align:left;">
-          <div class="row-icon">🗑</div>
-          <div class="row-copy">
-            <div class="row-title">Удалить последнюю Story</div>
-            <div class="row-sub" id="deleteMeta">Нет сохранённой Story</div>
+        <div id="audienceBars" class="bars"></div>
+      </section>
+
+      <section class="analytics-card locked-analytics">
+        <div class="locked-head">
+          <span class="setting-icon violet">↗</span>
+          <div>
+            <strong>Viewer Analytics</strong>
+            <small>После подключения пользовательской MTProto-сессии</small>
           </div>
-          <div class="chevron">›</div>
-        </button>
+        </div>
+        <div class="locked-metrics">
+          <span>Unique viewers</span>
+          <span>Repeat viewers</span>
+          <span>Contacts / non-contacts</span>
+          <span>Reactions over time</span>
+        </div>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="archive">
+      <div class="page-head">
+        <span class="kicker">История</span>
+        <h1>Archive</h1>
+        <p>Последние публикации Story Pilot и настройки аудитории, с которыми они ушли.</p>
       </div>
+
+      <section class="archive-list" id="archiveList"></section>
+
+      <section class="empty-state" id="archiveEmpty">
+        <div class="empty-icon">□</div>
+        <strong>Архив пока пуст</strong>
+        <span>После первой публикации здесь появится Story, аудитория и время.</span>
+      </section>
     </section>
   </main>
 
-  <div class="bottom">
-    <div class="bottom-inner">
-      <button class="primary" id="mainButton" type="button">Открыть чат и отправить фото</button>
-    </div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-nav="publish" type="button"><span>＋</span><small>Publish</small></button>
+    <button class="nav-item" data-nav="viewers" type="button"><span>◉</span><small>Viewers</small></button>
+    <button class="nav-item" data-nav="analytics" type="button"><span>⌁</span><small>Analytics</small></button>
+    <button class="nav-item" data-nav="archive" type="button"><span>□</span><small>Archive</small></button>
+  </nav>
+
+  <div class="action-dock" id="actionDock">
+    <button class="primary-button" id="mainButton" type="button">
+      <span>＋</span>
+      <b>Открыть чат и отправить фото</b>
+    </button>
   </div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+  <section class="sheet" id="sheet" aria-modal="true" hidden>
+    <div class="sheet-handle"></div>
+    <div id="sheetContent"></div>
+  </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script>
-    const tg = window.Telegram?.WebApp;
-    const qs = new URLSearchParams(location.search);
-    const $ = (id) => document.getElementById(id);
-    const audienceButtons = [...document.querySelectorAll('[data-audience]')];
-
-    let state = {
-      connection: qs.get('bc') ? (qs.get('cs') === '0' ? 'needs_permission' : 'ready') : 'unknown',
-      ready: Boolean(qs.get('bc') && qs.get('cs') !== '0'),
-      audience: qs.get('aud') || 'standard',
-      selected: (qs.get('sel') || '').split(',').filter(Boolean),
-      excluded: (qs.get('exc') || '').split(',').filter(Boolean),
-      protect: qs.get('prot') === '1',
-      lastStory: qs.get('ls') || null,
-      advancedPrivacy: true,
-      live: null,
-      storyPermission: null,
-    };
-
-    let apiReady = false;
-    let toastTimer = null;
-
-    function haptic(type = 'light') {
-      try { tg?.HapticFeedback?.impactOccurred(type); } catch (_) {}
-    }
-
-    function notify(type = 'success') {
-      try { tg?.HapticFeedback?.notificationOccurred(type); } catch (_) {}
-    }
-
-    function showToast(message) {
-      const toast = $('toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
-    }
-
-    function audienceLabel(mode) {
-      return ({
-        standard: 'Стандарт',
-        all: 'Все',
-        contacts: 'Контакты',
-        close: 'Близкие',
-        selected: 'Выбранные',
-      })[mode] || 'Стандарт';
-    }
-
-    function avatarFromUser(user) {
-      const avatar = $('avatar');
-      const source = user || tg?.initDataUnsafe?.user || {};
-      const photo = source.photoUrl || source.photo_url;
-      if (photo) {
-        avatar.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = photo;
-        img.alt = '';
-        avatar.appendChild(img);
-        return;
-      }
-      const name = source.firstName || source.first_name || source.username || 'SP';
-      avatar.textContent = String(name).slice(0, 2).toUpperCase();
-    }
-
-    function render() {
-      const ready = state.connection === 'ready';
-      const needsPermission = state.connection === 'needs_permission';
-
-      $('connectionCard').classList.remove('skeleton');
-      $('heroDot').className = 'status-dot ' + (ready ? 'ready' : needsPermission ? 'warn' : '');
-      $('connectionIcon').className = 'status-icon ' + (ready ? 'ready' : needsPermission ? 'warn' : '');
-
-      if (ready) {
-        $('heroStatus').textContent = 'Telegram подключён';
-        $('heroText').textContent = 'Настрой аудиторию один раз. Дальше просто отправляй фото в чат — Story Pilot опубликует Story.';
-        $('connectionCaption').textContent = 'готово';
-        $('connectionIcon').textContent = '✓';
-        $('connectionTitle').textContent = 'Готов к публикации';
-        $('connectionText').textContent = 'Business Connection активен, управление Stories разрешено.';
-        $('checkButton').textContent = 'Проверить подключение';
-        $('connectSteps').hidden = true;
-        $('mainButton').textContent = 'Открыть чат и отправить фото';
-      } else if (needsPermission) {
-        $('heroStatus').textContent = 'Нужно разрешение';
-        $('heroText').textContent = 'Telegram уже видит Story Pilot, осталось включить управление историями.';
-        $('connectionCaption').textContent = '1 действие';
-        $('connectionIcon').textContent = '!';
-        $('connectionTitle').textContent = 'Включи управление Stories';
-        $('connectionText').textContent = 'Открой настройки Telegram Business и разреши Story Pilot управлять историями.';
-        $('checkButton').textContent = 'Я включил — проверить';
-        $('connectSteps').hidden = false;
-        $('mainButton').textContent = 'Проверить подключение';
-      } else {
-        $('heroStatus').textContent = 'Подключение не подтверждено';
-        $('heroText').textContent = 'Подключи Story Pilot один раз — дальше всё управление будет здесь.';
-        $('connectionCaption').textContent = 'нужно подключить';
-        $('connectionIcon').textContent = '↗';
-        $('connectionTitle').textContent = 'Подключи Telegram';
-        $('connectionText').textContent = 'Story Pilot пока не получил актуальный Business Connection от Telegram.';
-        $('checkButton').textContent = 'Я подключил — проверить';
-        $('connectSteps').hidden = false;
-        $('mainButton').textContent = 'Проверить подключение';
-      }
-
-      $('metricAccount').textContent = ready ? 'Готово' : needsPermission ? 'Права' : 'Ожидание';
-      $('metricAudience').textContent = audienceLabel(state.audience);
-
-      audienceButtons.forEach((button) => {
-        button.classList.toggle('active', button.dataset.audience === state.audience);
-      });
-
-      const controlsDisabled = !ready;
-      $('audienceSection').classList.toggle('disabled', controlsDisabled);
-      $('privacySection').classList.toggle('disabled', controlsDisabled);
-
-      $('protectSwitch').checked = Boolean(state.protect);
-      $('selectedMeta').textContent = state.selected?.length
-        ? `Выбрано: ${state.selected.length} · нажми, чтобы добавить ещё`
-        : 'Можно добавлять группами по 10';
-      $('excludedMeta').textContent = state.excluded?.length
-        ? `Исключено: ${state.excluded.length} · нажми, чтобы добавить ещё`
-        : 'Можно добавлять группами по 10';
-
-      $('deleteStory').classList.toggle('disabled', !state.lastStory || !ready);
-      $('deleteMeta').textContent = state.lastStory ? `Story #${state.lastStory}` : 'Нет сохранённой Story';
-    }
-
-    async function api(action, payload = {}) {
-      if (!tg?.initData) throw new Error('Открой Story Pilot внутри Telegram');
-
-      const options = {
-        method: action ? 'POST' : 'GET',
-        headers: {
-          'x-telegram-init-data': tg.initData,
-          'content-type': 'application/json',
-        },
-      };
-      if (action) options.body = JSON.stringify({ action, ...payload });
-
-      const response = await fetch('/api/miniapp', options);
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Story Pilot');
-      apiReady = true;
-      if (data.state) {
-        state = { ...state, ...data.state };
-        render();
-      }
-      if (data.user) avatarFromUser(data.user);
-      return data;
-    }
-
-    async function refresh() {
-      $('checkButton').disabled = true;
-      try {
-        const data = await api(null);
-        if (data.state?.ready) notify('success');
-      } catch (error) {
-        showToast(error.message);
-      } finally {
-        $('checkButton').disabled = false;
-      }
-    }
-
-    async function setAudience(mode) {
-      const previous = state.audience;
-      state.audience = mode;
-      render();
-      haptic();
-      try {
-        await api('audience', { value: mode });
-        showToast('Аудитория сохранена');
-      } catch (error) {
-        state.audience = previous;
-        render();
-        showToast(error.message);
-        notify('error');
-      }
-    }
-
-    async function setProtect(value) {
-      const previous = state.protect;
-      state.protect = value;
-      render();
-      haptic();
-      try {
-        await api('protect', { value });
-        showToast(value ? 'Защита включена' : 'Защита выключена');
-      } catch (error) {
-        state.protect = previous;
-        render();
-        showToast(error.message);
-        notify('error');
-      }
-    }
-
-    async function sendPicker(kind) {
-      if (!tg) return showToast('Открой Mini App внутри Telegram');
-      haptic();
-      try {
-        await api(kind === 'selected' ? 'picker_selected' : 'picker_exclude');
-        showToast('Открываю Telegram-пикер в чате');
-        setTimeout(() => tg.close(), 180);
-      } catch (error) {
-        showToast(error.message || 'Не удалось открыть выбор людей');
-        notify('error');
-      }
-    }
-
-    async function deleteStory() {
-      if (!state.lastStory || !state.ready) return;
-
-      const doDelete = async () => {
-        try {
-          await api('delete_story');
-          showToast('Story удалена');
-          notify('success');
-        } catch (error) {
-          showToast(error.message);
-          notify('error');
-        }
-      };
-
-      if (tg?.showConfirm) {
-        tg.showConfirm('Удалить последнюю Story?', (ok) => { if (ok) doDelete(); });
-      } else if (confirm('Удалить последнюю Story?')) {
-        doDelete();
-      }
-    }
-
-    audienceButtons.forEach((button) => {
-      button.addEventListener('click', () => setAudience(button.dataset.audience));
-    });
-
-    $('protectSwitch').addEventListener('change', (event) => setProtect(event.target.checked));
-    $('selectedRow').addEventListener('click', () => sendPicker('selected'));
-    $('excludeRow').addEventListener('click', () => sendPicker('exclude'));
-    $('deleteStory').addEventListener('click', deleteStory);
-    $('checkButton').addEventListener('click', async () => {
-      haptic();
-      try {
-        await api('check');
-        showToast(state.ready ? 'Подключение активно' : 'Пока не вижу активного подключения');
-      } catch (error) {
-        showToast(error.message);
-      }
-    });
-
-    $('mainButton').addEventListener('click', async () => {
-      if (!state.ready) {
-        haptic();
-        try {
-          await api('check');
-          showToast(state.ready ? 'Готово — подключение найдено' : 'Сначала включи управление Stories в Telegram');
-        } catch (error) {
-          showToast(error.message);
-        }
-        return;
-      }
-
-      haptic('medium');
-      try { tg?.close(); } catch (_) {}
-    });
-
-    if (tg) {
-      try {
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor?.('secondary_bg_color');
-        tg.setBackgroundColor?.('bg_color');
-        tg.disableVerticalSwipes?.();
-      } catch (_) {}
-      avatarFromUser();
-      render();
-      refresh();
-    } else {
-      avatarFromUser();
-      render();
-      $('connectionCard').classList.remove('skeleton');
-      showToast('Открой Story Pilot внутри Telegram для управления');
-    }
-  </script>
+  <script src="/app.js"></script>
 </body>
 </html>
