@@ -446,8 +446,30 @@
   $$('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
   $$('.audience-card').forEach(button => button.addEventListener('click', () => setAudience(button.dataset.audience)));
   $('protectSwitch').addEventListener('change', event => setProtect(event.target.checked));
-  $('selectedRow').addEventListener('click', () => openPicker('selected'));
-  $('excludeRow').addEventListener('click', () => openPicker('exclude'));
+  $('selectedRow').addEventListener('click', () => {
+    openSheet(`
+      <span class="kicker">Только выбранные</span>
+      <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Список пока пуст'}</h2>
+      <p>Telegram позволяет выбрать до 10 человек за одно открытие. Story Pilot объединяет группы — можешь добавлять дальше.</p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="picker-selected">Добавить людей</button>
+        ${state.selected?.length ? '<button data-sheet-action="clear-selected">Очистить список</button>' : ''}
+        <button data-sheet-action="close">Закрыть</button>
+      </div>
+    `);
+  });
+  $('excludeRow').addEventListener('click', () => {
+    openSheet(`
+      <span class="kicker">Исключения</span>
+      <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Никто не исключён'}</h2>
+      <p>Исключения применяются к режимам «Все» и «Контакты». Можно добавлять пользователей группами по 10.</p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="picker-exclude">Добавить людей</button>
+        ${state.excluded?.length ? '<button data-sheet-action="clear-excluded">Очистить исключения</button>' : ''}
+        <button data-sheet-action="close">Закрыть</button>
+      </div>
+    `);
+  });
   $('deleteStory').addEventListener('click', () => deleteStory());
   $('checkButton').addEventListener('click', async () => {
     haptic();
@@ -470,6 +492,32 @@
     if (action === 'check') {
       closeSheet();
       await refresh();
+    }
+    if (action === 'picker-selected') {
+      closeSheet();
+      await openPicker('selected');
+    }
+    if (action === 'picker-exclude') {
+      closeSheet();
+      await openPicker('exclude');
+    }
+    if (action === 'clear-selected') {
+      closeSheet();
+      try {
+        await api('clear_selected');
+        showToast('Список выбранных очищен');
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'clear-excluded') {
+      closeSheet();
+      try {
+        await api('clear_excluded');
+        showToast('Исключения очищены');
+      } catch (error) {
+        showToast(error.message);
+      }
     }
     if (storyId) {
       selectedViewerStory = storyId;
