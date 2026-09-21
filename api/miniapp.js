@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-const MAX_SAVED_USERS = 20;
+const MAX_SAVED_USERS = 100;
 const PICK_SELECTED = 10101;
 const PICK_EXCLUDED = 10102;
 
@@ -46,7 +46,7 @@ function userPicker(kind) {
   const isExclude = kind === 'exclude';
   return {
     keyboard: [[{
-      text: isExclude ? '🚫 Выбрать, кого исключить' : '🎯 Выбрать людей',
+      text: isExclude ? '🚫 Добавить людей (до 10)' : '🎯 Добавить людей (до 10)',
       request_users: {
         request_id: isExclude ? PICK_EXCLUDED : PICK_SELECTED,
         user_is_bot: false,
@@ -85,8 +85,8 @@ async function beginNativePicker(token, chatId, baseUrl, settings, kind) {
   const prompt = await tg(token, 'sendMessage', {
     chat_id: chatId,
     text: kind === 'exclude'
-      ? '🚫 Выбери людей, которым Story показывать НЕ надо.'
-      : '🎯 Выбери людей, которым нужно показать Story.',
+      ? `🚫 Добавь людей, которым Story показывать НЕ надо.\n\nСейчас исключено: ${settings.excluded?.length || 0}. Telegram позволяет выбрать до 10 за один раз — потом можно добавить следующую группу.`
+      : `🎯 Добавь людей, которым нужно показать Story.\n\nСейчас выбрано: ${settings.selected?.length || 0}. Telegram позволяет выбрать до 10 за один раз — потом можно добавить следующую группу.`,
     disable_notification: true,
     reply_markup: userPicker(kind),
   });
