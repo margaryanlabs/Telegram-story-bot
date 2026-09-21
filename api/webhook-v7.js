@@ -706,10 +706,23 @@ export default async function handler(req, res) {
     const chatId = message.chat.id;
     let settings = await getStoredSettings(token, chatId);
     const text = String(message.text || '').trim();
+    const webAppData = String(message.web_app_data?.data || '');
 
     const command = text.split(/\s+/)[0].split('@')[0];
 
-    if (message.web_app_data?.data === 'storypilot:home' || command === '/start' || text === '🚀 Старт') {
+    if (webAppData === 'storypilot:picker:selected' || webAppData === 'storypilot:picker:exclude') {
+      const refreshed = await refreshConnection(token, chatId, origin, settings);
+      if (!refreshed.live || !refreshed.rights) {
+        await showFreshPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live));
+      } else {
+        const kind = webAppData.endsWith(':exclude') ? 'exclude' : 'selected';
+        await beginNativePicker(token, chatId, origin, refreshed.settings, kind);
+      }
+      res.status(200).json({ ok: true, miniapp_picker: true });
+      return;
+    }
+
+    if (webAppData === 'storypilot:home' || command === '/start' || text === '🚀 Старт') {
       await clearReplyKeyboard(token, chatId);
       const refreshed = await refreshConnection(token, chatId, origin, settings);
       const next = { ...refreshed.settings, picking: '', pickerMessage: null };

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "vercel dev",
-    "check": "node --check api/webhook-v7.js && node --check api/webhook-v8.js && node --check api/setup.js && node --check api/health.js"
+    "check": "node --check api/webhook-v7.js && node --check api/webhook-v8.js && node --check api/miniapp.js && node --check api/setup.js && node --check api/health.js"
   },
   "dependencies": {
     "sharp": "0.34.5",
