@@ -482,17 +482,90 @@
   }
 
   function viewerSetupSheet() {
+    if (viewerState.configured === false) {
+      openSheet(`
+        <span class="kicker">Viewer Sync</span>
+        <h2>Watcher уже в коде</h2>
+        <p>Осталось подключить отдельную серверную БД и ключ шифрования. До этого Story Pilot не будет просить Telegram-код: пользовательскую сессию нельзя хранить небезопасно.</p>
+        <div class="sheet-list">
+          <div class="sheet-item"><strong>Realtime watcher</strong><span>Проверка Stories по расписанию и уведомления уже реализованы.</span></div>
+          <div class="sheet-item"><strong>Privacy reconciliation</strong><span>Сразу приходит обезличенное уведомление. Имя появляется только если просмотр остаётся видимым после окна приватности.</span></div>
+          <div class="sheet-item"><strong>Storage</strong><span>Нужны server-only таблицы и AES-GCM master key для MTProto-сессии.</span></div>
+        </div>
+        <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
+      `);
+      return;
+    }
+
+    if (viewerState.session?.connected) {
+      const account = viewerState.session.account || {};
+      openSheet(`
+        <span class="kicker">Viewer Sync</span>
+        <h2>Подключено</h2>
+        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} используется только для чтения данных твоих собственных Stories.</p>
+        <div class="sheet-list">
+          <div class="sheet-item"><strong>Realtime notification</strong><span>Новый view → сразу обезличенное уведомление → reconciliation → подтверждённое имя или анонимизация.</span></div>
+          <div class="sheet-item"><strong>Последняя проверка</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
+        </div>
+        <div class="sheet-actions">
+          <button data-sheet-action="viewer-disconnect">Отключить Viewer Sync</button>
+          <button data-sheet-action="close">Закрыть</button>
+        </div>
+      `);
+      return;
+    }
+
     openSheet(`
       <span class="kicker">Viewer Sync</span>
-      <h2>Отдельный контур для viewers</h2>
-      <p>Публикация работает через Business Bot Connection. Но Telegram разрешает <code>stories.getStoryViewsList</code> только пользовательской MTProto-сессии владельца Story.</p>
-      <div class="sheet-list">
-        <div class="sheet-item"><strong>1. Авторизация пользователя</strong><span>Нужен безопасный вход в личную Telegram MTProto-сессию, отдельно от Bot Token.</span></div>
-        <div class="sheet-item"><strong>2. Серверное хранилище</strong><span>Сессию и снимки viewers нельзя хранить в URL Mini App. Нужна зашифрованная БД.</span></div>
-        <div class="sheet-item"><strong>3. Периодический snapshot</strong><span>Пока Telegram отдаёт список, сервер сохраняет viewers, реакции и публичные репосты.</span></div>
-        <div class="sheet-item"><strong>Ограничение Telegram</strong><span>Stealth Mode не раскрывается и уже исчезнувшие viewer-данные задним числом не восстанавливаются.</span></div>
+      <h2>Подключить Telegram</h2>
+      <p>Это отдельная пользовательская MTProto-сессия для чтения viewers твоих собственных Stories. Story Pilot не сохраняет код входа или 2FA-пароль.</p>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label for="viewerPhone">Номер Telegram</label>
+          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+374..." />
+        </div>
+        <div class="auth-help">Telegram отправит код в приложение или другим доступным способом.</div>
       </div>
-      <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
+    `);
+  }
+
+  function viewerCodeSheet(delivery) {
+    openSheet(`
+      <span class="kicker">Viewer Sync</span>
+      <h2>Введи код Telegram</h2>
+      <p>${delivery === 'telegram_app' ? 'Код отправлен в Telegram.' : 'Telegram выбрал доступный способ доставки кода.'}</p>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label for="viewerCode">Код</label>
+          <input id="viewerCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="12345" />
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-verify-code">Подтвердить</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
+    `);
+  }
+
+  function viewerPasswordSheet() {
+    openSheet(`
+      <span class="kicker">Двухэтапная защита</span>
+      <h2>Нужен 2FA-пароль</h2>
+      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Story Pilot.</p>
+      <div class="auth-form">
+        <div class="auth-field">
+          <label for="viewerPassword">Telegram 2FA</label>
+          <input id="viewerPassword" type="password" autocomplete="current-password" placeholder="Пароль" />
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-verify-password">Подключить</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
     `);
   }
 
