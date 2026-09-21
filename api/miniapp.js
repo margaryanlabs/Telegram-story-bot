@@ -281,6 +281,20 @@ function publicState(settings, extra = {}) {
       ? 'ready'
       : 'needs_permission';
 
+  const history = settings.history?.length
+    ? settings.history
+    : settings.lastStory
+      ? [{
+          id: String(settings.lastStory),
+          ts: 0,
+          audience: settings.audience || 'standard',
+          excluded: settings.excluded?.length || 0,
+          selected: settings.selected?.length || 0,
+          protect: Boolean(settings.protect),
+          deleted: false,
+        }]
+      : [];
+
   return {
     connection,
     ready: connection === 'ready',
@@ -289,8 +303,8 @@ function publicState(settings, extra = {}) {
     excluded: settings.excluded || [],
     protect: Boolean(settings.protect),
     lastStory: settings.lastStory || null,
-    history: settings.history || [],
-    analytics: analyticsFromHistory(settings.history || []),
+    history,
+    analytics: analyticsFromHistory(history),
     processing: Boolean(settings.processing),
     advancedPrivacy: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
     viewerSync: {
@@ -417,6 +431,14 @@ export default async function handler(req, res) {
       await saveSettings(token, chatId, baseUrl, settings);
     } else if (action === 'clear_excluded') {
       settings = { ...settings, excluded: [], picking: '' };
+      await saveSettings(token, chatId, baseUrl, settings);
+    } else if (action === 'clear_selected') {
+      settings = {
+        ...settings,
+        selected: [],
+        audience: settings.audience === 'selected' ? 'standard' : settings.audience,
+        picking: '',
+      };
       await saveSettings(token, chatId, baseUrl, settings);
     } else if (action === 'picker_selected' || action === 'picker_exclude') {
       const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
