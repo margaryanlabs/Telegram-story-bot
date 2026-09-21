@@ -487,7 +487,7 @@ async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, 
   const apiId = Number(process.env.TELEGRAM_API_ID);
   const apiHash = String(process.env.TELEGRAM_API_HASH || '');
   const [{ TelegramClient, Api }, { StringSession }, { CustomFile }] = await Promise.all([
-    import('telegram'), import('telegram/sessions'), import('telegram/client/uploads'),
+    import('telegram'), import('telegram/sessions/index.js'), import('telegram/client/uploads.js'),
   ]);
 
   const client = new TelegramClient(new StringSession(''), apiId, apiHash, { connectionRetries: 3, useWSS: false });
