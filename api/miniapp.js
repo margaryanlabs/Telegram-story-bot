@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
 
 const MAX_SAVED_USERS = 20;
+const PICK_SELECTED = 10101;
+const PICK_EXCLUDED = 10102;
 
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
@@ -38,6 +40,60 @@ function productionBaseUrl(req) {
 
 function normalizeUsername(value) {
   return String(value || '').trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, '');
+}
+
+function userPicker(kind) {
+  const isExclude = kind === 'exclude';
+  return {
+    keyboard: [[{
+      text: isExclude ? '🚫 Выбрать, кого исключить' : '🎯 Выбрать людей',
+      request_users: {
+        request_id: isExclude ? PICK_EXCLUDED : PICK_SELECTED,
+        user_is_bot: false,
+        max_quantity: 10,
+        request_name: true,
+        request_username: true,
+        request_photo: true,
+      },
+    }], [{ text: '✖️ Отмена' }]],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+    input_field_placeholder: 'Нажми кнопку — откроется список людей',
+  };
+}
+
+async function clearReplyKeyboard(token, chatId) {
+  try {
+    const message = await tg(token, 'sendMessage', {
+      chat_id: chatId,
+      text: '·',
+      disable_notification: true,
+      reply_markup: { remove_keyboard: true },
+    });
+    if (message?.message_id) {
+      await tg(token, 'deleteMessage', { chat_id: chatId, message_id: message.message_id }).catch(() => {});
+    }
+  } catch {}
+}
+
+async function beginNativePicker(token, chatId, baseUrl, settings, kind) {
+  if (kind === 'exclude' && settings.audience === 'standard') {
+    throw new Error('Сначала выбери «Все», «Контакты» или «Близкие», затем добавь исключения');
+  }
+
+  await clearReplyKeyboard(token, chatId);
+  const prompt = await tg(token, 'sendMessage', {
+    chat_id: chatId,
+    text: kind === 'exclude'
+      ? '🚫 Выбери людей, которым Story показывать НЕ надо.'
+      : '🎯 Выбери людей, которым нужно показать Story.',
+    disable_notification: true,
+    reply_markup: userPicker(kind),
+  });
+
+  const next = { ...settings, picking: kind, pickerMessage: prompt.message_id };
+  await saveSettings(token, chatId, baseUrl, next);
+  return next;
 }
 
 function defaultSettings() {
@@ -292,6 +348,21 @@ export default async function handler(req, res) {
     } else if (action === 'clear_excluded') {
       settings = { ...settings, excluded: [], picking: '' };
       await saveSettings(token, chatId, baseUrl, settings);
+    } else if (action === 'picker_selected' || action === 'picker_exclude') {
+      const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
+      settings = refreshed.settings;
+      if (!refreshed.live || !refreshed.rights) {
+        res.status(409).json({ ok: false, error: 'Сначала подключи Telegram и разреши управление Stories' });
+        return;
+      }
+      const kind = action === 'picker_exclude' ? 'exclude' : 'selected';
+      settings = await beginNativePicker(token, chatId, baseUrl, settings, kind);
+      res.status(200).json({
+        ok: true,
+        pickerOpened: true,
+        state: publicState(settings, { live: true, storyPermission: true }),
+      });
+      return;
     } else if (action === 'reset') {
       settings = {
         ...settings,
