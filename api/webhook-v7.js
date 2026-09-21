@@ -209,7 +209,7 @@ async function clearReplyKeyboard(token, chatId) {
 
 function homeText(settings) {
   if (!settings.bc) {
-    return '✨ Story Pilot\n\nПубликуй Stories в своём Telegram прямо из этого чата.\n\nНужно подключиться только один раз:\n\n1️⃣ Нажми «🔗 Подключить Telegram».\n2️⃣ В Telegram Business / «Автоматизация чатов» добавь @Storypilotlab_bot.\n3️⃣ Разреши «Управление историями».\n4️⃣ Вернись сюда и нажми «✅ Я подключил — проверить».\n\nПосле этого просто отправляй фото — Story Pilot опубликует его в твоём профиле.';
+    return '✨ Story Pilot\n\nПубликуй Stories в своём Telegram прямо из этого чата.\n\nЕсли подключаешься впервые:\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Включи «Управление историями».\n4️⃣ Вернись и нажми «✅ Я подключил — проверить».\n\nУже подключён, но бот этого не видит? Не отключай бота целиком: выключи «Управление историями», включи снова и сохрани — Telegram пришлёт Story Pilot свежий статус подключения.';
   }
 
   if (!settings.canStories) {
@@ -225,7 +225,7 @@ function homeText(settings) {
 function settingsText(settings, live = null) {
   let connection = settings.bc
     ? (settings.canStories ? '✅ активно, Stories разрешены' : '⚠️ подключено, но без доступа к Stories')
-    : '❌ не подключено';
+    : '⚪ ID подключения ещё не получен';
   if (live === false) connection = '❌ неактивно';
   return `📊 Настройки Story Pilot\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
 }
@@ -239,7 +239,7 @@ function connectText(settings, live = null) {
     return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → Story Pilot → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
   }
 
-  return '🔗 Подключить Telegram\n\nЭто делается один раз для каждого пользователя:\n\n1️⃣ Открой Telegram → Настройки.\n2️⃣ Открой Telegram Business / «Автоматизация чатов».\n3️⃣ Добавь @Storypilotlab_bot как чат-бота.\n4️⃣ Разреши «Управление историями».\n5️⃣ Сохрани и вернись сюда.\n6️⃣ Нажми «✅ Я подключил — проверить».\n\nStory Pilot не получает пароль и не входит в аккаунт — публикация идёт через официальное Business-подключение Telegram.';
+  return '🔗 Подключить Telegram\n\nЭто делается один раз для каждого пользователя:\n\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Разреши «Управление историями».\n4️⃣ Сохрани и вернись сюда.\n5️⃣ Нажми «✅ Я подключил — проверить».\n\nЕсли Story Pilot уже выбран в Telegram, а здесь подключение не найдено: просто выключи «Управление историями», включи снова и сохрани. Это заставит Telegram прислать боту актуальный Business Connection.\n\nStory Pilot не получает пароль и не входит в аккаунт — публикация идёт через официальное Business-подключение Telegram.';
 }
 
 function howToText(settings) {
@@ -344,6 +344,48 @@ async function refreshConnection(token, chatId, origin, settings) {
     await saveSettings(token, chatId, origin, next).catch(() => {});
     return { settings: next, live: false, rights: false };
   }
+}
+
+async function persistBusinessConnection(token, origin, connection, { notify = false } = {}) {
+  const chatId = connection?.user_chat_id;
+  if (!chatId) return null;
+
+  const settings = await getStoredSettings(token, chatId);
+  const live = Boolean(connection?.is_enabled);
+  const rights = Boolean(connection?.rights?.can_manage_stories);
+  const next = {
+    ...settings,
+    bc: live ? connection.id : null,
+    canStories: live && rights,
+    processing: false,
+    ...(live && rights ? { picking: '', pickerMessage: null } : {}),
+  };
+
+  await saveSettings(token, chatId, origin, next);
+
+  console.log('Story Pilot business connection sync', {
+    chat_id: chatId,
+    connection_present: Boolean(connection?.id),
+    enabled: live,
+    can_manage_stories: rights,
+    source: notify ? 'business_connection_update' : 'business_activity_recovery',
+  });
+
+  if (notify) {
+    const text = live
+      ? connectText(next, true)
+      : '⚠️ Story Pilot отключён от Telegram Business. Подключи бота снова, чтобы публиковать Stories.';
+    await showFreshPanel(token, chatId, origin, next, text);
+  }
+
+  return next;
+}
+
+function businessConnectionIdFromActivity(update) {
+  return update?.business_message?.business_connection_id
+    || update?.edited_business_message?.business_connection_id
+    || update?.deleted_business_messages?.business_connection_id
+    || null;
 }
 
 async function downloadTelegramFile(token, fileId) {
@@ -564,30 +606,19 @@ export default async function handler(req, res) {
   const origin = originFromRequest(req);
 
   try {
+    const activityConnectionId = businessConnectionIdFromActivity(update);
+    if (activityConnectionId) {
+      try {
+        const connection = await tg(token, 'getBusinessConnection', { business_connection_id: activityConnectionId });
+        await persistBusinessConnection(token, origin, connection, { notify: false });
+      } catch (error) {
+        console.warn('Story Pilot business activity recovery failed', error?.telegram || error?.message || error);
+      }
+    }
+
     if (update?.business_connection) {
-      const bc = update.business_connection;
-      const settings = await getStoredSettings(token, bc.user_chat_id);
-
-      if (!bc.is_enabled) {
-        const next = { ...settings, bc: null, canStories: false, processing: false };
-        await saveSettings(token, bc.user_chat_id, origin, next);
-        await showPanel(token, bc.user_chat_id, origin, next, '⚠️ Story Pilot отключён от аккаунта. Нажми «🔗 Подключить аккаунт», чтобы вернуть публикацию Stories.');
-        res.status(200).json({ ok: true });
-        return;
-      }
-      if (!bc.rights?.can_manage_stories) {
-        const next = { ...settings, bc: bc.id, canStories: false, processing: false };
-        await saveSettings(token, bc.user_chat_id, origin, next);
-        await showFreshPanel(token, bc.user_chat_id, origin, next, connectText(next, true));
-        res.status(200).json({ ok: true });
-        return;
-      }
-
-      await clearReplyKeyboard(token, bc.user_chat_id);
-      const next = { ...settings, bc: bc.id, canStories: true, picking: '', pickerMessage: null, processing: false };
-      await saveSettings(token, bc.user_chat_id, origin, next);
-      await showFreshPanel(token, bc.user_chat_id, origin, next, connectText(next, true));
-      res.status(200).json({ ok: true });
+      await persistBusinessConnection(token, origin, update.business_connection, { notify: true });
+      res.status(200).json({ ok: true, business_connection_synced: true });
       return;
     }
 
@@ -653,7 +684,7 @@ export default async function handler(req, res) {
         } else if (refreshed.live) {
           await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
         } else {
-          await showPanel(token, chatId, origin, refreshed.settings, '⏳ Подключение пока не найдено.\n\nПроверь, что @Storypilotlab_bot добавлен в Telegram Business / «Автоматизация чатов» и включено «Управление историями». Затем нажми проверить ещё раз.', messageId);
+          await showPanel(token, chatId, origin, refreshed.settings, '⏳ Story Pilot пока не получил ID активного Business Connection.\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
         }
       } else if (action === 'view:settings') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
