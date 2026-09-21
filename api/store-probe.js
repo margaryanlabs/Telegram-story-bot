@@ -3,7 +3,12 @@ import { getVercelOidcToken } from '@vercel/oidc';
 export default async function handler(req, res) {
   let token = String(process.env.VERCEL_OIDC_TOKEN || '');
   if (!token) {
-    try { token = String(await getVercelOidcToken() || ''); } catch {}
+    try {
+      token = String(await getVercelOidcToken({
+        project: 'prj_YZWYGa35qRTxSjWgjfe3VohPi57L',
+        team: 'team_yqBWofpR4TIix8zHOalN5lOq',
+      }) || '');
+    } catch {}
   }
 
   const response = await fetch('https://xvtmgzzaomolnvkcgosk.supabase.co/functions/v1/story-pilot-store', {
