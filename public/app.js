@@ -39,6 +39,15 @@
   let currentScreen = 'publish';
   let selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
   let toastTimer = null;
+  let viewerSearchQuery = '';
+  let viewerState = {
+    configured: null,
+    backgroundReady: false,
+    session: null,
+    story: null,
+    viewers: [],
+    error: null,
+  };
 
   function audienceLabel(mode) {
     return ({
