@@ -111,11 +111,11 @@ A new visible view can trigger a fast generic notification. Viewer identity is o
 
 Viewer Sync is disabled until these server-only values are configured:
 
-- `STORY_PILOT_SUPABASE_URL`
 - `STORY_PILOT_SUPABASE_SERVICE_ROLE_KEY`
-- `VIEWER_SYNC_MASTER_KEY`
 - `CRON_SECRET`
-- existing `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`
+- existing `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_BOT_TOKEN`
+
+The shared Margaryan Labs Supabase project URL is already wired as the default storage target. A separate `VIEWER_SYNC_MASTER_KEY` remains optional; if it is absent, Story Pilot derives the encryption key from the existing server-only Telegram secrets without persisting the derived key.
 
 Optional tuning:
 
