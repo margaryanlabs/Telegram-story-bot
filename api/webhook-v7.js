@@ -3,7 +3,7 @@ import sharp from 'sharp';
 
 const PICK_SELECTED = 10101;
 const PICK_EXCLUDED = 10102;
-const MAX_SAVED_USERS = 20;
+const MAX_SAVED_USERS = 100;
 const MAX_STORY_BYTES = 10 * 1024 * 1024;
 const STORY_PERIOD_SECONDS = 86400;
 
@@ -100,7 +100,7 @@ function inlineMenu(settings = {}) {
       ],
       [
         { text: mark('close', '⭐ Близкие друзья'), callback_data: 'aud:close' },
-        { text: mark('selected', '🎯 Выбранные'), callback_data: 'pick:selected' },
+        { text: mark('selected', `🎯 Выбранные${settings.selected?.length ? ` (${settings.selected.length})` : ''}`), callback_data: 'pick:selected' },
       ],
       [
         { text: `🚫 Исключить${exc ? ` (${exc})` : ''}`, callback_data: 'pick:exclude' },
@@ -124,7 +124,7 @@ function userPicker(kind) {
   const isExclude = kind === 'exclude';
   return {
     keyboard: [[{
-      text: isExclude ? '🚫 Выбрать, кого исключить' : '🎯 Выбрать людей',
+      text: isExclude ? '🚫 Добавить людей (до 10)' : '🎯 Добавить людей (до 10)',
       request_users: {
         request_id: isExclude ? PICK_EXCLUDED : PICK_SELECTED,
         user_is_bot: false,
@@ -313,8 +313,8 @@ async function beginNativePicker(token, chatId, origin, settings, kind) {
   const prompt = await tg(token, 'sendMessage', {
     chat_id: chatId,
     text: kind === 'exclude'
-      ? '🚫 Выбери людей, которым Story показывать НЕ надо.'
-      : '🎯 Выбери людей, которым нужно показать Story.',
+      ? `🚫 Добавь людей, которым Story показывать НЕ надо.\n\nСейчас исключено: ${settings.excluded?.length || 0}. Telegram даёт выбрать до 10 за один раз — можно открывать выбор повторно и добавлять ещё.`
+      : `🎯 Добавь людей, которым нужно показать Story.\n\nСейчас выбрано: ${settings.selected?.length || 0}. Telegram даёт выбрать до 10 за один раз — можно открывать выбор повторно и добавлять ещё.`,
     disable_notification: true,
     reply_markup: userPicker(kind),
   });
@@ -725,7 +725,8 @@ export default async function handler(req, res) {
     if (webAppData === 'storypilot:home' || command === '/start' || text === '🚀 Старт') {
       await clearReplyKeyboard(token, chatId);
       const refreshed = await refreshConnection(token, chatId, origin, settings);
-      const next = { ...refreshed.settings, picking: '', pickerMessage: null };
+      const next = { ...refreshed.settings, picking: '', pickerMessage: null, processing: false };
+      await saveSettings(token, chatId, origin, next);
       await showFreshPanel(token, chatId, origin, next);
       res.status(200).json({ ok: true });
       return;
@@ -739,7 +740,9 @@ export default async function handler(req, res) {
 
     if (command === '/status') {
       const refreshed = await refreshConnection(token, chatId, origin, settings);
-      await showFreshPanel(token, chatId, origin, refreshed.settings, settingsText(refreshed.settings, refreshed.live));
+      const next = { ...refreshed.settings, processing: false };
+      await saveSettings(token, chatId, origin, next);
+      await showFreshPanel(token, chatId, origin, next, settingsText(next, refreshed.live));
       res.status(200).json({ ok: true });
       return;
     }
@@ -800,9 +803,10 @@ export default async function handler(req, res) {
         await saveSettings(token, chatId, origin, next);
         await showPanel(token, chatId, origin, next, `${homeText(next)}${missing ? `\n\n⚠️ ${missing} выбранных без @username не добавлены.` : ''}`);
       } else if (requestId === PICK_SELECTED) {
-        const next = { ...settings, audience: 'selected', selected: usernames.slice(0, MAX_SAVED_USERS), picking: '', pickerMessage: null };
+        const merged = [...new Set([...(settings.selected || []), ...usernames])].slice(0, MAX_SAVED_USERS);
+        const next = { ...settings, audience: 'selected', selected: merged, picking: '', pickerMessage: null };
         await saveSettings(token, chatId, origin, next);
-        await showPanel(token, chatId, origin, next, `${homeText(next)}${missing ? `\n\n⚠️ ${missing} выбранных без @username не добавлены.` : ''}`);
+        await showPanel(token, chatId, origin, next, `${homeText(next)}\n\n➕ Добавлено: ${usernames.length}. Всего выбранных: ${merged.length}. Нажми «🎯 Выбранные» ещё раз, чтобы добавить следующую группу.${missing ? `\n⚠️ ${missing} выбранных без @username не добавлены.` : ''}`);
       } else {
         const next = { ...settings, picking: '', pickerMessage: null };
         await saveSettings(token, chatId, origin, next);
@@ -821,7 +825,7 @@ export default async function handler(req, res) {
           await saveSettings(token, chatId, origin, next);
           await showPanel(token, chatId, origin, next);
         } else {
-          const next = { ...settings, audience: 'selected', selected: usernames, picking: '', pickerMessage: null };
+          const next = { ...settings, audience: 'selected', selected: [...new Set([...(settings.selected || []), ...usernames])].slice(0, MAX_SAVED_USERS), picking: '', pickerMessage: null };
           await saveSettings(token, chatId, origin, next);
           await showPanel(token, chatId, origin, next);
         }
@@ -869,10 +873,25 @@ export default async function handler(req, res) {
       await saveSettings(token, chatId, origin, pre);
       await showPanel(token, chatId, origin, pre, '⏳ Публикую Story…');
 
+      console.log('Story Pilot publish start', {
+        chat_id: chatId,
+        audience: pre.audience,
+        selected_count: pre.selected?.length || 0,
+        excluded_count: pre.excluded?.length || 0,
+        transport: pre.audience === 'standard' ? 'bot-api' : 'mtproto',
+      });
+
       const original = await downloadTelegramFile(token, image.fileId);
       const story = pre.audience === 'standard'
         ? await postPhotoStoryBotApi(token, connectionId, original, image.caption, pre.protect)
         : await postPhotoStoryMtproto(token, connectionId, original, image.caption, pre.audience, pre.selected, pre.excluded, message.message_id, pre.protect);
+
+      console.log('Story Pilot publish success', {
+        chat_id: chatId,
+        audience: pre.audience,
+        transport: story.transport,
+        story_id: String(story.id),
+      });
 
       const next = {
         ...pre,
@@ -896,6 +915,13 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Webhook error', error?.telegram || error);
     const chatId = update?.callback_query?.message?.chat?.id || update?.message?.chat?.id || update?.business_connection?.user_chat_id;
+    if (update?.message && extractImage(update.message)) {
+      console.error('Story Pilot publish failed', {
+        chat_id: chatId || null,
+        message_id: update.message.message_id || null,
+        error: error?.telegram?.description || error?.message || String(error),
+      });
+    }
     const description = error?.telegram?.description || error?.message || String(error);
     if (chatId) {
       let settings = await getStoredSettings(token, chatId).catch(() => defaultSettings());
@@ -903,7 +929,11 @@ export default async function handler(req, res) {
         settings = { ...settings, lastMessage: null, lastStory: null, processing: false };
         await saveSettings(token, chatId, origin, settings).catch(() => {});
       }
-      await showPanel(token, chatId, origin, settings, `❌ Не получилось опубликовать\n\n${friendlyError(description)}`).catch(() => {});
+      try {
+        await showPanel(token, chatId, origin, settings, `❌ Не получилось опубликовать\n\n${friendlyError(description)}\n\nПопробуй отправить фото ещё раз.`);
+      } catch {
+        await showFreshPanel(token, chatId, origin, { ...settings, panel: null }, `❌ Не получилось опубликовать\n\n${friendlyError(description)}\n\nПопробуй отправить фото ещё раз.`).catch(() => {});
+      }
     }
     res.status(200).json({ ok: false, error: description });
   }

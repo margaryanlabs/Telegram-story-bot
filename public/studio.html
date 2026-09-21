@@ -629,7 +629,7 @@
           <div class="row-icon">🎯</div>
           <div class="row-copy">
             <div class="row-title">Только выбранные</div>
-            <div class="row-sub" id="selectedMeta">Открыть Telegram-пикер</div>
+            <div class="row-sub" id="selectedMeta">Можно добавлять группами по 10</div>
           </div>
           <div class="chevron">›</div>
         </button>
@@ -638,7 +638,7 @@
           <div class="row-icon">🚫</div>
           <div class="row-copy">
             <div class="row-title">Исключить людей</div>
-            <div class="row-sub" id="excludedMeta">Никто не исключён</div>
+            <div class="row-sub" id="excludedMeta">Можно добавлять группами по 10</div>
           </div>
           <div class="chevron">›</div>
         </button>
@@ -806,11 +806,11 @@
 
       $('protectSwitch').checked = Boolean(state.protect);
       $('selectedMeta').textContent = state.selected?.length
-        ? `Выбрано: ${state.selected.length}`
-        : 'Открыть Telegram-пикер';
+        ? `Выбрано: ${state.selected.length} · нажми, чтобы добавить ещё`
+        : 'Можно добавлять группами по 10';
       $('excludedMeta').textContent = state.excluded?.length
-        ? `Исключено: ${state.excluded.length}`
-        : 'Никто не исключён';
+        ? `Исключено: ${state.excluded.length} · нажми, чтобы добавить ещё`
+        : 'Можно добавлять группами по 10';
 
       $('deleteStory').classList.toggle('disabled', !state.lastStory || !ready);
       $('deleteMeta').textContent = state.lastStory ? `Story #${state.lastStory}` : 'Нет сохранённой Story';
