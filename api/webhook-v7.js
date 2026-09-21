@@ -256,6 +256,14 @@ async function showPanel(token, chatId, origin, settings, text = null, preferred
   return next;
 }
 
+async function showFreshPanel(token, chatId, origin, settings, text = null) {
+  // Explicit slash commands must produce visible feedback next to the user's command.
+  // Reusing an older editable panel can make the bot look dead when that panel is days above.
+  const fresh = { ...settings, panel: null };
+  await saveSettings(token, chatId, origin, fresh);
+  return showPanel(token, chatId, origin, fresh, text);
+}
+
 async function removePicker(token, chatId, settings) {
   await clearReplyKeyboard(token, chatId);
   if (settings.pickerMessage) {
@@ -621,51 +629,52 @@ export default async function handler(req, res) {
     let settings = await getStoredSettings(token, chatId);
     const text = String(message.text || '').trim();
 
-    if (message.web_app_data?.data === 'storypilot:home' || text === '/start' || text === '🚀 Старт') {
+    const command = text.split(/\s+/)[0].split('@')[0];
+
+    if (message.web_app_data?.data === 'storypilot:home' || command === '/start' || text === '🚀 Старт') {
       await clearReplyKeyboard(token, chatId);
       const refreshed = await refreshConnection(token, chatId, origin, settings);
       const next = { ...refreshed.settings, picking: '', pickerMessage: null };
-      await saveSettings(token, chatId, origin, next);
-      await showPanel(token, chatId, origin, next);
+      await showFreshPanel(token, chatId, origin, next);
       res.status(200).json({ ok: true });
       return;
     }
 
-    if (text === '/help') {
-      await showPanel(token, chatId, origin, settings, howToText(settings));
+    if (command === '/help') {
+      await showFreshPanel(token, chatId, origin, settings, howToText(settings));
       res.status(200).json({ ok: true });
       return;
     }
 
-    if (text === '/status') {
+    if (command === '/status') {
       const refreshed = await refreshConnection(token, chatId, origin, settings);
-      await showPanel(token, chatId, origin, refreshed.settings, settingsText(refreshed.settings, refreshed.live));
+      await showFreshPanel(token, chatId, origin, refreshed.settings, settingsText(refreshed.settings, refreshed.live));
       res.status(200).json({ ok: true });
       return;
     }
 
-    if (text === '/delete') {
+    if (command === '/delete') {
       const refreshed = await refreshConnection(token, chatId, origin, settings);
       const current = refreshed.settings;
       const storyId = Number(current.lastStory);
       if (!refreshed.live || !current.bc) {
-        await showPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Story Pilot.');
+        await showFreshPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Story Pilot.');
       } else if (!Number.isInteger(storyId) || storyId <= 0) {
-        await showPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
+        await showFreshPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
       } else {
         await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
         const next = { ...current, lastStory: null, lastMessage: null, processing: false };
         await saveSettings(token, chatId, origin, next);
-        await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.');
+        await showFreshPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.');
       }
       res.status(200).json({ ok: true });
       return;
     }
 
-    if (text === '/reset') {
+    if (command === '/reset') {
       await removePicker(token, chatId, settings);
       const next = await resetSettings(token, chatId, origin, settings);
-      await showPanel(token, chatId, origin, next, '♻️ Настройки аудитории сброшены. Подключение аккаунта сохранено.');
+      await showFreshPanel(token, chatId, origin, next, '♻️ Настройки аудитории сброшены. Подключение аккаунта сохранено.');
       res.status(200).json({ ok: true });
       return;
     }
