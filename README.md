@@ -95,3 +95,39 @@ The persistent **🚀 Старт** menu now opens a full Telegram Mini App inste
 - Can delete the last Story from the dashboard.
 - Keeps the primary publish flow simple: configure in Mini App, close it, then send a photo to the bot chat.
 - Uses Telegram theme variables and safe-area insets for Android/iOS.
+
+
+## Viewer Sync
+
+Story Pilot includes a privacy-aware Viewer Sync foundation for analytics on the account owner's own Stories.
+
+### Flow
+
+`Story publish -> user MTProto session -> watcher -> generic view alert -> reconciliation -> confirmed viewer OR anonymized view`
+
+A new visible view can trigger a fast generic notification. Viewer identity is only promoted to a confirmed viewer after the reconciliation window. If Telegram later stops exposing that viewer, Story Pilot edits the notification to an unattributed view and removes the stored identity instead of preserving a hidden identity.
+
+### Required production configuration
+
+Viewer Sync is disabled until these server-only values are configured:
+
+- `STORY_PILOT_SUPABASE_URL`
+- `STORY_PILOT_SUPABASE_SERVICE_ROLE_KEY`
+- `VIEWER_SYNC_MASTER_KEY`
+- `CRON_SECRET`
+- existing `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`
+
+Optional tuning:
+
+- `VIEWER_RECONCILE_SECONDS` — default 360 seconds
+- `VIEWER_WATCH_OWNER_LIMIT` — default 4 accounts per run
+- `VIEWER_WATCH_STORY_LIMIT` — default 4 Stories per account per run
+- `VIEWER_WATCH_HOURS` — default 72 hours
+
+Apply `supabase/migrations/20260921_story_pilot_viewer_sync.sql` to a dedicated Story Pilot database. Viewer tables are server-only: RLS is enabled and no client policies are granted.
+
+The Vercel cron calls `/api/viewer-watch` every minute. Until the server-side storage and cron secret are configured, the endpoint returns a harmless disabled state and does not affect Story publishing.
+
+### Session security
+
+Telegram login codes and 2FA passwords are not persisted. The MTProto StringSession is encrypted with AES-256-GCM using `VIEWER_SYNC_MASTER_KEY` before storage. Disconnecting Viewer Sync attempts to log out the Telegram user session and removes the stored session.
