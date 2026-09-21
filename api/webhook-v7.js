@@ -448,31 +448,57 @@ async function postPhotoStoryBotApi(token, businessConnectionId, imageBuffer, ca
 
 async function resolveUsers(client, Api, usernames) {
   const users = [];
+  const valid = [];
+  const skipped = [];
+
   for (const username of usernames.slice(0, MAX_SAVED_USERS)) {
-    const resolved = await client.invoke(new Api.contacts.ResolveUsername({ username }));
-    const user = resolved?.users?.find(item => item?.accessHash !== undefined) || resolved?.users?.[0];
-    if (!user?.id) throw new Error(`Не удалось найти @${username}`);
-    users.push(new Api.InputUser({ userId: user.id, accessHash: user.accessHash ?? BigInt(0) }));
+    try {
+      const resolved = await client.invoke(new Api.contacts.ResolveUsername({ username }));
+      const user = resolved?.users?.find(item => item?.accessHash !== undefined) || resolved?.users?.[0];
+      if (!user?.id) throw new Error(`Не удалось найти @${username}`);
+      users.push(new Api.InputUser({ userId: user.id, accessHash: user.accessHash ?? BigInt(0) }));
+      valid.push(username);
+    } catch (error) {
+      const description = error?.errorMessage || error?.message || String(error);
+      if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID|Не удалось найти/i.test(description)) {
+        skipped.push(username);
+        console.warn('Story Pilot skipped stale privacy username', { username });
+        continue;
+      }
+      throw error;
+    }
   }
-  return users;
+
+  return { users, valid, skipped };
 }
 
 async function buildPrivacyRules(client, Api, audience, selected, excluded) {
   const rules = [];
+  let skippedExcluded = [];
+  let skippedSelected = [];
+
   if (excluded?.length) {
-    const users = await resolveUsers(client, Api, excluded);
-    if (users.length) rules.push(new Api.InputPrivacyValueDisallowUsers({ users }));
+    const resolved = await resolveUsers(client, Api, excluded);
+    skippedExcluded = resolved.skipped;
+    if (resolved.users.length) rules.push(new Api.InputPrivacyValueDisallowUsers({ users: resolved.users }));
   }
+
   if (audience === 'all') rules.push(new Api.InputPrivacyValueAllowAll({}));
   else if (audience === 'contacts') rules.push(new Api.InputPrivacyValueAllowContacts({}));
   else if (audience === 'close') rules.push(new Api.InputPrivacyValueAllowCloseFriends({}));
   else if (audience === 'selected') {
     if (!selected?.length) throw new Error('Список выбранных людей пуст');
-    rules.push(new Api.InputPrivacyValueAllowUsers({ users: await resolveUsers(client, Api, selected) }));
+    const resolved = await resolveUsers(client, Api, selected);
+    skippedSelected = resolved.skipped;
+    if (!resolved.users.length) {
+      throw new Error('Список выбранных людей больше не актуален. Выбери людей заново.');
+    }
+    rules.push(new Api.InputPrivacyValueAllowUsers({ users: resolved.users }));
   } else {
     throw new Error(`Неизвестный режим аудитории: ${audience}`);
   }
-  return rules;
+
+  return { rules, skippedExcluded, skippedSelected };
 }
 
 function deterministicRandomId(connectionId, messageId) {
@@ -508,20 +534,25 @@ async function postPhotoStoryMtproto(token, connectionId, imageBuffer, caption, 
       file: new CustomFile('story.jpg', prepared.length, '', prepared),
       workers: 1,
     });
-    const privacyRules = await buildPrivacyRules(client, Api, audience, selected, excluded);
+    const privacy = await buildPrivacyRules(client, Api, audience, selected, excluded);
     const randomId = deterministicRandomId(connectionId, messageId);
 
     const result = await client.invoke(new Api.stories.SendStory({
       peer,
       media: new Api.InputMediaUploadedPhoto({ file: uploaded }),
       caption: caption ? caption.slice(0, 2048) : undefined,
-      privacyRules,
+      privacyRules: privacy.rules,
       randomId,
       period: STORY_PERIOD_SECONDS,
       noforwards: Boolean(protect),
     }));
     const idUpdate = result?.updates?.find(item => item?.className === 'UpdateStoryID' || item?.randomId?.toString?.() === randomId.toString());
-    return { id: idUpdate?.id ?? 'ok', transport: 'mtproto' };
+    return {
+      id: idUpdate?.id ?? 'ok',
+      transport: 'mtproto',
+      skippedExcluded: privacy.skippedExcluded,
+      skippedSelected: privacy.skippedSelected,
+    };
   } finally {
     await client.disconnect().catch(() => {});
   }
@@ -541,6 +572,7 @@ function friendlyError(description = '') {
   if (/BUSINESS_CONNECTION_INVALID|Business connection is disabled/i.test(d)) return 'Подключение Story Pilot устарело или отключено. Переподключи бота в «Автоматизация чатов».';
   if (/can_manage_stories|Нет права/i.test(d)) return 'Нет разрешения «Управление историями». Включи его в «Автоматизация чатов».';
   if (/PHOTO_INVALID_DIMENSIONS|IMAGE_PROCESS_FAILED|Input buffer contains unsupported image format/i.test(d)) return 'Telegram не принял изображение. Попробуй JPG, PNG или WEBP.';
+  if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID/i.test(d)) return 'Один из сохранённых usernames больше не существует. Story Pilot очистит такие записи при следующей публикации.';
   if (/STORY_PRIVACY_INVALID|PRIVACY/i.test(d)) return 'Telegram не принял выбранную аудиторию. Попробуй заново выбрать людей.';
   if (/STORY_ID_INVALID|STORY_NOT_FOUND/i.test(d)) return 'Последняя Story уже удалена или больше недоступна.';
   if (/BOT_METHOD_INVALID.*CanSendStory/i.test(d)) return 'Внутренняя проверка Telegram была недоступна для business-бота. Story Pilot уже исправлен — отправь фото ещё раз.';
@@ -895,13 +927,18 @@ export default async function handler(req, res) {
         story_id: String(story.id),
       });
 
+      const skippedExcluded = story.skippedExcluded || [];
+      const skippedSelected = story.skippedSelected || [];
       const next = {
         ...pre,
         processing: false,
         lastStory: String(story.id),
+        excluded: (pre.excluded || []).filter(u => !skippedExcluded.includes(u)),
+        selected: (pre.selected || []).filter(u => !skippedSelected.includes(u)),
       };
       await saveSettings(token, chatId, origin, next);
-      await showPanel(token, chatId, origin, next, `✅ Story опубликована\n\n👁 ${audienceLabel(next.audience, next.selected)}${next.excluded?.length ? `\n🚫 Кроме: ${next.excluded.map(u => `@${u}`).join(', ')}` : ''}${next.protect ? '\n🛡 Защита включена' : ''}\n\n📸 Отправь следующее фото — настройки сохранятся.`);
+      const cleaned = [...skippedExcluded, ...skippedSelected];
+      await showPanel(token, chatId, origin, next, `✅ Story опубликована\n\n👁 ${audienceLabel(next.audience, next.selected)}${next.excluded?.length ? `\n🚫 Кроме: ${next.excluded.map(u => `@${u}`).join(', ')}` : ''}${next.protect ? '\n🛡 Защита включена' : ''}${cleaned.length ? `\n\n🧹 Удалил из приватности неактуальные usernames: ${cleaned.map(u => `@${u}`).join(', ')}` : ''}\n\n📸 Отправь следующее фото — настройки сохранятся.`);
       res.status(200).json({ ok: true, story_id: story.id, transport: story.transport });
       return;
     }
