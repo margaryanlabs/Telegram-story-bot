@@ -77,8 +77,8 @@ async function clearReplyKeyboard(token, chatId) {
 }
 
 async function beginNativePicker(token, chatId, baseUrl, settings, kind) {
-  if (kind === 'exclude' && settings.audience === 'standard') {
-    throw new Error('Сначала выбери «Все», «Контакты» или «Близкие», затем добавь исключения');
+  if (kind === 'exclude' && !['all', 'contacts'].includes(settings.audience)) {
+    throw new Error('Исключения работают для режимов «Все» и «Контакты»');
   }
 
   await clearReplyKeyboard(token, chatId);
