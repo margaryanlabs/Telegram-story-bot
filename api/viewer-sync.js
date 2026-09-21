@@ -64,9 +64,7 @@ function configState() {
     configured: db && telegram,
     backgroundReady: db && telegram && cron,
     missing: [
-      !process.env.STORY_PILOT_SUPABASE_URL ? 'STORY_PILOT_SUPABASE_URL' : null,
       !process.env.STORY_PILOT_SUPABASE_SERVICE_ROLE_KEY ? 'STORY_PILOT_SUPABASE_SERVICE_ROLE_KEY' : null,
-      !process.env.VIEWER_SYNC_MASTER_KEY ? 'VIEWER_SYNC_MASTER_KEY' : null,
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
       !process.env.CRON_SECRET ? 'CRON_SECRET' : null,
