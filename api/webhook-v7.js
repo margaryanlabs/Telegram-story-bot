@@ -256,6 +256,14 @@ async function showPanel(token, chatId, origin, settings, text = null, preferred
   return next;
 }
 
+async function showFreshPanel(token, chatId, origin, settings, text = null) {
+  // Explicit slash commands must produce visible feedback next to the user's command.
+  // Reusing an older editable panel can make the bot look dead when that panel is days above.
+  const fresh = { ...settings, panel: null };
+  await saveSettings(token, chatId, origin, fresh);
+  return showPanel(token, chatId, origin, fresh, text);
+}
+
 async function removePicker(token, chatId, settings) {
   await clearReplyKeyboard(token, chatId);
   if (settings.pickerMessage) {
@@ -621,30 +629,31 @@ export default async function handler(req, res) {
     let settings = await getStoredSettings(token, chatId);
     const text = String(message.text || '').trim();
 
-    if (message.web_app_data?.data === 'storypilot:home' || text === '/start' || text === '🚀 Старт') {
+    const command = text.split(/\s+/)[0].split('@')[0];
+
+    if (message.web_app_data?.data === 'storypilot:home' || command === '/start' || text === '🚀 Старт') {
       await clearReplyKeyboard(token, chatId);
       const refreshed = await refreshConnection(token, chatId, origin, settings);
       const next = { ...refreshed.settings, picking: '', pickerMessage: null };
-      await saveSettings(token, chatId, origin, next);
-      await showPanel(token, chatId, origin, next);
+      await showFreshPanel(token, chatId, origin, next);
       res.status(200).json({ ok: true });
       return;
     }
 
-    if (text === '/help') {
-      await showPanel(token, chatId, origin, settings, howToText(settings));
+    if (command === '/help') {
+      await showFreshPanel(token, chatId, origin, settings, howToText(settings));
       res.status(200).json({ ok: true });
       return;
     }
 
-    if (text === '/status') {
+    if (command === '/status') {
       const refreshed = await refreshConnection(token, chatId, origin, settings);
-      await showPanel(token, chatId, origin, refreshed.settings, settingsText(refreshed.settings, refreshed.live));
+      await showFreshPanel(token, chatId, origin, refreshed.settings, settingsText(refreshed.settings, refreshed.live));
       res.status(200).json({ ok: true });
       return;
     }
 
-    if (text === '/delete') {
+    if (command === '/delete') {
       const refreshed = await refreshConnection(token, chatId, origin, settings);
       const current = refreshed.settings;
       const storyId = Number(current.lastStory);
@@ -662,10 +671,10 @@ export default async function handler(req, res) {
       return;
     }
 
-    if (text === '/reset') {
+    if (command === '/reset') {
       await removePicker(token, chatId, settings);
       const next = await resetSettings(token, chatId, origin, settings);
-      await showPanel(token, chatId, origin, next, '♻️ Настройки аудитории сброшены. Подключение аккаунта сохранено.');
+      await showFreshPanel(token, chatId, origin, next, '♻️ Настройки аудитории сброшены. Подключение аккаунта сохранено.');
       res.status(200).json({ ok: true });
       return;
     }
