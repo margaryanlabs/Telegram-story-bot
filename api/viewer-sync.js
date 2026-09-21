@@ -57,17 +57,21 @@ function validateInitData(initData, token) {
 }
 
 function configState() {
-  const db = viewerDbConfigured();
-  const telegram = Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH);
-  const cron = Boolean(process.env.CRON_SECRET);
+  const storage = viewerDbConfigured();
+  const telegram = Boolean(
+    process.env.TELEGRAM_API_ID
+    && process.env.TELEGRAM_API_HASH
+    && process.env.TELEGRAM_BOT_TOKEN
+  );
+
   return {
-    configured: db && telegram,
-    backgroundReady: db && telegram && cron,
+    configured: storage && telegram,
+    backgroundReady: storage && telegram,
+    scheduler: 'supabase_pg_cron',
     missing: [
-      !process.env.STORY_PILOT_SUPABASE_SERVICE_ROLE_KEY ? 'STORY_PILOT_SUPABASE_SERVICE_ROLE_KEY' : null,
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
-      !process.env.CRON_SECRET ? 'CRON_SECRET' : null,
+      !process.env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_BOT_TOKEN' : null,
     ].filter(Boolean),
   };
 }

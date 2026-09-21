@@ -1,4 +1,5 @@
 import { openJson } from '../lib/viewer-sync-crypto.js';
+import { verifyEdgeSignature } from '../lib/viewer-sync-signing.js';
 import {
   viewerDbConfigured,
   listActiveViewerSessions,
@@ -18,6 +19,7 @@ import {
 const RECONCILE_SECONDS = Math.max(60, Number(process.env.VIEWER_RECONCILE_SECONDS || 360));
 const OWNER_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_OWNER_LIMIT || 4)));
 const STORY_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_STORY_LIMIT || 4)));
+const EDGE_TRIGGER_PUBLIC_KEY = '8sAlE7n-envFOB-8bisnYwBONXPe8M6GRtos_6UsoAg';
 
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
@@ -204,23 +206,27 @@ async function syncStory({ token, ownerId, story, client }) {
 }
 
 function authorized(req) {
-  const secret = String(process.env.CRON_SECRET || '');
-  return Boolean(secret) && String(req.headers.authorization || '') === `Bearer ${secret}`;
+  const timestamp = String(req.headers['x-story-trigger-timestamp'] || '');
+  const signature = String(req.headers['x-story-trigger-signature'] || '');
+  const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
+
+  return verifyEdgeSignature({
+    publicKey: EDGE_TRIGGER_PUBLIC_KEY,
+    timestamp,
+    body,
+    signature,
+    maxAgeMs: 120000,
+  });
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET' && req.method !== 'POST') {
-    res.status(405).json({ ok: false });
+  if (req.method !== 'POST') {
+    res.status(405).json({ ok: false, error: 'Method not allowed' });
     return;
   }
 
-  const cronSecret = String(process.env.CRON_SECRET || '');
-  if (!cronSecret || !viewerDbConfigured()) {
-    res.status(200).json({
-      ok: true,
-      disabled: true,
-      reason: !cronSecret ? 'cron_secret_missing' : 'viewer_sync_storage_missing',
-    });
+  if (!viewerDbConfigured()) {
+    res.status(503).json({ ok: false, error: 'Viewer Sync storage signing is not configured' });
     return;
   }
 

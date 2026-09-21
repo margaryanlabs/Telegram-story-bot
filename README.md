@@ -109,13 +109,9 @@ A new visible view can trigger a fast generic notification. Viewer identity is o
 
 ### Required production configuration
 
-Viewer Sync is disabled until these server-only values are configured:
+Viewer Sync uses the existing server-only `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_BOT_TOKEN` values.
 
-- `STORY_PILOT_SUPABASE_SERVICE_ROLE_KEY`
-- `CRON_SECRET`
-- existing `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_BOT_TOKEN`
-
-The shared Margaryan Labs Supabase project URL is already wired as the default storage target. A separate `VIEWER_SYNC_MASTER_KEY` remains optional; if it is absent, Story Pilot derives the encryption key from the existing server-only Telegram secrets without persisting the derived key.
+The shared Margaryan Labs Supabase project is the storage target. Vercel does not need a Supabase service-role key: requests to the server-only Supabase Edge storage gateway are signed with Ed25519 using key material derived at runtime from existing Telegram secrets. A separate `VIEWER_SYNC_MASTER_KEY` remains optional; if it is absent, Story Pilot derives the encryption key from the existing server-only Telegram secrets without persisting the derived key.
 
 Optional tuning:
 
@@ -126,7 +122,7 @@ Optional tuning:
 
 Apply `supabase/migrations/20260921_story_pilot_viewer_sync.sql` to a dedicated Story Pilot database. Viewer tables are server-only: RLS is enabled and no client policies are granted.
 
-The Vercel cron calls `/api/viewer-watch` every minute. Until the server-side storage and cron secret are configured, the endpoint returns a harmless disabled state and does not affect Story publishing.
+Supabase `pg_cron` calls the `story-pilot-watch-trigger` Edge Function every minute. The trigger signs the request to `/api/viewer-watch`, so no Vercel cron secret is required. The watcher is protected by short-lived Ed25519 signatures and a database lease to avoid overlapping runs.
 
 ### Session security
 
