@@ -447,25 +447,30 @@ export default async function handler(req, res) {
     } else if (action === 'delete_story') {
       const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
       settings = refreshed.settings;
-      const storyId = Number(settings.lastStory);
+      const requestedId = Number(body.storyId || settings.lastStory);
+      const knownStory = (settings.history || []).find(item => Number(item.id) === requestedId);
       if (!refreshed.live || !settings.bc) {
         res.status(409).json({ ok: false, error: 'Telegram Business подключение не найдено' });
         return;
       }
-      if (!Number.isInteger(storyId) || storyId <= 0) {
+      if (!Number.isInteger(requestedId) || requestedId <= 0) {
         res.status(409).json({ ok: false, error: 'Нет сохранённой Story для удаления' });
+        return;
+      }
+      if (body.storyId && !knownStory && String(settings.lastStory || '') !== String(requestedId)) {
+        res.status(404).json({ ok: false, error: 'Этой Story нет в архиве Story Pilot' });
         return;
       }
       await tg(token, 'deleteStory', {
         business_connection_id: settings.bc,
-        story_id: storyId,
+        story_id: requestedId,
       });
       settings = {
         ...settings,
-        lastStory: null,
-        lastMessage: null,
+        lastStory: String(settings.lastStory || '') === String(requestedId) ? null : settings.lastStory,
+        lastMessage: String(settings.lastStory || '') === String(requestedId) ? null : settings.lastMessage,
         processing: false,
-        history: markHistoryDeleted(settings.history, storyId),
+        history: markHistoryDeleted(settings.history, requestedId),
       };
       await saveSettings(token, chatId, baseUrl, settings);
     } else {
