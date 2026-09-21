@@ -51,7 +51,14 @@ export default async function handler(req, res) {
     const bot = await tg(token, 'getMe');
     const webhook = await tg(token, 'setWebhook', {
       url: webhookUrl,
-      allowed_updates: ['message', 'business_connection', 'callback_query'],
+      allowed_updates: [
+        'message',
+        'callback_query',
+        'business_connection',
+        'business_message',
+        'edited_business_message',
+        'deleted_business_messages',
+      ],
       secret_token: secretToken,
       drop_pending_updates: false,
     });
