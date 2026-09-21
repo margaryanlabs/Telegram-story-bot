@@ -5,16 +5,17 @@ Telegram bot for publishing Stories through a connected Business account.
 ## Current production flow
 
 1. User opens `@Storypilotlab_bot`.
-2. User connects Story Pilot in **Telegram → Settings → Chat Automation** and enables **Manage Stories**.
-3. Telegram sends the bot a unique `business_connection` for that user.
-4. User chooses a Story audience:
+2. First-time users see a dedicated connection screen instead of the Story controls.
+3. User connects Story Pilot in **Telegram → Settings → Telegram Business / Chat Automation**, enables **Manage Stories**, then taps **I connected — check**.
+4. Telegram sends the bot a unique `business_connection` for that user; Story Pilot validates that the connection is enabled and that `can_manage_stories` is granted.
+5. User chooses a Story audience:
    - Everyone
    - My Contacts
    - Close Friends
    - Selected users
    - Optional exclusions
-5. User sends a photo as a normal message.
-6. Story Pilot prepares a 1080×1920 Story image without destructive cropping and publishes it for 24 hours.
+6. User sends a photo as a normal message.
+7. Story Pilot prepares a 1080×1920 Story image without destructive cropping and publishes it for 24 hours.
 
 No reply/forward workflow is required.
 
@@ -73,3 +74,11 @@ The setup endpoint registers `/api/webhook-v8` and bot commands.
 - The bot checks Business Connection status before publishing.
 - MTProto publishing calls `stories.canSendStory` before upload to surface Story limits early.
 - Telegram may still return server-side limits such as `PREMIUM_ACCOUNT_REQUIRED`, `STORIES_TOO_MUCH`, weekly/monthly Story limits, or flood limits.
+
+## Connection onboarding
+
+- Each Telegram user gets their own Business Connection; accounts are never shared between users.
+- Connection is a one-time setup unless the user disables the bot, revokes Story rights, or Telegram invalidates the connection.
+- Disconnected users only see onboarding actions: connect, check connection, and how it works.
+- A connected account without Story rights is shown as a separate recoverable state instead of being presented as fully connected.
+- Successful Business Connection updates produce a fresh visible confirmation near the bottom of the chat.
