@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 const MAX_SAVED_USERS = 100;
+const MAX_HISTORY = 12;
 const PICK_SELECTED = 10101;
 const PICK_EXCLUDED = 10102;
 
@@ -40,6 +41,65 @@ function productionBaseUrl(req) {
 
 function normalizeUsername(value) {
   return String(value || '').trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, '');
+}
+
+const AUDIENCE_CODE = {
+  standard: 's',
+  all: 'a',
+  contacts: 'c',
+  close: 'f',
+  selected: 'u',
+};
+
+const CODE_AUDIENCE = Object.fromEntries(Object.entries(AUDIENCE_CODE).map(([key, value]) => [value, key]));
+
+function encodeHistory(history = []) {
+  return history.slice(0, MAX_HISTORY).map(item => [
+    String(item.id || ''),
+    Math.max(0, Number(item.ts || 0)).toString(36),
+    AUDIENCE_CODE[item.audience] || 's',
+    Math.max(0, Number(item.excluded || 0)),
+    Math.max(0, Number(item.selected || 0)),
+    item.protect ? 1 : 0,
+    item.deleted ? 1 : 0,
+  ].join('.')).join('~');
+}
+
+function decodeHistory(value) {
+  return String(value || '').split('~').filter(Boolean).slice(0, MAX_HISTORY).map(chunk => {
+    const [id, ts36, audienceCode, excluded, selected, protect, deleted] = chunk.split('.');
+    return {
+      id: String(id || ''),
+      ts: parseInt(ts36 || '0', 36) || 0,
+      audience: CODE_AUDIENCE[audienceCode] || 'standard',
+      excluded: Number(excluded || 0) || 0,
+      selected: Number(selected || 0) || 0,
+      protect: protect === '1',
+      deleted: deleted === '1',
+    };
+  }).filter(item => item.id);
+}
+
+function markHistoryDeleted(history, storyId) {
+  return (history || []).map(item => String(item.id) === String(storyId) ? { ...item, deleted: true } : item);
+}
+
+function analyticsFromHistory(history = []) {
+  const active = history.filter(item => !item.deleted);
+  const audienceCounts = active.reduce((acc, item) => {
+    const key = item.audience || 'standard';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    storiesTracked: history.length,
+    activeTracked: active.length,
+    protectedStories: active.filter(item => item.protect).length,
+    totalExcluded: active.reduce((sum, item) => sum + (Number(item.excluded) || 0), 0),
+    audienceCounts,
+    lastPublishedAt: active[0]?.ts || history[0]?.ts || null,
+  };
 }
 
 function userPicker(kind) {
@@ -108,6 +168,7 @@ function defaultSettings() {
     pickerMessage: null,
     lastMessage: null,
     lastStory: null,
+    history: [],
     processing: false,
     protect: false,
   };
@@ -130,6 +191,7 @@ function parseStoredSettings(menu) {
       pickerMessage: Number(url.searchParams.get('pm') || 0) || null,
       lastMessage: Number(url.searchParams.get('lm') || 0) || null,
       lastStory: url.searchParams.get('ls') || null,
+      history: decodeHistory(url.searchParams.get('hist')),
       processing: url.searchParams.get('pr') === '1',
       protect: url.searchParams.get('prot') === '1',
     };
@@ -161,6 +223,7 @@ async function saveSettings(token, chatId, baseUrl, settings) {
   if (settings.pickerMessage) url.searchParams.set('pm', String(settings.pickerMessage));
   if (settings.lastMessage) url.searchParams.set('lm', String(settings.lastMessage));
   if (settings.lastStory) url.searchParams.set('ls', String(settings.lastStory));
+  if (settings.history?.length) url.searchParams.set('hist', encodeHistory(settings.history));
   if (settings.processing) url.searchParams.set('pr', '1');
   if (settings.protect) url.searchParams.set('prot', '1');
 
@@ -226,8 +289,15 @@ function publicState(settings, extra = {}) {
     excluded: settings.excluded || [],
     protect: Boolean(settings.protect),
     lastStory: settings.lastStory || null,
+    history: settings.history || [],
+    analytics: analyticsFromHistory(settings.history || []),
     processing: Boolean(settings.processing),
     advancedPrivacy: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
+    viewerSync: {
+      available: false,
+      requiresUserSession: true,
+      reason: 'user_mtproto_session_required',
+    },
     ...extra,
   };
 }
@@ -390,7 +460,13 @@ export default async function handler(req, res) {
         business_connection_id: settings.bc,
         story_id: storyId,
       });
-      settings = { ...settings, lastStory: null, lastMessage: null, processing: false };
+      settings = {
+        ...settings,
+        lastStory: null,
+        lastMessage: null,
+        processing: false,
+        history: markHistoryDeleted(settings.history, storyId),
+      };
       await saveSettings(token, chatId, baseUrl, settings);
     } else {
       res.status(400).json({ ok: false, error: 'Unknown action' });
