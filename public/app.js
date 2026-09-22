@@ -678,6 +678,7 @@
     const mainLabel = $('mainButton').querySelector('b');
     const mainIcon = $('mainButton').querySelector('span');
     $('mainButton').disabled = Boolean(composerBusy || state.processing);
+    $('mainButton').setAttribute('aria-busy', state.processing || composerBusy ? 'true' : 'false');
 
     if (!state.ready) {
       mainIcon.textContent = '↻';
@@ -1281,7 +1282,11 @@
     if (!state.ready) {
       try {
         await api('check');
-        showToast(state.ready ? 'Telegram подключён' : 'Нужно подключить Telegram Business');
+        if (state.ready) {
+          showToast('Telegram подключён');
+        } else {
+          connectionHelpSheet();
+        }
       } catch (error) {
         showToast(error.message);
       }
@@ -1632,6 +1637,30 @@
       $('captionCounter').textContent = `${$('storyCaption').value.length} / 2048`;
     }
   } catch {}
+
+  function renderNetworkStatus() {
+    const banner = $('networkBanner');
+    if (!banner) return;
+    const offline = navigator.onLine === false;
+    banner.hidden = !offline;
+    document.documentElement.classList.toggle('is-offline', offline);
+  }
+
+  window.addEventListener('online', () => {
+    renderNetworkStatus();
+    showToast('Соединение восстановлено');
+    if (tg?.initData) {
+      refresh();
+      if (viewerState.session?.connected) refreshViewerSync({ silent:true });
+    }
+  });
+
+  window.addEventListener('offline', () => {
+    renderNetworkStatus();
+    showToast('Нет интернета. Данные на экране сохранены.');
+  });
+
+  renderNetworkStatus();
 
   window.addEventListener('unhandledrejection', event => {
     const message = event?.reason?.message || String(event?.reason || '');
