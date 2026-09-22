@@ -218,8 +218,11 @@
 
   async function publishComposerStory() {
     if (!state.ready) {
-      await api('check');
-      if (!state.ready) throw new Error('Сначала подключи Telegram Business');
+      try { await api('check'); } catch {}
+      if (!state.ready) {
+        connectionHelpSheet();
+        return;
+      }
     }
     if (!composerDataUrl) {
       $('storyFileInput').click();
@@ -228,10 +231,13 @@
     if (composerBusy || state.processing) return;
 
     if (state.audience === 'selected' && !state.selected?.length) {
-      throw new Error('Добавь людей для режима «Выбранные»');
+      showToast('Добавь людей для режима «Выбранные»');
+      $('selectedRow').click();
+      return;
     }
     if (state.excluded?.length && !['all', 'contacts'].includes(state.audience)) {
-      throw new Error('Исключения работают только для «Все» и «Контакты»');
+      showToast('Для исключений выбери «Все» или «Контакты»');
+      return;
     }
 
     composerBusy = true;
@@ -246,15 +252,36 @@
         nonce: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
       });
 
-      selectedViewerStory = result.storyId || state.lastStory || selectedViewerStory;
+      const publishedStoryId = result.storyId || state.lastStory;
+      selectedViewerStory = publishedStoryId || selectedViewerStory;
+      const publishedAudience = audienceLabel(state.audience);
+      const cleaned = Array.isArray(result.cleanedUsernames) ? result.cleanedUsernames : [];
+
       resetComposer();
       notify('success');
-      showToast(`Story #${result.storyId || state.lastStory} опубликована`);
+      showToast(`Story #${publishedStoryId} опубликована`);
 
       if (viewerState.session?.connected) {
         await refreshViewerSync({ silent:true });
         await refreshViewerAnalytics({ silent:true });
       }
+
+      openSheet(`
+        <span class="kicker">Опубликовано</span>
+        <h2>Story #${escapeHtml(publishedStoryId)} уже в Telegram</h2>
+        <p>Аудитория: ${escapeHtml(publishedAudience)} · Viewer Sync ${viewerState.session?.connected ? 'подхватит просмотры автоматически' : 'можно подключить позже'}.</p>
+        <div class="sheet-list">
+          <div class="sheet-item"><strong>Публикация</strong><span>Готово · ${escapeHtml(result.transport || 'Telegram')}</span></div>
+          <div class="sheet-item"><strong>Защита</strong><span>${state.protect ? 'Включена' : 'Выключена'}</span></div>
+          ${cleaned.length ? `<div class="sheet-item"><strong>Очищены старые usernames</strong><span>${cleaned.map(item => '@' + escapeHtml(item)).join(', ')}</span></div>` : ''}
+        </div>
+        <div class="sheet-actions">
+          <button class="accent" data-sheet-action="go-viewers">Смотреть Viewers</button>
+          <button data-sheet-action="go-analytics">Открыть Analytics</button>
+          <button data-sheet-action="publish-another">Опубликовать ещё</button>
+          <button data-sheet-action="close">Готово</button>
+        </div>
+      `);
     } catch (error) {
       state.processing = false;
       notify('error');
@@ -934,6 +961,23 @@
     `);
   }
 
+  function connectionHelpSheet() {
+    openSheet(`
+      <span class="kicker">Telegram Business</span>
+      <h2>Одноразовое подключение</h2>
+      <p>Саму публикацию, аудиторию, Viewer Sync и аналитику Story Pilot делает внутри Mini App. Только системное разрешение Telegram Business выдаётся в настройках Telegram.</p>
+      <div class="sheet-list">
+        <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots (название пункта может немного отличаться).</span></div>
+        <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Разреши управление Stories / can_manage_stories.</span></div>
+        <div class="sheet-item"><strong>3. Вернись сюда</strong><span>Нажми «Проверить подключение» — остальной процесс остаётся внутри приложения.</span></div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="check">Проверить подключение</button>
+        <button data-sheet-action="close">Закрыть</button>
+      </div>
+    `);
+  }
+
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
@@ -1172,9 +1216,11 @@
     haptic();
     try {
       await api('check');
-      showToast(state.ready ? 'Подключение активно' : 'Активное подключение пока не найдено');
+      if (state.ready) showToast('Подключение активно');
+      else connectionHelpSheet();
     } catch (error) {
       showToast(error.message);
+      connectionHelpSheet();
     }
   });
   $('profileButton').addEventListener('click', profileSheet);
@@ -1333,6 +1379,22 @@
     if (action === 'check') {
       closeSheet();
       await refresh();
+      if (!state.ready) setTimeout(connectionHelpSheet, 120);
+    }
+    if (action === 'go-viewers') {
+      closeSheet();
+      switchScreen('viewers');
+      await refreshViewerSync({ silent:true });
+    }
+    if (action === 'go-analytics') {
+      closeSheet();
+      switchScreen('analytics');
+      await refreshViewerAnalytics({ silent:true });
+    }
+    if (action === 'publish-another') {
+      closeSheet();
+      switchScreen('publish');
+      setTimeout(() => $('storyFileInput').click(), 160);
     }
     if (action === 'save-selected') {
       const usernames = parseUsernameInput($('selectedUsernames')?.value || '');
