@@ -1180,18 +1180,6 @@
     }
   }
 
-  async function openPicker(kind) {
-    try {
-      haptic();
-      await api(kind === 'selected' ? 'picker_selected' : 'picker_exclude');
-      showToast('Открываю выбор людей в чате');
-      setTimeout(() => tg?.close(), 180);
-    } catch (error) {
-      showToast(error.message);
-      notify('error');
-    }
-  }
-
   async function deleteStory(storyId = state.lastStory) {
     if (!storyId || !state.ready) return;
     const run = async () => {
@@ -1471,14 +1459,6 @@
       } catch (error) {
         showToast(error.message);
       }
-    }
-    if (action === 'picker-selected') {
-      closeSheet();
-      await openPicker('selected');
-    }
-    if (action === 'picker-exclude') {
-      closeSheet();
-      await openPicker('exclude');
     }
     if (action === 'clear-selected') {
       closeSheet();
