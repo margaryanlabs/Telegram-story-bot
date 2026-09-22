@@ -575,3 +575,313 @@ button{color:inherit;cursor:pointer}
   color:#c5bcff;font-size:8px
 }
 .primary-button:disabled,.secondary-button:disabled{opacity:.45;cursor:default}
+
+
+/* ===== Story Pilot visual system v2 ===== */
+:root{
+  --bg-deep:#070a10;
+  --surface-1:rgba(255,255,255,.038);
+  --surface-2:rgba(255,255,255,.062);
+  --surface-3:rgba(255,255,255,.085);
+  --hairline:rgba(255,255,255,.075);
+  --text-strong:#f7f9fc;
+  --text-soft:#a4afbe;
+  --text-faint:#6f7b8b;
+  --blue-soft:#72cfff;
+  --radius-xl:28px;
+  --radius-lg:22px;
+  --radius-md:16px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+html{background:var(--bg-deep);scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(120% 80% at 100% -5%,rgba(42,171,238,.075),transparent 48%),
+    radial-gradient(100% 60% at -10% 35%,rgba(105,92,255,.055),transparent 50%),
+    var(--bg);
+  font-family:"SF Pro Text","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:14px;
+  line-height:1.45;
+  letter-spacing:-.008em;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button,input,textarea{font-family:inherit}
+button{touch-action:manipulation}
+button:focus-visible,input:focus-visible,textarea:focus-visible{
+  outline:2px solid rgba(114,207,255,.65);
+  outline-offset:2px;
+}
+.app-shell{
+  width:min(100%,640px);
+  padding:max(14px,env(safe-area-inset-top)) 14px calc(132px + env(safe-area-inset-bottom));
+}
+.topbar{
+  margin-bottom:15px;
+  padding:4px 2px 2px;
+}
+.brand-mark{
+  width:42px;height:42px;border-radius:14px;
+  background:
+    linear-gradient(145deg,rgba(47,183,247,.98),rgba(82,99,236,.98));
+  box-shadow:0 10px 28px rgba(42,171,238,.16),inset 0 1px 0 rgba(255,255,255,.28);
+}
+.brand-copy strong{font-size:16px;font-weight:780;letter-spacing:-.035em}
+.brand-copy span{font-size:10px;color:var(--text-faint)}
+.profile-button{width:43px;height:43px;background:rgba(255,255,255,.035)}
+.profile-avatar{width:37px;height:37px}
+.hero-card{
+  border-radius:var(--radius-xl);
+  padding:20px;
+  border-color:rgba(255,255,255,.07);
+  background:
+    radial-gradient(100% 120% at 100% 0%,rgba(69,104,255,.13),transparent 45%),
+    linear-gradient(145deg,rgba(42,171,238,.075),rgba(255,255,255,.028) 44%,rgba(116,91,255,.045));
+  box-shadow:0 24px 70px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.035)
+}
+.hero-glow{opacity:.55;filter:blur(6px)}
+.hero-copy{margin-top:22px}
+.hero-copy h1{
+  font-size:clamp(34px,8.5vw,52px);
+  line-height:.96;
+  letter-spacing:-.058em;
+  font-weight:800
+}
+.hero-copy h1 span{color:#a5b2c3}
+.hero-copy p{font-size:12px;line-height:1.55;color:#95a1b1}
+.status-pill{
+  min-height:31px;padding:7px 10px;
+  background:rgba(6,10,16,.28);
+  font-size:10px;font-weight:700
+}
+.story-id{font-size:9px}
+.hero-stats{gap:7px;margin-top:20px}
+.hero-stats>div{
+  padding:11px;border-radius:15px;
+  background:rgba(5,9,15,.32)
+}
+.hero-stats span{font-size:8px;color:#7f8b9a}
+.hero-stats strong{font-size:12px}
+.connection-strip{
+  margin-top:10px;padding:11px 12px;border-radius:17px;
+  background:rgba(255,255,255,.027)
+}
+.connection-icon{width:37px;height:37px;border-radius:12px}
+.connection-copy strong{font-size:11px}
+.connection-copy span{font-size:9px}
+.text-button{font-size:10px}
+.composer-card{
+  margin-top:11px;
+  padding:15px;
+  border-radius:24px;
+  background:
+    radial-gradient(90% 70% at 0% 0%,rgba(42,171,238,.06),transparent 55%),
+    rgba(255,255,255,.032);
+  border-color:rgba(255,255,255,.075);
+  box-shadow:0 18px 46px rgba(0,0,0,.16)
+}
+.composer-head h2{font-size:17px;font-weight:760}
+.composer-state{font-size:8px;min-height:27px;display:inline-flex;align-items:center}
+.media-picker{
+  min-height:148px;
+  border-radius:19px;
+  border-color:rgba(145,162,183,.18);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.018),rgba(255,255,255,.008)),
+    rgba(4,8,14,.34);
+  transition:transform .16s var(--ease),border-color .16s var(--ease),background .16s var(--ease)
+}
+.media-picker:active{transform:scale(.992);border-color:rgba(114,207,255,.35)}
+.media-picker-icon{
+  width:46px;height:46px;border-radius:15px;
+  background:linear-gradient(145deg,rgba(42,171,238,.16),rgba(96,100,255,.10));
+  color:#d8f1ff
+}
+.media-picker strong{font-size:13px;font-weight:760}
+.media-picker small{font-size:9px}
+.media-preview{
+  min-height:300px;
+  max-height:500px;
+  border-radius:19px;
+  background:linear-gradient(180deg,#070b11,#030509)
+}
+.media-preview img{max-height:500px}
+.media-preview-meta strong{font-size:11px}
+.media-preview-meta span{font-size:9px}
+.media-remove{
+  width:36px;height:36px;border-radius:13px;
+  background:rgba(4,7,11,.76)
+}
+.caption-field{margin-top:14px}
+.caption-field>span{font-size:10px}
+.caption-field textarea{
+  min-height:86px;
+  padding:13px 14px;
+  border-radius:15px;
+  font-size:13px;
+  line-height:1.5;
+  background:rgba(4,8,14,.34)
+}
+.composer-summary span{font-size:9px;padding:6px 9px}
+.block{margin-top:22px}
+.block-head{margin-bottom:10px}
+.kicker{font-size:8px;letter-spacing:.14em;color:#768394}
+.block h2,.block-head h2{font-size:16px;font-weight:760}
+.audience-grid{gap:8px}
+.audience-card{
+  min-height:101px;
+  padding:13px;
+  border-radius:19px;
+  background:rgba(255,255,255,.03)
+}
+.audience-card.active{
+  border-color:rgba(82,184,242,.44);
+  background:
+    linear-gradient(145deg,rgba(42,171,238,.115),rgba(78,93,217,.055)),
+    rgba(255,255,255,.025);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)
+}
+.audience-icon{font-size:18px}
+.audience-name{margin-top:11px;font-size:12px}
+.audience-desc{font-size:9px}
+.audience-card-wide{min-height:78px}
+.settings-card,.analytics-card,.viewer-list-preview{
+  border-radius:21px;
+  background:rgba(255,255,255,.03);
+  border-color:rgba(255,255,255,.072)
+}
+.setting-row{min-height:67px;padding:11px 13px}
+.setting-icon{width:37px;height:37px;border-radius:12px}
+.setting-copy strong{font-size:11px}
+.setting-copy small{font-size:9px}
+.setting-count{font-size:8px}
+.last-story-card{
+  margin-top:11px;
+  border-radius:19px;
+  background:rgba(255,255,255,.027)
+}
+.page-head{padding:5px 2px 15px}
+.page-head h1{font-size:34px;font-weight:800;letter-spacing:-.05em}
+.page-head p{font-size:11px;line-height:1.55}
+.quick-start-card,.viewer-story-card,.viewer-sync-card{
+  border-radius:22px;
+  box-shadow:0 16px 42px rgba(0,0,0,.13)
+}
+.quick-start-card{padding:15px}
+.quick-start-head h2{font-size:17px}
+.quick-step{padding:10px 11px}
+.quick-step strong{font-size:10px}
+.quick-step small,.quick-step em{font-size:8px}
+.quick-footnote{font-size:8.5px;line-height:1.5;color:#7a8798}
+.viewer-story-card{padding:15px}
+.viewer-story-top strong{font-size:13px}
+.viewer-metrics strong{font-size:19px}
+.viewer-metrics span{font-size:8px}
+.viewer-sync-card{padding:18px}
+.viewer-sync-card h2{font-size:20px}
+.viewer-sync-card p{font-size:10px}
+.feature-tags span{font-size:8.5px}
+.viewer-search input{font-size:11px}
+.viewer-row{padding:12px 2px}
+.viewer-copy strong{font-size:11px}
+.viewer-copy span,.viewer-side span{font-size:8.5px}
+.viewer-side strong{font-size:9px}
+.stat-card{min-height:105px;border-radius:18px}
+.stat-card strong{font-size:27px}
+.stat-card small{font-size:8.5px}
+.analytics-card{padding:14px}
+.viewer-intelligence-grid strong{font-size:23px}
+.viewer-intelligence-grid small{font-size:8.5px}
+.intel-empty{font-size:9px}
+.archive-item{border-radius:17px;background:rgba(255,255,255,.028)}
+.archive-copy strong{font-size:11px}
+.archive-copy span{font-size:8.5px}
+.bottom-nav{
+  height:66px;
+  bottom:calc(9px + env(safe-area-inset-bottom));
+  padding:6px;
+  border-radius:23px;
+  background:rgba(9,14,22,.88);
+  border-color:rgba(255,255,255,.09);
+  box-shadow:0 16px 52px rgba(0,0,0,.36);
+  -webkit-backdrop-filter:blur(22px) saturate(130%);
+  backdrop-filter:blur(22px) saturate(130%)
+}
+.nav-item{border-radius:17px;transition:background .16s var(--ease),color .16s var(--ease),transform .16s var(--ease)}
+.nav-item:active{transform:scale(.96)}
+.nav-item span{font-size:17px}
+.nav-item small{font-size:8px}
+.nav-item.active{
+  background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.045));
+  color:#fff
+}
+.action-dock{bottom:calc(84px + env(safe-area-inset-bottom))}
+.primary-button{
+  min-height:55px;
+  border-radius:18px;
+  font-size:12px;
+  font-weight:760;
+  background:linear-gradient(135deg,#25aee9,#5b69ed);
+  box-shadow:0 16px 36px rgba(42,171,238,.18),inset 0 1px 0 rgba(255,255,255,.18);
+  transition:transform .14s var(--ease),filter .14s var(--ease),opacity .14s var(--ease)
+}
+.primary-button:active{transform:scale(.988);filter:brightness(.96)}
+.secondary-button{
+  min-height:45px;
+  font-size:10px;
+  border-radius:14px;
+  background:rgba(255,255,255,.055)
+}
+.ghost-danger{min-height:38px}
+.sheet{
+  max-height:min(86vh,760px);
+  border-radius:30px 30px 0 0;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.025),transparent 22%),
+    #0e151f;
+  -webkit-overflow-scrolling:touch
+}
+.sheet h2{font-size:21px}
+.sheet p{font-size:10px}
+.sheet-item{border-radius:14px;background:rgba(255,255,255,.038)}
+.sheet-item strong{font-size:10px}
+.sheet-item span{font-size:9px}
+.sheet-actions button{min-height:46px;font-size:10px}
+.people-input-wrap textarea{
+  min-height:110px;
+  padding:13px;
+  border-radius:14px;
+  font-size:12px;
+  resize:none
+}
+.people-chips span{font-size:8.5px}
+.toast{
+  padding:12px 14px;
+  border-radius:16px;
+  font-size:10px;
+  background:rgba(15,22,32,.97);
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px)
+}
+.viewer-sync-state{font-size:9px}
+.timeline-chart-wrap{border-radius:15px}
+.performance-row{border-radius:15px}
+.top-person{border-radius:15px}
+.auth-field input{min-height:46px;font-size:12px}
+.auth-help{font-size:9px}
+input,textarea{caret-color:var(--accent)}
+::selection{background:rgba(42,171,238,.28);color:#fff}
+
+@media(max-width:390px){
+  .app-shell{padding-left:12px;padding-right:12px}
+  .hero-card{padding:17px;border-radius:24px}
+  .hero-copy h1{font-size:34px}
+  .hero-stats strong{font-size:11px}
+  .composer-card{padding:13px;border-radius:21px}
+  .audience-card{min-height:96px}
+  .viewer-sync-card{padding:16px}
+  .page-head h1{font-size:31px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
+}
