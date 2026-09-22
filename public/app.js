@@ -1137,7 +1137,7 @@
       <p>Вставь @username через пробел, запятую или с новой строки. Можно до 100 человек — всё сохраняется прямо в приложении.</p>
       <div class="people-input-wrap">
         <label for="selectedUsernames">Usernames</label>
-        <textarea id="selectedUsernames" placeholder="@alex\n@maria">@${(state.selected || []).join('\n@')}</textarea>
+        <textarea id="selectedUsernames" placeholder="@alex\n@maria">${state.selected?.length ? '@' + state.selected.join('\n@') : ''}</textarea>
       </div>
       <div class="people-chips">${peopleChips(state.selected)}</div>
       <div class="sheet-actions">
@@ -1155,7 +1155,7 @@
       <p>Вставь @username. Если сейчас выбран другой режим, Story Pilot автоматически переключит аудиторию на «Контакты».</p>
       <div class="people-input-wrap">
         <label for="excludedUsernames">Usernames</label>
-        <textarea id="excludedUsernames" placeholder="@alex\n@maria">@${(state.excluded || []).join('\n@')}</textarea>
+        <textarea id="excludedUsernames" placeholder="@alex\n@maria">${state.excluded?.length ? '@' + state.excluded.join('\n@') : ''}</textarea>
       </div>
       <div class="people-chips">${peopleChips(state.excluded)}</div>
       <div class="sheet-actions">
@@ -1332,6 +1332,33 @@
       closeSheet();
       await refresh();
     }
+    if (action === 'save-selected') {
+      const usernames = parseUsernameInput($('selectedUsernames')?.value || '');
+      try {
+        const data = await api('set_selected', { usernames });
+        closeSheet();
+        showToast(usernames.length ? `${usernames.length} пользователей сохранено` : 'Список очищен');
+        if (data.state) state = { ...state, ...data.state };
+        render();
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'save-excluded') {
+      const usernames = parseUsernameInput($('excludedUsernames')?.value || '');
+      try {
+        if (usernames.length && !['all', 'contacts'].includes(state.audience)) {
+          await api('audience', { value:'contacts' });
+        }
+        const data = await api('set_excluded', { usernames });
+        closeSheet();
+        showToast(usernames.length ? `${usernames.length} исключений сохранено` : 'Исключения очищены');
+        if (data.state) state = { ...state, ...data.state };
+        render();
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
     if (action === 'picker-selected') {
       closeSheet();
       await openPicker('selected');
@@ -1379,7 +1406,6 @@
           showToast('Viewer Sync подключён');
           await refreshViewerSync({ silent: true });
           await refreshViewerAnalytics({ silent: true });
-          await refreshViewerAnalytics({ silent: true });
         }
       } catch (error) {
         showToast(error.message);
@@ -1393,6 +1419,7 @@
         notify('success');
         showToast('Viewer Sync подключён');
         await refreshViewerSync({ silent: true });
+        await refreshViewerAnalytics({ silent: true });
       } catch (error) {
         showToast(error.message);
       }
