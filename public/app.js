@@ -569,8 +569,8 @@
 
   function switchScreen(name) {
     currentScreen = name;
-    $('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
-    $('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === name));
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
+    document.querySelectorAll('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === name));
     $('actionDock').classList.toggle('hidden', name !== 'publish');
     haptic();
     window.scrollTo({ top:0, behavior:'smooth' });
