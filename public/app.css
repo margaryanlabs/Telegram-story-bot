@@ -885,3 +885,26 @@ input,textarea{caret-color:var(--accent)}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
 }
+
+
+.network-banner{
+  margin:-2px 0 12px;
+  padding:10px 12px;
+  border-radius:15px;
+  border:1px solid rgba(255,189,89,.16);
+  background:rgba(255,189,89,.075);
+  color:#ffd394;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px
+}
+.network-banner span{font-size:10px;font-weight:800}
+.network-banner small{font-size:8.5px;color:#cda96f;text-align:right;line-height:1.35}
+.network-banner[hidden]{display:none}
+.is-offline .primary-button{filter:saturate(.72)}
+.primary-button[aria-busy="true"]{cursor:wait}
+@media(max-width:390px){
+  .network-banner{align-items:flex-start;flex-direction:column;gap:3px}
+  .network-banner small{text-align:left}
+}
