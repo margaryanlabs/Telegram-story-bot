@@ -41,6 +41,10 @@
   let toastTimer = null;
   let viewerSearchQuery = '';
   let viewerRegisteredKey = '';
+  let composerFile = null;
+  let composerDataUrl = '';
+  let composerPreviewUrl = '';
+  let composerBusy = false;
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -83,6 +87,184 @@
     el.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  function formatBytes(bytes) {
+    const value = Number(bytes || 0);
+    if (value < 1024) return `${value} B`;
+    if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  async function loadImageSource(file) {
+    if (window.createImageBitmap) {
+      try {
+        return await createImageBitmap(file, { imageOrientation:'from-image' });
+      } catch {}
+    }
+
+    const url = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = url;
+      await image.decode();
+      return image;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function canvasToBlob(canvas, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('Не удалось подготовить изображение'));
+      }, 'image/jpeg', quality);
+    });
+  }
+
+  async function compressStoryImage(file) {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(String(file?.type || '').toLowerCase())) {
+      throw new Error('Поддерживаются JPG, PNG и WEBP');
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      throw new Error('Исходное фото слишком большое. Максимум 20 MB.');
+    }
+
+    const source = await loadImageSource(file);
+    const sourceWidth = source.width || source.naturalWidth;
+    const sourceHeight = source.height || source.naturalHeight;
+    if (!sourceWidth || !sourceHeight) throw new Error('Не удалось прочитать размеры изображения');
+
+    const render = async (maxSide, quality) => {
+      const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight));
+      const width = Math.max(1, Math.round(sourceWidth * scale));
+      const height = Math.max(1, Math.round(sourceHeight * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d', { alpha:false });
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(source, 0, 0, width, height);
+      return canvasToBlob(canvas, quality);
+    };
+
+    let blob = await render(1800, .88);
+    if (blob.size > 1.75 * 1024 * 1024) blob = await render(1600, .76);
+    if (blob.size > 1.75 * 1024 * 1024) blob = await render(1280, .68);
+    if (blob.size > 1.9 * 1024 * 1024) {
+      throw new Error('Фото не удалось достаточно сжать. Выбери другое изображение.');
+    }
+
+    try { source.close?.(); } catch {}
+
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Не удалось прочитать подготовленное фото'));
+      reader.readAsDataURL(blob);
+    });
+
+    return { blob, dataUrl };
+  }
+
+  function resetComposer() {
+    composerFile = null;
+    composerDataUrl = '';
+    composerBusy = false;
+    if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
+    composerPreviewUrl = '';
+    $('storyFileInput').value = '';
+    $('storyCaption').value = '';
+    $('captionCounter').textContent = '0 / 2048';
+    $('mediaPreview').hidden = true;
+    $('pickStoryMedia').hidden = false;
+    renderPublish();
+  }
+
+  async function prepareComposerFile(file) {
+    if (!file) return;
+
+    composerBusy = true;
+    $('composerState').textContent = 'Подготавливаю…';
+    $('composerState').className = 'composer-state busy';
+    renderPublish();
+
+    try {
+      const prepared = await compressStoryImage(file);
+      composerFile = file;
+      composerDataUrl = prepared.dataUrl;
+      if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
+      composerPreviewUrl = URL.createObjectURL(file);
+
+      $('mediaPreviewImage').src = composerPreviewUrl;
+      $('mediaFileName').textContent = file.name || 'Фото';
+      $('mediaFileMeta').textContent = `${formatBytes(file.size)} → ${formatBytes(prepared.blob.size)}`;
+      $('mediaPreview').hidden = false;
+      $('pickStoryMedia').hidden = true;
+      notify('success');
+    } catch (error) {
+      resetComposer();
+      notify('error');
+      showToast(error.message);
+    } finally {
+      composerBusy = false;
+      renderPublish();
+    }
+  }
+
+  async function publishComposerStory() {
+    if (!state.ready) {
+      await api('check');
+      if (!state.ready) throw new Error('Сначала подключи Telegram Business');
+    }
+    if (!composerDataUrl) {
+      $('storyFileInput').click();
+      return;
+    }
+    if (composerBusy || state.processing) return;
+
+    if (state.audience === 'selected' && !state.selected?.length) {
+      throw new Error('Добавь людей для режима «Выбранные»');
+    }
+    if (state.excluded?.length && !['all', 'contacts'].includes(state.audience)) {
+      throw new Error('Исключения работают только для «Все» и «Контакты»');
+    }
+
+    composerBusy = true;
+    state.processing = true;
+    renderPublish();
+    haptic('medium');
+
+    try {
+      const result = await api('publish_story', {
+        imageBase64: composerDataUrl,
+        caption: $('storyCaption').value || '',
+        nonce: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+      });
+
+      selectedViewerStory = result.storyId || state.lastStory || selectedViewerStory;
+      resetComposer();
+      notify('success');
+      showToast(`Story #${result.storyId || state.lastStory} опубликована`);
+
+      if (viewerState.session?.connected) {
+        await refreshViewerSync({ silent:true });
+        await refreshViewerAnalytics({ silent:true });
+      }
+    } catch (error) {
+      state.processing = false;
+      notify('error');
+      showToast(error.message);
+      throw error;
+    } finally {
+      composerBusy = false;
+      state.processing = false;
+      renderPublish();
+    }
   }
 
   function relativeTime(ts) {
@@ -147,6 +329,19 @@
       medium:'MEDIUM',
       low:'LOW',
     }[String(value || '')] || '—';
+  }
+
+  function parseUsernameInput(value) {
+    return [...new Set(String(value || '')
+      .split(/[\s,;]+/)
+      .map(item => item.trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, ''))
+      .filter(Boolean))]
+      .slice(0, 100);
+  }
+
+  function peopleChips(list) {
+    if (!list?.length) return '<span>Список пуст</span>';
+    return list.slice(0, 30).map(username => `<span>@${escapeHtml(username)}</span>`).join('');
   }
 
   function buildTimelinePolyline(points, key, maxValue) {
@@ -326,7 +521,7 @@
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
       $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
-      $('heroText').textContent = 'Аудитория, защита и история публикаций — в одном месте. Отправь фото в чат, когда всё готово.';
+      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Story Pilot.';
     } else if (permission) {
       $('heroStatusPill').querySelector('span').textContent = 'Нужно разрешение';
       $('connectionIcon').className = 'connection-icon warn';
@@ -345,6 +540,7 @@
       $('metricAccount').textContent = 'Ожидание';
     }
 
+    $('composerCard').classList.toggle('disabled', !ready);
     $('audienceBlock').classList.toggle('disabled', !ready);
     $('privacyBlock').classList.toggle('disabled', !ready);
   }
@@ -369,19 +565,51 @@
       : 'Для «Все» и «Контакты»';
 
     $('protectSwitch').checked = Boolean(state.protect);
+    $('selectedAudienceDesc').textContent = state.selected?.length
+      ? `${state.selected.length} пользователей`
+      : 'Только конкретные люди';
+
+    $('composerAudience').textContent = `Аудитория: ${audienceLabel(state.audience)}`;
+    $('composerProtection').textContent = `Защита: ${state.protect ? 'вкл' : 'выкл'}`;
+
+    const composerState = $('composerState');
+    if (composerBusy || state.processing) {
+      composerState.textContent = state.processing ? 'Публикую…' : 'Подготавливаю…';
+      composerState.className = 'composer-state busy';
+    } else if (composerDataUrl) {
+      composerState.textContent = 'Готово';
+      composerState.className = 'composer-state ready';
+    } else {
+      composerState.textContent = 'Не выбрано';
+      composerState.className = 'composer-state';
+    }
 
     if (latest) {
       $('lastStoryTitle').textContent = `Story #${latest.id} · ${audienceLong(latest.audience, latest)}`;
       $('lastStoryMeta').textContent = `${formatDate(latest.ts)}${latest.protect ? ' · защита включена' : ''}`;
     } else {
       $('lastStoryTitle').textContent = 'Пока нет публикаций';
-      $('lastStoryMeta').textContent = 'Отправь фото в чат Story Pilot';
+      $('lastStoryMeta').textContent = 'Выбери фото выше и опубликуй Story';
     }
 
     $('deleteStory').disabled = !state.lastStory || !state.ready;
-    $('mainButton').querySelector('b').textContent = state.ready
-      ? 'Открыть чат и отправить фото'
-      : 'Проверить подключение';
+    const mainLabel = $('mainButton').querySelector('b');
+    const mainIcon = $('mainButton').querySelector('span');
+    $('mainButton').disabled = Boolean(composerBusy || state.processing);
+
+    if (!state.ready) {
+      mainIcon.textContent = '↻';
+      mainLabel.textContent = 'Проверить подключение';
+    } else if (composerBusy || state.processing) {
+      mainIcon.textContent = '…';
+      mainLabel.textContent = state.processing ? 'Публикую Story…' : 'Подготавливаю фото…';
+    } else if (!composerDataUrl) {
+      mainIcon.textContent = '＋';
+      mainLabel.textContent = 'Выбрать фото';
+    } else {
+      mainIcon.textContent = '↑';
+      mainLabel.textContent = 'Опубликовать Story';
+    }
   }
 
   function renderViewers() {
@@ -697,7 +925,7 @@
       <div class="sheet-list">
         <div class="sheet-item"><strong>Business Connection</strong><span>${ready ? 'Активен' : 'Не подтверждён'}</span></div>
         <div class="sheet-item"><strong>Расширенная приватность</strong><span>${state.advancedPrivacy ? 'MTProto готов' : 'Не настроена'}</span></div>
-        <div class="sheet-item"><strong>Viewer Sync</strong><span>Требует отдельной пользовательской MTProto-сессии</span></div>
+        <div class="sheet-item"><strong>Viewer Sync</strong><span>${viewerState.session?.connected ? 'Подключён · фоновые просмотры активны' : 'Не подключён'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
@@ -893,16 +1121,29 @@
     else if (confirm(`Удалить Story #${storyId}?`)) run();
   }
 
-  $$('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
-  $$('.audience-card').forEach(button => button.addEventListener('click', () => setAudience(button.dataset.audience)));
+  document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
+  document.querySelectorAll('.audience-card').forEach(button => button.addEventListener('click', async () => {
+    const mode = button.dataset.audience;
+    if (mode === 'selected' && !state.selected?.length) {
+      $('selectedRow').click();
+      return;
+    }
+    await setAudience(mode);
+  }));
   $('protectSwitch').addEventListener('change', event => setProtect(event.target.checked));
   $('selectedRow').addEventListener('click', () => {
     openSheet(`
       <span class="kicker">Только выбранные</span>
-      <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Список пока пуст'}</h2>
-      <p>Telegram позволяет выбрать до 10 человек за одно открытие. Story Pilot объединяет группы — можешь добавлять дальше.</p>
+      <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Добавь людей'}</h2>
+      <p>Вставь @username через пробел, запятую или с новой строки. Можно до 100 человек — всё сохраняется прямо в приложении.</p>
+      <div class="people-input-wrap">
+        <label for="selectedUsernames">Usernames</label>
+        <textarea id="selectedUsernames" placeholder="@alex\n@maria">${state.selected?.length ? '@' + state.selected.join('\n@') : ''}</textarea>
+      </div>
+      <div class="people-chips">${peopleChips(state.selected)}</div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="picker-selected">Добавить людей</button>
+        <button class="accent" data-sheet-action="save-selected">Сохранить в приложении</button>
+        <button data-sheet-action="picker-selected">Выбрать через Telegram</button>
         ${state.selected?.length ? '<button data-sheet-action="clear-selected">Очистить список</button>' : ''}
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -911,10 +1152,16 @@
   $('excludeRow').addEventListener('click', () => {
     openSheet(`
       <span class="kicker">Исключения</span>
-      <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Никто не исключён'}</h2>
-      <p>Исключения применяются к режимам «Все» и «Контакты». Можно добавлять пользователей группами по 10.</p>
+      <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Добавь исключения'}</h2>
+      <p>Вставь @username. Если сейчас выбран другой режим, Story Pilot автоматически переключит аудиторию на «Контакты».</p>
+      <div class="people-input-wrap">
+        <label for="excludedUsernames">Usernames</label>
+        <textarea id="excludedUsernames" placeholder="@alex\n@maria">${state.excluded?.length ? '@' + state.excluded.join('\n@') : ''}</textarea>
+      </div>
+      <div class="people-chips">${peopleChips(state.excluded)}</div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="picker-exclude">Добавить людей</button>
+        <button class="accent" data-sheet-action="save-excluded">Сохранить в приложении</button>
+        <button data-sheet-action="picker-exclude">Выбрать через Telegram</button>
         ${state.excluded?.length ? '<button data-sheet-action="clear-excluded">Очистить исключения</button>' : ''}
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -954,8 +1201,9 @@
     }
 
     if (!item) {
-      haptic('medium');
-      try { tg?.close(); } catch {}
+      switchScreen('publish');
+      showToast('Выбери фото — всё остальное делается здесь');
+      setTimeout(() => $('storyFileInput').click(), 180);
       return;
     }
 
@@ -1086,6 +1334,33 @@
       closeSheet();
       await refresh();
     }
+    if (action === 'save-selected') {
+      const usernames = parseUsernameInput($('selectedUsernames')?.value || '');
+      try {
+        const data = await api('set_selected', { usernames });
+        closeSheet();
+        showToast(usernames.length ? `${usernames.length} пользователей сохранено` : 'Список очищен');
+        if (data.state) state = { ...state, ...data.state };
+        render();
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+    if (action === 'save-excluded') {
+      const usernames = parseUsernameInput($('excludedUsernames')?.value || '');
+      try {
+        if (usernames.length && !['all', 'contacts'].includes(state.audience)) {
+          await api('audience', { value:'contacts' });
+        }
+        const data = await api('set_excluded', { usernames });
+        closeSheet();
+        showToast(usernames.length ? `${usernames.length} исключений сохранено` : 'Исключения очищены');
+        if (data.state) state = { ...state, ...data.state };
+        render();
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
     if (action === 'picker-selected') {
       closeSheet();
       await openPicker('selected');
@@ -1133,7 +1408,6 @@
           showToast('Viewer Sync подключён');
           await refreshViewerSync({ silent: true });
           await refreshViewerAnalytics({ silent: true });
-          await refreshViewerAnalytics({ silent: true });
         }
       } catch (error) {
         showToast(error.message);
@@ -1147,6 +1421,7 @@
         notify('success');
         showToast('Viewer Sync подключён');
         await refreshViewerSync({ silent: true });
+        await refreshViewerAnalytics({ silent: true });
       } catch (error) {
         showToast(error.message);
       }
@@ -1206,18 +1481,28 @@
     deleteStory(storyId);
   });
 
-  $('mainButton').addEventListener('click', async () => {
+  $('pickStoryMedia').addEventListener('click', () => {
     if (!state.ready) {
-      try {
-        await api('check');
-        showToast(state.ready ? 'Готово — Telegram подключён' : 'Сначала подключи Telegram Business');
-      } catch (error) {
-        showToast(error.message);
-      }
+      showToast('Сначала подключи Telegram Business');
       return;
     }
-    haptic('medium');
-    try { tg?.close(); } catch {}
+    $('storyFileInput').click();
+  });
+
+  $('storyFileInput').addEventListener('change', event => {
+    prepareComposerFile(event.target.files?.[0] || null);
+  });
+
+  $('removeStoryMedia').addEventListener('click', resetComposer);
+
+  $('storyCaption').addEventListener('input', event => {
+    $('captionCounter').textContent = `${event.target.value.length} / 2048`;
+  });
+
+  $('mainButton').addEventListener('click', async () => {
+    try {
+      await publishComposerStory();
+    } catch {}
   });
 
   try {

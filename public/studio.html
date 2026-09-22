@@ -36,7 +36,7 @@
         </div>
         <div class="hero-copy">
           <h1 id="heroTitle">Stories.<br><span>Без лишнего.</span></h1>
-          <p id="heroText">Настрой аудиторию один раз и отправляй фото в чат. Story Pilot сделает остальное.</p>
+          <p id="heroText">Выбери фото, настрой аудиторию и опубликуй Story — всё прямо здесь, без перехода в чат.</p>
         </div>
         <div class="hero-stats">
           <div>
@@ -61,6 +61,44 @@
           <span id="connectionText">Проверяем Business Connection и разрешение на Stories.</span>
         </div>
         <button class="text-button" id="checkButton" type="button">Проверить</button>
+      </section>
+
+      <section class="composer-card" id="composerCard">
+        <div class="composer-head">
+          <div>
+            <span class="kicker">Новая Story</span>
+            <h2>Фото и подпись</h2>
+          </div>
+          <span class="composer-state" id="composerState">Не выбрано</span>
+        </div>
+
+        <input id="storyFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+
+        <button class="media-picker" id="pickStoryMedia" type="button">
+          <span class="media-picker-icon">＋</span>
+          <strong>Выбрать фото</strong>
+          <small>JPG · PNG · WEBP</small>
+        </button>
+
+        <div class="media-preview" id="mediaPreview" hidden>
+          <img id="mediaPreviewImage" alt="Предпросмотр Story" />
+          <div class="media-preview-gradient"></div>
+          <div class="media-preview-meta">
+            <strong id="mediaFileName">Фото</strong>
+            <span id="mediaFileMeta">—</span>
+          </div>
+          <button class="media-remove" id="removeStoryMedia" type="button" aria-label="Удалить выбранное фото">×</button>
+        </div>
+
+        <label class="caption-field" for="storyCaption">
+          <span>Подпись <small id="captionCounter">0 / 2048</small></span>
+          <textarea id="storyCaption" maxlength="2048" rows="3" placeholder="Можно оставить пустой"></textarea>
+        </label>
+
+        <div class="composer-summary">
+          <span id="composerAudience">Аудитория: Стандарт</span>
+          <span id="composerProtection">Защита: выкл</span>
+        </div>
       </section>
 
       <section class="block" id="audienceBlock">
@@ -95,6 +133,12 @@
             <span class="audience-icon">✦</span>
             <span class="audience-name">Близкие</span>
             <span class="audience-desc">Close Friends</span>
+            <span class="choice-dot">✓</span>
+          </button>
+          <button class="audience-card audience-card-wide" data-audience="selected" type="button">
+            <span class="audience-icon">◎</span>
+            <span class="audience-name">Выбранные</span>
+            <span class="audience-desc" id="selectedAudienceDesc">Только конкретные люди</span>
             <span class="choice-dot">✓</span>
           </button>
         </div>
@@ -147,7 +191,7 @@
         <div>
           <span class="kicker">Последняя Story</span>
           <strong id="lastStoryTitle">Пока нет публикаций</strong>
-          <small id="lastStoryMeta">Отправь фото в чат Story Pilot</small>
+          <small id="lastStoryMeta">Выбери фото выше и опубликуй Story</small>
         </div>
         <button class="ghost-danger" id="deleteStory" type="button">Удалить</button>
       </section>
@@ -437,7 +481,7 @@
   <div class="action-dock" id="actionDock">
     <button class="primary-button" id="mainButton" type="button">
       <span>＋</span>
-      <b>Открыть чат и отправить фото</b>
+      <b>Выбрать фото</b>
     </button>
   </div>
 
