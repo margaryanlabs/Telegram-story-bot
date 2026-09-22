@@ -41,6 +41,10 @@
   let toastTimer = null;
   let viewerSearchQuery = '';
   let viewerRegisteredKey = '';
+  let composerFile = null;
+  let composerDataUrl = '';
+  let composerPreviewUrl = '';
+  let composerBusy = false;
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -83,6 +87,184 @@
     el.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  function formatBytes(bytes) {
+    const value = Number(bytes || 0);
+    if (value < 1024) return `${value} B`;
+    if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  async function loadImageSource(file) {
+    if (window.createImageBitmap) {
+      try {
+        return await createImageBitmap(file, { imageOrientation:'from-image' });
+      } catch {}
+    }
+
+    const url = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = url;
+      await image.decode();
+      return image;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function canvasToBlob(canvas, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('Не удалось подготовить изображение'));
+      }, 'image/jpeg', quality);
+    });
+  }
+
+  async function compressStoryImage(file) {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(String(file?.type || '').toLowerCase())) {
+      throw new Error('Поддерживаются JPG, PNG и WEBP');
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      throw new Error('Исходное фото слишком большое. Максимум 20 MB.');
+    }
+
+    const source = await loadImageSource(file);
+    const sourceWidth = source.width || source.naturalWidth;
+    const sourceHeight = source.height || source.naturalHeight;
+    if (!sourceWidth || !sourceHeight) throw new Error('Не удалось прочитать размеры изображения');
+
+    const render = async (maxSide, quality) => {
+      const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight));
+      const width = Math.max(1, Math.round(sourceWidth * scale));
+      const height = Math.max(1, Math.round(sourceHeight * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d', { alpha:false });
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(source, 0, 0, width, height);
+      return canvasToBlob(canvas, quality);
+    };
+
+    let blob = await render(1800, .88);
+    if (blob.size > 1.75 * 1024 * 1024) blob = await render(1600, .76);
+    if (blob.size > 1.75 * 1024 * 1024) blob = await render(1280, .68);
+    if (blob.size > 1.9 * 1024 * 1024) {
+      throw new Error('Фото не удалось достаточно сжать. Выбери другое изображение.');
+    }
+
+    try { source.close?.(); } catch {}
+
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Не удалось прочитать подготовленное фото'));
+      reader.readAsDataURL(blob);
+    });
+
+    return { blob, dataUrl };
+  }
+
+  function resetComposer() {
+    composerFile = null;
+    composerDataUrl = '';
+    composerBusy = false;
+    if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
+    composerPreviewUrl = '';
+    $('storyFileInput').value = '';
+    $('storyCaption').value = '';
+    $('captionCounter').textContent = '0 / 2048';
+    $('mediaPreview').hidden = true;
+    $('pickStoryMedia').hidden = false;
+    renderPublish();
+  }
+
+  async function prepareComposerFile(file) {
+    if (!file) return;
+
+    composerBusy = true;
+    $('composerState').textContent = 'Подготавливаю…';
+    $('composerState').className = 'composer-state busy';
+    renderPublish();
+
+    try {
+      const prepared = await compressStoryImage(file);
+      composerFile = file;
+      composerDataUrl = prepared.dataUrl;
+      if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
+      composerPreviewUrl = URL.createObjectURL(file);
+
+      $('mediaPreviewImage').src = composerPreviewUrl;
+      $('mediaFileName').textContent = file.name || 'Фото';
+      $('mediaFileMeta').textContent = `${formatBytes(file.size)} → ${formatBytes(prepared.blob.size)}`;
+      $('mediaPreview').hidden = false;
+      $('pickStoryMedia').hidden = true;
+      notify('success');
+    } catch (error) {
+      resetComposer();
+      notify('error');
+      showToast(error.message);
+    } finally {
+      composerBusy = false;
+      renderPublish();
+    }
+  }
+
+  async function publishComposerStory() {
+    if (!state.ready) {
+      await api('check');
+      if (!state.ready) throw new Error('Сначала подключи Telegram Business');
+    }
+    if (!composerDataUrl) {
+      $('storyFileInput').click();
+      return;
+    }
+    if (composerBusy || state.processing) return;
+
+    if (state.audience === 'selected' && !state.selected?.length) {
+      throw new Error('Добавь людей для режима «Выбранные»');
+    }
+    if (state.excluded?.length && !['all', 'contacts'].includes(state.audience)) {
+      throw new Error('Исключения работают только для «Все» и «Контакты»');
+    }
+
+    composerBusy = true;
+    state.processing = true;
+    renderPublish();
+    haptic('medium');
+
+    try {
+      const result = await api('publish_story', {
+        imageBase64: composerDataUrl,
+        caption: $('storyCaption').value || '',
+        nonce: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+      });
+
+      selectedViewerStory = result.storyId || state.lastStory || selectedViewerStory;
+      resetComposer();
+      notify('success');
+      showToast(`Story #${result.storyId || state.lastStory} опубликована`);
+
+      if (viewerState.session?.connected) {
+        await refreshViewerSync({ silent:true });
+        await refreshViewerAnalytics({ silent:true });
+      }
+    } catch (error) {
+      state.processing = false;
+      notify('error');
+      showToast(error.message);
+      throw error;
+    } finally {
+      composerBusy = false;
+      state.processing = false;
+      renderPublish();
+    }
   }
 
   function relativeTime(ts) {
