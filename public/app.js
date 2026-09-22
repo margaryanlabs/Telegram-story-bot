@@ -149,6 +149,26 @@
     }[String(value || '')] || '—';
   }
 
+  function buildTimelinePolyline(points, key, maxValue) {
+    const width = 320;
+    const height = 116;
+    const left = 8;
+    const right = 8;
+    const top = 10;
+    const bottom = 16;
+    const usableWidth = width - left - right;
+    const usableHeight = height - top - bottom;
+    const maxMinutes = Math.max(1, ...points.map((point, index) => Number.isFinite(Number(point.minutes)) ? Number(point.minutes) : index));
+
+    return points.map((point, index) => {
+      const minute = Number.isFinite(Number(point.minutes)) ? Number(point.minutes) : index;
+      const value = Math.max(0, Number(point[key] || 0));
+      const x = left + (minute / maxMinutes) * usableWidth;
+      const y = top + usableHeight - (value / Math.max(1, maxValue)) * usableHeight;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
+
   function computeAnalytics() {
     const history = state.history || [];
     const active = history.filter(item => !item.deleted);
@@ -498,6 +518,38 @@
     $('intelForwards').textContent = intel ? String(intel.forwards || 0) : '—';
 
     $('intelEmpty').style.display = intel ? 'none' : 'block';
+
+    const timeline = intel?.latestTimeline || [];
+    const timelineStoryId = intel?.latestTimelineStoryId || null;
+    if (!timeline.length) {
+      $('timelineTitle').textContent = timelineStoryId ? `Story #${timelineStoryId}` : 'Последняя Story';
+      $('timelineMeta').textContent = 'snapshots';
+      $('timelineChart').innerHTML = '';
+      $('timelineChartWrap').style.display = 'none';
+      $('timelineEmpty').style.display = 'block';
+    } else {
+      const maxValue = Math.max(1, ...timeline.map(point => Number(point.totalViews || 0)));
+      const totalLine = buildTimelinePolyline(timeline, 'totalViews', maxValue);
+      const knownLine = buildTimelinePolyline(timeline, 'identifiedViews', maxValue);
+      const gapLine = buildTimelinePolyline(timeline, 'unattributedViews', maxValue);
+      const lastPoint = timeline[timeline.length - 1] || {};
+      const maxMinutes = Math.max(0, ...timeline.map(point => Number(point.minutes || 0)));
+
+      $('timelineTitle').textContent = timelineStoryId ? `Story #${timelineStoryId}` : 'Последняя Story';
+      $('timelineMeta').textContent = `${timeline.length} snapshots · ${lastPoint.totalViews || 0} views · ${maxMinutes}м`;
+      $('timelineChartWrap').style.display = 'block';
+      $('timelineEmpty').style.display = 'none';
+      $('timelineChart').innerHTML = `
+        <g class="timeline-grid">
+          <line x1="8" y1="10" x2="312" y2="10"></line>
+          <line x1="8" y1="55" x2="312" y2="55"></line>
+          <line x1="8" y1="100" x2="312" y2="100"></line>
+        </g>
+        <polyline class="timeline-line timeline-total" points="${totalLine}"></polyline>
+        <polyline class="timeline-line timeline-known" points="${knownLine}"></polyline>
+        <polyline class="timeline-line timeline-gap" points="${gapLine}"></polyline>
+      `;
+    }
 
     const people = intel?.topPeople || [];
     if (!people.length) {
