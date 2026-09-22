@@ -331,6 +331,19 @@
     }[String(value || '')] || '—';
   }
 
+  function parseUsernameInput(value) {
+    return [...new Set(String(value || '')
+      .split(/[\s,;]+/)
+      .map(item => item.trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, ''))
+      .filter(Boolean))]
+      .slice(0, 100);
+  }
+
+  function peopleChips(list) {
+    if (!list?.length) return '<span>Список пуст</span>';
+    return list.slice(0, 30).map(username => `<span>@${escapeHtml(username)}</span>`).join('');
+  }
+
   function buildTimelinePolyline(points, key, maxValue) {
     const width = 320;
     const height = 116;
@@ -1108,16 +1121,28 @@
     else if (confirm(`Удалить Story #${storyId}?`)) run();
   }
 
-  $$('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
-  $$('.audience-card').forEach(button => button.addEventListener('click', () => setAudience(button.dataset.audience)));
+  $('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
+  $('.audience-card').forEach(button => button.addEventListener('click', async () => {
+    const mode = button.dataset.audience;
+    await setAudience(mode);
+    if (mode === 'selected' && !state.selected?.length) {
+      $('selectedRow').click();
+    }
+  }));
   $('protectSwitch').addEventListener('change', event => setProtect(event.target.checked));
   $('selectedRow').addEventListener('click', () => {
     openSheet(`
       <span class="kicker">Только выбранные</span>
-      <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Список пока пуст'}</h2>
-      <p>Telegram позволяет выбрать до 10 человек за одно открытие. Story Pilot объединяет группы — можешь добавлять дальше.</p>
+      <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Добавь людей'}</h2>
+      <p>Вставь @username через пробел, запятую или с новой строки. Можно до 100 человек — всё сохраняется прямо в приложении.</p>
+      <div class="people-input-wrap">
+        <label for="selectedUsernames">Usernames</label>
+        <textarea id="selectedUsernames" placeholder="@alex\n@maria">@${(state.selected || []).join('\n@')}</textarea>
+      </div>
+      <div class="people-chips">${peopleChips(state.selected)}</div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="picker-selected">Добавить людей</button>
+        <button class="accent" data-sheet-action="save-selected">Сохранить в приложении</button>
+        <button data-sheet-action="picker-selected">Выбрать через Telegram</button>
         ${state.selected?.length ? '<button data-sheet-action="clear-selected">Очистить список</button>' : ''}
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -1126,10 +1151,16 @@
   $('excludeRow').addEventListener('click', () => {
     openSheet(`
       <span class="kicker">Исключения</span>
-      <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Никто не исключён'}</h2>
-      <p>Исключения применяются к режимам «Все» и «Контакты». Можно добавлять пользователей группами по 10.</p>
+      <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Добавь исключения'}</h2>
+      <p>Вставь @username. Если сейчас выбран другой режим, Story Pilot автоматически переключит аудиторию на «Контакты».</p>
+      <div class="people-input-wrap">
+        <label for="excludedUsernames">Usernames</label>
+        <textarea id="excludedUsernames" placeholder="@alex\n@maria">@${(state.excluded || []).join('\n@')}</textarea>
+      </div>
+      <div class="people-chips">${peopleChips(state.excluded)}</div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="picker-exclude">Добавить людей</button>
+        <button class="accent" data-sheet-action="save-excluded">Сохранить в приложении</button>
+        <button data-sheet-action="picker-exclude">Выбрать через Telegram</button>
         ${state.excluded?.length ? '<button data-sheet-action="clear-excluded">Очистить исключения</button>' : ''}
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -1421,18 +1452,28 @@
     deleteStory(storyId);
   });
 
-  $('mainButton').addEventListener('click', async () => {
+  $('pickStoryMedia').addEventListener('click', () => {
     if (!state.ready) {
-      try {
-        await api('check');
-        showToast(state.ready ? 'Готово — Telegram подключён' : 'Сначала подключи Telegram Business');
-      } catch (error) {
-        showToast(error.message);
-      }
+      showToast('Сначала подключи Telegram Business');
       return;
     }
-    haptic('medium');
-    try { tg?.close(); } catch {}
+    $('storyFileInput').click();
+  });
+
+  $('storyFileInput').addEventListener('change', event => {
+    prepareComposerFile(event.target.files?.[0] || null);
+  });
+
+  $('removeStoryMedia').addEventListener('click', resetComposer);
+
+  $('storyCaption').addEventListener('input', event => {
+    $('captionCounter').textContent = `${event.target.value.length} / 2048`;
+  });
+
+  $('mainButton').addEventListener('click', async () => {
+    try {
+      await publishComposerStory();
+    } catch {}
   });
 
   try {
