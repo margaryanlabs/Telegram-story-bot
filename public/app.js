@@ -407,6 +407,38 @@
     const syncButton = $('viewerSetupButton');
     const connected = viewerState.session?.connected === true;
 
+    const hasStory = Boolean(item && !item.deleted);
+    const quickTelegram = $('quickTelegramStatus');
+    const quickViewer = $('quickViewerStatus');
+    const quickStory = $('quickStoryStatus');
+    const quickBadge = $('quickReadyBadge');
+    const quickPrimary = $('quickPrimaryButton');
+    const testAlertButton = $('testAlertButton');
+
+    quickTelegram.textContent = state.ready ? 'Готово' : 'Нужно подключить';
+    quickViewer.textContent = connected ? 'Готово' : 'Нужно подключить';
+    quickStory.textContent = hasStory ? `#${item.id}` : 'Нужно опубликовать';
+
+    $('quickTelegramStep').classList.toggle('done', Boolean(state.ready));
+    $('quickViewerStep').classList.toggle('done', connected);
+    $('quickStoryStep').classList.toggle('done', hasStory);
+
+    const completed = [Boolean(state.ready), connected, hasStory].filter(Boolean).length;
+    quickBadge.textContent = completed === 3 ? '3/3 · READY' : `${completed}/3`;
+    quickBadge.classList.toggle('ready', completed === 3);
+
+    if (!state.ready) {
+      quickPrimary.textContent = 'Проверить Telegram';
+    } else if (!connected) {
+      quickPrimary.textContent = 'Подключить Viewer Sync';
+    } else if (!hasStory) {
+      quickPrimary.textContent = 'Опубликовать Story';
+    } else {
+      quickPrimary.textContent = 'Обновить данные';
+    }
+
+    testAlertButton.disabled = !connected;
+
     syncState.className = 'viewer-sync-state';
     if (viewerState.configured === false) {
       $('viewerSyncTitle').textContent = 'Viewer Sync backend почти готов.';
@@ -417,7 +449,7 @@
     } else if (connected) {
       const account = viewerState.session?.account || {};
       $('viewerSyncTitle').textContent = 'Viewer Sync активен.';
-      $('viewerSyncText').textContent = 'Story Pilot снимает разрешённые Telegram snapshots и показывает только подтверждённых зрителей.';
+      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый view замечается в фоне, затем проходит privacy reconciliation.';
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
       syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
@@ -901,6 +933,64 @@
   $('profileButton').addEventListener('click', profileSheet);
   $('viewerSetupButton').addEventListener('click', viewerSetupSheet);
   $('viewerStoryPicker').addEventListener('click', viewerStorySheet);
+
+  $('quickPrimaryButton').addEventListener('click', async () => {
+    const connected = viewerState.session?.connected === true;
+    const item = (state.history || []).find(entry => !entry.deleted) || null;
+
+    if (!state.ready) {
+      try {
+        await api('check');
+        showToast(state.ready ? 'Telegram подключён' : 'Нужно подключить Telegram Business');
+      } catch (error) {
+        showToast(error.message);
+      }
+      return;
+    }
+
+    if (!connected) {
+      viewerSetupSheet();
+      return;
+    }
+
+    if (!item) {
+      haptic('medium');
+      try { tg?.close(); } catch {}
+      return;
+    }
+
+    await refreshViewerSync({ silent: false });
+    await refreshViewerAnalytics({ silent: true });
+    showToast('Данные обновлены');
+  });
+
+  $('testAlertButton').addEventListener('click', async () => {
+    const button = $('testAlertButton');
+    if (!viewerState.session?.connected) {
+      showToast('Сначала подключи Viewer Sync');
+      return;
+    }
+
+    const previous = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Отправляю тест…';
+
+    try {
+      await viewerApi('test_alert', {}, null);
+      notify('success');
+      showToast('Тестовое уведомление отправлено в чат');
+      button.textContent = 'Уведомление отправлено ✓';
+      setTimeout(() => {
+        button.textContent = previous;
+        button.disabled = !viewerState.session?.connected;
+      }, 1600);
+    } catch (error) {
+      notify('error');
+      showToast(error.message);
+      button.textContent = previous;
+      button.disabled = !viewerState.session?.connected;
+    }
+  });
   $('viewerSearch').addEventListener('input', event => {
     viewerSearchQuery = event.target.value || '';
     renderViewers();
