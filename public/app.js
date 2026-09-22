@@ -47,6 +47,7 @@
     session: null,
     story: null,
     viewers: [],
+    analytics: null,
     error: null,
   };
 
@@ -105,6 +106,38 @@
     } catch {
       return 'Недавно';
     }
+  }
+
+  function formatDuration(seconds) {
+    const value = Number(seconds);
+    if (!Number.isFinite(value) || value < 0) return '—';
+    if (value < 60) return `${Math.max(1, Math.round(value))}с`;
+    if (value < 3600) return `${Math.round(value / 60)}м`;
+    if (value < 86400) return `${Math.round(value / 3600)}ч`;
+    return `${Math.round(value / 86400)}д`;
+  }
+
+  function formatIso(value) {
+    if (!value) return '—';
+    try {
+      return new Intl.DateTimeFormat('ru', {
+        day:'numeric',
+        month:'short',
+        hour:'2-digit',
+        minute:'2-digit',
+      }).format(new Date(value));
+    } catch {
+      return '—';
+    }
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
   }
 
   function computeAnalytics() {
@@ -189,6 +222,30 @@
     return data;
   }
 
+  async function refreshViewerAnalytics({ silent = true } = {}) {
+    if (!tg?.initData || !viewerState.session?.connected) {
+      viewerState.analytics = null;
+      renderAnalytics();
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/viewer-sync?analytics=1', {
+        method: 'GET',
+        headers: {
+          'x-telegram-init-data': tg.initData,
+          'content-type':'application/json',
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось загрузить Viewer Analytics');
+      viewerState.analytics = data.analytics || null;
+    } catch (error) {
+      if (!silent) showToast(error.message);
+    }
+    renderAnalytics();
+  }
+
   async function refreshViewerSync({ silent = false } = {}) {
     try {
       let data = await viewerApi();
@@ -208,6 +265,7 @@
         session: data.session || null,
         story: data.story || null,
         viewers: data.viewers || [],
+        analytics: viewerState.analytics,
         error: null,
       };
     } catch (error) {
@@ -382,14 +440,14 @@
       const reaction = viewer.reaction_json?.value ? ` · ${viewer.reaction_json.value}` : '';
       return `
         <div class="viewer-row">
-          <div class="viewer-avatar">${initials}</div>
+          <div class="viewer-avatar">${escapeHtml(initials)}</div>
           <div class="viewer-copy">
-            <strong>${name}</strong>
-            <span>${username}${viewer.is_contact ? ' · контакт' : ''}</span>
+            <strong>${escapeHtml(name)}</strong>
+            <span>${escapeHtml(username)}${viewer.is_contact ? ' · контакт' : ''}</span>
           </div>
           <div class="viewer-side">
-            <strong>${viewedAt}</strong>
-            <span>confirmed${reaction}</span>
+            <strong>${escapeHtml(viewedAt)}</strong>
+            <span>confirmed${escapeHtml(reaction)}</span>
           </div>
         </div>`;
     }).join('');
@@ -415,6 +473,64 @@
           <strong>${count}</strong>
         </div>`;
     }).join('');
+
+    const intel = viewerState.analytics;
+    const connected = viewerState.session?.connected === true;
+    $('viewerAnalyticsBadge').textContent = connected ? 'Live data' : 'Viewer Sync';
+    $('intelUnique').textContent = intel ? String(intel.uniqueViewers || 0) : '—';
+    $('intelRepeat').textContent = intel ? String(intel.repeatViewers || 0) : '—';
+    $('intelGap').textContent = intel ? String(intel.unattributedViews || 0) : '—';
+    $('intelDelay').textContent = intel ? formatDuration(intel.avgDelaySec) : '—';
+    $('intelContacts').textContent = intel ? String(intel.contacts || 0) : '—';
+    $('intelNonContacts').textContent = intel ? String(intel.nonContacts || 0) : '—';
+    $('intelReactions').textContent = intel ? String(intel.reactions || 0) : '—';
+    $('intelForwards').textContent = intel ? String(intel.forwards || 0) : '—';
+
+    $('intelEmpty').style.display = intel ? 'none' : 'block';
+
+    const people = intel?.topPeople || [];
+    if (!people.length) {
+      $('topAudienceList').innerHTML = '<div class="intel-empty">Когда появятся подтверждённые просмотры нескольких Stories, здесь станет видна повторяемость аудитории.</div>';
+    } else {
+      $('topAudienceList').innerHTML = people.slice(0, 10).map((person, index) => {
+        const name = person.displayName || (person.username ? '@' + person.username : 'Telegram user');
+        const handle = person.username ? '@' + person.username : (person.isContact ? 'контакт' : 'viewer');
+        const fast = Number.isFinite(Number(person.fast15Rate)) ? `${person.fast15Rate}% ≤15м` : 'скорость —';
+        return `
+          <button class="top-person" type="button" data-person-id="${escapeHtml(person.viewerUserId)}">
+            <span class="top-rank">${index + 1}</span>
+            <span class="top-person-copy">
+              <strong>${escapeHtml(name)}</strong>
+              <small>${escapeHtml(handle)} · ${person.viewedStories} Stories · ${escapeHtml(fast)}</small>
+            </span>
+            <span class="top-person-side">
+              <strong>${person.viewedStories}</strong>
+              <small>views</small>
+            </span>
+          </button>`;
+      }).join('');
+    }
+
+    const performance = intel?.storyPerformance || [];
+    if (!performance.length) {
+      $('storyPerformanceList').innerHTML = '<div class="intel-empty">После первых snapshots здесь появится скорость набора просмотров.</div>';
+    } else {
+      $('storyPerformanceList').innerHTML = performance.slice(0, 8).map(story => {
+        const milestones = [
+          ['5м', story.views5m],
+          ['15м', story.views15m],
+          ['60м', story.views60m],
+        ].map(([label, value]) => `<span><small>${label}</small><strong>${value ?? '—'}</strong></span>`).join('');
+        return `
+          <article class="performance-row">
+            <div>
+              <strong>Story #${escapeHtml(story.storyId)}</strong>
+              <small>${escapeHtml(formatIso(story.postedAt))} · ${story.views} total · ${Math.max(0, story.views - story.identified)} unattributed</small>
+            </div>
+            <div class="milestones">${milestones}</div>
+          </article>`;
+      }).join('');
+    }
   }
 
   function renderArchive() {
@@ -453,12 +569,13 @@
 
   function switchScreen(name) {
     currentScreen = name;
-    $('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
-    $('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === name));
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
+    document.querySelectorAll('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === name));
     $('actionDock').classList.toggle('hidden', name !== 'publish');
     haptic();
     window.scrollTo({ top:0, behavior:'smooth' });
     if (name === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
+    if (name === 'analytics' && tg?.initData) refreshViewerAnalytics({ silent: true });
   }
 
   function openSheet(html) {
@@ -709,6 +826,31 @@
     viewerSearchQuery = event.target.value || '';
     renderViewers();
   });
+  $('topAudienceList').addEventListener('click', event => {
+    const row = event.target.closest('[data-person-id]');
+    if (!row) return;
+    const person = (viewerState.analytics?.topPeople || []).find(
+      item => String(item.viewerUserId) === String(row.dataset.personId),
+    );
+    if (!person) return;
+
+    const name = person.displayName || (person.username ? '@' + person.username : 'Telegram user');
+    const handle = person.username ? '@' + person.username : (person.isContact ? 'Контакт Telegram' : 'Без username');
+    openSheet(`
+      <span class="kicker">Viewer profile</span>
+      <h2>${escapeHtml(name)}</h2>
+      <p>${escapeHtml(handle)} · только подтверждённые Story interactions.</p>
+      <div class="sheet-list">
+        <div class="sheet-item"><strong>Stories viewed</strong><span>${person.viewedStories || 0}</span></div>
+        <div class="sheet-item"><strong>First seen</strong><span>${escapeHtml(formatIso(person.firstSeenAt))}</span></div>
+        <div class="sheet-item"><strong>Last seen</strong><span>${escapeHtml(formatIso(person.lastSeenAt))}</span></div>
+        <div class="sheet-item"><strong>Average delay</strong><span>${escapeHtml(formatDuration(person.avgDelaySec))}</span></div>
+        <div class="sheet-item"><strong>Fast views ≤ 15 min</strong><span>${Number.isFinite(Number(person.fast15Rate)) ? person.fast15Rate + '%' : '—'}</span></div>
+        <div class="sheet-item"><strong>Reactions</strong><span>${person.reactions || 0}</span></div>
+      </div>
+      <div class="sheet-actions"><button class="accent" data-sheet-action="close">Закрыть</button></div>
+    `);
+  });
   $('sheetBackdrop').addEventListener('click', closeSheet);
 
   $('sheet').addEventListener('click', async event => {
@@ -765,6 +907,8 @@
           notify('success');
           showToast('Viewer Sync подключён');
           await refreshViewerSync({ silent: true });
+          await refreshViewerAnalytics({ silent: true });
+          await refreshViewerAnalytics({ silent: true });
         }
       } catch (error) {
         showToast(error.message);
@@ -792,6 +936,7 @@
           session: null,
           story: null,
           viewers: [],
+          analytics: null,
           error: null,
         };
         renderViewers();
@@ -868,6 +1013,9 @@
     setInterval(() => {
       if (currentScreen === 'viewers' && viewerState.session?.connected) {
         refreshViewerSync({ silent: true });
+      }
+      if (currentScreen === 'analytics' && viewerState.session?.connected) {
+        refreshViewerAnalytics({ silent: true });
       }
     }, 30000);
   } else {

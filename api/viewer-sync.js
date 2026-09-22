@@ -9,6 +9,7 @@ import {
   saveAuthChallenge,
   deleteAuthChallenge,
   getViewerStoryData,
+  getViewerAnalytics,
   trackPublishedStory,
 } from '../lib/viewer-sync-store.js';
 import {
@@ -162,9 +163,16 @@ export default async function handler(req, res) {
       const session = await getViewerSession(userId);
       const rawStoryId = req.query?.storyId;
       const storyId = Number(Array.isArray(rawStoryId) ? rawStoryId[0] : rawStoryId || 0);
-      const storyData = Number.isInteger(storyId) && storyId > 0
-        ? await getViewerStoryData(userId, storyId)
-        : null;
+      const wantsAnalytics = String(req.query?.analytics || '') === '1';
+
+      const [storyData, analytics] = await Promise.all([
+        Number.isInteger(storyId) && storyId > 0
+          ? getViewerStoryData(userId, storyId)
+          : Promise.resolve(null),
+        wantsAnalytics && session?.status === 'active'
+          ? getViewerAnalytics(userId)
+          : Promise.resolve(null),
+      ]);
 
       res.status(200).json({
         ok: true,
@@ -172,6 +180,7 @@ export default async function handler(req, res) {
         session: safeSession(session),
         story: storyData?.story || null,
         viewers: storyData?.viewers || [],
+        analytics,
       });
       return;
     }
