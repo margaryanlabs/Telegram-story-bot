@@ -5,6 +5,7 @@
   const qs = new URLSearchParams(location.search);
 
   const CODE_AUDIENCE = { s:'standard', a:'all', c:'contacts', f:'close', u:'selected' };
+  const DRAFT_CAPTION_KEY = 'story-pilot:draft-caption';
 
   function decodeHistory(value) {
     return String(value || '').split('~').filter(Boolean).slice(0, 12).map(chunk => {
@@ -171,15 +172,20 @@
     return { blob, dataUrl };
   }
 
-  function resetComposer() {
+  function resetComposer({ keepCaption = false } = {}) {
     composerFile = null;
     composerDataUrl = '';
     composerBusy = false;
     if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl = '';
     $('storyFileInput').value = '';
-    $('storyCaption').value = '';
-    $('captionCounter').textContent = '0 / 2048';
+
+    if (!keepCaption) {
+      $('storyCaption').value = '';
+      $('captionCounter').textContent = '0 / 2048';
+      try { sessionStorage.removeItem(DRAFT_CAPTION_KEY); } catch {}
+    }
+
     $('mediaPreview').hidden = true;
     $('pickStoryMedia').hidden = false;
     renderPublish();
@@ -207,7 +213,7 @@
       $('pickStoryMedia').hidden = true;
       notify('success');
     } catch (error) {
-      resetComposer();
+      resetComposer({ keepCaption: true });
       notify('error');
       showToast(error.message);
     } finally {
@@ -585,11 +591,11 @@
     $('selectedCount').textContent = String(state.selected?.length || 0);
     $('excludedCount').textContent = String(state.excluded?.length || 0);
     $('selectedMeta').textContent = state.selected?.length
-      ? `${state.selected.length} выбрано · нажми, чтобы добавить`
-      : 'Добавить людей группами по 10';
+      ? `${state.selected.length} выбрано · редактировать в приложении`
+      : 'Добавить @usernames · до 100';
     $('excludedMeta').textContent = state.excluded?.length
-      ? `${state.excluded.length} исключено · нажми, чтобы добавить`
-      : 'Для «Все» и «Контакты»';
+      ? `${state.excluded.length} исключено · редактировать в приложении`
+      : 'Добавить @usernames · для «Все» и «Контакты»';
 
     $('protectSwitch').checked = Boolean(state.protect);
     $('selectedAudienceDesc').textContent = state.selected?.length
@@ -1179,15 +1185,14 @@
     openSheet(`
       <span class="kicker">Только выбранные</span>
       <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Добавь людей'}</h2>
-      <p>Вставь @username через пробел, запятую или с новой строки. Можно до 100 человек — всё сохраняется прямо в приложении.</p>
+      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из Story Pilot.</p>
       <div class="people-input-wrap">
-        <label for="selectedUsernames">Usernames</label>
-        <textarea id="selectedUsernames" placeholder="@alex\n@maria">${state.selected?.length ? '@' + state.selected.join('\n@') : ''}</textarea>
+        <label for="selectedUsernames">Usernames <small id="selectedInputCount">${state.selected?.length || 0} / 100</small></label>
+        <textarea id="selectedUsernames" data-people-input="selected" placeholder="@alex\n@maria">${state.selected?.length ? '@' + state.selected.join('\n@') : ''}</textarea>
       </div>
-      <div class="people-chips">${peopleChips(state.selected)}</div>
+      <div class="people-chips" id="selectedInputChips">${peopleChips(state.selected)}</div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="save-selected">Сохранить в приложении</button>
-        <button data-sheet-action="picker-selected">Выбрать через Telegram</button>
+        <button class="accent" data-sheet-action="save-selected">Сохранить</button>
         ${state.selected?.length ? '<button data-sheet-action="clear-selected">Очистить список</button>' : ''}
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -1197,15 +1202,14 @@
     openSheet(`
       <span class="kicker">Исключения</span>
       <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Добавь исключения'}</h2>
-      <p>Вставь @username. Если сейчас выбран другой режим, Story Pilot автоматически переключит аудиторию на «Контакты».</p>
+      <p>Вставь @username. Если выбран другой режим, Story Pilot сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
       <div class="people-input-wrap">
-        <label for="excludedUsernames">Usernames</label>
-        <textarea id="excludedUsernames" placeholder="@alex\n@maria">${state.excluded?.length ? '@' + state.excluded.join('\n@') : ''}</textarea>
+        <label for="excludedUsernames">Usernames <small id="excludedInputCount">${state.excluded?.length || 0} / 100</small></label>
+        <textarea id="excludedUsernames" data-people-input="excluded" placeholder="@alex\n@maria">${state.excluded?.length ? '@' + state.excluded.join('\n@') : ''}</textarea>
       </div>
-      <div class="people-chips">${peopleChips(state.excluded)}</div>
+      <div class="people-chips" id="excludedInputChips">${peopleChips(state.excluded)}</div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="save-excluded">Сохранить в приложении</button>
-        <button data-sheet-action="picker-exclude">Выбрать через Telegram</button>
+        <button class="accent" data-sheet-action="save-excluded">Сохранить</button>
         ${state.excluded?.length ? '<button data-sheet-action="clear-excluded">Очистить исключения</button>' : ''}
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -1349,6 +1353,17 @@
     `);
   });
   $('sheetBackdrop').addEventListener('click', closeSheet);
+
+  $('sheet').addEventListener('input', event => {
+    const kind = event.target?.dataset?.peopleInput;
+    if (!kind) return;
+
+    const usernames = parseUsernameInput(event.target.value || '');
+    const count = $(kind === 'selected' ? 'selectedInputCount' : 'excludedInputCount');
+    const chips = $(kind === 'selected' ? 'selectedInputChips' : 'excludedInputChips');
+    if (count) count.textContent = `${usernames.length} / 100`;
+    if (chips) chips.innerHTML = peopleChips(usernames);
+  });
 
   $('sheet').addEventListener('change', async event => {
     const pref = event.target?.dataset?.viewerPref;
@@ -1555,10 +1570,11 @@
     prepareComposerFile(event.target.files?.[0] || null);
   });
 
-  $('removeStoryMedia').addEventListener('click', resetComposer);
+  $('removeStoryMedia').addEventListener('click', () => resetComposer({ keepCaption: true }));
 
   $('storyCaption').addEventListener('input', event => {
     $('captionCounter').textContent = `${event.target.value.length} / 2048`;
+    try { sessionStorage.setItem(DRAFT_CAPTION_KEY, event.target.value || ''); } catch {}
   });
 
   $('mainButton').addEventListener('click', async () => {
@@ -1574,6 +1590,14 @@
     tg?.setBackgroundColor?.('bg_color');
     tg?.disableVerticalSwipes?.();
     tg?.BackButton?.onClick(closeSheet);
+  } catch {}
+
+  try {
+    const draftCaption = sessionStorage.getItem(DRAFT_CAPTION_KEY) || '';
+    if (draftCaption) {
+      $('storyCaption').value = draftCaption.slice(0, 2048);
+      $('captionCounter').textContent = `${$('storyCaption').value.length} / 2048`;
+    }
   } catch {}
 
   setAvatar();
