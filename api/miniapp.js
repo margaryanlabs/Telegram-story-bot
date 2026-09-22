@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+import { publishPhotoStory, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
+import { trackPublishedStory } from '../lib/viewer-sync-store.js';
 
 const MAX_SAVED_USERS = 100;
 const MAX_HISTORY = 12;
@@ -43,6 +45,11 @@ function normalizeUsername(value) {
   return String(value || '').trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, '');
 }
 
+function parseUsernames(value) {
+  const source = Array.isArray(value) ? value : String(value || '').split(/[\s,;]+/);
+  return [...new Set(source.map(normalizeUsername).filter(Boolean))].slice(0, MAX_SAVED_USERS);
+}
+
 const AUDIENCE_CODE = {
   standard: 's',
   all: 'a',
@@ -82,6 +89,22 @@ function decodeHistory(value) {
 
 function markHistoryDeleted(history, storyId) {
   return (history || []).map(item => String(item.id) === String(storyId) ? { ...item, deleted: true } : item);
+}
+
+function appendHistory(settings, story) {
+  const record = {
+    id: String(story.id),
+    ts: Math.floor(Date.now() / 1000),
+    audience: settings.audience || 'standard',
+    excluded: settings.excluded?.length || 0,
+    selected: settings.selected?.length || 0,
+    protect: Boolean(settings.protect),
+    deleted: false,
+  };
+  return [
+    record,
+    ...(settings.history || []).filter(item => String(item.id) !== record.id),
+  ].slice(0, MAX_HISTORY);
 }
 
 function analyticsFromHistory(history = []) {
@@ -400,6 +423,118 @@ export default async function handler(req, res) {
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const action = String(body.action || '');
+
+    if (action === 'set_selected') {
+      const selected = parseUsernames(body.usernames);
+      settings = {
+        ...settings,
+        selected,
+        audience: selected.length ? 'selected' : (settings.audience === 'selected' ? 'standard' : settings.audience),
+        picking: '',
+      };
+      await saveSettings(token, chatId, baseUrl, settings);
+    } else if (action === 'set_excluded') {
+      const excluded = parseUsernames(body.usernames);
+      settings = { ...settings, excluded, picking: '' };
+      await saveSettings(token, chatId, baseUrl, settings);
+    } else if (action === 'publish_story') {
+      const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
+      settings = refreshed.settings;
+
+      if (!refreshed.live || !refreshed.rights || !settings.bc) {
+        res.status(409).json({ ok: false, error: 'Сначала подключи Telegram и разреши управление Stories' });
+        return;
+      }
+      if (settings.processing) {
+        res.status(409).json({ ok: false, error: 'Предыдущая Story ещё обрабатывается' });
+        return;
+      }
+      if (settings.audience === 'selected' && !settings.selected?.length) {
+        res.status(409).json({ ok: false, error: 'Добавь хотя бы одного пользователя в «Только выбранные»' });
+        return;
+      }
+      if (settings.excluded?.length && !['all', 'contacts'].includes(settings.audience)) {
+        res.status(409).json({ ok: false, error: 'Исключения работают только для «Все» и «Контакты»' });
+        return;
+      }
+
+      const encoded = String(body.imageBase64 || '');
+      const match = encoded.match(/^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/i);
+      if (!match) {
+        res.status(400).json({ ok: false, error: 'Выбери JPG, PNG или WEBP' });
+        return;
+      }
+
+      const imageBuffer = Buffer.from(match[2], 'base64');
+      if (!imageBuffer.length || imageBuffer.length > 2.4 * 1024 * 1024) {
+        res.status(413).json({ ok: false, error: 'Фото слишком большое после подготовки. Выбери другое изображение.' });
+        return;
+      }
+
+      const caption = String(body.caption || '').slice(0, 2048);
+      const nonce = String(body.nonce || crypto.randomUUID()).slice(0, 120);
+      const pre = { ...settings, processing: true };
+      await saveSettings(token, chatId, baseUrl, pre);
+
+      try {
+        const story = await publishPhotoStory({
+          token,
+          businessConnectionId: pre.bc,
+          imageBuffer,
+          caption,
+          audience: pre.audience,
+          selected: pre.selected,
+          excluded: pre.excluded,
+          nonce: `${chatId}:${nonce}`,
+          protect: pre.protect,
+        });
+
+        const skippedExcluded = story.skippedExcluded || [];
+        const skippedSelected = story.skippedSelected || [];
+        const next = {
+          ...pre,
+          processing: false,
+          lastStory: String(story.id),
+          lastMessage: null,
+          excluded: (pre.excluded || []).filter(username => !skippedExcluded.includes(username)),
+          selected: (pre.selected || []).filter(username => !skippedSelected.includes(username)),
+        };
+        next.history = appendHistory(next, story);
+        await saveSettings(token, chatId, baseUrl, next);
+
+        const postedAt = new Date();
+        const watchHours = Math.max(48, Number(process.env.VIEWER_WATCH_HOURS || 72));
+        await trackPublishedStory({
+          telegram_user_id: String(chatId),
+          story_id: Number(story.id),
+          posted_at: postedAt.toISOString(),
+          expires_at: new Date(postedAt.getTime() + STORY_PERIOD_SECONDS * 1000).toISOString(),
+          watch_until: new Date(postedAt.getTime() + watchHours * 60 * 60 * 1000).toISOString(),
+          audience: next.audience || 'standard',
+          protected: Boolean(next.protect),
+          active: true,
+          last_error: null,
+        }).catch(error => {
+          console.warn('Mini App Viewer Sync story tracking skipped', error?.message || error);
+        });
+
+        res.status(200).json({
+          ok: true,
+          published: true,
+          storyId: String(story.id),
+          transport: story.transport,
+          cleanedUsernames: [...skippedExcluded, ...skippedSelected],
+          state: publicState(next, { live: true, storyPermission: true }),
+        });
+        return;
+      } catch (error) {
+        const next = { ...pre, processing: false };
+        await saveSettings(token, chatId, baseUrl, next).catch(() => {});
+        const description = error?.telegram?.description || error?.errorMessage || error?.message || String(error);
+        res.status(500).json({ ok: false, error: friendlyPublishError(description) });
+        return;
+      }
+    }
 
     if (action === 'check') {
       const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
