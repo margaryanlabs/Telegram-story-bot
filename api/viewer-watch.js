@@ -20,7 +20,7 @@ const RECONCILE_SECONDS = Math.max(60, Number(process.env.VIEWER_RECONCILE_SECON
 const OWNER_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_OWNER_LIMIT || 4)));
 const STORY_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_STORY_LIMIT || 4)));
 const FAST_POLL_ROUNDS = Math.max(1, Math.min(3, Number(process.env.VIEWER_FAST_POLL_ROUNDS || 3)));
-const FAST_POLL_INTERVAL_MS = Math.max(8000, Math.min(20000, Number(process.env.VIEWER_FAST_POLL_INTERVAL_MS || 17000)));
+const FAST_POLL_INTERVAL_MS = Math.max(8000, Math.min(15000, Number(process.env.VIEWER_FAST_POLL_INTERVAL_MS || 10000)));
 const EDGE_TRIGGER_PUBLIC_KEY = '8sAlE7n-envFOB-8bisnYwBONXPe8M6GRtos_6UsoAg';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -315,74 +315,106 @@ export default async function handler(req, res) {
     return;
   }
 
-  const sessions = await listActiveViewerSessions(OWNER_LIMIT);
+  let sessions;
+  try {
+    sessions = await listActiveViewerSessions(OWNER_LIMIT);
+  } catch (error) {
+    const description = error?.message || String(error);
+    console.warn('Viewer Sync store temporarily unavailable', description);
+    res.status(200).json({
+      ok: true,
+      degraded: true,
+      reason: 'store_temporarily_unavailable',
+      ownersProcessed: 0,
+      results: [],
+    });
+    return;
+  }
+
   const results = [];
   let roundsCompleted = 0;
   let activeStoriesSeen = 0;
   const pollRounds = sessions.length <= 2 ? FAST_POLL_ROUNDS : 1;
+  const contexts = [];
 
-  for (let round = 0; round < pollRounds; round += 1) {
-    if (round > 0) await sleep(FAST_POLL_INTERVAL_MS);
-
-    let storiesThisRound = 0;
-
-    for (const row of sessions) {
-      const ownerId = String(row.telegram_user_id);
-      let client = null;
-      try {
-        const decrypted = openJson(row.session_ciphertext, `session:${ownerId}`);
-        client = await createViewerClient(decrypted.session);
-        const stories = await listStoriesForOwner(ownerId, STORY_LIMIT);
-        storiesThisRound += stories.length;
-
-        const ownerResult = [];
-        for (const story of stories) {
-          try {
-            ownerResult.push(await syncStory({
-              token,
-              ownerId,
-              story,
-              client,
-              preferences: {
-                notifyEnabled: row.notify_enabled !== false,
-                notifyAnonymousGap: row.notify_anonymous_gap !== false,
-              },
-            }));
-          } catch (error) {
-            const description = error?.errorMessage || error?.message || String(error);
-            await updateStoryStats(ownerId, story.story_id, {
-              last_sync_at: new Date().toISOString(),
-              last_error: description.slice(0, 500),
-            }).catch(() => {});
-            ownerResult.push({ storyId: story.story_id, error: description });
-          }
-        }
-
-        await updateViewerSession(ownerId, {
-          last_poll_at: new Date().toISOString(),
-          last_error: null,
-          updated_at: new Date().toISOString(),
-        });
-        results.push({ round: round + 1, ownerId, stories: ownerResult });
-      } catch (error) {
-        const description = error?.errorMessage || error?.message || String(error);
-        await updateViewerSession(ownerId, {
-          last_poll_at: new Date().toISOString(),
-          last_error: description.slice(0, 500),
-          status: /AUTH_KEY|SESSION_REVOKED|not authorized/i.test(description) ? 'reauth_required' : 'active',
-          updated_at: new Date().toISOString(),
-        }).catch(() => {});
-        results.push({ round: round + 1, ownerId, error: description });
-      } finally {
-        if (client) await client.disconnect().catch(() => {});
-      }
+  for (const row of sessions) {
+    const ownerId = String(row.telegram_user_id);
+    try {
+      const decrypted = openJson(row.session_ciphertext, `session:${ownerId}`);
+      const client = await createViewerClient(decrypted.session);
+      contexts.push({
+        row,
+        ownerId,
+        client,
+        preferences: {
+          notifyEnabled: row.notify_enabled !== false,
+          notifyAnonymousGap: row.notify_anonymous_gap !== false,
+        },
+      });
+    } catch (error) {
+      const description = error?.errorMessage || error?.message || String(error);
+      await updateViewerSession(ownerId, {
+        last_poll_at: new Date().toISOString(),
+        last_error: description.slice(0, 500),
+        status: /AUTH_KEY|SESSION_REVOKED|not authorized/i.test(description) ? 'reauth_required' : 'active',
+        updated_at: new Date().toISOString(),
+      }).catch(() => {});
+      results.push({ round: 0, ownerId, error: description });
     }
+  }
 
-    roundsCompleted += 1;
-    activeStoriesSeen += storiesThisRound;
+  try {
+    for (let round = 0; round < pollRounds; round += 1) {
+      if (round > 0) await sleep(FAST_POLL_INTERVAL_MS);
 
-    // No tracked Story means there is nothing useful to burst-poll.
-    if (round === 0 && storiesThisRound === 0) break;
+      let storiesThisRound = 0;
+
+      for (const context of contexts) {
+        const { row, ownerId, client, preferences } = context;
+        try {
+          const stories = await listStoriesForOwner(ownerId, STORY_LIMIT);
+          storiesThisRound += stories.length;
+          const ownerResult = [];
+
+          for (const story of stories) {
+            try {
+              ownerResult.push(await syncStory({
+                token,
+                ownerId,
+                story,
+                client,
+                preferences,
+              }));
+            } catch (error) {
+              const description = error?.errorMessage || error?.message || String(error);
+              await updateStoryStats(ownerId, story.story_id, {
+                last_sync_at: new Date().toISOString(),
+                last_error: description.slice(0, 500),
+              }).catch(() => {});
+              ownerResult.push({ storyId: story.story_id, error: description });
+            }
+          }
+
+          await updateViewerSession(ownerId, {
+            last_poll_at: new Date().toISOString(),
+            last_error: null,
+            updated_at: new Date().toISOString(),
+          }).catch(() => {});
+
+          results.push({ round: round + 1, ownerId, stories: ownerResult });
+        } catch (error) {
+          const description = error?.message || String(error);
+          results.push({ round: round + 1, ownerId, error: description });
+        }
+      }
+
+      roundsCompleted += 1;
+      activeStoriesSeen += storiesThisRound;
+
+      if (round === 0 && storiesThisRound === 0) break;
+    }
+  } finally {
+    await Promise.all(contexts.map(({ client }) => client.disconnect().catch(() => {})));
   }
 
   res.status(200).json({

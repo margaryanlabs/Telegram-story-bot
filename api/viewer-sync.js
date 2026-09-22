@@ -277,17 +277,37 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const session = await getViewerSession(userId);
+      let session;
+      try {
+        session = await getViewerSession(userId);
+      } catch (error) {
+        const description = error?.message || String(error);
+        if (/Viewer Sync store|schema cache|timeout|temporar|fetch failed|network/i.test(description)) {
+          res.status(200).json({
+            ok: true,
+            degraded: true,
+            config,
+            session: null,
+            story: null,
+            viewers: [],
+            analytics: null,
+            storageError: 'Viewer Sync временно восстанавливает соединение. Публикация Stories работает независимо.',
+          });
+          return;
+        }
+        throw error;
+      }
+
       const rawStoryId = req.query?.storyId;
       const storyId = Number(Array.isArray(rawStoryId) ? rawStoryId[0] : rawStoryId || 0);
       const wantsAnalytics = String(req.query?.analytics || '') === '1';
 
       const [storyData, analytics] = await Promise.all([
         Number.isInteger(storyId) && storyId > 0
-          ? getViewerStoryData(userId, storyId)
+          ? getViewerStoryData(userId, storyId).catch(() => null)
           : Promise.resolve(null),
         wantsAnalytics && session?.status === 'active'
-          ? getViewerAnalytics(userId)
+          ? getViewerAnalytics(userId).catch(() => null)
           : Promise.resolve(null),
       ]);
 
@@ -518,10 +538,17 @@ export default async function handler(req, res) {
     res.status(400).json({ ok: false, error: 'Unknown action' });
   } catch (error) {
     const description = error?.errorMessage || error?.message || String(error);
-    console.error('Viewer Sync API error', {
-      telegram_user_id: userId,
-      error: description,
-    });
+    if (/Viewer Sync store|schema cache|timeout|temporar|fetch failed|network/i.test(description)) {
+      console.warn('Viewer Sync API degraded', {
+        telegram_user_id: userId,
+        error: description,
+      });
+    } else {
+      console.error('Viewer Sync API error', {
+        telegram_user_id: userId,
+        error: description,
+      });
+    }
 
     let message = description;
     if (/PHONE_CODE_INVALID/i.test(description)) message = 'Неверный код Telegram';
