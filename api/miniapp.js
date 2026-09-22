@@ -434,10 +434,26 @@ export default async function handler(req, res) {
         picking: '',
       };
       await saveSettings(token, chatId, baseUrl, settings);
+      res.status(200).json({
+        ok: true,
+        state: publicState(settings, {
+          live: Boolean(settings.bc),
+          storyPermission: Boolean(settings.canStories),
+        }),
+      });
+      return;
     } else if (action === 'set_excluded') {
       const excluded = parseUsernames(body.usernames);
       settings = { ...settings, excluded, picking: '' };
       await saveSettings(token, chatId, baseUrl, settings);
+      res.status(200).json({
+        ok: true,
+        state: publicState(settings, {
+          live: Boolean(settings.bc),
+          storyPermission: Boolean(settings.canStories),
+        }),
+      });
+      return;
     } else if (action === 'publish_story') {
       const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
       settings = refreshed.settings;
