@@ -431,3 +431,25 @@ button{color:inherit;cursor:pointer}
 .activity-score-side strong{font-size:16px;letter-spacing:-.04em}
 .activity-score-side small{font-size:6px;letter-spacing:.08em;color:#8fd7ff}
 .score-summary span b{font-size:15px;color:var(--text)}
+
+
+.timeline-chart-wrap{
+  margin-top:12px;padding:8px 6px 4px;border-radius:16px;
+  background:linear-gradient(180deg,rgba(42,171,238,.035),rgba(255,255,255,.018));
+  border:1px solid rgba(255,255,255,.06);overflow:hidden
+}
+.timeline-chart{width:100%;height:116px;display:block}
+.timeline-grid line{stroke:rgba(255,255,255,.055);stroke-width:1}
+.timeline-line{fill:none;stroke-width:2.1;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+.timeline-total{stroke:#e9f6ff}
+.timeline-known{stroke:#2aabee}
+.timeline-gap{stroke:#8f7cff;stroke-dasharray:4 4}
+.timeline-legend{
+  display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;color:var(--muted);font-size:8px
+}
+.timeline-legend span{display:flex;align-items:center;gap:5px}
+.timeline-legend i{width:13px;height:2px;border-radius:4px;display:inline-block;background:#e9f6ff}
+.timeline-legend .line-known{background:#2aabee}
+.timeline-legend .line-gap{
+  height:0;border-top:2px dashed #8f7cff;background:transparent;border-radius:0
+}
