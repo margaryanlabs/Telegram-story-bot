@@ -172,6 +172,23 @@ function viewerEvidenceCsv(data) {
   return '\uFEFF' + rows.join('\r\n');
 }
 
+async function sendTestViewerAlert(token, userId) {
+  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'content-type':'application/json' },
+    body: JSON.stringify({
+      chat_id: String(userId),
+      text: '⚡ Story Pilot Fast Alerts работают.\n\nНовый просмотр активной Story будет замечен фоновым watcher примерно за 0–25 секунд. Если Telegram позже скроет связь просмотра с аккаунтом, Story Pilot анонимизирует запись и пришлёт отдельный privacy-сигнал.',
+      disable_notification: false,
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data?.ok) {
+    throw new Error(`Не удалось отправить тест: ${data?.description || response.statusText}`);
+  }
+  return data.result;
+}
+
 async function sendEvidenceCsv(token, userId, data) {
   const csv = viewerEvidenceCsv(data);
   const date = new Date().toISOString().slice(0, 10);
@@ -292,6 +309,22 @@ export default async function handler(req, res) {
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const action = String(body.action || '');
+
+    if (action === 'test_alert') {
+      const session = await getViewerSession(userId);
+      if (!session || session.status !== 'active') {
+        res.status(409).json({ ok: false, error: 'Сначала подключи Viewer Sync' });
+        return;
+      }
+
+      const message = await sendTestViewerAlert(botToken, userId);
+      res.status(200).json({
+        ok: true,
+        sent: true,
+        messageId: message?.message_id || null,
+      });
+      return;
+    }
 
     if (action === 'export_csv') {
       const session = await getViewerSession(userId);
