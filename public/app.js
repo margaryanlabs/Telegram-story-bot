@@ -1121,13 +1121,14 @@
     else if (confirm(`Удалить Story #${storyId}?`)) run();
   }
 
-  $('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
-  $('.audience-card').forEach(button => button.addEventListener('click', async () => {
+  document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
+  document.querySelectorAll('.audience-card').forEach(button => button.addEventListener('click', async () => {
     const mode = button.dataset.audience;
-    await setAudience(mode);
     if (mode === 'selected' && !state.selected?.length) {
       $('selectedRow').click();
+      return;
     }
+    await setAudience(mode);
   }));
   $('protectSwitch').addEventListener('change', event => setProtect(event.target.checked));
   $('selectedRow').addEventListener('click', () => {
@@ -1200,8 +1201,9 @@
     }
 
     if (!item) {
-      haptic('medium');
-      try { tg?.close(); } catch {}
+      switchScreen('publish');
+      showToast('Выбери фото — всё остальное делается здесь');
+      setTimeout(() => $('storyFileInput').click(), 180);
       return;
     }
 
