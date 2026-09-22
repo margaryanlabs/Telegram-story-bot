@@ -88,7 +88,7 @@ function isoFromUnix(value) {
   return seconds > 0 ? new Date(seconds * 1000).toISOString() : new Date().toISOString();
 }
 
-async function syncStory({ token, ownerId, story, client }) {
+async function syncStory({ token, ownerId, story, client, preferences }) {
   const snapshot = await fetchStoryViewState(client, story.story_id);
   const rows = await listViewerRows(ownerId, story.story_id);
   const existing = new Map(rows.map(row => [String(row.viewer_user_id), row]));
@@ -168,7 +168,9 @@ async function syncStory({ token, ownerId, story, client }) {
     const viewedAt = isoFromUnix(viewer.viewedAt);
 
     if (!row) {
-      const notice = await sendGenericViewNotice(token, ownerId, story.story_id, viewer.viewedAt);
+      const notice = preferences?.notifyEnabled === false
+        ? null
+        : await sendGenericViewNotice(token, ownerId, story.story_id, viewer.viewedAt);
       await upsertViewerRow({
         telegram_user_id: String(ownerId),
         story_id: Number(story.story_id),
@@ -228,7 +230,9 @@ async function syncStory({ token, ownerId, story, client }) {
     Number(story.last_views_count || 0) - Number(story.last_identified_count || 0),
   );
   const anonymousDelta = Math.max(0, gap - previousGap - disappearedCount);
-  await sendAnonymousGapNotice(token, ownerId, story.story_id, anonymousDelta);
+  if (preferences?.notifyEnabled !== false && preferences?.notifyAnonymousGap !== false) {
+    await sendAnonymousGapNotice(token, ownerId, story.story_id, anonymousDelta);
+  }
 
   await insertSnapshot({
     telegram_user_id: String(ownerId),
@@ -310,7 +314,16 @@ export default async function handler(req, res) {
       const ownerResult = [];
       for (const story of stories) {
         try {
-          ownerResult.push(await syncStory({ token, ownerId, story, client }));
+          ownerResult.push(await syncStory({
+            token,
+            ownerId,
+            story,
+            client,
+            preferences: {
+              notifyEnabled: row.notify_enabled !== false,
+              notifyAnonymousGap: row.notify_anonymous_gap !== false,
+            },
+          }));
         } catch (error) {
           const description = error?.errorMessage || error?.message || String(error);
           await updateStoryStats(ownerId, story.story_id, {
