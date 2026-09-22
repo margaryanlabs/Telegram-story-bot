@@ -54,6 +54,7 @@
     story: null,
     viewers: [],
     analytics: null,
+    degraded: false,
     error: null,
   };
 
@@ -553,15 +554,26 @@
         data = await viewerApi();
       }
 
-      viewerState = {
-        configured: Boolean(data.config?.configured),
-        backgroundReady: Boolean(data.config?.backgroundReady),
-        session: data.session || null,
-        story: data.story || null,
-        viewers: data.viewers || [],
-        analytics: viewerState.analytics,
-        error: null,
-      };
+      if (data.degraded) {
+        viewerState = {
+          ...viewerState,
+          configured: Boolean(data.config?.configured),
+          backgroundReady: Boolean(data.config?.backgroundReady),
+          degraded: true,
+          error: data.storageError || 'Viewer Sync временно восстанавливает соединение',
+        };
+      } else {
+        viewerState = {
+          configured: Boolean(data.config?.configured),
+          backgroundReady: Boolean(data.config?.backgroundReady),
+          session: data.session || null,
+          story: data.story || null,
+          viewers: data.viewers || [],
+          analytics: viewerState.analytics,
+          degraded: false,
+          error: null,
+        };
+      }
     } catch (error) {
       const data = error.viewerData || {};
       viewerState = {
@@ -738,7 +750,13 @@
     testAlertButton.disabled = !connected;
 
     syncState.className = 'viewer-sync-state';
-    if (viewerState.configured === false) {
+    if (viewerState.degraded) {
+      $('viewerSyncTitle').textContent = 'Viewer Sync восстанавливает соединение.';
+      $('viewerSyncText').textContent = viewerState.error || 'Данные зрителей временно недоступны. Публикация Stories продолжает работать.';
+      syncState.textContent = 'Временная проблема хранилища · повторяем автоматически';
+      syncState.classList.add('warn');
+      syncButton.textContent = connected ? 'Управление Viewer Sync' : 'Обновить';
+    } else if (viewerState.configured === false) {
       $('viewerSyncTitle').textContent = 'Viewer Sync backend почти готов.';
       $('viewerSyncText').textContent = 'Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.';
       syncState.textContent = 'Нужно завершить серверную настройку Viewer Sync';
@@ -1528,6 +1546,7 @@
           story: null,
           viewers: [],
           analytics: null,
+          degraded: false,
           error: null,
         };
         renderViewers();
