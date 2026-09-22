@@ -925,7 +925,7 @@
       <div class="sheet-list">
         <div class="sheet-item"><strong>Business Connection</strong><span>${ready ? 'Активен' : 'Не подтверждён'}</span></div>
         <div class="sheet-item"><strong>Расширенная приватность</strong><span>${state.advancedPrivacy ? 'MTProto готов' : 'Не настроена'}</span></div>
-        <div class="sheet-item"><strong>Viewer Sync</strong><span>Требует отдельной пользовательской MTProto-сессии</span></div>
+        <div class="sheet-item"><strong>Viewer Sync</strong><span>${viewerState.session?.connected ? 'Подключён · фоновые просмотры активны' : 'Не подключён'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
