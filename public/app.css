@@ -406,3 +406,12 @@ button{color:inherit;cursor:pointer}
   .performance-row{align-items:flex-start;flex-direction:column}
   .milestones{width:100%}.milestones span{flex:1}
 }
+
+
+.preference-item{
+  display:flex;align-items:center;gap:12px
+}
+.preference-copy{min-width:0;flex:1}
+.preference-copy strong{display:block;font-size:11px}
+.preference-copy span{display:block;margin-top:3px;color:var(--muted);font-size:9px;line-height:1.4}
+.preference-item .switch{flex:0 0 auto}
