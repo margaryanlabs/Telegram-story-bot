@@ -389,7 +389,8 @@
       const account = viewerState.session?.account || {};
       $('viewerSyncTitle').textContent = 'Viewer Sync активен.';
       $('viewerSyncText').textContent = 'Story Pilot снимает разрешённые Telegram snapshots и показывает только подтверждённых зрителей.';
-      syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'}`;
+      const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
+      syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
       syncButton.textContent = 'Управление Viewer Sync';
     } else if (viewerState.session?.status === 'reauth_required') {
@@ -632,7 +633,21 @@
         <h2>Подключено</h2>
         <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} используется только для чтения данных твоих собственных Stories.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Realtime notification</strong><span>Новый view → сразу обезличенное уведомление → reconciliation → подтверждённое имя или анонимизация.</span></div>
+          <div class="sheet-item preference-item">
+            <span class="preference-copy"><strong>Realtime alerts</strong><span>Уведомлять о новых просмотрах.</span></span>
+            <label class="switch">
+              <input id="viewerNotifySwitch" type="checkbox" data-viewer-pref="notify" ${viewerState.session?.preferences?.notifyEnabled !== false ? 'checked' : ''} />
+              <span></span>
+            </label>
+          </div>
+          <div class="sheet-item preference-item">
+            <span class="preference-copy"><strong>Unattributed gap</strong><span>Отдельно уведомлять, когда растёт общий счётчик без доступной личности.</span></span>
+            <label class="switch">
+              <input id="viewerGapSwitch" type="checkbox" data-viewer-pref="gap" ${viewerState.session?.preferences?.notifyAnonymousGap !== false ? 'checked' : ''} />
+              <span></span>
+            </label>
+          </div>
+          <div class="sheet-item"><strong>Как работает</strong><span>Новый view → быстрый сигнал → reconciliation → подтверждённый viewer или анонимизация.</span></div>
           <div class="sheet-item"><strong>Последняя проверка</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
         </div>
         <div class="sheet-actions">
@@ -852,6 +867,28 @@
     `);
   });
   $('sheetBackdrop').addEventListener('click', closeSheet);
+
+  $('sheet').addEventListener('change', async event => {
+    const pref = event.target?.dataset?.viewerPref;
+    if (!pref) return;
+
+    const notifyEnabled = $('viewerNotifySwitch')?.checked !== false;
+    const notifyAnonymousGap = $('viewerGapSwitch')?.checked !== false;
+
+    try {
+      const data = await viewerApi('preferences', {
+        notifyEnabled,
+        notifyAnonymousGap,
+      }, null);
+      if (data.session) viewerState.session = data.session;
+      renderViewers();
+      showToast('Настройки уведомлений сохранены');
+      haptic();
+    } catch (error) {
+      showToast(error.message);
+      notify('error');
+    }
+  });
 
   $('sheet').addEventListener('click', async event => {
     const action = event.target?.dataset?.sheetAction;
