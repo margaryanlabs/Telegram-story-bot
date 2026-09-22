@@ -178,7 +178,7 @@ async function sendTestViewerAlert(token, userId) {
     headers: { 'content-type':'application/json' },
     body: JSON.stringify({
       chat_id: String(userId),
-      text: '⚡ Story Pilot Fast Alerts работают.\n\nНовый просмотр активной Story будет замечен фоновым watcher примерно за 0–25 секунд. Если Telegram позже скроет связь просмотра с аккаунтом, Story Pilot анонимизирует запись и пришлёт отдельный privacy-сигнал.',
+      text: '⚡ Story Pilot Fast Alerts работают.\n\nНовый просмотр активной Story будет замечен фоновым watcher обычно до ~30 секунд. Если Telegram позже скроет связь просмотра с аккаунтом, Story Pilot анонимизирует запись и пришлёт отдельный privacy-сигнал.',
       disable_notification: false,
     }),
   });
