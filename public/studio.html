@@ -321,6 +321,25 @@
         </div>
       </section>
 
+      <section class="analytics-card live-timeline-card" id="liveTimelineCard">
+        <div class="block-head compact">
+          <div>
+            <span class="kicker">Live Views</span>
+            <h2 id="timelineTitle">Последняя Story</h2>
+          </div>
+          <span class="tiny-note" id="timelineMeta">snapshots</span>
+        </div>
+        <div class="timeline-chart-wrap" id="timelineChartWrap">
+          <svg id="timelineChart" viewBox="0 0 320 116" preserveAspectRatio="none" aria-label="График просмотров Story"></svg>
+        </div>
+        <div class="timeline-legend">
+          <span><i class="line-total"></i>Total views</span>
+          <span><i class="line-known"></i>Identified</span>
+          <span><i class="line-gap"></i>Unattributed</span>
+        </div>
+        <div class="intel-empty" id="timelineEmpty">После первых Viewer Sync snapshots здесь появится динамика просмотров.</div>
+      </section>
+
       <section class="analytics-card" id="topAudienceCard">
         <div class="block-head compact">
           <div>
