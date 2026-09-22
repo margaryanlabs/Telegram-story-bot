@@ -19,7 +19,11 @@ import {
 const RECONCILE_SECONDS = Math.max(60, Number(process.env.VIEWER_RECONCILE_SECONDS || 360));
 const OWNER_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_OWNER_LIMIT || 4)));
 const STORY_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_STORY_LIMIT || 4)));
+const FAST_POLL_ROUNDS = Math.max(1, Math.min(3, Number(process.env.VIEWER_FAST_POLL_ROUNDS || 3)));
+const FAST_POLL_INTERVAL_MS = Math.max(8000, Math.min(20000, Number(process.env.VIEWER_FAST_POLL_INTERVAL_MS || 17000)));
 const EDGE_TRIGGER_PUBLIC_KEY = '8sAlE7n-envFOB-8bisnYwBONXPe8M6GRtos_6UsoAg';
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
@@ -44,7 +48,7 @@ async function sendGenericViewNotice(token, chatId, storyId, viewedAt) {
     : 'только что';
   return tg(token, 'sendMessage', {
     chat_id: chatId,
-    text: `🔔 Новый просмотр Story #${storyId}\n\nВремя: ${when}\nПроверяю просмотр после окна приватности Telegram…`,
+    text: `🔔 Новый просмотр Story #${storyId}\n\nВремя: ${when}\nСигнал пришёл сразу. Личность появится только после проверки приватности Telegram.`,
     disable_notification: false,
   });
 }
@@ -71,6 +75,14 @@ async function editAnonymousNotice(token, chatId, messageId, storyId) {
     chat_id: chatId,
     message_id: Number(messageId),
     text: `👁 Просмотр Story #${storyId}\n\nTelegram больше не связывает этот просмотр с конкретным аккаунтом. В Story Pilot он сохранён только как неатрибутированный просмотр.`,
+  }).catch(() => {});
+}
+
+async function sendPrivacyChangeNotice(token, chatId, storyId) {
+  return tg(token, 'sendMessage', {
+    chat_id: chatId,
+    text: `🔒 Story #${storyId}: Telegram больше не показывает личность одного ранее видимого просмотра.\n\nStory Pilot анонимизировал его и удалил привязку к аккаунту.`,
+    disable_notification: false,
   }).catch(() => {});
 }
 
@@ -158,6 +170,9 @@ async function syncStory({ token, ownerId, story, client, preferences }) {
     if (!visible.has(viewerId) && ['provisional', 'confirmed'].includes(row.status)) {
       disappearedCount += 1;
       await editAnonymousNotice(token, ownerId, row.notification_message_id, story.story_id);
+      if (preferences?.notifyEnabled !== false) {
+        await sendPrivacyChangeNotice(token, ownerId, story.story_id);
+      }
       await deleteViewerRow(ownerId, story.story_id, viewerId);
     }
   }
@@ -302,62 +317,80 @@ export default async function handler(req, res) {
 
   const sessions = await listActiveViewerSessions(OWNER_LIMIT);
   const results = [];
+  let roundsCompleted = 0;
+  let activeStoriesSeen = 0;
 
-  for (const row of sessions) {
-    const ownerId = String(row.telegram_user_id);
-    let client = null;
-    try {
-      const decrypted = openJson(row.session_ciphertext, `session:${ownerId}`);
-      client = await createViewerClient(decrypted.session);
-      const stories = await listStoriesForOwner(ownerId, STORY_LIMIT);
+  for (let round = 0; round < FAST_POLL_ROUNDS; round += 1) {
+    if (round > 0) await sleep(FAST_POLL_INTERVAL_MS);
 
-      const ownerResult = [];
-      for (const story of stories) {
-        try {
-          ownerResult.push(await syncStory({
-            token,
-            ownerId,
-            story,
-            client,
-            preferences: {
-              notifyEnabled: row.notify_enabled !== false,
-              notifyAnonymousGap: row.notify_anonymous_gap !== false,
-            },
-          }));
-        } catch (error) {
-          const description = error?.errorMessage || error?.message || String(error);
-          await updateStoryStats(ownerId, story.story_id, {
-            last_sync_at: new Date().toISOString(),
-            last_error: description.slice(0, 500),
-          }).catch(() => {});
-          ownerResult.push({ storyId: story.story_id, error: description });
+    let storiesThisRound = 0;
+
+    for (const row of sessions) {
+      const ownerId = String(row.telegram_user_id);
+      let client = null;
+      try {
+        const decrypted = openJson(row.session_ciphertext, `session:${ownerId}`);
+        client = await createViewerClient(decrypted.session);
+        const stories = await listStoriesForOwner(ownerId, STORY_LIMIT);
+        storiesThisRound += stories.length;
+
+        const ownerResult = [];
+        for (const story of stories) {
+          try {
+            ownerResult.push(await syncStory({
+              token,
+              ownerId,
+              story,
+              client,
+              preferences: {
+                notifyEnabled: row.notify_enabled !== false,
+                notifyAnonymousGap: row.notify_anonymous_gap !== false,
+              },
+            }));
+          } catch (error) {
+            const description = error?.errorMessage || error?.message || String(error);
+            await updateStoryStats(ownerId, story.story_id, {
+              last_sync_at: new Date().toISOString(),
+              last_error: description.slice(0, 500),
+            }).catch(() => {});
+            ownerResult.push({ storyId: story.story_id, error: description });
+          }
         }
-      }
 
-      await updateViewerSession(ownerId, {
-        last_poll_at: new Date().toISOString(),
-        last_error: null,
-        updated_at: new Date().toISOString(),
-      });
-      results.push({ ownerId, stories: ownerResult });
-    } catch (error) {
-      const description = error?.errorMessage || error?.message || String(error);
-      await updateViewerSession(ownerId, {
-        last_poll_at: new Date().toISOString(),
-        last_error: description.slice(0, 500),
-        status: /AUTH_KEY|SESSION_REVOKED|not authorized/i.test(description) ? 'reauth_required' : 'active',
-        updated_at: new Date().toISOString(),
-      }).catch(() => {});
-      results.push({ ownerId, error: description });
-    } finally {
-      if (client) await client.disconnect().catch(() => {});
+        await updateViewerSession(ownerId, {
+          last_poll_at: new Date().toISOString(),
+          last_error: null,
+          updated_at: new Date().toISOString(),
+        });
+        results.push({ round: round + 1, ownerId, stories: ownerResult });
+      } catch (error) {
+        const description = error?.errorMessage || error?.message || String(error);
+        await updateViewerSession(ownerId, {
+          last_poll_at: new Date().toISOString(),
+          last_error: description.slice(0, 500),
+          status: /AUTH_KEY|SESSION_REVOKED|not authorized/i.test(description) ? 'reauth_required' : 'active',
+          updated_at: new Date().toISOString(),
+        }).catch(() => {});
+        results.push({ round: round + 1, ownerId, error: description });
+      } finally {
+        if (client) await client.disconnect().catch(() => {});
+      }
     }
+
+    roundsCompleted += 1;
+    activeStoriesSeen += storiesThisRound;
+
+    // No tracked Story means there is nothing useful to burst-poll.
+    if (round === 0 && storiesThisRound === 0) break;
   }
 
   res.status(200).json({
     ok: true,
     reconcileSeconds: RECONCILE_SECONDS,
+    fastPollRounds: roundsCompleted,
+    fastPollIntervalMs: FAST_POLL_INTERVAL_MS,
     ownersProcessed: sessions.length,
+    activeStoriesSeen,
     results,
   });
 }
