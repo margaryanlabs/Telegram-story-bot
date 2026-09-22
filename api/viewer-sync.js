@@ -88,6 +88,10 @@ function safeSession(row) {
       username: row.telegram_account_username || '',
       firstName: row.telegram_account_first_name || '',
     },
+    preferences: {
+      notifyEnabled: row.notify_enabled !== false,
+      notifyAnonymousGap: row.notify_anonymous_gap !== false,
+    },
     lastPollAt: row.last_poll_at || null,
     lastError: row.last_error || null,
   };
@@ -192,6 +196,28 @@ export default async function handler(req, res) {
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const action = String(body.action || '');
+
+    if (action === 'preferences') {
+      const session = await getViewerSession(userId);
+      if (!session) {
+        res.status(409).json({ ok: false, error: 'Viewer Sync ещё не подключён' });
+        return;
+      }
+
+      const patch = {
+        notify_enabled: body.notifyEnabled !== false,
+        notify_anonymous_gap: body.notifyAnonymousGap !== false,
+        updated_at: new Date().toISOString(),
+      };
+      const updated = await upsertViewerSession({
+        ...session,
+        ...patch,
+        telegram_user_id: userId,
+      });
+
+      res.status(200).json({ ok: true, session: safeSession(updated) });
+      return;
+    }
 
     if (action === 'register_stories') {
       const session = await getViewerSession(userId);
