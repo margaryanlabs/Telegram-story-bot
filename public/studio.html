@@ -265,20 +265,82 @@
         <div id="audienceBars" class="bars"></div>
       </section>
 
-      <section class="analytics-card locked-analytics">
-        <div class="locked-head">
-          <span class="setting-icon violet">↗</span>
+      <section class="analytics-card" id="viewerAnalyticsCard">
+        <div class="block-head compact">
           <div>
-            <strong>Viewer Analytics</strong>
-            <small>После подключения пользовательской MTProto-сессии</small>
+            <span class="kicker">Viewer Intelligence</span>
+            <h2>Аудитория по фактам</h2>
+          </div>
+          <span class="lock-badge" id="viewerAnalyticsBadge">Viewer Sync</span>
+        </div>
+
+        <div class="viewer-intelligence-grid">
+          <article>
+            <span>Unique</span>
+            <strong id="intelUnique">—</strong>
+            <small>подтверждённых зрителей</small>
+          </article>
+          <article>
+            <span>Repeat</span>
+            <strong id="intelRepeat">—</strong>
+            <small>смотрели 2+ Stories</small>
+          </article>
+          <article>
+            <span>Unattributed</span>
+            <strong id="intelGap">—</strong>
+            <small>views без доступной личности</small>
+          </article>
+          <article>
+            <span>Avg delay</span>
+            <strong id="intelDelay">—</strong>
+            <small>до просмотра Story</small>
+          </article>
+        </div>
+
+        <div class="intel-split">
+          <div>
+            <span>Contacts</span>
+            <strong id="intelContacts">—</strong>
+          </div>
+          <div>
+            <span>Non-contacts</span>
+            <strong id="intelNonContacts">—</strong>
+          </div>
+          <div>
+            <span>Reactions</span>
+            <strong id="intelReactions">—</strong>
+          </div>
+          <div>
+            <span>Forwards</span>
+            <strong id="intelForwards">—</strong>
           </div>
         </div>
-        <div class="locked-metrics">
-          <span>Unique viewers</span>
-          <span>Repeat viewers</span>
-          <span>Contacts / non-contacts</span>
-          <span>Reactions over time</span>
+
+        <div class="intel-empty" id="intelEmpty">
+          Подключи Viewer Sync — здесь появятся repeat viewers, скорость просмотра и история аудитории.
         </div>
+      </section>
+
+      <section class="analytics-card" id="topAudienceCard">
+        <div class="block-head compact">
+          <div>
+            <span class="kicker">Поведение</span>
+            <h2>Самые постоянные зрители</h2>
+          </div>
+          <span class="tiny-note">confirmed only</span>
+        </div>
+        <div id="topAudienceList" class="top-audience-list"></div>
+      </section>
+
+      <section class="analytics-card" id="storyPerformanceCard">
+        <div class="block-head compact">
+          <div>
+            <span class="kicker">Скорость</span>
+            <h2>Story performance</h2>
+          </div>
+          <span class="tiny-note">5 · 15 · 60 мин</span>
+        </div>
+        <div id="storyPerformanceList" class="story-performance-list"></div>
       </section>
     </section>
 
