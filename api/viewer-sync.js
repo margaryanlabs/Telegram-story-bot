@@ -10,6 +10,7 @@ import {
   deleteAuthChallenge,
   getViewerStoryData,
   getViewerAnalytics,
+  getViewerExportData,
   trackPublishedStory,
 } from '../lib/viewer-sync-store.js';
 import {
@@ -100,6 +101,101 @@ function safeSession(row) {
 function setNoStore(res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+}
+
+function csvCell(value) {
+  if (value === null || value === undefined) return '""';
+  let text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function viewerEvidenceCsv(data) {
+  const stories = Array.isArray(data?.stories) ? data.stories : [];
+  const viewers = Array.isArray(data?.viewers) ? data.viewers : [];
+  const storyMap = new Map(stories.map(story => [String(story.story_id), story]));
+
+  const columns = [
+    'row_type','story_id','story_posted_at','story_audience','story_protected',
+    'total_views','identified_views','unattributed_views','reactions_count','forwards_count',
+    'viewer_user_id','username','display_name','viewed_at','is_contact','reaction',
+    'confirmed_at','exported_at'
+  ];
+
+  const rows = [columns.map(csvCell).join(',')];
+
+  for (const story of stories) {
+    const total = Number(story.last_views_count || 0);
+    const identified = Number(story.last_identified_count || 0);
+    rows.push([
+      'story',
+      story.story_id,
+      story.posted_at,
+      story.audience || '',
+      Boolean(story.protected),
+      total,
+      identified,
+      Math.max(0, total - identified),
+      Number(story.last_reactions_count || 0),
+      Number(story.last_forwards_count || 0),
+      '','','','','','','',
+      data?.generatedAt || new Date().toISOString(),
+    ].map(csvCell).join(','));
+  }
+
+  for (const viewer of viewers) {
+    const story = storyMap.get(String(viewer.story_id)) || {};
+    const total = Number(story.last_views_count || 0);
+    const identified = Number(story.last_identified_count || 0);
+    rows.push([
+      'viewer',
+      viewer.story_id,
+      story.posted_at || '',
+      story.audience || '',
+      Boolean(story.protected),
+      total,
+      identified,
+      Math.max(0, total - identified),
+      Number(story.last_reactions_count || 0),
+      Number(story.last_forwards_count || 0),
+      viewer.viewer_user_id,
+      viewer.username || '',
+      viewer.display_name || '',
+      viewer.viewed_at || '',
+      Boolean(viewer.is_contact),
+      viewer.reaction_json || '',
+      viewer.confirmed_at || '',
+      data?.generatedAt || new Date().toISOString(),
+    ].map(csvCell).join(','));
+  }
+
+  return '\uFEFF' + rows.join('\r\n');
+}
+
+async function sendEvidenceCsv(token, userId, data) {
+  const csv = viewerEvidenceCsv(data);
+  const date = new Date().toISOString().slice(0, 10);
+  const form = new FormData();
+  form.append('chat_id', String(userId));
+  form.append(
+    'document',
+    new Blob([csv], { type: 'text/csv;charset=utf-8' }),
+    `story-pilot-evidence-${date}.csv`,
+  );
+  form.append(
+    'caption',
+    'Story Pilot · Viewer Intelligence export\nТолько подтверждённые Telegram viewers + агрегированные Story counters.',
+  );
+
+  const response = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+    method: 'POST',
+    body: form,
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result?.ok) {
+    throw new Error(`Не удалось отправить CSV: ${result?.description || response.statusText}`);
+  }
+  return result.result;
 }
 
 async function registerRecentStories(userId, stories) {
@@ -196,6 +292,32 @@ export default async function handler(req, res) {
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const action = String(body.action || '');
+
+    if (action === 'export_csv') {
+      const session = await getViewerSession(userId);
+      if (!session || session.status !== 'active') {
+        res.status(409).json({ ok: false, error: 'Сначала подключи Viewer Sync' });
+        return;
+      }
+
+      const exportData = await getViewerExportData(userId);
+      const storyCount = Array.isArray(exportData?.stories) ? exportData.stories.length : 0;
+      const viewerCount = Array.isArray(exportData?.viewers) ? exportData.viewers.length : 0;
+      if (!storyCount && !viewerCount) {
+        res.status(409).json({ ok: false, error: 'Для экспорта пока нет данных Viewer Sync' });
+        return;
+      }
+
+      const message = await sendEvidenceCsv(botToken, userId, exportData);
+      res.status(200).json({
+        ok: true,
+        exported: true,
+        storyCount,
+        viewerCount,
+        messageId: message?.message_id || null,
+      });
+      return;
+    }
 
     if (action === 'preferences') {
       const session = await getViewerSession(userId);
