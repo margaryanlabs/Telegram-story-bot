@@ -478,6 +478,7 @@
     const intel = viewerState.analytics;
     const connected = viewerState.session?.connected === true;
     $('viewerAnalyticsBadge').textContent = connected ? 'Live data' : 'Viewer Sync';
+    $('exportCsvButton').disabled = !connected;
     $('intelUnique').textContent = intel ? String(intel.uniqueViewers || 0) : '—';
     $('intelRepeat').textContent = intel ? String(intel.repeatViewers || 0) : '—';
     $('intelGap').textContent = intel ? String(intel.unattributedViews || 0) : '—';
@@ -840,6 +841,35 @@
   $('viewerSearch').addEventListener('input', event => {
     viewerSearchQuery = event.target.value || '';
     renderViewers();
+  });
+
+  $('exportCsvButton').addEventListener('click', async () => {
+    const button = $('exportCsvButton');
+    if (!viewerState.session?.connected || button.disabled) {
+      showToast('Сначала подключи Viewer Sync');
+      return;
+    }
+
+    const previous = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Готовлю CSV…';
+    haptic('medium');
+
+    try {
+      const result = await viewerApi('export_csv', {}, null);
+      notify('success');
+      showToast(`CSV отправлен в чат · ${result.storyCount || 0} Stories · ${result.viewerCount || 0} viewers`);
+      button.textContent = 'CSV отправлен ✓';
+      setTimeout(() => {
+        button.textContent = previous;
+        button.disabled = !viewerState.session?.connected;
+      }, 1800);
+    } catch (error) {
+      showToast(error.message);
+      notify('error');
+      button.textContent = previous;
+      button.disabled = !viewerState.session?.connected;
+    }
   });
   $('topAudienceList').addEventListener('click', event => {
     const row = event.target.closest('[data-person-id]');
