@@ -85,10 +85,39 @@
 
   function showToast(message) {
     const el = $('toast');
-    el.textContent = message;
+    if (!el) return;
+    el.textContent = String(message || 'Что-то пошло не так');
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  async function requestJson(url, options = {}, { retry = false, timeoutMs = 15000 } = {}) {
+    const attempts = retry ? 2 : 1;
+    let lastError = null;
+
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        const data = await response.json().catch(() => ({}));
+        return { response, data };
+      } catch (error) {
+        lastError = error?.name === 'AbortError'
+          ? new Error('Сервер отвечает слишком долго. Попробуй ещё раз.')
+          : error;
+        if (attempt < attempts - 1) {
+          await new Promise(resolve => setTimeout(resolve, 260));
+          continue;
+        }
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    throw lastError || new Error('Не удалось связаться с сервером');
   }
 
   function formatBytes(bytes) {
@@ -446,8 +475,11 @@
     };
     if (action) options.body = JSON.stringify({ action, ...payload });
 
-    const response = await fetch('/api/miniapp', options);
-    const data = await response.json().catch(() => ({}));
+    const { response, data } = await requestJson('/api/miniapp', options, {
+      retry: !action || action === 'check' || action === 'publish_story',
+      timeoutMs: action === 'publish_story' ? 45000 : 15000,
+    });
+
     if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Story Pilot');
 
     if (data.state) {
@@ -472,10 +504,13 @@
     };
     if (action) options.body = JSON.stringify({ action, ...payload });
 
-    const response = await fetch(`/api/viewer-sync${query}`, options);
-    const data = await response.json().catch(() => ({}));
+    const { response, data } = await requestJson(`/api/viewer-sync${query}`, options, {
+      retry: !action,
+      timeoutMs: 18000,
+    });
+
     if (!response.ok || !data.ok) {
-      const error = new Error(data.error || 'Viewer Sync недоступен');
+      const error = new Error(data.error || 'Viewer Sync временно недоступен');
       error.viewerData = data;
       throw error;
     }
@@ -490,14 +525,13 @@
     }
 
     try {
-      const response = await fetch('/api/viewer-sync?analytics=1', {
+      const { response, data } = await requestJson('/api/viewer-sync?analytics=1', {
         method: 'GET',
         headers: {
           'x-telegram-init-data': tg.initData,
           'content-type':'application/json',
         },
-      });
-      const data = await response.json().catch(() => ({}));
+      }, { retry:true, timeoutMs:18000 });
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось загрузить Viewer Analytics');
       viewerState.analytics = data.analytics || null;
     } catch (error) {
@@ -1599,6 +1633,22 @@
       $('captionCounter').textContent = `${$('storyCaption').value.length} / 2048`;
     }
   } catch {}
+
+  window.addEventListener('unhandledrejection', event => {
+    const message = event?.reason?.message || String(event?.reason || '');
+    if (message) {
+      console.warn('Story Pilot unhandled rejection', message);
+      showToast(message);
+    }
+  });
+
+  window.addEventListener('error', event => {
+    const message = event?.error?.message || event?.message || '';
+    if (message) {
+      console.warn('Story Pilot UI error', message);
+      showToast('Интерфейс восстановился после ошибки');
+    }
+  });
 
   setAvatar();
   render();
