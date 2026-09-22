@@ -508,7 +508,7 @@
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
       $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
-      $('heroText').textContent = 'Аудитория, защита и история публикаций — в одном месте. Отправь фото в чат, когда всё готово.';
+      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Story Pilot.';
     } else if (permission) {
       $('heroStatusPill').querySelector('span').textContent = 'Нужно разрешение';
       $('connectionIcon').className = 'connection-icon warn';
@@ -527,6 +527,7 @@
       $('metricAccount').textContent = 'Ожидание';
     }
 
+    $('composerCard').classList.toggle('disabled', !ready);
     $('audienceBlock').classList.toggle('disabled', !ready);
     $('privacyBlock').classList.toggle('disabled', !ready);
   }
@@ -551,19 +552,51 @@
       : 'Для «Все» и «Контакты»';
 
     $('protectSwitch').checked = Boolean(state.protect);
+    $('selectedAudienceDesc').textContent = state.selected?.length
+      ? `${state.selected.length} пользователей`
+      : 'Только конкретные люди';
+
+    $('composerAudience').textContent = `Аудитория: ${audienceLabel(state.audience)}`;
+    $('composerProtection').textContent = `Защита: ${state.protect ? 'вкл' : 'выкл'}`;
+
+    const composerState = $('composerState');
+    if (composerBusy || state.processing) {
+      composerState.textContent = state.processing ? 'Публикую…' : 'Подготавливаю…';
+      composerState.className = 'composer-state busy';
+    } else if (composerDataUrl) {
+      composerState.textContent = 'Готово';
+      composerState.className = 'composer-state ready';
+    } else {
+      composerState.textContent = 'Не выбрано';
+      composerState.className = 'composer-state';
+    }
 
     if (latest) {
       $('lastStoryTitle').textContent = `Story #${latest.id} · ${audienceLong(latest.audience, latest)}`;
       $('lastStoryMeta').textContent = `${formatDate(latest.ts)}${latest.protect ? ' · защита включена' : ''}`;
     } else {
       $('lastStoryTitle').textContent = 'Пока нет публикаций';
-      $('lastStoryMeta').textContent = 'Отправь фото в чат Story Pilot';
+      $('lastStoryMeta').textContent = 'Выбери фото выше и опубликуй Story';
     }
 
     $('deleteStory').disabled = !state.lastStory || !state.ready;
-    $('mainButton').querySelector('b').textContent = state.ready
-      ? 'Открыть чат и отправить фото'
-      : 'Проверить подключение';
+    const mainLabel = $('mainButton').querySelector('b');
+    const mainIcon = $('mainButton').querySelector('span');
+    $('mainButton').disabled = Boolean(composerBusy || state.processing);
+
+    if (!state.ready) {
+      mainIcon.textContent = '↻';
+      mainLabel.textContent = 'Проверить подключение';
+    } else if (composerBusy || state.processing) {
+      mainIcon.textContent = '…';
+      mainLabel.textContent = state.processing ? 'Публикую Story…' : 'Подготавливаю фото…';
+    } else if (!composerDataUrl) {
+      mainIcon.textContent = '＋';
+      mainLabel.textContent = 'Выбрать фото';
+    } else {
+      mainIcon.textContent = '↑';
+      mainLabel.textContent = 'Опубликовать Story';
+    }
   }
 
   function renderViewers() {
