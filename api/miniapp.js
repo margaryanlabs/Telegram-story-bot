@@ -430,6 +430,7 @@ export default async function handler(req, res) {
         ...settings,
         selected,
         audience: selected.length ? 'selected' : (settings.audience === 'selected' ? 'standard' : settings.audience),
+        excluded: selected.length ? [] : settings.excluded,
         picking: '',
       };
       await saveSettings(token, chatId, baseUrl, settings);
@@ -550,7 +551,7 @@ export default async function handler(req, res) {
 
     if (action === 'audience') {
       const audience = String(body.value || '');
-      const allowed = ['standard', 'all', 'contacts', 'close'];
+      const allowed = ['standard', 'all', 'contacts', 'close', 'selected'];
       if (!allowed.includes(audience)) {
         res.status(400).json({ ok: false, error: 'Unsupported audience' });
         return;
@@ -559,7 +560,12 @@ export default async function handler(req, res) {
         res.status(409).json({ ok: false, error: 'Расширенная аудитория пока недоступна' });
         return;
       }
-      settings = { ...settings, audience, picking: '' };
+      settings = {
+        ...settings,
+        audience,
+        excluded: ['all', 'contacts'].includes(audience) ? settings.excluded : [],
+        picking: '',
+      };
       await saveSettings(token, chatId, baseUrl, settings);
     } else if (action === 'protect') {
       settings = { ...settings, protect: Boolean(body.value) };
