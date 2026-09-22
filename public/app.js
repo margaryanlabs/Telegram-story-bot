@@ -826,6 +826,31 @@
     viewerSearchQuery = event.target.value || '';
     renderViewers();
   });
+  $('topAudienceList').addEventListener('click', event => {
+    const row = event.target.closest('[data-person-id]');
+    if (!row) return;
+    const person = (viewerState.analytics?.topPeople || []).find(
+      item => String(item.viewerUserId) === String(row.dataset.personId),
+    );
+    if (!person) return;
+
+    const name = person.displayName || (person.username ? '@' + person.username : 'Telegram user');
+    const handle = person.username ? '@' + person.username : (person.isContact ? 'Контакт Telegram' : 'Без username');
+    openSheet(`
+      <span class="kicker">Viewer profile</span>
+      <h2>${escapeHtml(name)}</h2>
+      <p>${escapeHtml(handle)} · только подтверждённые Story interactions.</p>
+      <div class="sheet-list">
+        <div class="sheet-item"><strong>Stories viewed</strong><span>${person.viewedStories || 0}</span></div>
+        <div class="sheet-item"><strong>First seen</strong><span>${escapeHtml(formatIso(person.firstSeenAt))}</span></div>
+        <div class="sheet-item"><strong>Last seen</strong><span>${escapeHtml(formatIso(person.lastSeenAt))}</span></div>
+        <div class="sheet-item"><strong>Average delay</strong><span>${escapeHtml(formatDuration(person.avgDelaySec))}</span></div>
+        <div class="sheet-item"><strong>Fast views ≤ 15 min</strong><span>${Number.isFinite(Number(person.fast15Rate)) ? person.fast15Rate + '%' : '—'}</span></div>
+        <div class="sheet-item"><strong>Reactions</strong><span>${person.reactions || 0}</span></div>
+      </div>
+      <div class="sheet-actions"><button class="accent" data-sheet-action="close">Закрыть</button></div>
+    `);
+  });
   $('sheetBackdrop').addEventListener('click', closeSheet);
 
   $('sheet').addEventListener('click', async event => {
@@ -882,6 +907,8 @@
           notify('success');
           showToast('Viewer Sync подключён');
           await refreshViewerSync({ silent: true });
+          await refreshViewerAnalytics({ silent: true });
+          await refreshViewerAnalytics({ silent: true });
         }
       } catch (error) {
         showToast(error.message);
@@ -909,6 +936,7 @@
           session: null,
           story: null,
           viewers: [],
+          analytics: null,
           error: null,
         };
         renderViewers();
@@ -985,6 +1013,9 @@
     setInterval(() => {
       if (currentScreen === 'viewers' && viewerState.session?.connected) {
         refreshViewerSync({ silent: true });
+      }
+      if (currentScreen === 'analytics' && viewerState.session?.connected) {
+        refreshViewerAnalytics({ silent: true });
       }
     }, 30000);
   } else {
