@@ -45,6 +45,7 @@
   let composerFile = null;
   let composerDataUrl = '';
   let composerPreviewUrl = '';
+  let composerNonce = '';
   let composerBusy = false;
   let viewerState = {
     configured: null,
@@ -175,6 +176,7 @@
   function resetComposer({ keepCaption = false } = {}) {
     composerFile = null;
     composerDataUrl = '';
+    composerNonce = '';
     composerBusy = false;
     if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl = '';
@@ -203,6 +205,7 @@
       const prepared = await compressStoryImage(file);
       composerFile = file;
       composerDataUrl = prepared.dataUrl;
+      composerNonce = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
       composerPreviewUrl = URL.createObjectURL(file);
 
@@ -255,7 +258,7 @@
       const result = await api('publish_story', {
         imageBase64: composerDataUrl,
         caption: $('storyCaption').value || '',
-        nonce: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+        nonce: composerNonce || (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
       });
 
       const publishedStoryId = result.storyId || state.lastStory;
@@ -1426,9 +1429,6 @@
     if (action === 'save-excluded') {
       const usernames = parseUsernameInput($('excludedUsernames')?.value || '');
       try {
-        if (usernames.length && !['all', 'contacts'].includes(state.audience)) {
-          await api('audience', { value:'contacts' });
-        }
         const data = await api('set_excluded', { usernames });
         closeSheet();
         showToast(usernames.length ? `${usernames.length} исключений сохранено` : 'Исключения очищены');
