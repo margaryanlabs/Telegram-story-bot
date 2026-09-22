@@ -140,6 +140,15 @@
       .replaceAll("'", '&#39;');
   }
 
+  function activityBandLabel(value) {
+    return {
+      very_high:'VERY HIGH',
+      high:'HIGH',
+      medium:'MEDIUM',
+      low:'LOW',
+    }[String(value || '')] || '—';
+  }
+
   function computeAnalytics() {
     const history = state.history || [];
     const active = history.filter(item => !item.deleted);
@@ -498,6 +507,8 @@
         const name = person.displayName || (person.username ? '@' + person.username : 'Telegram user');
         const handle = person.username ? '@' + person.username : (person.isContact ? 'контакт' : 'viewer');
         const fast = Number.isFinite(Number(person.fast15Rate)) ? `${person.fast15Rate}% ≤15м` : 'скорость —';
+        const score = Number.isFinite(Number(person.activityScore)) ? Number(person.activityScore) : null;
+        const band = activityBandLabel(person.activityBand);
         return `
           <button class="top-person" type="button" data-person-id="${escapeHtml(person.viewerUserId)}">
             <span class="top-rank">${index + 1}</span>
@@ -505,9 +516,9 @@
               <strong>${escapeHtml(name)}</strong>
               <small>${escapeHtml(handle)} · ${person.viewedStories} Stories · ${escapeHtml(fast)}</small>
             </span>
-            <span class="top-person-side">
-              <strong>${person.viewedStories}</strong>
-              <small>views</small>
+            <span class="top-person-side activity-score-side">
+              <strong>${score ?? '—'}</strong>
+              <small>${escapeHtml(band)}</small>
             </span>
           </button>`;
       }).join('');
@@ -886,12 +897,17 @@
       <h2>${escapeHtml(name)}</h2>
       <p>${escapeHtml(handle)} · только подтверждённые Story interactions.</p>
       <div class="sheet-list">
+        <div class="sheet-item score-summary">
+          <strong>Activity Score</strong>
+          <span><b>${Number.isFinite(Number(person.activityScore)) ? person.activityScore : '—'}</b> · ${escapeHtml(activityBandLabel(person.activityBand))} · confidence ${person.scoreConfidence ?? 0}%</span>
+        </div>
         <div class="sheet-item"><strong>Stories viewed</strong><span>${person.viewedStories || 0}</span></div>
         <div class="sheet-item"><strong>First seen</strong><span>${escapeHtml(formatIso(person.firstSeenAt))}</span></div>
         <div class="sheet-item"><strong>Last seen</strong><span>${escapeHtml(formatIso(person.lastSeenAt))}</span></div>
         <div class="sheet-item"><strong>Average delay</strong><span>${escapeHtml(formatDuration(person.avgDelaySec))}</span></div>
         <div class="sheet-item"><strong>Fast views ≤ 15 min</strong><span>${Number.isFinite(Number(person.fast15Rate)) ? person.fast15Rate + '%' : '—'}</span></div>
         <div class="sheet-item"><strong>Reactions</strong><span>${person.reactions || 0}</span></div>
+        <div class="sheet-item"><strong>Score factors</strong><span>frequency ${person.scoreFactors?.frequency ?? 0}% · latency ${person.scoreFactors?.latency ?? 0}% · reactions ${person.scoreFactors?.reactions ?? 0}% · recency ${person.scoreFactors?.recency ?? 0}%</span></div>
       </div>
       <div class="sheet-actions"><button class="accent" data-sheet-action="close">Закрыть</button></div>
     `);

@@ -422,3 +422,12 @@ button{color:inherit;cursor:pointer}
 }
 .evidence-export-card .secondary-button{width:100%}
 .evidence-export-card .privacy-note{display:block;margin-top:10px}
+
+
+.activity-score-side{
+  min-width:54px;padding:7px 8px;border-radius:12px;
+  background:rgba(42,171,238,.07);border:1px solid rgba(42,171,238,.12)
+}
+.activity-score-side strong{font-size:16px;letter-spacing:-.04em}
+.activity-score-side small{font-size:6px;letter-spacing:.08em;color:#8fd7ff}
+.score-summary span b{font-size:15px;color:var(--text)}
