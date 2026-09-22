@@ -191,6 +191,7 @@ function defaultSettings() {
     pickerMessage: null,
     lastMessage: null,
     lastStory: null,
+    lastPublishNonce: null,
     history: [],
     processing: false,
     protect: false,
@@ -214,6 +215,7 @@ function parseStoredSettings(menu) {
       pickerMessage: Number(url.searchParams.get('pm') || 0) || null,
       lastMessage: Number(url.searchParams.get('lm') || 0) || null,
       lastStory: url.searchParams.get('ls') || null,
+      lastPublishNonce: url.searchParams.get('pn') || null,
       history: decodeHistory(url.searchParams.get('hist')),
       processing: url.searchParams.get('pr') === '1',
       protect: url.searchParams.get('prot') === '1',
@@ -246,6 +248,7 @@ async function saveSettings(token, chatId, baseUrl, settings) {
   if (settings.pickerMessage) url.searchParams.set('pm', String(settings.pickerMessage));
   if (settings.lastMessage) url.searchParams.set('lm', String(settings.lastMessage));
   if (settings.lastStory) url.searchParams.set('ls', String(settings.lastStory));
+  if (settings.lastPublishNonce) url.searchParams.set('pn', String(settings.lastPublishNonce).slice(0, 120));
   if (settings.history?.length) url.searchParams.set('hist', encodeHistory(settings.history));
   if (settings.processing) url.searchParams.set('pr', '1');
   if (settings.protect) url.searchParams.set('prot', '1');
@@ -444,7 +447,14 @@ export default async function handler(req, res) {
       return;
     } else if (action === 'set_excluded') {
       const excluded = parseUsernames(body.usernames);
-      settings = { ...settings, excluded, picking: '' };
+      settings = {
+        ...settings,
+        excluded,
+        audience: excluded.length && !['all', 'contacts'].includes(settings.audience)
+          ? 'contacts'
+          : settings.audience,
+        picking: '',
+      };
       await saveSettings(token, chatId, baseUrl, settings);
       res.status(200).json({
         ok: true,
@@ -490,6 +500,20 @@ export default async function handler(req, res) {
 
       const caption = String(body.caption || '').slice(0, 2048);
       const nonce = String(body.nonce || crypto.randomUUID()).slice(0, 120);
+
+      if (nonce && settings.lastPublishNonce === nonce && settings.lastStory) {
+        res.status(200).json({
+          ok: true,
+          published: true,
+          idempotentReplay: true,
+          storyId: String(settings.lastStory),
+          transport: 'existing',
+          cleanedUsernames: [],
+          state: publicState(settings, { live: true, storyPermission: true }),
+        });
+        return;
+      }
+
       const pre = { ...settings, processing: true };
       await saveSettings(token, chatId, baseUrl, pre);
 
@@ -512,6 +536,7 @@ export default async function handler(req, res) {
           ...pre,
           processing: false,
           lastStory: String(story.id),
+          lastPublishNonce: nonce,
           lastMessage: null,
           excluded: (pre.excluded || []).filter(username => !skippedExcluded.includes(username)),
           selected: (pre.selected || []).filter(username => !skippedSelected.includes(username)),
