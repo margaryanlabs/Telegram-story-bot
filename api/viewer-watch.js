@@ -319,8 +319,9 @@ export default async function handler(req, res) {
   const results = [];
   let roundsCompleted = 0;
   let activeStoriesSeen = 0;
+  const pollRounds = sessions.length <= 2 ? FAST_POLL_ROUNDS : 1;
 
-  for (let round = 0; round < FAST_POLL_ROUNDS; round += 1) {
+  for (let round = 0; round < pollRounds; round += 1) {
     if (round > 0) await sleep(FAST_POLL_INTERVAL_MS);
 
     let storiesThisRound = 0;
