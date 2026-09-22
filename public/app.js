@@ -218,8 +218,11 @@
 
   async function publishComposerStory() {
     if (!state.ready) {
-      await api('check');
-      if (!state.ready) throw new Error('Сначала подключи Telegram Business');
+      try { await api('check'); } catch {}
+      if (!state.ready) {
+        connectionHelpSheet();
+        return;
+      }
     }
     if (!composerDataUrl) {
       $('storyFileInput').click();
@@ -228,10 +231,13 @@
     if (composerBusy || state.processing) return;
 
     if (state.audience === 'selected' && !state.selected?.length) {
-      throw new Error('Добавь людей для режима «Выбранные»');
+      showToast('Добавь людей для режима «Выбранные»');
+      $('selectedRow').click();
+      return;
     }
     if (state.excluded?.length && !['all', 'contacts'].includes(state.audience)) {
-      throw new Error('Исключения работают только для «Все» и «Контакты»');
+      showToast('Для исключений выбери «Все» или «Контакты»');
+      return;
     }
 
     composerBusy = true;
