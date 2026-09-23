@@ -1100,3 +1100,9 @@ input,textarea{caret-color:var(--accent)}
   .retention-row{align-items:flex-start}
   .retention-segment{margin-left:auto}
 }
+
+
+.privacy-live-control>span.degraded{
+  background:var(--amber);
+  box-shadow:0 0 0 4px rgba(255,189,89,.08)
+}
