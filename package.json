@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "vercel dev",
-    "check": "node --check api/webhook-v7.js && node --check api/webhook-v8.js && node --check api/miniapp.js && node --check api/viewer-sync.js && node --check api/viewer-watch.js && node --check api/viewer-public-key.js && node --check api/viewer-store-health.js && node --check api/viewer-analytics-health.js && node --check api/viewer-export-health.js && node --check lib/story-app-publisher.js && node --check lib/viewer-sync-crypto.js && node --check lib/viewer-sync-signing.js && node --check lib/viewer-sync-store.js && node --check lib/viewer-sync-telegram.js && node --check api/setup.js && node --check api/health.js && node --check public/app.js"
+    "check": "node --check api/webhook-v7.js && node --check api/webhook-v8.js && node --check api/miniapp.js && node --check api/privacy.js && node --check api/viewer-sync.js && node --check api/viewer-watch.js && node --check api/viewer-public-key.js && node --check api/viewer-store-health.js && node --check api/viewer-analytics-health.js && node --check api/viewer-export-health.js && node --check lib/story-app-publisher.js && node --check lib/privacy-business.js && node --check lib/viewer-sync-crypto.js && node --check lib/viewer-sync-signing.js && node --check lib/viewer-sync-store.js && node --check lib/viewer-sync-telegram.js && node --check api/setup.js && node --check api/health.js && node --check public/app.js"
   },
   "dependencies": {
     "sharp": "0.34.5",
