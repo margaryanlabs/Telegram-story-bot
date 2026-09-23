@@ -529,7 +529,10 @@
         incomingState.analytics = null;
       }
       state = { ...state, ...incomingState };
-      if (!selectedViewerStory) selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
+      if (action === 'delete_story' && payload?.storyId && String(selectedViewerStory || '') === String(payload.storyId)) {
+        selectedViewerStory = (state.history || []).find(item => !item.deleted)?.id || null;
+      }
+      if (!selectedViewerStory) selectedViewerStory = state.lastStory || state.history?.find(item => !item.deleted)?.id || state.history?.[0]?.id || null;
       render();
     }
     if (data.user) setAvatar(data.user);
@@ -1508,11 +1511,9 @@
     if (action === 'save-selected') {
       const usernames = parseUsernameInput($('selectedUsernames')?.value || '');
       try {
-        const data = await api('set_selected', { usernames });
+        await api('set_selected', { usernames });
         closeSheet();
         showToast(usernames.length ? `${usernames.length} пользователей сохранено` : 'Список очищен');
-        if (data.state) state = { ...state, ...data.state };
-        render();
       } catch (error) {
         showToast(error.message);
       }
@@ -1520,11 +1521,9 @@
     if (action === 'save-excluded') {
       const usernames = parseUsernameInput($('excludedUsernames')?.value || '');
       try {
-        const data = await api('set_excluded', { usernames });
+        await api('set_excluded', { usernames });
         closeSheet();
         showToast(usernames.length ? `${usernames.length} исключений сохранено` : 'Исключения очищены');
-        if (data.state) state = { ...state, ...data.state };
-        render();
       } catch (error) {
         showToast(error.message);
       }
