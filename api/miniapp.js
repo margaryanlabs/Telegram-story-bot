@@ -183,6 +183,7 @@ function defaultSettings() {
   return {
     bc: null,
     canStories: false,
+    canReadMessages: false,
     audience: 'standard',
     selected: [],
     excluded: [],
@@ -204,9 +205,11 @@ function parseStoredSettings(menu) {
     const url = new URL(menu.web_app.url);
     const bc = url.searchParams.get('bc') || null;
     const canStoriesParam = url.searchParams.get('cs');
+    const canReadMessagesParam = url.searchParams.get('cr');
     return {
       bc,
       canStories: canStoriesParam === null ? Boolean(bc) : canStoriesParam === '1',
+      canReadMessages: canReadMessagesParam === '1',
       audience: url.searchParams.get('aud') || 'standard',
       selected: (url.searchParams.get('sel') || '').split(',').map(normalizeUsername).filter(Boolean).slice(0, MAX_SAVED_USERS),
       excluded: (url.searchParams.get('exc') || '').split(',').map(normalizeUsername).filter(Boolean).slice(0, MAX_SAVED_USERS),
@@ -239,6 +242,7 @@ async function saveSettings(token, chatId, baseUrl, settings) {
   if (settings.bc) {
     url.searchParams.set('bc', settings.bc);
     url.searchParams.set('cs', settings.canStories ? '1' : '0');
+    url.searchParams.set('cr', settings.canReadMessages ? '1' : '0');
   }
   url.searchParams.set('aud', settings.audience || 'standard');
   if (settings.selected?.length) url.searchParams.set('sel', settings.selected.slice(0, MAX_SAVED_USERS).join(','));
@@ -332,6 +336,11 @@ function publicState(settings, extra = {}) {
     history,
     analytics: analyticsFromHistory(history),
     processing: Boolean(settings.processing),
+    readPermission: Boolean(settings.canReadMessages),
+    businessPermissions: {
+      stories: Boolean(settings.canStories),
+      messages: Boolean(settings.canReadMessages),
+    },
     advancedPrivacy: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
     viewerSync: {
       available: false,
@@ -344,8 +353,8 @@ function publicState(settings, extra = {}) {
 
 async function refreshConnection(token, chatId, baseUrl, settings) {
   if (!settings.bc) {
-    const next = { ...settings, canStories: false };
-    return { settings: next, live: false, rights: false };
+    const next = { ...settings, canStories: false, canReadMessages: false };
+    return { settings: next, live: false, rights: false, readRights: false };
   }
 
   try {
@@ -354,22 +363,30 @@ async function refreshConnection(token, chatId, baseUrl, settings) {
     });
     const live = Boolean(connection?.is_enabled);
     const rights = Boolean(connection?.rights?.can_manage_stories);
+    const readRights = Boolean(connection?.rights?.can_read_messages);
 
     if (!live) {
-      const next = { ...settings, bc: null, canStories: false };
+      const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
       await saveSettings(token, chatId, baseUrl, next);
-      return { settings: next, live: false, rights: false };
+      return { settings: next, live: false, rights: false, readRights: false };
     }
 
-    const next = { ...settings, canStories: rights };
-    if (next.canStories !== settings.canStories) {
+    const next = {
+      ...settings,
+      canStories: rights,
+      canReadMessages: readRights,
+    };
+    if (
+      next.canStories !== settings.canStories
+      || next.canReadMessages !== settings.canReadMessages
+    ) {
       await saveSettings(token, chatId, baseUrl, next);
     }
-    return { settings: next, live: true, rights };
+    return { settings: next, live: true, rights, readRights };
   } catch {
-    const next = { ...settings, bc: null, canStories: false };
+    const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
     await saveSettings(token, chatId, baseUrl, next).catch(() => {});
-    return { settings: next, live: false, rights: false };
+    return { settings: next, live: false, rights: false, readRights: false };
   }
 }
 
@@ -414,6 +431,7 @@ export default async function handler(req, res) {
         state: publicState(settings, {
           live: refreshed.live,
           storyPermission: refreshed.rights,
+          readPermission: refreshed.readRights,
         }),
       });
       return;
@@ -442,6 +460,8 @@ export default async function handler(req, res) {
         state: publicState(settings, {
           live: Boolean(settings.bc),
           storyPermission: Boolean(settings.canStories),
+          readPermission: Boolean(settings.canReadMessages),
+          readPermission: Boolean(settings.canReadMessages),
         }),
       });
       return;

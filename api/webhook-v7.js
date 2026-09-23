@@ -126,6 +126,7 @@ function defaultSettings() {
   return {
     bc: null,
     canStories: false,
+    canReadMessages: false,
     audience: 'standard',
     selected: [],
     excluded: [],
@@ -237,6 +238,7 @@ async function saveSettings(token, chatId, origin, settings) {
   if (settings.bc) {
     url.searchParams.set('bc', settings.bc);
     url.searchParams.set('cs', settings.canStories ? '1' : '0');
+    url.searchParams.set('cr', settings.canReadMessages ? '1' : '0');
   }
   url.searchParams.set('aud', settings.audience || 'standard');
   if (settings.selected?.length) url.searchParams.set('sel', settings.selected.slice(0, MAX_SAVED_USERS).join(','));
@@ -276,7 +278,7 @@ async function clearReplyKeyboard(token, chatId) {
 
 function homeText(settings) {
   if (!settings.bc) {
-    return '✨ Story Pilot\n\nПубликуй Stories в своём Telegram прямо из этого чата.\n\nЕсли подключаешься впервые:\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Включи «Управление историями».\n4️⃣ Вернись и нажми «✅ Я подключил — проверить».\n\nУже подключён, но бот этого не видит? Не отключай бота целиком: выключи «Управление историями», включи снова и сохрани — Telegram пришлёт Story Pilot свежий статус подключения.';
+    return '✨ Story Pilot\n\nПубликуй Stories и используй Ghost в своём Telegram.\n\nЕсли подключаешься впервые:\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Включи «Управление историями» и доступ к сообщениям / чтению сообщений.\n4️⃣ Разреши нужные чаты.\n5️⃣ Вернись и нажми «✅ Я подключил — проверить».\n\nУже подключён, но бот этого не видит? Измени одно из разрешений и сохрани — Telegram пришлёт Story Pilot свежий статус подключения.';
   }
 
   if (!settings.canStories) {
@@ -294,24 +296,24 @@ function settingsText(settings, live = null) {
     ? (settings.canStories ? '✅ активно, Stories разрешены' : '⚠️ подключено, но без доступа к Stories')
     : '⚪ ID подключения ещё не получен';
   if (live === false) connection = '❌ неактивно';
-  return `📊 Настройки Story Pilot\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
+  return `📊 Настройки Story Pilot\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n👻 Доступ к сообщениям для Ghost: ${settings.canReadMessages ? '✅ есть' : '⚠️ не выдан'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
 }
 
 function connectText(settings, live = null) {
   if (settings.bc && settings.canStories && live !== false) {
-    return '✅ Готово — Telegram подключён\n\nStory Pilot получил разрешение управлять Stories. Больше подключаться не нужно.\n\n📸 Теперь просто отправь фото в этот чат.';
+    return `✅ Telegram подключён\n\nStory Pilot получил разрешение управлять Stories.\n${settings.canReadMessages ? '👻 Ghost: доступ к сообщениям тоже включён.' : '👻 Ghost: для Anti-Delete и удалённых сообщений ещё включи доступ к сообщениям / чтению сообщений в настройках Business-бота.'}\n\n📸 Для Story просто отправь фото в этот чат.`;
   }
 
   if (settings.bc && live !== false) {
     return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → Story Pilot → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
   }
 
-  return '🔗 Подключить Telegram\n\nЭто делается один раз для каждого пользователя:\n\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Разреши «Управление историями».\n4️⃣ Сохрани и вернись сюда.\n5️⃣ Нажми «✅ Я подключил — проверить».\n\nЕсли Story Pilot уже выбран в Telegram, а здесь подключение не найдено: просто выключи «Управление историями», включи снова и сохрани. Это заставит Telegram прислать боту актуальный Business Connection.\n\nStory Pilot не получает пароль и не входит в аккаунт — публикация идёт через официальное Business-подключение Telegram.';
+  return '🔗 Подключить Telegram\n\nЭто делается один раз для каждого пользователя:\n\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Разреши «Управление историями».\n4️⃣ Для Ghost включи доступ к сообщениям / чтению сообщений и выбери нужные чаты.\n5️⃣ Сохрани и вернись сюда.\n6️⃣ Нажми «✅ Я подключил — проверить».\n\nЕсли Story Pilot уже выбран в Telegram, а здесь подключение не найдено: измени одно разрешение и сохрани. Это заставит Telegram прислать боту актуальный Business Connection.\n\nStory Pilot не получает пароль и не входит в аккаунт — всё работает через официальное Business-подключение Telegram.';
 }
 
 function howToText(settings) {
   if (!settings.bc || !settings.canStories) {
-    return '📸 Как работает Story Pilot\n\n1. Один раз подключаешь Story Pilot через Telegram Business / «Автоматизация чатов».\n2. Разрешаешь управление Stories.\n3. Возвращаешься в бот и выбираешь аудиторию.\n4. Отправляешь фото обычным сообщением.\n5. Story появляется в твоём Telegram-профиле.\n\nКаждый пользователь подключает только свой аккаунт.';
+    return '📸 Как работает Story Pilot\n\n1. Один раз подключаешь Story Pilot через Telegram Business / «Автоматизация чатов».\n2. Для Stories разрешаешь управление историями; для Ghost — доступ к сообщениям и нужным чатам.\n3. Возвращаешься в бот и выбираешь аудиторию.\n4. Отправляешь фото обычным сообщением.\n5. Story появляется в твоём Telegram-профиле, а Ghost работает отдельно в Mini App.\n\nКаждый пользователь подключает только свой аккаунт.';
   }
 
   return `📸 Как публиковать\n\n1. Выбери аудиторию.\n2. Для «Мои контакты, кроме…» выбери «👥 Мои контакты» → «🚫 Исключить».\n3. Для конкретных людей нажми «🎯 Выбранные».\n4. Отправь фото обычным сообщением.\n\nБез reply, без forward, без подтверждений.\n\nСейчас: ${audienceLabel(settings.audience, settings.selected)}.`;
@@ -391,25 +393,33 @@ async function beginNativePicker(token, chatId, origin, settings, kind) {
 }
 
 async function refreshConnection(token, chatId, origin, settings) {
-  if (!settings.bc) return { settings: { ...settings, canStories: false }, live: false, rights: false };
+  if (!settings.bc) return { settings: { ...settings, canStories: false, canReadMessages: false }, live: false, rights: false, readRights: false };
   try {
     const connection = await tg(token, 'getBusinessConnection', { business_connection_id: settings.bc });
     const live = Boolean(connection?.is_enabled);
     const rights = Boolean(connection?.rights?.can_manage_stories);
+    const readRights = Boolean(connection?.rights?.can_read_messages);
     if (!live) {
-      const next = { ...settings, bc: null, canStories: false };
+      const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
       await saveSettings(token, chatId, origin, next);
-      return { settings: next, live: false, rights: false };
+      return { settings: next, live: false, rights: false, readRights: false };
     }
-    const next = { ...settings, canStories: rights };
-    if (next.canStories !== settings.canStories) {
+    const next = {
+      ...settings,
+      canStories: rights,
+      canReadMessages: readRights,
+    };
+    if (
+      next.canStories !== settings.canStories
+      || next.canReadMessages !== settings.canReadMessages
+    ) {
       await saveSettings(token, chatId, origin, next);
     }
-    return { settings: next, live: true, rights };
+    return { settings: next, live: true, rights, readRights };
   } catch {
-    const next = { ...settings, bc: null, canStories: false };
+    const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
     await saveSettings(token, chatId, origin, next).catch(() => {});
-    return { settings: next, live: false, rights: false };
+    return { settings: next, live: false, rights: false, readRights: false };
   }
 }
 
@@ -420,10 +430,12 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   const settings = await getStoredSettings(token, chatId);
   const live = Boolean(connection?.is_enabled);
   const rights = Boolean(connection?.rights?.can_manage_stories);
+  const readRights = Boolean(connection?.rights?.can_read_messages);
   const next = {
     ...settings,
     bc: live ? connection.id : null,
     canStories: live && rights,
+    canReadMessages: live && readRights,
     processing: false,
     ...(live && rights ? { picking: '', pickerMessage: null } : {}),
   };
@@ -435,6 +447,7 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
     connection_present: Boolean(connection?.id),
     enabled: live,
     can_manage_stories: rights,
+    can_read_messages: readRights,
     source: notify ? 'business_connection_update' : 'business_activity_recovery',
   });
 
