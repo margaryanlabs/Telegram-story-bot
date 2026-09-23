@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import sharp from 'sharp';
 import { trackPublishedStory, markStoryDeleted } from '../lib/viewer-sync-store.js';
+import { archiveBusinessMessage, archiveDeletedBusinessMessages } from '../lib/privacy-business.js';
 
 const PICK_SELECTED = 10101;
 const PICK_EXCLUDED = 10102;
@@ -776,6 +777,62 @@ export default async function handler(req, res) {
     if (update?.business_connection) {
       await persistBusinessConnection(token, origin, update.business_connection, { notify: true });
       res.status(200).json({ ok: true, business_connection_synced: true });
+      return;
+    }
+
+    const privacyBusinessMessage = update?.business_message || update?.edited_business_message;
+    if (privacyBusinessMessage) {
+      const connectionId = privacyBusinessMessage.business_connection_id;
+      let result = null;
+      try {
+        const connection = await tg(token, 'getBusinessConnection', {
+          business_connection_id: connectionId,
+        });
+        result = await archiveBusinessMessage(
+          connection,
+          privacyBusinessMessage,
+          update?.edited_business_message ? 'edit' : 'new',
+        );
+      } catch (error) {
+        // Privacy storage must never make Telegram retry the entire webhook update.
+        console.warn('Story Pilot privacy message capture skipped', {
+          connection_id: connectionId || null,
+          message_id: privacyBusinessMessage.message_id || null,
+          error: error?.message || String(error),
+        });
+      }
+
+      res.status(200).json({
+        ok: true,
+        privacy_message_captured: Boolean(result?.captured),
+        edited: Boolean(update?.edited_business_message),
+      });
+      return;
+    }
+
+    if (update?.deleted_business_messages) {
+      const deleted = update.deleted_business_messages;
+      let result = null;
+      try {
+        const connection = await tg(token, 'getBusinessConnection', {
+          business_connection_id: deleted.business_connection_id,
+        });
+        result = await archiveDeletedBusinessMessages(connection, deleted);
+      } catch (error) {
+        console.warn('Story Pilot privacy delete capture skipped', {
+          connection_id: deleted.business_connection_id || null,
+          chat_id: deleted.chat?.id || null,
+          message_count: deleted.message_ids?.length || 0,
+          error: error?.message || String(error),
+        });
+      }
+
+      res.status(200).json({
+        ok: true,
+        privacy_delete_captured: Boolean(result?.affected),
+        retained: Boolean(result?.retained),
+        affected: Number(result?.affected || 0),
+      });
       return;
     }
 

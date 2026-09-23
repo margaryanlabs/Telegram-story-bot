@@ -256,7 +256,7 @@ button{color:inherit;cursor:pointer}
 .empty-state span{display:block;max-width:280px;margin:7px auto 0;color:var(--muted);font-size:10px;line-height:1.45}
 .bottom-nav{
   position:fixed;z-index:30;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);
-  width:min(calc(100% - 24px),596px);height:63px;padding:6px;display:grid;grid-template-columns:repeat(4,1fr);
+  width:min(calc(100% - 24px),596px);height:63px;padding:6px;display:grid;grid-template-columns:repeat(5,1fr);
   border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(12,17,26,.91);
   backdrop-filter:blur(18px);box-shadow:0 20px 50px rgba(0,0,0,.34)
 }
@@ -907,4 +907,86 @@ input,textarea{caret-color:var(--accent)}
 @media(max-width:390px){
   .network-banner{align-items:flex-start;flex-direction:column;gap:3px}
   .network-banner small{text-align:left}
+}
+
+
+/* Privacy / Ghost */
+.ghost-command-card{
+  position:relative;overflow:hidden;padding:18px;border:1px solid rgba(143,124,255,.15);
+  border-radius:26px;background:
+    radial-gradient(circle at 88% 16%,rgba(143,124,255,.18),transparent 34%),
+    linear-gradient(145deg,rgba(42,171,238,.09),rgba(255,255,255,.03));
+  box-shadow:var(--shadow)
+}
+.ghost-orb{
+  position:absolute;right:18px;top:16px;width:72px;height:72px;border-radius:50%;
+  display:grid;place-items:center;font-size:34px;color:rgba(214,220,255,.8);
+  border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);
+  box-shadow:0 0 44px rgba(111,91,255,.13)
+}
+.ghost-command-copy{position:relative;z-index:1;padding-right:74px}
+.ghost-command-copy h2{margin:18px 0 0;font-size:29px;letter-spacing:-.05em}
+.ghost-command-copy p{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+.ghost-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:17px}
+.ghost-badges span{
+  padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.04);color:#aeb9c9;font-size:8px;font-weight:780
+}
+.privacy-truth-card{display:grid;gap:8px;margin-top:13px}
+.privacy-truth-card>div{
+  display:grid;grid-template-columns:minmax(82px,.7fr) 1.8fr auto;align-items:center;gap:10px;
+  padding:12px 13px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.03)
+}
+.privacy-truth-card strong{font-size:10px}
+.privacy-truth-card span{font-size:9px;color:var(--muted);line-height:1.4}
+.privacy-truth-card em{
+  font-style:normal;font-size:7px;font-weight:850;letter-spacing:.08em;color:#8c9bb0;
+  padding:4px 6px;border-radius:999px;background:rgba(255,255,255,.05)
+}
+.privacy-inbox-card{margin-top:15px;padding:15px;border:1px solid var(--line);border-radius:23px;background:var(--card)}
+.privacy-summary{display:flex;align-items:center;justify-content:space-between;margin:10px 1px 11px;color:var(--muted);font-size:8px}
+.privacy-summary strong{color:#f4f7fb;font-size:11px}
+.privacy-thread-list{display:grid;gap:8px}
+.privacy-thread{
+  width:100%;padding:12px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.025);
+  display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;text-align:left
+}
+.privacy-thread-avatar{
+  width:40px;height:40px;border-radius:14px;display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(42,171,238,.13),rgba(143,124,255,.1));font-size:14px;font-weight:850
+}
+.privacy-thread-copy{min-width:0}
+.privacy-thread-copy strong,.privacy-thread-copy span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.privacy-thread-copy strong{font-size:11px}
+.privacy-thread-copy span{margin-top:4px;color:var(--muted);font-size:9px}
+.privacy-thread-side{text-align:right}
+.privacy-thread-side small{display:block;color:#76859a;font-size:7px}
+.privacy-thread-badges{display:flex;justify-content:flex-end;gap:4px;margin-bottom:4px}
+.privacy-thread-badges i{font-style:normal;padding:3px 5px;border-radius:999px;background:rgba(255,255,255,.055);font-size:7px}
+.privacy-thread-badges i.deleted{color:#ff91a5;background:rgba(255,111,137,.08)}
+.privacy-thread-badges i.edited{color:#bcb2ff;background:rgba(143,124,255,.09)}
+.privacy-clear-button{
+  width:100%;margin-top:12px;padding:11px;border:1px solid rgba(255,111,137,.15);border-radius:15px;
+  background:rgba(255,111,137,.045);color:#d88393;font-size:9px;font-weight:800
+}
+.privacy-message-list{display:grid;gap:8px;margin-top:16px}
+.privacy-message{
+  max-width:88%;padding:10px 11px;border-radius:16px;background:rgba(255,255,255,.055);
+  border:1px solid var(--line)
+}
+.privacy-message.outgoing{margin-left:auto;background:rgba(42,171,238,.09);border-color:rgba(42,171,238,.14)}
+.privacy-message.deleted{border-color:rgba(255,111,137,.18)}
+.privacy-message header{display:flex;justify-content:space-between;gap:8px;color:#8391a4;font-size:7px}
+.privacy-message p{margin:6px 0 0!important;color:#f2f5f9!important;font-size:10px!important;white-space:pre-wrap;overflow-wrap:anywhere}
+.privacy-message footer{display:flex;gap:5px;margin-top:7px}
+.privacy-message footer span{font-size:7px;padding:3px 5px;border-radius:999px;background:rgba(255,255,255,.05);color:#9ba8b9}
+.privacy-message footer .deleted{color:#ff91a5}
+.privacy-message footer .edited{color:#bcb2ff}
+.privacy-version-list{display:grid;gap:8px;margin-top:14px}
+.privacy-version{padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.035)}
+.privacy-version strong{display:block;font-size:8px;color:#9aa8ba}.privacy-version span{display:block;margin-top:5px;font-size:10px;white-space:pre-wrap}
+@media(max-width:390px){
+  .nav-item small{font-size:7px}
+  .privacy-truth-card>div{grid-template-columns:1fr auto}
+  .privacy-truth-card>div span{grid-column:1/-1}
 }

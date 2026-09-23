@@ -459,6 +459,74 @@
       </section>
     </section>
 
+    <section class="screen" data-screen="privacy">
+      <div class="page-head">
+        <span class="kicker">Privacy</span>
+        <h1>Ghost</h1>
+        <p>Отдельный приватный inbox для iPhone: Story Pilot сохраняет доступные Business-сообщения, редакции и удаления на сервере.</p>
+      </div>
+
+      <section class="ghost-command-card">
+        <div class="ghost-orb">◌</div>
+        <div class="ghost-command-copy">
+          <span class="status-pill" id="privacyStatusPill"><i></i><span id="privacyStatusText">Проверяю</span></span>
+          <h2>Ghost Inbox</h2>
+          <p id="privacyHeroText">Включи нужные функции — новые события начнут попадать сюда автоматически.</p>
+        </div>
+        <div class="ghost-badges">
+          <span>iPhone ready</span><span>Server-side</span><span>No read call</span>
+        </div>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <div><span class="kicker">Режим</span><h2>Что сохранять</h2></div>
+          <span class="tiny-note">для новых сообщений</span>
+        </div>
+        <div class="settings-card">
+          <div class="setting-row">
+            <span class="setting-icon rose">↶</span>
+            <span class="setting-copy"><strong>Anti-Delete</strong><small>Оставлять копию сообщения после удаления в Telegram.</small></span>
+            <label class="switch"><input id="privacyAntiDeleteSwitch" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <span class="setting-icon violet">≋</span>
+            <span class="setting-copy"><strong>Edit History</strong><small>Сохранять предыдущие версии изменённых сообщений.</small></span>
+            <label class="switch"><input id="privacyEditHistorySwitch" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <span class="setting-icon cyan">◉</span>
+            <span class="setting-copy"><strong>Ghost Inbox</strong><small>Читать сохранённые копии здесь. Story Pilot не отправляет readBusinessMessage.</small></span>
+            <label class="switch"><input id="privacyGhostInboxSwitch" type="checkbox" /><span></span></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="privacy-truth-card">
+        <div><strong>Read receipts</strong><span>При просмотре Ghost Inbox команда «прочитано» от Story Pilot не отправляется.</span><em>SERVER</em></div>
+        <div><strong>Online status</strong><span>Официальный Telegram на iPhone сам управляет online. Этот режим его не подменяет.</span><em>iOS LIMIT</em></div>
+      </section>
+
+      <section class="privacy-inbox-card">
+        <div class="block-head compact">
+          <div><span class="kicker">Ghost Inbox</span><h2>Диалоги</h2></div>
+          <button class="mini-chip" id="privacyRefreshButton" type="button">Обновить</button>
+        </div>
+        <div class="privacy-summary">
+          <span><strong id="privacyThreadCount">0</strong> диалогов</span>
+          <span id="privacyRetentionLabel">Хранение · 30 дней</span>
+        </div>
+        <div class="privacy-thread-list" id="privacyThreads"></div>
+        <div class="empty-state show" id="privacyEmpty">
+          <div class="empty-icon">◌</div>
+          <strong>Ghost Inbox пока пуст</strong>
+          <span>После включения режима новые доступные Business-сообщения и события появятся здесь.</span>
+        </div>
+      </section>
+
+      <button class="privacy-clear-button" id="privacyClearButton" type="button">Очистить Ghost Inbox</button>
+    </section>
+
     <section class="screen" data-screen="archive">
       <div class="page-head">
         <span class="kicker">История</span>
@@ -480,6 +548,7 @@
     <button class="nav-item active" data-nav="publish" type="button"><span>＋</span><small>Создать</small></button>
     <button class="nav-item" data-nav="viewers" type="button"><span>◉</span><small>Зрители</small></button>
     <button class="nav-item" data-nav="analytics" type="button"><span>⌁</span><small>Аналитика</small></button>
+    <button class="nav-item" data-nav="privacy" type="button"><span>◌</span><small>Ghost</small></button>
     <button class="nav-item" data-nav="archive" type="button"><span>□</span><small>Архив</small></button>
   </nav>
 
@@ -499,5 +568,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/app.js"></script>
+  <script src="/privacy.js"></script>
 </body>
 </html>
