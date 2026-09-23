@@ -1,15 +1,11 @@
-import { getViewerAnalytics, viewerStoreHealth } from '../lib/viewer-sync-store.js';
+import { getViewerAnalytics } from '../lib/viewer-sync-store.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   try {
-    const [store, analytics] = await Promise.all([
-      viewerStoreHealth(),
-      getViewerAnalytics('0'),
-    ]);
+    const analytics = await getViewerAnalytics('0');
     res.status(200).json({
       ok: true,
-      store,
       analyticsShape: {
         uniqueViewers: analytics?.uniqueViewers ?? null,
         repeatViewers: analytics?.repeatViewers ?? null,
