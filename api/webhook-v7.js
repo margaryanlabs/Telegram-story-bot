@@ -468,6 +468,54 @@ function businessConnectionIdFromActivity(update) {
     || null;
 }
 
+function ghostAlertPreview(value) {
+  const clean = String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return clean ? clean.slice(0, 140) : 'Сообщение';
+}
+
+async function sendGhostDeleteAlert(token, userChatId, origin, result = {}) {
+  const affected = Math.max(0, Number(result?.affected || 0));
+  if (!userChatId || !affected || !result?.settings?.notifyDeletes) return false;
+
+  const events = Array.isArray(result?.events) ? result.events.slice(0, 3) : [];
+  const lines = events.map(event => {
+    const who = event?.direction === 'outgoing'
+      ? 'Вы'
+      : (event?.sender || event?.chatTitle || 'Telegram');
+    return `• ${who}: ${ghostAlertPreview(event?.preview)}`;
+  });
+  const extra = Math.max(0, affected - events.length);
+
+  const status = result?.retained
+    ? 'Копия сохранена в Ghost.'
+    : 'Anti-Delete выключен — зафиксировано только событие удаления.';
+
+  const text = [
+    `👻 Ghost · удалено сообщений: ${affected}`,
+    lines.length ? lines.join('\n') : null,
+    extra ? `• ещё ${extra}` : null,
+    status,
+  ].filter(Boolean).join('\n\n');
+
+  const appUrl = new URL('/studio.html', origin);
+  appUrl.searchParams.set('open', 'privacy');
+
+  await tg(token, 'sendMessage', {
+    chat_id: userChatId,
+    text,
+    disable_notification: false,
+    reply_markup: {
+      inline_keyboard: [[{
+        text: '👻 Открыть Ghost',
+        web_app: { url: appUrl.toString() },
+      }]],
+    },
+  });
+  return true;
+}
+
 async function downloadTelegramFile(token, fileId) {
   const file = await tg(token, 'getFile', { file_id: fileId });
   const response = await fetch(`https://api.telegram.org/file/bot${token}/${file.file_path}`);
@@ -746,6 +794,7 @@ async function resetSettings(token, chatId, origin, settings) {
     ...defaultSettings(),
     bc: settings.bc,
     canStories: settings.canStories,
+    canReadMessages: settings.canReadMessages,
     panel: settings.panel,
     history: settings.history || [],
   };
@@ -839,11 +888,32 @@ export default async function handler(req, res) {
     if (update?.deleted_business_messages) {
       const deleted = update.deleted_business_messages;
       let result = null;
+      let connection = null;
+      let alertSent = false;
       try {
-        const connection = await tg(token, 'getBusinessConnection', {
+        connection = await tg(token, 'getBusinessConnection', {
           business_connection_id: deleted.business_connection_id,
         });
         result = await archiveDeletedBusinessMessages(connection, deleted);
+
+        if (
+          result?.settings?.notifyDeletes
+          && Number(result?.affected || 0) > 0
+          && connection?.user_chat_id
+        ) {
+          alertSent = await sendGhostDeleteAlert(
+            token,
+            connection.user_chat_id,
+            origin,
+            result,
+          ).catch(error => {
+            console.warn('Story Pilot Ghost delete alert skipped', {
+              user_chat_id: connection?.user_chat_id || null,
+              error: error?.message || String(error),
+            });
+            return false;
+          });
+        }
       } catch (error) {
         console.warn('Story Pilot privacy delete capture skipped', {
           connection_id: deleted.business_connection_id || null,
@@ -858,6 +928,7 @@ export default async function handler(req, res) {
         privacy_delete_captured: Boolean(result?.affected),
         retained: Boolean(result?.retained),
         affected: Number(result?.affected || 0),
+        ghost_alert_sent: Boolean(alertSent),
       });
       return;
     }
