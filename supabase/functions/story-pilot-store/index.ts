@@ -97,7 +97,16 @@ async function opUpdatePrivacySettings(args: any) {
     .upsert(next, { onConflict: "telegram_user_id" })
     .select("anti_delete,edit_history,ghost_inbox,retention_days")
     .single();
-  return privacyShape(need(r as any));
+  const saved = privacyShape(need(r as any));
+
+  const cutoff = new Date(Date.now() - saved.retentionDays * 86400000).toISOString();
+  const purge = await db.from("story_pilot_messages")
+    .delete()
+    .eq("telegram_user_id", userId)
+    .lt("sent_at", cutoff);
+  need(purge as any);
+
+  return saved;
 }
 
 function privacyEnabled(settings: any) {
