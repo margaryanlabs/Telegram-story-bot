@@ -22,6 +22,36 @@
     }).filter(item => item.id);
   }
 
+  function mergeClientHistory(incoming = [], existing = []) {
+    const existingMap = new Map((existing || []).map(item => [String(item.id), item]));
+    const merged = [];
+    const seen = new Set();
+
+    for (const item of incoming || []) {
+      const id = String(item.id || '');
+      if (!id || seen.has(id)) continue;
+      merged.push({
+        ...(existingMap.get(id) || {}),
+        ...item,
+        countsKnown: item.countsKnown === undefined
+          ? (existingMap.get(id)?.countsKnown ?? true)
+          : item.countsKnown,
+      });
+      seen.add(id);
+    }
+
+    for (const item of existing || []) {
+      const id = String(item.id || '');
+      if (!id || seen.has(id)) continue;
+      merged.push(item);
+      seen.add(id);
+    }
+
+    return merged
+      .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0))
+      .slice(0, 100);
+  }
+
   let state = {
     connection: qs.get('bc') ? (qs.get('cs') === '0' ? 'needs_permission' : 'ready') : 'unknown',
     ready: Boolean(qs.get('bc') && qs.get('cs') !== '0'),
@@ -484,8 +514,30 @@
     if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Story Pilot');
 
     if (data.state) {
-      state = { ...state, ...data.state };
-      if (!selectedViewerStory) selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
+      const incomingState = { ...data.state };
+      if (action && Array.isArray(incomingState.history)) {
+        incomingState.history = mergeClientHistory(incomingState.history, state.history || []);
+        if (action === 'delete_story' && payload?.storyId) {
+          incomingState.history = incomingState.history.map(item =>
+            String(item.id) === String(payload.storyId)
+              ? { ...item, deleted: true }
+              : item
+          );
+        }
+        // Action responses still carry the compact menu-state analytics.
+        // Recompute from the merged durable history instead of shrinking back to 12 Stories.
+        incomingState.analytics = null;
+      }
+      state = { ...state, ...incomingState };
+      if (action === 'delete_story' && payload?.storyId) {
+        if (String(selectedViewerStory || '') === String(payload.storyId)) {
+          selectedViewerStory = (state.history || []).find(item => !item.deleted)?.id || null;
+        }
+        if (!state.lastStory || String(state.lastStory) === String(payload.storyId)) {
+          state.lastStory = (state.history || []).find(item => !item.deleted)?.id || null;
+        }
+      }
+      if (!selectedViewerStory) selectedViewerStory = state.lastStory || state.history?.find(item => !item.deleted)?.id || state.history?.[0]?.id || null;
       render();
     }
     if (data.user) setAvatar(data.user);
@@ -963,7 +1015,7 @@
         <div class="archive-thumb">#${item.id}</div>
         <div class="archive-copy">
           <strong>${audienceLong(item.audience, item)}</strong>
-          <span>${formatDate(item.ts)}${item.protect ? ' · защита' : ''}</span>
+          <span>${formatDate(item.ts)}${item.protect ? ' · защита' : ''}${item.lastSyncAt ? ` · ${Number(item.views || 0)} views` : ''}</span>
         </div>
         <div class="archive-side">
           <span class="archive-status ${item.deleted ? 'deleted' : ''}">${item.deleted ? 'удалена' : 'опубликована'}</span>
@@ -1007,14 +1059,17 @@
 
   function profileSheet() {
     const ready = state.connection === 'ready';
+    const ghostPermission = state.readPermission === true;
     openSheet(`
       <span class="kicker">Аккаунт</span>
       <h2>${ready ? 'Story Pilot подключён' : 'Проверь подключение'}</h2>
-      <p>${ready ? 'Business Connection активен. Публикация Stories доступна.' : 'Для публикации нужен Telegram Business Connection и право управления Stories.'}</p>
+      <p>${ready ? 'Business Connection активен. Stories, Ghost и Viewer Sync используют один общий Telegram-контур.' : 'Для публикации нужен Telegram Business Connection и право управления Stories.'}</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>Business Connection</strong><span>${ready ? 'Активен' : 'Не подтверждён'}</span></div>
-        <div class="sheet-item"><strong>Расширенная приватность</strong><span>${state.advancedPrivacy ? 'MTProto готов' : 'Не настроена'}</span></div>
+        <div class="sheet-item"><strong>Stories</strong><span>${ready ? 'Готовы к публикации' : 'Нужно can_manage_stories'}</span></div>
+        <div class="sheet-item"><strong>Ghost</strong><span>${ghostPermission ? 'Доступ к сообщениям разрешён' : 'Нужно разрешить сообщения'}</span></div>
+        <div class="sheet-item"><strong>Media Vault</strong><span>${ghostPermission ? 'Готов сохранять Anti-Delete медиа' : 'Ждёт доступ к сообщениям'}</span></div>
         <div class="sheet-item"><strong>Viewer Sync</strong><span>${viewerState.session?.connected ? 'Подключён · фоновые просмотры активны' : 'Не подключён'}</span></div>
+        <div class="sheet-item"><strong>MTProto</strong><span>${state.advancedPrivacy ? 'Backend готов' : 'Не настроен'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
@@ -1022,24 +1077,23 @@
       </div>
     `);
   }
-
   function connectionHelpSheet() {
     openSheet(`
       <span class="kicker">Telegram Business</span>
       <h2>Одноразовое подключение</h2>
-      <p>Саму публикацию, аудиторию, Viewer Sync и аналитику Story Pilot делает внутри Mini App. Только системное разрешение Telegram Business выдаётся в настройках Telegram.</p>
+      <p>Story Pilot работает на iOS, Android и Desktop. Системные права Telegram Business выдаются один раз в самом Telegram.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots (название пункта может немного отличаться).</span></div>
-        <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Разреши управление Stories / can_manage_stories.</span></div>
-        <div class="sheet-item"><strong>3. Вернись сюда</strong><span>Нажми «Проверить подключение» — остальной процесс остаётся внутри приложения.</span></div>
+        <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Автоматизация чатов.</span></div>
+        <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Для Stories включи can_manage_stories.</span></div>
+        <div class="sheet-item"><strong>3. Разреши сообщения для Ghost</strong><span>Включи доступ к сообщениям / can_read_messages и выбери нужные чаты.</span></div>
+        <div class="sheet-item"><strong>4. Вернись сюда</strong><span>Нажми «Проверить Telegram» — Story Pilot сам проверит оба разрешения.</span></div>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="check">Проверить подключение</button>
+        <button class="accent" data-sheet-action="check">Проверить Telegram</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
   }
-
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
@@ -1143,7 +1197,7 @@
   }
 
   function viewerStorySheet() {
-    const history = (state.history || []).filter(item => !item.deleted);
+    const history = (state.history || []).filter(item => !item.deleted).slice(0, 20);
     const items = history.length
       ? history.map(item => `<button data-viewer-story="${item.id}">Story #${item.id} · ${audienceLabel(item.audience)} · ${formatDate(item.ts)}</button>`).join('')
       : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через Story Pilot.</span></div>';
@@ -1462,11 +1516,9 @@
     if (action === 'save-selected') {
       const usernames = parseUsernameInput($('selectedUsernames')?.value || '');
       try {
-        const data = await api('set_selected', { usernames });
+        await api('set_selected', { usernames });
         closeSheet();
         showToast(usernames.length ? `${usernames.length} пользователей сохранено` : 'Список очищен');
-        if (data.state) state = { ...state, ...data.state };
-        render();
       } catch (error) {
         showToast(error.message);
       }
@@ -1474,11 +1526,9 @@
     if (action === 'save-excluded') {
       const usernames = parseUsernameInput($('excludedUsernames')?.value || '');
       try {
-        const data = await api('set_excluded', { usernames });
+        await api('set_excluded', { usernames });
         closeSheet();
         showToast(usernames.length ? `${usernames.length} исключений сохранено` : 'Исключения очищены');
-        if (data.state) state = { ...state, ...data.state };
-        render();
       } catch (error) {
         showToast(error.message);
       }
@@ -1578,9 +1628,10 @@
       <h2>${audienceLong(story.audience, story)}</h2>
       <p>${formatDate(story.ts)} · ${story.protect ? 'Защита включена' : 'Без защиты'}.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>Исключено</strong><span>${story.excluded || 0} пользователей</span></div>
-        <div class="sheet-item"><strong>Выбрано</strong><span>${story.selected || 0} пользователей</span></div>
+        <div class="sheet-item"><strong>Исключено</strong><span>${story.countsKnown === false ? '— · старый архив' : `${story.excluded || 0} пользователей`}</span></div>
+        <div class="sheet-item"><strong>Выбрано</strong><span>${story.countsKnown === false ? '— · старый архив' : `${story.selected || 0} пользователей`}</span></div>
         <div class="sheet-item"><strong>Статус</strong><span>${story.deleted ? 'Удалена' : 'Опубликована'}</span></div>
+        ${story.lastSyncAt ? `<div class="sheet-item"><strong>Viewer Sync</strong><span>${Number(story.views || 0)} views · ${Number(story.identified || 0)} identified · ${Number(story.reactions || 0)} reactions</span></div>` : ''}
       </div>
       <div class="sheet-actions">
         ${story.deleted ? '' : `<button data-delete-story="${story.id}">Удалить Story</button>`}

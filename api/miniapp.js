@@ -1,6 +1,10 @@
 import crypto from 'node:crypto';
 import { publishPhotoStory, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
-import { trackPublishedStory } from '../lib/viewer-sync-store.js';
+import {
+  listStoryArchive,
+  markStoryDeleted,
+  trackPublishedStory,
+} from '../lib/viewer-sync-store.js';
 
 const MAX_SAVED_USERS = 100;
 const MAX_HISTORY = 12;
@@ -105,6 +109,39 @@ function appendHistory(settings, story) {
     record,
     ...(settings.history || []).filter(item => String(item.id) !== record.id),
   ].slice(0, MAX_HISTORY);
+}
+
+function mergeDurableHistory(rows = [], localHistory = []) {
+  const local = new Map((localHistory || []).map(item => [String(item.id), item]));
+  const durable = (Array.isArray(rows) ? rows : []).map(row => {
+    const fallback = local.get(String(row.story_id)) || {};
+    const postedMs = row.posted_at ? new Date(row.posted_at).getTime() : NaN;
+    return {
+      id: String(row.story_id),
+      ts: Number.isFinite(postedMs) ? Math.floor(postedMs / 1000) : Number(fallback.ts || 0),
+      audience: row.audience || fallback.audience || 'standard',
+      excluded: fallback.id ? Number(fallback.excluded || 0) : null,
+      selected: fallback.id ? Number(fallback.selected || 0) : null,
+      countsKnown: Boolean(fallback.id),
+      protect: Boolean(row.protected),
+      deleted: Boolean(row.deleted_at || row.active === false),
+      views: Number(row.last_views_count || 0),
+      identified: Number(row.last_identified_count || 0),
+      reactions: Number(row.last_reactions_count || 0),
+      forwards: Number(row.last_forwards_count || 0),
+      lastSyncAt: row.last_sync_at || null,
+      lastError: row.last_error || null,
+    };
+  });
+
+  const seen = new Set(durable.map(item => String(item.id)));
+  for (const item of localHistory || []) {
+    if (!seen.has(String(item.id))) durable.push(item);
+  }
+
+  return durable
+    .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0))
+    .slice(0, 100);
 }
 
 function analyticsFromHistory(history = []) {
@@ -418,8 +455,20 @@ export default async function handler(req, res) {
     let settings = await getStoredSettings(token, chatId);
 
     if (req.method === 'GET') {
-      const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
+      const archivePromise = listStoryArchive(chatId, 100).catch(error => {
+        console.warn('Mini App durable archive fallback', error?.message || error);
+        return null;
+      });
+      const [refreshed, archiveRows] = await Promise.all([
+        refreshConnection(token, chatId, baseUrl, settings),
+        archivePromise,
+      ]);
       settings = refreshed.settings;
+
+      const durableHistory = Array.isArray(archiveRows)
+        ? mergeDurableHistory(archiveRows, settings.history || [])
+        : (settings.history || []);
+
       res.status(200).json({
         ok: true,
         user: {
@@ -432,6 +481,9 @@ export default async function handler(req, res) {
           live: refreshed.live,
           storyPermission: refreshed.rights,
           readPermission: refreshed.readRights,
+          lastStory: durableHistory.find(item => !item.deleted)?.id || settings.lastStory || null,
+          history: durableHistory,
+          analytics: analyticsFromHistory(durableHistory),
         }),
       });
       return;
@@ -672,7 +724,16 @@ export default async function handler(req, res) {
       const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
       settings = refreshed.settings;
       const requestedId = Number(body.storyId || settings.lastStory);
-      const knownStory = (settings.history || []).find(item => Number(item.id) === requestedId);
+      let knownStory = (settings.history || []).find(item => Number(item.id) === requestedId) || null;
+      if (body.storyId && !knownStory && Number.isInteger(requestedId) && requestedId > 0) {
+        try {
+          const durableRows = await listStoryArchive(chatId, 100);
+          const durable = durableRows.find(row => Number(row.story_id) === requestedId);
+          if (durable) knownStory = durable;
+        } catch (error) {
+          console.warn('Mini App durable archive ownership check fallback', error?.message || error);
+        }
+      }
       if (!refreshed.live || !settings.bc) {
         res.status(409).json({ ok: false, error: 'Telegram Business подключение не найдено' });
         return;
@@ -688,6 +749,9 @@ export default async function handler(req, res) {
       await tg(token, 'deleteStory', {
         business_connection_id: settings.bc,
         story_id: requestedId,
+      });
+      await markStoryDeleted(chatId, requestedId).catch(error => {
+        console.warn('Mini App durable archive delete tracking failed', error?.message || error);
       });
       settings = {
         ...settings,

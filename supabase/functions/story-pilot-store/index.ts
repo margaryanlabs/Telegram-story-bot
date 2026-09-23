@@ -682,6 +682,16 @@ async function opListActiveSessions(args: any) {
   return need(r as any) || [];
 }
 
+async function opListStoryArchive(args: any) {
+  const limit = Math.max(1, Math.min(100, Number(args.limit || 50)));
+  const r = await db.from("story_pilot_stories")
+    .select("story_id,posted_at,audience,protected,active,deleted_at,last_views_count,last_identified_count,last_reactions_count,last_forwards_count,last_sync_at,last_error")
+    .eq("telegram_user_id", String(args.userId))
+    .order("posted_at", { ascending: false })
+    .limit(limit);
+  return need(r as any) || [];
+}
+
 async function opListStories(args: any) {
   const limit = Math.max(1, Math.min(20, Number(args.limit || 8)));
   const r = await db.from("story_pilot_stories")
@@ -1035,7 +1045,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v5", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v5", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
@@ -1058,6 +1068,7 @@ async function dispatch(op: string, args: any) {
     case "track_story": return opTrackStory(args);
     case "mark_story_deleted": return opMarkStoryDeleted(args);
     case "list_active_sessions": return opListActiveSessions(args);
+    case "list_story_archive": return opListStoryArchive(args);
     case "list_stories": return opListStories(args);
     case "update_story_stats": return opUpdateStoryStats(args);
     case "list_viewer_rows": return opListViewerRows(args);
