@@ -61,6 +61,7 @@ const DEFAULT_PRIVACY_SETTINGS = {
   antiDelete: false,
   editHistory: false,
   ghostInbox: false,
+  notifyDeletes: false,
   retentionDays: 30,
 };
 
@@ -70,13 +71,14 @@ function privacyShape(row: any) {
     antiDelete: Boolean(row.anti_delete),
     editHistory: Boolean(row.edit_history),
     ghostInbox: Boolean(row.ghost_inbox),
+    notifyDeletes: Boolean(row.notify_deletes),
     retentionDays: Math.max(1, Math.min(3650, Number(row.retention_days || 30))),
   };
 }
 
 async function opGetPrivacySettings(args: any) {
   const r = await db.from("story_pilot_privacy_settings")
-    .select("anti_delete,edit_history,ghost_inbox,retention_days")
+    .select("anti_delete,edit_history,ghost_inbox,notify_deletes,retention_days")
     .eq("telegram_user_id", String(args.userId))
     .maybeSingle();
   return privacyShape(need(r as any));
@@ -298,13 +300,14 @@ async function opUpdatePrivacySettings(args: any) {
     anti_delete: patch.antiDelete === undefined ? current.antiDelete : Boolean(patch.antiDelete),
     edit_history: patch.editHistory === undefined ? current.editHistory : Boolean(patch.editHistory),
     ghost_inbox: patch.ghostInbox === undefined ? current.ghostInbox : Boolean(patch.ghostInbox),
+    notify_deletes: patch.notifyDeletes === undefined ? current.notifyDeletes : Boolean(patch.notifyDeletes),
     retention_days: Math.max(1, Math.min(3650, Number(patch.retentionDays ?? current.retentionDays ?? 30))),
     updated_at: new Date().toISOString(),
   };
 
   const r = await db.from("story_pilot_privacy_settings")
     .upsert(next, { onConflict: "telegram_user_id" })
-    .select("anti_delete,edit_history,ghost_inbox,retention_days")
+    .select("anti_delete,edit_history,ghost_inbox,notify_deletes,retention_days")
     .single();
   const saved = privacyShape(need(r as any));
 
@@ -313,7 +316,12 @@ async function opUpdatePrivacySettings(args: any) {
 }
 
 function privacyEnabled(settings: any) {
-  return Boolean(settings?.antiDelete || settings?.editHistory || settings?.ghostInbox);
+  return Boolean(
+    settings?.antiDelete
+    || settings?.editHistory
+    || settings?.ghostInbox
+    || settings?.notifyDeletes
+  );
 }
 
 async function opCaptureBusinessMessage(args: any) {
@@ -391,6 +399,21 @@ async function opMarkBusinessMessagesDeleted(args: any) {
   if (!userId || !chatId || !messageIds.length) return { affected: 0 };
 
   const settings = await opGetPrivacySettings({ userId });
+
+  const beforeResult = await db.from("story_pilot_messages")
+    .select("message_id,sender_display_name,sender_username,chat_title,text_content,caption,media_type,direction")
+    .eq("telegram_user_id", userId)
+    .eq("chat_id", chatId)
+    .in("message_id", messageIds);
+  const beforeRows = need(beforeResult as any) || [];
+  const events = beforeRows.map((row: any) => ({
+    messageId: Number(row.message_id),
+    sender: row.sender_display_name || (row.sender_username ? "@" + row.sender_username : null),
+    chatTitle: row.chat_title || null,
+    direction: row.direction || "incoming",
+    preview: messagePreview(row),
+  }));
+
   if (!settings.antiDelete) {
     const r = await db.from("story_pilot_messages")
       .delete()
@@ -398,7 +421,12 @@ async function opMarkBusinessMessagesDeleted(args: any) {
       .eq("chat_id", chatId)
       .in("message_id", messageIds)
       .select("message_id");
-    return { affected: (need(r as any) || []).length, retained: false };
+    return {
+      affected: (need(r as any) || []).length,
+      retained: false,
+      settings,
+      events,
+    };
   }
 
   const deletedAt = args.deletedAt || new Date().toISOString();
@@ -408,7 +436,12 @@ async function opMarkBusinessMessagesDeleted(args: any) {
     .eq("chat_id", chatId)
     .in("message_id", messageIds)
     .select("message_id");
-  return { affected: (need(r as any) || []).length, retained: true };
+  return {
+    affected: (need(r as any) || []).length,
+    retained: true,
+    settings,
+    events,
+  };
 }
 
 function messagePreview(row: any) {
@@ -1000,7 +1033,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v3", mediaProxy: true, mediaVault: true };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v4", mediaProxy: true, mediaVault: true, deleteAlerts: true };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
