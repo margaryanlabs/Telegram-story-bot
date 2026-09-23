@@ -463,6 +463,30 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   return next;
 }
 
+async function sendGhostDeleteAlert(token, ownerChatId, events = []) {
+  const incoming = (Array.isArray(events) ? events : [])
+    .filter(event => event?.direction !== 'outgoing')
+    .slice(0, 5);
+  if (!ownerChatId || !incoming.length) return false;
+
+  const lines = incoming.map(event => {
+    const sender = event.sender || event.chatTitle || 'Telegram user';
+    const preview = String(event.preview || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
+    return `• ${sender}: ${preview}`;
+  });
+
+  const extra = (events?.length || 0) > incoming.length
+    ? `\n+ ещё ${Math.max(0, events.length - incoming.length)}`
+    : '';
+
+  await tg(token, 'sendMessage', {
+    chat_id: ownerChatId,
+    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Story Pilot → Ghost.`,
+    disable_notification: false,
+  });
+  return true;
+}
+
 function businessConnectionIdFromActivity(update) {
   return update?.business_message?.business_connection_id
     || update?.edited_business_message?.business_connection_id
@@ -846,6 +870,11 @@ export default async function handler(req, res) {
           business_connection_id: deleted.business_connection_id,
         });
         result = await archiveDeletedBusinessMessages(connection, deleted);
+        if (result?.retained && Array.isArray(result?.events) && result.events.length) {
+          await sendGhostDeleteAlert(token, connection?.user_chat_id, result.events).catch(error => {
+            console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
+          });
+        }
       } catch (error) {
         console.warn('Story Pilot privacy delete capture skipped', {
           connection_id: deleted.business_connection_id || null,
@@ -860,6 +889,7 @@ export default async function handler(req, res) {
         privacy_delete_captured: Boolean(result?.affected),
         retained: Boolean(result?.retained),
         affected: Number(result?.affected || 0),
+        alert_sent: Boolean(result?.retained && result?.events?.some(event => event?.direction !== 'outgoing')),
       });
       return;
     }
