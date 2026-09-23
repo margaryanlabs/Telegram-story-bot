@@ -24,6 +24,7 @@
       live: false,
       ready: false,
       state: 'unknown',
+      readMessages: false,
       error: false,
     },
   };
@@ -111,6 +112,7 @@
         live: Boolean(data.state?.live),
         ready: Boolean(data.state?.ready),
         state: String(data.state?.connection || 'unknown'),
+        readMessages: Boolean(data.state?.readPermission),
         error: false,
       };
       render();
@@ -202,7 +204,8 @@
     const enabled = anyEnabled(settings);
     const complete = fullyEnabled(settings);
     const connectionLive = Boolean(privacyState.connection?.live);
-    const operational = complete && connectionLive && !privacyState.degraded;
+    const readMessages = Boolean(privacyState.connection?.readMessages);
+    const operational = complete && connectionLive && readMessages && !privacyState.degraded;
     const pill = $('privacyStatusPill');
     const statusText = $('privacyStatusText');
 
@@ -217,7 +220,9 @@
             ? 'Проверяю Telegram'
             : complete && !connectionLive
               ? 'Нужно подключить Telegram'
-              : operational
+              : complete && connectionLive && !readMessages
+                ? 'Нужен доступ к сообщениям'
+                : operational
                 ? 'Ghost полностью активен'
                 : enabled
                   ? 'Ghost частично активен'
@@ -225,11 +230,13 @@
     }
 
     if ($('privacyHeroText')) {
-      $('privacyHeroText').textContent = complete && connectionLive
+      $('privacyHeroText').textContent = complete && connectionLive && readMessages
         ? 'Готово. Новые доступные Business-сообщения, правки и удаления обрабатываются автоматически.'
         : complete && privacyState.connection.loaded && !connectionLive
           ? 'Ghost включён, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать Ghost не нужно.'
-          : enabled
+          : complete && connectionLive && !readMessages
+            ? 'Telegram подключён, но Ghost не получил право на сообщения. Разреши доступ к сообщениям в настройках Business-бота.'
+            : enabled
             ? 'Часть защиты уже включена. Можно включить весь Ghost одной кнопкой.'
             : 'Включи Ghost одной кнопкой — дальше всё работает автоматически.';
     }
@@ -268,24 +275,28 @@
     const accessTitle = $('privacyAccessTitle');
     const accessText = $('privacyAccessText');
     const accessAction = $('privacyAccessAction');
-    if (accessStrip) accessStrip.classList.toggle('ready', connectionLive);
-    if (accessIcon) accessIcon.textContent = connectionLive ? '✓' : '◌';
+    if (accessStrip) accessStrip.classList.toggle('ready', connectionLive && readMessages);
+    if (accessIcon) accessIcon.textContent = connectionLive && readMessages ? '✓' : '◌';
     if (accessTitle) {
       accessTitle.textContent = !privacyState.connection.loaded
         ? 'Проверяю Telegram'
-        : connectionLive
+        : connectionLive && readMessages
           ? 'Telegram Business подключён'
-          : privacyState.connection.error
+          : connectionLive && !readMessages
+            ? 'Разреши доступ к сообщениям'
+            : privacyState.connection.error
             ? 'Не удалось проверить Telegram'
             : 'Нужно подключить Telegram Business';
     }
     if (accessText) {
-      accessText.textContent = connectionLive
+      accessText.textContent = connectionLive && readMessages
         ? 'Business Connection активен. Ghost может получать новые сообщения из разрешённых Telegram-чатов.'
-        : 'Ghost сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
+        : connectionLive
+          ? 'Подключение есть, но Telegram не дал право can_read_messages. Ghost не сможет надёжно ловить удаления, пока это право не включено.'
+          : 'Ghost сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
     }
     if (accessAction) {
-      accessAction.textContent = connectionLive ? 'Проверить' : 'Подключить';
+      accessAction.textContent = connectionLive && readMessages ? 'Проверить' : 'Настроить';
     }
 
     const totals = threadTotals();
@@ -318,7 +329,7 @@
 
     const liveDot = $('privacyLiveDot');
     if (liveDot) {
-      liveDot.classList.toggle('active', enabled && connectionLive && navigator.onLine !== false && !privacyState.degraded);
+      liveDot.classList.toggle('active', enabled && connectionLive && readMessages && navigator.onLine !== false && !privacyState.degraded);
       liveDot.classList.toggle('degraded', privacyState.degraded);
     }
     if ($('privacyLiveText')) {
@@ -326,7 +337,7 @@
         ? 'Offline'
         : privacyState.degraded
           ? 'Восстановление'
-          : enabled && !connectionLive
+          : enabled && (!connectionLive || !readMessages)
             ? 'Ждёт Telegram'
             : enabled
               ? 'Авто · 12с'
@@ -701,9 +712,9 @@
   });
 
   $('privacyAccessAction')?.addEventListener('click', async () => {
-    if (privacyState.connection.live) {
+    if (privacyState.connection.live && privacyState.connection.readMessages) {
       await loadTelegramConnection({ silent:false });
-      toast(privacyState.connection.live ? 'Telegram подключён' : 'Подключение не найдено');
+      toast('Telegram и доступ к сообщениям подключены');
       return;
     }
 
