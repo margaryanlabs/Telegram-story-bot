@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 import sharp from 'sharp';
 import { trackPublishedStory, markStoryDeleted } from '../lib/viewer-sync-store.js';
-import { archiveBusinessMessage, archiveDeletedBusinessMessages } from '../lib/privacy-business.js';
+import {
+  archiveBusinessMediaVault,
+  archiveBusinessMessage,
+  archiveDeletedBusinessMessages,
+} from '../lib/privacy-business.js';
 
 const PICK_SELECTED = 10101;
 const PICK_EXCLUDED = 10102;
@@ -793,6 +797,14 @@ export default async function handler(req, res) {
           privacyBusinessMessage,
           update?.edited_business_message ? 'edit' : 'new',
         );
+
+        if (
+          result?.captured
+          && result?.settings?.antiDelete
+          && result?.row?.media_file_id
+        ) {
+          result.mediaVault = await archiveBusinessMediaVault(token, result.row);
+        }
       } catch (error) {
         // Privacy storage must never make Telegram retry the entire webhook update.
         console.warn('Story Pilot privacy message capture skipped', {
@@ -805,6 +817,7 @@ export default async function handler(req, res) {
       res.status(200).json({
         ok: true,
         privacy_message_captured: Boolean(result?.captured),
+        media_vault_archived: Boolean(result?.mediaVault?.archived),
         edited: Boolean(update?.edited_business_message),
       });
       return;

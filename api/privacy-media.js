@@ -71,8 +71,36 @@ export default async function handler(req, res) {
 
   try {
     const ref = await getPrivacyMediaRef(String(user.id), chatId, messageId);
-    if (!ref?.fileId) {
+    if (!ref?.fileId && !ref?.vaultUrl) {
       res.status(404).json({ ok:false, error:'Media is not available' });
+      return;
+    }
+
+    if (ref?.vaultUrl) {
+      const vaultResponse = await fetch(ref.vaultUrl);
+      if (vaultResponse.ok) {
+        const buffer = Buffer.from(await vaultResponse.arrayBuffer());
+        const contentType = ref.mimeType || vaultResponse.headers.get('content-type') || 'application/octet-stream';
+        const filename = safeFilename(ref.fileName, `ghost-${messageId}`);
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Length', String(buffer.length));
+        res.setHeader(
+          'Content-Disposition',
+          `${inlineType(ref.mediaType) ? 'inline' : 'attachment'}; filename="${filename}"`,
+        );
+        res.setHeader('X-Story-Pilot-Media-Source', 'vault');
+        res.status(200).send(buffer);
+        return;
+      }
+      console.warn('Ghost vault media fallback to Telegram', {
+        chatId,
+        messageId,
+        status: vaultResponse.status,
+      });
+    }
+
+    if (!ref?.fileId) {
+      res.status(404).json({ ok:false, error:'Archived media is temporarily unavailable' });
       return;
     }
 
@@ -102,6 +130,7 @@ export default async function handler(req, res) {
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Length', String(buffer.length));
+    res.setHeader('X-Story-Pilot-Media-Source', 'telegram');
     res.setHeader(
       'Content-Disposition',
       `${inlineType(ref.mediaType) ? 'inline' : 'attachment'}; filename="${filename}"`,

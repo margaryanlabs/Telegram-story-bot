@@ -502,6 +502,7 @@
       const edited = Boolean(message.edited_at);
       const deleted = Boolean(message.deleted_at);
       const hasMedia = Boolean(message.media_type);
+      const mediaArchived = message.media_archive_status === 'archived';
       const sender = message.direction === 'outgoing'
         ? 'Вы'
         : (message.sender_display_name || (message.sender_username ? '@' + message.sender_username : thread.title));
@@ -516,7 +517,7 @@
               data-privacy-media-type="${escapeHtml(message.media_type)}"
               data-privacy-media-name="${escapeHtml(message.media_file_name || '')}">
               <span>▣</span><b>Открыть ${escapeHtml(message.media_type === 'photo' ? 'фото' : 'медиа')}</b>
-              <small>${escapeHtml(formatBytes(message.media_file_size))}</small>
+              <small>${escapeHtml([mediaArchived ? 'Vault' : 'Telegram', formatBytes(message.media_file_size)].filter(Boolean).join(' · '))}</small>
             </button>` : ''}
           <footer>
             ${deleted ? '<span class="deleted">Удалено в Telegram</span>' : ''}
