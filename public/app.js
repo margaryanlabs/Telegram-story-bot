@@ -22,6 +22,36 @@
     }).filter(item => item.id);
   }
 
+  function mergeClientHistory(incoming = [], existing = []) {
+    const existingMap = new Map((existing || []).map(item => [String(item.id), item]));
+    const merged = [];
+    const seen = new Set();
+
+    for (const item of incoming || []) {
+      const id = String(item.id || '');
+      if (!id || seen.has(id)) continue;
+      merged.push({
+        ...(existingMap.get(id) || {}),
+        ...item,
+        countsKnown: item.countsKnown === undefined
+          ? (existingMap.get(id)?.countsKnown ?? true)
+          : item.countsKnown,
+      });
+      seen.add(id);
+    }
+
+    for (const item of existing || []) {
+      const id = String(item.id || '');
+      if (!id || seen.has(id)) continue;
+      merged.push(item);
+      seen.add(id);
+    }
+
+    return merged
+      .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0))
+      .slice(0, 100);
+  }
+
   let state = {
     connection: qs.get('bc') ? (qs.get('cs') === '0' ? 'needs_permission' : 'ready') : 'unknown',
     ready: Boolean(qs.get('bc') && qs.get('cs') !== '0'),
@@ -484,7 +514,21 @@
     if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Story Pilot');
 
     if (data.state) {
-      state = { ...state, ...data.state };
+      const incomingState = { ...data.state };
+      if (action && Array.isArray(incomingState.history)) {
+        incomingState.history = mergeClientHistory(incomingState.history, state.history || []);
+        if (action === 'delete_story' && payload?.storyId) {
+          incomingState.history = incomingState.history.map(item =>
+            String(item.id) === String(payload.storyId)
+              ? { ...item, deleted: true }
+              : item
+          );
+        }
+        // Action responses still carry the compact menu-state analytics.
+        // Recompute from the merged durable history instead of shrinking back to 12 Stories.
+        incomingState.analytics = null;
+      }
+      state = { ...state, ...incomingState };
       if (!selectedViewerStory) selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
       render();
     }
