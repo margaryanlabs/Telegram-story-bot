@@ -1,6 +1,10 @@
 import crypto from 'node:crypto';
 import { publishPhotoStory, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
-import { trackPublishedStory } from '../lib/viewer-sync-store.js';
+import {
+  listStoryArchive,
+  markStoryDeleted,
+  trackPublishedStory,
+} from '../lib/viewer-sync-store.js';
 
 const MAX_SAVED_USERS = 100;
 const MAX_HISTORY = 12;
@@ -105,6 +109,38 @@ function appendHistory(settings, story) {
     record,
     ...(settings.history || []).filter(item => String(item.id) !== record.id),
   ].slice(0, MAX_HISTORY);
+}
+
+function mergeDurableHistory(rows = [], localHistory = []) {
+  const local = new Map((localHistory || []).map(item => [String(item.id), item]));
+  const durable = (Array.isArray(rows) ? rows : []).map(row => {
+    const fallback = local.get(String(row.story_id)) || {};
+    const postedMs = row.posted_at ? new Date(row.posted_at).getTime() : NaN;
+    return {
+      id: String(row.story_id),
+      ts: Number.isFinite(postedMs) ? Math.floor(postedMs / 1000) : Number(fallback.ts || 0),
+      audience: row.audience || fallback.audience || 'standard',
+      excluded: Number(fallback.excluded || 0),
+      selected: Number(fallback.selected || 0),
+      protect: Boolean(row.protected),
+      deleted: Boolean(row.deleted_at || row.active === false),
+      views: Number(row.last_views_count || 0),
+      identified: Number(row.last_identified_count || 0),
+      reactions: Number(row.last_reactions_count || 0),
+      forwards: Number(row.last_forwards_count || 0),
+      lastSyncAt: row.last_sync_at || null,
+      lastError: row.last_error || null,
+    };
+  });
+
+  const seen = new Set(durable.map(item => String(item.id)));
+  for (const item of localHistory || []) {
+    if (!seen.has(String(item.id))) durable.push(item);
+  }
+
+  return durable
+    .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0))
+    .slice(0, 100);
 }
 
 function analyticsFromHistory(history = []) {
@@ -420,6 +456,15 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
       settings = refreshed.settings;
+
+      let durableHistory = settings.history || [];
+      try {
+        const archiveRows = await listStoryArchive(chatId, 100);
+        durableHistory = mergeDurableHistory(archiveRows, settings.history || []);
+      } catch (error) {
+        console.warn('Mini App durable archive fallback', error?.message || error);
+      }
+
       res.status(200).json({
         ok: true,
         user: {
@@ -432,6 +477,8 @@ export default async function handler(req, res) {
           live: refreshed.live,
           storyPermission: refreshed.rights,
           readPermission: refreshed.readRights,
+          history: durableHistory,
+          analytics: analyticsFromHistory(durableHistory),
         }),
       });
       return;
@@ -688,6 +735,9 @@ export default async function handler(req, res) {
       await tg(token, 'deleteStory', {
         business_connection_id: settings.bc,
         story_id: requestedId,
+      });
+      await markStoryDeleted(chatId, requestedId).catch(error => {
+        console.warn('Mini App durable archive delete tracking failed', error?.message || error);
       });
       settings = {
         ...settings,
