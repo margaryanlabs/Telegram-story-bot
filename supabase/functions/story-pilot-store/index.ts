@@ -6,6 +6,8 @@ const SUPABASE_URL = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "");
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const VERCEL_PUBLIC_KEY = "FvnaVTxBDvxvK5wFkIxBw_Y_2XxotSphSsh9qh3xfGY";
 const MAX_SKEW_MS = 120_000;
+const PRIVACY_MEDIA_BUCKET = "story-pilot-ghost-media";
+const MAX_PRIVACY_MEDIA_BYTES = 20 * 1024 * 1024;
 
 const db = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -80,6 +82,213 @@ async function opGetPrivacySettings(args: any) {
   return privacyShape(need(r as any));
 }
 
+
+function storageErrorMessage(error: any) {
+  return String(error?.message || error?.error || error || "");
+}
+
+async function ensurePrivacyMediaBucket() {
+  const existing = await db.storage.getBucket(PRIVACY_MEDIA_BUCKET);
+  if (!existing.error && existing.data) return true;
+
+  const message = storageErrorMessage(existing.error);
+  if (existing.error && !/not found|404/i.test(message)) {
+    throw new Error(message || "privacy_media_bucket_lookup_failed");
+  }
+
+  const created = await db.storage.createBucket(PRIVACY_MEDIA_BUCKET, {
+    public: false,
+    fileSizeLimit: MAX_PRIVACY_MEDIA_BYTES,
+  });
+
+  if (created.error && !/already exists|duplicate/i.test(storageErrorMessage(created.error))) {
+    throw new Error(storageErrorMessage(created.error) || "privacy_media_bucket_create_failed");
+  }
+  return true;
+}
+
+function mediaExtension(fileName: string | null, mimeType: string | null) {
+  const name = String(fileName || "");
+  const dot = name.lastIndexOf(".");
+  if (dot >= 0 && dot < name.length - 1) {
+    return "." + name.slice(dot + 1).replace(/[^a-zA-Z0-9]/g, "").slice(0, 12).toLowerCase();
+  }
+  const map: Record<string, string> = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "video/mp4": ".mp4",
+    "audio/ogg": ".ogg",
+    "audio/mpeg": ".mp3",
+    "application/pdf": ".pdf",
+  };
+  return map[String(mimeType || "").toLowerCase()] || "";
+}
+
+async function removePrivacyMediaPaths(paths: string[]) {
+  const unique = [...new Set(paths.filter(Boolean))];
+  for (let i = 0; i < unique.length; i += 1000) {
+    const batch = unique.slice(i, i + 1000);
+    if (!batch.length) continue;
+    const removed = await db.storage.from(PRIVACY_MEDIA_BUCKET).remove(batch);
+    if (removed.error && !/not found|bucket not found|404/i.test(storageErrorMessage(removed.error))) {
+      throw new Error(storageErrorMessage(removed.error) || "privacy_media_remove_failed");
+    }
+  }
+}
+
+async function cleanupPrivacyUser(userId: string, retentionDays: number) {
+  const cutoff = new Date(Date.now() - retentionDays * 86400000).toISOString();
+
+  while (true) {
+    const rowsResult = await db.from("story_pilot_messages")
+      .select("message_id,media_storage_path")
+      .eq("telegram_user_id", userId)
+      .lt("sent_at", cutoff)
+      .limit(1000);
+    const rows = need(rowsResult as any) || [];
+    if (!rows.length) break;
+
+    await removePrivacyMediaPaths(rows.map((row: any) => row.media_storage_path).filter(Boolean));
+
+    const ids = rows.map((row: any) => Number(row.message_id)).filter((id: number) => Number.isInteger(id));
+    if (!ids.length) break;
+
+    const deleted = await db.from("story_pilot_messages")
+      .delete()
+      .eq("telegram_user_id", userId)
+      .in("message_id", ids);
+    need(deleted as any);
+
+    if (rows.length < 1000) break;
+  }
+}
+
+async function opCreatePrivacyMediaUpload(args: any) {
+  const userId = String(args.userId || "");
+  const chatId = String(args.chatId || "");
+  const messageId = Number(args.messageId || 0);
+  if (!userId || !chatId || !Number.isInteger(messageId) || messageId <= 0) {
+    throw new Error("invalid_privacy_media_identity");
+  }
+
+  const settings = await opGetPrivacySettings({ userId });
+  if (!settings.antiDelete) return { allowed: false, reason: "anti_delete_disabled" };
+
+  const rowResult = await db.from("story_pilot_messages")
+    .select("content_hash,media_file_id,media_mime_type,media_file_name,media_file_size,media_storage_path,media_archive_status")
+    .eq("telegram_user_id", userId)
+    .eq("chat_id", chatId)
+    .eq("message_id", messageId)
+    .maybeSingle();
+  const row = need(rowResult as any);
+  if (!row?.media_file_id) return { allowed: false, reason: "no_media" };
+
+  const fileSize = Number(row.media_file_size || 0) || null;
+  if (fileSize && fileSize > MAX_PRIVACY_MEDIA_BYTES) {
+    const tooLarge = await db.from("story_pilot_messages")
+      .update({
+        media_archive_status: "too_large",
+        media_archive_error: "telegram_bot_download_limit",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("telegram_user_id", userId)
+      .eq("chat_id", chatId)
+      .eq("message_id", messageId);
+    need(tooLarge as any);
+    return { allowed: false, reason: "too_large" };
+  }
+
+  if (row.media_storage_path && row.media_archive_status === "archived") {
+    return { allowed: false, reason: "already_archived", path: row.media_storage_path };
+  }
+
+  await ensurePrivacyMediaBucket();
+
+  const hash = String(row.content_hash || "media").replace(/[^a-zA-Z0-9]/g, "").slice(0, 24) || "media";
+  const ext = mediaExtension(row.media_file_name || null, row.media_mime_type || null);
+  const path = [userId, chatId, String(messageId), hash + ext].join("/");
+
+  const pending = await db.from("story_pilot_messages")
+    .update({
+      media_archive_status: "pending",
+      media_archive_error: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("telegram_user_id", userId)
+    .eq("chat_id", chatId)
+    .eq("message_id", messageId);
+  need(pending as any);
+
+  const signed = await db.storage
+    .from(PRIVACY_MEDIA_BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
+
+  if (signed.error || !signed.data?.signedUrl) {
+    throw new Error(storageErrorMessage(signed.error) || "privacy_media_signed_upload_failed");
+  }
+
+  return {
+    allowed: true,
+    path,
+    signedUrl: signed.data.signedUrl,
+    mimeType: row.media_mime_type || null,
+    fileName: row.media_file_name || null,
+    fileSize,
+  };
+}
+
+async function opFinalizePrivacyMediaArchive(args: any) {
+  const userId = String(args.userId || "");
+  const chatId = String(args.chatId || "");
+  const messageId = Number(args.messageId || 0);
+  const archived = Boolean(args.archived);
+  const path = args.path ? String(args.path) : null;
+
+  const patch: Record<string, any> = {
+    media_archive_status: archived ? "archived" : "failed",
+    media_archive_error: archived ? null : String(args.error || "archive_failed").slice(0, 300),
+    updated_at: new Date().toISOString(),
+  };
+  if (archived && path) {
+    patch.media_storage_path = path;
+    patch.media_archived_at = new Date().toISOString();
+  }
+
+  const r = await db.from("story_pilot_messages")
+    .update(patch)
+    .eq("telegram_user_id", userId)
+    .eq("chat_id", chatId)
+    .eq("message_id", messageId)
+    .select("media_archive_status,media_storage_path,media_archived_at")
+    .maybeSingle();
+  return need(r as any);
+}
+
+async function opCleanupPrivacyRetentionGlobal() {
+  await ensurePrivacyMediaBucket();
+  const settingsResult = await db.from("story_pilot_privacy_settings")
+    .select("telegram_user_id,retention_days")
+    .limit(5000);
+  const rows = need(settingsResult as any) || [];
+  let users = 0;
+
+  for (const row of rows as any[]) {
+    await cleanupPrivacyUser(
+      String(row.telegram_user_id),
+      Math.max(1, Math.min(3650, Number(row.retention_days || 30))),
+    );
+    users += 1;
+  }
+  return { users };
+}
+
+async function maintenanceSecretAllowed(secret: string) {
+  if (!secret) return false;
+  const result = await db.rpc("story_pilot_maintenance_secret_ok", { p_secret: secret });
+  return Boolean(need(result as any));
+}
+
 async function opUpdatePrivacySettings(args: any) {
   const userId = String(args.userId);
   const current = await opGetPrivacySettings({ userId });
@@ -99,13 +308,7 @@ async function opUpdatePrivacySettings(args: any) {
     .single();
   const saved = privacyShape(need(r as any));
 
-  const cutoff = new Date(Date.now() - saved.retentionDays * 86400000).toISOString();
-  const purge = await db.from("story_pilot_messages")
-    .delete()
-    .eq("telegram_user_id", userId)
-    .lt("sent_at", cutoff);
-  need(purge as any);
-
+  await cleanupPrivacyUser(userId, saved.retentionDays);
   return saved;
 }
 
@@ -265,7 +468,7 @@ async function opListPrivacyMessages(args: any) {
 
   const cutoff = new Date(Date.now() - settings.retentionDays * 86400000).toISOString();
   const r = await db.from("story_pilot_messages")
-    .select("chat_id,message_id,direction,sender_user_id,sender_username,sender_display_name,chat_title,text_content,caption,media_type,media_mime_type,media_file_name,media_file_size,sent_at,edited_at,deleted_at")
+    .select("chat_id,message_id,direction,sender_user_id,sender_username,sender_display_name,chat_title,text_content,caption,media_type,media_mime_type,media_file_name,media_file_size,media_archive_status,media_archived_at,sent_at,edited_at,deleted_at")
     .eq("telegram_user_id", userId)
     .eq("chat_id", chatId)
     .gte("sent_at", cutoff)
@@ -283,20 +486,34 @@ async function opGetPrivacyMediaRef(args: any) {
   if (!privacyEnabled(settings)) return null;
 
   const r = await db.from("story_pilot_messages")
-    .select("media_type,media_file_id,media_mime_type,media_file_name,media_file_size,deleted_at")
+    .select("media_type,media_file_id,media_mime_type,media_file_name,media_file_size,media_storage_path,media_archive_status,deleted_at")
     .eq("telegram_user_id", userId)
     .eq("chat_id", chatId)
     .eq("message_id", messageId)
     .maybeSingle();
   const row = need(r as any);
-  if (!row?.media_file_id) return null;
+  if (!row?.media_file_id && !row?.media_storage_path) return null;
+
+  let vaultUrl: string | null = null;
+  if (row.media_storage_path && row.media_archive_status === "archived") {
+    await ensurePrivacyMediaBucket();
+    const signed = await db.storage
+      .from(PRIVACY_MEDIA_BUCKET)
+      .createSignedUrl(row.media_storage_path, 90);
+    if (!signed.error && signed.data?.signedUrl) {
+      vaultUrl = signed.data.signedUrl;
+    }
+  }
+
   return {
     mediaType: row.media_type || null,
-    fileId: row.media_file_id,
+    fileId: row.media_file_id || null,
     mimeType: row.media_mime_type || null,
     fileName: row.media_file_name || null,
     fileSize: Number(row.media_file_size || 0) || null,
     deletedAt: row.deleted_at || null,
+    archiveStatus: row.media_archive_status || "none",
+    vaultUrl,
   };
 }
 
@@ -319,11 +536,30 @@ async function opGetMessageVersions(args: any) {
 
 async function opClearPrivacyArchive(args: any) {
   const userId = String(args.userId);
-  const r = await db.from("story_pilot_messages")
-    .delete()
-    .eq("telegram_user_id", userId)
-    .select("message_id");
-  return { deleted: (need(r as any) || []).length };
+  let deletedCount = 0;
+
+  while (true) {
+    const rowsResult = await db.from("story_pilot_messages")
+      .select("message_id,media_storage_path")
+      .eq("telegram_user_id", userId)
+      .limit(1000);
+    const rows = need(rowsResult as any) || [];
+    if (!rows.length) break;
+
+    await removePrivacyMediaPaths(rows.map((row: any) => row.media_storage_path).filter(Boolean));
+    const ids = rows.map((row: any) => Number(row.message_id)).filter((id: number) => Number.isInteger(id));
+    if (!ids.length) break;
+
+    const r = await db.from("story_pilot_messages")
+      .delete()
+      .eq("telegram_user_id", userId)
+      .in("message_id", ids)
+      .select("message_id");
+    deletedCount += (need(r as any) || []).length;
+    if (rows.length < 1000) break;
+  }
+
+  return { deleted: deletedCount };
 }
 
 
@@ -764,7 +1000,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v2", mediaProxy: true };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v3", mediaProxy: true, mediaVault: true };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
@@ -772,6 +1008,9 @@ async function dispatch(op: string, args: any) {
     case "list_privacy_threads": return opListPrivacyThreads(args);
     case "list_privacy_messages": return opListPrivacyMessages(args);
     case "get_privacy_media_ref": return opGetPrivacyMediaRef(args);
+    case "create_privacy_media_upload": return opCreatePrivacyMediaUpload(args);
+    case "finalize_privacy_media_archive": return opFinalizePrivacyMediaArchive(args);
+    case "cleanup_privacy_retention_global": return opCleanupPrivacyRetentionGlobal();
     case "get_message_versions": return opGetMessageVersions(args);
     case "clear_privacy_archive": return opClearPrivacyArchive(args);
     case "get_session": return opGetSession(args);
@@ -804,9 +1043,21 @@ Deno.serve(async (request) => {
 
   try {
     const rawBody = await request.text();
-    verifySignedRequest(request, rawBody);
     const body = JSON.parse(rawBody || "{}");
     const op = String(body?.op ?? "");
+    const maintenanceSecret = request.headers.get("x-maintenance-secret") ?? "";
+    const maintenanceAllowed = maintenanceSecret
+      ? await maintenanceSecretAllowed(maintenanceSecret)
+      : false;
+
+    if (maintenanceAllowed) {
+      if (op !== "cleanup_privacy_retention_global") {
+        throw new Error("maintenance_operation_not_allowed");
+      }
+    } else {
+      verifySignedRequest(request, rawBody);
+    }
+
     const data = await dispatchWithRetry(op, body?.args ?? {});
     return json({ ok: true, data });
   } catch (error) {
