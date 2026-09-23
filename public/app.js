@@ -529,8 +529,13 @@
         incomingState.analytics = null;
       }
       state = { ...state, ...incomingState };
-      if (action === 'delete_story' && payload?.storyId && String(selectedViewerStory || '') === String(payload.storyId)) {
-        selectedViewerStory = (state.history || []).find(item => !item.deleted)?.id || null;
+      if (action === 'delete_story' && payload?.storyId) {
+        if (String(selectedViewerStory || '') === String(payload.storyId)) {
+          selectedViewerStory = (state.history || []).find(item => !item.deleted)?.id || null;
+        }
+        if (!state.lastStory || String(state.lastStory) === String(payload.storyId)) {
+          state.lastStory = (state.history || []).find(item => !item.deleted)?.id || null;
+        }
       }
       if (!selectedViewerStory) selectedViewerStory = state.lastStory || state.history?.find(item => !item.deleted)?.id || state.history?.[0]?.id || null;
       render();
@@ -1192,7 +1197,7 @@
   }
 
   function viewerStorySheet() {
-    const history = (state.history || []).filter(item => !item.deleted);
+    const history = (state.history || []).filter(item => !item.deleted).slice(0, 20);
     const items = history.length
       ? history.map(item => `<button data-viewer-story="${item.id}">Story #${item.id} · ${audienceLabel(item.audience)} · ${formatDate(item.ts)}</button>`).join('')
       : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через Story Pilot.</span></div>';
