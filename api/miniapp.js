@@ -481,6 +481,7 @@ export default async function handler(req, res) {
           live: refreshed.live,
           storyPermission: refreshed.rights,
           readPermission: refreshed.readRights,
+          lastStory: durableHistory.find(item => !item.deleted)?.id || settings.lastStory || null,
           history: durableHistory,
           analytics: analyticsFromHistory(durableHistory),
         }),
