@@ -213,9 +213,11 @@ async function getStoredSettings(token, chatId) {
       const url = new URL(menu.web_app.url);
       const bc = url.searchParams.get('bc') || null;
       const canStoriesParam = url.searchParams.get('cs');
+      const canReadMessagesParam = url.searchParams.get('cr');
       return {
         bc,
         canStories: canStoriesParam === null ? Boolean(bc) : canStoriesParam === '1',
+        canReadMessages: canReadMessagesParam === '1',
         audience: url.searchParams.get('aud') || 'standard',
         selected: (url.searchParams.get('sel') || '').split(',').map(normalizeUsername).filter(Boolean).slice(0, MAX_SAVED_USERS),
         excluded: (url.searchParams.get('exc') || '').split(',').map(normalizeUsername).filter(Boolean).slice(0, MAX_SAVED_USERS),
