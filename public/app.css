@@ -1106,3 +1106,24 @@ input,textarea{caret-color:var(--accent)}
   background:var(--amber);
   box-shadow:0 0 0 4px rgba(255,189,89,.08)
 }
+
+
+.ghost-access-strip{
+  margin-top:8px;padding:11px 12px;border:1px solid var(--line);border-radius:17px;
+  background:rgba(255,255,255,.03);display:grid;grid-template-columns:34px 1fr auto;
+  align-items:center;gap:9px
+}
+.ghost-access-icon{
+  width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
+  background:rgba(255,189,89,.08);color:#d6ad70;font-size:14px
+}
+.ghost-access-strip.ready{border-color:rgba(56,212,135,.14);background:rgba(56,212,135,.035)}
+.ghost-access-strip.ready .ghost-access-icon{background:rgba(56,212,135,.1);color:#63e3a2}
+.ghost-access-copy{min-width:0}
+.ghost-access-copy strong{display:block;font-size:10px}
+.ghost-access-copy span{display:block;margin-top:3px;color:var(--muted);font-size:8px;line-height:1.35}
+.ghost-access-strip button{
+  border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.045);
+  color:#d9e4f1;padding:7px 8px;font-size:8px;font-weight:800
+}
+.ghost-access-strip.ready button{color:#8edeb8;border-color:rgba(56,212,135,.14)}
