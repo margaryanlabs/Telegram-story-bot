@@ -180,8 +180,9 @@
       acc.deleted += Number(thread.deletedCount || 0);
       acc.edited += Number(thread.editedCount || 0);
       acc.media += Number(thread.mediaCount || 0);
+      acc.vault += Number(thread.vaultCount || 0);
       return acc;
-    }, { messages:0, deleted:0, edited:0, media:0 });
+    }, { messages:0, deleted:0, edited:0, media:0, vault:0 });
   }
 
   function filteredThreads() {
@@ -305,6 +306,7 @@
       privacyStatDeleted: totals.deleted,
       privacyStatEdited: totals.edited,
       privacyStatMessages: totals.messages,
+      privacyStatVault: totals.vault,
     };
     for (const [id, value] of Object.entries(statMap)) {
       if ($(id)) $(id).textContent = String(value);
@@ -367,10 +369,11 @@
       const deleted = Number(thread.deletedCount || 0);
       const edited = Number(thread.editedCount || 0);
       const media = Number(thread.mediaCount || 0);
+      const vault = Number(thread.vaultCount || 0);
       const badges = [
         deleted ? `<i class="deleted">↶ ${deleted}</i>` : '',
         edited ? `<i class="edited">≋ ${edited}</i>` : '',
-        media ? `<i class="media">▣ ${media}</i>` : '',
+        vault ? `<i class="vault">◇ ${vault}</i>` : (media ? `<i class="media">▣ ${media}</i>` : ''),
       ].filter(Boolean).join('');
 
       return `
@@ -514,6 +517,8 @@
       const deleted = Boolean(message.deleted_at);
       const hasMedia = Boolean(message.media_type);
       const mediaArchived = message.media_archive_status === 'archived';
+      const mediaPending = message.media_archive_status === 'pending';
+      const mediaFailed = ['failed','too_large'].includes(String(message.media_archive_status || ''));
       const sender = message.direction === 'outgoing'
         ? 'Вы'
         : (message.sender_display_name || (message.sender_username ? '@' + message.sender_username : thread.title));
@@ -528,10 +533,15 @@
               data-privacy-media-type="${escapeHtml(message.media_type)}"
               data-privacy-media-name="${escapeHtml(message.media_file_name || '')}">
               <span>▣</span><b>Открыть ${escapeHtml(message.media_type === 'photo' ? 'фото' : 'медиа')}</b>
-              <small>${escapeHtml([mediaArchived ? 'Vault' : 'Telegram', formatBytes(message.media_file_size)].filter(Boolean).join(' · '))}</small>
+              <small>${escapeHtml([
+                mediaArchived ? 'Vault защищён' : mediaPending ? 'Vault сохраняется' : mediaFailed ? 'Только Telegram' : 'Telegram',
+                formatBytes(message.media_file_size)
+              ].filter(Boolean).join(' · '))}</small>
             </button>` : ''}
           <footer>
             ${deleted ? '<span class="deleted">Удалено в Telegram</span>' : ''}
+            ${mediaArchived ? '<span class="vault">Media Vault</span>' : ''}
+            ${deleted && hasMedia && !mediaArchived ? '<span class="warn">Медиа может зависеть от Telegram</span>' : ''}
             ${edited ? `<button class="mini-chip" type="button" data-privacy-versions="${escapeHtml(message.message_id)}" data-privacy-chat-id="${escapeHtml(message.chat_id)}">История правок</button>` : ''}
           </footer>
         </article>`;

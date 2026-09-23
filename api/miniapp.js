@@ -461,7 +461,6 @@ export default async function handler(req, res) {
           live: Boolean(settings.bc),
           storyPermission: Boolean(settings.canStories),
           readPermission: Boolean(settings.canReadMessages),
-          readPermission: Boolean(settings.canReadMessages),
         }),
       });
       return;
@@ -481,6 +480,7 @@ export default async function handler(req, res) {
         state: publicState(settings, {
           live: Boolean(settings.bc),
           storyPermission: Boolean(settings.canStories),
+          readPermission: Boolean(settings.canReadMessages),
         }),
       });
       return;

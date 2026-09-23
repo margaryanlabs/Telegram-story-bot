@@ -982,6 +982,8 @@ input,textarea{caret-color:var(--accent)}
 .privacy-message footer span{font-size:7px;padding:3px 5px;border-radius:999px;background:rgba(255,255,255,.05);color:#9ba8b9}
 .privacy-message footer .deleted{color:#ff91a5}
 .privacy-message footer .edited{color:#bcb2ff}
+.privacy-message footer .vault{color:#78e6b3;background:rgba(56,212,135,.08)}
+.privacy-message footer .warn{color:#e9bc75;background:rgba(255,189,89,.08)}
 .privacy-version-list{display:grid;gap:8px;margin-top:14px}
 .privacy-version{padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.035)}
 .privacy-version strong{display:block;font-size:8px;color:#9aa8ba}.privacy-version span{display:block;margin-top:5px;font-size:10px;white-space:pre-wrap}
@@ -1010,7 +1012,7 @@ input,textarea{caret-color:var(--accent)}
 .ghost-enable-all.done>span{background:rgba(56,212,135,.12);color:#65e5a3}
 .ghost-enable-all:disabled{opacity:.8}
 
-.ghost-health-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:11px}
+.ghost-health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:7px;margin-top:11px}
 .ghost-health-grid article{
   min-width:0;padding:11px 8px;border-radius:16px;border:1px solid var(--line);
   background:rgba(255,255,255,.03)
@@ -1062,6 +1064,7 @@ input,textarea{caret-color:var(--accent)}
 }
 
 .privacy-thread-badges i.media{color:#7bd7f7;background:rgba(42,171,238,.09)}
+.privacy-thread-badges i.vault{color:#78e6b3;background:rgba(56,212,135,.09)}
 .privacy-sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .privacy-sheet-head h2{margin-top:3px}
 
