@@ -21,6 +21,8 @@ const OWNER_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_OWN
 const STORY_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_STORY_LIMIT || 4)));
 const FAST_POLL_ROUNDS = Math.max(1, Math.min(3, Number(process.env.VIEWER_FAST_POLL_ROUNDS || 3)));
 const FAST_POLL_INTERVAL_MS = Math.max(8000, Math.min(15000, Number(process.env.VIEWER_FAST_POLL_INTERVAL_MS || 10000)));
+const WATCH_BUDGET_MS = Math.max(30000, Math.min(50000, Number(process.env.VIEWER_WATCH_BUDGET_MS || 44000)));
+const WATCH_MIN_REMAINING_MS = 5500;
 const EDGE_TRIGGER_PUBLIC_KEY = '8sAlE7n-envFOB-8bisnYwBONXPe8M6GRtos_6UsoAg';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -334,10 +336,21 @@ export default async function handler(req, res) {
   const results = [];
   let roundsCompleted = 0;
   let activeStoriesSeen = 0;
-  const pollRounds = sessions.length <= 2 ? FAST_POLL_ROUNDS : 1;
+  let budgetExhausted = false;
+  const startedAt = Date.now();
+  const remainingMs = () => Math.max(0, WATCH_BUDGET_MS - (Date.now() - startedAt));
+  const pollRounds = sessions.length <= 1
+    ? FAST_POLL_ROUNDS
+    : sessions.length === 2
+      ? Math.min(2, FAST_POLL_ROUNDS)
+      : 1;
   const contexts = [];
 
   for (const row of sessions) {
+    if (remainingMs() < WATCH_MIN_REMAINING_MS) {
+      budgetExhausted = true;
+      break;
+    }
     const ownerId = String(row.telegram_user_id);
     try {
       const decrypted = openJson(row.session_ciphertext, `session:${ownerId}`);
@@ -365,11 +378,25 @@ export default async function handler(req, res) {
 
   try {
     for (let round = 0; round < pollRounds; round += 1) {
-      if (round > 0) await sleep(FAST_POLL_INTERVAL_MS);
+      if (remainingMs() < WATCH_MIN_REMAINING_MS) {
+        budgetExhausted = true;
+        break;
+      }
+      if (round > 0) {
+        if (remainingMs() < FAST_POLL_INTERVAL_MS + WATCH_MIN_REMAINING_MS) {
+          budgetExhausted = true;
+          break;
+        }
+        await sleep(FAST_POLL_INTERVAL_MS);
+      }
 
       let storiesThisRound = 0;
 
       for (const context of contexts) {
+        if (remainingMs() < WATCH_MIN_REMAINING_MS) {
+          budgetExhausted = true;
+          break;
+        }
         const { row, ownerId, client, preferences } = context;
         try {
           const stories = await listStoriesForOwner(ownerId, STORY_LIMIT);
@@ -377,6 +404,11 @@ export default async function handler(req, res) {
           const ownerResult = [];
 
           for (const story of stories) {
+            if (remainingMs() < WATCH_MIN_REMAINING_MS) {
+              budgetExhausted = true;
+              ownerResult.push({ storyId: story.story_id, skipped: 'watch_budget' });
+              break;
+            }
             try {
               ownerResult.push(await syncStory({
                 token,
@@ -424,6 +456,9 @@ export default async function handler(req, res) {
     fastPollIntervalMs: FAST_POLL_INTERVAL_MS,
     ownersProcessed: sessions.length,
     activeStoriesSeen,
+    budgetMs: WATCH_BUDGET_MS,
+    budgetRemainingMs: remainingMs(),
+    budgetExhausted,
     results,
   });
 }
