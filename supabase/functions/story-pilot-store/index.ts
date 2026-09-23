@@ -775,24 +775,26 @@ async function opGetStoryData(args: any) {
 async function opGetAnalytics(args: any) {
   const userId = String(args.userId);
 
-  const [storiesResult, viewersResult, snapshotsResult] = await Promise.all([
-    db.from("story_pilot_stories")
-      .select("story_id,posted_at,last_views_count,last_identified_count,last_reactions_count,last_forwards_count,last_sync_at,active")
-      .eq("telegram_user_id", userId)
-      .order("posted_at", { ascending: false })
-      .limit(100),
-    db.from("story_pilot_viewers")
-      .select("story_id,viewer_user_id,username,display_name,viewed_at,reaction_json,is_contact")
-      .eq("telegram_user_id", userId)
-      .eq("status", "confirmed")
-      .order("viewed_at", { ascending: false })
-      .limit(5000),
-    db.from("story_pilot_viewer_snapshots")
-      .select("story_id,observed_at,total_views,identified_views,reactions_count,forwards_count")
-      .eq("telegram_user_id", userId)
-      .order("observed_at", { ascending: false })
-      .limit(1500),
-  ]);
+  // Keep analytics requests sequential. This project can share a small DB pool with
+  // other workloads; parallel PostgREST queries amplify pool saturation during recovery.
+  const storiesResult = await db.from("story_pilot_stories")
+    .select("story_id,posted_at,last_views_count,last_identified_count,last_reactions_count,last_forwards_count,last_sync_at,active")
+    .eq("telegram_user_id", userId)
+    .order("posted_at", { ascending: false })
+    .limit(100);
+
+  const viewersResult = await db.from("story_pilot_viewers")
+    .select("story_id,viewer_user_id,username,display_name,viewed_at,reaction_json,is_contact")
+    .eq("telegram_user_id", userId)
+    .eq("status", "confirmed")
+    .order("viewed_at", { ascending: false })
+    .limit(3000);
+
+  const snapshotsResult = await db.from("story_pilot_viewer_snapshots")
+    .select("story_id,observed_at,total_views,identified_views,reactions_count,forwards_count")
+    .eq("telegram_user_id", userId)
+    .order("observed_at", { ascending: false })
+    .limit(1000);
 
   const stories = need(storiesResult as any) || [];
   const viewers = need(viewersResult as any) || [];
@@ -994,19 +996,20 @@ async function opGetAnalytics(args: any) {
 async function opGetExport(args: any) {
   const userId = String(args.userId);
 
-  const [storiesResult, viewersResult] = await Promise.all([
-    db.from("story_pilot_stories")
-      .select("story_id,posted_at,expires_at,active,deleted_at,audience,protected,last_views_count,last_identified_count,last_reactions_count,last_forwards_count,last_sync_at")
-      .eq("telegram_user_id", userId)
-      .order("posted_at", { ascending: false })
-      .limit(250),
-    db.from("story_pilot_viewers")
-      .select("story_id,viewer_user_id,username,display_name,viewed_at,first_seen_at,last_seen_at,confirmed_at,is_contact,reaction_json")
-      .eq("telegram_user_id", userId)
-      .eq("status", "confirmed")
-      .order("viewed_at", { ascending: false })
-      .limit(5000),
-  ]);
+  // Export is intentionally sequential for the same reason as analytics: avoid
+  // competing with ourselves for PostgREST/Supavisor connections.
+  const storiesResult = await db.from("story_pilot_stories")
+    .select("story_id,posted_at,expires_at,active,deleted_at,audience,protected,last_views_count,last_identified_count,last_reactions_count,last_forwards_count,last_sync_at")
+    .eq("telegram_user_id", userId)
+    .order("posted_at", { ascending: false })
+    .limit(250);
+
+  const viewersResult = await db.from("story_pilot_viewers")
+    .select("story_id,viewer_user_id,username,display_name,viewed_at,first_seen_at,last_seen_at,confirmed_at,is_contact,reaction_json")
+    .eq("telegram_user_id", userId)
+    .eq("status", "confirmed")
+    .order("viewed_at", { ascending: false })
+    .limit(3000);
 
   const stories = need(storiesResult as any) || [];
   const viewers = need(viewersResult as any) || [];
@@ -1025,8 +1028,14 @@ function transientStoreError(error: unknown) {
   return /schema cache|connection terminated|connection timeout|fetch failed|network|temporar|retrying|PGRST/i.test(message);
 }
 
+function databaseOverloadError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /PGRST002|schema cache|connection timeout|connection not available|queue timeout|statement timeout/i.test(message);
+}
+
 async function dispatchWithRetry(op: string, args: any) {
-  const waits = [0, 220, 650, 1400];
+  const heavyOp = op === "get_analytics" || op === "get_export";
+  const waits = heavyOp ? [0] : [0, 350];
   let lastError: unknown = null;
 
   for (let attempt = 0; attempt < waits.length; attempt += 1) {
@@ -1038,6 +1047,9 @@ async function dispatchWithRetry(op: string, args: any) {
       return await dispatch(op, args);
     } catch (error) {
       lastError = error;
+      // When PostgREST/Supavisor is saturated, immediate retries create a thundering
+      // herd and make recovery slower. Fail fast so the app can show degraded state.
+      if (databaseOverloadError(error)) throw error;
       if (!transientStoreError(error) || attempt === waits.length - 1) throw error;
       console.warn("story-pilot-store retry", {
         op,
@@ -1052,7 +1064,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v5", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: true };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v6", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
