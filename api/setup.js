@@ -66,19 +66,19 @@ export default async function handler(req, res) {
     await tg(token, 'setMyCommands', {
       commands: [
         { command: 'start', description: '🚀 Открыть Story Pilot' },
-        { command: 'status', description: '📊 Проверить подключение и настройки' },
+        { command: 'status', description: '📊 Проверить Telegram и настройки' },
         { command: 'delete', description: '🗑 Удалить последнюю Story' },
         { command: 'reset', description: '♻️ Сбросить аудиторию и исключения' },
-        { command: 'help', description: '📸 Как публиковать Story' },
+        { command: 'help', description: '❔ Stories, Ghost и Viewer Sync' },
       ],
     });
 
     await tg(token, 'setMyShortDescription', {
-      short_description: 'Подключи Telegram один раз и публикуй Stories прямо из чата.',
+      short_description: 'Stories, Ghost Inbox и Viewer Sync — один центр управления Telegram.',
     }).catch(() => {});
 
     await tg(token, 'setMyDescription', {
-      description: 'Story Pilot публикует Stories в твоём Telegram-профиле. Один раз подключи бота через Telegram Business, разреши управление Stories, выбери аудиторию и просто отправляй фото.',
+      description: 'Story Pilot — центр управления Telegram: публикация Stories, Ghost Inbox с Anti-Delete/Edit History и опциональный Viewer Sync. Stories и Ghost работают через Telegram Business; Viewer Sync подключается отдельно через защищённую пользовательскую MTProto-сессию.',
     }).catch(() => {});
 
     await tg(token, 'setChatMenuButton', {

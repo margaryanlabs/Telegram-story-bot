@@ -315,10 +315,10 @@ function connectText(settings, live = null) {
 
 function howToText(settings) {
   if (!settings.bc || !settings.canStories) {
-    return '📸 Как работает Story Pilot\n\n1. Один раз подключаешь Story Pilot через Telegram Business / «Автоматизация чатов».\n2. Для Stories разрешаешь управление историями; для Ghost — доступ к сообщениям и нужным чатам.\n3. Возвращаешься в бот и выбираешь аудиторию.\n4. Отправляешь фото обычным сообщением.\n5. Story появляется в твоём Telegram-профиле, а Ghost работает отдельно в Mini App.\n\nКаждый пользователь подключает только свой аккаунт.';
+    return '🚀 Как работает Story Pilot\n\n1. Один раз подключаешь Story Pilot через Telegram Business / «Автоматизация чатов».\n2. Для Stories разрешаешь управление историями; для Ghost — доступ к сообщениям и нужным чатам.\n3. Возвращаешься в Mini App: там публикация Stories, Ghost Inbox, Analytics и Archive.\n4. Viewer Sync подключается отдельно, только если нужны фоновые просмотры и alerts.\n5. Для Story можешь также просто отправить фото в этот чат.\n\nStories/Ghost используют Business Connection; Viewer Sync — отдельную защищённую MTProto-сессию.';
   }
 
-  return `📸 Как публиковать\n\n1. Выбери аудиторию.\n2. Для «Мои контакты, кроме…» выбери «👥 Мои контакты» → «🚫 Исключить».\n3. Для конкретных людей нажми «🎯 Выбранные».\n4. Отправь фото обычным сообщением.\n\nБез reply, без forward, без подтверждений.\n\nСейчас: ${audienceLabel(settings.audience, settings.selected)}.`;
+  return `🚀 Story Pilot\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n👻 Ghost: открой Mini App → Ghost; нужен доступ к сообщениям в Telegram Business.\n👁 Viewer Sync: подключается отдельно в Mini App для фоновых просмотров и alerts.\n📊 Analytics/Archive: доступны в Mini App.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
 }
 
 async function editPanel(token, chatId, messageId, text, settings) {
