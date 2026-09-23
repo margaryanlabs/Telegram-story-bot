@@ -871,8 +871,9 @@ export default async function handler(req, res) {
         });
         result = await archiveDeletedBusinessMessages(connection, deleted);
         if (result?.retained && Array.isArray(result?.events) && result.events.length) {
-          await sendGhostDeleteAlert(token, connection?.user_chat_id, result.events).catch(error => {
+          result.alertSent = await sendGhostDeleteAlert(token, connection?.user_chat_id, result.events).catch(error => {
             console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
+            return false;
           });
         }
       } catch (error) {
@@ -889,7 +890,7 @@ export default async function handler(req, res) {
         privacy_delete_captured: Boolean(result?.affected),
         retained: Boolean(result?.retained),
         affected: Number(result?.affected || 0),
-        alert_sent: Boolean(result?.retained && result?.events?.some(event => event?.direction !== 'outgoing')),
+        alert_sent: Boolean(result?.alertSent),
       });
       return;
     }
