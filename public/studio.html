@@ -460,10 +460,10 @@
     </section>
 
     <section class="screen" data-screen="privacy">
-      <div class="page-head">
+      <div class="page-head privacy-page-head">
         <span class="kicker">Privacy</span>
         <h1>Ghost</h1>
-        <p>Отдельный приватный inbox для iPhone: Story Pilot сохраняет доступные Business-сообщения, редакции и удаления на сервере.</p>
+        <p>Приватный inbox для iPhone: новые доступные Business-сообщения, правки и удаления остаются в Story Pilot.</p>
       </div>
 
       <section class="ghost-command-card">
@@ -471,17 +471,27 @@
         <div class="ghost-command-copy">
           <span class="status-pill" id="privacyStatusPill"><i></i><span id="privacyStatusText">Проверяю</span></span>
           <h2>Ghost Inbox</h2>
-          <p id="privacyHeroText">Включи нужные функции — новые события начнут попадать сюда автоматически.</p>
+          <p id="privacyHeroText">Включи Ghost — дальше всё работает автоматически.</p>
         </div>
         <div class="ghost-badges">
           <span>iPhone ready</span><span>Server-side</span><span>No read call</span>
         </div>
+        <button class="ghost-enable-all" id="privacyEnableAllButton" type="button">
+          <span>◉</span><b>Включить Ghost целиком</b><small>Anti-Delete + Edit History + Ghost Inbox</small>
+        </button>
+      </section>
+
+      <section class="ghost-health-grid">
+        <article><span>Диалоги</span><strong id="privacyStatThreads">0</strong><small>в Ghost Inbox</small></article>
+        <article><span>Удалено</span><strong id="privacyStatDeleted">0</strong><small>сохранено</small></article>
+        <article><span>Изменено</span><strong id="privacyStatEdited">0</strong><small>с историей</small></article>
+        <article><span>Сообщения</span><strong id="privacyStatMessages">0</strong><small>в архиве</small></article>
       </section>
 
       <section class="block">
         <div class="block-head">
           <div><span class="kicker">Режим</span><h2>Что сохранять</h2></div>
-          <span class="tiny-note">для новых сообщений</span>
+          <span class="tiny-note">для новых событий</span>
         </div>
         <div class="settings-card">
           <div class="setting-row">
@@ -496,31 +506,61 @@
           </div>
           <div class="setting-row">
             <span class="setting-icon cyan">◉</span>
-            <span class="setting-copy"><strong>Ghost Inbox</strong><small>Читать сохранённые копии здесь. Story Pilot не отправляет readBusinessMessage.</small></span>
+            <span class="setting-copy"><strong>Ghost Inbox</strong><small>Читать сохранённые копии здесь без вызова readBusinessMessage.</small></span>
             <label class="switch"><input id="privacyGhostInboxSwitch" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row retention-row">
+            <span class="setting-icon">⌛</span>
+            <span class="setting-copy"><strong>Срок хранения</strong><small>Можно изменить в любой момент.</small></span>
+            <div class="retention-segment" id="privacyRetentionSegment">
+              <button type="button" data-retention="7">7</button>
+              <button type="button" data-retention="30">30</button>
+              <button type="button" data-retention="90">90</button>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="privacy-truth-card">
-        <div><strong>Read receipts</strong><span>При просмотре Ghost Inbox команда «прочитано» от Story Pilot не отправляется.</span><em>SERVER</em></div>
-        <div><strong>Online status</strong><span>Официальный Telegram на iPhone сам управляет online. Этот режим его не подменяет.</span><em>iOS LIMIT</em></div>
+        <div><strong>Read receipts</strong><span>Открытие Ghost Inbox не отправляет Story Pilot-команду «прочитано» в Telegram.</span><em>SERVER</em></div>
+        <div><strong>Online status</strong><span>Если открыть обычный Telegram-чат на iPhone, официальный клиент сам управляет online/read.</span><em>iOS LIMIT</em></div>
       </section>
 
       <section class="privacy-inbox-card">
         <div class="block-head compact">
-          <div><span class="kicker">Ghost Inbox</span><h2>Диалоги</h2></div>
-          <button class="mini-chip" id="privacyRefreshButton" type="button">Обновить</button>
+          <div>
+            <span class="kicker">Ghost Inbox</span>
+            <h2>Диалоги</h2>
+          </div>
+          <div class="privacy-live-control">
+            <span id="privacyLiveDot"></span>
+            <small id="privacyLiveText">Авто</small>
+            <button class="mini-chip" id="privacyRefreshButton" type="button">↻</button>
+          </div>
         </div>
+
+        <label class="privacy-search">
+          <span>⌕</span>
+          <input id="privacySearch" type="search" autocomplete="off" placeholder="Найти диалог или сообщение" />
+        </label>
+
+        <div class="privacy-filters" id="privacyFilters">
+          <button class="active" type="button" data-privacy-filter="all">Все</button>
+          <button type="button" data-privacy-filter="deleted">Удалённые</button>
+          <button type="button" data-privacy-filter="edited">Изменённые</button>
+          <button type="button" data-privacy-filter="media">Медиа</button>
+        </div>
+
         <div class="privacy-summary">
           <span><strong id="privacyThreadCount">0</strong> диалогов</span>
           <span id="privacyRetentionLabel">Хранение · 30 дней</span>
         </div>
+
         <div class="privacy-thread-list" id="privacyThreads"></div>
         <div class="empty-state show" id="privacyEmpty">
           <div class="empty-icon">◌</div>
-          <strong>Ghost Inbox пока пуст</strong>
-          <span>После включения режима новые доступные Business-сообщения и события появятся здесь.</span>
+          <strong id="privacyEmptyTitle">Ghost Inbox пока пуст</strong>
+          <span id="privacyEmptyText">Включи Ghost — новые доступные Business-сообщения и события появятся здесь автоматически.</span>
         </div>
       </section>
 
