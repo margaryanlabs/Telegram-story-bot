@@ -454,16 +454,19 @@ export default async function handler(req, res) {
     let settings = await getStoredSettings(token, chatId);
 
     if (req.method === 'GET') {
-      const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
+      const archivePromise = listStoryArchive(chatId, 100).catch(error => {
+        console.warn('Mini App durable archive fallback', error?.message || error);
+        return null;
+      });
+      const [refreshed, archiveRows] = await Promise.all([
+        refreshConnection(token, chatId, baseUrl, settings),
+        archivePromise,
+      ]);
       settings = refreshed.settings;
 
-      let durableHistory = settings.history || [];
-      try {
-        const archiveRows = await listStoryArchive(chatId, 100);
-        durableHistory = mergeDurableHistory(archiveRows, settings.history || []);
-      } catch (error) {
-        console.warn('Mini App durable archive fallback', error?.message || error);
-      }
+      const durableHistory = Array.isArray(archiveRows)
+        ? mergeDurableHistory(archiveRows, settings.history || [])
+        : (settings.history || []);
 
       res.status(200).json({
         ok: true,
