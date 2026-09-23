@@ -2,6 +2,7 @@ import { openJson } from '../lib/viewer-sync-crypto.js';
 import { verifyEdgeSignature } from '../lib/viewer-sync-signing.js';
 import {
   viewerDbConfigured,
+  acquireViewerWatchLease,
   listActiveViewerSessions,
   listStoriesForOwner,
   updateViewerSession,
@@ -281,6 +282,12 @@ async function syncStory({ token, ownerId, story, client, preferences }) {
   };
 }
 
+function vercelCronAuthorized(req) {
+  const secret = String(process.env.CRON_SECRET || '');
+  const authorization = String(req.headers.authorization || '');
+  return Boolean(secret && authorization === `Bearer ${secret}`);
+}
+
 function authorized(req) {
   const timestamp = String(req.headers['x-story-trigger-timestamp'] || '');
   const signature = String(req.headers['x-story-trigger-signature'] || '');
@@ -296,18 +303,46 @@ function authorized(req) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
+  const isVercelCron = req.method === 'GET';
+  const isSignedTrigger = req.method === 'POST';
+
+  if (!isVercelCron && !isSignedTrigger) {
     res.status(405).json({ ok: false, error: 'Method not allowed' });
     return;
   }
 
   if (!viewerDbConfigured()) {
-    res.status(503).json({ ok: false, error: 'Viewer Sync storage signing is not configured' });
+    res.status(503).json({ ok: false, error: 'Viewer Sync MTProto configuration is incomplete' });
     return;
   }
 
-  if (!authorized(req)) {
-    res.status(401).json({ ok: false, error: 'Unauthorized' });
+  if (isVercelCron) {
+    if (!process.env.CRON_SECRET) {
+      res.status(503).json({ ok: false, error: 'CRON_SECRET is not configured' });
+      return;
+    }
+    if (!vercelCronAuthorized(req)) {
+      res.status(401).json({ ok: false, error: 'Unauthorized cron request' });
+      return;
+    }
+
+    try {
+      const lease = await acquireViewerWatchLease(55);
+      if (!lease) {
+        res.status(200).json({ ok: true, skipped: true, reason: 'watch_lease_held' });
+        return;
+      }
+    } catch (error) {
+      res.status(200).json({
+        ok: true,
+        degraded: true,
+        reason: 'watch_lease_unavailable',
+        error: error?.message || String(error),
+      });
+      return;
+    }
+  } else if (!authorized(req)) {
+    res.status(401).json({ ok: false, error: 'Unauthorized signed trigger' });
     return;
   }
 
@@ -459,6 +494,7 @@ export default async function handler(req, res) {
     budgetMs: WATCH_BUDGET_MS,
     budgetRemainingMs: remainingMs(),
     budgetExhausted,
+    trigger: isVercelCron ? 'vercel_cron' : 'supabase_signed',
     results,
   });
 }
