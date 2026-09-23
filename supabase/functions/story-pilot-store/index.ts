@@ -401,7 +401,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
   const settings = await opGetPrivacySettings({ userId });
 
   const beforeResult = await db.from("story_pilot_messages")
-    .select("message_id,sender_display_name,sender_username,chat_title,text_content,caption,media_type,direction")
+    .select("message_id,sender_display_name,sender_username,chat_title,text_content,caption,media_type,direction,media_storage_path")
     .eq("telegram_user_id", userId)
     .eq("chat_id", chatId)
     .in("message_id", messageIds);
@@ -415,6 +415,10 @@ async function opMarkBusinessMessagesDeleted(args: any) {
   }));
 
   if (!settings.antiDelete) {
+    await removePrivacyMediaPaths(
+      beforeRows.map((row: any) => row.media_storage_path).filter(Boolean),
+    );
+
     const r = await db.from("story_pilot_messages")
       .delete()
       .eq("telegram_user_id", userId)
@@ -1045,7 +1049,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v5", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v5", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
