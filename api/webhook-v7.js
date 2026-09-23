@@ -464,9 +464,9 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
 }
 
 async function sendGhostDeleteAlert(token, ownerChatId, events = []) {
-  const incoming = (Array.isArray(events) ? events : [])
-    .filter(event => event?.direction !== 'outgoing')
-    .slice(0, 5);
+  const allIncoming = (Array.isArray(events) ? events : [])
+    .filter(event => event?.direction !== 'outgoing');
+  const incoming = allIncoming.slice(0, 5);
   if (!ownerChatId || !incoming.length) return false;
 
   const lines = incoming.map(event => {
@@ -475,8 +475,8 @@ async function sendGhostDeleteAlert(token, ownerChatId, events = []) {
     return `• ${sender}: ${preview}`;
   });
 
-  const extra = (events?.length || 0) > incoming.length
-    ? `\n+ ещё ${Math.max(0, events.length - incoming.length)}`
+  const extra = allIncoming.length > incoming.length
+    ? `\n+ ещё ${allIncoming.length - incoming.length}`
     : '';
 
   await tg(token, 'sendMessage', {
