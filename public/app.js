@@ -1075,12 +1075,12 @@
     openSheet(`
       <span class="kicker">Аккаунт</span>
       <h2>${ready ? 'Story Pilot подключён' : 'Проверь подключение'}</h2>
-      <p>${ready ? 'Business Connection активен. Stories, Ghost и Viewer Sync используют один общий Telegram-контур.' : 'Для публикации нужен Telegram Business Connection и право управления Stories.'}</p>
+      <p>${ready ? 'Business Connection активен для Stories и Ghost. Viewer Sync подключается отдельно через защищённую пользовательскую MTProto-сессию.' : 'Для публикации нужен Telegram Business Connection и право управления Stories.'}</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>Stories</strong><span>${ready ? 'Готовы к публикации' : 'Нужно can_manage_stories'}</span></div>
         <div class="sheet-item"><strong>Ghost</strong><span>${ghostPermission ? 'Доступ к сообщениям разрешён' : 'Нужно разрешить сообщения'}</span></div>
         <div class="sheet-item"><strong>Media Vault</strong><span>${ghostPermission ? 'Готов сохранять Anti-Delete медиа' : 'Ждёт доступ к сообщениям'}</span></div>
-        <div class="sheet-item"><strong>Viewer Sync</strong><span>${viewerState.session?.connected ? 'Подключён · фоновые просмотры активны' : 'Не подключён'}</span></div>
+        <div class="sheet-item"><strong>Viewer Sync</strong><span>${viewerState.session?.connected ? 'Отдельная MTProto-сессия подключена · фоновые просмотры активны' : 'Отдельная MTProto-сессия не подключена'}</span></div>
         <div class="sheet-item"><strong>MTProto</strong><span>${state.advancedPrivacy ? 'Backend готов' : 'Не настроен'}</span></div>
       </div>
       <div class="sheet-actions">
