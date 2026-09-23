@@ -50,7 +50,7 @@ async function sendGenericViewNotice(token, chatId, storyId, viewedAt) {
     : 'только что';
   return tg(token, 'sendMessage', {
     chat_id: chatId,
-    text: `🔔 Новый просмотр Story #${storyId}\n\nВремя: ${when}\nСигнал пришёл сразу. Личность появится только после проверки приватности Telegram.`,
+    text: `🔔 Новый просмотр Story #${storyId}\n\nВремя: ${when}\nWatcher заметил просмотр в фоновом цикле. Личность подтвердится только после окна privacy reconciliation.`,
     disable_notification: false,
   });
 }
