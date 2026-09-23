@@ -19,6 +19,13 @@
     mediaObjectUrl: null,
     autoTimer: null,
     degraded: false,
+    connection: {
+      loaded: false,
+      live: false,
+      ready: false,
+      state: 'unknown',
+      error: false,
+    },
   };
 
   function escapeHtml(value) {
@@ -80,6 +87,46 @@
 
   function anyEnabled(settings = privacyState.settings) {
     return Boolean(settings.antiDelete || settings.editHistory || settings.ghostInbox);
+  }
+
+  async function loadTelegramConnection({ silent = true } = {}) {
+    if (!tg?.initData || navigator.onLine === false) return privacyState.connection;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const response = await fetch('/api/miniapp', {
+        method: 'GET',
+        headers: {
+          'x-telegram-init-data': tg.initData,
+          'content-type': 'application/json',
+        },
+        signal: controller.signal,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось проверить Telegram');
+
+      privacyState.connection = {
+        loaded: true,
+        live: Boolean(data.state?.live),
+        ready: Boolean(data.state?.ready),
+        state: String(data.state?.connection || 'unknown'),
+        error: false,
+      };
+      render();
+      return privacyState.connection;
+    } catch (error) {
+      privacyState.connection = {
+        ...privacyState.connection,
+        loaded: true,
+        error: true,
+      };
+      render();
+      if (!silent) toast(error?.name === 'AbortError' ? 'Telegram отвечает слишком долго' : error.message);
+      return privacyState.connection;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   async function request(action = null, payload = {}) {
@@ -154,29 +201,37 @@
     const settings = privacyState.settings || {};
     const enabled = anyEnabled(settings);
     const complete = fullyEnabled(settings);
+    const connectionLive = Boolean(privacyState.connection?.live);
+    const operational = complete && connectionLive && !privacyState.degraded;
     const pill = $('privacyStatusPill');
     const statusText = $('privacyStatusText');
 
-    pill?.classList.toggle('ready', complete && !privacyState.degraded);
+    pill?.classList.toggle('ready', operational);
     pill?.classList.toggle('warn', (!complete && !privacyState.loading) || privacyState.degraded);
     if (statusText) {
       statusText.textContent = privacyState.loading
         ? 'Синхронизация'
         : privacyState.degraded
           ? 'Ghost восстанавливает связь'
-          : complete
-            ? 'Ghost полностью активен'
-            : enabled
-              ? 'Ghost частично активен'
-              : 'Режим выключен';
+          : !privacyState.connection.loaded
+            ? 'Проверяю Telegram'
+            : complete && !connectionLive
+              ? 'Нужно подключить Telegram'
+              : operational
+                ? 'Ghost полностью активен'
+                : enabled
+                  ? 'Ghost частично активен'
+                  : 'Режим выключен';
     }
 
     if ($('privacyHeroText')) {
-      $('privacyHeroText').textContent = complete
+      $('privacyHeroText').textContent = complete && connectionLive
         ? 'Готово. Новые доступные Business-сообщения, правки и удаления обрабатываются автоматически.'
-        : enabled
-          ? 'Часть защиты уже включена. Можно включить весь Ghost одной кнопкой.'
-          : 'Включи Ghost одной кнопкой — дальше всё работает автоматически.';
+        : complete && privacyState.connection.loaded && !connectionLive
+          ? 'Ghost включён, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать Ghost не нужно.'
+          : enabled
+            ? 'Часть защиты уже включена. Можно включить весь Ghost одной кнопкой.'
+            : 'Включи Ghost одной кнопкой — дальше всё работает автоматически.';
     }
 
     const enableAll = $('privacyEnableAllButton');
@@ -208,6 +263,31 @@
       button.disabled = privacyState.loading;
     });
 
+    const accessStrip = $('privacyAccessStrip');
+    const accessIcon = $('privacyAccessIcon');
+    const accessTitle = $('privacyAccessTitle');
+    const accessText = $('privacyAccessText');
+    const accessAction = $('privacyAccessAction');
+    if (accessStrip) accessStrip.classList.toggle('ready', connectionLive);
+    if (accessIcon) accessIcon.textContent = connectionLive ? '✓' : '◌';
+    if (accessTitle) {
+      accessTitle.textContent = !privacyState.connection.loaded
+        ? 'Проверяю Telegram'
+        : connectionLive
+          ? 'Telegram Business подключён'
+          : privacyState.connection.error
+            ? 'Не удалось проверить Telegram'
+            : 'Нужно подключить Telegram Business';
+    }
+    if (accessText) {
+      accessText.textContent = connectionLive
+        ? 'Business Connection активен. Ghost может получать новые сообщения из разрешённых Telegram-чатов.'
+        : 'Ghost сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
+    }
+    if (accessAction) {
+      accessAction.textContent = connectionLive ? 'Проверить' : 'Подключить';
+    }
+
     const totals = threadTotals();
     const statMap = {
       privacyStatThreads: privacyState.threads.length,
@@ -238,7 +318,7 @@
 
     const liveDot = $('privacyLiveDot');
     if (liveDot) {
-      liveDot.classList.toggle('active', enabled && navigator.onLine !== false && !privacyState.degraded);
+      liveDot.classList.toggle('active', enabled && connectionLive && navigator.onLine !== false && !privacyState.degraded);
       liveDot.classList.toggle('degraded', privacyState.degraded);
     }
     if ($('privacyLiveText')) {
@@ -246,9 +326,11 @@
         ? 'Offline'
         : privacyState.degraded
           ? 'Восстановление'
-          : enabled
-            ? 'Авто · 12с'
-            : 'Авто';
+          : enabled && !connectionLive
+            ? 'Ждёт Telegram'
+            : enabled
+              ? 'Авто · 12с'
+              : 'Авто';
     }
 
     if (empty) {
@@ -363,7 +445,10 @@
     if (ok) {
       toast('Ghost полностью включён');
       try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
-      await refresh({ silent:true });
+      await Promise.all([
+        refresh({ silent:true }),
+        loadTelegramConnection({ silent:true }),
+      ]);
     }
   }
 
@@ -609,7 +694,21 @@
     render();
   });
 
-  document.querySelector('[data-nav="privacy"]')?.addEventListener('click', () => refresh({ silent:true }));
+  document.querySelector('[data-nav="privacy"]')?.addEventListener('click', () => {
+    refresh({ silent:true });
+    loadTelegramConnection({ silent:true });
+  });
+
+  $('privacyAccessAction')?.addEventListener('click', async () => {
+    if (privacyState.connection.live) {
+      await loadTelegramConnection({ silent:false });
+      toast(privacyState.connection.live ? 'Telegram подключён' : 'Подключение не найдено');
+      return;
+    }
+
+    document.querySelector('[data-nav="publish"]')?.click();
+    setTimeout(() => $('checkButton')?.click(), 140);
+  });
 
   $('privacyThreads')?.addEventListener('click', event => {
     const target = event.target.closest('[data-privacy-chat]');
@@ -655,7 +754,10 @@
 
   window.addEventListener('online', () => {
     render();
-    if (privacyScreenActive()) refresh({ silent:true });
+    if (privacyScreenActive()) {
+      refresh({ silent:true });
+      loadTelegramConnection({ silent:true });
+    }
   });
   window.addEventListener('offline', render);
 
