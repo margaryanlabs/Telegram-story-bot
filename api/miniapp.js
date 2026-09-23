@@ -719,7 +719,16 @@ export default async function handler(req, res) {
       const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
       settings = refreshed.settings;
       const requestedId = Number(body.storyId || settings.lastStory);
-      const knownStory = (settings.history || []).find(item => Number(item.id) === requestedId);
+      let knownStory = (settings.history || []).find(item => Number(item.id) === requestedId) || null;
+      if (body.storyId && !knownStory && Number.isInteger(requestedId) && requestedId > 0) {
+        try {
+          const durableRows = await listStoryArchive(chatId, 100);
+          const durable = durableRows.find(row => Number(row.story_id) === requestedId);
+          if (durable) knownStory = durable;
+        } catch (error) {
+          console.warn('Mini App durable archive ownership check fallback', error?.message || error);
+        }
+      }
       if (!refreshed.live || !settings.bc) {
         res.status(409).json({ ok: false, error: 'Telegram Business подключение не найдено' });
         return;
