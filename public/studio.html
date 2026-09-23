@@ -240,7 +240,7 @@
           <button class="primary-button compact-primary" id="quickPrimaryButton" type="button">Продолжить</button>
           <button class="secondary-button compact-secondary" id="testAlertButton" type="button">Тест уведомления</button>
         </div>
-        <small class="quick-footnote">Fast Alerts: watcher делает несколько проверок внутри каждой минуты. Обычный новый view обычно замечается обычно до ~30 секунд.</small>
+        <small class="quick-footnote">Fast Alerts: watcher проверяет активные Stories фоновыми циклами. Задержка зависит от расписания и ответа Telegram.</small>
       </section>
 
       <section class="viewer-story-card">
@@ -273,7 +273,7 @@
         </div>
         <div class="viewer-sync-state" id="viewerSyncState">Проверяю состояние…</div>
         <button class="secondary-button" id="viewerSetupButton" type="button">Подключить Viewer Sync</button>
-        <small class="privacy-note">Новый просмотр даёт быстрый сигнал без личности. Если Telegram позже скрывает связь просмотра с аккаунтом, Story Pilot анонимизирует запись и присылает отдельный privacy-сигнал.</small>
+        <small class="privacy-note">Новый просмотр сначала фиксируется как быстрый provisional-сигнал. После reconciliation Story Pilot подтверждает доступную Telegram-личность или оставляет просмотр неатрибутированным.</small>
       </section>
 
       <section class="viewer-list-preview">
