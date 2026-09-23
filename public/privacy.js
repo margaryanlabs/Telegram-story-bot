@@ -718,6 +718,20 @@
       return;
     }
 
+    if (privacyState.connection.live && !privacyState.connection.readMessages) {
+      openSheet(`
+        <span class="kicker">Telegram Business</span>
+        <h2>Разреши сообщения для Ghost</h2>
+        <p>Открой Telegram → Настройки → Telegram Business / Автоматизация чатов → Story Pilot. Включи доступ к сообщениям / чтению сообщений и выбери чаты, которые Story Pilot может обрабатывать.</p>
+        <p>Это право нужно, чтобы Telegram присылал Ghost события удалений. Story Pilot всё равно не вызывает readBusinessMessage при просмотре Ghost Inbox.</p>
+        <div class="sheet-actions">
+          <button class="accent" data-privacy-recheck-access="1">Проверить снова</button>
+          <button data-privacy-close="1">Закрыть</button>
+        </div>
+      `);
+      return;
+    }
+
     document.querySelector('[data-nav="publish"]')?.click();
     setTimeout(() => $('checkButton')?.click(), 140);
   });
@@ -728,6 +742,19 @@
   });
 
   $('sheet')?.addEventListener('click', event => {
+    const recheckAccess = event.target.closest('[data-privacy-recheck-access]');
+    if (recheckAccess) {
+      await loadTelegramConnection({ silent:false });
+      if (privacyState.connection.live && privacyState.connection.readMessages) {
+        closeSheet();
+        toast('Готово — доступ к сообщениям включён');
+        try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
+      } else {
+        toast('Telegram пока не показывает право на сообщения');
+      }
+      return;
+    }
+
     const mediaButton = event.target.closest('[data-privacy-media]');
     if (mediaButton) {
       loadMedia(
