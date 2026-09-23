@@ -963,7 +963,7 @@
         <div class="archive-thumb">#${item.id}</div>
         <div class="archive-copy">
           <strong>${audienceLong(item.audience, item)}</strong>
-          <span>${formatDate(item.ts)}${item.protect ? ' · защита' : ''}</span>
+          <span>${formatDate(item.ts)}${item.protect ? ' · защита' : ''}${item.lastSyncAt ? ` · ${Number(item.views || 0)} views` : ''}</span>
         </div>
         <div class="archive-side">
           <span class="archive-status ${item.deleted ? 'deleted' : ''}">${item.deleted ? 'удалена' : 'опубликована'}</span>
@@ -1007,14 +1007,17 @@
 
   function profileSheet() {
     const ready = state.connection === 'ready';
+    const ghostPermission = state.readPermission === true;
     openSheet(`
       <span class="kicker">Аккаунт</span>
       <h2>${ready ? 'Story Pilot подключён' : 'Проверь подключение'}</h2>
-      <p>${ready ? 'Business Connection активен. Публикация Stories доступна.' : 'Для публикации нужен Telegram Business Connection и право управления Stories.'}</p>
+      <p>${ready ? 'Business Connection активен. Stories, Ghost и Viewer Sync используют один общий Telegram-контур.' : 'Для публикации нужен Telegram Business Connection и право управления Stories.'}</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>Business Connection</strong><span>${ready ? 'Активен' : 'Не подтверждён'}</span></div>
-        <div class="sheet-item"><strong>Расширенная приватность</strong><span>${state.advancedPrivacy ? 'MTProto готов' : 'Не настроена'}</span></div>
+        <div class="sheet-item"><strong>Stories</strong><span>${ready ? 'Готовы к публикации' : 'Нужно can_manage_stories'}</span></div>
+        <div class="sheet-item"><strong>Ghost</strong><span>${ghostPermission ? 'Доступ к сообщениям разрешён' : 'Нужно разрешить сообщения'}</span></div>
+        <div class="sheet-item"><strong>Media Vault</strong><span>${ghostPermission ? 'Готов сохранять Anti-Delete медиа' : 'Ждёт доступ к сообщениям'}</span></div>
         <div class="sheet-item"><strong>Viewer Sync</strong><span>${viewerState.session?.connected ? 'Подключён · фоновые просмотры активны' : 'Не подключён'}</span></div>
+        <div class="sheet-item"><strong>MTProto</strong><span>${state.advancedPrivacy ? 'Backend готов' : 'Не настроен'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
@@ -1022,24 +1025,23 @@
       </div>
     `);
   }
-
   function connectionHelpSheet() {
     openSheet(`
       <span class="kicker">Telegram Business</span>
       <h2>Одноразовое подключение</h2>
-      <p>Саму публикацию, аудиторию, Viewer Sync и аналитику Story Pilot делает внутри Mini App. Только системное разрешение Telegram Business выдаётся в настройках Telegram.</p>
+      <p>Story Pilot работает на iOS, Android и Desktop. Системные права Telegram Business выдаются один раз в самом Telegram.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots (название пункта может немного отличаться).</span></div>
-        <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Разреши управление Stories / can_manage_stories.</span></div>
-        <div class="sheet-item"><strong>3. Вернись сюда</strong><span>Нажми «Проверить подключение» — остальной процесс остаётся внутри приложения.</span></div>
+        <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Автоматизация чатов.</span></div>
+        <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Для Stories включи can_manage_stories.</span></div>
+        <div class="sheet-item"><strong>3. Разреши сообщения для Ghost</strong><span>Включи доступ к сообщениям / can_read_messages и выбери нужные чаты.</span></div>
+        <div class="sheet-item"><strong>4. Вернись сюда</strong><span>Нажми «Проверить Telegram» — Story Pilot сам проверит оба разрешения.</span></div>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="check">Проверить подключение</button>
+        <button class="accent" data-sheet-action="check">Проверить Telegram</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
   }
-
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
@@ -1578,9 +1580,10 @@
       <h2>${audienceLong(story.audience, story)}</h2>
       <p>${formatDate(story.ts)} · ${story.protect ? 'Защита включена' : 'Без защиты'}.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>Исключено</strong><span>${story.excluded || 0} пользователей</span></div>
-        <div class="sheet-item"><strong>Выбрано</strong><span>${story.selected || 0} пользователей</span></div>
+        <div class="sheet-item"><strong>Исключено</strong><span>${story.countsKnown === false ? '— · старый архив' : `${story.excluded || 0} пользователей`}</span></div>
+        <div class="sheet-item"><strong>Выбрано</strong><span>${story.countsKnown === false ? '— · старый архив' : `${story.selected || 0} пользователей`}</span></div>
         <div class="sheet-item"><strong>Статус</strong><span>${story.deleted ? 'Удалена' : 'Опубликована'}</span></div>
+        ${story.lastSyncAt ? `<div class="sheet-item"><strong>Viewer Sync</strong><span>${Number(story.views || 0)} views · ${Number(story.identified || 0)} identified · ${Number(story.reactions || 0)} reactions</span></div>` : ''}
       </div>
       <div class="sheet-actions">
         ${story.deleted ? '' : `<button data-delete-story="${story.id}">Удалить Story</button>`}
