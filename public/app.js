@@ -88,6 +88,19 @@
     error: null,
   };
 
+  function activeStoryHistory() {
+    return (state.history || []).filter(item => !item.deleted);
+  }
+
+  function preferredStory() {
+    const active = activeStoryHistory();
+    if (selectedViewerStory) {
+      const selected = active.find(item => String(item.id) === String(selectedViewerStory));
+      if (selected) return selected;
+    }
+    return active[0] || null;
+  }
+
   function audienceLabel(mode) {
     return ({
       standard:'Стандарт',
@@ -597,7 +610,7 @@
     try {
       let data = await viewerApi();
 
-      const history = (state.history || []).filter(item => !item.deleted && Number(item.ts || 0) > 0);
+      const history = activeStoryHistory().filter(item => Number(item.ts || 0) > 0);
       const historyKey = history.map(item => `${item.id}:${item.ts}:${item.deleted ? 1 : 0}`).join('|');
 
       if (data.session?.connected && historyKey && historyKey !== viewerRegisteredKey) {
@@ -632,6 +645,7 @@
         ...viewerState,
         configured: data.config?.configured === false ? false : viewerState.configured,
         backgroundReady: Boolean(data.config?.backgroundReady),
+        degraded: data.config?.configured === false ? false : true,
         error: error.message,
       };
       if (!silent && data.config?.configured !== false) showToast(error.message);
@@ -680,7 +694,7 @@
   }
 
   function renderPublish() {
-    const latest = (state.history || []).find(item => !item.deleted) || null;
+    const latest = activeStoryHistory()[0] || null;
     $('metricAudience').textContent = audienceLabel(state.audience);
     $('metricLast').textContent = latest ? relativeTime(latest.ts) : '—';
     $('heroStoryId').textContent = latest ? `Story #${latest.id}` : 'Story —';
@@ -748,9 +762,7 @@
   }
 
   function renderViewers() {
-    const item = (state.history || []).find(entry => String(entry.id) === String(selectedViewerStory))
-      || (state.history || [])[0]
-      || null;
+    const item = preferredStory();
 
     if (item) {
       selectedViewerStory = item.id;
@@ -1331,7 +1343,7 @@
 
   $('quickPrimaryButton').addEventListener('click', async () => {
     const connected = viewerState.session?.connected === true;
-    const item = (state.history || []).find(entry => !entry.deleted) || null;
+    const item = activeStoryHistory()[0] || null;
 
     if (!state.ready) {
       try {
