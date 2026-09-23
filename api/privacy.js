@@ -50,6 +50,11 @@ function noStore(res) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 }
 
+function transientStoreError(error) {
+  const message = error?.message || String(error || '');
+  return /Viewer Sync store|schema cache|timeout|timed out|connection|temporar|fetch failed|network|502|503|504/i.test(message);
+}
+
 function privacyPatch(body = {}) {
   const input = body.settings || body.patch || {};
   const patch = {};
@@ -82,12 +87,25 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const overview = await listPrivacyThreads(userId);
-      res.status(200).json({
-        ok: true,
-        settings: overview?.settings || await getPrivacySettings(userId),
-        threads: overview?.threads || [],
-      });
+      try {
+        const overview = await listPrivacyThreads(userId);
+        res.status(200).json({
+          ok: true,
+          degraded: false,
+          settings: overview?.settings || await getPrivacySettings(userId),
+          threads: overview?.threads || [],
+        });
+      } catch (error) {
+        if (!transientStoreError(error)) throw error;
+        console.warn('Privacy API transient store recovery', error?.message || error);
+        res.status(200).json({
+          ok: true,
+          degraded: true,
+          settings: null,
+          threads: null,
+          storageError: 'Ghost временно восстанавливает соединение. Данные на экране сохранены.',
+        });
+      }
       return;
     }
 
@@ -138,6 +156,11 @@ export default async function handler(req, res) {
     res.status(400).json({ ok: false, error: 'Unsupported privacy action' });
   } catch (error) {
     console.error('Privacy API error', error?.message || error);
+    if (transientStoreError(error)) {
+      res.setHeader('Retry-After', '2');
+      res.status(503).json({ ok: false, error: 'Ghost восстанавливает соединение. Попробуй ещё раз.' });
+      return;
+    }
     res.status(500).json({ ok: false, error: 'Privacy archive is temporarily unavailable' });
   }
 }
