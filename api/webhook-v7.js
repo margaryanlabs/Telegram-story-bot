@@ -126,6 +126,7 @@ function defaultSettings() {
   return {
     bc: null,
     canStories: false,
+    canReadMessages: false,
     audience: 'standard',
     selected: [],
     excluded: [],
@@ -237,6 +238,7 @@ async function saveSettings(token, chatId, origin, settings) {
   if (settings.bc) {
     url.searchParams.set('bc', settings.bc);
     url.searchParams.set('cs', settings.canStories ? '1' : '0');
+    url.searchParams.set('cr', settings.canReadMessages ? '1' : '0');
   }
   url.searchParams.set('aud', settings.audience || 'standard');
   if (settings.selected?.length) url.searchParams.set('sel', settings.selected.slice(0, MAX_SAVED_USERS).join(','));
@@ -391,25 +393,33 @@ async function beginNativePicker(token, chatId, origin, settings, kind) {
 }
 
 async function refreshConnection(token, chatId, origin, settings) {
-  if (!settings.bc) return { settings: { ...settings, canStories: false }, live: false, rights: false };
+  if (!settings.bc) return { settings: { ...settings, canStories: false, canReadMessages: false }, live: false, rights: false, readRights: false };
   try {
     const connection = await tg(token, 'getBusinessConnection', { business_connection_id: settings.bc });
     const live = Boolean(connection?.is_enabled);
     const rights = Boolean(connection?.rights?.can_manage_stories);
+    const readRights = Boolean(connection?.rights?.can_read_messages);
     if (!live) {
-      const next = { ...settings, bc: null, canStories: false };
+      const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
       await saveSettings(token, chatId, origin, next);
-      return { settings: next, live: false, rights: false };
+      return { settings: next, live: false, rights: false, readRights: false };
     }
-    const next = { ...settings, canStories: rights };
-    if (next.canStories !== settings.canStories) {
+    const next = {
+      ...settings,
+      canStories: rights,
+      canReadMessages: readRights,
+    };
+    if (
+      next.canStories !== settings.canStories
+      || next.canReadMessages !== settings.canReadMessages
+    ) {
       await saveSettings(token, chatId, origin, next);
     }
-    return { settings: next, live: true, rights };
+    return { settings: next, live: true, rights, readRights };
   } catch {
-    const next = { ...settings, bc: null, canStories: false };
+    const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
     await saveSettings(token, chatId, origin, next).catch(() => {});
-    return { settings: next, live: false, rights: false };
+    return { settings: next, live: false, rights: false, readRights: false };
   }
 }
 
@@ -420,10 +430,12 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   const settings = await getStoredSettings(token, chatId);
   const live = Boolean(connection?.is_enabled);
   const rights = Boolean(connection?.rights?.can_manage_stories);
+  const readRights = Boolean(connection?.rights?.can_read_messages);
   const next = {
     ...settings,
     bc: live ? connection.id : null,
     canStories: live && rights,
+    canReadMessages: live && readRights,
     processing: false,
     ...(live && rights ? { picking: '', pickerMessage: null } : {}),
   };
@@ -435,6 +447,7 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
     connection_present: Boolean(connection?.id),
     enabled: live,
     can_manage_stories: rights,
+    can_read_messages: readRights,
     source: notify ? 'business_connection_update' : 'business_activity_recovery',
   });
 
