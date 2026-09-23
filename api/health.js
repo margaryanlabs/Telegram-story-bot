@@ -17,6 +17,7 @@ export default async function handler(req, res) {
     version: 'v8',
     token_configured: Boolean(token),
     mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
+    vercel_cron_secret_configured: Boolean(process.env.CRON_SECRET),
     bot: null,
     webhook: null,
     pending_updates: null,
