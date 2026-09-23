@@ -18,6 +18,7 @@
     lastRefreshAt: null,
     mediaObjectUrl: null,
     autoTimer: null,
+    degraded: false,
   };
 
   function escapeHtml(value) {
@@ -84,27 +85,44 @@
   async function request(action = null, payload = {}) {
     if (!tg?.initData) throw new Error('Открой Story Pilot внутри Telegram');
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 16000);
-    try {
-      const response = await fetch('/api/privacy', {
-        method: action ? 'POST' : 'GET',
-        headers: {
-          'x-telegram-init-data': tg.initData,
-          'content-type': 'application/json',
-        },
-        body: action ? JSON.stringify({ action, ...payload }) : undefined,
-        signal: controller.signal,
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) throw new Error(data.error || 'Ghost Inbox временно недоступен');
-      return data;
-    } catch (error) {
-      if (error?.name === 'AbortError') throw new Error('Ghost Inbox отвечает слишком долго');
-      throw error;
-    } finally {
-      clearTimeout(timeout);
+    const retryable = !action || action === 'list_messages' || action === 'versions';
+    const attempts = retryable ? 2 : 1;
+    let lastError = null;
+
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      if (attempt) await new Promise(resolve => setTimeout(resolve, 550));
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 16000);
+      try {
+        const response = await fetch('/api/privacy', {
+          method: action ? 'POST' : 'GET',
+          headers: {
+            'x-telegram-init-data': tg.initData,
+            'content-type': 'application/json',
+          },
+          body: action ? JSON.stringify({ action, ...payload }) : undefined,
+          signal: controller.signal,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.ok) return data;
+
+        const error = new Error(data.error || 'Ghost Inbox временно недоступен');
+        error.status = response.status;
+        lastError = error;
+        if (!retryable || ![502,503,504].includes(response.status) || attempt === attempts - 1) throw error;
+      } catch (error) {
+        const normalized = error?.name === 'AbortError'
+          ? new Error('Ghost Inbox отвечает слишком долго')
+          : error;
+        lastError = normalized;
+        if (!retryable || attempt === attempts - 1) throw normalized;
+      } finally {
+        clearTimeout(timeout);
+      }
     }
+
+    throw lastError || new Error('Ghost Inbox временно недоступен');
   }
 
   function threadTotals(threads = privacyState.threads) {
@@ -139,16 +157,18 @@
     const pill = $('privacyStatusPill');
     const statusText = $('privacyStatusText');
 
-    pill?.classList.toggle('ready', complete);
-    pill?.classList.toggle('warn', !complete && !privacyState.loading);
+    pill?.classList.toggle('ready', complete && !privacyState.degraded);
+    pill?.classList.toggle('warn', (!complete && !privacyState.loading) || privacyState.degraded);
     if (statusText) {
       statusText.textContent = privacyState.loading
         ? 'Синхронизация'
-        : complete
-          ? 'Ghost полностью активен'
-          : enabled
-            ? 'Ghost частично активен'
-            : 'Режим выключен';
+        : privacyState.degraded
+          ? 'Ghost восстанавливает связь'
+          : complete
+            ? 'Ghost полностью активен'
+            : enabled
+              ? 'Ghost частично активен'
+              : 'Режим выключен';
     }
 
     if ($('privacyHeroText')) {
@@ -217,13 +237,18 @@
     });
 
     const liveDot = $('privacyLiveDot');
-    if (liveDot) liveDot.classList.toggle('active', enabled && navigator.onLine !== false);
+    if (liveDot) {
+      liveDot.classList.toggle('active', enabled && navigator.onLine !== false && !privacyState.degraded);
+      liveDot.classList.toggle('degraded', privacyState.degraded);
+    }
     if ($('privacyLiveText')) {
       $('privacyLiveText').textContent = navigator.onLine === false
         ? 'Offline'
-        : enabled
-          ? 'Авто · 12с'
-          : 'Авто';
+        : privacyState.degraded
+          ? 'Восстановление'
+          : enabled
+            ? 'Авто · 12с'
+            : 'Авто';
     }
 
     if (empty) {
@@ -278,18 +303,26 @@
     const before = privacyState.lastTotalMessages || threadTotals().messages;
     try {
       const data = await request();
-      privacyState.settings = { ...privacyState.settings, ...(data.settings || {}) };
-      privacyState.threads = Array.isArray(data.threads) ? data.threads : [];
+      privacyState.degraded = Boolean(data.degraded);
+      if (data.settings) {
+        privacyState.settings = { ...privacyState.settings, ...data.settings };
+      }
+      if (Array.isArray(data.threads)) {
+        privacyState.threads = data.threads;
+      }
       privacyState.lastRefreshAt = Date.now();
 
       const after = threadTotals().messages;
       privacyState.lastTotalMessages = after;
-      if (background && before > 0 && after > before && privacyScreenActive()) {
+      if (data.degraded) {
+        if (!silent && data.storageError) toast(data.storageError);
+      } else if (background && before > 0 && after > before && privacyScreenActive()) {
         const added = after - before;
         toast(`Новых сообщений: ${added}`);
         haptic('soft');
       }
     } catch (error) {
+      privacyState.degraded = true;
       if (!silent) toast(error.message);
     } finally {
       privacyState.loading = false;
@@ -304,6 +337,7 @@
     haptic();
     try {
       const data = await request('update_settings', { settings: patch });
+      privacyState.degraded = false;
       privacyState.settings = { ...privacyState.settings, ...(data.settings || {}) };
       privacyState.threads = Array.isArray(data.threads) ? data.threads : privacyState.threads;
       privacyState.lastTotalMessages = threadTotals().messages;
