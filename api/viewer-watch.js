@@ -1,4 +1,4 @@
-import { openJson } from '../lib/viewer-sync-crypto.js';
+import { openJsonWithMeta, sealJson } from '../lib/viewer-sync-crypto.js';
 import { verifyEdgeSignature } from '../lib/viewer-sync-signing.js';
 import {
   viewerDbConfigured,
@@ -390,8 +390,25 @@ export default async function handler(req, res) {
     }
     const ownerId = String(row.telegram_user_id);
     try {
-      const decrypted = openJson(row.session_ciphertext, `session:${ownerId}`);
+      const opened = await openJsonWithMeta(row.session_ciphertext, `session:${ownerId}`);
+      const decrypted = opened.value;
       const client = await createViewerClient(decrypted.session);
+
+      if (opened.legacy) {
+        try {
+          const upgradedCiphertext = await sealJson(decrypted, `session:${ownerId}`);
+          await updateViewerSession(ownerId, {
+            session_ciphertext: upgradedCiphertext,
+            updated_at: new Date().toISOString(),
+          });
+        } catch (migrationError) {
+          console.warn('Viewer Sync legacy session rewrap deferred', {
+            telegram_user_id: ownerId,
+            error: migrationError?.message || String(migrationError),
+          });
+        }
+      }
+
       contexts.push({
         row,
         ownerId,

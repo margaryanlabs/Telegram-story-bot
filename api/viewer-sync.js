@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
+import { getViewerSyncKeyring } from '../lib/viewer-sync-keyring.js';
 import {
   viewerDbConfigured,
   getViewerSession,
@@ -59,22 +60,29 @@ function validateInitData(initData, token) {
   }
 }
 
-function configState() {
+async function configState() {
   const storage = viewerDbConfigured();
   const telegram = Boolean(
     process.env.TELEGRAM_API_ID
     && process.env.TELEGRAM_API_HASH
     && process.env.TELEGRAM_BOT_TOKEN
   );
+  const secureKeyring = storage && telegram
+    ? await getViewerSyncKeyring({ required: false })
+    : null;
+  const secureSessionCrypto = Boolean(secureKeyring?.current);
 
   return {
     configured: storage && telegram,
     backgroundReady: storage && telegram,
+    newConnectionsReady: storage && telegram && secureSessionCrypto,
+    secureSessionCrypto,
     scheduler: 'supabase_pg_cron',
     missing: [
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
       !process.env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_BOT_TOKEN' : null,
+      storage && telegram && !secureSessionCrypto ? 'SECURE_SESSION_KEYRING' : null,
     ].filter(Boolean),
   };
 }
@@ -263,7 +271,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const config = configState();
+  const config = await configState();
   const userId = String(user.id);
 
   if (!config.configured) {
@@ -413,8 +421,9 @@ export default async function handler(req, res) {
         return;
       }
 
+      await getViewerSyncKeyring({ required: true });
       const auth = await beginUserAuth(body.phone);
-      const payload = sealJson(auth, `auth:${userId}`);
+      const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
       await saveAuthChallenge({
         telegram_user_id: userId,
@@ -440,11 +449,12 @@ export default async function handler(req, res) {
         return;
       }
 
-      const auth = openJson(challenge.challenge_ciphertext, `auth:${userId}`);
+      await getViewerSyncKeyring({ required: true });
+      const auth = await openJson(challenge.challenge_ciphertext, `auth:${userId}`);
       const result = await verifyUserCode(auth, body.code);
 
       if (result.needsPassword) {
-        const next = sealJson({ ...auth, session: result.session }, `auth:${userId}`);
+        const next = await sealJson({ ...auth, session: result.session }, `auth:${userId}`);
         await saveAuthChallenge({
           telegram_user_id: userId,
           challenge_ciphertext: next,
@@ -458,7 +468,7 @@ export default async function handler(req, res) {
 
       await upsertViewerSession({
         telegram_user_id: userId,
-        session_ciphertext: sealJson({ session: result.session }, `session:${userId}`),
+        session_ciphertext: await sealJson({ session: result.session }, `session:${userId}`),
         status: 'active',
         telegram_account_user_id: result.user?.id || null,
         telegram_account_username: result.user?.username || null,
@@ -488,12 +498,13 @@ export default async function handler(req, res) {
         return;
       }
 
-      const auth = openJson(challenge.challenge_ciphertext, `auth:${userId}`);
+      await getViewerSyncKeyring({ required: true });
+      const auth = await openJson(challenge.challenge_ciphertext, `auth:${userId}`);
       const result = await verifyUserPassword(auth, body.password);
 
       await upsertViewerSession({
         telegram_user_id: userId,
-        session_ciphertext: sealJson({ session: result.session }, `session:${userId}`),
+        session_ciphertext: await sealJson({ session: result.session }, `session:${userId}`),
         status: 'active',
         telegram_account_user_id: result.user?.id || null,
         telegram_account_username: result.user?.username || null,
@@ -519,7 +530,7 @@ export default async function handler(req, res) {
       const sessionRow = await getViewerSession(userId);
       if (sessionRow?.session_ciphertext) {
         try {
-          const decrypted = openJson(sessionRow.session_ciphertext, `session:${userId}`);
+          const decrypted = await openJson(sessionRow.session_ciphertext, `session:${userId}`);
           await revokeUserSession(decrypted.session);
         } catch (error) {
           console.warn('Viewer Sync session revoke failed', {
@@ -538,6 +549,17 @@ export default async function handler(req, res) {
     res.status(400).json({ ok: false, error: 'Unknown action' });
   } catch (error) {
     const description = error?.errorMessage || error?.message || String(error);
+    if (/key broker|Secure Viewer Sync keyring|encryption key version/i.test(description)) {
+      console.warn('Viewer Sync secure key unavailable', {
+        telegram_user_id: userId,
+        error: description,
+      });
+      res.status(503).json({
+        ok: false,
+        error: 'Защищённое хранилище приватной сессии временно недоступно. Подключение не будет продолжено без безопасного ключа.',
+      });
+      return;
+    }
     if (/Viewer Sync store|schema cache|timeout|temporar|fetch failed|network/i.test(description)) {
       console.warn('Viewer Sync API degraded', {
         telegram_user_id: userId,
