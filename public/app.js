@@ -1180,7 +1180,7 @@
         <div class="sheet-item"><strong>Business access</strong><span>${businessConnected ? '✓ Подключено' : '○ Требуется подключение'}</span></div>
         <div class="sheet-item"><strong>Ghost</strong><span>${ghostPermission ? '✓ Доступ к сообщениям разрешён' : '○ Разреши доступ к сообщениям'}</span></div>
         <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Разреши управление Stories'}</span></div>
-        <div class="sheet-item"><strong>Deep Intelligence</strong><span>${intelligenceConnected ? '✓ Подключено отдельно' : '○ Опционально · не подключено'}</span></div>
+        <div class="sheet-item"><strong>Deep Intelligence</strong><span>${intelligenceConnected ? '✓ Подключено отдельно' : viewerState.newConnectionsReady === false ? '○ Secure storage setup required' : '○ Опционально · не подключено'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
