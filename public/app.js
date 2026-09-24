@@ -516,12 +516,12 @@
       avatar.appendChild(img);
       return;
     }
-    const name = source.firstName || source.first_name || source.username || 'SP';
+    const name = source.firstName || source.first_name || source.username || 'TC';
     avatar.textContent = String(name).slice(0, 2).toUpperCase();
   }
 
   async function api(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Story Pilot внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Telegram Control внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
@@ -537,7 +537,7 @@
       timeoutMs: action === 'publish_story' ? 45000 : 15000,
     });
 
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Story Pilot');
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Telegram Control');
 
     if (data.state) {
       const incomingState = { ...data.state };
@@ -571,7 +571,7 @@
   }
 
   async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
-    if (!tg?.initData) throw new Error('Открой Story Pilot внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Telegram Control внутри Telegram');
 
     const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
     const options = {
@@ -683,7 +683,7 @@
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
       $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
-      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Story Pilot.';
+      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Telegram Control.';
     } else if (permission) {
       $('heroStatusPill').querySelector('span').textContent = 'Нужно разрешение';
       $('connectionIcon').className = 'connection-icon warn';
@@ -697,7 +697,7 @@
       $('connectionIcon').className = 'connection-icon';
       $('connectionIcon').textContent = '↗';
       $('connectionTitle').textContent = 'Подключи Telegram';
-      $('connectionText').textContent = 'Story Pilot пока не получил активный Business Connection';
+      $('connectionText').textContent = 'Telegram Control пока не получил активный Business Connection';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Ожидание';
     }
@@ -878,7 +878,7 @@
     }
 
     if (!selectedViewerStory) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Story Pilot.</div>';
+      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Telegram Control.</div>';
       return;
     }
 
@@ -1140,7 +1140,7 @@
     const ghostPermission = state.readPermission === true;
     openSheet(`
       <span class="kicker">Аккаунт</span>
-      <h2>${ready ? 'Story Pilot подключён' : 'Проверь подключение'}</h2>
+      <h2>${ready ? 'Telegram Control подключён' : 'Проверь подключение'}</h2>
       <p>${ready ? 'Business Connection активен для Stories и Ghost. Viewer Sync подключается отдельно через защищённую пользовательскую MTProto-сессию.' : 'Для публикации нужен Telegram Business Connection и право управления Stories.'}</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>Stories</strong><span>${ready ? 'Готовы к публикации' : 'Нужно can_manage_stories'}</span></div>
@@ -1159,12 +1159,12 @@
     openSheet(`
       <span class="kicker">Telegram Business</span>
       <h2>Одноразовое подключение</h2>
-      <p>Story Pilot работает на iOS, Android и Desktop. Системные права Telegram Business выдаются один раз в самом Telegram.</p>
+      <p>Telegram Control работает на iOS, Android и Desktop. Системные права Telegram Business выдаются один раз в самом Telegram.</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Автоматизация чатов.</span></div>
         <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Для Stories включи can_manage_stories.</span></div>
         <div class="sheet-item"><strong>3. Разреши сообщения для Ghost</strong><span>Включи доступ к сообщениям / can_read_messages и выбери нужные чаты.</span></div>
-        <div class="sheet-item"><strong>4. Вернись сюда</strong><span>Нажми «Проверить Telegram» — Story Pilot сам проверит оба разрешения.</span></div>
+        <div class="sheet-item"><strong>4. Вернись сюда</strong><span>Нажми «Проверить Telegram» — Telegram Control сам проверит оба разрешения.</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
@@ -1177,7 +1177,7 @@
       openSheet(`
         <span class="kicker">Viewer Sync</span>
         <h2>Watcher уже в коде</h2>
-        <p>Осталось подключить отдельную серверную БД и ключ шифрования. До этого Story Pilot не будет просить Telegram-код: пользовательскую сессию нельзя хранить небезопасно.</p>
+        <p>Осталось подключить отдельную серверную БД и ключ шифрования. До этого Telegram Control не будет просить Telegram-код: пользовательскую сессию нельзя хранить небезопасно.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Realtime watcher</strong><span>Проверка Stories по расписанию и уведомления уже реализованы.</span></div>
           <div class="sheet-item"><strong>Privacy reconciliation</strong><span>Сразу приходит обезличенное уведомление. Имя появляется только если просмотр остаётся видимым после окна приватности.</span></div>
@@ -1223,7 +1223,7 @@
     openSheet(`
       <span class="kicker">Viewer Sync</span>
       <h2>Подключить Telegram</h2>
-      <p>Это отдельная пользовательская MTProto-сессия для чтения viewers твоих собственных Stories. Story Pilot не сохраняет код входа или 2FA-пароль.</p>
+      <p>Это отдельная пользовательская MTProto-сессия для чтения viewers твоих собственных Stories. Telegram Control не сохраняет код входа или 2FA-пароль.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
@@ -1260,7 +1260,7 @@
     openSheet(`
       <span class="kicker">Двухэтапная защита</span>
       <h2>Нужен 2FA-пароль</h2>
-      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Story Pilot.</p>
+      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Telegram Control.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPassword">Telegram 2FA</label>
@@ -1278,7 +1278,7 @@
     const history = (state.history || []).filter(item => !item.deleted).slice(0, 20);
     const items = history.length
       ? history.map(item => `<button data-viewer-story="${item.id}">Story #${item.id} · ${audienceLabel(item.audience)} · ${formatDate(item.ts)}</button>`).join('')
-      : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через Story Pilot.</span></div>';
+      : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через Telegram Control.</span></div>';
 
     openSheet(`
       <span class="kicker">Viewers</span>
@@ -1366,7 +1366,7 @@
     openSheet(`
       <span class="kicker">Только выбранные</span>
       <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Добавь людей'}</h2>
-      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из Story Pilot.</p>
+      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из Telegram Control.</p>
       <div class="people-input-wrap">
         <label for="selectedUsernames">Usernames <small id="selectedInputCount">${state.selected?.length || 0} / 100</small></label>
         <textarea id="selectedUsernames" data-people-input="selected" placeholder="@alex\n@maria">${state.selected?.length ? '@' + state.selected.join('\n@') : ''}</textarea>
@@ -1383,7 +1383,7 @@
     openSheet(`
       <span class="kicker">Исключения</span>
       <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Добавь исключения'}</h2>
-      <p>Вставь @username. Если выбран другой режим, Story Pilot сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
+      <p>Вставь @username. Если выбран другой режим, Telegram Control сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
       <div class="people-input-wrap">
         <label for="excludedUsernames">Usernames <small id="excludedInputCount">${state.excluded?.length || 0} / 100</small></label>
         <textarea id="excludedUsernames" data-people-input="excluded" placeholder="@alex\n@maria">${state.excluded?.length ? '@' + state.excluded.join('\n@') : ''}</textarea>
@@ -1828,6 +1828,6 @@
       }
     }, 30000);
   } else {
-    showToast('Открой Story Pilot внутри Telegram для управления');
+    showToast('Открой Telegram Control внутри Telegram для управления');
   }
 })();
