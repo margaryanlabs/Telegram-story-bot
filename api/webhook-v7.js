@@ -463,7 +463,18 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   return next;
 }
 
-async function sendGhostDeleteAlert(token, ownerChatId, events = []) {
+function ghostAppUrl(origin) {
+  const url = new URL('/studio.html', origin);
+  url.searchParams.set('screen', 'privacy');
+  return url.toString();
+}
+
+function ghostMessagePreview(row = {}) {
+  const value = row.text_content || row.caption || (row.media_type ? `[${row.media_type}]` : 'Сообщение');
+  return String(value || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
+}
+
+async function sendGhostDeleteAlert(token, ownerChatId, origin, events = []) {
   const allIncoming = (Array.isArray(events) ? events : [])
     .filter(event => event?.direction !== 'outgoing');
   const incoming = allIncoming.slice(0, 5);
@@ -481,10 +492,40 @@ async function sendGhostDeleteAlert(token, ownerChatId, events = []) {
 
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Story Pilot → Ghost.`,
+    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Ghost.`,
     disable_notification: false,
+    reply_markup: {
+      inline_keyboard: [[{ text: '👻 Открыть Ghost', web_app: { url: ghostAppUrl(origin) } }]],
+    },
   });
   return true;
+}
+
+async function sendGhostEditAlert(token, ownerChatId, origin, row = {}) {
+  if (!ownerChatId || !row || row.direction === 'outgoing') return false;
+  const sender = row.sender_display_name || (row.sender_username ? `@${row.sender_username}` : null) || row.chat_title || 'Telegram user';
+  await tg(token, 'sendMessage', {
+    chat_id: ownerChatId,
+    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в Ghost.`,
+    disable_notification: false,
+    reply_markup: {
+      inline_keyboard: [[{ text: '👻 Открыть историю', web_app: { url: ghostAppUrl(origin) } }]],
+    },
+  });
+  return true;
+}
+
+async function sendAppShortcut(token, chatId, origin, screen, text, buttonText) {
+  const url = new URL('/studio.html', origin);
+  url.searchParams.set('screen', screen);
+  await tg(token, 'sendMessage', {
+    chat_id: chatId,
+    text,
+    disable_web_page_preview: true,
+    reply_markup: {
+      inline_keyboard: [[{ text: buttonText, web_app: { url: url.toString() } }]],
+    },
+  });
 }
 
 function businessConnectionIdFromActivity(update) {
@@ -844,6 +885,23 @@ export default async function handler(req, res) {
         ) {
           result.mediaVault = await archiveBusinessMediaVault(token, result.row);
         }
+
+        if (
+          update?.edited_business_message
+          && result?.captured
+          && result?.settings?.editHistory
+          && result?.row?.direction !== 'outgoing'
+        ) {
+          result.editAlertSent = await sendGhostEditAlert(
+            token,
+            connection?.user_chat_id,
+            origin,
+            result.row,
+          ).catch(error => {
+            console.warn('Story Pilot Ghost edit alert skipped', error?.message || error);
+            return false;
+          });
+        }
       } catch (error) {
         // Privacy storage must never make Telegram retry the entire webhook update.
         console.warn('Story Pilot privacy message capture skipped', {
@@ -858,6 +916,7 @@ export default async function handler(req, res) {
         privacy_message_captured: Boolean(result?.captured),
         media_vault_archived: Boolean(result?.mediaVault?.archived),
         edited: Boolean(update?.edited_business_message),
+        edit_alert_sent: Boolean(result?.editAlertSent),
       });
       return;
     }
@@ -871,7 +930,7 @@ export default async function handler(req, res) {
         });
         result = await archiveDeletedBusinessMessages(connection, deleted);
         if (result?.retained && Array.isArray(result?.events) && result.events.length) {
-          result.alertSent = await sendGhostDeleteAlert(token, connection?.user_chat_id, result.events).catch(error => {
+          result.alertSent = await sendGhostDeleteAlert(token, connection?.user_chat_id, origin, result.events).catch(error => {
             console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
             return false;
           });
@@ -1011,6 +1070,45 @@ export default async function handler(req, res) {
       await saveSettings(token, chatId, origin, next);
       await showFreshPanel(token, chatId, origin, next);
       res.status(200).json({ ok: true });
+      return;
+    }
+
+    if (command === '/ghost') {
+      await sendAppShortcut(
+        token,
+        chatId,
+        origin,
+        'privacy',
+        '👻 Ghost\n\nAnti-Delete, Edit History, сохранённые медиа и поиск по приватному архиву.',
+        '👻 Открыть Ghost',
+      );
+      res.status(200).json({ ok: true, screen: 'privacy' });
+      return;
+    }
+
+    if (command === '/stories') {
+      await sendAppShortcut(
+        token,
+        chatId,
+        origin,
+        'publish',
+        '📸 Stories\n\nПубликация, аудитория, исключения и защита контента.',
+        '📸 Открыть Stories',
+      );
+      res.status(200).json({ ok: true, screen: 'publish' });
+      return;
+    }
+
+    if (command === '/viewers') {
+      await sendAppShortcut(
+        token,
+        chatId,
+        origin,
+        'viewers',
+        '👁 Viewer Intelligence\n\nПросмотры, повторные зрители, реакции и история аудитории.',
+        '👁 Открыть Intelligence',
+      );
+      res.status(200).json({ ok: true, screen: 'viewers' });
       return;
     }
 
