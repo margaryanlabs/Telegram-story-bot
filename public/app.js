@@ -93,6 +93,8 @@
   let viewerState = {
     configured: null,
     backgroundReady: false,
+    newConnectionsReady: null,
+    secureSessionCrypto: null,
     session: null,
     story: null,
     viewers: [],
@@ -637,6 +639,8 @@
           ...viewerState,
           configured: Boolean(data.config?.configured),
           backgroundReady: Boolean(data.config?.backgroundReady),
+          newConnectionsReady: Boolean(data.config?.newConnectionsReady),
+          secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
           degraded: true,
           error: data.storageError || 'Viewer Sync временно восстанавливает соединение',
         };
@@ -644,6 +648,8 @@
         viewerState = {
           configured: Boolean(data.config?.configured),
           backgroundReady: Boolean(data.config?.backgroundReady),
+          newConnectionsReady: Boolean(data.config?.newConnectionsReady),
+          secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
           session: data.session || null,
           story: data.story || null,
           viewers: data.viewers || [],
@@ -658,6 +664,12 @@
         ...viewerState,
         configured: data.config?.configured === false ? false : viewerState.configured,
         backgroundReady: Boolean(data.config?.backgroundReady),
+        newConnectionsReady: data.config?.newConnectionsReady === undefined
+          ? viewerState.newConnectionsReady
+          : Boolean(data.config?.newConnectionsReady),
+        secureSessionCrypto: data.config?.secureSessionCrypto === undefined
+          ? viewerState.secureSessionCrypto
+          : Boolean(data.config?.secureSessionCrypto),
         degraded: data.config?.configured === false ? false : true,
         error: error.message,
       };
