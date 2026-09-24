@@ -4,7 +4,6 @@ import postgres from "npm:postgres@3.4.5";
 
 const SUPABASE_DB_URL = Deno.env.get("SUPABASE_DB_URL") ?? "";
 const WATCH_URL = "https://telegram-story-bot-murex.vercel.app/api/viewer-watch";
-const TRIGGER_PRIVATE_SEED = "DUFcymFQ6A1XLKZkI5DkPyie4OYXWJCFsXumUxFhV_8";
 
 const sql = SUPABASE_DB_URL ? postgres(SUPABASE_DB_URL, {
   prepare: false,
@@ -24,6 +23,19 @@ function encodeB64Url(bytes: Uint8Array) {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function loadTriggerSeed() {
+  if (!sql) throw new Error("trigger_direct_database_not_configured");
+  const rows = await sql`
+    select secret_value
+    from story_pilot_private.runtime_secrets
+    where name = 'viewer_watch_signing_seed'
+    limit 1
+  `;
+  const value = String(rows[0]?.secret_value || "").trim();
+  if (!value) throw new Error("viewer_watch_signing_seed_missing");
+  return b64url(value);
 }
 
 function json(value: unknown, status = 200) {
@@ -50,7 +62,7 @@ Deno.serve(async (request) => {
 
     const body = JSON.stringify({ trigger: "viewer_watch" });
     const timestamp = String(Date.now());
-    const seed = b64url(TRIGGER_PRIVATE_SEED);
+    const seed = await loadTriggerSeed();
     const pair = nacl.sign.keyPair.fromSeed(seed);
     const message = new TextEncoder().encode(`${timestamp}.${body}`);
     const signature = encodeB64Url(nacl.sign.detached(message, pair.secretKey));
