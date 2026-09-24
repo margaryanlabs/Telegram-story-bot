@@ -1136,21 +1136,25 @@
   }
 
   function profileSheet() {
-    const ready = state.connection === 'ready';
+    const storiesReady = state.connection === 'ready' || state.ready === true;
+    const businessConnected = storiesReady || state.connection === 'needs_permission';
     const ghostPermission = state.readPermission === true;
+    const intelligenceConnected = viewerState.session?.connected === true;
     openSheet(`
-      <span class="kicker">Аккаунт</span>
-      <h2>${ready ? 'Telegram Control подключён' : 'Проверь подключение'}</h2>
-      <p>${ready ? 'Business Connection активен для Stories и Ghost. Viewer Sync подключается отдельно через защищённую пользовательскую MTProto-сессию.' : 'Для публикации нужен Telegram Business Connection и право управления Stories.'}</p>
-      <div class="sheet-list">
-        <div class="sheet-item"><strong>Stories</strong><span>${ready ? 'Готовы к публикации' : 'Нужно can_manage_stories'}</span></div>
-        <div class="sheet-item"><strong>Ghost</strong><span>${ghostPermission ? 'Доступ к сообщениям разрешён' : 'Нужно разрешить сообщения'}</span></div>
-        <div class="sheet-item"><strong>Media Vault</strong><span>${ghostPermission ? 'Готов сохранять Anti-Delete медиа' : 'Ждёт доступ к сообщениям'}</span></div>
-        <div class="sheet-item"><strong>Viewer Sync</strong><span>${viewerState.session?.connected ? 'Отдельная MTProto-сессия подключена · фоновые просмотры активны' : 'Отдельная MTProto-сессия не подключена'}</span></div>
-        <div class="sheet-item"><strong>MTProto</strong><span>${state.advancedPrivacy ? 'Backend готов' : 'Не настроен'}</span></div>
+      <span class="kicker">CONNECTION CENTER</span>
+      <h2>${businessConnected ? 'Telegram подключён' : 'Подключи Telegram'}</h2>
+      <p>Здесь видно, какие возможности реально доступны. Технические протоколы скрыты — включай только то, что тебе нужно.</p>
+      <div class="sheet-list connection-center-list">
+        <div class="sheet-item"><strong>Telegram identity</strong><span>${tg?.initData ? '✓ Подтверждена Telegram Mini App' : 'Нужно открыть приложение внутри Telegram'}</span></div>
+        <div class="sheet-item"><strong>Business access</strong><span>${businessConnected ? '✓ Подключено' : '○ Требуется подключение'}</span></div>
+        <div class="sheet-item"><strong>Ghost</strong><span>${ghostPermission ? '✓ Доступ к сообщениям разрешён' : '○ Разреши доступ к сообщениям'}</span></div>
+        <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Разреши управление Stories'}</span></div>
+        <div class="sheet-item"><strong>Deep Intelligence</strong><span>${intelligenceConnected ? '✓ Подключено отдельно' : '○ Опционально · не подключено'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
+        <button data-sheet-action="go-ghost">Ghost</button>
+        <button data-sheet-action="go-viewers">Intelligence</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
@@ -1162,8 +1166,8 @@
       <p>Telegram Control работает на iOS, Android и Desktop. Системные права Telegram Business выдаются один раз в самом Telegram.</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Автоматизация чатов.</span></div>
-        <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Для Stories включи can_manage_stories.</span></div>
-        <div class="sheet-item"><strong>3. Разреши сообщения для Ghost</strong><span>Включи доступ к сообщениям / can_read_messages и выбери нужные чаты.</span></div>
+        <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Включи разрешение «Управление историями» для Stories.</span></div>
+        <div class="sheet-item"><strong>3. Разреши сообщения для Ghost</strong><span>Включи доступ к сообщениям и выбери нужные чаты.</span></div>
         <div class="sheet-item"><strong>4. Вернись сюда</strong><span>Нажми «Проверить Telegram» — Telegram Control сам проверит оба разрешения.</span></div>
       </div>
       <div class="sheet-actions">
@@ -1181,7 +1185,7 @@
         <div class="sheet-list">
           <div class="sheet-item"><strong>Realtime watcher</strong><span>Проверка Stories по расписанию и уведомления уже реализованы.</span></div>
           <div class="sheet-item"><strong>Privacy reconciliation</strong><span>Сразу приходит обезличенное уведомление. Имя появляется только если просмотр остаётся видимым после окна приватности.</span></div>
-          <div class="sheet-item"><strong>Storage</strong><span>Нужны server-only таблицы и AES-GCM master key для MTProto-сессии.</span></div>
+          <div class="sheet-item"><strong>Storage</strong><span>Нужны защищённое server-only хранилище и отдельный ключ шифрования для приватной сессии.</span></div>
         </div>
         <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
       `);
@@ -1580,6 +1584,14 @@
       closeSheet();
       await refresh();
       if (!state.ready) setTimeout(connectionHelpSheet, 120);
+    }
+    if (action === 'go-ghost') {
+      closeSheet();
+      switchScreen('privacy');
+    }
+    if (action === 'go-stories') {
+      closeSheet();
+      switchScreen('publish');
     }
     if (action === 'go-viewers') {
       closeSheet();
