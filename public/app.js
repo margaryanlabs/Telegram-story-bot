@@ -1205,13 +1205,12 @@
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
-        <span class="kicker">Viewer Sync</span>
-        <h2>Watcher уже в коде</h2>
-        <p>Осталось подключить отдельную серверную БД и ключ шифрования. До этого Telegram Control не будет просить Telegram-код: пользовательскую сессию нельзя хранить небезопасно.</p>
+        <span class="kicker">DEEP INTELLIGENCE</span>
+        <h2>Серверная часть ещё не готова</h2>
+        <p>Telegram Control не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Realtime watcher</strong><span>Проверка Stories по расписанию и уведомления уже реализованы.</span></div>
-          <div class="sheet-item"><strong>Privacy reconciliation</strong><span>Сразу приходит обезличенное уведомление. Имя появляется только если просмотр остаётся видимым после окна приватности.</span></div>
-          <div class="sheet-item"><strong>Storage</strong><span>Нужны защищённое server-only хранилище и отдельный ключ шифрования для приватной сессии.</span></div>
+          <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и privacy reconciliation уже встроены.</span></div>
+          <div class="sheet-item"><strong>Private session</strong><span>Новая сессия создаётся только при безопасном server-side хранении.</span></div>
         </div>
         <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
       `);
@@ -1221,9 +1220,9 @@
     if (viewerState.session?.connected) {
       const account = viewerState.session.account || {};
       openSheet(`
-        <span class="kicker">Viewer Sync</span>
+        <span class="kicker">DEEP INTELLIGENCE</span>
         <h2>Подключено</h2>
-        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} используется только для чтения данных твоих собственных Stories.</p>
+        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} используется только для данных твоих собственных Stories.</p>
         <div class="sheet-list">
           <div class="sheet-item preference-item">
             <span class="preference-copy"><strong>Realtime alerts</strong><span>Уведомлять о новых просмотрах.</span></span>
@@ -1233,17 +1232,35 @@
             </label>
           </div>
           <div class="sheet-item preference-item">
-            <span class="preference-copy"><strong>Unattributed gap</strong><span>Отдельно уведомлять, когда растёт общий счётчик без доступной личности.</span></span>
+            <span class="preference-copy"><strong>Unattributed gap</strong><span>Уведомлять, когда растёт общий счётчик без доступной личности.</span></span>
             <label class="switch">
               <input id="viewerGapSwitch" type="checkbox" data-viewer-pref="gap" ${viewerState.session?.preferences?.notifyAnonymousGap !== false ? 'checked' : ''} />
               <span></span>
             </label>
           </div>
-          <div class="sheet-item"><strong>Как работает</strong><span>Новый view → быстрый сигнал → reconciliation → подтверждённый viewer или анонимизация.</span></div>
+          <div class="sheet-item"><strong>Session security</strong><span>${viewerState.secureSessionCrypto ? 'Versioned server-side encryption active' : 'Legacy session · secure migration pending'}</span></div>
           <div class="sheet-item"><strong>Последняя проверка</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
         </div>
         <div class="sheet-actions">
-          <button data-sheet-action="viewer-disconnect">Отключить Viewer Sync</button>
+          <button data-sheet-action="viewer-disconnect">Отключить Deep Intelligence</button>
+          <button data-sheet-action="close">Закрыть</button>
+        </div>
+      `);
+      return;
+    }
+
+    if (viewerState.newConnectionsReady === false) {
+      openSheet(`
+        <span class="kicker">SECURITY</span>
+        <h2>Новое подключение приостановлено</h2>
+        <p>Telegram Control не создаст приватную MTProto-сессию, пока отдельный серверный ключ шифрования не подтверждён.</p>
+        <div class="sheet-list">
+          <div class="sheet-item"><strong>Stories & Ghost</strong><span>Продолжают работать независимо.</span></div>
+          <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
+          <div class="sheet-item"><strong>New private session</strong><span>Fail-closed · создание заблокировано до secure-ready.</span></div>
+        </div>
+        <div class="sheet-actions">
+          <button class="accent" data-sheet-action="viewer-refresh-security">Проверить снова</button>
           <button data-sheet-action="close">Закрыть</button>
         </div>
       `);
@@ -1251,9 +1268,30 @@
     }
 
     openSheet(`
-      <span class="kicker">Viewer Sync</span>
+      <span class="kicker">DEEP INTELLIGENCE</span>
       <h2>Подключить Telegram</h2>
-      <p>Это отдельная пользовательская MTProto-сессия для чтения viewers твоих собственных Stories. Telegram Control не сохраняет код входа или 2FA-пароль.</p>
+      <p>Отдельная пользовательская сессия нужна только для viewer intelligence твоих собственных Stories.</p>
+      <div class="qr-choice-card">
+        <div class="qr-choice-icon">⌁</div>
+        <div>
+          <strong>Подтвердить через QR</strong>
+          <span>Без ввода номера и кода. Telegram покажет системное подтверждение новой сессии.</span>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-start-qr">Подключить через QR</button>
+        <button data-sheet-action="viewer-use-phone">Использовать номер и код</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
+      <p class="auth-security-note">Код входа и 2FA-пароль не сохраняются. Сессия хранится только в зашифрованном server-side виде.</p>
+    `);
+  }
+
+  function viewerPhoneSheet() {
+    openSheet(`
+      <span class="kicker">FALLBACK LOGIN</span>
+      <h2>Номер и код Telegram</h2>
+      <p>Используй этот способ, если QR-подтверждение недоступно.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
@@ -1263,7 +1301,7 @@
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
-        <button data-sheet-action="close">Отмена</button>
+        <button data-sheet-action="viewer-back-setup">Назад</button>
       </div>
     `);
   }
