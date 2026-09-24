@@ -1,3 +1,5 @@
+import { getViewerSyncKeyring } from '../lib/viewer-sync-keyring.js';
+
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
 }
@@ -18,6 +20,7 @@ export default async function handler(req, res) {
     token_configured: Boolean(token),
     mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
     vercel_cron_secret_configured: Boolean(process.env.CRON_SECRET),
+    secure_session_crypto: 'checking',
     bot: null,
     webhook: null,
     pending_updates: null,
@@ -30,6 +33,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    const secureKeyring = await getViewerSyncKeyring({ required: false });
+    status.secure_session_crypto = secureKeyring?.current ? 'ready' : 'unavailable';
+
     const [bot, webhook] = await Promise.all([
       tg(token, 'getMe'),
       tg(token, 'getWebhookInfo'),
