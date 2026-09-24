@@ -85,6 +85,7 @@
   let toastTimer = null;
   let viewerSearchQuery = '';
   let viewerRegisteredKey = '';
+  let viewerQrAbortController = null;
   let composerFile = null;
   let composerDataUrl = '';
   let composerPreviewUrl = '';
@@ -93,6 +94,8 @@
   let viewerState = {
     configured: null,
     backgroundReady: false,
+    newConnectionsReady: null,
+    secureSessionCrypto: null,
     session: null,
     story: null,
     viewers: [],
@@ -637,6 +640,8 @@
           ...viewerState,
           configured: Boolean(data.config?.configured),
           backgroundReady: Boolean(data.config?.backgroundReady),
+          newConnectionsReady: Boolean(data.config?.newConnectionsReady),
+          secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
           degraded: true,
           error: data.storageError || 'Viewer Sync временно восстанавливает соединение',
         };
@@ -644,6 +649,8 @@
         viewerState = {
           configured: Boolean(data.config?.configured),
           backgroundReady: Boolean(data.config?.backgroundReady),
+          newConnectionsReady: Boolean(data.config?.newConnectionsReady),
+          secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
           session: data.session || null,
           story: data.story || null,
           viewers: data.viewers || [],
@@ -658,6 +665,12 @@
         ...viewerState,
         configured: data.config?.configured === false ? false : viewerState.configured,
         backgroundReady: Boolean(data.config?.backgroundReady),
+        newConnectionsReady: data.config?.newConnectionsReady === undefined
+          ? viewerState.newConnectionsReady
+          : Boolean(data.config?.newConnectionsReady),
+        secureSessionCrypto: data.config?.secureSessionCrypto === undefined
+          ? viewerState.secureSessionCrypto
+          : Boolean(data.config?.secureSessionCrypto),
         degraded: data.config?.configured === false ? false : true,
         error: error.message,
       };
@@ -805,7 +818,11 @@
     const testAlertButton = $('testAlertButton');
 
     quickTelegram.textContent = state.ready ? 'Готово' : 'Нужно подключить';
-    quickViewer.textContent = connected ? 'Готово' : 'Нужно подключить';
+    quickViewer.textContent = connected
+      ? 'Готово'
+      : viewerState.newConnectionsReady === false
+        ? 'Security setup'
+        : 'Нужно подключить';
     quickStory.textContent = hasStory ? `#${item.id}` : 'Нужно опубликовать';
 
     $('quickTelegramStep').classList.toggle('done', Boolean(state.ready));
@@ -818,8 +835,10 @@
 
     if (!state.ready) {
       quickPrimary.textContent = 'Проверить Telegram';
+    } else if (!connected && viewerState.newConnectionsReady === false) {
+      quickPrimary.textContent = 'Проверить Security';
     } else if (!connected) {
-      quickPrimary.textContent = 'Подключить Viewer Sync';
+      quickPrimary.textContent = 'Подключить Intelligence';
     } else if (!hasStory) {
       quickPrimary.textContent = 'Опубликовать Story';
     } else {
@@ -852,14 +871,22 @@
     } else if (viewerState.session?.status === 'reauth_required') {
       $('viewerSyncTitle').textContent = 'Нужно переподключить Viewer Sync.';
       $('viewerSyncText').textContent = viewerState.session?.lastError || 'Telegram-сессия больше не авторизована.';
-      syncState.textContent = 'Требуется повторная авторизация';
+      syncState.textContent = viewerState.newConnectionsReady === false
+        ? 'Повторное подключение временно закрыто Security'
+        : 'Требуется повторная авторизация';
       syncState.classList.add('warn');
       syncButton.textContent = 'Переподключить';
+    } else if (viewerState.newConnectionsReady === false) {
+      $('viewerSyncTitle').textContent = 'Deep Intelligence защищён.';
+      $('viewerSyncText').textContent = 'Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.';
+      syncState.textContent = 'Secure session storage · setup required';
+      syncState.classList.add('warn');
+      syncButton.textContent = 'Проверить Security';
     } else {
       $('viewerSyncTitle').textContent = 'Подключи аналитику зрителей.';
       $('viewerSyncText').textContent = 'Отдельная пользовательская MTProto-сессия нужна только для данных твоих собственных Stories. Код входа и 2FA не сохраняются.';
       syncState.textContent = viewerState.configured === null ? 'Проверяю состояние…' : 'Не подключено';
-      syncButton.textContent = 'Подключить Viewer Sync';
+      syncButton.textContent = 'Подключить Intelligence';
     }
 
     const query = viewerSearchQuery.trim().toLowerCase();
@@ -1130,6 +1157,10 @@
   }
 
   function closeSheet() {
+    if (viewerQrAbortController) {
+      viewerQrAbortController.abort();
+      viewerQrAbortController = null;
+    }
     $('sheetBackdrop').hidden = true;
     $('sheet').hidden = true;
     try { tg?.BackButton?.hide(); } catch {}
@@ -1149,7 +1180,7 @@
         <div class="sheet-item"><strong>Business access</strong><span>${businessConnected ? '✓ Подключено' : '○ Требуется подключение'}</span></div>
         <div class="sheet-item"><strong>Ghost</strong><span>${ghostPermission ? '✓ Доступ к сообщениям разрешён' : '○ Разреши доступ к сообщениям'}</span></div>
         <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Разреши управление Stories'}</span></div>
-        <div class="sheet-item"><strong>Deep Intelligence</strong><span>${intelligenceConnected ? '✓ Подключено отдельно' : '○ Опционально · не подключено'}</span></div>
+        <div class="sheet-item"><strong>Deep Intelligence</strong><span>${intelligenceConnected ? '✓ Подключено отдельно' : viewerState.newConnectionsReady === false ? '○ Secure storage setup required' : '○ Опционально · не подключено'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
@@ -1179,13 +1210,12 @@
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
-        <span class="kicker">Viewer Sync</span>
-        <h2>Watcher уже в коде</h2>
-        <p>Осталось подключить отдельную серверную БД и ключ шифрования. До этого Telegram Control не будет просить Telegram-код: пользовательскую сессию нельзя хранить небезопасно.</p>
+        <span class="kicker">DEEP INTELLIGENCE</span>
+        <h2>Серверная часть ещё не готова</h2>
+        <p>Telegram Control не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Realtime watcher</strong><span>Проверка Stories по расписанию и уведомления уже реализованы.</span></div>
-          <div class="sheet-item"><strong>Privacy reconciliation</strong><span>Сразу приходит обезличенное уведомление. Имя появляется только если просмотр остаётся видимым после окна приватности.</span></div>
-          <div class="sheet-item"><strong>Storage</strong><span>Нужны защищённое server-only хранилище и отдельный ключ шифрования для приватной сессии.</span></div>
+          <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и privacy reconciliation уже встроены.</span></div>
+          <div class="sheet-item"><strong>Private session</strong><span>Новая сессия создаётся только при безопасном server-side хранении.</span></div>
         </div>
         <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
       `);
@@ -1195,9 +1225,9 @@
     if (viewerState.session?.connected) {
       const account = viewerState.session.account || {};
       openSheet(`
-        <span class="kicker">Viewer Sync</span>
+        <span class="kicker">DEEP INTELLIGENCE</span>
         <h2>Подключено</h2>
-        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} используется только для чтения данных твоих собственных Stories.</p>
+        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} используется только для данных твоих собственных Stories.</p>
         <div class="sheet-list">
           <div class="sheet-item preference-item">
             <span class="preference-copy"><strong>Realtime alerts</strong><span>Уведомлять о новых просмотрах.</span></span>
@@ -1207,17 +1237,35 @@
             </label>
           </div>
           <div class="sheet-item preference-item">
-            <span class="preference-copy"><strong>Unattributed gap</strong><span>Отдельно уведомлять, когда растёт общий счётчик без доступной личности.</span></span>
+            <span class="preference-copy"><strong>Unattributed gap</strong><span>Уведомлять, когда растёт общий счётчик без доступной личности.</span></span>
             <label class="switch">
               <input id="viewerGapSwitch" type="checkbox" data-viewer-pref="gap" ${viewerState.session?.preferences?.notifyAnonymousGap !== false ? 'checked' : ''} />
               <span></span>
             </label>
           </div>
-          <div class="sheet-item"><strong>Как работает</strong><span>Новый view → быстрый сигнал → reconciliation → подтверждённый viewer или анонимизация.</span></div>
+          <div class="sheet-item"><strong>Session security</strong><span>${viewerState.secureSessionCrypto ? 'Versioned server-side encryption active' : 'Legacy session · secure migration pending'}</span></div>
           <div class="sheet-item"><strong>Последняя проверка</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
         </div>
         <div class="sheet-actions">
-          <button data-sheet-action="viewer-disconnect">Отключить Viewer Sync</button>
+          <button data-sheet-action="viewer-disconnect">Отключить Deep Intelligence</button>
+          <button data-sheet-action="close">Закрыть</button>
+        </div>
+      `);
+      return;
+    }
+
+    if (viewerState.newConnectionsReady === false) {
+      openSheet(`
+        <span class="kicker">SECURITY</span>
+        <h2>Новое подключение приостановлено</h2>
+        <p>Telegram Control не создаст приватную MTProto-сессию, пока отдельный серверный ключ шифрования не подтверждён.</p>
+        <div class="sheet-list">
+          <div class="sheet-item"><strong>Stories & Ghost</strong><span>Продолжают работать независимо.</span></div>
+          <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
+          <div class="sheet-item"><strong>New private session</strong><span>Fail-closed · создание заблокировано до secure-ready.</span></div>
+        </div>
+        <div class="sheet-actions">
+          <button class="accent" data-sheet-action="viewer-refresh-security">Проверить снова</button>
           <button data-sheet-action="close">Закрыть</button>
         </div>
       `);
@@ -1225,9 +1273,30 @@
     }
 
     openSheet(`
-      <span class="kicker">Viewer Sync</span>
+      <span class="kicker">DEEP INTELLIGENCE</span>
       <h2>Подключить Telegram</h2>
-      <p>Это отдельная пользовательская MTProto-сессия для чтения viewers твоих собственных Stories. Telegram Control не сохраняет код входа или 2FA-пароль.</p>
+      <p>Отдельная пользовательская сессия нужна только для viewer intelligence твоих собственных Stories.</p>
+      <div class="qr-choice-card">
+        <div class="qr-choice-icon">⌁</div>
+        <div>
+          <strong>Подтвердить через QR</strong>
+          <span>Без ввода номера и кода. Telegram покажет системное подтверждение новой сессии.</span>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-start-qr">Подключить через QR</button>
+        <button data-sheet-action="viewer-use-phone">Использовать номер и код</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
+      <p class="auth-security-note">Код входа и 2FA-пароль не сохраняются. Сессия хранится только в зашифрованном server-side виде.</p>
+    `);
+  }
+
+  function viewerPhoneSheet() {
+    openSheet(`
+      <span class="kicker">FALLBACK LOGIN</span>
+      <h2>Номер и код Telegram</h2>
+      <p>Используй этот способ, если QR-подтверждение недоступно.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
@@ -1237,7 +1306,7 @@
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
-        <button data-sheet-action="close">Отмена</button>
+        <button data-sheet-action="viewer-back-setup">Назад</button>
       </div>
     `);
   }
@@ -1260,11 +1329,11 @@
     `);
   }
 
-  function viewerPasswordSheet() {
+  function viewerPasswordSheet(hint = '') {
     openSheet(`
       <span class="kicker">Двухэтапная защита</span>
       <h2>Нужен 2FA-пароль</h2>
-      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Telegram Control.</p>
+      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Telegram Control.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPassword">Telegram 2FA</label>
@@ -1276,6 +1345,154 @@
         <button data-sheet-action="close">Отмена</button>
       </div>
     `);
+  }
+
+  function viewerQrSheet() {
+    openSheet(`
+      <span class="kicker">TELEGRAM QR LOGIN</span>
+      <h2>Подтверди новую сессию</h2>
+      <p>QR короткоживущий и обновляется автоматически. На телефоне можно открыть системное подтверждение Telegram.</p>
+      <div class="viewer-qr-card">
+        <div class="viewer-qr-frame">
+          <div class="viewer-qr-loader" id="viewerQrLoader">⌁</div>
+          <img id="viewerQrImage" alt="Telegram login QR" hidden />
+        </div>
+        <strong id="viewerQrStatus">Создаю безопасный QR…</strong>
+        <span id="viewerQrMeta">Не закрывай этот экран до подтверждения.</span>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" id="viewerQrOpenButton" data-sheet-action="viewer-open-qr" disabled>Открыть в Telegram</button>
+        <button data-sheet-action="viewer-use-phone">Номер и код</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
+      <p class="auth-security-note">После подтверждения сохраняется только зашифрованная server-side session. Сам QR-token не сохраняется.</p>
+    `);
+  }
+
+  function updateViewerQr(event) {
+    if (!event || $('sheet')?.hidden) return;
+    const image = $('viewerQrImage');
+    const loader = $('viewerQrLoader');
+    const status = $('viewerQrStatus');
+    const meta = $('viewerQrMeta');
+    const openButton = $('viewerQrOpenButton');
+
+    if (event.type === 'qr') {
+      if (image && event.qrDataUrl) {
+        image.src = event.qrDataUrl;
+        image.hidden = false;
+      }
+      if (loader) loader.hidden = true;
+      if (status) status.textContent = 'QR готов';
+      if (meta) meta.textContent = 'Telegram → Settings → Devices → Link Desktop Device, либо открой подтверждение кнопкой.';
+      if (openButton) {
+        openButton.disabled = false;
+        openButton.dataset.qrUri = event.uri || '';
+      }
+      haptic();
+      return;
+    }
+
+    if (event.type === 'expired') {
+      if (status) status.textContent = 'QR истёк';
+      if (meta) meta.textContent = event.error || 'Создай новый QR.';
+      if (openButton) {
+        openButton.disabled = false;
+        openButton.textContent = 'Создать новый QR';
+        openButton.dataset.sheetAction = 'viewer-start-qr';
+        delete openButton.dataset.qrUri;
+      }
+      return;
+    }
+
+    if (event.type === 'error') {
+      if (status) status.textContent = 'Не удалось подключить';
+      if (meta) meta.textContent = event.error || 'Повтори попытку.';
+      if (openButton) {
+        openButton.disabled = false;
+        openButton.textContent = 'Повторить';
+        openButton.dataset.sheetAction = 'viewer-start-qr';
+        delete openButton.dataset.qrUri;
+      }
+    }
+  }
+
+  async function startViewerQrLogin() {
+    if (!tg?.initData) {
+      showToast('Открой Telegram Control внутри Telegram');
+      return;
+    }
+    if (viewerState.newConnectionsReady === false) {
+      viewerSetupSheet();
+      return;
+    }
+
+    if (viewerQrAbortController) viewerQrAbortController.abort();
+    viewerQrAbortController = new AbortController();
+    const controller = viewerQrAbortController;
+    viewerQrSheet();
+
+    try {
+      const response = await fetch('/api/viewer-qr', {
+        method: 'POST',
+        headers: {
+          'x-telegram-init-data': tg.initData,
+          'content-type': 'application/json',
+        },
+        body: '{}',
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'QR-подключение временно недоступно');
+      }
+      if (!response.body) throw new Error('Streaming login недоступен в этом WebView');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let finished = false;
+
+      while (!finished) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let event;
+          try { event = JSON.parse(line); } catch { continue; }
+
+          if (event.type === 'connected') {
+            finished = true;
+            viewerQrAbortController = null;
+            closeSheet();
+            notify('success');
+            showToast('Deep Intelligence подключён через QR');
+            await refreshViewerSync({ silent: true });
+            await refreshViewerAnalytics({ silent: true });
+            break;
+          }
+
+          if (event.type === 'password_required') {
+            finished = true;
+            viewerQrAbortController = null;
+            viewerPasswordSheet(event.hint || '');
+            break;
+          }
+
+          updateViewerQr(event);
+        }
+      }
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      updateViewerQr({ type:'error', error:error.message });
+    } finally {
+      if (viewerQrAbortController === controller) viewerQrAbortController = null;
+    }
   }
 
   function viewerStorySheet() {
@@ -1646,6 +1863,38 @@
         showToast(error.message);
       }
     }
+    if (action === 'viewer-start-qr') {
+      await startViewerQrLogin();
+      return;
+    }
+    if (action === 'viewer-open-qr') {
+      const uri = event.target?.dataset?.qrUri || '';
+      if (uri) {
+        try {
+          window.location.href = uri;
+        } catch {
+          showToast('Открой QR через Telegram → Settings → Devices');
+        }
+      }
+      return;
+    }
+    if (action === 'viewer-use-phone') {
+      if (viewerQrAbortController) {
+        viewerQrAbortController.abort();
+        viewerQrAbortController = null;
+      }
+      viewerPhoneSheet();
+      return;
+    }
+    if (action === 'viewer-back-setup') {
+      viewerSetupSheet();
+      return;
+    }
+    if (action === 'viewer-refresh-security') {
+      await refreshViewerSync({ silent: false });
+      viewerSetupSheet();
+      return;
+    }
     if (action === 'viewer-send-code') {
       const phone = $('viewerPhone')?.value || '';
       try {
@@ -1692,6 +1941,8 @@
         viewerState = {
           configured: true,
           backgroundReady: viewerState.backgroundReady,
+          newConnectionsReady: viewerState.newConnectionsReady,
+          secureSessionCrypto: viewerState.secureSessionCrypto,
           session: null,
           story: null,
           viewers: [],
