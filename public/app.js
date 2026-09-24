@@ -68,19 +68,19 @@
   };
 
   const SCREEN_ALIASES = {
-    home: 'publish',
+    home: 'home',
     stories: 'publish',
     publish: 'publish',
     ghost: 'privacy',
     privacy: 'privacy',
-    chats: 'privacy',
+    chats: 'chats',
     intelligence: 'viewers',
     viewers: 'viewers',
     analytics: 'analytics',
     archive: 'archive',
   };
   const requestedScreen = SCREEN_ALIASES[String(qs.get('screen') || '').toLowerCase()] || null;
-  let currentScreen = 'publish';
+  let currentScreen = 'home';
   let selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
   let toastTimer = null;
   let viewerSearchQuery = '';
@@ -664,6 +664,7 @@
       if (!silent && data.config?.configured !== false) showToast(error.message);
     }
     renderViewers();
+    renderHome();
   }
 
   function renderConnection() {
@@ -1050,23 +1051,75 @@
     `).join('');
   }
 
+  function setHomeActivity(dotId, active) {
+    const dot = $(dotId);
+    if (!dot) return;
+    dot.classList.toggle('ready', Boolean(active));
+    dot.classList.toggle('warn', active === false);
+  }
+
+  function renderHome() {
+    const telegramReady = state.connection === 'ready' || state.ready === true;
+    const ghostPermission = state.readPermission === true;
+    const intelConnected = viewerState.session?.connected === true;
+
+    const overall = $('homeOverallState');
+    if (overall) {
+      overall.classList.toggle('ready', telegramReady && ghostPermission);
+      overall.classList.toggle('warn', !telegramReady || !ghostPermission);
+      const label = overall.querySelector('span');
+      if (label) label.textContent = telegramReady ? 'Telegram connected' : 'Setup required';
+    }
+
+    if ($('homeTelegramTitle')) {
+      $('homeTelegramTitle').textContent = telegramReady ? 'Подключён' : 'Нужно подключение';
+      $('homeTelegramText').textContent = telegramReady
+        ? 'Business Connection подтверждён сервером.'
+        : 'Открой подключение Telegram и проверь разрешения.';
+    }
+
+    if ($('homeGhostState')) $('homeGhostState').textContent = ghostPermission ? 'Доступ разрешён' : 'Нужен доступ';
+    if ($('homeChatsState')) $('homeChatsState').textContent = ghostPermission ? 'Архив доступен' : 'Ждёт разрешение';
+    if ($('homeIntelState')) $('homeIntelState').textContent = intelConnected ? 'Активен' : 'Setup required';
+    if ($('homeSecurityState')) $('homeSecurityState').textContent = 'Контроль доступа';
+
+    if ($('homeGhostTitle')) $('homeGhostTitle').textContent = ghostPermission ? 'Ghost готов' : 'Ghost требует разрешение';
+    if ($('homeGhostText')) $('homeGhostText').textContent = ghostPermission
+      ? 'Telegram разрешил Business-доступ к сообщениям.'
+      : 'Разреши сообщения в Telegram Business.';
+    if ($('homeStoryTitle')) $('homeStoryTitle').textContent = telegramReady ? 'Stories готовы' : 'Stories не подключены';
+    if ($('homeStoryText')) $('homeStoryText').textContent = telegramReady
+      ? (state.lastStory ? `Последняя Story #${state.lastStory}` : 'Можно публиковать с выбранной аудиторией.')
+      : 'Нужно право управления Stories.';
+    if ($('homeIntelTitle')) $('homeIntelTitle').textContent = intelConnected ? 'Intelligence активен' : 'Intelligence не подключён';
+    if ($('homeIntelText')) $('homeIntelText').textContent = intelConnected
+      ? 'Viewer Sync подключён к отдельной пользовательской сессии.'
+      : 'Подключается отдельно и добровольно.';
+
+    setHomeActivity('homeGhostDot', ghostPermission);
+    setHomeActivity('homeStoryDot', telegramReady);
+    setHomeActivity('homeIntelDot', intelConnected);
+  }
+
   function render() {
     renderConnection();
     renderPublish();
     renderViewers();
     renderAnalytics();
     renderArchive();
+    renderHome();
   }
 
   function switchScreen(name) {
-    currentScreen = name;
-    document.querySelectorAll('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === name));
-    document.querySelectorAll('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === name));
-    $('actionDock').classList.toggle('hidden', name !== 'publish');
+    const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || name || 'home';
+    currentScreen = target;
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === target));
+    document.querySelectorAll('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === target));
+    $('actionDock')?.classList.toggle('hidden', target !== 'publish');
     haptic();
     window.scrollTo({ top:0, behavior:'smooth' });
-    if (name === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
-    if (name === 'analytics' && tg?.initData) refreshViewerAnalytics({ silent: true });
+    if (target === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
+    if (target === 'analytics' && tg?.initData) refreshViewerAnalytics({ silent: true });
   }
 
   function openSheet(html) {
@@ -1295,6 +1348,11 @@
   }
 
   document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
+
+  document.querySelectorAll('[data-open-screen]').forEach(button => {
+    button.addEventListener('click', () => switchScreen(button.dataset.openScreen));
+  });
+  $('homeSecurityCard')?.addEventListener('click', profileSheet);
   document.querySelectorAll('.audience-card').forEach(button => button.addEventListener('click', async () => {
     const mode = button.dataset.audience;
     if (mode === 'selected' && !state.selected?.length) {
@@ -1756,9 +1814,7 @@
 
   setAvatar();
   render();
-  if (requestedScreen && requestedScreen !== 'publish') {
-    switchScreen(requestedScreen);
-  }
+  switchScreen(requestedScreen || 'home');
 
   if (tg?.initData) {
     refresh();
