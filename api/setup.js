@@ -63,29 +63,33 @@ export default async function handler(req, res) {
       drop_pending_updates: false,
     });
 
+    await tg(token, 'setMyName', {
+      name: 'Telegram Control',
+    }).catch(() => {});
+
     await tg(token, 'setMyCommands', {
       commands: [
         { command: 'start', description: '🚀 Открыть центр управления' },
         { command: 'ghost', description: '👻 Ghost и Anti-Delete' },
         { command: 'stories', description: '📸 Stories и приватность' },
-        { command: 'viewers', description: '👁 Viewer Intelligence' },
+        { command: 'viewers', description: '👁 Deep Intelligence' },
         { command: 'status', description: '📊 Статус подключения' },
         { command: 'help', description: '❔ Возможности и помощь' },
       ],
     });
 
     await tg(token, 'setMyShortDescription', {
-      short_description: 'Ghost, Stories и Viewer Intelligence — один центр управления Telegram.',
+      short_description: 'Privacy, Messages, Stories и Intelligence — один Telegram Control.',
     }).catch(() => {});
 
     await tg(token, 'setMyDescription', {
-      description: 'Центр управления Telegram: Ghost Inbox с Anti-Delete/Edit History, Stories с точной приватностью и Viewer Intelligence. Business-функции работают через Telegram Business; расширенная аналитика использует защищённую пользовательскую MTProto-сессию.',
+      description: 'Telegram Control — единый слой управления Telegram: Ghost с Anti-Delete/Edit History, архив сообщений, Stories с точной приватностью и опциональный Deep Intelligence.',
     }).catch(() => {});
 
     await tg(token, 'setChatMenuButton', {
       menu_button: {
         type: 'web_app',
-        text: 'Открыть приложение',
+        text: 'Открыть Control',
         web_app: { url: `${baseUrl}/studio.html` },
       },
     }).catch(() => {});
