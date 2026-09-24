@@ -752,7 +752,7 @@
     if (target) openThread(target.dataset.privacyChat);
   });
 
-  $('sheet')?.addEventListener('click', event => {
+  $('sheet')?.addEventListener('click', async event => {
     const recheckAccess = event.target.closest('[data-privacy-recheck-access]');
     if (recheckAccess) {
       await loadTelegramConnection({ silent:false });
