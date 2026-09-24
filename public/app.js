@@ -817,7 +817,11 @@
     const testAlertButton = $('testAlertButton');
 
     quickTelegram.textContent = state.ready ? 'Готово' : 'Нужно подключить';
-    quickViewer.textContent = connected ? 'Готово' : 'Нужно подключить';
+    quickViewer.textContent = connected
+      ? 'Готово'
+      : viewerState.newConnectionsReady === false
+        ? 'Security setup'
+        : 'Нужно подключить';
     quickStory.textContent = hasStory ? `#${item.id}` : 'Нужно опубликовать';
 
     $('quickTelegramStep').classList.toggle('done', Boolean(state.ready));
@@ -830,8 +834,10 @@
 
     if (!state.ready) {
       quickPrimary.textContent = 'Проверить Telegram';
+    } else if (!connected && viewerState.newConnectionsReady === false) {
+      quickPrimary.textContent = 'Проверить Security';
     } else if (!connected) {
-      quickPrimary.textContent = 'Подключить Viewer Sync';
+      quickPrimary.textContent = 'Подключить Intelligence';
     } else if (!hasStory) {
       quickPrimary.textContent = 'Опубликовать Story';
     } else {
@@ -864,14 +870,22 @@
     } else if (viewerState.session?.status === 'reauth_required') {
       $('viewerSyncTitle').textContent = 'Нужно переподключить Viewer Sync.';
       $('viewerSyncText').textContent = viewerState.session?.lastError || 'Telegram-сессия больше не авторизована.';
-      syncState.textContent = 'Требуется повторная авторизация';
+      syncState.textContent = viewerState.newConnectionsReady === false
+        ? 'Повторное подключение временно закрыто Security'
+        : 'Требуется повторная авторизация';
       syncState.classList.add('warn');
       syncButton.textContent = 'Переподключить';
+    } else if (viewerState.newConnectionsReady === false) {
+      $('viewerSyncTitle').textContent = 'Deep Intelligence защищён.';
+      $('viewerSyncText').textContent = 'Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.';
+      syncState.textContent = 'Secure session storage · setup required';
+      syncState.classList.add('warn');
+      syncButton.textContent = 'Проверить Security';
     } else {
       $('viewerSyncTitle').textContent = 'Подключи аналитику зрителей.';
       $('viewerSyncText').textContent = 'Отдельная пользовательская MTProto-сессия нужна только для данных твоих собственных Stories. Код входа и 2FA не сохраняются.';
       syncState.textContent = viewerState.configured === null ? 'Проверяю состояние…' : 'Не подключено';
-      syncButton.textContent = 'Подключить Viewer Sync';
+      syncButton.textContent = 'Подключить Intelligence';
     }
 
     const query = viewerSearchQuery.trim().toLowerCase();
