@@ -65,24 +65,29 @@ export default async function handler(req, res) {
 
     await tg(token, 'setMyCommands', {
       commands: [
-        { command: 'start', description: '🚀 Открыть Story Pilot' },
-        { command: 'status', description: '📊 Проверить Telegram и настройки' },
-        { command: 'delete', description: '🗑 Удалить последнюю Story' },
-        { command: 'reset', description: '♻️ Сбросить аудиторию и исключения' },
-        { command: 'help', description: '❔ Stories, Ghost и Viewer Sync' },
+        { command: 'start', description: '🚀 Открыть центр управления' },
+        { command: 'ghost', description: '👻 Ghost и Anti-Delete' },
+        { command: 'stories', description: '📸 Stories и приватность' },
+        { command: 'viewers', description: '👁 Viewer Intelligence' },
+        { command: 'status', description: '📊 Статус подключения' },
+        { command: 'help', description: '❔ Возможности и помощь' },
       ],
     });
 
     await tg(token, 'setMyShortDescription', {
-      short_description: 'Stories, Ghost Inbox и Viewer Sync — один центр управления Telegram.',
+      short_description: 'Ghost, Stories и Viewer Intelligence — один центр управления Telegram.',
     }).catch(() => {});
 
     await tg(token, 'setMyDescription', {
-      description: 'Story Pilot — центр управления Telegram: публикация Stories, Ghost Inbox с Anti-Delete/Edit History и опциональный Viewer Sync. Stories и Ghost работают через Telegram Business; Viewer Sync подключается отдельно через защищённую пользовательскую MTProto-сессию.',
+      description: 'Центр управления Telegram: Ghost Inbox с Anti-Delete/Edit History, Stories с точной приватностью и Viewer Intelligence. Business-функции работают через Telegram Business; расширенная аналитика использует защищённую пользовательскую MTProto-сессию.',
     }).catch(() => {});
 
     await tg(token, 'setChatMenuButton', {
-      menu_button: { type: 'commands' },
+      menu_button: {
+        type: 'web_app',
+        text: 'Открыть приложение',
+        web_app: { url: `${baseUrl}/studio.html` },
+      },
     }).catch(() => {});
 
     const webhookInfo = await tg(token, 'getWebhookInfo').catch(() => null);
