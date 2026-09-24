@@ -85,6 +85,7 @@
   let toastTimer = null;
   let viewerSearchQuery = '';
   let viewerRegisteredKey = '';
+  let viewerQrAbortController = null;
   let composerFile = null;
   let composerDataUrl = '';
   let composerPreviewUrl = '';
@@ -1156,6 +1157,10 @@
   }
 
   function closeSheet() {
+    if (viewerQrAbortController) {
+      viewerQrAbortController.abort();
+      viewerQrAbortController = null;
+    }
     $('sheetBackdrop').hidden = true;
     $('sheet').hidden = true;
     try { tg?.BackButton?.hide(); } catch {}
@@ -1324,11 +1329,11 @@
     `);
   }
 
-  function viewerPasswordSheet() {
+  function viewerPasswordSheet(hint = '') {
     openSheet(`
       <span class="kicker">Двухэтапная защита</span>
       <h2>Нужен 2FA-пароль</h2>
-      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Telegram Control.</p>
+      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Telegram Control.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPassword">Telegram 2FA</label>
@@ -1340,6 +1345,154 @@
         <button data-sheet-action="close">Отмена</button>
       </div>
     `);
+  }
+
+  function viewerQrSheet() {
+    openSheet(`
+      <span class="kicker">TELEGRAM QR LOGIN</span>
+      <h2>Подтверди новую сессию</h2>
+      <p>QR короткоживущий и обновляется автоматически. На телефоне можно открыть системное подтверждение Telegram.</p>
+      <div class="viewer-qr-card">
+        <div class="viewer-qr-frame">
+          <div class="viewer-qr-loader" id="viewerQrLoader">⌁</div>
+          <img id="viewerQrImage" alt="Telegram login QR" hidden />
+        </div>
+        <strong id="viewerQrStatus">Создаю безопасный QR…</strong>
+        <span id="viewerQrMeta">Не закрывай этот экран до подтверждения.</span>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" id="viewerQrOpenButton" data-sheet-action="viewer-open-qr" disabled>Открыть в Telegram</button>
+        <button data-sheet-action="viewer-use-phone">Номер и код</button>
+        <button data-sheet-action="close">Отмена</button>
+      </div>
+      <p class="auth-security-note">После подтверждения сохраняется только зашифрованная server-side session. Сам QR-token не сохраняется.</p>
+    `);
+  }
+
+  function updateViewerQr(event) {
+    if (!event || $('sheet')?.hidden) return;
+    const image = $('viewerQrImage');
+    const loader = $('viewerQrLoader');
+    const status = $('viewerQrStatus');
+    const meta = $('viewerQrMeta');
+    const openButton = $('viewerQrOpenButton');
+
+    if (event.type === 'qr') {
+      if (image && event.qrDataUrl) {
+        image.src = event.qrDataUrl;
+        image.hidden = false;
+      }
+      if (loader) loader.hidden = true;
+      if (status) status.textContent = 'QR готов';
+      if (meta) meta.textContent = 'Telegram → Settings → Devices → Link Desktop Device, либо открой подтверждение кнопкой.';
+      if (openButton) {
+        openButton.disabled = false;
+        openButton.dataset.qrUri = event.uri || '';
+      }
+      haptic();
+      return;
+    }
+
+    if (event.type === 'expired') {
+      if (status) status.textContent = 'QR истёк';
+      if (meta) meta.textContent = event.error || 'Создай новый QR.';
+      if (openButton) {
+        openButton.disabled = false;
+        openButton.textContent = 'Создать новый QR';
+        openButton.dataset.sheetAction = 'viewer-start-qr';
+        delete openButton.dataset.qrUri;
+      }
+      return;
+    }
+
+    if (event.type === 'error') {
+      if (status) status.textContent = 'Не удалось подключить';
+      if (meta) meta.textContent = event.error || 'Повтори попытку.';
+      if (openButton) {
+        openButton.disabled = false;
+        openButton.textContent = 'Повторить';
+        openButton.dataset.sheetAction = 'viewer-start-qr';
+        delete openButton.dataset.qrUri;
+      }
+    }
+  }
+
+  async function startViewerQrLogin() {
+    if (!tg?.initData) {
+      showToast('Открой Telegram Control внутри Telegram');
+      return;
+    }
+    if (viewerState.newConnectionsReady === false) {
+      viewerSetupSheet();
+      return;
+    }
+
+    if (viewerQrAbortController) viewerQrAbortController.abort();
+    viewerQrAbortController = new AbortController();
+    const controller = viewerQrAbortController;
+    viewerQrSheet();
+
+    try {
+      const response = await fetch('/api/viewer-qr', {
+        method: 'POST',
+        headers: {
+          'x-telegram-init-data': tg.initData,
+          'content-type': 'application/json',
+        },
+        body: '{}',
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'QR-подключение временно недоступно');
+      }
+      if (!response.body) throw new Error('Streaming login недоступен в этом WebView');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let finished = false;
+
+      while (!finished) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let event;
+          try { event = JSON.parse(line); } catch { continue; }
+
+          if (event.type === 'connected') {
+            finished = true;
+            viewerQrAbortController = null;
+            closeSheet();
+            notify('success');
+            showToast('Deep Intelligence подключён через QR');
+            await refreshViewerSync({ silent: true });
+            await refreshViewerAnalytics({ silent: true });
+            break;
+          }
+
+          if (event.type === 'password_required') {
+            finished = true;
+            viewerQrAbortController = null;
+            viewerPasswordSheet(event.hint || '');
+            break;
+          }
+
+          updateViewerQr(event);
+        }
+      }
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      updateViewerQr({ type:'error', error:error.message });
+    } finally {
+      if (viewerQrAbortController === controller) viewerQrAbortController = null;
+    }
   }
 
   function viewerStorySheet() {
