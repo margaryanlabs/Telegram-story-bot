@@ -79,7 +79,8 @@
   }
 
   function privacyScreenActive() {
-    return document.querySelector('.screen.active')?.dataset?.screen === 'privacy';
+    const screen = document.querySelector('.screen.active')?.dataset?.screen;
+    return screen === 'privacy' || screen === 'chats';
   }
 
   function fullyEnabled(settings = privacyState.settings) {
