@@ -71,8 +71,37 @@ async function verifyVercelIdentity(token: string) {
   return { environment };
 }
 
+async function ensureActiveKey(environment: string) {
+  if (!sql) throw new Error("key_broker_database_not_configured");
+
+  const existing = await sql`
+    select key_id
+    from story_pilot_private.crypto_keys
+    where purpose = ${PURPOSE}
+      and environment = ${environment}
+      and status = 'active'
+    limit 1
+  `;
+  if (existing[0]?.key_id) return;
+
+  const keyId = `viewer-sync-${environment}-2026-09-24-01`;
+  await sql`
+    insert into story_pilot_private.crypto_keys
+      (key_id, purpose, environment, secret_value, status)
+    values (
+      ${keyId},
+      ${PURPOSE},
+      ${environment},
+      encode(gen_random_bytes(32), 'base64'),
+      'active'
+    )
+    on conflict (key_id) do nothing
+  `;
+}
+
 async function loadKeyring(environment: string) {
   if (!sql) throw new Error("key_broker_database_not_configured");
+  await ensureActiveKey(environment);
 
   const rows = await sql`
     select key_id, secret_value, status, created_at
