@@ -1863,6 +1863,38 @@
         showToast(error.message);
       }
     }
+    if (action === 'viewer-start-qr') {
+      await startViewerQrLogin();
+      return;
+    }
+    if (action === 'viewer-open-qr') {
+      const uri = event.target?.dataset?.qrUri || '';
+      if (uri) {
+        try {
+          window.location.href = uri;
+        } catch {
+          showToast('Открой QR через Telegram → Settings → Devices');
+        }
+      }
+      return;
+    }
+    if (action === 'viewer-use-phone') {
+      if (viewerQrAbortController) {
+        viewerQrAbortController.abort();
+        viewerQrAbortController = null;
+      }
+      viewerPhoneSheet();
+      return;
+    }
+    if (action === 'viewer-back-setup') {
+      viewerSetupSheet();
+      return;
+    }
+    if (action === 'viewer-refresh-security') {
+      await refreshViewerSync({ silent: false });
+      viewerSetupSheet();
+      return;
+    }
     if (action === 'viewer-send-code') {
       const phone = $('viewerPhone')?.value || '';
       try {
@@ -1909,6 +1941,8 @@
         viewerState = {
           configured: true,
           backgroundReady: viewerState.backgroundReady,
+          newConnectionsReady: viewerState.newConnectionsReady,
+          secureSessionCrypto: viewerState.secureSessionCrypto,
           session: null,
           story: null,
           viewers: [],
