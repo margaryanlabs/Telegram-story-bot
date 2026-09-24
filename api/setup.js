@@ -29,11 +29,30 @@ function productionBaseUrl(req) {
   return `https://${host}`;
 }
 
+function setupAuthorized(req) {
+  const secret = String(process.env.SETUP_SECRET || '').trim();
+  if (!secret) return false;
+
+  const actual = Buffer.from(String(req.headers.authorization || ''), 'utf8');
+  const expected = Buffer.from(`Bearer ${secret}`, 'utf8');
+  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
 
-  if (req.method !== 'GET' && req.method !== 'POST') {
+  if (req.method !== 'POST') {
     res.status(405).json({ ok: false, error: 'Method not allowed' });
+    return;
+  }
+
+  if (!process.env.SETUP_SECRET) {
+    res.status(503).json({ ok: false, error: 'Setup endpoint disabled' });
+    return;
+  }
+
+  if (!setupAuthorized(req)) {
+    res.status(401).json({ ok: false, error: 'Unauthorized' });
     return;
   }
 
