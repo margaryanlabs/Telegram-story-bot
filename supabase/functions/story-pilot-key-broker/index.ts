@@ -66,7 +66,9 @@ async function verifyVercelIdentity(token: string) {
   if (payload.project !== EXPECTED_PROJECT) throw new Error("invalid_oidc_project");
 
   const environment = String(payload.environment || "");
-  if (environment !== "production") throw new Error("production_runtime_required");
+  if (!["production", "preview"].includes(environment)) {
+    throw new Error("unsupported_runtime_environment");
+  }
 
   return { environment };
 }
@@ -134,7 +136,7 @@ Deno.serve(async (request: Request) => {
     return json({ ok: true, keyring });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const authFailure = /oidc|runtime_required|missing_vercel/i.test(message);
+    const authFailure = /oidc|runtime_environment|missing_vercel/i.test(message);
     console.warn("Story Pilot key broker denied", { reason: message });
     return json({ ok: false, error: authFailure ? "unauthorized" : "key_broker_unavailable" }, authFailure ? 401 : 503);
   }
