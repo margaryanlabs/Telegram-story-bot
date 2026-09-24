@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#080c13" />
-  <title>Story Pilot</title>
+  <title>Telegram Control</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css" />
 </head>
@@ -15,24 +15,100 @@
   <main class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark"><span>SP</span></div>
+        <div class="brand-mark"><span>TC</span></div>
         <div class="brand-copy">
-          <strong>Story Pilot</strong>
-          <span>Stories control center</span>
+          <strong>Telegram Control</strong>
+          <span>Privacy · Stories · Intelligence</span>
         </div>
       </div>
       <button class="profile-button" id="profileButton" type="button" aria-label="Открыть статус аккаунта">
-        <span class="profile-avatar" id="avatar">SP</span>
+        <span class="profile-avatar" id="avatar">TC</span>
         <span class="live-dot" id="profileDot"></span>
       </button>
     </header>
 
     <div class="network-banner" id="networkBanner" hidden>
       <span>Нет соединения с интернетом</span>
-      <small>Story Pilot сохранит экран и продолжит, когда сеть вернётся.</small>
+      <small>Control сохранит экран и продолжит, когда сеть вернётся.</small>
     </div>
 
-    <section class="screen active" data-screen="publish">
+    <section class="screen active control-home" data-screen="home">
+      <div class="control-heading">
+        <div>
+          <span class="kicker">CONTROL</span>
+          <h1>Telegram под контролем.</h1>
+          <p>Один спокойный слой для приватности, сообщений, Stories и Intelligence.</p>
+        </div>
+        <span class="control-live" id="homeOverallState"><i></i><span>Проверяю</span></span>
+      </div>
+
+      <section class="control-hero">
+        <div class="control-hero-orb">C</div>
+        <div class="control-hero-copy">
+          <span>TELEGRAM</span>
+          <strong id="homeTelegramTitle">Проверяю подключение</strong>
+          <p id="homeTelegramText">Собираю фактическое состояние доступов.</p>
+        </div>
+        <button class="control-inline-action" type="button" data-open-screen="stories">Stories</button>
+      </section>
+
+      <section class="capability-grid" aria-label="Состояние Telegram Control">
+        <button class="capability-card" type="button" data-open-screen="ghost">
+          <span class="capability-icon">◌</span>
+          <span class="capability-copy"><small>Ghost</small><strong id="homeGhostState">Проверяю</strong></span>
+          <span class="capability-chevron">›</span>
+        </button>
+        <button class="capability-card" type="button" data-open-screen="intelligence">
+          <span class="capability-icon">◉</span>
+          <span class="capability-copy"><small>Intelligence</small><strong id="homeIntelState">Проверяю</strong></span>
+          <span class="capability-chevron">›</span>
+        </button>
+        <button class="capability-card" type="button" data-open-screen="chats">
+          <span class="capability-icon">≋</span>
+          <span class="capability-copy"><small>Chats</small><strong id="homeChatsState">Ghost archive</strong></span>
+          <span class="capability-chevron">›</span>
+        </button>
+        <button class="capability-card" type="button" id="homeSecurityCard">
+          <span class="capability-icon">⌾</span>
+          <span class="capability-copy"><small>Security</small><strong id="homeSecurityState">Protected</strong></span>
+          <span class="capability-chevron">›</span>
+        </button>
+      </section>
+
+      <section class="control-section">
+        <div class="block-head compact">
+          <div><span class="kicker">Быстрые действия</span><h2>Что сделать сейчас</h2></div>
+        </div>
+        <div class="control-actions">
+          <button type="button" data-open-screen="stories"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
+          <button type="button" data-open-screen="ghost"><span>◌</span><strong>Ghost</strong><small>Anti-Delete и Edit History</small></button>
+          <button type="button" data-open-screen="intelligence"><span>◉</span><strong>Intelligence</strong><small>Просмотры и паттерны</small></button>
+        </div>
+      </section>
+
+      <section class="control-activity">
+        <div class="block-head compact">
+          <div><span class="kicker">Состояние</span><h2>Что важно</h2></div>
+          <span class="tiny-note">live</span>
+        </div>
+        <div class="control-activity-list">
+          <div class="control-activity-row">
+            <span class="activity-dot" id="homeGhostDot"></span>
+            <div><strong id="homeGhostTitle">Ghost</strong><small id="homeGhostText">Проверяю доступ к сообщениям</small></div>
+          </div>
+          <div class="control-activity-row">
+            <span class="activity-dot" id="homeStoryDot"></span>
+            <div><strong id="homeStoryTitle">Stories</strong><small id="homeStoryText">Проверяю право публикации</small></div>
+          </div>
+          <div class="control-activity-row">
+            <span class="activity-dot" id="homeIntelDot"></span>
+            <div><strong id="homeIntelTitle">Intelligence</strong><small id="homeIntelText">Проверяю Viewer Sync</small></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="publish">
       <section class="hero-card">
         <div class="hero-glow"></div>
         <div class="hero-topline">
@@ -463,15 +539,15 @@
       <div class="page-head privacy-page-head">
         <span class="kicker">Privacy</span>
         <h1>Ghost</h1>
-        <p>Приватный Telegram inbox: новые доступные Business-сообщения, правки и удаления остаются в Story Pilot на любом устройстве.</p>
+        <p>Защита сообщений: Anti-Delete, Edit History, Media Vault и срок хранения — отдельно от обычного Telegram-клиента.</p>
       </div>
 
       <section class="ghost-command-card">
         <div class="ghost-orb">◌</div>
         <div class="ghost-command-copy">
           <span class="status-pill" id="privacyStatusPill"><i></i><span id="privacyStatusText">Проверяю</span></span>
-          <h2>Ghost Inbox</h2>
-          <p id="privacyHeroText">Включи Ghost — дальше всё работает автоматически.</p>
+          <h2>Ghost Protection</h2>
+          <p id="privacyHeroText">Включи защиту — дальше события сохраняются автоматически.</p>
         </div>
         <div class="ghost-badges">
           <span>iOS · Android · Desktop</span><span>Server-side</span><span>No read call</span>
@@ -536,6 +612,16 @@
         <div><strong>Online status</strong><span>Если открыть обычный чат в официальном Telegram, само приложение Telegram управляет online/read.</span><em>TELEGRAM</em></div>
       </section>
 
+
+    </section>
+
+    <section class="screen" data-screen="chats">
+      <div class="page-head chats-page-head">
+        <span class="kicker">MESSAGES</span>
+        <h1>Chats</h1>
+        <p>Поиск и история доступных Business-сообщений, правок, удалений и сохранённых медиа. Это архив событий, а не замена Telegram-клиента.</p>
+      </div>
+
       <section class="privacy-inbox-card">
         <div class="block-head compact">
           <div>
@@ -594,12 +680,12 @@
     </section>
   </main>
 
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-nav="publish" type="button"><span>＋</span><small>Создать</small></button>
-    <button class="nav-item" data-nav="viewers" type="button"><span>◉</span><small>Зрители</small></button>
-    <button class="nav-item" data-nav="analytics" type="button"><span>⌁</span><small>Аналитика</small></button>
+  <nav class="bottom-nav" aria-label="Главная навигация">
+    <button class="nav-item active" data-nav="home" type="button"><span>⌂</span><small>Home</small></button>
     <button class="nav-item" data-nav="privacy" type="button"><span>◌</span><small>Ghost</small></button>
-    <button class="nav-item" data-nav="archive" type="button"><span>□</span><small>Архив</small></button>
+    <button class="nav-item" data-nav="chats" type="button"><span>≋</span><small>Chats</small></button>
+    <button class="nav-item" data-nav="publish" type="button"><span>＋</span><small>Stories</small></button>
+    <button class="nav-item" data-nav="viewers" type="button"><span>◉</span><small>Intel</small></button>
   </nav>
 
   <div class="action-dock" id="actionDock">
