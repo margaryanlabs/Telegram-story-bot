@@ -1,6 +1,6 @@
-import crypto from 'node:crypto';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { getViewerSyncKeyring } from '../lib/viewer-sync-keyring.js';
+import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import {
   viewerDbConfigured,
   getViewerSession,
@@ -22,43 +22,6 @@ import {
 } from '../lib/viewer-sync-telegram.js';
 
 const AUTH_TTL_MS = 10 * 60 * 1000;
-
-function validateInitData(initData, token) {
-  if (!initData || !token) return null;
-
-  const params = new URLSearchParams(initData);
-  const hash = String(params.get('hash') || '');
-  if (!/^[a-f0-9]{64}$/i.test(hash)) return null;
-
-  params.delete('hash');
-  const checkString = [...params.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${value}`)
-    .join('\n');
-
-  const secret = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
-  const expected = crypto.createHmac('sha256', secret).update(checkString).digest('hex');
-
-  const actualBuffer = Buffer.from(hash, 'hex');
-  const expectedBuffer = Buffer.from(expected, 'hex');
-  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) {
-    return null;
-  }
-
-  const authDate = Number(params.get('auth_date') || 0);
-  const now = Math.floor(Date.now() / 1000);
-  if (!Number.isFinite(authDate) || authDate <= 0 || Math.abs(now - authDate) > 86400) {
-    return null;
-  }
-
-  try {
-    const user = JSON.parse(params.get('user') || '{}');
-    if (!user?.id) return null;
-    return user;
-  } catch {
-    return null;
-  }
-}
 
 async function configState() {
   const storage = viewerDbConfigured();
@@ -265,7 +228,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const user = validateInitData(String(req.headers['x-telegram-init-data'] || ''), botToken);
+  const user = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''), botToken);
   if (!user) {
     res.status(401).json({ ok: false, error: 'Open Story Pilot inside Telegram' });
     return;
@@ -492,7 +455,7 @@ export default async function handler(req, res) {
 
     if (action === 'verify_password') {
       const challenge = await getAuthChallenge(userId);
-      if (!challenge || challenge.stage !== 'password' || new Date(challenge.expires_at).getTime() < Date.now()) {
+      if (!challenge || !['password', 'qr_password'].includes(challenge.stage) || new Date(challenge.expires_at).getTime() < Date.now()) {
         await deleteAuthChallenge(userId).catch(() => {});
         res.status(410).json({ ok: false, error: 'Авторизация устарела. Начни подключение заново.' });
         return;
