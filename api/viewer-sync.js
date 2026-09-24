@@ -415,8 +415,8 @@ export default async function handler(req, res) {
         return;
       }
 
-      const auth = await beginUserAuth(body.phone);
       await getViewerSyncKeyring({ required: true });
+      const auth = await beginUserAuth(body.phone);
       const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
       await saveAuthChallenge({
@@ -492,7 +492,6 @@ export default async function handler(req, res) {
         return;
       }
 
-      await getViewerSyncKeyring({ required: true });
       await getViewerSyncKeyring({ required: true });
       const auth = await openJson(challenge.challenge_ciphertext, `auth:${userId}`);
       const result = await verifyUserPassword(auth, body.password);
