@@ -1,9 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 import nacl from "npm:tweetnacl@1.0.3";
+import postgres from "npm:postgres@3.4.5";
 
 const SUPABASE_URL = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "");
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SUPABASE_DB_URL = Deno.env.get("SUPABASE_DB_URL") ?? "";
 const VERCEL_PUBLIC_KEY = "FvnaVTxBDvxvK5wFkIxBw_Y_2XxotSphSsh9qh3xfGY";
 const MAX_SKEW_MS = 120_000;
 const PRIVACY_MEDIA_BUCKET = "story-pilot-ghost-media";
@@ -12,6 +14,15 @@ const MAX_PRIVACY_MEDIA_BYTES = 20 * 1024 * 1024;
 const db = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+// Direct Postgres bypasses PostgREST schema-cache failures while staying inside
+// the same Supabase project / Supavisor pool.
+const directSql = SUPABASE_DB_URL ? postgres(SUPABASE_DB_URL, {
+  prepare: false,
+  max: 1,
+  idle_timeout: 3,
+  connect_timeout: 5,
+}) : null;
 
 function json(value: unknown, status = 200) {
   return new Response(JSON.stringify(value), {
@@ -77,13 +88,23 @@ function privacyShape(row: any) {
 }
 
 async function opGetPrivacySettings(args: any) {
+  const userId = String(args.userId);
+  if (directSql) {
+    const rows = await directSql`
+      select anti_delete, edit_history, ghost_inbox, notify_deletes, retention_days
+      from public.story_pilot_privacy_settings
+      where telegram_user_id = ${userId}::bigint
+      limit 1
+    `;
+    return privacyShape(rows[0] || null);
+  }
+
   const r = await db.from("story_pilot_privacy_settings")
     .select("anti_delete,edit_history,ghost_inbox,notify_deletes,retention_days")
-    .eq("telegram_user_id", String(args.userId))
+    .eq("telegram_user_id", userId)
     .maybeSingle();
   return privacyShape(need(r as any));
 }
-
 
 function storageErrorMessage(error: any) {
   return String(error?.message || error?.error || error || "");
@@ -257,6 +278,22 @@ async function opFinalizePrivacyMediaArchive(args: any) {
     patch.media_archived_at = new Date().toISOString();
   }
 
+  if (directSql) {
+    const rows = await directSql`
+      update public.story_pilot_messages
+      set media_archive_status = ${patch.media_archive_status},
+          media_archive_error = ${patch.media_archive_error},
+          media_storage_path = case when ${archived} and ${path} is not null then ${path} else media_storage_path end,
+          media_archived_at = case when ${archived} and ${path} is not null then now() else media_archived_at end,
+          updated_at = now()
+      where telegram_user_id = ${userId}::bigint
+        and chat_id = ${chatId}::bigint
+        and message_id = ${messageId}
+      returning media_archive_status, media_storage_path, media_archived_at
+    `;
+    return rows[0] || null;
+  }
+
   const r = await db.from("story_pilot_messages")
     .update(patch)
     .eq("telegram_user_id", userId)
@@ -305,11 +342,31 @@ async function opUpdatePrivacySettings(args: any) {
     updated_at: new Date().toISOString(),
   };
 
-  const r = await db.from("story_pilot_privacy_settings")
-    .upsert(next, { onConflict: "telegram_user_id" })
-    .select("anti_delete,edit_history,ghost_inbox,notify_deletes,retention_days")
-    .single();
-  const saved = privacyShape(need(r as any));
+  let saved;
+  if (directSql) {
+    const rows = await directSql`
+      insert into public.story_pilot_privacy_settings
+        (telegram_user_id, anti_delete, edit_history, ghost_inbox, notify_deletes, retention_days, updated_at)
+      values
+        (${userId}::bigint, ${next.anti_delete}, ${next.edit_history}, ${next.ghost_inbox},
+         ${next.notify_deletes}, ${next.retention_days}, ${next.updated_at}::timestamptz)
+      on conflict (telegram_user_id) do update set
+        anti_delete = excluded.anti_delete,
+        edit_history = excluded.edit_history,
+        ghost_inbox = excluded.ghost_inbox,
+        notify_deletes = excluded.notify_deletes,
+        retention_days = excluded.retention_days,
+        updated_at = excluded.updated_at
+      returning anti_delete, edit_history, ghost_inbox, notify_deletes, retention_days
+    `;
+    saved = privacyShape(rows[0] || null);
+  } else {
+    const r = await db.from("story_pilot_privacy_settings")
+      .upsert(next, { onConflict: "telegram_user_id" })
+      .select("anti_delete,edit_history,ghost_inbox,notify_deletes,retention_days")
+      .single();
+    saved = privacyShape(need(r as any));
+  }
 
   await cleanupPrivacyUser(userId, saved.retentionDays);
   return saved;
@@ -362,11 +419,53 @@ async function opCaptureBusinessMessage(args: any) {
 
   if (!normalized.content_hash) throw new Error("missing_message_hash");
 
-  const upsert = await db.from("story_pilot_messages")
-    .upsert(normalized, { onConflict: "telegram_user_id,chat_id,message_id" })
-    .select("telegram_user_id,chat_id,message_id")
-    .single();
-  need(upsert as any);
+  if (directSql) {
+    await directSql`
+      insert into public.story_pilot_messages (
+        telegram_user_id, business_connection_id, chat_id, message_id, direction,
+        sender_user_id, sender_username, sender_display_name, chat_title,
+        text_content, caption, media_type, media_file_id, media_unique_id,
+        media_mime_type, media_file_name, media_file_size, sent_at, edited_at,
+        deleted_at, content_hash, updated_at
+      ) values (
+        ${userId}::bigint, ${normalized.business_connection_id}, ${normalized.chat_id}::bigint,
+        ${normalized.message_id}, ${normalized.direction},
+        ${normalized.sender_user_id}::bigint, ${normalized.sender_username},
+        ${normalized.sender_display_name}, ${normalized.chat_title},
+        ${normalized.text_content}, ${normalized.caption}, ${normalized.media_type},
+        ${normalized.media_file_id}, ${normalized.media_unique_id},
+        ${normalized.media_mime_type}, ${normalized.media_file_name},
+        ${normalized.media_file_size}, ${normalized.sent_at}::timestamptz,
+        ${normalized.edited_at}::timestamptz, null, ${normalized.content_hash},
+        ${normalized.updated_at}::timestamptz
+      )
+      on conflict (telegram_user_id, chat_id, message_id) do update set
+        business_connection_id = excluded.business_connection_id,
+        direction = excluded.direction,
+        sender_user_id = excluded.sender_user_id,
+        sender_username = excluded.sender_username,
+        sender_display_name = excluded.sender_display_name,
+        chat_title = excluded.chat_title,
+        text_content = excluded.text_content,
+        caption = excluded.caption,
+        media_type = excluded.media_type,
+        media_file_id = excluded.media_file_id,
+        media_unique_id = excluded.media_unique_id,
+        media_mime_type = excluded.media_mime_type,
+        media_file_name = excluded.media_file_name,
+        media_file_size = excluded.media_file_size,
+        sent_at = excluded.sent_at,
+        edited_at = excluded.edited_at,
+        content_hash = excluded.content_hash,
+        updated_at = excluded.updated_at
+    `;
+  } else {
+    const upsert = await db.from("story_pilot_messages")
+      .upsert(normalized, { onConflict: "telegram_user_id,chat_id,message_id" })
+      .select("telegram_user_id,chat_id,message_id")
+      .single();
+    need(upsert as any);
+  }
 
   if (settings.editHistory) {
     const version = {
@@ -382,9 +481,24 @@ async function opCaptureBusinessMessage(args: any) {
       media_unique_id: normalized.media_unique_id,
       observed_at: now,
     };
-    const vr = await db.from("story_pilot_message_versions")
-      .upsert(version, { onConflict: "telegram_user_id,chat_id,message_id,content_hash", ignoreDuplicates: true });
-    need(vr as any);
+    if (directSql) {
+      await directSql`
+        insert into public.story_pilot_message_versions (
+          telegram_user_id, chat_id, message_id, content_hash, event_type,
+          text_content, caption, media_type, media_file_id, media_unique_id, observed_at
+        ) values (
+          ${userId}::bigint, ${String(row.chat_id)}::bigint, ${Number(row.message_id)},
+          ${normalized.content_hash}, ${version.event_type}, ${normalized.text_content},
+          ${normalized.caption}, ${normalized.media_type}, ${normalized.media_file_id},
+          ${normalized.media_unique_id}, ${now}::timestamptz
+        )
+        on conflict (telegram_user_id, chat_id, message_id, content_hash) do nothing
+      `;
+    } else {
+      const vr = await db.from("story_pilot_message_versions")
+        .upsert(version, { onConflict: "telegram_user_id,chat_id,message_id,content_hash", ignoreDuplicates: true });
+      need(vr as any);
+    }
   }
 
   return { captured: true, settings };
@@ -400,12 +514,24 @@ async function opMarkBusinessMessagesDeleted(args: any) {
 
   const settings = await opGetPrivacySettings({ userId });
 
-  const beforeResult = await db.from("story_pilot_messages")
-    .select("message_id,sender_display_name,sender_username,chat_title,text_content,caption,media_type,direction,media_storage_path")
-    .eq("telegram_user_id", userId)
-    .eq("chat_id", chatId)
-    .in("message_id", messageIds);
-  const beforeRows = need(beforeResult as any) || [];
+  let beforeRows: any[] = [];
+  if (directSql) {
+    beforeRows = await directSql`
+      select message_id, sender_display_name, sender_username, chat_title,
+             text_content, caption, media_type, direction, media_storage_path
+      from public.story_pilot_messages
+      where telegram_user_id = ${userId}::bigint
+        and chat_id = ${chatId}::bigint
+        and message_id = any(${messageIds}::integer[])
+    `;
+  } else {
+    const beforeResult = await db.from("story_pilot_messages")
+      .select("message_id,sender_display_name,sender_username,chat_title,text_content,caption,media_type,direction,media_storage_path")
+      .eq("telegram_user_id", userId)
+      .eq("chat_id", chatId)
+      .in("message_id", messageIds);
+    beforeRows = need(beforeResult as any) || [];
+  }
   const events = beforeRows.map((row: any) => ({
     messageId: Number(row.message_id),
     sender: row.sender_display_name || (row.sender_username ? "@" + row.sender_username : null),
@@ -419,14 +545,27 @@ async function opMarkBusinessMessagesDeleted(args: any) {
       beforeRows.map((row: any) => row.media_storage_path).filter(Boolean),
     );
 
-    const r = await db.from("story_pilot_messages")
-      .delete()
-      .eq("telegram_user_id", userId)
-      .eq("chat_id", chatId)
-      .in("message_id", messageIds)
-      .select("message_id");
+    let affected = 0;
+    if (directSql) {
+      const rows = await directSql`
+        delete from public.story_pilot_messages
+        where telegram_user_id = ${userId}::bigint
+          and chat_id = ${chatId}::bigint
+          and message_id = any(${messageIds}::integer[])
+        returning message_id
+      `;
+      affected = rows.length;
+    } else {
+      const r = await db.from("story_pilot_messages")
+        .delete()
+        .eq("telegram_user_id", userId)
+        .eq("chat_id", chatId)
+        .in("message_id", messageIds)
+        .select("message_id");
+      affected = (need(r as any) || []).length;
+    }
     return {
-      affected: (need(r as any) || []).length,
+      affected,
       retained: false,
       settings,
       events,
@@ -434,14 +573,29 @@ async function opMarkBusinessMessagesDeleted(args: any) {
   }
 
   const deletedAt = args.deletedAt || new Date().toISOString();
-  const r = await db.from("story_pilot_messages")
-    .update({ deleted_at: deletedAt, updated_at: deletedAt })
-    .eq("telegram_user_id", userId)
-    .eq("chat_id", chatId)
-    .in("message_id", messageIds)
-    .select("message_id");
+  let affected = 0;
+  if (directSql) {
+    const rows = await directSql`
+      update public.story_pilot_messages
+      set deleted_at = ${deletedAt}::timestamptz,
+          updated_at = ${deletedAt}::timestamptz
+      where telegram_user_id = ${userId}::bigint
+        and chat_id = ${chatId}::bigint
+        and message_id = any(${messageIds}::integer[])
+      returning message_id
+    `;
+    affected = rows.length;
+  } else {
+    const r = await db.from("story_pilot_messages")
+      .update({ deleted_at: deletedAt, updated_at: deletedAt })
+      .eq("telegram_user_id", userId)
+      .eq("chat_id", chatId)
+      .in("message_id", messageIds)
+      .select("message_id");
+    affected = (need(r as any) || []).length;
+  }
   return {
-    affected: (need(r as any) || []).length,
+    affected,
     retained: true,
     settings,
     events,
@@ -461,13 +615,28 @@ async function opListPrivacyThreads(args: any) {
   if (!privacyEnabled(settings)) return { settings, threads: [] };
 
   const cutoff = new Date(Date.now() - settings.retentionDays * 86400000).toISOString();
-  const r = await db.from("story_pilot_messages")
-    .select("chat_id,chat_title,direction,text_content,caption,media_type,media_archive_status,sent_at,edited_at,deleted_at,sender_display_name,sender_username")
-    .eq("telegram_user_id", userId)
-    .gte("sent_at", cutoff)
-    .order("sent_at", { ascending: false })
-    .limit(600);
-  const rows = need(r as any) || [];
+  let rows: any[] = [];
+
+  if (directSql) {
+    rows = await directSql`
+      select chat_id, chat_title, direction, text_content, caption, media_type,
+             media_archive_status, sent_at, edited_at, deleted_at,
+             sender_display_name, sender_username
+      from public.story_pilot_messages
+      where telegram_user_id = ${userId}::bigint
+        and sent_at >= ${cutoff}::timestamptz
+      order by sent_at desc
+      limit 600
+    `;
+  } else {
+    const r = await db.from("story_pilot_messages")
+      .select("chat_id,chat_title,direction,text_content,caption,media_type,media_archive_status,sent_at,edited_at,deleted_at,sender_display_name,sender_username")
+      .eq("telegram_user_id", userId)
+      .gte("sent_at", cutoff)
+      .order("sent_at", { ascending: false })
+      .limit(600);
+    rows = need(r as any) || [];
+  }
 
   const byChat = new Map<string, any>();
   for (const row of rows as any[]) {
@@ -506,14 +675,32 @@ async function opListPrivacyMessages(args: any) {
   if (!privacyEnabled(settings)) return { settings, messages: [] };
 
   const cutoff = new Date(Date.now() - settings.retentionDays * 86400000).toISOString();
-  const r = await db.from("story_pilot_messages")
-    .select("chat_id,message_id,direction,sender_user_id,sender_username,sender_display_name,chat_title,text_content,caption,media_type,media_mime_type,media_file_name,media_file_size,media_archive_status,media_archived_at,sent_at,edited_at,deleted_at")
-    .eq("telegram_user_id", userId)
-    .eq("chat_id", chatId)
-    .gte("sent_at", cutoff)
-    .order("sent_at", { ascending: false })
-    .limit(limit);
-  const messages = need(r as any) || [];
+  let messages: any[] = [];
+
+  if (directSql) {
+    messages = await directSql`
+      select chat_id, message_id, direction, sender_user_id, sender_username,
+             sender_display_name, chat_title, text_content, caption, media_type,
+             media_mime_type, media_file_name, media_file_size,
+             media_archive_status, media_archived_at, sent_at, edited_at, deleted_at
+      from public.story_pilot_messages
+      where telegram_user_id = ${userId}::bigint
+        and chat_id = ${chatId}::bigint
+        and sent_at >= ${cutoff}::timestamptz
+      order by sent_at desc
+      limit ${limit}
+    `;
+  } else {
+    const r = await db.from("story_pilot_messages")
+      .select("chat_id,message_id,direction,sender_user_id,sender_username,sender_display_name,chat_title,text_content,caption,media_type,media_mime_type,media_file_name,media_file_size,media_archive_status,media_archived_at,sent_at,edited_at,deleted_at")
+      .eq("telegram_user_id", userId)
+      .eq("chat_id", chatId)
+      .gte("sent_at", cutoff)
+      .order("sent_at", { ascending: false })
+      .limit(limit);
+    messages = need(r as any) || [];
+  }
+
   return { settings, messages: [...messages].reverse() };
 }
 
@@ -563,6 +750,19 @@ async function opGetMessageVersions(args: any) {
   const settings = await opGetPrivacySettings({ userId });
   if (!settings.editHistory) return { settings, versions: [] };
 
+  if (directSql) {
+    const versions = await directSql`
+      select event_type, text_content, caption, media_type, observed_at
+      from public.story_pilot_message_versions
+      where telegram_user_id = ${userId}::bigint
+        and chat_id = ${chatId}::bigint
+        and message_id = ${messageId}
+      order by observed_at asc
+      limit 50
+    `;
+    return { settings, versions };
+  }
+
   const r = await db.from("story_pilot_message_versions")
     .select("event_type,text_content,caption,media_type,observed_at")
     .eq("telegram_user_id", userId)
@@ -603,81 +803,253 @@ async function opClearPrivacyArchive(args: any) {
 
 
 async function opGetSession(args: any) {
+  const userId = String(args.userId);
+  if (directSql) {
+    const rows = await directSql`
+      select *
+      from public.story_pilot_viewer_sessions
+      where telegram_user_id = ${userId}::bigint
+      limit 1
+    `;
+    return rows[0] || null;
+  }
+
   const r = await db.from("story_pilot_viewer_sessions")
     .select("*")
-    .eq("telegram_user_id", String(args.userId))
+    .eq("telegram_user_id", userId)
     .maybeSingle();
   return need(r as any);
 }
 
 async function opUpsertSession(args: any) {
+  const row = args.row || {};
+  const userId = String(row.telegram_user_id || "");
+  if (directSql) {
+    const rows = await directSql`
+      insert into public.story_pilot_viewer_sessions (
+        telegram_user_id, session_ciphertext, status, telegram_account_user_id,
+        telegram_account_username, telegram_account_first_name, last_poll_at,
+        last_error, created_at, updated_at, notify_enabled, notify_anonymous_gap
+      ) values (
+        ${userId}::bigint,
+        ${String(row.session_ciphertext || "")},
+        ${String(row.status || "active")},
+        ${row.telegram_account_user_id ? String(row.telegram_account_user_id) : null}::bigint,
+        ${row.telegram_account_username || null},
+        ${row.telegram_account_first_name || null},
+        ${row.last_poll_at || null}::timestamptz,
+        ${row.last_error ?? null},
+        coalesce(${row.created_at || null}::timestamptz, now()),
+        coalesce(${row.updated_at || null}::timestamptz, now()),
+        ${row.notify_enabled !== false},
+        ${row.notify_anonymous_gap !== false}
+      )
+      on conflict (telegram_user_id) do update set
+        session_ciphertext = excluded.session_ciphertext,
+        status = excluded.status,
+        telegram_account_user_id = excluded.telegram_account_user_id,
+        telegram_account_username = excluded.telegram_account_username,
+        telegram_account_first_name = excluded.telegram_account_first_name,
+        last_poll_at = excluded.last_poll_at,
+        last_error = excluded.last_error,
+        updated_at = excluded.updated_at,
+        notify_enabled = excluded.notify_enabled,
+        notify_anonymous_gap = excluded.notify_anonymous_gap
+      returning *
+    `;
+    return rows[0] || null;
+  }
+
   const r = await db.from("story_pilot_viewer_sessions")
-    .upsert(args.row, { onConflict: "telegram_user_id" })
+    .upsert(row, { onConflict: "telegram_user_id" })
     .select("*")
     .single();
   return need(r as any);
 }
 
 async function opUpdateSession(args: any) {
+  const userId = String(args.userId);
+  const patch = args.patch || {};
+  if (directSql) {
+    const patchJson = JSON.stringify(patch);
+    const rows = await directSql`
+      with p as (select ${patchJson}::jsonb as j)
+      update public.story_pilot_viewer_sessions s
+      set
+        session_ciphertext = case when p.j ? 'session_ciphertext' then p.j->>'session_ciphertext' else s.session_ciphertext end,
+        status = case when p.j ? 'status' then p.j->>'status' else s.status end,
+        telegram_account_user_id = case when p.j ? 'telegram_account_user_id' then nullif(p.j->>'telegram_account_user_id','')::bigint else s.telegram_account_user_id end,
+        telegram_account_username = case when p.j ? 'telegram_account_username' then p.j->>'telegram_account_username' else s.telegram_account_username end,
+        telegram_account_first_name = case when p.j ? 'telegram_account_first_name' then p.j->>'telegram_account_first_name' else s.telegram_account_first_name end,
+        last_poll_at = case when p.j ? 'last_poll_at' then nullif(p.j->>'last_poll_at','')::timestamptz else s.last_poll_at end,
+        last_error = case when p.j ? 'last_error' then p.j->>'last_error' else s.last_error end,
+        updated_at = case when p.j ? 'updated_at' then coalesce(nullif(p.j->>'updated_at','')::timestamptz, now()) else now() end,
+        notify_enabled = case when p.j ? 'notify_enabled' then (p.j->>'notify_enabled')::boolean else s.notify_enabled end,
+        notify_anonymous_gap = case when p.j ? 'notify_anonymous_gap' then (p.j->>'notify_anonymous_gap')::boolean else s.notify_anonymous_gap end
+      from p
+      where s.telegram_user_id = ${userId}::bigint
+      returning s.*
+    `;
+    return rows[0] || null;
+  }
+
   const r = await db.from("story_pilot_viewer_sessions")
-    .update(args.patch)
-    .eq("telegram_user_id", String(args.userId))
+    .update(patch)
+    .eq("telegram_user_id", userId)
     .select("*")
     .maybeSingle();
   return need(r as any);
 }
 
 async function opDeleteSession(args: any) {
+  const userId = String(args.userId);
+  if (directSql) {
+    await directSql`
+      delete from public.story_pilot_viewer_sessions
+      where telegram_user_id = ${userId}::bigint
+    `;
+    return true;
+  }
   const r = await db.from("story_pilot_viewer_sessions")
     .delete()
-    .eq("telegram_user_id", String(args.userId));
+    .eq("telegram_user_id", userId);
   need(r as any);
   return true;
 }
 
 async function opGetChallenge(args: any) {
+  const userId = String(args.userId);
+  if (directSql) {
+    const rows = await directSql`
+      select *
+      from public.story_pilot_viewer_auth_challenges
+      where telegram_user_id = ${userId}::bigint
+      limit 1
+    `;
+    return rows[0] || null;
+  }
+
   const r = await db.from("story_pilot_viewer_auth_challenges")
     .select("*")
-    .eq("telegram_user_id", String(args.userId))
+    .eq("telegram_user_id", userId)
     .maybeSingle();
   return need(r as any);
 }
 
 async function opSaveChallenge(args: any) {
+  const row = args.row || {};
+  const userId = String(row.telegram_user_id || "");
+  if (directSql) {
+    const rows = await directSql`
+      insert into public.story_pilot_viewer_auth_challenges
+        (telegram_user_id, challenge_ciphertext, stage, created_at, expires_at)
+      values (
+        ${userId}::bigint, ${String(row.challenge_ciphertext || "")},
+        ${String(row.stage || "code")}, ${row.created_at}::timestamptz,
+        ${row.expires_at}::timestamptz
+      )
+      on conflict (telegram_user_id) do update set
+        challenge_ciphertext = excluded.challenge_ciphertext,
+        stage = excluded.stage,
+        created_at = excluded.created_at,
+        expires_at = excluded.expires_at
+      returning *
+    `;
+    return rows[0] || null;
+  }
   const r = await db.from("story_pilot_viewer_auth_challenges")
-    .upsert(args.row, { onConflict: "telegram_user_id" })
+    .upsert(row, { onConflict: "telegram_user_id" })
     .select("*")
     .single();
   return need(r as any);
 }
 
 async function opDeleteChallenge(args: any) {
+  const userId = String(args.userId);
+  if (directSql) {
+    await directSql`
+      delete from public.story_pilot_viewer_auth_challenges
+      where telegram_user_id = ${userId}::bigint
+    `;
+    return true;
+  }
   const r = await db.from("story_pilot_viewer_auth_challenges")
     .delete()
-    .eq("telegram_user_id", String(args.userId));
+    .eq("telegram_user_id", userId);
   need(r as any);
   return true;
 }
 
 async function opTrackStory(args: any) {
+  const row = args.row || {};
+  const userId = String(row.telegram_user_id || "");
+  const storyId = Number(row.story_id || 0);
+  if (directSql) {
+    const rows = await directSql`
+      insert into public.story_pilot_stories (
+        telegram_user_id, story_id, posted_at, expires_at, watch_until, audience,
+        protected, active, deleted_at, last_views_count, last_identified_count,
+        last_forwards_count, last_reactions_count, last_sync_at, last_error
+      ) values (
+        ${userId}::bigint, ${storyId}, ${row.posted_at}::timestamptz,
+        ${row.expires_at}::timestamptz, ${row.watch_until}::timestamptz,
+        ${row.audience || null}, ${Boolean(row.protected)}, ${row.active !== false},
+        ${row.deleted_at || null}::timestamptz, ${Number(row.last_views_count || 0)},
+        ${Number(row.last_identified_count || 0)}, ${Number(row.last_forwards_count || 0)},
+        ${Number(row.last_reactions_count || 0)}, ${row.last_sync_at || null}::timestamptz,
+        ${row.last_error ?? null}
+      )
+      on conflict (telegram_user_id, story_id) do update set
+        posted_at = excluded.posted_at,
+        expires_at = excluded.expires_at,
+        watch_until = excluded.watch_until,
+        audience = excluded.audience,
+        protected = excluded.protected,
+        active = excluded.active,
+        deleted_at = excluded.deleted_at,
+        last_error = excluded.last_error
+      returning *
+    `;
+    return rows[0] || null;
+  }
   const r = await db.from("story_pilot_stories")
-    .upsert(args.row, { onConflict: "telegram_user_id,story_id" })
+    .upsert(row, { onConflict: "telegram_user_id,story_id" })
     .select("*")
     .single();
   return need(r as any);
 }
 
 async function opMarkStoryDeleted(args: any) {
+  const userId = String(args.userId);
+  const storyId = Number(args.storyId);
+  if (directSql) {
+    await directSql`
+      update public.story_pilot_stories
+      set active = false, deleted_at = now()
+      where telegram_user_id = ${userId}::bigint and story_id = ${storyId}
+    `;
+    return true;
+  }
   const r = await db.from("story_pilot_stories")
     .update({ active: false, deleted_at: new Date().toISOString() })
-    .eq("telegram_user_id", String(args.userId))
-    .eq("story_id", Number(args.storyId));
+    .eq("telegram_user_id", userId)
+    .eq("story_id", storyId);
   need(r as any);
   return true;
 }
 
 async function opListActiveSessions(args: any) {
   const limit = Math.max(1, Math.min(50, Number(args.limit || 10)));
+  if (directSql) {
+    return await directSql`
+      select *
+      from public.story_pilot_viewer_sessions
+      where status = 'active'
+      order by last_poll_at asc nulls first
+      limit ${limit}
+    `;
+  }
+
   const r = await db.from("story_pilot_viewer_sessions")
     .select("*")
     .eq("status", "active")
@@ -687,20 +1059,46 @@ async function opListActiveSessions(args: any) {
 }
 
 async function opListStoryArchive(args: any) {
+  const userId = String(args.userId);
   const limit = Math.max(1, Math.min(100, Number(args.limit || 50)));
+  if (directSql) {
+    return await directSql`
+      select story_id, posted_at, audience, protected, active, deleted_at,
+             last_views_count, last_identified_count, last_reactions_count,
+             last_forwards_count, last_sync_at, last_error
+      from public.story_pilot_stories
+      where telegram_user_id = ${userId}::bigint
+      order by posted_at desc
+      limit ${limit}
+    `;
+  }
+
   const r = await db.from("story_pilot_stories")
     .select("story_id,posted_at,audience,protected,active,deleted_at,last_views_count,last_identified_count,last_reactions_count,last_forwards_count,last_sync_at,last_error")
-    .eq("telegram_user_id", String(args.userId))
+    .eq("telegram_user_id", userId)
     .order("posted_at", { ascending: false })
     .limit(limit);
   return need(r as any) || [];
 }
 
 async function opListStories(args: any) {
+  const userId = String(args.userId);
   const limit = Math.max(1, Math.min(20, Number(args.limit || 8)));
+  if (directSql) {
+    return await directSql`
+      select *
+      from public.story_pilot_stories
+      where telegram_user_id = ${userId}::bigint
+        and active = true
+        and watch_until > now()
+      order by posted_at desc
+      limit ${limit}
+    `;
+  }
+
   const r = await db.from("story_pilot_stories")
     .select("*")
-    .eq("telegram_user_id", String(args.userId))
+    .eq("telegram_user_id", userId)
     .eq("active", true)
     .gt("watch_until", new Date().toISOString())
     .order("posted_at", { ascending: false })
@@ -709,60 +1107,178 @@ async function opListStories(args: any) {
 }
 
 async function opUpdateStoryStats(args: any) {
+  const userId = String(args.userId);
+  const storyId = Number(args.storyId);
+  const patch = args.patch || {};
+  if (directSql) {
+    const patchJson = JSON.stringify(patch);
+    const rows = await directSql`
+      with p as (select ${patchJson}::jsonb as j)
+      update public.story_pilot_stories s
+      set
+        last_views_count = case when p.j ? 'last_views_count' then (p.j->>'last_views_count')::integer else s.last_views_count end,
+        last_identified_count = case when p.j ? 'last_identified_count' then (p.j->>'last_identified_count')::integer else s.last_identified_count end,
+        last_forwards_count = case when p.j ? 'last_forwards_count' then (p.j->>'last_forwards_count')::integer else s.last_forwards_count end,
+        last_reactions_count = case when p.j ? 'last_reactions_count' then (p.j->>'last_reactions_count')::integer else s.last_reactions_count end,
+        last_sync_at = case when p.j ? 'last_sync_at' then nullif(p.j->>'last_sync_at','')::timestamptz else s.last_sync_at end,
+        last_error = case when p.j ? 'last_error' then p.j->>'last_error' else s.last_error end,
+        active = case when p.j ? 'active' then (p.j->>'active')::boolean else s.active end
+      from p
+      where s.telegram_user_id = ${userId}::bigint and s.story_id = ${storyId}
+      returning s.*
+    `;
+    return rows[0] || null;
+  }
   const r = await db.from("story_pilot_stories")
-    .update(args.patch)
-    .eq("telegram_user_id", String(args.userId))
-    .eq("story_id", Number(args.storyId))
+    .update(patch)
+    .eq("telegram_user_id", userId)
+    .eq("story_id", storyId)
     .select("*")
     .maybeSingle();
   return need(r as any);
 }
 
 async function opListViewerRows(args: any) {
+  const userId = String(args.userId);
+  const storyId = Number(args.storyId);
+  if (directSql) {
+    return await directSql`
+      select *
+      from public.story_pilot_viewers
+      where telegram_user_id = ${userId}::bigint
+        and story_id = ${storyId}
+      order by first_seen_at asc
+    `;
+  }
+
   const r = await db.from("story_pilot_viewers")
     .select("*")
-    .eq("telegram_user_id", String(args.userId))
-    .eq("story_id", Number(args.storyId))
+    .eq("telegram_user_id", userId)
+    .eq("story_id", storyId)
     .order("first_seen_at", { ascending: true });
   return need(r as any) || [];
 }
 
 async function opUpsertViewer(args: any) {
+  const row = args.row || {};
+  const userId = String(row.telegram_user_id || "");
+  const storyId = Number(row.story_id || 0);
+  const viewerId = String(row.viewer_user_id || "");
+  if (directSql) {
+    const reactionJson = row.reaction_json == null ? null : JSON.stringify(row.reaction_json);
+    const rows = await directSql`
+      insert into public.story_pilot_viewers (
+        telegram_user_id, story_id, viewer_user_id, status, first_seen_at,
+        last_seen_at, viewed_at, confirmed_at, username, display_name,
+        is_contact, reaction_json, notification_message_id
+      ) values (
+        ${userId}::bigint, ${storyId}, ${viewerId}::bigint,
+        ${String(row.status || "provisional")}, ${row.first_seen_at}::timestamptz,
+        ${row.last_seen_at}::timestamptz, ${row.viewed_at}::timestamptz,
+        ${row.confirmed_at || null}::timestamptz, ${row.username || null},
+        ${row.display_name || null}, ${Boolean(row.is_contact)},
+        ${reactionJson}::jsonb, ${row.notification_message_id ? String(row.notification_message_id) : null}::bigint
+      )
+      on conflict (telegram_user_id, story_id, viewer_user_id) do update set
+        status = excluded.status,
+        first_seen_at = excluded.first_seen_at,
+        last_seen_at = excluded.last_seen_at,
+        viewed_at = excluded.viewed_at,
+        confirmed_at = excluded.confirmed_at,
+        username = excluded.username,
+        display_name = excluded.display_name,
+        is_contact = excluded.is_contact,
+        reaction_json = excluded.reaction_json,
+        notification_message_id = excluded.notification_message_id
+      returning *
+    `;
+    return rows[0] || null;
+  }
   const r = await db.from("story_pilot_viewers")
-    .upsert(args.row, { onConflict: "telegram_user_id,story_id,viewer_user_id" })
+    .upsert(row, { onConflict: "telegram_user_id,story_id,viewer_user_id" })
     .select("*")
     .single();
   return need(r as any);
 }
 
 async function opDeleteViewer(args: any) {
+  const userId = String(args.userId);
+  const storyId = Number(args.storyId);
+  const viewerUserId = String(args.viewerUserId);
+  if (directSql) {
+    await directSql`
+      delete from public.story_pilot_viewers
+      where telegram_user_id = ${userId}::bigint
+        and story_id = ${storyId}
+        and viewer_user_id = ${viewerUserId}::bigint
+    `;
+    return true;
+  }
   const r = await db.from("story_pilot_viewers")
     .delete()
-    .eq("telegram_user_id", String(args.userId))
-    .eq("story_id", Number(args.storyId))
-    .eq("viewer_user_id", String(args.viewerUserId));
+    .eq("telegram_user_id", userId)
+    .eq("story_id", storyId)
+    .eq("viewer_user_id", viewerUserId);
   need(r as any);
   return true;
 }
 
 async function opInsertSnapshot(args: any) {
-  const r = await db.from("story_pilot_viewer_snapshots").insert(args.row);
+  const row = args.row || {};
+  if (directSql) {
+    await directSql`
+      insert into public.story_pilot_viewer_snapshots (
+        telegram_user_id, story_id, observed_at, total_views,
+        identified_views, forwards_count, reactions_count
+      ) values (
+        ${String(row.telegram_user_id)}::bigint, ${Number(row.story_id)},
+        ${row.observed_at}::timestamptz, ${Number(row.total_views || 0)},
+        ${Number(row.identified_views || 0)}, ${Number(row.forwards_count || 0)},
+        ${Number(row.reactions_count || 0)}
+      )
+    `;
+    return true;
+  }
+  const r = await db.from("story_pilot_viewer_snapshots").insert(row);
   need(r as any);
   return true;
 }
 
 async function opGetStoryData(args: any) {
+  const userId = String(args.userId);
+  const storyId = Number(args.storyId);
+
+  if (directSql) {
+    const stories = await directSql`
+      select *
+      from public.story_pilot_stories
+      where telegram_user_id = ${userId}::bigint
+        and story_id = ${storyId}
+      limit 1
+    `;
+    const viewers = await directSql`
+      select viewer_user_id, username, display_name, viewed_at, reaction_json, is_contact
+      from public.story_pilot_viewers
+      where telegram_user_id = ${userId}::bigint
+        and story_id = ${storyId}
+        and status = 'confirmed'
+      order by viewed_at desc
+      limit 500
+    `;
+    return { story: stories[0] || null, viewers };
+  }
+
   const storyResult = await db.from("story_pilot_stories")
     .select("*")
-    .eq("telegram_user_id", String(args.userId))
-    .eq("story_id", Number(args.storyId))
+    .eq("telegram_user_id", userId)
+    .eq("story_id", storyId)
     .maybeSingle();
   const story = need(storyResult as any);
 
   const viewersResult = await db.from("story_pilot_viewers")
     .select("viewer_user_id,username,display_name,viewed_at,reaction_json,is_contact")
-    .eq("telegram_user_id", String(args.userId))
-    .eq("story_id", Number(args.storyId))
+    .eq("telegram_user_id", userId)
+    .eq("story_id", storyId)
     .eq("status", "confirmed")
     .order("viewed_at", { ascending: false })
     .limit(500);
@@ -771,34 +1287,37 @@ async function opGetStoryData(args: any) {
   return { story, viewers };
 }
 
-
 async function opGetAnalytics(args: any) {
   const userId = String(args.userId);
+  if (!directSql) throw new Error("direct_database_unavailable");
 
-  // Keep analytics requests sequential. This project can share a small DB pool with
-  // other workloads; parallel PostgREST queries amplify pool saturation during recovery.
-  const storiesResult = await db.from("story_pilot_stories")
-    .select("story_id,posted_at,last_views_count,last_identified_count,last_reactions_count,last_forwards_count,last_sync_at,active")
-    .eq("telegram_user_id", userId)
-    .order("posted_at", { ascending: false })
-    .limit(100);
+  const stories = await directSql`
+    select story_id, posted_at, last_views_count, last_identified_count,
+           last_reactions_count, last_forwards_count, last_sync_at, active
+    from public.story_pilot_stories
+    where telegram_user_id = ${userId}::bigint
+    order by posted_at desc
+    limit 100
+  `;
 
-  const viewersResult = await db.from("story_pilot_viewers")
-    .select("story_id,viewer_user_id,username,display_name,viewed_at,reaction_json,is_contact")
-    .eq("telegram_user_id", userId)
-    .eq("status", "confirmed")
-    .order("viewed_at", { ascending: false })
-    .limit(3000);
+  const viewers = await directSql`
+    select story_id, viewer_user_id, username, display_name, viewed_at,
+           reaction_json, is_contact
+    from public.story_pilot_viewers
+    where telegram_user_id = ${userId}::bigint
+      and status = 'confirmed'
+    order by viewed_at desc
+    limit 3000
+  `;
 
-  const snapshotsResult = await db.from("story_pilot_viewer_snapshots")
-    .select("story_id,observed_at,total_views,identified_views,reactions_count,forwards_count")
-    .eq("telegram_user_id", userId)
-    .order("observed_at", { ascending: false })
-    .limit(1000);
-
-  const stories = need(storiesResult as any) || [];
-  const viewers = need(viewersResult as any) || [];
-  const snapshots = need(snapshotsResult as any) || [];
+  const snapshots = await directSql`
+    select story_id, observed_at, total_views, identified_views,
+           reactions_count, forwards_count
+    from public.story_pilot_viewer_snapshots
+    where telegram_user_id = ${userId}::bigint
+    order by observed_at desc
+    limit 1000
+  `;
 
   const storyMap = new Map(stories.map((story: any) => [String(story.story_id), story]));
   const people = new Map<string, any>();
@@ -995,30 +1514,39 @@ async function opGetAnalytics(args: any) {
 
 async function opGetExport(args: any) {
   const userId = String(args.userId);
+  if (!directSql) throw new Error("direct_database_unavailable");
 
-  // Export is intentionally sequential for the same reason as analytics: avoid
-  // competing with ourselves for PostgREST/Supavisor connections.
-  const storiesResult = await db.from("story_pilot_stories")
-    .select("story_id,posted_at,expires_at,active,deleted_at,audience,protected,last_views_count,last_identified_count,last_reactions_count,last_forwards_count,last_sync_at")
-    .eq("telegram_user_id", userId)
-    .order("posted_at", { ascending: false })
-    .limit(250);
+  const stories = await directSql`
+    select story_id, posted_at, expires_at, active, deleted_at, audience,
+           protected, last_views_count, last_identified_count,
+           last_reactions_count, last_forwards_count, last_sync_at
+    from public.story_pilot_stories
+    where telegram_user_id = ${userId}::bigint
+    order by posted_at desc
+    limit 250
+  `;
 
-  const viewersResult = await db.from("story_pilot_viewers")
-    .select("story_id,viewer_user_id,username,display_name,viewed_at,first_seen_at,last_seen_at,confirmed_at,is_contact,reaction_json")
-    .eq("telegram_user_id", userId)
-    .eq("status", "confirmed")
-    .order("viewed_at", { ascending: false })
-    .limit(3000);
-
-  const stories = need(storiesResult as any) || [];
-  const viewers = need(viewersResult as any) || [];
+  const viewers = await directSql`
+    select story_id, viewer_user_id, username, display_name, viewed_at,
+           first_seen_at, last_seen_at, confirmed_at, is_contact, reaction_json
+    from public.story_pilot_viewers
+    where telegram_user_id = ${userId}::bigint
+      and status = 'confirmed'
+    order by viewed_at desc
+    limit 3000
+  `;
 
   return { stories, viewers, generatedAt: new Date().toISOString() };
 }
 
 async function opAcquireLease(args: any) {
   const seconds = Math.max(10, Math.min(300, Number(args.seconds || 55)));
+  if (directSql) {
+    const rows = await directSql`
+      select public.story_pilot_acquire_watch_lease(${seconds}) as acquired
+    `;
+    return Boolean(rows[0]?.acquired);
+  }
   const r = await db.rpc("story_pilot_acquire_watch_lease", { p_seconds: seconds });
   return Boolean(need(r as any));
 }
@@ -1064,7 +1592,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v6", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v10", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true, directDbUrlAvailable: Boolean(SUPABASE_DB_URL), directAnalytics: Boolean(directSql), directExport: Boolean(directSql), directCoreReads: Boolean(directSql), directGhostWrites: Boolean(directSql), directViewerWrites: Boolean(directSql) };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
