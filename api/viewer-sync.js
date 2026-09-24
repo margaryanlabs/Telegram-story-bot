@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
-import { getViewerSyncKeyring, secureViewerKeySourceConfigured } from '../lib/viewer-sync-keyring.js';
+import { getViewerSyncKeyring } from '../lib/viewer-sync-keyring.js';
 import {
   viewerDbConfigured,
   getViewerSession,
@@ -60,23 +60,29 @@ function validateInitData(initData, token) {
   }
 }
 
-function configState() {
+async function configState() {
   const storage = viewerDbConfigured();
   const telegram = Boolean(
     process.env.TELEGRAM_API_ID
     && process.env.TELEGRAM_API_HASH
     && process.env.TELEGRAM_BOT_TOKEN
   );
+  const secureKeyring = storage && telegram
+    ? await getViewerSyncKeyring({ required: false })
+    : null;
+  const secureSessionCrypto = Boolean(secureKeyring?.current);
 
   return {
     configured: storage && telegram,
     backgroundReady: storage && telegram,
+    newConnectionsReady: storage && telegram && secureSessionCrypto,
+    secureSessionCrypto,
     scheduler: 'supabase_pg_cron',
-    secureSessionCrypto: secureViewerKeySourceConfigured(),
     missing: [
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
       !process.env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_BOT_TOKEN' : null,
+      storage && telegram && !secureSessionCrypto ? 'SECURE_SESSION_KEYRING' : null,
     ].filter(Boolean),
   };
 }
@@ -265,7 +271,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const config = configState();
+  const config = await configState();
   const userId = String(user.id);
 
   if (!config.configured) {
