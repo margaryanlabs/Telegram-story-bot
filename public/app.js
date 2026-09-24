@@ -67,6 +67,19 @@
     processing: qs.get('pr') === '1',
   };
 
+  const SCREEN_ALIASES = {
+    home: 'publish',
+    stories: 'publish',
+    publish: 'publish',
+    ghost: 'privacy',
+    privacy: 'privacy',
+    chats: 'privacy',
+    intelligence: 'viewers',
+    viewers: 'viewers',
+    analytics: 'analytics',
+    archive: 'archive',
+  };
+  const requestedScreen = SCREEN_ALIASES[String(qs.get('screen') || '').toLowerCase()] || null;
   let currentScreen = 'publish';
   let selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
   let toastTimer = null;
@@ -1743,6 +1756,9 @@
 
   setAvatar();
   render();
+  if (requestedScreen && requestedScreen !== 'publish') {
+    switchScreen(requestedScreen);
+  }
 
   if (tg?.initData) {
     refresh();
