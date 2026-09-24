@@ -24,7 +24,10 @@ const FAST_POLL_ROUNDS = Math.max(1, Math.min(3, Number(process.env.VIEWER_FAST_
 const FAST_POLL_INTERVAL_MS = Math.max(8000, Math.min(15000, Number(process.env.VIEWER_FAST_POLL_INTERVAL_MS || 10000)));
 const WATCH_BUDGET_MS = Math.max(30000, Math.min(50000, Number(process.env.VIEWER_WATCH_BUDGET_MS || 44000)));
 const WATCH_MIN_REMAINING_MS = 5500;
-const EDGE_TRIGGER_PUBLIC_KEY = '8sAlE7n-envFOB-8bisnYwBONXPe8M6GRtos_6UsoAg';
+const EDGE_TRIGGER_PUBLIC_KEYS = [
+  '8sAlE7n-envFOB-8bisnYwBONXPe8M6GRtos_6UsoAg',
+  'idl_pp6aznx3_qyvmQV6CI5Um0cRt2VLI9-o-raIsVc',
+];
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -293,13 +296,13 @@ function authorized(req) {
   const signature = String(req.headers['x-story-trigger-signature'] || '');
   const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
 
-  return verifyEdgeSignature({
-    publicKey: EDGE_TRIGGER_PUBLIC_KEY,
+  return EDGE_TRIGGER_PUBLIC_KEYS.some(publicKey => verifyEdgeSignature({
+    publicKey,
     timestamp,
     body,
     signature,
     maxAgeMs: 120000,
-  });
+  }));
 }
 
 export default async function handler(req, res) {
