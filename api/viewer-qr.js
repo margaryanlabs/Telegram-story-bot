@@ -1,8 +1,8 @@
 import QRCode from 'qrcode';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
-import { getViewerSyncKeyring } from '../lib/viewer-sync-keyring.js';
 import { sealJson } from '../lib/viewer-sync-crypto.js';
 import {
+  viewerCryptoHealth,
   getViewerSession,
   upsertViewerSession,
   saveAuthChallenge,
@@ -54,7 +54,10 @@ export default async function handler(req, res) {
   const userId = String(user.id);
 
   try {
-    await getViewerSyncKeyring({ required: true });
+    const cryptoHealth = await viewerCryptoHealth();
+    if (cryptoHealth?.ready !== true || cryptoHealth?.version !== 'v3') {
+      throw new Error('private_crypto_not_ready');
+    }
   } catch {
     jsonError(
       res,
