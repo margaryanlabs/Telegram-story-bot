@@ -159,7 +159,7 @@ async function sendTestViewerAlert(token, userId) {
     headers: { 'content-type':'application/json' },
     body: JSON.stringify({
       chat_id: String(userId),
-      text: '⚡ Story Pilot Fast Alerts работают.\n\nНовый просмотр активной Story отслеживается фоновым watcher; задержка зависит от цикла проверки и ответа Telegram. Если Telegram позже скроет связь просмотра с аккаунтом, Story Pilot анонимизирует запись и пришлёт отдельный privacy-сигнал.',
+      text: '⚡ Telegram Control Fast Alerts работают.\n\nНовый просмотр активной Story отслеживается фоновым watcher; задержка зависит от цикла проверки и ответа Telegram. Если Telegram позже скроет связь просмотра с аккаунтом, Telegram Control анонимизирует запись и пришлёт отдельный privacy-сигнал.',
       disable_notification: false,
     }),
   });
@@ -182,7 +182,7 @@ async function sendEvidenceCsv(token, userId, data) {
   );
   form.append(
     'caption',
-    'Story Pilot · Viewer Intelligence export\nТолько подтверждённые Telegram viewers + агрегированные Story counters.',
+    'Telegram Control · Viewer Intelligence export\nТолько подтверждённые Telegram viewers + агрегированные Story counters.',
   );
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
@@ -234,13 +234,13 @@ export default async function handler(req, res) {
 
   const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '');
   if (!botToken) {
-    res.status(500).json({ ok: false, error: 'Story Pilot is not configured' });
+    res.status(500).json({ ok: false, error: 'Telegram Control is not configured' });
     return;
   }
 
   const user = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''), botToken);
   if (!user) {
-    res.status(401).json({ ok: false, error: 'Open Story Pilot inside Telegram' });
+    res.status(401).json({ ok: false, error: 'Open Telegram Control inside Telegram' });
     return;
   }
 
