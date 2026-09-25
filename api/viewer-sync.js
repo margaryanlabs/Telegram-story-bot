@@ -1,8 +1,8 @@
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
-import { getViewerSyncKeyring } from '../lib/viewer-sync-keyring.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import {
   viewerDbConfigured,
+  viewerCryptoHealth,
   getViewerSession,
   upsertViewerSession,
   deleteViewerSession,
@@ -30,10 +30,15 @@ async function configState() {
     && process.env.TELEGRAM_API_HASH
     && process.env.TELEGRAM_BOT_TOKEN
   );
-  const secureKeyring = storage && telegram
-    ? await getViewerSyncKeyring({ required: false })
-    : null;
-  const secureSessionCrypto = Boolean(secureKeyring?.current);
+  let secureSessionCrypto = false;
+  if (storage && telegram) {
+    try {
+      const cryptoHealth = await viewerCryptoHealth();
+      secureSessionCrypto = cryptoHealth?.ready === true && cryptoHealth?.version === 'v3';
+    } catch {
+      secureSessionCrypto = false;
+    }
+  }
 
   return {
     configured: storage && telegram,
@@ -45,7 +50,7 @@ async function configState() {
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
       !process.env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_BOT_TOKEN' : null,
-      storage && telegram && !secureSessionCrypto ? 'SECURE_SESSION_KEYRING' : null,
+      storage && telegram && !secureSessionCrypto ? 'PRIVATE_SESSION_CRYPTO' : null,
     ].filter(Boolean),
   };
 }
@@ -384,7 +389,6 @@ export default async function handler(req, res) {
         return;
       }
 
-      await getViewerSyncKeyring({ required: true });
       const auth = await beginUserAuth(body.phone);
       const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
@@ -412,7 +416,6 @@ export default async function handler(req, res) {
         return;
       }
 
-      await getViewerSyncKeyring({ required: true });
       const auth = await openJson(challenge.challenge_ciphertext, `auth:${userId}`);
       const result = await verifyUserCode(auth, body.code);
 
@@ -461,7 +464,6 @@ export default async function handler(req, res) {
         return;
       }
 
-      await getViewerSyncKeyring({ required: true });
       const auth = await openJson(challenge.challenge_ciphertext, `auth:${userId}`);
       const result = await verifyUserPassword(auth, body.password);
 
@@ -512,7 +514,7 @@ export default async function handler(req, res) {
     res.status(400).json({ ok: false, error: 'Unknown action' });
   } catch (error) {
     const description = error?.errorMessage || error?.message || String(error);
-    if (/key broker|Secure Viewer Sync keyring|encryption key version/i.test(description)) {
+    if (/viewer_crypto|private json|PRIVATE_SESSION_CRYPTO|encryption key version|Viewer Sync store/i.test(description)) {
       console.warn('Viewer Sync secure key unavailable', {
         telegram_user_id: userId,
         error: description,
