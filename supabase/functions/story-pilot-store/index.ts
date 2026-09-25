@@ -802,6 +802,168 @@ async function opClearPrivacyArchive(args: any) {
 }
 
 
+function cryptoEnvironment(value: unknown) {
+  const environment = String(value || "").trim();
+  if (environment === "production" || environment === "preview") return environment;
+  throw new Error("invalid_crypto_environment");
+}
+
+function encodeB64Url(bytes: Uint8Array) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function ensureViewerCryptoKey(environment: string) {
+  if (!directSql) throw new Error("viewer_crypto_direct_database_required");
+
+  const current = await directSql`
+    select key_id, secret_value, status
+    from story_pilot_private.crypto_keys
+    where purpose = 'viewer_sync_session'
+      and environment = ${environment}
+      and status = 'active'
+    order by created_at desc
+    limit 1
+  `;
+  if (current[0]?.key_id && current[0]?.secret_value) return current[0];
+
+  const keyId = `viewer-sync-${environment}-${crypto.randomUUID()}`;
+  try {
+    await directSql`
+      insert into story_pilot_private.crypto_keys
+        (key_id, purpose, environment, secret_value, status)
+      values (
+        ${keyId},
+        'viewer_sync_session',
+        ${environment},
+        encode(gen_random_bytes(32), 'base64'),
+        'active'
+      )
+    `;
+  } catch {
+    // A concurrent request can win the unique active-key race.
+  }
+
+  const created = await directSql`
+    select key_id, secret_value, status
+    from story_pilot_private.crypto_keys
+    where purpose = 'viewer_sync_session'
+      and environment = ${environment}
+      and status = 'active'
+    order by created_at desc
+    limit 1
+  `;
+  if (!created[0]?.key_id || !created[0]?.secret_value) {
+    throw new Error("viewer_crypto_active_key_missing");
+  }
+  return created[0];
+}
+
+async function viewerCryptoKey(environment: string, keyId: string) {
+  if (!directSql) throw new Error("viewer_crypto_direct_database_required");
+  const rows = await directSql`
+    select key_id, secret_value, status
+    from story_pilot_private.crypto_keys
+    where purpose = 'viewer_sync_session'
+      and environment = ${environment}
+      and key_id = ${keyId}
+      and status in ('active', 'retired')
+    limit 1
+  `;
+  if (!rows[0]?.secret_value) throw new Error("viewer_crypto_key_version_unavailable");
+  return rows[0];
+}
+
+async function importViewerAesKey(secret: string, keyId: string) {
+  const material = new TextEncoder().encode(
+    `telegram-control-viewer-sync-v3:${keyId}:${secret}`,
+  );
+  const digest = await crypto.subtle.digest("SHA-256", material);
+  return crypto.subtle.importKey(
+    "raw",
+    digest,
+    { name: "AES-GCM" },
+    false,
+    ["encrypt", "decrypt"],
+  );
+}
+
+function viewerCryptoAad(context: unknown, keyId: string) {
+  const normalized = String(context || "global").slice(0, 256);
+  return new TextEncoder().encode(
+    `story-pilot-viewer-sync:v3:${keyId}:${normalized}`,
+  );
+}
+
+async function opViewerCryptoHealth(args: any) {
+  const environment = cryptoEnvironment(args?.environment);
+  const key = await ensureViewerCryptoKey(environment);
+  return {
+    ready: true,
+    version: "v3",
+    keyId: String(key.key_id),
+    environment,
+  };
+}
+
+async function opSealViewerPrivateJson(args: any) {
+  const environment = cryptoEnvironment(args?.environment);
+  const context = String(args?.context || "global").slice(0, 256);
+  const plaintext = JSON.stringify(args?.value ?? null);
+  if (plaintext.length > 100_000) throw new Error("viewer_crypto_payload_too_large");
+
+  const keyRow = await ensureViewerCryptoKey(environment);
+  const keyId = String(keyRow.key_id);
+  const key = await importViewerAesKey(String(keyRow.secret_value), keyId);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt(
+    {
+      name: "AES-GCM",
+      iv,
+      additionalData: viewerCryptoAad(context, keyId),
+      tagLength: 128,
+    },
+    key,
+    new TextEncoder().encode(plaintext),
+  );
+
+  return [
+    "v3",
+    keyId,
+    encodeB64Url(iv),
+    encodeB64Url(new Uint8Array(ciphertext)),
+  ].join(".");
+}
+
+async function opOpenViewerPrivateJson(args: any) {
+  const environment = cryptoEnvironment(args?.environment);
+  const context = String(args?.context || "global").slice(0, 256);
+  const parts = String(args?.ciphertext || "").split(".");
+  const [version, keyId, ivB64, ciphertextB64] = parts;
+  if (version !== "v3" || !keyId || !ivB64 || !ciphertextB64 || parts.length !== 4) {
+    throw new Error("invalid_viewer_crypto_payload");
+  }
+
+  const keyRow = await viewerCryptoKey(environment, keyId);
+  const key = await importViewerAesKey(String(keyRow.secret_value), keyId);
+  const plaintext = await crypto.subtle.decrypt(
+    {
+      name: "AES-GCM",
+      iv: b64url(ivB64),
+      additionalData: viewerCryptoAad(context, keyId),
+      tagLength: 128,
+    },
+    key,
+    b64url(ciphertextB64),
+  );
+
+  const text = new TextDecoder().decode(plaintext);
+  if (text.length > 100_000) throw new Error("viewer_crypto_plaintext_too_large");
+  return JSON.parse(text);
+}
+
+
 async function opGetSession(args: any) {
   const userId = String(args.userId);
   if (directSql) {
@@ -1592,7 +1754,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v10", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true, directDbUrlAvailable: Boolean(SUPABASE_DB_URL), directAnalytics: Boolean(directSql), directExport: Boolean(directSql), directCoreReads: Boolean(directSql), directGhostWrites: Boolean(directSql), directViewerWrites: Boolean(directSql) };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v10", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true, privateCrypto: Boolean(directSql), directDbUrlAvailable: Boolean(SUPABASE_DB_URL), directAnalytics: Boolean(directSql), directExport: Boolean(directSql), directCoreReads: Boolean(directSql), directGhostWrites: Boolean(directSql), directViewerWrites: Boolean(directSql) };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
@@ -1605,6 +1767,9 @@ async function dispatch(op: string, args: any) {
     case "cleanup_privacy_retention_global": return opCleanupPrivacyRetentionGlobal();
     case "get_message_versions": return opGetMessageVersions(args);
     case "clear_privacy_archive": return opClearPrivacyArchive(args);
+    case "viewer_crypto_health": return opViewerCryptoHealth(args);
+    case "seal_viewer_private_json": return opSealViewerPrivateJson(args);
+    case "open_viewer_private_json": return opOpenViewerPrivateJson(args);
     case "get_session": return opGetSession(args);
     case "upsert_session": return opUpsertSession(args);
     case "update_session": return opUpdateSession(args);
