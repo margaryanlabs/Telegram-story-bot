@@ -58,9 +58,13 @@ async function configState() {
 
 function safeSession(row) {
   if (!row) return null;
+  const cipherVersion = String(row.session_ciphertext || '').split('.')[0] || null;
   return {
     connected: row.status === 'active',
     status: row.status,
+    cryptoVersion: /^v\d+$/.test(cipherVersion || '') ? cipherVersion : null,
+    createdAt: row.created_at || null,
+    updatedAt: row.updated_at || null,
     account: {
       id: row.telegram_account_user_id || null,
       username: row.telegram_account_username || '',
