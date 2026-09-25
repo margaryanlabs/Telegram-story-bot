@@ -1,4 +1,4 @@
-import { getViewerSyncKeyring } from '../lib/viewer-sync-keyring.js';
+import { viewerCryptoHealth } from '../lib/viewer-sync-store.js';
 
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
@@ -33,8 +33,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const secureKeyring = await getViewerSyncKeyring({ required: false });
-    status.secure_session_crypto = secureKeyring?.current ? 'ready' : 'unavailable';
+    try {
+      const secureCrypto = await viewerCryptoHealth();
+      status.secure_session_crypto =
+        secureCrypto?.ready === true && secureCrypto?.version === 'v3'
+          ? 'ready'
+          : 'unavailable';
+    } catch {
+      status.secure_session_crypto = 'unavailable';
+    }
 
     const [bot, webhook] = await Promise.all([
       tg(token, 'getMe'),
