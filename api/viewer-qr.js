@@ -5,6 +5,7 @@ import {
   viewerCryptoHealth,
   getViewerSession,
   upsertViewerSession,
+  recordActivityEvent,
   saveAuthChallenge,
   deleteAuthChallenge,
 } from '../lib/viewer-sync-store.js';
@@ -155,6 +156,16 @@ export default async function handler(req, res) {
       updated_at: new Date().toISOString(),
     });
     await deleteAuthChallenge(userId).catch(() => {});
+    await recordActivityEvent(userId, 'session.created', {
+      method: 'qr',
+      crypto: 'v3',
+      connection: 'deep_intelligence',
+      status: 'active',
+    }, {
+      correlationKey: 'deep-intelligence',
+    }).catch(error => {
+      console.warn('Deep Intelligence QR session.created event skipped', error?.message || error);
+    });
 
     send({
       type: 'connected',
