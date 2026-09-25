@@ -697,7 +697,7 @@
       $('connectionIcon').className = 'connection-icon ready';
       $('connectionIcon').textContent = '✓';
       $('connectionTitle').textContent = 'Готов к публикации';
-      $('connectionText').textContent = 'Business Connection активен · Stories разрешены';
+      $('connectionText').textContent = 'Telegram подключён · Stories доступны';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
       $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
@@ -707,7 +707,7 @@
       $('connectionIcon').className = 'connection-icon warn';
       $('connectionIcon').textContent = '!';
       $('connectionTitle').textContent = 'Разреши управление Stories';
-      $('connectionText').textContent = 'Telegram подключён, но нет can_manage_stories';
+      $('connectionText').textContent = 'Telegram подключён, но не разрешено управление Stories';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Права';
     } else {
@@ -715,7 +715,7 @@
       $('connectionIcon').className = 'connection-icon';
       $('connectionIcon').textContent = '↗';
       $('connectionTitle').textContent = 'Подключи Telegram';
-      $('connectionText').textContent = 'Telegram Control пока не получил активный Business Connection';
+      $('connectionText').textContent = 'Telegram ещё не подключён к Control Center';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Ожидание';
     }
@@ -868,7 +868,7 @@
     } else if (connected) {
       const account = viewerState.session?.account || {};
       $('viewerSyncTitle').textContent = 'Viewer Sync активен.';
-      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый view замечается в фоне, затем проходит privacy reconciliation.';
+      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем Telegram Control подтверждает доступную личность.';
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
       syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
@@ -889,7 +889,7 @@
       syncButton.textContent = 'Проверить Security';
     } else {
       $('viewerSyncTitle').textContent = 'Подключи аналитику зрителей.';
-      $('viewerSyncText').textContent = 'Отдельная пользовательская MTProto-сессия нужна только для данных твоих собственных Stories. Код входа и 2FA не сохраняются.';
+      $('viewerSyncText').textContent = 'Для Deep Intelligence используется отдельное защищённое подключение Telegram только к данным твоих собственных Stories. Код входа и 2FA не сохраняются.';
       syncState.textContent = viewerState.configured === null ? 'Проверяю состояние…' : 'Не подключено';
       syncButton.textContent = 'Подключить Intelligence';
     }
@@ -1166,7 +1166,7 @@
     if (type === 'story.view.provisional') {
       return {
         title: `Новый просмотр Story ${storyId}`,
-        detail: 'Provisional · личность подтверждается после reconciliation',
+        detail: 'Новый сигнал · личность ещё подтверждается Telegram',
       };
     }
     if (type === 'session.created') {
@@ -1254,7 +1254,7 @@
     if ($('homeTelegramTitle')) {
       $('homeTelegramTitle').textContent = telegramReady ? 'Подключён' : 'Нужно подключение';
       $('homeTelegramText').textContent = telegramReady
-        ? 'Business Connection подтверждён сервером.'
+        ? 'Telegram-доступ подтверждён сервером.'
         : 'Открой подключение Telegram и проверь разрешения.';
     }
 
@@ -1337,8 +1337,8 @@
         </article>
         <article class="${viewerState.secureSessionCrypto ? 'ready' : 'warn'}">
           <span>Encryption</span>
-          <strong>${viewerState.secureSessionCrypto ? 'Private v3' : 'Unavailable'}</strong>
-          <small>Master key stays server-side</small>
+          <strong>${viewerState.secureSessionCrypto ? 'Encrypted v3' : 'Unavailable'}</strong>
+          <small>Ключ шифрования не передаётся в приложение</small>
         </article>
         <article class="${sessionConnected ? 'ready' : ''}">
           <span>Deep Intelligence</span>
@@ -1348,7 +1348,7 @@
       </div>
 
       <div class="sheet-list security-detail-list">
-        <div class="sheet-item"><strong>Private session</strong><span>${sessionConnected ? '✓ Active · encrypted ' + (cryptoVersion || 'v3') : '○ Нет активной приватной сессии'}</span></div>
+        <div class="sheet-item"><strong>Приватное подключение</strong><span>${sessionConnected ? '✓ Active · encrypted ' + (cryptoVersion || 'v3') : '○ Нет активной приватной сессии'}</span></div>
         <div class="sheet-item"><strong>Telegram account</strong><span>${sessionConnected ? (account.username ? '@' + account.username : account.firstName || 'Connected account') : 'Не подключён'}</span></div>
         <div class="sheet-item"><strong>Session created</strong><span>${sessionConnected ? formatSecurityTime(session?.createdAt) : '—'}</span></div>
         <div class="sheet-item"><strong>Last watcher check</strong><span>${sessionConnected ? formatSecurityTime(session?.lastPollAt) : '—'}</span></div>
@@ -1413,8 +1413,8 @@
         <h2>Серверная часть ещё не готова</h2>
         <p>Telegram Control не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и privacy reconciliation уже встроены.</span></div>
-          <div class="sheet-item"><strong>Private session</strong><span>Новая сессия создаётся только при безопасном server-side хранении.</span></div>
+          <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и последующее подтверждение просмотров уже встроены.</span></div>
+          <div class="sheet-item"><strong>Приватное подключение</strong><span>Новое подключение создаётся только при подтверждённом защищённом хранении.</span></div>
         </div>
         <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
       `);
@@ -1442,7 +1442,7 @@
               <span></span>
             </label>
           </div>
-          <div class="sheet-item"><strong>Session security</strong><span>${viewerState.secureSessionCrypto ? 'Versioned server-side encryption active' : 'Legacy session · secure migration pending'}</span></div>
+          <div class="sheet-item"><strong>Session security</strong><span>${viewerState.secureSessionCrypto ? 'Защищённое шифрование v3 активно' : 'Требуется обновление защиты подключения'}</span></div>
           <div class="sheet-item"><strong>Последняя проверка</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
         </div>
         <div class="sheet-actions">
@@ -1457,11 +1457,11 @@
       openSheet(`
         <span class="kicker">SECURITY</span>
         <h2>Новое подключение приостановлено</h2>
-        <p>Telegram Control не создаст приватную MTProto-сессию, пока отдельный серверный ключ шифрования не подтверждён.</p>
+        <p>Telegram Control не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Stories & Ghost</strong><span>Продолжают работать независимо.</span></div>
           <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
-          <div class="sheet-item"><strong>New private session</strong><span>Fail-closed · создание заблокировано до secure-ready.</span></div>
+          <div class="sheet-item"><strong>New private session</strong><span>Создание заблокировано, пока защита не готова.</span></div>
         </div>
         <div class="sheet-actions">
           <button class="accent" data-sheet-action="viewer-refresh-security">Проверить снова</button>
@@ -1487,7 +1487,7 @@
         <button data-sheet-action="viewer-use-phone">Использовать номер и код</button>
         <button data-sheet-action="close">Отмена</button>
       </div>
-      <p class="auth-security-note">Код входа и 2FA-пароль не сохраняются. Сессия хранится только в зашифрованном server-side виде.</p>
+      <p class="auth-security-note">Код входа и 2FA-пароль не сохраняются. Подключение хранится только в зашифрованном виде на сервере.</p>
     `);
   }
 
@@ -1564,7 +1564,7 @@
         <button data-sheet-action="viewer-use-phone">Номер и код</button>
         <button data-sheet-action="close">Отмена</button>
       </div>
-      <p class="auth-security-note">После подтверждения сохраняется только зашифрованная server-side session. Сам QR-token не сохраняется.</p>
+      <p class="auth-security-note">После подтверждения сохраняется только зашифрованное подключение. QR-код и его временный токен не сохраняются.</p>
     `);
   }
 

@@ -292,9 +292,9 @@
     }
     if (accessText) {
       accessText.textContent = connectionLive && readMessages
-        ? 'Business Connection активен. Ghost может получать новые сообщения из разрешённых Telegram-чатов.'
+        ? 'Telegram подключён. Ghost может получать новые сообщения из разрешённых чатов.'
         : connectionLive
-          ? 'Подключение есть, но Telegram не дал право can_read_messages. Ghost не сможет надёжно ловить удаления, пока это право не включено.'
+          ? 'Telegram подключён, но доступ к сообщениям не разрешён. Включи его, чтобы Ghost надёжно сохранял изменения и удаления.'
           : 'Ghost сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
     }
     if (accessAction) {
