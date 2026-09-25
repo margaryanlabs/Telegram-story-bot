@@ -5,6 +5,7 @@ import {
   viewerCryptoHealth,
   getViewerSession,
   upsertViewerSession,
+  recordActivityEvent,
   deleteViewerSession,
   getAuthChallenge,
   saveAuthChallenge,
@@ -443,6 +444,16 @@ export default async function handler(req, res) {
         updated_at: new Date().toISOString(),
       });
       await deleteAuthChallenge(userId);
+      await recordActivityEvent(userId, 'session.created', {
+        method: 'phone',
+        crypto: 'v3',
+        connection: 'deep_intelligence',
+        status: 'active',
+      }, {
+        correlationKey: 'deep-intelligence',
+      }).catch(error => {
+        console.warn('Viewer Sync session.created event skipped', error?.message || error);
+      });
 
       res.status(200).json({
         ok: true,
@@ -478,6 +489,16 @@ export default async function handler(req, res) {
         updated_at: new Date().toISOString(),
       });
       await deleteAuthChallenge(userId);
+      await recordActivityEvent(userId, 'session.created', {
+        method: challenge.stage === 'qr_password' ? 'qr_2fa' : 'phone_2fa',
+        crypto: 'v3',
+        connection: 'deep_intelligence',
+        status: 'active',
+      }, {
+        correlationKey: 'deep-intelligence',
+      }).catch(error => {
+        console.warn('Viewer Sync session.created event skipped', error?.message || error);
+      });
 
       res.status(200).json({
         ok: true,
@@ -507,6 +528,16 @@ export default async function handler(req, res) {
 
       await deleteAuthChallenge(userId).catch(() => {});
       await deleteViewerSession(userId);
+      await recordActivityEvent(userId, 'session.revoked', {
+        method: 'user_action',
+        crypto: 'v3',
+        connection: 'deep_intelligence',
+        status: 'revoked',
+      }, {
+        correlationKey: 'deep-intelligence',
+      }).catch(error => {
+        console.warn('Viewer Sync session.revoked event skipped', error?.message || error);
+      });
       res.status(200).json({ ok: true, disconnected: true });
       return;
     }
