@@ -381,6 +381,107 @@ function privacyEnabled(settings: any) {
   );
 }
 
+
+async function recordEvent(input: any) {
+  if (!directSql) return null;
+
+  const userId = String(input?.userId || "");
+  const eventType = String(input?.eventType || "").slice(0, 64);
+  const source = String(input?.source || "system").slice(0, 32);
+  const dedupeKey = String(input?.dedupeKey || "").slice(0, 240);
+  if (!userId || !eventType || !dedupeKey) return null;
+
+  const occurredAt = input?.occurredAt || new Date().toISOString();
+  const payload = input?.payload && typeof input.payload === "object"
+    ? JSON.stringify(input.payload)
+    : "{}";
+  const retentionUntil = input?.retentionUntil || null;
+
+  try {
+    const rows = await directSql`
+      insert into public.story_pilot_events (
+        telegram_user_id, event_type, source, occurred_at,
+        chat_id, message_id, story_id,
+        actor_user_id, actor_username, actor_display_name,
+        direction, correlation_key, dedupe_key, payload, retention_until
+      ) values (
+        ${userId}::bigint, ${eventType}, ${source}, ${occurredAt}::timestamptz,
+        ${input?.chatId ? String(input.chatId) : null}::bigint,
+        ${input?.messageId ? Number(input.messageId) : null},
+        ${input?.storyId ? Number(input.storyId) : null},
+        ${input?.actorUserId ? String(input.actorUserId) : null}::bigint,
+        ${input?.actorUsername || null},
+        ${input?.actorDisplayName || null},
+        ${input?.direction || null},
+        ${input?.correlationKey || null},
+        ${dedupeKey},
+        ${payload}::jsonb,
+        ${retentionUntil}::timestamptz
+      )
+      on conflict (telegram_user_id, dedupe_key) do update set
+        occurred_at = greatest(public.story_pilot_events.occurred_at, excluded.occurred_at),
+        actor_username = coalesce(excluded.actor_username, public.story_pilot_events.actor_username),
+        actor_display_name = coalesce(excluded.actor_display_name, public.story_pilot_events.actor_display_name),
+        payload = public.story_pilot_events.payload || excluded.payload,
+        retention_until = coalesce(excluded.retention_until, public.story_pilot_events.retention_until)
+      returning id
+    `;
+    return rows[0] || null;
+  } catch (error) {
+    console.warn("Story Pilot Event Vault write skipped", {
+      event_type: eventType,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+function eventRetention(days: unknown, occurredAt: string) {
+  const normalized = Math.max(1, Math.min(365, Number(days || 90)));
+  const base = new Date(occurredAt).getTime();
+  return new Date((Number.isFinite(base) ? base : Date.now()) + normalized * 86400000).toISOString();
+}
+
+async function opListEvents(args: any) {
+  const userId = String(args?.userId || "");
+  const limit = Math.max(1, Math.min(50, Number(args?.limit || 20)));
+  if (!userId || !directSql) return [];
+
+  await directSql`
+    delete from public.story_pilot_events
+    where telegram_user_id = ${userId}::bigint
+      and retention_until is not null
+      and retention_until <= now()
+  `;
+
+  const rows = await directSql`
+    select
+      id, event_type, source, occurred_at, chat_id, message_id, story_id,
+      actor_user_id, actor_username, actor_display_name, direction,
+      correlation_key, payload
+    from public.story_pilot_events
+    where telegram_user_id = ${userId}::bigint
+    order by occurred_at desc, created_at desc
+    limit ${limit}
+  `;
+
+  return rows.map((row: any) => ({
+    id: String(row.id),
+    eventType: row.event_type,
+    source: row.source,
+    occurredAt: row.occurred_at,
+    chatId: row.chat_id ? String(row.chat_id) : null,
+    messageId: row.message_id == null ? null : Number(row.message_id),
+    storyId: row.story_id == null ? null : Number(row.story_id),
+    actorUserId: row.actor_user_id ? String(row.actor_user_id) : null,
+    actorUsername: row.actor_username || null,
+    actorDisplayName: row.actor_display_name || null,
+    direction: row.direction || null,
+    correlationKey: row.correlation_key || null,
+    payload: row.payload && typeof row.payload === "object" ? row.payload : {},
+  }));
+}
+
 async function opCaptureBusinessMessage(args: any) {
   const row = args.row || {};
   const userId = String(row.telegram_user_id || args.userId || "");
@@ -501,6 +602,28 @@ async function opCaptureBusinessMessage(args: any) {
     }
   }
 
+  const messageEventType = args.eventType === "edit" ? "message.edit" : "message.new";
+  await recordEvent({
+    userId,
+    eventType: messageEventType,
+    source: "business",
+    occurredAt: normalized.edited_at || normalized.sent_at || now,
+    chatId: normalized.chat_id,
+    messageId: normalized.message_id,
+    actorUserId: normalized.sender_user_id,
+    actorUsername: normalized.sender_username,
+    actorDisplayName: normalized.sender_display_name,
+    direction: normalized.direction,
+    correlationKey: `chat:${normalized.chat_id}`,
+    dedupeKey: `message:${normalized.chat_id}:${normalized.message_id}:${messageEventType}:${normalized.content_hash}`,
+    payload: {
+      chatTitle: normalized.chat_title || null,
+      mediaType: normalized.media_type || null,
+      hasMedia: Boolean(normalized.media_type),
+    },
+    retentionUntil: eventRetention(settings.retentionDays, normalized.sent_at || now),
+  });
+
   return { captured: true, settings };
 }
 
@@ -540,6 +663,28 @@ async function opMarkBusinessMessagesDeleted(args: any) {
     preview: messagePreview(row),
   }));
 
+  const recordDeleteEvents = async (occurredAt: string) => {
+    await Promise.all(beforeRows.map((row: any) => recordEvent({
+      userId,
+      eventType: "message.delete",
+      source: "business",
+      occurredAt,
+      chatId,
+      messageId: Number(row.message_id),
+      actorUsername: row.sender_username || null,
+      actorDisplayName: row.sender_display_name || null,
+      direction: row.direction || "incoming",
+      correlationKey: `chat:${chatId}`,
+      dedupeKey: `message:${chatId}:${Number(row.message_id)}:delete`,
+      payload: {
+        chatTitle: row.chat_title || null,
+        mediaType: row.media_type || null,
+        hasMedia: Boolean(row.media_type),
+      },
+      retentionUntil: eventRetention(settings.retentionDays, occurredAt),
+    })));
+  };
+
   if (!settings.antiDelete) {
     await removePrivacyMediaPaths(
       beforeRows.map((row: any) => row.media_storage_path).filter(Boolean),
@@ -564,6 +709,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
         .select("message_id");
       affected = (need(r as any) || []).length;
     }
+    await recordDeleteEvents(new Date().toISOString());
     return {
       affected,
       retained: false,
@@ -594,6 +740,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
       .select("message_id");
     affected = (need(r as any) || []).length;
   }
+  await recordDeleteEvents(deletedAt);
   return {
     affected,
     retained: true,
@@ -1183,13 +1330,43 @@ async function opTrackStory(args: any) {
         last_error = excluded.last_error
       returning *
     `;
-    return rows[0] || null;
+    const saved = rows[0] || null;
+    await recordEvent({
+      userId,
+      eventType: "story.publish",
+      source: "stories",
+      occurredAt: row.posted_at || new Date().toISOString(),
+      storyId,
+      correlationKey: `story:${storyId}`,
+      dedupeKey: `story:${storyId}:publish`,
+      payload: {
+        audience: row.audience || null,
+        protected: Boolean(row.protected),
+      },
+      retentionUntil: eventRetention(90, row.posted_at || new Date().toISOString()),
+    });
+    return saved;
   }
   const r = await db.from("story_pilot_stories")
     .upsert(row, { onConflict: "telegram_user_id,story_id" })
     .select("*")
     .single();
-  return need(r as any);
+  const saved = need(r as any);
+  await recordEvent({
+    userId,
+    eventType: "story.publish",
+    source: "stories",
+    occurredAt: row.posted_at || new Date().toISOString(),
+    storyId,
+    correlationKey: `story:${storyId}`,
+    dedupeKey: `story:${storyId}:publish`,
+    payload: {
+      audience: row.audience || null,
+      protected: Boolean(row.protected),
+    },
+    retentionUntil: eventRetention(90, row.posted_at || new Date().toISOString()),
+  });
+  return saved;
 }
 
 async function opMarkStoryDeleted(args: any) {
@@ -1201,6 +1378,16 @@ async function opMarkStoryDeleted(args: any) {
       set active = false, deleted_at = now()
       where telegram_user_id = ${userId}::bigint and story_id = ${storyId}
     `;
+    await recordEvent({
+      userId,
+      eventType: "story.delete",
+      source: "stories",
+      occurredAt: new Date().toISOString(),
+      storyId,
+      correlationKey: `story:${storyId}`,
+      dedupeKey: `story:${storyId}:delete`,
+      retentionUntil: eventRetention(90, new Date().toISOString()),
+    });
     return true;
   }
   const r = await db.from("story_pilot_stories")
@@ -1208,6 +1395,16 @@ async function opMarkStoryDeleted(args: any) {
     .eq("telegram_user_id", userId)
     .eq("story_id", storyId);
   need(r as any);
+  await recordEvent({
+    userId,
+    eventType: "story.delete",
+    source: "stories",
+    occurredAt: new Date().toISOString(),
+    storyId,
+    correlationKey: `story:${storyId}`,
+    dedupeKey: `story:${storyId}:delete`,
+    retentionUntil: eventRetention(90, new Date().toISOString()),
+  });
   return true;
 }
 
@@ -1365,13 +1562,51 @@ async function opUpsertViewer(args: any) {
         notification_message_id = excluded.notification_message_id
       returning *
     `;
-    return rows[0] || null;
+    const saved = rows[0] || null;
+    await recordEvent({
+      userId,
+      eventType: `story.view.${String(row.status || "provisional")}`,
+      source: "intelligence",
+      occurredAt: row.confirmed_at || row.viewed_at || row.last_seen_at || new Date().toISOString(),
+      storyId,
+      actorUserId: viewerId,
+      actorUsername: row.username || null,
+      actorDisplayName: row.display_name || null,
+      correlationKey: `story:${storyId}`,
+      dedupeKey: `story:${storyId}:viewer:${viewerId}:${String(row.status || "provisional")}`,
+      payload: {
+        status: String(row.status || "provisional"),
+        isContact: Boolean(row.is_contact),
+        hasReaction: Boolean(row.reaction_json),
+      },
+      retentionUntil: eventRetention(90, row.viewed_at || new Date().toISOString()),
+    });
+    return saved;
   }
   const r = await db.from("story_pilot_viewers")
     .upsert(row, { onConflict: "telegram_user_id,story_id,viewer_user_id" })
     .select("*")
     .single();
-  return need(r as any);
+  const saved = need(r as any);
+  await recordEvent({
+    userId,
+    eventType: `story.view.${String(row.status || "provisional")}`,
+    source: "intelligence",
+    occurredAt: row.confirmed_at || row.viewed_at || row.last_seen_at || new Date().toISOString(),
+    storyId,
+    actorUserId: viewerId,
+    actorUsername: row.username || null,
+    actorDisplayName: row.display_name || null,
+    correlationKey: `story:${storyId}`,
+    dedupeKey: `story:${storyId}:viewer:${viewerId}:${String(row.status || "provisional")}`,
+    payload: {
+      status: String(row.status || "provisional"),
+      isContact: Boolean(row.is_contact),
+      hasReaction: Boolean(row.reaction_json),
+    },
+    retentionUntil: eventRetention(90, row.viewed_at || new Date().toISOString()),
+  });
+  return saved;
 }
 
 async function opDeleteViewer(args: any) {
@@ -1781,6 +2016,7 @@ async function dispatch(op: string, args: any) {
     case "viewer_crypto_health": return opViewerCryptoHealth(args);
     case "seal_viewer_private_json": return opSealViewerPrivateJson(args);
     case "open_viewer_private_json": return opOpenViewerPrivateJson(args);
+    case "list_events": return opListEvents(args);
     case "get_session": return opGetSession(args);
     case "upsert_session": return opUpsertSession(args);
     case "update_session": return opUpdateSession(args);
