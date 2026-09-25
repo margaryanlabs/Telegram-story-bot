@@ -397,9 +397,15 @@ export default async function handler(req, res) {
       if (opened.legacy) {
         try {
           const upgradedCiphertext = await sealJson(decrypted, `session:${ownerId}`);
-          await updateViewerSession(ownerId, {
+          const updatedSession = await updateViewerSession(ownerId, {
             session_ciphertext: upgradedCiphertext,
             updated_at: new Date().toISOString(),
+          });
+          console.info('Viewer Sync legacy session rewrapped', {
+            telegram_user_id: ownerId,
+            from: opened.version,
+            requested: String(upgradedCiphertext || '').split('.')[0] || 'unknown',
+            stored: String(updatedSession?.session_ciphertext || '').split('.')[0] || 'unknown',
           });
         } catch (migrationError) {
           console.warn('Viewer Sync legacy session rewrap deferred', {
