@@ -88,21 +88,13 @@
 
       <section class="control-activity">
         <div class="block-head compact">
-          <div><span class="kicker">Состояние</span><h2>Что важно</h2></div>
+          <div><span class="kicker">EVENT VAULT</span><h2>Последняя активность</h2></div>
           <span class="tiny-note">live</span>
         </div>
-        <div class="control-activity-list">
-          <div class="control-activity-row">
-            <span class="activity-dot" id="homeGhostDot"></span>
-            <div><strong id="homeGhostTitle">Ghost</strong><small id="homeGhostText">Проверяю доступ к сообщениям</small></div>
-          </div>
-          <div class="control-activity-row">
-            <span class="activity-dot" id="homeStoryDot"></span>
-            <div><strong id="homeStoryTitle">Stories</strong><small id="homeStoryText">Проверяю право публикации</small></div>
-          </div>
-          <div class="control-activity-row">
-            <span class="activity-dot" id="homeIntelDot"></span>
-            <div><strong id="homeIntelTitle">Intelligence</strong><small id="homeIntelText">Проверяю Viewer Sync</small></div>
+        <div class="control-activity-list" id="homeActivityList">
+          <div class="control-activity-row activity-loading">
+            <span class="activity-event-icon">◌</span>
+            <div><strong>Загружаю активность</strong><small>Собираю события Telegram Control</small></div>
           </div>
         </div>
       </section>
