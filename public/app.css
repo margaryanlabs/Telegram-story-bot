@@ -1216,8 +1216,21 @@ input,textarea{caret-color:var(--accent)}
 }
 .control-activity-list{display:grid;gap:2px}
 .control-activity-row{
-  display:grid;grid-template-columns:11px 1fr;align-items:center;gap:10px;
-  min-height:56px;padding:9px 4px;border-top:1px solid rgba(255,255,255,.045)
+  width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;
+  min-height:58px;padding:9px 4px;border:0;border-top:1px solid rgba(255,255,255,.045);
+  background:transparent;color:inherit;text-align:left
+}
+.control-activity-row:active{background:rgba(255,255,255,.025)}
+.activity-event-icon{
+  width:34px;height:34px;display:grid;place-items:center;border-radius:12px;
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.05);
+  color:#d7e4f2;font-size:13px;font-weight:850
+}
+.control-activity-row time{
+  color:#6f7d8f;font-size:7.5px;font-weight:760;white-space:nowrap
+}
+.control-activity-row.activity-empty,.control-activity-row.activity-loading{
+  grid-template-columns:34px 1fr;pointer-events:none
 }
 .control-activity-row:first-child{border-top:0}
 .activity-dot{

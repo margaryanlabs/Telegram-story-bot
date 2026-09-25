@@ -61,6 +61,7 @@
     protect: qs.get('prot') === '1',
     lastStory: qs.get('ls') || null,
     history: decodeHistory(qs.get('hist')),
+    activity: [],
     analytics: null,
     advancedPrivacy: true,
     viewerSync: { available:false, requiresUserSession:true },
@@ -541,6 +542,10 @@
     });
 
     if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Telegram Control');
+
+    if (Array.isArray(data.activity)) {
+      state.activity = data.activity;
+    }
 
     if (data.state) {
       const incomingState = { ...data.state };
@@ -1085,6 +1090,132 @@
     dot.classList.toggle('warn', active === false);
   }
 
+  function activityTarget(eventType) {
+    const type = String(eventType || '');
+    if (type.startsWith('message.')) return 'chats';
+    if (type.startsWith('story.view.')) return 'viewers';
+    if (type.startsWith('story.')) return 'publish';
+    return 'home';
+  }
+
+  function activityIcon(eventType) {
+    const type = String(eventType || '');
+    if (type === 'message.delete') return '↶';
+    if (type === 'message.edit') return '≋';
+    if (type === 'message.new') return '✦';
+    if (type === 'story.publish') return '＋';
+    if (type === 'story.delete') return '−';
+    if (type === 'story.view.confirmed') return '◉';
+    if (type === 'story.view.provisional') return '◌';
+    return '•';
+  }
+
+  function activityActor(event) {
+    return event?.actorDisplayName
+      || (event?.actorUsername ? '@' + event.actorUsername : '')
+      || '';
+  }
+
+  function activityCopy(event) {
+    const type = String(event?.eventType || '');
+    const actor = activityActor(event);
+    const storyId = event?.storyId ? `#${event.storyId}` : '';
+    const chatTitle = event?.payload?.chatTitle || '';
+
+    if (type === 'message.delete') {
+      return {
+        title: actor ? `${actor} удалил сообщение` : 'Сообщение удалено',
+        detail: chatTitle ? `${chatTitle} · сохранено в Ghost` : 'Сохранено в Ghost',
+      };
+    }
+    if (type === 'message.edit') {
+      return {
+        title: actor ? `${actor} изменил сообщение` : 'Сообщение изменено',
+        detail: chatTitle ? `${chatTitle} · версия сохранена` : 'Предыдущая версия сохранена',
+      };
+    }
+    if (type === 'message.new') {
+      return {
+        title: actor ? `Новое сообщение от ${actor}` : 'Новое сообщение',
+        detail: chatTitle || (event?.payload?.hasMedia ? 'Медиа-событие' : 'Business message'),
+      };
+    }
+    if (type === 'story.publish') {
+      const audience = event?.payload?.audience ? audienceLabel(event.payload.audience) : 'аудитория сохранена';
+      return {
+        title: `Story ${storyId || ''} опубликована`.trim(),
+        detail: `${audience}${event?.payload?.protected ? ' · защита включена' : ''}`,
+      };
+    }
+    if (type === 'story.delete') {
+      return {
+        title: `Story ${storyId || ''} удалена`.trim(),
+        detail: 'Удаление подтверждено',
+      };
+    }
+    if (type === 'story.view.confirmed') {
+      return {
+        title: actor ? `${actor} посмотрел Story ${storyId}` : `Подтверждён просмотр Story ${storyId}`,
+        detail: event?.payload?.isContact ? 'Контакт Telegram · confirmed' : 'Confirmed viewer',
+      };
+    }
+    if (type === 'story.view.provisional') {
+      return {
+        title: `Новый просмотр Story ${storyId}`,
+        detail: 'Provisional · личность подтверждается после reconciliation',
+      };
+    }
+    return {
+      title: 'Событие Telegram Control',
+      detail: type || 'Activity',
+    };
+  }
+
+  function activityRelativeTime(value) {
+    const ms = new Date(value || 0).getTime();
+    if (!Number.isFinite(ms) || ms <= 0) return '';
+    const seconds = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+    if (seconds < 60) return 'сейчас';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}м`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}ч`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}д`;
+    return new Date(ms).toLocaleDateString('ru-RU', { day:'2-digit', month:'short' });
+  }
+
+  function renderHomeActivity() {
+    const list = $('homeActivityList');
+    if (!list) return;
+    const events = Array.isArray(state.activity) ? state.activity.slice(0, 7) : [];
+
+    if (!events.length) {
+      list.innerHTML = `
+        <div class="control-activity-row activity-empty">
+          <span class="activity-event-icon">◌</span>
+          <div>
+            <strong>Пока тихо</strong>
+            <small>Новые Ghost, Stories и Intelligence события появятся здесь автоматически.</small>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = events.map(event => {
+      const copy = activityCopy(event);
+      const target = activityTarget(event?.eventType);
+      return `
+        <button class="control-activity-row" type="button" data-activity-screen="${escapeHtml(target)}">
+          <span class="activity-event-icon">${escapeHtml(activityIcon(event?.eventType))}</span>
+          <div>
+            <strong>${escapeHtml(copy.title)}</strong>
+            <small>${escapeHtml(copy.detail)}</small>
+          </div>
+          <time>${escapeHtml(activityRelativeTime(event?.occurredAt))}</time>
+        </button>
+      `;
+    }).join('');
+  }
+
   function renderHome() {
     const telegramReady = state.connection === 'ready' || state.ready === true;
     const ghostPermission = state.readPermission === true;
@@ -1110,22 +1241,7 @@
     if ($('homeIntelState')) $('homeIntelState').textContent = intelConnected ? 'Активен' : 'Setup required';
     if ($('homeSecurityState')) $('homeSecurityState').textContent = 'Контроль доступа';
 
-    if ($('homeGhostTitle')) $('homeGhostTitle').textContent = ghostPermission ? 'Ghost готов' : 'Ghost требует разрешение';
-    if ($('homeGhostText')) $('homeGhostText').textContent = ghostPermission
-      ? 'Telegram разрешил Business-доступ к сообщениям.'
-      : 'Разреши сообщения в Telegram Business.';
-    if ($('homeStoryTitle')) $('homeStoryTitle').textContent = telegramReady ? 'Stories готовы' : 'Stories не подключены';
-    if ($('homeStoryText')) $('homeStoryText').textContent = telegramReady
-      ? (state.lastStory ? `Последняя Story #${state.lastStory}` : 'Можно публиковать с выбранной аудиторией.')
-      : 'Нужно право управления Stories.';
-    if ($('homeIntelTitle')) $('homeIntelTitle').textContent = intelConnected ? 'Intelligence активен' : 'Intelligence не подключён';
-    if ($('homeIntelText')) $('homeIntelText').textContent = intelConnected
-      ? 'Viewer Sync подключён к отдельной пользовательской сессии.'
-      : 'Подключается отдельно и добровольно.';
-
-    setHomeActivity('homeGhostDot', ghostPermission);
-    setHomeActivity('homeStoryDot', telegramReady);
-    setHomeActivity('homeIntelDot', intelConnected);
+    renderHomeActivity();
   }
 
   function render() {
@@ -1572,6 +1688,11 @@
 
   document.querySelectorAll('[data-open-screen]').forEach(button => {
     button.addEventListener('click', () => switchScreen(button.dataset.openScreen));
+  });
+  $('homeActivityList')?.addEventListener('click', event => {
+    const row = event.target.closest('[data-activity-screen]');
+    if (!row) return;
+    switchScreen(row.dataset.activityScreen);
   });
   $('homeSecurityCard')?.addEventListener('click', profileSheet);
   document.querySelectorAll('.audience-card').forEach(button => button.addEventListener('click', async () => {

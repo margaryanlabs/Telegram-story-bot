@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { publishPhotoStory, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
 import {
+  listActivityEvents,
   listStoryArchive,
   markStoryDeleted,
   trackPublishedStory,
@@ -459,9 +460,14 @@ export default async function handler(req, res) {
         console.warn('Mini App durable archive fallback', error?.message || error);
         return null;
       });
-      const [refreshed, archiveRows] = await Promise.all([
+      const activityPromise = listActivityEvents(chatId, 20).catch(error => {
+        console.warn('Mini App activity fallback', error?.message || error);
+        return [];
+      });
+      const [refreshed, archiveRows, activity] = await Promise.all([
         refreshConnection(token, chatId, baseUrl, settings),
         archivePromise,
+        activityPromise,
       ]);
       settings = refreshed.settings;
 
@@ -485,6 +491,7 @@ export default async function handler(req, res) {
           history: durableHistory,
           analytics: analyticsFromHistory(durableHistory),
         }),
+        activity,
       });
       return;
     }
