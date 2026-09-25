@@ -22,8 +22,11 @@ const OWNER_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_OWN
 const STORY_LIMIT = Math.max(1, Math.min(10, Number(process.env.VIEWER_WATCH_STORY_LIMIT || 4)));
 const FAST_POLL_ROUNDS = Math.max(1, Math.min(3, Number(process.env.VIEWER_FAST_POLL_ROUNDS || 3)));
 const FAST_POLL_INTERVAL_MS = Math.max(8000, Math.min(15000, Number(process.env.VIEWER_FAST_POLL_INTERVAL_MS || 10000)));
-const WATCH_BUDGET_MS = Math.max(30000, Math.min(50000, Number(process.env.VIEWER_WATCH_BUDGET_MS || 44000)));
-const WATCH_MIN_REMAINING_MS = 5500;
+const WATCH_BUDGET_MS = Math.max(25000, Math.min(48000, Number(process.env.VIEWER_WATCH_BUDGET_MS || 40000)));
+const WATCH_MIN_REMAINING_MS = 6000;
+const WATCH_CONNECT_TIMEOUT_MS = Math.max(3000, Math.min(9000, Number(process.env.VIEWER_WATCH_CONNECT_TIMEOUT_MS || 6500)));
+const WATCH_STORY_DEADLINE_MS = Math.max(6000, Math.min(15000, Number(process.env.VIEWER_WATCH_STORY_DEADLINE_MS || 10000)));
+const BOT_API_TIMEOUT_MS = Math.max(1500, Math.min(7000, Number(process.env.VIEWER_BOT_API_TIMEOUT_MS || 4000)));
 const EDGE_TRIGGER_PUBLIC_KEYS = [
   'idl_pp6aznx3_qyvmQV6CI5Um0cRt2VLI9-o-raIsVc',
 ];
@@ -35,16 +38,26 @@ function telegramUrl(token, method) {
 }
 
 async function tg(token, method, body) {
-  const response = await fetch(telegramUrl(token, method), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body || {}),
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok || !data?.ok) {
-    throw new Error(`${method}: ${data?.description || response.statusText || response.status}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), BOT_API_TIMEOUT_MS);
+  try {
+    const response = await fetch(telegramUrl(token, method), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body || {}),
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.ok) {
+      throw new Error(`${method}: ${data?.description || response.statusText || response.status}`);
+    }
+    return data.result;
+  } catch (error) {
+    if (error?.name === 'AbortError') throw new Error(`${method}: Bot API timeout`);
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-  return data.result;
 }
 
 async function sendGenericViewNotice(token, chatId, storyId, viewedAt) {
@@ -105,8 +118,11 @@ function isoFromUnix(value) {
   return seconds > 0 ? new Date(seconds * 1000).toISOString() : new Date().toISOString();
 }
 
-async function syncStory({ token, ownerId, story, client, preferences }) {
-  const snapshot = await fetchStoryViewState(client, story.story_id);
+async function syncStory({ token, ownerId, story, client, preferences, deadlineAt }) {
+  const snapshot = await fetchStoryViewState(client, story.story_id, {
+    deadlineAt,
+    perCallTimeoutMs: Math.min(5000, Math.max(1500, deadlineAt - Date.now() - 500)),
+  });
   const rows = await listViewerRows(ownerId, story.story_id);
   const existing = new Map(rows.map(row => [String(row.viewer_user_id), row]));
   const visible = new Map(snapshot.viewers.map(view => [String(view.viewerUserId), view]));
@@ -392,7 +408,9 @@ export default async function handler(req, res) {
     try {
       const opened = await openJsonWithMeta(row.session_ciphertext, `session:${ownerId}`);
       const decrypted = opened.value;
-      const client = await createViewerClient(decrypted.session);
+      const client = await createViewerClient(decrypted.session, {
+        timeoutMs: Math.min(WATCH_CONNECT_TIMEOUT_MS, Math.max(1500, remainingMs() - WATCH_MIN_REMAINING_MS)),
+      });
 
       if (opened.legacy) {
         try {
@@ -470,12 +488,17 @@ export default async function handler(req, res) {
               break;
             }
             try {
+              const storyDeadlineAt = Math.min(
+                Date.now() + WATCH_STORY_DEADLINE_MS,
+                startedAt + WATCH_BUDGET_MS - WATCH_MIN_REMAINING_MS,
+              );
               ownerResult.push(await syncStory({
                 token,
                 ownerId,
                 story,
                 client,
                 preferences,
+                deadlineAt: storyDeadlineAt,
               }));
             } catch (error) {
               const description = error?.errorMessage || error?.message || String(error);
@@ -506,7 +529,12 @@ export default async function handler(req, res) {
       if (round === 0 && storiesThisRound === 0) break;
     }
   } finally {
-    await Promise.all(contexts.map(({ client }) => client.disconnect().catch(() => {})));
+    await Promise.all(contexts.map(async ({ client }) => {
+      await Promise.race([
+        client.disconnect().catch(() => {}),
+        new Promise(resolve => setTimeout(resolve, 800)),
+      ]).catch(() => {});
+    }));
   }
 
   res.status(200).json({
@@ -517,6 +545,9 @@ export default async function handler(req, res) {
     ownersProcessed: sessions.length,
     activeStoriesSeen,
     budgetMs: WATCH_BUDGET_MS,
+    connectTimeoutMs: WATCH_CONNECT_TIMEOUT_MS,
+    storyDeadlineMs: WATCH_STORY_DEADLINE_MS,
+    botApiTimeoutMs: BOT_API_TIMEOUT_MS,
     budgetRemainingMs: remainingMs(),
     budgetExhausted,
     trigger: isVercelCron ? 'vercel_cron' : 'supabase_signed',
