@@ -890,6 +890,7 @@ export default async function handler(req, res) {
           update?.edited_business_message
           && result?.captured
           && result?.settings?.editHistory
+          && result?.settings?.notifyEdits !== false
           && result?.row?.direction !== 'outgoing'
         ) {
           result.editAlertSent = await sendGhostEditAlert(
@@ -929,7 +930,12 @@ export default async function handler(req, res) {
           business_connection_id: deleted.business_connection_id,
         });
         result = await archiveDeletedBusinessMessages(connection, deleted);
-        if (result?.retained && Array.isArray(result?.events) && result.events.length) {
+        if (
+          result?.retained
+          && result?.settings?.notifyDeletes !== false
+          && Array.isArray(result?.events)
+          && result.events.length
+        ) {
           result.alertSent = await sendGhostDeleteAlert(token, connection?.user_chat_id, origin, result.events).catch(error => {
             console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
             return false;

@@ -8,6 +8,8 @@
       antiDelete: false,
       editHistory: false,
       ghostInbox: false,
+      notifyDeletes: true,
+      notifyEdits: true,
       retentionDays: 30,
     },
     threads: [],
@@ -259,6 +261,8 @@
       ['privacyAntiDeleteSwitch', 'antiDelete'],
       ['privacyEditHistorySwitch', 'editHistory'],
       ['privacyGhostInboxSwitch', 'ghostInbox'],
+      ['privacyNotifyDeletesSwitch', 'notifyDeletes'],
+      ['privacyNotifyEditsSwitch', 'notifyEdits'],
     ]) {
       const el = $(id);
       if (el) {
@@ -695,6 +699,8 @@
   $('privacyAntiDeleteSwitch')?.addEventListener('change', event => saveSettings({ antiDelete:event.target.checked }));
   $('privacyEditHistorySwitch')?.addEventListener('change', event => saveSettings({ editHistory:event.target.checked }));
   $('privacyGhostInboxSwitch')?.addEventListener('change', event => saveSettings({ ghostInbox:event.target.checked }));
+  $('privacyNotifyDeletesSwitch')?.addEventListener('change', event => saveSettings({ notifyDeletes:event.target.checked }));
+  $('privacyNotifyEditsSwitch')?.addEventListener('change', event => saveSettings({ notifyEdits:event.target.checked }));
   $('privacyRefreshButton')?.addEventListener('click', () => refresh());
   $('privacyClearButton')?.addEventListener('click', clearArchive);
 
