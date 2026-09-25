@@ -482,6 +482,47 @@ async function opListEvents(args: any) {
   }));
 }
 
+async function opRecordClientEvent(args: any) {
+  const allowedTypes = new Set([
+    "session.created",
+    "session.revoked",
+    "connection.created",
+    "connection.revoked",
+    "security.event",
+  ]);
+  const eventType = String(args?.eventType || "");
+  if (!allowedTypes.has(eventType)) throw new Error("event_type_not_allowed");
+
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("event_user_required");
+
+  const occurredAt = args?.occurredAt || new Date().toISOString();
+  const correlationKey = String(args?.correlationKey || "security").slice(0, 120);
+  const safePayload: Record<string, unknown> = {};
+  const inputPayload = args?.payload && typeof args.payload === "object" ? args.payload : {};
+  for (const key of ["method", "crypto", "connection", "reason", "status"]) {
+    const value = inputPayload[key];
+    if (typeof value === "string") safePayload[key] = value.slice(0, 80);
+    else if (typeof value === "boolean" || typeof value === "number") safePayload[key] = value;
+  }
+
+  const dedupeKey = String(
+    args?.dedupeKey
+    || `${eventType}:${correlationKey}:${occurredAt}`,
+  ).slice(0, 240);
+
+  return recordEvent({
+    userId,
+    eventType,
+    source: "security",
+    occurredAt,
+    correlationKey,
+    dedupeKey,
+    payload: safePayload,
+    retentionUntil: eventRetention(180, occurredAt),
+  });
+}
+
 async function opCaptureBusinessMessage(args: any) {
   const row = args.row || {};
   const userId = String(row.telegram_user_id || args.userId || "");
@@ -2017,6 +2058,7 @@ async function dispatch(op: string, args: any) {
     case "seal_viewer_private_json": return opSealViewerPrivateJson(args);
     case "open_viewer_private_json": return opOpenViewerPrivateJson(args);
     case "list_events": return opListEvents(args);
+    case "record_event": return opRecordClientEvent(args);
     case "get_session": return opGetSession(args);
     case "upsert_session": return opUpsertSession(args);
     case "update_session": return opUpdateSession(args);
