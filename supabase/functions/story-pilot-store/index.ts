@@ -1033,6 +1033,17 @@ async function opUpdateSession(args: any) {
   const userId = String(args.userId);
   const patch = args.patch || {};
   if (directSql) {
+    if (typeof patch.session_ciphertext === "string" && patch.session_ciphertext) {
+      const rows = await directSql`
+        update public.story_pilot_viewer_sessions
+        set
+          session_ciphertext = ${String(patch.session_ciphertext)},
+          updated_at = coalesce(${patch.updated_at || null}::timestamptz, now())
+        where telegram_user_id = ${userId}::bigint
+        returning *
+      `;
+      return rows[0] || null;
+    }
     const patchJson = JSON.stringify(patch);
     const rows = await directSql`
       with p as (select ${patchJson}::jsonb as j)
