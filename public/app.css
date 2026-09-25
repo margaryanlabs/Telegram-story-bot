@@ -1296,3 +1296,20 @@ input,textarea{caret-color:var(--accent)}
 @media(max-width:390px){
   .viewer-qr-frame{width:220px;height:220px}
 }
+
+
+/* Security Center */
+.security-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.security-status-grid article{
+  min-height:86px;padding:12px;border:1px solid var(--line);border-radius:18px;
+  background:rgba(255,255,255,.03)
+}
+.security-status-grid article.ready{border-color:rgba(56,212,135,.16);background:rgba(56,212,135,.045)}
+.security-status-grid article.warn{border-color:rgba(255,189,89,.16);background:rgba(255,189,89,.04)}
+.security-status-grid span,.security-status-grid small{display:block;color:var(--muted);font-size:7.5px}
+.security-status-grid strong{display:block;margin:7px 0 5px;font-size:11px;letter-spacing:-.02em}
+.security-detail-list{margin-top:10px}
+.sheet-actions .danger{
+  border-color:rgba(255,111,137,.2)!important;background:rgba(255,111,137,.06)!important;color:#ff9daf!important
+}
+@media(max-width:390px){.security-status-grid{grid-template-columns:1fr 1fr;gap:6px}.security-status-grid article{padding:10px}}

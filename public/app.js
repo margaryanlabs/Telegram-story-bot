@@ -1095,6 +1095,7 @@
     if (type.startsWith('message.')) return 'chats';
     if (type.startsWith('story.view.')) return 'viewers';
     if (type.startsWith('story.')) return 'publish';
+    if (type.startsWith('session.') || type.startsWith('security.') || type.startsWith('connection.')) return 'security';
     return 'home';
   }
 
@@ -1107,6 +1108,9 @@
     if (type === 'story.delete') return '−';
     if (type === 'story.view.confirmed') return '◉';
     if (type === 'story.view.provisional') return '◌';
+    if (type === 'session.created') return '⌾';
+    if (type === 'session.revoked') return '×';
+    if (type === 'security.event') return '!';
     return '•';
   }
 
@@ -1163,6 +1167,24 @@
       return {
         title: `Новый просмотр Story ${storyId}`,
         detail: 'Provisional · личность подтверждается после reconciliation',
+      };
+    }
+    if (type === 'session.created') {
+      return {
+        title: 'Deep Intelligence подключён',
+        detail: `${event?.payload?.method === 'qr' ? 'QR' : 'Telegram auth'} · encrypted ${event?.payload?.crypto || 'v3'}`,
+      };
+    }
+    if (type === 'session.revoked') {
+      return {
+        title: 'Deep Intelligence отключён',
+        detail: 'Приватная Telegram session отозвана',
+      };
+    }
+    if (type === 'security.event') {
+      return {
+        title: 'Security event',
+        detail: event?.payload?.label || 'Проверь Security Center',
       };
     }
     return {
@@ -1282,6 +1304,66 @@
     try { tg?.BackButton?.hide(); } catch {}
   }
 
+  function formatSecurityTime(value) {
+    if (!value) return 'нет данных';
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) ? date.toLocaleString('ru-RU') : 'нет данных';
+  }
+
+  function securityCenterSheet() {
+    const storiesReady = state.connection === 'ready' || state.ready === true;
+    const businessConnected = storiesReady || state.connection === 'needs_permission';
+    const ghostPermission = state.readPermission === true;
+    const session = viewerState.session;
+    const sessionConnected = session?.connected === true;
+    const cryptoVersion = session?.cryptoVersion || (viewerState.secureSessionCrypto ? 'v3' : null);
+    const account = session?.account || {};
+    const lastError = String(session?.lastError || '').trim();
+
+    openSheet(`
+      <span class="kicker">SECURITY CENTER</span>
+      <h2>${sessionConnected ? 'Защита активна' : 'Контроль доступа'}</h2>
+      <p>Здесь только реальные состояния подключений и приватной сессии. Секреты, session-string и ключи никогда не показываются клиенту.</p>
+      <div class="security-status-grid">
+        <article class="${businessConnected ? 'ready' : 'warn'}">
+          <span>Telegram</span>
+          <strong>${businessConnected ? 'Connected' : 'Setup required'}</strong>
+          <small>Business access</small>
+        </article>
+        <article class="${ghostPermission ? 'ready' : 'warn'}">
+          <span>Ghost</span>
+          <strong>${ghostPermission ? 'Allowed' : 'Permission needed'}</strong>
+          <small>Message access</small>
+        </article>
+        <article class="${viewerState.secureSessionCrypto ? 'ready' : 'warn'}">
+          <span>Encryption</span>
+          <strong>${viewerState.secureSessionCrypto ? 'Private v3' : 'Unavailable'}</strong>
+          <small>Master key stays server-side</small>
+        </article>
+        <article class="${sessionConnected ? 'ready' : ''}">
+          <span>Deep Intelligence</span>
+          <strong>${sessionConnected ? 'Active' : 'Not connected'}</strong>
+          <small>${sessionConnected ? (cryptoVersion || 'encrypted') : 'Optional'}</small>
+        </article>
+      </div>
+
+      <div class="sheet-list security-detail-list">
+        <div class="sheet-item"><strong>Private session</strong><span>${sessionConnected ? '✓ Active · encrypted ' + (cryptoVersion || 'v3') : '○ Нет активной приватной сессии'}</span></div>
+        <div class="sheet-item"><strong>Telegram account</strong><span>${sessionConnected ? (account.username ? '@' + account.username : account.firstName || 'Connected account') : 'Не подключён'}</span></div>
+        <div class="sheet-item"><strong>Session created</strong><span>${sessionConnected ? formatSecurityTime(session?.createdAt) : '—'}</span></div>
+        <div class="sheet-item"><strong>Last watcher check</strong><span>${sessionConnected ? formatSecurityTime(session?.lastPollAt) : '—'}</span></div>
+        <div class="sheet-item"><strong>Security status</strong><span>${lastError ? '⚠ ' + escapeHtml(lastError.slice(0, 140)) : '✓ Ошибок сессии нет'}</span></div>
+      </div>
+
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-refresh-security">Проверить снова</button>
+        ${sessionConnected ? '<button class="danger" data-sheet-action="security-revoke-session">Отозвать Deep Intelligence session</button>' : '<button data-sheet-action="go-viewers">Подключить Deep Intelligence</button>'}
+        <button data-sheet-action="open-connections">Connection Center</button>
+        <button data-sheet-action="close">Закрыть</button>
+      </div>
+    `);
+  }
+
   function profileSheet() {
     const storiesReady = state.connection === 'ready' || state.ready === true;
     const businessConnected = storiesReady || state.connection === 'needs_permission';
@@ -1302,6 +1384,7 @@
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
         <button data-sheet-action="go-ghost">Ghost</button>
         <button data-sheet-action="go-viewers">Intelligence</button>
+        <button data-sheet-action="open-security">Security Center</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
@@ -1692,9 +1775,13 @@
   $('homeActivityList')?.addEventListener('click', event => {
     const row = event.target.closest('[data-activity-screen]');
     if (!row) return;
+    if (row.dataset.activityScreen === 'security') {
+      securityCenterSheet();
+      return;
+    }
     switchScreen(row.dataset.activityScreen);
   });
-  $('homeSecurityCard')?.addEventListener('click', profileSheet);
+  $('homeSecurityCard')?.addEventListener('click', securityCenterSheet);
   document.querySelectorAll('.audience-card').forEach(button => button.addEventListener('click', async () => {
     const mode = button.dataset.audience;
     if (mode === 'selected' && !state.selected?.length) {
@@ -2011,9 +2098,17 @@
       viewerSetupSheet();
       return;
     }
+    if (action === 'open-security') {
+      securityCenterSheet();
+      return;
+    }
+    if (action === 'open-connections') {
+      profileSheet();
+      return;
+    }
     if (action === 'viewer-refresh-security') {
       await refreshViewerSync({ silent: false });
-      viewerSetupSheet();
+      securityCenterSheet();
       return;
     }
     if (action === 'viewer-send-code') {
@@ -2055,6 +2150,31 @@
         showToast(error.message);
       }
     }
+    if (action === 'security-revoke-session') {
+      try {
+        await viewerApi('disconnect', {}, null);
+        viewerState = {
+          configured: true,
+          backgroundReady: viewerState.backgroundReady,
+          newConnectionsReady: viewerState.newConnectionsReady,
+          secureSessionCrypto: viewerState.secureSessionCrypto,
+          session: null,
+          story: null,
+          viewers: [],
+          analytics: null,
+          degraded: false,
+          error: null,
+        };
+        render();
+        showToast('Приватная session отозвана');
+        await api().catch(() => {});
+        securityCenterSheet();
+      } catch (error) {
+        showToast(error.message);
+      }
+      return;
+    }
+
     if (action === 'viewer-disconnect') {
       try {
         await viewerApi('disconnect', {}, null);
