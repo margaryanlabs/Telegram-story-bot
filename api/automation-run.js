@@ -9,6 +9,7 @@ const EDGE_TRIGGER_PUBLIC_KEYS = [
 ];
 const BOT_API_TIMEOUT_MS = 5000;
 const JOB_LIMIT = 12;
+const CONTROL_BUILD = '20260926-0950';
 
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
@@ -55,6 +56,7 @@ function controlUrl(screen) {
   const base = 'https://telegram-story-bot-murex.vercel.app/studio.html';
   const url = new URL(base);
   url.searchParams.set('screen', screen);
+  url.searchParams.set('v', CONTROL_BUILD);
   return url.toString();
 }
 

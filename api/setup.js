@@ -1,3 +1,4 @@
+import { listActiveViewerSessions } from '../lib/viewer-sync-store.js';
 import crypto from 'node:crypto';
 
 function telegramUrl(token, method) {
@@ -13,6 +14,14 @@ async function tg(token, method, body = {}) {
   const data = await response.json();
   if (!response.ok || !data.ok) throw new Error(`${method}: ${data.description || response.statusText}`);
   return data.result;
+}
+
+const CONTROL_BUILD = '20260926-0950';
+
+function controlAppUrl(baseUrl) {
+  const url = new URL('/studio.html', baseUrl);
+  url.searchParams.set('v', CONTROL_BUILD);
+  return url.toString();
 }
 
 function productionBaseUrl(req) {
@@ -90,9 +99,31 @@ export default async function handler(req, res) {
       menu_button: {
         type: 'web_app',
         text: 'Открыть Control',
-        web_app: { url: `${baseUrl}/studio.html` },
+        web_app: { url: controlAppUrl(baseUrl) },
       },
     }).catch(() => {});
+
+    // Telegram supports per-chat menu buttons. Refresh active owners too so an
+    // old personalized Mini App URL cannot keep a stale WebView build forever.
+    let refreshedOwnerMenus = 0;
+    try {
+      const owners = await listActiveViewerSessions(20);
+      for (const owner of owners) {
+        const chatId = String(owner?.telegram_user_id || '');
+        if (!chatId) continue;
+        await tg(token, 'setChatMenuButton', {
+          chat_id: chatId,
+          menu_button: {
+            type: 'web_app',
+            text: 'Открыть Control',
+            web_app: { url: controlAppUrl(baseUrl) },
+          },
+        }).catch(() => {});
+        refreshedOwnerMenus += 1;
+      }
+    } catch (error) {
+      console.warn('Active owner menu refresh skipped', error?.message || String(error));
+    }
 
     const webhookInfo = await tg(token, 'getWebhookInfo').catch(() => null);
 
@@ -107,6 +138,8 @@ export default async function handler(req, res) {
       mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
       public_bot: true,
       version: 'v8',
+      control_build: CONTROL_BUILD,
+      refreshed_owner_menus: refreshedOwnerMenus,
     });
   } catch (error) {
     console.error(error);
