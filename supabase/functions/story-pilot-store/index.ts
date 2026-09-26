@@ -1352,6 +1352,29 @@ async function opOpenViewerPrivateJson(args: any) {
 }
 
 
+async function opListBusinessConnectionCandidates(args: any) {
+  const limit = Math.max(1, Math.min(100, Number(args?.limit || 50)));
+  if (!directSql) return [];
+
+  const rows = await directSql`
+    select distinct on (telegram_user_id)
+      telegram_user_id,
+      business_connection_id,
+      updated_at
+    from public.story_pilot_messages
+    where business_connection_id is not null
+      and business_connection_id <> ''
+    order by telegram_user_id, updated_at desc
+    limit ${limit}
+  `;
+
+  return rows.map((row: any) => ({
+    telegramUserId: String(row.telegram_user_id),
+    businessConnectionId: String(row.business_connection_id),
+    lastSeenAt: row.updated_at || null,
+  }));
+}
+
 async function opGetBusinessConnectionState(args: any) {
   const userId = String(args?.userId || "");
   if (!userId) throw new Error("business_connection_user_required");
@@ -2580,6 +2603,7 @@ async function dispatch(op: string, args: any) {
     case "open_viewer_private_json": return opOpenViewerPrivateJson(args);
     case "list_events": return opListEvents(args);
     case "record_event": return opRecordClientEvent(args);
+    case "list_business_connection_candidates": return opListBusinessConnectionCandidates(args);
     case "get_business_connection_state": return opGetBusinessConnectionState(args);
     case "upsert_business_connection_state": return opUpsertBusinessConnectionState(args);
     case "get_session": return opGetSession(args);
