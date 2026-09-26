@@ -557,6 +557,13 @@
         <article><span>Media Vault</span><strong id="privacyStatVault">0</strong><small>независимых копий</small></article>
       </section>
 
+      <section class="ghost-quick-grid" aria-label="Ghost быстрые действия">
+        <button type="button" data-ghost-jump="deleted"><span>↶</span><strong>Удалённые</strong><small>Сразу к сохранённым удалениям</small></button>
+        <button type="button" data-ghost-jump="edited"><span>≋</span><strong>Изменённые</strong><small>История правок по чатам</small></button>
+        <button type="button" data-ghost-jump="media"><span>▣</span><strong>Media Vault</strong><small>Сохранённые вложения</small></button>
+        <button type="button" data-ghost-jump="all"><span>☰</span><strong>Все чаты</strong><small>Полный Ghost Inbox</small></button>
+      </section>
+
       <section class="ghost-access-strip" id="privacyAccessStrip">
         <div class="ghost-access-icon" id="privacyAccessIcon">◌</div>
         <div class="ghost-access-copy">
@@ -586,6 +593,11 @@
             <span class="setting-icon cyan">◉</span>
             <span class="setting-copy"><strong>Ghost Inbox</strong><small>Читать сохранённые копии здесь без вызова readBusinessMessage.</small></span>
             <label class="switch"><input id="privacyGhostInboxSwitch" type="checkbox" /><span></span></label>
+          </div>
+          <div class="setting-row">
+            <span class="setting-icon cyan">⌖</span>
+            <span class="setting-copy"><strong>Ghost Focus</strong><small>Alert открывает точно нужный чат и удалённое/изменённое сообщение с контекстом.</small></span>
+            <label class="switch"><input id="privacyGhostFocusSwitch" type="checkbox" checked /><span></span></label>
           </div>
           <div class="setting-row">
             <span class="setting-icon rose">⌁</span>
