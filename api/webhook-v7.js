@@ -496,7 +496,7 @@ function ghostMessagePreview(row = {}) {
   return String(value || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
 }
 
-async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}) {
+async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}, mediaRecoveryResults = []) {
   const allIncoming = (Array.isArray(events) ? events : [])
     .filter(event => event?.direction !== 'outgoing');
   const incoming = allIncoming.slice(0, 5);
@@ -512,9 +512,17 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
     ? `\n+ ещё ${allIncoming.length - incoming.length}`
     : '';
 
+  const mediaResults = Array.isArray(mediaRecoveryResults) ? mediaRecoveryResults : [];
+  const mediaRecovered = mediaResults.filter(item => item?.archived).length;
+  const mediaStatus = mediaResults.length
+    ? mediaRecovered === mediaResults.length
+      ? `\n\n▣ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}`
+      : `\n\n⚠ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}. Текст и метаданные Ghost всё равно сохранены.`
+    : '';
+
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Ghost.`,
+    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Ghost.${mediaStatus}`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -988,6 +996,18 @@ export default async function handler(req, res) {
           business_connection_id: deleted.business_connection_id,
         });
         result = await archiveDeletedBusinessMessages(connection, deleted);
+
+        if (result?.retained && Array.isArray(result?.mediaRecovery) && result.mediaRecovery.length) {
+          const recovery = [];
+          for (const row of result.mediaRecovery.slice(0, 3)) {
+            recovery.push(await archiveBusinessMediaVault(token, row).catch(error => ({
+              archived: false,
+              reason: error?.message || String(error),
+            })));
+          }
+          result.mediaRecoveryResults = recovery;
+        }
+
         if (
           result?.retained
           && result?.settings?.notifyDeletes !== false
@@ -1000,6 +1020,7 @@ export default async function handler(req, res) {
             origin,
             result.events,
             result.settings,
+            result.mediaRecoveryResults,
           ).catch(error => {
             console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
             return false;
@@ -1020,6 +1041,10 @@ export default async function handler(req, res) {
         retained: Boolean(result?.retained),
         affected: Number(result?.affected || 0),
         alert_sent: Boolean(result?.alertSent),
+        media_recovery_attempted: Array.isArray(result?.mediaRecoveryResults) ? result.mediaRecoveryResults.length : 0,
+        media_recovered: Array.isArray(result?.mediaRecoveryResults)
+          ? result.mediaRecoveryResults.filter(item => item?.archived).length
+          : 0,
       });
       return;
     }

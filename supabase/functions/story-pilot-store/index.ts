@@ -698,7 +698,8 @@ async function opMarkBusinessMessagesDeleted(args: any) {
   if (directSql) {
     beforeRows = await directSql`
       select message_id, sender_display_name, sender_username, chat_title,
-             text_content, caption, media_type, direction, media_storage_path
+             text_content, caption, media_type, direction, media_storage_path,
+             media_archive_status, media_file_id, media_mime_type, media_file_name, media_file_size
       from public.story_pilot_messages
       where telegram_user_id = ${userId}::bigint
         and chat_id = ${chatId}::bigint
@@ -706,7 +707,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
     `;
   } else {
     const beforeResult = await db.from("story_pilot_messages")
-      .select("message_id,sender_display_name,sender_username,chat_title,text_content,caption,media_type,direction,media_storage_path")
+      .select("message_id,sender_display_name,sender_username,chat_title,text_content,caption,media_type,direction,media_storage_path,media_archive_status,media_file_id,media_mime_type,media_file_name,media_file_size")
       .eq("telegram_user_id", userId)
       .eq("chat_id", chatId)
       .in("message_id", messageIds);
@@ -720,6 +721,24 @@ async function opMarkBusinessMessagesDeleted(args: any) {
     direction: row.direction || "incoming",
     preview: messagePreview(row),
   }));
+
+  const mediaRecovery = beforeRows
+    .filter((row: any) =>
+      row.media_file_id
+      && row.media_archive_status !== "archived"
+      && !row.media_storage_path
+    )
+    .slice(0, 5)
+    .map((row: any) => ({
+      telegram_user_id: userId,
+      chat_id: chatId,
+      message_id: Number(row.message_id),
+      media_type: row.media_type || null,
+      media_file_id: row.media_file_id || null,
+      media_mime_type: row.media_mime_type || null,
+      media_file_name: row.media_file_name || null,
+      media_file_size: Number(row.media_file_size || 0) || null,
+    }));
 
   const recordDeleteEvents = async (occurredAt: string) => {
     await Promise.all(beforeRows.map((row: any) => recordEvent({
@@ -773,6 +792,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
       retained: false,
       settings,
       events,
+      mediaRecovery: [],
     };
   }
 
@@ -804,6 +824,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
     retained: true,
     settings,
     events,
+    mediaRecovery,
   };
 }
 
