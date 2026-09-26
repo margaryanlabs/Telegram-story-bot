@@ -442,17 +442,33 @@
         ? thread.smartReasons[0]
         : '';
 
+      const displayPreview = privacyState.filter === 'deleted' && thread.deletedPreview
+        ? thread.deletedPreview
+        : privacyState.filter === 'edited' && thread.editedPreview
+          ? thread.editedPreview
+          : thread.preview;
+      const displayAt = privacyState.filter === 'deleted' && thread.lastDeletedAt
+        ? thread.lastDeletedAt
+        : privacyState.filter === 'edited' && thread.lastEditedAt
+          ? thread.lastEditedAt
+          : thread.lastAt;
+      const eventReason = privacyState.filter === 'deleted' && thread.lastDeletedAt
+        ? 'Последнее удаление · ' + formatWhen(thread.lastDeletedAt)
+        : privacyState.filter === 'edited' && thread.lastEditedAt
+          ? 'Последнее изменение · ' + formatWhen(thread.lastEditedAt)
+          : reason;
+
       return `
         <button class="privacy-thread" type="button" data-privacy-chat="${escapeHtml(thread.chatId)}">
           <span class="privacy-thread-avatar">${escapeHtml(initials(thread.title))}</span>
           <span class="privacy-thread-copy">
             <strong>${escapeHtml(thread.title || 'Telegram chat')}</strong>
-            <span>${escapeHtml(thread.preview || 'Сообщение')}</span>
-            ${reason ? `<small class="smart-thread-reason">${escapeHtml(reason)}</small>` : ''}
+            <span>${escapeHtml(displayPreview || 'Сообщение')}</span>
+            ${eventReason ? `<small class="smart-thread-reason">${escapeHtml(eventReason)}</small>` : ''}
           </span>
           <span class="privacy-thread-side">
             <span class="privacy-thread-badges">${badges}</span>
-            <small>${escapeHtml(formatWhen(thread.lastAt))}</small>
+            <small>${escapeHtml(formatWhen(displayAt))}</small>
           </span>
         </button>`;
     }).join('');
