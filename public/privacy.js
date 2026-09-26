@@ -514,6 +514,7 @@
       antiDelete: true,
       editHistory: true,
       ghostInbox: true,
+      ghostFocus: true,
       retentionDays: Number(privacyState.settings.retentionDays || 30),
     }, { quiet:true });
     if (ok) {
