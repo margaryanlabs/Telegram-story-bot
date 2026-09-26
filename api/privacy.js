@@ -96,6 +96,7 @@ export default async function handler(req, res) {
           degraded: false,
           settings: overview?.settings || await getPrivacySettings(userId),
           threads: overview?.threads || [],
+          smartSummary: overview?.smartSummary || null,
         });
       } catch (error) {
         if (!transientStoreError(error)) throw error;
@@ -122,7 +123,12 @@ export default async function handler(req, res) {
     if (action === 'update_settings') {
       const settings = await updatePrivacySettings(userId, privacyPatch(body));
       const overview = await listPrivacyThreads(userId);
-      res.status(200).json({ ok: true, settings, threads: overview?.threads || [] });
+      res.status(200).json({
+        ok: true,
+        settings,
+        threads: overview?.threads || [],
+        smartSummary: overview?.smartSummary || null,
+      });
       return;
     }
 

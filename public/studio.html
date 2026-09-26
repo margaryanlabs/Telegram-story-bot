@@ -619,10 +619,23 @@
 
     <section class="screen" data-screen="chats">
       <div class="page-head chats-page-head">
-        <span class="kicker">MESSAGES</span>
+        <span class="kicker">SMART INBOX</span>
         <h1>Chats</h1>
-        <p>Поиск и история доступных Business-сообщений, правок, удалений и сохранённых медиа. Это архив событий, а не замена Telegram-клиента.</p>
+        <p>Privacy-first triage поверх доступных Telegram-событий: что похоже требует внимания, что изменилось и что можно оставить в архиве.</p>
       </div>
+
+      <section class="smart-inbox-overview">
+        <div class="smart-inbox-title">
+          <div><span class="kicker">PRIORITY</span><h2>Что требует внимания</h2></div>
+          <span class="tiny-note">без read-status</span>
+        </div>
+        <div class="smart-inbox-grid">
+          <button type="button" data-smart-filter="action"><span>Action</span><strong id="smartInboxAction">0</strong><small>вероятно нужен ответ</small></button>
+          <button type="button" data-smart-filter="watch"><span>Watch</span><strong id="smartInboxWatch">0</strong><small>изменения / удаления</small></button>
+          <button type="button" data-smart-filter="all"><span>All</span><strong id="smartInboxAll">0</strong><small>доступные диалоги</small></button>
+        </div>
+        <p class="smart-inbox-note">Telegram Control не называет сообщения «непрочитанными», если Telegram не дал такого сигнала. Приоритет — это объяснимая оценка по последнему входящему событию, свежести, правкам и удалениям.</p>
+      </section>
 
       <section class="privacy-inbox-card">
         <div class="block-head compact">
@@ -643,7 +656,10 @@
         </label>
 
         <div class="privacy-filters" id="privacyFilters">
-          <button class="active" type="button" data-privacy-filter="all">Все</button>
+          <button class="active" type="button" data-privacy-filter="smart">Smart</button>
+          <button type="button" data-privacy-filter="action">Action</button>
+          <button type="button" data-privacy-filter="watch">Watch</button>
+          <button type="button" data-privacy-filter="all">Все</button>
           <button type="button" data-privacy-filter="deleted">Удалённые</button>
           <button type="button" data-privacy-filter="edited">Изменённые</button>
           <button type="button" data-privacy-filter="media">Медиа</button>
