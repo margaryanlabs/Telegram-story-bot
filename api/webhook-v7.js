@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20260926-1135';
+const CONTROL_BUILD = '20260926-1340';
 import sharp from 'sharp';
 import { trackPublishedStory, markStoryDeleted } from '../lib/viewer-sync-store.js';
 import {
