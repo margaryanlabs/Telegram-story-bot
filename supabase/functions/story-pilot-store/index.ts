@@ -1352,6 +1352,132 @@ async function opOpenViewerPrivateJson(args: any) {
 }
 
 
+async function opGetBusinessConnectionState(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("business_connection_user_required");
+
+  if (directSql) {
+    const rows = await directSql`
+      select telegram_user_id, business_connection_id, is_enabled,
+             can_manage_stories, can_read_messages, source,
+             last_verified_at, created_at, updated_at
+      from public.story_pilot_business_connections
+      where telegram_user_id = ${userId}::bigint
+      limit 1
+    `;
+    const row = rows[0];
+    return row ? {
+      telegramUserId: String(row.telegram_user_id),
+      businessConnectionId: row.business_connection_id || null,
+      isEnabled: Boolean(row.is_enabled),
+      canManageStories: Boolean(row.can_manage_stories),
+      canReadMessages: Boolean(row.can_read_messages),
+      source: row.source || null,
+      lastVerifiedAt: row.last_verified_at || null,
+      createdAt: row.created_at || null,
+      updatedAt: row.updated_at || null,
+    } : null;
+  }
+
+  const r = await db.from("story_pilot_business_connections")
+    .select("telegram_user_id,business_connection_id,is_enabled,can_manage_stories,can_read_messages,source,last_verified_at,created_at,updated_at")
+    .eq("telegram_user_id", userId)
+    .maybeSingle();
+  const row = need(r as any);
+  return row ? {
+    telegramUserId: String(row.telegram_user_id),
+    businessConnectionId: row.business_connection_id || null,
+    isEnabled: Boolean(row.is_enabled),
+    canManageStories: Boolean(row.can_manage_stories),
+    canReadMessages: Boolean(row.can_read_messages),
+    source: row.source || null,
+    lastVerifiedAt: row.last_verified_at || null,
+    createdAt: row.created_at || null,
+    updatedAt: row.updated_at || null,
+  } : null;
+}
+
+async function opUpsertBusinessConnectionState(args: any) {
+  const row = args?.row || {};
+  const userId = String(row.telegramUserId || row.telegram_user_id || "");
+  if (!userId) throw new Error("business_connection_user_required");
+
+  const businessConnectionId = row.businessConnectionId ?? row.business_connection_id ?? null;
+  const isEnabled = Boolean(row.isEnabled ?? row.is_enabled);
+  const canManageStories = Boolean(row.canManageStories ?? row.can_manage_stories);
+  const canReadMessages = Boolean(row.canReadMessages ?? row.can_read_messages);
+  const source = String(row.source || "runtime").slice(0, 64);
+  const lastVerifiedAt = row.lastVerifiedAt || row.last_verified_at || new Date().toISOString();
+
+  if (directSql) {
+    const rows = await directSql`
+      insert into public.story_pilot_business_connections (
+        telegram_user_id, business_connection_id, is_enabled,
+        can_manage_stories, can_read_messages, source,
+        last_verified_at, updated_at
+      ) values (
+        ${userId}::bigint,
+        ${businessConnectionId},
+        ${isEnabled},
+        ${canManageStories},
+        ${canReadMessages},
+        ${source},
+        ${lastVerifiedAt}::timestamptz,
+        now()
+      )
+      on conflict (telegram_user_id) do update set
+        business_connection_id = excluded.business_connection_id,
+        is_enabled = excluded.is_enabled,
+        can_manage_stories = excluded.can_manage_stories,
+        can_read_messages = excluded.can_read_messages,
+        source = excluded.source,
+        last_verified_at = excluded.last_verified_at,
+        updated_at = now()
+      returning telegram_user_id, business_connection_id, is_enabled,
+                can_manage_stories, can_read_messages, source,
+                last_verified_at, created_at, updated_at
+    `;
+    const saved = rows[0];
+    return {
+      telegramUserId: String(saved.telegram_user_id),
+      businessConnectionId: saved.business_connection_id || null,
+      isEnabled: Boolean(saved.is_enabled),
+      canManageStories: Boolean(saved.can_manage_stories),
+      canReadMessages: Boolean(saved.can_read_messages),
+      source: saved.source || null,
+      lastVerifiedAt: saved.last_verified_at || null,
+      createdAt: saved.created_at || null,
+      updatedAt: saved.updated_at || null,
+    };
+  }
+
+  const r = await db.from("story_pilot_business_connections")
+    .upsert({
+      telegram_user_id: userId,
+      business_connection_id: businessConnectionId,
+      is_enabled: isEnabled,
+      can_manage_stories: canManageStories,
+      can_read_messages: canReadMessages,
+      source,
+      last_verified_at: lastVerifiedAt,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "telegram_user_id" })
+    .select("telegram_user_id,business_connection_id,is_enabled,can_manage_stories,can_read_messages,source,last_verified_at,created_at,updated_at")
+    .single();
+  const saved = need(r as any);
+  return {
+    telegramUserId: String(saved.telegram_user_id),
+    businessConnectionId: saved.business_connection_id || null,
+    isEnabled: Boolean(saved.is_enabled),
+    canManageStories: Boolean(saved.can_manage_stories),
+    canReadMessages: Boolean(saved.can_read_messages),
+    source: saved.source || null,
+    lastVerifiedAt: saved.last_verified_at || null,
+    createdAt: saved.created_at || null,
+    updatedAt: saved.updated_at || null,
+  };
+}
+
 async function opGetSession(args: any) {
   const userId = String(args.userId);
   if (directSql) {
@@ -2454,6 +2580,8 @@ async function dispatch(op: string, args: any) {
     case "open_viewer_private_json": return opOpenViewerPrivateJson(args);
     case "list_events": return opListEvents(args);
     case "record_event": return opRecordClientEvent(args);
+    case "get_business_connection_state": return opGetBusinessConnectionState(args);
+    case "upsert_business_connection_state": return opUpsertBusinessConnectionState(args);
     case "get_session": return opGetSession(args);
     case "upsert_session": return opUpsertSession(args);
     case "update_session": return opUpdateSession(args);
