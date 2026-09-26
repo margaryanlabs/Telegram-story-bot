@@ -466,10 +466,20 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   return next;
 }
 
-function ghostAppUrl(origin) {
+function ghostAppUrl(origin, options = {}) {
   const url = new URL('/studio.html', origin);
   url.searchParams.set('v', CONTROL_BUILD);
-  url.searchParams.set('screen', 'privacy');
+
+  const chatId = options.chatId ? String(options.chatId) : '';
+  const messageId = Number(options.messageId || 0);
+  const mode = String(options.mode || '');
+  const filter = String(options.filter || '');
+
+  url.searchParams.set('screen', chatId ? 'chats' : (options.screen || 'privacy'));
+  if (chatId) url.searchParams.set('chat', chatId);
+  if (messageId > 0) url.searchParams.set('message', String(messageId));
+  if (mode) url.searchParams.set('mode', mode);
+  if (filter) url.searchParams.set('filter', filter);
   return url.toString();
 }
 
@@ -478,7 +488,7 @@ function ghostMessagePreview(row = {}) {
   return String(value || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
 }
 
-async function sendGhostDeleteAlert(token, ownerChatId, origin, events = []) {
+async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}) {
   const allIncoming = (Array.isArray(events) ? events : [])
     .filter(event => event?.direction !== 'outgoing');
   const incoming = allIncoming.slice(0, 5);
@@ -499,13 +509,30 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = []) {
     text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Ghost.`,
     disable_notification: false,
     reply_markup: {
-      inline_keyboard: [[{ text: '👻 Открыть Ghost', web_app: { url: ghostAppUrl(origin) } }]],
+      inline_keyboard: [
+        ...(settings?.ghostFocus !== false && incoming[0]?.chatId && incoming[0]?.messageId
+          ? [[{
+              text: '👻 Открыть это удалённое',
+              web_app: {
+                url: ghostAppUrl(origin, {
+                  chatId: incoming[0].chatId,
+                  messageId: incoming[0].messageId,
+                  mode: 'focus',
+                }),
+              },
+            }]]
+          : []),
+        [{
+          text: '↶ Все удалённые',
+          web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'deleted' }) },
+        }],
+      ],
     },
   });
   return true;
 }
 
-async function sendGhostEditAlert(token, ownerChatId, origin, row = {}) {
+async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings = {}) {
   if (!ownerChatId || !row || row.direction === 'outgoing') return false;
   const sender = row.sender_display_name || (row.sender_username ? `@${row.sender_username}` : null) || row.chat_title || 'Telegram user';
   await tg(token, 'sendMessage', {
@@ -513,7 +540,24 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}) {
     text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в Ghost.`,
     disable_notification: false,
     reply_markup: {
-      inline_keyboard: [[{ text: '👻 Открыть историю', web_app: { url: ghostAppUrl(origin) } }]],
+      inline_keyboard: [
+        ...(settings?.ghostFocus !== false && row?.chat_id && row?.message_id
+          ? [[{
+              text: '✏️ Открыть это изменение',
+              web_app: {
+                url: ghostAppUrl(origin, {
+                  chatId: row.chat_id,
+                  messageId: row.message_id,
+                  mode: 'edit',
+                }),
+              },
+            }]]
+          : []),
+        [{
+          text: '≋ Все изменённые',
+          web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'edited' }) },
+        }],
+      ],
     },
   });
   return true;
@@ -903,6 +947,7 @@ export default async function handler(req, res) {
             connection?.user_chat_id,
             origin,
             result.row,
+            result.settings,
           ).catch(error => {
             console.warn('Story Pilot Ghost edit alert skipped', error?.message || error);
             return false;
@@ -941,7 +986,13 @@ export default async function handler(req, res) {
           && Array.isArray(result?.events)
           && result.events.length
         ) {
-          result.alertSent = await sendGhostDeleteAlert(token, connection?.user_chat_id, origin, result.events).catch(error => {
+          result.alertSent = await sendGhostDeleteAlert(
+            token,
+            connection?.user_chat_id,
+            origin,
+            result.events,
+            result.settings,
+          ).catch(error => {
             console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
             return false;
           });
