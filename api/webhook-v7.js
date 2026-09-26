@@ -247,7 +247,6 @@ async function getStoredSettings(token, chatId) {
 async function saveSettings(token, chatId, origin, settings) {
   const url = new URL('/studio.html', origin);
   url.searchParams.set('v', CONTROL_BUILD);
-  url.searchParams.set('v', CONTROL_BUILD);
   if (settings.bc) {
     url.searchParams.set('bc', settings.bc);
     url.searchParams.set('cs', settings.canStories ? '1' : '0');
