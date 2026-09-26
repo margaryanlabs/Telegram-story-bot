@@ -1,10 +1,12 @@
 import crypto from 'node:crypto';
 import { publishPhotoStory, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
 import {
+  getBusinessConnectionState,
   listActivityEvents,
   listStoryArchive,
   markStoryDeleted,
   trackPublishedStory,
+  upsertBusinessConnectionState,
 } from '../lib/viewer-sync-store.js';
 
 const MAX_SAVED_USERS = 100;
@@ -267,12 +269,27 @@ function parseStoredSettings(menu) {
 }
 
 async function getStoredSettings(token, chatId) {
+  let menuSettings = defaultSettings();
   try {
     const menu = await tg(token, 'getChatMenuButton', { chat_id: chatId });
-    return parseStoredSettings(menu);
-  } catch {
-    return defaultSettings();
+    menuSettings = parseStoredSettings(menu);
+  } catch {}
+
+  try {
+    const durable = await getBusinessConnectionState(chatId);
+    if (durable) {
+      return {
+        ...menuSettings,
+        bc: durable.isEnabled ? durable.businessConnectionId : null,
+        canStories: durable.isEnabled && durable.canManageStories,
+        canReadMessages: durable.isEnabled && durable.canReadMessages,
+      };
+    }
+  } catch (error) {
+    console.warn('Durable Business connection read skipped', error?.message || String(error));
   }
+
+  return menuSettings;
 }
 
 async function saveSettings(token, chatId, baseUrl, settings) {
@@ -420,11 +437,27 @@ async function refreshConnection(token, chatId, baseUrl, settings) {
     ) {
       await saveSettings(token, chatId, baseUrl, next);
     }
+    await upsertBusinessConnectionState({
+      telegramUserId: chatId,
+      businessConnectionId: connection.id,
+      isEnabled: true,
+      canManageStories: rights,
+      canReadMessages: readRights,
+      source: 'miniapp_verify',
+      lastVerifiedAt: new Date().toISOString(),
+    }).catch(() => {});
     return { settings: next, live: true, rights, readRights };
-  } catch {
-    const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
-    await saveSettings(token, chatId, baseUrl, next).catch(() => {});
-    return { settings: next, live: false, rights: false, readRights: false };
+  } catch (error) {
+    // A transient Telegram/API failure must not destroy a previously valid
+    // Business connection. Keep the durable/menu state and surface degraded live status.
+    console.warn('Business connection verification deferred', error?.message || String(error));
+    return {
+      settings,
+      live: Boolean(settings.bc),
+      rights: Boolean(settings.canStories),
+      readRights: Boolean(settings.canReadMessages),
+      degraded: true,
+    };
   }
 }
 
