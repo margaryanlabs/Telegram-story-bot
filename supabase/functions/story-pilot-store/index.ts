@@ -72,6 +72,7 @@ const DEFAULT_PRIVACY_SETTINGS = {
   antiDelete: false,
   editHistory: false,
   ghostInbox: false,
+  ghostFocus: true,
   notifyDeletes: true,
   notifyEdits: true,
   retentionDays: 30,
@@ -83,6 +84,7 @@ function privacyShape(row: any) {
     antiDelete: Boolean(row.anti_delete),
     editHistory: Boolean(row.edit_history),
     ghostInbox: Boolean(row.ghost_inbox),
+    ghostFocus: row.ghost_focus !== false,
     notifyDeletes: row.notify_deletes !== false,
     notifyEdits: row.notify_edits !== false,
     retentionDays: Math.max(1, Math.min(3650, Number(row.retention_days || 30))),
@@ -93,7 +95,7 @@ async function opGetPrivacySettings(args: any) {
   const userId = String(args.userId);
   if (directSql) {
     const rows = await directSql`
-      select anti_delete, edit_history, ghost_inbox, notify_deletes, notify_edits, retention_days
+      select anti_delete, edit_history, ghost_inbox, ghost_focus, notify_deletes, notify_edits, retention_days
       from public.story_pilot_privacy_settings
       where telegram_user_id = ${userId}::bigint
       limit 1
@@ -102,7 +104,7 @@ async function opGetPrivacySettings(args: any) {
   }
 
   const r = await db.from("story_pilot_privacy_settings")
-    .select("anti_delete,edit_history,ghost_inbox,notify_deletes,notify_edits,retention_days")
+    .select("anti_delete,edit_history,ghost_inbox,ghost_focus,notify_deletes,notify_edits,retention_days")
     .eq("telegram_user_id", userId)
     .maybeSingle();
   return privacyShape(need(r as any));
@@ -339,6 +341,7 @@ async function opUpdatePrivacySettings(args: any) {
     anti_delete: patch.antiDelete === undefined ? current.antiDelete : Boolean(patch.antiDelete),
     edit_history: patch.editHistory === undefined ? current.editHistory : Boolean(patch.editHistory),
     ghost_inbox: patch.ghostInbox === undefined ? current.ghostInbox : Boolean(patch.ghostInbox),
+    ghost_focus: patch.ghostFocus === undefined ? current.ghostFocus : Boolean(patch.ghostFocus),
     notify_deletes: patch.notifyDeletes === undefined ? current.notifyDeletes : Boolean(patch.notifyDeletes),
     notify_edits: patch.notifyEdits === undefined ? current.notifyEdits : Boolean(patch.notifyEdits),
     retention_days: Math.max(1, Math.min(3650, Number(patch.retentionDays ?? current.retentionDays ?? 30))),
@@ -349,25 +352,26 @@ async function opUpdatePrivacySettings(args: any) {
   if (directSql) {
     const rows = await directSql`
       insert into public.story_pilot_privacy_settings
-        (telegram_user_id, anti_delete, edit_history, ghost_inbox, notify_deletes, notify_edits, retention_days, updated_at)
+        (telegram_user_id, anti_delete, edit_history, ghost_inbox, ghost_focus, notify_deletes, notify_edits, retention_days, updated_at)
       values
-        (${userId}::bigint, ${next.anti_delete}, ${next.edit_history}, ${next.ghost_inbox},
+        (${userId}::bigint, ${next.anti_delete}, ${next.edit_history}, ${next.ghost_inbox}, ${next.ghost_focus},
          ${next.notify_deletes}, ${next.notify_edits}, ${next.retention_days}, ${next.updated_at}::timestamptz)
       on conflict (telegram_user_id) do update set
         anti_delete = excluded.anti_delete,
         edit_history = excluded.edit_history,
         ghost_inbox = excluded.ghost_inbox,
+        ghost_focus = excluded.ghost_focus,
         notify_deletes = excluded.notify_deletes,
         notify_edits = excluded.notify_edits,
         retention_days = excluded.retention_days,
         updated_at = excluded.updated_at
-      returning anti_delete, edit_history, ghost_inbox, notify_deletes, notify_edits, retention_days
+      returning anti_delete, edit_history, ghost_inbox, ghost_focus, notify_deletes, notify_edits, retention_days
     `;
     saved = privacyShape(rows[0] || null);
   } else {
     const r = await db.from("story_pilot_privacy_settings")
       .upsert(next, { onConflict: "telegram_user_id" })
-      .select("anti_delete,edit_history,ghost_inbox,notify_deletes,notify_edits,retention_days")
+      .select("anti_delete,edit_history,ghost_inbox,ghost_focus,notify_deletes,notify_edits,retention_days")
       .single();
     saved = privacyShape(need(r as any));
   }
@@ -709,6 +713,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
     beforeRows = need(beforeResult as any) || [];
   }
   const events = beforeRows.map((row: any) => ({
+    chatId: String(chatId),
     messageId: Number(row.message_id),
     sender: row.sender_display_name || (row.sender_username ? "@" + row.sender_username : null),
     chatTitle: row.chat_title || null,
