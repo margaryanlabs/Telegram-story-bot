@@ -599,6 +599,54 @@
     return 'Сообщение';
   }
 
+  function plainMessageBody(message) {
+    const text = String(message?.text_content || message?.caption || '').trim();
+    if (text) return text;
+    if (message?.media_type) return '[' + String(message.media_type) + ']';
+    return 'Сообщение';
+  }
+
+  async function copyGhostMessage(messageId) {
+    const rows = privacyState.activeThread?.messages || [];
+    const message = rows.find(item => String(item.message_id) === String(messageId));
+    if (!message) {
+      toast('Сообщение не найдено');
+      return;
+    }
+    const value = plainMessageBody(message);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const area = document.createElement('textarea');
+        area.value = value;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        area.remove();
+      }
+      haptic('soft');
+      toast('Скопировано');
+    } catch {
+      toast('Не удалось скопировать');
+    }
+  }
+
+  function openTelegramPeer(username) {
+    const clean = String(username || '').replace(/^@/, '').trim();
+    if (!clean) return;
+    const url = 'https://t.me/' + encodeURIComponent(clean);
+    try {
+      if (tg?.openTelegramLink) tg.openTelegramLink(url);
+      else window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      window.location.href = url;
+    }
+  }
+
   function normalizeThreadMode(value) {
     const mode = String(value || 'all');
     return ['all','deleted','edited','focus'].includes(mode) ? mode : 'all';
@@ -665,6 +713,7 @@
             ${deleted ? '<span class="deleted">Удалено в Telegram</span>' : ''}
             ${mediaArchived ? '<span class="vault">Media Vault</span>' : ''}
             ${deleted && hasMedia && !mediaArchived ? '<span class="warn">Медиа может зависеть от Telegram</span>' : ''}
+            ${deleted || edited ? `<button class="mini-chip" type="button" data-ghost-copy="${escapeHtml(message.message_id)}">Копировать</button>` : ''}
             ${edited ? `<button class="mini-chip" type="button" data-privacy-versions="${escapeHtml(message.message_id)}" data-privacy-chat-id="${escapeHtml(message.chat_id)}">История правок</button>` : ''}
           </footer>
         </article>`;
@@ -675,6 +724,9 @@
     const focusNote = mode === 'focus'
       ? '<p class="ghost-focus-note">Показываю выбранное событие и до двух сообщений контекста до/после. Это архив Ghost, а не изменение оригинального Telegram-чата.</p>'
       : '';
+    const peerUsername = (messages || []).find(message =>
+      message.direction !== 'outgoing' && message.sender_username
+    )?.sender_username || '';
 
     openSheet(`
       <div class="privacy-sheet-head">
@@ -694,6 +746,7 @@
       <div class="privacy-message-list">${rows || '<div class="intel-empty">В этом режиме сообщений пока нет.</div>'}</div>
       <div class="sheet-actions">
         ${mode === 'focus' ? '<button class="accent" data-privacy-thread-mode="all">Показать весь чат</button>' : ''}
+        ${peerUsername ? `<button data-ghost-open-peer="${escapeHtml(peerUsername)}">Открыть чат в Telegram</button>` : ''}
         <button data-privacy-close="1">Закрыть</button>
       </div>
     `);
@@ -968,6 +1021,18 @@
       } else {
         toast('Telegram пока не показывает право на сообщения');
       }
+      return;
+    }
+
+    const copyButton = event.target.closest('[data-ghost-copy]');
+    if (copyButton) {
+      await copyGhostMessage(copyButton.dataset.ghostCopy);
+      return;
+    }
+
+    const openPeerButton = event.target.closest('[data-ghost-open-peer]');
+    if (openPeerButton) {
+      openTelegramPeer(openPeerButton.dataset.ghostOpenPeer);
       return;
     }
 
