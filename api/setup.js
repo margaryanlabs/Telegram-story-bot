@@ -16,7 +16,7 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20260926-1135';
+const CONTROL_BUILD = '20260926-1340';
 
 function controlAppUrl(baseUrl) {
   const url = new URL('/studio.html', baseUrl);
