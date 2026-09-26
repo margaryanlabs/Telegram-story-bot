@@ -23,6 +23,9 @@
     },
     threads: [],
     smartSummary: null,
+    deletedFeed: [],
+    deletedFeedLoaded: false,
+    deletedFeedLoading: false,
     activeThread: null,
     query: '',
     filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'smart',
@@ -240,6 +243,37 @@
     );
   }
 
+  function filteredDeletedFeed() {
+    const query = privacyState.query.trim().toLowerCase();
+    const rows = Array.isArray(privacyState.deletedFeed) ? privacyState.deletedFeed : [];
+    if (!query) return rows;
+    return rows.filter(item => [
+      item.chatTitle,
+      item.senderDisplayName,
+      item.senderUsername,
+      item.preview,
+      item.mediaFileName,
+      item.chatId,
+    ].some(value => String(value || '').toLowerCase().includes(query)));
+  }
+
+  async function refreshDeletedFeed({ silent = false, force = false } = {}) {
+    if (!tg?.initData || privacyState.deletedFeedLoading) return;
+    if (privacyState.deletedFeedLoaded && !force) return;
+
+    privacyState.deletedFeedLoading = true;
+    try {
+      const data = await request('list_deleted', { limit: 160 });
+      privacyState.deletedFeed = Array.isArray(data.items) ? data.items : [];
+      privacyState.deletedFeedLoaded = true;
+    } catch (error) {
+      if (!silent) toast(error.message);
+    } finally {
+      privacyState.deletedFeedLoading = false;
+      render();
+    }
+  }
+
   function render() {
     const settings = privacyState.settings || {};
     const enabled = anyEnabled(settings);
@@ -369,9 +403,32 @@
       $('privacyRetentionLabel').textContent = `Хранение · ${Number(settings.retentionDays || 30)} дней`;
     }
 
+    const latestDeletedThread = [...privacyState.threads]
+      .filter(thread => thread.lastDeletedAt && thread.latestDeletedMessageId)
+      .sort((left, right) =>
+        new Date(right.lastDeletedAt || 0).getTime() - new Date(left.lastDeletedAt || 0).getTime()
+      )[0] || null;
+    const latestCard = $('ghostLatestDeletedCard');
+    if (latestCard) {
+      latestCard.hidden = !latestDeletedThread;
+      if (latestDeletedThread) {
+        latestCard.dataset.chatId = String(latestDeletedThread.chatId || '');
+        latestCard.dataset.messageId = String(latestDeletedThread.latestDeletedMessageId || '');
+        if ($('ghostLatestDeletedTitle')) {
+          $('ghostLatestDeletedTitle').textContent = latestDeletedThread.title || 'Telegram chat';
+        }
+        if ($('ghostLatestDeletedPreview')) {
+          $('ghostLatestDeletedPreview').textContent = latestDeletedThread.deletedPreview || 'Удалённое сообщение';
+        }
+        if ($('ghostLatestDeletedTime')) {
+          $('ghostLatestDeletedTime').textContent = formatWhen(latestDeletedThread.lastDeletedAt);
+        }
+      }
+    }
+
     const list = $('privacyThreads');
     const empty = $('privacyEmpty');
-    const visible = filteredThreads();
+    const visible = privacyState.filter === 'deleted' ? filteredDeletedFeed() : filteredThreads();
     if ($('privacyThreadCount')) $('privacyThreadCount').textContent = String(visible.length);
 
     document.querySelectorAll('[data-privacy-filter]').forEach(button => {
@@ -407,20 +464,61 @@
       if ($('privacyEmptyTitle')) {
         $('privacyEmptyTitle').textContent = !enabled
           ? 'Ghost ещё не включён'
-          : privacyState.threads.length && !visible.length
+          : (privacyState.filter === 'deleted' ? privacyState.deletedFeed.length : privacyState.threads.length) && !visible.length
             ? 'Ничего не найдено'
-            : 'Ghost Inbox пока пуст';
+            : privacyState.filter === 'deleted'
+              ? 'Удалённых сообщений пока нет'
+              : 'Ghost Inbox пока пуст';
       }
       if ($('privacyEmptyText')) {
         $('privacyEmptyText').textContent = !enabled
           ? 'Нажми «Включить Ghost целиком» — дальше новые события будут сохраняться автоматически.'
-          : privacyState.threads.length && !visible.length
+          : (privacyState.filter === 'deleted' ? privacyState.deletedFeed.length : privacyState.threads.length) && !visible.length
             ? 'Измени поиск или фильтр.'
-            : 'Новые доступные Business-сообщения появятся здесь автоматически.';
+            : privacyState.filter === 'deleted'
+              ? 'Когда Telegram пришлёт событие удаления, сохранённая копия появится здесь.'
+              : 'Новые доступные Business-сообщения появятся здесь автоматически.';
       }
     }
 
     if (!list) return;
+
+    if (privacyState.filter === 'deleted') {
+      if (privacyState.deletedFeedLoading && !privacyState.deletedFeedLoaded) {
+        list.innerHTML = '<div class="deleted-feed-loading">◌ Загружаю удаления</div>';
+        return;
+      }
+
+      list.innerHTML = visible.map(item => {
+        const sender = item.direction === 'outgoing'
+          ? 'Вы'
+          : (item.senderDisplayName || (item.senderUsername ? '@' + item.senderUsername : 'Telegram user'));
+        const mediaState = item.mediaType
+          ? item.mediaArchiveStatus === 'archived'
+            ? '<i class="vault">◇ Vault</i>'
+            : '<i class="media">▣ Media</i>'
+          : '';
+        return `
+          <button class="deleted-feed-item" type="button"
+            data-deleted-chat="${escapeHtml(item.chatId)}"
+            data-deleted-message="${escapeHtml(item.messageId)}">
+            <span class="deleted-feed-icon">↶</span>
+            <span class="deleted-feed-copy">
+              <strong>${escapeHtml(item.chatTitle || sender)}</strong>
+              <em>${escapeHtml(sender)}</em>
+              <span>${escapeHtml(item.preview || 'Сообщение')}</span>
+              <small>Удалено · ${escapeHtml(formatWhen(item.deletedAt))}</small>
+            </span>
+            <span class="deleted-feed-meta">
+              ${mediaState}
+              ${item.editedAt ? '<i class="edited">≋ Edit</i>' : ''}
+              <b>›</b>
+            </span>
+          </button>`;
+      }).join('');
+      return;
+    }
+
     list.innerHTML = visible.map(thread => {
       const deleted = Number(thread.deletedCount || 0);
       const edited = Number(thread.editedCount || 0);
@@ -507,6 +605,9 @@
     } finally {
       privacyState.loading = false;
       render();
+      if (privacyState.filter === 'deleted') {
+        setTimeout(() => refreshDeletedFeed({ silent:true, force:true }), 0);
+      }
       if (!privacyState.deepLinkHandled && ghostDeepLink.chatId) {
         setTimeout(() => maybeOpenGhostDeepLink(), 60);
       }
@@ -882,6 +983,8 @@
         await request('clear_archive');
         privacyState.threads = [];
         privacyState.smartSummary = null;
+        privacyState.deletedFeed = [];
+        privacyState.deletedFeedLoaded = true;
         privacyState.lastTotalMessages = 0;
         render();
         toast('Ghost Inbox очищен');
@@ -907,12 +1010,23 @@
     }, 12000);
   }
 
+  $('ghostLatestDeletedCard')?.addEventListener('click', event => {
+    const card = event.currentTarget;
+    const chatId = String(card?.dataset?.chatId || '');
+    const messageId = Number(card?.dataset?.messageId || 0);
+    if (!chatId || !messageId) return;
+    haptic('soft');
+    document.querySelector('[data-nav="chats"]')?.click();
+    setTimeout(() => openThread(chatId, { mode:'focus', focusMessageId:messageId }), 60);
+  });
+
   $('privacyEnableAllButton')?.addEventListener('click', enableAll);
   document.querySelectorAll('[data-ghost-jump]').forEach(button => {
     button.addEventListener('click', () => {
       const target = String(button.dataset.ghostJump || 'all');
       privacyState.filter = ['deleted','edited','media'].includes(target) ? target : 'all';
       haptic('soft');
+      if (privacyState.filter === 'deleted') refreshDeletedFeed({ silent:true });
       render();
       document.querySelector('[data-nav="chats"]')?.click();
       setTimeout(() => $('privacyThreads')?.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
@@ -943,6 +1057,7 @@
     if (!button) return;
     privacyState.filter = button.dataset.privacyFilter || 'all';
     haptic('soft');
+    if (privacyState.filter === 'deleted') refreshDeletedFeed({ silent:true });
     render();
   });
 
@@ -986,6 +1101,15 @@
   });
 
   $('privacyThreads')?.addEventListener('click', event => {
+    const deletedTarget = event.target.closest('[data-deleted-chat][data-deleted-message]');
+    if (deletedTarget) {
+      openThread(deletedTarget.dataset.deletedChat, {
+        mode: 'focus',
+        focusMessageId: Number(deletedTarget.dataset.deletedMessage || 0) || null,
+      });
+      return;
+    }
+
     const target = event.target.closest('[data-privacy-chat]');
     if (!target) return;
     const chatId = target.dataset.privacyChat;
