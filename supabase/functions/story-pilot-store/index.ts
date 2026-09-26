@@ -800,6 +800,71 @@ function messagePreview(row: any) {
   return "Сообщение";
 }
 
+function smartThreadSignals(thread: any) {
+  const lastAtMs = new Date(thread.lastAt || 0).getTime();
+  const ageMinutes = Number.isFinite(lastAtMs)
+    ? Math.max(0, Math.floor((Date.now() - lastAtMs) / 60000))
+    : 999999;
+
+  const lastIncomingMs = new Date(thread.lastIncomingAt || 0).getTime();
+  const lastOutgoingMs = new Date(thread.lastOutgoingAt || 0).getTime();
+  const awaitingReply = Number.isFinite(lastIncomingMs)
+    && lastIncomingMs > 0
+    && (!Number.isFinite(lastOutgoingMs) || lastOutgoingMs <= 0 || lastIncomingMs > lastOutgoingMs);
+
+  const preview = String(thread.preview || "");
+  const looksQuestion = thread.direction !== "outgoing" && (
+    /[?？]$/.test(preview.trim())
+    || /\b(can you|could you|would you|please|need|when|where|what|why|how|можешь|можете|пожалуйста|нужно|надо|когда|где|что|почему|как)\b/i.test(preview)
+  );
+
+  let score = 0;
+  const reasons: string[] = [];
+
+  if (awaitingReply) {
+    score += 38;
+    reasons.push("Последнее доступное сообщение входящее");
+  }
+  if (looksQuestion) {
+    score += 16;
+    reasons.push("Похоже на вопрос или запрос");
+  }
+  if (ageMinutes <= 120) {
+    score += 18;
+    reasons.push("Свежая активность");
+  } else if (ageMinutes <= 1440) {
+    score += 8;
+  }
+  if (Number(thread.deletedCount || 0) > 0) {
+    score += Math.min(18, 8 + Number(thread.deletedCount || 0) * 2);
+    reasons.push("Есть удалённые сообщения");
+  }
+  if (Number(thread.editedCount || 0) > 0) {
+    score += Math.min(12, 5 + Number(thread.editedCount || 0));
+    reasons.push("Есть изменённые сообщения");
+  }
+  if (Number(thread.mediaCount || 0) > 0) score += 3;
+
+  if (thread.direction === "outgoing" && !awaitingReply) {
+    score = Math.max(0, score - 18);
+  }
+
+  const smartState = score >= 52
+    ? "action"
+    : score >= 24
+      ? "watch"
+      : "archive";
+
+  return {
+    smartScore: Math.min(100, score),
+    smartState,
+    smartReasons: reasons.slice(0, 3),
+    actionLikely: awaitingReply,
+    looksQuestion,
+    ageMinutes,
+  };
+}
+
 async function opListPrivacyThreads(args: any) {
   const userId = String(args.userId);
   const settings = await opGetPrivacySettings({ userId });
@@ -845,17 +910,39 @@ async function opListPrivacyThreads(args: any) {
         mediaCount: 0,
         vaultCount: 0,
         messageCount: 0,
+        incomingCount: 0,
+        outgoingCount: 0,
+        lastIncomingAt: null,
+        lastOutgoingAt: null,
       };
       byChat.set(key, thread);
     }
     thread.messageCount += 1;
+    if (row.direction === "outgoing") {
+      thread.outgoingCount += 1;
+      if (!thread.lastOutgoingAt) thread.lastOutgoingAt = row.sent_at;
+    } else {
+      thread.incomingCount += 1;
+      if (!thread.lastIncomingAt) thread.lastIncomingAt = row.sent_at;
+    }
     if (row.deleted_at) thread.deletedCount += 1;
     if (row.edited_at) thread.editedCount += 1;
     if (row.media_type) thread.mediaCount += 1;
     if (row.media_archive_status === "archived") thread.vaultCount += 1;
   }
 
-  return { settings, threads: [...byChat.values()].slice(0, 60) };
+  const threads = [...byChat.values()]
+    .map((thread: any) => ({ ...thread, ...smartThreadSignals(thread) }))
+    .slice(0, 60);
+
+  const smartSummary = {
+    action: threads.filter((thread: any) => thread.smartState === "action").length,
+    watch: threads.filter((thread: any) => thread.smartState === "watch").length,
+    archive: threads.filter((thread: any) => thread.smartState === "archive").length,
+    likelyNeedsReply: threads.filter((thread: any) => thread.actionLikely).length,
+  };
+
+  return { settings, threads, smartSummary };
 }
 
 async function opListPrivacyMessages(args: any) {
