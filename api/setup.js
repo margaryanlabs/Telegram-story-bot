@@ -1,4 +1,8 @@
-import { listActiveViewerSessions } from '../lib/viewer-sync-store.js';
+import {
+  listActiveViewerSessions,
+  listBusinessConnectionCandidates,
+  upsertBusinessConnectionState,
+} from '../lib/viewer-sync-store.js';
 import crypto from 'node:crypto';
 
 function telegramUrl(token, method) {
@@ -117,14 +121,60 @@ export default async function handler(req, res) {
       },
     }).catch(() => {});
 
-    // Telegram supports per-chat menu buttons. Refresh active owners too so an
-    // old personalized Mini App URL cannot keep a stale WebView build forever.
+    // Recover Business Connection state from archived Business messages.
+    // This is especially important after menu-button refreshes because navigation
+    // URLs are not a reliable database for connection identity/rights.
+    let recoveredBusinessConnections = 0;
+    const menuOwnerIds = new Set();
+    try {
+      const candidates = await listBusinessConnectionCandidates(50);
+      for (const candidate of candidates) {
+        const userId = String(candidate?.telegramUserId || '');
+        const connectionId = String(candidate?.businessConnectionId || '');
+        if (!userId || !connectionId) continue;
+        menuOwnerIds.add(userId);
+
+        try {
+          const connection = await tg(token, 'getBusinessConnection', {
+            business_connection_id: connectionId,
+          });
+          const live = Boolean(connection?.is_enabled);
+          const rights = Boolean(connection?.rights?.can_manage_stories);
+          const readRights = Boolean(connection?.rights?.can_read_messages);
+          const connectionUserChatId = String(connection?.user_chat_id || userId);
+
+          await upsertBusinessConnectionState({
+            telegramUserId: connectionUserChatId,
+            businessConnectionId: live ? connectionId : null,
+            isEnabled: live,
+            canManageStories: live && rights,
+            canReadMessages: live && readRights,
+            source: 'setup_archive_recovery',
+            lastVerifiedAt: new Date().toISOString(),
+          });
+          recoveredBusinessConnections += 1;
+        } catch (error) {
+          console.warn('Business connection recovery candidate skipped', {
+            user_id: userId,
+            error: error?.message || String(error),
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('Business connection recovery skipped', error?.message || String(error));
+    }
+
+    // Telegram supports per-chat menu buttons. Refresh active owners while
+    // preserving every existing URL parameter; only the build token changes.
     let refreshedOwnerMenus = 0;
     try {
       const owners = await listActiveViewerSessions(20);
       for (const owner of owners) {
         const chatId = String(owner?.telegram_user_id || '');
-        if (!chatId) continue;
+        if (chatId) menuOwnerIds.add(chatId);
+      }
+
+      for (const chatId of menuOwnerIds) {
         const currentMenu = await tg(token, 'getChatMenuButton', { chat_id: chatId }).catch(() => null);
         const nextUrl = versionExistingControlUrl(currentMenu, baseUrl);
         await tg(token, 'setChatMenuButton', {
@@ -156,6 +206,7 @@ export default async function handler(req, res) {
       version: 'v8',
       control_build: CONTROL_BUILD,
       refreshed_owner_menus: refreshedOwnerMenus,
+      recovered_business_connections: recoveredBusinessConnections,
     });
   } catch (error) {
     console.error(error);
