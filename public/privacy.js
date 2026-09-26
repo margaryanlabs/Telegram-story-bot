@@ -679,7 +679,10 @@
     openSheet(`
       <div class="privacy-sheet-head">
         <div><span class="kicker">${mode === 'focus' ? 'GHOST FOCUS' : 'Ghost Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
-        <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
+        <div class="privacy-sheet-head-actions">
+          <button class="mini-chip" type="button" data-privacy-close="1">← Список</button>
+          <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
+        </div>
       </div>
       <p>Архивная копия. Telegram Control не вызывает readBusinessMessage при просмотре этого экрана.</p>
       ${focusNote}
@@ -931,7 +934,27 @@
 
   $('privacyThreads')?.addEventListener('click', event => {
     const target = event.target.closest('[data-privacy-chat]');
-    if (target) openThread(target.dataset.privacyChat);
+    if (!target) return;
+    const chatId = target.dataset.privacyChat;
+    const thread = privacyState.threads.find(item => String(item.chatId) === String(chatId));
+
+    if (privacyState.filter === 'deleted') {
+      openThread(chatId, {
+        mode: thread?.latestDeletedMessageId ? 'focus' : 'deleted',
+        focusMessageId: thread?.latestDeletedMessageId || null,
+      });
+      return;
+    }
+
+    if (privacyState.filter === 'edited') {
+      openThread(chatId, {
+        mode: thread?.latestEditedMessageId ? 'focus' : 'edited',
+        focusMessageId: thread?.latestEditedMessageId || null,
+      });
+      return;
+    }
+
+    openThread(chatId);
   });
 
   $('sheet')?.addEventListener('click', async event => {
