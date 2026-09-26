@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 const CONTROL_BUILD = '20260926-1340';
 import sharp from 'sharp';
-import { trackPublishedStory, markStoryDeleted } from '../lib/viewer-sync-store.js';
+import {
+  trackPublishedStory,
+  markStoryDeleted,
+  upsertBusinessConnectionState,
+} from '../lib/viewer-sync-store.js';
 import {
   archiveBusinessMediaVault,
   archiveBusinessMessage,
@@ -453,6 +457,17 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   };
 
   await saveSettings(token, chatId, origin, next);
+  await upsertBusinessConnectionState({
+    telegramUserId: chatId,
+    businessConnectionId: live ? connection.id : null,
+    isEnabled: live,
+    canManageStories: live && rights,
+    canReadMessages: live && readRights,
+    source: notify ? 'business_connection_update' : 'business_activity_recovery',
+    lastVerifiedAt: new Date().toISOString(),
+  }).catch(error => {
+    console.warn('Durable Business connection sync skipped', error?.message || String(error));
+  });
 
   console.log('Story Pilot business connection sync', {
     chat_id: chatId,
