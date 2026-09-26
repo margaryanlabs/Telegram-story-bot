@@ -1446,3 +1446,10 @@ input,textarea{caret-color:var(--accent)}
   .ghost-quick-grid{gap:6px}
   .ghost-quick-grid button{min-height:76px;padding:10px}
 }
+
+
+/* Deleted/Edit feed navigation v2 */
+.privacy-sheet-head-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+@media(max-width:390px){
+  .privacy-sheet-head-actions .mini-chip:first-child{padding-left:8px;padding-right:8px}
+}

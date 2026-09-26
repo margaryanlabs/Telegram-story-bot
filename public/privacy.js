@@ -225,7 +225,19 @@
         return new Date(right.lastAt || 0).getTime() - new Date(left.lastAt || 0).getTime();
       });
     }
-    return rows;
+    if (filter === 'deleted') {
+      return rows.sort((left, right) =>
+        new Date(right.lastDeletedAt || 0).getTime() - new Date(left.lastDeletedAt || 0).getTime()
+      );
+    }
+    if (filter === 'edited') {
+      return rows.sort((left, right) =>
+        new Date(right.lastEditedAt || 0).getTime() - new Date(left.lastEditedAt || 0).getTime()
+      );
+    }
+    return rows.sort((left, right) =>
+      new Date(right.lastAt || 0).getTime() - new Date(left.lastAt || 0).getTime()
+    );
   }
 
   function render() {
@@ -430,17 +442,33 @@
         ? thread.smartReasons[0]
         : '';
 
+      const displayPreview = privacyState.filter === 'deleted' && thread.deletedPreview
+        ? thread.deletedPreview
+        : privacyState.filter === 'edited' && thread.editedPreview
+          ? thread.editedPreview
+          : thread.preview;
+      const displayAt = privacyState.filter === 'deleted' && thread.lastDeletedAt
+        ? thread.lastDeletedAt
+        : privacyState.filter === 'edited' && thread.lastEditedAt
+          ? thread.lastEditedAt
+          : thread.lastAt;
+      const eventReason = privacyState.filter === 'deleted' && thread.lastDeletedAt
+        ? 'Последнее удаление · ' + formatWhen(thread.lastDeletedAt)
+        : privacyState.filter === 'edited' && thread.lastEditedAt
+          ? 'Последнее изменение · ' + formatWhen(thread.lastEditedAt)
+          : reason;
+
       return `
         <button class="privacy-thread" type="button" data-privacy-chat="${escapeHtml(thread.chatId)}">
           <span class="privacy-thread-avatar">${escapeHtml(initials(thread.title))}</span>
           <span class="privacy-thread-copy">
             <strong>${escapeHtml(thread.title || 'Telegram chat')}</strong>
-            <span>${escapeHtml(thread.preview || 'Сообщение')}</span>
-            ${reason ? `<small class="smart-thread-reason">${escapeHtml(reason)}</small>` : ''}
+            <span>${escapeHtml(displayPreview || 'Сообщение')}</span>
+            ${eventReason ? `<small class="smart-thread-reason">${escapeHtml(eventReason)}</small>` : ''}
           </span>
           <span class="privacy-thread-side">
             <span class="privacy-thread-badges">${badges}</span>
-            <small>${escapeHtml(formatWhen(thread.lastAt))}</small>
+            <small>${escapeHtml(formatWhen(displayAt))}</small>
           </span>
         </button>`;
     }).join('');
@@ -651,7 +679,10 @@
     openSheet(`
       <div class="privacy-sheet-head">
         <div><span class="kicker">${mode === 'focus' ? 'GHOST FOCUS' : 'Ghost Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
-        <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
+        <div class="privacy-sheet-head-actions">
+          <button class="mini-chip" type="button" data-privacy-close="1">← Список</button>
+          <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
+        </div>
       </div>
       <p>Архивная копия. Telegram Control не вызывает readBusinessMessage при просмотре этого экрана.</p>
       ${focusNote}
@@ -903,7 +934,27 @@
 
   $('privacyThreads')?.addEventListener('click', event => {
     const target = event.target.closest('[data-privacy-chat]');
-    if (target) openThread(target.dataset.privacyChat);
+    if (!target) return;
+    const chatId = target.dataset.privacyChat;
+    const thread = privacyState.threads.find(item => String(item.chatId) === String(chatId));
+
+    if (privacyState.filter === 'deleted') {
+      openThread(chatId, {
+        mode: thread?.latestDeletedMessageId ? 'focus' : 'deleted',
+        focusMessageId: thread?.latestDeletedMessageId || null,
+      });
+      return;
+    }
+
+    if (privacyState.filter === 'edited') {
+      openThread(chatId, {
+        mode: thread?.latestEditedMessageId ? 'focus' : 'edited',
+        focusMessageId: thread?.latestEditedMessageId || null,
+      });
+      return;
+    }
+
+    openThread(chatId);
   });
 
   $('sheet')?.addEventListener('click', async event => {

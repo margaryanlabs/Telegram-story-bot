@@ -910,7 +910,7 @@ async function opListPrivacyThreads(args: any) {
 
   if (directSql) {
     rows = await directSql`
-      select chat_id, chat_title, direction, text_content, caption, media_type,
+      select chat_id, message_id, chat_title, direction, text_content, caption, media_type,
              media_archive_status, sent_at, edited_at, deleted_at,
              sender_display_name, sender_username
       from public.story_pilot_messages
@@ -921,7 +921,7 @@ async function opListPrivacyThreads(args: any) {
     `;
   } else {
     const r = await db.from("story_pilot_messages")
-      .select("chat_id,chat_title,direction,text_content,caption,media_type,media_archive_status,sent_at,edited_at,deleted_at,sender_display_name,sender_username")
+      .select("chat_id,message_id,chat_title,direction,text_content,caption,media_type,media_archive_status,sent_at,edited_at,deleted_at,sender_display_name,sender_username")
       .eq("telegram_user_id", userId)
       .gte("sent_at", cutoff)
       .order("sent_at", { ascending: false })
@@ -949,6 +949,12 @@ async function opListPrivacyThreads(args: any) {
         outgoingCount: 0,
         lastIncomingAt: null,
         lastOutgoingAt: null,
+        lastDeletedAt: null,
+        latestDeletedMessageId: null,
+        deletedPreview: null,
+        lastEditedAt: null,
+        latestEditedMessageId: null,
+        editedPreview: null,
       };
       byChat.set(key, thread);
     }
@@ -960,8 +966,22 @@ async function opListPrivacyThreads(args: any) {
       thread.incomingCount += 1;
       if (!thread.lastIncomingAt) thread.lastIncomingAt = row.sent_at;
     }
-    if (row.deleted_at) thread.deletedCount += 1;
-    if (row.edited_at) thread.editedCount += 1;
+    if (row.deleted_at) {
+      thread.deletedCount += 1;
+      if (!thread.lastDeletedAt || new Date(row.deleted_at).getTime() > new Date(thread.lastDeletedAt).getTime()) {
+        thread.lastDeletedAt = row.deleted_at;
+        thread.latestDeletedMessageId = Number(row.message_id);
+        thread.deletedPreview = messagePreview(row);
+      }
+    }
+    if (row.edited_at) {
+      thread.editedCount += 1;
+      if (!thread.lastEditedAt || new Date(row.edited_at).getTime() > new Date(thread.lastEditedAt).getTime()) {
+        thread.lastEditedAt = row.edited_at;
+        thread.latestEditedMessageId = Number(row.message_id);
+        thread.editedPreview = messagePreview(row);
+      }
+    }
     if (row.media_type) thread.mediaCount += 1;
     if (row.media_archive_status === "archived") thread.vaultCount += 1;
   }
