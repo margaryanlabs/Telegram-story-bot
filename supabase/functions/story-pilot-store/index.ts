@@ -1868,6 +1868,7 @@ async function opGetAnalytics(args: any) {
   `;
 
   const storyMap = new Map(stories.map((story: any) => [String(story.story_id), story]));
+  const recentStoryIds = (stories as any[]).slice(0, 5).map(story => String(story.story_id));
   const people = new Map<string, any>();
 
   for (const row of viewers as any[]) {
@@ -1925,6 +1926,21 @@ async function opGetAnalytics(args: any) {
     const avgDelaySec = person.delayCount ? Math.round(person.delayTotal / person.delayCount) : null;
     const fast15Rate = person.delayCount ? Math.round((person.fast15Count / person.delayCount) * 100) : null;
 
+    const recentViewedStories = recentStoryIds.filter(storyId => person.storyIds.has(storyId)).length;
+    let latestStoryStreak = 0;
+    for (const storyId of recentStoryIds) {
+      if (!person.storyIds.has(storyId)) break;
+      latestStoryStreak += 1;
+    }
+    const recentCoveragePct = recentStoryIds.length
+      ? Math.round((recentViewedStories / recentStoryIds.length) * 100)
+      : 0;
+    const reactionRatePct = viewedStories
+      ? Math.round((person.reactions / viewedStories) * 100)
+      : 0;
+    const firstSeenMs = person.firstSeenAt ? new Date(person.firstSeenAt).getTime() : 0;
+    const newViewer7d = firstSeenMs > 0 && nowMs - firstSeenMs <= 7 * 86400000;
+
     const frequency = Math.min(1, viewedStories / scoreStoryDenominator);
     const latency = fast15Rate === null ? 0 : Math.min(1, Math.max(0, fast15Rate / 100));
     const reactionRate = Math.min(1, person.reactions / Math.max(1, viewedStories));
@@ -1955,6 +1971,12 @@ async function opGetAnalytics(args: any) {
       avgDelaySec,
       fast15Rate,
       reactions: person.reactions,
+      reactionRatePct,
+      recentViewedStories,
+      recentCoveragePct,
+      latestStoryStreak,
+      newViewer7d,
+      returningViewer: viewedStories >= 2,
       activityScore,
       activityBand,
       scoreConfidence: Math.round(confidence * 100),
@@ -1975,6 +1997,23 @@ async function opGetAnalytics(args: any) {
   const repeatViewers = personRows.filter((person: any) => person.viewedStories >= 2).length;
   const contacts = personRows.filter((person: any) => person.isContact).length;
   const nonContacts = Math.max(0, uniqueViewers - contacts);
+  const newViewers7d = personRows.filter((person: any) => person.newViewer7d).length;
+  const highRecurrence = personRows.filter((person: any) =>
+    recentStoryIds.length >= 2
+    && person.recentViewedStories >= 2
+    && person.recentCoveragePct >= 60
+  ).length;
+  const fastRepeatViewers = personRows.filter((person: any) =>
+    person.viewedStories >= 2
+    && Number(person.fast15Rate || 0) >= 50
+  ).length;
+  const reactors = personRows.filter((person: any) => person.reactions > 0).length;
+  const returningRatePct = uniqueViewers
+    ? Math.round((repeatViewers / uniqueViewers) * 100)
+    : 0;
+  const reactionViewerRatePct = uniqueViewers
+    ? Math.round((reactors / uniqueViewers) * 100)
+    : 0;
 
   const delays = personRows
     .map((person: any) => person.avgDelaySec)
@@ -2049,6 +2088,16 @@ async function opGetAnalytics(args: any) {
     repeatViewers,
     contacts,
     nonContacts,
+    audiencePatterns: {
+      recentStoriesWindow: recentStoryIds.length,
+      newViewers7d,
+      returningViewers: repeatViewers,
+      returningRatePct,
+      highRecurrence,
+      fastRepeatViewers,
+      reactors,
+      reactionViewerRatePct,
+    },
     reactions,
     forwards,
     avgDelaySec,
