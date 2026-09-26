@@ -225,7 +225,19 @@
         return new Date(right.lastAt || 0).getTime() - new Date(left.lastAt || 0).getTime();
       });
     }
-    return rows;
+    if (filter === 'deleted') {
+      return rows.sort((left, right) =>
+        new Date(right.lastDeletedAt || 0).getTime() - new Date(left.lastDeletedAt || 0).getTime()
+      );
+    }
+    if (filter === 'edited') {
+      return rows.sort((left, right) =>
+        new Date(right.lastEditedAt || 0).getTime() - new Date(left.lastEditedAt || 0).getTime()
+      );
+    }
+    return rows.sort((left, right) =>
+      new Date(right.lastAt || 0).getTime() - new Date(left.lastAt || 0).getTime()
+    );
   }
 
   function render() {
