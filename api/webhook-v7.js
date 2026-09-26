@@ -496,7 +496,7 @@ function ghostMessagePreview(row = {}) {
   return String(value || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
 }
 
-async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}) {
+async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}, mediaRecoveryResults = []) {
   const allIncoming = (Array.isArray(events) ? events : [])
     .filter(event => event?.direction !== 'outgoing');
   const incoming = allIncoming.slice(0, 5);
@@ -512,9 +512,17 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
     ? `\n+ ещё ${allIncoming.length - incoming.length}`
     : '';
 
+  const mediaResults = Array.isArray(mediaRecoveryResults) ? mediaRecoveryResults : [];
+  const mediaRecovered = mediaResults.filter(item => item?.archived).length;
+  const mediaStatus = mediaResults.length
+    ? mediaRecovered === mediaResults.length
+      ? `\n\n▣ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}`
+      : `\n\n⚠ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}. Текст и метаданные Ghost всё равно сохранены.`
+    : '';
+
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Ghost.`,
+    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Ghost.${mediaStatus}`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -1012,6 +1020,7 @@ export default async function handler(req, res) {
             origin,
             result.events,
             result.settings,
+            result.mediaRecoveryResults,
           ).catch(error => {
             console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
             return false;
