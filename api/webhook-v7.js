@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+const CONTROL_BUILD = '20260926-0950';
 import sharp from 'sharp';
 import { trackPublishedStory, markStoryDeleted } from '../lib/viewer-sync-store.js';
 import {
@@ -237,6 +238,8 @@ async function getStoredSettings(token, chatId) {
 
 async function saveSettings(token, chatId, origin, settings) {
   const url = new URL('/studio.html', origin);
+  url.searchParams.set('v', CONTROL_BUILD);
+  url.searchParams.set('v', CONTROL_BUILD);
   if (settings.bc) {
     url.searchParams.set('bc', settings.bc);
     url.searchParams.set('cs', settings.canStories ? '1' : '0');
@@ -465,6 +468,7 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
 
 function ghostAppUrl(origin) {
   const url = new URL('/studio.html', origin);
+  url.searchParams.set('v', CONTROL_BUILD);
   url.searchParams.set('screen', 'privacy');
   return url.toString();
 }
@@ -517,6 +521,7 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}) {
 
 async function sendAppShortcut(token, chatId, origin, screen, text, buttonText) {
   const url = new URL('/studio.html', origin);
+  url.searchParams.set('v', CONTROL_BUILD);
   url.searchParams.set('screen', screen);
   await tg(token, 'sendMessage', {
     chat_id: chatId,
