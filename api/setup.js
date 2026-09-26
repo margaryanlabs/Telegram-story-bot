@@ -24,6 +24,18 @@ function controlAppUrl(baseUrl) {
   return url.toString();
 }
 
+function versionExistingControlUrl(menu, baseUrl) {
+  const raw = String(menu?.web_app?.url || '').trim();
+  if (!raw) return controlAppUrl(baseUrl);
+  try {
+    const url = new URL(raw);
+    url.searchParams.set('v', CONTROL_BUILD);
+    return url.toString();
+  } catch {
+    return controlAppUrl(baseUrl);
+  }
+}
+
 function productionBaseUrl(req) {
   const configured = String(process.env.STORY_PILOT_BASE_URL || '').trim();
   if (configured) return configured.replace(/\/$/, '');
@@ -113,12 +125,14 @@ export default async function handler(req, res) {
       for (const owner of owners) {
         const chatId = String(owner?.telegram_user_id || '');
         if (!chatId) continue;
+        const currentMenu = await tg(token, 'getChatMenuButton', { chat_id: chatId }).catch(() => null);
+        const nextUrl = versionExistingControlUrl(currentMenu, baseUrl);
         await tg(token, 'setChatMenuButton', {
           chat_id: chatId,
           menu_button: {
             type: 'web_app',
             text: 'Открыть Control',
-            web_app: { url: controlAppUrl(baseUrl) },
+            web_app: { url: nextUrl },
           },
         }).catch(() => {});
         refreshedOwnerMenus += 1;
