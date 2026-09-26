@@ -307,7 +307,7 @@ function connectText(settings, live = null) {
   }
 
   if (settings.bc && live !== false) {
-    return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → Story Pilot → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
+    return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → Telegram Control → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
   }
 
   return '🔗 Подключить Telegram\n\nЭто делается один раз для каждого пользователя:\n\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Разреши «Управление историями».\n4️⃣ Для Ghost включи доступ к сообщениям / чтению сообщений и выбери нужные чаты.\n5️⃣ Сохрани и вернись сюда.\n6️⃣ Нажми «✅ Я подключил — проверить».\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, а здесь подключение не найдено: измени одно разрешение и сохрани. Это заставит Telegram прислать боту актуальный Business Connection.\n\nBusiness-функции работают через официальное подключение Telegram. Deep Intelligence подключается отдельно и добровольно.';
@@ -456,7 +456,7 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   if (notify) {
     const text = live
       ? connectText(next, true)
-      : '⚠️ Story Pilot отключён от Telegram Business. Подключи бота снова, чтобы публиковать Stories.';
+      : '⚠️ Telegram Control отключён от Telegram Business. Подключи бота снова, чтобы публиковать Stories.';
     await showFreshPanel(token, chatId, origin, next, text);
   }
 
