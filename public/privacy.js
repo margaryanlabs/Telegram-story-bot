@@ -13,9 +13,10 @@
       retentionDays: 30,
     },
     threads: [],
+    smartSummary: null,
     activeThread: null,
     query: '',
-    filter: 'all',
+    filter: 'smart',
     lastTotalMessages: 0,
     lastRefreshAt: null,
     mediaObjectUrl: null,
@@ -190,17 +191,31 @@
 
   function filteredThreads() {
     const query = privacyState.query.trim().toLowerCase();
-    return (privacyState.threads || []).filter(thread => {
-      if (privacyState.filter === 'deleted' && Number(thread.deletedCount || 0) === 0) return false;
-      if (privacyState.filter === 'edited' && Number(thread.editedCount || 0) === 0) return false;
-      if (privacyState.filter === 'media' && Number(thread.mediaCount || 0) === 0) return false;
+    const filter = privacyState.filter || 'smart';
+    const rows = (privacyState.threads || []).filter(thread => {
+      if (filter === 'smart' && !['action','watch'].includes(String(thread.smartState || ''))) return false;
+      if (filter === 'action' && thread.smartState !== 'action') return false;
+      if (filter === 'watch' && thread.smartState !== 'watch') return false;
+      if (filter === 'deleted' && Number(thread.deletedCount || 0) === 0) return false;
+      if (filter === 'edited' && Number(thread.editedCount || 0) === 0) return false;
+      if (filter === 'media' && Number(thread.mediaCount || 0) === 0) return false;
       if (!query) return true;
       return [
         thread.title,
         thread.preview,
         thread.chatId,
+        ...(Array.isArray(thread.smartReasons) ? thread.smartReasons : []),
       ].some(value => String(value || '').toLowerCase().includes(query));
     });
+
+    if (['smart','action','watch'].includes(filter)) {
+      return rows.sort((left, right) => {
+        const scoreDelta = Number(right.smartScore || 0) - Number(left.smartScore || 0);
+        if (scoreDelta) return scoreDelta;
+        return new Date(right.lastAt || 0).getTime() - new Date(left.lastAt || 0).getTime();
+      });
+    }
+    return rows;
   }
 
   function render() {
@@ -306,6 +321,16 @@
     }
 
     const totals = threadTotals();
+    const summary = privacyState.smartSummary || {
+      action: privacyState.threads.filter(thread => thread.smartState === 'action').length,
+      watch: privacyState.threads.filter(thread => thread.smartState === 'watch').length,
+      archive: privacyState.threads.filter(thread => thread.smartState === 'archive').length,
+      likelyNeedsReply: privacyState.threads.filter(thread => thread.actionLikely).length,
+    };
+    if ($('smartInboxAction')) $('smartInboxAction').textContent = String(summary.action || 0);
+    if ($('smartInboxWatch')) $('smartInboxWatch').textContent = String(summary.watch || 0);
+    if ($('smartInboxAll')) $('smartInboxAll').textContent = String(privacyState.threads.length);
+
     const statMap = {
       privacyStatThreads: privacyState.threads.length,
       privacyStatDeleted: totals.deleted,
@@ -329,6 +354,9 @@
     document.querySelectorAll('[data-privacy-filter]').forEach(button => {
       button.classList.toggle('active', button.dataset.privacyFilter === privacyState.filter);
       const type = button.dataset.privacyFilter;
+      if (type === 'smart') button.dataset.count = String((summary.action || 0) + (summary.watch || 0));
+      if (type === 'action') button.dataset.count = String(summary.action || 0);
+      if (type === 'watch') button.dataset.count = String(summary.watch || 0);
       if (type === 'deleted') button.dataset.count = String(totals.deleted);
       if (type === 'edited') button.dataset.count = String(totals.edited);
       if (type === 'media') button.dataset.count = String(totals.media);
@@ -375,11 +403,21 @@
       const edited = Number(thread.editedCount || 0);
       const media = Number(thread.mediaCount || 0);
       const vault = Number(thread.vaultCount || 0);
+      const state = String(thread.smartState || 'archive');
+      const smartBadge = state === 'action'
+        ? '<i class="smart-action">Action</i>'
+        : state === 'watch'
+          ? '<i class="smart-watch">Watch</i>'
+          : '';
       const badges = [
+        smartBadge,
         deleted ? `<i class="deleted">↶ ${deleted}</i>` : '',
         edited ? `<i class="edited">≋ ${edited}</i>` : '',
         vault ? `<i class="vault">◇ ${vault}</i>` : (media ? `<i class="media">▣ ${media}</i>` : ''),
       ].filter(Boolean).join('');
+      const reason = Array.isArray(thread.smartReasons) && thread.smartReasons.length
+        ? thread.smartReasons[0]
+        : '';
 
       return `
         <button class="privacy-thread" type="button" data-privacy-chat="${escapeHtml(thread.chatId)}">
@@ -387,6 +425,7 @@
           <span class="privacy-thread-copy">
             <strong>${escapeHtml(thread.title || 'Telegram chat')}</strong>
             <span>${escapeHtml(thread.preview || 'Сообщение')}</span>
+            ${reason ? `<small class="smart-thread-reason">${escapeHtml(reason)}</small>` : ''}
           </span>
           <span class="privacy-thread-side">
             <span class="privacy-thread-badges">${badges}</span>
@@ -411,6 +450,7 @@
       if (Array.isArray(data.threads)) {
         privacyState.threads = data.threads;
       }
+      if (data.smartSummary) privacyState.smartSummary = data.smartSummary;
       privacyState.lastRefreshAt = Date.now();
 
       const after = threadTotals().messages;
@@ -441,6 +481,7 @@
       privacyState.degraded = false;
       privacyState.settings = { ...privacyState.settings, ...(data.settings || {}) };
       privacyState.threads = Array.isArray(data.threads) ? data.threads : privacyState.threads;
+      if (data.smartSummary) privacyState.smartSummary = data.smartSummary;
       privacyState.lastTotalMessages = threadTotals().messages;
       render();
       if (!quiet) toast('Ghost настройки сохранены');
@@ -670,6 +711,7 @@
       try {
         await request('clear_archive');
         privacyState.threads = [];
+        privacyState.smartSummary = null;
         privacyState.lastTotalMessages = 0;
         render();
         toast('Ghost Inbox очищен');
@@ -721,6 +763,15 @@
     privacyState.filter = button.dataset.privacyFilter || 'all';
     haptic('soft');
     render();
+  });
+
+  document.querySelectorAll('[data-smart-filter]').forEach(button => {
+    button.addEventListener('click', () => {
+      privacyState.filter = button.dataset.smartFilter || 'smart';
+      haptic('soft');
+      render();
+      $('privacyThreads')?.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
   });
 
   document.querySelector('[data-nav="privacy"]')?.addEventListener('click', () => {
