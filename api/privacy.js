@@ -3,6 +3,7 @@ import {
   clearPrivacyArchive,
   getPrivacyMessageVersions,
   getPrivacySettings,
+  listDeletedFeed,
   listPrivacyMessages,
   listPrivacyThreads,
   updatePrivacySettings,
@@ -130,6 +131,12 @@ export default async function handler(req, res) {
         threads: overview?.threads || [],
         smartSummary: overview?.smartSummary || null,
       });
+      return;
+    }
+
+    if (action === 'list_deleted') {
+      const data = await listDeletedFeed(userId, body.limit || 120);
+      res.status(200).json({ ok: true, ...data });
       return;
     }
 
