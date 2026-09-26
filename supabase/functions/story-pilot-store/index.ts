@@ -1000,6 +1000,61 @@ async function opListPrivacyThreads(args: any) {
   return { settings, threads, smartSummary };
 }
 
+async function opListDeletedFeed(args: any) {
+  const userId = String(args.userId);
+  const limit = Math.max(1, Math.min(160, Number(args.limit || 120)));
+  const settings = await opGetPrivacySettings({ userId });
+  if (!privacyEnabled(settings)) return { settings, items: [] };
+
+  const cutoff = new Date(Date.now() - settings.retentionDays * 86400000).toISOString();
+  let rows: any[] = [];
+
+  if (directSql) {
+    rows = await directSql`
+      select chat_id, message_id, direction, sender_user_id, sender_username,
+             sender_display_name, chat_title, text_content, caption, media_type,
+             media_file_name, media_file_size, media_archive_status,
+             sent_at, edited_at, deleted_at
+      from public.story_pilot_messages
+      where telegram_user_id = ${userId}::bigint
+        and deleted_at is not null
+        and sent_at >= ${cutoff}::timestamptz
+      order by deleted_at desc, chat_id desc, message_id desc
+      limit ${limit}
+    `;
+  } else {
+    const r = await db.from("story_pilot_messages")
+      .select("chat_id,message_id,direction,sender_user_id,sender_username,sender_display_name,chat_title,text_content,caption,media_type,media_file_name,media_file_size,media_archive_status,sent_at,edited_at,deleted_at")
+      .eq("telegram_user_id", userId)
+      .not("deleted_at", "is", null)
+      .gte("sent_at", cutoff)
+      .order("deleted_at", { ascending: false })
+      .limit(limit);
+    rows = need(r as any) || [];
+  }
+
+  return {
+    settings,
+    items: rows.map((row: any) => ({
+      chatId: String(row.chat_id),
+      messageId: Number(row.message_id),
+      direction: row.direction || "incoming",
+      senderUserId: row.sender_user_id ? String(row.sender_user_id) : null,
+      senderUsername: row.sender_username || null,
+      senderDisplayName: row.sender_display_name || null,
+      chatTitle: row.chat_title || null,
+      preview: messagePreview(row),
+      mediaType: row.media_type || null,
+      mediaFileName: row.media_file_name || null,
+      mediaFileSize: Number(row.media_file_size || 0) || null,
+      mediaArchiveStatus: row.media_archive_status || null,
+      sentAt: row.sent_at || null,
+      editedAt: row.edited_at || null,
+      deletedAt: row.deleted_at || null,
+    })),
+  };
+}
+
 async function opListPrivacyMessages(args: any) {
   const userId = String(args.userId);
   const chatId = String(args.chatId);
@@ -2386,6 +2441,7 @@ async function dispatch(op: string, args: any) {
     case "capture_business_message": return opCaptureBusinessMessage(args);
     case "mark_business_messages_deleted": return opMarkBusinessMessagesDeleted(args);
     case "list_privacy_threads": return opListPrivacyThreads(args);
+    case "list_deleted_feed": return opListDeletedFeed(args);
     case "list_privacy_messages": return opListPrivacyMessages(args);
     case "get_privacy_media_ref": return opGetPrivacyMediaRef(args);
     case "create_privacy_media_upload": return opCreatePrivacyMediaUpload(args);
