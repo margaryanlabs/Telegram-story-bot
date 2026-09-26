@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20260926-1340';
+const CONTROL_BUILD = '20260926-1405';
 import sharp from 'sharp';
 import {
   trackPublishedStory,

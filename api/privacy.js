@@ -1,12 +1,14 @@
 import crypto from 'node:crypto';
 import {
   clearPrivacyArchive,
+  getBusinessConnectionState,
   getPrivacyMessageVersions,
   getPrivacySettings,
   listDeletedFeed,
   listPrivacyMessages,
   listPrivacyThreads,
   updatePrivacySettings,
+  viewerStoreHealth,
 } from '../lib/viewer-sync-store.js';
 
 function validateInitData(initData, token) {
@@ -49,6 +51,180 @@ function validateInitData(initData, token) {
 function noStore(res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+}
+
+function telegramUrl(token, method) {
+  return `https://api.telegram.org/bot${token}/${method}`;
+}
+
+async function tg(token, method, body = {}, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(telegramUrl(token, method), {
+      method: 'POST',
+      headers: { 'content-type':'application/json' },
+      body: JSON.stringify(body || {}),
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.ok) {
+      throw new Error(`${method}: ${data?.description || response.statusText || response.status}`);
+    }
+    return data.result;
+  } catch (error) {
+    if (error?.name === 'AbortError') throw new Error(`${method}: timeout`);
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function connectionIdFromMenu(menu) {
+  try {
+    const raw = String(menu?.web_app?.url || '');
+    if (!raw) return null;
+    return new URL(raw).searchParams.get('bc') || null;
+  } catch {
+    return null;
+  }
+}
+
+function productionControlUrl() {
+  const configured = String(process.env.STORY_PILOT_BASE_URL || '').trim();
+  const host = String(process.env.VERCEL_PROJECT_PRODUCTION_URL || '').trim();
+  const base = configured
+    ? configured.replace(/\/$/, '')
+    : host
+      ? `https://${host.replace(/^https?:\/\//, '').replace(/\/$/, '')}`
+      : 'https://telegram-story-bot-murex.vercel.app';
+  const url = new URL('/studio.html', base);
+  url.searchParams.set('screen', 'privacy');
+  return url.toString();
+}
+
+async function ghostDiagnostics(token, userId) {
+  const [settings, storeHealth, deletedData, webhookInfo, durable, menu] = await Promise.all([
+    getPrivacySettings(userId),
+    viewerStoreHealth().catch(() => null),
+    listDeletedFeed(userId, 1).catch(() => ({ items: [] })),
+    tg(token, 'getWebhookInfo').catch(() => null),
+    getBusinessConnectionState(userId).catch(() => null),
+    tg(token, 'getChatMenuButton', { chat_id: userId }).catch(() => null),
+  ]);
+
+  const connectionId = durable?.businessConnectionId || connectionIdFromMenu(menu);
+  let liveConnection = null;
+  let verificationError = null;
+  if (connectionId) {
+    try {
+      liveConnection = await tg(token, 'getBusinessConnection', {
+        business_connection_id: connectionId,
+      });
+    } catch (error) {
+      verificationError = error?.message || String(error);
+    }
+  }
+
+  const businessLive = liveConnection
+    ? Boolean(liveConnection?.is_enabled)
+    : Boolean(durable?.isEnabled);
+  const canReadMessages = liveConnection
+    ? Boolean(liveConnection?.rights?.can_read_messages)
+    : Boolean(durable?.canReadMessages);
+  const canManageStories = liveConnection
+    ? Boolean(liveConnection?.rights?.can_manage_stories)
+    : Boolean(durable?.canManageStories);
+
+  const webhookUrl = String(webhookInfo?.url || '');
+  const webhookReady = Boolean(webhookUrl && /\/api\/webhook-v8(?:$|\?)/.test(webhookUrl));
+  const pendingUpdates = Number(webhookInfo?.pending_update_count || 0);
+  const storageReady = Boolean(storeHealth?.storage === 'ok' && storeHealth?.directGhostWrites);
+  const mediaVaultReady = Boolean(storeHealth?.mediaVault);
+  const deleteItems = Array.isArray(deletedData?.items) ? deletedData.items : [];
+  const lastDelete = deleteItems[0] || null;
+
+  const checks = {
+    webhook: {
+      ok: webhookReady,
+      label: 'Telegram webhook',
+      detail: webhookReady
+        ? pendingUpdates ? `Active · pending ${pendingUpdates}` : 'Active · no pending updates'
+        : 'Webhook is not active',
+    },
+    business: {
+      ok: businessLive,
+      label: 'Business connection',
+      detail: businessLive
+        ? verificationError ? 'Stored connection · live verification deferred' : 'Verified with Telegram'
+        : 'Needs Telegram Business connection',
+    },
+    messagePermission: {
+      ok: canReadMessages,
+      label: 'Message access',
+      detail: canReadMessages ? 'can_read_messages allowed' : 'Message access is not allowed',
+    },
+    storage: {
+      ok: storageReady,
+      label: 'Protected Ghost store',
+      detail: storageReady ? 'Direct durable writes ready' : 'Storage write path unavailable',
+    },
+    mediaVault: {
+      ok: mediaVaultReady,
+      label: 'Media Vault',
+      detail: mediaVaultReady ? 'Independent media copies supported' : 'Media Vault unavailable',
+    },
+    antiDelete: {
+      ok: settings?.antiDelete === true,
+      label: 'Anti-Delete',
+      detail: settings?.antiDelete ? 'Enabled for new events' : 'Turn Anti-Delete on',
+    },
+    focus: {
+      ok: settings?.ghostFocus !== false,
+      label: 'Ghost Focus',
+      detail: settings?.ghostFocus !== false ? 'Exact-message deep links enabled' : 'Ghost Focus is off',
+    },
+    alerts: {
+      ok: settings?.notifyDeletes !== false,
+      label: 'Delete alerts',
+      detail: settings?.notifyDeletes !== false ? 'Bot alerts enabled' : 'Delete alerts are off',
+    },
+  };
+
+  const coreReady = [
+    checks.webhook.ok,
+    checks.business.ok,
+    checks.messagePermission.ok,
+    checks.storage.ok,
+    checks.antiDelete.ok,
+  ].every(Boolean);
+
+  return {
+    status: coreReady ? 'ready' : 'attention',
+    checkedAt: new Date().toISOString(),
+    checks,
+    business: {
+      connectionPresent: Boolean(connectionId),
+      verifiedNow: Boolean(liveConnection),
+      canManageStories,
+      canReadMessages,
+      verificationError,
+    },
+    liveDeleteProof: lastDelete ? {
+      captured: true,
+      deletedAt: lastDelete.deletedAt || null,
+      chatTitle: lastDelete.chatTitle || null,
+      mediaArchived: lastDelete.mediaArchiveStatus === 'archived',
+    } : {
+      captured: false,
+      deletedAt: null,
+      chatTitle: null,
+      mediaArchived: null,
+    },
+    note: lastDelete
+      ? 'At least one real Telegram delete event has been captured by Ghost.'
+      : 'Core pipeline can be ready even before the first real delete event. No synthetic deletion is created.',
+  };
 }
 
 function transientStoreError(error) {
@@ -137,6 +313,28 @@ export default async function handler(req, res) {
     if (action === 'list_deleted') {
       const data = await listDeletedFeed(userId, body.limit || 120);
       res.status(200).json({ ok: true, ...data });
+      return;
+    }
+
+    if (action === 'diagnostics') {
+      const diagnostics = await ghostDiagnostics(token, userId);
+      res.status(200).json({ ok: true, diagnostics });
+      return;
+    }
+
+    if (action === 'test_alert') {
+      await tg(token, 'sendMessage', {
+        chat_id: userId,
+        text: '👻 Ghost Self-Test\n\nAlert route works. Это диагностическое сообщение, а не симуляция удаления.',
+        disable_notification: false,
+        reply_markup: {
+          inline_keyboard: [[{
+            text: '👻 Открыть Ghost',
+            web_app: { url: productionControlUrl() },
+          }]],
+        },
+      });
+      res.status(200).json({ ok: true, delivered: true });
       return;
     }
 

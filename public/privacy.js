@@ -26,6 +26,8 @@
     deletedFeed: [],
     deletedFeedLoaded: false,
     deletedFeedLoading: false,
+    diagnostics: null,
+    diagnosticsLoading: false,
     activeThread: null,
     query: '',
     filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'smart',
@@ -257,6 +259,78 @@
     ].some(value => String(value || '').toLowerCase().includes(query)));
   }
 
+  function diagnosticStatusIcon(ok) {
+    return ok ? '✓' : '!';
+  }
+
+  function renderDiagnosticsSheet(data) {
+    const diagnostics = data || privacyState.diagnostics || {};
+    const checks = diagnostics.checks || {};
+    const rows = Object.values(checks).map(check => `
+      <div class="ghost-diagnostic-row ${check?.ok ? 'ready' : 'warn'}">
+        <span>${diagnosticStatusIcon(Boolean(check?.ok))}</span>
+        <div>
+          <strong>${escapeHtml(check?.label || 'Check')}</strong>
+          <small>${escapeHtml(check?.detail || '')}</small>
+        </div>
+      </div>
+    `).join('');
+
+    const liveProof = diagnostics.liveDeleteProof?.captured
+      ? `
+        <div class="ghost-delete-proof ready">
+          <span>↶</span>
+          <div>
+            <strong>Настоящее удаление уже поймано</strong>
+            <small>${escapeHtml(diagnostics.liveDeleteProof.chatTitle || 'Telegram chat')} · ${escapeHtml(formatWhen(diagnostics.liveDeleteProof.deletedAt))}</small>
+          </div>
+        </div>
+      `
+      : `
+        <div class="ghost-delete-proof neutral">
+          <span>◌</span>
+          <div>
+            <strong>Ждём первое настоящее удаление</strong>
+            <small>Self-Test не подделывает Telegram delete event. После реального удаления здесь появится proof.</small>
+          </div>
+        </div>
+      `;
+
+    openSheet(`
+      <span class="kicker">GHOST DIAGNOSTICS</span>
+      <h2>${diagnostics.status === 'ready' ? 'Ghost готов' : 'Нужна проверка'}</h2>
+      <p>Проверяю не UI, а реальную цепочку Anti-Delete. Каждый статус ниже приходит с backend/Telegram.</p>
+      <div class="ghost-diagnostic-list">${rows}</div>
+      ${liveProof}
+      <p class="ghost-diagnostic-note">${escapeHtml(diagnostics.note || '')}</p>
+      <div class="sheet-actions">
+        <button class="accent" data-ghost-diagnostics-refresh="1">Проверить снова</button>
+        <button data-ghost-test-alert="1">Отправить тестовый alert</button>
+        <button data-privacy-close="1">Закрыть</button>
+      </div>
+    `);
+  }
+
+  async function runGhostDiagnostics({ silent = false } = {}) {
+    if (privacyState.diagnosticsLoading) return;
+    privacyState.diagnosticsLoading = true;
+    const button = $('privacyDiagnosticsButton');
+    button?.classList.add('loading');
+    try {
+      const data = await request('diagnostics');
+      privacyState.diagnostics = data.diagnostics || null;
+      renderDiagnosticsSheet(privacyState.diagnostics);
+      if (!silent) {
+        toast(privacyState.diagnostics?.status === 'ready' ? 'Ghost pipeline готов' : 'Есть пункты, которые требуют внимания');
+      }
+    } catch (error) {
+      if (!silent) toast(error.message);
+    } finally {
+      privacyState.diagnosticsLoading = false;
+      button?.classList.remove('loading');
+    }
+  }
+
   async function refreshDeletedFeed({ silent = false, force = false } = {}) {
     if (!tg?.initData || privacyState.deletedFeedLoading) return;
     if (privacyState.deletedFeedLoaded && !force) return;
@@ -375,6 +449,14 @@
     }
     if (accessAction) {
       accessAction.textContent = connectionLive && readMessages ? 'Проверить' : 'Настроить';
+    }
+
+    const diagnosticsButton = $('privacyDiagnosticsButton');
+    if (diagnosticsButton && privacyState.diagnostics) {
+      diagnosticsButton.classList.toggle('ready', privacyState.diagnostics.status === 'ready');
+      diagnosticsButton.classList.toggle('warn', privacyState.diagnostics.status !== 'ready');
+      const action = diagnosticsButton.querySelector('.ghost-diagnostics-action');
+      if (action) action.textContent = privacyState.diagnostics.status === 'ready' ? 'Готово ›' : 'Проверить ›';
     }
 
     const totals = threadTotals();
@@ -1010,6 +1092,8 @@
     }, 12000);
   }
 
+  $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
+
   $('ghostLatestDeletedCard')?.addEventListener('click', event => {
     const card = event.currentTarget;
     const chatId = String(card?.dataset?.chatId || '');
@@ -1135,6 +1219,24 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
+    const diagnosticsRefresh = event.target.closest('[data-ghost-diagnostics-refresh]');
+    if (diagnosticsRefresh) {
+      await runGhostDiagnostics({ silent:true });
+      return;
+    }
+
+    const testAlert = event.target.closest('[data-ghost-test-alert]');
+    if (testAlert) {
+      try {
+        await request('test_alert');
+        toast('Тестовый alert отправлен в бот');
+        haptic('soft');
+      } catch (error) {
+        toast(error.message);
+      }
+      return;
+    }
+
     const recheckAccess = event.target.closest('[data-privacy-recheck-access]');
     if (recheckAccess) {
       await loadTelegramConnection({ silent:false });
