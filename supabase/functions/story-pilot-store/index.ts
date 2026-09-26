@@ -526,6 +526,14 @@ async function opRecordClientEvent(args: any) {
   });
 }
 
+function messageLooksLikeActionRequest(row: any) {
+  if (row?.direction === "outgoing") return false;
+  const text = String(row?.text_content || row?.caption || "").trim();
+  if (!text) return false;
+  return /[?？]$/.test(text)
+    || /\b(can you|could you|would you|please|need|when|where|what|why|how|можешь|можете|пожалуйста|нужно|надо|когда|где|что|почему|как)\b/i.test(text);
+}
+
 async function opCaptureBusinessMessage(args: any) {
   const row = args.row || {};
   const userId = String(row.telegram_user_id || args.userId || "");
@@ -664,6 +672,7 @@ async function opCaptureBusinessMessage(args: any) {
       chatTitle: normalized.chat_title || null,
       mediaType: normalized.media_type || null,
       hasMedia: Boolean(normalized.media_type),
+      smartAction: messageEventType === "message.new" && messageLooksLikeActionRequest(normalized),
     },
     retentionUntil: eventRetention(settings.retentionDays, normalized.sent_at || now),
   });
@@ -2078,6 +2087,200 @@ async function opGetExport(args: any) {
   return { stories, viewers, generatedAt: new Date().toISOString() };
 }
 
+const AUTOMATION_RULE_DEFAULTS: Record<string, boolean> = {
+  security_changes: true,
+  smart_action: false,
+  confirmed_viewer: false,
+};
+
+function automationRuleKey(value: unknown) {
+  const key = String(value || "");
+  if (!(key in AUTOMATION_RULE_DEFAULTS)) throw new Error("invalid_automation_rule");
+  return key;
+}
+
+async function opGetAutomationSettings(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("automation_user_required");
+  if (!directSql) throw new Error("direct_database_unavailable");
+
+  const rows = await directSql`
+    select rule_key, enabled, updated_at
+    from public.story_pilot_automation_rules
+    where telegram_user_id = ${userId}::bigint
+  `;
+
+  const rules: Record<string, any> = {};
+  for (const [ruleKey, defaultEnabled] of Object.entries(AUTOMATION_RULE_DEFAULTS)) {
+    const row = rows.find((item: any) => item.rule_key === ruleKey);
+    rules[ruleKey] = {
+      enabled: row ? Boolean(row.enabled) : defaultEnabled,
+      source: row ? "user" : "default",
+      updatedAt: row?.updated_at || null,
+    };
+  }
+
+  return { rules };
+}
+
+async function opUpdateAutomationSettings(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("automation_user_required");
+  if (!directSql) throw new Error("direct_database_unavailable");
+
+  const patch = args?.rules && typeof args.rules === "object" ? args.rules : {};
+  for (const [rawKey, rawValue] of Object.entries(patch)) {
+    const ruleKey = automationRuleKey(rawKey);
+    const enabled = typeof rawValue === "object" && rawValue !== null
+      ? Boolean((rawValue as any).enabled)
+      : Boolean(rawValue);
+
+    await directSql`
+      insert into public.story_pilot_automation_rules (
+        telegram_user_id, rule_key, enabled, updated_at
+      ) values (
+        ${userId}::bigint, ${ruleKey}, ${enabled}, now()
+      )
+      on conflict (telegram_user_id, rule_key) do update set
+        enabled = excluded.enabled,
+        updated_at = excluded.updated_at
+    `;
+  }
+
+  return opGetAutomationSettings({ userId });
+}
+
+async function opListAutomationJobs(args: any) {
+  const userId = String(args?.userId || "");
+  const limit = Math.max(1, Math.min(50, Number(args?.limit || 20)));
+  if (!userId) throw new Error("automation_user_required");
+  if (!directSql) throw new Error("direct_database_unavailable");
+
+  const rows = await directSql`
+    select
+      j.id, j.rule_key, j.status, j.attempts, j.created_at,
+      j.sent_at, j.last_error,
+      e.event_type, e.occurred_at, e.story_id, e.chat_id,
+      e.actor_username, e.actor_display_name, e.payload
+    from public.story_pilot_automation_jobs j
+    join public.story_pilot_events e on e.id = j.event_id
+    where j.telegram_user_id = ${userId}::bigint
+    order by j.created_at desc
+    limit ${limit}
+  `;
+
+  return rows.map((row: any) => ({
+    id: String(row.id),
+    ruleKey: row.rule_key,
+    status: row.status,
+    attempts: Number(row.attempts || 0),
+    createdAt: row.created_at,
+    sentAt: row.sent_at || null,
+    lastError: row.last_error || null,
+    event: {
+      type: row.event_type,
+      occurredAt: row.occurred_at,
+      storyId: row.story_id == null ? null : Number(row.story_id),
+      chatId: row.chat_id ? String(row.chat_id) : null,
+      actorUsername: row.actor_username || null,
+      actorDisplayName: row.actor_display_name || null,
+      payload: row.payload && typeof row.payload === "object" ? row.payload : {},
+    },
+  }));
+}
+
+async function opClaimAutomationJobs(args: any) {
+  const limit = Math.max(1, Math.min(25, Number(args?.limit || 10)));
+  if (!directSql) throw new Error("direct_database_unavailable");
+
+  const rows = await directSql`
+    with picked as (
+      select id
+      from public.story_pilot_automation_jobs
+      where attempts < 5
+        and (
+          (status in ('queued','failed') and available_at <= now())
+          or (status = 'sending' and locked_at < now() - interval '5 minutes')
+        )
+      order by created_at asc
+      for update skip locked
+      limit ${limit}
+    ),
+    updated as (
+      update public.story_pilot_automation_jobs j
+      set
+        status = 'sending',
+        attempts = j.attempts + 1,
+        locked_at = now(),
+        updated_at = now()
+      from picked
+      where j.id = picked.id
+      returning j.*
+    )
+    select
+      u.id, u.telegram_user_id, u.event_id, u.rule_key,
+      u.status, u.attempts, u.created_at,
+      e.event_type, e.occurred_at, e.story_id, e.chat_id,
+      e.actor_username, e.actor_display_name, e.payload
+    from updated u
+    join public.story_pilot_events e on e.id = u.event_id
+    order by u.created_at asc
+  `;
+
+  return rows.map((row: any) => ({
+    id: String(row.id),
+    userId: String(row.telegram_user_id),
+    eventId: String(row.event_id),
+    ruleKey: row.rule_key,
+    attempts: Number(row.attempts || 0),
+    event: {
+      type: row.event_type,
+      occurredAt: row.occurred_at,
+      storyId: row.story_id == null ? null : Number(row.story_id),
+      chatId: row.chat_id ? String(row.chat_id) : null,
+      actorUsername: row.actor_username || null,
+      actorDisplayName: row.actor_display_name || null,
+      payload: row.payload && typeof row.payload === "object" ? row.payload : {},
+    },
+  }));
+}
+
+async function opCompleteAutomationJob(args: any) {
+  const jobId = String(args?.jobId || "");
+  const success = Boolean(args?.success);
+  const error = String(args?.error || "").slice(0, 500) || null;
+  if (!jobId) throw new Error("automation_job_required");
+  if (!directSql) throw new Error("direct_database_unavailable");
+
+  const rows = success
+    ? await directSql`
+        update public.story_pilot_automation_jobs
+        set
+          status = 'sent',
+          sent_at = now(),
+          last_error = null,
+          locked_at = null,
+          updated_at = now()
+        where id = ${jobId}::uuid
+        returning id, status, attempts, sent_at
+      `
+    : await directSql`
+        update public.story_pilot_automation_jobs
+        set
+          status = 'failed',
+          last_error = ${error},
+          available_at = now() + (
+            least(30, greatest(1, attempts * attempts))::text || ' minutes'
+          )::interval,
+          locked_at = null,
+          updated_at = now()
+        where id = ${jobId}::uuid
+        returning id, status, attempts, available_at
+      `;
+
+  return rows[0] || null;
+}
+
 async function opAcquireLease(args: any) {
   const seconds = Math.max(10, Math.min(300, Number(args.seconds || 55)));
   if (directSql) {
@@ -2169,6 +2372,11 @@ async function dispatch(op: string, args: any) {
     case "get_story_data": return opGetStoryData(args);
     case "get_analytics": return opGetAnalytics(args);
     case "get_export": return opGetExport(args);
+    case "get_automation_settings": return opGetAutomationSettings(args);
+    case "update_automation_settings": return opUpdateAutomationSettings(args);
+    case "list_automation_jobs": return opListAutomationJobs(args);
+    case "claim_automation_jobs": return opClaimAutomationJobs(args);
+    case "complete_automation_job": return opCompleteAutomationJob(args);
     case "acquire_watch_lease": return opAcquireLease(args);
     default: throw new Error("unknown_operation");
   }
