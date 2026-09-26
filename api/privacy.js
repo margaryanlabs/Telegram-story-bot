@@ -61,6 +61,7 @@ function privacyPatch(body = {}) {
   if ('antiDelete' in input) patch.antiDelete = Boolean(input.antiDelete);
   if ('editHistory' in input) patch.editHistory = Boolean(input.editHistory);
   if ('ghostInbox' in input) patch.ghostInbox = Boolean(input.ghostInbox);
+  if ('ghostFocus' in input) patch.ghostFocus = Boolean(input.ghostFocus);
   if ('notifyDeletes' in input) patch.notifyDeletes = Boolean(input.notifyDeletes);
   if ('notifyEdits' in input) patch.notifyEdits = Boolean(input.notifyEdits);
   if ('retentionDays' in input) {
