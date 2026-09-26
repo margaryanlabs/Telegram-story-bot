@@ -1391,3 +1391,58 @@ input,textarea{caret-color:var(--accent)}
 .automation-audit-dot.failed{background:#ff6f89}
 .automation-audit-dot.sending,.automation-audit-dot.queued{background:var(--amber)}
 .automation-empty{padding:14px;border:1px dashed var(--line);border-radius:15px;color:var(--muted);font-size:8px}
+
+
+/* Ghost Focus */
+.ghost-quick-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0 12px
+}
+.ghost-quick-grid button{
+  min-height:82px;padding:12px;border:1px solid var(--line);border-radius:19px;
+  background:rgba(255,255,255,.028);color:inherit;text-align:left
+}
+.ghost-quick-grid button:active{transform:scale(.985);background:rgba(255,255,255,.05)}
+.ghost-quick-grid button>span{
+  width:30px;height:30px;display:grid;place-items:center;border-radius:10px;
+  background:rgba(255,255,255,.055);font-size:12px;margin-bottom:9px
+}
+.ghost-quick-grid strong,.ghost-quick-grid small{display:block}
+.ghost-quick-grid strong{font-size:10px}
+.ghost-quick-grid small{margin-top:4px;color:var(--muted);font-size:7.4px;line-height:1.35}
+
+.ghost-thread-modes{
+  display:flex;gap:5px;overflow:auto;margin:10px 0 12px;padding-bottom:2px;
+  scrollbar-width:none
+}
+.ghost-thread-modes::-webkit-scrollbar{display:none}
+.ghost-thread-modes button{
+  flex:0 0 auto;min-height:34px;padding:0 10px;border:1px solid var(--line);
+  border-radius:999px;background:rgba(255,255,255,.025);color:var(--muted);
+  font-size:8px;font-weight:750
+}
+.ghost-thread-modes button b{margin-left:4px;color:inherit}
+.ghost-thread-modes button.active{
+  color:#eaf4ff;border-color:rgba(74,190,255,.18);background:rgba(74,190,255,.08)
+}
+.ghost-focus-note{
+  margin:10px 0;padding:9px 10px;border:1px solid rgba(255,111,137,.12);
+  border-radius:14px;background:rgba(255,111,137,.045);color:#aeb9c8!important;
+  font-size:7.7px!important;line-height:1.45!important
+}
+.privacy-message.ghost-focused-message{
+  position:relative;border-color:rgba(255,111,137,.34)!important;
+  box-shadow:0 0 0 1px rgba(255,111,137,.08),0 10px 36px rgba(255,111,137,.08)
+}
+.privacy-message.ghost-focused-message::before{
+  content:'FOCUS';position:absolute;top:-7px;right:10px;padding:3px 6px;
+  border-radius:999px;background:#1b1118;border:1px solid rgba(255,111,137,.24);
+  color:#ff9bad;font-size:6px;font-weight:900;letter-spacing:.12em
+}
+.privacy-message footer .focus{
+  color:#ff9bad;background:rgba(255,111,137,.08);border:1px solid rgba(255,111,137,.1);
+  border-radius:999px;padding:3px 6px
+}
+@media(max-width:390px){
+  .ghost-quick-grid{gap:6px}
+  .ghost-quick-grid button{min-height:76px;padding:10px}
+}

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20260926-0950';
+const CONTROL_BUILD = '20260926-1117';
 import sharp from 'sharp';
 import { trackPublishedStory, markStoryDeleted } from '../lib/viewer-sync-store.js';
 import {
@@ -142,7 +142,7 @@ function defaultSettings() {
   };
 }
 
-function inlineMenu(settings = {}) {
+function inlineMenu(settings = {}, origin = '') {
   const active = settings.audience || 'standard';
   const mark = (mode, label) => active === mode ? `✅ ${label}` : label;
   const exc = settings.excluded?.length || 0;
@@ -152,6 +152,10 @@ function inlineMenu(settings = {}) {
     return {
       inline_keyboard: [
         [{ text: settings.bc ? '⚠️ Разрешить управление Stories' : '🔗 Подключить Telegram', callback_data: 'view:connect' }],
+        ...(origin ? [[
+          { text: '👻 Ghost', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } },
+          { text: '↶ Удалённые', web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'deleted' }) } },
+        ]] : []),
         [{ text: '✅ Я подключил — проверить', callback_data: 'connect:check' }],
         [{ text: '📸 Как это работает', callback_data: 'view:howto' }],
       ],
@@ -178,6 +182,10 @@ function inlineMenu(settings = {}) {
         { text: settings.lastStory ? '🗑 Удалить Story' : '🗑 Нет Story', callback_data: 'story:delete' },
       ],
       [{ text: connectionText, callback_data: 'view:connect' }],
+      ...(origin ? [[
+        { text: '👻 Ghost', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } },
+        { text: '↶ Удалённые', web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'deleted' }) } },
+      ]] : []),
       [
         { text: mark('standard', '⚡ Стандарт'), callback_data: 'aud:standard' },
         { text: '📊 Настройки', callback_data: 'view:settings' },
@@ -324,14 +332,14 @@ function howToText(settings) {
   return `◉ Telegram Control\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n👻 Ghost: открой Mini App → Ghost; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: Ghost archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
 }
 
-async function editPanel(token, chatId, messageId, text, settings) {
+async function editPanel(token, chatId, messageId, text, settings, origin = '') {
   try {
     await tg(token, 'editMessageText', {
       chat_id: chatId,
       message_id: messageId,
       text,
       disable_web_page_preview: true,
-      reply_markup: inlineMenu(settings),
+      reply_markup: inlineMenu(settings, origin),
     });
     return messageId;
   } catch (error) {
@@ -344,7 +352,7 @@ async function showPanel(token, chatId, origin, settings, text = null, preferred
   const target = preferredMessageId || settings.panel;
   if (target) {
     try {
-      const id = await editPanel(token, chatId, target, text || homeText(settings), settings);
+      const id = await editPanel(token, chatId, target, text || homeText(settings), settings, origin);
       const next = { ...settings, panel: id };
       await saveSettings(token, chatId, origin, next);
       return next;
@@ -356,7 +364,7 @@ async function showPanel(token, chatId, origin, settings, text = null, preferred
     text: text || homeText(settings),
     disable_notification: true,
     disable_web_page_preview: true,
-    reply_markup: inlineMenu(settings),
+    reply_markup: inlineMenu(settings, origin),
   });
   const next = { ...settings, panel: message.message_id };
   await saveSettings(token, chatId, origin, next);
@@ -466,10 +474,20 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   return next;
 }
 
-function ghostAppUrl(origin) {
+function ghostAppUrl(origin, options = {}) {
   const url = new URL('/studio.html', origin);
   url.searchParams.set('v', CONTROL_BUILD);
-  url.searchParams.set('screen', 'privacy');
+
+  const chatId = options.chatId ? String(options.chatId) : '';
+  const messageId = Number(options.messageId || 0);
+  const mode = String(options.mode || '');
+  const filter = String(options.filter || '');
+
+  url.searchParams.set('screen', chatId ? 'chats' : (options.screen || 'privacy'));
+  if (chatId) url.searchParams.set('chat', chatId);
+  if (messageId > 0) url.searchParams.set('message', String(messageId));
+  if (mode) url.searchParams.set('mode', mode);
+  if (filter) url.searchParams.set('filter', filter);
   return url.toString();
 }
 
@@ -478,7 +496,7 @@ function ghostMessagePreview(row = {}) {
   return String(value || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
 }
 
-async function sendGhostDeleteAlert(token, ownerChatId, origin, events = []) {
+async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}) {
   const allIncoming = (Array.isArray(events) ? events : [])
     .filter(event => event?.direction !== 'outgoing');
   const incoming = allIncoming.slice(0, 5);
@@ -499,13 +517,30 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = []) {
     text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Ghost.`,
     disable_notification: false,
     reply_markup: {
-      inline_keyboard: [[{ text: '👻 Открыть Ghost', web_app: { url: ghostAppUrl(origin) } }]],
+      inline_keyboard: [
+        ...(settings?.ghostFocus !== false && incoming[0]?.chatId && incoming[0]?.messageId
+          ? [[{
+              text: '👻 Открыть это удалённое',
+              web_app: {
+                url: ghostAppUrl(origin, {
+                  chatId: incoming[0].chatId,
+                  messageId: incoming[0].messageId,
+                  mode: 'focus',
+                }),
+              },
+            }]]
+          : []),
+        [{
+          text: '↶ Все удалённые',
+          web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'deleted' }) },
+        }],
+      ],
     },
   });
   return true;
 }
 
-async function sendGhostEditAlert(token, ownerChatId, origin, row = {}) {
+async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings = {}) {
   if (!ownerChatId || !row || row.direction === 'outgoing') return false;
   const sender = row.sender_display_name || (row.sender_username ? `@${row.sender_username}` : null) || row.chat_title || 'Telegram user';
   await tg(token, 'sendMessage', {
@@ -513,7 +548,24 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}) {
     text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в Ghost.`,
     disable_notification: false,
     reply_markup: {
-      inline_keyboard: [[{ text: '👻 Открыть историю', web_app: { url: ghostAppUrl(origin) } }]],
+      inline_keyboard: [
+        ...(settings?.ghostFocus !== false && row?.chat_id && row?.message_id
+          ? [[{
+              text: '✏️ Открыть это изменение',
+              web_app: {
+                url: ghostAppUrl(origin, {
+                  chatId: row.chat_id,
+                  messageId: row.message_id,
+                  mode: 'edit',
+                }),
+              },
+            }]]
+          : []),
+        [{
+          text: '≋ Все изменённые',
+          web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'edited' }) },
+        }],
+      ],
     },
   });
   return true;
@@ -903,6 +955,7 @@ export default async function handler(req, res) {
             connection?.user_chat_id,
             origin,
             result.row,
+            result.settings,
           ).catch(error => {
             console.warn('Story Pilot Ghost edit alert skipped', error?.message || error);
             return false;
@@ -941,7 +994,13 @@ export default async function handler(req, res) {
           && Array.isArray(result?.events)
           && result.events.length
         ) {
-          result.alertSent = await sendGhostDeleteAlert(token, connection?.user_chat_id, origin, result.events).catch(error => {
+          result.alertSent = await sendGhostDeleteAlert(
+            token,
+            connection?.user_chat_id,
+            origin,
+            result.events,
+            result.settings,
+          ).catch(error => {
             console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
             return false;
           });
@@ -1094,6 +1153,28 @@ export default async function handler(req, res) {
         '👻 Открыть Ghost',
       );
       res.status(200).json({ ok: true, screen: 'privacy' });
+      return;
+    }
+
+    if (command === '/deleted') {
+      const url = ghostAppUrl(origin, { screen:'chats', filter:'deleted' });
+      await tg(token, 'sendMessage', {
+        chat_id: chatId,
+        text: '↶ Удалённые сообщения\n\nОткрываю Ghost Inbox сразу на сохранённых удалениях.',
+        reply_markup: { inline_keyboard: [[{ text:'↶ Открыть удалённые', web_app:{ url } }]] },
+      });
+      res.status(200).json({ ok: true, screen:'chats', filter:'deleted' });
+      return;
+    }
+
+    if (command === '/edits') {
+      const url = ghostAppUrl(origin, { screen:'chats', filter:'edited' });
+      await tg(token, 'sendMessage', {
+        chat_id: chatId,
+        text: '≋ Изменённые сообщения\n\nОткрываю Ghost Inbox на сообщениях с сохранённой историей правок.',
+        reply_markup: { inline_keyboard: [[{ text:'≋ Открыть изменения', web_app:{ url } }]] },
+      });
+      res.status(200).json({ ok: true, screen:'chats', filter:'edited' });
       return;
     }
 

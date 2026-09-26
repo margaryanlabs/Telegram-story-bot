@@ -16,7 +16,7 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20260926-0950';
+const CONTROL_BUILD = '20260926-1117';
 
 function controlAppUrl(baseUrl) {
   const url = new URL('/studio.html', baseUrl);
@@ -80,6 +80,8 @@ export default async function handler(req, res) {
       commands: [
         { command: 'start', description: '🚀 Открыть центр управления' },
         { command: 'ghost', description: '👻 Ghost и Anti-Delete' },
+        { command: 'deleted', description: '↶ Последние удалённые сообщения' },
+        { command: 'edits', description: '≋ История изменённых сообщений' },
         { command: 'stories', description: '📸 Stories и приватность' },
         { command: 'viewers', description: '👁 Deep Intelligence' },
         { command: 'status', description: '📊 Статус подключения' },

@@ -1,6 +1,14 @@
 (() => {
   const tg = window.Telegram?.WebApp;
   const $ = id => document.getElementById(id);
+  const pageParams = new URLSearchParams(window.location.search);
+  const ghostDeepLink = {
+    chatId: String(pageParams.get('chat') || ''),
+    messageId: Number(pageParams.get('message') || 0) || null,
+    mode: String(pageParams.get('mode') || ''),
+    filter: String(pageParams.get('filter') || ''),
+  };
+  const allowedInitialFilters = new Set(['smart','action','watch','all','deleted','edited','media']);
 
   const privacyState = {
     loading: false,
@@ -8,6 +16,7 @@
       antiDelete: false,
       editHistory: false,
       ghostInbox: false,
+      ghostFocus: true,
       notifyDeletes: true,
       notifyEdits: true,
       retentionDays: 30,
@@ -16,7 +25,8 @@
     smartSummary: null,
     activeThread: null,
     query: '',
-    filter: 'smart',
+    filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'smart',
+    deepLinkHandled: false,
     lastTotalMessages: 0,
     lastRefreshAt: null,
     mediaObjectUrl: null,
@@ -276,6 +286,7 @@
       ['privacyAntiDeleteSwitch', 'antiDelete'],
       ['privacyEditHistorySwitch', 'editHistory'],
       ['privacyGhostInboxSwitch', 'ghostInbox'],
+      ['privacyGhostFocusSwitch', 'ghostFocus'],
       ['privacyNotifyDeletesSwitch', 'notifyDeletes'],
       ['privacyNotifyEditsSwitch', 'notifyEdits'],
     ]) {
@@ -468,6 +479,9 @@
     } finally {
       privacyState.loading = false;
       render();
+      if (!privacyState.deepLinkHandled && ghostDeepLink.chatId) {
+        setTimeout(() => maybeOpenGhostDeepLink(), 60);
+      }
     }
   }
 
@@ -500,6 +514,7 @@
       antiDelete: true,
       editHistory: true,
       ghostInbox: true,
+      ghostFocus: true,
       retentionDays: Number(privacyState.settings.retentionDays || 30),
     }, { quiet:true });
     if (ok) {
@@ -556,11 +571,43 @@
     return 'Сообщение';
   }
 
-  function renderThreadSheet(thread, messages) {
-    privacyState.activeThread = { thread, messages };
-    const rows = (messages || []).map(message => {
+  function normalizeThreadMode(value) {
+    const mode = String(value || 'all');
+    return ['all','deleted','edited','focus'].includes(mode) ? mode : 'all';
+  }
+
+  function threadModeLabel(mode) {
+    if (mode === 'deleted') return 'Удалённые';
+    if (mode === 'edited') return 'Изменённые';
+    if (mode === 'focus') return 'Ghost Focus';
+    return 'Все сообщения';
+  }
+
+  function messagesForMode(messages, mode, focusMessageId = null) {
+    const rows = Array.isArray(messages) ? messages : [];
+    if (mode === 'deleted') return rows.filter(message => Boolean(message.deleted_at));
+    if (mode === 'edited') return rows.filter(message => Boolean(message.edited_at));
+    if (mode === 'focus' && focusMessageId) {
+      const index = rows.findIndex(message => String(message.message_id) === String(focusMessageId));
+      if (index >= 0) {
+        const from = Math.max(0, index - 2);
+        const to = Math.min(rows.length, index + 3);
+        return rows.slice(from, to);
+      }
+    }
+    return rows;
+  }
+
+  function renderThreadSheet(thread, messages, options = {}) {
+    const mode = normalizeThreadMode(options.mode || privacyState.activeThread?.mode || 'all');
+    const focusMessageId = Number(options.focusMessageId || privacyState.activeThread?.focusMessageId || 0) || null;
+    privacyState.activeThread = { thread, messages, mode, focusMessageId };
+
+    const visibleMessages = messagesForMode(messages, mode, focusMessageId);
+    const rows = visibleMessages.map(message => {
       const edited = Boolean(message.edited_at);
       const deleted = Boolean(message.deleted_at);
+      const focused = focusMessageId && String(message.message_id) === String(focusMessageId);
       const hasMedia = Boolean(message.media_type);
       const mediaArchived = message.media_archive_status === 'archived';
       const mediaPending = message.media_archive_status === 'pending';
@@ -569,7 +616,8 @@
         ? 'Вы'
         : (message.sender_display_name || (message.sender_username ? '@' + message.sender_username : thread.title));
       return `
-        <article class="privacy-message ${message.direction === 'outgoing' ? 'outgoing' : ''} ${deleted ? 'deleted' : ''}">
+        <article class="privacy-message ${message.direction === 'outgoing' ? 'outgoing' : ''} ${deleted ? 'deleted' : ''} ${focused ? 'ghost-focused-message' : ''}"
+          data-ghost-message-id="${escapeHtml(message.message_id)}">
           <header><span>${escapeHtml(sender)}</span><span>${escapeHtml(formatWhen(message.sent_at))}</span></header>
           <p>${messageBody(message)}</p>
           ${hasMedia ? `
@@ -585,6 +633,7 @@
               ].filter(Boolean).join(' · '))}</small>
             </button>` : ''}
           <footer>
+            ${focused ? '<span class="focus">Ghost Focus</span>' : ''}
             ${deleted ? '<span class="deleted">Удалено в Telegram</span>' : ''}
             ${mediaArchived ? '<span class="vault">Media Vault</span>' : ''}
             ${deleted && hasMedia && !mediaArchived ? '<span class="warn">Медиа может зависеть от Telegram</span>' : ''}
@@ -593,30 +642,67 @@
         </article>`;
     }).join('');
 
+    const deletedCount = (messages || []).filter(message => Boolean(message.deleted_at)).length;
+    const editedCount = (messages || []).filter(message => Boolean(message.edited_at)).length;
+    const focusNote = mode === 'focus'
+      ? '<p class="ghost-focus-note">Показываю выбранное событие и до двух сообщений контекста до/после. Это архив Ghost, а не изменение оригинального Telegram-чата.</p>'
+      : '';
+
     openSheet(`
       <div class="privacy-sheet-head">
-        <div><span class="kicker">Ghost Inbox</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
+        <div><span class="kicker">${mode === 'focus' ? 'GHOST FOCUS' : 'Ghost Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
         <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
       </div>
       <p>Архивная копия. Telegram Control не вызывает readBusinessMessage при просмотре этого экрана.</p>
-      <div class="privacy-message-list">${rows || '<div class="intel-empty">Сообщений пока нет.</div>'}</div>
-      <div class="sheet-actions"><button data-privacy-close="1">Закрыть</button></div>
+      ${focusNote}
+      <div class="ghost-thread-modes">
+        <button type="button" class="${mode === 'all' ? 'active' : ''}" data-privacy-thread-mode="all">Все <b>${(messages || []).length}</b></button>
+        <button type="button" class="${mode === 'deleted' ? 'active' : ''}" data-privacy-thread-mode="deleted">Удалённые <b>${deletedCount}</b></button>
+        <button type="button" class="${mode === 'edited' ? 'active' : ''}" data-privacy-thread-mode="edited">Изменённые <b>${editedCount}</b></button>
+      </div>
+      <div class="privacy-message-list">${rows || '<div class="intel-empty">В этом режиме сообщений пока нет.</div>'}</div>
+      <div class="sheet-actions">
+        ${mode === 'focus' ? '<button class="accent" data-privacy-thread-mode="all">Показать весь чат</button>' : ''}
+        <button data-privacy-close="1">Закрыть</button>
+      </div>
     `);
 
     requestAnimationFrame(() => {
       const sheet = $('sheet');
-      if (sheet) sheet.scrollTop = sheet.scrollHeight;
+      const focused = focusMessageId
+        ? sheet?.querySelector(`[data-ghost-message-id="${CSS.escape(String(focusMessageId))}"]`)
+        : null;
+      if (focused) focused.scrollIntoView({ behavior:'smooth', block:'center' });
+      else if (sheet) sheet.scrollTop = sheet.scrollHeight;
     });
   }
 
-  async function openThread(chatId, { silent = false } = {}) {
+  async function openThread(chatId, { silent = false, mode = 'all', focusMessageId = null } = {}) {
     const thread = privacyState.threads.find(item => String(item.chatId) === String(chatId))
       || { chatId, title: 'Telegram chat' };
     try {
       const data = await request('list_messages', { chatId, limit: 150 });
-      renderThreadSheet(thread, data.messages || []);
+      renderThreadSheet(thread, data.messages || [], { mode, focusMessageId });
     } catch (error) {
       if (!silent) toast(error.message);
+    }
+  }
+
+  async function maybeOpenGhostDeepLink() {
+    if (privacyState.deepLinkHandled || !ghostDeepLink.chatId) return;
+    privacyState.deepLinkHandled = true;
+    const mode = ghostDeepLink.mode === 'edit'
+      ? 'focus'
+      : ghostDeepLink.mode === 'focus'
+        ? 'focus'
+        : 'all';
+    await openThread(ghostDeepLink.chatId, {
+      silent: false,
+      mode,
+      focusMessageId: ghostDeepLink.messageId,
+    });
+    if (ghostDeepLink.mode === 'edit' && ghostDeepLink.messageId) {
+      setTimeout(() => openVersions(ghostDeepLink.chatId, ghostDeepLink.messageId), 220);
     }
   }
 
@@ -738,9 +824,20 @@
   }
 
   $('privacyEnableAllButton')?.addEventListener('click', enableAll);
+  document.querySelectorAll('[data-ghost-jump]').forEach(button => {
+    button.addEventListener('click', () => {
+      const target = String(button.dataset.ghostJump || 'all');
+      privacyState.filter = ['deleted','edited','media'].includes(target) ? target : 'all';
+      haptic('soft');
+      render();
+      document.querySelector('[data-nav="chats"]')?.click();
+      setTimeout(() => $('privacyThreads')?.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+    });
+  });
   $('privacyAntiDeleteSwitch')?.addEventListener('change', event => saveSettings({ antiDelete:event.target.checked }));
   $('privacyEditHistorySwitch')?.addEventListener('change', event => saveSettings({ editHistory:event.target.checked }));
   $('privacyGhostInboxSwitch')?.addEventListener('change', event => saveSettings({ ghostInbox:event.target.checked }));
+  $('privacyGhostFocusSwitch')?.addEventListener('change', event => saveSettings({ ghostFocus:event.target.checked }));
   $('privacyNotifyDeletesSwitch')?.addEventListener('change', event => saveSettings({ notifyDeletes:event.target.checked }));
   $('privacyNotifyEditsSwitch')?.addEventListener('change', event => saveSettings({ notifyEdits:event.target.checked }));
   $('privacyRefreshButton')?.addEventListener('click', () => refresh());
@@ -823,6 +920,17 @@
       return;
     }
 
+    const threadModeButton = event.target.closest('[data-privacy-thread-mode]');
+    if (threadModeButton && privacyState.activeThread) {
+      const mode = normalizeThreadMode(threadModeButton.dataset.privacyThreadMode);
+      renderThreadSheet(
+        privacyState.activeThread.thread,
+        privacyState.activeThread.messages,
+        { mode, focusMessageId: null },
+      );
+      return;
+    }
+
     const mediaButton = event.target.closest('[data-privacy-media]');
     if (mediaButton) {
       loadMedia(
@@ -842,13 +950,24 @@
 
     const threadRefresh = event.target.closest('[data-privacy-thread-refresh]');
     if (threadRefresh) {
-      openThread(threadRefresh.dataset.privacyThreadRefresh, { silent:true });
+      openThread(threadRefresh.dataset.privacyThreadRefresh, {
+        silent:true,
+        mode: privacyState.activeThread?.mode || 'all',
+        focusMessageId: privacyState.activeThread?.focusMessageId || null,
+      });
       return;
     }
 
     if (event.target.closest('[data-privacy-back]') && privacyState.activeThread) {
       revokeMediaUrl();
-      renderThreadSheet(privacyState.activeThread.thread, privacyState.activeThread.messages);
+      renderThreadSheet(
+        privacyState.activeThread.thread,
+        privacyState.activeThread.messages,
+        {
+          mode: privacyState.activeThread.mode || 'all',
+          focusMessageId: privacyState.activeThread.focusMessageId || null,
+        },
+      );
       return;
     }
 
