@@ -9,7 +9,7 @@ const EDGE_TRIGGER_PUBLIC_KEYS = [
 ];
 const BOT_API_TIMEOUT_MS = 5000;
 const JOB_LIMIT = 12;
-const CONTROL_BUILD = '20260926-1117';
+const CONTROL_BUILD = '20260926-1135';
 
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
