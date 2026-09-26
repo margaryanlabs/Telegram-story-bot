@@ -105,6 +105,14 @@
     error: null,
   };
 
+  let automationState = {
+    loaded: false,
+    rules: {},
+    jobs: [],
+    busy: false,
+    error: null,
+  };
+
   function activeStoryHistory() {
     return (state.history || []).filter(item => !item.deleted);
   }
@@ -602,6 +610,62 @@
       throw error;
     }
     return data;
+  }
+
+  async function automationsApi(action = null, payload = {}) {
+    if (!tg?.initData) throw new Error('Открой Telegram Control внутри Telegram');
+
+    const options = {
+      method: action ? 'POST' : 'GET',
+      headers: {
+        'x-telegram-init-data': tg.initData,
+        'content-type':'application/json',
+      },
+    };
+    if (action) options.body = JSON.stringify({ action, ...payload });
+
+    const { response, data } = await requestJson('/api/automations', options, {
+      retry: !action || action === 'refresh',
+      timeoutMs: 12000,
+    });
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Automation Center временно недоступен');
+    return data;
+  }
+
+  function automationRuleEnabled(ruleKey, fallback = false) {
+    const value = automationState.rules?.[ruleKey];
+    if (value && typeof value === 'object') return value.enabled === true;
+    if (typeof value === 'boolean') return value;
+    return fallback;
+  }
+
+  function automationJobStatus(job) {
+    const status = String(job?.status || '');
+    if (status === 'sent') return 'Delivered';
+    if (status === 'sending') return 'Sending';
+    if (status === 'failed') return 'Retry scheduled';
+    if (status === 'queued') return 'Queued';
+    return status || 'Unknown';
+  }
+
+  function automationJobTitle(job) {
+    const rule = String(job?.ruleKey || '');
+    const event = job?.event || {};
+    if (rule === 'security_changes') {
+      if (event.type === 'session.created') return 'Deep Intelligence connected';
+      if (event.type === 'session.revoked') return 'Deep Intelligence revoked';
+      return 'Security event';
+    }
+    if (rule === 'smart_action') {
+      return event.actorDisplayName
+        || (event.actorUsername ? '@' + event.actorUsername : 'Smart Inbox action');
+    }
+    if (rule === 'confirmed_viewer') {
+      const actor = event.actorDisplayName
+        || (event.actorUsername ? '@' + event.actorUsername : 'Confirmed viewer');
+      return event.storyId ? `${actor} · Story #${event.storyId}` : actor;
+    }
+    return 'Automation';
   }
 
   async function refreshViewerAnalytics({ silent = true } = {}) {
@@ -1364,6 +1428,120 @@
     `);
   }
 
+  function renderAutomationCenterSheet() {
+    const securityEnabled = automationRuleEnabled('security_changes', true);
+    const smartEnabled = automationRuleEnabled('smart_action', false);
+    const viewerEnabled = automationRuleEnabled('confirmed_viewer', false);
+    const jobs = Array.isArray(automationState.jobs) ? automationState.jobs.slice(0, 8) : [];
+
+    const audit = jobs.length
+      ? jobs.map(job => `
+          <div class="automation-audit-row">
+            <span class="automation-audit-dot ${escapeHtml(String(job.status || ''))}"></span>
+            <div>
+              <strong>${escapeHtml(automationJobTitle(job))}</strong>
+              <small>${escapeHtml(automationJobStatus(job))} · ${escapeHtml(formatSecurityTime(job.createdAt))}</small>
+            </div>
+          </div>
+        `).join('')
+      : '<div class="automation-empty">Automation audit появится после первого подходящего события.</div>';
+
+    openSheet(`
+      <span class="kicker">AUTOMATION CENTER</span>
+      <h2>Событие → правило → действие</h2>
+      <p>Automation v1 только уведомляет тебя в собственном Telegram Control bot. Она не пишет другим людям и не совершает действия от твоего имени.</p>
+
+      <div class="automation-rule-list">
+        <button class="automation-rule-card ${securityEnabled ? 'enabled' : ''}" type="button"
+          data-sheet-action="automation-toggle" data-automation-rule="security_changes" data-automation-enabled="${securityEnabled ? '1' : '0'}">
+          <span class="automation-rule-icon">⌾</span>
+          <span class="automation-rule-copy">
+            <strong>Security changes</strong>
+            <small>Подключение или отзыв Deep Intelligence session.</small>
+          </span>
+          <b>${securityEnabled ? 'ON' : 'OFF'}</b>
+        </button>
+
+        <button class="automation-rule-card ${smartEnabled ? 'enabled' : ''}" type="button"
+          data-sheet-action="automation-toggle" data-automation-rule="smart_action" data-automation-enabled="${smartEnabled ? '1' : '0'}">
+          <span class="automation-rule-icon">⚡</span>
+          <span class="automation-rule-copy">
+            <strong>Smart Inbox action</strong>
+            <small>Входящее сообщение похоже содержит вопрос или запрос.</small>
+          </span>
+          <b>${smartEnabled ? 'ON' : 'OFF'}</b>
+        </button>
+
+        <button class="automation-rule-card ${viewerEnabled ? 'enabled' : ''}" type="button"
+          data-sheet-action="automation-toggle" data-automation-rule="confirmed_viewer" data-automation-enabled="${viewerEnabled ? '1' : '0'}">
+          <span class="automation-rule-icon">◉</span>
+          <span class="automation-rule-copy">
+            <strong>Confirmed viewer</strong>
+            <small>Отдельный alert после подтверждения Viewer Intelligence.</small>
+          </span>
+          <b>${viewerEnabled ? 'ON' : 'OFF'}</b>
+        </button>
+      </div>
+
+      <div class="automation-safety-note">
+        <strong>Privacy boundary</strong>
+        <span>Worker получает только нормализованное Event Vault событие. Raw message text не включается в automation notification payload.</span>
+      </div>
+
+      <div class="block-head compact automation-audit-head">
+        <div><span class="kicker">AUDIT</span><h2>Последние выполнения</h2></div>
+        <span class="tiny-note">queue + retry</span>
+      </div>
+      <div class="automation-audit-list">${audit}</div>
+
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="automation-refresh">Обновить</button>
+        <button data-sheet-action="open-security">Security Center</button>
+        <button data-sheet-action="close">Закрыть</button>
+      </div>
+    `);
+  }
+
+  async function automationCenterSheet({ refresh = true } = {}) {
+    if (!automationState.loaded) {
+      openSheet(`
+        <span class="kicker">AUTOMATION CENTER</span>
+        <h2>Загружаю правила</h2>
+        <p>Проверяю очередь, audit и текущие настройки.</p>
+        <div class="intel-empty">◌ Automation Engine</div>
+      `);
+    }
+
+    if (refresh) {
+      try {
+        automationState.busy = true;
+        const data = await automationsApi();
+        automationState.rules = data.settings?.rules || {};
+        automationState.jobs = Array.isArray(data.jobs) ? data.jobs : [];
+        automationState.loaded = true;
+        automationState.error = null;
+      } catch (error) {
+        automationState.error = error.message;
+        if (!automationState.loaded) {
+          openSheet(`
+            <span class="kicker">AUTOMATION CENTER</span>
+            <h2>Временно недоступно</h2>
+            <p>${escapeHtml(error.message)}</p>
+            <div class="sheet-actions">
+              <button class="accent" data-sheet-action="automation-refresh">Повторить</button>
+              <button data-sheet-action="close">Закрыть</button>
+            </div>
+          `);
+          return;
+        }
+      } finally {
+        automationState.busy = false;
+      }
+    }
+
+    renderAutomationCenterSheet();
+  }
+
   function profileSheet() {
     const storiesReady = state.connection === 'ready' || state.ready === true;
     const businessConnected = storiesReady || state.connection === 'needs_permission';
@@ -1385,6 +1563,7 @@
         <button data-sheet-action="go-ghost">Ghost</button>
         <button data-sheet-action="go-viewers">Intelligence</button>
         <button data-sheet-action="open-security">Security Center</button>
+        <button data-sheet-action="open-automations">Automation Center</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
@@ -2002,8 +2181,9 @@
   });
 
   $('sheet').addEventListener('click', async event => {
-    const action = event.target?.dataset?.sheetAction;
-    const storyId = event.target?.dataset?.viewerStory;
+    const actionTarget = event.target?.closest?.('[data-sheet-action]') || event.target;
+    const action = actionTarget?.dataset?.sheetAction;
+    const storyId = actionTarget?.dataset?.viewerStory;
     if (action === 'close') closeSheet();
     if (action === 'check') {
       closeSheet();
@@ -2096,6 +2276,38 @@
     }
     if (action === 'viewer-back-setup') {
       viewerSetupSheet();
+      return;
+    }
+    if (action === 'open-automations') {
+      await automationCenterSheet();
+      return;
+    }
+    if (action === 'automation-refresh') {
+      await automationCenterSheet({ refresh:true });
+      return;
+    }
+    if (action === 'automation-toggle') {
+      const ruleKey = String(actionTarget?.dataset?.automationRule || '');
+      const current = actionTarget?.dataset?.automationEnabled === '1';
+      if (!ruleKey || automationState.busy) return;
+      try {
+        automationState.busy = true;
+        const data = await automationsApi('update_rule', {
+          ruleKey,
+          enabled: !current,
+        });
+        automationState.rules = data.settings?.rules || automationState.rules;
+        automationState.jobs = Array.isArray(data.jobs) ? data.jobs : automationState.jobs;
+        automationState.loaded = true;
+        haptic();
+        showToast(!current ? 'Automation включена' : 'Automation выключена');
+      } catch (error) {
+        showToast(error.message);
+        notify('error');
+      } finally {
+        automationState.busy = false;
+      }
+      renderAutomationCenterSheet();
       return;
     }
     if (action === 'open-security') {
