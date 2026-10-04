@@ -7,7 +7,7 @@
   <title>Ghost Mode — Telegram Control</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261004-ghost-studio" />
-  <link rel="stylesheet" href="/studio-module.css?v=20261004-ghost-studio" />
+  <link rel="stylesheet" href="/studio-module.css?v=20261004-brand-pack" />
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -66,7 +66,7 @@
         </button>
         <button class="capability-card" type="button" data-open-screen="studio">
           <span class="capability-icon">✦</span>
-          <span class="capability-copy"><small>Creator Studio</small><strong>Emoji · Stickers</strong></span>
+          <span class="capability-copy"><small>Creator Studio</small><strong>Brand Packs · Emoji</strong></span>
           <span class="capability-chevron">›</span>
         </button>
         <button class="capability-card" type="button" data-open-screen="intelligence">
@@ -82,7 +82,7 @@
         </div>
         <div class="control-actions">
           <button type="button" data-open-screen="stories"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
-          <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать emoji</strong><small>Brand Pack · Stickers</small></button>
+          <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
           <button type="button" data-open-screen="ghost"><span>◌</span><strong>Ghost</strong><small>Anti-Delete · Inbox · Vault</small></button>
         </div>
       </section>
@@ -574,7 +574,7 @@
         <button type="button" data-ghost-jump="edited"><span>≋</span><strong>Изменённые</strong><small>История правок по чатам</small></button>
         <button type="button" data-ghost-jump="media"><span>▣</span><strong>Media Vault</strong><small>Сохранённые вложения</small></button>
         <button type="button" data-ghost-jump="all"><span>☰</span><strong>Все чаты</strong><small>Полный Ghost Inbox</small></button>
-        <button type="button" data-open-screen="studio"><span>✦</span><strong>Creator Studio</strong><small>Emoji, stickers и brand packs</small></button>
+        <button type="button" data-open-screen="studio"><span>✦</span><strong>Creator Studio</strong><small>Brand Pack Engine · motion</small></button>
         <button type="button" data-open-screen="stories"><span>＋</span><strong>Stories</strong><small>Публикация и точная аудитория</small></button>
       </section>
 
@@ -819,9 +819,84 @@
         </div>
       </section>
 
+      <section class="brand-pack-card">
+        <div class="brand-pack-head">
+          <div>
+            <span class="kicker">ONE LOGO → SYSTEM</span>
+            <h2>Brand Pack Engine</h2>
+            <p>Из одного логотипа Ghost Mode собирает единый набор из 6–12 custom emoji или stickers, автоматически подбирает акцент и готовит весь pack к публикации.</p>
+          </div>
+          <span class="brand-pack-mode" id="brandPackMode">STATIC · WEBP</span>
+        </div>
+
+        <div class="brand-pack-toolbar">
+          <div class="brand-pack-control">
+            <span>Размер pack</span>
+            <div class="brand-pack-segment">
+              <button type="button" data-brand-count="6">6</button>
+              <button type="button" class="active" data-brand-count="8">8</button>
+              <button type="button" data-brand-count="12">12</button>
+            </div>
+          </div>
+
+          <div class="brand-pack-control brand-pack-accent">
+            <span id="brandPackAccentLabel">Auto from logo</span>
+            <div>
+              <input id="brandPackAccent" type="color" value="#7b66ff" aria-label="Brand accent" />
+              <button id="brandPackAutoAccentButton" type="button">Auto</button>
+            </div>
+          </div>
+
+          <div class="brand-pack-control">
+            <span>Motion preset</span>
+            <div class="brand-pack-motion">
+              <button class="active" type="button" data-motion-preset="assemble">Assemble</button>
+              <button type="button" data-motion-preset="shine">Shine</button>
+              <button type="button" data-motion-preset="pulse">Pulse</button>
+              <button type="button" data-motion-preset="float">Float</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="brand-pack-actions">
+          <button class="studio-button" id="brandPackBuildButton" type="button">✦ Собрать Brand Pack</button>
+          <button class="studio-button secondary" id="brandPackAnimateButton" type="button" disabled>◌ Animate pack</button>
+          <button class="studio-button secondary" id="brandPackRestoreButton" type="button" hidden>↶ Static</button>
+        </div>
+
+        <div class="brand-pack-meta">
+          <span id="brandPackMotionCapability">Проверяю motion…</span>
+          <span><strong id="brandPackSelectedCount">0</strong> selected</span>
+          <span>Auto background cleanup</span>
+          <span>Auto brand accent</span>
+        </div>
+
+        <div class="brand-pack-empty" id="brandPackEmpty">
+          <span>✦</span>
+          <strong>Сначала добавь логотип выше</strong>
+          <small>После этого Ghost Mode соберёт согласованный набор Core · Done · Private · Watch · Priority · Focus и другие.</small>
+        </div>
+
+        <div class="brand-pack-grid" id="brandPackGrid"></div>
+
+        <div class="brand-pack-footer">
+          <div class="studio-status-line" id="brandPackStatus">Готов собрать полный бренд-пак без AI-ключа.</div>
+          <button class="studio-button brand-pack-publish" id="brandPackPublishButton" type="button" disabled>Опубликовать весь pack</button>
+        </div>
+
+        <div class="studio-result brand-pack-result" id="brandPackResult" hidden>
+          <strong>Brand Pack опубликован</strong>
+          <span id="brandPackResultTitle"></span>
+          <span id="brandPackResultName"></span>
+          <div class="studio-result-actions">
+            <button id="brandPackOpenButton" type="button">Открыть в Telegram</button>
+          </div>
+        </div>
+      </section>
+
       <section class="studio-truth">
         <article><strong>Static AI</strong><span>Prompt generation активируется через OPENAI_API_KEY; загрузка собственного бренда работает без AI.</span></article>
-        <article><strong>Animated</strong><span>Готовый Telegram-compatible WEBM можно сразу загрузить и добавить в custom emoji pack.</span></article>
+        <article><strong>Animated</strong><span>Brand Pack умеет локально собирать VP9 WEBM motion прямо в Telegram WebView; если WebView не поддерживает encoder, static pack остаётся полностью рабочим.</span></article>
         <article><strong>Ghost positioning</strong><span>Creator Studio — часть Ghost Mode рядом с Privacy, Stories и Intelligence, а не отдельный бот.</span></article>
       </section>
     </section>
@@ -866,8 +941,9 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261004-ghost-studio"></script>
-  <script src="/privacy.js?v=20261004-ghost-studio"></script>
-  <script src="/studio-module.js?v=20261004-ghost-studio"></script>
+  <script src="/app.js?v=20261004-brand-pack"></script>
+  <script src="/privacy.js?v=20261004-brand-pack"></script>
+  <script src="/studio-module.js?v=20261004-brand-pack"></script>
+  <script src="/brand-pack.js?v=20261004-brand-pack"></script>
 </body>
 </html>
