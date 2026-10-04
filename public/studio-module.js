@@ -271,6 +271,17 @@
       try { tg?.openTelegramLink?.(link); } catch { window.open(link, '_blank', 'noopener'); }
     });
 
+    $('studioSharePackButton')?.addEventListener('click', () => {
+      if (!studio.packLink) return toast('Сначала создай Telegram pack');
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(studio.packLink)}&text=${encodeURIComponent('Ghost Mode · Telegram Emoji Pack')}`;
+      try { tg?.openTelegramLink?.(shareUrl); } catch { window.open(shareUrl, '_blank', 'noopener'); }
+    });
+
+    $('studioOpenDirectButton')?.addEventListener('click', () => {
+      if (!studio.packName) return toast('Сначала создай Telegram pack');
+      try { window.location.href = `tg://addemoji?set=${encodeURIComponent(studio.packName)}`; } catch {}
+    });
+
     $('studioNewAssetButton')?.addEventListener('click', () => {
       studio.assetDataUrl = '';
       studio.assetMime = '';
