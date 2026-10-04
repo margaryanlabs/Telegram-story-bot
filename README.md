@@ -36,6 +36,21 @@ Optional Creator Studio environment:
 
 Animated v1 accepts already Telegram-compatible VP9/WEBM input. Motion generation is intentionally separated from static AI generation so the product never pretends a non-compliant animation is publishable.
 
+
+### Brand Pack Engine
+
+Creator Studio also includes **Brand Pack Engine**, designed around the product flow:
+
+`one logo -> 6/8/12 consistent assets -> optional motion -> one Telegram pack`
+
+- Works from an uploaded PNG/JPG/WEBP even when AI generation is not configured.
+- Removes neutral near-white backgrounds from common logo exports.
+- Detects a likely brand accent from the logo and uses it across the pack.
+- Generates consistent semantic variants such as Core, Done, Private, Watch, Priority, Focus, Growth, Spark, Shield, Message, Celebrate and Premium.
+- Publishes the whole selected set in one Telegram sticker/custom-emoji pack.
+- The Mini App can encode simple VP9/WebM motion presets locally when the Telegram WebView exposes MediaRecorder + VP9 support.
+- Static output remains the deterministic fallback if local motion encoding is unavailable.
+
 ## Current production flow
 
 1. User opens `@Storypilotlab_bot`.
