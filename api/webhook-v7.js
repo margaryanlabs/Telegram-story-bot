@@ -1230,6 +1230,19 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (command === '/studio') {
+      await sendAppShortcut(
+        token,
+        chatId,
+        origin,
+        'studio',
+        '✦ Ghost Creator Studio\n\nСоздавай custom emoji, sticker packs и бренд-ассеты из prompt или своего логотипа.',
+        '✦ Открыть Creator Studio',
+      );
+      res.status(200).json({ ok: true, screen: 'studio' });
+      return;
+    }
+
     if (command === '/viewers') {
       await sendAppShortcut(
         token,
