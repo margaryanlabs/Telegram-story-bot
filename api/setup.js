@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     });
 
     await tg(token, 'setMyName', {
-      name: 'Telegram Control',
+      name: 'Ghost Mode',
     }).catch(() => {});
 
     await tg(token, 'setMyCommands', {
