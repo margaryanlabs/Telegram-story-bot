@@ -20,7 +20,7 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20261004-ghost-studio';
+const CONTROL_BUILD = '20261004-brand-pack';
 
 function controlAppUrl(baseUrl) {
   const url = new URL('/studio.html', baseUrl);
@@ -111,7 +111,7 @@ export default async function handler(req, res) {
     }).catch(() => {});
 
     await tg(token, 'setMyDescription', {
-      description: 'Ghost Mode — приватный control layer для Telegram: Anti-Delete/Edit History, Ghost Inbox, Stories, Creator Studio для emoji/stickers и Deep Intelligence.',
+      description: 'Ghost Mode — приватный control layer для Telegram: Anti-Delete/Edit History, Stories, Brand Pack Engine для custom emoji/stickers и Deep Intelligence.',
     }).catch(() => {});
 
     await tg(token, 'setChatMenuButton', {
