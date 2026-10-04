@@ -100,6 +100,7 @@ export default async function handler(req, res) {
         { command: 'edits', description: '≋ История изменённых сообщений' },
         { command: 'stories', description: '📸 Stories и приватность' },
         { command: 'studio', description: '✦ Emoji, stickers и brand packs' },
+        { command: 'sharepack', description: '↗ Проверить и поделиться emoji pack' },
         { command: 'viewers', description: '👁 Deep Intelligence' },
         { command: 'status', description: '📊 Статус подключения' },
         { command: 'help', description: '❔ Возможности и помощь' },
