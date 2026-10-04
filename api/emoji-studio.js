@@ -129,23 +129,54 @@ async function knockoutNearWhite(buffer) {
 
   const { data, info } = await source.raw().toBuffer({ resolveWithObject: true });
   const pixels = Buffer.from(data);
+  const width = info.width;
+  const height = info.height;
+  const total = width * height;
+  const visited = new Uint8Array(total);
+  const queue = new Int32Array(total);
+  let head = 0;
+  let tail = 0;
 
-  for (let i = 0; i < pixels.length; i += 4) {
+  const isBackgroundCandidate = pixelIndex => {
+    const i = pixelIndex * 4;
     const r = pixels[i];
     const g = pixels[i + 1];
     const b = pixels[i + 2];
-    const a = pixels[i + 3];
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
-    const chroma = max - min;
+    return min >= 226 && (max - min) <= 20;
+  };
 
-    // Remove only neutral near-white pixels. Colored light pixels are kept.
-    if (min >= 244 && chroma <= 12) {
-      pixels[i + 3] = 0;
-    } else if (min >= 228 && chroma <= 16) {
-      const factor = Math.max(0, Math.min(1, (244 - min) / 16));
-      pixels[i + 3] = Math.round(a * factor);
-    }
+  const seed = pixelIndex => {
+    if (pixelIndex < 0 || pixelIndex >= total || visited[pixelIndex] || !isBackgroundCandidate(pixelIndex)) return;
+    visited[pixelIndex] = 1;
+    queue[tail++] = pixelIndex;
+  };
+
+  for (let x = 0; x < width; x += 1) {
+    seed(x);
+    seed((height - 1) * width + x);
+  }
+  for (let y = 0; y < height; y += 1) {
+    seed(y * width);
+    seed(y * width + width - 1);
+  }
+
+  while (head < tail) {
+    const pixelIndex = queue[head++];
+    const x = pixelIndex % width;
+    const y = Math.floor(pixelIndex / width);
+    if (x > 0) seed(pixelIndex - 1);
+    if (x < width - 1) seed(pixelIndex + 1);
+    if (y > 0) seed(pixelIndex - width);
+    if (y < height - 1) seed(pixelIndex + width);
+  }
+
+  // Only edge-connected neutral white is removed. White/light brand pieces inside
+  // the logo stay intact instead of being mistaken for background.
+  for (let pixelIndex = 0; pixelIndex < total; pixelIndex += 1) {
+    if (!visited[pixelIndex]) continue;
+    pixels[pixelIndex * 4 + 3] = 0;
   }
 
   return sharp(pixels, {
