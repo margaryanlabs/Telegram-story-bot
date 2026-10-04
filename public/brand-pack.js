@@ -421,7 +421,9 @@
       }
       if ($('brandPackResultName')) $('brandPackResultName').textContent = data.pack?.name || '';
       if ($('brandPackOpenButton')) $('brandPackOpenButton').dataset.link = data.pack?.link || '';
-      $('brandPackStatus').textContent = 'Brand Pack опубликован. Открывай его прямо в Telegram.';
+      if ($('brandPackShareButton')) $('brandPackShareButton').dataset.link = data.pack?.link || '';
+      if ($('brandPackDirectButton')) $('brandPackDirectButton').dataset.name = data.pack?.name || '';
+      $('brandPackStatus').textContent = 'Brand Pack опубликован. Для просмотра всех emoji открывай именно весь pack, а не отдельный emoji.';
       notify('success');
     } catch (error) {
       $('brandPackStatus').textContent = error.message;
@@ -470,6 +472,19 @@
       const link = event.currentTarget.dataset.link;
       if (!link) return;
       try { tg?.openTelegramLink?.(link); } catch { window.open(link, '_blank', 'noopener'); }
+    });
+
+    $('brandPackShareButton')?.addEventListener('click', event => {
+      const link = event.currentTarget.dataset.link;
+      if (!link) return;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Ghost Mode · Brand Emoji Pack')}`;
+      try { tg?.openTelegramLink?.(shareUrl); } catch { window.open(shareUrl, '_blank', 'noopener'); }
+    });
+
+    $('brandPackDirectButton')?.addEventListener('click', event => {
+      const name = event.currentTarget.dataset.name;
+      if (!name) return;
+      try { window.location.href = `tg://addemoji?set=${encodeURIComponent(name)}`; } catch {}
     });
   }
 
