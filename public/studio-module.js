@@ -268,7 +268,28 @@
     $('studioOpenPackButton')?.addEventListener('click', event => {
       const link = event.currentTarget.dataset.link;
       if (!link) return;
-      try { tg?.openTelegramLink?.(link); } catch { window.open(link, '_blank', 'noopener'); }
+      try { tg?.openTelegramLink?.(link); }
+      catch { window.open(link, '_blank', 'noopener'); }
+    });
+
+    $('studioSharePackButton')?.addEventListener('click', () => {
+      if (!studio.packLink) {
+        toast('Сначала создай Telegram pack');
+        return;
+      }
+      const text = 'Ghost Mode · Telegram Emoji Pack';
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(studio.packLink)}&text=${encodeURIComponent(text)}`;
+      try { tg?.openTelegramLink?.(shareUrl); }
+      catch { window.open(shareUrl, '_blank', 'noopener'); }
+    });
+
+    $('studioOpenDirectButton')?.addEventListener('click', () => {
+      if (!studio.packName) {
+        toast('Сначала создай Telegram pack');
+        return;
+      }
+      const direct = `tg://addemoji?set=${encodeURIComponent(studio.packName)}`;
+      try { window.location.href = direct; } catch {}
     });
 
     $('studioNewAssetButton')?.addEventListener('click', () => {
