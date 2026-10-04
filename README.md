@@ -1,6 +1,40 @@
-# Story Pilot
+# Ghost Mode / Telegram Control
 
 Telegram bot for publishing Stories through a connected Business account.
+
+
+## Product positioning
+
+**Ghost Mode** is the umbrella product: a private control layer for Telegram that brings together:
+
+- **Ghost Privacy** — Anti-Delete, Edit History, Ghost Inbox, Media Vault and retention controls.
+- **Stories** — direct publishing, precise audiences, exclusions and content protection.
+- **Creator Studio** — custom emoji, sticker packs and brand assets from a prompt or uploaded logo.
+- **Intelligence** — Viewer Sync, audience patterns, reactions and analytics.
+- **Chats / Event Vault** — the durable event and message archive that powers Ghost workflows.
+
+The product should feel like one private Telegram operating layer, not a collection of unrelated bots.
+
+## Creator Studio
+
+The Mini App now includes **Ghost Creator Studio**.
+
+Working v1 flow:
+
+1. Open Studio inside the Telegram Mini App.
+2. Choose **Custom Emoji** or **Sticker Pack**.
+3. Either upload PNG/JPG/WEBP/Telegram-compatible WEBM, or generate a static asset by prompt when `OPENAI_API_KEY` is configured.
+4. Ghost Studio normalizes static assets automatically (100×100 for custom emoji, 512×512 for stickers).
+5. The backend uploads the asset through the Telegram Bot API and creates a user-owned pack.
+6. The returned Telegram deep link opens the new pack immediately.
+7. Additional assets can be appended to the same pack from the Studio.
+
+Optional Creator Studio environment:
+
+- `OPENAI_API_KEY` — enables prompt-to-image generation.
+- `OPENAI_IMAGE_MODEL` — optional override; defaults to `gpt-image-2.5-flare`.
+
+Animated v1 accepts already Telegram-compatible VP9/WEBM input. Motion generation is intentionally separated from static AI generation so the product never pretends a non-compliant animation is publishable.
 
 ## Current production flow
 

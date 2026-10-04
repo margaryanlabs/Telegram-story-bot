@@ -4,9 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#080c13" />
-  <title>Telegram Control</title>
+  <title>Ghost Mode — Telegram Control</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20260926-1405" />
+  <link rel="stylesheet" href="/app.css?v=20261004-ghost-studio" />
+  <link rel="stylesheet" href="/studio-module.css?v=20261004-ghost-studio" />
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -17,8 +18,8 @@
       <div class="brand">
         <div class="brand-mark"><span>TC</span></div>
         <div class="brand-copy">
-          <strong>Telegram Control</strong>
-          <span>Privacy · Stories · Intelligence</span>
+          <strong>Ghost Mode</strong>
+          <span>Privacy · Stories · Studio · Intelligence</span>
         </div>
       </div>
       <button class="profile-button" id="profileButton" type="button" aria-label="Открыть статус аккаунта">
@@ -35,17 +36,17 @@
     <section class="screen active control-home" data-screen="home">
       <div class="control-heading">
         <div>
-          <span class="kicker">CONTROL</span>
-          <h1>Telegram под контролем.</h1>
-          <p>Один спокойный слой для приватности, сообщений, Stories и Intelligence.</p>
+          <span class="kicker">GHOST MODE</span>
+          <h1>Твой приватный слой Telegram.</h1>
+          <p>Privacy, Stories, Creator Studio и Intelligence — в одном спокойном control layer.</p>
         </div>
         <span class="control-live" id="homeOverallState"><i></i><span>Проверяю</span></span>
       </div>
 
       <section class="control-hero">
-        <div class="control-hero-orb">C</div>
+        <div class="control-hero-orb">G</div>
         <div class="control-hero-copy">
-          <span>TELEGRAM</span>
+          <span>GHOST LAYER</span>
           <strong id="homeTelegramTitle">Проверяю подключение</strong>
           <p id="homeTelegramText">Собираю фактическое состояние доступов.</p>
         </div>
@@ -58,19 +59,19 @@
           <span class="capability-copy"><small>Ghost</small><strong id="homeGhostState">Проверяю</strong></span>
           <span class="capability-chevron">›</span>
         </button>
+        <button class="capability-card" type="button" data-open-screen="stories">
+          <span class="capability-icon">＋</span>
+          <span class="capability-copy"><small>Stories</small><strong>Publish privately</strong></span>
+          <span class="capability-chevron">›</span>
+        </button>
+        <button class="capability-card" type="button" data-open-screen="studio">
+          <span class="capability-icon">✦</span>
+          <span class="capability-copy"><small>Creator Studio</small><strong>Emoji · Stickers</strong></span>
+          <span class="capability-chevron">›</span>
+        </button>
         <button class="capability-card" type="button" data-open-screen="intelligence">
           <span class="capability-icon">◉</span>
           <span class="capability-copy"><small>Intelligence</small><strong id="homeIntelState">Проверяю</strong></span>
-          <span class="capability-chevron">›</span>
-        </button>
-        <button class="capability-card" type="button" data-open-screen="chats">
-          <span class="capability-icon">≋</span>
-          <span class="capability-copy"><small>Chats</small><strong id="homeChatsState">Ghost archive</strong></span>
-          <span class="capability-chevron">›</span>
-        </button>
-        <button class="capability-card" type="button" id="homeSecurityCard">
-          <span class="capability-icon">⌾</span>
-          <span class="capability-copy"><small>Security</small><strong id="homeSecurityState">Protected</strong></span>
           <span class="capability-chevron">›</span>
         </button>
       </section>
@@ -81,8 +82,8 @@
         </div>
         <div class="control-actions">
           <button type="button" data-open-screen="stories"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
-          <button type="button" data-open-screen="ghost"><span>◌</span><strong>Ghost</strong><small>Anti-Delete и Edit History</small></button>
-          <button type="button" data-open-screen="intelligence"><span>◉</span><strong>Intelligence</strong><small>Просмотры и паттерны</small></button>
+          <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать emoji</strong><small>Brand Pack · Stickers</small></button>
+          <button type="button" data-open-screen="ghost"><span>◌</span><strong>Ghost</strong><small>Anti-Delete · Inbox · Vault</small></button>
         </div>
       </section>
 
@@ -531,7 +532,7 @@
       <div class="page-head privacy-page-head">
         <span class="kicker">Privacy</span>
         <h1>Ghost</h1>
-        <p>Защита сообщений: Anti-Delete, Edit History, Media Vault и срок хранения — отдельно от обычного Telegram-клиента.</p>
+        <p>Ghost Mode — приватный control layer поверх Telegram: Anti-Delete, Edit History, Ghost Inbox, Stories, Creator Studio и Intelligence.</p>
       </div>
 
       <section class="ghost-command-card">
@@ -573,6 +574,8 @@
         <button type="button" data-ghost-jump="edited"><span>≋</span><strong>Изменённые</strong><small>История правок по чатам</small></button>
         <button type="button" data-ghost-jump="media"><span>▣</span><strong>Media Vault</strong><small>Сохранённые вложения</small></button>
         <button type="button" data-ghost-jump="all"><span>☰</span><strong>Все чаты</strong><small>Полный Ghost Inbox</small></button>
+        <button type="button" data-open-screen="studio"><span>✦</span><strong>Creator Studio</strong><small>Emoji, stickers и brand packs</small></button>
+        <button type="button" data-open-screen="stories"><span>＋</span><strong>Stories</strong><small>Публикация и точная аудитория</small></button>
       </section>
 
       <section class="ghost-access-strip" id="privacyAccessStrip">
@@ -713,6 +716,116 @@
       <button class="privacy-clear-button" id="privacyClearButton" type="button">Очистить Ghost Inbox</button>
     </section>
 
+
+    <section class="screen" data-screen="studio">
+      <div class="page-head studio-page-head">
+        <span class="kicker">GHOST CREATOR</span>
+        <h1>Creator Studio</h1>
+        <p class="studio-positioning">Создавай фирменные emoji, sticker packs и Telegram-ассеты внутри Ghost Mode — от prompt или готового логотипа до пакета.</p>
+      </div>
+
+      <section class="studio-hero">
+        <div class="studio-hero-top">
+          <div class="studio-hero-copy">
+            <span class="studio-badge"><i></i> Ghost Brand Engine</span>
+            <h2>Brand → Telegram Pack</h2>
+            <p>Один визуальный язык для статуса, сообщений, Stories и сообщества. Без ручной возни с размерами и форматами.</p>
+          </div>
+        </div>
+        <div class="studio-capabilities">
+          <span id="studioAiState">Проверяю AI…</span>
+          <span id="studioMotionState">WEBM import ready</span>
+          <span>Auto resize</span>
+          <span>Telegram publish</span>
+        </div>
+        <div class="studio-map">
+          <article><span>01 · INPUT</span><strong>Prompt / Logo</strong></article>
+          <article><span>02 · CREATE</span><strong>Ghost AI / Upload</strong></article>
+          <article><span>03 · PACKAGE</span><strong>Emoji / Sticker</strong></article>
+          <article><span>04 · PUBLISH</span><strong>Telegram Pack</strong></article>
+        </div>
+      </section>
+
+      <section class="studio-workspace">
+        <div class="studio-panel">
+          <div class="studio-panel-head">
+            <div><span class="kicker">FORMAT</span><h2>Что создаём</h2></div>
+          </div>
+          <div class="studio-segment">
+            <button type="button" class="active" data-studio-kind="custom_emoji">Custom Emoji</button>
+            <button type="button" data-studio-kind="sticker">Sticker Pack</button>
+          </div>
+          <p class="studio-helper" id="studioKindHelper">Custom Emoji для статуса, имени и сообщений. Изображение будет приведено к 100×100.</p>
+
+          <div class="studio-panel-head" style="margin-top:18px">
+            <div><span class="kicker">PROMPT</span><h2>Опиши стиль</h2></div>
+          </div>
+          <textarea class="studio-textarea" id="studioPrompt" maxlength="1800" placeholder="Например: Сделай из логотипа PROSTROY премиальный 3D custom emoji, красный + графит, без текста, чистый силуэт…"></textarea>
+          <div class="studio-style-row">
+            <button class="active" type="button" data-studio-style="brand">Brand</button>
+            <button type="button" data-studio-style="minimal">Minimal</button>
+            <button type="button" data-studio-style="3d">3D</button>
+            <button type="button" data-studio-style="chrome">Chrome</button>
+            <button type="button" data-studio-style="soft">Soft</button>
+          </div>
+          <div class="studio-prompt-examples">
+            <button type="button" data-studio-prompt="Премиальный custom emoji из моего бренда, чистая геометрия, фирменные цвета, без текста, прозрачный фон.">Brand emoji</button>
+            <button type="button" data-studio-prompt="Минималистичный reaction sticker: готово, уверенный визуальный жест, без текста, фирменный стиль.">Reaction</button>
+            <button type="button" data-studio-prompt="Иконка для Telegram статуса: технологичная, премиальная, хорошо читается в маленьком размере.">Status icon</button>
+          </div>
+          <div class="studio-actions-row">
+            <button class="studio-button" id="studioGenerateButton" type="button">✦ Создать AI</button>
+            <button class="studio-button secondary" id="studioUploadButton" type="button">↑ Загрузить</button>
+          </div>
+          <input id="studioFileInput" type="file" accept="image/png,image/jpeg,image/webp,video/webm" hidden />
+        </div>
+
+        <div class="studio-panel">
+          <div class="studio-panel-head">
+            <div><span class="kicker">ASSET</span><h2>Предпросмотр</h2></div>
+            <small>safe area</small>
+          </div>
+          <div class="studio-asset-stage">
+            <button class="studio-asset-empty" id="studioAssetEmpty" type="button">
+              <span>＋</span>
+              <strong>Добавить бренд-ассет</strong>
+              <small>PNG · JPG · WEBP · WEBM</small>
+            </button>
+            <img id="studioAssetImage" alt="Ghost Studio asset" hidden />
+            <video id="studioAssetVideo" muted loop playsinline hidden></video>
+          </div>
+          <div class="studio-asset-meta" id="studioAssetMeta">Загрузи логотип или создай его по prompt</div>
+
+          <div class="studio-form-grid">
+            <label class="studio-field"><span>Название pack</span><input class="studio-input" id="studioPackTitle" value="Ghost Brand Pack" maxlength="64" /></label>
+            <label class="studio-field"><span>Short name</span><input class="studio-input" id="studioShortName" value="ghost_brand" maxlength="40" /></label>
+            <label class="studio-field"><span>Emoji</span><input class="studio-input" id="studioEmoji" value="✨" maxlength="8" /></label>
+          </div>
+
+          <div class="studio-publish-actions">
+            <button class="studio-button" id="studioCreateButton" type="button" disabled><span id="studioCreateButtonLabel">Создать Emoji Pack</span></button>
+            <button class="studio-button secondary" id="studioAddButton" type="button" hidden>＋ В пакет</button>
+          </div>
+          <div class="studio-status-line" id="studioStatus">Готов к созданию.</div>
+
+          <div class="studio-result" id="studioResult" hidden>
+            <strong id="studioResultTitle">Telegram pack создан</strong>
+            <span id="studioResultText"></span>
+            <div class="studio-result-actions">
+              <button id="studioOpenPackButton" type="button">Открыть в Telegram</button>
+              <button id="studioNewAssetButton" type="button">Следующий asset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="studio-truth">
+        <article><strong>Static AI</strong><span>Prompt generation активируется через OPENAI_API_KEY; загрузка собственного бренда работает без AI.</span></article>
+        <article><strong>Animated</strong><span>Готовый Telegram-compatible WEBM можно сразу загрузить и добавить в custom emoji pack.</span></article>
+        <article><strong>Ghost positioning</strong><span>Creator Studio — часть Ghost Mode рядом с Privacy, Stories и Intelligence, а не отдельный бот.</span></article>
+      </section>
+    </section>
+
     <section class="screen" data-screen="archive">
       <div class="page-head">
         <span class="kicker">История</span>
@@ -733,8 +846,8 @@
   <nav class="bottom-nav" aria-label="Главная навигация">
     <button class="nav-item active" data-nav="home" type="button"><span>⌂</span><small>Home</small></button>
     <button class="nav-item" data-nav="privacy" type="button"><span>◌</span><small>Ghost</small></button>
-    <button class="nav-item" data-nav="chats" type="button"><span>≋</span><small>Chats</small></button>
     <button class="nav-item" data-nav="publish" type="button"><span>＋</span><small>Stories</small></button>
+    <button class="nav-item" data-nav="studio" type="button"><span>✦</span><small>Studio</small></button>
     <button class="nav-item" data-nav="viewers" type="button"><span>◉</span><small>Intel</small></button>
   </nav>
 
@@ -753,7 +866,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20260926-1405"></script>
-  <script src="/privacy.js?v=20260926-1405"></script>
+  <script src="/app.js?v=20261004-ghost-studio"></script>
+  <script src="/privacy.js?v=20261004-ghost-studio"></script>
+  <script src="/studio-module.js?v=20261004-ghost-studio"></script>
 </body>
 </html>

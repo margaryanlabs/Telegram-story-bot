@@ -75,6 +75,8 @@
     ghost: 'privacy',
     privacy: 'privacy',
     chats: 'chats',
+    studio: 'studio',
+    creator: 'studio',
     intelligence: 'viewers',
     viewers: 'viewers',
     analytics: 'analytics',

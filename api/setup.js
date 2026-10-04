@@ -20,7 +20,7 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20260926-1405';
+const CONTROL_BUILD = '20261004-ghost-studio';
 
 function controlAppUrl(baseUrl) {
   const url = new URL('/studio.html', baseUrl);
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     });
 
     await tg(token, 'setMyName', {
-      name: 'Telegram Control',
+      name: 'Ghost Mode',
     }).catch(() => {});
 
     await tg(token, 'setMyCommands', {
@@ -99,6 +99,7 @@ export default async function handler(req, res) {
         { command: 'deleted', description: '↶ Последние удалённые сообщения' },
         { command: 'edits', description: '≋ История изменённых сообщений' },
         { command: 'stories', description: '📸 Stories и приватность' },
+        { command: 'studio', description: '✦ Emoji, stickers и brand packs' },
         { command: 'viewers', description: '👁 Deep Intelligence' },
         { command: 'status', description: '📊 Статус подключения' },
         { command: 'help', description: '❔ Возможности и помощь' },
@@ -106,17 +107,17 @@ export default async function handler(req, res) {
     });
 
     await tg(token, 'setMyShortDescription', {
-      short_description: 'Privacy, Messages, Stories и Intelligence — один Telegram Control.',
+      short_description: 'Ghost Mode: Privacy, Stories, Studio и Intelligence — один Telegram control layer.',
     }).catch(() => {});
 
     await tg(token, 'setMyDescription', {
-      description: 'Telegram Control — единый слой управления Telegram: Ghost с Anti-Delete/Edit History, архив сообщений, Stories с точной приватностью и опциональный Deep Intelligence.',
+      description: 'Ghost Mode — приватный control layer для Telegram: Anti-Delete/Edit History, Ghost Inbox, Stories, Creator Studio для emoji/stickers и Deep Intelligence.',
     }).catch(() => {});
 
     await tg(token, 'setChatMenuButton', {
       menu_button: {
         type: 'web_app',
-        text: 'Открыть Control',
+        text: 'Ghost Mode',
         web_app: { url: controlAppUrl(baseUrl) },
       },
     }).catch(() => {});
