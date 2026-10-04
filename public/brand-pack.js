@@ -283,7 +283,7 @@
 
   async function recordMotion(dataUrl, preset, bitrate = 80000) {
     const image = await loadImage(dataUrl);
-    const size = 100;
+    const size = currentKind() === 'sticker' ? 512 : 100;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -335,23 +335,23 @@
       return;
     }
 
-    const selected = selectedAssets();
-    if (!selected.length) return;
+    const targets = state.assets;
+    if (!targets.length) return;
 
-    setBusy(true, `Анимирую 1/${selected.length}…`);
+    setBusy(true, `Анимирую 1/${targets.length}…`);
     try {
       const animatedById = new Map();
 
-      for (let i = 0; i < selected.length; i += 1) {
-        $('brandPackStatus').textContent = `Анимирую ${i + 1}/${selected.length} · ${selected[i].label}…`;
-        let blob = await recordMotion(selected[i].assetDataUrl, state.motionPreset, 76000);
+      for (let i = 0; i < targets.length; i += 1) {
+        $('brandPackStatus').textContent = `Анимирую ${i + 1}/${targets.length} · ${targets[i].label}…`;
+        let blob = await recordMotion(targets[i].assetDataUrl, state.motionPreset, 76000);
         if (blob.size > 250 * 1024) {
-          blob = await recordMotion(selected[i].assetDataUrl, state.motionPreset, 42000);
+          blob = await recordMotion(targets[i].assetDataUrl, state.motionPreset, 42000);
         }
         if (blob.size > 256 * 1024) {
-          throw new Error(`${selected[i].label}: WEBM получился больше 256 KB. Выбери другой motion preset.`);
+          throw new Error(`${targets[i].label}: WEBM получился больше 256 KB. Выбери другой motion preset.`);
         }
-        animatedById.set(selected[i].id, await blobToDataUrl(blob));
+        animatedById.set(targets[i].id, await blobToDataUrl(blob));
       }
 
       state.assets = state.assets.map(asset => {
@@ -360,7 +360,7 @@
       });
       state.animated = true;
       renderGrid();
-      $('brandPackStatus').textContent = `Motion Pack готов · ${selected.length} VP9 WEBM · loop ~2.35 сек.`;
+      $('brandPackStatus').textContent = `Motion Pack готов · ${targets.length} VP9 WEBM · loop ~2.35 сек.`;
       notify('success');
     } catch (error) {
       state.assets = state.staticAssets.map(asset => ({ ...asset }));
