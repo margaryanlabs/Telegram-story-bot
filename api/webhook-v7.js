@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20260926-1405';
+const CONTROL_BUILD = '20261004-ghost-studio';
 import sharp from 'sharp';
 import {
   trackPublishedStory,
@@ -1228,6 +1228,54 @@ export default async function handler(req, res) {
       );
       res.status(200).json({ ok: true, screen: 'publish' });
       return;
+    }
+
+    if (command === '/sharepack') {
+      const requestedPack = String(text.split(/\s+/).slice(1).join(' ') || '')
+        .trim()
+        .replace(/^https?:\/\/t\.me\/addemoji\//i, '')
+        .replace(/^tg:\/\/addemoji\?set=/i, '')
+        .replace(/[^a-zA-Z0-9_]/g, '')
+        .slice(0, 64);
+
+      if (!requestedPack) {
+        await tg(token, 'sendMessage', {
+          chat_id: chatId,
+          text: '✦ Поделиться Emoji Pack\n\nОтправь команду так:\n/sharepack Prostroypz\n\nМожно вставить и полную ссылку t.me/addemoji/…',
+        });
+        res.status(200).json({ ok: true, sharepack_help: true });
+        return;
+      }
+
+      try {
+        const set = await tg(token, 'getStickerSet', { name: requestedPack });
+        const count = Array.isArray(set?.stickers) ? set.stickers.length : 0;
+        const title = String(set?.title || requestedPack);
+        const link = `https://t.me/addemoji/${requestedPack}`;
+        const share = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(title)}`;
+
+        await tg(token, 'sendMessage', {
+          chat_id: chatId,
+          text: `✦ ${title}\n\nTelegram API видит весь набор: ${count} emoji.\n\nОткрывай именно ссылку набора ниже — не нажатием на отдельный emoji в сообщении.\n\n${link}`,
+          disable_web_page_preview: true,
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: `✦ Открыть весь набор (${count})`, url: link }],
+              [{ text: '↗ Поделиться набором', url: share }],
+            ],
+          },
+        });
+
+        res.status(200).json({ ok: true, pack: requestedPack, count });
+        return;
+      } catch (error) {
+        await tg(token, 'sendMessage', {
+          chat_id: chatId,
+          text: `Не смог открыть набор «${requestedPack}» через Telegram API. Проверь short name после /addemoji/ и попробуй ещё раз.`,
+        }).catch(() => {});
+        res.status(200).json({ ok: false, pack: requestedPack, error: error?.message || String(error) });
+        return;
+      }
     }
 
     if (command === '/studio') {
