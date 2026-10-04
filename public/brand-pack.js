@@ -10,6 +10,7 @@
     autoAccent: '',
     motionPreset: 'assemble',
     animated: false,
+    kind: 'custom_emoji',
     busy: false,
   };
 
@@ -179,9 +180,10 @@
 
     setBusy(true, `Собираю ${state.count} брендовых ассетов…`);
     try {
+      state.kind = currentKind();
       const data = await api({
         action: 'generate_brand_pack',
-        kind: currentKind(),
+        kind: state.kind,
         assetDataUrl,
         count: state.count,
         accent: state.accent || undefined,
@@ -283,7 +285,7 @@
 
   async function recordMotion(dataUrl, preset, bitrate = 80000) {
     const image = await loadImage(dataUrl);
-    const size = currentKind() === 'sticker' ? 512 : 100;
+    const size = state.kind === 'sticker' ? 512 : 100;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -402,7 +404,7 @@
     try {
       const data = await api({
         action: 'publish_brand_pack',
-        kind: currentKind(),
+        kind: state.kind,
         title,
         shortBase,
         assets: assets.map(asset => ({
