@@ -568,6 +568,8 @@ async function createBrandPack({ token, user, assets, kind, title, shortBase }) 
   };
 }
 
+export { generateBrandPack, knockoutNearWhite, inferAccent };
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   const token = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
