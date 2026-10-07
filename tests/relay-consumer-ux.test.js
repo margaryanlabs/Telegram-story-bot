@@ -45,9 +45,11 @@ test('Relay never claims protected before client confirms Telegram works',()=>{
   const openRoute=client.slice(client.indexOf('function openRoute'),client.indexOf('async function connect'));
   assert.match(openRoute,/markPending/);
   assert.doesNotMatch(openRoute,/markEnabled/);
-  assert.match(client,/Telegram заработал\?/);
-  assert.match(client,/Да, Telegram работает/);
-  assert.match(client,/Нет, всё ещё крутится/);
+  assert.match(client,/pendingRelay/);
+  const html=read('public/studio.html');
+  assert.match(html,/Telegram заработал\?/);
+  assert.match(html,/Да, работает/);
+  assert.match(html,/Нет, не работает/);
 });
 
 test('failed client route is excluded before automatic retry',()=>{
@@ -56,4 +58,26 @@ test('failed client route is excluded before automatic retry',()=>{
   assert.match(client,/rejectPendingRelay/);
   assert.match(client,/exclude:excluded/);
   assert.match(client,/Переключаю на запасной/);
+});
+
+
+test('Relay activation never auto-opens a confirmation popup',()=>{
+  const html=read('public/studio.html');
+  const client=read('public/relay-module.js');
+
+  assert.match(html,/relayPendingConfirm/);
+  assert.match(html,/Telegram заработал\?/);
+  assert.match(html,/Да, работает/);
+  assert.match(html,/Нет, не работает/);
+
+  assert.doesNotMatch(client,/function openRelayConfirmation/);
+  assert.doesNotMatch(client,/setTimeout\(openRelayConfirmation/);
+  assert.doesNotMatch(client,/pendingRelay\?openRelayConfirmation/);
+});
+
+test('disable confirmation is only attached to explicit disable flow',()=>{
+  const client=read('public/relay-module.js');
+  assert.match(client,/function openDisableGuide/);
+  assert.match(client,/relayDisableButton'\)\?\.addEventListener\('click',openDisableGuide\)/);
+  assert.match(client,/Я выключил/);
 });

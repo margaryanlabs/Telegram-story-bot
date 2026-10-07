@@ -159,6 +159,7 @@
     if(!pill||!power)return;
     const pt=pill.querySelector('span'),strong=power.querySelector('strong'),small=power.querySelector('small');
     const active=Boolean(s.enabled),r=s.relay;
+    const pending=Boolean(s.pendingRelay&&!active);
 
     $('relayHero')?.classList.toggle('relay-active',active);
     $('relayHomePrimary')?.classList.toggle('relay-active',active);
@@ -171,6 +172,7 @@
     if($('relayConnectedProof'))$('relayConnectedProof').hidden=!active;
     if($('relayDisableButton'))$('relayDisableButton').hidden=!active;
     if($('relayGlobalBadge'))$('relayGlobalBadge').hidden=!active;
+    if($('relayPendingConfirm'))$('relayPendingConfirm').hidden=!pending;
 
     let title='Защита выключена',text='Нажми один раз — VETO сам выберет рабочий путь.',a='Защитить Telegram',b='VETO всё выберет автоматически',p='Готово';
     let simple='Готово к включению',simpleText='VETO автоматически выберет лучший доступный путь.';
@@ -218,17 +220,21 @@
 
     if($('relaySimpleStatus'))$('relaySimpleStatus').textContent=simple;
     if($('relaySimpleStatusText'))$('relaySimpleStatusText').textContent=simpleText;
-    if($('homeRelayState'))$('homeRelayState').textContent=active?'TELEGRAM PROTECTED':s.configured===false?'Недоступно':'Защита Telegram';
-    if($('homeRelayPrimaryState'))$('homeRelayPrimaryState').textContent=active?'PROTECTED':s.configured===false?'Недоступно':'Готово к включению';
+    if($('homeRelayState'))$('homeRelayState').textContent=active?'TELEGRAM PROTECTED':pending?'Проверь подключение':s.configured===false?'Недоступно':'Защита Telegram';
+    if($('homeRelayPrimaryState'))$('homeRelayPrimaryState').textContent=active?'PROTECTED':pending?'Нужно подтвердить':s.configured===false?'Недоступно':'Готово к включению';
     if($('relayGlobalBadgeRoute'))$('relayGlobalBadgeRoute').textContent=r?.region||'AUTO';
-    if($('relayHomeTitle'))$('relayHomeTitle').textContent=active?'Telegram защищён':'Telegram работает нестабильно?';
+    if($('relayHomeTitle'))$('relayHomeTitle').textContent=active?'Telegram защищён':pending?'Telegram заработал?':'Telegram работает нестабильно?';
     if($('relayHomeText'))$('relayHomeText').textContent=active
       ? 'Защита включена. Закрывай VETO — статус сохранится на этом устройстве.'
-      : 'Включи защиту одним нажатием. VETO сам выберет рабочий путь только для Telegram.';
-    if($('homeRelayPrimaryButtonTitle'))$('homeRelayPrimaryButtonTitle').textContent=active?'TELEGRAM PROTECTED':'Защитить Telegram';
+      : pending
+        ? 'Вернись в VETO после включения proxy и спокойно подтверди результат на экране защиты.'
+        : 'Включи защиту одним нажатием. VETO сам выберет рабочий путь только для Telegram.';
+    if($('homeRelayPrimaryButtonTitle'))$('homeRelayPrimaryButtonTitle').textContent=active?'TELEGRAM PROTECTED':pending?'Проверить подключение':'Защитить Telegram';
     if($('homeRelayPrimaryButtonText'))$('homeRelayPrimaryButtonText').textContent=active
       ? (r?.region?'Активно · '+r.region:'Управлять защитой')
-      : 'Одно нажатие';
+      : pending
+        ? 'Без всплывающих окон'
+        : 'Одно нажатие';
   }
 
   async function status(silent=true){
@@ -288,24 +294,6 @@
       const message=relayErrorMessage(e);s={...s,configured:e?.data?.configured===false?false:s.configured,error:message};
       toast(message);
     }finally{s.busy=false;render();}
-  }
-
-  function openRelayConfirmation(){
-    if(!s.pendingRelay||!$('sheetContent')||!$('sheet'))return;
-    const route=s.pendingRelay;
-    $('sheetContent').innerHTML=
-      '<span class="kicker">ПРОВЕРКА СВЯЗИ</span>'+
-      '<div class="feature-guide-title"><span>◉</span><h2>Telegram заработал?</h2></div>'+
-      '<p>Мы не считаем proxy подключённым только потому, что сервер доступен из VETO. Подтверди результат именно на этом телефоне.</p>'+
-      '<div class="feature-guide-facts">'+
-        '<div><span>Маршрут</span><strong>'+(route.region||'AUTO')+' · '+(route.label||'VETO Relay')+'</strong></div>'+
-        '<div><span>Что проверить</span><strong>Открой чат или канал в Telegram. Сообщения должны загружаться без бесконечного «Connecting…».</strong></div>'+
-      '</div>'+
-      '<div class="sheet-actions">'+
-        '<button class="accent" data-relay-confirm="yes">Да, Telegram работает</button>'+
-        '<button data-relay-confirm="no">Нет, всё ещё крутится</button>'+
-      '</div>';
-    $('sheetBackdrop').hidden=false;$('sheet').hidden=false;
   }
 
   function rejectPendingRelay(){
@@ -371,11 +359,25 @@
   }
 
   $('homeRelayCard')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();guide();},true);
-  document.querySelectorAll('[data-open-screen="relay"]').forEach(x=>x.addEventListener('click',()=>setTimeout(()=>status(true).then(()=>s.pendingRelay?openRelayConfirmation():healthCheck({autoFailover:true})),0)));
+  document.querySelectorAll('[data-open-screen="relay"]').forEach(x=>x.addEventListener('click',()=>setTimeout(()=>status(true).then(()=>s.enabled?healthCheck({autoFailover:true}):null),0)));
   $('relayPowerButton')?.addEventListener('click',()=>{
-    if(s.pendingRelay)return openRelayConfirmation();
+    if(s.pendingRelay){
+      $('relayPendingConfirm')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
     if(s.enabled)return healthCheck({autoFailover:true}).then(()=>toast('Защита проверена'));
     return connect(false);
+  });
+  $('relayPendingYes')?.addEventListener('click',()=>{
+    if(!s.pendingRelay)return;
+    const relay=s.pendingRelay;
+    const health=s.pendingHealth;
+    markEnabled(relay,health);
+    render();
+    toast('Подключение подтверждено на этом устройстве.');
+  });
+  $('relayPendingNo')?.addEventListener('click',()=>{
+    if(s.pendingRelay)rejectPendingRelay();
   });
   $('relayDisableButton')?.addEventListener('click',openDisableGuide);
   $('relayRotateButton')?.addEventListener('click',()=>connect(true));
@@ -387,13 +389,6 @@
     const action=e.target.closest('[data-relay-action]')?.dataset?.relayAction;
     if(action==='open')openScreen();
     if(action==='close')closeSheet();
-    const confirmation=e.target.closest('[data-relay-confirm]')?.dataset?.relayConfirm;
-    if(confirmation==='yes'){
-      const relay=s.pendingRelay;
-      const health=s.pendingHealth;
-      markEnabled(relay,health);closeSheet();render();toast('Подключение подтверждено на этом устройстве.');
-    }
-    if(confirmation==='no')rejectPendingRelay();
     const disable=e.target.closest('[data-relay-disable-confirm]')?.dataset?.relayDisableConfirm;
     if(disable==='yes'){markDisabledLocal();closeSheet();toast('Защита отмечена как выключенная');}
     if(disable==='no'){closeSheet();}
@@ -402,15 +397,14 @@
 
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState!=='visible')return;
-    if(s.pendingRelay)setTimeout(openRelayConfirmation,450);
-    else if(s.enabled)setTimeout(()=>healthCheck({autoFailover:true}),500);
+    render();
+    if(s.enabled)setTimeout(()=>healthCheck({autoFailover:true}),500);
   });
   window.addEventListener('pageshow',()=>{
     render();
-    if(s.pendingRelay)setTimeout(openRelayConfirmation,650);
-    else if(s.enabled)setTimeout(()=>healthCheck({autoFailover:true}),700);
+    if(s.enabled)setTimeout(()=>healthCheck({autoFailover:true}),700);
   });
 
   render();
-  if(tg?.initData)status(true).then(()=>s.pendingRelay?openRelayConfirmation():healthCheck({autoFailover:true}));
+  if(tg?.initData)status(true).then(()=>s.enabled?healthCheck({autoFailover:true}):null);
 })();

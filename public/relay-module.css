@@ -395,3 +395,21 @@
   .relay-simple-status{grid-template-columns:1fr}
   .relay-simple-status button{width:100%}
 }
+
+.relay-pending-confirm{
+  margin-top:11px;padding:12px;border:1px solid rgba(255,196,95,.14);border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,182,67,.055),rgba(255,255,255,.018));
+}
+.relay-pending-confirm[hidden]{display:none!important}
+.relay-pending-confirm>div:first-child{display:grid;gap:4px}
+.relay-pending-confirm strong{font-size:10px;color:#ffd08a}
+.relay-pending-confirm small{font-size:8px;line-height:1.4;color:#8d96a4}
+.relay-pending-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.relay-pending-actions button{
+  padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:12px;
+  background:rgba(255,255,255,.035);font-size:8.5px;font-weight:800
+}
+.relay-pending-actions button.yes{
+  border-color:rgba(74,221,150,.18);background:rgba(53,203,133,.075);color:#8ce8ba
+}
+@media(max-width:420px){.relay-pending-actions{grid-template-columns:1fr}}
