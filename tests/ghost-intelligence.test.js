@@ -52,16 +52,19 @@ test('automation presets only use durable existing rules', () => {
   assert.deepEqual(AUTOMATION_PRESETS.quiet, {
     security_changes: true,
     smart_action: false,
+    watch_changes: false,
     confirmed_viewer: false,
   });
   assert.deepEqual(AUTOMATION_PRESETS.smart, {
     security_changes: true,
     smart_action: true,
+    watch_changes: true,
     confirmed_viewer: false,
   });
   assert.deepEqual(AUTOMATION_PRESETS.full, {
     security_changes: true,
     smart_action: true,
+    watch_changes: true,
     confirmed_viewer: true,
   });
 });

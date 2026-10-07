@@ -23,6 +23,7 @@
     },
     threads: [],
     smartSummary: null,
+    smartBrief: null,
     deletedFeed: [],
     deletedFeedLoaded: false,
     deletedFeedLoading: false,
@@ -470,6 +471,48 @@
     if ($('smartInboxWatch')) $('smartInboxWatch').textContent = String(summary.watch || 0);
     if ($('smartInboxAll')) $('smartInboxAll').textContent = String(privacyState.threads.length);
 
+    const brief = privacyState.smartBrief || {
+      status: summary.action > 0 ? 'action' : summary.watch > 0 ? 'watch' : 'clear',
+      title: summary.action > 0
+        ? `${summary.action} диалог(а) требуют внимания`
+        : summary.watch > 0
+          ? `${summary.watch} диалог(а) стоит проверить`
+          : 'Срочных сигналов нет',
+      detail: 'Ghost Mode использует только доступные Telegram-события и объяснимые правила.',
+      primaryChatId: '',
+      primaryAction: 'archive',
+      reasons: [],
+    };
+    const briefCard = $('smartBriefCard');
+    if (briefCard) {
+      briefCard.classList.remove('action','watch','clear');
+      briefCard.classList.add(['action','watch','clear'].includes(String(brief.status)) ? String(brief.status) : 'clear');
+    }
+    if ($('smartBriefTitle')) $('smartBriefTitle').textContent = brief.title || 'Ghost Brief';
+    if ($('smartBriefDetail')) $('smartBriefDetail').textContent = brief.detail || '';
+    if ($('smartBriefStatus')) {
+      $('smartBriefStatus').textContent = brief.status === 'action'
+        ? 'ACTION'
+        : brief.status === 'watch'
+          ? 'WATCH'
+          : 'CLEAR';
+    }
+    if ($('smartBriefReasons')) {
+      const reasons = Array.isArray(brief.reasons) ? brief.reasons : [];
+      $('smartBriefReasons').innerHTML = reasons.map(reason => `<span>${escapeHtml(reason)}</span>`).join('');
+    }
+    const smartBriefPrimary = $('smartBriefPrimary');
+    if (smartBriefPrimary) {
+      const chatId = String(brief.primaryChatId || '');
+      smartBriefPrimary.hidden = !chatId;
+      smartBriefPrimary.dataset.chatId = chatId;
+      smartBriefPrimary.textContent = brief.primaryAction === 'reply'
+        ? 'Открыть и ответить'
+        : brief.primaryAction === 'review_changes'
+          ? 'Проверить изменения'
+          : 'Открыть диалог';
+    }
+
     const statMap = {
       privacyStatThreads: privacyState.threads.length,
       privacyStatDeleted: totals.deleted,
@@ -670,6 +713,7 @@
         privacyState.threads = data.threads;
       }
       if (data.smartSummary) privacyState.smartSummary = data.smartSummary;
+      privacyState.smartBrief = data.smartBrief || null;
       privacyState.lastRefreshAt = Date.now();
 
       const after = threadTotals().messages;
@@ -707,6 +751,7 @@
       privacyState.settings = { ...privacyState.settings, ...(data.settings || {}) };
       privacyState.threads = Array.isArray(data.threads) ? data.threads : privacyState.threads;
       if (data.smartSummary) privacyState.smartSummary = data.smartSummary;
+      privacyState.smartBrief = data.smartBrief || privacyState.smartBrief;
       privacyState.lastTotalMessages = threadTotals().messages;
       render();
       if (!quiet) toast('Ghost настройки сохранены');
@@ -1093,6 +1138,14 @@
   }
 
   $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
+
+  $('smartBriefPrimary')?.addEventListener('click', () => {
+    const chatId = String($('smartBriefPrimary')?.dataset?.chatId || '');
+    if (!chatId) return;
+    privacyState.filter = 'smart';
+    render();
+    openThread(chatId, { mode:'all' });
+  });
 
   $('ghostLatestDeletedCard')?.addEventListener('click', event => {
     const card = event.currentTarget;

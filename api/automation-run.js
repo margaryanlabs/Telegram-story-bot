@@ -102,6 +102,19 @@ export function automationMessage(job) {
     };
   }
 
+  if (job?.ruleKey === 'watch_changes') {
+    const actor = actorLabel(event);
+    const chat = event?.payload?.chatTitle ? `\nЧат: ${event.payload.chatTitle}` : '';
+    const deleted = type === 'message.delete';
+    return {
+      text: deleted
+        ? `↶ Ghost Watch\n\n${actor}: сообщение удалено.${chat}\n\nGhost сохранил доступную копию и откроет точное событие, если оно есть в Vault.`
+        : `≋ Ghost Watch\n\n${actor}: сообщение изменено.${chat}\n\nОткрой Edit History, чтобы увидеть сохранённые версии.`,
+      screen: 'chats',
+      button: deleted ? 'Открыть удаление' : 'Открыть изменение',
+    };
+  }
+
   if (job?.ruleKey === 'confirmed_viewer') {
     const actor = actorLabel(event);
     const story = event?.storyId ? ` #${event.storyId}` : '';

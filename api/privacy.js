@@ -275,6 +275,7 @@ export default async function handler(req, res) {
           settings: overview?.settings || await getPrivacySettings(userId),
           threads: overview?.threads || [],
           smartSummary: overview?.smartSummary || null,
+          smartBrief: overview?.smartBrief || null,
         });
       } catch (error) {
         if (!transientStoreError(error)) throw error;
@@ -306,6 +307,7 @@ export default async function handler(req, res) {
         settings,
         threads: overview?.threads || [],
         smartSummary: overview?.smartSummary || null,
+        smartBrief: overview?.smartBrief || null,
       });
       return;
     }
