@@ -375,7 +375,7 @@
 
       const publishedStoryId = result.storyId || state.lastStory;
       selectedViewerStory = publishedStoryId || selectedViewerStory;
-      const publishedAudience = audienceLabel(state.audience);
+      const publishedAudience = audienceLabel(result.verifiedAudience || state.audience);
       const cleaned = Array.isArray(result.cleanedUsernames) ? result.cleanedUsernames : [];
 
       resetComposer();
