@@ -6,7 +6,7 @@ import {
 } from '../lib/viewer-sync-store.js';
 
 const ALLOWED_RULES = new Set(['security_changes','smart_action','confirmed_viewer']);
-const AUTOMATION_PRESETS = {
+export const AUTOMATION_PRESETS = {
   quiet: { security_changes:true, smart_action:false, confirmed_viewer:false },
   smart: { security_changes:true, smart_action:true, confirmed_viewer:false },
   full: { security_changes:true, smart_action:true, confirmed_viewer:true },
