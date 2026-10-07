@@ -252,14 +252,14 @@ export default async function handler(req, res) {
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
-    res.status(500).json({ ok: false, error: 'Telegram Control is not configured' });
+    res.status(500).json({ ok: false, error: 'Ghost Mode is not configured' });
     return;
   }
 
   const initData = String(req.headers['x-telegram-init-data'] || '');
   const user = validateInitData(initData, token);
   if (!user) {
-    res.status(401).json({ ok: false, error: 'Open Telegram Control inside Telegram' });
+    res.status(401).json({ ok: false, error: 'Open Ghost Mode inside Telegram' });
     return;
   }
 
