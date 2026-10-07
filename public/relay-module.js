@@ -8,6 +8,7 @@
   let s = {
     configured:null,count:0,busy:false,relay:null,health:null,alternatives:false,
     opened:0,error:null,enabled:false,activatedAt:0,failoverBusy:false,
+    pendingRelay:null,pendingHealth:null,pendingAt:0,failedIds:[],
   };
 
   function loadUiState() {
@@ -24,6 +25,14 @@
       s.opened = Number(saved.opened || 0) || 0;
       if (saved.relay && typeof saved.relay === 'object') s.relay = saved.relay;
       if (saved.health) s.health = saved.health;
+      if (saved.pendingRelay && typeof saved.pendingRelay === 'object') s.pendingRelay = saved.pendingRelay;
+      s.pendingHealth = saved.pendingHealth || null;
+      s.pendingAt = Number(saved.pendingAt || 0) || 0;
+      if (s.pendingAt && Date.now() - s.pendingAt > 10 * 60 * 1000) {
+        s.pendingRelay = null;
+        s.pendingHealth = null;
+        s.pendingAt = 0;
+      }
     }
     if (!s.opened) {
       try { s.opened = Number(sessionStorage.getItem(LEGACY_OPENED_KEY) || 0) || 0; } catch {}
@@ -39,7 +48,13 @@
           latencyMs:Number.isFinite(Number(s.relay.latencyMs))?Number(s.relay.latencyMs):null,
           reachable:s.relay.reachable===true,
         } : null,
-        health:s.health||null,updatedAt:Date.now(),
+        health:s.health||null,
+        pendingRelay:s.pendingRelay ? {
+          id:s.pendingRelay.id||null,label:s.pendingRelay.label||null,region:s.pendingRelay.region||null,
+          latencyMs:Number.isFinite(Number(s.pendingRelay.latencyMs))?Number(s.pendingRelay.latencyMs):null,
+          reachable:s.pendingRelay.reachable===true,
+        } : null,
+        pendingHealth:s.pendingHealth||null,pendingAt:s.pendingAt||0,updatedAt:Date.now(),
       }));
     } catch {}
   }
@@ -117,12 +132,25 @@
   function markEnabled(relay,health){
     s.enabled=true;s.activatedAt=Date.now();s.opened=Date.now();
     if(relay)s.relay=relay;if(health)s.health=health;
+    s.pendingRelay=null;s.pendingHealth=null;s.pendingAt=0;s.failedIds=[];
     try{sessionStorage.setItem(LEGACY_OPENED_KEY,String(s.opened));}catch{}
     saveUiState();successHaptic();showSuccessEffect();
   }
 
+  function markPending(relay,health){
+    s.enabled=false;
+    s.pendingRelay=relay||null;
+    s.pendingHealth=health||null;
+    s.pendingAt=Date.now();
+    if(relay)s.relay=relay;
+    if(health)s.health=health;
+    saveUiState();
+    render();
+  }
+
   function markDisabledLocal(){
     s.enabled=false;s.activatedAt=0;s.error=null;
+    s.pendingRelay=null;s.pendingHealth=null;s.pendingAt=0;
     saveUiState();render();
   }
 
@@ -147,7 +175,13 @@
     let title='Защита выключена',text='Нажми один раз — VETO сам выберет рабочий путь.',a='Защитить Telegram',b='VETO всё выберет автоматически',p='Готово';
     let simple='Готово к включению',simpleText='VETO автоматически выберет лучший доступный путь.';
 
-    if(active){
+    if(s.pendingRelay&&!active){
+      title='Подтверди подключение в Telegram';
+      text='Telegram открыл настройки proxy. Включи маршрут и вернись сюда.';
+      a='Жду подтверждение';b='VETO не покажет PROTECTED, пока ты не подтвердил связь';p='ПРОВЕРКА';
+      simple='Проверь Telegram';simpleText='После подключения вернись и подтверди, что Telegram работает.';
+      power.disabled=true;
+    }else if(active){
       title='TELEGRAM PROTECTED';
       text='Защита включена и сохранена на этом устройстве.';
       a='Защита включена · Проверить'; b=r?.region?'Активный регион · '+r.region:'Проверить связь'; p='PROTECTED';
@@ -232,9 +266,9 @@
   function openRoute(data,{failover=false}={}){
     const url=data?.tgUrl||data?.connectUrl;
     if(!url)throw new Error('Telegram link не получен');
-    markEnabled(data?.relay||s.relay,data?.routeHealth||s.health);
+    markPending(data?.relay||s.relay,data?.routeHealth||s.health);
     s.failoverBusy=false;render();
-    if(failover)toast('Запасной путь готов. Telegram откроет его сейчас.');
+    if(failover)toast('Запасной путь открыт. Подтверди подключение в Telegram.');
     openTelegramLink(url);
   }
 
@@ -242,7 +276,11 @@
     if(s.busy)return;
     s.busy=true;s.error=null;render();haptic('medium');
     try{
-      const d=await api(rotate?'rotate':'connect',{exclude:rotate&&s.relay?.id?[s.relay.id]:[]});
+      const excluded=[...new Set([
+        ...(s.failedIds||[]),
+        ...(rotate&&s.relay?.id?[s.relay.id]:[]),
+      ].filter(Boolean))].slice(0,8);
+      const d=await api(rotate?'rotate':'connect',{exclude:excluded});
       s={...s,configured:true,relay:d.relay||null,health:d.routeHealth||null,alternatives:Boolean(d.alternatives),error:null};
       openRoute(d,{failover});
     }catch(e){
@@ -250,6 +288,39 @@
       const message=relayErrorMessage(e);s={...s,configured:e?.data?.configured===false?false:s.configured,error:message};
       toast(message);
     }finally{s.busy=false;render();}
+  }
+
+  function openRelayConfirmation(){
+    if(!s.pendingRelay||!$('sheetContent')||!$('sheet'))return;
+    const route=s.pendingRelay;
+    $('sheetContent').innerHTML=
+      '<span class="kicker">ПРОВЕРКА СВЯЗИ</span>'+
+      '<div class="feature-guide-title"><span>◉</span><h2>Telegram заработал?</h2></div>'+
+      '<p>Мы не считаем proxy подключённым только потому, что сервер доступен из VETO. Подтверди результат именно на этом телефоне.</p>'+
+      '<div class="feature-guide-facts">'+
+        '<div><span>Маршрут</span><strong>'+(route.region||'AUTO')+' · '+(route.label||'VETO Relay')+'</strong></div>'+
+        '<div><span>Что проверить</span><strong>Открой чат или канал в Telegram. Сообщения должны загружаться без бесконечного «Connecting…».</strong></div>'+
+      '</div>'+
+      '<div class="sheet-actions">'+
+        '<button class="accent" data-relay-confirm="yes">Да, Telegram работает</button>'+
+        '<button data-relay-confirm="no">Нет, всё ещё крутится</button>'+
+      '</div>';
+    $('sheetBackdrop').hidden=false;$('sheet').hidden=false;
+  }
+
+  function rejectPendingRelay(){
+    const failedId=s.pendingRelay?.id;
+    if(failedId&&!s.failedIds.includes(failedId))s.failedIds.push(failedId);
+    s.pendingRelay=null;s.pendingHealth=null;s.pendingAt=0;s.enabled=false;
+    saveUiState();render();closeSheet();
+    if(s.count>0&&s.failedIds.length>=s.count){
+      s.error='Текущие Relay-маршруты недоступны из этой сети. Нужен другой узел.';
+      render();
+      toast('Оба маршрута не прошли проверку этой сети.');
+      return;
+    }
+    toast('Этот путь не подходит. Переключаю на запасной…');
+    connect(true,{failover:true});
   }
 
   function openDisableGuide(){
@@ -312,6 +383,13 @@
     const action=e.target.closest('[data-relay-action]')?.dataset?.relayAction;
     if(action==='open')openScreen();
     if(action==='close')closeSheet();
+    const confirmation=e.target.closest('[data-relay-confirm]')?.dataset?.relayConfirm;
+    if(confirmation==='yes'){
+      const relay=s.pendingRelay;
+      const health=s.pendingHealth;
+      markEnabled(relay,health);closeSheet();render();toast('Подключение подтверждено на этом устройстве.');
+    }
+    if(confirmation==='no')rejectPendingRelay();
     const disable=e.target.closest('[data-relay-disable-confirm]')?.dataset?.relayDisableConfirm;
     if(disable==='yes'){markDisabledLocal();closeSheet();toast('Защита отмечена как выключенная');}
     if(disable==='no'){closeSheet();}
@@ -319,9 +397,15 @@
   });
 
   document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='visible'&&s.enabled)setTimeout(()=>healthCheck({autoFailover:true}),500);
+    if(document.visibilityState!=='visible')return;
+    if(s.pendingRelay)setTimeout(openRelayConfirmation,450);
+    else if(s.enabled)setTimeout(()=>healthCheck({autoFailover:true}),500);
   });
-  window.addEventListener('pageshow',()=>{render();if(s.enabled)setTimeout(()=>healthCheck({autoFailover:true}),700);});
+  window.addEventListener('pageshow',()=>{
+    render();
+    if(s.pendingRelay)setTimeout(openRelayConfirmation,650);
+    else if(s.enabled)setTimeout(()=>healthCheck({autoFailover:true}),700);
+  });
 
   render();
   if(tg?.initData)status(true).then(()=>healthCheck({autoFailover:true}));
