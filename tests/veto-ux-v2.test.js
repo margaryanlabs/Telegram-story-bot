@@ -37,9 +37,9 @@ test('regular Telegram account link is a first-class connection path', () => {
 test('Telegram host chrome is forced to the VETO dark visual system', () => {
   const app = read('public/app.js');
 
-  assert.match(app, /setHeaderColor\?\.\('#06080d'\)/);
-  assert.match(app, /setBackgroundColor\?\.\('#06080d'\)/);
-  assert.match(app, /setBottomBarColor\?\.\('#090d14'\)/);
+  assert.match(app, /setHeaderColor\?\.\('#000000'\)/);
+  assert.match(app, /setBackgroundColor\?\.\('#000000'\)/);
+  assert.match(app, /setBottomBarColor\?\.\('#030303'\)/);
 });
 
 test('bot setup pushes VETO Telegram identity to Telegram', () => {
