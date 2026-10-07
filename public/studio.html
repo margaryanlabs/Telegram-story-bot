@@ -10,7 +10,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261007-veto-relay-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v3" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v4" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -142,11 +142,12 @@
         </button>
       </section>
 
-      <section class="relay-home-primary" aria-label="VETO Private Relay">
+      <section class="relay-home-primary" id="relayHomePrimary" aria-label="VETO Private Relay">
+        <span class="relay-global-badge" id="relayGlobalBadge" hidden><i></i><b>RELAY ON</b><small id="relayGlobalBadgeRoute">AUTO</small></span>
         <div class="relay-home-primary-copy">
           <span class="relay-home-kicker"><i></i> PRIVATE RELAY</span>
-          <strong>Telegram не подключается?</strong>
-          <p>Включи отдельный маршрут только для Telegram. Остальной интернет телефона не меняется.</p>
+          <strong id="relayHomeTitle">Telegram не подключается?</strong>
+          <p id="relayHomeText">Включи отдельный маршрут только для Telegram. Остальной интернет телефона не меняется.</p>
           <div class="relay-home-meta">
             <span>Telegram only</span>
             <span>Auto route</span>
@@ -155,7 +156,7 @@
         </div>
         <button class="relay-home-primary-button" id="homeRelayPrimaryButton" type="button" data-open-screen="relay">
           <span class="relay-home-primary-icon">⇄</span>
-          <span><b>Включить Telegram Relay</b><small>Открыть Private Relay</small></span>
+          <span><b id="homeRelayPrimaryButtonTitle">Включить Telegram Relay</b><small id="homeRelayPrimaryButtonText">Открыть Private Relay</small></span>
           <em>›</em>
         </button>
         <button class="relay-emergency-home" id="relayEmergencyHomeButton" type="button">
@@ -1104,7 +1105,7 @@
         <p>Отдельный резервный маршрут только для Telegram. Остальной интернет телефона не идёт через VETO.</p>
       </div>
 
-      <section class="relay-hero">
+      <section class="relay-hero" id="relayHero">
         <div class="relay-orbit" aria-hidden="true">
           <div class="relay-core"><img src="/veto-telegram-mark.svg" alt="" /></div>
           <i></i><i></i><i></i>
@@ -1120,7 +1121,20 @@
           <span class="relay-power-icon">⌁</span>
           <span><strong>Подключить Telegram Relay</strong><small>Автоматически выбрать лучший маршрут</small></span>
         </button>
+        <button class="relay-disable-button" id="relayDisableButton" type="button" hidden>
+          <span>○</span><strong>Выключить Relay</strong><small>Открыть Telegram → Use Proxy</small>
+        </button>
+        <div class="relay-connected-proof" id="relayConnectedProof" hidden>
+          <i></i>
+          <div><strong>ПОДКЛЮЧЕНО · VETO RELAY</strong><small>Состояние VETO сохранено на устройстве. Фактический proxy-status показывает Telegram.</small></div>
+        </div>
       </section>
+
+      <div class="relay-success-overlay" id="relaySuccessOverlay" hidden>
+        <div class="relay-success-ring"><span>✓</span></div>
+        <strong>VETO RELAY ON</strong>
+        <p>Telegram-only маршрут включён в VETO</p>
+      </div>
 
       <section class="relay-route-card">
         <div class="block-head compact">
@@ -1207,7 +1221,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/app.js?v=20261007-veto-relay-v1"></script>
-  <script src="/relay-module.js?v=20261007-veto-relay-v3"></script>
+  <script src="/relay-module.js?v=20261007-veto-relay-v4"></script>
   <script src="/privacy.js?v=20261007-veto-telegram-v2"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>

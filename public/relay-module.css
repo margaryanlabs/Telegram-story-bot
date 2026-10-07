@@ -214,3 +214,136 @@
   .relay-emergency-card{grid-template-columns:1fr}
   .relay-emergency-card button{width:100%}
 }
+
+
+/* Persistent Relay ON state */
+.relay-home-primary.relay-active{
+  border-color:rgba(77,219,145,.28);
+  background:
+    radial-gradient(circle at 86% 2%,rgba(65,223,143,.20),transparent 36%),
+    radial-gradient(circle at 8% 100%,rgba(27,134,94,.08),transparent 38%),
+    linear-gradient(145deg,rgba(65,223,143,.09),rgba(255,255,255,.022));
+  box-shadow:0 20px 56px rgba(0,0,0,.32),0 0 0 1px rgba(65,223,143,.03),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.relay-home-primary.relay-active .relay-home-kicker{color:#7ee7b4}
+.relay-home-primary.relay-active .relay-home-kicker i{
+  background:#43dc91;
+  box-shadow:0 0 0 5px rgba(67,220,145,.09),0 0 22px rgba(67,220,145,.72);
+  animation:relayOnPulse 1.8s ease-in-out infinite;
+}
+.relay-home-primary.relay-active .relay-home-primary-button{
+  border-color:rgba(118,240,177,.28);
+  background:linear-gradient(135deg,#1fa56c,#158c5a);
+  box-shadow:0 13px 34px rgba(24,162,104,.24);
+}
+.relay-home-primary.relay-active .relay-home-primary-icon{background:rgba(0,0,0,.13)}
+.relay-global-badge{
+  position:absolute;right:14px;top:13px;z-index:4;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 8px;border-radius:999px;
+  background:rgba(41,205,129,.08);
+  border:1px solid rgba(79,226,153,.16);
+  box-shadow:0 0 26px rgba(48,211,136,.08);
+}
+.relay-global-badge[hidden]{display:none!important}
+.relay-global-badge i{
+  width:7px;height:7px;border-radius:50%;background:#48df96;
+  box-shadow:0 0 0 4px rgba(72,223,150,.08),0 0 14px rgba(72,223,150,.7);
+  animation:relayOnPulse 1.8s ease-in-out infinite;
+}
+.relay-global-badge b{font-size:7.5px;color:#8ce8ba;letter-spacing:.1em}
+.relay-global-badge small{font-size:7px;color:#6e9b84}
+@keyframes relayOnPulse{
+  0%,100%{transform:scale(1);filter:brightness(1)}
+  50%{transform:scale(1.14);filter:brightness(1.18)}
+}
+
+.relay-hero.relay-active{
+  border-color:rgba(72,223,150,.20);
+  background:
+    radial-gradient(circle at 82% 6%,rgba(53,221,141,.18),transparent 35%),
+    radial-gradient(circle at 5% 90%,rgba(48,117,95,.10),transparent 34%),
+    linear-gradient(145deg,rgba(255,255,255,.052),rgba(255,255,255,.022));
+  box-shadow:0 24px 70px rgba(0,0,0,.34),0 0 52px rgba(48,211,136,.06);
+}
+.relay-hero.relay-active .relay-core{
+  border-color:rgba(102,236,174,.20);
+  box-shadow:0 0 0 10px rgba(56,218,142,.03),0 0 70px rgba(56,218,142,.20);
+}
+.relay-hero.relay-active .relay-orbit>i:nth-of-type(1){border-color:rgba(79,227,155,.23)}
+.relay-hero.relay-active .relay-orbit>span{background:#49df97;box-shadow:0 0 20px rgba(73,223,151,.85)}
+.relay-status-pill.connected{
+  color:#8ce8ba;border-color:rgba(77,220,147,.18);background:rgba(59,215,139,.07)
+}
+.relay-status-pill.connected i{
+  background:#47dc91!important;
+  box-shadow:0 0 0 5px rgba(71,220,145,.08),0 0 18px rgba(71,220,145,.65)!important;
+  animation:relayOnPulse 1.8s ease-in-out infinite;
+}
+.relay-power-button.connected{
+  border-color:rgba(89,230,160,.20);
+  background:linear-gradient(135deg,rgba(47,199,125,.20),rgba(27,146,92,.11));
+  box-shadow:0 16px 44px rgba(34,193,119,.09);
+}
+.relay-power-button.connected .relay-power-icon{
+  background:#1c9f66;
+  box-shadow:0 9px 26px rgba(28,159,102,.26);
+}
+.relay-disable-button{
+  width:100%;margin-top:9px;padding:11px 12px;
+  display:grid;grid-template-columns:31px 1fr;align-items:center;gap:10px;text-align:left;
+  border:1px solid rgba(255,255,255,.08);border-radius:15px;
+  background:rgba(255,255,255,.028);
+}
+.relay-disable-button[hidden]{display:none!important}
+.relay-disable-button>span{
+  width:31px;height:31px;border-radius:10px;display:grid;place-items:center;
+  background:rgba(255,98,112,.07);color:#ff8b98
+}
+.relay-disable-button strong{display:block;font-size:9.5px;color:#d9dee6}
+.relay-disable-button small{display:block;margin-top:3px;font-size:7.5px;color:#727d8e}
+.relay-connected-proof{
+  margin-top:11px;padding:11px 12px;display:flex;align-items:center;gap:10px;
+  border:1px solid rgba(76,220,148,.12);border-radius:16px;
+  background:rgba(52,208,132,.045);
+}
+.relay-connected-proof[hidden]{display:none!important}
+.relay-connected-proof>i{
+  width:10px;height:10px;border-radius:50%;background:#48dd95;
+  box-shadow:0 0 0 5px rgba(72,221,149,.07),0 0 18px rgba(72,221,149,.55)
+}
+.relay-connected-proof strong{display:block;color:#83e7b5;font-size:9px;letter-spacing:.05em}
+.relay-connected-proof small{display:block;margin-top:4px;color:#71887c;font-size:7.5px;line-height:1.4}
+
+.relay-success-overlay{
+  position:fixed;inset:0;z-index:9999;
+  display:grid;place-content:center;justify-items:center;
+  background:radial-gradient(circle at 50% 43%,rgba(53,225,143,.18),rgba(5,7,9,.93) 42%,rgba(5,7,9,.98));
+  opacity:0;transform:scale(1.02);transition:opacity .28s ease,transform .32s ease;
+  pointer-events:none;
+}
+.relay-success-overlay[hidden]{display:none!important}
+.relay-success-overlay.show{opacity:1;transform:scale(1)}
+.relay-success-ring{
+  width:96px;height:96px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(93,237,169,.25);
+  background:rgba(53,216,139,.08);
+  box-shadow:0 0 0 18px rgba(54,220,142,.035),0 0 0 38px rgba(54,220,142,.015),0 0 70px rgba(54,220,142,.22);
+  animation:relaySuccessBreath 1.6s ease-in-out infinite;
+}
+.relay-success-ring span{
+  width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,#50e29d,#1d9e67);
+  color:#05120b;font-size:28px;font-weight:950;
+  box-shadow:0 12px 34px rgba(43,193,122,.26);
+}
+.relay-success-overlay>strong{margin-top:25px;font-size:18px;letter-spacing:.11em;color:#94efbf}
+.relay-success-overlay>p{margin:8px 0 0;color:#7d9989;font-size:9px}
+@keyframes relaySuccessBreath{
+  0%,100%{transform:scale(1);box-shadow:0 0 0 18px rgba(54,220,142,.035),0 0 0 38px rgba(54,220,142,.015),0 0 70px rgba(54,220,142,.22)}
+  50%{transform:scale(1.05);box-shadow:0 0 0 24px rgba(54,220,142,.025),0 0 0 48px rgba(54,220,142,.01),0 0 90px rgba(54,220,142,.27)}
+}
+
+@media(max-width:520px){
+  .relay-global-badge{position:static;grid-column:1/-1;justify-self:start;margin-bottom:-2px}
+}
