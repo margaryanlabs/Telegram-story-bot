@@ -676,7 +676,7 @@
     }
     if (rule === 'watch_changes') {
       const actor = event.actorDisplayName
-        || (event.actorUsername ? '@' + event.actorUsername : 'Ghost Watch');
+        || (event.actorUsername ? '@' + event.actorUsername : 'VETO Watch');
       return event.type === 'message.delete' ? `${actor} · deleted` : `${actor} · edited`;
     }
     if (rule === 'confirmed_viewer') {
@@ -1261,7 +1261,7 @@
     if (type === 'message.delete') {
       return {
         title: actor ? `${actor} удалил сообщение` : 'Сообщение удалено',
-        detail: chatTitle ? `${chatTitle} · сохранено в Ghost` : 'Сохранено в Ghost',
+        detail: chatTitle ? `${chatTitle} · сохранено в VETO Vault` : 'Сохранено в VETO Vault',
       };
     }
     if (type === 'message.edit') {
@@ -1920,7 +1920,7 @@
         <h2>Новое подключение приостановлено</h2>
         <p>VETO Telegram не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Stories & Ghost</strong><span>Продолжают работать независимо.</span></div>
+          <div class="sheet-item"><strong>Stories & Privacy</strong><span>Продолжают работать независимо.</span></div>
           <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
           <div class="sheet-item"><strong>New private session</strong><span>Создание заблокировано, пока защита не готова.</span></div>
         </div>
