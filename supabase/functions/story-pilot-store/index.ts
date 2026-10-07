@@ -2420,13 +2420,20 @@ function automationRuleKey(value: unknown) {
 async function opGetAutomationSettings(args: any) {
   const userId = String(args?.userId || "");
   if (!userId) throw new Error("automation_user_required");
-  if (!directSql) throw new Error("direct_database_unavailable");
 
-  const rows = await directSql`
-    select rule_key, enabled, updated_at
-    from public.story_pilot_automation_rules
-    where telegram_user_id = ${userId}::bigint
-  `;
+  let rows: any[] = [];
+  if (useDirectSql()) {
+    rows = await directSql`
+      select rule_key, enabled, updated_at
+      from public.story_pilot_automation_rules
+      where telegram_user_id = ${userId}::bigint
+    `;
+  } else {
+    const r = await db.from("story_pilot_automation_rules")
+      .select("rule_key,enabled,updated_at")
+      .eq("telegram_user_id", userId);
+    rows = need(r as any) || [];
+  }
 
   const rules: Record<string, any> = {};
   for (const [ruleKey, defaultEnabled] of Object.entries(AUTOMATION_RULE_DEFAULTS)) {
@@ -2444,25 +2451,41 @@ async function opGetAutomationSettings(args: any) {
 async function opUpdateAutomationSettings(args: any) {
   const userId = String(args?.userId || "");
   if (!userId) throw new Error("automation_user_required");
-  if (!directSql) throw new Error("direct_database_unavailable");
 
   const patch = args?.rules && typeof args.rules === "object" ? args.rules : {};
+  const normalizedRows: any[] = [];
+
   for (const [rawKey, rawValue] of Object.entries(patch)) {
     const ruleKey = automationRuleKey(rawKey);
     const enabled = typeof rawValue === "object" && rawValue !== null
       ? Boolean((rawValue as any).enabled)
       : Boolean(rawValue);
 
-    await directSql`
-      insert into public.story_pilot_automation_rules (
-        telegram_user_id, rule_key, enabled, updated_at
-      ) values (
-        ${userId}::bigint, ${ruleKey}, ${enabled}, now()
-      )
-      on conflict (telegram_user_id, rule_key) do update set
-        enabled = excluded.enabled,
-        updated_at = excluded.updated_at
-    `;
+    normalizedRows.push({
+      telegram_user_id: userId,
+      rule_key: ruleKey,
+      enabled,
+      updated_at: new Date().toISOString(),
+    });
+  }
+
+  if (useDirectSql()) {
+    for (const row of normalizedRows) {
+      await directSql`
+        insert into public.story_pilot_automation_rules (
+          telegram_user_id, rule_key, enabled, updated_at
+        ) values (
+          ${row.telegram_user_id}::bigint, ${row.rule_key}, ${row.enabled}, ${row.updated_at}::timestamptz
+        )
+        on conflict (telegram_user_id, rule_key) do update set
+          enabled = excluded.enabled,
+          updated_at = excluded.updated_at
+      `;
+    }
+  } else if (normalizedRows.length) {
+    const r = await db.from("story_pilot_automation_rules")
+      .upsert(normalizedRows, { onConflict: "telegram_user_id,rule_key" });
+    need(r as any);
   }
 
   return opGetAutomationSettings({ userId });
@@ -2472,20 +2495,52 @@ async function opListAutomationJobs(args: any) {
   const userId = String(args?.userId || "");
   const limit = Math.max(1, Math.min(50, Number(args?.limit || 20)));
   if (!userId) throw new Error("automation_user_required");
-  if (!directSql) throw new Error("direct_database_unavailable");
 
-  const rows = await directSql`
-    select
-      j.id, j.rule_key, j.status, j.attempts, j.created_at,
-      j.sent_at, j.last_error,
-      e.event_type, e.occurred_at, e.story_id, e.chat_id,
-      e.actor_username, e.actor_display_name, e.payload
-    from public.story_pilot_automation_jobs j
-    join public.story_pilot_events e on e.id = j.event_id
-    where j.telegram_user_id = ${userId}::bigint
-    order by j.created_at desc
-    limit ${limit}
-  `;
+  let rows: any[] = [];
+
+  if (useDirectSql()) {
+    rows = await directSql`
+      select
+        j.id, j.rule_key, j.status, j.attempts, j.created_at,
+        j.sent_at, j.last_error,
+        e.event_type, e.occurred_at, e.story_id, e.chat_id,
+        e.actor_username, e.actor_display_name, e.payload
+      from public.story_pilot_automation_jobs j
+      join public.story_pilot_events e on e.id = j.event_id
+      where j.telegram_user_id = ${userId}::bigint
+      order by j.created_at desc
+      limit ${limit}
+    `;
+  } else {
+    const jobsResult = await db.from("story_pilot_automation_jobs")
+      .select("id,event_id,rule_key,status,attempts,created_at,sent_at,last_error")
+      .eq("telegram_user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    const jobs = need(jobsResult as any) || [];
+    if (!jobs.length) return [];
+
+    const eventIds = [...new Set(jobs.map((job: any) => String(job.event_id)).filter(Boolean))];
+    const eventsResult = await db.from("story_pilot_events")
+      .select("id,event_type,occurred_at,story_id,chat_id,actor_username,actor_display_name,payload")
+      .in("id", eventIds);
+    const events = need(eventsResult as any) || [];
+    const byEventId = new Map(events.map((event: any) => [String(event.id), event]));
+
+    rows = jobs.map((job: any) => {
+      const event = byEventId.get(String(job.event_id)) || {};
+      return {
+        ...job,
+        event_type: event.event_type || null,
+        occurred_at: event.occurred_at || null,
+        story_id: event.story_id ?? null,
+        chat_id: event.chat_id ?? null,
+        actor_username: event.actor_username || null,
+        actor_display_name: event.actor_display_name || null,
+        payload: event.payload || {},
+      };
+    });
+  }
 
   return rows.map((row: any) => ({
     id: String(row.id),
