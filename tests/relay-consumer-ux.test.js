@@ -39,3 +39,21 @@ test('consumer Relay persists protected state',()=>{
   assert.match(client,/localStorage\.setItem/);
   assert.match(client,/TELEGRAM PROTECTED/);
 });
+
+test('Relay never claims protected before client confirms Telegram works',()=>{
+  const client=read('public/relay-module.js');
+  const openRoute=client.slice(client.indexOf('function openRoute'),client.indexOf('async function connect'));
+  assert.match(openRoute,/markPending/);
+  assert.doesNotMatch(openRoute,/markEnabled/);
+  assert.match(client,/Telegram заработал\?/);
+  assert.match(client,/Да, Telegram работает/);
+  assert.match(client,/Нет, всё ещё крутится/);
+});
+
+test('failed client route is excluded before automatic retry',()=>{
+  const client=read('public/relay-module.js');
+  assert.match(client,/failedIds/);
+  assert.match(client,/rejectPendingRelay/);
+  assert.match(client,/exclude:excluded/);
+  assert.match(client,/Переключаю на запасной/);
+});
