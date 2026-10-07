@@ -266,7 +266,7 @@ async function sendTestViewerAlert(token, userId) {
     headers: { 'content-type':'application/json' },
     body: JSON.stringify({
       chat_id: String(userId),
-      text: '⚡ Ghost Mode Fast Alerts работают.\n\nНовый просмотр активной Story отслеживается фоновым watcher; задержка зависит от цикла проверки и ответа Telegram. Если Telegram позже скроет связь просмотра с аккаунтом, Ghost Mode анонимизирует запись и пришлёт отдельный privacy-сигнал.',
+      text: '⚡ VETO Telegram Fast Alerts работают.\n\nНовый просмотр активной Story отслеживается фоновым watcher; задержка зависит от цикла проверки и ответа Telegram. Если Telegram позже скроет связь просмотра с аккаунтом, VETO Telegram анонимизирует запись и пришлёт отдельный privacy-сигнал.',
       disable_notification: false,
     }),
   });
@@ -289,7 +289,7 @@ async function sendEvidenceCsv(token, userId, data) {
   );
   form.append(
     'caption',
-    'Ghost Mode · Viewer Intelligence export\nТолько подтверждённые Telegram viewers + агрегированные Story counters.',
+    'VETO Telegram · Viewer Intelligence export\nТолько подтверждённые Telegram viewers + агрегированные Story counters.',
   );
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
@@ -341,13 +341,13 @@ export default async function handler(req, res) {
 
   const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '');
   if (!botToken) {
-    res.status(500).json({ ok: false, error: 'Ghost Mode is not configured' });
+    res.status(500).json({ ok: false, error: 'VETO Telegram is not configured' });
     return;
   }
 
   const user = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''), botToken);
   if (!user) {
-    res.status(401).json({ ok: false, error: 'Open Ghost Mode inside Telegram' });
+    res.status(401).json({ ok: false, error: 'Open VETO Telegram inside Telegram' });
     return;
   }
 
