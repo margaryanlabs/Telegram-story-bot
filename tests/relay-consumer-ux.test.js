@@ -81,3 +81,22 @@ test('disable confirmation is only attached to explicit disable flow',()=>{
   assert.match(client,/relayDisableButton'\)\?\.addEventListener\('click',openDisableGuide\)/);
   assert.match(client,/Я выключил/);
 });
+
+
+test('Relay handoff prefers official t.me proxy link over raw tg scheme',()=>{
+  const client=read('public/relay-module.js');
+  const openRoute=client.slice(client.indexOf('function openRoute'),client.indexOf('async function connect'));
+  assert.match(openRoute,/const httpsUrl=data\?\.connectUrl/);
+  assert.match(openRoute,/const tgUrl=data\?\.tgUrl/);
+  assert.match(openRoute,/openTelegramLink\(httpsUrl,tgUrl\)/);
+  assert.match(client,/\^https:\\\/\\\/t\\\.me\\\//);
+});
+
+test('pending Relay state can retry Telegram handoff instead of trapping the user',()=>{
+  const client=read('public/relay-module.js');
+  const click=client.slice(client.indexOf("$('relayPowerButton')?.addEventListener"),client.indexOf("$('relayPendingYes')?.addEventListener"));
+  assert.match(click,/if\(s\.pendingRelay\)/);
+  assert.match(click,/s\.pendingRelay=null/);
+  assert.match(click,/return connect\(false\)/);
+  assert.match(client,/Открыть Telegram ещё раз/);
+});

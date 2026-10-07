@@ -106,10 +106,32 @@
     }finally{clearTimeout(timer);}
   }
 
-  function openTelegramLink(url){
-    if(!url)throw new Error('Telegram link не получен');
-    try{ if(tg?.openTelegramLink)tg.openTelegramLink(url); else location.href=url; }
-    catch{ location.href=url; }
+  function openTelegramLink(primaryUrl,fallbackUrl){
+    const primary=String(primaryUrl||'').trim();
+    const fallback=String(fallbackUrl||'').trim();
+    if(!primary&&!fallback)throw new Error('Telegram link не получен');
+
+    // Telegram Mini Apps handle HTTPS t.me links more consistently than raw tg://
+    // deep links, so prefer the official t.me proxy URL and keep tg:// as fallback.
+    if(primary){
+      try{
+        if(tg?.openTelegramLink&&/^https:\/\/t\.me\//i.test(primary)){
+          tg.openTelegramLink(primary);
+          return true;
+        }
+        location.href=primary;
+        return true;
+      }catch{}
+    }
+
+    if(fallback){
+      try{
+        location.href=fallback;
+        return true;
+      }catch{}
+    }
+
+    throw new Error('Не удалось открыть настройки proxy в Telegram');
   }
 
   function openEmergencyAccess(){
@@ -180,7 +202,7 @@
     if(s.pendingRelay&&!active){
       title='Подтверди подключение в Telegram';
       text='Telegram открыл настройки proxy. Включи маршрут и вернись сюда.';
-      a='Проверить подключение';b='VETO не покажет PROTECTED, пока ты не подтвердил связь';p='ПРОВЕРКА';
+      a='Открыть Telegram ещё раз';b='Если окно proxy не открылось — нажми ещё раз';p='ПРОВЕРКА';
       simple='Проверь Telegram';simpleText='После подключения вернись и подтверди, что Telegram работает.';
       power.disabled=false;
     }else if(active){
@@ -270,12 +292,15 @@
   }
 
   function openRoute(data,{failover=false}={}){
-    const url=data?.tgUrl||data?.connectUrl;
-    if(!url)throw new Error('Telegram link не получен');
+    const httpsUrl=data?.connectUrl;
+    const tgUrl=data?.tgUrl;
+    if(!httpsUrl&&!tgUrl)throw new Error('Telegram link не получен');
+
+    // Open first; only persist "pending" after the Telegram handoff was attempted.
+    openTelegramLink(httpsUrl,tgUrl);
     markPending(data?.relay||s.relay,data?.routeHealth||s.health);
     s.failoverBusy=false;render();
-    if(failover)toast('Запасной путь открыт. Подтверди подключение в Telegram.');
-    openTelegramLink(url);
+    if(failover)toast('Запасной путь открыт. Проверь Telegram и подтверди результат.');
   }
 
   async function connect(rotate=false,{failover=false}={}){
@@ -362,8 +387,11 @@
   document.querySelectorAll('[data-open-screen="relay"]').forEach(x=>x.addEventListener('click',()=>setTimeout(()=>status(true).then(()=>s.enabled?healthCheck({autoFailover:true}):null),0)));
   $('relayPowerButton')?.addEventListener('click',()=>{
     if(s.pendingRelay){
-      $('relayPendingConfirm')?.scrollIntoView({behavior:'smooth',block:'center'});
-      return;
+      // A failed Telegram handoff must not trap the user in a stale pending state.
+      // Re-request the route and open the official t.me proxy link again.
+      s.pendingRelay=null;s.pendingHealth=null;s.pendingAt=0;
+      saveUiState();render();
+      return connect(false);
     }
     if(s.enabled)return healthCheck({autoFailover:true}).then(()=>toast('Защита проверена'));
     return connect(false);
