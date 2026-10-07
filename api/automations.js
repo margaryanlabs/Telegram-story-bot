@@ -5,11 +5,11 @@ import {
   listAutomationJobs,
 } from '../lib/viewer-sync-store.js';
 
-const ALLOWED_RULES = new Set(['security_changes','smart_action','confirmed_viewer']);
+const ALLOWED_RULES = new Set(['security_changes','smart_action','watch_changes','confirmed_viewer']);
 export const AUTOMATION_PRESETS = {
-  quiet: { security_changes:true, smart_action:false, confirmed_viewer:false },
-  smart: { security_changes:true, smart_action:true, confirmed_viewer:false },
-  full: { security_changes:true, smart_action:true, confirmed_viewer:true },
+  quiet: { security_changes:true, smart_action:false, watch_changes:false, confirmed_viewer:false },
+  smart: { security_changes:true, smart_action:true, watch_changes:true, confirmed_viewer:false },
+  full: { security_changes:true, smart_action:true, watch_changes:true, confirmed_viewer:true },
 };
 
 function noStore(res) {
