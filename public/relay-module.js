@@ -206,9 +206,9 @@
       simple='Проверь Telegram';simpleText='После подключения вернись и подтверди, что Telegram работает.';
       power.disabled=false;
     }else if(active){
-      title='TELEGRAM PROTECTED';
+      title='ЗАЩИТА ВКЛЮЧЕНА';
       text='Защита включена и сохранена на этом устройстве.';
-      a='Защита включена · Проверить'; b=r?.region?'Активный регион · '+r.region:'Проверить связь'; p='PROTECTED';
+      a='Защита включена · Проверить'; b=r?.region?'Активный регион · '+r.region:'Проверить связь'; p='ВКЛЮЧЕНО';
       simple='Защита включена'; simpleText=r?.region?'Telegram защищён · '+r.region:'Telegram защищён';
     }else if(s.failoverBusy){
       title='Восстанавливаю связь…';text='Текущий путь недоступен. VETO переключается на запасной.';
@@ -235,23 +235,23 @@
 
     $('relayRouteLabel').textContent=r?.label||'Автовыбор';
     $('relayRouteId').textContent=r?.id?'route · '+r.id:'ещё не выбран';
-    $('relayRouteRegion').textContent=r?.region||'AUTO';
+    $('relayRouteRegion').textContent=r?.region||'АВТО';
     $('relayRouteLatency').textContent=Number.isFinite(Number(r?.latencyMs))?Math.round(Number(r.latencyMs))+' ms':'—';
     $('relayRouteHealth').textContent=active?'ON':s.health==='verified'?'OK':s.health==='degraded'?'Нестабильно':'—';
     $('relayRotateButton').hidden=!(r&&s.alternatives);
 
     if($('relaySimpleStatus'))$('relaySimpleStatus').textContent=simple;
     if($('relaySimpleStatusText'))$('relaySimpleStatusText').textContent=simpleText;
-    if($('homeRelayState'))$('homeRelayState').textContent=active?'TELEGRAM PROTECTED':pending?'Проверь подключение':s.configured===false?'Недоступно':'Защита Telegram';
-    if($('homeRelayPrimaryState'))$('homeRelayPrimaryState').textContent=active?'PROTECTED':pending?'Нужно подтвердить':s.configured===false?'Недоступно':'Готово к включению';
-    if($('relayGlobalBadgeRoute'))$('relayGlobalBadgeRoute').textContent=r?.region||'AUTO';
+    if($('homeRelayState'))$('homeRelayState').textContent=active?'ЗАЩИТА ВКЛЮЧЕНА':pending?'Проверь подключение':s.configured===false?'Недоступно':'Защита Telegram';
+    if($('homeRelayPrimaryState'))$('homeRelayPrimaryState').textContent=active?'ВКЛЮЧЕНО':pending?'Нужно подтвердить':s.configured===false?'Недоступно':'Готово к включению';
+    if($('relayGlobalBadgeRoute'))$('relayGlobalBadgeRoute').textContent=r?.region||'АВТО';
     if($('relayHomeTitle'))$('relayHomeTitle').textContent=active?'Telegram защищён':pending?'Telegram заработал?':'Telegram работает нестабильно?';
     if($('relayHomeText'))$('relayHomeText').textContent=active
       ? 'Защита включена. Закрывай VETO — статус сохранится на этом устройстве.'
       : pending
         ? 'Вернись в VETO после включения proxy и спокойно подтверди результат на экране защиты.'
         : 'Включи защиту одним нажатием. VETO сам выберет рабочий путь только для Telegram.';
-    if($('homeRelayPrimaryButtonTitle'))$('homeRelayPrimaryButtonTitle').textContent=active?'TELEGRAM PROTECTED':pending?'Проверить подключение':'Защитить Telegram';
+    if($('homeRelayPrimaryButtonTitle'))$('homeRelayPrimaryButtonTitle').textContent=active?'ЗАЩИТА ВКЛЮЧЕНА':pending?'Проверить подключение':'Защитить Telegram';
     if($('homeRelayPrimaryButtonText'))$('homeRelayPrimaryButtonText').textContent=active
       ? (r?.region?'Активно · '+r.region:'Управлять защитой')
       : pending
