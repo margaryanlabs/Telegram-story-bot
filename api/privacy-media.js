@@ -52,13 +52,13 @@ export default async function handler(req, res) {
 
   const token = String(process.env.TELEGRAM_BOT_TOKEN || '');
   if (!token) {
-    res.status(500).json({ ok:false, error:'Story Pilot is not configured' });
+    res.status(500).json({ ok:false, error:'VETO Telegram is not configured' });
     return;
   }
 
   const user = validateInitData(String(req.headers['x-telegram-init-data'] || ''), token);
   if (!user) {
-    res.status(401).json({ ok:false, error:'Open Story Pilot inside Telegram' });
+    res.status(401).json({ ok:false, error:'Open VETO Telegram inside Telegram' });
     return;
   }
 
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
           'Content-Disposition',
           `${inlineType(ref.mediaType) ? 'inline' : 'attachment'}; filename="${filename}"`,
         );
-        res.setHeader('X-Story-Pilot-Media-Source', 'vault');
+        res.setHeader('X-VETO-Media-Source', 'vault');
         res.status(200).send(buffer);
         return;
       }
@@ -130,7 +130,7 @@ export default async function handler(req, res) {
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Length', String(buffer.length));
-    res.setHeader('X-Story-Pilot-Media-Source', 'telegram');
+    res.setHeader('X-VETO-Media-Source', 'telegram');
     res.setHeader(
       'Content-Disposition',
       `${inlineType(ref.mediaType) ? 'inline' : 'attachment'}; filename="${filename}"`,
