@@ -43,7 +43,7 @@ test('Mini App exposes emergency fallback and avoids promising voice calls', () 
   const client = read('public/relay-module.js');
 
   assert.match(html, /Аварийный доступ/);
-  assert.match(html, /Звонки — best effort/);
+  assert.match(html, /Звонки — без гарантии стабильности/);
   assert.match(html, /Telegram не открывается совсем/);
   assert.match(client, /openEmergencyAccess/);
   assert.match(client, /Связь отвечает слишком долго/);

@@ -10,7 +10,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261007-veto-relay-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v6" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -143,9 +143,9 @@
       </section>
 
       <section class="relay-home-primary relay-consumer-card" id="relayHomePrimary" aria-label="Защита Telegram">
-        <span class="relay-global-badge" id="relayGlobalBadge" hidden><i></i><b>TELEGRAM PROTECTED</b><small id="relayGlobalBadgeRoute">AUTO</small></span>
+        <span class="relay-global-badge" id="relayGlobalBadge" hidden><i></i><b>ЗАЩИТА ВКЛЮЧЕНА</b><small id="relayGlobalBadgeRoute">АВТО</small></span>
         <div class="relay-home-primary-copy">
-          <span class="relay-home-kicker"><i></i> VETO CONNECT</span>
+          <span class="relay-home-kicker"><i></i> VETO ЗАЩИТА</span>
           <strong id="relayHomeTitle">Telegram работает нестабильно?</strong>
           <p id="relayHomeText">Включи защиту одним нажатием. VETO сам выберет рабочий путь только для Telegram.</p>
           <div class="relay-home-meta">
@@ -1100,7 +1100,7 @@
 
     <section class="screen relay-screen relay-consumer-screen" data-screen="relay">
       <div class="page-head relay-page-head">
-        <span class="kicker">VETO CONNECT</span>
+        <span class="kicker">VETO ЗАЩИТА</span>
         <h1>Защита Telegram</h1>
         <p>Никаких серверов и настроек. VETO сам проверит доступные пути и выберет лучший.</p>
       </div>
@@ -1113,7 +1113,7 @@
         </div>
         <div class="relay-status-row">
           <span class="relay-status-pill" id="relayStatusPill"><i></i><span>Проверяю доступ</span></span>
-          <span class="relay-mode-badge">ТОЛЬКО TELEGRAM</span>
+          <span class="relay-mode-badge">ТОЛЬКО ДЛЯ TELEGRAM</span>
         </div>
         <h2 id="relayPowerState">Защита выключена</h2>
         <p id="relayStateText">Нажми один раз — VETO сам выберет рабочий путь и передаст его Telegram.</p>
@@ -1126,7 +1126,7 @@
         </button>
         <div class="relay-connected-proof" id="relayConnectedProof" hidden>
           <i></i>
-          <div><strong>TELEGRAM PROTECTED</strong><small>Защита сохранена на этом устройстве.</small></div>
+          <div><strong>ЗАЩИТА ВКЛЮЧЕНА</strong><small>Защита сохранена на этом устройстве.</small></div>
         </div>
         <div class="relay-pending-confirm" id="relayPendingConfirm" hidden>
           <div><strong>Telegram заработал?</strong><small>Никаких всплывающих окон — просто подтверди здесь, когда вернёшься.</small></div>
@@ -1139,7 +1139,7 @@
 
       <div class="relay-success-overlay" id="relaySuccessOverlay" hidden>
         <div class="relay-success-ring"><span>✓</span></div>
-        <strong>TELEGRAM PROTECTED</strong>
+        <strong>ЗАЩИТА ВКЛЮЧЕНА</strong>
         <p>Защита Telegram включена</p>
       </div>
 
@@ -1160,7 +1160,7 @@
           </div>
           <div class="relay-route-grid">
             <article><span>Сервер</span><strong id="relayRouteLabel">Автовыбор</strong><small id="relayRouteId">ещё не выбран</small></article>
-            <article><span>Регион</span><strong id="relayRouteRegion">AUTO</strong><small>VETO</small></article>
+            <article><span>Регион</span><strong id="relayRouteRegion">АВТО</strong><small>VETO</small></article>
             <article><span>Задержка</span><strong id="relayRouteLatency">—</strong><small>проверка VETO</small></article>
             <article><span>Состояние</span><strong id="relayRouteHealth">—</strong><small>не статус Telegram</small></article>
           </div>
@@ -1172,7 +1172,7 @@
         <article><span>✓</span><div><strong>Только Telegram</strong><small>Браузер, банки и остальные приложения работают как раньше.</small></div></article>
         <article><span>↻</span><div><strong>Запасной путь</strong><small>Если текущий сервер перестал отвечать, VETO предложит или включит запасной при проверке.</small></div></article>
         <article><span>●</span><div><strong>Статус сохраняется</strong><small>Закрыл VETO и вернулся — зелёный статус останется.</small></div></article>
-        <article><span>!</span><div><strong>Звонки — best effort</strong><small>Для стабильных voice/video нужен отдельный Voice Relay.</small></div></article>
+        <article><span>!</span><div><strong>Звонки — без гарантии стабильности</strong><small>Для стабильных звонков и видео нужен отдельный режим связи.</small></div></article>
       </section>
 
       <section class="relay-emergency-card">
@@ -1228,7 +1228,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/app.js?v=20261007-veto-relay-v1"></script>
-  <script src="/relay-module.js?v=20261007-veto-relay-v6"></script>
+  <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261007-veto-telegram-v2"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
