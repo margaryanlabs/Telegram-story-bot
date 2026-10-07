@@ -77,6 +77,12 @@ function audienceLabel(state = {}) {
 export default async function handler(req, res) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
 
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
+    res.status(200).json({ ok: true, service: 'telegram-story-bot-v8' });
+    return;
+  }
+
   // v8 must never create Telegram-side effects before the webhook authenticity check.
   if (req.method === 'POST' && token) {
     const expectedSecret = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
