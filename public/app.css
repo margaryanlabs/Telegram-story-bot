@@ -2216,3 +2216,102 @@ input::placeholder,textarea::placeholder{color:#647287!important}
 @media(prefers-reduced-motion:reduce){
   .veto-aurora,.veto-grid-fx:after,.veto-command-hero:before,.veto-logo-halo:before,.veto-signal-dot{animation:none!important}
 }
+
+
+/* Canonical VETO palette sync — same authority accent as Decision Command */
+:root,.veto-dark{
+  --bg:#000!important;
+  --surface:#030303!important;
+  --text:#fff!important;
+  --muted:rgba(255,255,255,.58)!important;
+  --accent:#ff553d!important;
+  --accent-text:#130402!important;
+  --veto-ink:#000;
+  --veto-panel:rgba(3,3,3,.86);
+  --veto-panel-strong:rgba(5,5,5,.97);
+  --veto-line:rgba(255,255,255,.085);
+  --veto-cyan:#ff6a55;
+  --veto-blue:#ff553d;
+  --veto-lilac:#ff806d;
+  --veto-mint:#65e5a2;
+}
+html,body{background:#000!important}
+body{
+  background:
+    radial-gradient(680px 460px at var(--veto-x) var(--veto-y),rgba(255,85,61,.085),transparent 56%),
+    radial-gradient(620px 440px at 7% 86%,rgba(255,85,61,.032),transparent 64%),
+    #000!important;
+}
+.veto-aurora-a{
+  background:radial-gradient(circle,rgba(255,85,61,.17),rgba(255,85,61,.025) 58%,transparent 72%)!important
+}
+.veto-aurora-b{
+  background:radial-gradient(circle,rgba(255,106,85,.09),rgba(255,85,61,.018) 60%,transparent 74%)!important
+}
+.veto-grid-fx:after{
+  background:linear-gradient(180deg,transparent,rgba(255,85,61,.026),transparent)!important
+}
+.veto-spotlight{
+  background:radial-gradient(circle,rgba(255,85,61,.055),rgba(255,85,61,.018) 42%,transparent 70%)!important
+}
+.brand-mark.veto-mark{
+  background:#030303!important;border-color:rgba(255,255,255,.11)!important
+}
+.veto-command-hero{
+  border-color:rgba(255,255,255,.11)!important;
+  background:
+    radial-gradient(circle at 95% 8%,rgba(255,85,61,.07),transparent 34%),
+    linear-gradient(145deg,rgba(255,255,255,.025),rgba(255,255,255,.012))!important
+}
+.veto-logo-halo{
+  box-shadow:0 24px 64px rgba(0,0,0,.58),0 0 52px rgba(255,85,61,.09)!important
+}
+.veto-logo-halo:before{
+  background:radial-gradient(circle,rgba(255,85,61,.095),transparent 70%)!important
+}
+.veto-orbit{border-color:rgba(255,85,61,.11)!important}
+.orbit-two{border-color:rgba(255,255,255,.06)!important}
+.veto-signal-dot{background:#ff6a55!important;box-shadow:0 0 18px rgba(255,85,61,.5)!important}
+.dot-c{background:#fff!important;box-shadow:0 0 16px rgba(255,255,255,.22)!important}
+.veto-connect-primary{
+  background:linear-gradient(135deg,#7b2018 0%,#d13c2c 55%,#ff553d 100%)!important;
+  border-color:rgba(255,85,61,.32)!important;
+  box-shadow:0 18px 42px rgba(134,31,22,.28),inset 0 1px 0 rgba(255,255,255,.16)!important
+}
+.veto-connect-primary.connected{
+  background:rgba(101,229,162,.075)!important;
+  border-color:rgba(101,229,162,.17)!important;
+  color:#c9f8e1!important
+}
+.veto-connect-sheet-head{
+  border-color:rgba(255,85,61,.15)!important;
+  background:linear-gradient(145deg,rgba(255,85,61,.055),rgba(255,255,255,.016))!important
+}
+.veto-connect-sheet-head:after{
+  background:radial-gradient(circle,rgba(255,85,61,.08),transparent 67%)!important
+}
+.veto-connect-option.recommended{
+  border-color:rgba(255,85,61,.18)!important;background:rgba(255,85,61,.04)!important
+}
+.veto-connect-option .option-icon{
+  background:rgba(255,85,61,.07)!important;color:#ff9a8a!important
+}
+.veto-connect-option em{
+  background:rgba(255,85,61,.08)!important;color:#ff9a8a!important
+}
+.activation-primary{
+  background:linear-gradient(135deg,rgba(255,85,61,.15),rgba(255,85,61,.07))!important;
+  border-color:rgba(255,85,61,.18)!important;color:#ffd3cc!important
+}
+.nav-item.active:after,.veto-intro-dots i.active{
+  background:linear-gradient(90deg,#ff553d,#ff806d)!important
+}
+.veto-welcome-primary{
+  background:linear-gradient(135deg,#8f241a,#ff553d)!important;
+  border-color:rgba(255,85,61,.24)!important;
+  box-shadow:0 18px 38px rgba(118,27,19,.25)!important
+}
+.sheet-actions .accent{
+  background:linear-gradient(135deg,#a42b20,#ff553d)!important;
+  color:#fff!important;box-shadow:0 14px 30px rgba(123,28,20,.2)!important
+}
