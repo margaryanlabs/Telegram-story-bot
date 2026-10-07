@@ -79,6 +79,110 @@ function safeSession(row) {
   };
 }
 
+export function deriveIntelligenceBrief(analytics) {
+  if (!analytics || typeof analytics !== 'object') return null;
+
+  const totalViews = Math.max(0, Number(analytics.totalViews || 0));
+  const identifiedViews = Math.max(0, Number(analytics.identifiedViews || 0));
+  const unique = Math.max(0, Number(analytics.uniqueViewers || 0));
+  const repeat = Math.max(0, Number(analytics.repeatViewers || 0));
+  const avgDelaySec = Number(analytics.avgDelaySec);
+  const topPeople = Array.isArray(analytics.topPeople) ? analytics.topPeople : [];
+  const performance = Array.isArray(analytics.storyPerformance) ? analytics.storyPerformance : [];
+
+  const repeatRate = unique > 0 ? Math.round((repeat / unique) * 100) : null;
+  const identityRate = totalViews > 0 ? Math.round((identifiedViews / totalViews) * 100) : null;
+  const sampleSize = Math.max(totalViews, unique);
+  const confidence = sampleSize >= 100 ? 'HIGH' : sampleSize >= 25 ? 'MEDIUM' : sampleSize > 0 ? 'EARLY' : 'NO DATA';
+
+  const items = [];
+
+  if (repeatRate !== null) {
+    const title = repeatRate >= 45
+      ? 'Формируется лояльное ядро аудитории'
+      : repeatRate >= 20
+        ? 'Повторная аудитория уже заметна'
+        : 'Повторная аудитория пока небольшая';
+    items.push({
+      kind: 'retention',
+      title,
+      detail: `${repeatRate}% подтверждённых зрителей смотрели 2+ Stories.`,
+      evidence: `${repeat} repeat из ${unique} unique`,
+    });
+  }
+
+  if (Number.isFinite(avgDelaySec) && avgDelaySec >= 0) {
+    const title = avgDelaySec <= 15 * 60
+      ? 'Аудитория реагирует быстро'
+      : avgDelaySec <= 60 * 60
+        ? 'Просмотры приходят в первый час'
+        : 'Основная реакция аудитории отложенная';
+    items.push({
+      kind: 'speed',
+      title,
+      detail: avgDelaySec <= 15 * 60
+        ? 'Средний подтверждённый просмотр происходит в первые 15 минут.'
+        : avgDelaySec <= 60 * 60
+          ? 'Средний подтверждённый просмотр происходит в течение первого часа.'
+          : 'Средний подтверждённый просмотр приходит позже первого часа.',
+      evidence: `avg delay ${Math.round(avgDelaySec)} sec`,
+    });
+  }
+
+  if (identityRate !== null) {
+    const gap = Math.max(0, totalViews - identifiedViews);
+    items.push({
+      kind: 'identity',
+      title: identityRate >= 75
+        ? 'Высокая доля просмотров атрибутирована'
+        : identityRate >= 40
+          ? 'Часть аудитории остаётся неатрибутированной'
+          : 'Не делай выводы о людях по общему счётчику',
+      detail: `${identityRate}% просмотров имеют подтверждённую доступную Telegram-личность.`,
+      evidence: `${identifiedViews} identified · ${gap} unattributed`,
+    });
+  }
+
+  const rankedStories = performance
+    .map(story => ({
+      ...story,
+      momentum: Number(story.views15m ?? story.views60m ?? story.views ?? 0),
+    }))
+    .filter(story => Number.isFinite(story.momentum))
+    .sort((a, b) => b.momentum - a.momentum);
+
+  if (rankedStories.length >= 2 && rankedStories[0].momentum > 0) {
+    const best = rankedStories[0];
+    const second = rankedStories[1];
+    const delta = Math.max(0, best.momentum - second.momentum);
+    items.push({
+      kind: 'momentum',
+      title: `Story #${best.storyId} набрала лучший ранний momentum`,
+      detail: delta > 0
+        ? `Она опережает следующую Story на ${delta} просмотров в сопоставимом раннем окне.`
+        : 'У нескольких Stories сейчас сопоставимая ранняя динамика.',
+      evidence: `best early views ${best.momentum}`,
+    });
+  }
+
+  if (topPeople.length > 0) {
+    const person = topPeople[0];
+    const name = person.displayName || (person.username ? '@' + person.username : 'Один viewer');
+    items.push({
+      kind: 'person',
+      title: `${name} — самый устойчивый подтверждённый viewer`,
+      detail: `${Number(person.viewedStories || 0)} Stories · activity score ${Number(person.activityScore || 0)}.`,
+      evidence: 'только подтверждённые Story interactions',
+    });
+  }
+
+  return {
+    confidence,
+    sampleSize,
+    items: items.slice(0, 4),
+  };
+}
+
 function setNoStore(res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -159,7 +263,7 @@ async function sendTestViewerAlert(token, userId) {
     headers: { 'content-type':'application/json' },
     body: JSON.stringify({
       chat_id: String(userId),
-      text: '⚡ Telegram Control Fast Alerts работают.\n\nНовый просмотр активной Story отслеживается фоновым watcher; задержка зависит от цикла проверки и ответа Telegram. Если Telegram позже скроет связь просмотра с аккаунтом, Telegram Control анонимизирует запись и пришлёт отдельный privacy-сигнал.',
+      text: '⚡ Ghost Mode Fast Alerts работают.\n\nНовый просмотр активной Story отслеживается фоновым watcher; задержка зависит от цикла проверки и ответа Telegram. Если Telegram позже скроет связь просмотра с аккаунтом, Ghost Mode анонимизирует запись и пришлёт отдельный privacy-сигнал.',
       disable_notification: false,
     }),
   });
@@ -178,11 +282,11 @@ async function sendEvidenceCsv(token, userId, data) {
   form.append(
     'document',
     new Blob([csv], { type: 'text/csv;charset=utf-8' }),
-    `story-pilot-evidence-${date}.csv`,
+    `ghost-mode-evidence-${date}.csv`,
   );
   form.append(
     'caption',
-    'Telegram Control · Viewer Intelligence export\nТолько подтверждённые Telegram viewers + агрегированные Story counters.',
+    'Ghost Mode · Viewer Intelligence export\nТолько подтверждённые Telegram viewers + агрегированные Story counters.',
   );
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
@@ -250,7 +354,7 @@ export default async function handler(req, res) {
   if (!config.configured) {
     res.status(503).json({
       ok: false,
-      error: 'Viewer Sync backend is not configured yet',
+      error: 'Deep Intelligence backend is not configured yet',
       config,
     });
     return;
@@ -298,7 +402,7 @@ export default async function handler(req, res) {
         session: safeSession(session),
         story: storyData?.story || null,
         viewers: storyData?.viewers || [],
-        analytics,
+        analytics: analytics ? { ...analytics, brief: deriveIntelligenceBrief(analytics) } : null,
       });
       return;
     }
