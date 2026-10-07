@@ -4,6 +4,7 @@ import {
   upsertBusinessConnectionState,
 } from '../lib/viewer-sync-store.js';
 import crypto from 'node:crypto';
+import sharp from 'sharp';
 
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
@@ -20,7 +21,40 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20261007-veto-telegram-v2';
+const CONTROL_BUILD = '20261007-veto-telegram-v2-profile';
+
+const VETO_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <rect x="1" y="1" width="38" height="38" rx="11" fill="#0b0c0f" stroke="#2a2c33"/>
+  <path d="M8.5 11.5 19.7 29 15 29 6.8 16.1Z" fill="#f5f6f8"/>
+  <path d="M31.5 11.5 20.3 29H25l8.2-12.9Z" fill="#ff553d"/>
+  <path d="M18.25 22.3h3.5" stroke="#050608" stroke-width="1.4" stroke-linecap="round"/>
+</svg>`;
+
+async function setVetoBotProfilePhoto(token) {
+  const jpg = await sharp(Buffer.from(VETO_MARK_SVG))
+    .resize(640, 640, { fit: 'cover' })
+    .flatten({ background: '#000000' })
+    .jpeg({ quality: 96, chromaSubsampling: '4:4:4' })
+    .toBuffer();
+
+  const form = new FormData();
+  form.append('photo', JSON.stringify({
+    type: 'static',
+    photo: 'attach://veto_logo',
+  }));
+  form.append('veto_logo', new Blob([jpg], { type: 'image/jpeg' }), 'veto-telegram.jpg');
+
+  const response = await fetch(telegramUrl(token, 'setMyProfilePhoto'), {
+    method: 'POST',
+    body: form,
+  });
+  const data = await response.json();
+  if (!response.ok || !data.ok) {
+    throw new Error(`setMyProfilePhoto: ${data.description || response.statusText}`);
+  }
+  return Boolean(data.result);
+}
+
 
 function controlAppUrl(baseUrl) {
   const url = new URL('/studio.html', baseUrl);
@@ -212,6 +246,11 @@ export default async function handler(req, res) {
       console.warn('Active owner menu refresh skipped', error?.message || String(error));
     }
 
+    const activeName = await tg(token, 'getMyName').catch(() => null);
+    const profilePhotos = await tg(token, 'getUserProfilePhotos', {
+      user_id: bot.id,
+      limit: 1,
+    }).catch(() => null);
     const webhookInfo = await tg(token, 'getWebhookInfo').catch(() => null);
 
     res.status(200).json({
@@ -227,6 +266,9 @@ export default async function handler(req, res) {
       version: 'v8',
       control_build: CONTROL_BUILD,
       brand: 'VETO Telegram v2',
+      active_name: activeName?.name || null,
+      profile_photo_updated: Boolean(profilePhotoUpdated),
+      profile_photo_count: Number(profilePhotos?.total_count || 0),
       refreshed_owner_menus: refreshedOwnerMenus,
       recovered_business_connections: recoveredBusinessConnections,
     });
