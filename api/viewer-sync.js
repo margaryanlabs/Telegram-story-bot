@@ -86,7 +86,10 @@ export function deriveIntelligenceBrief(analytics) {
   const identifiedViews = Math.max(0, Number(analytics.identifiedViews || 0));
   const unique = Math.max(0, Number(analytics.uniqueViewers || 0));
   const repeat = Math.max(0, Number(analytics.repeatViewers || 0));
-  const avgDelaySec = Number(analytics.avgDelaySec);
+  const rawAvgDelaySec = analytics.avgDelaySec;
+  const avgDelaySec = rawAvgDelaySec === null || rawAvgDelaySec === undefined || rawAvgDelaySec === ''
+    ? Number.NaN
+    : Number(rawAvgDelaySec);
   const topPeople = Array.isArray(analytics.topPeople) ? analytics.topPeople : [];
   const performance = Array.isArray(analytics.storyPerformance) ? analytics.storyPerformance : [];
 
