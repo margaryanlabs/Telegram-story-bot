@@ -383,9 +383,9 @@
       $('privacyHeroText').textContent = complete && connectionLive && readMessages
         ? 'Готово. Новые доступные Business-сообщения, правки и удаления обрабатываются автоматически.'
         : complete && privacyState.connection.loaded && !connectionLive
-          ? 'VETO Privacy включена, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать Ghost не нужно.'
+          ? 'VETO Privacy включена, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать VETO Privacy не нужно.'
           : complete && connectionLive && !readMessages
-            ? 'Telegram подключён, но Ghost не получил право на сообщения. Разреши доступ к сообщениям в настройках Business-бота.'
+            ? 'Telegram подключён, но VETO Privacy не получила право на сообщения. Разреши доступ к сообщениям в настройках Business-бота.'
             : enabled
             ? 'Часть защиты уже включена. Можно включить всю VETO Privacy одной кнопкой.'
             : 'Включи VETO Privacy одной кнопкой — дальше всё работает автоматически.';
@@ -883,7 +883,7 @@
   function threadModeLabel(mode) {
     if (mode === 'deleted') return 'Удалённые';
     if (mode === 'edited') return 'Изменённые';
-    if (mode === 'focus') return 'Ghost Focus';
+    if (mode === 'focus') return 'VETO Focus';
     return 'Все сообщения';
   }
 
@@ -937,7 +937,7 @@
               ].filter(Boolean).join(' · '))}</small>
             </button>` : ''}
           <footer>
-            ${focused ? '<span class="focus">Ghost Focus</span>' : ''}
+            ${focused ? '<span class="focus">VETO Focus</span>' : ''}
             ${deleted ? '<span class="deleted">Удалено в Telegram</span>' : ''}
             ${mediaArchived ? '<span class="vault">Media Vault</span>' : ''}
             ${deleted && hasMedia && !mediaArchived ? '<span class="warn">Медиа может зависеть от Telegram</span>' : ''}
@@ -1070,7 +1070,7 @@
       let body = '';
 
       if (type === 'photo' || blob.type.startsWith('image/')) {
-        body = `<img class="privacy-media-preview-image" src="${url}" alt="Ghost media" />`;
+        body = `<img class="privacy-media-preview-image" src="${url}" alt="VETO media" />`;
       } else if (['video','animation','video_note'].includes(type) || blob.type.startsWith('video/')) {
         body = `<video class="privacy-media-preview-video" src="${url}" controls playsinline autoplay></video>`;
       } else if (['voice','audio'].includes(type) || blob.type.startsWith('audio/')) {
