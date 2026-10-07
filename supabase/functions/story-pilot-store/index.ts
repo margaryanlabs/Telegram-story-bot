@@ -1634,42 +1634,13 @@ async function opUpsertSession(args: any) {
 }
 
 async function opUpdateSession(args: any) {
-  const userId = String(args.userId);
-  const patch = args.patch || {};
-  if (useDirectSql()) {
-    if (typeof patch.session_ciphertext === "string" && patch.session_ciphertext) {
-      const rows = await directSql`
-        update public.story_pilot_viewer_sessions
-        set
-          session_ciphertext = ${String(patch.session_ciphertext)},
-          updated_at = coalesce(${patch.updated_at || null}::timestamptz, now())
-        where telegram_user_id = ${userId}::bigint
-        returning *
-      `;
-      return rows[0] || null;
-    }
-    const patchJson = JSON.stringify(patch);
-    const rows = await directSql`
-      with p as (select ${patchJson}::jsonb as j)
-      update public.story_pilot_viewer_sessions s
-      set
-        session_ciphertext = case when p.j ? 'session_ciphertext' then p.j->>'session_ciphertext' else s.session_ciphertext end,
-        status = case when p.j ? 'status' then p.j->>'status' else s.status end,
-        telegram_account_user_id = case when p.j ? 'telegram_account_user_id' then nullif(p.j->>'telegram_account_user_id','')::bigint else s.telegram_account_user_id end,
-        telegram_account_username = case when p.j ? 'telegram_account_username' then p.j->>'telegram_account_username' else s.telegram_account_username end,
-        telegram_account_first_name = case when p.j ? 'telegram_account_first_name' then p.j->>'telegram_account_first_name' else s.telegram_account_first_name end,
-        last_poll_at = case when p.j ? 'last_poll_at' then nullif(p.j->>'last_poll_at','')::timestamptz else s.last_poll_at end,
-        last_error = case when p.j ? 'last_error' then p.j->>'last_error' else s.last_error end,
-        updated_at = case when p.j ? 'updated_at' then coalesce(nullif(p.j->>'updated_at','')::timestamptz, now()) else now() end,
-        notify_enabled = case when p.j ? 'notify_enabled' then (p.j->>'notify_enabled')::boolean else s.notify_enabled end,
-        notify_anonymous_gap = case when p.j ? 'notify_anonymous_gap' then (p.j->>'notify_anonymous_gap')::boolean else s.notify_anonymous_gap end
-      from p
-      where s.telegram_user_id = ${userId}::bigint
-      returning s.*
-    `;
-    return rows[0] || null;
-  }
+  const userId = String(args.userId || "");
+  const patch = args.patch && typeof args.patch === "object" ? args.patch : {};
+  if (!userId) throw new Error("viewer_session_user_required");
 
+  // Heartbeats and session status are correctness-critical. Use the service-role
+  // Data API here instead of direct Postgres so a successful call always applies
+  // the full patch (including last_poll_at), regardless of direct DB health.
   const r = await db.from("story_pilot_viewer_sessions")
     .update(patch)
     .eq("telegram_user_id", userId)
