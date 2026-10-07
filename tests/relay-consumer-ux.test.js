@@ -6,7 +6,7 @@ function read(path){return readFileSync(new URL('../'+path,import.meta.url),'utf
 test('consumer Relay hides technical jargon behind advanced settings',()=>{
   const html=read('public/studio.html');
   assert.match(html,/Защитить Telegram/);
-  assert.match(html,/TELEGRAM PROTECTED/);
+  assert.match(html,/ЗАЩИТА ВКЛЮЧЕНА/);
   assert.match(html,/Расширенные настройки/);
   assert.match(html,/Аварийный доступ/);
   assert.match(html,/Отключить защиту/);
@@ -37,7 +37,7 @@ test('consumer Relay persists protected state',()=>{
   const client=read('public/relay-module.js');
   assert.match(client,/veto-connect-ui-state-v5/);
   assert.match(client,/localStorage\.setItem/);
-  assert.match(client,/TELEGRAM PROTECTED/);
+  assert.match(client,/ЗАЩИТА ВКЛЮЧЕНА/);
 });
 
 test('Relay never claims protected before client confirms Telegram works',()=>{
