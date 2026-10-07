@@ -40,7 +40,7 @@
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Ghost Studio error');
+    if (!response.ok || !data.ok) throw new Error(data.error || 'VETO Studio error');
     return data;
   }
 
@@ -96,7 +96,7 @@
         img.src = studio.assetDataUrl;
         img.hidden = false;
       }
-      if (meta) meta.textContent = 'Изображение · Ghost Studio оптимизирует размер автоматически';
+      if (meta) meta.textContent = 'Изображение · VETO Studio оптимизирует размер автоматически';
     }
     if (create) create.disabled = false;
     if (add) add.hidden = !studio.packName;
@@ -140,7 +140,7 @@
       studio.capabilities = data.capabilities || {};
       renderCapabilities();
     } catch (error) {
-      console.warn('Ghost Studio capabilities', error);
+      console.warn('VETO Studio capabilities', error);
     }
   }
 
@@ -167,7 +167,7 @@
       return;
     }
 
-    setBusy(true, 'Ghost AI создаёт основу…');
+    setBusy(true, 'VETO AI создаёт основу…');
     try {
       const data = await api({
         action: 'generate_image',
@@ -194,7 +194,7 @@
       return;
     }
 
-    const title = String($('studioPackTitle')?.value || '').trim() || 'Ghost Brand Pack';
+    const title = String($('studioPackTitle')?.value || '').trim() || 'VETO Brand Pack';
     const shortBase = String($('studioShortName')?.value || '').trim() || title;
     const emoji = String($('studioEmoji')?.value || '').trim() || '✨';
 
