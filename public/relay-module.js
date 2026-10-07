@@ -51,6 +51,7 @@
     $('relayRouteHealth').textContent=s.health==='verified'?'Verified':s.health==='degraded'?'Degraded':'—';
     $('relayRotateButton').hidden=!(r&&s.alternatives);
     if($('homeRelayState')) $('homeRelayState').textContent=s.configured===false?'Нужно настроить':recent()?'Маршрут выдан Telegram':'Telegram-only маршрут';
+    if($('homeRelayPrimaryState')) $('homeRelayPrimaryState').textContent=s.configured===false?'Нужно настроить':recent()?'Маршрут выдан':s.error?'Проверить Relay':'Mesh готов';
   }
 
   async function status(silent=true){
