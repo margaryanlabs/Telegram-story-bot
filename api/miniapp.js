@@ -1,13 +1,15 @@
 import crypto from 'node:crypto';
-import { publishPhotoStory, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
+import { publishPhotoStory, publishPhotoStoryUserSession, deleteStoryUserSession, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
 import {
   getBusinessConnectionState,
+  getViewerSession,
   listActivityEvents,
   listStoryArchive,
   markStoryDeleted,
   trackPublishedStory,
   upsertBusinessConnectionState,
 } from '../lib/viewer-sync-store.js';
+import { openJson } from '../lib/viewer-sync-crypto.js';
 
 const MAX_SAVED_USERS = 100;
 const MAX_HISTORY = 12;
@@ -360,11 +362,14 @@ function validateInitData(initData, token) {
 }
 
 function publicState(settings, extra = {}) {
-  const connection = !settings.bc
-    ? 'unknown'
-    : settings.canStories
-      ? 'ready'
-      : 'needs_permission';
+  const personalConnected = Boolean(settings.userSessionConnected);
+  const businessConnected = Boolean(settings.bc);
+  const businessStoriesReady = Boolean(settings.bc && settings.canStories);
+  const connection = personalConnected || businessStoriesReady
+    ? 'ready'
+    : businessConnected
+      ? 'needs_permission'
+      : 'unknown';
 
   const history = settings.history?.length
     ? settings.history
@@ -383,6 +388,11 @@ function publicState(settings, extra = {}) {
   return {
     connection,
     ready: connection === 'ready',
+    connectionMode: personalConnected ? 'user-session' : businessConnected ? 'business' : 'none',
+    accountConnection: {
+      connected: personalConnected,
+      account: settings.userSessionAccount || null,
+    },
     audience: settings.audience || 'standard',
     selected: settings.selected || [],
     excluded: settings.excluded || [],
@@ -393,9 +403,11 @@ function publicState(settings, extra = {}) {
     processing: Boolean(settings.processing),
     readPermission: Boolean(settings.canReadMessages),
     businessPermissions: {
+      connected: businessConnected,
       stories: Boolean(settings.canStories),
       messages: Boolean(settings.canReadMessages),
     },
+    storyPermission: businessStoriesReady || personalConnected,
     advancedPrivacy: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
     viewerSync: {
       available: false,
@@ -487,6 +499,19 @@ export default async function handler(req, res) {
 
   try {
     let settings = await getStoredSettings(token, chatId);
+    const userSessionRow = await getViewerSession(String(chatId)).catch(error => {
+      console.warn('Telegram user session lookup skipped', error?.message || String(error));
+      return null;
+    });
+    settings = {
+      ...settings,
+      userSessionConnected: userSessionRow?.status === 'active',
+      userSessionAccount: userSessionRow?.status === 'active' ? {
+        id: userSessionRow.telegram_account_user_id || null,
+        username: userSessionRow.telegram_account_username || '',
+        firstName: userSessionRow.telegram_account_first_name || '',
+      } : null,
+    };
 
     if (req.method === 'GET') {
       const archivePromise = listStoryArchive(chatId, 100).catch(error => {
@@ -580,8 +605,10 @@ export default async function handler(req, res) {
       const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
       settings = refreshed.settings;
 
-      if (!refreshed.live || !refreshed.rights || !settings.bc) {
-        res.status(409).json({ ok: false, error: 'Сначала подключи Telegram и разреши управление Stories' });
+      const canPublishBusiness = Boolean(refreshed.live && refreshed.rights && settings.bc);
+      const canPublishUserSession = Boolean(settings.userSessionConnected && userSessionRow?.session_ciphertext);
+      if (!canPublishBusiness && !canPublishUserSession) {
+        res.status(409).json({ ok: false, error: 'Подключи Telegram по QR/номеру или включи управление Stories через Telegram Business' });
         return;
       }
       if (settings.processing) {
@@ -630,17 +657,32 @@ export default async function handler(req, res) {
       await saveSettings(token, chatId, baseUrl, pre);
 
       try {
-        const story = await publishPhotoStory({
-          token,
-          businessConnectionId: pre.bc,
-          imageBuffer,
-          caption,
-          audience: pre.audience,
-          selected: pre.selected,
-          excluded: pre.excluded,
-          nonce: `${chatId}:${nonce}`,
-          protect: pre.protect,
-        });
+        let story;
+        if (canPublishBusiness) {
+          story = await publishPhotoStory({
+            token,
+            businessConnectionId: pre.bc,
+            imageBuffer,
+            caption,
+            audience: pre.audience,
+            selected: pre.selected,
+            excluded: pre.excluded,
+            nonce: `${chatId}:${nonce}`,
+            protect: pre.protect,
+          });
+        } else {
+          const decrypted = await openJson(userSessionRow.session_ciphertext, `session:${chatId}`);
+          story = await publishPhotoStoryUserSession({
+            session: decrypted.session,
+            imageBuffer,
+            caption,
+            audience: pre.audience,
+            selected: pre.selected,
+            excluded: pre.excluded,
+            nonce: `${chatId}:${nonce}`,
+            protect: pre.protect,
+          });
+        }
 
         const skippedExcluded = story.skippedExcluded || [];
         const skippedSelected = story.skippedSelected || [];
@@ -664,7 +706,7 @@ export default async function handler(req, res) {
           posted_at: postedAt.toISOString(),
           expires_at: new Date(postedAt.getTime() + STORY_PERIOD_SECONDS * 1000).toISOString(),
           watch_until: new Date(postedAt.getTime() + watchHours * 60 * 60 * 1000).toISOString(),
-          audience: next.audience || 'standard',
+          audience: story.verifiedAudience || next.audience || 'standard',
           protected: Boolean(next.protect),
           active: true,
           last_error: null,
@@ -735,18 +777,12 @@ export default async function handler(req, res) {
       };
       await saveSettings(token, chatId, baseUrl, settings);
     } else if (action === 'picker_selected' || action === 'picker_exclude') {
-      const refreshed = await refreshConnection(token, chatId, baseUrl, settings);
-      settings = refreshed.settings;
-      if (!refreshed.live || !refreshed.rights) {
-        res.status(409).json({ ok: false, error: 'Сначала подключи Telegram и разреши управление Stories' });
-        return;
-      }
       const kind = action === 'picker_exclude' ? 'exclude' : 'selected';
       settings = await beginNativePicker(token, chatId, baseUrl, settings, kind);
       res.status(200).json({
         ok: true,
         pickerOpened: true,
-        state: publicState(settings, { live: true, storyPermission: true }),
+        state: publicState(settings),
       });
       return;
     } else if (action === 'reset') {
@@ -774,8 +810,10 @@ export default async function handler(req, res) {
           console.warn('Mini App durable archive ownership check fallback', error?.message || error);
         }
       }
-      if (!refreshed.live || !settings.bc) {
-        res.status(409).json({ ok: false, error: 'Telegram Business подключение не найдено' });
+      const canDeleteBusiness = Boolean(refreshed.live && settings.bc);
+      const canDeleteUserSession = Boolean(settings.userSessionConnected && userSessionRow?.session_ciphertext);
+      if (!canDeleteBusiness && !canDeleteUserSession) {
+        res.status(409).json({ ok: false, error: 'Подключение Telegram не найдено' });
         return;
       }
       if (!Number.isInteger(requestedId) || requestedId <= 0) {
@@ -786,10 +824,15 @@ export default async function handler(req, res) {
         res.status(404).json({ ok: false, error: 'Этой Story нет в архиве VETO Telegram' });
         return;
       }
-      await tg(token, 'deleteStory', {
-        business_connection_id: settings.bc,
-        story_id: requestedId,
-      });
+      if (canDeleteBusiness) {
+        await tg(token, 'deleteStory', {
+          business_connection_id: settings.bc,
+          story_id: requestedId,
+        });
+      } else {
+        const decrypted = await openJson(userSessionRow.session_ciphertext, `session:${chatId}`);
+        await deleteStoryUserSession({ session: decrypted.session, storyId: requestedId });
+      }
       await markStoryDeleted(chatId, requestedId).catch(error => {
         console.warn('Mini App durable archive delete tracking failed', error?.message || error);
       });
