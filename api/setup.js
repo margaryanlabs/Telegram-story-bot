@@ -102,6 +102,49 @@ export default async function handler(req, res) {
     return;
   }
 
+  if (req.method === 'GET') {
+    try {
+      const [bot, webhook] = await Promise.all([
+        tg(token, 'getMe'),
+        tg(token, 'getWebhookInfo'),
+      ]);
+      res.status(200).json({
+        ok: true,
+        service: 'veto-telegram-setup',
+        mode: 'read-only',
+        protected: Boolean(process.env.SETUP_SECRET),
+        bot: bot?.username ? `@${bot.username}` : null,
+        webhook: webhook?.url || null,
+        pending_updates: webhook?.pending_update_count ?? null,
+        last_error: webhook?.last_error_message || null,
+        control_build: CONTROL_BUILD,
+      });
+    } catch (error) {
+      res.status(503).json({ ok: false, error: error?.message || String(error) });
+    }
+    return;
+  }
+
+  const setupSecret = String(process.env.SETUP_SECRET || '');
+  const authorization = String(req.headers.authorization || '');
+  const providedSecret = authorization.startsWith('Bearer ')
+    ? authorization.slice(7)
+    : String(req.headers['x-veto-setup-secret'] || '');
+
+  if (!setupSecret) {
+    res.status(503).json({ ok: false, error: 'SETUP_SECRET is not configured' });
+    return;
+  }
+
+  const expectedBuffer = Buffer.from(setupSecret);
+  const providedBuffer = Buffer.from(providedSecret);
+  const setupAuthorized = expectedBuffer.length === providedBuffer.length
+    && crypto.timingSafeEqual(expectedBuffer, providedBuffer);
+  if (!setupAuthorized) {
+    res.status(401).json({ ok: false, error: 'Unauthorized setup request' });
+    return;
+  }
+
   try {
     const baseUrl = productionBaseUrl(req);
     const webhookUrl = `${baseUrl}/api/webhook-v8`;
