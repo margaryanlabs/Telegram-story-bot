@@ -890,9 +890,31 @@ function smartThreadSignals(thread: any) {
       ? "watch"
       : "archive";
 
+  const hasDelete = Number(thread.deletedCount || 0) > 0;
+  const hasEdit = Number(thread.editedCount || 0) > 0;
+  const smartKind = smartState === "action"
+    ? (looksQuestion ? "reply" : "review_reply")
+    : smartState === "watch" && (hasDelete || hasEdit)
+      ? "review_changes"
+      : smartState === "watch"
+        ? "monitor"
+        : "archive";
+
+  const smartNextAction = smartKind === "reply"
+    ? "Ответить на входящий вопрос"
+    : smartKind === "review_reply"
+      ? "Проверить входящее и решить, нужен ли ответ"
+      : smartKind === "review_changes"
+        ? "Проверить удаления и правки"
+        : smartKind === "monitor"
+          ? "Наблюдать без срочного действия"
+          : "Оставить в архиве";
+
   return {
     smartScore: Math.min(100, score),
     smartState,
+    smartKind,
+    smartNextAction,
     smartReasons: reasons.slice(0, 3),
     actionLikely: awaitingReply,
     looksQuestion,
@@ -997,7 +1019,35 @@ async function opListPrivacyThreads(args: any) {
     likelyNeedsReply: threads.filter((thread: any) => thread.actionLikely).length,
   };
 
-  return { settings, threads, smartSummary };
+  const ranked = [...threads].sort((a: any, b: any) => {
+    const scoreDelta = Number(b.smartScore || 0) - Number(a.smartScore || 0);
+    if (scoreDelta) return scoreDelta;
+    return new Date(b.lastAt || 0).getTime() - new Date(a.lastAt || 0).getTime();
+  });
+  const topAction = ranked.find((thread: any) => thread.smartState === "action") || null;
+  const topWatch = ranked.find((thread: any) => thread.smartState === "watch") || null;
+
+  const smartBrief = {
+    status: smartSummary.action > 0 ? "action" : smartSummary.watch > 0 ? "watch" : "clear",
+    title: smartSummary.action > 0
+      ? `${smartSummary.action} диалог(а) требуют внимания`
+      : smartSummary.watch > 0
+        ? `${smartSummary.watch} диалог(а) стоит проверить`
+        : "Срочных сигналов нет",
+    detail: topAction
+      ? `${topAction.title}: ${topAction.smartNextAction}`
+      : topWatch
+        ? `${topWatch.title}: ${topWatch.smartNextAction}`
+        : "Ghost не видит объяснимых причин поднимать диалоги выше архива.",
+    primaryChatId: String((topAction || topWatch)?.chatId || ""),
+    primaryAction: String((topAction || topWatch)?.smartKind || "archive"),
+    reasons: Array.isArray((topAction || topWatch)?.smartReasons)
+      ? (topAction || topWatch).smartReasons.slice(0, 3)
+      : [],
+    generatedAt: new Date().toISOString(),
+  };
+
+  return { settings, threads, smartSummary, smartBrief };
 }
 
 async function opListDeletedFeed(args: any) {
@@ -2340,6 +2390,7 @@ async function opGetExport(args: any) {
 const AUTOMATION_RULE_DEFAULTS: Record<string, boolean> = {
   security_changes: true,
   smart_action: false,
+  watch_changes: false,
   confirmed_viewer: false,
 };
 
