@@ -104,7 +104,7 @@ function appendHistory(settings, story) {
   const record = {
     id: String(story.id),
     ts: Math.floor(Date.now() / 1000),
-    audience: settings.audience || 'standard',
+    audience: story.verifiedAudience || settings.audience || 'standard',
     excluded: settings.excluded?.length || 0,
     selected: settings.selected?.length || 0,
     protect: Boolean(settings.protect),
@@ -719,6 +719,7 @@ export default async function handler(req, res) {
           published: true,
           storyId: String(story.id),
           transport: story.transport,
+          verifiedAudience: story.verifiedAudience || next.audience || 'standard',
           cleanedUsernames: [...skippedExcluded, ...skippedSelected],
           state: publicState(next, { live: true, storyPermission: true }),
         });
