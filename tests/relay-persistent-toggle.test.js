@@ -23,7 +23,7 @@ test('consumer UI exposes a strong protected state and disable control', () => {
   const client = read('public/relay-module.js');
 
   assert.match(html, /relayGlobalBadge/);
-  assert.match(html, /TELEGRAM PROTECTED/);
+  assert.match(html, /ЗАЩИТА ВКЛЮЧЕНА/);
   assert.match(html, /relayDisableButton/);
   assert.match(html, /relaySuccessOverlay/);
 
@@ -31,7 +31,7 @@ test('consumer UI exposes a strong protected state and disable control', () => {
   assert.match(css, /relay-status-pill\.connected/);
   assert.match(css, /relay-success-overlay\.show/);
 
-  assert.match(client, /title='TELEGRAM PROTECTED'/);
+  assert.match(client, /title='ЗАЩИТА ВКЛЮЧЕНА'/);
   assert.match(client, /showSuccessEffect/);
   assert.match(client, /markEnabled/);
 });
