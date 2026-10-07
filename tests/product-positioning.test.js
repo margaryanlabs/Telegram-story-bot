@@ -12,6 +12,12 @@ test('Ghost Mode is the only user-facing product brand', () => {
     'public/app.js',
     'api/setup.js',
     'api/webhook-v7.js',
+    'api/webhook-v8.js',
+    'api/viewer-sync.js',
+    'api/miniapp.js',
+    'api/privacy.js',
+    'api/automation-run.js',
+    'public/privacy.js',
   ].map(read).join('\n');
 
   assert.doesNotMatch(surfaces, /Telegram Control/);
