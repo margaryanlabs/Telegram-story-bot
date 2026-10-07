@@ -10,7 +10,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261007-veto-relay-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v5" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v6" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -1128,6 +1128,13 @@
           <i></i>
           <div><strong>TELEGRAM PROTECTED</strong><small>Защита сохранена на этом устройстве.</small></div>
         </div>
+        <div class="relay-pending-confirm" id="relayPendingConfirm" hidden>
+          <div><strong>Telegram заработал?</strong><small>Никаких всплывающих окон — просто подтверди здесь, когда вернёшься.</small></div>
+          <div class="relay-pending-actions">
+            <button class="yes" id="relayPendingYes" type="button">Да, работает</button>
+            <button id="relayPendingNo" type="button">Нет, не работает</button>
+          </div>
+        </div>
       </section>
 
       <div class="relay-success-overlay" id="relaySuccessOverlay" hidden>
@@ -1221,7 +1228,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/app.js?v=20261007-veto-relay-v1"></script>
-  <script src="/relay-module.js?v=20261007-veto-relay-v5"></script>
+  <script src="/relay-module.js?v=20261007-veto-relay-v6"></script>
   <script src="/privacy.js?v=20261007-veto-telegram-v2"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
