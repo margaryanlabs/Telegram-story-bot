@@ -20,7 +20,7 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20261004-brand-pack';
+const CONTROL_BUILD = '20261007-control-layer';
 
 function controlAppUrl(baseUrl) {
   const url = new URL('/studio.html', baseUrl);
@@ -94,25 +94,25 @@ export default async function handler(req, res) {
 
     await tg(token, 'setMyCommands', {
       commands: [
-        { command: 'start', description: '🚀 Открыть центр управления' },
+        { command: 'start', description: '🚀 Открыть Ghost Mode' },
         { command: 'ghost', description: '👻 Ghost и Anti-Delete' },
         { command: 'deleted', description: '↶ Последние удалённые сообщения' },
         { command: 'edits', description: '≋ История изменённых сообщений' },
         { command: 'stories', description: '📸 Stories и приватность' },
         { command: 'studio', description: '✦ Emoji, stickers и brand packs' },
         { command: 'sharepack', description: '↗ Проверить и поделиться emoji pack' },
-        { command: 'viewers', description: '👁 Deep Intelligence' },
-        { command: 'status', description: '📊 Статус подключения' },
+        { command: 'viewers', description: '👁 Intelligence' },
+        { command: 'status', description: '📊 Connection Center' },
         { command: 'help', description: '❔ Возможности и помощь' },
       ],
     });
 
     await tg(token, 'setMyShortDescription', {
-      short_description: 'Ghost Mode: Privacy, Stories, Studio и Intelligence — один Telegram control layer.',
+      short_description: 'Ghost Mode: Privacy, Stories, Intelligence, Studio и Automations — private control layer для Telegram.',
     }).catch(() => {});
 
     await tg(token, 'setMyDescription', {
-      description: 'Ghost Mode — приватный control layer для Telegram: Anti-Delete/Edit History, Stories, Brand Pack Engine для custom emoji/stickers и Deep Intelligence.',
+      description: 'Ghost Mode — private control layer для Telegram: Privacy, Stories, Intelligence, Creator Studio, Security и Automations в одном месте.',
     }).catch(() => {});
 
     await tg(token, 'setChatMenuButton', {
@@ -183,7 +183,7 @@ export default async function handler(req, res) {
           chat_id: chatId,
           menu_button: {
             type: 'web_app',
-            text: 'Открыть Control',
+            text: 'Ghost Mode',
             web_app: { url: nextUrl },
           },
         }).catch(() => {});
