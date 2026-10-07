@@ -17,7 +17,10 @@
     try {
       const parsed = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
       if (!Array.isArray(parsed)) return [];
-      return parsed.filter(item => item?.connectUrl && item?.manual?.server && item?.manual?.secret).slice(0, 4);
+      return parsed
+        .filter(item => item?.connectUrl && item?.manual?.server && item?.manual?.secret)
+        .map(item => ({ ...item, source:'cache' }))
+        .slice(0, 4);
     } catch {
       return [];
     }
@@ -170,14 +173,26 @@
   }
 
   function openTelegram() {
-    if (!current?.connectUrl) {
+    if (!current?.connectUrl && !current?.tgUrl) {
       toast('Маршрут ещё не выбран');
       return;
     }
-    try {
-      location.href = current.connectUrl;
-    } catch {
-      try { location.href = current.tgUrl; } catch {}
+
+    // Prefer tg:// so the bootstrap still works when t.me itself is filtered.
+    const nativeUrl = current.tgUrl || current.connectUrl;
+    const webUrl = current.connectUrl;
+    let hidden = false;
+    const onVisibility = () => { if (document.visibilityState === 'hidden') hidden = true; };
+    document.addEventListener('visibilitychange', onVisibility, { once:true });
+
+    try { location.href = nativeUrl; } catch {}
+
+    if (webUrl && nativeUrl !== webUrl) {
+      setTimeout(() => {
+        if (!hidden && document.visibilityState === 'visible') {
+          try { location.href = webUrl; } catch {}
+        }
+      }, 900);
     }
   }
 
@@ -222,6 +237,10 @@
   $('alternateButton').addEventListener('click', rotate);
   $('refreshButton').addEventListener('click', () => refresh());
   document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', () => copyValue(button.dataset.copy)));
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/relay-sw.js', { scope:'/' }).catch(() => {});
+  }
 
   setNetwork();
   const cached = readCache();
