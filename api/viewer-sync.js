@@ -341,13 +341,13 @@ export default async function handler(req, res) {
 
   const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '');
   if (!botToken) {
-    res.status(500).json({ ok: false, error: 'Telegram Control is not configured' });
+    res.status(500).json({ ok: false, error: 'Ghost Mode is not configured' });
     return;
   }
 
   const user = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''), botToken);
   if (!user) {
-    res.status(401).json({ ok: false, error: 'Open Telegram Control inside Telegram' });
+    res.status(401).json({ ok: false, error: 'Open Ghost Mode inside Telegram' });
     return;
   }
 
@@ -379,7 +379,7 @@ export default async function handler(req, res) {
             story: null,
             viewers: [],
             analytics: null,
-            storageError: 'Viewer Sync временно восстанавливает соединение. Публикация Stories работает независимо.',
+            storageError: 'Deep Intelligence временно восстанавливает соединение. Публикация Stories работает независимо.',
           });
           return;
         }
@@ -421,7 +421,7 @@ export default async function handler(req, res) {
     if (action === 'test_alert') {
       const session = await getViewerSession(userId);
       if (!session || session.status !== 'active') {
-        res.status(409).json({ ok: false, error: 'Сначала подключи Viewer Sync' });
+        res.status(409).json({ ok: false, error: 'Сначала подключи Deep Intelligence' });
         return;
       }
 
@@ -437,7 +437,7 @@ export default async function handler(req, res) {
     if (action === 'export_csv') {
       const session = await getViewerSession(userId);
       if (!session || session.status !== 'active') {
-        res.status(409).json({ ok: false, error: 'Сначала подключи Viewer Sync' });
+        res.status(409).json({ ok: false, error: 'Сначала подключи Deep Intelligence' });
         return;
       }
 
@@ -445,7 +445,7 @@ export default async function handler(req, res) {
       const storyCount = Array.isArray(exportData?.stories) ? exportData.stories.length : 0;
       const viewerCount = Array.isArray(exportData?.viewers) ? exportData.viewers.length : 0;
       if (!storyCount && !viewerCount) {
-        res.status(409).json({ ok: false, error: 'Для экспорта пока нет данных Viewer Sync' });
+        res.status(409).json({ ok: false, error: 'Для экспорта пока нет данных Deep Intelligence' });
         return;
       }
 
@@ -463,7 +463,7 @@ export default async function handler(req, res) {
     if (action === 'preferences') {
       const session = await getViewerSession(userId);
       if (!session) {
-        res.status(409).json({ ok: false, error: 'Viewer Sync ещё не подключён' });
+        res.status(409).json({ ok: false, error: 'Deep Intelligence ещё не подключён' });
         return;
       }
 
@@ -485,7 +485,7 @@ export default async function handler(req, res) {
     if (action === 'register_stories') {
       const session = await getViewerSession(userId);
       if (!session || session.status !== 'active') {
-        res.status(409).json({ ok: false, error: 'Сначала подключи Viewer Sync' });
+        res.status(409).json({ ok: false, error: 'Сначала подключи Deep Intelligence' });
         return;
       }
 
