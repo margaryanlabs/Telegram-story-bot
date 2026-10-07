@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/svg+xml" href="/veto-telegram-mark.svg" />
   <title>VETO Telegram — Private Telegram OS</title>
-  <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence and Automations." />
+  <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261007-veto-clarity-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261007-veto-relay-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
 </head>
 <body>
@@ -42,13 +42,14 @@
 
         <article class="veto-intro-step" data-veto-intro-step="1">
           <span class="kicker">ЧТО ЗДЕСЬ ЕСТЬ</span>
-          <h1>Шесть функций.<br><em>Каждая — понятная.</em></h1>
+          <h1>Семь функций.<br><em>Каждая — понятная.</em></h1>
           <div class="veto-intro-function-grid">
             <div><b>＋</b><strong>Stories</strong><small>Публикуй Story и выбирай, кто её увидит.</small></div>
             <div><b>◉</b><strong>Просмотры</strong><small>Смотри аудиторию своих Stories и изменения просмотров.</small></div>
             <div><b>◌</b><strong>Privacy</strong><small>Anti‑Delete, история изменений и приватный архив.</small></div>
             <div><b>✦</b><strong>Studio</strong><small>Emoji, stickers и брендированные наборы.</small></div>
             <div><b>⌾</b><strong>Security</strong><small>Проверь подключённые доступы и сессии.</small></div>
+            <div><b>⇄</b><strong>Relay</strong><small>Дай Telegram отдельный резервный маршрут, не трогая остальной интернет.</small></div>
             <div><b>⚡</b><strong>Automations</strong><small>Получай нужные сигналы и уведомления автоматически.</small></div>
           </div>
         </article>
@@ -92,7 +93,7 @@
         <div class="brand-mark veto-mark" aria-hidden="true"><img src="/veto-telegram-mark.svg" alt="" /><i></i></div>
         <div class="brand-copy">
           <strong>VETO Telegram</strong>
-          <span>Private Telegram OS · Stories · Chats · Intelligence</span>
+          <span>Private Telegram OS · Stories · Chats · Relay · Intelligence</span>
         </div>
       </div>
       <button class="profile-button" id="profileButton" type="button" aria-label="Открыть статус аккаунта">
@@ -111,7 +112,7 @@
         <div>
           <span class="kicker">VETO TELEGRAM</span>
           <h1>Telegram.<br><span>Под твоим контролем.</span></h1>
-          <p>Один приватный слой для Chats, Stories, Privacy, Intelligence и Automations — с понятными разрешениями и без скрытых действий.</p>
+          <p>Один приватный слой для Chats, Stories, Privacy, Relay, Intelligence и Automations — с понятными разрешениями и без скрытых действий.</p>
         </div>
         <span class="control-live" id="homeOverallState"><i></i><span>Проверяю</span></span>
       </div>
@@ -170,6 +171,11 @@
           <span class="capability-copy"><small>Security</small><strong>Доступы и сессии</strong><span>Показывает, что подключено и что можно отключить.</span></span>
           <span class="capability-chevron">?</span>
         </button>
+        <button class="capability-card" id="homeRelayCard" type="button" data-feature-help="relay">
+          <span class="capability-icon">⇄</span>
+          <span class="capability-copy"><small>Relay</small><strong id="homeRelayState">Telegram-only маршрут</strong><span>Резервный доступ для Telegram без VPN на весь телефон.</span></span>
+          <span class="capability-chevron">?</span>
+        </button>
         <button class="capability-card" id="homeAutomationsCard" type="button" data-feature-help="automations">
           <span class="capability-icon">⚡</span>
           <span class="capability-copy"><small>Automations</small><strong>Сигналы и уведомления</strong><span>VETO сам сообщает о важных событиях.</span></span>
@@ -220,6 +226,7 @@
           <button type="button" data-open-screen="stories"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
           <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
           <button type="button" data-open-screen="ghost"><span>◌</span><strong>Privacy</strong><small>Anti-Delete · Inbox · Vault</small></button>
+          <button type="button" data-open-screen="relay"><span>⇄</span><strong>Private Relay</strong><small>Telegram-only · Auto route</small></button>
         </div>
       </section>
 
@@ -1067,6 +1074,68 @@
       </section>
     </section>
 
+
+    <section class="screen relay-screen" data-screen="relay">
+      <div class="page-head relay-page-head">
+        <span class="kicker">VETO RELAY MESH</span>
+        <h1>Private Relay</h1>
+        <p>Отдельный резервный маршрут только для Telegram. Остальной интернет телефона не идёт через VETO.</p>
+      </div>
+
+      <section class="relay-hero">
+        <div class="relay-orbit" aria-hidden="true">
+          <div class="relay-core"><img src="/veto-telegram-mark.svg" alt="" /></div>
+          <i></i><i></i><i></i>
+          <span></span><span></span><span></span>
+        </div>
+        <div class="relay-status-row">
+          <span class="relay-status-pill" id="relayStatusPill"><i></i><span>Проверяю Relay</span></span>
+          <span class="relay-mode-badge">TELEGRAM ONLY</span>
+        </div>
+        <h2 id="relayPowerState">Relay выключен</h2>
+        <p id="relayStateText">VETO проверит доступные маршруты и передаст лучший в Telegram. Финальное включение подтверждает сам Telegram.</p>
+        <button class="relay-power-button" id="relayPowerButton" type="button">
+          <span class="relay-power-icon">⌁</span>
+          <span><strong>Подключить Telegram Relay</strong><small>Автоматически выбрать лучший маршрут</small></span>
+        </button>
+      </section>
+
+      <section class="relay-route-card">
+        <div class="block-head compact">
+          <div><span class="kicker">АКТИВНЫЙ МАРШРУТ</span><h2>Route Intelligence</h2></div>
+          <button class="mini-chip" id="relayRefreshButton" type="button">↻ Проверить</button>
+        </div>
+        <div class="relay-route-grid">
+          <article><span>Узел</span><strong id="relayRouteLabel">Автовыбор</strong><small id="relayRouteId">ещё не выбран</small></article>
+          <article><span>Регион</span><strong id="relayRouteRegion">AUTO</strong><small>VETO Mesh</small></article>
+          <article><span>Latency</span><strong id="relayRouteLatency">—</strong><small>edge probe</small></article>
+          <article><span>Health</span><strong id="relayRouteHealth">—</strong><small>не статус Telegram</small></article>
+        </div>
+        <button class="relay-rotate-button" id="relayRotateButton" type="button" hidden>⇄ Сменить маршрут</button>
+      </section>
+
+      <section class="relay-truth-grid">
+        <article>
+          <span>01</span><div><strong>Только Telegram</strong><small>Relay использует нативный MTProxy Telegram. Браузер, банки и другие приложения не отправляются через него.</small></div>
+        </article>
+        <article>
+          <span>02</span><div><strong>Автовыбор</strong><small>VETO проверяет пул узлов и сначала предлагает доступный маршрут с лучшим score.</small></div>
+        </article>
+        <article>
+          <span>03</span><div><strong>Failover вручную</strong><small>Если конкретная сеть блокирует текущий узел, нажми «Сменить маршрут» — VETO выдаст другой.</small></div>
+        </article>
+        <article>
+          <span>04</span><div><strong>Без фальшивого Connected</strong><small>Mini App видит, что маршрут выдан. Только Telegram может подтвердить, что proxy действительно включён на устройстве.</small></div>
+        </article>
+      </section>
+
+      <section class="relay-note">
+        <span>PRIVACY</span>
+        <strong>VETO Relay не получает содержимое твоих Telegram-сообщений.</strong>
+        <p>Этот экран управляет только выдачей proxy-маршрута. Шифрование Telegram и статус подключения остаются на стороне Telegram.</p>
+      </section>
+    </section>
+
     <section class="screen" data-screen="archive">
       <div class="page-head">
         <span class="kicker">История</span>
@@ -1107,7 +1176,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261007-veto-clarity-v1"></script>
+  <script src="/app.js?v=20261007-veto-relay-v1"></script>
   <script src="/privacy.js?v=20261007-veto-telegram-v2"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
