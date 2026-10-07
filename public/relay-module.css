@@ -347,3 +347,51 @@
 @media(max-width:520px){
   .relay-global-badge{position:static;grid-column:1/-1;justify-self:start;margin-bottom:-2px}
 }
+
+
+/* Consumer VETO Connect UX */
+.relay-consumer-card .relay-home-kicker{color:#aab4c2}
+.relay-consumer-card.relay-active .relay-home-kicker{color:#7ee7b4}
+.relay-consumer-screen .relay-page-head p{max-width:520px}
+.relay-consumer-power{grid-template-columns:46px 1fr}
+.relay-simple-status{
+  margin-top:12px;padding:14px 15px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;
+  border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.026)
+}
+.relay-simple-status>div{display:grid;gap:4px}
+.relay-simple-status span{font-size:7.5px;font-weight:900;letter-spacing:.11em;color:#6f7b8c}
+.relay-simple-status strong{font-size:12px}
+.relay-simple-status small{font-size:8px;color:var(--muted);line-height:1.4}
+.relay-simple-status button{
+  padding:9px 10px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.04);font-size:8.5px;font-weight:800
+}
+.relay-advanced{
+  margin-top:10px;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(255,255,255,.018);overflow:hidden
+}
+.relay-advanced summary{
+  list-style:none;cursor:pointer;padding:12px 14px;font-size:9px;font-weight:800;color:#8f9aaa
+}
+.relay-advanced summary::-webkit-details-marker{display:none}
+.relay-advanced summary::after{content:"⌄";float:right;color:#5f6a79}
+.relay-advanced[open] summary::after{content:"⌃"}
+.relay-route-card-advanced{margin:0;border:0;border-top:1px solid rgba(255,255,255,.05);border-radius:0;background:rgba(0,0,0,.10)}
+.relay-consumer-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.relay-consumer-facts article{
+  display:grid;grid-template-columns:30px 1fr;gap:9px;padding:12px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.024)
+}
+.relay-consumer-facts article>span{
+  width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:rgba(69,215,139,.065);color:#7fe3b2;font-size:9px;font-weight:900
+}
+.relay-consumer-facts strong{display:block;font-size:9.5px}
+.relay-consumer-facts small{display:block;margin-top:4px;color:var(--muted);font-size:8px;line-height:1.4}
+.relay-disable-steps{display:grid;gap:8px;margin:14px 0}
+.relay-disable-steps>div{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.065);border-radius:14px;background:rgba(255,255,255,.025)}
+.relay-disable-steps b{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:rgba(255,80,99,.07);color:#ff8d9a;font-size:9px}
+.relay-disable-steps strong{display:block;font-size:9px}.relay-disable-steps small{display:block;margin-top:3px;color:#778292;font-size:7.5px}
+.relay-disable-note{color:var(--muted);font-size:8px;line-height:1.45}
+.relay-global-badge b{letter-spacing:.075em}
+@media(max-width:520px){
+  .relay-consumer-facts{grid-template-columns:1fr}
+  .relay-simple-status{grid-template-columns:1fr}
+  .relay-simple-status button{width:100%}
+}

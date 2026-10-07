@@ -30,8 +30,8 @@ test('home feature cards explain value before opening advanced surfaces', () => 
   assert.match(app, /Зачем/);
   assert.match(app, /Что нужно/);
   assert.match(app, /function allFeaturesSheet/);
-  assert.match(relay, /PRIVATE RELAY/);
-  assert.match(relay, /Резервный маршрут только для Telegram/);
+  assert.match(relay, /ЗАЩИТА TELEGRAM/);
+  assert.match(relay, /VETO сам выбирает рабочий путь только для Telegram/);
 });
 
 test('connection wizard recommends phone plus code on the current phone', () => {

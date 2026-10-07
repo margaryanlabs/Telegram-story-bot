@@ -10,7 +10,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261007-veto-relay-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v4" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v5" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -142,25 +142,25 @@
         </button>
       </section>
 
-      <section class="relay-home-primary" id="relayHomePrimary" aria-label="VETO Private Relay">
-        <span class="relay-global-badge" id="relayGlobalBadge" hidden><i></i><b>RELAY ON</b><small id="relayGlobalBadgeRoute">AUTO</small></span>
+      <section class="relay-home-primary relay-consumer-card" id="relayHomePrimary" aria-label="Защита Telegram">
+        <span class="relay-global-badge" id="relayGlobalBadge" hidden><i></i><b>TELEGRAM PROTECTED</b><small id="relayGlobalBadgeRoute">AUTO</small></span>
         <div class="relay-home-primary-copy">
-          <span class="relay-home-kicker"><i></i> PRIVATE RELAY</span>
-          <strong id="relayHomeTitle">Telegram не подключается?</strong>
-          <p id="relayHomeText">Включи отдельный маршрут только для Telegram. Остальной интернет телефона не меняется.</p>
+          <span class="relay-home-kicker"><i></i> VETO CONNECT</span>
+          <strong id="relayHomeTitle">Telegram работает нестабильно?</strong>
+          <p id="relayHomeText">Включи защиту одним нажатием. VETO сам выберет рабочий путь только для Telegram.</p>
           <div class="relay-home-meta">
-            <span>Telegram only</span>
-            <span>Auto route</span>
-            <span id="homeRelayPrimaryState">Mesh готов</span>
+            <span>Только Telegram</span>
+            <span>Автовыбор</span>
+            <span id="homeRelayPrimaryState">Готово к включению</span>
           </div>
         </div>
         <button class="relay-home-primary-button" id="homeRelayPrimaryButton" type="button" data-open-screen="relay">
-          <span class="relay-home-primary-icon">⇄</span>
-          <span><b id="homeRelayPrimaryButtonTitle">Включить Telegram Relay</b><small id="homeRelayPrimaryButtonText">Открыть Private Relay</small></span>
+          <span class="relay-home-primary-icon">◉</span>
+          <span><b id="homeRelayPrimaryButtonTitle">Защитить Telegram</b><small id="homeRelayPrimaryButtonText">Одно нажатие</small></span>
           <em>›</em>
         </button>
         <button class="relay-emergency-home" id="relayEmergencyHomeButton" type="button">
-          Telegram вообще не открывается? <b>Emergency Access ↗</b>
+          Telegram совсем не открывается? <b>Аварийный доступ ↗</b>
         </button>
       </section>
 
@@ -196,7 +196,7 @@
         </button>
         <button class="capability-card" id="homeRelayCard" type="button" data-feature-help="relay">
           <span class="capability-icon">⇄</span>
-          <span class="capability-copy"><small>Relay</small><strong id="homeRelayState">Telegram-only маршрут</strong><span>Резервный доступ для Telegram без VPN на весь телефон.</span></span>
+          <span class="capability-copy"><small>Connect</small><strong id="homeRelayState">Защита Telegram</strong><span>Отдельный путь только для Telegram — без изменений для остальных приложений.</span></span>
           <span class="capability-chevron">?</span>
         </button>
         <button class="capability-card" id="homeAutomationsCard" type="button" data-feature-help="automations">
@@ -249,7 +249,7 @@
           <button type="button" data-open-screen="stories"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
           <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
           <button type="button" data-open-screen="ghost"><span>◌</span><strong>Privacy</strong><small>Anti-Delete · Inbox · Vault</small></button>
-          <button type="button" data-open-screen="relay"><span>⇄</span><strong>Private Relay</strong><small>Telegram-only · Auto route</small></button>
+          <button type="button" data-open-screen="relay"><span>◉</span><strong>Защита Telegram</strong><small>Одно нажатие · Автовыбор</small></button>
         </div>
       </section>
 
@@ -1098,85 +1098,85 @@
     </section>
 
 
-    <section class="screen relay-screen" data-screen="relay">
+    <section class="screen relay-screen relay-consumer-screen" data-screen="relay">
       <div class="page-head relay-page-head">
-        <span class="kicker">VETO RELAY MESH</span>
-        <h1>Private Relay</h1>
-        <p>Отдельный резервный маршрут только для Telegram. Остальной интернет телефона не идёт через VETO.</p>
+        <span class="kicker">VETO CONNECT</span>
+        <h1>Защита Telegram</h1>
+        <p>Никаких серверов и настроек. VETO сам проверит доступные пути и выберет лучший.</p>
       </div>
 
-      <section class="relay-hero" id="relayHero">
+      <section class="relay-hero relay-consumer-hero" id="relayHero">
         <div class="relay-orbit" aria-hidden="true">
           <div class="relay-core"><img src="/veto-telegram-mark.svg" alt="" /></div>
           <i></i><i></i><i></i>
           <span></span><span></span><span></span>
         </div>
         <div class="relay-status-row">
-          <span class="relay-status-pill" id="relayStatusPill"><i></i><span>Проверяю Relay</span></span>
-          <span class="relay-mode-badge">TELEGRAM ONLY</span>
+          <span class="relay-status-pill" id="relayStatusPill"><i></i><span>Проверяю доступ</span></span>
+          <span class="relay-mode-badge">ТОЛЬКО TELEGRAM</span>
         </div>
-        <h2 id="relayPowerState">Relay выключен</h2>
-        <p id="relayStateText">VETO проверит доступные маршруты и передаст лучший в Telegram. Финальное включение подтверждает сам Telegram.</p>
-        <button class="relay-power-button" id="relayPowerButton" type="button">
-          <span class="relay-power-icon">⌁</span>
-          <span><strong>Подключить Telegram Relay</strong><small>Автоматически выбрать лучший маршрут</small></span>
+        <h2 id="relayPowerState">Защита выключена</h2>
+        <p id="relayStateText">Нажми один раз — VETO сам выберет рабочий путь и передаст его Telegram.</p>
+        <button class="relay-power-button relay-consumer-power" id="relayPowerButton" type="button">
+          <span class="relay-power-icon">◉</span>
+          <span><strong>Защитить Telegram</strong><small>VETO всё выберет автоматически</small></span>
         </button>
         <button class="relay-disable-button" id="relayDisableButton" type="button" hidden>
-          <span>○</span><strong>Выключить Relay</strong><small>Открыть Telegram → Use Proxy</small>
+          <span>○</span><strong>Отключить защиту</strong><small>Покажем 3 простых шага</small>
         </button>
         <div class="relay-connected-proof" id="relayConnectedProof" hidden>
           <i></i>
-          <div><strong>ПОДКЛЮЧЕНО · VETO RELAY</strong><small>Состояние VETO сохранено на устройстве. Фактический proxy-status показывает Telegram.</small></div>
+          <div><strong>TELEGRAM PROTECTED</strong><small>Защита сохранена на этом устройстве.</small></div>
         </div>
       </section>
 
       <div class="relay-success-overlay" id="relaySuccessOverlay" hidden>
         <div class="relay-success-ring"><span>✓</span></div>
-        <strong>VETO RELAY ON</strong>
-        <p>Telegram-only маршрут включён в VETO</p>
+        <strong>TELEGRAM PROTECTED</strong>
+        <p>Защита Telegram включена</p>
       </div>
 
-      <section class="relay-route-card">
-        <div class="block-head compact">
-          <div><span class="kicker">АКТИВНЫЙ МАРШРУТ</span><h2>Route Intelligence</h2></div>
-          <button class="mini-chip" id="relayRefreshButton" type="button">↻ Проверить</button>
+      <section class="relay-simple-status">
+        <div>
+          <span>СОСТОЯНИЕ</span>
+          <strong id="relaySimpleStatus">Готово к включению</strong>
+          <small id="relaySimpleStatusText">VETO автоматически выберет лучший доступный путь.</small>
         </div>
-        <div class="relay-route-grid">
-          <article><span>Узел</span><strong id="relayRouteLabel">Автовыбор</strong><small id="relayRouteId">ещё не выбран</small></article>
-          <article><span>Регион</span><strong id="relayRouteRegion">AUTO</strong><small>VETO Mesh</small></article>
-          <article><span>Latency</span><strong id="relayRouteLatency">—</strong><small>edge probe</small></article>
-          <article><span>Health</span><strong id="relayRouteHealth">—</strong><small>не статус Telegram</small></article>
-        </div>
-        <button class="relay-rotate-button" id="relayRotateButton" type="button" hidden>⇄ Сменить маршрут</button>
+        <button id="relayRefreshButton" type="button">↻ Проверить</button>
       </section>
 
-      <section class="relay-truth-grid">
-        <article>
-          <span>01</span><div><strong>Только Telegram</strong><small>Relay использует нативный MTProxy Telegram. Браузер, банки и другие приложения не отправляются через него.</small></div>
-        </article>
-        <article>
-          <span>02</span><div><strong>Автовыбор</strong><small>VETO проверяет пул узлов и сначала предлагает доступный маршрут с лучшим score.</small></div>
-        </article>
-        <article>
-          <span>03</span><div><strong>Failover вручную</strong><small>Если конкретная сеть блокирует текущий узел, нажми «Сменить маршрут» — VETO выдаст другой.</small></div>
-        </article>
-        <article>
-          <span>04</span><div><strong>Без фальшивого Connected</strong><small>Mini App видит, что маршрут выдан. Только Telegram может подтвердить, что proxy действительно включён на устройстве.</small></div>
-        </article>
-        <article>
-          <span>05</span><div><strong>Voice / Video — best effort</strong><small>Текущий MTProxy оптимизирован для Telegram data traffic. Стабильные звонки не гарантируются до отдельного Voice Relay.</small></div>
-        </article>
+      <details class="relay-advanced" id="relayAdvanced">
+        <summary>Расширенные настройки</summary>
+        <div class="relay-route-card relay-route-card-advanced">
+          <div class="block-head compact">
+            <div><span class="kicker">ТЕХНИЧЕСКИЕ ДЕТАЛИ</span><h2>Текущий путь</h2></div>
+          </div>
+          <div class="relay-route-grid">
+            <article><span>Сервер</span><strong id="relayRouteLabel">Автовыбор</strong><small id="relayRouteId">ещё не выбран</small></article>
+            <article><span>Регион</span><strong id="relayRouteRegion">AUTO</strong><small>VETO</small></article>
+            <article><span>Задержка</span><strong id="relayRouteLatency">—</strong><small>проверка VETO</small></article>
+            <article><span>Состояние</span><strong id="relayRouteHealth">—</strong><small>не статус Telegram</small></article>
+          </div>
+          <button class="relay-rotate-button" id="relayRotateButton" type="button" hidden>⇄ Попробовать другой путь</button>
+        </div>
+      </details>
+
+      <section class="relay-consumer-facts">
+        <article><span>✓</span><div><strong>Только Telegram</strong><small>Браузер, банки и остальные приложения работают как раньше.</small></div></article>
+        <article><span>↻</span><div><strong>Запасной путь</strong><small>Если текущий сервер перестал отвечать, VETO предложит или включит запасной при проверке.</small></div></article>
+        <article><span>●</span><div><strong>Статус сохраняется</strong><small>Закрыл VETO и вернулся — зелёный статус останется.</small></div></article>
+        <article><span>!</span><div><strong>Звонки — best effort</strong><small>Для стабильных voice/video нужен отдельный Voice Relay.</small></div></article>
       </section>
 
       <section class="relay-emergency-card">
-        <div><span>EMERGENCY ACCESS</span><strong>Telegram не открывается совсем?</strong><p>Открой внешний VETO Relay в обычном браузере. Он работает без запуска Mini App и сохраняет резервные маршруты на устройстве.</p></div>
-        <button id="relayEmergencyButton" type="button">Открыть в браузере ↗</button>
+        <div><span>АВАРИЙНЫЙ ДОСТУП</span><strong>Telegram не открывается совсем?</strong><p>Открой VETO Connect в обычном браузере и включи защиту оттуда.</p></div>
+        <button id="relayEmergencyButton" type="button">Открыть ↗</button>
       </section>
 
       <section class="relay-note">
-        <span>PRIVACY</span>
-        <strong>VETO Relay не получает содержимое твоих Telegram-сообщений.</strong>
-        <p>Этот экран управляет только выдачей proxy-маршрута. Шифрование Telegram и статус подключения остаются на стороне Telegram.</p>
+        <span>ПРИВАТНОСТЬ</span>
+        <strong>VETO не читает содержимое твоих Telegram-сообщений.</strong>
+        <p>Мы управляем только выбором пути подключения. Реальный статус proxy показывает сам Telegram.</p>
       </section>
     </section>
 
@@ -1221,7 +1221,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/app.js?v=20261007-veto-relay-v1"></script>
-  <script src="/relay-module.js?v=20261007-veto-relay-v4"></script>
+  <script src="/relay-module.js?v=20261007-veto-relay-v5"></script>
   <script src="/privacy.js?v=20261007-veto-telegram-v2"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
