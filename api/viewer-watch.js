@@ -510,13 +510,27 @@ export default async function handler(req, res) {
             }
           }
 
-          await updateViewerSession(ownerId, {
-            last_poll_at: new Date().toISOString(),
-            last_error: null,
-            updated_at: new Date().toISOString(),
-          }).catch(() => {});
+          let heartbeatSaved = true;
+          try {
+            await updateViewerSession(ownerId, {
+              last_poll_at: new Date().toISOString(),
+              last_error: null,
+              updated_at: new Date().toISOString(),
+            });
+          } catch (heartbeatError) {
+            heartbeatSaved = false;
+            console.warn('Viewer Sync heartbeat write failed', {
+              telegram_user_id: ownerId,
+              error: heartbeatError?.message || String(heartbeatError),
+            });
+          }
 
-          results.push({ round: round + 1, ownerId, stories: ownerResult });
+          results.push({
+            round: round + 1,
+            ownerId,
+            stories: ownerResult,
+            heartbeatSaved,
+          });
         } catch (error) {
           const description = error?.message || String(error);
           results.push({ round: round + 1, ownerId, error: description });

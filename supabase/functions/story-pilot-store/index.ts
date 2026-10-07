@@ -20,9 +20,29 @@ const db = createClient(SUPABASE_URL, SERVICE_KEY, {
 const directSql = SUPABASE_DB_URL ? postgres(SUPABASE_DB_URL, {
   prepare: false,
   max: 1,
-  idle_timeout: 3,
-  connect_timeout: 5,
+  // Keep one lightweight connection warm across the one-minute background cadence.
+  // Core operations automatically fall back to PostgREST when direct Postgres is unhealthy.
+  idle_timeout: 90,
+  connect_timeout: 6,
 }) : null;
+
+let directSqlDegradedUntil = 0;
+const DIRECT_SQL_CIRCUIT_MS = 60_000;
+const DIRECT_SQL_PREFERRED = (Deno.env.get("STORY_PILOT_DIRECT_SQL_PREFERRED") ?? "").toLowerCase() === "true";
+
+function useDirectSql() {
+  return Boolean(directSql)
+    && DIRECT_SQL_PREFERRED
+    && Date.now() >= directSqlDegradedUntil;
+}
+
+function openDirectSqlCircuit(error: unknown) {
+  directSqlDegradedUntil = Math.max(directSqlDegradedUntil, Date.now() + DIRECT_SQL_CIRCUIT_MS);
+  console.warn("story-pilot-store direct database circuit opened", {
+    retry_after_ms: DIRECT_SQL_CIRCUIT_MS,
+    error: error instanceof Error ? error.message : String(error),
+  });
+}
 
 function json(value: unknown, status = 200) {
   return new Response(JSON.stringify(value), {
@@ -93,7 +113,7 @@ function privacyShape(row: any) {
 
 async function opGetPrivacySettings(args: any) {
   const userId = String(args.userId);
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       select anti_delete, edit_history, ghost_inbox, ghost_focus, notify_deletes, notify_edits, retention_days
       from public.story_pilot_privacy_settings
@@ -282,7 +302,7 @@ async function opFinalizePrivacyMediaArchive(args: any) {
     patch.media_archived_at = new Date().toISOString();
   }
 
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       update public.story_pilot_messages
       set media_archive_status = ${patch.media_archive_status},
@@ -349,7 +369,7 @@ async function opUpdatePrivacySettings(args: any) {
   };
 
   let saved;
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       insert into public.story_pilot_privacy_settings
         (telegram_user_id, anti_delete, edit_history, ghost_inbox, ghost_focus, notify_deletes, notify_edits, retention_days, updated_at)
@@ -576,7 +596,7 @@ async function opCaptureBusinessMessage(args: any) {
 
   if (!normalized.content_hash) throw new Error("missing_message_hash");
 
-  if (directSql) {
+  if (useDirectSql()) {
     await directSql`
       insert into public.story_pilot_messages (
         telegram_user_id, business_connection_id, chat_id, message_id, direction,
@@ -638,7 +658,7 @@ async function opCaptureBusinessMessage(args: any) {
       media_unique_id: normalized.media_unique_id,
       observed_at: now,
     };
-    if (directSql) {
+    if (useDirectSql()) {
       await directSql`
         insert into public.story_pilot_message_versions (
           telegram_user_id, chat_id, message_id, content_hash, event_type,
@@ -695,7 +715,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
   const settings = await opGetPrivacySettings({ userId });
 
   let beforeRows: any[] = [];
-  if (directSql) {
+  if (useDirectSql()) {
     beforeRows = await directSql`
       select message_id, sender_display_name, sender_username, chat_title,
              text_content, caption, media_type, direction, media_storage_path,
@@ -768,7 +788,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
     );
 
     let affected = 0;
-    if (directSql) {
+    if (useDirectSql()) {
       const rows = await directSql`
         delete from public.story_pilot_messages
         where telegram_user_id = ${userId}::bigint
@@ -798,7 +818,7 @@ async function opMarkBusinessMessagesDeleted(args: any) {
 
   const deletedAt = args.deletedAt || new Date().toISOString();
   let affected = 0;
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       update public.story_pilot_messages
       set deleted_at = ${deletedAt}::timestamptz,
@@ -930,7 +950,7 @@ async function opListPrivacyThreads(args: any) {
   const cutoff = new Date(Date.now() - settings.retentionDays * 86400000).toISOString();
   let rows: any[] = [];
 
-  if (directSql) {
+  if (useDirectSql()) {
     rows = await directSql`
       select chat_id, message_id, chat_title, direction, text_content, caption, media_type,
              media_archive_status, sent_at, edited_at, deleted_at,
@@ -1059,7 +1079,7 @@ async function opListDeletedFeed(args: any) {
   const cutoff = new Date(Date.now() - settings.retentionDays * 86400000).toISOString();
   let rows: any[] = [];
 
-  if (directSql) {
+  if (useDirectSql()) {
     rows = await directSql`
       select chat_id, message_id, direction, sender_user_id, sender_username,
              sender_display_name, chat_title, text_content, caption, media_type,
@@ -1115,7 +1135,7 @@ async function opListPrivacyMessages(args: any) {
   const cutoff = new Date(Date.now() - settings.retentionDays * 86400000).toISOString();
   let messages: any[] = [];
 
-  if (directSql) {
+  if (useDirectSql()) {
     messages = await directSql`
       select chat_id, message_id, direction, sender_user_id, sender_username,
              sender_display_name, chat_title, text_content, caption, media_type,
@@ -1188,7 +1208,7 @@ async function opGetMessageVersions(args: any) {
   const settings = await opGetPrivacySettings({ userId });
   if (!settings.editHistory) return { settings, versions: [] };
 
-  if (directSql) {
+  if (useDirectSql()) {
     const versions = await directSql`
       select event_type, text_content, caption, media_type, observed_at
       from public.story_pilot_message_versions
@@ -1253,64 +1273,24 @@ function encodeB64Url(bytes: Uint8Array) {
 }
 
 async function ensureViewerCryptoKey(environment: string) {
-  if (!directSql) throw new Error("viewer_crypto_direct_database_required");
-
-  const current = await directSql`
-    select key_id, secret_value, status
-    from story_pilot_private.crypto_keys
-    where purpose = 'viewer_sync_session'
-      and environment = ${environment}
-      and status = 'active'
-    order by created_at desc
-    limit 1
-  `;
-  if (current[0]?.key_id && current[0]?.secret_value) return current[0];
-
-  const keyId = `viewer-sync-${environment}-${crypto.randomUUID()}`;
-  try {
-    await directSql`
-      insert into story_pilot_private.crypto_keys
-        (key_id, purpose, environment, secret_value, status)
-      values (
-        ${keyId},
-        'viewer_sync_session',
-        ${environment},
-        encode(gen_random_bytes(32), 'base64'),
-        'active'
-      )
-    `;
-  } catch {
-    // A concurrent request can win the unique active-key race.
-  }
-
-  const created = await directSql`
-    select key_id, secret_value, status
-    from story_pilot_private.crypto_keys
-    where purpose = 'viewer_sync_session'
-      and environment = ${environment}
-      and status = 'active'
-    order by created_at desc
-    limit 1
-  `;
-  if (!created[0]?.key_id || !created[0]?.secret_value) {
+  const r = await db.rpc("story_pilot_get_or_create_viewer_crypto_key", {
+    p_environment: environment,
+  });
+  const row = need(r as any) as any;
+  if (!row?.key_id || !row?.secret_value) {
     throw new Error("viewer_crypto_active_key_missing");
   }
-  return created[0];
+  return row;
 }
 
 async function viewerCryptoKey(environment: string, keyId: string) {
-  if (!directSql) throw new Error("viewer_crypto_direct_database_required");
-  const rows = await directSql`
-    select key_id, secret_value, status
-    from story_pilot_private.crypto_keys
-    where purpose = 'viewer_sync_session'
-      and environment = ${environment}
-      and key_id = ${keyId}
-      and status in ('active', 'retired')
-    limit 1
-  `;
-  if (!rows[0]?.secret_value) throw new Error("viewer_crypto_key_version_unavailable");
-  return rows[0];
+  const r = await db.rpc("story_pilot_get_viewer_crypto_key", {
+    p_environment: environment,
+    p_key_id: keyId,
+  });
+  const row = need(r as any) as any;
+  if (!row?.secret_value) throw new Error("viewer_crypto_key_version_unavailable");
+  return row;
 }
 
 async function importViewerAesKey(secret: string, keyId: string) {
@@ -1429,7 +1409,7 @@ async function opGetBusinessConnectionState(args: any) {
   const userId = String(args?.userId || "");
   if (!userId) throw new Error("business_connection_user_required");
 
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       select telegram_user_id, business_connection_id, is_enabled,
              can_manage_stories, can_read_messages, source,
@@ -1482,7 +1462,7 @@ async function opUpsertBusinessConnectionState(args: any) {
   const source = String(row.source || "runtime").slice(0, 64);
   const lastVerifiedAt = row.lastVerifiedAt || row.last_verified_at || new Date().toISOString();
 
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       insert into public.story_pilot_business_connections (
         telegram_user_id, business_connection_id, is_enabled,
@@ -1553,7 +1533,7 @@ async function opUpsertBusinessConnectionState(args: any) {
 
 async function opGetSession(args: any) {
   const userId = String(args.userId);
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       select *
       from public.story_pilot_viewer_sessions
@@ -1573,7 +1553,7 @@ async function opGetSession(args: any) {
 async function opUpsertSession(args: any) {
   const row = args.row || {};
   const userId = String(row.telegram_user_id || "");
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       insert into public.story_pilot_viewer_sessions (
         telegram_user_id, session_ciphertext, status, telegram_account_user_id,
@@ -1617,42 +1597,13 @@ async function opUpsertSession(args: any) {
 }
 
 async function opUpdateSession(args: any) {
-  const userId = String(args.userId);
-  const patch = args.patch || {};
-  if (directSql) {
-    if (typeof patch.session_ciphertext === "string" && patch.session_ciphertext) {
-      const rows = await directSql`
-        update public.story_pilot_viewer_sessions
-        set
-          session_ciphertext = ${String(patch.session_ciphertext)},
-          updated_at = coalesce(${patch.updated_at || null}::timestamptz, now())
-        where telegram_user_id = ${userId}::bigint
-        returning *
-      `;
-      return rows[0] || null;
-    }
-    const patchJson = JSON.stringify(patch);
-    const rows = await directSql`
-      with p as (select ${patchJson}::jsonb as j)
-      update public.story_pilot_viewer_sessions s
-      set
-        session_ciphertext = case when p.j ? 'session_ciphertext' then p.j->>'session_ciphertext' else s.session_ciphertext end,
-        status = case when p.j ? 'status' then p.j->>'status' else s.status end,
-        telegram_account_user_id = case when p.j ? 'telegram_account_user_id' then nullif(p.j->>'telegram_account_user_id','')::bigint else s.telegram_account_user_id end,
-        telegram_account_username = case when p.j ? 'telegram_account_username' then p.j->>'telegram_account_username' else s.telegram_account_username end,
-        telegram_account_first_name = case when p.j ? 'telegram_account_first_name' then p.j->>'telegram_account_first_name' else s.telegram_account_first_name end,
-        last_poll_at = case when p.j ? 'last_poll_at' then nullif(p.j->>'last_poll_at','')::timestamptz else s.last_poll_at end,
-        last_error = case when p.j ? 'last_error' then p.j->>'last_error' else s.last_error end,
-        updated_at = case when p.j ? 'updated_at' then coalesce(nullif(p.j->>'updated_at','')::timestamptz, now()) else now() end,
-        notify_enabled = case when p.j ? 'notify_enabled' then (p.j->>'notify_enabled')::boolean else s.notify_enabled end,
-        notify_anonymous_gap = case when p.j ? 'notify_anonymous_gap' then (p.j->>'notify_anonymous_gap')::boolean else s.notify_anonymous_gap end
-      from p
-      where s.telegram_user_id = ${userId}::bigint
-      returning s.*
-    `;
-    return rows[0] || null;
-  }
+  const userId = String(args.userId || "");
+  const patch = args.patch && typeof args.patch === "object" ? args.patch : {};
+  if (!userId) throw new Error("viewer_session_user_required");
 
+  // Heartbeats and session status are correctness-critical. Use the service-role
+  // Data API here instead of direct Postgres so a successful call always applies
+  // the full patch (including last_poll_at), regardless of direct DB health.
   const r = await db.from("story_pilot_viewer_sessions")
     .update(patch)
     .eq("telegram_user_id", userId)
@@ -1663,7 +1614,7 @@ async function opUpdateSession(args: any) {
 
 async function opDeleteSession(args: any) {
   const userId = String(args.userId);
-  if (directSql) {
+  if (useDirectSql()) {
     await directSql`
       delete from public.story_pilot_viewer_sessions
       where telegram_user_id = ${userId}::bigint
@@ -1679,7 +1630,7 @@ async function opDeleteSession(args: any) {
 
 async function opGetChallenge(args: any) {
   const userId = String(args.userId);
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       select *
       from public.story_pilot_viewer_auth_challenges
@@ -1699,7 +1650,7 @@ async function opGetChallenge(args: any) {
 async function opSaveChallenge(args: any) {
   const row = args.row || {};
   const userId = String(row.telegram_user_id || "");
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       insert into public.story_pilot_viewer_auth_challenges
         (telegram_user_id, challenge_ciphertext, stage, created_at, expires_at)
@@ -1726,7 +1677,7 @@ async function opSaveChallenge(args: any) {
 
 async function opDeleteChallenge(args: any) {
   const userId = String(args.userId);
-  if (directSql) {
+  if (useDirectSql()) {
     await directSql`
       delete from public.story_pilot_viewer_auth_challenges
       where telegram_user_id = ${userId}::bigint
@@ -1744,7 +1695,7 @@ async function opTrackStory(args: any) {
   const row = args.row || {};
   const userId = String(row.telegram_user_id || "");
   const storyId = Number(row.story_id || 0);
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       insert into public.story_pilot_stories (
         telegram_user_id, story_id, posted_at, expires_at, watch_until, audience,
@@ -1812,7 +1763,7 @@ async function opTrackStory(args: any) {
 async function opMarkStoryDeleted(args: any) {
   const userId = String(args.userId);
   const storyId = Number(args.storyId);
-  if (directSql) {
+  if (useDirectSql()) {
     await directSql`
       update public.story_pilot_stories
       set active = false, deleted_at = now()
@@ -1850,7 +1801,7 @@ async function opMarkStoryDeleted(args: any) {
 
 async function opListActiveSessions(args: any) {
   const limit = Math.max(1, Math.min(50, Number(args.limit || 10)));
-  if (directSql) {
+  if (useDirectSql()) {
     return await directSql`
       select *
       from public.story_pilot_viewer_sessions
@@ -1871,7 +1822,7 @@ async function opListActiveSessions(args: any) {
 async function opListStoryArchive(args: any) {
   const userId = String(args.userId);
   const limit = Math.max(1, Math.min(100, Number(args.limit || 50)));
-  if (directSql) {
+  if (useDirectSql()) {
     return await directSql`
       select story_id, posted_at, audience, protected, active, deleted_at,
              last_views_count, last_identified_count, last_reactions_count,
@@ -1894,7 +1845,7 @@ async function opListStoryArchive(args: any) {
 async function opListStories(args: any) {
   const userId = String(args.userId);
   const limit = Math.max(1, Math.min(20, Number(args.limit || 8)));
-  if (directSql) {
+  if (useDirectSql()) {
     return await directSql`
       select *
       from public.story_pilot_stories
@@ -1920,7 +1871,7 @@ async function opUpdateStoryStats(args: any) {
   const userId = String(args.userId);
   const storyId = Number(args.storyId);
   const patch = args.patch || {};
-  if (directSql) {
+  if (useDirectSql()) {
     const patchJson = JSON.stringify(patch);
     const rows = await directSql`
       with p as (select ${patchJson}::jsonb as j)
@@ -1951,7 +1902,7 @@ async function opUpdateStoryStats(args: any) {
 async function opListViewerRows(args: any) {
   const userId = String(args.userId);
   const storyId = Number(args.storyId);
-  if (directSql) {
+  if (useDirectSql()) {
     return await directSql`
       select *
       from public.story_pilot_viewers
@@ -1974,7 +1925,7 @@ async function opUpsertViewer(args: any) {
   const userId = String(row.telegram_user_id || "");
   const storyId = Number(row.story_id || 0);
   const viewerId = String(row.viewer_user_id || "");
-  if (directSql) {
+  if (useDirectSql()) {
     const reactionJson = row.reaction_json == null ? null : JSON.stringify(row.reaction_json);
     const rows = await directSql`
       insert into public.story_pilot_viewers (
@@ -2053,7 +2004,7 @@ async function opDeleteViewer(args: any) {
   const userId = String(args.userId);
   const storyId = Number(args.storyId);
   const viewerUserId = String(args.viewerUserId);
-  if (directSql) {
+  if (useDirectSql()) {
     await directSql`
       delete from public.story_pilot_viewers
       where telegram_user_id = ${userId}::bigint
@@ -2073,7 +2024,7 @@ async function opDeleteViewer(args: any) {
 
 async function opInsertSnapshot(args: any) {
   const row = args.row || {};
-  if (directSql) {
+  if (useDirectSql()) {
     await directSql`
       insert into public.story_pilot_viewer_snapshots (
         telegram_user_id, story_id, observed_at, total_views,
@@ -2096,7 +2047,7 @@ async function opGetStoryData(args: any) {
   const userId = String(args.userId);
   const storyId = Number(args.storyId);
 
-  if (directSql) {
+  if (useDirectSql()) {
     const stories = await directSql`
       select *
       from public.story_pilot_stories
@@ -2403,13 +2354,20 @@ function automationRuleKey(value: unknown) {
 async function opGetAutomationSettings(args: any) {
   const userId = String(args?.userId || "");
   if (!userId) throw new Error("automation_user_required");
-  if (!directSql) throw new Error("direct_database_unavailable");
 
-  const rows = await directSql`
-    select rule_key, enabled, updated_at
-    from public.story_pilot_automation_rules
-    where telegram_user_id = ${userId}::bigint
-  `;
+  let rows: any[] = [];
+  if (useDirectSql()) {
+    rows = await directSql`
+      select rule_key, enabled, updated_at
+      from public.story_pilot_automation_rules
+      where telegram_user_id = ${userId}::bigint
+    `;
+  } else {
+    const r = await db.from("story_pilot_automation_rules")
+      .select("rule_key,enabled,updated_at")
+      .eq("telegram_user_id", userId);
+    rows = need(r as any) || [];
+  }
 
   const rules: Record<string, any> = {};
   for (const [ruleKey, defaultEnabled] of Object.entries(AUTOMATION_RULE_DEFAULTS)) {
@@ -2427,25 +2385,41 @@ async function opGetAutomationSettings(args: any) {
 async function opUpdateAutomationSettings(args: any) {
   const userId = String(args?.userId || "");
   if (!userId) throw new Error("automation_user_required");
-  if (!directSql) throw new Error("direct_database_unavailable");
 
   const patch = args?.rules && typeof args.rules === "object" ? args.rules : {};
+  const normalizedRows: any[] = [];
+
   for (const [rawKey, rawValue] of Object.entries(patch)) {
     const ruleKey = automationRuleKey(rawKey);
     const enabled = typeof rawValue === "object" && rawValue !== null
       ? Boolean((rawValue as any).enabled)
       : Boolean(rawValue);
 
-    await directSql`
-      insert into public.story_pilot_automation_rules (
-        telegram_user_id, rule_key, enabled, updated_at
-      ) values (
-        ${userId}::bigint, ${ruleKey}, ${enabled}, now()
-      )
-      on conflict (telegram_user_id, rule_key) do update set
-        enabled = excluded.enabled,
-        updated_at = excluded.updated_at
-    `;
+    normalizedRows.push({
+      telegram_user_id: userId,
+      rule_key: ruleKey,
+      enabled,
+      updated_at: new Date().toISOString(),
+    });
+  }
+
+  if (useDirectSql()) {
+    for (const row of normalizedRows) {
+      await directSql`
+        insert into public.story_pilot_automation_rules (
+          telegram_user_id, rule_key, enabled, updated_at
+        ) values (
+          ${row.telegram_user_id}::bigint, ${row.rule_key}, ${row.enabled}, ${row.updated_at}::timestamptz
+        )
+        on conflict (telegram_user_id, rule_key) do update set
+          enabled = excluded.enabled,
+          updated_at = excluded.updated_at
+      `;
+    }
+  } else if (normalizedRows.length) {
+    const r = await db.from("story_pilot_automation_rules")
+      .upsert(normalizedRows, { onConflict: "telegram_user_id,rule_key" });
+    need(r as any);
   }
 
   return opGetAutomationSettings({ userId });
@@ -2455,20 +2429,52 @@ async function opListAutomationJobs(args: any) {
   const userId = String(args?.userId || "");
   const limit = Math.max(1, Math.min(50, Number(args?.limit || 20)));
   if (!userId) throw new Error("automation_user_required");
-  if (!directSql) throw new Error("direct_database_unavailable");
 
-  const rows = await directSql`
-    select
-      j.id, j.rule_key, j.status, j.attempts, j.created_at,
-      j.sent_at, j.last_error,
-      e.event_type, e.occurred_at, e.story_id, e.chat_id,
-      e.actor_username, e.actor_display_name, e.payload
-    from public.story_pilot_automation_jobs j
-    join public.story_pilot_events e on e.id = j.event_id
-    where j.telegram_user_id = ${userId}::bigint
-    order by j.created_at desc
-    limit ${limit}
-  `;
+  let rows: any[] = [];
+
+  if (useDirectSql()) {
+    rows = await directSql`
+      select
+        j.id, j.rule_key, j.status, j.attempts, j.created_at,
+        j.sent_at, j.last_error,
+        e.event_type, e.occurred_at, e.story_id, e.chat_id,
+        e.actor_username, e.actor_display_name, e.payload
+      from public.story_pilot_automation_jobs j
+      join public.story_pilot_events e on e.id = j.event_id
+      where j.telegram_user_id = ${userId}::bigint
+      order by j.created_at desc
+      limit ${limit}
+    `;
+  } else {
+    const jobsResult = await db.from("story_pilot_automation_jobs")
+      .select("id,event_id,rule_key,status,attempts,created_at,sent_at,last_error")
+      .eq("telegram_user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    const jobs = need(jobsResult as any) || [];
+    if (!jobs.length) return [];
+
+    const eventIds = [...new Set(jobs.map((job: any) => String(job.event_id)).filter(Boolean))];
+    const eventsResult = await db.from("story_pilot_events")
+      .select("id,event_type,occurred_at,story_id,chat_id,actor_username,actor_display_name,payload")
+      .in("id", eventIds);
+    const events = need(eventsResult as any) || [];
+    const byEventId = new Map(events.map((event: any) => [String(event.id), event]));
+
+    rows = jobs.map((job: any) => {
+      const event = byEventId.get(String(job.event_id)) || {};
+      return {
+        ...job,
+        event_type: event.event_type || null,
+        occurred_at: event.occurred_at || null,
+        story_id: event.story_id ?? null,
+        chat_id: event.chat_id ?? null,
+        actor_username: event.actor_username || null,
+        actor_display_name: event.actor_display_name || null,
+        payload: event.payload || {},
+      };
+    });
+  }
 
   return rows.map((row: any) => ({
     id: String(row.id),
@@ -2492,58 +2498,63 @@ async function opListAutomationJobs(args: any) {
 
 async function opClaimAutomationJobs(args: any) {
   const limit = Math.max(1, Math.min(25, Number(args?.limit || 10)));
-  if (!directSql) throw new Error("direct_database_unavailable");
 
-  const rows = await directSql`
-    with picked as (
-      select id
-      from public.story_pilot_automation_jobs
-      where attempts < 5
-        and (
-          (status in ('queued','failed') and available_at <= now())
-          or (status = 'sending' and locked_at < now() - interval '5 minutes')
-        )
-      order by created_at asc
-      for update skip locked
-      limit ${limit}
-    ),
-    updated as (
-      update public.story_pilot_automation_jobs j
-      set
-        status = 'sending',
-        attempts = j.attempts + 1,
-        locked_at = now(),
-        updated_at = now()
-      from picked
-      where j.id = picked.id
-      returning j.*
-    )
-    select
-      u.id, u.telegram_user_id, u.event_id, u.rule_key,
-      u.status, u.attempts, u.created_at,
-      e.event_type, e.occurred_at, e.story_id, e.chat_id,
-      e.actor_username, e.actor_display_name, e.payload
-    from updated u
-    join public.story_pilot_events e on e.id = u.event_id
-    order by u.created_at asc
-  `;
+  if (useDirectSql()) {
+    const rows = await directSql`
+      with picked as (
+        select id
+        from public.story_pilot_automation_jobs
+        where attempts < 5
+          and (
+            (status in ('queued','failed') and available_at <= now())
+            or (status = 'sending' and locked_at < now() - interval '5 minutes')
+          )
+        order by created_at asc
+        for update skip locked
+        limit ${limit}
+      ),
+      updated as (
+        update public.story_pilot_automation_jobs j
+        set
+          status = 'sending',
+          attempts = j.attempts + 1,
+          locked_at = now(),
+          updated_at = now()
+        from picked
+        where j.id = picked.id
+        returning j.*
+      )
+      select
+        u.id, u.telegram_user_id, u.event_id, u.rule_key,
+        u.status, u.attempts, u.created_at,
+        e.event_type, e.occurred_at, e.story_id, e.chat_id,
+        e.actor_username, e.actor_display_name, e.payload
+      from updated u
+      join public.story_pilot_events e on e.id = u.event_id
+      order by u.created_at asc
+    `;
 
-  return rows.map((row: any) => ({
-    id: String(row.id),
-    userId: String(row.telegram_user_id),
-    eventId: String(row.event_id),
-    ruleKey: row.rule_key,
-    attempts: Number(row.attempts || 0),
-    event: {
-      type: row.event_type,
-      occurredAt: row.occurred_at,
-      storyId: row.story_id == null ? null : Number(row.story_id),
-      chatId: row.chat_id ? String(row.chat_id) : null,
-      actorUsername: row.actor_username || null,
-      actorDisplayName: row.actor_display_name || null,
-      payload: row.payload && typeof row.payload === "object" ? row.payload : {},
-    },
-  }));
+    return rows.map((row: any) => ({
+      id: String(row.id),
+      userId: String(row.telegram_user_id),
+      eventId: String(row.event_id),
+      ruleKey: row.rule_key,
+      attempts: Number(row.attempts || 0),
+      event: {
+        type: row.event_type,
+        occurredAt: row.occurred_at,
+        storyId: row.story_id == null ? null : Number(row.story_id),
+        chatId: row.chat_id ? String(row.chat_id) : null,
+        actorUsername: row.actor_username || null,
+        actorDisplayName: row.actor_display_name || null,
+        payload: row.payload && typeof row.payload === "object" ? row.payload : {},
+      },
+    }));
+  }
+
+  const r = await db.rpc("story_pilot_claim_automation_jobs", { p_limit: limit });
+  const rows = need(r as any);
+  return Array.isArray(rows) ? rows : [];
 }
 
 async function opCompleteAutomationJob(args: any) {
@@ -2551,40 +2562,48 @@ async function opCompleteAutomationJob(args: any) {
   const success = Boolean(args?.success);
   const error = String(args?.error || "").slice(0, 500) || null;
   if (!jobId) throw new Error("automation_job_required");
-  if (!directSql) throw new Error("direct_database_unavailable");
 
-  const rows = success
-    ? await directSql`
-        update public.story_pilot_automation_jobs
-        set
-          status = 'sent',
-          sent_at = now(),
-          last_error = null,
-          locked_at = null,
-          updated_at = now()
-        where id = ${jobId}::uuid
-        returning id, status, attempts, sent_at
-      `
-    : await directSql`
-        update public.story_pilot_automation_jobs
-        set
-          status = 'failed',
-          last_error = ${error},
-          available_at = now() + (
-            least(30, greatest(1, attempts * attempts))::text || ' minutes'
-          )::interval,
-          locked_at = null,
-          updated_at = now()
-        where id = ${jobId}::uuid
-        returning id, status, attempts, available_at
-      `;
+  if (useDirectSql()) {
+    const rows = success
+      ? await directSql`
+          update public.story_pilot_automation_jobs
+          set
+            status = 'sent',
+            sent_at = now(),
+            last_error = null,
+            locked_at = null,
+            updated_at = now()
+          where id = ${jobId}::uuid
+          returning id, status, attempts, sent_at
+        `
+      : await directSql`
+          update public.story_pilot_automation_jobs
+          set
+            status = 'failed',
+            last_error = ${error},
+            available_at = now() + (
+              least(30, greatest(1, attempts * attempts))::text || ' minutes'
+            )::interval,
+            locked_at = null,
+            updated_at = now()
+          where id = ${jobId}::uuid
+          returning id, status, attempts, available_at
+        `;
 
-  return rows[0] || null;
+    return rows[0] || null;
+  }
+
+  const r = await db.rpc("story_pilot_complete_automation_job", {
+    p_job_id: jobId,
+    p_success: success,
+    p_error: error,
+  });
+  return need(r as any);
 }
 
 async function opAcquireLease(args: any) {
   const seconds = Math.max(10, Math.min(300, Number(args.seconds || 55)));
-  if (directSql) {
+  if (useDirectSql()) {
     const rows = await directSql`
       select public.story_pilot_acquire_watch_lease(${seconds}) as acquired
     `;
@@ -2596,12 +2615,17 @@ async function opAcquireLease(args: any) {
 
 function transientStoreError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  return /schema cache|connection terminated|connection timeout|fetch failed|network|temporar|retrying|PGRST/i.test(message);
+  return /schema cache|CONNECT_TIMEOUT|connection terminated|connection timeout|fetch failed|network|temporar|retrying|PGRST|could not determine data type of parameter/i.test(message);
+}
+
+function directDatabaseFallbackError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /CONNECT_TIMEOUT|connection terminated|connection timeout|connection not available|queue timeout|statement timeout|could not determine data type of parameter/i.test(message);
 }
 
 function databaseOverloadError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  return /PGRST002|schema cache|connection timeout|connection not available|queue timeout|statement timeout/i.test(message);
+  return /PGRST002|schema cache|CONNECT_TIMEOUT|connection timeout|connection not available|queue timeout|statement timeout/i.test(message);
 }
 
 async function dispatchWithRetry(op: string, args: any) {
@@ -2618,15 +2642,28 @@ async function dispatchWithRetry(op: string, args: any) {
       return await dispatch(op, args);
     } catch (error) {
       lastError = error;
-      // When PostgREST/Supavisor is saturated, immediate retries create a thundering
-      // herd and make recovery slower. Fail fast so the app can show degraded state.
-      if (databaseOverloadError(error)) throw error;
+
+      // A direct Postgres connection is an optimization, not a correctness boundary.
+      // If it becomes unhealthy, open a short circuit so retry-capable operations
+      // take their existing PostgREST/service-role fallback on the next attempt.
+      if (directDatabaseFallbackError(error)) {
+        openDirectSqlCircuit(error);
+      }
+
       if (!transientStoreError(error) || attempt === waits.length - 1) throw error;
+
+      // Keep retries bounded. The second attempt is deliberately routed away from
+      // direct SQL when the circuit is open, avoiding repeated CONNECT_TIMEOUTs.
       console.warn("story-pilot-store retry", {
         op,
         attempt: attempt + 1,
+        fallback: useDirectSql() ? "direct" : "postgrest",
         error: error instanceof Error ? error.message : String(error),
       });
+
+      if (databaseOverloadError(error) && !directDatabaseFallbackError(error)) {
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
     }
   }
 
@@ -2635,7 +2672,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v10", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true, privateCrypto: Boolean(directSql), directDbUrlAvailable: Boolean(SUPABASE_DB_URL), directAnalytics: Boolean(directSql), directExport: Boolean(directSql), directCoreReads: Boolean(directSql), directGhostWrites: Boolean(directSql), directViewerWrites: Boolean(directSql) };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v10", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true, directDbPreferred: DIRECT_SQL_PREFERRED, directDbCircuitOpen: Boolean(directSql) && DIRECT_SQL_PREFERRED && !useDirectSql(), directDbRetryAt: directSqlDegradedUntil || null, privateCrypto: true, cryptoBackend: "service-role-rpc", directDbUrlAvailable: Boolean(SUPABASE_DB_URL), directAnalytics: Boolean(directSql), directExport: Boolean(directSql), directCoreReads: useDirectSql(), directGhostWrites: useDirectSql(), directViewerWrites: useDirectSql(), postgrestFallback: true };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
@@ -2691,10 +2728,11 @@ Deno.serve(async (request) => {
   if (request.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
   if (!SUPABASE_URL || !SERVICE_KEY) return json({ ok: false, error: "storage_not_configured" }, 503);
 
+  let op = "";
   try {
     const rawBody = await request.text();
     const body = JSON.parse(rawBody || "{}");
-    const op = String(body?.op ?? "");
+    op = String(body?.op ?? "");
     const maintenanceSecret = request.headers.get("x-maintenance-secret") ?? "";
     const maintenanceAllowed = maintenanceSecret
       ? await maintenanceSecretAllowed(maintenanceSecret)
@@ -2712,8 +2750,14 @@ Deno.serve(async (request) => {
     return json({ ok: true, data });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const status = /signature/.test(message) ? 401 : 500;
-    console.error("story-pilot-store", message);
-    return json({ ok: false, error: message }, status);
+    const transient = transientStoreError(error);
+    const status = /signature/.test(message) ? 401 : transient ? 503 : 500;
+    console.error("story-pilot-store", {
+      op: op || "unknown",
+      status,
+      error: message,
+      direct_db_circuit_open: Boolean(directSql) && !useDirectSql(),
+    });
+    return json({ ok: false, error: message, transient }, status);
   }
 });
