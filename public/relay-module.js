@@ -178,9 +178,9 @@
     if(s.pendingRelay&&!active){
       title='Подтверди подключение в Telegram';
       text='Telegram открыл настройки proxy. Включи маршрут и вернись сюда.';
-      a='Жду подтверждение';b='VETO не покажет PROTECTED, пока ты не подтвердил связь';p='ПРОВЕРКА';
+      a='Проверить подключение';b='VETO не покажет PROTECTED, пока ты не подтвердил связь';p='ПРОВЕРКА';
       simple='Проверь Telegram';simpleText='После подключения вернись и подтверди, что Telegram работает.';
-      power.disabled=true;
+      power.disabled=false;
     }else if(active){
       title='TELEGRAM PROTECTED';
       text='Защита включена и сохранена на этом устройстве.';
@@ -371,8 +371,12 @@
   }
 
   $('homeRelayCard')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();guide();},true);
-  document.querySelectorAll('[data-open-screen="relay"]').forEach(x=>x.addEventListener('click',()=>setTimeout(()=>status(true).then(()=>healthCheck({autoFailover:true})),0)));
-  $('relayPowerButton')?.addEventListener('click',()=>s.enabled?healthCheck({autoFailover:true}).then(()=>toast('Защита проверена')):connect(false));
+  document.querySelectorAll('[data-open-screen="relay"]').forEach(x=>x.addEventListener('click',()=>setTimeout(()=>status(true).then(()=>s.pendingRelay?openRelayConfirmation():healthCheck({autoFailover:true})),0)));
+  $('relayPowerButton')?.addEventListener('click',()=>{
+    if(s.pendingRelay)return openRelayConfirmation();
+    if(s.enabled)return healthCheck({autoFailover:true}).then(()=>toast('Защита проверена'));
+    return connect(false);
+  });
   $('relayDisableButton')?.addEventListener('click',openDisableGuide);
   $('relayRotateButton')?.addEventListener('click',()=>connect(true));
   $('relayRefreshButton')?.addEventListener('click',()=>status(false).then(()=>healthCheck({autoFailover:true})));
@@ -408,5 +412,5 @@
   });
 
   render();
-  if(tg?.initData)status(true).then(()=>healthCheck({autoFailover:true}));
+  if(tg?.initData)status(true).then(()=>s.pendingRelay?openRelayConfirmation():healthCheck({autoFailover:true}));
 })();
