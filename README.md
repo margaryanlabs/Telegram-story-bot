@@ -1,13 +1,13 @@
-# Ghost Mode
+# VETO Telegram
 
-**Your private control layer for Telegram.**
+**Private Telegram OS for Stories, Chats, Privacy, Intelligence and Automations.**
 
-Ghost Mode combines privacy, Stories, audience intelligence, creation, security and automations around a connected Telegram account.
+VETO Telegram combines privacy, Stories, audience intelligence, creation, security and automations around a connected Telegram account.
 
 
 ## Product positioning
 
-**Ghost Mode** is the product: a private control layer for Telegram that brings together:
+**VETO Telegram** is the product: a private control layer for Telegram that brings together:
 
 - **Ghost Privacy** — Anti-Delete, Edit History, Ghost Inbox, Media Vault and retention controls.
 - **Stories** — direct publishing, precise audiences, exclusions and content protection.
@@ -21,9 +21,10 @@ The product must feel like one private Telegram operating layer, not a collectio
 
 ## Brand architecture
 
-- **Ghost Mode** — the only user-facing product name.
-- **Private Telegram Control Layer** — the category / positioning line, not a second brand.
-- **Ghost Privacy**, **Ghost Stories**, **Ghost Intelligence**, **Ghost Studio**, **Ghost Security** and **Ghost Automations** — product modules.
+- **VETO Telegram** — the only user-facing product name.
+- **Private Telegram OS** — the category / positioning line, not a second brand.
+- **VETO Privacy**, **VETO Stories**, **VETO Intelligence**, **VETO Studio**, **VETO Security** and **VETO Automations** — product modules.
+- **Ghost** remains a legacy/internal privacy concept where required for backward compatibility; new user-facing copy should prefer VETO Privacy.
 - Legacy technical identifiers such as `STORY_PILOT_BASE_URL`, migration filenames and `storypilot:` callback payloads remain supported for backward compatibility and must not leak into user-facing copy.
 
 ## Creator Studio
@@ -66,8 +67,8 @@ Creator Studio also includes **Brand Pack Engine**, designed around the product 
 
 1. User opens `@Storypilotlab_bot`.
 2. First-time users see a dedicated connection screen instead of the Story controls.
-3. User connects Ghost Mode in **Telegram → Settings → Telegram Business / Chat Automation**, enables **Manage Stories**, then taps **I connected — check**.
-4. Telegram sends the bot a unique `business_connection` for that user; Ghost Mode validates that the connection is enabled and that `can_manage_stories` is granted.
+3. User connects VETO Telegram in **Telegram → Settings → Telegram Business / Chat Automation**, enables **Manage Stories**, then taps **I connected — check**.
+4. Telegram sends the bot a unique `business_connection` for that user; VETO Telegram validates that the connection is enabled and that `can_manage_stories` is granted.
 5. User chooses a Story audience:
    - Everyone
    - My Contacts
@@ -75,7 +76,7 @@ Creator Studio also includes **Brand Pack Engine**, designed around the product 
    - Selected users
    - Optional exclusions
 6. User sends a photo as a normal message.
-7. Ghost Mode prepares a 1080×1920 Story image without destructive cropping and publishes it for 24 hours.
+7. VETO Telegram prepares a 1080×1920 Story image without destructive cropping and publishes it for 24 hours.
 
 No reply/forward workflow is required.
 
@@ -91,7 +92,7 @@ No reply/forward workflow is required.
 - `/reset` clears audience / selected users / exclusions while preserving the Business Connection.
 - Story limit and privacy errors are translated into short user-facing messages.
 - `🛡 Protection` can prevent forwards/saving where Telegram supports it.
-- The last published Story can be deleted from Ghost Mode with the delete control or `/delete`.
+- The last published Story can be deleted from VETO Telegram with the delete control or `/delete`.
 - The persistent `🚀 Start` Web App closes immediately and exists only as a lightweight launcher/state carrier.
 - v8 performs the Telegram webhook secret verification before any Telegram-side UX action.
 
@@ -159,19 +160,19 @@ The persistent **🚀 Старт** menu now opens a full Telegram Mini App inste
 
 ## Viewer Sync
 
-Ghost Mode includes a privacy-aware Viewer Sync foundation for analytics on the account owner's own Stories.
+VETO Telegram includes a privacy-aware Viewer Sync foundation for analytics on the account owner's own Stories.
 
 ### Flow
 
 `Story publish -> user MTProto session -> watcher -> generic view alert -> reconciliation -> confirmed viewer OR anonymized view`
 
-A new visible view can trigger a fast generic notification. Viewer identity is only promoted to a confirmed viewer after the reconciliation window. If Telegram later stops exposing that viewer, Ghost Mode edits the notification to an unattributed view and removes the stored identity instead of preserving a hidden identity.
+A new visible view can trigger a fast generic notification. Viewer identity is only promoted to a confirmed viewer after the reconciliation window. If Telegram later stops exposing that viewer, VETO Telegram edits the notification to an unattributed view and removes the stored identity instead of preserving a hidden identity.
 
 ### Required production configuration
 
 Viewer Sync uses the existing server-only `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_BOT_TOKEN` values.
 
-The shared Margaryan Labs Supabase project is the storage target. Vercel does not need a Supabase service-role key: requests to the server-only Supabase Edge storage gateway are signed with Ed25519 using key material derived at runtime from existing Telegram secrets. A separate `VIEWER_SYNC_MASTER_KEY` remains optional; if it is absent, Ghost Mode derives the encryption key from the existing server-only Telegram secrets without persisting the derived key.
+The shared Margaryan Labs Supabase project is the storage target. Vercel does not need a Supabase service-role key: requests to the server-only Supabase Edge storage gateway are signed with Ed25519 using key material derived at runtime from existing Telegram secrets. A separate `VIEWER_SYNC_MASTER_KEY` remains optional; if it is absent, VETO Telegram derives the encryption key from the existing server-only Telegram secrets without persisting the derived key.
 
 Optional tuning:
 
@@ -180,7 +181,7 @@ Optional tuning:
 - `VIEWER_WATCH_STORY_LIMIT` — default 4 Stories per account per run
 - `VIEWER_WATCH_HOURS` — default 72 hours
 
-Apply `supabase/migrations/20260921_story_pilot_viewer_sync.sql` to a dedicated Ghost Mode database. Viewer tables are server-only: RLS is enabled and no client policies are granted.
+Apply `supabase/migrations/20260921_story_pilot_viewer_sync.sql` to a dedicated VETO Telegram database. Viewer tables are server-only: RLS is enabled and no client policies are granted.
 
 Supabase `pg_cron` calls the `story-pilot-watch-trigger` Edge Function every minute. The trigger signs the request to `/api/viewer-watch`, so no Vercel cron secret is required. The watcher is protected by short-lived Ed25519 signatures and a database lease to avoid overlapping runs.
 
