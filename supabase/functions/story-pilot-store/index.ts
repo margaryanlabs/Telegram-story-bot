@@ -28,9 +28,12 @@ const directSql = SUPABASE_DB_URL ? postgres(SUPABASE_DB_URL, {
 
 let directSqlDegradedUntil = 0;
 const DIRECT_SQL_CIRCUIT_MS = 60_000;
+const DIRECT_SQL_PREFERRED = (Deno.env.get("STORY_PILOT_DIRECT_SQL_PREFERRED") ?? "").toLowerCase() === "true";
 
 function useDirectSql() {
-  return Boolean(directSql) && Date.now() >= directSqlDegradedUntil;
+  return Boolean(directSql)
+    && DIRECT_SQL_PREFERRED
+    && Date.now() >= directSqlDegradedUntil;
 }
 
 function openDirectSqlCircuit(error: unknown) {
@@ -1270,64 +1273,24 @@ function encodeB64Url(bytes: Uint8Array) {
 }
 
 async function ensureViewerCryptoKey(environment: string) {
-  if (!directSql) throw new Error("viewer_crypto_direct_database_required");
-
-  const current = await directSql`
-    select key_id, secret_value, status
-    from story_pilot_private.crypto_keys
-    where purpose = 'viewer_sync_session'
-      and environment = ${environment}
-      and status = 'active'
-    order by created_at desc
-    limit 1
-  `;
-  if (current[0]?.key_id && current[0]?.secret_value) return current[0];
-
-  const keyId = `viewer-sync-${environment}-${crypto.randomUUID()}`;
-  try {
-    await directSql`
-      insert into story_pilot_private.crypto_keys
-        (key_id, purpose, environment, secret_value, status)
-      values (
-        ${keyId},
-        'viewer_sync_session',
-        ${environment},
-        encode(gen_random_bytes(32), 'base64'),
-        'active'
-      )
-    `;
-  } catch {
-    // A concurrent request can win the unique active-key race.
-  }
-
-  const created = await directSql`
-    select key_id, secret_value, status
-    from story_pilot_private.crypto_keys
-    where purpose = 'viewer_sync_session'
-      and environment = ${environment}
-      and status = 'active'
-    order by created_at desc
-    limit 1
-  `;
-  if (!created[0]?.key_id || !created[0]?.secret_value) {
+  const r = await db.rpc("story_pilot_get_or_create_viewer_crypto_key", {
+    p_environment: environment,
+  });
+  const row = need(r as any) as any;
+  if (!row?.key_id || !row?.secret_value) {
     throw new Error("viewer_crypto_active_key_missing");
   }
-  return created[0];
+  return row;
 }
 
 async function viewerCryptoKey(environment: string, keyId: string) {
-  if (!directSql) throw new Error("viewer_crypto_direct_database_required");
-  const rows = await directSql`
-    select key_id, secret_value, status
-    from story_pilot_private.crypto_keys
-    where purpose = 'viewer_sync_session'
-      and environment = ${environment}
-      and key_id = ${keyId}
-      and status in ('active', 'retired')
-    limit 1
-  `;
-  if (!rows[0]?.secret_value) throw new Error("viewer_crypto_key_version_unavailable");
-  return rows[0];
+  const r = await db.rpc("story_pilot_get_viewer_crypto_key", {
+    p_environment: environment,
+    p_key_id: keyId,
+  });
+  const row = need(r as any) as any;
+  if (!row?.secret_value) throw new Error("viewer_crypto_key_version_unavailable");
+  return row;
 }
 
 async function importViewerAesKey(secret: string, keyId: string) {
@@ -2709,7 +2672,7 @@ async function dispatchWithRetry(op: string, args: any) {
 
 async function dispatch(op: string, args: any) {
   switch (op) {
-    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v10", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true, directDbCircuitOpen: Boolean(directSql) && !useDirectSql(), directDbRetryAt: directSqlDegradedUntil || null, privateCrypto: Boolean(directSql), directDbUrlAvailable: Boolean(SUPABASE_DB_URL), directAnalytics: Boolean(directSql), directExport: Boolean(directSql), directCoreReads: useDirectSql(), directGhostWrites: useDirectSql(), directViewerWrites: useDirectSql(), postgrestFallback: true };
+    case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v10", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true, directDbPreferred: DIRECT_SQL_PREFERRED, directDbCircuitOpen: Boolean(directSql) && DIRECT_SQL_PREFERRED && !useDirectSql(), directDbRetryAt: directSqlDegradedUntil || null, privateCrypto: true, cryptoBackend: "service-role-rpc", directDbUrlAvailable: Boolean(SUPABASE_DB_URL), directAnalytics: Boolean(directSql), directExport: Boolean(directSql), directCoreReads: useDirectSql(), directGhostWrites: useDirectSql(), directViewerWrites: useDirectSql(), postgrestFallback: true };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
