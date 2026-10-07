@@ -42,12 +42,12 @@ test('Mini App exposes emergency fallback and avoids promising voice calls', () 
   const html = read('public/studio.html');
   const client = read('public/relay-module.js');
 
-  assert.match(html, /Emergency Access/);
-  assert.match(html, /Voice \/ Video — best effort/);
-  assert.match(html, /Telegram вообще не открывается/);
+  assert.match(html, /Аварийный доступ/);
+  assert.match(html, /Звонки — best effort/);
+  assert.match(html, /Telegram не открывается совсем/);
   assert.match(client, /openEmergencyAccess/);
-  assert.match(client, /Relay отвечает слишком долго/);
-  assert.match(client, /Нет обычного интернета/);
+  assert.match(client, /Связь отвечает слишком долго/);
+  assert.match(client, /Нет интернета/);
 });
 
 test('Vercel applies no-store and anti-indexing policy to public Relay config', () => {
