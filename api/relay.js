@@ -1,8 +1,6 @@
-import net from 'node:net';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
-import { loadRelayNodes, selectRelay, telegramProxyLinks } from '../lib/relay-mesh.js';
-
-const PROBE_TIMEOUT_MS = 1600;
+import { loadRelayNodes, telegramProxyLinks } from '../lib/relay-mesh.js';
+import { inspectRelayPool } from '../lib/relay-probe.js';
 const MAX_EXCLUDED = 8;
 
 function json(res, status, body) {
@@ -15,30 +13,6 @@ function json(res, status, body) {
 function parseBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   try { return JSON.parse(req.body || '{}'); } catch { return {}; }
-}
-
-function probeTcp(node, timeoutMs = PROBE_TIMEOUT_MS) {
-  return new Promise(resolve => {
-    const started = Date.now();
-    let done = false;
-    const finish = (reachable, error = null) => {
-      if (done) return;
-      done = true;
-      try { socket.destroy(); } catch {}
-      resolve({
-        id: node.id,
-        reachable,
-        latencyMs: reachable ? Math.max(1, Date.now() - started) : null,
-        error: error ? String(error).slice(0, 120) : null,
-      });
-    };
-
-    const socket = net.createConnection({ host: node.host, port: node.port });
-    socket.setTimeout(timeoutMs);
-    socket.once('connect', () => finish(true));
-    socket.once('timeout', () => finish(false, 'timeout'));
-    socket.once('error', error => finish(false, error?.code || error?.message || 'connect_error'));
-  });
 }
 
 function authUser(req) {
@@ -89,22 +63,14 @@ export default async function handler(req, res) {
     ? [...new Set(body.exclude.map(String).filter(Boolean))].slice(0, MAX_EXCLUDED)
     : [];
 
-  const candidates = nodes.filter(node => !excluded.includes(String(node.id)));
-  const pool = candidates.length ? candidates : nodes;
-  const probes = await Promise.all(pool.map(node => probeTcp(node).catch(error => ({
-    id:node.id,
-    reachable:false,
-    latencyMs:null,
-    error:error?.message || 'probe_error',
-  }))));
-
-  const selected = selectRelay(pool, probes, []);
+  const inspected = await inspectRelayPool(nodes, { excluded });
+  const selected = inspected.selected;
   if (!selected) {
     return json(res, 503, { ok:false, configured:true, error:'relay_unavailable' });
   }
 
   const links = telegramProxyLinks(selected);
-  const reachableCount = probes.filter(item => item.reachable).length;
+  const reachableCount = inspected.reachableCount;
 
   return json(res, 200, {
     ok:true,
@@ -117,7 +83,7 @@ export default async function handler(req, res) {
       reachable:selected.reachable,
     },
     routeHealth:selected.reachable ? 'verified' : 'degraded',
-    checked:probes.length,
+    checked:inspected.probes.length,
     reachableCount,
     alternatives:nodes.length > 1,
     connectUrl:links?.https,
