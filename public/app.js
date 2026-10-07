@@ -2833,9 +2833,9 @@
   try {
     tg?.ready();
     tg?.expand();
-    tg?.setHeaderColor?.('#06080d');
-    tg?.setBackgroundColor?.('#06080d');
-    tg?.setBottomBarColor?.('#090d14');
+    tg?.setHeaderColor?.('#000000');
+    tg?.setBackgroundColor?.('#000000');
+    tg?.setBottomBarColor?.('#030303');
     tg?.disableVerticalSwipes?.();
     tg?.BackButton?.onClick(closeSheet);
   } catch {}
