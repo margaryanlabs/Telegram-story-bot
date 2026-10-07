@@ -45,9 +45,11 @@ test('Relay never claims protected before client confirms Telegram works',()=>{
   const openRoute=client.slice(client.indexOf('function openRoute'),client.indexOf('async function connect'));
   assert.match(openRoute,/markPending/);
   assert.doesNotMatch(openRoute,/markEnabled/);
-  assert.match(client,/Telegram заработал\?/);
-  assert.match(client,/Да, Telegram работает/);
-  assert.match(client,/Нет, всё ещё крутится/);
+  assert.match(client,/pendingRelay/);
+  const html=read('public/studio.html');
+  assert.match(html,/Telegram заработал\?/);
+  assert.match(html,/Да, работает/);
+  assert.match(html,/Нет, не работает/);
 });
 
 test('failed client route is excluded before automatic retry',()=>{
