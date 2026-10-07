@@ -30,7 +30,7 @@
   }
 
   async function api(body = null) {
-    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
     const response = await fetch('/api/emoji-studio', {
       method: body ? 'POST' : 'GET',
       headers: {
@@ -273,7 +273,7 @@
 
     $('studioSharePackButton')?.addEventListener('click', () => {
       if (!studio.packLink) return toast('Сначала создай Telegram pack');
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(studio.packLink)}&text=${encodeURIComponent('Ghost Mode · Telegram Emoji Pack')}`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(studio.packLink)}&text=${encodeURIComponent('VETO Telegram · Telegram Emoji Pack')}`;
       try { tg?.openTelegramLink?.(shareUrl); } catch { window.open(shareUrl, '_blank', 'noopener'); }
     });
 
