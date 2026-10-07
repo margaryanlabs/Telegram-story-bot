@@ -2291,6 +2291,76 @@ async function opGetAnalytics(args: any) {
         })
     : [];
 
+  const audienceSegments = {
+    newViewers: personRows.filter((person: any) => person.viewedStories === 1).length,
+    repeatViewers: personRows.filter((person: any) => person.viewedStories >= 2 && person.viewedStories < 4).length,
+    loyalViewers: personRows.filter((person: any) => person.viewedStories >= 4).length,
+    fastViewers: personRows.filter((person: any) => Number(person.fast15Rate || 0) >= 60).length,
+    reactors: personRows.filter((person: any) => Number(person.reactions || 0) > 0).length,
+  };
+
+  const relationshipGraph = personRows.slice(0, 50).map((person: any, index: number) => ({
+    ...person,
+    attentionScore: person.activityScore,
+    rank: index + 1,
+    segment: person.viewedStories >= 4
+      ? "loyal"
+      : person.viewedStories >= 2
+        ? "repeat"
+        : "new",
+  }));
+
+  const earlyValues = performance
+    .map((story: any) => Number(story.views15m ?? story.views60m ?? story.views ?? 0))
+    .filter((value: number) => Number.isFinite(value));
+  const sortedEarly = [...earlyValues].sort((a, b) => a - b);
+  const earlyMedian = sortedEarly.length
+    ? sortedEarly[Math.floor(sortedEarly.length / 2)]
+    : null;
+  const bestStory = [...performance]
+    .sort((a: any, b: any) =>
+      Number(b.views15m ?? b.views60m ?? b.views ?? 0)
+      - Number(a.views15m ?? a.views60m ?? a.views ?? 0)
+    )[0] || null;
+
+  const experiments = {
+    sampleStories: performance.length,
+    earlyMedian,
+    bestStoryId: bestStory?.storyId || null,
+    bestEarlyViews: bestStory ? Number(bestStory.views15m ?? bestStory.views60m ?? bestStory.views ?? 0) : null,
+    ready: performance.length >= 3,
+  };
+
+  const intelligenceFeed: any[] = [];
+  if (relationshipGraph[0]) {
+    intelligenceFeed.push({
+      type: "attention",
+      title: `${relationshipGraph[0].displayName || relationshipGraph[0].username || "Viewer"} — #1 по Attention Score`,
+      detail: `${relationshipGraph[0].attentionScore}/100 · ${relationshipGraph[0].viewedStories} Stories`,
+    });
+  }
+  if (audienceSegments.loyalViewers > 0) {
+    intelligenceFeed.push({
+      type: "loyal",
+      title: `${audienceSegments.loyalViewers} loyal viewers`,
+      detail: "Эти люди посмотрели 4+ отслеживаемых Stories.",
+    });
+  }
+  if (unattributedViews > 0) {
+    intelligenceFeed.push({
+      type: "privacy",
+      title: `${unattributedViews} просмотров без доступной личности`,
+      detail: "VETO не угадывает скрытых viewers — они остаются unattributed.",
+    });
+  }
+  if (experiments.ready && bestStory) {
+    intelligenceFeed.push({
+      type: "experiment",
+      title: `Story #${bestStory.storyId} — текущий benchmark`,
+      detail: `${experiments.bestEarlyViews} ранних просмотров против median ${experiments.earlyMedian}`,
+    });
+  }
+
   return {
     storiesTracked: stories.length,
     totalViews,
@@ -2303,6 +2373,10 @@ async function opGetAnalytics(args: any) {
     reactions,
     forwards,
     avgDelaySec,
+    audienceSegments,
+    relationshipGraph,
+    experiments,
+    intelligenceFeed,
     topPeople: personRows.slice(0, 30),
     storyPerformance: performance,
     latestTimelineStoryId: latestStory ? String(latestStory.story_id) : null,
@@ -2336,6 +2410,145 @@ async function opGetExport(args: any) {
   `;
 
   return { stories, viewers, generatedAt: new Date().toISOString() };
+}
+
+
+function normalizeRadarPeer(value: unknown) {
+  const raw = String(value || '').trim().replace(/^@/, '');
+  const clean = raw.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 64);
+  if (!/^[a-zA-Z0-9_]{5,64}$/.test(clean)) throw new Error("invalid_radar_peer");
+  return clean.toLowerCase();
+}
+
+async function opListRadarTargets(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("radar_user_required");
+  const r = await db.from("story_pilot_radar_targets")
+    .select("peer_key,display_name,enabled,notify_new_story,last_story_id,last_story_at,last_checked_at,last_notified_story_id,last_error,created_at,updated_at")
+    .eq("telegram_user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(100);
+  return need(r as any) || [];
+}
+
+async function opUpsertRadarTarget(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("radar_user_required");
+  const peerKey = normalizeRadarPeer(args?.peerKey);
+  const row = {
+    telegram_user_id: userId,
+    peer_key: peerKey,
+    display_name: String(args?.displayName || "").trim().slice(0, 120) || null,
+    enabled: args?.enabled !== false,
+    notify_new_story: args?.notifyNewStory !== false,
+    updated_at: new Date().toISOString(),
+  };
+  const r = await db.from("story_pilot_radar_targets")
+    .upsert(row, { onConflict: "telegram_user_id,peer_key" })
+    .select("*")
+    .single();
+  return need(r as any);
+}
+
+async function opRemoveRadarTarget(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("radar_user_required");
+  const peerKey = normalizeRadarPeer(args?.peerKey);
+  const r = await db.from("story_pilot_radar_targets")
+    .delete()
+    .eq("telegram_user_id", userId)
+    .eq("peer_key", peerKey);
+  need(r as any);
+  return { removed: true, peerKey };
+}
+
+async function opUpdateRadarTargetState(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("radar_user_required");
+  const peerKey = normalizeRadarPeer(args?.peerKey);
+  const patch = args?.patch && typeof args.patch === "object" ? args.patch : {};
+  const allowed: Record<string, unknown> = {};
+  const mapping: Record<string, string> = {
+    displayName: "display_name",
+    enabled: "enabled",
+    notifyNewStory: "notify_new_story",
+    lastStoryId: "last_story_id",
+    lastStoryAt: "last_story_at",
+    lastCheckedAt: "last_checked_at",
+    lastNotifiedStoryId: "last_notified_story_id",
+    lastError: "last_error",
+  };
+  for (const [source, target] of Object.entries(mapping)) {
+    if (Object.prototype.hasOwnProperty.call(patch, source)) allowed[target] = patch[source];
+  }
+  allowed.updated_at = new Date().toISOString();
+  const r = await db.from("story_pilot_radar_targets")
+    .update(allowed)
+    .eq("telegram_user_id", userId)
+    .eq("peer_key", peerKey)
+    .select("*")
+    .maybeSingle();
+  return need(r as any);
+}
+
+const BUSINESS_AGENT_DEFAULTS = {
+  enabled: false,
+  leadAlerts: true,
+  mode: "draft",
+  leadKeywords: [
+    "price","pricing","cost","buy","order","book","available",
+    "цена","стоимость","купить","заказать","забронировать","доступно"
+  ],
+  greeting: "",
+};
+
+function businessAgentShape(row: any) {
+  if (!row) return { ...BUSINESS_AGENT_DEFAULTS };
+  return {
+    enabled: Boolean(row.enabled),
+    leadAlerts: row.lead_alerts !== false,
+    mode: ["off","draft","assist"].includes(String(row.mode)) ? String(row.mode) : "draft",
+    leadKeywords: Array.isArray(row.lead_keywords) ? row.lead_keywords : BUSINESS_AGENT_DEFAULTS.leadKeywords,
+    greeting: String(row.greeting || ""),
+    updatedAt: row.updated_at || null,
+  };
+}
+
+async function opGetBusinessAgentSettings(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("business_agent_user_required");
+  const r = await db.from("story_pilot_business_agent_settings")
+    .select("enabled,lead_alerts,mode,lead_keywords,greeting,updated_at")
+    .eq("telegram_user_id", userId)
+    .maybeSingle();
+  return businessAgentShape(need(r as any));
+}
+
+async function opUpdateBusinessAgentSettings(args: any) {
+  const userId = String(args?.userId || "");
+  if (!userId) throw new Error("business_agent_user_required");
+  const patch = args?.patch && typeof args.patch === "object" ? args.patch : {};
+  const current = await opGetBusinessAgentSettings({ userId });
+  const mode = ["off","draft","assist"].includes(String(patch.mode || current.mode))
+    ? String(patch.mode || current.mode)
+    : "draft";
+  const keywords = Array.isArray(patch.leadKeywords)
+    ? patch.leadKeywords.map((item: unknown) => String(item || "").trim().toLowerCase()).filter(Boolean).slice(0, 50)
+    : current.leadKeywords;
+  const row = {
+    telegram_user_id: userId,
+    enabled: patch.enabled === undefined ? current.enabled : Boolean(patch.enabled),
+    lead_alerts: patch.leadAlerts === undefined ? current.leadAlerts : Boolean(patch.leadAlerts),
+    mode,
+    lead_keywords: keywords,
+    greeting: patch.greeting === undefined ? current.greeting : String(patch.greeting || "").slice(0, 1000),
+    updated_at: new Date().toISOString(),
+  };
+  const r = await db.from("story_pilot_business_agent_settings")
+    .upsert(row, { onConflict: "telegram_user_id" })
+    .select("enabled,lead_alerts,mode,lead_keywords,greeting,updated_at")
+    .single();
+  return businessAgentShape(need(r as any));
 }
 
 const AUTOMATION_RULE_DEFAULTS: Record<string, boolean> = {
@@ -2714,6 +2927,12 @@ async function dispatch(op: string, args: any) {
     case "get_story_data": return opGetStoryData(args);
     case "get_analytics": return opGetAnalytics(args);
     case "get_export": return opGetExport(args);
+    case "list_radar_targets": return opListRadarTargets(args);
+    case "upsert_radar_target": return opUpsertRadarTarget(args);
+    case "remove_radar_target": return opRemoveRadarTarget(args);
+    case "update_radar_target_state": return opUpdateRadarTargetState(args);
+    case "get_business_agent_settings": return opGetBusinessAgentSettings(args);
+    case "update_business_agent_settings": return opUpdateBusinessAgentSettings(args);
     case "get_automation_settings": return opGetAutomationSettings(args);
     case "update_automation_settings": return opUpdateAutomationSettings(args);
     case "list_automation_jobs": return opListAutomationJobs(args);
