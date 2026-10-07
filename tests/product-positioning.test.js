@@ -6,7 +6,7 @@ function read(path) {
   return readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 }
 
-test('Ghost Mode is the only user-facing product brand', () => {
+test('VETO Telegram is the only user-facing product brand', () => {
   const surfaces = [
     'public/studio.html',
     'public/app.js',
@@ -22,7 +22,7 @@ test('Ghost Mode is the only user-facing product brand', () => {
 
   assert.doesNotMatch(surfaces, /Telegram Control/);
   assert.doesNotMatch(surfaces, /Story Pilot/);
-  assert.match(surfaces, /Ghost Mode/);
+  assert.match(surfaces, /VETO Telegram/);
 });
 
 test('home exposes the complete control layer', () => {
@@ -32,7 +32,7 @@ test('home exposes the complete control layer', () => {
   assert.match(html, /id="homeAutomationsCard"/);
   assert.match(html, />Security</);
   assert.match(html, />Automations</);
-  assert.match(html, /Private control layer for Telegram/);
+  assert.match(html, /Private Telegram OS/);
 });
 
 test('legacy technical identifiers stay backward compatible', () => {

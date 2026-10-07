@@ -152,7 +152,7 @@
   }
 
   async function request(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
 
     const retryable = !action || action === 'list_messages' || action === 'versions';
     const attempts = retryable ? 2 : 1;
@@ -478,7 +478,7 @@
         : summary.watch > 0
           ? `${summary.watch} диалог(а) стоит проверить`
           : 'Срочных сигналов нет',
-      detail: 'Ghost Mode использует только доступные Telegram-события и объяснимые правила.',
+      detail: 'VETO Telegram использует только доступные Telegram-события и объяснимые правила.',
       primaryChatId: '',
       primaryAction: 'archive',
       reasons: [],
@@ -964,7 +964,7 @@
           <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
         </div>
       </div>
-      <p>Архивная копия. Ghost Mode не вызывает readBusinessMessage при просмотре этого экрана.</p>
+      <p>Архивная копия. VETO Telegram не вызывает readBusinessMessage при просмотре этого экрана.</p>
       ${focusNote}
       <div class="ghost-thread-modes">
         <button type="button" class="${mode === 'all' ? 'active' : ''}" data-privacy-thread-mode="all">Все <b>${(messages || []).length}</b></button>
@@ -1032,7 +1032,7 @@
       openSheet(`
         <span class="kicker">Edit History</span>
         <h2>История сообщения</h2>
-        <p>Здесь только версии, которые Ghost Mode реально получил после включения Edit History.</p>
+        <p>Здесь только версии, которые VETO Telegram реально получил после включения Edit History.</p>
         <div class="privacy-version-list">${body || '<div class="intel-empty">Предыдущих версий нет.</div>'}</div>
         <div class="sheet-actions">
           <button class="accent" data-privacy-back="1">Назад</button>
@@ -1088,7 +1088,7 @@
       openSheet(`
         <span class="kicker">Ghost Media</span>
         <h2>${escapeHtml(fileName || (type === 'photo' ? 'Фото' : 'Вложение'))}</h2>
-        <p>Медиа загружено через авторизованный Ghost Mode proxy. Прямая Telegram file-id в браузер не отдаётся.</p>
+        <p>Медиа загружено через авторизованный VETO Telegram proxy. Прямая Telegram file-id в браузер не отдаётся.</p>
         <div class="privacy-media-preview-wrap">${body}</div>
         <div class="sheet-actions">
           <button class="accent" data-privacy-back="1">Назад</button>
@@ -1224,7 +1224,7 @@
         <span class="kicker">Telegram Business</span>
         <h2>Разреши сообщения для Ghost</h2>
         <p>Открой Telegram → Настройки → Telegram Business / Автоматизация чатов → @Storypilotlab_bot. Включи доступ к сообщениям / чтению сообщений и выбери чаты, которые бот может обрабатывать.</p>
-        <p>Это право нужно, чтобы Telegram присылал Ghost события удалений. Ghost Mode всё равно не вызывает readBusinessMessage при просмотре Ghost Inbox.</p>
+        <p>Это право нужно, чтобы Telegram присылал Ghost события удалений. VETO Telegram всё равно не вызывает readBusinessMessage при просмотре Ghost Inbox.</p>
         <div class="sheet-actions">
           <button class="accent" data-privacy-recheck-access="1">Проверить снова</button>
           <button data-privacy-close="1">Закрыть</button>

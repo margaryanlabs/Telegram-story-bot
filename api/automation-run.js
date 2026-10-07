@@ -86,7 +86,7 @@ export function automationMessage(job) {
       };
     }
     return {
-      text: '🔐 Security\n\nGhost Mode зафиксировал новое security-событие. Проверь Security Center.',
+      text: '🔐 Security\n\nVETO Telegram зафиксировал новое security-событие. Проверь Security Center.',
       screen: 'security',
       button: 'Открыть Security Center',
     };

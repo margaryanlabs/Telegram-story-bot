@@ -4,41 +4,94 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#080c13" />
-  <title>Ghost Mode — Private control layer for Telegram</title>
+  <title>VETO Telegram — Private Telegram OS</title>
+  <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261004-ghost-studio" />
-  <link rel="stylesheet" href="/studio-module.css?v=20261004-brand-pack" />
+  <link rel="stylesheet" href="/app.css?v=20261007-veto-telegram" />
+  <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram" />
 </head>
 <body>
   <div class="ambient ambient-a"></div>
   <div class="ambient ambient-b"></div>
 
+  <section class="veto-welcome" id="vetoWelcome" hidden aria-modal="true" aria-label="Добро пожаловать в VETO Telegram">
+    <div class="veto-welcome-shell">
+      <div class="veto-welcome-top">
+        <div class="veto-welcome-brand"><span>V</span><div><strong>VETO Telegram</strong><small>Private Telegram OS</small></div></div>
+        <button class="veto-welcome-skip" id="vetoWelcomeSkip" type="button">Позже</button>
+      </div>
+
+      <div class="veto-welcome-stage">
+        <article class="veto-intro-step active" data-veto-intro-step="0">
+          <div class="veto-intro-orbit"><span>V</span><i></i><b></b></div>
+          <span class="kicker">WELCOME TO VETO</span>
+          <h1>Telegram стал<br><em>понятнее и приватнее.</em></h1>
+          <p>Stories, чаты, Anti‑Delete, история изменений, аудитория, Intelligence и автоматизации — в одном интерфейсе.</p>
+          <div class="veto-intro-features">
+            <span>◌ Privacy</span><span>◉ Stories</span><span>✦ Intelligence</span><span>⌁ Automations</span>
+          </div>
+        </article>
+
+        <article class="veto-intro-step" data-veto-intro-step="1">
+          <div class="veto-intro-shield">⌁<i></i></div>
+          <span class="kicker">PRIVACY PROMISE</span>
+          <h1>Твои данные —<br><em>не рекламный продукт.</em></h1>
+          <p>VETO использует доступ Telegram только для функций, которые ты включил. Мы не строим рекламный профиль из переписки и не продаём содержимое сообщений.</p>
+          <div class="veto-promise-mini">
+            <div><strong>Выборочный доступ</strong><small>включаешь только нужные модули</small></div>
+            <div><strong>Прозрачное хранение</strong><small>данные сохраняются только там, где функция этого требует</small></div>
+            <div><strong>Контроль</strong><small>доступ можно отозвать в Telegram</small></div>
+          </div>
+        </article>
+
+        <article class="veto-intro-step" data-veto-intro-step="2">
+          <div class="veto-connect-visual">
+            <span>1</span><i></i><span>2</span><i></i><span>3</span>
+          </div>
+          <span class="kicker">CONNECT ONCE</span>
+          <h1>Подключение<br><em>без технической путаницы.</em></h1>
+          <p>Telegram Settings → Telegram Business → Chatbots / Automation → подключи @Storypilotlab_bot и выдай только нужные разрешения. VETO сам проверит статус.</p>
+          <div class="veto-connect-summary">
+            <div><b>Stories</b><small>Manage Stories</small></div>
+            <div><b>Privacy</b><small>Message access</small></div>
+            <div><b>Intel</b><small>Optional отдельное подключение</small></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="veto-welcome-footer">
+        <div class="veto-intro-dots" aria-hidden="true"><i class="active"></i><i></i><i></i></div>
+        <button class="veto-welcome-primary" id="vetoWelcomeNext" type="button">Продолжить <span>→</span></button>
+      </div>
+    </div>
+  </section>
+
   <main class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark"><span>G</span></div>
+        <div class="brand-mark veto-mark" aria-hidden="true"><span>V</span><i></i></div>
         <div class="brand-copy">
-          <strong>Ghost Mode</strong>
-          <span>Privacy · Stories · Intelligence · Automations</span>
+          <strong>VETO Telegram</strong>
+          <span>Private Telegram OS · Stories · Chats · Intelligence</span>
         </div>
       </div>
       <button class="profile-button" id="profileButton" type="button" aria-label="Открыть статус аккаунта">
-        <span class="profile-avatar" id="avatar">G</span>
+        <span class="profile-avatar" id="avatar">V</span>
         <span class="live-dot" id="profileDot"></span>
       </button>
     </header>
 
     <div class="network-banner" id="networkBanner" hidden>
       <span>Нет соединения с интернетом</span>
-      <small>Ghost Mode сохранит экран и продолжит, когда сеть вернётся.</small>
+      <small>VETO Telegram сохранит экран и продолжит, когда сеть вернётся.</small>
     </div>
 
     <section class="screen active control-home" data-screen="home">
       <div class="control-heading">
         <div>
-          <span class="kicker">GHOST MODE</span>
-          <h1>Твой приватный слой Telegram.</h1>
-          <p>Privacy, Stories, Creator Studio, Intelligence, Security и Automations — в одном приватном control layer.</p>
+          <span class="kicker">VETO TELEGRAM</span>
+          <h1>Telegram.<br><span>Под твоим контролем.</span></h1>
+          <p>Один приватный слой для Chats, Stories, Privacy, Intelligence и Automations — с понятными разрешениями и без скрытых действий.</p>
         </div>
         <span class="control-live" id="homeOverallState"><i></i><span>Проверяю</span></span>
       </div>
@@ -46,14 +99,14 @@
       <section class="control-hero">
         <div class="control-hero-orb">G</div>
         <div class="control-hero-copy">
-          <span>GHOST LAYER</span>
+          <span>VETO CORE</span>
           <strong id="homeTelegramTitle">Проверяю подключение</strong>
           <p id="homeTelegramText">Собираю фактическое состояние доступов.</p>
         </div>
         <button class="control-inline-action" type="button" data-open-screen="stories">Stories</button>
       </section>
 
-      <section class="capability-grid" aria-label="Состояние Ghost Mode">
+      <section class="capability-grid" aria-label="Состояние VETO Telegram">
         <button class="capability-card" type="button" data-open-screen="ghost">
           <span class="capability-icon">◌</span>
           <span class="capability-copy"><small>Ghost</small><strong id="homeGhostState">Проверяю</strong></span>
@@ -86,12 +139,22 @@
         </button>
       </section>
 
+      <section class="veto-trust-card" id="vetoTrustCard">
+        <div class="veto-trust-mark"><span>⌁</span><i></i></div>
+        <div class="veto-trust-copy">
+          <span class="kicker">VETO PRIVACY PROMISE</span>
+          <strong>Переписка не превращается в рекламный профиль.</strong>
+          <p>Доступ используется только для включённых функций. Что сохраняется, зачем и как отключить — можно проверить в один тап.</p>
+        </div>
+        <button id="privacyPromiseButton" type="button">Как работает защита <span>↗</span></button>
+      </section>
+
       <section class="activation-card" id="activationCard">
         <div class="activation-head">
           <div>
-            <span class="kicker">ACTIVATION PATH</span>
-            <h2 id="activationTitle">Настраиваю Ghost Mode</h2>
-            <p id="activationText">Четыре понятных шага. Никаких скрытых требований.</p>
+            <span class="kicker">VETO SETUP</span>
+            <h2 id="activationTitle">Настраиваю VETO Telegram</h2>
+            <p id="activationText">Понятный маршрут: подключение, приватность, первая Story и optional Intelligence.</p>
           </div>
           <strong id="activationScore">0/4</strong>
         </div>
@@ -100,7 +163,7 @@
             <span>01</span><div><strong>Telegram Business</strong><small>Stories + подключение</small></div><em>—</em>
           </button>
           <button type="button" class="activation-step" id="activationGhost" data-activation-step="ghost">
-            <span>02</span><div><strong>Ghost Privacy</strong><small>Message access</small></div><em>—</em>
+            <span>02</span><div><strong>VETO Privacy</strong><small>Доступ только к выбранным функциям</small></div><em>—</em>
           </button>
           <button type="button" class="activation-step" id="activationStory" data-activation-step="story">
             <span>03</span><div><strong>Первая Story</strong><small>Проверить публикацию</small></div><em>—</em>
@@ -131,7 +194,7 @@
         <div class="control-activity-list" id="homeActivityList">
           <div class="control-activity-row activity-loading">
             <span class="activity-event-icon">◌</span>
-            <div><strong>Загружаю активность</strong><small>Собираю события Ghost Mode</small></div>
+            <div><strong>Загружаю активность</strong><small>Собираю события VETO Telegram</small></div>
           </div>
         </div>
       </section>
@@ -378,7 +441,7 @@
         </div>
         <div class="viewer-sync-state" id="viewerSyncState">Проверяю состояние…</div>
         <button class="secondary-button" id="viewerSetupButton" type="button">Подключить Deep Intelligence</button>
-        <small class="privacy-note">Новый просмотр сначала фиксируется как быстрый сигнал. Затем Ghost Mode подтверждает доступную Telegram-личность или оставляет просмотр неатрибутированным.</small>
+        <small class="privacy-note">Новый просмотр сначала фиксируется как быстрый сигнал. Затем VETO Telegram подтверждает доступную Telegram-личность или оставляет просмотр неатрибутированным.</small>
       </section>
 
       <section class="viewer-list-preview">
@@ -417,7 +480,7 @@
       <div class="page-head">
         <span class="kicker">Инсайты</span>
         <h1>Analytics</h1>
-        <p>Сейчас — аналитика публикаций Ghost Mode. После Deep Intelligence здесь появится аналитика аудитории.</p>
+        <p>Сейчас — аналитика публикаций VETO Telegram. После Deep Intelligence здесь появится аналитика аудитории.</p>
       </div>
 
       <div class="stat-grid">
@@ -518,7 +581,7 @@
           <span class="lock-badge" id="intelligenceBriefConfidence">Evidence</span>
         </div>
         <div class="intelligence-brief-list" id="intelligenceBriefList">
-          <div class="intel-empty">Ghost Mode сформирует выводы только после появления подтверждённых данных.</div>
+          <div class="intel-empty">VETO Telegram сформирует выводы только после появления подтверждённых данных.</div>
         </div>
       </section>
 
@@ -579,23 +642,23 @@
 
     <section class="screen" data-screen="privacy">
       <div class="page-head privacy-page-head">
-        <span class="kicker">Privacy</span>
-        <h1>Ghost</h1>
-        <p>Ghost Mode — приватный control layer поверх Telegram: Anti-Delete, Edit History, Ghost Inbox, Stories, Creator Studio и Intelligence.</p>
+        <span class="kicker">VETO PRIVACY</span>
+        <h1>Privacy Center</h1>
+        <p>Anti-Delete, Edit History, Smart Inbox и Media Vault — с отдельными переключателями, прозрачным статусом доступа и понятным хранением данных.</p>
       </div>
 
       <section class="ghost-command-card">
         <div class="ghost-orb">◌</div>
         <div class="ghost-command-copy">
           <span class="status-pill" id="privacyStatusPill"><i></i><span id="privacyStatusText">Проверяю</span></span>
-          <h2>Ghost Protection</h2>
+          <h2>VETO Protection</h2>
           <p id="privacyHeroText">Включи защиту — дальше события сохраняются автоматически.</p>
         </div>
         <div class="ghost-badges">
           <span>iOS · Android · Desktop</span><span>Server-side</span><span>No read call</span>
         </div>
         <button class="ghost-enable-all" id="privacyEnableAllButton" type="button">
-          <span>◉</span><b>Включить Ghost целиком</b><small>Anti-Delete + Edit History + Ghost Inbox</small>
+          <span>◉</span><b>Включить VETO Privacy</b><small>Anti-Delete + Edit History + Smart Inbox</small>
         </button>
       </section>
 
@@ -718,7 +781,7 @@
           <button type="button" data-smart-filter="watch"><span>Watch</span><strong id="smartInboxWatch">0</strong><small>изменения / удаления</small></button>
           <button type="button" data-smart-filter="all"><span>All</span><strong id="smartInboxAll">0</strong><small>доступные диалоги</small></button>
         </div>
-        <p class="smart-inbox-note">Ghost Mode не называет сообщения «непрочитанными», если Telegram не дал такого сигнала. Приоритет — это объяснимая оценка по последнему входящему событию, свежести, правкам и удалениям.</p>
+        <p class="smart-inbox-note">VETO Telegram не называет сообщения «непрочитанными», если Telegram не дал такого сигнала. Приоритет — это объяснимая оценка по последнему входящему событию, свежести, правкам и удалениям.</p>
       </section>
 
       <section class="smart-brief-card" id="smartBriefCard">
@@ -729,7 +792,7 @@
           </div>
           <span class="smart-brief-status" id="smartBriefStatus">LIVE</span>
         </div>
-        <p id="smartBriefDetail">Ghost Mode поднимет только объяснимые сигналы из доступных Telegram-событий.</p>
+        <p id="smartBriefDetail">VETO Telegram поднимет только объяснимые сигналы из доступных Telegram-событий.</p>
         <div class="smart-brief-reasons" id="smartBriefReasons"></div>
         <button type="button" class="smart-brief-primary" id="smartBriefPrimary" hidden>Открыть диалог</button>
       </section>
@@ -783,7 +846,7 @@
       <div class="page-head studio-page-head">
         <span class="kicker">GHOST CREATOR</span>
         <h1>Creator Studio</h1>
-        <p class="studio-positioning">Создавай фирменные emoji, sticker packs и Telegram-ассеты внутри Ghost Mode — от prompt или готового логотипа до пакета.</p>
+        <p class="studio-positioning">Создавай фирменные emoji, sticker packs и Telegram-ассеты внутри VETO Telegram — от prompt или готового логотипа до пакета.</p>
       </div>
 
       <section class="studio-hero">
@@ -890,7 +953,7 @@
           <div>
             <span class="kicker">ONE LOGO → SYSTEM</span>
             <h2>Brand Pack Engine</h2>
-            <p>Из одного логотипа Ghost Mode собирает единый набор из 6–12 custom emoji или stickers, автоматически подбирает акцент и готовит весь pack к публикации.</p>
+            <p>Из одного логотипа VETO Telegram собирает единый набор из 6–12 custom emoji или stickers, автоматически подбирает акцент и готовит весь pack к публикации.</p>
           </div>
           <span class="brand-pack-mode" id="brandPackMode">STATIC · WEBP</span>
         </div>
@@ -940,7 +1003,7 @@
         <div class="brand-pack-empty" id="brandPackEmpty">
           <span>✦</span>
           <strong>Сначала добавь логотип выше</strong>
-          <small>После этого Ghost Mode соберёт согласованный набор Core · Done · Private · Watch · Priority · Focus и другие.</small>
+          <small>После этого VETO Telegram соберёт согласованный набор Core · Done · Private · Watch · Priority · Focus и другие.</small>
         </div>
 
         <div class="brand-pack-grid" id="brandPackGrid"></div>
@@ -963,7 +1026,7 @@
       <section class="studio-truth">
         <article><strong>Static AI</strong><span>Prompt generation активируется через OPENAI_API_KEY; загрузка собственного бренда работает без AI.</span></article>
         <article><strong>Animated</strong><span>Brand Pack умеет локально собирать VP9 WEBM motion прямо в Telegram WebView; если WebView не поддерживает encoder, static pack остаётся полностью рабочим.</span></article>
-        <article><strong>Ghost positioning</strong><span>Creator Studio — часть Ghost Mode рядом с Privacy, Stories и Intelligence, а не отдельный бот.</span></article>
+        <article><strong>Ghost positioning</strong><span>Creator Studio — часть VETO Telegram рядом с Privacy, Stories и Intelligence, а не отдельный бот.</span></article>
       </section>
     </section>
 
@@ -971,7 +1034,7 @@
       <div class="page-head">
         <span class="kicker">История</span>
         <h1>Архив</h1>
-        <p>Последние публикации Ghost Mode и настройки аудитории, с которыми они ушли.</p>
+        <p>Последние публикации VETO Telegram и настройки аудитории, с которыми они ушли.</p>
       </div>
 
       <section class="archive-list" id="archiveList"></section>
@@ -985,11 +1048,11 @@
   </main>
 
   <nav class="bottom-nav" aria-label="Главная навигация">
-    <button class="nav-item active" data-nav="home" type="button"><span>⌂</span><small>Home</small></button>
-    <button class="nav-item" data-nav="privacy" type="button"><span>◌</span><small>Ghost</small></button>
-    <button class="nav-item" data-nav="publish" type="button"><span>＋</span><small>Stories</small></button>
-    <button class="nav-item" data-nav="studio" type="button"><span>✦</span><small>Studio</small></button>
-    <button class="nav-item" data-nav="viewers" type="button"><span>◉</span><small>Intel</small></button>
+    <button class="nav-item active" data-nav="home" type="button" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4z"/></svg><small>Home</small></button>
+    <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5.5 5.7v5.5c0 4.2 2.5 7.7 6.5 9.8 4-2.1 6.5-5.6 6.5-9.8V5.7z"/><path d="M9.5 12.2 11.2 14l3.6-4"/></svg><small>Privacy</small></button>
+    <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 8v8M8 12h8"/></svg><small>Stories</small></button>
+    <button class="nav-item" data-nav="studio" type="button" aria-label="Студия"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/><path d="m18.5 15 .7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7z"/></svg><small>Studio</small></button>
+    <button class="nav-item" data-nav="viewers" type="button" aria-label="Интеллект"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V9M9 18V5M14 18v-7M19 18V7"/><path d="M3 18h18"/></svg><small>Intel</small></button>
   </nav>
 
   <div class="action-dock" id="actionDock">
@@ -1007,9 +1070,9 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261004-brand-pack"></script>
-  <script src="/privacy.js?v=20261004-brand-pack"></script>
-  <script src="/studio-module.js?v=20261004-brand-pack"></script>
-  <script src="/brand-pack.js?v=20261004-brand-pack"></script>
+  <script src="/app.js?v=20261007-veto-telegram"></script>
+  <script src="/privacy.js?v=20261007-veto-telegram"></script>
+  <script src="/studio-module.js?v=20261007-veto-telegram"></script>
+  <script src="/brand-pack.js?v=20261007-veto-telegram"></script>
 </body>
 </html>

@@ -32,7 +32,7 @@
   }
 
   async function api(body) {
-    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
     const response = await fetch('/api/emoji-studio', {
       method: 'POST',
       headers: {
@@ -42,7 +42,7 @@
       body: JSON.stringify(body),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Ghost Brand Engine error');
+    if (!response.ok || !data.ok) throw new Error(data.error || 'VETO Brand Engine error');
     return data;
   }
 
@@ -477,7 +477,7 @@
     $('brandPackShareButton')?.addEventListener('click', event => {
       const link = event.currentTarget.dataset.link;
       if (!link) return;
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Ghost Mode · Brand Emoji Pack')}`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('VETO Telegram · Brand Emoji Pack')}`;
       try { tg?.openTelegramLink?.(shareUrl); } catch { window.open(shareUrl, '_blank', 'noopener'); }
     });
 
