@@ -46,3 +46,40 @@ test('confirmed viewer automation is factual and story-scoped', () => {
   assert.match(message.text, /@alice/);
   assert.match(message.text, /Story #42/);
 });
+
+
+test('Watch Changes automation handles deletes without raw content', () => {
+  const rawSecret = 'PRIVATE DELETED MESSAGE';
+  const message = automationMessage({
+    ruleKey: 'watch_changes',
+    event: {
+      type: 'message.delete',
+      actorUsername: 'alex',
+      payload: {
+        chatTitle: 'Important chat',
+        text_content: rawSecret,
+        preview: rawSecret,
+      },
+    },
+  });
+  assert.equal(message.screen, 'chats');
+  assert.match(message.text, /@alex/);
+  assert.match(message.text, /удалено/i);
+  assert.match(message.text, /Important chat/);
+  assert.equal(message.text.includes(rawSecret), false);
+});
+
+test('Watch Changes automation distinguishes edits', () => {
+  const message = automationMessage({
+    ruleKey: 'watch_changes',
+    event: {
+      type: 'message.edit',
+      actorDisplayName: 'Anna',
+      payload: { chatTitle: 'Deal room' },
+    },
+  });
+  assert.equal(message.screen, 'chats');
+  assert.match(message.text, /Anna/);
+  assert.match(message.text, /изменено/i);
+  assert.match(message.text, /Edit History/);
+});
