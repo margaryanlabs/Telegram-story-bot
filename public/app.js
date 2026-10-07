@@ -378,7 +378,7 @@
       openSheet(`
         <span class="kicker">Опубликовано</span>
         <h2>Story #${escapeHtml(publishedStoryId)} уже в Telegram</h2>
-        <p>Аудитория: ${escapeHtml(publishedAudience)} · Viewer Sync ${viewerState.session?.connected ? 'подхватит просмотры автоматически' : 'можно подключить позже'}.</p>
+        <p>Аудитория: ${escapeHtml(publishedAudience)} · Deep Intelligence ${viewerState.session?.connected ? 'подхватит просмотры автоматически' : 'можно подключить позже'}.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Публикация</strong><span>Готово · ${escapeHtml(result.transport || 'Telegram')}</span></div>
           <div class="sheet-item"><strong>Защита</strong><span>${state.protect ? 'Включена' : 'Выключена'}</span></div>
@@ -530,12 +530,12 @@
       avatar.appendChild(img);
       return;
     }
-    const name = source.firstName || source.first_name || source.username || 'TC';
+    const name = source.firstName || source.first_name || source.username || 'G';
     avatar.textContent = String(name).slice(0, 2).toUpperCase();
   }
 
   async function api(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Telegram Control внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
@@ -551,7 +551,7 @@
       timeoutMs: action === 'publish_story' ? 45000 : 15000,
     });
 
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Telegram Control');
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Ghost Mode');
 
     if (Array.isArray(data.activity)) {
       state.activity = data.activity;
@@ -589,7 +589,7 @@
   }
 
   async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
-    if (!tg?.initData) throw new Error('Открой Telegram Control внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
 
     const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
     const options = {
@@ -607,7 +607,7 @@
     });
 
     if (!response.ok || !data.ok) {
-      const error = new Error(data.error || 'Viewer Sync временно недоступен');
+      const error = new Error(data.error || 'Deep Intelligence временно недоступен');
       error.viewerData = data;
       throw error;
     }
@@ -615,7 +615,7 @@
   }
 
   async function automationsApi(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Telegram Control внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
@@ -714,7 +714,7 @@
           newConnectionsReady: Boolean(data.config?.newConnectionsReady),
           secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
           degraded: true,
-          error: data.storageError || 'Viewer Sync временно восстанавливает соединение',
+          error: data.storageError || 'Deep Intelligence временно восстанавливает соединение',
         };
       } else {
         viewerState = {
@@ -767,7 +767,7 @@
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
       $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
-      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Telegram Control.';
+      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Ghost Mode.';
     } else if (permission) {
       $('heroStatusPill').querySelector('span').textContent = 'Нужно разрешение';
       $('connectionIcon').className = 'connection-icon warn';
@@ -920,27 +920,27 @@
 
     syncState.className = 'viewer-sync-state';
     if (viewerState.degraded) {
-      $('viewerSyncTitle').textContent = 'Viewer Sync восстанавливает соединение.';
+      $('viewerSyncTitle').textContent = 'Deep Intelligence восстанавливает соединение.';
       $('viewerSyncText').textContent = viewerState.error || 'Данные зрителей временно недоступны. Публикация Stories продолжает работать.';
       syncState.textContent = 'Временная проблема хранилища · повторяем автоматически';
       syncState.classList.add('warn');
-      syncButton.textContent = connected ? 'Управление Viewer Sync' : 'Обновить';
+      syncButton.textContent = connected ? 'Управление Deep Intelligence' : 'Обновить';
     } else if (viewerState.configured === false) {
-      $('viewerSyncTitle').textContent = 'Viewer Sync backend почти готов.';
+      $('viewerSyncTitle').textContent = 'Deep Intelligence backend почти готов.';
       $('viewerSyncText').textContent = 'Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.';
-      syncState.textContent = 'Нужно завершить серверную настройку Viewer Sync';
+      syncState.textContent = 'Нужно завершить серверную настройку Deep Intelligence';
       syncState.classList.add('warn');
       syncButton.textContent = 'Что осталось подключить';
     } else if (connected) {
       const account = viewerState.session?.account || {};
-      $('viewerSyncTitle').textContent = 'Viewer Sync активен.';
-      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем Telegram Control подтверждает доступную личность.';
+      $('viewerSyncTitle').textContent = 'Deep Intelligence активен.';
+      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем Ghost Mode подтверждает доступную личность.';
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
       syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
-      syncButton.textContent = 'Управление Viewer Sync';
+      syncButton.textContent = 'Управление Deep Intelligence';
     } else if (viewerState.session?.status === 'reauth_required') {
-      $('viewerSyncTitle').textContent = 'Нужно переподключить Viewer Sync.';
+      $('viewerSyncTitle').textContent = 'Нужно переподключить Deep Intelligence.';
       $('viewerSyncText').textContent = viewerState.session?.lastError || 'Telegram-сессия больше не авторизована.';
       syncState.textContent = viewerState.newConnectionsReady === false
         ? 'Повторное подключение временно закрыто Security'
@@ -968,15 +968,15 @@
         .some(value => String(value).toLowerCase().includes(query));
     });
 
-    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} confirmed` : 'Viewer Sync';
+    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} confirmed` : 'Deep Intelligence';
 
     if (!connected) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Подключи Viewer Sync, чтобы видеть подтверждённых зрителей и историю взаимодействий.</div>';
+      $('viewerList').innerHTML = '<div class="viewer-empty">Подключи Deep Intelligence, чтобы видеть подтверждённых зрителей и историю взаимодействий.</div>';
       return;
     }
 
     if (!selectedViewerStory) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Telegram Control.</div>';
+      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Ghost Mode.</div>';
       return;
     }
 
@@ -1031,7 +1031,7 @@
 
     const intel = viewerState.analytics;
     const connected = viewerState.session?.connected === true;
-    $('viewerAnalyticsBadge').textContent = connected ? 'Live data' : 'Viewer Sync';
+    $('viewerAnalyticsBadge').textContent = connected ? 'Live data' : 'Deep Intelligence';
     $('exportCsvButton').disabled = !connected;
     $('intelUnique').textContent = intel ? String(intel.uniqueViewers || 0) : '—';
     $('intelRepeat').textContent = intel ? String(intel.repeatViewers || 0) : '—';
@@ -1254,7 +1254,7 @@
       };
     }
     return {
-      title: 'Событие Telegram Control',
+      title: 'Событие Ghost Mode',
       detail: type || 'Activity',
     };
   }
@@ -1451,7 +1451,7 @@
     openSheet(`
       <span class="kicker">AUTOMATION CENTER</span>
       <h2>Событие → правило → действие</h2>
-      <p>Automation v1 только уведомляет тебя в собственном Telegram Control bot. Она не пишет другим людям и не совершает действия от твоего имени.</p>
+      <p>Automation v1 только уведомляет тебя в собственном Ghost Mode bot. Она не пишет другим людям и не совершает действия от твоего имени.</p>
 
       <div class="automation-rule-list">
         <button class="automation-rule-card ${securityEnabled ? 'enabled' : ''}" type="button"
@@ -1574,12 +1574,12 @@
     openSheet(`
       <span class="kicker">Telegram Business</span>
       <h2>Одноразовое подключение</h2>
-      <p>Telegram Control работает на iOS, Android и Desktop. Системные права Telegram Business выдаются один раз в самом Telegram.</p>
+      <p>Ghost Mode работает на iOS, Android и Desktop. Системные права Telegram Business выдаются один раз в самом Telegram.</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Автоматизация чатов.</span></div>
         <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Включи разрешение «Управление историями» для Stories.</span></div>
         <div class="sheet-item"><strong>3. Разреши сообщения для Ghost</strong><span>Включи доступ к сообщениям и выбери нужные чаты.</span></div>
-        <div class="sheet-item"><strong>4. Вернись сюда</strong><span>Нажми «Проверить Telegram» — Telegram Control сам проверит оба разрешения.</span></div>
+        <div class="sheet-item"><strong>4. Вернись сюда</strong><span>Нажми «Проверить Telegram» — Ghost Mode сам проверит оба разрешения.</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
@@ -1592,7 +1592,7 @@
       openSheet(`
         <span class="kicker">DEEP INTELLIGENCE</span>
         <h2>Серверная часть ещё не готова</h2>
-        <p>Telegram Control не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
+        <p>Ghost Mode не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и последующее подтверждение просмотров уже встроены.</span></div>
           <div class="sheet-item"><strong>Приватное подключение</strong><span>Новое подключение создаётся только при подтверждённом защищённом хранении.</span></div>
@@ -1638,7 +1638,7 @@
       openSheet(`
         <span class="kicker">SECURITY</span>
         <h2>Новое подключение приостановлено</h2>
-        <p>Telegram Control не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
+        <p>Ghost Mode не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Stories & Ghost</strong><span>Продолжают работать независимо.</span></div>
           <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
@@ -1693,7 +1693,7 @@
 
   function viewerCodeSheet(delivery) {
     openSheet(`
-      <span class="kicker">Viewer Sync</span>
+      <span class="kicker">Deep Intelligence</span>
       <h2>Введи код Telegram</h2>
       <p>${delivery === 'telegram_app' ? 'Код отправлен в Telegram.' : 'Telegram выбрал доступный способ доставки кода.'}</p>
       <div class="auth-form">
@@ -1713,7 +1713,7 @@
     openSheet(`
       <span class="kicker">Двухэтапная защита</span>
       <h2>Нужен 2FA-пароль</h2>
-      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Telegram Control.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
+      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Ghost Mode.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPassword">Telegram 2FA</label>
@@ -1799,7 +1799,7 @@
 
   async function startViewerQrLogin() {
     if (!tg?.initData) {
-      showToast('Открой Telegram Control внутри Telegram');
+      showToast('Открой Ghost Mode внутри Telegram');
       return;
     }
     if (viewerState.newConnectionsReady === false) {
@@ -1879,7 +1879,7 @@
     const history = (state.history || []).filter(item => !item.deleted).slice(0, 20);
     const items = history.length
       ? history.map(item => `<button data-viewer-story="${item.id}">Story #${item.id} · ${audienceLabel(item.audience)} · ${formatDate(item.ts)}</button>`).join('')
-      : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через Telegram Control.</span></div>';
+      : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через Ghost Mode.</span></div>';
 
     openSheet(`
       <span class="kicker">Viewers</span>
@@ -1963,6 +1963,7 @@
     switchScreen(row.dataset.activityScreen);
   });
   $('homeSecurityCard')?.addEventListener('click', securityCenterSheet);
+  $('homeAutomationsCard')?.addEventListener('click', () => automationCenterSheet());
   document.querySelectorAll('.audience-card').forEach(button => button.addEventListener('click', async () => {
     const mode = button.dataset.audience;
     if (mode === 'selected' && !state.selected?.length) {
@@ -1976,7 +1977,7 @@
     openSheet(`
       <span class="kicker">Только выбранные</span>
       <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Добавь людей'}</h2>
-      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из Telegram Control.</p>
+      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из Ghost Mode.</p>
       <div class="people-input-wrap">
         <label for="selectedUsernames">Usernames <small id="selectedInputCount">${state.selected?.length || 0} / 100</small></label>
         <textarea id="selectedUsernames" data-people-input="selected" placeholder="@alex\n@maria">${state.selected?.length ? '@' + state.selected.join('\n@') : ''}</textarea>
@@ -1993,7 +1994,7 @@
     openSheet(`
       <span class="kicker">Исключения</span>
       <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Добавь исключения'}</h2>
-      <p>Вставь @username. Если выбран другой режим, Telegram Control сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
+      <p>Вставь @username. Если выбран другой режим, Ghost Mode сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
       <div class="people-input-wrap">
         <label for="excludedUsernames">Usernames <small id="excludedInputCount">${state.excluded?.length || 0} / 100</small></label>
         <textarea id="excludedUsernames" data-people-input="excluded" placeholder="@alex\n@maria">${state.excluded?.length ? '@' + state.excluded.join('\n@') : ''}</textarea>
@@ -2060,7 +2061,7 @@
   $('testAlertButton').addEventListener('click', async () => {
     const button = $('testAlertButton');
     if (!viewerState.session?.connected) {
-      showToast('Сначала подключи Viewer Sync');
+      showToast('Сначала подключи Deep Intelligence');
       return;
     }
 
@@ -2092,7 +2093,7 @@
   $('exportCsvButton').addEventListener('click', async () => {
     const button = $('exportCsvButton');
     if (!viewerState.session?.connected || button.disabled) {
-      showToast('Сначала подключи Viewer Sync');
+      showToast('Сначала подключи Deep Intelligence');
       return;
     }
 
@@ -2343,7 +2344,7 @@
         } else {
           closeSheet();
           notify('success');
-          showToast('Viewer Sync подключён');
+          showToast('Deep Intelligence подключён');
           await refreshViewerSync({ silent: true });
           await refreshViewerAnalytics({ silent: true });
         }
@@ -2357,7 +2358,7 @@
         await viewerApi('verify_password', { password }, null);
         closeSheet();
         notify('success');
-        showToast('Viewer Sync подключён');
+        showToast('Deep Intelligence подключён');
         await refreshViewerSync({ silent: true });
         await refreshViewerAnalytics({ silent: true });
       } catch (error) {
@@ -2406,7 +2407,7 @@
           error: null,
         };
         renderViewers();
-        showToast('Viewer Sync отключён');
+        showToast('Deep Intelligence отключён');
       } catch (error) {
         showToast(error.message);
       }
@@ -2432,7 +2433,7 @@
         <div class="sheet-item"><strong>Исключено</strong><span>${story.countsKnown === false ? '— · старый архив' : `${story.excluded || 0} пользователей`}</span></div>
         <div class="sheet-item"><strong>Выбрано</strong><span>${story.countsKnown === false ? '— · старый архив' : `${story.selected || 0} пользователей`}</span></div>
         <div class="sheet-item"><strong>Статус</strong><span>${story.deleted ? 'Удалена' : 'Опубликована'}</span></div>
-        ${story.lastSyncAt ? `<div class="sheet-item"><strong>Viewer Sync</strong><span>${Number(story.views || 0)} views · ${Number(story.identified || 0)} identified · ${Number(story.reactions || 0)} reactions</span></div>` : ''}
+        ${story.lastSyncAt ? `<div class="sheet-item"><strong>Deep Intelligence</strong><span>${Number(story.views || 0)} views · ${Number(story.identified || 0)} identified · ${Number(story.reactions || 0)} reactions</span></div>` : ''}
       </div>
       <div class="sheet-actions">
         ${story.deleted ? '' : `<button data-delete-story="${story.id}">Удалить Story</button>`}
@@ -2517,7 +2518,7 @@
   window.addEventListener('unhandledrejection', event => {
     const message = event?.reason?.message || String(event?.reason || '');
     if (message) {
-      console.warn('Story Pilot unhandled rejection', message);
+      console.warn('Ghost Mode unhandled rejection', message);
       showToast(message);
     }
   });
@@ -2525,7 +2526,7 @@
   window.addEventListener('error', event => {
     const message = event?.error?.message || event?.message || '';
     if (message) {
-      console.warn('Story Pilot UI error', message);
+      console.warn('Ghost Mode UI error', message);
       showToast('Интерфейс восстановился после ошибки');
     }
   });
@@ -2546,6 +2547,6 @@
       }
     }, 30000);
   } else {
-    showToast('Открой Telegram Control внутри Telegram для управления');
+    showToast('Открой Ghost Mode внутри Telegram для управления');
   }
 })();
