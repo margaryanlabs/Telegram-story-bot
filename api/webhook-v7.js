@@ -272,7 +272,7 @@ async function saveSettings(token, chatId, origin, settings) {
     chat_id: chatId,
     menu_button: {
       type: 'web_app',
-      text: 'Открыть Control',
+      text: 'Ghost Mode',
       web_app: { url: url.toString() },
     },
   });
@@ -294,7 +294,7 @@ async function clearReplyKeyboard(token, chatId) {
 
 function homeText(settings) {
   if (!settings.bc) {
-    return '◉ Telegram Control\n\nPrivacy, Messages, Stories и Intelligence — в одном центре.\n\nЕсли подключаешься впервые:\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Включи «Управление историями» и доступ к сообщениям / чтению сообщений.\n4️⃣ Разреши нужные чаты.\n5️⃣ Вернись и нажми «✅ Я подключил — проверить».\n\nУже подключён, но бот этого не видит? Измени одно из разрешений и сохрани — Telegram пришлёт боту свежий статус подключения.';
+    return '◉ Ghost Mode\n\nPrivacy, Messages, Stories и Intelligence — в одном центре.\n\nЕсли подключаешься впервые:\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Включи «Управление историями» и доступ к сообщениям / чтению сообщений.\n4️⃣ Разреши нужные чаты.\n5️⃣ Вернись и нажми «✅ Я подключил — проверить».\n\nУже подключён, но бот этого не видит? Измени одно из разрешений и сохрани — Telegram пришлёт боту свежий статус подключения.';
   }
 
   if (!settings.canStories) {
@@ -304,7 +304,7 @@ function homeText(settings) {
   const excluded = settings.excluded?.length
     ? `\n🚫 Не увидят: ${settings.excluded.map(u => `@${u}`).join(', ')}`
     : '';
-  return `◉ Telegram Control\n\n✅ Telegram подключён\n👁 ${audienceLabel(settings.audience, settings.selected)}${excluded}\n🛡 Защита: ${settings.protect ? 'ВКЛ' : 'ВЫКЛ'}\n\n📸 Отправь фото или JPG/PNG/WEBP — опубликую его как Story.`;
+  return `◉ Ghost Mode\n\n✅ Telegram подключён\n👁 ${audienceLabel(settings.audience, settings.selected)}${excluded}\n🛡 Защита: ${settings.protect ? 'ВКЛ' : 'ВЫКЛ'}\n\n📸 Отправь фото или JPG/PNG/WEBP — опубликую его как Story.`;
 }
 
 function settingsText(settings, live = null) {
@@ -312,16 +312,16 @@ function settingsText(settings, live = null) {
     ? (settings.canStories ? '✅ активно, Stories разрешены' : '⚠️ подключено, но без доступа к Stories')
     : '⚪ ID подключения ещё не получен';
   if (live === false) connection = '❌ неактивно';
-  return `📊 Telegram Control\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n👻 Доступ к сообщениям для Ghost: ${settings.canReadMessages ? '✅ есть' : '⚠️ не выдан'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
+  return `📊 Ghost Mode\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n👻 Доступ к сообщениям для Ghost: ${settings.canReadMessages ? '✅ есть' : '⚠️ не выдан'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
 }
 
 function connectText(settings, live = null) {
   if (settings.bc && settings.canStories && live !== false) {
-    return `✅ Telegram подключён\n\nTelegram Control готов управлять Stories.\n${settings.canReadMessages ? '👻 Ghost: доступ к сообщениям тоже включён.' : '👻 Ghost: для Anti-Delete и удалённых сообщений ещё включи доступ к сообщениям / чтению сообщений в настройках Business-бота.'}\n\n📸 Для Story просто отправь фото в этот чат.`;
+    return `✅ Telegram подключён\n\nGhost Mode готов управлять Stories.\n${settings.canReadMessages ? '👻 Ghost: доступ к сообщениям тоже включён.' : '👻 Ghost: для Anti-Delete и удалённых сообщений ещё включи доступ к сообщениям / чтению сообщений в настройках Business-бота.'}\n\n📸 Для Story просто отправь фото в этот чат.`;
   }
 
   if (settings.bc && live !== false) {
-    return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → Telegram Control → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
+    return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → Ghost Mode → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
   }
 
   return '🔗 Подключить Telegram\n\nЭто делается один раз для каждого пользователя:\n\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Разреши «Управление историями».\n4️⃣ Для Ghost включи доступ к сообщениям / чтению сообщений и выбери нужные чаты.\n5️⃣ Сохрани и вернись сюда.\n6️⃣ Нажми «✅ Я подключил — проверить».\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, а здесь подключение не найдено: измени одно разрешение и сохрани. Это заставит Telegram прислать боту актуальный Business Connection.\n\nBusiness-функции работают через официальное подключение Telegram. Deep Intelligence подключается отдельно и добровольно.';
@@ -329,10 +329,10 @@ function connectText(settings, live = null) {
 
 function howToText(settings) {
   if (!settings.bc || !settings.canStories) {
-    return '◉ Как работает Telegram Control\n\n1. Один раз подключаешь @Storypilotlab_bot через Telegram Business / «Автоматизация чатов».\n2. Для Stories разрешаешь управление историями; для Ghost — доступ к сообщениям и нужным чатам.\n3. Возвращаешься в Control Center: Home, Ghost, Chats, Stories и Intelligence.\n4. Deep Intelligence подключается отдельно, только если нужны viewer analytics и alerts.\n5. Для Story можешь также просто отправить фото в этот чат.\n\nStories и Ghost используют Telegram Business; Deep Intelligence — отдельную защищённую приватную сессию.';
+    return '◉ Как работает Ghost Mode\n\n1. Один раз подключаешь @Storypilotlab_bot через Telegram Business / «Автоматизация чатов».\n2. Для Stories разрешаешь управление историями; для Ghost — доступ к сообщениям и нужным чатам.\n3. Возвращаешься в Ghost Mode: Home, Ghost, Chats, Stories и Intelligence.\n4. Deep Intelligence подключается отдельно, только если нужны viewer analytics и alerts.\n5. Для Story можешь также просто отправить фото в этот чат.\n\nStories и Ghost используют Telegram Business; Deep Intelligence — отдельную защищённую приватную сессию.';
   }
 
-  return `◉ Telegram Control\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n👻 Ghost: открой Mini App → Ghost; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: Ghost archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
+  return `◉ Ghost Mode\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n👻 Ghost: открой Mini App → Ghost; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: Ghost archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
 }
 
 async function editPanel(token, chatId, messageId, text, settings, origin = '') {
@@ -469,7 +469,7 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
     console.warn('Durable Business connection sync skipped', error?.message || String(error));
   });
 
-  console.log('Story Pilot business connection sync', {
+  console.log('Ghost Mode business connection sync', {
     chat_id: chatId,
     connection_present: Boolean(connection?.id),
     enabled: live,
@@ -481,7 +481,7 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   if (notify) {
     const text = live
       ? connectText(next, true)
-      : '⚠️ Telegram Control отключён от Telegram Business. Подключи бота снова, чтобы публиковать Stories.';
+      : '⚠️ Ghost Mode отключён от Telegram Business. Подключи бота снова, чтобы публиковать Stories.';
     await showFreshPanel(token, chatId, origin, next, text);
   }
 
@@ -693,7 +693,7 @@ async function resolveUsers(client, Api, usernames) {
       } catch (error) {
         const description = error?.errorMessage || error?.message || String(error);
         if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID|Не удалось найти/i.test(description)) {
-          console.warn('Story Pilot skipped stale privacy username', { username });
+          console.warn('Ghost Mode skipped stale privacy username', { username });
           return { username, skipped: true };
         }
         throw error;
@@ -755,7 +755,7 @@ async function buildPrivacyRules(client, Api, audience, selected, excluded) {
     throw new Error(`Неизвестный режим аудитории: ${audience}`);
   }
 
-  console.log('Story Pilot privacy rules built', {
+  console.log('Ghost Mode privacy rules built', {
     audience,
     rule_order: rules.map(rule => rule?.className || rule?.constructor?.name || 'unknown'),
     excluded_requested: excluded?.length || 0,
@@ -837,7 +837,7 @@ async function postPhotoStoryMtprotoWithRetry(...args) {
     return await postPhotoStoryMtproto(...args);
   } catch (error) {
     if (!isTransientMtprotoError(error)) throw error;
-    console.warn('Story Pilot transient MTProto failure, retrying once', {
+    console.warn('Ghost Mode transient MTProto failure, retrying once', {
       error: error?.errorMessage || error?.message || String(error),
     });
     return postPhotoStoryMtproto(...args);
@@ -855,13 +855,13 @@ function friendlyError(description = '') {
   if (/STORY_SEND_FLOOD_WEEKLY/i.test(d)) return 'Достигнут недельный лимит Stories для этого аккаунта.';
   if (/STORY_SEND_FLOOD_MONTHLY/i.test(d)) return 'Достигнут месячный лимит Stories для этого аккаунта.';
   if (/STORY_SEND_FLOOD|FLOOD_WAIT/i.test(d)) return 'Telegram временно ограничил публикации. Нужно подождать до окончания лимита.';
-  if (/BUSINESS_CONNECTION_INVALID|Business connection is disabled/i.test(d)) return 'Подключение Telegram Control устарело или отключено. Переподключи бота в «Автоматизация чатов».';
+  if (/BUSINESS_CONNECTION_INVALID|Business connection is disabled/i.test(d)) return 'Подключение Ghost Mode устарело или отключено. Переподключи бота в «Автоматизация чатов».';
   if (/can_manage_stories|Нет права/i.test(d)) return 'Нет разрешения «Управление историями». Включи его в «Автоматизация чатов».';
   if (/PHOTO_INVALID_DIMENSIONS|IMAGE_PROCESS_FAILED|Input buffer contains unsupported image format/i.test(d)) return 'Telegram не принял изображение. Попробуй JPG, PNG или WEBP.';
-  if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID/i.test(d)) return 'Один из сохранённых usernames больше не существует. Telegram Control очистит такие записи при следующей публикации.';
+  if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID/i.test(d)) return 'Один из сохранённых usernames больше не существует. Ghost Mode очистит такие записи при следующей публикации.';
   if (/STORY_PRIVACY_INVALID|PRIVACY/i.test(d)) return 'Telegram не принял выбранную аудиторию. Попробуй заново выбрать людей.';
   if (/STORY_ID_INVALID|STORY_NOT_FOUND/i.test(d)) return 'Последняя Story уже удалена или больше недоступна.';
-  if (/BOT_METHOD_INVALID.*CanSendStory/i.test(d)) return 'Внутренняя проверка Telegram была недоступна для business-бота. Telegram Control уже исправлен — отправь фото ещё раз.';
+  if (/BOT_METHOD_INVALID.*CanSendStory/i.test(d)) return 'Внутренняя проверка Telegram была недоступна для business-бота. Ghost Mode уже исправлен — отправь фото ещё раз.';
   if (/BOT_ACCESS_FORBIDDEN/i.test(d)) return 'Telegram запретил эту операцию через текущее Business-подключение.';
   return d;
 }
@@ -933,7 +933,7 @@ export default async function handler(req, res) {
         const connection = await tg(token, 'getBusinessConnection', { business_connection_id: activityConnectionId });
         await persistBusinessConnection(token, origin, connection, { notify: false });
       } catch (error) {
-        console.warn('Story Pilot business activity recovery failed', error?.telegram || error?.message || error);
+        console.warn('Ghost Mode business activity recovery failed', error?.telegram || error?.message || error);
       }
     }
 
@@ -979,13 +979,13 @@ export default async function handler(req, res) {
             result.row,
             result.settings,
           ).catch(error => {
-            console.warn('Story Pilot Ghost edit alert skipped', error?.message || error);
+            console.warn('Ghost Mode Ghost edit alert skipped', error?.message || error);
             return false;
           });
         }
       } catch (error) {
         // Privacy storage must never make Telegram retry the entire webhook update.
-        console.warn('Story Pilot privacy message capture skipped', {
+        console.warn('Ghost Mode privacy message capture skipped', {
           connection_id: connectionId || null,
           message_id: privacyBusinessMessage.message_id || null,
           error: error?.message || String(error),
@@ -1036,12 +1036,12 @@ export default async function handler(req, res) {
             result.settings,
             result.mediaRecoveryResults,
           ).catch(error => {
-            console.warn('Story Pilot Ghost delete alert skipped', error?.message || error);
+            console.warn('Ghost Mode Ghost delete alert skipped', error?.message || error);
             return false;
           });
         }
       } catch (error) {
-        console.warn('Story Pilot privacy delete capture skipped', {
+        console.warn('Ghost Mode privacy delete capture skipped', {
           connection_id: deleted.business_connection_id || null,
           chat_id: deleted.chat?.id || null,
           message_count: deleted.message_ids?.length || 0,
@@ -1106,13 +1106,13 @@ export default async function handler(req, res) {
         const current = refreshed.settings;
         const storyId = Number(current.lastStory);
         if (!refreshed.live || !current.bc) {
-          await showPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Telegram Control.', messageId);
+          await showPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Ghost Mode.', messageId);
         } else if (!Number.isInteger(storyId) || storyId <= 0) {
           await showPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.', messageId);
         } else {
           await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
           await markStoryDeleted(chatId, storyId).catch(error => {
-            console.warn('Viewer Sync story delete tracking failed', error?.message || error);
+            console.warn('Deep Intelligence story delete tracking failed', error?.message || error);
           });
           const next = {
             ...current,
@@ -1134,7 +1134,7 @@ export default async function handler(req, res) {
         } else if (refreshed.live) {
           await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
         } else {
-          await showPanel(token, chatId, origin, refreshed.settings, '⏳ Telegram Control пока не получил активный Business Connection.\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
+          await showPanel(token, chatId, origin, refreshed.settings, '⏳ Ghost Mode пока не получил активный Business Connection.\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
         }
       } else if (action === 'view:settings') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
@@ -1324,13 +1324,13 @@ export default async function handler(req, res) {
       const current = refreshed.settings;
       const storyId = Number(current.lastStory);
       if (!refreshed.live || !current.bc) {
-        await showFreshPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Telegram Control.');
+        await showFreshPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Ghost Mode.');
       } else if (!Number.isInteger(storyId) || storyId <= 0) {
         await showFreshPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
       } else {
         await tg(token, 'deleteStory', { business_connection_id: current.bc, story_id: storyId });
         await markStoryDeleted(chatId, storyId).catch(error => {
-          console.warn('Viewer Sync story delete tracking failed', error?.message || error);
+          console.warn('Deep Intelligence story delete tracking failed', error?.message || error);
         });
         const next = {
           ...current,
@@ -1462,7 +1462,7 @@ export default async function handler(req, res) {
           : '⏳ Проверяю аудиторию и публикую Story…'
       );
 
-      console.log('Story Pilot publish start', {
+      console.log('Ghost Mode publish start', {
         chat_id: chatId,
         audience: pre.audience,
         selected_count: pre.selected?.length || 0,
@@ -1475,7 +1475,7 @@ export default async function handler(req, res) {
         ? await postPhotoStoryBotApi(token, connectionId, original, image.caption, pre.protect)
         : await postPhotoStoryMtprotoWithRetry(token, connectionId, original, image.caption, pre.audience, pre.selected, pre.excluded, message.message_id, pre.protect);
 
-      console.log('Story Pilot publish success', {
+      console.log('Ghost Mode publish success', {
         chat_id: chatId,
         audience: pre.audience,
         transport: story.transport,
@@ -1507,7 +1507,7 @@ export default async function handler(req, res) {
         active: true,
         last_error: null,
       }).catch(error => {
-        console.warn('Viewer Sync story tracking skipped', error?.message || error);
+        console.warn('Deep Intelligence story tracking skipped', error?.message || error);
       });
       const cleaned = [...skippedExcluded, ...skippedSelected];
       await showPanel(token, chatId, origin, next, `✅ Story опубликована\n\n👁 ${audienceLabel(next.audience, next.selected)}${next.excluded?.length ? `\n🚫 Кроме: ${next.excluded.map(u => `@${u}`).join(', ')}` : ''}${next.protect ? '\n🛡 Защита включена' : ''}${cleaned.length ? `\n\n🧹 Удалил из приватности неактуальные usernames: ${cleaned.map(u => `@${u}`).join(', ')}` : ''}\n\n📸 Отправь следующее фото — настройки сохранятся.`);
@@ -1527,7 +1527,7 @@ export default async function handler(req, res) {
     console.error('Webhook error', error?.telegram || error);
     const chatId = update?.callback_query?.message?.chat?.id || update?.message?.chat?.id || update?.business_connection?.user_chat_id;
     if (update?.message && extractImage(update.message)) {
-      console.error('Story Pilot publish failed', {
+      console.error('Ghost Mode publish failed', {
         chat_id: chatId || null,
         message_id: update.message.message_id || null,
         error: error?.telegram?.description || error?.message || String(error),
