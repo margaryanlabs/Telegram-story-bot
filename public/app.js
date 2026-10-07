@@ -992,7 +992,7 @@
     } else if (viewerState.newConnectionsReady === false) {
       $('viewerSyncTitle').textContent = 'Deep Intelligence защищён.';
       $('viewerSyncText').textContent = 'Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.';
-      syncState.textContent = 'Secure session storage · setup required';
+      syncState.textContent = 'Защищённая сессия storage · setup required';
       syncState.classList.add('warn');
       syncButton.textContent = 'Проверить Security';
     } else {
@@ -1381,23 +1381,21 @@
       overall.classList.toggle('ready', telegramReady);
       overall.classList.toggle('warn', !telegramReady);
       const label = overall.querySelector('span');
-      if (label) label.textContent = telegramReady ? 'Secure connection' : 'Connect Telegram';
+      if (label) label.textContent = telegramReady ? 'Telegram подключён' : 'Нужно подключить';
     }
 
     if ($('homeTelegramTitle')) {
       $('homeTelegramTitle').textContent = telegramReady
-        ? (intelConnected ? 'Аккаунт защищённо подключён' : 'Telegram Business подключён')
-        : 'Подключи Telegram за минуту';
+        ? 'Telegram подключён и готов'
+        : 'Подключи Telegram, чтобы начать';
       $('homeTelegramText').textContent = telegramReady
-        ? (intelConnected
-            ? 'QR/номер подтверждён. Сессия хранится в зашифрованном виде; Stories и Intelligence готовы.'
-            : 'Business-доступ подтверждён Telegram.')
-        : 'Рекомендуем QR или номер телефона. Telegram Business нужен только для дополнительных Business‑разрешений.';
+        ? 'Теперь можно публиковать Stories и пользоваться аналитикой. Дополнительные функции включаются отдельно.'
+        : 'На этом телефоне выбери номер + код. QR используй, если рядом есть второй экран.';
     }
 
-    if ($('homeGhostState')) $('homeGhostState').textContent = ghostPermission ? 'Business Privacy активна' : 'Опционально';
+    if ($('homeGhostState')) $('homeGhostState').textContent = ghostPermission ? 'Включено' : 'Anti‑Delete и архив';
     if ($('homeChatsState')) $('homeChatsState').textContent = ghostPermission ? 'Архив доступен' : 'Опционально';
-    if ($('homeIntelState')) $('homeIntelState').textContent = intelConnected ? 'Активен' : 'После подключения';
+    if ($('homeIntelState')) $('homeIntelState').textContent = intelConnected ? 'Доступно' : 'Аналитика аудитории';
     if ($('homeSecurityState')) $('homeSecurityState').textContent = intelConnected ? 'Encrypted session' : 'Контроль доступа';
 
     const accountBadge = $('vetoAccountBadge');
@@ -1425,10 +1423,10 @@
 
     const hasStory = activeStoryHistory().length > 0;
     const activation = [
-      { id:'activationTelegram', done:telegramReady, text:telegramReady ? 'Готово' : 'Нужно' },
-      { id:'activationGhost', done:ghostPermission, text:ghostPermission ? 'Готово' : 'Optional', optional:true },
-      { id:'activationStory', done:hasStory, text:hasStory ? 'Готово' : 'Нужно' },
-      { id:'activationIntel', done:intelConnected, text:intelConnected ? 'Готово' : 'Optional', optional:true },
+      { id:'activationTelegram', done:telegramReady, text:telegramReady ? 'Готово ✓' : 'Нужно' },
+      { id:'activationStory', done:hasStory, text:hasStory ? 'Готово ✓' : (telegramReady ? 'Следующий шаг' : 'После шага 1') },
+      { id:'activationGhost', done:ghostPermission, text:ghostPermission ? 'Включено' : 'Необязательно', optional:true },
+      { id:'activationIntel', done:intelConnected, text:intelConnected ? 'Доступно' : 'После подключения', optional:true },
     ];
     activation.forEach(step => {
       const el = $(step.id);
@@ -1439,24 +1437,22 @@
       if (status) status.textContent = step.text;
     });
 
-    const completed = activation.filter(step => step.done).length;
+    const completed = [telegramReady, hasStory].filter(Boolean).length;
     const coreReady = telegramReady && hasStory;
     const activationCard = $('activationCard');
     activationCard?.classList.toggle('ready', coreReady);
-    if ($('activationScore')) $('activationScore').textContent = `${completed}/4`;
+    if ($('activationScore')) $('activationScore').textContent = `${completed}/2`;
     if ($('activationTitle')) {
       $('activationTitle').textContent = coreReady
-        ? (intelConnected ? 'VETO Telegram полностью активирован' : 'Основной контур готов')
-        : 'Заверши базовую настройку';
+        ? 'VETO готов к работе'
+        : !telegramReady ? 'Шаг 1 · Подключи Telegram' : 'Шаг 2 · Проверь первой Story';
     }
     if ($('activationText')) {
       $('activationText').textContent = !telegramReady
-        ? 'Подключи Telegram через QR или номер. Business можно добавить позже только для Privacy‑архива.'
+        ? 'На этом телефоне проще выбрать номер + код. Никакой доступ к сообщениям на этом шаге не включается.'
         : !hasStory
-          ? 'Аккаунт готов. Опубликуй первую Story и проверь полный цикл.'
-          : !ghostPermission
-            ? 'Основной контур работает. Privacy‑архив можно включить отдельно через Telegram Business.'
-            : 'Stories, Privacy и Intelligence активны. Следующий слой — Automations.';
+          ? 'Telegram уже подключён. Теперь выбери фото и опубликуй тестовую Story — после этого базовая активация завершена.'
+          : 'Базовая активация завершена. Privacy, Studio и Automations включай только если они тебе нужны.';
     }
 
     const activationPrimary = $('activationPrimaryButton');
@@ -1464,18 +1460,12 @@
       if (!telegramReady) {
         activationPrimary.textContent = 'Подключить Telegram · QR / номер';
         activationPrimary.dataset.activationAction = 'telegram';
-      } else if (!ghostPermission) {
-        activationPrimary.textContent = 'Настроить VETO Privacy';
-        activationPrimary.dataset.activationAction = 'ghost';
       } else if (!hasStory) {
-        activationPrimary.textContent = 'Опубликовать первую Story';
+        activationPrimary.textContent = 'Шаг 2 · Опубликовать тестовую Story';
         activationPrimary.dataset.activationAction = 'story';
-      } else if (!intelConnected) {
-        activationPrimary.textContent = 'Подключить Intelligence · optional';
-        activationPrimary.dataset.activationAction = 'intelligence';
       } else {
-        activationPrimary.textContent = 'Настроить Automations';
-        activationPrimary.dataset.activationAction = 'automations';
+        activationPrimary.textContent = 'Готово ✓ · Посмотреть возможности';
+        activationPrimary.dataset.activationAction = 'features';
       }
     }
 
@@ -1531,7 +1521,7 @@
   }
 
   function renderVetoWelcomeStep(index = vetoWelcomeStep) {
-    vetoWelcomeStep = Math.max(0, Math.min(2, Number(index) || 0));
+    vetoWelcomeStep = Math.max(0, Math.min(3, Number(index) || 0));
     document.querySelectorAll('[data-veto-intro-step]').forEach((step, stepIndex) => {
       step.classList.toggle('active', stepIndex === vetoWelcomeStep);
     });
@@ -1540,9 +1530,9 @@
     });
     const next = $('vetoWelcomeNext');
     if (next) {
-      next.innerHTML = vetoWelcomeStep < 2
-        ? 'Продолжить <span>→</span>'
-        : (state.ready ? 'Открыть VETO <span>→</span>' : 'Подключить Telegram <span>→</span>');
+      next.innerHTML = vetoWelcomeStep < 3
+        ? 'Дальше <span>→</span>'
+        : (telegramAccountReady() ? 'Открыть VETO <span>→</span>' : 'Начать подключение <span>→</span>');
     }
   }
 
@@ -1581,8 +1571,8 @@
       <div class="veto-privacy-facts">
         <div><i>01</i><div><strong>Что обрабатывается</strong><span>Для Anti‑Delete, Edit History и Smart Inbox сервер получает только те события и сообщения, к которым ты сам выдал Telegram‑доступ.</span></div></div>
         <div><i>02</i><div><strong>Что может храниться</strong><span>Функции архива и восстановления требуют серверного хранения копий и версий. Если модуль выключен, VETO не должен притворяться, что он всё равно работает.</span></div></div>
-        <div><i>03</i><div><strong>Коды входа и 2FA</strong><span>Используются только во время отдельного подключения Deep Intelligence и не сохраняются как пароль или код авторизации.</span></div></div>
-        <div><i>04</i><div><strong>Ты контролируешь доступ</strong><span>Telegram‑разрешения можно отозвать в настройках Business / Chatbots. VETO после проверки покажет, что доступ больше не активен.</span></div></div>
+        <div><i>03</i><div><strong>Код Telegram и 2FA</strong><span>Используются только во время подключения аккаунта и не сохраняются как пароль или одноразовый код.</span></div></div>
+        <div><i>04</i><div><strong>Ты контролируешь доступ</strong><span>Основную сессию можно отключить в VETO Security Center. Business‑доступ для Privacy можно отдельно отозвать в Telegram Business / Chatbots.</span></div></div>
       </div>
 
       <div class="sheet-actions">
@@ -1590,6 +1580,106 @@
         <button data-sheet-action="go-ghost">Открыть Privacy Center</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
+    `);
+  }
+
+  const VETO_FEATURES = {
+    stories: {
+      kicker: 'STORIES',
+      icon: '＋',
+      title: 'Публикуй Stories из VETO',
+      summary: 'Выбирай фото, подпись и аудиторию — VETO публикует Story от твоего Telegram‑аккаунта и проверяет приватность публикации.',
+      benefit: 'Полезно, если хочешь быстро управлять Stories и точно понимать, кому они доступны.',
+      access: 'Нужно основное подключение Telegram через номер + код или QR.',
+      action: 'Открыть Stories',
+      screen: 'publish',
+    },
+    intelligence: {
+      kicker: 'ПРОСМОТРЫ И АНАЛИТИКА',
+      icon: '◉',
+      title: 'Понимай аудиторию своих Stories',
+      summary: 'VETO собирает доступные Telegram данные по твоим собственным Stories и показывает просмотры, повторную аудиторию и изменения.',
+      benefit: 'Полезно, чтобы видеть не просто цифру просмотров, а динамику аудитории.',
+      access: 'Работает после основного подключения Telegram. Дополнительный Business‑доступ не нужен.',
+      action: 'Открыть просмотры',
+      screen: 'viewers',
+    },
+    privacy: {
+      kicker: 'PRIVACY',
+      icon: '◌',
+      title: 'Anti‑Delete, Edit History и Smart Inbox',
+      summary: 'Если ты сам разрешишь доступ к выбранным Business‑чатам, VETO сможет сохранять разрешённые события сообщений, версии изменений и медиа.',
+      benefit: 'Полезно, если тебе нужен приватный архив изменений и удалений в выбранных чатах.',
+      access: 'Необязательно. Требует отдельного Telegram Business message access для выбранных чатов.',
+      action: 'Открыть Privacy',
+      screen: 'privacy',
+    },
+    studio: {
+      kicker: 'CREATOR STUDIO',
+      icon: '✦',
+      title: 'Создавай Telegram‑материалы',
+      summary: 'Emoji, stickers и Brand Packs можно собирать и подготавливать прямо внутри VETO.',
+      benefit: 'Полезно для личного бренда, каналов и визуального оформления.',
+      access: 'Для создания материалов дополнительный доступ к сообщениям не нужен.',
+      action: 'Открыть Studio',
+      screen: 'studio',
+    },
+    security: {
+      kicker: 'SECURITY',
+      icon: '⌾',
+      title: 'Всегда знай, что подключено',
+      summary: 'Security Center показывает основную Telegram‑сессию, шифрование, Business‑доступ и Privacy‑разрешения отдельно.',
+      benefit: 'Полезно, чтобы не гадать, какие права активны и что можно отключить.',
+      access: 'Никаких дополнительных разрешений для просмотра статуса не требуется.',
+      action: 'Открыть Security Center',
+      screen: 'security',
+    },
+    automations: {
+      kicker: 'AUTOMATIONS',
+      icon: '⚡',
+      title: 'Не проверяй всё вручную',
+      summary: 'VETO может отправлять сигналы о важных событиях: новых просмотрах, изменениях, удалениях и других доступных событиях.',
+      benefit: 'Полезно, если хочешь получать только нужные уведомления без постоянной проверки приложения.',
+      access: 'Каждая автоматизация работает только с теми источниками, которые ты сам подключил.',
+      action: 'Открыть Automations',
+      screen: 'automations',
+    },
+  };
+
+  function featureGuideSheet(featureKey) {
+    const feature = VETO_FEATURES[featureKey];
+    if (!feature) return;
+    openSheet(`
+      <span class="kicker">${feature.kicker}</span>
+      <div class="feature-guide-title"><span>${feature.icon}</span><h2>${feature.title}</h2></div>
+      <p>${feature.summary}</p>
+      <div class="feature-guide-facts">
+        <div><span>Зачем</span><strong>${feature.benefit}</strong></div>
+        <div><span>Что нужно</span><strong>${feature.access}</strong></div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="feature-open" data-feature-screen="${feature.screen}">${feature.action}</button>
+        <button data-sheet-action="all-features">Посмотреть все функции</button>
+        <button data-sheet-action="close">Понятно</button>
+      </div>
+    `);
+  }
+
+  function allFeaturesSheet() {
+    openSheet(`
+      <span class="kicker">ВОЗМОЖНОСТИ VETO</span>
+      <h2>Что делает каждая функция</h2>
+      <p>Нажми на функцию — покажу простыми словами, зачем она нужна и какой доступ требуется.</p>
+      <div class="all-features-list">
+        ${Object.entries(VETO_FEATURES).map(([key, feature]) => `
+          <button data-sheet-action="feature-help" data-feature-key="${key}">
+            <span>${feature.icon}</span>
+            <div><strong>${feature.title}</strong><small>${feature.summary}</small></div>
+            <em>Подробнее</em>
+          </button>
+        `).join('')}
+      </div>
+      <div class="sheet-actions"><button data-sheet-action="close">Закрыть</button></div>
     `);
   }
 
@@ -1614,13 +1704,13 @@
       <p>Здесь только реальные состояния. Коды входа и 2FA не сохраняются; сервер хранит зашифрованную Telegram‑сессию только после успешного подключения.</p>
       <div class="security-status-grid">
         <article class="${accountConnected ? 'ready' : 'warn'}">
-          <span>Account Link</span>
+          <span>Основное подключение</span>
           <strong>${accountConnected ? 'Connected' : 'Not connected'}</strong>
           <small>QR / phone session</small>
         </article>
         <article class="${viewerState.secureSessionCrypto ? 'ready' : 'warn'}">
           <span>Encryption</span>
-          <strong>${viewerState.secureSessionCrypto ? 'Encrypted v3' : 'Check required'}</strong>
+          <strong>${viewerState.secureSessionCrypto ? 'Защищено' : 'Check required'}</strong>
           <small>Ключ не передаётся в Mini App</small>
         </article>
         <article class="${businessConnected ? 'ready' : ''}">
@@ -1639,7 +1729,7 @@
         <div class="sheet-item"><strong>Telegram account</strong><span>${accountConnected ? (account.username ? '@' + escapeHtml(account.username) : escapeHtml(account.firstName || 'Connected account')) : 'Не подключён'}</span></div>
         <div class="sheet-item"><strong>Session created</strong><span>${session?.createdAt ? formatSecurityTime(session.createdAt) : '—'}</span></div>
         <div class="sheet-item"><strong>Last secure check</strong><span>${session?.lastPollAt ? formatSecurityTime(session.lastPollAt) : '—'}</span></div>
-        <div class="sheet-item"><strong>Security status</strong><span>${lastError ? '⚠ ' + escapeHtml(lastError.slice(0, 140)) : accountConnected ? '✓ Ошибок сессии нет' : '○ Нет активной Account Link session'}</span></div>
+        <div class="sheet-item"><strong>Security status</strong><span>${lastError ? '⚠ ' + escapeHtml(lastError.slice(0, 140)) : accountConnected ? '✓ Ошибок сессии нет' : '○ Нет активной Основное подключение session'}</span></div>
       </div>
 
       <div class="sheet-actions">
@@ -1798,14 +1888,14 @@
     openSheet(`
       <span class="kicker">VETO CONNECTION CENTER</span>
       <h2>${accountConnected ? 'Telegram Account подключён' : businessConnected ? 'Business подключён' : 'Подключи Telegram'}</h2>
-      <p>Основной Account Link и Telegram Business показаны отдельно. Ты сам видишь, какой доступ реально активен и для чего он нужен.</p>
+      <p>Основной Основное подключение и Telegram Business показаны отдельно. Ты сам видишь, какой доступ реально активен и для чего он нужен.</p>
       <div class="sheet-list connection-center-list">
         <div class="sheet-item"><strong>Telegram identity</strong><span>${tg?.initData ? '✓ Mini App identity подтверждена' : '○ Открой VETO внутри Telegram'}</span></div>
-        <div class="sheet-item"><strong>Account Link</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Secure session') : '○ Не подключён · QR / номер'}</span></div>
-        <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Подключи Account Link или дай Business Manage Stories'}</span></div>
-        <div class="sheet-item"><strong>Business access</strong><span>${businessConnected ? '✓ Подключено' + (businessStories ? ' · Stories' : '') : '○ Optional · нужен только для расширенной Privacy'}</span></div>
+        <div class="sheet-item"><strong>Основное подключение</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Защищённая сессия') : '○ Не подключён · QR / номер'}</span></div>
+        <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Подключи Основное подключение или дай Business Manage Stories'}</span></div>
+        <div class="sheet-item"><strong>Business‑доступ</strong><span>${businessConnected ? '✓ Подключено' + (businessStories ? ' · Stories' : '') : '○ Optional · нужен только для расширенной Privacy'}</span></div>
         <div class="sheet-item"><strong>VETO Privacy archive</strong><span>${privacyPermission ? '✓ Message access активен' : '○ Optional · Anti‑Delete / Edit History / Smart Inbox'}</span></div>
-        <div class="sheet-item"><strong>Encryption</strong><span>${viewerState.secureSessionCrypto ? '✓ Encrypted v3' : accountConnected ? '⚠ Требует проверки' : '○ После Account Link'}</span></div>
+        <div class="sheet-item"><strong>Encryption</strong><span>${viewerState.secureSessionCrypto ? '✓ Защищено' : accountConnected ? '⚠ Требует проверки' : '○ После Основное подключение'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="${accountConnected ? 'account-connect' : 'account-connect'}">${accountConnected ? 'Управлять Telegram Account' : 'Подключить Telegram · QR / номер'}</button>
@@ -1819,31 +1909,37 @@
   function connectionHelpSheet() {
     const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
     if (accountConnected) {
-      viewerSetupSheet();
+      profileSheet();
       return;
     }
     openSheet(`
-      <span class="kicker">VETO SECURE CONNECTION</span>
-      <h2>Подключи свой Telegram</h2>
-      <p>Основной путь больше не зависит от Telegram Business. Выбери обычное безопасное подключение аккаунта.</p>
-      <div class="veto-connect-sheet-head">
-        <strong>Рекомендуется: Telegram Account Link</strong>
-        <span>Подтверждение через QR или номер телефона. После подключения VETO может публиковать твои Stories и включить Intelligence без Business‑бота.</span>
-      </div>
-      <div class="veto-connect-options">
-        <button class="veto-connect-option recommended" data-sheet-action="account-connect">
-          <span class="option-icon">⌁</span>
-          <span><strong>QR / номер телефона</strong><small>Для обычного Telegram‑аккаунта · основной способ</small></span>
-          <em>Recommended</em>
+      <span class="kicker">ШАГ 1 ИЗ 2 · ПОДКЛЮЧЕНИЕ</span>
+      <h2>Как тебе удобнее подключить Telegram?</h2>
+      <p>Если ты сейчас в VETO на телефоне — проще использовать номер + код. QR удобнее, когда рядом открыт Telegram Desktop или второй телефон.</p>
+
+      <div class="connection-methods-simple">
+        <button class="connection-method-card recommended" data-sheet-action="viewer-use-phone">
+          <span class="method-icon">1</span>
+          <div><strong>Я на этом телефоне</strong><small>Введи номер → получи код в Telegram → подтверди. Обычно это самый понятный путь.</small></div>
+          <em>Рекомендуем</em>
         </button>
-        <button class="veto-connect-option" data-sheet-action="business-help">
-          <span class="option-icon">B</span>
-          <span><strong>Telegram Business</strong><small>Дополнительно для Anti‑Delete, Edit History и Smart Inbox</small></span>
-          <em>Optional</em>
+        <button class="connection-method-card" data-sheet-action="viewer-start-qr">
+          <span class="method-icon">⌁</span>
+          <div><strong>У меня есть второй экран</strong><small>Покажем QR. Отсканируй его через Telegram → Settings → Devices.</small></div>
+          <em>QR</em>
         </button>
       </div>
+
+      <div class="connection-what-next">
+        <strong>Что будет после подключения?</strong>
+        <div><span>✓</span><p><b>Stories</b><small>сможешь публиковать Story из VETO</small></p></div>
+        <div><span>✓</span><p><b>Просмотры</b><small>станет доступна аналитика твоих Stories</small></p></div>
+        <div><span>✓</span><p><b>Privacy — отдельно</b><small>доступ к сообщениям не включается автоматически</small></p></div>
+      </div>
+
+      <p class="auth-security-note">Код Telegram и 2FA‑пароль не сохраняются. После входа сервер хранит только зашифрованную сессию, которую можно отключить в Security Center.</p>
       <div class="sheet-actions">
-        <button data-sheet-action="privacy-promise">Как VETO хранит подключение</button>
+        <button data-sheet-action="privacy-promise">Почему это безопасно?</button>
         <button data-sheet-action="close">Не сейчас</button>
       </div>
     `);
@@ -1858,7 +1954,7 @@
         <div class="sheet-item"><strong>1 · Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Chat Automation.</span></div>
         <div class="sheet-item"><strong>2 · Добавь @Storypilotlab_bot</strong><span>Выбери VETO Telegram и нужные чаты.</span></div>
         <div class="sheet-item"><strong>3 · Message access</strong><span>Нужен для Anti‑Delete, Edit History и Smart Inbox.</span></div>
-        <div class="sheet-item"><strong>4 · Manage Stories</strong><span>Не обязателен, если Stories уже работают через Account Link.</span></div>
+        <div class="sheet-item"><strong>4 · Manage Stories</strong><span>Не обязателен, если Stories уже работают через Основное подключение.</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Business‑разрешения</button>
@@ -1933,36 +2029,37 @@
     }
 
     openSheet(`
-      <span class="kicker">VETO SECURE ACCOUNT</span>
+      <span class="kicker">ШАГ 1 ИЗ 2 · ПОДКЛЮЧЕНИЕ</span>
       <h2>Подключить Telegram</h2>
-      <p>Подтверди аккаунт через QR или номер. После этого VETO использует зашифрованную сессию для Stories и Intelligence; Business‑доступ остаётся отдельным и необязательным.</p>
-      <div class="qr-choice-card">
-        <div class="qr-choice-icon">⌁</div>
-        <div>
-          <strong>Подтвердить через QR</strong>
-          <span>Без ввода номера и кода. Telegram покажет системное подтверждение новой сессии.</span>
-        </div>
+      <p>Выбери способ, который подходит твоему устройству. На одном телефоне проще номер + код; QR удобен со вторым экраном.</p>
+      <div class="connection-methods-simple">
+        <button class="connection-method-card recommended" data-sheet-action="viewer-use-phone">
+          <span class="method-icon">1</span>
+          <div><strong>Номер + код Telegram</strong><small>Самый простой способ на текущем телефоне.</small></div>
+          <em>Рекомендуем</em>
+        </button>
+        <button class="connection-method-card" data-sheet-action="viewer-start-qr">
+          <span class="method-icon">⌁</span>
+          <div><strong>QR‑код</strong><small>Если рядом есть Telegram Desktop или второй телефон.</small></div>
+          <em>Второй экран</em>
+        </button>
       </div>
-      <div class="sheet-actions">
-        <button class="accent" data-sheet-action="viewer-start-qr">Подключить через QR</button>
-        <button data-sheet-action="viewer-use-phone">Использовать номер и код</button>
-        <button data-sheet-action="close">Отмена</button>
-      </div>
-      <p class="auth-security-note">Код входа и 2FA-пароль не сохраняются. Подключение хранится только в зашифрованном виде на сервере.</p>
+      <p class="auth-security-note">Код и 2FA‑пароль не сохраняются. После входа хранится только зашифрованная сессия.</p>
+      <div class="sheet-actions"><button data-sheet-action="close">Отмена</button></div>
     `);
   }
 
   function viewerPhoneSheet() {
     openSheet(`
-      <span class="kicker">FALLBACK LOGIN</span>
-      <h2>Номер и код Telegram</h2>
-      <p>Используй этот способ, если QR-подтверждение недоступно.</p>
+      <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 1 ИЗ 2</span>
+      <h2>Введи номер Telegram</h2>
+      <p>Укажи тот номер, на который зарегистрирован твой Telegram. Мы попросим Telegram отправить код подтверждения.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
           <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+374..." />
         </div>
-        <div class="auth-help">Telegram отправит код в приложение или другим доступным способом.</div>
+        <div class="auth-help">Пример: +374… или +971… · код обычно придёт прямо в чат Telegram от официального сервиса.</div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
@@ -1973,8 +2070,8 @@
 
   function viewerCodeSheet(delivery) {
     openSheet(`
-      <span class="kicker">VETO SECURE ACCOUNT</span>
-      <h2>Введи код Telegram</h2>
+      <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 2 ИЗ 2</span>
+      <h2>Теперь введи код из Telegram</h2>
       <p>${delivery === 'telegram_app' ? 'Код отправлен в Telegram.' : 'Telegram выбрал доступный способ доставки кода.'}</p>
       <div class="auth-form">
         <div class="auth-field">
@@ -1991,8 +2088,8 @@
 
   function viewerPasswordSheet(hint = '') {
     openSheet(`
-      <span class="kicker">Двухэтапная защита</span>
-      <h2>Нужен 2FA-пароль</h2>
+      <span class="kicker">ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА TELEGRAM</span>
+      <h2>У тебя включён 2FA‑пароль</h2>
       <p>Пароль передаётся Telegram только для завершения входа и не сохраняется VETO Telegram.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
         <div class="auth-field">
@@ -2009,9 +2106,9 @@
 
   function viewerQrSheet() {
     openSheet(`
-      <span class="kicker">TELEGRAM QR LOGIN</span>
-      <h2>Подтверди новую сессию</h2>
-      <p>QR короткоживущий и обновляется автоматически. На телефоне можно открыть системное подтверждение Telegram.</p>
+      <span class="kicker">ПОДКЛЮЧЕНИЕ ЧЕРЕЗ QR</span>
+      <h2>Отсканируй QR со второго экрана</h2>
+      <p>Открой Telegram на телефоне → Settings → Devices → Link Desktop Device и отсканируй QR. Если VETO открыт на этом же телефоне, проще вернуться и выбрать номер + код.</p>
       <div class="viewer-qr-card">
         <div class="viewer-qr-frame">
           <div class="viewer-qr-loader" id="viewerQrLoader">⌁</div>
@@ -2243,12 +2340,13 @@
     }
     switchScreen(row.dataset.activityScreen);
   });
-  $('homeSecurityCard')?.addEventListener('click', securityCenterSheet);
-  $('homeAutomationsCard')?.addEventListener('click', () => automationCenterSheet());
-
   async function runActivationAction(action) {
-    if (action === 'telegram' || action === 'ghost') {
+    if (action === 'telegram') {
       connectionHelpSheet();
+      return;
+    }
+    if (action === 'ghost') {
+      featureGuideSheet('privacy');
       return;
     }
     if (action === 'story') {
@@ -2257,13 +2355,22 @@
       return;
     }
     if (action === 'intelligence') {
-      viewerSetupSheet();
+      featureGuideSheet('intelligence');
+      return;
+    }
+    if (action === 'features') {
+      allFeaturesSheet();
       return;
     }
     if (action === 'automations') {
-      await automationCenterSheet();
+      featureGuideSheet('automations');
     }
   }
+
+  document.querySelectorAll('[data-feature-help]').forEach(button => {
+    button.addEventListener('click', () => featureGuideSheet(button.dataset.featureHelp));
+  });
+  $('explainAllFeaturesButton')?.addEventListener('click', allFeaturesSheet);
 
   document.querySelectorAll('[data-activation-step]').forEach(button => {
     button.addEventListener('click', () => runActivationAction(button.dataset.activationStep));
@@ -2329,13 +2436,13 @@
   $('profileButton').addEventListener('click', profileSheet);
   $('connectTelegramButton')?.addEventListener('click', () => {
     const connected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
-    connected ? viewerSetupSheet() : connectionHelpSheet();
+    connected ? profileSheet() : connectionHelpSheet();
   });
   $('privacyPromiseButton')?.addEventListener('click', privacyPromiseSheet);
   $('vetoWelcomeSkip')?.addEventListener('click', () => closeVetoWelcome());
   $('vetoWelcomeNext')?.addEventListener('click', () => {
     haptic();
-    if (vetoWelcomeStep < 2) {
+    if (vetoWelcomeStep < 3) {
       renderVetoWelcomeStep(vetoWelcomeStep + 1);
       return;
     }
@@ -2522,6 +2629,28 @@
       privacyPromiseSheet();
       return;
     }
+    if (action === 'feature-help') {
+      featureGuideSheet(actionTarget?.dataset?.featureKey || '');
+      return;
+    }
+    if (action === 'all-features') {
+      allFeaturesSheet();
+      return;
+    }
+    if (action === 'feature-open') {
+      const featureScreen = actionTarget?.dataset?.featureScreen || '';
+      closeSheet();
+      if (featureScreen === 'security') {
+        setTimeout(securityCenterSheet, 80);
+        return;
+      }
+      if (featureScreen === 'automations') {
+        setTimeout(() => automationCenterSheet(), 80);
+        return;
+      }
+      switchScreen(featureScreen);
+      return;
+    }
     if (action === 'go-stories') {
       closeSheet();
       switchScreen('publish');
@@ -2580,7 +2709,7 @@
       }
     }
     if (action === 'account-connect') {
-      viewerSetupSheet();
+      connectionHelpSheet();
       return;
     }
     if (action === 'business-help') {
