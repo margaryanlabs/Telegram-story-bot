@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#08090c" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <title>VETO Relay — Emergency Access</title>
+  <meta name="description" content="Emergency Telegram-only Relay access for VETO Telegram." />
+  <link rel="icon" href="/veto-telegram-mark.svg" />
+  <link rel="stylesheet" href="/relay-bootstrap.css?v=20261007-v1" />
+</head>
+<body>
+  <main class="shell">
+    <header class="brand">
+      <img src="/veto-telegram-mark.svg" alt="VETO" />
+      <div><strong>VETO RELAY</strong><span>Emergency Access</span></div>
+      <span class="net" id="networkState"><i></i><b>Проверяю сеть</b></span>
+    </header>
+
+    <section class="hero">
+      <span class="eyebrow">TELEGRAM ONLY</span>
+      <h1>Telegram не открывается?</h1>
+      <p>Эта страница работает отдельно от Telegram. Она выбирает резервный маршрут и передаёт его прямо приложению Telegram.</p>
+
+      <div class="route-visual" aria-hidden="true">
+        <span class="phone">V</span><i></i><i></i><span class="node node-a"></span><span class="node node-b"></span>
+      </div>
+
+      <div class="status" id="routeStatus">
+        <span class="dot"></span>
+        <div><strong id="routeTitle">Ищу рабочий маршрут…</strong><small id="routeText">Проверяю VETO Relay Mesh</small></div>
+      </div>
+
+      <button class="connect" id="connectButton" type="button" disabled>
+        <span>⇄</span>
+        <div><strong>Подключить Telegram Relay</strong><small id="connectHint">Маршрут ещё не выбран</small></div>
+        <em>›</em>
+      </button>
+
+      <div class="actions">
+        <button id="alternateButton" type="button" disabled>⇄ Другой маршрут</button>
+        <button id="refreshButton" type="button">↻ Проверить снова</button>
+      </div>
+    </section>
+
+    <section class="route-card">
+      <div class="route-head"><span>ACTIVE ROUTE</span><b id="healthBadge">—</b></div>
+      <div class="route-grid">
+        <article><span>Узел</span><strong id="routeLabel">Автовыбор</strong><small id="routeId">—</small></article>
+        <article><span>Регион</span><strong id="routeRegion">AUTO</strong><small>VETO Mesh</small></article>
+        <article><span>Latency</span><strong id="routeLatency">—</strong><small>edge probe</small></article>
+        <article><span>Источник</span><strong id="routeSource">Live</strong><small id="routeSourceHint">VETO API</small></article>
+      </div>
+    </section>
+
+    <section class="truth">
+      <article><span>01</span><div><strong>Нужен обычный интернет</strong><p>Если нет Wi‑Fi/мобильной сети вообще, ни VPN, ни Relay работать не смогут.</p></div></article>
+      <article><span>02</span><div><strong>Telegram не обязан уже работать</strong><p>Страница открывается в обычном браузере и передаёт proxy-конфиг напрямую Telegram.</p></div></article>
+      <article><span>03</span><div><strong>Маршруты сохраняются</strong><p>После первого успешного открытия VETO хранит последние маршруты в этом браузере как аварийный fallback.</p></div></article>
+      <article class="voice"><span>!</span><div><strong>Звонки не гарантируются</strong><p>Текущий MTProxy рассчитан прежде всего на сообщения, медиа и Telegram data traffic. Для стабильных voice/video нужен отдельный Voice Relay.</p></div></article>
+    </section>
+
+    <details class="manual" id="manualDetails">
+      <summary>Ручная настройка, если кнопка не открывает Telegram</summary>
+      <div class="manual-grid">
+        <label>Server <button data-copy="server" type="button">Copy</button><code id="manualServer">—</code></label>
+        <label>Port <button data-copy="port" type="button">Copy</button><code id="manualPort">—</code></label>
+        <label>Secret <button data-copy="secret" type="button">Copy</button><code id="manualSecret">—</code></label>
+      </div>
+      <p>Telegram → Settings → Data and Storage → Proxy Settings → Add Proxy → MTProto.</p>
+    </details>
+
+    <section class="save">
+      <strong>Сохрани эту страницу заранее</strong>
+      <p>Добавь её в закладки или на главный экран браузера. Тогда при блокировке Telegram не понадобится сначала искать другой VPN.</p>
+    </section>
+
+    <footer>VETO Relay не утверждает, что соединение установлено: финальный статус показывает Telegram.</footer>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="/relay-bootstrap.js?v=20261007-v1"></script>
+</body>
+</html>

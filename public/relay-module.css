@@ -190,3 +190,27 @@
   .relay-home-primary{grid-template-columns:1fr;padding:15px}
   .relay-home-primary-button{width:100%;min-width:0}
 }
+
+.relay-emergency-home{
+  grid-column:1/-1;
+  justify-self:start;
+  border:0;background:transparent;padding:0;
+  color:#8d98a8;font-size:8px;text-align:left
+}
+.relay-emergency-home b{color:#ff8998;font-weight:850}
+.relay-emergency-card{
+  margin-top:12px;padding:15px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;
+  border:1px solid rgba(255,178,77,.13);border-radius:22px;
+  background:linear-gradient(135deg,rgba(255,178,77,.045),rgba(255,255,255,.02))
+}
+.relay-emergency-card span{font-size:8px;font-weight:900;letter-spacing:.12em;color:#ffc06c}
+.relay-emergency-card strong{display:block;margin-top:6px;font-size:11px}
+.relay-emergency-card p{margin:5px 0 0;color:var(--muted);font-size:8.5px;line-height:1.45}
+.relay-emergency-card button{
+  min-width:142px;padding:10px 11px;border:1px solid rgba(255,193,108,.15);border-radius:14px;
+  background:rgba(255,178,77,.055);color:#ffd294;font-size:8.5px;font-weight:820
+}
+@media(max-width:520px){
+  .relay-emergency-card{grid-template-columns:1fr}
+  .relay-emergency-card button{width:100%}
+}

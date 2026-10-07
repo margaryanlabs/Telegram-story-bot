@@ -10,19 +10,54 @@
     clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2800);
   }
 
+  function relayErrorMessage(error) {
+    const code = String(error?.data?.error || error?.code || error?.message || '');
+    if (navigator.onLine === false) return 'Нет обычного интернета. Подключи Wi‑Fi или мобильную сеть.';
+    if (/AbortError|timeout/i.test(code)) return 'Relay отвечает слишком долго. Попробуй снова или открой Emergency Access.';
+    if (/telegram_auth_required/i.test(code)) return 'Сессия Mini App устарела. Закрой и заново открой VETO Telegram.';
+    if (/relay_not_configured/i.test(code)) return 'Relay Mesh временно не настроен.';
+    if (/relay_unavailable/i.test(code)) return 'Ни один Relay сейчас не подтверждён. Попробуй другой маршрут или Emergency Access.';
+    return error?.message || 'Relay временно недоступен';
+  }
+
   async function api(action, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
-    const response = await fetch('/api/relay', {
-      method:'POST',
-      headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
-      body:JSON.stringify({action,...payload}),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data?.ok) {
-      const e = new Error(data?.message || data?.error || 'Relay временно недоступен');
-      e.data = data; throw e;
+    if (!tg?.initData) {
+      const error = new Error('Открой VETO Telegram внутри Telegram или используй Emergency Access');
+      error.code = 'telegram_auth_required';
+      throw error;
     }
-    return data;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), action === 'status' ? 7000 : 10000);
+    try {
+      const response = await fetch('/api/relay', {
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
+        body:JSON.stringify({action,...payload}),
+        cache:'no-store',
+        signal:controller.signal,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.ok) {
+        const e = new Error(data?.message || data?.error || 'Relay временно недоступен');
+        e.data = data; throw e;
+      }
+      return data;
+    } catch (error) {
+      if (error?.name === 'AbortError') error.code = 'timeout';
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function openEmergencyAccess() {
+    const url = new URL('/relay.html', location.origin).toString();
+    try {
+      if (tg?.openLink) tg.openLink(url, { try_instant_view:false });
+      else window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      location.href = url;
+    }
   }
 
   const recent = () => Date.now() - Number(s.opened || 0) < 15 * 60 * 1000;
@@ -57,7 +92,7 @@
   async function status(silent=true){
     if(!tg?.initData){s={...s,configured:false,error:'Открой VETO Telegram внутри Telegram.'};render();return;}
     try{const d=await api('status');s={...s,configured:Boolean(d.configured),count:Number(d.nodeCount||0),alternatives:Boolean(d.canRotate),error:null};}
-    catch(e){s={...s,error:e.message};if(!silent)toast(e.message);} render();
+    catch(e){const message=relayErrorMessage(e);s={...s,error:message};if(!silent)toast(message);} render();
   }
 
   function openRoute(url){
@@ -72,7 +107,7 @@
       const d=await api(rotate?'rotate':'connect',{exclude:rotate&&s.relay?.id?[s.relay.id]:[]});
       s={...s,configured:true,relay:d.relay||null,health:d.routeHealth||null,alternatives:Boolean(d.alternatives),error:null};
       openRoute(d.connectUrl);
-    }catch(e){s={...s,configured:e?.data?.configured===false?false:s.configured,error:e.message};toast(e.message);}
+    }catch(e){const message=relayErrorMessage(e);s={...s,configured:e?.data?.configured===false?false:s.configured,error:message};toast(message);}
     finally{s.busy=false;render();}
   }
 
@@ -85,6 +120,8 @@
   $('relayPowerButton')?.addEventListener('click',()=>connect(false));
   $('relayRotateButton')?.addEventListener('click',()=>connect(true));
   $('relayRefreshButton')?.addEventListener('click',()=>status(false));
+  $('relayEmergencyButton')?.addEventListener('click',openEmergencyAccess);
+  $('relayEmergencyHomeButton')?.addEventListener('click',openEmergencyAccess);
   $('sheet')?.addEventListener('click',e=>{const a=e.target.closest('[data-relay-action]')?.dataset?.relayAction;if(a==='open')openScreen();if(a==='close')closeSheet();});
   render(); if(tg?.initData)status(true);
 })();

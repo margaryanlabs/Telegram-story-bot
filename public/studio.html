@@ -10,7 +10,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261007-veto-relay-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v2" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v3" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -157,6 +157,9 @@
           <span class="relay-home-primary-icon">⇄</span>
           <span><b>Включить Telegram Relay</b><small>Открыть Private Relay</small></span>
           <em>›</em>
+        </button>
+        <button class="relay-emergency-home" id="relayEmergencyHomeButton" type="button">
+          Telegram вообще не открывается? <b>Emergency Access ↗</b>
         </button>
       </section>
 
@@ -1146,6 +1149,14 @@
         <article>
           <span>04</span><div><strong>Без фальшивого Connected</strong><small>Mini App видит, что маршрут выдан. Только Telegram может подтвердить, что proxy действительно включён на устройстве.</small></div>
         </article>
+        <article>
+          <span>05</span><div><strong>Voice / Video — best effort</strong><small>Текущий MTProxy оптимизирован для Telegram data traffic. Стабильные звонки не гарантируются до отдельного Voice Relay.</small></div>
+        </article>
+      </section>
+
+      <section class="relay-emergency-card">
+        <div><span>EMERGENCY ACCESS</span><strong>Telegram не открывается совсем?</strong><p>Открой внешний VETO Relay в обычном браузере. Он работает без запуска Mini App и сохраняет резервные маршруты на устройстве.</p></div>
+        <button id="relayEmergencyButton" type="button">Открыть в браузере ↗</button>
       </section>
 
       <section class="relay-note">
@@ -1196,7 +1207,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/app.js?v=20261007-veto-relay-v1"></script>
-  <script src="/relay-module.js?v=20261007-veto-relay-v2"></script>
+  <script src="/relay-module.js?v=20261007-veto-relay-v3"></script>
   <script src="/privacy.js?v=20261007-veto-telegram-v2"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
