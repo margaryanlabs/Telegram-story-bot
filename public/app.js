@@ -670,6 +670,26 @@
     return 'Automation';
   }
 
+  function automationPresetKey() {
+    const security = automationRuleEnabled('security_changes', true);
+    const smart = automationRuleEnabled('smart_action', false);
+    const viewer = automationRuleEnabled('confirmed_viewer', false);
+    if (security && smart && viewer) return 'full';
+    if (security && smart && !viewer) return 'smart';
+    if (security && !smart && !viewer) return 'quiet';
+    return 'custom';
+  }
+
+  function intelligenceBriefIcon(kind) {
+    return ({
+      retention:'↻',
+      speed:'⚡',
+      identity:'◎',
+      momentum:'↗',
+      person:'◉',
+    })[String(kind || '')] || '◌';
+  }
+
   async function refreshViewerAnalytics({ silent = true } = {}) {
     if (!tg?.initData || !viewerState.session?.connected) {
       viewerState.analytics = null;
@@ -781,7 +801,7 @@
       $('connectionIcon').className = 'connection-icon';
       $('connectionIcon').textContent = '↗';
       $('connectionTitle').textContent = 'Подключи Telegram';
-      $('connectionText').textContent = 'Telegram ещё не подключён к Control Center';
+      $('connectionText').textContent = 'Telegram ещё не подключён к Ghost Mode';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Ожидание';
     }
@@ -1043,6 +1063,30 @@
     $('intelForwards').textContent = intel ? String(intel.forwards || 0) : '—';
 
     $('intelEmpty').style.display = intel ? 'none' : 'block';
+
+    const brief = intel?.brief || null;
+    const briefBadge = $('intelligenceBriefConfidence');
+    const briefList = $('intelligenceBriefList');
+    if (briefBadge) {
+      briefBadge.textContent = brief?.confidence
+        ? `${brief.confidence} · ${Number(brief.sampleSize || 0)} signals`
+        : 'Evidence';
+    }
+    if (briefList) {
+      const items = Array.isArray(brief?.items) ? brief.items : [];
+      briefList.innerHTML = items.length
+        ? items.map(item => `
+            <article class="intelligence-brief-item">
+              <span>${escapeHtml(intelligenceBriefIcon(item.kind))}</span>
+              <div>
+                <strong>${escapeHtml(item.title || 'Insight')}</strong>
+                <p>${escapeHtml(item.detail || '')}</p>
+                <small>${escapeHtml(item.evidence || '')}</small>
+              </div>
+            </article>
+          `).join('')
+        : '<div class="intel-empty">Пока недостаточно подтверждённых данных для выводов. Ghost Mode не будет заполнять этот блок догадками.</div>';
+    }
 
     const timeline = intel?.latestTimeline || [];
     const timelineStoryId = intel?.latestTimelineStoryId || null;
@@ -1329,6 +1373,64 @@
     if ($('homeIntelState')) $('homeIntelState').textContent = intelConnected ? 'Активен' : 'Setup required';
     if ($('homeSecurityState')) $('homeSecurityState').textContent = 'Контроль доступа';
 
+    const hasStory = activeStoryHistory().length > 0;
+    const activation = [
+      { id:'activationTelegram', done:telegramReady, text:telegramReady ? 'Готово' : 'Нужно' },
+      { id:'activationGhost', done:ghostPermission, text:ghostPermission ? 'Готово' : 'Нужно' },
+      { id:'activationStory', done:hasStory, text:hasStory ? 'Готово' : 'Нужно' },
+      { id:'activationIntel', done:intelConnected, text:intelConnected ? 'Готово' : 'Optional', optional:true },
+    ];
+    activation.forEach(step => {
+      const el = $(step.id);
+      if (!el) return;
+      el.classList.toggle('done', step.done);
+      el.classList.toggle('optional', Boolean(step.optional));
+      const status = el.querySelector('em');
+      if (status) status.textContent = step.text;
+    });
+
+    const completed = activation.filter(step => step.done).length;
+    const coreReady = telegramReady && ghostPermission && hasStory;
+    const activationCard = $('activationCard');
+    activationCard?.classList.toggle('ready', coreReady);
+    if ($('activationScore')) $('activationScore').textContent = `${completed}/4`;
+    if ($('activationTitle')) {
+      $('activationTitle').textContent = coreReady
+        ? (intelConnected ? 'Ghost Mode полностью активирован' : 'Основной контур готов')
+        : 'Заверши базовую настройку';
+    }
+    if ($('activationText')) {
+      $('activationText').textContent = !telegramReady
+        ? 'Начни с Telegram Business — Ghost Mode сам проверит разрешения.'
+        : !ghostPermission
+          ? 'Stories доступны. Для Privacy и Smart Inbox осталось разрешить сообщения.'
+          : !hasStory
+            ? 'Доступы готовы. Опубликуй первую Story и проверь полный цикл.'
+            : !intelConnected
+              ? 'Privacy и Stories готовы. Deep Intelligence можно подключить отдельно.'
+              : 'Privacy, Stories и Intelligence активны. Следующий слой — Automations.';
+    }
+
+    const activationPrimary = $('activationPrimaryButton');
+    if (activationPrimary) {
+      if (!telegramReady) {
+        activationPrimary.textContent = 'Подключить Telegram Business';
+        activationPrimary.dataset.activationAction = 'telegram';
+      } else if (!ghostPermission) {
+        activationPrimary.textContent = 'Разрешить Ghost Privacy';
+        activationPrimary.dataset.activationAction = 'ghost';
+      } else if (!hasStory) {
+        activationPrimary.textContent = 'Опубликовать первую Story';
+        activationPrimary.dataset.activationAction = 'story';
+      } else if (!intelConnected) {
+        activationPrimary.textContent = 'Подключить Intelligence · optional';
+        activationPrimary.dataset.activationAction = 'intelligence';
+      } else {
+        activationPrimary.textContent = 'Настроить Automations';
+        activationPrimary.dataset.activationAction = 'automations';
+      }
+    }
+
     renderHomeActivity();
   }
 
@@ -1451,7 +1553,19 @@
     openSheet(`
       <span class="kicker">AUTOMATION CENTER</span>
       <h2>Событие → правило → действие</h2>
-      <p>Automation v1 только уведомляет тебя в собственном Ghost Mode bot. Она не пишет другим людям и не совершает действия от твоего имени.</p>
+      <p>Ghost Mode реагирует только на нормализованные события и отправляет owner-only alerts. Никаких сообщений другим людям от твоего имени.</p>
+
+      <div class="automation-presets">
+        <button type="button" class="${automationPresetKey() === 'quiet' ? 'active' : ''}" data-sheet-action="automation-preset" data-automation-preset="quiet">
+          <strong>Quiet</strong><small>Только security</small>
+        </button>
+        <button type="button" class="${automationPresetKey() === 'smart' ? 'active' : ''}" data-sheet-action="automation-preset" data-automation-preset="smart">
+          <strong>Smart</strong><small>Security + важные сообщения</small>
+        </button>
+        <button type="button" class="${automationPresetKey() === 'full' ? 'active' : ''}" data-sheet-action="automation-preset" data-automation-preset="full">
+          <strong>Full</strong><small>+ confirmed viewers</small>
+        </button>
+      </div>
 
       <div class="automation-rule-list">
         <button class="automation-rule-card ${securityEnabled ? 'enabled' : ''}" type="button"
@@ -1964,6 +2078,32 @@
   });
   $('homeSecurityCard')?.addEventListener('click', securityCenterSheet);
   $('homeAutomationsCard')?.addEventListener('click', () => automationCenterSheet());
+
+  async function runActivationAction(action) {
+    if (action === 'telegram' || action === 'ghost') {
+      connectionHelpSheet();
+      return;
+    }
+    if (action === 'story') {
+      switchScreen('publish');
+      setTimeout(() => $('storyFileInput')?.click(), 160);
+      return;
+    }
+    if (action === 'intelligence') {
+      viewerSetupSheet();
+      return;
+    }
+    if (action === 'automations') {
+      await automationCenterSheet();
+    }
+  }
+
+  document.querySelectorAll('[data-activation-step]').forEach(button => {
+    button.addEventListener('click', () => runActivationAction(button.dataset.activationStep));
+  });
+  $('activationPrimaryButton')?.addEventListener('click', () => {
+    runActivationAction($('activationPrimaryButton')?.dataset?.activationAction || 'telegram');
+  });
   document.querySelectorAll('.audience-card').forEach(button => button.addEventListener('click', async () => {
     const mode = button.dataset.audience;
     if (mode === 'selected' && !state.selected?.length) {
@@ -2287,6 +2427,26 @@
     }
     if (action === 'automation-refresh') {
       await automationCenterSheet({ refresh:true });
+      return;
+    }
+    if (action === 'automation-preset') {
+      const preset = String(actionTarget?.dataset?.automationPreset || '');
+      if (!preset || automationState.busy) return;
+      try {
+        automationState.busy = true;
+        const data = await automationsApi('apply_preset', { preset });
+        automationState.rules = data.settings?.rules || automationState.rules;
+        automationState.jobs = Array.isArray(data.jobs) ? data.jobs : automationState.jobs;
+        automationState.loaded = true;
+        haptic();
+        showToast(preset === 'quiet' ? 'Quiet mode включён' : preset === 'smart' ? 'Smart mode включён' : 'Full automation включена');
+      } catch (error) {
+        showToast(error.message);
+        notify('error');
+      } finally {
+        automationState.busy = false;
+      }
+      renderAutomationCenterSheet();
       return;
     }
     if (action === 'automation-toggle') {

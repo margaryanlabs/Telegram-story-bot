@@ -19,7 +19,7 @@
         <div class="brand-mark"><span>G</span></div>
         <div class="brand-copy">
           <strong>Ghost Mode</strong>
-          <span>Privacy · Stories · Studio · Intelligence</span>
+          <span>Privacy · Stories · Intelligence · Automations</span>
         </div>
       </div>
       <button class="profile-button" id="profileButton" type="button" aria-label="Открыть статус аккаунта">
@@ -84,6 +84,32 @@
           <span class="capability-copy"><small>Automations</small><strong>Signals · Alerts</strong></span>
           <span class="capability-chevron">›</span>
         </button>
+      </section>
+
+      <section class="activation-card" id="activationCard">
+        <div class="activation-head">
+          <div>
+            <span class="kicker">ACTIVATION PATH</span>
+            <h2 id="activationTitle">Настраиваю Ghost Mode</h2>
+            <p id="activationText">Четыре понятных шага. Никаких скрытых требований.</p>
+          </div>
+          <strong id="activationScore">0/4</strong>
+        </div>
+        <div class="activation-steps">
+          <button type="button" class="activation-step" id="activationTelegram" data-activation-step="telegram">
+            <span>01</span><div><strong>Telegram Business</strong><small>Stories + подключение</small></div><em>—</em>
+          </button>
+          <button type="button" class="activation-step" id="activationGhost" data-activation-step="ghost">
+            <span>02</span><div><strong>Ghost Privacy</strong><small>Message access</small></div><em>—</em>
+          </button>
+          <button type="button" class="activation-step" id="activationStory" data-activation-step="story">
+            <span>03</span><div><strong>Первая Story</strong><small>Проверить публикацию</small></div><em>—</em>
+          </button>
+          <button type="button" class="activation-step" id="activationIntel" data-activation-step="intelligence">
+            <span>04</span><div><strong>Deep Intelligence</strong><small>Опциональный advanced layer</small></div><em>—</em>
+          </button>
+        </div>
+        <button class="activation-primary" id="activationPrimaryButton" type="button">Продолжить настройку</button>
       </section>
 
       <section class="control-section">
@@ -480,6 +506,19 @@
 
         <div class="intel-empty" id="intelEmpty">
           Подключи Deep Intelligence — здесь появятся repeat viewers, скорость просмотра и история аудитории.
+        </div>
+      </section>
+
+      <section class="analytics-card intelligence-brief-card" id="intelligenceBriefCard">
+        <div class="block-head compact">
+          <div>
+            <span class="kicker">GHOST BRIEF</span>
+            <h2>Что это значит</h2>
+          </div>
+          <span class="lock-badge" id="intelligenceBriefConfidence">Evidence</span>
+        </div>
+        <div class="intelligence-brief-list" id="intelligenceBriefList">
+          <div class="intel-empty">Ghost Mode сформирует выводы только после появления подтверждённых данных.</div>
         </div>
       </section>
 

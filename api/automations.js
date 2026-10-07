@@ -6,6 +6,11 @@ import {
 } from '../lib/viewer-sync-store.js';
 
 const ALLOWED_RULES = new Set(['security_changes','smart_action','confirmed_viewer']);
+export const AUTOMATION_PRESETS = {
+  quiet: { security_changes:true, smart_action:false, confirmed_viewer:false },
+  smart: { security_changes:true, smart_action:true, confirmed_viewer:false },
+  full: { security_changes:true, smart_action:true, confirmed_viewer:true },
+};
 
 function noStore(res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
@@ -15,7 +20,7 @@ function noStore(res) {
 function userFromRequest(req) {
   const token = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
   const initData = String(req.headers['x-telegram-init-data'] || '');
-  if (!token) throw new Error('Telegram Control is not configured');
+  if (!token) throw new Error('Ghost Mode is not configured');
   return validateTelegramMiniApp(initData, token);
 }
 
@@ -24,7 +29,7 @@ export default async function handler(req, res) {
 
   const user = userFromRequest(req);
   if (!user?.id) {
-    res.status(401).json({ ok: false, error: 'Open Telegram Control inside Telegram' });
+    res.status(401).json({ ok: false, error: 'Open Ghost Mode inside Telegram' });
     return;
   }
 
@@ -62,6 +67,19 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (action === 'apply_preset') {
+      const preset = String(body.preset || '');
+      const rules = AUTOMATION_PRESETS[preset];
+      if (!rules) {
+        res.status(400).json({ ok: false, error: 'Unknown automation preset' });
+        return;
+      }
+      const settings = await updateAutomationSettings(userId, rules);
+      const jobs = await listAutomationJobs(userId, 20);
+      res.status(200).json({ ok: true, preset, settings, jobs });
+      return;
+    }
+
     if (action === 'refresh') {
       const [settings, jobs] = await Promise.all([
         getAutomationSettings(userId),
@@ -73,7 +91,7 @@ export default async function handler(req, res) {
 
     res.status(400).json({ ok: false, error: 'Unknown action' });
   } catch (error) {
-    console.error('Telegram Control automations API', error?.message || String(error));
+    console.error('Ghost Mode automations API', error?.message || String(error));
     res.status(500).json({ ok: false, error: 'Automation Center временно недоступен' });
   }
 }

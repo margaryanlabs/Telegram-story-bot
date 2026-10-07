@@ -1582,3 +1582,68 @@ input,textarea{caret-color:var(--accent)}
 .ghost-delete-proof strong{font-size:8.8px}
 .ghost-delete-proof small{margin-top:3px;color:var(--muted);font-size:7.2px;line-height:1.4}
 .ghost-diagnostic-note{font-size:7.5px!important;line-height:1.45!important;color:#8290a3!important}
+
+
+/* Ghost activation path */
+.activation-card{
+  margin-top:14px;padding:15px;border:1px solid var(--line);border-radius:22px;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.025));
+}
+.activation-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.activation-head h2{margin:4px 0 4px;font-size:16px;letter-spacing:-.02em}
+.activation-head p{margin:0;color:var(--muted);font-size:10px;line-height:1.45}
+.activation-head>strong{
+  min-width:48px;padding:7px 9px;border-radius:12px;background:rgba(255,255,255,.055);
+  font-size:11px;text-align:center
+}
+.activation-steps{display:grid;gap:7px;margin-top:13px}
+.activation-step{
+  width:100%;display:grid;grid-template-columns:31px 1fr auto;align-items:center;gap:10px;
+  min-height:55px;padding:9px 10px;border:1px solid var(--line);border-radius:16px;
+  background:rgba(255,255,255,.024);text-align:left
+}
+.activation-step>span{
+  width:31px;height:31px;display:grid;place-items:center;border-radius:10px;
+  background:rgba(255,255,255,.045);color:var(--muted);font-size:8px;font-weight:800
+}
+.activation-step div{min-width:0}
+.activation-step div strong{display:block;font-size:10px}
+.activation-step div small{display:block;margin-top:3px;color:var(--muted);font-size:8px}
+.activation-step em{font-style:normal;color:var(--muted);font-size:8px;font-weight:800}
+.activation-step.done{border-color:rgba(94,220,157,.2);background:rgba(94,220,157,.055)}
+.activation-step.done>span,.activation-step.done em{color:#bff4d9}
+.activation-step.optional:not(.done) em{color:#aab5c4}
+.activation-primary{
+  width:100%;margin-top:11px;padding:11px 13px;border-radius:15px;border:1px solid rgba(42,171,238,.22);
+  background:rgba(42,171,238,.11);color:#d9f3ff;font-size:10px;font-weight:850
+}
+.activation-card.ready .activation-primary{border-color:rgba(94,220,157,.22);background:rgba(94,220,157,.08);color:#d7f8e7}
+
+/* Evidence-first Intelligence brief */
+.intelligence-brief-card{overflow:hidden}
+.intelligence-brief-list{display:grid;gap:8px;margin-top:8px}
+.intelligence-brief-item{
+  display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:flex-start;
+  padding:11px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.025)
+}
+.intelligence-brief-item>span{
+  width:34px;height:34px;display:grid;place-items:center;border-radius:11px;
+  background:rgba(255,255,255,.045);font-size:13px
+}
+.intelligence-brief-item strong{display:block;font-size:10px;line-height:1.35}
+.intelligence-brief-item p{margin:4px 0 0;color:var(--muted);font-size:9px;line-height:1.48}
+.intelligence-brief-item small{display:block;margin-top:5px;color:#7f8da1;font-size:8px}
+
+
+.automation-presets{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0 14px
+}
+.automation-presets button{
+  min-height:64px;padding:9px;border:1px solid var(--line);border-radius:15px;
+  background:rgba(255,255,255,.025);text-align:left
+}
+.automation-presets button strong{display:block;font-size:9px}
+.automation-presets button small{display:block;margin-top:4px;color:var(--muted);font-size:8px;line-height:1.35}
+.automation-presets button.active{
+  border-color:rgba(94,220,157,.22);background:rgba(94,220,157,.07)
+}
