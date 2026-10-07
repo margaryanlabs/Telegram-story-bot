@@ -21,7 +21,7 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20261007-veto-telegram-v2-profile';
+const CONTROL_BUILD = '20261007-veto-clarity-v1';
 
 const VETO_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
   <rect x="1" y="1" width="38" height="38" rx="11" fill="#0b0c0f" stroke="#2a2c33"/>
