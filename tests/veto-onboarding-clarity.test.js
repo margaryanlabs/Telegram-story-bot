@@ -10,7 +10,8 @@ test('first-run onboarding explains product, functions and two-step activation',
   const html = read('public/studio.html');
 
   assert.match(html, /Что такое/);
-  assert.match(html, /Шесть функций/);
+  assert.match(html, /Семь функций/);
+  assert.match(html, /Relay/);
   assert.match(html, /нужны 2 шага/);
   assert.match(html, /Подключи Telegram/);
   assert.match(html, /Опубликуй тестовую Story/);
@@ -20,14 +21,17 @@ test('first-run onboarding explains product, functions and two-step activation',
 test('home feature cards explain value before opening advanced surfaces', () => {
   const html = read('public/studio.html');
   const app = read('public/app.js');
+  const relay = read('public/relay-module.js');
 
-  for (const key of ['stories','intelligence','privacy','studio','security','automations']) {
-    assert.match(html, new RegExp(`data-feature-help="${key}"`));
+  for (const key of ['stories','intelligence','privacy','studio','security','relay','automations']) {
+    assert.match(html, new RegExp('data-feature-help="' + key + '"'));
   }
   assert.match(app, /function featureGuideSheet/);
   assert.match(app, /Зачем/);
   assert.match(app, /Что нужно/);
   assert.match(app, /function allFeaturesSheet/);
+  assert.match(relay, /PRIVATE RELAY/);
+  assert.match(relay, /Резервный маршрут только для Telegram/);
 });
 
 test('connection wizard recommends phone plus code on the current phone', () => {
