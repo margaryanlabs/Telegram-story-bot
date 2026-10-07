@@ -662,6 +662,11 @@
       return event.actorDisplayName
         || (event.actorUsername ? '@' + event.actorUsername : 'Smart Inbox action');
     }
+    if (rule === 'watch_changes') {
+      const actor = event.actorDisplayName
+        || (event.actorUsername ? '@' + event.actorUsername : 'Ghost Watch');
+      return event.type === 'message.delete' ? `${actor} · deleted` : `${actor} · edited`;
+    }
     if (rule === 'confirmed_viewer') {
       const actor = event.actorDisplayName
         || (event.actorUsername ? '@' + event.actorUsername : 'Confirmed viewer');
@@ -673,10 +678,11 @@
   function automationPresetKey() {
     const security = automationRuleEnabled('security_changes', true);
     const smart = automationRuleEnabled('smart_action', false);
+    const watch = automationRuleEnabled('watch_changes', false);
     const viewer = automationRuleEnabled('confirmed_viewer', false);
-    if (security && smart && viewer) return 'full';
-    if (security && smart && !viewer) return 'smart';
-    if (security && !smart && !viewer) return 'quiet';
+    if (security && smart && watch && viewer) return 'full';
+    if (security && smart && watch && !viewer) return 'smart';
+    if (security && !smart && !watch && !viewer) return 'quiet';
     return 'custom';
   }
 
@@ -1535,6 +1541,7 @@
   function renderAutomationCenterSheet() {
     const securityEnabled = automationRuleEnabled('security_changes', true);
     const smartEnabled = automationRuleEnabled('smart_action', false);
+    const watchEnabled = automationRuleEnabled('watch_changes', false);
     const viewerEnabled = automationRuleEnabled('confirmed_viewer', false);
     const jobs = Array.isArray(automationState.jobs) ? automationState.jobs.slice(0, 8) : [];
 
@@ -1560,7 +1567,7 @@
           <strong>Quiet</strong><small>Только security</small>
         </button>
         <button type="button" class="${automationPresetKey() === 'smart' ? 'active' : ''}" data-sheet-action="automation-preset" data-automation-preset="smart">
-          <strong>Smart</strong><small>Security + важные сообщения</small>
+          <strong>Smart</strong><small>Security + Inbox + changes</small>
         </button>
         <button type="button" class="${automationPresetKey() === 'full' ? 'active' : ''}" data-sheet-action="automation-preset" data-automation-preset="full">
           <strong>Full</strong><small>+ confirmed viewers</small>
@@ -1586,6 +1593,16 @@
             <small>Входящее сообщение похоже содержит вопрос или запрос.</small>
           </span>
           <b>${smartEnabled ? 'ON' : 'OFF'}</b>
+        </button>
+
+        <button class="automation-rule-card ${watchEnabled ? 'enabled' : ''}" type="button"
+          data-sheet-action="automation-toggle" data-automation-rule="watch_changes" data-automation-enabled="${watchEnabled ? '1' : '0'}">
+          <span class="automation-rule-icon">↶</span>
+          <span class="automation-rule-copy">
+            <strong>Watch changes</strong>
+            <small>Owner alert при удалении или изменении доступного сообщения.</small>
+          </span>
+          <b>${watchEnabled ? 'ON' : 'OFF'}</b>
         </button>
 
         <button class="automation-rule-card ${viewerEnabled ? 'enabled' : ''}" type="button"
