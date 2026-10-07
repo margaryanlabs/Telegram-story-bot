@@ -166,7 +166,7 @@ async function ghostDiagnostics(token, userId) {
     },
     storage: {
       ok: storageReady,
-      label: 'Protected Ghost store',
+      label: 'Protected VETO Privacy store',
       detail: storageReady ? 'Direct durable writes ready' : 'Storage write path unavailable',
     },
     mediaVault: {
@@ -181,8 +181,8 @@ async function ghostDiagnostics(token, userId) {
     },
     focus: {
       ok: settings?.ghostFocus !== false,
-      label: 'Ghost Focus',
-      detail: settings?.ghostFocus !== false ? 'Exact-message deep links enabled' : 'Ghost Focus is off',
+      label: 'VETO Focus',
+      detail: settings?.ghostFocus !== false ? 'Exact-message deep links enabled' : 'VETO Focus is off',
     },
     alerts: {
       ok: settings?.notifyDeletes !== false,
@@ -222,7 +222,7 @@ async function ghostDiagnostics(token, userId) {
       mediaArchived: null,
     },
     note: lastDelete
-      ? 'At least one real Telegram delete event has been captured by Ghost.'
+      ? 'At least one real Telegram delete event has been captured by VETO Privacy.'
       : 'Core pipeline can be ready even before the first real delete event. No synthetic deletion is created.',
   };
 }
@@ -285,7 +285,7 @@ export default async function handler(req, res) {
           degraded: true,
           settings: null,
           threads: null,
-          storageError: 'Ghost временно восстанавливает соединение. Данные на экране сохранены.',
+          storageError: 'VETO Privacy временно восстанавливает соединение. Данные на экране сохранены.',
         });
       }
       return;
@@ -327,11 +327,11 @@ export default async function handler(req, res) {
     if (action === 'test_alert') {
       await tg(token, 'sendMessage', {
         chat_id: userId,
-        text: '👻 Ghost Self-Test\n\nAlert route works. Это диагностическое сообщение, а не симуляция удаления.',
+        text: '🛡 VETO Privacy Self-Test\n\nAlert route works. Это диагностическое сообщение, а не симуляция удаления.',
         disable_notification: false,
         reply_markup: {
           inline_keyboard: [[{
-            text: '👻 Открыть Ghost',
+            text: '🛡 Открыть Privacy',
             web_app: { url: productionControlUrl() },
           }]],
         },
@@ -374,7 +374,7 @@ export default async function handler(req, res) {
     console.error('Privacy API error', error?.message || error);
     if (transientStoreError(error)) {
       res.setHeader('Retry-After', '2');
-      res.status(503).json({ ok: false, error: 'Ghost восстанавливает соединение. Попробуй ещё раз.' });
+      res.status(503).json({ ok: false, error: 'VETO Privacy восстанавливает соединение. Попробуй ещё раз.' });
       return;
     }
     res.status(500).json({ ok: false, error: 'Privacy archive is temporarily unavailable' });

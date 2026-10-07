@@ -157,7 +157,7 @@ function inlineMenu(settings = {}, origin = '') {
       inline_keyboard: [
         [{ text: settings.bc ? '⚠️ Разрешить управление Stories' : '🔗 Подключить Telegram', callback_data: 'view:connect' }],
         ...(origin ? [[
-          { text: '👻 Ghost', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } },
+          { text: '🛡 Privacy', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } },
           { text: '↶ Удалённые', web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'deleted' }) } },
         ]] : []),
         [{ text: '✅ Я подключил — проверить', callback_data: 'connect:check' }],
@@ -187,7 +187,7 @@ function inlineMenu(settings = {}, origin = '') {
       ],
       [{ text: connectionText, callback_data: 'view:connect' }],
       ...(origin ? [[
-        { text: '👻 Ghost', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } },
+        { text: '🛡 Privacy', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } },
         { text: '↶ Удалённые', web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'deleted' }) } },
       ]] : []),
       [
@@ -312,27 +312,27 @@ function settingsText(settings, live = null) {
     ? (settings.canStories ? '✅ активно, Stories разрешены' : '⚠️ подключено, но без доступа к Stories')
     : '⚪ ID подключения ещё не получен';
   if (live === false) connection = '❌ неактивно';
-  return `📊 VETO Telegram\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n👻 Доступ к сообщениям для Ghost: ${settings.canReadMessages ? '✅ есть' : '⚠️ не выдан'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
+  return `📊 VETO Telegram\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n🛡 Доступ к сообщениям для VETO Privacy: ${settings.canReadMessages ? '✅ есть' : '⚠️ не выдан'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
 }
 
 function connectText(settings, live = null) {
   if (settings.bc && settings.canStories && live !== false) {
-    return `✅ Telegram подключён\n\nVETO Telegram готов управлять Stories.\n${settings.canReadMessages ? '👻 Ghost: доступ к сообщениям тоже включён.' : '👻 Ghost: для Anti-Delete и удалённых сообщений ещё включи доступ к сообщениям / чтению сообщений в настройках Business-бота.'}\n\n📸 Для Story просто отправь фото в этот чат.`;
+    return `✅ Telegram подключён\n\nVETO Telegram готов управлять Stories.\n${settings.canReadMessages ? '🛡 VETO Privacy: доступ к сообщениям тоже включён.' : '🛡 VETO Privacy: для Anti-Delete и удалённых сообщений ещё включи доступ к сообщениям / чтению сообщений в настройках Business-бота.'}\n\n📸 Для Story просто отправь фото в этот чат.`;
   }
 
   if (settings.bc && live !== false) {
     return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → VETO Telegram → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
   }
 
-  return '🔗 Подключить Telegram\n\nЭто делается один раз для каждого пользователя:\n\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Разреши «Управление историями».\n4️⃣ Для Ghost включи доступ к сообщениям / чтению сообщений и выбери нужные чаты.\n5️⃣ Сохрани и вернись сюда.\n6️⃣ Нажми «✅ Я подключил — проверить».\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, а здесь подключение не найдено: измени одно разрешение и сохрани. Это заставит Telegram прислать боту актуальный Business Connection.\n\nBusiness-функции работают через официальное подключение Telegram. Deep Intelligence подключается отдельно и добровольно.';
+  return '🔗 Подключить Telegram\n\nРекомендуемый путь для обычного пользователя:\n\n1️⃣ Открой Mini App VETO Telegram.\n2️⃣ Нажми «Подключить Telegram».\n3️⃣ Подтверди аккаунт через QR или номер + код Telegram.\n4️⃣ После подключения Stories и Intelligence становятся доступны через защищённую сессию.\n\n🛡 Telegram Business — отдельный optional-слой. Он нужен только если хочешь Anti-Delete, Edit History и Smart Inbox для разрешённых чатов.\n\nКоды входа и 2FA не сохраняются; после успешного входа хранится зашифрованная сессия.';
 }
 
 function howToText(settings) {
   if (!settings.bc || !settings.canStories) {
-    return '◉ Как работает VETO Telegram\n\n1. Один раз подключаешь @Storypilotlab_bot через Telegram Business / «Автоматизация чатов».\n2. Для Stories разрешаешь управление историями; для Ghost — доступ к сообщениям и нужным чатам.\n3. Возвращаешься в VETO Telegram: Home, Ghost, Chats, Stories и Intelligence.\n4. Deep Intelligence подключается отдельно, только если нужны viewer analytics и alerts.\n5. Для Story можешь также просто отправить фото в этот чат.\n\nStories и Ghost используют Telegram Business; Deep Intelligence — отдельную защищённую приватную сессию.';
+    return '◉ Как работает VETO Telegram\n\n1. Открываешь Mini App и подключаешь свой Telegram через QR или номер.\n2. VETO хранит только зашифрованную пользовательскую сессию после успешного входа.\n3. Через Account Link работают Stories и Intelligence.\n4. Telegram Business подключается отдельно и только если нужны Anti-Delete, Edit History или Smart Inbox.\n5. В Connection Center всегда видно, какой доступ реально активен.\n\nОсновной вход больше не требует Telegram Business.';
   }
 
-  return `◉ VETO Telegram\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n👻 Ghost: открой Mini App → Ghost; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: Ghost archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
+  return `◉ VETO Telegram\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n🛡 Privacy: открой Mini App → Privacy; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: VETO archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
 }
 
 async function editPanel(token, chatId, messageId, text, settings, origin = '') {
@@ -531,12 +531,12 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
   const mediaStatus = mediaResults.length
     ? mediaRecovered === mediaResults.length
       ? `\n\n▣ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}`
-      : `\n\n⚠ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}. Текст и метаданные Ghost всё равно сохранены.`
+      : `\n\n⚠ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}. Текст и метаданные VETO Privacy всё равно сохранены.`
     : '';
 
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в Ghost.${mediaStatus}`,
+    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в VETO Vault.${mediaStatus}`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -567,7 +567,7 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings
   const sender = row.sender_display_name || (row.sender_username ? `@${row.sender_username}` : null) || row.chat_title || 'Telegram user';
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в Ghost.`,
+    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в VETO Vault.`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -1188,8 +1188,8 @@ export default async function handler(req, res) {
         chatId,
         origin,
         'privacy',
-        '👻 Ghost\n\nAnti-Delete, Edit History, сохранённые медиа и поиск по приватному архиву.',
-        '👻 Открыть Ghost',
+        '🛡 VETO Privacy\n\nAnti-Delete, Edit History, сохранённые медиа и поиск по приватному архиву.',
+        '🛡 Открыть Privacy',
       );
       res.status(200).json({ ok: true, screen: 'privacy' });
       return;
@@ -1199,7 +1199,7 @@ export default async function handler(req, res) {
       const url = ghostAppUrl(origin, { screen:'chats', filter:'deleted' });
       await tg(token, 'sendMessage', {
         chat_id: chatId,
-        text: '↶ Удалённые сообщения\n\nОткрываю Ghost Inbox сразу на сохранённых удалениях.',
+        text: '↶ Удалённые сообщения\n\nОткрываю VETO Inbox сразу на сохранённых удалениях.',
         reply_markup: { inline_keyboard: [[{ text:'↶ Открыть удалённые', web_app:{ url } }]] },
       });
       res.status(200).json({ ok: true, screen:'chats', filter:'deleted' });
@@ -1210,7 +1210,7 @@ export default async function handler(req, res) {
       const url = ghostAppUrl(origin, { screen:'chats', filter:'edited' });
       await tg(token, 'sendMessage', {
         chat_id: chatId,
-        text: '≋ Изменённые сообщения\n\nОткрываю Ghost Inbox на сообщениях с сохранённой историей правок.',
+        text: '≋ Изменённые сообщения\n\nОткрываю VETO Inbox на сообщениях с сохранённой историей правок.',
         reply_markup: { inline_keyboard: [[{ text:'≋ Открыть изменения', web_app:{ url } }]] },
       });
       res.status(200).json({ ok: true, screen:'chats', filter:'edited' });
@@ -1284,7 +1284,7 @@ export default async function handler(req, res) {
         chatId,
         origin,
         'studio',
-        '✦ Ghost Creator Studio\n\nСоздавай custom emoji, sticker packs и бренд-ассеты из prompt или своего логотипа.',
+        '✦ VETO Creator Studio\n\nСоздавай custom emoji, sticker packs и бренд-ассеты из prompt или своего логотипа.',
         '✦ Открыть Creator Studio',
       );
       res.status(200).json({ ok: true, screen: 'studio' });

@@ -65,20 +65,20 @@ Creator Studio also includes **Brand Pack Engine**, designed around the product 
 
 ## Current production flow
 
-1. User opens `@Storypilotlab_bot`.
-2. First-time users see a dedicated connection screen instead of the Story controls.
-3. User connects VETO Telegram in **Telegram → Settings → Telegram Business / Chat Automation**, enables **Manage Stories**, then taps **I connected — check**.
-4. Telegram sends the bot a unique `business_connection` for that user; VETO Telegram validates that the connection is enabled and that `can_manage_stories` is granted.
-5. User chooses a Story audience:
+1. User opens `@Storypilotlab_bot` and launches **VETO Telegram**.
+2. First-time users see the VETO onboarding and press **Connect Telegram**.
+3. Recommended path: connect the user's normal Telegram account through **QR** or **phone + Telegram code**. The resulting user session is stored encrypted server-side.
+4. The connected user session is the primary path for owner Stories and Intelligence. It does not require Telegram Business.
+5. **Telegram Business is optional** and exists for server-side message event features such as Anti-Delete, Edit History and Smart Inbox.
+6. User chooses a Story audience:
    - Everyone
    - My Contacts
    - Close Friends
    - Selected users
    - Optional exclusions
-6. User sends a photo as a normal message.
-7. VETO Telegram prepares a 1080×1920 Story image without destructive cropping and publishes it for 24 hours.
+7. VETO Telegram prepares a 1080×1920 Story image without destructive cropping, publishes it for 24 hours and verifies the requested privacy audience.
 
-No reply/forward workflow is required.
+The product must not make Telegram Business a blocker for a regular user's first connection.
 
 ## v8 UX and reliability improvements
 
@@ -138,11 +138,12 @@ The setup endpoint registers `/api/webhook-v8` and bot commands.
 
 ## Connection onboarding
 
-- Each Telegram user gets their own Business Connection; accounts are never shared between users.
-- Connection is a one-time setup unless the user disables the bot, revokes Story rights, or Telegram invalidates the connection.
-- Disconnected users only see onboarding actions: connect, check connection, and how it works.
-- A connected account without Story rights is shown as a separate recoverable state instead of being presented as fully connected.
-- Successful Business Connection updates produce a fresh visible confirmation near the bottom of the chat.
+- The default connection is **Account Link**: QR first, phone/code fallback.
+- Each Telegram user gets their own encrypted user session; accounts and sessions are never shared between users.
+- Telegram Business is a separate optional connection for Privacy message-event features.
+- A Business connection without Story rights must never block an already-connected Account Link.
+- The Mini App displays Account Link, Story readiness, Business access, Privacy access and encryption as separate statuses.
+- Successful connection must immediately refresh Mini App state so the user sees the account as ready without reopening the app.
 
 
 ## Mini App
@@ -150,12 +151,12 @@ The setup endpoint registers `/api/webhook-v8` and bot commands.
 The persistent **🚀 Старт** menu now opens a full Telegram Mini App instead of immediately closing back to chat.
 
 - Authenticates requests with Telegram Web App `initData`.
-- Shows live Business Connection and `can_manage_stories` status.
+- Shows secure Account Link, Business permissions and Story readiness as separate states.
 - Lets the user change Story audience and content protection without leaving the Mini App.
 - Shows selected/excluded user counts and hands off to Telegram's native picker when those lists need editing.
 - Can delete the last Story from the dashboard.
 - Keeps the primary publish flow simple: configure in Mini App, close it, then send a photo to the bot chat.
-- Uses Telegram theme variables and safe-area insets for Android/iOS.
+- Uses safe-area insets for Android/iOS but intentionally forces the VETO dark visual system instead of inheriting Telegram's light theme.
 
 
 ## Viewer Sync

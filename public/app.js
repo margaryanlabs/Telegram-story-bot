@@ -65,6 +65,8 @@
     activity: [],
     analytics: null,
     advancedPrivacy: true,
+    accountConnection: { connected:false, account:null },
+    businessPermissions: { connected:false, stories:false, messages:false },
     viewerSync: { available:false, requiresUserSession:true },
     processing: qs.get('pr') === '1',
   };
@@ -115,6 +117,15 @@
     busy: false,
     error: null,
   };
+
+  function telegramAccountReady() {
+    return Boolean(
+      state.ready
+      || state.connection === 'ready'
+      || state.accountConnection?.connected
+      || viewerState.session?.connected
+    );
+  }
 
   function activeStoryHistory() {
     return (state.history || []).filter(item => !item.deleted);
@@ -327,9 +338,9 @@
   }
 
   async function publishComposerStory() {
-    if (!state.ready) {
+    if (!telegramAccountReady()) {
       try { await api('check'); } catch {}
-      if (!state.ready) {
+      if (!telegramAccountReady()) {
         connectionHelpSheet();
         return;
       }
@@ -364,7 +375,7 @@
 
       const publishedStoryId = result.storyId || state.lastStory;
       selectedViewerStory = publishedStoryId || selectedViewerStory;
-      const publishedAudience = audienceLabel(state.audience);
+      const publishedAudience = audienceLabel(result.verifiedAudience || state.audience);
       const cleaned = Array.isArray(result.cleanedUsernames) ? result.cleanedUsernames : [];
 
       resetComposer();
@@ -531,7 +542,7 @@
       avatar.appendChild(img);
       return;
     }
-    const name = source.firstName || source.first_name || source.username || 'G';
+    const name = source.firstName || source.first_name || source.username || 'V';
     avatar.textContent = String(name).slice(0, 2).toUpperCase();
   }
 
@@ -665,7 +676,7 @@
     }
     if (rule === 'watch_changes') {
       const actor = event.actorDisplayName
-        || (event.actorUsername ? '@' + event.actorUsername : 'Ghost Watch');
+        || (event.actorUsername ? '@' + event.actorUsername : 'VETO Watch');
       return event.type === 'message.delete' ? `${actor} · deleted` : `${actor} · edited`;
     }
     if (rule === 'confirmed_viewer') {
@@ -779,8 +790,10 @@
   }
 
   function renderConnection() {
-    const ready = state.connection === 'ready';
-    const permission = state.connection === 'needs_permission';
+    const personalConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
+    const ready = state.connection === 'ready' || state.ready === true || personalConnected;
+    const permission = !ready && state.connection === 'needs_permission';
+    const businessStories = state.businessPermissions?.stories === true;
 
     $('profileDot').className = 'live-dot ' + (ready ? 'ready' : permission ? 'warn' : '');
     $('heroStatusPill').className = 'status-pill ' + (ready ? 'ready' : permission ? 'warn' : '');
@@ -789,8 +802,10 @@
       $('heroStatusPill').querySelector('span').textContent = 'Telegram подключён';
       $('connectionIcon').className = 'connection-icon ready';
       $('connectionIcon').textContent = '✓';
-      $('connectionTitle').textContent = 'Готов к публикации';
-      $('connectionText').textContent = 'Telegram подключён · Stories доступны';
+      $('connectionTitle').textContent = personalConnected ? 'Telegram Account подключён' : 'Готов к публикации';
+      $('connectionText').textContent = personalConnected
+        ? 'Защищённая Telegram-сессия активна · Stories и Intelligence доступны'
+        : 'Telegram Business подключён · Stories доступны';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
       $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
@@ -799,8 +814,8 @@
       $('heroStatusPill').querySelector('span').textContent = 'Нужно разрешение';
       $('connectionIcon').className = 'connection-icon warn';
       $('connectionIcon').textContent = '!';
-      $('connectionTitle').textContent = 'Разреши управление Stories';
-      $('connectionText').textContent = 'Telegram подключён, но не разрешено управление Stories';
+      $('connectionTitle').textContent = 'Business подключён частично';
+      $('connectionText').textContent = 'Для Stories можно дать Manage Stories или подключить аккаунт по QR/номеру';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Права';
     } else {
@@ -1246,7 +1261,7 @@
     if (type === 'message.delete') {
       return {
         title: actor ? `${actor} удалил сообщение` : 'Сообщение удалено',
-        detail: chatTitle ? `${chatTitle} · сохранено в Ghost` : 'Сохранено в Ghost',
+        detail: chatTitle ? `${chatTitle} · сохранено в VETO Vault` : 'Сохранено в VETO Vault',
       };
     }
     if (type === 'message.edit') {
@@ -1332,7 +1347,7 @@
           <span class="activity-event-icon">◌</span>
           <div>
             <strong>Пока тихо</strong>
-            <small>Новые Ghost, Stories и Intelligence события появятся здесь автоматически.</small>
+            <small>Новые Privacy, Stories и Intelligence события появятся здесь автоматически.</small>
           </div>
         </div>
       `;
@@ -1356,34 +1371,62 @@
   }
 
   function renderHome() {
-    const telegramReady = state.connection === 'ready' || state.ready === true;
+    const intelConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
+    const telegramReady = state.connection === 'ready' || state.ready === true || intelConnected;
     const ghostPermission = state.readPermission === true;
-    const intelConnected = viewerState.session?.connected === true;
+    const businessStories = state.businessPermissions?.stories === true;
 
     const overall = $('homeOverallState');
     if (overall) {
-      overall.classList.toggle('ready', telegramReady && ghostPermission);
-      overall.classList.toggle('warn', !telegramReady || !ghostPermission);
+      overall.classList.toggle('ready', telegramReady);
+      overall.classList.toggle('warn', !telegramReady);
       const label = overall.querySelector('span');
-      if (label) label.textContent = telegramReady ? 'Telegram connected' : 'Setup required';
+      if (label) label.textContent = telegramReady ? 'Secure connection' : 'Connect Telegram';
     }
 
     if ($('homeTelegramTitle')) {
-      $('homeTelegramTitle').textContent = telegramReady ? 'Подключён' : 'Нужно подключение';
+      $('homeTelegramTitle').textContent = telegramReady
+        ? (intelConnected ? 'Аккаунт защищённо подключён' : 'Telegram Business подключён')
+        : 'Подключи Telegram за минуту';
       $('homeTelegramText').textContent = telegramReady
-        ? 'Telegram-доступ подтверждён сервером.'
-        : 'Открой подключение Telegram и проверь разрешения.';
+        ? (intelConnected
+            ? 'QR/номер подтверждён. Сессия хранится в зашифрованном виде; Stories и Intelligence готовы.'
+            : 'Business-доступ подтверждён Telegram.')
+        : 'Рекомендуем QR или номер телефона. Telegram Business нужен только для дополнительных Business‑разрешений.';
     }
 
-    if ($('homeGhostState')) $('homeGhostState').textContent = ghostPermission ? 'Доступ разрешён' : 'Нужен доступ';
-    if ($('homeChatsState')) $('homeChatsState').textContent = ghostPermission ? 'Архив доступен' : 'Ждёт разрешение';
-    if ($('homeIntelState')) $('homeIntelState').textContent = intelConnected ? 'Активен' : 'Setup required';
-    if ($('homeSecurityState')) $('homeSecurityState').textContent = 'Контроль доступа';
+    if ($('homeGhostState')) $('homeGhostState').textContent = ghostPermission ? 'Business Privacy активна' : 'Опционально';
+    if ($('homeChatsState')) $('homeChatsState').textContent = ghostPermission ? 'Архив доступен' : 'Опционально';
+    if ($('homeIntelState')) $('homeIntelState').textContent = intelConnected ? 'Активен' : 'После подключения';
+    if ($('homeSecurityState')) $('homeSecurityState').textContent = intelConnected ? 'Encrypted session' : 'Контроль доступа';
+
+    const accountBadge = $('vetoAccountBadge');
+    const privacyBadge = $('vetoPrivacyBadge');
+    const storiesBadge = $('vetoStoriesBadge');
+    const connectButton = $('connectTelegramButton');
+    if (accountBadge) {
+      accountBadge.textContent = telegramReady ? (intelConnected ? 'Account · Secure' : 'Account · Business') : 'Account · Not connected';
+      accountBadge.classList.toggle('ready', telegramReady);
+    }
+    if (privacyBadge) {
+      privacyBadge.textContent = ghostPermission ? 'Privacy · Active' : 'Privacy · Optional';
+      privacyBadge.classList.toggle('ready', ghostPermission);
+    }
+    if (storiesBadge) {
+      storiesBadge.textContent = telegramReady ? `Stories · ${businessStories ? 'Business' : intelConnected ? 'Account' : 'Ready'}` : 'Stories · Waiting';
+      storiesBadge.classList.toggle('ready', telegramReady);
+    }
+    if (connectButton) {
+      connectButton.classList.toggle('connected', telegramReady);
+      connectButton.innerHTML = telegramReady
+        ? '<span>✓</span><b>Telegram подключён · Управление</b>'
+        : '<span>⌁</span><b>Подключить Telegram</b>';
+    }
 
     const hasStory = activeStoryHistory().length > 0;
     const activation = [
       { id:'activationTelegram', done:telegramReady, text:telegramReady ? 'Готово' : 'Нужно' },
-      { id:'activationGhost', done:ghostPermission, text:ghostPermission ? 'Готово' : 'Нужно' },
+      { id:'activationGhost', done:ghostPermission, text:ghostPermission ? 'Готово' : 'Optional', optional:true },
       { id:'activationStory', done:hasStory, text:hasStory ? 'Готово' : 'Нужно' },
       { id:'activationIntel', done:intelConnected, text:intelConnected ? 'Готово' : 'Optional', optional:true },
     ];
@@ -1397,7 +1440,7 @@
     });
 
     const completed = activation.filter(step => step.done).length;
-    const coreReady = telegramReady && ghostPermission && hasStory;
+    const coreReady = telegramReady && hasStory;
     const activationCard = $('activationCard');
     activationCard?.classList.toggle('ready', coreReady);
     if ($('activationScore')) $('activationScore').textContent = `${completed}/4`;
@@ -1408,20 +1451,18 @@
     }
     if ($('activationText')) {
       $('activationText').textContent = !telegramReady
-        ? 'Начни с Telegram Business — VETO сам проверит Stories и Privacy‑разрешения.'
-        : !ghostPermission
-          ? 'Stories уже доступны. Доступ к сообщениям включай только если нужны Privacy и Smart Inbox.'
-          : !hasStory
-            ? 'Доступы готовы. Опубликуй первую Story и проверь полный цикл.'
-            : !intelConnected
-              ? 'Privacy и Stories готовы. Deep Intelligence можно подключить отдельно.'
-              : 'Privacy, Stories и Intelligence активны. Следующий слой — Automations.';
+        ? 'Подключи Telegram через QR или номер. Business можно добавить позже только для Privacy‑архива.'
+        : !hasStory
+          ? 'Аккаунт готов. Опубликуй первую Story и проверь полный цикл.'
+          : !ghostPermission
+            ? 'Основной контур работает. Privacy‑архив можно включить отдельно через Telegram Business.'
+            : 'Stories, Privacy и Intelligence активны. Следующий слой — Automations.';
     }
 
     const activationPrimary = $('activationPrimaryButton');
     if (activationPrimary) {
       if (!telegramReady) {
-        activationPrimary.textContent = 'Подключить Telegram Business';
+        activationPrimary.textContent = 'Подключить Telegram · QR / номер';
         activationPrimary.dataset.activationAction = 'telegram';
       } else if (!ghostPermission) {
         activationPrimary.textContent = 'Настроить VETO Privacy';
@@ -1559,53 +1600,51 @@
   }
 
   function securityCenterSheet() {
-    const storiesReady = state.connection === 'ready' || state.ready === true;
-    const businessConnected = storiesReady || state.connection === 'needs_permission';
-    const ghostPermission = state.readPermission === true;
+    const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
+    const businessConnected = state.businessPermissions?.connected === true || state.connection === 'needs_permission';
+    const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
     const session = viewerState.session;
-    const sessionConnected = session?.connected === true;
     const cryptoVersion = session?.cryptoVersion || (viewerState.secureSessionCrypto ? 'v3' : null);
-    const account = session?.account || {};
+    const account = session?.account || state.accountConnection?.account || {};
     const lastError = String(session?.lastError || '').trim();
 
     openSheet(`
-      <span class="kicker">SECURITY CENTER</span>
-      <h2>${sessionConnected ? 'Защита активна' : 'Контроль доступа'}</h2>
-      <p>Здесь только реальные состояния подключений и приватной сессии. Секреты, session-string и ключи никогда не показываются клиенту.</p>
+      <span class="kicker">VETO SECURITY CENTER</span>
+      <h2>${accountConnected ? 'Secure Account активен' : 'Контроль доступа'}</h2>
+      <p>Здесь только реальные состояния. Коды входа и 2FA не сохраняются; сервер хранит зашифрованную Telegram‑сессию только после успешного подключения.</p>
       <div class="security-status-grid">
-        <article class="${businessConnected ? 'ready' : 'warn'}">
-          <span>Telegram</span>
-          <strong>${businessConnected ? 'Connected' : 'Setup required'}</strong>
-          <small>Business access</small>
-        </article>
-        <article class="${ghostPermission ? 'ready' : 'warn'}">
-          <span>Ghost</span>
-          <strong>${ghostPermission ? 'Allowed' : 'Permission needed'}</strong>
-          <small>Message access</small>
+        <article class="${accountConnected ? 'ready' : 'warn'}">
+          <span>Account Link</span>
+          <strong>${accountConnected ? 'Connected' : 'Not connected'}</strong>
+          <small>QR / phone session</small>
         </article>
         <article class="${viewerState.secureSessionCrypto ? 'ready' : 'warn'}">
           <span>Encryption</span>
-          <strong>${viewerState.secureSessionCrypto ? 'Encrypted v3' : 'Unavailable'}</strong>
-          <small>Ключ шифрования не передаётся в приложение</small>
+          <strong>${viewerState.secureSessionCrypto ? 'Encrypted v3' : 'Check required'}</strong>
+          <small>Ключ не передаётся в Mini App</small>
         </article>
-        <article class="${sessionConnected ? 'ready' : ''}">
-          <span>Deep Intelligence</span>
-          <strong>${sessionConnected ? 'Active' : 'Not connected'}</strong>
-          <small>${sessionConnected ? (cryptoVersion || 'encrypted') : 'Optional'}</small>
+        <article class="${businessConnected ? 'ready' : ''}">
+          <span>Business</span>
+          <strong>${businessConnected ? 'Connected' : 'Optional'}</strong>
+          <small>Privacy event access</small>
+        </article>
+        <article class="${privacyPermission ? 'ready' : ''}">
+          <span>Privacy archive</span>
+          <strong>${privacyPermission ? 'Active' : 'Optional'}</strong>
+          <small>Anti‑Delete · Edit History</small>
         </article>
       </div>
 
       <div class="sheet-list security-detail-list">
-        <div class="sheet-item"><strong>Приватное подключение</strong><span>${sessionConnected ? '✓ Active · encrypted ' + (cryptoVersion || 'v3') : '○ Нет активной приватной сессии'}</span></div>
-        <div class="sheet-item"><strong>Telegram account</strong><span>${sessionConnected ? (account.username ? '@' + account.username : account.firstName || 'Connected account') : 'Не подключён'}</span></div>
-        <div class="sheet-item"><strong>Session created</strong><span>${sessionConnected ? formatSecurityTime(session?.createdAt) : '—'}</span></div>
-        <div class="sheet-item"><strong>Last watcher check</strong><span>${sessionConnected ? formatSecurityTime(session?.lastPollAt) : '—'}</span></div>
-        <div class="sheet-item"><strong>Security status</strong><span>${lastError ? '⚠ ' + escapeHtml(lastError.slice(0, 140)) : '✓ Ошибок сессии нет'}</span></div>
+        <div class="sheet-item"><strong>Telegram account</strong><span>${accountConnected ? (account.username ? '@' + escapeHtml(account.username) : escapeHtml(account.firstName || 'Connected account')) : 'Не подключён'}</span></div>
+        <div class="sheet-item"><strong>Session created</strong><span>${session?.createdAt ? formatSecurityTime(session.createdAt) : '—'}</span></div>
+        <div class="sheet-item"><strong>Last secure check</strong><span>${session?.lastPollAt ? formatSecurityTime(session.lastPollAt) : '—'}</span></div>
+        <div class="sheet-item"><strong>Security status</strong><span>${lastError ? '⚠ ' + escapeHtml(lastError.slice(0, 140)) : accountConnected ? '✓ Ошибок сессии нет' : '○ Нет активной Account Link session'}</span></div>
       </div>
 
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-refresh-security">Проверить снова</button>
-        ${sessionConnected ? '<button class="danger" data-sheet-action="security-revoke-session">Отозвать Deep Intelligence session</button>' : '<button data-sheet-action="go-viewers">Подключить Deep Intelligence</button>'}
+        ${accountConnected ? '<button class="danger" data-sheet-action="security-revoke-session">Отключить Telegram Account</button>' : '<button data-sheet-action="account-connect">Подключить Telegram Account</button>'}
         <button data-sheet-action="open-connections">Connection Center</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -1750,47 +1789,80 @@
   }
 
   function profileSheet() {
-    const storiesReady = state.connection === 'ready' || state.ready === true;
-    const businessConnected = storiesReady || state.connection === 'needs_permission';
-    const ghostPermission = state.readPermission === true;
-    const intelligenceConnected = viewerState.session?.connected === true;
+    const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
+    const businessConnected = state.businessPermissions?.connected === true || state.connection === 'needs_permission';
+    const businessStories = state.businessPermissions?.stories === true;
+    const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
+    const storiesReady = telegramAccountReady();
+    const account = viewerState.session?.account || state.accountConnection?.account || {};
     openSheet(`
       <span class="kicker">VETO CONNECTION CENTER</span>
-      <h2>${businessConnected ? 'Telegram подключён' : 'Подключи Telegram один раз'}</h2>
-      <p>VETO показывает реальные разрешения по отдельности. Ничего не включается «в фоне» без Telegram‑доступа.</p>
+      <h2>${accountConnected ? 'Telegram Account подключён' : businessConnected ? 'Business подключён' : 'Подключи Telegram'}</h2>
+      <p>Основной Account Link и Telegram Business показаны отдельно. Ты сам видишь, какой доступ реально активен и для чего он нужен.</p>
       <div class="sheet-list connection-center-list">
-        <div class="sheet-item"><strong>Telegram identity</strong><span>${tg?.initData ? '✓ Подтверждена Telegram Mini App' : 'Нужно открыть приложение внутри Telegram'}</span></div>
-        <div class="sheet-item"><strong>Business access</strong><span>${businessConnected ? '✓ Подключено' : '○ Требуется подключение'}</span></div>
-        <div class="sheet-item"><strong>VETO Privacy</strong><span>${ghostPermission ? '✓ Доступ к сообщениям разрешён' : '○ Разреши доступ к сообщениям только если нужны Privacy‑функции'}</span></div>
-        <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Разреши управление Stories'}</span></div>
-        <div class="sheet-item"><strong>Deep Intelligence</strong><span>${intelligenceConnected ? '✓ Подключено отдельно' : viewerState.newConnectionsReady === false ? '○ Secure storage setup required' : '○ Опционально · не подключено'}</span></div>
+        <div class="sheet-item"><strong>Telegram identity</strong><span>${tg?.initData ? '✓ Mini App identity подтверждена' : '○ Открой VETO внутри Telegram'}</span></div>
+        <div class="sheet-item"><strong>Account Link</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Secure session') : '○ Не подключён · QR / номер'}</span></div>
+        <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Подключи Account Link или дай Business Manage Stories'}</span></div>
+        <div class="sheet-item"><strong>Business access</strong><span>${businessConnected ? '✓ Подключено' + (businessStories ? ' · Stories' : '') : '○ Optional · нужен только для расширенной Privacy'}</span></div>
+        <div class="sheet-item"><strong>VETO Privacy archive</strong><span>${privacyPermission ? '✓ Message access активен' : '○ Optional · Anti‑Delete / Edit History / Smart Inbox'}</span></div>
+        <div class="sheet-item"><strong>Encryption</strong><span>${viewerState.secureSessionCrypto ? '✓ Encrypted v3' : accountConnected ? '⚠ Требует проверки' : '○ После Account Link'}</span></div>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="check">Проверить Telegram</button>
-        <button data-sheet-action="go-ghost">Privacy Center</button>
+        <button class="accent" data-sheet-action="${accountConnected ? 'account-connect' : 'account-connect'}">${accountConnected ? 'Управлять Telegram Account' : 'Подключить Telegram · QR / номер'}</button>
+        <button data-sheet-action="business-help">${businessConnected ? 'Проверить Telegram Business' : 'Добавить Business Privacy · optional'}</button>
         <button data-sheet-action="privacy-promise">Privacy Promise</button>
-        <button data-sheet-action="go-viewers">Intelligence</button>
         <button data-sheet-action="open-security">Security Center</button>
-        <button data-sheet-action="open-automations">Automation Center</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
   }
   function connectionHelpSheet() {
+    const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
+    if (accountConnected) {
+      viewerSetupSheet();
+      return;
+    }
     openSheet(`
-      <span class="kicker">VETO CONNECTION</span>
-      <h2>Подключи Telegram один раз</h2>
-      <p>Никаких API‑ключей и технических экранов. Разрешения выдаются внутри Telegram и проверяются VETO автоматически.</p>
-      <div class="sheet-list">
-        <div class="sheet-item"><strong>1 · Telegram Settings</strong><span>Открой Telegram Business / Business → Chatbots / Chat Automation.</span></div>
-        <div class="sheet-item"><strong>2 · Добавь @Storypilotlab_bot</strong><span>Это текущий технический бот VETO Telegram. Позже username можно сменить отдельно через BotFather.</span></div>
-        <div class="sheet-item"><strong>3 · Stories</strong><span>Включи Manage Stories, если хочешь публиковать и управлять Stories из VETO.</span></div>
-        <div class="sheet-item"><strong>4 · Privacy — только по желанию</strong><span>Доступ к сообщениям нужен для Anti‑Delete, Edit History и Smart Inbox. Выбирай только нужные чаты.</span></div>
-        <div class="sheet-item"><strong>5 · Вернись в VETO</strong><span>Нажми «Проверить Telegram» — статус каждого разрешения появится в Connection Center.</span></div>
+      <span class="kicker">VETO SECURE CONNECTION</span>
+      <h2>Подключи свой Telegram</h2>
+      <p>Основной путь больше не зависит от Telegram Business. Выбери обычное безопасное подключение аккаунта.</p>
+      <div class="veto-connect-sheet-head">
+        <strong>Рекомендуется: Telegram Account Link</strong>
+        <span>Подтверждение через QR или номер телефона. После подключения VETO может публиковать твои Stories и включить Intelligence без Business‑бота.</span>
+      </div>
+      <div class="veto-connect-options">
+        <button class="veto-connect-option recommended" data-sheet-action="account-connect">
+          <span class="option-icon">⌁</span>
+          <span><strong>QR / номер телефона</strong><small>Для обычного Telegram‑аккаунта · основной способ</small></span>
+          <em>Recommended</em>
+        </button>
+        <button class="veto-connect-option" data-sheet-action="business-help">
+          <span class="option-icon">B</span>
+          <span><strong>Telegram Business</strong><small>Дополнительно для Anti‑Delete, Edit History и Smart Inbox</small></span>
+          <em>Optional</em>
+        </button>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="check">Проверить подключение</button>
-        <button data-sheet-action="privacy-promise">Что происходит с моими данными</button>
+        <button data-sheet-action="privacy-promise">Как VETO хранит подключение</button>
+        <button data-sheet-action="close">Не сейчас</button>
+      </div>
+    `);
+  }
+
+  function businessConnectionHelpSheet() {
+    openSheet(`
+      <span class="kicker">OPTIONAL · TELEGRAM BUSINESS</span>
+      <h2>Business нужен только для расширенной Privacy</h2>
+      <p>Stories и Intelligence могут работать через обычное защищённое подключение аккаунта. Business подключай, если нужны серверные события сообщений.</p>
+      <div class="sheet-list">
+        <div class="sheet-item"><strong>1 · Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Chat Automation.</span></div>
+        <div class="sheet-item"><strong>2 · Добавь @Storypilotlab_bot</strong><span>Выбери VETO Telegram и нужные чаты.</span></div>
+        <div class="sheet-item"><strong>3 · Message access</strong><span>Нужен для Anti‑Delete, Edit History и Smart Inbox.</span></div>
+        <div class="sheet-item"><strong>4 · Manage Stories</strong><span>Не обязателен, если Stories уже работают через Account Link.</span></div>
+      </div>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="check">Проверить Business‑разрешения</button>
+        <button data-sheet-action="account-connect">Подключить обычный аккаунт</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
@@ -1798,8 +1870,8 @@
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
-        <span class="kicker">DEEP INTELLIGENCE</span>
-        <h2>Серверная часть ещё не готова</h2>
+        <span class="kicker">VETO SECURE ACCOUNT</span>
+        <h2>Защищённое подключение временно недоступно</h2>
         <p>VETO Telegram не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и последующее подтверждение просмотров уже встроены.</span></div>
@@ -1813,9 +1885,9 @@
     if (viewerState.session?.connected) {
       const account = viewerState.session.account || {};
       openSheet(`
-        <span class="kicker">DEEP INTELLIGENCE</span>
-        <h2>Подключено</h2>
-        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} используется только для данных твоих собственных Stories.</p>
+        <span class="kicker">VETO SECURE ACCOUNT</span>
+        <h2>Telegram подключён</h2>
+        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} подключён через зашифрованную пользовательскую сессию. Она используется для функций аккаунта, которые ты запускаешь в VETO.</p>
         <div class="sheet-list">
           <div class="sheet-item preference-item">
             <span class="preference-copy"><strong>Realtime alerts</strong><span>Уведомлять о новых просмотрах.</span></span>
@@ -1835,7 +1907,7 @@
           <div class="sheet-item"><strong>Последняя проверка</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
         </div>
         <div class="sheet-actions">
-          <button data-sheet-action="viewer-disconnect">Отключить Deep Intelligence</button>
+          <button data-sheet-action="viewer-disconnect">Отключить Telegram Account</button>
           <button data-sheet-action="close">Закрыть</button>
         </div>
       `);
@@ -1848,7 +1920,7 @@
         <h2>Новое подключение приостановлено</h2>
         <p>VETO Telegram не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Stories & Ghost</strong><span>Продолжают работать независимо.</span></div>
+          <div class="sheet-item"><strong>Stories & Privacy</strong><span>Продолжают работать независимо.</span></div>
           <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
           <div class="sheet-item"><strong>New private session</strong><span>Создание заблокировано, пока защита не готова.</span></div>
         </div>
@@ -1861,9 +1933,9 @@
     }
 
     openSheet(`
-      <span class="kicker">DEEP INTELLIGENCE</span>
+      <span class="kicker">VETO SECURE ACCOUNT</span>
       <h2>Подключить Telegram</h2>
-      <p>Отдельная пользовательская сессия нужна только для viewer intelligence твоих собственных Stories.</p>
+      <p>Подтверди аккаунт через QR или номер. После этого VETO использует зашифрованную сессию для Stories и Intelligence; Business‑доступ остаётся отдельным и необязательным.</p>
       <div class="qr-choice-card">
         <div class="qr-choice-icon">⌁</div>
         <div>
@@ -1901,7 +1973,7 @@
 
   function viewerCodeSheet(delivery) {
     openSheet(`
-      <span class="kicker">Deep Intelligence</span>
+      <span class="kicker">VETO SECURE ACCOUNT</span>
       <h2>Введи код Telegram</h2>
       <p>${delivery === 'telegram_app' ? 'Код отправлен в Telegram.' : 'Telegram выбрал доступный способ доставки кода.'}</p>
       <div class="auth-form">
@@ -2059,8 +2131,9 @@
             viewerQrAbortController = null;
             closeSheet();
             notify('success');
-            showToast('Deep Intelligence подключён через QR');
+            showToast('Telegram подключён через QR');
             await refreshViewerSync({ silent: true });
+            await refresh();
             await refreshViewerAnalytics({ silent: true });
             break;
           }
@@ -2141,7 +2214,7 @@
   }
 
   async function deleteStory(storyId = state.lastStory) {
-    if (!storyId || !state.ready) return;
+    if (!storyId || !telegramAccountReady()) return;
     const run = async () => {
       try {
         await api('delete_story', { storyId });
@@ -2254,6 +2327,10 @@
     }
   });
   $('profileButton').addEventListener('click', profileSheet);
+  $('connectTelegramButton')?.addEventListener('click', () => {
+    const connected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
+    connected ? viewerSetupSheet() : connectionHelpSheet();
+  });
   $('privacyPromiseButton')?.addEventListener('click', privacyPromiseSheet);
   $('vetoWelcomeSkip')?.addEventListener('click', () => closeVetoWelcome());
   $('vetoWelcomeNext')?.addEventListener('click', () => {
@@ -2271,10 +2348,10 @@
     const connected = viewerState.session?.connected === true;
     const item = activeStoryHistory()[0] || null;
 
-    if (!state.ready) {
+    if (!telegramAccountReady()) {
       try {
         await api('check');
-        if (state.ready) {
+        if (telegramAccountReady()) {
           showToast('Telegram подключён');
         } else {
           connectionHelpSheet();
@@ -2502,6 +2579,14 @@
         showToast(error.message);
       }
     }
+    if (action === 'account-connect') {
+      viewerSetupSheet();
+      return;
+    }
+    if (action === 'business-help') {
+      businessConnectionHelpSheet();
+      return;
+    }
     if (action === 'viewer-start-qr') {
       await startViewerQrLogin();
       return;
@@ -2626,8 +2711,9 @@
         await viewerApi('verify_password', { password }, null);
         closeSheet();
         notify('success');
-        showToast('Deep Intelligence подключён');
+        showToast('Telegram подключён');
         await refreshViewerSync({ silent: true });
+        await refresh();
         await refreshViewerAnalytics({ silent: true });
       } catch (error) {
         showToast(error.message);
@@ -2675,7 +2761,8 @@
           error: null,
         };
         renderViewers();
-        showToast('Deep Intelligence отключён');
+        await refresh().catch(() => {});
+        showToast('Telegram Account отключён');
       } catch (error) {
         showToast(error.message);
       }
@@ -2718,8 +2805,9 @@
   });
 
   $('pickStoryMedia').addEventListener('click', () => {
-    if (!state.ready) {
-      showToast('Сначала подключи Telegram Business');
+    if (!telegramAccountReady()) {
+      showToast('Сначала подключи Telegram');
+      connectionHelpSheet();
       return;
     }
     $('storyFileInput').click();
@@ -2745,8 +2833,9 @@
   try {
     tg?.ready();
     tg?.expand();
-    tg?.setHeaderColor?.('secondary_bg_color');
-    tg?.setBackgroundColor?.('bg_color');
+    tg?.setHeaderColor?.('#000000');
+    tg?.setBackgroundColor?.('#000000');
+    tg?.setBottomBarColor?.('#030303');
     tg?.disableVerticalSwipes?.();
     tg?.BackButton?.onClick(closeSheet);
   } catch {}
@@ -2782,6 +2871,18 @@
   });
 
   renderNetworkStatus();
+
+  const updateVetoSpotlight = (clientX, clientY) => {
+    const x = Math.max(0, Math.min(window.innerWidth, Number(clientX || 0)));
+    const y = Math.max(0, Math.min(window.innerHeight, Number(clientY || 0)));
+    document.body.style.setProperty('--veto-x', `${x}px`);
+    document.body.style.setProperty('--veto-y', `${y}px`);
+  };
+  window.addEventListener('pointermove', event => updateVetoSpotlight(event.clientX, event.clientY), { passive:true });
+  window.addEventListener('touchmove', event => {
+    const touch = event.touches?.[0];
+    if (touch) updateVetoSpotlight(touch.clientX, touch.clientY);
+  }, { passive:true });
 
   window.addEventListener('unhandledrejection', event => {
     const message = event?.reason?.message || String(event?.reason || '');

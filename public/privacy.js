@@ -176,13 +176,13 @@
         const data = await response.json().catch(() => ({}));
         if (response.ok && data.ok) return data;
 
-        const error = new Error(data.error || 'Ghost Inbox временно недоступен');
+        const error = new Error(data.error || 'VETO Inbox временно недоступен');
         error.status = response.status;
         lastError = error;
         if (!retryable || ![502,503,504].includes(response.status) || attempt === attempts - 1) throw error;
       } catch (error) {
         const normalized = error?.name === 'AbortError'
-          ? new Error('Ghost Inbox отвечает слишком долго')
+          ? new Error('VETO Inbox отвечает слишком долго')
           : error;
         lastError = normalized;
         if (!retryable || attempt === attempts - 1) throw normalized;
@@ -191,7 +191,7 @@
       }
     }
 
-    throw lastError || new Error('Ghost Inbox временно недоступен');
+    throw lastError || new Error('VETO Inbox временно недоступен');
   }
 
   function threadTotals(threads = privacyState.threads) {
@@ -299,7 +299,7 @@
 
     openSheet(`
       <span class="kicker">GHOST DIAGNOSTICS</span>
-      <h2>${diagnostics.status === 'ready' ? 'Ghost готов' : 'Нужна проверка'}</h2>
+      <h2>${diagnostics.status === 'ready' ? 'Privacy готова' : 'Нужна проверка'}</h2>
       <p>Проверяю не UI, а реальную цепочку Anti-Delete. Каждый статус ниже приходит с backend/Telegram.</p>
       <div class="ghost-diagnostic-list">${rows}</div>
       ${liveProof}
@@ -322,7 +322,7 @@
       privacyState.diagnostics = data.diagnostics || null;
       renderDiagnosticsSheet(privacyState.diagnostics);
       if (!silent) {
-        toast(privacyState.diagnostics?.status === 'ready' ? 'Ghost pipeline готов' : 'Есть пункты, которые требуют внимания');
+        toast(privacyState.diagnostics?.status === 'ready' ? 'Privacy pipeline готов' : 'Есть пункты, которые требуют внимания');
       }
     } catch (error) {
       if (!silent) toast(error.message);
@@ -365,7 +365,7 @@
       statusText.textContent = privacyState.loading
         ? 'Синхронизация'
         : privacyState.degraded
-          ? 'Ghost восстанавливает связь'
+          ? 'VETO Privacy восстанавливает связь'
           : !privacyState.connection.loaded
             ? 'Проверяю Telegram'
             : complete && !connectionLive
@@ -373,9 +373,9 @@
               : complete && connectionLive && !readMessages
                 ? 'Нужен доступ к сообщениям'
                 : operational
-                ? 'Ghost полностью активен'
+                ? 'VETO Privacy полностью активна'
                 : enabled
-                  ? 'Ghost частично активен'
+                  ? 'VETO Privacy частично активна'
                   : 'Режим выключен';
     }
 
@@ -383,12 +383,12 @@
       $('privacyHeroText').textContent = complete && connectionLive && readMessages
         ? 'Готово. Новые доступные Business-сообщения, правки и удаления обрабатываются автоматически.'
         : complete && privacyState.connection.loaded && !connectionLive
-          ? 'Ghost включён, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать Ghost не нужно.'
+          ? 'VETO Privacy включена, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать VETO Privacy не нужно.'
           : complete && connectionLive && !readMessages
-            ? 'Telegram подключён, но Ghost не получил право на сообщения. Разреши доступ к сообщениям в настройках Business-бота.'
+            ? 'Telegram подключён, но VETO Privacy не получила право на сообщения. Разреши доступ к сообщениям в настройках Business-бота.'
             : enabled
-            ? 'Часть защиты уже включена. Можно включить весь Ghost одной кнопкой.'
-            : 'Включи Ghost одной кнопкой — дальше всё работает автоматически.';
+            ? 'Часть защиты уже включена. Можно включить всю VETO Privacy одной кнопкой.'
+            : 'Включи VETO Privacy одной кнопкой — дальше всё работает автоматически.';
     }
 
     const enableAll = $('privacyEnableAllButton');
@@ -397,10 +397,10 @@
       enableAll.classList.toggle('done', complete);
       const label = enableAll.querySelector('b');
       const hint = enableAll.querySelector('small');
-      if (label) label.textContent = complete ? 'Ghost включён' : 'Включить Ghost целиком';
+      if (label) label.textContent = complete ? 'VETO Privacy включена' : 'Включить VETO Privacy';
       if (hint) hint.textContent = complete
-        ? 'Anti-Delete + Edit History + Ghost Inbox активны'
-        : 'Anti-Delete + Edit History + Ghost Inbox';
+        ? 'Anti-Delete + Edit History + VETO Inbox активны'
+        : 'Anti-Delete + Edit History + VETO Inbox';
     }
 
     for (const [id, key] of [
@@ -443,10 +443,10 @@
     }
     if (accessText) {
       accessText.textContent = connectionLive && readMessages
-        ? 'Telegram подключён. Ghost может получать новые сообщения из разрешённых чатов.'
+        ? 'Telegram подключён. VETO Privacy может получать новые сообщения из разрешённых чатов.'
         : connectionLive
-          ? 'Telegram подключён, но доступ к сообщениям не разрешён. Включи его, чтобы Ghost надёжно сохранял изменения и удаления.'
-          : 'Ghost сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
+          ? 'Telegram подключён, но доступ к сообщениям не разрешён. Включи его, чтобы VETO Privacy надёжно сохраняла изменения и удаления.'
+          : 'VETO Privacy сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
     }
     if (accessAction) {
       accessAction.textContent = connectionLive && readMessages ? 'Проверить' : 'Настроить';
@@ -488,7 +488,7 @@
       briefCard.classList.remove('action','watch','clear');
       briefCard.classList.add(['action','watch','clear'].includes(String(brief.status)) ? String(brief.status) : 'clear');
     }
-    if ($('smartBriefTitle')) $('smartBriefTitle').textContent = brief.title || 'Ghost Brief';
+    if ($('smartBriefTitle')) $('smartBriefTitle').textContent = brief.title || 'VETO Brief';
     if ($('smartBriefDetail')) $('smartBriefDetail').textContent = brief.detail || '';
     if ($('smartBriefStatus')) {
       $('smartBriefStatus').textContent = brief.status === 'action'
@@ -588,16 +588,16 @@
       empty.classList.toggle('show', visible.length === 0);
       if ($('privacyEmptyTitle')) {
         $('privacyEmptyTitle').textContent = !enabled
-          ? 'Ghost ещё не включён'
+          ? 'VETO Privacy ещё не включена'
           : (privacyState.filter === 'deleted' ? privacyState.deletedFeed.length : privacyState.threads.length) && !visible.length
             ? 'Ничего не найдено'
             : privacyState.filter === 'deleted'
               ? 'Удалённых сообщений пока нет'
-              : 'Ghost Inbox пока пуст';
+              : 'VETO Inbox пока пуст';
       }
       if ($('privacyEmptyText')) {
         $('privacyEmptyText').textContent = !enabled
-          ? 'Нажми «Включить Ghost целиком» — дальше новые события будут сохраняться автоматически.'
+          ? 'Нажми «Включить VETO Privacy» — дальше новые события будут сохраняться автоматически.'
           : (privacyState.filter === 'deleted' ? privacyState.deletedFeed.length : privacyState.threads.length) && !visible.length
             ? 'Измени поиск или фильтр.'
             : privacyState.filter === 'deleted'
@@ -754,7 +754,7 @@
       privacyState.smartBrief = data.smartBrief || privacyState.smartBrief;
       privacyState.lastTotalMessages = threadTotals().messages;
       render();
-      if (!quiet) toast('Ghost настройки сохранены');
+      if (!quiet) toast('VETO Privacy настройки сохранены');
       return true;
     } catch (error) {
       privacyState.settings = previous;
@@ -774,7 +774,7 @@
       retentionDays: Number(privacyState.settings.retentionDays || 30),
     }, { quiet:true });
     if (ok) {
-      toast('Ghost полностью включён');
+      toast('VETO Privacy полностью включена');
       try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
       await Promise.all([
         refresh({ silent:true }),
@@ -883,7 +883,7 @@
   function threadModeLabel(mode) {
     if (mode === 'deleted') return 'Удалённые';
     if (mode === 'edited') return 'Изменённые';
-    if (mode === 'focus') return 'Ghost Focus';
+    if (mode === 'focus') return 'VETO Focus';
     return 'Все сообщения';
   }
 
@@ -937,7 +937,7 @@
               ].filter(Boolean).join(' · '))}</small>
             </button>` : ''}
           <footer>
-            ${focused ? '<span class="focus">Ghost Focus</span>' : ''}
+            ${focused ? '<span class="focus">VETO Focus</span>' : ''}
             ${deleted ? '<span class="deleted">Удалено в Telegram</span>' : ''}
             ${mediaArchived ? '<span class="vault">Media Vault</span>' : ''}
             ${deleted && hasMedia && !mediaArchived ? '<span class="warn">Медиа может зависеть от Telegram</span>' : ''}
@@ -958,7 +958,7 @@
 
     openSheet(`
       <div class="privacy-sheet-head">
-        <div><span class="kicker">${mode === 'focus' ? 'GHOST FOCUS' : 'Ghost Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
+        <div><span class="kicker">${mode === 'focus' ? 'VETO FOCUS' : 'VETO Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
         <div class="privacy-sheet-head-actions">
           <button class="mini-chip" type="button" data-privacy-close="1">← Список</button>
           <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
@@ -1070,7 +1070,7 @@
       let body = '';
 
       if (type === 'photo' || blob.type.startsWith('image/')) {
-        body = `<img class="privacy-media-preview-image" src="${url}" alt="Ghost media" />`;
+        body = `<img class="privacy-media-preview-image" src="${url}" alt="VETO media" />`;
       } else if (['video','animation','video_note'].includes(type) || blob.type.startsWith('video/')) {
         body = `<video class="privacy-media-preview-video" src="${url}" controls playsinline autoplay></video>`;
       } else if (['voice','audio'].includes(type) || blob.type.startsWith('audio/')) {
@@ -1086,7 +1086,7 @@
       }
 
       openSheet(`
-        <span class="kicker">Ghost Media</span>
+        <span class="kicker">VETO Media</span>
         <h2>${escapeHtml(fileName || (type === 'photo' ? 'Фото' : 'Вложение'))}</h2>
         <p>Медиа загружено через авторизованный VETO Telegram proxy. Прямая Telegram file-id в браузер не отдаётся.</p>
         <div class="privacy-media-preview-wrap">${body}</div>
@@ -1114,7 +1114,7 @@
         privacyState.deletedFeedLoaded = true;
         privacyState.lastTotalMessages = 0;
         render();
-        toast('Ghost Inbox очищен');
+        toast('VETO Inbox очищен');
         try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
       } catch (error) {
         toast(error.message);
@@ -1122,8 +1122,8 @@
     };
 
     if (tg?.showConfirm) {
-      tg.showConfirm('Удалить все сохранённые сообщения Ghost Inbox?', ok => ok && run());
-    } else if (window.confirm('Удалить все сохранённые сообщения Ghost Inbox?')) {
+      tg.showConfirm('Удалить все сохранённые сообщения VETO Inbox?', ok => ok && run());
+    } else if (window.confirm('Удалить все сохранённые сообщения VETO Inbox?')) {
       run();
     }
   }
@@ -1222,9 +1222,9 @@
     if (privacyState.connection.live && !privacyState.connection.readMessages) {
       openSheet(`
         <span class="kicker">Telegram Business</span>
-        <h2>Разреши сообщения для Ghost</h2>
+        <h2>Разреши сообщения для VETO Privacy</h2>
         <p>Открой Telegram → Настройки → Telegram Business / Автоматизация чатов → @Storypilotlab_bot. Включи доступ к сообщениям / чтению сообщений и выбери чаты, которые бот может обрабатывать.</p>
-        <p>Это право нужно, чтобы Telegram присылал Ghost события удалений. VETO Telegram всё равно не вызывает readBusinessMessage при просмотре Ghost Inbox.</p>
+        <p>Это право нужно, чтобы Telegram присылал VETO Privacy события удалений. VETO Telegram всё равно не вызывает readBusinessMessage при просмотре VETO Inbox.</p>
         <div class="sheet-actions">
           <button class="accent" data-privacy-recheck-access="1">Проверить снова</button>
           <button data-privacy-close="1">Закрыть</button>

@@ -397,7 +397,7 @@
       return;
     }
 
-    const title = String($('studioPackTitle')?.value || '').trim() || 'Ghost Brand Pack';
+    const title = String($('studioPackTitle')?.value || '').trim() || 'VETO Brand Pack';
     const shortBase = String($('studioShortName')?.value || '').trim() || title;
 
     setBusy(true, `Публикую ${assets.length} ассетов в Telegram…`);
