@@ -24,7 +24,7 @@ test('regular Telegram account link is a first-class connection path', () => {
   const miniapp = read('api/miniapp.js');
   const publisher = read('lib/story-app-publisher.js');
 
-  assert.match(app, /QR \/ номер телефона/);
+  assert.match(app, /номер \+ код/);
   assert.match(app, /data-sheet-action="account-connect"/);
   assert.match(app, /Telegram Business.*Optional|Business.*optional/i);
   assert.match(miniapp, /getViewerSession/);
