@@ -2509,58 +2509,63 @@ async function opListAutomationJobs(args: any) {
 
 async function opClaimAutomationJobs(args: any) {
   const limit = Math.max(1, Math.min(25, Number(args?.limit || 10)));
-  if (!directSql) throw new Error("direct_database_unavailable");
 
-  const rows = await directSql`
-    with picked as (
-      select id
-      from public.story_pilot_automation_jobs
-      where attempts < 5
-        and (
-          (status in ('queued','failed') and available_at <= now())
-          or (status = 'sending' and locked_at < now() - interval '5 minutes')
-        )
-      order by created_at asc
-      for update skip locked
-      limit ${limit}
-    ),
-    updated as (
-      update public.story_pilot_automation_jobs j
-      set
-        status = 'sending',
-        attempts = j.attempts + 1,
-        locked_at = now(),
-        updated_at = now()
-      from picked
-      where j.id = picked.id
-      returning j.*
-    )
-    select
-      u.id, u.telegram_user_id, u.event_id, u.rule_key,
-      u.status, u.attempts, u.created_at,
-      e.event_type, e.occurred_at, e.story_id, e.chat_id,
-      e.actor_username, e.actor_display_name, e.payload
-    from updated u
-    join public.story_pilot_events e on e.id = u.event_id
-    order by u.created_at asc
-  `;
+  if (useDirectSql()) {
+    const rows = await directSql`
+      with picked as (
+        select id
+        from public.story_pilot_automation_jobs
+        where attempts < 5
+          and (
+            (status in ('queued','failed') and available_at <= now())
+            or (status = 'sending' and locked_at < now() - interval '5 minutes')
+          )
+        order by created_at asc
+        for update skip locked
+        limit ${limit}
+      ),
+      updated as (
+        update public.story_pilot_automation_jobs j
+        set
+          status = 'sending',
+          attempts = j.attempts + 1,
+          locked_at = now(),
+          updated_at = now()
+        from picked
+        where j.id = picked.id
+        returning j.*
+      )
+      select
+        u.id, u.telegram_user_id, u.event_id, u.rule_key,
+        u.status, u.attempts, u.created_at,
+        e.event_type, e.occurred_at, e.story_id, e.chat_id,
+        e.actor_username, e.actor_display_name, e.payload
+      from updated u
+      join public.story_pilot_events e on e.id = u.event_id
+      order by u.created_at asc
+    `;
 
-  return rows.map((row: any) => ({
-    id: String(row.id),
-    userId: String(row.telegram_user_id),
-    eventId: String(row.event_id),
-    ruleKey: row.rule_key,
-    attempts: Number(row.attempts || 0),
-    event: {
-      type: row.event_type,
-      occurredAt: row.occurred_at,
-      storyId: row.story_id == null ? null : Number(row.story_id),
-      chatId: row.chat_id ? String(row.chat_id) : null,
-      actorUsername: row.actor_username || null,
-      actorDisplayName: row.actor_display_name || null,
-      payload: row.payload && typeof row.payload === "object" ? row.payload : {},
-    },
-  }));
+    return rows.map((row: any) => ({
+      id: String(row.id),
+      userId: String(row.telegram_user_id),
+      eventId: String(row.event_id),
+      ruleKey: row.rule_key,
+      attempts: Number(row.attempts || 0),
+      event: {
+        type: row.event_type,
+        occurredAt: row.occurred_at,
+        storyId: row.story_id == null ? null : Number(row.story_id),
+        chatId: row.chat_id ? String(row.chat_id) : null,
+        actorUsername: row.actor_username || null,
+        actorDisplayName: row.actor_display_name || null,
+        payload: row.payload && typeof row.payload === "object" ? row.payload : {},
+      },
+    }));
+  }
+
+  const r = await db.rpc("story_pilot_claim_automation_jobs", { p_limit: limit });
+  const rows = need(r as any);
+  return Array.isArray(rows) ? rows : [];
 }
 
 async function opCompleteAutomationJob(args: any) {
@@ -2568,35 +2573,43 @@ async function opCompleteAutomationJob(args: any) {
   const success = Boolean(args?.success);
   const error = String(args?.error || "").slice(0, 500) || null;
   if (!jobId) throw new Error("automation_job_required");
-  if (!directSql) throw new Error("direct_database_unavailable");
 
-  const rows = success
-    ? await directSql`
-        update public.story_pilot_automation_jobs
-        set
-          status = 'sent',
-          sent_at = now(),
-          last_error = null,
-          locked_at = null,
-          updated_at = now()
-        where id = ${jobId}::uuid
-        returning id, status, attempts, sent_at
-      `
-    : await directSql`
-        update public.story_pilot_automation_jobs
-        set
-          status = 'failed',
-          last_error = ${error},
-          available_at = now() + (
-            least(30, greatest(1, attempts * attempts))::text || ' minutes'
-          )::interval,
-          locked_at = null,
-          updated_at = now()
-        where id = ${jobId}::uuid
-        returning id, status, attempts, available_at
-      `;
+  if (useDirectSql()) {
+    const rows = success
+      ? await directSql`
+          update public.story_pilot_automation_jobs
+          set
+            status = 'sent',
+            sent_at = now(),
+            last_error = null,
+            locked_at = null,
+            updated_at = now()
+          where id = ${jobId}::uuid
+          returning id, status, attempts, sent_at
+        `
+      : await directSql`
+          update public.story_pilot_automation_jobs
+          set
+            status = 'failed',
+            last_error = ${error},
+            available_at = now() + (
+              least(30, greatest(1, attempts * attempts))::text || ' minutes'
+            )::interval,
+            locked_at = null,
+            updated_at = now()
+          where id = ${jobId}::uuid
+          returning id, status, attempts, available_at
+        `;
 
-  return rows[0] || null;
+    return rows[0] || null;
+  }
+
+  const r = await db.rpc("story_pilot_complete_automation_job", {
+    p_job_id: jobId,
+    p_success: success,
+    p_error: error,
+  });
+  return need(r as any);
 }
 
 async function opAcquireLease(args: any) {
