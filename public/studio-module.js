@@ -45,8 +45,11 @@
   }
 
   function setBusy(value, label = '') {
-    const buttons = [$('studioGenerateButton'), $('studioCreateButton'), $('studioAddButton')].filter(Boolean);
-    buttons.forEach(button => { button.disabled = Boolean(value); });
+    const generate = $('studioGenerateButton');
+    const create = $('studioCreateButton');
+    const add = $('studioAddButton');
+    if (generate) generate.disabled = Boolean(value) || studio.capabilities?.aiImage !== true;
+    [create, add].filter(Boolean).forEach(button => { button.disabled = Boolean(value); });
     const status = $('studioStatus');
     if (status) {
       status.classList.toggle('busy', Boolean(value));
@@ -125,11 +128,20 @@
   function renderCapabilities() {
     const ai = $('studioAiState');
     const motion = $('studioMotionState');
+    const aiReady = studio.capabilities?.aiImage === true;
     if (ai) {
-      ai.textContent = studio.capabilities?.aiImage
+      ai.textContent = aiReady
         ? `AI ready · ${studio.capabilities.aiModel || 'image model'}`
-        : 'AI key required';
-      ai.classList.toggle('ready', Boolean(studio.capabilities?.aiImage));
+        : 'AI временно недоступен · загрузи PNG/JPG/WEBP';
+      ai.classList.toggle('ready', aiReady);
+    }
+    const generate = $('studioGenerateButton');
+    if (generate) {
+      generate.disabled = !aiReady;
+      generate.setAttribute('aria-disabled', aiReady ? 'false' : 'true');
+      generate.title = aiReady
+        ? 'Создать asset с помощью AI'
+        : 'AI generation временно недоступна. Загрузка собственного asset работает.';
     }
     if (motion) motion.textContent = 'WEBM import ready';
   }
@@ -161,6 +173,11 @@
   }
 
   async function generateAsset() {
+    if (studio.capabilities?.aiImage !== true) {
+      toast('AI generation временно недоступна. Загрузи PNG, JPG, WEBP или WEBM — публикация Brand Pack работает без AI.');
+      return;
+    }
+
     const prompt = String($('studioPrompt')?.value || '').trim();
     if (!prompt) {
       toast('Напиши prompt для emoji или загрузи свой логотип');
