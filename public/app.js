@@ -1553,7 +1553,7 @@
     document.documentElement.classList.remove('veto-welcome-open');
     markVetoWelcomeSeen();
     if (openConnection) {
-      setTimeout(() => state.ready ? profileSheet() : connectionHelpSheet(), 120);
+      setTimeout(() => telegramAccountReady() ? profileSheet() : connectionHelpSheet(), 120);
     }
   }
 
@@ -1886,22 +1886,22 @@
     const storiesReady = telegramAccountReady();
     const account = viewerState.session?.account || state.accountConnection?.account || {};
     openSheet(`
-      <span class="kicker">VETO CONNECTION CENTER</span>
-      <h2>${accountConnected ? 'Telegram Account подключён' : businessConnected ? 'Business подключён' : 'Подключи Telegram'}</h2>
-      <p>Основной Основное подключение и Telegram Business показаны отдельно. Ты сам видишь, какой доступ реально активен и для чего он нужен.</p>
+      <span class="kicker">МОЁ ПОДКЛЮЧЕНИЕ</span>
+      <h2>${accountConnected ? 'Telegram подключён' : businessConnected ? 'Частичное подключение' : 'Telegram ещё не подключён'}</h2>
+      <p>Здесь простыми словами показано, что сейчас работает. Дополнительный доступ к сообщениям не нужен для обычных Stories.</p>
       <div class="sheet-list connection-center-list">
-        <div class="sheet-item"><strong>Telegram identity</strong><span>${tg?.initData ? '✓ Mini App identity подтверждена' : '○ Открой VETO внутри Telegram'}</span></div>
-        <div class="sheet-item"><strong>Основное подключение</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Защищённая сессия') : '○ Не подключён · QR / номер'}</span></div>
-        <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Подключи Основное подключение или дай Business Manage Stories'}</span></div>
-        <div class="sheet-item"><strong>Business‑доступ</strong><span>${businessConnected ? '✓ Подключено' + (businessStories ? ' · Stories' : '') : '○ Optional · нужен только для расширенной Privacy'}</span></div>
-        <div class="sheet-item"><strong>VETO Privacy archive</strong><span>${privacyPermission ? '✓ Message access активен' : '○ Optional · Anti‑Delete / Edit History / Smart Inbox'}</span></div>
-        <div class="sheet-item"><strong>Encryption</strong><span>${viewerState.secureSessionCrypto ? '✓ Защищено' : accountConnected ? '⚠ Требует проверки' : '○ После Основное подключение'}</span></div>
+        <div class="sheet-item"><strong>VETO открыт внутри Telegram</strong><span>${tg?.initData ? '✓ Да' : '○ Открой Mini App из Telegram'}</span></div>
+        <div class="sheet-item"><strong>Основное подключение аккаунта</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Telegram подключён') : '○ Не подключено · номер + код или QR'}</span></div>
+        <div class="sheet-item"><strong>Публикация Stories</strong><span>${storiesReady ? '✓ Готово' : '○ Станет доступно после подключения Telegram'}</span></div>
+        <div class="sheet-item"><strong>Дополнительная Privacy</strong><span>${privacyPermission ? '✓ Доступ к выбранным Business‑чатам включён' : '○ Не включена · это нормально, функция необязательная'}</span></div>
+        <div class="sheet-item"><strong>Защита сессии</strong><span>${viewerState.secureSessionCrypto ? '✓ Сессия хранится в зашифрованном виде' : accountConnected ? '⚠ Нужна повторная проверка защиты' : '○ Появится после подключения'}</span></div>
+        ${businessConnected ? `<div class="sheet-item"><strong>Telegram Business</strong><span>✓ Подключён${businessStories ? ' · может управлять Stories' : ''}</span></div>` : ''}
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="${accountConnected ? 'account-connect' : 'account-connect'}">${accountConnected ? 'Управлять Telegram Account' : 'Подключить Telegram · QR / номер'}</button>
-        <button data-sheet-action="business-help">${businessConnected ? 'Проверить Telegram Business' : 'Добавить Business Privacy · optional'}</button>
-        <button data-sheet-action="privacy-promise">Privacy Promise</button>
-        <button data-sheet-action="open-security">Security Center</button>
+        <button class="accent" data-sheet-action="account-connect">${accountConnected ? 'Управлять подключением' : 'Подключить Telegram'}</button>
+        <button data-sheet-action="business-help">${businessConnected ? 'Проверить дополнительную Privacy' : 'Что такое Privacy‑доступ?'}</button>
+        <button data-sheet-action="privacy-promise">Как хранятся данные</button>
+        <button data-sheet-action="open-security">Расширенные настройки безопасности</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
@@ -1947,14 +1947,14 @@
 
   function businessConnectionHelpSheet() {
     openSheet(`
-      <span class="kicker">OPTIONAL · TELEGRAM BUSINESS</span>
-      <h2>Business нужен только для расширенной Privacy</h2>
-      <p>Stories и Intelligence могут работать через обычное защищённое подключение аккаунта. Business подключай, если нужны серверные события сообщений.</p>
+      <span class="kicker">НЕОБЯЗАТЕЛЬНО · PRIVACY</span>
+      <h2>Это нужно только для Anti‑Delete и истории сообщений</h2>
+      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Telegram Business нужен, чтобы ты сам разрешил VETO получать события выбранных чатов.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1 · Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Chat Automation.</span></div>
-        <div class="sheet-item"><strong>2 · Добавь @Storypilotlab_bot</strong><span>Выбери VETO Telegram и нужные чаты.</span></div>
-        <div class="sheet-item"><strong>3 · Message access</strong><span>Нужен для Anti‑Delete, Edit History и Smart Inbox.</span></div>
-        <div class="sheet-item"><strong>4 · Manage Stories</strong><span>Не обязателен, если Stories уже работают через Основное подключение.</span></div>
+        <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
+        <div class="sheet-item"><strong>2 · Добавь VETO Telegram</strong><span>Технический username сейчас @Storypilotlab_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
+        <div class="sheet-item"><strong>3 · Разреши доступ к сообщениям</strong><span>Только этот доступ позволяет Anti‑Delete, Edit History и Smart Inbox видеть события выбранных чатов.</span></div>
+        <div class="sheet-item"><strong>4 · Stories можно не включать</strong><span>Если основное подключение уже работает, отдельный Business‑доступ к Stories не нужен.</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Business‑разрешения</button>
@@ -1986,21 +1986,21 @@
         <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} подключён через зашифрованную пользовательскую сессию. Она используется для функций аккаунта, которые ты запускаешь в VETO.</p>
         <div class="sheet-list">
           <div class="sheet-item preference-item">
-            <span class="preference-copy"><strong>Realtime alerts</strong><span>Уведомлять о новых просмотрах.</span></span>
+            <span class="preference-copy"><strong>Новые просмотры</strong><span>Присылать уведомление, когда VETO подтверждает новый просмотр.</span></span>
             <label class="switch">
               <input id="viewerNotifySwitch" type="checkbox" data-viewer-pref="notify" ${viewerState.session?.preferences?.notifyEnabled !== false ? 'checked' : ''} />
               <span></span>
             </label>
           </div>
           <div class="sheet-item preference-item">
-            <span class="preference-copy"><strong>Unattributed gap</strong><span>Уведомлять, когда растёт общий счётчик без доступной личности.</span></span>
+            <span class="preference-copy"><strong>Рост просмотров без имени</strong><span>Сообщать, если общий счётчик вырос, но Telegram не дал доступной личности зрителя.</span></span>
             <label class="switch">
               <input id="viewerGapSwitch" type="checkbox" data-viewer-pref="gap" ${viewerState.session?.preferences?.notifyAnonymousGap !== false ? 'checked' : ''} />
               <span></span>
             </label>
           </div>
-          <div class="sheet-item"><strong>Session security</strong><span>${viewerState.secureSessionCrypto ? 'Защищённое шифрование v3 активно' : 'Требуется обновление защиты подключения'}</span></div>
-          <div class="sheet-item"><strong>Последняя проверка</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
+          <div class="sheet-item"><strong>Защита подключения</strong><span>${viewerState.secureSessionCrypto ? 'Защищённое шифрование v3 активно' : 'Требуется обновление защиты подключения'}</span></div>
+          <div class="sheet-item"><strong>Последнее обновление данных</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
         </div>
         <div class="sheet-actions">
           <button data-sheet-action="viewer-disconnect">Отключить Telegram Account</button>
