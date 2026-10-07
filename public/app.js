@@ -2518,7 +2518,7 @@
   window.addEventListener('unhandledrejection', event => {
     const message = event?.reason?.message || String(event?.reason || '');
     if (message) {
-      console.warn('Story Pilot unhandled rejection', message);
+      console.warn('Ghost Mode unhandled rejection', message);
       showToast(message);
     }
   });
@@ -2526,7 +2526,7 @@
   window.addEventListener('error', event => {
     const message = event?.error?.message || event?.message || '';
     if (message) {
-      console.warn('Story Pilot UI error', message);
+      console.warn('Ghost Mode UI error', message);
       showToast('Интерфейс восстановился после ошибки');
     }
   });
