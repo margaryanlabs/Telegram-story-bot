@@ -108,8 +108,8 @@ export function automationMessage(job) {
     const deleted = type === 'message.delete';
     return {
       text: deleted
-        ? `↶ Ghost Watch\n\n${actor}: сообщение удалено.${chat}\n\nGhost сохранил доступную копию и откроет точное событие, если оно есть в Vault.`
-        : `≋ Ghost Watch\n\n${actor}: сообщение изменено.${chat}\n\nОткрой Edit History, чтобы увидеть сохранённые версии.`,
+        ? `↶ VETO Watch\n\n${actor}: сообщение удалено.${chat}\n\nVETO Privacy сохранила доступную копию и откроет точное событие, если оно есть в Vault.`
+        : `≋ VETO Watch\n\n${actor}: сообщение изменено.${chat}\n\nОткрой Edit History, чтобы увидеть сохранённые версии.`,
       screen: 'chats',
       button: deleted ? 'Открыть удаление' : 'Открыть изменение',
     };
