@@ -129,6 +129,11 @@ export default async function handler(req, res) {
       }).catch(() => {});
     }
 
+    const profilePhotoUpdated = await setVetoBotProfilePhoto(token).catch(error => {
+      console.warn('VETO Telegram profile photo update skipped', error?.message || String(error));
+      return false;
+    });
+
     await tg(token, 'setMyCommands', {
       commands: [
         { command: 'start', description: '🚀 Открыть VETO Telegram' },
