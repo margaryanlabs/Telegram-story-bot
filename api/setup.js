@@ -20,7 +20,7 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20261007-control-layer';
+const CONTROL_BUILD = '20261007-veto-telegram-v2';
 
 function controlAppUrl(baseUrl) {
   const url = new URL('/studio.html', baseUrl);
@@ -88,14 +88,17 @@ export default async function handler(req, res) {
       drop_pending_updates: false,
     });
 
-    await tg(token, 'setMyName', {
-      name: 'VETO Telegram',
-    }).catch(() => {});
+    for (const languageCode of [null, 'ru', 'en']) {
+      await tg(token, 'setMyName', {
+        name: 'VETO Telegram',
+        ...(languageCode ? { language_code: languageCode } : {}),
+      }).catch(() => {});
+    }
 
     await tg(token, 'setMyCommands', {
       commands: [
         { command: 'start', description: '🚀 Открыть VETO Telegram' },
-        { command: 'ghost', description: '👻 Ghost и Anti-Delete' },
+        { command: 'ghost', description: '🛡 VETO Privacy · Anti-Delete' },
         { command: 'deleted', description: '↶ Последние удалённые сообщения' },
         { command: 'edits', description: '≋ История изменённых сообщений' },
         { command: 'stories', description: '📸 Stories и приватность' },
@@ -107,13 +110,29 @@ export default async function handler(req, res) {
       ],
     });
 
-    await tg(token, 'setMyShortDescription', {
-      short_description: 'VETO Telegram: Privacy, Stories, Intelligence, Studio и Automations — private control layer для Telegram.',
-    }).catch(() => {});
+    const shortDescriptions = [
+      [null, 'VETO Telegram: secure Stories, Privacy, Intelligence и Automations в одном Mini App.'],
+      ['ru', 'VETO Telegram: Stories, Privacy, Intelligence и Automations — безопасно и понятно.'],
+      ['en', 'VETO Telegram: secure Stories, Privacy, Intelligence and Automations in one Mini App.'],
+    ];
+    for (const [languageCode, shortDescription] of shortDescriptions) {
+      await tg(token, 'setMyShortDescription', {
+        short_description: shortDescription,
+        ...(languageCode ? { language_code: languageCode } : {}),
+      }).catch(() => {});
+    }
 
-    await tg(token, 'setMyDescription', {
-      description: 'VETO Telegram — private control layer для Telegram: Privacy, Stories, Intelligence, Creator Studio, Security и Automations в одном месте.',
-    }).catch(() => {});
+    const descriptions = [
+      [null, 'VETO Telegram — Private Telegram OS. Connect your account securely, publish Stories, understand viewers, and optionally enable Business privacy tools.'],
+      ['ru', 'VETO Telegram — приватный Telegram OS: безопасное подключение аккаунта, Stories, Intelligence и optional Business Privacy.'],
+      ['en', 'VETO Telegram — Private Telegram OS: secure account link, Stories, Intelligence, and optional Business Privacy.'],
+    ];
+    for (const [languageCode, description] of descriptions) {
+      await tg(token, 'setMyDescription', {
+        description,
+        ...(languageCode ? { language_code: languageCode } : {}),
+      }).catch(() => {});
+    }
 
     await tg(token, 'setChatMenuButton', {
       menu_button: {
@@ -207,6 +226,7 @@ export default async function handler(req, res) {
       public_bot: true,
       version: 'v8',
       control_build: CONTROL_BUILD,
+      brand: 'VETO Telegram v2',
       refreshed_owner_menus: refreshedOwnerMenus,
       recovered_business_connections: recoveredBusinessConnections,
     });
