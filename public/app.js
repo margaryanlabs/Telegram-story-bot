@@ -6,6 +6,7 @@
 
   const CODE_AUDIENCE = { s:'standard', a:'all', c:'contacts', f:'close', u:'selected' };
   const DRAFT_CAPTION_KEY = 'story-pilot:draft-caption';
+  const VETO_WELCOME_KEY = 'veto-telegram:welcome:v1';
 
   function decodeHistory(value) {
     return String(value || '').split('~').filter(Boolean).slice(0, 12).map(chunk => {
@@ -535,7 +536,7 @@
   }
 
   async function api(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
@@ -551,7 +552,7 @@
       timeoutMs: action === 'publish_story' ? 45000 : 15000,
     });
 
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Ghost Mode');
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить VETO Telegram');
 
     if (Array.isArray(data.activity)) {
       state.activity = data.activity;
@@ -589,7 +590,7 @@
   }
 
   async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
-    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
 
     const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
     const options = {
@@ -615,7 +616,7 @@
   }
 
   async function automationsApi(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Ghost Mode внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
@@ -793,7 +794,7 @@
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
       $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
-      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Ghost Mode.';
+      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри VETO Telegram.';
     } else if (permission) {
       $('heroStatusPill').querySelector('span').textContent = 'Нужно разрешение';
       $('connectionIcon').className = 'connection-icon warn';
@@ -807,7 +808,7 @@
       $('connectionIcon').className = 'connection-icon';
       $('connectionIcon').textContent = '↗';
       $('connectionTitle').textContent = 'Подключи Telegram';
-      $('connectionText').textContent = 'Telegram ещё не подключён к Ghost Mode';
+      $('connectionText').textContent = 'Telegram ещё не подключён к VETO Telegram';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Ожидание';
     }
@@ -960,7 +961,7 @@
     } else if (connected) {
       const account = viewerState.session?.account || {};
       $('viewerSyncTitle').textContent = 'Deep Intelligence активен.';
-      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем Ghost Mode подтверждает доступную личность.';
+      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем VETO Telegram подтверждает доступную личность.';
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
       syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
@@ -1002,7 +1003,7 @@
     }
 
     if (!selectedViewerStory) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Ghost Mode.</div>';
+      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через VETO Telegram.</div>';
       return;
     }
 
@@ -1091,7 +1092,7 @@
               </div>
             </article>
           `).join('')
-        : '<div class="intel-empty">Пока недостаточно подтверждённых данных для выводов. Ghost Mode не будет заполнять этот блок догадками.</div>';
+        : '<div class="intel-empty">Пока недостаточно подтверждённых данных для выводов. VETO Telegram не будет заполнять этот блок догадками.</div>';
     }
 
     const timeline = intel?.latestTimeline || [];
@@ -1304,7 +1305,7 @@
       };
     }
     return {
-      title: 'Событие Ghost Mode',
+      title: 'Событие VETO Telegram',
       detail: type || 'Activity',
     };
   }
@@ -1402,14 +1403,14 @@
     if ($('activationScore')) $('activationScore').textContent = `${completed}/4`;
     if ($('activationTitle')) {
       $('activationTitle').textContent = coreReady
-        ? (intelConnected ? 'Ghost Mode полностью активирован' : 'Основной контур готов')
+        ? (intelConnected ? 'VETO Telegram полностью активирован' : 'Основной контур готов')
         : 'Заверши базовую настройку';
     }
     if ($('activationText')) {
       $('activationText').textContent = !telegramReady
-        ? 'Начни с Telegram Business — Ghost Mode сам проверит разрешения.'
+        ? 'Начни с Telegram Business — VETO сам проверит Stories и Privacy‑разрешения.'
         : !ghostPermission
-          ? 'Stories доступны. Для Privacy и Smart Inbox осталось разрешить сообщения.'
+          ? 'Stories уже доступны. Доступ к сообщениям включай только если нужны Privacy и Smart Inbox.'
           : !hasStory
             ? 'Доступы готовы. Опубликуй первую Story и проверь полный цикл.'
             : !intelConnected
@@ -1423,7 +1424,7 @@
         activationPrimary.textContent = 'Подключить Telegram Business';
         activationPrimary.dataset.activationAction = 'telegram';
       } else if (!ghostPermission) {
-        activationPrimary.textContent = 'Разрешить Ghost Privacy';
+        activationPrimary.textContent = 'Настроить VETO Privacy';
         activationPrimary.dataset.activationAction = 'ghost';
       } else if (!hasStory) {
         activationPrimary.textContent = 'Опубликовать первую Story';
@@ -1476,6 +1477,79 @@
     $('sheetBackdrop').hidden = true;
     $('sheet').hidden = true;
     try { tg?.BackButton?.hide(); } catch {}
+  }
+
+  let vetoWelcomeStep = 0;
+
+  function vetoWelcomeSeen() {
+    try { return localStorage.getItem(VETO_WELCOME_KEY) === '1'; } catch { return false; }
+  }
+
+  function markVetoWelcomeSeen() {
+    try { localStorage.setItem(VETO_WELCOME_KEY, '1'); } catch {}
+  }
+
+  function renderVetoWelcomeStep(index = vetoWelcomeStep) {
+    vetoWelcomeStep = Math.max(0, Math.min(2, Number(index) || 0));
+    document.querySelectorAll('[data-veto-intro-step]').forEach((step, stepIndex) => {
+      step.classList.toggle('active', stepIndex === vetoWelcomeStep);
+    });
+    document.querySelectorAll('.veto-intro-dots i').forEach((dot, dotIndex) => {
+      dot.classList.toggle('active', dotIndex === vetoWelcomeStep);
+    });
+    const next = $('vetoWelcomeNext');
+    if (next) {
+      next.innerHTML = vetoWelcomeStep < 2
+        ? 'Продолжить <span>→</span>'
+        : (state.ready ? 'Открыть VETO <span>→</span>' : 'Подключить Telegram <span>→</span>');
+    }
+  }
+
+  function openVetoWelcome({ restart = false } = {}) {
+    const welcome = $('vetoWelcome');
+    if (!welcome) return;
+    if (restart) vetoWelcomeStep = 0;
+    renderVetoWelcomeStep(vetoWelcomeStep);
+    welcome.hidden = false;
+    document.documentElement.classList.add('veto-welcome-open');
+    try { tg?.HapticFeedback?.impactOccurred?.('light'); } catch {}
+  }
+
+  function closeVetoWelcome({ openConnection = false } = {}) {
+    const welcome = $('vetoWelcome');
+    if (!welcome) return;
+    welcome.hidden = true;
+    document.documentElement.classList.remove('veto-welcome-open');
+    markVetoWelcomeSeen();
+    if (openConnection) {
+      setTimeout(() => state.ready ? profileSheet() : connectionHelpSheet(), 120);
+    }
+  }
+
+  function privacyPromiseSheet() {
+    openSheet(`
+      <span class="kicker">VETO PRIVACY PROMISE</span>
+      <h2>Приватность без красивых обещаний</h2>
+      <p>VETO Telegram показывает, какой доступ реально выдан, и использует его только для функций, которые ты включил.</p>
+
+      <div class="veto-privacy-sheet-hero">
+        <strong>Мы не превращаем твою переписку в рекламный профиль.</strong>
+        <span>Содержимое сообщений не продаётся рекламодателям и не используется для персонализации рекламы VETO.</span>
+      </div>
+
+      <div class="veto-privacy-facts">
+        <div><i>01</i><div><strong>Что обрабатывается</strong><span>Для Anti‑Delete, Edit History и Smart Inbox сервер получает только те события и сообщения, к которым ты сам выдал Telegram‑доступ.</span></div></div>
+        <div><i>02</i><div><strong>Что может храниться</strong><span>Функции архива и восстановления требуют серверного хранения копий и версий. Если модуль выключен, VETO не должен притворяться, что он всё равно работает.</span></div></div>
+        <div><i>03</i><div><strong>Коды входа и 2FA</strong><span>Используются только во время отдельного подключения Deep Intelligence и не сохраняются как пароль или код авторизации.</span></div></div>
+        <div><i>04</i><div><strong>Ты контролируешь доступ</strong><span>Telegram‑разрешения можно отозвать в настройках Business / Chatbots. VETO после проверки покажет, что доступ больше не активен.</span></div></div>
+      </div>
+
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="open-connections">Проверить мои разрешения</button>
+        <button data-sheet-action="go-ghost">Открыть Privacy Center</button>
+        <button data-sheet-action="close">Закрыть</button>
+      </div>
+    `);
   }
 
   function formatSecurityTime(value) {
@@ -1560,7 +1634,7 @@
     openSheet(`
       <span class="kicker">AUTOMATION CENTER</span>
       <h2>Событие → правило → действие</h2>
-      <p>Ghost Mode реагирует только на нормализованные события и отправляет owner-only alerts. Никаких сообщений другим людям от твоего имени.</p>
+      <p>VETO Telegram реагирует только на нормализованные события и отправляет owner-only alerts. Никаких сообщений другим людям от твоего имени.</p>
 
       <div class="automation-presets">
         <button type="button" class="${automationPresetKey() === 'quiet' ? 'active' : ''}" data-sheet-action="automation-preset" data-automation-preset="quiet">
@@ -1681,19 +1755,20 @@
     const ghostPermission = state.readPermission === true;
     const intelligenceConnected = viewerState.session?.connected === true;
     openSheet(`
-      <span class="kicker">CONNECTION CENTER</span>
-      <h2>${businessConnected ? 'Telegram подключён' : 'Подключи Telegram'}</h2>
-      <p>Здесь видно, какие возможности реально доступны. Технические протоколы скрыты — включай только то, что тебе нужно.</p>
+      <span class="kicker">VETO CONNECTION CENTER</span>
+      <h2>${businessConnected ? 'Telegram подключён' : 'Подключи Telegram один раз'}</h2>
+      <p>VETO показывает реальные разрешения по отдельности. Ничего не включается «в фоне» без Telegram‑доступа.</p>
       <div class="sheet-list connection-center-list">
         <div class="sheet-item"><strong>Telegram identity</strong><span>${tg?.initData ? '✓ Подтверждена Telegram Mini App' : 'Нужно открыть приложение внутри Telegram'}</span></div>
         <div class="sheet-item"><strong>Business access</strong><span>${businessConnected ? '✓ Подключено' : '○ Требуется подключение'}</span></div>
-        <div class="sheet-item"><strong>Ghost</strong><span>${ghostPermission ? '✓ Доступ к сообщениям разрешён' : '○ Разреши доступ к сообщениям'}</span></div>
+        <div class="sheet-item"><strong>VETO Privacy</strong><span>${ghostPermission ? '✓ Доступ к сообщениям разрешён' : '○ Разреши доступ к сообщениям только если нужны Privacy‑функции'}</span></div>
         <div class="sheet-item"><strong>Stories</strong><span>${storiesReady ? '✓ Публикация доступна' : '○ Разреши управление Stories'}</span></div>
         <div class="sheet-item"><strong>Deep Intelligence</strong><span>${intelligenceConnected ? '✓ Подключено отдельно' : viewerState.newConnectionsReady === false ? '○ Secure storage setup required' : '○ Опционально · не подключено'}</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="check">Проверить Telegram</button>
-        <button data-sheet-action="go-ghost">Ghost</button>
+        <button data-sheet-action="go-ghost">Privacy Center</button>
+        <button data-sheet-action="privacy-promise">Privacy Promise</button>
         <button data-sheet-action="go-viewers">Intelligence</button>
         <button data-sheet-action="open-security">Security Center</button>
         <button data-sheet-action="open-automations">Automation Center</button>
@@ -1703,17 +1778,19 @@
   }
   function connectionHelpSheet() {
     openSheet(`
-      <span class="kicker">Telegram Business</span>
-      <h2>Одноразовое подключение</h2>
-      <p>Ghost Mode работает на iOS, Android и Desktop. Системные права Telegram Business выдаются один раз в самом Telegram.</p>
+      <span class="kicker">VETO CONNECTION</span>
+      <h2>Подключи Telegram один раз</h2>
+      <p>Никаких API‑ключей и технических экранов. Разрешения выдаются внутри Telegram и проверяются VETO автоматически.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1. Открой Telegram Settings</strong><span>Telegram Business / Business → Chatbots / Автоматизация чатов.</span></div>
-        <div class="sheet-item"><strong>2. Подключи @Storypilotlab_bot</strong><span>Включи разрешение «Управление историями» для Stories.</span></div>
-        <div class="sheet-item"><strong>3. Разреши сообщения для Ghost</strong><span>Включи доступ к сообщениям и выбери нужные чаты.</span></div>
-        <div class="sheet-item"><strong>4. Вернись сюда</strong><span>Нажми «Проверить Telegram» — Ghost Mode сам проверит оба разрешения.</span></div>
+        <div class="sheet-item"><strong>1 · Telegram Settings</strong><span>Открой Telegram Business / Business → Chatbots / Chat Automation.</span></div>
+        <div class="sheet-item"><strong>2 · Добавь @Storypilotlab_bot</strong><span>Это текущий технический бот VETO Telegram. Позже username можно сменить отдельно через BotFather.</span></div>
+        <div class="sheet-item"><strong>3 · Stories</strong><span>Включи Manage Stories, если хочешь публиковать и управлять Stories из VETO.</span></div>
+        <div class="sheet-item"><strong>4 · Privacy — только по желанию</strong><span>Доступ к сообщениям нужен для Anti‑Delete, Edit History и Smart Inbox. Выбирай только нужные чаты.</span></div>
+        <div class="sheet-item"><strong>5 · Вернись в VETO</strong><span>Нажми «Проверить Telegram» — статус каждого разрешения появится в Connection Center.</span></div>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="check">Проверить Telegram</button>
+        <button class="accent" data-sheet-action="check">Проверить подключение</button>
+        <button data-sheet-action="privacy-promise">Что происходит с моими данными</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
@@ -1723,7 +1800,7 @@
       openSheet(`
         <span class="kicker">DEEP INTELLIGENCE</span>
         <h2>Серверная часть ещё не готова</h2>
-        <p>Ghost Mode не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
+        <p>VETO Telegram не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и последующее подтверждение просмотров уже встроены.</span></div>
           <div class="sheet-item"><strong>Приватное подключение</strong><span>Новое подключение создаётся только при подтверждённом защищённом хранении.</span></div>
@@ -1769,7 +1846,7 @@
       openSheet(`
         <span class="kicker">SECURITY</span>
         <h2>Новое подключение приостановлено</h2>
-        <p>Ghost Mode не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
+        <p>VETO Telegram не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Stories & Ghost</strong><span>Продолжают работать независимо.</span></div>
           <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
@@ -1844,7 +1921,7 @@
     openSheet(`
       <span class="kicker">Двухэтапная защита</span>
       <h2>Нужен 2FA-пароль</h2>
-      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Ghost Mode.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
+      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется VETO Telegram.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPassword">Telegram 2FA</label>
@@ -1930,7 +2007,7 @@
 
   async function startViewerQrLogin() {
     if (!tg?.initData) {
-      showToast('Открой Ghost Mode внутри Telegram');
+      showToast('Открой VETO Telegram внутри Telegram');
       return;
     }
     if (viewerState.newConnectionsReady === false) {
@@ -2010,7 +2087,7 @@
     const history = (state.history || []).filter(item => !item.deleted).slice(0, 20);
     const items = history.length
       ? history.map(item => `<button data-viewer-story="${item.id}">Story #${item.id} · ${audienceLabel(item.audience)} · ${formatDate(item.ts)}</button>`).join('')
-      : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через Ghost Mode.</span></div>';
+      : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через VETO Telegram.</span></div>';
 
     openSheet(`
       <span class="kicker">Viewers</span>
@@ -2134,7 +2211,7 @@
     openSheet(`
       <span class="kicker">Только выбранные</span>
       <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Добавь людей'}</h2>
-      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из Ghost Mode.</p>
+      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из VETO Telegram.</p>
       <div class="people-input-wrap">
         <label for="selectedUsernames">Usernames <small id="selectedInputCount">${state.selected?.length || 0} / 100</small></label>
         <textarea id="selectedUsernames" data-people-input="selected" placeholder="@alex\n@maria">${state.selected?.length ? '@' + state.selected.join('\n@') : ''}</textarea>
@@ -2151,7 +2228,7 @@
     openSheet(`
       <span class="kicker">Исключения</span>
       <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Добавь исключения'}</h2>
-      <p>Вставь @username. Если выбран другой режим, Ghost Mode сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
+      <p>Вставь @username. Если выбран другой режим, VETO Telegram сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
       <div class="people-input-wrap">
         <label for="excludedUsernames">Usernames <small id="excludedInputCount">${state.excluded?.length || 0} / 100</small></label>
         <textarea id="excludedUsernames" data-people-input="excluded" placeholder="@alex\n@maria">${state.excluded?.length ? '@' + state.excluded.join('\n@') : ''}</textarea>
@@ -2177,6 +2254,16 @@
     }
   });
   $('profileButton').addEventListener('click', profileSheet);
+  $('privacyPromiseButton')?.addEventListener('click', privacyPromiseSheet);
+  $('vetoWelcomeSkip')?.addEventListener('click', () => closeVetoWelcome());
+  $('vetoWelcomeNext')?.addEventListener('click', () => {
+    haptic();
+    if (vetoWelcomeStep < 2) {
+      renderVetoWelcomeStep(vetoWelcomeStep + 1);
+      return;
+    }
+    closeVetoWelcome({ openConnection: true });
+  });
   $('viewerSetupButton').addEventListener('click', viewerSetupSheet);
   $('viewerStoryPicker').addEventListener('click', viewerStorySheet);
 
@@ -2353,6 +2440,10 @@
     if (action === 'go-ghost') {
       closeSheet();
       switchScreen('privacy');
+    }
+    if (action === 'privacy-promise') {
+      privacyPromiseSheet();
+      return;
     }
     if (action === 'go-stories') {
       closeSheet();
@@ -2695,7 +2786,7 @@
   window.addEventListener('unhandledrejection', event => {
     const message = event?.reason?.message || String(event?.reason || '');
     if (message) {
-      console.warn('Ghost Mode unhandled rejection', message);
+      console.warn('VETO Telegram unhandled rejection', message);
       showToast(message);
     }
   });
@@ -2703,7 +2794,7 @@
   window.addEventListener('error', event => {
     const message = event?.error?.message || event?.message || '';
     if (message) {
-      console.warn('Ghost Mode UI error', message);
+      console.warn('VETO Telegram UI error', message);
       showToast('Интерфейс восстановился после ошибки');
     }
   });
@@ -2711,6 +2802,10 @@
   setAvatar();
   render();
   switchScreen(requestedScreen || 'home');
+
+  if (!requestedScreen && !vetoWelcomeSeen()) {
+    setTimeout(() => openVetoWelcome({ restart:true }), 90);
+  }
 
   if (tg?.initData) {
     refresh();
@@ -2724,6 +2819,6 @@
       }
     }, 30000);
   } else {
-    showToast('Открой Ghost Mode внутри Telegram для управления');
+    showToast('Открой VETO Telegram внутри Telegram для управления');
   }
 })();
