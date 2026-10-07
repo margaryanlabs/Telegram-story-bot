@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261007-veto-telegram-v2" />
+  <link rel="stylesheet" href="/app.css?v=20261007-veto-clarity-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
 </head>
 <body>
@@ -25,30 +25,31 @@
   <section class="veto-welcome" id="vetoWelcome" hidden aria-modal="true" aria-label="Добро пожаловать в VETO Telegram">
     <div class="veto-welcome-shell">
       <div class="veto-welcome-top">
-        <div class="veto-welcome-brand"><img src="/veto-telegram-mark.svg" alt="" /><div><strong>VETO Telegram</strong><small>Private Telegram OS</small></div></div>
-        <button class="veto-welcome-skip" id="vetoWelcomeSkip" type="button">Позже</button>
+        <div class="veto-welcome-brand"><img src="/veto-telegram-mark.svg" alt="" /><div><strong>VETO Telegram</strong><small>Telegram с дополнительными возможностями</small></div></div>
+        <button class="veto-welcome-skip" id="vetoWelcomeSkip" type="button">Пропустить</button>
       </div>
 
       <div class="veto-welcome-stage">
         <article class="veto-intro-step active" data-veto-intro-step="0">
           <div class="veto-intro-orbit"><img src="/veto-telegram-mark.svg" alt="VETO Telegram" /><i></i><b></b></div>
-          <span class="kicker">WELCOME TO VETO</span>
-          <h1>Telegram стал<br><em>понятнее и приватнее.</em></h1>
-          <p>Stories, чаты, Anti‑Delete, история изменений, аудитория, Intelligence и автоматизации — в одном интерфейсе.</p>
+          <span class="kicker">ДОБРО ПОЖАЛОВАТЬ</span>
+          <h1>Что такое<br><em>VETO Telegram?</em></h1>
+          <p>Это дополнительный интерфейс для твоего Telegram: публикация Stories, анализ просмотров, защита переписки и автоматические уведомления — всё из одного места.</p>
           <div class="veto-intro-features">
-            <span>◌ Privacy</span><span>◉ Stories</span><span>✦ Intelligence</span><span>⌁ Automations</span>
+            <span>Stories</span><span>Защита сообщений</span><span>Аналитика</span><span>Уведомления</span>
           </div>
         </article>
 
         <article class="veto-intro-step" data-veto-intro-step="1">
-          <div class="veto-intro-shield">⌁<i></i></div>
-          <span class="kicker">PRIVACY PROMISE</span>
-          <h1>Твои данные —<br><em>не рекламный продукт.</em></h1>
-          <p>VETO использует доступ Telegram только для функций, которые ты включил. Мы не строим рекламный профиль из переписки и не продаём содержимое сообщений.</p>
-          <div class="veto-promise-mini">
-            <div><strong>Выборочный доступ</strong><small>включаешь только нужные модули</small></div>
-            <div><strong>Прозрачное хранение</strong><small>данные сохраняются только там, где функция этого требует</small></div>
-            <div><strong>Контроль</strong><small>доступ можно отозвать в Telegram</small></div>
+          <span class="kicker">ЧТО ЗДЕСЬ ЕСТЬ</span>
+          <h1>Шесть функций.<br><em>Каждая — понятная.</em></h1>
+          <div class="veto-intro-function-grid">
+            <div><b>＋</b><strong>Stories</strong><small>Публикуй Story и выбирай, кто её увидит.</small></div>
+            <div><b>◉</b><strong>Просмотры</strong><small>Смотри аудиторию своих Stories и изменения просмотров.</small></div>
+            <div><b>◌</b><strong>Privacy</strong><small>Anti‑Delete, история изменений и приватный архив.</small></div>
+            <div><b>✦</b><strong>Studio</strong><small>Emoji, stickers и брендированные наборы.</small></div>
+            <div><b>⌾</b><strong>Security</strong><small>Проверь подключённые доступы и сессии.</small></div>
+            <div><b>⚡</b><strong>Automations</strong><small>Получай нужные сигналы и уведомления автоматически.</small></div>
           </div>
         </article>
 
@@ -56,20 +57,31 @@
           <div class="veto-connect-visual">
             <span>1</span><i></i><span>2</span><i></i><span>3</span>
           </div>
-          <span class="kicker">CONNECT ONCE</span>
-          <h1>Подключение<br><em>без технической путаницы.</em></h1>
-          <p>Нажми «Подключить Telegram». Рекомендуемый путь — защищённое подключение аккаунта по QR или номеру. Telegram Business остаётся дополнительным способом для Business‑функций.</p>
-          <div class="veto-connect-summary">
-            <div><b>1 · Account</b><small>QR или номер телефона</small></div>
-            <div><b>2 · Secure</b><small>зашифрованная сессия</small></div>
-            <div><b>3 · Ready</b><small>Stories + Intelligence</small></div>
+          <span class="kicker">АКТИВАЦИЯ</span>
+          <h1>Чтобы начать,<br><em>нужны 2 шага.</em></h1>
+          <div class="veto-simple-steps">
+            <div><span>1</span><div><strong>Подключи Telegram</strong><small>На этом телефоне — номер + код. QR удобен, если рядом есть второй экран.</small></div></div>
+            <div><span>2</span><div><strong>Опубликуй тестовую Story</strong><small>Так мы сразу проверим, что всё подключено правильно.</small></div></div>
+          </div>
+          <p>Privacy и Automations можно включить позже. Они не мешают начать пользоваться Stories.</p>
+        </article>
+
+        <article class="veto-intro-step" data-veto-intro-step="3">
+          <div class="veto-intro-shield">✓<i></i></div>
+          <span class="kicker">БЕЗОПАСНОСТЬ</span>
+          <h1>Ты всегда видишь,<br><em>что подключено.</em></h1>
+          <p>VETO показывает доступы отдельно. Код Telegram и 2FA-пароль не сохраняются. Дополнительный доступ к сообщениям включается только если тебе нужны Privacy-функции.</p>
+          <div class="veto-promise-mini">
+            <div><strong>Основной вход</strong><small>обычный Telegram через номер или QR</small></div>
+            <div><strong>Privacy отдельно</strong><small>доступ к сообщениям — только по твоему выбору</small></div>
+            <div><strong>Можно отключить</strong><small>Connection Center показывает и управляет подключением</small></div>
           </div>
         </article>
       </div>
 
       <div class="veto-welcome-footer">
-        <div class="veto-intro-dots" aria-hidden="true"><i class="active"></i><i></i><i></i></div>
-        <button class="veto-welcome-primary" id="vetoWelcomeNext" type="button">Продолжить <span>→</span></button>
+        <div class="veto-intro-dots" aria-hidden="true"><i class="active"></i><i></i><i></i><i></i></div>
+        <button class="veto-welcome-primary" id="vetoWelcomeNext" type="button">Дальше <span>→</span></button>
       </div>
     </div>
   </section>
@@ -114,9 +126,9 @@
           <span class="veto-signal-dot dot-c"></span>
         </div>
         <div class="control-hero-copy">
-          <span>VETO SECURE CORE</span>
-          <strong id="homeTelegramTitle">Проверяю Telegram</strong>
-          <p id="homeTelegramText">Собираю фактическое состояние подключения и разрешений.</p>
+          <span>ПОДКЛЮЧЕНИЕ TELEGRAM</span>
+          <strong id="homeTelegramTitle">Проверяю подключение</strong>
+          <p id="homeTelegramText">Здесь будет видно, готов ли Telegram к работе с VETO.</p>
           <div class="veto-connection-badges">
             <span id="vetoAccountBadge">Account · —</span>
             <span id="vetoPrivacyBadge">Privacy · —</span>
@@ -128,36 +140,40 @@
         </button>
       </section>
 
-      <section class="capability-grid" aria-label="Состояние VETO Telegram">
-        <button class="capability-card" type="button" data-open-screen="ghost">
-          <span class="capability-icon">◌</span>
-          <span class="capability-copy"><small>Privacy</small><strong id="homeGhostState">Проверяю</strong></span>
-          <span class="capability-chevron">›</span>
-        </button>
-        <button class="capability-card" type="button" data-open-screen="stories">
+      <section class="feature-explain-head">
+        <div><span class="kicker">ВОЗМОЖНОСТИ</span><h2>Что умеет VETO</h2></div>
+        <button id="explainAllFeaturesButton" type="button">Объяснить всё</button>
+      </section>
+      <section class="capability-grid capability-grid-explained" aria-label="Возможности VETO Telegram">
+        <button class="capability-card" type="button" data-feature-help="stories">
           <span class="capability-icon">＋</span>
-          <span class="capability-copy"><small>Stories</small><strong>Publish privately</strong></span>
-          <span class="capability-chevron">›</span>
+          <span class="capability-copy"><small>Stories</small><strong>Публикация и аудитория</strong><span>Кому показать Story и как защитить её.</span></span>
+          <span class="capability-chevron">?</span>
         </button>
-        <button class="capability-card" type="button" data-open-screen="studio">
-          <span class="capability-icon">✦</span>
-          <span class="capability-copy"><small>Creator Studio</small><strong>Brand Packs · Emoji</strong></span>
-          <span class="capability-chevron">›</span>
-        </button>
-        <button class="capability-card" type="button" data-open-screen="intelligence">
+        <button class="capability-card" type="button" data-feature-help="intelligence">
           <span class="capability-icon">◉</span>
-          <span class="capability-copy"><small>Intelligence</small><strong id="homeIntelState">Проверяю</strong></span>
-          <span class="capability-chevron">›</span>
+          <span class="capability-copy"><small>Просмотры</small><strong id="homeIntelState">Аналитика аудитории</strong><span>Кто смотрит твои Stories и как меняется аудитория.</span></span>
+          <span class="capability-chevron">?</span>
         </button>
-        <button class="capability-card" id="homeSecurityCard" type="button">
+        <button class="capability-card" type="button" data-feature-help="privacy">
+          <span class="capability-icon">◌</span>
+          <span class="capability-copy"><small>Privacy</small><strong id="homeGhostState">Anti‑Delete и архив</strong><span>Сохраняет разрешённые события сообщений и изменения.</span></span>
+          <span class="capability-chevron">?</span>
+        </button>
+        <button class="capability-card" type="button" data-feature-help="studio">
+          <span class="capability-icon">✦</span>
+          <span class="capability-copy"><small>Studio</small><strong>Emoji и Brand Packs</strong><span>Создание Telegram‑материалов в одном месте.</span></span>
+          <span class="capability-chevron">?</span>
+        </button>
+        <button class="capability-card" id="homeSecurityCard" type="button" data-feature-help="security">
           <span class="capability-icon">⌾</span>
-          <span class="capability-copy"><small>Security</small><strong>Sessions · Access</strong></span>
-          <span class="capability-chevron">›</span>
+          <span class="capability-copy"><small>Security</small><strong>Доступы и сессии</strong><span>Показывает, что подключено и что можно отключить.</span></span>
+          <span class="capability-chevron">?</span>
         </button>
-        <button class="capability-card" id="homeAutomationsCard" type="button">
+        <button class="capability-card" id="homeAutomationsCard" type="button" data-feature-help="automations">
           <span class="capability-icon">⚡</span>
-          <span class="capability-copy"><small>Automations</small><strong>Signals · Alerts</strong></span>
-          <span class="capability-chevron">›</span>
+          <span class="capability-copy"><small>Automations</small><strong>Сигналы и уведомления</strong><span>VETO сам сообщает о важных событиях.</span></span>
+          <span class="capability-chevron">?</span>
         </button>
       </section>
 
@@ -171,30 +187,29 @@
         <button id="privacyPromiseButton" type="button">Как работает защита <span>↗</span></button>
       </section>
 
-      <section class="activation-card" id="activationCard">
+      <section class="activation-card activation-card-simple" id="activationCard">
         <div class="activation-head">
           <div>
-            <span class="kicker">VETO SETUP</span>
-            <h2 id="activationTitle">Настраиваю VETO Telegram</h2>
-            <p id="activationText">Понятный маршрут: подключение, приватность, первая Story и optional Intelligence.</p>
+            <span class="kicker">НАЧНИ ЗДЕСЬ</span>
+            <h2 id="activationTitle">Активация за 2 шага</h2>
+            <p id="activationText">Сначала подключи Telegram, затем опубликуй тестовую Story. Остальное — по желанию.</p>
           </div>
-          <strong id="activationScore">0/4</strong>
+          <strong id="activationScore">0/2</strong>
         </div>
-        <div class="activation-steps">
-          <button type="button" class="activation-step" id="activationTelegram" data-activation-step="telegram">
-            <span>01</span><div><strong>Telegram Account</strong><small>QR / номер · основной вход</small></div><em>—</em>
+        <div class="activation-core-steps">
+          <button type="button" class="activation-step activation-step-core" id="activationTelegram" data-activation-step="telegram">
+            <span>1</span><div><strong>Подключить Telegram</strong><small>На этом телефоне: номер + код · QR — если есть второй экран</small></div><em>Нужно</em>
           </button>
-          <button type="button" class="activation-step" id="activationGhost" data-activation-step="ghost">
-            <span>02</span><div><strong>VETO Privacy</strong><small>Доступ только к выбранным функциям</small></div><em>—</em>
-          </button>
-          <button type="button" class="activation-step" id="activationStory" data-activation-step="story">
-            <span>03</span><div><strong>Первая Story</strong><small>Проверить публикацию</small></div><em>—</em>
-          </button>
-          <button type="button" class="activation-step" id="activationIntel" data-activation-step="intelligence">
-            <span>04</span><div><strong>Deep Intelligence</strong><small>Опциональный advanced layer</small></div><em>—</em>
+          <button type="button" class="activation-step activation-step-core" id="activationStory" data-activation-step="story">
+            <span>2</span><div><strong>Проверить первой Story</strong><small>Выбери фото и опубликуй тестовую Story</small></div><em>После шага 1</em>
           </button>
         </div>
-        <button class="activation-primary" id="activationPrimaryButton" type="button">Продолжить настройку</button>
+        <button class="activation-primary" id="activationPrimaryButton" type="button">Начать подключение</button>
+        <div class="activation-optional">
+          <span>ПОТОМ, ЕСЛИ НУЖНО</span>
+          <button type="button" id="activationGhost" data-activation-step="ghost"><b>Privacy</b><small>Anti‑Delete · история изменений</small><em>Необязательно</em></button>
+          <button type="button" id="activationIntel" data-activation-step="intelligence"><b>Automations и аналитика</b><small>Просмотры · alerts · автоматические сигналы</small><em>Необязательно</em></button>
+        </div>
       </section>
 
       <section class="control-section">
@@ -1092,7 +1107,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261007-veto-telegram-v2"></script>
+  <script src="/app.js?v=20261007-veto-clarity-v1"></script>
   <script src="/privacy.js?v=20261007-veto-telegram-v2"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
