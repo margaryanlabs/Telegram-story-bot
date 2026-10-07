@@ -26,7 +26,7 @@ test('home exposes the complete control layer', () => {
   assert.match(html, /id="homeAutomationsCard"/);
   assert.match(html, />Security</);
   assert.match(html, />Automations</);
-  assert.match(html, /Private Telegram Control/);
+  assert.match(html, /Private control layer for Telegram/);
 });
 
 test('legacy technical identifiers stay backward compatible', () => {
