@@ -89,12 +89,12 @@ export default async function handler(req, res) {
     });
 
     await tg(token, 'setMyName', {
-      name: 'Ghost Mode',
+      name: 'VETO Telegram',
     }).catch(() => {});
 
     await tg(token, 'setMyCommands', {
       commands: [
-        { command: 'start', description: '🚀 Открыть Ghost Mode' },
+        { command: 'start', description: '🚀 Открыть VETO Telegram' },
         { command: 'ghost', description: '👻 Ghost и Anti-Delete' },
         { command: 'deleted', description: '↶ Последние удалённые сообщения' },
         { command: 'edits', description: '≋ История изменённых сообщений' },
@@ -108,17 +108,17 @@ export default async function handler(req, res) {
     });
 
     await tg(token, 'setMyShortDescription', {
-      short_description: 'Ghost Mode: Privacy, Stories, Intelligence, Studio и Automations — private control layer для Telegram.',
+      short_description: 'VETO Telegram: Privacy, Stories, Intelligence, Studio и Automations — private control layer для Telegram.',
     }).catch(() => {});
 
     await tg(token, 'setMyDescription', {
-      description: 'Ghost Mode — private control layer для Telegram: Privacy, Stories, Intelligence, Creator Studio, Security и Automations в одном месте.',
+      description: 'VETO Telegram — private control layer для Telegram: Privacy, Stories, Intelligence, Creator Studio, Security и Automations в одном месте.',
     }).catch(() => {});
 
     await tg(token, 'setChatMenuButton', {
       menu_button: {
         type: 'web_app',
-        text: 'Ghost Mode',
+        text: 'VETO Telegram',
         web_app: { url: controlAppUrl(baseUrl) },
       },
     }).catch(() => {});
@@ -183,7 +183,7 @@ export default async function handler(req, res) {
           chat_id: chatId,
           menu_button: {
             type: 'web_app',
-            text: 'Ghost Mode',
+            text: 'VETO Telegram',
             web_app: { url: nextUrl },
           },
         }).catch(() => {});
