@@ -139,7 +139,7 @@ async function ghostDiagnostics(token, userId) {
   const webhookUrl = String(webhookInfo?.url || '');
   const webhookReady = Boolean(webhookUrl && /\/api\/webhook-v8(?:$|\?)/.test(webhookUrl));
   const pendingUpdates = Number(webhookInfo?.pending_update_count || 0);
-  const storageReady = Boolean(storeHealth?.storage === 'ok' && storeHealth?.directGhostWrites);
+  const storageReady = Boolean(storeHealth?.storage === 'ok' && (storeHealth?.directGhostWrites || storeHealth?.postgrestFallback));
   const mediaVaultReady = Boolean(storeHealth?.mediaVault);
   const deleteItems = Array.isArray(deletedData?.items) ? deletedData.items : [];
   const lastDelete = deleteItems[0] || null;
@@ -167,7 +167,7 @@ async function ghostDiagnostics(token, userId) {
     storage: {
       ok: storageReady,
       label: 'Protected VETO Privacy store',
-      detail: storageReady ? 'Direct durable writes ready' : 'Storage write path unavailable',
+      detail: storageReady ? 'Store gateway responsive (direct SQL or REST fallback)' : 'Store gateway unavailable',
     },
     mediaVault: {
       ok: mediaVaultReady,
