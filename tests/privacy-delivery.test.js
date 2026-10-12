@@ -101,5 +101,5 @@ test('Chats do not disappear when one conversation exceeds the old 600-event cap
   assert.ok(start >= 0 && end > start);
   const handler = store.slice(start, end);
   assert.match(handler, /limit 2400/);
-  assert.match(handler, /\\.limit\\(2400\\)/);
+  assert.match(handler, /\.limit\(2400\)/);
 });
