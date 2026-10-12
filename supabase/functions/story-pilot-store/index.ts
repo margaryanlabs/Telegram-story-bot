@@ -961,17 +961,28 @@ async function opListPrivacyThreads(args: any) {
       from public.story_pilot_messages
       where telegram_user_id = ${userId}::bigint
         and sent_at >= ${cutoff}::timestamptz
-      order by sent_at desc
+      order by sent_at desc, chat_id desc, message_id desc
       limit 2400
     `;
   } else {
-    const r = await db.from("story_pilot_messages")
-      .select("chat_id,message_id,chat_title,direction,text_content,caption,media_type,media_archive_status,sent_at,edited_at,deleted_at,sender_display_name,sender_username")
-      .eq("telegram_user_id", userId)
-      .gte("sent_at", cutoff)
-      .order("sent_at", { ascending: false })
-      .limit(2400);
-    rows = need(r as any) || [];
+    // PostgREST caps rows per response (often 1,000), regardless of .limit().
+    // Explicit small pages are required, or quiet conversations vanish behind
+    // high-volume chats even when they are within retention.
+    const pageSize = 400;
+    const maxEvents = 2400;
+    for (let offset = 0; offset < maxEvents; offset += pageSize) {
+      const r = await db.from("story_pilot_messages")
+        .select("chat_id,message_id,chat_title,direction,text_content,caption,media_type,media_archive_status,sent_at,edited_at,deleted_at,sender_display_name,sender_username")
+        .eq("telegram_user_id", userId)
+        .gte("sent_at", cutoff)
+        .order("sent_at", { ascending: false })
+        .order("chat_id", { ascending: false })
+        .order("message_id", { ascending: false })
+        .range(offset, offset + pageSize - 1);
+      const page = need(r as any) || [];
+      rows.push(...page);
+      if (page.length < pageSize) break;
+    }
   }
 
   const byChat = new Map<string, any>();
