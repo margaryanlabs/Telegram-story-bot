@@ -93,3 +93,13 @@ test('Temporary Telegram verification failures keep existing Business rights', (
   assert.match(src, /verificationDeferred: true/);
   assert.match(src, /live: Boolean\(settings\.bc\)/);
 });
+
+test('Chats do not disappear when one conversation exceeds the old 600-event cap', () => {
+  const store = source('supabase/functions/story-pilot-store/index.ts');
+  const start = store.indexOf('async function opListPrivacyThreads(');
+  const end = store.indexOf('async function opListDeletedFeed(', start);
+  assert.ok(start >= 0 && end > start);
+  const handler = store.slice(start, end);
+  assert.match(handler, /limit 2400/);
+  assert.match(handler, /\\.limit\\(2400\\)/);
+});
