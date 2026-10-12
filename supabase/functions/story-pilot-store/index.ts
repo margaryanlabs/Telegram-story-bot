@@ -947,6 +947,9 @@ async function opListPrivacyThreads(args: any) {
   const settings = await opGetPrivacySettings({ userId });
   if (!privacyEnabled(settings)) return { settings, threads: [] };
 
+  // Avoid hiding low-volume chats when one busy conversation occupies the
+  // previous 600-row scan window. This remains a bounded recent-event archive,
+  // not an MTProto full-history sync.
   const cutoff = new Date(Date.now() - settings.retentionDays * 86400000).toISOString();
   let rows: any[] = [];
 
@@ -959,7 +962,7 @@ async function opListPrivacyThreads(args: any) {
       where telegram_user_id = ${userId}::bigint
         and sent_at >= ${cutoff}::timestamptz
       order by sent_at desc
-      limit 600
+      limit 2400
     `;
   } else {
     const r = await db.from("story_pilot_messages")
@@ -967,7 +970,7 @@ async function opListPrivacyThreads(args: any) {
       .eq("telegram_user_id", userId)
       .gte("sent_at", cutoff)
       .order("sent_at", { ascending: false })
-      .limit(600);
+      .limit(2400);
     rows = need(r as any) || [];
   }
 
