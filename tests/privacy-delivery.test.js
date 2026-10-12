@@ -100,6 +100,6 @@ test('Chats do not disappear when one conversation exceeds the old 600-event cap
   const end = store.indexOf('async function opListDeletedFeed(', start);
   assert.ok(start >= 0 && end > start);
   const handler = store.slice(start, end);
-  assert.match(handler, /limit 2400/);
-  assert.match(handler, /\.limit\(2400\)/);
+  assert.match(handler, /\.range\(offset, offset \+ pageSize - 1\)/);
+  assert.match(handler, /\.range\(offset, offset \+ pageSize - 1\)/);
 });
