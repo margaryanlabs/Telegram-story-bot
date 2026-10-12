@@ -432,10 +432,17 @@ async function refreshConnection(token, chatId, origin, settings) {
       await saveSettings(token, chatId, origin, next);
     }
     return { settings: next, live: true, rights, readRights };
-  } catch {
-    const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
-    await saveSettings(token, chatId, origin, next).catch(() => {});
-    return { settings: next, live: false, rights: false, readRights: false };
+  } catch (error) {
+    // A temporary Telegram API failure is NOT proof that Business rights were
+    // revoked. Clearing them here silently disabled Privacy and its archive.
+    console.warn('VETO Telegram Business verification deferred', error?.message || String(error));
+    return {
+      settings,
+      live: Boolean(settings.bc),
+      rights: Boolean(settings.canStories),
+      readRights: Boolean(settings.canReadMessages),
+      verificationDeferred: true,
+    };
   }
 }
 
@@ -928,7 +935,12 @@ export default async function handler(req, res) {
 
   try {
     const activityConnectionId = businessConnectionIdFromActivity(update);
-    if (activityConnectionId) {
+    // Message and delete handlers below already resolve the live connection.
+    // The previous unconditional recovery performed extra Telegram + store
+    // writes on EVERY message, delaying capture until its timeout expired.
+    const privacyActivity = Boolean(update?.business_message
+      || update?.edited_business_message || update?.deleted_business_messages);
+    if (activityConnectionId && !privacyActivity) {
       try {
         const connection = await tg(token, 'getBusinessConnection', { business_connection_id: activityConnectionId });
         await persistBusinessConnection(token, origin, connection, { notify: false });
@@ -947,6 +959,7 @@ export default async function handler(req, res) {
     if (privacyBusinessMessage) {
       const connectionId = privacyBusinessMessage.business_connection_id;
       let result = null;
+      let captureError = null;
       try {
         const connection = await tg(token, 'getBusinessConnection', {
           business_connection_id: connectionId,
@@ -984,14 +997,22 @@ export default async function handler(req, res) {
           });
         }
       } catch (error) {
-        // Privacy storage must never make Telegram retry the entire webhook update.
+        // Report a transient archive failure so Telegram can safely redeliver.
         console.warn('VETO Telegram privacy message capture skipped', {
           connection_id: connectionId || null,
           message_id: privacyBusinessMessage.message_id || null,
           error: error?.message || String(error),
         });
+        captureError = error;
       }
 
+      if (captureError) {
+        // Do not acknowledge an unpersisted message: Telegram retries the
+        // same update, and the archive's (owner, chat, message) key is idempotent.
+        res.setHeader('Retry-After', '2');
+        res.status(503).json({ ok: false, error: 'privacy_message_archive_unavailable', retryable: true });
+        return;
+      }
       res.status(200).json({
         ok: true,
         privacy_message_captured: Boolean(result?.captured),
@@ -1005,6 +1026,7 @@ export default async function handler(req, res) {
     if (update?.deleted_business_messages) {
       const deleted = update.deleted_business_messages;
       let result = null;
+      let captureError = null;
       try {
         const connection = await tg(token, 'getBusinessConnection', {
           business_connection_id: deleted.business_connection_id,
@@ -1047,8 +1069,14 @@ export default async function handler(req, res) {
           message_count: deleted.message_ids?.length || 0,
           error: error?.message || String(error),
         });
+        captureError = error;
       }
 
+      if (captureError) {
+        res.setHeader('Retry-After', '2');
+        res.status(503).json({ ok: false, error: 'privacy_delete_archive_unavailable', retryable: true });
+        return;
+      }
       res.status(200).json({
         ok: true,
         privacy_delete_captured: Boolean(result?.affected),

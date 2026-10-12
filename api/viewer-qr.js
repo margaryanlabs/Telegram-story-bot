@@ -32,6 +32,7 @@ function expiresAtMs(expires) {
 }
 
 export default async function handler(req, res) {
+  const requestStartedAt = Date.now();
   if (req.method !== 'POST') {
     jsonError(res, 405, 'Method not allowed');
     return;
@@ -93,7 +94,10 @@ export default async function handler(req, res) {
   };
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), QR_STREAM_MS);
+  // Preflight crypto/session checks consume part of the Vercel request budget.
+  // Keep the entire request below the 60s runtime limit, not just the QR phase.
+  const remainingMs = Math.max(1000, Math.min(QR_STREAM_MS, 54_000 - (Date.now() - requestStartedAt)));
+  const timer = setTimeout(() => controller.abort(), remainingMs);
   res.on('close', () => controller.abort());
 
   try {
