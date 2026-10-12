@@ -997,7 +997,7 @@ export default async function handler(req, res) {
           });
         }
       } catch (error) {
-        // Privacy storage must never make Telegram retry the entire webhook update.
+        // Report a transient archive failure so Telegram can safely redeliver.
         console.warn('VETO Telegram privacy message capture skipped', {
           connection_id: connectionId || null,
           message_id: privacyBusinessMessage.message_id || null,
