@@ -1512,6 +1512,9 @@
     window.scrollTo({ top:0, behavior:'smooth' });
     if (target === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
     if (target === 'analytics' && tg?.initData) refreshViewerAnalytics({ silent: true });
+    // The Privacy module is loaded separately and must refresh whether a
+    // screen is opened through a bottom tab, a home shortcut or a feature sheet.
+    window.dispatchEvent(new CustomEvent('veto:screen-changed', { detail: { screen: target } }));
     return true;
   }
   // Other modules can open secondary pages (Chats, Relay) without depending on
