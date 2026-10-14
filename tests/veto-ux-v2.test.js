@@ -51,6 +51,6 @@ test('bot setup pushes VETO Telegram identity to Telegram', () => {
   assert.match(setup, /profilePhotoUpdated = await setVetoBotProfilePhoto\(token\)/);
   assert.match(setup, /veto-telegram\.jpg/);
   assert.match(setup, /getUserProfilePhotos/);
-  assert.match(setup, /const CONTROL_BUILD = '\\d{8}-veto-[^']+';/);
+  assert.match(setup, /const CONTROL_BUILD = '[0-9]{8}-veto-[^']+';/);
   assert.match(setup, /brand: 'VETO Telegram v2'/);
 });
