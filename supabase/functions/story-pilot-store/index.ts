@@ -189,7 +189,7 @@ async function cleanupPrivacyUser(userId: string, retentionDays: number) {
 
   while (true) {
     const rowsResult = await db.from("story_pilot_messages")
-      .select("message_id,media_storage_path")
+      .select("chat_id,message_id,media_storage_path")
       .eq("telegram_user_id", userId)
       .lt("sent_at", cutoff)
       .limit(1000);
@@ -198,14 +198,25 @@ async function cleanupPrivacyUser(userId: string, retentionDays: number) {
 
     await removePrivacyMediaPaths(rows.map((row: any) => row.media_storage_path).filter(Boolean));
 
-    const ids = rows.map((row: any) => Number(row.message_id)).filter((id: number) => Number.isInteger(id));
-    if (!ids.length) break;
-
-    const deleted = await db.from("story_pilot_messages")
-      .delete()
-      .eq("telegram_user_id", userId)
-      .in("message_id", ids);
-    need(deleted as any);
+    // Telegram message IDs are scoped to a chat, not globally unique per owner.
+    // Never delete a still-retained message in another chat with the same ID.
+    const idsByChat = new Map<string, number[]>();
+    for (const row of rows as any[]) {
+      const chatId = String(row.chat_id || "");
+      const id = Number(row.message_id);
+      if (!chatId || !Number.isInteger(id)) continue;
+      if (!idsByChat.has(chatId)) idsByChat.set(chatId, []);
+      idsByChat.get(chatId)!.push(id);
+    }
+    if (!idsByChat.size) break;
+    for (const [chatId, ids] of idsByChat) {
+      const deleted = await db.from("story_pilot_messages")
+        .delete()
+        .eq("telegram_user_id", userId)
+        .eq("chat_id", chatId)
+        .in("message_id", ids);
+      need(deleted as any);
+    }
 
     if (rows.length < 1000) break;
   }
@@ -1044,7 +1055,7 @@ async function opListPrivacyThreads(args: any) {
 
   const threads = [...byChat.values()]
     .map((thread: any) => ({ ...thread, ...smartThreadSignals(thread) }))
-    .slice(0, 60);
+    .slice(0, 160);
 
   const smartSummary = {
     action: threads.filter((thread: any) => thread.smartState === "action").length,
@@ -1087,6 +1098,7 @@ async function opListPrivacyThreads(args: any) {
 async function opListDeletedFeed(args: any) {
   const userId = String(args.userId);
   const limit = Math.max(1, Math.min(160, Number(args.limit || 120)));
+  const offset = Math.max(0, Math.min(50000, Math.floor(Number(args.offset || 0))));
   const settings = await opGetPrivacySettings({ userId });
   if (!privacyEnabled(settings)) return { settings, items: [] };
 
@@ -1104,7 +1116,7 @@ async function opListDeletedFeed(args: any) {
         and deleted_at is not null
         and sent_at >= ${cutoff}::timestamptz
       order by deleted_at desc, chat_id desc, message_id desc
-      limit ${limit}
+      limit ${limit + 1} offset ${offset}
     `;
   } else {
     const r = await db.from("story_pilot_messages")
@@ -1113,12 +1125,18 @@ async function opListDeletedFeed(args: any) {
       .not("deleted_at", "is", null)
       .gte("sent_at", cutoff)
       .order("deleted_at", { ascending: false })
-      .limit(limit);
+      .order("chat_id", { ascending: false })
+      .order("message_id", { ascending: false })
+      .range(offset, offset + limit);
     rows = need(r as any) || [];
   }
 
+  const hasMore = rows.length > limit;
+  rows = rows.slice(0, limit);
   return {
     settings,
+    offset,
+    hasMore,
     items: rows.map((row: any) => ({
       chatId: String(row.chat_id),
       messageId: Number(row.message_id),
@@ -1143,6 +1161,7 @@ async function opListPrivacyMessages(args: any) {
   const userId = String(args.userId);
   const chatId = String(args.chatId);
   const limit = Math.max(1, Math.min(150, Number(args.limit || 80)));
+  const offset = Math.max(0, Math.min(50000, Math.floor(Number(args.offset || 0))));
   const settings = await opGetPrivacySettings({ userId });
   if (!privacyEnabled(settings)) return { settings, messages: [] };
 
@@ -1159,8 +1178,8 @@ async function opListPrivacyMessages(args: any) {
       where telegram_user_id = ${userId}::bigint
         and chat_id = ${chatId}::bigint
         and sent_at >= ${cutoff}::timestamptz
-      order by sent_at desc
-      limit ${limit}
+      order by sent_at desc, message_id desc
+      limit ${limit + 1} offset ${offset}
     `;
   } else {
     const r = await db.from("story_pilot_messages")
@@ -1169,11 +1188,13 @@ async function opListPrivacyMessages(args: any) {
       .eq("chat_id", chatId)
       .gte("sent_at", cutoff)
       .order("sent_at", { ascending: false })
-      .limit(limit);
+      .order("message_id", { ascending: false })
+      .range(offset, offset + limit);
     messages = need(r as any) || [];
   }
 
-  return { settings, messages: [...messages].reverse() };
+  const hasMore = messages.length > limit;
+  return { settings, offset, hasMore, messages: [...messages.slice(0, limit)].reverse() };
 }
 
 async function opGetPrivacyMediaRef(args: any) {
