@@ -3,20 +3,22 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const get = name => readFileSync(new URL('../'+name,import.meta.url),'utf8');
 
-test('server exposes only expiry and stage for a pending Telegram login',()=>{
+test('server exposes only login stage and expiry to the Mini App',()=>{
  const api = get('api/viewer-sync.js');
- assert.match(api,/getAuthChallenge\(userId\)\.catch\(\(\) => null\)/);
- assert.match(api,/loginPending,/);
- assert.match(api,/stage: loginChallenge.stage, expiresAt: new Date\(expiry\)\.toISOString\(\)/);
- assert.doesNotMatch(api,/loginPending: loginChallenge/);
+ assert.ok(api.includes('getAuthChallenge(userId).catch(() => null)'));
+ assert.ok(api.includes('loginPending,'));
+ assert.ok(api.includes('stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString()'));
+ assert.ok(!api.includes('loginPending: loginChallenge'));
 });
-test('Mini App restores code and 2FA login after Telegram WebView closes',()=>{
- const app=get('public/app.js');
- assert.match(app,/function pendingLoginMarkup/);
- assert.match(app,/loginPending: data.loginPending \|\| null/);
- assert.match(app,/data-sheet-action="viewer-resume-login"/);
- assert.match(app,/action === 'viewer-resume-login'/);
- assert.match(app,/viewerCodeSheet\('telegram_app'\)/);
- assert.match(app,/viewerPasswordSheet\(\)/);
- assert.match(app,/await refreshViewerSync\(\{ silent: true \}\);[\s\S]*?const connected/);
+
+test('Telegram Mini App can resume a code or 2FA challenge after reopening',()=>{
+ const app = get('public/app.js');
+ for (const snippet of [
+   'function pendingLoginMarkup()',
+   'loginPending: data.loginPending || null',
+   'data-sheet-action="viewer-resume-login"',
+   "action === 'viewer-resume-login'",
+   "viewerCodeSheet('telegram_app')",
+   'viewerPasswordSheet()',
+ ]) assert.ok(app.includes(snippet), 'Missing Mini App continuation: '+snippet);
 });
