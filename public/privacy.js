@@ -27,11 +27,12 @@
     deletedFeed: [],
     deletedFeedLoaded: false,
     deletedFeedLoading: false,
+    deletedFeedHasMore: false,
     diagnostics: null,
     diagnosticsLoading: false,
     activeThread: null,
     query: '',
-    filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'smart',
+    filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'all',
     deepLinkHandled: false,
     lastTotalMessages: 0,
     lastRefreshAt: null,
@@ -338,8 +339,9 @@
 
     privacyState.deletedFeedLoading = true;
     try {
-      const data = await request('list_deleted', { limit: 160 });
+      const data = await request('list_deleted', { limit: 160, offset: 0 });
       privacyState.deletedFeed = Array.isArray(data.items) ? data.items : [];
+      privacyState.deletedFeedHasMore = data.hasMore === true;
       privacyState.deletedFeedLoaded = true;
     } catch (error) {
       if (!silent) toast(error.message);
@@ -347,6 +349,22 @@
       privacyState.deletedFeedLoading = false;
       render();
     }
+  }
+
+  async function loadMoreDeletedFeed() {
+    if (!tg?.initData || privacyState.deletedFeedLoading || !privacyState.deletedFeedHasMore) return;
+    privacyState.deletedFeedLoading = true;
+    render();
+    try {
+      const data = await request('list_deleted', { limit: 160, offset: privacyState.deletedFeed.length });
+      const existing = new Set(privacyState.deletedFeed.map(x => String(x.chatId) + ':' + String(x.messageId)));
+      for (const item of data.items || []) {
+        const id = String(item.chatId) + ':' + String(item.messageId);
+        if (!existing.has(id)) { existing.add(id); privacyState.deletedFeed.push(item); }
+      }
+      privacyState.deletedFeedHasMore = data.hasMore === true;
+    } catch (error) { toast(error.message); }
+    finally { privacyState.deletedFeedLoading = false; render(); }
   }
 
   function render() {
@@ -397,10 +415,10 @@
       enableAll.classList.toggle('done', complete);
       const label = enableAll.querySelector('b');
       const hint = enableAll.querySelector('small');
-      if (label) label.textContent = complete ? 'VETO Privacy включена' : 'Включить VETO Privacy';
+      if (label) label.textContent = complete ? 'Защита переписок включена' : 'Защитить переписки';
       if (hint) hint.textContent = complete
-        ? 'Anti-Delete + Edit History + VETO Inbox активны'
-        : 'Anti-Delete + Edit History + VETO Inbox';
+        ? 'Anti-Delete · история правок · архив'
+        : 'Новые разрешённые сообщения сохранятся до удаления в Telegram';
     }
 
     for (const [id, key] of [
@@ -525,7 +543,11 @@
     }
 
     if ($('privacyRetentionLabel')) {
-      $('privacyRetentionLabel').textContent = `Хранение · ${Number(settings.retentionDays || 30)} дней`;
+      $('privacyRetentionLabel').textContent = Number(settings.retentionDays || 30) === 3650
+        ? 'Хранение · до 10 лет'
+        : Number(settings.retentionDays || 30) === 365
+          ? 'Хранение · 1 год'
+          : `Хранение · ${Number(settings.retentionDays || 30)} дней`;
     }
 
     const latestDeletedThread = [...privacyState.threads]
@@ -551,6 +573,14 @@
       }
     }
 
+    const moreDeleted = $('privacyDeletedMore');
+    if (moreDeleted) {
+      moreDeleted.hidden = privacyState.filter !== 'deleted' || !privacyState.deletedFeedHasMore;
+      moreDeleted.disabled = privacyState.deletedFeedLoading;
+      moreDeleted.textContent = privacyState.deletedFeedLoading
+        ? 'Загружаю…'
+        : 'Показать ещё сохранённые удаления ↓';
+    }
     const list = $('privacyThreads');
     const empty = $('privacyEmpty');
     const visible = privacyState.filter === 'deleted' ? filteredDeletedFeed() : filteredThreads();
@@ -740,13 +770,13 @@
     }
   }
 
-  async function saveSettings(patch, { quiet = false } = {}) {
+  async function saveSettings(patch, { quiet = false, confirmRetentionPurge = false } = {}) {
     const previous = { ...privacyState.settings };
     privacyState.settings = { ...privacyState.settings, ...patch };
     render();
     haptic();
     try {
-      const data = await request('update_settings', { settings: patch });
+      const data = await request('update_settings', { settings: patch, confirmRetentionPurge });
       privacyState.degraded = false;
       privacyState.settings = { ...privacyState.settings, ...(data.settings || {}) };
       privacyState.threads = Array.isArray(data.threads) ? data.threads : privacyState.threads;
@@ -774,12 +804,17 @@
       retentionDays: Number(privacyState.settings.retentionDays || 30),
     }, { quiet:true });
     if (ok) {
-      toast('VETO Privacy полностью включена');
       try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
       await Promise.all([
         refresh({ silent:true }),
         loadTelegramConnection({ silent:true }),
       ]);
+      if (!privacyState.connection.live || !privacyState.connection.readMessages) {
+        toast('Защита включена. Осталось разрешить VETO получать сообщения в Telegram Business.');
+        privacyBusinessGuideSheet();
+      } else {
+        toast('Защита включена: новые разрешённые сообщения будут сохраняться в архив.');
+      }
     }
   }
 
