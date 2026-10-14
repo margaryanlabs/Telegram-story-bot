@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261014-veto-connect-r2" />
+  <link rel="stylesheet" href="/app.css?v=20261015-veto-archive-v3" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -719,16 +719,24 @@
         <div class="ghost-command-copy">
           <span class="status-pill" id="privacyStatusPill"><i></i><span id="privacyStatusText">Проверяю</span></span>
           <h2>VETO Protection</h2>
-          <p id="privacyHeroText">Включи защиту — дальше события сохраняются автоматически.</p>
+          <p id="privacyHeroText">Разрешённые сообщения сохраняются с момента включения — даже если позже переписку очистят в Telegram.</p>
         </div>
         <div class="ghost-badges">
-          <span>iOS · Android · Desktop</span><span>Server-side</span><span>No read call</span>
+          <span>iOS · Android · Desktop</span><span>Private archive</span><span>No read call</span>
         </div>
         <button class="ghost-enable-all" id="privacyEnableAllButton" type="button">
-          <span>◉</span><b>Включить VETO Privacy</b><small>Anti-Delete + Edit History + Smart Inbox</small>
+          <span>◉</span><b>Защитить переписки</b><small>Anti-Delete · Edit History · частный архив</small>
         </button>
       </section>
 
+      <section class="ghost-archive-promise" aria-label="Как сохраняются очищенные переписки">
+        <div class="ghost-archive-promise-mark">◎</div>
+        <div class="ghost-archive-promise-body">
+          <strong>Очистил чат в Telegram? Копия останется в VETO.</strong>
+          <p>Только сообщения, которые VETO успел получить из разрешённых чатов <b>до удаления</b>. Старые или секретные чаты задним числом восстановить нельзя.</p>
+        </div>
+        <button type="button" id="privacyBackupGuideButton" class="ghost-archive-promise-link">Как включить ↗</button>
+      </section>
       <section class="ghost-health-grid">
         <article><span>Диалоги</span><strong id="privacyStatThreads">0</strong><small>в VETO Inbox</small></article>
         <article><span>Удалено</span><strong id="privacyStatDeleted">0</strong><small>сохранено</small></article>
@@ -813,11 +821,13 @@
           </div>
           <div class="setting-row retention-row">
             <span class="setting-icon">⌛</span>
-            <span class="setting-copy"><strong>Срок хранения</strong><small>Можно изменить в любой момент.</small></span>
+            <span class="setting-copy"><strong>Срок хранения архива</strong><small>7–90 дней или 1–10 лет. Уменьшение срока может удалить старые копии.</small></span>
             <div class="retention-segment" id="privacyRetentionSegment">
-              <button type="button" data-retention="7">7</button>
-              <button type="button" data-retention="30">30</button>
-              <button type="button" data-retention="90">90</button>
+              <button type="button" data-retention="7">7д</button>
+              <button type="button" data-retention="30">30д</button>
+              <button type="button" data-retention="90">90д</button>
+              <button type="button" data-retention="365">1 год</button>
+              <button type="button" data-retention="3650">10 лет</button>
             </div>
           </div>
         </div>
@@ -835,7 +845,7 @@
       <div class="page-head chats-page-head">
         <span class="kicker">SMART INBOX</span>
         <h1>Chats</h1>
-        <p>Privacy-first triage поверх доступных Telegram-событий: что похоже требует внимания, что изменилось и что можно оставить в архиве.</p>
+        <p>Твои сохранённые копии разрешённых переписок, правки и удаления — независимо от того, остался ли оригинальный чат в Telegram.</p>
       </div>
 
       <section class="smart-inbox-overview">
@@ -879,14 +889,14 @@
 
         <label class="privacy-search">
           <span>⌕</span>
-          <input id="privacySearch" type="search" autocomplete="off" placeholder="Найти диалог или сообщение" />
+          <input id="privacySearch" type="search" autocomplete="off" placeholder="Найти чат, участника или сохранённую запись" />
         </label>
 
         <div class="privacy-filters" id="privacyFilters">
-          <button class="active" type="button" data-privacy-filter="smart">Smart</button>
+          <button type="button" data-privacy-filter="smart">Smart</button>
           <button type="button" data-privacy-filter="action">Action</button>
           <button type="button" data-privacy-filter="watch">Watch</button>
-          <button type="button" data-privacy-filter="all">Все</button>
+          <button class="active" type="button" data-privacy-filter="all">Все</button>
           <button type="button" data-privacy-filter="deleted">Удалённые</button>
           <button type="button" data-privacy-filter="edited">Изменённые</button>
           <button type="button" data-privacy-filter="media">Медиа</button>
@@ -898,14 +908,15 @@
         </div>
 
         <div class="privacy-thread-list" id="privacyThreads"></div>
+        <button class="privacy-more-button" id="privacyDeletedMore" type="button" hidden>Показать ещё удалённые сообщения ↓</button>
         <div class="empty-state show" id="privacyEmpty">
           <div class="empty-icon">◌</div>
           <strong id="privacyEmptyTitle">VETO Inbox пока пуст</strong>
-          <span id="privacyEmptyText">Включи VETO Privacy — новые доступные Business-сообщения и события появятся здесь автоматически.</span>
+          <span id="privacyEmptyText">Включи VETO Privacy и разреши боту выбранные Telegram Business-чаты. Сохраняются только новые доступные сообщения.</span>
         </div>
       </section>
 
-      <button class="privacy-clear-button" id="privacyClearButton" type="button">Очистить VETO Inbox</button>
+      <button class="privacy-clear-button" id="privacyClearButton" type="button">Удалить сохранённый архив навсегда</button>
     </section>
 
 
@@ -1227,9 +1238,9 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261014-veto-connect-r2"></script>
+  <script src="/app.js?v=20261015-veto-archive-v3"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
-  <script src="/privacy.js?v=20261014-veto-connect-r2"></script>
+  <script src="/privacy.js?v=20261015-veto-archive-v3"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>

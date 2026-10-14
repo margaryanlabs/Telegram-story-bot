@@ -27,11 +27,12 @@
     deletedFeed: [],
     deletedFeedLoaded: false,
     deletedFeedLoading: false,
+    deletedFeedHasMore: false,
     diagnostics: null,
     diagnosticsLoading: false,
     activeThread: null,
     query: '',
-    filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'smart',
+    filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'all',
     deepLinkHandled: false,
     lastTotalMessages: 0,
     lastRefreshAt: null,
@@ -338,8 +339,9 @@
 
     privacyState.deletedFeedLoading = true;
     try {
-      const data = await request('list_deleted', { limit: 160 });
+      const data = await request('list_deleted', { limit: 160, offset: 0 });
       privacyState.deletedFeed = Array.isArray(data.items) ? data.items : [];
+      privacyState.deletedFeedHasMore = data.hasMore === true;
       privacyState.deletedFeedLoaded = true;
     } catch (error) {
       if (!silent) toast(error.message);
@@ -347,6 +349,22 @@
       privacyState.deletedFeedLoading = false;
       render();
     }
+  }
+
+  async function loadMoreDeletedFeed() {
+    if (!tg?.initData || privacyState.deletedFeedLoading || !privacyState.deletedFeedHasMore) return;
+    privacyState.deletedFeedLoading = true;
+    render();
+    try {
+      const data = await request('list_deleted', { limit: 160, offset: privacyState.deletedFeed.length });
+      const existing = new Set(privacyState.deletedFeed.map(x => String(x.chatId) + ':' + String(x.messageId)));
+      for (const item of data.items || []) {
+        const id = String(item.chatId) + ':' + String(item.messageId);
+        if (!existing.has(id)) { existing.add(id); privacyState.deletedFeed.push(item); }
+      }
+      privacyState.deletedFeedHasMore = data.hasMore === true;
+    } catch (error) { toast(error.message); }
+    finally { privacyState.deletedFeedLoading = false; render(); }
   }
 
   function render() {
@@ -381,7 +399,7 @@
 
     if ($('privacyHeroText')) {
       $('privacyHeroText').textContent = complete && connectionLive && readMessages
-        ? 'Готово. Новые доступные Business-сообщения, правки и удаления обрабатываются автоматически.'
+        ? 'Разрешённые сообщения сохраняются в независимый архив на выбранный срок, даже если оригинальную переписку позже очистят в Telegram.'
         : complete && privacyState.connection.loaded && !connectionLive
           ? 'VETO Privacy включена, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать VETO Privacy не нужно.'
           : complete && connectionLive && !readMessages
@@ -397,10 +415,10 @@
       enableAll.classList.toggle('done', complete);
       const label = enableAll.querySelector('b');
       const hint = enableAll.querySelector('small');
-      if (label) label.textContent = complete ? 'VETO Privacy включена' : 'Включить VETO Privacy';
+      if (label) label.textContent = complete ? 'Защита переписок включена' : 'Защитить переписки';
       if (hint) hint.textContent = complete
-        ? 'Anti-Delete + Edit History + VETO Inbox активны'
-        : 'Anti-Delete + Edit History + VETO Inbox';
+        ? 'Anti-Delete · история правок · архив'
+        : 'Новые разрешённые сообщения сохранятся до удаления в Telegram';
     }
 
     for (const [id, key] of [
@@ -525,7 +543,11 @@
     }
 
     if ($('privacyRetentionLabel')) {
-      $('privacyRetentionLabel').textContent = `Хранение · ${Number(settings.retentionDays || 30)} дней`;
+      $('privacyRetentionLabel').textContent = Number(settings.retentionDays || 30) === 3650
+        ? 'Хранение · до 10 лет'
+        : Number(settings.retentionDays || 30) === 365
+          ? 'Хранение · 1 год'
+          : `Хранение · ${Number(settings.retentionDays || 30)} дней`;
     }
 
     const latestDeletedThread = [...privacyState.threads]
@@ -551,6 +573,14 @@
       }
     }
 
+    const moreDeleted = $('privacyDeletedMore');
+    if (moreDeleted) {
+      moreDeleted.hidden = privacyState.filter !== 'deleted' || !privacyState.deletedFeedHasMore;
+      moreDeleted.disabled = privacyState.deletedFeedLoading;
+      moreDeleted.textContent = privacyState.deletedFeedLoading
+        ? 'Загружаю…'
+        : 'Показать ещё сохранённые удаления ↓';
+    }
     const list = $('privacyThreads');
     const empty = $('privacyEmpty');
     const visible = privacyState.filter === 'deleted' ? filteredDeletedFeed() : filteredThreads();
@@ -740,13 +770,13 @@
     }
   }
 
-  async function saveSettings(patch, { quiet = false } = {}) {
+  async function saveSettings(patch, { quiet = false, confirmRetentionPurge = false } = {}) {
     const previous = { ...privacyState.settings };
     privacyState.settings = { ...privacyState.settings, ...patch };
     render();
     haptic();
     try {
-      const data = await request('update_settings', { settings: patch });
+      const data = await request('update_settings', { settings: patch, confirmRetentionPurge });
       privacyState.degraded = false;
       privacyState.settings = { ...privacyState.settings, ...(data.settings || {}) };
       privacyState.threads = Array.isArray(data.threads) ? data.threads : privacyState.threads;
@@ -774,12 +804,17 @@
       retentionDays: Number(privacyState.settings.retentionDays || 30),
     }, { quiet:true });
     if (ok) {
-      toast('VETO Privacy полностью включена');
       try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
       await Promise.all([
         refresh({ silent:true }),
         loadTelegramConnection({ silent:true }),
       ]);
+      if (!privacyState.connection.live || !privacyState.connection.readMessages) {
+        toast('Защита включена. Осталось разрешить VETO получать сообщения в Telegram Business.');
+        privacyBusinessGuideSheet();
+      } else {
+        toast('Защита включена: новые разрешённые сообщения будут сохраняться в архив.');
+      }
     }
   }
 
@@ -905,7 +940,11 @@
   function renderThreadSheet(thread, messages, options = {}) {
     const mode = normalizeThreadMode(options.mode || privacyState.activeThread?.mode || 'all');
     const focusMessageId = Number(options.focusMessageId || privacyState.activeThread?.focusMessageId || 0) || null;
-    privacyState.activeThread = { thread, messages, mode, focusMessageId };
+    const prior = privacyState.activeThread?.thread?.chatId === thread.chatId
+      ? privacyState.activeThread : null;
+    const hasMore = options.hasMore ?? prior?.hasMore ?? false;
+    const offset = options.offset ?? prior?.offset ?? messages.length;
+    privacyState.activeThread = { thread, messages, mode, focusMessageId, hasMore, offset };
 
     const visibleMessages = messagesForMode(messages, mode, focusMessageId);
     const rows = visibleMessages.map(message => {
@@ -972,6 +1011,7 @@
         <button type="button" class="${mode === 'edited' ? 'active' : ''}" data-privacy-thread-mode="edited">Изменённые <b>${editedCount}</b></button>
       </div>
       <div class="privacy-message-list">${rows || '<div class="intel-empty">В этом режиме сообщений пока нет.</div>'}</div>
+      ${hasMore ? '<button class="privacy-more-button" data-privacy-thread-more="1">Загрузить более ранние сообщения ↓</button>' : ''}
       <div class="sheet-actions">
         ${mode === 'focus' ? '<button class="accent" data-privacy-thread-mode="all">Показать весь чат</button>' : ''}
         ${peerUsername ? `<button data-ghost-open-peer="${escapeHtml(peerUsername)}">Открыть чат в Telegram</button>` : ''}
@@ -979,6 +1019,7 @@
       </div>
     `);
 
+    if (options.preserveScroll) return;
     requestAnimationFrame(() => {
       const sheet = $('sheet');
       const focused = focusMessageId
@@ -993,11 +1034,40 @@
     const thread = privacyState.threads.find(item => String(item.chatId) === String(chatId))
       || { chatId, title: 'Telegram chat' };
     try {
-      const data = await request('list_messages', { chatId, limit: 150 });
-      renderThreadSheet(thread, data.messages || [], { mode, focusMessageId });
+      const data = await request('list_messages', { chatId, limit: 150, offset: 0 });
+      const items = data.messages || [];
+      renderThreadSheet(thread, items, { mode, focusMessageId, hasMore:data.hasMore === true, offset:items.length });
     } catch (error) {
       if (!silent) toast(error.message);
     }
+  }
+
+  async function loadOlderThread() {
+    const active = privacyState.activeThread;
+    if (!active || !active.hasMore || privacyState.loadingOlderThread) return;
+    privacyState.loadingOlderThread = true;
+    const button = $('sheet')?.querySelector('[data-privacy-thread-more]');
+    if (button) { button.disabled = true; button.textContent = 'Загружаю…'; }
+    try {
+      const data = await request('list_messages', {
+        chatId:active.thread.chatId, limit:150, offset:active.offset || 0,
+      });
+      const older = Array.isArray(data.messages) ? data.messages : [];
+      const ids = new Set(active.messages.map(x => String(x.message_id)));
+      const additions = older.filter(x => !ids.has(String(x.message_id)));
+      const merged = [...additions, ...active.messages];
+      renderThreadSheet(active.thread, merged, {
+        mode:active.mode, focusMessageId:active.focusMessageId,
+        hasMore:data.hasMore === true, offset:(active.offset || 0) + older.length,
+        preserveScroll:true,
+      });
+      // Newly fetched messages remain at the beginning of the archive page.
+      const sheet = $('sheet');
+      if (sheet) sheet.scrollTop = 0;
+    } catch (error) {
+      toast(error.message);
+      if (button) { button.disabled = false; button.textContent = 'Повторить загрузку'; }
+    } finally { privacyState.loadingOlderThread = false; }
   }
 
   async function maybeOpenGhostDeepLink() {
@@ -1104,28 +1174,42 @@
     }
   }
 
-  async function clearArchive() {
-    const run = async () => {
-      try {
-        await request('clear_archive');
-        privacyState.threads = [];
-        privacyState.smartSummary = null;
-        privacyState.deletedFeed = [];
-        privacyState.deletedFeedLoaded = true;
-        privacyState.lastTotalMessages = 0;
-        render();
-        toast('VETO Inbox очищен');
-        try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
-      } catch (error) {
-        toast(error.message);
-      }
-    };
+  function privacyBusinessGuideSheet() {
+    const linked = Boolean(privacyState.connection.live);
+    openSheet(`
+      <span class="kicker">VETO PRIVATE ARCHIVE · ДЛЯ ТВОИХ ЧАТОВ</span>
+      <h2>${linked ? 'Дай разрешение сохранять сообщения' : 'Подключи Telegram Business к архиву'}</h2>
+      <p>Обычное подключение Telegram для Stories не включает архив переписок. Для сохранения сообщений необходимо отдельно разрешить VETO Business-доступ в выбранных чатах.</p>
+      <div class="sheet-list">
+        <div class="sheet-item"><strong>1. Настройки Telegram</strong><span>Telegram → Настройки → Telegram Business → Чат-боты / Автоматизация чатов.</span></div>
+        <div class="sheet-item"><strong>2. Выбери VETO</strong><span>Подключи @Storypilotlab_bot и явно выбери чаты, из которых разрешено сохранять сообщения.</span></div>
+        <div class="sheet-item"><strong>3. Разреши читать сообщения</strong><span>Включи право на сообщения, затем вернись сюда и нажми «Проверить». Настрой хранение до 10 лет, если нужен долгий архив.</span></div>
+      </div>
+      <p class="privacy-archive-limit">Важно: сохраняются только сообщения, которые Telegram передал после включения доступа. Очистка чата в Telegram не удаляет уже сохранённую VETO-копию. Ранее удалённые, секретные и неразрешённые чаты восстановить невозможно.</p>
+      <div class="sheet-actions">
+        <button class="accent" data-privacy-recheck-access="1">Проверить доступ снова</button>
+        <button data-privacy-keep-long="1">Хранить копии до 10 лет</button>
+        <button data-privacy-close="1">Закрыть</button>
+      </div>
+    `);
+  }
 
-    if (tg?.showConfirm) {
-      tg.showConfirm('Удалить все сохранённые сообщения VETO Inbox?', ok => ok && run());
-    } else if (window.confirm('Удалить все сохранённые сообщения VETO Inbox?')) {
-      run();
-    }
+  async function clearArchive() {
+    // Clearing a Telegram conversation and deleting VETO's independent archive
+    // are separate actions. Use a typed second step to prevent accidental loss.
+    openSheet(`
+      <span class="kicker">БЕЗВОЗВРАТНОЕ УДАЛЕНИЕ</span>
+      <h2>Удалить сохранённые копии VETO?</h2>
+      <p>Будут удалены сохранённые сообщения, копии удалений и доступные медиа из VETO. Очистка беседы в обычном Telegram ЭТОГО НЕ ДЕЛАЕТ.</p>
+      <p class="privacy-archive-limit"><strong>Это нельзя отменить.</strong> Если цель — очистить оригинальный Telegram-чат, просто закрой это окно. VETO-архив останется.</p>
+      <label class="privacy-danger-input">Для подтверждения введи УДАЛИТЬ
+        <input id="privacyConfirmDelete" type="text" autocomplete="off" autocapitalize="characters" placeholder="УДАЛИТЬ" />
+      </label>
+      <div class="sheet-actions">
+        <button class="ghost-danger" data-privacy-confirm-clear="1" disabled>Удалить архив VETO навсегда</button>
+        <button data-privacy-close="1">Оставить копии</button>
+      </div>
+    `);
   }
 
   function startAutoRefresh() {
@@ -1138,6 +1222,8 @@
   }
 
   $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
+  $('privacyBackupGuideButton')?.addEventListener('click', privacyBusinessGuideSheet);
+  $('privacyDeletedMore')?.addEventListener('click', loadMoreDeletedFeed);
 
   $('smartBriefPrimary')?.addEventListener('click', () => {
     const chatId = String($('smartBriefPrimary')?.dataset?.chatId || '');
@@ -1180,10 +1266,24 @@
   $('privacyRefreshButton')?.addEventListener('click', () => refresh());
   $('privacyClearButton')?.addEventListener('click', clearArchive);
 
-  $('privacyRetentionSegment')?.addEventListener('click', event => {
+  $('privacyRetentionSegment')?.addEventListener('click', async event => {
     const button = event.target.closest('[data-retention]');
     if (!button) return;
-    saveSettings({ retentionDays:Number(button.dataset.retention || 30) });
+    const nextDays = Number(button.dataset.retention || 30);
+    const oldDays = Number(privacyState.settings.retentionDays || 30);
+    if (nextDays === oldDays) return;
+    if (nextDays < oldDays) {
+      const text = 'Уменьшение срока с ' + oldDays + ' до ' + nextDays
+        + ' дней удалит копии сообщений старше нового срока. Продолжить?';
+      const accepted = await new Promise(resolve => {
+        if (tg?.showConfirm) tg.showConfirm(text, result => resolve(Boolean(result)));
+        else resolve(window.confirm(text));
+      });
+      if (!accepted) return;
+      await saveSettings({ retentionDays:nextDays }, { confirmRetentionPurge:true });
+    } else {
+      await saveSettings({ retentionDays:nextDays });
+    }
   });
 
   $('privacySearch')?.addEventListener('input', event => {
@@ -1215,28 +1315,12 @@
   });
 
   $('privacyAccessAction')?.addEventListener('click', async () => {
+    await loadTelegramConnection({ silent:false });
     if (privacyState.connection.live && privacyState.connection.readMessages) {
-      await loadTelegramConnection({ silent:false });
-      toast('Telegram и доступ к сообщениям подключены');
+      toast('Доступ подтверждён: новые разрешённые сообщения сохраняются');
       return;
     }
-
-    if (privacyState.connection.live && !privacyState.connection.readMessages) {
-      openSheet(`
-        <span class="kicker">Telegram Business</span>
-        <h2>Разреши сообщения для VETO Privacy</h2>
-        <p>Открой Telegram → Настройки → Telegram Business / Автоматизация чатов → @Storypilotlab_bot. Включи доступ к сообщениям / чтению сообщений и выбери чаты, которые бот может обрабатывать.</p>
-        <p>Это право нужно, чтобы Telegram присылал VETO Privacy события удалений. VETO Telegram всё равно не вызывает readBusinessMessage при просмотре VETO Inbox.</p>
-        <div class="sheet-actions">
-          <button class="accent" data-privacy-recheck-access="1">Проверить снова</button>
-          <button data-privacy-close="1">Закрыть</button>
-        </div>
-      `);
-      return;
-    }
-
-    document.querySelector('[data-nav="publish"]')?.click();
-    setTimeout(() => $('checkButton')?.click(), 140);
+    privacyBusinessGuideSheet();
   });
 
   $('privacyThreads')?.addEventListener('click', event => {
@@ -1273,7 +1357,33 @@
     openThread(chatId);
   });
 
+  $('sheet')?.addEventListener('input', event => {
+    if (event.target?.id !== 'privacyConfirmDelete') return;
+    const accept = $('sheet')?.querySelector('[data-privacy-confirm-clear]');
+    if (accept) accept.disabled = String(event.target.value || '').trim() !== 'УДАЛИТЬ';
+  });
+
   $('sheet')?.addEventListener('click', async event => {
+    const confirmClear = event.target.closest('[data-privacy-confirm-clear]');
+    if (confirmClear) {
+      if (String($('privacyConfirmDelete')?.value || '').trim() !== 'УДАЛИТЬ') return;
+      confirmClear.disabled = true;
+      try {
+        await request('clear_archive', { confirm:'DELETE_MY_VETO_ARCHIVE' });
+        privacyState.threads = [];
+        privacyState.smartSummary = null;
+        privacyState.deletedFeed = [];
+        privacyState.deletedFeedHasMore = false;
+        privacyState.deletedFeedLoaded = true;
+        privacyState.lastTotalMessages = 0;
+        closeSheet(); render();
+        toast('Архив VETO удалён по твоему подтверждению');
+      } catch (error) {
+        toast(error.message);
+        confirmClear.disabled = false;
+      }
+      return;
+    }
     const diagnosticsRefresh = event.target.closest('[data-ghost-diagnostics-refresh]');
     if (diagnosticsRefresh) {
       await runGhostDiagnostics({ silent:true });
@@ -1289,6 +1399,15 @@
       } catch (error) {
         toast(error.message);
       }
+      return;
+    }
+
+    const keepLong = event.target.closest('[data-privacy-keep-long]');
+    if (keepLong) {
+      keepLong.disabled = true;
+      const saved = await saveSettings({ retentionDays:3650 });
+      if (saved) toast('Архив настроен: хранение копий до 10 лет');
+      keepLong.disabled = false;
       return;
     }
 
@@ -1345,6 +1464,10 @@
       return;
     }
 
+    if (event.target.closest('[data-privacy-thread-more]')) {
+      await loadOlderThread();
+      return;
+    }
     const threadRefresh = event.target.closest('[data-privacy-thread-refresh]');
     if (threadRefresh) {
       openThread(threadRefresh.dataset.privacyThreadRefresh, {

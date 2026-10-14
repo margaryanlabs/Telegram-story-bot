@@ -300,7 +300,22 @@ export default async function handler(req, res) {
     const action = String(body.action || '');
 
     if (action === 'update_settings') {
-      const settings = await updatePrivacySettings(userId, privacyPatch(body));
+      const patch = privacyPatch(body);
+      // Lowering the archive window physically deletes older saved messages.
+      // Require an explicit acknowledgement before this irreversible action.
+      if (patch.retentionDays !== undefined) {
+        const current = await getPrivacySettings(userId);
+        if (patch.retentionDays < Number(current?.retentionDays || 30)
+            && body.confirmRetentionPurge !== true) {
+          res.status(409).json({
+            ok: false,
+            error: 'Уменьшение срока удалит старые архивные копии. Подтверди изменение отдельно.',
+            requiresConfirmation: true,
+          });
+          return;
+        }
+      }
+      const settings = await updatePrivacySettings(userId, patch);
       const overview = await listPrivacyThreads(userId);
       res.status(200).json({
         ok: true,
@@ -313,7 +328,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'list_deleted') {
-      const data = await listDeletedFeed(userId, body.limit || 120);
+      const data = await listDeletedFeed(userId, body.limit || 120, body.offset || 0);
       res.status(200).json({ ok: true, ...data });
       return;
     }
@@ -346,7 +361,7 @@ export default async function handler(req, res) {
         res.status(400).json({ ok: false, error: 'chatId is required' });
         return;
       }
-      const data = await listPrivacyMessages(userId, chatId, body.limit || 80);
+      const data = await listPrivacyMessages(userId, chatId, body.limit || 80, body.offset || 0);
       res.status(200).json({ ok: true, ...data });
       return;
     }
@@ -364,6 +379,13 @@ export default async function handler(req, res) {
     }
 
     if (action === 'clear_archive') {
+      if (body.confirm !== 'DELETE_MY_VETO_ARCHIVE') {
+        res.status(409).json({
+          ok: false,
+          error: 'Подтверди безвозвратное удаление сохранённых копий VETO отдельно от очистки Telegram.',
+        });
+        return;
+      }
       const result = await clearPrivacyArchive(userId);
       res.status(200).json({ ok: true, result });
       return;
