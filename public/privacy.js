@@ -399,7 +399,7 @@
 
     if ($('privacyHeroText')) {
       $('privacyHeroText').textContent = complete && connectionLive && readMessages
-        ? 'Готово. Новые доступные Business-сообщения, правки и удаления обрабатываются автоматически.'
+        ? 'Разрешённые сообщения сохраняются в независимый архив на выбранный срок, даже если оригинальную переписку позже очистят в Telegram.'
         : complete && privacyState.connection.loaded && !connectionLive
           ? 'VETO Privacy включена, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать VETO Privacy не нужно.'
           : complete && connectionLive && !readMessages
@@ -1188,6 +1188,7 @@
       <p class="privacy-archive-limit">Важно: сохраняются только сообщения, которые Telegram передал после включения доступа. Очистка чата в Telegram не удаляет уже сохранённую VETO-копию. Ранее удалённые, секретные и неразрешённые чаты восстановить невозможно.</p>
       <div class="sheet-actions">
         <button class="accent" data-privacy-recheck-access="1">Проверить доступ снова</button>
+        <button data-privacy-keep-long="1">Хранить копии до 10 лет</button>
         <button data-privacy-close="1">Закрыть</button>
       </div>
     `);
@@ -1398,6 +1399,15 @@
       } catch (error) {
         toast(error.message);
       }
+      return;
+    }
+
+    const keepLong = event.target.closest('[data-privacy-keep-long]');
+    if (keepLong) {
+      keepLong.disabled = true;
+      const saved = await saveSettings({ retentionDays:3650 });
+      if (saved) toast('Архив настроен: хранение копий до 10 лет');
+      keepLong.disabled = false;
       return;
     }
 
