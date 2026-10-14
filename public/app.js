@@ -106,6 +106,7 @@
     newConnectionsReady: null,
     secureSessionCrypto: null,
     session: null,
+    loginPending: null,
     story: null,
     viewers: [],
     analytics: null,
@@ -764,6 +765,7 @@
           newConnectionsReady: Boolean(data.config?.newConnectionsReady),
           secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
           session: data.session || null,
+          loginPending: data.loginPending || null,
           story: data.story || null,
           viewers: data.viewers || [],
           analytics: viewerState.analytics,
@@ -1929,6 +1931,19 @@
       </div>
     `);
   }
+  function pendingLoginMarkup() {
+    const pending = viewerState.loginPending;
+    if (!pending || Date.parse(pending.expiresAt || '') <= Date.now()) return '';
+    const password = ['password', 'qr_password'].includes(pending.stage);
+    return `
+      <div class="auth-resume-card">
+        <strong>Ты уже начал подключение</strong>
+        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код уже отправлен в Telegram. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
+        <button class="accent" data-sheet-action="viewer-resume-login">${password ? 'Продолжить ввод пароля' : 'Ввести полученный код'} →</button>
+      </div>
+    `;
+  }
+
   function connectionHelpSheet() {
     if (viewerState.configured === false || viewerState.newConnectionsReady === false) {
       viewerSetupSheet();
@@ -1943,7 +1958,7 @@
       <span class="kicker">ШАГ 1 ИЗ 2 · ПОДКЛЮЧЕНИЕ</span>
       <h2>Как тебе удобнее подключить Telegram?</h2>
       <p>Если ты сейчас в VETO на телефоне — проще использовать номер + код. QR удобнее, когда рядом открыт Telegram Desktop или второй телефон.</p>
-
+      ${pendingLoginMarkup()}
       <div class="connection-methods-simple">
         <button class="connection-method-card recommended" data-sheet-action="viewer-use-phone">
           <span class="method-icon">1</span>
@@ -2062,6 +2077,7 @@
       <span class="kicker">ШАГ 1 ИЗ 2 · ПОДКЛЮЧЕНИЕ</span>
       <h2>Подключить Telegram</h2>
       <p>Выбери способ, который подходит твоему устройству. На одном телефоне проще номер + код; QR удобен со вторым экраном.</p>
+      ${pendingLoginMarkup()}
       <div class="connection-methods-simple">
         <button class="connection-method-card recommended" data-sheet-action="viewer-use-phone">
           <span class="method-icon">1</span>
@@ -2136,7 +2152,7 @@
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 2 ИЗ 2</span>
       <h2>Теперь введи код из Telegram</h2>
-      <p>${delivery === 'telegram_app' ? 'Код отправлен в Telegram.' : 'Telegram выбрал доступный способ доставки кода.'}</p>
+      <p>${delivery === 'telegram_app' ? 'Код отправлен в Telegram.' : 'Telegram выбрал доступный способ доставки кода.'} Можно открыть чат с кодом и вернуться в VETO — ввод кода продолжится без повторной отправки.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2501,7 +2517,12 @@
     }
   });
   $('profileButton').addEventListener('click', profileSheet);
-  $('connectTelegramButton')?.addEventListener('click', () => {
+  $('connectTelegramButton')?.addEventListener('click', async () => {
+    // A returning user may have closed Telegram's WebView to copy a login code.
+    // Load the server-side pending challenge before showing the onboarding menu.
+    if (!viewerState.session?.connected && !state.accountConnection?.connected) {
+      await refreshViewerSync({ silent: true });
+    }
     const connected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
     connected ? profileSheet() : connectionHelpSheet();
   });
@@ -2795,6 +2816,17 @@
         } catch {
           showToast('Открой QR через Telegram → Settings → Devices');
         }
+      }
+      return;
+    }
+    if (action === 'viewer-resume-login') {
+      const pending = viewerState.loginPending;
+      if (pending && Date.parse(pending.expiresAt || '') > Date.now()) {
+        if (['password', 'qr_password'].includes(pending.stage)) viewerPasswordSheet();
+        else viewerCodeSheet('telegram_app');
+      } else {
+        await refreshViewerSync({ silent: true });
+        connectionHelpSheet();
       }
       return;
     }
