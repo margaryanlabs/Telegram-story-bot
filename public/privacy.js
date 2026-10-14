@@ -1153,10 +1153,12 @@
     const messageId = Number(card?.dataset?.messageId || 0);
     if (!chatId || !messageId) return;
     haptic('soft');
-    document.querySelector('[data-nav="chats"]')?.click();
+    window.VetoTelegramNavigate?.('chats');
     setTimeout(() => openThread(chatId, { mode:'focus', focusMessageId:messageId }), 60);
   });
 
+  // Chats is a secondary screen: it has no bottom tab to click.
+  // Use the main navigator to reveal it and keep the Privacy tab selected.
   $('privacyEnableAllButton')?.addEventListener('click', enableAll);
   document.querySelectorAll('[data-ghost-jump]').forEach(button => {
     button.addEventListener('click', () => {
@@ -1165,7 +1167,7 @@
       haptic('soft');
       if (privacyState.filter === 'deleted') refreshDeletedFeed({ silent:true });
       render();
-      document.querySelector('[data-nav="chats"]')?.click();
+      window.VetoTelegramNavigate?.('chats');
       setTimeout(() => $('privacyThreads')?.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
     });
   });
