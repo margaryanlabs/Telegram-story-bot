@@ -42,8 +42,8 @@ test('Existing Mini App and Telegram message flows both use fresh UI build ident
   const studio = readFileSync(new URL('../public/studio.html',import.meta.url),'utf8');
   const setup = readFileSync(new URL('../api/setup.js',import.meta.url),'utf8');
   const webhook = readFileSync(new URL('../api/webhook-v7.js',import.meta.url),'utf8');
-  assert.ok(studio.includes('/app.js?v=20261015-veto-archive-v3'));
-  assert.ok(studio.includes('/privacy.js?v=20261015-veto-archive-v3'));
-  assert.match(setup,/CONTROL_BUILD = '20261015-veto-archive-v3'/);
-  assert.match(webhook,/CONTROL_BUILD = '20261015-veto-archive-v3'/);
+  assert.ok(studio.includes('/app.js?v=20261015-veto-archive-v4'));
+  assert.ok(studio.includes('/privacy.js?v=20261015-veto-archive-v4'));
+  assert.match(setup,/CONTROL_BUILD = '20261015-veto-archive-v4'/);
+  assert.match(webhook,/CONTROL_BUILD = '20261015-veto-archive-v4'/);
 });
