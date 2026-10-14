@@ -1139,28 +1139,41 @@
     }
   }
 
-  async function clearArchive() {
-    const run = async () => {
-      try {
-        await request('clear_archive');
-        privacyState.threads = [];
-        privacyState.smartSummary = null;
-        privacyState.deletedFeed = [];
-        privacyState.deletedFeedLoaded = true;
-        privacyState.lastTotalMessages = 0;
-        render();
-        toast('VETO Inbox очищен');
-        try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
-      } catch (error) {
-        toast(error.message);
-      }
-    };
+  function privacyBusinessGuideSheet() {
+    const linked = Boolean(privacyState.connection.live);
+    openSheet(`
+      <span class="kicker">VETO PRIVATE ARCHIVE · ДЛЯ ТВОИХ ЧАТОВ</span>
+      <h2>${linked ? 'Дай разрешение сохранять сообщения' : 'Подключи Telegram Business к архиву'}</h2>
+      <p>Обычное подключение Telegram для Stories не включает архив переписок. Для сохранения сообщений необходимо отдельно разрешить VETO Business-доступ в выбранных чатах.</p>
+      <div class="sheet-list">
+        <div class="sheet-item"><strong>1. Настройки Telegram</strong><span>Telegram → Настройки → Telegram Business → Чат-боты / Автоматизация чатов.</span></div>
+        <div class="sheet-item"><strong>2. Выбери VETO</strong><span>Подключи @Storypilotlab_bot и явно выбери чаты, из которых разрешено сохранять сообщения.</span></div>
+        <div class="sheet-item"><strong>3. Разреши читать сообщения</strong><span>Включи право на сообщения, затем вернись сюда и нажми «Проверить». Настрой хранение до 10 лет, если нужен долгий архив.</span></div>
+      </div>
+      <p class="privacy-archive-limit">Важно: сохраняются только сообщения, которые Telegram передал после включения доступа. Очистка чата в Telegram не удаляет уже сохранённую VETO-копию. Ранее удалённые, секретные и неразрешённые чаты восстановить невозможно.</p>
+      <div class="sheet-actions">
+        <button class="accent" data-privacy-recheck-access="1">Проверить доступ снова</button>
+        <button data-privacy-close="1">Закрыть</button>
+      </div>
+    `);
+  }
 
-    if (tg?.showConfirm) {
-      tg.showConfirm('Удалить все сохранённые сообщения VETO Inbox?', ok => ok && run());
-    } else if (window.confirm('Удалить все сохранённые сообщения VETO Inbox?')) {
-      run();
-    }
+  async function clearArchive() {
+    // Clearing a Telegram conversation and deleting VETO's independent archive
+    // are separate actions. Use a typed second step to prevent accidental loss.
+    openSheet(`
+      <span class="kicker">БЕЗВОЗВРАТНОЕ УДАЛЕНИЕ</span>
+      <h2>Удалить сохранённые копии VETO?</h2>
+      <p>Будут удалены сохранённые сообщения, копии удалений и доступные медиа из VETO. Очистка беседы в обычном Telegram ЭТОГО НЕ ДЕЛАЕТ.</p>
+      <p class="privacy-archive-limit"><strong>Это нельзя отменить.</strong> Если цель — очистить оригинальный Telegram-чат, просто закрой это окно. VETO-архив останется.</p>
+      <label class="privacy-danger-input">Для подтверждения введи УДАЛИТЬ
+        <input id="privacyConfirmDelete" type="text" autocomplete="off" autocapitalize="characters" placeholder="УДАЛИТЬ" />
+      </label>
+      <div class="sheet-actions">
+        <button class="ghost-danger" data-privacy-confirm-clear="1" disabled>Удалить архив VETO навсегда</button>
+        <button data-privacy-close="1">Оставить копии</button>
+      </div>
+    `);
   }
 
   function startAutoRefresh() {
@@ -1173,6 +1186,8 @@
   }
 
   $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
+  $('privacyBackupGuideButton')?.addEventListener('click', privacyBusinessGuideSheet);
+  $('privacyDeletedMore')?.addEventListener('click', loadMoreDeletedFeed);
 
   $('smartBriefPrimary')?.addEventListener('click', () => {
     const chatId = String($('smartBriefPrimary')?.dataset?.chatId || '');
@@ -1215,10 +1230,24 @@
   $('privacyRefreshButton')?.addEventListener('click', () => refresh());
   $('privacyClearButton')?.addEventListener('click', clearArchive);
 
-  $('privacyRetentionSegment')?.addEventListener('click', event => {
+  $('privacyRetentionSegment')?.addEventListener('click', async event => {
     const button = event.target.closest('[data-retention]');
     if (!button) return;
-    saveSettings({ retentionDays:Number(button.dataset.retention || 30) });
+    const nextDays = Number(button.dataset.retention || 30);
+    const oldDays = Number(privacyState.settings.retentionDays || 30);
+    if (nextDays === oldDays) return;
+    if (nextDays < oldDays) {
+      const text = 'Уменьшение срока с ' + oldDays + ' до ' + nextDays
+        + ' дней удалит копии сообщений старше нового срока. Продолжить?';
+      const accepted = await new Promise(resolve => {
+        if (tg?.showConfirm) tg.showConfirm(text, result => resolve(Boolean(result)));
+        else resolve(window.confirm(text));
+      });
+      if (!accepted) return;
+      await saveSettings({ retentionDays:nextDays }, { confirmRetentionPurge:true });
+    } else {
+      await saveSettings({ retentionDays:nextDays });
+    }
   });
 
   $('privacySearch')?.addEventListener('input', event => {
@@ -1250,28 +1279,12 @@
   });
 
   $('privacyAccessAction')?.addEventListener('click', async () => {
+    await loadTelegramConnection({ silent:false });
     if (privacyState.connection.live && privacyState.connection.readMessages) {
-      await loadTelegramConnection({ silent:false });
-      toast('Telegram и доступ к сообщениям подключены');
+      toast('Доступ подтверждён: новые разрешённые сообщения сохраняются');
       return;
     }
-
-    if (privacyState.connection.live && !privacyState.connection.readMessages) {
-      openSheet(`
-        <span class="kicker">Telegram Business</span>
-        <h2>Разреши сообщения для VETO Privacy</h2>
-        <p>Открой Telegram → Настройки → Telegram Business / Автоматизация чатов → @Storypilotlab_bot. Включи доступ к сообщениям / чтению сообщений и выбери чаты, которые бот может обрабатывать.</p>
-        <p>Это право нужно, чтобы Telegram присылал VETO Privacy события удалений. VETO Telegram всё равно не вызывает readBusinessMessage при просмотре VETO Inbox.</p>
-        <div class="sheet-actions">
-          <button class="accent" data-privacy-recheck-access="1">Проверить снова</button>
-          <button data-privacy-close="1">Закрыть</button>
-        </div>
-      `);
-      return;
-    }
-
-    document.querySelector('[data-nav="publish"]')?.click();
-    setTimeout(() => $('checkButton')?.click(), 140);
+    privacyBusinessGuideSheet();
   });
 
   $('privacyThreads')?.addEventListener('click', event => {
@@ -1308,7 +1321,33 @@
     openThread(chatId);
   });
 
+  $('sheet')?.addEventListener('input', event => {
+    if (event.target?.id !== 'privacyConfirmDelete') return;
+    const accept = $('sheet')?.querySelector('[data-privacy-confirm-clear]');
+    if (accept) accept.disabled = String(event.target.value || '').trim() !== 'УДАЛИТЬ';
+  });
+
   $('sheet')?.addEventListener('click', async event => {
+    const confirmClear = event.target.closest('[data-privacy-confirm-clear]');
+    if (confirmClear) {
+      if (String($('privacyConfirmDelete')?.value || '').trim() !== 'УДАЛИТЬ') return;
+      confirmClear.disabled = true;
+      try {
+        await request('clear_archive', { confirm:'DELETE_MY_VETO_ARCHIVE' });
+        privacyState.threads = [];
+        privacyState.smartSummary = null;
+        privacyState.deletedFeed = [];
+        privacyState.deletedFeedHasMore = false;
+        privacyState.deletedFeedLoaded = true;
+        privacyState.lastTotalMessages = 0;
+        closeSheet(); render();
+        toast('Архив VETO удалён по твоему подтверждению');
+      } catch (error) {
+        toast(error.message);
+        confirmClear.disabled = false;
+      }
+      return;
+    }
     const diagnosticsRefresh = event.target.closest('[data-ghost-diagnostics-refresh]');
     if (diagnosticsRefresh) {
       await runGhostDiagnostics({ silent:true });
