@@ -38,3 +38,13 @@ test('Every new archive control is backed by click handler, API and safe feedbac
  assert.ok(store.includes('idsByChat'));
  assert.ok(html.includes('ghost-archive-promise'));
 });
+
+test('Every navigation path refreshes Privacy and Chats (tabs, cards, deep links)',()=>{
+ const app=read('public/app.js');
+ const privacy=read('public/privacy.js');
+ assert.ok(app.includes("new CustomEvent('veto:screen-changed'"));
+ assert.ok(privacy.includes("window.addEventListener('veto:screen-changed', onVetoScreenChanged)"));
+ assert.ok(privacy.includes("screen !== 'privacy' && screen !== 'chats'"));
+ assert.ok(privacy.includes('privacyScreenActive()) onVetoScreenChanged'));
+ assert.ok(!privacy.includes("document.querySelector('[data-nav=\"privacy\"]')?.addEventListener('click'"));
+});
