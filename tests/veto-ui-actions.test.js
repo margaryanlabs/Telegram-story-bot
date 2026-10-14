@@ -36,5 +36,5 @@ test('Every new archive control is backed by click handler, API and safe feedbac
    assert.ok(ui.includes(key),'Missing routine '+key);
  assert.ok(api.includes('confirmRetentionPurge'));
  assert.ok(store.includes('idsByChat'));
- assert.ok(html.includes('privacy-archive-promise'));
+ assert.ok(html.includes('ghost-archive-promise'));
 });
