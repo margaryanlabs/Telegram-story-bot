@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20261004-brand-pack';
+const CONTROL_BUILD = '20261014-veto-connect-r2';
 import sharp from 'sharp';
 import {
   trackPublishedStory,
