@@ -391,19 +391,33 @@ export default async function handler(req, res) {
       const storyId = Number(Array.isArray(rawStoryId) ? rawStoryId[0] : rawStoryId || 0);
       const wantsAnalytics = String(req.query?.analytics || '') === '1';
 
-      const [storyData, analytics] = await Promise.all([
+      const [storyData, analytics, loginChallenge] = await Promise.all([
         Number.isInteger(storyId) && storyId > 0
           ? getViewerStoryData(userId, storyId).catch(() => null)
           : Promise.resolve(null),
         wantsAnalytics && session?.status === 'active'
           ? getViewerAnalytics(userId).catch(() => null)
           : Promise.resolve(null),
+        session?.status === 'active'
+          ? Promise.resolve(null)
+          : getAuthChallenge(userId).catch(() => null),
       ]);
+
+      // A Telegram code often arrives in the Telegram app itself. If the WebView
+      // closes while the owner copies it, allow continuing the existing challenge
+      // instead of forcing another code request (which can hit FLOOD_WAIT).
+      const expiry = Date.parse(loginChallenge?.expires_at || '');
+      const loginPending = Number.isFinite(expiry)
+        && expiry > Date.now()
+        && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage)
+        ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString() }
+        : null;
 
       res.status(200).json({
         ok: true,
         config,
         session: safeSession(session),
+        loginPending,
         story: storyData?.story || null,
         viewers: storyData?.viewers || [],
         analytics: analytics ? { ...analytics, brief: deriveIntelligenceBrief(analytics) } : null,
