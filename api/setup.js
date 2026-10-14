@@ -21,7 +21,7 @@ async function tg(token, method, body = {}) {
   return data.result;
 }
 
-const CONTROL_BUILD = '20261007-veto-clarity-v1';
+const CONTROL_BUILD = '20261014-veto-connect-r2';
 
 const VETO_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
   <rect x="1" y="1" width="38" height="38" rx="11" fill="#0b0c0f" stroke="#2a2c33"/>
@@ -117,6 +117,7 @@ export default async function handler(req, res) {
         webhook: webhook?.url || null,
         pending_updates: webhook?.pending_update_count ?? null,
         last_error: webhook?.last_error_message || null,
+        last_error_at: webhook?.last_error_date ? new Date(webhook.last_error_date * 1000).toISOString() : null,
         control_build: CONTROL_BUILD,
       });
     } catch (error) {

@@ -1,4 +1,5 @@
 import { viewerCryptoHealth, viewerStoreHealth } from '../lib/viewer-sync-store.js';
+import { telegramWebhookHealth } from '../lib/telegram-webhook-health.js';
 
 function telegramUrl(token, method) {
   return `https://api.telegram.org/bot${token}/${method}`;
@@ -29,6 +30,10 @@ export default async function handler(req, res) {
     webhook: null,
     pending_updates: null,
     last_error: null,
+    last_error_at: null,
+    webhook_error_recent: null,
+    webhook_error_stale: null,
+    webhook_healthy: false,
   };
 
   if (!token) {
@@ -58,14 +63,18 @@ export default async function handler(req, res) {
       tg(token, 'getMe'),
       tg(token, 'getWebhookInfo'),
     ]);
+    const delivery = telegramWebhookHealth(webhook);
     status.bot = bot?.username ? `@${bot.username}` : null;
     status.webhook = webhook?.url || null;
-    status.pending_updates = webhook?.pending_update_count ?? null;
-    status.last_error = webhook?.last_error_message || null;
+    status.pending_updates = delivery.pendingUpdates;
+    status.last_error = delivery.lastError;
+    status.last_error_at = delivery.lastErrorAt;
+    status.webhook_error_recent = delivery.errorRecent;
+    status.webhook_error_stale = delivery.errorStale;
+    status.webhook_healthy = delivery.ready;
     status.ok = Boolean(
       bot?.username
-      && webhook?.url?.includes('/api/webhook-v8')
-      && !status.last_error
+      && delivery.ready
       && status.secure_session_crypto === 'ready'
       && status.store === 'ready'
     );
