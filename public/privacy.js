@@ -1309,10 +1309,16 @@
     });
   });
 
-  document.querySelector('[data-nav="privacy"]')?.addEventListener('click', () => {
+  function onVetoScreenChanged(event) {
+    const screen = event?.detail?.screen;
+    if (screen !== 'privacy' && screen !== 'chats') return;
     refresh({ silent:true });
     loadTelegramConnection({ silent:true });
-  });
+    if (screen === 'chats' && privacyState.filter === 'deleted') {
+      refreshDeletedFeed({ silent:true, force:true });
+    }
+  }
+  window.addEventListener('veto:screen-changed', onVetoScreenChanged);
 
   $('privacyAccessAction')?.addEventListener('click', async () => {
     await loadTelegramConnection({ silent:false });
@@ -1509,4 +1515,6 @@
 
   startAutoRefresh();
   render();
+  // Deep links are activated by app.js before this module attaches listeners.
+  if (tg?.initData && privacyScreenActive()) onVetoScreenChanged({ detail: { screen: document.querySelector('.screen.active')?.dataset?.screen } });
 })();
