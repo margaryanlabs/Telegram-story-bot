@@ -543,7 +543,7 @@ export default async function handler(req, res) {
         },
         state: publicState(settings, {
           live: refreshed.live,
-          storyPermission: refreshed.rights,
+          storyPermission: Boolean(refreshed.rights || refreshed.settings.userSessionConnected),
           readPermission: refreshed.readRights,
           lastStory: durableHistory.find(item => !item.deleted)?.id || settings.lastStory || null,
           history: durableHistory,
@@ -739,7 +739,7 @@ export default async function handler(req, res) {
         ok: true,
         state: publicState(refreshed.settings, {
           live: refreshed.live,
-          storyPermission: refreshed.rights,
+          storyPermission: Boolean(refreshed.rights || refreshed.settings.userSessionConnected),
         }),
       });
       return;
@@ -855,7 +855,7 @@ export default async function handler(req, res) {
       ok: true,
       state: publicState(refreshed.settings, {
         live: refreshed.live,
-        storyPermission: refreshed.rights,
+        storyPermission: Boolean(refreshed.rights || refreshed.settings.userSessionConnected),
       }),
     });
   } catch (error) {

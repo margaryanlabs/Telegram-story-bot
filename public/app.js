@@ -78,6 +78,7 @@
     ghost: 'privacy',
     privacy: 'privacy',
     chats: 'chats',
+    relay: 'relay',
     studio: 'studio',
     creator: 'studio',
     intelligence: 'viewers',
@@ -92,6 +93,8 @@
   let viewerSearchQuery = '';
   let viewerRegisteredKey = '';
   let viewerQrAbortController = null;
+  let viewerAuthBusy = false;
+  let viewerPendingPhone = '';
   let composerFile = null;
   let composerDataUrl = '';
   let composerPreviewUrl = '';
@@ -1481,17 +1484,37 @@
     renderHome();
   }
 
+  // Pages without a bottom-tab button still belong to an existing tab.
+  const NAV_PARENT = { chats:'privacy', archive:'publish', analytics:'viewers', relay:'home' };
   function switchScreen(name) {
-    const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || name || 'home';
+    const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
+    const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
+    if (!activeScreen) {
+      showToast('Раздел временно недоступен');
+      return false;
+    }
     currentScreen = target;
-    document.querySelectorAll('.screen').forEach(screen => screen.classList.toggle('active', screen.dataset.screen === target));
-    document.querySelectorAll('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.nav === target));
+    document.querySelectorAll('.screen').forEach(screen => {
+      const active = screen === activeScreen;
+      screen.classList.toggle('active', active);
+      screen.setAttribute('aria-hidden', String(!active));
+    });
+    const activeTab = NAV_PARENT[target] || target;
+    document.querySelectorAll('.nav-item').forEach(button => {
+      const active = button.dataset.nav === activeTab;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-current', active ? 'page' : 'false');
+    });
     $('actionDock')?.classList.toggle('hidden', target !== 'publish');
     haptic();
     window.scrollTo({ top:0, behavior:'smooth' });
     if (target === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
     if (target === 'analytics' && tg?.initData) refreshViewerAnalytics({ silent: true });
+    return true;
   }
+  // Other modules can open secondary pages (Chats, Relay) without depending on
+  // a non-existent bottom tab or duplicating navigation state.
+  window.VetoTelegramNavigate = switchScreen;
 
   function openSheet(html) {
     $('sheetContent').innerHTML = html;
@@ -1907,6 +1930,10 @@
     `);
   }
   function connectionHelpSheet() {
+    if (viewerState.configured === false || viewerState.newConnectionsReady === false) {
+      viewerSetupSheet();
+      return;
+    }
     const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
     if (accountConnected) {
       profileSheet();
@@ -1973,7 +2000,10 @@
           <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и последующее подтверждение просмотров уже встроены.</span></div>
           <div class="sheet-item"><strong>Приватное подключение</strong><span>Новое подключение создаётся только при подтверждённом защищённом хранении.</span></div>
         </div>
-        <div class="sheet-actions"><button class="accent" data-sheet-action="close">Понятно</button></div>
+        <div class="sheet-actions">
+          <button class="accent" data-sheet-action="viewer-refresh-security">Проверить подключение</button>
+          <button data-sheet-action="close">Закрыть</button>
+        </div>
       `);
       return;
     }
@@ -2049,6 +2079,39 @@
     `);
   }
 
+  function showViewerAuthError(error) {
+    const message = String(error?.message || error || 'Не удалось войти в Telegram');
+    const slot = $('viewerAuthError');
+    if (slot) {
+      slot.textContent = message;
+      slot.hidden = false;
+    } else {
+      showToast(message);
+    }
+    notify('error');
+  }
+
+  async function runViewerAuthAction(button, task) {
+    if (viewerAuthBusy) return;
+    viewerAuthBusy = true;
+    const previous = button?.textContent || '';
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Подключаем…';
+    }
+    try {
+      await task();
+    } catch (error) {
+      showViewerAuthError(error);
+    } finally {
+      viewerAuthBusy = false;
+      if (button?.isConnected) {
+        button.disabled = false;
+        button.textContent = previous;
+      }
+    }
+  }
+
   function viewerPhoneSheet() {
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 1 ИЗ 2</span>
@@ -2057,10 +2120,11 @@
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
-          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+374..." />
+          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 / +374 / +971…" value="${escapeHtml(viewerPendingPhone)}" />
         </div>
-        <div class="auth-help">Пример: +374… или +971… · код обычно придёт прямо в чат Telegram от официального сервиса.</div>
+        <div class="auth-help">Международный формат, начиная с +. Код придёт в Telegram, иногда по SMS. Каждый пользователь подключает свой аккаунт отдельно.</div>
       </div>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
         <button data-sheet-action="viewer-back-setup">Назад</button>
@@ -2076,11 +2140,13 @@
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
-          <input id="viewerCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="12345" />
+          <input id="viewerCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="12345" maxlength="8" />
         </div>
       </div>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-code">Подтвердить</button>
+        <button data-sheet-action="viewer-use-phone">Другой номер / новый код</button>
         <button data-sheet-action="close">Отмена</button>
       </div>
     `);
@@ -2097,6 +2163,7 @@
           <input id="viewerPassword" type="password" autocomplete="current-password" placeholder="Пароль" />
         </div>
       </div>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-password">Подключить</button>
         <button data-sheet-action="close">Отмена</button>
@@ -2721,7 +2788,7 @@
       return;
     }
     if (action === 'viewer-open-qr') {
-      const uri = event.target?.dataset?.qrUri || '';
+      const uri = actionTarget?.dataset?.qrUri || '';
       if (uri) {
         try {
           window.location.href = uri;
@@ -2809,44 +2876,52 @@
       return;
     }
     if (action === 'viewer-send-code') {
-      const phone = $('viewerPhone')?.value || '';
-      try {
+      const phone = ($('viewerPhone')?.value || '').trim();
+      await runViewerAuthAction(actionTarget, async () => {
+        if (!/^\+[\d\s()-]{7,24}$/.test(phone)) {
+          throw new Error('Введи номер с кодом страны, например +374…');
+        }
         const data = await viewerApi('send_code', { phone }, null);
+        viewerPendingPhone = phone;
         viewerCodeSheet(data.delivery);
-      } catch (error) {
-        showToast(error.message);
-      }
+      });
+      return;
     }
     if (action === 'viewer-verify-code') {
-      const code = $('viewerCode')?.value || '';
-      try {
+      const code = ($('viewerCode')?.value || '').trim();
+      await runViewerAuthAction(actionTarget, async () => {
+        if (!/^\d{3,8}$/.test(code)) throw new Error('Проверь код из Telegram');
         const data = await viewerApi('verify_code', { code }, null);
         if (data.needsPassword) {
           viewerPasswordSheet();
         } else {
           closeSheet();
+          viewerPendingPhone = '';
           notify('success');
-          showToast('Deep Intelligence подключён');
+          showToast('Telegram успешно подключён');
           await refreshViewerSync({ silent: true });
+          // Refresh the account/Stories state too; a connected session does not
+          // immediately appear otherwise for users without Telegram Business.
+          await refresh();
           await refreshViewerAnalytics({ silent: true });
         }
-      } catch (error) {
-        showToast(error.message);
-      }
+      });
+      return;
     }
     if (action === 'viewer-verify-password') {
       const password = $('viewerPassword')?.value || '';
-      try {
+      await runViewerAuthAction(actionTarget, async () => {
+        if (!password) throw new Error('Введи пароль двухэтапной проверки Telegram');
         await viewerApi('verify_password', { password }, null);
         closeSheet();
+        viewerPendingPhone = '';
         notify('success');
-        showToast('Telegram подключён');
+        showToast('Telegram успешно подключён');
         await refreshViewerSync({ silent: true });
         await refresh();
         await refreshViewerAnalytics({ silent: true });
-      } catch (error) {
-        showToast(error.message);
-      }
+      });
+      return;
     }
     if (action === 'security-revoke-session') {
       try {

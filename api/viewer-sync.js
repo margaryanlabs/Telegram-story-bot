@@ -1,4 +1,5 @@
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
+import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import {
   viewerDbConfigured,
@@ -496,8 +497,11 @@ export default async function handler(req, res) {
 
     if (action === 'send_code') {
       const existing = await getAuthChallenge(userId);
-      if (existing?.created_at && Date.now() - new Date(existing.created_at).getTime() < 45_000) {
-        res.status(429).json({ ok: false, error: 'Подожди немного перед повторной отправкой кода' });
+      const elapsedMs = existing?.created_at ? Date.now() - new Date(existing.created_at).getTime() : Infinity;
+      if (Number.isFinite(elapsedMs) && elapsedMs >= 0 && elapsedMs < 45_000) {
+        const retryAfterSeconds = Math.ceil((45_000 - elapsedMs) / 1000);
+        res.setHeader('Retry-After', String(retryAfterSeconds));
+        res.status(429).json({ ok: false, error: 'Код недавно отправлен. Проверь сообщения Telegram или подожди перед новой попыткой.', retryAfterSeconds });
         return;
       }
 
@@ -522,9 +526,9 @@ export default async function handler(req, res) {
 
     if (action === 'verify_code') {
       const challenge = await getAuthChallenge(userId);
-      if (!challenge || new Date(challenge.expires_at).getTime() < Date.now()) {
+      if (!challenge || challenge.stage !== 'code' || new Date(challenge.expires_at).getTime() < Date.now()) {
         await deleteAuthChallenge(userId).catch(() => {});
-        res.status(410).json({ ok: false, error: 'Код устарел. Запроси новый.' });
+        res.status(410).json({ ok: false, error: 'Код устарел. Вернись к номеру и запроси новый.' });
         return;
       }
 
@@ -679,12 +683,12 @@ export default async function handler(req, res) {
       });
     }
 
-    let message = description;
-    if (/PHONE_CODE_INVALID/i.test(description)) message = 'Неверный код Telegram';
-    else if (/PHONE_CODE_EXPIRED/i.test(description)) message = 'Код Telegram истёк. Запроси новый.';
-    else if (/PASSWORD_HASH_INVALID/i.test(description)) message = 'Неверный пароль двухэтапной аутентификации';
-    else if (/FLOOD_WAIT/i.test(description)) message = 'Telegram временно ограничил повторные попытки. Попробуй позже.';
-
-    res.status(500).json({ ok: false, error: message });
+    const feedback = classifyTelegramAuthError(error);
+    if (feedback.retryAfterSeconds) res.setHeader('Retry-After', String(feedback.retryAfterSeconds));
+    res.status(feedback.status).json({
+      ok: false,
+      error: feedback.message,
+      ...(feedback.retryAfterSeconds ? { retryAfterSeconds: feedback.retryAfterSeconds } : {}),
+    });
   }
 }

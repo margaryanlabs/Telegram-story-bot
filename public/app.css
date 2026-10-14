@@ -343,6 +343,8 @@ button{color:inherit;cursor:pointer}
 }
 .auth-field input:focus{border-color:rgba(42,171,238,.42);box-shadow:0 0 0 3px rgba(42,171,238,.06)}
 .auth-help{color:#728094;font-size:9px;line-height:1.45}
+.auth-error{margin:12px 0 0;padding:12px 14px;border:1px solid rgba(244,110,108,.36);border-radius:12px;background:rgba(244,110,108,.08);color:#ffb6b5;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.auth-error[hidden]{display:none}
 
 
 .viewer-intelligence-grid{
