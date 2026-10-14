@@ -940,7 +940,11 @@
   function renderThreadSheet(thread, messages, options = {}) {
     const mode = normalizeThreadMode(options.mode || privacyState.activeThread?.mode || 'all');
     const focusMessageId = Number(options.focusMessageId || privacyState.activeThread?.focusMessageId || 0) || null;
-    privacyState.activeThread = { thread, messages, mode, focusMessageId };
+    const prior = privacyState.activeThread?.thread?.chatId === thread.chatId
+      ? privacyState.activeThread : null;
+    const hasMore = options.hasMore ?? prior?.hasMore ?? false;
+    const offset = options.offset ?? prior?.offset ?? messages.length;
+    privacyState.activeThread = { thread, messages, mode, focusMessageId, hasMore, offset };
 
     const visibleMessages = messagesForMode(messages, mode, focusMessageId);
     const rows = visibleMessages.map(message => {
@@ -1007,6 +1011,7 @@
         <button type="button" class="${mode === 'edited' ? 'active' : ''}" data-privacy-thread-mode="edited">Изменённые <b>${editedCount}</b></button>
       </div>
       <div class="privacy-message-list">${rows || '<div class="intel-empty">В этом режиме сообщений пока нет.</div>'}</div>
+      ${hasMore ? '<button class="privacy-more-button" data-privacy-thread-more="1">Загрузить более ранние сообщения ↓</button>' : ''}
       <div class="sheet-actions">
         ${mode === 'focus' ? '<button class="accent" data-privacy-thread-mode="all">Показать весь чат</button>' : ''}
         ${peerUsername ? `<button data-ghost-open-peer="${escapeHtml(peerUsername)}">Открыть чат в Telegram</button>` : ''}
@@ -1014,6 +1019,7 @@
       </div>
     `);
 
+    if (options.preserveScroll) return;
     requestAnimationFrame(() => {
       const sheet = $('sheet');
       const focused = focusMessageId
@@ -1028,11 +1034,40 @@
     const thread = privacyState.threads.find(item => String(item.chatId) === String(chatId))
       || { chatId, title: 'Telegram chat' };
     try {
-      const data = await request('list_messages', { chatId, limit: 150 });
-      renderThreadSheet(thread, data.messages || [], { mode, focusMessageId });
+      const data = await request('list_messages', { chatId, limit: 150, offset: 0 });
+      const items = data.messages || [];
+      renderThreadSheet(thread, items, { mode, focusMessageId, hasMore:data.hasMore === true, offset:items.length });
     } catch (error) {
       if (!silent) toast(error.message);
     }
+  }
+
+  async function loadOlderThread() {
+    const active = privacyState.activeThread;
+    if (!active || !active.hasMore || privacyState.loadingOlderThread) return;
+    privacyState.loadingOlderThread = true;
+    const button = $('sheet')?.querySelector('[data-privacy-thread-more]');
+    if (button) { button.disabled = true; button.textContent = 'Загружаю…'; }
+    try {
+      const data = await request('list_messages', {
+        chatId:active.thread.chatId, limit:150, offset:active.offset || 0,
+      });
+      const older = Array.isArray(data.messages) ? data.messages : [];
+      const ids = new Set(active.messages.map(x => String(x.message_id)));
+      const additions = older.filter(x => !ids.has(String(x.message_id)));
+      const merged = [...additions, ...active.messages];
+      renderThreadSheet(active.thread, merged, {
+        mode:active.mode, focusMessageId:active.focusMessageId,
+        hasMore:data.hasMore === true, offset:(active.offset || 0) + older.length,
+        preserveScroll:true,
+      });
+      // Newly fetched messages remain at the beginning of the archive page.
+      const sheet = $('sheet');
+      if (sheet) sheet.scrollTop = 0;
+    } catch (error) {
+      toast(error.message);
+      if (button) { button.disabled = false; button.textContent = 'Повторить загрузку'; }
+    } finally { privacyState.loadingOlderThread = false; }
   }
 
   async function maybeOpenGhostDeepLink() {
@@ -1419,6 +1454,10 @@
       return;
     }
 
+    if (event.target.closest('[data-privacy-thread-more]')) {
+      await loadOlderThread();
+      return;
+    }
     const threadRefresh = event.target.closest('[data-privacy-thread-refresh]');
     if (threadRefresh) {
       openThread(threadRefresh.dataset.privacyThreadRefresh, {
