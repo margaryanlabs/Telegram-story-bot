@@ -73,3 +73,32 @@ test('Private history media download accepts small buffers but never sends media
   assert.ok(!api.includes('signedUrl:ticket.signedUrl'));
   assert.ok(api.includes("includeMedia = body.includeMedia === true"));
 });
+
+test('Dense media chats are split before third attachment, so none silently disappear',async()=>{
+ const dialog={id:777n,isUser:true,title:'Private',entity:{id:777n,firstName:'Private'}};
+ const messages=Array.from({length:45},(_,i)=>({
+   id:100-i,date:Math.floor(Date.now()/1000),className:'Message',
+   photo:{},message:'',out:false,
+ }));
+ const client={
+   async getDialogs(){return[dialog];},
+   async getMessages(peer,{offsetId}){
+     assert.equal(peer,dialog.entity);
+     return offsetId ? messages.filter(m=>m.id < offsetId) : messages;
+   },
+ };
+ const one=await fetchBackupPage(client,{
+   ownerId:'500',chatId:'777',retentionDays:30,mediaEnabled:true,
+ });
+ assert.equal(one.fetched,2);
+ assert.equal(one.eligible,2);
+ assert.equal(one.mediaCandidates.length,2);
+ assert.equal(one.hasMore,true);
+ assert.equal(one.nextOffsetId,99);
+ const two=await fetchBackupPage(client,{
+   ownerId:'500',chatId:'777',retentionDays:30,mediaEnabled:true,offsetId:99,
+ });
+ assert.equal(two.rows[0].message_id,98);
+ assert.equal(two.fetched,2);
+ assert.equal(two.hasMore,true);
+});
