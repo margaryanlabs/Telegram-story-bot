@@ -744,7 +744,7 @@
           <span class="kicker">HISTORY BACKUP · ПО ТВОЕМУ ВЫБОРУ</span>
           <h2>Сохрани переписки заранее</h2>
           <p>Выбери личный чат из своего Telegram. VETO сохранит доступные сообщения в независимый архив, прежде чем ты очистишь их в Telegram. Никакого массового копирования без выбора.</p>
-          <small>Только обычные личные чаты. Секретные чаты, уже удалённые сообщения и старые медиафайлы не восстанавливаются.</small>
+          <small>Только обычные личные чаты. Секретные чаты и удалённые ранее сообщения не восстанавливаются. Доступные фото и документы до 5 МБ можно сохранить в закрытый Media Vault по отдельному согласию.</small>
         </div>
         <button class="ghost-backup-cta" id="privacyBackupHistoryButton" type="button">Выбрать чат для копии <span>→</span></button>
       </section>
@@ -784,6 +784,15 @@
         </div>
         <button type="button" id="privacyAccessAction">Проверить</button>
       </section>
+
+      <button class="ghost-diagnostics-strip ghost-vault-repair-action" id="privacyVaultCheckButton" type="button">
+        <span class="ghost-diagnostics-icon">▣</span>
+        <span class="ghost-diagnostics-copy">
+          <strong>Проверить сохранение медиа</strong>
+          <small>Проверить незавершённые копии фотографий и документов и, с твоего разрешения, повторить до 3 загрузок</small>
+        </span>
+        <span class="ghost-diagnostics-action">Проверить ›</span>
+      </button>
 
       <button class="ghost-diagnostics-strip" id="privacyDiagnosticsButton" type="button">
         <span class="ghost-diagnostics-icon">✓</span>
