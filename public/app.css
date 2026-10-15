@@ -2580,3 +2580,71 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   .retention-row{display:flex;flex-wrap:wrap;gap:8px}
   .retention-segment{width:100%;justify-content:flex-start}
 }
+
+/* VETO Telegram · owner-consented history backup and alert controls */
+.ghost-backup-panel{
+  display:grid;grid-template-columns:48px minmax(0,1fr);
+  gap:12px;margin:15px 0 16px;padding:19px 17px;border-radius:22px;
+  color:#eff4fa;background:linear-gradient(135deg,rgba(255,255,255,.065),rgba(255,255,255,.015));
+  border:1px solid rgba(224,235,248,.14);
+  box-shadow:0 17px 48px rgba(0,0,0,.23)
+}
+.ghost-backup-icon{
+  display:grid;place-items:center;width:46px;height:46px;border-radius:15px;
+  color:#fafbff;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.065);font-size:23px
+}
+.ghost-backup-content{min-width:0}
+.ghost-backup-content .kicker{color:#8fa1b4}
+.ghost-backup-content h2{margin:7px 0;font-size:19px;letter-spacing:-.038em;line-height:1.2}
+.ghost-backup-content p{margin:9px 0 10px;color:#b8c4d3;font-size:11px;line-height:1.65}
+.ghost-backup-content small{display:block;color:#8797a8;font-size:10px;line-height:1.6}
+.ghost-backup-cta{
+  grid-column:2;width:100%;min-height:46px;display:flex;align-items:center;
+  justify-content:space-between;padding:12px 15px;
+  border-radius:13px;background:#eef2f7;border:1px solid #f4f6fa;
+  color:#131820;font-size:12px;font-weight:780;text-align:left
+}
+.ghost-backup-cta span{font-size:18px}
+.ghost-notification-testing{display:flex;flex-wrap:wrap;gap:10px}
+.ghost-test-notify-button{
+  flex-shrink:0;min-height:41px;padding:9px 12px;
+  color:#f1f6fc;background:rgba(250,250,255,.07);
+  border:1px solid rgba(249,249,255,.16);border-radius:11px;
+  font-size:11px;font-weight:700
+}
+.ghost-test-notify-button:disabled{opacity:.45}
+.ghost-backup-summary{margin:14px 0;padding:13px;border-radius:13px;
+  background:rgba(255,255,255,.04);color:#a8bac9;font-size:11px;line-height:1.6}
+.ghost-backup-summary b{color:#eff4fb}
+.ghost-backup-list{display:grid;gap:8px;margin:17px 0;max-height:48vh;overflow-y:auto}
+.ghost-backup-person{
+  display:flex;align-items:center;gap:11px;width:100%;min-height:64px;text-align:left;
+  padding:10px 12px;color:#e8edf6;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.09);border-radius:14px
+}
+.ghost-backup-person>span:nth-child(2){flex:1;min-width:0}
+.ghost-backup-person strong,.ghost-backup-person small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ghost-backup-person strong{font-size:12px;font-weight:720}
+.ghost-backup-person small{margin-top:4px;font-size:10px;color:#98a8ba}
+.ghost-backup-person em{font-size:11px;color:#c0ccdb;font-style:normal}
+.ghost-backup-person .privacy-thread-avatar{width:41px;height:41px;min-width:41px;border-radius:13px}
+.ghost-backup-person:active{background:rgba(255,255,255,.09)}
+.ghost-backup-progress{
+  display:flex;align-items:baseline;gap:12px;padding:18px;margin:12px 0;
+  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.11);
+  border-radius:17px
+}
+.ghost-backup-progress strong{font-size:38px;letter-spacing:-.06em;color:#f6f8fc}
+.ghost-backup-progress span{color:#afbccc;font-size:11px}
+.ghost-backup-notify{display:flex;align-items:center;gap:9px;margin:15px 0;
+  font-size:12px;color:#e1e8f2;line-height:1.4}
+.ghost-backup-notify input{width:18px;height:18px;accent-color:#eef4fa}
+@media(max-width:410px){
+  .ghost-backup-panel{grid-template-columns:37px minmax(0,1fr);padding:14px;gap:10px}
+  .ghost-backup-icon{width:37px;height:37px;font-size:19px}
+  .ghost-backup-content h2{font-size:17px}
+  .ghost-backup-cta{grid-column:1/-1}
+  .ghost-notification-testing{align-items:flex-start}
+  .ghost-test-notify-button{margin-left:auto}
+}
