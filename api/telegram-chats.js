@@ -56,7 +56,7 @@ function preview(message){
     location:'Местоположение',contact:'Контакт',link:'Ссылка'};
   return type?(names[type]||'Вложение'):'';
 }
-function dialogInfo(d){
+export function dialogInfo(d){
   const username=clean(d?.entity?.username||'',65).replace(/[^A-Za-z0-9_]/g,'');
   const type=kind(d);
   const peerId=safeId(d?.entity?.id);
