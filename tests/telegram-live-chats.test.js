@@ -97,13 +97,12 @@ test('Live Chat frontend does not duplicate Telegram session or cache private me
   assert.ok(!ui.includes("method:'PUT'"));
 });
 
-test('Live chats uses read-only scope, no secret chat claims, and links only to Telegram',()=>{
-  const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js');
+test('Live chat is read-only and native open action is limited to Telegram destinations',()=>{
+  const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js'),html=read('public/studio.html');
   assert.ok(api.includes("scope:'read-only-cloud-chats'"));
   assert.ok(api.includes('readOnly:true,isCopy:false'));
-  assert.ok(ui.includes('Открыть в Telegram'));
-  assert.ok(ui.includes('read-only')===false||ui.includes("PRIVATE"));
-  assert.ok(ui.includes('ВETO')===false || ui.length>1);
-  assert.ok(ui.includes('/^https:\\/\\/t\\.me\\/[A-Za-z0-9_]+$/')||ui.includes('t\\.me'));
+  assert.ok(html.includes('Открыть в Telegram'));
+  assert.ok(ui.includes('t\\.me') || ui.includes("https://t.me"));
+  assert.ok(ui.includes("link.removeAttribute('href')"));
   assert.ok(!api.includes('readHistory'));
 });
