@@ -28,6 +28,8 @@
     deletedFeedLoaded: false,
     deletedFeedLoading: false,
     deletedFeedHasMore: false,
+    backup: { chats:[], selected:null, offsetId:0, totalSaved:0, totalRead:0, running:false },
+
     diagnostics: null,
     diagnosticsLoading: false,
     activeThread: null,
@@ -1194,6 +1196,125 @@
     `);
   }
 
+  async function backupApi(action, payload = {}) {
+    if (!tg?.initData) throw new Error('Открой VETO внутри Telegram');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    try {
+      const response = await fetch('/api/privacy-backup', {
+        method:'POST', headers:{
+          'x-telegram-init-data':tg.initData,
+          'content-type':'application/json',
+        },
+        body:JSON.stringify({ action,...payload }),
+        signal:controller.signal,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось сохранить переписку');
+      return data;
+    } catch (error) {
+      if (error?.name === 'AbortError') throw new Error('Telegram отвечает слишком долго. Повтори попытку.');
+      throw error;
+    } finally { clearTimeout(timeout); }
+  }
+
+  function renderBackupList() {
+    const backup = privacyState.backup;
+    openSheet(`
+      <span class="kicker">HISTORY BACKUP · ТОЛЬКО С ТВОЕГО СОГЛАСИЯ</span>
+      <h2>Выбери личный чат</h2>
+      <p>VETO использует только твой подключённый Telegram-аккаунт. Содержимое выбранного чата сохраняется в VETO — отдельно от оригинала. Другие чаты без выбора не копируются.</p>
+      <div class="ghost-backup-summary">Хранение: <b>${Number(privacyState.settings.retentionDays || 30)} дней</b>.
+        Для старых сообщений рекомендуем установить 10 лет перед копированием.</div>
+      <div class="sheet-actions"><button data-backup-retention-long="1">Продлить хранение до 10 лет</button></div>
+      <div class="ghost-backup-list">
+        ${backup.chats.length ? backup.chats.map(chat => `
+          <button class="ghost-backup-person" data-backup-chat="${escapeHtml(chat.chatId)}" type="button">
+            <span class="privacy-thread-avatar">${escapeHtml(initials(chat.title))}</span>
+            <span><strong>${escapeHtml(chat.title)}</strong><small>${escapeHtml(chat.username ? '@'+chat.username : 'Личная переписка')}</small></span><em>Выбрать →</em>
+          </button>`).join('') : '<p>В подключённом аккаунте не найдены доступные обычные личные переписки.</p>'}
+      </div>
+      <p class="privacy-archive-limit">Secret Chats, группы, каналы и сообщения, уже удалённые в Telegram, сюда не входят. Старые медиа сохраняются лишь как название типа вложения, без самих файлов.</p>
+      <div class="sheet-actions"><button data-privacy-close="1">Закрыть</button></div>
+    `);
+  }
+
+  async function openBackupPicker() {
+    openSheet('<span class="kicker">HISTORY BACKUP</span><h2>Проверяю личные диалоги…</h2><p>Никаких сообщений без выбора чата не копируем.</p>');
+    try {
+      const data = await backupApi('list_chats');
+      privacyState.backup.chats = Array.isArray(data.chats) ? data.chats : [];
+      renderBackupList();
+    } catch (error) {
+      openSheet(`
+        <span class="kicker">HISTORY BACKUP</span><h2>Нужно подключить Telegram</h2>
+        <p>${escapeHtml(error.message)}</p>
+        <p>Для резервной копии требуется собственный Telegram-аккаунт с номером и кодом. Telegram Business для этого не обязателен.</p>
+        <div class="sheet-actions">
+          <button class="accent" data-backup-connect="1">Подключить мой Telegram</button>
+          <button data-backup-retry="1">Проверить ещё раз</button>
+          <button data-privacy-close="1">Закрыть</button>
+        </div>`);
+    }
+  }
+
+  function renderBackupConfirm(chat) {
+    privacyState.backup.selected = chat;
+    privacyState.backup.offsetId = 0;
+    privacyState.backup.totalSaved = 0;
+    privacyState.backup.totalRead = 0;
+    openSheet(`
+      <span class="kicker">СОГЛАСИЕ НА КОПИРОВАНИЕ · 1 ЧАТ</span>
+      <h2>${escapeHtml(chat.title)}</h2>
+      <p>Сохранить доступную историю <strong>этого одного чата</strong> в VETO Inbox? В отличие от удаления оригинала в Telegram, копия сохранится на выбранный срок.</p>
+      <p>Сейчас срок: <b>${Number(privacyState.settings.retentionDays || 30)} дней</b>. Уже удалённые сообщения вернуть нельзя. Работаем порциями по 45 сообщений, можно остановиться между ними.</p>
+      <label class="ghost-backup-notify"><input type="checkbox" id="backupNotify" checked> Уведомить меня в Telegram по завершении</label>
+      <div class="sheet-actions">
+        <button class="accent" data-backup-run="1">Сохранить доступные сообщения →</button>
+        <button data-backup-back="1">Назад к чатам</button>
+      </div>
+    `);
+  }
+
+  async function runBackupPage(button, offsetId = 0) {
+    const backup = privacyState.backup;
+    const chat = backup.selected;
+    if (backup.running || !chat) return;
+    backup.running = true;
+    if (button) {button.disabled=true;button.textContent='Копирую из Telegram…';}
+    const notifyCompletion = backup.notifyCompletion !== false;
+    try {
+      const data = await backupApi('backup_chat',{
+        chatId:chat.chatId, offsetId, confirm:true, notifyCompletion,
+      });
+      backup.totalSaved += Number(data.saved || 0);
+      backup.totalRead += Number(data.fetched || 0);
+      backup.offsetId = data.nextOffsetId || 0;
+      const finished = !data.hasMore;
+      openSheet(`
+        <span class="kicker">VETO PRIVATE ARCHIVE · ${finished ? 'ГОТОВО' : 'В ПРОЦЕССЕ'}</span>
+        <h2>${escapeHtml(chat.title)}</h2>
+        <div class="ghost-backup-progress"><strong>${backup.totalSaved}</strong><span>новых сообщений сохранено</span></div>
+        <p>Проверено: ${backup.totalRead} сообщений. ${finished
+          ? 'Копирование доступной истории в рамках срока хранения завершено.'
+          : 'Есть более ранние сообщения. Можно продолжить; то, что уже сохранено, останется в VETO.'}</p>
+        ${data.olderThanRetention ? '<p class="privacy-archive-limit">Достигнут выбранный срок хранения: более старые сообщения не переносились.</p>' : ''}
+        ${finished ? '<p>Уведомление: '+(notifyCompletion ? (data.notified ? 'отправлено в бот.' : 'не доставлено. Открой @Storypilotlab_bot и нажми Start.') : 'отключено по выбору.')+'</p>' : ''}
+        <p class="privacy-archive-limit">Для старых медиа сохраняем только тип вложения, не сам файл. Уже удалённые сообщения восстановить нельзя.</p>
+        <div class="sheet-actions">
+          ${data.hasMore ? '<button class="accent" data-backup-next="1">Продолжить копирование →</button>' : '<button class="accent" data-backup-open-chat="1">Открыть сохранённый чат →</button>'}
+          <button data-backup-back="1">Выбрать другой чат</button>
+          <button data-privacy-close="1">Закрыть</button>
+        </div>
+      `);
+      await refresh({silent:true});
+      if (finished && data.notified) haptic('soft');
+    } catch (error) {
+      toast(error.message);
+      if (button) {button.disabled=false;button.textContent='Повторить копирование';}
+    } finally { backup.running=false; }
+  }
+
   async function clearArchive() {
     // Clearing a Telegram conversation and deleting VETO's independent archive
     // are separate actions. Use a typed second step to prevent accidental loss.
@@ -1223,6 +1344,14 @@
 
   $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
   $('privacyBackupGuideButton')?.addEventListener('click', privacyBusinessGuideSheet);
+  $('privacyBackupHistoryButton')?.addEventListener('click', openBackupPicker);
+  $('privacyTestNotificationButton')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    button.disabled=true;
+    try { await request('test_alert'); toast('Тест доставлен в Telegram. Проверь чат с VETO.'); }
+    catch (error) { toast('Проверь бота @Storypilotlab_bot: '+error.message); }
+    finally {button.disabled=false;}
+  });
   $('privacyDeletedMore')?.addEventListener('click', loadMoreDeletedFeed);
 
   $('smartBriefPrimary')?.addEventListener('click', () => {
@@ -1370,6 +1499,33 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
+    const action = event.target.closest('[data-backup-chat],[data-backup-run],[data-backup-next],[data-backup-back],[data-backup-retry],[data-backup-connect],[data-backup-open-chat],[data-backup-retention-long]');
+    if (action) {
+      if (action.hasAttribute('data-backup-chat')) {
+        const chat = privacyState.backup.chats.find(c => String(c.chatId) === String(action.dataset.backupChat));
+        if (chat) renderBackupConfirm(chat);
+      } else if (action.hasAttribute('data-backup-run')) {
+        privacyState.backup.notifyCompletion = $('backupNotify')?.checked !== false;
+        await runBackupPage(action,0);
+      } else if (action.hasAttribute('data-backup-next')) {
+        await runBackupPage(action,privacyState.backup.offsetId);
+      } else if (action.hasAttribute('data-backup-back')) renderBackupList();
+      else if (action.hasAttribute('data-backup-retry')) await openBackupPicker();
+      else if (action.hasAttribute('data-backup-connect')) {
+        closeSheet();
+        $('connectTelegramButton')?.click();
+      } else if (action.hasAttribute('data-backup-retention-long')) {
+        action.disabled=true;
+        const changed=await saveSettings({retentionDays:3650});
+        if(changed) renderBackupList(); else action.disabled=false;
+      } else if (action.hasAttribute('data-backup-open-chat')) {
+        closeSheet();
+        privacyState.filter='all';
+        window.VetoTelegramNavigate?.('chats');
+        setTimeout(() => openThread(privacyState.backup.selected.chatId),80);
+      }
+      return;
+    }
     const confirmClear = event.target.closest('[data-privacy-confirm-clear]');
     if (confirmClear) {
       if (String($('privacyConfirmDelete')?.value || '').trim() !== 'УДАЛИТЬ') return;
