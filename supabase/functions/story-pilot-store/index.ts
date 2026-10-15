@@ -424,6 +424,33 @@ async function opCompleteBackupJob(args:any) {
   return need(updated as any) || {status:"paused"};
 }
 
+// Owner-scoped repair queue for media that Telegram Business already sent to
+// VETO but did not reach the independent Vault. No scanning other people's chats
+// or attempting to recover anything that Telegram has already removed.
+async function opListRecoverablePrivacyMedia(args:any) {
+  const userId=String(args.userId || "");
+  const limit=Math.max(1,Math.min(3,Math.floor(Number(args.limit || 3))));
+  if (!/^\d{1,19}$/.test(userId)) throw new Error("invalid_privacy_media_owner");
+  const settings=await opGetPrivacySettings({userId});
+  if (!settings.antiDelete) return { eligible:false, pending:0, rows:[] };
+  const readyQuery=()=>db.from("story_pilot_messages")
+    .select("telegram_user_id,chat_id,message_id,media_file_id,media_mime_type,media_file_size,media_archive_status,media_storage_path")
+    .eq("telegram_user_id",userId)
+    .not("media_file_id","is",null)
+    .in("media_archive_status",["pending","failed"])
+    .is("media_storage_path",null);
+  const countResult=await db.from("story_pilot_messages")
+    .select("message_id",{count:"exact",head:true})
+    .eq("telegram_user_id",userId)
+    .not("media_file_id","is",null)
+    .in("media_archive_status",["pending","failed"])
+    .is("media_storage_path",null);
+  if (countResult.error) throw countResult.error;
+  const data=await readyQuery().order("updated_at",{ascending:true}).limit(limit);
+  const rows=need(data as any) || [];
+  return { eligible:true, pending:Number(countResult.count||0), rows };
+}
+
 async function opCreateHistoryMediaUpload(args: any) {
   const userId = String(args.userId || "");
   const chatId = String(args.chatId || "");
@@ -2957,6 +2984,7 @@ async function dispatch(op: string, args: any) {
     case "pause_backup_job": return opPauseBackupJob(args);
     case "claim_backup_jobs": return opClaimBackupJobs(args);
     case "complete_backup_job": return opCompleteBackupJob(args);
+    case "list_recoverable_privacy_media": return opListRecoverablePrivacyMedia(args);
     case "create_history_media_upload": return opCreateHistoryMediaUpload(args);
     case "create_privacy_media_upload": return opCreatePrivacyMediaUpload(args);
     case "finalize_privacy_media_archive": return opFinalizePrivacyMediaArchive(args);
