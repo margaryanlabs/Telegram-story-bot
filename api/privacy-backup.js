@@ -103,6 +103,7 @@ export default async function handler(req, res) {
     const {page,result,media} = await withBackupClient(decrypted.session, async client => {
       const page=await fetchBackupPage(client,{
         ownerId:userId,chatId,offsetId:body.offsetId,retentionDays:settings.retentionDays,
+        mediaEnabled:includeMedia,
       });
       const result=page.rows.length
         ? await importUserHistoryBatch(userId,chatId,page.rows)
