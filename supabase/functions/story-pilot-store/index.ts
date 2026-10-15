@@ -778,6 +778,10 @@ async function opImportUserHistoryBatch(args: any) {
         ? row.media_type : null,
       media_file_id: null, // Only metadata; cannot use MTProto media IDs in Bot API.
       media_unique_id: null,
+      media_mime_type: String(row.media_mime_type || "").slice(0,100) || null,
+      media_file_name: String(row.media_file_name || "").slice(0,110) || null,
+      media_file_size: Number.isSafeInteger(Number(row.media_file_size))
+        && Number(row.media_file_size) >= 0 ? Number(row.media_file_size) : null,
       sent_at: new Date(sentAtMs).toISOString(),
       edited_at: row.edited_at && Number.isFinite(Date.parse(row.edited_at))
         ? new Date(row.edited_at).toISOString() : null,
