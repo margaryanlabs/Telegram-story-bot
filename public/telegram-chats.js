@@ -6,11 +6,11 @@
     chats:[],page:0,hasMore:true,loading:false,
     filter:'all',search:'',generation:0,
     thread:null,messages:[],threadLoading:false,
-    threadHasMore:false,threadOffset:0,threadGeneration:0,
+    threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
-    saved:'избранное',other:'чат',
+    saved:'избранное',copy:'сохранённая копия VETO',other:'чат',
   };
   const mediaLabels={
     photo:'▣ Фотография',video:'▹ Видео',audio:'♫ Аудио',
@@ -89,7 +89,8 @@
     return state.chats.filter(chat=>{
       if(state.filter==='unread' && Number(chat.unreadCount||0)<=0)return false;
       if(state.filter==='archived' && chat.archived!==true)return false;
-      if(!['all','unread','archived'].includes(state.filter)&&chat.type!==state.filter)return false;
+      if(state.filter==='copies' && !chat.savedCopy)return false;
+      if(!['all','unread','archived','copies'].includes(state.filter)&&chat.type!==state.filter)return false;
       if(!q)return true;
       return [chat.title,chat.username,chat.preview].some(value=>
         String(value||'').toLocaleLowerCase().includes(q));
@@ -109,10 +110,13 @@
           ?empty('Ничего не найдено','Попробуй другой запрос или выбери «Все»','⌕')
           :empty('Чаты пока не загружены','Нажми обновить, чтобы увидеть свои переписки');
     }else{
-      list.innerHTML=items.map((chat,index)=>{
+      list.innerHTML=items.map(chat=>{
         const unread=Math.max(0,Number(chat.unreadCount||0));
         const badge=unread?'<span class="veto-mirror-unread">'+
           safe(unread>99?'99+':unread)+'</span>':'';
+        const retained=chat.savedCopy
+          ?'<span class="veto-mirror-chat-retained">'+(Number(chat.deletedCount||0)>0
+            ?'↶ '+safe(chat.deletedCount)+' удалено':'◈ СОХРАНЕНО')+'</span>' : '';
         return '<button class="veto-mirror-chat'+(unread?' unread':'')+
           '" type="button" data-mirror-chat="'+safe(chat.id)+
           '" aria-label="'+safe('Открыть '+chat.title)+'">'+
@@ -123,7 +127,7 @@
           (chat.verified?'<i class="veto-mirror-verified">✓</i>':'')+
           (chat.pinned?'<i class="veto-mirror-pin">⌁</i>':'')+
           (chat.archived?'<i class="veto-mirror-pin">▣</i>':'')+'</span>'+
-          '<small>'+safe(preview(chat))+'</small>'+
+          '<small>'+safe(preview(chat))+'</small>'+retained+
           '</span><span class="veto-mirror-chat-aside"><time>'+safe(time(chat.date))+
           '</time>'+badge+'</span></button>';
       }).join('');
@@ -149,14 +153,27 @@
     try{
       const data=await request('list',{page:state.page});
       if(generation!==state.generation)return;
-      const ids=new Set(state.chats.map(c=>String(c.id)));
+      const indexes=new Map(state.chats.map((c,index)=>[String(c.id),index]));
       (data.chats||[]).forEach(chat=>{
-        if(!chat||!chat.id||ids.has(String(chat.id)))return;
-        state.chats.push(chat);ids.add(String(chat.id));
+        if(!chat||!chat.id)return;
+        const key=String(chat.id);
+        if(indexes.has(key)){
+          const index=indexes.get(key),previous=state.chats[index];
+          if(chat.type!=='copy'||previous.type==='copy'){
+            state.chats[index]={...previous,...chat,
+              savedCopy:Boolean(previous.savedCopy||chat.savedCopy),
+              deletedCount:Math.max(Number(previous.deletedCount||0),Number(chat.deletedCount||0)),
+              savedCount:Math.max(Number(previous.savedCount||0),Number(chat.savedCount||0)),
+            };
+          }
+        }else{
+          indexes.set(key,state.chats.length);state.chats.push(chat);
+        }
       });
       state.hasMore=Boolean(data.hasMore)&&state.chats.length<Number(data.limit||500);
       state.page+=1;
       hideNotice();
+      if(data.warning)showNotice(data.warning,/Подключи|подключён/.test(data.warning));
       if(!state.hasMore&&state.chats.length>=500)
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
@@ -192,12 +209,24 @@
         const text=String(message.text||'');
         const media=message.media
           ?'<div class="veto-mirror-media">'+safe(mediaLabels[message.media]||'◫ Вложение')+
-            '<small>Файл можно открыть в Telegram</small></div>':'';
+            '<small>'+safe(message.saved&&message.mediaAvailable
+              ?'Независимая копия · Media Vault'
+              :message.saved?'Сохранена отметка о вложении':'Файл доступен в Telegram')+'</small></div>':'';
+        const savedBanner=message.deleted
+          ?'<div class="veto-mirror-preserved-flag deleted">↶ УДАЛЕНО В TELEGRAM · СОХРАНЕНО В VETO</div>'
+          :message.preservedOnly
+            ?'<div class="veto-mirror-preserved-flag">◈ СОХРАНЁННАЯ КОПИЯ VETO</div>'
+            :message.saved
+              ?'<div class="veto-mirror-preserved-flag subtle">◈ КОПИЯ В VETO</div>':'';
+        const viewFile=message.saved&&message.media&&message.mediaAvailable
+          ?'<button type="button" class="veto-mirror-open-vault" data-mirror-file="'+safe(message.id)+
+             '">Открыть сохранённый файл ↗</button>':'';
         return divider+'<article class="veto-mirror-bubble'+(message.out?' outgoing':'')+
-          '"><div class="veto-mirror-bubble-inner">'+
+          (message.deleted?' is-deleted':'')+
+          '"><div class="veto-mirror-bubble-inner">'+savedBanner+
           (message.sender&&!message.out?'<strong class="veto-mirror-bubble-sender">'+
             safe(message.sender)+'</strong>':'')+
-          media+(text?'<p>'+safe(text)+'</p>':'')+
+          media+viewFile+(text?'<p>'+safe(text)+'</p>':'')+
           '<footer>'+(message.edited?'<span>изменено</span>':'')+
           '<time>'+safe(time(message.date))+'</time></footer></div></article>';
       }).join('');
@@ -216,7 +245,8 @@
     $('telegramThreadTitle').textContent=chat.title;
     $('telegramThreadAvatar').textContent=initials(chat.title);
     $('telegramThreadMeta').textContent=(labels[chat.type]||'чат')+
-      ' · сообщения из Telegram';
+      (chat.archiveOnly?' · сохранено до удаления/очистки'
+        :chat.savedCopy?' · вместе с сохранённой историей':' · сообщения из Telegram');
     $('telegramThreadAvatar').className='veto-mirror-thread-avatar avatar-'+chat.type;
     const link=$('telegramThreadOpenNative');
     if(link){
@@ -237,7 +267,8 @@
     if(!chat)return;
     haptic();
     state.thread=chat;state.messages=[];state.threadHasMore=false;
-    state.threadOffset=0;
+    state.threadOffset=0;state.archiveOffset=0;
+    state.archiveHasMore=false;state.liveHasMore=!chat.archiveOnly;
     state.threadGeneration++;
     setThread(chat);
     await loadMessages({reset:true});
@@ -253,14 +284,32 @@
     try{
       const data=await request('thread',{
         chatId,offsetId:reset?0:state.threadOffset,
+        archiveOffset:reset?0:state.archiveOffset,
+        archiveOnly:Boolean(state.thread.archiveOnly),
+        liveExhausted:!reset&&!state.liveHasMore,
       });
       if(generation!==state.threadGeneration||String(state.thread?.id)!==chatId)return;
-      const existing=new Set(state.messages.map(m=>m.id));
-      const addition=(data.messages||[]).filter(m=>!existing.has(m.id));
-      state.messages=reset?addition:[...addition,...state.messages];
-      state.threadHasMore=Boolean(data.hasMore&&data.nextOffsetId);
-      state.threadOffset=Number(data.nextOffsetId||0);
-      threadNotice('');
+      const byId=new Map(state.messages.map(m=>[String(m.id),m]));
+      (data.messages||[]).forEach(msg=>{
+        if(!msg||!msg.id)return;
+        const key=String(msg.id),old=byId.get(key);
+        byId.set(key,old
+          ?{...old,...msg,deleted:Boolean(old.deleted||msg.deleted),
+            saved:Boolean(old.saved||msg.saved),
+            preservedOnly:Boolean(old.preservedOnly||msg.preservedOnly),
+            mediaAvailable:Boolean(old.mediaAvailable||msg.mediaAvailable)}
+          :msg);
+      });
+      state.messages=[...byId.values()].sort((a,b)=>
+        new Date(a.date||0).getTime()-new Date(b.date||0).getTime()||
+        Number(a.id)-Number(b.id));
+      state.liveHasMore=Boolean(data.liveHasMore&&data.nextOffsetId);
+      state.archiveHasMore=Boolean(data.archiveHasMore);
+      state.threadHasMore=state.liveHasMore||state.archiveHasMore;
+      state.threadOffset=Number(data.nextOffsetId||state.threadOffset||0);
+      state.archiveOffset=Number(data.archiveNextOffset||0);
+      if(!data.warning)threadNotice('');
+      else threadNotice(data.warning);
       state.threadLoading=false;
       renderMessages({keepScroll:!reset});
     }catch(error){
