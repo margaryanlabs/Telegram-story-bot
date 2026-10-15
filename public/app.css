@@ -2674,3 +2674,17 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
 .ghost-backup-active-job small{display:block;color:#95a6b9;font-weight:400;margin-top:3px;font-size:10px}
 .ghost-backup-active-job button{flex-shrink:0;min-height:38px;padding:8px 12px;
   border:1px solid rgba(255,255,255,.2);border-radius:12px;color:#ebf0f8;background:rgba(255,255,255,.06)}
+
+/* Media Vault repair: understated, legible on Telegram's smallest screens. */
+.ghost-vault-repair-action{
+  width:100%;margin-top:8px;text-align:left;
+  background:linear-gradient(135deg,rgba(244,247,252,.065),rgba(255,255,255,.015));
+  border-color:rgba(230,238,249,.13)
+}
+.ghost-vault-repair-action .ghost-diagnostics-icon{
+  background:rgba(231,240,250,.08);color:#e7eef8
+}
+.ghost-vault-repair-action .ghost-diagnostics-copy small{
+  line-height:1.5;white-space:normal
+}
+.ghost-vault-repair-action:active{background:rgba(242,246,253,.1)}
