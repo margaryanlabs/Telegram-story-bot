@@ -2648,3 +2648,7 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   .ghost-notification-testing{align-items:flex-start}
   .ghost-test-notify-button{margin-left:auto}
 }
+
+/* Archive-only media: never show a dead Open attachment control. */
+.ghost-media-placeholder{cursor:default;pointer-events:none;opacity:.8}
+.ghost-media-placeholder small{color:var(--muted);font-size:10px}
