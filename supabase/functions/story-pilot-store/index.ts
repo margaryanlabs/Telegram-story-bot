@@ -569,6 +569,71 @@ function messageLooksLikeActionRequest(row: any) {
     || /\b(can you|could you|would you|please|need|when|where|what|why|how|можешь|можете|пожалуйста|нужно|надо|когда|где|что|почему|как)\b/i.test(text);
 }
 
+// History import is explicitly initiated by the owner from their authorized
+// Telegram user session. It only inserts missing rows: an old backup must never
+// overwrite later edits, deletion tombstones or a richer Business archive.
+async function opImportUserHistoryBatch(args: any) {
+  const userId = String(args.userId || "");
+  const chatId = String(args.chatId || "");
+  const incoming = Array.isArray(args.rows) ? args.rows : [];
+  if (!/^\\d{1,19}$/.test(userId) || !/^-?\\d{1,22}$/.test(chatId)
+      || !incoming.length || incoming.length > 45) {
+    throw new Error("invalid_history_import");
+  }
+  const settings = await opGetPrivacySettings({ userId });
+  if (!settings.ghostInbox) throw new Error("enable_private_inbox_before_history_import");
+  const minAt = Date.now() - Number(settings.retentionDays || 30) * 86400000;
+  const seen = new Set<number>();
+  const now = new Date().toISOString();
+  const sanitized = incoming.map((row: any) => {
+    const messageId = Number(row.message_id);
+    const sentAtMs = Date.parse(String(row.sent_at || ""));
+    if (String(row.telegram_user_id) !== userId || String(row.chat_id) !== chatId
+        || row.business_connection_id !== "user_session_backup"
+        || !Number.isInteger(messageId) || messageId <= 0 || seen.has(messageId)
+        || !Number.isFinite(sentAtMs) || sentAtMs < minAt || sentAtMs > Date.now() + 120000
+        || !/^[a-f0-9]{64}$/.test(String(row.content_hash || ""))) {
+      return null;
+    }
+    seen.add(messageId);
+    return {
+      telegram_user_id: userId,
+      business_connection_id: "user_session_backup",
+      chat_id: chatId,
+      message_id: messageId,
+      direction: row.direction === "outgoing" ? "outgoing" : "incoming",
+      sender_user_id: /^\\d{1,19}$/.test(String(row.sender_user_id || "")) ? row.sender_user_id : null,
+      sender_username: String(row.sender_username || "").slice(0, 80) || null,
+      sender_display_name: String(row.sender_display_name || "").slice(0, 120) || null,
+      chat_title: String(row.chat_title || "").slice(0, 120) || null,
+      text_content: String(row.text_content || "").slice(0, 4000) || null,
+      caption: null,
+      media_type: ["photo", "document", "location", "attachment"].includes(row.media_type)
+        ? row.media_type : null,
+      media_file_id: null, // Only metadata; cannot use MTProto media IDs in Bot API.
+      media_unique_id: null,
+      sent_at: new Date(sentAtMs).toISOString(),
+      edited_at: row.edited_at && Number.isFinite(Date.parse(row.edited_at))
+        ? new Date(row.edited_at).toISOString() : null,
+      deleted_at: null,
+      content_hash: row.content_hash,
+      updated_at: now,
+    };
+  }).filter(Boolean);
+  if (!sanitized.length) return { accepted:0, inserted:0 };
+
+  // Prefer one PostgREST batch (partial failures throw). This code is invoked
+  // only via the signed private store gateway; public roles have no table grants.
+  const result = await db.from("story_pilot_messages")
+    .upsert(sanitized, {
+      onConflict: "telegram_user_id,chat_id,message_id",
+      ignoreDuplicates: true,
+    })
+    .select("message_id");
+  const inserted = (need(result as any) || []).length;
+  return { accepted:sanitized.length, inserted };
+}
+
 async function opCaptureBusinessMessage(args: any) {
   const row = args.row || {};
   const userId = String(row.telegram_user_id || args.userId || "");
@@ -2710,6 +2775,7 @@ async function dispatch(op: string, args: any) {
     case "health": return { storage: "ok", auth: "ed25519", privacy: "ghost-inbox-v10", mediaProxy: true, mediaVault: true, deleteAlerts: true, vaultVisibility: true, durableArchive: true, vaultOrphanCleanup: true, parallelAnalytics: false, overloadBackoff: true, directDbPreferred: DIRECT_SQL_PREFERRED, directDbCircuitOpen: Boolean(directSql) && DIRECT_SQL_PREFERRED && !useDirectSql(), directDbRetryAt: directSqlDegradedUntil || null, privateCrypto: true, cryptoBackend: "service-role-rpc", directDbUrlAvailable: Boolean(SUPABASE_DB_URL), directAnalytics: Boolean(directSql), directExport: Boolean(directSql), directCoreReads: useDirectSql(), directGhostWrites: useDirectSql(), directViewerWrites: useDirectSql(), postgrestFallback: true };
     case "get_privacy_settings": return opGetPrivacySettings(args);
     case "update_privacy_settings": return opUpdatePrivacySettings(args);
+    case "import_user_history_batch": return opImportUserHistoryBatch(args);
     case "capture_business_message": return opCaptureBusinessMessage(args);
     case "mark_business_messages_deleted": return opMarkBusinessMessagesDeleted(args);
     case "list_privacy_threads": return opListPrivacyThreads(args);
