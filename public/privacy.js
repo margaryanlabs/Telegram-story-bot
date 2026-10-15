@@ -28,7 +28,8 @@
     deletedFeedLoaded: false,
     deletedFeedLoading: false,
     deletedFeedHasMore: false,
-    backup: { chats:[], selected:null, offsetId:0, totalSaved:0, totalRead:0, running:false },
+    backup: { chats:[], selected:null, offsetId:0, totalSaved:0, totalRead:0,
+      running:false, stopRequested:false, auto:false, notifyCompletion:true },
 
     diagnostics: null,
     diagnosticsLoading: false,
@@ -832,6 +833,8 @@
   }
 
   function closeSheet() {
+    // Telegram BackButton must not allow an unobserved backup loop to continue.
+    privacyState.backup.stopRequested = true;
     revokeMediaUrl();
     if ($('sheetBackdrop')) $('sheetBackdrop').hidden = true;
     if ($('sheet')) $('sheet').hidden = true;
@@ -955,6 +958,7 @@
       const focused = focusMessageId && String(message.message_id) === String(focusMessageId);
       const hasMedia = Boolean(message.media_type);
       const mediaArchived = message.media_archive_status === 'archived';
+      const canOpenMedia = hasMedia && (Boolean(message.media_file_id) || mediaArchived);
       const mediaPending = message.media_archive_status === 'pending';
       const mediaFailed = ['failed','too_large'].includes(String(message.media_archive_status || ''));
       const sender = message.direction === 'outgoing'
@@ -965,7 +969,12 @@
           data-ghost-message-id="${escapeHtml(message.message_id)}">
           <header><span>${escapeHtml(sender)}</span><span>${escapeHtml(formatWhen(message.sent_at))}</span></header>
           <p>${messageBody(message)}</p>
-          ${hasMedia ? `
+          ${hasMedia && !canOpenMedia ? `
+            <div class="privacy-media-button ghost-media-placeholder" aria-label="Архивная отметка о вложении">
+              <span>▣</span><b>${escapeHtml(message.media_type === 'photo' ? 'Фото из истории' : 'Вложение из истории')}</b>
+              <small>В архиве только отметка — сам файл не сохранён</small>
+            </div>` : ''}
+          ${canOpenMedia ? `
             <button class="privacy-media-button" type="button"
               data-privacy-media="${escapeHtml(message.message_id)}"
               data-privacy-chat-id="${escapeHtml(message.chat_id)}"
@@ -1218,6 +1227,42 @@
     } finally { clearTimeout(timeout); }
   }
 
+  // Save cursor/aggregate counts only. Telegram message content, auth sessions,
+  // contact names and message bodies must never enter localStorage.
+  const BACKUP_RESUME_PREFIX = 'veto:history-cursor:v1:';
+  function backupResumeKey(chatId) {
+    return BACKUP_RESUME_PREFIX + String(tg?.initDataUnsafe?.user?.id || 'unknown')
+      + ':' + String(chatId || '');
+  }
+  function savedBackupCursor(chatId) {
+    try {
+      const raw = window.localStorage.getItem(backupResumeKey(chatId));
+      const item = raw ? JSON.parse(raw) : null;
+      if (!item || item.chatId !== String(chatId)
+        || !Number.isSafeInteger(item.offsetId) || item.offsetId <= 0
+        || !Number.isSafeInteger(item.updatedAt)
+        || Date.now() - item.updatedAt > 30 * 86400000) return null;
+      return {
+        offsetId:item.offsetId, totalSaved:Math.max(0,Math.floor(Number(item.totalSaved || 0))),
+        totalRead:Math.max(0,Math.floor(Number(item.totalRead || 0))),
+      };
+    } catch { return null; }
+  }
+  function rememberBackupCursor() {
+    const b = privacyState.backup;
+    if (!b.selected || !Number.isSafeInteger(b.offsetId) || b.offsetId <= 0) return;
+    try {
+      window.localStorage.setItem(backupResumeKey(b.selected.chatId),
+        JSON.stringify({
+          chatId:String(b.selected.chatId), offsetId:b.offsetId,
+          totalSaved:b.totalSaved, totalRead:b.totalRead, updatedAt:Date.now(),
+        }));
+    } catch {} // Storage can be disabled in Telegram WebViews.
+  }
+  function clearBackupCursor(chatId) {
+    try { window.localStorage.removeItem(backupResumeKey(chatId)); } catch {}
+  }
+
   function renderBackupList() {
     const backup = privacyState.backup;
     openSheet(`
@@ -1231,7 +1276,7 @@
         ${backup.chats.length ? backup.chats.map(chat => `
           <button class="ghost-backup-person" data-backup-chat="${escapeHtml(chat.chatId)}" type="button">
             <span class="privacy-thread-avatar">${escapeHtml(initials(chat.title))}</span>
-            <span><strong>${escapeHtml(chat.title)}</strong><small>${escapeHtml(chat.username ? '@'+chat.username : 'Личная переписка')}</small></span><em>Выбрать →</em>
+            <span><strong>${escapeHtml(chat.title)}</strong><small>${escapeHtml(chat.username ? '@'+chat.username : 'Личная переписка')}${savedBackupCursor(chat.chatId) ? ' · Есть незавершённая копия' : ''}</small></span><em>${savedBackupCursor(chat.chatId) ? 'Продолжить →' : 'Выбрать →'}</em>
           </button>`).join('') : '<p>В подключённом аккаунте не найдены доступные обычные личные переписки.</p>'}
       </div>
       <p class="privacy-archive-limit">Secret Chats, группы, каналы и сообщения, уже удалённые в Telegram, сюда не входят. Старые медиа сохраняются лишь как название типа вложения, без самих файлов.</p>
@@ -1263,15 +1308,49 @@
     privacyState.backup.offsetId = 0;
     privacyState.backup.totalSaved = 0;
     privacyState.backup.totalRead = 0;
+    privacyState.backup.stopRequested = false;
+    privacyState.backup.auto = false;
+    const saved = savedBackupCursor(chat.chatId);
     openSheet(`
       <span class="kicker">СОГЛАСИЕ НА КОПИРОВАНИЕ · 1 ЧАТ</span>
       <h2>${escapeHtml(chat.title)}</h2>
       <p>Сохранить доступную историю <strong>этого одного чата</strong> в VETO Inbox? В отличие от удаления оригинала в Telegram, копия сохранится на выбранный срок.</p>
-      <p>Сейчас срок: <b>${Number(privacyState.settings.retentionDays || 30)} дней</b>. Уже удалённые сообщения вернуть нельзя. Работаем порциями по 45 сообщений, можно остановиться между ними.</p>
-      <label class="ghost-backup-notify"><input type="checkbox" id="backupNotify" checked> Уведомить меня в Telegram по завершении</label>
+      <p>Сейчас срок: <b>${Number(privacyState.settings.retentionDays || 30)} дней</b>. Уже удалённые сообщения вернуть нельзя. Работаем порциями по 45 сообщений.</p>
+      ${saved ? `<div class="ghost-backup-summary"><strong>Найдена незавершённая копия</strong><br>Ранее проверено ${saved.totalRead} сообщений. Можно продолжить с сохранённого места — уже скопированное не перезаписывается.</div>` : ''}
+      <label class="ghost-backup-notify"><input type="checkbox" id="backupAuto" checked> Продолжать автоматически, пока приложение открыто (максимум 20 порций за запуск)</label>
+      <label class="ghost-backup-notify"><input type="checkbox" id="backupNotify" checked> Уведомить меня в Telegram после полного завершения</label>
       <div class="sheet-actions">
-        <button class="accent" data-backup-run="1">Сохранить доступные сообщения →</button>
+        <button class="accent" data-backup-run="1">${saved ? 'Начать заново →' : 'Сохранить доступные сообщения →'}</button>
+        ${saved ? '<button data-backup-resume="1">Продолжить с сохранённого места →</button>' : ''}
         <button data-backup-back="1">Назад к чатам</button>
+      </div>
+    `);
+  }
+
+  function renderBackupProgress({ complete = false, error = '', alerted = null, pageLimit = false } = {}) {
+    const backup = privacyState.backup;
+    const chat = backup.selected;
+    if (!chat) return;
+    const paused = !backup.running && !complete;
+    openSheet(`
+      <span class="kicker">VETO PRIVATE ARCHIVE · ${complete ? 'ГОТОВО' : paused ? 'ПАУЗА' : 'КОПИРОВАНИЕ'}</span>
+      <h2>${escapeHtml(chat.title)}</h2>
+      <div class="ghost-backup-progress"><strong>${backup.totalSaved}</strong><span>новых сообщений сохранено</span></div>
+      <p>Проверено: ${backup.totalRead} сообщений. ${complete
+        ? 'Доступная история в пределах срока хранения скопирована.'
+        : pageLimit ? 'Достигнут предел автоматической проверки. Можно запустить следующие 20 порций.'
+        : backup.running ? 'Автоматически продолжаю копирование выбранного чата.' : 'Копирование приостановлено — всё уже сохранённое осталось в VETO.'}</p>
+      ${error ? `<p class="privacy-archive-limit">${escapeHtml(error)}</p>` : ''}
+      ${complete && backup.notifyCompletion
+        ? '<p>Уведомление: ' + (alerted === true ? 'доставлено в бот.' : 'не доставлено. Открой @Storypilotlab_bot и нажми Start.') + '</p>'
+        : ''}
+      <p class="privacy-archive-limit">Доступны только сообщения, которые Telegram сохранил и предоставил аккаунту. Старые медиа — отметки о вложениях, не файлы.</p>
+      <div class="sheet-actions">
+        ${complete ? '<button class="accent" data-backup-open-chat="1">Открыть сохранённый чат →</button>'
+          : backup.running ? '<button class="ghost-backup-stop" data-backup-pause="1">Приостановить после текущей порции</button>'
+          : '<button class="accent" data-backup-next="1">Продолжить копирование →</button>'}
+        ${!backup.running ? '<button data-backup-back="1">Выбрать другой чат</button><button data-privacy-close="1">Закрыть</button>'
+          : '<small class="ghost-backup-working">Не закрывай Telegram Mini App во время копирования. Если закроешь, можно продолжить позже.</small>'}
       </div>
     `);
   }
@@ -1281,38 +1360,53 @@
     const chat = backup.selected;
     if (backup.running || !chat) return;
     backup.running = true;
-    if (button) {button.disabled=true;button.textContent='Копирую из Telegram…';}
-    const notifyCompletion = backup.notifyCompletion !== false;
+    backup.stopRequested = false;
+    if (button) { button.disabled=true; button.textContent='Копирую из Telegram…'; }
+    let cursor = Number(offsetId || 0);
+    let pages = 0;
+    let didFinish = false;
     try {
-      const data = await backupApi('backup_chat',{
-        chatId:chat.chatId, offsetId, confirm:true, notifyCompletion,
-      });
-      backup.totalSaved += Number(data.saved || 0);
-      backup.totalRead += Number(data.fetched || 0);
-      backup.offsetId = data.nextOffsetId || 0;
-      const finished = !data.hasMore;
-      openSheet(`
-        <span class="kicker">VETO PRIVATE ARCHIVE · ${finished ? 'ГОТОВО' : 'В ПРОЦЕССЕ'}</span>
-        <h2>${escapeHtml(chat.title)}</h2>
-        <div class="ghost-backup-progress"><strong>${backup.totalSaved}</strong><span>новых сообщений сохранено</span></div>
-        <p>Проверено: ${backup.totalRead} сообщений. ${finished
-          ? 'Копирование доступной истории в рамках срока хранения завершено.'
-          : 'Есть более ранние сообщения. Можно продолжить; то, что уже сохранено, останется в VETO.'}</p>
-        ${data.olderThanRetention ? '<p class="privacy-archive-limit">Достигнут выбранный срок хранения: более старые сообщения не переносились.</p>' : ''}
-        ${finished ? '<p>Уведомление: '+(notifyCompletion ? (data.notified ? 'отправлено в бот.' : 'не доставлено. Открой @Storypilotlab_bot и нажми Start.') : 'отключено по выбору.')+'</p>' : ''}
-        <p class="privacy-archive-limit">Для старых медиа сохраняем только тип вложения, не сам файл. Уже удалённые сообщения восстановить нельзя.</p>
-        <div class="sheet-actions">
-          ${data.hasMore ? '<button class="accent" data-backup-next="1">Продолжить копирование →</button>' : '<button class="accent" data-backup-open-chat="1">Открыть сохранённый чат →</button>'}
-          <button data-backup-back="1">Выбрать другой чат</button>
-          <button data-privacy-close="1">Закрыть</button>
-        </div>
-      `);
+      while (!backup.stopRequested && pages < (backup.auto ? 20 : 1)) {
+        const data = await backupApi('backup_chat', {
+          chatId:chat.chatId, offsetId:cursor, confirm:true,
+          notifyCompletion:backup.notifyCompletion,
+        });
+        pages += 1;
+        backup.totalSaved += Number(data.saved || 0);
+        backup.totalRead += Number(data.fetched || 0);
+        backup.offsetId = Number(data.nextOffsetId || 0);
+        didFinish = !data.hasMore;
+        if (didFinish) {
+          clearBackupCursor(chat.chatId);
+          backup.running = false;
+          renderBackupProgress({complete:true, alerted:data.notified});
+          await refresh({silent:true});
+          if (data.notified) haptic('soft');
+          return;
+        }
+        // On a broken/looping server cursor, stop instead of fetching forever.
+        if (!Number.isSafeInteger(backup.offsetId) || backup.offsetId <= 0
+            || (cursor > 0 && backup.offsetId >= cursor)) {
+          throw new Error('Telegram вернул некорректную страницу. Ранее сохранённые сообщения остались в VETO.');
+        }
+        cursor = backup.offsetId;
+        rememberBackupCursor();
+        renderBackupProgress();
+        if (backup.auto && !backup.stopRequested && pages < 20) {
+          // Yield to the WebView so Stop stays responsive on older phones.
+          await new Promise(resolve => setTimeout(resolve, 180));
+        }
+      }
+      backup.running = false;
+      renderBackupProgress({pageLimit:pages >= 20});
       await refresh({silent:true});
-      if (finished && data.notified) haptic('soft');
     } catch (error) {
+      backup.running = false;
+      renderBackupProgress({error:error.message});
       toast(error.message);
-      if (button) {button.disabled=false;button.textContent='Повторить копирование';}
-    } finally { backup.running=false; }
+    } finally {
+      backup.running = false;
+    }
   }
 
   async function clearArchive() {
@@ -1499,17 +1593,34 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
-    const action = event.target.closest('[data-backup-chat],[data-backup-run],[data-backup-next],[data-backup-back],[data-backup-retry],[data-backup-connect],[data-backup-open-chat],[data-backup-retention-long]');
+    const action = event.target.closest('[data-backup-chat],[data-backup-run],[data-backup-resume],[data-backup-next],[data-backup-pause],[data-backup-back],[data-backup-retry],[data-backup-connect],[data-backup-open-chat],[data-backup-retention-long]');
     if (action) {
       if (action.hasAttribute('data-backup-chat')) {
         const chat = privacyState.backup.chats.find(c => String(c.chatId) === String(action.dataset.backupChat));
         if (chat) renderBackupConfirm(chat);
-      } else if (action.hasAttribute('data-backup-run')) {
-        privacyState.backup.notifyCompletion = $('backupNotify')?.checked !== false;
-        await runBackupPage(action,0);
+      } else if (action.hasAttribute('data-backup-run') || action.hasAttribute('data-backup-resume')) {
+        const b = privacyState.backup;
+        b.auto = $('backupAuto')?.checked !== false;
+        b.notifyCompletion = $('backupNotify')?.checked !== false;
+        const resume = action.hasAttribute('data-backup-resume')
+          ? savedBackupCursor(b.selected?.chatId) : null;
+        b.offsetId = resume?.offsetId || 0;
+        b.totalRead = resume?.totalRead || 0;
+        b.totalSaved = resume?.totalSaved || 0;
+        if (!resume) clearBackupCursor(b.selected?.chatId);
+        await runBackupPage(action,b.offsetId);
       } else if (action.hasAttribute('data-backup-next')) {
+        // Continue automatically only if the user enabled the option
+        // at the original per-chat consent step.
         await runBackupPage(action,privacyState.backup.offsetId);
-      } else if (action.hasAttribute('data-backup-back')) renderBackupList();
+      } else if (action.hasAttribute('data-backup-pause')) {
+        privacyState.backup.stopRequested = true;
+        action.disabled = true;
+        action.textContent = 'Останавливаю после текущей порции…';
+      } else if (action.hasAttribute('data-backup-back')) {
+        privacyState.backup.stopRequested = true;
+        renderBackupList();
+      }
       else if (action.hasAttribute('data-backup-retry')) await openBackupPicker();
       else if (action.hasAttribute('data-backup-connect')) {
         closeSheet();
@@ -1657,6 +1768,11 @@
   });
 
   document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Mobile Telegram may kill a hidden WebView. The last successful cursor
+      // is durable, while the in-flight request is allowed to finish safely.
+      privacyState.backup.stopRequested = true;
+    }
     if (!document.hidden && privacyScreenActive()) refresh({ silent:true });
   });
 

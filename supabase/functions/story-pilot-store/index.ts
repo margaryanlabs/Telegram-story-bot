@@ -1237,7 +1237,7 @@ async function opListPrivacyMessages(args: any) {
     messages = await directSql`
       select chat_id, message_id, direction, sender_user_id, sender_username,
              sender_display_name, chat_title, text_content, caption, media_type,
-             media_mime_type, media_file_name, media_file_size,
+             media_mime_type, media_file_name, media_file_size, media_file_id,
              media_archive_status, media_archived_at, sent_at, edited_at, deleted_at
       from public.story_pilot_messages
       where telegram_user_id = ${userId}::bigint
@@ -1248,7 +1248,7 @@ async function opListPrivacyMessages(args: any) {
     `;
   } else {
     const r = await db.from("story_pilot_messages")
-      .select("chat_id,message_id,direction,sender_user_id,sender_username,sender_display_name,chat_title,text_content,caption,media_type,media_mime_type,media_file_name,media_file_size,media_archive_status,media_archived_at,sent_at,edited_at,deleted_at")
+      .select("chat_id,message_id,direction,sender_user_id,sender_username,sender_display_name,chat_title,text_content,caption,media_type,media_mime_type,media_file_name,media_file_size,media_file_id,media_archive_status,media_archived_at,sent_at,edited_at,deleted_at")
       .eq("telegram_user_id", userId)
       .eq("chat_id", chatId)
       .gte("sent_at", cutoff)
