@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20261015-veto-history-alerts-v2';
+const CONTROL_BUILD = '20261015-veto-backup-media-v1';
 import sharp from 'sharp';
 import {
   trackPublishedStory,
