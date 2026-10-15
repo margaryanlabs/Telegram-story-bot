@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261015-veto-backup-media-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261015-veto-vault-recovery-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -744,7 +744,7 @@
           <span class="kicker">HISTORY BACKUP · ПО ТВОЕМУ ВЫБОРУ</span>
           <h2>Сохрани переписки заранее</h2>
           <p>Выбери личный чат из своего Telegram. VETO сохранит доступные сообщения в независимый архив, прежде чем ты очистишь их в Telegram. Никакого массового копирования без выбора.</p>
-          <small>Только обычные личные чаты. Секретные чаты, уже удалённые сообщения и старые медиафайлы не восстанавливаются.</small>
+          <small>Только обычные личные чаты. Секретные чаты и удалённые ранее сообщения не восстанавливаются. Доступные фото и документы до 5 МБ можно сохранить в закрытый Media Vault по отдельному согласию.</small>
         </div>
         <button class="ghost-backup-cta" id="privacyBackupHistoryButton" type="button">Выбрать чат для копии <span>→</span></button>
       </section>
@@ -784,6 +784,15 @@
         </div>
         <button type="button" id="privacyAccessAction">Проверить</button>
       </section>
+
+      <button class="ghost-diagnostics-strip ghost-vault-repair-action" id="privacyVaultCheckButton" type="button">
+        <span class="ghost-diagnostics-icon">▣</span>
+        <span class="ghost-diagnostics-copy">
+          <strong>Проверить сохранение медиа</strong>
+          <small>Проверить незавершённые копии фотографий и документов и, с твоего разрешения, повторить до 3 загрузок</small>
+        </span>
+        <span class="ghost-diagnostics-action">Проверить ›</span>
+      </button>
 
       <button class="ghost-diagnostics-strip" id="privacyDiagnosticsButton" type="button">
         <span class="ghost-diagnostics-icon">✓</span>
@@ -1254,9 +1263,9 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261015-veto-backup-media-v1"></script>
+  <script src="/app.js?v=20261015-veto-vault-recovery-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
-  <script src="/privacy.js?v=20261015-veto-backup-media-v1"></script>
+  <script src="/privacy.js?v=20261015-veto-vault-recovery-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>

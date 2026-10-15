@@ -1205,6 +1205,79 @@
     `);
   }
 
+  async function mediaRecoveryApi(action) {
+    if (!tg?.initData) throw new Error('Открой VETO внутри Telegram');
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),45000);
+    try {
+      const response=await fetch('/api/privacy-media-recover',{
+        method:'POST',headers:{
+          'x-telegram-init-data':tg.initData,
+          'content-type':'application/json',
+        },
+        body:JSON.stringify({action,confirm:action==='recover'}),
+        signal:controller.signal,
+      });
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok||!data.ok)throw new Error(data.error||'Media Vault недоступен');
+      return data;
+    }catch(error){
+      if(error?.name==='AbortError')throw new Error('Telegram отвечает слишком долго. Попробуй ещё раз.');
+      throw error;
+    }finally{clearTimeout(timeout);}
+  }
+
+  async function openVaultMediaRecovery() {
+    openSheet('<span class="kicker">VETO MEDIA VAULT · ПРОВЕРКА</span><h2>Проверяю сохранённые вложения…</h2><p>Проверяются только медиа, уже полученные твоим VETO через разрешённый Telegram Business-доступ.</p>');
+    try {
+      const data=await mediaRecoveryApi('status');
+      openSheet(`
+        <span class="kicker">VETO MEDIA VAULT · САМОПРОВЕРКА</span>
+        <h2>${data.pending ? 'Есть незавершённые копии' : 'Очередь медиа в порядке'}</h2>
+        <div class="ghost-backup-progress"><strong>${Math.max(0,Number(data.pending||0))}</strong><span>медиафайлов ожидают повторной загрузки</span></div>
+        <p>${escapeHtml(data.eligible===false
+          ? 'Для сохранения будущих вложений через Telegram Business включи Anti-Delete и разреши боту доступ.'
+          : data.pending
+            ? 'Telegram передал VETO ссылки на эти файлы, но не все копии оказались в защищённом Vault. Можно повторить попытку для трёх файлов.'
+            : 'Нет зависших медиафайлов, для которых сейчас возможна повторная загрузка через Bot API.')}</p>
+        <p class="privacy-archive-limit">Если Telegram уже удалил или отозвал исходный файл, восстановить его невозможно. Переписки и ранее сохранённые файлы при проверке не удаляются.</p>
+        <div class="sheet-actions">
+          ${data.eligible!==false && data.pending>0
+            ? '<button class="accent" data-privacy-repair-media="1">Попробовать восстановить до 3 файлов →</button>' : ''}
+          <button data-privacy-close="1">Закрыть</button>
+        </div>
+      `);
+    } catch (error) {
+      openSheet(`
+        <span class="kicker">VETO MEDIA VAULT</span><h2>Не удалось проверить</h2>
+        <p>${escapeHtml(error.message)}</p>
+        <div class="sheet-actions"><button data-privacy-check-media="1">Проверить ещё раз</button><button data-privacy-close="1">Закрыть</button></div>
+      `);
+    }
+  }
+
+  async function repairVaultMedia(button) {
+    if (button) {button.disabled=true;button.textContent='Проверяю Telegram…';}
+    try {
+      const data=await mediaRecoveryApi('recover');
+      openSheet(`
+        <span class="kicker">VETO MEDIA VAULT · РЕЗУЛЬТАТ</span>
+        <h2>${data.recovered>0?'Копии сохранены':'Проверка завершена'}</h2>
+        <div class="ghost-backup-progress"><strong>${Number(data.recovered||0)}</strong><span>новых независимых медиа-копий</span></div>
+        <p>Проверено: ${Number(data.attempted||0)} файлов. Не удалось загрузить: ${Number(data.unavailable||0)}.</p>
+        <p>${escapeHtml(data.message||'')} Поиск и повторная загрузка доступны только для медиа, которые бот ранее получил с твоего разрешения.</p>
+        <div class="sheet-actions">
+          <button class="accent" data-privacy-check-media="1">Проверить оставшиеся →</button>
+          <button data-privacy-close="1">Закрыть</button>
+        </div>
+      `);
+      if(data.recovered>0){toast('Media Vault сохранил '+data.recovered+' файлов');await refresh({silent:true});}
+    } catch(error){
+      toast(error.message);
+      if(button){button.disabled=false;button.textContent='Повторить попытку';}
+    }
+  }
+
   async function backupApi(action, payload = {}) {
     if (!tg?.initData) throw new Error('Открой VETO внутри Telegram');
     const controller = new AbortController();
@@ -1290,7 +1363,7 @@
               <button data-backup-background-pause="${escapeHtml(job.chat_id)}">Остановить</button>
             </div>`).join('')}
         </div>` : ''}
-      <p class="privacy-archive-limit">Secret Chats, группы, каналы и сообщения, уже удалённые в Telegram, сюда не входят. Старые медиа сохраняются лишь как название типа вложения, без самих файлов.</p>
+      <p class="privacy-archive-limit">Secret Chats, группы, каналы и сообщения, уже удалённые в Telegram, сюда не входят. При отдельном согласии доступные фотографии и небольшие документы до 5 МБ сохраняются как файлы. Без согласия — только тип вложения.</p>
       <div class="sheet-actions"><button data-privacy-close="1">Закрыть</button></div>
     `);
   }
@@ -1463,6 +1536,7 @@
   }
 
   $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
+  $('privacyVaultCheckButton')?.addEventListener('click', openVaultMediaRecovery);
   $('privacyBackupGuideButton')?.addEventListener('click', privacyBusinessGuideSheet);
   $('privacyBackupHistoryButton')?.addEventListener('click', openBackupPicker);
   $('privacyTestNotificationButton')?.addEventListener('click', async event => {
@@ -1619,6 +1693,12 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
+    const mediaRecovery=event.target.closest('[data-privacy-repair-media],[data-privacy-check-media]');
+    if(mediaRecovery) {
+      if(mediaRecovery.hasAttribute('data-privacy-repair-media')) await repairVaultMedia(mediaRecovery);
+      else await openVaultMediaRecovery();
+      return;
+    }
     const action = event.target.closest('[data-backup-background-pause],[data-backup-chat],[data-backup-run],[data-backup-resume],[data-backup-next],[data-backup-pause],[data-backup-back],[data-backup-retry],[data-backup-connect],[data-backup-open-chat],[data-backup-retention-long]');
     if (action) {
       if (action.hasAttribute('data-backup-background-pause')) {
