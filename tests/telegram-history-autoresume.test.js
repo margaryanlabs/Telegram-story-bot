@@ -11,7 +11,7 @@ test('Historical backup runs bounded automatic pages only after chat consent',()
   assert.ok(ui.includes("data-backup-pause=\"1\""));
   assert.ok(ui.includes("backup.stopRequested = true"));
   assert.ok(ui.includes("Math.max") || ui.includes("pages < 20"));
-  assert.ok(ui.includes("backup.auto = $('backupAuto')?.checked !== false"));
+  assert.ok(ui.includes("b.auto = $('backupAuto')?.checked !== false"));
   assert.ok(ui.includes('privacyState.backup.notifyCompletion =') === false || ui.includes("b.notifyCompletion = $('backupNotify')?.checked !== false"));
   assert.ok(html.includes('privacyBackupHistoryButton'));
 });
