@@ -33,7 +33,7 @@
     return date.toLocaleDateString('ru',{day:'numeric',month:'short'});
   }
   const initials=value=>{
-    const x=String(value||'TG').replace(/^@/,'').split(/\\s+/).filter(Boolean);
+    const x=String(value||'TG').replace(/^@/,'').split(/\s+/).filter(Boolean);
     return (x.slice(0,2).map(p=>p[0]).join('')||'TG').toUpperCase();
   };
   function toast(text){
