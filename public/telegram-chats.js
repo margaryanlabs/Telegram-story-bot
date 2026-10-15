@@ -7,6 +7,7 @@
     filter:'all',search:'',generation:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
+    mediaUrls:[],
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -188,6 +189,54 @@
     el.hidden=!text;
     el.textContent=String(text||'');
   }
+  function revokeMediaUrls(){
+    state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
+    state.mediaUrls=[];
+  }
+  async function openArchivedFile(button){
+    if(!state.thread||!button||button.disabled)return;
+    if(!tg?.initData){toast('Открой VETO внутри Telegram');return;}
+    const id=Number(button.dataset.mirrorFile||0);
+    if(!Number.isSafeInteger(id)||id<=0)return;
+    button.disabled=true;
+    const original=button.textContent;
+    button.textContent='Загружаю защищённую копию…';
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),20000);
+    try{
+      const params=new URLSearchParams({
+        chatId:String(state.thread.id),messageId:String(id),
+      });
+      const response=await fetch('/api/privacy-media?'+params,{
+        headers:{'x-telegram-init-data':tg.initData},signal:controller.signal,
+      });
+      if(!response.ok)throw new Error('Telegram уже не отдаёт вложение и резервная копия недоступна.');
+      const blob=await response.blob();
+      if(!blob.size||blob.size>20*1024*1024)throw new Error('Файл слишком большой для просмотра.');
+      const href=URL.createObjectURL(blob);
+      state.mediaUrls.push(href);
+      const wrapper=document.createElement('div');
+      wrapper.className='veto-mirror-media-reveal';
+      const mime=String(blob.type||'').toLowerCase();
+      if(['image/jpeg','image/png','image/webp','image/gif'].includes(mime)){
+        const img=document.createElement('img');
+        img.src=href;img.alt='Сохранённое вложение из чата';img.loading='lazy';
+        wrapper.appendChild(img);
+      }else if(['video/mp4','video/webm'].includes(mime)){
+        const video=document.createElement('video');
+        video.src=href;video.controls=true;video.preload='metadata';wrapper.appendChild(video);
+      }
+      const link=document.createElement('a');
+      link.href=href;link.download='telegram-veto-'+id;
+      link.textContent='Сохранить копию файла ↓';
+      wrapper.appendChild(link);
+      button.after(wrapper);button.hidden=true;
+    }catch(error){
+      toast(error?.name==='AbortError'?'Media Vault отвечает слишком долго':error.message);
+      button.textContent=original;button.disabled=false;
+    }finally{clearTimeout(timer);}
+  }
+
   function renderMessages({keepScroll=false}={}){
     const box=$('telegramThreadMessages');
     if(!box)return;
@@ -265,6 +314,7 @@
   }
   async function openThread(chat){
     if(!chat)return;
+    revokeMediaUrls();
     haptic();
     state.thread=chat;state.messages=[];state.threadHasMore=false;
     state.threadOffset=0;state.archiveOffset=0;
@@ -310,6 +360,12 @@
       state.archiveOffset=Number(data.archiveNextOffset||0);
       if(!data.warning)threadNotice('');
       else threadNotice(data.warning);
+      if(data.chat && state.thread && data.chat.type!=='copy'){
+        state.thread={...state.thread,...data.chat,
+          savedCopy:Boolean(state.thread.savedCopy||data.chat.savedCopy)};
+        $('telegramThreadMeta').textContent=(labels[data.chat.type]||'чат')+
+          (state.thread.savedCopy?' · сохранённая история VETO':' · Telegram');
+      }
       state.threadLoading=false;
       renderMessages({keepScroll:!reset});
     }catch(error){
@@ -326,6 +382,7 @@
     $('telegramThreadView').hidden=true;
     $('telegramChatsView').hidden=false;
     $('telegramMirror')?.classList.remove('thread-mode');
+    revokeMediaUrls();
     window.scrollTo({top:0,behavior:'instant'});
   }
   $('telegramMirrorRefresh')?.addEventListener('click',()=>loadChats({reset:true}));
@@ -358,6 +415,10 @@
     if(!event.target.closest('[data-mirror-connect]'))return;
     window.VetoTelegramNavigate?.('home');
     $('connectTelegramButton')?.click();
+  });
+  $('telegramThreadMessages')?.addEventListener('click',event=>{
+    const button=event.target.closest('[data-mirror-file]');
+    if(button)openArchivedFile(button);
   });
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
