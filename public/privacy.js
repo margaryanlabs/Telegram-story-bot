@@ -1298,17 +1298,24 @@
   async function openBackupPicker() {
     openSheet('<span class="kicker">HISTORY BACKUP</span><h2>Проверяю личные диалоги…</h2><p>Никаких сообщений без выбора чата не копируем.</p>');
     try {
-      const [data,background] = await Promise.all([
-        backupApi('list_chats'),backupApi('background_status').catch(()=>({jobs:[]})),
+      const [dialogResponse,jobResponse] = await Promise.allSettled([
+        backupApi('list_chats'),backupApi('background_status'),
       ]);
+      privacyState.backup.jobs = jobResponse.status === 'fulfilled'
+        && Array.isArray(jobResponse.value.jobs) ? jobResponse.value.jobs : [];
+      if (dialogResponse.status !== 'fulfilled') throw dialogResponse.reason;
+      const data=dialogResponse.value;
       privacyState.backup.chats = Array.isArray(data.chats) ? data.chats : [];
-      privacyState.backup.jobs = Array.isArray(background.jobs) ? background.jobs : [];
       renderBackupList();
     } catch (error) {
       openSheet(`
         <span class="kicker">HISTORY BACKUP</span><h2>Нужно подключить Telegram</h2>
         <p>${escapeHtml(error.message)}</p>
         <p>Для резервной копии требуется собственный Telegram-аккаунт с номером и кодом. Telegram Business для этого не обязателен.</p>
+        ${privacyState.backup.jobs.filter(j=>j.enabled).map(job=>`
+          <div class="ghost-backup-active-job"><span>${escapeHtml(job.chat_title||'Личный чат')}
+          <small>Фоновый доступ можно отозвать без входа в Telegram</small></span>
+          <button data-backup-background-pause="${escapeHtml(job.chat_id)}">Остановить фон</button></div>`).join('')}
         <div class="sheet-actions">
           <button class="accent" data-backup-connect="1">Подключить мой Telegram</button>
           <button data-backup-retry="1">Проверить ещё раз</button>
