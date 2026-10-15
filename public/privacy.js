@@ -28,7 +28,7 @@
     deletedFeedLoaded: false,
     deletedFeedLoading: false,
     deletedFeedHasMore: false,
-    backup: { chats:[], selected:null, offsetId:0, totalSaved:0, totalRead:0,
+    backup: { chats:[], jobs:[], selected:null, offsetId:0, totalSaved:0, totalRead:0, totalMedia:0,
       running:false, stopRequested:false, auto:false, notifyCompletion:true },
 
     diagnostics: null,
@@ -1276,9 +1276,18 @@
         ${backup.chats.length ? backup.chats.map(chat => `
           <button class="ghost-backup-person" data-backup-chat="${escapeHtml(chat.chatId)}" type="button">
             <span class="privacy-thread-avatar">${escapeHtml(initials(chat.title))}</span>
-            <span><strong>${escapeHtml(chat.title)}</strong><small>${escapeHtml(chat.username ? '@'+chat.username : 'Личная переписка')}${savedBackupCursor(chat.chatId) ? ' · Есть незавершённая копия' : ''}</small></span><em>${savedBackupCursor(chat.chatId) ? 'Продолжить →' : 'Выбрать →'}</em>
+            <span><strong>${escapeHtml(chat.title)}</strong><small>${escapeHtml(chat.username ? '@'+chat.username : 'Личная переписка')}${savedBackupCursor(chat.chatId) ? ' · Есть незавершённая копия' : ''}${backup.jobs.find(j=>String(j.chat_id)===String(chat.chatId))?.state === 'active' ? ' · ФОНОВЫЙ АРХИВ ВКЛЮЧЁН' : ''}</small></span><em>${savedBackupCursor(chat.chatId) ? 'Продолжить →' : 'Выбрать →'}</em>
           </button>`).join('') : '<p>В подключённом аккаунте не найдены доступные обычные личные переписки.</p>'}
       </div>
+      ${backup.jobs.filter(j=>j.enabled).length ? `
+        <div class="ghost-backup-summary">
+          <strong>Фоновые копии</strong><p>Работают по расписанию для выбранных чатов, даже когда Mini App закрыт.</p>
+          ${backup.jobs.filter(j=>j.enabled).map(job=>`
+            <div class="ghost-backup-active-job">
+              <span>${escapeHtml(job.chat_title||'Личный чат')}<small>${Number(job.total_saved||0)} сообщений · ${Number(job.total_media||0)} вложений</small></span>
+              <button data-backup-background-pause="${escapeHtml(job.chat_id)}">Остановить</button>
+            </div>`).join('')}
+        </div>` : ''}
       <p class="privacy-archive-limit">Secret Chats, группы, каналы и сообщения, уже удалённые в Telegram, сюда не входят. Старые медиа сохраняются лишь как название типа вложения, без самих файлов.</p>
       <div class="sheet-actions"><button data-privacy-close="1">Закрыть</button></div>
     `);
@@ -1287,8 +1296,11 @@
   async function openBackupPicker() {
     openSheet('<span class="kicker">HISTORY BACKUP</span><h2>Проверяю личные диалоги…</h2><p>Никаких сообщений без выбора чата не копируем.</p>');
     try {
-      const data = await backupApi('list_chats');
+      const [data,background] = await Promise.all([
+        backupApi('list_chats'),backupApi('background_status').catch(()=>({jobs:[]})),
+      ]);
       privacyState.backup.chats = Array.isArray(data.chats) ? data.chats : [];
+      privacyState.backup.jobs = Array.isArray(background.jobs) ? background.jobs : [];
       renderBackupList();
     } catch (error) {
       openSheet(`
@@ -1317,7 +1329,9 @@
       <p>Сохранить доступную историю <strong>этого одного чата</strong> в VETO Inbox? В отличие от удаления оригинала в Telegram, копия сохранится на выбранный срок.</p>
       <p>Сейчас срок: <b>${Number(privacyState.settings.retentionDays || 30)} дней</b>. Уже удалённые сообщения вернуть нельзя. Работаем порциями по 45 сообщений.</p>
       ${saved ? `<div class="ghost-backup-summary"><strong>Найдена незавершённая копия</strong><br>Ранее проверено ${saved.totalRead} сообщений. Можно продолжить с сохранённого места — уже скопированное не перезаписывается.</div>` : ''}
-      <label class="ghost-backup-notify"><input type="checkbox" id="backupAuto" checked> Продолжать автоматически, пока приложение открыто (максимум 20 порций за запуск)</label>
+      <label class="ghost-backup-notify"><input type="checkbox" id="backupMedia" checked> Сохранять фотографии и небольшие документы в защищённый Media Vault (до 5 МБ, максимум 2 за порцию)</label>
+      <label class="ghost-backup-notify"><input type="checkbox" id="backupBackground"> Разрешить фоновое копирование именно этого чата, даже когда Telegram закрыт (проверка примерно каждые 5 минут)</label>
+      <label class="ghost-backup-notify"><input type="checkbox" id="backupAuto" checked> Если фон выключен — продолжать автоматически, пока приложение открыто (до 20 порций)</label>
       <label class="ghost-backup-notify"><input type="checkbox" id="backupNotify" checked> Уведомить меня в Telegram после полного завершения</label>
       <div class="sheet-actions">
         <button class="accent" data-backup-run="1">${saved ? 'Начать заново →' : 'Сохранить доступные сообщения →'}</button>
@@ -1335,7 +1349,7 @@
     openSheet(`
       <span class="kicker">VETO PRIVATE ARCHIVE · ${complete ? 'ГОТОВО' : paused ? 'ПАУЗА' : 'КОПИРОВАНИЕ'}</span>
       <h2>${escapeHtml(chat.title)}</h2>
-      <div class="ghost-backup-progress"><strong>${backup.totalSaved}</strong><span>новых сообщений сохранено</span></div>
+      <div class="ghost-backup-progress"><strong>${backup.totalSaved}</strong><span>новых сообщений сохранено · ${backup.totalMedia||0} медиафайлов</span></div>
       <p>Проверено: ${backup.totalRead} сообщений. ${complete
         ? 'Доступная история в пределах срока хранения скопирована.'
         : pageLimit ? 'Достигнут предел автоматической проверки. Можно запустить следующие 20 порций.'
@@ -1370,9 +1384,11 @@
         const data = await backupApi('backup_chat', {
           chatId:chat.chatId, offsetId:cursor, confirm:true,
           notifyCompletion:backup.notifyCompletion,
+          includeMedia:backup.mediaEnabled === true,
         });
         pages += 1;
         backup.totalSaved += Number(data.saved || 0);
+        backup.totalMedia += Number(data.mediaSaved || 0);
         backup.totalRead += Number(data.fetched || 0);
         backup.offsetId = Number(data.nextOffsetId || 0);
         didFinish = !data.hasMore;
@@ -1593,15 +1609,34 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
-    const action = event.target.closest('[data-backup-chat],[data-backup-run],[data-backup-resume],[data-backup-next],[data-backup-pause],[data-backup-back],[data-backup-retry],[data-backup-connect],[data-backup-open-chat],[data-backup-retention-long]');
+    const action = event.target.closest('[data-backup-background-pause],[data-backup-chat],[data-backup-run],[data-backup-resume],[data-backup-next],[data-backup-pause],[data-backup-back],[data-backup-retry],[data-backup-connect],[data-backup-open-chat],[data-backup-retention-long]');
     if (action) {
-      if (action.hasAttribute('data-backup-chat')) {
+      if (action.hasAttribute('data-backup-background-pause')) {
+        action.disabled=true;
+        try {
+          await backupApi('background_pause',{chatId:String(action.dataset.backupBackgroundPause)});
+          toast('Фоновое копирование остановлено');
+          await openBackupPicker();
+        } catch (error) { toast(error.message); action.disabled=false; }
+      } else if (action.hasAttribute('data-backup-chat')) {
         const chat = privacyState.backup.chats.find(c => String(c.chatId) === String(action.dataset.backupChat));
         if (chat) renderBackupConfirm(chat);
       } else if (action.hasAttribute('data-backup-run') || action.hasAttribute('data-backup-resume')) {
         const b = privacyState.backup;
         b.auto = $('backupAuto')?.checked !== false;
+        b.mediaEnabled = $('backupMedia')?.checked === true;
         b.notifyCompletion = $('backupNotify')?.checked !== false;
+        if ($('backupBackground')?.checked === true) {
+          try {
+            await backupApi('background_enable',{
+              chatId:b.selected.chatId,confirm:true,backgroundConsent:true,
+              mediaEnabled:b.mediaEnabled,notifyCompletion:b.notifyCompletion,
+            });
+            toast('Фоновый архив включён только для выбранного чата');
+            await openBackupPicker();
+          } catch (error) { toast(error.message); }
+          return;
+        }
         const resume = action.hasAttribute('data-backup-resume')
           ? savedBackupCursor(b.selected?.chatId) : null;
         b.offsetId = resume?.offsetId || 0;
