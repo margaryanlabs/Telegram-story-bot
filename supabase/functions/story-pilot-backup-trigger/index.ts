@@ -53,6 +53,18 @@ Deno.serve(async (request) => {
   if (!sql) return json({ ok: false, error: "trigger_direct_database_not_configured" }, 503);
 
   try {
+    // This endpoint can be reached without a JWT because pg_cron signs via
+    // an existing secret held only in Supabase Vault. Reject outside callers
+    // before touching the scheduling seed or any user-owned backup job.
+    const key=String(request.headers.get("x-maintenance-secret") || "");
+    if (!key) return json({ok:false,error:"unauthorized"},401);
+    const rows=await sql`
+      select decrypted_secret from vault.decrypted_secrets
+      where name='story_pilot_maintenance_secret' limit 1
+    `;
+    if (!rows[0]?.decrypted_secret || key!==String(rows[0].decrypted_secret)) {
+      return json({ok:false,error:"unauthorized"},401);
+    }
     // Per-chat atomic leases live in story_pilot_backup_jobs.
     // Do not block the unrelated real-time viewer watcher.
 
