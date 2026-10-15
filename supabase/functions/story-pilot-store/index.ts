@@ -576,7 +576,7 @@ async function opImportUserHistoryBatch(args: any) {
   const userId = String(args.userId || "");
   const chatId = String(args.chatId || "");
   const incoming = Array.isArray(args.rows) ? args.rows : [];
-  if (!/^\\d{1,19}$/.test(userId) || !/^-?\\d{1,22}$/.test(chatId)
+  if (!/^\d{1,19}$/.test(userId) || !/^-?\d{1,22}$/.test(chatId)
       || !incoming.length || incoming.length > 45) {
     throw new Error("invalid_history_import");
   }
@@ -602,7 +602,7 @@ async function opImportUserHistoryBatch(args: any) {
       chat_id: chatId,
       message_id: messageId,
       direction: row.direction === "outgoing" ? "outgoing" : "incoming",
-      sender_user_id: /^\\d{1,19}$/.test(String(row.sender_user_id || "")) ? row.sender_user_id : null,
+      sender_user_id: /^\d{1,19}$/.test(String(row.sender_user_id || "")) ? row.sender_user_id : null,
       sender_username: String(row.sender_username || "").slice(0, 80) || null,
       sender_display_name: String(row.sender_display_name || "").slice(0, 120) || null,
       chat_title: String(row.chat_title || "").slice(0, 120) || null,
