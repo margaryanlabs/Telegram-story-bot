@@ -737,6 +737,17 @@
         </div>
         <button type="button" id="privacyBackupGuideButton" class="ghost-archive-promise-link">Как включить ↗</button>
       </section>
+
+      <section class="ghost-backup-panel" aria-label="Резервные копии личных диалогов Telegram">
+        <div class="ghost-backup-icon">▣</div>
+        <div class="ghost-backup-content">
+          <span class="kicker">HISTORY BACKUP · ПО ТВОЕМУ ВЫБОРУ</span>
+          <h2>Сохрани переписки заранее</h2>
+          <p>Выбери личный чат из своего Telegram. VETO сохранит доступные сообщения в независимый архив, прежде чем ты очистишь их в Telegram. Никакого массового копирования без выбора.</p>
+          <small>Только обычные личные чаты. Секретные чаты, уже удалённые сообщения и старые медиафайлы не восстанавливаются.</small>
+        </div>
+        <button class="ghost-backup-cta" id="privacyBackupHistoryButton" type="button">Выбрать чат для копии <span>→</span></button>
+      </section>
       <section class="ghost-health-grid">
         <article><span>Диалоги</span><strong id="privacyStatThreads">0</strong><small>в VETO Inbox</small></article>
         <article><span>Удалено</span><strong id="privacyStatDeleted">0</strong><small>сохранено</small></article>
@@ -818,6 +829,11 @@
             <span class="setting-icon violet">✎</span>
             <span class="setting-copy"><strong>Изменения · уведомления</strong><small>Присылать alert, когда входящее сообщение изменили.</small></span>
             <label class="switch"><input id="privacyNotifyEditsSwitch" type="checkbox" checked /><span></span></label>
+          </div>
+          <div class="setting-row ghost-notification-testing">
+            <span class="setting-icon">♢</span>
+            <span class="setting-copy"><strong>Тест уведомлений</strong><small>Отправить настоящий тест в чат @Storypilotlab_bot. Удаления, изменения и Story-просмотры имеют отдельные настройки.</small></span>
+            <button class="ghost-test-notify-button" id="privacyTestNotificationButton" type="button">Проверить →</button>
           </div>
           <div class="setting-row retention-row">
             <span class="setting-icon">⌛</span>
