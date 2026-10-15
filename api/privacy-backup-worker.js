@@ -59,6 +59,7 @@ async function runJob(job) {
     progress=await withBackupClient(decrypted.session,async client=>{
       const page=await fetchBackupPage(client,{
         ownerId:userId,chatId,offsetId:job.offset_id,retentionDays:settings.retentionDays,
+        mediaEnabled:job.media_enabled === true,
       });
       const result=page.rows.length?await importUserHistoryBatch(userId,chatId,page.rows):{inserted:0};
       const media=await archiveHistoryMedia(client,userId,chatId,page.mediaCandidates,{
