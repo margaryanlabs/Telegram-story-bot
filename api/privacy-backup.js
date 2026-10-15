@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     }
     if(body.confirm !== true) return respond(res,409,{error:'Подтверди копирование выбранного чата в VETO.'});
     const chatId=String(body.chatId || '');
-    if(!/^\\d{1,19}$/.test(chatId)) return respond(res,400,{error:'Выбери личный диалог из списка'});
+    if(!/^\d{1,19}$/.test(chatId)) return respond(res,400,{error:'Выбери личный диалог из списка'});
     let settings=await getPrivacySettings(userId);
     // Consent to backup explicitly enables the private VETO Inbox for this user,
     // without silently enabling Business chat access or deletion notifications.
