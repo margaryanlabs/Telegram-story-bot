@@ -100,3 +100,12 @@ test('User initiates one chat backup and can load older pages or stop',()=>{
  assert.ok(ui.includes('privacyState.backup.selected'));
  assert.ok(ui.includes('data-backup-retention-long'));
 });
+
+test('A real delete event triggers an alert even when content was not archived',()=>{
+ const webhook=source('api/webhook-v7.js');
+ assert.ok(webhook.includes('deletedMessageCount = 0'));
+ assert.ok(webhook.includes('Telegram сообщил об удалении'));
+ assert.ok(webhook.includes('нет ранее сохранённой копии содержания'));
+ assert.ok(webhook.includes('deleted.message_ids.length,'));
+ assert.ok(!webhook.includes('&& result.events.length\n        ) {'));
+});
