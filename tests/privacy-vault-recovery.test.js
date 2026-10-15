@@ -48,7 +48,7 @@ test('Owner receives accurate state and can repair max three files explicitly',(
  assert.ok(ui.includes('data-privacy-check-media="1"'));
  assert.ok(ui.includes('Не удалось загрузить'));
  assert.ok(ui.includes('Если Telegram уже удалил или отозвал исходный файл'));
- assert.ok(ui.includes('До'));
+ assert.ok(ui.includes('Попробовать восстановить до 3 файлов'));
 });
 
 test('History Backup clarifies actual media bytes are opt-in and 5MB limited',()=>{
