@@ -52,6 +52,18 @@ export default async function handler(req, res) {
   const action=String(body.action || '');
   if(!['list_chats','backup_chat','background_enable','background_pause','background_status'].includes(action)) return respond(res,400,{error:'Неизвестное действие'});
   try {
+    // Revocation must remain possible even when the MTProto session has
+    // expired or the user deliberately disconnected their Telegram account.
+    if(action === 'background_status') {
+      const jobs=await listBackupJobs(userId);
+      return respond(res,200,{jobs,worker:'scheduled',optInOnly:true});
+    }
+    if(action === 'background_pause') {
+      const chatId=String(body.chatId || '');
+      if(!/^\d{1,19}$/.test(chatId)) return respond(res,400,{error:'Неверный ID переписки'});
+      const job=await pauseBackupJob(userId,chatId);
+      return respond(res,200,{job});
+    }
     const session=await getViewerSession(userId);
     if(!session || session.status !== 'active' || !session.session_ciphertext) {
       return respond(res,409,{error:'Сначала подключи собственный Telegram-аккаунт через номер и код в VETO.'});
@@ -66,16 +78,6 @@ export default async function handler(req, res) {
     if(action === 'list_chats') {
       const chats=await withBackupClient(decrypted.session,client=>listBackupDialogs(client));
       return respond(res,200,{chats,scope:'private-dialogs-only',requiresSelection:true});
-    }
-    if(action === 'background_status') {
-      const jobs=await listBackupJobs(userId);
-      return respond(res,200,{jobs,worker:'scheduled',optInOnly:true});
-    }
-    if(action === 'background_pause') {
-      const chatId=String(body.chatId || '');
-      if(!/^\d{1,19}$/.test(chatId)) return respond(res,400,{error:'Неверный ID переписки'});
-      const job=await pauseBackupJob(userId,chatId);
-      return respond(res,200,{job});
     }
     if(action === 'background_enable') {
       if(body.confirm !== true || body.backgroundConsent !== true)
