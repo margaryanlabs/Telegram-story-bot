@@ -1,7 +1,8 @@
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
-import { getViewerSession, getPrivacySettings, updatePrivacySettings, importUserHistoryBatch } from '../lib/viewer-sync-store.js';
+import { getViewerSession, getPrivacySettings, updatePrivacySettings, importUserHistoryBatch, saveBackupJob, listBackupJobs, pauseBackupJob } from '../lib/viewer-sync-store.js';
 import { withBackupClient, listBackupDialogs, fetchBackupPage } from '../lib/telegram-history-backup.js';
+import { archiveHistoryMedia } from '../lib/telegram-history-media.js';
 
 const BOT = String(process.env.TELEGRAM_BOT_TOKEN || '');
 
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
   const userId=String(user.id);
   const body=typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   const action=String(body.action || '');
-  if(!['list_chats','backup_chat'].includes(action)) return respond(res,400,{error:'Неизвестное действие'});
+  if(!['list_chats','backup_chat','background_enable','background_pause','background_status'].includes(action)) return respond(res,400,{error:'Неизвестное действие'});
   try {
     const session=await getViewerSession(userId);
     if(!session || session.status !== 'active' || !session.session_ciphertext) {
@@ -66,6 +67,31 @@ export default async function handler(req, res) {
       const chats=await withBackupClient(decrypted.session,client=>listBackupDialogs(client));
       return respond(res,200,{chats,scope:'private-dialogs-only',requiresSelection:true});
     }
+    if(action === 'background_status') {
+      const jobs=await listBackupJobs(userId);
+      return respond(res,200,{jobs,worker:'scheduled',optInOnly:true});
+    }
+    if(action === 'background_pause') {
+      const chatId=String(body.chatId || '');
+      if(!/^\d{1,19}$/.test(chatId)) return respond(res,400,{error:'Неверный ID переписки'});
+      const job=await pauseBackupJob(userId,chatId);
+      return respond(res,200,{job});
+    }
+    if(action === 'background_enable') {
+      if(body.confirm !== true || body.backgroundConsent !== true)
+        return respond(res,409,{error:'Нужно отдельное согласие на фоновое хранение переписки.'});
+      const chatId=String(body.chatId || '');
+      if(!/^\d{1,19}$/.test(chatId)) return respond(res,400,{error:'Неверный ID переписки'});
+      // Check membership and eligible personal chat before storing consent.
+      const dialogs=await withBackupClient(decrypted.session,client=>listBackupDialogs(client));
+      const chat=dialogs.find(c=>String(c.chatId)===chatId);
+      if(!chat) return respond(res,403,{error:'Можно подключать только свои обычные личные переписки'});
+      const settings=await getPrivacySettings(userId);
+      if(!settings.ghostInbox) await updatePrivacySettings(userId,{ghostInbox:true});
+      const job=await saveBackupJob(userId,chatId,chat.title,body.mediaEnabled === true,body.notifyCompletion !== false);
+      return respond(res,200,{job,backgroundEnabled:true,
+        note:'Фоновое сохранение только выбранной переписки, пока опция включена.'});
+    }
     if(body.confirm !== true) return respond(res,409,{error:'Подтверди копирование выбранного чата в VETO.'});
     const chatId=String(body.chatId || '');
     if(!/^\d{1,19}$/.test(chatId)) return respond(res,400,{error:'Выбери личный диалог из списка'});
@@ -73,12 +99,19 @@ export default async function handler(req, res) {
     // Consent to backup explicitly enables the private VETO Inbox for this user,
     // without silently enabling Business chat access or deletion notifications.
     if(!settings.ghostInbox) settings=await updatePrivacySettings(userId,{ghostInbox:true});
-    const page=await withBackupClient(decrypted.session,client=>fetchBackupPage(client,{
-      ownerId:userId, chatId, offsetId:body.offsetId, retentionDays:settings.retentionDays,
-    }));
-    const result=page.rows.length
-      ? await importUserHistoryBatch(userId,chatId,page.rows)
-      : {inserted:0,accepted:0};
+    const includeMedia = body.includeMedia === true;
+    const {page,result,media} = await withBackupClient(decrypted.session, async client => {
+      const page=await fetchBackupPage(client,{
+        ownerId:userId,chatId,offsetId:body.offsetId,retentionDays:settings.retentionDays,
+      });
+      const result=page.rows.length
+        ? await importUserHistoryBatch(userId,chatId,page.rows)
+        : {inserted:0,accepted:0};
+      const media=await archiveHistoryMedia(client,userId,chatId,page.mediaCandidates,{
+        enabled:includeMedia,
+      });
+      return {page,result,media};
+    });
     let alerted=false;
     if(!page.hasMore && body.notifyCompletion !== false) {
       alerted=await sendBackupNotice(userId,chatId,page.chatTitle,result.inserted).catch(()=>false);
@@ -86,12 +119,12 @@ export default async function handler(req, res) {
     return respond(res,200,{
       chatId, chatTitle:page.chatTitle,
       fetched:page.fetched,eligible:page.eligible,
-      saved:result.inserted,
+      saved:result.inserted,mediaSaved:media.saved,mediaAttempted:media.attempted,
       hasMore:page.hasMore,nextOffsetId:page.nextOffsetId,
       olderThanRetention:page.olderThanRetention,
       retentionDays:settings.retentionDays,
       notified:alerted,
-      mediaScope:'text-and-media-labels-only',
+      mediaScope:includeMedia ? 'bounded-private-media-vault' : 'metadata-only',
     });
   } catch(error) {
     // Never disclose MTProto session details, phone numbers or message bodies.
