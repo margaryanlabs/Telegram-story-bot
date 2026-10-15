@@ -2899,3 +2899,39 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
 @media(prefers-reduced-motion:reduce){
   .veto-mirror-loader{animation:none}
 }
+
+/* Preserved chat history is always visually distinguishable from Telegram live data. */
+.veto-mirror-chat-retained{display:inline-flex;max-width:100%;
+  white-space:nowrap;align-items:center;overflow:hidden;text-overflow:ellipsis;
+  margin-top:7px;padding:4px 7px;border:1px solid rgba(169,197,230,.20);
+  border-radius:7px;font-size:8px;font-weight:760;letter-spacing:.055em;
+  color:#b7c9de;background:rgba(152,177,210,.08)}
+.veto-mirror-preserved-flag{font-size:8px;font-weight:790;letter-spacing:.035em;
+  color:#bbcae0;margin:-2px 0 7px;background:rgba(157,185,216,.08);
+  border:1px solid rgba(186,207,233,.12);padding:6px 8px;border-radius:8px;
+  line-height:1.4}
+.veto-mirror-preserved-flag.deleted{color:#f2b3c0;
+  background:rgba(220,90,121,.1);border-color:rgba(220,112,138,.22)}
+.veto-mirror-preserved-flag.subtle{background:transparent;border:0;
+  padding:0 0 5px;color:#8799ac}
+.veto-mirror-bubble.is-deleted .veto-mirror-bubble-inner{
+  border-color:rgba(231,125,151,.26);background:#211923;
+}
+.veto-mirror-bubble.is-deleted.outgoing .veto-mirror-bubble-inner{background:#28202c}
+.veto-mirror-chat-avatar.avatar-copy,.veto-mirror-thread-avatar.avatar-copy{
+  background:linear-gradient(145deg,#45404a,#29252e);color:#e4d5e6
+}
+.veto-mirror-open-vault{display:flex;align-items:center;gap:5px;
+  border:1px solid rgba(181,214,242,.2);border-radius:10px;
+  padding:9px 10px;margin-top:9px;min-height:36px;
+  background:#253242;color:#e5f0fb;font-size:10px;font-weight:800}
+.veto-mirror-open-vault:disabled{opacity:.55}
+.veto-mirror-open-vault[hidden]{display:none!important}
+.veto-mirror-media-reveal{display:flex;flex-direction:column;align-items:flex-start;
+  gap:9px;max-width:100%;margin:7px 0}
+.veto-mirror-media-reveal img,.veto-mirror-media-reveal video{
+  display:block;max-width:100%;max-height:260px;border-radius:12px;object-fit:contain;
+  border:1px solid rgba(236,243,250,.08)}
+.veto-mirror-media-reveal>a{display:inline-flex;padding:8px 11px;border:1px solid rgba(231,239,252,.17);
+  border-radius:10px;color:#d7e4f1;background:rgba(255,255,255,.05);
+  text-decoration:none;font-size:9px;font-weight:780}

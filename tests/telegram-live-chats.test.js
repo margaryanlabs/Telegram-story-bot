@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {dialogInfo,messageInfo} from '../api/telegram-chats.js';
+import {dialogInfo,messageInfo,combineLiveAndPreserved} from '../api/telegram-chats.js';
 
 const read=name=>readFileSync(new URL('../'+name,import.meta.url),'utf8');
 
@@ -44,7 +44,7 @@ test('Live Chats API is isolated to verified owner Telegram Mini App session',()
   const api=read('api/telegram-chats.js');
   assert.ok(api.includes('validateTelegramMiniApp('));
   assert.ok(api.includes('getViewerSession(userId)'));
-  assert.ok(api.includes("String(linked.telegram_account_user_id||'')!==userId"));
+  assert.ok(api.includes("String(linked.telegram_account_user_id||'')===userId"));
   assert.ok(api.includes("openJson(linked.session_ciphertext,'session:'+userId)"));
   assert.ok(api.includes("if(req.method!=='POST')"));
   assert.ok(api.includes('dialog=dialogs.find')||api.includes('dialogs.find(d=>safeId(d.id)===chatId)'));
@@ -100,7 +100,7 @@ test('Live Chat frontend does not duplicate Telegram session or cache private me
 test('Live chat is read-only and native open action is limited to Telegram destinations',()=>{
   const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js'),html=read('public/studio.html');
   assert.ok(api.includes("scope:'read-only-cloud-chats'"));
-  assert.ok(api.includes('readOnly:true,isCopy:false'));
+  assert.ok(api.includes('readOnly:true,isCopy:chat.archiveOnly===true'));
   assert.ok(html.includes('Открыть в Telegram'));
   assert.ok(ui.includes('t\\.me') || ui.includes("https://t.me"));
   assert.ok(ui.includes("link.removeAttribute('href')"));
@@ -117,4 +117,50 @@ test('Real Telegram unread and archived dialogs are discoverable by category',()
   assert.ok(ui.includes("state.filter==='archived'"));
   assert.ok(html.includes('data-mirror-filter="unread"'));
   assert.ok(html.includes('data-mirror-filter="archived"'));
+});
+
+
+
+test('Previously captured Telegram deletions remain visible in a live chat with explicit provenance',()=>{
+  const rows=combineLiveAndPreserved([
+    {id:10,text:'Original',date:'2026-10-11T15:05:00.000Z',out:false},
+    {id:12,text:'Current message',date:'2026-10-11T15:07:00.000Z',out:false},
+  ],[
+    {id:10,text:'Copied before deletion',date:'2026-10-11T15:05:00.000Z',
+      out:false,saved:true,deleted:true,media:'photo',mediaAvailable:true},
+    {id:11,text:'Already deleted in Telegram',date:'2026-10-11T15:06:00.000Z',
+      out:false,saved:true,deleted:true},
+  ]);
+  assert.equal(rows.length,3);
+  assert.deepEqual(rows.map(x=>x.id),[10,11,12]);
+  assert.equal(rows[0].saved,true);
+  assert.equal(rows[0].deleted,true);
+  assert.equal(rows[0].mediaAvailable,true);
+  assert.equal(rows[1].preservedOnly,true);
+  assert.equal(rows[1].text,'Already deleted in Telegram');
+  assert.equal(rows[2].saved,undefined);
+});
+test('Preserved-only chat is accessible without a live Telegram session and never invents missing history',()=>{
+ const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js');
+ assert.ok(api.includes('const history=await archiveThreads(userId)'));
+ assert.ok(api.includes("if(!chat && threadArchive)chat=archivedDialog(threadArchive)"));
+ assert.ok(api.includes("if(warning && !history.length)return respond(res,409"));
+ assert.ok(api.includes('listPrivacyMessages(ownerId,chatId,ARCHIVE_PAGE,offset)'));
+ assert.ok(api.includes("deleted:Boolean(row.deleted_at),saved:true"));
+ assert.ok(api.includes('archiveHasMore:stored.hasMore'));
+ assert.ok(ui.includes("data-mirror-filter"));
+ assert.ok(ui.includes("message.deleted"));
+ assert.ok(ui.includes("УДАЛЕНО В TELEGRAM · СОХРАНЕНО В VETO"));
+ assert.ok(ui.includes("state.archiveHasMore"));
+ assert.ok(ui.includes('state.archiveOffset'));
+ assert.ok(!api.includes('Telegram can recover already deleted messages'));
+});
+test('Previously deleted media is available only through authenticated Media Vault, never a public file URL',()=>{
+ const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js');
+ assert.ok(ui.includes("'x-telegram-init-data':tg.initData"));
+ assert.ok(ui.includes("'/api/privacy-media?'"));
+ assert.ok(ui.includes('URL.createObjectURL(blob)'));
+ assert.ok(ui.includes('revokeMediaUrls()'));
+ assert.ok(api.includes("mediaAvailable:Boolean(row.media_file_id)||row.media_archive_status==='archived'"));
+ assert.ok(!api.includes('signedUrl:'));
 });

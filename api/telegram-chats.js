@@ -1,12 +1,13 @@
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
-import { getViewerSession } from '../lib/viewer-sync-store.js';
+import { getViewerSession, listPrivacyThreads, listPrivacyMessages } from '../lib/viewer-sync-store.js';
 import { withBackupClient } from '../lib/telegram-history-backup.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const PAGE_SIZE=50;
 const MAX_DIALOGS=500;
 const MESSAGE_PAGE=35;
+const ARCHIVE_PAGE=100;
 const safeId=value=>String(value?.toString?.()||value||'');
 const clean=(value,limit=200)=>String(value??'').replace(/[\u0000-\u001f]/g,' ').slice(0,limit);
 const validChatId=value=>/^-?\d{1,22}$/.test(String(value||''));
@@ -88,6 +89,78 @@ export function messageInfo(message,group=false){
     // For protected media copies use independent owner-approved Media Vault.
   };
 }
+
+function archivedDialog(row){
+  const title=clean(row?.title||'Сохранённый чат',100);
+  return {
+    id:safeId(row?.chatId),title,type:'copy',username:null,peerId:null,
+    preview:clean(row?.deletedPreview||row?.preview||'Есть сохранённая переписка',180),
+    date:row?.lastAt||null,unreadCount:0,pinned:false,muted:false,
+    verified:false,nativeUrl:null,
+    archiveOnly:true,savedCopy:true,archived:true,
+    savedCount:Math.max(0,Number(row?.messageCount||0)),
+    deletedCount:Math.max(0,Number(row?.deletedCount||0)),
+  };
+}
+function decorateRemote(remote,archiveRows){
+  const archiveMap=new Map((archiveRows||[]).map(row=>[safeId(row.chatId),row]));
+  return remote.map(chat=>{
+    const row=archiveMap.get(chat.id);
+    if(!row)return chat;
+    return {...chat,savedCopy:true,
+      savedCount:Math.max(0,Number(row.messageCount||0)),
+      deletedCount:Math.max(0,Number(row.deletedCount||0))};
+  });
+}
+async function archiveThreads(ownerId){
+  try {
+    const result=await listPrivacyThreads(ownerId);
+    return Array.isArray(result?.threads)
+      ? result.threads.filter(row=>safeId(row?.chatId)&&Number(row?.messageCount||0)>0)
+      : [];
+  }catch {
+    // If private archive is unavailable, do not invent saved chats.
+    return [];
+  }
+}
+async function archivedMessages(ownerId,chatId,offset=0){
+  try{
+    const result=await listPrivacyMessages(ownerId,chatId,ARCHIVE_PAGE,offset);
+    const rows=Array.isArray(result?.messages)?result.messages:[];
+    return {
+      messages:rows.map(row=>({
+        id:Number(row.message_id),date:row.sent_at||null,
+        out:row.direction==='outgoing',
+        text:clean(row.text_content||row.caption||'',5000),
+        media:row.media_type||null,
+        mediaAvailable:Boolean(row.media_file_id)||row.media_archive_status==='archived',
+        edited:Boolean(row.edited_at),
+        deleted:Boolean(row.deleted_at),saved:true,
+        sender:clean(row.sender_display_name||'',90)||null,
+      })).filter(row=>Number.isSafeInteger(row.id)&&row.id>0),
+      hasMore:Boolean(result?.hasMore),
+      nextOffset:offset+rows.length,
+    };
+  }catch{return {messages:[],hasMore:false,nextOffset:offset};}
+}
+export function combineLiveAndPreserved(live=[],preserved=[]){
+  const map=new Map();
+  for(const msg of live)if(msg?.id)map.set(String(msg.id),msg);
+  for(const kept of preserved){
+    if(!kept?.id)continue;
+    const key=String(kept.id),previous=map.get(key);
+    if(previous){
+      map.set(key,{...previous,saved:true,deleted:Boolean(kept.deleted),
+        mediaAvailable:Boolean(kept.mediaAvailable),
+        archivedOriginal:Boolean(kept.deleted)});
+    }else{
+      map.set(key,{...kept,preservedOnly:true});
+    }
+  }
+  return [...map.values()].sort((a,b)=>
+    new Date(a.date||0).getTime()-new Date(b.date||0).getTime()||
+    Number(a.id)-Number(b.id));
+}
 function errorMessage(error){
   const raw=String(error?.errorMessage||error?.message||'');
   if(/FLOOD_WAIT|429/i.test(raw))return {status:429,error:'Telegram ограничил запросы. Попробуй позже.'};
@@ -109,55 +182,96 @@ export default async function handler(req,res){
   const action=String(body.action||'list');
   if(!['list','thread'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
   const userId=String(owner.id);
+  const page=Number(body.page??0);
+  const chatId=String(body.chatId||'');
+  const cursor=Number(body.offsetId||0);
+  const archiveOffset=Number(body.archiveOffset||0);
+  if(action==='list'&&(!Number.isSafeInteger(page)||page<0||page>=Math.ceil(MAX_DIALOGS/PAGE_SIZE)))
+    return respond(res,400,{error:'Неверная страница списка чатов'});
+  if(action==='thread'&&(!validChatId(chatId)||!Number.isSafeInteger(cursor)||cursor<0
+    ||!Number.isSafeInteger(archiveOffset)||archiveOffset<0||archiveOffset>50000))
+    return respond(res,400,{error:'Неверный идентификатор переписки'});
   try{
-    const linked=await getViewerSession(userId);
-    if(!linked||linked.status!=='active'||!linked.session_ciphertext)
-      return respond(res,409,{error:'Подключи личный Telegram-аккаунт в VETO через номер или QR.'});
-    if(String(linked.telegram_account_user_id||'')!==userId)
-      return respond(res,403,{error:'Для просмотра подключи именно свой Telegram-аккаунт.'});
-    const creds=await openJson(linked.session_ciphertext,'session:'+userId);
-    if(!creds?.session)throw new Error('SESSION_REVOKED');
-    const data=await withBackupClient(creds.session,async client=>{
-      if(action==='list'){
-        const page=Number(body.page??0);
-        if(!Number.isSafeInteger(page)||page<0||page>=Math.ceil(MAX_DIALOGS/PAGE_SIZE))
-          throw new Error('invalid_page');
-        // Bounded, cursor-independent re-fetch avoids leaking MTProto access
-        // hashes to the browser and keeps navigation valid after reconnect.
-        const totalToFetch=Math.min(MAX_DIALOGS,(page+1)*PAGE_SIZE+1);
-        const dialogs=await client.getDialogs({limit:totalToFetch});
-        const start=page*PAGE_SIZE;
-        return {
-          chats:dialogs.slice(start,start+PAGE_SIZE).map(dialogInfo),
-          page,hasMore:dialogs.length>start+PAGE_SIZE,
-          limit:MAX_DIALOGS,updatedAt:new Date().toISOString(),
-          scope:'read-only-cloud-chats',isCopy:false,
-        };
+    const history=await archiveThreads(userId);
+    const linked=await getViewerSession(userId).catch(()=>null);
+    const validSession=linked?.status==='active' && linked.session_ciphertext &&
+      String(linked.telegram_account_user_id||'')===userId;
+    let creds=null;
+    if(validSession){
+      try{creds=await openJson(linked.session_ciphertext,'session:'+userId);}
+      catch{/* Archival copies remain readable when MTProto authorization expires. */}
+    }
+    if(action==='list'){
+      let live={chats:[],hasMore:false};
+      let warning=null;
+      if(creds?.session){
+        try{
+          live=await withBackupClient(creds.session,async client=>{
+            // Bounded cursor-independent retrieval, never return access hashes.
+            const totalToFetch=Math.min(MAX_DIALOGS,(page+1)*PAGE_SIZE+1);
+            const dialogs=await client.getDialogs({limit:totalToFetch});
+            const start=page*PAGE_SIZE;
+            return {chats:dialogs.slice(start,start+PAGE_SIZE).map(dialogInfo),
+              hasMore:dialogs.length>start+PAGE_SIZE};
+          });
+        }catch(error){warning=errorMessage(error).error;}
+      }else warning='Подключи свой Telegram для живых чатов. Ранее сохранённые копии VETO доступны отдельно.';
+      const chats=decorateRemote(live.chats,history);
+      if(page===0){
+        const liveIds=new Set(chats.map(c=>c.id));
+        for(const thread of history){
+          const entry=archivedDialog(thread);
+          if(!liveIds.has(entry.id))chats.push(entry);
+        }
       }
-      const chatId=String(body.chatId||'');
-      const cursor=Number(body.offsetId||0);
-      if(!validChatId(chatId)||!Number.isSafeInteger(cursor)||cursor<0)
-        throw new Error('invalid_thread');
-      // A client may only open a dialog actually returned from the owner's
-      // MTProto dialog list, never arbitrary foreign user/chat IDs.
-      const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
-      const dialog=dialogs.find(d=>safeId(d.id)===chatId);
-      if(!dialog)return {missing:true,limit:MAX_DIALOGS};
-      const received=await client.getMessages(dialog.entity,{
-        limit:MESSAGE_PAGE+1,offsetId:cursor,
+      if(warning && !history.length)return respond(res,409,{error:warning});
+      return respond(res,200,{
+        chats,page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
+        updatedAt:new Date().toISOString(),warning,
+        archivedThreads:history.length,scope:'read-only-cloud-chats',isCopy:false,
       });
-      const slice=received.slice(0,MESSAGE_PAGE);
-      const oldest=Number(slice.at(-1)?.id||0);
-      return {
-        chat:dialogInfo(dialog),
-        messages:slice.map(m=>messageInfo(m,kind(dialog)==='group')).filter(Boolean).reverse(),
-        hasMore:received.length>MESSAGE_PAGE&&oldest>1,
-        nextOffsetId:oldest>0&&oldest<(cursor||Number.MAX_SAFE_INTEGER)?oldest:null,
-        readOnly:true,isCopy:false,
-      };
+    }
+    const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
+    const stored=await archivedMessages(userId,chatId,archiveOffset);
+    let liveMessages=[],liveMore=false,nextLive=null,chat=null,warning=null;
+    // A preserved-only thread can be opened even after the chat is cleared
+    // or removed from the owner's current Telegram dialog list.
+    if(creds?.session && body.liveExhausted!==true){
+      try{
+        const fetched=await withBackupClient(creds.session,async client=>{
+          const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
+          const dialog=dialogs.find(d=>safeId(d.id)===chatId);
+          if(!dialog)return {missing:true};
+          const received=await client.getMessages(dialog.entity,{
+            limit:MESSAGE_PAGE+1,offsetId:cursor,
+          });
+          const slice=received.slice(0,MESSAGE_PAGE);
+          const oldest=Number(slice.at(-1)?.id||0);
+          return {
+            chat:dialogInfo(dialog),
+            messages:slice.map(m=>messageInfo(m,kind(dialog)==='group')).filter(Boolean).reverse(),
+            hasMore:received.length>MESSAGE_PAGE&&oldest>1,
+            nextOffsetId:oldest>0&&oldest<(cursor||Number.MAX_SAFE_INTEGER)?oldest:null,
+          };
+        });
+        if(!fetched.missing){
+          chat=fetched.chat;liveMessages=fetched.messages;
+          liveMore=Boolean(fetched.hasMore);
+          nextLive=fetched.nextOffsetId;
+        }
+      }catch(error){warning=errorMessage(error).error;}
+    }
+    if(!chat && threadArchive)chat=archivedDialog(threadArchive);
+    if(!chat)return respond(res,404,{error:'Чат не найден в Telegram и нет ранее сохранённой копии VETO.'});
+    return respond(res,200,{
+      chat, messages:combineLiveAndPreserved(liveMessages,stored.messages),
+      hasMore:Boolean(liveMore||stored.hasMore),liveHasMore:liveMore,
+      archiveHasMore:stored.hasMore, archiveNextOffset:stored.nextOffset,
+      nextOffsetId:nextLive,
+      archivedMessageCount:Number(threadArchive?.messageCount||0),
+      deletedMessageCount:Number(threadArchive?.deletedCount||0),
+      warning,readOnly:true,isCopy:chat.archiveOnly===true,
     });
-    if(data.missing)return respond(res,404,{error:'Чат не найден в последних 500 диалогах аккаунта. Используй оригинальный Telegram.'});
-    return respond(res,200,data);
   }catch(error){
     const e=errorMessage(error);
     return respond(res,e.status,{error:e.error});
