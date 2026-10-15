@@ -833,6 +833,8 @@
   }
 
   function closeSheet() {
+    // Telegram BackButton must not allow an unobserved backup loop to continue.
+    privacyState.backup.stopRequested = true;
     revokeMediaUrl();
     if ($('sheetBackdrop')) $('sheetBackdrop').hidden = true;
     if ($('sheet')) $('sheet').hidden = true;
@@ -1585,17 +1587,34 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
-    const action = event.target.closest('[data-backup-chat],[data-backup-run],[data-backup-next],[data-backup-back],[data-backup-retry],[data-backup-connect],[data-backup-open-chat],[data-backup-retention-long]');
+    const action = event.target.closest('[data-backup-chat],[data-backup-run],[data-backup-resume],[data-backup-next],[data-backup-pause],[data-backup-back],[data-backup-retry],[data-backup-connect],[data-backup-open-chat],[data-backup-retention-long]');
     if (action) {
       if (action.hasAttribute('data-backup-chat')) {
         const chat = privacyState.backup.chats.find(c => String(c.chatId) === String(action.dataset.backupChat));
         if (chat) renderBackupConfirm(chat);
-      } else if (action.hasAttribute('data-backup-run')) {
-        privacyState.backup.notifyCompletion = $('backupNotify')?.checked !== false;
-        await runBackupPage(action,0);
+      } else if (action.hasAttribute('data-backup-run') || action.hasAttribute('data-backup-resume')) {
+        const b = privacyState.backup;
+        b.auto = $('backupAuto')?.checked !== false;
+        b.notifyCompletion = $('backupNotify')?.checked !== false;
+        const resume = action.hasAttribute('data-backup-resume')
+          ? savedBackupCursor(b.selected?.chatId) : null;
+        b.offsetId = resume?.offsetId || 0;
+        b.totalRead = resume?.totalRead || 0;
+        b.totalSaved = resume?.totalSaved || 0;
+        if (!resume) clearBackupCursor(b.selected?.chatId);
+        await runBackupPage(action,b.offsetId);
       } else if (action.hasAttribute('data-backup-next')) {
+        // Continue automatically only if the user enabled the option
+        // at the original per-chat consent step.
         await runBackupPage(action,privacyState.backup.offsetId);
-      } else if (action.hasAttribute('data-backup-back')) renderBackupList();
+      } else if (action.hasAttribute('data-backup-pause')) {
+        privacyState.backup.stopRequested = true;
+        action.disabled = true;
+        action.textContent = 'Останавливаю после текущей порции…';
+      } else if (action.hasAttribute('data-backup-back')) {
+        privacyState.backup.stopRequested = true;
+        renderBackupList();
+      }
       else if (action.hasAttribute('data-backup-retry')) await openBackupPicker();
       else if (action.hasAttribute('data-backup-connect')) {
         closeSheet();
@@ -1743,6 +1762,11 @@
   });
 
   document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Mobile Telegram may kill a hidden WebView. The last successful cursor
+      // is durable, while the in-flight request is allowed to finish safely.
+      privacyState.backup.stopRequested = true;
+    }
     if (!document.hidden && privacyScreenActive()) refresh({ silent:true });
   });
 
