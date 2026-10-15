@@ -286,7 +286,7 @@
         <div class="veto-mirror-list" id="telegramChatsView">
           <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETO TELEGRAM · LIVE MIRROR <span class="veto-mirror-readonly">READ ONLY</span></div>
           <div class="veto-mirror-heading">
-            <div><h1>Мои чаты<span class="veto-mirror-dot">.</span></h1><p>Твои настоящие переписки в другом интерфейсе. Без импорта и изменения статуса прочтения.</p></div>
+            <div><h1>Мои чаты<span class="veto-mirror-dot">.</span></h1><p>Живые переписки и сохранённые копии — вместе. Даже если Telegram-чат очистили после сохранения.</p></div>
             <button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button>
           </div>
           <div class="veto-mirror-search-wrap">
@@ -303,15 +303,16 @@
             <button type="button" data-mirror-filter="saved">Избранное</button>
             <button type="button" data-mirror-filter="unread">Непрочитанные</button>
             <button type="button" data-mirror-filter="archived">Архив</button>
+            <button type="button" data-mirror-filter="copies">Копии VETO <span>↶</span></button>
           </div>
-          <div class="veto-mirror-headline"><span>ПОСЛЕДНИЕ ДИАЛОГИ</span><span id="telegramMirrorUpdated">LIVE · По запросу</span></div>
+          <div class="veto-mirror-headline"><span>ДИАЛОГИ И СОХРАНЁННЫЕ КОПИИ</span><span id="telegramMirrorUpdated">LIVE · По запросу</span></div>
           <div id="telegramMirrorNotice" class="veto-mirror-notice" hidden></div>
           <div class="veto-mirror-chat-list" id="telegramMirrorList" aria-live="polite">
             <div class="veto-mirror-empty"><span class="veto-mirror-loader"></span><strong>Открываю Telegram…</strong><small>Доступны чаты твоего подключённого аккаунта</small></div>
           </div>
           <button class="veto-mirror-more" id="telegramMirrorMore" type="button" hidden>Показать ещё чаты <span>↓</span></button>
           <div class="veto-mirror-privacy-note">
-            <span>◈</span><div><strong>Живой просмотр ≠ резервная копия</strong><p>Сообщения загружаются по запросу из твоего Telegram. VETO не сохраняет их в этот раздел и не отправляет отметку «прочитано». Сохранение копий — отдельная функция Privacy.</p></div>
+            <span>◈</span><div><strong>Живой просмотр ≠ резервная копия</strong><p>Сообщения загружаются по запросу из твоего Telegram. VETO не отправляет отметку «прочитано». Здесь также показаны ранее сохранённые копии Privacy — включая подтверждённые удаления и чаты, исчезнувшие из Telegram.</p></div>
           </div>
           <button class="veto-mirror-vault-link" type="button" data-open-screen="privacy">Открыть защищённый архив VETO <span>↗</span></button>
         </div>
@@ -323,13 +324,13 @@
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
           </div>
-          <div class="veto-mirror-thread-security"><i></i> Живой Telegram · только чтение <span>◈</span></div>
+          <div class="veto-mirror-thread-security"><i></i> Telegram + сохранённая история · только чтение <span>◈</span></div>
           <div class="veto-mirror-thread-body" id="telegramThreadMessages" aria-live="polite"></div>
           <div id="telegramThreadNotice" class="veto-mirror-thread-notice" hidden></div>
           <div class="veto-mirror-thread-bottom">
             <button type="button" id="telegramThreadOlder" class="veto-mirror-older" hidden>↑ Загрузить старые сообщения</button>
             <div class="veto-mirror-thread-footer">
-              <div><strong>◈ Private View</strong><small>Здесь ты только смотришь · отправка в Telegram</small></div>
+              <div><strong>◈ Private View + VETO Archive</strong><small>Удалённые сообщения видны, только если они были сохранены заранее</small></div>
               <a id="telegramThreadOpenNative" href="#" target="_blank" rel="noopener noreferrer" hidden>Открыть в Telegram ↗</a>
             </div>
           </div>
@@ -809,7 +810,7 @@
       </section>
 
       <section class="veto-mirror-privacy-entrance">
-        <div><span>↗</span><section><small>VETO · LIVE CHATS</small><strong>Мой Telegram — все чаты</strong><p>Открывай живые диалоги, группы и каналы. Отдельно от архивных копий.</p></section></div>
+        <div><span>↗</span><section><small>VETO · LIVE CHATS</small><strong>Мой Telegram — все чаты</strong><p>Открывай живые диалоги вместе с ранее сохранёнными и удалёнными сообщениями.</p></section></div>
         <button type="button" data-open-screen="telegram">Открыть чаты <span>→</span></button>
       </section>
       <section class="ghost-backup-panel" aria-label="Резервные копии личных диалогов Telegram">
