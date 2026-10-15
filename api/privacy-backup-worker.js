@@ -7,7 +7,6 @@ import {
 import { withBackupClient,fetchBackupPage } from '../lib/telegram-history-backup.js';
 import { archiveHistoryMedia } from '../lib/telegram-history-media.js';
 
-const PUBLIC_KEYS=['idl_pp6aznx3_qyvmQV6CI5Um0cRt2VLI9-o_raIsVc'.replace('-o_','-o-')];
 // Keep exact production verifier key aligned with the viewer watcher.
 const WATCH_SIGNING_KEY='idl_pp6aznx3_qyvmQV6CI5Um0cRt2VLI9-o-raIsVc';
 const MAX_JOBS=2;
