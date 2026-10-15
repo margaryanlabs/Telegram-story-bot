@@ -67,7 +67,8 @@ export function dialogInfo(d){
     peerId:peerId||null,
     preview:preview(d?.message),date:dateString(d?.message),
     unreadCount:Math.max(0,Math.min(99999,Number(d?.unreadCount||0))),
-    pinned:Boolean(d?.pinned),muted:Boolean(d?.dialog?.notifySettings?.muteUntil),
+    pinned:Boolean(d?.pinned),archived:Boolean(d?.archived||d?.folderId===1),
+    muted:Boolean(d?.dialog?.notifySettings?.muteUntil),
     verified:Boolean(d?.entity?.verified),scam:Boolean(d?.entity?.scam),
     nativeUrl:publicUrl||nativeUrl,
   };
