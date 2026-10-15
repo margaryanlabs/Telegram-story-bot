@@ -299,6 +299,131 @@ async function opCreatePrivacyMediaUpload(args: any) {
 // User-session historical media is separate from the Bot API vault workflow.
 // Only a previously imported message, with a real media type and an explicit
 // Mini App selection or owner-approved background job, can request an upload.
+// No job is ever created by a watcher. It is enabled only after a Mini App
+// owner has selected a specific one-to-one chat and consented explicitly.
+async function opSaveBackupJob(args: any) {
+  const userId=String(args.userId || "");
+  const chatId=String(args.chatId || "");
+  if (!/^\d{1,19}$/.test(userId) || !/^\d{1,19}$/.test(chatId)
+      || typeof args.consent !== "boolean" || args.consent !== true) {
+    throw new Error("explicit_backup_consent_required");
+  }
+  const session = await opGetSession({userId});
+  if (!session || session.status !== "active" || String(session.telegram_account_user_id) !== userId) {
+    throw new Error("owned_telegram_session_required");
+  }
+  const settings = await opGetPrivacySettings({userId});
+  if (!settings.ghostInbox) throw new Error("enable_inbox_before_backup");
+  const row={
+    telegram_user_id:userId,chat_id:chatId,
+    chat_title:String(args.chatTitle || "").slice(0,120),
+    enabled:true,media_enabled:args.mediaEnabled === true,
+    notify_completion:args.notifyCompletion !== false,
+    state:"active", last_error:null, completed_at:null,
+    next_run_at:new Date().toISOString(),
+    lease_until:new Date().toISOString(),updated_at:new Date().toISOString(),
+  };
+  const existing=await db.from("story_pilot_backup_jobs").select("offset_id,total_read,total_saved,total_media")
+    .eq("telegram_user_id",userId).eq("chat_id",chatId).maybeSingle();
+  const original=need(existing as any);
+  const next={...row,offset_id:Number(original?.offset_id || 0),
+    total_read:Number(original?.total_read || 0),total_saved:Number(original?.total_saved || 0),
+    total_media:Number(original?.total_media || 0)};
+  const saved=await db.from("story_pilot_backup_jobs").upsert(next,{
+    onConflict:"telegram_user_id,chat_id",
+  }).select("chat_id,state,enabled,media_enabled,notify_completion,total_read,total_saved,total_media,offset_id,updated_at").single();
+  return need(saved as any);
+}
+
+async function opListBackupJobs(args:any) {
+  const userId=String(args.userId || "");
+  if (!/^\d{1,19}$/.test(userId)) throw new Error("invalid_owner");
+  const r=await db.from("story_pilot_backup_jobs")
+    .select("chat_id,chat_title,enabled,media_enabled,notify_completion,state,offset_id,total_read,total_saved,total_media,updated_at,last_error,completed_at")
+    .eq("telegram_user_id",userId)
+    .order("updated_at",{ascending:false}).limit(60);
+  return need(r as any) || [];
+}
+
+async function opPauseBackupJob(args:any) {
+  const userId=String(args.userId || "");
+  const chatId=String(args.chatId || "");
+  if (!/^\d{1,19}$/.test(userId) || !/^\d{1,19}$/.test(chatId)) throw new Error("invalid_owner_chat");
+  const r=await db.from("story_pilot_backup_jobs").update({
+    enabled:false,state:"paused",updated_at:new Date().toISOString(),
+  }).eq("telegram_user_id",userId).eq("chat_id",chatId)
+    .select("chat_id,state,enabled").maybeSingle();
+  return need(r as any);
+}
+
+async function opClaimBackupJobs(args:any) {
+  const maxJobs=Math.max(1,Math.min(3,Number(args.limit || 2)));
+  const now=new Date().toISOString();
+  const ready=await db.from("story_pilot_backup_jobs")
+    .select("telegram_user_id,chat_id,chat_title,offset_id,media_enabled,notify_completion")
+    .eq("enabled",true).eq("state","active")
+    .lte("next_run_at",now).lte("lease_until",now)
+    .order("next_run_at",{ascending:true}).limit(maxJobs);
+  const candidates=need(ready as any) || [];
+  const claimed=[];
+  for (const row of candidates) {
+    const stamp=new Date().toISOString();
+    // Atomic conditional update: two concurrent cron requests cannot claim
+    // the same job while its lease is active.
+    const update=await db.from("story_pilot_backup_jobs").update({
+      lease_until:new Date(Date.now()+115000).toISOString(),
+      next_run_at:new Date(Date.now()+300000).toISOString(),
+      updated_at:stamp,
+    }).eq("telegram_user_id",row.telegram_user_id)
+      .eq("chat_id",row.chat_id).eq("enabled",true).eq("state","active")
+      .lte("lease_until",stamp).lte("next_run_at",stamp)
+      .select("telegram_user_id,chat_id,chat_title,offset_id,media_enabled,notify_completion")
+      .maybeSingle();
+    const acquired=need(update as any);
+    if (acquired) claimed.push(acquired);
+  }
+  return claimed;
+}
+
+async function opCompleteBackupJob(args:any) {
+  const userId=String(args.userId || "");
+  const chatId=String(args.chatId || "");
+  if (!/^\d{1,19}$/.test(userId) || !/^\d{1,19}$/.test(chatId)) throw new Error("invalid_owner_chat");
+  const complete=args.complete === true;
+  const error=String(args.error || "").slice(0,150);
+  const cursor=Math.max(0,Math.floor(Number(args.nextOffsetId || 0)));
+  if (!Number.isSafeInteger(cursor)) throw new Error("invalid_backup_cursor");
+  const r=await db.from("story_pilot_backup_jobs").select("total_read,total_saved,total_media,state,enabled,offset_id")
+    .eq("telegram_user_id",userId).eq("chat_id",chatId).maybeSingle();
+  const row=need(r as any);
+  if (!row || !row.enabled || row.state!=="active") return {status:"paused"};
+  // A retry must never move the resume position forward based on a stale
+  // offset; Telegram message IDs decrease as the archive goes backwards.
+  const current=Number(row.offset_id || 0);
+  if (!complete && !error && current && cursor>=current) return {status:"stale"};
+  const patch:any={
+    total_read:Number(row.total_read || 0)+Math.max(0,Math.min(45,Number(args.read || 0))),
+    total_saved:Number(row.total_saved || 0)+Math.max(0,Math.min(45,Number(args.saved || 0))),
+    total_media:Number(row.total_media || 0)+Math.max(0,Math.min(2,Number(args.mediaSaved || 0))),
+    lease_until:new Date().toISOString(), updated_at:new Date().toISOString(),
+  };
+  if (error) {
+    patch.last_error=error;
+    patch.next_run_at=new Date(Date.now()+900000).toISOString();
+  } else {
+    patch.offset_id=complete ? 0 : cursor;
+    patch.last_error=null;
+    patch.state=complete ? "done" : "active";
+    patch.enabled=!complete;
+    patch.completed_at=complete ? new Date().toISOString() : null;
+  }
+  const updated=await db.from("story_pilot_backup_jobs").update(patch)
+    .eq("telegram_user_id",userId).eq("chat_id",chatId)
+    .eq("enabled",true).eq("state","active")
+    .select("state,enabled,offset_id,total_read,total_saved,total_media,notify_completion,chat_title").maybeSingle();
+  return need(updated as any) || {status:"paused"};
+}
+
 async function opCreateHistoryMediaUpload(args: any) {
   const userId = String(args.userId || "");
   const chatId = String(args.chatId || "");
@@ -2823,6 +2948,11 @@ async function dispatch(op: string, args: any) {
     case "list_deleted_feed": return opListDeletedFeed(args);
     case "list_privacy_messages": return opListPrivacyMessages(args);
     case "get_privacy_media_ref": return opGetPrivacyMediaRef(args);
+    case "save_backup_job": return opSaveBackupJob(args);
+    case "list_backup_jobs": return opListBackupJobs(args);
+    case "pause_backup_job": return opPauseBackupJob(args);
+    case "claim_backup_jobs": return opClaimBackupJobs(args);
+    case "complete_backup_job": return opCompleteBackupJob(args);
     case "create_history_media_upload": return opCreateHistoryMediaUpload(args);
     case "create_privacy_media_upload": return opCreatePrivacyMediaUpload(args);
     case "finalize_privacy_media_archive": return opFinalizePrivacyMediaArchive(args);
