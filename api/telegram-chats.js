@@ -236,7 +236,7 @@ export default async function handler(req,res){
     let liveMessages=[],liveMore=false,nextLive=null,chat=null,warning=null;
     // A preserved-only thread can be opened even after the chat is cleared
     // or removed from the owner's current Telegram dialog list.
-    if(creds?.session && body.archiveOnly!==true && body.liveExhausted!==true){
+    if(creds?.session && body.liveExhausted!==true){
       try{
         const fetched=await withBackupClient(creds.session,async client=>{
           const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
