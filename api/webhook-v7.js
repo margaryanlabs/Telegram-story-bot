@@ -517,11 +517,11 @@ function ghostMessagePreview(row = {}) {
   return String(value || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
 }
 
-async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}, mediaRecoveryResults = []) {
+async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}, mediaRecoveryResults = [], deletedMessageCount = 0) {
   const allIncoming = (Array.isArray(events) ? events : [])
     .filter(event => event?.direction !== 'outgoing');
   const incoming = allIncoming.slice(0, 5);
-  if (!ownerChatId || !incoming.length) return false;
+  if (!ownerChatId || (!incoming.length && deletedMessageCount <= 0)) return false;
 
   const lines = incoming.map(event => {
     const sender = event.sender || event.chatTitle || 'Telegram user';
@@ -532,6 +532,13 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
   const extra = allIncoming.length > incoming.length
     ? `\n+ ещё ${allIncoming.length - incoming.length}`
     : '';
+  const unseenCount = Math.max(0, Number(deletedMessageCount || 0) - (Array.isArray(events) ? events.length : 0));
+  const unseenNote = unseenCount
+    ? `\n\n⚠ Ещё ${unseenCount} удалённых сообщений Telegram сообщил без сохранённого ранее текста. Восстановить их содержимое задним числом нельзя.`
+    : '';
+  const copyNote = incoming.length
+    ? 'Копия доступных сообщений сохранена в VETO Vault.'
+    : 'Telegram сообщил об удалении. У VETO нет ранее сохранённой копии содержания.';
 
   const mediaResults = Array.isArray(mediaRecoveryResults) ? mediaRecoveryResults : [];
   const mediaRecovered = mediaResults.filter(item => item?.archived).length;
@@ -543,7 +550,7 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
 
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `👻 Anti-Delete\n\nУдалено ${incoming.length === 1 ? 'сообщение' : 'сообщения'}:\n${lines.join('\n')}${extra}\n\nКопия сохранена в VETO Vault.${mediaStatus}`,
+    text: `👻 Anti-Delete\n\nTelegram сообщил об удалении ${Number(deletedMessageCount || incoming.length)} сообщени${Number(deletedMessageCount || incoming.length) === 1 ? 'я' : 'й'}.\n${lines.join('\n')}${extra}\n\n${copyNote}${unseenNote}${mediaStatus}`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -1047,8 +1054,8 @@ export default async function handler(req, res) {
         if (
           result?.retained
           && result?.settings?.notifyDeletes !== false
-          && Array.isArray(result?.events)
-          && result.events.length
+          && Array.isArray(deleted?.message_ids)
+          && deleted.message_ids.length
         ) {
           result.alertSent = await sendGhostDeleteAlert(
             token,
@@ -1057,6 +1064,7 @@ export default async function handler(req, res) {
             result.events,
             result.settings,
             result.mediaRecoveryResults,
+            deleted.message_ids.length,
           ).catch(error => {
             console.warn('VETO Telegram Ghost delete alert skipped', error?.message || error);
             return false;
