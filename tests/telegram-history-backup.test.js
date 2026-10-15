@@ -71,7 +71,9 @@ test('Database importer is idempotent and preserves previously deleted copies',(
  assert.ok(edge.includes('ignoreDuplicates: true'));
  assert.ok(edge.includes('onConflict: "telegram_user_id,chat_id,message_id"'));
  assert.ok(edge.includes('if (!settings.ghostInbox)'));
- assert.ok(!edge.includes('on conflict (telegram_user_id, chat_id, message_id) do update set\n        business_connection_id = excluded.business_connection_id\n        direction = excluded.direction\n        sender_user_id = excluded.sender_user_id\n        sender_username = excluded.sender_username\n        sender_display_name = excluded.sender_display_name\n        chat_title = excluded.chat_title\n        text_content = excluded.text_content\n        caption = excluded.caption\n        media_type = excluded.media_type\n        media_file_id = excluded.media_file_id\n        media_unique_id = excluded.media_unique_id\n        media_mime_type = excluded.media_mime_type\n        media_file_name = excluded.media_file_name\n        media_file_size = excluded.media_file_size\n        sent_at = excluded.sent_at\n        edited_at = excluded.edited_at\n        content_hash = excluded.content_hash\n        updated_at = excluded.updated_at'));
+ const importer = edge.split('async function opImportUserHistoryBatch')[1]?.split('async function opCaptureBusinessMessage')[0] || '';
+ assert.ok(importer.includes('ignoreDuplicates: true'));
+ assert.ok(!importer.includes('do update set'));
 });
 
 test('Notification switches, live test alerts and completion notice remain real functions',()=>{
@@ -96,5 +98,5 @@ test('User initiates one chat backup and can load older pages or stop',()=>{
  assert.ok(ui.includes('data-backup-next="1"'));
  assert.ok(ui.includes('backup.totalSaved += Number(data.saved || 0)'));
  assert.ok(ui.includes('privacyState.backup.selected'));
- assert.ok(ui.includes('Хранить'));
+ assert.ok(ui.includes('data-backup-retention-long'));
 });
