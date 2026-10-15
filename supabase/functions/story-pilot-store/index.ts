@@ -296,6 +296,47 @@ async function opCreatePrivacyMediaUpload(args: any) {
   };
 }
 
+// User-session historical media is separate from the Bot API vault workflow.
+// Only a previously imported message, with a real media type and an explicit
+// Mini App selection or owner-approved background job, can request an upload.
+async function opCreateHistoryMediaUpload(args: any) {
+  const userId = String(args.userId || "");
+  const chatId = String(args.chatId || "");
+  const messageId = Number(args.messageId || 0);
+  const fileSize = Number(args.fileSize || 0);
+  if (!/^\d{1,19}$/.test(userId) || !/^\d{1,19}$/.test(chatId)
+      || !Number.isInteger(messageId) || messageId <= 0
+      || !Number.isSafeInteger(fileSize) || fileSize < 1 || fileSize > 5 * 1024 * 1024) {
+    throw new Error("invalid_history_media_upload");
+  }
+  const settings = await opGetPrivacySettings({ userId });
+  if (!settings.ghostInbox) return { allowed:false, reason:"history_inbox_disabled" };
+  const result = await db.from("story_pilot_messages")
+    .select("business_connection_id,content_hash,media_type,media_storage_path,media_archive_status,sent_at")
+    .eq("telegram_user_id",userId).eq("chat_id",chatId)
+    .eq("message_id",messageId).maybeSingle();
+  const row = need(result as any);
+  if (!row || row.business_connection_id !== "user_session_backup" || !row.media_type) {
+    return { allowed:false, reason:"history_message_not_found" };
+  }
+  if (Date.parse(row.sent_at) < Date.now() - settings.retentionDays * 86400000) {
+    return { allowed:false, reason:"expired_history" };
+  }
+  if (row.media_storage_path && row.media_archive_status === "archived") {
+    return { allowed:false, reason:"already_archived" };
+  }
+  await ensurePrivacyMediaBucket();
+  const hash = String(row.content_hash || "").replace(/[^a-f0-9]/g,"").slice(0,24);
+  const ext = mediaExtension(args.fileName || null,args.mimeType || null);
+  const path = [userId,chatId,String(messageId),hash + ext].join("/");
+  const sign = await db.storage.from(PRIVACY_MEDIA_BUCKET)
+    .createSignedUploadUrl(path, { upsert:true });
+  if (sign.error || !sign.data?.signedUrl) {
+    throw new Error(storageErrorMessage(sign.error) || "history_media_upload_sign_failed");
+  }
+  return { allowed:true, path, signedUrl:sign.data.signedUrl };
+}
+
 async function opFinalizePrivacyMediaArchive(args: any) {
   const userId = String(args.userId || "");
   const chatId = String(args.chatId || "");
@@ -2782,6 +2823,7 @@ async function dispatch(op: string, args: any) {
     case "list_deleted_feed": return opListDeletedFeed(args);
     case "list_privacy_messages": return opListPrivacyMessages(args);
     case "get_privacy_media_ref": return opGetPrivacyMediaRef(args);
+    case "create_history_media_upload": return opCreateHistoryMediaUpload(args);
     case "create_privacy_media_upload": return opCreatePrivacyMediaUpload(args);
     case "finalize_privacy_media_archive": return opFinalizePrivacyMediaArchive(args);
     case "cleanup_privacy_retention_global": return opCleanupPrivacyRetentionGlobal();
