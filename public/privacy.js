@@ -958,6 +958,7 @@
       const focused = focusMessageId && String(message.message_id) === String(focusMessageId);
       const hasMedia = Boolean(message.media_type);
       const mediaArchived = message.media_archive_status === 'archived';
+      const canOpenMedia = hasMedia && (Boolean(message.media_file_id) || mediaArchived);
       const mediaPending = message.media_archive_status === 'pending';
       const mediaFailed = ['failed','too_large'].includes(String(message.media_archive_status || ''));
       const sender = message.direction === 'outgoing'
@@ -968,7 +969,12 @@
           data-ghost-message-id="${escapeHtml(message.message_id)}">
           <header><span>${escapeHtml(sender)}</span><span>${escapeHtml(formatWhen(message.sent_at))}</span></header>
           <p>${messageBody(message)}</p>
-          ${hasMedia ? `
+          ${hasMedia && !canOpenMedia ? `
+            <div class="privacy-media-button ghost-media-placeholder" aria-label="Архивная отметка о вложении">
+              <span>▣</span><b>${escapeHtml(message.media_type === 'photo' ? 'Фото из истории' : 'Вложение из истории')}</b>
+              <small>В архиве только отметка — сам файл не сохранён</small>
+            </div>` : ''}
+          ${canOpenMedia ? `
             <button class="privacy-media-button" type="button"
               data-privacy-media="${escapeHtml(message.message_id)}"
               data-privacy-chat-id="${escapeHtml(message.chat_id)}"
