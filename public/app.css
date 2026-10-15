@@ -2652,3 +2652,18 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
 /* Archive-only media: never show a dead Open attachment control. */
 .ghost-media-placeholder{cursor:default;pointer-events:none;opacity:.8}
 .ghost-media-placeholder small{color:var(--muted);font-size:10px}
+
+/* History Backup: explicit manual pause, resumable cursor and mobile progress. */
+.ghost-backup-stop{
+  min-height:47px;width:100%;border:1px solid rgba(232,238,248,.24);
+  border-radius:13px;background:rgba(255,255,255,.065);color:#ebeff6;
+  font-size:12px;font-weight:740;padding:12px
+}
+.ghost-backup-stop:disabled{opacity:.58}
+.ghost-backup-working{
+  display:block;text-align:center;color:#91a0b1;line-height:1.6;
+  font-size:10px;padding:7px
+}
+.ghost-backup-summary strong{color:#f4f6fb;font-size:12px}
+.ghost-backup-notify{min-height:30px;padding:4px 0}
+.ghost-backup-person em{max-width:85px;text-align:right;font-size:10px}
