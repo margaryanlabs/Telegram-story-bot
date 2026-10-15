@@ -106,3 +106,15 @@ test('Live chat is read-only and native open action is limited to Telegram desti
   assert.ok(ui.includes("link.removeAttribute('href')"));
   assert.ok(!api.includes('readHistory'));
 });
+
+test('Real Telegram unread and archived dialogs are discoverable by category',()=>{
+  const d=dialogInfo({id:19n,title:'Важный чат',isUser:true,archived:true,
+    entity:{id:19n,username:'sample'},unreadCount:17});
+  assert.equal(d.archived,true);
+  assert.equal(d.unreadCount,17);
+  const ui=read('public/telegram-chats.js'),html=read('public/studio.html');
+  assert.ok(ui.includes("state.filter==='unread'"));
+  assert.ok(ui.includes("state.filter==='archived'"));
+  assert.ok(html.includes('data-mirror-filter="unread"'));
+  assert.ok(html.includes('data-mirror-filter="archived"'));
+});
