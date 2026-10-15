@@ -1245,6 +1245,7 @@
       return {
         offsetId:item.offsetId, totalSaved:Math.max(0,Math.floor(Number(item.totalSaved || 0))),
         totalRead:Math.max(0,Math.floor(Number(item.totalRead || 0))),
+        totalMedia:Math.max(0,Math.floor(Number(item.totalMedia || 0))),
       };
     } catch { return null; }
   }
@@ -1255,7 +1256,8 @@
       window.localStorage.setItem(backupResumeKey(b.selected.chatId),
         JSON.stringify({
           chatId:String(b.selected.chatId), offsetId:b.offsetId,
-          totalSaved:b.totalSaved, totalRead:b.totalRead, updatedAt:Date.now(),
+          totalSaved:b.totalSaved, totalRead:b.totalRead,
+          totalMedia:b.totalMedia,updatedAt:Date.now(),
         }));
     } catch {} // Storage can be disabled in Telegram WebViews.
   }
@@ -1320,6 +1322,7 @@
     privacyState.backup.offsetId = 0;
     privacyState.backup.totalSaved = 0;
     privacyState.backup.totalRead = 0;
+    privacyState.backup.totalMedia = 0;
     privacyState.backup.stopRequested = false;
     privacyState.backup.auto = false;
     const saved = savedBackupCursor(chat.chatId);
@@ -1642,6 +1645,7 @@
         b.offsetId = resume?.offsetId || 0;
         b.totalRead = resume?.totalRead || 0;
         b.totalSaved = resume?.totalSaved || 0;
+        b.totalMedia = resume?.totalMedia || 0;
         if (!resume) clearBackupCursor(b.selected?.chatId);
         await runBackupPage(action,b.offsetId);
       } else if (action.hasAttribute('data-backup-next')) {
