@@ -87,7 +87,9 @@
   function filteredChats(){
     const q=state.search.trim().toLocaleLowerCase();
     return state.chats.filter(chat=>{
-      if(state.filter!=='all'&&chat.type!==state.filter)return false;
+      if(state.filter==='unread' && Number(chat.unreadCount||0)<=0)return false;
+      if(state.filter==='archived' && chat.archived!==true)return false;
+      if(!['all','unread','archived'].includes(state.filter)&&chat.type!==state.filter)return false;
       if(!q)return true;
       return [chat.title,chat.username,chat.preview].some(value=>
         String(value||'').toLocaleLowerCase().includes(q));
@@ -119,7 +121,8 @@
           '<span class="veto-mirror-chat-main">'+
           '<span class="veto-mirror-chat-title"><strong>'+safe(chat.title)+'</strong>'+
           (chat.verified?'<i class="veto-mirror-verified">✓</i>':'')+
-          (chat.pinned?'<i class="veto-mirror-pin">⌁</i>':'')+'</span>'+
+          (chat.pinned?'<i class="veto-mirror-pin">⌁</i>':'')+
+          (chat.archived?'<i class="veto-mirror-pin">▣</i>':'')+'</span>'+
           '<small>'+safe(preview(chat))+'</small>'+
           '</span><span class="veto-mirror-chat-aside"><time>'+safe(time(chat.date))+
           '</time>'+badge+'</span></button>';
