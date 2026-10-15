@@ -21,7 +21,7 @@ test('Background job enrollment is explicit, per-chat, and authenticated against
   assert.ok(api.includes('String(session.telegram_account_user_id || \'\') !== userId'));
   assert.ok(api.includes("dialogs.find(c=>String(c.chatId)===chatId)"));
   assert.ok(api.includes("background_pause"));
-  assert.ok(api.includes('mediaEnabled:'));
+  assert.ok(api.includes('body.mediaEnabled === true'));
   const ui=read('public/privacy.js');
   assert.ok(ui.includes('backupBackground'));
   assert.ok(ui.includes('background_enable'));
