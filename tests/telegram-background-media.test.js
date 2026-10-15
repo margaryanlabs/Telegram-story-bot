@@ -102,3 +102,13 @@ test('Dense media chats are split before third attachment, so none silently disa
  assert.equal(two.fetched,2);
  assert.equal(two.hasMore,true);
 });
+
+test('User can disable background access even if linked Telegram user session is expired',()=>{
+ const api=read('api/privacy-backup.js'), ui=read('public/privacy.js');
+ const pause=api.indexOf("if(action === 'background_pause')");
+ const session=api.indexOf("const session=await getViewerSession(userId)");
+ assert.ok(pause>=0&&pause<session);
+ assert.ok(api.indexOf("if(action === 'background_status')") < session);
+ assert.ok(ui.includes("Фоновый доступ можно отозвать без входа в Telegram"));
+ assert.ok(ui.includes('data-backup-background-pause'));
+});
