@@ -8,8 +8,8 @@ const PAGE_SIZE=50;
 const MAX_DIALOGS=500;
 const MESSAGE_PAGE=35;
 const safeId=value=>String(value?.toString?.()||value||'');
-const clean=(value,limit=200)=>String(value??'').replace(/[\\u0000-\\u001f]/g,' ').slice(0,limit);
-const validChatId=value=>/^-?\\d{1,22}$/.test(String(value||''));
+const clean=(value,limit=200)=>String(value??'').replace(/[\u0000-\u001f]/g,' ').slice(0,limit);
+const validChatId=value=>/^-?\d{1,22}$/.test(String(value||''));
 const userText=m=>clean(m?.message||m?.text||'',5000);
 function dateString(value){
   const seconds=Number(value?.date||value||0);
@@ -61,7 +61,7 @@ function dialogInfo(d){
   const type=kind(d);
   const peerId=safeId(d?.entity?.id);
   const publicUrl=username?'https://t.me/'+username:null;
-  const nativeUrl=type==='private'&&/^\\d+$/.test(peerId)?'tg://user?id='+peerId:null;
+  const nativeUrl=type==='private'&&/^\d+$/.test(peerId)?'tg://user?id='+peerId:null;
   return {
     id:safeId(d?.id),title:title(d),type,username:username||null,
     peerId:peerId||null,
