@@ -269,6 +269,12 @@
       toast('Микрофон выключен при выходе из Voice Studio.');
     }
   });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&state.active){
+      stopMic();
+      toast('Микрофон отключён: приложение свёрнуто.');
+    }
+  });
   window.addEventListener('pagehide',()=>{
     stopMic();releaseRecording();cancelAnimationFrame(state.raf);state.raf=0;
   });
