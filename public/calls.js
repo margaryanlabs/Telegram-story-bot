@@ -1,7 +1,7 @@
 (() => {
   'use strict';
-  // VETO Calls experimental P2P: browser-native WebRTC with manual signaling.
-  // No signaling database, server audio relay, Telegram call interception or recording.
+  // VETO Calls: browser-native WebRTC + optional short-code signaling.
+  // No Telegram call interception, cloud audio recording or server-side audio processing.
   const $=id=>document.getElementById(id);
   const tg=window.Telegram?.WebApp;
   const supported=Boolean(window.RTCPeerConnection && navigator.mediaDevices?.getUserMedia
@@ -10,6 +10,7 @@
     peer:null,mic:null,audio:null,processed:null,oscillator:null,nodes:null,
     room:null,role:null,muted:false,connectedAt:0,timer:0,phase:'idle',epoch:0,
     mode:'manual',signalRoom:null,signalPollTimer:0,signalPollFailures:0,
+    sessionTimer:0,connectionTimer:0,iceMode:'stun',
   };
   const presets={
     original:{low:0,mid:0,high:0,robot:0},
@@ -37,6 +38,7 @@
     $('callState').dataset.state=state.phase;
     $('callCodeSection').hidden=state.phase==='idle';
     $('callMorphValue').textContent=$('callMorph').value+'%';
+    if($('callTransport'))$('callTransport').textContent=state.iceMode==='turn'? 'ICE · TURN ДОСТУПЕН':'ICE · STUN ONLY';
   }
   function stop(){
     // Cleanup is best-effort: the database also deletes abandoned offers by TTL.
@@ -45,6 +47,8 @@
       void signalRequest('end',{roomId:oldRoom}).catch(()=>{});
     }
     clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
+    clearTimeout(state.sessionTimer);state.sessionTimer=0;
+    clearTimeout(state.connectionTimer);state.connectionTimer=0;
     state.epoch++;
     clearInterval(state.timer);state.timer=0;
     try{state.peer?.close();}catch{}
@@ -56,7 +60,7 @@
     state.peer=null;state.oscillator=null;state.mic=null;state.processed=null;
     state.audio=null;state.nodes=null;state.room=null;state.role=null;
     state.muted=false;state.connectedAt=0;state.phase='idle';
-    state.mode='manual';state.signalRoom=null;state.signalPollFailures=0;
+    state.mode='manual';state.signalRoom=null;state.signalPollFailures=0;state.iceMode='stun';
     const player=$('callRemoteAudio');
     if(player){player.pause();player.srcObject=null;}
     $('callOutgoing').value='';$('callIncoming').value='';
@@ -153,12 +157,46 @@
       change();
     });
   }
+  function armConnectionWatchdog(epoch){
+    clearTimeout(state.connectionTimer);
+    state.connectionTimer=setTimeout(()=>{
+      if(epoch!==state.epoch||state.phase==='connected'||state.phase==='idle')return;
+      failed(Error('Нет аудиосвязи за 45 секунд. Проверь сеть или настрой TURN-сервер.'),epoch);
+    },45000);
+  }
   async function establish(role,epoch){
     const stream=await microphone(epoch);
     if(epoch!==state.epoch)throw Error('CANCELLED');
-    const peer=new RTCPeerConnection({iceServers:STUN,iceCandidatePoolSize:1});
+    // No TURN credentials are stored on device beyond this session.
+    let servers=STUN;state.iceMode='stun';
+    if(tg?.initData){
+      try{
+        const config=await signalRequest('ice');
+        if(epoch!==state.epoch)throw Error('CANCELLED');
+        if(Array.isArray(config?.iceServers)&&config.iceServers.length){
+          servers=config.iceServers;
+          state.iceMode=config.relayConfigured?'turn':'stun';
+        }
+      }catch(error){
+        if(epoch!==state.epoch)throw Error('CANCELLED');
+        // Fail to STUN rather than leaving the microphone waiting on backend.
+        report('TURN недоступен — пробую прямое соединение STUN.');
+      }
+    }
+    const peer=new RTCPeerConnection({iceServers:servers,iceCandidatePoolSize:1});
     state.peer=peer;state.role=role;
-    stream.getAudioTracks().forEach(track=>peer.addTrack(track,stream));
+    stream.getAudioTracks().forEach(track=>{
+      peer.addTrack(track,stream);
+      track.addEventListener('ended',()=>{
+        if(epoch===state.epoch&&state.phase!=='idle'){
+          failed(Error('Микрофон отключён системой. Звонок завершён.'),epoch);
+        }
+      });
+    });
+    state.sessionTimer=setTimeout(()=>{
+      if(epoch!==state.epoch||state.phase==='connected'||state.phase==='idle')return;
+      failed(Error('Время ожидания ответа истекло. Микрофон выключен.'),epoch);
+    },9*60*1000);
     peer.addEventListener('track',event=>{
       if(epoch!==state.epoch)return;
       const player=$('callRemoteAudio');
@@ -171,6 +209,8 @@
       if(epoch!==state.epoch)return;
       const current=peer.connectionState;
       if(current==='connected'){
+        clearTimeout(state.connectionTimer);state.connectionTimer=0;
+        clearTimeout(state.sessionTimer);state.sessionTimer=0;
         state.phase='connected';state.connectedAt=Date.now();
         clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
         // SDP is no longer needed once ICE/DTLS is established.
@@ -187,7 +227,8 @@
         },1000);
         report('Собственный WebRTC-звонок активен. Звук шифруется WebRTC DTLS-SRTP.');
       }else if(current==='failed'){
-        report('Соединение не удалось — возможно, нужен TURN-сервер. Заверши вызов и попробуй ещё раз.',true);
+        failed(Error('WebRTC-соединение не удалось. Нужен TURN или другая сеть.'),epoch);
+        return;
       }else if(current==='disconnected'){
         report('Связь прервана. Проверяю восстановление…',true);
       }
@@ -238,7 +279,7 @@
         if(!data.answerSdp||!state.peer)throw Error('Ответ собеседника недоступен');
         await state.peer.setRemoteDescription({type:'answer',sdp:data.answerSdp});
         if(epoch!==state.epoch)return;
-        state.phase='connecting';update();
+        state.phase='connecting';update();armConnectionWatchdog(epoch);
         report('Telegram пользователь #'+data.calleeId+
           ' принял приглашение. Устанавливаю WebRTC-соединение…');
       }
@@ -300,7 +341,7 @@
       await signalRequest('answer',{invite,sdp:peer.localDescription.sdp});
       if(epoch!==state.epoch)return;
       $('callIncoming').value='';
-      state.phase='connecting';update();
+      state.phase='connecting';update();armConnectionWatchdog(epoch);
       report('Ответ отправлен Telegram пользователю #'+room.callerId+
         '. Ожидаю соединение…');
     }catch(error){failed(error,epoch);}
@@ -353,7 +394,7 @@
     try{
       await state.peer.setRemoteDescription({type:'answer',sdp:answer.sdp});
       $('callIncoming').value='';$('callOutgoing').value='';
-      state.phase='connecting';update();
+      state.phase='connecting';update();armConnectionWatchdog(state.epoch);
       report('Согласование завершено. Ожидаю защищённое соединение…');
     }catch(error){report('Не удалось применить ответ: '+error.message,true);}
   }
