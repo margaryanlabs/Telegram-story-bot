@@ -10,7 +10,7 @@
     peer:null,mic:null,audio:null,processed:null,oscillator:null,nodes:null,
     room:null,role:null,muted:false,connectedAt:0,timer:0,phase:'idle',epoch:0,
     mode:'manual',signalRoom:null,signalPollTimer:0,signalPollFailures:0,
-    sessionTimer:0,connectionTimer:0,iceMode:'stun',
+    sessionTimer:0,connectionTimer:0,iceMode:'stun',waveRaf:0,qualityTimer:0,
   };
   const presets={
     original:{low:0,mid:0,high:0,robot:0},
@@ -49,6 +49,8 @@
     clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
     clearTimeout(state.sessionTimer);state.sessionTimer=0;
     clearTimeout(state.connectionTimer);state.connectionTimer=0;
+    clearInterval(state.qualityTimer);state.qualityTimer=0;
+    cancelAnimationFrame(state.waveRaf);state.waveRaf=0;
     state.epoch++;
     clearInterval(state.timer);state.timer=0;
     try{state.peer?.close();}catch{}
@@ -65,6 +67,8 @@
     if(player){player.pause();player.srcObject=null;}
     $('callOutgoing').value='';$('callIncoming').value='';
     $('callElapsed').textContent='00:00';
+    if($('callQuality'))$('callQuality').textContent='СОЕДИНЕНИЕ НЕ УСТАНОВЛЕНО';
+    const wave=$('callWaveform');if(wave)wave.getContext('2d')?.clearRect(0,0,wave.width,wave.height);
     update();
   }
   function morph(){
@@ -100,13 +104,16 @@
       const tremolo=context.createGain();tremolo.gain.value=1;
       oscillator.connect(modulation);modulation.connect(tremolo.gain);
       const limiter=context.createDynamicsCompressor();
+      const analyser=context.createAnalyser();analyser.fftSize=1024;
       const destination=context.createMediaStreamDestination();
       input.connect(low);low.connect(mid);mid.connect(high);high.connect(tremolo);
       tremolo.connect(limiter);limiter.connect(volume);volume.connect(destination);
+      volume.connect(analyser); // Visualize locally; no audio transmitted by analyser.
       oscillator.start();
       state.mic=stream;state.audio=context;state.processed=destination.stream;
-      state.oscillator=oscillator;state.nodes={low,mid,high,volume,modulation};
+      state.oscillator=oscillator;state.nodes={low,mid,high,volume,modulation,analyser};
       morph();
+      if(!state.waveRaf)drawWave(epoch);
       return destination.stream;
     }catch(error){
       stream.getTracks().forEach(t=>t.stop());
@@ -156,6 +163,43 @@
       peer.addEventListener('icegatheringstatechange',change);
       change();
     });
+  }
+  function drawWave(epoch){
+    if(epoch!==state.epoch||!state.mic||!state.nodes?.analyser)return;
+    const canvas=$('callWaveform'),ctx=canvas?.getContext('2d');
+    if(!ctx)return;
+    const {width,height}=canvas;
+    const buf=new Uint8Array(state.nodes.analyser.frequencyBinCount);
+    state.nodes.analyser.getByteTimeDomainData(buf);
+    ctx.clearRect(0,0,width,height);
+    const bars=58,step=width/bars,mid=height/2;
+    for(let i=0;i<bars;i++){
+      const n=Math.floor(i*buf.length/bars);
+      const value=Math.abs((buf[n]??128)-128)/128;
+      const amplitude=Math.min(height*.86,3+value*height*1.1);
+      ctx.fillStyle='rgba(199,214,230,'+(0.28+0.66*(1-Math.abs(i-29)/29)).toFixed(2)+')';
+      ctx.fillRect(i*step+2,mid-amplitude/2,Math.max(2,step-3),amplitude);
+    }
+    state.waveRaf=requestAnimationFrame(()=>drawWave(epoch));
+  }
+  async function updateQuality(epoch,peer){
+    if(epoch!==state.epoch||peer.connectionState!=='connected'||!peer.getStats)return;
+    try{
+      const report=await peer.getStats();
+      if(epoch!==state.epoch||peer!==state.peer)return;
+      let selected=null;
+      report.forEach(stat=>{
+        if(stat.type==='candidate-pair'&&
+           (stat.selected===true||(stat.nominated&&stat.state==='succeeded')))selected=stat;
+      });
+      if(!selected)return;
+      const candidate=selected.localCandidateId?report.get(selected.localCandidateId):null;
+      const kind=candidate?.candidateType==='relay'?'TURN RELAY':'P2P';
+      const ms=Number.isFinite(selected.currentRoundTripTime)
+        ?Math.max(0,Math.round(selected.currentRoundTripTime*1000)):null;
+      if($('callQuality'))$('callQuality').textContent=
+        kind+(ms===null?'':' · RTT '+ms+' мс');
+    }catch{} // Browser WebRTC stats support varies. Never log SDP/IP.
   }
   function armConnectionWatchdog(epoch){
     // A WebRTC peer may become connected before setRemoteDescription settles.
@@ -214,6 +258,9 @@
       if(current==='connected'){
         clearTimeout(state.connectionTimer);state.connectionTimer=0;
         clearTimeout(state.sessionTimer);state.sessionTimer=0;
+        clearInterval(state.qualityTimer);state.qualityTimer=0;
+        state.qualityTimer=setInterval(()=>{void updateQuality(epoch,peer);},5000);
+        void updateQuality(epoch,peer);
         state.phase='connected';state.connectedAt=Date.now();
         clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
         // SDP is no longer needed once ICE/DTLS is established.
