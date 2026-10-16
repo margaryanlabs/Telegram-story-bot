@@ -47,6 +47,13 @@ test('Authenticated user obtains ICE config only through signed Vercel backend',
   assert.ok(client.includes('45 секунд'));
   assert.ok(client.includes("track.addEventListener('ended'"));
   assert.ok(read('public/studio.html').includes('id="callTransport"'));
+  assert.ok(read('public/studio.html').includes('id="callWaveform"'));
+  assert.ok(read('public/studio.html').includes('id="callQuality"'));
+  assert.ok(client.includes('createAnalyser()'));
+  assert.ok(client.includes('requestAnimationFrame('));
+  assert.ok(client.includes('updateQuality(epoch,peer)'));
+  assert.ok(client.includes('cancelAnimationFrame(state.waveRaf)'));
+  assert.ok(client.includes('clearInterval(state.qualityTimer)'));
   assert.ok(!client.includes('VETO_TURN_SECRET'));
   assert.ok(!read('public/studio.html').includes('VETO_TURN_SECRET'));
 });
