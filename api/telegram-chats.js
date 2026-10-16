@@ -101,7 +101,7 @@ export function orderChatRows(chats=[]){
     return String(left.id||'').localeCompare(String(right.id||''));
   });
 }
-function archivedDialog(row){
+export function archivedDialog(row){
   const title=clean(row?.title||'Сохранённый чат',100);
   return {
     id:safeId(row?.chatId),title,type:'copy',username:null,peerId:null,
@@ -114,7 +114,7 @@ function archivedDialog(row){
     lastDeletedAt:row?.lastDeletedAt||null,
   };
 }
-function decorateRemote(remote,archiveRows){
+export function decorateRemote(remote,archiveRows){
   const archiveMap=new Map((archiveRows||[]).map(row=>[safeId(row.chatId),row]));
   return remote.map(chat=>{
     const row=archiveMap.get(chat.id);
