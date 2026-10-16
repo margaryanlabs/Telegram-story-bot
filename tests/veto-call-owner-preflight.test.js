@@ -84,7 +84,7 @@ test('Network preflight checks readiness without recording or uploading micropho
   assert.ok(source.includes("signalRequest('ice')"));
   assert.ok(source.includes("navigator.permissions.query({name:'microphone'})"));
   assert.ok(source.includes('config.relayConfigured'));
-  assert.ok(source.includes('Real'));
+  assert.ok(source.includes('Реальный звонок'));
   assert.ok(!source.includes('getUserMedia('));
   assert.ok(!source.includes('MediaRecorder'));
 });
