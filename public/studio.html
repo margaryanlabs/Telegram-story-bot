@@ -372,7 +372,8 @@
         <div class="calls-hero">
           <div class="calls-portrait" aria-hidden="true">⌁</div>
           <strong class="calls-elapsed" id="callElapsed">00:00</strong>
-          <small>Звук напрямую между участниками, если сеть позволяет. Отдельное соединение вне обычных Telegram Calls.</small>
+          <small>Звук передаётся между участниками напрямую либо через TURN-реле, если оно настроено. Не обычный Telegram-звонок.</small>
+          <small id="callTransport" class="calls-transport">ICE · STUN ONLY</small>
           <audio id="callRemoteAudio" autoplay playsinline></audio>
           <div class="calls-actions">
             <button type="button" class="call-btn secondary" id="callMute" disabled>◉ Выключить микрофон</button>
@@ -421,7 +422,7 @@
           <input type="range" id="callMorph" min="0" max="100" value="65" step="1" />
         </div>
         <div class="calls-status" id="callStatus" role="status" aria-live="polite">Готово к подключению. Микрофон включится только после твоего действия.</div>
-        <p class="calls-note"><b>Экспериментальная версия.</b> Короткий код VETOR1 передаёт зашифрованные WebRTC-параметры через временный сервер сигнализации (SDP удаляется после соединения/завершения или по TTL); само аудио сервер VETO не получает. Оба участника должны оставить окно вызова открытым. Коды пересылаются вручную, но ответ для VETOR1 передаётся автоматически. TURN-сервер пока не добавлен, поэтому в сложных сетях соединение может не пройти. Не доступны: видеосвязь, живой перевод, запись, звонок-пуш и групповые комнаты. Личность участника подтверждается входом в Telegram Mini App, но доверять собеседнику нужно по тому каналу, где передан секрет приглашения.</p>
+        <p class="calls-note"><b>Экспериментальная версия.</b> Короткий код VETOR1 передаёт зашифрованные WebRTC-параметры через временный сервер сигнализации (SDP удаляется после соединения/завершения или по TTL); само аудио сервер VETO не получает. Оба участника должны оставить окно вызова открытым. Коды пересылаются вручную, но ответ для VETOR1 передаётся автоматически. TURN-реле подключается только при наличии настроенного сервера и временных учётных данных. Без TURN связь в сложных сетях может не установиться. Не доступны: видеосвязь, живой перевод, запись, звонок-пуш и групповые комнаты. Личность участника подтверждается входом в Telegram Mini App, но доверять собеседнику нужно по тому каналу, где передан секрет приглашения.</p>
       </div>
     </section>
 
@@ -1503,7 +1504,7 @@
   <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
-  <script src="/calls.js?v=20261016-veto-p2p-signal-v2"></script>
+  <script src="/calls.js?v=20261016-veto-p2p-signal-v3"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
