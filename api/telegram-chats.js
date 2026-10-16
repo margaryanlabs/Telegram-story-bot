@@ -90,26 +90,45 @@ export function messageInfo(message,group=false){
   };
 }
 
-function archivedDialog(row){
+// Ordering mirrors the original time a message was sent, never the time
+// it was deleted or archived. It keeps cleared chats in their historical row.
+export function orderChatRows(chats=[]){
+  return [...chats].sort((left,right)=>{
+    if(Boolean(left.pinned)!==Boolean(right.pinned))return left.pinned?-1:1;
+    const a=Date.parse(left.date||'')||0;
+    const b=Date.parse(right.date||'')||0;
+    if(a!==b)return b-a;
+    return String(left.id||'').localeCompare(String(right.id||''));
+  });
+}
+export function archivedDialog(row){
   const title=clean(row?.title||'Сохранённый чат',100);
   return {
     id:safeId(row?.chatId),title,type:'copy',username:null,peerId:null,
-    preview:clean(row?.deletedPreview||row?.preview||'Есть сохранённая переписка',180),
+    preview:clean(row?.preview||row?.deletedPreview||'Есть сохранённая переписка',180),
     date:row?.lastAt||null,unreadCount:0,pinned:false,muted:false,
     verified:false,nativeUrl:null,
     archiveOnly:true,savedCopy:true,archived:true,
     savedCount:Math.max(0,Number(row?.messageCount||0)),
     deletedCount:Math.max(0,Number(row?.deletedCount||0)),
+    lastDeletedAt:row?.lastDeletedAt||null,
   };
 }
-function decorateRemote(remote,archiveRows){
+export function decorateRemote(remote,archiveRows){
   const archiveMap=new Map((archiveRows||[]).map(row=>[safeId(row.chatId),row]));
   return remote.map(chat=>{
     const row=archiveMap.get(chat.id);
     if(!row)return chat;
+    const archivedTime=Date.parse(row.lastAt||'')||0;
+    const liveTime=Date.parse(chat.date||'')||0;
+    const preservedIsNewer=archivedTime>liveTime;
     return {...chat,savedCopy:true,
+      date:preservedIsNewer?row.lastAt:chat.date,
+      preview:preservedIsNewer?clean(row.preview||row.deletedPreview||chat.preview,180):chat.preview,
       savedCount:Math.max(0,Number(row.messageCount||0)),
-      deletedCount:Math.max(0,Number(row.deletedCount||0))};
+      deletedCount:Math.max(0,Number(row.deletedCount||0)),
+      lastDeletedAt:row.lastDeletedAt||null,
+    };
   });
 }
 async function archiveThreads(ownerId){
@@ -226,7 +245,7 @@ export default async function handler(req,res){
       }
       if(warning && !history.length)return respond(res,409,{error:warning});
       return respond(res,200,{
-        chats,page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
+        chats:orderChatRows(chats),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
         updatedAt:new Date().toISOString(),warning,
         archivedThreads:history.length,scope:'read-only-cloud-chats',isCopy:false,
       });
