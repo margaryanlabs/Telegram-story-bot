@@ -2981,3 +2981,30 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
  .veto-mirror-chat-retained{font-size:7.5px}
  .veto-mirror-bubble-inner{max-width:91%}
 }
+
+/* Multi-account onboarding: separate MTProto live access from consented Privacy archive. */
+.veto-mirror-access-center{display:grid;gap:14px;margin:0 0 17px;padding:14px;
+ background:linear-gradient(128deg,rgba(35,48,65,.97),rgba(12,16,23,.98));
+ border:1px solid rgba(196,214,237,.15);border-radius:16px}
+.veto-mirror-access-head{display:flex;align-items:center;gap:9px;min-width:0}
+.veto-mirror-access-beacon{flex:0 0 auto;display:grid;place-items:center;width:35px;height:35px;
+ font-size:16px;border-radius:11px;background:rgba(191,211,235,.12);color:#d3e2f4}
+.veto-mirror-access-head>div{display:grid;flex:1;gap:4px;min-width:0}
+.veto-mirror-access-head strong{font-size:11px;color:#f1f5fb;line-height:1.4}
+.veto-mirror-access-head small{font-size:8px;color:#9eacc0;line-height:1.5}
+.veto-mirror-access-head button{flex:0 0 auto;min-height:35px;padding:0 10px;
+ border:1px solid rgba(223,238,254,.19);background:rgba(222,236,251,.1);
+ border-radius:10px;color:#e9f2fd;font-size:9px;font-weight:800}
+.veto-mirror-access-steps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.veto-mirror-access-steps>div{display:grid;grid-template-columns:auto 1fr;column-gap:7px;
+ row-gap:4px;align-content:start;padding:11px 9px;border-radius:11px;
+ background:rgba(7,12,19,.62);border:1px solid rgba(223,235,247,.055)}
+.veto-mirror-access-steps b{font-size:9px;font-weight:850;color:#b7c9dd}
+.veto-mirror-access-steps span{font-size:9px;font-weight:780;color:#eff4fb}
+.veto-mirror-access-steps small{grid-column:1/-1;font-size:8px;line-height:1.5;color:#94a7bd}
+@media(max-width:380px){
+ .veto-mirror-access-center{padding:11px}
+ .veto-mirror-access-head button{padding:0 8px;font-size:8px}
+ .veto-mirror-access-steps{gap:5px}
+ .veto-mirror-access-steps>div{padding:9px 7px}
+}
