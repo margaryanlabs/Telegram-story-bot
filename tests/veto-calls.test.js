@@ -71,6 +71,6 @@ test('Server-assisted signaling still discloses missing TURN, video and Telegram
   assert.ok(html.includes('TURN-реле'));
   assert.ok(html.includes('не проверяется')===false ||
     html.includes('личность собеседника проверяется вами'));
-  assert.ok(html.includes('Не доступны: видеосвязь, живой перевод'));
+  assert.ok(html.includes('Недоступны: видеосвязь, живой перевод'));
   assert.ok(!js.includes('TELEGRAM_API_HASH'));
 });
