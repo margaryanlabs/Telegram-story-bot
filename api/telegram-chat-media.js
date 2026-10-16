@@ -2,6 +2,7 @@ import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import { getViewerSession } from '../lib/viewer-sync-store.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { withBackupClient } from '../lib/telegram-history-backup.js';
+import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const AVATAR_LIMIT=180*1024;
@@ -54,6 +55,7 @@ export default async function handler(req,res){
     const credentials=await openJson(session.session_ciphertext,'session:'+userId);
     if(!credentials?.session)return deny(res,409,'Telegram-сессия недоступна');
     const buffer=await withBackupClient(credentials.session,async client=>{
+      await verifyTelegramClientOwner(client,userId);
       // Never accept peer/access hashes from the browser: the dialog must be
       // reachable in the authenticated owner's real Telegram account.
       const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
@@ -73,6 +75,8 @@ export default async function handler(req,res){
     res.setHeader('Content-Length',String(buffer.length));
     return res.status(200).end(buffer);
   }catch(error){
+    const stop=telegramOwnerError(error);
+    if(stop)return deny(res,stop.status,stop.error);
     const msg=String(error?.errorMessage||error?.message||'');
     if(/FLOOD_WAIT|429/i.test(msg))return deny(res,429,'Telegram ограничил загрузку фото');
     if(/AUTH_KEY|SESSION_REVOKED/i.test(msg))return deny(res,409,'Восстанови подключение Telegram');
