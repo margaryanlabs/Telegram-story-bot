@@ -272,6 +272,13 @@
       stop();report('Звонок завершён при выходе из Calls. Микрофон отключён.');
     }
   });
+  // Mobile Telegram can background a WebView without firing pagehide.
+  // Do not retain an active microphone or connected media when it is hidden.
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&state.phase!=='idle'){
+      stop();report('Звонок завершён: приложение свёрнуто. Микрофон отключён.');
+    }
+  });
   window.addEventListener('pagehide',()=>stop());
   if(!supported)report('WebRTC или микрофон недоступны в этом Telegram WebView. Попробуй актуальную версию Telegram.',true);
   update();
