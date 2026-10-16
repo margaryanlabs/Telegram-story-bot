@@ -4,8 +4,31 @@ import {createCallRoom,inspectCallRoom,answerCallRoom,pollCallRoom,endCallRoom}
 import {newCallInvite,parseCallInvite,checkCallDescription,checkCallRoom}
   from '../lib/veto-call-signals.js';
 import {createIceConfig} from '../lib/veto-call-ice.js';
+import {makeCallInviteUrl} from '../lib/veto-call-invite-link.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
+let cachedUsername=null;
+let usernameExpiresAt=0;
+async function currentBotUsername(){
+  if(cachedUsername&&Date.now()<usernameExpiresAt)return cachedUsername;
+  // Only Telegram's official API; no caller-controlled URLs, credentials in client or logs.
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),3500);
+  try{
+    const response=await fetch('https://api.telegram.org/bot'+BOT+'/getMe',{
+      signal:controller.signal,cache:'no-store',
+    });
+    const json=await response.json();
+    const username=String(json?.result?.username||'');
+    if(!response.ok||json.ok!==true||!/^[a-zA-Z0-9_]{5,32}$/.test(username))
+      throw Error('BOT_USERNAME_UNAVAILABLE');
+    cachedUsername=username;usernameExpiresAt=Date.now()+30*60*1000;
+    return username;
+  }catch{
+    // An expired cached identity should never be presented as confirmed.
+    throw Error('BOT_USERNAME_UNAVAILABLE');
+  }finally{clearTimeout(timeout);}
+}
 function reply(res,status,data){
   res.setHeader('Cache-Control','private, no-store, max-age=0');
   res.setHeader('X-Content-Type-Options','nosniff');
@@ -25,9 +48,15 @@ export default async function handler(req,res){
       return reply(res,413,{error:'Слишком большой запрос'});
   }catch{return reply(res,400,{error:'Неверный формат'});}
   const action=String(body.action||'');
-  if(!['create','inspect','answer','poll','end','ice'].includes(action))
+  if(!['create','inspect','answer','poll','end','ice','share_url'].includes(action))
     return reply(res,400,{error:'Неизвестная операция'});
   try{
+    if(action==='share_url'){
+      // The URL itself is a bearer invitation, generated only when the user
+      // explicitly asks to copy an existing (syntactically valid) invitation.
+      const url=makeCallInviteUrl(await currentBotUsername(),body.invite);
+      return reply(res,200,{url,warning:'Share only with a trusted person. Requires a configured Telegram Main Mini App.'});
+    }
     if(action==='ice'){
       // Authenticated access only. TURN shared secret never leaves Vercel.
       return reply(res,200,createIceConfig({secret:process.env.VETO_TURN_SECRET,
@@ -67,6 +96,7 @@ export default async function handler(req,res){
     if(reason==='call_invite_unavailable')
       return reply(res,410,{error:'Приглашение недействительно, использовано или истекло'});
     if(reason==='call_access_denied')return reply(res,403,{error:'Это не твой вызов'});
+    if(reason==='BOT_USERNAME_UNAVAILABLE')return reply(res,503,{error:'Не удалось проверить имя Telegram-бота. Используй код приглашения.'});
     if(/^(INVALID_|call_bad_)/.test(reason))return reply(res,400,{error:'Неверные параметры звонка'});
     // Suppress sensitive SDP and storage details in user-visible errors.
     return reply(res,503,{error:'Сигнальный сервер недоступен. Ручной режим остаётся доступен.'});
