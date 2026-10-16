@@ -68,7 +68,7 @@ test('Server-assisted signaling still discloses missing TURN, video and Telegram
   assert.ok(html.includes('id="callJoinAssisted"'));
   assert.ok(js.includes('pollAssisted(epoch)'));
   assert.ok(js.includes("signalRequest('answer'"));
-  assert.ok(html.includes('TURN-сервер'));
+  assert.ok(html.includes('TURN-реле'));
   assert.ok(html.includes('не проверяется')===false ||
     html.includes('личность собеседника проверяется вами'));
   assert.ok(html.includes('Не доступны: видеосвязь, живой перевод'));
