@@ -54,7 +54,7 @@ test('Every short-code operation is signed, per-user and ephemeral',()=>{
   assert.ok(api.includes("action==='poll'"));
   assert.ok(api.includes("action==='create'"));
   assert.ok(api.includes("action==='end'")===false || api.includes('endCallRoom('));
-  for(const op of ['call_create','call_inspect','call_answer','call_poll','call_end']){
+  for(const op of ['call_probe','call_create','call_inspect','call_answer','call_poll','call_end']){
     assert.ok(gateway.includes("'"+op+"'"),"gateway "+op);
     assert.ok(edge.includes(op+':opCall'),"edge "+op);
   }
