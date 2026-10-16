@@ -285,8 +285,7 @@
         if(state.phase!=='connected'){
           state.phase='connecting';update();armConnectionWatchdog(epoch);
         }
-        report('Собеседник принял приглашение.
- Устанавливаю WebRTC-соединение…');
+        report('Собеседник принял приглашение. Устанавливаю WebRTC-соединение…');
       }
     }).catch(error=>{
       if(epoch!==state.epoch)return;
