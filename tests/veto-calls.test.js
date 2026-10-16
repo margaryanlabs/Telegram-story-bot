@@ -33,6 +33,7 @@ test('Actual microphone, 1-to-1 audio WebRTC and in-call filters must exist',()=
   assert.ok(js.includes('track.enabled=!state.muted'));
   assert.ok(js.includes('state.mic?.getTracks().forEach(t=>t.stop())'));
   assert.ok(js.includes("event.detail?.screen!=='calls'"));
+  assert.ok(js.includes("document.addEventListener('visibilitychange'"));
   assert.ok(!js.includes('fetch('));
   assert.ok(!js.includes('localStorage'));
   assert.ok(!js.includes('sessionStorage'));
