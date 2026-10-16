@@ -1,6 +1,7 @@
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
-import { getViewerSession, listPrivacyThreads, listPrivacyMessages } from '../lib/viewer-sync-store.js';
+import { getViewerSession, listPrivacyThreads, listPrivacyMessages, getPrivacySettings, getBusinessConnectionState } from '../lib/viewer-sync-store.js';
+import { inboxSignals, privacyReadiness } from '../lib/telegram-inbox-signals.js';
 import { withBackupClient } from '../lib/telegram-history-backup.js';
 import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
 import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
@@ -215,7 +216,14 @@ export default async function handler(req,res){
     ||!Number.isSafeInteger(archiveOffset)||archiveOffset<0||archiveOffset>50000))
     return respond(res,400,{error:'Неверный идентификатор переписки'});
   try{
-    const history=await archiveThreads(userId);
+    // Read owner-scoped archive and permission evidence concurrently. Network
+    // failure must never be reported as 'Privacy disabled' without evidence.
+    const [history,permissionState]=await Promise.all([
+      archiveThreads(userId),
+      Promise.all([getPrivacySettings(userId).catch(()=>null),
+        getBusinessConnectionState(userId).catch(()=>null)])
+        .then(([settings,business])=>({settings,business})),
+    ]);
     const linked=await getViewerSession(userId).catch(()=>null);
     const validSession=linked?.status==='active' && linked.session_ciphertext &&
       sameTelegramAccount(userId, linked.telegram_account_user_id);
@@ -257,14 +265,15 @@ export default async function handler(req,res){
       }
       if(warning && !history.length)return respond(res,409,{error:warning});
       return respond(res,200,{
-        chats:orderChatRows(chats),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
+        chats:orderChatRows(chats).map(chat=>({...chat,inbox:inboxSignals(chat)})),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
         updatedAt:new Date().toISOString(),warning,
         archivedThreads:history.length,scope:'read-only-cloud-chats',isCopy:false,
         connection:{verified:Boolean(live.account?.verified),
           source:live.account?.verified?'telegram-live':'owner-scoped-veto-archive',
           accountName:live.account?.name||null,username:live.account?.username||null,
           archivedThreads:history.length,
-          confirmedDeleted:history.reduce((n,row)=>n+Math.max(0,Number(row.deletedCount||0)),0)},
+          confirmedDeleted:history.reduce((n,row)=>n+Math.max(0,Number(row.deletedCount||0)),0),
+          privacy:privacyReadiness(permissionState.settings,permissionState.business,history)},
       });
     }
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
