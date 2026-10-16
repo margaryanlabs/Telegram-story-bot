@@ -568,6 +568,7 @@ export default async function handler(req, res) {
         requireOwnTelegramAccount(userId, result.user);
       } catch (error) {
         await revokeUserSession(result.session).catch(() => {});
+        await deleteAuthChallenge(userId).catch(() => {});
         throw error;
       }
 
@@ -620,6 +621,7 @@ export default async function handler(req, res) {
         requireOwnTelegramAccount(userId, result.user);
       } catch (error) {
         await revokeUserSession(result.session).catch(() => {});
+        await deleteAuthChallenge(userId).catch(() => {});
         throw error;
       }
 
