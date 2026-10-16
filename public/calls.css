@@ -1,0 +1,40 @@
+/* VETO Calls: experimental WebRTC room - matte black, restrained silver. */
+.veto-calls{position:relative;max-width:860px;margin:0 auto;padding:clamp(18px,4vw,32px) 18px 120px;color:#e9edf3}
+.veto-calls *{box-sizing:border-box}
+.veto-calls .calls-eyebrow{font-size:10px;letter-spacing:.25em;color:#8f9cad;font-weight:800}
+.veto-calls .calls-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:20px}
+.veto-calls h1{font-size:clamp(36px,8vw,64px);letter-spacing:-.055em;line-height:1.05;margin:8px 0;color:#f6f7fb;font-weight:750}
+.veto-calls h1 span{color:#929fae}
+.veto-calls .calls-header p{color:#929dab;font-size:13px;line-height:1.6;max-width:560px}
+.veto-calls .calls-state{font-size:10px;letter-spacing:.1em;border:1px solid #303b48;border-radius:25px;padding:9px 12px;color:#bdc5d1;white-space:nowrap}
+.veto-calls .calls-state[data-state=connected]{color:#b5f0ca;border-color:#42755b}
+.veto-calls .calls-hero{position:relative;background:radial-gradient(ellipse at 50% 10%,#293546 0%,#11151c 55%,#0a0d12 100%);border:1px solid #2c3542;border-radius:26px;text-align:center;overflow:hidden;padding:30px 22px 24px;min-height:270px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.veto-calls .calls-portrait{width:116px;height:116px;border:1px solid #59677b;display:grid;place-items:center;border-radius:50%;font-size:45px;background:linear-gradient(145deg,#283342,#0c0e14);box-shadow:0 0 0 12px #ffffff06,0 0 0 32px #ffffff04,0 35px 65px #0008}
+.veto-calls .calls-elapsed{font-size:24px;font-variant-numeric:tabular-nums;letter-spacing:.13em;margin:20px 0 4px;color:#fafbfc}
+.veto-calls .calls-hero small{max-width:340px;line-height:1.5;color:#8695a8;font-size:11px}
+.veto-calls .calls-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.veto-calls .calls-card{border-radius:20px;border:1px solid #2c3542;background:#11151b;padding:18px}
+.veto-calls .calls-card>span{font-size:10px;letter-spacing:.15em;color:#8796a8}
+.veto-calls .calls-card strong{display:block;font-size:17px;color:#f5f6f9;letter-spacing:-.02em;margin:6px 0}
+.veto-calls .calls-card p{font-size:12px;color:#8995a4;line-height:1.65;margin:0 0 13px}
+.veto-calls button{cursor:pointer;touch-action:manipulation}
+.veto-calls .call-btn{background:#e5ebf2;color:#0a0e12;border:1px solid #e5ebf2;border-radius:13px;min-height:43px;padding:10px 15px;font-size:12px;font-weight:800}
+.veto-calls .call-btn.secondary{background:#202731;color:#e7edf3;border-color:#3e4a5b}
+.veto-calls .call-btn.danger{background:#391e23;border-color:#734048;color:#ffe4e7}
+.veto-calls .call-btn:disabled{opacity:.4;cursor:not-allowed}
+.veto-calls .calls-card .call-btn{width:100%}
+.veto-calls .calls-field{width:100%;min-width:0;background:#0a0e14;color:#edf1f7;border:1px solid #364353;border-radius:12px;padding:12px;font-size:12px;line-height:1.5;outline:0;resize:vertical;overflow-wrap:anywhere}
+.veto-calls .calls-field:focus{border-color:#c0c9d5}
+.veto-calls .calls-code{min-height:90px}
+.veto-calls .calls-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}
+.veto-calls .calls-actions .call-btn{flex:1;min-width:130px}
+.veto-calls .calls-morph{border-radius:20px;background:#11151b;border:1px solid #2c3542;padding:18px;margin:12px 0}
+.veto-calls .calls-morph>label{display:block;font-size:11px;color:#b5c1cf;margin:0 0 11px}
+.veto-calls .calls-morph select{width:100%;background:#090d12;color:#ebedf4;border:1px solid #364353;border-radius:11px;padding:10px;font-size:13px;margin:0 0 14px}
+.veto-calls .calls-morph input[type=range]{width:100%;accent-color:#ced7e4}
+.veto-calls .calls-morph output{float:right;color:#c9d2df;font-size:12px}
+.veto-calls .calls-status{background:#19202a;border-left:2px solid #98aabe;border-radius:5px 13px 13px 5px;padding:15px;color:#d2dae5;font-size:12px;line-height:1.6;margin:12px 0}
+.veto-calls .calls-status[data-error=true]{border-color:#b77b7b;color:#f1c8ce}
+.veto-calls .calls-note{font-size:11px;line-height:1.7;color:#8c9aaa;border:1px solid #25313b;border-radius:14px;padding:13px}
+.veto-calls .calls-note b{color:#cdd5e0}
+@media(max-width:560px){.veto-calls{padding:17px 14px 110px}.veto-calls .calls-grid{grid-template-columns:1fr}.veto-calls .calls-header{align-items:flex-start;flex-direction:column}.veto-calls .calls-hero{min-height:240px}.veto-calls .calls-card{padding:15px}}
