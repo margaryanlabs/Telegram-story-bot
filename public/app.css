@@ -3117,3 +3117,35 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
  .veto-voice-monitor-controls{padding:13px}
  .veto-voice-headphones{width:100%;margin-left:0;padding-top:7px}
 }
+
+/* Owner-scoped Inbox/Privacy evidence: no misleading universal Anti-Delete promise. */
+.veto-mirror-privacy-diagnostics{margin:0 0 13px;padding:14px 13px 12px;border-radius:13px;
+ border:1px solid rgba(199,211,226,.15);background:#10141c;color:#e7ecf4}
+.veto-mirror-privacy-diagnostics.ready{border-color:rgba(157,219,186,.22);
+ background:linear-gradient(120deg,#101b1b,#10141b)}
+.veto-mirror-diagnostics-head{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.veto-mirror-diagnostics-head>span{display:grid;place-items:center;width:29px;height:29px;
+ border-radius:9px;background:#263343;color:#c4d7eb;font-size:16px}
+.veto-mirror-diagnostics-head strong{flex:1;min-width:118px;font-size:11px}
+.veto-mirror-diagnostics-head small{font-size:8px;line-height:1.45;color:#c2aeb6}
+.veto-mirror-privacy-diagnostics.ready .veto-mirror-diagnostics-head small{color:#b4d7c3}
+.veto-mirror-checks{display:flex;gap:6px;flex-wrap:wrap;margin:13px 0 9px}
+.veto-mirror-checks span{font-size:8px;font-weight:760;color:#a3a9b5;background:#1c222d;
+ border:1px solid rgba(217,229,244,.08);padding:7px 9px;border-radius:8px}
+.veto-mirror-checks span.active{color:#b8d9cb;background:#172720;border-color:rgba(160,215,188,.13)}
+.veto-mirror-evidence{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap;padding:10px 0;
+ border-top:1px solid rgba(222,232,246,.075);border-bottom:1px solid rgba(222,232,246,.075)}
+.veto-mirror-evidence strong{color:#e7effa;font-size:18px;line-height:1;font-weight:840}
+.veto-mirror-evidence span{color:#9faec0;font-size:9px;margin-right:6px}
+.veto-mirror-privacy-diagnostics p{font-size:9px;color:#a9bbcc;line-height:1.7;margin:9px 0}
+.veto-mirror-privacy-diagnostics>button{display:block;width:100%;margin-top:8px;
+ padding:11px;border:1px solid rgba(222,232,247,.16);border-radius:10px;
+ background:#253347;color:#edf5ff;font-size:10px;font-weight:800;cursor:pointer}
+.veto-mirror-focus-hint{color:#8598af;font-size:9px;line-height:1.6;margin:0 0 11px}
+.veto-mirror-focus-tag{display:inline-flex;max-width:100%;margin:5px 5px 0 0;
+ padding:4px 6px;color:#d0dce9;border:1px solid rgba(173,206,241,.19);
+ background:#263244;border-radius:7px;font-size:8px;font-weight:780}
+@media(max-width:420px){
+  .veto-mirror-diagnostics-head small{width:100%;padding-left:38px}
+  .veto-mirror-evidence span{font-size:8px}
+}
