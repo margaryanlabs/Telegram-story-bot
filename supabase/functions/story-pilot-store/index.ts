@@ -2972,7 +2972,7 @@ async function dispatchWithRetry(op: string, args: any) {
 // reads. The server-proven Telegram identity is supplied by signed Vercel only.
 function callId(value: unknown) {
   const id=String(value??'');
-  if (!/^\\d{1,20}$/.test(id) || id==='0') throw new Error('call_bad_actor');
+  if (!/^\d{1,20}$/.test(id) || id==='0') throw new Error('call_bad_actor');
   return id;
 }
 function callRoom(value: unknown) {
@@ -2987,7 +2987,7 @@ function callHash(value: unknown) {
 }
 function callSdp(value: unknown) {
   const sdp=String(value??'');
-  if(sdp.length<50||sdp.length>30000||!sdp.startsWith('v=0\\r\\n'))
+  if(sdp.length<50||sdp.length>30000||!sdp.startsWith('v=0\r\n'))
     throw new Error('call_bad_description');
   return sdp;
 }
