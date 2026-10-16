@@ -189,11 +189,17 @@
       state.hasMore=Boolean(data.hasMore)&&state.page<10;
       state.page+=1;
       hideNotice();
+      if($('telegramMirrorAccessButton')){
+        $('telegramMirrorAccessButton').textContent = data.warning ? 'Подключить ↗' : 'Подключено ✓';
+      }
       if(data.warning)showNotice(data.warning,/Подключи|подключён/.test(data.warning));
       if(!state.hasMore&&state.chats.length>=500)
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
-      showNotice(error.message,/Подключи|подключён|Открой VETO/.test(error.message));
+      if($('telegramMirrorAccessButton')){
+        $('telegramMirrorAccessButton').textContent = 'Подключить ↗';
+      }
+      showNotice(error.message,/Подключи|подключён|Открой VETO|аккаунт|авторизуй/i.test(error.message));
     }finally{
       if(generation===state.generation){state.loading=false;renderChats();}
     }
@@ -522,6 +528,13 @@
     revokeMediaUrls();
     window.scrollTo({top:0,behavior:'instant'});
   }
+  $('telegramMirrorAccessButton')?.addEventListener('click',()=>{
+    if(typeof window.VetoTelegramOpenAccountConnection==='function'){
+      window.VetoTelegramOpenAccountConnection();
+    }else{
+      toast('Открой VETO внутри Telegram');
+    }
+  });
   $('telegramMirrorRefresh')?.addEventListener('click',()=>loadChats({reset:true}));
   $('telegramMirrorMore')?.addEventListener('click',()=>loadChats());
   $('telegramMirrorSearch')?.addEventListener('input',event=>{
@@ -550,8 +563,12 @@
   });
   $('telegramMirrorNotice')?.addEventListener('click',event=>{
     if(!event.target.closest('[data-mirror-connect]'))return;
-    window.VetoTelegramNavigate?.('home');
-    $('connectTelegramButton')?.click();
+    if(typeof window.VetoTelegramOpenAccountConnection==='function'){
+      window.VetoTelegramOpenAccountConnection();
+    }else{
+      window.VetoTelegramNavigate?.('home');
+      $('connectTelegramButton')?.click();
+    }
   });
   $('telegramThreadMessages')?.addEventListener('click',event=>{
     const button=event.target.closest('[data-mirror-file]');

@@ -1,5 +1,6 @@
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
+import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import {
   viewerDbConfigured,
@@ -57,11 +58,12 @@ async function configState() {
   };
 }
 
-function safeSession(row) {
+function safeSession(row, userId = '') {
   if (!row) return null;
   const cipherVersion = String(row.session_ciphertext || '').split('.')[0] || null;
   return {
-    connected: row.status === 'active',
+    connected: row.status === 'active' && sameTelegramAccount(userId, row.telegram_account_user_id),
+    identityMismatch: row.status === 'active' && !sameTelegramAccount(userId, row.telegram_account_user_id),
     status: row.status,
     cryptoVersion: /^v\d+$/.test(cipherVersion || '') ? cipherVersion : null,
     createdAt: row.created_at || null,
@@ -416,7 +418,7 @@ export default async function handler(req, res) {
       res.status(200).json({
         ok: true,
         config,
-        session: safeSession(session),
+        session: safeSession(session, userId),
         loginPending,
         story: storyData?.story || null,
         viewers: storyData?.viewers || [],
@@ -493,7 +495,7 @@ export default async function handler(req, res) {
         telegram_user_id: userId,
       });
 
-      res.status(200).json({ ok: true, session: safeSession(updated) });
+      res.status(200).json({ ok: true, session: safeSession(updated, userId) });
       return;
     }
 
@@ -562,6 +564,14 @@ export default async function handler(req, res) {
         return;
       }
 
+      try {
+        requireOwnTelegramAccount(userId, result.user);
+      } catch (error) {
+        await revokeUserSession(result.session).catch(() => {});
+        await deleteAuthChallenge(userId).catch(() => {});
+        throw error;
+      }
+
       await upsertViewerSession({
         telegram_user_id: userId,
         session_ciphertext: await sealJson({ session: result.session }, `session:${userId}`),
@@ -606,6 +616,14 @@ export default async function handler(req, res) {
 
       const auth = await openJson(challenge.challenge_ciphertext, `auth:${userId}`);
       const result = await verifyUserPassword(auth, body.password);
+
+      try {
+        requireOwnTelegramAccount(userId, result.user);
+      } catch (error) {
+        await revokeUserSession(result.session).catch(() => {});
+        await deleteAuthChallenge(userId).catch(() => {});
+        throw error;
+      }
 
       await upsertViewerSession({
         telegram_user_id: userId,
@@ -697,6 +715,10 @@ export default async function handler(req, res) {
       });
     }
 
+    if (error?.code === 'TELEGRAM_ACCOUNT_MISMATCH') {
+      res.status(409).json({ ok:false, error:TELEGRAM_OWNER_MESSAGE });
+      return;
+    }
     const feedback = classifyTelegramAuthError(error);
     if (feedback.retryAfterSeconds) res.setHeader('Retry-After', String(feedback.retryAfterSeconds));
     res.status(feedback.status).json({
