@@ -62,15 +62,15 @@ test('Out-of-band signaling codes enforce version, room ID, offer/answer type an
   });
   assert.throws(()=>old.unpack(code,'offer'),/Код не подходит/);
 });
-test('No promise of private-room server signaling, automatic invitations or phone call intercept',()=>{
+test('Server-assisted signaling still discloses missing TURN, video and Telegram-call interception',()=>{
   assert.ok(html.includes('Коды пересылаются вручную'));
   assert.ok(html.includes('id="callCreateAssisted"'));
   assert.ok(html.includes('id="callJoinAssisted"'));
   assert.ok(js.includes('pollAssisted(epoch)'));
   assert.ok(js.includes("signalRequest('answer'"));
-  assert.ok(html.includes('TURN-сервера'));
+  assert.ok(html.includes('TURN-сервер'));
   assert.ok(html.includes('не проверяется')===false ||
     html.includes('личность собеседника проверяется вами'));
-  assert.ok(html.includes('Не доступны: видеосвязь, перевод'));
+  assert.ok(html.includes('Не доступны: видеосвязь, живой перевод'));
   assert.ok(!js.includes('TELEGRAM_API_HASH'));
 });
