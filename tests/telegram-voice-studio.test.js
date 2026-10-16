@@ -50,6 +50,6 @@ test('Voice Studio v2 has a bounded local recording pipeline and adjustable EQ',
   assert.ok(html.includes('id="voicePlaybackSpeed"'));
   assert.ok(voice.includes('state.preset===\'custom\''));
   assert.ok(voice.includes('180000'));
-  assert.ok(voice.includes('voicePlayer\').playbackRate'));
+  assert.ok(voice.includes("playbackRate=rate"));
   assert.ok(!voice.includes("fetch("));
 });
