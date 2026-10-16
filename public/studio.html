@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/app.css?v=20261016-veto-smart-inbox-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
+  <link rel="stylesheet" href="/calls.css?v=20261016-veto-p2p-v1" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -263,6 +264,7 @@
           <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
           <button type="button" data-open-screen="telegram"><span>▤</span><strong>Мои чаты</strong><small>Настоящий Telegram внутри VETO</small></button>
           <button type="button" data-open-screen="voice"><span>◉</span><strong>Voice Studio</strong><small>Живые эффекты · голосовые</small></button>
+          <button type="button" data-open-screen="calls"><span>⌁</span><strong>VETO Calls</strong><small>WebRTC · звонки 1:1 · Voice Morph</small></button>
           <button type="button" data-open-screen="ghost"><span>◌</span><strong>Privacy</strong><small>Anti-Delete · Inbox · Vault</small></button>
           <button type="button" data-open-screen="relay"><span>◉</span><strong>Защита Telegram</strong><small>Одно нажатие · Автовыбор</small></button>
         </div>
@@ -356,6 +358,69 @@
           </div>
         </div>
       </section>
+    </section>
+
+    <section class="screen" data-screen="calls" aria-label="VETO Calls — защищённые аудиозвонки">
+      <div class="veto-calls">
+        <header class="calls-header">
+          <div><span class="calls-eyebrow">VETO TELEGRAM / COMMUNICATION / 01</span>
+            <h1>VETO <span>Calls.</span></h1>
+            <p>Реальный аудиозвонок WebRTC один на один, голосовые эффекты во время разговора. Не перехватывает обычные Telegram-звонки.</p>
+          </div>
+          <span class="calls-state" id="callState" data-state="idle">OFFLINE</span>
+        </header>
+        <div class="calls-hero">
+          <div class="calls-portrait" aria-hidden="true">⌁</div>
+          <strong class="calls-elapsed" id="callElapsed">00:00</strong>
+          <small>Звук напрямую между участниками, если сеть позволяет. Отдельное соединение вне обычных Telegram Calls.</small>
+          <audio id="callRemoteAudio" autoplay playsinline></audio>
+          <div class="calls-actions">
+            <button type="button" class="call-btn secondary" id="callMute" disabled>◉ Выключить микрофон</button>
+            <button type="button" class="call-btn secondary" id="callListen">↗ Включить звук</button>
+            <button type="button" class="call-btn danger" id="callHangup" disabled>■ Завершить</button>
+          </div>
+        </div>
+        <div class="calls-grid">
+          <article class="calls-card"><span>01 / СОЗДАТЬ</span>
+            <strong>Начать звонок</strong>
+            <p>Создай приглашение, скопируй код и передай его доверенному собеседнику. Не закрывай это окно.</p>
+            <button id="callCreate" type="button" class="call-btn">＋ Создать вызов</button>
+          </article>
+          <article class="calls-card"><span>02 / ПРИСОЕДИНИТЬСЯ</span>
+            <strong>Ответить на приглашение</strong>
+            <p>Вставь код, полученный от инициатора звонка. VETO запросит разрешение на микрофон.</p>
+            <button id="callJoin" type="button" class="call-btn secondary">↗ Ответить на код ниже</button>
+          </article>
+        </div>
+        <article class="calls-card" id="callCodeSection" hidden>
+          <span>ТРАНСФЕР КОДА / ВНЕШНИЙ КАНАЛ</span>
+          <strong>Приглашение или ответ для собеседника</strong>
+          <p>Передавай код через защищённый чат. Код может содержать сетевые адреса. Сам по себе код не даёт доступ к Telegram-перепискам.</p>
+          <textarea class="calls-field calls-code" id="callOutgoing" readonly placeholder="Код появится после подготовки звонка" aria-label="Исходящий код вызова"></textarea>
+          <div class="calls-actions"><button type="button" class="call-btn secondary" id="callCopy">Копировать код ↗</button></div>
+        </article>
+        <article class="calls-card" style="margin-top:12px">
+          <span>03 / ПОЛУЧИТЬ КОД</span>
+          <strong>Входящее приглашение или ответ</strong>
+          <p>Если тебе отправили приглашение — вставь его и нажми «Ответить». Если ты создал вызов — вставь ответ сюда и нажми «Подключить».</p>
+          <textarea class="calls-field calls-code" id="callIncoming" placeholder="Вставь код вида VETO1:…" aria-label="Входящий код вызова"></textarea>
+          <div class="calls-actions"><button id="callApplyAnswer" type="button" class="call-btn secondary" disabled>✓ Подключить по ответу</button></div>
+        </article>
+        <div class="calls-morph">
+          <label for="callPreset">VOICE MORPH / во время соединения</label>
+          <select id="callPreset" aria-label="Эффект для твоего микрофона">
+            <option value="original">Original — нейтральный</option>
+            <option value="deep">Warm Deep — тёплый тембр (EQ)</option>
+            <option value="cinematic">Cinematic — объём</option>
+            <option value="radio">Radio — узкий диапазон</option>
+            <option value="robot">Robot — модуляция</option>
+          </select>
+          <label for="callMorph">Интенсивность <output for="callMorph" id="callMorphValue">65%</output></label>
+          <input type="range" id="callMorph" min="0" max="100" value="65" step="1" />
+        </div>
+        <div class="calls-status" id="callStatus" role="status" aria-live="polite">Готово к подключению. Микрофон включится только после твоего действия.</div>
+        <p class="calls-note"><b>Экспериментальная версия.</b> Пока сигнальные коды пересылаются вручную: оба человека должны удерживать окно звонка открытым, иногда удобнее использовать два устройства. В сложных мобильных сетях связь без TURN-сервера может не установиться. Не доступны: видеосвязь, перевод, запись, автоматические приглашения и групповые комнаты. Соединение шифруется WebRTC, но личность собеседника проверяется вами через канал обмена кодами. Вызов прекращается при выходе из раздела.</p>
+      </div>
     </section>
 
     <section class="screen" data-screen="voice" aria-label="VETO Voice Studio">
@@ -1424,6 +1489,7 @@
   <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
+  <script src="/calls.js?v=20261016-veto-p2p-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
