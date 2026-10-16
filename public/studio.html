@@ -386,7 +386,9 @@
         <div class="calls-grid">
           <article class="calls-card"><span>01 / СОЗДАТЬ</span>
             <strong>Начать звонок</strong>
-            <p>Короткий код действует до 8 минут. Отправь его доверенному Telegram-пользователю, который откроет VETO Calls. Не закрывай окно.</p>
+            <p>Короткий код действует до 8 минут. Можно отправить приглашение вручную или указать ID пользователя, который разрешил входящие VETO Calls.</p>
+            <label class="calls-label" for="callRecipientId">TELEGRAM ID ПОЛУЧАТЕЛЯ · НЕОБЯЗАТЕЛЬНО</label>
+            <input class="calls-field calls-recipient" id="callRecipientId" type="text" inputmode="numeric" autocomplete="off" maxlength="16" placeholder="ID знакомого, который включил входящие" aria-label="Telegram ID получателя входящего звонка"/>
             <button id="callCreateAssisted" type="button" class="call-btn">＋ Создать короткий код</button>
             <button id="callCreate" type="button" class="call-btn secondary" style="margin-top:8px">Ручной P2P · резервный режим</button>
           </article>
@@ -411,8 +413,18 @@
           <textarea class="calls-field calls-code" id="callIncoming" placeholder="Вставь код вида VETO1:…" aria-label="Входящий код вызова"></textarea>
           <div class="calls-actions"><button id="callApplyAnswer" type="button" class="call-btn secondary" disabled>✓ Подключить по ответу</button></div>
         </article>
+        <article class="calls-card calls-incoming-card" aria-label="Входящие приглашения VETO Calls">
+          <span>04 / ВХОДЯЩИЕ ЗВОНКИ</span>
+          <strong>Разрешение на приглашения</strong>
+          <p>Только ты решаешь, получать ли сообщения от VETO Telegram о входящих звонках. Никому не отправляем сообщение без предварительного согласия. Не чаще одного уведомления за 3 минуты.</p>
+          <div class="calls-actions">
+            <button id="callOptIn" type="button" class="call-btn secondary">○ Включить входящие</button>
+            <button id="callCopyMyId" type="button" class="call-btn secondary">↗ Мой Telegram ID</button>
+          </div>
+          <p class="calls-optin-status" id="callOptInStatus" role="status">Входящие выключены по умолчанию. Сначала запусти VETO Telegram Bot, чтобы он мог отправить приглашение.</p>
+        </article>
         <article class="calls-card calls-diagnostics-card" aria-label="Диагностика VETO Calls">
-          <span>04 / READY CHECK</span>
+          <span>05 / READY CHECK</span>
           <strong>Проверка перед звонком</strong>
           <p>Проверим доступность WebRTC, HTTPS, Telegram-подписи и конфигурацию сети. Без запроса доступа к микрофону и без отправки аудио.</p>
           <button id="callPreflight" type="button" class="call-btn secondary">◎ Проверить готовность</button>
@@ -431,7 +443,7 @@
           <input type="range" id="callMorph" min="0" max="100" value="65" step="1" />
         </div>
         <div class="calls-status" id="callStatus" role="status" aria-live="polite">Готово к подключению. Микрофон включится только после твоего действия.</div>
-        <p class="calls-note"><b>Экспериментальная версия.</b> Короткий код VETOR1 не содержит сетевых параметров. Сервер сигнализации временно хранит SDP по HTTPS; эти технические данные могут содержать IP-адреса и доступны серверу, но удаляются после соединения, завершения или по TTL. Аудио защищено средствами WebRTC DTLS-SRTP и не расшифровывается сервером VETO. Оба участника должны оставить окно вызова открытым. Переход в другой чат или приложение может закрыть Mini App и завершить звонок; пересылать приглашение удобнее со второго устройства или другим каналом. Коды пересылаются вручную, но ответ для VETOR1 передаётся автоматически. TURN-реле подключается только при наличии настроенного сервера и временных учётных данных. Без TURN связь в сложных сетях может не установиться. Не доступны: видеосвязь, живой перевод, запись, звонок-пуш и групповые комнаты. Личность участника подтверждается входом в Telegram Mini App, но доверять собеседнику нужно по тому каналу, где передан секрет приглашения.</p>
+        <p class="calls-note"><b>Экспериментальная версия.</b> Короткий код VETOR1 не содержит сетевых параметров. Сервер сигнализации временно хранит SDP по HTTPS; эти технические данные могут содержать IP-адреса и доступны серверу, но удаляются после соединения, завершения или по TTL. Аудио защищено средствами WebRTC DTLS-SRTP и не расшифровывается сервером VETO. Оба участника должны оставить окно вызова открытым. Переход в другой чат или приложение может закрыть Mini App и завершить звонок; пересылать приглашение удобнее со второго устройства или другим каналом. Коды пересылаются вручную, но ответ для VETOR1 передаётся автоматически. TURN-реле подключается только при наличии настроенного сервера и временных учётных данных. Без TURN связь в сложных сетях может не установиться. Недоступны: видеосвязь, живой перевод, запись и групповые комнаты. Уведомления о входящих приглашениях работают только при добровольном включении, запущенном боте и известном ID получателя; они не являются системным звонком Telegram. Личность участника подтверждается входом в Telegram Mini App, но доверять собеседнику нужно по тому каналу, где передан секрет приглашения.</p>
       </div>
     </section>
 
@@ -1513,7 +1525,7 @@
   <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
-  <script src="/calls.js?v=20261016-veto-preflight-v5"></script>
+  <script src="/calls.js?v=20261016-veto-inbound-v6"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
