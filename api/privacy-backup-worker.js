@@ -5,6 +5,7 @@ import {
   importUserHistoryBatch,pauseBackupJob,viewerDbConfigured,
 } from '../lib/viewer-sync-store.js';
 import { withBackupClient,fetchBackupPage } from '../lib/telegram-history-backup.js';
+import { verifyTelegramClientOwner } from '../lib/telegram-owner-runtime.js';
 import { archiveHistoryMedia } from '../lib/telegram-history-media.js';
 
 // Keep exact production verifier key aligned with the viewer watcher.
@@ -57,6 +58,7 @@ async function runJob(job) {
       return {result:'private_archive_disabled'};
     }
     progress=await withBackupClient(decrypted.session,async client=>{
+      await verifyTelegramClientOwner(client,userId);
       const page=await fetchBackupPage(client,{
         ownerId:userId,chatId,offsetId:job.offset_id,retentionDays:settings.retentionDays,
         mediaEnabled:job.media_enabled === true,
