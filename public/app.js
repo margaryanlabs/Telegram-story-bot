@@ -1960,7 +1960,7 @@
     return `
       <div class="auth-resume-card">
         <strong>Ты уже начал подключение</strong>
-        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код уже отправлен в Telegram. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
+        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код запрошен у Telegram. Ищи его в официальном чате «Telegram» с синей галочкой, не в чате StoryLab. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
         <button class="accent" data-sheet-action="viewer-resume-login">${password ? 'Продолжить ввод пароля' : 'Ввести полученный код'} →</button>
       </div>
     `;
@@ -1995,7 +1995,7 @@
     openSheet(`
       <span class="kicker">ШАГ 1 ИЗ 2 · ПОДКЛЮЧЕНИЕ</span>
       <h2>Как тебе удобнее подключить Telegram?</h2>
-      <p>Если ты сейчас в VETO на телефоне — проще использовать номер + код. QR удобнее, когда рядом открыт Telegram Desktop или второй телефон.</p>
+      <p>Mini App уже знает, кто ты, через Telegram. Номер и код нужны только для отдельного подключения личных чатов/Stories. Код присылает официальный Telegram, не наш бот. QR удобнее, когда есть второй экран.</p>
       ${pendingLoginMarkup()}
       <div class="connection-methods-simple">
         <button class="connection-method-card recommended" data-sheet-action="viewer-use-phone">
@@ -2176,7 +2176,7 @@
           <label for="viewerPhone">Номер Telegram</label>
           <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 / +374 / +971…" value="${escapeHtml(viewerPendingPhone)}" />
         </div>
-        <div class="auth-help">Международный формат, начиная с +. Код придёт в Telegram, иногда по SMS. Каждый пользователь подключает свой аккаунт отдельно.</div>
+        <div class="auth-help">Международный формат, начиная с +. Проверь официальный чат «Telegram» с синей галочкой во всех своих активных устройствах. SMS может не прийти — способ доставки выбирает Telegram.</div>
       </div>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
@@ -2186,11 +2186,11 @@
     `);
   }
 
-  function viewerCodeSheet(delivery) {
+  function viewerCodeSheet(delivery, reused = false) {
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 2 ИЗ 2</span>
       <h2>Теперь введи код из Telegram</h2>
-      <p>${delivery === 'telegram_app' ? 'Код отправлен в Telegram.' : 'Telegram выбрал доступный способ доставки кода.'} Можно открыть чат с кодом и вернуться в VETO — ввод кода продолжится без повторной отправки.</p>
+      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте StoryLab. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2200,8 +2200,26 @@
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-code">Подтвердить</button>
-        <button data-sheet-action="viewer-use-phone">Другой номер / новый код</button>
-        <button data-sheet-action="close">Отмена</button>
+        <button data-sheet-action="viewer-code-help">Код не пришёл?</button>
+        <button data-sheet-action="close">Закрыть (вход сохранится)</button>
+      </div>
+    `);
+  }
+
+  function viewerNoCodeSheet() {
+    openSheet(`
+      <span class="kicker">ПОМОЩЬ · КОД TELEGRAM</span>
+      <h2>Код не приходит?</h2>
+      <div class="sheet-list">
+        <div class="sheet-item"><strong>1 · Проверь официальный чат «Telegram»</strong><span>Открой поиск Telegram, введи Telegram и найди сервисный аккаунт с синей галочкой. Это не чат нашего бота и не раздел SMS.</span></div>
+        <div class="sheet-item"><strong>2 · Проверь другие свои устройства</strong><span>Telegram нередко присылает код на уже авторизованный телефон или компьютер вместо SMS.</span></div>
+        <div class="sheet-item"><strong>3 · Не запрашивай код много раз</strong><span>Повторные запросы могут аннулировать предыдущий код и вызвать ограничение Telegram. Если есть второй экран, попробуй QR-вход.</span></div>
+      </div>
+      <p class="auth-security-note">Никогда не пересылай код другим людям. StoryLab не умеет доставить код вручную: способ выбирает Telegram.</p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button>
+        <button data-sheet-action="viewer-start-qr">Подключить через QR</button>
+        <button data-sheet-action="viewer-cancel-login">Отменить запрос и сменить номер</button>
       </div>
     `);
   }
@@ -2868,6 +2886,22 @@
       }
       return;
     }
+    if (action === 'viewer-code-help') {
+      viewerNoCodeSheet();
+      return;
+    }
+    if (action === 'viewer-back-code') {
+      viewerCodeSheet('telegram_app');
+      return;
+    }
+    if (action === 'viewer-cancel-login') {
+      await runViewerAuthAction(actionTarget, async () => {
+        await viewerApi('cancel_login', {}, null);
+        viewerState.loginPending = null;
+        viewerPhoneSheet();
+      });
+      return;
+    }
     if (action === 'viewer-use-phone') {
       if (viewerQrAbortController) {
         viewerQrAbortController.abort();
@@ -2953,7 +2987,7 @@
         }
         const data = await viewerApi('send_code', { phone }, null);
         viewerPendingPhone = phone;
-        viewerCodeSheet(data.delivery);
+        viewerCodeSheet(data.delivery, data.reused === true);
       });
       return;
     }
