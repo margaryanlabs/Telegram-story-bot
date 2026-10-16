@@ -2,6 +2,8 @@ import { openJson } from '../lib/viewer-sync-crypto.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import { getViewerSession, listPrivacyThreads, listPrivacyMessages } from '../lib/viewer-sync-store.js';
 import { withBackupClient } from '../lib/telegram-history-backup.js';
+import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
+import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const PAGE_SIZE=50;
@@ -182,6 +184,8 @@ export function combineLiveAndPreserved(live=[],preserved=[]){
 }
 function errorMessage(error){
   const raw=String(error?.errorMessage||error?.message||'');
+  const ownerError = telegramOwnerError(error);
+  if(ownerError)return ownerError;
   if(/FLOOD_WAIT|429/i.test(raw))return {status:429,error:'Telegram ограничил запросы. Попробуй позже.'};
   if(/AUTH_KEY|SESSION_REVOKED|not authorized/i.test(raw))return {status:409,error:'Telegram-сессия недействительна. Подключи аккаунт заново.'};
   if(/timeout|ETIMEDOUT/i.test(raw))return {status:504,error:'Telegram отвечает слишком долго. Повтори запрос.'};
@@ -214,26 +218,34 @@ export default async function handler(req,res){
     const history=await archiveThreads(userId);
     const linked=await getViewerSession(userId).catch(()=>null);
     const validSession=linked?.status==='active' && linked.session_ciphertext &&
-      String(linked.telegram_account_user_id||'')===userId;
+      sameTelegramAccount(userId, linked.telegram_account_user_id);
+    if(linked?.status==='active' && !sameTelegramAccount(userId,linked.telegram_account_user_id)){
+      return respond(res,409,telegramOwnerError({code:'TELEGRAM_OWNER_MISMATCH'}));
+    }
     let creds=null;
     if(validSession){
       try{creds=await openJson(linked.session_ciphertext,'session:'+userId);}
       catch{/* Archival copies remain readable when MTProto authorization expires. */}
     }
     if(action==='list'){
-      let live={chats:[],hasMore:false};
+      let live={chats:[],hasMore:false,account:null};
       let warning=null;
       if(creds?.session){
         try{
           live=await withBackupClient(creds.session,async client=>{
+            const account=await verifyTelegramClientOwner(client,userId);
             // Bounded cursor-independent retrieval, never return access hashes.
             const totalToFetch=Math.min(MAX_DIALOGS,(page+1)*PAGE_SIZE+1);
             const dialogs=await client.getDialogs({limit:totalToFetch});
             const start=page*PAGE_SIZE;
             return {chats:dialogs.slice(start,start+PAGE_SIZE).map(dialogInfo),
-              hasMore:dialogs.length>start+PAGE_SIZE};
+              hasMore:dialogs.length>start+PAGE_SIZE,account};
           });
-        }catch(error){warning=errorMessage(error).error;}
+        }catch(error){
+          const stop=telegramOwnerError(error);
+          if(stop)return respond(res,stop.status,{error:stop.error});
+          warning=errorMessage(error).error;
+        }
       }else warning='Подключи свой Telegram для живых чатов. Ранее сохранённые копии VETO доступны отдельно.';
       const chats=decorateRemote(live.chats,history);
       if(page===0){
@@ -248,6 +260,11 @@ export default async function handler(req,res){
         chats:orderChatRows(chats),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
         updatedAt:new Date().toISOString(),warning,
         archivedThreads:history.length,scope:'read-only-cloud-chats',isCopy:false,
+        connection:{verified:Boolean(live.account?.verified),
+          source:live.account?.verified?'telegram-live':'owner-scoped-veto-archive',
+          accountName:live.account?.name||null,username:live.account?.username||null,
+          archivedThreads:history.length,
+          confirmedDeleted:history.reduce((n,row)=>n+Math.max(0,Number(row.deletedCount||0)),0)},
       });
     }
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
@@ -258,6 +275,7 @@ export default async function handler(req,res){
     if(creds?.session && body.liveExhausted!==true){
       try{
         const fetched=await withBackupClient(creds.session,async client=>{
+          await verifyTelegramClientOwner(client,userId);
           const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
           const dialog=dialogs.find(d=>safeId(d.id)===chatId);
           if(!dialog)return {missing:true};
@@ -278,7 +296,11 @@ export default async function handler(req,res){
           liveMore=Boolean(fetched.hasMore);
           nextLive=fetched.nextOffsetId;
         }
-      }catch(error){warning=errorMessage(error).error;}
+      }catch(error){
+        const stop=telegramOwnerError(error);
+        if(stop)return respond(res,stop.status,{error:stop.error});
+        warning=errorMessage(error).error;
+      }
     }
     if(!chat && threadArchive)chat=archivedDialog(threadArchive);
     if(!chat)return respond(res,404,{error:'Чат не найден в Telegram и нет ранее сохранённой копии VETO.'});

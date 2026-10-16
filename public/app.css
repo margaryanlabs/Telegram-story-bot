@@ -3008,3 +3008,15 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
  .veto-mirror-access-steps{gap:5px}
  .veto-mirror-access-steps>div{padding:9px 7px}
 }
+
+/* Owner proof is separate from Bot/Business readiness: LIVE only after MTProto getMe. */
+.veto-mirror-account-proof{display:flex;align-items:center;gap:8px;margin:4px 0 11px;
+ padding:11px 12px;color:#d9bcbf;background:#231d24;border:1px solid rgba(224,170,184,.16);
+ border-radius:12px;font-size:10px;line-height:1.6;font-weight:700}
+.veto-mirror-account-proof.ready{background:#14201f;color:#bfe3d7;border-color:rgba(161,228,201,.19)}
+.veto-mirror-account-proof.archive-only{background:#1b222c;color:#bed0e9;border-color:rgba(174,201,237,.2)}
+.veto-mirror-deletion-guide{width:100%;display:flex;gap:10px;align-items:center;justify-content:space-between;
+ margin:0 0 16px;background:#111821;color:#c6d5e8;border:1px solid rgba(200,224,243,.14);
+ padding:11px 12px;border-radius:11px;font-size:10px;font-weight:750;text-align:left}
+.veto-mirror-deletion-guide span{font-size:15px;color:#a5bacf}
+.veto-mirror-deletion-guide:focus-visible{outline:2px solid #d3e6f8;outline-offset:2px}

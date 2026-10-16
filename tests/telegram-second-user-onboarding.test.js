@@ -57,7 +57,8 @@ test('Live Chats and Privacy isolation remains intact for any second user',()=>{
   const live=read('api/telegram-chats.js'),media=read('api/telegram-chat-media.js');
   const privacy=read('api/privacy-backup.js');
   assert.ok(live.includes('validateTelegramMiniApp('));
-  assert.ok(live.includes("String(linked.telegram_account_user_id||'')===userId"));
+  assert.ok(live.includes('sameTelegramAccount(userId, linked.telegram_account_user_id)'));
+  assert.ok(live.includes('verifyTelegramClientOwner(client,userId)'));
   assert.ok(media.includes("String(session.telegram_account_user_id||'')!==userId"));
   assert.ok(privacy.includes("String(session.telegram_account_user_id || '') !== userId"));
   assert.ok(!live.includes('admin_chat_id'));

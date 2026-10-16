@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
-    mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
+    connectionProof:null,mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
     previewActive:0,previewSeen:new Set(),
   };
   const labels={
@@ -112,6 +112,15 @@
     if(!list)return;
     const items=filteredChats();
     $('telegramMirrorCount').textContent=String(state.chats.length);
+    const proof=$('telegramMirrorAccountProof');
+    if(proof){
+      const p=state.connectionProof;
+      proof.classList.toggle('ready',p?.verified===true);
+      proof.classList.toggle('archive-only',Boolean(p)&&!p.verified);
+      proof.textContent=p?.verified
+        ?'✓ Подтверждён Telegram '+(p.username?'@'+p.username:p.accountName||'владельца')+' · чаты только этого аккаунта'
+        :p ? '◈ Только собственный архив VETO · живой аккаунт не подтверждён' : '◌ Проверяю личный Telegram · чужие чаты не показываются';
+    }
     $('telegramMirrorUpdated').textContent=state.chats.length
       ?String(state.chats.length)+' загружено · LIVE':'LIVE · По запросу';
     if(!items.length){
@@ -159,7 +168,7 @@
     if(state.loading)return;
     const generation=++state.generation;
     if(reset){
-      state.page=0;state.chats=[];state.hasMore=true;
+      state.page=0;state.chats=[];state.hasMore=true;state.connectionProof=null;
       hideNotice();
     }
     if(!state.hasMore)return;
@@ -185,17 +194,25 @@
           indexes.set(key,state.chats.length);state.chats.push(chat);
         }
       });
+      state.connectionProof=data.connection||null;
       // Archive-only rows are additional cards, not remote Telegram pagination.
       state.hasMore=Boolean(data.hasMore)&&state.page<10;
       state.page+=1;
       hideNotice();
       if($('telegramMirrorAccessButton')){
-        $('telegramMirrorAccessButton').textContent = data.warning ? 'Подключить ↗' : 'Подключено ✓';
+        $('telegramMirrorAccessButton').textContent = data.connection?.verified ? 'LIVE ✓' : 'Подключить ↗';
       }
       if(data.warning)showNotice(data.warning,/Подключи|подключён/.test(data.warning));
       if(!state.hasMore&&state.chats.length>=500)
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
+      // Fail closed on any signed-account mismatch or authentication error.
+      // Never keep a previously loaded conversation visible after a failed refresh.
+      state.chats=[];state.hasMore=false;state.connectionProof=null;
+      state.thread=null;state.messages=[];
+      $('telegramThreadView').hidden=true;
+      $('telegramChatsView').hidden=false;
+      revokeMediaUrls();
       if($('telegramMirrorAccessButton')){
         $('telegramMirrorAccessButton').textContent = 'Подключить ↗';
       }
@@ -528,6 +545,22 @@
     revokeMediaUrls();
     window.scrollTo({top:0,behavior:'instant'});
   }
+  $('telegramMirrorDeletedGuide')?.addEventListener('click',()=>{
+    const saved=state.connectionProof?.archivedThreads||0;
+    const deleted=state.connectionProof?.confirmedDeleted||0;
+    const notice=$('telegramMirrorNotice');
+    if(!notice)return;
+    notice.hidden=false;
+    notice.innerHTML='<div><span>↶</span><p>'+
+      'Подтверждённых удалений в твоём собственном сохранённом архиве: <b>'+safe(deleted)+
+      '</b>. Сохранённых диалогов: <b>'+safe(saved)+
+      '</b>. LIVE подключение показывает только текущую историю Telegram. Удалённые сообщения доступны только если VETO сохранил их до удаления и получил событие об удалении. '+
+      'Для будущих удалений включи Anti-Delete и разреши сообщения в Telegram Business для выбранных чатов. Резервные копии без Business сохраняют содержимое, но не подтверждают факт удаления.'+
+      '</p></div><button type="button" data-mirror-privacy-open="1">Настроить Privacy ↗</button>';
+  });
+  $('telegramMirrorNotice')?.addEventListener('click',event=>{
+    if(event.target.closest('[data-mirror-privacy-open]'))window.VetoTelegramNavigate?.('privacy');
+  });
   $('telegramMirrorAccessButton')?.addEventListener('click',()=>{
     if(typeof window.VetoTelegramOpenAccountConnection==='function'){
       window.VetoTelegramOpenAccountConnection();

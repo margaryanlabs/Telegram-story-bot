@@ -5,6 +5,7 @@ import {
   importUserHistoryBatch,pauseBackupJob,viewerDbConfigured,
 } from '../lib/viewer-sync-store.js';
 import { withBackupClient,fetchBackupPage } from '../lib/telegram-history-backup.js';
+import { verifyTelegramClientOwner } from '../lib/telegram-owner-runtime.js';
 import { archiveHistoryMedia } from '../lib/telegram-history-media.js';
 
 // Keep exact production verifier key aligned with the viewer watcher.
@@ -25,7 +26,7 @@ async function notifyCompleted(ownerId, job, total,media) {
   const url=new URL('https://telegram-story-bot-murex.vercel.app/studio.html');
   url.searchParams.set('screen','chats');
   url.searchParams.set('chat',String(job.chat_id));
-  url.searchParams.set('v','20261016-veto-owner-access-v2');
+  url.searchParams.set('v','20261016-veto-owner-proof-v3');
   const response=await fetch('https://api.telegram.org/bot'+BOT+'/sendMessage',{
     method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({
@@ -57,6 +58,7 @@ async function runJob(job) {
       return {result:'private_archive_disabled'};
     }
     progress=await withBackupClient(decrypted.session,async client=>{
+      await verifyTelegramClientOwner(client,userId);
       const page=await fetchBackupPage(client,{
         ownerId:userId,chatId,offsetId:job.offset_id,retentionDays:settings.retentionDays,
         mediaEnabled:job.media_enabled === true,
