@@ -1,6 +1,6 @@
 import {validateTelegramMiniApp} from '../lib/telegram-miniapp-auth.js';
 import {createCallRoom,inspectCallRoom,answerCallRoom,pollCallRoom,endCallRoom}
-  from '../lib/viewer-sync-store.js';
+  from '../lib/veto-call-signal-store.js';
 import {newCallInvite,parseCallInvite,checkCallDescription,checkCallRoom}
   from '../lib/veto-call-signals.js';
 
