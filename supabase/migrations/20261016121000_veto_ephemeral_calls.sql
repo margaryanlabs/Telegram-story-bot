@@ -27,11 +27,12 @@ revoke all on public.story_pilot_call_rooms from public, anon, authenticated;
 -- cron is already used by the existing VETO Telegram storage project.
 do $$
 begin
-  if exists(select 1 from pg_extension where extname='pg_cron') then
-    if exists(select 1 from cron.job where jobname='veto-call-room-ttl') then
-      perform cron.unschedule('veto-call-room-ttl');
-    end if;
-    perform cron.schedule('veto-call-room-ttl','*/5 * * * *',
-      'delete from public.story_pilot_call_rooms where expires_at < now()');
+  if not exists(select 1 from pg_extension where extname='pg_cron') then
+    raise exception 'veto_call_rooms_require_pg_cron_for_ephemeral_retention';
   end if;
+  if exists(select 1 from cron.job where jobname='veto-call-room-ttl') then
+    perform cron.unschedule('veto-call-room-ttl');
+  end if;
+  perform cron.schedule('veto-call-room-ttl','*/5 * * * *',
+    'delete from public.story_pilot_call_rooms where expires_at < now()');
 end $$;
