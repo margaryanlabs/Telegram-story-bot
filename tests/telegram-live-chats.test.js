@@ -44,7 +44,8 @@ test('Live Chats API is isolated to verified owner Telegram Mini App session',()
   const api=read('api/telegram-chats.js');
   assert.ok(api.includes('validateTelegramMiniApp('));
   assert.ok(api.includes('getViewerSession(userId)'));
-  assert.ok(api.includes("String(linked.telegram_account_user_id||'')===userId"));
+  assert.ok(api.includes('sameTelegramAccount(userId, linked.telegram_account_user_id)'));
+  assert.ok(api.includes('verifyTelegramClientOwner(client,userId)'));
   assert.ok(api.includes("openJson(linked.session_ciphertext,'session:'+userId)"));
   assert.ok(api.includes("if(req.method!=='POST')"));
   assert.ok(api.includes('dialog=dialogs.find')||api.includes('dialogs.find(d=>safeId(d.id)===chatId)'));
