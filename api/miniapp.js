@@ -505,7 +505,8 @@ export default async function handler(req, res) {
     });
     settings = {
       ...settings,
-      userSessionConnected: userSessionRow?.status === 'active',
+      userSessionConnected: userSessionRow?.status === 'active' &&
+        String(userSessionRow.telegram_account_user_id || '') === String(chatId),
       userSessionAccount: userSessionRow?.status === 'active' ? {
         id: userSessionRow.telegram_account_user_id || null,
         username: userSessionRow.telegram_account_username || '',
