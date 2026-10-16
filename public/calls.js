@@ -111,6 +111,18 @@
     }
     if(tg?.initData){
       try{
+        // Exercises signed Telegram -> Vercel -> signed Edge -> private DB.
+        const backend=await signalRequest('probe');
+        if(!guardOwner())return;
+        facts.push(backend.signaling==='ready'&&backend.database==='ready'
+          ?'✓ Сервер VETO Calls и защищённая база отвечают'
+          :'✕ Сервер не подтвердил готовность базы');
+      }catch{
+        facts.push('✕ Сервер сигнализации / база не отвечают');
+      }
+    }
+    if(tg?.initData){
+      try{
         const config=await signalRequest('ice');
         if(!guardOwner())return;
         facts.push(config.relayConfigured?
