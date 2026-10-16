@@ -244,7 +244,8 @@
     try{
       const data=await request('list',{page:state.page});
       if(ownerFingerprint!==String(tg?.initData||'')){
-        void loadChats({reset:true});return;
+        if(state.ownerFingerprint!==String(tg?.initData||''))void loadChats({reset:true});
+        return;
       }
       if(generation!==state.generation)return;
       const indexes=new Map(state.chats.map((c,index)=>[String(c.id),index]));
@@ -277,7 +278,8 @@
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
       if(ownerFingerprint!==String(tg?.initData||'')){
-        void loadChats({reset:true});return;
+        if(state.ownerFingerprint!==String(tg?.initData||''))void loadChats({reset:true});
+        return;
       }
       if(generation!==state.generation)return;
       // Fail closed on any signed-account mismatch or authentication error.
