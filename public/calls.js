@@ -158,6 +158,9 @@
     });
   }
   function armConnectionWatchdog(epoch){
+    // A WebRTC peer may become connected before setRemoteDescription settles.
+    if(epoch!==state.epoch||state.phase==='connected'||
+      state.peer?.connectionState==='connected')return;
     clearTimeout(state.connectionTimer);
     state.connectionTimer=setTimeout(()=>{
       if(epoch!==state.epoch||state.phase==='connected'||state.phase==='idle')return;
@@ -279,9 +282,11 @@
         if(!data.answerSdp||!state.peer)throw Error('Ответ собеседника недоступен');
         await state.peer.setRemoteDescription({type:'answer',sdp:data.answerSdp});
         if(epoch!==state.epoch)return;
-        state.phase='connecting';update();armConnectionWatchdog(epoch);
-        report('Telegram пользователь #'+data.calleeId+
-          ' принял приглашение. Устанавливаю WebRTC-соединение…');
+        if(state.phase!=='connected'){
+          state.phase='connecting';update();armConnectionWatchdog(epoch);
+        }
+        report('Собеседник принял приглашение.
+ Устанавливаю WebRTC-соединение…');
       }
     }).catch(error=>{
       if(epoch!==state.epoch)return;
@@ -341,9 +346,10 @@
       await signalRequest('answer',{invite,sdp:peer.localDescription.sdp});
       if(epoch!==state.epoch)return;
       $('callIncoming').value='';
-      state.phase='connecting';update();armConnectionWatchdog(epoch);
-      report('Ответ отправлен Telegram пользователю #'+room.callerId+
-        '. Ожидаю соединение…');
+      if(state.phase!=='connected'){
+        state.phase='connecting';update();armConnectionWatchdog(epoch);
+      }
+      report('Ответ отправлен. Ожидаю защищённое соединение…');
     }catch(error){failed(error,epoch);}
   }
 
@@ -394,7 +400,9 @@
     try{
       await state.peer.setRemoteDescription({type:'answer',sdp:answer.sdp});
       $('callIncoming').value='';$('callOutgoing').value='';
-      state.phase='connecting';update();armConnectionWatchdog(state.epoch);
+      if(state.phase!=='connected'){
+        state.phase='connecting';update();armConnectionWatchdog(state.epoch);
+      }
       report('Согласование завершено. Ожидаю защищённое соединение…');
     }catch(error){report('Не удалось применить ответ: '+error.message,true);}
   }
