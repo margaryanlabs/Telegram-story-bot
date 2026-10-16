@@ -11,6 +11,7 @@
     room:null,role:null,muted:false,connectedAt:0,timer:0,phase:'idle',epoch:0,
     mode:'manual',signalRoom:null,signalPollTimer:0,signalPollFailures:0,
     sessionTimer:0,connectionTimer:0,iceMode:'stun',waveRaf:0,qualityTimer:0,
+    inviteShareUrl:'',
   };
   const presets={
     original:{low:0,mid:0,high:0,robot:0},
@@ -37,6 +38,7 @@
       state.phase==='idle'?'OFFLINE':state.phase==='connecting'?'СОЕДИНЕНИЕ':'ОЖИДАНИЕ';
     $('callState').dataset.state=state.phase;
     $('callCodeSection').hidden=state.phase==='idle';
+    if($('callInviteShare'))$('callInviteShare').hidden=!state.inviteShareUrl;
     $('callMorphValue').textContent=$('callMorph').value+'%';
     if($('callTransport'))$('callTransport').textContent=state.iceMode==='turn'? 'ICE · TURN ДОСТУПЕН':'ICE · STUN ONLY';
   }
@@ -62,7 +64,8 @@
     state.peer=null;state.oscillator=null;state.mic=null;state.processed=null;
     state.audio=null;state.nodes=null;state.room=null;state.role=null;
     state.muted=false;state.connectedAt=0;state.phase='idle';
-    state.mode='manual';state.signalRoom=null;state.signalPollFailures=0;state.iceMode='stun';
+    state.mode='manual';state.signalRoom=null;state.signalPollFailures=0;
+    state.iceMode='stun';state.inviteShareUrl='';
     const player=$('callRemoteAudio');
     if(player){player.pause();player.srcObject=null;}
     $('callOutgoing').value='';$('callIncoming').value='';
@@ -362,7 +365,10 @@
         void signalRequest('end',{roomId:created.roomId}).catch(()=>{});
         return;
       }
-      state.signalRoom=created.roomId;state.phase='invite-ready';update();
+      state.signalRoom=created.roomId;
+      state.inviteShareUrl=String(created.shareUrl||'').startsWith('https://t.me/')
+        ?String(created.shareUrl):'';
+      state.phase='invite-ready';update();
       $('callOutgoing').value=created.invite;
       report('Короткое приглашение готово. Отправь код второму Telegram пользователю. '+
         'Он вводит его в VETO Calls — ответ подключится автоматически (до 8 минут).');
@@ -452,6 +458,31 @@
       report('Согласование завершено. Ожидаю защищённое соединение…');
     }catch(error){report('Не удалось применить ответ: '+error.message,true);}
   }
+  function prefillDeepLink(){
+    // start_param is not authorization and is never forwarded as a Telegram
+    // identity. Only the signed initData is used for the signaling API.
+    const raw=String(tg?.initDataUnsafe?.start_param||
+      new URLSearchParams(location.search).get('tgWebAppStartParam')||'');
+    if(!/^vc_[A-Za-z0-9_-]{54}$/.test(raw))return;
+    try{
+      const code=raw.slice(3).replace(/-/g,'+').replace(/_/g,'/');
+      const decoded=atob(code.padEnd(56,'='));
+      if(decoded.length!==40)return;
+      const hex=Array.from(decoded,ch=>ch.charCodeAt(0).toString(16).padStart(2,'0')).join('');
+      $('callIncoming').value='VETOR1:'+hex.slice(0,32)+'.'+hex.slice(32);
+      report('Приглашение получено. Проверь собеседника и нажми «Присоединиться по короткому коду».');
+    }catch{}
+  }
+  async function copyInviteLink(){
+    if(!state.inviteShareUrl)return;
+    try{
+      if(!navigator.clipboard?.writeText)throw Error('clipboard unavailable');
+      await navigator.clipboard.writeText(state.inviteShareUrl);
+      report('Ссылка скопирована. Отправь её доверенному человеку. При переключении приложений текущий вызов завершится.');
+    }catch{
+      report('Не удалось скопировать ссылку. Используй короткий код приглашения.',true);
+    }
+  }
   async function copy(){
     const text=$('callOutgoing').value;
     if(!text){report('Сначала сформируй код приглашения или ответа.');return;}
@@ -473,6 +504,7 @@
   $('callJoin')?.addEventListener('click',join);
   $('callApplyAnswer')?.addEventListener('click',applyAnswer);
   $('callCopy')?.addEventListener('click',copy);
+  $('callInviteShare')?.addEventListener('click',copyInviteLink);
   $('callHangup')?.addEventListener('click',()=>{stop();report('Вызов завершён. Микрофон отключён.');});
   $('callMute')?.addEventListener('click',()=>{
     if(!state.processed)return;
@@ -499,5 +531,6 @@
   });
   window.addEventListener('pagehide',()=>stop());
   if(!supported)report('WebRTC или микрофон недоступны в этом Telegram WebView. Попробуй актуальную версию Telegram.',true);
+  prefillDeepLink();
   update();
 })();
