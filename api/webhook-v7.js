@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20261016-veto-owner-access-v2';
+const CONTROL_BUILD = '20261016-veto-owner-proof-v3';
 import sharp from 'sharp';
 import {
   trackPublishedStory,
