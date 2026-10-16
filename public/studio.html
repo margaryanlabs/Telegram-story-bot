@@ -383,26 +383,28 @@
         <div class="calls-grid">
           <article class="calls-card"><span>01 / СОЗДАТЬ</span>
             <strong>Начать звонок</strong>
-            <p>Создай приглашение, скопируй код и передай его доверенному собеседнику. Не закрывай это окно.</p>
-            <button id="callCreate" type="button" class="call-btn">＋ Создать вызов</button>
+            <p>Короткий код действует до 8 минут. Отправь его доверенному Telegram-пользователю, который откроет VETO Calls. Не закрывай окно.</p>
+            <button id="callCreateAssisted" type="button" class="call-btn">＋ Создать короткий код</button>
+            <button id="callCreate" type="button" class="call-btn secondary" style="margin-top:8px">Ручной P2P · резервный режим</button>
           </article>
           <article class="calls-card"><span>02 / ПРИСОЕДИНИТЬСЯ</span>
             <strong>Ответить на приглашение</strong>
-            <p>Вставь код, полученный от инициатора звонка. VETO запросит разрешение на микрофон.</p>
-            <button id="callJoin" type="button" class="call-btn secondary">↗ Ответить на код ниже</button>
+            <p>Вставь приглашение VETOR1, подтвердив свой Telegram через Mini App. Ответ передастся автоматически; разреши микрофон.</p>
+            <button id="callJoinAssisted" type="button" class="call-btn">↗ Присоединиться по короткому коду</button>
+            <button id="callJoin" type="button" class="call-btn secondary" style="margin-top:8px">Ручной P2P · старый длинный код</button>
           </article>
         </div>
         <article class="calls-card" id="callCodeSection" hidden>
           <span>ТРАНСФЕР КОДА / ВНЕШНИЙ КАНАЛ</span>
           <strong>Приглашение или ответ для собеседника</strong>
-          <p>Передавай код через защищённый чат. Код может содержать сетевые адреса. Сам по себе код не даёт доступ к Telegram-перепискам.</p>
+          <p>Короткий код VETOR1 не содержит SDP и сетевых адресов; он даёт получателю временное право присоединиться к конкретному звонку. Старый код VETO1 может содержать сетевые адреса. Никогда не публикуй их открыто.</p>
           <textarea class="calls-field calls-code" id="callOutgoing" readonly placeholder="Код появится после подготовки звонка" aria-label="Исходящий код вызова"></textarea>
           <div class="calls-actions"><button type="button" class="call-btn secondary" id="callCopy">Копировать код ↗</button></div>
         </article>
         <article class="calls-card" style="margin-top:12px">
           <span>03 / ПОЛУЧИТЬ КОД</span>
           <strong>Входящее приглашение или ответ</strong>
-          <p>Если тебе отправили приглашение — вставь его и нажми «Ответить». Если ты создал вызов — вставь ответ сюда и нажми «Подключить».</p>
+          <p>Для VETOR1 вставь код и нажми «Присоединиться по короткому коду» выше. При старом ручном режиме VETO1 вставь сюда приглашение либо ответ и используй соответствующие кнопки.</p>
           <textarea class="calls-field calls-code" id="callIncoming" placeholder="Вставь код вида VETO1:…" aria-label="Входящий код вызова"></textarea>
           <div class="calls-actions"><button id="callApplyAnswer" type="button" class="call-btn secondary" disabled>✓ Подключить по ответу</button></div>
         </article>
@@ -419,7 +421,7 @@
           <input type="range" id="callMorph" min="0" max="100" value="65" step="1" />
         </div>
         <div class="calls-status" id="callStatus" role="status" aria-live="polite">Готово к подключению. Микрофон включится только после твоего действия.</div>
-        <p class="calls-note"><b>Экспериментальная версия.</b> Пока сигнальные коды пересылаются вручную: оба человека должны удерживать окно звонка открытым, иногда удобнее использовать два устройства. В сложных мобильных сетях связь без TURN-сервера может не установиться. Не доступны: видеосвязь, перевод, запись, автоматические приглашения и групповые комнаты. Соединение шифруется WebRTC, но личность собеседника проверяется вами через канал обмена кодами. Вызов прекращается при выходе из раздела.</p>
+        <p class="calls-note"><b>Экспериментальная версия.</b> Короткий код VETOR1 передаёт зашифрованные WebRTC-параметры через временный сервер сигнализации (SDP удаляется после соединения/завершения или по TTL); само аудио сервер VETO не получает. Оба участника должны оставить окно вызова открытым. Коды пересылаются вручную, но ответ для VETOR1 передаётся автоматически. TURN-сервер пока не добавлен, поэтому в сложных сетях соединение может не пройти. Не доступны: видеосвязь, живой перевод, запись, звонок-пуш и групповые комнаты. Личность участника подтверждается входом в Telegram Mini App, но доверять собеседнику нужно по тому каналу, где передан секрет приглашения.</p>
       </div>
     </section>
 
@@ -1501,7 +1503,7 @@
   <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
-  <script src="/calls.js?v=20261016-veto-p2p-v1"></script>
+  <script src="/calls.js?v=20261016-veto-p2p-signal-v2"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
