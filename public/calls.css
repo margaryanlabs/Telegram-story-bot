@@ -57,3 +57,5 @@
 
 .veto-calls .calls-diagnostics-card{margin:12px 0}
 .veto-calls .calls-diagnostics{border:1px solid #2b3947;border-radius:12px;background:#090e14;color:#bfcbd8;padding:13px 14px;margin:13px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85}
+
+.veto-calls .calls-peer-mute{display:block;margin:5px auto 0;text-align:center;color:#aab8c8;font-size:9px;letter-spacing:.16em;font-weight:750}
