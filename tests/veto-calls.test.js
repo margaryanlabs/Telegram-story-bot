@@ -34,7 +34,8 @@ test('Actual microphone, 1-to-1 audio WebRTC and in-call filters must exist',()=
   assert.ok(js.includes('state.mic?.getTracks().forEach(t=>t.stop())'));
   assert.ok(js.includes("event.detail?.screen!=='calls'"));
   assert.ok(js.includes("document.addEventListener('visibilitychange'"));
-  assert.ok(!js.includes('fetch('));
+  assert.ok(js.includes("fetch('/api/call-signal'"));
+  assert.ok(!js.includes('TelegramClient('));
   assert.ok(!js.includes('localStorage'));
   assert.ok(!js.includes('sessionStorage'));
   assert.ok(!js.includes('MediaRecorder'));
@@ -62,7 +63,11 @@ test('Out-of-band signaling codes enforce version, room ID, offer/answer type an
   assert.throws(()=>old.unpack(code,'offer'),/Код не подходит/);
 });
 test('No promise of private-room server signaling, automatic invitations or phone call intercept',()=>{
-  assert.ok(html.includes('сигнальные коды пересылаются вручную'));
+  assert.ok(html.includes('Коды пересылаются вручную'));
+  assert.ok(html.includes('id="callCreateAssisted"'));
+  assert.ok(html.includes('id="callJoinAssisted"'));
+  assert.ok(js.includes('pollAssisted(epoch)'));
+  assert.ok(js.includes("signalRequest('answer'"));
   assert.ok(html.includes('TURN-сервера'));
   assert.ok(html.includes('не проверяется')===false ||
     html.includes('личность собеседника проверяется вами'));
