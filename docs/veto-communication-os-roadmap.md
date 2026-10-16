@@ -15,14 +15,18 @@ This plan extends the existing `margaryanlabs/Telegram-story-bot` production cod
 
 ## Follow-up P1 implementation (same draft PR #126)
 
-The new short-code signaling path is **implemented in code but not deployed/activated**:
+The new short-code signaling path is **deployed on the backend but UI not released to production**:
 - `/api/call-signal`: verifies Telegram-signed Mini App user, never trusts a client-supplied user ID, issues 192-bit temporary invite capability.
 - `supabase/functions/veto-call-signal`: **independent** Ed25519-signed Supabase Edge function, separate from all Story, Privacy and Viewer Sync gateway operations.
 - `supabase/migrations/20261016121000_veto_ephemeral_calls.sql`: server-only RLS table, bearer-token SHA-256 hash, first-answer atomic claim, eight-minute expiry and five-minute pg_cron hard purge.
 - Browser: caller polls for answer over short invite `VETOR1`; callee claims it under their own signed Telegram identity. SDP stays server-side; no peer SDP is copied into the invite. Original manual `VETO1` remains a fallback.
-- Both modes are WebRTC-only audio without TURN; a P2P WebRTC room is not a production signaling/notification service.
+- Both modes are WebRTC-only audio. Optional TURN REST credentials are implemented but require a real Coturn server and Vercel configuration; no functioning relay has been verified. A P2P WebRTC room is not a Telegram-native incoming-call/notification service.
 
-**Release gate:** apply the migration to the correct VETO Telegram Supabase project; deploy the new Edge function with `verify_jwt=false` (this function verifies Ed25519 signatures itself); check that the configured Vercel signing public key matches the Edge verifier; run a real two-account test on two phones (including 4G↔Wi-Fi and denial of the second callee). Do NOT merge a UI that advertises short invites before the Edge endpoint is alive. No passwords, tokens, raw SDP or private chats in logs.
+**Deployment record, 2026-10-16:** applied `veto_ephemeral_calls` migration to Supabase project `xvtmgzzaomolnvkcgosk`; deployed standalone `veto-call-signal` Edge function v1, `verify_jwt=false` with mandatory internal Ed25519 verification. Verified table has RLS ON, neither `anon` nor `authenticated` has SELECT, initial room count = 0, and `veto-call-room-ttl` cron active every five minutes. Existing Story/Privacy Edge function was not replaced. This **does not** establish successful authenticated signaling or real WebRTC call; no real two-physical-device test completed.
+
+**Remaining release gate:** verify signed end-to-end Vercel→Edge create/inspect/answer/poll/end via two separate real Telegram initData identities; verify first-answer and expiry; test Android/iOS and cellular/Wi-Fi ICE, reject cross-account access and confirm low leak risk. Do NOT merge until two-device evidence. Never log secrets, SDP or chats.
+
+**TURN readiness:** server can mint Coturn REST temporary HMAC-SHA1 credentials on authenticated `POST /api/call-signal {action:"ice"}`. Configure server-only Vercel `VETO_TURN_URLS` (comma-separated `turn:`/`turns:` addresses) and `VETO_TURN_SECRET` (same strong shared secret as Coturn `static-auth-secret`). Without both, UI accurately displays STUN ONLY. Verify actual selected ICE candidate as relay in client quality indicator before calling it working TURN.
 
 ## Delivery phases & acceptance criteria
 
@@ -58,7 +62,7 @@ The new short-code signaling path is **implemented in code but not deployed/acti
 ## Production gates
 
 - P0: real two-account isolation audit; PR #125 must be separately validated.
-- P1: PR #126 preview build + signaling migration and Edge verification + **two-device** WebRTC test. Browser tests do not prove actual call stability.
+- P1: PR #126 preview build + deployed schema/Edge + signed live tests and **two-device** WebRTC test. Backend installed, E2E remains unverified. Browser tests do not prove actual call stability.
 - P2: server signal service with reliable TURN, signed caller/callee identity, incoming notification route, disconnect lifecycle. Gate by transport reliability.
 - P3: upgrade local Voice Studio first, then streaming speech-to-text and translation in separate optional consented calls.
 - P4: Message Intelligence, source-grounded draft replies, encrypted semantic search and aggregations with measured privacy and inference cost.
