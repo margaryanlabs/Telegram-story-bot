@@ -51,3 +51,6 @@
 .veto-voice-playback-control input{width:100%;margin-top:9px;accent-color:#c7d0dd}
 
 .veto-calls .calls-transport{display:block;margin-top:8px;font-weight:800;letter-spacing:.16em;color:#bbc8d7;font-size:10px}
+
+.veto-calls .calls-waveform{display:block;width:min(100%,480px);height:60px;margin:15px auto 0;opacity:.92}
+.veto-calls .calls-quality{display:block;letter-spacing:.17em;font-size:9px;color:#9ba9b9;margin-top:4px;font-weight:800}
