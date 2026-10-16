@@ -38,3 +38,14 @@
 .veto-calls .calls-note{font-size:11px;line-height:1.7;color:#8c9aaa;border:1px solid #25313b;border-radius:14px;padding:13px}
 .veto-calls .calls-note b{color:#cdd5e0}
 @media(max-width:560px){.veto-calls{padding:17px 14px 110px}.veto-calls .calls-grid{grid-template-columns:1fr}.veto-calls .calls-header{align-items:flex-start;flex-direction:column}.veto-calls .calls-hero{min-height:240px}.veto-calls .calls-card{padding:15px}}
+
+/* Voice Studio v2 refinements (shared product typography, no colored theme). */
+.veto-voice .veto-voice-custom{margin:16px 0 0;border:1px solid #2c3945;border-radius:15px;padding:16px;background:#10161d}
+.veto-voice .veto-voice-custom[hidden]{display:none}
+.veto-voice-custom>strong{display:block;color:#eef1f7;margin-bottom:13px;font-size:13px}
+.veto-voice-custom label{display:flex;align-items:center;gap:15px;color:#adb9c6;font-size:12px;padding:8px 0}
+.veto-voice-custom label input{flex:1;min-width:100px;accent-color:#c7d0dd}
+.veto-voice-custom small{font-size:11px;color:#8492a1;line-height:1.5;display:block;margin-top:8px}
+.veto-voice-playback-control{display:block;font-size:12px;color:#c5cfd9;margin:13px 0}
+.veto-voice-playback-control output{float:right;font-variant-numeric:tabular-nums;color:#f3f5f7}
+.veto-voice-playback-control input{width:100%;margin-top:9px;accent-color:#c7d0dd}
