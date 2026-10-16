@@ -21,19 +21,22 @@
     }
     button.disabled=true;
     write('Проверяю локальный WebRTC: аудиопоток, ICE, DTLS и канал управления…');
-    let caller=null,receiver=null,audio=null,osc=null,timeoutId=0;
+    let caller=null,receiver=null,audio=null,osc=null,destination=null,timeoutId=0;
+    let rejectPending=null;
     const disposables=[];
     let completed=false;
     const cleanup=()=>{
       if(completed)return;
       completed=true;
       clearTimeout(timeoutId);
+      if(rejectPending){rejectPending(Error('CANCELLED'));rejectPending=null;}
       for(const dispose of disposables.splice(0)){
         try{dispose();}catch{}
       }
       try{caller?.close();}catch{}
       try{receiver?.close();}catch{}
       try{osc?.stop();}catch{}
+      try{destination?.stream?.getTracks().forEach(t=>t.stop());}catch{}
       try{audio?.close();}catch{}
       if(cleanupActive===cleanup)cleanupActive=null;
       if(epoch===currentEpoch)button.disabled=false;
@@ -43,7 +46,7 @@
       audio=new Context();
       if(audio.state==='suspended')await audio.resume();
       if(epoch!==currentEpoch||completed)return;
-      const dest=audio.createMediaStreamDestination();
+      const dest=audio.createMediaStreamDestination();destination=dest;
       const gain=audio.createGain();
       gain.gain.value=0.0001; // silent synthetic signal, never user microphone
       osc=audio.createOscillator();osc.frequency.value=260;
@@ -74,7 +77,7 @@
       let remoteAudio=false,pong=false;
       let resolveDone, rejectDone;
       const received=new Promise((resolve,reject)=>{
-        resolveDone=resolve;rejectDone=reject;
+        resolveDone=resolve;rejectDone=reject;rejectPending=reject;
       });
       const maybeDone=()=>{
         callerReady=caller.connectionState==='connected';
