@@ -3020,3 +3020,100 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
  padding:11px 12px;border-radius:11px;font-size:10px;font-weight:750;text-align:left}
 .veto-mirror-deletion-guide span{font-size:15px;color:#a5bacf}
 .veto-mirror-deletion-guide:focus-visible{outline:2px solid #d3e6f8;outline-offset:2px}
+
+/* VETO Voice Studio — local first audio workbench. Matte black, silver typography. */
+.veto-voice{--va:#e8eef6;--vm:#8898ab;--vl:rgba(225,237,249,.11);--vbg:#080b11;
+ min-height:calc(100dvh - 130px);padding:24px 16px 85px;background:#080b11;color:var(--va);
+ font-family:inherit;letter-spacing:normal}
+.veto-voice *{box-sizing:border-box}
+.veto-voice-header{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;
+ max-width:780px;margin:0 auto 24px}
+.veto-voice-eyebrow{display:block;font-size:9px;font-weight:800;letter-spacing:.17em;color:#90a5bc}
+.veto-voice-header h1{font-size:clamp(33px,9vw,55px);line-height:1;letter-spacing:-.07em;
+ font-weight:850;margin:12px 0 14px;color:#f3f6fa}
+.veto-voice-header h1 span{font-weight:450;color:#93a6bb}
+.veto-voice-header p{font-size:11px;line-height:1.65;color:var(--vm);margin:0;max-width:475px}
+.veto-voice-security{flex:0 0 auto;display:flex;align-items:center;gap:7px;white-space:nowrap;
+ border:1px solid rgba(196,220,238,.18);padding:8px 10px;border-radius:25px;
+ color:#b0c8dc;font-size:9px;letter-spacing:.1em;font-weight:800;margin-top:5px}
+.veto-voice-security i{width:6px;height:6px;background:#9cbaa9;box-shadow:0 0 8px rgba(160,215,178,.25);border-radius:50%}
+.veto-voice-monitor-card,.veto-voice-presets-panel,.veto-voice-capture{max-width:780px;
+ margin:0 auto 16px;border:1px solid var(--vl);border-radius:20px;
+ background:linear-gradient(145deg,#121823,#090d14);overflow:hidden}
+.veto-voice-monitor-top{display:flex;justify-content:space-between;gap:12px;
+ align-items:flex-start;padding:18px 19px 4px}
+.veto-voice-monitor-top>div{display:grid;gap:7px}
+.veto-voice-input-label{letter-spacing:.16em;font-size:9px;color:#8191a6;font-weight:850}
+.veto-voice-monitor-top strong{font-size:13px;color:#edf3f9}
+.veto-voice-monitor-top strong.live{color:#c8e3d7}
+.veto-voice-monitor-top strong.recording{color:#f2c0c7}
+.veto-voice-signal{color:#9db2c7;font-size:9px;letter-spacing:.12em}
+.veto-voice-monitor-card canvas{display:block;width:100%;height:190px;object-fit:cover;
+ margin:8px 0;border-top:1px solid rgba(255,255,255,.03);
+ border-bottom:1px solid rgba(255,255,255,.03);background:#090d13}
+.veto-voice-monitor-controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:13px 17px 18px}
+.veto-voice-button{border:1px solid rgba(196,215,236,.19);display:inline-flex;align-items:center;gap:10px;
+ justify-content:center;min-height:46px;padding:12px 17px;border-radius:11px;font-weight:800;
+ font-family:inherit;font-size:11px;letter-spacing:.01em;cursor:pointer;transition:transform .15s,opacity .15s}
+.veto-voice-button:active{transform:scale(.985)}
+.veto-voice-button.primary{border-color:#d9e3f0;background:#e4eaf2;color:#131923}
+.veto-voice-button.subdued{background:#1b2634;color:#cbd9e9}
+.veto-voice-button:disabled{opacity:.32;cursor:not-allowed}
+.veto-voice-headphones{margin-left:auto;display:flex;align-items:center;gap:7px;color:#d1ddea;
+ font-size:10px;cursor:pointer}
+.veto-voice-headphones input{accent-color:#d2e3f7;width:16px;height:16px}
+.veto-voice-headphones small{display:block;font-size:8px;color:#7f92a6;margin-top:2px}
+.veto-voice-presets-panel{padding:20px}
+.veto-voice-panel-heading{display:flex;justify-content:space-between;align-items:center;
+ gap:10px;margin-bottom:16px}
+.veto-voice-panel-heading span{font-size:9px;font-weight:800;letter-spacing:.16em;color:#8195a9}
+.veto-voice-panel-heading strong{font-size:12px;color:#edf2f8}
+.veto-voice-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.veto-voice-presets button{display:flex;flex-direction:column;align-items:flex-start;gap:7px;
+ color:#d7e3f0;border:1px solid rgba(190,213,237,.11);
+ border-radius:14px;background:#101721;padding:15px 13px;min-height:112px;
+ font:inherit;text-align:left;transition:transform .15s,border .15s,background .15s}
+.veto-voice-presets button>span{color:#9ab0c8;font-size:24px;font-weight:650;line-height:1.05}
+.veto-voice-presets button strong{font-size:12px}
+.veto-voice-presets button small{font-size:9px;color:#8697ad}
+.veto-voice-presets button.active{border-color:rgba(221,235,251,.66);background:#273347;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.veto-voice-presets button.active>span,.veto-voice-presets button.active strong{color:#f2f7ff}
+.veto-voice-presets button:active{transform:scale(.97)}
+.veto-voice-morph{margin-top:21px;padding:20px;border:1px solid rgba(210,230,246,.09);
+ border-radius:15px;background:#0a1019;display:grid;grid-template-columns:1fr auto;gap:8px}
+.veto-voice-morph>div:first-child{display:grid;gap:5px}
+.veto-voice-morph strong{font-size:13px}
+.veto-voice-morph small{font-size:9px;color:#8d9fb4}
+.veto-voice-morph output{font-size:14px;font-weight:850;color:#d3e2f1}
+.veto-voice-morph input{grid-column:1/-1;width:100%;height:24px;accent-color:#d4dfef;cursor:pointer}
+.veto-voice-morph-marks{grid-column:1/-1;display:flex;justify-content:space-between;
+ color:#728498;font-size:8px;letter-spacing:.14em;font-weight:850}
+.veto-voice-capture{padding:20px}
+.veto-voice-capture p{font-size:11px;line-height:1.6;color:#91a4b9;margin:0 0 18px}
+.veto-voice-record-actions{display:flex;gap:9px;flex-wrap:wrap}
+.veto-voice-record-actions button{flex:1;min-width:120px}
+.veto-voice-record-actions .primary b{font-size:18px;color:#a9293b}
+.veto-voice-result{margin-top:16px;padding:16px;border:1px solid rgba(213,228,247,.14);border-radius:13px;background:#0a1019}
+.veto-voice-result[hidden]{display:none!important}
+.veto-voice-result-heading{display:flex;justify-content:space-between;margin:0 0 9px}
+.veto-voice-result-heading strong{font-size:11px}
+.veto-voice-result-heading small{color:#91a5bb;font-size:9px}
+.veto-voice-result audio{width:100%;height:44px;margin-bottom:10px}
+.veto-voice-status{max-width:780px;margin:0 auto 13px;color:#9fb4cc;background:#111820;
+ border:1px solid rgba(176,207,238,.1);padding:12px 15px;border-radius:11px;font-size:10px;line-height:1.7}
+.veto-voice-footnote{max-width:780px;margin:0 auto;display:flex;gap:12px;padding:9px 6px;color:#8f9fb3}
+.veto-voice-footnote span{font-size:22px;color:#bdccd9}
+.veto-voice-footnote p{font-size:10px;line-height:1.75;margin:0}
+.veto-voice button:focus-visible,.veto-voice input:focus-visible{outline:2px solid #dcebf7;outline-offset:2px}
+@media (max-width:520px){
+ .veto-voice{padding:21px 13px 100px}
+ .veto-voice-header{display:block}
+ .veto-voice-header h1{margin-bottom:13px}
+ .veto-voice-security{width:max-content;margin-top:16px}
+ .veto-voice-monitor-card canvas{height:148px}
+ .veto-voice-presets-panel,.veto-voice-capture{padding:15px}
+ .veto-voice-presets{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .veto-voice-presets button{min-height:107px}
+ .veto-voice-monitor-controls{padding:13px}
+ .veto-voice-headphones{width:100%;margin-left:0;padding-top:7px}
+}
