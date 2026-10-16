@@ -62,17 +62,50 @@ function callSdp(value: unknown) {
     throw new Error('call_bad_description');
   return sdp;
 }
+async function opCallGetPreferences(args:any){
+  const actor=callId(args.userId);
+  const {data,error}=await db.from('story_pilot_call_optins')
+    .select('notifications_enabled').eq('telegram_user_id',actor).maybeSingle();
+  if(error)throw error;
+  return {notificationsEnabled:data?.notifications_enabled===true};
+}
+async function opCallSetPreferences(args:any){
+  const actor=callId(args.userId);
+  if(typeof args.enabled!=='boolean')throw new Error('call_bad_preference');
+  const {error}=await db.from('story_pilot_call_optins').upsert({
+    telegram_user_id:actor,notifications_enabled:args.enabled,
+    updated_at:new Date().toISOString(),
+  },{onConflict:'telegram_user_id'});
+  if(error)throw error;
+  return {notificationsEnabled:args.enabled};
+}
+// Claims one alert slot only for an explicitly opted-in account.
+// Atomic conditional UPDATE keeps concurrent callers from flooding a recipient.
+async function claimRecipientSlot(recipient:string,now:Date){
+  const earliest=new Date(now.getTime()-3*60*1000).toISOString();
+  const {data,error}=await db.from('story_pilot_call_optins')
+    .update({last_alert_at:now.toISOString(),updated_at:now.toISOString()})
+    .eq('telegram_user_id',recipient).eq('notifications_enabled',true)
+    .or('last_alert_at.is.null,last_alert_at.lt.'+earliest)
+    .select('telegram_user_id').maybeSingle();
+  if(error)throw error;
+  if(!data)throw new Error('call_recipient_unavailable');
+}
+
 async function opCallCreate(args: any){
   const caller=callId(args.callerId),room=callRoom(args.roomId),hash=callHash(args.tokenHash);
   const sdp=callSdp(args.offerSdp);
+  const recipient=args.recipientId==null?null:callId(args.recipientId);
+  if(recipient===caller)throw new Error('call_bad_recipient');
   const now=new Date(),expires=new Date(now.getTime()+8*60*1000);
   const {count,error:counterError}=await db.from('story_pilot_call_rooms')
     .select('room_id',{count:'exact',head:true}).eq('caller_id',caller)
     .gt('expires_at',now.toISOString());
   if(counterError)throw counterError;
   if(Number(count||0)>=3)throw new Error('call_room_limit');
+  if(recipient)await claimRecipientSlot(recipient,now);
   const {error}=await db.from('story_pilot_call_rooms').insert({
-    room_id:room,invite_hash:hash,caller_id:caller,offer_sdp:sdp,status:'offered',
+    room_id:room,invite_hash:hash,caller_id:caller,recipient_id:recipient,offer_sdp:sdp,status:'offered',
     created_at:now.toISOString(),expires_at:expires.toISOString(),
   });
   if(error){
@@ -90,11 +123,12 @@ async function opCallCreate(args: any){
 async function opCallInspect(args: any){
   const room=callRoom(args.roomId),hash=callHash(args.tokenHash),actor=callId(args.userId);
   const {data,error}=await db.from('story_pilot_call_rooms')
-    .select('room_id,caller_id,callee_id,status,offer_sdp,expires_at')
+    .select('room_id,caller_id,callee_id,recipient_id,status,offer_sdp,expires_at')
     .eq('room_id',room).eq('invite_hash',hash)
     .gt('expires_at',new Date().toISOString()).maybeSingle();
   if(error)throw error;
-  if(!data||String(data.caller_id)===actor||data.status!=='offered'||data.callee_id)
+  if(!data||String(data.caller_id)===actor||data.status!=='offered'||data.callee_id||
+    (data.recipient_id&&String(data.recipient_id)!==actor))
     throw new Error('call_invite_unavailable');
   return {roomId:room,callerId:String(data.caller_id),offerSdp:data.offer_sdp,
     expiresAt:data.expires_at};
@@ -106,7 +140,9 @@ async function opCallAnswer(args: any){
     .update({callee_id:actor,answer_sdp:sdp,status:'answered'})
     .eq('room_id',room).eq('invite_hash',hash)
     .eq('status','offered').is('callee_id',null)
-    .neq('caller_id',actor).gt('expires_at',new Date().toISOString())
+    .neq('caller_id',actor)
+    .or('recipient_id.is.null,recipient_id.eq.'+actor)
+    .gt('expires_at',new Date().toISOString())
     .select('room_id,caller_id,callee_id').maybeSingle();
   if(error)throw error;
   if(!data)throw new Error('call_invite_unavailable');
@@ -149,6 +185,8 @@ async function opCallProbe(_args:any){
 
 const operations:Record<string,(args:any)=>Promise<any>>={
   call_probe:opCallProbe,
+  call_preferences_get:opCallGetPreferences,
+  call_preferences_set:opCallSetPreferences,
   call_create:opCallCreate,
   call_inspect:opCallInspect,
   call_answer:opCallAnswer,
@@ -174,10 +212,11 @@ Deno.serve(async request=>{
       msg==="call_room_limit"?429:
       msg==="call_invite_unavailable"?410:
       msg==="call_access_denied"?403:
+      msg==="call_recipient_unavailable"?410:
       /^(invalid_|call_bad_)/.test(msg)?400:503;
     // No SDP, invite code, Telegram token, DB connection, message text, or owner
     // identifiers in logs. Only short error codes to support health metrics.
-    const safe=/^(invalid_|call_bad_|call_invite_unavailable|call_room_limit|call_access_denied)/.test(msg)
+    const safe=/^(invalid_|call_bad_|call_invite_unavailable|call_room_limit|call_access_denied|call_recipient_unavailable)/.test(msg)
       ?msg:"call_store_unavailable";
     return json({ok:false,error:safe},status);
   }
