@@ -189,10 +189,16 @@
       state.hasMore=Boolean(data.hasMore)&&state.page<10;
       state.page+=1;
       hideNotice();
+      if($('telegramMirrorAccessButton')){
+        $('telegramMirrorAccessButton').textContent = data.warning ? 'Подключить ↗' : 'Подключено ✓';
+      }
       if(data.warning)showNotice(data.warning,/Подключи|подключён/.test(data.warning));
       if(!state.hasMore&&state.chats.length>=500)
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
+      if($('telegramMirrorAccessButton')){
+        $('telegramMirrorAccessButton').textContent = 'Подключить ↗';
+      }
       showNotice(error.message,/Подключи|подключён|Открой VETO|аккаунт|авторизуй/i.test(error.message));
     }finally{
       if(generation===state.generation){state.loading=false;renderChats();}
