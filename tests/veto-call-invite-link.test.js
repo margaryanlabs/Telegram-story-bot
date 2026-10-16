@@ -22,7 +22,7 @@ test('VETO Mini App share link transports ephemeral invitation without SDP or us
 test('Startapp decoder rejects tampered links and wrong bot usernames',()=>{
   const param=inviteToStartParam(newCallInvite().invite);
   for(const broken of ['', 'abc', param.slice(0,-1), param+'a',
-    param.replace('vc_','wrong_'),param.replace('a','!')]){
+    param.replace('vc_','wrong_'),param.slice(0,10)+'!'+param.slice(11)]){
     assert.throws(()=>startParamToInvite(broken));
   }
   assert.throws(()=>makeCallInviteUrl('https://evil.example/path',newCallInvite().invite));
