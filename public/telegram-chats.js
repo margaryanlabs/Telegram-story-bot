@@ -580,7 +580,7 @@
     if(state.ownerFingerprint!==String(tg?.initData||'')){
       void loadChats({reset:true});return;
     }
-    if(!state.thread||state.threadLoading)return;
+    if(!state.thread||(state.threadLoading&&!reset))return;
     const chatId=String(state.thread.id);
     const rememberedAnchor=state.messages.length?visibleMessageAnchor():null;
     const generation=++state.threadGeneration;
