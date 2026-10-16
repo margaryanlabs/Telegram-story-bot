@@ -1522,6 +1522,21 @@
   // Other modules can open secondary pages (Chats, Relay) without depending on
   // a non-existent bottom tab or duplicating navigation state.
   window.VetoTelegramNavigate = switchScreen;
+  // Messenger and Privacy modules share the same owner-scoped account login.
+  // The Business-bot permission is an independent optional archive feature.
+  window.VetoTelegramOpenAccountConnection = async () => {
+    if (!tg?.initData) {
+      showToast('Открой VETO внутри своего Telegram');
+      return;
+    }
+    await refreshViewerSync({ silent:true });
+    if (viewerState.session?.connected === true && viewerState.session?.identityMismatch !== true) {
+      profileSheet();
+    } else {
+      connectionHelpSheet();
+    }
+  };
+
 
   function openSheet(html) {
     $('sheetContent').innerHTML = html;
@@ -1950,6 +1965,22 @@
   }
 
   function connectionHelpSheet() {
+    if (viewerState.session?.identityMismatch === true) {
+      openSheet(`
+        <span class="kicker">МОЙ TELEGRAM · ПРОВЕРКА АККАУНТА</span>
+        <h2>Подключён другой Telegram-аккаунт</h2>
+        <p>Открой VETO в своём Telegram и подключи именно этот аккаунт. Для просмотра переписок нужен личный вход. Telegram Business отдельно и для чтения живых чатов не требуется.</p>
+        <div class="sheet-list">
+          <div class="sheet-item"><strong>1 · Очистить неправильное подключение</strong><span>Это отключит только приватную VETO-сессию для данного аккаунта.</span></div>
+          <div class="sheet-item"><strong>2 · Подключиться заново</strong><span>Номер + код на этом телефоне; QR — если есть второй экран. Коды вводи только сам в VETO.</span></div>
+        </div>
+        <div class="sheet-actions">
+          <button class="accent" data-sheet-action="viewer-disconnect">Отключить чужой вход →</button>
+          <button data-sheet-action="close">Закрыть</button>
+        </div>
+      `);
+      return;
+    }
     if (viewerState.configured === false || viewerState.newConnectionsReady === false) {
       viewerSetupSheet();
       return;
@@ -3004,6 +3035,9 @@
         renderViewers();
         await refresh().catch(() => {});
         showToast('Telegram Account отключён');
+        // After a mismatched account is removed, immediately offer the
+        // owner a fresh, consent-based connection rather than a dead end.
+        connectionHelpSheet();
       } catch (error) {
         showToast(error.message);
       }
