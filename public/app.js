@@ -92,7 +92,14 @@
     analytics: 'analytics',
     archive: 'archive',
   };
-  const requestedScreen = SCREEN_ALIASES[String(qs.get('screen') || '').toLowerCase()] || null;
+  // Telegram Main Mini App links may carry a temporary VETO call invite.
+  // Only route to Calls here; its module parses the token and asks for explicit
+  // microphone consent. The server separately verifies signed initData.
+  const callStartParam=String(tg?.initDataUnsafe?.start_param||
+    qs.get('tgWebAppStartParam')||'');
+  const requestedScreen=/^vc_[A-Za-z0-9_-]{54}$/.test(callStartParam)
+    ?'calls'
+    :(SCREEN_ALIASES[String(qs.get('screen') || '').toLowerCase()]||null);
   let currentScreen = 'home';
   let selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
   let toastTimer = null;
