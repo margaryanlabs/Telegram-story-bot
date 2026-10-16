@@ -39,6 +39,8 @@ test('Mini App provides inline recovery from phone, code, and 2FA errors', () =>
   const app = read('public/app.js');
   assert.match(app, /function runViewerAuthAction/);
   assert.match(app, /id="viewerAuthError"/);
-  assert.match(app, /data-sheet-action="viewer-use-phone">Другой номер \/ новый код/);
+  assert.match(app, /data-sheet-action="viewer-code-help">Код не пришёл/);
+  assert.match(app, /data-sheet-action="viewer-cancel-login">Отменить запрос и сменить номер/);
+  assert.match(app, /await viewerApi\('cancel_login', \{\}, null\)/);
   assert.match(app, /const uri = actionTarget\?\.dataset\?\.qrUri/);
 });
