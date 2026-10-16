@@ -374,6 +374,7 @@
           <canvas id="callWaveform" class="calls-waveform" width="480" height="80" aria-label="Живая визуализация микрофона"></canvas>
           <strong class="calls-elapsed" id="callElapsed">00:00</strong>
           <span class="calls-quality" id="callQuality">СОЕДИНЕНИЕ НЕ УСТАНОВЛЕНО</span>
+          <span class="calls-peer-mute" id="callPeerMute" aria-live="polite">СОБЕСЕДНИК · НЕТ СОЕДИНЕНИЯ</span>
           <small>Звук передаётся между участниками напрямую либо через TURN-реле, если оно настроено. Не обычный Telegram-звонок.</small>
           <small id="callTransport" class="calls-transport">ICE · STUN ONLY</small>
           <audio id="callRemoteAudio" autoplay playsinline></audio>
@@ -1525,7 +1526,7 @@
   <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
-  <script src="/calls.js?v=20261016-veto-inbound-v6"></script>
+  <script src="/calls.js?v=20261016-veto-control-v7"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
