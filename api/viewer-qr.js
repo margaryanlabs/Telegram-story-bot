@@ -9,7 +9,8 @@ import {
   saveAuthChallenge,
   deleteAuthChallenge,
 } from '../lib/viewer-sync-store.js';
-import { beginUserQrAuth } from '../lib/viewer-sync-telegram.js';
+import { beginUserQrAuth, revokeUserSession } from '../lib/viewer-sync-telegram.js';
+import { requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
 
 const AUTH_TTL_MS = 10 * 60 * 1000;
 const QR_STREAM_MS = 52_000;
@@ -144,6 +145,14 @@ export default async function handler(req, res) {
 
     if (!result?.connected || !result?.session || !result?.user) {
       throw new Error('Telegram QR authorization did not return a session');
+    }
+    try {
+      requireOwnTelegramAccount(userId, result.user);
+    } catch (error) {
+      await revokeUserSession(result.session).catch(() => {});
+      send({ type:'error', error:TELEGRAM_OWNER_MESSAGE });
+      res.end();
+      return;
     }
 
     await upsertViewerSession({
