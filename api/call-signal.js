@@ -3,6 +3,7 @@ import {createCallRoom,inspectCallRoom,answerCallRoom,pollCallRoom,endCallRoom}
   from '../lib/veto-call-signal-store.js';
 import {newCallInvite,parseCallInvite,checkCallDescription,checkCallRoom}
   from '../lib/veto-call-signals.js';
+import {createIceConfig} from '../lib/veto-call-ice.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 function reply(res,status,data){
@@ -24,9 +25,14 @@ export default async function handler(req,res){
       return reply(res,413,{error:'Слишком большой запрос'});
   }catch{return reply(res,400,{error:'Неверный формат'});}
   const action=String(body.action||'');
-  if(!['create','inspect','answer','poll','end'].includes(action))
+  if(!['create','inspect','answer','poll','end','ice'].includes(action))
     return reply(res,400,{error:'Неизвестная операция'});
   try{
+    if(action==='ice'){
+      // Authenticated access only. TURN shared secret never leaves Vercel.
+      return reply(res,200,createIceConfig({secret:process.env.VETO_TURN_SECRET,
+        turnUrls:process.env.VETO_TURN_URLS}));
+    }
     if(action==='create'){
       const offer=checkCallDescription(body.sdp,'offer');
       const room=newCallInvite();
