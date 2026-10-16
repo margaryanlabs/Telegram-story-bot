@@ -28,6 +28,17 @@ The new short-code signaling path is **deployed on the backend but UI not releas
 
 **TURN readiness:** server can mint Coturn REST temporary HMAC-SHA1 credentials on authenticated `POST /api/call-signal {action:"ice"}`. Configure server-only Vercel `VETO_TURN_URLS` (comma-separated `turn:`/`turns:` addresses) and `VETO_TURN_SECRET` (same strong shared secret as Coturn `static-auth-secret`). Without both, UI accurately displays STUN ONLY. Verify actual selected ICE candidate as relay in client quality indicator before calling it working TURN.
 
+## Incoming invitations — consent-first delivery (staged PR #126)
+- New migration `20261016204500_veto_call_recipient_optin.sql`: incoming alert preferences are **OFF by default**, server-only with RLS enabled and no `anon`/`authenticated` direct access; private recipient ID on targeted WebRTC rooms.
+- New signed Edge operations `call_preferences_get` and `call_preferences_set` accept only the verified Telegram Mini App actor passed from the Vercel backend.
+- Opted-in recipients can share their own Telegram ID with trusted people. A caller may optionally enter that ID to send one invitation. The Edge only permits that if the **recipient opted in**, binds the invite to the chosen Telegram account, and atomically limits alerts to **one per recipient per three minutes**.
+- Vercel sends `sendMessage` from the existing Telegram bot after the signed store accepts the room; link carries **no raw SDP**, `protect_content` is set and the message has a single user-directed "Open VETO Calls" button. An undeliverable bot message is reported honestly; a short code remains usable.
+- The Telegram Bot API **cannot ring arbitrary phone users**, intercept Telegram native calls, or message a recipient who has not started / blocked the bot. Incoming messages are notifications, not true CallKit/native OS phone rings.
+- No alerts were sent during code deployment. At deployment verification, Supabase room count and opted-in record count were both **zero**. The `veto-call-signal` isolated Edge function is version 3 ACTIVE; private call opt-in table has RLS ON and direct client reads revoked.
+- CLI/automated tests cover opt-in, disabled recipient rejection, targeted secret binding, replay refusal, caller-only poll, and throttling under a fake Telegram Bot API. **Not verified on two actual accounts or real Telegram messages.**
+
+**Release gate:** verify Telegram bot has been started by recipient, the Main Mini App deep link opens correctly, delivery is not spammy, and real WebRTC audio works across two phones. PR stays draft; production UI should not show untested incoming calls.
+
 ## Delivery phases & acceptance criteria
 
 | # | Feature | Status / next milestone | Acceptance gate |
