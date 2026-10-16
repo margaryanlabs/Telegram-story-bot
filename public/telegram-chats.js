@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
-    mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarActive:0,avatarLoaded:0,
+    mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
     previewActive:0,previewSeen:new Set(),
   };
   const labels={
@@ -222,7 +222,8 @@
       .slice(0,12-state.avatarLoaded);
     for(const el of visible){
       const id=String(el.dataset.vetoAvatar||'');
-      if(!id||state.avatarQueue.includes(id))continue;
+      if(!id||state.avatarRequested.has(id))continue;
+      state.avatarRequested.add(id);
       state.avatarQueue.push(id);
     }
     runAvatarQueue();
