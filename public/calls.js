@@ -8,6 +8,7 @@
     && (window.AudioContext||window.webkitAudioContext) && window.crypto?.getRandomValues);
   const state={
     peer:null,mic:null,audio:null,processed:null,oscillator:null,nodes:null,
+    control:null,remoteMuted:null,disconnectTimer:0,
     room:null,role:null,muted:false,connectedAt:0,timer:0,phase:'idle',epoch:0,
     mode:'manual',signalRoom:null,signalPollTimer:0,signalPollFailures:0,
     sessionTimer:0,connectionTimer:0,iceMode:'stun',waveRaf:0,qualityTimer:0,
@@ -53,17 +54,20 @@
     clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
     clearTimeout(state.sessionTimer);state.sessionTimer=0;
     clearTimeout(state.connectionTimer);state.connectionTimer=0;
+    clearTimeout(state.disconnectTimer);state.disconnectTimer=0;
     clearInterval(state.qualityTimer);state.qualityTimer=0;
     cancelAnimationFrame(state.waveRaf);state.waveRaf=0;
     state.epoch++;
     clearInterval(state.timer);state.timer=0;
+    try{state.control?.close();}catch{}
     try{state.peer?.close();}catch{}
     try{state.oscillator?.stop();}catch{}
     try{state.oscillator?.disconnect();}catch{}
     try{state.mic?.getTracks().forEach(t=>t.stop());}catch{}
     try{state.processed?.getTracks().forEach(t=>t.stop());}catch{}
     try{state.audio?.close();}catch{}
-    state.peer=null;state.oscillator=null;state.mic=null;state.processed=null;
+    state.peer=null;state.control=null;state.remoteMuted=null;
+    state.oscillator=null;state.mic=null;state.processed=null;
     state.audio=null;state.nodes=null;state.room=null;state.role=null;
     state.muted=false;state.connectedAt=0;state.phase='idle';
     state.mode='manual';state.signalRoom=null;state.signalPollFailures=0;
@@ -75,6 +79,7 @@
     if($('callPreflight'))$('callPreflight').disabled=false;
     if($('callDiagnostics'))$('callDiagnostics').textContent='Диагностика ещё не запускалась.';
     if($('callQuality'))$('callQuality').textContent='СОЕДИНЕНИЕ НЕ УСТАНОВЛЕНО';
+    if($('callPeerMute'))$('callPeerMute').textContent='СОБЕСЕДНИК · НЕТ СОЕДИНЕНИЯ';
     const wave=$('callWaveform');if(wave)wave.getContext('2d')?.clearRect(0,0,wave.width,wave.height);
     update();
   }
@@ -315,6 +320,60 @@
         kind+(ms===null?'':' · RTT '+ms+' мс');
     }catch{} // Browser WebRTC stats support varies. Never log SDP/IP.
   }
+  // This control channel is negotiated inside the same consent-based 1:1
+  // WebRTC session. It carries only hangup and microphone mute flags.
+  // Messages are not stored in Supabase, Telegram or browser storage.
+  function bindCallControl(channel,epoch){
+    if(epoch!==state.epoch||!channel)return;
+    if(channel.label!=='veto-call-control'||state.control){
+      try{channel.close();}catch{}
+      return;
+    }
+    state.control=channel;
+    channel.addEventListener('open',()=>{
+      if(epoch!==state.epoch||state.control!==channel)return;
+      sendCallControl('mute',state.muted);
+    });
+    channel.addEventListener('message',event=>{
+      if(epoch!==state.epoch||state.control!==channel)return;
+      if(typeof event.data!=='string'||event.data.length>128)return;
+      let payload;
+      try{payload=JSON.parse(event.data);}catch{return;}
+      if(payload?.v!==1)return;
+      if(payload.type==='hangup'){
+        stop();report('Собеседник завершил звонок. Микрофон отключён.');
+        return;
+      }
+      if(payload.type==='mute'&&typeof payload.value==='boolean'){
+        state.remoteMuted=payload.value;
+        if($('callPeerMute'))$('callPeerMute').textContent=
+          state.remoteMuted?'СОБЕСЕДНИК · МИКРОФОН ВЫКЛЮЧЕН':'СОБЕСЕДНИК · МИКРОФОН ВКЛЮЧЕН';
+      }
+    });
+    channel.addEventListener('close',()=>{
+      if(epoch!==state.epoch||state.control!==channel)return;
+      state.control=null;state.remoteMuted=null;
+      if($('callPeerMute'))$('callPeerMute').textContent='СОБЕСЕДНИК · СТАТУС НЕДОСТУПЕН';
+    });
+  }
+  function sendCallControl(type,value){
+    const channel=state.control;
+    if(!channel||channel.readyState!=='open')return false;
+    if(type!=='hangup'&&type!=='mute')return false;
+    try{
+      channel.send(JSON.stringify(type==='mute'
+        ?{v:1,type:'mute',value:!!value}:{v:1,type:'hangup'}));
+      return true;
+    }catch{return false;}
+  }
+  function hangup(){
+    // WebRTC DataChannel delivery during immediate peer.close() is best effort.
+    // Regardless of delivery, local microphone and transport stop immediately.
+    if(!guardOwner())return;
+    sendCallControl('hangup');
+    stop();
+    report('Вызов завершён. Микрофон отключён.');
+  }
   function armConnectionWatchdog(epoch){
     // A WebRTC peer may become connected before setRemoteDescription settles.
     if(epoch!==state.epoch||state.phase==='connected'||
@@ -346,6 +405,8 @@
     }
     const peer=new RTCPeerConnection({iceServers:servers,iceCandidatePoolSize:1});
     state.peer=peer;state.role=role;
+    peer.addEventListener('datachannel',event=>bindCallControl(event.channel,epoch));
+    if(role==='caller')bindCallControl(peer.createDataChannel('veto-call-control',{ordered:true}),epoch);
     stream.getAudioTracks().forEach(track=>{
       peer.addTrack(track,stream);
       track.addEventListener('ended',()=>{
@@ -370,12 +431,14 @@
       if(epoch!==state.epoch)return;
       const current=peer.connectionState;
       if(current==='connected'){
+        clearTimeout(state.disconnectTimer);state.disconnectTimer=0;
         clearTimeout(state.connectionTimer);state.connectionTimer=0;
         clearTimeout(state.sessionTimer);state.sessionTimer=0;
         clearInterval(state.qualityTimer);state.qualityTimer=0;
         state.qualityTimer=setInterval(()=>{void updateQuality(epoch,peer);},5000);
         void updateQuality(epoch,peer);
-        state.phase='connected';state.connectedAt=Date.now();
+        state.phase='connected';
+        if(!state.connectedAt)state.connectedAt=Date.now();
         clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
         // SDP is no longer needed once ICE/DTLS is established.
         if(state.signalRoom){
@@ -394,7 +457,15 @@
         failed(Error('WebRTC-соединение не удалось. Нужен TURN или другая сеть.'),epoch);
         return;
       }else if(current==='disconnected'){
-        report('Связь прервана. Проверяю восстановление…',true);
+        clearTimeout(state.disconnectTimer);
+        state.disconnectTimer=setTimeout(()=>{
+          if(epoch!==state.epoch||peer.connectionState==='connected')return;
+          failed(Error('Соединение не восстановилось. Вызов завершён.'),epoch);
+        },15000);
+        report('Связь прервана. Попытка восстановить за 15 секунд…',true);
+      }else if(current==='closed'){
+        failed(Error('Соединение завершено. Микрофон отключён.'),epoch);
+        return;
       }
       update();
     });
@@ -634,11 +705,12 @@
   $('callApplyAnswer')?.addEventListener('click',applyAnswer);
   $('callCopy')?.addEventListener('click',copy);
   $('callInviteShare')?.addEventListener('click',copyInviteLink);
-  $('callHangup')?.addEventListener('click',()=>{stop();report('Вызов завершён. Микрофон отключён.');});
+  $('callHangup')?.addEventListener('click',hangup);
   $('callMute')?.addEventListener('click',()=>{
     if(!state.processed)return;
     state.muted=!state.muted;
     state.processed.getAudioTracks().forEach(track=>{track.enabled=!state.muted;});
+    sendCallControl('mute',state.muted);
     update();
   });
   $('callPreset')?.addEventListener('change',morph);
