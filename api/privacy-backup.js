@@ -17,7 +17,7 @@ async function sendBackupNotice(userId, chatId, title, count) {
   url.searchParams.set('screen', 'chats');
   url.searchParams.set('filter', 'all');
   url.searchParams.set('chat', chatId);
-  url.searchParams.set('v', '20261016-veto-owner-access-v2');
+  url.searchParams.set('v', '20261016-veto-owner-proof-v3');
   const response = await fetch('https://api.telegram.org/bot'+BOT+'/sendMessage', {
     method:'POST',
     headers:{ 'content-type':'application/json' },
