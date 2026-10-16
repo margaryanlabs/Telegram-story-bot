@@ -262,6 +262,7 @@
           <button type="button" data-open-screen="stories"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
           <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
           <button type="button" data-open-screen="telegram"><span>▤</span><strong>Мои чаты</strong><small>Настоящий Telegram внутри VETO</small></button>
+          <button type="button" data-open-screen="voice"><span>◉</span><strong>Voice Studio</strong><small>Живые эффекты · голосовые</small></button>
           <button type="button" data-open-screen="ghost"><span>◌</span><strong>Privacy</strong><small>Anti-Delete · Inbox · Vault</small></button>
           <button type="button" data-open-screen="relay"><span>◉</span><strong>Защита Telegram</strong><small>Одно нажатие · Автовыбор</small></button>
         </div>
@@ -348,6 +349,67 @@
               <a id="telegramThreadOpenNative" href="#" target="_blank" rel="noopener noreferrer" hidden>Открыть в Telegram ↗</a>
             </div>
           </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="voice" aria-label="VETO Voice Studio">
+      <section class="veto-voice">
+        <div class="veto-voice-header">
+          <div><span class="veto-voice-eyebrow">VETO TELEGRAM · AUDIO LAB / 01</span>
+            <h1>Voice<span> Studio.</span></h1>
+            <p>Обработка голоса в реальном времени и запись голосовых без загрузки на сервер.</p>
+          </div>
+          <div class="veto-voice-security"><i></i> LOCAL AUDIO</div>
+        </div>
+        <div class="veto-voice-monitor-card">
+          <div class="veto-voice-monitor-top">
+            <div><span class="veto-voice-input-label">MICROPHONE INPUT</span><strong id="voiceMicState">◌ Микрофон выключен</strong></div>
+            <span class="veto-voice-signal">▂▅▇ · LIVE DSP</span>
+          </div>
+          <canvas id="voiceSpectrum" width="760" height="220" aria-label="Визуализация звука"></canvas>
+          <div class="veto-voice-monitor-controls">
+            <button id="voiceMicButton" class="veto-voice-button primary" type="button">◉ Включить микрофон</button>
+            <button id="voiceMicStop" class="veto-voice-button subdued" type="button" disabled>Отключить</button>
+            <label class="veto-voice-headphones"><input id="voiceMonitor" type="checkbox" /><span>Слушать себя <small>Только в наушниках</small></span></label>
+          </div>
+        </div>
+        <div class="veto-voice-presets-panel">
+          <div class="veto-voice-panel-heading"><span>01 / ОБРАБОТКА</span><strong>Выбери звучание</strong></div>
+          <div id="voicePresetGrid" class="veto-voice-presets" role="group" aria-label="Эффекты голоса">
+            <button type="button" data-voice-preset="clean" class="active" aria-pressed="true"><span>◇</span><strong>Original</strong><small>Без эффекта</small></button>
+            <button type="button" data-voice-preset="deep" aria-pressed="false"><span>◕</span><strong>Deep</strong><small>Низкий тембр</small></button>
+            <button type="button" data-voice-preset="cinematic" aria-pressed="false"><span>◈</span><strong>Cinematic</strong><small>Объём и тепло</small></button>
+            <button type="button" data-voice-preset="radio" aria-pressed="false"><span>▥</span><strong>Radio</strong><small>В эфире</small></button>
+            <button type="button" data-voice-preset="robot" aria-pressed="false"><span>▧</span><strong>Robot</strong><small>Модуляция</small></button>
+            <button type="button" data-voice-preset="space" aria-pressed="false"><span>◎</span><strong>Echo</strong><small>Пространство</small></button>
+          </div>
+          <div class="veto-voice-morph">
+            <div><strong>Voice Morph</strong><small>Плавное изменение интенсивности эффекта</small></div>
+            <output id="voiceMorphValue" for="voiceMorph">75%</output>
+            <input id="voiceMorph" type="range" min="0" max="100" step="1" value="75" aria-label="Интенсивность изменения голоса"/>
+            <div class="veto-voice-morph-marks"><span>ORIGINAL</span><span>FULL EFFECT</span></div>
+          </div>
+        </div>
+        <div class="veto-voice-capture">
+          <div class="veto-voice-panel-heading"><span>02 / ЗАПИСЬ</span><strong>Голосовое сообщение</strong></div>
+          <p>Разреши микрофон, выбери эффект и запиши сообщение. Запись обработанного звука сохраняется только в памяти приложения.</p>
+          <div class="veto-voice-record-actions">
+            <button id="voiceRecord" class="veto-voice-button primary" type="button" disabled><b>●</b> Начать запись</button>
+            <button id="voiceStopRecord" class="veto-voice-button subdued" type="button" disabled>■ Остановить</button>
+          </div>
+          <div class="veto-voice-result" id="voiceResult" hidden>
+            <div class="veto-voice-result-heading"><strong>Готовое голосовое</strong><small id="voiceDuration">—</small></div>
+            <audio id="voicePlayer" controls preload="none"></audio>
+            <div class="veto-voice-record-actions">
+              <button type="button" id="voiceShare" class="veto-voice-button primary" disabled>↗ Отправить файлом</button>
+              <button type="button" id="voiceDownload" class="veto-voice-button subdued" disabled>↓ Скачать</button>
+            </div>
+          </div>
+        </div>
+        <div id="voiceStatus" class="veto-voice-status" role="status" aria-live="polite">Микрофон выключен. Ничего не записывается.</div>
+        <div class="veto-voice-footnote"><span>⎔</span>
+          <p>Voice Studio обрабатывает звук на устройстве и не загружает записи в VETO. Отправка происходит только по твоему нажатию через системное меню. Эффекты меняют звучание, но не гарантируют анонимность и пока не работают внутри обычных Telegram-звонков.</p>
         </div>
       </section>
     </section>
@@ -1356,6 +1418,7 @@
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261016-veto-owner-proof-v3"></script>
   <script src="/telegram-chats.js?v=20261016-veto-owner-proof-v3"></script>
+  <script src="/voice-studio.js?v=20261016-veto-voice-studio-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
