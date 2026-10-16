@@ -411,6 +411,13 @@
           <textarea class="calls-field calls-code" id="callIncoming" placeholder="Вставь код вида VETO1:…" aria-label="Входящий код вызова"></textarea>
           <div class="calls-actions"><button id="callApplyAnswer" type="button" class="call-btn secondary" disabled>✓ Подключить по ответу</button></div>
         </article>
+        <article class="calls-card calls-diagnostics-card" aria-label="Диагностика VETO Calls">
+          <span>04 / READY CHECK</span>
+          <strong>Проверка перед звонком</strong>
+          <p>Проверим доступность WebRTC, HTTPS, Telegram-подписи и конфигурацию сети. Без запроса доступа к микрофону и без отправки аудио.</p>
+          <button id="callPreflight" type="button" class="call-btn secondary">◎ Проверить готовность</button>
+          <pre class="calls-diagnostics" id="callDiagnostics" aria-live="polite">Диагностика ещё не запускалась.</pre>
+        </article>
         <div class="calls-morph">
           <label for="callPreset">VOICE MORPH / во время соединения</label>
           <select id="callPreset" aria-label="Эффект для твоего микрофона">
@@ -1506,7 +1513,7 @@
   <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
-  <script src="/calls.js?v=20261016-veto-deeplink-v4"></script>
+  <script src="/calls.js?v=20261016-veto-preflight-v5"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
