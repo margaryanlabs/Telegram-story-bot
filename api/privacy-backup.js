@@ -2,6 +2,7 @@ import { openJson } from '../lib/viewer-sync-crypto.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import { getViewerSession, getPrivacySettings, updatePrivacySettings, importUserHistoryBatch, saveBackupJob, listBackupJobs, pauseBackupJob } from '../lib/viewer-sync-store.js';
 import { withBackupClient, listBackupDialogs, fetchBackupPage } from '../lib/telegram-history-backup.js';
+import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 import { archiveHistoryMedia } from '../lib/telegram-history-media.js';
 
 const BOT = String(process.env.TELEGRAM_BOT_TOKEN || '');
@@ -34,6 +35,8 @@ async function sendBackupNotice(userId, chatId, title, count) {
 
 function safeError(error) {
   const raw = String(error?.errorMessage || error?.message || '');
+  const stop=telegramOwnerError(error);
+  if(stop)return [stop.status,stop.error];
   if (/FLOOD_WAIT|429|Too Many Requests/i.test(raw)) return [429,'Telegram временно ограничил частые запросы. Попробуй позже.'];
   if (/AUTH_KEY|SESSION_REVOKED|not authorized/i.test(raw)) return [409,'Telegram-сессия истекла. Подключи аккаунт заново.'];
   if (/timed out|timeout|ETIMEDOUT/i.test(raw)) return [504,'Telegram отвечает слишком долго. Повтори этот шаг позже.'];
@@ -76,7 +79,7 @@ export default async function handler(req, res) {
     if(!decrypted?.session) throw new Error('SESSION_REVOKED');
 
     if(action === 'list_chats') {
-      const chats=await withBackupClient(decrypted.session,client=>listBackupDialogs(client));
+      const chats=await withBackupClient(decrypted.session,async client=>{await verifyTelegramClientOwner(client,userId);return listBackupDialogs(client);});
       return respond(res,200,{chats,scope:'private-dialogs-only',requiresSelection:true});
     }
     if(action === 'background_enable') {
@@ -85,7 +88,7 @@ export default async function handler(req, res) {
       const chatId=String(body.chatId || '');
       if(!/^\d{1,19}$/.test(chatId)) return respond(res,400,{error:'Неверный ID переписки'});
       // Check membership and eligible personal chat before storing consent.
-      const dialogs=await withBackupClient(decrypted.session,client=>listBackupDialogs(client));
+      const dialogs=await withBackupClient(decrypted.session,async client=>{await verifyTelegramClientOwner(client,userId);return listBackupDialogs(client);});
       const chat=dialogs.find(c=>String(c.chatId)===chatId);
       if(!chat) return respond(res,403,{error:'Можно подключать только свои обычные личные переписки'});
       const settings=await getPrivacySettings(userId);
@@ -103,6 +106,7 @@ export default async function handler(req, res) {
     if(!settings.ghostInbox) settings=await updatePrivacySettings(userId,{ghostInbox:true});
     const includeMedia = body.includeMedia === true;
     const {page,result,media} = await withBackupClient(decrypted.session, async client => {
+      await verifyTelegramClientOwner(client,userId);
       const page=await fetchBackupPage(client,{
         ownerId:userId,chatId,offsetId:body.offsetId,retentionDays:settings.retentionDays,
         mediaEnabled:includeMedia,
