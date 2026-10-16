@@ -138,7 +138,17 @@ async function opCallEnd(args: any){
 }
 
 
+// Signed, read-only health proof for the *actual* call signaling database.
+// This performs a bounded private table query; returns no room/user/SDP data.
+async function opCallProbe(_args:any){
+  const {error}=await db.from('story_pilot_call_rooms')
+    .select('room_id',{head:true,count:'exact'}).limit(1);
+  if(error)throw new Error('call_store_unavailable');
+  return {signaling:'ready',database:'ready',retentionMinutes:8};
+}
+
 const operations:Record<string,(args:any)=>Promise<any>>={
+  call_probe:opCallProbe,
   call_create:opCallCreate,
   call_inspect:opCallInspect,
   call_answer:opCallAnswer,
