@@ -1,5 +1,5 @@
 import {validateTelegramMiniApp} from '../lib/telegram-miniapp-auth.js';
-import {probeCallStore,createCallRoom,inspectCallRoom,answerCallRoom,pollCallRoom,endCallRoom}
+import {probeCallStore,getCallPreferences,setCallPreferences,createCallRoom,inspectCallRoom,answerCallRoom,pollCallRoom,endCallRoom}
   from '../lib/veto-call-signal-store.js';
 import {newCallInvite,parseCallInvite,checkCallDescription,checkCallRoom}
   from '../lib/veto-call-signals.js';
@@ -29,6 +29,30 @@ async function resolveBotUsername(){
   }catch{}finally{clearTimeout(timer);}
   return '';
 }
+// Bot push only to an account that explicitly enabled incoming call alerts
+// through their signed Mini App identity (enforced atomically by Edge).
+// No Telegram username search, arbitrary chat spam or raw SDP in messages.
+async function deliverCallAlert(recipientId,shareUrl){
+  if(!/^[1-9][0-9]{0,15}$/.test(String(recipientId))||
+    !String(shareUrl||'').startsWith('https://t.me/'))return false;
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),4500);
+  try{
+    const response=await fetch('https://api.telegram.org/bot'+BOT+'/sendMessage',{
+      method:'POST',signal:controller.signal,
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({
+        chat_id:recipientId,
+        text:'📞 VETO Calls — тебе поступило приглашение на аудиозвонок. Ссылка действует около 8 минут. Открывай только если ожидаешь звонок.',
+        disable_web_page_preview:true,protect_content:true,
+        reply_markup:{inline_keyboard:[[{text:'↗ Открыть VETO Calls',url:shareUrl}]]},
+      }),
+    });
+    const result=await response.json().catch(()=>({}));
+    return response.ok&&result.ok===true;
+  }catch{return false;}
+  finally{clearTimeout(timeout);}
+}
 function reply(res,status,data){
   res.setHeader('Cache-Control','private, no-store, max-age=0');
   res.setHeader('X-Content-Type-Options','nosniff');
@@ -48,9 +72,20 @@ export default async function handler(req,res){
       return reply(res,413,{error:'Слишком большой запрос'});
   }catch{return reply(res,400,{error:'Неверный формат'});}
   const action=String(body.action||'');
-  if(!['create','inspect','answer','poll','end','ice','probe'].includes(action))
+  if(!['create','inspect','answer','poll','end','ice','probe','preferences_get','preferences_set'].includes(action))
     return reply(res,400,{error:'Неизвестная операция'});
   try{
+    if(action==='preferences_get'){
+      const prefs=await getCallPreferences(userId);
+      return reply(res,200,{notificationsEnabled:prefs.notificationsEnabled===true,
+        myCallId:userId});
+    }
+    if(action==='preferences_set'){
+      if(typeof body.enabled!=='boolean')return reply(res,400,{error:'Нужно явно включить или отключить приглашения'});
+      const prefs=await setCallPreferences(userId,body.enabled);
+      return reply(res,200,{notificationsEnabled:prefs.notificationsEnabled===true,
+        myCallId:userId});
+    }
     if(action==='probe'){
       // Browser cannot call Supabase directly; both Telegram HMAC and
       // Ed25519 Vercel->Edge signature are required before DB access.
@@ -65,11 +100,22 @@ export default async function handler(req,res){
     }
     if(action==='create'){
       const offer=checkCallDescription(body.sdp,'offer');
+      // Recipient IDs may only be specified explicitly by the caller.
+      // Edge verifies that the recipient previously opted in and atomically
+      // limits new alerts to one per three minutes.
+      const recipientId=body.recipientId==null||String(body.recipientId).trim()===''
+        ?null:String(body.recipientId).trim();
+      if(recipientId!==null&&!/^[1-9][0-9]{0,15}$/.test(recipientId))
+        return reply(res,400,{error:'Неверный Telegram ID собеседника'});
+      if(recipientId===userId)return reply(res,400,{error:'Нельзя позвонить самому себе'});
       const room=newCallInvite();
-      const stored=await createCallRoom(userId,room.roomId,room.tokenHash,offer);
+      const stored=await createCallRoom(userId,room.roomId,room.tokenHash,offer,recipientId);
       const botUsername=await resolveBotUsername();
       const shareUrl=botUsername?makeCallInviteUrl(botUsername,room.invite):null;
+      const notificationSent=recipientId&&shareUrl
+        ?await deliverCallAlert(recipientId,shareUrl):false;
       return reply(res,200,{invite:room.invite,shareUrl,roomId:room.roomId,
+        notificationSent:Boolean(notificationSent),
         expiresAt:stored.expiresAt,scope:'temporary-peer-to-peer-sdp'});
     }
     if(action==='inspect'){
@@ -99,6 +145,8 @@ export default async function handler(req,res){
     if(reason==='call_invite_unavailable')
       return reply(res,410,{error:'Приглашение недействительно, использовано или истекло'});
     if(reason==='call_access_denied')return reply(res,403,{error:'Это не твой вызов'});
+    if(reason==='call_recipient_unavailable')
+      return reply(res,410,{error:'Собеседник не разрешил входящие VETO Calls или недавно получал приглашение'});
     if(/^(INVALID_|call_bad_)/.test(reason))return reply(res,400,{error:'Неверные параметры звонка'});
     // Suppress sensitive SDP and storage details in user-visible errors.
     return reply(res,503,{error:'Сигнальный сервер недоступен. Ручной режим остаётся доступен.'});
