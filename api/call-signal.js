@@ -1,5 +1,5 @@
 import {validateTelegramMiniApp} from '../lib/telegram-miniapp-auth.js';
-import {createCallRoom,inspectCallRoom,answerCallRoom,pollCallRoom,endCallRoom}
+import {probeCallStore,createCallRoom,inspectCallRoom,answerCallRoom,pollCallRoom,endCallRoom}
   from '../lib/veto-call-signal-store.js';
 import {newCallInvite,parseCallInvite,checkCallDescription,checkCallRoom}
   from '../lib/veto-call-signals.js';
@@ -48,9 +48,16 @@ export default async function handler(req,res){
       return reply(res,413,{error:'Слишком большой запрос'});
   }catch{return reply(res,400,{error:'Неверный формат'});}
   const action=String(body.action||'');
-  if(!['create','inspect','answer','poll','end','ice'].includes(action))
+  if(!['create','inspect','answer','poll','end','ice','probe'].includes(action))
     return reply(res,400,{error:'Неизвестная операция'});
   try{
+    if(action==='probe'){
+      // Browser cannot call Supabase directly; both Telegram HMAC and
+      // Ed25519 Vercel->Edge signature are required before DB access.
+      const verified=await probeCallStore();
+      return reply(res,200,{signaling:verified.signaling,
+        database:verified.database,retentionMinutes:verified.retentionMinutes});
+    }
     if(action==='ice'){
       // Authenticated access only. TURN shared secret never leaves Vercel.
       return reply(res,200,createIceConfig({secret:process.env.VETO_TURN_SECRET,
