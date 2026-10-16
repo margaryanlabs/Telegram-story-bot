@@ -13,12 +13,23 @@ This plan extends the existing `margaryanlabs/Telegram-story-bot` production cod
 - Calls proof in PR #126: explicit P2P 1:1 audio, manual out-of-band invite/answer and WebRTC transport. **No automatic ringing, public rooms, TURN, identity service, video, model-based translation or server AI.** No normal Telegram call hooking.
 - Security hardening in PR #125 separately handles in-flight previous-account UI events; merge only after account-isolation review and second-device acceptance.
 
+## Follow-up P1 implementation (same draft PR #126)
+
+The new short-code signaling path is **implemented in code but not deployed/activated**:
+- `/api/call-signal`: verifies Telegram-signed Mini App user, never trusts a client-supplied user ID, issues 192-bit temporary invite capability.
+- `supabase/functions/veto-call-signal`: **independent** Ed25519-signed Supabase Edge function, separate from all Story, Privacy and Viewer Sync gateway operations.
+- `supabase/migrations/20261016121000_veto_ephemeral_calls.sql`: server-only RLS table, bearer-token SHA-256 hash, first-answer atomic claim, eight-minute expiry and five-minute pg_cron hard purge.
+- Browser: caller polls for answer over short invite `VETOR1`; callee claims it under their own signed Telegram identity. SDP stays server-side; no peer SDP is copied into the invite. Original manual `VETO1` remains a fallback.
+- Both modes are WebRTC-only audio without TURN; a P2P WebRTC room is not a production signaling/notification service.
+
+**Release gate:** apply the migration to the correct VETO Telegram Supabase project; deploy the new Edge function with `verify_jwt=false` (this function verifies Ed25519 signatures itself); check that the configured Vercel signing public key matches the Edge verifier; run a real two-account test on two phones (including 4G↔Wi-Fi and denial of the second callee). Do NOT merge a UI that advertises short invites before the Edge endpoint is alive. No passwords, tokens, raw SDP or private chats in logs.
+
 ## Delivery phases & acceptance criteria
 
 | # | Feature | Status / next milestone | Acceptance gate |
 |---|---|---|---|
 | 1 | Voice Changer | WebAudio presets in Studio and Calls; actual gender-style/formant model is future R&D | Compare original/processed recordings; low-latency budget and measured CPU; no anonymity claims |
-| 2 | VETO Calls | PR #126 first explicit-P2P prototype; follow-up server signaling, verified invitations, TURN and reconnect | Two real Telegram users, Android+iOS, Wi-Fi/cellular and NAT, mic revocation and hangup |
+| 2 | VETO Calls | PR #126 P2P + staged signed signaling and verified invites; next TURN, incoming notifications and reconnect | Two real Telegram users, Android+iOS, Wi-Fi/cellular and NAT, mic revocation and hangup |
 | 3 | Universal Translator | Not implemented | Opt-in STT→translate→TTS with displayed latency, languages RU/EN/HY/AR; fallback to original audio; costs |
 | 4 | Voice Studio | Local recording present; v2 custom EQ and playback rate in PR #126 | Browser/WebView capability matrix, sharing fallback; never silently transmit audio |
 | 5 | Call Memory | Not implemented | All participants explicitly opt into recording; consent visible/revocable, retention and deletion |
@@ -47,7 +58,7 @@ This plan extends the existing `margaryanlabs/Telegram-story-bot` production cod
 ## Production gates
 
 - P0: real two-account isolation audit; PR #125 must be separately validated.
-- P1: PR #126 preview build, feature tests and **two-device** WebRTC test. Browser tests do not prove actual call stability.
+- P1: PR #126 preview build + signaling migration and Edge verification + **two-device** WebRTC test. Browser tests do not prove actual call stability.
 - P2: server signal service with reliable TURN, signed caller/callee identity, incoming notification route, disconnect lifecycle. Gate by transport reliability.
 - P3: upgrade local Voice Studio first, then streaming speech-to-text and translation in separate optional consented calls.
 - P4: Message Intelligence, source-grounded draft replies, encrypted semantic search and aggregations with measured privacy and inference cost.
