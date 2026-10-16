@@ -614,8 +614,6 @@ function privacyEnabled(settings: any) {
 
 
 async function recordEvent(input: any) {
-  if (!directSql) return null;
-
   const userId = String(input?.userId || "");
   const eventType = String(input?.eventType || "").slice(0, 64);
   const source = String(input?.source || "system").slice(0, 32);
@@ -624,44 +622,65 @@ async function recordEvent(input: any) {
 
   const occurredAt = input?.occurredAt || new Date().toISOString();
   const payload = input?.payload && typeof input.payload === "object"
-    ? JSON.stringify(input.payload)
-    : "{}";
+    ? input.payload : {};
   const retentionUntil = input?.retentionUntil || null;
+  const row = {
+    telegram_user_id: userId, event_type: eventType, source,
+    occurred_at: occurredAt,
+    chat_id: input?.chatId ? String(input.chatId) : null,
+    message_id: input?.messageId ? Number(input.messageId) : null,
+    story_id: input?.storyId ? Number(input.storyId) : null,
+    actor_user_id: input?.actorUserId ? String(input.actorUserId) : null,
+    actor_username: input?.actorUsername || null,
+    actor_display_name: input?.actorDisplayName || null,
+    direction: input?.direction || null,
+    correlation_key: input?.correlationKey || null,
+    dedupe_key: dedupeKey, payload, retention_until: retentionUntil,
+  };
+
+  // The event vault must not depend on a live Supavisor/direct-SQL session.
+  // For CONNECT_TIMEOUT or an open circuit, retain events through PostgREST.
+  if (useDirectSql()) {
+    try {
+      const rows = await directSql`
+        insert into public.story_pilot_events (
+          telegram_user_id, event_type, source, occurred_at,
+          chat_id, message_id, story_id,
+          actor_user_id, actor_username, actor_display_name,
+          direction, correlation_key, dedupe_key, payload, retention_until
+        ) values (
+          ${userId}::bigint, ${eventType}, ${source}, ${occurredAt}::timestamptz,
+          ${row.chat_id}::bigint, ${row.message_id}, ${row.story_id},
+          ${row.actor_user_id}::bigint, ${row.actor_username},
+          ${row.actor_display_name}, ${row.direction},
+          ${row.correlation_key}, ${dedupeKey}, ${JSON.stringify(payload)}::jsonb,
+          ${retentionUntil}::timestamptz
+        )
+        on conflict (telegram_user_id, dedupe_key) do update set
+          occurred_at = greatest(public.story_pilot_events.occurred_at, excluded.occurred_at),
+          actor_username = coalesce(excluded.actor_username, public.story_pilot_events.actor_username),
+          actor_display_name = coalesce(excluded.actor_display_name, public.story_pilot_events.actor_display_name),
+          payload = public.story_pilot_events.payload || excluded.payload,
+          retention_until = coalesce(excluded.retention_until, public.story_pilot_events.retention_until)
+        returning id
+      `;
+      return rows[0] || null;
+    } catch (error) {
+      if (directDatabaseFallbackError(error)) openDirectSqlCircuit(error);
+      console.warn("Story Pilot Event Vault direct write failed, using PostgREST", {
+        event_type: eventType, error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   try {
-    const rows = await directSql`
-      insert into public.story_pilot_events (
-        telegram_user_id, event_type, source, occurred_at,
-        chat_id, message_id, story_id,
-        actor_user_id, actor_username, actor_display_name,
-        direction, correlation_key, dedupe_key, payload, retention_until
-      ) values (
-        ${userId}::bigint, ${eventType}, ${source}, ${occurredAt}::timestamptz,
-        ${input?.chatId ? String(input.chatId) : null}::bigint,
-        ${input?.messageId ? Number(input.messageId) : null},
-        ${input?.storyId ? Number(input.storyId) : null},
-        ${input?.actorUserId ? String(input.actorUserId) : null}::bigint,
-        ${input?.actorUsername || null},
-        ${input?.actorDisplayName || null},
-        ${input?.direction || null},
-        ${input?.correlationKey || null},
-        ${dedupeKey},
-        ${payload}::jsonb,
-        ${retentionUntil}::timestamptz
-      )
-      on conflict (telegram_user_id, dedupe_key) do update set
-        occurred_at = greatest(public.story_pilot_events.occurred_at, excluded.occurred_at),
-        actor_username = coalesce(excluded.actor_username, public.story_pilot_events.actor_username),
-        actor_display_name = coalesce(excluded.actor_display_name, public.story_pilot_events.actor_display_name),
-        payload = public.story_pilot_events.payload || excluded.payload,
-        retention_until = coalesce(excluded.retention_until, public.story_pilot_events.retention_until)
-      returning id
-    `;
-    return rows[0] || null;
+    const result = await db.from("story_pilot_events")
+      .upsert(row, { onConflict: "telegram_user_id,dedupe_key" })
+      .select("id").single();
+    return need(result as any);
   } catch (error) {
     console.warn("Story Pilot Event Vault write skipped", {
-      event_type: eventType,
-      error: error instanceof Error ? error.message : String(error),
+      event_type: eventType, error: error instanceof Error ? error.message : String(error),
     });
     return null;
   }
@@ -862,7 +881,8 @@ async function opCaptureBusinessMessage(args: any) {
     media_file_size: Number.isFinite(Number(row.media_file_size)) ? Number(row.media_file_size) : null,
     sent_at: row.sent_at || now,
     edited_at: row.edited_at || null,
-    deleted_at: null,
+    // Never reset an existing deletion tombstone on a delayed/retried
+    // business_message upsert (PostgREST updates every provided field).
     content_hash: String(row.content_hash || ""),
     updated_at: now,
   };
