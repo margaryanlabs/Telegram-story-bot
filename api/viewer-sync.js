@@ -511,17 +511,69 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (action === 'cancel_login') {
+      // Explicit cancellation only. Closing the Mini App must not invalidate a
+      // valid phone code or cause Telegram to send another login message.
+      await deleteAuthChallenge(userId);
+      res.status(200).json({ ok: true, cancelled: true });
+      return;
+    }
+
     if (action === 'send_code') {
+      const requestedPhone = String(body.phone || '').replace(/[^+\\d]/g, '');
+      if (!/^\\+\\d{7,15}$/.test(requestedPhone)) {
+        res.status(400).json({ ok: false, error: 'Введи номер Telegram в международном формате, начиная с +.' });
+        return;
+      }
+
+      // Telegram may deliver codes inside its official service chat, not via
+      // SMS or our bot. Preserve the existing challenge until it expires.
+      // Repeated SendCode calls invalidate previous hashes and may trigger FLOOD_WAIT.
       const existing = await getAuthChallenge(userId);
+      const expiresAt = Date.parse(existing?.expires_at || '');
+      if (existing && Number.isFinite(expiresAt) && expiresAt > Date.now()) {
+        if (existing.stage === 'code') {
+          const pending = await openJson(existing.challenge_ciphertext, `auth:${userId}`);
+          if (pending?.phone === requestedPhone) {
+            res.status(200).json({
+              ok: true,
+              stage: 'code',
+              delivery: pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+              reused: true,
+              expiresAt: new Date(expiresAt).toISOString(),
+            });
+            return;
+          }
+        }
+        res.status(409).json({
+          ok: false,
+          error: 'Есть незавершённый вход. Продолжи его или нажми «Сменить номер» для отмены предыдущего кода.',
+          loginPending: { stage: existing.stage, expiresAt: new Date(expiresAt).toISOString() },
+        });
+        return;
+      }
+
       const elapsedMs = existing?.created_at ? Date.now() - new Date(existing.created_at).getTime() : Infinity;
       if (Number.isFinite(elapsedMs) && elapsedMs >= 0 && elapsedMs < 45_000) {
         const retryAfterSeconds = Math.ceil((45_000 - elapsedMs) / 1000);
         res.setHeader('Retry-After', String(retryAfterSeconds));
-        res.status(429).json({ ok: false, error: 'Код недавно отправлен. Проверь сообщения Telegram или подожди перед новой попыткой.', retryAfterSeconds });
+        res.status(429).json({ ok: false, error: 'Код недавно запрошен. Проверь официальный чат «Telegram» и подожди.', retryAfterSeconds });
         return;
       }
 
-      const auth = await beginUserAuth(body.phone);
+      // Do not ask Telegram to send a code if we cannot persist the matching
+      // encrypted MTProto challenge. A delivery without its phoneCodeHash is unusable.
+      if (config.newConnectionsReady !== true) {
+        res.status(503).json({ ok: false, error: 'Защищённое хранилище временно недоступно. Код пока не запрашивался — попробуй позже.' });
+        return;
+      }
+      const linked = await getViewerSession(userId);
+      if (linked?.status === 'active') {
+        res.status(409).json({ ok: false, error: 'Этот Telegram-аккаунт уже подключён. Обнови статус подключения.' });
+        return;
+      }
+
+      const auth = await beginUserAuth(requestedPhone);
       const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
       await saveAuthChallenge({
@@ -536,6 +588,8 @@ export default async function handler(req, res) {
         ok: true,
         stage: 'code',
         delivery: auth.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+        reused: false,
+        expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
       return;
     }
