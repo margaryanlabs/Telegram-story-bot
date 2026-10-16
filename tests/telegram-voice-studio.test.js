@@ -1,0 +1,44 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const file=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+test('Voice Studio is visible, navigable and branded VETO (never HiLab)',()=>{
+  const html=file('public/studio.html'),app=file('public/app.js');
+  assert.ok(html.includes('data-screen="voice"'));
+  assert.ok(html.includes('data-open-screen="voice"'));
+  assert.ok(html.includes('id="voicePresetGrid"'));
+  assert.ok(html.includes('id="voiceSpectrum"'));
+  assert.ok(html.includes('/voice-studio.js?v='));
+  assert.ok(app.includes("voice:'voice'"));
+  assert.ok(app.includes("voicestudio:'voice'"));
+  assert.ok(!html.includes('HiLab'));
+  assert.ok(!html.includes('High Lab'));
+});
+test('Audio is processed on device and starts only on explicit microphone consent',()=>{
+  const voice=file('public/voice-studio.js');
+  assert.ok(voice.includes('navigator.mediaDevices.getUserMedia('));
+  assert.ok(voice.includes("addEventListener('click',startMic)"));
+  assert.ok(voice.includes("new MediaRecorder(state.nodes.destination.stream"));
+  assert.ok(voice.includes('context.createMediaStreamDestination()'));
+  assert.ok(voice.includes('context.createBiquadFilter()'));
+  assert.ok(voice.includes("oscillator.type='sine'"));
+  assert.ok(voice.includes('oscillator.connect(robotGain)'));
+  assert.ok(voice.includes('navigator.share({files:[file]'));
+  assert.ok(voice.includes('state.stream.getTracks().forEach(track=>track.stop())'));
+  assert.ok(voice.includes("event.detail?.screen!=='voice'"));
+  assert.ok(!voice.includes("fetch("));
+  assert.ok(!voice.includes('localStorage'));
+  assert.ok(!voice.includes('sessionStorage'));
+});
+test('Audio labels are clear about the boundaries and can be disabled or downloaded',()=>{
+  const voice=file('public/voice-studio.js'),html=file('public/studio.html');
+  assert.equal((html.match(/data-voice-preset=/g)||[]).length,6);
+  assert.ok(html.includes('id="voiceMicStop"'));
+  assert.ok(html.includes('id="voiceStopRecord"'));
+  assert.ok(html.includes('id="voiceDownload"'));
+  assert.ok(html.includes('id="voiceShare"'));
+  assert.ok(html.includes('id="voiceMonitor"'));
+  assert.ok(html.includes('пока не работают внутри обычных Telegram-звонков'));
+  assert.ok(voice.includes('URL.revokeObjectURL(state.recordedUrl)'));
+  assert.ok(voice.includes('cancelAnimationFrame(state.raf)'));
+});

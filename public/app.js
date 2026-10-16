@@ -80,6 +80,8 @@
     chats: 'chats',
     telegram: 'telegram',
     livechats: 'telegram',
+    voice:'voice',
+    voicestudio:'voice',
     relay: 'relay',
     studio: 'studio',
     creator: 'studio',
@@ -1489,7 +1491,7 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = { chats:'privacy', telegram:'privacy', archive:'publish', analytics:'viewers', relay:'home' };
+  const NAV_PARENT = { chats:'privacy', telegram:'privacy', voice:'home', archive:'publish', analytics:'viewers', relay:'home' };
   function switchScreen(name) {
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
