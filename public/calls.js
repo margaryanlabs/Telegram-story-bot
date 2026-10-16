@@ -3,11 +3,13 @@
   // VETO Calls experimental P2P: browser-native WebRTC with manual signaling.
   // No signaling database, server audio relay, Telegram call interception or recording.
   const $=id=>document.getElementById(id);
+  const tg=window.Telegram?.WebApp;
   const supported=Boolean(window.RTCPeerConnection && navigator.mediaDevices?.getUserMedia
     && (window.AudioContext||window.webkitAudioContext) && window.crypto?.getRandomValues);
   const state={
     peer:null,mic:null,audio:null,processed:null,oscillator:null,nodes:null,
     room:null,role:null,muted:false,connectedAt:0,timer:0,phase:'idle',epoch:0,
+    mode:'manual',signalRoom:null,signalPollTimer:0,signalPollFailures:0,
   };
   const presets={
     original:{low:0,mid:0,high:0,robot:0},
@@ -24,6 +26,8 @@
     const busy=state.phase!=='idle';
     $('callCreate').disabled=busy||!supported;
     $('callJoin').disabled=busy||!supported;
+    $('callCreateAssisted').disabled=busy||!supported||!tg?.initData;
+    $('callJoinAssisted').disabled=busy||!supported||!tg?.initData;
     $('callApplyAnswer').disabled=!state.peer||state.role!=='caller'||state.phase!=='offer-ready';
     $('callHangup').disabled=!busy;
     $('callMute').disabled=!busy;
@@ -35,6 +39,12 @@
     $('callMorphValue').textContent=$('callMorph').value+'%';
   }
   function stop(){
+    // Cleanup is best-effort: the database also deletes abandoned offers by TTL.
+    const oldRoom=state.signalRoom;
+    if(oldRoom&&tg?.initData){
+      void signalRequest('end',{roomId:oldRoom}).catch(()=>{});
+    }
+    clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
     state.epoch++;
     clearInterval(state.timer);state.timer=0;
     try{state.peer?.close();}catch{}
@@ -46,6 +56,7 @@
     state.peer=null;state.oscillator=null;state.mic=null;state.processed=null;
     state.audio=null;state.nodes=null;state.room=null;state.role=null;
     state.muted=false;state.connectedAt=0;state.phase='idle';
+    state.mode='manual';state.signalRoom=null;state.signalPollFailures=0;
     const player=$('callRemoteAudio');
     if(player){player.pause();player.srcObject=null;}
     $('callOutgoing').value='';$('callIncoming').value='';
@@ -161,6 +172,12 @@
       const current=peer.connectionState;
       if(current==='connected'){
         state.phase='connected';state.connectedAt=Date.now();
+        clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
+        // SDP is no longer needed once ICE/DTLS is established.
+        if(state.signalRoom){
+          const roomId=state.signalRoom;state.signalRoom=null;
+          void signalRequest('end',{roomId}).catch(()=>{});
+        }
         $('callOutgoing').value='';$('callIncoming').value='';
         clearInterval(state.timer);
         state.timer=setInterval(()=>{
@@ -185,6 +202,110 @@
       error?.message||'Ошибка WebRTC на этом устройстве.';
     stop();report(message,true);
   }
+  async function signalRequest(action,payload={}){
+    const signed=String(tg?.initData||'');
+    if(!signed)throw Error('Открой VETO Calls внутри Telegram.');
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),11000);
+    try{
+      const res=await fetch('/api/call-signal',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':signed},
+        cache:'no-store',signal:controller.signal,
+        body:JSON.stringify({action,...payload}),
+      });
+      const json=await res.json().catch(()=>({}));
+      if(signed!==String(tg?.initData||''))throw Error('TELEGRAM_ACCOUNT_CHANGED');
+      if(!res.ok||!json.ok)throw Error(json.error||'Сигнальный сервер недоступен');
+      return json;
+    }catch(error){
+      if(error?.name==='AbortError')throw Error('Нет ответа сигнального сервера');
+      throw error;
+    }finally{clearTimeout(timeout);}
+  }
+  function pollAssisted(epoch){
+    if(epoch!==state.epoch||state.mode!=='assisted'||state.role!=='caller'||
+      state.phase!=='invite-ready'||!state.signalRoom)return;
+    const roomId=state.signalRoom;
+    void signalRequest('poll',{roomId}).then(async data=>{
+      if(epoch!==state.epoch||state.signalRoom!==roomId)return;
+      state.signalPollFailures=0;
+      if(data.status==='expired'){
+        failed(Error('Время приглашения истекло. Создай новый вызов.'),epoch);
+        return;
+      }
+      if(data.status==='answered'){
+        if(!data.answerSdp||!state.peer)throw Error('Ответ собеседника недоступен');
+        await state.peer.setRemoteDescription({type:'answer',sdp:data.answerSdp});
+        if(epoch!==state.epoch)return;
+        state.phase='connecting';update();
+        report('Telegram пользователь #'+data.calleeId+
+          ' принял приглашение. Устанавливаю WebRTC-соединение…');
+      }
+    }).catch(error=>{
+      if(epoch!==state.epoch)return;
+      state.signalPollFailures++;
+      if(state.signalPollFailures>=3){
+        failed(Error('Связь с сигнальным сервером потеряна. '+error.message),epoch);
+      }
+    }).finally(()=>{
+      if(epoch!==state.epoch||state.phase!=='invite-ready')return;
+      state.signalPollTimer=setTimeout(()=>pollAssisted(epoch),3000);
+    });
+  }
+  async function createAssisted(){
+    if(state.phase!=='idle'||!supported)return;
+    if(!tg?.initData){report('Открой VETO Calls внутри Telegram.',true);return;}
+    const epoch=++state.epoch;
+    state.mode='assisted';state.phase='preparing';update();
+    report('Готовлю аудио и короткое приглашение для собеседника…');
+    try{
+      const peer=await establish('caller',epoch);
+      await peer.setLocalDescription(await peer.createOffer());
+      const complete=await iceDone(peer,epoch);
+      if(epoch!==state.epoch)return;
+      if(!complete)throw Error('Не удалось завершить подготовку сетевых адресов. Попробуй ещё раз.');
+      const created=await signalRequest('create',{sdp:peer.localDescription.sdp});
+      if(epoch!==state.epoch){
+        void signalRequest('end',{roomId:created.roomId}).catch(()=>{});
+        return;
+      }
+      state.signalRoom=created.roomId;state.phase='invite-ready';update();
+      $('callOutgoing').value=created.invite;
+      report('Короткое приглашение готово. Отправь код второму Telegram пользователю. '+
+        'Он вводит его в VETO Calls — ответ подключится автоматически (до 8 минут).');
+      pollAssisted(epoch);
+    }catch(error){failed(error,epoch);}
+  }
+  async function joinAssisted(){
+    if(state.phase!=='idle'||!supported)return;
+    if(!tg?.initData){report('Открой VETO Calls внутри Telegram.',true);return;}
+    const invite=String($('callIncoming').value||'').trim();
+    if(!/^VETOR1:[a-f0-9]{32}\.[a-f0-9]{48}$/.test(invite)){
+      report('Вставь короткий код VETOR1, полученный от инициатора.',true);return;
+    }
+    const epoch=++state.epoch;
+    state.mode='assisted';state.phase='preparing';update();
+    report('Проверяю приглашение и подключаю микрофон…');
+    try{
+      const room=await signalRequest('inspect',{invite});
+      if(epoch!==state.epoch)return;
+      state.room=room.roomId;state.signalRoom=room.roomId;
+      const peer=await establish('callee',epoch);
+      await peer.setRemoteDescription({type:'offer',sdp:room.offerSdp});
+      await peer.setLocalDescription(await peer.createAnswer());
+      const complete=await iceDone(peer,epoch);
+      if(epoch!==state.epoch)return;
+      if(!complete)throw Error('Не удалось завершить подготовку сетевых адресов.');
+      await signalRequest('answer',{invite,sdp:peer.localDescription.sdp});
+      if(epoch!==state.epoch)return;
+      $('callIncoming').value='';
+      state.phase='connecting';update();
+      report('Ответ отправлен Telegram пользователю #'+room.callerId+
+        '. Ожидаю соединение…');
+    }catch(error){failed(error,epoch);}
+  }
+
   async function create(){
     if(state.phase!=='idle'||!supported)return;
     const epoch=++state.epoch;
@@ -252,6 +373,8 @@
     }
   }
   $('callCreate')?.addEventListener('click',create);
+  $('callCreateAssisted')?.addEventListener('click',createAssisted);
+  $('callJoinAssisted')?.addEventListener('click',joinAssisted);
   $('callJoin')?.addEventListener('click',join);
   $('callApplyAnswer')?.addEventListener('click',applyAnswer);
   $('callCopy')?.addEventListener('click',copy);
