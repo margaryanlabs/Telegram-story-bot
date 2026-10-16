@@ -647,6 +647,11 @@
     $('callRemoteAudio').play().catch(()=>report('Разреши воспроизведение звука в WebView.',true));
   });
   window.addEventListener('veto:screen-changed',event=>{
+    if(event.detail?.screen==='calls'){
+      if(guardOwner()&&tg?.initData)
+        void loadCallPreferences().catch(()=>{}); // preferences, not microphone
+      return;
+    }
     if(event.detail?.screen!=='calls'&&state.phase!=='idle'){
       stop();report('Звонок завершён при выходе из Calls. Микрофон отключён.');
     }
@@ -665,4 +670,5 @@
   if(!supported)report('WebRTC или микрофон недоступны в этом Telegram WebView. Попробуй актуальную версию Telegram.',true);
   prefillDeepLink();
   update();
+  if(tg?.initData)void loadCallPreferences().catch(()=>{});
 })();
