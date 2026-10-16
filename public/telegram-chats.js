@@ -7,7 +7,8 @@
     filter:'all',search:'',generation:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
-    mediaUrls:[],
+    mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarActive:0,avatarLoaded:0,
+    previewActive:0,previewSeen:new Set(),
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -85,9 +86,17 @@
     return item||(['channel','group'].includes(chat.type)
       ?'Открыть беседу':'Открыть сообщения');
   }
+  function orderedChats(chats){
+    return [...chats].sort((a,b)=>{
+      if(Boolean(a.pinned)!==Boolean(b.pinned))return a.pinned?-1:1;
+      const left=Date.parse(a.date||'')||0,right=Date.parse(b.date||'')||0;
+      if(left!==right)return right-left;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  }
   function filteredChats(){
     const q=state.search.trim().toLocaleLowerCase();
-    return state.chats.filter(chat=>{
+    return orderedChats(state.chats.filter(chat=>{
       if(state.filter==='unread' && Number(chat.unreadCount||0)<=0)return false;
       if(state.filter==='archived' && chat.archived!==true)return false;
       if(state.filter==='copies' && !chat.savedCopy)return false;
@@ -95,7 +104,7 @@
       if(!q)return true;
       return [chat.title,chat.username,chat.preview].some(value=>
         String(value||'').toLocaleLowerCase().includes(q));
-    });
+    }));
   }
   function renderChats(){
     const list=$('telegramMirrorList');
@@ -118,11 +127,13 @@
         const retained=chat.savedCopy
           ?'<span class="veto-mirror-chat-retained">'+(Number(chat.deletedCount||0)>0
             ?'↶ '+safe(chat.deletedCount)+' удалено':'◈ СОХРАНЕНО')+'</span>' : '';
+        const avatar=state.avatarUrls.get(String(chat.id));
+        const image=avatar?'<img class="veto-mirror-avatar-img" src="'+safe(avatar)+'" alt="" />':safe(initials(chat.title));
         return '<button class="veto-mirror-chat'+(unread?' unread':'')+
           '" type="button" data-mirror-chat="'+safe(chat.id)+
           '" aria-label="'+safe('Открыть '+chat.title)+'">'+
-          '<span class="veto-mirror-chat-avatar avatar-'+safe(chat.type)+'">'+
-          safe(initials(chat.title))+'</span>'+
+          '<span class="veto-mirror-chat-avatar avatar-'+safe(chat.type)+'" data-veto-avatar="'+safe(chat.id)+'">'+
+          image+'</span>'+
           '<span class="veto-mirror-chat-main">'+
           '<span class="veto-mirror-chat-title"><strong>'+safe(chat.title)+'</strong>'+
           (chat.verified?'<i class="veto-mirror-verified">✓</i>':'')+
@@ -138,6 +149,7 @@
       more.hidden=!state.hasMore||state.loading;
       more.disabled=state.loading;
     }
+    if(items.length)queueVisibleAvatars();
     const clear=$('telegramMirrorSearchClear');
     if(clear)clear.hidden=!state.search;
   }
@@ -171,7 +183,8 @@
           indexes.set(key,state.chats.length);state.chats.push(chat);
         }
       });
-      state.hasMore=Boolean(data.hasMore)&&state.chats.length<Number(data.limit||500);
+      // Archive-only rows are additional cards, not remote Telegram pagination.
+      state.hasMore=Boolean(data.hasMore)&&state.page<10;
       state.page+=1;
       hideNotice();
       if(data.warning)showNotice(data.warning,/Подключи|подключён/.test(data.warning));
@@ -183,6 +196,109 @@
       if(generation===state.generation){state.loading=false;renderChats();}
     }
   }
+  async function photoRequest(action,chatId,messageId=null){
+    if(!tg?.initData)throw new Error('Telegram Mini App требуется');
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),18000);
+    try{
+      const response=await fetch('/api/telegram-chat-media',{
+        method:'POST',headers:{
+          'content-type':'application/json','x-telegram-init-data':tg.initData,
+        },body:JSON.stringify({action,chatId,messageId}),signal:controller.signal,
+      });
+      if(!response.ok)throw new Error('Telegram не отдаёт изображение');
+      const blob=await response.blob();
+      if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
+        throw new Error('Изображение недоступно');
+      return URL.createObjectURL(blob);
+    }finally{clearTimeout(timer);}
+  }
+  // At most two MTProto avatar requests in flight, and 12 per app session:
+  // never attempt to download hundreds of profile photos when browsing dialogs.
+  function queueVisibleAvatars(){
+    if(!tg?.initData||state.avatarLoaded>=12)return;
+    const visible=[...document.querySelectorAll('[data-veto-avatar]')]
+      .filter(el=>!state.avatarUrls.has(el.dataset.vetoAvatar))
+      .slice(0,12-state.avatarLoaded);
+    for(const el of visible){
+      const id=String(el.dataset.vetoAvatar||'');
+      if(!id||state.avatarQueue.includes(id))continue;
+      state.avatarQueue.push(id);
+    }
+    runAvatarQueue();
+  }
+  function runAvatarQueue(){
+    while(state.avatarActive<2&&state.avatarQueue.length&&state.avatarLoaded<12){
+      const id=state.avatarQueue.shift();
+      state.avatarActive++;state.avatarLoaded++;
+      photoRequest('avatar',id).then(href=>{
+        state.avatarUrls.set(id,href);
+        for(const el of document.querySelectorAll('[data-veto-avatar]')){
+          if(el.dataset.vetoAvatar!==id)continue;
+          const img=document.createElement('img');
+          img.className='veto-mirror-avatar-img';img.alt='';img.src=href;
+          el.replaceChildren(img);
+        }
+      }).catch(()=>{}).finally(()=>{
+        state.avatarActive--;runAvatarQueue();
+      });
+    }
+  }
+  function rememberPreview(messageId,href){
+    state.mediaPreviewUrls.set(String(messageId),href);
+    state.mediaUrls.push(href);
+  }
+  function inlineImage(message){
+    if(message?.media!=='photo')return '';
+    const cached=state.mediaPreviewUrls.get(String(message.id));
+    if(cached)return '<img class="veto-mirror-inline-photo" src="'+safe(cached)+'" alt="Фото из переписки" loading="lazy" />';
+    return '<div class="veto-mirror-inline-placeholder" data-mirror-preview="'+
+      safe(message.id)+'"><span>▣</span><small>Фотография из переписки</small></div>';
+  }
+  // Lazy bounded preview: only three images per thread load; no media is
+  // persisted outside the browser tab and all blob URLs are revoked on exit.
+  function loadInlinePreviews(){
+    if(!state.thread||!tg?.initData)return;
+    const targets=[...document.querySelectorAll('[data-mirror-preview]')].slice(-3);
+    for(const el of targets){
+      const id=Number(el.dataset.mirrorPreview);
+      if(!Number.isSafeInteger(id)||state.previewSeen.has(id))continue;
+      const msg=state.messages.find(m=>m.id===id);
+      if(!msg)continue;
+      state.previewSeen.add(id);
+      // Never bulk-load attachments from unavailable deleted Telegram messages.
+      if(msg.deleted && !msg.mediaAvailable)continue;
+      const ownerChatId=String(state.thread.id);
+      const generation=state.threadGeneration;
+      const request=msg.saved&&msg.mediaAvailable
+        ?(async()=>{
+            const res=await fetch('/api/privacy-media?'+
+              new URLSearchParams({chatId:ownerChatId,messageId:String(id)}),{
+                headers:{'x-telegram-init-data':tg.initData},
+              });
+            if(!res.ok)throw new Error('private_photo_unavailable');
+            const blob=await res.blob();
+            if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
+              throw new Error('private_photo_unavailable');
+            return URL.createObjectURL(blob);
+          })()
+        :photoRequest('photo',ownerChatId,id);
+      request.then(href=>{
+        if(generation!==state.threadGeneration||String(state.thread?.id)!==ownerChatId){
+          URL.revokeObjectURL(href);return;
+        }
+        rememberPreview(id,href);
+        const container=[...document.querySelectorAll('[data-mirror-preview]')]
+          .find(x=>Number(x.dataset.mirrorPreview)===id);
+        if(container){
+          const img=document.createElement('img');img.className='veto-mirror-inline-photo';
+          img.alt='Фото из переписки';img.loading='lazy';img.src=href;
+          container.replaceWith(img);
+        }
+      }).catch(()=>{});
+    }
+  }
+
   function threadNotice(text){
     const el=$('telegramThreadNotice');
     if(!el)return;
@@ -192,6 +308,7 @@
   function revokeMediaUrls(){
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
+    state.mediaPreviewUrls.clear();state.previewSeen.clear();
   }
   async function openArchivedFile(button){
     if(!state.thread||!button||button.disabled)return;
@@ -237,7 +354,15 @@
     }finally{clearTimeout(timer);}
   }
 
-  function renderMessages({keepScroll=false}={}){
+  function visibleMessageAnchor(){
+    const box=$('telegramThreadMessages');
+    if(!box)return null;
+    const bounds=box.getBoundingClientRect();
+    const nodes=[...box.querySelectorAll('[data-mirror-message-id]')];
+    const first=nodes.find(n=>n.getBoundingClientRect().bottom>bounds.top+10);
+    return first?{id:first.dataset.mirrorMessageId,top:first.getBoundingClientRect().top-bounds.top}:null;
+  }
+  function renderMessages({keepScroll=false,anchor=null}={}){
     const box=$('telegramThreadMessages');
     if(!box)return;
     const previousHeight=box.scrollHeight, previousScroll=box.scrollTop;
@@ -257,7 +382,7 @@
         day=dayKey||day;
         const text=String(message.text||'');
         const media=message.media
-          ?'<div class="veto-mirror-media">'+safe(mediaLabels[message.media]||'◫ Вложение')+
+          ?'<div class="veto-mirror-media">'+inlineImage(message)+safe(mediaLabels[message.media]||'◫ Вложение')+
             '<small>'+safe(message.saved&&message.mediaAvailable
               ?'Независимая копия · Media Vault'
               :message.saved?'Сохранена отметка о вложении':'Файл доступен в Telegram')+'</small></div>':'';
@@ -270,7 +395,7 @@
         const viewFile=message.saved&&message.media&&message.mediaAvailable
           ?'<button type="button" class="veto-mirror-open-vault" data-mirror-file="'+safe(message.id)+
              '">Открыть сохранённый файл ↗</button>':'';
-        return divider+'<article class="veto-mirror-bubble'+(message.out?' outgoing':'')+
+        return divider+'<article data-mirror-message-id="'+safe(message.id)+'" class="veto-mirror-bubble'+(message.out?' outgoing':'')+
           (message.deleted?' is-deleted':'')+
           '"><div class="veto-mirror-bubble-inner">'+savedBanner+
           (message.sender&&!message.out?'<strong class="veto-mirror-bubble-sender">'+
@@ -280,19 +405,27 @@
           '<time>'+safe(time(message.date))+'</time></footer></div></article>';
       }).join('');
     }
-    if(keepScroll){
+    if(anchor){
+      const el=[...box.querySelectorAll('[data-mirror-message-id]')]
+        .find(x=>x.dataset.mirrorMessageId===String(anchor.id));
+      if(el)box.scrollTop+=el.getBoundingClientRect().top-box.getBoundingClientRect().top-anchor.top;
+      else box.scrollTop=previousScroll+(box.scrollHeight-previousHeight);
+    }else if(keepScroll){
       box.scrollTop=previousScroll+(box.scrollHeight-previousHeight);
     }else{
       box.scrollTop=box.scrollHeight;
     }
     const more=$('telegramThreadOlder');
     if(more){more.hidden=!state.threadHasMore;more.disabled=state.threadLoading;}
+    loadInlinePreviews();
   }
   function setThread(chat){
     $('telegramChatsView').hidden=true;
     $('telegramThreadView').hidden=false;
     $('telegramThreadTitle').textContent=chat.title;
     $('telegramThreadAvatar').textContent=initials(chat.title);
+    const avatar=state.avatarUrls.get(String(chat.id));
+    if(avatar){const img=document.createElement('img');img.className='veto-mirror-avatar-img';img.src=avatar;img.alt='';$('telegramThreadAvatar').replaceChildren(img);}
     $('telegramThreadMeta').textContent=(labels[chat.type]||'чат')+
       (chat.archiveOnly?' · сохранено до удаления/очистки'
         :chat.savedCopy?' · вместе с сохранённой историей':' · сообщения из Telegram');
@@ -326,9 +459,10 @@
   async function loadMessages({reset=false}={}){
     if(!state.thread||state.threadLoading)return;
     const chatId=String(state.thread.id);
+    const rememberedAnchor=state.messages.length?visibleMessageAnchor():null;
     const generation=++state.threadGeneration;
     state.threadLoading=true;
-    if(reset)state.messages=[];
+    if(reset&&!rememberedAnchor)state.messages=[];
     $('telegramThreadOlder').hidden=true;
     if(reset)renderMessages();
     try{
@@ -367,7 +501,7 @@
           (state.thread.savedCopy?' · сохранённая история VETO':' · Telegram');
       }
       state.threadLoading=false;
-      renderMessages({keepScroll:!reset});
+      renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
     }catch(error){
       state.threadLoading=false;
       threadNotice(error.message);
