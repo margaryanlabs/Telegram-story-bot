@@ -11,7 +11,7 @@
     room:null,role:null,muted:false,connectedAt:0,timer:0,phase:'idle',epoch:0,
     mode:'manual',signalRoom:null,signalPollTimer:0,signalPollFailures:0,
     sessionTimer:0,connectionTimer:0,iceMode:'stun',waveRaf:0,qualityTimer:0,
-    inviteShareUrl:'',
+    inviteShareUrl:'',ownerFingerprint:String(tg?.initData||''),
   };
   const presets={
     original:{low:0,mid:0,high:0,robot:0},
@@ -42,10 +42,11 @@
     $('callMorphValue').textContent=$('callMorph').value+'%';
     if($('callTransport'))$('callTransport').textContent=state.iceMode==='turn'? 'ICE · TURN ДОСТУПЕН':'ICE · STUN ONLY';
   }
-  function stop(){
+  function stop(skipEnd=false){
     // Cleanup is best-effort: the database also deletes abandoned offers by TTL.
     const oldRoom=state.signalRoom;
-    if(oldRoom&&tg?.initData){
+    if(!skipEnd&&oldRoom&&tg?.initData&&
+      state.ownerFingerprint===String(tg.initData)){
       void signalRequest('end',{roomId:oldRoom}).catch(()=>{});
     }
     clearTimeout(state.signalPollTimer);state.signalPollTimer=0;
@@ -74,6 +75,54 @@
     const wave=$('callWaveform');if(wave)wave.getContext('2d')?.clearRect(0,0,wave.width,wave.height);
     update();
   }
+  function guardOwner(){
+    const current=String(tg?.initData||'');
+    if(state.ownerFingerprint===current)return true;
+    // Never retain a previous Telegram user's codes, call UI, stream or tracks
+    // in an already-open Mini App WebView. Avoid using B's credentials to close
+    // A's room: the short-lived TTL takes care of abandoned A state.
+    stop(true);
+    state.ownerFingerprint=current;
+    report('Telegram-аккаунт изменился. Прошлый вызов и его данные очищены.');
+    return false;
+  }
+  async function checkCallReadiness(){
+    if(!guardOwner())return;
+    const button=$('callPreflight');
+    const output=$('callDiagnostics');
+    if(!output)return;
+    button.disabled=true;
+    const facts=[
+      (window.isSecureContext?'✓ HTTPS / безопасный контекст':'✕ Нет HTTPS'),
+      (window.RTCPeerConnection?'✓ WebRTC':'✕ WebRTC недоступен'),
+      (navigator.mediaDevices?.getUserMedia?'✓ API микрофона':'✕ API микрофона недоступен'),
+      (window.AudioContext||window.webkitAudioContext?'✓ Обработка звука':'✕ Web Audio недоступен'),
+      (tg?.initData?'✓ Telegram Mini App':'✕ Открой приложение из Telegram'),
+    ];
+    if(navigator.permissions?.query){
+      try{
+        const status=await navigator.permissions.query({name:'microphone'});
+        if(!guardOwner())return;
+        const label={granted:'разрешён',prompt:'потребует подтверждения',denied:'заблокирован'};
+        facts.push('Микрофон: '+(label[status.state]||'неизвестно'));
+      }catch{facts.push('Разрешение микрофона проверяется при начале вызова');}
+    }
+    if(tg?.initData){
+      try{
+        const config=await signalRequest('ice');
+        if(!guardOwner())return;
+        facts.push(config.relayConfigured?
+          '✓ TURN-конфигурация получена — соединение через реле ещё не проверено':
+          '○ TURN не настроен — только STUN, мобильные сети могут блокировать звонок');
+      }catch{
+        facts.push('✕ Сервер ICE не отвечает или Telegram сессия недействительна');
+      }
+    }
+    output.textContent=facts.join('\n');
+    button.disabled=false;
+    report('Диагностика завершена. Реальный звонок проверяется только между двумя устройствами.');
+  }
+
   function morph(){
     const n=state.nodes;if(!n||!state.audio)return;
     const preset=presets[$('callPreset').value]||presets.original;
@@ -298,6 +347,7 @@
   }
   async function signalRequest(action,payload={}){
     const signed=String(tg?.initData||'');
+    if(signed!==state.ownerFingerprint)throw Error('TELEGRAM_ACCOUNT_CHANGED');
     if(!signed)throw Error('Открой VETO Calls внутри Telegram.');
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),11000);
@@ -349,6 +399,7 @@
     });
   }
   async function createAssisted(){
+    if(!guardOwner())return;
     if(state.phase!=='idle'||!supported)return;
     if(!tg?.initData){report('Открой VETO Calls внутри Telegram.',true);return;}
     const epoch=++state.epoch;
@@ -376,6 +427,7 @@
     }catch(error){failed(error,epoch);}
   }
   async function joinAssisted(){
+    if(!guardOwner())return;
     if(state.phase!=='idle'||!supported)return;
     if(!tg?.initData){report('Открой VETO Calls внутри Telegram.',true);return;}
     const invite=String($('callIncoming').value||'').trim();
@@ -406,6 +458,7 @@
   }
 
   async function create(){
+    if(!guardOwner())return;
     if(state.phase!=='idle'||!supported)return;
     const epoch=++state.epoch;
     state.room=newRoom();state.phase='preparing';update();
@@ -422,6 +475,7 @@
     }catch(error){failed(error,epoch);}
   }
   async function join(){
+    if(!guardOwner())return;
     if(state.phase!=='idle'||!supported)return;
     let offer;
     try{offer=unpack($('callIncoming').value,'offer');}
@@ -443,6 +497,7 @@
     }catch(error){failed(error,epoch);}
   }
   async function applyAnswer(){
+    if(!guardOwner())return;
     if(state.role!=='caller'||state.phase!=='offer-ready'||!state.peer)return;
     let answer;
     try{
@@ -474,6 +529,7 @@
     }catch{}
   }
   async function copyInviteLink(){
+    if(!guardOwner())return;
     if(!state.inviteShareUrl)return;
     try{
       if(!navigator.clipboard?.writeText)throw Error('clipboard unavailable');
@@ -484,6 +540,7 @@
     }
   }
   async function copy(){
+    if(!guardOwner())return;
     const text=$('callOutgoing').value;
     if(!text){report('Сначала сформируй код приглашения или ответа.');return;}
     try{
@@ -498,6 +555,7 @@
       report('Копирование запрещено браузером. Выдели код и скопируй вручную.');
     }
   }
+  $('callPreflight')?.addEventListener('click',checkCallReadiness);
   $('callCreate')?.addEventListener('click',create);
   $('callCreateAssisted')?.addEventListener('click',createAssisted);
   $('callJoinAssisted')?.addEventListener('click',joinAssisted);
@@ -525,10 +583,13 @@
   // Mobile Telegram can background a WebView without firing pagehide.
   // Do not retain an active microphone or connected media when it is hidden.
   document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden){guardOwner();return;}
     if(document.hidden&&state.phase!=='idle'){
       stop();report('Звонок завершён: приложение свёрнуто. Микрофон отключён.');
     }
   });
+  window.addEventListener('focus',guardOwner);
+  window.addEventListener('pageshow',guardOwner);
   window.addEventListener('pagehide',()=>stop());
   if(!supported)report('WebRTC или микрофон недоступны в этом Telegram WebView. Попробуй актуальную версию Telegram.',true);
   prefillDeepLink();
