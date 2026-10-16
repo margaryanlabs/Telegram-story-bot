@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261016-veto-voice-studio-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261016-veto-smart-inbox-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -314,11 +314,16 @@
             <button type="button" data-mirror-filter="bot">Боты</button>
             <button type="button" data-mirror-filter="saved">Избранное</button>
             <button type="button" data-mirror-filter="pinned">Закреплённые</button>
+            <button type="button" data-mirror-filter="focus">Важное <span>⌑</span></button>
             <button type="button" data-mirror-filter="unread">Непрочитанные</button>
             <button type="button" data-mirror-filter="archived">Архив</button>
             <button type="button" data-mirror-filter="copies">Копии VETO <span>↶</span></button>
           </div>
           <div id="telegramMirrorAccountProof" class="veto-mirror-account-proof" role="status" aria-live="polite"><span class="veto-mirror-live-pip"></span> Личный Telegram ещё не проверен · отображение чатов остановлено до подтверждения</div>
+          <div class="veto-mirror-privacy-diagnostics" id="telegramMirrorPrivacyDiagnostics" role="status" aria-live="polite">
+            <div class="veto-mirror-diagnostics-head"><span>◈</span><strong>Защита переписки</strong><small>Проверяю доступ для этого аккаунта…</small></div>
+          </div>
+          <p class="veto-mirror-focus-hint">⌑ Важное — локальная сортировка по непрочитанным, вопросам и срокам, не ИИ-прогноз.</p>
           <button type="button" id="telegramMirrorDeletedGuide" class="veto-mirror-deletion-guide">↶ Почему удалённые сообщения могут не появляться? <span>↗</span></button>
           <div class="veto-mirror-headline"><span>ДИАЛОГИ И СОХРАНЁННЫЕ КОПИИ</span><span id="telegramMirrorUpdated">LIVE · По запросу</span></div>
           <div id="telegramMirrorNotice" class="veto-mirror-notice" hidden></div>
@@ -1414,11 +1419,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261016-veto-voice-studio-v1"></script>
+  <script src="/app.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
-  <script src="/privacy.js?v=20261016-veto-voice-studio-v1"></script>
-  <script src="/telegram-chats.js?v=20261016-veto-voice-studio-v1"></script>
-  <script src="/voice-studio.js?v=20261016-veto-voice-studio-v1"></script>
+  <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
+  <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
+  <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>

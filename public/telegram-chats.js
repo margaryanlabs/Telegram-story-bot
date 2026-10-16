@@ -96,21 +96,65 @@
   }
   function filteredChats(){
     const q=state.search.trim().toLocaleLowerCase();
-    return orderedChats(state.chats.filter(chat=>{
+    const filtered=state.chats.filter(chat=>{
       if(state.filter==='unread' && Number(chat.unreadCount||0)<=0)return false;
+      if(state.filter==='focus' && !chat.inbox?.needsAttention)return false;
       if(state.filter==='pinned' && !chat.pinned)return false;
       if(state.filter==='archived' && chat.archived!==true)return false;
       if(state.filter==='copies' && !chat.savedCopy)return false;
-      if(!['all','unread','pinned','archived','copies'].includes(state.filter)&&chat.type!==state.filter)return false;
+      if(!['all','unread','pinned','archived','copies','focus'].includes(state.filter)&&chat.type!==state.filter)return false;
       if(!q)return true;
       return [chat.title,chat.username,chat.preview].some(value=>
         String(value||'').toLocaleLowerCase().includes(q));
-    }));
+    });
+    if(state.filter==='focus'){
+      return filtered.sort((a,b)=>Number(b.inbox?.score||0)-Number(a.inbox?.score||0)
+        ||new Date(b.date||0)-new Date(a.date||0));
+    }
+    return orderedChats(filtered);
+  }
+  function renderPrivacyDiagnostics(){
+    const el=$('telegramMirrorPrivacyDiagnostics');
+    if(!el)return;
+    const privacy=state.connectionProof?.privacy;
+    if(!privacy){
+      el.innerHTML='<div class="veto-mirror-diagnostics-head"><span>◈</span>'+
+        '<strong>Privacy · проверяю состояние</strong><small>Если проверка не проходит — обнови экран.</small></div>';
+      el.className='veto-mirror-privacy-diagnostics';
+      return;
+    }
+    const known=privacy.nextAction!=='unavailable';
+    const configured=privacy.ready===true;
+    const next={
+      unavailable:'Состояние Privacy не удалось проверить. Не считай архив активным.',
+      enable_privacy:'Включи Anti-Delete и защищённый Inbox в Privacy.',
+      connect_business:'Подключи Telegram Business к VETO, чтобы бот получал разрешённые события.',
+      grant_messages:'Разреши VETO доступ к сообщениям в Telegram Business для нужных чатов.',
+      test_archive:'Доступы выглядят готовыми. Проверь на новом сообщении в разрешённом чате.',
+    };
+    const status=configured?'НАСТРОЕНО · ДЛЯ РАЗРЕШЁННЫХ ЧАТОВ':known?'ТРЕБУЕТ НАСТРОЙКИ':'СОСТОЯНИЕ НЕИЗВЕСТНО';
+    const checkpoint=(label,okay)=>'<span class="'+(okay?'active':'inactive')+'">'+
+      (okay?'✓ ':'○ ')+safe(label)+'</span>';
+    el.className='veto-mirror-privacy-diagnostics'+(configured?' ready':'');
+    el.innerHTML='<div class="veto-mirror-diagnostics-head"><span>◈</span>'+
+      '<strong>Защита переписки</strong><small>'+safe(status)+'</small></div>'+
+      '<div class="veto-mirror-checks">'+checkpoint('Anti-Delete',privacy.antiDelete)+
+      checkpoint('Частный Inbox',privacy.privateArchive)+
+      checkpoint('Business-доступ',privacy.businessConnected)+
+      checkpoint('Чтение сообщений',privacy.readMessagesAllowed)+'</div>'+
+      '<div class="veto-mirror-evidence"><strong>'+safe(privacy.confirmedDeleted||0)+
+      '</strong><span>подтверждённых удалений</span><strong>'+safe(privacy.savedChats||0)+
+      '</strong><span>сохранённых диалогов</span></div>'+
+      '<p>'+safe(next[privacy.nextAction]||next.unavailable)+
+      (Number(privacy.retentionDays)>0?' · Срок хранения: '+safe(privacy.retentionDays)+' дн.':'')+
+      '</p><button type="button" data-mirror-privacy-setup="1">'+
+      (configured?'Проверить настройки':'Настроить Privacy')+' ↗</button>';
   }
   function renderChats(){
     const list=$('telegramMirrorList');
     if(!list)return;
     const items=filteredChats();
+    renderPrivacyDiagnostics();
     $('telegramMirrorCount').textContent=String(state.chats.length);
     const proof=$('telegramMirrorAccountProof');
     if(proof){
@@ -134,6 +178,8 @@
         const unread=Math.max(0,Number(chat.unreadCount||0));
         const badge=unread?'<span class="veto-mirror-unread">'+
           safe(unread>99?'99+':unread)+'</span>':'';
+        const focusTag=chat.inbox?.needsAttention
+          ?'<span class="veto-mirror-focus-tag">⌑ '+safe(chat.inbox.action?'Есть срок или действие':'Возможен вопрос')+'</span>':'';
         const retained=chat.savedCopy
           ?'<span class="veto-mirror-chat-retained">'+(Number(chat.deletedCount||0)>0
             ?'↶ '+safe(chat.deletedCount)+' удалено':'◈ СОХРАНЕНО')+'</span>' : '';
@@ -150,7 +196,7 @@
           (chat.verified?'<i class="veto-mirror-verified">✓</i>':'')+
           (chat.pinned?'<i class="veto-mirror-pin">⌁</i>':'')+
           (chat.archived?'<i class="veto-mirror-pin">▣</i>':'')+'</span>'+
-          '<small>'+safe(preview(chat))+'</small>'+retained+
+          '<small>'+safe(preview(chat))+'</small>'+focusTag+retained+
           '</span><span class="veto-mirror-chat-aside"><time>'+safe(time(chat.date))+
           '</time>'+badge+'</span></button>';
       }).join('');
@@ -545,6 +591,10 @@
     revokeMediaUrls();
     window.scrollTo({top:0,behavior:'instant'});
   }
+  $('telegramMirrorPrivacyDiagnostics')?.addEventListener('click',event=>{
+    if(event.target.closest('[data-mirror-privacy-setup]'))
+      window.VetoTelegramNavigate?.('privacy');
+  });
   $('telegramMirrorDeletedGuide')?.addEventListener('click',()=>{
     const saved=state.connectionProof?.archivedThreads||0;
     const deleted=state.connectionProof?.confirmedDeleted||0;

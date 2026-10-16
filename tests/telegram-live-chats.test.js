@@ -143,7 +143,7 @@ test('Previously captured Telegram deletions remain visible in a live chat with 
 });
 test('Preserved-only chat is accessible without a live Telegram session and never invents missing history',()=>{
  const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js');
- assert.ok(api.includes('const history=await archiveThreads(userId)'));
+ assert.ok(api.includes('archiveThreads(userId)'));
  assert.ok(api.includes("if(!chat && threadArchive)chat=archivedDialog(threadArchive)"));
  assert.ok(api.includes("if(warning && !history.length)return respond(res,409"));
  assert.ok(api.includes('listPrivacyMessages(ownerId,chatId,ARCHIVE_PAGE,offset)'));

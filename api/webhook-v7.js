@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20261016-veto-voice-studio-v1';
+const CONTROL_BUILD = '20261016-veto-smart-inbox-v1';
 import sharp from 'sharp';
 import {
   trackPublishedStory,
