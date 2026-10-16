@@ -11,6 +11,8 @@ process.env.TELEGRAM_API_HASH='test-hash-only-in-process';
 const {default:handler}=await import('../api/call-signal.js?two-account-test');
 const originalFetch=globalThis.fetch;
 const rooms=new Map();
+const prefs=new Map();
+const alerts=[];
 const offer='v=0\r\n'+'a=candidate:0 1 udp 123 test.local 555 typ host\r\n'.repeat(3);
 const answer='v=0\r\n'+'a=candidate:1 1 udp 321 test.local 556 typ host\r\n'.repeat(3);
 
@@ -31,20 +33,34 @@ function gateway(op,a){
   const now=Date.now();
   const existing=rooms.get(a.roomId);
   switch(op){
+    case 'call_preferences_get':
+      return edgeOK({notificationsEnabled:prefs.get(a.userId)?.enabled===true});
+    case 'call_preferences_set':
+      prefs.set(a.userId,{enabled:a.enabled,lastAlert:prefs.get(a.userId)?.lastAlert||0});
+      return edgeOK({notificationsEnabled:a.enabled});
     case 'call_probe':return edgeOK({signaling:'ready',database:'ready',retentionMinutes:8});
     case 'call_create':
       if(existing)return edgeFail('call_invite_unavailable');
-      rooms.set(a.roomId,{callerId:a.callerId,hash:a.tokenHash,offer:a.offerSdp,
+      if(a.recipientId){
+        const pref=prefs.get(a.recipientId);
+        if(!pref?.enabled||now-pref.lastAlert<3*60000)
+          return edgeFail('call_recipient_unavailable');
+        pref.lastAlert=now;
+      }
+      rooms.set(a.roomId,{callerId:a.callerId,recipientId:a.recipientId||null,
+        hash:a.tokenHash,offer:a.offerSdp,
         calleeId:null,answer:null,expiresAt:now+8*60000});
       return edgeOK({roomId:a.roomId,expiresAt:new Date(now+8*60000).toISOString()});
     case 'call_inspect':
       if(!existing||existing.hash!==a.tokenHash||existing.callerId===a.userId||
+        (existing.recipientId&&existing.recipientId!==a.userId)||
         existing.calleeId||now>existing.expiresAt)return edgeFail('call_invite_unavailable');
       return edgeOK({roomId:a.roomId,callerId:existing.callerId,offerSdp:existing.offer,
         expiresAt:new Date(existing.expiresAt).toISOString()});
     case 'call_answer':
       if(!existing||existing.hash!==a.tokenHash||existing.calleeId||
-        existing.callerId===a.userId)return edgeFail('call_invite_unavailable');
+        existing.callerId===a.userId||
+        (existing.recipientId&&existing.recipientId!==a.userId))return edgeFail('call_invite_unavailable');
       existing.calleeId=a.userId;existing.answer=a.answerSdp;
       return edgeOK({roomId:a.roomId,callerId:existing.callerId,
         calleeId:existing.calleeId,status:'answered'});
@@ -66,6 +82,14 @@ async function mockFetch(url,options={}){
   if(u.includes('/getMe'))return {ok:true,json:async()=>({
     ok:true,result:{username:'VetoTestBot'}
   })};
+  if(u.includes('/sendMessage')){
+    const message=JSON.parse(options.body);
+    assert.equal(typeof message.chat_id,'string');
+    assert.ok(!message.text.includes('v=0'));
+    assert.equal(message.protect_content,true);
+    alerts.push(message);
+    return {ok:true,json:async()=>({ok:true,result:{message_id:345}})};
+  }
   if(!u.endsWith('/functions/v1/veto-call-signal'))throw Error('Unexpected external request '+u);
   const body=String(options.body||'');
   const header=options.headers;
@@ -75,7 +99,7 @@ async function mockFetch(url,options={}){
   const payload=JSON.parse(body);
   // Signature covers operation, owner ID and SDP; browser must not be allowed to
   // call the Edge store directly with unsigned user-selected identifiers.
-  assert.match(payload.op,/^call_(probe|create|inspect|answer|poll|end)$/);
+  assert.match(payload.op,/^call_(probe|preferences_get|preferences_set|create|inspect|answer|poll|end)$/);
   return gateway(payload.op,payload.args);
 }
 async function call(id,action,fields={},authOverride){
@@ -130,5 +154,43 @@ test('Real Vercel handler protects invite→accept→poll→end between two sign
     const calleeCanEnd=await call(22,'end',{roomId:caller.result.roomId});
     assert.equal(calleeCanEnd.statusCode,200);
     assert.equal(rooms.size,0,'Room and all SDP must be removed after hangup');
+  }finally{globalThis.fetch=originalFetch;}
+});
+
+test('Incoming bot alerts require explicit self opt-in, signed recipient binding and per-recipient throttle',async()=>{
+  globalThis.fetch=mockFetch;rooms.clear();prefs.clear();alerts.length=0;
+  try{
+    const off=await call(22,'preferences_get');
+    assert.equal(off.statusCode,200);
+    assert.equal(off.result.notificationsEnabled,false);
+    assert.equal(off.result.myCallId,'22');
+    const cannotRing=await call(11,'create',{sdp:offer,recipientId:'22'});
+    assert.equal(cannotRing.statusCode,410,'Nonconsenting users cannot receive push');
+    assert.equal(alerts.length,0);
+    const enable=await call(22,'preferences_set',{enabled:true});
+    assert.equal(enable.statusCode,200);
+    assert.equal(enable.result.notificationsEnabled,true);
+    const target=await call(11,'create',{sdp:offer,recipientId:'22'});
+    assert.equal(target.statusCode,200);
+    assert.equal(target.result.notificationSent,true);
+    assert.equal(alerts.length,1);
+    assert.equal(alerts[0].chat_id,'22');
+    assert.ok(alerts[0].reply_markup.inline_keyboard[0][0].url.includes('?startapp='));
+    assert.ok(!JSON.stringify(alerts[0]).includes(offer));
+    const thirdParty=await call(33,'inspect',{invite:target.result.invite});
+    assert.equal(thirdParty.statusCode,410,'Forwarded invite must not be usable by third party');
+    const recipient=await call(22,'inspect',{invite:target.result.invite});
+    assert.equal(recipient.statusCode,200);
+    const thirdPartyAnswer=await call(33,'answer',{invite:target.result.invite,sdp:answer});
+    assert.equal(thirdPartyAnswer.statusCode,410);
+    const secondRing=await call(11,'create',{sdp:offer,recipientId:'22'});
+    assert.equal(secondRing.statusCode,410,'One alert per 3 minutes');
+    assert.equal(alerts.length,1);
+    const disable=await call(22,'preferences_set',{enabled:false});
+    assert.equal(disable.statusCode,200);
+    const reRing=await call(11,'create',{sdp:offer,recipientId:'22'});
+    assert.equal(reRing.statusCode,410,'Recipient may revoke notifications');
+    const end=await call(11,'end',{roomId:target.result.roomId});
+    assert.equal(end.statusCode,200);
   }finally{globalThis.fetch=originalFetch;}
 });
