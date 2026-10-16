@@ -31,6 +31,7 @@ function gateway(op,a){
   const now=Date.now();
   const existing=rooms.get(a.roomId);
   switch(op){
+    case 'call_probe':return edgeOK({signaling:'ready',database:'ready',retentionMinutes:8});
     case 'call_create':
       if(existing)return edgeFail('call_invite_unavailable');
       rooms.set(a.roomId,{callerId:a.callerId,hash:a.tokenHash,offer:a.offerSdp,
@@ -74,7 +75,7 @@ async function mockFetch(url,options={}){
   const payload=JSON.parse(body);
   // Signature covers operation, owner ID and SDP; browser must not be allowed to
   // call the Edge store directly with unsigned user-selected identifiers.
-  assert.match(payload.op,/^call_(create|inspect|answer|poll|end)$/);
+  assert.match(payload.op,/^call_(probe|create|inspect|answer|poll|end)$/);
   return gateway(payload.op,payload.args);
 }
 async function call(id,action,fields={},authOverride){
@@ -95,6 +96,10 @@ test('Real Vercel handler protects invite→accept→poll→end between two sign
     assert.equal(anonymous.statusCode,401);
     const expired=await call(11,'ice',{},signedInitData(11,Math.floor(Date.now()/1000)-4000));
     assert.equal(expired.statusCode,401);
+    const probe=await call(11,'probe');
+    assert.equal(probe.statusCode,200);
+    assert.equal(probe.result.signaling,'ready');
+    assert.equal(probe.result.database,'ready');
     const caller=await call(11,'create',{sdp:offer});
     assert.equal(caller.statusCode,200);
     assert.equal(caller.result.ok,true);
