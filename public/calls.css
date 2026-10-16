@@ -54,3 +54,6 @@
 
 .veto-calls .calls-waveform{display:block;width:min(100%,480px);height:60px;margin:15px auto 0;opacity:.92}
 .veto-calls .calls-quality{display:block;letter-spacing:.17em;font-size:9px;color:#9ba9b9;margin-top:4px;font-weight:800}
+
+.veto-calls .calls-diagnostics-card{margin:12px 0}
+.veto-calls .calls-diagnostics{border:1px solid #2b3947;border-radius:12px;background:#090e14;color:#bfcbd8;padding:13px 14px;margin:13px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85}
