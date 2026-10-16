@@ -371,7 +371,9 @@
         </header>
         <div class="calls-hero">
           <div class="calls-portrait" aria-hidden="true">⌁</div>
+          <canvas id="callWaveform" class="calls-waveform" width="480" height="80" aria-label="Живая визуализация микрофона"></canvas>
           <strong class="calls-elapsed" id="callElapsed">00:00</strong>
+          <span class="calls-quality" id="callQuality">СОЕДИНЕНИЕ НЕ УСТАНОВЛЕНО</span>
           <small>Звук передаётся между участниками напрямую либо через TURN-реле, если оно настроено. Не обычный Telegram-звонок.</small>
           <small id="callTransport" class="calls-transport">ICE · STUN ONLY</small>
           <audio id="callRemoteAudio" autoplay playsinline></audio>
