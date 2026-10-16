@@ -24,7 +24,7 @@ test('Local WebRTC smoke test uses two actual peer connections and synthetic aud
   assert.ok(!source.includes('x-telegram-init-data'));
 });
 test('Self-test has a bounded timeout, releases all media and truthfully discloses limits',()=>{
-  assert.ok(source.includes("},15000)"));
+  assert.ok(source.includes("15000);"));
   assert.ok(source.includes('destination?.stream?.getTracks().forEach(t=>t.stop())'));
   assert.ok(source.includes('caller?.close()'));
   assert.ok(source.includes('receiver?.close()'));
