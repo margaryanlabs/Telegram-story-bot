@@ -98,9 +98,10 @@
     const q=state.search.trim().toLocaleLowerCase();
     return orderedChats(state.chats.filter(chat=>{
       if(state.filter==='unread' && Number(chat.unreadCount||0)<=0)return false;
+      if(state.filter==='pinned' && !chat.pinned)return false;
       if(state.filter==='archived' && chat.archived!==true)return false;
       if(state.filter==='copies' && !chat.savedCopy)return false;
-      if(!['all','unread','archived','copies'].includes(state.filter)&&chat.type!==state.filter)return false;
+      if(!['all','unread','pinned','archived','copies'].includes(state.filter)&&chat.type!==state.filter)return false;
       if(!q)return true;
       return [chat.title,chat.username,chat.preview].some(value=>
         String(value||'').toLocaleLowerCase().includes(q));
@@ -130,6 +131,7 @@
         const avatar=state.avatarUrls.get(String(chat.id));
         const image=avatar?'<img class="veto-mirror-avatar-img" src="'+safe(avatar)+'" alt="" />':safe(initials(chat.title));
         return '<button class="veto-mirror-chat'+(unread?' unread':'')+
+          (chat.archiveOnly?' is-cleared':'')+
           '" type="button" data-mirror-chat="'+safe(chat.id)+
           '" aria-label="'+safe('Открыть '+chat.title)+'">'+
           '<span class="veto-mirror-chat-avatar avatar-'+safe(chat.type)+'" data-veto-avatar="'+safe(chat.id)+'">'+
