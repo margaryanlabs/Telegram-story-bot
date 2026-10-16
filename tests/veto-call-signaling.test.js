@@ -42,8 +42,8 @@ test('WebRTC descriptions are size and protocol bounded; no HTML or null bytes',
 });
 test('Every short-code operation is signed, per-user and ephemeral',()=>{
   const api=read('api/call-signal.js');
-  const gateway=read('lib/viewer-sync-store.js');
-  const edge=read('supabase/functions/story-pilot-store/index.ts');
+  const gateway=read('lib/veto-call-signal-store.js');
+  const edge=read('supabase/functions/veto-call-signal/index.ts');
   const sql=read('supabase/migrations/20261016121000_veto_ephemeral_calls.sql');
   assert.ok(api.includes('validateTelegramMiniApp('));
   assert.ok(api.includes("req.headers['x-telegram-init-data']"));
@@ -56,7 +56,7 @@ test('Every short-code operation is signed, per-user and ephemeral',()=>{
   assert.ok(api.includes("action==='end'")===false || api.includes('endCallRoom('));
   for(const op of ['call_create','call_inspect','call_answer','call_poll','call_end']){
     assert.ok(gateway.includes("'"+op+"'"),"gateway "+op);
-    assert.ok(edge.includes('case "'+op+'":'),"edge "+op);
+    assert.ok(edge.includes(op+':opCall'),"edge "+op);
   }
   assert.ok(edge.includes(".eq('caller_id',actor)"));
   assert.ok(edge.includes(".neq('caller_id',actor)"));
@@ -68,6 +68,10 @@ test('Every short-code operation is signed, per-user and ephemeral',()=>{
   assert.ok(sql.includes('veto-call-room-ttl'));
   assert.ok(sql.includes("status in ('offered', 'answered')"));
   assert.ok(!api.includes('SUPABASE_SERVICE_ROLE_KEY'));
+  assert.ok(!read('supabase/functions/story-pilot-store/index.ts').includes('opCallCreate('));
+  assert.ok(!read('lib/viewer-sync-store.js').includes('call_create'));
+  assert.ok(gateway.includes('/functions/v1/veto-call-signal'));
+  assert.ok(edge.includes('verifySignedRequest(request,raw)'));
 });
 test('Protected signaling is separate from Telegram private-chats MTProto APIs',()=>{
   const api=read('api/call-signal.js'),ui=read('public/calls.js');
