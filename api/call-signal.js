@@ -5,8 +5,31 @@ import {newCallInvite,parseCallInvite,checkCallDescription,checkCallRoom}
   from '../lib/veto-call-signals.js';
 import {createIceConfig} from '../lib/veto-call-ice.js';
 import {makeCallInviteUrl} from '../lib/veto-call-invite-link.js';
+import {makeCallInviteUrl} from '../lib/veto-call-invite-link.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
+let botNameCache='';
+async function resolveBotUsername(){
+  const configured=String(process.env.TELEGRAM_BOT_USERNAME||'').trim().replace(/^@/,'');
+  if(configured)return configured;
+  if(botNameCache)return botNameCache;
+  // Best-effort: failing to obtain a public bot username must not break Calls.
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),1800);
+  try{
+    const result=await fetch('https://api.telegram.org/bot'+BOT+'/getMe',{
+      signal:controller.signal,cache:'no-store',
+    });
+    if(!result.ok)return '';
+    const info=await result.json();
+    const name=String(info?.result?.username||'');
+    if(info?.ok&&/^[A-Za-z0-9_]{5,32}$/.test(name)){
+      botNameCache=name;
+      return name;
+    }
+  }catch{}finally{clearTimeout(timer);}
+  return '';
+}
 let cachedUsername=null;
 let usernameExpiresAt=0;
 async function currentBotUsername(){
@@ -66,8 +89,10 @@ export default async function handler(req,res){
       const offer=checkCallDescription(body.sdp,'offer');
       const room=newCallInvite();
       const stored=await createCallRoom(userId,room.roomId,room.tokenHash,offer);
-      return reply(res,200,{invite:room.invite,roomId:room.roomId,expiresAt:stored.expiresAt,
-        scope:'temporary-peer-to-peer-sdp',callerId:userId});
+      const botUsername=await resolveBotUsername();
+      const shareUrl=botUsername?makeCallInviteUrl(botUsername,room.invite):null;
+      return reply(res,200,{invite:room.invite,shareUrl,roomId:room.roomId,
+        expiresAt:stored.expiresAt,scope:'temporary-peer-to-peer-sdp'});
     }
     if(action==='inspect'){
       const invite=parseCallInvite(body.invite);
