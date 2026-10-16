@@ -94,6 +94,7 @@
     if(state.context){state.context.close().catch(()=>{});}
     state.context=null;state.stream=null;state.nodes=null;state.oscillator=null;
     state.recorder=null;state.source=null;state.active=false;
+    cancelAnimationFrame(state.raf);state.raf=0;
     updateButtons();
   }
   async function startMic(){
@@ -202,6 +203,9 @@
   }
   async function shareRecording(){
     if(!state.recordedBlob)return;
+    if(typeof File!=='function'){
+      toast('Этот WebView не поддерживает отправку файлов. Используй «Скачать».');return;
+    }
     const file=new File([state.recordedBlob],
       'veto-voice.'+extFor(state.recordedBlob.type),{type:state.recordedBlob.type});
     if(typeof navigator.share==='function'&&navigator.canShare?.({files:[file]})){
