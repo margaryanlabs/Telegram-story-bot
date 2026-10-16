@@ -12,6 +12,7 @@
     mode:'manual',signalRoom:null,signalPollTimer:0,signalPollFailures:0,
     sessionTimer:0,connectionTimer:0,iceMode:'stun',waveRaf:0,qualityTimer:0,
     inviteShareUrl:'',ownerFingerprint:String(tg?.initData||''),
+    notificationsEnabled:null,myCallId:'',
   };
   const presets={
     original:{low:0,mid:0,high:0,robot:0},
@@ -85,9 +86,56 @@
     // A's room: the short-lived TTL takes care of abandoned A state.
     stop(true);
     state.ownerFingerprint=current;
+    state.notificationsEnabled=null;state.myCallId='';
+    if($('callOptIn'))$('callOptIn').textContent='○ Включить входящие';
+    if($('callOptInStatus'))$('callOptInStatus').textContent='Сессия обновлена. Настройки нового аккаунта ещё не загружены.';
+    if($('callRecipientId'))$('callRecipientId').value='';
     report('Telegram-аккаунт изменился. Прошлый вызов и его данные очищены.');
     return false;
   }
+  async function loadCallPreferences(){
+    if(!guardOwner()||!tg?.initData)throw Error('Открой VETO внутри Telegram');
+    const data=await signalRequest('preferences_get');
+    if(!guardOwner())throw Error('TELEGRAM_ACCOUNT_CHANGED');
+    state.notificationsEnabled=data.notificationsEnabled===true;
+    state.myCallId=String(data.myCallId||'');
+    $('callOptIn').textContent=state.notificationsEnabled
+      ?'✓ Отключить входящие':'○ Включить входящие';
+    $('callOptInStatus').textContent=state.notificationsEnabled
+      ?'Входящие включены. ID: '+state.myCallId+' · только приглашения от знающих твой ID'
+      :'Входящие выключены. Разреши вручную, чтобы получать приглашения.';
+    return data;
+  }
+  async function toggleCallPreferences(){
+    if(!guardOwner()||!tg?.initData){report('Открой VETO внутри Telegram.',true);return;}
+    const btn=$('callOptIn');btn.disabled=true;
+    try{
+      if(state.notificationsEnabled===null)await loadCallPreferences();
+      if(!guardOwner())return;
+      const data=await signalRequest('preferences_set',{enabled:!state.notificationsEnabled});
+      if(!guardOwner())return;
+      state.notificationsEnabled=data.notificationsEnabled===true;
+      state.myCallId=String(data.myCallId||'');
+      btn.textContent=state.notificationsEnabled?'✓ Отключить входящие':'○ Включить входящие';
+      $('callOptInStatus').textContent=state.notificationsEnabled
+        ?'Входящие включены. Передавай свой ID только знакомым: '+state.myCallId
+        :'Входящие выключены. Новые уведомления о звонках не отправляются.';
+      report('Настройка входящих VETO Calls сохранена.');
+    }catch(error){report(error.message||'Не удалось сохранить настройку входящих',true);}
+    finally{btn.disabled=false;}
+  }
+  async function copyMyCallId(){
+    if(!guardOwner())return;
+    try{
+      if(!state.myCallId)await loadCallPreferences();
+      if(!guardOwner())return;
+      if(!state.myCallId||!navigator.clipboard?.writeText)
+        throw Error('Скопировать ID не удалось. Посмотри номер в настройках выше.');
+      await navigator.clipboard.writeText(state.myCallId);
+      report('Твой Telegram ID скопирован. Передавай его только доверенным людям.');
+    }catch(error){report(error.message||'ID пока недоступен',true);}
+  }
+
   async function checkCallReadiness(){
     if(!guardOwner())return;
     const button=$('callPreflight');
@@ -425,7 +473,11 @@
       const complete=await iceDone(peer,epoch);
       if(epoch!==state.epoch)return;
       if(!complete)throw Error('Не удалось завершить подготовку сетевых адресов. Попробуй ещё раз.');
-      const created=await signalRequest('create',{sdp:peer.localDescription.sdp});
+      const recipientId=String($('callRecipientId')?.value||'').trim();
+      if(recipientId&&!/^[1-9][0-9]{0,15}$/.test(recipientId))
+        throw Error('Telegram ID получателя должен состоять только из цифр.');
+      const created=await signalRequest('create',{sdp:peer.localDescription.sdp,
+        ...(recipientId?{recipientId}:{})});
       if(epoch!==state.epoch){
         void signalRequest('end',{roomId:created.roomId}).catch(()=>{});
         return;
@@ -435,8 +487,11 @@
         ?String(created.shareUrl):'';
       state.phase='invite-ready';update();
       $('callOutgoing').value=created.invite;
-      report('Короткое приглашение готово. Отправь код второму Telegram пользователю. '+
-        'Он вводит его в VETO Calls — ответ подключится автоматически (до 8 минут).');
+      report(created.notificationSent
+        ?'Входящее приглашение отправлено собеседнику через Telegram. Ожидаю ответ…'
+        :recipientId
+          ?'Приглашение создано, но Telegram не доставил сообщение. Передай код знакомому вручную.'
+          :'Короткий код готов. Передай его доверенному человеку (до 8 минут).');
       pollAssisted(epoch);
     }catch(error){failed(error,epoch);}
   }
@@ -570,6 +625,8 @@
     }
   }
   $('callPreflight')?.addEventListener('click',checkCallReadiness);
+  $('callOptIn')?.addEventListener('click',toggleCallPreferences);
+  $('callCopyMyId')?.addEventListener('click',copyMyCallId);
   $('callCreate')?.addEventListener('click',create);
   $('callCreateAssisted')?.addEventListener('click',createAssisted);
   $('callJoinAssisted')?.addEventListener('click',joinAssisted);
