@@ -453,6 +453,15 @@
             <button type="button" data-voice-preset="radio" aria-pressed="false"><span>▥</span><strong>Radio</strong><small>В эфире</small></button>
             <button type="button" data-voice-preset="robot" aria-pressed="false"><span>▧</span><strong>Robot</strong><small>Модуляция</small></button>
             <button type="button" data-voice-preset="space" aria-pressed="false"><span>◎</span><strong>Echo</strong><small>Пространство</small></button>
+            <button type="button" data-voice-preset="custom" aria-pressed="false"><span>▤</span><strong>Custom</strong><small>Ручная настройка EQ</small></button>
+          </div>
+          <div class="veto-voice-custom" id="voiceCustomControls" hidden>
+            <strong>Свой голосовой профиль · только на этом устройстве</strong>
+            <label>Бас / Low <input id="voiceCustomLow" type="range" min="-12" max="12" value="0" step="1" /></label>
+            <label>Середина / Mid <input id="voiceCustomMid" type="range" min="-12" max="12" value="0" step="1" /></label>
+            <label>Высокие / High <input id="voiceCustomHigh" type="range" min="-12" max="12" value="0" step="1" /></label>
+            <label>Эхо / Echo <input id="voiceCustomEcho" type="range" min="0" max="40" value="0" step="1" /></label>
+            <small>EQ меняет окраску, а не высоту голоса. Профиль не сохраняется после закрытия.</small>
           </div>
           <div class="veto-voice-morph">
             <div><strong>Voice Morph</strong><small>Плавное изменение интенсивности эффекта</small></div>
@@ -463,7 +472,7 @@
         </div>
         <div class="veto-voice-capture">
           <div class="veto-voice-panel-heading"><span>02 / ЗАПИСЬ</span><strong>Голосовое сообщение</strong></div>
-          <p>Разреши микрофон, выбери эффект и запиши сообщение. Запись обработанного звука сохраняется только в памяти приложения.</p>
+          <p>Разреши микрофон, выбери эффект и запиши сообщение до 3 минут. Запись обработанного звука остаётся в памяти приложения. Изменение скорости относится к прослушиванию и не меняет экспортируемый файл.</p>
           <div class="veto-voice-record-actions">
             <button id="voiceRecord" class="veto-voice-button primary" type="button" disabled><b>●</b> Начать запись</button>
             <button id="voiceStopRecord" class="veto-voice-button subdued" type="button" disabled>■ Остановить</button>
@@ -471,6 +480,9 @@
           <div class="veto-voice-result" id="voiceResult" hidden>
             <div class="veto-voice-result-heading"><strong>Готовое голосовое</strong><small id="voiceDuration">—</small></div>
             <audio id="voicePlayer" controls preload="none"></audio>
+            <label class="veto-voice-playback-control">Скорость прослушивания <output id="voicePlaybackSpeedValue">1.00×</output>
+              <input id="voicePlaybackSpeed" type="range" min="0.75" max="1.5" step="0.05" value="1" />
+            </label>
             <div class="veto-voice-record-actions">
               <button type="button" id="voiceShare" class="veto-voice-button primary" disabled>↗ Отправить файлом</button>
               <button type="button" id="voiceDownload" class="veto-voice-button subdued" disabled>↓ Скачать</button>
