@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-const CONTROL_BUILD = '20261015-veto-live-mirror-v1';
+const CONTROL_BUILD = '20261016-veto-live-chronology-v1';
 import sharp from 'sharp';
 import {
   trackPublishedStory,
