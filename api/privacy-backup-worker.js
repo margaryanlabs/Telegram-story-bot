@@ -26,7 +26,7 @@ async function notifyCompleted(ownerId, job, total,media) {
   const url=new URL('https://telegram-story-bot-murex.vercel.app/studio.html');
   url.searchParams.set('screen','chats');
   url.searchParams.set('chat',String(job.chat_id));
-  url.searchParams.set('v','20261016-veto-voice-studio-v1');
+  url.searchParams.set('v','20261016-veto-smart-inbox-v1');
   const response=await fetch('https://api.telegram.org/bot'+BOT+'/sendMessage',{
     method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({
