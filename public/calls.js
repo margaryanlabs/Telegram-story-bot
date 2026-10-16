@@ -71,6 +71,8 @@
     if(player){player.pause();player.srcObject=null;}
     $('callOutgoing').value='';$('callIncoming').value='';
     $('callElapsed').textContent='00:00';
+    if($('callPreflight'))$('callPreflight').disabled=false;
+    if($('callDiagnostics'))$('callDiagnostics').textContent='Диагностика ещё не запускалась.';
     if($('callQuality'))$('callQuality').textContent='СОЕДИНЕНИЕ НЕ УСТАНОВЛЕНО';
     const wave=$('callWaveform');if(wave)wave.getContext('2d')?.clearRect(0,0,wave.width,wave.height);
     update();
