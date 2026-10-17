@@ -175,3 +175,17 @@ test('campaign elements render actual badge and CTA on the same 9:16 Canvas as t
   assert.ok(drawn.some(x=>x[0]==='label'&&x[1].includes('меню')));
   assert.ok(drawn.filter(x=>x[0]==='rectangle').length>=3);
 });
+
+test('modal remains accessible and external project files never auto-publish',()=>{
+  const js=read('public/story-editor.js'),html=read('public/studio.html');
+  assert.ok(html.includes('role="dialog" aria-modal="true"'));
+  assert.ok(js.includes("event.key!=='Tab'"));
+  assert.ok(js.includes('event.shiftKey'));
+  assert.ok(js.includes('last.focus()'));
+  assert.ok(js.includes('first.focus()'));
+  assert.ok(js.includes('previousFocus?.focus?.()'));
+  assert.ok(js.includes("const project=await window.VetoStoryProject.parse(file)"));
+  assert.ok(js.includes('const opened=await open(project.file)'));
+  assert.ok(js.includes('settings={...defaultSettings(),...project.settings}'));
+  assert.ok(!js.includes("fetch("));
+});
