@@ -80,6 +80,10 @@ test('encrypted preview whitelists minimal chat-list metadata and discards messa
   assert.ok(js.includes('15*60*1000'));
   assert.ok(js.includes('const DB='));
   assert.ok(!js.includes('localStorage'));
+  assert.ok(js.includes("tx.oncomplete=()=>{if(mode==='readwrite')resolve(operation.result);};"));
+  assert.ok(js.includes('await clear(id);'));
+  assert.ok(js.includes('const invalidation=new Map();'));
+  assert.ok(js.includes("if(epoch!==(invalidation.get(id)||0))"));
 });
 
 test('encrypted cache can only be restored after server-signed Telegram owner verification and expires',()=>{
