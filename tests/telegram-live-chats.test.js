@@ -98,13 +98,15 @@ test('Live Chat frontend does not duplicate Telegram session or cache private me
   assert.ok(!ui.includes("method:'PUT'"));
 });
 
-test('Live chat is read-only and native open action is limited to Telegram destinations',()=>{
+test('Live chats report send capability accurately; only old copies and channels stay read-only',()=>{
   const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js'),html=read('public/studio.html');
-  assert.ok(api.includes("scope:'read-only-cloud-chats'"));
-  assert.ok(api.includes('readOnly:true,isCopy:chat.archiveOnly===true'));
-  assert.ok(html.includes('Открыть в Telegram'));
-  assert.ok(ui.includes('t\\.me') || ui.includes("https://t.me"));
-  assert.ok(ui.includes("link.removeAttribute('href')"));
+  assert.ok(api.includes("scope:'owner-cloud-chats'"));
+  assert.ok(api.includes('canSend:Boolean(creds?.session && chat.archiveOnly!==true && SENDABLE_TYPES.includes(chat.type))'));
+  assert.ok(api.includes('chat.archiveOnly===true'));
+  assert.ok(html.includes('id="telegramThreadComposer"'));
+  assert.ok(html.includes('В Telegram ↗'));
+  assert.ok(ui.includes('canSendInThread(chat)'));
+  assert.ok(ui.includes('link.removeAttribute(\'href\')'));
   assert.ok(!api.includes('readHistory'));
 });
 
