@@ -56,6 +56,6 @@ test('mixed directions count archived copies correctly without hiding sent rows'
   const message = calls[0].body.text;
   assert.match(message, /Вы: Sent/);
   assert.match(message, /A: Received/);
-  assert.match(message, /Ещё 1 удалённых сообщений/);
+  assert.match(message, /Для 1 удалённого сообщения копии в VETO Vault нет/);
   assert.match(message, /Копия доступных сообщений сохранена/);
 });
