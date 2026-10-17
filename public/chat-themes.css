@@ -280,3 +280,8 @@
 #telegramMirror[data-chat-theme] .veto-mirror-chat-list{background:var(--ct-bg)}
 #telegramMirror[data-chat-theme] .veto-mirror-list{background:var(--ct-bg)}
 #telegramMirror[data-chat-theme] .veto-mirror-sticker-drawer{background:var(--ct-panel)}
+
+#telegramMirror .veto-mirror-native-link{display:grid;place-items:center;flex:0 0 37px;width:37px;height:37px;min-width:37px;text-decoration:none;border-radius:50%;background:var(--ct-chip);color:var(--ct-chip-text);border:1px solid var(--ct-line)}
+#telegramMirror .veto-mirror-native-link[hidden]{display:none!important}
+#telegramMirror .veto-mirror-native-link:focus-visible{outline:2px solid var(--ct-accent)}
+@media(max-width:360px){#telegramMirror .veto-mirror-composer{gap:3px}#telegramMirror .veto-mirror-send-button{flex-basis:38px;width:38px;height:38px}#telegramMirror .veto-mirror-compose-toolbar{gap:0}}
