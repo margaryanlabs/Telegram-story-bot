@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="/app.css?v=20261016-veto-smart-inbox-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
-  <link rel="stylesheet" href="/calls.css?v=20261016-veto-p2p-v1" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -264,7 +263,6 @@
           <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
           <button type="button" data-open-screen="telegram"><span>▤</span><strong>Мои чаты</strong><small>Настоящий Telegram внутри VETO</small></button>
           <button type="button" data-open-screen="voice"><span>◉</span><strong>Voice Studio</strong><small>Живые эффекты · голосовые</small></button>
-          <button type="button" data-open-screen="calls"><span>⌁</span><strong>VETO Calls</strong><small>WebRTC · звонки 1:1 · Voice Morph</small></button>
           <button type="button" data-open-screen="ghost"><span>◌</span><strong>Privacy</strong><small>Anti-Delete · Inbox · Vault</small></button>
           <button type="button" data-open-screen="relay"><span>◉</span><strong>Защита Telegram</strong><small>Одно нажатие · Автовыбор</small></button>
         </div>
@@ -360,7 +358,8 @@
       </section>
     </section>
 
-    <section class="screen" data-screen="calls" aria-label="VETO Calls — защищённые аудиозвонки">
+    <!-- Staged feature: retained in source, unavailable in the visible app until real two-phone testing. -->
+    <section class="screen" data-screen="calls" aria-label="VETO Calls — разработка" data-feature-status="code-only" aria-hidden="true" hidden inert>
       <div class="veto-calls">
         <header class="calls-header">
           <div><span class="calls-eyebrow">VETO TELEGRAM / COMMUNICATION / 01</span>
@@ -1532,9 +1531,6 @@
   <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
-  <script src="/calls.js?v=20261016-veto-control-v7"></script>
-  <script src="/calls-selftest.js?v=20261016-veto-transport-v1"></script>
-  <script src="/calls-turn-test.js?v=20261017-veto-relay-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
