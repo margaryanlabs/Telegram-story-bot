@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261016-veto-smart-inbox-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261017-veto-business-onboarding-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -881,6 +881,38 @@
         </button>
       </section>
 
+
+      <section class="veto-business-journey" id="privacyBusinessOnboarding" aria-label="Настройка архива Telegram Business">
+        <div class="veto-business-journey-head">
+          <div class="veto-business-journey-emblem" aria-hidden="true">↗</div>
+          <div class="veto-business-journey-heading">
+            <span class="kicker">VETO · ПОДКЛЮЧЕНИЕ ЧАТОВ</span>
+            <h2 id="privacyBusinessOnboardingTitle">Сохрани важное. Даже после удаления.</h2>
+            <p id="privacyBusinessOnboardingHint">Один раз разреши VETO получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.</p>
+          </div>
+          <span class="veto-business-state" id="privacyBusinessOnboardingState" role="status" aria-live="polite">Проверяю</span>
+        </div>
+        <div class="veto-business-journey-steps" id="privacyBusinessOnboardingSteps">
+          <div class="veto-business-step">
+            <span class="veto-business-step-number">01</span>
+            <div><strong>Открой Telegram Business</strong><p>Telegram → Настройки → Telegram для бизнеса → Чат-боты.</p></div>
+          </div>
+          <div class="veto-business-step">
+            <span class="veto-business-step-number">02</span>
+            <div><strong>Добавь VETO Telegram</strong><p>Вставь имя бота в поле подключения.</p><code>@Storypilotlab_bot</code></div>
+            <button type="button" id="privacyBusinessCopyButton" aria-label="Скопировать имя бота">Копировать</button>
+          </div>
+          <div class="veto-business-step">
+            <span class="veto-business-step-number">03</span>
+            <div><strong>Выбери, какие чаты защищать</strong><p>«Только выбранные чаты» → отметь личные переписки и разреши доступ к сообщениям. Затем вернись в VETO.</p></div>
+          </div>
+        </div>
+        <div class="veto-business-journey-actions">
+          <button type="button" class="veto-business-verify" id="privacyBusinessVerifyButton">Проверить подключение <span>↗</span></button>
+          <button type="button" class="veto-business-more" id="privacyBusinessDetailsButton">Почему нужен доступ?</button>
+        </div>
+        <p class="veto-business-disclosure">Без Premium · Без доступа к секретным чатам · Telegram разрешает подключить только одного Business-бота. Резервную копию выбранного чата можно сделать отдельно, без Business.</p>
+      </section>
       <section class="ghost-archive-promise" aria-label="Как сохраняются очищенные переписки">
         <div class="ghost-archive-promise-mark">◎</div>
         <div class="ghost-archive-promise-body">
@@ -1419,9 +1451,9 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261016-veto-smart-inbox-v1"></script>
+  <script src="/app.js?v=20261017-veto-business-onboarding-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
-  <script src="/privacy.js?v=20261016-veto-smart-inbox-v1"></script>
+  <script src="/privacy.js?v=20261017-veto-business-onboarding-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
