@@ -12,6 +12,7 @@
 
   const privacyState = {
     loading: false,
+    ownerInitData:String(tg?.initData||''),ownerEpoch:0,
     settings: {
       antiDelete: false,
       editHistory: false,
@@ -114,8 +115,35 @@
     return Boolean(settings.antiDelete || settings.editHistory || settings.ghostInbox);
   }
 
+  function guardPrivacyOwner(){
+    const signed=String(tg?.initData||'');
+    if(signed===privacyState.ownerInitData)return;
+    // Do not expose A's archive, media or event counts after WebView changes
+    // to Telegram account B while an asynchronous response is in flight.
+    privacyState.ownerInitData=signed;privacyState.ownerEpoch++;
+    privacyState.loading=false;
+    privacyState.threads=[];privacyState.deletedFeed=[];
+    privacyState.deletedFeedLoaded=false;privacyState.deletedFeedHasMore=false;
+    privacyState.activeThread=null;privacyState.diagnostics=null;
+    privacyState.smartSummary=null;privacyState.smartBrief=null;
+    privacyState.lastTotalMessages=0;privacyState.lastRefreshAt=null;
+    privacyState.query='';privacyState.filter='all';
+    privacyState.settings={
+      antiDelete:false,editHistory:false,ghostInbox:false,ghostFocus:true,
+      notifyDeletes:true,notifyEdits:true,retentionDays:30,
+    };
+    privacyState.connection={
+      loaded:false,live:false,ready:false,state:'unknown',readMessages:false,error:false,
+    };
+    privacyState.backup.stopRequested=true;privacyState.backup.running=false;
+    revokeMediaUrl();closeSheet();render();
+  }
+
   async function loadTelegramConnection({ silent = true } = {}) {
+    guardPrivacyOwner();
     if (!tg?.initData || navigator.onLine === false) return privacyState.connection;
+    const owner=privacyState.ownerInitData;
+    const epoch=privacyState.ownerEpoch;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
@@ -123,12 +151,14 @@
       const response = await fetch('/api/miniapp', {
         method: 'GET',
         headers: {
-          'x-telegram-init-data': tg.initData,
+          'x-telegram-init-data': owner,
           'content-type': 'application/json',
         },
         signal: controller.signal,
       });
       const data = await response.json().catch(() => ({}));
+      guardPrivacyOwner();
+      if(epoch!==privacyState.ownerEpoch||owner!==privacyState.ownerInitData)return privacyState.connection;
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось проверить Telegram');
 
       privacyState.connection = {
@@ -142,6 +172,7 @@
       render();
       return privacyState.connection;
     } catch (error) {
+      if(epoch!==privacyState.ownerEpoch)return privacyState.connection;
       privacyState.connection = {
         ...privacyState.connection,
         loaded: true,
@@ -156,7 +187,10 @@
   }
 
   async function request(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
+    guardPrivacyOwner();
+    const owner=privacyState.ownerInitData;
+    const epoch=privacyState.ownerEpoch;
+    if (!owner) throw new Error('Открой VETO Telegram внутри Telegram');
 
     const retryable = !action || action === 'list_messages' || action === 'versions';
     const attempts = retryable ? 2 : 1;
@@ -164,6 +198,8 @@
 
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       if (attempt) await new Promise(resolve => setTimeout(resolve, 550));
+      guardPrivacyOwner();
+      if(epoch!==privacyState.ownerEpoch)throw new Error('Telegram-аккаунт изменился');
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 16000);
@@ -171,13 +207,16 @@
         const response = await fetch('/api/privacy', {
           method: action ? 'POST' : 'GET',
           headers: {
-            'x-telegram-init-data': tg.initData,
+            'x-telegram-init-data': owner,
             'content-type': 'application/json',
           },
           body: action ? JSON.stringify({ action, ...payload }) : undefined,
           signal: controller.signal,
         });
         const data = await response.json().catch(() => ({}));
+        guardPrivacyOwner();
+        if(epoch!==privacyState.ownerEpoch||owner!==privacyState.ownerInitData)
+          throw new Error('Telegram-аккаунт изменился');
         if (response.ok && data.ok) return data;
 
         const error = new Error(data.error || 'VETO Inbox временно недоступен');
@@ -779,13 +818,16 @@
   }
 
   async function refresh({ silent = false, background = false } = {}) {
+    guardPrivacyOwner();
     if (!tg?.initData || privacyState.loading || navigator.onLine === false) return;
+    const epoch=privacyState.ownerEpoch;
     privacyState.loading = !background;
     if (!background) render();
 
     const before = privacyState.lastTotalMessages || threadTotals().messages;
     try {
       const data = await request();
+      if(epoch!==privacyState.ownerEpoch)return;
       privacyState.degraded = Boolean(data.degraded);
       if (data.settings) {
         privacyState.settings = { ...privacyState.settings, ...data.settings };
@@ -807,9 +849,11 @@
         haptic('soft');
       }
     } catch (error) {
+      if(epoch!==privacyState.ownerEpoch)return;
       privacyState.degraded = true;
       if (!silent) toast(error.message);
     } finally {
+      if(epoch!==privacyState.ownerEpoch)return;
       privacyState.loading = false;
       render();
       if (privacyState.filter === 'deleted') {
@@ -1959,6 +2003,7 @@
   });
 
   document.addEventListener('visibilitychange', () => {
+    if (!document.hidden)guardPrivacyOwner();
     if (document.hidden) {
       // Mobile Telegram may kill a hidden WebView. The last successful cursor
       // is durable, while the in-flight request is allowed to finish safely.
@@ -1970,6 +2015,8 @@
     }
   });
 
+  window.addEventListener('focus',guardPrivacyOwner);
+  window.addEventListener('pageshow',guardPrivacyOwner);
   window.addEventListener('online', () => {
     render();
     if (privacyScreenActive()) {
