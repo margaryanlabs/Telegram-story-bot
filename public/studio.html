@@ -375,7 +375,15 @@
             <div class="veto-mirror-thread-avatar" id="telegramThreadAvatar">TG</div>
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
             <a id="telegramThreadOpenNative" class="veto-mirror-icon-btn veto-mirror-native-link" aria-label="Открыть этот чат в Telegram" title="Открыть в Telegram" href="#" target="_blank" rel="noopener noreferrer" hidden>↗</a>
+            <button type="button" id="telegramThreadSearchToggle" class="veto-mirror-icon-btn" aria-label="Поиск по загруженным сообщениям" aria-controls="telegramThreadFind" aria-expanded="false" title="Поиск в переписке">⌕</button>
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
+          </div>
+          <div class="veto-mirror-thread-find" id="telegramThreadFind" role="search" aria-label="Поиск по открытой переписке" hidden>
+            <input type="search" id="telegramThreadFindInput" placeholder="Найти в загруженных сообщениях" autocomplete="off" spellcheck="false" maxlength="90" aria-label="Текст для поиска"/>
+            <span id="telegramThreadFindCount" role="status" aria-live="polite">Только загруженная история</span>
+            <button type="button" id="telegramThreadFindPrev" aria-label="Предыдущее совпадение" disabled>↑</button>
+            <button type="button" id="telegramThreadFindNext" aria-label="Следующее совпадение" disabled>↓</button>
+            <button type="button" id="telegramThreadFindClose" aria-label="Закрыть поиск">×</button>
           </div>
           <div class="veto-mirror-thread-security"><i></i><span>Облачные сообщения + подтверждённые копии VETO. Удалённое появляется, только если сохранено заранее.</span><b>↶</b></div>
           <div class="veto-mirror-sync-strip" role="status" aria-live="polite">

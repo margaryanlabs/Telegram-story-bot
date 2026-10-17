@@ -3465,3 +3465,34 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
 #telegramMirror[data-chat-theme="pearl"] .veto-mirror-sync-strip small,
 #telegramMirror[data-chat-theme="linen"] .veto-mirror-sync-strip small{color:#65768a}
 @media(prefers-reduced-motion:reduce){#telegramMirror .veto-mirror-sync-indicator.is-busy{animation:none}}
+
+/* In-thread private find: searches only messages present in this browser tab. */
+#telegramMirror .veto-mirror-thread-find:not([hidden]){display:flex;align-items:center;gap:6px;padding:8px 10px;
+  background:rgba(116,153,190,.075);border-bottom:1px solid rgba(164,190,219,.12);min-width:0}
+#telegramMirror .veto-mirror-thread-find[hidden]{display:none}
+#telegramMirror .veto-mirror-thread-find input{min-width:0;flex:1 1 100px;width:100%;padding:8px 10px;border-radius:10px;
+  border:1px solid rgba(164,190,219,.21);outline:0;color:var(--text,#e6ebf2);background:rgba(8,17,30,.42);font-size:12px}
+#telegramMirror .veto-mirror-thread-find input:focus-visible{border-color:#82a9d0;box-shadow:0 0 0 2px rgba(130,169,208,.17)}
+#telegramMirror .veto-mirror-thread-find span{font-size:10px;line-height:1.25;color:#a2b8cf;white-space:nowrap}
+#telegramMirror .veto-mirror-thread-find button{flex:none;display:grid;place-items:center;width:29px;height:30px;
+  border-radius:9px;border:1px solid rgba(164,190,219,.17);color:#bfd3e8;background:rgba(120,158,203,.09);font-size:16px}
+#telegramMirror .veto-mirror-thread-find button:disabled{opacity:.36;cursor:not-allowed}
+#telegramMirror .veto-mirror-bubble.search-match .veto-mirror-bubble-inner{outline:1px solid rgba(155,192,230,.36);outline-offset:1px}
+#telegramMirror .veto-mirror-bubble.search-active .veto-mirror-bubble-inner{outline:2px solid #9abce4;outline-offset:2px}
+#telegramMirror .veto-mirror-bubble mark{padding:0 1px;border-radius:2px;color:#101f31;background:#d5e79e}
+#telegramMirror[data-chat-theme="pearl"] .veto-mirror-thread-find,
+#telegramMirror[data-chat-theme="linen"] .veto-mirror-thread-find{background:rgba(52,83,112,.055)}
+#telegramMirror[data-chat-theme="pearl"] .veto-mirror-thread-find input,
+#telegramMirror[data-chat-theme="linen"] .veto-mirror-thread-find input{color:#26364b;background:#fff;border-color:#cbd5df}
+#telegramMirror[data-chat-theme="pearl"] .veto-mirror-thread-find span,
+#telegramMirror[data-chat-theme="linen"] .veto-mirror-thread-find span{color:#5c6b79}
+#telegramMirror[data-chat-theme="pearl"] .veto-mirror-thread-find button,
+#telegramMirror[data-chat-theme="linen"] .veto-mirror-thread-find button{color:#334c66;background:#eef3f7;border-color:#ced8e2}
+#telegramMirror[data-chat-theme="pearl"] .veto-mirror-bubble.search-active .veto-mirror-bubble-inner,
+#telegramMirror[data-chat-theme="linen"] .veto-mirror-bubble.search-active .veto-mirror-bubble-inner{outline-color:#477fae}
+@media(max-width:520px){
+  #telegramMirror .veto-mirror-thread-find{gap:4px;padding:6px 8px}
+  #telegramMirror .veto-mirror-thread-find input{font-size:11px;padding:7px}
+  #telegramMirror .veto-mirror-thread-find span{font-size:9px;max-width:58px;white-space:normal;text-align:center}
+  #telegramMirror .veto-mirror-thread-find button{width:25px;height:27px}
+}
