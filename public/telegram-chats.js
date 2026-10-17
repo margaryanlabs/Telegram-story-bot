@@ -12,6 +12,7 @@
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
+    threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -807,6 +808,9 @@
     state.ownerInitData=current;
     state.generation++;state.threadGeneration++;state.voicePermissionGeneration++;
     cancelVoiceCapture();
+    stopThreadSync();
+    state.threadCache.clear();
+    state.syncFailures=0;state.syncBusy=false;
     state.chats=[];state.messages=[];state.thread=null;
     state.page=0;state.hasMore=true;state.autoPages=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
@@ -1004,6 +1008,139 @@
     if(more){more.hidden=!state.threadHasMore;more.disabled=state.threadLoading;}
     loadInlinePreviews();
   }
+
+  // Active chat feels live without maintaining a server-side permanent user
+  // Telegram session or sending read receipts. Messages are kept only in RAM,
+  // scoped to this initData, and refreshed while the visible chat is open.
+  function activeChatScreen(){
+    return document.querySelector('.screen.active')?.dataset?.screen==='telegram';
+  }
+  function maySyncThread(){
+    return Boolean(state.thread&&!state.thread.archiveOnly&&
+      state.connectionProof?.verified&&!document.hidden&&navigator.onLine!==false&&
+      activeChatScreen());
+  }
+  function stopThreadSync(){
+    if(state.syncTimer!==null)clearTimeout(state.syncTimer);
+    state.syncTimer=null;
+  }
+  function syncLabel(value,busy=false){
+    const el=$('telegramThreadSyncStatus'),dot=$('telegramThreadSyncDot');
+    if(el)el.textContent=value;
+    if(dot)dot.classList.toggle('is-busy',busy);
+  }
+  function scheduleThreadSync(ms=26000){
+    stopThreadSync();
+    if(!maySyncThread())return;
+    state.syncTimer=setTimeout(()=>{void pollThread();},ms);
+  }
+  function rememberHotThread(){
+    if(!state.thread||!state.messages.length)return;
+    const chatId=String(state.thread.id);
+    const copy={
+      at:Date.now(),messages:state.messages.slice(-150).map(m=>({...m})),
+      threadOffset:state.threadOffset,archiveOffset:state.archiveOffset,
+      liveHasMore:state.liveHasMore,archiveHasMore:state.archiveHasMore,
+      threadHasMore:state.threadHasMore,serverCanSend:state.thread.serverCanSend,
+    };
+    state.threadCache.delete(chatId);
+    state.threadCache.set(chatId,copy);
+    while(state.threadCache.size>4){
+      const oldest=state.threadCache.keys().next().value;
+      state.threadCache.delete(oldest);
+    }
+  }
+  function restoreHotThread(chatId){
+    const value=state.threadCache.get(String(chatId));
+    if(!value||Date.now()-value.at>90000){
+      state.threadCache.delete(String(chatId));return false;
+    }
+    state.threadCache.delete(String(chatId));
+    state.threadCache.set(String(chatId),value);
+    state.messages=value.messages.map(m=>({...m}));
+    state.threadOffset=value.threadOffset;
+    state.archiveOffset=value.archiveOffset;
+    state.liveHasMore=value.liveHasMore;
+    state.archiveHasMore=value.archiveHasMore;
+    state.threadHasMore=value.threadHasMore;
+    state.thread.serverCanSend=value.serverCanSend;
+    return true;
+  }
+  async function pollThread({manual=false}={}){
+    if(resetOwner()||!maySyncThread()||state.syncBusy||state.threadLoading||state.sendInFlight){
+      if(!state.syncBusy&&maySyncThread())scheduleThreadSync(15000);
+      return;
+    }
+    const chatId=String(state.thread.id),generation=state.threadGeneration;
+    const ownerKey=state.ownerInitData;
+    state.syncBusy=true;
+    syncLabel('Проверяю новые сообщения…',true);
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),18500);
+    try{
+      const response=await fetch('/api/telegram-chat-updates',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':ownerKey},
+        body:JSON.stringify({action:'poll_thread',chatId}),
+        signal:controller.signal,
+      });
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok||!data.ok)throw new Error(data.error||'Не удалось обновить переписку');
+      if(generation!==state.threadGeneration||ownerKey!==state.ownerInitData||
+        ownerKey!==String(tg?.initData||'')||String(state.thread?.id)!==chatId)return;
+      const current=new Map(state.messages.map(m=>[String(m.id),m]));
+      const box=$('telegramThreadMessages');
+      const atBottom=box?box.scrollHeight-box.scrollTop-box.clientHeight<110:true;
+      const anchor=atBottom?null:visibleMessageAnchor();
+      let changed=false,newItems=0;
+      for(const msg of data.messages||[]){
+        if(!msg||!Number.isSafeInteger(Number(msg.id))||Number(msg.id)<=0)continue;
+        const key=String(msg.id),old=current.get(key);
+        if(!old){current.set(key,msg);changed=true;newItems++;continue;}
+        const merged={...old,...msg,
+          saved:Boolean(old.saved||msg.saved),
+          deleted:Boolean(old.deleted||msg.deleted),
+          preservedOnly:Boolean(old.preservedOnly||msg.preservedOnly),
+          mediaAvailable:Boolean(old.mediaAvailable||msg.mediaAvailable),
+        };
+        // Edits and confirmed deletions are visible even when the message ID
+        // did not change; absence alone is never treated as a deletion.
+        if(old.text!==merged.text||old.deleted!==merged.deleted||
+          old.edited!==merged.edited||old.saved!==merged.saved||
+          old.mediaAvailable!==merged.mediaAvailable){
+          current.set(key,merged);changed=true;
+        }
+      }
+      if(changed){
+        state.messages=[...current.values()].sort((a,b)=>
+          new Date(a.date||0).getTime()-new Date(b.date||0).getTime()||
+          Number(a.id)-Number(b.id));
+        renderMessages({keepScroll:atBottom,anchor});
+        rememberHotThread();
+      }
+      state.syncFailures=0;
+      state.lastSyncedAt=Date.now();
+      const date=new Date(state.lastSyncedAt);
+      syncLabel(newItems&&!atBottom
+        ?newItems+' новых · '+two(date.getHours())+':'+two(date.getMinutes())+' · прокрути вниз'
+        :'Обновлено '+two(date.getHours())+':'+two(date.getMinutes())+' · без отметки «прочитано»');
+    }catch(error){
+      if(String(state.thread?.id)===chatId && ownerKey===state.ownerInitData){
+        state.syncFailures=Math.min(4,state.syncFailures+1);
+        syncLabel(error?.name==='AbortError'?'Telegram отвечает медленно — повторю позже'
+          :navigator.onLine===false?'Нет сети — обновление приостановлено'
+            :'Связь с Telegram прервана — повторю позже');
+        // Repeated failures must not erase visible conversations or pretend
+        // to receive updates. Retries exponentially slow down.
+      }
+    }finally{
+      clearTimeout(timeout);
+      state.syncBusy=false;
+      if(String(state.thread?.id)===chatId&&ownerKey===state.ownerInitData)
+        scheduleThreadSync(state.syncFailures?Math.min(120000,30000*2**state.syncFailures):26000);
+    }
+  }
+
   function setThread(chat){
     $('telegramChatsView').hidden=true;
     $('telegramThreadView').hidden=false;
@@ -1036,6 +1173,8 @@
     revokeMediaUrls();
     haptic();
     cancelVoiceCapture();
+    stopThreadSync();
+    state.syncFailures=0;state.lastSyncedAt=null;
     state.thread=chat;state.messages=[];state.threadHasMore=false;
     state.replyTo=null;state.pendingAttachment=null;
     renderReplyPreview();renderAttachmentChip();
@@ -1044,6 +1183,11 @@
     state.archiveHasMore=false;state.liveHasMore=!chat.archiveOnly;
     state.threadGeneration++;
     setThread(chat);
+    if(restoreHotThread(chat.id)){
+      renderMessages();
+      renderSendComposer();
+      syncLabel('Предпросмотр из памяти · обновляю Telegram…',true);
+    }else syncLabel('Подключаюсь к Telegram…',true);
     await loadMessages({reset:true});
   }
   async function loadMessages({reset=false}={}){
@@ -1093,17 +1237,24 @@
       }
       state.threadLoading=false;
       renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
+      rememberHotThread();
       renderSendComposer();
+      syncLabel('Telegram подключён · проверка каждые 26 сек.');
+      scheduleThreadSync();
     }catch(error){
       if(generation!==state.threadGeneration)return;
       state.threadLoading=false;
       threadNotice(error.message);
+      syncLabel('Нет подтверждения Telegram · проверю снова');
+      scheduleThreadSync(45000);
       if(reset)renderMessages();
       else $('telegramThreadOlder').hidden=!state.threadHasMore;
     }
   }
   function back(){
     if(!$('telegramThreadView')||$('telegramThreadView').hidden)return;
+    rememberHotThread();
+    stopThreadSync();
     state.threadGeneration++;
     cancelVoiceCapture();
     state.thread=null;state.threadLoading=false;
@@ -1291,16 +1442,31 @@
   });
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
+  $('telegramThreadSyncNow')?.addEventListener('click',()=>{
+    if(state.syncBusy||state.threadLoading)return;
+    stopThreadSync();void pollThread({manual:true});
+  });
   $('telegramThreadOlder')?.addEventListener('click',()=>loadMessages());
   window.addEventListener('veto:screen-changed',event=>{
     resetOwner();
     const current=event.detail?.screen;
-    if(current!=='telegram')cancelVoiceCapture();
-    if(current==='telegram'&&state.chats.length===0&&!state.loading)loadChats({reset:true});
+    if(current!=='telegram'){
+      cancelVoiceCapture();stopThreadSync();
+    }else{
+      if(state.thread)scheduleThreadSync(3500);
+      else if(state.chats.length===0&&!state.loading)loadChats({reset:true});
+    }
   });
   window.addEventListener('focus',resetOwner);
   window.addEventListener('pageshow',resetOwner);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)resetOwner()});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)stopThreadSync();
+    else if(!resetOwner()&&state.thread)scheduleThreadSync(2800);
+  });
+  window.addEventListener('online',()=>{if(state.thread)scheduleThreadSync(1800)});
+  window.addEventListener('offline',()=>{
+    stopThreadSync();syncLabel('Нет сети · сообщения сохранены на этом экране');
+  });
   // Opening a deep-linked screen may precede the first screen-change event.
   if(document.querySelector('.screen.active')?.dataset?.screen==='telegram')
     loadChats({reset:true});

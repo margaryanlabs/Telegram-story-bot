@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261017-veto-rich-chat-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261017-veto-active-sync-v1" />
   <link rel="stylesheet" href="/chat-themes.css?v=20261017-chat-compose-v4" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
@@ -378,6 +378,11 @@
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
           </div>
           <div class="veto-mirror-thread-security"><i></i><span>Облачные сообщения + подтверждённые копии VETO. Удалённое появляется, только если сохранено заранее.</span><b>↶</b></div>
+          <div class="veto-mirror-sync-strip" role="status" aria-live="polite">
+            <span class="veto-mirror-sync-indicator" id="telegramThreadSyncDot"></span>
+            <small id="telegramThreadSyncStatus">Обновление при открытом чате · без отметки «прочитано»</small>
+            <button type="button" id="telegramThreadSyncNow" aria-label="Проверить новые сообщения">↻</button>
+          </div>
           <div class="veto-mirror-thread-body" id="telegramThreadMessages" aria-live="polite"></div>
           <div id="telegramThreadNotice" class="veto-mirror-thread-notice" hidden></div>
           <div class="veto-mirror-thread-bottom">
@@ -1538,7 +1543,7 @@
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
   <script src="/chat-theme.js?v=20261017-chat-compose-v4"></script>
-  <script src="/telegram-chats.js?v=20261017-chat-compose-v4"></script>
+  <script src="/telegram-chats.js?v=20261017-veto-active-sync-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
