@@ -90,3 +90,8 @@
 @media(prefers-reduced-motion:reduce){
  .veto-story-editor *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
+
+.veto-story-editor-history{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0 5px}
+.veto-story-editor-history button{background:#151d28;border:1px solid rgba(230,241,255,.13);
+ color:#d3dfec;min-height:38px;border-radius:10px;font-size:11px;font-weight:750}
+.veto-story-editor-history button:disabled{opacity:.37;cursor:not-allowed}
