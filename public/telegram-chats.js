@@ -319,7 +319,7 @@
           $('telegramMirrorAccessButton').textContent='Подключить ↗';
       }
       // For a temporary 5xx/network outage only, keep the owner's current
-      // in-memory list visibly marked as stale. No localStorage/sessionStorage.
+      // in-memory list visibly marked as stale. No persistent browser storage.
       showNotice(!accessFailure&&state.chats.length
         ?'Telegram временно не отвечает. Показываю список из этого сеанса, не LIVE. Нажми ↻ для проверки. '+error.message
         :error.message,
