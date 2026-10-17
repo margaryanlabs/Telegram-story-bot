@@ -31,8 +31,14 @@
       const tx=db.transaction(store,mode);
       const operation=mode==='readonly'?tx.objectStore(store).get(key)
         :tx.objectStore(store).put(value,key);
-      operation.onsuccess=()=>resolve(operation.result);
+      operation.onsuccess=()=>{
+        // IndexedDB put request succeeded; durability is only assured when
+        // its transaction completes, so don't race logout/owner purges.
+        if(mode==='readonly')resolve(operation.result);
+      };
+      tx.oncomplete=()=>{if(mode==='readwrite')resolve(operation.result);};
       operation.onerror=()=>reject(operation.error||Error('CACHE_IO'));
+      tx.onerror=()=>reject(tx.error||Error('CACHE_TX_FAILED'));
       tx.onabort=()=>reject(tx.error||Error('CACHE_ABORT'));
     });
   }
