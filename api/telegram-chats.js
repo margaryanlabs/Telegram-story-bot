@@ -5,6 +5,7 @@ import { inboxSignals, privacyReadiness } from '../lib/telegram-inbox-signals.js
 import { withBackupClient } from '../lib/telegram-history-backup.js';
 import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
 import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
+import { SENDABLE_TYPES } from '../lib/telegram-chat-compose.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const PAGE_SIZE=50;
@@ -267,7 +268,7 @@ export default async function handler(req,res){
       return respond(res,200,{
         chats:orderChatRows(chats).map(chat=>({...chat,inbox:inboxSignals(chat)})),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
         updatedAt:new Date().toISOString(),warning,
-        archivedThreads:history.length,scope:'read-only-cloud-chats',isCopy:false,
+        archivedThreads:history.length,scope:'owner-cloud-chats',isCopy:false,
         connection:{verified:Boolean(live.account?.verified),
           source:live.account?.verified?'telegram-live':'owner-scoped-veto-archive',
           accountName:live.account?.name||null,username:live.account?.username||null,
@@ -320,7 +321,9 @@ export default async function handler(req,res){
       nextOffsetId:nextLive,
       archivedMessageCount:Number(threadArchive?.messageCount||0),
       deletedMessageCount:Number(threadArchive?.deletedCount||0),
-      warning,readOnly:true,isCopy:chat.archiveOnly===true,
+      warning,readOnly:!creds?.session || chat.archiveOnly===true || !SENDABLE_TYPES.includes(chat.type),
+      canSend:Boolean(creds?.session && chat.archiveOnly!==true && SENDABLE_TYPES.includes(chat.type)),
+      isCopy:chat.archiveOnly===true,
     });
   }catch(error){
     const e=errorMessage(error);
