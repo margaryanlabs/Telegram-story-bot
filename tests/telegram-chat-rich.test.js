@@ -91,15 +91,15 @@ test('recent stickers expose only indices and emoji, and send a server-resolved 
    client.invocations.push(req);
    return req.className==='messages.GetRecentStickers'?{stickers:[sticker]}:{id:777};
  };
- assert.deepEqual(recentStickersPublic([sticker]),[{index:0,emoji:'🦊'}]);
+ assert.deepEqual(recentStickersPublic([sticker]),[{index:0,id:'88',emoji:'🦊'}]);
  const result=await sendRichTelegramMessage(client,[dialog],{
-  action:'send_sticker',stickerIndex:0,ownerId:'777',chatId:'123',nonce,
+  action:'send_sticker',stickerId:'88',ownerId:'777',chatId:'123',nonce,
  });
  assert.equal(result.kind,'sticker');
  assert.equal(client.invocations[1].className,'messages.SendMedia');
  assert.equal(client.invocations[1].media.className,'InputMediaDocument');
  await assert.rejects(sendRichTelegramMessage(client,[dialog],{
-  action:'send_sticker',stickerIndex:50,ownerId:'777',chatId:'123',nonce,
+  action:'send_sticker',stickerId:'999',ownerId:'777',chatId:'123',nonce,
  }));
 });
 
