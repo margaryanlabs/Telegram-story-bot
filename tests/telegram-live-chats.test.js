@@ -60,7 +60,9 @@ test('Pagination on dialogs and messages is bounded and older messages cannot ta
   assert.ok(api.includes('const PAGE_SIZE=50;'));
   assert.ok(api.includes('const MAX_DIALOGS=500;'));
   assert.ok(api.includes('const MESSAGE_PAGE=35;'));
-  assert.ok(api.includes('getDialogs({limit:totalToFetch})'));
+  assert.ok(api.includes('dialogPageBounds(page)'));
+  assert.ok(api.includes('limit:Math.min(MAX_DIALOGS,start+count+1)'));
+  assert.ok(api.includes('const FIRST_PAGE_SIZE=24;'));
   assert.ok(api.includes('getDialogs({limit:MAX_DIALOGS})'));
   assert.ok(api.includes('client.getMessages(dialog.entity'));
   assert.ok(api.includes('offsetId:cursor'));
@@ -104,7 +106,7 @@ test('Live chats report send capability accurately; only old copies and channels
   assert.ok(api.includes('canSend:Boolean(creds?.session && chat.archiveOnly!==true && SENDABLE_TYPES.includes(chat.type))'));
   assert.ok(api.includes('chat.archiveOnly===true'));
   assert.ok(html.includes('id="telegramThreadComposer"'));
-  assert.ok(html.includes('В Telegram ↗'));
+  assert.ok(html.includes('aria-label="Открыть этот чат в Telegram"'));
   assert.ok(ui.includes('canSendInThread(chat)'));
   assert.ok(ui.includes('link.removeAttribute(\'href\')'));
   assert.ok(!api.includes('readHistory'));
