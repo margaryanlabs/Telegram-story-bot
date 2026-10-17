@@ -71,6 +71,13 @@ test('no unrequested automated Story publishing, and editor integration respects
   assert.ok(app.includes("if(!(file instanceof File)"));
   assert.ok(js.includes('if(file.size>20*1024*1024)'));
   assert.ok(js.includes('thisEpoch!==epoch'));
+  assert.ok(js.includes('undoStack.push({...lastCommitted})'));
+  assert.ok(js.includes('redoStack=[];lastCommitted={...settings}'));
+  assert.ok(js.includes('if(undoStack.length>25)undoStack.shift()'));
+  assert.ok(html.includes('id="vetoStoryUndo"'));
+  assert.ok(html.includes('id="vetoStoryRedo"'));
+  assert.ok(js.includes('moveHistory(undoStack,redoStack)'));
+  assert.ok(js.includes('moveHistory(redoStack,undoStack)'));
   assert.ok(js.includes("window.addEventListener('pagehide',()=>close())"));
   assert.ok(html.includes('Черновик'));
   assert.ok(js.includes('a.download=file.name'));
