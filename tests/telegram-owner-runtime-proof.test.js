@@ -18,7 +18,7 @@ test('MTProto runtime user identity must match signed Telegram Mini App owner',a
 test('Private list, thread, avatars and history backup cannot run without real owner identity check',()=>{
   const chats=load('api/telegram-chats.js'),media=load('api/telegram-chat-media.js');
   const backup=load('api/privacy-backup.js'),worker=load('api/privacy-backup-worker.js');
-  assert.equal(chats.split('verifyTelegramClientOwner(client,userId)').length-1,2);
+  assert.equal(chats.split('verifyTelegramClientOwner(client,userId)').length-1,3);
   assert.equal(media.split('verifyTelegramClientOwner(client,userId)').length-1,1);
   assert.equal(backup.split('verifyTelegramClientOwner(client,userId)').length-1,3);
   assert.equal(worker.split('verifyTelegramClientOwner(client,userId)').length-1,1);
