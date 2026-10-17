@@ -53,7 +53,7 @@ test('TURN transport self-test is bounded, cleans up on navigation and does not 
   const html=read('public/studio.html');
   assert.ok(html.includes('id="callTurnTest"'));
   assert.ok(html.includes('id="callTurnTestStatus"'));
-  assert.ok(html.includes('src="/calls-turn-test.js?'));
+  assert.ok(!html.includes('src="/calls-turn-test.js?'));
   assert.ok(source.includes('setTimeout(()=>reject(Error('));
   assert.ok(source.includes('40000);'));
   assert.ok(source.includes('turnConfig=null;'));
