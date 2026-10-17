@@ -5,7 +5,7 @@ import { openJson } from '../lib/viewer-sync-crypto.js';
 import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 import { withBackupClient, listBackupDialogs } from '../lib/telegram-history-backup.js';
 import { readBusinessConsentState, connectBusinessSelectedChats,
-  assertBusinessConnectionAvailable, CONSENT_APPROVAL } from '../lib/telegram-business-consent.js';
+  assertBusinessConnectionAvailable, connectBusinessAllPrivateChats, CONSENT_APPROVAL } from '../lib/telegram-business-consent.js';
 
 const BOT = String(process.env.TELEGRAM_BOT_TOKEN || '');
 const json = (res, code, body) => res.status(code).json({ ok:code >= 200 && code < 300, ...body });
@@ -78,13 +78,17 @@ export default async function handler(req, res) {
       });
     }
 
-    if (!Array.isArray(body.chatIds) || body.chatIds.length < 1 || body.chatIds.length > 12) {
+    const allPrivate = body.scope === 'all-private';
+    if (allPrivate && body.allChatsConsent !== true) return json(res,409,{error:'Разрешение на все существующие и будущие личные чаты требует отдельного подтверждения.'});
+    if (!allPrivate && (!Array.isArray(body.chatIds) || body.chatIds.length < 1 || body.chatIds.length > 12)) {
       return json(res,400,{error:'Выбери от 1 до 12 личных переписок.'});
     }
     // Don't retry a write automatically after timeout. Re-run prepare first.
     const result = await withBackupClient(decrypted.session,async client => {
       await verifyTelegramClientOwner(client,ownerId);
-      return connectBusinessSelectedChats(client,body.chatIds);
+      return allPrivate
+        ? connectBusinessAllPrivateChats(client)
+        : connectBusinessSelectedChats(client,body.chatIds);
     });
     // This was an explicit opt-in for an automatic archive: configure only the
     // minimal server-side retention and archive switches for this owner.
@@ -98,9 +102,10 @@ export default async function handler(req, res) {
     }
     return json(res,200,{
       ...result,
+      scope:allPrivate ? 'all-current-and-future-private' : 'selected-private',
       settingsUpdated,
       note:settingsUpdated
-        ? 'Telegram принял подключение. Отправь тестовое сообщение из выбранного чата, чтобы проверить реальное сохранение.'
+        ? 'Telegram принял подключение. Отправь тестовое сообщение из разрешённого личного чата, чтобы проверить реальное сохранение.'
         : 'Telegram принял подключение, но включение архива пока не подтверждено. Включи Anti-Delete в Privacy Center.',
     });
   } catch (error) {
