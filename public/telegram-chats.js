@@ -34,6 +34,10 @@
       return date.toLocaleDateString('ru',{weekday:'short'});
     return date.toLocaleDateString('ru',{day:'numeric',month:'short'});
   }
+  function messageTime(value) {
+    const date = new Date(value || 0);
+    return Number.isNaN(date.getTime()) ? '' : two(date.getHours())+':'+two(date.getMinutes());
+  }
   const initials=value=>{
     const x=String(value||'TG').replace(/^@/,'').split(/\s+/).filter(Boolean);
     return (x.slice(0,2).map(p=>p[0]).join('')||'TG').toUpperCase();
@@ -129,7 +133,7 @@
       unavailable:'Состояние Privacy не удалось проверить. Не считай архив активным.',
       enable_privacy:'Включи Anti-Delete и защищённый Inbox в Privacy.',
       connect_business:'Подключи Telegram Business к VETO, чтобы бот получал разрешённые события.',
-      grant_messages:'Разреши VETO доступ к сообщениям в Telegram Business для нужных чатов.',
+      grant_messages:'Подключи Business-бота для нужных личных чатов. Отмечать сообщения прочитанными для архива не нужно.',
       test_archive:'Доступы выглядят готовыми. Проверь на новом сообщении в разрешённом чате.',
     };
     const status=configured?'НАСТРОЕНО · ДЛЯ РАЗРЕШЁННЫХ ЧАТОВ':known?'ТРЕБУЕТ НАСТРОЙКИ':'СОСТОЯНИЕ НЕИЗВЕСТНО';
@@ -141,7 +145,7 @@
       '<div class="veto-mirror-checks">'+checkpoint('Anti-Delete',privacy.antiDelete)+
       checkpoint('Частный Inbox',privacy.privateArchive)+
       checkpoint('Business-доступ',privacy.businessConnected)+
-      checkpoint('Чтение сообщений',privacy.readMessagesAllowed)+'</div>'+
+      checkpoint('Сохранённый архив',privacy.savedChats>0)+'</div>'+
       '<div class="veto-mirror-evidence"><strong>'+safe(privacy.confirmedDeleted||0)+
       '</strong><span>подтверждённых удалений</span><strong>'+safe(privacy.savedChats||0)+
       '</strong><span>сохранённых диалогов</span></div>'+
@@ -157,6 +161,14 @@
     renderPrivacyDiagnostics();
     $('telegramMirrorCount').textContent=String(state.chats.length);
     const proof=$('telegramMirrorAccountProof');
+    const drawer=$('telegramMirrorAccessDrawer');
+    const drawerStatus=$('telegramMirrorAccessDrawerStatus');
+    if (drawerStatus) drawerStatus.textContent=state.connectionProof?.verified
+      ? 'Telegram подключён · ↶ архив отдельно'
+      : 'Нужно подключить Telegram';
+    // Keep setup discoverable when login isn't verified, out of the way for
+    // an already linked user reading chats on a small mobile screen.
+    if (drawer && !drawer.dataset.userToggled) drawer.open=!state.connectionProof?.verified;
     if(proof){
       const p=state.connectionProof;
       proof.classList.toggle('ready',p?.verified===true);
@@ -444,6 +456,7 @@
         :empty('Пустой чат','В Telegram нет доступных сообщений');
     }else{
       let day='';
+      let previous=null;
       box.innerHTML=state.messages.map(message=>{
         const date=message.date?new Date(message.date):null;
         const dayKey=date&&!Number.isNaN(date.getTime())?date.toDateString():'';
@@ -452,6 +465,10 @@
             safe(date.toLocaleDateString('ru',{day:'numeric',month:'long',year:'numeric'}))+
             '</span></div>':'';
         day=dayKey||day;
+        const compact=previous && previous.out===message.out && dayKey===previous.day
+          && Math.abs(date?.getTime() - previous.stamp) < 5*60000
+          && (!message.sender || message.sender===previous.sender);
+        previous={out:message.out,day:dayKey,stamp:date?.getTime()||0,sender:message.sender||''};
         const text=String(message.text||'');
         const media=message.media
           ?'<div class="veto-mirror-media">'+inlineImage(message)+safe(mediaLabels[message.media]||'◫ Вложение')+
@@ -462,19 +479,19 @@
           ?'<div class="veto-mirror-preserved-flag deleted">↶ УДАЛЕНО В TELEGRAM · СОХРАНЕНО В VETO</div>'
           :message.preservedOnly
             ?'<div class="veto-mirror-preserved-flag">◈ СОХРАНЁННАЯ КОПИЯ VETO</div>'
-            :message.saved
-              ?'<div class="veto-mirror-preserved-flag subtle">◈ КОПИЯ В VETO</div>':'';
+            :'';
         const viewFile=message.saved&&message.media&&message.mediaAvailable
           ?'<button type="button" class="veto-mirror-open-vault" data-mirror-file="'+safe(message.id)+
              '">Открыть сохранённый файл ↗</button>':'';
         return divider+'<article data-mirror-message-id="'+safe(message.id)+'" class="veto-mirror-bubble'+(message.out?' outgoing':'')+
-          (message.deleted?' is-deleted':'')+
+          (compact?' compact':'')+(message.deleted?' is-deleted':'')+
           '"><div class="veto-mirror-bubble-inner">'+savedBanner+
           (message.sender&&!message.out?'<strong class="veto-mirror-bubble-sender">'+
             safe(message.sender)+'</strong>':'')+
           media+viewFile+(text?'<p>'+safe(text)+'</p>':'')+
           '<footer>'+(message.edited?'<span>изменено</span>':'')+
-          '<time>'+safe(time(message.date))+'</time></footer></div></article>';
+          (message.saved&&!message.deleted?'<span title="Сохранено в VETO">↶</span>':'')+
+          '<time>'+safe(messageTime(message.date))+'</time></footer></div></article>';
       }).join('');
     }
     if(anchor){
@@ -591,6 +608,13 @@
     revokeMediaUrls();
     window.scrollTo({top:0,behavior:'instant'});
   }
+  $('telegramMirrorArchiveLink')?.addEventListener('click',()=>{
+    window.VetoTelegramNavigate?.('privacy');
+  });
+  $('telegramMirrorAccessDrawer')?.addEventListener('toggle',event=>{
+    // Don't mark the initial native <details> toggle as user choice.
+    if (event.isTrusted) event.currentTarget.dataset.userToggled='1';
+  });
   $('telegramMirrorPrivacyDiagnostics')?.addEventListener('click',event=>{
     if(event.target.closest('[data-mirror-privacy-setup]'))
       window.VetoTelegramNavigate?.('privacy');
@@ -605,7 +629,7 @@
       'Подтверждённых удалений в твоём собственном сохранённом архиве: <b>'+safe(deleted)+
       '</b>. Сохранённых диалогов: <b>'+safe(saved)+
       '</b>. LIVE подключение показывает только текущую историю Telegram. Удалённые сообщения доступны только если VETO сохранил их до удаления и получил событие об удалении. '+
-      'Для будущих удалений включи Anti-Delete и разреши сообщения в Telegram Business для выбранных чатов. Резервные копии без Business сохраняют содержимое, но не подтверждают факт удаления.'+
+      'Для будущих удалений включи Anti-Delete через Telegram Business для выбранных или всех личных чатов. История через код/QR сохраняет содержимое выбранных чатов, но без события Telegram не доказывает удаление.'+
       '</p></div><button type="button" data-mirror-privacy-open="1">Настроить Privacy ↗</button>';
   });
   $('telegramMirrorNotice')?.addEventListener('click',event=>{
