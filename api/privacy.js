@@ -160,9 +160,14 @@ async function ghostDiagnostics(token, userId) {
         : 'Needs Telegram Business connection',
     },
     messagePermission: {
-      ok: canReadMessages,
-      label: 'Message access',
-      detail: canReadMessages ? 'can_read_messages allowed' : 'Message access is not allowed',
+      // BusinessBotRights.can_read_messages grants MARK-AS-READ, not delivery.
+      // Incoming business_message/edit/delete updates depend on the connection
+      // and per-chat recipient selection, which the bot cannot enumerate here.
+      ok: businessLive,
+      label: 'Business message events',
+      detail: businessLive
+        ? 'Connection active; send a test message in an allowed private chat to prove delivery'
+        : 'Connect the business bot to selected private chats',
     },
     storage: {
       ok: storageReady,

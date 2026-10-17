@@ -21,20 +21,31 @@ test('Business walkthrough uses Telegram settings, never requests an OTP or expa
   assert.match(guide, /Выбери личные чаты|Выбрать личные чаты/);
   assert.match(guide, /data-privacy-copy-bot/);
   assert.match(guide, /data-privacy-recheck-access/);
-  assert.match(guide, /Не предоставляй права отправлять или удалять сообщения/);
+  assert.match(guide, /не нужны права отвечать, удалять сообщения или отмечать их прочитанными/);
   assert.doesNotMatch(guide, /send_code|verify_code|2FA|введи код/);
 });
 
 test('Onboarding status comes from verified backend Business connection, not local toggles', () => {
   const code = source('public/privacy.js');
   assert.match(code, /renderBusinessOnboarding\(connectionLive, readMessages\)/);
-  assert.match(code, /const verified = connectionLive && readMessages/);
+  assert.match(code, /const verified = connectionLive && !failed/);
+  assert.match(code, /const operational = complete && connectionLive && !privacyState\.connection\.error && !privacyState\.degraded/);
   assert.match(code, /await loadTelegramConnection\(\{ silent:false \}\)/);
   assert.match(code, /privacyBusinessVerifyButton/);
   assert.match(code, /privacyBusinessCopyButton/);
   assert.match(code, /if \(!document.hidden && privacyScreenActive\(\)\) \{/);
   const html = source('public/studio.html');
-  assert.match(html, /privacy\.js\?v=20261017-veto-business-onboarding-v1/);
+  assert.match(html, /privacy\.js\?v=20261017-veto-business-receive-v2/);
+});
+
+test('Business message updates do not require the Telegram mark-as-read permission', () => {
+  const privacy = source('public/privacy.js');
+  const diagnostics = source('api/privacy.js');
+  assert.match(privacy, /const operational = complete && connectionLive && !privacyState\.connection\.error/);
+  assert.match(diagnostics, /ok: businessLive,\n      label: 'Business message events'/);
+  assert.match(diagnostics, /can_read_messages grants MARK-AS-READ/);
+  assert.match(diagnostics, /send a test message in an allowed private chat/);
+  assert.doesNotMatch(privacy, /complete && connectionLive && readMessages/);
 });
 
 test('Connect journey retains a mobile layout and never claims to retrieve past deleted chats', () => {
