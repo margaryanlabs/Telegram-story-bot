@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261017-veto-telegram-chat-ui-v2" />
+  <link rel="stylesheet" href="/app.css?v=20261017-veto-chat-send-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -304,7 +304,7 @@
     <section class="screen" data-screen="telegram" aria-label="Мои живые Telegram чаты">
       <section class="veto-mirror" id="telegramMirror">
         <div class="veto-mirror-list" id="telegramChatsView">
-          <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETO · CLOUD CHATS <span class="veto-mirror-readonly">ТОЛЬКО ПРОСМОТР</span></div>
+          <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETO · CLOUD CHATS <span class="veto-mirror-readonly">ЧАТЫ + АРХИВ</span></div>
           <div class="veto-mirror-heading">
             <div><h1>Чаты</h1><p>Твой Telegram и сохранённая история — в одном месте.</p></div>
             <div class="veto-mirror-header-actions"><button type="button" class="veto-mirror-icon-btn" id="telegramMirrorArchiveLink" aria-label="Открыть защиту и архив">↶</button><button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button></div>
@@ -372,7 +372,13 @@
           <div class="veto-mirror-thread-bottom">
             <button type="button" id="telegramThreadOlder" class="veto-mirror-older" hidden>↑ Загрузить старые сообщения</button>
             <div class="veto-mirror-thread-footer">
-              <div class="veto-mirror-composer-faux" aria-label="Режим просмотра, отправка сообщений не поддерживается"><span>◉</span><p>Сообщение · только просмотр</p><em>↶</em></div>
+              <form class="veto-mirror-composer" id="telegramThreadComposer" autocomplete="off">
+                <label for="telegramThreadCompose" class="veto-mirror-compose-field">
+                  <span aria-hidden="true">◉</span>
+                  <textarea id="telegramThreadCompose" maxlength="4096" rows="1" placeholder="Сообщение" aria-label="Написать сообщение" disabled></textarea>
+                </label>
+                <button type="submit" class="veto-mirror-send-button" id="telegramThreadSend" aria-label="Отправить сообщение" title="Отправить в Telegram от моего имени" disabled>➤</button>
+              </form>
               <a id="telegramThreadOpenNative" href="#" target="_blank" rel="noopener noreferrer" hidden>В Telegram ↗</a>
             </div>
           </div>
@@ -1483,7 +1489,7 @@
   <script src="/app.js?v=20261017-veto-chat-choice-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
-  <script src="/telegram-chats.js?v=20261017-veto-telegram-chat-ui-v2"></script>
+  <script src="/telegram-chats.js?v=20261017-veto-chat-send-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
