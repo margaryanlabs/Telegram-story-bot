@@ -59,7 +59,7 @@ test('encrypted preview whitelists minimal chat-list metadata and discards messa
   const js=read('public/chat-snapshot-cache.js');
   const a=js.indexOf('  function clean(rows){'),b=js.indexOf('  async function save(',a);
   assert.ok(a>=0&&b>a);
-  const sanitize=vm.runInNewContext(js.slice(a,b)+'\nclean');
+  const sanitize=vm.runInNewContext(js.slice(a,b)+'\nclean',{MAX:60});
   const input={id:'123',title:'Personal',type:'private',date:'2026-10-17T10:00:00Z',
     pinned:true,unreadCount:9,preview:'PRIVATE SECRET MESSAGE',
     session:'AUTH SESSION',username:'secret',text:'VERY SECRET',
