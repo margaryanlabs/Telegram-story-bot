@@ -215,11 +215,27 @@
   async function download(){
     setBusy(true);
     try{
-      const file=await exportJpeg(),url=URL.createObjectURL(file);
-      const a=document.createElement('a');a.href=url;a.download=file.name;
-      document.body.appendChild(a);a.click();a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),20000);
-      showState('Черновик сохранён файлом на устройство. В Telegram ещё не опубликовано.');
+      const file=await exportJpeg();
+      let shared=false;
+      if(navigator.canShare?.({files:[file]})&&typeof navigator.share==='function'){
+        try{
+          await navigator.share({files:[file],title:'VETO Story · черновик'});
+          shared=true;
+        }catch(error){
+          if(error?.name==='AbortError'){
+            showState('Сохранение отменено. Story не опубликована.');return;
+          }
+        }
+      }
+      if(!shared){
+        const url=URL.createObjectURL(file);
+        const a=document.createElement('a');a.href=url;a.download=file.name;
+        document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),20000);
+      }
+      showState(shared
+        ?'Черновик передан через системное меню. В Telegram не опубликовано.'
+        :'Запущено скачивание JPEG. Если Telegram заблокировал скачивание, открой VETO в браузере.');
     }catch(error){showState(error.message||'Не удалось скачать черновик',true);}
     finally{setBusy(false);}
   }
