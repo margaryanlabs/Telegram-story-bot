@@ -10,6 +10,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261017-veto-rich-chat-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
+  <link rel="stylesheet" href="/story-editor.css?v=20261017-veto-story-studio-v1" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
 <body>
@@ -529,6 +530,10 @@
           <button class="media-remove" id="removeStoryMedia" type="button" aria-label="Удалить выбранное фото">×</button>
         </div>
 
+        <div class="veto-story-editor-cta" id="vetoStoryEditEntry" hidden>
+          <div><small>VETO STORY STUDIO</small><strong>Из обычного кадра — в красивую Story</strong><span>9:16 · цвет · композиция · надписи · шаблоны</span></div>
+          <button id="vetoStoryEditOpen" type="button">✦ Редактировать →</button>
+        </div>
         <label class="caption-field" for="storyCaption">
           <span>Подпись <small id="captionCounter">0 / 2048</small></span>
           <textarea id="storyCaption" maxlength="2048" rows="3" placeholder="Можно оставить пустой"></textarea>
@@ -1482,6 +1487,58 @@
     </section>
   </main>
 
+  <section class="veto-story-editor" id="vetoStoryEditor" aria-label="Редактор VETO Story Studio" role="dialog" aria-modal="true" hidden>
+    <div class="veto-story-editor-top">
+      <div><small>VETO / CREATIVE STUDIO 1.0</small><h2>Story Studio<span>.</span></h2></div>
+      <button id="vetoStoryCancel" type="button" aria-label="Закрыть редактор без изменений">✕</button>
+    </div>
+    <div class="veto-story-editor-stage">
+      <div class="veto-story-editor-stage-inner">
+        <canvas id="vetoStoryCanvas" width="720" height="1280" aria-label="Предпросмотр истории 9:16, проведи по фото для изменения композиции"></canvas>
+        <span class="veto-story-editor-aspect">9:16 · TELEGRAM STORY</span>
+      </div>
+      <p>Двигай фото пальцем, чтобы выбрать композицию. Редактирование происходит на устройстве.</p>
+    </div>
+    <div class="veto-story-editor-controls">
+      <div class="veto-story-editor-tabs-title"><span>01 / MAGIC STYLES</span><small>Пять локальных вариантов · без AI-генерации</small></div>
+      <div class="veto-story-looks" id="vetoStoryLooks">
+        <button type="button" data-story-look="editorial" aria-pressed="true" class="active"><i>ED</i><span>Editorial</span></button>
+        <button type="button" data-story-look="cinematic" aria-pressed="false"><i>CI</i><span>Cinematic</span></button>
+        <button type="button" data-story-look="minimal" aria-pressed="false"><i>MI</i><span>Minimal</span></button>
+        <button type="button" data-story-look="warm" aria-pressed="false"><i>WA</i><span>Warm</span></button>
+        <button type="button" data-story-look="original" aria-pressed="false"><i>OR</i><span>Original</span></button>
+      </div>
+      <div class="veto-story-editor-tabs-title"><span>02 / COLOR & FRAME</span><small>Прямое управление</small></div>
+      <div class="veto-story-tuning">
+        <label><span>Свет <em id="vetoStoryValuebrightness">0</em></span><input id="vetoStoryBrightness" type="range" min="-40" max="40" value="0"></label>
+        <label><span>Контраст <em id="vetoStoryValuecontrast">+10</em></span><input id="vetoStoryContrast" type="range" min="-40" max="60" value="10"></label>
+        <label><span>Цвет <em id="vetoStoryValuesaturation">-12</em></span><input id="vetoStorySaturation" type="range" min="-80" max="70" value="-12"></label>
+        <label><span>Тепло <em id="vetoStoryValuewarmth">0</em></span><input id="vetoStoryWarmth" type="range" min="-40" max="40" value="0"></label>
+        <label><span>Виньетка <em id="vetoStoryValuevignette">+22</em></span><input id="vetoStoryVignette" type="range" min="0" max="80" value="22"></label>
+        <label><span>Масштаб <em id="vetoStoryValuezoom">1.00×</em></span><input id="vetoStoryZoom" type="range" min="1" max="2" step=".02" value="1"></label>
+      </div>
+      <div class="veto-story-editor-tabs-title"><span>03 / TYPOGRAPHY</span><small>Поверх фото</small></div>
+      <div class="veto-story-type-control">
+        <label for="vetoStoryOverlay">Надпись на самой фотографии</label>
+        <textarea id="vetoStoryOverlay" maxlength="140" rows="2" placeholder="Твоя история начинается здесь…"></textarea>
+        <div class="veto-story-text-positions" role="group" aria-label="Расположение текста">
+          <button data-story-text-position="top" type="button" aria-pressed="false">Вверху</button>
+          <button data-story-text-position="center" type="button" aria-pressed="false">По центру</button>
+          <button data-story-text-position="bottom" type="button" aria-pressed="true" class="active">Внизу</button>
+        </div>
+        <label>Размер надписи <input type="range" id="vetoStoryTextSize" min="34" max="92" value="56"></label>
+      </div>
+      <p class="veto-story-editor-status" id="vetoStoryEditorStatus" role="status" aria-live="polite"></p>
+      <div class="veto-story-editor-meta"><span id="vetoStoryOriginalSize">—</span><span>EXPORT · 1080 × 1920 · JPEG</span></div>
+      <div class="veto-story-editor-actions">
+        <button type="button" id="vetoStoryReset">↺ Сбросить</button>
+        <button type="button" id="vetoStoryDownload">↓ Черновик на устройство</button>
+        <button type="button" id="vetoStoryApply">Использовать для Story →</button>
+      </div>
+      <p class="veto-story-editor-privacy">Фото остаётся на этом устройстве до нажатия «Опубликовать». «Черновик» скачивает JPEG, не размещая Story в Telegram.</p>
+    </div>
+  </section>
+
   <nav class="bottom-nav" aria-label="Главная навигация">
     <button class="nav-item active" data-nav="home" type="button" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4z"/></svg><small>Home</small></button>
     <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5.5 5.7v5.5c0 4.2 2.5 7.7 6.5 9.8 4-2.1 6.5-5.6 6.5-9.8V5.7z"/><path d="M9.5 12.2 11.2 14l3.6-4"/></svg><small>Privacy</small></button>
@@ -1511,6 +1568,7 @@
   <script src="/telegram-chats.js?v=20261017-veto-rich-chat-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
+  <script src="/story-editor.js?v=20261017-veto-story-studio-v1"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
 </html>
