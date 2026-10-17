@@ -14,6 +14,11 @@
     original:{brightness:0,contrast:0,saturation:0,warmth:0,vignette:0,zoom:1,title:''},
   };
   const defaultSettings=()=>({...effects.editorial,look:'editorial',text:'',textPosition:'bottom',textTone:'light',textSize:56,panX:0,panY:0,eyebrow:'',callToAction:'',accent:'#ffffff'});
+  const campaignStarters=Object.freeze({
+    launch:{eyebrow:'JUST DROPPED',text:'НОВАЯ КОЛЛЕКЦИЯ',callToAction:'УЗНАТЬ БОЛЬШЕ',textPosition:'center',textSize:67,accent:'#ffffff'},
+    event:{eyebrow:'TONIGHT',text:'ВСТРЕТИМСЯ СЕГОДНЯ',callToAction:'ЗАБРОНИРОВАТЬ',textPosition:'center',textSize:62,accent:'#e3c3a1'},
+    offer:{eyebrow:'LIMITED OFFER',text:'ТОЛЬКО СЕГОДНЯ',callToAction:'ПОСМОТРЕТЬ',textPosition:'center',textSize:71,accent:'#d8e9ff'},
+  });
   let image=null,sourceFile=null,sourceUrl='',settings=defaultSettings();
   let painting=false,renderQueued=false,epoch=0,lastPoint=null;
   let undoStack=[],redoStack=[],lastCommitted={...settings};
@@ -353,6 +358,15 @@
     if(look){
       const preset=effects[look.dataset.storyLook];
       if(preset){settings={...settings,...preset,look:look.dataset.storyLook};syncControls();commitEdit();requestRender();}
+      return;
+    }
+    const campaign=event.target.closest('[data-story-campaign]');
+    if(campaign){
+      const preset=campaignStarters[campaign.dataset.storyCampaign];
+      if(preset){
+        settings={...settings,...preset};syncControls();commitEdit();requestRender();
+        showState('Шаблон применён. Каждую надпись и цвет можно изменить перед публикацией.');
+      }
       return;
     }
     const pos=event.target.closest('[data-story-text-position]');
