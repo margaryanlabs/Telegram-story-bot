@@ -266,8 +266,12 @@
     try{
       const identity=await request('verify');
       if(signed!==state.ownerInitData||state.cacheDenied)return;
-      if(!identity.cacheAllowed||!/^[1-9][0-9]{0,18}$/.test(String(identity.ownerId||''))){
-        return; // Never render local data to a disconnected/foreign owner.
+      if(!/^[1-9][0-9]{0,18}$/.test(String(identity.ownerId||'')))return;
+      if(!identity.cacheAllowed){
+        // A revoked/disconnected session must also remove the encrypted
+        // preview from this device, not just hide it until expiry.
+        await window.VetoChatsSnapshot.clear(identity.ownerId);
+        return;
       }
       state.cacheOwnerId=String(identity.ownerId);
       const snapshot=await window.VetoChatsSnapshot.load(identity.ownerId);
