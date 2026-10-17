@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261017-veto-business-onboarding-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261017-veto-chat-choice-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -36,6 +36,10 @@
           <span class="kicker">ДОБРО ПОЖАЛОВАТЬ</span>
           <h1>Что такое<br><em>VETO Telegram?</em></h1>
           <p>Это дополнительный интерфейс для твоего Telegram: публикация Stories, анализ просмотров, защита переписки и автоматические уведомления — всё из одного места.</p>
+          <div class="veto-first-choice-intro" aria-label="Выбор способа подключения переписок">
+            <button type="button" data-veto-start-action="live-chats"><b>💬 Мои чаты</b><small>Войти по номеру / QR · без Business</small><em>→</em></button>
+            <button type="button" data-veto-start-action="archive"><b>↶ Anti-Delete</b><small>Автоархив новых сообщений · Telegram Business</small><em>→</em></button>
+          </div>
           <div class="veto-intro-features">
             <span>Stories</span><span>Защита сообщений</span><span>Аналитика</span><span>Уведомления</span>
           </div>
@@ -60,12 +64,12 @@
             <span>1</span><i></i><span>2</span><i></i><span>3</span>
           </div>
           <span class="kicker">АКТИВАЦИЯ</span>
-          <h1>Чтобы начать,<br><em>нужны 2 шага.</em></h1>
+          <h1>Для Stories<br><em>нужны 2 шага.</em></h1>
           <div class="veto-simple-steps">
             <div><span>1</span><div><strong>Подключи Telegram</strong><small>На этом телефоне — номер + код. QR удобен, если рядом есть второй экран.</small></div></div>
             <div><span>2</span><div><strong>Опубликуй тестовую Story</strong><small>Так мы сразу проверим, что всё подключено правильно.</small></div></div>
           </div>
-          <p>Privacy и Automations можно включить позже. Они не мешают начать пользоваться Stories.</p>
+          <p>Для живых переписок достаточно номера + кода или QR. Автоматическое сохранение удалённых сообщений включается отдельно через Telegram Business.</p>
         </article>
 
         <article class="veto-intro-step" data-veto-intro-step="3">
@@ -140,6 +144,21 @@
         <button class="control-inline-action veto-connect-primary" id="connectTelegramButton" type="button">
           <span>⌁</span><b>Подключить Telegram</b>
         </button>
+      </section>
+
+      <section class="veto-chat-entry" id="vetoChatEntry" aria-label="Как подключить свои переписки">
+        <div class="veto-chat-entry-intro"><span class="kicker">ВЫБЕРИ СВОЙ СЦЕНАРИЙ</span><h2>Твои чаты. Твой контроль.</h2><p>Два независимых подключения. Покажем нужные шаги сразу — без скрытых настроек.</p></div>
+        <div class="veto-chat-entry-grid">
+          <button type="button" class="veto-chat-path" data-veto-start-action="live-chats">
+            <span class="veto-chat-path-icon">◉</span><strong>Читать мои чаты</strong>
+            <small>Войти по номеру + коду или QR. Без Telegram Business.</small><em>Открыть чаты ↗</em>
+          </button>
+          <button type="button" class="veto-chat-path" data-veto-start-action="archive">
+            <span class="veto-chat-path-icon">↶</span><strong>Сохранять удалённые</strong>
+            <small>Включить автоматический архив новых сообщений из выбранных личных чатов через Business.</small><em>Подключить Anti-Delete ↗</em>
+          </button>
+        </div>
+        <p class="veto-chat-entry-footnote">Для выбранного чата доступна и отдельная резервная копия без Business. Секретные чаты и уже удалённые сообщения не восстанавливаются.</p>
       </section>
 
       <section class="veto-mirror-home">
@@ -1451,7 +1470,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261017-veto-business-onboarding-v1"></script>
+  <script src="/app.js?v=20261017-veto-chat-choice-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-business-receive-v2"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
