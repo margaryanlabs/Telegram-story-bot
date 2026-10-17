@@ -121,7 +121,7 @@
       if($(id))$(id).disabled=!available;
     }
     const voiceButton=$('telegramThreadRecordVoice');
-    if(voiceButton){voiceButton.disabled=!writable || (state.sendInFlight&&!state.recording);
+    if(voiceButton){voiceButton.disabled=!writable || Boolean(state.pendingAttachment) || (state.sendInFlight&&!state.recording);
       voiceButton.classList.toggle('recording',Boolean(state.recording));
       voiceButton.textContent=state.recording?'■':'♫';
       voiceButton.title=state.recording?'Закончить и отправить запись':'Записать голосовое';}
@@ -271,7 +271,7 @@
     if(!nonce){toast('Нужен защищённый HTTPS');return;}
     const replyTo=state.replyTo?.id||null;
     const voiceSend=action==='send_media' && attachmentOrIndex?.kind==='voice';
-    const pending=action==='send_media'?attachmentOrIndex:state.pendingAttachment;
+    const pending=action==='send_media'?(attachmentOrIndex||state.pendingAttachment):null;
     state.sendInFlight=true;
     renderSendComposer();
     try {
