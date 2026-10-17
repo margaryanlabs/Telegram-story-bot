@@ -56,7 +56,7 @@ test('Wizard requires owner-verified session and explicit opt-in before MTProto 
   assert.match(frontend,/data-business-apply/);
   assert.match(frontend,/businessWizardConsent/);
   assert.match(frontend,/data-business-selected/);
-  assert.match(api,/needsMessageProof:true|needsMessageProof/); // consent API returns actual-delivery proof requirement
+  assert.match(backend,/needsMessageProof:true/); // consent API returns actual-delivery proof requirement
   assert.match(html,/id="privacyBusinessWizardButton"/);
   assert.match(html,/veto-native-business-wizard-v1/);
 });
@@ -66,5 +66,5 @@ test('Business wizard does not silently request control over read, delete, profi
   const frontend=src('public/privacy.js');
   assert.doesNotMatch(backend,/rights:\s*new Api\.BusinessBotRights\(\{\s*readMessages:true/);
   assert.match(frontend,/Без права отвечать, удалять, отмечать прочитанным/);
-  assert.match(frontend,/конкретных выбранных|выбранным личным перепискам|выбранных личных переписок/);
+  assert.match(frontend,/только отмеченным личным перепискам|выбранных личных чатов/);
 });
