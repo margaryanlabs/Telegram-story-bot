@@ -370,6 +370,57 @@
     finally { privacyState.deletedFeedLoading = false; render(); }
   }
 
+
+  async function copyBusinessBotUsername() {
+    const username = '@Storypilotlab_bot';
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(username);
+      } else {
+        const temp = document.createElement('textarea');
+        temp.value = username;
+        temp.setAttribute('readonly', '');
+        temp.style.position = 'fixed';
+        temp.style.opacity = '0';
+        document.body.appendChild(temp);
+        temp.select();
+        if (!document.execCommand('copy')) throw new Error('Clipboard unavailable');
+        temp.remove();
+      }
+      toast('Имя бота скопировано. Вставь его в Telegram → Чат-боты.');
+      haptic('light');
+    } catch {
+      toast('Скопируй вручную: ' + username);
+    }
+  }
+
+  function renderBusinessOnboarding(connectionLive, readMessages) {
+    const journey = $('privacyBusinessOnboarding');
+    if (!journey) return;
+    const verified = connectionLive && readMessages;
+    const failed = privacyState.connection.error;
+    const isPending = !privacyState.connection.loaded;
+    journey.classList.toggle('ready', verified);
+    journey.classList.toggle('partial', connectionLive && !readMessages);
+    const title = $('privacyBusinessOnboardingTitle');
+    const hint = $('privacyBusinessOnboardingHint');
+    const state = $('privacyBusinessOnboardingState');
+    const steps = $('privacyBusinessOnboardingSteps');
+    const verify = $('privacyBusinessVerifyButton');
+    if (title) title.textContent = verified ? 'Telegram Business подключён' : 'Сохрани важное. Даже после удаления.';
+    if (hint) hint.textContent = verified
+      ? 'VETO подтвердил подключение и право на сообщения. Новые сообщения выбранных личных чатов будут доступны для архива при включённой защите.'
+      : connectionLive
+        ? 'Бот уже подключён. Проверь разрешения и выбор личных чатов в Telegram Business — VETO пока не подтвердил доступ к сообщениям.'
+        : 'Один раз разреши VETO получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.';
+    if (state) state.textContent = isPending ? 'Проверяю' : failed ? 'Нет связи' : verified ? 'Подключено ✓' : connectionLive ? 'Нужны права' : 'Один раз';
+    if (steps) steps.hidden = verified;
+    if (verify) {
+      verify.disabled = false;
+      verify.innerHTML = verified ? 'Обновить статус <span>↻</span>' : 'Проверить подключение <span>↗</span>';
+    }
+  }
+
   function render() {
     const settings = privacyState.settings || {};
     const enabled = anyEnabled(settings);
@@ -377,6 +428,7 @@
     const connectionLive = Boolean(privacyState.connection?.live);
     const readMessages = Boolean(privacyState.connection?.readMessages);
     const operational = complete && connectionLive && readMessages && !privacyState.degraded;
+    renderBusinessOnboarding(connectionLive, readMessages);
     const pill = $('privacyStatusPill');
     const statusText = $('privacyStatusText');
 
@@ -418,9 +470,9 @@
       enableAll.classList.toggle('done', complete);
       const label = enableAll.querySelector('b');
       const hint = enableAll.querySelector('small');
-      if (label) label.textContent = complete ? 'Защита переписок включена' : 'Защитить переписки';
+      if (label) label.textContent = complete && !operational ? 'Настройки защиты включены' : complete ? 'Защита переписок включена' : 'Защитить переписки';
       if (hint) hint.textContent = complete
-        ? 'Anti-Delete · история правок · архив'
+        ? operational ? 'Anti-Delete · история правок · архив' : 'Осталось подключить разрешённые Telegram-чаты'
         : 'Новые разрешённые сообщения сохранятся до удаления в Telegram';
     }
 
@@ -1188,19 +1240,19 @@
   function privacyBusinessGuideSheet() {
     const linked = Boolean(privacyState.connection.live);
     openSheet(`
-      <span class="kicker">VETO PRIVATE ARCHIVE · ДЛЯ ТВОИХ ЧАТОВ</span>
-      <h2>${linked ? 'Дай разрешение сохранять сообщения' : 'Подключи Telegram Business к архиву'}</h2>
-      <p>Обычное подключение Telegram для Stories не включает архив переписок. Для сохранения сообщений необходимо отдельно разрешить VETO Business-доступ в выбранных чатах.</p>
-      <div class="sheet-list">
-        <div class="sheet-item"><strong>1. Настройки Telegram</strong><span>Telegram → Настройки → Telegram Business → Чат-боты / Автоматизация чатов.</span></div>
-        <div class="sheet-item"><strong>2. Выбери VETO</strong><span>Подключи @Storypilotlab_bot и явно выбери чаты, из которых разрешено сохранять сообщения.</span></div>
-        <div class="sheet-item"><strong>3. Разреши читать сообщения</strong><span>Включи право на сообщения, затем вернись сюда и нажми «Проверить». Настрой хранение до 10 лет, если нужен долгий архив.</span></div>
+      <span class="kicker">VETO · ЛИЧНЫЕ ПЕРЕПИСКИ</span>
+      <h2>${linked ? 'Осталось проверить разрешения' : 'Один шаг — и переписки под защитой'}</h2>
+      <p>Для автоматического Anti-Delete нужно один раз подключить VETO как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
+      <div class="veto-business-sheet-steps">
+        <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
+        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Storypilotlab_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
+        <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты» и доступ к сообщениям. Не предоставляй права отправлять или удалять сообщения, если они тебе не нужны.</span></section></div>
+        <div><b>04</b><section><strong>Вернись в VETO</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
       </div>
-      <p class="privacy-archive-limit">Важно: сохраняются только сообщения, которые Telegram передал после включения доступа. Очистка чата в Telegram не удаляет уже сохранённую VETO-копию. Ранее удалённые, секретные и неразрешённые чаты восстановить невозможно.</p>
+      <p class="privacy-archive-limit">Без Premium. Это не передаёт VETO старую переписку и не открывает секретные чаты. VETO сохраняет только разрешённые новые события, которые Telegram доставил после подключения, — удалённое ранее восстановить нельзя.</p>
       <div class="sheet-actions">
-        <button class="accent" data-privacy-recheck-access="1">Проверить доступ снова</button>
-        <button data-privacy-keep-long="1">Хранить копии до 10 лет</button>
-        <button data-privacy-close="1">Закрыть</button>
+        <button class="accent" data-privacy-recheck-access="1">✓ Проверить подключение</button>
+        <button data-privacy-close="1">Вернуться к чатам</button>
       </div>
     `);
   }
@@ -1538,6 +1590,18 @@
   $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
   $('privacyVaultCheckButton')?.addEventListener('click', openVaultMediaRecovery);
   $('privacyBackupGuideButton')?.addEventListener('click', privacyBusinessGuideSheet);
+  $('privacyBusinessDetailsButton')?.addEventListener('click', privacyBusinessGuideSheet);
+  $('privacyBusinessCopyButton')?.addEventListener('click', copyBusinessBotUsername);
+  $('privacyBusinessVerifyButton')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await loadTelegramConnection({ silent:false });
+      toast(privacyState.connection.live && privacyState.connection.readMessages
+        ? 'Подключение подтверждено. Теперь включи Anti-Delete для выбранных чатов.'
+        : 'Пока нет подтверждённого доступа. Проверь шаги подключения в Telegram.');
+    } finally { button.disabled = false; }
+  });
   $('privacyBackupHistoryButton')?.addEventListener('click', openBackupPicker);
   $('privacyTestNotificationButton')?.addEventListener('click', async event => {
     const button = event.currentTarget;
@@ -1801,6 +1865,11 @@
       return;
     }
 
+    if (event.target.closest('[data-privacy-copy-bot]')) {
+      await copyBusinessBotUsername();
+      return;
+    }
+
     const keepLong = event.target.closest('[data-privacy-keep-long]');
     if (keepLong) {
       keepLong.disabled = true;
@@ -1899,7 +1968,10 @@
       // is durable, while the in-flight request is allowed to finish safely.
       privacyState.backup.stopRequested = true;
     }
-    if (!document.hidden && privacyScreenActive()) refresh({ silent:true });
+    if (!document.hidden && privacyScreenActive()) {
+      refresh({ silent:true });
+      loadTelegramConnection({ silent:true });
+    }
   });
 
   window.addEventListener('online', () => {
