@@ -429,7 +429,20 @@
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])
     preview.addEventListener(ev,()=>{if(painting)commitEdit();painting=false;lastPoint=null;});
   document.addEventListener('keydown',event=>{
-    if(event.key==='Escape'&&!panel.hidden)close();
+    if(panel.hidden)return;
+    if(event.key==='Escape'){event.preventDefault();close();return;}
+    if(event.key!=='Tab')return;
+    // A real modal must keep keyboard focus within the private editor.
+    const focusable=[...panel.querySelectorAll(
+      'button:not([disabled]),input:not([disabled]):not([type=hidden]),textarea:not([disabled])',
+    )].filter(el=>el.getClientRects().length>0);
+    if(!focusable.length)return;
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(event.shiftKey&&(document.activeElement===first||!panel.contains(document.activeElement))){
+      event.preventDefault();last.focus();
+    }else if(!event.shiftKey&&(document.activeElement===last||!panel.contains(document.activeElement))){
+      event.preventDefault();first.focus();
+    }
   });
   window.addEventListener('pagehide',()=>close());
   // Public API only accepts user-chosen files, no network access.
