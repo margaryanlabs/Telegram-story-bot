@@ -15,14 +15,14 @@
     context:null,stream:null,source:null,nodes:null,oscillator:null,
     recorder:null,chunks:[],recordedBlob:null,recordedUrl:null,
     preset:'clean',morph:75,active:false,recording:false,
-    startedAt:0,raf:0,monitor:false,
+    startedAt:0,raf:0,monitor:false,opening:false,micEpoch:0,
   };
   const extFor=mime=>mime.includes('mp4')?'m4a':mime.includes('ogg')?'ogg':'webm';
   const toast=message=>{
     const el=$('voiceStatus');if(el){el.textContent=String(message);el.dataset.state='visible';}
   };
   function updateButtons(){
-    $('voiceMicButton').disabled=!audioSupported||state.active;
+    $('voiceMicButton').disabled=!audioSupported||state.active||state.opening;
     $('voiceMicStop').disabled=!state.active;
     $('voiceRecord').disabled=!state.active||state.recording;
     $('voiceStopRecord').disabled=!state.recording;
@@ -86,6 +86,7 @@
     if($('voiceMonitor'))$('voiceMonitor').checked=false;
   }
   function stopMic(){
+    state.micEpoch++;state.opening=false;
     if(state.recording){try{state.recorder?.stop()}catch{};state.recording=false;}
     stopMonitor();
     if(state.oscillator){try{state.oscillator.stop()}catch{}}
@@ -102,25 +103,34 @@
       if(!audioSupported)toast('В этом WebView запись пока недоступна. Открой VETO в актуальном Telegram на Android или iOS.');
       return;
     }
+    if(state.opening||document.hidden)return;
+    const epoch=++state.micEpoch;
+    state.opening=true;
     $('voiceMicButton').disabled=true;
     toast('Запрашиваю разрешение на микрофон…');
-    let stream=null,context=null;
+    let stream=null,context=null,oscillator=null;
     try{
       // Only initiated by a real tap. Neither audio nor microphone data goes to our server.
       stream=await navigator.mediaDevices.getUserMedia({audio:{
         echoCancellation:true,noiseSuppression:true,autoGainControl:false,
         channelCount:1,
       },video:false});
+      if(epoch!==state.micEpoch||document.hidden||
+        document.querySelector('.screen.active')?.dataset?.screen!=='voice')
+        throw Error('MIC_CANCELLED');
       const AudioContextClass=window.AudioContext||window.webkitAudioContext;
       context=new AudioContextClass();
       await context.resume();
+      if(epoch!==state.micEpoch||document.hidden||
+        document.querySelector('.screen.active')?.dataset?.screen!=='voice')
+        throw Error('MIC_CANCELLED');
       const source=context.createMediaStreamSource(stream);
       const highpass=context.createBiquadFilter();highpass.type='highpass';highpass.frequency.value=75;
       const low=context.createBiquadFilter();low.type='lowshelf';low.frequency.value=250;
       const mid=context.createBiquadFilter();mid.type='peaking';mid.frequency.value=1850;mid.Q.value=1;
       const high=context.createBiquadFilter();high.type='highshelf';high.frequency.value=4200;
       const tremolo=context.createGain();tremolo.gain.value=1;
-      const oscillator=context.createOscillator();oscillator.type='sine';oscillator.frequency.value=35;
+      oscillator=context.createOscillator();oscillator.type='sine';oscillator.frequency.value=35;
       const robotGain=context.createGain();robotGain.gain.value=0;
       oscillator.connect(robotGain);robotGain.connect(tremolo.gain);oscillator.start();
       const compressor=context.createDynamicsCompressor();
@@ -145,11 +155,15 @@
       if(!state.raf)draw();
     }catch(error){
       stream?.getTracks()?.forEach(t=>t.stop());
+      try{oscillator?.stop();}catch{}
       context?.close().catch(()=>{});
+      if(error?.message==='MIC_CANCELLED')return;
       const denied=error?.name==='NotAllowedError'||error?.name==='PermissionDeniedError';
       toast(denied?'Telegram не разрешил доступ к микрофону. Разреши его в настройках приложения.':
         'Не удалось открыть микрофон. Проверь разрешения и попробуй ещё раз.');
       updateButtons();
+    }finally{
+      if(epoch===state.micEpoch){state.opening=false;updateButtons();}
     }
   }
   function releaseRecording(){
@@ -244,9 +258,15 @@
     }else{stopMonitor();toast('Мониторинг выключен. Запись обработанного голоса доступна.');}
   });
   window.addEventListener('veto:screen-changed',event=>{
-    if(event.detail?.screen!=='voice'&&state.active){
+    if(event.detail?.screen!=='voice'&&(state.active||state.opening)){
       stopMic();
       toast('Микрофон выключен при выходе из Voice Studio.');
+    }
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&(state.active||state.opening)){
+      stopMic();
+      toast('Telegram свернут. Микрофон отключён.');
     }
   });
   window.addEventListener('pagehide',()=>{
