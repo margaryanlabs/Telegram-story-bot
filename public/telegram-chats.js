@@ -108,7 +108,7 @@
   function canSendInThread(chat){
     // Archive-only cards and channels are deliberately read-only. The
     // authenticated owner's existing peer is revalidated on the server.
-    return Boolean(chat && !chat.archiveOnly && state.connectionProof?.verified
+    return Boolean(chat && chat.serverCanSend !== false && !chat.archiveOnly && state.connectionProof?.verified
       && ['private','group','bot','saved'].includes(chat.type));
   }
   function renderSendComposer(){
@@ -710,6 +710,7 @@
       state.archiveOffset=Number(data.archiveNextOffset||0);
       if(!data.warning)threadNotice('');
       else threadNotice(data.warning);
+      if(state.thread)state.thread.serverCanSend=data.canSend===true;
       if(data.chat && state.thread && data.chat.type!=='copy'){
         state.thread={...state.thread,...data.chat,
           savedCopy:Boolean(state.thread.savedCopy||data.chat.savedCopy)};
