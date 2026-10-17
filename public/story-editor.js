@@ -13,7 +13,7 @@
     warm:{brightness:7,contrast:12,saturation:8,warmth:23,vignette:20,zoom:1.0,title:'SOFT LIGHT'},
     original:{brightness:0,contrast:0,saturation:0,warmth:0,vignette:0,zoom:1,title:''},
   };
-  const defaultSettings=()=>({...effects.editorial,text:'',textPosition:'bottom',textTone:'light',textSize:56,panX:0,panY:0});
+  const defaultSettings=()=>({...effects.editorial,look:'editorial',text:'',textPosition:'bottom',textTone:'light',textSize:56,panX:0,panY:0});
   let image=null,sourceFile=null,sourceUrl='',settings=defaultSettings();
   let painting=false,renderQueued=false,epoch=0,lastPoint=null;
   const W=720,H=1280,OUTPUT_W=1080,OUTPUT_H=1920;
@@ -110,8 +110,7 @@
     if($('vetoStoryOverlay'))$('vetoStoryOverlay').value=settings.text;
     if($('vetoStoryTextSize'))$('vetoStoryTextSize').value=String(settings.textSize);
     panel.querySelectorAll('[data-story-look]').forEach(el=>{
-      const active=el.dataset.storyLook===settings.title?.toLowerCase().replace(/\s+/g,'-')||
-        (el.dataset.storyLook==='original'&&!settings.title);
+      const active=el.dataset.storyLook===settings.look;
       el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active));
     });
     panel.querySelectorAll('[data-story-text-position]').forEach(el=>{
@@ -210,7 +209,7 @@
     const look=event.target.closest('[data-story-look]');
     if(look){
       const preset=effects[look.dataset.storyLook];
-      if(preset){settings={...settings,...preset};syncControls();requestRender();}
+      if(preset){settings={...settings,...preset,look:look.dataset.storyLook};syncControls();requestRender();}
       return;
     }
     const pos=event.target.closest('[data-story-text-position]');
