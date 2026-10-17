@@ -21,14 +21,15 @@ test('Business walkthrough uses Telegram settings, never requests an OTP or expa
   assert.match(guide, /Выбери личные чаты|Выбрать личные чаты/);
   assert.match(guide, /data-privacy-copy-bot/);
   assert.match(guide, /data-privacy-recheck-access/);
-  assert.match(guide, /Не предоставляй права отправлять или удалять сообщения/);
+  assert.match(guide, /не нужны права отвечать, удалять сообщения или отмечать их прочитанными/);
   assert.doesNotMatch(guide, /send_code|verify_code|2FA|введи код/);
 });
 
 test('Onboarding status comes from verified backend Business connection, not local toggles', () => {
   const code = source('public/privacy.js');
   assert.match(code, /renderBusinessOnboarding\(connectionLive, readMessages\)/);
-  assert.match(code, /const verified = connectionLive && readMessages/);
+  assert.match(code, /const verified = connectionLive && !failed/);
+  assert.match(code, /const operational = complete && connectionLive && !privacyState\.connection\.error && !privacyState\.degraded/);
   assert.match(code, /await loadTelegramConnection\(\{ silent:false \}\)/);
   assert.match(code, /privacyBusinessVerifyButton/);
   assert.match(code, /privacyBusinessCopyButton/);
