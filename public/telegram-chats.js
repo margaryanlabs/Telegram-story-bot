@@ -138,6 +138,7 @@
       :'Подключи Telegram для отправки';
     field.style.height='auto';
     field.style.height=Math.min(135,Math.max(24,field.scrollHeight))+'px';
+    field.maxLength=state.pendingAttachment?'1024':'4096';
     button.disabled=!available || (!field.value.trim()&&!state.pendingAttachment);
     button.textContent=state.sendInFlight?'◌':'➤';
     button.title=writable?'Отправить из собственного Telegram':'Отправка здесь недоступна';
@@ -812,6 +813,11 @@
             '<small>'+safe(message.saved&&message.mediaAvailable
               ?'Независимая копия · Media Vault'
               :message.saved?'Сохранена отметка о вложении':'Файл доступен в Telegram')+'</small></div>':'';
+        const replySource=Number(message.replyTo)>0
+          ?state.messages.find(m=>Number(m.id)===Number(message.replyTo)):null;
+        const replyMarkup=Number(message.replyTo)>0
+          ?'<div class="veto-mirror-reply-tag">↩ '+safe(replySource?.text?.slice(0,90)||('Ответ на сообщение '+message.replyTo))+'</div>'
+          :'';
         const savedBanner=message.deleted
           ?'<div class="veto-mirror-preserved-flag deleted">↶ УДАЛЕНО В TELEGRAM · СОХРАНЕНО В VETO</div>'
           :message.preservedOnly
@@ -828,7 +834,7 @@
           '"><div class="veto-mirror-bubble-inner">'+savedBanner+
           (message.sender&&!message.out?'<strong class="veto-mirror-bubble-sender">'+
             safe(message.sender)+'</strong>':'')+
-          media+viewFile+(text?'<p>'+safe(text)+'</p>':'')+
+          replyMarkup+media+viewFile+(text?'<p>'+safe(text)+'</p>':'')+
           '<footer>'+(canSendInThread(state.thread)&&Number.isSafeInteger(Number(message.id))&&!message.deleted&&!message.preservedOnly
             ?'<button type="button" class="veto-mirror-reply-action" data-mirror-reply="'+safe(message.id)+'" aria-label="Ответить на сообщение">↩</button>':'')+
           (message.replyTo?'<span>↩ '+safe(message.replyTo)+'</span>':'')+
@@ -1113,6 +1119,11 @@
   $('telegramThreadOlder')?.addEventListener('click',()=>loadMessages());
   window.addEventListener('veto:screen-changed',event=>{
     const current=event.detail?.screen;
+    if(current!=='telegram'&&state.recording){
+      state.recording.cancelled=true;
+      clearTimeout(state.recording.timer);
+      try{state.recording.recorder.stop()}catch{}
+    }
     if(current==='telegram'&&state.chats.length===0&&!state.loading)loadChats({reset:true});
   });
   // Opening a deep-linked screen may precede the first screen-change event.
