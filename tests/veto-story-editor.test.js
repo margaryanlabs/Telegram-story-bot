@@ -19,7 +19,7 @@ test('9:16 crop centers landscape/portrait photos without letterboxing',()=>{
   assert.ok(landscape.dx<0);
   const vertical=cover(1080,1920);
   assert.deepEqual(JSON.parse(JSON.stringify(vertical)),{dx:0,dy:0,width:720,height:1280});
-  const moved=cover(1920,1080,1,1,0);
+  const moved=cover(1920,1080,1,-1,0);
   assert.equal(moved.dx,2*landscape.dx);
   const clamped=cover(1920,1080,99,4,-4);
   assert.ok(clamped.dx<=0&&clamped.dy<=0);
