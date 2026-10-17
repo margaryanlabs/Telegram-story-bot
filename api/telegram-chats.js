@@ -13,6 +13,14 @@ const MAX_DIALOGS=500;
 const FAST_THREAD_DIALOGS=80;
 const MESSAGE_PAGE=35;
 const ARCHIVE_PAGE=100;
+export function dialogPageBounds(page){
+  if(!Number.isSafeInteger(page)||page<0||
+    page>Math.ceil((MAX_DIALOGS-FIRST_PAGE_SIZE)/PAGE_SIZE))
+    throw new RangeError('Invalid chat page');
+  const start=page===0?0:FIRST_PAGE_SIZE+(page-1)*PAGE_SIZE;
+  const count=Math.min(MAX_DIALOGS-start,page===0?FIRST_PAGE_SIZE:PAGE_SIZE);
+  return {start,count,totalToFetch:Math.min(MAX_DIALOGS,start+count+1)};
+}
 const safeId=value=>String(value?.toString?.()||value||'');
 const clean=(value,limit=200)=>String(value??'').replace(/[\u0000-\u001f]/g,' ').slice(0,limit);
 const validChatId=value=>/^-?\d{1,22}$/.test(String(value||''));
@@ -248,9 +256,7 @@ export default async function handler(req,res){
           live=await withBackupClient(creds.session,async client=>{
             const account=await verifyTelegramClientOwner(client,userId);
             // Bounded cursor-independent retrieval, never return access hashes.
-            const start=page===0?0:FIRST_PAGE_SIZE+(page-1)*PAGE_SIZE;
-            const count=Math.min(MAX_DIALOGS-start,page===0?FIRST_PAGE_SIZE:PAGE_SIZE);
-            const totalToFetch=Math.min(MAX_DIALOGS,start+count+1);
+            const {start,count,totalToFetch}=dialogPageBounds(page);
             const dialogs=await client.getDialogs({limit:totalToFetch});
             return {chats:dialogs.slice(start,start+count).map(dialogInfo),
               hasMore:dialogs.length>start+count && start+count<MAX_DIALOGS,account};
