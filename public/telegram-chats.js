@@ -6,6 +6,7 @@
     chats:[],page:0,hasMore:true,loading:false,
     filter:'all',search:'',generation:0,lastSyncedAt:0,syncMs:0,autoPages:0,stale:false,
     cacheOwnerId:'',cachedPreview:false,cacheDenied:false,cacheVerifyBusy:false,
+    searchGeneration:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,avatarScheduled:false,
@@ -495,6 +496,52 @@
     }
   }
 
+  function closeThreadSearch(){
+    state.searchGeneration++;
+    const box=$('telegramThreadSearchPanel');
+    if(box)box.hidden=true;
+    if($('telegramThreadSearchQuery'))$('telegramThreadSearchQuery').value='';
+    if($('telegramThreadSearchResults'))$('telegramThreadSearchResults').replaceChildren();
+    $('telegramThreadSearchToggle')?.setAttribute('aria-expanded','false');
+  }
+  async function submitThreadSearch(event){
+    event?.preventDefault?.();
+    if(resetOwner()||!state.thread)return;
+    const chatId=String(state.thread.id);
+    const query=String($('telegramThreadSearchQuery')?.value||'').trim();
+    const output=$('telegramThreadSearchResults');
+    if(!output)return;
+    if(query.length<2||query.length>80){
+      output.textContent='Для поиска введи от 2 до 80 символов.';return;
+    }
+    if(state.thread.archiveOnly){
+      output.textContent='Это только сохранённая копия. Для поиска в архиве открой Privacy.';
+      return;
+    }
+    const generation=++state.searchGeneration;
+    output.textContent='Ищу сообщения в Telegram…';
+    const submit=$('telegramThreadSearchForm')?.querySelector('[type="submit"]');
+    if(submit)submit.disabled=true;
+    try{
+      const data=await request('search',{chatId,query});
+      if(generation!==state.searchGeneration||String(state.thread?.id)!==chatId)return;
+      const rows=Array.isArray(data.results)?data.results:[];
+      output.innerHTML=rows.length
+        ?'<div class="veto-chat-search-total">Найдено: '+rows.length+
+          (rows.length>=25?' · показаны первые 25':'')+'</div>'+
+          rows.map(row=>
+            '<button type="button" class="veto-chat-search-result" data-search-msg="'+safe(row.id)+'">'+
+            '<span>'+safe(time(row.date))+(row.edited?' · изменено':'')+'</span>'+
+            '<strong>'+safe(row.text||'Вложение: '+(row.media||'файл'))+'</strong>'+
+            '</button>').join('')
+        :'<p>По этому запросу сообщений не найдено.</p>';
+    }catch(error){
+      if(generation===state.searchGeneration)
+        output.textContent=error.message||'Поиск временно недоступен';
+    }finally{
+      if(generation===state.searchGeneration&&submit)submit.disabled=false;
+    }
+  }
   function threadNotice(text){
     const el=$('telegramThreadNotice');
     if(!el)return;
@@ -512,6 +559,7 @@
     // render into B's view or overwrite B's newer response.
     state.generation++;state.threadGeneration++;
     state.chats=[];state.messages=[];state.thread=null;
+    closeThreadSearch();
     state.connectionProof=null;state.page=0;state.hasMore=true;
     state.lastSyncedAt=0;state.syncMs=0;state.autoPages=0;state.stale=false;
     state.cacheOwnerId='';state.cachedPreview=false;state.cacheDenied=false;state.cacheVerifyBusy=false;
@@ -677,6 +725,7 @@
   }
   async function openThread(chat){
     if(resetOwner()||!chat)return;
+    closeThreadSearch();
     revokeMediaUrls();
     haptic();
     state.thread=chat;state.messages=[];state.threadHasMore=false;
@@ -831,6 +880,33 @@
     if(button)openArchivedFile(button);
   });
   $('telegramThreadBack')?.addEventListener('click',back);
+  $('telegramThreadSearchToggle')?.addEventListener('click',()=>{
+    if(!state.thread)return;
+    const panel=$('telegramThreadSearchPanel');
+    if(!panel)return;
+    const opening=panel.hidden;
+    if(!opening){closeThreadSearch();return;}
+    panel.hidden=false;
+    $('telegramThreadSearchToggle')?.setAttribute('aria-expanded','true');
+    $('telegramThreadSearchQuery')?.focus();
+  });
+  $('telegramThreadSearchClose')?.addEventListener('click',closeThreadSearch);
+  $('telegramThreadSearchForm')?.addEventListener('submit',submitThreadSearch);
+  $('telegramThreadSearchResults')?.addEventListener('click',event=>{
+    const hit=event.target.closest('[data-search-msg]');
+    if(!hit)return;
+    const id=String(hit.dataset.searchMsg||'');
+    const message=[...$('telegramThreadMessages').querySelectorAll('[data-mirror-message-id]')]
+      .find(el=>el.dataset.mirrorMessageId===id);
+    if(message){
+      closeThreadSearch();
+      message.scrollIntoView({behavior:'smooth',block:'center'});
+      message.classList.add('veto-chat-found');
+      setTimeout(()=>message.classList.remove('veto-chat-found'),1600);
+    }else{
+      hit.setAttribute('title','Сообщение найдено в Telegram; оно не входит в уже загруженную страницу.');
+    }
+  });
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
   $('telegramThreadOlder')?.addEventListener('click',()=>loadMessages());
   $('telegramThreadBottomJump')?.addEventListener('click',()=>{
