@@ -97,7 +97,7 @@ test('tampered or untrusted project settings are clamped and HTML can never be i
 });
 test('malformed photo payload and wrong VETO project version fail closed',async()=>{
   const {api,TestFile,realPhoto}=harness();
-  const file=(value)=>new TestFile([JSON.stringify(value)],'bad.vetostory',
+  const file=(value)=>new TestFile([JSON.stringify({...value,padding:'x'.repeat(120)})],'bad.vetostory',
     {type:'application/json'});
   const photo='data:image/jpeg;base64,'+realPhoto.toString('base64');
   await assert.rejects(()=>api.parse(file({signature:'INVALID',version:1,photo})),
@@ -126,6 +126,6 @@ test('creator surface has real user-photo look previews and independent CTA/eyeb
   assert.ok(js.includes("'vetoStoryCallToAction','callToAction',32"));
   assert.ok(js.includes('if(exporting||!image)return'));
   assert.ok(js.includes('if(generation!==epoch||panel.hidden)return'));
-  assert.ok(html.includes('Файл проекта'));
+  assert.ok(html.includes('Сохрани проект файлом'));
   assert.ok(html.includes('.vetostory'));
 });
