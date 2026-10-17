@@ -84,8 +84,12 @@
     try{
       const db=await openDb();
       const entry=await txOp(db,'snapshots','readonly','owner:'+id);
-      if(!entry||entry.v!==1||Date.now()-entry.savedAt>TTL||entry.savedAt>Date.now()+60000)
+      if(!entry)return null;
+      if(entry.v!==1||Date.now()-entry.savedAt>TTL||entry.savedAt>Date.now()+60000){
+        // Expiry is physical deletion, not just hiding stale metadata.
+        await clear(id);
         return null;
+      }
       const key=await ownerKey(db,id,false);
       if(!key)return null;
       const plain=await subtle.decrypt({
