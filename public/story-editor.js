@@ -247,25 +247,31 @@
     return new File([blob],`veto-story-${Date.now()}.jpg`,{type:'image/jpeg'});
   }
   function setBusy(busy){
-    for(const id of ['vetoStoryApply','vetoStoryDownload']){
+    for(const id of ['vetoStoryApply','vetoStoryDownload','vetoStorySaveProject','vetoStoryOpenProject']){
       const b=$(id);if(b)b.disabled=busy;
     }
   }
   async function apply(){
-    setBusy(true);showState('Готовлю Story 9:16 для публикации…');
+    if(exporting||!image)return;
+    exporting=true;setBusy(true);showState('Готовлю Story 9:16 для публикации…');
+    const generation=epoch;
     try{
       const file=await exportJpeg();
+      if(generation!==epoch||panel.hidden)return;
       // The existing Story publish function still owns audience, permissions,
       // size validation and Telegram upload. Editor never bypasses that path.
       window.dispatchEvent(new CustomEvent('veto:story-edited',{detail:{file}}));
       close();
-    }catch(error){showState(error.message||'Не удалось подготовить Story',true);}
-    finally{setBusy(false);}
+    }catch(error){if(generation===epoch)showState(error.message||'Не удалось подготовить Story',true);}
+    finally{exporting=false;setBusy(false);}
   }
   async function download(){
-    setBusy(true);
+    if(exporting||!image)return;
+    exporting=true;setBusy(true);
     try{
+      const generation=epoch;
       const file=await exportJpeg();
+      if(generation!==epoch||panel.hidden)return;
       let shared=false;
       if(navigator.canShare?.({files:[file]})&&typeof navigator.share==='function'){
         try{
@@ -287,7 +293,60 @@
         ?'Черновик передан через системное меню. В Telegram не опубликовано.'
         :'Запущено скачивание JPEG. Если Telegram заблокировал скачивание, открой VETO в браузере.');
     }catch(error){showState(error.message||'Не удалось скачать черновик',true);}
-    finally{setBusy(false);}
+    finally{exporting=false;setBusy(false);}
+  }
+  async function shareOrDownload(file){
+    // Sharing a file requires explicit user interaction. Never send drafts
+    // through Telegram APIs or external AI services without user approval.
+    if(navigator.canShare?.({files:[file]})&&typeof navigator.share==='function'){
+      try{await navigator.share({files:[file],title:'VETO Story · редактируемый проект'});return 'shared';}
+      catch(error){if(error?.name==='AbortError')return 'cancelled';}
+    }
+    const url=URL.createObjectURL(file);
+    const anchor=document.createElement('a');
+    anchor.href=url;anchor.download=file.name;document.body.appendChild(anchor);
+    anchor.click();anchor.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),20000);
+    return 'downloaded';
+  }
+  async function saveProject(){
+    if(exporting||!image||!window.VetoStoryProject)return;
+    exporting=true;setBusy(true);
+    const generation=epoch;
+    showState('Собираю редактируемый проект на устройстве…');
+    try{
+      const file=await window.VetoStoryProject.create(image,settings);
+      if(generation!==epoch||panel.hidden)return;
+      const result=await shareOrDownload(file);
+      showState(result==='cancelled'
+        ?'Сохранение отменено. Проект остался открытым.'
+        :result==='shared'
+          ?'Файл проекта передан через системное меню. Сохрани его в приватном месте.'
+          :'Запущено скачивание проекта. Проверь файлы устройства — внутри есть личная фотография.');
+    }catch(error){if(generation===epoch)showState(error.message||'Не удалось сохранить проект',true);}
+    finally{exporting=false;setBusy(false);}
+  }
+  function openProjectPicker(){
+    if(exporting)return;
+    const input=$('vetoStoryProjectFile');
+    if(input){input.value='';input.click();}
+  }
+  async function importProject(file){
+    if(!file||exporting||!window.VetoStoryProject)return;
+    const generation=++importGeneration;
+    exporting=true;setBusy(true);
+    showState('Проверяю формат проекта и загружаю фотографию…');
+    try{
+      const project=await window.VetoStoryProject.parse(file);
+      if(generation!==importGeneration)return;
+      const opened=await open(project.file);
+      if(!opened||generation!==importGeneration)return;
+      settings={...defaultSettings(),...project.settings};
+      undoStack=[];redoStack=[];lastCommitted={...settings};
+      syncControls();syncHistory();renderLookPreviews();requestRender();
+      showState('Редактируемый проект восстановлен локально. До публикации данные не отправляются.');
+    }catch(error){showState(error.message||'Не удалось открыть проект',true);}
+    finally{exporting=false;setBusy(false);}
   }
   panel.addEventListener('click',event=>{
     const look=event.target.closest('[data-story-look]');
@@ -313,12 +372,32 @@
     settings.textSize=Number(event.target.value);requestRender();
   });
   $('vetoStoryTextSize')?.addEventListener('change',commitEdit);
+  for(const [id,key,max] of [
+    ['vetoStoryEyebrow','eyebrow',32],['vetoStoryCallToAction','callToAction',32],
+  ]){
+    $(id)?.addEventListener('input',event=>{
+      settings[key]=event.target.value.slice(0,max);requestRender();
+    });
+    $(id)?.addEventListener('change',commitEdit);
+  }
+  $('vetoStoryAccent')?.addEventListener('input',event=>{
+    if(/^#[0-9a-fA-F]{6}$/.test(event.target.value)){
+      settings.accent=event.target.value;requestRender();
+    }
+  });
+  $('vetoStoryAccent')?.addEventListener('change',commitEdit);
   $('vetoStoryReset')?.addEventListener('click',resetFilters);
   $('vetoStoryUndo')?.addEventListener('click',()=>moveHistory(undoStack,redoStack));
   $('vetoStoryRedo')?.addEventListener('click',()=>moveHistory(redoStack,undoStack));
   $('vetoStoryCancel')?.addEventListener('click',()=>close());
   $('vetoStoryApply')?.addEventListener('click',apply);
   $('vetoStoryDownload')?.addEventListener('click',download);
+  $('vetoStorySaveProject')?.addEventListener('click',saveProject);
+  $('vetoStoryOpenProject')?.addEventListener('click',openProjectPicker);
+  $('vetoStoryImportLaunch')?.addEventListener('click',openProjectPicker);
+  $('vetoStoryProjectFile')?.addEventListener('change',event=>{
+    void importProject(event.target.files?.[0]);
+  });
   preview.addEventListener('pointerdown',event=>{
     if(!image)return;
     painting=true;lastPoint={x:event.clientX,y:event.clientY};preview.setPointerCapture?.(event.pointerId);
@@ -340,5 +419,5 @@
   });
   window.addEventListener('pagehide',()=>close());
   // Public API only accepts user-chosen files, no network access.
-  window.VetoStoryEditor=Object.freeze({open,close,coverGeometry,exportJpeg});
+  window.VetoStoryEditor=Object.freeze({open,close,coverGeometry,exportJpeg,importProject,saveProject,openProjectPicker});
 })();
