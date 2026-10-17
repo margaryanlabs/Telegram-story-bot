@@ -550,8 +550,8 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
     ? `\n+ ещё ${stored.length - visible.length}`
     : '';
   const unseenCount = Math.max(0, Number(deletedMessageCount || 0) - stored.length);
-  const unseenNote = unseenCount
-    ? `\n\n⚠ Ещё ${unseenCount} удалённых сообщений Telegram сообщил без сохранённого ранее текста. Восстановить их содержимое задним числом нельзя.`
+  const unseenNote = unseenCount && stored.length
+    ? `\n\n⚠ Для ${unseenCount} ${unseenCount === 1 ? 'удалённого сообщения' : 'удалённых сообщений'} копии в VETO Vault нет. Восстановить их содержимое задним числом нельзя.`
     : '';
   const copyNote = stored.length
     ? 'Копия доступных сообщений сохранена в VETO Vault.'
