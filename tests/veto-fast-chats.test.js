@@ -65,7 +65,7 @@ test('UI uses viewport-bound auto pagination rather than eagerly preloading 500 
   assert.ok(js.includes("state.page<11"));
   assert.ok(js.includes("'telegramThreadBottomJump'"));
   assert.ok(html.includes('id="telegramThreadBottomJump"'));
-  assert.ok(html.includes('v=20261017-veto-chat-speed-v2'));
+  assert.ok(html.includes('v=20261017-veto-chat-speed-v3-merged'));
   const css=read('public/app.css');
   assert.ok(css.includes('.veto-mirror-skeleton'));
   assert.ok(css.includes('prefers-reduced-motion:reduce'));
