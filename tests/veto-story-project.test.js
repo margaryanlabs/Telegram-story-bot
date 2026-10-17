@@ -141,3 +141,37 @@ test('three campaign starters create editable layered photo Stories without AI c
   assert.ok(!js.includes('OpenAI'));
   assert.ok(!js.includes('fetch('));
 });
+
+test('campaign elements render actual badge and CTA on the same 9:16 Canvas as the photograph',()=>{
+  const src=read('public/story-editor.js');
+  const start=src.indexOf('  function coverGeometry(');
+  const stop=src.indexOf('  function renderLookPreviews(){',start);
+  assert.ok(start>0&&stop>start);
+  const api=vm.runInNewContext(src.slice(start,stop)+'\n({drawFrame})',{
+    W:720,H:1280,
+    cap:(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0)),
+    photoSize:p=>({width:p.width,height:p.height}),
+  });
+  const drawn=[];
+  const context={
+    filter:'none',fillStyle:'#fff',save(){},restore(){},clearRect(){},
+    drawImage:(...args)=>drawn.push(['image',...args]),
+    fillRect:(...args)=>drawn.push(['rectangle',...args]),
+    createRadialGradient:()=>({addColorStop(){}}),
+    createLinearGradient:()=>({addColorStop(){}}),
+    measureText:t=>({width:String(t).length*12}),
+    fillText:(...args)=>drawn.push(['label',...args]),
+  };
+  api.drawFrame({width:1080,height:1920},context,{width:1200,height:1200},{
+    brightness:0,contrast:10,saturation:0,warmth:0,zoom:1,vignette:20,
+    panX:0,panY:0,look:'editorial',text:'Новое меню',
+    textPosition:'center',textSize:56,
+    eyebrow:'TONIGHT',callToAction:'ЗАБРОНИРОВАТЬ',
+    accent:'#e3c3a1',
+  });
+  assert.ok(drawn.some(x=>x[0]==='image'));
+  assert.ok(drawn.some(x=>x[0]==='label'&&x[1]==='TONIGHT'));
+  assert.ok(drawn.some(x=>x[0]==='label'&&x[1]==='ЗАБРОНИРОВАТЬ'));
+  assert.ok(drawn.some(x=>x[0]==='label'&&x[1].includes('меню')));
+  assert.ok(drawn.filter(x=>x[0]==='rectangle').length>=3);
+});
