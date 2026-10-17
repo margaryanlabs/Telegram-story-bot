@@ -310,6 +310,7 @@
 
     $('mediaPreview').hidden = true;
     $('pickStoryMedia').hidden = false;
+    if($('vetoStoryEditEntry'))$('vetoStoryEditEntry').hidden=true;
     renderPublish();
   }
 
@@ -334,6 +335,7 @@
       $('mediaFileMeta').textContent = `${formatBytes(file.size)} → ${formatBytes(prepared.blob.size)}`;
       $('mediaPreview').hidden = false;
       $('pickStoryMedia').hidden = true;
+      if($('vetoStoryEditEntry'))$('vetoStoryEditEntry').hidden=false;
       notify('success');
     } catch (error) {
       resetComposer({ keepCaption: true });
@@ -3125,12 +3127,19 @@
   });
 
   $('pickStoryMedia').addEventListener('click', () => {
-    if (!telegramAccountReady()) {
-      showToast('Сначала подключи Telegram');
-      connectionHelpSheet();
-      return;
-    }
+    // Editing is fully local. Telegram connection is required only to publish.
     $('storyFileInput').click();
+  });
+  $('vetoStoryEditOpen')?.addEventListener('click',()=>{
+    if(composerBusy){showToast('Фото ещё подготавливается');return;}
+    if(!composerFile){$('storyFileInput').click();return;}
+    if(!window.VetoStoryEditor){showToast('Редактор пока недоступен');return;}
+    void window.VetoStoryEditor.open(composerFile);
+  });
+  window.addEventListener('veto:story-edited',event=>{
+    const file=event.detail?.file;
+    if(!(file instanceof File)||!['image/jpeg','image/png','image/webp'].includes(file.type))return;
+    void prepareComposerFile(file);
   });
 
   $('storyFileInput').addEventListener('change', event => {
