@@ -3203,3 +3203,24 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   .veto-business-step button{font-size:8px;padding:7px}
 }
 @media(prefers-reduced-motion:reduce){.veto-business-journey *{animation:none!important;transition:none!important}}
+
+/* First-run chat choice: premium graphite, no deceptive single-click permissions. */
+.veto-chat-entry{position:relative;margin:15px 0 18px;border:1px solid rgba(197,214,239,.14);border-radius:25px;background:linear-gradient(145deg,rgba(190,206,232,.075),rgba(15,21,31,.8) 52%),#0d1119;padding:19px;box-shadow:0 14px 35px rgba(0,0,0,.18)}
+.veto-chat-entry-intro .kicker{font-size:9px;color:#a4b6cc;letter-spacing:.13em}
+.veto-chat-entry-intro h2{margin:8px 0 6px;color:#f4f6fa;font-size:clamp(20px,5vw,26px);line-height:1.1;letter-spacing:-.045em}
+.veto-chat-entry-intro p{font-size:11px;color:#93a1b6;margin:0;line-height:1.5}
+.veto-chat-entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px}
+.veto-chat-path{min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:10px;border:1px solid rgba(199,218,244,.115);background:rgba(255,255,255,.035);border-radius:19px;padding:14px;transition:transform .15s ease,border-color .15s ease}
+.veto-chat-path:active{transform:scale(.985)}
+.veto-chat-path-icon{height:34px;width:34px;display:grid;place-items:center;border:1px solid rgba(205,222,248,.15);border-radius:12px;color:#d9e5f7;background:rgba(194,215,248,.065);font-size:17px}
+.veto-chat-path strong{font-size:13px;font-weight:790;line-height:1.2;color:#eff4fc}
+.veto-chat-path small{font-size:10px;line-height:1.5;color:#97a4b4;flex:1}
+.veto-chat-path em{font-size:10px;font-style:normal;font-weight:770;color:#d4e3f7}
+.veto-chat-entry-footnote{margin:12px 2px 0;font-size:9px;color:#8796aa;line-height:1.55}
+.veto-first-choice-intro{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0 11px}
+.veto-first-choice-intro button{border:1px solid rgba(199,218,244,.14);border-radius:14px;background:rgba(196,215,243,.065);min-width:0;display:grid;grid-template-columns:1fr auto;gap:4px;padding:12px;text-align:left}
+.veto-first-choice-intro b{font-size:11px;font-weight:800;color:#f4f7fc}
+.veto-first-choice-intro small{grid-column:1/-1;line-height:1.4;font-size:9px;color:#9cacc0}
+.veto-first-choice-intro em{font-size:13px;color:#dbe8f9;font-style:normal}
+@media(max-width:390px){.veto-chat-entry{padding:15px}.veto-chat-entry-grid{gap:7px}.veto-chat-path{padding:11px;gap:8px}.veto-chat-path strong{font-size:12px}.veto-first-choice-intro{gap:7px}.veto-first-choice-intro button{padding:9px}}
+@media(prefers-reduced-motion:reduce){.veto-chat-path{transition:none}}
