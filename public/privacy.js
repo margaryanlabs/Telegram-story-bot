@@ -1283,9 +1283,14 @@
     const chats = Array.isArray(result.chats) ? result.chats : [];
     openSheet(`
       <span class="kicker">VETO PRIVACY · ПОДКЛЮЧЕНИЕ В 2 ШАГА</span>
-      <h2>Выбери, какие чаты защищать</h2>
+      <h2>Какие переписки защищать?</h2>
       <p>StoryLab подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
-      <div class="veto-consent-chat-list" role="group" aria-label="Доступные личные переписки">
+      <fieldset class="veto-business-scope-options">
+        <legend>Охват Anti-Delete</legend>
+        <label><input type="radio" name="vetoBusinessScope" value="all-private" checked><span><b>Все личные переписки</b><small>Существующие и будущие — без ограничения 12 чатами. Не включает группы, каналы и секретные чаты.</small></span></label>
+        <label><input type="radio" name="vetoBusinessScope" value="selected"><span><b>Только выбранные</b><small>До 12 личных переписок из списка ниже.</small></span></label>
+      </fieldset>
+      <div class="veto-consent-chat-list" role="group" aria-label="Доступные личные переписки" hidden>
         ${chats.length ? chats.map(chat => `
           <label class="veto-consent-chat">
             <input type="checkbox" data-business-selected value="${escapeHtml(chat.chatId)}" />
@@ -1295,14 +1300,14 @@
       </div>
       <div class="veto-consent-boundary">
         <strong>Что именно разрешаем?</strong>
-        <p>✓ Получать новые сообщения, изменения и удаления из выбранных чатов.</p>
+        <p>✓ Получать новые сообщения, изменения и удаления в рамках выбранного охвата. Telegram Business не передаёт старую историю.</p>
         <p>✕ Без права отвечать, удалять, отмечать прочитанным, менять профиль, управлять Stories или переводить средства.</p>
         <p>Это не восстанавливает сообщения, удалённые до подключения.</p>
       </div>
       <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent" />
-        <span>Я понимаю, что выбранные сообщения будут передаваться VETO для моего приватного архива, и разрешаю подключение только этих чатов.</span>
+        <span>Я разрешаю боту получать и сохранять новые события в обозначенных личных чатах. Для режима «Все» это касается также будущих личных переписок, пока я не отключу доступ.</span>
       </label>
-      <p class="veto-consent-selected-count" id="businessWizardCount">Не выбрано ни одного чата</p>
+      <p class="veto-consent-selected-count" id="businessWizardCount">Все текущие и будущие личные чаты — после подтверждения</p>
       <div class="sheet-actions">
         <button class="accent" data-business-apply="1" disabled>Подключить выбранные чаты</button>
         <button data-business-manual="1">Настроить вручную</button>
@@ -1333,32 +1338,42 @@
   function updateBusinessWizardConsent() {
     const selected = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])];
     const approved = $('businessWizardConsent')?.checked === true;
-    const valid = selected.length > 0 && selected.length <= 12 && approved;
+    const all = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value === 'all-private';
+    const picker = $('sheet')?.querySelector('.veto-consent-chat-list');
+    if (picker) picker.hidden = all;
+    const valid = approved && (all || (selected.length > 0 && selected.length <= 12));
     const count = $('businessWizardCount');
-    if (count) count.textContent = selected.length
-      ? `Выбрано: ${selected.length} из 12 допустимых чатов`
-      : 'Не выбрано ни одного чата';
+    if (count) count.textContent = all
+      ? 'Все нынешние и будущие личные переписки · без групп, каналов и секретных чатов'
+      : selected.length
+        ? `Выбрано: ${selected.length} из 12 допустимых чатов`
+        : 'Не выбрано ни одного чата';
     const action = $('sheet')?.querySelector('[data-business-apply]');
     if (action) action.disabled = !valid;
   }
 
   async function applyBusinessWizard(button) {
     const chats = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])].map(el => el.value);
-    if (!chats.length || chats.length > 12 || $('businessWizardConsent')?.checked !== true) {
-      toast('Выбери чаты и подтвердите согласие');
+    const all = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value === 'all-private';
+    if ((!all && (!chats.length || chats.length > 12)) || $('businessWizardConsent')?.checked !== true) {
+      toast('Выбери охват и подтверди согласие');
       return;
     }
     button.disabled = true;
     button.textContent = 'Подключаю выбранные чаты…';
     try {
       const result = await businessWizardRequest('connect', {
-        chatIds:chats,consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',
+        chatIds:all ? [] : chats,scope:all ? 'all-private' : 'selected-private',
+        allChatsConsent:all,consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',
       });
       await Promise.allSettled([loadTelegramConnection({silent:true}),refresh({silent:true})]);
       openSheet(`
         <span class="kicker">VETO PRIVACY · ЗАПРОС ПРИНЯТ</span>
         <h2>Telegram подключил VETO</h2>
-        <p>Выбрано ${Number(result.selectedCount||chats.length)} личных чатов. Подключение принято, но получение и сохранение событий нужно проверить на настоящем сообщении.</p>
+        <p>${result.scope === 'all-current-and-future-private'
+          ? 'Разрешён охват всех существующих и будущих личных переписок (но не групп, каналов или секретных чатов).'
+          : 'Выбрано '+Number(result.selectedCount||chats.length)+' личных чатов.'}
+          Telegram принял подключение; фактическую доставку ещё требуется проверить новым сообщением.</p>
         ${result.settingsUpdated ? '' : '<p>Настройки архива пока не обновились: включи Anti-Delete, Edit History и Inbox в Privacy Center.</p>'}
         <div class="veto-consent-boundary"><strong>Как проверить</strong><p>1. Попроси собеседника отправить новое сообщение в выбранный чат.</p><p>2. Найди его в VETO Inbox.</p><p>3. Попроси собеседника удалить его и проверь сохранённую копию.</p></div>
         <div class="sheet-actions">
@@ -1897,7 +1912,7 @@
   });
 
   $('sheet')?.addEventListener('change', event => {
-    if (event.target.matches('[data-business-selected],#businessWizardConsent')) updateBusinessWizardConsent();
+    if (event.target.matches('[data-business-selected],#businessWizardConsent,input[name="vetoBusinessScope"]')) updateBusinessWizardConsent();
   });
 
   $('sheet')?.addEventListener('input', event => {
