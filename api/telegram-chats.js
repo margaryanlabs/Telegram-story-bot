@@ -40,6 +40,7 @@ function mediaType(m){
   if(/Photo/i.test(cls))return 'photo';
   if(/Document/i.test(cls)){
     const attrs=media.document?.attributes||[];
+    if(attrs.some(a=>a?.className==='DocumentAttributeSticker'))return 'sticker';
     if(attrs.some(a=>a?.roundMessage))return 'video_note';
     if(attrs.some(a=>a?.voice))return 'voice';
     if(attrs.some(a=>a?.className==='DocumentAttributeAudio'))return 'audio';
@@ -57,7 +58,7 @@ function preview(message){
   if(txt)return txt.slice(0,180);
   const type=mediaType(message);
   const names={photo:'Фотография',video:'Видео',voice:'Голосовое сообщение',
-    audio:'Аудио',document:'Документ',video_note:'Видеосообщение',
+    audio:'Аудио',document:'Документ',video_note:'Видеосообщение',sticker:'Стикер',
     location:'Местоположение',contact:'Контакт',link:'Ссылка'};
   return type?(names[type]||'Вложение'):'';
 }
@@ -89,6 +90,8 @@ export function messageInfo(message,group=false){
     id:mid,date:dateString(message),out:Boolean(message?.out),
     text:userText(message),media:mediaType(message),
     edited:Boolean(message?.editDate),sender:group?sender:null,
+    replyTo:Number.isSafeInteger(Number(message?.replyTo?.replyToMsgId))
+      ? Number(message.replyTo.replyToMsgId) : null,
     // Live viewer deliberately never pulls Telegram attachments into our DB.
     // For protected media copies use independent owner-approved Media Vault.
   };

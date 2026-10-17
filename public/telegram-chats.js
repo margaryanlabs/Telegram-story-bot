@@ -10,6 +10,7 @@
     connectionProof:null,mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
     previewActive:0,previewSeen:new Set(),
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
+    pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -17,7 +18,7 @@
   };
   const mediaLabels={
     photo:'▣ Фотография',video:'▹ Видео',audio:'♫ Аудио',
-    document:'◫ Документ',voice:'◉ Голосовое',video_note:'◉ Видеосообщение',
+    document:'◫ Документ',voice:'◉ Голосовое',video_note:'◉ Видеосообщение',sticker:'☺ Стикер',
     location:'⌖ Локация',contact:'◈ Контакт',link:'↗ Ссылка',
     attachment:'◫ Вложение',
   };
@@ -76,7 +77,7 @@
 
   // Text sending is separate from the Business bot and its archive permissions.
   // The backend rechecks the Mini App owner, the MTProto owner and the dialog.
-  async function sendChatRequest(chatId,message,nonce){
+  async function sendChatRequest(chatId,message,nonce,replyTo=null){
     if(!tg?.initData)throw new Error('Открой VETO из Telegram для отправки');
     const abort=new AbortController();
     const timer=setTimeout(()=>abort.abort(),26000);
@@ -84,7 +85,7 @@
       const response=await fetch('/api/telegram-send',{
         method:'POST',
         headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
-        body:JSON.stringify({action:'send_message',chatId,message,nonce}),
+        body:JSON.stringify({action:'send_message',chatId,message,nonce,replyTo}),
         signal:abort.signal,
       });
       const data=await response.json().catch(()=>({}));
@@ -116,6 +117,15 @@
     if(!form || !field || !button)return;
     const writable=canSendInThread(state.thread);
     const available=writable && !state.sendInFlight;
+    for(const id of ['telegramThreadAttachButton','telegramThreadStickersButton']){
+      if($(id))$(id).disabled=!available;
+    }
+    const voiceButton=$('telegramThreadRecordVoice');
+    if(voiceButton){voiceButton.disabled=!writable || Boolean(state.pendingAttachment) || (state.sendInFlight&&!state.recording);
+      voiceButton.classList.toggle('recording',Boolean(state.recording));
+      voiceButton.textContent=state.recording?'■':'♫';
+      voiceButton.title=state.recording?'Закончить и отправить запись':'Записать голосовое';}
+
     form.classList.toggle('is-readonly',!writable);
     field.disabled=!available;
     const chatId=String(state.thread?.id||'');
@@ -128,7 +138,8 @@
       :'Подключи Telegram для отправки';
     field.style.height='auto';
     field.style.height=Math.min(135,Math.max(24,field.scrollHeight))+'px';
-    button.disabled=!available || !field.value.trim();
+    field.maxLength=state.pendingAttachment?'1024':'4096';
+    button.disabled=!available || (!field.value.trim()&&!state.pendingAttachment);
     button.textContent=state.sendInFlight?'◌':'➤';
     button.title=writable?'Отправить из собственного Telegram':'Отправка здесь недоступна';
   }
@@ -137,6 +148,7 @@
     const chat=state.thread,field=$('telegramThreadCompose');
     if(!field || !canSendInThread(chat) || state.sendInFlight)return;
     const message=field.value.trim();
+    if(state.pendingAttachment){await sendRichOutgoing('send_media');return;}
     if(!message || message.length>4096)return;
     const chatId=String(chat.id);
     const savedRetry=state.lastSendFailure;
@@ -154,7 +166,7 @@
     renderMessages();
     renderSendComposer();
     try{
-      const delivered=await sendChatRequest(chatId,message,nonce);
+      const delivered=await sendChatRequest(chatId,message,nonce,state.replyTo?.id||null);
       if(String(state.thread?.id)===chatId){
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
         if(Number.isSafeInteger(delivered.messageId)&&delivered.messageId>0){
@@ -165,6 +177,7 @@
           state.messages.sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
         }
         field.value='';
+        state.replyTo=null;renderReplyPreview();
         state.drafts.delete(chatId);
         renderMessages();
         threadNotice('');
@@ -193,6 +206,169 @@
     }finally{
       state.sendInFlight=false;
       renderSendComposer();
+    }
+  }
+
+
+  async function richRequest(action,payload={}){
+    if(!tg?.initData)throw new Error('Открой StoryLab внутри Telegram');
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),45000);
+    try {
+      const response=await fetch('/api/telegram-send',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
+        body:JSON.stringify({action,...payload}),signal:controller.signal,
+      });
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok || !data.ok){
+        const error=new Error(data.error||'Telegram не подтвердил отправку.');
+        error.uncertain=data.uncertain===true;
+        throw error;
+      }
+      return data;
+    }catch(error) {
+      if(error?.name==='AbortError'||error instanceof TypeError){
+        const uncertain=new Error('Нет подтверждения от Telegram. Проверь чат перед повторной отправкой.');
+        uncertain.uncertain=true;
+        throw uncertain;
+      }
+      throw error;
+    }finally{clearTimeout(timer);}
+  }
+  function renderReplyPreview(){
+    const box=$('telegramThreadReplyPreview'),text=$('telegramThreadReplyText');
+    if(!box||!text)return;
+    box.hidden=!state.replyTo;
+    text.textContent=state.replyTo?.preview||'';
+  }
+  function renderAttachmentChip(){
+    const chip=$('telegramThreadAttachmentChip'),label=$('telegramThreadAttachmentLabel');
+    if(!chip||!label)return;
+    chip.hidden=!state.pendingAttachment;
+    const f=state.pendingAttachment;
+    label.textContent=f?('◫ '+f.name+' · '+Math.ceil(f.size/1024)+' КБ'):'';
+  }
+  function readFileAsBase64(file){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
+      reader.onerror=()=>reject(new Error('Не удалось прочитать файл'));
+      reader.readAsDataURL(file);
+    });
+  }
+  function clearComposerExtras(){
+    state.replyTo=null;
+    state.pendingAttachment=null;
+    if($('telegramThreadFileInput'))$('telegramThreadFileInput').value='';
+    renderReplyPreview();renderAttachmentChip();
+    renderSendComposer();
+  }
+  async function sendRichOutgoing(action,attachmentOrIndex=null){
+    const chat=state.thread,field=$('telegramThreadCompose');
+    if(!canSendInThread(chat)||state.sendInFlight)return;
+    const chatId=String(chat.id),nonce=window.crypto?.randomUUID?.();
+    if(!nonce){toast('Нужен защищённый HTTPS');return;}
+    const replyTo=state.replyTo?.id||null;
+    const voiceSend=action==='send_media' && attachmentOrIndex?.kind==='voice';
+    const pending=action==='send_media'?(attachmentOrIndex||state.pendingAttachment):null;
+    state.sendInFlight=true;
+    renderSendComposer();
+    try {
+      let request={chatId,nonce,replyTo};
+      if(action==='send_media'){
+        const file=pending?.file||pending;
+        if(!file||file.size>2*1024*1024||file.size<1)
+          throw new Error('Выбери файл не больше 2 МБ');
+        const kind=pending?.kind||(['image/jpeg','image/png','image/webp'].includes(file.type)?'photo':'document');
+        request={...request,kind,name:file.name,mime:file.type,base64:await readFileAsBase64(file),
+          caption:voiceSend?'':field?.value||'',duration:Number(pending?.duration||0)};
+      }else if(action==='send_sticker') request={...request,stickerId:String(attachmentOrIndex)};
+      else return;
+      // Never transmit a different chat's pending media after the user navigates away.
+      if(String(state.thread?.id)!==chatId)throw new Error('Чат изменился. Отправка отменена.');
+      await richRequest(action,request);
+      if(String(state.thread?.id)===chatId){
+        if(field&&!voiceSend)field.value='';
+        if(!voiceSend)state.drafts.delete(chatId);
+        state.replyTo=null;state.pendingAttachment=null;
+        if($('telegramThreadFileInput'))$('telegramThreadFileInput').value='';
+        $('telegramThreadStickerDrawer').hidden=true;
+        renderReplyPreview();renderAttachmentChip();
+        threadNotice('');
+        // A confirmed Telegram send is reloaded from its authoritative history.
+        setTimeout(()=>{if(String(state.thread?.id)===chatId&&!state.threadLoading&&!state.sendInFlight)
+          loadMessages({reset:true});},750);
+      }
+      try{tg?.HapticFeedback?.notificationOccurred('success')}catch{}
+    }catch(error){
+      threadNotice(error.message);
+      toast(error.message);
+      // The same media may have reached Telegram on timeout. We never
+      // auto-resend; the user should check Telegram before another attempt.
+    }finally{
+      state.sendInFlight=false;
+      renderSendComposer();
+    }
+  }
+  async function openStickerDrawer(){
+    if(!canSendInThread(state.thread)||state.sendInFlight)return;
+    const pane=$('telegramThreadStickerDrawer'),list=$('telegramThreadStickerList');
+    if(!pane||!list)return;
+    pane.hidden=!pane.hidden;
+    if(pane.hidden)return;
+    list.textContent='Загружаю твои недавние стикеры…';
+    const chatId=String(state.thread.id);
+    try {
+      const data=await richRequest('recent_stickers',{chatId});
+      if(String(state.thread?.id)!==chatId)return;
+      state.stickers=Array.isArray(data.stickers)?data.stickers:[];
+      list.innerHTML=state.stickers.length
+        ?state.stickers.map(x=>'<button type="button" data-send-sticker="'+safe(x.id)+'" title="Отправить стикер">'+
+            safe(x.emoji||'🎭')+'</button>').join('')
+        :'<p>В Telegram пока нет недавних стикеров.</p>';
+    }catch(error){list.textContent=error.message;}
+  }
+  async function toggleVoiceRecording(){
+    if(state.recording){
+      clearTimeout(state.recording.timer);
+      try{state.recording.recorder.stop()}catch{}
+      return;
+    }
+    if(!canSendInThread(state.thread)||state.sendInFlight)return;
+    if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
+      toast('Запись голоса недоступна в этом браузере Telegram');return;
+    }
+    let stream;
+    try {
+      stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      const preferred=['audio/ogg;codecs=opus','audio/webm;codecs=opus','audio/webm'];
+      const mime=preferred.find(type=>MediaRecorder.isTypeSupported(type));
+      if(!mime)throw new Error('В этом браузере нет подходящего аудиокодека');
+      const recorder=new MediaRecorder(stream,{mimeType:mime,audioBitsPerSecond:32000});
+      const chunks=[],origin=String(state.thread.id);
+      const started=Date.now();
+      recorder.ondataavailable=event=>{if(event.data?.size)chunks.push(event.data)};
+      recorder.onstop=async()=>{
+        stream.getTracks().forEach(track=>track.stop());
+        const item=state.recording;
+        state.recording=null;
+        renderSendComposer();
+        const blob=new Blob(chunks,{type:mime});
+        if(!item?.cancelled&&String(state.thread?.id)===origin &&blob.size){
+          const ext=mime.startsWith('audio/ogg')?'ogg':'webm';
+          const file=new File([blob],'voice-'+Date.now()+'.'+ext,{type:mime.split(';')[0]});
+          await sendRichOutgoing('send_media',{file,kind:'voice',duration:(Date.now()-started)/1000});
+        }
+      };
+      recorder.onerror=()=>{toast('Не удалось записать голосовое');};
+      recorder.start(500);
+      const timer=setTimeout(()=>{if(recorder.state==='recording')recorder.stop()},45000);
+      state.recording={recorder,stream,timer,cancelled:false,origin};
+      renderSendComposer();
+    }catch(error){
+      stream?.getTracks().forEach(track=>track.stop());
+      toast(error.message||'Микрофон недоступен');
     }
   }
 
@@ -562,6 +738,45 @@
     }finally{clearTimeout(timer);}
   }
 
+  async function openLiveAttachment(button){
+    if(!state.thread||button.disabled||!tg?.initData)return;
+    const id=Number(button.dataset.mirrorLiveFile);
+    if(!Number.isSafeInteger(id)||id<=0)return;
+    const chatId=String(state.thread.id);
+    const prev=button.textContent;
+    button.disabled=true;button.textContent='Загружаю из Telegram…';
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),27000);
+    try {
+      const response=await fetch('/api/telegram-chat-media',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
+        body:JSON.stringify({action:'attachment',chatId,messageId:id}),signal:controller.signal,
+      });
+      if(!response.ok)throw new Error('Telegram не отдаёт файл или он превышает 4 МБ.');
+      const blob=await response.blob();
+      if(!blob.size||blob.size>4*1024*1024)throw new Error('Вложение слишком большое.');
+      if(String(state.thread?.id)!==chatId)return;
+      const href=URL.createObjectURL(blob);
+      state.mediaUrls.push(href);
+      const element=document.createElement('div');
+      element.className='veto-mirror-media-reveal';
+      if(blob.type.startsWith('audio/')){
+        const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';
+        audio.src=href;element.appendChild(audio);
+      }else if(['image/png','image/jpeg','image/webp'].includes(blob.type)){
+        const image=document.createElement('img');image.src=href;image.alt='Вложение Telegram';
+        element.appendChild(image);
+      }else if(['video/mp4','video/webm'].includes(blob.type)){
+        const video=document.createElement('video');video.src=href;video.controls=true;video.preload='metadata';element.appendChild(video);
+      }
+      const link=document.createElement('a');link.href=href;link.download='storylab-attachment-'+id;
+      link.textContent='Скачать вложение ↓';element.appendChild(link);
+      button.after(element);button.hidden=true;
+    }catch(error){
+      button.disabled=false;button.textContent=prev;
+      toast(error?.name==='AbortError'?'Telegram не ответил вовремя':error.message);
+    }finally{clearTimeout(timer);}
+  }
   function visibleMessageAnchor(){
     const box=$('telegramThreadMessages');
     if(!box)return null;
@@ -599,6 +814,11 @@
             '<small>'+safe(message.saved&&message.mediaAvailable
               ?'Независимая копия · Media Vault'
               :message.saved?'Сохранена отметка о вложении':'Файл доступен в Telegram')+'</small></div>':'';
+        const replySource=Number(message.replyTo)>0
+          ?state.messages.find(m=>Number(m.id)===Number(message.replyTo)):null;
+        const replyMarkup=Number(message.replyTo)>0
+          ?'<div class="veto-mirror-reply-tag">↩ '+safe(replySource?.text?.slice(0,90)||('Ответ на сообщение '+message.replyTo))+'</div>'
+          :'';
         const savedBanner=message.deleted
           ?'<div class="veto-mirror-preserved-flag deleted">↶ УДАЛЕНО В TELEGRAM · СОХРАНЕНО В VETO</div>'
           :message.preservedOnly
@@ -606,14 +826,20 @@
             :'';
         const viewFile=message.saved&&message.media&&message.mediaAvailable
           ?'<button type="button" class="veto-mirror-open-vault" data-mirror-file="'+safe(message.id)+
-             '">Открыть сохранённый файл ↗</button>':'';
+             '">Открыть сохранённый файл ↗</button>'
+          :message.media&&!message.deleted&&!message.preservedOnly&&message.media!=='photo'
+            ?'<button type="button" class="veto-mirror-open-vault" data-mirror-live-file="'+safe(message.id)+'">Открыть файл из Telegram ↗</button>'
+            :'';
         return divider+'<article data-mirror-message-id="'+safe(message.id)+'" class="veto-mirror-bubble'+(message.out?' outgoing':'')+
           (compact?' compact':'')+(message.deleted?' is-deleted':'')+
           '"><div class="veto-mirror-bubble-inner">'+savedBanner+
           (message.sender&&!message.out?'<strong class="veto-mirror-bubble-sender">'+
             safe(message.sender)+'</strong>':'')+
-          media+viewFile+(text?'<p>'+safe(text)+'</p>':'')+
-          '<footer>'+(message.pending?'<span>Отправляется…</span>':'')+
+          replyMarkup+media+viewFile+(text?'<p>'+safe(text)+'</p>':'')+
+          '<footer>'+(canSendInThread(state.thread)&&Number.isSafeInteger(Number(message.id))&&!message.deleted&&!message.preservedOnly
+            ?'<button type="button" class="veto-mirror-reply-action" data-mirror-reply="'+safe(message.id)+'" aria-label="Ответить на сообщение">↩</button>':'')+
+          (message.replyTo?'<span>↩ '+safe(message.replyTo)+'</span>':'')+
+          (message.pending?'<span>Отправляется…</span>':'')+
           (message.sent?'<span>✓</span>':'')+
           (message.edited?'<span>изменено</span>':'')+
           (message.saved&&!message.deleted?'<span title="Сохранено в VETO">↶</span>':'')+
@@ -645,6 +871,8 @@
       (chat.archiveOnly?' · сохранено до удаления/очистки'
         :chat.savedCopy?' · вместе с сохранённой историей':' · сообщения из Telegram');
     $('telegramThreadAvatar').className='veto-mirror-thread-avatar avatar-'+chat.type;
+    const call=$('telegramThreadCall');
+    if(call)call.hidden=chat.type!=='private'||!/^https:\/\/t\.me\/[A-Za-z0-9_]+$|^tg:\/\/user\?id=\d+$/.test(String(chat.nativeUrl||''));
     const link=$('telegramThreadOpenNative');
     if(link){
       const native=String(chat.nativeUrl||'');
@@ -666,6 +894,9 @@
     revokeMediaUrls();
     haptic();
     state.thread=chat;state.messages=[];state.threadHasMore=false;
+    state.replyTo=null;state.pendingAttachment=null;
+    renderReplyPreview();renderAttachmentChip();
+    if($('telegramThreadStickerDrawer'))$('telegramThreadStickerDrawer').hidden=true;
     state.threadOffset=0;state.archiveOffset=0;
     state.archiveHasMore=false;state.liveHasMore=!chat.archiveOnly;
     state.threadGeneration++;
@@ -730,7 +961,10 @@
   function back(){
     if(!$('telegramThreadView')||$('telegramThreadView').hidden)return;
     state.threadGeneration++;
+    if(state.recording){state.recording.cancelled=true;clearTimeout(state.recording.timer);
+      try{state.recording.recorder.stop()}catch{}}
     state.thread=null;state.threadLoading=false;
+    state.replyTo=null;state.pendingAttachment=null;renderReplyPreview();renderAttachmentChip();
     $('telegramThreadView').hidden=true;
     $('telegramChatsView').hidden=false;
     $('telegramMirror')?.classList.remove('thread-mode');
@@ -738,6 +972,42 @@
     renderSendComposer();
     window.scrollTo({top:0,behavior:'instant'});
   }
+  $('telegramThreadAttachButton')?.addEventListener('click',()=>{
+    if(canSendInThread(state.thread))$('telegramThreadFileInput')?.click();
+  });
+  $('telegramThreadFileInput')?.addEventListener('change',event=>{
+    const file=event.target.files?.[0];
+    if(!file)return;
+    if(file.size<1||file.size>2*1024*1024){toast('Выбери фото или документ до 2 МБ');event.target.value='';return;}
+    if(!canSendInThread(state.thread))return;
+    state.pendingAttachment={file,kind:['image/jpeg','image/png','image/webp'].includes(file.type)?'photo':'document'};
+    renderAttachmentChip();renderSendComposer();
+  });
+  $('telegramThreadAttachmentClear')?.addEventListener('click',()=>{
+    state.pendingAttachment=null;
+    if($('telegramThreadFileInput'))$('telegramThreadFileInput').value='';
+    renderAttachmentChip();renderSendComposer();
+  });
+  $('telegramThreadReplyCancel')?.addEventListener('click',()=>{
+    state.replyTo=null;renderReplyPreview();
+  });
+  $('telegramThreadStickersButton')?.addEventListener('click',openStickerDrawer);
+  $('telegramThreadStickersClose')?.addEventListener('click',()=>{
+    $('telegramThreadStickerDrawer').hidden=true;
+  });
+  $('telegramThreadStickerList')?.addEventListener('click',event=>{
+    const btn=event.target.closest('[data-send-sticker]');
+    if(btn)sendRichOutgoing('send_sticker',String(btn.dataset.sendSticker));
+  });
+  $('telegramThreadRecordVoice')?.addEventListener('click',toggleVoiceRecording);
+  $('telegramThreadCall')?.addEventListener('click',()=>{
+    const chat=state.thread,link=String(chat?.nativeUrl||'');
+    if(chat?.type!=='private'||!/^https:\/\/t\.me\/[A-Za-z0-9_]+$|^tg:\/\/user\?id=\d+$/.test(link))return;
+    // Telegram calls require native E2E VoIP signaling and media: hand off to
+    // the official app instead of pretending a browser phone call started.
+    if(link.startsWith('https://')&&tg?.openTelegramLink)tg.openTelegramLink(link);
+    else window.location.href=link;
+  });
   $('telegramThreadComposer')?.addEventListener('submit',event=>{
     event.preventDefault();
     sendOutgoing();
@@ -831,12 +1101,30 @@
   $('telegramThreadMessages')?.addEventListener('click',event=>{
     const button=event.target.closest('[data-mirror-file]');
     if(button)openArchivedFile(button);
+    const liveFile=event.target.closest('[data-mirror-live-file]');
+    if(liveFile)openLiveAttachment(liveFile);
+    const reply=event.target.closest('[data-mirror-reply]');
+    if(reply){
+      const message=state.messages.find(m=>String(m.id)===String(reply.dataset.mirrorReply));
+      if(!message||!canSendInThread(state.thread))return;
+      const mid=Number(message.id);
+      if(!Number.isSafeInteger(mid)||mid<1)return;
+      state.replyTo={id:mid,preview:String(message.text||mediaLabels[message.media]||'Сообщение').slice(0,120)};
+      renderReplyPreview();
+      $('telegramThreadCompose')?.focus();
+      haptic();
+    }
   });
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
   $('telegramThreadOlder')?.addEventListener('click',()=>loadMessages());
   window.addEventListener('veto:screen-changed',event=>{
     const current=event.detail?.screen;
+    if(current!=='telegram'&&state.recording){
+      state.recording.cancelled=true;
+      clearTimeout(state.recording.timer);
+      try{state.recording.recorder.stop()}catch{}
+    }
     if(current==='telegram'&&state.chats.length===0&&!state.loading)loadChats({reset:true});
   });
   // Opening a deep-linked screen may precede the first screen-change event.

@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261017-veto-chat-send-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261017-veto-rich-chat-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -364,19 +364,38 @@
             <button type="button" id="telegramThreadBack" aria-label="Вернуться к чатам" class="veto-mirror-icon-btn veto-mirror-back">←</button>
             <div class="veto-mirror-thread-avatar" id="telegramThreadAvatar">TG</div>
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
+            <button type="button" id="telegramThreadCall" class="veto-mirror-icon-btn" aria-label="Открыть контакт для звонка через Telegram" title="Открыть контакт для звонка в Telegram" hidden>☎</button>
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
           </div>
           <div class="veto-mirror-thread-security"><i></i><span>Облачные сообщения + подтверждённые копии VETO. Удалённое появляется, только если сохранено заранее.</span><b>↶</b></div>
           <div class="veto-mirror-thread-body" id="telegramThreadMessages" aria-live="polite"></div>
           <div id="telegramThreadNotice" class="veto-mirror-thread-notice" hidden></div>
           <div class="veto-mirror-thread-bottom">
+            <div id="telegramThreadReplyPreview" class="veto-mirror-reply-preview" hidden>
+              <div><strong>↩ Ответ на сообщение</strong><small id="telegramThreadReplyText"></small></div>
+              <button type="button" id="telegramThreadReplyCancel" aria-label="Убрать ответ">×</button>
+            </div>
+            <div class="veto-mirror-attachment-chip" id="telegramThreadAttachmentChip" hidden>
+              <span id="telegramThreadAttachmentLabel"></span>
+              <button type="button" id="telegramThreadAttachmentClear" aria-label="Убрать вложение">×</button>
+            </div>
+            <div class="veto-mirror-sticker-drawer" id="telegramThreadStickerDrawer" hidden role="group" aria-label="Недавние стикеры">
+              <div><strong>Недавние стикеры Telegram</strong><button type="button" id="telegramThreadStickersClose" aria-label="Закрыть стикеры">×</button></div>
+              <div id="telegramThreadStickerList" class="veto-mirror-sticker-list">Загружаю…</div>
+            </div>
             <button type="button" id="telegramThreadOlder" class="veto-mirror-older" hidden>↑ Загрузить старые сообщения</button>
             <div class="veto-mirror-thread-footer">
+              <div class="veto-mirror-compose-toolbar">
+                <button type="button" id="telegramThreadAttachButton" class="veto-mirror-tool-btn" aria-label="Прикрепить фото или документ" title="Фото или документ" disabled>＋</button>
+                <input type="file" id="telegramThreadFileInput" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,application/zip,video/mp4,audio/mpeg,audio/ogg,audio/webm" hidden>
+                <button type="button" id="telegramThreadStickersButton" class="veto-mirror-tool-btn" aria-label="Выбрать стикер Telegram" title="Стикеры" disabled>☺</button>
+              </div>
               <form class="veto-mirror-composer" id="telegramThreadComposer" autocomplete="off">
                 <label for="telegramThreadCompose" class="veto-mirror-compose-field">
                   <span aria-hidden="true">◉</span>
                   <textarea id="telegramThreadCompose" maxlength="4096" rows="1" placeholder="Сообщение" aria-label="Написать сообщение" disabled></textarea>
                 </label>
+                <button type="button" id="telegramThreadRecordVoice" class="veto-mirror-tool-btn veto-mirror-mic-btn" aria-label="Записать голосовое" title="Голосовое" disabled>♫</button>
                 <button type="submit" class="veto-mirror-send-button" id="telegramThreadSend" aria-label="Отправить сообщение" title="Отправить в Telegram от моего имени" disabled>➤</button>
               </form>
               <a id="telegramThreadOpenNative" href="#" target="_blank" rel="noopener noreferrer" hidden>В Telegram ↗</a>
@@ -1489,7 +1508,7 @@
   <script src="/app.js?v=20261017-veto-chat-choice-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
-  <script src="/telegram-chats.js?v=20261017-veto-chat-send-v1"></script>
+  <script src="/telegram-chats.js?v=20261017-veto-rich-chat-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
