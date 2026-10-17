@@ -283,7 +283,7 @@
         const kind=pending?.kind||(['image/jpeg','image/png','image/webp'].includes(file.type)?'photo':'document');
         request={...request,kind,name:file.name,mime:file.type,base64:await readFileAsBase64(file),
           caption:voiceSend?'':field?.value||'',duration:Number(pending?.duration||0)};
-      }else if(action==='send_sticker') request={...request,stickerIndex:Number(attachmentOrIndex)};
+      }else if(action==='send_sticker') request={...request,stickerId:String(attachmentOrIndex)};
       else return;
       // Never transmit a different chat's pending media after the user navigates away.
       if(String(state.thread?.id)!==chatId)throw new Error('Чат изменился. Отправка отменена.');
@@ -324,7 +324,7 @@
       if(String(state.thread?.id)!==chatId)return;
       state.stickers=Array.isArray(data.stickers)?data.stickers:[];
       list.innerHTML=state.stickers.length
-        ?state.stickers.map(x=>'<button type="button" data-send-sticker="'+Number(x.index)+'" title="Отправить стикер">'+
+        ?state.stickers.map(x=>'<button type="button" data-send-sticker="'+safe(x.id)+'" title="Отправить стикер">'+
             safe(x.emoji||'🎭')+'</button>').join('')
         :'<p>В Telegram пока нет недавних стикеров.</p>';
     }catch(error){list.textContent=error.message;}
@@ -997,7 +997,7 @@
   });
   $('telegramThreadStickerList')?.addEventListener('click',event=>{
     const btn=event.target.closest('[data-send-sticker]');
-    if(btn)sendRichOutgoing('send_sticker',Number(btn.dataset.sendSticker));
+    if(btn)sendRichOutgoing('send_sticker',String(btn.dataset.sendSticker));
   });
   $('telegramThreadRecordVoice')?.addEventListener('click',toggleVoiceRecording);
   $('telegramThreadCall')?.addEventListener('click',()=>{
