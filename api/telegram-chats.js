@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import { getViewerSession, listPrivacyThreads, listPrivacyMessages, getPrivacySettings, getBusinessConnectionState } from '../lib/viewer-sync-store.js';
@@ -202,6 +203,34 @@ function errorMessage(error){
   if(/timeout|ETIMEDOUT/i.test(raw))return {status:504,error:'Telegram отвечает слишком долго. Повтори запрос.'};
   return {status:503,error:'Не удалось открыть чаты. Проверь подключение Telegram.'};
 }
+export function chatRowFingerprint(chat){
+  const data={
+    id:chat.id,title:chat.title,type:chat.type,preview:chat.preview,
+    date:chat.date,unreadCount:chat.unreadCount,pinned:chat.pinned,
+    archived:chat.archived,verified:chat.verified,savedCopy:chat.savedCopy,
+    savedCount:chat.savedCount,deletedCount:chat.deletedCount,
+    media:chat.media,muted:chat.muted,
+  };
+  return createHash('sha256').update(JSON.stringify(data)).digest('base64url');
+}
+export function chatDelta(rows,known=[]){
+  const knownMap=new Map(
+    (Array.isArray(known)?known:[]).slice(0,60)
+      .filter(x=>/^-?\d{1,22}$/.test(String(x?.id||''))&&
+        /^[A-Za-z0-9_-]{43}$/.test(String(x?.rowHash||'')))
+      .map(x=>[String(x.id),x.rowHash]),
+  );
+  const hashed=rows.map(chat=>({...chat,rowHash:chatRowFingerprint(chat)}));
+  if(!knownMap.size)return {chats:hashed,delta:null};
+  const ids=new Set(hashed.map(chat=>String(chat.id)));
+  return {
+    chats:hashed.filter(chat=>knownMap.get(String(chat.id))!==chat.rowHash),
+    delta:{
+      orderedIds:hashed.map(chat=>String(chat.id)),
+      removedIds:[...knownMap.keys()].filter(id=>!ids.has(id)),
+    },
+  };
+}
 function respond(res,status,data){res.status(status).json({ok:status<400,...data});}
 export default async function handler(req,res){
   res.setHeader('Cache-Control','private, no-store, max-age=0');
@@ -289,8 +318,10 @@ export default async function handler(req,res){
         }
       }
       if(warning && !history.length)return respond(res,409,{error:warning});
+      const rendered=orderChatRows(chats).map(chat=>({...chat,inbox:inboxSignals(chat)}));
+      const update=chatDelta(rendered,page===0?body.known:[]);
       return respond(res,200,{
-        chats:orderChatRows(chats).map(chat=>({...chat,inbox:inboxSignals(chat)})),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
+        chats:update.chats,delta:update.delta,page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
         updatedAt:new Date().toISOString(),warning,
         archivedThreads:history.length,scope:'read-only-cloud-chats',isCopy:false,
         connection:{verified:Boolean(live.account?.verified),
