@@ -50,16 +50,17 @@ test('all-chat history queue is explicitly authorized, resumable, limited and op
   assert.match(ui,/Секретные чаты, группы и каналы в этой очереди не сохраняются/);
 });
 
-test('native-like chat interface retains read-only behavior and distinguishes saved copies', () => {
+test('native-like chat interface keeps saved copies visible and supports owner-only sends', () => {
   const html=file('public/studio.html'),css=file('public/app.css'),ui=file('public/telegram-chats.js');
   assert.match(html,/id="telegramMirrorAccessDrawer"/);
   assert.match(html,/id="telegramMirrorArchiveLink"/);
-  assert.match(html,/veto-mirror-composer-faux/);
+  assert.match(html,/veto-mirror-composer/);
   assert.match(css,/CHAT SURFACE v2/);
   assert.match(css,/border-radius:50%/);
   assert.match(css,/veto-mirror-bubble\.outgoing/);
   assert.match(ui,/function messageTime\(value\)/);
   assert.match(ui,/const compact=previous/);
   assert.match(ui,/message\.saved&&!message\.deleted/);
-  assert.doesNotMatch(ui,/sendMessage\(|readBusinessMessage\(/);
+  assert.match(ui,/sendChatRequest\(/);
+  assert.doesNotMatch(ui,/readBusinessMessage\(/);
 });
