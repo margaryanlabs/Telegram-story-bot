@@ -302,6 +302,7 @@
   // At most two MTProto avatar requests in flight, and 12 per app session:
   // never attempt to download hundreds of profile photos when browsing dialogs.
   function queueVisibleAvatars(){
+    if(String(tg?.initData||'')!==state.ownerInitData)return;
     if(!tg?.initData||state.avatarLoaded>=12)return;
     const visible=[...document.querySelectorAll('[data-veto-avatar]')]
       .filter(el=>!state.avatarUrls.has(el.dataset.vetoAvatar))
@@ -331,7 +332,8 @@
           el.replaceChildren(img);
         }
       }).catch(()=>{}).finally(()=>{
-        state.avatarActive--;runAvatarQueue();
+        if(owner!==state.ownerInitData)return;
+        state.avatarActive=Math.max(0,state.avatarActive-1);runAvatarQueue();
       });
     }
   }
@@ -349,7 +351,8 @@
   // Lazy bounded preview: only three images per thread load; no media is
   // persisted outside the browser tab and all blob URLs are revoked on exit.
   function loadInlinePreviews(){
-    if(!state.thread||!tg?.initData)return;
+    if(!state.thread||!tg?.initData||
+      String(tg.initData)!==state.ownerInitData)return;
     const targets=[...document.querySelectorAll('[data-mirror-preview]')].slice(-3);
     for(const el of targets){
       const id=Number(el.dataset.mirrorPreview);
@@ -408,7 +411,7 @@
     state.threadLoading=false;state.loading=false;
     state.search='';state.filter='all';
     if($('telegramMirrorSearch'))$('telegramMirrorSearch').value='';
-    state.avatarQueue=[];state.avatarRequested.clear();
+    state.avatarQueue=[];state.avatarRequested.clear();state.avatarActive=0;
     state.avatarUrls.forEach(url=>{try{URL.revokeObjectURL(url);}catch{}});
     state.avatarUrls.clear();state.avatarLoaded=0;
     revokeMediaUrls();
@@ -428,7 +431,7 @@
     state.mediaPreviewUrls.clear();state.previewSeen.clear();
   }
   async function openArchivedFile(button){
-    if(!state.thread||!button||button.disabled)return;
+    if(resetOwner()||!state.thread||!button||button.disabled)return;
     if(!tg?.initData){toast('Открой VETO внутри Telegram');return;}
     const id=Number(button.dataset.mirrorFile||0);
     if(!Number.isSafeInteger(id)||id<=0)return;
@@ -447,6 +450,9 @@
       if(!response.ok)throw new Error('Telegram уже не отдаёт вложение и резервная копия недоступна.');
       const blob=await response.blob();
       if(!blob.size||blob.size>20*1024*1024)throw new Error('Файл слишком большой для просмотра.');
+      if(String(tg?.initData||'')!==state.ownerInitData){
+        resetOwner();return;
+      }
       const href=URL.createObjectURL(blob);
       state.mediaUrls.push(href);
       const wrapper=document.createElement('div');
