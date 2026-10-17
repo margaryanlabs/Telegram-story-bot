@@ -116,7 +116,7 @@
 .veto-story-import-launch{display:block;width:100%;min-height:41px;margin:7px 0 14px;padding:10px 12px;border:1px dashed rgba(189,214,242,.22);
  background:#121923;color:#c9d9ea;border-radius:12px;font-size:11px;font-weight:730;text-align:center;letter-spacing:.01em}
 .veto-story-import-launch:hover,.veto-story-import-launch:focus-visible{border-color:rgba(221,238,255,.55);background:#1b2633}
-.veto-story-looks button canvas{width:100%;max-width:47px;height:76px;border-radius:7px;display:block;
+.veto-story-looks button canvas{width:100%;max-width:47px;height:auto;aspect-ratio:9/16;border-radius:7px;display:block;
  object-fit:cover;background:linear-gradient(135deg,#354353,#141b25);border:1px solid rgba(236,245,255,.09)}
 .veto-story-looks button.active canvas{outline:2px solid #a7bfda;outline-offset:2px}
 .veto-story-looks button{padding:10px 4px;gap:9px}
@@ -144,7 +144,7 @@
 .veto-story-project-actions button:first-child{background:#e5eef8;color:#172537;border:0}
 .veto-story-project-actions button:disabled{opacity:.5}
 @media(max-width:375px){
- .veto-story-looks button canvas{max-width:36px;height:60px}
+ .veto-story-looks button canvas{max-width:36px;height:auto}
  .veto-story-brand-kit>label{align-items:flex-start;flex-direction:column;gap:3px}
  .veto-story-project-actions{grid-template-columns:1fr}
 }
