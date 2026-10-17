@@ -121,9 +121,10 @@
     // Do not expose A's archive, media or event counts after WebView changes
     // to Telegram account B while an asynchronous response is in flight.
     privacyState.ownerInitData=signed;privacyState.ownerEpoch++;
-    privacyState.loading=false;
+    privacyState.loading=false;privacyState.degraded=false;
     privacyState.threads=[];privacyState.deletedFeed=[];
     privacyState.deletedFeedLoaded=false;privacyState.deletedFeedHasMore=false;
+    privacyState.deletedFeedLoading=false;
     privacyState.activeThread=null;privacyState.diagnostics=null;
     privacyState.smartSummary=null;privacyState.smartBrief=null;
     privacyState.lastTotalMessages=0;privacyState.lastRefreshAt=null;
