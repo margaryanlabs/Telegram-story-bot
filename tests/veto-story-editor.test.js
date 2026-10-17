@@ -82,3 +82,35 @@ test('no unrequested automated Story publishing, and editor integration respects
   assert.ok(html.includes('Черновик'));
   assert.ok(js.includes('a.download=file.name'));
 });
+
+test('canvas export actually composes the source photograph, vignette and burned-in caption',()=>{
+  const start=js.indexOf('  function coverGeometry(');
+  const stop=js.indexOf('  function requestRender(){',start);
+  assert.ok(start>0&&stop>start);
+  const ctx={W:720,H:1280,cap:(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0))};
+  const draw=vm.runInNewContext(js.slice(start,stop)+'\n({drawFrame,coverGeometry})',ctx);
+  const calls=[];
+  const noop=()=>{};
+  const canvas={width:1080,height:1920};
+  const paint={
+    clearRect:noop,fillRect:(...values)=>calls.push(['fillRect',...values]),
+    save:noop,restore:noop,drawImage:(...values)=>calls.push(['drawImage',...values]),
+    createRadialGradient:()=>({addColorStop:noop}),
+    createLinearGradient:()=>({addColorStop:noop}),
+    measureText:text=>({width:String(text).length*20}),
+    fillText:(...values)=>calls.push(['fillText',...values]),
+  };
+  const photo={naturalWidth:2200,naturalHeight:1400};
+  const config={brightness:6,contrast:14,saturation:-9,warmth:3,
+    vignette:30,zoom:1.2,panX:0,panY:0,text:'A BEAUTIFUL STORY',
+    textPosition:'bottom',textTone:'light',textSize:56};
+  draw.drawFrame(canvas,paint,photo,config);
+  const image=calls.find(row=>row[0]==='drawImage');
+  assert.ok(image);
+  assert.equal(image[1],photo);
+  assert.ok(image[4]>1080);
+  assert.ok(image[5]>=1920);
+  assert.ok(String(paint.filter).includes('brightness('));
+  assert.ok(calls.some(row=>row[0]==='fillText'&&row[1].includes('STORY')));
+  assert.ok(calls.filter(row=>row[0]==='fillRect').length>=2);
+});
