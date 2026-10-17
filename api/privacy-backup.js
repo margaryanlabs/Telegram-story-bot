@@ -98,7 +98,10 @@ export default async function handler(req, res) {
         note:'Группы, каналы, боты и секретные чаты сюда не входят. Будущие удаления без непрерывной доставки Telegram не гарантируются.',
       });
       const settings=await getPrivacySettings(userId);
-      if(!settings.ghostInbox) await updatePrivacySettings(userId,{ghostInbox:true});
+      const patch={};
+      if(!settings.ghostInbox) patch.ghostInbox=true;
+      if(body.retentionConsent === true && Number(settings.retentionDays||0)<3650) patch.retentionDays=3650;
+      if(Object.keys(patch).length) await updatePrivacySettings(userId,patch);
       let offset=start;
       const queued=[];
       let warning=null;
