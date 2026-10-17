@@ -1512,6 +1512,120 @@
     } finally { clearTimeout(timeout); }
   }
 
+
+  // Opt-in queue for the owner's existing, ordinary private cloud chats. Queue
+  // progress is only an index; NEVER store contact IDs, names or message text
+  // in localStorage. Worker imports history separately and may take hours.
+  const allBackup={running:false,stop:false,index:0,total:0,queued:0};
+  function allBackupKey() {
+    return 'veto:all-private-queue:v1:'+String(tg?.initDataUnsafe?.user?.id||'unknown');
+  }
+  function rememberedAllBackupIndex() {
+    try {
+      const item=JSON.parse(localStorage.getItem(allBackupKey())||'{}');
+      return Date.now()-Number(item.at||0)<7*86400000
+        ?Math.max(0,Math.min(500,Number(item.index||0))):0;
+    } catch { return 0; }
+  }
+  function saveAllBackupIndex() {
+    try { localStorage.setItem(allBackupKey(),JSON.stringify({
+      index:allBackup.index,at:Date.now(),
+    })); } catch {}
+  }
+  function allBackupProgressCopy() {
+    if (allBackup.index>=allBackup.total)
+      return 'Все найденные личные чаты добавлены в фоновую очередь. Это НЕ означает, что вся история уже сохранена — дождись выполнения задач.';
+    if (allBackup.stop) return 'Добавление приостановлено. Уже поставленные задания продолжают работать в фоне.';
+    return 'Добавляю по четыре чата за запрос. Содержимое начнёт сохраняться фоновым работником, не мгновенно.';
+  }
+  function renderAllBackupProgress({error=''}={}) {
+    openSheet(`
+      <span class="kicker">VETO · HISTORY QUEUE</span>
+      <h2>${allBackup.index>=allBackup.total?'Очередь создана':'История личных чатов'}</h2>
+      <p>${escapeHtml(error||allBackupProgressCopy())}</p>
+      <div class="ghost-backup-progress"><strong>${allBackup.index} / ${allBackup.total}</strong><span>личных чатов поставлено в очередь</span></div>
+      <p class="privacy-archive-limit">Важное ограничение: историческая копия работает только с доступными обычными личными облачными чатами (до 500). Секретные чаты, группы и каналы в этой очереди не сохраняются. Удалённое раньше или между опросами может быть потеряно; для будущих удалений лучше добавить Telegram Business.</p>
+      <div class="sheet-actions">
+        ${allBackup.running
+          ?'<button data-backup-all-stop="1">Остановить добавление новых задач</button>'
+          :allBackup.index<allBackup.total
+            ?'<button class="accent" data-backup-all-resume="1">Продолжить очередь →</button>'
+            :'<button class="accent" data-backup-all-finished="1">Посмотреть архив →</button>'}
+        <button data-backup-all-status="1">Список фоновых заданий</button>
+        <button data-privacy-close="1">Закрыть</button>
+      </div>
+    `);
+  }
+  async function openAllBackupWizard() {
+    openSheet('<span class="kicker">VETO · HISTORY</span><h2>Проверяю историю твоих чатов…</h2><p>Никакие сообщения или задачи пока не создаются.</p>');
+    try {
+      const info=await backupApi('background_all_preview');
+      allBackup.total=Number(info.total||0);
+      allBackup.index=Math.min(allBackup.total,rememberedAllBackupIndex());
+      allBackup.stop=false;
+      openSheet(`
+        <span class="kicker">VETO PRIVATE · ОТДЕЛЬНОЕ СОГЛАСИЕ</span>
+        <h2>Сохранить доступную историю личных переписок?</h2>
+        <p>Найдено: <b>${allBackup.total}</b> обычных личных облачных диалогов. Сначала создадим очередь, затем по расписанию постепенно сохраним доступные сообщения. Для нового чата потребуется включить копирование отдельно или разрешить Business.</p>
+        <div class="veto-consent-boundary">
+          <strong>Что будет происходить</strong>
+          <p>✓ Только твой авторизованный Telegram, только личные чаты; не более 500.</p>
+          <p>✓ Сохранение по заданному сроку хранения VETO, даже когда Mini App закрыт.</p>
+          <p>✕ Не гарантирует мгновенный перехват удаления и не восстанавливает ранее удалённое.</p>
+          <p>✕ Группы, каналы, боты и секретные чаты не входят в текущий режим копирования.</p>
+        </div>
+        ${allBackup.index>0 ? '<p>Есть незавершённая очередь. Продолжим с позиции '+allBackup.index+'.</p>' : ''}
+        <label class="veto-consent-checkbox"><input type="checkbox" id="allBackupConsent">
+          <span>Я разрешаю VETO создать фоновые архивные задания для всех доступных обычных личных переписок моего аккаунта. Понимаю, что копии будут храниться на сервере.</span>
+        </label>
+        <div class="sheet-actions">
+          <button class="accent" data-backup-all-start="1" disabled>Создать фоновую очередь →</button>
+          <button data-backup-all-single="1">Выбрать один чат вместо всех</button>
+          <button data-privacy-close="1">Отмена</button>
+        </div>
+      `);
+    } catch(error) {
+      openSheet(`
+        <span class="kicker">VETO · HISTORY</span><h2>Нужно подключение Telegram</h2>
+        <p>${escapeHtml(error.message)}</p>
+        <div class="sheet-actions">
+          <button class="accent" data-backup-connect="1">Подключить свой Telegram →</button>
+          <button data-privacy-close="1">Закрыть</button>
+        </div>
+      `);
+    }
+  }
+  async function runAllBackupQueue() {
+    if (allBackup.running || allBackup.index>=allBackup.total) return;
+    allBackup.running=true;allBackup.stop=false;
+    renderAllBackupProgress();
+    let error='';
+    // Bounded client loop: leave UI responsive, with user-controlled stop.
+    for (let batch=0;batch<20 && !allBackup.stop && allBackup.index<allBackup.total;batch++) {
+      if(document.hidden){allBackup.stop=true;break;}
+      try {
+        const data=await backupApi('background_enable_all',{
+          confirm:true,backgroundConsent:true,allChatsConsent:true,
+          offset:allBackup.index,mediaEnabled:false,
+        });
+        const oldIndex=allBackup.index;
+        allBackup.index=Number(data.nextOffset||oldIndex);
+        saveAllBackupIndex();
+        if (!Number.isSafeInteger(allBackup.index)||allBackup.index<=oldIndex) {
+          error=data.warning||'Не удалось добавить следующую группу. Продолжи позднее.';
+          break;
+        }
+        const title=$('sheet')?.querySelector('.ghost-backup-progress strong');
+        const body=$('sheet')?.querySelector('.ghost-backup-progress span');
+        if (title) title.textContent=allBackup.index+' / '+allBackup.total;
+        if (body) body.textContent='личных чатов добавлено в очередь';
+        if(data.warning){error=data.warning;break;}
+      } catch(e){error=e.message;break;}
+    }
+    allBackup.running=false;
+    renderAllBackupProgress({error});
+  }
+
   // Save cursor/aggregate counts only. Telegram message content, auth sessions,
   // contact names and message bodies must never enter localStorage.
   const BACKUP_RESUME_PREFIX = 'veto:history-cursor:v1:';
@@ -1763,6 +1877,7 @@
         : 'Подключение пока не подтверждено. Проверь шаги в Telegram.');
     } finally { button.disabled = false; }
   });
+  $('privacyBackupAllButton')?.addEventListener('click', openAllBackupWizard);
   $('privacyBackupHistoryButton')?.addEventListener('click', openBackupPicker);
   $('privacyTestNotificationButton')?.addEventListener('click', async event => {
     const button = event.currentTarget;
@@ -1912,6 +2027,10 @@
   });
 
   $('sheet')?.addEventListener('change', event => {
+    if(event.target.id==='allBackupConsent'){
+      const button=$('sheet')?.querySelector('[data-backup-all-start]');
+      if(button)button.disabled=!event.target.checked;
+    }
     if (event.target.matches('[data-business-selected],#businessWizardConsent,input[name="vetoBusinessScope"]')) updateBusinessWizardConsent();
   });
 
@@ -1935,6 +2054,20 @@
         closeSheet();
         await openBackupPicker();
       }
+      return;
+    }
+    const allBackupAction=event.target.closest('[data-backup-all-start],[data-backup-all-stop],[data-backup-all-resume],[data-backup-all-finished],[data-backup-all-status],[data-backup-all-single]');
+    if (allBackupAction) {
+      if(allBackupAction.hasAttribute('data-backup-all-start')){
+        if($('allBackupConsent')?.checked!==true){toast('Подтверди согласие на архивирование');return;}
+        await runAllBackupQueue();
+      }else if(allBackupAction.hasAttribute('data-backup-all-resume'))await runAllBackupQueue();
+      else if(allBackupAction.hasAttribute('data-backup-all-stop')){
+        allBackup.stop=true;
+        toast('Остановка после текущего запроса. Уже поставленные задания остаются активными.');
+      }else if(allBackupAction.hasAttribute('data-backup-all-finished')){closeSheet();refresh({silent:true});}
+      else if(allBackupAction.hasAttribute('data-backup-all-status'))await openBackupPicker();
+      else if(allBackupAction.hasAttribute('data-backup-all-single'))await openBackupPicker();
       return;
     }
     const mediaRecovery=event.target.closest('[data-privacy-repair-media],[data-privacy-check-media]');
