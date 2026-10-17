@@ -87,7 +87,8 @@ test('canvas export actually composes the source photograph, vignette and burned
   const start=js.indexOf('  function coverGeometry(');
   const stop=js.indexOf('  function requestRender(){',start);
   assert.ok(start>0&&stop>start);
-  const ctx={W:720,H:1280,cap:(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0))};
+  const ctx={W:720,H:1280,cap:(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0)),
+    photoSize:p=>({width:p.naturalWidth||p.width,height:p.naturalHeight||p.height})};
   const draw=vm.runInNewContext(js.slice(start,stop)+'\n({drawFrame,coverGeometry})',ctx);
   const calls=[];
   const noop=()=>{};
