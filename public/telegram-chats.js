@@ -128,7 +128,7 @@
       voiceButton.title=state.recording?'Завершить запись и прослушать':'Записать голосовое';}
 
     form.classList.toggle('is-readonly',!writable);
-    field.disabled=!available;
+    field.disabled=!writable; // The next draft is editable while the previous send is pending.
     const chatId=String(state.thread?.id||'');
     if(field.dataset.activeChat!==chatId){
       field.dataset.activeChat=chatId;
@@ -159,6 +159,9 @@
     if(!nonce){toast('Нужен защищённый HTTPS для отправки сообщений');return;}
     state.sendInFlight=true;
     state.lastSendFailure=null;
+    // Immediate input handoff; server delivery is still confirmed asynchronously.
+    field.value='';
+    state.drafts.delete(chatId);
     const provisionalId='sending-'+nonce;
     state.messages.push({
       id:provisionalId,date:new Date().toISOString(),text:message,out:true,
@@ -178,9 +181,9 @@
           });
           state.messages.sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
         }
-        field.value='';
+        // Never erase text the user has begun writing while awaiting Telegram.
         state.replyTo=null;renderReplyPreview();
-        state.drafts.delete(chatId);
+        if(!field.value.trim())state.drafts.delete(chatId);
         renderMessages();
         threadNotice('');
         // Replace any provisional timestamp with Telegram's own message and
@@ -199,8 +202,10 @@
       }
       if(String(state.thread?.id)===chatId){
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
-        state.drafts.set(chatId,message);
-        field.value=message;
+        if(!field.value.trim()){
+          state.drafts.set(chatId,message);
+          field.value=message;
+        }else state.drafts.set(chatId,field.value);
         renderMessages();
         threadNotice(error.message+(error.uncertain?' · Повтор с тем же идентификатором.':''));
       }
@@ -372,6 +377,7 @@
     const AudioCtx=window.AudioContext||window.webkitAudioContext;
     if(!AudioCtx)throw new Error('Аудиоэффекты недоступны в этом браузере. Выбери «Оригинал».');
     const context=new AudioCtx();
+    if(context.state==='suspended')void context.resume().catch(()=>{});
     const source=context.createMediaStreamSource(microphone);
     const filter=context.createBiquadFilter();
     const compressor=context.createDynamicsCompressor();
