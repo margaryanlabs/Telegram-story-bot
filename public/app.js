@@ -104,6 +104,7 @@
   let composerPreviewUrl = '';
   let composerNonce = '';
   let composerBusy = false;
+  let composerGeneration = 0;
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -294,6 +295,7 @@
   }
 
   function resetComposer({ keepCaption = false } = {}) {
+    composerGeneration++;
     composerFile = null;
     composerDataUrl = '';
     composerNonce = '';
@@ -316,7 +318,7 @@
 
   async function prepareComposerFile(file) {
     if (!file) return;
-
+    const generation=++composerGeneration;
     composerBusy = true;
     $('composerState').textContent = 'Подготавливаю…';
     $('composerState').className = 'composer-state busy';
@@ -324,6 +326,7 @@
 
     try {
       const prepared = await compressStoryImage(file);
+      if(generation!==composerGeneration)return;
       composerFile = file;
       composerDataUrl = prepared.dataUrl;
       composerNonce = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
@@ -338,12 +341,12 @@
       if($('vetoStoryEditEntry'))$('vetoStoryEditEntry').hidden=false;
       notify('success');
     } catch (error) {
+      if(generation!==composerGeneration)return;
       resetComposer({ keepCaption: true });
       notify('error');
       showToast(error.message);
     } finally {
-      composerBusy = false;
-      renderPublish();
+      if(generation===composerGeneration){composerBusy=false;renderPublish();}
     }
   }
 
