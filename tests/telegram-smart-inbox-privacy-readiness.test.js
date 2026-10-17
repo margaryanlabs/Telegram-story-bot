@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { privacyReadiness, inboxSignals } from '../lib/telegram-inbox-signals.js';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
-test('Privacy readiness requires owner-enabled protection AND Business message permission',()=>{
+test('Privacy readiness requires opted-in owner protection and Business connection, not mark-as-read',()=>{
  const rows=[{messageCount:24,deletedCount:3},{messageCount:7,deletedCount:1}];
  const settings={antiDelete:true,ghostInbox:true,retentionDays:365};
  const business={isEnabled:true,businessConnectionId:'test',canReadMessages:true};
@@ -17,7 +17,8 @@ test('Privacy readiness requires owner-enabled protection AND Business message p
  assert.equal(ready.retentionDays,365);
  assert.equal(privacyReadiness({...settings,antiDelete:false},business,rows).nextAction,'enable_privacy');
  assert.equal(privacyReadiness(settings,null,rows).nextAction,'connect_business');
- assert.equal(privacyReadiness(settings,{...business,canReadMessages:false},rows).nextAction,'grant_messages');
+ assert.equal(privacyReadiness(settings,{...business,canReadMessages:false},rows).nextAction,'test_archive');
+ assert.equal(privacyReadiness(settings,{...business,canReadMessages:false},rows).markReadAllowed,false);
  assert.equal(privacyReadiness(null,business,rows).nextAction,'unavailable');
 });
 test('Smart Inbox focuses on unanswered-looking messages, never sends or marks read',()=>{
