@@ -4,7 +4,7 @@
   const $=id=>document.getElementById(id);
   const state={
     chats:[],page:0,hasMore:true,loading:false,
-    filter:'all',search:'',generation:0,lastSyncedAt:0,syncMs:0,autoPages:0,
+    filter:'all',search:'',generation:0,lastSyncedAt:0,syncMs:0,autoPages:0,stale:false,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
@@ -196,16 +196,18 @@
     const proof=$('telegramMirrorAccountProof');
     if(proof){
       const p=state.connectionProof;
-      proof.classList.toggle('ready',p?.verified===true);
+      proof.classList.toggle('ready',p?.verified===true&&!state.stale);
       proof.classList.toggle('archive-only',Boolean(p)&&!p.verified);
-      proof.textContent=p?.verified
+      proof.textContent=state.stale&&p?.verified
+        ?'◌ Ранее проверенный аккаунт · отображаются данные этого сеанса, обновление недоступно'
+        :p?.verified
         ?'✓ Подтверждён Telegram '+(p.username?'@'+p.username:p.accountName||'владельца')+' · чаты только этого аккаунта'
         :p ? '◈ Только собственный архив VETO · живой аккаунт не подтверждён' : '◌ Проверяю личный Telegram · чужие чаты не показываются';
     }
     $('telegramMirrorUpdated').textContent=state.loading
       ?'СИНХРОНИЗАЦИЯ · '+state.chats.length+' чатов'
       :state.lastSyncedAt
-        ?state.chats.length+' загружено · '+(state.connectionProof?.verified?'LIVE':'АРХИВ')
+        ?state.chats.length+' загружено · '+(state.stale?'ОФЛАЙН-КОПИЯ':state.connectionProof?.verified?'LIVE':'АРХИВ')
         :'Ожидаю подключения';
     if(!items.length){
       list.innerHTML=state.loading
@@ -289,7 +291,7 @@
         }
       });
       state.connectionProof=data.connection||null;
-      state.lastSyncedAt=Date.now();
+      state.lastSyncedAt=Date.now();state.stale=false;
       state.syncMs=Math.max(0,Date.now()-started);
       // Archive-only rows are additional cards, not remote Telegram pagination.
       state.hasMore=Boolean(data.hasMore)&&state.page<11;
@@ -303,6 +305,7 @@
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
       if(generation!==state.generation)return;
+      state.stale=true;
       const accessFailure=[401,403,409].includes(Number(error.status||0))||
         /владелец|другой аккаунт|аккаунт изменился|сессия недействительна/i.test(error.message);
       if(accessFailure||!state.chats.length){
@@ -455,7 +458,7 @@
     state.generation++;state.threadGeneration++;
     state.chats=[];state.messages=[];state.thread=null;
     state.connectionProof=null;state.page=0;state.hasMore=true;
-    state.lastSyncedAt=0;state.syncMs=0;state.autoPages=0;
+    state.lastSyncedAt=0;state.syncMs=0;state.autoPages=0;state.stale=false;
     state.threadLoading=false;state.loading=false;
     state.search='';state.filter='all';
     if($('telegramMirrorSearch'))$('telegramMirrorSearch').value='';
@@ -774,6 +777,10 @@
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
   $('telegramThreadOlder')?.addEventListener('click',()=>loadMessages());
+  $('telegramThreadBottomJump')?.addEventListener('click',()=>{
+    const body=$('telegramThreadMessages');
+    if(body)body.scrollTo({top:body.scrollHeight,behavior:'smooth'});
+  });
   window.addEventListener('veto:screen-changed',event=>{
     resetOwner();
     const current=event.detail?.screen;
