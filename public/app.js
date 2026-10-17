@@ -2028,16 +2028,16 @@
   function businessConnectionHelpSheet() {
     openSheet(`
       <span class="kicker">НЕОБЯЗАТЕЛЬНО · PRIVACY</span>
-      <h2>Это нужно только для Anti‑Delete и истории сообщений</h2>
-      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Telegram Business нужен, чтобы ты сам разрешил VETO получать события выбранных чатов.</p>
+      <h2>Подключи архив личных чатов</h2>
+      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Premium не требуется.</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
         <div class="sheet-item"><strong>2 · Добавь VETO Telegram</strong><span>Технический username сейчас @Storypilotlab_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
-        <div class="sheet-item"><strong>3 · Разреши доступ к сообщениям</strong><span>Только этот доступ позволяет Anti‑Delete, Edit History и Smart Inbox видеть события выбранных чатов.</span></div>
-        <div class="sheet-item"><strong>4 · Stories можно не включать</strong><span>Если основное подключение уже работает, отдельный Business‑доступ к Stories не нужен.</span></div>
+        <div class="sheet-item"><strong>3 · Выбери личные чаты</strong><span>Включи «Только выбранные чаты» и права для сообщений; остальные разрешения не нужны для архива. Секретные чаты не поддерживаются.</span></div>
+        <div class="sheet-item"><strong>4 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="check">Проверить Business‑разрешения</button>
+        <button class="accent" data-sheet-action="go-ghost">Открыть настройку чатов</button>
         <button data-sheet-action="account-connect">Подключить обычный аккаунт</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
