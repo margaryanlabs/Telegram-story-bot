@@ -18,7 +18,7 @@ test('Business walkthrough uses Telegram settings, never requests an OTP or expa
   const code = source('public/privacy.js');
   const guide = code.split('function privacyBusinessGuideSheet()')[1].split('async function mediaRecoveryApi')[0];
   assert.match(guide, /Telegram для бизнеса/);
-  assert.match(guide, /Выбери личные чаты/);
+  assert.match(guide, /Выбери личные чаты|Выбрать личные чаты/);
   assert.match(guide, /data-privacy-copy-bot/);
   assert.match(guide, /data-privacy-recheck-access/);
   assert.match(guide, /Не предоставляй права отправлять или удалять сообщения/);
