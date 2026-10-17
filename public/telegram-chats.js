@@ -12,7 +12,7 @@
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
-    threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,
+    threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -809,6 +809,7 @@
     state.generation++;state.threadGeneration++;state.voicePermissionGeneration++;
     cancelVoiceCapture();
     stopThreadSync();
+    state.syncRunId++; // stale poll completions must not unlock another owner's sync
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
     state.chats=[];state.messages=[];state.thread=null;
@@ -847,6 +848,7 @@
     if(!tg?.initData){toast('Открой VETO внутри Telegram');return;}
     const id=Number(button.dataset.mirrorFile||0);
     if(!Number.isSafeInteger(id)||id<=0)return;
+    const chatId=String(state.thread.id),ownerKey=state.ownerInitData,epoch=state.threadGeneration;
     button.disabled=true;
     const original=button.textContent;
     button.textContent='Загружаю защищённую копию…';
@@ -854,13 +856,15 @@
     const timer=setTimeout(()=>controller.abort(),20000);
     try{
       const params=new URLSearchParams({
-        chatId:String(state.thread.id),messageId:String(id),
+        chatId,messageId:String(id),
       });
       const response=await fetch('/api/privacy-media?'+params,{
-        headers:{'x-telegram-init-data':tg.initData},signal:controller.signal,
+        headers:{'x-telegram-init-data':ownerKey},signal:controller.signal,
       });
       if(!response.ok)throw new Error('Telegram уже не отдаёт вложение и резервная копия недоступна.');
       const blob=await response.blob();
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+         epoch!==state.threadGeneration||String(state.thread?.id)!==chatId||!button.isConnected)return;
       if(!blob.size||blob.size>20*1024*1024)throw new Error('Файл слишком большой для просмотра.');
       const href=URL.createObjectURL(blob);
       state.mediaUrls.push(href);
@@ -881,8 +885,11 @@
       wrapper.appendChild(link);
       button.after(wrapper);button.hidden=true;
     }catch(error){
-      toast(error?.name==='AbortError'?'Media Vault отвечает слишком долго':error.message);
-      button.textContent=original;button.disabled=false;
+      if(ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
+         epoch===state.threadGeneration&&String(state.thread?.id)===chatId&&button.isConnected){
+        toast(error?.name==='AbortError'?'Media Vault отвечает слишком долго':error.message);
+        button.textContent=original;button.disabled=false;
+      }
     }finally{clearTimeout(timer);}
   }
 
@@ -890,20 +897,21 @@
     if(!state.thread||button.disabled||!tg?.initData)return;
     const id=Number(button.dataset.mirrorLiveFile);
     if(!Number.isSafeInteger(id)||id<=0)return;
-    const chatId=String(state.thread.id);
+    const chatId=String(state.thread.id),ownerKey=state.ownerInitData,epoch=state.threadGeneration;
     const prev=button.textContent;
     button.disabled=true;button.textContent='Загружаю из Telegram…';
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),27000);
     try {
       const response=await fetch('/api/telegram-chat-media',{
         method:'POST',
-        headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
+        headers:{'content-type':'application/json','x-telegram-init-data':ownerKey},
         body:JSON.stringify({action:'attachment',chatId,messageId:id}),signal:controller.signal,
       });
       if(!response.ok)throw new Error('Telegram не отдаёт файл или он превышает 4 МБ.');
       const blob=await response.blob();
       if(!blob.size||blob.size>4*1024*1024)throw new Error('Вложение слишком большое.');
-      if(String(state.thread?.id)!==chatId)return;
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+         epoch!==state.threadGeneration||String(state.thread?.id)!==chatId||!button.isConnected)return;
       const href=URL.createObjectURL(blob);
       state.mediaUrls.push(href);
       const element=document.createElement('div');
@@ -921,8 +929,11 @@
       link.textContent='Скачать вложение ↓';element.appendChild(link);
       button.after(element);button.hidden=true;
     }catch(error){
-      button.disabled=false;button.textContent=prev;
-      toast(error?.name==='AbortError'?'Telegram не ответил вовремя':error.message);
+      if(ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
+         epoch===state.threadGeneration&&String(state.thread?.id)===chatId&&button.isConnected){
+        button.disabled=false;button.textContent=prev;
+        toast(error?.name==='AbortError'?'Telegram не ответил вовремя':error.message);
+      }
     }finally{clearTimeout(timer);}
   }
   function visibleMessageAnchor(){
@@ -1073,6 +1084,7 @@
     }
     const chatId=String(state.thread.id),generation=state.threadGeneration;
     const ownerKey=state.ownerInitData;
+    const runId=++state.syncRunId;
     state.syncBusy=true;
     syncLabel('Проверяю новые сообщения…',true);
     const controller=new AbortController();
@@ -1135,9 +1147,11 @@
       }
     }finally{
       clearTimeout(timeout);
-      state.syncBusy=false;
-      if(String(state.thread?.id)===chatId&&ownerKey===state.ownerInitData)
+      if(runId===state.syncRunId&&generation===state.threadGeneration&&
+         String(state.thread?.id)===chatId&&ownerKey===state.ownerInitData){
+        state.syncBusy=false;
         scheduleThreadSync(state.syncFailures?Math.min(120000,30000*2**state.syncFailures):26000);
+      }
     }
   }
 
@@ -1174,6 +1188,10 @@
     haptic();
     cancelVoiceCapture();
     stopThreadSync();
+    state.syncRunId++;state.syncBusy=false;
+    // Older thread fetches may still be running: don't let their loading flag
+    // block this newly selected dialog for the rest of the session.
+    state.threadLoading=false;
     state.syncFailures=0;state.lastSyncedAt=null;
     state.thread=chat;state.messages=[];state.threadHasMore=false;
     state.replyTo=null;state.pendingAttachment=null;
@@ -1255,6 +1273,7 @@
     if(!$('telegramThreadView')||$('telegramThreadView').hidden)return;
     rememberHotThread();
     stopThreadSync();
+    state.syncRunId++;state.syncBusy=false;
     state.threadGeneration++;
     cancelVoiceCapture();
     state.thread=null;state.threadLoading=false;
