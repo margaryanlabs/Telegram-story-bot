@@ -3250,3 +3250,125 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
 .veto-consent-selected-count{font-size:10px;color:#a0aec2;margin:5px 2px 11px}
 .sheet-actions [data-business-apply]:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:390px){.veto-business-wizard-highlight{padding:12px}.veto-consent-chat{padding:10px 8px;gap:8px}}
+
+
+/* CHAT SURFACE v2 — familiar Telegram-density layout with VETO ownership and archive proof.
+   Original client styles remain, this layer overrides only the chat surface. */
+.screen[data-screen="telegram"]{padding:0}
+#telegramMirror.veto-mirror{--tg-line:rgba(193,209,232,.10);--tg-fg:#f3f6fa;--tg-muted:#8999ae;--tg-accent:#a8c8ee;
+  background:#10161e;border:1px solid rgba(189,206,229,.12);border-radius:20px;overflow:hidden;
+  box-shadow:0 18px 64px rgba(0,0,0,.28);min-height:calc(100dvh - 155px)}
+#telegramMirror .veto-mirror-list{padding:18px 16px 20px}
+#telegramMirror .veto-mirror-eyebrow{font-size:8px;letter-spacing:.13em;color:#899caf;opacity:.78}
+#telegramMirror .veto-mirror-readonly{font-size:8px;border-radius:10px;padding:4px 7px}
+#telegramMirror .veto-mirror-heading{margin:14px 0 18px;gap:7px;align-items:center}
+#telegramMirror .veto-mirror-heading h1{font-size:31px;font-weight:820;letter-spacing:-.045em;color:#f6f8fb}
+#telegramMirror .veto-mirror-heading p{font-size:10px;line-height:1.5;color:#8293a7;margin-top:4px}
+.veto-mirror-header-actions{display:flex;align-items:center;gap:8px}
+#telegramMirror .veto-mirror-icon-btn{width:40px;height:40px;min-width:40px;border-radius:50%;border:0;background:rgba(209,224,245,.06);color:#dbe7f5;font-size:19px}
+#telegramMirror .veto-mirror-icon-btn:active{background:rgba(220,232,247,.16)}
+#telegramMirror .veto-mirror-access-drawer{margin:0 0 14px;background:rgba(182,203,234,.045);
+  border:1px solid rgba(194,211,232,.11);border-radius:13px;overflow:hidden}
+#telegramMirror .veto-mirror-access-drawer summary{cursor:pointer;display:flex;gap:10px;align-items:center;list-style:none;padding:11px 12px;min-height:43px}
+#telegramMirror .veto-mirror-access-drawer summary::-webkit-details-marker{display:none}
+#telegramMirror .veto-mirror-access-drawer summary>strong{flex:1;min-width:0;font-size:10px;color:#d8e2ed;letter-spacing:.015em}
+#telegramMirror .veto-mirror-access-drawer summary>small{font-size:9px;color:#8a9aae;white-space:nowrap}
+#telegramMirror .veto-mirror-access-drawer summary>b{font-size:13px;color:#a7b8ce;transition:transform .2s}
+#telegramMirror .veto-mirror-access-drawer[open] summary>b{transform:rotate(180deg)}
+.veto-mirror-access-drawer-icon{font-size:14px;color:#bad1ec}
+#telegramMirror .veto-mirror-access-center{margin:1px 10px 10px}
+#telegramMirror .veto-mirror-privacy-diagnostics{margin:0 10px 10px}
+#telegramMirror .veto-mirror-search-wrap{border:1px solid rgba(190,213,241,.095);border-radius:13px;height:46px;
+  background:#1c2734;box-shadow:none;padding:0 12px}
+#telegramMirror .veto-mirror-search-wrap input{font-size:13px;color:#e6edf6}
+#telegramMirror .veto-mirror-search-wrap input::placeholder{color:#889bab}
+#telegramMirror .veto-mirror-filters{margin:13px -16px 0;padding:0 16px 11px;gap:6px}
+#telegramMirror .veto-mirror-filters button{font-size:10px;min-height:34px;border-radius:999px;border:1px solid rgba(173,197,224,.09);background:rgba(203,221,242,.045);color:#91a4b7;font-weight:700}
+#telegramMirror .veto-mirror-filters button.active{color:#111b29;background:#d9e7fa;border-color:#d9e7fa}
+#telegramMirror .veto-mirror-headline{margin:5px 0 3px;font-size:8px;letter-spacing:.1em;color:#8796ac}
+#telegramMirror .veto-mirror-headline span:last-child{letter-spacing:0;font-size:8px}
+#telegramMirror .veto-mirror-account-proof{margin:0 0 4px;padding:7px 2px;font-size:9px;border:0;background:transparent;color:#78909f}
+#telegramMirror .veto-mirror-focus-hint{margin:6px 0 8px;color:#74859a;font-size:9px}
+#telegramMirror .veto-mirror-chat-list{min-height:180px;margin:0 -16px}
+#telegramMirror .veto-mirror-chat{width:100%;margin:0;min-height:72px;padding:11px 15px;gap:12px;border:0;
+  border-radius:0;background:transparent;transition:background .12s}
+#telegramMirror .veto-mirror-chat:not(:last-child){border-bottom:1px solid rgba(185,201,223,.065)}
+#telegramMirror .veto-mirror-chat:hover,#telegramMirror .veto-mirror-chat:focus-visible{background:#1c2837}
+#telegramMirror .veto-mirror-chat:active{background:#263546}
+#telegramMirror .veto-mirror-chat-avatar,#telegramMirror .veto-mirror-thread-avatar{width:52px;height:52px;min-width:52px;
+  border-radius:50%;font-size:16px;font-weight:810;overflow:hidden}
+#telegramMirror .veto-mirror-avatar-img{border-radius:50%;object-fit:cover}
+#telegramMirror .veto-mirror-chat-title{gap:5px;align-items:baseline}
+#telegramMirror .veto-mirror-chat-title strong{font-size:13px;font-weight:790;color:#f1f4f9;letter-spacing:-.01em}
+#telegramMirror .veto-mirror-chat-main>small{margin-top:4px;font-size:11px;color:#91a2b5;line-height:1.4}
+#telegramMirror .veto-mirror-chat-aside{gap:7px}
+#telegramMirror .veto-mirror-chat-aside time{font-size:10px;color:#879bad}
+#telegramMirror .veto-mirror-unread{background:#79a9e2;color:#0d1826;font-size:10px;min-width:20px;height:20px;border-radius:999px}
+#telegramMirror .veto-mirror-chat.unread .veto-mirror-chat-title strong{color:#fff}
+#telegramMirror .veto-mirror-focus-tag{font-size:9px}
+#telegramMirror .veto-mirror-chat-retained{font-size:8px;letter-spacing:0;color:#a3b9d0}
+#telegramMirror .veto-mirror-chat.is-cleared{background:linear-gradient(90deg,rgba(122,168,222,.07),transparent)}
+#telegramMirror .veto-mirror-deletion-guide{margin-top:13px;width:100%;font-size:10px}
+#telegramMirror .veto-mirror-privacy-note{margin-top:16px}
+#telegramMirror .veto-mirror-thread{height:calc(100dvh - 160px);max-height:860px;min-height:540px;background:#0a1017}
+#telegramMirror .veto-mirror-thread-bar{padding:8px 12px;min-height:66px;background:#18232f;border-bottom:1px solid rgba(199,214,236,.09)}
+#telegramMirror .veto-mirror-thread-bar .veto-mirror-icon-btn{width:37px;height:37px;min-width:37px}
+#telegramMirror .veto-mirror-thread-avatar{width:42px;height:42px;min-width:42px}
+#telegramMirror .veto-mirror-thread-person strong{font-size:13px;font-weight:790}
+#telegramMirror .veto-mirror-thread-person span{font-size:10px;margin-top:3px}
+#telegramMirror .veto-mirror-thread-security{min-height:32px;padding:6px 12px;justify-content:flex-start;font-size:9px;letter-spacing:0;color:#8da0b7;background:#101924}
+#telegramMirror .veto-mirror-thread-security span{flex:1;line-height:1.3}
+#telegramMirror .veto-mirror-thread-security b{color:#a8c6e5;font-size:12px}
+#telegramMirror .veto-mirror-thread-body{position:relative;overflow-y:auto;padding:21px 14px 16px;
+  background-color:#0a121b;
+  background-image:radial-gradient(circle at 22% 29%,rgba(111,145,174,.035) 0 2px,transparent 2.5px),radial-gradient(circle at 84% 66%,rgba(145,164,186,.03) 0 2px,transparent 2.5px);
+  background-size:70px 72px,95px 98px;scrollbar-gutter:stable}
+#telegramMirror .veto-mirror-day{padding:10px 0 17px}
+#telegramMirror .veto-mirror-day span{background:#253140;box-shadow:0 2px 7px rgba(0,0,0,.12);
+  color:#bccddf;padding:5px 12px;border:0;border-radius:11px;font-size:10px;font-weight:720}
+#telegramMirror .veto-mirror-bubble{margin:4px 0;line-height:1.42}
+#telegramMirror .veto-mirror-bubble-inner{max-width:min(88%,520px);padding:9px 11px 6px;
+  color:#e8eef7;background:#1e2b37;border:1px solid rgba(198,212,229,.045);
+  border-radius:17px 17px 17px 5px;box-shadow:0 2px 6px rgba(0,0,0,.10)}
+#telegramMirror .veto-mirror-bubble.outgoing .veto-mirror-bubble-inner{background:#304c68;color:#f1f7ff;
+  border-color:rgba(185,211,234,.09);border-radius:17px 17px 5px 17px}
+#telegramMirror .veto-mirror-bubble-inner p{font-size:12.5px;line-height:1.48;letter-spacing:.001em;color:inherit}
+#telegramMirror .veto-mirror-bubble footer{font-size:9px;color:#a9b7c6;margin-top:4px;padding-top:0}
+#telegramMirror .veto-mirror-bubble.outgoing footer{color:#bcd4ec}
+#telegramMirror .veto-mirror-bubble-sender{font-size:10px;color:#b9d3f0}
+#telegramMirror .veto-mirror-preserved-flag{font-size:9px;letter-spacing:.02em}
+#telegramMirror .veto-mirror-bubble.is-deleted .veto-mirror-bubble-inner{box-shadow:inset 3px 0 0 rgba(226,148,167,.47)}
+#telegramMirror .veto-mirror-thread-bottom{background:#17222e;padding:8px 11px max(11px,env(safe-area-inset-bottom));border-top:1px solid rgba(195,211,229,.10)}
+#telegramMirror .veto-mirror-older{color:#b8d1ec;font-size:11px}
+#telegramMirror .veto-mirror-thread-footer{display:flex;gap:8px;align-items:center}
+#telegramMirror .veto-mirror-composer-faux{display:flex;align-items:center;gap:10px;flex:1;min-height:44px;
+  background:#243342;border:1px solid rgba(180,206,238,.08);border-radius:999px;padding:0 13px;color:#aab9ca}
+#telegramMirror .veto-mirror-composer-faux span{font-size:16px}
+#telegramMirror .veto-mirror-composer-faux p{margin:0;flex:1;text-align:left;font-size:11px;color:#a3b5c7}
+#telegramMirror .veto-mirror-composer-faux em{font-size:17px;font-style:normal;color:#b9cfe7}
+#telegramMirror .veto-mirror-thread-footer>a{border-radius:999px;min-height:43px;display:flex;align-items:center;white-space:nowrap;font-size:10px;padding:0 13px;background:#bdd4ef;color:#132336}
+#telegramMirror .veto-mirror-thread-footer>a[hidden]{display:none!important}
+.veto-business-scope-options{display:grid;gap:7px;border:1px solid rgba(187,209,237,.14);
+  padding:11px;border-radius:14px;margin:14px 0 10px}
+.veto-business-scope-options legend{font-size:10px;font-weight:800;color:#dce5f0;padding:0 6px}
+.veto-business-scope-options label{display:flex;align-items:center;gap:10px;border:1px solid rgba(181,205,234,.09);
+  background:rgba(255,255,255,.035);border-radius:12px;padding:12px;cursor:pointer}
+.veto-business-scope-options input{width:18px;height:18px;accent-color:#bed6f1;flex:0 0 auto}
+.veto-business-scope-options span{display:flex;flex-direction:column;gap:4px}
+.veto-business-scope-options b{font-size:12px;color:#e9f2fc}
+.veto-business-scope-options small{font-size:10px;color:#9cacbf;line-height:1.45}
+.veto-consent-chat-list[hidden]{display:none!important}
+@media(max-width:560px){
+  .screen[data-screen="telegram"]{margin:0 -13px}
+  #telegramMirror.veto-mirror{border-radius:0;border-left:0;border-right:0;min-height:calc(100dvh - 125px)}
+  #telegramMirror .veto-mirror-list{padding:15px 14px 19px}
+  #telegramMirror .veto-mirror-chat-list{margin:0 -14px}
+  #telegramMirror .veto-mirror-chat{min-height:73px;padding:10px 15px}
+  #telegramMirror .veto-mirror-filters{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px}
+  #telegramMirror .veto-mirror-heading{margin:12px 0 16px}
+  #telegramMirror .veto-mirror-thread{min-height:calc(100dvh - 150px);height:calc(100dvh - 150px);max-height:none}
+  #telegramMirror .veto-mirror-thread-body{padding:15px 9px 13px}
+  #telegramMirror .veto-mirror-bubble-inner{max-width:90%}
+  #telegramMirror .veto-mirror-thread-security{font-size:8px;padding:5px 9px}
+}
+@media(prefers-reduced-motion:reduce){#telegramMirror *{animation-duration:0s!important;transition:none!important}}
