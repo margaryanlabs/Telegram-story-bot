@@ -142,7 +142,7 @@
       enable_privacy:'Включи Anti-Delete и защищённый Inbox в Privacy.',
       connect_business:'Подключи Telegram Business к VETO, чтобы бот получал разрешённые события.',
       grant_messages:'Разреши VETO доступ к сообщениям в Telegram Business для нужных чатов.',
-      test_archive:'Доступы выглядят готовыми. Проверь на новом сообщении в разрешённом чате.',
+      test_archive:'Настройки включены. Для подтверждения доставки отправь новое сообщение в выбранном чате. Право отмечать сообщения прочитанными не требуется.',
     };
     const status=configured?'НАСТРОЕНО · ДЛЯ РАЗРЕШЁННЫХ ЧАТОВ':known?'ТРЕБУЕТ НАСТРОЙКИ':'СОСТОЯНИЕ НЕИЗВЕСТНО';
     const checkpoint=(label,okay)=>'<span class="'+(okay?'active':'inactive')+'">'+
@@ -152,8 +152,7 @@
       '<strong>Защита переписки</strong><small>'+safe(status)+'</small></div>'+
       '<div class="veto-mirror-checks">'+checkpoint('Anti-Delete',privacy.antiDelete)+
       checkpoint('Частный Inbox',privacy.privateArchive)+
-      checkpoint('Business-доступ',privacy.businessConnected)+
-      checkpoint('Чтение сообщений',privacy.readMessagesAllowed)+'</div>'+
+      checkpoint('Business-доступ',privacy.businessConnected)+'</div>'+
       '<div class="veto-mirror-evidence"><strong>'+safe(privacy.confirmedDeleted||0)+
       '</strong><span>подтверждённых удалений</span><strong>'+safe(privacy.savedChats||0)+
       '</strong><span>сохранённых диалогов</span></div>'+
