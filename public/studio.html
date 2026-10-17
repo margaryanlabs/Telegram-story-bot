@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261017-veto-chat-choice-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261017-veto-native-business-wizard-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -926,9 +926,15 @@
             <div><strong>Выбери, какие чаты защищать</strong><p>«Только выбранные чаты» → отметь личные переписки. Не нужны права отвечать, удалять или отмечать прочитанным. Затем вернись в VETO.</p></div>
           </div>
         </div>
+        <div class="veto-business-wizard-highlight">
+          <span>НОВОЕ · ПОДКЛЮЧЕНИЕ ВНУТРИ VETO</span>
+          <strong>Выбери чаты — мы поможем подключить их без поиска настроек.</strong>
+          <p>Для этого сначала нужно авторизовать свой Telegram через номер или QR. Перед активацией ты сам отметишь разрешённые личные переписки и подтвердишь права.</p>
+          <button type="button" id="privacyBusinessWizardButton">Выбрать чаты в StoryLab <b>↗</b></button>
+        </div>
         <div class="veto-business-journey-actions">
           <button type="button" class="veto-business-verify" id="privacyBusinessVerifyButton">Проверить подключение <span>↗</span></button>
-          <button type="button" class="veto-business-more" id="privacyBusinessDetailsButton">Почему нужен доступ?</button>
+          <button type="button" class="veto-business-more" id="privacyBusinessDetailsButton">Настроить вручную</button>
         </div>
         <p class="veto-business-disclosure">Без Premium · Без доступа к секретным чатам · Telegram разрешает подключить только одного Business-бота. Резервную копию выбранного чата можно сделать отдельно, без Business.</p>
       </section>
@@ -1472,7 +1478,7 @@
 
   <script src="/app.js?v=20261017-veto-chat-choice-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
-  <script src="/privacy.js?v=20261017-veto-business-receive-v2"></script>
+  <script src="/privacy.js?v=20261017-veto-native-business-wizard-v1"></script>
   <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
