@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
-    connectionProof:null,mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
+    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
     previewActive:0,previewSeen:new Set(),
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
@@ -57,16 +57,19 @@
     try{tg?.HapticFeedback?.impactOccurred('light');}catch{}
   }
   async function request(action,payload={}){
-    if(!tg?.initData)throw new Error('Открой VETO в Telegram для доступа к твоим чатам.');
+    resetOwner();
+    const signed=String(tg?.initData||'');
+    if(!signed)throw new Error('Открой VETO в Telegram для доступа к твоим чатам.');
     const abort=new AbortController();
     const timer=setTimeout(()=>abort.abort(),22000);
     try{
       const response=await fetch('/api/telegram-chats',{
         method:'POST',
-        headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
+        headers:{'content-type':'application/json','x-telegram-init-data':signed},
         body:JSON.stringify({action,...payload}),signal:abort.signal,
       });
       const data=await response.json().catch(()=>({}));
+      if(signed!==String(tg?.initData||'')){resetOwner();throw new Error('Telegram-аккаунт изменился. Старые чаты скрыты.');}
       if(!response.ok||!data.ok)
         throw new Error(data.error||'Не удалось получить переписки');
       return data;
@@ -79,17 +82,20 @@
   // Text sending is separate from the Business bot and its archive permissions.
   // The backend rechecks the Mini App owner, the MTProto owner and the dialog.
   async function sendChatRequest(chatId,message,nonce,replyTo=null){
-    if(!tg?.initData)throw new Error('Открой VETO из Telegram для отправки');
+    if(resetOwner())throw new Error('Telegram-аккаунт изменился');
+    const signed=String(tg?.initData||'');
+    if(!signed)throw new Error('Открой VETO из Telegram для отправки');
     const abort=new AbortController();
     const timer=setTimeout(()=>abort.abort(),26000);
     try {
       const response=await fetch('/api/telegram-send',{
         method:'POST',
-        headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
+        headers:{'content-type':'application/json','x-telegram-init-data':signed},
         body:JSON.stringify({action:'send_message',chatId,message,nonce,replyTo}),
         signal:abort.signal,
       });
       const data=await response.json().catch(()=>({}));
+      if(signed!==String(tg?.initData||'')){resetOwner();throw new Error('Telegram-аккаунт изменился. Не повторяй отправку без проверки.');}
       if(!response.ok || !data.ok){
         const error=new Error(data.error||'Telegram не подтвердил отправку.');
         error.uncertain=data.uncertain===true;
@@ -110,7 +116,7 @@
   function canSendInThread(chat){
     // Archive-only cards and channels are deliberately read-only. The
     // authenticated owner's existing peer is revalidated on the server.
-    return Boolean(chat && chat.serverCanSend !== false && !chat.archiveOnly && state.connectionProof?.verified
+    return Boolean(String(tg?.initData||'')===state.ownerInitData && chat && chat.serverCanSend !== false && !chat.archiveOnly && state.connectionProof?.verified
       && ['private','group','bot','saved'].includes(chat.type));
   }
   function renderSendComposer(){
@@ -616,6 +622,7 @@
     if(clear)clear.hidden=!state.search;
   }
   async function loadChats({reset=false}={}){
+    resetOwner();
     if(state.loading)return;
     const generation=++state.generation;
     if(reset){
@@ -657,6 +664,7 @@
       if(!state.hasMore&&state.chats.length>=500)
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
+      if(generation!==state.generation)return;
       // Fail closed on any signed-account mismatch or authentication error.
       // Never keep a previously loaded conversation visible after a failed refresh.
       state.chats=[];state.hasMore=false;state.connectionProof=null;
@@ -674,22 +682,24 @@
   }
   async function photoRequest(action,chatId,messageId=null){
     if(!tg?.initData)throw new Error('Telegram Mini App требуется');
+    const signed=String(tg.initData),generation=state.generation;
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),18000);
     try{
       const response=await fetch('/api/telegram-chat-media',{
         method:'POST',headers:{
-          'content-type':'application/json','x-telegram-init-data':tg.initData,
+          'content-type':'application/json','x-telegram-init-data':signed,
         },body:JSON.stringify({action,chatId,messageId}),signal:controller.signal,
       });
       if(!response.ok)throw new Error('Telegram не отдаёт изображение');
       const blob=await response.blob();
+      if(generation!==state.generation||signed!==String(tg?.initData||'')){resetOwner();throw new Error('Сменился Telegram-аккаунт');}
       if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
         throw new Error('Изображение недоступно');
       return URL.createObjectURL(blob);
     }finally{clearTimeout(timer);}
   }
-  // At most two MTProto avatar requests in flight, and 12 per app session:
+  // At most one MTProto avatar request in flight, and six per app session:
   // never attempt to download hundreds of profile photos when browsing dialogs.
   function queueVisibleAvatars(){
     if(!tg?.initData||state.avatarLoaded>=6)return;
@@ -782,6 +792,41 @@
     el.hidden=!text;
     el.textContent=String(text||'');
   }
+  // Privacy: Telegram WebView can switch an account while old network
+  // requests are in flight. Invalidate generations before any stale reply
+  // is rendered or reused. Never persist message drafts across owners.
+  function resetOwner(){
+    const current=String(tg?.initData||'');
+    if(current===state.ownerInitData)return false;
+    state.ownerInitData=current;
+    state.generation++;state.threadGeneration++;state.voicePermissionGeneration++;
+    cancelVoiceCapture();
+    state.chats=[];state.messages=[];state.thread=null;
+    state.page=0;state.hasMore=true;state.autoPages=0;
+    state.connectionProof=null;state.loading=false;state.threadLoading=false;
+    state.sendInFlight=false;state.lastSendFailure=null;state.lastRichFailure=null;
+    state.drafts.clear();state.pendingAttachment=null;state.replyTo=null;state.stickers=[];
+    state.filter='all';state.search='';
+    const input=$('telegramThreadCompose');
+    if(input){input.value='';input.dataset.activeChat='';}
+    for(const id of ['telegramThreadFileInput','telegramThreadAudioInput']){
+      if($(id))$(id).value='';
+    }
+    if($('telegramMirrorSearch'))$('telegramMirrorSearch').value='';
+    if($('telegramThreadMessages'))$('telegramThreadMessages').replaceChildren();
+    if($('telegramMirrorList'))$('telegramMirrorList').replaceChildren();
+    if($('telegramThreadView'))$('telegramThreadView').hidden=true;
+    if($('telegramChatsView'))$('telegramChatsView').hidden=false;
+    $('telegramMirror')?.classList.remove('thread-mode');
+    state.avatarQueue=[];state.avatarRequested.clear();state.avatarLoaded=0;
+    state.avatarUrls.forEach(href=>{try{URL.revokeObjectURL(href)}catch{}});
+    state.avatarUrls.clear();
+    revokeMediaUrls();
+    renderSendComposer();renderChats();
+    showNotice('Telegram-аккаунт изменился. Чаты предыдущего аккаунта скрыты. Нажми ↻.');
+    return true;
+  }
+
   function revokeMediaUrls(){
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
@@ -981,7 +1026,7 @@
     window.scrollTo({top:0,behavior:'instant'});
   }
   async function openThread(chat){
-    if(!chat)return;
+    if(resetOwner()||!chat)return;
     revokeMediaUrls();
     haptic();
     cancelVoiceCapture();
@@ -996,7 +1041,7 @@
     await loadMessages({reset:true});
   }
   async function loadMessages({reset=false}={}){
-    if(!state.thread||state.threadLoading)return;
+    if(resetOwner()||!state.thread||state.threadLoading)return;
     const chatId=String(state.thread.id);
     const rememberedAnchor=state.messages.length?visibleMessageAnchor():null;
     const generation=++state.threadGeneration;
@@ -1044,6 +1089,7 @@
       renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
       renderSendComposer();
     }catch(error){
+      if(generation!==state.threadGeneration)return;
       state.threadLoading=false;
       threadNotice(error.message);
       if(reset)renderMessages();
@@ -1241,10 +1287,14 @@
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
   $('telegramThreadOlder')?.addEventListener('click',()=>loadMessages());
   window.addEventListener('veto:screen-changed',event=>{
+    resetOwner();
     const current=event.detail?.screen;
     if(current!=='telegram')cancelVoiceCapture();
     if(current==='telegram'&&state.chats.length===0&&!state.loading)loadChats({reset:true});
   });
+  window.addEventListener('focus',resetOwner);
+  window.addEventListener('pageshow',resetOwner);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)resetOwner()});
   // Opening a deep-linked screen may precede the first screen-change event.
   if(document.querySelector('.screen.active')?.dataset?.screen==='telegram')
     loadChats({reset:true});
