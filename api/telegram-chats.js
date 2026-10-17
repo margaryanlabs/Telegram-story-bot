@@ -214,8 +214,18 @@ export default async function handler(req,res){
   try{body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};}
   catch{return respond(res,400,{error:'Некорректный запрос'});}
   const action=String(body.action||'list');
-  if(!['list','thread'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
+  if(!['list','thread','verify'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
   const userId=String(owner.id);
+  if(action==='verify'){
+    // Cheap, signed, owner-only gate before decrypting any locally cached
+    // chat metadata. No MTProto dialogs scan or message retrieval here.
+    const linked=await getViewerSession(userId).catch(()=>null);
+    if(linked?.status==='active'&&!sameTelegramAccount(userId,linked.telegram_account_user_id))
+      return respond(res,409,telegramOwnerError({code:'TELEGRAM_OWNER_MISMATCH'}));
+    const active=Boolean(linked?.status==='active'&&linked.session_ciphertext);
+    return respond(res,200,{ownerId:userId,cacheAllowed:active,
+      cacheMaxAgeSeconds:900,scope:'owner-verified-preview-only'});
+  }
   const page=Number(body.page??0);
   const chatId=String(body.chatId||'');
   const cursor=Number(body.offsetId||0);
@@ -281,6 +291,7 @@ export default async function handler(req,res){
         updatedAt:new Date().toISOString(),warning,
         archivedThreads:history.length,scope:'read-only-cloud-chats',isCopy:false,
         connection:{verified:Boolean(live.account?.verified),
+          ownerId:live.account?.verified?userId:null,
           source:live.account?.verified?'telegram-live':'owner-scoped-veto-archive',
           accountName:live.account?.name||null,username:live.account?.username||null,
           archivedThreads:history.length,
