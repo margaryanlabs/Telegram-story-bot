@@ -10,8 +10,9 @@ Automatic tests are synthetic; do **not** claim mobile launch readiness from Ver
 - 9:16 crop, pan by touch, zoom, exposure/contrast/saturation/warmth/vignette.
 - Text on image, 3 positions, text size.
 - Local bounded 25-level undo / redo.
+- Three one-tap customisable campaign starters (Launch, Tonight, Offer) plus editable top badge, CTA button and accent color. Five photo-based look thumbnails display real previews.
 - Export JPEG at 1080 × 1920 and feed back into existing confirmed Story composer.
-- Save draft as a JPEG file through system share/download; **not** cloud or in-app persistent drafts.
+- Save a ready-to-publish JPEG through system share/download, or explicitly export/import a portable editable **.vetostory** project file containing photo + non-destructive settings. **No in-app cloud/persistent drafts**; the project file is intentionally user-owned and is **not encrypted**.
 - No AI model is called; **Magic Styles are not AI-generated** and no hidden AI charges apply.
 
 ## Release acceptance, two consenting test accounts
@@ -23,7 +24,7 @@ Automatic tests are synthetic; do **not** claim mobile launch readiness from Ver
 5. Test each preset and all six sliders; test text overlays for long Russian/Armenian/English headlines.
 6. Test undo and redo, reset, cancel; cancellation cannot upload an image or publish any Telegram Story.
 7. Save draft and verify only a user-selected file is shared/downloaded. Confirm no image auto-upload while editing.
-8. Use generated JPEG and continue composer; test Standard, Public, Contacts, Close Friends and Selected audience. Failed Telegram connection, invalid selected audience, 403 and expired credentials must **fail closed**.
+8. Save and reopen a **.vetostory** file from the composer and from inside the editor; verify colors, campaign elements, pan/crop, typography, and photo survive closing/reopening. A project file contains a readable copy of the user's photograph (JPEG, EXIF generally stripped by Canvas): confirm the disclosure is visible, and test malformed/malicious JSON rejection.\n9. Use generated JPEG and continue composer; test Standard, Public, Contacts, Close Friends and Selected audience. Failed Telegram connection, invalid selected audience, 403 and expired credentials must **fail closed**.
 9. Rapidly change photos while compression is running, remove image, then choose another; an earlier asynchronous job must never override the latest image.
 10. Background Telegram mid-load and during export; navigate away and back; verify blob URLs are reclaimed, no dangling microphone, and UI stays responsive.
 11. Publish one controlled test Story with a connected consenting Telegram account. Verify displayed audience and Telegram's own Story result. Delete according to user direction.
@@ -31,8 +32,8 @@ Automatic tests are synthetic; do **not** claim mobile launch readiness from Ver
 
 ## Limitations and next build
 
-- Native Telegram Story editing, Telegram's full rich-entity stickers, and AI retouch/background removal **not implemented**.
-- Timeline/video editor, audio/music tracks, automatic schedules, subscriptions/Telegram Stars, and in-app drafts **not implemented**.
+- Native Telegram Story editing, Telegram's full rich-entity stickers, arbitrary draggable multi-object layers, and AI retouch/background removal **not implemented**.
+- Timeline/video editor, audio/music tracks, automatic schedules, subscriptions/Telegram Stars, and in-app encrypted/cloud drafts **not implemented**.
 - A browser's file-download and system-share capabilities vary, especially inside Telegram WebViews.
 - Next product gates: private durable drafts with owner-safe auth, one-tap story sequences,
   optional user-triggered AI transformations with transparent credit accounting,
