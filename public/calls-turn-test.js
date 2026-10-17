@@ -154,8 +154,23 @@
         const [ls,rs]=await Promise.all([left.getStats(),right.getStats()]);
         if(!selectedRelay(ls)||!selectedRelay(rs))
           throw Error('WebRTC установился, но браузер не подтвердил relay-кандидаты');
-        show('✓ TURN RELAY подтверждён на этом устройстве: реальный реле-маршрут, '+
-          'зашифрованный WebRTC, синтетическое аудио и ping/pong.\n'+
+        // A remote ontrack event proves SDP negotiation, not actual RTP
+        // delivery. Require observed inbound audio bytes for a real media proof.
+        let audioReceived=false;
+        for(let attempt=0;attempt<9&&!audioReceived;attempt++){
+          if(ended||myGeneration!==generation)return;
+          const stats=await right.getStats();
+          stats.forEach(s=>{
+            if(s.type==='inbound-rtp'&&
+              (s.kind==='audio'||s.mediaType==='audio')&&
+              Number(s.bytesReceived||0)>0)audioReceived=true;
+          });
+          if(!audioReceived)await new Promise(resolve=>setTimeout(resolve,450));
+        }
+        if(!audioReceived)
+          throw Error('TURN relay работает, но доставка аудио RTP не подтверждена');
+        show('✓ TURN RELAY подтверждён: реальный реле-маршрут, входящие аудио RTP-байты, '+
+          'зашифрованный WebRTC и ping/pong.\n'+
           'Это всё ещё НЕ тест звонка между двумя телефонами.');
       })();
       await Promise.race([negotiate,deadline]);
