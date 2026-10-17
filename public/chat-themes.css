@@ -154,3 +154,14 @@
  .veto-mirror .veto-chat-search input{padding:8px;min-height:37px}
  .veto-mirror .veto-chat-search button{padding:0 8px;min-height:37px}
 }
+
+/* Specificity safeguards against legacy dark-only evidence/status styles. */
+.veto-mirror .veto-mirror-privacy-diagnostics.ready .veto-mirror-diagnostics-head small,
+.veto-mirror .veto-mirror-evidence span,
+.veto-mirror .veto-mirror-deletion-guide span{color:var(--ct-muted)}
+.veto-mirror .veto-mirror-evidence strong,
+.veto-mirror .veto-mirror-checks span.active{color:var(--ct-text)}
+.veto-mirror .veto-mirror-checks span.active{background:var(--ct-elev);border-color:var(--ct-line)}
+.veto-mirror[data-chat-theme="pearl"] .veto-mirror-preserved-flag.deleted,
+.veto-mirror[data-chat-theme="linen"] .veto-mirror-preserved-flag.deleted{color:#914654}
+.veto-mirror[data-chat-theme="slate"] .veto-mirror-preserved-flag.deleted{color:#ffd0d8}
