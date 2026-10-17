@@ -540,7 +540,7 @@
     }
     const generation=++state.searchGeneration;
     output.textContent='Ищу сообщения в Telegram…';
-    const submit=$('telegramThreadSearchForm')?.querySelector('[type="submit"]');
+    const submit=$('telegramThreadSearchSubmit');
     if(submit)submit.disabled=true;
     try{
       const data=await request('search',{chatId,query});
