@@ -151,14 +151,23 @@ function inlineMenu(settings = {}, origin = '') {
   const mark = (mode, label) => active === mode ? `✅ ${label}` : label;
   const exc = settings.excluded?.length || 0;
   const ready = Boolean(settings.bc && settings.canStories);
+  // A Business connection is NOT needed just to read chats through an authorized
+  // personal session. Put both user journeys above the unrelated Stories controls.
+  const chatPathButtons = origin ? [
+    [{ text: '💬 Мои чаты · номер / QR', web_app: { url: ghostAppUrl(origin, { screen:'telegram' }) } }],
+    [{ text: '↶ Anti-Delete · подключить', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } }],
+  ] : [
+    [{ text: '💬 Как открыть мои чаты', callback_data: 'view:live-chats' }],
+    [{ text: '↶ Как включить Anti-Delete', callback_data: 'view:archive-guide' }],
+  ];
 
   if (!ready) {
     return {
       inline_keyboard: [
-        [{ text: settings.bc ? '⚠️ Разрешить управление Stories' : '🔗 Подключить Telegram', callback_data: 'view:connect' }],
+        ...chatPathButtons,
+        [{ text: '⌁ Аккаунт и Stories · подключение', callback_data: 'view:connect' }],
         ...(origin ? [[
-          { text: '🛡 Privacy', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } },
-          { text: '↶ Удалённые', web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'deleted' }) } },
+          { text: '↶ Посмотреть сохранённые удаления', web_app: { url: ghostAppUrl(origin, { screen:'chats', filter:'deleted' }) } },
         ]] : []),
         [{ text: '✅ Я подключил — проверить', callback_data: 'connect:check' }],
         [{ text: '📸 Как это работает', callback_data: 'view:howto' }],
@@ -169,6 +178,7 @@ function inlineMenu(settings = {}, origin = '') {
   const connectionText = '✅ Telegram подключён';
   return {
     inline_keyboard: [
+      ...chatPathButtons,
       [
         { text: mark('all', '🌍 Все'), callback_data: 'aud:all' },
         { text: mark('contacts', '👥 Мои контакты'), callback_data: 'aud:contacts' },
@@ -293,18 +303,20 @@ async function clearReplyKeyboard(token, chatId) {
 }
 
 function homeText(settings) {
-  if (!settings.bc) {
-    return '◉ VETO Telegram\n\nPrivacy, Messages, Stories и Intelligence — в одном центре.\n\nЕсли подключаешься впервые:\n1️⃣ Telegram → Настройки → Telegram Business / «Автоматизация чатов».\n2️⃣ Добавь @Storypilotlab_bot.\n3️⃣ Включи «Управление историями» и доступ к сообщениям / чтению сообщений.\n4️⃣ Разреши нужные чаты.\n5️⃣ Вернись и нажми «✅ Я подключил — проверить».\n\nУже подключён, но бот этого не видит? Измени одно из разрешений и сохрани — Telegram пришлёт боту свежий статус подключения.';
-  }
+  const firstRun = '◉ VETO Telegram · выбери, что нужно\n\n'
+    + '💬 ОТКРЫТЬ МОИ ЧАТЫ\nНажми «Мои чаты», подключи свой Telegram по номеру + коду или QR. Telegram Business не нужен.\n\n'
+    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @Storypilotlab_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Premium не требуется.\n\n'
+    + 'Разрешения выдаются в самом Telegram. Ранее удалённые сообщения восстановить нельзя.';
+  if (!settings.bc) return firstRun;
 
   if (!settings.canStories) {
-    return '⚠️ Почти готово\n\nTelegram видит подключение бота, но ему не разрешено управлять Stories.\n\nОткрой Telegram → Настройки → Telegram Business / Автоматизация чатов → @Storypilotlab_bot и включи «Управление историями».\n\nПотом нажми «✅ Я подключил — проверить».';
+    return firstRun + '\n\n✓ Business-бот подключён. Для работы архива отправь тестовое сообщение из выбранного личного чата. Право управлять Stories здесь не требуется.';
   }
 
   const excluded = settings.excluded?.length
-    ? `\n🚫 Не увидят: ${settings.excluded.map(u => `@${u}`).join(', ')}`
+    ? `\n🚫 Не увидят Stories: ${settings.excluded.map(u => `@${u}`).join(', ')}`
     : '';
-  return `◉ VETO Telegram\n\n✅ Telegram подключён\n👁 ${audienceLabel(settings.audience, settings.selected)}${excluded}\n🛡 Защита: ${settings.protect ? 'ВКЛ' : 'ВЫКЛ'}\n\n📸 Отправь фото или JPG/PNG/WEBP — опубликую его как Story.`;
+  return firstRun + `\n\n📸 Stories также подключены · ${audienceLabel(settings.audience, settings.selected)}${excluded}`;
 }
 
 function settingsText(settings, live = null) {
@@ -312,19 +324,20 @@ function settingsText(settings, live = null) {
     ? (settings.canStories ? '✅ активно, Stories разрешены' : '⚠️ подключено, но без доступа к Stories')
     : '⚪ ID подключения ещё не получен';
   if (live === false) connection = '❌ неактивно';
-  return `📊 VETO Telegram\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n🛡 Доступ к сообщениям для VETO Privacy: ${settings.canReadMessages ? '✅ есть' : '⚠️ не выдан'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
+  return `📊 VETO Telegram\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n↶ Business для Anti-Delete: ${settings.bc ? '✓ бот подключён; проверь выбранные чаты тестовым сообщением' : '○ не подключён'}\nℹ Право «отмечать прочитанным»: ${settings.canReadMessages ? 'разрешено' : 'не выдано (для архива не нужно)'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
 }
 
 function connectText(settings, live = null) {
-  if (settings.bc && settings.canStories && live !== false) {
-    return `✅ Telegram подключён\n\nVETO Telegram готов управлять Stories.\n${settings.canReadMessages ? '🛡 VETO Privacy: доступ к сообщениям тоже включён.' : '🛡 VETO Privacy: для Anti-Delete и удалённых сообщений ещё включи доступ к сообщениям / чтению сообщений в настройках Business-бота.'}\n\n📸 Для Story просто отправь фото в этот чат.`;
-  }
-
   if (settings.bc && live !== false) {
-    return '⚠️ Подключение найдено, но не хватает разрешения\n\nTelegram → Настройки → Telegram Business / «Автоматизация чатов» → VETO Telegram → включи «Управление историями».\n\nПосле сохранения вернись сюда и нажми «✅ Я подключил — проверить».';
+    return '✓ Telegram Business-бот подключён.\n\n'
+      + '↶ Anti-Delete: разреши боту выбранные личные переписки в Telegram → Настройки → Telegram для бизнеса → Чат-боты. Для проверки отправь из такого чата НОВОЕ сообщение и посмотри в VETO Inbox.\n\n'
+      + '💬 Живые чаты в VETO открываются отдельно через свой номер + код или QR.\n\n'
+      + (settings.canStories ? '📸 Stories: управление тоже разрешено.' : '📸 Разрешение на Stories необязательно для архива.');
   }
 
-  return '🔗 Подключить Telegram\n\nРекомендуемый путь для обычного пользователя:\n\n1️⃣ Открой Mini App VETO Telegram.\n2️⃣ Нажми «Подключить Telegram».\n3️⃣ Подтверди аккаунт через QR или номер + код Telegram.\n4️⃣ После подключения Stories и Intelligence становятся доступны через защищённую сессию.\n\n🛡 Telegram Business — отдельный optional-слой. Он нужен только если хочешь Anti-Delete, Edit History и Smart Inbox для разрешённых чатов.\n\nКоды входа и 2FA не сохраняются; после успешного входа хранится зашифрованная сессия.';
+  return '💬 ЖИВЫЕ ЧАТЫ\nОткрой Mini App → «Мои чаты» → номер + код Telegram или QR. Business для этого не нужен.\n\n'
+    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @Storypilotlab_bot → выбери личные чаты.\n\n'
+    + 'Можно пользоваться только одним способом или обоими. Не отправляй коды боту.';
 }
 
 function howToText(settings) {
@@ -1160,6 +1173,10 @@ export default async function handler(req, res) {
           await saveSettings(token, chatId, origin, next);
           await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.', messageId);
         }
+      } else if (action === 'view:live-chats') {
+        await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой VETO Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
+      } else if (action === 'view:archive-guide') {
+        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Storypilotlab_bot и выбери личные переписки. Затем VETO Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);
@@ -1224,7 +1241,7 @@ export default async function handler(req, res) {
         chatId,
         origin,
         'privacy',
-        '🛡 VETO Privacy\n\nAnti-Delete, Edit History, сохранённые медиа и поиск по приватному архиву.',
+        '↶ VETO Privacy · Anti-Delete\n\nАвтоматическое сохранение: Telegram → Настройки → Telegram для бизнеса → Чат-боты → @Storypilotlab_bot → выбери личные чаты.\n\nТакже можно вручную сохранить выбранный чат через личный Telegram-аккаунт. Старые удаления не восстановить.',
         '🛡 Открыть Privacy',
       );
       res.status(200).json({ ok: true, screen: 'privacy' });
