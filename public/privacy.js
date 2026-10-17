@@ -397,11 +397,13 @@
   function renderBusinessOnboarding(connectionLive, readMessages) {
     const journey = $('privacyBusinessOnboarding');
     if (!journey) return;
-    const verified = connectionLive && readMessages;
+    // Telegram can_read_messages is the ability to MARK a chat as read, not
+    // the permission to receive business_message events. Never demand it for archives.
     const failed = privacyState.connection.error;
+    const verified = connectionLive && !failed;
     const isPending = !privacyState.connection.loaded;
     journey.classList.toggle('ready', verified);
-    journey.classList.toggle('partial', connectionLive && !readMessages);
+    journey.classList.toggle('partial', connectionLive && failed);
     const title = $('privacyBusinessOnboardingTitle');
     const hint = $('privacyBusinessOnboardingHint');
     const state = $('privacyBusinessOnboardingState');
@@ -409,11 +411,11 @@
     const verify = $('privacyBusinessVerifyButton');
     if (title) title.textContent = verified ? 'Telegram Business подключён' : 'Сохрани важное. Даже после удаления.';
     if (hint) hint.textContent = verified
-      ? 'VETO подтвердил подключение и право на сообщения. Новые сообщения выбранных личных чатов будут доступны для архива при включённой защите.'
+      ? 'Telegram подтвердил связь с ботом. Чтобы проверить реальную доставку, отправь новое сообщение из выбранного личного чата и найди его в VETO Inbox.'
       : connectionLive
-        ? 'Бот уже подключён. Проверь разрешения и выбор личных чатов в Telegram Business — VETO пока не подтвердил доступ к сообщениям.'
+        ? 'Связь с Telegram временно не подтверждена. Проверь подключение повторно.'
         : 'Один раз разреши VETO получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.';
-    if (state) state.textContent = isPending ? 'Проверяю' : failed ? 'Нет связи' : verified ? 'Подключено ✓' : connectionLive ? 'Нужны права' : 'Один раз';
+    if (state) state.textContent = isPending ? 'Проверяю' : failed ? 'Проверить связь' : verified ? 'Бот подключён ✓' : 'Один раз';
     if (steps) steps.hidden = verified;
     if (verify) {
       verify.disabled = false;
@@ -427,7 +429,7 @@
     const complete = fullyEnabled(settings);
     const connectionLive = Boolean(privacyState.connection?.live);
     const readMessages = Boolean(privacyState.connection?.readMessages);
-    const operational = complete && connectionLive && readMessages && !privacyState.degraded;
+    const operational = complete && connectionLive && !privacyState.connection.error && !privacyState.degraded;
     renderBusinessOnboarding(connectionLive, readMessages);
     const pill = $('privacyStatusPill');
     const statusText = $('privacyStatusText');
@@ -443,22 +445,18 @@
             ? 'Проверяю Telegram'
             : complete && !connectionLive
               ? 'Нужно подключить Telegram'
-              : complete && connectionLive && !readMessages
-                ? 'Нужен доступ к сообщениям'
-                : operational
-                ? 'VETO Privacy полностью активна'
+              : operational
+                ? 'Настроено · проверь сообщением'
                 : enabled
                   ? 'VETO Privacy частично активна'
                   : 'Режим выключен';
     }
 
     if ($('privacyHeroText')) {
-      $('privacyHeroText').textContent = complete && connectionLive && readMessages
-        ? 'Разрешённые сообщения сохраняются в независимый архив на выбранный срок, даже если оригинальную переписку позже очистят в Telegram.'
+      $('privacyHeroText').textContent = complete && connectionLive && !privacyState.connection.error
+        ? 'Защита настроена. VETO может сохранять новые сообщения из выбранных личных чатов. Для проверки отправь тестовое сообщение — Telegram не раскрывает боту весь список разрешённых чатов.'
         : complete && privacyState.connection.loaded && !connectionLive
-          ? 'VETO Privacy включена, но Telegram Business ещё не подключён. Подключи его ниже — повторно настраивать VETO Privacy не нужно.'
-          : complete && connectionLive && !readMessages
-            ? 'Telegram подключён, но VETO Privacy не получила право на сообщения. Разреши доступ к сообщениям в настройках Business-бота.'
+          ? 'VETO Privacy настроена, но Telegram Business ещё не подключён. Добавь бота ниже — настройки защиты сохранятся.'
             : enabled
             ? 'Часть защиты уже включена. Можно включить всю VETO Privacy одной кнопкой.'
             : 'Включи VETO Privacy одной кнопкой — дальше всё работает автоматически.';
@@ -501,28 +499,26 @@
     const accessTitle = $('privacyAccessTitle');
     const accessText = $('privacyAccessText');
     const accessAction = $('privacyAccessAction');
-    if (accessStrip) accessStrip.classList.toggle('ready', connectionLive && readMessages);
-    if (accessIcon) accessIcon.textContent = connectionLive && readMessages ? '✓' : '◌';
+    if (accessStrip) accessStrip.classList.toggle('ready', connectionLive && !privacyState.connection.error);
+    if (accessIcon) accessIcon.textContent = connectionLive && !privacyState.connection.error ? '✓' : '◌';
     if (accessTitle) {
       accessTitle.textContent = !privacyState.connection.loaded
         ? 'Проверяю Telegram'
-        : connectionLive && readMessages
+        : connectionLive && !privacyState.connection.error
           ? 'Telegram Business подключён'
-          : connectionLive && !readMessages
-            ? 'Разреши доступ к сообщениям'
             : privacyState.connection.error
             ? 'Не удалось проверить Telegram'
             : 'Нужно подключить Telegram Business';
     }
     if (accessText) {
-      accessText.textContent = connectionLive && readMessages
-        ? 'Telegram подключён. VETO Privacy может получать новые сообщения из разрешённых чатов.'
+      accessText.textContent = connectionLive && !privacyState.connection.error
+        ? 'Бот связан. В Telegram выбери личные чаты и отправь тестовое сообщение — право отмечать прочитанным для архива не нужно.'
         : connectionLive
-          ? 'Telegram подключён, но доступ к сообщениям не разрешён. Включи его, чтобы VETO Privacy надёжно сохраняла изменения и удаления.'
+          ? 'Проверка соединения временно недоступна. Повтори попытку, не меняя разрешения.'
           : 'VETO Privacy сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
     }
     if (accessAction) {
-      accessAction.textContent = connectionLive && readMessages ? 'Проверить' : 'Настроить';
+      accessAction.textContent = connectionLive ? 'Проверить' : 'Настроить';
     }
 
     const diagnosticsButton = $('privacyDiagnosticsButton');
@@ -654,7 +650,7 @@
 
     const liveDot = $('privacyLiveDot');
     if (liveDot) {
-      liveDot.classList.toggle('active', enabled && connectionLive && readMessages && navigator.onLine !== false && !privacyState.degraded);
+      liveDot.classList.toggle('active', enabled && connectionLive && navigator.onLine !== false && !privacyState.degraded);
       liveDot.classList.toggle('degraded', privacyState.degraded);
     }
     if ($('privacyLiveText')) {
@@ -662,7 +658,7 @@
         ? 'Offline'
         : privacyState.degraded
           ? 'Восстановление'
-          : enabled && (!connectionLive || !readMessages)
+          : enabled && !connectionLive
             ? 'Ждёт Telegram'
             : enabled
               ? 'Авто · 12с'
@@ -864,11 +860,11 @@
         refresh({ silent:true }),
         loadTelegramConnection({ silent:true }),
       ]);
-      if (!privacyState.connection.live || !privacyState.connection.readMessages) {
+      if (!privacyState.connection.live) {
         toast('Защита включена. Осталось разрешить VETO получать сообщения в Telegram Business.');
         privacyBusinessGuideSheet();
       } else {
-        toast('Защита включена: новые разрешённые сообщения будут сохраняться в архив.');
+        toast('VETO настроена. Отправь тестовое сообщение из выбранного чата, чтобы проверить получение.');
       }
     }
   }
@@ -1246,7 +1242,7 @@
       <div class="veto-business-sheet-steps">
         <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
         <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Storypilotlab_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
-        <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты» и доступ к сообщениям. Не предоставляй права отправлять или удалять сообщения, если они тебе не нужны.</span></section></div>
+        <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты». Для архива не нужны права отвечать, удалять сообщения или отмечать их прочитанными.</span></section></div>
         <div><b>04</b><section><strong>Вернись в VETO</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
       </div>
       <p class="privacy-archive-limit">Без Premium. Это не передаёт VETO старую переписку и не открывает секретные чаты. VETO сохраняет только разрешённые новые события, которые Telegram доставил после подключения, — удалённое ранее восстановить нельзя.</p>
@@ -1597,9 +1593,9 @@
     button.disabled = true;
     try {
       await loadTelegramConnection({ silent:false });
-      toast(privacyState.connection.live && privacyState.connection.readMessages
-        ? 'Подключение подтверждено. Теперь включи Anti-Delete для выбранных чатов.'
-        : 'Пока нет подтверждённого доступа. Проверь шаги подключения в Telegram.');
+      toast(privacyState.connection.live && !privacyState.connection.error
+        ? 'Бот подключён. Теперь отправь тестовое сообщение из выбранного чата.'
+        : 'Подключение пока не подтверждено. Проверь шаги в Telegram.');
     } finally { button.disabled = false; }
   });
   $('privacyBackupHistoryButton')?.addEventListener('click', openBackupPicker);
@@ -1709,8 +1705,8 @@
 
   $('privacyAccessAction')?.addEventListener('click', async () => {
     await loadTelegramConnection({ silent:false });
-    if (privacyState.connection.live && privacyState.connection.readMessages) {
-      toast('Доступ подтверждён: новые разрешённые сообщения сохраняются');
+    if (privacyState.connection.live && !privacyState.connection.error) {
+      toast('Бот подключён. Реальную доставку проверь тестовым сообщением.');
       return;
     }
     privacyBusinessGuideSheet();
@@ -1882,12 +1878,12 @@
     const recheckAccess = event.target.closest('[data-privacy-recheck-access]');
     if (recheckAccess) {
       await loadTelegramConnection({ silent:false });
-      if (privacyState.connection.live && privacyState.connection.readMessages) {
+      if (privacyState.connection.live && !privacyState.connection.error) {
         closeSheet();
-        toast('Готово — доступ к сообщениям включён');
+        toast('Бот подключён. Отправь тестовое сообщение из выбранного личного чата.');
         try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
       } else {
-        toast('Telegram пока не показывает право на сообщения');
+        toast('Telegram Business ещё не подтвердил подключение');
       }
       return;
     }
