@@ -31,8 +31,9 @@ test('Startapp decoder rejects tampered links and wrong bot usernames',()=>{
 test('Mini App uses call deep link only to prefill, with real explicit consent and account verification',()=>{
   const app=read('public/app.js'),calls=read('public/calls.js');
   const api=read('api/call-signal.js'),html=read('public/studio.html');
-  assert.ok(app.includes('tgWebAppStartParam'));
-  assert.ok(app.includes("?'calls'"));
+  assert.ok(!app.includes("?'calls'"));
+  assert.ok(!app.includes("calls:'calls'"));
+  assert.ok(html.includes('data-feature-status="code-only"'));
   assert.ok(calls.includes('function prefillDeepLink()'));
   assert.ok(calls.includes("tg?.initDataUnsafe?.start_param"));
   assert.ok(calls.includes("callIncoming').value"));
