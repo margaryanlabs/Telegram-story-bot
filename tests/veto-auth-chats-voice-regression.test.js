@@ -18,6 +18,18 @@ test('resuming an existing Telegram code preserves its real delivery type withou
   assert.ok(!app.includes('StoryLab'));
 });
 
+test('Telegram login does not request a code if the initial connection hangs',()=>{
+  const source=read('lib/viewer-sync-telegram.js');
+  const start=source.indexOf('export async function beginUserAuth(phoneNumber)');
+  const end=source.indexOf('export async function verifyUserCode(',start);
+  const flow=source.slice(start,end);
+  assert.ok(flow.includes("withTimeout(client.connect(), 8000, 'Telegram phone connect')"));
+  assert.ok(flow.indexOf('withTimeout(client.connect()')<flow.indexOf('client.sendCode('));
+  assert.ok(flow.includes('Promise.race(['));
+  assert.ok(flow.includes('client.disconnect().catch(() => {})'));
+  assert.ok(!flow.includes('withTimeout(client.sendCode('),
+    'Do not create a phantom code by timing out an already-sent Telegram request');
+});
 test('live chat API fails closed when the authenticated Telegram user changes mid-request',async()=>{
   const source=read('public/telegram-chats.js');
   const start=source.indexOf('  async function request(action,payload={}){');
