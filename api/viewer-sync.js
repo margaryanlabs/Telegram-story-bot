@@ -409,10 +409,25 @@ export default async function handler(req, res) {
       // closes while the owner copies it, allow continuing the existing challenge
       // instead of forcing another code request (which can hit FLOOD_WAIT).
       const expiry = Date.parse(loginChallenge?.expires_at || '');
-      const loginPending = Number.isFinite(expiry)
+      const pendingValid = Number.isFinite(expiry)
         && expiry > Date.now()
-        && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage)
-        ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString() }
+        && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage);
+      // Only expose how Telegram chose to deliver a pending code. Never
+      // return the phone number, phoneCodeHash, session or encrypted payload.
+      let pendingDelivery = 'unknown';
+      if (pendingValid && loginChallenge.stage === 'code') {
+        try {
+          const sealed = await openJson(loginChallenge.challenge_ciphertext, `auth:${userId}`);
+          pendingDelivery = sealed?.isCodeViaApp === true ? 'telegram_app'
+            : sealed?.isCodeViaApp === false ? 'sms_or_other' : 'unknown';
+        } catch { /* Keep pending challenge resumable without disclosing secrets. */ }
+      }
+      const loginPending = pendingValid
+        ? {
+            stage: loginChallenge.stage,
+            expiresAt: new Date(expiry).toISOString(),
+            ...(loginChallenge.stage === 'code' ? { delivery: pendingDelivery } : {}),
+          }
         : null;
 
       res.status(200).json({
@@ -574,6 +589,16 @@ export default async function handler(req, res) {
       }
 
       const auth = await beginUserAuth(requestedPhone);
+      // A Telegram delivery is not a usable login unless the matching hash
+      // and session are present. Never tell the user to enter a phantom code.
+      if (typeof auth?.phoneCodeHash !== 'string' || !auth.phoneCodeHash.trim()
+          || typeof auth?.session !== 'string') {
+        res.status(503).json({
+          ok:false,
+          error:'Telegram не подтвердил выдачу кода. Новый код не запрашивай сразу — проверь официальный Telegram и повтори позже.',
+        });
+        return;
+      }
       const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
       await saveAuthChallenge({
