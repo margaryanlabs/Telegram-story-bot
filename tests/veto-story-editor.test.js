@@ -80,6 +80,17 @@ test('no unrequested automated Story publishing, and editor integration respects
   assert.ok(js.includes('moveHistory(redoStack,undoStack)'));
   assert.ok(js.includes("window.addEventListener('pagehide',()=>close())"));
   assert.ok(html.includes('Черновик'));
+  assert.ok(html.includes('id="vetoStorySaveProject"'));
+  assert.ok(html.includes('id="vetoStoryOpenProject"'));
+  assert.ok(html.includes('id="vetoStoryImportLaunch"'));
+  assert.ok(html.includes('id="vetoStoryEyebrow"'));
+  assert.ok(html.includes('id="vetoStoryCallToAction"'));
+  assert.ok(html.includes('data-story-look-preview="editorial"'));
+  assert.ok(js.includes('renderLookPreviews()'));
+  assert.ok(js.includes('window.VetoStoryProject.parse(file)'));
+  assert.ok(js.includes('window.VetoStoryProject.create(image,settings)'));
+  assert.ok(html.includes('src="/story-project.js?'));
+  assert.ok(js.includes("if(generation!==epoch||panel.hidden)return"));
   assert.ok(js.includes('a.download=file.name'));
 });
 
