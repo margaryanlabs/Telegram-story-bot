@@ -129,3 +129,15 @@ test('creator surface has real user-photo look previews and independent CTA/eyeb
   assert.ok(html.includes('Сохрани проект файлом'));
   assert.ok(html.includes('.vetostory'));
 });
+
+test('three campaign starters create editable layered photo Stories without AI calls',()=>{
+  const html=read('public/studio.html'),js=read('public/story-editor.js');
+  for(const key of ['launch','event','offer']){
+    assert.ok(html.includes('data-story-campaign="'+key+'"'));
+    assert.ok(js.includes(key+':{eyebrow:'));
+  }
+  assert.ok(js.includes('settings={...settings,...preset};syncControls();commitEdit();requestRender()'));
+  assert.ok(js.includes("showState('Шаблон применён."));
+  assert.ok(!js.includes('OpenAI'));
+  assert.ok(!js.includes('fetch('));
+});
