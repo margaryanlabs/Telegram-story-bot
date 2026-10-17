@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   const userId=String(user.id);
   const body=typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   const action=String(body.action || '');
-  if(!['list_chats','backup_chat','background_enable','background_pause','background_status'].includes(action)) return respond(res,400,{error:'Неизвестное действие'});
+  if(!['list_chats','backup_chat','background_enable','background_enable_all','background_all_preview','background_pause','background_status'].includes(action)) return respond(res,400,{error:'Неизвестное действие'});
   try {
     // Revocation must remain possible even when the MTProto session has
     // expired or the user deliberately disconnected their Telegram account.
@@ -78,6 +78,47 @@ export default async function handler(req, res) {
     const decrypted=await openJson(session.session_ciphertext, 'session:'+userId);
     if(!decrypted?.session) throw new Error('SESSION_REVOKED');
 
+    if(action === 'background_all_preview' || action === 'background_enable_all') {
+      // One explicit global opt-in, owner-verified as with single-chat backup.
+      // A request only queues FOUR dialogues; no unbounded remote calls or
+      // hidden background task. The user can resume with returned offset.
+      const start=Number(body.offset ?? 0);
+      if(!Number.isSafeInteger(start) || start<0 || start>500)
+        return respond(res,400,{error:'Недопустимая позиция копирования'});
+      if(action === 'background_enable_all'
+        && (body.confirm !== true || body.backgroundConsent !== true || body.allChatsConsent !== true))
+        return respond(res,409,{error:'Подтверди сохранение истории всех доступных личных чатов и фоновую работу.'});
+      const dialogs=await withBackupClient(decrypted.session,async client=>{
+        await verifyTelegramClientOwner(client,userId);
+        return listBackupDialogs(client);
+      });
+      const total=dialogs.length;
+      if(action === 'background_all_preview') return respond(res,200,{
+        total,scope:'existing-private-human-cloud-chats',maxDialogs:500,
+        note:'Группы, каналы, боты и секретные чаты сюда не входят. Будущие удаления без непрерывной доставки Telegram не гарантируются.',
+      });
+      const settings=await getPrivacySettings(userId);
+      if(!settings.ghostInbox) await updatePrivacySettings(userId,{ghostInbox:true});
+      let offset=start;
+      const queued=[];
+      let warning=null;
+      for(const chat of dialogs.slice(start,Math.min(start+4,total))) {
+        try {
+          await saveBackupJob(userId,String(chat.chatId),chat.title,body.mediaEnabled === true,false);
+          queued.push(String(chat.chatId));
+          offset++;
+        } catch (error) {
+          warning='Очередь временно недоступна. Продолжи с сохранённой позиции.';
+          break;
+        }
+      }
+      return respond(res,200,{
+        queued:queued.length,total,nextOffset:offset,hasMore:offset<total,
+        warning,scope:'existing-private-human-cloud-chats',
+        complete:offset>=total,
+        note:'Добавлено в очередь, не сохранено полностью. Реальный прогресс — в фоне и VETO Inbox. Проверяй обновления.',
+      });
+    }
     if(action === 'list_chats') {
       const chats=await withBackupClient(decrypted.session,async client=>{await verifyTelegramClientOwner(client,userId);return listBackupDialogs(client);});
       return respond(res,200,{chats,scope:'private-dialogs-only',requiresSelection:true});
