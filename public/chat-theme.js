@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   // Appearance is a non-sensitive preference only. No chat, Telegram ID,
-  // message body, initData, permission or session is ever persisted here.
+  // message body, authentication material, permission or session is ever persisted here.
   const root=document.getElementById('telegramMirror');
   const panel=document.getElementById('telegramChatThemes');
   if(!root||!panel)return;
