@@ -57,3 +57,16 @@ test('themes reskin the rich composer and provide light-scheme contrast',()=>{
   assert.match(themeJs,/localStorage\.setItem\(KEY,theme\)/);
   assert.doesNotMatch(themeJs,/localStorage\.setItem\([^)]*(?:chat|message|auth|token)/i);
 });
+
+test('a Telegram identity change clears owner state and stale send acknowledgements',()=>{
+  const js=source('public/telegram-chats.js');
+  assert.match(js,/ownerInitData:String\(tg\?\.initData\|\|''\)/);
+  assert.match(js,/function resetOwner\(\)/);
+  assert.match(js,/state\.drafts\.clear\(\)/);
+  assert.match(js,/state\.generation\+\+;state\.threadGeneration\+\+/);
+  assert.match(js,/if\(generation!==state\.generation\)return/);
+  assert.match(js,/if\(generation!==state\.threadGeneration\)return/);
+  assert.match(js,/ownerKey!==state\.ownerInitData/);
+  assert.match(js,/function cancelVoiceCapture\(\)/);
+  assert.match(js,/URL\.revokeObjectURL/);
+});
