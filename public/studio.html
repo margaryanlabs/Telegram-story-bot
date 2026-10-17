@@ -433,6 +433,8 @@
           <div class="calls-selftest">
             <button id="callSelfTest" type="button" class="call-btn secondary">⊙ Тест WebRTC без микрофона</button>
             <pre id="callSelfTestStatus" class="calls-diagnostics" aria-live="polite">Проверка локального аудиосоединения между двумя виртуальными участниками на этом устройстве. Ни микрофон, ни интернет-звонок не используются.</pre>
+            <button id="callTurnTest" type="button" class="call-btn secondary">◎ Проверить реальный TURN relay</button>
+            <pre id="callTurnTestStatus" class="calls-diagnostics" aria-live="polite">Для этого теста требуется настоящий настроенный TURN-сервер. Он проверяет relay-маршрут через интернет без микрофона, но не заменяет разговор между двумя телефонами.</pre>
           </div>
         </article>
         <div class="calls-morph">
@@ -1532,6 +1534,7 @@
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/calls.js?v=20261016-veto-control-v7"></script>
   <script src="/calls-selftest.js?v=20261016-veto-transport-v1"></script>
+  <script src="/calls-turn-test.js?v=20261017-veto-relay-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
