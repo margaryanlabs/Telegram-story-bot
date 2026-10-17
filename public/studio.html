@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261017-veto-native-business-wizard-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261017-veto-telegram-chat-ui-v2" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -304,11 +304,12 @@
     <section class="screen" data-screen="telegram" aria-label="Мои живые Telegram чаты">
       <section class="veto-mirror" id="telegramMirror">
         <div class="veto-mirror-list" id="telegramChatsView">
-          <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETO TELEGRAM · LIVE MIRROR <span class="veto-mirror-readonly">READ ONLY</span></div>
+          <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETO · CLOUD CHATS <span class="veto-mirror-readonly">ТОЛЬКО ПРОСМОТР</span></div>
           <div class="veto-mirror-heading">
-            <div><h1>Мои чаты<span class="veto-mirror-dot">.</span></h1><p>Живые переписки и сохранённые копии — вместе. Даже если Telegram-чат очистили после сохранения.</p></div>
-            <button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button>
+            <div><h1>Чаты</h1><p>Твой Telegram и сохранённая история — в одном месте.</p></div>
+            <div class="veto-mirror-header-actions"><button type="button" class="veto-mirror-icon-btn" id="telegramMirrorArchiveLink" aria-label="Открыть защиту и архив">↶</button><button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button></div>
           </div>
+          <details class="veto-mirror-access-drawer" id="telegramMirrorAccessDrawer"><summary><span class="veto-mirror-access-drawer-icon">◈</span><strong>Подключение и защита переписок</strong><small id="telegramMirrorAccessDrawerStatus">Проверяем права</small><b>⌄</b></summary>
           <section class="veto-mirror-access-center" aria-label="Как подключить личный Telegram и защиту переписок">
             <div class="veto-mirror-access-head">
               <span class="veto-mirror-access-beacon">◈</span>
@@ -317,12 +318,12 @@
             </div>
             <div class="veto-mirror-access-steps">
               <div><b>01</b><span>Живые чаты</span><small>Номер + код или QR своего Telegram</small></div>
-              <div><b>02</b><span>Privacy · по желанию</span><small>Архив выбранных чатов через Business или резервную копию</small></div>
+              <div><b>02</b><span>Anti-Delete</span><small>Business позволяет получать новые события всех разрешённых личных чатов. Для старой истории — резервная копия.</small></div>
             </div>
           </section>
           <div class="veto-mirror-search-wrap">
             <span class="veto-mirror-search-symbol" aria-hidden="true">⌕</span>
-            <input id="telegramMirrorSearch" type="search" placeholder="Поиск среди загруженных чатов" autocomplete="off" aria-label="Поиск по загруженным чатам" />
+            <input id="telegramMirrorSearch" type="search" placeholder="Поиск по чатам" autocomplete="off" aria-label="Поиск по загруженным чатам" />
             <button id="telegramMirrorSearchClear" aria-label="Очистить поиск" type="button" hidden>×</button>
           </div>
           <div class="veto-mirror-filters" id="telegramMirrorFilters" role="group" aria-label="Фильтр по чатам">
@@ -342,14 +343,15 @@
           <div class="veto-mirror-privacy-diagnostics" id="telegramMirrorPrivacyDiagnostics" role="status" aria-live="polite">
             <div class="veto-mirror-diagnostics-head"><span>◈</span><strong>Защита переписки</strong><small>Проверяю доступ для этого аккаунта…</small></div>
           </div>
-          <p class="veto-mirror-focus-hint">⌑ Важное — локальная сортировка по непрочитанным, вопросам и срокам, не ИИ-прогноз.</p>
-          <button type="button" id="telegramMirrorDeletedGuide" class="veto-mirror-deletion-guide">↶ Почему удалённые сообщения могут не появляться? <span>↗</span></button>
+          </details>
+          <p class="veto-mirror-focus-hint">Локальная сортировка без отметок «прочитано» и изменения оригинальных чатов.</p>
           <div class="veto-mirror-headline"><span>ДИАЛОГИ И СОХРАНЁННЫЕ КОПИИ</span><span id="telegramMirrorUpdated">LIVE · По запросу</span></div>
           <div id="telegramMirrorNotice" class="veto-mirror-notice" hidden></div>
           <div class="veto-mirror-chat-list" id="telegramMirrorList" aria-live="polite">
             <div class="veto-mirror-empty"><span class="veto-mirror-loader"></span><strong>Открываю Telegram…</strong><small>Доступны чаты твоего подключённого аккаунта</small></div>
           </div>
           <button class="veto-mirror-more" id="telegramMirrorMore" type="button" hidden>Показать ещё чаты <span>↓</span></button>
+          <button type="button" id="telegramMirrorDeletedGuide" class="veto-mirror-deletion-guide">↶ Почему удалённые сообщения могут не появляться? <span>↗</span></button>
           <div class="veto-mirror-privacy-note">
             <span>◈</span><div><strong>Живой просмотр ≠ резервная копия</strong><p>Сообщения загружаются по запросу из твоего Telegram. VETO не отправляет отметку «прочитано». Здесь также показаны ранее сохранённые копии Privacy — включая подтверждённые удаления и чаты, исчезнувшие из Telegram.</p></div>
           </div>
@@ -363,14 +365,14 @@
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
           </div>
-          <div class="veto-mirror-thread-security"><i></i> Telegram + сохранённая история · в хронологии · только чтение <span>◈</span></div>
+          <div class="veto-mirror-thread-security"><i></i><span>Облачные сообщения + подтверждённые копии VETO. Удалённое появляется, только если сохранено заранее.</span><b>↶</b></div>
           <div class="veto-mirror-thread-body" id="telegramThreadMessages" aria-live="polite"></div>
           <div id="telegramThreadNotice" class="veto-mirror-thread-notice" hidden></div>
           <div class="veto-mirror-thread-bottom">
             <button type="button" id="telegramThreadOlder" class="veto-mirror-older" hidden>↑ Загрузить старые сообщения</button>
             <div class="veto-mirror-thread-footer">
-              <div><strong>◈ Private View + VETO Archive</strong><small>Удалённые сообщения видны, только если они были сохранены заранее</small></div>
-              <a id="telegramThreadOpenNative" href="#" target="_blank" rel="noopener noreferrer" hidden>Открыть в Telegram ↗</a>
+              <div class="veto-mirror-composer-faux" aria-label="Режим просмотра, отправка сообщений не поддерживается"><span>◉</span><p>Сообщение · только просмотр</p><em>↶</em></div>
+              <a id="telegramThreadOpenNative" href="#" target="_blank" rel="noopener noreferrer" hidden>В Telegram ↗</a>
             </div>
           </div>
         </div>
@@ -1478,8 +1480,8 @@
 
   <script src="/app.js?v=20261017-veto-chat-choice-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
-  <script src="/privacy.js?v=20261017-veto-native-business-wizard-v1"></script>
-  <script src="/telegram-chats.js?v=20261016-veto-smart-inbox-v1"></script>
+  <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
+  <script src="/telegram-chats.js?v=20261017-veto-telegram-chat-ui-v2"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
