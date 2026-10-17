@@ -44,7 +44,7 @@ test('Second user can open own connection from My Chats and sees Privacy as sepa
   const app=read('public/app.js');
   assert.ok(html.includes('id="telegramMirrorAccessButton"'));
   assert.ok(html.includes('Живые чаты'));
-  assert.ok(html.includes('Privacy · по желанию'));
+  assert.ok(html.includes('Anti-Delete'));
   assert.ok(client.includes("window.VetoTelegramOpenAccountConnection()"));
   assert.ok(app.includes('window.VetoTelegramOpenAccountConnection = async () =>'));
   assert.ok(app.includes("viewerState.session?.identityMismatch === true"));
