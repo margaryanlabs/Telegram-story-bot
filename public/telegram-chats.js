@@ -18,7 +18,7 @@
   };
   const mediaLabels={
     photo:'▣ Фотография',video:'▹ Видео',audio:'♫ Аудио',
-    document:'◫ Документ',voice:'◉ Голосовое',video_note:'◉ Видеосообщение',
+    document:'◫ Документ',voice:'◉ Голосовое',video_note:'◉ Видеосообщение',sticker:'☺ Стикер',
     location:'⌖ Локация',contact:'◈ Контакт',link:'↗ Ссылка',
     attachment:'◫ Вложение',
   };
@@ -736,6 +736,45 @@
     }finally{clearTimeout(timer);}
   }
 
+  async function openLiveAttachment(button){
+    if(!state.thread||button.disabled||!tg?.initData)return;
+    const id=Number(button.dataset.mirrorLiveFile);
+    if(!Number.isSafeInteger(id)||id<=0)return;
+    const chatId=String(state.thread.id);
+    const prev=button.textContent;
+    button.disabled=true;button.textContent='Загружаю из Telegram…';
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),27000);
+    try {
+      const response=await fetch('/api/telegram-chat-media',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
+        body:JSON.stringify({action:'attachment',chatId,messageId:id}),signal:controller.signal,
+      });
+      if(!response.ok)throw new Error('Telegram не отдаёт файл или он превышает 4 МБ.');
+      const blob=await response.blob();
+      if(!blob.size||blob.size>4*1024*1024)throw new Error('Вложение слишком большое.');
+      if(String(state.thread?.id)!==chatId)return;
+      const href=URL.createObjectURL(blob);
+      state.mediaUrls.push(href);
+      const element=document.createElement('div');
+      element.className='veto-mirror-media-reveal';
+      if(blob.type.startsWith('audio/')){
+        const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';
+        audio.src=href;element.appendChild(audio);
+      }else if(['image/png','image/jpeg','image/webp'].includes(blob.type)){
+        const image=document.createElement('img');image.src=href;image.alt='Вложение Telegram';
+        element.appendChild(image);
+      }else if(['video/mp4','video/webm'].includes(blob.type)){
+        const video=document.createElement('video');video.src=href;video.controls=true;video.preload='metadata';element.appendChild(video);
+      }
+      const link=document.createElement('a');link.href=href;link.download='storylab-attachment-'+id;
+      link.textContent='Скачать вложение ↓';element.appendChild(link);
+      button.after(element);button.hidden=true;
+    }catch(error){
+      button.disabled=false;button.textContent=prev;
+      toast(error?.name==='AbortError'?'Telegram не ответил вовремя':error.message);
+    }finally{clearTimeout(timer);}
+  }
   function visibleMessageAnchor(){
     const box=$('telegramThreadMessages');
     if(!box)return null;
@@ -780,7 +819,10 @@
             :'';
         const viewFile=message.saved&&message.media&&message.mediaAvailable
           ?'<button type="button" class="veto-mirror-open-vault" data-mirror-file="'+safe(message.id)+
-             '">Открыть сохранённый файл ↗</button>':'';
+             '">Открыть сохранённый файл ↗</button>'
+          :message.media&&!message.deleted&&!message.preservedOnly&&message.media!=='photo'
+            ?'<button type="button" class="veto-mirror-open-vault" data-mirror-live-file="'+safe(message.id)+'">Открыть файл из Telegram ↗</button>'
+            :'';
         return divider+'<article data-mirror-message-id="'+safe(message.id)+'" class="veto-mirror-bubble'+(message.out?' outgoing':'')+
           (compact?' compact':'')+(message.deleted?' is-deleted':'')+
           '"><div class="veto-mirror-bubble-inner">'+savedBanner+
@@ -1052,6 +1094,8 @@
   $('telegramThreadMessages')?.addEventListener('click',event=>{
     const button=event.target.closest('[data-mirror-file]');
     if(button)openArchivedFile(button);
+    const liveFile=event.target.closest('[data-mirror-live-file]');
+    if(liveFile)openLiveAttachment(liveFile);
     const reply=event.target.closest('[data-mirror-reply]');
     if(reply){
       const message=state.messages.find(m=>String(m.id)===String(reply.dataset.mirrorReply));
