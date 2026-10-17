@@ -9,7 +9,17 @@ import { SENDABLE_TYPES } from '../lib/telegram-chat-compose.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const PAGE_SIZE=50;
+const FIRST_PAGE_SIZE=24;
+const FAST_THREAD_DIALOGS=80;
 const MAX_DIALOGS=500;
+// Fetch only what is needed for the first paint; keep all later pages gap-free.
+export function dialogPageBounds(page){
+  const maxPage=Math.ceil((MAX_DIALOGS-FIRST_PAGE_SIZE)/PAGE_SIZE);
+  if(!Number.isSafeInteger(page)||page<0||page>maxPage)
+    throw new RangeError('Invalid chat page');
+  const start=page===0?0:FIRST_PAGE_SIZE+(page-1)*PAGE_SIZE;
+  return {start,count:Math.min(MAX_DIALOGS-start,page===0?FIRST_PAGE_SIZE:PAGE_SIZE)};
+}
 const MESSAGE_PAGE=35;
 const ARCHIVE_PAGE=100;
 const safeId=value=>String(value?.toString?.()||value||'');
@@ -214,7 +224,8 @@ export default async function handler(req,res){
   const chatId=String(body.chatId||'');
   const cursor=Number(body.offsetId||0);
   const archiveOffset=Number(body.archiveOffset||0);
-  if(action==='list'&&(!Number.isSafeInteger(page)||page<0||page>=Math.ceil(MAX_DIALOGS/PAGE_SIZE)))
+  if(action==='list'&&(!Number.isSafeInteger(page)||page<0||
+    page>Math.ceil((MAX_DIALOGS-FIRST_PAGE_SIZE)/PAGE_SIZE)))
     return respond(res,400,{error:'Неверная страница списка чатов'});
   if(action==='thread'&&(!validChatId(chatId)||!Number.isSafeInteger(cursor)||cursor<0
     ||!Number.isSafeInteger(archiveOffset)||archiveOffset<0||archiveOffset>50000))
@@ -222,13 +233,15 @@ export default async function handler(req,res){
   try{
     // Read owner-scoped archive and permission evidence concurrently. Network
     // failure must never be reported as 'Privacy disabled' without evidence.
-    const [history,permissionState]=await Promise.all([
+    const [history,permissionState,linked]=await Promise.all([
       archiveThreads(userId),
-      Promise.all([getPrivacySettings(userId).catch(()=>null),
-        getBusinessConnectionState(userId).catch(()=>null)])
-        .then(([settings,business])=>({settings,business})),
+      action==='list'
+        ? Promise.all([getPrivacySettings(userId).catch(()=>null),
+            getBusinessConnectionState(userId).catch(()=>null)])
+            .then(([settings,business])=>({settings,business}))
+        : Promise.resolve({settings:null,business:null}),
+      getViewerSession(userId).catch(()=>null),
     ]);
-    const linked=await getViewerSession(userId).catch(()=>null);
     const validSession=linked?.status==='active' && linked.session_ciphertext &&
       sameTelegramAccount(userId, linked.telegram_account_user_id);
     if(linked?.status==='active' && !sameTelegramAccount(userId,linked.telegram_account_user_id)){
@@ -247,11 +260,10 @@ export default async function handler(req,res){
           live=await withBackupClient(creds.session,async client=>{
             const account=await verifyTelegramClientOwner(client,userId);
             // Bounded cursor-independent retrieval, never return access hashes.
-            const totalToFetch=Math.min(MAX_DIALOGS,(page+1)*PAGE_SIZE+1);
-            const dialogs=await client.getDialogs({limit:totalToFetch});
-            const start=page*PAGE_SIZE;
-            return {chats:dialogs.slice(start,start+PAGE_SIZE).map(dialogInfo),
-              hasMore:dialogs.length>start+PAGE_SIZE,account};
+            const {start,count}=dialogPageBounds(page);
+            const dialogs=await client.getDialogs({limit:Math.min(MAX_DIALOGS,start+count+1)});
+            return {chats:dialogs.slice(start,start+count).map(dialogInfo),
+              hasMore:dialogs.length>start+count,account};
           });
         }catch(error){
           const stop=telegramOwnerError(error);
@@ -289,8 +301,13 @@ export default async function handler(req,res){
       try{
         const fetched=await withBackupClient(creds.session,async client=>{
           await verifyTelegramClientOwner(client,userId);
-          const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
-          const dialog=dialogs.find(d=>safeId(d.id)===chatId);
+          let dialogs=await client.getDialogs({limit:FAST_THREAD_DIALOGS});
+          let dialog=dialogs.find(d=>safeId(d.id)===chatId);
+          // Older chats still work, without scanning 500 for every common open.
+          if(!dialog){
+            dialogs=await client.getDialogs({limit:MAX_DIALOGS});
+            dialog=dialogs.find(d=>safeId(d.id)===chatId);
+          }
           if(!dialog)return {missing:true};
           const received=await client.getMessages(dialog.entity,{
             limit:MESSAGE_PAGE+1,offsetId:cursor,
