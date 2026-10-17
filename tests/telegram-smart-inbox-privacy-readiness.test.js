@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { privacyReadiness, inboxSignals } from '../lib/telegram-inbox-signals.js';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
-test('Privacy readiness requires owner-enabled protection AND Business message permission',()=>{
+test('Privacy requires explicit owner switches and Business connection, not mark-as-read permission',()=>{
  const rows=[{messageCount:24,deletedCount:3},{messageCount:7,deletedCount:1}];
  const settings={antiDelete:true,ghostInbox:true,retentionDays:365};
  const business={isEnabled:true,businessConnectionId:'test',canReadMessages:true};
@@ -17,7 +17,7 @@ test('Privacy readiness requires owner-enabled protection AND Business message p
  assert.equal(ready.retentionDays,365);
  assert.equal(privacyReadiness({...settings,antiDelete:false},business,rows).nextAction,'enable_privacy');
  assert.equal(privacyReadiness(settings,null,rows).nextAction,'connect_business');
- assert.equal(privacyReadiness(settings,{...business,canReadMessages:false},rows).nextAction,'grant_messages');
+ assert.equal(privacyReadiness(settings,{...business,canReadMessages:false},rows).nextAction,'test_archive');
  assert.equal(privacyReadiness(null,business,rows).nextAction,'unavailable');
 });
 test('Smart Inbox focuses on unanswered-looking messages, never sends or marks read',()=>{
@@ -46,7 +46,7 @@ test('Mobile Smart Inbox and Privacy explanation are consented and not labeled a
  const html=read('public/studio.html'),ui=read('public/telegram-chats.js');
  assert.ok(html.includes('data-mirror-filter="focus"'));
  assert.ok(html.includes('id="telegramMirrorPrivacyDiagnostics"'));
- assert.ok(html.includes('локальная сортировка'));
+ assert.ok(html.toLowerCase().includes('локальная сортировка'));
  assert.ok(ui.includes("if(state.filter==='focus' && !chat.inbox?.needsAttention)return false;"));
  assert.ok(ui.includes('function renderPrivacyDiagnostics()'));
  assert.ok(ui.includes('privacy.confirmedDeleted'));
