@@ -46,7 +46,7 @@ test('private chat list shows immediate skeleton, loaded account progress and ow
   assert.ok(js.includes('state.stale=false;'));
   assert.ok(js.includes('state.ownerInitData'));
   assert.ok(js.includes('accessFailure=[401,403,409]'));
-  assert.ok(js.includes('Не LIVE'));
+  assert.ok(js.includes('не LIVE'));
   assert.ok(!js.includes('localStorage'));
   assert.ok(!js.includes('sessionStorage'));
   assert.ok(html.includes('id="telegramMirrorSyncMetric"'));
@@ -61,7 +61,7 @@ test('UI uses viewport-bound auto pagination rather than eagerly preloading 500 
   assert.ok(js.includes('IntersectionObserver'));
   assert.ok(js.includes("rootMargin:'180px 0px'"));
   assert.ok(js.includes('state.autoPages>=2'));
-  assert.ok(js.includes("event.detail?.screen==='telegram'"));
+  assert.ok(js.includes("current==='telegram'"));
   assert.ok(js.includes("state.page<11"));
   assert.ok(js.includes("'telegramThreadBottomJump'"));
   assert.ok(html.includes('id="telegramThreadBottomJump"'));
