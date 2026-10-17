@@ -149,3 +149,16 @@
  .veto-story-project-actions{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){.veto-story-import-launch,.veto-story-project-actions button{transition:none}}
+
+.veto-story-campaign-starters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0 0 11px}
+.veto-story-campaign-starters button{min-height:68px;display:grid;align-content:center;gap:7px;
+ text-align:left;padding:11px;border-radius:11px;border:1px solid rgba(221,238,255,.13);
+ color:#e0ebf5;background:linear-gradient(150deg,#202a35,#111821)}
+.veto-story-campaign-starters strong{font-size:10px;font-weight:850;letter-spacing:.025em}
+.veto-story-campaign-starters small{font-size:9px;color:#90a5ba;line-height:1.4}
+.veto-story-campaign-starters button:hover,.veto-story-campaign-starters button:focus-visible{
+ background:linear-gradient(150deg,#314052,#1b2634);border-color:rgba(230,241,255,.35)}
+@media(max-width:350px){.veto-story-campaign-starters{gap:5px}
+ .veto-story-campaign-starters button{padding:8px}
+ .veto-story-campaign-starters strong{font-size:9px}
+ .veto-story-campaign-starters small{font-size:8px}}
