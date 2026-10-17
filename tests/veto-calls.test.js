@@ -8,16 +8,17 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const js=read('public/calls.js');
 const html=read('public/studio.html');
 const app=read('public/app.js');
-test('VETO Calls is discoverable and operates outside normal Telegram calls',()=>{
+test('Unreleased VETO Calls stays in code without visible navigation or loaded runtime',()=>{
   assert.ok(html.includes('data-screen="calls"'));
-  assert.ok(html.includes('data-open-screen="calls"'));
-  assert.ok(html.includes('/calls.js?v='));
-  assert.ok(html.includes('/calls.css?v='));
+  assert.ok(html.includes('data-feature-status="code-only" aria-hidden="true" hidden inert'));
+  assert.ok(!html.includes('data-open-screen="calls"'));
+  for(const path of ['/calls.js?v=','/calls-selftest.js?v=','/calls-turn-test.js?v=','/calls.css?v='])
+    assert.ok(!html.includes(path),'Calls asset must not auto-load: '+path);
   assert.ok(html.includes('id="callRemoteAudio"'));
   assert.ok(html.includes('id="callOutgoing"'));
   assert.ok(html.includes('id="callIncoming"'));
-  assert.ok(app.includes("calls:'calls'"));
-  assert.ok(app.includes("calls:'home'"));
+  assert.ok(!app.includes("calls:'calls'"));
+  assert.ok(!app.includes("calls:'home'"));
   assert.ok(!html.includes('High Lab'));
   assert.ok(!html.includes('HiLab'));
 });
