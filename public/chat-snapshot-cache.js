@@ -9,6 +9,7 @@
   const validOwner=id=>/^[1-9][0-9]{0,18}$/.test(String(id||''));
   const subtle=globalThis.crypto?.subtle;
   let openPromise=null;
+  const invalidation=new Map();
   function openDb(){
     if(!globalThis.indexedDB||!subtle)return Promise.reject(Error('LOCAL_CACHE_UNAVAILABLE'));
     if(openPromise)return openPromise;
@@ -63,18 +64,25 @@
   async function save(ownerId,rows){
     const id=String(ownerId);
     if(!validOwner(id)||!subtle)return false;
+    const epoch=invalidation.get(id)||0;
     try{
       const db=await openDb();
       const key=await ownerKey(db,id,true);
+      if(epoch!==(invalidation.get(id)||0))return false;
       const savedAt=Date.now();
       const iv=crypto.getRandomValues(new Uint8Array(12));
       const payload=JSON.stringify({v:1,savedAt,rows:clean(rows)});
       const cipher=await subtle.encrypt({
         name:'AES-GCM',iv,additionalData:new TextEncoder().encode('veto-chat-owner:'+id),
       },key,new TextEncoder().encode(payload));
+      if(epoch!==(invalidation.get(id)||0))return false;
       await txOp(db,'snapshots','readwrite','owner:'+id,{
         v:1,savedAt,iv:Array.from(iv),cipher:Array.from(new Uint8Array(cipher)),
       });
+      if(epoch!==(invalidation.get(id)||0)){
+        await clear(id);
+        return false;
+      }
       return true;
     }catch{return false;}
   }
@@ -104,6 +112,7 @@
   async function clear(ownerId){
     const id=String(ownerId);
     if(!validOwner(id))return;
+    invalidation.set(id,(invalidation.get(id)||0)+1);
     try{
       const db=await openDb();
       await new Promise((resolve,reject)=>{
