@@ -90,7 +90,9 @@
     analytics: 'analytics',
     archive: 'archive',
   };
-  const requestedScreen = SCREEN_ALIASES[String(qs.get('screen') || '').toLowerCase()] || null;
+  // Staged Calls is code-only. Ignore old startapp invites until a verified
+  // public release explicitly enables the screen and server integration.
+  const requestedScreen=SCREEN_ALIASES[String(qs.get('screen')||'').toLowerCase()]||null;
   let currentScreen = 'home';
   let selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
   let toastTimer = null;

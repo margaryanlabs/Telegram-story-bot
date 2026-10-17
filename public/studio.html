@@ -358,6 +358,101 @@
       </section>
     </section>
 
+    <!-- Staged feature: retained in source, unavailable in the visible app until real two-phone testing. -->
+    <section class="screen" data-screen="calls" aria-label="VETO Calls — разработка" data-feature-status="code-only" aria-hidden="true" hidden inert>
+      <div class="veto-calls">
+        <header class="calls-header">
+          <div><span class="calls-eyebrow">VETO TELEGRAM / COMMUNICATION / 01</span>
+            <h1>VETO <span>Calls.</span></h1>
+            <p>Реальный аудиозвонок WebRTC один на один, голосовые эффекты во время разговора. Не перехватывает обычные Telegram-звонки.</p>
+          </div>
+          <span class="calls-state" id="callState" data-state="idle">OFFLINE</span>
+        </header>
+        <div class="calls-hero">
+          <div class="calls-portrait" aria-hidden="true">⌁</div>
+          <canvas id="callWaveform" class="calls-waveform" width="480" height="80" aria-label="Живая визуализация микрофона"></canvas>
+          <strong class="calls-elapsed" id="callElapsed">00:00</strong>
+          <span class="calls-quality" id="callQuality">СОЕДИНЕНИЕ НЕ УСТАНОВЛЕНО</span>
+          <span class="calls-peer-mute" id="callPeerMute" aria-live="polite">СОБЕСЕДНИК · НЕТ СОЕДИНЕНИЯ</span>
+          <small>Звук передаётся между участниками напрямую либо через TURN-реле, если оно настроено. Не обычный Telegram-звонок.</small>
+          <small id="callTransport" class="calls-transport">ICE · STUN ONLY</small>
+          <audio id="callRemoteAudio" autoplay playsinline></audio>
+          <div class="calls-actions">
+            <button type="button" class="call-btn secondary" id="callMute" disabled>◉ Выключить микрофон</button>
+            <button type="button" class="call-btn secondary" id="callListen">↗ Включить звук</button>
+            <button type="button" class="call-btn danger" id="callHangup" disabled>■ Завершить</button>
+          </div>
+        </div>
+        <div class="calls-grid">
+          <article class="calls-card"><span>01 / СОЗДАТЬ</span>
+            <strong>Начать звонок</strong>
+            <p>Короткий код действует до 8 минут. Можно отправить приглашение вручную или указать ID пользователя, который разрешил входящие VETO Calls.</p>
+            <label class="calls-label" for="callRecipientId">TELEGRAM ID ПОЛУЧАТЕЛЯ · НЕОБЯЗАТЕЛЬНО</label>
+            <input class="calls-field calls-recipient" id="callRecipientId" type="text" inputmode="numeric" autocomplete="off" maxlength="16" placeholder="ID знакомого, который включил входящие" aria-label="Telegram ID получателя входящего звонка"/>
+            <button id="callCreateAssisted" type="button" class="call-btn">＋ Создать короткий код</button>
+            <button id="callCreate" type="button" class="call-btn secondary" style="margin-top:8px">Ручной P2P · резервный режим</button>
+          </article>
+          <article class="calls-card"><span>02 / ПРИСОЕДИНИТЬСЯ</span>
+            <strong>Ответить на приглашение</strong>
+            <p>Вставь приглашение VETOR1, подтвердив свой Telegram через Mini App. Ответ передастся автоматически; разреши микрофон.</p>
+            <button id="callJoinAssisted" type="button" class="call-btn">↗ Присоединиться по короткому коду</button>
+            <button id="callJoin" type="button" class="call-btn secondary" style="margin-top:8px">Ручной P2P · старый длинный код</button>
+          </article>
+        </div>
+        <article class="calls-card" id="callCodeSection" hidden>
+          <span>ТРАНСФЕР КОДА / ВНЕШНИЙ КАНАЛ</span>
+          <strong>Приглашение или ответ для собеседника</strong>
+          <p>Короткий код VETOR1 не содержит SDP и сетевых адресов; он даёт получателю временное право присоединиться к конкретному звонку. Старый код VETO1 может содержать сетевые адреса. Никогда не публикуй их открыто.</p>
+          <textarea class="calls-field calls-code" id="callOutgoing" readonly placeholder="Код появится после подготовки звонка" aria-label="Исходящий код вызова"></textarea>
+          <div class="calls-actions"><button type="button" class="call-btn secondary" id="callCopy">Копировать код ↗</button><button type="button" class="call-btn secondary" id="callInviteShare" hidden>Копировать ссылку Telegram ↗</button></div>
+        </article>
+        <article class="calls-card" style="margin-top:12px">
+          <span>03 / ПОЛУЧИТЬ КОД</span>
+          <strong>Входящее приглашение или ответ</strong>
+          <p>Для VETOR1 вставь код и нажми «Присоединиться по короткому коду» выше. При старом ручном режиме VETO1 вставь сюда приглашение либо ответ и используй соответствующие кнопки.</p>
+          <textarea class="calls-field calls-code" id="callIncoming" placeholder="Вставь код вида VETO1:…" aria-label="Входящий код вызова"></textarea>
+          <div class="calls-actions"><button id="callApplyAnswer" type="button" class="call-btn secondary" disabled>✓ Подключить по ответу</button></div>
+        </article>
+        <article class="calls-card calls-incoming-card" aria-label="Входящие приглашения VETO Calls">
+          <span>04 / ВХОДЯЩИЕ ЗВОНКИ</span>
+          <strong>Разрешение на приглашения</strong>
+          <p>Только ты решаешь, получать ли сообщения от VETO Telegram о входящих звонках. Никому не отправляем сообщение без предварительного согласия. Не чаще одного уведомления за 3 минуты.</p>
+          <div class="calls-actions">
+            <button id="callOptIn" type="button" class="call-btn secondary">○ Включить входящие</button>
+            <button id="callCopyMyId" type="button" class="call-btn secondary">↗ Мой Telegram ID</button>
+          </div>
+          <p class="calls-optin-status" id="callOptInStatus" role="status">Входящие выключены по умолчанию. Сначала запусти VETO Telegram Bot, чтобы он мог отправить приглашение.</p>
+        </article>
+        <article class="calls-card calls-diagnostics-card" aria-label="Диагностика VETO Calls">
+          <span>05 / READY CHECK</span>
+          <strong>Проверка перед звонком</strong>
+          <p>Проверим доступность WebRTC, HTTPS, Telegram-подписи и конфигурацию сети. Без запроса доступа к микрофону и без отправки аудио.</p>
+          <button id="callPreflight" type="button" class="call-btn secondary">◎ Проверить готовность</button>
+          <pre class="calls-diagnostics" id="callDiagnostics" aria-live="polite">Диагностика ещё не запускалась.</pre>
+          <div class="calls-selftest">
+            <button id="callSelfTest" type="button" class="call-btn secondary">⊙ Тест WebRTC без микрофона</button>
+            <pre id="callSelfTestStatus" class="calls-diagnostics" aria-live="polite">Проверка локального аудиосоединения между двумя виртуальными участниками на этом устройстве. Ни микрофон, ни интернет-звонок не используются.</pre>
+            <button id="callTurnTest" type="button" class="call-btn secondary">◎ Проверить реальный TURN relay</button>
+            <pre id="callTurnTestStatus" class="calls-diagnostics" aria-live="polite">Для этого теста требуется настоящий настроенный TURN-сервер. Он проверяет relay-маршрут через интернет без микрофона, но не заменяет разговор между двумя телефонами.</pre>
+          </div>
+        </article>
+        <div class="calls-morph">
+          <label for="callPreset">VOICE MORPH / во время соединения</label>
+          <select id="callPreset" aria-label="Эффект для твоего микрофона">
+            <option value="original">Original — нейтральный</option>
+            <option value="deep">Warm Deep — тёплый тембр (EQ)</option>
+            <option value="cinematic">Cinematic — объём</option>
+            <option value="radio">Radio — узкий диапазон</option>
+            <option value="robot">Robot — модуляция</option>
+          </select>
+          <label for="callMorph">Интенсивность <output for="callMorph" id="callMorphValue">65%</output></label>
+          <input type="range" id="callMorph" min="0" max="100" value="65" step="1" />
+        </div>
+        <div class="calls-status" id="callStatus" role="status" aria-live="polite">Готово к подключению. Микрофон включится только после твоего действия.</div>
+        <p class="calls-note"><b>Экспериментальная версия.</b> Короткий код VETOR1 не содержит сетевых параметров. Сервер сигнализации временно хранит SDP по HTTPS; эти технические данные могут содержать IP-адреса и доступны серверу, но удаляются после соединения, завершения или по TTL. Аудио защищено средствами WebRTC DTLS-SRTP и не расшифровывается сервером VETO. Оба участника должны оставить окно вызова открытым. Переход в другой чат или приложение может закрыть Mini App и завершить звонок; пересылать приглашение удобнее со второго устройства или другим каналом. Коды пересылаются вручную, но ответ для VETOR1 передаётся автоматически. TURN-реле подключается только при наличии настроенного сервера и временных учётных данных. Без TURN связь в сложных сетях может не установиться. Недоступны: видеосвязь, живой перевод, запись и групповые комнаты. Уведомления о входящих приглашениях работают только при добровольном включении, запущенном боте и известном ID получателя; они не являются системным звонком Telegram. Личность участника подтверждается входом в Telegram Mini App, но доверять собеседнику нужно по тому каналу, где передан секрет приглашения.</p>
+      </div>
+    </section>
+
     <section class="screen" data-screen="voice" aria-label="VETO Voice Studio">
       <section class="veto-voice">
         <div class="veto-voice-header">
@@ -388,6 +483,15 @@
             <button type="button" data-voice-preset="radio" aria-pressed="false"><span>▥</span><strong>Radio</strong><small>В эфире</small></button>
             <button type="button" data-voice-preset="robot" aria-pressed="false"><span>▧</span><strong>Robot</strong><small>Модуляция</small></button>
             <button type="button" data-voice-preset="space" aria-pressed="false"><span>◎</span><strong>Echo</strong><small>Пространство</small></button>
+            <button type="button" data-voice-preset="custom" aria-pressed="false"><span>▤</span><strong>Custom</strong><small>Ручная настройка EQ</small></button>
+          </div>
+          <div class="veto-voice-custom" id="voiceCustomControls" hidden>
+            <strong>Свой голосовой профиль · только на этом устройстве</strong>
+            <label>Бас / Low <input id="voiceCustomLow" type="range" min="-12" max="12" value="0" step="1" /></label>
+            <label>Середина / Mid <input id="voiceCustomMid" type="range" min="-12" max="12" value="0" step="1" /></label>
+            <label>Высокие / High <input id="voiceCustomHigh" type="range" min="-12" max="12" value="0" step="1" /></label>
+            <label>Эхо / Echo <input id="voiceCustomEcho" type="range" min="0" max="40" value="0" step="1" /></label>
+            <small>EQ меняет окраску, а не высоту голоса. Профиль не сохраняется после закрытия.</small>
           </div>
           <div class="veto-voice-morph">
             <div><strong>Voice Morph</strong><small>Плавное изменение интенсивности эффекта</small></div>
@@ -398,7 +502,7 @@
         </div>
         <div class="veto-voice-capture">
           <div class="veto-voice-panel-heading"><span>02 / ЗАПИСЬ</span><strong>Голосовое сообщение</strong></div>
-          <p>Разреши микрофон, выбери эффект и запиши сообщение. Запись обработанного звука сохраняется только в памяти приложения.</p>
+          <p>Разреши микрофон, выбери эффект и запиши сообщение до 3 минут. Запись обработанного звука остаётся в памяти приложения. Изменение скорости относится к прослушиванию и не меняет экспортируемый файл.</p>
           <div class="veto-voice-record-actions">
             <button id="voiceRecord" class="veto-voice-button primary" type="button" disabled><b>●</b> Начать запись</button>
             <button id="voiceStopRecord" class="veto-voice-button subdued" type="button" disabled>■ Остановить</button>
@@ -406,6 +510,9 @@
           <div class="veto-voice-result" id="voiceResult" hidden>
             <div class="veto-voice-result-heading"><strong>Готовое голосовое</strong><small id="voiceDuration">—</small></div>
             <audio id="voicePlayer" controls preload="none"></audio>
+            <label class="veto-voice-playback-control">Скорость прослушивания <output id="voicePlaybackSpeedValue">1.00×</output>
+              <input id="voicePlaybackSpeed" type="range" min="0.75" max="1.5" step="0.05" value="1" />
+            </label>
             <div class="veto-voice-record-actions">
               <button type="button" id="voiceShare" class="veto-voice-button primary" disabled>↗ Отправить файлом</button>
               <button type="button" id="voiceDownload" class="veto-voice-button subdued" disabled>↓ Скачать</button>

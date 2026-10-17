@@ -32,7 +32,7 @@ test('Audio is processed on device and starts only on explicit microphone consen
 });
 test('Audio labels are clear about the boundaries and can be disabled or downloaded',()=>{
   const voice=file('public/voice-studio.js'),html=file('public/studio.html');
-  assert.equal((html.match(/data-voice-preset=/g)||[]).length,6);
+  assert.equal((html.match(/data-voice-preset=/g)||[]).length,7);
   assert.ok(html.includes('id="voiceMicStop"'));
   assert.ok(html.includes('id="voiceStopRecord"'));
   assert.ok(html.includes('id="voiceDownload"'));
@@ -41,4 +41,15 @@ test('Audio labels are clear about the boundaries and can be disabled or downloa
   assert.ok(html.includes('пока не работают внутри обычных Telegram-звонков'));
   assert.ok(voice.includes('URL.revokeObjectURL(state.recordedUrl)'));
   assert.ok(voice.includes('cancelAnimationFrame(state.raf)'));
+});
+
+test('Voice Studio v2 has a bounded local recording pipeline and adjustable EQ',()=>{
+  const html=file('public/studio.html'),voice=file('public/voice-studio.js');
+  assert.ok(html.includes('data-voice-preset="custom"'));
+  assert.ok(html.includes('id="voiceCustomControls"'));
+  assert.ok(html.includes('id="voicePlaybackSpeed"'));
+  assert.ok(voice.includes('state.preset===\'custom\''));
+  assert.ok(voice.includes('180000'));
+  assert.ok(voice.includes("playbackRate=rate"));
+  assert.ok(!voice.includes("fetch("));
 });

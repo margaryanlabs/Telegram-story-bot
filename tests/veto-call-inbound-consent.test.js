@@ -1,0 +1,52 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+
+test('Incoming call alerts are opt-in and recipient-bound at every signed server layer',()=>{
+  const edge=read('supabase/functions/veto-call-signal/index.ts');
+  const api=read('api/call-signal.js');
+  const gateway=read('lib/veto-call-signal-store.js');
+  const migration=read('supabase/migrations/20261016204500_veto_call_recipient_optin.sql');
+  assert.ok(migration.includes('notifications_enabled boolean not null default false'));
+  assert.ok(migration.includes('enable row level security'));
+  assert.ok(migration.includes('revoke all on public.story_pilot_call_optins from public, anon, authenticated'));
+  assert.ok(migration.includes('recipient_id bigint'));
+  assert.ok(edge.includes('async function claimRecipientSlot('));
+  assert.ok(edge.includes(".eq('notifications_enabled',true)"));
+  assert.ok(edge.includes("now.getTime()-3*60*1000"));
+  assert.ok(edge.includes(".or('recipient_id.is.null,recipient_id.eq.'+actor)"));
+  assert.ok(edge.includes('data.recipient_id&&String(data.recipient_id)!==actor'));
+  assert.ok(edge.includes('call_preferences_set:opCallSetPreferences'));
+  assert.ok(edge.includes('call_preferences_get:opCallGetPreferences'));
+  assert.ok(api.includes('const userId=String(user.id)'));
+  assert.ok(api.includes("action==='preferences_set'"));
+  assert.ok(api.includes("action==='preferences_get'"));
+  assert.ok(api.includes('getCallPreferences(userId)'));
+  assert.ok(api.includes('setCallPreferences(userId,body.enabled)'));
+  assert.ok(gateway.includes("'call_preferences_get'"));
+  assert.ok(gateway.includes("'call_preferences_set'"));
+});
+test('Telegram delivery is explicit, silent on missing consent, and does not send microphone or SDP',()=>{
+  const api=read('api/call-signal.js');
+  const html=read('public/studio.html');
+  const calls=read('public/calls.js');
+  assert.ok(api.includes('await createCallRoom('));
+  assert.ok(api.includes('await deliverCallAlert('));
+  assert.ok(api.indexOf('await createCallRoom(')<api.indexOf('await deliverCallAlert('));
+  assert.ok(api.includes('protect_content:true'));
+  assert.ok(api.includes('https://api.telegram.org/bot'));
+  assert.ok(api.includes('notificationSent:Boolean(notificationSent)'));
+  assert.ok(!api.includes('telegraph'));
+  assert.ok(html.includes('id="callOptIn"'));
+  assert.ok(html.includes('id="callCopyMyId"'));
+  assert.ok(html.includes('id="callRecipientId"'));
+  assert.ok(calls.includes("signalRequest('preferences_get')"));
+  assert.ok(calls.includes("signalRequest('preferences_set'"));
+  assert.ok(calls.includes("signalRequest('probe')"));
+  assert.ok(calls.includes('created.notificationSent'));
+  assert.ok(html.includes('входящих'));
+  assert.ok(html.includes('Не чаще одного уведомления за 3 минуты'));
+  assert.ok(!calls.includes('sendMessage'));
+});

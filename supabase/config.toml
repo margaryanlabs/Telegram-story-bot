@@ -1,0 +1,5 @@
+# Existing VETO Edge Functions retain their deployed settings.
+# Dedicated call-signaling API authenticates each request with Ed25519 signature
+# from the server-side Vercel gateway; do not use Telegram's initData in this layer.
+[functions.veto-call-signal]
+verify_jwt = false

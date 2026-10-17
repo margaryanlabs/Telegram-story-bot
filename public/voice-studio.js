@@ -10,12 +10,13 @@
     radio:{name:'Radio',low:-7,high:-8,mid:9,robot:0,echo:0},
     robot:{name:'Robot',low:1,high:-3,mid:2,robot:.48,echo:.06},
     space:{name:'Echo',low:2,high:0,mid:-1,robot:0,echo:.42},
+    custom:{name:'Custom EQ',low:0,high:0,mid:0,robot:0,echo:0},
   };
   const state={
     context:null,stream:null,source:null,nodes:null,oscillator:null,
     recorder:null,chunks:[],recordedBlob:null,recordedUrl:null,
     preset:'clean',morph:75,active:false,recording:false,
-    startedAt:0,raf:0,monitor:false,
+    startedAt:0,raf:0,monitor:false,recordingTimer:0,
   };
   const extFor=mime=>mime.includes('mp4')?'m4a':mime.includes('ogg')?'ogg':'webm';
   const toast=message=>{
@@ -29,6 +30,7 @@
     $('voiceShare').disabled=!state.recordedBlob;
     $('voiceDownload').disabled=!state.recordedBlob;
     $('voiceMorphValue').textContent=String(state.morph)+'%';
+    if($('voiceCustomControls'))$('voiceCustomControls').hidden=state.preset!=='custom';
     $('voicePresetGrid')?.querySelectorAll('[data-voice-preset]').forEach(btn=>{
       const active=btn.dataset.voicePreset===state.preset;
       btn.classList.toggle('active',active);
@@ -42,7 +44,11 @@
   function setStrength(){
     const n=state.nodes;
     if(!n||!state.context)return;
-    const profile=presets[state.preset]||presets.clean;
+    const profile=state.preset==='custom'?{
+      low:Number($('voiceCustomLow')?.value||0),mid:Number($('voiceCustomMid')?.value||0),
+      high:Number($('voiceCustomHigh')?.value||0),robot:0,
+      echo:Number($('voiceCustomEcho')?.value||0)/100,
+    }:(presets[state.preset]||presets.clean);
     const k=Math.max(0,Math.min(1,state.morph/100));
     const now=state.context.currentTime;
     const smooth=(param,value)=>param.setTargetAtTime(value,now,.07);
@@ -86,6 +92,7 @@
     if($('voiceMonitor'))$('voiceMonitor').checked=false;
   }
   function stopMic(){
+    clearTimeout(state.recordingTimer);state.recordingTimer=0;
     if(state.recording){try{state.recorder?.stop()}catch{};state.recording=false;}
     stopMonitor();
     if(state.oscillator){try{state.oscillator.stop()}catch{}}
@@ -171,11 +178,13 @@
     recorder.ondataavailable=event=>{if(event.data?.size)chunks.push(event.data);};
     recorder.onerror=()=>toast('Ошибка записи. Перезапусти микрофон и повтори.');
     recorder.onstop=()=>{
+      clearTimeout(state.recordingTimer);state.recordingTimer=0;
       const blob=new Blob(chunks,{type:recorder.mimeType||options||'audio/webm'});
       state.recorder=null;state.recording=false;
       if(blob.size){
         state.recordedBlob=blob;state.recordedUrl=URL.createObjectURL(blob);
         $('voicePlayer').src=state.recordedUrl;
+        $('voicePlayer').playbackRate=Number($('voicePlaybackSpeed')?.value||1);
         $('voiceResult').hidden=false;
         const seconds=Math.max(1,Math.round((Date.now()-started)/1000));
         $('voiceDuration').textContent=seconds+' с · '+Math.max(1,Math.round(blob.size/1024))+' КБ';
@@ -185,10 +194,15 @@
     };
     state.recorder=recorder;state.recording=true;state.startedAt=Date.now();
     recorder.start(250);
+    // Bound memory growth on mobile devices; keep recorded audio local.
+    state.recordingTimer=setTimeout(()=>{
+      if(state.recording){stopRecording();toast('Лимит записи — 3 минуты. Голосовое готово к прослушиванию.');}
+    },180000);
     toast('Идёт запись голоса с выбранным эффектом. Она остаётся только на этом устройстве.');
     updateButtons();
   }
   function stopRecording(){
+    clearTimeout(state.recordingTimer);state.recordingTimer=0;
     if(state.recording&&state.recorder?.state!=='inactive'){
       try{state.recorder.stop()}catch{}state.recording=false;
       updateButtons();
@@ -230,6 +244,12 @@
     state.preset=preset;setStrength();updateButtons();
     toast(presets[preset].name+' · эффект готов'+(state.active?' · меняется в реальном времени':''));
   });
+  $('voiceCustomControls')?.addEventListener('input',()=>{if(state.preset==='custom')setStrength();});
+  $('voicePlaybackSpeed')?.addEventListener('input',event=>{
+    const rate=Math.max(.75,Math.min(1.5,Number(event.target.value||1)));
+    if($('voicePlayer'))$('voicePlayer').playbackRate=rate;
+    if($('voicePlaybackSpeedValue'))$('voicePlaybackSpeedValue').textContent=rate.toFixed(2)+'×';
+  });
   $('voiceMorph')?.addEventListener('input',event=>{
     state.morph=Math.max(0,Math.min(100,Number(event.target.value||0)));
     setStrength();updateButtons();
@@ -247,6 +267,12 @@
     if(event.detail?.screen!=='voice'&&state.active){
       stopMic();
       toast('Микрофон выключен при выходе из Voice Studio.');
+    }
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&state.active){
+      stopMic();
+      toast('Микрофон отключён: приложение свёрнуто.');
     }
   });
   window.addEventListener('pagehide',()=>{
