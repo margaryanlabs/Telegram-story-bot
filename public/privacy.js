@@ -1516,7 +1516,7 @@
   // Opt-in queue for the owner's existing, ordinary private cloud chats. Queue
   // progress is only an index; NEVER store contact IDs, names or message text
   // in localStorage. Worker imports history separately and may take hours.
-  const allBackup={running:false,stop:false,index:0,total:0,queued:0};
+  const allBackup={running:false,stop:false,index:0,total:0,queued:0,longRetention:false};
   function allBackupKey() {
     return 'veto:all-private-queue:v1:'+String(tg?.initDataUnsafe?.user?.id||'unknown');
   }
@@ -1575,6 +1575,9 @@
           <p>✕ Группы, каналы, боты и секретные чаты не входят в текущий режим копирования.</p>
         </div>
         ${allBackup.index>0 ? '<p>Есть незавершённая очередь. Продолжим с позиции '+allBackup.index+'.</p>' : ''}
+        <label class="veto-consent-checkbox"><input type="checkbox" id="allBackupRetentionLong">
+          <span>Хранить доступную историю до 10 лет. Это изменит срок хранения всего VETO Private Archive, не только новых чатов.</span>
+        </label>
         <label class="veto-consent-checkbox"><input type="checkbox" id="allBackupConsent">
           <span>Я разрешаю VETO создать фоновые архивные задания для всех доступных обычных личных переписок моего аккаунта. Понимаю, что копии будут храниться на сервере.</span>
         </label>
@@ -1607,6 +1610,7 @@
         const data=await backupApi('background_enable_all',{
           confirm:true,backgroundConsent:true,allChatsConsent:true,
           offset:allBackup.index,mediaEnabled:false,
+          retentionConsent:allBackup.longRetention,
         });
         const oldIndex=allBackup.index;
         allBackup.index=Number(data.nextOffset||oldIndex);
@@ -2060,6 +2064,7 @@
     if (allBackupAction) {
       if(allBackupAction.hasAttribute('data-backup-all-start')){
         if($('allBackupConsent')?.checked!==true){toast('Подтверди согласие на архивирование');return;}
+        allBackup.longRetention = $('allBackupRetentionLong')?.checked === true;
         await runAllBackupQueue();
       }else if(allBackupAction.hasAttribute('data-backup-all-resume'))await runAllBackupQueue();
       else if(allBackupAction.hasAttribute('data-backup-all-stop')){
