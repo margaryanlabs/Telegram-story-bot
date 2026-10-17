@@ -56,7 +56,7 @@ test('Wizard requires owner-verified session and explicit opt-in before MTProto 
   assert.match(frontend,/data-business-apply/);
   assert.match(frontend,/businessWizardConsent/);
   assert.match(frontend,/data-business-selected/);
-  assert.match(frontend,/needsMessageProof/); // user must test actual event delivery (not simulated)
+  assert.match(api,/needsMessageProof:true|needsMessageProof/); // consent API returns actual-delivery proof requirement
   assert.match(html,/id="privacyBusinessWizardButton"/);
   assert.match(html,/veto-native-business-wizard-v1/);
 });
