@@ -270,6 +270,7 @@
     const chatId=String(chat.id),nonce=window.crypto?.randomUUID?.();
     if(!nonce){toast('Нужен защищённый HTTPS');return;}
     const replyTo=state.replyTo?.id||null;
+    const voiceSend=action==='send_media' && attachmentOrIndex?.kind==='voice';
     const pending=action==='send_media'?attachmentOrIndex:state.pendingAttachment;
     state.sendInFlight=true;
     renderSendComposer();
@@ -281,15 +282,15 @@
           throw new Error('Выбери файл не больше 2 МБ');
         const kind=pending?.kind||(['image/jpeg','image/png','image/webp'].includes(file.type)?'photo':'document');
         request={...request,kind,name:file.name,mime:file.type,base64:await readFileAsBase64(file),
-          caption:field?.value||'',duration:Number(pending?.duration||0)};
+          caption:voiceSend?'':field?.value||'',duration:Number(pending?.duration||0)};
       }else if(action==='send_sticker') request={...request,stickerIndex:Number(attachmentOrIndex)};
       else return;
       // Never transmit a different chat's pending media after the user navigates away.
       if(String(state.thread?.id)!==chatId)throw new Error('Чат изменился. Отправка отменена.');
       await richRequest(action,request);
       if(String(state.thread?.id)===chatId){
-        if(field)field.value='';
-        state.drafts.delete(chatId);
+        if(field&&!voiceSend)field.value='';
+        if(!voiceSend)state.drafts.delete(chatId);
         state.replyTo=null;state.pendingAttachment=null;
         if($('telegramThreadFileInput'))$('telegramThreadFileInput').value='';
         $('telegramThreadStickerDrawer').hidden=true;
