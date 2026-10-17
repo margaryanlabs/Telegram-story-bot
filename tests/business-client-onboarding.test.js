@@ -35,7 +35,7 @@ test('Onboarding status comes from verified backend Business connection, not loc
   assert.match(code, /privacyBusinessCopyButton/);
   assert.match(code, /if \(!document.hidden && privacyScreenActive\(\)\) \{/);
   const html = source('public/studio.html');
-  assert.match(html, /privacy\.js\?v=20261017-veto-business-onboarding-v1/);
+  assert.match(html, /privacy\.js\?v=20261017-veto-business-receive-v2/);
 });
 
 test('Connect journey retains a mobile layout and never claims to retrieve past deleted chats', () => {
