@@ -7,7 +7,10 @@ test('server exposes only login stage and expiry to the Mini App',()=>{
  const api = get('api/viewer-sync.js');
  assert.ok(api.includes('getAuthChallenge(userId).catch(() => null)'));
  assert.ok(api.includes('loginPending,'));
- assert.ok(api.includes('stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString()'));
+ assert.ok(api.includes('stage: loginChallenge.stage,'));
+ assert.ok(api.includes('expiresAt: new Date(expiry).toISOString()'));
+ assert.ok(api.includes('delivery: pendingDelivery'));
+ assert.ok(!api.includes('phoneCodeHash: sealed.phoneCodeHash'));
  assert.ok(!api.includes('loginPending: loginChallenge'));
 });
 
@@ -18,7 +21,7 @@ test('Telegram Mini App can resume a code or 2FA challenge after reopening',()=>
    'loginPending: data.loginPending || null',
    'data-sheet-action="viewer-resume-login"',
    "action === 'viewer-resume-login'",
-   "viewerCodeSheet('telegram_app')",
+   "viewerCodeSheet(pending.delivery||'unknown',true)",
    'viewerPasswordSheet()',
  ]) assert.ok(app.includes(snippet), 'Missing Mini App continuation: '+snippet);
 });
