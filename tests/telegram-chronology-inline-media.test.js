@@ -57,7 +57,9 @@ test('Avatar/photo download is owner-authenticated, size-capped and read-only',(
   assert.ok(api.includes('downloadProfilePhoto'));
   assert.ok(api.includes('downloadMedia(message'));
   assert.ok(api.includes('getMessages(dialog.entity,{ids:[id]})'));
-  assert.ok(api.includes("Content-Type','image/jpeg"));
+  assert.ok(api.includes("mime:'image/jpeg'"));
+  assert.ok(api.includes("Content-Type',result.mime"));
+  assert.ok(api.includes("Content-Disposition',action==='attachment'"));
   assert.ok(api.includes("Cache-Control','private,no-store"));
   assert.ok(!api.includes('upload('));
   assert.ok(!api.includes('saveMessage('));
