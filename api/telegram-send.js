@@ -63,7 +63,12 @@ export default async function handler(req,res) {
       await verifyTelegramClientOwner(client,userId);
       // Re-check target as an existing user-owned dialog, not a client-provided
       // access hash. Do not allow sends into archive-only or arbitrary peers.
-      const dialogs=await client.getDialogs({limit:500});
+      // The current conversation is normally among the latest dialogs. Avoid
+      // fetching 500 peers for every outgoing message; still check the entire
+      // supported account window for an older conversation.
+      const recent=await client.getDialogs({limit:60});
+      const recentMatch=recent.some(dialog=>String(dialog?.id?.toString?.()||dialog?.id||'')===chatId);
+      const dialogs=recentMatch ? recent : await client.getDialogs({limit:500});
       return sendOwnerMessage(client,dialogs,{ownerId:userId,chatId,message,nonce});
     });
     return respond(res,200,{
