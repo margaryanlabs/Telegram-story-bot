@@ -214,7 +214,7 @@ export default async function handler(req,res){
   try{body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};}
   catch{return respond(res,400,{error:'Некорректный запрос'});}
   const action=String(body.action||'list');
-  if(!['list','thread','verify'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
+  if(!['list','thread','verify','search'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
   const userId=String(owner.id);
   if(action==='verify'){
     // Cheap, signed, owner-only gate before decrypting any locally cached
@@ -230,9 +230,12 @@ export default async function handler(req,res){
   const chatId=String(body.chatId||'');
   const cursor=Number(body.offsetId||0);
   const archiveOffset=Number(body.archiveOffset||0);
+  const searchQuery=String(body.query||'').trim();
   if(action==='list'&&(!Number.isSafeInteger(page)||page<0||
     page>Math.ceil((MAX_DIALOGS-FIRST_PAGE_SIZE)/PAGE_SIZE)))
     return respond(res,400,{error:'Неверная страница списка чатов'});
+  if(action==='search'&&(!validChatId(chatId)||searchQuery.length<2||searchQuery.length>80))
+    return respond(res,400,{error:'Введи 2–80 символов для поиска в одной переписке'});
   if(action==='thread'&&(!validChatId(chatId)||!Number.isSafeInteger(cursor)||cursor<0
     ||!Number.isSafeInteger(archiveOffset)||archiveOffset<0||archiveOffset>50000))
     return respond(res,400,{error:'Неверный идентификатор переписки'});
@@ -297,6 +300,45 @@ export default async function handler(req,res){
           archivedThreads:history.length,
           confirmedDeleted:history.reduce((n,row)=>n+Math.max(0,Number(row.deletedCount||0)),0),
           privacy:privacyReadiness(permissionState.settings,permissionState.business,history)},
+      });
+    }
+    if(action==='search'){
+      if(!creds?.session)return respond(res,409,{
+        error:'Поиск Telegram доступен после подключения своего аккаунта. Сохранённые копии можно открыть в архиве VETO.',
+      });
+      let matches=[];
+      try{
+        matches=await withBackupClient(creds.session,async client=>{
+          await verifyTelegramClientOwner(client,userId);
+          let dialogs=await client.getDialogs({limit:FAST_THREAD_DIALOGS});
+          let dialog=dialogs.find(d=>safeId(d.id)===chatId);
+          if(!dialog){
+            dialogs=await client.getDialogs({limit:MAX_DIALOGS});
+            dialog=dialogs.find(d=>safeId(d.id)===chatId);
+          }
+          if(!dialog)throw Error('CHAT_NOT_OWNED');
+          // Telegram/Teleproto server-side messages.Search, restricted to the
+          // signed user's selected chat. No global peer scan or read receipt.
+          const found=await client.getMessages(dialog.entity,{
+            search:searchQuery,limit:25,
+          });
+          return found.map(m=>messageInfo(m,kind(dialog)==='group'))
+            .filter(Boolean).map(m=>({
+              id:m.id,date:m.date,text:clean(m.text||'',250),
+              media:m.media||null,edited:Boolean(m.edited),out:Boolean(m.out),
+            }));
+        });
+      }catch(error){
+        if(error?.message==='CHAT_NOT_OWNED')
+          return respond(res,404,{error:'Эта переписка не найдена среди доступных чатов'});
+        const stop=telegramOwnerError(error);
+        if(stop)return respond(res,stop.status,{error:stop.error});
+        const err=errorMessage(error);
+        return respond(res,err.status,{error:err.error});
+      }
+      return respond(res,200,{
+        results:matches,query:searchQuery,chatId,
+        limit:25,readOnly:true,scope:'selected-telegram-chat',
       });
     }
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
