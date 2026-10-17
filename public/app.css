@@ -3149,3 +3149,57 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   .veto-mirror-diagnostics-head small{width:100%;padding-left:38px}
   .veto-mirror-evidence span{font-size:8px}
 }
+
+
+/* Client-friendly Telegram Business consent journey. Visual language matches
+   VETO's graphite cards without implying that Telegram grants access silently. */
+.veto-business-journey{
+  margin:14px 0 12px;position:relative;overflow:hidden;
+  border:1px solid rgba(170,189,219,.21);border-radius:24px;
+  padding:20px;background:linear-gradient(140deg,rgba(125,151,191,.115),transparent 48%),#10151d;
+  box-shadow:0 16px 46px rgba(0,0,0,.19)
+}
+.veto-business-journey:before{content:"";position:absolute;right:-60px;top:-80px;width:205px;height:205px;border-radius:50%;background:radial-gradient(circle,rgba(173,194,226,.085),transparent 68%);pointer-events:none}
+.veto-business-journey-head{display:flex;gap:13px;align-items:flex-start;position:relative}
+.veto-business-journey-emblem{flex:none;display:grid;place-items:center;width:45px;height:45px;border-radius:15px;border:1px solid rgba(192,210,242,.18);background:linear-gradient(145deg,rgba(210,226,255,.15),rgba(118,148,197,.045));font-size:22px;color:#cbdaf0}
+.veto-business-journey-heading{min-width:0;flex:1}
+.veto-business-journey-heading .kicker{font-size:9px;letter-spacing:.13em;color:#9aacca}
+.veto-business-journey-heading h2{font-size:clamp(19px,5.2vw,25px);font-weight:790;line-height:1.18;letter-spacing:-.045em;margin:6px 0 7px;color:#f2f6fd}
+.veto-business-journey-heading p{margin:0;color:#9ca8b8;font-size:11px;line-height:1.55}
+.veto-business-state{font-size:9px;color:#cad5e7;background:rgba(207,224,250,.085);border:1px solid rgba(207,224,250,.14);padding:6px 8px;border-radius:999px;white-space:nowrap}
+.veto-business-journey-steps{position:relative;display:grid;gap:0;margin:19px 0 15px;border:1px solid rgba(194,211,239,.09);border-radius:17px;background:rgba(0,0,0,.14)}
+.veto-business-step{display:flex;align-items:flex-start;gap:11px;padding:13px 12px}
+.veto-business-step+.veto-business-step{border-top:1px solid rgba(194,211,239,.08)}
+.veto-business-step-number{flex:none;font-size:10px;font-weight:800;color:#c7d4e8;background:rgba(192,211,246,.08);padding:6px;border-radius:8px}
+.veto-business-step>div{min-width:0;flex:1}
+.veto-business-step strong{font-size:12px;color:#e9edf6;font-weight:760}
+.veto-business-step p{margin:5px 0 0;font-size:10px;line-height:1.5;color:#99a5b5}
+.veto-business-step code{display:inline-block;font-size:11px;font-family:inherit;font-weight:770;color:#d6e6fd;background:rgba(170,195,231,.095);padding:5px 9px;margin-top:7px;border-radius:7px;word-break:break-all}
+.veto-business-step button{flex:none;align-self:center;border:1px solid rgba(178,203,242,.18);background:rgba(190,212,245,.07);border-radius:9px;padding:8px;font-size:9px;color:#d2def0}
+.veto-business-journey-actions{display:grid;grid-template-columns:1.35fr 1fr;gap:9px}
+.veto-business-journey-actions button{border-radius:12px;min-height:43px;font-size:11px;font-weight:760;padding:10px;border:1px solid rgba(188,211,247,.12)}
+.veto-business-verify{display:flex;justify-content:center;align-items:center;gap:9px;background:#e6edf8;color:#161f2d}
+.veto-business-verify span{font-size:15px}
+.veto-business-verify:disabled{opacity:.6;cursor:wait}
+.veto-business-more{background:rgba(214,230,252,.055);color:#c3d0e4}
+.veto-business-disclosure{margin:12px 0 0;color:#8493a9;font-size:9px;line-height:1.65}
+.veto-business-journey.ready{border-color:rgba(177,202,239,.28);background:linear-gradient(140deg,rgba(152,185,232,.13),rgba(255,255,255,.025)),#10151d}
+.veto-business-journey.ready .veto-business-state{color:#e8f2ff;background:rgba(171,197,231,.12)}
+.veto-business-journey.ready .veto-business-journey-steps{display:none}
+.veto-business-sheet-steps{display:grid;gap:8px;margin-top:16px}
+.veto-business-sheet-steps>div{display:flex;align-items:flex-start;gap:10px;border:1px solid rgba(194,210,231,.12);background:rgba(255,255,255,.035);border-radius:13px;padding:12px}
+.veto-business-sheet-steps b{flex:none;color:#b8cbe7;font-size:11px}
+.veto-business-sheet-steps section{flex:1;min-width:0}
+.veto-business-sheet-steps strong{display:block;font-size:11px;color:#eef3fb}
+.veto-business-sheet-steps span{display:block;font-size:10px;line-height:1.5;color:#9daaC0;margin-top:5px}
+.veto-business-sheet-steps button{flex:none;padding:8px;border-radius:9px;font-size:9px;border:1px solid rgba(190,210,240,.15);background:rgba(255,255,255,.08)}
+@media(max-width:400px){
+  .veto-business-journey{padding:16px}
+  .veto-business-journey-head{flex-wrap:wrap}
+  .veto-business-state{order:-1;margin-left:auto}
+  .veto-business-journey-actions{grid-template-columns:1fr}
+  .veto-business-journey-actions button{min-height:42px}
+  .veto-business-step{gap:8px;padding:12px 9px}
+  .veto-business-step button{font-size:8px;padding:7px}
+}
+@media(prefers-reduced-motion:reduce){.veto-business-journey *{animation:none!important;transition:none!important}}
