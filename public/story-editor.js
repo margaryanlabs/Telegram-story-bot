@@ -13,10 +13,11 @@
     warm:{brightness:7,contrast:12,saturation:8,warmth:23,vignette:20,zoom:1.0,title:'SOFT LIGHT'},
     original:{brightness:0,contrast:0,saturation:0,warmth:0,vignette:0,zoom:1,title:''},
   };
-  const defaultSettings=()=>({...effects.editorial,look:'editorial',text:'',textPosition:'bottom',textTone:'light',textSize:56,panX:0,panY:0});
+  const defaultSettings=()=>({...effects.editorial,look:'editorial',text:'',textPosition:'bottom',textTone:'light',textSize:56,panX:0,panY:0,eyebrow:'',callToAction:'',accent:'#ffffff'});
   let image=null,sourceFile=null,sourceUrl='',settings=defaultSettings();
   let painting=false,renderQueued=false,epoch=0,lastPoint=null;
   let undoStack=[],redoStack=[],lastCommitted={...settings};
+  let exporting=false,importGeneration=0,previousFocus=null;
   const W=720,H=1280,OUTPUT_W=1080,OUTPUT_H=1920;
   const cap=(n,min,max)=>Math.min(max,Math.max(min,Number(n)||0));
   const photoSize=(source)=>({width:source.naturalWidth||source.width,height:source.naturalHeight||source.height});
@@ -90,6 +91,45 @@
       lines.forEach((line,i)=>context.fillText(line,w*.085,center-total/2+(i+.5)*lineHeight,w*.84));
       context.shadowBlur=0;
     }
+    const eyebrow=String(s.eyebrow||'').trim().slice(0,32);
+    if(eyebrow){
+      context.save();
+      const font=cap(19*m,10,44);
+      context.font=`850 ${font}px Inter, system-ui, sans-serif`;
+      context.textAlign='center';context.textBaseline='middle';
+      const labelWidth=Math.min(w*.88,context.measureText(eyebrow).width+60*m);
+      const left=(w-labelWidth)/2,top=h*.11-21*m,height=42*m;
+      context.fillStyle='rgba(7,12,19,.70)';
+      context.fillRect(left,top,labelWidth,height);
+      context.fillStyle=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#ffffff';
+      context.shadowColor='rgba(0,0,0,.75)';context.shadowBlur=7*m;
+      context.fillText(eyebrow,w/2,top+height/2,labelWidth-20*m);
+      context.restore();
+    }
+    const call=String(s.callToAction||'').trim().slice(0,32);
+    if(call){
+      context.save();
+      const left=w*.12,top=h*.875,width=w*.76,height=74*m;
+      context.fillStyle=/^#[0-9a-f]{6}$/i.test(s.accent||'')?s.accent:'#ffffff';
+      context.fillRect(left,top,width,height);
+      const hex=context.fillStyle;
+      const red=parseInt(hex.slice(1,3),16),green=parseInt(hex.slice(3,5),16),blue=parseInt(hex.slice(5,7),16);
+      const luminance=(red*299+green*587+blue*114)/1000;
+      context.fillStyle=luminance>155?'#152030':'#ffffff';
+      context.font=`850 ${20*m}px Inter, system-ui, sans-serif`;
+      context.textAlign='center';context.textBaseline='middle';
+      context.fillText(call.toUpperCase(),w/2,top+height/2,width-28*m);
+      context.restore();
+    }
+  }
+  function renderLookPreviews(){
+    if(!image)return;
+    panel.querySelectorAll('[data-story-look-preview]').forEach(canvas=>{
+      const preset=effects[canvas.dataset.storyLookPreview];
+      const context=canvas.getContext('2d',{alpha:false});
+      if(!preset||!context)return;
+      drawFrame(canvas,context,image,{...settings,...preset,text:'',eyebrow:'',callToAction:''});
+    });
   }
   function requestRender(){
     if(renderQueued)return;
@@ -110,6 +150,9 @@
     }
     if($('vetoStoryOverlay'))$('vetoStoryOverlay').value=settings.text;
     if($('vetoStoryTextSize'))$('vetoStoryTextSize').value=String(settings.textSize);
+    if($('vetoStoryEyebrow'))$('vetoStoryEyebrow').value=settings.eyebrow||'';
+    if($('vetoStoryCallToAction'))$('vetoStoryCallToAction').value=settings.callToAction||'';
+    if($('vetoStoryAccent'))$('vetoStoryAccent').value=settings.accent||'#ffffff';
     panel.querySelectorAll('[data-story-look]').forEach(el=>{
       const active=el.dataset.storyLook===settings.look;
       el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active));
@@ -140,6 +183,8 @@
   }
   function close({dispose=true}={}){
     panel.hidden=true;document.body.classList.remove('veto-story-editing');
+    try{previousFocus?.focus?.();}catch{}
+    previousFocus=null;
     painting=false;lastPoint=null;
     if(dispose){
       epoch++;
@@ -158,7 +203,9 @@
     if(sourceUrl){URL.revokeObjectURL(sourceUrl);sourceUrl='';}
     try{image?.close?.();}catch{}
     image=null;sourceFile=null;
+    if(panel.hidden)previousFocus=document.activeElement;
     panel.hidden=false;document.body.classList.add('veto-story-editing');
+    $('vetoStoryCancel')?.focus?.();
     settings=defaultSettings();undoStack=[];redoStack=[];lastCommitted={...settings};
     syncControls();syncHistory();
     showState('Открываю фотографию на устройстве…');
@@ -180,9 +227,12 @@
       const size=`${dim.width} × ${dim.height}`;
       $('vetoStoryOriginalSize').textContent=size;
       showState('Локальный редактор · фотографии не отправляются на сервер до публикации.');
+      renderLookPreviews();
       requestRender();
+      return true;
     }catch(error){
       if(thisEpoch===epoch){showState(error.message||'Не удалось открыть фотографию',true);close();}
+      return false;
     }
   }
   async function exportJpeg(){
