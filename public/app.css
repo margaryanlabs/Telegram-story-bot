@@ -3372,3 +3372,32 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   #telegramMirror .veto-mirror-thread-security{font-size:8px;padding:5px 9px}
 }
 @media(prefers-reduced-motion:reduce){#telegramMirror *{animation-duration:0s!important;transition:none!important}}
+
+
+/* StoryLab Telegram outgoing messages — native-like actual composer, not a mock. */
+#telegramMirror .veto-mirror-composer{display:flex;align-items:flex-end;flex:1;gap:8px;min-width:0}
+#telegramMirror .veto-mirror-compose-field{display:flex;align-items:flex-end;gap:10px;flex:1;min-width:0;min-height:44px;
+  padding:10px 14px;background:#243342;border:1px solid rgba(180,206,238,.12);border-radius:22px}
+#telegramMirror .veto-mirror-compose-field:focus-within{border-color:rgba(181,217,250,.33);background:#293b4b}
+#telegramMirror .veto-mirror-compose-field>span{color:#aebfd2;font-size:17px;line-height:23px}
+#telegramMirror .veto-mirror-compose-field textarea{flex:1;min-width:0;max-height:135px;min-height:24px;height:24px;overflow-y:auto;
+  padding:2px 0 0;resize:none;outline:0;border:0;background:transparent;color:#f1f6fd;
+  font:500 13px/1.45 inherit;font-family:inherit;font-size:13px;line-height:1.45;white-space:pre-wrap}
+#telegramMirror .veto-mirror-compose-field textarea::placeholder{color:#a6b5c5;opacity:.9}
+#telegramMirror .veto-mirror-compose-field textarea:disabled{opacity:.6;cursor:not-allowed}
+#telegramMirror .veto-mirror-send-button{display:grid;place-items:center;flex:0 0 43px;width:43px;height:43px;
+  padding:0 1px 1px 0;border:0;border-radius:50%;background:#b4d5f8;color:#12243a;font-size:19px;
+  box-shadow:0 4px 15px rgba(10,18,30,.24);transition:transform .15s,opacity .15s,background .15s}
+#telegramMirror .veto-mirror-send-button:not(:disabled):active{transform:scale(.94)}
+#telegramMirror .veto-mirror-send-button:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+#telegramMirror .veto-mirror-composer.is-readonly .veto-mirror-compose-field{background:#18232e;border-color:rgba(177,202,228,.07)}
+#telegramMirror .veto-mirror-bubble.compact{margin-top:2px}
+#telegramMirror .veto-mirror-bubble.compact .veto-mirror-bubble-inner{border-top-left-radius:13px}
+#telegramMirror .veto-mirror-bubble.compact.outgoing .veto-mirror-bubble-inner{border-top-right-radius:13px}
+#telegramMirror .veto-mirror-bubble:has(footer span:first-child) footer span{letter-spacing:.01em}
+@media(max-width:560px){
+  #telegramMirror .veto-mirror-compose-field{min-height:44px;padding:10px 12px}
+  #telegramMirror .veto-mirror-send-button{width:43px;flex-basis:43px;height:43px}
+  #telegramMirror .veto-mirror-thread-footer>a{font-size:9px;padding:0 10px}
+}
+@media(prefers-reduced-motion:reduce){#telegramMirror .veto-mirror-send-button{transition:none}}
