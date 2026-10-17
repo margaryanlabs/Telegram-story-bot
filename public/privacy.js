@@ -1233,6 +1233,155 @@
     }
   }
 
+
+  async function businessWizardRequest(action, payload = {}) {
+    if (!tg?.initData) throw new Error('Открой VETO из Telegram, чтобы подтвердить аккаунт');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 27000);
+    try {
+      const response = await fetch('/api/business-wizard', {
+        method:'POST',
+        headers:{ 'content-type':'application/json','x-telegram-init-data':tg.initData },
+        body:JSON.stringify({action,...payload}),signal:controller.signal,
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        const err = new Error(result.error || 'Не удалось проверить подключение');
+        err.needsSession = Boolean(result.needsSession);
+        throw err;
+      }
+      return result;
+    } catch (err) {
+      if (err?.name === 'AbortError') throw new Error('Telegram не ответил вовремя. Проверь статус перед повторным подключением.');
+      throw err;
+    } finally { clearTimeout(timeout); }
+  }
+
+  function renderBusinessWizardPicker(result) {
+    const state = String(result.state || '');
+    if (state === 'storylab') {
+      openSheet(`
+        <span class="kicker">VETO · УЖЕ ПОДКЛЮЧЕНО</span><h2>Business-бот активен</h2>
+        <p>Telegram подтвердил, что VETO уже подключён. Мы не перезаписываем выбранные чаты и другие разрешения автоматически.</p>
+        <p>Для изменения списка открой Telegram → Настройки → Для бизнеса → Чат-боты. Отправь тестовое сообщение из разрешённого чата, чтобы проверить реальный архив.</p>
+        <div class="sheet-actions"><button class="accent" data-business-close="1">Понятно</button></div>
+      `);
+      return;
+    }
+    if (state === 'other_bot') {
+      openSheet(`
+        <span class="kicker">ПРИВАТНОСТЬ · КОНФЛИКТ</span><h2>У тебя уже подключён другой Business-бот</h2>
+        <p>Telegram допускает одного Business-бота на аккаунт. VETO не отключит и не заменит другого бота без твоего решения.</p>
+        <p>Если хочешь сменить бота, сделай это самостоятельно в Telegram → Для бизнеса → Чат-боты. Или используй резервную копию выбранной переписки без Business.</p>
+        <div class="sheet-actions">
+          <button class="accent" data-business-backup="1">Резервная копия без Business</button>
+          <button data-business-close="1">Закрыть</button>
+        </div>
+      `);
+      return;
+    }
+    const chats = Array.isArray(result.chats) ? result.chats : [];
+    openSheet(`
+      <span class="kicker">VETO PRIVACY · ПОДКЛЮЧЕНИЕ В 2 ШАГА</span>
+      <h2>Выбери, какие чаты защищать</h2>
+      <p>StoryLab подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
+      <div class="veto-consent-chat-list" role="group" aria-label="Доступные личные переписки">
+        ${chats.length ? chats.map(chat => `
+          <label class="veto-consent-chat">
+            <input type="checkbox" data-business-selected value="${escapeHtml(chat.chatId)}" />
+            <span class="veto-consent-chat-avatar">${escapeHtml(initials(chat.title))}</span>
+            <span class="veto-consent-chat-copy"><strong>${escapeHtml(chat.title)}</strong><small>${escapeHtml(chat.username ? '@'+chat.username : 'Личный Telegram-чат')}</small></span>
+          </label>`).join('') : '<div class="ghost-backup-summary">Не найдено доступных обычных личных диалогов. Открой чат в Telegram и попробуй снова.</div>'}
+      </div>
+      <div class="veto-consent-boundary">
+        <strong>Что именно разрешаем?</strong>
+        <p>✓ Получать новые сообщения, изменения и удаления из выбранных чатов.</p>
+        <p>✕ Без права отвечать, удалять, отмечать прочитанным, менять профиль, управлять Stories или переводить средства.</p>
+        <p>Это не восстанавливает сообщения, удалённые до подключения.</p>
+      </div>
+      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent" />
+        <span>Я понимаю, что выбранные сообщения будут передаваться VETO для моего приватного архива, и разрешаю подключение только этих чатов.</span>
+      </label>
+      <p class="veto-consent-selected-count" id="businessWizardCount">Не выбрано ни одного чата</p>
+      <div class="sheet-actions">
+        <button class="accent" data-business-apply="1" disabled>Подключить выбранные чаты</button>
+        <button data-business-manual="1">Настроить вручную</button>
+        <button data-business-close="1">Отмена</button>
+      </div>
+    `);
+  }
+
+  async function openBusinessWizard() {
+    openSheet('<span class="kicker">VETO PRIVACY</span><h2>Проверяю твой Telegram…</h2><p>Ищем только личные диалоги. Никакие сообщения пока не копируем и разрешения не меняем.</p>');
+    try {
+      const result = await businessWizardRequest('prepare');
+      renderBusinessWizardPicker(result);
+    } catch (error) {
+      openSheet(`
+        <span class="kicker">VETO · ПОДКЛЮЧЕНИЕ</span><h2>Нужно подключить свой Telegram</h2>
+        <p>${escapeHtml(error.message)}</p>
+        <p>Чтобы выбрать разрешённые чаты прямо в VETO, сначала авторизуй собственную сессию через номер + код или QR. Код вводится только в интерфейсе входа.</p>
+        <div class="sheet-actions">
+          ${error.needsSession ? '<button class="accent" data-business-account="1">Подключить мой Telegram →</button>' : '<button class="accent" data-business-retry="1">Повторить проверку →</button>'}
+          <button data-business-manual="1">Подключить вручную</button>
+          <button data-business-close="1">Закрыть</button>
+        </div>
+      `);
+    }
+  }
+
+  function updateBusinessWizardConsent() {
+    const selected = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])];
+    const approved = $('businessWizardConsent')?.checked === true;
+    const valid = selected.length > 0 && selected.length <= 12 && approved;
+    const count = $('businessWizardCount');
+    if (count) count.textContent = selected.length
+      ? `Выбрано: ${selected.length} из 12 допустимых чатов`
+      : 'Не выбрано ни одного чата';
+    const action = $('sheet')?.querySelector('[data-business-apply]');
+    if (action) action.disabled = !valid;
+  }
+
+  async function applyBusinessWizard(button) {
+    const chats = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])].map(el => el.value);
+    if (!chats.length || chats.length > 12 || $('businessWizardConsent')?.checked !== true) {
+      toast('Выбери чаты и подтвердите согласие');
+      return;
+    }
+    button.disabled = true;
+    button.textContent = 'Подключаю выбранные чаты…';
+    try {
+      const result = await businessWizardRequest('connect', {
+        chatIds:chats,consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',
+      });
+      await Promise.allSettled([loadTelegramConnection({silent:true}),refresh({silent:true})]);
+      openSheet(`
+        <span class="kicker">VETO PRIVACY · ЗАПРОС ПРИНЯТ</span>
+        <h2>Telegram подключил VETO</h2>
+        <p>Выбрано ${Number(result.selectedCount||chats.length)} личных чатов. Подключение принято, но получение и сохранение событий нужно проверить на настоящем сообщении.</p>
+        ${result.settingsUpdated ? '' : '<p>Настройки архива пока не обновились: включи Anti-Delete, Edit History и Inbox в Privacy Center.</p>'}
+        <div class="veto-consent-boundary"><strong>Как проверить</strong><p>1. Попроси собеседника отправить новое сообщение в выбранный чат.</p><p>2. Найди его в VETO Inbox.</p><p>3. Попроси собеседника удалить его и проверь сохранённую копию.</p></div>
+        <div class="sheet-actions">
+          <button class="accent" data-business-close="1">Проверить в Privacy Center →</button>
+        </div>
+      `);
+      try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
+    } catch (error) {
+      // A Telegram RPC may succeed even when its HTTP response times out.
+      // Never auto-resend a consent write: ask the user to recheck state.
+      openSheet(`
+        <span class="kicker">VETO · ПРОВЕРКА</span><h2>Проверь состояние подключения</h2>
+        <p>${escapeHtml(error.message)}</p>
+        <p>Не подключаем автоматически ещё раз: Telegram мог уже принять запрос. Сначала запросим его текущий статус.</p>
+        <div class="sheet-actions">
+          <button class="accent" data-business-retry="1">Проверить статус ↻</button>
+          <button data-business-manual="1">Настроить через Telegram</button>
+          <button data-business-close="1">Закрыть</button>
+        </div>
+      `);
+    }
+  }
+
   function privacyBusinessGuideSheet() {
     const linked = Boolean(privacyState.connection.live);
     openSheet(`
@@ -1588,6 +1737,7 @@
   $('privacyBackupGuideButton')?.addEventListener('click', privacyBusinessGuideSheet);
   $('privacyBusinessDetailsButton')?.addEventListener('click', privacyBusinessGuideSheet);
   $('privacyBusinessCopyButton')?.addEventListener('click', copyBusinessBotUsername);
+  $('privacyBusinessWizardButton')?.addEventListener('click', openBusinessWizard);
   $('privacyBusinessVerifyButton')?.addEventListener('click', async event => {
     const button = event.currentTarget;
     button.disabled = true;
@@ -1746,6 +1896,10 @@
     openThread(chatId);
   });
 
+  $('sheet')?.addEventListener('change', event => {
+    if (event.target.matches('[data-business-selected],#businessWizardConsent')) updateBusinessWizardConsent();
+  });
+
   $('sheet')?.addEventListener('input', event => {
     if (event.target?.id !== 'privacyConfirmDelete') return;
     const accept = $('sheet')?.querySelector('[data-privacy-confirm-clear]');
@@ -1753,6 +1907,21 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
+    const button = event.target.closest('[data-business-apply],[data-business-close],[data-business-retry],[data-business-manual],[data-business-account],[data-business-backup]');
+    if (button) {
+      if (button.hasAttribute('data-business-apply')) await applyBusinessWizard(button);
+      else if (button.hasAttribute('data-business-close')) closeSheet();
+      else if (button.hasAttribute('data-business-retry')) await openBusinessWizard();
+      else if (button.hasAttribute('data-business-manual')) privacyBusinessGuideSheet();
+      else if (button.hasAttribute('data-business-account')) {
+        closeSheet();
+        window.VetoTelegramOpenAccountConnection?.();
+      } else if (button.hasAttribute('data-business-backup')) {
+        closeSheet();
+        await openBackupPicker();
+      }
+      return;
+    }
     const mediaRecovery=event.target.closest('[data-privacy-repair-media],[data-privacy-check-media]');
     if(mediaRecovery) {
       if(mediaRecovery.hasAttribute('data-privacy-repair-media')) await repairVaultMedia(mediaRecovery);
