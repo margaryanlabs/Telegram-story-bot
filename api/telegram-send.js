@@ -4,7 +4,8 @@ import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { withBackupClient } from '../lib/telegram-history-backup.js';
 import { verifyTelegramClientOwner,telegramOwnerError } from '../lib/telegram-owner-runtime.js';
-import { cleanOutgoingMessage,validateSendNonce,sendOwnerMessage } from '../lib/telegram-chat-compose.js';
+import { cleanOutgoingMessage,validateSendNonce,sendOwnerMessage,safeReplyId } from '../lib/telegram-chat-compose.js';
+import { recentStickers,recentStickersPublic,sendRichTelegramMessage,decodeMediaInput } from '../lib/telegram-chat-rich.js';
 
 const BOT = String(process.env.TELEGRAM_BOT_TOKEN || '');
 const respond=(res,status,data)=>res.status(status).json({ok:status<400,...data});
@@ -42,11 +43,15 @@ export default async function handler(req,res) {
   let body={};
   try { body=typeof req.body==='string' ? JSON.parse(req.body) : req.body||{}; }
   catch { return respond(res,400,{error:'Неверный запрос'}); }
-  if(body.action!=='send_message')return respond(res,400,{error:'Неизвестное действие'});
-  let message,nonce;
+  const action=String(body.action||'');
+  if(!['send_message','send_media','send_sticker','recent_stickers'].includes(action))
+    return respond(res,400,{error:'Неизвестное действие'});
+  let message='',nonce='',replyTo=null;
   try {
-    message=cleanOutgoingMessage(body.message);
-    nonce=validateSendNonce(body.nonce);
+    if(action==='send_message')message=cleanOutgoingMessage(body.message);
+    if(action==='send_media')decodeMediaInput(body); // reject unsafe or oversized file before opening MTProto
+    if(action!=='recent_stickers')nonce=validateSendNonce(body.nonce);
+    replyTo=safeReplyId(body.replyTo);
   } catch(error) { return respond(res,error.status||400,{error:error.message}); }
   const chatId=String(body.chatId||'');
   if(!/^-?\d{1,22}$/.test(chatId))return respond(res,400,{error:'Некорректный чат'});
@@ -69,11 +74,20 @@ export default async function handler(req,res) {
       const recent=await client.getDialogs({limit:60});
       const recentMatch=recent.some(dialog=>String(dialog?.id?.toString?.()||dialog?.id||'')===chatId);
       const dialogs=recentMatch ? recent : await client.getDialogs({limit:500});
-      return sendOwnerMessage(client,dialogs,{ownerId:userId,chatId,message,nonce});
+      if(action==='recent_stickers')
+        return {stickers:recentStickersPublic(await recentStickers(client))};
+      if(action==='send_message')
+        return sendOwnerMessage(client,dialogs,{ownerId:userId,chatId,message,nonce,replyTo});
+      return sendRichTelegramMessage(client,dialogs,{
+        ...body,ownerId:userId,chatId,nonce,replyTo,action,
+      });
+    });
+    if(action==='recent_stickers')return respond(res,200,{
+      stickers:result.stickers,source:'owner-mtproto',notCached:true,
     });
     return respond(res,200,{
       sent:result.sent,chatId:result.chatId,messageId:result.messageId,
-      source:result.source,delivery:result.delivery,
+      source:result.source||'owner-mtproto',kind:result.kind||'text',delivery:result.delivery,
       note:'Telegram принял отправку из твоего личного аккаунта.',
     });
   } catch(error) {
