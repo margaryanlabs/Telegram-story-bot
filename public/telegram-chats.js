@@ -158,7 +158,7 @@
     const message=field.value.trim();
     if(state.pendingAttachment){await sendRichOutgoing('send_media');return;}
     if(!message || message.length>4096)return;
-    const chatId=String(chat.id);
+    const chatId=String(chat.id),ownerKey=state.ownerInitData;
     const savedRetry=state.lastSendFailure;
     const retry=savedRetry?.chatId===chatId && savedRetry.message===message;
     const nonce=retry?savedRetry.nonce:window.crypto?.randomUUID?.();
@@ -178,6 +178,7 @@
     renderSendComposer();
     try{
       const delivered=await sendChatRequest(chatId,message,nonce,state.replyTo?.id||null);
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       if(String(state.thread?.id)===chatId){
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
         if(Number.isSafeInteger(delivered.messageId)&&delivered.messageId>0){
@@ -201,6 +202,7 @@
       } else state.drafts.delete(chatId);
       try{tg?.HapticFeedback?.notificationOccurred('success');}catch{}
     }catch(error){
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       // A send can succeed even if the HTTP confirmation is lost.
       // Retain the SAME random_id on deliberate retry, preventing duplicates.
       if(error.uncertain===true){
@@ -217,23 +219,25 @@
       }
       toast(error.message);
     }finally{
-      state.sendInFlight=false;
-      renderSendComposer();
+      if(ownerKey===state.ownerInitData){state.sendInFlight=false;renderSendComposer();}
     }
   }
 
 
   async function richRequest(action,payload={}){
-    if(!tg?.initData)throw new Error('Открой StoryLab внутри Telegram');
+    resetOwner();
+    const signed=String(tg?.initData||'');
+    if(!signed)throw new Error('Открой StoryLab внутри Telegram');
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),45000);
     try {
       const response=await fetch('/api/telegram-send',{
         method:'POST',
-        headers:{'content-type':'application/json','x-telegram-init-data':tg.initData},
+        headers:{'content-type':'application/json','x-telegram-init-data':signed},
         body:JSON.stringify({action,...payload}),signal:controller.signal,
       });
       const data=await response.json().catch(()=>({}));
+      if(signed!==String(tg?.initData||'')){resetOwner();throw new Error('Telegram-аккаунт изменился. Проверь переписку.');}
       if(!response.ok || !data.ok){
         const error=new Error(data.error||'Telegram не подтвердил отправку.');
         error.uncertain=data.uncertain===true;
@@ -281,7 +285,7 @@
   async function sendRichOutgoing(action,attachmentOrIndex=null){
     const chat=state.thread,field=$('telegramThreadCompose');
     if(!canSendInThread(chat)||state.sendInFlight)return;
-    const chatId=String(chat.id),nonce=window.crypto?.randomUUID?.();
+    const chatId=String(chat.id),ownerKey=state.ownerInitData,nonce=window.crypto?.randomUUID?.();
     if(!nonce){toast('Нужен защищённый HTTPS');return;}
     const replyTo=state.replyTo?.id||null;
     const voiceSend=action==='send_media' && attachmentOrIndex?.kind==='voice';
@@ -300,8 +304,10 @@
       }else if(action==='send_sticker') request={...request,stickerId:String(attachmentOrIndex)};
       else return;
       // Never transmit a different chat's pending media after the user navigates away.
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();throw new Error('Аккаунт изменился. Отправка отменена.');}
       if(String(state.thread?.id)!==chatId)throw new Error('Чат изменился. Отправка отменена.');
       await richRequest(action,request);
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       if(String(state.thread?.id)===chatId){
         if(field&&!voiceSend)field.value='';
         if(!voiceSend)state.drafts.delete(chatId);
@@ -318,13 +324,13 @@
       }
       try{tg?.HapticFeedback?.notificationOccurred('success')}catch{}
     }catch(error){
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       threadNotice(error.message);
       toast(error.message);
       // The same media may have reached Telegram on timeout. We never
       // auto-resend; the user should check Telegram before another attempt.
     }finally{
-      state.sendInFlight=false;
-      renderSendComposer();
+      if(ownerKey===state.ownerInitData){state.sendInFlight=false;renderSendComposer();}
     }
   }
   async function openStickerDrawer(){
