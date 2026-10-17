@@ -377,9 +377,19 @@
             <button type="button" id="telegramThreadBack" aria-label="Вернуться к чатам" class="veto-mirror-icon-btn veto-mirror-back">←</button>
             <div class="veto-mirror-thread-avatar" id="telegramThreadAvatar">TG</div>
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
+            <button type="button" id="telegramThreadSearchToggle" class="veto-mirror-icon-btn" aria-label="Поиск сообщений в этой переписке" aria-expanded="false">⌕</button>
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
           </div>
           <div class="veto-mirror-thread-security"><i></i> Telegram + сохранённая история · в хронологии · только чтение <span>◈</span></div>
+          <section class="veto-chat-search" id="telegramThreadSearchPanel" aria-label="Поиск внутри переписки" hidden>
+            <form id="telegramThreadSearchForm">
+              <input id="telegramThreadSearchQuery" type="search" inputmode="search" placeholder="Найти в этой переписке…" minlength="2" maxlength="80" autocomplete="off" />
+              <button type="submit">Найти</button>
+              <button type="button" id="telegramThreadSearchClose" aria-label="Закрыть поиск">✕</button>
+            </form>
+            <p>Поиск по доступной истории этого чата в Telegram · максимум 25 результатов. Секретные чаты и уже удалённые сообщения недоступны.</p>
+            <div id="telegramThreadSearchResults" role="status" aria-live="polite"></div>
+          </section>
           <div class="veto-mirror-thread-body" id="telegramThreadMessages" aria-live="polite"></div>
           <div id="telegramThreadNotice" class="veto-mirror-thread-notice" hidden></div>
           <div class="veto-mirror-thread-bottom">
