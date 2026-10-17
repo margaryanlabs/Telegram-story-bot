@@ -20,7 +20,7 @@ test('Private list, thread, avatars and history backup cannot run without real o
   const backup=load('api/privacy-backup.js'),worker=load('api/privacy-backup-worker.js');
   assert.equal(chats.split('verifyTelegramClientOwner(client,userId)').length-1,2);
   assert.equal(media.split('verifyTelegramClientOwner(client,userId)').length-1,1);
-  assert.equal(backup.split('verifyTelegramClientOwner(client,userId)').length-1,3);
+  assert.ok(backup.split('verifyTelegramClientOwner(client,userId)').length-1>=4);
   assert.equal(worker.split('verifyTelegramClientOwner(client,userId)').length-1,1);
   assert.ok(chats.includes("if(stop)return respond(res,stop.status,{error:stop.error});"));
   assert.ok(media.includes('if(stop)return deny(res,stop.status,stop.error)'));
@@ -42,6 +42,6 @@ test('Confirmed deleted messages are distinguished from saved-but-not-confirmed 
   const source=load('api/telegram-chats.js'),html=load('public/telegram-chats.js');
   assert.ok(source.includes('confirmedDeleted:history.reduce'));
   assert.ok(html.includes('Подтверждённых удалений'));
-  assert.ok(html.includes('Резервные копии без Business сохраняют содержимое'));
+  assert.ok(html.includes('История через код/QR сохраняет содержимое'));
   assert.ok(source.includes('deleted:Boolean(row.deleted_at)'));
 });

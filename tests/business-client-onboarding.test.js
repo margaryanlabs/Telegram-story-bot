@@ -35,7 +35,7 @@ test('Onboarding status comes from verified backend Business connection, not loc
   assert.match(code, /privacyBusinessCopyButton/);
   assert.match(code, /if \(!document.hidden && privacyScreenActive\(\)\) \{/);
   const html = source('public/studio.html');
-  assert.match(html, /privacy\.js\?v=20261017-veto-native-business-wizard-v1/);
+  assert.match(html, /privacy\.js\?v=20261017-veto-telegram-chat-ui-v2/);
 });
 
 test('Business message updates do not require the Telegram mark-as-read permission', () => {
