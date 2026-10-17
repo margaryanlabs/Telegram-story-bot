@@ -33,6 +33,10 @@ test('TURN-only test uses real signed ICE endpoint and synthetic audio, without 
   assert.ok(source.includes('right.getStats()'));
   assert.ok(source.includes('selectedRelay(ls)'));
   assert.ok(source.includes('selectedRelay(rs)'));
+  assert.ok(source.includes("s.type==='inbound-rtp'"));
+  assert.ok(source.includes('Number(s.bytesReceived||0)>0'));
+  assert.ok(source.includes('if(!audioReceived)'));
+  assert.ok(source.includes('доставка аудио RTP не подтверждена'));
   assert.ok(source.includes('createMediaStreamDestination()'));
   assert.ok(source.includes('createOscillator()'));
   assert.ok(source.includes('createDataChannel('));
