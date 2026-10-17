@@ -3446,3 +3446,22 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   #telegramMirror .veto-mirror-compose-field{padding:9px}
 }
 @media(prefers-reduced-motion:reduce){#telegramMirror .veto-mirror-mic-btn.recording{animation:none}}
+
+
+/* Scoped active Telegram chat refresh: visible UI only, no false realtime claims. */
+#telegramMirror .veto-mirror-sync-strip{display:flex;align-items:center;gap:8px;min-height:28px;
+  padding:4px 12px;background:rgba(157,185,217,.045);border-bottom:1px solid rgba(163,191,223,.06)}
+#telegramMirror .veto-mirror-sync-strip small{flex:1;color:#90a7c0;font-size:9px;line-height:1.35;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#telegramMirror .veto-mirror-sync-indicator{display:inline-block;flex:none;width:6px;height:6px;border-radius:50%;
+  background:#79bc9b;box-shadow:0 0 0 3px rgba(121,188,155,.075)}
+#telegramMirror .veto-mirror-sync-indicator.is-busy{background:#b8cfe8;animation:vetoSyncPulse 1.2s ease-in-out infinite}
+#telegramMirror #telegramThreadSyncNow{display:grid;place-items:center;width:24px;height:23px;
+  border:0;border-radius:7px;background:transparent;color:#a7c2df;font-size:14px}
+#telegramMirror #telegramThreadSyncNow:active{background:rgba(185,210,238,.12)}
+@keyframes vetoSyncPulse{50%{opacity:.4;transform:scale(.8)}}
+#telegramMirror[data-chat-theme="pearl"] .veto-mirror-sync-strip,
+#telegramMirror[data-chat-theme="linen"] .veto-mirror-sync-strip{background:rgba(36,66,96,.045)}
+#telegramMirror[data-chat-theme="pearl"] .veto-mirror-sync-strip small,
+#telegramMirror[data-chat-theme="linen"] .veto-mirror-sync-strip small{color:#65768a}
+@media(prefers-reduced-motion:reduce){#telegramMirror .veto-mirror-sync-indicator.is-busy{animation:none}}
