@@ -34,7 +34,7 @@ test('saved outgoing audio deletion has a real Vault copy and a focus button', a
   assert.match(alert.text, /Вы: \[audio\]/);
   assert.match(alert.text, /Копия доступных сообщений сохранена в VETO Vault/);
   assert.doesNotMatch(alert.text, /нет ранее сохранённой копии/);
-  assert.match(alert.reply_markup.inline_keyboard[0][0].web_app.url, /chat=chat-1/);
+  assert.match(alert.reply_markup.inline_keyboard[0][0].web_app.url, /chatId=chat-1/);
   assert.match(alert.reply_markup.inline_keyboard[0][0].web_app.url, /messageId=123|message=123/);
 });
 
