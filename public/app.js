@@ -82,8 +82,6 @@
     livechats: 'telegram',
     voice:'voice',
     voicestudio:'voice',
-    calls:'calls',
-    call:'calls',
     relay: 'relay',
     studio: 'studio',
     creator: 'studio',
@@ -92,14 +90,9 @@
     analytics: 'analytics',
     archive: 'archive',
   };
-  // Telegram Main Mini App links may carry a temporary VETO call invite.
-  // Only route to Calls here; its module parses the token and asks for explicit
-  // microphone consent. The server separately verifies signed initData.
-  const callStartParam=String(tg?.initDataUnsafe?.start_param||
-    qs.get('tgWebAppStartParam')||'');
-  const requestedScreen=/^vc_[A-Za-z0-9_-]{54}$/.test(callStartParam)
-    ?'calls'
-    :(SCREEN_ALIASES[String(qs.get('screen') || '').toLowerCase()]||null);
+  // Staged Calls is code-only. Ignore old startapp invites until a verified
+  // public release explicitly enables the screen and server integration.
+  const requestedScreen=SCREEN_ALIASES[String(qs.get('screen')||'').toLowerCase()]||null;
   let currentScreen = 'home';
   let selectedViewerStory = state.lastStory || state.history?.[0]?.id || null;
   let toastTimer = null;
@@ -1500,7 +1493,7 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = { chats:'privacy', telegram:'privacy', voice:'home', calls:'home', archive:'publish', analytics:'viewers', relay:'home' };
+  const NAV_PARENT = { chats:'privacy', telegram:'privacy', voice:'home', archive:'publish', analytics:'viewers', relay:'home' };
   function switchScreen(name) {
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
