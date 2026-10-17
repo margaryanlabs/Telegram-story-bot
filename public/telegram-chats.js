@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,lastSyncedAt:0,syncMs:0,autoPages:0,stale:false,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
-    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
+    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,avatarScheduled:false,
     previewActive:0,previewSeen:new Set(),
   };
   const labels={
@@ -349,24 +349,34 @@
       return URL.createObjectURL(blob);
     }finally{clearTimeout(timer);}
   }
-  // At most two MTProto avatar requests in flight, and 12 per app session:
+  // Low-priority avatar budget: one request in flight and six per app session.
   // never attempt to download hundreds of profile photos when browsing dialogs.
   function queueVisibleAvatars(){
     if(String(tg?.initData||'')!==state.ownerInitData)return;
-    if(!tg?.initData||state.avatarLoaded>=12)return;
+    if(!tg?.initData||state.avatarLoaded>=6||state.loading)return;
     const visible=[...document.querySelectorAll('[data-veto-avatar]')]
       .filter(el=>!state.avatarUrls.has(el.dataset.vetoAvatar))
-      .slice(0,12-state.avatarLoaded);
+      .slice(0,6-state.avatarLoaded);
     for(const el of visible){
       const id=String(el.dataset.vetoAvatar||'');
       if(!id||state.avatarRequested.has(id))continue;
       state.avatarRequested.add(id);
       state.avatarQueue.push(id);
     }
-    runAvatarQueue();
+    // Defer MTProto media requests until the list paints. Telegram's initial
+    // dialogs request must never compete with twelve thumbnail connections.
+    if(state.avatarScheduled)return;
+    state.avatarScheduled=true;
+    const begin=()=>{
+      state.avatarScheduled=false;
+      if(state.ownerInitData===String(tg?.initData||''))runAvatarQueue();
+    };
+    if(typeof window.requestIdleCallback==='function')
+      window.requestIdleCallback(begin,{timeout:1200});
+    else setTimeout(begin,280);
   }
   function runAvatarQueue(){
-    while(state.avatarActive<2&&state.avatarQueue.length&&state.avatarLoaded<12){
+    while(state.avatarActive<1&&state.avatarQueue.length&&state.avatarLoaded<6){
       const id=state.avatarQueue.shift();
       const owner=state.ownerInitData;
       state.avatarActive++;state.avatarLoaded++;
@@ -462,7 +472,7 @@
     state.threadLoading=false;state.loading=false;
     state.search='';state.filter='all';
     if($('telegramMirrorSearch'))$('telegramMirrorSearch').value='';
-    state.avatarQueue=[];state.avatarRequested.clear();state.avatarActive=0;
+    state.avatarQueue=[];state.avatarRequested.clear();state.avatarActive=0;state.avatarScheduled=false;
     state.avatarUrls.forEach(url=>{try{URL.revokeObjectURL(url);}catch{}});
     state.avatarUrls.clear();state.avatarLoaded=0;
     revokeMediaUrls();
