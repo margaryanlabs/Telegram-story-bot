@@ -293,7 +293,9 @@ export default async function handler(req,res){
       });
     }
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
-    const stored=await archivedMessages(userId,chatId,archiveOffset);
+    // Archive and Telegram are independent reads. Do not make the first
+    // message paint wait for an entire serialized archive round trip.
+    const storedPromise=archivedMessages(userId,chatId,archiveOffset);
     let liveMessages=[],liveMore=false,nextLive=null,chat=null,warning=null;
     // A preserved-only thread can be opened even after the chat is cleared
     // or removed from the owner's current Telegram dialog list.
@@ -332,6 +334,7 @@ export default async function handler(req,res){
         warning=errorMessage(error).error;
       }
     }
+    const stored=await storedPromise;
     if(!chat && threadArchive)chat=archivedDialog(threadArchive);
     if(!chat)return respond(res,404,{error:'Чат не найден в Telegram и нет ранее сохранённой копии VETO.'});
     return respond(res,200,{
