@@ -35,5 +35,5 @@ test('Self-test has a bounded timeout, releases all media and truthfully disclos
   assert.ok(source.includes("window.addEventListener('veto:screen-changed'"));
   assert.ok(source.includes('Это НЕ тест звонка через интернет'));
   assert.ok(read('public/studio.html').includes('id="callSelfTest"'));
-  assert.ok(read('public/studio.html').includes('src="/calls-selftest.js?'));
+  assert.ok(!read('public/studio.html').includes('src="/calls-selftest.js?'));
 });
