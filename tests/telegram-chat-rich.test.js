@@ -105,10 +105,11 @@ test('recent stickers expose only indices and emoji, and send a server-resolved 
 
 test('UI requires explicit user sends, uses client mic permission, no fake in-browser calling',()=>{
  const ui=read('public/telegram-chats.js'),html=read('public/studio.html'),api=read('api/telegram-send.js'),media=read('api/telegram-chat-media.js');
- for(const id of ['telegramThreadAttachButton','telegramThreadRecordVoice','telegramThreadStickersButton','telegramThreadReplyPreview','telegramThreadCall']){
+ for(const id of ['telegramThreadAttachButton','telegramThreadRecordVoice','telegramThreadStickersButton','telegramThreadReplyPreview','telegramThreadVoicePreview','telegramThreadVoiceSend']){
   assert.ok(html.includes('id="'+id+'"'),id);
  }
- assert.match(ui,/getUserMedia\(\{audio:true\}\)/);
+ assert.match(ui,/navigator\.mediaDevices\.getUserMedia\(/);
+ assert.match(ui,/echoCancellation:true/);
  assert.match(ui,/new MediaRecorder\(/);
  assert.match(ui,/sendRichOutgoing\('send_media'/);
  assert.match(ui,/sendRichOutgoing\('send_sticker'/);
@@ -119,5 +120,7 @@ test('UI requires explicit user sends, uses client mic permission, no fake in-br
  assert.match(api,/\['send_message','send_media','send_sticker','recent_stickers'\]/);
  assert.match(media,/verifyTelegramClientOwner\(client,userId\)/);
  assert.match(media,/Content-Disposition/);
- assert.match(ui,/official app instead of pretending a browser phone call started/);
+ assert.doesNotMatch(html,/id="telegramThreadCall"/);
+ assert.doesNotMatch(ui,/telegramThreadCall/);
+ assert.match(ui,/sendRichOutgoing\('send_media',\{file:draft\.file,kind:'voice'/);
 });
