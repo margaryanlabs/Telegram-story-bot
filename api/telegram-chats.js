@@ -206,6 +206,7 @@ function errorMessage(error){
 export function chatRowFingerprint(chat){
   const data={
     id:chat.id,title:chat.title,type:chat.type,preview:chat.preview,
+    username:chat.username,nativeUrl:chat.nativeUrl,archiveOnly:chat.archiveOnly,
     date:chat.date,unreadCount:chat.unreadCount,pinned:chat.pinned,
     archived:chat.archived,verified:chat.verified,savedCopy:chat.savedCopy,
     savedCount:chat.savedCount,deletedCount:chat.deletedCount,
