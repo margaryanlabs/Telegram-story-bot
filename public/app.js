@@ -2584,6 +2584,15 @@
   });
   $('privacyPromiseButton')?.addEventListener('click', privacyPromiseSheet);
   $('vetoWelcomeSkip')?.addEventListener('click', () => closeVetoWelcome());
+  // Let a new customer choose live Telegram vs independent Anti-Delete before
+  // seeing the Stories-first activation wizard. No permissions are granted here.
+  document.querySelectorAll('[data-veto-start-action]').forEach(button => {
+    button.addEventListener('click', () => {
+      const destination = button.dataset.vetoStartAction === 'archive' ? 'privacy' : 'telegram';
+      if (!$('vetoWelcome')?.hidden) closeVetoWelcome();
+      switchScreen(destination);
+    });
+  });
   $('vetoWelcomeNext')?.addEventListener('click', () => {
     haptic();
     if (vetoWelcomeStep < 3) {
