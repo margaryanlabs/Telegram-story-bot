@@ -1509,11 +1509,11 @@
     <div class="veto-story-editor-controls">
       <div class="veto-story-editor-tabs-title"><span>01 / MAGIC STYLES</span><small>Пять локальных вариантов · без AI-генерации</small></div>
       <div class="veto-story-looks" id="vetoStoryLooks">
-        <button type="button" data-story-look="editorial" aria-pressed="true" class="active"><i>ED</i><span>Editorial</span></button>
-        <button type="button" data-story-look="cinematic" aria-pressed="false"><i>CI</i><span>Cinematic</span></button>
-        <button type="button" data-story-look="minimal" aria-pressed="false"><i>MI</i><span>Minimal</span></button>
-        <button type="button" data-story-look="warm" aria-pressed="false"><i>WA</i><span>Warm</span></button>
-        <button type="button" data-story-look="original" aria-pressed="false"><i>OR</i><span>Original</span></button>
+        <button type="button" data-story-look="editorial" aria-pressed="true" class="active"><canvas width="90" height="150" data-story-look-preview="editorial" aria-hidden="true"></canvas><span>Editorial</span></button>
+        <button type="button" data-story-look="cinematic" aria-pressed="false"><canvas width="90" height="150" data-story-look-preview="cinematic" aria-hidden="true"></canvas><span>Cinematic</span></button>
+        <button type="button" data-story-look="minimal" aria-pressed="false"><canvas width="90" height="150" data-story-look-preview="minimal" aria-hidden="true"></canvas><span>Minimal</span></button>
+        <button type="button" data-story-look="warm" aria-pressed="false"><canvas width="90" height="150" data-story-look-preview="warm" aria-hidden="true"></canvas><span>Warm</span></button>
+        <button type="button" data-story-look="original" aria-pressed="false"><canvas width="90" height="150" data-story-look-preview="original" aria-hidden="true"></canvas><span>Original</span></button>
       </div>
       <div class="veto-story-editor-tabs-title"><span>02 / COLOR & FRAME</span><small>Прямое управление</small></div>
       <div class="veto-story-tuning">
@@ -1535,8 +1535,28 @@
         </div>
         <label>Размер надписи <input type="range" id="vetoStoryTextSize" min="34" max="92" value="56"></label>
       </div>
+      <div class="veto-story-editor-tabs-title"><span>04 / CAMPAIGN ELEMENTS</span><small>Отдельные редактируемые слои</small></div>
+      <div class="veto-story-brand-kit">
+        <label for="vetoStoryEyebrow">Верхняя метка <small>Например: NEW COLLECTION</small></label>
+        <input id="vetoStoryEyebrow" type="text" maxlength="32" autocomplete="off" placeholder="NEW COLLECTION" />
+        <label for="vetoStoryCallToAction">Кнопка на фотографии <small>Например: DISCOVER MORE</small></label>
+        <input id="vetoStoryCallToAction" type="text" maxlength="32" autocomplete="off" placeholder="DISCOVER MORE" />
+        <div class="veto-story-brand-accent">
+          <label for="vetoStoryAccent">Цвет акцента</label>
+          <input id="vetoStoryAccent" type="color" value="#ffffff" aria-label="Цвет метки и кнопки" />
+          <span>Два независимых элемента поверх фотографии. Сохраняются вместе с проектом.</span>
+        </div>
+      </div>
       <p class="veto-story-editor-status" id="vetoStoryEditorStatus" role="status" aria-live="polite"></p>
       <div class="veto-story-editor-meta"><span id="vetoStoryOriginalSize">—</span><span>EXPORT · 1080 × 1920 · JPEG</span></div>
+      <div class="veto-story-project">
+        <div><small>EDITABLE PROJECT</small><strong>Вернуться к редактированию позже</strong><span>Сохрани проект файлом на устройстве. Фото внутри — береги файл как личный.</span></div>
+        <div class="veto-story-project-actions">
+          <button id="vetoStorySaveProject" type="button">↓ Сохранить проект</button>
+          <button id="vetoStoryOpenProject" type="button">↥ Открыть проект</button>
+          <input id="vetoStoryProjectFile" type="file" accept=".vetostory,application/json" hidden />
+        </div>
+      </div>
       <div class="veto-story-editor-history">
         <button type="button" id="vetoStoryUndo" disabled>↶ Отменить</button>
         <button type="button" id="vetoStoryRedo" disabled>↷ Повторить</button>
@@ -1546,7 +1566,7 @@
         <button type="button" id="vetoStoryDownload">↓ Черновик на устройство</button>
         <button type="button" id="vetoStoryApply">Использовать для Story →</button>
       </div>
-      <p class="veto-story-editor-privacy">Фото остаётся на этом устройстве до нажатия «Опубликовать». «Черновик» скачивает JPEG, не размещая Story в Telegram.</p>
+      <p class="veto-story-editor-privacy">Фото остаётся на этом устройстве до нажатия «Опубликовать». «Черновик» экспортирует JPEG. «Проект» сохраняет редактируемое фото и настройки отдельным личным файлом. Оба действия не публикуют Story.</p>
     </div>
   </section>
 
