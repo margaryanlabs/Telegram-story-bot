@@ -38,6 +38,16 @@ test('Onboarding status comes from verified backend Business connection, not loc
   assert.match(html, /privacy\.js\?v=20261017-veto-business-receive-v2/);
 });
 
+test('Business message updates do not require the Telegram mark-as-read permission', () => {
+  const privacy = source('public/privacy.js');
+  const diagnostics = source('api/privacy.js');
+  assert.match(privacy, /const operational = complete && connectionLive && !privacyState\.connection\.error/);
+  assert.match(diagnostics, /ok: businessLive,\n      label: 'Business message events'/);
+  assert.match(diagnostics, /can_read_messages grants MARK-AS-READ/);
+  assert.match(diagnostics, /send a test message in an allowed private chat/);
+  assert.doesNotMatch(privacy, /complete && connectionLive && readMessages/);
+});
+
 test('Connect journey retains a mobile layout and never claims to retrieve past deleted chats', () => {
   const css = source('public/app.css');
   const app = source('public/app.js');
