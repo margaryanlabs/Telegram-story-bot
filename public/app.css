@@ -3203,3 +3203,56 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   .veto-business-step button{font-size:8px;padding:7px}
 }
 @media(prefers-reduced-motion:reduce){.veto-business-journey *{animation:none!important;transition:none!important}}
+
+
+/* VETO Chats v2 — calm high-contrast dark UI; never alter other surfaces. */
+.veto-mirror{--chat-hairline:rgba(226,235,247,.075);background:#06080c;border-color:rgba(224,235,249,.10)}
+.veto-mirror-heading{margin:19px 0 16px}
+.veto-mirror-heading h1{font-size:clamp(29px,7.5vw,40px);letter-spacing:-.065em}
+.veto-mirror-heading p{font-size:11px;max-width:410px;line-height:1.6}
+.veto-mirror-metrics{display:grid;grid-template-columns:.8fr .8fr 1.2fr;gap:8px;margin:0 0 15px}
+.veto-mirror-metrics>div{display:flex;min-width:0;flex-direction:column;gap:8px;padding:12px;border-radius:14px;border:1px solid rgba(226,237,251,.08);background:linear-gradient(160deg,#11151d,#0b0f15)}
+.veto-mirror-metrics span{font-size:8px;letter-spacing:.105em;font-weight:780;color:#8998aa}
+.veto-mirror-metrics strong{font-size:21px;letter-spacing:-.06em;color:#f3f7fd;line-height:1.1;font-variant-numeric:tabular-nums}
+.veto-mirror-metrics .veto-mirror-metric-sync strong{font-size:12px;letter-spacing:-.025em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d5e1f0}
+.veto-mirror-access-center.connected{padding-top:10px;padding-bottom:10px}
+.veto-mirror-access-center.connected .veto-mirror-access-steps{display:none}
+.veto-mirror-search-wrap:focus-within{border-color:rgba(210,229,252,.4);box-shadow:0 0 0 3px rgba(184,207,237,.055)}
+.veto-mirror-filters button{transition:background .15s ease,color .15s ease,border .15s ease}
+.veto-mirror-chat{border-radius:12px;margin:2px 0;min-height:70px;padding:9px 10px;transition:background .13s ease}
+.veto-mirror-chat:hover,.veto-mirror-chat:focus-visible{background:#151b25;outline:0}
+.veto-mirror-chat:focus-visible{box-shadow:inset 0 0 0 1px rgba(219,232,248,.28)}
+.veto-mirror-chat-avatar,.veto-mirror-thread-avatar{border:1px solid rgba(237,246,255,.11);border-radius:15px}
+.veto-mirror-chat-title strong{font-size:13px;letter-spacing:-.017em}
+.veto-mirror-chat-main>small{font-size:11px;color:#91a0b2}
+.veto-mirror-progress{display:flex;gap:9px;align-items:center;padding:9px 11px;margin:0 0 5px;border-radius:10px;color:#a9bad0;background:#10151d;font-size:10px}
+.veto-mirror-progress[hidden]{display:none!important}
+.veto-mirror-progress i{display:block;width:11px;height:11px;flex:none;border:2px solid #65758a;border-top-color:#e5edf9;border-radius:50%;animation:vetoMirrorSpin .8s linear infinite}
+.veto-mirror-icon-btn.spinning{opacity:.6;cursor:progress}
+.veto-mirror-skeleton{display:flex;flex-direction:column;gap:4px;padding:8px 0 22px}
+.veto-mirror-skeleton-row{display:flex;align-items:center;gap:12px;min-height:70px;padding:8px 10px;border-bottom:1px solid rgba(235,244,255,.04)}
+.veto-mirror-skeleton-avatar,.veto-mirror-skeleton-copy i,.veto-mirror-skeleton-date{display:block;background:linear-gradient(115deg,#151b25 10%,#222b39 46%,#151b25 80%);background-size:220% 100%;animation:vetoChatShimmer 1.7s ease-in-out infinite}
+.veto-mirror-skeleton-avatar{width:48px;height:48px;flex:none;border-radius:15px}
+.veto-mirror-skeleton-copy{display:flex;flex:1;flex-direction:column;gap:10px;min-width:0}
+.veto-mirror-skeleton-copy i{height:9px;width:65%;border-radius:5px}
+.veto-mirror-skeleton-copy i+ i{width:88%;height:8px;opacity:.6}
+.veto-mirror-skeleton-date{width:35px;height:8px;border-radius:5px;align-self:flex-start;margin-top:9px}
+@keyframes vetoChatShimmer{to{background-position-x:-220%}}
+.veto-mirror-bottom-jump{display:block;margin:3px auto 11px;padding:9px 17px;background:#18212c;border:1px solid rgba(211,227,246,.16);border-radius:999px;color:#d7e3f2;font-size:11px;font-weight:760}
+.veto-mirror-bottom-jump:hover{background:#202b38}
+.veto-mirror-thread-body{background:linear-gradient(180deg,#070a0f,#0a0d13);padding:20px 14px}
+.veto-mirror-bubble-inner{box-shadow:0 6px 18px rgba(0,0,0,.12);border-color:rgba(233,241,251,.065)}
+.veto-mirror-bubble.outgoing .veto-mirror-bubble-inner{background:#253246}
+@media(max-width:410px){
+  .veto-mirror-list{padding:20px 12px 18px}
+  .veto-mirror-metrics{gap:6px}
+  .veto-mirror-metrics>div{padding:10px 9px}
+  .veto-mirror-metrics span{font-size:7px}
+  .veto-mirror-metrics strong{font-size:19px}
+  .veto-mirror-metrics .veto-mirror-metric-sync strong{font-size:11px}
+  .veto-mirror-chat{padding:8px 5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .veto-mirror-skeleton-avatar,.veto-mirror-skeleton-copy i,.veto-mirror-skeleton-date,.veto-mirror-progress i{animation:none}
+  .veto-mirror-chat{transition:none}
+}
