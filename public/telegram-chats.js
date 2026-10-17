@@ -289,6 +289,12 @@
     if(resetOwner())return;
     if(state.loading)return;
     const generation=++state.generation;
+    const previousPage=state.page;
+    const previousRows=new Map(state.chats.map(chat=>[String(chat.id),chat]));
+    const known=reset&&previousPage===1&&!state.cachedPreview
+      ?state.chats.filter(row=>/^[A-Za-z0-9_-]{43}$/.test(String(row.rowHash||'')))
+        .slice(0,60).map(({id,rowHash})=>({id,rowHash}))
+      :[];
     const sameOwner=String(tg?.initData||'')===state.ownerInitData;
     const keepWhileRefreshing=reset&&state.chats.length>0&&sameOwner;
     if(reset){
@@ -301,13 +307,27 @@
     const started=Date.now();
     renderChats();
     try{
-      const data=await request('list',{page:state.page});
+      let data=await request('list',{page:state.page,...(known.length?{known}:{})});
       if(generation!==state.generation)return;
+      // Only changed first-page cards traverse the network on a healthy
+      // signed owner refresh. A partial response must never hide unknown
+      // dialogs: retry a complete read when local metadata is unavailable.
+      let incoming=Array.isArray(data.chats)?data.chats:[];
+      if(data.delta?.orderedIds){
+        const changes=new Map(incoming.map(row=>[String(row.id),row]));
+        const rebuilt=data.delta.orderedIds.map(id=>
+          changes.get(String(id))||previousRows.get(String(id)));
+        if(rebuilt.some(row=>!row)){
+          data=await request('list',{page:state.page});
+          if(generation!==state.generation)return;
+          incoming=Array.isArray(data.chats)?data.chats:[];
+        }else incoming=rebuilt;
+      }
       // Replace stale rows only AFTER the new first page was verified by the
       // same Telegram owner; do not leave removed dialogs in the fresh list.
       if(reset)state.chats=[];
       const indexes=new Map(state.chats.map((c,index)=>[String(c.id),index]));
-      (data.chats||[]).forEach(chat=>{
+      incoming.forEach(chat=>{
         if(!chat||!chat.id)return;
         const key=String(chat.id);
         if(indexes.has(key)){
