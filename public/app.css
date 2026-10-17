@@ -3401,3 +3401,48 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   #telegramMirror .veto-mirror-thread-footer>a{font-size:9px;padding:0 10px}
 }
 @media(prefers-reduced-motion:reduce){#telegramMirror .veto-mirror-send-button{transition:none}}
+
+
+/* StoryLab Telegram: rich composer — compact, native-inspired, scoped controls. */
+#telegramMirror .veto-mirror-thread-footer{gap:7px}
+#telegramMirror .veto-mirror-compose-toolbar{display:flex;align-items:center;gap:3px}
+#telegramMirror .veto-mirror-tool-btn{border:0;border-radius:50%;display:grid;place-items:center;
+  color:#cadbf0;background:rgba(180,210,242,.075);height:40px;min-width:38px;
+  font-size:21px;transition:background .17s,color .17s,transform .17s}
+#telegramMirror .veto-mirror-tool-btn:not(:disabled):active{transform:scale(.92)}
+#telegramMirror .veto-mirror-tool-btn:disabled{opacity:.3;cursor:not-allowed}
+#telegramMirror .veto-mirror-mic-btn{height:37px;min-width:36px;font-size:18px}
+#telegramMirror .veto-mirror-mic-btn.recording{background:#ad4e64;color:#fff;animation:vetoVoicePulse 1.2s ease-in-out infinite}
+@keyframes vetoVoicePulse{50%{box-shadow:0 0 0 5px rgba(173,78,100,.14)}}
+#telegramMirror .veto-mirror-attachment-chip,#telegramMirror .veto-mirror-reply-preview{
+  display:flex;align-items:center;justify-content:space-between;gap:11px;
+  margin:0 0 7px;padding:9px 12px;border-left:3px solid #9fbede;border-radius:10px;
+  background:#243446;color:#e1ebf8;font-size:11px}
+#telegramMirror .veto-mirror-reply-preview strong{font-size:11px;display:block;margin-bottom:3px}
+#telegramMirror .veto-mirror-reply-preview small{font-size:10px;display:block;color:#9eafc2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70vw}
+#telegramMirror .veto-mirror-attachment-chip button,#telegramMirror .veto-mirror-reply-preview button{border:0;background:transparent;color:#b0c2d5;font-size:19px}
+#telegramMirror .veto-mirror-attachment-chip[hidden],#telegramMirror .veto-mirror-reply-preview[hidden],
+#telegramMirror .veto-mirror-sticker-drawer[hidden]{display:none!important}
+#telegramMirror .veto-mirror-sticker-drawer{border:1px solid rgba(187,210,239,.13);border-radius:14px;
+  margin:0 0 9px;padding:11px;background:#192734;max-height:215px;overflow-y:auto}
+#telegramMirror .veto-mirror-sticker-drawer>div:first-child{display:flex;justify-content:space-between;align-items:center}
+#telegramMirror .veto-mirror-sticker-drawer strong{font-size:11px;color:#d7e4f6}
+#telegramMirror .veto-mirror-sticker-drawer button{border:0;color:#d6e7f9;background:transparent}
+#telegramMirror .veto-mirror-sticker-list{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:9px;font-size:11px}
+#telegramMirror .veto-mirror-sticker-list button{height:42px;border-radius:10px;background:#273b51;
+  font-size:24px;transition:background .15s}
+#telegramMirror .veto-mirror-sticker-list button:active{background:#3b5775}
+#telegramMirror .veto-mirror-reply-action{border:0;padding:1px 4px;color:#8aafd5;background:none;
+  font-size:10px;font-weight:650}
+#telegramMirror .veto-mirror-reply-tag{margin:0 0 5px;padding:5px 8px;background:rgba(171,210,242,.09);
+  border-left:2px solid #9cbde2;border-radius:4px;font-size:10px;color:#b2cde9}
+#telegramMirror .veto-mirror-bubble footer{align-items:center;gap:9px}
+@media(max-width:520px){
+  #telegramMirror .veto-mirror-compose-toolbar{gap:0}
+  #telegramMirror .veto-mirror-tool-btn{min-width:34px;width:34px;height:39px}
+  #telegramMirror .veto-mirror-sticker-list{grid-template-columns:repeat(6,minmax(0,1fr))}
+  #telegramMirror .veto-mirror-thread-footer>a{padding:0 8px;font-size:9px}
+  #telegramMirror .veto-mirror-compose-field{padding:9px}
+}
+@media(prefers-reduced-motion:reduce){#telegramMirror .veto-mirror-mic-btn.recording{animation:none}}
