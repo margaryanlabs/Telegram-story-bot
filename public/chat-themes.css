@@ -1,0 +1,253 @@
+/* VETO Telegram Chats — four coherent palettes, scoped to the chat product.
+ * No changes to Stories, Privacy, operator OS, or the global theme. */
+.veto-mirror{
+  --ct-bg:#070a0f;--ct-panel:#10151e;--ct-elev:#171e29;--ct-text:#f1f5fb;
+  --ct-muted:#a7b5c8;--ct-faint:#8596ab;--ct-line:rgba(229,239,253,.13);
+  --ct-chip:#151b24;--ct-chip-text:#c9d6e6;--ct-active:#e9eef5;--ct-active-ink:#17202d;
+  --ct-in:#19222e;--ct-out:#26384c;--ct-input:#131b25;--ct-notice:#202b38;
+  --ct-accent:#d9e9fa;--ct-skeleton:#202b38;--ct-shadow:rgba(0,0,0,.22);
+  --ct-avatar:#354353;--ct-avatar-ink:#fff;
+  background:var(--ct-bg);color:var(--ct-text);border-color:var(--ct-line);
+  transition:background-color .18s ease,color .18s ease,border-color .18s ease;
+}
+.veto-mirror[data-chat-theme="pearl"]{
+  --ct-bg:#f5f7fa;--ct-panel:#fff;--ct-elev:#edf1f6;--ct-text:#162438;
+  --ct-muted:#4c6078;--ct-faint:#52667e;--ct-line:rgba(32,55,82,.19);
+  --ct-chip:#e8edf3;--ct-chip-text:#344961;--ct-active:#233950;--ct-active-ink:#fff;
+  --ct-in:#fff;--ct-out:#dce9f7;--ct-input:#fff;--ct-notice:#e5edf5;
+  --ct-accent:#285176;--ct-skeleton:#dbe3ed;--ct-shadow:rgba(30,52,74,.07);
+  --ct-avatar:#4f6d87;--ct-avatar-ink:#fff;
+}
+.veto-mirror[data-chat-theme="slate"]{
+  --ct-bg:#192532;--ct-panel:#233141;--ct-elev:#293a4d;--ct-text:#f1f6ff;
+  --ct-muted:#c1d0e0;--ct-faint:#a7bdcf;--ct-line:rgba(223,237,255,.20);
+  --ct-chip:#293a4c;--ct-chip-text:#dae6f4;--ct-active:#e2eefb;--ct-active-ink:#1d3044;
+  --ct-in:#293849;--ct-out:#344b63;--ct-input:#223345;--ct-notice:#314358;
+  --ct-accent:#c8e3fa;--ct-skeleton:#3c5064;--ct-shadow:rgba(5,13,21,.2);
+  --ct-avatar:#4e6880;--ct-avatar-ink:#fff;
+}
+.veto-mirror[data-chat-theme="linen"]{
+  --ct-bg:#f4f0e9;--ct-panel:#fdfbf7;--ct-elev:#e9e3d9;--ct-text:#302d2a;
+  --ct-muted:#615b52;--ct-faint:#696154;--ct-line:rgba(74,62,46,.20);
+  --ct-chip:#e7e1d7;--ct-chip-text:#3e3931;--ct-active:#4a4b49;--ct-active-ink:#fff;
+  --ct-in:#fffdf9;--ct-out:#e7e2d7;--ct-input:#fffcf7;--ct-notice:#eae3d8;
+  --ct-accent:#4c5a62;--ct-skeleton:#ddd5c9;--ct-shadow:rgba(72,58,40,.07);
+  --ct-avatar:#69747d;--ct-avatar-ink:#fff;
+}
+.veto-mirror .veto-chat-appearance{display:flex;gap:9px;justify-content:space-between;align-items:center;
+  padding:11px 15px;min-height:54px;background:var(--ct-panel);
+  border-bottom:1px solid var(--ct-line);color:var(--ct-text)}
+.veto-mirror .veto-chat-appearance-label{font-size:9px;letter-spacing:.095em;font-weight:800;color:var(--ct-muted);white-space:nowrap}
+.veto-mirror .veto-chat-appearance-options{display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none}
+.veto-mirror .veto-chat-appearance-options::-webkit-scrollbar{display:none}
+.veto-mirror .veto-chat-appearance-options button{display:flex;align-items:center;gap:5px;min-height:32px;
+  padding:5px 9px;background:var(--ct-chip);color:var(--ct-chip-text);
+  border:1px solid var(--ct-line);border-radius:999px;white-space:nowrap;font-size:10px;font-weight:770}
+.veto-mirror .veto-chat-appearance-options button.selected{background:var(--ct-active);color:var(--ct-active-ink);border-color:transparent}
+.veto-mirror .veto-chat-appearance-options button i{width:11px;height:11px;flex:none;border-radius:50%;border:1px solid rgba(80,92,106,.25);background:#131922}
+.veto-mirror [data-chat-theme-option="pearl"] i{background:#fff!important}
+.veto-mirror [data-chat-theme-option="slate"] i{background:#2c445b!important}
+.veto-mirror [data-chat-theme-option="linen"] i{background:#e5ddd1!important}
+.veto-mirror :is(.veto-mirror-list,.veto-mirror-thread){background:var(--ct-bg);color:var(--ct-text)}
+.veto-mirror :is(.veto-mirror-eyebrow,.veto-mirror-heading p,.veto-mirror-readonly,.veto-mirror-focus-hint,
+  .veto-mirror-account-proof,.veto-mirror-headline,.veto-mirror-headline span:last-child,
+  .veto-mirror-chat-aside time,.veto-mirror-chat-main>small,.veto-mirror-thread-person span,
+  .veto-mirror-thread-security,.veto-mirror-thread-security span,.veto-mirror-day span,
+  .veto-mirror-bubble footer,.veto-mirror-thread-footer small,.veto-mirror-empty small,
+  .veto-mirror-privacy-note p,.veto-mirror-metrics span,.veto-mirror-inline-placeholder>small,
+  .veto-mirror-media small,.veto-mirror-notice p,.veto-mirror-privacy-diagnostics p,
+  .veto-mirror-access-head small,.veto-mirror-access-steps small){color:var(--ct-muted)}
+.veto-mirror :is(.veto-mirror-heading h1,.veto-mirror-chat-title strong,.veto-mirror-thread-person strong,
+  .veto-mirror-bubble-inner,.veto-mirror-bubble-inner p,.veto-mirror-thread-footer strong,
+  .veto-mirror-metrics strong,.veto-mirror-privacy-note strong,.veto-mirror-empty strong,
+  .veto-mirror-access-head strong,.veto-mirror-access-steps span,.veto-mirror-access-steps b,
+  .veto-mirror-privacy-diagnostics strong){color:var(--ct-text)}
+.veto-mirror :is(.veto-mirror-access-center,.veto-mirror-metrics>div,.veto-mirror-privacy-diagnostics,
+  .veto-mirror-search-wrap,.veto-mirror-skeleton-row,.veto-mirror-thread-bar,
+  .veto-mirror-thread-security,.veto-mirror-thread-bottom,.veto-mirror-privacy-note,
+  .veto-mirror-headline,.veto-mirror-thread-footer){border-color:var(--ct-line)}
+.veto-mirror :is(.veto-mirror-access-center,.veto-mirror-metrics>div,.veto-mirror-privacy-diagnostics,
+  .veto-mirror-thread-bar,.veto-mirror-thread-bottom){background:var(--ct-panel);box-shadow:none}
+.veto-mirror :is(.veto-mirror-search-wrap,.veto-mirror-search-wrap input,.veto-mirror-inline-placeholder){background:var(--ct-input);color:var(--ct-text)}
+.veto-mirror .veto-mirror-search-wrap input::placeholder{color:var(--ct-muted);opacity:1}
+.veto-mirror :is(.veto-mirror-icon-btn,.veto-mirror-filters button,.veto-mirror-more,
+  .veto-mirror-vault-link,.veto-mirror-bottom-jump,.veto-mirror-older,
+  .veto-mirror-deletion-guide,.veto-mirror-open-vault,.veto-mirror-media-reveal>a,
+  .veto-mirror-account-proof,.veto-mirror-notice){background:var(--ct-chip);color:var(--ct-chip-text);border-color:var(--ct-line)}
+.veto-mirror :is(.veto-mirror-filters button.active,.veto-mirror-access-head button){
+  background:var(--ct-active);color:var(--ct-active-ink);border-color:transparent}
+.veto-mirror .veto-mirror-chat{border-color:var(--ct-line);color:var(--ct-text)}
+.veto-mirror .veto-mirror-chat:is(:hover,:focus-visible,:active){background:var(--ct-elev);box-shadow:inset 0 0 0 1px var(--ct-line)}
+.veto-mirror .veto-mirror-chat.unread :is(.veto-mirror-chat-title strong,.veto-mirror-chat-aside time){color:var(--ct-text)}
+.veto-mirror .veto-mirror-chat-aside .veto-mirror-unread{background:var(--ct-active);color:var(--ct-active-ink)}
+.veto-mirror :is(.veto-mirror-chat-avatar,.veto-mirror-thread-avatar){background:var(--ct-avatar);color:var(--ct-avatar-ink);border-color:var(--ct-line)}
+.veto-mirror .veto-mirror-chat-avatar.avatar-copy{background:var(--ct-avatar)}
+.veto-mirror :is(.veto-mirror-chat-avatar.avatar-private,.veto-mirror-thread-avatar.avatar-private,
+  .veto-mirror-chat-avatar.avatar-group,.veto-mirror-thread-avatar.avatar-group,
+  .veto-mirror-chat-avatar.avatar-channel,.veto-mirror-thread-avatar.avatar-channel,
+  .veto-mirror-chat-avatar.avatar-saved,.veto-mirror-thread-avatar.avatar-saved){background:var(--ct-avatar)}
+.veto-mirror .veto-mirror-chat.is-cleared{background:var(--ct-elev)}
+.veto-mirror .veto-mirror-chat.is-cleared .veto-mirror-chat-title strong{color:var(--ct-text)}
+.veto-mirror .veto-mirror-chat-retained{background:var(--ct-elev);border-color:var(--ct-line);color:var(--ct-accent)}
+.veto-mirror .veto-mirror-metrics .veto-mirror-metric-sync strong{color:var(--ct-text)}
+.veto-mirror .veto-mirror-progress{background:var(--ct-notice);border-color:var(--ct-line);color:var(--ct-text)}
+.veto-mirror :is(.veto-mirror-thread-body,.veto-mirror-skeleton){background:var(--ct-bg)}
+.veto-mirror .veto-mirror-day span{background:var(--ct-chip);border-color:var(--ct-line)}
+.veto-mirror .veto-mirror-bubble .veto-mirror-bubble-inner{background:var(--ct-in);border-color:var(--ct-line);
+  color:var(--ct-text);box-shadow:0 6px 15px var(--ct-shadow)}
+.veto-mirror .veto-mirror-bubble.outgoing .veto-mirror-bubble-inner{background:var(--ct-out);border-color:var(--ct-line)}
+.veto-mirror .veto-mirror-bubble.is-deleted .veto-mirror-bubble-inner{border-style:dashed;border-color:var(--ct-accent)}
+.veto-mirror :is(.veto-mirror-media,.veto-mirror-preserved-flag,.veto-mirror-thread-notice,
+  .veto-mirror-media-reveal){background:var(--ct-elev);color:var(--ct-text);border-color:var(--ct-line)}
+.veto-mirror :is(.veto-mirror-preserved-flag.deleted,.veto-mirror-preserved-flag.subtle,
+  .veto-mirror-bubble-sender,.veto-mirror-media-reveal a,.veto-mirror-open-vault){color:var(--ct-accent)}
+.veto-mirror .veto-mirror-inline-placeholder>span{color:var(--ct-text)}
+.veto-mirror .veto-mirror-privacy-note>span{color:var(--ct-accent)}
+.veto-mirror :is(.veto-mirror-skeleton-avatar,.veto-mirror-skeleton-copy i,.veto-mirror-skeleton-date){
+  background-image:linear-gradient(110deg,var(--ct-elev),var(--ct-skeleton),var(--ct-elev))}
+.veto-mirror .veto-mirror-access-beacon{background:var(--ct-elev);color:var(--ct-accent)}
+.veto-mirror .veto-mirror-account-proof.ready{background:var(--ct-notice);border-color:var(--ct-line);color:var(--ct-text)}
+.veto-mirror .veto-mirror-account-proof.archive-only{background:var(--ct-chip);border-color:var(--ct-line);color:var(--ct-text)}
+.veto-mirror :is(button,input,a):focus-visible{outline:2px solid var(--ct-accent);outline-offset:2px}
+.veto-mirror :is(.veto-mirror-verified,.veto-mirror-privacy-diagnostics .active){color:var(--ct-active-ink)}
+@media(max-width:625px){
+ .veto-mirror .veto-chat-appearance{display:block;padding:11px 12px}
+ .veto-mirror .veto-chat-appearance-label{display:block;margin-bottom:8px}
+ .veto-mirror .veto-chat-appearance-options{padding-bottom:1px}
+ .veto-mirror .veto-chat-appearance-options button{flex:1;justify-content:center;min-width:75px;padding:6px}
+}
+@media(prefers-reduced-motion:reduce){
+ .veto-mirror{transition:none}
+ .veto-mirror :is(.veto-mirror-skeleton-avatar,.veto-mirror-skeleton-copy i,.veto-mirror-skeleton-date){animation:none}
+}
+
+/* Conversation-wide, accessible search and result cards. */
+.veto-mirror .veto-chat-search{background:var(--ct-panel);color:var(--ct-text);border-bottom:1px solid var(--ct-line);padding:12px 14px}
+.veto-mirror .veto-chat-search[hidden]{display:none!important}
+.veto-mirror .veto-chat-search form{display:flex;align-items:center;gap:7px}
+.veto-mirror .veto-chat-search input{flex:1;min-width:0;min-height:40px;background:var(--ct-input);border:1px solid var(--ct-line);border-radius:10px;padding:10px 12px;color:var(--ct-text);font-size:12px}
+.veto-mirror .veto-chat-search input::placeholder{color:var(--ct-muted)}
+.veto-mirror .veto-chat-search button{flex:0 0 auto;min-height:40px;background:var(--ct-chip);color:var(--ct-chip-text);border:1px solid var(--ct-line);border-radius:10px;font-size:11px;font-weight:750;padding:0 10px}
+.veto-mirror .veto-chat-search button[type=submit]{background:var(--ct-active);color:var(--ct-active-ink)}
+.veto-mirror .veto-chat-search>p{margin:8px 2px;color:var(--ct-muted);line-height:1.45;font-size:10px}
+.veto-mirror #telegramThreadSearchResults{max-height:40dvh;overflow-y:auto;color:var(--ct-muted);font-size:11px}
+.veto-mirror .veto-chat-search-total{font-size:10px;letter-spacing:.06em;color:var(--ct-accent);font-weight:800;margin:11px 0}
+.veto-mirror .veto-chat-search-result{display:block;width:100%;height:auto;padding:11px 12px;margin:5px 0;background:var(--ct-elev);color:var(--ct-text);border:1px solid var(--ct-line);border-radius:11px;text-align:left}
+.veto-mirror .veto-chat-search-result span{display:block;color:var(--ct-muted);font-size:9px;margin-bottom:5px}
+.veto-mirror .veto-chat-search-result strong{font-size:11px;font-weight:650;color:var(--ct-text);line-height:1.55;overflow-wrap:anywhere}
+.veto-mirror .veto-chat-found .veto-mirror-bubble-inner{outline:2px solid var(--ct-accent);outline-offset:2px}
+.veto-mirror .veto-mirror-privacy-diagnostics .veto-mirror-checks span{background:var(--ct-elev);color:var(--ct-muted);border-color:var(--ct-line)}
+.veto-mirror .veto-mirror-privacy-diagnostics .veto-mirror-checks span.active{background:var(--ct-active);color:var(--ct-active-ink)}
+.veto-mirror .veto-mirror-diagnostics-head small{color:var(--ct-muted)}
+.veto-mirror .veto-mirror-diagnostics-head strong{color:var(--ct-text)}
+.veto-mirror .veto-mirror-privacy-diagnostics button{background:var(--ct-active);color:var(--ct-active-ink);border-color:var(--ct-line)}
+.veto-mirror .veto-mirror-access-head button:focus-visible,.veto-mirror .veto-chat-search button:focus-visible{outline-color:var(--ct-accent)}
+.veto-mirror .veto-mirror-access-steps>div{background:var(--ct-elev);border-color:var(--ct-line)}
+.veto-mirror .veto-mirror-media-reveal a{color:var(--ct-accent)}
+.veto-mirror .veto-mirror-thread-notice{color:var(--ct-text)}
+.veto-mirror[data-chat-theme="pearl"] .veto-mirror-live-pip,.veto-mirror[data-chat-theme="linen"] .veto-mirror-live-pip{box-shadow:0 0 0 3px rgba(43,94,102,.10);background:#317e79}
+.veto-mirror[data-chat-theme="pearl"] .veto-mirror-verified,.veto-mirror[data-chat-theme="linen"] .veto-mirror-verified{background:#36637f;color:#fff!important}
+.veto-mirror[data-chat-theme="pearl"] :is(.veto-mirror-privacy-diagnostics .inactive,.veto-mirror-metrics span),
+.veto-mirror[data-chat-theme="linen"] :is(.veto-mirror-privacy-diagnostics .inactive,.veto-mirror-metrics span){color:var(--ct-muted)}
+@media(max-width:410px){
+ .veto-mirror .veto-chat-search{padding:9px 10px}
+ .veto-mirror .veto-chat-search input{padding:8px;min-height:37px}
+ .veto-mirror .veto-chat-search button{padding:0 8px;min-height:37px}
+}
+
+/* Specificity safeguards against legacy dark-only evidence/status styles. */
+.veto-mirror .veto-mirror-privacy-diagnostics.ready .veto-mirror-diagnostics-head small,
+.veto-mirror .veto-mirror-evidence span,
+.veto-mirror .veto-mirror-deletion-guide span{color:var(--ct-muted)}
+.veto-mirror .veto-mirror-evidence strong,
+.veto-mirror .veto-mirror-checks span.active{color:var(--ct-text)}
+.veto-mirror .veto-mirror-checks span.active{background:var(--ct-elev);border-color:var(--ct-line)}
+.veto-mirror[data-chat-theme="pearl"] .veto-mirror-preserved-flag.deleted,
+.veto-mirror[data-chat-theme="linen"] .veto-mirror-preserved-flag.deleted{color:#914654}
+.veto-mirror[data-chat-theme="slate"] .veto-mirror-preserved-flag.deleted{color:#ffd0d8}
+
+/* Rich composer and current main chat layout: #telegramMirror styles have
+   stronger specificity than the original palettes. All surfaces remain themed. */
+#telegramMirror[data-chat-theme]{background:var(--ct-bg);color:var(--ct-text);color-scheme:dark}
+#telegramMirror[data-chat-theme="pearl"],#telegramMirror[data-chat-theme="linen"]{color-scheme:light}
+#telegramMirror[data-chat-theme] .veto-mirror-thread{background:var(--ct-bg)}
+#telegramMirror[data-chat-theme] .veto-mirror-thread-bar,
+#telegramMirror[data-chat-theme] .veto-mirror-thread-bottom,
+#telegramMirror[data-chat-theme] .veto-mirror-thread-security{background:var(--ct-panel);color:var(--ct-muted);border-color:var(--ct-line)}
+#telegramMirror[data-chat-theme] .veto-mirror-thread-body{background-color:var(--ct-bg);background-image:none}
+#telegramMirror[data-chat-theme] .veto-mirror-day span{background:var(--ct-chip);color:var(--ct-muted);box-shadow:none}
+#telegramMirror[data-chat-theme] .veto-mirror-bubble-inner{background:var(--ct-in);color:var(--ct-text);border-color:var(--ct-line);box-shadow:0 3px 12px var(--ct-shadow)}
+#telegramMirror[data-chat-theme] .veto-mirror-bubble.outgoing .veto-mirror-bubble-inner{background:var(--ct-out);color:var(--ct-text);border-color:var(--ct-line)}
+#telegramMirror[data-chat-theme] .veto-mirror-bubble-inner p{color:inherit}
+#telegramMirror[data-chat-theme] .veto-mirror-bubble footer,
+#telegramMirror[data-chat-theme] .veto-mirror-bubble.outgoing footer{color:var(--ct-muted)}
+#telegramMirror[data-chat-theme] .veto-mirror-chat-title strong,
+#telegramMirror[data-chat-theme] .veto-mirror-chat.unread .veto-mirror-chat-title strong,
+#telegramMirror[data-chat-theme] .veto-mirror-thread-person strong{color:var(--ct-text)}
+#telegramMirror[data-chat-theme] .veto-mirror-chat-main>small,
+#telegramMirror[data-chat-theme] .veto-mirror-chat-aside time{color:var(--ct-muted)}
+#telegramMirror[data-chat-theme] .veto-mirror-chat.is-cleared{background:var(--ct-elev)}
+#telegramMirror[data-chat-theme] .veto-mirror-compose-field,
+#telegramMirror[data-chat-theme] .veto-mirror-composer.is-readonly .veto-mirror-compose-field{background:var(--ct-input);border-color:var(--ct-line);color:var(--ct-text)}
+#telegramMirror[data-chat-theme] .veto-mirror-compose-field:focus-within{background:var(--ct-panel);border-color:var(--ct-accent)}
+#telegramMirror[data-chat-theme] .veto-mirror-compose-field textarea{color:var(--ct-text);caret-color:var(--ct-accent)}
+#telegramMirror[data-chat-theme] .veto-mirror-compose-field textarea::placeholder,
+#telegramMirror[data-chat-theme] .veto-mirror-compose-field>span{color:var(--ct-muted)}
+#telegramMirror[data-chat-theme] .veto-mirror-send-button{background:var(--ct-active);color:var(--ct-active-ink);box-shadow:0 5px 16px var(--ct-shadow)}
+#telegramMirror[data-chat-theme] .veto-mirror-tool-btn{background:var(--ct-chip);color:var(--ct-chip-text)}
+#telegramMirror[data-chat-theme] .veto-mirror-mic-btn.recording{background:#a54560;color:#fff}
+#telegramMirror[data-chat-theme] .veto-mirror-attachment-chip,
+#telegramMirror[data-chat-theme] .veto-mirror-reply-preview,
+#telegramMirror[data-chat-theme] .veto-mirror-sticker-drawer{background:var(--ct-elev);color:var(--ct-text);border-color:var(--ct-line)}
+#telegramMirror[data-chat-theme] .veto-mirror-reply-preview small,
+#telegramMirror[data-chat-theme] .veto-mirror-attachment-chip button,
+#telegramMirror[data-chat-theme] .veto-mirror-reply-preview button{color:var(--ct-muted)}
+#telegramMirror[data-chat-theme] .veto-mirror-sticker-drawer strong{color:var(--ct-text)}
+#telegramMirror[data-chat-theme] .veto-mirror-sticker-drawer button{color:var(--ct-text)}
+#telegramMirror[data-chat-theme] .veto-mirror-sticker-list button{background:var(--ct-chip)}
+#telegramMirror[data-chat-theme] .veto-mirror-reply-tag{color:var(--ct-accent);background:var(--ct-elev);border-color:var(--ct-accent)}
+#telegramMirror[data-chat-theme] .veto-mirror-thread-footer>a{background:var(--ct-chip);color:var(--ct-chip-text)}
+#telegramMirror[data-chat-theme] .veto-mirror-older{color:var(--ct-accent)}
+#telegramMirror[data-chat-theme] .veto-mirror-thread-security b{color:var(--ct-accent)}
+#telegramMirror[data-chat-theme] .veto-mirror-reply-action{color:var(--ct-accent)}
+#telegramMirror[data-chat-theme] .veto-mirror-search-wrap{border-color:var(--ct-line);background:var(--ct-panel)}
+#telegramMirror[data-chat-theme] .veto-mirror-filters button{background:var(--ct-chip);color:var(--ct-chip-text);border-color:var(--ct-line)}
+#telegramMirror[data-chat-theme] .veto-mirror-filters button.active{background:var(--ct-active);color:var(--ct-active-ink)}
+#telegramMirror[data-chat-theme] .veto-mirror-account-proof{color:var(--ct-muted);border-color:var(--ct-line)}
+#telegramMirror[data-chat-theme] .veto-mirror-privacy-diagnostics{color:var(--ct-text)}
+#telegramMirror[data-chat-theme] .veto-mirror-access-drawer{border-color:var(--ct-line);background:var(--ct-panel);color:var(--ct-text)}
+#telegramMirror[data-chat-theme] .veto-mirror-access-drawer summary{color:var(--ct-text)}
+#telegramMirror[data-chat-theme] :is(.veto-mirror-access-drawer summary small,.veto-mirror-privacy-diagnostics p){color:var(--ct-muted)}
+/* Composer voice workspace — local processing and explicit send review */
+#telegramMirror .veto-voice-mode{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:5px 2px 8px}
+#telegramMirror .veto-voice-mode>span{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--ct-muted);margin-right:3px}
+#telegramMirror .veto-voice-mode button{padding:7px 10px;border:1px solid var(--ct-line);border-radius:999px;background:var(--ct-chip);color:var(--ct-chip-text);font-size:10px;font-weight:730;min-height:34px}
+#telegramMirror .veto-voice-mode button[aria-pressed="true"]{background:var(--ct-active);color:var(--ct-active-ink);border-color:transparent}
+#telegramMirror .veto-voice-mode button:disabled{opacity:.46}
+#telegramMirror .veto-mirror-voice-status{display:flex;align-items:center;gap:9px;padding:8px 11px;margin-bottom:8px;border:1px solid var(--ct-line);border-radius:13px;background:var(--ct-elev);color:var(--ct-text);font-size:11px;font-weight:650}
+#telegramMirror .veto-mirror-voice-status[hidden],#telegramMirror .veto-mirror-voice-preview[hidden]{display:none!important}
+#telegramMirror .veto-mirror-voice-status i{width:9px;height:9px;flex:0 0 auto;border-radius:50%;background:#d55769;animation:vetoVoicePulse 1.2s ease-in-out infinite}
+#telegramMirror .veto-mirror-voice-preview{padding:11px;margin-bottom:8px;border:1px solid var(--ct-line);border-radius:15px;background:var(--ct-elev);color:var(--ct-text)}
+#telegramMirror .veto-mirror-voice-preview>strong{display:block;font-size:11px;margin-bottom:8px}
+#telegramMirror .veto-mirror-voice-preview audio{display:block;width:100%;height:39px;accent-color:var(--ct-accent)}
+#telegramMirror .veto-mirror-voice-actions{display:flex;gap:7px;margin-top:9px}
+#telegramMirror .veto-mirror-voice-actions button{flex:1;min-height:38px;border:1px solid var(--ct-line);background:var(--ct-chip);color:var(--ct-chip-text);border-radius:11px;font-weight:750;font-size:11px}
+#telegramMirror .veto-mirror-voice-actions button[data-voice-send]{background:var(--ct-active);color:var(--ct-active-ink);border-color:transparent}
+#telegramMirror .veto-mirror-voice-actions button:disabled{opacity:.5}
+#telegramMirror .veto-mirror-compose-toolbar{flex:0 0 auto}
+#telegramMirror .veto-mirror-thread-footer{display:flex;align-items:flex-end;gap:5px;flex-wrap:nowrap}
+#telegramMirror .veto-mirror-composer{gap:5px}
+#telegramMirror .veto-mirror-compose-field{border-radius:20px;min-height:44px}
+#telegramMirror .veto-mirror-tool-btn{flex:0 0 auto}
+#telegramMirror .veto-mirror-mic-btn{height:43px;min-width:39px}
+#telegramMirror .veto-mirror-compose-field>span{display:none}
+#telegramMirror .veto-mirror-send-button{width:43px;flex-basis:43px;height:43px}
+@media(max-width:420px){
+ #telegramMirror .veto-mirror-thread-bottom{padding:8px 8px max(8px,env(safe-area-inset-bottom))}
+ #telegramMirror .veto-mirror-thread-footer{gap:3px}
+ #telegramMirror .veto-mirror-compose-field{padding:9px 10px}
+ #telegramMirror .veto-mirror-tool-btn{min-width:32px;width:32px}
+ #telegramMirror .veto-mirror-mic-btn{min-width:35px;width:35px}
+ #telegramMirror .veto-voice-mode button{padding:6px 8px;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){#telegramMirror .veto-mirror-voice-status i{animation:none}}
