@@ -5,6 +5,7 @@
   const state={
     chats:[],page:0,hasMore:true,loading:false,
     filter:'all',search:'',generation:0,lastSyncedAt:0,syncMs:0,autoPages:0,stale:false,
+    cacheOwnerId:'',cachedPreview:false,cacheDenied:false,cacheVerifyBusy:false,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,avatarScheduled:false,
@@ -176,7 +177,7 @@
       unread>999?'999+':String(unread);
     if($('telegramMirrorSavedMetric'))$('telegramMirrorSavedMetric').textContent=String(saved);
     if($('telegramMirrorSyncMetric'))$('telegramMirrorSyncMetric').textContent=
-      state.loading?'SYNC…':state.lastSyncedAt
+      state.cachedPreview?'КЭШ · НЕ LIVE':state.loading?'SYNC…':state.lastSyncedAt
         ?(state.syncMs?state.syncMs+' ms':'Обновлено'):'Нет данных';
     const access=$('telegramMirrorAccessCenter');
     if(access)access.classList.toggle('connected',state.connectionProof?.verified===true);
@@ -197,13 +198,17 @@
       const p=state.connectionProof;
       proof.classList.toggle('ready',p?.verified===true&&!state.stale);
       proof.classList.toggle('archive-only',Boolean(p)&&!p.verified);
-      proof.textContent=state.stale&&p?.verified
+      proof.textContent=state.cachedPreview
+        ?'◌ Проверенный аккаунт · зашифрованная локальная копия, не LIVE'
+        :state.stale&&p?.verified
         ?'◌ Ранее проверенный аккаунт · отображаются данные этого сеанса, обновление недоступно'
         :p?.verified
         ?'✓ Подтверждён Telegram '+(p.username?'@'+p.username:p.accountName||'владельца')+' · чаты только этого аккаунта'
         :p ? '◈ Только собственный архив VETO · живой аккаунт не подтверждён' : '◌ Проверяю личный Telegram · чужие чаты не показываются';
     }
-    $('telegramMirrorUpdated').textContent=state.loading
+    $('telegramMirrorUpdated').textContent=state.cachedPreview
+      ?'КЭШ · '+state.chats.length+' чатов · проверяю Telegram'
+      :state.loading
       ?'СИНХРОНИЗАЦИЯ · '+state.chats.length+' чатов'
       :state.lastSyncedAt
         ?state.chats.length+' загружено · '+(state.stale?'ОФЛАЙН-КОПИЯ':state.connectionProof?.verified?'LIVE':'АРХИВ')
@@ -251,6 +256,34 @@
     const clear=$('telegramMirrorSearchClear');
     if(clear)clear.hidden=!state.search;
   }
+  async function restoreSafePreview(){
+    // Telegram initData is verified by Vercel BEFORE IndexedDB decrypt.
+    // No cached previews/message text, media or auth secrets are persisted.
+    if(state.cacheVerifyBusy||!window.VetoChatsSnapshot||!tg?.initData)return;
+    const signed=state.ownerInitData;
+    state.cacheVerifyBusy=true;
+    try{
+      const identity=await request('verify');
+      if(signed!==state.ownerInitData||state.cacheDenied)return;
+      if(!identity.cacheAllowed||!/^[1-9][0-9]{0,18}$/.test(String(identity.ownerId||''))){
+        return; // Never render local data to a disconnected/foreign owner.
+      }
+      state.cacheOwnerId=String(identity.ownerId);
+      const snapshot=await window.VetoChatsSnapshot.load(identity.ownerId);
+      if(signed!==state.ownerInitData||state.cacheDenied||!snapshot?.rows?.length||
+        state.lastSyncedAt||state.chats.length)return;
+      state.chats=snapshot.rows;
+      state.cachedPreview=true;state.stale=true;
+      state.hasMore=true; // Server pagination remains authoritative.
+      renderChats();
+    }catch{/* Private chats still load normally when offline cache fails. */}
+    finally{if(signed===state.ownerInitData)state.cacheVerifyBusy=false;}
+  }
+  function saveSafePreview(){
+    if(!window.VetoChatsSnapshot||!state.cacheOwnerId||
+      state.cachedPreview||!state.connectionProof?.verified)return;
+    void window.VetoChatsSnapshot.save(state.cacheOwnerId,state.chats);
+  }
   async function loadChats({reset=false}={}){
     if(resetOwner())return;
     if(state.loading)return;
@@ -290,11 +323,15 @@
         }
       });
       state.connectionProof=data.connection||null;
+      state.cachedPreview=false;
+      if(data.connection?.verified&&data.connection?.ownerId)
+        state.cacheOwnerId=String(data.connection.ownerId);
       state.lastSyncedAt=Date.now();state.stale=false;
       state.syncMs=Math.max(0,Date.now()-started);
       // Archive-only rows are additional cards, not remote Telegram pagination.
       state.hasMore=Boolean(data.hasMore)&&state.page<11;
       state.page+=1;
+      saveSafePreview();
       hideNotice();
       if($('telegramMirrorAccessButton')){
         $('telegramMirrorAccessButton').textContent = data.connection?.verified ? 'LIVE ✓' : 'Подключить ↗';
@@ -308,8 +345,14 @@
       const accessFailure=[401,403,409].includes(Number(error.status||0))||
         /владелец|другой аккаунт|аккаунт изменился|сессия недействительна/i.test(error.message);
       if(accessFailure||!state.chats.length){
+        if(accessFailure){
+          state.cacheDenied=true;
+          if(state.cacheOwnerId&&window.VetoChatsSnapshot)
+            void window.VetoChatsSnapshot.clear(state.cacheOwnerId);
+        }
         // No cross-user or unverified data may remain on access failure.
         state.chats=[];state.hasMore=false;state.connectionProof=null;
+        state.cachedPreview=false;
         state.thread=null;state.messages=[];
         $('telegramThreadView').hidden=true;
         $('telegramChatsView').hidden=false;
@@ -461,13 +504,17 @@
   function resetOwner(){
     const current=String(tg?.initData||'');
     if(current===state.ownerInitData)return false;
+    const oldCacheId=state.cacheOwnerId;
     state.ownerInitData=current;
+    if(oldCacheId&&window.VetoChatsSnapshot)
+      void window.VetoChatsSnapshot.clear(oldCacheId);
     // Invalidate every previously started list/thread request before it can
     // render into B's view or overwrite B's newer response.
     state.generation++;state.threadGeneration++;
     state.chats=[];state.messages=[];state.thread=null;
     state.connectionProof=null;state.page=0;state.hasMore=true;
     state.lastSyncedAt=0;state.syncMs=0;state.autoPages=0;state.stale=false;
+    state.cacheOwnerId='';state.cachedPreview=false;state.cacheDenied=false;state.cacheVerifyBusy=false;
     state.threadLoading=false;state.loading=false;
     state.search='';state.filter='all';
     if($('telegramMirrorSearch'))$('telegramMirrorSearch').value='';
@@ -793,7 +840,10 @@
   window.addEventListener('veto:screen-changed',event=>{
     resetOwner();
     const current=event.detail?.screen;
-    if(current==='telegram'&&state.chats.length===0&&!state.loading)loadChats({reset:true});
+    if(current==='telegram'&&state.chats.length===0&&!state.loading){
+      void restoreSafePreview();
+      void loadChats({reset:true});
+    }
   });
   window.addEventListener('focus',resetOwner);
   window.addEventListener('pageshow',resetOwner);
@@ -801,6 +851,8 @@
     if(!document.hidden)resetOwner();
   });
   // Opening a deep-linked screen may precede the first screen-change event.
-  if(document.querySelector('.screen.active')?.dataset?.screen==='telegram')
-    loadChats({reset:true});
+  if(document.querySelector('.screen.active')?.dataset?.screen==='telegram'){
+    void restoreSafePreview();
+    void loadChats({reset:true});
+  }
 })();
