@@ -16,6 +16,7 @@
   const defaultSettings=()=>({...effects.editorial,look:'editorial',text:'',textPosition:'bottom',textTone:'light',textSize:56,panX:0,panY:0});
   let image=null,sourceFile=null,sourceUrl='',settings=defaultSettings();
   let painting=false,renderQueued=false,epoch=0,lastPoint=null;
+  let undoStack=[],redoStack=[],lastCommitted={...settings};
   const W=720,H=1280,OUTPUT_W=1080,OUTPUT_H=1920;
   const cap=(n,min,max)=>Math.min(max,Math.max(min,Number(n)||0));
   const photoSize=(source)=>({width:source.naturalWidth||source.width,height:source.naturalHeight||source.height});
@@ -118,8 +119,24 @@
       el.setAttribute('aria-pressed',String(active));el.classList.toggle('active',active);
     });
   }
+  function syncHistory(){
+    if($('vetoStoryUndo'))$('vetoStoryUndo').disabled=!undoStack.length;
+    if($('vetoStoryRedo'))$('vetoStoryRedo').disabled=!redoStack.length;
+  }
+  function commitEdit(){
+    if(JSON.stringify(lastCommitted)===JSON.stringify(settings))return;
+    undoStack.push({...lastCommitted});if(undoStack.length>25)undoStack.shift();
+    redoStack=[];lastCommitted={...settings};
+    syncHistory();
+  }
+  function moveHistory(source,target){
+    if(!source.length)return;
+    target.push({...lastCommitted});
+    settings={...source.pop()};lastCommitted={...settings};
+    syncControls();syncHistory();requestRender();
+  }
   function resetFilters(){
-    settings=defaultSettings();syncControls();requestRender();
+    settings=defaultSettings();syncControls();commitEdit();requestRender();
   }
   function close({dispose=true}={}){
     panel.hidden=true;document.body.classList.remove('veto-story-editing');
@@ -142,7 +159,8 @@
     try{image?.close?.();}catch{}
     image=null;sourceFile=null;
     panel.hidden=false;document.body.classList.add('veto-story-editing');
-    settings=defaultSettings();syncControls();
+    settings=defaultSettings();undoStack=[];redoStack=[];lastCommitted={...settings};
+    syncControls();syncHistory();
     showState('Открываю фотографию на устройстве…');
     try{
       let decoded;
@@ -209,24 +227,29 @@
     const look=event.target.closest('[data-story-look]');
     if(look){
       const preset=effects[look.dataset.storyLook];
-      if(preset){settings={...settings,...preset,look:look.dataset.storyLook};syncControls();requestRender();}
+      if(preset){settings={...settings,...preset,look:look.dataset.storyLook};syncControls();commitEdit();requestRender();}
       return;
     }
     const pos=event.target.closest('[data-story-text-position]');
-    if(pos){settings.textPosition=pos.dataset.storyTextPosition;syncControls();requestRender();}
+    if(pos){settings.textPosition=pos.dataset.storyTextPosition;syncControls();commitEdit();requestRender();}
   });
   for(const name of ['brightness','contrast','saturation','warmth','vignette','zoom']){
     $('vetoStory'+name.charAt(0).toUpperCase()+name.slice(1))?.addEventListener('input',event=>{
       settings[name]=Number(event.target.value);syncControls();requestRender();
     });
+    $('vetoStory'+name.charAt(0).toUpperCase()+name.slice(1))?.addEventListener('change',commitEdit);
   }
   $('vetoStoryOverlay')?.addEventListener('input',event=>{
     settings.text=event.target.value.slice(0,140);requestRender();
   });
+  $('vetoStoryOverlay')?.addEventListener('change',commitEdit);
   $('vetoStoryTextSize')?.addEventListener('input',event=>{
     settings.textSize=Number(event.target.value);requestRender();
   });
+  $('vetoStoryTextSize')?.addEventListener('change',commitEdit);
   $('vetoStoryReset')?.addEventListener('click',resetFilters);
+  $('vetoStoryUndo')?.addEventListener('click',()=>moveHistory(undoStack,redoStack));
+  $('vetoStoryRedo')?.addEventListener('click',()=>moveHistory(redoStack,undoStack));
   $('vetoStoryCancel')?.addEventListener('click',()=>close());
   $('vetoStoryApply')?.addEventListener('click',apply);
   $('vetoStoryDownload')?.addEventListener('click',download);
@@ -245,7 +268,7 @@
     lastPoint={x:event.clientX,y:event.clientY};requestRender();
   });
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])
-    preview.addEventListener(ev,()=>{painting=false;lastPoint=null;});
+    preview.addEventListener(ev,()=>{if(painting)commitEdit();painting=false;lastPoint=null;});
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'&&!panel.hidden)close();
   });
