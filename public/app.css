@@ -3224,3 +3224,29 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
 .veto-first-choice-intro em{font-size:13px;color:#dbe8f9;font-style:normal}
 @media(max-width:390px){.veto-chat-entry{padding:15px}.veto-chat-entry-grid{gap:7px}.veto-chat-path{padding:11px;gap:8px}.veto-chat-path strong{font-size:12px}.veto-first-choice-intro{gap:7px}.veto-first-choice-intro button{padding:9px}}
 @media(prefers-reduced-motion:reduce){.veto-chat-path{transition:none}}
+
+
+/* Business permission wizard: focused, opt-in, graphite, touch friendly. */
+.veto-business-wizard-highlight{border:1px solid rgba(197,215,244,.18);background:linear-gradient(135deg,rgba(162,188,230,.11),rgba(255,255,255,.015)),#121921;border-radius:17px;padding:16px;margin:14px 0 12px}
+.veto-business-wizard-highlight>span{display:block;color:#b3c9e6;font-size:9px;font-weight:850;letter-spacing:.10em}
+.veto-business-wizard-highlight>strong{display:block;margin-top:9px;color:#f0f5fc;font-size:15px;line-height:1.4}
+.veto-business-wizard-highlight>p{font-size:10px;color:#a3aec0;line-height:1.6;margin:8px 0 12px}
+.veto-business-wizard-highlight button{width:100%;min-height:46px;display:flex;justify-content:center;align-items:center;gap:12px;border:0;background:#e6edf8;color:#111b29;font-size:12px;font-weight:820;border-radius:12px}
+.veto-business-wizard-highlight button b{font-size:16px}
+.veto-consent-chat-list{max-height:min(35vh,310px);overflow:auto;border:1px solid rgba(185,210,243,.14);border-radius:15px;margin:13px 0 15px;background:rgba(0,0,0,.14)}
+.veto-consent-chat{display:flex;align-items:center;gap:11px;padding:12px;cursor:pointer}
+.veto-consent-chat+.veto-consent-chat{border-top:1px solid rgba(185,210,243,.08)}
+.veto-consent-chat input{width:20px;height:20px;accent-color:#bdcee6;flex:none}
+.veto-consent-chat-avatar{display:grid;place-items:center;flex:none;width:35px;height:35px;border-radius:12px;background:rgba(194,215,247,.09);color:#dbe7f8;font-weight:800;font-size:12px}
+.veto-consent-chat-copy{display:flex;flex-direction:column;min-width:0;gap:4px}
+.veto-consent-chat-copy strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.veto-consent-chat-copy small{font-size:10px;color:#94a4b9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.veto-consent-boundary{background:rgba(184,205,237,.05);border:1px solid rgba(184,205,237,.12);border-radius:13px;padding:13px;margin:11px 0}
+.veto-consent-boundary strong{display:block;font-size:12px;color:#e7f0fc}
+.veto-consent-boundary p{font-size:10px;line-height:1.5;color:#afbdd0;margin:7px 0 0}
+.veto-consent-checkbox{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid rgba(194,215,247,.13);border-radius:12px;background:rgba(255,255,255,.025);margin:12px 0 8px}
+.veto-consent-checkbox input{flex:none;width:19px;height:19px;accent-color:#c4d8f4}
+.veto-consent-checkbox span{font-size:10px;line-height:1.6;color:#c6d3e7}
+.veto-consent-selected-count{font-size:10px;color:#a0aec2;margin:5px 2px 11px}
+.sheet-actions [data-business-apply]:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:390px){.veto-business-wizard-highlight{padding:12px}.veto-consent-chat{padding:10px 8px;gap:8px}}
