@@ -6,8 +6,8 @@ import { withBackupClient } from '../lib/telegram-history-backup.js';
 import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
 import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 import {
-  telegramId, validTelegramId, validStoryId, stealthStatus, requireStealth,
-  normalizeContactStories, STORY_MEDIA_LIMIT_BYTES, STORY_MAX_PAGES,
+  telegramId, validTelegramId, validStoryId, normalizeContactStories,
+  STORY_MEDIA_LIMIT_BYTES, STORY_MAX_PAGES,
 } from '../lib/telegram-contact-stories.js';
 
 const BOT = String(process.env.TELEGRAM_BOT_TOKEN || '');
@@ -18,61 +18,44 @@ function telegramFailure(error) {
   const owner = telegramOwnerError(error);
   if (owner) return owner;
   const raw = String(error?.errorMessage || error?.message || '');
-  if (/PREMIUM_ACCOUNT_REQUIRED/i.test(raw))
-    return {status:403,error:'Анонимный просмотр доступен только с Telegram Premium.',reason:'premium'};
-  if (/STEALTH_NOT_CONFIRMED/i.test(raw))
-    return {status:423,error:'Telegram не подтвердил режим инкогнито. Просмотр заблокирован.',reason:'stealth',
-      cooldownUntil:error.cooldownUntil || null};
   if (/FLOOD_WAIT/i.test(raw))
-    return {status:429,error:'Telegram пока не разрешает повторно включить инкогнито. Просмотр заблокирован.',reason:'cooldown'};
+    return {status:429,error:'Telegram временно ограничил загрузку историй. Попробуй позже.'};
   if (/AUTH_KEY|SESSION_REVOKED|not authorized/i.test(raw))
     return {status:409,error:'Telegram-сессия истекла. Подключи аккаунт заново.'};
   if (/STORY_MEDIA_TOO_LARGE/i.test(raw))
     return {status:413,error:'История слишком большая для безопасного просмотра внутри Mini App.'};
-  return {status:503,error:'Не удалось подтвердить доступ к Stories в Telegram. Просмотр заблокирован.'};
+  return {status:503,error:'Не удалось безопасно загрузить истории Telegram.'};
+}
+
+// Strict allowlist: unlike ordinary Telegram clients, Ghost View deliberately
+// does not call stories.readStories or stories.incrementStoryViews. Only
+// read-only fetch calls are accepted here; media bytes use downloadMedia.
+const READ_ONLY_STORY_REQUESTS = new Set([
+  Api.stories.GetAllStories, Api.stories.GetStoriesByID,
+]);
+async function invokeStoryFetch(client, request) {
+  if (!READ_ONLY_STORY_REQUESTS.has(request?.constructor))
+    throw new Error('STORY_RPC_NOT_ALLOWLISTED');
+  return client.invoke(request);
 }
 
 async function loadVisibleContactStories(client) {
   let cursor = '';
   const peerStories = [];
   const users = new Map();
-  let stealthMode = null;
   let hasMore = false;
   for (let page = 0; page < STORY_MAX_PAGES; page++) {
     // Initial page is read without a state; pagination requires BOTH state and next.
-    const reply = await client.invoke(new Api.stories.GetAllStories(
+    const reply = await invokeStoryFetch(client,new Api.stories.GetAllStories(
       page === 0 ? {} : {next:true,state:cursor}
     ));
-    stealthMode = reply?.stealthMode || stealthMode;
     for (const u of reply?.users || []) users.set(telegramId(u.id), u);
     peerStories.push(...(reply?.peerStories || []));
     hasMore = Boolean(reply?.hasMore);
     cursor = String(reply?.state || '');
     if (!hasMore || !cursor) break;
   }
-  return {peerStories, users:[...users.values()], stealthMode, partial:hasMore};
-}
-
-async function ensureStealth(client, raw) {
-  let mode = raw;
-  const now = nowSeconds();
-  if (stealthStatus(mode,now).active) return requireStealth(mode,now);
-  const state = stealthStatus(mode,now);
-  if (!state.canActivate) {
-    const error = new Error('STEALTH_NOT_CONFIRMED');
-    error.code = 'STEALTH_NOT_CONFIRMED';
-    error.cooldownUntil = state.cooldownUntil;
-    throw error;
-  }
-  // Activating a user's official Premium Stealth Mode is the only automatic
-  // privacy change. Never infer privacy from media downloads or a timer.
-  const updates = await client.invoke(new Api.stories.ActivateStealthMode({past:true,future:true}));
-  mode = (updates?.updates || []).find(x => x?.stealthMode)?.stealthMode || null;
-  if (!mode) {
-    const reply = await client.invoke(new Api.stories.GetAllStories({}));
-    mode = reply?.stealthMode;
-  }
-  return requireStealth(mode,nowSeconds());
+  return {peerStories, users:[...users.values()], partial:hasMore};
 }
 
 async function ownerSession(ownerId) {
@@ -90,7 +73,7 @@ async function ownerSession(ownerId) {
 
 async function downloadContactStory(client, story, user) {
   const entity = await client.getInputEntity(user);
-  const fetched = await client.invoke(new Api.stories.GetStoriesByID({
+  const fetched = await invokeStoryFetch(client,new Api.stories.GetStoriesByID({
     peer:entity,id:[Number(story.id)],
   }));
   const fresh = (fetched?.stories || []).find(s =>
@@ -141,12 +124,10 @@ export default async function handler(req,res) {
       await verifyTelegramClientOwner(client,ownerId);
       const snapshot = await loadVisibleContactStories(client);
       const contacts = normalizeContactStories(snapshot);
-      const status = stealthStatus(snapshot.stealthMode);
       if (action === 'list') {
-        const me = await client.getMe();
         return respond(res,200,{
           contacts,partial:snapshot.partial,
-          stealth:{...status,premium:me?.premium===true},
+          viewMode:'ghost-no-receipt',
           updatedAt:new Date().toISOString(),
         });
       }
@@ -157,14 +138,14 @@ export default async function handler(req,res) {
       const user = snapshot.users.find(u => telegramId(u.id) === String(body.userId));
       if (!contact || !story || !user)
         return respond(res,404,{error:'История больше недоступна этому аккаунту.'});
-      // No media or ReadStories/IncrementStoryViews requests until official
-      // Premium stealth state has been confirmed on Telegram's own servers.
-      const granted = await ensureStealth(client,snapshot.stealthMode);
+      // AyuGram-style Ghost View: fetching media is separate from marking
+      // stories read or incrementing views. Never emit either write RPC here.
+      // Reactions/replies are not implemented: those can reveal the viewer.
       const file = await downloadContactStory(client,story,user);
       if (!file) return respond(res,404,{error:'История удалена или недоступна.'});
-      // The user can only remain in this viewer while official Stealth Mode
-      // is active. Never return a media response when activation failed.
-      res.setHeader('X-Veto-Stealth-Until',String(granted.activeUntil));
+      // UI requires an explicit no-receipt mode header before rendering media.
+      // This is our RPC policy, not a guarantee about other Telegram clients.
+      res.setHeader('X-Veto-Story-Mode','ghost-no-receipt');
       res.setHeader('Content-Type',file.mime);
       res.setHeader('Content-Disposition','inline');
       res.setHeader('Content-Length',String(file.buffer.length));

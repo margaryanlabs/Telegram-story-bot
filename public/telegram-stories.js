@@ -6,9 +6,9 @@
     .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
     .replaceAll('"','&quot;').replaceAll("'",'&#39;');
   const state = {
-    owner:String(tg?.initData || ''), contacts:[],premium:null,stealth:null,
+    owner:String(tg?.initData || ''), contacts:[],viewMode:null,
     loadedAt:0,busy:false,lastError:null,epoch:0,activePeer:-1,activeStory:-1,
-    url:null,autoTimer:null,expiryTimer:null,mediaBusy:false,stealthUntil:0,partial:false,
+    url:null,autoTimer:null,mediaBusy:false,partial:false,
   };
   const bar = document.createElement('section');
   bar.className = 'veto-story-strip';
@@ -37,8 +37,7 @@
   }
   function hideMedia() {
     if (state.autoTimer) clearTimeout(state.autoTimer);
-    if (state.expiryTimer) clearTimeout(state.expiryTimer);
-    state.autoTimer = null;state.expiryTimer = null;
+    state.autoTimer = null;
     viewer.querySelectorAll('video').forEach(video => { try { video.pause(); } catch {} });
     if (state.url) URL.revokeObjectURL(state.url);
     state.url = null;
@@ -56,8 +55,8 @@
     const current = String(tg?.initData || '');
     if (current === state.owner) return false;
     closeViewer();
-    state.owner = current;state.contacts = [];state.premium = null;
-    state.stealth = null;state.loadedAt = 0;state.partial = false;state.lastError = null;
+    state.owner = current;state.contacts = [];state.viewMode = null;
+    state.loadedAt = 0;state.partial = false;state.lastError = null;
     renderBar();
     return true;
   }
@@ -85,13 +84,14 @@
       const kind = response.headers.get('content-type') || '';
       if (!/^image\/jpeg|^video\/(mp4|webm)/i.test(kind))
         throw new Error('Telegram вернул неподдерживаемое медиа.');
-      const stealthUntil = Number(response.headers.get('x-veto-stealth-until') || 0);
-      if (stealthUntil <= Date.now()/1000 + 20)
-        throw new Error('Срок анонимного режима заканчивается. Просмотр заблокирован.');
+      // Reject unexpected/old backends instead of silently falling back to
+      // normal story viewing. The server must use the no-view-receipt path.
+      if (response.headers.get('x-veto-story-mode') !== 'ghost-no-receipt')
+        throw new Error('VETO не подтвердил Ghost View. Просмотр заблокирован.');
       const blob = await response.blob();
       if (blob.size > 4*1024*1024 || !blob.size)
         throw new Error('Этот файл слишком большой для просмотра.');
-      return {blob,kind,stealthUntil};
+      return {blob,kind};
     } catch(error) {
       if (error?.name === 'AbortError') throw new Error('Telegram не ответил. Просмотр не был открыт.');
       throw error;
@@ -99,11 +99,9 @@
   }
   function statusText() {
     if (state.lastError) return 'Не удалось обновить · нажми ↻';
-    if (state.premium === false) return 'Для анонимности нужен Telegram Premium';
-    if (state.stealth?.active) return 'Инкогнито активно';
-    if (state.stealth && state.stealth.canActivate === false)
-      return 'Инкогнито на паузе · просмотр заблокирован';
-    return 'Анонимность проверяется перед каждым просмотром';
+    return state.viewMode==='ghost-no-receipt'
+      ? 'Ghost View · без отметок о просмотре'
+      : 'Проверяю Ghost View…';
   }
   function syncKnownContactAvatars() {
     const list = $('telegramMirrorList');
@@ -142,7 +140,7 @@
     bar.innerHTML =
       '<div class="veto-story-strip-heading"><strong>Истории</strong>'+
       '<span class="veto-story-status">'+
-      (state.stealth?.active?'✓ ':'◈ ')+safe(statusText())+'</span>'+
+      (state.viewMode==='ghost-no-receipt'?'✓ ':'◈ ')+safe(statusText())+'</span>'+
       '<button type="button" class="veto-story-refresh" data-veto-story-refresh="1" '+
       'aria-label="Обновить истории">↻</button></div>'+
       '<div class="veto-story-people"><button type="button" class="veto-story-person" '+
@@ -164,9 +162,10 @@
     try {
       const data = await call('list');
       if (epoch!==state.epoch || owner!==state.owner)return;
+      if (data.viewMode !== 'ghost-no-receipt')
+        throw new Error('Сервер не подтвердил безопасный Ghost View.');
       state.contacts = Array.isArray(data.contacts) ? data.contacts : [];
-      state.stealth = data.stealth || null;
-      state.premium = data.stealth?.premium === true;
+      state.viewMode = data.viewMode;
       state.loadedAt = Date.now();
       state.partial = Boolean(data.partial);state.lastError = null;
     } catch(error) {
@@ -192,10 +191,10 @@
       '<div class="veto-story-stage-head"><span class="veto-story-stage-avatar">'+
       safe(initials(contact.name))+'</span><div><strong>'+safe(contact.name)+'</strong>'+
       '<small>'+safe(formatTime(story.createdAt))+' · Telegram</small></div>'+
-      '<span class="veto-story-protection">◈ Инкогнито</span>'+
+      '<span class="veto-story-protection">◈ Ghost View</span>'+
       '<button type="button" class="veto-story-close" data-veto-story-close="1" aria-label="Закрыть">×</button></div>'+
       '<div class="veto-story-media" id="vetoStoryMedia"><div class="veto-story-spinner"></div>'+
-      '<span>Telegram проверяет анонимный режим…</span></div>'+
+      '<span>Загружаю историю без отметки о просмотре…</span></div>'+
       '<button class="veto-story-skip previous" data-veto-story-back="1" aria-label="Предыдущая история"></button>'+
       '<button class="veto-story-skip next" data-veto-story-next="1" aria-label="Следующая история"></button>'+
       '<p class="veto-story-caption">'+safe(story.caption||'')+'</p>'+
@@ -219,16 +218,10 @@
     state.activeStory = storyIndex;
     const epoch = ++state.epoch, owner=state.owner;
     renderViewerShell();
-    if (state.premium === false) {
-      viewerError('Для невидимого просмотра историй необходим Telegram Premium.');
-      return;
-    }
     state.mediaBusy = true;
     try {
       const data = await call('media',{userId:person.userId,storyId:story.id},true);
       if (epoch!==state.epoch || owner!==state.owner || viewer.hidden) return;
-      state.stealthUntil = data.stealthUntil;
-      state.expiryTimer = setTimeout(()=>closeViewer(),Math.max(1,(data.stealthUntil*1000-Date.now()-20000)));
       state.url = URL.createObjectURL(data.blob);
       const area = $('vetoStoryMedia');
       if (!area) return;
@@ -297,7 +290,7 @@
   window.addEventListener('pageshow',resetOwner);
   document.addEventListener('visibilitychange',()=>{
     if (document.hidden) {
-      // Stops playback before official stealth expires while the app is backgrounded.
+      // Never leave private media playing in the background.
       closeViewer();
     } else resetOwner();
   });
