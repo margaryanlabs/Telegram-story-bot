@@ -315,6 +315,8 @@
     if(!nonce){toast('Нужен защищённый HTTPS');return;}
     state.lastRichFailure=null;
     state.sendInFlight=true;
+    const deliveryKind=voiceSend?'voice':action==='send_sticker'?'sticker':'media';
+    setDeliveryStatus('sending',chatId,deliveryKind);
     renderSendComposer();
     try {
       let request={chatId,nonce,replyTo};
@@ -333,6 +335,7 @@
       await richRequest(action,request);
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       if(String(state.thread?.id)===chatId){
+        setDeliveryStatus('accepted',chatId,deliveryKind);
         if(field&&!voiceSend)field.value='';
         if(!voiceSend)state.drafts.delete(chatId);
         state.replyTo=null;state.pendingAttachment=null;
@@ -352,6 +355,7 @@
       if(error?.uncertain===true && String(state.thread?.id)===chatId)
         state.lastRichFailure={intent,nonce};
       if(String(state.thread?.id)===chatId){
+        setDeliveryStatus(error?.uncertain?'uncertain':'failed',chatId,deliveryKind);
         const warning=error?.uncertain===true
           ?' · Проверь Telegram. При повторе того же файла используем тот же ID без создания дубля.'
           :'';
