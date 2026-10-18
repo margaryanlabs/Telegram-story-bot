@@ -70,9 +70,9 @@ test('catalog, preview and send only use signed Telegram owner with no access ha
  assert.match(preview,/verifyTelegramClientOwner\(client,userId\)/);
  assert.match(rich,/resolveOwnerSticker\(client,selected,inputs.setId/);
  assert.match(ui,/async function openStickerPack\(setId\)/);
- assert.match(ui,/state\\.stickerEpoch\\+\\+/);
- assert.match(ui,/closeStickerDrawer\\(\\);\\s*if\\(\\$\\('telegramThreadStickerList'\\)\\)/);
- assert.match(ui,/stickerSets=\\[\\];state\\.stickerPack=null/);
+ assert.match(ui,/state\.stickerEpoch\+\+/);
+ assert.match(ui,/closeStickerDrawer\(\);\s*if\(\$\('telegramThreadStickerList'\)\)/);
+ assert.match(ui,/stickerSets=\[\];state\.stickerPack=null/);
  assert.match(ui,/stickerRequestValid\(chatId,ownerKey,epoch\)/);
  assert.match(ui,/a\.stickerSetId===b\.stickerSetId/);
  assert.match(html,/id="vetoStickersSearch"/);
