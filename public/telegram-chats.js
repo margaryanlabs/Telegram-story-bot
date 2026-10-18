@@ -1062,6 +1062,12 @@
       el.replaceWith(document.createTextNode(el.textContent||''));
     }
   }
+  function showLatestShortcut(){
+    const scroller=$('telegramThreadMessages'),shortcut=$('telegramThreadJumpLatest');
+    if(!scroller||!shortcut)return;
+    const remaining=scroller.scrollHeight-scroller.scrollTop-scroller.clientHeight;
+    shortcut.hidden=!state.thread||state.messages.length<9||remaining<160;
+  }
   function renderMessages({keepScroll=false,anchor=null}={}){
     const box=$('telegramThreadMessages');
     if(!box)return;
@@ -1137,6 +1143,7 @@
     if(more){more.hidden=!state.threadHasMore;more.disabled=state.threadLoading;}
     loadInlinePreviews();
     refreshThreadSearch();
+    showLatestShortcut();
   }
 
   // Active chat feels live without maintaining a server-side permanent user
@@ -1295,6 +1302,7 @@
       else link.removeAttribute('href');
     }
     $('telegramThreadMessages').innerHTML=empty('Открываю переписку','История загружается из Telegram');
+    if($('telegramThreadJumpLatest'))$('telegramThreadJumpLatest').hidden=true;
     renderSendComposer();
     threadNotice('');
     const shell=$('telegramMirror');
@@ -1614,6 +1622,21 @@
     }else if(event.key==='Enter'){
       event.preventDefault();moveThreadSearch(event.shiftKey?-1:1);
     }
+  });
+  $('telegramThreadMessages')?.addEventListener('scroll',()=>{
+    // Browsers can emit dozens of scroll events per frame; schedule a single
+    // inexpensive bottom-distance check rather than rebuilding messages.
+    if(showLatestShortcut.frame)return;
+    showLatestShortcut.frame=requestAnimationFrame(()=>{
+      showLatestShortcut.frame=0;
+      showLatestShortcut();
+    });
+  },{passive:true});
+  $('telegramThreadJumpLatest')?.addEventListener('click',()=>{
+    const box=$('telegramThreadMessages');if(!box)return;
+    box.scrollTo({top:box.scrollHeight,behavior:'smooth'});
+    const button=$('telegramThreadJumpLatest');
+    if(button)button.hidden=true;
   });
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
