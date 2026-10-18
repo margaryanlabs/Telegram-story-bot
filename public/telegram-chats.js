@@ -1228,11 +1228,18 @@
     const box=$('telegramThreadMessages');
     if(!box)return;
     const previousHeight=box.scrollHeight, previousScroll=box.scrollTop;
-    // Detach media nodes before replacing message markup. Reattaching the
-    // same nodes retains their playback position and download state.
+    // Keep the exact media element and capture active playback. Some Android
+    // WebViews pause detached audio; restore only media already playing by
+    // user action, never autoplay unopened voice messages.
+    const playingBeforePaint=[];
     for(const slot of box.querySelectorAll('[data-mirror-expanded]')){
       const entry=state.expandedAttachments.get(String(slot.dataset.mirrorExpanded));
-      if(entry?.node?.parentNode===slot)entry.node.remove();
+      if(entry?.node?.parentNode===slot){
+        const media=entry.node.querySelector('audio,video');
+        if(media&&!media.paused&&!media.ended)
+          playingBeforePaint.push({media,position:media.currentTime});
+        entry.node.remove();
+      }
     }
     if(!state.messages.length){
       box.innerHTML=state.threadLoading
@@ -1297,6 +1304,14 @@
       }).join('');
     }
     restoreExpandedAttachments();
+    for(const {media,position} of playingBeforePaint){
+      if(!media.isConnected||!media.paused)continue;
+      try{
+        if(Number.isFinite(position)&&position>0)media.currentTime=position;
+        const resumed=media.play();
+        if(resumed?.catch)resumed.catch(()=>{});
+      }catch{}
+    }
     if(anchor){
       const el=[...box.querySelectorAll('[data-mirror-message-id]')]
         .find(x=>x.dataset.mirrorMessageId===String(anchor.id));
