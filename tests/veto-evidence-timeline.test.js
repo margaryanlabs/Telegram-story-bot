@@ -75,6 +75,19 @@ test('same cloud and Vault message merges once with reliable deletion provenance
  assert.equal(evidenceTimeline(merged,planSearch('Какие обещания давали?')).length,1);
 });
 
+test('group evidence never attributes a promise to group title without sender evidence',async()=>{
+ const {searchResultsFromTelegram}=await import('../lib/veto-intelligence-search.js');
+ const group={chats:[{id:201n,title:'Команда'}],users:[{id:17n,firstName:'Мария'}],
+   messages:[
+    {id:4,peerId:{chatId:201n},fromId:{userId:17n},message:'Я оплачу завтра',date:1760791200,className:'Message'},
+    {id:5,peerId:{chatId:201n},message:'Верну потом',date:1760791300,className:'Message'},
+   ]};
+ const evidence=searchResultsFromTelegram(group,'оплачу');
+ assert.equal(evidence.length,2);
+ assert.equal(evidence[0].sender,'Мария');
+ assert.equal(evidence[1].sender,'Автор не определён');
+ assert.equal(evidence[0].chatTitle,'Команда');
+});
 test('signed server uses opt-in Vault search, never silently indexes all chats or exports data',()=>{
  const api=read('api/telegram-intelligence-search.js');
  const ui=read('public/telegram-chats.js');
