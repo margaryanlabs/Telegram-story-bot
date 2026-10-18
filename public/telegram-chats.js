@@ -167,6 +167,7 @@
     if(!nonce){toast('Нужен защищённый HTTPS для отправки сообщений');return;}
     state.sendInFlight=true;
     state.lastSendFailure=null;
+    setDeliveryStatus('sending',chatId,'text');
     // Immediate input handoff; server delivery is still confirmed asynchronously.
     field.value='';
     state.drafts.delete(chatId);
@@ -182,6 +183,7 @@
       const delivered=await sendChatRequest(chatId,message,nonce,state.replyTo?.id||null);
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       if(String(state.thread?.id)===chatId){
+        setDeliveryStatus('accepted',chatId,'text');
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
         if(Number.isSafeInteger(delivered.messageId)&&delivered.messageId>0){
           state.messages.push({
@@ -211,6 +213,7 @@
         state.lastSendFailure={chatId,message,nonce};
       }
       if(String(state.thread?.id)===chatId){
+        setDeliveryStatus(error.uncertain?'uncertain':'failed',chatId,'text');
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
         if(!field.value.trim()){
           state.drafts.set(chatId,message);
@@ -1160,8 +1163,8 @@
           '<footer>'+(canSendInThread(state.thread)&&Number.isSafeInteger(Number(message.id))&&!message.deleted&&!message.preservedOnly
             ?'<button type="button" class="veto-mirror-reply-action" data-mirror-reply="'+safe(message.id)+'" aria-label="Ответить на сообщение">↩</button>':'')+
           (message.replyTo?'<span>↩ '+safe(message.replyTo)+'</span>':'')+
-          (message.pending?'<span>Отправляется…</span>':'')+
-          (message.sent?'<span>✓</span>':'')+
+          (message.pending?'<span class="veto-mirror-send-pending">◌ Отправляется…</span>':'')+
+          (message.sent?'<span class="veto-mirror-send-accepted" title="Telegram принял отправку, статус прочтения неизвестен">✓ Принято</span>':'')+
           (message.edited?'<span>изменено</span>':'')+
           (message.saved&&!message.deleted?'<span title="Сохранено в VETO">↶</span>':'')+
           '<time>'+safe(messageTime(message.date))+'</time></footer></div></article>';
