@@ -4,7 +4,7 @@
   const $=id=>document.getElementById(id);
   const state={
     chats:[],page:0,hasMore:true,loading:false,
-    filter:'all',search:'',generation:0,
+    filter:'all',search:'',generation:0,lastListFetchedAt:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
@@ -196,6 +196,7 @@
         // Never erase text the user has begun writing while awaiting Telegram.
         state.replyTo=null;renderReplyPreview();
         if(!field.value.trim())state.drafts.delete(chatId);
+        touchRecentChat(chatId,message,new Date().toISOString());
         renderMessages();
         threadNotice('');
         // Replace any provisional timestamp with Telegram's own message and
@@ -333,6 +334,10 @@
       await richRequest(action,request);
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       if(String(state.thread?.id)===chatId){
+        const mediaTitle=action==='send_sticker'?'Стикер'
+          :request.kind==='voice'?'Голосовое сообщение'
+            :request.kind==='photo'?'Фотография':'Документ';
+        touchRecentChat(chatId,request.caption||mediaTitle,new Date().toISOString());
         if(field&&!voiceSend)field.value='';
         if(!voiceSend)state.drafts.delete(chatId);
         state.replyTo=null;state.pendingAttachment=null;
@@ -525,6 +530,15 @@
     return item||(['channel','group'].includes(chat.type)
       ?'Открыть беседу':'Открыть сообщения');
   }
+  function touchRecentChat(chatId,text,date){
+    // Only update the already verified owner's in-memory preview; the next
+    // server snapshot remains authoritative. No fake unread/read status.
+    if(state.ownerInitData!==String(tg?.initData||''))return;
+    const chat=state.chats.find(c=>String(c.id)===String(chatId));
+    if(!chat||chat.archiveOnly)return;
+    chat.preview=String(text||'').slice(0,180);
+    chat.date=date||new Date().toISOString();
+  }
   function orderedChats(chats){
     return [...chats].sort((a,b)=>{
       if(Boolean(a.pinned)!==Boolean(b.pinned))return a.pinned?-1:1;
@@ -703,6 +717,7 @@
         }
       });
       state.connectionProof=data.connection||null;
+      if(data.connection?.verified)state.lastListFetchedAt=Date.now();
       // Archive-only rows are additional cards, not remote Telegram pagination.
       state.hasMore=Boolean(data.hasMore)&&state.page<10;
       state.page+=1;
@@ -872,7 +887,7 @@
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
     state.chats=[];state.messages=[];state.thread=null;
-    state.page=0;state.hasMore=true;state.autoPages=0;
+    state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
     state.sendInFlight=false;state.lastSendFailure=null;state.lastRichFailure=null;
     state.drafts.clear();state.pendingAttachment=null;state.replyTo=null;state.stickers=[];
@@ -1413,6 +1428,12 @@
     $('telegramMirror')?.classList.remove('thread-mode');
     revokeMediaUrls();
     renderSendComposer();
+    renderChats();
+    // Show cached chat list instantly, reconcile server-side ordering when it
+    // is old. Never delay the Back gesture on a round trip to Telegram.
+    if(state.connectionProof?.verified&&state.ownerInitData===String(tg?.initData||'')&&
+       !state.loading&&navigator.onLine!==false&&Date.now()-state.lastListFetchedAt>45000)
+      void loadChats({reset:true});
     window.scrollTo({top:0,behavior:'instant'});
   }
   $('telegramThreadAttachButton')?.addEventListener('click',()=>{
