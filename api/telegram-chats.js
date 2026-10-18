@@ -13,6 +13,10 @@ const FIRST_PAGE_SIZE=24;
 const FAST_THREAD_DIALOGS=80;
 const MAX_DIALOGS=500;
 // Fetch only what is needed for the first paint; keep all later pages gap-free.
+export function shouldFetchLiveFirst(action,body={},cursor=0,archiveOffset=0){
+  return action==='thread'&&body.fastLive===true&&cursor===0&&
+    archiveOffset===0&&body.archiveOnly!==true&&body.liveExhausted!==true;
+}
 export function dialogPageBounds(page){
   const maxPage=Math.ceil((MAX_DIALOGS-FIRST_PAGE_SIZE)/PAGE_SIZE);
   if(!Number.isSafeInteger(page)||page<0||page>maxPage)
@@ -233,8 +237,7 @@ export default async function handler(req,res){
   // Fast live mode deliberately defers storage reads until after the Telegram
   // history is on screen. It is only allowed on the initial, owner-scoped page.
   // If MTProto cannot locate the peer, fall back to archived copies below.
-  const fastLive=action==='thread'&&body.fastLive===true&&cursor===0&&
-    archiveOffset===0&&body.archiveOnly!==true&&body.liveExhausted!==true;
+  const fastLive=shouldFetchLiveFirst(action,body,cursor,archiveOffset);
   try{
     // Archive-only reads never connect to Telegram/MTProto. They are always
     // owner-scoped by the signed Mini App user id, with no public media links.
