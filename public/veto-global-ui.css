@@ -464,3 +464,14 @@ html[data-veto-theme] .veto-welcome-details:focus-visible{outline:2px solid var(
 @media(prefers-reduced-motion:reduce){
   .veto-command-home button,#telegramMirror .veto-mirror-filters button{transition:none!important}
 }
+
+/* Registration progress uses the same global palette; 2FA is conditional. */
+.veto-login-stage{display:flex;flex-wrap:wrap;gap:6px;margin:13px 0 16px}
+.veto-login-stage span{display:inline-flex;align-items:center;min-height:29px;
+  padding:6px 9px;border-radius:9px;border:1px solid var(--veto-ui-line);
+  color:var(--veto-ui-muted);background:color-mix(in srgb,var(--veto-ui-card) 87%,var(--veto-ui-ink));
+  font-size:10px;font-weight:700}
+.veto-login-stage .active{color:var(--veto-ui-ink);background:var(--veto-ui-card);
+  border-color:var(--veto-ui-accent);box-shadow:inset 0 -2px 0 var(--veto-ui-accent)}
+.veto-login-stage .done{color:var(--veto-ui-accent)}
+.veto-command-advanced>summary:focus-visible{outline:2px solid var(--veto-ui-accent);outline-offset:3px}
