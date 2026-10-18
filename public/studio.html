@@ -431,11 +431,14 @@
               <div class="veto-voice-mode" id="telegramThreadVoiceModes" role="group" aria-label="Эквалайзер новой записи">
               <span>EQ</span>
               <button type="button" data-chat-voice-preset="original" aria-pressed="true">Оригинал</button>
-              <button type="button" data-chat-voice-preset="deep" aria-pressed="false">Глубже · EQ</button>
+              <button type="button" data-chat-voice-preset="low" aria-pressed="false">↓ Ниже · Pitch</button>
+              <button type="button" data-chat-voice-preset="high" aria-pressed="false">↑ Выше · Pitch</button>
+              <button type="button" data-chat-voice-preset="robot" aria-pressed="false">Робот</button>
+              <button type="button" data-chat-voice-preset="deep" aria-pressed="false">Басы · EQ</button>
               <button type="button" data-chat-voice-preset="warm" aria-pressed="false">Теплее</button>
               <button type="button" data-chat-voice-preset="radio" aria-pressed="false">Радио</button>
               </div>
-              <small class="veto-voice-tools-note">Меняет тембр эквалайзером, не высоту голоса. Выбирай до записи; для настоящего Voice Changer потребуется отдельная обработка.</small>
+              <small class="veto-voice-tools-note">Ниже/Выше изменяют высоту голоса на устройстве; Робот — звучание. Выбери эффект до записи, прослушай результат перед отправкой.</small>
             </details>
             <div id="telegramThreadVoiceStatus" class="veto-mirror-voice-status" role="status" hidden><i aria-hidden="true"></i><span id="telegramThreadVoiceTimer">● 00:00 · Идёт запись</span></div>
             <div id="telegramThreadVoicePreview" class="veto-mirror-voice-preview" hidden>
