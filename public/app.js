@@ -104,6 +104,7 @@
   let composerPreviewUrl = '';
   let composerNonce = '';
   let composerBusy = false;
+  let composerGeneration = 0;
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -294,6 +295,7 @@
   }
 
   function resetComposer({ keepCaption = false } = {}) {
+    composerGeneration++;
     composerFile = null;
     composerDataUrl = '';
     composerNonce = '';
@@ -310,12 +312,13 @@
 
     $('mediaPreview').hidden = true;
     $('pickStoryMedia').hidden = false;
+    if($('vetoStoryEditEntry'))$('vetoStoryEditEntry').hidden=true;
     renderPublish();
   }
 
   async function prepareComposerFile(file) {
     if (!file) return;
-
+    const generation=++composerGeneration;
     composerBusy = true;
     $('composerState').textContent = 'Подготавливаю…';
     $('composerState').className = 'composer-state busy';
@@ -323,6 +326,7 @@
 
     try {
       const prepared = await compressStoryImage(file);
+      if(generation!==composerGeneration)return;
       composerFile = file;
       composerDataUrl = prepared.dataUrl;
       composerNonce = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
@@ -334,14 +338,15 @@
       $('mediaFileMeta').textContent = `${formatBytes(file.size)} → ${formatBytes(prepared.blob.size)}`;
       $('mediaPreview').hidden = false;
       $('pickStoryMedia').hidden = true;
+      if($('vetoStoryEditEntry'))$('vetoStoryEditEntry').hidden=false;
       notify('success');
     } catch (error) {
+      if(generation!==composerGeneration)return;
       resetComposer({ keepCaption: true });
       notify('error');
       showToast(error.message);
     } finally {
-      composerBusy = false;
-      renderPublish();
+      if(generation===composerGeneration){composerBusy=false;renderPublish();}
     }
   }
 
@@ -3125,12 +3130,23 @@
   });
 
   $('pickStoryMedia').addEventListener('click', () => {
-    if (!telegramAccountReady()) {
-      showToast('Сначала подключи Telegram');
-      connectionHelpSheet();
-      return;
-    }
+    // Editing is fully local. Telegram connection is required only to publish.
     $('storyFileInput').click();
+  });
+  $('vetoStoryEditOpen')?.addEventListener('click',()=>{
+    if(composerBusy){showToast('Фото ещё подготавливается');return;}
+    if(!composerFile){$('storyFileInput').click();return;}
+    if(!window.VetoStoryEditor){showToast('Редактор пока недоступен');return;}
+    void window.VetoStoryEditor.open(composerFile);
+  });
+  window.addEventListener('veto:story-project-error',event=>{
+    const message=String(event.detail?.message||'Не удалось открыть проект').slice(0,160);
+    showToast(message);
+  });
+  window.addEventListener('veto:story-edited',event=>{
+    const file=event.detail?.file;
+    if(!(file instanceof File)||!['image/jpeg','image/png','image/webp'].includes(file.type))return;
+    void prepareComposerFile(file);
   });
 
   $('storyFileInput').addEventListener('change', event => {
