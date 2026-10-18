@@ -936,9 +936,18 @@
       wrapper.className='veto-mirror-media-reveal';
       const mime=String(blob.type||'').toLowerCase();
       if(['image/jpeg','image/png','image/webp','image/gif'].includes(mime)){
+        const thumb=document.createElement('button');thumb.type='button';
+        thumb.className='veto-mirror-inline-photo-btn';thumb.dataset.mirrorPhoto=String(id);
+        thumb.setAttribute('aria-label','Развернуть сохранённое фото');
         const img=document.createElement('img');
         img.src=href;img.alt='Сохранённое вложение из чата';img.loading='lazy';
-        wrapper.appendChild(img);
+        thumb.appendChild(img);wrapper.appendChild(thumb);
+        state.mediaPreviewUrls.set(String(id),href);
+      }else if(mime.startsWith('audio/')){
+        const audio=document.createElement('audio');
+        audio.controls=true;audio.preload='metadata';audio.src=href;
+        audio.setAttribute('aria-label','Сохранённое аудио из VETO Vault');
+        wrapper.appendChild(audio);
       }else if(['video/mp4','video/webm'].includes(mime)){
         const video=document.createElement('video');
         video.src=href;video.controls=true;video.preload='metadata';wrapper.appendChild(video);
@@ -982,10 +991,15 @@
       element.className='veto-mirror-media-reveal';
       if(blob.type.startsWith('audio/')){
         const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';
+        audio.setAttribute('aria-label','Прослушать аудио из Telegram');
         audio.src=href;element.appendChild(audio);
       }else if(['image/png','image/jpeg','image/webp'].includes(blob.type)){
+        const thumb=document.createElement('button');thumb.type='button';
+        thumb.className='veto-mirror-inline-photo-btn';thumb.dataset.mirrorPhoto=String(id);
+        thumb.setAttribute('aria-label','Развернуть фото');
         const image=document.createElement('img');image.src=href;image.alt='Вложение Telegram';
-        element.appendChild(image);
+        thumb.appendChild(image);element.appendChild(thumb);
+        state.mediaPreviewUrls.set(String(id),href);
       }else if(['video/mp4','video/webm'].includes(blob.type)){
         const video=document.createElement('video');video.src=href;video.controls=true;video.preload='metadata';element.appendChild(video);
       }
@@ -1103,11 +1117,13 @@
           :message.preservedOnly
             ?'<div class="veto-mirror-preserved-flag">◈ СОХРАНЁННАЯ КОПИЯ VETO</div>'
             :'';
+        const isAudio=['voice','audio'].includes(message.media);
         const viewFile=message.saved&&message.media&&message.mediaAvailable
           ?'<button type="button" class="veto-mirror-open-vault" data-mirror-file="'+safe(message.id)+
-             '">Открыть сохранённый файл ↗</button>'
+             '">'+(isAudio?'▶ Слушать сохранённое аудио':'Открыть сохранённый файл ↗')+'</button>'
           :message.media&&!message.deleted&&!message.preservedOnly&&message.media!=='photo'
-            ?'<button type="button" class="veto-mirror-open-vault" data-mirror-live-file="'+safe(message.id)+'">Открыть файл из Telegram ↗</button>'
+            ?'<button type="button" class="veto-mirror-open-vault" data-mirror-live-file="'+safe(message.id)+
+               '">'+(isAudio?'▶ Слушать в переписке':'Открыть файл из Telegram ↗')+'</button>'
             :'';
         return divider+'<article data-mirror-message-id="'+safe(message.id)+'" class="veto-mirror-bubble'+(message.out?' outgoing':'')+
           (compact?' compact':'')+(message.deleted?' is-deleted':'')+
@@ -1569,6 +1585,8 @@
     }
   });
   $('telegramThreadMessages')?.addEventListener('click',event=>{
+    const photo=event.target.closest('[data-mirror-photo]');
+    if(photo){openPhotoViewer(photo.dataset.mirrorPhoto);return;}
     const button=event.target.closest('[data-mirror-file]');
     if(button)openArchivedFile(button);
     const liveFile=event.target.closest('[data-mirror-live-file]');
@@ -1618,6 +1636,14 @@
     }else if(event.key==='Enter'){
       event.preventDefault();moveThreadSearch(event.shiftKey?-1:1);
     }
+  });
+  $('telegramThreadPhotoClose')?.addEventListener('click',closePhotoViewer);
+  $('telegramThreadPhotoDialog')?.addEventListener('click',event=>{
+    if(event.target===event.currentTarget)closePhotoViewer();
+  });
+  $('telegramThreadPhotoDialog')?.addEventListener('close',()=>{
+    if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
+    if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
   });
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
