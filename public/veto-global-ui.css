@@ -215,3 +215,57 @@ html[data-veto-theme="linen"] input{color:var(--text)}
   #telegramMirror .veto-mirror-sticker-list{grid-template-columns:repeat(4,minmax(0,1fr))}
   #telegramMirror .veto-mirror-sticker-drawer{padding:9px;max-height:48dvh}
 }
+
+/* VETO Intelligence Search: evidence-first, not fabricated AI answers. */
+#telegramMirror .veto-intelligence{margin:4px 12px 10px;border:1px solid var(--ct-line);
+  border-radius:15px;background:var(--ct-panel);color:var(--ct-text);overflow:hidden}
+#telegramMirror .veto-intelligence-toggle{display:flex;align-items:center;gap:9px;width:100%;
+  min-height:44px;padding:8px 12px;text-align:left;background:var(--ct-elev);color:var(--ct-text);
+  border:0;border-radius:13px;cursor:pointer}
+#telegramMirror .veto-intelligence-toggle>span{font-size:18px;color:var(--ct-accent)}
+#telegramMirror .veto-intelligence-toggle strong{font-size:12px;font-weight:800}
+#telegramMirror .veto-intelligence-toggle small{flex:1;text-align:right;color:var(--ct-muted);font-size:10px}
+#telegramMirror .veto-intelligence-toggle b{font-size:17px;font-weight:500;color:var(--ct-muted)}
+#telegramMirror .veto-intelligence-panel{padding:13px}
+#telegramMirror .veto-intelligence-panel[hidden]{display:none}
+#telegramMirror .veto-intelligence-panel>strong{font-size:13px;color:var(--ct-text)}
+#telegramMirror .veto-intelligence-panel>strong small{font-size:9px;letter-spacing:.08em;
+  border:1px solid var(--ct-line);padding:3px 5px;border-radius:6px;color:var(--ct-muted)}
+#telegramMirror .veto-intelligence-panel>p{font-size:11px;line-height:1.55;color:var(--ct-muted);
+  margin:7px 0 12px}
+#telegramMirror #vetoIntelSearchForm{display:flex;align-items:center;gap:7px}
+#telegramMirror #vetoIntelSearchInput{flex:1;min-width:0;min-height:42px;box-sizing:border-box;
+  border-radius:11px;padding:9px 12px;border:1px solid var(--ct-line);
+  background:var(--ct-input);color:var(--ct-text);font-size:13px}
+#telegramMirror #vetoIntelSearchSubmit{min-height:42px;padding:8px 12px;
+  background:var(--ct-active);color:var(--ct-active-ink);border:0;border-radius:11px;
+  font-size:12px;font-weight:800}
+#telegramMirror #vetoIntelSearchSubmit:disabled{opacity:.55}
+#telegramMirror .veto-intelligence-examples{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0}
+#telegramMirror .veto-intelligence-examples button{font-size:10px;color:var(--ct-chip-text);
+  background:var(--ct-chip);border:1px solid var(--ct-line);border-radius:999px;padding:7px 10px}
+#telegramMirror .veto-intelligence-status{color:var(--ct-muted);font-size:11px;
+  line-height:1.55;margin:7px 0 8px;overflow-wrap:anywhere}
+#telegramMirror .veto-intelligence-results{display:grid;gap:8px;
+  max-height:min(50dvh,530px);overflow-y:auto;overscroll-behavior:contain}
+#telegramMirror .veto-intelligence-hit{border:1px solid var(--ct-line);border-radius:12px;
+  background:var(--ct-elev);padding:11px;color:var(--ct-text);min-width:0}
+#telegramMirror .veto-intelligence-hit-head{display:flex;align-items:center;gap:8px;
+  justify-content:space-between;min-width:0}
+#telegramMirror .veto-intelligence-hit-head strong{font-size:12px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+#telegramMirror .veto-intelligence-hit-head time{font-size:10px;flex:none;color:var(--ct-muted)}
+#telegramMirror .veto-intelligence-hit p{font-size:12px;line-height:1.48;color:var(--ct-text);
+  margin:8px 0 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+#telegramMirror .veto-intelligence-hit-foot{display:flex;align-items:center;
+  justify-content:space-between;gap:8px}
+#telegramMirror .veto-intelligence-hit-foot small{font-size:9px;color:var(--ct-muted)}
+#telegramMirror .veto-intelligence-hit-foot button{font-size:11px;border-radius:9px;
+  background:var(--ct-chip);border:1px solid var(--ct-line);
+  color:var(--ct-chip-text);padding:7px 9px;font-weight:750}
+#telegramMirror .veto-intelligence :is(button,input):focus-visible{outline:2px solid var(--ct-accent);outline-offset:2px}
+@media(max-width:380px){
+  #telegramMirror .veto-intelligence{margin-left:8px;margin-right:8px}
+  #telegramMirror .veto-intelligence-toggle small{display:none}
+  #telegramMirror .veto-intelligence-hit-foot small{max-width:58%}
+}
