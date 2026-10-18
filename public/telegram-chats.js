@@ -355,7 +355,7 @@
         if($('telegramThreadFileInput'))$('telegramThreadFileInput').value='';
         if($('telegramThreadAudioInput'))$('telegramThreadAudioInput').value='';
         if(voiceSend)dropVoiceDraft();
-        $('telegramThreadStickerDrawer').hidden=true;
+        closeStickerDrawer();
         renderReplyPreview();renderAttachmentChip();
         threadNotice('');
         // Confirm with authoritative history. No second send on any outcome.
@@ -1171,6 +1171,10 @@
     state.drafts.clear();state.pendingAttachment=null;state.replyTo=null;
     state.stickers=[];state.stickerSets=[];state.stickerPack=null;
     state.stickerTab='recent';state.stickerQuery='';state.stickerVisible=16;state.stickerEpoch++;
+    closeStickerDrawer();
+    if($('telegramThreadStickerList'))$('telegramThreadStickerList').replaceChildren();
+    if($('vetoStickerDrawerTitle'))$('vetoStickerDrawerTitle').textContent='Стикеры Telegram';
+    if($('vetoStickersSearch'))$('vetoStickersSearch').value='';
     state.filter='all';state.search='';state.threadSearch='';state.threadSearchIndex=0;
     if($('telegramThreadFind'))$('telegramThreadFind').hidden=true;
     if($('telegramThreadFindInput'))$('telegramThreadFindInput').value='';
