@@ -134,3 +134,11 @@ body.veto-chat-active #telegramMirror .veto-mirror-header-actions .veto-mirror-i
 #telegramMirror .veto-voice-tools[open]{padding:0 0 6px}
 #telegramMirror .veto-voice-tools-note{display:block;margin:2px 2px 5px;color:var(--ct-muted);font-size:10px;line-height:1.5}
 body.veto-chat-thread #telegramMirror .veto-voice-mode{padding:6px 0;overflow-x:auto}
+
+#telegramMirror .veto-mirror-first-preview{margin:14px auto;max-width:min(94%,400px);
+  padding:12px 15px;background:var(--ct-elev);border:1px solid var(--ct-line);
+  border-radius:15px;color:var(--ct-text)}
+#telegramMirror .veto-mirror-first-preview>span{font-size:9px;letter-spacing:.13em;font-weight:800;color:var(--ct-muted)}
+#telegramMirror .veto-mirror-first-preview>p{font-size:13px;line-height:1.45;overflow-wrap:anywhere;
+  margin:7px 0 9px;max-height:70px;overflow:hidden}
+#telegramMirror .veto-mirror-first-preview>small{font-size:10px;color:var(--ct-muted)}
