@@ -531,25 +531,27 @@ function ghostMessagePreview(row = {}) {
 }
 
 async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], settings = {}, mediaRecoveryResults = [], deletedMessageCount = 0) {
-  const allIncoming = (Array.isArray(events) ? events : [])
-    .filter(event => event?.direction !== 'outgoing');
-  const incoming = allIncoming.slice(0, 5);
-  if (!ownerChatId || (!incoming.length && deletedMessageCount <= 0)) return false;
+  // Incoming AND owner-sent messages are preserved when captured ahead of deletion.
+  // Never tell the user a saved outgoing voice/file is missing solely because
+  // the message was sent by the owner.
+  const stored = (Array.isArray(events) ? events : []).filter(Boolean);
+  const visible = stored.slice(0, 5);
+  if (!ownerChatId || (!stored.length && deletedMessageCount <= 0)) return false;
 
-  const lines = incoming.map(event => {
-    const sender = event.sender || event.chatTitle || 'Telegram user';
+  const lines = visible.map(event => {
+    const sender = event.direction === 'outgoing' ? 'Вы' : (event.sender || event.chatTitle || 'Telegram user');
     const preview = String(event.preview || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
     return `• ${sender}: ${preview}`;
   });
 
-  const extra = allIncoming.length > incoming.length
-    ? `\n+ ещё ${allIncoming.length - incoming.length}`
+  const extra = stored.length > visible.length
+    ? `\n+ ещё ${stored.length - visible.length}`
     : '';
-  const unseenCount = Math.max(0, Number(deletedMessageCount || 0) - (Array.isArray(events) ? events.length : 0));
-  const unseenNote = unseenCount
-    ? `\n\n⚠ Ещё ${unseenCount} удалённых сообщений Telegram сообщил без сохранённого ранее текста. Восстановить их содержимое задним числом нельзя.`
+  const unseenCount = Math.max(0, Number(deletedMessageCount || 0) - stored.length);
+  const unseenNote = unseenCount && stored.length
+    ? `\n\n⚠ Для ${unseenCount} ${unseenCount === 1 ? 'удалённого сообщения' : 'удалённых сообщений'} копии в VETO Vault нет. Восстановить их содержимое задним числом нельзя.`
     : '';
-  const copyNote = incoming.length
+  const copyNote = stored.length
     ? 'Копия доступных сообщений сохранена в VETO Vault.'
     : 'Telegram сообщил об удалении. У VETO нет ранее сохранённой копии содержания.';
 
@@ -563,17 +565,17 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
 
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `👻 Anti-Delete\n\nTelegram сообщил об удалении ${Number(deletedMessageCount || incoming.length)} сообщени${Number(deletedMessageCount || incoming.length) === 1 ? 'я' : 'й'}.\n${lines.join('\n')}${extra}\n\n${copyNote}${unseenNote}${mediaStatus}`,
+    text: `👻 Anti-Delete\n\nTelegram сообщил об удалении ${Number(deletedMessageCount || stored.length)} сообщени${Number(deletedMessageCount || stored.length) === 1 ? 'я' : 'й'}.\n${lines.join('\n')}${extra}\n\n${copyNote}${unseenNote}${mediaStatus}`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
-        ...(settings?.ghostFocus !== false && incoming[0]?.chatId && incoming[0]?.messageId
+        ...(settings?.ghostFocus !== false && visible[0]?.chatId && visible[0]?.messageId
           ? [[{
               text: '👻 Открыть это удалённое',
               web_app: {
                 url: ghostAppUrl(origin, {
-                  chatId: incoming[0].chatId,
-                  messageId: incoming[0].messageId,
+                  chatId: visible[0].chatId,
+                  messageId: visible[0].messageId,
                   mode: 'focus',
                 }),
               },
