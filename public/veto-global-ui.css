@@ -120,3 +120,17 @@ body.veto-chat-active .veto-messenger-exit{border:1px solid var(--ct-line);
 body.veto-chat-active #telegramMirror .veto-mirror-heading{padding:10px 12px}
 body.veto-chat-active #telegramMirror .veto-mirror-heading .veto-mirror-header-actions{gap:5px}
 body.veto-chat-active #telegramMirror .veto-mirror-header-actions .veto-mirror-icon-btn{width:35px;height:35px}
+
+/* Real previews replace emoji when Telegram provides a static WEBP sticker. */
+#telegramMirror .veto-mirror-sticker-list button img{display:block;width:100%;height:100%;max-height:56px;object-fit:contain}
+#telegramMirror .veto-mirror-sticker-list button{height:55px;min-width:0;overflow:hidden;display:grid;place-items:center}
+#telegramMirror .veto-mirror-sticker-list p{grid-column:1/-1;font-size:11px;line-height:1.6;color:var(--ct-muted)}
+/* Voice equalization is explicitly optional and never pretends to morph identity. */
+#telegramMirror .veto-voice-tools{margin:4px 0 5px;max-width:100%;color:var(--ct-muted)}
+#telegramMirror .veto-voice-tools summary{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;
+  border:1px solid var(--ct-line);border-radius:11px;cursor:pointer;font-size:10px;font-weight:750;
+  background:var(--ct-chip);color:var(--ct-chip-text)}
+#telegramMirror .veto-voice-tools summary small{font-size:9px;color:var(--ct-muted);font-weight:500}
+#telegramMirror .veto-voice-tools[open]{padding:0 0 6px}
+#telegramMirror .veto-voice-tools-note{display:block;margin:2px 2px 5px;color:var(--ct-muted);font-size:10px;line-height:1.5}
+body.veto-chat-thread #telegramMirror .veto-voice-mode{padding:6px 0;overflow-x:auto}
