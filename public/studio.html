@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/chat-media.css?v=20261018-inline-media-v6" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
-  <link rel="stylesheet" href="/veto-global-ui.css?v=20261018-v1" />
+  <link rel="stylesheet" href="/veto-global-ui.css?v=20261019-messenger-first-v1" />
   <link rel="stylesheet" href="/telegram-stories.css?v=20261019-veto-ghost-v1" />
 </head>
 <body>
@@ -38,14 +38,14 @@
         <article class="veto-intro-step active" data-veto-intro-step="0">
           <div class="veto-intro-orbit"><img src="/veto-telegram-mark.svg" alt="VETO Telegram" /><i></i><b></b></div>
           <span class="kicker">ДОБРО ПОЖАЛОВАТЬ</span>
-          <h1>Что такое<br><em>VETO Telegram?</em></h1>
-          <p>Это дополнительный интерфейс для твоего Telegram: публикация Stories, анализ просмотров, защита переписки и автоматические уведомления — всё из одного места.</p>
+          <h1>Твои переписки.<br><em>Больше возможностей.</em></h1>
+          <p>Подключи свой Telegram и сразу переходи к чатам. Умный поиск, стикеры, голос, Stories и защита доступны тогда, когда нужны.</p>
           <div class="veto-first-choice-intro" aria-label="Выбор способа подключения переписок">
             <button type="button" data-veto-start-action="live-chats"><b>💬 Мои чаты</b><small>Войти по номеру / QR · без Business</small><em>→</em></button>
             <button type="button" data-veto-start-action="archive"><b>↶ Anti-Delete</b><small>Автоархив новых сообщений · Telegram Business</small><em>→</em></button>
           </div>
           <div class="veto-intro-features">
-            <span>Stories</span><span>Защита сообщений</span><span>Аналитика</span><span>Уведомления</span>
+            <span>Живые чаты</span><span>Приватный поиск</span><span>Voice</span><span>Stories</span>
           </div>
         </article>
 
@@ -90,8 +90,9 @@
       </div>
 
       <div class="veto-welcome-footer">
+        <button class="veto-welcome-details" id="vetoWelcomeExplore" type="button">Что ещё умеет VETO?</button>
         <div class="veto-intro-dots" aria-hidden="true"><i class="active"></i><i></i><i></i><i></i></div>
-        <button class="veto-welcome-primary" id="vetoWelcomeNext" type="button">Дальше <span>→</span></button>
+        <button class="veto-welcome-primary" id="vetoWelcomeNext" type="button">Перейти к чатам <span>→</span></button>
       </div>
     </div>
   </section>
@@ -129,6 +130,24 @@
     </div>
 
     <section class="screen active control-home" data-screen="home">
+      <section class="veto-command-home" aria-label="VETO Command Hub">
+        <div class="veto-command-home-top"><span>VETO / PRIVATE TELEGRAM</span><i aria-hidden="true"></i><strong>Твой контроль</strong></div>
+        <h1>Telegram.<br><em>На твоих условиях.</em></h1>
+        <p>Переписки — главное. Всё остальное на расстоянии одного касания.</p>
+        <div class="veto-command-home-actions">
+          <button type="button" class="veto-command-home-primary" id="vetoHomeChatsPrimary" data-open-screen="telegram"><span>▤</span><strong>Открыть мои чаты</strong><b>↗</b></button>
+          <button type="button" class="veto-command-home-connect" id="vetoHomeConnectPrimary"><span>⌁</span><strong>Подключение Telegram</strong><b>→</b></button>
+        </div>
+        <div class="veto-command-home-grid" aria-label="Инструменты VETO">
+          <button type="button" data-open-screen="privacy"><span>↶</span><strong>Privacy Vault</strong><small>Anti-Delete и сохранённые копии</small></button>
+          <button type="button" data-open-screen="viewers"><span>◉</span><strong>Stories Intel</strong><small>Просмотры и аудитория</small></button>
+          <button type="button" data-open-screen="voice"><span>♫</span><strong>Voice Lab</strong><small>Голосовые и эффекты</small></button>
+          <button type="button" data-open-screen="relay"><span>⇄</span><strong>Relay</strong><small>Дополнительное подключение</small></button>
+        </div>
+      </section>
+      <details class="veto-command-advanced" id="vetoCommandAdvanced">
+        <summary><span>Все инструменты и состояние системы</span><b>⌄</b></summary>
+        <div class="veto-command-advanced-body">
       <div class="control-heading">
         <div>
           <span class="kicker">VETO TELEGRAM</span>
@@ -315,6 +334,8 @@
           </div>
         </div>
       </section>
+        </div>
+      </details>
     </section>
 
     <section class="screen" data-screen="telegram" aria-label="Мои живые Telegram чаты">
@@ -323,8 +344,17 @@
           <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETO · CLOUD CHATS <span class="veto-mirror-readonly">ЧАТЫ + АРХИВ</span></div>
           <div class="veto-mirror-heading">
             <div class="veto-messenger-title"><button type="button" class="veto-messenger-exit" data-open-screen="home" aria-label="В главное меню VETO">← VETO</button><h1>Чаты</h1></div>
-            <div class="veto-mirror-header-actions"><button type="button" class="veto-mirror-icon-btn" id="telegramMirrorArchiveLink" aria-label="Открыть защиту и архив">↶</button><button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button></div>
+            <div class="veto-mirror-header-actions"><button type="button" class="veto-mirror-icon-btn veto-messenger-tools-toggle" id="vetoMessengerToolsToggle" aria-label="Инструменты VETO" aria-controls="vetoMessengerTools" aria-expanded="false" title="Инструменты VETO">✦</button><button type="button" class="veto-mirror-icon-btn" id="telegramMirrorArchiveLink" aria-label="Открыть защиту и архив">↶</button><button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button></div>
           </div>
+          <div class="veto-messenger-tools" id="vetoMessengerTools" hidden>
+            <div class="veto-messenger-tools-grid" role="group" aria-label="Инструменты и настройка">
+              <button type="button" data-veto-messenger-tool="intel"><span>✳</span><strong>Поиск по сообщениям</strong><small>Intelligence</small></button>
+              <button type="button" data-veto-messenger-tool="access"><span>⌁</span><strong>Подключения</strong><small>Мой Telegram</small></button>
+              <button type="button" data-open-screen="privacy"><span>↶</span><strong>Архив</strong><small>Privacy Vault</small></button>
+              <button type="button" data-open-screen="voice"><span>♫</span><strong>Голос</strong><small>Voice Lab</small></button>
+              <button type="button" data-open-screen="studio"><span>✦</span><strong>Стикеры</strong><small>Creator Studio</small></button>
+              <button type="button" data-open-screen="relay"><span>⇄</span><strong>Relay</strong><small>Подключение</small></button>
+            </div>
           <details class="veto-mirror-access-drawer" id="telegramMirrorAccessDrawer"><summary><span class="veto-mirror-access-drawer-icon">◈</span><strong>Подключение и защита переписок</strong><small id="telegramMirrorAccessDrawerStatus">Проверяем права</small><b>⌄</b></summary>
           <section class="veto-mirror-access-center" aria-label="Как подключить личный Telegram и защиту переписок">
             <div class="veto-mirror-access-head">
@@ -341,12 +371,13 @@
             <div class="veto-mirror-diagnostics-head"><span>◈</span><strong>Защита переписки</strong><small>Проверяю доступ для этого аккаунта…</small></div>
           </div>
           </details>
+          </div>
           <div class="veto-mirror-search-wrap">
             <span class="veto-mirror-search-symbol" aria-hidden="true">⌕</span>
-            <input id="telegramMirrorSearch" type="search" placeholder="Поиск по чатам" autocomplete="off" aria-label="Поиск по загруженным чатам" />
+            <input id="telegramMirrorSearch" type="search" placeholder="Найти чат или сообщение…" autocomplete="off" aria-label="Поиск по загруженным чатам" />
             <button id="telegramMirrorSearchClear" aria-label="Очистить поиск" type="button" hidden>×</button>
           </div>
-          <section class="veto-intelligence" aria-label="Интеллект-поиск по перепискам">
+          <section class="veto-intelligence" id="vetoMessengerIntelArea" aria-label="Интеллект-поиск по перепискам" hidden>
             <button type="button" id="vetoIntelSearchToggle" class="veto-intelligence-toggle" aria-controls="vetoIntelSearchPanel" aria-expanded="false">
               <span>✳</span><strong>Поиск в переписках</strong><small>Вопросы, темы, цитаты</small><b>⌄</b>
             </button>
@@ -380,15 +411,16 @@
           <div class="veto-mirror-filters" id="telegramMirrorFilters" role="group" aria-label="Фильтр по чатам">
             <button type="button" data-mirror-filter="all" class="active">Все <span id="telegramMirrorCount">—</span></button>
             <button type="button" data-mirror-filter="private">Личные</button>
-            <button type="button" data-mirror-filter="group">Группы</button>
-            <button type="button" data-mirror-filter="channel">Каналы</button>
-            <button type="button" data-mirror-filter="bot">Боты</button>
-            <button type="button" data-mirror-filter="saved">Избранное</button>
-            <button type="button" data-mirror-filter="pinned">Закреплённые</button>
-            <button type="button" data-mirror-filter="focus">Важное <span>⌑</span></button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="group">Группы</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="channel">Каналы</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="bot">Боты</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="saved">Избранное</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="pinned">Закреплённые</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="focus">Важное <span>⌑</span></button>
             <button type="button" data-mirror-filter="unread">Непрочитанные</button>
-            <button type="button" data-mirror-filter="archived">Архив</button>
-            <button type="button" data-mirror-filter="copies">Копии VETO <span>↶</span></button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="archived">Архив</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="copies">Копии VETO <span>↶</span></button>
+            <button type="button" class="veto-filters-more" id="vetoMessengerFiltersToggle" aria-expanded="false" aria-controls="telegramMirrorFilters">Фильтры <span>⌄</span></button>
           </div>
           <div id="telegramMirrorAccountProof" class="veto-mirror-account-proof" role="status" aria-live="polite"><span class="veto-mirror-live-pip"></span> Личный Telegram ещё не проверен · отображение чатов остановлено до подтверждения</div>
 
@@ -1593,11 +1625,11 @@
   </main>
 
   <nav class="bottom-nav" aria-label="Главная навигация">
-    <button class="nav-item active" data-nav="home" type="button" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4z"/></svg><small>Home</small></button>
-    <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5.5 5.7v5.5c0 4.2 2.5 7.7 6.5 9.8 4-2.1 6.5-5.6 6.5-9.8V5.7z"/><path d="M9.5 12.2 11.2 14l3.6-4"/></svg><small>Privacy</small></button>
-    <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 8v8M8 12h8"/></svg><small>Stories</small></button>
-    <button class="nav-item" data-nav="studio" type="button" aria-label="Студия"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/><path d="m18.5 15 .7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7z"/></svg><small>Studio</small></button>
-    <button class="nav-item" data-nav="viewers" type="button" aria-label="Интеллект"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V9M9 18V5M14 18v-7M19 18V7"/><path d="M3 18h18"/></svg><small>Intel</small></button>
+    <button class="nav-item active" data-nav="telegram" type="button" aria-label="Чаты"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5c0 4.8-3.9 8.5-8.7 8.5-1.3 0-2.7-.3-3.8-.9L3 20l1.2-4.2C3.4 14.5 3 13 3 11.5 3 6.8 6.9 3 11.5 3S20 6.8 20 11.5Z"/></svg><small>Чаты</small></button>
+    <button class="nav-item" data-nav="home" type="button" aria-label="Инструменты VETO"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.7 7.3L22 12l-7.3 2.7L12 22l-2.7-7.3L2 12l7.3-2.7z"/></svg><small>VETO</small></button>
+    <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg><small>Stories</small></button>
+    <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5.2c0 5 3.2 8.7 8 10.8 4.8-2.1 8-5.8 8-10.8V6z"/><path d="m9 12 2 2 4-4"/></svg><small>Vault</small></button>
+    <button class="nav-item" data-nav="studio" type="button" aria-label="Студия"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/></svg><small>Studio</small></button>
   </nav>
 
   <div class="action-dock" id="actionDock">
@@ -1615,11 +1647,11 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/app.js?v=20261017-veto-chat-choice-v1"></script>
+  <script src="/app.js?v=20261019-messenger-first-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
   <script src="/chat-theme.js?v=20261018-global-theme-v1"></script>
-  <script src="/telegram-chats.js?v=20261018-veto-fast-chat-v1"></script>
+  <script src="/telegram-chats.js?v=20261019-messenger-first-v1"></script>
   <script src="/telegram-stories.js?v=20261019-veto-ayugram-v2"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
