@@ -79,7 +79,7 @@ test('UI is explicit, memory-only, identity-isolated and cites original message 
  assert.match(ui,/void openThread\(chat\)/);
  assert.match(html,/id="vetoIntelSearchForm"/);
  assert.match(html,/id="vetoIntelSearchResults"/);
- assert.match(html,/удалённые копии VETO Vault пока не включены/i);
+ assert.match(html,/type="checkbox" id="vetoIntelIncludeVault"/);
  assert.match(css,/veto-intelligence-hit/);
  assert.doesNotMatch(ui,/indexedDB|localStorage|sessionStorage/);
 });
