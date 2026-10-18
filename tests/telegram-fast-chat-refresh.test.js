@@ -5,7 +5,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 
 test('chat list starts its independent archive + Business reads without serial blocking MTProto',()=>{
   const api=read('api/telegram-chats.js');
-  assert.match(api,/const historyPromise=archiveThreads\(userId\)/);
+  assert.match(api,/let historyPromise=fastLive\?Promise\.resolve\(\[\]\):archiveThreads\(userId\)/);
   assert.match(api,/const permissionStatePromise=action==='list'/);
   assert.match(api,/const linked=await getViewerSession\(userId\)/);
   assert.ok(api.indexOf('const linked=await getViewerSession(userId)')<
