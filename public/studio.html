@@ -10,6 +10,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261018-veto-fast-chat-v1" />
   <link rel="stylesheet" href="/chat-themes.css?v=20261017-chat-compose-v4" />
+  <link rel="stylesheet" href="/chat-media.css?v=20261018-inline-media-v6" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -395,6 +396,18 @@
           <button type="button" id="telegramThreadJumpLatest" class="veto-mirror-jump-latest"
             aria-label="Перейти к последним сообщениям" title="К последним сообщениям" hidden>↓ <span>Последние</span></button>
           <div id="telegramThreadNotice" class="veto-mirror-thread-notice" hidden></div>
+          <div class="veto-mirror-delivery-status" id="telegramThreadDeliveryStatus" role="status" aria-live="polite" aria-atomic="true" hidden>
+            <span id="telegramThreadDeliveryIcon" aria-hidden="true">◌</span>
+            <span id="telegramThreadDeliveryText">Ожидаю Telegram</span>
+          </div>
+          <dialog id="telegramThreadPhotoDialog" class="veto-mirror-photo-dialog" aria-label="Просмотр фотографии из переписки">
+            <div class="veto-mirror-photo-head">
+              <strong>Фото из переписки · только на этом устройстве</strong>
+              <button type="button" id="telegramThreadPhotoClose" aria-label="Закрыть просмотр фотографии">×</button>
+            </div>
+            <img id="telegramThreadPhotoFull" alt="Фото из собственной переписки"/>
+            <a id="telegramThreadPhotoSave" download="veto-chat-photo.jpg" rel="noopener" href="#">Сохранить фото ↓</a>
+          </dialog>
           <div class="veto-mirror-thread-bottom">
             <div id="telegramThreadReplyPreview" class="veto-mirror-reply-preview" hidden>
               <div><strong>↩ Ответ на сообщение</strong><small id="telegramThreadReplyText"></small></div>
