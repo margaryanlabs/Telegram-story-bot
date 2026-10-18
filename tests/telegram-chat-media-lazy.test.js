@@ -23,7 +23,9 @@ test('expanded attachment snapshots are RAM only, survive markup refresh, and ca
  assert.match(ui,/function cacheExpandedAttachment\(button,id,blob,archive\)/);
  assert.match(ui,/function restoreExpandedAttachments\(\)/);
  assert.match(ui,/state\.expandedAttachments\.set\(key,\{href,mime,size:blob\.size,archive,node:wrapper\}\)/);
- assert.match(ui,/if\(entry\?\.node\?\.parentNode===slot\)entry\.node\.remove\(\)/);
+ assert.match(ui,/if\(entry\?\.node\?\.parentNode===slot\)\{/);
+ assert.match(ui,/entry\.node\.remove\(\)/);
+ assert.match(ui,/playingBeforePaint\.push/);
  assert.match(ui,/restoreExpandedAttachments\(\)/);
  assert.match(ui,/state\.expandedAttachments\.clear\(\);state\.expandedBytes=0/);
  assert.match(ui,/function revokeMediaUrls\(\)/);
