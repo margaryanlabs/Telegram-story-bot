@@ -1491,7 +1491,7 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = { chats:'privacy', telegram:'privacy', voice:'home', archive:'publish', analytics:'viewers', relay:'home' };
+  const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home' };
   function switchScreen(name) {
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
@@ -1577,9 +1577,11 @@
     });
     const next = $('vetoWelcomeNext');
     if (next) {
-      next.innerHTML = vetoWelcomeStep < 3
-        ? 'Дальше <span>→</span>'
-        : (telegramAccountReady() ? 'Открыть VETO <span>→</span>' : 'Начать подключение <span>→</span>');
+      next.innerHTML = vetoWelcomeStep === 0
+        ? 'Перейти к чатам <span>→</span>'
+        : vetoWelcomeStep < 3
+          ? 'Подробнее <span>→</span>'
+          : 'Открыть чаты <span>→</span>';
     }
   }
 
@@ -1588,6 +1590,7 @@
     if (!welcome) return;
     if (restart) vetoWelcomeStep = 0;
     renderVetoWelcomeStep(vetoWelcomeStep);
+    $('vetoWelcomeExplore')?.toggleAttribute('hidden',vetoWelcomeStep!==0);
     welcome.hidden = false;
     document.documentElement.classList.add('veto-welcome-open');
     try { tg?.HapticFeedback?.impactOccurred?.('light'); } catch {}
@@ -2470,6 +2473,9 @@
   document.querySelectorAll('[data-open-screen]').forEach(button => {
     button.addEventListener('click', () => switchScreen(button.dataset.openScreen));
   });
+  $('vetoHomeConnectPrimary')?.addEventListener('click', () => {
+    void window.VetoTelegramOpenAccountConnection?.();
+  });
   $('homeActivityList')?.addEventListener('click', event => {
     const row = event.target.closest('[data-activity-screen]');
     if (!row) return;
@@ -2584,6 +2590,10 @@
   });
   $('privacyPromiseButton')?.addEventListener('click', privacyPromiseSheet);
   $('vetoWelcomeSkip')?.addEventListener('click', () => closeVetoWelcome());
+  $('vetoWelcomeExplore')?.addEventListener('click', () => {
+    renderVetoWelcomeStep(1);
+    if($('vetoWelcomeExplore'))$('vetoWelcomeExplore').hidden=true;
+  });
   // Let a new customer choose live Telegram vs independent Anti-Delete before
   // seeing the Stories-first activation wizard. No permissions are granted here.
   document.querySelectorAll('[data-veto-start-action]').forEach(button => {
@@ -2591,15 +2601,22 @@
       const destination = button.dataset.vetoStartAction === 'archive' ? 'privacy' : 'telegram';
       if (!$('vetoWelcome')?.hidden) closeVetoWelcome();
       switchScreen(destination);
+      if(destination==='telegram'&&!viewerState.session?.connected&&!state.accountConnection?.connected)
+        setTimeout(()=>{if(currentScreen==='telegram')connectionHelpSheet();},140);
     });
   });
   $('vetoWelcomeNext')?.addEventListener('click', () => {
     haptic();
-    if (vetoWelcomeStep < 3) {
+    if (vetoWelcomeStep > 0 && vetoWelcomeStep < 3) {
       renderVetoWelcomeStep(vetoWelcomeStep + 1);
       return;
     }
-    closeVetoWelcome({ openConnection: true });
+    closeVetoWelcome();
+    switchScreen('telegram');
+    if (viewerState.session?.connected !== true &&
+        state.accountConnection?.connected !== true) {
+      setTimeout(()=>{ if(currentScreen==='telegram')connectionHelpSheet(); },140);
+    }
   });
   $('viewerSetupButton').addEventListener('click', viewerSetupSheet);
   $('viewerStoryPicker').addEventListener('click', viewerStorySheet);
@@ -3222,7 +3239,9 @@
 
   setAvatar();
   render();
-  switchScreen(requestedScreen || 'home');
+  // The Messenger is the primary destination. The owner-safe welcome overlay
+  // remains visible until dismissed when this is a new installation.
+  switchScreen(requestedScreen || 'telegram');
 
   if (!requestedScreen && !vetoWelcomeSeen()) {
     setTimeout(() => openVetoWelcome({ restart:true }), 90);
