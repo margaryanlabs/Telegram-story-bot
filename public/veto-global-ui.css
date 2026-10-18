@@ -320,3 +320,15 @@ html[data-veto-theme="linen"] input{color:var(--text)}
 #telegramMirror .veto-intel-load-more[hidden]{display:none!important}
 #telegramMirror .veto-intel-load-more:focus-visible{outline:2px solid var(--ct-accent);
   outline-offset:2px}
+
+/* Exact-source jump: does not imply surrounding messages were fetched. */
+#telegramMirror .veto-mirror-bubble.veto-intel-exact-source .veto-mirror-bubble-inner{
+  outline:2px solid var(--ct-accent);outline-offset:2px;
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--ct-accent) 11%,transparent)}
+#telegramMirror .veto-intel-source-notice{
+  margin-bottom:7px;padding:7px 9px;border:1px solid var(--ct-line);
+  border-radius:9px;background:var(--ct-elev);color:var(--ct-muted);
+  font-size:10px;line-height:1.45}
+@media(prefers-reduced-motion:reduce){
+  #telegramMirror .veto-mirror-bubble.veto-intel-exact-source{scroll-behavior:auto}
+}

@@ -107,7 +107,7 @@ test('signed server uses opt-in Vault search, never silently indexes all chats o
  assert.match(ui,/JSON\.stringify\(\{query,includeVault,vaultPage\}\)/);
  assert.match(ui,/clearIntelSearch\(\{close:true\}\)/);
  assert.match(ui,/renderIntelTimeline\(\)/);
- assert.match(ui,/type:result.source==='veto-vault'\?'copy'/);
+ assert.match(ui,/type:archiveOnly\?'copy'/);
  assert.match(html,/type="checkbox" id="vetoIntelIncludeVault"/);
  assert.match(html,/id="vetoIntelTimelineSection"/);
  assert.doesNotMatch(ui,/indexedDB|localStorage|sessionStorage/);
