@@ -1491,7 +1491,7 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = { chats:'privacy', telegram:'privacy', voice:'home', archive:'publish', analytics:'viewers', relay:'home' };
+  const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home' };
   function switchScreen(name) {
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
@@ -1577,9 +1577,11 @@
     });
     const next = $('vetoWelcomeNext');
     if (next) {
-      next.innerHTML = vetoWelcomeStep < 3
-        ? 'Дальше <span>→</span>'
-        : (telegramAccountReady() ? 'Открыть VETO <span>→</span>' : 'Начать подключение <span>→</span>');
+      next.innerHTML = vetoWelcomeStep === 0
+        ? 'Перейти к чатам <span>→</span>'
+        : vetoWelcomeStep < 3
+          ? 'Подробнее <span>→</span>'
+          : 'Открыть чаты <span>→</span>';
     }
   }
 
@@ -1588,6 +1590,7 @@
     if (!welcome) return;
     if (restart) vetoWelcomeStep = 0;
     renderVetoWelcomeStep(vetoWelcomeStep);
+    $('vetoWelcomeExplore')?.toggleAttribute('hidden',vetoWelcomeStep!==0);
     welcome.hidden = false;
     document.documentElement.classList.add('veto-welcome-open');
     try { tg?.HapticFeedback?.impactOccurred?.('light'); } catch {}
@@ -2168,7 +2171,8 @@
 
   function viewerPhoneSheet() {
     openSheet(`
-      <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 1 ИЗ 2</span>
+      <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="active">1 · Номер</span><span>2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Введи номер Telegram</h2>
       <p>Укажи тот номер, на который зарегистрирован твой Telegram. Мы попросим Telegram отправить код подтверждения.</p>
       <div class="auth-form">
@@ -2188,7 +2192,8 @@
 
   function viewerCodeSheet(delivery, reused = false) {
     openSheet(`
-      <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 2 ИЗ 2</span>
+      <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Теперь введи код из Telegram</h2>
       <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте StoryLab. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
       <div class="auth-form">
@@ -2227,6 +2232,7 @@
   function viewerPasswordSheet(hint = '') {
     openSheet(`
       <span class="kicker">ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА TELEGRAM</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="done">✓ Код</span><span class="active">3 · 2FA</span></div>
       <h2>У тебя включён 2FA‑пароль</h2>
       <p>Пароль передаётся Telegram только для завершения входа и не сохраняется VETO Telegram.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
@@ -2371,6 +2377,7 @@
             await refreshViewerSync({ silent: true });
             await refresh();
             await refreshViewerAnalytics({ silent: true });
+            switchScreen('telegram');
             break;
           }
 
@@ -2469,6 +2476,9 @@
 
   document.querySelectorAll('[data-open-screen]').forEach(button => {
     button.addEventListener('click', () => switchScreen(button.dataset.openScreen));
+  });
+  $('vetoHomeConnectPrimary')?.addEventListener('click', () => {
+    void window.VetoTelegramOpenAccountConnection?.();
   });
   $('homeActivityList')?.addEventListener('click', event => {
     const row = event.target.closest('[data-activity-screen]');
@@ -2584,6 +2594,10 @@
   });
   $('privacyPromiseButton')?.addEventListener('click', privacyPromiseSheet);
   $('vetoWelcomeSkip')?.addEventListener('click', () => closeVetoWelcome());
+  $('vetoWelcomeExplore')?.addEventListener('click', () => {
+    renderVetoWelcomeStep(1);
+    if($('vetoWelcomeExplore'))$('vetoWelcomeExplore').hidden=true;
+  });
   // Let a new customer choose live Telegram vs independent Anti-Delete before
   // seeing the Stories-first activation wizard. No permissions are granted here.
   document.querySelectorAll('[data-veto-start-action]').forEach(button => {
@@ -2591,15 +2605,22 @@
       const destination = button.dataset.vetoStartAction === 'archive' ? 'privacy' : 'telegram';
       if (!$('vetoWelcome')?.hidden) closeVetoWelcome();
       switchScreen(destination);
+      if(destination==='telegram'&&!viewerState.session?.connected&&!state.accountConnection?.connected)
+        setTimeout(()=>{if(currentScreen==='telegram')void window.VetoTelegramOpenAccountConnection?.();},140);
     });
   });
   $('vetoWelcomeNext')?.addEventListener('click', () => {
     haptic();
-    if (vetoWelcomeStep < 3) {
+    if (vetoWelcomeStep > 0 && vetoWelcomeStep < 3) {
       renderVetoWelcomeStep(vetoWelcomeStep + 1);
       return;
     }
-    closeVetoWelcome({ openConnection: true });
+    closeVetoWelcome();
+    switchScreen('telegram');
+    if (viewerState.session?.connected !== true &&
+        state.accountConnection?.connected !== true) {
+      setTimeout(()=>{ if(currentScreen==='telegram')void window.VetoTelegramOpenAccountConnection?.(); },140);
+    }
   });
   $('viewerSetupButton').addEventListener('click', viewerSetupSheet);
   $('viewerStoryPicker').addEventListener('click', viewerStorySheet);
@@ -3017,6 +3038,7 @@
           // immediately appear otherwise for users without Telegram Business.
           await refresh();
           await refreshViewerAnalytics({ silent: true });
+          switchScreen('telegram');
         }
       });
       return;
@@ -3033,6 +3055,7 @@
         await refreshViewerSync({ silent: true });
         await refresh();
         await refreshViewerAnalytics({ silent: true });
+        switchScreen('telegram');
       });
       return;
     }
@@ -3222,7 +3245,9 @@
 
   setAvatar();
   render();
-  switchScreen(requestedScreen || 'home');
+  // The Messenger is the primary destination. The owner-safe welcome overlay
+  // remains visible until dismissed when this is a new installation.
+  switchScreen(requestedScreen || 'telegram');
 
   if (!requestedScreen && !vetoWelcomeSeen()) {
     setTimeout(() => openVetoWelcome({ restart:true }), 90);

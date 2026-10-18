@@ -82,7 +82,7 @@ test('Premium live inbox has first-class Home and Privacy entry points and dedic
   assert.ok(html.includes('veto-mirror-privacy-entrance'));
   assert.ok(html.includes('data-open-screen="telegram"'));
   assert.ok(app.includes("telegram: 'telegram'"));
-  assert.ok(app.includes("telegram:'privacy'"));
+  assert.ok(app.includes("telegram:'telegram'"));
 });
 
 test('Live Chat frontend does not duplicate Telegram session or cache private message bodies',()=>{
