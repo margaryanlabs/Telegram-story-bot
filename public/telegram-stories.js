@@ -7,7 +7,7 @@
     .replaceAll('"','&quot;').replaceAll("'",'&#39;');
   const state = {
     owner:String(tg?.initData || ''), contacts:[],premium:null,stealth:null,
-    loadedAt:0,busy:false,epoch:0,activePeer:-1,activeStory:-1,
+    loadedAt:0,busy:false,lastError:null,epoch:0,activePeer:-1,activeStory:-1,
     url:null,autoTimer:null,expiryTimer:null,mediaBusy:false,stealthUntil:0,partial:false,
   };
   const bar = document.createElement('section');
@@ -57,7 +57,7 @@
     if (current === state.owner) return false;
     closeViewer();
     state.owner = current;state.contacts = [];state.premium = null;
-    state.stealth = null;state.loadedAt = 0;state.partial = false;
+    state.stealth = null;state.loadedAt = 0;state.partial = false;state.lastError = null;
     renderBar();
     return true;
   }
@@ -98,6 +98,7 @@
     } finally { clearTimeout(timer); }
   }
   function statusText() {
+    if (state.lastError) return 'Не удалось обновить · нажми ↻';
     if (state.premium === false) return 'Для анонимности нужен Telegram Premium';
     if (state.stealth?.active) return 'Инкогнито активно';
     if (state.stealth && state.stealth.canActivate === false)
@@ -149,6 +150,7 @@
       '<span class="veto-story-ring is-mine"><span class="veto-story-face">＋</span></span>'+
       '<small>Моя</small></button>'+cards+extra+'</div>'+
       (state.busy?'<p class="veto-story-note">Загружаю доступные истории контактов…</p>':
+      state.lastError?'<p class="veto-story-note" role="status">'+safe(state.lastError)+'</p>':
       state.contacts.length===0 && state.loadedAt
         ?'<p class="veto-story-note">Сейчас нет доступных активных историй контактов.</p>'
         :state.partial?'<p class="veto-story-note">Показана доступная часть ленты Telegram.</p>':'');
@@ -166,12 +168,11 @@
       state.stealth = data.stealth || null;
       state.premium = data.stealth?.premium === true;
       state.loadedAt = Date.now();
-      state.partial = Boolean(data.partial);
+      state.partial = Boolean(data.partial);state.lastError = null;
     } catch(error) {
       if (epoch!==state.epoch)return;
       state.contacts = [];state.loadedAt = 0;
-      bar.dataset.error = '1';
-      bar.title = error.message;
+      state.lastError = String(error.message || 'Telegram не ответил.').slice(0,170);
     } finally {
       if (epoch===state.epoch) {state.busy=false;renderBar();}
     }
