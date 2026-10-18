@@ -284,14 +284,33 @@
     renderReplyPreview();renderAttachmentChip();
     renderSendComposer();
   }
+  // Delivery is uncertain after a network timeout: a deliberate retry for the
+  // exact SAME file, caption, reply and chat reuses the nonce. Telegram can then
+  // deduplicate instead of sending the media twice. Never retry automatically.
+  function richSendIntent(action,chatId,pending,caption,replyTo,stickerId){
+    return {
+      action,chatId,file:pending?.file||pending||null,
+      caption,replyTo,stickerId:action==='send_sticker'?String(stickerId):null,
+    };
+  }
+  function sameRichIntent(a,b){
+    return Boolean(a&&b&&a.action===b.action&&a.chatId===b.chatId&&
+      a.file===b.file&&a.caption===b.caption&&a.replyTo===b.replyTo&&
+      a.stickerId===b.stickerId);
+  }
   async function sendRichOutgoing(action,attachmentOrIndex=null){
     const chat=state.thread,field=$('telegramThreadCompose');
     if(!canSendInThread(chat)||state.sendInFlight)return;
-    const chatId=String(chat.id),ownerKey=state.ownerInitData,nonce=window.crypto?.randomUUID?.();
-    if(!nonce){toast('Нужен защищённый HTTPS');return;}
+    const chatId=String(chat.id),ownerKey=state.ownerInitData;
     const replyTo=state.replyTo?.id||null;
     const voiceSend=action==='send_media' && attachmentOrIndex?.kind==='voice';
     const pending=action==='send_media'?(attachmentOrIndex||state.pendingAttachment):null;
+    const caption=voiceSend?'':String(field?.value||'');
+    const intent=richSendIntent(action,chatId,pending,caption,replyTo,attachmentOrIndex);
+    const prior=state.lastRichFailure;
+    const nonce=sameRichIntent(prior?.intent,intent) ? prior.nonce : window.crypto?.randomUUID?.();
+    if(!nonce){toast('Нужен защищённый HTTPS');return;}
+    state.lastRichFailure=null;
     state.sendInFlight=true;
     renderSendComposer();
     try {
@@ -302,10 +321,10 @@
           throw new Error('Выбери файл не больше 2 МБ');
         const kind=pending?.kind||(['image/jpeg','image/png','image/webp'].includes(file.type)?'photo':'document');
         request={...request,kind,name:file.name,mime:file.type,base64:await readFileAsBase64(file),
-          caption:voiceSend?'':field?.value||'',duration:Number(pending?.duration||0)};
-      }else if(action==='send_sticker') request={...request,stickerId:String(attachmentOrIndex)};
+          caption,duration:Number(pending?.duration||0)};
+      }else if(action==='send_sticker')request={...request,stickerId:String(attachmentOrIndex)};
       else return;
-      // Never transmit a different chat's pending media after the user navigates away.
+      // A file read can outlive both the original thread and the Telegram owner.
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();throw new Error('Аккаунт изменился. Отправка отменена.');}
       if(String(state.thread?.id)!==chatId)throw new Error('Чат изменился. Отправка отменена.');
       await richRequest(action,request);
@@ -320,17 +339,23 @@
         $('telegramThreadStickerDrawer').hidden=true;
         renderReplyPreview();renderAttachmentChip();
         threadNotice('');
-        // A confirmed Telegram send is reloaded from its authoritative history.
+        // Confirm with authoritative history. No second send on any outcome.
         setTimeout(()=>{if(String(state.thread?.id)===chatId&&!state.threadLoading&&!state.sendInFlight)
           loadMessages({reset:true});},750);
       }
       try{tg?.HapticFeedback?.notificationOccurred('success')}catch{}
     }catch(error){
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
-      threadNotice(error.message);
-      toast(error.message);
-      // The same media may have reached Telegram on timeout. We never
-      // auto-resend; the user should check Telegram before another attempt.
+      if(error?.uncertain===true && String(state.thread?.id)===chatId)
+        state.lastRichFailure={intent,nonce};
+      if(String(state.thread?.id)===chatId){
+        const warning=error?.uncertain===true
+          ?' · Проверь Telegram. При повторе того же файла используем тот же ID без создания дубля.'
+          :'';
+        threadNotice(error.message+warning);
+        toast(error.message);
+      }
+      // Never automatically retry: server acknowledgement may be lost.
     }finally{
       if(ownerKey===state.ownerInitData){state.sendInFlight=false;renderSendComposer();}
     }
