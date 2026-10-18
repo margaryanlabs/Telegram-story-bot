@@ -58,6 +58,9 @@
   color:#e8effb;background:#25364b;
   letter-spacing:-.05em;
 }
+#telegramMirror .veto-story-contact-photo {
+  display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;
+}
 #telegramMirror .veto-story-ring.is-mine .veto-story-face {
   color:var(--tg-fg,#e8effb);
   background:rgba(155,182,216,.18);
