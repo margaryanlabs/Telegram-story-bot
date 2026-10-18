@@ -218,7 +218,7 @@ export default async function handler(req,res){
   try{body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};}
   catch{return respond(res,400,{error:'Некорректный запрос'});}
   const action=String(body.action||'list');
-  if(!['list','thread'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
+  if(!['list','thread','thread_archive'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
   const userId=String(owner.id);
   const page=Number(body.page??0);
   const chatId=String(body.chatId||'');
@@ -227,17 +227,31 @@ export default async function handler(req,res){
   if(action==='list'&&(!Number.isSafeInteger(page)||page<0||
     page>Math.ceil((MAX_DIALOGS-FIRST_PAGE_SIZE)/PAGE_SIZE)))
     return respond(res,400,{error:'Неверная страница списка чатов'});
-  if(action==='thread'&&(!validChatId(chatId)||!Number.isSafeInteger(cursor)||cursor<0
+  if((action==='thread'||action==='thread_archive')&&(!validChatId(chatId)||!Number.isSafeInteger(cursor)||cursor<0
     ||!Number.isSafeInteger(archiveOffset)||archiveOffset<0||archiveOffset>50000))
     return respond(res,400,{error:'Неверный идентификатор переписки'});
+  // Fast live mode deliberately defers storage reads until after the Telegram
+  // history is on screen. It is only allowed on the initial, owner-scoped page.
+  // If MTProto cannot locate the peer, fall back to archived copies below.
+  const fastLive=action==='thread'&&body.fastLive===true&&cursor===0&&
+    archiveOffset===0&&body.archiveOnly!==true&&body.liveExhausted!==true;
   try{
+    // Archive-only reads never connect to Telegram/MTProto. They are always
+    // owner-scoped by the signed Mini App user id, with no public media links.
+    if(action==='thread_archive'){
+      const saved=await archivedMessages(userId,chatId,archiveOffset);
+      return respond(res,200,{
+        messages:saved.messages,archiveHasMore:saved.hasMore,
+        archiveNextOffset:saved.nextOffset,source:'owner-private-archive',
+      });
+    }
     // Read owner-scoped archive and permission evidence concurrently. Network
     // failure must never be reported as 'Privacy disabled' without evidence.
     // Begin archive and Business diagnostics without delaying the first
     // MTProto connection. Archive retrieval and Telegram are independent
     // owner-scoped services, so the previous Promise.all created a needless
     // serial wait: STORE → Telegram → messages.
-    const historyPromise=archiveThreads(userId);
+    let historyPromise=fastLive?Promise.resolve([]):archiveThreads(userId);
     const permissionStatePromise=action==='list'
       ? Promise.all([getPrivacySettings(userId).catch(()=>null),
           getBusinessConnectionState(userId).catch(()=>null)])
@@ -298,7 +312,9 @@ export default async function handler(req,res){
     }
     // Archive and Telegram are independent reads. Do not make the first
     // message paint wait for an entire serialized archive round trip.
-    const storedPromise=archivedMessages(userId,chatId,archiveOffset);
+    let storedPromise=fastLive&&creds?.session
+      ?Promise.resolve({messages:[],hasMore:false,nextOffset:archiveOffset})
+      :archivedMessages(userId,chatId,archiveOffset);
     let liveMessages=[],liveMore=false,nextLive=null,chat=null,warning=null;
     // A preserved-only thread can be opened even after the chat is cleared
     // or removed from the owner's current Telegram dialog list.
@@ -337,6 +353,12 @@ export default async function handler(req,res){
         warning=errorMessage(error).error;
       }
     }
+    // A chat that vanished from Telegram must still open its saved owner copies.
+    // Falling back is mandatory even if the caller requested fast-live rendering.
+    if(!chat&&fastLive){
+      historyPromise=archiveThreads(userId);
+      storedPromise=archivedMessages(userId,chatId,archiveOffset);
+    }
     const [stored,history]=await Promise.all([storedPromise,historyPromise]);
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
     if(!chat && threadArchive)chat=archivedDialog(threadArchive);
@@ -346,8 +368,9 @@ export default async function handler(req,res){
       hasMore:Boolean(liveMore||stored.hasMore),liveHasMore:liveMore,
       archiveHasMore:stored.hasMore, archiveNextOffset:stored.nextOffset,
       nextOffsetId:nextLive,
-      archivedMessageCount:Number(threadArchive?.messageCount||0),
-      deletedMessageCount:Number(threadArchive?.deletedCount||0),
+      archivedMessageCount:fastLive&&chat?null:Number(threadArchive?.messageCount||0),
+      deletedMessageCount:fastLive&&chat?null:Number(threadArchive?.deletedCount||0),
+      archiveDeferred:Boolean(fastLive&&chat),
       warning,readOnly:!creds?.session || chat.archiveOnly===true || !SENDABLE_TYPES.includes(chat.type),
       canSend:Boolean(creds?.session && chat.archiveOnly!==true && SENDABLE_TYPES.includes(chat.type)),
       isCopy:chat.archiveOnly===true,
