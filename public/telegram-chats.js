@@ -389,7 +389,7 @@
   }
   function closeStickerDrawer(){
     state.stickerEpoch++;
-    if($('telegramThreadStickerDrawer'))$('telegramThreadStickerDrawer').hidden=true;
+    closeStickerDrawer();
   }
   function stickerShownItems(){
     const source=state.stickerTab==='recent'?state.stickers:state.stickerPack?.stickers||[];
@@ -434,7 +434,9 @@
       const chatId=String(state.thread.id),ownerKey=state.ownerInitData,epoch=state.stickerEpoch;
       // No auto-fetch of large animated packs. Only the next visible 8 tiles.
       void fetchStickerPreviews(chatId,ownerKey,epoch,
-        shown.filter(x=>!state.stickerPreviewUrls.has(String(x.id))).slice(0,8),pack?.set?.id||null);
+        (state.stickerVisible>16?shown.slice(state.stickerVisible-8,state.stickerVisible)
+          :shown.slice(0,8)).filter(x=>!state.stickerPreviewUrls.has(String(x.id))),
+        pack?.set?.id||null);
     }
   }
   // Static WEBP previews only; other originals can still be sent by Telegram.
@@ -1160,7 +1162,9 @@
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
     state.sendInFlight=false;state.lastSendFailure=null;state.lastRichFailure=null;
-    state.drafts.clear();state.pendingAttachment=null;state.replyTo=null;state.stickers=[];
+    state.drafts.clear();state.pendingAttachment=null;state.replyTo=null;
+    state.stickers=[];state.stickerSets=[];state.stickerPack=null;
+    state.stickerTab='recent';state.stickerQuery='';state.stickerVisible=16;state.stickerEpoch++;
     state.filter='all';state.search='';state.threadSearch='';state.threadSearchIndex=0;
     if($('telegramThreadFind'))$('telegramThreadFind').hidden=true;
     if($('telegramThreadFindInput'))$('telegramThreadFindInput').value='';
@@ -1867,12 +1871,29 @@
     state.replyTo=null;renderReplyPreview();
   });
   $('telegramThreadStickersButton')?.addEventListener('click',openStickerDrawer);
-  $('telegramThreadStickersClose')?.addEventListener('click',()=>{
-    $('telegramThreadStickerDrawer').hidden=true;
+  $('telegramThreadStickersClose')?.addEventListener('click',closeStickerDrawer);
+  $('telegramThreadStickerDrawer')?.addEventListener('click',event=>{
+    const tab=event.target.closest('[data-sticker-tab]');
+    if(tab){void selectStickerTab(tab.dataset.stickerTab);return;}
+    const open=event.target.closest('[data-open-sticker-pack]');
+    if(open){void openStickerPack(open.dataset.openStickerPack);return;}
+    const sticker=event.target.closest('[data-send-sticker]');
+    if(sticker)void sendRichOutgoing('send_sticker',{
+      id:String(sticker.dataset.sendSticker),
+      ...(sticker.dataset.stickerSetId?{setId:String(sticker.dataset.stickerSetId)}:{}),
+    });
   });
-  $('telegramThreadStickerList')?.addEventListener('click',event=>{
-    const btn=event.target.closest('[data-send-sticker]');
-    if(btn)sendRichOutgoing('send_sticker',String(btn.dataset.sendSticker));
+  $('vetoStickersBackPack')?.addEventListener('click',()=>{
+    state.stickerEpoch++;state.stickerPack=null;state.stickerVisible=16;
+    state.stickerQuery='';if($('vetoStickersSearch'))$('vetoStickersSearch').value='';
+    renderStickerDrawer();
+  });
+  $('vetoStickersSearch')?.addEventListener('input',event=>{
+    state.stickerEpoch++;state.stickerQuery=String(event.target.value||'').slice(0,45);
+    state.stickerVisible=16;renderStickerDrawer();
+  });
+  $('vetoStickersMore')?.addEventListener('click',()=>{
+    state.stickerEpoch++;state.stickerVisible+=8;renderStickerDrawer();
   });
   $('telegramThreadRecordVoice')?.addEventListener('click',toggleVoiceRecording);
   $('telegramThreadVoiceModes')?.addEventListener('click',event=>{
