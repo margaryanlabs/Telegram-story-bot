@@ -50,6 +50,7 @@ function makeArchiveHarness(requestImpl){
    resetOwner:()=>false,visibleMessageAnchor:()=>null,
    renderMessages:()=>{env.renders++},rememberHotThread:()=>{},
    threadNotice:message=>{env.notice=message},renders:0,notice:''};
+ env.env=env;
  runInNewContext(`const {state,request,resetOwner,visibleMessageAnchor,renderMessages,rememberHotThread,threadNotice}=env;\n`+
    ui.slice(start,end)+'\nthis.mergeDeferredArchive=mergeDeferredArchive;',env);
  return env;
