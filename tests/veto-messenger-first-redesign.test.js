@@ -48,7 +48,7 @@ test('Inbox has signed-user connect CTA, bounded tools, filters and source-backe
    assert.ok(html.includes('id="'+id+'"'),id);
  }
  assert.match(messenger,/const ready=state.connectionProof\?\.verified===true/);
- assert.match(messenger,/vetoMessengerConnectCta'\)\)\$('vetoMessengerConnectCta'\)\.hidden=ready/);
+ assert.ok(messenger.includes("if($('vetoMessengerConnectCta'))$('vetoMessengerConnectCta').hidden=ready;"));
  assert.match(messenger,/data-veto-messenger-tool/);
  assert.match(messenger,/closeVetoMessengerTools\(\)/);
  assert.match(messenger,/clearIntelSearch\(\{close:true\}\)/);
