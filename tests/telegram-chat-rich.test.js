@@ -117,7 +117,7 @@ test('UI requires explicit user sends, uses client mic permission, no fake in-br
  assert.match(ui,/openLiveAttachment\(/);
  assert.match(api,/verifyTelegramClientOwner\(client,userId\)/);
  assert.match(api,/safeReplyId\(body.replyTo\)/);
- assert.match(api,/\['send_message','send_media','send_sticker','recent_stickers'\]/);
+ assert.match(api,/\['send_message','send_media','send_sticker','recent_stickers','sticker_sets','sticker_set'\]/);
  assert.match(media,/verifyTelegramClientOwner\(client,userId\)/);
  assert.match(media,/Content-Disposition/);
  assert.doesNotMatch(html,/id="telegramThreadCall"/);

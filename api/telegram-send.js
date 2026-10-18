@@ -6,6 +6,7 @@ import { withBackupClient } from '../lib/telegram-history-backup.js';
 import { verifyTelegramClientOwner,telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 import { cleanOutgoingMessage,validateSendNonce,sendOwnerMessage,safeReplyId } from '../lib/telegram-chat-compose.js';
 import { recentStickers,recentStickersPublic,sendRichTelegramMessage,decodeMediaInput } from '../lib/telegram-chat-rich.js';
+import { getInstalledStickerSets,publicInstalledSets,getInstalledStickerPack,publicStickerDocuments } from '../lib/telegram-sticker-catalog.js';
 
 const BOT = String(process.env.TELEGRAM_BOT_TOKEN || '');
 const respond=(res,status,data)=>res.status(status).json({ok:status<400,...data});
@@ -44,13 +45,13 @@ export default async function handler(req,res) {
   try { body=typeof req.body==='string' ? JSON.parse(req.body) : req.body||{}; }
   catch { return respond(res,400,{error:'Неверный запрос'}); }
   const action=String(body.action||'');
-  if(!['send_message','send_media','send_sticker','recent_stickers'].includes(action))
+  if(!['send_message','send_media','send_sticker','recent_stickers','sticker_sets','sticker_set'].includes(action))
     return respond(res,400,{error:'Неизвестное действие'});
   let message='',nonce='',replyTo=null;
   try {
     if(action==='send_message')message=cleanOutgoingMessage(body.message);
     if(action==='send_media')decodeMediaInput(body); // reject unsafe or oversized file before opening MTProto
-    if(action!=='recent_stickers')nonce=validateSendNonce(body.nonce);
+    if(['send_message','send_media','send_sticker'].includes(action))nonce=validateSendNonce(body.nonce);
     replyTo=safeReplyId(body.replyTo);
   } catch(error) { return respond(res,error.status||400,{error:error.message}); }
   const chatId=String(body.chatId||'');
@@ -71,6 +72,12 @@ export default async function handler(req,res) {
       // merely to show the user's own 24 recent sticker choices.
       if(action==='recent_stickers')
         return {stickers:recentStickersPublic(await recentStickers(client))};
+      if(action==='sticker_sets')
+        return {sets:publicInstalledSets(await getInstalledStickerSets(client))};
+      if(action==='sticker_set'){
+        const pack=await getInstalledStickerPack(client,body.setId);
+        return {set:pack.set,stickers:publicStickerDocuments(pack.documents)};
+      }
       // Re-check target as an existing user-owned dialog, not a client-provided
       // access hash. Do not allow sends into archive-only or arbitrary peers.
       // Start with 60 peers; search further only for older conversations.
@@ -83,9 +90,10 @@ export default async function handler(req,res) {
         ...body,ownerId:userId,chatId,nonce,replyTo,action,
       });
     });
-    if(action==='recent_stickers')return respond(res,200,{
-      stickers:result.stickers,source:'owner-mtproto',notCached:true,
-    });
+    if(['recent_stickers','sticker_sets','sticker_set'].includes(action))
+      return respond(res,200,{
+        ...result,source:'owner-mtproto',notCached:true,
+      });
     return respond(res,200,{
       sent:result.sent,chatId:result.chatId,messageId:result.messageId,
       source:result.source||'owner-mtproto',kind:result.kind||'text',delivery:result.delivery,

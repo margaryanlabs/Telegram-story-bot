@@ -421,9 +421,19 @@
               <span id="telegramThreadAttachmentLabel"></span>
               <button type="button" id="telegramThreadAttachmentClear" aria-label="Убрать вложение">×</button>
             </div>
-            <div class="veto-mirror-sticker-drawer" id="telegramThreadStickerDrawer" hidden role="group" aria-label="Недавние стикеры">
-              <div><strong>Недавние стикеры Telegram</strong><button type="button" id="telegramThreadStickersClose" aria-label="Закрыть стикеры">×</button></div>
-              <div id="telegramThreadStickerList" class="veto-mirror-sticker-list">Загружаю…</div>
+            <div class="veto-mirror-sticker-drawer" id="telegramThreadStickerDrawer" hidden role="group" aria-label="Стикеры Telegram">
+              <div class="veto-stickers-head"><strong id="vetoStickerDrawerTitle">Стикеры Telegram</strong><button type="button" id="telegramThreadStickersClose" aria-label="Закрыть стикеры">×</button></div>
+              <div class="veto-stickers-tabs" role="group" aria-label="Раздел стикеров">
+                <button type="button" data-sticker-tab="recent" aria-pressed="true">Недавние</button>
+                <button type="button" data-sticker-tab="packs" aria-pressed="false">Мои наборы</button>
+              </div>
+              <div class="veto-stickers-find">
+                <button type="button" id="vetoStickersBackPack" hidden aria-label="Назад к наборам">←</button>
+                <input type="search" id="vetoStickersSearch" maxlength="45" autocomplete="off" placeholder="Найти набор или эмодзи" aria-label="Поиск стикеров"/>
+              </div>
+              <div id="telegramThreadStickerList" class="veto-mirror-sticker-list" aria-live="polite">Загружаю…</div>
+              <button type="button" id="vetoStickersMore" class="veto-stickers-more" hidden>Показать ещё ↓</button>
+              <small class="veto-stickers-footnote">Личные наборы Telegram. Анимация и видео пока показываются эмодзи, отправляются оригинальные стикеры.</small>
             </div>
             <button type="button" id="telegramThreadOlder" class="veto-mirror-older" hidden>↑ Загрузить старые сообщения</button>
             <details class="veto-voice-tools" id="vetoVoiceTools">

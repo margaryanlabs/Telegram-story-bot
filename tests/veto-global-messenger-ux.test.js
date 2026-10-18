@@ -35,7 +35,7 @@ test('sticker previews fetch only signed owner recent static WEBP and revoke loc
  assert.match(api,/validateTelegramMiniApp/);
  assert.match(api,/sameTelegramAccount/);
  assert.match(api,/verifyTelegramClientOwner/);
- assert.match(api,/recentStickers\(client\)/);
+ assert.match(api,/resolveOwnerSticker\(client,stickerId,body.setId,\{recentStickers\}\)/);
  assert.match(api,/image\/webp/);
  assert.match(api,/WEBP/);
  assert.match(api,/MAX_STICKER_BYTES=160\*1024/);
@@ -43,5 +43,5 @@ test('sticker previews fetch only signed owner recent static WEBP and revoke loc
  assert.match(ui,/fetchStickerPreviews\(chatId,ownerKey/);
  assert.match(ui,/slice\(0,8\)/);
  assert.match(ui,/state\.stickerPreviewUrls\.clear\(\)/);
- assert.match(ui,/fetch\('\/api\/telegram-sticker-preview'/);
+ assert.match(ui,/fetch\('\/api\/telegram-sticker-previews'/);
 });
