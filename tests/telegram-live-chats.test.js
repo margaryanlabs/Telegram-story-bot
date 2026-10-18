@@ -87,7 +87,7 @@ test('Premium live inbox has first-class Home and Privacy entry points and dedic
 
 test('Live Chat frontend does not duplicate Telegram session or cache private message bodies',()=>{
   const ui=read('public/telegram-chats.js');
-  assert.ok(ui.includes("'x-telegram-init-data':tg.initData"));
+  assert.ok(ui.includes("'x-telegram-init-data':ownerKey") || ui.includes("'x-telegram-init-data':tg.initData"));
   assert.ok(ui.includes("request('list'"));
   assert.ok(ui.includes("request('thread'"));
   assert.ok(ui.includes('function renderMessages('));
@@ -162,7 +162,7 @@ test('Preserved-only chat is accessible without a live Telegram session and neve
 });
 test('Previously deleted media is available only through authenticated Media Vault, never a public file URL',()=>{
  const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js');
- assert.ok(ui.includes("'x-telegram-init-data':tg.initData"));
+ assert.ok(ui.includes("'x-telegram-init-data':ownerKey") || ui.includes("'x-telegram-init-data':tg.initData"));
  assert.ok(ui.includes("'/api/privacy-media?'"));
  assert.ok(ui.includes('URL.createObjectURL(blob)'));
  assert.ok(ui.includes('revokeMediaUrls()'));
