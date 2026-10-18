@@ -6,6 +6,7 @@ import {openJson} from '../lib/viewer-sync-crypto.js';
 import {withBackupClient} from '../lib/telegram-history-backup.js';
 import {verifyTelegramClientOwner,telegramOwnerError} from '../lib/telegram-owner-runtime.js';
 import {recentStickers} from '../lib/telegram-chat-rich.js';
+import {resolveOwnerSticker} from '../lib/telegram-sticker-catalog.js';
 
 // Only the currently authenticated owner's actual recent static WEBP stickers.
 // Animated .tgs and video stickers are intentionally NOT served as images.
@@ -34,8 +35,7 @@ export default async function handler(req,res){
     if(!decrypted?.session)return res.status(409).json({error:'Сессия недоступна'});
     const data=await withBackupClient(decrypted.session,async client=>{
       await verifyTelegramClientOwner(client,userId);
-      const docs=await recentStickers(client);
-      const doc=docs.find(x=>String(x.id)===stickerId);
+      const doc=await resolveOwnerSticker(client,stickerId,body.setId,{recentStickers});
       if(!doc||String(doc.mimeType||'').toLowerCase()!=='image/webp'||
          !Number.isFinite(Number(doc.size))||Number(doc.size)<=0||
          Number(doc.size)>MAX_STICKER_BYTES)return null;
