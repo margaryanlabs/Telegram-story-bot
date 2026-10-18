@@ -8,7 +8,7 @@
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
-    previewActive:0,previewSeen:new Set(),expandedAttachments:new Map(),expandedBytes:0,
+    previewActive:0,previewEpoch:0,previewSeen:new Set(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
@@ -883,7 +883,7 @@
       const badge=el.querySelector('small');
       if(badge)badge.textContent='Загружаю фотографию…';
       const ownerChatId=String(state.thread.id),ownerKey=state.ownerInitData;
-      const generation=state.threadGeneration;
+      const generation=state.threadGeneration,previewEpoch=state.previewEpoch;
       const request=msg.saved&&msg.mediaAvailable
         ?(async()=>{
             const res=await fetch('/api/privacy-media?'+
@@ -924,6 +924,7 @@
           if(label)label.textContent='Не удалось загрузить · нажми повторно';
         }
       }).finally(()=>{
+        if(previewEpoch!==state.previewEpoch)return;
         state.previewActive=Math.max(0,state.previewActive-1);
         if(ownerKey===state.ownerInitData&&generation===state.threadGeneration)
           loadInlinePreviews();
@@ -1013,6 +1014,7 @@
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
     state.mediaPreviewUrls.clear();state.previewSeen.clear();
+    state.previewEpoch++;state.previewActive=0;
     state.expandedAttachments.clear();state.expandedBytes=0;
   }
   function expandedFileButton(id,archive){
@@ -1746,6 +1748,14 @@
   $('telegramThreadMessages')?.addEventListener('click',event=>{
     const photo=event.target.closest('[data-mirror-photo]');
     if(photo){openPhotoViewer(photo.dataset.mirrorPhoto);return;}
+    const retry=event.target.closest('[data-mirror-preview]');
+    if(retry){
+      const id=Number(retry.dataset.mirrorPreview);
+      if(Number.isSafeInteger(id)&&id>0){
+        state.previewSeen.delete(id);loadInlinePreviews({requestedId:id});
+      }
+      return;
+    }
     const button=event.target.closest('[data-mirror-file]');
     if(button)openArchivedFile(button);
     const liveFile=event.target.closest('[data-mirror-live-file]');
@@ -1803,6 +1813,7 @@
     showLatestShortcut.frame=requestAnimationFrame(()=>{
       showLatestShortcut.frame=0;
       showLatestShortcut();
+      loadInlinePreviews();
     });
   },{passive:true});
   $('telegramThreadJumpLatest')?.addEventListener('click',()=>{
