@@ -8,7 +8,7 @@
   const state = {
     owner:String(tg?.initData || ''), contacts:[],premium:null,stealth:null,
     loadedAt:0,busy:false,epoch:0,activePeer:-1,activeStory:-1,
-    url:null,autoTimer:null,mediaBusy:false,stealthUntil:0,partial:false,
+    url:null,autoTimer:null,expiryTimer:null,mediaBusy:false,stealthUntil:0,partial:false,
   };
   const bar = document.createElement('section');
   bar.className = 'veto-story-strip';
@@ -37,7 +37,8 @@
   }
   function hideMedia() {
     if (state.autoTimer) clearTimeout(state.autoTimer);
-    state.autoTimer = null;
+    if (state.expiryTimer) clearTimeout(state.expiryTimer);
+    state.autoTimer = null;state.expiryTimer = null;
     viewer.querySelectorAll('video').forEach(video => { try { video.pause(); } catch {} });
     if (state.url) URL.revokeObjectURL(state.url);
     state.url = null;
@@ -108,14 +109,15 @@
       bar.innerHTML='<span class="veto-story-status">Подключи Telegram, чтобы увидеть истории</span>';
       return;
     }
-    const cards = state.contacts.slice(0,32).map((person,index)=>
+    const expanded = bar.classList.contains('expanded');
+    const cards = (expanded?state.contacts:state.contacts.slice(0,32)).map((person,index)=>
       '<button type="button" class="veto-story-person" data-veto-story-person="'+index+'" '+
       'aria-label="Истории: '+safe(person.name)+'">'+
       '<span class="veto-story-ring"><span class="veto-story-face">'+safe(initials(person.name))+
       '</span></span><small>'+safe(person.name.split(' ')[0])+'</small></button>').join('');
     const extra = state.contacts.length>32
-      ? '<button type="button" class="veto-story-more" data-veto-story-expand="1">Ещё +'+
-        (state.contacts.length-32)+'</button>' : '';
+      ? '<button type="button" class="veto-story-more" data-veto-story-expand="1">'+
+        (expanded?'Свернуть':'Ещё +'+(state.contacts.length-32))+'</button>' : '';
     bar.innerHTML =
       '<div class="veto-story-strip-heading"><strong>Истории</strong>'+
       '<span class="veto-story-status">'+
@@ -204,6 +206,7 @@
       const data = await call('media',{userId:person.userId,storyId:story.id},true);
       if (epoch!==state.epoch || owner!==state.owner || viewer.hidden) return;
       state.stealthUntil = data.stealthUntil;
+      state.expiryTimer = setTimeout(()=>closeViewer(),Math.max(1,(data.stealthUntil*1000-Date.now()-20000)));
       state.url = URL.createObjectURL(data.blob);
       const area = $('vetoStoryMedia');
       if (!area) return;
@@ -246,7 +249,7 @@
     }
     if (button.hasAttribute('data-veto-story-refresh')) {void loadStories(true);return;}
     if (button.hasAttribute('data-veto-story-expand')) {
-      bar.classList.toggle('expanded');return;
+      bar.classList.toggle('expanded');renderBar();return;
     }
     if (button.hasAttribute('data-veto-story-person')) {
       const index=Number(button.dataset.vetoStoryPerson);
