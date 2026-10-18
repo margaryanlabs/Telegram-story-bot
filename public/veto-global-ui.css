@@ -107,3 +107,16 @@ body.veto-chat-thread #telegramMirror .veto-voice-mode button{white-space:nowrap
  body.veto-chat-thread #telegramMirror .veto-mirror-thread-avatar{width:34px;height:34px;min-width:34px}
  body.veto-chat-thread #vetoGlobalThemeToggle{width:31px;height:31px;min-width:31px;border-radius:10px;font-size:17px}
 }
+
+/* The messenger owns the viewport. Main navigation is reachable from ← VETO. */
+body.veto-chat-active .bottom-nav{display:none!important}
+body.veto-chat-active .app-shell{padding-bottom:0!important}
+body.veto-chat-active #telegramMirror{min-height:100dvh}
+body.veto-chat-active .veto-messenger-title{display:flex;align-items:center;gap:11px}
+body.veto-chat-active .veto-messenger-title h1{margin:0;font-size:24px}
+body.veto-chat-active .veto-messenger-exit{border:1px solid var(--ct-line);
+  background:var(--ct-chip);color:var(--ct-chip-text);border-radius:12px;
+  min-height:37px;padding:6px 9px;font-size:11px;font-weight:850;white-space:nowrap}
+body.veto-chat-active #telegramMirror .veto-mirror-heading{padding:10px 12px}
+body.veto-chat-active #telegramMirror .veto-mirror-heading .veto-mirror-header-actions{gap:5px}
+body.veto-chat-active #telegramMirror .veto-mirror-header-actions .veto-mirror-icon-btn{width:35px;height:35px}
