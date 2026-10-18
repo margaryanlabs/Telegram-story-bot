@@ -1535,7 +1535,12 @@
       if(valid)link.href=native;
       else link.removeAttribute('href');
     }
-    $('telegramThreadMessages').innerHTML=empty('Открываю переписку','История загружается из Telegram');
+    // Immediate owner-verified inbox snapshot; not misrepresented as history.
+    const teaser=state.connectionProof?.verified&&chat.preview
+      ?'<div class="veto-mirror-first-preview" role="status"><span>ПОСЛЕДНЕЕ ИЗ СПИСКА</span><p>'+
+        safe(String(chat.preview).slice(0,200))+'</p><small>Открываю историю из Telegram…</small></div>'
+      :empty('Открываю переписку','Получаю последние сообщения из Telegram…');
+    $('telegramThreadMessages').innerHTML=teaser;
     if($('telegramThreadJumpLatest'))$('telegramThreadJumpLatest').hidden=true;
     renderSendComposer();
     threadNotice('');
@@ -1581,7 +1586,7 @@
     state.threadLoading=true;
     if(reset&&!rememberedAnchor)state.messages=[];
     $('telegramThreadOlder').hidden=true;
-    if(reset)renderMessages();
+    if(reset&&state.messages.length)renderMessages();
     try{
       const data=await request('thread',{
         chatId,offsetId:reset?0:state.threadOffset,
