@@ -16,7 +16,7 @@
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
     threadSearch:'',threadSearchIndex:0,deliveryStage:null,
-    intelResults:[],intelQuery:'',intelEpoch:0,intelBusy:false,
+    intelResults:[],intelTimeline:[],intelQuery:'',intelEpoch:0,intelBusy:false,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -798,11 +798,14 @@
   // message text outside this tab, and never represent keyword evidence as LLM.
   function clearIntelSearch({close=false}={}){
     state.intelEpoch++;
-    state.intelBusy=false;state.intelResults=[];state.intelQuery='';
+    state.intelBusy=false;state.intelResults=[];state.intelTimeline=[];state.intelQuery='';
+    if($('vetoIntelIncludeVault'))$('vetoIntelIncludeVault').checked=false;
+    if($('vetoIntelTimeline'))$('vetoIntelTimeline').replaceChildren();
+    if($('vetoIntelTimelineSection'))$('vetoIntelTimelineSection').hidden=true;
     if($('vetoIntelSearchInput'))$('vetoIntelSearchInput').value='';
     if($('vetoIntelSearchResults'))$('vetoIntelSearchResults').replaceChildren();
     if($('vetoIntelSearchStatus'))$('vetoIntelSearchStatus').textContent=
-      'Облачный поиск Telegram. Удалённые копии VETO Vault пока не индексируются.';
+      'Облачный Telegram. Сохранённые копии VETO Vault доступны только при отдельном выборе.';
     if($('vetoIntelSearchSubmit'))$('vetoIntelSearchSubmit').disabled=false;
     if(close){
       if($('vetoIntelSearchPanel'))$('vetoIntelSearchPanel').hidden=true;
@@ -820,9 +823,37 @@
         '<div class="veto-intelligence-hit-head"><strong>'+safe(result.chatTitle||'Telegram чат')+'</strong>'+
         '<time>'+safe(validDate)+'</time></div>'+
         '<p>'+safe(result.snippet||'')+'</p>'+
-        '<div class="veto-intelligence-hit-foot"><small>Telegram · сообщение #'+safe(result.messageId)+
-        ' · '+(result.out?'Исходящее':'Входящее')+'</small>'+
+        '<div class="veto-intelligence-hit-foot"><small>'+
+        (result.source==='veto-vault'?'↶ Сохранённая копия VETO':result.saved?'✓ Telegram + копия VETO':'Telegram')+
+        (result.deleted?' · удалено после сохранения':'')+
+        ' · #'+safe(result.messageId)+' · '+(result.out?'Исходящее':'Входящее')+'</small>'+
         '<button type="button" data-veto-intel-open="'+index+'">Открыть чат ↗</button></div>'+
+        '</article>';
+    }).join('');
+  }
+  function renderIntelTimeline(){
+    const section=$('vetoIntelTimelineSection'),list=$('vetoIntelTimeline');
+    if(!section||!list)return;
+    const entries=state.intelTimeline.filter(item=>
+      state.intelResults.some(result=>
+        String(result.chatId)===String(item.chatId)&&
+        String(result.messageId)===String(item.messageId)));
+    section.hidden=!entries.length;
+    list.innerHTML=entries.map(item=>{
+      const index=state.intelResults.findIndex(result=>
+        String(result.chatId)===String(item.chatId)&&
+        String(result.messageId)===String(item.messageId));
+      const date=new Date(item.date);
+      const stamp=Number.isNaN(date.getTime())?'Без даты':
+        date.toLocaleDateString('ru',{day:'numeric',month:'short',year:'numeric'});
+      return '<article class="veto-intel-event">'+
+        '<div class="veto-intel-event-date"><time>'+safe(stamp)+'</time><span>ВОЗМОЖНОЕ ОБЕЩАНИЕ</span></div>'+
+        '<strong>'+safe(item.sender||item.chatTitle||'Собеседник неизвестен')+'</strong>'+
+        '<blockquote>'+safe(item.snippet||'')+'</blockquote>'+
+        '<div><small>'+safe(item.chatTitle||'Telegram чат')+
+        ' · сообщение #'+safe(item.messageId)+
+        (item.deleted?' · сохранено до удаления':'')+'</small>'+
+        '<button type="button" data-veto-intel-open="'+index+'">Открыть источник ↗</button></div>'+
         '</article>';
     }).join('');
   }
@@ -838,26 +869,38 @@
       status.textContent='Подключи и подтверди свой Telegram для поиска.';return;
     }
     const ownerKey=state.ownerInitData,epoch=++state.intelEpoch;
+    const includeVault=$('vetoIntelIncludeVault')?.checked===true;
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
-    state.intelBusy=true;state.intelQuery=query;state.intelResults=[];
+    state.intelBusy=true;state.intelQuery=query;state.intelResults=[];state.intelTimeline=[];
+    if($('vetoIntelTimeline'))$('vetoIntelTimeline').replaceChildren();
+    if($('vetoIntelTimelineSection'))$('vetoIntelTimelineSection').hidden=true;
     button.disabled=true;status.textContent='Ищу подтверждённые сообщения в твоём Telegram…';
     $('vetoIntelSearchResults')?.replaceChildren();
     try{
       const response=await fetch('/api/telegram-intelligence-search',{
         method:'POST',headers:{
           'content-type':'application/json','x-telegram-init-data':ownerKey,
-        },body:JSON.stringify({query}),signal:controller.signal,
+        },body:JSON.stringify({query,includeVault}),signal:controller.signal,
       });
       const data=await response.json().catch(()=>({}));
       if(resetOwner()||epoch!==state.intelEpoch||
         ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||''))return;
       if(!response.ok||!data.ok)throw new Error(data.error||'Telegram не ответил');
       state.intelResults=Array.isArray(data.results)?data.results.slice(0,30):[];
-      const count=state.intelResults.length;
-      status.textContent=count
-        ?'Найдено '+count+' сообщений. Показаны реальные цитаты Telegram, не AI-выводы. Архив VETO не включён.'
-        :'Совпадений в доступном Telegram не найдено. Это не означает, что сообщения никогда не существовали.';
-      renderIntelResults();
+      state.intelTimeline=Array.isArray(data.timeline)?data.timeline.slice(0,18):[];
+      const count=state.intelResults.length,coverage=data.coverage||{};
+      const vaultText=includeVault
+        ?coverage.vault==='sampled'
+          ?' Проверено '+Number(coverage.chatsScanned||0)+' из '+Number(coverage.chatsAvailable||0)+
+            ' сохранённых чатов · до '+Number(coverage.perChatLimit||0)+' сообщений в каждом.'
+          :' Архив VETO временно недоступен.'
+        :' Архив VETO не запрашивался.';
+      const partial=coverage.partial?' Выдача неполная.':'';
+      status.textContent=(count
+        ?'Найдено '+count+' исходных сообщений. Хронология — только возможные обещания, требующие проверки.'
+        :'Совпадений в проверенной части истории нет. Это не доказывает отсутствия сообщений.')+
+        vaultText+partial;
+      renderIntelResults();renderIntelTimeline();
     }catch(error){
       if(epoch!==state.intelEpoch||ownerKey!==state.ownerInitData)return;
       status.textContent=error?.name==='AbortError'
