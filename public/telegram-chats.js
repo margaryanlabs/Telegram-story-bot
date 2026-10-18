@@ -1577,6 +1577,42 @@
     }else syncLabel('Подключаюсь к Telegram…',true);
     await loadMessages({reset:true});
   }
+  // First paint comes from owner-verified MTProto; archived deletion evidence
+  // is fetched afterwards and reconciled without blocking the visible chat.
+  // Both stages stay in memory and are invalidated on account/thread changes.
+  async function mergeDeferredArchive(chatId,generation,ownerKey){
+    try{
+      const data=await request('thread_archive',{chatId,archiveOffset:0});
+      if(resetOwner()||ownerKey!==state.ownerInitData||
+         generation!==state.threadGeneration||String(state.thread?.id)!==chatId)return;
+      const anchor=visibleMessageAnchor();
+      const byId=new Map(state.messages.map(msg=>[String(msg.id),msg]));
+      for(const kept of data.messages||[]){
+        if(!kept||!kept.id)continue;
+        const id=String(kept.id),previous=byId.get(id);
+        if(previous){
+          byId.set(id,{...previous,saved:true,
+            deleted:Boolean(kept.deleted),archivedOriginal:Boolean(kept.deleted),
+            mediaAvailable:Boolean(kept.mediaAvailable||previous.mediaAvailable)});
+        }else byId.set(id,{...kept,preservedOnly:true});
+      }
+      state.messages=[...byId.values()].sort((a,b)=>
+        new Date(a.date||0).getTime()-new Date(b.date||0).getTime()||
+        Number(a.id)-Number(b.id));
+      state.archiveHasMore=Boolean(data.archiveHasMore);
+      state.archiveOffset=Number(data.archiveNextOffset||0);
+      state.threadHasMore=state.liveHasMore||state.archiveHasMore;
+      renderMessages({anchor});
+      rememberHotThread();
+    }catch(error){
+      // Live messages are valid even when Privacy storage is slow or offline.
+      // Don't mislabel lack of stored evidence as restored deletions.
+      if(ownerKey===state.ownerInitData&&
+         generation===state.threadGeneration&&String(state.thread?.id)===chatId&&
+         state.thread?.savedCopy===true)
+        threadNotice('Облачная история открыта. Защищённый архив пока не ответил; обнови чат позже.');
+    }
+  }
   async function loadMessages({reset=false}={}){
     if(resetOwner()||!state.thread||state.threadLoading)return;
     const chatId=String(state.thread.id);
@@ -1588,11 +1624,15 @@
     $('telegramThreadOlder').hidden=true;
     if(reset&&state.messages.length)renderMessages();
     try{
+      const ownerKey=state.ownerInitData;
+      const fastLive=reset&&state.thread.archiveOnly!==true&&
+        state.connectionProof?.verified===true;
       const data=await request('thread',{
         chatId,offsetId:reset?0:state.threadOffset,
         archiveOffset:reset?0:state.archiveOffset,
         archiveOnly:Boolean(state.thread.archiveOnly),
         liveExhausted:!reset&&!state.liveHasMore,
+        fastLive,
       });
       if(generation!==state.threadGeneration||String(state.thread?.id)!==chatId)return;
       const byId=new Map(state.messages.map(m=>[String(m.id),m]));
@@ -1627,8 +1667,12 @@
       renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
       rememberHotThread();
       renderSendComposer();
-      syncLabel('Telegram подключён · проверка каждые 26 сек.');
+      syncLabel(data.archiveDeferred
+        ?'Telegram подключён · синхронизирую архив VETO…'
+        :'Telegram подключён · проверка каждые 26 сек.');
       scheduleThreadSync();
+      if(data.archiveDeferred===true)
+        void mergeDeferredArchive(chatId,generation,ownerKey);
     }catch(error){
       if(generation!==state.threadGeneration)return;
       state.threadLoading=false;
