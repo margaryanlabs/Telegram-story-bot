@@ -813,32 +813,38 @@
       state.previewSeen.add(id);
       // Never bulk-load attachments from unavailable deleted Telegram messages.
       if(msg.deleted && !msg.mediaAvailable)continue;
-      const ownerChatId=String(state.thread.id);
+      const ownerChatId=String(state.thread.id),ownerKey=state.ownerInitData;
       const generation=state.threadGeneration;
       const request=msg.saved&&msg.mediaAvailable
         ?(async()=>{
             const res=await fetch('/api/privacy-media?'+
               new URLSearchParams({chatId:ownerChatId,messageId:String(id)}),{
-                headers:{'x-telegram-init-data':tg.initData},
+                headers:{'x-telegram-init-data':ownerKey},
               });
             if(!res.ok)throw new Error('private_photo_unavailable');
             const blob=await res.blob();
+            if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||generation!==state.threadGeneration)
+              throw new Error('Telegram account changed');
             if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
               throw new Error('private_photo_unavailable');
             return URL.createObjectURL(blob);
           })()
         :photoRequest('photo',ownerChatId,id);
       request.then(href=>{
-        if(generation!==state.threadGeneration||String(state.thread?.id)!==ownerChatId){
+        if(generation!==state.threadGeneration||String(state.thread?.id)!==ownerChatId||
+           ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){
           URL.revokeObjectURL(href);return;
         }
         rememberPreview(id,href);
         const container=[...document.querySelectorAll('[data-mirror-preview]')]
           .find(x=>Number(x.dataset.mirrorPreview)===id);
         if(container){
+          const btn=document.createElement('button');
+          btn.type='button';btn.className='veto-mirror-inline-photo-btn';
+          btn.dataset.mirrorPhoto=String(id);btn.setAttribute('aria-label','Развернуть фотографию');
           const img=document.createElement('img');img.className='veto-mirror-inline-photo';
           img.alt='Фото из переписки';img.loading='lazy';img.src=href;
-          container.replaceWith(img);
+          btn.appendChild(img);container.replaceWith(btn);
         }
       }).catch(()=>{});
     }
