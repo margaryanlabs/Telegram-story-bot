@@ -43,5 +43,5 @@ test('sticker previews fetch only signed owner recent static WEBP and revoke loc
  assert.match(ui,/fetchStickerPreviews\(chatId,ownerKey/);
  assert.match(ui,/slice\(0,8\)/);
  assert.match(ui,/state\.stickerPreviewUrls\.clear\(\)/);
- assert.match(ui,/fetch\('\/api\/telegram-sticker-preview'/);
+ assert.match(ui,/fetch\('\/api\/telegram-sticker-previews'/);
 });
