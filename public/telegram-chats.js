@@ -17,6 +17,7 @@
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
     threadSearch:'',threadSearchIndex:0,deliveryStage:null,
     intelResults:[],intelTimeline:[],intelQuery:'',intelEpoch:0,intelBusy:false,
+    intelNextPage:null,intelIncludeVault:false,intelCoverage:null,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -799,6 +800,8 @@
   function clearIntelSearch({close=false}={}){
     state.intelEpoch++;
     state.intelBusy=false;state.intelResults=[];state.intelTimeline=[];state.intelQuery='';
+    state.intelNextPage=null;state.intelIncludeVault=false;state.intelCoverage=null;
+    if($('vetoIntelLoadMore'))$('vetoIntelLoadMore').hidden=true;
     if($('vetoIntelIncludeVault'))$('vetoIntelIncludeVault').checked=false;
     if($('vetoIntelTimeline'))$('vetoIntelTimeline').replaceChildren();
     if($('vetoIntelTimelineSection'))$('vetoIntelTimelineSection').hidden=true;
@@ -857,7 +860,24 @@
         '</article>';
     }).join('');
   }
-  async function searchIntel(){
+  // A continuation merges results from explicit previous page(s) in RAM only.
+  function appendIntelResults(incoming=[]){
+    const byId=new Map(state.intelResults.map(item=>[String(item.chatId)+'/'+item.messageId,item]));
+    for(const item of incoming){
+      if(!item?.chatId||!Number.isSafeInteger(Number(item.messageId)))continue;
+      const key=String(item.chatId)+'/'+item.messageId,previous=byId.get(key);
+      if(!previous)byId.set(key,item);
+      else if(item.source==='veto-vault'&&previous.source!=='veto-vault'){
+        byId.set(key,{...previous,saved:true,deleted:Boolean(item.deleted),
+          source:'telegram-cloud+veto-vault',
+          possibleCommitment:previous.possibleCommitment||item.possibleCommitment});
+      }else if(Number(item.score||0)>Number(previous.score||0))byId.set(key,item);
+    }
+    state.intelResults=[...byId.values()].sort((a,b)=>
+      Number(b.score||0)-Number(a.score||0)||
+      (Date.parse(b.date||'')||0)-(Date.parse(a.date||'')||0)).slice(0,150);
+  }
+  async function searchIntel({loadMore=false}={}){
     const input=$('vetoIntelSearchInput'),status=$('vetoIntelSearchStatus'),button=$('vetoIntelSearchSubmit');
     if(!input||!status||!button||state.intelBusy)return;
     if(resetOwner())return;
@@ -868,38 +888,64 @@
     if(!state.connectionProof?.verified){
       status.textContent='Подключи и подтверди свой Telegram для поиска.';return;
     }
-    const ownerKey=state.ownerInitData,epoch=++state.intelEpoch;
     const includeVault=$('vetoIntelIncludeVault')?.checked===true;
+    if(loadMore&&(!includeVault||!state.intelIncludeVault||
+      query!==state.intelQuery||state.intelNextPage===null)){
+      status.textContent='Параметры поиска изменились. Нажми «Найти», чтобы начать заново.';return;
+    }
+    const vaultPage=loadMore?state.intelNextPage:0;
+    const ownerKey=state.ownerInitData,epoch=++state.intelEpoch;
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
-    state.intelBusy=true;state.intelQuery=query;state.intelResults=[];state.intelTimeline=[];
-    if($('vetoIntelTimeline'))$('vetoIntelTimeline').replaceChildren();
-    if($('vetoIntelTimelineSection'))$('vetoIntelTimelineSection').hidden=true;
-    button.disabled=true;status.textContent='Ищу подтверждённые сообщения в твоём Telegram…';
-    $('vetoIntelSearchResults')?.replaceChildren();
+    state.intelBusy=true;
+    if(!loadMore){
+      state.intelQuery=query;state.intelIncludeVault=includeVault;
+      state.intelNextPage=null;state.intelCoverage=null;
+      state.intelResults=[];state.intelTimeline=[];
+    }
+    if($('vetoIntelLoadMore'))$('vetoIntelLoadMore').hidden=true;
+    if(!loadMore){
+      if($('vetoIntelTimeline'))$('vetoIntelTimeline').replaceChildren();
+      if($('vetoIntelTimelineSection'))$('vetoIntelTimelineSection').hidden=true;
+      $('vetoIntelSearchResults')?.replaceChildren();
+    }
+    button.disabled=true;
+    status.textContent=loadMore
+      ?'Проверяю следующую порцию твоего сохранённого архива…'
+      :'Ищу исходные сообщения в твоём Telegram…';
     try{
       const response=await fetch('/api/telegram-intelligence-search',{
         method:'POST',headers:{
           'content-type':'application/json','x-telegram-init-data':ownerKey,
-        },body:JSON.stringify({query,includeVault}),signal:controller.signal,
+        },body:JSON.stringify({query,includeVault,vaultPage}),signal:controller.signal,
       });
       const data=await response.json().catch(()=>({}));
       if(resetOwner()||epoch!==state.intelEpoch||
         ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||''))return;
       if(!response.ok||!data.ok)throw new Error(data.error||'Telegram не ответил');
-      state.intelResults=Array.isArray(data.results)?data.results.slice(0,30):[];
-      state.intelTimeline=Array.isArray(data.timeline)?data.timeline.slice(0,18):[];
-      const count=state.intelResults.length,coverage=data.coverage||{};
+      appendIntelResults(Array.isArray(data.results)?data.results:[]);
+      const items=Array.isArray(data.timeline)?data.timeline:[];
+      const timelines=new Map([...state.intelTimeline,...items]
+        .map(item=>[String(item.chatId)+'/'+item.messageId,item]));
+      state.intelTimeline=[...timelines.values()].sort((a,b)=>
+        (Date.parse(a.date||'')||0)-(Date.parse(b.date||'')||0)).slice(0,100);
+      const coverage=data.coverage||{};
+      state.intelCoverage=coverage;
+      state.intelNextPage=includeVault&&Number.isSafeInteger(data.nextVaultPage)
+        ?data.nextVaultPage:null;
+      const count=state.intelResults.length;
       const vaultText=includeVault
         ?coverage.vault==='sampled'
-          ?' Проверено '+Number(coverage.chatsScanned||0)+' из '+Number(coverage.chatsAvailable||0)+
-            ' сохранённых чатов · до '+Number(coverage.perChatLimit||0)+' сообщений в каждом.'
+          ?' Эта порция: '+Number(coverage.segmentStart||0)+'–'+
+            Number(coverage.segmentEnd||0)+' из '+Number(coverage.totalSegments||0)+
+            ' · проверено '+Number(coverage.scannedMessages||0)+' сохранённых сообщений.'
           :' Архив VETO временно недоступен.'
         :' Архив VETO не запрашивался.';
-      const partial=coverage.partial?' Выдача неполная.':'';
+      const partial=coverage.partial?' Поиск по архиву ещё не завершён.':'';
       status.textContent=(count
-        ?'Найдено '+count+' исходных сообщений. Хронология — только возможные обещания, требующие проверки.'
-        :'Совпадений в проверенной части истории нет. Это не доказывает отсутствия сообщений.')+
+        ?'Найдено '+count+' реальных сообщений. «Обещания» — гипотезы, проверяй контекст.'
+        :'Пока нет совпадений в проверенной части. Это не доказывает отсутствие переписки.')+
         vaultText+partial;
+      if($('vetoIntelLoadMore'))$('vetoIntelLoadMore').hidden=state.intelNextPage===null;
       renderIntelResults();renderIntelTimeline();
     }catch(error){
       if(epoch!==state.intelEpoch||ownerKey!==state.ownerInitData)return;
@@ -1975,6 +2021,17 @@
     $('vetoIntelSearchToggle')?.setAttribute('aria-expanded',String(!panel.hidden));
     if(!panel.hidden)$('vetoIntelSearchInput')?.focus();
   });
+  $('vetoIntelLoadMore')?.addEventListener('click',()=>void searchIntel({loadMore:true}));
+  for(const id of ['vetoIntelSearchInput','vetoIntelIncludeVault']){
+    $(id)?.addEventListener(id==='vetoIntelSearchInput'?'input':'change',()=>{
+      state.intelEpoch++;
+      state.intelBusy=false;state.intelNextPage=null;
+      if($('vetoIntelLoadMore'))$('vetoIntelLoadMore').hidden=true;
+      if($('vetoIntelSearchSubmit'))$('vetoIntelSearchSubmit').disabled=false;
+      if($('vetoIntelSearchStatus')&&state.intelResults.length)
+        $('vetoIntelSearchStatus').textContent='Параметры изменились. Нажми «Найти» для нового поиска.';
+    });
+  }
   $('vetoIntelSearchForm')?.addEventListener('submit',event=>{
     event.preventDefault();void searchIntel();
   });
