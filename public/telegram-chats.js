@@ -464,7 +464,10 @@
     const draft=state.voiceDraft;
     if(draft && $('telegramThreadVoiceLabel')){
       $('telegramThreadVoiceLabel').textContent='♫ '+String(Math.ceil(draft.duration))+
-        ' с · '+(draft.preset==='deep'?'Глубже (эквалайзер)':draft.preset==='warm'?'Теплее':
+        ' с · '+(draft.preset==='low'?'Низкий голос · Pitch':
+        draft.preset==='high'?'Высокий голос · Pitch':
+        draft.preset==='robot'?'Робот · эффект':
+        draft.preset==='deep'?'Басы · EQ':draft.preset==='warm'?'Теплее':
         draft.preset==='radio'?'Радио':'Оригинал')+' · прослушай перед отправкой';
     }
     for(const btn of document.querySelectorAll('[data-chat-voice-preset]')){
@@ -476,26 +479,65 @@
   }
   // Processing is local. EQ changes tone, never claims to synthesize another
   // person's voice or perform real pitch/formant transformation.
-  function processedVoiceStream(microphone,preset){
+  async function processedVoiceStream(microphone,preset){
     if(preset==='original')return {recordStream:microphone,close:()=>{}};
     const AudioCtx=window.AudioContext||window.webkitAudioContext;
-    if(!AudioCtx)throw new Error('Аудиоэффекты недоступны в этом браузере. Выбери «Оригинал».');
+    if(!AudioCtx)throw new Error('Аудиоэффекты недоступны здесь. Выбери «Оригинал».');
     const context=new AudioCtx();
-    if(context.state==='suspended')void context.resume().catch(()=>{});
-    const source=context.createMediaStreamSource(microphone);
-    const filter=context.createBiquadFilter();
-    const compressor=context.createDynamicsCompressor();
-    const output=context.createMediaStreamDestination();
-    if(preset==='radio'){
-      filter.type='bandpass';filter.frequency.value=1600;filter.Q.value=.58;
-    }else if(preset==='deep'){
-      filter.type='lowshelf';filter.frequency.value=270;filter.gain.value=7;
-    }else{
-      filter.type='lowshelf';filter.frequency.value=420;filter.gain.value=3;
+    const nodes=[];
+    let oscillator=null;
+    const close=()=>{
+      try{oscillator?.stop()}catch{}
+      for(const node of nodes){try{node.disconnect()}catch{}}
+      void context.close().catch(()=>{});
+    };
+    try{
+      if(context.state==='suspended')await context.resume();
+      const source=context.createMediaStreamSource(microphone);
+      const compressor=context.createDynamicsCompressor();
+      const output=context.createMediaStreamDestination();
+      nodes.push(source,compressor,output);
+      compressor.threshold.value=-21;compressor.ratio.value=2.4;
+      if(preset==='low'||preset==='high'){
+        if(!context.audioWorklet||!window.AudioWorkletNode)
+          throw new Error('Pitch эффекты не поддерживаются в этом Telegram. Выбери Робот или Оригинал.');
+        await context.audioWorklet.addModule('/veto-voice-pitch-worklet.js');
+        const shifter=new AudioWorkletNode(context,'veto-pitch-shifter',{
+          numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1],
+          processorOptions:{factor:preset==='low'?.79:1.24},
+        });
+        nodes.push(shifter);
+        source.connect(shifter);shifter.connect(compressor);
+      }else if(preset==='robot'){
+        // Audible ring-modulated robot voice, not EQ or an identity impersonation.
+        const band=context.createBiquadFilter();
+        band.type='highpass';band.frequency.value=140;
+        const carrier=context.createGain(),depth=context.createGain();
+        carrier.gain.value=0;depth.gain.value=.82;
+        oscillator=context.createOscillator();
+        oscillator.type='sine';oscillator.frequency.value=57;
+        oscillator.connect(depth);depth.connect(carrier.gain);
+        source.connect(band);band.connect(carrier);carrier.connect(compressor);
+        nodes.push(band,carrier,depth,oscillator);
+        oscillator.start();
+      }else{
+        const filter=context.createBiquadFilter();
+        nodes.push(filter);
+        if(preset==='radio'){
+          filter.type='bandpass';filter.frequency.value=1600;filter.Q.value=.58;
+        }else if(preset==='deep'){
+          filter.type='lowshelf';filter.frequency.value=270;filter.gain.value=7;
+        }else{
+          filter.type='lowshelf';filter.frequency.value=420;filter.gain.value=3;
+        }
+        source.connect(filter);filter.connect(compressor);
+      }
+      compressor.connect(output);
+      return {recordStream:output.stream,close};
+    }catch(error){
+      close();
+      throw error;
     }
-    compressor.threshold.value=-21;compressor.ratio.value=2.4;
-    source.connect(filter);filter.connect(compressor);compressor.connect(output);
-    return {recordStream:output.stream,close:()=>{try{source.disconnect();filter.disconnect();compressor.disconnect()}catch{};void context.close().catch(()=>{})}};
   }
   async function toggleVoiceRecording(){
     if(state.recording){
@@ -517,7 +559,13 @@
         stream.getTracks().forEach(t=>t.stop());return;
       }
       const preset=state.voicePreset;
-      effect=processedVoiceStream(stream,preset);
+      effect=await processedVoiceStream(stream,preset);
+      // A delayed AudioWorklet load must not record after switching users/chats.
+      if(generation!==state.voicePermissionGeneration||document.hidden||
+        String(state.thread?.id)!==origin||String(tg?.initData||'')!==signed){
+        stream.getTracks().forEach(track=>track.stop());
+        effect.close();return;
+      }
       const preferred=['audio/ogg;codecs=opus','audio/webm;codecs=opus','audio/webm'];
       const mime=preferred.find(type=>MediaRecorder.isTypeSupported(type));
       if(!mime)throw new Error('В этом браузере нет подходящего аудиокодека');
