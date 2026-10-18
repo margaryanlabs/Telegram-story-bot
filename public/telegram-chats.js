@@ -19,6 +19,7 @@
     intelResults:[],intelTimeline:[],intelQuery:'',intelEpoch:0,intelBusy:false,
     intelNextPage:null,intelIncludeVault:false,intelCoverage:null,intelFocus:null,
   };
+  let chatFilterTimer=null;
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
     saved:'избранное',copy:'сохранённая копия VETO',other:'чат',
@@ -1342,6 +1343,7 @@
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
     state.chats=[];state.messages=[];state.thread=null;
+    clearTimeout(chatFilterTimer);chatFilterTimer=null;
     closeVetoMessengerTools();
     clearIntelSearch({close:true});
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
@@ -2315,10 +2317,18 @@
     },{rootMargin:'170px'});
     observer.observe($('telegramMirrorMore'));
   }
+  // Filtering 500 dialogues on every keystroke can jank Android WebView;
+  // debounce DOM replacement while keeping typed input responsive.
   $('telegramMirrorSearch')?.addEventListener('input',event=>{
-    state.search=event.target.value;renderChats();
+    state.search=event.target.value;
+    clearTimeout(chatFilterTimer);
+    chatFilterTimer=setTimeout(()=>{
+      chatFilterTimer=null;
+      if(!resetOwner())renderChats();
+    },110);
   });
   $('telegramMirrorSearchClear')?.addEventListener('click',()=>{
+    clearTimeout(chatFilterTimer);chatFilterTimer=null;
     state.search='';$('telegramMirrorSearch').value='';renderChats();
     $('telegramMirrorSearch').focus();
   });
