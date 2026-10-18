@@ -8,7 +8,7 @@
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
-    previewActive:0,previewSeen:new Set(),
+    previewActive:0,previewSeen:new Set(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
@@ -852,22 +852,36 @@
     if(message?.media!=='photo')return '';
     const cached=state.mediaPreviewUrls.get(String(message.id));
     if(cached)return photoButtonMarkup(cached,message.id,'Фото из переписки');
-    return '<div class="veto-mirror-inline-placeholder" data-mirror-preview="'+
-      safe(message.id)+'"><span>▣</span><small>Фотография из переписки</small></div>';
+    return '<button type="button" class="veto-mirror-inline-placeholder" data-mirror-preview="'+
+      safe(message.id)+'" aria-label="Загрузить фото из переписки"><span>▣</span>'+
+      '<small>Фотография · нажми для загрузки</small></button>';
   }
   // Lazy bounded preview: only three images per thread load; no media is
   // persisted outside the browser tab and all blob URLs are revoked on exit.
-  function loadInlinePreviews(){
-    if(!state.thread||!tg?.initData)return;
-    const targets=[...document.querySelectorAll('[data-mirror-preview]')].slice(-3);
+  function photoInViewport(el,scroller){
+    const item=el.getBoundingClientRect(),box=scroller.getBoundingClientRect();
+    return item.bottom>box.top-200&&item.top<box.bottom+200;
+  }
+  // Only fetch photos the owner scrolls into view. Bounded concurrency avoids
+  // multiple expensive MTProto connections on a low-memory Telegram WebView.
+  // The owner can tap an unavailable thumbnail to retry deliberately.
+  function loadInlinePreviews({requestedId=null}={}){
+    const scroller=$('telegramThreadMessages');
+    if(!state.thread||!tg?.initData||!scroller)return;
+    const all=[...scroller.querySelectorAll('[data-mirror-preview]')];
+    const targets=requestedId!==null
+      ?all.filter(el=>String(el.dataset.mirrorPreview)===String(requestedId))
+      :all.filter(el=>photoInViewport(el,scroller));
     for(const el of targets){
+      if(state.previewActive>=2)break;
       const id=Number(el.dataset.mirrorPreview);
-      if(!Number.isSafeInteger(id)||state.previewSeen.has(id))continue;
-      const msg=state.messages.find(m=>m.id===id);
-      if(!msg)continue;
+      if(!Number.isSafeInteger(id)||id<1||state.previewSeen.has(id))continue;
+      const msg=state.messages.find(m=>Number(m.id)===id);
+      if(!msg || (msg.deleted&&!msg.mediaAvailable))continue;
       state.previewSeen.add(id);
-      // Never bulk-load attachments from unavailable deleted Telegram messages.
-      if(msg.deleted && !msg.mediaAvailable)continue;
+      state.previewActive++;
+      const badge=el.querySelector('small');
+      if(badge)badge.textContent='Загружаю фотографию…';
       const ownerChatId=String(state.thread.id),ownerKey=state.ownerInitData;
       const generation=state.threadGeneration;
       const request=msg.saved&&msg.mediaAvailable
@@ -891,7 +905,7 @@
           URL.revokeObjectURL(href);return;
         }
         rememberPreview(id,href);
-        const container=[...document.querySelectorAll('[data-mirror-preview]')]
+        const container=[...scroller.querySelectorAll('[data-mirror-preview]')]
           .find(x=>Number(x.dataset.mirrorPreview)===id);
         if(container){
           const btn=document.createElement('button');
@@ -901,7 +915,19 @@
           img.alt='Фото из переписки';img.loading='lazy';img.src=href;
           btn.appendChild(img);container.replaceWith(btn);
         }
-      }).catch(()=>{});
+      }).catch(()=>{
+        // Do not loop after a network failure. A manual tap explicitly retries.
+        if(generation===state.threadGeneration&&ownerKey===state.ownerInitData){
+          const latest=[...scroller.querySelectorAll('[data-mirror-preview]')]
+            .find(x=>Number(x.dataset.mirrorPreview)===id);
+          const label=latest?.querySelector('small');
+          if(label)label.textContent='Не удалось загрузить · нажми повторно';
+        }
+      }).finally(()=>{
+        state.previewActive=Math.max(0,state.previewActive-1);
+        if(ownerKey===state.ownerInitData&&generation===state.threadGeneration)
+          loadInlinePreviews();
+      });
     }
   }
 
@@ -987,6 +1013,7 @@
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
     state.mediaPreviewUrls.clear();state.previewSeen.clear();
+    state.expandedAttachments.clear();state.expandedBytes=0;
   }
   async function openArchivedFile(button){
     if(!state.thread||!button||button.disabled)return;
