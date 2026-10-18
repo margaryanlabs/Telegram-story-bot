@@ -19,7 +19,7 @@ export function afterMonths(months,now=new Date()){
 }
 export async function searchOwnerCloud(client,plan){
   // One authenticated owner, max two Telegram-native global searches. This is
-  // NOT LLM/embedding search and never sends private text to an outside AI.
+  // NOT neural search and never sends private text to an outside AI.
   const groups=[];
   const minDate=afterMonths(plan.months);
   for(const term of plan.terms.slice(0,2)){
