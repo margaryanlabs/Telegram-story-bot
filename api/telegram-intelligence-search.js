@@ -7,8 +7,9 @@ import {withBackupClient} from '../lib/telegram-history-backup.js';
 import {verifyTelegramClientOwner,telegramOwnerError} from '../lib/telegram-owner-runtime.js';
 import {planSearch,mergeSearchResults,searchResultsFromTelegram} from '../lib/veto-intelligence-search.js';
 import {
- prioritizeArchiveThreads,normalizeOwnerArchive,mergeEvidence,evidenceTimeline
+ normalizeOwnerArchive,mergeEvidence,evidenceTimeline
 } from '../lib/veto-evidence-timeline.js';
+import {planVaultPage,validVaultPage,VAULT_BATCH_READS,VAULT_ROWS_PER_READ} from '../lib/veto-vault-pagination.js';
 
 const send=(res,status,data)=>res.status(status).json({ok:status<400,...data});
 export function afterMonths(months,now=new Date()){
@@ -36,41 +37,44 @@ export async function searchOwnerCloud(client,plan){
 }
 
 
-export const VAULT_MAX_CHATS=6;
-export const VAULT_MESSAGES_PER_CHAT=60;
-// Owner-scoped, limited sample of newest saved chats. Never imply full
-// archive coverage or silently turn store failures into "no evidence".
-export async function searchOwnerVault(userId,plan){
+export const VAULT_MAX_CHATS=VAULT_BATCH_READS;
+export const VAULT_MESSAGES_PER_CHAT=VAULT_ROWS_PER_READ;
+// Each click scans only six bounded slices, automatically advancing across
+// the saved chats and through older offsets. No background crawling or index.
+export async function searchOwnerVault(userId,plan,{page=0}={}){
   const data=await listPrivacyThreads(userId);
   if(!data||!Array.isArray(data.threads))
     throw new Error('Не удалось получить список сохранённых чатов');
-  const allThreads=data.threads.filter(row=>Number(row?.messageCount||0)>0);
-  const picked=prioritizeArchiveThreads(allThreads,VAULT_MAX_CHATS);
+  const batch=planVaultPage(data.threads,page);
   const minMs=plan.months?afterMonths(plan.months)*1000:0;
   const found=[],failed=[];
-  let pointer=0;
+  let pointer=0,scannedMessages=0;
   async function worker(){
-    while(pointer<picked.length){
-      const thread=picked[pointer++];
+    while(pointer<batch.tasks.length){
+      const task=batch.tasks[pointer++];
       try{
-        const reply=await listPrivacyMessages(userId,String(thread.chatId),VAULT_MESSAGES_PER_CHAT,0);
+        const reply=await listPrivacyMessages(userId,String(task.thread.chatId),task.limit,task.offset);
         if(!reply||!Array.isArray(reply.messages))throw new Error('Архив ответил некорректно');
+        scannedMessages+=reply.messages.length;
         for(const row of reply.messages){
-          const evidence=normalizeOwnerArchive(row,thread,plan,minMs);
+          const evidence=normalizeOwnerArchive(row,task.thread,plan,minMs);
           if(evidence)found.push(evidence);
         }
-      }catch{failed.push(String(thread.chatId))}
+      }catch{failed.push(String(task.thread.chatId))}
     }
   }
-  // At most three concurrent bounded store calls, never unbounded per-chat
-  // crawling or plaintext search indexing.
   await Promise.all([worker(),worker(),worker()]);
   return {
-    results:found,scannedChats:picked.length,availableChats:allThreads.length,
-    perChatLimit:VAULT_MESSAGES_PER_CHAT,
-    partial:failed.length>0||picked.length<allThreads.length||
-      picked.some(row=>Number(row.messageCount||0)>VAULT_MESSAGES_PER_CHAT),
-    failedChats:failed.length,
+    results:found,
+    nextPage:failed.length?page:batch.nextPage,
+    page,segmentsScanned:batch.tasks.length,
+    startSegment:batch.startSegment,endSegment:batch.endSegment,
+    totalSegments:batch.totalSlices,
+    scannedMessages,
+    scannedChats:batch.scannedChats,availableChats:batch.availableChats,
+    perChatLimit:VAULT_ROWS_PER_READ,
+    partial:failed.length>0||batch.nextPage!==null||batch.truncated,
+    truncated:batch.truncated,failedChats:failed.length,
   };
 }
 export default async function handler(req,res){
@@ -98,11 +102,14 @@ export default async function handler(req,res){
     const decrypted=await openJson(session.session_ciphertext,'session:'+userId);
     if(!decrypted?.session)return send(res,409,{error:'Сессия Telegram недоступна'});
     const includeVault=body?.includeVault===true;
+    const vaultPage=body?.vaultPage===undefined?0:body.vaultPage;
+    if(!validVaultPage(vaultPage)||(!includeVault&&vaultPage!==0))
+      return send(res,400,{error:'Неверная страница архива'});
     const searched=await withBackupClient(decrypted.session,async client=>{
       await verifyTelegramClientOwner(client,userId);
       const requests=[
-        searchOwnerCloud(client,plan),
-        includeVault?searchOwnerVault(userId,plan):Promise.resolve(null),
+        vaultPage===0?searchOwnerCloud(client,plan):Promise.resolve([]),
+        includeVault?searchOwnerVault(userId,plan,{page:vaultPage}):Promise.resolve(null),
       ];
       const settled=await Promise.allSettled(requests);
       return {cloud:settled[0],vault:settled[1]};
@@ -116,6 +123,7 @@ export default async function handler(req,res){
     const timeline=evidenceTimeline(results,plan);
     return send(res,200,{
       results,timeline,count:results.length,terms:plan.terms,
+      nextVaultPage:includeVault&&vaultOk?vault?.nextPage??null:null,
       scope:includeVault?'telegram-cloud+owner-vault':'telegram-cloud',
       mode:'lexical-concept+evidence-timeline',searchedAfter:plan.months||null,
       coverage:{
@@ -124,10 +132,14 @@ export default async function handler(req,res){
         chatsScanned:vault?.scannedChats||0,
         chatsAvailable:vault?.availableChats||0,
         perChatLimit:vault?.perChatLimit||0,
-        partial:Boolean((includeVault&&!vaultOk)||vault?.partial||!cloudOk),
+        vaultPage,segmentsScanned:vault?.segmentsScanned||0,
+        segmentStart:vault?.startSegment||0,segmentEnd:vault?.endSegment||0,
+        totalSegments:vault?.totalSegments||0,scannedMessages:vault?.scannedMessages||0,
+        truncated:Boolean(vault?.truncated),
+        partial:Boolean((includeVault&&!vaultOk)||vault?.partial||(!cloudOk&&vaultPage===0)),
         failedVaultChats:vault?.failedChats||0,
       },
-      note:'Только исходные тексты, не подтверждённые обязательства. Архив VETO просматривается лишь по выбору, ограниченно: до 6 недавних сохранённых чатов и 60 сообщений из каждого. Отсутствие совпадений не доказывает отсутствие переписки.',
+      note:'Результаты — только исходные цитаты, не доказательство обязательств. Архив проверяется по шесть порций за раз (80 сообщений каждая) после отдельного согласия. Можно вручную продолжить по остальным сообщениям и чатам. Выдача может оставаться неполной.',
     });
   }catch(error){
     const denied=telegramOwnerError(error);

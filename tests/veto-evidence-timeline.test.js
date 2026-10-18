@@ -19,7 +19,7 @@ test('Vault retrieval only considers bounded newest owner-saved threads',()=>{
  assert.equal(picked[0].chatId,'1');
  assert.equal(picked[5].chatId,'6');
  assert.equal(VAULT_MAX_CHATS,6);
- assert.equal(VAULT_MESSAGES_PER_CHAT,60);
+ assert.equal(VAULT_MESSAGES_PER_CHAT,80);
  assert.deepEqual(prioritizeArchiveThreads([{chatId:'naughty',messageCount:90}],6),[]);
 });
 
@@ -97,14 +97,14 @@ test('signed server uses opt-in Vault search, never silently indexes all chats o
  assert.match(api,/verifyTelegramClientOwner\(client,userId\)/);
  assert.match(api,/const includeVault=body\?\.includeVault===true/);
  assert.match(api,/listPrivacyThreads\(userId\)/);
- assert.match(api,/listPrivacyMessages\(userId,String\(thread.chatId\),VAULT_MESSAGES_PER_CHAT,0\)/);
+ assert.match(api,/listPrivacyMessages\(userId,String\(task.thread.chatId\),task.limit,task.offset\)/);
  assert.match(api,/Promise\.allSettled/);
  assert.match(api,/chatsScanned:vault\?\.scannedChats/);
  assert.match(api,/if\(!cloudOk&&\(!includeVault\|\|!vaultOk\)\)/);
  assert.match(api,/Cache-Control','private, no-store/);
  assert.doesNotMatch(api,/OpenAI|Anthropic|Gemini|vector|embedding|storeResults|localStorage/);
  assert.match(ui,/const includeVault=\$\('vetoIntelIncludeVault'\)\?\.checked===true/);
- assert.match(ui,/JSON\.stringify\(\{query,includeVault\}\)/);
+ assert.match(ui,/JSON\.stringify\(\{query,includeVault,vaultPage\}\)/);
  assert.match(ui,/clearIntelSearch\(\{close:true\}\)/);
  assert.match(ui,/renderIntelTimeline\(\)/);
  assert.match(ui,/type:result.source==='veto-vault'\?'copy'/);
