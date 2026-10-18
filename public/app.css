@@ -3496,3 +3496,32 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
   #telegramMirror .veto-mirror-thread-find span{font-size:9px;max-width:58px;white-space:normal;text-align:center}
   #telegramMirror .veto-mirror-thread-find button{width:25px;height:27px}
 }
+
+
+/* StoryLab chat quality pass · 2026-10-18
+   Immediate visual feedback while a verified inbox refreshes; no empty flash. */
+#telegramMirror .veto-mirror-icon-btn.is-refreshing{
+  opacity:.76;animation:vetoChatSyncSpinner 1.1s linear infinite;
+}
+@keyframes vetoChatSyncSpinner{to{transform:rotate(360deg)}}
+#telegramMirror .veto-mirror-thread{position:relative}
+#telegramMirror .veto-mirror-jump-latest{
+  position:absolute;right:17px;bottom:148px;z-index:6;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid rgba(182,212,246,.24);color:#edf5ff;
+  background:rgba(39,60,83,.96);box-shadow:0 6px 19px rgba(0,0,0,.32);
+  border-radius:999px;padding:10px 12px;min-height:36px;
+  font-size:11px;font-weight:720;cursor:pointer;
+}
+#telegramMirror .veto-mirror-jump-latest[hidden]{display:none!important}
+#telegramMirror .veto-mirror-jump-latest:active{transform:scale(.97)}
+#telegramMirror .veto-mirror-jump-latest:focus-visible{outline:2px solid #d8e9ff;outline-offset:3px}
+#telegramMirror .veto-mirror-jump-latest span{color:#bcd5ef}
+@media(max-width:520px){
+  #telegramMirror .veto-mirror-jump-latest{
+    right:11px;bottom:159px;padding:9px 12px
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #telegramMirror .veto-mirror-icon-btn.is-refreshing{animation:none}
+}

@@ -4,7 +4,7 @@
   const $=id=>document.getElementById(id);
   const state={
     chats:[],page:0,hasMore:true,loading:false,
-    filter:'all',search:'',generation:0,
+    filter:'all',search:'',generation:0,lastListFetchedAt:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
@@ -72,8 +72,11 @@
       });
       const data=await response.json().catch(()=>({}));
       if(signed!==String(tg?.initData||'')){resetOwner();throw new Error('Telegram-аккаунт изменился. Старые чаты скрыты.');}
-      if(!response.ok||!data.ok)
-        throw new Error(data.error||'Не удалось получить переписки');
+      if(!response.ok||!data.ok){
+        const error=new Error(data.error||'Не удалось получить переписки');
+        error.httpStatus=response.status;
+        throw error;
+      }
       return data;
     }catch(err){
       if(err?.name==='AbortError')throw new Error('Telegram отвечает слишком долго. Попробуй ещё раз.');
@@ -193,6 +196,7 @@
         // Never erase text the user has begun writing while awaiting Telegram.
         state.replyTo=null;renderReplyPreview();
         if(!field.value.trim())state.drafts.delete(chatId);
+        touchRecentChat(chatId,message,new Date().toISOString());
         renderMessages();
         threadNotice('');
         // Replace any provisional timestamp with Telegram's own message and
@@ -330,6 +334,10 @@
       await richRequest(action,request);
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       if(String(state.thread?.id)===chatId){
+        const mediaTitle=action==='send_sticker'?'Стикер'
+          :request.kind==='voice'?'Голосовое сообщение'
+            :request.kind==='photo'?'Фотография':'Документ';
+        touchRecentChat(chatId,request.caption||mediaTitle,new Date().toISOString());
         if(field&&!voiceSend)field.value='';
         if(!voiceSend)state.drafts.delete(chatId);
         state.replyTo=null;state.pendingAttachment=null;
@@ -522,6 +530,15 @@
     return item||(['channel','group'].includes(chat.type)
       ?'Открыть беседу':'Открыть сообщения');
   }
+  function touchRecentChat(chatId,text,date){
+    // Only update the already verified owner's in-memory preview; the next
+    // server snapshot remains authoritative. No fake unread/read status.
+    if(state.ownerInitData!==String(tg?.initData||''))return;
+    const chat=state.chats.find(c=>String(c.id)===String(chatId));
+    if(!chat||chat.archiveOnly)return;
+    chat.preview=String(text||'').slice(0,180);
+    chat.date=date||new Date().toISOString();
+  }
   function orderedChats(chats){
     return [...chats].sort((a,b)=>{
       if(Boolean(a.pinned)!==Boolean(b.pinned))return a.pinned?-1:1;
@@ -658,16 +675,30 @@
     resetOwner();
     if(state.loading)return;
     const generation=++state.generation;
+    // Keep the verified, in-memory conversation list visible during a same-
+    // account refresh. Fresh data atomically replaces it only on success.
+    // Never reuse it across changed owners or unauthenticated sessions.
+    const keepVisible=Boolean(reset&&state.connectionProof?.verified&&state.chats.length&&
+      state.ownerInitData===String(tg?.initData||''));
     if(reset){
-      state.page=0;state.autoPages=0;state.chats=[];state.hasMore=true;state.connectionProof=null;
+      state.page=0;state.autoPages=0;state.hasMore=true;
+      if(!keepVisible){state.chats=[];state.connectionProof=null;}
       hideNotice();
     }
     if(!state.hasMore)return;
     state.loading=true;
-    renderChats();
+    if(keepVisible){
+      const stamp=$('telegramMirrorUpdated');
+      if(stamp)stamp.textContent='↻ Обновляю · чаты доступны';
+      $('telegramMirrorRefresh')?.classList.add('is-refreshing');
+      $('telegramMirrorRefresh')?.setAttribute('aria-busy','true');
+    }else renderChats();
     try{
       const data=await request('list',{page:state.page});
       if(generation!==state.generation)return;
+      // Atomic replacement prevents stale previews, unread badges and
+      // vanished chats from leaking into the newly verified server snapshot.
+      if(keepVisible)state.chats=[];
       const indexes=new Map(state.chats.map((c,index)=>[String(c.id),index]));
       (data.chats||[]).forEach(chat=>{
         if(!chat||!chat.id)return;
@@ -686,6 +717,7 @@
         }
       });
       state.connectionProof=data.connection||null;
+      if(data.connection?.verified)state.lastListFetchedAt=Date.now();
       // Archive-only rows are additional cards, not remote Telegram pagination.
       state.hasMore=Boolean(data.hasMore)&&state.page<10;
       state.page+=1;
@@ -698,8 +730,19 @@
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
       if(generation!==state.generation)return;
-      // Fail closed on any signed-account mismatch or authentication error.
-      // Never keep a previously loaded conversation visible after a failed refresh.
+      const authenticated=state.ownerInitData===String(tg?.initData||'');
+      // Temporary Telegram/transport outages are not an authentication
+      // failure. Keep already verified RAM-only chats visible, with an honest
+      // stale-data notice and a manual retry. 401/403/409 fail closed.
+      const status=Number(error?.httpStatus||0);
+      const transient=status===429||status>=500||(!status&&
+        /долго|сети|соединени|не удалось|не ответил/i.test(String(error?.message||'')));
+      if(keepVisible&&authenticated&&transient){
+        state.hasMore=true;state.page=0;
+        showNotice('Пока нет свежего ответа Telegram. Показаны ранее загруженные чаты этого аккаунта; для обновления нажми ↻. '+error.message);
+        return;
+      }
+      // Authentication and ownership failures must never leave old chats on screen.
       state.chats=[];state.hasMore=false;state.connectionProof=null;
       state.thread=null;state.messages=[];
       $('telegramThreadView').hidden=true;
@@ -710,7 +753,12 @@
       }
       showNotice(error.message,/Подключи|подключён|Открой VETO|аккаунт|авторизуй/i.test(error.message));
     }finally{
-      if(generation===state.generation){state.loading=false;renderChats();}
+      if(generation===state.generation){
+        state.loading=false;
+        $('telegramMirrorRefresh')?.classList.remove('is-refreshing');
+        $('telegramMirrorRefresh')?.removeAttribute('aria-busy');
+        renderChats();
+      }
     }
   }
   async function photoRequest(action,chatId,messageId=null){
@@ -839,7 +887,7 @@
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
     state.chats=[];state.messages=[];state.thread=null;
-    state.page=0;state.hasMore=true;state.autoPages=0;
+    state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
     state.sendInFlight=false;state.lastSendFailure=null;state.lastRichFailure=null;
     state.drafts.clear();state.pendingAttachment=null;state.replyTo=null;state.stickers=[];
@@ -1029,6 +1077,12 @@
       el.replaceWith(document.createTextNode(el.textContent||''));
     }
   }
+  function showLatestShortcut(){
+    const scroller=$('telegramThreadMessages'),shortcut=$('telegramThreadJumpLatest');
+    if(!scroller||!shortcut)return;
+    const remaining=scroller.scrollHeight-scroller.scrollTop-scroller.clientHeight;
+    shortcut.hidden=!state.thread||state.messages.length<9||remaining<160;
+  }
   function renderMessages({keepScroll=false,anchor=null}={}){
     const box=$('telegramThreadMessages');
     if(!box)return;
@@ -1104,6 +1158,7 @@
     if(more){more.hidden=!state.threadHasMore;more.disabled=state.threadLoading;}
     loadInlinePreviews();
     refreshThreadSearch();
+    showLatestShortcut();
   }
 
   // Active chat feels live without maintaining a server-side permanent user
@@ -1262,6 +1317,7 @@
       else link.removeAttribute('href');
     }
     $('telegramThreadMessages').innerHTML=empty('Открываю переписку','История загружается из Telegram');
+    if($('telegramThreadJumpLatest'))$('telegramThreadJumpLatest').hidden=true;
     renderSendComposer();
     threadNotice('');
     const shell=$('telegramMirror');
@@ -1372,6 +1428,12 @@
     $('telegramMirror')?.classList.remove('thread-mode');
     revokeMediaUrls();
     renderSendComposer();
+    renderChats();
+    // Show cached chat list instantly, reconcile server-side ordering when it
+    // is old. Never delay the Back gesture on a round trip to Telegram.
+    if(state.connectionProof?.verified&&state.ownerInitData===String(tg?.initData||'')&&
+       !state.loading&&navigator.onLine!==false&&Date.now()-state.lastListFetchedAt>45000)
+      void loadChats({reset:true});
     window.scrollTo({top:0,behavior:'instant'});
   }
   $('telegramThreadAttachButton')?.addEventListener('click',()=>{
@@ -1581,6 +1643,21 @@
     }else if(event.key==='Enter'){
       event.preventDefault();moveThreadSearch(event.shiftKey?-1:1);
     }
+  });
+  $('telegramThreadMessages')?.addEventListener('scroll',()=>{
+    // Browsers can emit dozens of scroll events per frame; schedule a single
+    // inexpensive bottom-distance check rather than rebuilding messages.
+    if(showLatestShortcut.frame)return;
+    showLatestShortcut.frame=requestAnimationFrame(()=>{
+      showLatestShortcut.frame=0;
+      showLatestShortcut();
+    });
+  },{passive:true});
+  $('telegramThreadJumpLatest')?.addEventListener('click',()=>{
+    const box=$('telegramThreadMessages');if(!box)return;
+    box.scrollTo({top:box.scrollHeight,behavior:'smooth'});
+    const button=$('telegramThreadJumpLatest');
+    if(button)button.hidden=true;
   });
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));

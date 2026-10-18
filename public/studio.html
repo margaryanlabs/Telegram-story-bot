@@ -8,7 +8,7 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261017-veto-active-sync-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261018-veto-fast-chat-v1" />
   <link rel="stylesheet" href="/chat-themes.css?v=20261017-chat-compose-v4" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
@@ -392,6 +392,8 @@
             <button type="button" id="telegramThreadSyncNow" aria-label="Проверить новые сообщения">↻</button>
           </div>
           <div class="veto-mirror-thread-body" id="telegramThreadMessages" aria-live="polite"></div>
+          <button type="button" id="telegramThreadJumpLatest" class="veto-mirror-jump-latest"
+            aria-label="Перейти к последним сообщениям" title="К последним сообщениям" hidden>↓ <span>Последние</span></button>
           <div id="telegramThreadNotice" class="veto-mirror-thread-notice" hidden></div>
           <div class="veto-mirror-thread-bottom">
             <div id="telegramThreadReplyPreview" class="veto-mirror-reply-preview" hidden>
@@ -1551,7 +1553,7 @@
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
   <script src="/chat-theme.js?v=20261017-chat-compose-v4"></script>
-  <script src="/telegram-chats.js?v=20261017-veto-active-sync-v1"></script>
+  <script src="/telegram-chats.js?v=20261018-veto-fast-chat-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
