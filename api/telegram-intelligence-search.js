@@ -56,10 +56,10 @@ export async function searchOwnerVault(userId,plan,{page=0}={}){
         const reply=await listPrivacyMessages(userId,String(task.thread.chatId),task.limit,task.offset);
         if(!reply||!Array.isArray(reply.messages))throw new Error('Архив ответил некорректно');
         scannedMessages+=reply.messages.length;
-        for(const row of reply.messages){
+        reply.messages.forEach((row,index)=>{
           const evidence=normalizeOwnerArchive(row,task.thread,plan,minMs);
-          if(evidence)found.push(evidence);
-        }
+          if(evidence)found.push({...evidence,vaultOffset:task.offset+index});
+        });
       }catch{failed.push(String(task.thread.chatId))}
     }
   }
