@@ -2171,7 +2171,8 @@
 
   function viewerPhoneSheet() {
     openSheet(`
-      <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 1 ИЗ 2</span>
+      <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="active">1 · Номер</span><span>2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Введи номер Telegram</h2>
       <p>Укажи тот номер, на который зарегистрирован твой Telegram. Мы попросим Telegram отправить код подтверждения.</p>
       <div class="auth-form">
@@ -2191,7 +2192,8 @@
 
   function viewerCodeSheet(delivery, reused = false) {
     openSheet(`
-      <span class="kicker">ПОДКЛЮЧЕНИЕ · ШАГ 2 ИЗ 2</span>
+      <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Теперь введи код из Telegram</h2>
       <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте StoryLab. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
       <div class="auth-form">
@@ -2230,6 +2232,7 @@
   function viewerPasswordSheet(hint = '') {
     openSheet(`
       <span class="kicker">ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА TELEGRAM</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="done">✓ Код</span><span class="active">3 · 2FA</span></div>
       <h2>У тебя включён 2FA‑пароль</h2>
       <p>Пароль передаётся Telegram только для завершения входа и не сохраняется VETO Telegram.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
