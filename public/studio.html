@@ -345,6 +345,28 @@
             <input id="telegramMirrorSearch" type="search" placeholder="Поиск по чатам" autocomplete="off" aria-label="Поиск по загруженным чатам" />
             <button id="telegramMirrorSearchClear" aria-label="Очистить поиск" type="button" hidden>×</button>
           </div>
+          <section class="veto-intelligence" aria-label="Интеллект-поиск по перепискам">
+            <button type="button" id="vetoIntelSearchToggle" class="veto-intelligence-toggle" aria-controls="vetoIntelSearchPanel" aria-expanded="false">
+              <span>✳</span><strong>Поиск в переписках</strong><small>Вопросы, темы, цитаты</small><b>⌄</b>
+            </button>
+            <div id="vetoIntelSearchPanel" class="veto-intelligence-panel" hidden>
+              <strong>VETO Intelligence Search <small>BETA</small></strong>
+              <p>Ищи свои сообщения во всех доступных облачных чатах Telegram по словам и близким понятиям. Без стороннего AI и без хранения запросов VETO.</p>
+              <form id="vetoIntelSearchForm" role="search" autocomplete="off">
+                <input id="vetoIntelSearchInput" type="search" maxlength="180" minlength="3"
+                  placeholder="Например: квартира в Дубае" aria-label="Поиск по сообщениям Telegram" autocomplete="off"/>
+                <button id="vetoIntelSearchSubmit" type="submit">Найти ↗</button>
+              </form>
+              <div class="veto-intelligence-examples" role="group" aria-label="Примеры запросов">
+                <button type="button" data-veto-intel-example="квартира в Дубае">Недвижимость в Дубае</button>
+                <button type="button" data-veto-intel-example="обещания за последние три месяца">Обещания за 3 месяца</button>
+              </div>
+              <div class="veto-intelligence-status" id="vetoIntelSearchStatus" role="status" aria-live="polite">
+                Поиск по доступным облачным сообщениям; удалённые копии VETO Vault пока не включены.
+              </div>
+              <div class="veto-intelligence-results" id="vetoIntelSearchResults" aria-label="Найденные сообщения"></div>
+            </div>
+          </section>
           <div class="veto-mirror-filters" id="telegramMirrorFilters" role="group" aria-label="Фильтр по чатам">
             <button type="button" data-mirror-filter="all" class="active">Все <span id="telegramMirrorCount">—</span></button>
             <button type="button" data-mirror-filter="private">Личные</button>
