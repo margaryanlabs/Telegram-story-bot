@@ -8,8 +8,9 @@
   <title>VETO Telegram — Private Telegram OS</title>
   <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261017-veto-active-sync-v1" />
+  <link rel="stylesheet" href="/app.css?v=20261018-veto-fast-chat-v1" />
   <link rel="stylesheet" href="/chat-themes.css?v=20261017-chat-compose-v4" />
+  <link rel="stylesheet" href="/chat-media.css?v=20261018-inline-media-v6" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/story-editor.css?v=20261017-veto-story-studio-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
@@ -376,7 +377,15 @@
             <div class="veto-mirror-thread-avatar" id="telegramThreadAvatar">TG</div>
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
             <a id="telegramThreadOpenNative" class="veto-mirror-icon-btn veto-mirror-native-link" aria-label="Открыть этот чат в Telegram" title="Открыть в Telegram" href="#" target="_blank" rel="noopener noreferrer" hidden>↗</a>
+            <button type="button" id="telegramThreadSearchToggle" class="veto-mirror-icon-btn" aria-label="Поиск по загруженным сообщениям" aria-controls="telegramThreadFind" aria-expanded="false" title="Поиск в переписке">⌕</button>
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
+          </div>
+          <div class="veto-mirror-thread-find" id="telegramThreadFind" role="search" aria-label="Поиск по открытой переписке" hidden>
+            <input type="search" id="telegramThreadFindInput" placeholder="Найти в загруженных сообщениях" autocomplete="off" spellcheck="false" maxlength="90" aria-label="Текст для поиска"/>
+            <span id="telegramThreadFindCount" role="status" aria-live="polite">Только загруженная история</span>
+            <button type="button" id="telegramThreadFindPrev" aria-label="Предыдущее совпадение" disabled>↑</button>
+            <button type="button" id="telegramThreadFindNext" aria-label="Следующее совпадение" disabled>↓</button>
+            <button type="button" id="telegramThreadFindClose" aria-label="Закрыть поиск">×</button>
           </div>
           <div class="veto-mirror-thread-security"><i></i><span>Облачные сообщения + подтверждённые копии VETO. Удалённое появляется, только если сохранено заранее.</span><b>↶</b></div>
           <div class="veto-mirror-sync-strip" role="status" aria-live="polite">
@@ -385,7 +394,21 @@
             <button type="button" id="telegramThreadSyncNow" aria-label="Проверить новые сообщения">↻</button>
           </div>
           <div class="veto-mirror-thread-body" id="telegramThreadMessages" aria-live="polite"></div>
+          <button type="button" id="telegramThreadJumpLatest" class="veto-mirror-jump-latest"
+            aria-label="Перейти к последним сообщениям" title="К последним сообщениям" hidden>↓ <span>Последние</span></button>
           <div id="telegramThreadNotice" class="veto-mirror-thread-notice" hidden></div>
+          <div class="veto-mirror-delivery-status" id="telegramThreadDeliveryStatus" role="status" aria-live="polite" aria-atomic="true" hidden>
+            <span id="telegramThreadDeliveryIcon" aria-hidden="true">◌</span>
+            <span id="telegramThreadDeliveryText">Ожидаю Telegram</span>
+          </div>
+          <dialog id="telegramThreadPhotoDialog" class="veto-mirror-photo-dialog" aria-label="Просмотр фотографии из переписки">
+            <div class="veto-mirror-photo-head">
+              <strong>Фото из переписки · только на этом устройстве</strong>
+              <button type="button" id="telegramThreadPhotoClose" aria-label="Закрыть просмотр фотографии">×</button>
+            </div>
+            <img id="telegramThreadPhotoFull" alt="Фото из собственной переписки"/>
+            <a id="telegramThreadPhotoSave" download="veto-chat-photo.jpg" rel="noopener" href="#">Сохранить фото ↓</a>
+          </dialog>
           <div class="veto-mirror-thread-bottom">
             <div id="telegramThreadReplyPreview" class="veto-mirror-reply-preview" hidden>
               <div><strong>↩ Ответ на сообщение</strong><small id="telegramThreadReplyText"></small></div>
@@ -1637,7 +1660,7 @@
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
   <script src="/chat-theme.js?v=20261017-chat-compose-v4"></script>
-  <script src="/telegram-chats.js?v=20261017-veto-active-sync-v1"></script>
+  <script src="/telegram-chats.js?v=20261018-veto-fast-chat-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/story-project.js?v=20261017-veto-story-project-v1"></script>
