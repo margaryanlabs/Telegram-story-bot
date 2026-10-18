@@ -862,7 +862,9 @@
   function resetOwner(){
     const current=String(tg?.initData||'');
     if(current===state.ownerInitData)return false;
+    closePhotoViewer();
     state.ownerInitData=current;
+    state.deliveryStage=null;renderDeliveryStatus();
     state.generation++;state.threadGeneration++;state.voicePermissionGeneration++;
     cancelVoiceCapture();
     stopThreadSync();
@@ -899,6 +901,8 @@
   }
 
   function revokeMediaUrls(){
+    closePhotoViewer();
+    for(const media of $('telegramThreadMessages')?.querySelectorAll('audio,video')||[])media.pause();
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
     state.mediaPreviewUrls.clear();state.previewSeen.clear();
@@ -1311,6 +1315,7 @@
     state.threadLoading=false;
     state.syncFailures=0;state.lastSyncedAt=null;
     state.thread=chat;state.messages=[];state.threadHasMore=false;
+    state.deliveryStage=null;renderDeliveryStatus();
     closeThreadSearch();
     state.replyTo=null;state.pendingAttachment=null;
     renderReplyPreview();renderAttachmentChip();
@@ -1397,6 +1402,7 @@
     closeThreadSearch();
     cancelVoiceCapture();
     state.thread=null;state.threadLoading=false;
+    state.deliveryStage=null;renderDeliveryStatus();
     state.replyTo=null;state.pendingAttachment=null;renderReplyPreview();renderAttachmentChip();
     $('telegramThreadView').hidden=true;
     $('telegramChatsView').hidden=false;
