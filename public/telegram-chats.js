@@ -853,7 +853,7 @@
         '<div><small>'+safe(item.chatTitle||'Telegram чат')+
         ' · сообщение #'+safe(item.messageId)+
         (item.deleted?' · сохранено до удаления':'')+'</small>'+
-        '<button type="button" data-veto-intel-open="'+index+'">Открыть источник ↗</button></div>'+
+        '<button type="button" data-veto-intel-open="'+index+'">Открыть чат ↗</button></div>'+
         '</article>';
     }).join('');
   }
