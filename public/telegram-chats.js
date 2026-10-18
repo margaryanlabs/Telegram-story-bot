@@ -964,6 +964,16 @@
     const list=$('telegramMirrorList');
     if(!list)return;
     const items=filteredChats();
+    const extendedFilter=!['all','private','unread'].includes(state.filter);
+    if(extendedFilter&&$('telegramMirrorFilters')){
+      $('telegramMirrorFilters').dataset.expanded='true';
+      $('vetoMessengerFiltersToggle')?.setAttribute('aria-expanded','true');
+    }
+    // Connected users see their dialogues first. Diagnostic configuration is
+    // still available from Tools, not occupying the message list.
+    const ready=state.connectionProof?.verified===true;
+    $('telegramMirror')?.classList.toggle('veto-messenger-ready',ready);
+    if($('vetoMessengerConnectCta'))$('vetoMessengerConnectCta').hidden=ready;
     renderPrivacyDiagnostics();
     $('telegramMirrorCount').textContent=String(state.chats.length);
     const proof=$('telegramMirrorAccountProof');
@@ -1332,6 +1342,7 @@
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
     state.chats=[];state.messages=[];state.thread=null;
+    closeVetoMessengerTools();
     clearIntelSearch({close:true});
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
@@ -1344,6 +1355,9 @@
     if($('vetoStickerDrawerTitle'))$('vetoStickerDrawerTitle').textContent='Стикеры Telegram';
     if($('vetoStickersSearch'))$('vetoStickersSearch').value='';
     state.filter='all';state.search='';state.threadSearch='';state.threadSearchIndex=0;
+    if($('vetoMessengerIntelArea'))$('vetoMessengerIntelArea').hidden=true;
+    if($('telegramMirrorFilters'))$('telegramMirrorFilters').dataset.expanded='false';
+    if($('vetoMessengerFiltersToggle'))$('vetoMessengerFiltersToggle').setAttribute('aria-expanded','false');
     if($('telegramThreadFind'))$('telegramThreadFind').hidden=true;
     if($('telegramThreadFindInput'))$('telegramThreadFindInput').value='';
     if($('telegramThreadSearchToggle'))$('telegramThreadSearchToggle').setAttribute('aria-expanded','false');
@@ -2020,6 +2034,45 @@
       void loadChats({reset:true});
     window.scrollTo({top:0,behavior:'instant'});
   }
+  function closeVetoMessengerTools(){
+    const pane=$('vetoMessengerTools'),button=$('vetoMessengerToolsToggle');
+    if(pane)pane.hidden=true;
+    if(button)button.setAttribute('aria-expanded','false');
+  }
+  $('vetoMessengerToolsToggle')?.addEventListener('click',()=>{
+    if(resetOwner())return;
+    const pane=$('vetoMessengerTools'),button=$('vetoMessengerToolsToggle');
+    if(!pane)return;
+    pane.hidden=!pane.hidden;
+    button?.setAttribute('aria-expanded',String(!pane.hidden));
+  });
+  $('vetoMessengerConnectCta')?.addEventListener('click',()=>{
+    if(typeof window.VetoTelegramOpenAccountConnection==='function')
+      void window.VetoTelegramOpenAccountConnection();
+  });
+  $('vetoMessengerTools')?.addEventListener('click',event=>{
+    const action=event.target.closest('[data-veto-messenger-tool]')?.dataset.vetoMessengerTool;
+    if(!action||resetOwner())return;
+    if(action==='intel'){
+      const panel=$('vetoMessengerIntelArea'),inside=$('vetoIntelSearchPanel');
+      if(panel){panel.hidden=false;inside.hidden=false;}
+      $('vetoIntelSearchToggle')?.setAttribute('aria-expanded','true');
+      closeVetoMessengerTools();
+      panel?.scrollIntoView({block:'nearest',behavior:'smooth'});
+      $('vetoIntelSearchInput')?.focus();
+    }else if(action==='access'){
+      const drawer=$('telegramMirrorAccessDrawer');
+      if(drawer){drawer.open=true;drawer.dataset.userToggled='1';}
+      drawer?.scrollIntoView({block:'nearest',behavior:'smooth'});
+    }
+  });
+  $('vetoMessengerFiltersToggle')?.addEventListener('click',()=>{
+    const box=$('telegramMirrorFilters'),button=$('vetoMessengerFiltersToggle');
+    if(!box||!button)return;
+    const next=box.dataset.expanded!=='true';
+    box.dataset.expanded=String(next);
+    button.setAttribute('aria-expanded',String(next));
+  });
   $('vetoIntelSearchToggle')?.addEventListener('click',()=>{
     const panel=$('vetoIntelSearchPanel');
     if(!panel)return;
@@ -2391,6 +2444,8 @@
     resetOwner();
     const current=event.detail?.screen;
     if(current!=='telegram'){
+      closeVetoMessengerTools();
+      if($('vetoMessengerIntelArea'))$('vetoMessengerIntelArea').hidden=true;
       clearIntelSearch({close:true});
       cancelVoiceCapture();stopThreadSync();
     }else{
