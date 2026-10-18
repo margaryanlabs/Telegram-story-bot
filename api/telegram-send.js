@@ -66,16 +66,17 @@ export default async function handler(req,res) {
     if(!decrypted?.session)return respond(res,409,{error:'Сессия отсутствует. Переподключи Telegram.'});
     const result=await withBackupClient(decrypted.session,async client=>{
       await verifyTelegramClientOwner(client,userId);
+      // Stickers are owner-owned account metadata: authentication and owner
+      // verification already happened above. Avoid loading up to 500 dialogs
+      // merely to show the user's own 24 recent sticker choices.
+      if(action==='recent_stickers')
+        return {stickers:recentStickersPublic(await recentStickers(client))};
       // Re-check target as an existing user-owned dialog, not a client-provided
       // access hash. Do not allow sends into archive-only or arbitrary peers.
-      // The current conversation is normally among the latest dialogs. Avoid
-      // fetching 500 peers for every outgoing message; still check the entire
-      // supported account window for an older conversation.
+      // Start with 60 peers; search further only for older conversations.
       const recent=await client.getDialogs({limit:60});
       const recentMatch=recent.some(dialog=>String(dialog?.id?.toString?.()||dialog?.id||'')===chatId);
       const dialogs=recentMatch ? recent : await client.getDialogs({limit:500});
-      if(action==='recent_stickers')
-        return {stickers:recentStickersPublic(await recentStickers(client))};
       if(action==='send_message')
         return sendOwnerMessage(client,dialogs,{ownerId:userId,chatId,message,nonce,replyTo});
       return sendRichTelegramMessage(client,dialogs,{
