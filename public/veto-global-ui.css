@@ -269,3 +269,45 @@ html[data-veto-theme="linen"] input{color:var(--text)}
   #telegramMirror .veto-intelligence-toggle small{display:none}
   #telegramMirror .veto-intelligence-hit-foot small{max-width:58%}
 }
+
+/* VETO Intelligence: consent-based private Vault evidence + chronological context. */
+#telegramMirror .veto-intel-vault-optin{display:flex;align-items:flex-start;gap:10px;
+  margin:10px 0;padding:11px;border:1px solid var(--ct-line);border-radius:12px;
+  background:var(--ct-elev);color:var(--ct-text);cursor:pointer}
+#telegramMirror .veto-intel-vault-optin input{accent-color:var(--ct-accent);width:18px;height:18px;
+  margin:2px 0 0;flex:none}
+#telegramMirror .veto-intel-vault-optin span{display:flex;flex-direction:column;gap:5px;min-width:0}
+#telegramMirror .veto-intel-vault-optin strong{font-size:12px;line-height:1.4}
+#telegramMirror .veto-intel-vault-optin small{font-size:10px;line-height:1.5;
+  color:var(--ct-muted)}
+#telegramMirror .veto-intel-timeline{margin:13px 0;padding:11px;
+  border-radius:13px;background:var(--ct-panel);border:1px solid var(--ct-line)}
+#telegramMirror .veto-intel-timeline[hidden]{display:none!important}
+#telegramMirror .veto-intel-timeline-head{display:flex;flex-wrap:wrap;gap:6px;
+  align-items:center;justify-content:space-between;padding-bottom:9px;border-bottom:1px solid var(--ct-line)}
+#telegramMirror .veto-intel-timeline-head strong{font-size:13px;color:var(--ct-text)}
+#telegramMirror .veto-intel-timeline-head small{font-size:10px;color:var(--ct-muted)}
+#telegramMirror .veto-intel-timeline-list{display:grid;gap:11px;
+  max-height:min(49dvh,480px);overflow-y:auto;overscroll-behavior:contain;margin-top:11px}
+#telegramMirror .veto-intel-event{border-left:2px solid var(--ct-accent);
+  border-radius:0 11px 11px 0;background:var(--ct-elev);padding:10px 12px;
+  min-width:0;color:var(--ct-text)}
+#telegramMirror .veto-intel-event-date{display:flex;flex-wrap:wrap;gap:7px;
+  justify-content:space-between;align-items:center;margin-bottom:8px}
+#telegramMirror .veto-intel-event-date time{font-size:10px;color:var(--ct-muted)}
+#telegramMirror .veto-intel-event-date span{font-size:9px;letter-spacing:.04em;
+  font-weight:800;color:var(--ct-accent)}
+#telegramMirror .veto-intel-event>strong{display:block;font-size:12px;color:var(--ct-text)}
+#telegramMirror .veto-intel-event blockquote{margin:9px 0;padding:0;font-size:12px;
+  line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ct-text)}
+#telegramMirror .veto-intel-event>div:last-child{display:flex;align-items:center;
+  flex-wrap:wrap;gap:9px;justify-content:space-between}
+#telegramMirror .veto-intel-event>div:last-child small{font-size:10px;color:var(--ct-muted)}
+#telegramMirror .veto-intel-event button{padding:7px 10px;background:var(--ct-chip);
+  color:var(--ct-chip-text);border:1px solid var(--ct-line);border-radius:9px;
+  font-size:10px;font-weight:750}
+#telegramMirror .veto-intel-event button:focus-visible{outline:2px solid var(--ct-accent)}
+@media(max-width:360px){
+ #telegramMirror .veto-intel-timeline{padding:8px}
+ #telegramMirror .veto-intel-vault-optin{padding:8px}
+}
