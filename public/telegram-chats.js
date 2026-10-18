@@ -440,41 +440,47 @@
     }
   }
   // Static WEBP previews only; other originals can still be sent by Telegram.
+  // One owner-verified Telegram connection fetches all eight previews.
+  // A bounded batch is much faster than connecting to Telegram per thumbnail.
   async function fetchStickerPreviews(chatId,ownerKey,epoch,items,setId=null){
-    let cursor=0;
-    async function worker(){
-      while(cursor<items.length){
-        const item=items[cursor++];
-        if(!item?.id||state.stickerPreviewUrls.has(String(item.id)))continue;
-        if(!stickerRequestValid(chatId,ownerKey,epoch))return;
+    const selected=items.filter(x=>x?.id&&!state.stickerPreviewUrls.has(String(x.id))).slice(0,8);
+    if(!selected.length||!stickerRequestValid(chatId,ownerKey,epoch))return;
+    const ids=new Set(selected.map(x=>String(x.id)));
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),19000);
+    try{
+      const response=await fetch('/api/telegram-sticker-previews',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':ownerKey},
+        body:JSON.stringify({stickerIds:[...ids],...(setId?{setId}:{})}),
+        signal:controller.signal,
+      });
+      if(!response.ok)return;
+      const data=await response.json();
+      if(!stickerRequestValid(chatId,ownerKey,epoch))return;
+      for(const item of Array.isArray(data.images)?data.images:[]){
+        const id=String(item?.id||''),encoded=String(item?.base64||'');
+        if(!ids.has(id)||state.stickerPreviewUrls.has(id)||
+          !encoded||encoded.length>218456||
+          !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))continue;
         try{
-          const controller=new AbortController();
-          const timer=setTimeout(()=>controller.abort(),12000);
-          let response;
-          try{
-            response=await fetch('/api/telegram-sticker-preview',{
-              method:'POST',
-              headers:{'content-type':'application/json','x-telegram-init-data':ownerKey},
-              body:JSON.stringify({stickerId:String(item.id),...(setId?{setId}:{})}),
-              signal:controller.signal,
-            });
-          }finally{clearTimeout(timer)}
-          if(!response.ok)continue;
-          const blob=await response.blob();
-          if(!blob.size||blob.size>160*1024||blob.type!=='image/webp')continue;
+          const decoded=atob(encoded);
+          if(!decoded.length||decoded.length>160*1024||
+             decoded.slice(0,4)!=='RIFF'||decoded.slice(8,12)!=='WEBP')continue;
           if(!stickerRequestValid(chatId,ownerKey,epoch))return;
-          const href=URL.createObjectURL(blob);
-          state.mediaUrls.push(href);state.stickerPreviewUrls.set(String(item.id),href);
+          const raw=Uint8Array.from(decoded,letter=>letter.charCodeAt(0));
+          const href=URL.createObjectURL(new Blob([raw],{type:'image/webp'}));
+          state.mediaUrls.push(href);state.stickerPreviewUrls.set(id,href);
           const button=[...$('telegramThreadStickerList')?.querySelectorAll('[data-send-sticker]')||[]]
-            .find(node=>node.dataset.sendSticker===String(item.id));
+            .find(node=>node.dataset.sendSticker===id);
           if(button?.isConnected){
             const img=document.createElement('img');img.src=href;img.alt='Стикер Telegram';
             img.loading='lazy';button.replaceChildren(img);
           }
-        }catch{/* Keep emoji fallback, never invent a sticker image. */}
+        }catch{/* Invalid image remains an emoji fallback. */}
       }
-    }
-    await Promise.all([worker(),worker()]);
+    }catch{/* Telegram previews are optional; never block sticker sending. */}
+    finally{clearTimeout(timer)}
   }
   async function selectStickerTab(tab){
     if(!['recent','packs'].includes(tab)||!state.thread)return;
