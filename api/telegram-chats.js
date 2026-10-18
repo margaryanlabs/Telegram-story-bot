@@ -357,7 +357,7 @@ export default async function handler(req,res){
     // Falling back is mandatory even if the caller requested fast-live rendering.
     if(!chat&&fastLive){
       historyPromise=archiveThreads(userId);
-      storedPromise=archivedMessages(userId,chatId,archiveOffset);
+      if(creds?.session)storedPromise=archivedMessages(userId,chatId,archiveOffset);
     }
     const [stored,history]=await Promise.all([storedPromise,historyPromise]);
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
