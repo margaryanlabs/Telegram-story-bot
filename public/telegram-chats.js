@@ -1015,6 +1015,79 @@
     state.mediaPreviewUrls.clear();state.previewSeen.clear();
     state.expandedAttachments.clear();state.expandedBytes=0;
   }
+  function expandedFileButton(id,archive){
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='veto-mirror-open-vault';
+    if(archive)btn.dataset.mirrorFile=String(id);
+    else btn.dataset.mirrorLiveFile=String(id);
+    btn.textContent=archive?'Открыть сохранённый файл ↗':'Открыть файл из Telegram ↗';
+    return btn;
+  }
+  // A downloaded file belongs to this open owner/thread only. The entire
+  // bounded in-memory media gallery is released on Back or account switch.
+  function cacheExpandedAttachment(button,id,blob,archive){
+    const key=String(id);
+    if(state.expandedAttachments.has(key))return;
+    const href=URL.createObjectURL(blob);
+    state.mediaUrls.push(href);
+    const wrapper=document.createElement('div');
+    wrapper.className='veto-mirror-media-reveal';
+    const mime=String(blob.type||'application/octet-stream').toLowerCase();
+    if(['image/jpeg','image/png','image/webp','image/gif'].includes(mime)){
+      const thumb=document.createElement('button');thumb.type='button';
+      thumb.className='veto-mirror-inline-photo-btn';thumb.dataset.mirrorPhoto=key;
+      thumb.setAttribute('aria-label','Развернуть фото');
+      const img=document.createElement('img');
+      img.src=href;img.alt=archive?'Фото из сохранённой копии':'Фото из Telegram';
+      img.loading='lazy';thumb.appendChild(img);wrapper.appendChild(thumb);
+      state.mediaPreviewUrls.set(key,href);
+    }else if(mime.startsWith('audio/')){
+      const audio=document.createElement('audio');
+      audio.controls=true;audio.preload='metadata';audio.src=href;
+      audio.setAttribute('aria-label',archive?'Сохранённое аудио из VETO Vault':'Аудиосообщение из Telegram');
+      wrapper.appendChild(audio);
+    }else if(['video/mp4','video/webm'].includes(mime)){
+      const video=document.createElement('video');
+      video.src=href;video.controls=true;video.preload='metadata';
+      wrapper.appendChild(video);
+    }
+    const link=document.createElement('a');
+    link.href=href;link.download=(archive?'telegram-veto-':'storylab-attachment-')+key;
+    link.textContent=archive?'Сохранить копию файла ↓':'Скачать вложение ↓';
+    wrapper.appendChild(link);
+    const slot=document.createElement('div');
+    slot.className='veto-mirror-expanded-slot';slot.dataset.mirrorExpanded=key;
+    slot.appendChild(wrapper);button.replaceWith(slot);
+    state.expandedAttachments.set(key,{href,mime,size:blob.size,archive,node:wrapper});
+    state.expandedBytes+=blob.size;
+    // LRU eviction prevents dozens of multi-megabyte blobs from exhausting
+    // memory on low-end Android WebViews. Reopen an evicted file on demand.
+    while((state.expandedAttachments.size>6||state.expandedBytes>24*1024*1024)
+      && state.expandedAttachments.size>1){
+      const oldestKey=state.expandedAttachments.keys().next().value;
+      const old=state.expandedAttachments.get(oldestKey);
+      state.expandedAttachments.delete(oldestKey);
+      state.expandedBytes=Math.max(0,state.expandedBytes-old.size);
+      for(const media of old.node.querySelectorAll('audio,video'))media.pause();
+      const current=state.mediaPreviewUrls.get(oldestKey);
+      if(current===old.href)state.mediaPreviewUrls.delete(oldestKey);
+      const oldSlot=[...$('telegramThreadMessages')?.querySelectorAll('[data-mirror-expanded]')||[]]
+        .find(el=>el.dataset.mirrorExpanded===oldestKey);
+      if(oldSlot)oldSlot.replaceWith(expandedFileButton(oldestKey,old.archive));
+      state.mediaUrls=state.mediaUrls.filter(url=>url!==old.href);
+      URL.revokeObjectURL(old.href);
+    }
+  }
+  // Reuse exact audio/video DOM nodes during history refresh. Re-creating the
+  // <audio> element would seek back to zero and cause repeated downloads.
+  function restoreExpandedAttachments(){
+    const scroller=$('telegramThreadMessages');
+    if(!scroller)return;
+    for(const slot of scroller.querySelectorAll('[data-mirror-expanded]')){
+      const entry=state.expandedAttachments.get(slot.dataset.mirrorExpanded);
+      if(entry&&entry.node)slot.replaceChildren(entry.node);
+    }
+  }
   async function openArchivedFile(button){
     if(!state.thread||!button||button.disabled)return;
     if(!tg?.initData){toast('Открой VETO внутри Telegram');return;}
@@ -1038,33 +1111,7 @@
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
          epoch!==state.threadGeneration||String(state.thread?.id)!==chatId||!button.isConnected)return;
       if(!blob.size||blob.size>20*1024*1024)throw new Error('Файл слишком большой для просмотра.');
-      const href=URL.createObjectURL(blob);
-      state.mediaUrls.push(href);
-      const wrapper=document.createElement('div');
-      wrapper.className='veto-mirror-media-reveal';
-      const mime=String(blob.type||'').toLowerCase();
-      if(['image/jpeg','image/png','image/webp','image/gif'].includes(mime)){
-        const thumb=document.createElement('button');thumb.type='button';
-        thumb.className='veto-mirror-inline-photo-btn';thumb.dataset.mirrorPhoto=String(id);
-        thumb.setAttribute('aria-label','Развернуть сохранённое фото');
-        const img=document.createElement('img');
-        img.src=href;img.alt='Сохранённое вложение из чата';img.loading='lazy';
-        thumb.appendChild(img);wrapper.appendChild(thumb);
-        state.mediaPreviewUrls.set(String(id),href);
-      }else if(mime.startsWith('audio/')){
-        const audio=document.createElement('audio');
-        audio.controls=true;audio.preload='metadata';audio.src=href;
-        audio.setAttribute('aria-label','Сохранённое аудио из VETO Vault');
-        wrapper.appendChild(audio);
-      }else if(['video/mp4','video/webm'].includes(mime)){
-        const video=document.createElement('video');
-        video.src=href;video.controls=true;video.preload='metadata';wrapper.appendChild(video);
-      }
-      const link=document.createElement('a');
-      link.href=href;link.download='telegram-veto-'+id;
-      link.textContent='Сохранить копию файла ↓';
-      wrapper.appendChild(link);
-      button.after(wrapper);button.hidden=true;
+      cacheExpandedAttachment(button,id,blob,true);
     }catch(error){
       if(ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
          epoch===state.threadGeneration&&String(state.thread?.id)===chatId&&button.isConnected){
@@ -1093,27 +1140,7 @@
       if(!blob.size||blob.size>4*1024*1024)throw new Error('Вложение слишком большое.');
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
          epoch!==state.threadGeneration||String(state.thread?.id)!==chatId||!button.isConnected)return;
-      const href=URL.createObjectURL(blob);
-      state.mediaUrls.push(href);
-      const element=document.createElement('div');
-      element.className='veto-mirror-media-reveal';
-      if(blob.type.startsWith('audio/')){
-        const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';
-        audio.setAttribute('aria-label','Прослушать аудио из Telegram');
-        audio.src=href;element.appendChild(audio);
-      }else if(['image/png','image/jpeg','image/webp'].includes(blob.type)){
-        const thumb=document.createElement('button');thumb.type='button';
-        thumb.className='veto-mirror-inline-photo-btn';thumb.dataset.mirrorPhoto=String(id);
-        thumb.setAttribute('aria-label','Развернуть фото');
-        const image=document.createElement('img');image.src=href;image.alt='Вложение Telegram';
-        thumb.appendChild(image);element.appendChild(thumb);
-        state.mediaPreviewUrls.set(String(id),href);
-      }else if(['video/mp4','video/webm'].includes(blob.type)){
-        const video=document.createElement('video');video.src=href;video.controls=true;video.preload='metadata';element.appendChild(video);
-      }
-      const link=document.createElement('a');link.href=href;link.download='storylab-attachment-'+id;
-      link.textContent='Скачать вложение ↓';element.appendChild(link);
-      button.after(element);button.hidden=true;
+      cacheExpandedAttachment(button,id,blob,false);
     }catch(error){
       if(ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
          epoch===state.threadGeneration&&String(state.thread?.id)===chatId&&button.isConnected){
@@ -1196,6 +1223,12 @@
     const box=$('telegramThreadMessages');
     if(!box)return;
     const previousHeight=box.scrollHeight, previousScroll=box.scrollTop;
+    // Detach media nodes before replacing message markup. Reattaching the
+    // same nodes retains their playback position and download state.
+    for(const slot of box.querySelectorAll('[data-mirror-expanded]')){
+      const entry=state.expandedAttachments.get(String(slot.dataset.mirrorExpanded));
+      if(entry?.node?.parentNode===slot)entry.node.remove();
+    }
     if(!state.messages.length){
       box.innerHTML=state.threadLoading
         ?empty('Загружаю сообщения','Получаю историю напрямую из Telegram…')
@@ -1232,7 +1265,10 @@
             ?'<div class="veto-mirror-preserved-flag">◈ СОХРАНЁННАЯ КОПИЯ VETO</div>'
             :'';
         const isAudio=['voice','audio'].includes(message.media);
-        const viewFile=message.saved&&message.media&&message.mediaAvailable
+        const cachedFile=state.expandedAttachments.get(String(message.id));
+        const viewFile=cachedFile&&message.media
+          ?'<div class="veto-mirror-expanded-slot" data-mirror-expanded="'+safe(message.id)+'"></div>'
+          :message.saved&&message.media&&message.mediaAvailable
           ?'<button type="button" class="veto-mirror-open-vault" data-mirror-file="'+safe(message.id)+
              '">'+(isAudio?'▶ Слушать сохранённое аудио':'Открыть сохранённый файл ↗')+'</button>'
           :message.media&&!message.deleted&&!message.preservedOnly&&message.media!=='photo'
@@ -1255,6 +1291,7 @@
           '<time>'+safe(messageTime(message.date))+'</time></footer></div></article>';
       }).join('');
     }
+    restoreExpandedAttachments();
     if(anchor){
       const el=[...box.querySelectorAll('[data-mirror-message-id]')]
         .find(x=>x.dataset.mirrorMessageId===String(anchor.id));
