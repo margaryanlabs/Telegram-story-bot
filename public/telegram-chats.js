@@ -870,6 +870,7 @@
       else if(item.source==='veto-vault'&&previous.source!=='veto-vault'){
         byId.set(key,{...previous,saved:true,deleted:Boolean(item.deleted),
           source:'telegram-cloud+veto-vault',
+          vaultOffset:Number.isSafeInteger(item.vaultOffset)?item.vaultOffset:previous.vaultOffset,
           possibleCommitment:previous.possibleCommitment||item.possibleCommitment});
       }else if(Number(item.score||0)>Number(previous.score||0))byId.set(key,item);
     }
@@ -2065,7 +2066,7 @@
     const result=state.intelResults[Number(trigger.dataset.vetoIntelOpen)];
     if(!result)return;
     const chatId=String(result.chatId),messageId=Number(result.messageId);
-    if(!/^-?\\d{1,22}$/.test(chatId)||!Number.isSafeInteger(messageId)||messageId<1)return;
+    if(!/^-?\d{1,22}$/.test(chatId)||!Number.isSafeInteger(messageId)||messageId<1)return;
     const ownerKey=state.ownerInitData;
     const current=state.chats.find(chat=>String(chat.id)===chatId);
     const archiveOnly=result.source==='veto-vault'&&!current;
