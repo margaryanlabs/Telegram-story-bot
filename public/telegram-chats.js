@@ -17,7 +17,7 @@
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
     threadSearch:'',threadSearchIndex:0,deliveryStage:null,
     intelResults:[],intelTimeline:[],intelQuery:'',intelEpoch:0,intelBusy:false,
-    intelNextPage:null,intelIncludeVault:false,intelCoverage:null,
+    intelNextPage:null,intelIncludeVault:false,intelCoverage:null,intelFocus:null,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -800,7 +800,7 @@
   function clearIntelSearch({close=false}={}){
     state.intelEpoch++;
     state.intelBusy=false;state.intelResults=[];state.intelTimeline=[];state.intelQuery='';
-    state.intelNextPage=null;state.intelIncludeVault=false;state.intelCoverage=null;
+    state.intelNextPage=null;state.intelIncludeVault=false;state.intelCoverage=null;state.intelFocus=null;
     if($('vetoIntelLoadMore'))$('vetoIntelLoadMore').hidden=true;
     if($('vetoIntelIncludeVault'))$('vetoIntelIncludeVault').checked=false;
     if($('vetoIntelTimeline'))$('vetoIntelTimeline').replaceChildren();
@@ -1646,7 +1646,11 @@
             :'';
         return divider+'<article data-mirror-message-id="'+safe(message.id)+'" class="veto-mirror-bubble'+(message.out?' outgoing':'')+
           (compact?' compact':'')+(message.deleted?' is-deleted':'')+
-          '"><div class="veto-mirror-bubble-inner">'+savedBanner+
+          (state.intelFocus&&String(state.intelFocus.chatId)===String(state.thread?.id)&&
+            String(state.intelFocus.messageId)===String(message.id)?' veto-intel-exact-source':'')+
+          '"><div class="veto-mirror-bubble-inner">'+
+          (message.sourceIsolated?'<div class="veto-intel-source-notice">Точное сообщение из источника · окружающая история не загружена</div>':'')+
+          savedBanner+
           (message.sender&&!message.out?'<strong class="veto-mirror-bubble-sender">'+
             safe(message.sender)+'</strong>':'')+
           replyMarkup+media+viewFile+(text?'<p>'+searchedText(text)+'</p>':'')+
@@ -1867,6 +1871,7 @@
     state.threadLoading=false;
     state.syncFailures=0;state.lastSyncedAt=null;
     state.thread=chat;state.messages=[];state.threadHasMore=false;
+    state.intelFocus=null;
     state.deliveryStage=null;renderDeliveryStatus();
     closeThreadSearch();
     state.replyTo=null;state.pendingAttachment=null;
@@ -1997,7 +2002,7 @@
     state.threadGeneration++;
     closeThreadSearch();
     cancelVoiceCapture();
-    state.thread=null;state.threadLoading=false;
+    state.thread=null;state.threadLoading=false;state.intelFocus=null;
     state.deliveryStage=null;renderDeliveryStatus();
     state.replyTo=null;state.pendingAttachment=null;renderReplyPreview();renderAttachmentChip();
     $('telegramThreadView').hidden=true;
@@ -2040,21 +2045,76 @@
       if($('vetoIntelSearchInput'))$('vetoIntelSearchInput').value=button.dataset.vetoIntelExample||'';
       void searchIntel();
     }));
-  function openIntelSource(trigger){
+  // No guessed jump: locate an actually loaded message or re-fetch precisely
+  // by its signed source ID. Missing/deleted Telegram evidence is reported.
+  function highlightIntelSource(chatId,messageId){
+    const box=$('telegramThreadMessages');
+    if(!box||String(state.thread?.id)!==String(chatId))return false;
+    const node=[...box.querySelectorAll('[data-mirror-message-id]')]
+      .find(el=>el.dataset.mirrorMessageId===String(messageId));
+    if(!node)return false;
+    state.intelFocus={chatId:String(chatId),messageId:Number(messageId)};
+    box.querySelectorAll('.veto-intel-exact-source')
+      .forEach(el=>el.classList.remove('veto-intel-exact-source'));
+    node.classList.add('veto-intel-exact-source');
+    node.scrollIntoView({block:'center',behavior:'smooth'});
+    return true;
+  }
+  async function openIntelSource(trigger){
     if(!trigger||resetOwner())return;
     const result=state.intelResults[Number(trigger.dataset.vetoIntelOpen)];
     if(!result)return;
-    const current=state.chats.find(chat=>String(chat.id)===String(result.chatId));
-    // Keep a Vault-only result in read-only archive mode, never infer the right
-    // to send messages from a private saved copy or an unlisted Telegram chat.
+    const chatId=String(result.chatId),messageId=Number(result.messageId);
+    if(!/^-?\\d{1,22}$/.test(chatId)||!Number.isSafeInteger(messageId)||messageId<1)return;
+    const ownerKey=state.ownerInitData;
+    const current=state.chats.find(chat=>String(chat.id)===chatId);
+    const archiveOnly=result.source==='veto-vault'&&!current;
     const chat=current||{
-      id:String(result.chatId),title:String(result.chatTitle||'Telegram чат'),
-      type:result.source==='veto-vault'?'copy':
+      id:chatId,title:String(result.chatTitle||'Telegram чат'),
+      type:archiveOnly?'copy':
         ['private','group','channel'].includes(result.kind)?result.kind:'other',
-      archiveOnly:result.source==='veto-vault',
-      savedCopy:result.saved===true,serverCanSend:false,preview:'',
+      archiveOnly,savedCopy:result.saved===true,serverCanSend:false,preview:'',
     };
-    void openThread(chat);
+    await openThread(chat);
+    if(resetOwner()||ownerKey!==state.ownerInitData||
+       ownerKey!==String(tg?.initData||'')||String(state.thread?.id)!==chatId)return;
+    const generation=state.threadGeneration;
+    if(highlightIntelSource(chatId,messageId))return;
+    const source=archiveOnly||result.source==='veto-vault'||
+      (result.deleted===true&&result.saved===true)?'veto-vault':'telegram-cloud';
+    const vaultOffset=result.vaultOffset;
+    if(source==='veto-vault'&&(!Number.isSafeInteger(vaultOffset)||vaultOffset<0)){
+      threadNotice('Точная позиция сохранённой копии отсутствует. Проверь сообщение в VETO Vault.');return;
+    }
+    threadNotice('Ищу точный источник сообщения #'+messageId+'…');
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),20000);
+    try{
+      const response=await fetch('/api/telegram-message-context',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':ownerKey},
+        body:JSON.stringify({chatId,messageId,source,
+          ...(source==='veto-vault'?{vaultOffset}:{})}),
+        signal:controller.signal,
+      });
+      const data=await response.json().catch(()=>({}));
+      if(resetOwner()||ownerKey!==state.ownerInitData||
+         ownerKey!==String(tg?.initData||'')||
+         generation!==state.threadGeneration||String(state.thread?.id)!==chatId)return;
+      if(!response.ok||!data.ok||Number(data.message?.id)!==messageId)
+        throw new Error(data.error||'Оригинальное сообщение сейчас недоступно.');
+      if(!state.messages.some(m=>String(m.id)===String(messageId))){
+        state.messages.push({...data.message,sourceIsolated:true});
+        state.messages.sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||Number(a.id)-Number(b.id));
+      }
+      state.intelFocus={chatId,messageId};
+      renderMessages({keepScroll:true});
+      if(highlightIntelSource(chatId,messageId))
+        threadNotice('Показано исходное сообщение #'+messageId+'. Остальная история вокруг него может быть не загружена.');
+    }catch(error){
+      if(ownerKey===state.ownerInitData&&generation===state.threadGeneration)
+        threadNotice(String(error.message||'Не удалось открыть точный источник.'));
+    }finally{clearTimeout(timer)}
   }
   $('vetoIntelSearchResults')?.addEventListener('click',event=>
     openIntelSource(event.target.closest('[data-veto-intel-open]')));
