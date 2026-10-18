@@ -76,7 +76,9 @@ test('Live mobile UI pins chats and loads bounded inline photo thumbnails',()=>{
   assert.ok(ui.includes("photoRequest('photo',ownerChatId,id)"));
   assert.ok(ui.includes('function loadInlinePreviews()'));
   assert.ok(ui.includes("document.querySelectorAll('[data-mirror-preview]')"));
-  assert.ok(ui.includes('.slice(-3)'));
+  assert.ok(ui.includes('photoInViewport(el,scroller)'));
+  assert.ok(ui.includes('state.previewActive>=2'));
+  assert.ok(ui.includes('loadInlinePreviews({requestedId:id})'));
   assert.ok(ui.includes("URL.revokeObjectURL"));
   assert.ok(css.includes('.veto-mirror-inline-photo'));
   assert.ok(css.includes('.veto-mirror-avatar-img'));
