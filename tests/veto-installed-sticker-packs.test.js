@@ -72,7 +72,7 @@ test('catalog, preview and send only use signed Telegram owner with no access ha
  assert.match(ui,/async function openStickerPack\(setId\)/);
  assert.match(ui,/state\.stickerEpoch\+\+/);
  assert.match(ui,/stickerRequestValid\(chatId,ownerKey,epoch\)/);
- assert.match(ui,/stickerSetId:a/);
+ assert.match(ui,/a\.stickerSetId===b\.stickerSetId/);
  assert.match(html,/id="vetoStickersSearch"/);
  assert.match(html,/data-sticker-tab="packs"/);
  assert.match(styles,/veto-sticker-pack-card/);
