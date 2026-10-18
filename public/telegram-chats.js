@@ -1983,21 +1983,26 @@
       if($('vetoIntelSearchInput'))$('vetoIntelSearchInput').value=button.dataset.vetoIntelExample||'';
       void searchIntel();
     }));
-  $('vetoIntelSearchResults')?.addEventListener('click',event=>{
-    const trigger=event.target.closest('[data-veto-intel-open]');
+  function openIntelSource(trigger){
     if(!trigger||resetOwner())return;
     const result=state.intelResults[Number(trigger.dataset.vetoIntelOpen)];
     if(!result)return;
     const current=state.chats.find(chat=>String(chat.id)===String(result.chatId));
-    // Telegram Global Search only yields account-visible messages; the normal
-    // thread endpoint still independently checks the MTProto peer owner.
+    // Keep a Vault-only result in read-only archive mode, never infer the right
+    // to send messages from a private saved copy or an unlisted Telegram chat.
     const chat=current||{
       id:String(result.chatId),title:String(result.chatTitle||'Telegram чат'),
-      type:['private','group','channel'].includes(result.kind)?result.kind:'other',
-      archiveOnly:false,serverCanSend:false,preview:'',
+      type:result.source==='veto-vault'?'copy':
+        ['private','group','channel'].includes(result.kind)?result.kind:'other',
+      archiveOnly:result.source==='veto-vault',
+      savedCopy:result.saved===true,serverCanSend:false,preview:'',
     };
     void openThread(chat);
-  });
+  }
+  $('vetoIntelSearchResults')?.addEventListener('click',event=>
+    openIntelSource(event.target.closest('[data-veto-intel-open]')));
+  $('vetoIntelTimeline')?.addEventListener('click',event=>
+    openIntelSource(event.target.closest('[data-veto-intel-open]')));
   $('telegramThreadAttachButton')?.addEventListener('click',()=>{
     if(canSendInThread(state.thread))$('telegramThreadFileInput')?.click();
   });
@@ -2268,6 +2273,7 @@
     resetOwner();
     const current=event.detail?.screen;
     if(current!=='telegram'){
+      clearIntelSearch({close:true});
       cancelVoiceCapture();stopThreadSync();
     }else{
       if(state.thread)scheduleThreadSync(3500);
