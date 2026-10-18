@@ -58,6 +58,8 @@
   let selected='graphite';
   try{selected=window.localStorage.getItem(KEY)||selected}catch{}
   paint(selected);
+  // Keep the popover outside the clipped chat scroller when the toggle docks into a thread.
+  document.body.appendChild(menu);
   dock();
   toggle.addEventListener('click',()=>{
     const show=menu.hidden;
@@ -74,7 +76,7 @@
     try{window.Telegram?.WebApp?.HapticFeedback?.selectionChanged()}catch{}
   });
   document.addEventListener('pointerdown',event=>{
-    if(!menu.hidden&&!control.contains(event.target))closeMenu();
+    if(!menu.hidden&&!control.contains(event.target)&&!menu.contains(event.target))closeMenu();
   });
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'&&!menu.hidden){closeMenu();toggle.focus()}
