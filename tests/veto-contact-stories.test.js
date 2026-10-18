@@ -2,8 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
-  normalizeContactStories,stealthStatus,requireStealth,
-  STORY_MEDIA_LIMIT_BYTES,
+  normalizeContactStories,STORY_MEDIA_LIMIT_BYTES,
 } from '../lib/telegram-contact-stories.js';
 
 const source=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
@@ -34,14 +33,13 @@ test('only Telegram-visible real contacts appear, no fabricated or expired stori
   assert.ok(!JSON.stringify(result).includes('accessHash'));
 });
 
-test('stealth fail-closed with safety window, cooldown and Telegram activation state',()=>{
-  assert.equal(stealthStatus({activeUntilDate:now+500,cooldownUntilDate:now+300},now).active,true);
-  assert.equal(stealthStatus({activeUntilDate:now+20,cooldownUntilDate:now+300},now).active,false);
-  assert.equal(stealthStatus({activeUntilDate:now+20,cooldownUntilDate:now+300},now).canActivate,false);
-  assert.equal(stealthStatus(null,now).active,false);
-  assert.equal(requireStealth({activeUntilDate:now+120},now).active,true);
-  assert.throws(()=>requireStealth({activeUntilDate:now+89,cooldownUntilDate:now+700},now),
-    /STEALTH_NOT_CONFIRMED/);
+test('Ghost View never requires Premium, official cooldown, or timed stealth',()=>{
+  const api=source('api/telegram-stories.js'), ui=source('public/telegram-stories.js');
+  const policy=source('lib/telegram-contact-stories.js');
+  assert.doesNotMatch(api,/ActivateStealthMode|ensureStealth|requireStealth|stealthStatus|PREMIUM_ACCOUNT_REQUIRED/);
+  assert.doesNotMatch(ui,/premium|stealthUntil|expiryTimer|canActivate|x-veto-stealth-until/i);
+  assert.doesNotMatch(policy,/STEALTH_SAFETY_SECONDS|stealthStatus|requireStealth/);
+  assert.match(ui,/Ghost View · без отметок о просмотре/);
 });
 
 test('backend authenticates Telegram owner and never silently reports story reads',()=>{
@@ -50,13 +48,17 @@ test('backend authenticates Telegram owner and never silently reports story read
   assert.match(api,/verifyTelegramClientOwner\(client,ownerId\)/);
   assert.match(api,/sameTelegramAccount/);
   assert.match(api,/getViewerSession/);
-  assert.match(api,/requireStealth/);
-  assert.match(api,/ActivateStealthMode/);
+  assert.match(api,/READ_ONLY_STORY_REQUESTS/);
+  assert.match(api,/invokeStoryFetch/);
+  assert.match(api,/Api\.stories\.GetAllStories, Api\.stories\.GetStoriesByID/);
   assert.match(api,/GetAllStories/);
   assert.match(api,/GetStoriesByID/);
-  assert.ok(api.indexOf('ensureStealth(client,snapshot.stealthMode)')<
-    api.indexOf('downloadContactStory(client,story,user)'));
-  assert.doesNotMatch(api,/new Api\.stories\.(ReadStories|IncrementStoryViews)/);
+  assert.match(api,/const file = await downloadContactStory\(client,story,user\)/);
+  assert.match(api,/viewMode:'ghost-no-receipt'/);
+  assert.match(api,/X-Veto-Story-Mode','ghost-no-receipt'/);
+  assert.doesNotMatch(api,/new Api\.stories\.(ReadStories|IncrementStoryViews|SendReaction|ActivateStealthMode)/);
+  assert.doesNotMatch(api,/client\.invoke\(new Api\.stories/);
+  assert.match(api,/STORY_RPC_NOT_ALLOWLISTED/);
   assert.ok(STORY_MEDIA_LIMIT_BYTES<=4*1024*1024);
   assert.match(api,/private, no-store/);
 });
@@ -70,7 +72,9 @@ test('stories are wired into the existing chat page, not a second app',()=>{
   assert.match(ui,/data-veto-story-person/);
   assert.match(ui,/closeViewer\(/);
   assert.match(ui,/X-Telegram-Init-Data/);
-  assert.match(ui,/x-veto-stealth-until/);
+  assert.match(ui,/x-veto-story-mode/);
+  assert.match(ui,/ghost-no-receipt/);
+  assert.doesNotMatch(ui,/data-veto-story-react|data-veto-story-reply/);
   assert.doesNotMatch(ui,/localStorage|sessionStorage/);
   assert.doesNotMatch(ui,/sendReaction|incrementStoryViews|readStories/);
 });
