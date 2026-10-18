@@ -109,7 +109,7 @@ export default async function handler(req,res){
     });
     const cloudOk=searched.cloud.status==='fulfilled';
     const vaultOk=!includeVault||searched.vault.status==='fulfilled';
-    if(!cloudOk&&!vaultOk)throw new Error('telegram_cloud_and_vault_unavailable');
+    if(!cloudOk&&(!includeVault||!vaultOk))throw new Error('telegram_cloud_and_vault_unavailable');
     const cloud=cloudOk?searched.cloud.value:[];
     const vault=includeVault&&vaultOk?searched.vault.value:null;
     const results=mergeEvidence(cloud,vault?.results||[],plan,30);
