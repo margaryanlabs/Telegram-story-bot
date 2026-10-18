@@ -2377,6 +2377,7 @@
             await refreshViewerSync({ silent: true });
             await refresh();
             await refreshViewerAnalytics({ silent: true });
+            switchScreen('telegram');
             break;
           }
 
@@ -2605,7 +2606,7 @@
       if (!$('vetoWelcome')?.hidden) closeVetoWelcome();
       switchScreen(destination);
       if(destination==='telegram'&&!viewerState.session?.connected&&!state.accountConnection?.connected)
-        setTimeout(()=>{if(currentScreen==='telegram')connectionHelpSheet();},140);
+        setTimeout(()=>{if(currentScreen==='telegram')void window.VetoTelegramOpenAccountConnection?.();},140);
     });
   });
   $('vetoWelcomeNext')?.addEventListener('click', () => {
@@ -2618,7 +2619,7 @@
     switchScreen('telegram');
     if (viewerState.session?.connected !== true &&
         state.accountConnection?.connected !== true) {
-      setTimeout(()=>{ if(currentScreen==='telegram')connectionHelpSheet(); },140);
+      setTimeout(()=>{ if(currentScreen==='telegram')void window.VetoTelegramOpenAccountConnection?.(); },140);
     }
   });
   $('viewerSetupButton').addEventListener('click', viewerSetupSheet);
@@ -3037,6 +3038,7 @@
           // immediately appear otherwise for users without Telegram Business.
           await refresh();
           await refreshViewerAnalytics({ silent: true });
+          switchScreen('telegram');
         }
       });
       return;
@@ -3053,6 +3055,7 @@
         await refreshViewerSync({ silent: true });
         await refresh();
         await refreshViewerAnalytics({ silent: true });
+        switchScreen('telegram');
       });
       return;
     }
