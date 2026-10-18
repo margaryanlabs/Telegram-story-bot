@@ -83,8 +83,13 @@ export default async function handler(req,res){
       await verifyTelegramClientOwner(client,userId);
       // Never accept peer/access hashes from the browser: the dialog must be
       // reachable in the authenticated owner's real Telegram account.
-      const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
-      const dialog=dialogs.find(d=>safeId(d?.id)===chatId);
+      const recent=await client.getDialogs({limit:60});
+      let dialog=recent.find(d=>safeId(d?.id)===chatId);
+      if(!dialog){
+        // Older but still supported conversations need the full fallback.
+        const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
+        dialog=dialogs.find(d=>safeId(d?.id)===chatId);
+      }
       if(!dialog)return null;
       if(action==='attachment')return getAttachment(client,dialog,body.messageId);
       const raw=action==='avatar'
