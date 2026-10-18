@@ -768,10 +768,35 @@
     state.mediaPreviewUrls.set(String(messageId),href);
     state.mediaUrls.push(href);
   }
+  function photoButtonMarkup(href,messageId,label){
+    return '<button type="button" class="veto-mirror-inline-photo-btn" data-mirror-photo="'+safe(messageId)+
+      '" aria-label="Развернуть фотографию" title="Увеличить фото">'+
+      '<img class="veto-mirror-inline-photo" src="'+safe(href)+'" alt="'+safe(label)+'" loading="lazy" /></button>';
+  }
+  function closePhotoViewer(){
+    const dialog=$('telegramThreadPhotoDialog');
+    if(!dialog)return;
+    if(typeof dialog.close==='function' && dialog.open)dialog.close();
+    else dialog.removeAttribute('open');
+    if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
+    if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
+  }
+  function openPhotoViewer(messageId){
+    if(resetOwner()||!state.thread)return;
+    const href=state.mediaPreviewUrls.get(String(messageId));
+    if(!href||!state.mediaUrls.includes(href)||!href.startsWith('blob:'))return;
+    const dialog=$('telegramThreadPhotoDialog'),img=$('telegramThreadPhotoFull');
+    const save=$('telegramThreadPhotoSave');
+    if(!dialog||!img||!save)return;
+    img.src=href;
+    save.href=href;save.download='veto-chat-photo-'+String(messageId)+'.jpg';
+    if(typeof dialog.showModal==='function'&&!dialog.open)dialog.showModal();
+    else dialog.setAttribute('open','');
+  }
   function inlineImage(message){
     if(message?.media!=='photo')return '';
     const cached=state.mediaPreviewUrls.get(String(message.id));
-    if(cached)return '<img class="veto-mirror-inline-photo" src="'+safe(cached)+'" alt="Фото из переписки" loading="lazy" />';
+    if(cached)return photoButtonMarkup(cached,message.id,'Фото из переписки');
     return '<div class="veto-mirror-inline-placeholder" data-mirror-preview="'+
       safe(message.id)+'"><span>▣</span><small>Фотография из переписки</small></div>';
   }
