@@ -297,13 +297,14 @@
   function richSendIntent(action,chatId,pending,caption,replyTo,stickerId){
     return {
       action,chatId,file:pending?.file||pending||null,
-      caption,replyTo,stickerId:action==='send_sticker'?String(stickerId):null,
+      caption,replyTo,stickerId:action==='send_sticker'?String(stickerId?.id||stickerId):null,
+      stickerSetId:action==='send_sticker'?(stickerId?.setId||null):null,
     };
   }
   function sameRichIntent(a,b){
     return Boolean(a&&b&&a.action===b.action&&a.chatId===b.chatId&&
       a.file===b.file&&a.caption===b.caption&&a.replyTo===b.replyTo&&
-      a.stickerId===b.stickerId);
+      a.stickerId===b.stickerId&&a.stickerSetId===b.stickerSetId);
   }
   async function sendRichOutgoing(action,attachmentOrIndex=null){
     const chat=state.thread,field=$('telegramThreadCompose');
@@ -331,7 +332,9 @@
         const kind=pending?.kind||(['image/jpeg','image/png','image/webp'].includes(file.type)?'photo':'document');
         request={...request,kind,name:file.name,mime:file.type,base64:await readFileAsBase64(file),
           caption,duration:Number(pending?.duration||0)};
-      }else if(action==='send_sticker')request={...request,stickerId:String(attachmentOrIndex)};
+      }else if(action==='send_sticker')request={...request,
+        stickerId:String(attachmentOrIndex?.id||attachmentOrIndex),
+        ...(attachmentOrIndex?.setId?{setId:String(attachmentOrIndex.setId)}:{})};
       else return;
       // A file read can outlive both the original thread and the Telegram owner.
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();throw new Error('Аккаунт изменился. Отправка отменена.');}
