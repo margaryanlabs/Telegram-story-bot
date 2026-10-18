@@ -72,8 +72,11 @@
       });
       const data=await response.json().catch(()=>({}));
       if(signed!==String(tg?.initData||'')){resetOwner();throw new Error('Telegram-аккаунт изменился. Старые чаты скрыты.');}
-      if(!response.ok||!data.ok)
-        throw new Error(data.error||'Не удалось получить переписки');
+      if(!response.ok||!data.ok){
+        const error=new Error(data.error||'Не удалось получить переписки');
+        error.httpStatus=response.status;
+        throw error;
+      }
       return data;
     }catch(err){
       if(err?.name==='AbortError')throw new Error('Telegram отвечает слишком долго. Попробуй ещё раз.');
@@ -658,16 +661,30 @@
     resetOwner();
     if(state.loading)return;
     const generation=++state.generation;
+    // Keep the verified, in-memory conversation list visible during a same-
+    // account refresh. Fresh data atomically replaces it only on success.
+    // Never reuse it across changed owners or unauthenticated sessions.
+    const keepVisible=Boolean(reset&&state.connectionProof?.verified&&state.chats.length&&
+      state.ownerInitData===String(tg?.initData||''));
     if(reset){
-      state.page=0;state.autoPages=0;state.chats=[];state.hasMore=true;state.connectionProof=null;
+      state.page=0;state.autoPages=0;state.hasMore=true;
+      if(!keepVisible){state.chats=[];state.connectionProof=null;}
       hideNotice();
     }
     if(!state.hasMore)return;
     state.loading=true;
-    renderChats();
+    if(keepVisible){
+      const stamp=$('telegramMirrorUpdated');
+      if(stamp)stamp.textContent='↻ Обновляю · чаты доступны';
+      $('telegramMirrorRefresh')?.classList.add('is-refreshing');
+      $('telegramMirrorRefresh')?.setAttribute('aria-busy','true');
+    }else renderChats();
     try{
       const data=await request('list',{page:state.page});
       if(generation!==state.generation)return;
+      // Atomic replacement prevents stale previews, unread badges and
+      // vanished chats from leaking into the newly verified server snapshot.
+      if(keepVisible)state.chats=[];
       const indexes=new Map(state.chats.map((c,index)=>[String(c.id),index]));
       (data.chats||[]).forEach(chat=>{
         if(!chat||!chat.id)return;
@@ -698,8 +715,19 @@
         showNotice('Показаны последние 500 облачных диалогов. Для более старых используй оригинальный Telegram.');
     }catch(error){
       if(generation!==state.generation)return;
-      // Fail closed on any signed-account mismatch or authentication error.
-      // Never keep a previously loaded conversation visible after a failed refresh.
+      const authenticated=state.ownerInitData===String(tg?.initData||'');
+      // Temporary Telegram/transport outages are not an authentication
+      // failure. Keep already verified RAM-only chats visible, with an honest
+      // stale-data notice and a manual retry. 401/403/409 fail closed.
+      const status=Number(error?.httpStatus||0);
+      const transient=status===429||status>=500||(!status&&
+        /долго|сети|соединени|не удалось|не ответил/i.test(String(error?.message||'')));
+      if(keepVisible&&authenticated&&transient){
+        state.hasMore=true;state.page=0;
+        showNotice('Пока нет свежего ответа Telegram. Показаны ранее загруженные чаты этого аккаунта; для обновления нажми ↻. '+error.message);
+        return;
+      }
+      // Authentication and ownership failures must never leave old chats on screen.
       state.chats=[];state.hasMore=false;state.connectionProof=null;
       state.thread=null;state.messages=[];
       $('telegramThreadView').hidden=true;
@@ -710,7 +738,12 @@
       }
       showNotice(error.message,/Подключи|подключён|Открой VETO|аккаунт|авторизуй/i.test(error.message));
     }finally{
-      if(generation===state.generation){state.loading=false;renderChats();}
+      if(generation===state.generation){
+        state.loading=false;
+        $('telegramMirrorRefresh')?.classList.remove('is-refreshing');
+        $('telegramMirrorRefresh')?.removeAttribute('aria-busy');
+        renderChats();
+      }
     }
   }
   async function photoRequest(action,chatId,messageId=null){
