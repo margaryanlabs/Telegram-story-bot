@@ -152,3 +152,21 @@ body.veto-chat-active #telegramMirror .veto-mirror-chat-main>small{font-size:12p
 body.veto-chat-active #telegramMirror .veto-mirror-thread-person strong{font-size:14px}
 body.veto-chat-active #telegramMirror .veto-mirror-sticker-list button:focus-visible,
 body.veto-chat-active #telegramMirror .veto-mirror-bubble:focus-visible{outline:2px solid var(--ct-accent)}
+
+/* Light/linen surfaces outside Messenger: Home, Privacy, Stories, Studio and Intel. */
+html[data-veto-theme="pearl"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,.studio-panel,
+  .studio-result,.ghost-command-card,.privacy-note,.veto-business-step,.veto-mirror-home),
+html[data-veto-theme="linen"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,.studio-panel,
+  .studio-result,.ghost-command-card,.privacy-note,.veto-business-step,.veto-mirror-home){
+  background:var(--surface);color:var(--text);border-color:var(--line);box-shadow:var(--shadow)
+}
+html[data-veto-theme="pearl"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,
+  .studio-panel,.studio-result,.ghost-command-card) :is(h1,h2,h3,strong,b),
+html[data-veto-theme="linen"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,
+  .studio-panel,.studio-result,.ghost-command-card) :is(h1,h2,h3,strong,b){color:var(--text)}
+html[data-veto-theme="pearl"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,
+  .studio-panel,.studio-result,.ghost-command-card) :is(p,small),
+html[data-veto-theme="linen"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,
+  .studio-panel,.studio-result,.ghost-command-card) :is(p,small){color:var(--muted)}
+html[data-veto-theme="pearl"] input,
+html[data-veto-theme="linen"] input{color:var(--text)}
