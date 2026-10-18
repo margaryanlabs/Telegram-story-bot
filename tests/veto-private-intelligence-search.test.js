@@ -76,7 +76,7 @@ test('UI is explicit, memory-only, identity-isolated and cites original message 
  assert.match(ui,/ownerKey!==state\.ownerInitData/);
  assert.match(ui,/safe\(result\.snippet\|\|''\)/);
  assert.match(ui,/data-veto-intel-open/);
- assert.match(ui,/void openThread\(chat\)/);
+ assert.match(ui,/await openThread\(chat\)/);
  assert.match(html,/id="vetoIntelSearchForm"/);
  assert.match(html,/id="vetoIntelSearchResults"/);
  assert.match(html,/type="checkbox" id="vetoIntelIncludeVault"/);
