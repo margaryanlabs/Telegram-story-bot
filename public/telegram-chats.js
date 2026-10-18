@@ -10,7 +10,7 @@
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
-    pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
+    pendingAttachment:null,replyTo:null,stickers:[],stickerPreviewUrls:new Map(),recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
     threadSearch:'',threadSearchIndex:0,deliveryStage:null,
@@ -375,23 +375,73 @@
       if(ownerKey===state.ownerInitData){state.sendInFlight=false;renderSendComposer();}
     }
   }
+  // Preview only genuine recent owner stickers. Animated .tgs/video stickers
+  // keep their emoji fallback until supported; never show a random fake sticker.
+  async function fetchStickerPreviews(chatId,ownerKey,items){
+    const selected=items.slice(0,8);
+    let cursor=0;
+    async function worker(){
+      while(cursor<selected.length){
+        const item=selected[cursor++];
+        if(!item?.id||state.stickerPreviewUrls.has(String(item.id)))continue;
+        if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+          String(state.thread?.id)!==chatId)return;
+        try{
+          const controller=new AbortController();
+          const timeout=setTimeout(()=>controller.abort(),11000);
+          let response;
+          try{
+            response=await fetch('/api/telegram-sticker-preview',{
+              method:'POST',
+              headers:{'content-type':'application/json','x-telegram-init-data':ownerKey},
+              body:JSON.stringify({stickerId:String(item.id)}),signal:controller.signal,
+            });
+          }finally{clearTimeout(timeout)}
+          if(!response.ok)continue;
+          const blob=await response.blob();
+          if(!blob.size||blob.size>160*1024||blob.type!=='image/webp')continue;
+          if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+            String(state.thread?.id)!==chatId)return;
+          const href=URL.createObjectURL(blob);
+          state.mediaUrls.push(href);
+          state.stickerPreviewUrls.set(String(item.id),href);
+          const button=[...$('telegramThreadStickerList')?.querySelectorAll('[data-send-sticker]')||[]]
+            .find(node=>node.dataset.sendSticker===String(item.id));
+          if(button&&button.isConnected){
+            const img=document.createElement('img');img.src=href;img.alt='Стикер Telegram';
+            img.loading='lazy';button.replaceChildren(img);
+          }
+        }catch{/* Emoji fallback is honest when preview cannot be fetched. */}
+      }
+    }
+    await Promise.all([worker(),worker()]);
+  }
   async function openStickerDrawer(){
     if(!canSendInThread(state.thread)||state.sendInFlight)return;
     const pane=$('telegramThreadStickerDrawer'),list=$('telegramThreadStickerList');
     if(!pane||!list)return;
     pane.hidden=!pane.hidden;
     if(pane.hidden)return;
-    list.textContent='Загружаю твои недавние стикеры…';
-    const chatId=String(state.thread.id);
-    try {
+    list.textContent='Загружаю последние стикеры твоего Telegram…';
+    const chatId=String(state.thread.id),ownerKey=state.ownerInitData;
+    try{
       const data=await richRequest('recent_stickers',{chatId});
-      if(String(state.thread?.id)!==chatId)return;
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+        String(state.thread?.id)!==chatId||pane.hidden)return;
       state.stickers=Array.isArray(data.stickers)?data.stickers:[];
       list.innerHTML=state.stickers.length
-        ?state.stickers.map(x=>'<button type="button" data-send-sticker="'+safe(x.id)+'" title="Отправить стикер">'+
-            safe(x.emoji||'🎭')+'</button>').join('')
-        :'<p>В Telegram пока нет недавних стикеров.</p>';
-    }catch(error){list.textContent=error.message;}
+        ?state.stickers.map(x=>'<button type="button" data-send-sticker="'+safe(x.id)+
+          '" aria-label="Отправить стикер '+safe(x.emoji||'')+'">'+
+          (state.stickerPreviewUrls.get(String(x.id))
+            ?'<img src="'+safe(state.stickerPreviewUrls.get(String(x.id)))+'" alt="Стикер Telegram" />'
+            :safe(x.emoji||'🎭'))+'</button>').join('')
+        :'<p>Недавних стикеров нет. Это история недавних, а не все наборы Telegram.</p>';
+      // The sticker catalogue itself remains usable before pictures arrive.
+      void fetchStickerPreviews(chatId,ownerKey,state.stickers);
+    }catch(error){
+      if(ownerKey===state.ownerInitData&&String(state.thread?.id)===chatId)
+        list.textContent=error.message;
+    }
   }
   function dropVoiceDraft(){
     const draft=state.voiceDraft;
@@ -624,7 +674,7 @@
       : 'Нужно подключить Telegram';
     // Keep setup discoverable when login isn't verified, out of the way for
     // an already linked user reading chats on a small mobile screen.
-    if (drawer && !drawer.dataset.userToggled) drawer.open=!state.connectionProof?.verified;
+    if (drawer && !drawer.dataset.userToggled) drawer.open=false; // on-demand setup, not the messenger's first screen
     if(proof){
       const p=state.connectionProof;
       proof.classList.toggle('ready',p?.verified===true);
@@ -1015,6 +1065,7 @@
     for(const media of $('telegramThreadMessages')?.querySelectorAll('audio,video')||[])media.pause();
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
+    state.stickerPreviewUrls.clear();
     state.mediaPreviewUrls.clear();state.previewSeen.clear();state.previewInflight.clear();
     state.previewEpoch++;state.previewActive=0;
     state.expandedAttachments.clear();state.expandedBytes=0;
@@ -1484,12 +1535,18 @@
       if(valid)link.href=native;
       else link.removeAttribute('href');
     }
-    $('telegramThreadMessages').innerHTML=empty('Открываю переписку','История загружается из Telegram');
+    // Immediate owner-verified inbox snapshot; not misrepresented as history.
+    const teaser=state.connectionProof?.verified&&chat.preview
+      ?'<div class="veto-mirror-first-preview" role="status"><span>ПОСЛЕДНЕЕ ИЗ СПИСКА</span><p>'+
+        safe(String(chat.preview).slice(0,200))+'</p><small>Открываю историю из Telegram…</small></div>'
+      :empty('Открываю переписку','Получаю последние сообщения из Telegram…');
+    $('telegramThreadMessages').innerHTML=teaser;
     if($('telegramThreadJumpLatest'))$('telegramThreadJumpLatest').hidden=true;
     renderSendComposer();
     threadNotice('');
     const shell=$('telegramMirror');
     shell?.classList.add('thread-mode');
+    window.VetoThemeDock?.('thread');
     window.scrollTo({top:0,behavior:'instant'});
   }
   async function openThread(chat){
@@ -1529,7 +1586,7 @@
     state.threadLoading=true;
     if(reset&&!rememberedAnchor)state.messages=[];
     $('telegramThreadOlder').hidden=true;
-    if(reset)renderMessages();
+    if(reset&&state.messages.length)renderMessages();
     try{
       const data=await request('thread',{
         chatId,offsetId:reset?0:state.threadOffset,
@@ -1596,6 +1653,7 @@
     $('telegramThreadView').hidden=true;
     $('telegramChatsView').hidden=false;
     $('telegramMirror')?.classList.remove('thread-mode');
+    window.VetoThemeDock?.('inbox');
     revokeMediaUrls();
     renderSendComposer();
     renderChats();

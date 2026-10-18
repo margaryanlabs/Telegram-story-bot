@@ -1,0 +1,172 @@
+/* VETO one-switch appearance + messenger-first UX.
+   Global palettes are cosmetic only: no chat contents or credentials persisted. */
+html[data-veto-theme="graphite"]{color-scheme:dark}
+html[data-veto-theme="pearl"]{
+  color-scheme:light;--bg:#f4f7fb;--surface:#fff;--text:#192a3e;--muted:#607187;
+  --card:rgba(30,59,86,.045);--card-strong:rgba(30,59,86,.09);
+  --line:rgba(26,53,81,.16);--accent:#305982;--accent-text:#fff;
+  --shadow:0 13px 35px rgba(31,59,83,.09);
+}
+html[data-veto-theme="slate"]{
+  color-scheme:dark;--bg:#182534;--surface:#223346;--text:#eff5fc;--muted:#b6c6d9;
+  --card:rgba(212,229,248,.065);--card-strong:rgba(212,229,248,.11);
+  --line:rgba(213,229,245,.21);--accent:#a5cbeb;--accent-text:#152332;
+}
+html[data-veto-theme="linen"]{
+  color-scheme:light;--bg:#f2eee6;--surface:#fffcf7;--text:#342f2a;--muted:#686057;
+  --card:rgba(90,74,49,.05);--card-strong:rgba(90,74,49,.08);
+  --line:rgba(78,67,54,.19);--accent:#55616b;--accent-text:#fff;
+  --shadow:0 13px 35px rgba(75,62,43,.09);
+}
+html[data-veto-theme] body,html[data-veto-theme] .app-shell,
+html[data-veto-theme] .screen{color:var(--text)}
+html[data-veto-theme="pearl"] body,html[data-veto-theme="linen"] body{background:var(--bg)}
+html[data-veto-theme="pearl"] .veto-stage-fx,html[data-veto-theme="linen"] .veto-stage-fx,
+html[data-veto-theme="pearl"] .ambient,html[data-veto-theme="linen"] .ambient{opacity:.1;pointer-events:none}
+html[data-veto-theme] .topbar{color:var(--text)}
+html[data-veto-theme] .brand-copy span{color:var(--muted)}
+html[data-veto-theme] .bottom-nav{background:var(--surface);color:var(--text);border:1px solid var(--line)}
+html[data-veto-theme] .bottom-nav .nav-item{color:var(--muted)}
+html[data-veto-theme] .bottom-nav .nav-item.active{background:var(--card-strong);color:var(--text)}
+html[data-veto-theme] .profile-button{background:var(--card);border-color:var(--line)}
+html[data-veto-theme] .page-head,html[data-veto-theme] .page-head :is(h1,h2){color:var(--text)}
+html[data-veto-theme] .page-head p{color:var(--muted)}
+html[data-veto-theme="pearl"] :is(.hero-card,.ghost-command-card,.control-card,.veto-business-journey,
+  .veto-mirror-access-center,.control-panel,.control-activity-row,.veto-mirror-privacy-diagnostics),
+html[data-veto-theme="linen"] :is(.hero-card,.ghost-command-card,.control-card,.veto-business-journey,
+  .veto-mirror-access-center,.control-panel,.control-activity-row,.veto-mirror-privacy-diagnostics){
+  background:var(--surface);color:var(--text);border-color:var(--line);box-shadow:var(--shadow);
+}
+html[data-veto-theme="pearl"] :is(.hero-card,.ghost-command-card,.control-card,.veto-business-journey,
+  .veto-mirror-access-center,.control-panel) :is(h1,h2,h3,strong),
+html[data-veto-theme="linen"] :is(.hero-card,.ghost-command-card,.control-card,.veto-business-journey,
+  .veto-mirror-access-center,.control-panel) :is(h1,h2,h3,strong){color:var(--text)}
+html[data-veto-theme="pearl"] :is(.hero-card,.ghost-command-card,.control-card,.veto-business-journey,
+  .veto-mirror-access-center,.control-panel) :is(p,small),
+html[data-veto-theme="linen"] :is(.hero-card,.ghost-command-card,.control-card,.veto-business-journey,
+  .veto-mirror-access-center,.control-panel) :is(p,small){color:var(--muted)}
+/* One small, movable control — menu is a popover, not a permanent theme strip. */
+.veto-global-appearance{display:flex;align-items:center;justify-content:center;position:relative;flex:none;z-index:350}
+.veto-global-theme-toggle{width:38px;height:38px;min-width:38px;border:1px solid var(--line);
+  border-radius:13px;background:var(--card-strong);color:var(--text);font-size:20px;
+  display:grid;place-items:center;box-shadow:0 4px 18px rgba(0,0,0,.09)}
+.veto-global-theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.veto-global-theme-menu{position:fixed;top:var(--veto-theme-menu-top,90px);
+  right:12px;z-index:1000;width:min(310px,calc(100vw - 24px));border-radius:20px;
+  padding:15px;box-shadow:0 18px 55px rgba(0,0,0,.32);
+  background:var(--surface);color:var(--text);border:1px solid var(--line)}
+.veto-global-theme-menu[hidden]{display:none!important}
+.veto-global-theme-menu>strong{display:block;font-size:14px}
+.veto-global-theme-menu>small{display:block;font-size:11px;color:var(--muted);margin:3px 0 12px}
+.veto-global-theme-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.veto-global-theme-options button{display:flex;align-items:center;gap:8px;min-height:42px;
+  padding:9px 11px;border-radius:12px;background:var(--card);color:var(--text);
+  border:1px solid var(--line);font-size:12px;font-weight:700}
+.veto-global-theme-options button.selected{outline:2px solid var(--accent);outline-offset:-2px}
+.veto-global-theme-options button i{width:13px;height:13px;border-radius:50%;background:#1c2531;border:1px solid #9ca7b3}
+.veto-global-theme-options [data-chat-theme-option="pearl"] i{background:#fff}
+.veto-global-theme-options [data-chat-theme-option="slate"] i{background:#31475f}
+.veto-global-theme-options [data-chat-theme-option="linen"] i{background:#e9e2d7}
+/* Directly into chats. No double VETO masthead or first-page tutorial cards. */
+body.veto-chat-active .topbar{display:none}
+body.veto-chat-active .app-shell{width:100%;max-width:100%;padding:0 0 calc(105px + env(safe-area-inset-bottom));min-height:0}
+body.veto-chat-active .screen[data-screen="telegram"].active{margin:0}
+body.veto-chat-active #telegramMirror{border-radius:0;margin:0;min-height:calc(100dvh - 95px)}
+body.veto-chat-active #telegramMirror .veto-chat-appearance{display:none!important}
+body.veto-chat-active #telegramMirror .veto-mirror-heading{padding:12px 14px 8px;align-items:center}
+body.veto-chat-active #telegramMirror .veto-mirror-heading h1{font-size:25px}
+body.veto-chat-active #telegramMirror .veto-mirror-eyebrow,
+body.veto-chat-active #telegramMirror .veto-mirror-heading p,
+body.veto-chat-active #telegramMirror .veto-mirror-focus-hint,
+body.veto-chat-active #telegramMirror .veto-mirror-privacy-note,
+body.veto-chat-active #telegramMirror .veto-mirror-vault-link,
+body.veto-chat-active #telegramMirror .veto-mirror-deletion-guide{display:none!important}
+body.veto-chat-active #telegramMirror .veto-mirror-access-drawer{margin:0 12px 9px}
+body.veto-chat-active #telegramMirror .veto-mirror-access-drawer:not([open]){max-height:46px;overflow:hidden}
+body.veto-chat-active #telegramMirror .veto-mirror-access-drawer>summary{min-height:42px;padding:9px 12px}
+body.veto-chat-active #telegramMirror .veto-mirror-search-wrap{margin:0 12px 8px}
+body.veto-chat-active #telegramMirror .veto-mirror-filters{margin:0 12px 8px}
+body.veto-chat-active #telegramMirror .veto-mirror-headline{padding:6px 12px 4px}
+body.veto-chat-thread .bottom-nav{display:none!important}
+body.veto-chat-thread .app-shell{padding:0!important;height:100dvh;overflow:hidden}
+body.veto-chat-thread .screen[data-screen="telegram"].active,
+body.veto-chat-thread #telegramMirror{height:100dvh;min-height:0;overflow:hidden}
+body.veto-chat-thread #telegramMirror .veto-mirror-thread{height:100dvh;max-height:100dvh;min-height:0;
+  display:flex;flex-direction:column;overflow:hidden;border-radius:0}
+body.veto-chat-thread #telegramMirror .veto-mirror-thread-bar{flex:none;min-height:56px;padding:6px 10px;gap:7px}
+body.veto-chat-thread #telegramMirror .veto-mirror-thread-security{display:none}
+body.veto-chat-thread #telegramMirror .veto-mirror-sync-strip{min-height:23px;padding:3px 9px;flex:none}
+body.veto-chat-thread #telegramMirror .veto-mirror-thread-body{flex:1;min-height:0;overscroll-behavior:contain}
+body.veto-chat-thread #telegramMirror .veto-mirror-thread-bottom{flex:none;padding-bottom:max(9px,env(safe-area-inset-bottom))}
+body.veto-chat-thread #telegramMirror .veto-voice-mode{padding:3px 0 5px;overflow-x:auto;flex-wrap:nowrap}
+body.veto-chat-thread #telegramMirror .veto-voice-mode button{white-space:nowrap}
+@media(min-width:620px){body.veto-chat-active .app-shell{max-width:720px}}
+@media(max-width:420px){
+ body.veto-chat-thread #telegramMirror .veto-mirror-thread-person{min-width:0}
+ body.veto-chat-thread #telegramMirror .veto-mirror-thread-bar .veto-mirror-icon-btn{width:32px;height:32px;min-width:32px}
+ body.veto-chat-thread #telegramMirror .veto-mirror-thread-avatar{width:34px;height:34px;min-width:34px}
+ body.veto-chat-thread #vetoGlobalThemeToggle{width:31px;height:31px;min-width:31px;border-radius:10px;font-size:17px}
+}
+
+/* The messenger owns the viewport. Main navigation is reachable from ← VETO. */
+body.veto-chat-active .bottom-nav{display:none!important}
+body.veto-chat-active .app-shell{padding-bottom:0!important}
+body.veto-chat-active #telegramMirror{min-height:100dvh}
+body.veto-chat-active .veto-messenger-title{display:flex;align-items:center;gap:11px}
+body.veto-chat-active .veto-messenger-title h1{margin:0;font-size:24px}
+body.veto-chat-active .veto-messenger-exit{border:1px solid var(--ct-line);
+  background:var(--ct-chip);color:var(--ct-chip-text);border-radius:12px;
+  min-height:37px;padding:6px 9px;font-size:11px;font-weight:850;white-space:nowrap}
+body.veto-chat-active #telegramMirror .veto-mirror-heading{padding:10px 12px}
+body.veto-chat-active #telegramMirror .veto-mirror-heading .veto-mirror-header-actions{gap:5px}
+body.veto-chat-active #telegramMirror .veto-mirror-header-actions .veto-mirror-icon-btn{width:35px;height:35px}
+
+/* Real previews replace emoji when Telegram provides a static WEBP sticker. */
+#telegramMirror .veto-mirror-sticker-list button img{display:block;width:100%;height:100%;max-height:56px;object-fit:contain}
+#telegramMirror .veto-mirror-sticker-list button{height:55px;min-width:0;overflow:hidden;display:grid;place-items:center}
+#telegramMirror .veto-mirror-sticker-list p{grid-column:1/-1;font-size:11px;line-height:1.6;color:var(--ct-muted)}
+/* Voice equalization is explicitly optional and never pretends to morph identity. */
+#telegramMirror .veto-voice-tools{margin:4px 0 5px;max-width:100%;color:var(--ct-muted)}
+#telegramMirror .veto-voice-tools summary{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;
+  border:1px solid var(--ct-line);border-radius:11px;cursor:pointer;font-size:10px;font-weight:750;
+  background:var(--ct-chip);color:var(--ct-chip-text)}
+#telegramMirror .veto-voice-tools summary small{font-size:9px;color:var(--ct-muted);font-weight:500}
+#telegramMirror .veto-voice-tools[open]{padding:0 0 6px}
+#telegramMirror .veto-voice-tools-note{display:block;margin:2px 2px 5px;color:var(--ct-muted);font-size:10px;line-height:1.5}
+body.veto-chat-thread #telegramMirror .veto-voice-mode{padding:6px 0;overflow-x:auto}
+
+#telegramMirror .veto-mirror-first-preview{margin:14px auto;max-width:min(94%,400px);
+  padding:12px 15px;background:var(--ct-elev);border:1px solid var(--ct-line);
+  border-radius:15px;color:var(--ct-text)}
+#telegramMirror .veto-mirror-first-preview>span{font-size:9px;letter-spacing:.13em;font-weight:800;color:var(--ct-muted)}
+#telegramMirror .veto-mirror-first-preview>p{font-size:13px;line-height:1.45;overflow-wrap:anywhere;
+  margin:7px 0 9px;max-height:70px;overflow:hidden}
+#telegramMirror .veto-mirror-first-preview>small{font-size:10px;color:var(--ct-muted)}
+
+/* Mobile legibility pass: 11px chat text is not acceptable for a messenger. */
+body.veto-chat-active #telegramMirror .veto-mirror-bubble-inner p{font-size:14px;line-height:1.48}
+body.veto-chat-active #telegramMirror .veto-mirror-bubble-inner{padding:9px 12px 7px;max-width:88%}
+body.veto-chat-active #telegramMirror .veto-mirror-bubble footer{font-size:10px}
+body.veto-chat-active #telegramMirror .veto-mirror-chat-title strong{font-size:14px}
+body.veto-chat-active #telegramMirror .veto-mirror-chat-main>small{font-size:12px;line-height:1.35}
+body.veto-chat-active #telegramMirror .veto-mirror-thread-person strong{font-size:14px}
+body.veto-chat-active #telegramMirror .veto-mirror-sticker-list button:focus-visible,
+body.veto-chat-active #telegramMirror .veto-mirror-bubble:focus-visible{outline:2px solid var(--ct-accent)}
+
+/* Light/linen surfaces outside Messenger: Home, Privacy, Stories, Studio and Intel. */
+html[data-veto-theme="pearl"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,.studio-panel,
+  .studio-result,.ghost-command-card,.privacy-note,.veto-business-step,.veto-mirror-home),
+html[data-veto-theme="linen"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,.studio-panel,
+  .studio-result,.ghost-command-card,.privacy-note,.veto-business-step,.veto-mirror-home){
+  background:var(--surface);color:var(--text);border-color:var(--line);box-shadow:var(--shadow)
+}
+html[data-veto-theme="pearl"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,
+  .studio-panel,.studio-result,.ghost-command-card) :is(h1,h2,h3,strong,b),
+html[data-veto-theme="linen"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,
+  .studio-panel,.studio-result,.ghost-command-card) :is(h1,h2,h3,strong,b){color:var(--text)}
+html[data-veto-theme="pearl"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,
+  .studio-panel,.studio-result,.ghost-command-card) :is(p,small),
+html[data-veto-theme="linen"] :is(.control-hero,.veto-chat-entry,.veto-trust-card,.control-activity,
+  .studio-panel,.studio-result,.ghost-command-card) :is(p,small){color:var(--muted)}
+html[data-veto-theme="pearl"] input,
+html[data-veto-theme="linen"] input{color:var(--text)}
