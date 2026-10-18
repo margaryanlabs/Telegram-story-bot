@@ -357,13 +357,21 @@
                   placeholder="Например: квартира в Дубае" aria-label="Поиск по сообщениям Telegram" autocomplete="off"/>
                 <button id="vetoIntelSearchSubmit" type="submit">Найти ↗</button>
               </form>
+              <label class="veto-intel-vault-optin">
+                <input type="checkbox" id="vetoIntelIncludeVault" />
+                <span><strong>Добавить сохранённые сообщения VETO Vault</strong><small>Только по запросу · до 6 последних сохранённых чатов, 60 сообщений из каждого. Обработка без стороннего AI.</small></span>
+              </label>
               <div class="veto-intelligence-examples" role="group" aria-label="Примеры запросов">
                 <button type="button" data-veto-intel-example="квартира в Дубае">Недвижимость в Дубае</button>
                 <button type="button" data-veto-intel-example="обещания за последние три месяца">Обещания за 3 месяца</button>
               </div>
               <div class="veto-intelligence-status" id="vetoIntelSearchStatus" role="status" aria-live="polite">
-                Поиск по доступным облачным сообщениям; удалённые копии VETO Vault пока не включены.
+                Облачный Telegram. Дополнительно можно включить ограниченный просмотр своего сохранённого архива VETO Vault.
               </div>
+              <section class="veto-intel-timeline" id="vetoIntelTimelineSection" aria-label="Хронология возможных обещаний" hidden>
+                <div class="veto-intel-timeline-head"><strong>Хронология возможных обещаний</strong><small>Цитаты, а не юридические выводы</small></div>
+                <div id="vetoIntelTimeline" class="veto-intel-timeline-list"></div>
+              </section>
               <div class="veto-intelligence-results" id="vetoIntelSearchResults" aria-label="Найденные сообщения"></div>
             </div>
           </section>
