@@ -359,7 +359,7 @@
               </form>
               <label class="veto-intel-vault-optin">
                 <input type="checkbox" id="vetoIntelIncludeVault" />
-                <span><strong>Добавить сохранённые сообщения VETO Vault</strong><small>Только по запросу · до 6 последних сохранённых чатов, 60 сообщений из каждого. Обработка без стороннего AI.</small></span>
+                <span><strong>Добавить сохранённые сообщения VETO Vault</strong><small>Только по запросу · поиск по 6 порциям по 80 сообщений. Нажми «Искать дальше», чтобы перейти к более старой истории и другим чатам. Без стороннего AI.</small></span>
               </label>
               <div class="veto-intelligence-examples" role="group" aria-label="Примеры запросов">
                 <button type="button" data-veto-intel-example="квартира в Дубае">Недвижимость в Дубае</button>
@@ -373,6 +373,7 @@
                 <div id="vetoIntelTimeline" class="veto-intel-timeline-list"></div>
               </section>
               <div class="veto-intelligence-results" id="vetoIntelSearchResults" aria-label="Найденные сообщения"></div>
+              <button type="button" class="veto-intel-load-more" id="vetoIntelLoadMore" hidden>Искать дальше в архиве ↓</button>
             </div>
           </section>
           <div class="veto-mirror-filters" id="telegramMirrorFilters" role="group" aria-label="Фильтр по чатам">
