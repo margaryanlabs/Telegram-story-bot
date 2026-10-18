@@ -624,7 +624,7 @@
       : 'Нужно подключить Telegram';
     // Keep setup discoverable when login isn't verified, out of the way for
     // an already linked user reading chats on a small mobile screen.
-    if (drawer && !drawer.dataset.userToggled) drawer.open=!state.connectionProof?.verified;
+    if (drawer && !drawer.dataset.userToggled) drawer.open=false; // on-demand setup, not the messenger's first screen
     if(proof){
       const p=state.connectionProof;
       proof.classList.toggle('ready',p?.verified===true);
@@ -1490,6 +1490,7 @@
     threadNotice('');
     const shell=$('telegramMirror');
     shell?.classList.add('thread-mode');
+    window.VetoThemeDock?.('thread');
     window.scrollTo({top:0,behavior:'instant'});
   }
   async function openThread(chat){
@@ -1596,6 +1597,7 @@
     $('telegramThreadView').hidden=true;
     $('telegramChatsView').hidden=false;
     $('telegramMirror')?.classList.remove('thread-mode');
+    window.VetoThemeDock?.('inbox');
     revokeMediaUrls();
     renderSendComposer();
     renderChats();
