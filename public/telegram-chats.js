@@ -8,7 +8,7 @@
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
-    previewActive:0,previewEpoch:0,previewSeen:new Set(),expandedAttachments:new Map(),expandedBytes:0,
+    previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
@@ -875,10 +875,11 @@
     for(const el of targets){
       if(state.previewActive>=2)break;
       const id=Number(el.dataset.mirrorPreview);
-      if(!Number.isSafeInteger(id)||id<1||state.previewSeen.has(id))continue;
+      if(!Number.isSafeInteger(id)||id<1||state.previewSeen.has(id)||state.previewInflight.has(id))continue;
       const msg=state.messages.find(m=>Number(m.id)===id);
       if(!msg || (msg.deleted&&!msg.mediaAvailable))continue;
       state.previewSeen.add(id);
+      state.previewInflight.add(id);
       state.previewActive++;
       const badge=el.querySelector('small');
       if(badge)badge.textContent='Загружаю фотографию…';
@@ -925,6 +926,7 @@
         }
       }).finally(()=>{
         if(previewEpoch!==state.previewEpoch)return;
+        state.previewInflight.delete(id);
         state.previewActive=Math.max(0,state.previewActive-1);
         if(ownerKey===state.ownerInitData&&generation===state.threadGeneration)
           loadInlinePreviews();
@@ -1013,7 +1015,7 @@
     for(const media of $('telegramThreadMessages')?.querySelectorAll('audio,video')||[])media.pause();
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
-    state.mediaPreviewUrls.clear();state.previewSeen.clear();
+    state.mediaPreviewUrls.clear();state.previewSeen.clear();state.previewInflight.clear();
     state.previewEpoch++;state.previewActive=0;
     state.expandedAttachments.clear();state.expandedBytes=0;
   }
@@ -1073,6 +1075,7 @@
       for(const media of old.node.querySelectorAll('audio,video'))media.pause();
       const current=state.mediaPreviewUrls.get(oldestKey);
       if(current===old.href)state.mediaPreviewUrls.delete(oldestKey);
+      if($('telegramThreadPhotoFull')?.getAttribute('src')===old.href)closePhotoViewer();
       const oldSlot=[...$('telegramThreadMessages')?.querySelectorAll('[data-mirror-expanded]')||[]]
         .find(el=>el.dataset.mirrorExpanded===oldestKey);
       if(oldSlot)oldSlot.replaceWith(expandedFileButton(oldestKey,old.archive));
@@ -1751,7 +1754,7 @@
     const retry=event.target.closest('[data-mirror-preview]');
     if(retry){
       const id=Number(retry.dataset.mirrorPreview);
-      if(Number.isSafeInteger(id)&&id>0){
+      if(Number.isSafeInteger(id)&&id>0&&!state.previewInflight.has(id)){
         state.previewSeen.delete(id);loadInlinePreviews({requestedId:id});
       }
       return;
