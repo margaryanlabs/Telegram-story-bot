@@ -83,6 +83,11 @@ test('no unrequested automated Story publishing, and editor integration respects
   assert.ok(html.includes('id="vetoStorySaveProject"'));
   assert.ok(html.includes('id="vetoStoryOpenProject"'));
   assert.ok(html.includes('id="vetoStoryImportLaunch"'));
+  assert.ok(html.indexOf('id="vetoStoryProjectFile"') < html.indexOf('id="vetoStoryEditor"'),
+    'Import input must stay available outside the hidden editor dialog on Telegram mobile');
+  assert.ok(js.includes("new CustomEvent('veto:story-project-error'"));
+  assert.ok(app.includes("window.addEventListener('veto:story-project-error'"));
+  assert.ok(app.includes('showToast(message)'));
   assert.ok(html.includes('id="vetoStoryEyebrow"'));
   assert.ok(html.includes('id="vetoStoryCallToAction"'));
   assert.ok(html.includes('data-story-look-preview="editorial"'));
