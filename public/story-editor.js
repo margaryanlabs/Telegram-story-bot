@@ -350,7 +350,13 @@
       undoStack=[];redoStack=[];lastCommitted={...settings};
       syncControls();syncHistory();renderLookPreviews();requestRender();
       showState('Редактируемый проект восстановлен локально. До публикации данные не отправляются.');
-    }catch(error){showState(error.message||'Не удалось открыть проект',true);}
+    }catch(error){
+      const message=String(error?.message||'Не удалось открыть проект').slice(0,160);
+      showState(message,true);
+      if(panel.hidden){
+        window.dispatchEvent(new CustomEvent('veto:story-project-error',{detail:{message}}));
+      }
+    }
     finally{exporting=false;setBusy(false);}
   }
   panel.addEventListener('click',event=>{
