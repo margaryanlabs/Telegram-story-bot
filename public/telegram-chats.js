@@ -13,7 +13,7 @@
     pendingAttachment:null,replyTo:null,stickers:[],recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
-    threadSearch:'',threadSearchIndex:0,
+    threadSearch:'',threadSearchIndex:0,deliveryStage:null,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
