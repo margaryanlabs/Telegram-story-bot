@@ -850,6 +850,32 @@
     }
   }
 
+  // Telegram's MTProto acceptance is not equivalent to a delivered/read receipt.
+  // These per-thread statuses never claim that another user has seen a message.
+  function renderDeliveryStatus(){
+    const bar=$('telegramThreadDeliveryStatus'),text=$('telegramThreadDeliveryText'),icon=$('telegramThreadDeliveryIcon');
+    if(!bar||!text||!icon)return;
+    const info=state.deliveryStage;
+    const valid=Boolean(info&&String(state.thread?.id)===info.chatId&&
+      state.ownerInitData===String(tg?.initData||''));
+    bar.hidden=!valid;
+    if(!valid){bar.removeAttribute('data-state');return;}
+    bar.dataset.state=info.stage;
+    const messages={
+      sending:'Отправляю в Telegram…',
+      accepted:'Telegram принял отправку · это не означает, что сообщение прочитано.',
+      uncertain:'Нет подтверждения. Проверь оригинальный Telegram перед повтором.',
+      failed:'Отправка не выполнена · проверь чат или подключение.',
+    };
+    text.textContent=(info.kind==='voice'?'Голосовое · ':info.kind==='media'?'Файл · ':info.kind==='sticker'?'Стикер · ':'')+
+      (messages[info.stage]||'Статус неизвестен');
+    icon.textContent={sending:'◌',accepted:'✓',uncertain:'!',failed:'×'}[info.stage]||'◌';
+  }
+  function setDeliveryStatus(stage,chatId,kind='text'){
+    if(String(state.thread?.id)!==chatId||state.ownerInitData!==String(tg?.initData||''))return;
+    state.deliveryStage={stage,chatId,kind};
+    renderDeliveryStatus();
+  }
   function threadNotice(text){
     const el=$('telegramThreadNotice');
     if(!el)return;
