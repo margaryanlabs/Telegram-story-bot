@@ -16,6 +16,7 @@
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
     threadSearch:'',threadSearchIndex:0,deliveryStage:null,
+    intelResults:[],intelQuery:'',intelEpoch:0,intelBusy:false,
   };
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
@@ -793,6 +794,82 @@
       '</p><button type="button" data-mirror-privacy-setup="1">'+
       (configured?'Проверить настройки':'Настроить Privacy')+' ↗</button>';
   }
+  // Search is explicit owner-authorized retrieval. Never store query or
+  // message text outside this tab, and never represent keyword evidence as LLM.
+  function clearIntelSearch({close=false}={}){
+    state.intelEpoch++;
+    state.intelBusy=false;state.intelResults=[];state.intelQuery='';
+    if($('vetoIntelSearchInput'))$('vetoIntelSearchInput').value='';
+    if($('vetoIntelSearchResults'))$('vetoIntelSearchResults').replaceChildren();
+    if($('vetoIntelSearchStatus'))$('vetoIntelSearchStatus').textContent=
+      'Облачный поиск Telegram. Удалённые копии VETO Vault пока не индексируются.';
+    if($('vetoIntelSearchSubmit'))$('vetoIntelSearchSubmit').disabled=false;
+    if(close){
+      if($('vetoIntelSearchPanel'))$('vetoIntelSearchPanel').hidden=true;
+      $('vetoIntelSearchToggle')?.setAttribute('aria-expanded','false');
+    }
+  }
+  function renderIntelResults(){
+    const box=$('vetoIntelSearchResults');
+    if(!box)return;
+    box.innerHTML=state.intelResults.map((result,index)=>{
+      const date=result.date?new Date(result.date):null;
+      const validDate=date&&!Number.isNaN(date.getTime())
+        ?date.toLocaleDateString('ru',{day:'numeric',month:'short',year:'numeric'}):'Без даты';
+      return '<article class="veto-intelligence-hit">'+
+        '<div class="veto-intelligence-hit-head"><strong>'+safe(result.chatTitle||'Telegram чат')+'</strong>'+
+        '<time>'+safe(validDate)+'</time></div>'+
+        '<p>'+safe(result.snippet||'')+'</p>'+
+        '<div class="veto-intelligence-hit-foot"><small>Telegram · сообщение #'+safe(result.messageId)+
+        ' · '+(result.out?'Исходящее':'Входящее')+'</small>'+
+        '<button type="button" data-veto-intel-open="'+index+'">Открыть чат ↗</button></div>'+
+        '</article>';
+    }).join('');
+  }
+  async function searchIntel(){
+    const input=$('vetoIntelSearchInput'),status=$('vetoIntelSearchStatus'),button=$('vetoIntelSearchSubmit');
+    if(!input||!status||!button||state.intelBusy)return;
+    if(resetOwner())return;
+    const query=String(input.value||'').trim().replace(/\s+/g,' ');
+    if(query.length<3||query.length>180){
+      status.textContent='Введи от 3 до 180 символов.';return;
+    }
+    if(!state.connectionProof?.verified){
+      status.textContent='Подключи и подтверди свой Telegram для поиска.';return;
+    }
+    const ownerKey=state.ownerInitData,epoch=++state.intelEpoch;
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
+    state.intelBusy=true;state.intelQuery=query;state.intelResults=[];
+    button.disabled=true;status.textContent='Ищу подтверждённые сообщения в твоём Telegram…';
+    $('vetoIntelSearchResults')?.replaceChildren();
+    try{
+      const response=await fetch('/api/telegram-intelligence-search',{
+        method:'POST',headers:{
+          'content-type':'application/json','x-telegram-init-data':ownerKey,
+        },body:JSON.stringify({query}),signal:controller.signal,
+      });
+      const data=await response.json().catch(()=>({}));
+      if(resetOwner()||epoch!==state.intelEpoch||
+        ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||''))return;
+      if(!response.ok||!data.ok)throw new Error(data.error||'Telegram не ответил');
+      state.intelResults=Array.isArray(data.results)?data.results.slice(0,30):[];
+      const count=state.intelResults.length;
+      status.textContent=count
+        ?'Найдено '+count+' сообщений. Показаны реальные цитаты Telegram, не AI-выводы. Архив VETO не включён.'
+        :'Совпадений в доступном Telegram не найдено. Это не означает, что сообщения никогда не существовали.';
+      renderIntelResults();
+    }catch(error){
+      if(epoch!==state.intelEpoch||ownerKey!==state.ownerInitData)return;
+      status.textContent=error?.name==='AbortError'
+        ?'Поиск отвечает слишком долго. Проверь подключение и повтори вручную.'
+        :String(error.message||'Поиск недоступен');
+    }finally{
+      clearTimeout(timer);
+      if(epoch===state.intelEpoch&&ownerKey===state.ownerInitData){
+        state.intelBusy=false;button.disabled=false;
+      }
+    }
+  }
   function renderChats(){
     const list=$('telegramMirrorList');
     if(!list)return;
@@ -1165,6 +1242,7 @@
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
     state.chats=[];state.messages=[];state.thread=null;
+    clearIntelSearch({close:true});
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
     state.sendInFlight=false;state.lastSendFailure=null;state.lastRichFailure=null;
@@ -1847,6 +1925,36 @@
       void loadChats({reset:true});
     window.scrollTo({top:0,behavior:'instant'});
   }
+  $('vetoIntelSearchToggle')?.addEventListener('click',()=>{
+    const panel=$('vetoIntelSearchPanel');
+    if(!panel)return;
+    panel.hidden=!panel.hidden;
+    $('vetoIntelSearchToggle')?.setAttribute('aria-expanded',String(!panel.hidden));
+    if(!panel.hidden)$('vetoIntelSearchInput')?.focus();
+  });
+  $('vetoIntelSearchForm')?.addEventListener('submit',event=>{
+    event.preventDefault();void searchIntel();
+  });
+  document.querySelectorAll('[data-veto-intel-example]').forEach(button=>
+    button.addEventListener('click',()=>{
+      if($('vetoIntelSearchInput'))$('vetoIntelSearchInput').value=button.dataset.vetoIntelExample||'';
+      void searchIntel();
+    }));
+  $('vetoIntelSearchResults')?.addEventListener('click',event=>{
+    const trigger=event.target.closest('[data-veto-intel-open]');
+    if(!trigger||resetOwner())return;
+    const result=state.intelResults[Number(trigger.dataset.vetoIntelOpen)];
+    if(!result)return;
+    const current=state.chats.find(chat=>String(chat.id)===String(result.chatId));
+    // Telegram Global Search only yields account-visible messages; the normal
+    // thread endpoint still independently checks the MTProto peer owner.
+    const chat=current||{
+      id:String(result.chatId),title:String(result.chatTitle||'Telegram чат'),
+      type:['private','group','channel'].includes(result.kind)?result.kind:'other',
+      archiveOnly:false,serverCanSend:false,preview:'',
+    };
+    void openThread(chat);
+  });
   $('telegramThreadAttachButton')?.addEventListener('click',()=>{
     if(canSendInThread(state.thread))$('telegramThreadFileInput')?.click();
   });
