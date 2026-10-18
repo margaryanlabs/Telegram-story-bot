@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="/chat-themes.css?v=20261017-chat-compose-v4" />
   <link rel="stylesheet" href="/chat-media.css?v=20261018-inline-media-v6" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
+  <link rel="stylesheet" href="/story-editor.css?v=20261017-veto-story-studio-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
 <body>
@@ -569,6 +570,7 @@
         </div>
 
         <input id="storyFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+        <button type="button" id="vetoStoryImportLaunch" class="veto-story-import-launch">↥ Открыть редактируемый проект VETO (.vetostory)</button>
 
         <button class="media-picker" id="pickStoryMedia" type="button">
           <span class="media-picker-icon">＋</span>
@@ -586,6 +588,10 @@
           <button class="media-remove" id="removeStoryMedia" type="button" aria-label="Удалить выбранное фото">×</button>
         </div>
 
+        <div class="veto-story-editor-cta" id="vetoStoryEditEntry" hidden>
+          <div><small>VETO STORY STUDIO</small><strong>Из обычного кадра — в красивую Story</strong><span>9:16 · цвет · композиция · надписи · шаблоны</span></div>
+          <button id="vetoStoryEditOpen" type="button">✦ Редактировать →</button>
+        </div>
         <label class="caption-field" for="storyCaption">
           <span>Подпись <small id="captionCounter">0 / 2048</small></span>
           <textarea id="storyCaption" maxlength="2048" rows="3" placeholder="Можно оставить пустой"></textarea>
@@ -1251,6 +1257,13 @@
         <p class="studio-positioning">Создавай фирменные emoji, sticker packs и Telegram-ассеты внутри VETO Telegram — от prompt или готового логотипа до пакета.</p>
       </div>
 
+      <section class="veto-story-studio-door">
+        <div><span>NEW · VETO STORY STUDIO</span><h2>Преврати фото в историю.</h2>
+          <p>Editorial · Cinematic · Minimal · Warm. Кадрирование 9:16, свет, надписи и экспорт — прямо в VETO.</p>
+          <small>Локальный фоторедактор · без AI-генерации и платы за обработку</small>
+        </div>
+        <button type="button" data-open-screen="publish">✦ Создать Story <b>↗</b></button>
+      </section>
       <section class="studio-hero">
         <div class="studio-hero-top">
           <div class="studio-hero-copy">
@@ -1539,6 +1552,87 @@
     </section>
   </main>
 
+  <section class="veto-story-editor" id="vetoStoryEditor" aria-label="Редактор VETO Story Studio" role="dialog" aria-modal="true" hidden>
+    <div class="veto-story-editor-top">
+      <div><small>VETO / CREATIVE STUDIO 1.0</small><h2>Story Studio<span>.</span></h2></div>
+      <button id="vetoStoryCancel" type="button" aria-label="Закрыть редактор без изменений">✕</button>
+    </div>
+    <div class="veto-story-editor-stage">
+      <div class="veto-story-editor-stage-inner">
+        <canvas id="vetoStoryCanvas" width="720" height="1280" aria-label="Предпросмотр истории 9:16, проведи по фото для изменения композиции"></canvas>
+        <span class="veto-story-editor-aspect">9:16 · TELEGRAM STORY</span>
+      </div>
+      <p>Двигай фото пальцем, чтобы выбрать композицию. Редактирование происходит на устройстве.</p>
+    </div>
+    <div class="veto-story-editor-controls">
+      <div class="veto-story-editor-tabs-title"><span>01 / MAGIC STYLES</span><small>Пять локальных вариантов · без AI-генерации</small></div>
+      <div class="veto-story-looks" id="vetoStoryLooks">
+        <button type="button" data-story-look="editorial" aria-pressed="true" class="active"><canvas width="90" height="160" data-story-look-preview="editorial" aria-hidden="true"></canvas><span>Editorial</span></button>
+        <button type="button" data-story-look="cinematic" aria-pressed="false"><canvas width="90" height="160" data-story-look-preview="cinematic" aria-hidden="true"></canvas><span>Cinematic</span></button>
+        <button type="button" data-story-look="minimal" aria-pressed="false"><canvas width="90" height="160" data-story-look-preview="minimal" aria-hidden="true"></canvas><span>Minimal</span></button>
+        <button type="button" data-story-look="warm" aria-pressed="false"><canvas width="90" height="160" data-story-look-preview="warm" aria-hidden="true"></canvas><span>Warm</span></button>
+        <button type="button" data-story-look="original" aria-pressed="false"><canvas width="90" height="160" data-story-look-preview="original" aria-hidden="true"></canvas><span>Original</span></button>
+      </div>
+      <div class="veto-story-editor-tabs-title"><span>02 / COLOR & FRAME</span><small>Прямое управление</small></div>
+      <div class="veto-story-tuning">
+        <label><span>Свет <em id="vetoStoryValuebrightness">0</em></span><input id="vetoStoryBrightness" type="range" min="-40" max="40" value="0"></label>
+        <label><span>Контраст <em id="vetoStoryValuecontrast">+10</em></span><input id="vetoStoryContrast" type="range" min="-40" max="60" value="10"></label>
+        <label><span>Цвет <em id="vetoStoryValuesaturation">-12</em></span><input id="vetoStorySaturation" type="range" min="-80" max="70" value="-12"></label>
+        <label><span>Тепло <em id="vetoStoryValuewarmth">0</em></span><input id="vetoStoryWarmth" type="range" min="-40" max="40" value="0"></label>
+        <label><span>Виньетка <em id="vetoStoryValuevignette">+22</em></span><input id="vetoStoryVignette" type="range" min="0" max="80" value="22"></label>
+        <label><span>Масштаб <em id="vetoStoryValuezoom">1.00×</em></span><input id="vetoStoryZoom" type="range" min="1" max="2" step=".02" value="1"></label>
+      </div>
+      <div class="veto-story-editor-tabs-title"><span>03 / TYPOGRAPHY</span><small>Поверх фото</small></div>
+      <div class="veto-story-type-control">
+        <label for="vetoStoryOverlay">Надпись на самой фотографии</label>
+        <textarea id="vetoStoryOverlay" maxlength="140" rows="2" placeholder="Твоя история начинается здесь…"></textarea>
+        <div class="veto-story-text-positions" role="group" aria-label="Расположение текста">
+          <button data-story-text-position="top" type="button" aria-pressed="false">Вверху</button>
+          <button data-story-text-position="center" type="button" aria-pressed="false">По центру</button>
+          <button data-story-text-position="bottom" type="button" aria-pressed="true" class="active">Внизу</button>
+        </div>
+        <label>Размер надписи <input type="range" id="vetoStoryTextSize" min="34" max="92" value="56"></label>
+      </div>
+      <div class="veto-story-editor-tabs-title"><span>04 / CAMPAIGN ELEMENTS</span><small>Отдельные редактируемые слои</small></div>
+      <div class="veto-story-campaign-starters" aria-label="Готовые макеты Stories">
+        <button type="button" data-story-campaign="launch"><strong>01 / Launch</strong><small>Новая коллекция</small></button>
+        <button type="button" data-story-campaign="event"><strong>02 / Tonight</strong><small>Событие / ресторан</small></button>
+        <button type="button" data-story-campaign="offer"><strong>03 / Offer</strong><small>Акция / продукт</small></button>
+      </div>
+      <div class="veto-story-brand-kit">
+        <label for="vetoStoryEyebrow">Верхняя метка <small>Например: NEW COLLECTION</small></label>
+        <input id="vetoStoryEyebrow" type="text" maxlength="32" autocomplete="off" placeholder="NEW COLLECTION" />
+        <label for="vetoStoryCallToAction">Кнопка на фотографии <small>Например: DISCOVER MORE</small></label>
+        <input id="vetoStoryCallToAction" type="text" maxlength="32" autocomplete="off" placeholder="DISCOVER MORE" />
+        <div class="veto-story-brand-accent">
+          <label for="vetoStoryAccent">Цвет акцента</label>
+          <input id="vetoStoryAccent" type="color" value="#ffffff" aria-label="Цвет метки и кнопки" />
+          <span>Два независимых элемента поверх фотографии. Сохраняются вместе с проектом.</span>
+        </div>
+      </div>
+      <p class="veto-story-editor-status" id="vetoStoryEditorStatus" role="status" aria-live="polite"></p>
+      <div class="veto-story-editor-meta"><span id="vetoStoryOriginalSize">—</span><span>EXPORT · 1080 × 1920 · JPEG</span></div>
+      <div class="veto-story-project">
+        <div><small>EDITABLE PROJECT</small><strong>Вернуться к редактированию позже</strong><span>Сохрани проект файлом на устройстве. Фото внутри — береги файл как личный.</span></div>
+        <div class="veto-story-project-actions">
+          <button id="vetoStorySaveProject" type="button">↓ Сохранить проект</button>
+          <button id="vetoStoryOpenProject" type="button">↥ Открыть проект</button>
+          <input id="vetoStoryProjectFile" type="file" accept=".vetostory,application/json" hidden />
+        </div>
+      </div>
+      <div class="veto-story-editor-history">
+        <button type="button" id="vetoStoryUndo" disabled>↶ Отменить</button>
+        <button type="button" id="vetoStoryRedo" disabled>↷ Повторить</button>
+      </div>
+      <div class="veto-story-editor-actions">
+        <button type="button" id="vetoStoryReset">↺ Сбросить</button>
+        <button type="button" id="vetoStoryDownload">↓ Черновик на устройство</button>
+        <button type="button" id="vetoStoryApply">Использовать для Story →</button>
+      </div>
+      <p class="veto-story-editor-privacy">Фото остаётся на этом устройстве до нажатия «Опубликовать». «Черновик» экспортирует JPEG. «Проект» сохраняет редактируемое фото и настройки отдельным личным файлом. Оба действия не публикуют Story.</p>
+    </div>
+  </section>
+
   <nav class="bottom-nav" aria-label="Главная навигация">
     <button class="nav-item active" data-nav="home" type="button" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4z"/></svg><small>Home</small></button>
     <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5.5 5.7v5.5c0 4.2 2.5 7.7 6.5 9.8 4-2.1 6.5-5.6 6.5-9.8V5.7z"/><path d="M9.5 12.2 11.2 14l3.6-4"/></svg><small>Privacy</small></button>
@@ -1569,6 +1663,8 @@
   <script src="/telegram-chats.js?v=20261018-veto-fast-chat-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
+  <script src="/story-project.js?v=20261017-veto-story-project-v1"></script>
+  <script src="/story-editor.js?v=20261017-veto-story-studio-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
 </body>
 </html>
