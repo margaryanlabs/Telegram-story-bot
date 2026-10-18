@@ -233,15 +233,17 @@ export default async function handler(req,res){
   try{
     // Read owner-scoped archive and permission evidence concurrently. Network
     // failure must never be reported as 'Privacy disabled' without evidence.
-    const [history,permissionState,linked]=await Promise.all([
-      archiveThreads(userId),
-      action==='list'
-        ? Promise.all([getPrivacySettings(userId).catch(()=>null),
-            getBusinessConnectionState(userId).catch(()=>null)])
-            .then(([settings,business])=>({settings,business}))
-        : Promise.resolve({settings:null,business:null}),
-      getViewerSession(userId).catch(()=>null),
-    ]);
+    // Begin archive and Business diagnostics without delaying the first
+    // MTProto connection. Archive retrieval and Telegram are independent
+    // owner-scoped services, so the previous Promise.all created a needless
+    // serial wait: STORE → Telegram → messages.
+    const historyPromise=archiveThreads(userId);
+    const permissionStatePromise=action==='list'
+      ? Promise.all([getPrivacySettings(userId).catch(()=>null),
+          getBusinessConnectionState(userId).catch(()=>null)])
+          .then(([settings,business])=>({settings,business}))
+      : Promise.resolve({settings:null,business:null});
+    const linked=await getViewerSession(userId).catch(()=>null);
     const validSession=linked?.status==='active' && linked.session_ciphertext &&
       sameTelegramAccount(userId, linked.telegram_account_user_id);
     if(linked?.status==='active' && !sameTelegramAccount(userId,linked.telegram_account_user_id)){
@@ -271,6 +273,8 @@ export default async function handler(req,res){
           warning=errorMessage(error).error;
         }
       }else warning='Подключи свой Telegram для живых чатов. Ранее сохранённые копии VETO доступны отдельно.';
+      // Both requests were already running while MTProto connected.
+      const [history,permissionState]=await Promise.all([historyPromise,permissionStatePromise]);
       const chats=decorateRemote(live.chats,history);
       if(page===0){
         const liveIds=new Set(chats.map(c=>c.id));
@@ -292,7 +296,6 @@ export default async function handler(req,res){
           privacy:privacyReadiness(permissionState.settings,permissionState.business,history)},
       });
     }
-    const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
     // Archive and Telegram are independent reads. Do not make the first
     // message paint wait for an entire serialized archive round trip.
     const storedPromise=archivedMessages(userId,chatId,archiveOffset);
@@ -334,7 +337,8 @@ export default async function handler(req,res){
         warning=errorMessage(error).error;
       }
     }
-    const stored=await storedPromise;
+    const [stored,history]=await Promise.all([storedPromise,historyPromise]);
+    const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
     if(!chat && threadArchive)chat=archivedDialog(threadArchive);
     if(!chat)return respond(res,404,{error:'Чат не найден в Telegram и нет ранее сохранённой копии VETO.'});
     return respond(res,200,{
