@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/app.css?v=20261018-veto-fast-chat-v1" />
   <link rel="stylesheet" href="/chat-themes.css?v=20261017-chat-compose-v4" />
   <link rel="stylesheet" href="/chat-media.css?v=20261018-inline-media-v6" />
+  <link rel="stylesheet" href="/veto-global-ui.css?v=20261018-v1" />
   <link rel="stylesheet" href="/studio-module.css?v=20261007-veto-telegram-v2" />
   <link rel="stylesheet" href="/relay-module.css?v=20261007-veto-relay-v7" />
 </head>
@@ -101,6 +102,18 @@
         <div class="brand-copy">
           <strong>VETO Telegram</strong>
           <span>Private Telegram OS · Stories · Chats · Relay · Intelligence</span>
+        </div>
+      </div>
+      <div class="veto-global-appearance" id="vetoGlobalAppearance">
+        <button type="button" id="vetoGlobalThemeToggle" class="veto-global-theme-toggle" aria-label="Тема VETO Telegram" aria-haspopup="true" aria-expanded="false" aria-controls="vetoGlobalThemeMenu" title="Тема приложения">◐</button>
+        <div id="vetoGlobalThemeMenu" class="veto-global-theme-menu" hidden>
+          <strong>Оформление всего VETO</strong><small>Одна тема для всех разделов</small>
+          <div id="telegramChatThemes" class="veto-global-theme-options" role="group" aria-label="Тема приложения">
+            <button type="button" data-chat-theme-option="graphite" aria-pressed="true" class="selected"><i></i> Графит</button>
+            <button type="button" data-chat-theme-option="pearl" aria-pressed="false"><i></i> Белый</button>
+            <button type="button" data-chat-theme-option="slate" aria-pressed="false"><i></i> Сланец</button>
+            <button type="button" data-chat-theme-option="linen" aria-pressed="false"><i></i> Лён</button>
+          </div>
         </div>
       </div>
       <button class="profile-button" id="profileButton" type="button" aria-label="Открыть статус аккаунта">
@@ -305,15 +318,6 @@
 
     <section class="screen" data-screen="telegram" aria-label="Мои живые Telegram чаты">
       <section class="veto-mirror" id="telegramMirror" data-chat-theme="graphite">
-        <div class="veto-chat-appearance" role="group" aria-label="Оформление Telegram чатов">
-          <span class="veto-chat-appearance-label">◐ ТЕМА</span>
-          <div class="veto-chat-appearance-options" id="telegramChatThemes">
-            <button type="button" data-chat-theme-option="graphite" aria-pressed="true" class="selected"><i></i> Графит</button>
-            <button type="button" data-chat-theme-option="pearl" aria-pressed="false"><i></i> Белый</button>
-            <button type="button" data-chat-theme-option="slate" aria-pressed="false"><i></i> Сланец</button>
-            <button type="button" data-chat-theme-option="linen" aria-pressed="false"><i></i> Лён</button>
-          </div>
-        </div>
         <div class="veto-mirror-list" id="telegramChatsView">
           <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETO · CLOUD CHATS <span class="veto-mirror-readonly">ЧАТЫ + АРХИВ</span></div>
           <div class="veto-mirror-heading">
@@ -1565,7 +1569,7 @@
   <script src="/app.js?v=20261017-veto-chat-choice-v1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
-  <script src="/chat-theme.js?v=20261017-chat-compose-v4"></script>
+  <script src="/chat-theme.js?v=20261018-global-theme-v1"></script>
   <script src="/telegram-chats.js?v=20261018-veto-fast-chat-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
