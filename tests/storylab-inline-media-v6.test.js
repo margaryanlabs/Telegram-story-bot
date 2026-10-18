@@ -71,9 +71,10 @@ test('saved and live audio is listened to in chat without implicit downloads',()
 test('outgoing UI shows accepted as Telegram-accepted, not delivered/read',()=>{
  const ui=read('public/telegram-chats.js');
  const html=read('public/studio.html'),css=read('public/chat-media.css');
- for(const state of ["'sending'","'accepted'","'uncertain'","'failed'"]){
-   assert.match(ui,new RegExp('setDeliveryStatus\\('+state));
- }
+ assert.match(ui,/setDeliveryStatus\('sending',chatId/);
+ assert.match(ui,/setDeliveryStatus\('accepted',chatId/);
+ assert.match(ui,/setDeliveryStatus\(error\?\.uncertain\?'uncertain':'failed'/);
+ assert.match(ui,/setDeliveryStatus\(error\.uncertain\?'uncertain':'failed'/);
  assert.match(ui,/title="Telegram принял отправку, статус прочтения неизвестен"/);
  assert.match(ui,/lastRichFailure=\{intent,nonce\}/);
  assert.match(html,/id="telegramThreadDeliveryStatus"/);
