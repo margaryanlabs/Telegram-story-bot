@@ -346,6 +346,7 @@
             <div class="veto-messenger-title"><button type="button" class="veto-messenger-exit" data-open-screen="home" aria-label="В главное меню VETO">← VETO</button><h1>Чаты</h1></div>
             <div class="veto-mirror-header-actions"><button type="button" class="veto-mirror-icon-btn veto-messenger-tools-toggle" id="vetoMessengerToolsToggle" aria-label="Инструменты VETO" aria-controls="vetoMessengerTools" aria-expanded="false" title="Инструменты VETO">✦</button><button type="button" class="veto-mirror-icon-btn" id="telegramMirrorArchiveLink" aria-label="Открыть защиту и архив">↶</button><button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button></div>
           </div>
+          <button type="button" id="vetoMessengerConnectCta" class="veto-messenger-connect-cta" hidden><span>⌁</span><strong>Подключить мой Telegram</strong><small>Чтобы увидеть свои чаты</small><b>↗</b></button>
           <div class="veto-messenger-tools" id="vetoMessengerTools" hidden>
             <div class="veto-messenger-tools-grid" role="group" aria-label="Инструменты и настройка">
               <button type="button" data-veto-messenger-tool="intel"><span>✳</span><strong>Поиск по сообщениям</strong><small>Intelligence</small></button>
@@ -374,7 +375,7 @@
           </div>
           <div class="veto-mirror-search-wrap">
             <span class="veto-mirror-search-symbol" aria-hidden="true">⌕</span>
-            <input id="telegramMirrorSearch" type="search" placeholder="Найти чат или сообщение…" autocomplete="off" aria-label="Поиск по загруженным чатам" />
+            <input id="telegramMirrorSearch" type="search" placeholder="Найти чат…" autocomplete="off" aria-label="Поиск по загруженным чатам" />
             <button id="telegramMirrorSearchClear" aria-label="Очистить поиск" type="button" hidden>×</button>
           </div>
           <section class="veto-intelligence" id="vetoMessengerIntelArea" aria-label="Интеллект-поиск по перепискам" hidden>
