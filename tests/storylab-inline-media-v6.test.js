@@ -57,12 +57,15 @@ test('photo lightbox only opens owner-scoped blob URLs already fetched in this t
 
 test('saved and live audio is listened to in chat without implicit downloads',()=>{
  const ui=read('public/telegram-chats.js');
- const section=ui.slice(ui.indexOf('async function openArchivedFile('),ui.indexOf('function visibleMessageAnchor('));
- assert.match(section,/mime\.startsWith\('audio\/'\)/);
- assert.match(section,/blob\.type\.startsWith\('audio\/'\)/);
- assert.match(section,/audio\.controls=true;audio\.preload='metadata'/);
- assert.match(section,/state\.mediaPreviewUrls\.set\(String\(id\),href\)/);
- assert.match(section,/ownerKey!==String\(tg\?\.initData\|\|''\)/);
+ const media=ui.slice(ui.indexOf('function cacheExpandedAttachment('),ui.indexOf('async function openArchivedFile('));
+ const requests=ui.slice(ui.indexOf('async function openArchivedFile('),ui.indexOf('function visibleMessageAnchor('));
+ assert.match(media,/mime\.startsWith\('audio\/'\)/);
+ assert.match(media,/audio\.controls=true;audio\.preload='metadata'/);
+ assert.match(media,/state\.mediaPreviewUrls\.set\(key,href\)/);
+ assert.match(requests,/cacheExpandedAttachment\(button,id,blob,true\)/);
+ assert.match(requests,/cacheExpandedAttachment\(button,id,blob,false\)/);
+ assert.match(requests,/ownerKey!==String\(tg\?\.initData\|\|''\)/);
+ assert.match(requests,/!button\.isConnected/);
  assert.match(ui,/Слушать сохранённое аудио/);
  assert.match(ui,/Слушать в переписке/);
  assert.match(ui,/event\.target\.closest\('\[data-mirror-photo\]'\)/);

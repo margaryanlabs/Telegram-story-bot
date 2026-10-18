@@ -29,7 +29,7 @@ test('late private media responses cannot expose previous owners or different co
     assert.match(section,/epoch!==state\.threadGeneration/);
     assert.match(section,/String\(state\.thread\?\.id\)!==chatId/);
     assert.match(section,/!button\.isConnected/);
-    assert.ok(section.indexOf('!button.isConnected')<section.indexOf('URL.createObjectURL(blob)'));
+    assert.ok(section.indexOf('!button.isConnected')<section.indexOf('cacheExpandedAttachment(button,id,blob'));
   }
   assert.match(ui,/state\.syncRunId\+\+;state\.syncBusy=false/);
 });

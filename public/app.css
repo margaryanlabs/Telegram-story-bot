@@ -3525,3 +3525,29 @@ button:focus-visible, [data-privacy-filter]:focus-visible{
 @media(prefers-reduced-motion:reduce){
   #telegramMirror .veto-mirror-icon-btn.is-refreshing{animation:none}
 }
+
+
+/* Lazy Telegram media: touch targets, no layout jumps, and bounded previews. */
+#telegramMirror .veto-mirror-inline-placeholder{
+  width:100%;min-width:145px;min-height:125px;padding:12px;
+  cursor:pointer;font:inherit;text-align:center;
+  -webkit-tap-highlight-color:transparent
+}
+#telegramMirror .veto-mirror-inline-placeholder:focus-visible{
+  outline:2px solid #bed6f1;outline-offset:3px
+}
+#telegramMirror .veto-mirror-inline-placeholder small{
+  display:block;max-width:90%;line-height:1.4
+}
+#telegramMirror .veto-mirror-expanded-slot{
+  min-width:0;max-width:100%;contain:layout style
+}
+#telegramMirror .veto-mirror-media-reveal audio{
+  width:min(100%,375px);height:43px;display:block;border-radius:24px
+}
+#telegramMirror .veto-mirror-media-reveal video{
+  max-height:310px;display:block
+}
+#telegramMirror .veto-mirror-expanded-slot>a{
+  overflow-wrap:anywhere
+}
