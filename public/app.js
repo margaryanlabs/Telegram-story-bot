@@ -3139,6 +3139,10 @@
     if(!window.VetoStoryEditor){showToast('Редактор пока недоступен');return;}
     void window.VetoStoryEditor.open(composerFile);
   });
+  window.addEventListener('veto:story-project-error',event=>{
+    const message=String(event.detail?.message||'Не удалось открыть проект').slice(0,160);
+    showToast(message);
+  });
   window.addEventListener('veto:story-edited',event=>{
     const file=event.detail?.file;
     if(!(file instanceof File)||!['image/jpeg','image/png','image/webp'].includes(file.type))return;
