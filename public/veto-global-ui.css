@@ -332,3 +332,135 @@ html[data-veto-theme="linen"] input{color:var(--text)}
 @media(prefers-reduced-motion:reduce){
   #telegramMirror .veto-mirror-bubble.veto-intel-exact-source{scroll-behavior:auto}
 }
+
+/* VETO Messenger-first 2026-10-19 — isolated presentation. Old modules remain mounted. */
+html[data-veto-theme]{
+  --veto-ui-line:var(--line,rgba(210,225,241,.16));
+  --veto-ui-card:var(--surface,#151c26);
+  --veto-ui-muted:var(--muted,#99a8bc);
+  --veto-ui-ink:var(--text,#eef4fb);
+  --veto-ui-accent:var(--accent,#b9d5ed);
+}
+.veto-command-home{position:relative;isolation:isolate;overflow:hidden;
+  display:grid;gap:20px;margin:0 0 20px;padding:25px 22px 22px;
+  border:1px solid var(--veto-ui-line);border-radius:25px;
+  background:linear-gradient(149deg,color-mix(in srgb,var(--veto-ui-card) 92%,var(--veto-ui-accent)),
+    var(--veto-ui-card) 65%);box-shadow:0 22px 58px rgba(0,0,0,.13)}
+.veto-command-home:before{content:"";position:absolute;inset:-140px -100px auto auto;
+  width:270px;height:270px;border:1px solid var(--veto-ui-line);border-radius:50%;
+  box-shadow:0 0 0 49px color-mix(in srgb,var(--veto-ui-accent) 3%,transparent),
+    0 0 0 98px color-mix(in srgb,var(--veto-ui-accent) 2%,transparent);
+  pointer-events:none;z-index:-1}
+.veto-command-home-top{display:flex;align-items:center;gap:10px;letter-spacing:.15em;
+  font-size:9px;font-weight:850;color:var(--veto-ui-muted)}
+.veto-command-home-top i{width:5px;height:5px;background:var(--veto-ui-accent);
+  border-radius:50%}
+.veto-command-home-top strong{margin-left:auto;letter-spacing:0;font-size:10px;
+  font-weight:600;color:var(--veto-ui-muted)}
+.veto-command-home h1{font-size:clamp(34px,9vw,53px);font-weight:830;
+  letter-spacing:-.066em;line-height:1.02;margin:3px 0 0;color:var(--veto-ui-ink)}
+.veto-command-home h1 em{font-style:normal;color:var(--veto-ui-accent)}
+.veto-command-home>p{font-size:13px;line-height:1.65;color:var(--veto-ui-muted);
+  max-width:340px;margin:-12px 0 0}
+.veto-command-home-actions{display:grid;gap:9px}
+.veto-command-home-actions button{min-height:54px;border-radius:15px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;font-size:13px;text-align:left;
+  font-weight:700;cursor:pointer}
+.veto-command-home-actions button span{font-size:21px}
+.veto-command-home-actions button b{margin-left:auto;font-size:17px}
+.veto-command-home-primary{background:var(--veto-ui-accent);
+  color:var(--accent-text,#132332);border:1px solid var(--veto-ui-accent)}
+.veto-command-home-connect{background:color-mix(in srgb,var(--veto-ui-card) 90%,var(--veto-ui-ink));
+  border:1px solid var(--veto-ui-line);color:var(--veto-ui-ink)}
+.veto-command-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.veto-command-home-grid button{display:grid;grid-template-columns:24px 1fr;
+  align-items:center;column-gap:8px;row-gap:3px;min-width:0;min-height:76px;
+  border:1px solid var(--veto-ui-line);border-radius:14px;text-align:left;
+  padding:12px;background:color-mix(in srgb,var(--veto-ui-card) 89%,var(--veto-ui-ink));
+  color:var(--veto-ui-ink)}
+.veto-command-home-grid span{font-size:20px;grid-row:span 2;color:var(--veto-ui-accent)}
+.veto-command-home-grid strong{font-size:12px;font-weight:780}
+.veto-command-home-grid small{font-size:10px;color:var(--veto-ui-muted);
+  line-height:1.4;min-width:0}
+.veto-command-advanced{border:1px solid var(--veto-ui-line);border-radius:16px;
+  background:var(--veto-ui-card);color:var(--veto-ui-ink);margin-bottom:22px}
+.veto-command-advanced>summary{list-style:none;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;cursor:pointer;padding:16px;
+  font-size:12px;font-weight:750}
+.veto-command-advanced>summary::-webkit-details-marker{display:none}
+.veto-command-advanced>summary b{color:var(--veto-ui-muted)}
+.veto-command-advanced[open]>summary{border-bottom:1px solid var(--veto-ui-line)}
+.veto-command-advanced-body{padding:16px 12px}
+.veto-command-advanced-body>*:first-child{margin-top:0}
+.veto-welcome .veto-welcome-details{border:0;background:transparent;
+  color:#c6d8eb;min-height:44px;padding:10px 4px;font-size:12px;font-weight:700}
+.veto-welcome .veto-welcome-details[hidden]{display:none!important}
+.veto-welcome:has([data-veto-intro-step="0"].active) .veto-intro-dots{display:none}
+.veto-welcome:has([data-veto-intro-step="0"].active) .veto-welcome-shell{
+  min-height:min(78dvh,650px)}
+.veto-welcome:has([data-veto-intro-step="0"].active) .veto-welcome-footer{gap:8px}
+.veto-welcome:has([data-veto-intro-step="0"].active) .veto-welcome-primary{min-width:0;flex:1}
+/* The toolbar must not push the first conversation beneath help text. */
+#telegramMirror.veto-mirror{border-radius:18px}
+#telegramMirror .veto-mirror-list{padding:12px 12px 16px}
+#telegramMirror .veto-mirror-eyebrow{display:none!important}
+#telegramMirror .veto-mirror-heading{margin:0 0 11px;min-height:49px;
+  padding:2px 1px;align-items:center}
+#telegramMirror .veto-messenger-title h1{font-size:clamp(24px,6vw,31px);letter-spacing:-.045em}
+#telegramMirror .veto-mirror-header-actions{gap:7px}
+#telegramMirror .veto-messenger-tools-toggle{font-size:22px}
+#telegramMirror .veto-messenger-tools[hidden],
+#telegramMirror #vetoMessengerIntelArea[hidden],
+#telegramMirror #vetoMessengerConnectCta[hidden]{display:none!important}
+#telegramMirror .veto-messenger-tools{margin:0 0 12px;border:1px solid var(--ct-line);
+  border-radius:16px;padding:10px;background:var(--ct-panel);color:var(--ct-text)}
+#telegramMirror .veto-messenger-tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#telegramMirror .veto-messenger-tools-grid button{min-width:0;min-height:68px;
+  background:var(--ct-elev);color:var(--ct-text);border:1px solid var(--ct-line);
+  border-radius:12px;padding:9px;text-align:left;
+  display:grid;column-gap:8px;grid-template-columns:22px 1fr;align-items:center}
+#telegramMirror .veto-messenger-tools-grid span{grid-row:span 2;color:var(--ct-accent);font-size:18px}
+#telegramMirror .veto-messenger-tools-grid strong{font-size:11px}
+#telegramMirror .veto-messenger-tools-grid small{font-size:9px;color:var(--ct-muted)}
+#telegramMirror .veto-messenger-tools .veto-mirror-access-drawer{margin:9px 0 0}
+#telegramMirror .veto-messenger-connect-cta{width:100%;margin:0 0 11px;
+  display:flex;align-items:center;gap:10px;padding:11px 12px;
+  border-radius:13px;border:1px solid var(--ct-line);background:var(--ct-elev);
+  color:var(--ct-text);text-align:left}
+#telegramMirror .veto-messenger-connect-cta span{font-size:21px;color:var(--ct-accent)}
+#telegramMirror .veto-messenger-connect-cta strong{font-size:12px}
+#telegramMirror .veto-messenger-connect-cta small{margin-left:auto;
+  font-size:10px;color:var(--ct-muted)}
+#telegramMirror .veto-messenger-connect-cta b{color:var(--ct-accent)}
+#telegramMirror .veto-mirror-search-wrap{margin-top:1px;margin-bottom:9px;
+  border-radius:13px}
+#telegramMirror .veto-mirror-filters{display:flex;flex-wrap:wrap;gap:6px;
+  overflow-x:visible;margin:0 0 9px;padding:0}
+#telegramMirror .veto-mirror-filters button{min-height:33px;border-radius:10px;padding:7px 11px}
+#telegramMirror .veto-mirror-filters .veto-filter-advanced{display:none}
+#telegramMirror .veto-mirror-filters[data-expanded="true"] .veto-filter-advanced{display:inline-flex}
+#telegramMirror .veto-mirror-filters .veto-filters-more{display:inline-flex;
+  margin-left:auto;border:1px solid var(--ct-line);background:var(--ct-elev);
+  color:var(--ct-muted);gap:5px;align-items:center}
+#telegramMirror .veto-mirror-filters[data-expanded="true"] .veto-filters-more span{transform:rotate(180deg)}
+#telegramMirror .veto-mirror-account-proof.ready{display:none}
+#telegramMirror .veto-mirror-focus-hint,#telegramMirror .veto-mirror-headline{display:none}
+#telegramMirror .veto-mirror-chat-list{margin-top:0}
+#telegramMirror .veto-mirror-notice{border-radius:11px}
+#telegramMirror .veto-mirror-privacy-note{margin-top:13px}
+#telegramMirror .veto-intelligence{margin:0 0 9px}
+#telegramMirror .veto-mirror-access-drawer[open]{margin-top:8px}
+html[data-veto-theme] #telegramMirror :is(.veto-messenger-tools-grid button,
+.veto-filters-more,.veto-messenger-connect-cta):focus-visible,
+html[data-veto-theme] .veto-command-home button:focus-visible,
+html[data-veto-theme] .veto-welcome-details:focus-visible{outline:2px solid var(--veto-ui-accent);
+  outline-offset:3px}
+@media(max-width:390px){
+  #telegramMirror .veto-mirror-list{padding-left:10px;padding-right:10px}
+  #telegramMirror .veto-messenger-connect-cta small{display:none}
+  .veto-command-home{padding:21px 17px}
+  .veto-command-home-grid button{padding:10px 8px}
+}
+@media(prefers-reduced-motion:reduce){
+  .veto-command-home button,#telegramMirror .veto-mirror-filters button{transition:none!important}
+}
