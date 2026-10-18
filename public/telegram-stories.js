@@ -104,6 +104,26 @@
       return 'Инкогнито на паузе · просмотр заблокирован';
     return 'Анонимность проверяется перед каждым просмотром';
   }
+  function syncKnownContactAvatars() {
+    const list = $('telegramMirrorList');
+    if (!list) return;
+    const known = new Map();
+    for (const item of list.querySelectorAll('[data-veto-avatar]')) {
+      const picture = item.querySelector('img');
+      if (picture?.src) known.set(String(item.dataset.vetoAvatar),picture.src);
+    }
+    for (const button of bar.querySelectorAll('[data-veto-story-person]')) {
+      const index = Number(button.dataset.vetoStoryPerson);
+      const face = button.querySelector('.veto-story-face');
+      const src = known.get(state.contacts[index]?.userId);
+      if (!face || !src || face.querySelector('img')?.src === src) continue;
+      const image = document.createElement('img');
+      image.src = src;
+      image.alt = '';
+      image.className = 'veto-story-contact-photo';
+      face.replaceChildren(image);
+    }
+  }
   function renderBar() {
     if (!state.owner) {
       bar.innerHTML='<span class="veto-story-status">Подключи Telegram, чтобы увидеть истории</span>';
@@ -132,6 +152,7 @@
       state.contacts.length===0 && state.loadedAt
         ?'<p class="veto-story-note">Сейчас нет доступных активных историй контактов.</p>'
         :state.partial?'<p class="veto-story-note">Показана доступная часть ленты Telegram.</p>':'');
+    syncKnownContactAvatars();
   }
   async function loadStories(force=false) {
     resetOwner();
@@ -279,6 +300,10 @@
       closeViewer();
     } else resetOwner();
   });
+  if (typeof MutationObserver !== 'undefined' && $('telegramMirrorList')) {
+    const watcher = new MutationObserver(()=>syncKnownContactAvatars());
+    watcher.observe($('telegramMirrorList'),{subtree:true,childList:true});
+  }
   renderBar();
   if (document.querySelector('.screen.active')?.dataset.screen === 'telegram')
     void loadStories();
