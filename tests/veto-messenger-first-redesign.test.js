@@ -93,5 +93,6 @@ test('The mobile inbox tab bar has legible labels and meaningful tap targets',()
   assert.ok(css.includes('font-size:clamp(10px,2.5vw,11px)'));
   assert.ok(css.includes('body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item:focus-visible'));
   assert.ok(!css.includes('body.veto-chat-active .bottom-nav{display:none!important}'));
+  assert.ok(css.includes('height:var(--veto-visible-height,100dvh)!important'));
   assert.ok(html.includes('veto-global-ui.css?v=20261019-messenger-nav-v3'));
 });
