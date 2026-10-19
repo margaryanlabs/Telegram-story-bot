@@ -473,3 +473,43 @@ body.veto-chat-active #vetoGlobalThemeToggle{
     transition:none!important;
   }
 }
+
+/* The first-run gate and compact VETO command hub must speak the same visual
+   language as Chats; otherwise an unconnected owner still sees the old grey. */
+.veto-welcome .veto-welcome-shell{
+  background:
+    radial-gradient(ellipse 80% 52% at 81% 13%,rgba(239,95,124,.17),transparent 76%),
+    radial-gradient(ellipse 80% 65% at 2% 100%,rgba(53,105,207,.30),transparent 78%),
+    linear-gradient(152deg,#111b34,#0b1126 65%,#14142e);
+  border:1px solid rgba(128,161,230,.27);
+  box-shadow:0 24px 85px rgba(3,7,25,.38);
+}
+.veto-welcome .veto-welcome-primary{
+  background:linear-gradient(120deg,#ff9377,#ff705c 55%,#ea6685);
+  color:#23192a;border-color:rgba(255,193,165,.6);
+  box-shadow:0 9px 24px rgba(213,76,93,.21);
+}
+.veto-welcome .veto-intro-features span{
+  background:rgba(53,89,147,.32);
+  border-color:rgba(143,175,240,.27);
+  color:#e6efff;
+}
+html[data-veto-theme="graphite"] .veto-command-home,
+html[data-veto-theme="slate"] .veto-command-home{
+  background:linear-gradient(133deg,#152d51,#19254b 57%,#432747);
+  border-color:rgba(136,175,230,.26);
+  --veto-ui-ink:#f8f8ff;
+  --veto-ui-muted:#c6d3e8;
+  --veto-ui-accent:#ff9580;
+}
+html[data-veto-theme="graphite"] .veto-command-home-primary,
+html[data-veto-theme="slate"] .veto-command-home-primary{
+  background:linear-gradient(115deg,#ff907a,#f56b71);
+  color:#281629;border-color:rgba(255,186,160,.5);
+}
+html[data-veto-theme="graphite"] .veto-command-home-grid button,
+html[data-veto-theme="slate"] .veto-command-home-grid button{
+  background:rgba(19,37,71,.50);
+  border-color:rgba(135,168,221,.20);
+  color:#f7f9ff;
+}
