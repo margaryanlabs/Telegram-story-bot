@@ -35,7 +35,7 @@
   --veto-row-border:rgba(120,217,222,.19);
   --veto-row-hover:linear-gradient(120deg,#285e75,#1f516e);
   --veto-story-glow:linear-gradient(145deg,#80e7d3,#37a9cf 53%,#72a6fa);
-  --veto-outgoing:linear-gradient(135deg,#208e9d,#25678e);
+  --veto-outgoing:linear-gradient(135deg,#1a7088,#25678e);
   --veto-incoming:linear-gradient(135deg,#234a61,#1a374f);
   --veto-highlight:#73ddd0;--veto-hero-ink:#fff;
 }
@@ -69,7 +69,7 @@
   --veto-row-border:rgba(145,100,99,.16);
   --veto-row-hover:linear-gradient(120deg,#fffefa,#f5e8e2);
   --veto-story-glow:linear-gradient(145deg,#d86f6a,#bc6b92 58%,#9c81ce);
-  --veto-outgoing:linear-gradient(130deg,#af6677,#92576d);
+  --veto-outgoing:linear-gradient(130deg,#a65e70,#92576d);
   --veto-incoming:linear-gradient(130deg,#fffefa,#faf3ed);
   --veto-highlight:#b35d68;--veto-hero-ink:#fff;
 }
