@@ -77,3 +77,20 @@ test('Single palette changes app and chats, no new private message persistence',
  assert.match(css,/html\[data-veto-theme\]/);
  assert.match(css,/:focus-visible/);
 });
+
+
+test('Account changes and authorization failures restore chat tabs',()=>{
+  const messenger=read('public/telegram-chats.js');
+  const reset=messenger.slice(messenger.indexOf('function resetOwner()'),messenger.indexOf('function revokeMediaUrls()'));
+  assert.match(reset,/VetoThemeDock\\?\\.\\('inbox'\\)/);
+  const authFailure=messenger.slice(messenger.indexOf('// Authentication and ownership failures'),messenger.indexOf('async function photoRequest('));
+  assert.match(authFailure,/VetoThemeDock\\?\\.\\('inbox'\\)/);
+  assert.match(authFailure,/classList\\.remove\\('thread-mode'\\)/);
+});
+test('The mobile inbox tab bar has legible labels and meaningful tap targets',()=>{
+  assert.match(css,/min-height:50px/);
+  assert.match(css,/font-size:clamp\\(10px,2\\.5vw,11px\\)/);
+  assert.match(css,/body\\.veto-chat-active:not\\(\\.veto-chat-thread\\) \\.bottom-nav \\.nav-item:focus-visible/);
+  assert.doesNotMatch(css,/body\\.veto-chat-active \\.bottom-nav\\{display:none!important\\}/);
+  assert.match(html,/veto-global-ui\\.css\\?v=20261019-messenger-nav-v3/);
+});
