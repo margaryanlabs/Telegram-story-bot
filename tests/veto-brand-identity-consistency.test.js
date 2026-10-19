@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import sharp from 'sharp';
 import {readFileSync} from 'node:fs';
 
 const read = path => readFileSync(new URL('../'+path,import.meta.url),'utf8');
@@ -43,4 +44,14 @@ test('Brandmark uses original geometry with accessible text and mobile sizing',(
   assert.match(css,/@media\(max-width:360px\)/);
   assert.doesNotMatch(css,/\.veto-inbox-signature span\{/);
   assert.match(html,/class="veto-inbox-title-copy"><span class="veto-inbox-wordmark">VETO/);
+});
+
+test('The actual branded SVG rasterizes for browser previews and Telegram bot photo',async()=>{
+  const rendered=await sharp(Buffer.from(svg)).resize(256,256).png().toBuffer();
+  const meta=await sharp(rendered).metadata();
+  assert.equal(meta.width,256);
+  assert.equal(meta.height,256);
+  assert.ok(rendered.length>1000);
+  const jpeg=await sharp(Buffer.from(svg)).resize(640,640).flatten({background:'#000000'}).jpeg().toBuffer();
+  assert.ok(jpeg.length>3000);
 });
