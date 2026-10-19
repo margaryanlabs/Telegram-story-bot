@@ -475,3 +475,46 @@ html[data-veto-theme] .veto-welcome-details:focus-visible{outline:2px solid var(
   border-color:var(--veto-ui-accent);box-shadow:inset 0 -2px 0 var(--veto-ui-accent)}
 .veto-login-stage .done{color:var(--veto-ui-accent)}
 .veto-command-advanced>summary:focus-visible{outline:2px solid var(--veto-ui-accent);outline-offset:3px}
+
+/* Messenger First follow-up: expose five real tabs on the chat LIST.
+   The previous global .veto-chat-active rule hid them even on the inbox,
+   effectively defeating the new first-class Chats navigation. A conversation
+   remains immersive/full-height, without a bottom tab bar. */
+body.veto-chat-active:not(.veto-chat-thread) .bottom-nav{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  z-index:60;
+}
+body.veto-chat-active:not(.veto-chat-thread) .app-shell{
+  height:auto!important;
+  overflow:visible!important;
+  padding:0 0 calc(108px + env(safe-area-inset-bottom))!important;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror{
+  min-height:calc(100dvh - 103px)!important;
+  height:auto;
+}
+body.veto-chat-active:not(.veto-chat-thread) .veto-messenger-exit{
+  display:none!important; /* VETO now lives in the persistent tab bar. */
+}
+body.veto-chat-thread .bottom-nav{display:none!important}
+body.veto-chat-thread .app-shell{
+  padding:0!important;
+  height:100dvh!important;
+  overflow:hidden!important;
+}
+@media(max-width:390px){
+  body.veto-chat-active:not(.veto-chat-thread) .bottom-nav{
+    width:calc(100% - 14px);
+    padding:5px 3px;
+    gap:1px;
+  }
+  body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item{
+    min-width:0;
+    padding-left:2px;
+    padding-right:2px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.veto-chat-active .bottom-nav{transition:none!important}
+}
