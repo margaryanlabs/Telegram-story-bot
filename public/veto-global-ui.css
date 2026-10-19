@@ -108,8 +108,7 @@ body.veto-chat-thread #telegramMirror .veto-voice-mode button{white-space:nowrap
  body.veto-chat-thread #vetoGlobalThemeToggle{width:31px;height:31px;min-width:31px;border-radius:10px;font-size:17px}
 }
 
-/* The messenger owns the viewport. Main navigation is reachable from ← VETO. */
-body.veto-chat-active .bottom-nav{display:none!important}
+/* Immersive threads are fullscreen; the inbox retains normal five-tab navigation. */
 body.veto-chat-active .app-shell{padding-bottom:0!important}
 body.veto-chat-active #telegramMirror{min-height:100dvh}
 body.veto-chat-active .veto-messenger-title{display:flex;align-items:center;gap:11px}
@@ -517,4 +516,52 @@ body.veto-chat-thread .app-shell{
 }
 @media(prefers-reduced-motion:reduce){
   body.veto-chat-active .bottom-nav{transition:none!important}
+}
+
+/* Messenger First 2.0 — readable, touch-friendly navigation on every palette.
+   Scope to inbox only, never cover the full-screen message composer. */
+body.veto-chat-active:not(.veto-chat-thread) .bottom-nav{
+  width:min(calc(100% - 20px - env(safe-area-inset-left) - env(safe-area-inset-right)),620px);
+  min-height:68px;
+  padding:7px;
+  gap:3px;
+  border-radius:21px;
+  box-shadow:0 12px 38px rgba(0,0,0,.22);
+}
+body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item{
+  min-width:0;
+  min-height:50px;
+  padding:5px 2px;
+  gap:3px;
+  border-radius:14px;
+  touch-action:manipulation;
+}
+body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item svg{
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+}
+body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item small{
+  max-width:100%;
+  font-size:clamp(10px,2.5vw,11px);
+  line-height:1.15;
+  font-weight:750;
+  letter-spacing:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item:focus-visible{
+  outline:2px solid var(--veto-ui-accent);
+  outline-offset:2px;
+}
+@media(max-width:350px){
+  body.veto-chat-active:not(.veto-chat-thread) .bottom-nav{
+    width:calc(100% - 12px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    padding:5px 3px;
+    gap:0;
+  }
+  body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item small{
+    font-size:9px;
+  }
 }
