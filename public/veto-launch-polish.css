@@ -25,7 +25,7 @@ html[data-veto-theme="linen"] #telegramMirror{--veto-polish-shadow:0 9px 26px rg
   transition:transform .35s ease-out;
 }
 #telegramMirror .veto-mirror-heading::after{
-  opacity:.83;transform:translate3d(calc(var(--veto-light-x,0px) * -.7),calc(var(--veto-light-y,0px) * -.6),0);
+  opacity:.83;transform:translate3d(var(--veto-light-reverse-x,0px),var(--veto-light-reverse-y,0px),0);
   transition:transform .35s ease-out;
 }
 #telegramMirror .veto-inbox-signature{
