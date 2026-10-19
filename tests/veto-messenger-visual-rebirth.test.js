@@ -8,7 +8,7 @@ const nav=read('public/veto-global-ui.css');
 
 test('visual rebirth is applied AFTER device polish, preserving mobile behavior',()=>{
   const device=html.indexOf('/veto-device-polish.css?');
-  const rebirth=html.indexOf('/veto-messenger-rebirth.css?v=20261019-visual-v1');
+  const rebirth=html.indexOf('/veto-messenger-rebirth.css?v=20261019-brand-v2');
   assert.ok(device>0 && rebirth>device, 'premium styles must load last');
   assert.match(html,/veto-device-polish\.js/);
   assert.match(html,/id="telegramThreadComposer"/);
@@ -17,7 +17,7 @@ test('visual rebirth is applied AFTER device polish, preserving mobile behavior'
 
 test('new inbox identity is visible and decorative only',()=>{
   assert.match(html,/class="veto-inbox-signature" aria-hidden="true"/);
-  assert.match(html,/class="veto-inbox-title-copy"><h1>Чаты<\/h1>/);
+  assert.match(html,/class="veto-inbox-title-copy"><span class="veto-inbox-wordmark">VETO/);
   assert.match(css,/\.veto-inbox-signature/);
   assert.match(css,/\.veto-mirror-heading::before/);
 });

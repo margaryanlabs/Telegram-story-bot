@@ -23,11 +23,35 @@ async function tg(token, method, body = {}) {
 
 const CONTROL_BUILD = '20261016-veto-smart-inbox-v1';
 
-const VETO_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
-  <rect x="1" y="1" width="38" height="38" rx="11" fill="#0b0c0f" stroke="#2a2c33"/>
-  <path d="M8.5 11.5 19.7 29 15 29 6.8 16.1Z" fill="#f5f6f8"/>
-  <path d="M31.5 11.5 20.3 29H25l8.2-12.9Z" fill="#ff553d"/>
-  <path d="M18.25 22.3h3.5" stroke="#050608" stroke-width="1.4" stroke-linecap="round"/>
+const VETO_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="VETO">
+  <defs>
+    <linearGradient id="vetoCase" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#202a3c"/>
+      <stop offset=".50" stop-color="#101726"/>
+      <stop offset="1" stop-color="#080b13"/>
+    </linearGradient>
+    <radialGradient id="vetoHalo" cx=".80" cy=".18" r=".86">
+      <stop offset="0" stop-color="#ff715b" stop-opacity=".20"/>
+      <stop offset=".60" stop-color="#314b77" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#314b77" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="vetoSilver" x1="0" y1="0" x2=".8" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".45" stop-color="#f0f6ff"/>
+      <stop offset="1" stop-color="#c0d3ed"/>
+    </linearGradient>
+    <linearGradient id="vetoFlame" x1=".1" y1="1" x2=".85" y2="0">
+      <stop offset="0" stop-color="#d94343"/>
+      <stop offset=".50" stop-color="#ff624f"/>
+      <stop offset="1" stop-color="#ff9a74"/>
+    </linearGradient>
+  </defs>
+  <rect x=".7" y=".7" width="38.6" height="38.6" rx="11.4" fill="url(#vetoCase)" stroke="#42506a" stroke-width="1.1"/>
+  <rect x="1.8" y="1.8" width="36.4" height="36.4" rx="10.4" fill="url(#vetoHalo)"/>
+  <path d="M8.5 11.5 19.7 29 15 29 6.8 16.1Z" fill="url(#vetoSilver)"/>
+  <path d="M31.5 11.5 20.3 29H25l8.2-12.9Z" fill="url(#vetoFlame)"/>
+  <path d="M18.25 22.3h3.5" stroke="#111927" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M6.8 6.4c2.8-2 6.5-3 10.9-3.1" fill="none" stroke="#ffffff" stroke-opacity=".17" stroke-width=".7" stroke-linecap="round"/>
 </svg>`;
 
 async function setVetoBotProfilePhoto(token) {
