@@ -158,7 +158,7 @@
       pin.setAttribute('aria-label',(favorite?'Убрать из избранного: ':'В избранное: ')+person.name);
     }
   }
-  function renderBar() {
+  function renderBar(preserveSearchField=false) {
     if (!state.owner) {
       bar.innerHTML='<span class="veto-story-status">Подключи Telegram, чтобы увидеть истории</span>';
       return;
@@ -183,7 +183,7 @@
         '</span>';
     }).join('');
     const status=state.viewMode==='ghost-no-receipt'?'◈ ':'◌ ';
-    bar.innerHTML=
+    const nextMarkup=
       '<div class="veto-story-strip-heading"><strong>Истории</strong>'+
       '<span class="veto-story-status">'+status+safe(statusText())+'</span>'+
       '<button type="button" class="veto-story-tools-toggle" data-veto-story-expand="1" '+
@@ -210,6 +210,22 @@
       state.contacts.length===0 && state.loadedAt
         ?'<p class="veto-story-note">Сейчас нет доступных активных историй контактов.</p>':
       state.partial?'<p class="veto-story-note">Показана доступная часть ленты Telegram.</p>':'');
+    if (preserveSearchField && bar.querySelector('[data-veto-story-search]')) {
+      // Keep the *same focused input element* while filtering. Recreating it
+      // per keystroke collapses the Android/iOS software keyboard.
+      const next=document.createElement('section');
+      next.innerHTML=nextMarkup;
+      const previousPeople=bar.querySelector('.veto-story-people');
+      const freshPeople=next.querySelector('.veto-story-people');
+      if (previousPeople && freshPeople) {
+        previousPeople.replaceChildren(...freshPeople.childNodes);
+        bar.querySelector('.veto-story-note')?.remove();
+        const note=next.querySelector('.veto-story-note');
+        if (note) bar.appendChild(note);
+      }
+    } else {
+      bar.innerHTML=nextMarkup;
+    }
     syncKnownContactAvatars();
   }
   async function loadStories(force=false) {
@@ -350,12 +366,8 @@
   });
   bar.addEventListener('input',event=>{
     if (!event.target.matches('[data-veto-story-search]')) return;
-    const caret=event.target.selectionStart;
     state.query=event.target.value.slice(0,100);
-    renderBar();
-    const input=bar.querySelector('[data-veto-story-search]');
-    input?.focus({preventScroll:true});
-    if (caret!==null) input?.setSelectionRange(caret,caret);
+    renderBar(true);
   });
   viewer.addEventListener('click',event=>{
     const favorite=event.target.closest('[data-veto-story-favorite]');
