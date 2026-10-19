@@ -9,6 +9,7 @@
     owner:String(tg?.initData || ''), contacts:[],viewMode:null,
     loadedAt:0,busy:false,lastError:null,epoch:0,activePeer:-1,activeStory:-1,
     url:null,autoTimer:null,mediaBusy:false,partial:false,
+    favorites:new Set(),seen:new Set(),query:'',onlyFavorites:false,priorFocus:null,
   };
   const bar = document.createElement('section');
   bar.className = 'veto-story-strip';
@@ -50,6 +51,9 @@
     viewer.hidden = true;
     viewer.replaceChildren();
     document.body.classList.remove('veto-stories-open');
+    const previous = state.priorFocus;
+    state.priorFocus = null;
+    if (previous?.isConnected) previous.focus({preventScroll:true});
   }
   function resetOwner() {
     const current = String(tg?.initData || '');
@@ -57,6 +61,9 @@
     closeViewer();
     state.owner = current;state.contacts = [];state.viewMode = null;
     state.loadedAt = 0;state.partial = false;state.lastError = null;
+    // Personal contact preferences are volatile: never save Telegram identities on device.
+    state.favorites.clear();state.seen.clear();state.query='';state.onlyFavorites=false;
+    bar.classList.remove('expanded');
     renderBar();
     return true;
   }
@@ -123,35 +130,102 @@
       face.replaceChildren(image);
     }
   }
-  function renderBar() {
+  function storyOrder() {
+    const query = state.query.trim().toLocaleLowerCase('ru');
+    return state.contacts.map((person,index)=>({person,index}))
+      .filter(({person})=>{
+        if (state.onlyFavorites && !state.favorites.has(String(person.userId))) return false;
+        const label=(String(person.name||'')+' '+String(person.username||'')).toLocaleLowerCase('ru');
+        return !query || label.includes(query);
+      })
+      .sort((a,b)=>
+        Number(state.favorites.has(String(b.person.userId))) -
+        Number(state.favorites.has(String(a.person.userId))) || a.index-b.index)
+      .map(({index})=>index);
+  }
+  function toggleFavorite(userId) {
+    const id = String(userId);
+    const person = state.contacts.find(item=>String(item.userId)===id);
+    if (!person) return;
+    if (state.favorites.has(id)) state.favorites.delete(id);
+    else state.favorites.add(id);
+    renderBar();
+    const pin = viewer.querySelector('[data-veto-story-favorite]');
+    if (pin && String(pin.dataset.vetoStoryFavorite)===id) {
+      const favorite=state.favorites.has(id);
+      pin.textContent=favorite?'★':'☆';
+      pin.setAttribute('aria-pressed',String(favorite));
+      pin.setAttribute('aria-label',(favorite?'Убрать из избранного: ':'В избранное: ')+person.name);
+    }
+  }
+  function renderBar(preserveSearchField=false) {
     if (!state.owner) {
       bar.innerHTML='<span class="veto-story-status">Подключи Telegram, чтобы увидеть истории</span>';
       return;
     }
-    const expanded = bar.classList.contains('expanded');
-    const cards = (expanded?state.contacts:state.contacts.slice(0,32)).map((person,index)=>
-      '<button type="button" class="veto-story-person" data-veto-story-person="'+index+'" '+
-      'aria-label="Истории: '+safe(person.name)+'">'+
-      '<span class="veto-story-ring"><span class="veto-story-face">'+safe(initials(person.name))+
-      '</span></span><small>'+safe(person.name.split(' ')[0])+'</small></button>').join('');
-    const extra = state.contacts.length>32
-      ? '<button type="button" class="veto-story-more" data-veto-story-expand="1">'+
-        (expanded?'Свернуть':'Ещё +'+(state.contacts.length-32))+'</button>' : '';
-    bar.innerHTML =
+    const expanded=bar.classList.contains('expanded');
+    const indices=storyOrder();
+    const shown=expanded?indices:indices.slice(0,32);
+    const cards=shown.map(index=>{
+      const person=state.contacts[index],id=String(person.userId);
+      const favorite=state.favorites.has(id);
+      const viewed=person.stories?.length && person.stories.every(story=>
+        state.seen.has(id+':'+story.id));
+      return '<span class="veto-story-contact-shell'+(favorite?' is-favorite':'')+'">'+
+        '<button type="button" class="veto-story-person'+(viewed?' is-viewed':'')+
+        '" data-veto-story-person="'+index+'" aria-label="Истории: '+safe(person.name)+'">'+
+        '<span class="veto-story-ring"><span class="veto-story-face">'+safe(initials(person.name))+
+        '</span></span><small>'+safe(person.name.split(' ')[0])+'</small></button>'+
+        (expanded?'<button type="button" class="veto-story-pin" data-veto-story-favorite="'+safe(id)+
+        '" aria-pressed="'+String(favorite)+'" aria-label="'+
+        (favorite?'Убрать из избранного: ':'В избранное: ')+safe(person.name)+
+        '" title="Избранное в этом сеансе">'+(favorite?'★':'☆')+'</button>':'')+
+        '</span>';
+    }).join('');
+    const status=state.viewMode==='ghost-no-receipt'?'◈ ':'◌ ';
+    const nextMarkup=
       '<div class="veto-story-strip-heading"><strong>Истории</strong>'+
-      '<span class="veto-story-status">'+
-      (state.viewMode==='ghost-no-receipt'?'✓ ':'◈ ')+safe(statusText())+'</span>'+
+      '<span class="veto-story-status">'+status+safe(statusText())+'</span>'+
+      '<button type="button" class="veto-story-tools-toggle" data-veto-story-expand="1" '+
+      'aria-expanded="'+String(expanded)+'" aria-label="'+
+      (expanded?'Закрыть поиск историй':'Открыть поиск и избранные истории')+'">'+
+      (expanded?'Готово':'Найти')+'</button>'+
       '<button type="button" class="veto-story-refresh" data-veto-story-refresh="1" '+
       'aria-label="Обновить истории">↻</button></div>'+
+      (expanded?'<div class="veto-story-tools">'+
+        '<input type="search" data-veto-story-search="1" value="'+safe(state.query)+
+        '" placeholder="Имя или @username" autocomplete="off" aria-label="Найти истории контакта">'+
+        '<button type="button" data-veto-story-only-favorites="1" aria-pressed="'+
+        String(state.onlyFavorites)+'" class="'+(state.onlyFavorites?'active':'')+'">★ Избранные</button>'+
+        '</div>':'')+
       '<div class="veto-story-people"><button type="button" class="veto-story-person" '+
       'data-veto-story-publish="1" aria-label="Опубликовать свою историю">'+
       '<span class="veto-story-ring is-mine"><span class="veto-story-face">＋</span></span>'+
-      '<small>Моя</small></button>'+cards+extra+'</div>'+
+      '<small>Моя</small></button>'+cards+'</div>'+
+      (expanded?'<p class="veto-story-session-hint">★ Избранное и просмотрено — только в этом сеансе VETO.</p>':'')+
       (state.busy?'<p class="veto-story-note">Загружаю доступные истории контактов…</p>':
       state.lastError?'<p class="veto-story-note" role="status">'+safe(state.lastError)+'</p>':
+      expanded && !shown.length && state.contacts.length
+        ?'<p class="veto-story-note">По этому запросу историй нет. Измени фильтр.</p>':
       state.contacts.length===0 && state.loadedAt
-        ?'<p class="veto-story-note">Сейчас нет доступных активных историй контактов.</p>'
-        :state.partial?'<p class="veto-story-note">Показана доступная часть ленты Telegram.</p>':'');
+        ?'<p class="veto-story-note">Сейчас нет доступных активных историй контактов.</p>':
+      state.partial?'<p class="veto-story-note">Показана доступная часть ленты Telegram.</p>':'');
+    if (preserveSearchField && bar.querySelector('[data-veto-story-search]')) {
+      // Keep the *same focused input element* while filtering. Recreating it
+      // per keystroke collapses the Android/iOS software keyboard.
+      const next=document.createElement('section');
+      next.innerHTML=nextMarkup;
+      const previousPeople=bar.querySelector('.veto-story-people');
+      const freshPeople=next.querySelector('.veto-story-people');
+      if (previousPeople && freshPeople) {
+        previousPeople.replaceChildren(...freshPeople.childNodes);
+        bar.querySelector('.veto-story-note')?.remove();
+        const note=next.querySelector('.veto-story-note');
+        if (note) bar.appendChild(note);
+      }
+    } else {
+      bar.innerHTML=nextMarkup;
+    }
     syncKnownContactAvatars();
   }
   async function loadStories(force=false) {
@@ -191,7 +265,11 @@
       '<div class="veto-story-stage-head"><span class="veto-story-stage-avatar">'+
       safe(initials(contact.name))+'</span><div><strong>'+safe(contact.name)+'</strong>'+
       '<small>'+safe(formatTime(story.createdAt))+' · Telegram</small></div>'+
-      '<span class="veto-story-protection">◈ Ghost View</span>'+
+      '<span class="veto-story-protection">◈ Ghost View</span>'+ 
+      '<button type="button" class="veto-story-stage-pin" data-veto-story-favorite="'+safe(contact.userId)+'" '+
+      'aria-pressed="'+String(state.favorites.has(String(contact.userId)))+'" aria-label="'+
+      (state.favorites.has(String(contact.userId))?'Убрать из избранного: ':'В избранное: ')+safe(contact.name)+'">'+
+      (state.favorites.has(String(contact.userId))?'★':'☆')+'</button>'+
       '<button type="button" class="veto-story-close" data-veto-story-close="1" aria-label="Закрыть">×</button></div>'+
       '<div class="veto-story-media" id="vetoStoryMedia"><div class="veto-story-spinner"></div>'+
       '<span>Загружаю историю без отметки о просмотре…</span></div>'+
@@ -213,11 +291,13 @@
     if (resetOwner() || state.mediaBusy) return;
     const person = state.contacts[peerIndex],story=person?.stories?.[storyIndex];
     if (!story) return;
+    if (viewer.hidden) state.priorFocus=document.activeElement;
     hideMedia();
     state.activePeer = peerIndex;
     state.activeStory = storyIndex;
     const epoch = ++state.epoch, owner=state.owner;
     renderViewerShell();
+    if (state.priorFocus) viewer.querySelector('.veto-story-close')?.focus({preventScroll:true});
     state.mediaBusy = true;
     try {
       const data = await call('media',{userId:person.userId,storyId:story.id},true);
@@ -237,6 +317,9 @@
         state.autoTimer = setTimeout(()=>navigate(1),7000);
       }
       area.appendChild(media);
+      // This is VETO-local feedback, not a Telegram read receipt.
+      state.seen.add(String(person.userId)+':'+story.id);
+      renderBar();
     } catch(error) {
       if (epoch===state.epoch && owner===state.owner) viewerError(error.message);
     } finally {
@@ -250,8 +333,10 @@
     if (nextStory >= 0 && nextStory < (current?.stories?.length||0)) {
       openStory(state.activePeer,nextStory);return;
     }
-    const nextPeer = state.activePeer + step;
-    if (nextPeer >=0 && nextPeer<state.contacts.length) {
+    const order=storyOrder();
+    const position=order.indexOf(state.activePeer);
+    const nextPeer=order[position+step];
+    if (position>=0 && nextPeer!==undefined) {
       const stories=state.contacts[nextPeer].stories;
       openStory(nextPeer,step>0?0:stories.length-1);
     } else closeViewer();
@@ -263,19 +348,48 @@
       window.VetoTelegramNavigate?.('publish');return;
     }
     if (button.hasAttribute('data-veto-story-refresh')) {void loadStories(true);return;}
+    if (button.hasAttribute('data-veto-story-favorite')) {toggleFavorite(button.dataset.vetoStoryFavorite);return;}
+    if (button.hasAttribute('data-veto-story-only-favorites')) {
+      state.onlyFavorites=!state.onlyFavorites;renderBar();return;
+    }
     if (button.hasAttribute('data-veto-story-expand')) {
-      bar.classList.toggle('expanded');renderBar();return;
+      const opened=bar.classList.toggle('expanded');
+      if (!opened) {state.query='';state.onlyFavorites=false;}
+      renderBar();
+      if (opened) bar.querySelector('[data-veto-story-search]')?.focus({preventScroll:true});
+      return;
     }
     if (button.hasAttribute('data-veto-story-person')) {
       const index=Number(button.dataset.vetoStoryPerson);
       if (Number.isInteger(index)) void openStory(index);
     }
   });
+  bar.addEventListener('input',event=>{
+    if (!event.target.matches('[data-veto-story-search]')) return;
+    state.query=event.target.value.slice(0,100);
+    renderBar(true);
+  });
   viewer.addEventListener('click',event=>{
+    const favorite=event.target.closest('[data-veto-story-favorite]');
+    if (favorite) {toggleFavorite(favorite.dataset.vetoStoryFavorite);return;}
     if (event.target.closest('[data-veto-story-close]')) {closeViewer();return;}
     if (event.target.closest('[data-veto-story-back]')) {navigate(-1);return;}
     if (event.target.closest('[data-veto-story-next]')) navigate(1);
   });
+  let swipeStart=null;
+  viewer.addEventListener('touchstart',event=>{
+    swipeStart=null;
+    if (viewer.hidden || event.touches.length!==1 || event.target?.closest?.('video,button')) return;
+    swipeStart={x:event.touches[0].clientX,y:event.touches[0].clientY};
+  },{passive:true});
+  viewer.addEventListener('touchend',event=>{
+    if (!swipeStart || viewer.hidden || state.mediaBusy || event.changedTouches.length!==1) return;
+    const dx=event.changedTouches[0].clientX-swipeStart.x;
+    const dy=event.changedTouches[0].clientY-swipeStart.y;
+    swipeStart=null;
+    if (Math.abs(dx)>65 && Math.abs(dy)<75) navigate(dx<0?1:-1);
+    else if (dy>105 && Math.abs(dx)<65) closeViewer();
+  },{passive:true});
   document.addEventListener('keydown',event=>{
     if (viewer.hidden)return;
     if (event.key==='Escape') closeViewer();
