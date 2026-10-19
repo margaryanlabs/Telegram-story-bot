@@ -63,7 +63,8 @@ body {min-width:0;}
 /* First-run experience: short landscape phones can scroll instead of clipping CTA. */
 .veto-welcome-shell {
   width:min(100%,760px);
-  min-height:min(92svh,780px);
+  min-height:0;
+  height:min(92svh,calc(var(--veto-visible-height,100dvh) - env(safe-area-inset-top)),780px);
   max-height:calc(var(--veto-visible-height,100dvh) - env(safe-area-inset-top));
   overflow-y:auto;overflow-x:hidden;
   overscroll-behavior:contain;
