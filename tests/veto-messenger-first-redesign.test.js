@@ -57,6 +57,17 @@ test('Inbox has signed-user connect CTA, bounded tools, filters and source-backe
  assert.match(css,/veto-messenger-tools\[hidden\]/);
 });
 
+test('App tabs are visible on inbox but immersive conversations keep their composer',()=>{
+ const css=read('public/veto-global-ui.css');
+ assert.match(css,/body\.veto-chat-active:not\(\.veto-chat-thread\) \.bottom-nav\{/);
+ assert.match(css,/display:grid!important/);
+ assert.match(css,/body\.veto-chat-thread \.bottom-nav\{display:none!important\}/);
+ assert.match(css,/body\.veto-chat-active:not\(\.veto-chat-thread\) \.app-shell\{/);
+ assert.match(css,/padding:0 0 calc\(108px \+ env\(safe-area-inset-bottom\)\)!important/);
+ assert.match(css,/body\.veto-chat-thread \.app-shell\{/);
+ assert.match(css,/body\.veto-chat-active:not\(\.veto-chat-thread\) \.veto-messenger-exit\{/);
+});
+
 test('Single palette changes app and chats, no new private message persistence',()=>{
  const theme=read('public/chat-theme.js');
  assert.match(theme,/document\.documentElement\.dataset\.vetoTheme=theme/);
