@@ -1115,6 +1115,8 @@
       state.thread=null;state.messages=[];
       $('telegramThreadView').hidden=true;
       $('telegramChatsView').hidden=false;
+      $('telegramMirror')?.classList.remove('thread-mode');
+      window.VetoThemeDock?.('inbox');
       revokeMediaUrls();
       if($('telegramMirrorAccessButton')){
         $('telegramMirrorAccessButton').textContent = 'Подключить ↗';
@@ -1374,6 +1376,9 @@
     if($('telegramThreadView'))$('telegramThreadView').hidden=true;
     if($('telegramChatsView'))$('telegramChatsView').hidden=false;
     $('telegramMirror')?.classList.remove('thread-mode');
+    // Restore the five-tab inbox after an identity switch; a stale fullscreen
+    // thread class must never strand the next Telegram owner without navigation.
+    window.VetoThemeDock?.('inbox');
     state.avatarQueue=[];state.avatarRequested.clear();state.avatarLoaded=0;
     state.avatarUrls.forEach(href=>{try{URL.revokeObjectURL(href)}catch{}});
     state.avatarUrls.clear();
