@@ -1,0 +1,223 @@
+/* VETO Device Polish — progressive, scoped overrides after app.css.
+   Targets Telegram WebView, Safari/iOS, Android, compact landscape and tablets.
+   No backend, message, session or privacy state changes. */
+:root {
+  --veto-visible-height: 100dvh;
+  --veto-visual-bottom: 0px;
+}
+html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+html,body {max-width:100%; overflow-x:clip;}
+body {min-width:0;}
+.app-shell {min-height:100dvh; max-width:100%; padding-top:max(12px,env(safe-area-inset-top));}
+.app-shell,.app-shell main,.screen,.screen>*,
+#telegramMirror,#telegramMirror .veto-mirror-list,
+#telegramMirror .veto-mirror-thread {min-width:0;}
+.app-shell img,.app-shell video,.sheet img,.sheet video {max-width:100%;height:auto;}
+.app-shell :is(p,small,strong,h1,h2,h3,label),
+.sheet :is(p,small,strong,h1,h2,h3,label) {overflow-wrap:break-word;}
+:where(.app-shell,.sheet,.veto-welcome) :is(button,a,input,textarea,select) {touch-action:manipulation;}
+:where(.app-shell,.sheet,.veto-welcome) :is(button,a,input,textarea,select):focus-visible {
+  outline:2px solid var(--tg-accent,var(--accent,#8abdf2));
+  outline-offset:2px;
+}
+
+/* Reserve space for the floating navigation + Story creation dock. */
+.app-shell {
+  padding-bottom:calc(142px + env(safe-area-inset-bottom));
+  padding-inline-start:max(12px,env(safe-area-inset-left));
+  padding-inline-end:max(12px,env(safe-area-inset-right));
+}
+.bottom-nav {
+  width:min(calc(100% - 20px - env(safe-area-inset-left) - env(safe-area-inset-right)), 720px);
+  padding:6px;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+}
+.bottom-nav .nav-item {min-width:0;min-height:44px;}
+.bottom-nav .nav-item svg {flex:none;max-width:22px;}
+.bottom-nav .nav-item small {max-width:100%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;}
+.action-dock {width:min(calc(100% - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)),690px);}
+
+/* The real visible area is smaller than the layout viewport when keyboards open. */
+.veto-keyboard-open .bottom-nav,.veto-keyboard-open .action-dock {
+  visibility:hidden;pointer-events:none;opacity:0;
+}
+.veto-keyboard-open .sheet {
+  bottom:var(--veto-visual-bottom,0px);
+  max-height:calc(var(--veto-visible-height,100dvh) - 12px);
+}
+.veto-keyboard-open .toast {bottom:calc(var(--veto-visual-bottom,0px) + 12px);}
+.sheet {
+  width:min(100%,640px);
+  max-height:min(800px,calc(var(--veto-visible-height,100dvh) - 12px));
+  overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom));
+}
+.sheet[hidden],.sheet-backdrop[hidden] {display:none!important;}
+.sheet :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select) {max-width:100%;min-width:0;}
+.sheet :is(.auth-field,.sheet-actions,.sheet-item) {min-width:0;}
+.sheet .sheet-actions button {min-height:44px;}
+.toast {max-width:calc(100% - 30px);overflow-wrap:anywhere;}
+
+/* First-run experience: short landscape phones can scroll instead of clipping CTA. */
+.veto-welcome-shell {
+  width:min(100%,760px);
+  min-height:0;
+  max-height:calc(var(--veto-visible-height,100dvh) - env(safe-area-inset-top));
+  overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;
+  display:flex;flex-direction:column;
+  -webkit-overflow-scrolling:touch;
+}
+.veto-welcome-stage {min-height:0;flex:1;align-items:center;}
+.veto-welcome-footer {flex:none;margin-top:auto;padding-top:14px;}
+
+/* Chat inbox + composer: no horizontal clipping and a scrollable messages pane. */
+#telegramMirror.veto-mirror {max-width:100%;min-width:0;}
+#telegramMirror .veto-mirror-thread {
+  min-height:0;max-height:none;
+  height:clamp(280px,calc(var(--veto-visible-height,100dvh) - 182px),850px);
+  width:100%;overflow:hidden;
+}
+#telegramMirror .veto-mirror-thread-body {
+  flex:1 1 auto;min-height:0;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  overflow-wrap:anywhere;
+}
+#telegramMirror :is(.veto-mirror-thread-bar,.veto-mirror-thread-footer,
+.veto-mirror-compose-toolbar,.veto-mirror-composer,.veto-mirror-compose-field,
+.veto-mirror-chat-main,.veto-mirror-thread-person) {min-width:0;}
+#telegramMirror .veto-mirror-thread-bar {gap:7px;}
+#telegramMirror .veto-mirror-thread-person {flex:1 1 0;}
+#telegramMirror .veto-mirror-thread-person :is(strong,span) {
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#telegramMirror .veto-mirror-compose-field {flex:1 1 auto;min-width:0;}
+#telegramMirror .veto-mirror-compose-field textarea {min-width:0;max-width:100%;resize:none;}
+#telegramMirror .veto-mirror-bubble-inner {min-width:0;overflow-wrap:anywhere;}
+#telegramMirror :is(.veto-mirror-media-reveal img,.veto-mirror-media-reveal video,
+.veto-mirror-media-reveal audio,.veto-mirror-expanded-slot img) {max-width:100%;height:auto;}
+#telegramMirror .veto-mirror-sticker-drawer {min-width:0;max-width:100%;overflow:hidden;}
+#telegramMirror .veto-mirror-sticker-list {max-height:min(34dvh,240px);overflow-y:auto;}
+#telegramMirror .veto-mirror-photo-dialog {
+  box-sizing:border-box;width:min(96vw,760px);
+  max-width:96vw;max-height:calc(var(--veto-visible-height,100dvh) - 20px);
+  overflow-y:auto;overscroll-behavior:contain;
+}
+#telegramMirror .veto-mirror-photo-dialog img {
+  max-height:calc(var(--veto-visible-height,100dvh) - 150px);
+  max-width:100%;height:auto;object-fit:contain;
+}
+#telegramMirror .veto-mirror-thread-find input {min-width:0;flex:1;}
+#telegramMirror .veto-mirror-filters {overscroll-behavior-x:contain;}
+#telegramMirror .veto-intelligence-results {min-width:0;overflow-wrap:anywhere;}
+
+/* Ghost Story viewer and controls stay within notches, home indicators and narrow displays. */
+.veto-story-viewer {width:100%;max-width:100%;height:100dvh;}
+.veto-story-stage {width:min(100%,540px);max-height:100dvh;min-height:0;height:100%;}
+.veto-story-stage-head {
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
+  min-width:0;
+}
+.veto-story-stage-head>div {min-width:0;flex:1 1 0;}
+.veto-story-stage-head strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.veto-story-stage-pin,.veto-story-close {flex-shrink:0;min-width:36px;min-height:36px;}
+.veto-story-media {min-height:0;}
+.veto-story-display {max-width:100%;max-height:100%;object-fit:contain;}
+.veto-story-caption {
+  max-height:min(24dvh,160px);overflow-y:auto;
+  margin:0;overflow-wrap:anywhere;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+#telegramMirror .veto-story-tools {min-width:0;}
+#telegramMirror .veto-story-tools input {width:100%;min-width:0;}
+#telegramMirror .veto-story-people {touch-action:pan-x pan-y;}
+
+/* Small phone portrait: 320px-class devices, compact chat tool rows. */
+@media(max-width:560px) {
+  .app-shell {padding-left:12px;padding-right:12px;}
+  .topbar {min-width:0;gap:8px;}
+  .brand,.brand-copy {min-width:0;}
+  .brand-copy strong,.brand-copy span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .screen[data-screen="telegram"] {margin-inline:-12px;}
+  #telegramMirror .veto-mirror-list {padding-inline:13px;}
+  #telegramMirror .veto-mirror-chat-list {margin-inline:-13px;}
+  #telegramMirror .veto-mirror-thread {height:max(265px,calc(var(--veto-visible-height,100dvh) - 160px));}
+  #telegramMirror .veto-mirror-thread-bar {gap:5px;padding-inline:7px;}
+  #telegramMirror .veto-mirror-thread-bar .veto-mirror-icon-btn {
+    width:36px;min-width:36px;height:38px;
+  }
+  #telegramMirror .veto-mirror-thread-avatar {height:36px;width:36px;min-width:36px;}
+  #telegramMirror .veto-mirror-thread-bottom {padding-inline:8px;padding-bottom:max(8px,env(safe-area-inset-bottom));}
+  #telegramMirror .veto-mirror-thread-footer {gap:4px;}
+  #telegramMirror .veto-mirror-tool-btn {flex-shrink:0;}
+  #telegramMirror .veto-mirror-compose-field textarea,
+  #telegramMirror #telegramMirrorSearch,
+  #telegramMirror #telegramThreadFindInput,
+  #telegramMirror #vetoStickersSearch,
+  #telegramMirror #vetoIntelSearchInput,
+  #telegramMirror [data-veto-story-search] {font-size:16px;}
+  #telegramMirror .veto-mirror-sticker-list {grid-template-columns:repeat(5,minmax(0,1fr));}
+  #telegramMirror .veto-mirror-headline {gap:8px;}
+  #telegramMirror .veto-mirror-headline span {min-width:0;}
+  #telegramMirror .veto-mirror-headline span:first-child {overflow-wrap:anywhere;}
+  .sheet :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select) {
+    font-size:16px;
+  }
+  .veto-story-stage {width:100%;}
+}
+@media(max-width:365px) {
+  .bottom-nav {width:calc(100% - 12px);padding:4px;}
+  .bottom-nav .nav-item {gap:2px;padding-inline:2px;}
+  .bottom-nav .nav-item svg {height:18px;width:18px;}
+  .bottom-nav .nav-item small {font-size:9px;letter-spacing:0;}
+  #telegramMirror .veto-mirror-thread-bar {gap:3px;padding-inline:5px;}
+  #telegramMirror .veto-mirror-thread-bar .veto-mirror-icon-btn {width:32px;min-width:32px;height:36px;}
+  #telegramMirror .veto-mirror-thread-avatar {height:32px;width:32px;min-width:32px;}
+  #telegramMirror .veto-mirror-thread-person strong {font-size:11px;}
+  #telegramMirror .veto-mirror-thread-security {font-size:8px;line-height:1.4;}
+  #telegramMirror .veto-mirror-sticker-list {grid-template-columns:repeat(4,minmax(0,1fr));}
+  #telegramMirror .veto-story-strip-heading {gap:4px;}
+  #telegramMirror .veto-story-status {min-width:0;max-width:105px;font-size:8.5px;}
+  #telegramMirror .veto-story-tools {flex-wrap:wrap;}
+  #telegramMirror .veto-story-tools input {flex-basis:100%;}
+  .veto-story-protection {display:none;}
+}
+/* Short viewport landscape / mini-player Telegram mode. */
+@media(max-height:570px) {
+  .veto-welcome-stage {padding:10px 2px;min-height:0;}
+  .veto-intro-step>.kicker {margin-top:6px;}
+  .veto-welcome-shell {max-height:var(--veto-visible-height,100dvh);border-radius:18px 18px 0 0;}
+  .sheet {max-height:calc(var(--veto-visible-height,100dvh) - 4px);}
+  #telegramMirror .veto-mirror-thread {
+    min-height:0;height:max(210px,calc(var(--veto-visible-height,100dvh) - 115px));
+  }
+  .bottom-nav {height:54px;padding:4px;border-radius:18px;}
+  .bottom-nav .nav-item {min-height:42px;}
+  .bottom-nav .nav-item svg {height:17px;width:17px;}
+  .action-dock {bottom:calc(65px + env(safe-area-inset-bottom));}
+  .veto-story-stage {min-height:0;}
+  .veto-story-stage-head {top:calc(16px + env(safe-area-inset-top));}
+  .veto-story-caption {max-height:24dvh;}
+}
+/* Tablets and desktop web: preserve focused content in a centred reading column. */
+@media(min-width:768px) {
+  .app-shell {width:min(100%,780px);max-width:780px;padding-inline:24px;}
+  .bottom-nav {width:min(calc(100% - 32px),740px);}
+  .action-dock {width:min(calc(100% - 40px),708px);}
+  #telegramMirror .veto-mirror-thread {
+    height:min(820px,calc(var(--veto-visible-height,100dvh) - 166px));
+    min-height:420px;
+  }
+  .veto-story-stage {width:min(100%,540px);}
+}
+@media(prefers-reduced-motion:reduce) {
+  .veto-story-spinner,.veto-story-ring,
+  .veto-story-viewer *,.veto-welcome * {
+    animation:none!important;scroll-behavior:auto!important;
+    transition-duration:0s!important;
+  }
+}
