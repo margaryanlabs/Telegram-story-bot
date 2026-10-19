@@ -565,3 +565,19 @@ body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item:focus-visible
     font-size:9px;
   }
 }
+
+/* When Stories 2.0 device polish provides visualViewport height, use the
+   visible keyboard-safe viewport for the active conversation. Without that
+   progressive enhancement, the normal 100dvh fullscreen layout remains. */
+body.veto-chat-thread .app-shell,
+body.veto-chat-thread .screen[data-screen="telegram"].active,
+body.veto-chat-thread #telegramMirror,
+body.veto-chat-thread #telegramMirror .veto-mirror-thread{
+  height:var(--veto-visible-height,100dvh)!important;
+  max-height:var(--veto-visible-height,100dvh);
+}
+body.veto-chat-thread #telegramMirror .veto-mirror-thread-body{
+  flex:1 1 auto;
+  min-height:0;
+  overscroll-behavior-y:contain;
+}
