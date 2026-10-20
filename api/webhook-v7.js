@@ -305,7 +305,7 @@ async function clearReplyKeyboard(token, chatId) {
 function homeText(settings) {
   const firstRun = '◉ VETO Telegram · выбери, что нужно\n\n'
     + '💬 ОТКРЫТЬ МОИ ЧАТЫ\nНажми «Мои чаты», подключи свой Telegram по номеру + коду или QR. Telegram Business не нужен.\n\n'
-    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @vetotg_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Premium не требуется.\n\n'
+    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @vetotg_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Если Telegram просит Premium для Business, это ограничение Telegram. Чаты и Stories можно подключить отдельно.\n\n'
     + 'Разрешения выдаются в самом Telegram. Ранее удалённые сообщения восстановить нельзя.';
   if (!settings.bc) return firstRun;
 
