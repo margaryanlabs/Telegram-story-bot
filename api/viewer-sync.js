@@ -1,4 +1,5 @@
 import { selectedStorageProvider } from '../lib/storage-provider.js';
+import { normalizeTelegramPhone } from '../lib/telegram-phone.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
 import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
@@ -521,8 +522,8 @@ export default async function handler(req, res) {
     }
 
     if (action === 'send_code') {
-      const requestedPhone = String(body.phone || '').replace(/[^+\\d]/g, '');
-      if (!/^\\+\\d{7,15}$/.test(requestedPhone)) {
+      const requestedPhone = normalizeTelegramPhone(body.phone);
+      if (!requestedPhone) {
         res.status(400).json({ ok: false, error: 'Введи номер Telegram в международном формате, начиная с +.' });
         return;
       }
