@@ -12,6 +12,19 @@ function suite(names,env) {
  if(result.status!==0)process.exit(result.status||1);
 }
 suite(files,{VETO_STORAGE_PROVIDER:'supabase'});
-if(process.env.VETO_STORAGE_PROVIDER==='neon'){
- suite(['neon-runtime-smoke.test.js'],{VETO_STORAGE_PROVIDER:'neon'});
+if (process.env.VETO_STORAGE_PROVIDER === 'neon') {
+ const hasDatabase = Boolean(process.env.VETO_NEON_DATABASE_URL);
+ const hasSessionKey = Boolean(process.env.VETO_NEON_SESSION_KEY);
+ if (hasDatabase !== hasSessionKey) {
+  console.error('Neon smoke config incomplete: both URL and session key are required.');
+  process.exit(1);
+ }
+ if (hasDatabase && hasSessionKey) {
+  suite(['neon-runtime-smoke.test.js'], { VETO_STORAGE_PROVIDER: 'neon' });
+ } else if (process.env.VERCEL_ENV === 'production') {
+  console.error('Neon production smoke requires protected connection and encryption secrets.');
+  process.exit(1);
+ } else {
+  console.log('Neon runtime smoke skipped: preview has no database secrets; unit tests ran.');
+ }
 }
