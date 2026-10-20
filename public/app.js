@@ -2032,7 +2032,7 @@
     openSheet(`
       <span class="kicker">НЕОБЯЗАТЕЛЬНО · PRIVACY</span>
       <h2>Подключи архив личных чатов</h2>
-      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Premium не требуется.</p>
+      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Если Telegram запрашивает Premium для Business, это ограничение твоего аккаунта Telegram. Основные чаты и Stories можно подключать отдельно.</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
         <div class="sheet-item"><strong>2 · Добавь VETO Telegram</strong><span>Технический username сейчас @vetotg_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
