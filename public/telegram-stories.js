@@ -202,7 +202,7 @@
       'data-veto-story-publish="1" aria-label="Опубликовать свою историю">'+
       '<span class="veto-story-ring is-mine"><span class="veto-story-face">＋</span></span>'+
       '<small>Моя</small></button>'+cards+'</div>'+
-      (expanded?'<p class="veto-story-session-hint">★ Избранное и просмотрено — только в этом сеансе VETO.</p>':'')+
+      (expanded?'<p class="veto-story-session-hint">★ Избранное и просмотрено — только в этом сеансе VETO. Ghost View не отправляет команду отметки; другие клиенты Telegram могут вести учёт просмотров.</p>':'')+
       (state.busy?'<p class="veto-story-note">Загружаю доступные истории контактов…</p>':
       state.lastError?'<p class="veto-story-note" role="status">'+safe(state.lastError)+'</p>':
       expanded && !shown.length && state.contacts.length
@@ -265,7 +265,7 @@
       '<div class="veto-story-stage-head"><span class="veto-story-stage-avatar">'+
       safe(initials(contact.name))+'</span><div><strong>'+safe(contact.name)+'</strong>'+
       '<small>'+safe(formatTime(story.createdAt))+' · Telegram</small></div>'+
-      '<span class="veto-story-protection">◈ Ghost View</span>'+ 
+      '<span class="veto-story-protection" title="VETO не отправляет отметку просмотра; другие клиенты Telegram могут отмечать её">◈ Ghost View</span>'+ 
       '<button type="button" class="veto-story-stage-pin" data-veto-story-favorite="'+safe(contact.userId)+'" '+
       'aria-pressed="'+String(state.favorites.has(String(contact.userId)))+'" aria-label="'+
       (state.favorites.has(String(contact.userId))?'Убрать из избранного: ':'В избранное: ')+safe(contact.name)+'">'+
