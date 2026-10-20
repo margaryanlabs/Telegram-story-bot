@@ -9,9 +9,9 @@ test('Privacy screen offers a visible, consent-first Telegram Business onboardin
   assert.match(html, /id="privacyBusinessCopyButton"/);
   assert.match(html, /id="privacyBusinessVerifyButton"/);
   assert.match(html, /«Только выбранные чаты»/);
-  assert.match(html, /Без Premium/);
+  assert.match(html, /Доступность Business зависит от настроек Telegram и может требовать Premium/);
   assert.match(html, /Без доступа к секретным чатам/);
-  assert.match(html, /@Storypilotlab_bot/);
+  assert.match(html, /@vetotg_bot/);
 });
 
 test('Business walkthrough uses Telegram settings, never requests an OTP or expands privileges', () => {
