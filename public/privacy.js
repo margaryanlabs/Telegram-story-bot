@@ -156,7 +156,7 @@
   }
 
   async function request(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой VetoTG внутри Telegram');
 
     const retryable = !action || action === 'list_messages' || action === 'versions';
     const attempts = retryable ? 2 : 1;
@@ -372,7 +372,7 @@
 
 
   async function copyBusinessBotUsername() {
-    const username = '@Storypilotlab_bot';
+    const username = '@Vetotg_bot';
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(username);
@@ -547,7 +547,7 @@
         : summary.watch > 0
           ? `${summary.watch} диалог(а) стоит проверить`
           : 'Срочных сигналов нет',
-      detail: 'VETO Telegram использует только доступные Telegram-события и объяснимые правила.',
+      detail: 'VetoTG использует только доступные Telegram-события и объяснимые правила.',
       primaryChatId: '',
       primaryAction: 'archive',
       reasons: [],
@@ -1062,7 +1062,7 @@
           <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
         </div>
       </div>
-      <p>Архивная копия. VETO Telegram не вызывает readBusinessMessage при просмотре этого экрана.</p>
+      <p>Архивная копия. VetoTG не вызывает readBusinessMessage при просмотре этого экрана.</p>
       ${focusNote}
       <div class="ghost-thread-modes">
         <button type="button" class="${mode === 'all' ? 'active' : ''}" data-privacy-thread-mode="all">Все <b>${(messages || []).length}</b></button>
@@ -1161,7 +1161,7 @@
       openSheet(`
         <span class="kicker">Edit History</span>
         <h2>История сообщения</h2>
-        <p>Здесь только версии, которые VETO Telegram реально получил после включения Edit History.</p>
+        <p>Здесь только версии, которые VetoTG реально получил после включения Edit History.</p>
         <div class="privacy-version-list">${body || '<div class="intel-empty">Предыдущих версий нет.</div>'}</div>
         <div class="sheet-actions">
           <button class="accent" data-privacy-back="1">Назад</button>
@@ -1217,7 +1217,7 @@
       openSheet(`
         <span class="kicker">VETO Media</span>
         <h2>${escapeHtml(fileName || (type === 'photo' ? 'Фото' : 'Вложение'))}</h2>
-        <p>Медиа загружено через авторизованный VETO Telegram proxy. Прямая Telegram file-id в браузер не отдаётся.</p>
+        <p>Медиа загружено через авторизованный VetoTG proxy. Прямая Telegram file-id в браузер не отдаётся.</p>
         <div class="privacy-media-preview-wrap">${body}</div>
         <div class="sheet-actions">
           <button class="accent" data-privacy-back="1">Назад</button>
@@ -1284,7 +1284,7 @@
     openSheet(`
       <span class="kicker">VETO PRIVACY · ПОДКЛЮЧЕНИЕ В 2 ШАГА</span>
       <h2>Какие переписки защищать?</h2>
-      <p>StoryLab подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
+      <p>VetoTG подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
       <fieldset class="veto-business-scope-options">
         <legend>Охват Anti-Delete</legend>
         <label><input type="radio" name="vetoBusinessScope" value="all-private" checked><span><b>Все личные переписки</b><small>Существующие и будущие — без ограничения 12 чатами. Не включает группы, каналы и секретные чаты.</small></span></label>
@@ -1405,7 +1405,7 @@
       <p>Для автоматического Anti-Delete нужно один раз подключить VETO как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
       <div class="veto-business-sheet-steps">
         <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
-        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Storypilotlab_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
+        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Vetotg_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
         <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты». Для архива не нужны права отвечать, удалять сообщения или отмечать их прочитанными.</span></section></div>
         <div><b>04</b><section><strong>Вернись в VETO</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
       </div>
@@ -1769,7 +1769,7 @@
         : backup.running ? 'Автоматически продолжаю копирование выбранного чата.' : 'Копирование приостановлено — всё уже сохранённое осталось в VETO.'}</p>
       ${error ? `<p class="privacy-archive-limit">${escapeHtml(error)}</p>` : ''}
       ${complete && backup.notifyCompletion
-        ? '<p>Уведомление: ' + (alerted === true ? 'доставлено в бот.' : 'не доставлено. Открой @Storypilotlab_bot и нажми Start.') + '</p>'
+        ? '<p>Уведомление: ' + (alerted === true ? 'доставлено в бот.' : 'не доставлено. Открой @Vetotg_bot и нажми Start.') + '</p>'
         : ''}
       <p class="privacy-archive-limit">Доступны только сообщения, которые Telegram сохранил и предоставил аккаунту. Старые медиа — отметки о вложениях, не файлы.</p>
       <div class="sheet-actions">
@@ -1887,7 +1887,7 @@
     const button = event.currentTarget;
     button.disabled=true;
     try { await request('test_alert'); toast('Тест доставлен в Telegram. Проверь чат с VETO.'); }
-    catch (error) { toast('Проверь бота @Storypilotlab_bot: '+error.message); }
+    catch (error) { toast('Проверь бота @Vetotg_bot: '+error.message); }
     finally {button.disabled=false;}
   });
   $('privacyDeletedMore')?.addEventListener('click', loadMoreDeletedFeed);
