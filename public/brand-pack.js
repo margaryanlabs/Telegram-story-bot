@@ -32,7 +32,7 @@
   }
 
   async function api(body) {
-    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой VetoTG внутри Telegram');
     const response = await fetch('/api/emoji-studio', {
       method: 'POST',
       headers: {
@@ -477,7 +477,7 @@
     $('brandPackShareButton')?.addEventListener('click', event => {
       const link = event.currentTarget.dataset.link;
       if (!link) return;
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('VETO Telegram · Brand Emoji Pack')}`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('VetoTG · Brand Emoji Pack')}`;
       try { tg?.openTelegramLink?.(shareUrl); } catch { window.open(shareUrl, '_blank', 'noopener'); }
     });
 
