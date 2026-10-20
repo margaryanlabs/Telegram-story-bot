@@ -21,3 +21,14 @@ test('setup POST still requires an operator secret; GET does not mutate profile'
   const getSection = setup.slice(setup.indexOf("if (req.method === 'GET')"),setup.indexOf('const setupSecret ='));
   assert.doesNotMatch(getSection,/setMyName|setMyProfilePhoto|setWebhook/);
 });
+
+test('replacement bot must match the expected @username before webhook or profile writes', () => {
+  assert.match(setup, /function isExpectedBot\(bot\)/);
+  assert.match(setup, /process\.env\.TELEGRAM_EXPECTED_BOT_USERNAME/);
+  assert.match(setup, /expected_bot_match: isExpectedBot\(bot\)/);
+  const post = setup.slice(setup.indexOf("const setupSecret ="));
+  const verify = post.indexOf('if (!isExpectedBot(bot))');
+  const webhook = post.indexOf("tg(token, 'setWebhook'");
+  assert.ok(verify > 0 && webhook > verify, 'username must be verified before webhook mutation');
+  assert.match(post.slice(verify, webhook), /res\.status\(409\)/);
+});
