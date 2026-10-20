@@ -1,4 +1,5 @@
 import { viewerCryptoHealth, viewerStoreHealth } from '../lib/viewer-sync-store.js';
+import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { telegramWebhookHealth } from '../lib/telegram-webhook-health.js';
 
 function telegramUrl(token, method) {
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
     version: 'v8',
     token_configured: Boolean(token),
     mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
-    background_trigger: 'supabase-signed',
+    background_trigger: selectedStorageProvider() === 'neon' ? 'not_migrated' : 'supabase-signed',
     vercel_cron_required: false,
     secure_session_crypto: 'checking',
     store: 'checking',
