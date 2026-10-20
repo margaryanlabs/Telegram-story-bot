@@ -1,11 +1,11 @@
 # VetoTG @Vetotg_bot cutover — no customer migration
 
-**Scope:** Replace the legacy @Vetotg_bot public entrypoint with the already created @Vetotg_bot, while keeping the current VetoTG repository, Mini App and database schema.
+**Scope:** Replace the legacy @Storypilotlab_bot public entrypoint with the already created @Vetotg_bot, while keeping the current VetoTG repository, Mini App and database schema.
 
 ## 0. Confirm the selected identity
 
-- **Confirmed target username:** `@Vetotg_bot`; proposed display name: `VetoTG`. Bot ownership must be confirmed in BotFather. Do not create yet another bot.
-- Telegram bot usernames must use 5–32 Latin letters, digits or underscores, and end in `bot` (case-insensitive). Verify availability **inside BotFather**; do not infer from a search engine or a proposed link.
+- **Confirmed target username:** `@Vetotg_bot`; proposed display name: `VetoTG`. Bot ownership must be confirmed in BotFather. Do not create another bot.
+- `@Vetotg_bot` already exists according to the owner. Confirm it appears in the owner's BotFather `/mybots` list; no username availability search or new bot is needed.
 - User-facing strings now target VetoTG; keep internal `story_pilot_*` database names and callbacks for backwards compatibility.
 - Do not delete the existing bot yet.
 
@@ -21,7 +21,7 @@ In BotFather configure a recognizable picture, long and short descriptions, and 
 2. Make sure the final HTTPS production domain loads without Vercel SSO in **an unauthenticated Telegram WebView**. The last inspection listed only `.vercel.app` domains and `all_except_custom_domains` SSO mode; the deployment's `READY` alone is insufficient.
 3. Set these server-only Vercel environment variables on the **correct project** (`telegram-story-bot`), never in frontend bundles:
    - `TELEGRAM_BOT_TOKEN` — the new BotFather token; changing it also changes Mini App initData verification and derived crypto inputs.
-   - `TELEGRAM_EXPECTED_BOT_USERNAME` — exact new username, with or without `@`. The setup endpoint now refuses to register a webhook if Bot API `getMe` identifies another bot.
+   - `TELEGRAM_EXPECTED_BOT_USERNAME=Vetotg_bot` — intended username, with or without `@`. The setup endpoint now refuses to register a webhook if Bot API `getMe` identifies another bot.
    - Keep `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `SETUP_SECRET` and existing stable storage settings untouched unless they require a documented migration.
    - Keep `BOT_PROFILE_SYNC` unset/false: profile edits in BotFather remain authoritative. Never enable `BOT_PROFILE_PHOTO_SYNC` unintentionally.
 4. Deploy reviewed code and update the production environment; verify `GET /api/setup` reports the intended `bot` and `expected_bot_match: true`. This GET is read-only.
