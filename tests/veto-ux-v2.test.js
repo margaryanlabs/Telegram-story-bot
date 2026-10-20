@@ -42,13 +42,14 @@ test('Telegram host chrome is forced to the VETO dark visual system', () => {
   assert.match(app, /setBottomBarColor\?\.\('#030303'\)/);
 });
 
-test('bot setup pushes VETO Telegram identity to Telegram', () => {
+test('bot setup preserves existing VETO identity but only syncs it when opted in', () => {
   const setup = read('api/setup.js');
 
   assert.match(setup, /setMyName/);
   assert.match(setup, /name: 'VETO Telegram'/);
   assert.match(setup, /setMyProfilePhoto/);
-  assert.match(setup, /profilePhotoUpdated = await setVetoBotProfilePhoto\(token\)/);
+  assert.match(setup, /profilePhotoUpdated = syncPublicPhoto \? await setVetoBotProfilePhoto\(token\)/);
+  assert.match(setup, /syncPublicProfile = process\.env\.BOT_PROFILE_SYNC === 'true'/);
   assert.match(setup, /veto-telegram\.jpg/);
   assert.match(setup, /getUserProfilePhotos/);
   assert.match(setup, /const CONTROL_BUILD = '[0-9]{8}-veto-[^']+';/);
