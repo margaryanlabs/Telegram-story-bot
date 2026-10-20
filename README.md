@@ -1,13 +1,13 @@
-# VETO Telegram
+# VetoTG
 
 **Private Telegram OS for Stories, Chats, Privacy, Intelligence and Automations.**
 
-VETO Telegram combines privacy, Stories, audience intelligence, creation, security and automations around a connected Telegram account.
+VetoTG combines privacy, Stories, audience intelligence, creation, security and automations around a connected Telegram account.
 
 
 ## Product positioning
 
-**VETO Telegram** is the product: a private control layer for Telegram that brings together:
+**VetoTG** is the product: a private control layer for Telegram that brings together:
 
 - **Ghost Privacy** — Anti-Delete, Edit History, Ghost Inbox, Media Vault and retention controls.
 - **Stories** — direct publishing, precise audiences, exclusions and content protection.
@@ -21,7 +21,10 @@ The product must feel like one private Telegram operating layer, not a collectio
 
 ## Brand architecture
 
-- **VETO Telegram** — the only user-facing product name.
+The public brand is **VetoTG**; the existing VETO icon and technical module naming may be preserved. The target entrypoint is **@Vetotg_bot**; it is **not live solely because this code was changed**. Protected Vercel credentials, bot webhook and BotFather profile require an operator-controlled cutover.
+
+
+- **VetoTG** — the only user-facing product name.
 - **Private Telegram OS** — the category / positioning line, not a second brand.
 - **VETO Privacy**, **VETO Stories**, **VETO Intelligence**, **VETO Studio**, **VETO Security** and **VETO Automations** — product modules.
 - **Ghost** remains a legacy/internal privacy concept where required for backward compatibility; new user-facing copy should prefer VETO Privacy.
@@ -63,9 +66,9 @@ Creator Studio also includes **Brand Pack Engine**, designed around the product 
 - The Mini App can encode simple VP9/WebM motion presets locally when the Telegram WebView exposes MediaRecorder + VP9 support.
 - Static output remains the deterministic fallback if local motion encoding is unavailable.
 
-## Current production flow
+## Target flow after VetoTG cutover
 
-1. User opens `@Storypilotlab_bot` and launches **VETO Telegram**.
+1. After configuring the replacement bot's token and webhook, user opens `@Vetotg_bot` and launches **VetoTG**. Until this cutover is complete, the live production webhook may still belong to the legacy bot.
 2. First-time users see the VETO onboarding and press **Connect Telegram**.
 3. Recommended path: connect the user's normal Telegram account through **QR** or **phone + Telegram code**. The resulting user session is stored encrypted server-side.
 4. The connected user session is the primary path for owner Stories and Intelligence. It does not require Telegram Business.
@@ -76,7 +79,7 @@ Creator Studio also includes **Brand Pack Engine**, designed around the product 
    - Close Friends
    - Selected users
    - Optional exclusions
-7. VETO Telegram prepares a 1080×1920 Story image without destructive cropping, publishes it for 24 hours and verifies the requested privacy audience.
+7. VetoTG prepares a 1080×1920 Story image without destructive cropping, publishes it for 24 hours and verifies the requested privacy audience.
 
 The product must not make Telegram Business a blocker for a regular user's first connection.
 
@@ -92,7 +95,7 @@ The product must not make Telegram Business a blocker for a regular user's first
 - `/reset` clears audience / selected users / exclusions while preserving the Business Connection.
 - Story limit and privacy errors are translated into short user-facing messages.
 - `🛡 Protection` can prevent forwards/saving where Telegram supports it.
-- The last published Story can be deleted from VETO Telegram with the delete control or `/delete`.
+- The last published Story can be deleted from VetoTG with the delete control or `/delete`.
 - The persistent `🚀 Start` Web App closes immediately and exists only as a lightweight launcher/state carrier.
 - v8 performs the Telegram webhook secret verification before any Telegram-side UX action.
 
@@ -161,19 +164,19 @@ The persistent **🚀 Старт** menu now opens a full Telegram Mini App inste
 
 ## Viewer Sync
 
-VETO Telegram includes a privacy-aware Viewer Sync foundation for analytics on the account owner's own Stories.
+VetoTG includes a privacy-aware Viewer Sync foundation for analytics on the account owner's own Stories.
 
 ### Flow
 
 `Story publish -> user MTProto session -> watcher -> generic view alert -> reconciliation -> confirmed viewer OR anonymized view`
 
-A new visible view can trigger a fast generic notification. Viewer identity is only promoted to a confirmed viewer after the reconciliation window. If Telegram later stops exposing that viewer, VETO Telegram edits the notification to an unattributed view and removes the stored identity instead of preserving a hidden identity.
+A new visible view can trigger a fast generic notification. Viewer identity is only promoted to a confirmed viewer after the reconciliation window. If Telegram later stops exposing that viewer, VetoTG edits the notification to an unattributed view and removes the stored identity instead of preserving a hidden identity.
 
 ### Required production configuration
 
 Viewer Sync uses the existing server-only `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_BOT_TOKEN` values.
 
-The shared Margaryan Labs Supabase project is the storage target. Vercel does not need a Supabase service-role key: requests to the server-only Supabase Edge storage gateway are signed with Ed25519 using key material derived at runtime from existing Telegram secrets. A separate `VIEWER_SYNC_MASTER_KEY` remains optional; if it is absent, VETO Telegram derives the encryption key from the existing server-only Telegram secrets without persisting the derived key.
+The shared Margaryan Labs Supabase project is the storage target. Vercel does not need a Supabase service-role key: requests to the server-only Supabase Edge storage gateway are signed with Ed25519 using key material derived at runtime from existing Telegram secrets. A separate `VIEWER_SYNC_MASTER_KEY` remains optional; if it is absent, VetoTG derives the encryption key from the existing server-only Telegram secrets without persisting the derived key.
 
 Optional tuning:
 
@@ -182,7 +185,7 @@ Optional tuning:
 - `VIEWER_WATCH_STORY_LIMIT` — default 4 Stories per account per run
 - `VIEWER_WATCH_HOURS` — default 72 hours
 
-Apply `supabase/migrations/20260921_story_pilot_viewer_sync.sql` to a dedicated VETO Telegram database. Viewer tables are server-only: RLS is enabled and no client policies are granted.
+Apply `supabase/migrations/20260921_story_pilot_viewer_sync.sql` to a dedicated VetoTG database. Viewer tables are server-only: RLS is enabled and no client policies are granted.
 
 Supabase `pg_cron` calls the `story-pilot-watch-trigger` Edge Function every minute. The trigger signs the request to `/api/viewer-watch`, so no Vercel cron secret is required. The watcher is protected by short-lived Ed25519 signatures and a database lease to avoid overlapping runs.
 
