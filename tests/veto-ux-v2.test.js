@@ -13,7 +13,7 @@ test('VetoTG v2 exposes a real brand mark and cinematic dark shell', () => {
   assert.match(html, /veto-telegram-mark\.svg/);
   assert.match(html, /id="connectTelegramButton"/);
   assert.match(html, /class="veto-stage-fx"/);
-  assert.match(css, /VETOTG v2 — forced dark/);
+  assert.match(css, /VETO TELEGRAM v2 — forced dark/);
   assert.match(css, /--bg:#06080d!important/);
   assert.match(css, /@keyframes vetoGlassSweep/);
   assert.match(css, /@keyframes vetoScan/);
