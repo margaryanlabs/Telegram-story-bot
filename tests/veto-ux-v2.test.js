@@ -6,14 +6,14 @@ function read(path) {
   return readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 }
 
-test('VETO Telegram v2 exposes a real brand mark and cinematic dark shell', () => {
+test('VetoTG v2 exposes a real brand mark and cinematic dark shell', () => {
   const html = read('public/studio.html');
   const css = read('public/app.css');
 
   assert.match(html, /veto-telegram-mark\.svg/);
   assert.match(html, /id="connectTelegramButton"/);
   assert.match(html, /class="veto-stage-fx"/);
-  assert.match(css, /VETO TELEGRAM v2 — forced dark/);
+  assert.match(css, /VETOTG v2 — forced dark/);
   assert.match(css, /--bg:#06080d!important/);
   assert.match(css, /@keyframes vetoGlassSweep/);
   assert.match(css, /@keyframes vetoScan/);
@@ -46,12 +46,12 @@ test('bot setup preserves existing VETO identity but only syncs it when opted in
   const setup = read('api/setup.js');
 
   assert.match(setup, /setMyName/);
-  assert.match(setup, /name: 'VETO Telegram'/);
+  assert.match(setup, /name: 'VetoTG'/);
   assert.match(setup, /setMyProfilePhoto/);
   assert.match(setup, /profilePhotoUpdated = syncPublicPhoto \? await setVetoBotProfilePhoto\(token\)/);
   assert.match(setup, /syncPublicProfile = process\.env\.BOT_PROFILE_SYNC === 'true'/);
   assert.match(setup, /veto-telegram\.jpg/);
   assert.match(setup, /getUserProfilePhotos/);
   assert.match(setup, /const CONTROL_BUILD = '[0-9]{8}-veto-[^']+';/);
-  assert.match(setup, /brand: 'VETO Telegram v2'/);
+  assert.match(setup, /brand: 'VetoTG v1'/);
 });
