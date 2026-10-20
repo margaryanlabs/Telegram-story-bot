@@ -241,7 +241,7 @@
   async function richRequest(action,payload={}){
     resetOwner();
     const signed=String(tg?.initData||'');
-    if(!signed)throw new Error('Открой StoryLab внутри Telegram');
+    if(!signed)throw new Error('Открой VetoTG внутри Telegram');
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),45000);
     try {
