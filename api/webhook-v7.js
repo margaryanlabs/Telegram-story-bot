@@ -163,7 +163,13 @@ function inlineMenu(settings = {}, origin = '') {
 
   if (!ready) {
     return {
-      inline_keyboard: [
+      inline_keyboard: origin ? [
+        [{ text: '🚀 Открыть VETO', web_app: { url: new URL('/studio.html', origin).toString() } }],
+        [{ text: '💬 Мои чаты · подключить', web_app: { url: ghostAppUrl(origin, { screen:'telegram' }) } }],
+        [{ text: '📸 Мои Stories', web_app: { url: ghostAppUrl(origin, { screen:'publish' }) } }],
+        [{ text: '↶ Anti-Delete · настроить', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } }],
+        [{ text: '❔ Как подключиться', callback_data: 'view:howto' }],
+      ] : [
         ...chatPathButtons,
         [{ text: '⌁ Аккаунт и Stories · подключение', callback_data: 'view:connect' }],
         ...(origin ? [[
@@ -303,20 +309,17 @@ async function clearReplyKeyboard(token, chatId) {
 }
 
 function homeText(settings) {
-  const firstRun = '◉ VETO Telegram · выбери, что нужно\n\n'
-    + '💬 ОТКРЫТЬ МОИ ЧАТЫ\nНажми «Мои чаты», подключи свой Telegram по номеру + коду или QR. Telegram Business не нужен.\n\n'
-    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @vetotg_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Если Telegram просит Premium для Business, это ограничение Telegram. Чаты и Stories можно подключить отдельно.\n\n'
-    + 'Разрешения выдаются в самом Telegram. Ранее удалённые сообщения восстановить нельзя.';
-  if (!settings.bc) return firstRun;
-
-  if (!settings.canStories) {
-    return firstRun + '\n\n✓ Business-бот подключён. Для работы архива отправь тестовое сообщение из выбранного личного чата. Право управлять Stories здесь не требуется.';
-  }
-
-  const excluded = settings.excluded?.length
-    ? `\n🚫 Не увидят Stories: ${settings.excluded.map(u => `@${u}`).join(', ')}`
-    : '';
-  return firstRun + `\n\n📸 Stories также подключены · ${audienceLabel(settings.audience, settings.selected)}${excluded}`;
+  const text = '◉ VETO · твой Telegram в одном приложении\n\n'
+    + '1. Нажми «🚀 Открыть VETO» ниже.\n'
+    + '2. Подключи Telegram по номеру + коду или через QR со второго устройства.\n'
+    + '3. Открой чаты, Stories и доступные инструменты.\n\n'
+    + '↶ Anti-Delete включается отдельно в Telegram Business для выбранных личных чатов. '
+    + 'Если Telegram просит Premium, это ограничение Telegram, а не VETO. '
+    + 'Удаления, произошедшие до подключения, вернуть нельзя.\n\n'
+    + 'Никому не пересылай коды Telegram и 2FA.';
+  return settings.bc
+    ? text + '\n\n✓ Business-бот подключён: проверь получение нового сообщения в разрешённом чате.'
+    : text;
 }
 
 function settingsText(settings, live = null) {
