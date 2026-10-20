@@ -1,3 +1,4 @@
+import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
 import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
@@ -45,10 +46,10 @@ async function configState() {
 
   return {
     configured: storage && telegram,
-    backgroundReady: storage && telegram,
+    backgroundReady: selectedStorageProvider() === 'supabase' && storage && telegram,
     newConnectionsReady: storage && telegram && secureSessionCrypto,
     secureSessionCrypto,
-    scheduler: 'supabase_pg_cron',
+    scheduler: selectedStorageProvider() === 'neon' ? 'not_migrated' : 'supabase_pg_cron',
     missing: [
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
