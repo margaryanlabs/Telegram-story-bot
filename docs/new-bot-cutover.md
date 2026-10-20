@@ -1,17 +1,17 @@
-# Replacement Telegram bot cutover — no customer migration
+# VetoTG @Vetotg_bot cutover — no customer migration
 
-**Scope:** Replace the legacy @Storypilotlab_bot public entrypoint with a new BotFather-created bot, while keeping the current VETO Telegram repository, Mini App and database schema.
+**Scope:** Replace the legacy @Vetotg_bot public entrypoint with the already created @Vetotg_bot, while keeping the current VetoTG repository, Mini App and database schema.
 
-## 0. Establish the final public name
+## 0. Confirm the selected identity
 
-- Select a memorable **display name** and unique **@username**. These are different: username is permanent once created.
+- **Confirmed target username:** `@Vetotg_bot`; proposed display name: `VetoTG`. Bot ownership must be confirmed in BotFather. Do not create yet another bot.
 - Telegram bot usernames must use 5–32 Latin letters, digits or underscores, and end in `bot` (case-insensitive). Verify availability **inside BotFather**; do not infer from a search engine or a proposed link.
-- Agree on product-facing copy and icons *before* changing all VETO/StoryLab strings in the app; keep internal `story_pilot_*` database names and callbacks for backwards compatibility.
+- User-facing strings now target VetoTG; keep internal `story_pilot_*` database names and callbacks for backwards compatibility.
 - Do not delete the existing bot yet.
 
-## 1. Owner creates bot in official Telegram
+## 1. Owner verifies existing bot and retrieves its token securely
 
-Open https://t.me/BotFather → `/newbot` → specify the chosen display name and username. BotFather gives a sensitive **token**: do not paste it into GitHub, tickets or ChatGPT. Save it only as a protected server-side Vercel environment secret.
+Open https://t.me/BotFather → `/mybots` → choose **@Vetotg_bot** → **API Token** (or `/token` if rotation is necessary). **Do not create a new bot**, and do not paste the token into GitHub, tickets or ChatGPT. Store it only in the protected server-side Vercel environment variable.
 
 In BotFather configure a recognizable picture, long and short descriptions, and the Mini App menu after final production domain is selected. Do not activate public promotion until smoke tests pass.
 
@@ -44,10 +44,10 @@ If there is a problem, preserve the new bot token securely, stop promotion, reve
 
 Only after a successful public dry run should the owner disable the legacy bot (by clearing its webhook or marking it retired). Deleting the legacy bot with BotFather is irreversible and should be the *last* optional action.
 
-## 5. Brand copy draft (replace placeholders after naming decision)
+## 5. VetoTG public copy (ready for BotFather)
 
-- Bot name: `<FINAL_PUBLIC_NAME>`
-- Username: `@<FINAL_BOT_USERNAME>`
+- Bot name: `VetoTG`
+- Username: `@Vetotg_bot`
 - Short description: `Чаты, Stories, приватность и умные инструменты Telegram — в одном приложении.`
 - Full description: `Подключай свой Telegram, работай с переписками, публикуй истории, используй приватный архив, поиск и инструменты для контента. Подключения и архивы управляются отдельно; возможности зависят от разрешений Telegram.`
 - /start: `Открыть <FINAL_PUBLIC_NAME>`
