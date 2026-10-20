@@ -216,19 +216,19 @@ export default async function handler(req, res) {
 
     if (syncPublicProfile) for (const languageCode of [null, 'ru', 'en']) {
       await tg(token, 'setMyName', {
-        name: 'VETO Telegram',
+        name: 'VetoTG',
         ...(languageCode ? { language_code: languageCode } : {}),
       }).catch(() => {});
     }
 
     const profilePhotoUpdated = syncPublicPhoto ? await setVetoBotProfilePhoto(token).catch(error => {
-      console.warn('VETO Telegram profile photo update skipped', error?.message || String(error));
+      console.warn('VetoTG profile photo update skipped', error?.message || String(error));
       return false;
     }) : false;
 
     await tg(token, 'setMyCommands', {
       commands: [
-        { command: 'start', description: '🚀 Открыть VETO Telegram' },
+        { command: 'start', description: '🚀 Открыть VetoTG' },
         { command: 'ghost', description: '🛡 VETO Privacy · Anti-Delete' },
         { command: 'deleted', description: '↶ Последние удалённые сообщения' },
         { command: 'edits', description: '≋ История изменённых сообщений' },
@@ -243,9 +243,9 @@ export default async function handler(req, res) {
 
     if (syncPublicProfile) {
     const shortDescriptions = [
-      [null, 'VETO Telegram: secure Stories, Privacy, Intelligence и Automations в одном Mini App.'],
-      ['ru', 'VETO Telegram: Stories, Privacy, Intelligence и Automations — безопасно и понятно.'],
-      ['en', 'VETO Telegram: secure Stories, Privacy, Intelligence and Automations in one Mini App.'],
+      [null, 'VetoTG: secure Stories, Privacy, Intelligence и Automations в одном Mini App.'],
+      ['ru', 'VetoTG: Stories, Privacy, Intelligence и Automations — безопасно и понятно.'],
+      ['en', 'VetoTG: secure Stories, Privacy, Intelligence and Automations in one Mini App.'],
     ];
     for (const [languageCode, shortDescription] of shortDescriptions) {
       await tg(token, 'setMyShortDescription', {
@@ -255,9 +255,9 @@ export default async function handler(req, res) {
     }
 
     const descriptions = [
-      [null, 'VETO Telegram — Private Telegram OS. Connect your account securely, publish Stories, understand viewers, and optionally enable Business privacy tools.'],
-      ['ru', 'VETO Telegram — приватный Telegram OS: безопасное подключение аккаунта, Stories, Intelligence и optional Business Privacy.'],
-      ['en', 'VETO Telegram — Private Telegram OS: secure account link, Stories, Intelligence, and optional Business Privacy.'],
+      [null, 'VetoTG — Private Telegram OS. Connect your account securely, publish Stories, understand viewers, and optionally enable Business privacy tools.'],
+      ['ru', 'VetoTG — приватный Telegram OS: безопасное подключение аккаунта, Stories, Intelligence и optional Business Privacy.'],
+      ['en', 'VetoTG — Private Telegram OS: secure account link, Stories, Intelligence, and optional Business Privacy.'],
     ];
     for (const [languageCode, description] of descriptions) {
       await tg(token, 'setMyDescription', {
@@ -271,7 +271,7 @@ export default async function handler(req, res) {
     await tg(token, 'setChatMenuButton', {
       menu_button: {
         type: 'web_app',
-        text: 'VETO Telegram',
+        text: 'VetoTG',
         web_app: { url: controlAppUrl(baseUrl) },
       },
     }).catch(() => {});
@@ -336,7 +336,7 @@ export default async function handler(req, res) {
           chat_id: chatId,
           menu_button: {
             type: 'web_app',
-            text: 'VETO Telegram',
+            text: 'VetoTG',
             web_app: { url: nextUrl },
           },
         }).catch(() => {});
@@ -365,7 +365,7 @@ export default async function handler(req, res) {
       public_bot: true,
       version: 'v8',
       control_build: CONTROL_BUILD,
-      brand: 'VETO Telegram v2',
+      brand: 'VetoTG v1',
       active_name: activeName?.name || null,
       profile_photo_updated: Boolean(profilePhotoUpdated),
       profile_photo_count: Number(profilePhotos?.total_count || 0),
