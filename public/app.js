@@ -1963,7 +1963,7 @@
     return `
       <div class="auth-resume-card">
         <strong>Ты уже начал подключение</strong>
-        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код запрошен у Telegram. Ищи его в официальном чате «Telegram» с синей галочкой, не в чате StoryLab. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
+        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код запрошен у Telegram. Ищи его в официальном чате «Telegram» с синей галочкой, не в чате VETO. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
         <button class="accent" data-sheet-action="viewer-resume-login">${password ? 'Продолжить ввод пароля' : 'Ввести полученный код'} →</button>
       </div>
     `;
@@ -2035,7 +2035,7 @@
       <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Premium не требуется.</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
-        <div class="sheet-item"><strong>2 · Добавь VETO Telegram</strong><span>Технический username сейчас @Storypilotlab_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
+        <div class="sheet-item"><strong>2 · Добавь VETO Telegram</strong><span>Технический username сейчас @vetotg_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
         <div class="sheet-item"><strong>3 · Выбери личные чаты</strong><span>Включи «Только выбранные чаты» и права для сообщений; остальные разрешения не нужны для архива. Секретные чаты не поддерживаются.</span></div>
         <div class="sheet-item"><strong>4 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
       </div>
@@ -2195,7 +2195,7 @@
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Теперь введи код из Telegram</h2>
-      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте StoryLab. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
+      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте VETO. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2220,7 +2220,7 @@
         <div class="sheet-item"><strong>2 · Проверь другие свои устройства</strong><span>Telegram нередко присылает код на уже авторизованный телефон или компьютер вместо SMS.</span></div>
         <div class="sheet-item"><strong>3 · Не запрашивай код много раз</strong><span>Повторные запросы могут аннулировать предыдущий код и вызвать ограничение Telegram. Если есть второй экран, попробуй QR-вход.</span></div>
       </div>
-      <p class="auth-security-note">Никогда не пересылай код другим людям. StoryLab не умеет доставить код вручную: способ выбирает Telegram.</p>
+      <p class="auth-security-note">Никогда не пересылай код другим людям. VETO не умеет доставить код вручную: способ выбирает Telegram.</p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button>
         <button data-sheet-action="viewer-start-qr">Подключить через QR</button>
