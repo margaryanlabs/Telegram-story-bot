@@ -200,7 +200,7 @@ export default async function handler(req, res) {
 
     for (const languageCode of [null, 'ru', 'en']) {
       await tg(token, 'setMyName', {
-        name: 'VETO Telegram',
+        name: 'VETO',
         ...(languageCode ? { language_code: languageCode } : {}),
       }).catch(() => {});
     }
@@ -226,9 +226,9 @@ export default async function handler(req, res) {
     });
 
     const shortDescriptions = [
-      [null, 'VETO Telegram: secure Stories, Privacy, Intelligence и Automations в одном Mini App.'],
-      ['ru', 'VETO Telegram: Stories, Privacy, Intelligence и Automations — безопасно и понятно.'],
-      ['en', 'VETO Telegram: secure Stories, Privacy, Intelligence and Automations in one Mini App.'],
+      [null, 'VETO: secure Stories, Privacy, Intelligence и Automations в одном Mini App.'],
+      ['ru', 'VETO: Stories, Privacy, Intelligence и Automations — безопасно и понятно.'],
+      ['en', 'VETO: secure Stories, Privacy, Intelligence and Automations in one Mini App.'],
     ];
     for (const [languageCode, shortDescription] of shortDescriptions) {
       await tg(token, 'setMyShortDescription', {
@@ -238,9 +238,9 @@ export default async function handler(req, res) {
     }
 
     const descriptions = [
-      [null, 'VETO Telegram — Private Telegram OS. Connect your account securely, publish Stories, understand viewers, and optionally enable Business privacy tools.'],
-      ['ru', 'VETO Telegram — приватный Telegram OS: безопасное подключение аккаунта, Stories, Intelligence и optional Business Privacy.'],
-      ['en', 'VETO Telegram — Private Telegram OS: secure account link, Stories, Intelligence, and optional Business Privacy.'],
+      [null, 'VETO — Private Telegram OS. Connect your account securely, publish Stories, understand viewers, and optionally enable Business privacy tools.'],
+      ['ru', 'VETO — приватный Telegram OS: безопасное подключение аккаунта, Stories, Intelligence и optional Business Privacy.'],
+      ['en', 'VETO — Private Telegram OS: secure account link, Stories, Intelligence, and optional Business Privacy.'],
     ];
     for (const [languageCode, description] of descriptions) {
       await tg(token, 'setMyDescription', {
@@ -252,7 +252,7 @@ export default async function handler(req, res) {
     await tg(token, 'setChatMenuButton', {
       menu_button: {
         type: 'web_app',
-        text: 'VETO Telegram',
+        text: 'Открыть VETO',
         web_app: { url: controlAppUrl(baseUrl) },
       },
     }).catch(() => {});
@@ -317,7 +317,7 @@ export default async function handler(req, res) {
           chat_id: chatId,
           menu_button: {
             type: 'web_app',
-            text: 'VETO Telegram',
+            text: 'Открыть VETO',
             web_app: { url: nextUrl },
           },
         }).catch(() => {});
@@ -346,7 +346,7 @@ export default async function handler(req, res) {
       public_bot: true,
       version: 'v8',
       control_build: CONTROL_BUILD,
-      brand: 'VETO Telegram v2',
+      brand: 'VETO',
       active_name: activeName?.name || null,
       profile_photo_updated: Boolean(profilePhotoUpdated),
       profile_photo_count: Number(profilePhotos?.total_count || 0),
