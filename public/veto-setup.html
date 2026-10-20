@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="color-scheme" content="dark">
+  <title>VETO — Private Bot Setup</title>
+  <link rel="stylesheet" href="/veto-setup.css">
+  <script src="/veto-setup.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header><div class="mark">V</div><div><p class="eyebrow">VETO / CONTROL</p><h1>Подключение Telegram</h1></div></header>
+    <p class="intro">Закрытая служебная страница для владельца @vetotg_bot. Не отправляйте никому секрет настройки.</p>
+    <section class="panel">
+      <div class="bar"><h2>Состояние бота</h2><button type="button" id="refresh">Проверить</button></div>
+      <p id="status" role="status" aria-live="polite">Проверяем Telegram API…</p>
+      <dl>
+        <div><dt>Бот</dt><dd id="bot">—</dd></div>
+        <div><dt>Webhook</dt><dd id="webhook">—</dd></div>
+        <div><dt>Ожидаемый адрес</dt><dd id="expected">—</dd></div>
+        <div><dt>Очередь событий</dt><dd id="pending">—</dd></div>
+        <div><dt>Последняя ошибка</dt><dd id="last-error">—</dd></div>
+      </dl>
+    </section>
+    <section class="panel">
+      <h2>Завершить настройку</h2>
+      <p>После подтверждения VETO зарегистрирует webhook в Telegram и обновит название, меню, команды и оформление бота. Действие заменит текущий webhook этого бота.</p>
+      <form id="activate-form" autocomplete="off">
+        <label for="secret">SETUP_SECRET из Vercel</label>
+        <input id="secret" name="secret" type="password" required spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" placeholder="Вставь секретный ключ" />
+        <label class="check"><input id="confirm" type="checkbox" required> Подтверждаю, что это мой @vetotg_bot, и разрешаю переключить его webhook на VETO.</label>
+        <button class="primary" id="activate" type="submit">Подключить @vetotg_bot</button>
+      </form>
+      <p class="fine">Секрет отправляется только в HTTPS-заголовке запроса на этот же сайт. Он не сохраняется в Local Storage, cookies или URL.</p>
+      <p id="result" role="status" aria-live="polite"></p>
+    </section>
+    <footer><a href="/studio.html">← Открыть VETO</a><span>Владельческий инструмент · не для публичного меню</span></footer>
+  </main>
+</body>
+</html>
