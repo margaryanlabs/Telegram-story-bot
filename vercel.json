@@ -1,10 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/*.js": {
-      "maxDuration": 60
-    }
-  },
   "headers": [
     {
       "source": "/studio.html",
@@ -95,6 +90,30 @@
           "value": "public, max-age=0, must-revalidate"
         }
       ]
+    }
+  ],
+  "builds": [
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/veto-gateway.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:route",
+      "destination": "/api/veto-gateway?route=:route"
+    },
+    {
+      "source": "/",
+      "destination": "/public/studio.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/public/:path*"
     }
   ]
 }
