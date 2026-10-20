@@ -98,6 +98,17 @@ function versionExistingControlUrl(menu, baseUrl) {
   }
 }
 
+// Optional cutover guard: with a new bot token, refuse to register a webhook
+// unless Telegram confirms the exact intended bot. Never expose any tokens.
+function normalizeBotUsername(value) {
+  return String(value || '').trim().replace(/^@/, '').toLowerCase();
+}
+
+function isExpectedBot(bot) {
+  const expected = normalizeBotUsername(process.env.TELEGRAM_EXPECTED_BOT_USERNAME);
+  return !expected || expected === normalizeBotUsername(bot?.username);
+}
+
 function productionBaseUrl(req) {
   const configured = String(process.env.STORY_PILOT_BASE_URL || '').trim();
   if (configured) return configured.replace(/\/$/, '');
@@ -138,6 +149,7 @@ export default async function handler(req, res) {
         mode: 'read-only',
         protected: Boolean(process.env.SETUP_SECRET),
         bot: bot?.username ? `@${bot.username}` : null,
+        expected_bot_match: isExpectedBot(bot),
         webhook: webhook?.url || null,
         pending_updates: webhook?.pending_update_count ?? null,
         last_error: webhook?.last_error_message || null,
@@ -176,6 +188,13 @@ export default async function handler(req, res) {
     const secretToken = crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
 
     const bot = await tg(token, 'getMe');
+    if (!isExpectedBot(bot)) {
+      return res.status(409).json({
+        ok: false,
+        error: 'New bot identity mismatch; webhook setup was not changed.',
+        actual_bot: bot?.username ? `@${bot.username}` : null,
+      });
+    }
     const webhook = await tg(token, 'setWebhook', {
       url: webhookUrl,
       allowed_updates: [
