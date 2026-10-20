@@ -151,7 +151,7 @@ export default async function handler(req, res) {
     } else if (resultPayload?.duplicate) {
       await editMessage(token, chatId, progressMessage.message_id, '✅ Эта Story уже обработана — дубликат не создаю.');
     } else {
-      await editMessage(token, chatId, progressMessage.message_id, '❌ Story не опубликована. Причина показана в VETO Telegram.');
+      await editMessage(token, chatId, progressMessage.message_id, '❌ Story не опубликована. Причина показана в VetoTG.');
     }
   }
 }
