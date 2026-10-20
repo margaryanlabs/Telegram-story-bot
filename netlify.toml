@@ -1,0 +1,17 @@
+# Zero-budget staging target. Configure environment variables in Netlify UI,
+# never in this file. Do not switch Telegram webhook/DNS until live smoke passes.
+[build]
+  command = "npm run check"
+  publish = "public"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/"
+  to = "/studio.html"
+  status = 302
