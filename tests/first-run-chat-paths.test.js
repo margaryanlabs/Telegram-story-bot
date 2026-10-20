@@ -8,13 +8,14 @@ test('Bot /start immediately presents two different chat permissions paths', () 
   const menu = hook.split('function inlineMenu(')[1].split('function userPicker(')[0];
   const home = hook.split('function homeText(settings)')[1].split('function settingsText(')[0];
   assert.match(menu, /chatPathButtons/);
-  assert.match(menu, /Мои чаты · номер \/ QR/);
-  assert.match(menu, /Anti-Delete · подключить/);
+  assert.match(menu, /🚀 Открыть VETO/);
+  assert.match(menu, /Мои чаты · подключить/);
+  assert.match(menu, /Anti-Delete · настроить/);
   assert.match(menu, /screen:'telegram'/);
   assert.match(menu, /screen:'privacy'/);
-  assert.match(home, /Business не нужен/);
-  assert.match(home, /автоматического получения новых сообщений/);
-  assert.match(home, /Ранее удалённые сообщения восстановить нельзя/);
+  assert.match(home, /Подключи Telegram по номеру \+ коду/);
+  assert.match(home, /Anti-Delete включается отдельно/);
+  assert.match(home, /Удаления, произошедшие до подключения, вернуть нельзя/);
   assert.match(hook, /command === '\/start'/);
 });
 
