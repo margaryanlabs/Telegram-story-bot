@@ -305,7 +305,7 @@ async function clearReplyKeyboard(token, chatId) {
 function homeText(settings) {
   const firstRun = '◉ VETO Telegram · выбери, что нужно\n\n'
     + '💬 ОТКРЫТЬ МОИ ЧАТЫ\nНажми «Мои чаты», подключи свой Telegram по номеру + коду или QR. Telegram Business не нужен.\n\n'
-    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @Storypilotlab_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Premium не требуется.\n\n'
+    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @vetotg_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Premium не требуется.\n\n'
     + 'Разрешения выдаются в самом Telegram. Ранее удалённые сообщения восстановить нельзя.';
   if (!settings.bc) return firstRun;
 
@@ -336,7 +336,7 @@ function connectText(settings, live = null) {
   }
 
   return '💬 ЖИВЫЕ ЧАТЫ\nОткрой Mini App → «Мои чаты» → номер + код Telegram или QR. Business для этого не нужен.\n\n'
-    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @Storypilotlab_bot → выбери личные чаты.\n\n'
+    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @vetotg_bot → выбери личные чаты.\n\n'
     + 'Можно пользоваться только одним способом или обоими. Не отправляй коды боту.';
 }
 
@@ -1178,7 +1178,7 @@ export default async function handler(req, res) {
       } else if (action === 'view:live-chats') {
         await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой VETO Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
       } else if (action === 'view:archive-guide') {
-        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Storypilotlab_bot и выбери личные переписки. Затем VETO Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
+        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @vetotg_bot и выбери личные переписки. Затем VETO Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);
@@ -1189,7 +1189,7 @@ export default async function handler(req, res) {
         } else if (refreshed.live) {
           await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
         } else {
-          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO Telegram пока не получил активный Business Connection.\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
+          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO Telegram пока не получил активный Business Connection.\n\nЕсли @vetotg_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
         }
       } else if (action === 'view:settings') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
@@ -1243,7 +1243,7 @@ export default async function handler(req, res) {
         chatId,
         origin,
         'privacy',
-        '↶ VETO Privacy · Anti-Delete\n\nАвтоматическое сохранение: Telegram → Настройки → Telegram для бизнеса → Чат-боты → @Storypilotlab_bot → выбери личные чаты.\n\nТакже можно вручную сохранить выбранный чат через личный Telegram-аккаунт. Старые удаления не восстановить.',
+        '↶ VETO Privacy · Anti-Delete\n\nАвтоматическое сохранение: Telegram → Настройки → Telegram для бизнеса → Чат-боты → @vetotg_bot → выбери личные чаты.\n\nТакже можно вручную сохранить выбранный чат через личный Telegram-аккаунт. Старые удаления не восстановить.',
         '🛡 Открыть Privacy',
       );
       res.status(200).json({ ok: true, screen: 'privacy' });
