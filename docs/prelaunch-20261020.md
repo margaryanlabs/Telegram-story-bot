@@ -1,4 +1,4 @@
-# VETO Telegram — launch gate & safe rebrand (2026-10-20)
+# VetoTG — launch gate & safe rebrand (2026-10-20)
 
 Status: **PRELAUNCH / NOT YET VERIFIED FOR GENERAL AVAILABILITY**. A Vercel `READY` deployment means the build completed; it does **not** establish that account linking, payment, deletion archive or end-to-end stories work reliably for independent accounts.
 
@@ -23,7 +23,7 @@ The setup route can overwrite a manually chosen public identity if it resynchron
 - `BOT_PROFILE_SYNC=true`: permits legacy automatic name, short description and full description synchronization from `api/setup.js`.
 - `BOT_PROFILE_PHOTO_SYNC=true` **together with** `BOT_PROFILE_SYNC=true`: permits overwriting Telegram profile photo.
 - Default: do **not** change Telegram display name, bio or profile photo through `/api/setup`. Webhook registration, commands and web app menu continue working.
-- **Before choosing a new name**, inventory and prepare all old user-facing occurrences of `VETO Telegram` and `StoryLab` in front end, server text, icons, support, legal pages, links and contact material. Do not rename internal database fields, signed callback formats or environment variables during the cosmetic brand rollout.
+- **Before choosing a new name**, inventory and prepare all old user-facing occurrences of `VetoTG` and `VetoTG` in front end, server text, icons, support, legal pages, links and contact material. Do not rename internal database fields, signed callback formats or environment variables during the cosmetic brand rollout.
 - Do a brand staging PR, verify onboarding/menu/chat/deep link on two accounts, then update BotFather display name and photo and release the staged UI together.
 - Keep an owner-only feature flag to revert UI copy while preserving the original bot token, Telegram user ids and archive.
 
@@ -49,3 +49,7 @@ Source references:
 - https://core.telegram.org/bots/payments-stars
 - https://core.telegram.org/bots/features
 - https://core.telegram.org/bots/api
+
+## Confirmed target identity (2026-10-20)
+
+The owner selected existing `@Vetotg_bot` with public display name **VetoTG**. Rename all end-user VETO Telegram/StoryLab copy to VetoTG and Business instructions to `@Vetotg_bot`. Do **not** assume the existing BotFather token is installed merely because the git branch compiles: set `TELEGRAM_EXPECTED_BOT_USERNAME=Vetotg_bot`, then replace `TELEGRAM_BOT_TOKEN` securely in the intended Vercel environment, redeploy and invoke authenticated `/api/setup` only after verifying the bot identity. Old bot still runs until the controlled cutover. No new bot creation required.
