@@ -35,7 +35,8 @@ test('VetoTG is the public identity, and Business instructions point only to the
 });
 
 test('no deprecated bot link or product name remains in customer-facing source', () => {
-  // Lowercase storylab flags and persisted identifiers are intentionally left intact.\n  for (const path of PUBLIC_FILES) {
+  // Lowercase storylab flags and persisted identifiers are intentionally left intact.
+  for (const path of PUBLIC_FILES) {
     const source = read(path);
     assert.doesNotMatch(source, /@Storypilotlab_bot|StoryLab|VETO Telegram/, `stale public branding in ${path}`);
   }
