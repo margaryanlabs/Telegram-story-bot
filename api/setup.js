@@ -190,17 +190,22 @@ export default async function handler(req, res) {
       drop_pending_updates: false,
     });
 
-    for (const languageCode of [null, 'ru', 'en']) {
+    // BotFather/profile edits are owner-managed. Never overwrite a deliberate
+    // public rename or profile photo merely by rerunning webhook setup.
+    const syncPublicProfile = process.env.BOT_PROFILE_SYNC === 'true';
+    const syncPublicPhoto = syncPublicProfile && process.env.BOT_PROFILE_PHOTO_SYNC === 'true';
+
+    if (syncPublicProfile) for (const languageCode of [null, 'ru', 'en']) {
       await tg(token, 'setMyName', {
         name: 'VETO Telegram',
         ...(languageCode ? { language_code: languageCode } : {}),
       }).catch(() => {});
     }
 
-    const profilePhotoUpdated = await setVetoBotProfilePhoto(token).catch(error => {
+    const profilePhotoUpdated = syncPublicPhoto ? await setVetoBotProfilePhoto(token).catch(error => {
       console.warn('VETO Telegram profile photo update skipped', error?.message || String(error));
       return false;
-    });
+    }) : false;
 
     await tg(token, 'setMyCommands', {
       commands: [
@@ -217,6 +222,7 @@ export default async function handler(req, res) {
       ],
     });
 
+    if (syncPublicProfile) {
     const shortDescriptions = [
       [null, 'VETO Telegram: secure Stories, Privacy, Intelligence и Automations в одном Mini App.'],
       ['ru', 'VETO Telegram: Stories, Privacy, Intelligence и Automations — безопасно и понятно.'],
@@ -239,6 +245,8 @@ export default async function handler(req, res) {
         description,
         ...(languageCode ? { language_code: languageCode } : {}),
       }).catch(() => {});
+    }
+
     }
 
     await tg(token, 'setChatMenuButton', {
