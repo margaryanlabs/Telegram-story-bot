@@ -169,6 +169,7 @@ function inlineMenu(settings = {}, origin = '') {
         [{ text: '📸 Мои Stories', web_app: { url: ghostAppUrl(origin, { screen:'publish' }) } }],
         [{ text: '↶ Anti-Delete · настроить', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } }],
         [{ text: '✅ Проверить Anti-Delete', callback_data: 'connect:check' }],
+        [{ text: '🔔 Управление уведомлениями', callback_data: 'view:alerts' }],
         [{ text: '❔ Как подключиться', callback_data: 'view:howto' }],
       ] : [
         ...chatPathButtons,
@@ -190,6 +191,7 @@ function inlineMenu(settings = {}, origin = '') {
       ] : []),
       ...chatPathButtons,
       [{ text: '✅ Проверить Anti-Delete', callback_data: 'connect:check' }],
+      [{ text: '🔔 Управление уведомлениями', callback_data: 'view:alerts' }],
       [
         { text: mark('all', '🌍 Все'), callback_data: 'aud:all' },
         { text: mark('contacts', '👥 Мои контакты'), callback_data: 'aud:contacts' },
@@ -629,6 +631,25 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings
     },
   });
   return true;
+}
+
+async function sendVetoAlertSettings(token, chatId, origin) {
+  if (!origin) return;
+  await tg(token, 'sendMessage', {
+    chat_id: chatId,
+    text: '🔔 VETO · Уведомления\n\n'
+      + '↶ Удалили сообщение: уведомление и сохранённая копия, если она была получена до удаления.\n'
+      + '✎ Изменили сообщение: уведомление и доступная история правок.\n'
+      + '👁 Просмотрели Story: уведомление только при подтверждении Telegram; неизвестные просмотры остаются неизвестными.\n\n'
+      + 'Включай и выключай типы уведомлений по отдельности в VETO. Для Stories нужны подключённый аккаунт и работающий фоновый watcher. '
+      + 'Оповещения не должны приходить задним числом после отключения.',
+    disable_web_page_preview: true,
+    reply_markup: {inline_keyboard: [
+      [{text:'↶ Удаления и изменения · ON/OFF',web_app:{url:ghostAppUrl(origin,{screen:'privacy'})}}],
+      [{text:'👁 Просмотры Stories · ON/OFF',web_app:{url:ghostAppUrl(origin,{screen:'viewers'})}}],
+      [{text:'🛡 Политика приватности',url:new URL('/privacy-policy.html',origin).toString()}],
+    ]},
+  });
 }
 
 async function sendAppShortcut(token, chatId, origin, screen, text, buttonText) {
@@ -1184,6 +1205,8 @@ export default async function handler(req, res) {
           await saveSettings(token, chatId, origin, next);
           await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.', messageId);
         }
+      } else if (action === 'view:alerts') {
+        await sendVetoAlertSettings(token, chatId, origin);
       } else if (action === 'view:live-chats') {
         await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой VETO Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
       } else if (action === 'view:archive-guide') {
@@ -1243,6 +1266,22 @@ export default async function handler(req, res) {
       await saveSettings(token, chatId, origin, next);
       await showFreshPanel(token, chatId, origin, next);
       res.status(200).json({ ok: true });
+      return;
+    }
+
+    if (command === '/alerts') {
+      await sendVetoAlertSettings(token, chatId, origin);
+      res.status(200).json({ ok:true, screen:'alerts' });
+      return;
+    }
+
+    if (command === '/privacy') {
+      await tg(token, 'sendMessage', {
+        chat_id: chatId,
+        text: '🔒 VETO · Политика конфиденциальности\n\nКакие данные обрабатываются, как отключить Telegram, управлять архивом и запросить удаление.',
+        reply_markup: {inline_keyboard: [[{text:'🔒 Открыть Privacy Policy',url:new URL('/privacy-policy.html',origin).toString()}]]},
+      });
+      res.status(200).json({ok:true, screen:'privacy-policy'});
       return;
     }
 
