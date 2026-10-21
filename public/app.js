@@ -2172,6 +2172,24 @@
   }
 
   function viewerPhoneSheet() {
+    const dialCodes = [
+      ['+7','🇷🇺 Россия · +7'],
+      ['+374','🇦🇲 Армения · +374'],
+      ['+995','🇬🇪 Грузия · +995'],
+      ['+971','🇦🇪 ОАЭ · +971'],
+      ['+1','🇺🇸 США/Канада · +1'],
+      ['+44','🇬🇧 Великобритания · +44'],
+      ['+49','🇩🇪 Германия · +49'],
+      ['+33','🇫🇷 Франция · +33'],
+      ['+7','🇰🇿 Казахстан · +7'],
+    ];
+    const existingPhone = String(viewerPendingPhone || '').replace(/[()\\s-]/g,'');
+    const currentCode = [...dialCodes].sort((a,b)=>b[0].length-a[0].length)
+      .find(([code])=>existingPhone.startsWith(code))?.[0] || '+7';
+    const national = existingPhone.startsWith(currentCode)
+      ? existingPhone.slice(currentCode.length) : existingPhone;
+    const countryChoices = dialCodes.map(([code,label]) =>
+      '<option value="'+code+'"'+(code===currentCode ? ' selected' : '')+'>'+label+'</option>').join('');
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="active">1 · Номер</span><span>2 · Код</span><span>3 · 2FA, если нужно</span></div>
@@ -2180,7 +2198,10 @@
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
-          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 / +374 / +971…" value="${escapeHtml(viewerPendingPhone)}" />
+          <div class="veto-phone-entry">
+            <select id="viewerPhoneCountry" aria-label="Страна и телефонный код" autocomplete="tel-country-code">${countryChoices}</select>
+            <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="Номер без кода страны" value="${escapeHtml(national)}" />
+          </div>
         </div>
         <div class="auth-help">Формат +374… или другой международный. Код может прийти в официальный чат «Telegram» на другом устройстве, на email входа либо по SMS — способ выбирает Telegram. Некоторые сторонние входы не поддерживают SMS. Никогда не отправляй код боту или другому человеку.</div>
       </div>
@@ -3035,10 +3056,12 @@
       return;
     }
     if (action === 'viewer-send-code') {
-      const phone = ($('viewerPhone')?.value || '').trim();
+      const local = ($('viewerPhone')?.value || '').trim().replace(/[()\\s-]/g,'');
+      const prefix = $('viewerPhoneCountry')?.value || '+7';
+      const phone = local.startsWith('+') ? local : prefix + local;
       await runViewerAuthAction(actionTarget, async () => {
-        if (!/^\+[\d\s()-]{7,24}$/.test(phone)) {
-          throw new Error('Введи номер с кодом страны, например +374…');
+        if (!/^\\+[1-9]\\d{6,14}$/.test(phone)) {
+          throw new Error('Проверь страну и номер Telegram. Можно вставить полный номер с +.');
         }
         const data = await viewerApi('send_code', { phone }, null);
         viewerPendingPhone = phone;
