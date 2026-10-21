@@ -81,7 +81,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  await deleteAuthChallenge(userId).catch(() => {});
+  // Starting a QR alternative must not erase a still-valid phone-code
+  // challenge. Delete it only after successful QR authorization.
 
   noStore(res);
   res.statusCode = 200;
