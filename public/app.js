@@ -2034,7 +2034,7 @@
       <h2>Подключи архив личных чатов</h2>
       <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Если Telegram запрашивает Premium для Business, это ограничение твоего аккаунта Telegram. Основные чаты и Stories можно подключать отдельно.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
+        <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Telegram → Настройки → Telegram для бизнеса → Чат-боты. В некоторых версиях: Аккаунт → Автоматизация чатов.</span></div>
         <div class="sheet-item"><strong>2 · Добавь @vetotg_bot</strong><span>Скопируй имя бота и вставь его в Telegram → Чат-боты. Выбери только нужные личные чаты.</span></div>
         <div class="sheet-item"><strong>3 · Выбери личные чаты</strong><span>Включи «Только выбранные чаты» и права для сообщений; остальные разрешения не нужны для архива. Секретные чаты не поддерживаются.</span></div>
         <div class="sheet-item"><strong>4 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
