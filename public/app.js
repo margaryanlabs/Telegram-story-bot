@@ -2298,9 +2298,57 @@
       </div>
       <p class="auth-security-note">Никогда не пересылай код другим людям. VETO не умеет доставить код вручную: способ выбирает Telegram.</p>
       <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-auth-diagnostics">Проверить отправку кода</button>
         <button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button>
         <button data-sheet-action="viewer-start-qr">Подключить через QR</button>
         <button data-sheet-action="viewer-cancel-login">Отменить запрос и сменить номер</button>
+      </div>
+    `);
+  }
+
+  function viewerAuthDiagnosticsSheet(events) {
+    const titles = {
+      'auth.send_code_attempt': 'VETO начал запрос кода',
+      'auth.delivery_selected': 'Telegram выбрал способ доставки',
+      'auth.send_code_failed': 'Ошибка запроса кода',
+    };
+    const reasons = {
+      RATE_LIMIT:'Telegram ограничил частоту попыток.',
+      DELIVERY_UNAVAILABLE:'Telegram не смог доставить код этим способом.',
+      APP_CONFIGURATION:'Ошибка настроек подключения VETO.',
+      EMAIL_VERIFICATION:'Нужна проверка почты Telegram.',
+      UNSUPPORTED_TELEGRAM_STEP:'Telegram запросил пока неподдерживаемый шаг входа.',
+      APP_LOGIN_RESTRICTED:'Telegram ограничил вход из стороннего приложения.',
+      PHONE_INVALID:'Номер не принят Telegram.',
+      CONNECTIVITY:'Ошибка соединения между VETO и Telegram.',
+      STORAGE:'Защищённое хранилище временно недоступно.',
+      UNCLASSIFIED:'Telegram не вернул распознаваемую причину.',
+    };
+    const delivery = {
+      telegram_app:'Код направлен в приложение Telegram',
+      email:'Код направлен на почту входа',
+      email_setup:'Telegram просит настроить почту входа',
+      sms_or_other:'Доставка по одному из доступных каналов — SMS не гарантируется',
+    };
+    const visible=Array.isArray(events)?events.slice(0,8):[];
+    const rows=visible.map(item=>{
+      const label=titles[item.type]||'Событие авторизации';
+      const detail=item.reason?reasons[item.reason]||'Проверь соединение'
+        :item.delivery?delivery[item.delivery]||'Способ доставки неизвестен'
+        :'Ожидаем следующий этап';
+      const time=item.at?new Date(item.at).toLocaleString('ru-RU'):'';
+      return '<div class="sheet-item"><strong>'+escapeHtml(label)+'</strong><span>'+
+        escapeHtml(detail)+(time?' · '+escapeHtml(time):'')+'</span></div>';
+    }).join('');
+    openSheet(`
+      <span class="kicker">VETO · ДИАГНОСТИКА ВХОДА</span>
+      <h2>Куда ушёл запрос?</h2>
+      <p>Только безопасные состояния авторизации. Здесь нет номера, кода, почты или Telegram-сессии.</p>
+      <div class="sheet-list">${rows||'<div class="sheet-item"><strong>Запрос кода не зафиксирован</strong><span>Открой VETO из Telegram владельца номера и повтори один раз. Если запрос уже делали, попробуй QR со второго устройства.</span></div>'}</div>
+      <p class="auth-security-note">Статус «Telegram выбрал доставку» означает ответ Telegram, но не подтверждает получение сообщения пользователем.</p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-code-help">Вернуться к подсказкам</button>
+        <button data-sheet-action="viewer-start-qr">Войти по QR</button>
       </div>
     `);
   }
@@ -3014,6 +3062,13 @@
     }
     if (action === 'viewer-code-help') {
       viewerNoCodeSheet();
+      return;
+    }
+    if (action === 'viewer-auth-diagnostics') {
+      await runViewerAuthAction(actionTarget, async () => {
+        const result=await viewerApi('auth_diagnostics',{},null);
+        viewerAuthDiagnosticsSheet(result.events);
+      });
       return;
     }
     if (action === 'viewer-back-code') {
