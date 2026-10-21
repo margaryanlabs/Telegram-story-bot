@@ -2138,12 +2138,20 @@
 
   function showViewerAuthError(error) {
     const message = String(error?.message || error || 'Не удалось войти в Telegram');
+    const pending = viewerState.loginPending;
+    // Show a useful, explicitly non-delivery-confirming diagnostic after errors,
+    // without including phone, OTP, 2FA password or session material.
+    const diagnostic = pending?.stage === 'code'
+      ? ' Запрос ожидает код. Выбранный канал: ' + viewerChannelLabel(pending.delivery) + '. Появление сообщения на устройстве не подтверждено.'
+      : pending?.stage === 'password' || pending?.stage === 'qr_password'
+        ? ' Telegram ожидает второй этап проверки.'
+        : ' Действующий запрос кода не подтверждён.';
     const slot = $('viewerAuthError');
     if (slot) {
-      slot.textContent = message;
+      slot.textContent = message + diagnostic;
       slot.hidden = false;
     } else {
-      showToast(message);
+      showToast(message + diagnostic);
     }
     notify('error');
   }
