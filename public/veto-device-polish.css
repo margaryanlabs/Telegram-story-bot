@@ -244,3 +244,38 @@ body {min-width:0;}
     transition-duration:0s!important;
   }
 }
+
+/* Telegram account onboarding: country code / phone, usable in iOS Safari,
+   Android Telegram WebView, narrow Fold cover display and desktop. */
+.sheet .veto-phone-entry {
+  display:grid;
+  grid-template-columns:minmax(112px,40%) minmax(0,1fr);
+  align-items:stretch;
+  gap:10px;
+  width:100%;
+  min-width:0;
+}
+.sheet .veto-phone-entry :is(select,input) {
+  display:block;
+  min-width:0;
+  max-width:100%;
+  width:100%;
+  min-height:50px;
+  font-size:16px;
+  border-radius:12px;
+  -webkit-text-size-adjust:100%;
+}
+.sheet .veto-phone-entry select {
+  padding-inline:12px 8px;
+  text-overflow:ellipsis;
+  overflow:hidden;
+  background:#1a202b;
+  color:inherit;
+  border:1px solid #414656;
+}
+.sheet .veto-phone-entry input {
+  padding-inline:14px;
+}
+@media(max-width:370px) {
+  .sheet .veto-phone-entry {grid-template-columns:1fr;gap:8px}
+}
