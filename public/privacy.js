@@ -1404,7 +1404,7 @@
       <h2>${linked ? 'Осталось проверить разрешения' : 'Один шаг — и переписки под защитой'}</h2>
       <p>Для автоматического Anti-Delete нужно один раз подключить VETO как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
       <div class="veto-business-sheet-steps">
-        <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
+        <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса (или «Аккаунт» → «Автоматизация чатов», если так называется пункт в твоей версии)</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
         <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @vetotg_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
         <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты». Для архива не нужны права отвечать, удалять сообщения или отмечать их прочитанными.</span></section></div>
         <div><b>04</b><section><strong>Вернись в VETO</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
