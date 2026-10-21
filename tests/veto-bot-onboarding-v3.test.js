@@ -24,7 +24,7 @@ test('Mini App Business wizard copies correct bot and does not collect Telegram 
   assert.match(wizard, /Только выбранные|только те чаты|только нужные личные чаты/);
   assert.doesNotMatch(wizard, /введи код|send_code|verify_code/);
   assert.match(app, /if \(action === 'business-copy-name'\)/);
-  assert.match(app, /navigator\.clipboard\?\.writeText\(botName\)/);
+  assert.match(app, /navigator\.clipboard\.writeText\(botName\)/);
 });
 
 test('read-only Stories and phone login do not imply automatic Business permissions', () => {
