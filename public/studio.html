@@ -1439,7 +1439,11 @@
         </div>
       </section>
 
-      <section class="brand-pack-card">
+      <section class="brand-pack-card veto-coming-soon" data-feature-status="coming-soon" aria-label="Brand Pack Engine — скоро">
+        <div style="display:flex;gap:11px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#191d2b;border:1px solid #464054;border-radius:13px;padding:16px;margin-bottom:18px">
+          <span style="font-weight:800;color:#f2d8d5">✦ Brand Pack Engine — СКОРО</span>
+          <span style="color:#b7becb;font-size:12px">Разработка · Пока недоступно для создания и публикации</span>
+        </div>
         <div class="brand-pack-head">
           <div>
             <span class="kicker">ONE LOGO → SYSTEM</span>
@@ -1479,7 +1483,7 @@
         </div>
 
         <div class="brand-pack-actions">
-          <button class="studio-button" id="brandPackBuildButton" type="button">✦ Собрать Brand Pack</button>
+          <button class="studio-button" id="brandPackBuildButton" type="button" disabled aria-disabled="true">✦ Собрать Brand Pack</button>
           <button class="studio-button secondary" id="brandPackAnimateButton" type="button" disabled>◌ Animate pack</button>
           <button class="studio-button secondary" id="brandPackRestoreButton" type="button" hidden>↶ Static</button>
         </div>
@@ -1501,7 +1505,7 @@
 
         <div class="brand-pack-footer">
           <div class="studio-status-line" id="brandPackStatus">Готов собрать полный бренд-пак без AI-ключа.</div>
-          <button class="studio-button brand-pack-publish" id="brandPackPublishButton" type="button" disabled>Опубликовать весь pack</button>
+          <button class="studio-button brand-pack-publish" id="brandPackPublishButton" type="button" disabled aria-disabled="true">Опубликовать весь pack</button>
         </div>
 
         <div class="studio-result brand-pack-result" id="brandPackResult" hidden>
@@ -1515,6 +1519,7 @@
       </section>
 
       <section class="studio-truth">
+        <article><strong>Brand Pack Engine · СКОРО</strong><span>Генерация и публикация полного бренд-пака готовится. Доступность не обещаем до проверки Telegram API и платежей.</span></article>
         <article><strong>Static AI</strong><span>Prompt generation активируется через OPENAI_API_KEY; загрузка собственного бренда работает без AI.</span></article>
         <article><strong>Animated</strong><span>Brand Pack умеет локально собирать VP9 WEBM motion прямо в Telegram WebView; если WebView не поддерживает encoder, static pack остаётся полностью рабочим.</span></article>
         <article><strong>VETO positioning</strong><span>Creator Studio — часть VETO Telegram рядом с Privacy, Stories и Intelligence, а не отдельный бот.</span></article>
@@ -1626,6 +1631,10 @@
         <span>После первой публикации здесь появится Story, аудитория и время.</span>
       </section>
     </section>
+    <div style="padding:25px 15px 12px;text-align:center;font-size:12px;color:#9fa8b9">
+      VETO · <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer" style="color:#e0abb2;text-decoration:underline">Политика конфиденциальности / Privacy Policy</a>
+      · <a href="https://t.me/vetotg_bot" target="_blank" rel="noopener noreferrer" style="color:#e0abb2;text-decoration:underline">Поддержка</a>
+    </div>
   </main>
 
   <nav class="bottom-nav" aria-label="Главная навигация">
