@@ -14,7 +14,11 @@ function suite(names,env) {
 // TEMP QA ISOLATION: restore complete suite before commercial launch.
 // Keep the previously selected legacy test shard stable when a new regression
 // test is introduced; execute the new auth regressions explicitly as well.
-const mandatory = new Set(['veto-auth-delivery-diagnostics.test.js']);
+const mandatory = new Set([
+  'veto-auth-delivery-diagnostics.test.js',
+  'telegram-login-resume.test.js',
+  'telegram-code-redelivery.test.js',
+]);
 const legacy = files.filter(name => !mandatory.has(name));
 suite([
   ...legacy.filter((_,index)=>index % 4 === 0),
