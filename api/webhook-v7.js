@@ -321,7 +321,7 @@ function homeText(settings) {
     + '💬 ЧАТЫ И STORIES\n'
     + 'Открой Mini App → «Мои чаты» → номер + код или QR. Для просмотра своих переписок Telegram Business не нужен.\n\n'
     + '↶ ANTI-DELETE\n'
-    + 'Открой Telegram → Настройки → Telegram для бизнеса → Чат-боты / Автоматизация чатов. '
+    + 'Открой Telegram → Настройки → Telegram для бизнеса → Чат-боты (или Аккаунт → Автоматизация чатов). '
     + 'Добавь @vetotg_bot, выбери только нужные личные чаты и вернись на кнопку «✅ Проверить Anti-Delete».\n\n'
     + '🔒 Доступ выдаётся только с твоего согласия. Коды и 2FA никогда не отправляй сообщением боту. '
     + 'Удалённые до подключения сообщения восстановить нельзя.';
@@ -1221,7 +1221,7 @@ export default async function handler(req, res) {
         } else if (refreshed.live) {
           await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
         } else {
-          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO пока не видит активного Telegram Business-подключения.\n\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты / Автоматизация чатов → выбери @vetotg_bot и разреши выбранные личные чаты.\n\nВернись и нажми «✅ Проверить Anti-Delete». Разрешение «Управление историями» для архива не требуется. Если Telegram просит Premium, это ограничение Telegram.', messageId);
+          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO пока не видит активного Telegram Business-подключения.\n\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты (или Аккаунт → Автоматизация чатов) → выбери @vetotg_bot и разреши выбранные личные чаты.\n\nВернись и нажми «✅ Проверить Anti-Delete». Разрешение «Управление историями» для архива не требуется. Если Telegram просит Premium, это ограничение Telegram.', messageId);
         }
       } else if (action === 'view:settings') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
