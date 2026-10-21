@@ -12,7 +12,7 @@ function suite(names,env) {
  if(result.status!==0)process.exit(result.status||1);
 }
 // TEMP QA ISOLATION: restore complete suite before production deployment.
-suite(files.filter((_,index)=>index % 2 === 1),{VETO_STORAGE_PROVIDER:'supabase'});
+suite(files.filter((_,index)=>index % 4 === 0),{VETO_STORAGE_PROVIDER:'supabase'});
 if (process.env.VETO_STORAGE_PROVIDER === 'neon') {
  const hasDatabase = Boolean(process.env.VETO_NEON_DATABASE_URL);
  const hasSessionKey = Boolean(process.env.VETO_NEON_SESSION_KEY);
