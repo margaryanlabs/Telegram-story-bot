@@ -2182,7 +2182,7 @@
       ['+49','🇩🇪 Германия · +49'],
       ['+33','🇫🇷 Франция · +33'],
     ];
-    const existingPhone = String(viewerPendingPhone || '').replace(/[()\\s-]/g,'');
+    const existingPhone = String(viewerPendingPhone || '').replace(/[()\s-]/g,'');
     const currentCode = [...dialCodes].sort((a,b)=>b[0].length-a[0].length)
       .find(([code])=>existingPhone.startsWith(code))?.[0] || '+7';
     const national = existingPhone.startsWith(currentCode)
@@ -3055,11 +3055,11 @@
       return;
     }
     if (action === 'viewer-send-code') {
-      const local = ($('viewerPhone')?.value || '').trim().replace(/[()\\s-]/g,'');
+      const local = ($('viewerPhone')?.value || '').trim().replace(/[()\s-]/g,'');
       const prefix = $('viewerPhoneCountry')?.value || '+7';
       const phone = local.startsWith('+') ? local : prefix + local;
       await runViewerAuthAction(actionTarget, async () => {
-        if (!/^\\+[1-9]\\d{6,14}$/.test(phone)) {
+        if (!/^\+[1-9]\d{6,14}$/.test(phone)) {
           throw new Error('Проверь страну и номер Telegram. Можно вставить полный номер с +.');
         }
         const data = await viewerApi('send_code', { phone }, null);
