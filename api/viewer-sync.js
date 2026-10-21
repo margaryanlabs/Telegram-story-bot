@@ -358,8 +358,21 @@ export default async function handler(req, res) {
     return;
   }
 
-  const config = await configState();
   const userId = String(user.id);
+  // Observe authorized login attempts BEFORE potentially slow private-store
+  // crypto health checks. Do not record phone, email, OTP, password or IP.
+  const incomingBody = req.method === 'POST'
+    ? (typeof req.body === 'string'
+      ? (() => { try { return JSON.parse(req.body); } catch { return {}; } })()
+      : (req.body || {}))
+    : {};
+  const isPhoneLoginRequest = incomingBody?.action === 'send_code';
+  if (isPhoneLoginRequest) {
+    await recordActivityEvent(userId,'auth.request_received',{
+      stage:'preflight',
+    }).catch(() => {});
+  }
+  const config = await configState();
 
   if (!config.configured) {
     res.status(503).json({
@@ -570,7 +583,12 @@ export default async function handler(req, res) {
       // Do not ask Telegram to send a code if we cannot persist the matching
       // encrypted MTProto challenge. A delivery without its phoneCodeHash is unusable.
       if (config.newConnectionsReady !== true) {
-        res.status(503).json({ ok: false, error: 'Защищённое хранилище временно недоступно. Код пока не запрашивался — попробуй позже.' });
+        await recordActivityEvent(userId,'auth.preflight_blocked',{reason:'PRIVATE_SESSION_CRYPTO'}).catch(() => {});
+        res.status(503).json({
+          ok: false,
+          error: 'Защищённое хранилище временно недоступно. Код НЕ запрашивался у Telegram — повтори позже.',
+          errorCode:'STORAGE',
+        });
         return;
       }
       const linked = await getViewerSession(userId);
@@ -809,7 +827,7 @@ export default async function handler(req, res) {
     res.status(400).json({ ok: false, error: 'Unknown action' });
   } catch (error) {
     const reason = safeTelegramAuthReason(error);
-    if (req.method === 'POST' && String(req.body?.action || '') === 'send_code') {
+    if (isPhoneLoginRequest) {
       await recordActivityEvent(userId,'auth.send_code_failed',{
         reason,
         // No phone number, code, email, device, IP or MTProto state.
