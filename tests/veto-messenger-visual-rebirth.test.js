@@ -17,7 +17,7 @@ test('visual rebirth is applied AFTER device polish, preserving mobile behavior'
 
 test('new inbox identity is visible and decorative only',()=>{
   assert.match(html,/class="veto-inbox-signature" aria-hidden="true"/);
-  assert.match(html,/class="veto-inbox-title-copy"><span class="veto-inbox-wordmark">VETO/);
+  assert.match(html,/class="veto-inbox-title-copy"><span class="veto-inbox-wordmark">VETOGRAM/);
   assert.match(css,/\.veto-inbox-signature/);
   assert.match(css,/\.veto-mirror-heading::before/);
 });
