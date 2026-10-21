@@ -168,6 +168,7 @@ function inlineMenu(settings = {}, origin = '') {
         [{ text: '💬 Мои чаты · подключить', web_app: { url: ghostAppUrl(origin, { screen:'telegram' }) } }],
         [{ text: '📸 Мои Stories', web_app: { url: ghostAppUrl(origin, { screen:'publish' }) } }],
         [{ text: '↶ Anti-Delete · настроить', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } }],
+        [{ text: '✅ Проверить Anti-Delete', callback_data: 'connect:check' }],
         [{ text: '❔ Как подключиться', callback_data: 'view:howto' }],
       ] : [
         ...chatPathButtons,
@@ -184,7 +185,11 @@ function inlineMenu(settings = {}, origin = '') {
   const connectionText = '✅ Telegram подключён';
   return {
     inline_keyboard: [
+      ...(origin ? [
+        [{ text: '🚀 Открыть VETO', web_app: { url: new URL('/studio.html', origin).toString() } }],
+      ] : []),
       ...chatPathButtons,
+      [{ text: '✅ Проверить Anti-Delete', callback_data: 'connect:check' }],
       [
         { text: mark('all', '🌍 Все'), callback_data: 'aud:all' },
         { text: mark('contacts', '👥 Мои контакты'), callback_data: 'aud:contacts' },
@@ -309,16 +314,17 @@ async function clearReplyKeyboard(token, chatId) {
 }
 
 function homeText(settings) {
-  const text = '◉ VETO · твой Telegram в одном приложении\n\n'
-    + '1. Нажми «🚀 Открыть VETO» ниже.\n'
-    + '2. Подключи Telegram по номеру + коду или через QR со второго устройства.\n'
-    + '3. Открой чаты, Stories и доступные инструменты.\n\n'
-    + '↶ Anti-Delete включается отдельно в Telegram Business для выбранных личных чатов. '
-    + 'Если Telegram просит Premium, это ограничение Telegram, а не VETO. '
-    + 'Удаления, произошедшие до подключения, вернуть нельзя.\n\n'
-    + 'Никому не пересылай коды Telegram и 2FA.';
+  const text = '✦ VETO · Твой Telegram. Твой контроль.\n\n'
+    + 'Выбери, что хочешь подключить:\n\n'
+    + '💬 ЧАТЫ И STORIES\n'
+    + 'Открой Mini App → «Мои чаты» → номер + код или QR. Для просмотра своих переписок Telegram Business не нужен.\n\n'
+    + '↶ ANTI-DELETE\n'
+    + 'Открой Telegram → Настройки → Telegram для бизнеса → Чат-боты / Автоматизация чатов. '
+    + 'Добавь @vetotg_bot, выбери только нужные личные чаты и вернись на кнопку «✅ Проверить Anti-Delete».\n\n'
+    + '🔒 Доступ выдаётся только с твоего согласия. Коды и 2FA никогда не отправляй сообщением боту. '
+    + 'Удалённые до подключения сообщения восстановить нельзя.';
   return settings.bc
-    ? text + '\n\n✓ Business-бот подключён: проверь получение нового сообщения в разрешённом чате.'
+    ? text + '\n\n✓ Business-связь сохранена; проверь получение нового сообщения из разрешённого чата.'
     : text;
 }
 
@@ -1192,7 +1198,7 @@ export default async function handler(req, res) {
         } else if (refreshed.live) {
           await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
         } else {
-          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO Telegram пока не получил активный Business Connection.\n\nЕсли @vetotg_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
+          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO пока не видит активного Telegram Business-подключения.\n\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты / Автоматизация чатов → выбери @vetotg_bot и разреши выбранные личные чаты.\n\nВернись и нажми «✅ Проверить Anti-Delete». Разрешение «Управление историями» для архива не требуется. Если Telegram просит Premium, это ограничение Telegram.', messageId);
         }
       } else if (action === 'view:settings') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
