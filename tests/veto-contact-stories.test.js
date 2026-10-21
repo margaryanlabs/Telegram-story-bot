@@ -55,12 +55,13 @@ test('backend authenticates Telegram owner and never silently reports story read
   assert.match(api,/GetStoriesByID/);
   assert.match(api,/const file = await downloadContactStory\(client,story,user\)/);
   assert.match(api,/viewMode:'ghost-no-receipt'/);
-  assert.match(api,/X-Veto-Story-Mode','ghost-no-receipt'/);
+  assert.match(source('lib/story-media-stream.js'),/X-Veto-Story-Mode', 'ghost-no-receipt'/);
   assert.doesNotMatch(api,/new Api\.stories\.(ReadStories|IncrementStoryViews|SendReaction|ActivateStealthMode)/);
   assert.doesNotMatch(api,/client\.invoke\(new Api\.stories/);
   assert.match(api,/STORY_RPC_NOT_ALLOWLISTED/);
-  assert.ok(STORY_MEDIA_LIMIT_BYTES<=4*1024*1024);
+  assert.ok(STORY_MEDIA_LIMIT_BYTES <= 32 * 1024 * 1024);
   assert.match(api,/private, no-store/);
+  assert.match(api,/await streamStoryMedia\(res,file\.buffer,file\.mime\)/);
 });
 
 test('stories are wired into the existing chat page, not a second app',()=>{
