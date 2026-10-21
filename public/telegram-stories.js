@@ -72,7 +72,7 @@
     const owner = String(tg?.initData || '');
     if (!owner) throw new Error('Открой VETO через Telegram и подключи личный аккаунт.');
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(),35000);
+    const timer = setTimeout(() => controller.abort(),90000);
     try {
       const response = await fetch('/api/telegram-stories',{
         method:'POST',headers:{
@@ -96,8 +96,8 @@
       if (response.headers.get('x-veto-story-mode') !== 'ghost-no-receipt')
         throw new Error('VETO не подтвердил Ghost View. Просмотр заблокирован.');
       const blob = await response.blob();
-      if (blob.size > 4*1024*1024 || !blob.size)
-        throw new Error('Этот файл слишком большой для просмотра.');
+      if (blob.size > 32*1024*1024 || !blob.size)
+        throw new Error('История превышает 32 МБ. Пока попробуй другое видео.');
       return {blob,kind};
     } catch(error) {
       if (error?.name === 'AbortError') throw new Error('Telegram не ответил. Просмотр не был открыт.');
