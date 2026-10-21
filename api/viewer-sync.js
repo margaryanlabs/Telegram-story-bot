@@ -528,8 +528,8 @@ export default async function handler(req, res) {
     }
 
     if (action === 'send_code') {
-      const requestedPhone = String(body.phone || '').replace(/[^+\\d]/g, '');
-      if (!/^\\+\\d{7,15}$/.test(requestedPhone)) {
+      const requestedPhone = String(body.phone || '').replace(/[^+\d]/g, '');
+      if (!/^\+\d{7,15}$/.test(requestedPhone)) {
         res.status(400).json({ ok: false, error: 'Введи номер Telegram в международном формате, начиная с +.' });
         return;
       }
