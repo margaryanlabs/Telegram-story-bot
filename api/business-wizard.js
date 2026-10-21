@@ -5,7 +5,7 @@ import { openJson } from '../lib/viewer-sync-crypto.js';
 import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 import { withBackupClient, listBackupDialogs } from '../lib/telegram-history-backup.js';
 import { readBusinessConsentState, connectBusinessSelectedChats,
-  assertBusinessConnectionAvailable, connectBusinessAllPrivateChats, CONSENT_APPROVAL } from '../lib/telegram-business-consent.js';
+  assertBusinessConnectionAvailable, connectBusinessAllPrivateChats, CONSENT_APPROVAL, BUSINESS_BOT_USERNAME } from '../lib/telegram-business-consent.js';
 
 const BOT = String(process.env.TELEGRAM_BOT_TOKEN || '');
 const json = (res, code, body) => res.status(code).json({ ok:code >= 200 && code < 300, ...body });
@@ -22,7 +22,7 @@ function safeFailure(error) {
   if (/AUTH_KEY|SESSION_REVOKED|SESSION_EXPIRED|not authorized/i.test(message))
     return { status:409,error:'Сессия Telegram истекла. Подключи свой аккаунт заново.' };
   if (/BOT_BUSINESS_MISSING/i.test(message))
-    return { status:409,error:'Для @Storypilotlab_bot необходимо включить Business Mode в BotFather.' };
+    return { status:409,error:`Для @${BUSINESS_BOT_USERNAME} необходимо включить Business Mode в BotFather.` };
   if (/BUSINESS_RECIPIENTS_EMPTY/i.test(message))
     return { status:400,error:'Нужно выбрать хотя бы один личный чат.' };
   if (/TIMEOUT|timed out|ETIMEDOUT/i.test(message))
@@ -34,9 +34,9 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control','private, no-store, max-age=0');
   res.setHeader('Content-Type','application/json; charset=utf-8');
   if (req.method !== 'POST') return json(res,405,{error:'Method not allowed'});
-  if (!BOT) return json(res,503,{error:'StoryLab Telegram не настроен'});
+  if (!BOT) return json(res,503,{error:'Vetogram Telegram не настроен'});
   const owner = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''),BOT);
-  if (!owner?.id) return json(res,401,{error:'Открой VETO внутри своего Telegram'});
+  if (!owner?.id) return json(res,401,{error:'Открой Vetogram внутри своего Telegram'});
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}; }
   catch { return json(res,400,{error:'Некорректный запрос'}); }
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
   try {
     const session = await getViewerSession(ownerId);
     if (!session?.session_ciphertext || session.status !== 'active') {
-      return json(res,409,{needsSession:true,error:'Сначала подключи свой Telegram через номер + код или QR в VETO.'});
+      return json(res,409,{needsSession:true,error:'Сначала подключи свой Telegram через номер + код или QR в Vetogram.'});
     }
     if (!sameTelegramAccount(ownerId,session.telegram_account_user_id)) {
       return json(res,403,{error:'Эта сессия принадлежит другому Telegram-аккаунту. Подключение заблокировано.'});

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   selectBusinessDialogs,connectionSummary,assertBusinessConnectionAvailable,
-  eligibleBusinessDialog,MAX_SELECTED_CHATS,CONSENT_APPROVAL,
+  eligibleBusinessDialog,MAX_SELECTED_CHATS,CONSENT_APPROVAL,BUSINESS_BOT_USERNAME,
 } from '../lib/telegram-business-consent.js';
 
 const src = path => readFileSync(new URL('../'+path,import.meta.url),'utf8');
@@ -16,6 +16,17 @@ const dialogs = [
   {id:505,isUser:true,entity:{id:505,self:true}},
   {id:606,isUser:true,entity:{id:606,deleted:true}},
 ];
+
+test('Business wizard resolves the current Vetogram bot, not a retired brand username', () => {
+  assert.equal(BUSINESS_BOT_USERNAME,'Vetotg_bot');
+  const backend=src('lib/telegram-business-consent.js');
+  const wizard=src('api/business-wizard.js');
+  const ui=src('public/studio.html');
+  assert.match(backend,/client\.getEntity\(BUSINESS_BOT_USERNAME\)/);
+  assert.match(wizard,/BUSINESS_BOT_USERNAME/);
+  assert.match(ui,/@Vetotg_bot/);
+  assert.doesNotMatch(backend+' '+wizard, /Storypilotlab_bot|@Storypilotlab_bot/);
+});
 
 test('Business consent can select only distinct, owner-visible private human chats', () => {
   assert.equal(MAX_SELECTED_CHATS,12);
