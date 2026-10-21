@@ -1960,11 +1960,16 @@
     const pending = viewerState.loginPending;
     if (!pending || Date.parse(pending.expiresAt || '') <= Date.now()) return '';
     const password = ['password', 'qr_password'].includes(pending.stage);
+    const email = ['email_setup','email_code'].includes(pending.stage);
+    const explanation = password ? 'Telegram ожидает пароль двухэтапной проверки.'
+      : pending.stage === 'email_setup' ? 'Telegram запросил настройку email для входа.'
+      : pending.stage === 'email_code' ? 'Telegram ожидает подтверждение email. Проверь почту.'
+      : 'Код запрошен у Telegram. Проверь официальный чат «Telegram» на своих устройствах.';
     return `
       <div class="auth-resume-card">
         <strong>Ты уже начал подключение</strong>
-        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код запрошен у Telegram. Ищи его в официальном чате «Telegram» с синей галочкой, не в чате VETO. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
-        <button class="accent" data-sheet-action="viewer-resume-login">${password ? 'Продолжить ввод пароля' : 'Ввести полученный код'} →</button>
+        <p>${explanation} Новый код пока запрашивать не нужно.</p>
+        <button class="accent" data-sheet-action="viewer-resume-login">${password ? 'Продолжить ввод пароля' : email ? 'Продолжить проверку email' : 'Ввести полученный код'} →</button>
       </div>
     `;
   }
@@ -2210,6 +2215,51 @@
         <button data-sheet-action="viewer-back-setup">Назад</button>
       </div>
     `);
+  }
+
+  function viewerEmailSetupSheet(reused = false) {
+    openSheet(`
+      <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM · ПОЧТА</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Email</span><span>3 · Код</span></div>
+      <h2>Telegram запрашивает email для входа</h2>
+      <p>${reused ? 'Сохранили начатую проверку.' : 'Telegram потребовал дополнительно подтвердить адрес почты.'} Введи свой email только в VETO — код подтверждения придёт на почту. Это отдельный этап Telegram, не сообщение от бота.</p>
+      <div class="auth-form"><div class="auth-field">
+        <label for="viewerLoginEmail">Твой email для входа в Telegram</label>
+        <input id="viewerLoginEmail" type="email" autocomplete="email" inputmode="email" placeholder="name@example.com" maxlength="254" />
+      </div></div>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-setup-email">Отправить код на email</button>
+        <button data-sheet-action="viewer-cancel-login">Отменить вход</button>
+      </div>
+    `);
+  }
+
+  function viewerEmailCodeSheet(pattern = '', reused = false) {
+    openSheet(`
+      <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM · EMAIL</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Email-код</span><span>3 · Telegram-код</span></div>
+      <h2>Проверь входящие письма</h2>
+      <p>${reused ? 'Продолжаем предыдущий запрос. Новый email-код не отправлялся.' : 'Telegram выбрал подтверждение через email.'}
+      ${pattern ? 'Письмо для ' + escapeHtml(pattern) + '.' : 'Проверь почту, привязанную к Telegram.'}
+      Введи код из письма в VETO. Не пересылай его в чат бота.</p>
+      <div class="auth-form"><div class="auth-field">
+        <label for="viewerEmailCode">Код из письма Telegram</label>
+        <input id="viewerEmailCode" type="text" inputmode="text" autocomplete="one-time-code" maxlength="12" placeholder="Код из email" />
+      </div></div>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-verify-email-code">Подтвердить email</button>
+        <button data-sheet-action="viewer-cancel-login">Отменить вход</button>
+      </div>
+    `);
+  }
+
+  function viewerShowLoginStage(data) {
+    if (data?.stage === 'email_setup') viewerEmailSetupSheet(data?.reused === true);
+    else if (data?.stage === 'email_code') viewerEmailCodeSheet(data.emailPattern, data?.reused === true);
+    else if (['password','qr_password'].includes(data?.stage)) viewerPasswordSheet();
+    else viewerCodeSheet(data?.delivery || 'sms_or_other', data?.reused === true);
   }
 
   function viewerCodeSheet(delivery, reused = false) {
@@ -2953,8 +3003,7 @@
     if (action === 'viewer-resume-login') {
       const pending = viewerState.loginPending;
       if (pending && Date.parse(pending.expiresAt || '') > Date.now()) {
-        if (['password', 'qr_password'].includes(pending.stage)) viewerPasswordSheet();
-        else viewerCodeSheet('telegram_app');
+        viewerShowLoginStage(pending);
       } else {
         await refreshViewerSync({ silent: true });
         connectionHelpSheet();
@@ -3064,7 +3113,27 @@
         }
         const data = await viewerApi('send_code', { phone }, null);
         viewerPendingPhone = phone;
-        viewerCodeSheet(data.delivery, data.reused === true);
+        viewerShowLoginStage(data);
+      });
+      return;
+    }
+    if (action === 'viewer-setup-email') {
+      const email = ($('viewerLoginEmail')?.value || '').trim();
+      await runViewerAuthAction(actionTarget, async () => {
+        if (!/^[^\\s@]{1,64}@[^\\s@]{1,190}\\.[^\\s@]{2,30}$/.test(email))
+          throw new Error('Проверь адрес email');
+        const data = await viewerApi('setup_email', { email }, null);
+        viewerShowLoginStage(data);
+      });
+      return;
+    }
+    if (action === 'viewer-verify-email-code') {
+      const code = ($('viewerEmailCode')?.value || '').trim();
+      await runViewerAuthAction(actionTarget, async () => {
+        if (!/^[a-zA-Z0-9]{3,12}$/.test(code))
+          throw new Error('Проверь код из письма Telegram');
+        const data = await viewerApi('verify_email_code', { code }, null);
+        viewerShowLoginStage(data);
       });
       return;
     }
