@@ -21,6 +21,8 @@ import {
 } from '../lib/viewer-sync-store.js';
 import {
   beginUserAuth,
+  beginUserEmailSetup,
+  verifyUserEmailCode,
   verifyUserCode,
   verifyUserPassword,
   revokeUserSession,
@@ -413,7 +415,7 @@ export default async function handler(req, res) {
       const expiry = Date.parse(loginChallenge?.expires_at || '');
       const loginPending = Number.isFinite(expiry)
         && expiry > Date.now()
-        && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage)
+        && ['code', 'email_setup', 'email_code', 'password', 'qr_password'].includes(loginChallenge?.stage)
         ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString() }
         : null;
 
@@ -534,13 +536,15 @@ export default async function handler(req, res) {
       const existing = await getAuthChallenge(userId);
       const expiresAt = Date.parse(existing?.expires_at || '');
       if (existing && Number.isFinite(expiresAt) && expiresAt > Date.now()) {
-        if (existing.stage === 'code') {
+        if (['code','email_setup','email_code'].includes(existing.stage)) {
           const pending = await openJson(existing.challenge_ciphertext, `auth:${userId}`);
           if (pending?.phone === requestedPhone) {
             res.status(200).json({
               ok: true,
-              stage: 'code',
-              delivery: pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+              stage: existing.stage,
+              delivery: pending.delivery || (pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other'),
+              emailPattern: existing.stage === 'email_code'
+                ? String(pending.emailPattern || '').slice(0,100) : undefined,
               reused: true,
               expiresAt: new Date(expiresAt).toISOString(),
             });
@@ -575,24 +579,77 @@ export default async function handler(req, res) {
         return;
       }
 
+      // Telegram selects the delivery mechanism. Do not mislabel email-based
+      // challenges as SMS; that made valid logins impossible to complete.
       const auth = await beginUserAuth(requestedPhone);
+      const stage = auth.delivery === 'email_setup' ? 'email_setup'
+        : auth.delivery === 'email' ? 'email_code' : 'code';
       const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
       await saveAuthChallenge({
         telegram_user_id: userId,
         challenge_ciphertext: payload,
-        stage: 'code',
+        stage,
         created_at: now.toISOString(),
         expires_at: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
-
+      await recordActivityEvent(userId,'auth.delivery_selected',{
+        delivery:auth.delivery,
+        stage,
+        // Never record a phone number, code, hash, email or MTProto session.
+      }).catch(() => {});
       res.status(200).json({
         ok: true,
-        stage: 'code',
-        delivery: auth.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+        stage,
+        delivery: auth.delivery,
+        emailPattern: stage === 'email_code' ? auth.emailPattern : undefined,
         reused: false,
         expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
+      return;
+    }
+
+    if (action === 'setup_email') {
+      const challenge = await getAuthChallenge(userId);
+      if (!challenge || challenge.stage !== 'email_setup' ||
+          Date.parse(challenge.expires_at || '') < Date.now()) {
+        res.status(410).json({ok:false,error:'Запрос истёк. Начни вход заново.'});
+        return;
+      }
+      const auth = await openJson(challenge.challenge_ciphertext,`auth:${userId}`);
+      const verified = await beginUserEmailSetup(auth,body.email);
+      const next = {...auth,session:verified.session,
+        delivery:'email',emailPattern:verified.emailPattern};
+      await saveAuthChallenge({
+        telegram_user_id:userId,
+        challenge_ciphertext:await sealJson(next,`auth:${userId}`),
+        stage:'email_code',
+        created_at:challenge.created_at,
+        expires_at:new Date(Date.now()+AUTH_TTL_MS).toISOString(),
+      });
+      res.status(200).json({ok:true,stage:'email_code',
+        delivery:'email',emailPattern:verified.emailPattern});
+      return;
+    }
+
+    if (action === 'verify_email_code') {
+      const challenge = await getAuthChallenge(userId);
+      if (!challenge || challenge.stage !== 'email_code' ||
+          Date.parse(challenge.expires_at || '') < Date.now()) {
+        res.status(410).json({ok:false,error:'Срок проверки email истёк. Начни вход заново.'});
+        return;
+      }
+      const auth = await openJson(challenge.challenge_ciphertext,`auth:${userId}`);
+      const verified = await verifyUserEmailCode(auth,body.code);
+      const next = {...auth,...verified,emailPattern:'',delivery:verified.delivery};
+      await saveAuthChallenge({
+        telegram_user_id:userId,
+        challenge_ciphertext:await sealJson(next,`auth:${userId}`),
+        stage:'code',
+        created_at:challenge.created_at,
+        expires_at:new Date(Date.now()+AUTH_TTL_MS).toISOString(),
+      });
+      res.status(200).json({ok:true,stage:'code',delivery:verified.delivery});
       return;
     }
 
