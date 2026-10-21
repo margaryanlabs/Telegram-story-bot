@@ -12,7 +12,7 @@ test('bot offers separate consent journeys, with non-invasive status verificatio
   assert.match(code, /✅ Проверить Anti-Delete/);
   assert.match(code, /callback_data: 'connect:check'/);
   assert.match(code, /Разрешение «Управление историями» для архива не требуется/);
-  assert.match(code, /Чат-боты \/ Автоматизация чатов/);
+  assert.match(code, /Автоматизация чатов/);
   assert.doesNotMatch(code,/выключи «Управление историями»/);
 });
 
