@@ -156,7 +156,7 @@
   }
 
   async function request(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
 
     const retryable = !action || action === 'list_messages' || action === 'versions';
     const attempts = retryable ? 2 : 1;
@@ -180,13 +180,13 @@
         const data = await response.json().catch(() => ({}));
         if (response.ok && data.ok) return data;
 
-        const error = new Error(data.error || 'VETO Inbox временно недоступен');
+        const error = new Error(data.error || 'Vetogram Inbox временно недоступен');
         error.status = response.status;
         lastError = error;
         if (!retryable || ![502,503,504].includes(response.status) || attempt === attempts - 1) throw error;
       } catch (error) {
         const normalized = error?.name === 'AbortError'
-          ? new Error('VETO Inbox отвечает слишком долго')
+          ? new Error('Vetogram Inbox отвечает слишком долго')
           : error;
         lastError = normalized;
         if (!retryable || attempt === attempts - 1) throw normalized;
@@ -195,7 +195,7 @@
       }
     }
 
-    throw lastError || new Error('VETO Inbox временно недоступен');
+    throw lastError || new Error('Vetogram Inbox временно недоступен');
   }
 
   function threadTotals(threads = privacyState.threads) {
@@ -372,7 +372,7 @@
 
 
   async function copyBusinessBotUsername() {
-    const username = '@Storypilotlab_bot';
+    const username = '@Vetotg_bot';
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(username);
@@ -411,7 +411,7 @@
     const verify = $('privacyBusinessVerifyButton');
     if (title) title.textContent = verified ? 'Telegram Business подключён' : 'Сохрани важное. Даже после удаления.';
     if (hint) hint.textContent = verified
-      ? 'Telegram подтвердил связь с ботом. Чтобы проверить реальную доставку, отправь новое сообщение из выбранного личного чата и найди его в VETO Inbox.'
+      ? 'Telegram подтвердил связь с ботом. Чтобы проверить реальную доставку, отправь новое сообщение из выбранного личного чата и найди его в Vetogram Inbox.'
       : connectionLive
         ? 'Связь с Telegram временно не подтверждена. Проверь подключение повторно.'
         : 'Один раз разреши VETO получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.';
@@ -440,7 +440,7 @@
       statusText.textContent = privacyState.loading
         ? 'Синхронизация'
         : privacyState.degraded
-          ? 'VETO Privacy восстанавливает связь'
+          ? 'Vetogram Privacy восстанавливает связь'
           : !privacyState.connection.loaded
             ? 'Проверяю Telegram'
             : complete && !connectionLive
@@ -448,7 +448,7 @@
               : operational
                 ? 'Настроено · проверь сообщением'
                 : enabled
-                  ? 'VETO Privacy частично активна'
+                  ? 'Vetogram Privacy частично активна'
                   : 'Режим выключен';
     }
 
@@ -456,10 +456,10 @@
       $('privacyHeroText').textContent = complete && connectionLive && !privacyState.connection.error
         ? 'Защита настроена. VETO может сохранять новые сообщения из выбранных личных чатов. Для проверки отправь тестовое сообщение — Telegram не раскрывает боту весь список разрешённых чатов.'
         : complete && privacyState.connection.loaded && !connectionLive
-          ? 'VETO Privacy настроена, но Telegram Business ещё не подключён. Добавь бота ниже — настройки защиты сохранятся.'
+          ? 'Vetogram Privacy настроена, но Telegram Business ещё не подключён. Добавь бота ниже — настройки защиты сохранятся.'
             : enabled
-            ? 'Часть защиты уже включена. Можно включить всю VETO Privacy одной кнопкой.'
-            : 'Включи VETO Privacy одной кнопкой — дальше всё работает автоматически.';
+            ? 'Часть защиты уже включена. Можно включить всю Vetogram Privacy одной кнопкой.'
+            : 'Включи Vetogram Privacy одной кнопкой — дальше всё работает автоматически.';
     }
 
     const enableAll = $('privacyEnableAllButton');
@@ -515,7 +515,7 @@
         ? 'Бот связан. В Telegram выбери личные чаты и отправь тестовое сообщение — право отмечать прочитанным для архива не нужно.'
         : connectionLive
           ? 'Проверка соединения временно недоступна. Повтори попытку, не меняя разрешения.'
-          : 'VETO Privacy сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
+          : 'Vetogram Privacy сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
     }
     if (accessAction) {
       accessAction.textContent = connectionLive ? 'Проверить' : 'Настроить';
@@ -547,7 +547,7 @@
         : summary.watch > 0
           ? `${summary.watch} диалог(а) стоит проверить`
           : 'Срочных сигналов нет',
-      detail: 'VETO Telegram использует только доступные Telegram-события и объяснимые правила.',
+      detail: 'Vetogram использует только доступные Telegram-события и объяснимые правила.',
       primaryChatId: '',
       primaryAction: 'archive',
       reasons: [],
@@ -669,16 +669,16 @@
       empty.classList.toggle('show', visible.length === 0);
       if ($('privacyEmptyTitle')) {
         $('privacyEmptyTitle').textContent = !enabled
-          ? 'VETO Privacy ещё не включена'
+          ? 'Vetogram Privacy ещё не включена'
           : (privacyState.filter === 'deleted' ? privacyState.deletedFeed.length : privacyState.threads.length) && !visible.length
             ? 'Ничего не найдено'
             : privacyState.filter === 'deleted'
               ? 'Удалённых сообщений пока нет'
-              : 'VETO Inbox пока пуст';
+              : 'Vetogram Inbox пока пуст';
       }
       if ($('privacyEmptyText')) {
         $('privacyEmptyText').textContent = !enabled
-          ? 'Нажми «Включить VETO Privacy» — дальше новые события будут сохраняться автоматически.'
+          ? 'Нажми «Включить Vetogram Privacy» — дальше новые события будут сохраняться автоматически.'
           : (privacyState.filter === 'deleted' ? privacyState.deletedFeed.length : privacyState.threads.length) && !visible.length
             ? 'Измени поиск или фильтр.'
             : privacyState.filter === 'deleted'
@@ -835,7 +835,7 @@
       privacyState.smartBrief = data.smartBrief || privacyState.smartBrief;
       privacyState.lastTotalMessages = threadTotals().messages;
       render();
-      if (!quiet) toast('VETO Privacy настройки сохранены');
+      if (!quiet) toast('Vetogram Privacy настройки сохранены');
       return true;
     } catch (error) {
       privacyState.settings = previous;
@@ -971,7 +971,7 @@
   function threadModeLabel(mode) {
     if (mode === 'deleted') return 'Удалённые';
     if (mode === 'edited') return 'Изменённые';
-    if (mode === 'focus') return 'VETO Focus';
+    if (mode === 'focus') return 'Vetogram Focus';
     return 'Все сообщения';
   }
 
@@ -1035,7 +1035,7 @@
               ].filter(Boolean).join(' · '))}</small>
             </button>` : ''}
           <footer>
-            ${focused ? '<span class="focus">VETO Focus</span>' : ''}
+            ${focused ? '<span class="focus">Vetogram Focus</span>' : ''}
             ${deleted ? '<span class="deleted">Удалено в Telegram</span>' : ''}
             ${mediaArchived ? '<span class="vault">Media Vault</span>' : ''}
             ${deleted && hasMedia && !mediaArchived ? '<span class="warn">Медиа может зависеть от Telegram</span>' : ''}
@@ -1056,13 +1056,13 @@
 
     openSheet(`
       <div class="privacy-sheet-head">
-        <div><span class="kicker">${mode === 'focus' ? 'VETO FOCUS' : 'VETO Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
+        <div><span class="kicker">${mode === 'focus' ? 'VETO FOCUS' : 'Vetogram Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
         <div class="privacy-sheet-head-actions">
           <button class="mini-chip" type="button" data-privacy-close="1">← Список</button>
           <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
         </div>
       </div>
-      <p>Архивная копия. VETO Telegram не вызывает readBusinessMessage при просмотре этого экрана.</p>
+      <p>Архивная копия. Vetogram не вызывает readBusinessMessage при просмотре этого экрана.</p>
       ${focusNote}
       <div class="ghost-thread-modes">
         <button type="button" class="${mode === 'all' ? 'active' : ''}" data-privacy-thread-mode="all">Все <b>${(messages || []).length}</b></button>
@@ -1161,7 +1161,7 @@
       openSheet(`
         <span class="kicker">Edit History</span>
         <h2>История сообщения</h2>
-        <p>Здесь только версии, которые VETO Telegram реально получил после включения Edit History.</p>
+        <p>Здесь только версии, которые Vetogram реально получил после включения Edit History.</p>
         <div class="privacy-version-list">${body || '<div class="intel-empty">Предыдущих версий нет.</div>'}</div>
         <div class="sheet-actions">
           <button class="accent" data-privacy-back="1">Назад</button>
@@ -1217,7 +1217,7 @@
       openSheet(`
         <span class="kicker">VETO Media</span>
         <h2>${escapeHtml(fileName || (type === 'photo' ? 'Фото' : 'Вложение'))}</h2>
-        <p>Медиа загружено через авторизованный VETO Telegram proxy. Прямая Telegram file-id в браузер не отдаётся.</p>
+        <p>Медиа загружено через авторизованный Vetogram proxy. Прямая Telegram file-id в браузер не отдаётся.</p>
         <div class="privacy-media-preview-wrap">${body}</div>
         <div class="sheet-actions">
           <button class="accent" data-privacy-back="1">Назад</button>
@@ -1284,7 +1284,7 @@
     openSheet(`
       <span class="kicker">VETO PRIVACY · ПОДКЛЮЧЕНИЕ В 2 ШАГА</span>
       <h2>Какие переписки защищать?</h2>
-      <p>StoryLab подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
+      <p>Vetogram подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
       <fieldset class="veto-business-scope-options">
         <legend>Охват Anti-Delete</legend>
         <label><input type="radio" name="vetoBusinessScope" value="all-private" checked><span><b>Все личные переписки</b><small>Существующие и будущие — без ограничения 12 чатами. Не включает группы, каналы и секретные чаты.</small></span></label>
@@ -1375,7 +1375,7 @@
           : 'Выбрано '+Number(result.selectedCount||chats.length)+' личных чатов.'}
           Telegram принял подключение; фактическую доставку ещё требуется проверить новым сообщением.</p>
         ${result.settingsUpdated ? '' : '<p>Настройки архива пока не обновились: включи Anti-Delete, Edit History и Inbox в Privacy Center.</p>'}
-        <div class="veto-consent-boundary"><strong>Как проверить</strong><p>1. Попроси собеседника отправить новое сообщение в выбранный чат.</p><p>2. Найди его в VETO Inbox.</p><p>3. Попроси собеседника удалить его и проверь сохранённую копию.</p></div>
+        <div class="veto-consent-boundary"><strong>Как проверить</strong><p>1. Попроси собеседника отправить новое сообщение в выбранный чат.</p><p>2. Найди его в Vetogram Inbox.</p><p>3. Попроси собеседника удалить его и проверь сохранённую копию.</p></div>
         <div class="sheet-actions">
           <button class="accent" data-business-close="1">Проверить в Privacy Center →</button>
         </div>
@@ -1405,7 +1405,7 @@
       <p>Для автоматического Anti-Delete нужно один раз подключить VETO как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
       <div class="veto-business-sheet-steps">
         <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
-        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Storypilotlab_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
+        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Vetotg_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
         <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты». Для архива не нужны права отвечать, удалять сообщения или отмечать их прочитанными.</span></section></div>
         <div><b>04</b><section><strong>Вернись в VETO</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
       </div>
@@ -1739,7 +1739,7 @@
     openSheet(`
       <span class="kicker">СОГЛАСИЕ НА КОПИРОВАНИЕ · 1 ЧАТ</span>
       <h2>${escapeHtml(chat.title)}</h2>
-      <p>Сохранить доступную историю <strong>этого одного чата</strong> в VETO Inbox? В отличие от удаления оригинала в Telegram, копия сохранится на выбранный срок.</p>
+      <p>Сохранить доступную историю <strong>этого одного чата</strong> в Vetogram Inbox? В отличие от удаления оригинала в Telegram, копия сохранится на выбранный срок.</p>
       <p>Сейчас срок: <b>${Number(privacyState.settings.retentionDays || 30)} дней</b>. Уже удалённые сообщения вернуть нельзя. Работаем порциями по 45 сообщений.</p>
       ${saved ? `<div class="ghost-backup-summary"><strong>Найдена незавершённая копия</strong><br>Ранее проверено ${saved.totalRead} сообщений. Можно продолжить с сохранённого места — уже скопированное не перезаписывается.</div>` : ''}
       <label class="ghost-backup-notify"><input type="checkbox" id="backupMedia" checked> Сохранять фотографии и небольшие документы в защищённый Media Vault (до 5 МБ, максимум 2 за порцию)</label>
@@ -1769,7 +1769,7 @@
         : backup.running ? 'Автоматически продолжаю копирование выбранного чата.' : 'Копирование приостановлено — всё уже сохранённое осталось в VETO.'}</p>
       ${error ? `<p class="privacy-archive-limit">${escapeHtml(error)}</p>` : ''}
       ${complete && backup.notifyCompletion
-        ? '<p>Уведомление: ' + (alerted === true ? 'доставлено в бот.' : 'не доставлено. Открой @Storypilotlab_bot и нажми Start.') + '</p>'
+        ? '<p>Уведомление: ' + (alerted === true ? 'доставлено в бот.' : 'не доставлено. Открой @Vetotg_bot и нажми Start.') + '</p>'
         : ''}
       <p class="privacy-archive-limit">Доступны только сообщения, которые Telegram сохранил и предоставил аккаунту. Старые медиа — отметки о вложениях, не файлы.</p>
       <div class="sheet-actions">
@@ -1887,7 +1887,7 @@
     const button = event.currentTarget;
     button.disabled=true;
     try { await request('test_alert'); toast('Тест доставлен в Telegram. Проверь чат с VETO.'); }
-    catch (error) { toast('Проверь бота @Storypilotlab_bot: '+error.message); }
+    catch (error) { toast('Проверь бота @Vetotg_bot: '+error.message); }
     finally {button.disabled=false;}
   });
   $('privacyDeletedMore')?.addEventListener('click', loadMoreDeletedFeed);
