@@ -483,14 +483,14 @@ export default async function handler(req, res) {
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
-    res.status(500).json({ ok: false, error: 'VETO Telegram is not configured' });
+    res.status(500).json({ ok: false, error: 'Vetogram is not configured' });
     return;
   }
 
   const initData = String(req.headers['x-telegram-init-data'] || '');
   const user = validateInitData(initData, token);
   if (!user) {
-    res.status(401).json({ ok: false, error: 'Open VETO Telegram inside Telegram' });
+    res.status(401).json({ ok: false, error: 'Open Vetogram inside Telegram' });
     return;
   }
 
@@ -823,7 +823,7 @@ export default async function handler(req, res) {
         return;
       }
       if (body.storyId && !knownStory && String(settings.lastStory || '') !== String(requestedId)) {
-        res.status(404).json({ ok: false, error: 'Этой Story нет в архиве VETO Telegram' });
+        res.status(404).json({ ok: false, error: 'Этой Story нет в архиве Vetogram' });
         return;
       }
       if (canDeleteBusiness) {
