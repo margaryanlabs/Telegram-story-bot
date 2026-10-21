@@ -414,7 +414,7 @@
       ? 'Telegram подтвердил связь с ботом. Чтобы проверить реальную доставку, отправь новое сообщение из выбранного личного чата и найди его в Vetogram Inbox.'
       : connectionLive
         ? 'Связь с Telegram временно не подтверждена. Проверь подключение повторно.'
-        : 'Один раз разреши VETO получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.';
+        : 'Один раз разреши Vetogram получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.';
     if (state) state.textContent = isPending ? 'Проверяю' : failed ? 'Проверить связь' : verified ? 'Бот подключён ✓' : 'Один раз';
     if (steps) steps.hidden = verified;
     if (verify) {
@@ -454,7 +454,7 @@
 
     if ($('privacyHeroText')) {
       $('privacyHeroText').textContent = complete && connectionLive && !privacyState.connection.error
-        ? 'Защита настроена. VETO может сохранять новые сообщения из выбранных личных чатов. Для проверки отправь тестовое сообщение — Telegram не раскрывает боту весь список разрешённых чатов.'
+        ? 'Защита настроена. Vetogram может сохранять новые сообщения из выбранных личных чатов. Для проверки отправь тестовое сообщение — Telegram не раскрывает боту весь список разрешённых чатов.'
         : complete && privacyState.connection.loaded && !connectionLive
           ? 'Vetogram Privacy настроена, но Telegram Business ещё не подключён. Добавь бота ниже — настройки защиты сохранятся.'
             : enabled
@@ -557,7 +557,7 @@
       briefCard.classList.remove('action','watch','clear');
       briefCard.classList.add(['action','watch','clear'].includes(String(brief.status)) ? String(brief.status) : 'clear');
     }
-    if ($('smartBriefTitle')) $('smartBriefTitle').textContent = brief.title || 'VETO Brief';
+    if ($('smartBriefTitle')) $('smartBriefTitle').textContent = brief.title || 'Vetogram Brief';
     if ($('smartBriefDetail')) $('smartBriefDetail').textContent = brief.detail || '';
     if ($('smartBriefStatus')) {
       $('smartBriefStatus').textContent = brief.status === 'action'
@@ -861,10 +861,10 @@
         loadTelegramConnection({ silent:true }),
       ]);
       if (!privacyState.connection.live) {
-        toast('Защита включена. Осталось разрешить VETO получать сообщения в Telegram Business.');
+        toast('Защита включена. Осталось разрешить Vetogram получать сообщения в Telegram Business.');
         privacyBusinessGuideSheet();
       } else {
-        toast('VETO настроена. Отправь тестовое сообщение из выбранного чата, чтобы проверить получение.');
+        toast('Vetogram настроена. Отправь тестовое сообщение из выбранного чата, чтобы проверить получение.');
       }
     }
   }
@@ -1056,7 +1056,7 @@
 
     openSheet(`
       <div class="privacy-sheet-head">
-        <div><span class="kicker">${mode === 'focus' ? 'VETO FOCUS' : 'Vetogram Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
+        <div><span class="kicker">${mode === 'focus' ? 'Vetogram FOCUS' : 'Vetogram Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
         <div class="privacy-sheet-head-actions">
           <button class="mini-chip" type="button" data-privacy-close="1">← Список</button>
           <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
@@ -1199,7 +1199,7 @@
       let body = '';
 
       if (type === 'photo' || blob.type.startsWith('image/')) {
-        body = `<img class="privacy-media-preview-image" src="${url}" alt="VETO media" />`;
+        body = `<img class="privacy-media-preview-image" src="${url}" alt="Vetogram media" />`;
       } else if (['video','animation','video_note'].includes(type) || blob.type.startsWith('video/')) {
         body = `<video class="privacy-media-preview-video" src="${url}" controls playsinline autoplay></video>`;
       } else if (['voice','audio'].includes(type) || blob.type.startsWith('audio/')) {
@@ -1215,7 +1215,7 @@
       }
 
       openSheet(`
-        <span class="kicker">VETO Media</span>
+        <span class="kicker">Vetogram Media</span>
         <h2>${escapeHtml(fileName || (type === 'photo' ? 'Фото' : 'Вложение'))}</h2>
         <p>Медиа загружено через авторизованный Vetogram proxy. Прямая Telegram file-id в браузер не отдаётся.</p>
         <div class="privacy-media-preview-wrap">${body}</div>
@@ -1235,7 +1235,7 @@
 
 
   async function businessWizardRequest(action, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой VETO из Telegram, чтобы подтвердить аккаунт');
+    if (!tg?.initData) throw new Error('Открой Vetogram из Telegram, чтобы подтвердить аккаунт');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 27000);
     try {
@@ -1261,8 +1261,8 @@
     const state = String(result.state || '');
     if (state === 'storylab') {
       openSheet(`
-        <span class="kicker">VETO · УЖЕ ПОДКЛЮЧЕНО</span><h2>Business-бот активен</h2>
-        <p>Telegram подтвердил, что VETO уже подключён. Мы не перезаписываем выбранные чаты и другие разрешения автоматически.</p>
+        <span class="kicker">Vetogram · УЖЕ ПОДКЛЮЧЕНО</span><h2>Business-бот активен</h2>
+        <p>Telegram подтвердил, что Vetogram уже подключён. Мы не перезаписываем выбранные чаты и другие разрешения автоматически.</p>
         <p>Для изменения списка открой Telegram → Настройки → Для бизнеса → Чат-боты. Отправь тестовое сообщение из разрешённого чата, чтобы проверить реальный архив.</p>
         <div class="sheet-actions"><button class="accent" data-business-close="1">Понятно</button></div>
       `);
@@ -1271,7 +1271,7 @@
     if (state === 'other_bot') {
       openSheet(`
         <span class="kicker">ПРИВАТНОСТЬ · КОНФЛИКТ</span><h2>У тебя уже подключён другой Business-бот</h2>
-        <p>Telegram допускает одного Business-бота на аккаунт. VETO не отключит и не заменит другого бота без твоего решения.</p>
+        <p>Telegram допускает одного Business-бота на аккаунт. Vetogram не отключит и не заменит другого бота без твоего решения.</p>
         <p>Если хочешь сменить бота, сделай это самостоятельно в Telegram → Для бизнеса → Чат-боты. Или используй резервную копию выбранной переписки без Business.</p>
         <div class="sheet-actions">
           <button class="accent" data-business-backup="1">Резервная копия без Business</button>
@@ -1282,7 +1282,7 @@
     }
     const chats = Array.isArray(result.chats) ? result.chats : [];
     openSheet(`
-      <span class="kicker">VETO PRIVACY · ПОДКЛЮЧЕНИЕ В 2 ШАГА</span>
+      <span class="kicker">Vetogram PRIVACY · ПОДКЛЮЧЕНИЕ В 2 ШАГА</span>
       <h2>Какие переписки защищать?</h2>
       <p>Vetogram подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
       <fieldset class="veto-business-scope-options">
@@ -1317,15 +1317,15 @@
   }
 
   async function openBusinessWizard() {
-    openSheet('<span class="kicker">VETO PRIVACY</span><h2>Проверяю твой Telegram…</h2><p>Ищем только личные диалоги. Никакие сообщения пока не копируем и разрешения не меняем.</p>');
+    openSheet('<span class="kicker">Vetogram PRIVACY</span><h2>Проверяю твой Telegram…</h2><p>Ищем только личные диалоги. Никакие сообщения пока не копируем и разрешения не меняем.</p>');
     try {
       const result = await businessWizardRequest('prepare');
       renderBusinessWizardPicker(result);
     } catch (error) {
       openSheet(`
-        <span class="kicker">VETO · ПОДКЛЮЧЕНИЕ</span><h2>Нужно подключить свой Telegram</h2>
+        <span class="kicker">Vetogram · ПОДКЛЮЧЕНИЕ</span><h2>Нужно подключить свой Telegram</h2>
         <p>${escapeHtml(error.message)}</p>
-        <p>Чтобы выбрать разрешённые чаты прямо в VETO, сначала авторизуй собственную сессию через номер + код или QR. Код вводится только в интерфейсе входа.</p>
+        <p>Чтобы выбрать разрешённые чаты прямо в Vetogram, сначала авторизуй собственную сессию через номер + код или QR. Код вводится только в интерфейсе входа.</p>
         <div class="sheet-actions">
           ${error.needsSession ? '<button class="accent" data-business-account="1">Подключить мой Telegram →</button>' : '<button class="accent" data-business-retry="1">Повторить проверку →</button>'}
           <button data-business-manual="1">Подключить вручную</button>
@@ -1368,8 +1368,8 @@
       });
       await Promise.allSettled([loadTelegramConnection({silent:true}),refresh({silent:true})]);
       openSheet(`
-        <span class="kicker">VETO PRIVACY · ЗАПРОС ПРИНЯТ</span>
-        <h2>Telegram подключил VETO</h2>
+        <span class="kicker">Vetogram PRIVACY · ЗАПРОС ПРИНЯТ</span>
+        <h2>Telegram подключил Vetogram</h2>
         <p>${result.scope === 'all-current-and-future-private'
           ? 'Разрешён охват всех существующих и будущих личных переписок (но не групп, каналов или секретных чатов).'
           : 'Выбрано '+Number(result.selectedCount||chats.length)+' личных чатов.'}
@@ -1385,7 +1385,7 @@
       // A Telegram RPC may succeed even when its HTTP response times out.
       // Never auto-resend a consent write: ask the user to recheck state.
       openSheet(`
-        <span class="kicker">VETO · ПРОВЕРКА</span><h2>Проверь состояние подключения</h2>
+        <span class="kicker">Vetogram · ПРОВЕРКА</span><h2>Проверь состояние подключения</h2>
         <p>${escapeHtml(error.message)}</p>
         <p>Не подключаем автоматически ещё раз: Telegram мог уже принять запрос. Сначала запросим его текущий статус.</p>
         <div class="sheet-actions">
@@ -1400,16 +1400,16 @@
   function privacyBusinessGuideSheet() {
     const linked = Boolean(privacyState.connection.live);
     openSheet(`
-      <span class="kicker">VETO · ЛИЧНЫЕ ПЕРЕПИСКИ</span>
+      <span class="kicker">Vetogram · ЛИЧНЫЕ ПЕРЕПИСКИ</span>
       <h2>${linked ? 'Осталось проверить разрешения' : 'Один шаг — и переписки под защитой'}</h2>
-      <p>Для автоматического Anti-Delete нужно один раз подключить VETO как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
+      <p>Для автоматического Anti-Delete нужно один раз подключить Vetogram как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
       <div class="veto-business-sheet-steps">
         <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
         <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Vetotg_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
         <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты». Для архива не нужны права отвечать, удалять сообщения или отмечать их прочитанными.</span></section></div>
-        <div><b>04</b><section><strong>Вернись в VETO</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
+        <div><b>04</b><section><strong>Вернись в Vetogram</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
       </div>
-      <p class="privacy-archive-limit">Без Premium. Это не передаёт VETO старую переписку и не открывает секретные чаты. VETO сохраняет только разрешённые новые события, которые Telegram доставил после подключения, — удалённое ранее восстановить нельзя.</p>
+      <p class="privacy-archive-limit">Без Premium. Это не передаёт Vetogram старую переписку и не открывает секретные чаты. Vetogram сохраняет только разрешённые новые события, которые Telegram доставил после подключения, — удалённое ранее восстановить нельзя.</p>
       <div class="sheet-actions">
         <button class="accent" data-privacy-recheck-access="1">✓ Проверить подключение</button>
         <button data-privacy-close="1">Вернуться к чатам</button>
@@ -1418,7 +1418,7 @@
   }
 
   async function mediaRecoveryApi(action) {
-    if (!tg?.initData) throw new Error('Открой VETO внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),45000);
     try {
@@ -1440,17 +1440,17 @@
   }
 
   async function openVaultMediaRecovery() {
-    openSheet('<span class="kicker">VETO MEDIA VAULT · ПРОВЕРКА</span><h2>Проверяю сохранённые вложения…</h2><p>Проверяются только медиа, уже полученные твоим VETO через разрешённый Telegram Business-доступ.</p>');
+    openSheet('<span class="kicker">Vetogram MEDIA VAULT · ПРОВЕРКА</span><h2>Проверяю сохранённые вложения…</h2><p>Проверяются только медиа, уже полученные твоим Vetogram через разрешённый Telegram Business-доступ.</p>');
     try {
       const data=await mediaRecoveryApi('status');
       openSheet(`
-        <span class="kicker">VETO MEDIA VAULT · САМОПРОВЕРКА</span>
+        <span class="kicker">Vetogram MEDIA VAULT · САМОПРОВЕРКА</span>
         <h2>${data.pending ? 'Есть незавершённые копии' : 'Очередь медиа в порядке'}</h2>
         <div class="ghost-backup-progress"><strong>${Math.max(0,Number(data.pending||0))}</strong><span>медиафайлов ожидают повторной загрузки</span></div>
         <p>${escapeHtml(data.eligible===false
           ? 'Для сохранения будущих вложений через Telegram Business включи Anti-Delete и разреши боту доступ.'
           : data.pending
-            ? 'Telegram передал VETO ссылки на эти файлы, но не все копии оказались в защищённом Vault. Можно повторить попытку для трёх файлов.'
+            ? 'Telegram передал Vetogram ссылки на эти файлы, но не все копии оказались в защищённом Vault. Можно повторить попытку для трёх файлов.'
             : 'Нет зависших медиафайлов, для которых сейчас возможна повторная загрузка через Bot API.')}</p>
         <p class="privacy-archive-limit">Если Telegram уже удалил или отозвал исходный файл, восстановить его невозможно. Переписки и ранее сохранённые файлы при проверке не удаляются.</p>
         <div class="sheet-actions">
@@ -1461,7 +1461,7 @@
       `);
     } catch (error) {
       openSheet(`
-        <span class="kicker">VETO MEDIA VAULT</span><h2>Не удалось проверить</h2>
+        <span class="kicker">Vetogram MEDIA VAULT</span><h2>Не удалось проверить</h2>
         <p>${escapeHtml(error.message)}</p>
         <div class="sheet-actions"><button data-privacy-check-media="1">Проверить ещё раз</button><button data-privacy-close="1">Закрыть</button></div>
       `);
@@ -1473,7 +1473,7 @@
     try {
       const data=await mediaRecoveryApi('recover');
       openSheet(`
-        <span class="kicker">VETO MEDIA VAULT · РЕЗУЛЬТАТ</span>
+        <span class="kicker">Vetogram MEDIA VAULT · РЕЗУЛЬТАТ</span>
         <h2>${data.recovered>0?'Копии сохранены':'Проверка завершена'}</h2>
         <div class="ghost-backup-progress"><strong>${Number(data.recovered||0)}</strong><span>новых независимых медиа-копий</span></div>
         <p>Проверено: ${Number(data.attempted||0)} файлов. Не удалось загрузить: ${Number(data.unavailable||0)}.</p>
@@ -1491,7 +1491,7 @@
   }
 
   async function backupApi(action, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой VETO внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000);
     try {
@@ -1540,7 +1540,7 @@
   }
   function renderAllBackupProgress({error=''}={}) {
     openSheet(`
-      <span class="kicker">VETO · HISTORY QUEUE</span>
+      <span class="kicker">Vetogram · HISTORY QUEUE</span>
       <h2>${allBackup.index>=allBackup.total?'Очередь создана':'История личных чатов'}</h2>
       <p>${escapeHtml(error||allBackupProgressCopy())}</p>
       <div class="ghost-backup-progress"><strong>${allBackup.index} / ${allBackup.total}</strong><span>личных чатов поставлено в очередь</span></div>
@@ -1557,29 +1557,29 @@
     `);
   }
   async function openAllBackupWizard() {
-    openSheet('<span class="kicker">VETO · HISTORY</span><h2>Проверяю историю твоих чатов…</h2><p>Никакие сообщения или задачи пока не создаются.</p>');
+    openSheet('<span class="kicker">Vetogram · HISTORY</span><h2>Проверяю историю твоих чатов…</h2><p>Никакие сообщения или задачи пока не создаются.</p>');
     try {
       const info=await backupApi('background_all_preview');
       allBackup.total=Number(info.total||0);
       allBackup.index=Math.min(allBackup.total,rememberedAllBackupIndex());
       allBackup.stop=false;
       openSheet(`
-        <span class="kicker">VETO PRIVATE · ОТДЕЛЬНОЕ СОГЛАСИЕ</span>
+        <span class="kicker">Vetogram PRIVATE · ОТДЕЛЬНОЕ СОГЛАСИЕ</span>
         <h2>Сохранить доступную историю личных переписок?</h2>
         <p>Найдено: <b>${allBackup.total}</b> обычных личных облачных диалогов. Сначала создадим очередь, затем по расписанию постепенно сохраним доступные сообщения. Для нового чата потребуется включить копирование отдельно или разрешить Business.</p>
         <div class="veto-consent-boundary">
           <strong>Что будет происходить</strong>
           <p>✓ Только твой авторизованный Telegram, только личные чаты; не более 500.</p>
-          <p>✓ Сохранение по заданному сроку хранения VETO, даже когда Mini App закрыт.</p>
+          <p>✓ Сохранение по заданному сроку хранения Vetogram, даже когда Mini App закрыт.</p>
           <p>✕ Не гарантирует мгновенный перехват удаления и не восстанавливает ранее удалённое.</p>
           <p>✕ Группы, каналы, боты и секретные чаты не входят в текущий режим копирования.</p>
         </div>
         ${allBackup.index>0 ? '<p>Есть незавершённая очередь. Продолжим с позиции '+allBackup.index+'.</p>' : ''}
         <label class="veto-consent-checkbox"><input type="checkbox" id="allBackupRetentionLong">
-          <span>Хранить доступную историю до 10 лет. Это изменит срок хранения всего VETO Private Archive, не только новых чатов.</span>
+          <span>Хранить доступную историю до 10 лет. Это изменит срок хранения всего Vetogram Private Archive, не только новых чатов.</span>
         </label>
         <label class="veto-consent-checkbox"><input type="checkbox" id="allBackupConsent">
-          <span>Я разрешаю VETO создать фоновые архивные задания для всех доступных обычных личных переписок моего аккаунта. Понимаю, что копии будут храниться на сервере.</span>
+          <span>Я разрешаю Vetogram создать фоновые архивные задания для всех доступных обычных личных переписок моего аккаунта. Понимаю, что копии будут храниться на сервере.</span>
         </label>
         <div class="sheet-actions">
           <button class="accent" data-backup-all-start="1" disabled>Создать фоновую очередь →</button>
@@ -1589,7 +1589,7 @@
       `);
     } catch(error) {
       openSheet(`
-        <span class="kicker">VETO · HISTORY</span><h2>Нужно подключение Telegram</h2>
+        <span class="kicker">Vetogram · HISTORY</span><h2>Нужно подключение Telegram</h2>
         <p>${escapeHtml(error.message)}</p>
         <div class="sheet-actions">
           <button class="accent" data-backup-connect="1">Подключить свой Telegram →</button>
@@ -1673,7 +1673,7 @@
     openSheet(`
       <span class="kicker">HISTORY BACKUP · ТОЛЬКО С ТВОЕГО СОГЛАСИЯ</span>
       <h2>Выбери личный чат</h2>
-      <p>VETO использует только твой подключённый Telegram-аккаунт. Содержимое выбранного чата сохраняется в VETO — отдельно от оригинала. Другие чаты без выбора не копируются.</p>
+      <p>Vetogram использует только твой подключённый Telegram-аккаунт. Содержимое выбранного чата сохраняется в Vetogram — отдельно от оригинала. Другие чаты без выбора не копируются.</p>
       <div class="ghost-backup-summary">Хранение: <b>${Number(privacyState.settings.retentionDays || 30)} дней</b>.
         Для старых сообщений рекомендуем установить 10 лет перед копированием.</div>
       <div class="sheet-actions"><button data-backup-retention-long="1">Продлить хранение до 10 лет</button></div>
@@ -1760,13 +1760,13 @@
     if (!chat) return;
     const paused = !backup.running && !complete;
     openSheet(`
-      <span class="kicker">VETO PRIVATE ARCHIVE · ${complete ? 'ГОТОВО' : paused ? 'ПАУЗА' : 'КОПИРОВАНИЕ'}</span>
+      <span class="kicker">Vetogram PRIVATE ARCHIVE · ${complete ? 'ГОТОВО' : paused ? 'ПАУЗА' : 'КОПИРОВАНИЕ'}</span>
       <h2>${escapeHtml(chat.title)}</h2>
       <div class="ghost-backup-progress"><strong>${backup.totalSaved}</strong><span>новых сообщений сохранено · ${backup.totalMedia||0} медиафайлов</span></div>
       <p>Проверено: ${backup.totalRead} сообщений. ${complete
         ? 'Доступная история в пределах срока хранения скопирована.'
         : pageLimit ? 'Достигнут предел автоматической проверки. Можно запустить следующие 20 порций.'
-        : backup.running ? 'Автоматически продолжаю копирование выбранного чата.' : 'Копирование приостановлено — всё уже сохранённое осталось в VETO.'}</p>
+        : backup.running ? 'Автоматически продолжаю копирование выбранного чата.' : 'Копирование приостановлено — всё уже сохранённое осталось в Vetogram.'}</p>
       ${error ? `<p class="privacy-archive-limit">${escapeHtml(error)}</p>` : ''}
       ${complete && backup.notifyCompletion
         ? '<p>Уведомление: ' + (alerted === true ? 'доставлено в бот.' : 'не доставлено. Открой @Vetotg_bot и нажми Start.') + '</p>'
@@ -1816,7 +1816,7 @@
         // On a broken/looping server cursor, stop instead of fetching forever.
         if (!Number.isSafeInteger(backup.offsetId) || backup.offsetId <= 0
             || (cursor > 0 && backup.offsetId >= cursor)) {
-          throw new Error('Telegram вернул некорректную страницу. Ранее сохранённые сообщения остались в VETO.');
+          throw new Error('Telegram вернул некорректную страницу. Ранее сохранённые сообщения остались в Vetogram.');
         }
         cursor = backup.offsetId;
         rememberBackupCursor();
@@ -1839,18 +1839,18 @@
   }
 
   async function clearArchive() {
-    // Clearing a Telegram conversation and deleting VETO's independent archive
+    // Clearing a Telegram conversation and deleting Vetogram's independent archive
     // are separate actions. Use a typed second step to prevent accidental loss.
     openSheet(`
       <span class="kicker">БЕЗВОЗВРАТНОЕ УДАЛЕНИЕ</span>
-      <h2>Удалить сохранённые копии VETO?</h2>
-      <p>Будут удалены сохранённые сообщения, копии удалений и доступные медиа из VETO. Очистка беседы в обычном Telegram ЭТОГО НЕ ДЕЛАЕТ.</p>
-      <p class="privacy-archive-limit"><strong>Это нельзя отменить.</strong> Если цель — очистить оригинальный Telegram-чат, просто закрой это окно. VETO-архив останется.</p>
+      <h2>Удалить сохранённые копии Vetogram?</h2>
+      <p>Будут удалены сохранённые сообщения, копии удалений и доступные медиа из Vetogram. Очистка беседы в обычном Telegram ЭТОГО НЕ ДЕЛАЕТ.</p>
+      <p class="privacy-archive-limit"><strong>Это нельзя отменить.</strong> Если цель — очистить оригинальный Telegram-чат, просто закрой это окно. Vetogram-архив останется.</p>
       <label class="privacy-danger-input">Для подтверждения введи УДАЛИТЬ
         <input id="privacyConfirmDelete" type="text" autocomplete="off" autocapitalize="characters" placeholder="УДАЛИТЬ" />
       </label>
       <div class="sheet-actions">
-        <button class="ghost-danger" data-privacy-confirm-clear="1" disabled>Удалить архив VETO навсегда</button>
+        <button class="ghost-danger" data-privacy-confirm-clear="1" disabled>Удалить архив Vetogram навсегда</button>
         <button data-privacy-close="1">Оставить копии</button>
       </div>
     `);
@@ -1886,7 +1886,7 @@
   $('privacyTestNotificationButton')?.addEventListener('click', async event => {
     const button = event.currentTarget;
     button.disabled=true;
-    try { await request('test_alert'); toast('Тест доставлен в Telegram. Проверь чат с VETO.'); }
+    try { await request('test_alert'); toast('Тест доставлен в Telegram. Проверь чат с Vetogram.'); }
     catch (error) { toast('Проверь бота @Vetotg_bot: '+error.message); }
     finally {button.disabled=false;}
   });
@@ -2158,7 +2158,7 @@
         privacyState.deletedFeedLoaded = true;
         privacyState.lastTotalMessages = 0;
         closeSheet(); render();
-        toast('Архив VETO удалён по твоему подтверждению');
+        toast('Архив Vetogram удалён по твоему подтверждению');
       } catch (error) {
         toast(error.message);
         confirmClear.disabled = false;
