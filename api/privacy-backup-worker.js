@@ -25,7 +25,7 @@ function authorized(req) {
 }
 async function notifyCompleted(ownerId, job, total,media) {
   if(!BOT||job.notify_completion===false)return false;
-  const url=new URL('https://telegram-story-bot-murex.vercel.app/studio.html');
+  const url=new URL('/studio.html',String(process.env.STORY_PILOT_BASE_URL||'https://veto-labsmargaryan-5386.vercel.app'));
   url.searchParams.set('screen','chats');
   url.searchParams.set('chat',String(job.chat_id));
   url.searchParams.set('v','20261016-veto-smart-inbox-v1');
