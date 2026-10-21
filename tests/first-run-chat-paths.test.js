@@ -11,11 +11,13 @@ test('Bot /start immediately presents two different chat permissions paths', () 
   assert.match(menu, /🚀 Открыть VETO/);
   assert.match(menu, /Мои чаты · подключить/);
   assert.match(menu, /Anti-Delete · настроить/);
+  assert.match(menu, /✅ Проверить Anti-Delete/);
+  assert.match(hook, /Разрешение «Управление историями» для архива не требуется/);
   assert.match(menu, /screen:'telegram'/);
   assert.match(menu, /screen:'privacy'/);
-  assert.match(home, /Подключи Telegram по номеру \+ коду/);
-  assert.match(home, /Anti-Delete включается отдельно/);
-  assert.match(home, /Удаления, произошедшие до подключения, вернуть нельзя/);
+  assert.match(home, /номер \+ код или QR/);
+  assert.match(home, /ANTI-DELETE/);
+  assert.match(home, /Удалённые до подключения сообщения восстановить нельзя/);
   assert.match(hook, /command === '\/start'/);
 });
 
