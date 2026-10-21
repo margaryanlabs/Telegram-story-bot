@@ -1,5 +1,6 @@
 import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { normalizeTelegramPhone } from '../lib/telegram-phone.js';
+import { codeResendWindow, safeCodeStatus } from '../lib/telegram-code-delivery.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError, safeTelegramAuthReason } from '../lib/telegram-auth-feedback.js';
 import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
@@ -22,6 +23,7 @@ import {
 } from '../lib/viewer-sync-store.js';
 import {
   beginUserAuth,
+  resendUserAuth,
   beginUserEmailSetup,
   verifyUserEmailCode,
   verifyUserCode,
@@ -427,11 +429,15 @@ export default async function handler(req, res) {
       // closes while the owner copies it, allow continuing the existing challenge
       // instead of forcing another code request (which can hit FLOOD_WAIT).
       const expiry = Date.parse(loginChallenge?.expires_at || '');
-      const loginPending = Number.isFinite(expiry)
+      let loginPending = Number.isFinite(expiry)
         && expiry > Date.now()
         && ['code', 'email_setup', 'email_code', 'password', 'qr_password'].includes(loginChallenge?.stage)
         ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString() }
         : null;
+      if (loginPending?.stage === 'code') {
+        const saved = await openJson(loginChallenge.challenge_ciphertext, 'auth:' + userId).catch(() => null);
+        if (saved) loginPending = safeCodeStatus(saved, loginPending.expiresAt);
+      }
 
       res.status(200).json({
         ok: true,
@@ -543,7 +549,7 @@ export default async function handler(req, res) {
           type:row.eventType,
           at:row.occurredAt,
           ...(allowedReasons.has(row?.payload?.reason)?{reason:row.payload.reason}:{}),
-          ...(['telegram_app','email','email_setup','sms_or_other'].includes(row?.payload?.delivery)
+          ...(['telegram_app','email','email_setup','sms_or_other','sms','call','flash_call','missed_call','fragment','other'].includes(row?.payload?.delivery)
             ? {delivery:row.payload.delivery}:{}),
           ...(['code','email_code','email_setup'].includes(row?.payload?.stage)
             ? {stage:row.payload.stage}:{}),
@@ -580,6 +586,7 @@ export default async function handler(req, res) {
               ok: true,
               stage: existing.stage,
               delivery: pending.delivery || (pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other'),
+              ...(existing.stage === 'code' ? safeCodeStatus(pending, new Date(expiresAt).toISOString()) : {}),
               emailPattern: existing.stage === 'email_code'
                 ? String(pending.emailPattern || '').slice(0,100) : undefined,
               reused: true,
@@ -648,9 +655,63 @@ export default async function handler(req, res) {
         ok: true,
         stage,
         delivery: auth.delivery,
+        ...(stage === 'code'
+          ? safeCodeStatus(auth, new Date(now.getTime() + AUTH_TTL_MS).toISOString())
+          : {}),
         emailPattern: stage === 'email_code' ? auth.emailPattern : undefined,
         reused: false,
         expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
+      });
+      return;
+    }
+
+    if (action === 'resend_code') {
+      const challenge = await getAuthChallenge(userId);
+      const expiry = Date.parse(challenge?.expires_at || '');
+      if (challenge?.stage !== 'code' || !Number.isFinite(expiry) || expiry <= Date.now()) {
+        res.status(410).json({ ok: false, error: 'Срок действия запроса истёк. Начни подключение заново.' });
+        return;
+      }
+      const saved = await openJson(challenge.challenge_ciphertext, 'auth:' + userId);
+      const retry = codeResendWindow(saved);
+      if (!saved?.nextDelivery || retry.retryAfterSeconds === null) {
+        res.status(409).json({ ok: false, error: 'Telegram не разрешил другой способ доставки. Проверь официальный чат или войди через QR.' });
+        return;
+      }
+      if (!retry.allowed) {
+        res.setHeader('Retry-After', String(retry.retryAfterSeconds));
+        res.status(429).json({
+          ok: false,
+          error: 'Следующий способ доставки станет доступен после ожидания Telegram.',
+          retryAfterSeconds: retry.retryAfterSeconds,
+        });
+        return;
+      }
+      const renewed = await resendUserAuth(saved);
+      const nextExpiry = new Date(Date.now() + AUTH_TTL_MS).toISOString();
+      const nextStage = renewed.delivery === 'email_setup' ? 'email_setup'
+        : renewed.delivery === 'email' ? 'email_code' : 'code';
+      await saveAuthChallenge({
+        telegram_user_id: userId,
+        challenge_ciphertext: await sealJson(renewed, 'auth:' + userId),
+        stage: nextStage,
+        created_at: challenge.created_at,
+        expires_at: nextExpiry,
+      });
+      await recordActivityEvent(userId, 'auth.delivery_selected', {
+        route: 'resend',
+        delivery: renewed.delivery,
+        stage: nextStage,
+      }).catch(() => {});
+      res.status(200).json({
+        ok: true,
+        stage: nextStage,
+        ...(nextStage === 'code' ? safeCodeStatus(renewed, nextExpiry) : {}),
+        delivery: renewed.delivery,
+        emailPattern: nextStage === 'email_code' ? renewed.emailPattern : undefined,
+        expiresAt: nextExpiry,
+        reused: false,
+        resent: true,
       });
       return;
     }
