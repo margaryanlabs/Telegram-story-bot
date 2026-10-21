@@ -241,7 +241,7 @@
   async function richRequest(action,payload={}){
     resetOwner();
     const signed=String(tg?.initData||'');
-    if(!signed)throw new Error('Открой StoryLab внутри Telegram');
+    if(!signed)throw new Error('Открой Vetogram внутри Telegram');
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),45000);
     try {
@@ -1435,7 +1435,7 @@
       wrapper.appendChild(video);
     }
     const link=document.createElement('a');
-    link.href=href;link.download=(archive?'telegram-veto-':'storylab-attachment-')+key;
+    link.href=href;link.download=(archive?'telegram-veto-':'vetogram-attachment-')+key;
     link.textContent=archive?'Сохранить копию файла ↓':'Скачать вложение ↓';
     wrapper.appendChild(link);
     const slot=document.createElement('div');
