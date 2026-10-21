@@ -77,3 +77,12 @@ test('Mini App has real channel labels, timer, retry and QR fallback, without sh
     'Войти через QR',
   ]) assert.ok(app.includes(piece), 'Missing auth UI: ' + piece);
 });
+
+test('Phone numbers retain country code and digits; malformed regex regression is blocked', () => {
+  const api = source('api/viewer-sync.js');
+  assert.ok(api.includes(String.raw`replace(/[^+\\d]/g, '')`));
+  assert.ok(api.includes(String.raw`/^\\+\\d{7,15}$/.test(requestedPhone)`));
+  const normalized = '+374 (91) 123-456'.replace(/[^+\d]/g, '');
+  assert.equal(normalized, '+37491123456');
+  assert.equal(/^\+\d{7,15}$/.test(normalized), true);
+});
