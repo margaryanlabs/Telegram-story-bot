@@ -554,7 +554,7 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
     const sender = event.direction === 'outgoing' ? 'Вы' : (event.sender || event.chatTitle || 'Telegram user');
     const preview = String(event.preview || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
     const chat = event.chatTitle && event.chatTitle !== sender ? ` · чат «${String(event.chatTitle).slice(0,60)}»` : '';
-    return `• Сообщение от ${sender}${chat}: ${preview}`;
+    return `• ${sender}: ${preview}${chat}`;
   });
 
   const extra = stored.length > visible.length
