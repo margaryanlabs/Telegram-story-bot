@@ -756,7 +756,7 @@ export default async function handler(req, res) {
         created_at:challenge.created_at,
         expires_at:new Date(Date.now()+AUTH_TTL_MS).toISOString(),
       });
-      res.status(200).json({ok:true,stage:'code',delivery:verified.delivery});
+      res.status(200).json({ok:true,...safeCodeStatus(next, new Date(Date.now() + AUTH_TTL_MS).toISOString())});
       return;
     }
 
