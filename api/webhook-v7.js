@@ -331,7 +331,7 @@ function connectText(settings, live = null) {
   if (settings.bc && live !== false) {
     return '✓ Telegram Business-бот подключён.\n\n'
       + '↶ Anti-Delete: разреши боту выбранные личные переписки в Telegram → Настройки → Telegram для бизнеса → Чат-боты. Для проверки отправь из такого чата НОВОЕ сообщение и посмотри в Vetogram Inbox.\n\n'
-      + '💬 Живые чаты в VETO открываются отдельно через свой номер + код или QR.\n\n'
+      + '💬 Живые чаты в Vetogram открываются отдельно через свой номер + код или QR.\n\n'
       + (settings.canStories ? '📸 Stories: управление тоже разрешено.' : '📸 Разрешение на Stories необязательно для архива.');
   }
 
@@ -342,10 +342,10 @@ function connectText(settings, live = null) {
 
 function howToText(settings) {
   if (!settings.bc || !settings.canStories) {
-    return '◉ Как работает Vetogram\n\n1. Открываешь Mini App и подключаешь свой Telegram через QR или номер.\n2. VETO хранит только зашифрованную пользовательскую сессию после успешного входа.\n3. Через Account Link работают Stories и Intelligence.\n4. Telegram Business подключается отдельно и только если нужны Anti-Delete, Edit History или Smart Inbox.\n5. В Connection Center всегда видно, какой доступ реально активен.\n\nОсновной вход больше не требует Telegram Business.';
+    return '◉ Как работает Vetogram\n\n1. Открываешь Mini App и подключаешь свой Telegram через QR или номер.\n2. Vetogram хранит только зашифрованную пользовательскую сессию после успешного входа.\n3. Через Account Link работают Stories и Intelligence.\n4. Telegram Business подключается отдельно и только если нужны Anti-Delete, Edit History или Smart Inbox.\n5. В Connection Center всегда видно, какой доступ реально активен.\n\nОсновной вход больше не требует Telegram Business.';
   }
 
-  return `◉ Vetogram\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n🛡 Privacy: открой Mini App → Privacy; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: VETO archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
+  return `◉ Vetogram\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n🛡 Privacy: открой Mini App → Privacy; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: Vetogram archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
 }
 
 async function editPanel(token, chatId, messageId, text, settings, origin = '') {
@@ -549,11 +549,11 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
     : '';
   const unseenCount = Math.max(0, Number(deletedMessageCount || 0) - stored.length);
   const unseenNote = unseenCount && stored.length
-    ? `\n\n⚠ Для ${unseenCount} ${unseenCount === 1 ? 'удалённого сообщения' : 'удалённых сообщений'} копии в VETO Vault нет. Восстановить их содержимое задним числом нельзя.`
+    ? `\n\n⚠ Для ${unseenCount} ${unseenCount === 1 ? 'удалённого сообщения' : 'удалённых сообщений'} копии в Vetogram Vault нет. Восстановить их содержимое задним числом нельзя.`
     : '';
   const copyNote = stored.length
-    ? 'Копия доступных сообщений сохранена в VETO Vault.'
-    : 'Telegram сообщил об удалении. У VETO нет ранее сохранённой копии содержания.';
+    ? 'Копия доступных сообщений сохранена в Vetogram Vault.'
+    : 'Telegram сообщил об удалении. У Vetogram нет ранее сохранённой копии содержания.';
 
   const mediaResults = Array.isArray(mediaRecoveryResults) ? mediaRecoveryResults : [];
   const mediaRecovered = mediaResults.filter(item => item?.archived).length;
@@ -596,7 +596,7 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings
   const sender = row.sender_display_name || (row.sender_username ? `@${row.sender_username}` : null) || row.chat_title || 'Telegram user';
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в VETO Vault.`,
+    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в Vetogram Vault.`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -1176,9 +1176,9 @@ export default async function handler(req, res) {
           await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.', messageId);
         }
       } else if (action === 'view:live-chats') {
-        await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой VETO Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
+        await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой Vetogram Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
       } else if (action === 'view:archive-guide') {
-        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Vetotg_bot и выбери личные переписки. Затем VETO Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
+        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Vetotg_bot и выбери личные переписки. Затем Vetogram Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);
@@ -1339,7 +1339,7 @@ export default async function handler(req, res) {
         chatId,
         origin,
         'studio',
-        '✦ VETO Creator Studio\n\nСоздавай custom emoji, sticker packs и бренд-ассеты из prompt или своего логотипа.',
+        '✦ Vetogram Creator Studio\n\nСоздавай custom emoji, sticker packs и бренд-ассеты из prompt или своего логотипа.',
         '✦ Открыть Creator Studio',
       );
       res.status(200).json({ ok: true, screen: 'studio' });
