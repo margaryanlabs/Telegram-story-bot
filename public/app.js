@@ -2037,7 +2037,8 @@
         <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Telegram → Настройки → Telegram для бизнеса → Чат-боты. В некоторых версиях: Аккаунт → Автоматизация чатов.</span></div>
         <div class="sheet-item"><strong>2 · Добавь @vetotg_bot</strong><span>Скопируй имя бота и вставь его в Telegram → Чат-боты. Выбери только нужные личные чаты.</span></div>
         <div class="sheet-item"><strong>3 · Выбери личные чаты</strong><span>Включи «Только выбранные чаты» и права для сообщений; остальные разрешения не нужны для архива. Секретные чаты не поддерживаются.</span></div>
-        <div class="sheet-item"><strong>4 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
+        <div class="sheet-item"><strong>4 · Stories — дополнительное право</strong><span>Хочешь публиковать, менять и удалять Stories через Business-бота? Включи «Управление историями». Для Anti-Delete и обычного просмотра Stories оно не требуется.</span></div>
+        <div class="sheet-item"><strong>5 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="business-copy-name">Скопировать @vetotg_bot</button>
@@ -2175,13 +2176,13 @@
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="active">1 · Номер</span><span>2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Введи номер Telegram</h2>
-      <p>Укажи тот номер, на который зарегистрирован твой Telegram. Мы попросим Telegram отправить код подтверждения.</p>
+      <p>Подключай только <strong>свой</strong> Telegram: аккаунт с этим номером должен совпадать с аккаунтом, из которого ты открыл @vetotg_bot. Для друга открой VETO с его собственного Telegram — подключение чужих аккаунтов запрещено.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
           <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 / +374 / +971…" value="${escapeHtml(viewerPendingPhone)}" />
         </div>
-        <div class="auth-help">Международный формат, начиная с +. Проверь официальный чат «Telegram» с синей галочкой во всех своих активных устройствах. SMS может не прийти — способ доставки выбирает Telegram.</div>
+        <div class="auth-help">Формат +374… или другой международный. Код может прийти в официальный чат «Telegram» на другом устройстве, на email входа либо по SMS — способ выбирает Telegram. Некоторые сторонние входы не поддерживают SMS. Никогда не отправляй код боту или другому человеку.</div>
       </div>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
@@ -2196,7 +2197,7 @@
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Теперь введи код из Telegram</h2>
-      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте VETO. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
+      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Проверь официальный чат «Telegram» с синей галочкой на всех устройствах и почту, привязанную к входу, если Telegram её настроил. Это не чат @vetotg_bot. SMS может быть недоступен для сторонних клиентов. Возвращайся сюда без нового запроса.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2219,7 +2220,9 @@
       <div class="sheet-list">
         <div class="sheet-item"><strong>1 · Проверь официальный чат «Telegram»</strong><span>Открой поиск Telegram, введи Telegram и найди сервисный аккаунт с синей галочкой. Это не чат нашего бота и не раздел SMS.</span></div>
         <div class="sheet-item"><strong>2 · Проверь другие свои устройства</strong><span>Telegram нередко присылает код на уже авторизованный телефон или компьютер вместо SMS.</span></div>
-        <div class="sheet-item"><strong>3 · Не запрашивай код много раз</strong><span>Повторные запросы могут аннулировать предыдущий код и вызвать ограничение Telegram. Если есть второй экран, попробуй QR-вход.</span></div>
+        <div class="sheet-item"><strong>3 · Проверь почту и метод доставки</strong><span>Telegram может выбрать код на email или другой способ, а SMS для сторонних приложений иногда недоступен.</span></div>
+        <div class="sheet-item"><strong>4 · Проверь чей аккаунт открыт</strong><span>Открывай @vetotg_bot из Telegram того же человека, чей номер подключаешь. Из своего Mini App чужой номер подключить нельзя.</span></div>
+        <div class="sheet-item"><strong>5 · Не запрашивай код много раз</strong><span>Telegram может временно ограничить попытки. Если есть второй экран, используй QR этого же аккаунта; не проси друга прислать код.</span></div>
       </div>
       <p class="auth-security-note">Никогда не пересылай код другим людям. VETO не умеет доставить код вручную: способ выбирает Telegram.</p>
       <div class="sheet-actions">
