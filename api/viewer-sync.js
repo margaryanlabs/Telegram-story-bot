@@ -10,6 +10,7 @@ import {
   getViewerSession,
   upsertViewerSession,
   recordActivityEvent,
+  listActivityEvents,
   deleteViewerSession,
   getAuthChallenge,
   saveAuthChallenge,
@@ -525,6 +526,29 @@ export default async function handler(req, res) {
 
       const registered = await registerRecentStories(userId, body.stories);
       res.status(200).json({ ok: true, registered });
+      return;
+    }
+
+    if (action === 'auth_diagnostics') {
+      // Logged-in Telegram Mini App owner only: read only privacy-safe enums
+      // from the security event ledger, never return the phone or OTP.
+      const rows = await listActivityEvents(userId, 40);
+      const types = new Set(['auth.send_code_attempt','auth.delivery_selected','auth.send_code_failed']);
+      const allowedReasons=new Set(['RATE_LIMIT','DELIVERY_UNAVAILABLE','APP_CONFIGURATION',
+        'EMAIL_VERIFICATION','UNSUPPORTED_TELEGRAM_STEP','APP_LOGIN_RESTRICTED',
+        'PHONE_INVALID','CONNECTIVITY','STORAGE','UNCLASSIFIED']);
+      const events=(Array.isArray(rows)?rows:[])
+        .filter(row=>types.has(row?.eventType)).slice(0,8)
+        .map(row=>({
+          type:row.eventType,
+          at:row.occurredAt,
+          ...(allowedReasons.has(row?.payload?.reason)?{reason:row.payload.reason}:{}),
+          ...(['telegram_app','email','email_setup','sms_or_other'].includes(row?.payload?.delivery)
+            ? {delivery:row.payload.delivery}:{}),
+          ...(['code','email_code','email_setup'].includes(row?.payload?.stage)
+            ? {stage:row.payload.stage}:{}),
+        }));
+      res.status(200).json({ok:true,events});
       return;
     }
 
