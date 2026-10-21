@@ -553,7 +553,8 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
   const lines = visible.map(event => {
     const sender = event.direction === 'outgoing' ? 'Вы' : (event.sender || event.chatTitle || 'Telegram user');
     const preview = String(event.preview || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
-    return `• ${sender}: ${preview}`;
+    const chat = event.chatTitle && event.chatTitle !== sender ? ` · чат «${String(event.chatTitle).slice(0,60)}»` : '';
+    return `• Сообщение от ${sender}${chat}: ${preview}`;
   });
 
   const extra = stored.length > visible.length
@@ -577,7 +578,7 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
 
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `👻 Anti-Delete\n\nTelegram сообщил об удалении ${Number(deletedMessageCount || stored.length)} сообщени${Number(deletedMessageCount || stored.length) === 1 ? 'я' : 'й'}.\n${lines.join('\n')}${extra}\n\n${copyNote}${unseenNote}${mediaStatus}`,
+    text: `👻 VETO · Anti-Delete\n🕒 Время фиксации: ${new Date().toLocaleString('ru-RU', { timeZone: 'UTC' })} UTC\n\nTelegram сообщил об удалении ${Number(deletedMessageCount || stored.length)} сообщени${Number(deletedMessageCount || stored.length) === 1 ? 'я' : 'й'}.\n${lines.join('\n')}${extra}\n\n${copyNote}${unseenNote}${mediaStatus}`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -608,7 +609,7 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings
   const sender = row.sender_display_name || (row.sender_username ? `@${row.sender_username}` : null) || row.chat_title || 'Telegram user';
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в VETO Vault.`,
+    text: `✏️ VETO · Edit History\n\n${sender} изменил сообщение${row.chat_title ? ` в чате «${String(row.chat_title).slice(0,60)}»` : ''}:\n${ghostMessagePreview(row)}\n\nДоступные предыдущие версии сохранены в VETO Vault.`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
