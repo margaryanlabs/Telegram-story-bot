@@ -217,10 +217,12 @@ export default async function handler(req, res) {
         { command: 'deleted', description: '↶ Последние удалённые сообщения' },
         { command: 'edits', description: '≋ История изменённых сообщений' },
         { command: 'stories', description: '📸 Stories и приватность' },
-        { command: 'studio', description: '✦ Emoji, stickers и brand packs' },
+        { command: 'studio', description: '✦ Creator Studio · Brand Packs скоро' },
         { command: 'sharepack', description: '↗ Проверить и поделиться emoji pack' },
         { command: 'viewers', description: '👁 Intelligence' },
         { command: 'status', description: '📊 Connection Center' },
+        { command: 'alerts', description: '🔔 Уведомления: удаления, правки, Stories' },
+        { command: 'privacy', description: '🔒 Политика конфиденциальности' },
         { command: 'help', description: '❔ Возможности и помощь' },
       ],
     });
