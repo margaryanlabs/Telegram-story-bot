@@ -2181,7 +2181,6 @@
       ['+44','🇬🇧 Великобритания · +44'],
       ['+49','🇩🇪 Германия · +49'],
       ['+33','🇫🇷 Франция · +33'],
-      ['+7','🇰🇿 Казахстан · +7'],
     ];
     const existingPhone = String(viewerPendingPhone || '').replace(/[()\\s-]/g,'');
     const currentCode = [...dialCodes].sort((a,b)=>b[0].length-a[0].length)
