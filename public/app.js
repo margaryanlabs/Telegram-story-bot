@@ -3120,7 +3120,7 @@
     if (action === 'viewer-setup-email') {
       const email = ($('viewerLoginEmail')?.value || '').trim();
       await runViewerAuthAction(actionTarget, async () => {
-        if (!/^[^\\s@]{1,64}@[^\\s@]{1,190}\\.[^\\s@]{2,30}$/.test(email))
+        if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,30}$/.test(email))
           throw new Error('Проверь адрес email');
         const data = await viewerApi('setup_email', { email }, null);
         viewerShowLoginStage(data);
