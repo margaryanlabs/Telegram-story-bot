@@ -555,7 +555,7 @@
   }
 
   async function api(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
@@ -571,7 +571,7 @@
       timeoutMs: action === 'publish_story' ? 45000 : 15000,
     });
 
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить VETO Telegram');
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Vetogram');
 
     if (Array.isArray(data.activity)) {
       state.activity = data.activity;
@@ -609,7 +609,7 @@
   }
 
   async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
-    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
 
     const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
     const options = {
@@ -635,7 +635,7 @@
   }
 
   async function automationsApi(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой VETO Telegram внутри Telegram');
+    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
@@ -684,7 +684,7 @@
     }
     if (rule === 'watch_changes') {
       const actor = event.actorDisplayName
-        || (event.actorUsername ? '@' + event.actorUsername : 'VETO Watch');
+        || (event.actorUsername ? '@' + event.actorUsername : 'Vetogram Watch');
       return event.type === 'message.delete' ? `${actor} · deleted` : `${actor} · edited`;
     }
     if (rule === 'confirmed_viewer') {
@@ -818,7 +818,7 @@
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
       $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
-      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри VETO Telegram.';
+      $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Vetogram.';
     } else if (permission) {
       $('heroStatusPill').querySelector('span').textContent = 'Нужно разрешение';
       $('connectionIcon').className = 'connection-icon warn';
@@ -832,7 +832,7 @@
       $('connectionIcon').className = 'connection-icon';
       $('connectionIcon').textContent = '↗';
       $('connectionTitle').textContent = 'Подключи Telegram';
-      $('connectionText').textContent = 'Telegram ещё не подключён к VETO Telegram';
+      $('connectionText').textContent = 'Telegram ещё не подключён к Vetogram';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Ожидание';
     }
@@ -985,7 +985,7 @@
     } else if (connected) {
       const account = viewerState.session?.account || {};
       $('viewerSyncTitle').textContent = 'Deep Intelligence активен.';
-      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем VETO Telegram подтверждает доступную личность.';
+      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем Vetogram подтверждает доступную личность.';
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
       syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
@@ -1027,7 +1027,7 @@
     }
 
     if (!selectedViewerStory) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через VETO Telegram.</div>';
+      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Vetogram.</div>';
       return;
     }
 
@@ -1116,7 +1116,7 @@
               </div>
             </article>
           `).join('')
-        : '<div class="intel-empty">Пока недостаточно подтверждённых данных для выводов. VETO Telegram не будет заполнять этот блок догадками.</div>';
+        : '<div class="intel-empty">Пока недостаточно подтверждённых данных для выводов. Vetogram не будет заполнять этот блок догадками.</div>';
     }
 
     const timeline = intel?.latestTimeline || [];
@@ -1270,7 +1270,7 @@
     if (type === 'message.delete') {
       return {
         title: actor ? `${actor} удалил сообщение` : 'Сообщение удалено',
-        detail: chatTitle ? `${chatTitle} · сохранено в VETO Vault` : 'Сохранено в VETO Vault',
+        detail: chatTitle ? `${chatTitle} · сохранено в Vetogram Vault` : 'Сохранено в Vetogram Vault',
       };
     }
     if (type === 'message.edit') {
@@ -1329,7 +1329,7 @@
       };
     }
     return {
-      title: 'Событие VETO Telegram',
+      title: 'Событие Vetogram',
       detail: type || 'Activity',
     };
   }
@@ -1453,7 +1453,7 @@
     if ($('activationScore')) $('activationScore').textContent = `${completed}/2`;
     if ($('activationTitle')) {
       $('activationTitle').textContent = coreReady
-        ? 'VETO готов к работе'
+        ? 'Vetogram готов к работе'
         : !telegramReady ? 'Шаг 1 · Подключи Telegram' : 'Шаг 2 · Проверь первой Story';
     }
     if ($('activationText')) {
@@ -1528,7 +1528,7 @@
   // The Business-bot permission is an independent optional archive feature.
   window.VetoTelegramOpenAccountConnection = async () => {
     if (!tg?.initData) {
-      showToast('Открой VETO внутри своего Telegram');
+      showToast('Открой Vetogram внутри своего Telegram');
       return;
     }
     await refreshViewerSync({ silent:true });
@@ -1609,20 +1609,20 @@
 
   function privacyPromiseSheet() {
     openSheet(`
-      <span class="kicker">VETO PRIVACY PROMISE</span>
+      <span class="kicker">Vetogram PRIVACY PROMISE</span>
       <h2>Приватность без красивых обещаний</h2>
-      <p>VETO Telegram показывает, какой доступ реально выдан, и использует его только для функций, которые ты включил.</p>
+      <p>Vetogram показывает, какой доступ реально выдан, и использует его только для функций, которые ты включил.</p>
 
       <div class="veto-privacy-sheet-hero">
         <strong>Мы не превращаем твою переписку в рекламный профиль.</strong>
-        <span>Содержимое сообщений не продаётся рекламодателям и не используется для персонализации рекламы VETO.</span>
+        <span>Содержимое сообщений не продаётся рекламодателям и не используется для персонализации рекламы Vetogram.</span>
       </div>
 
       <div class="veto-privacy-facts">
         <div><i>01</i><div><strong>Что обрабатывается</strong><span>Для Anti‑Delete, Edit History и Smart Inbox сервер получает только те события и сообщения, к которым ты сам выдал Telegram‑доступ.</span></div></div>
-        <div><i>02</i><div><strong>Что может храниться</strong><span>Функции архива и восстановления требуют серверного хранения копий и версий. Если модуль выключен, VETO не должен притворяться, что он всё равно работает.</span></div></div>
+        <div><i>02</i><div><strong>Что может храниться</strong><span>Функции архива и восстановления требуют серверного хранения копий и версий. Если модуль выключен, Vetogram не должен притворяться, что он всё равно работает.</span></div></div>
         <div><i>03</i><div><strong>Код Telegram и 2FA</strong><span>Используются только во время подключения аккаунта и не сохраняются как пароль или одноразовый код.</span></div></div>
-        <div><i>04</i><div><strong>Ты контролируешь доступ</strong><span>Основную сессию можно отключить в VETO Security Center. Business‑доступ для Privacy можно отдельно отозвать в Telegram Business / Chatbots.</span></div></div>
+        <div><i>04</i><div><strong>Ты контролируешь доступ</strong><span>Основную сессию можно отключить в Vetogram Security Center. Business‑доступ для Privacy можно отдельно отозвать в Telegram Business / Chatbots.</span></div></div>
       </div>
 
       <div class="sheet-actions">
@@ -1637,8 +1637,8 @@
     stories: {
       kicker: 'STORIES',
       icon: '＋',
-      title: 'Публикуй Stories из VETO',
-      summary: 'Выбирай фото, подпись и аудиторию — VETO публикует Story от твоего Telegram‑аккаунта и проверяет приватность публикации.',
+      title: 'Публикуй Stories из Vetogram',
+      summary: 'Выбирай фото, подпись и аудиторию — Vetogram публикует Story от твоего Telegram‑аккаунта и проверяет приватность публикации.',
       benefit: 'Полезно, если хочешь быстро управлять Stories и точно понимать, кому они доступны.',
       access: 'Нужно основное подключение Telegram через номер + код или QR.',
       action: 'Открыть Stories',
@@ -1648,7 +1648,7 @@
       kicker: 'ПРОСМОТРЫ И АНАЛИТИКА',
       icon: '◉',
       title: 'Понимай аудиторию своих Stories',
-      summary: 'VETO собирает доступные Telegram данные по твоим собственным Stories и показывает просмотры, повторную аудиторию и изменения.',
+      summary: 'Vetogram собирает доступные Telegram данные по твоим собственным Stories и показывает просмотры, повторную аудиторию и изменения.',
       benefit: 'Полезно, чтобы видеть не просто цифру просмотров, а динамику аудитории.',
       access: 'Работает после основного подключения Telegram. Дополнительный Business‑доступ не нужен.',
       action: 'Открыть просмотры',
@@ -1658,7 +1658,7 @@
       kicker: 'PRIVACY',
       icon: '◌',
       title: 'Anti‑Delete, Edit History и Smart Inbox',
-      summary: 'Если ты сам разрешишь доступ к выбранным Business‑чатам, VETO сможет сохранять разрешённые события сообщений, версии изменений и медиа.',
+      summary: 'Если ты сам разрешишь доступ к выбранным Business‑чатам, Vetogram сможет сохранять разрешённые события сообщений, версии изменений и медиа.',
       benefit: 'Полезно, если тебе нужен приватный архив изменений и удалений в выбранных чатах.',
       access: 'Необязательно. Требует отдельного Telegram Business message access для выбранных чатов.',
       action: 'Открыть Privacy',
@@ -1668,7 +1668,7 @@
       kicker: 'CREATOR STUDIO',
       icon: '✦',
       title: 'Создавай Telegram‑материалы',
-      summary: 'Emoji, stickers и Brand Packs можно собирать и подготавливать прямо внутри VETO.',
+      summary: 'Emoji, stickers и Brand Packs можно собирать и подготавливать прямо внутри Vetogram.',
       benefit: 'Полезно для личного бренда, каналов и визуального оформления.',
       access: 'Для создания материалов дополнительный доступ к сообщениям не нужен.',
       action: 'Открыть Studio',
@@ -1688,7 +1688,7 @@
       kicker: 'AUTOMATIONS',
       icon: '⚡',
       title: 'Не проверяй всё вручную',
-      summary: 'VETO может отправлять сигналы о важных событиях: новых просмотрах, изменениях, удалениях и других доступных событиях.',
+      summary: 'Vetogram может отправлять сигналы о важных событиях: новых просмотрах, изменениях, удалениях и других доступных событиях.',
       benefit: 'Полезно, если хочешь получать только нужные уведомления без постоянной проверки приложения.',
       access: 'Каждая автоматизация работает только с теми источниками, которые ты сам подключил.',
       action: 'Открыть Automations',
@@ -1717,7 +1717,7 @@
 
   function allFeaturesSheet() {
     openSheet(`
-      <span class="kicker">ВОЗМОЖНОСТИ VETO</span>
+      <span class="kicker">ВОЗМОЖНОСТИ Vetogram</span>
       <h2>Что делает каждая функция</h2>
       <p>Нажми на функцию — покажу простыми словами, зачем она нужна и какой доступ требуется.</p>
       <div class="all-features-list">
@@ -1749,7 +1749,7 @@
     const lastError = String(session?.lastError || '').trim();
 
     openSheet(`
-      <span class="kicker">VETO SECURITY CENTER</span>
+      <span class="kicker">Vetogram SECURITY CENTER</span>
       <h2>${accountConnected ? 'Secure Account активен' : 'Контроль доступа'}</h2>
       <p>Здесь только реальные состояния. Коды входа и 2FA не сохраняются; сервер хранит зашифрованную Telegram‑сессию только после успешного подключения.</p>
       <div class="security-status-grid">
@@ -1813,7 +1813,7 @@
     openSheet(`
       <span class="kicker">AUTOMATION CENTER</span>
       <h2>Событие → правило → действие</h2>
-      <p>VETO Telegram реагирует только на нормализованные события и отправляет owner-only alerts. Никаких сообщений другим людям от твоего имени.</p>
+      <p>Vetogram реагирует только на нормализованные события и отправляет owner-only alerts. Никаких сообщений другим людям от твоего имени.</p>
 
       <div class="automation-presets">
         <button type="button" class="${automationPresetKey() === 'quiet' ? 'active' : ''}" data-sheet-action="automation-preset" data-automation-preset="quiet">
@@ -1940,7 +1940,7 @@
       <h2>${accountConnected ? 'Telegram подключён' : businessConnected ? 'Частичное подключение' : 'Telegram ещё не подключён'}</h2>
       <p>Здесь простыми словами показано, что сейчас работает. Дополнительный доступ к сообщениям не нужен для обычных Stories.</p>
       <div class="sheet-list connection-center-list">
-        <div class="sheet-item"><strong>VETO открыт внутри Telegram</strong><span>${tg?.initData ? '✓ Да' : '○ Открой Mini App из Telegram'}</span></div>
+        <div class="sheet-item"><strong>Vetogram открыт внутри Telegram</strong><span>${tg?.initData ? '✓ Да' : '○ Открой Mini App из Telegram'}</span></div>
         <div class="sheet-item"><strong>Основное подключение аккаунта</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Telegram подключён') : '○ Не подключено · номер + код или QR'}</span></div>
         <div class="sheet-item"><strong>Публикация Stories</strong><span>${storiesReady ? '✓ Готово' : '○ Станет доступно после подключения Telegram'}</span></div>
         <div class="sheet-item"><strong>Дополнительная Privacy</strong><span>${privacyPermission ? '✓ Доступ к выбранным Business‑чатам включён' : '○ Не включена · это нормально, функция необязательная'}</span></div>
@@ -1963,7 +1963,7 @@
     return `
       <div class="auth-resume-card">
         <strong>Ты уже начал подключение</strong>
-        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код запрошен у Telegram. Ищи его в официальном чате «Telegram» с синей галочкой, не в чате StoryLab. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
+        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код запрошен у Telegram. Ищи его в официальном чате «Telegram» с синей галочкой, не в чате Vetogram. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
         <button class="accent" data-sheet-action="viewer-resume-login">${password ? 'Продолжить ввод пароля' : 'Ввести полученный код'} →</button>
       </div>
     `;
@@ -1974,10 +1974,10 @@
       openSheet(`
         <span class="kicker">МОЙ TELEGRAM · ПРОВЕРКА АККАУНТА</span>
         <h2>Подключён другой Telegram-аккаунт</h2>
-        <p>Открой VETO в своём Telegram и подключи именно этот аккаунт. Для просмотра переписок нужен личный вход. Telegram Business отдельно и для чтения живых чатов не требуется.</p>
+        <p>Открой Vetogram в своём Telegram и подключи именно этот аккаунт. Для просмотра переписок нужен личный вход. Telegram Business отдельно и для чтения живых чатов не требуется.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>1 · Очистить неправильное подключение</strong><span>Это отключит только приватную VETO-сессию для данного аккаунта.</span></div>
-          <div class="sheet-item"><strong>2 · Подключиться заново</strong><span>Номер + код на этом телефоне; QR — если есть второй экран. Коды вводи только сам в VETO.</span></div>
+          <div class="sheet-item"><strong>1 · Очистить неправильное подключение</strong><span>Это отключит только приватную Vetogram-сессию для данного аккаунта.</span></div>
+          <div class="sheet-item"><strong>2 · Подключиться заново</strong><span>Номер + код на этом телефоне; QR — если есть второй экран. Коды вводи только сам в Vetogram.</span></div>
         </div>
         <div class="sheet-actions">
           <button class="accent" data-sheet-action="viewer-disconnect">Отключить чужой вход →</button>
@@ -2015,7 +2015,7 @@
 
       <div class="connection-what-next">
         <strong>Что будет после подключения?</strong>
-        <div><span>✓</span><p><b>Stories</b><small>сможешь публиковать Story из VETO</small></p></div>
+        <div><span>✓</span><p><b>Stories</b><small>сможешь публиковать Story из Vetogram</small></p></div>
         <div><span>✓</span><p><b>Просмотры</b><small>станет доступна аналитика твоих Stories</small></p></div>
         <div><span>✓</span><p><b>Privacy — отдельно</b><small>доступ к сообщениям не включается автоматически</small></p></div>
       </div>
@@ -2035,7 +2035,7 @@
       <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Premium не требуется.</p>
       <div class="sheet-list">
         <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
-        <div class="sheet-item"><strong>2 · Добавь VETO Telegram</strong><span>Технический username сейчас @Storypilotlab_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
+        <div class="sheet-item"><strong>2 · Добавь Vetogram</strong><span>Технический username сейчас @Vetotg_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
         <div class="sheet-item"><strong>3 · Выбери личные чаты</strong><span>Включи «Только выбранные чаты» и права для сообщений; остальные разрешения не нужны для архива. Секретные чаты не поддерживаются.</span></div>
         <div class="sheet-item"><strong>4 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
       </div>
@@ -2049,9 +2049,9 @@
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
-        <span class="kicker">VETO SECURE ACCOUNT</span>
+        <span class="kicker">Vetogram SECURE ACCOUNT</span>
         <h2>Защищённое подключение временно недоступно</h2>
-        <p>VETO Telegram не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
+        <p>Vetogram не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и последующее подтверждение просмотров уже встроены.</span></div>
           <div class="sheet-item"><strong>Приватное подключение</strong><span>Новое подключение создаётся только при подтверждённом защищённом хранении.</span></div>
@@ -2067,12 +2067,12 @@
     if (viewerState.session?.connected) {
       const account = viewerState.session.account || {};
       openSheet(`
-        <span class="kicker">VETO SECURE ACCOUNT</span>
+        <span class="kicker">Vetogram SECURE ACCOUNT</span>
         <h2>Telegram подключён</h2>
-        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} подключён через зашифрованную пользовательскую сессию. Она используется для функций аккаунта, которые ты запускаешь в VETO.</p>
+        <p>${account.username ? '@' + account.username : account.firstName || 'Telegram account'} подключён через зашифрованную пользовательскую сессию. Она используется для функций аккаунта, которые ты запускаешь в Vetogram.</p>
         <div class="sheet-list">
           <div class="sheet-item preference-item">
-            <span class="preference-copy"><strong>Новые просмотры</strong><span>Присылать уведомление, когда VETO подтверждает новый просмотр.</span></span>
+            <span class="preference-copy"><strong>Новые просмотры</strong><span>Присылать уведомление, когда Vetogram подтверждает новый просмотр.</span></span>
             <label class="switch">
               <input id="viewerNotifySwitch" type="checkbox" data-viewer-pref="notify" ${viewerState.session?.preferences?.notifyEnabled !== false ? 'checked' : ''} />
               <span></span>
@@ -2100,7 +2100,7 @@
       openSheet(`
         <span class="kicker">SECURITY</span>
         <h2>Новое подключение приостановлено</h2>
-        <p>VETO Telegram не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
+        <p>Vetogram не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Stories & Privacy</strong><span>Продолжают работать независимо.</span></div>
           <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
@@ -2195,7 +2195,7 @@
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Теперь введи код из Telegram</h2>
-      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте StoryLab. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
+      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте Vetogram. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2220,7 +2220,7 @@
         <div class="sheet-item"><strong>2 · Проверь другие свои устройства</strong><span>Telegram нередко присылает код на уже авторизованный телефон или компьютер вместо SMS.</span></div>
         <div class="sheet-item"><strong>3 · Не запрашивай код много раз</strong><span>Повторные запросы могут аннулировать предыдущий код и вызвать ограничение Telegram. Если есть второй экран, попробуй QR-вход.</span></div>
       </div>
-      <p class="auth-security-note">Никогда не пересылай код другим людям. StoryLab не умеет доставить код вручную: способ выбирает Telegram.</p>
+      <p class="auth-security-note">Никогда не пересылай код другим людям. Vetogram не умеет доставить код вручную: способ выбирает Telegram.</p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button>
         <button data-sheet-action="viewer-start-qr">Подключить через QR</button>
@@ -2234,7 +2234,7 @@
       <span class="kicker">ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="done">✓ Код</span><span class="active">3 · 2FA</span></div>
       <h2>У тебя включён 2FA‑пароль</h2>
-      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется VETO Telegram.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
+      <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Vetogram.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPassword">Telegram 2FA</label>
@@ -2253,7 +2253,7 @@
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ ЧЕРЕЗ QR</span>
       <h2>Отсканируй QR со второго экрана</h2>
-      <p>Открой Telegram на телефоне → Settings → Devices → Link Desktop Device и отсканируй QR. Если VETO открыт на этом же телефоне, проще вернуться и выбрать номер + код.</p>
+      <p>Открой Telegram на телефоне → Settings → Devices → Link Desktop Device и отсканируй QR. Если Vetogram открыт на этом же телефоне, проще вернуться и выбрать номер + код.</p>
       <div class="viewer-qr-card">
         <div class="viewer-qr-frame">
           <div class="viewer-qr-loader" id="viewerQrLoader">⌁</div>
@@ -2321,7 +2321,7 @@
 
   async function startViewerQrLogin() {
     if (!tg?.initData) {
-      showToast('Открой VETO Telegram внутри Telegram');
+      showToast('Открой Vetogram внутри Telegram');
       return;
     }
     if (viewerState.newConnectionsReady === false) {
@@ -2403,7 +2403,7 @@
     const history = (state.history || []).filter(item => !item.deleted).slice(0, 20);
     const items = history.length
       ? history.map(item => `<button data-viewer-story="${item.id}">Story #${item.id} · ${audienceLabel(item.audience)} · ${formatDate(item.ts)}</button>`).join('')
-      : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через VETO Telegram.</span></div>';
+      : '<div class="sheet-item"><strong>Нет Stories</strong><span>Сначала опубликуй Story через Vetogram.</span></div>';
 
     openSheet(`
       <span class="kicker">Viewers</span>
@@ -2540,7 +2540,7 @@
     openSheet(`
       <span class="kicker">Только выбранные</span>
       <h2>${state.selected?.length ? `${state.selected.length} пользователей` : 'Добавь людей'}</h2>
-      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из VETO Telegram.</p>
+      <p>Вставь @username через пробел, запятую или с новой строки. До 100 человек — без выхода из Vetogram.</p>
       <div class="people-input-wrap">
         <label for="selectedUsernames">Usernames <small id="selectedInputCount">${state.selected?.length || 0} / 100</small></label>
         <textarea id="selectedUsernames" data-people-input="selected" placeholder="@alex\n@maria">${state.selected?.length ? '@' + state.selected.join('\n@') : ''}</textarea>
@@ -2557,7 +2557,7 @@
     openSheet(`
       <span class="kicker">Исключения</span>
       <h2>${state.excluded?.length ? `${state.excluded.length} исключено` : 'Добавь исключения'}</h2>
-      <p>Вставь @username. Если выбран другой режим, VETO Telegram сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
+      <p>Вставь @username. Если выбран другой режим, Vetogram сам переключит аудиторию на «Контакты». Всё остаётся внутри приложения.</p>
       <div class="people-input-wrap">
         <label for="excludedUsernames">Usernames <small id="excludedInputCount">${state.excluded?.length || 0} / 100</small></label>
         <textarea id="excludedUsernames" data-people-input="excluded" placeholder="@alex\n@maria">${state.excluded?.length ? '@' + state.excluded.join('\n@') : ''}</textarea>
@@ -3230,7 +3230,7 @@
   window.addEventListener('unhandledrejection', event => {
     const message = event?.reason?.message || String(event?.reason || '');
     if (message) {
-      console.warn('VETO Telegram unhandled rejection', message);
+      console.warn('Vetogram unhandled rejection', message);
       showToast(message);
     }
   });
@@ -3238,7 +3238,7 @@
   window.addEventListener('error', event => {
     const message = event?.error?.message || event?.message || '';
     if (message) {
-      console.warn('VETO Telegram UI error', message);
+      console.warn('Vetogram UI error', message);
       showToast('Интерфейс восстановился после ошибки');
     }
   });
@@ -3265,6 +3265,6 @@
       }
     }, 30000);
   } else {
-    showToast('Открой VETO Telegram внутри Telegram для управления');
+    showToast('Открой Vetogram внутри Telegram для управления');
   }
 })();

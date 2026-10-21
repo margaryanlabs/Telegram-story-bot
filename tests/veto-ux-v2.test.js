@@ -46,11 +46,11 @@ test('bot setup pushes VETO Telegram identity to Telegram', () => {
   const setup = read('api/setup.js');
 
   assert.match(setup, /setMyName/);
-  assert.match(setup, /name: 'VETO Telegram'/);
+  assert.match(setup, /name: 'Vetogram'/);
   assert.match(setup, /setMyProfilePhoto/);
   assert.match(setup, /profilePhotoUpdated = await setVetoBotProfilePhoto\(token\)/);
   assert.match(setup, /veto-telegram\.jpg/);
   assert.match(setup, /getUserProfilePhotos/);
-  assert.match(setup, /const CONTROL_BUILD = '[0-9]{8}-veto-[^']+';/);
-  assert.match(setup, /brand: 'VETO Telegram v2'/);
+  assert.match(setup, /const CONTROL_BUILD = '[0-9]{8}-vetogram-[^']+';/);
+  assert.match(setup, /brand: 'Vetogram v2'/);
 });

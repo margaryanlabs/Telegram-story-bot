@@ -282,7 +282,7 @@ async function saveSettings(token, chatId, origin, settings) {
     chat_id: chatId,
     menu_button: {
       type: 'web_app',
-      text: 'VETO Telegram',
+      text: 'Vetogram',
       web_app: { url: url.toString() },
     },
   });
@@ -303,9 +303,9 @@ async function clearReplyKeyboard(token, chatId) {
 }
 
 function homeText(settings) {
-  const firstRun = '◉ VETO Telegram · выбери, что нужно\n\n'
+  const firstRun = '◉ Vetogram · выбери, что нужно\n\n'
     + '💬 ОТКРЫТЬ МОИ ЧАТЫ\nНажми «Мои чаты», подключи свой Telegram по номеру + коду или QR. Telegram Business не нужен.\n\n'
-    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @Storypilotlab_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Premium не требуется.\n\n'
+    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @Vetotg_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Premium не требуется.\n\n'
     + 'Разрешения выдаются в самом Telegram. Ранее удалённые сообщения восстановить нельзя.';
   if (!settings.bc) return firstRun;
 
@@ -324,28 +324,28 @@ function settingsText(settings, live = null) {
     ? (settings.canStories ? '✅ активно, Stories разрешены' : '⚠️ подключено, но без доступа к Stories')
     : '⚪ ID подключения ещё не получен';
   if (live === false) connection = '❌ неактивно';
-  return `📊 VETO Telegram\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n↶ Business для Anti-Delete: ${settings.bc ? '✓ бот подключён; проверь выбранные чаты тестовым сообщением' : '○ не подключён'}\nℹ Право «отмечать прочитанным»: ${settings.canReadMessages ? 'разрешено' : 'не выдано (для архива не нужно)'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
+  return `📊 Vetogram\n\n👁 Аудитория: ${audienceLabel(settings.audience, settings.selected)}\n🚫 Исключения: ${settings.excluded?.length ? settings.excluded.map(u => `@${u}`).join(', ') : 'нет'}\n🛡 Защита от пересылки/сохранения: ${settings.protect ? '✅ ВКЛ' : '❌ ВЫКЛ'}\n🔌 Telegram: ${connection}\n↶ Business для Anti-Delete: ${settings.bc ? '✓ бот подключён; проверь выбранные чаты тестовым сообщением' : '○ не подключён'}\nℹ Право «отмечать прочитанным»: ${settings.canReadMessages ? 'разрешено' : 'не выдано (для архива не нужно)'}\n🧠 Расширенная приватность: ${mtprotoConfigured() ? '✅ готова' : '❌ не настроена'}\n\nНастройки сохраняются для следующих Stories.`;
 }
 
 function connectText(settings, live = null) {
   if (settings.bc && live !== false) {
     return '✓ Telegram Business-бот подключён.\n\n'
-      + '↶ Anti-Delete: разреши боту выбранные личные переписки в Telegram → Настройки → Telegram для бизнеса → Чат-боты. Для проверки отправь из такого чата НОВОЕ сообщение и посмотри в VETO Inbox.\n\n'
-      + '💬 Живые чаты в VETO открываются отдельно через свой номер + код или QR.\n\n'
+      + '↶ Anti-Delete: разреши боту выбранные личные переписки в Telegram → Настройки → Telegram для бизнеса → Чат-боты. Для проверки отправь из такого чата НОВОЕ сообщение и посмотри в Vetogram Inbox.\n\n'
+      + '💬 Живые чаты в Vetogram открываются отдельно через свой номер + код или QR.\n\n'
       + (settings.canStories ? '📸 Stories: управление тоже разрешено.' : '📸 Разрешение на Stories необязательно для архива.');
   }
 
   return '💬 ЖИВЫЕ ЧАТЫ\nОткрой Mini App → «Мои чаты» → номер + код Telegram или QR. Business для этого не нужен.\n\n'
-    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @Storypilotlab_bot → выбери личные чаты.\n\n'
+    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @Vetotg_bot → выбери личные чаты.\n\n'
     + 'Можно пользоваться только одним способом или обоими. Не отправляй коды боту.';
 }
 
 function howToText(settings) {
   if (!settings.bc || !settings.canStories) {
-    return '◉ Как работает VETO Telegram\n\n1. Открываешь Mini App и подключаешь свой Telegram через QR или номер.\n2. VETO хранит только зашифрованную пользовательскую сессию после успешного входа.\n3. Через Account Link работают Stories и Intelligence.\n4. Telegram Business подключается отдельно и только если нужны Anti-Delete, Edit History или Smart Inbox.\n5. В Connection Center всегда видно, какой доступ реально активен.\n\nОсновной вход больше не требует Telegram Business.';
+    return '◉ Как работает Vetogram\n\n1. Открываешь Mini App и подключаешь свой Telegram через QR или номер.\n2. Vetogram хранит только зашифрованную пользовательскую сессию после успешного входа.\n3. Через Account Link работают Stories и Intelligence.\n4. Telegram Business подключается отдельно и только если нужны Anti-Delete, Edit History или Smart Inbox.\n5. В Connection Center всегда видно, какой доступ реально активен.\n\nОсновной вход больше не требует Telegram Business.';
   }
 
-  return `◉ VETO Telegram\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n🛡 Privacy: открой Mini App → Privacy; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: VETO archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
+  return `◉ Vetogram\n\n📸 Stories: выбери аудиторию и отправь фото или публикуй из Mini App.\n🛡 Privacy: открой Mini App → Privacy; нужен доступ к сообщениям в Telegram Business.\n👁 Intelligence: подключается отдельно для viewer analytics и alerts.\n💬 Chats: Vetogram archive, поиск, edits и deleted messages.\n\nСейчас аудитория Stories: ${audienceLabel(settings.audience, settings.selected)}.`;
 }
 
 async function editPanel(token, chatId, messageId, text, settings, origin = '') {
@@ -448,7 +448,7 @@ async function refreshConnection(token, chatId, origin, settings) {
   } catch (error) {
     // A temporary Telegram API failure is NOT proof that Business rights were
     // revoked. Clearing them here silently disabled Privacy and its archive.
-    console.warn('VETO Telegram Business verification deferred', error?.message || String(error));
+    console.warn('Vetogram Business verification deferred', error?.message || String(error));
     return {
       settings,
       live: Boolean(settings.bc),
@@ -489,7 +489,7 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
     console.warn('Durable Business connection sync skipped', error?.message || String(error));
   });
 
-  console.log('VETO Telegram business connection sync', {
+  console.log('Vetogram business connection sync', {
     chat_id: chatId,
     connection_present: Boolean(connection?.id),
     enabled: live,
@@ -501,7 +501,7 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
   if (notify) {
     const text = live
       ? connectText(next, true)
-      : '⚠️ VETO Telegram отключён от Telegram Business. Подключи бота снова, чтобы публиковать Stories.';
+      : '⚠️ Vetogram отключён от Telegram Business. Подключи бота снова, чтобы публиковать Stories.';
     await showFreshPanel(token, chatId, origin, next, text);
   }
 
@@ -549,18 +549,18 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
     : '';
   const unseenCount = Math.max(0, Number(deletedMessageCount || 0) - stored.length);
   const unseenNote = unseenCount && stored.length
-    ? `\n\n⚠ Для ${unseenCount} ${unseenCount === 1 ? 'удалённого сообщения' : 'удалённых сообщений'} копии в VETO Vault нет. Восстановить их содержимое задним числом нельзя.`
+    ? `\n\n⚠ Для ${unseenCount} ${unseenCount === 1 ? 'удалённого сообщения' : 'удалённых сообщений'} копии в Vetogram Vault нет. Восстановить их содержимое задним числом нельзя.`
     : '';
   const copyNote = stored.length
-    ? 'Копия доступных сообщений сохранена в VETO Vault.'
-    : 'Telegram сообщил об удалении. У VETO нет ранее сохранённой копии содержания.';
+    ? 'Копия доступных сообщений сохранена в Vetogram Vault.'
+    : 'Telegram сообщил об удалении. У Vetogram нет ранее сохранённой копии содержания.';
 
   const mediaResults = Array.isArray(mediaRecoveryResults) ? mediaRecoveryResults : [];
   const mediaRecovered = mediaResults.filter(item => item?.archived).length;
   const mediaStatus = mediaResults.length
     ? mediaRecovered === mediaResults.length
       ? `\n\n▣ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}`
-      : `\n\n⚠ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}. Текст и метаданные VETO Privacy всё равно сохранены.`
+      : `\n\n⚠ Media Vault: сохранено ${mediaRecovered}/${mediaResults.length}. Текст и метаданные Vetogram Privacy всё равно сохранены.`
     : '';
 
   await tg(token, 'sendMessage', {
@@ -596,7 +596,7 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings
   const sender = row.sender_display_name || (row.sender_username ? `@${row.sender_username}` : null) || row.chat_title || 'Telegram user';
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в VETO Vault.`,
+    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в Vetogram Vault.`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -722,7 +722,7 @@ async function resolveUsers(client, Api, usernames) {
       } catch (error) {
         const description = error?.errorMessage || error?.message || String(error);
         if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID|Не удалось найти/i.test(description)) {
-          console.warn('VETO Telegram skipped stale privacy username', { username });
+          console.warn('Vetogram skipped stale privacy username', { username });
           return { username, skipped: true };
         }
         throw error;
@@ -784,7 +784,7 @@ async function buildPrivacyRules(client, Api, audience, selected, excluded) {
     throw new Error(`Неизвестный режим аудитории: ${audience}`);
   }
 
-  console.log('VETO Telegram privacy rules built', {
+  console.log('Vetogram privacy rules built', {
     audience,
     rule_order: rules.map(rule => rule?.className || rule?.constructor?.name || 'unknown'),
     excluded_requested: excluded?.length || 0,
@@ -866,7 +866,7 @@ async function postPhotoStoryMtprotoWithRetry(...args) {
     return await postPhotoStoryMtproto(...args);
   } catch (error) {
     if (!isTransientMtprotoError(error)) throw error;
-    console.warn('VETO Telegram transient MTProto failure, retrying once', {
+    console.warn('Vetogram transient MTProto failure, retrying once', {
       error: error?.errorMessage || error?.message || String(error),
     });
     return postPhotoStoryMtproto(...args);
@@ -884,13 +884,13 @@ function friendlyError(description = '') {
   if (/STORY_SEND_FLOOD_WEEKLY/i.test(d)) return 'Достигнут недельный лимит Stories для этого аккаунта.';
   if (/STORY_SEND_FLOOD_MONTHLY/i.test(d)) return 'Достигнут месячный лимит Stories для этого аккаунта.';
   if (/STORY_SEND_FLOOD|FLOOD_WAIT/i.test(d)) return 'Telegram временно ограничил публикации. Нужно подождать до окончания лимита.';
-  if (/BUSINESS_CONNECTION_INVALID|Business connection is disabled/i.test(d)) return 'Подключение VETO Telegram устарело или отключено. Переподключи бота в «Автоматизация чатов».';
+  if (/BUSINESS_CONNECTION_INVALID|Business connection is disabled/i.test(d)) return 'Подключение Vetogram устарело или отключено. Переподключи бота в «Автоматизация чатов».';
   if (/can_manage_stories|Нет права/i.test(d)) return 'Нет разрешения «Управление историями». Включи его в «Автоматизация чатов».';
   if (/PHOTO_INVALID_DIMENSIONS|IMAGE_PROCESS_FAILED|Input buffer contains unsupported image format/i.test(d)) return 'Telegram не принял изображение. Попробуй JPG, PNG или WEBP.';
-  if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID/i.test(d)) return 'Один из сохранённых usernames больше не существует. VETO Telegram очистит такие записи при следующей публикации.';
+  if (/USERNAME_NOT_OCCUPIED|USERNAME_INVALID/i.test(d)) return 'Один из сохранённых usernames больше не существует. Vetogram очистит такие записи при следующей публикации.';
   if (/STORY_PRIVACY_INVALID|PRIVACY/i.test(d)) return 'Telegram не принял выбранную аудиторию. Попробуй заново выбрать людей.';
   if (/STORY_ID_INVALID|STORY_NOT_FOUND/i.test(d)) return 'Последняя Story уже удалена или больше недоступна.';
-  if (/BOT_METHOD_INVALID.*CanSendStory/i.test(d)) return 'Внутренняя проверка Telegram была недоступна для business-бота. VETO Telegram уже исправлен — отправь фото ещё раз.';
+  if (/BOT_METHOD_INVALID.*CanSendStory/i.test(d)) return 'Внутренняя проверка Telegram была недоступна для business-бота. Vetogram уже исправлен — отправь фото ещё раз.';
   if (/BOT_ACCESS_FORBIDDEN/i.test(d)) return 'Telegram запретил эту операцию через текущее Business-подключение.';
   return d;
 }
@@ -967,7 +967,7 @@ export default async function handler(req, res) {
         const connection = await tg(token, 'getBusinessConnection', { business_connection_id: activityConnectionId });
         await persistBusinessConnection(token, origin, connection, { notify: false });
       } catch (error) {
-        console.warn('VETO Telegram business activity recovery failed', error?.telegram || error?.message || error);
+        console.warn('Vetogram business activity recovery failed', error?.telegram || error?.message || error);
       }
     }
 
@@ -1014,13 +1014,13 @@ export default async function handler(req, res) {
             result.row,
             result.settings,
           ).catch(error => {
-            console.warn('VETO Telegram Ghost edit alert skipped', error?.message || error);
+            console.warn('Vetogram Ghost edit alert skipped', error?.message || error);
             return false;
           });
         }
       } catch (error) {
         // Report a transient archive failure so Telegram can safely redeliver.
-        console.warn('VETO Telegram privacy message capture skipped', {
+        console.warn('Vetogram privacy message capture skipped', {
           connection_id: connectionId || null,
           message_id: privacyBusinessMessage.message_id || null,
           error: error?.message || String(error),
@@ -1081,12 +1081,12 @@ export default async function handler(req, res) {
             result.mediaRecoveryResults,
             deleted.message_ids.length,
           ).catch(error => {
-            console.warn('VETO Telegram Ghost delete alert skipped', error?.message || error);
+            console.warn('Vetogram Ghost delete alert skipped', error?.message || error);
             return false;
           });
         }
       } catch (error) {
-        console.warn('VETO Telegram privacy delete capture skipped', {
+        console.warn('Vetogram privacy delete capture skipped', {
           connection_id: deleted.business_connection_id || null,
           chat_id: deleted.chat?.id || null,
           message_count: deleted.message_ids?.length || 0,
@@ -1157,7 +1157,7 @@ export default async function handler(req, res) {
         const current = refreshed.settings;
         const storyId = Number(current.lastStory);
         if (!refreshed.live || !current.bc) {
-          await showPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи VETO Telegram.', messageId);
+          await showPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Vetogram.', messageId);
         } else if (!Number.isInteger(storyId) || storyId <= 0) {
           await showPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.', messageId);
         } else {
@@ -1176,9 +1176,9 @@ export default async function handler(req, res) {
           await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.', messageId);
         }
       } else if (action === 'view:live-chats') {
-        await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой VETO Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
+        await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой Vetogram Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
       } else if (action === 'view:archive-guide') {
-        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Storypilotlab_bot и выбери личные переписки. Затем VETO Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
+        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Vetotg_bot и выбери личные переписки. Затем Vetogram Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);
@@ -1189,7 +1189,7 @@ export default async function handler(req, res) {
         } else if (refreshed.live) {
           await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
         } else {
-          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO Telegram пока не получил активный Business Connection.\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
+          await showPanel(token, chatId, origin, refreshed.settings, '⏳ Vetogram пока не получил активный Business Connection.\n\nЕсли @Vetotg_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
         }
       } else if (action === 'view:settings') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
@@ -1243,7 +1243,7 @@ export default async function handler(req, res) {
         chatId,
         origin,
         'privacy',
-        '↶ VETO Privacy · Anti-Delete\n\nАвтоматическое сохранение: Telegram → Настройки → Telegram для бизнеса → Чат-боты → @Storypilotlab_bot → выбери личные чаты.\n\nТакже можно вручную сохранить выбранный чат через личный Telegram-аккаунт. Старые удаления не восстановить.',
+        '↶ Vetogram Privacy · Anti-Delete\n\nАвтоматическое сохранение: Telegram → Настройки → Telegram для бизнеса → Чат-боты → @Vetotg_bot → выбери личные чаты.\n\nТакже можно вручную сохранить выбранный чат через личный Telegram-аккаунт. Старые удаления не восстановить.',
         '🛡 Открыть Privacy',
       );
       res.status(200).json({ ok: true, screen: 'privacy' });
@@ -1254,7 +1254,7 @@ export default async function handler(req, res) {
       const url = ghostAppUrl(origin, { screen:'chats', filter:'deleted' });
       await tg(token, 'sendMessage', {
         chat_id: chatId,
-        text: '↶ Удалённые сообщения\n\nОткрываю VETO Inbox сразу на сохранённых удалениях.',
+        text: '↶ Удалённые сообщения\n\nОткрываю Vetogram Inbox сразу на сохранённых удалениях.',
         reply_markup: { inline_keyboard: [[{ text:'↶ Открыть удалённые', web_app:{ url } }]] },
       });
       res.status(200).json({ ok: true, screen:'chats', filter:'deleted' });
@@ -1265,7 +1265,7 @@ export default async function handler(req, res) {
       const url = ghostAppUrl(origin, { screen:'chats', filter:'edited' });
       await tg(token, 'sendMessage', {
         chat_id: chatId,
-        text: '≋ Изменённые сообщения\n\nОткрываю VETO Inbox на сообщениях с сохранённой историей правок.',
+        text: '≋ Изменённые сообщения\n\nОткрываю Vetogram Inbox на сообщениях с сохранённой историей правок.',
         reply_markup: { inline_keyboard: [[{ text:'≋ Открыть изменения', web_app:{ url } }]] },
       });
       res.status(200).json({ ok: true, screen:'chats', filter:'edited' });
@@ -1339,7 +1339,7 @@ export default async function handler(req, res) {
         chatId,
         origin,
         'studio',
-        '✦ VETO Creator Studio\n\nСоздавай custom emoji, sticker packs и бренд-ассеты из prompt или своего логотипа.',
+        '✦ Vetogram Creator Studio\n\nСоздавай custom emoji, sticker packs и бренд-ассеты из prompt или своего логотипа.',
         '✦ Открыть Creator Studio',
       );
       res.status(200).json({ ok: true, screen: 'studio' });
@@ -1379,7 +1379,7 @@ export default async function handler(req, res) {
       const current = refreshed.settings;
       const storyId = Number(current.lastStory);
       if (!refreshed.live || !current.bc) {
-        await showFreshPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи VETO Telegram.');
+        await showFreshPanel(token, chatId, origin, current, '🔌 Аккаунт не подключён. Сначала подключи Vetogram.');
       } else if (!Number.isInteger(storyId) || storyId <= 0) {
         await showFreshPanel(token, chatId, origin, current, '🗑 Нет сохранённой последней Story для удаления.');
       } else {
@@ -1517,7 +1517,7 @@ export default async function handler(req, res) {
           : '⏳ Проверяю аудиторию и публикую Story…'
       );
 
-      console.log('VETO Telegram publish start', {
+      console.log('Vetogram publish start', {
         chat_id: chatId,
         audience: pre.audience,
         selected_count: pre.selected?.length || 0,
@@ -1530,7 +1530,7 @@ export default async function handler(req, res) {
         ? await postPhotoStoryBotApi(token, connectionId, original, image.caption, pre.protect)
         : await postPhotoStoryMtprotoWithRetry(token, connectionId, original, image.caption, pre.audience, pre.selected, pre.excluded, message.message_id, pre.protect);
 
-      console.log('VETO Telegram publish success', {
+      console.log('Vetogram publish success', {
         chat_id: chatId,
         audience: pre.audience,
         transport: story.transport,
@@ -1582,7 +1582,7 @@ export default async function handler(req, res) {
     console.error('Webhook error', error?.telegram || error);
     const chatId = update?.callback_query?.message?.chat?.id || update?.message?.chat?.id || update?.business_connection?.user_chat_id;
     if (update?.message && extractImage(update.message)) {
-      console.error('VETO Telegram publish failed', {
+      console.error('Vetogram publish failed', {
         chat_id: chatId || null,
         message_id: update.message.message_id || null,
         error: error?.telegram?.description || error?.message || String(error),

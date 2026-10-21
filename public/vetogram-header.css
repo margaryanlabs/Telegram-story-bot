@@ -1,0 +1,154 @@
+/* VETOGRAM · compact, expandable Telegram inbox header.
+   This last-loaded presentation layer does not touch chat data or auth.
+   Base and dark/light themes remain functional; only the inbox hero changes. */
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .veto-mirror-heading.vetogram-header {
+  position:sticky;
+  top:4px;
+  z-index:30;
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  gap:8px;
+  min-height:64px;
+  margin:0 0 10px;
+  padding:9px 11px;
+  border:1px solid rgba(196,213,244,.22);
+  border-radius:18px;
+  background:linear-gradient(112deg,#11223e 0%,#1b2847 58%,#392536 100%);
+  box-shadow:0 8px 26px rgba(3,9,25,.24),inset 0 1px 0 rgba(255,255,255,.12);
+  transition:min-height .32s cubic-bezier(.2,.8,.2,1),padding .32s ease,
+    border-radius .32s ease,box-shadow .32s ease;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-messenger-title {
+  min-width:0;
+  flex:1 1 auto;
+  gap:10px;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-inbox-signature {
+  width:40px;height:40px;min-width:40px;
+  border-radius:13px;
+  flex:none;
+  box-shadow:0 5px 19px rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.16);
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-inbox-title-copy {
+  gap:3px;min-width:0;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-inbox-wordmark {
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:10px;
+  letter-spacing:.16em;
+  color:#ffd5cf;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header h1 {
+  font-size:21px;
+  line-height:1.1;
+  letter-spacing:-.035em;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-inbox-tagline {
+  display:none;
+  color:rgba(255,255,255,.83);
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-mirror-header-actions {
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:5px;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-mirror-header-actions #vetoMessengerToolsToggle,
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-mirror-header-actions #telegramMirrorArchiveLink {
+  display:none;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-mirror-icon-btn {
+  width:34px;min-width:34px;height:34px;
+  border-radius:11px;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header #vetogramHeaderToggle {
+  order:2;flex:0 0 34px;
+  display:grid;place-items:center;
+  width:34px;height:34px;min-width:34px;
+  padding:0;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:11px;
+  background:rgba(255,255,255,.11);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header #vetogramHeaderToggle svg {
+  width:17px;height:17px;
+  fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .34s cubic-bezier(.2,.8,.2,1);
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header #vetogramHeaderToggle:focus-visible {
+  outline:2px solid #ffa28e;outline-offset:3px;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header #vetogramHeaderToggle:active {
+  transform:scale(.93);
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded {
+  flex-wrap:wrap;
+  min-height:116px;
+  padding:14px 14px 12px;
+  border-radius:21px;
+  box-shadow:0 16px 38px rgba(2,8,26,.28),inset 0 1px 0 rgba(255,255,255,.16);
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded .veto-messenger-title {
+  order:0;flex:1 1 calc(100% - 48px);
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded .veto-inbox-signature {
+  width:46px;height:46px;min-width:46px;border-radius:15px;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded h1 {
+  font-size:26px;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded .veto-inbox-tagline {
+  display:block;
+  font-size:10px;
+  max-width:100%;
+  white-space:normal;
+  animation:vetogram-header-reveal .27s ease both;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded .veto-mirror-header-actions {
+  order:3;
+  flex:1 0 100%;
+  justify-content:flex-end;
+  padding-top:3px;
+  animation:vetogram-header-reveal .25s ease both;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded .veto-mirror-header-actions #vetoMessengerToolsToggle,
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded .veto-mirror-header-actions #telegramMirrorArchiveLink {
+  display:flex;
+}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded #vetogramHeaderToggle svg {
+  transform:rotate(180deg);
+}
+@keyframes vetogram-header-reveal {
+  from{opacity:0;transform:translateY(-5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(max-width:360px){
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .veto-mirror-heading.vetogram-header{
+    min-height:60px;padding:8px;gap:5px;
+  }
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-messenger-title{gap:6px}
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-inbox-signature{
+    width:35px;height:35px;min-width:35px;
+  }
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-inbox-wordmark{
+    font-size:9px;letter-spacing:.07em;
+  }
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header h1{font-size:19px}
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded{min-height:115px;padding:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .veto-mirror-heading.vetogram-header,
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header #vetogramHeaderToggle,
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header #vetogramHeaderToggle svg,
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-mirror-header-actions,
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-inbox-tagline{
+    animation:none!important;transition:none!important;transform:none!important;
+  }
+}

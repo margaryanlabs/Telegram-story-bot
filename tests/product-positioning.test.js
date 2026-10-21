@@ -6,7 +6,7 @@ function read(path) {
   return readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 }
 
-test('VETO Telegram is the only user-facing product brand', () => {
+test('Vetogram is the user-facing product brand', () => {
   const surfaces = [
     'public/studio.html',
     'public/app.js',
@@ -22,7 +22,8 @@ test('VETO Telegram is the only user-facing product brand', () => {
 
   assert.doesNotMatch(surfaces, /Telegram Control/);
   assert.doesNotMatch(surfaces, /Story Pilot/);
-  assert.match(surfaces, /VETO Telegram/);
+  assert.match(surfaces, /Vetogram/);
+  assert.doesNotMatch(read('public/studio.html'), /VETO Telegram|StoryLab|Buy Veta/i);
 });
 
 test('home exposes the complete control layer', () => {

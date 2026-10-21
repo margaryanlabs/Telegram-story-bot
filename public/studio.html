@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/svg+xml" href="/veto-telegram-mark.svg?v=20261019-brand-v2" />
-  <title>VETO Telegram — Private Telegram OS</title>
-  <meta name="description" content="VETO Telegram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
+  <title>Vetogram — Private Telegram OS</title>
+  <meta name="description" content="Vetogram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/app.css?v=20261018-veto-fast-chat-v1" />
   <link rel="stylesheet" href="/chat-themes.css?v=20261017-chat-compose-v4" />
@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="/veto-device-polish.css?v=20261019-mobile-polish-v1" />
   <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261019-brand-v2" />
   <link rel="stylesheet" href="/veto-launch-polish.css?v=20261019-launch-01" />
+  <link rel="stylesheet" href="/vetogram-header.css?v=20261021-v1" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -30,16 +31,16 @@
   <div class="ambient ambient-a"></div>
   <div class="ambient ambient-b"></div>
 
-  <section class="veto-welcome" id="vetoWelcome" hidden aria-modal="true" aria-label="Добро пожаловать в VETO Telegram">
+  <section class="veto-welcome" id="vetoWelcome" hidden aria-modal="true" aria-label="Добро пожаловать в Vetogram">
     <div class="veto-welcome-shell">
       <div class="veto-welcome-top">
-        <div class="veto-welcome-brand"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /><div><strong>VETO Telegram</strong><small>Telegram с дополнительными возможностями</small></div></div>
+        <div class="veto-welcome-brand"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /><div><strong>Vetogram</strong><small>Telegram с дополнительными возможностями</small></div></div>
         <button class="veto-welcome-skip" id="vetoWelcomeSkip" type="button">Пропустить</button>
       </div>
 
       <div class="veto-welcome-stage">
         <article class="veto-intro-step active" data-veto-intro-step="0">
-          <div class="veto-intro-orbit"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="VETO Telegram" /><i></i><b></b></div>
+          <div class="veto-intro-orbit"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="Vetogram" /><i></i><b></b></div>
           <span class="kicker">ДОБРО ПОЖАЛОВАТЬ</span>
           <h1>Твои переписки.<br><em>Больше возможностей.</em></h1>
           <p>Подключи свой Telegram и сразу переходи к чатам. Умный поиск, стикеры, голос, Stories и защита доступны тогда, когда нужны.</p>
@@ -83,7 +84,7 @@
           <div class="veto-intro-shield">✓<i></i></div>
           <span class="kicker">БЕЗОПАСНОСТЬ</span>
           <h1>Ты всегда видишь,<br><em>что подключено.</em></h1>
-          <p>VETO показывает доступы отдельно. Код Telegram и 2FA-пароль не сохраняются. Дополнительный доступ к сообщениям включается только если тебе нужны Privacy-функции.</p>
+          <p>Vetogram показывает доступы отдельно. Код Telegram и 2FA-пароль не сохраняются. Дополнительный доступ к сообщениям включается только если тебе нужны Privacy-функции.</p>
           <div class="veto-promise-mini">
             <div><strong>Основной вход</strong><small>обычный Telegram через номер или QR</small></div>
             <div><strong>Privacy отдельно</strong><small>доступ к сообщениям — только по твоему выбору</small></div>
@@ -93,7 +94,7 @@
       </div>
 
       <div class="veto-welcome-footer">
-        <button class="veto-welcome-details" id="vetoWelcomeExplore" type="button">Что ещё умеет VETO?</button>
+        <button class="veto-welcome-details" id="vetoWelcomeExplore" type="button">Что ещё умеет Vetogram?</button>
         <div class="veto-intro-dots" aria-hidden="true"><i class="active"></i><i></i><i></i><i></i></div>
         <button class="veto-welcome-primary" id="vetoWelcomeNext" type="button">Перейти к чатам <span>→</span></button>
       </div>
@@ -105,14 +106,14 @@
       <div class="brand">
         <div class="brand-mark veto-mark" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /><i></i></div>
         <div class="brand-copy">
-          <strong>VETO Telegram</strong>
+          <strong>Vetogram</strong>
           <span>Private Telegram OS · Stories · Chats · Relay · Intelligence</span>
         </div>
       </div>
       <div class="veto-global-appearance" id="vetoGlobalAppearance">
-        <button type="button" id="vetoGlobalThemeToggle" class="veto-global-theme-toggle" aria-label="Тема VETO Telegram" aria-haspopup="true" aria-expanded="false" aria-controls="vetoGlobalThemeMenu" title="Тема приложения">◐</button>
+        <button type="button" id="vetoGlobalThemeToggle" class="veto-global-theme-toggle" aria-label="Тема Vetogram" aria-haspopup="true" aria-expanded="false" aria-controls="vetoGlobalThemeMenu" title="Тема приложения">◐</button>
         <div id="vetoGlobalThemeMenu" class="veto-global-theme-menu" hidden>
-          <strong>Оформление всего VETO</strong><small>Одна тема для всех разделов</small>
+          <strong>Оформление всего Vetogram</strong><small>Одна тема для всех разделов</small>
           <div id="telegramChatThemes" class="veto-global-theme-options" role="group" aria-label="Тема приложения">
             <button type="button" data-chat-theme-option="graphite" aria-pressed="true" class="selected"><i></i> Графит</button>
             <button type="button" data-chat-theme-option="pearl" aria-pressed="false"><i></i> Белый</button>
@@ -129,19 +130,19 @@
 
     <div class="network-banner" id="networkBanner" hidden>
       <span>Нет соединения с интернетом</span>
-      <small>VETO Telegram сохранит экран и продолжит, когда сеть вернётся.</small>
+      <small>Vetogram сохранит экран и продолжит, когда сеть вернётся.</small>
     </div>
 
     <section class="screen active control-home" data-screen="home">
-      <section class="veto-command-home" aria-label="VETO Command Hub">
-        <div class="veto-command-home-top"><span>VETO / PRIVATE TELEGRAM</span><i aria-hidden="true"></i><strong>Твой контроль</strong></div>
+      <section class="veto-command-home" aria-label="Vetogram Command Hub">
+        <div class="veto-command-home-top"><span>VETOGRAM / PRIVATE TELEGRAM</span><i aria-hidden="true"></i><strong>Твой контроль</strong></div>
         <h1>Telegram.<br><em>На твоих условиях.</em></h1>
         <p>Переписки — главное. Всё остальное на расстоянии одного касания.</p>
         <div class="veto-command-home-actions">
           <button type="button" class="veto-command-home-primary" id="vetoHomeChatsPrimary" data-open-screen="telegram"><span>▤</span><strong>Открыть мои чаты</strong><b>↗</b></button>
           <button type="button" class="veto-command-home-connect" id="vetoHomeConnectPrimary"><span>⌁</span><strong>Подключение Telegram</strong><b>→</b></button>
         </div>
-        <div class="veto-command-home-grid" aria-label="Инструменты VETO">
+        <div class="veto-command-home-grid" aria-label="Инструменты Vetogram">
           <button type="button" data-open-screen="privacy"><span>↶</span><strong>Privacy Vault</strong><small>Anti-Delete и сохранённые копии</small></button>
           <button type="button" data-open-screen="viewers"><span>◉</span><strong>Stories Intel</strong><small>Просмотры и аудитория</small></button>
           <button type="button" data-open-screen="voice"><span>♫</span><strong>Voice Lab</strong><small>Голосовые и эффекты</small></button>
@@ -153,7 +154,7 @@
         <div class="veto-command-advanced-body">
       <div class="control-heading">
         <div>
-          <span class="kicker">VETO TELEGRAM</span>
+          <span class="kicker">VETOGRAM</span>
           <h1>Telegram.<br><span>Под твоим контролем.</span></h1>
           <p>Один приватный слой для Chats, Stories, Privacy, Relay, Intelligence и Automations — с понятными разрешениями и без скрытых действий.</p>
         </div>
@@ -172,7 +173,7 @@
         <div class="control-hero-copy">
           <span>ПОДКЛЮЧЕНИЕ TELEGRAM</span>
           <strong id="homeTelegramTitle">Проверяю подключение</strong>
-          <p id="homeTelegramText">Здесь будет видно, готов ли Telegram к работе с VETO.</p>
+          <p id="homeTelegramText">Здесь будет видно, готов ли Telegram к работе с Vetogram.</p>
           <div class="veto-connection-badges">
             <span id="vetoAccountBadge">Account · —</span>
             <span id="vetoPrivacyBadge">Privacy · —</span>
@@ -207,7 +208,7 @@
           <span class="veto-mirror-home-avatar three">M</span>
           <span class="veto-mirror-home-preview-line"><i></i><i></i></span>
         </div>
-        <h2>Весь Telegram.<br><em>Внутри VETO.</em></h2>
+        <h2>Весь Telegram.<br><em>Внутри Vetogram.</em></h2>
         <p>Личные сообщения, группы, каналы, боты — открывай свои настоящие диалоги в приватном тёмном интерфейсе.</p>
         <button type="button" class="veto-mirror-home-open" data-open-screen="telegram"><span>↗</span><b>Открыть мои чаты</b><em>→</em></button>
       </section>
@@ -215,9 +216,9 @@
       <section class="relay-home-primary relay-consumer-card" id="relayHomePrimary" aria-label="Защита Telegram">
         <span class="relay-global-badge" id="relayGlobalBadge" hidden><i></i><b>ЗАЩИТА ВКЛЮЧЕНА</b><small id="relayGlobalBadgeRoute">АВТО</small></span>
         <div class="relay-home-primary-copy">
-          <span class="relay-home-kicker"><i></i> VETO ЗАЩИТА</span>
+          <span class="relay-home-kicker"><i></i> VETOGRAM ЗАЩИТА</span>
           <strong id="relayHomeTitle">Telegram работает нестабильно?</strong>
-          <p id="relayHomeText">Включи защиту одним нажатием. VETO сам выберет рабочий путь только для Telegram.</p>
+          <p id="relayHomeText">Включи защиту одним нажатием. Vetogram сам выберет рабочий путь только для Telegram.</p>
           <div class="relay-home-meta">
             <span>Только Telegram</span>
             <span>Автовыбор</span>
@@ -235,10 +236,10 @@
       </section>
 
       <section class="feature-explain-head">
-        <div><span class="kicker">ВОЗМОЖНОСТИ</span><h2>Что умеет VETO</h2></div>
+        <div><span class="kicker">ВОЗМОЖНОСТИ</span><h2>Что умеет Vetogram</h2></div>
         <button id="explainAllFeaturesButton" type="button">Объяснить всё</button>
       </section>
-      <section class="capability-grid capability-grid-explained" aria-label="Возможности VETO Telegram">
+      <section class="capability-grid capability-grid-explained" aria-label="Возможности Vetogram">
         <button class="capability-card" type="button" data-feature-help="stories">
           <span class="capability-icon">＋</span>
           <span class="capability-copy"><small>Stories</small><strong>Публикация и аудитория</strong><span>Кому показать Story и как защитить её.</span></span>
@@ -271,7 +272,7 @@
         </button>
         <button class="capability-card" id="homeAutomationsCard" type="button" data-feature-help="automations">
           <span class="capability-icon">⚡</span>
-          <span class="capability-copy"><small>Automations</small><strong>Сигналы и уведомления</strong><span>VETO сам сообщает о важных событиях.</span></span>
+          <span class="capability-copy"><small>Automations</small><strong>Сигналы и уведомления</strong><span>Vetogram сам сообщает о важных событиях.</span></span>
           <span class="capability-chevron">?</span>
         </button>
       </section>
@@ -279,7 +280,7 @@
       <section class="veto-trust-card" id="vetoTrustCard">
         <div class="veto-trust-mark"><span>⌁</span><i></i></div>
         <div class="veto-trust-copy">
-          <span class="kicker">VETO PRIVACY PROMISE</span>
+          <span class="kicker">VETOGRAM PRIVACY PROMISE</span>
           <strong>Переписка не превращается в рекламный профиль.</strong>
           <p>Доступ используется только для включённых функций. Что сохраняется, зачем и как отключить — можно проверить в один тап.</p>
         </div>
@@ -318,7 +319,7 @@
         <div class="control-actions">
           <button type="button" data-open-screen="stories"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
           <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
-          <button type="button" data-open-screen="telegram"><span>▤</span><strong>Мои чаты</strong><small>Настоящий Telegram внутри VETO</small></button>
+          <button type="button" data-open-screen="telegram"><span>▤</span><strong>Мои чаты</strong><small>Настоящий Telegram внутри Vetogram</small></button>
           <button type="button" data-open-screen="voice"><span>◉</span><strong>Voice Studio</strong><small>Живые эффекты · голосовые</small></button>
           <button type="button" data-open-screen="ghost"><span>◌</span><strong>Privacy</strong><small>Anti-Delete · Inbox · Vault</small></button>
           <button type="button" data-open-screen="relay"><span>◉</span><strong>Защита Telegram</strong><small>Одно нажатие · Автовыбор</small></button>
@@ -333,7 +334,7 @@
         <div class="control-activity-list" id="homeActivityList">
           <div class="control-activity-row activity-loading">
             <span class="activity-event-icon">◌</span>
-            <div><strong>Загружаю активность</strong><small>Собираю события VETO Telegram</small></div>
+            <div><strong>Загружаю активность</strong><small>Собираю события Vetogram</small></div>
           </div>
         </div>
       </section>
@@ -344,10 +345,11 @@
     <section class="screen" data-screen="telegram" aria-label="Мои живые Telegram чаты">
       <section class="veto-mirror" id="telegramMirror" data-chat-theme="graphite">
         <div class="veto-mirror-list" id="telegramChatsView">
-          <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETO · CLOUD CHATS <span class="veto-mirror-readonly">ЧАТЫ + АРХИВ</span></div>
-          <div class="veto-mirror-heading">
-            <div class="veto-messenger-title"><button type="button" class="veto-messenger-exit" data-open-screen="home" aria-label="В главное меню VETO">← VETO</button><span class="veto-inbox-signature" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="46" height="46" /></span><div class="veto-inbox-title-copy"><span class="veto-inbox-wordmark">VETO <i aria-hidden="true">/</i> PRIVATE MESSENGER</span><h1>Чаты</h1><span class="veto-inbox-tagline">Твой Telegram. Под твоим контролем.</span></div></div>
-            <div class="veto-mirror-header-actions"><button type="button" class="veto-mirror-icon-btn veto-messenger-tools-toggle" id="vetoMessengerToolsToggle" aria-label="Инструменты VETO" aria-controls="vetoMessengerTools" aria-expanded="false" title="Инструменты VETO">✦</button><button type="button" class="veto-mirror-icon-btn" id="telegramMirrorArchiveLink" aria-label="Открыть защиту и архив">↶</button><button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button></div>
+          <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETOGRAM · CLOUD CHATS <span class="veto-mirror-readonly">ЧАТЫ + АРХИВ</span></div>
+          <div class="veto-mirror-heading vetogram-header">
+            <div class="veto-messenger-title"><button type="button" class="veto-messenger-exit" data-open-screen="home" aria-label="В главное меню Vetogram">← Vetogram</button><span class="veto-inbox-signature" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="46" height="46" /></span><div class="veto-inbox-title-copy"><span class="veto-inbox-wordmark">VETOGRAM</span><h1>Чаты</h1><span class="veto-inbox-tagline">Твой Telegram. Под твоим контролем.</span></div></div>
+            <div class="veto-mirror-header-actions" id="vetogramHeaderActions"><button type="button" class="veto-mirror-icon-btn veto-messenger-tools-toggle" id="vetoMessengerToolsToggle" aria-label="Инструменты Vetogram" aria-controls="vetoMessengerTools" aria-expanded="false" title="Инструменты Vetogram">✦</button><button type="button" class="veto-mirror-icon-btn" id="telegramMirrorArchiveLink" aria-label="Открыть защиту и архив">↶</button><button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button></div>
+            <button type="button" id="vetogramHeaderToggle" aria-label="Развернуть верхнюю панель чатов" aria-controls="vetogramHeaderActions" aria-expanded="false" title="Развернуть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
           </div>
           <button type="button" id="vetoMessengerConnectCta" class="veto-messenger-connect-cta" hidden><span>⌁</span><strong>Подключить мой Telegram</strong><small>Чтобы увидеть свои чаты</small><b>↗</b></button>
           <div class="veto-messenger-tools" id="vetoMessengerTools" hidden>
@@ -386,8 +388,8 @@
               <span>✳</span><strong>Поиск в переписках</strong><small>Вопросы, темы, цитаты</small><b>⌄</b>
             </button>
             <div id="vetoIntelSearchPanel" class="veto-intelligence-panel" hidden>
-              <strong>VETO Intelligence Search <small>BETA</small></strong>
-              <p>Ищи свои сообщения во всех доступных облачных чатах Telegram по словам и близким понятиям. Без стороннего AI и без хранения запросов VETO.</p>
+              <strong>Vetogram Intelligence Search <small>BETA</small></strong>
+              <p>Ищи свои сообщения во всех доступных облачных чатах Telegram по словам и близким понятиям. Без стороннего AI и без хранения запросов Vetogram.</p>
               <form id="vetoIntelSearchForm" role="search" autocomplete="off">
                 <input id="vetoIntelSearchInput" type="search" maxlength="180" minlength="3"
                   placeholder="Например: квартира в Дубае" aria-label="Поиск по сообщениям Telegram" autocomplete="off"/>
@@ -395,14 +397,14 @@
               </form>
               <label class="veto-intel-vault-optin">
                 <input type="checkbox" id="vetoIntelIncludeVault" />
-                <span><strong>Добавить сохранённые сообщения VETO Vault</strong><small>Только по запросу · поиск по 6 порциям по 80 сообщений. Нажми «Искать дальше», чтобы перейти к более старой истории и другим чатам. Без стороннего AI.</small></span>
+                <span><strong>Добавить сохранённые сообщения Vetogram Vault</strong><small>Только по запросу · поиск по 6 порциям по 80 сообщений. Нажми «Искать дальше», чтобы перейти к более старой истории и другим чатам. Без стороннего AI.</small></span>
               </label>
               <div class="veto-intelligence-examples" role="group" aria-label="Примеры запросов">
                 <button type="button" data-veto-intel-example="квартира в Дубае">Недвижимость в Дубае</button>
                 <button type="button" data-veto-intel-example="обещания за последние три месяца">Обещания за 3 месяца</button>
               </div>
               <div class="veto-intelligence-status" id="vetoIntelSearchStatus" role="status" aria-live="polite">
-                Облачный Telegram. Дополнительно можно включить ограниченный просмотр своего сохранённого архива VETO Vault.
+                Облачный Telegram. Дополнительно можно включить ограниченный просмотр своего сохранённого архива Vetogram Vault.
               </div>
               <section class="veto-intel-timeline" id="vetoIntelTimelineSection" aria-label="Хронология возможных обещаний" hidden>
                 <div class="veto-intel-timeline-head"><strong>Хронология возможных обещаний</strong><small>Цитаты, а не юридические выводы</small></div>
@@ -423,7 +425,7 @@
             <button class="veto-filter-advanced" type="button" data-mirror-filter="focus">Важное <span>⌑</span></button>
             <button type="button" data-mirror-filter="unread">Непрочитанные</button>
             <button class="veto-filter-advanced" type="button" data-mirror-filter="archived">Архив</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="copies">Копии VETO <span>↶</span></button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="copies">Копии Vetogram <span>↶</span></button>
             <button type="button" class="veto-filters-more" id="vetoMessengerFiltersToggle" aria-expanded="false" aria-controls="telegramMirrorFilters">Фильтры <span>⌄</span></button>
           </div>
           <div id="telegramMirrorAccountProof" class="veto-mirror-account-proof" role="status" aria-live="polite"><span class="veto-mirror-live-pip"></span> Личный Telegram ещё не проверен · отображение чатов остановлено до подтверждения</div>
@@ -437,9 +439,9 @@
           <button class="veto-mirror-more" id="telegramMirrorMore" type="button" hidden>Показать ещё чаты <span>↓</span></button>
           <button type="button" id="telegramMirrorDeletedGuide" class="veto-mirror-deletion-guide">↶ Почему удалённые сообщения могут не появляться? <span>↗</span></button>
           <div class="veto-mirror-privacy-note">
-            <span>◈</span><div><strong>Живой просмотр ≠ резервная копия</strong><p>Сообщения загружаются по запросу из твоего Telegram. VETO не отправляет отметку «прочитано». Здесь также показаны ранее сохранённые копии Privacy — включая подтверждённые удаления и чаты, исчезнувшие из Telegram.</p></div>
+            <span>◈</span><div><strong>Живой просмотр ≠ резервная копия</strong><p>Сообщения загружаются по запросу из твоего Telegram. Vetogram не отправляет отметку «прочитано». Здесь также показаны ранее сохранённые копии Privacy — включая подтверждённые удаления и чаты, исчезнувшие из Telegram.</p></div>
           </div>
-          <button class="veto-mirror-vault-link" type="button" data-open-screen="privacy">Открыть защищённый архив VETO <span>↗</span></button>
+          <button class="veto-mirror-vault-link" type="button" data-open-screen="privacy">Открыть защищённый архив Vetogram <span>↗</span></button>
         </div>
 
         <div class="veto-mirror-thread" id="telegramThreadView" hidden>
@@ -458,7 +460,7 @@
             <button type="button" id="telegramThreadFindNext" aria-label="Следующее совпадение" disabled>↓</button>
             <button type="button" id="telegramThreadFindClose" aria-label="Закрыть поиск">×</button>
           </div>
-          <div class="veto-mirror-thread-security"><i></i><span>Облачные сообщения + подтверждённые копии VETO. Удалённое появляется, только если сохранено заранее.</span><b>↶</b></div>
+          <div class="veto-mirror-thread-security"><i></i><span>Облачные сообщения + подтверждённые копии Vetogram. Удалённое появляется, только если сохранено заранее.</span><b>↶</b></div>
           <div class="veto-mirror-sync-strip" role="status" aria-live="polite">
             <span class="veto-mirror-sync-indicator" id="telegramThreadSyncDot"></span>
             <small id="telegramThreadSyncStatus">Обновление при открытом чате · без отметки «прочитано»</small>
@@ -551,10 +553,10 @@
       </section>
     </section>
 
-    <section class="screen" data-screen="voice" aria-label="VETO Voice Studio">
+    <section class="screen" data-screen="voice" aria-label="Vetogram Voice Studio">
       <section class="veto-voice">
         <div class="veto-voice-header">
-          <div><span class="veto-voice-eyebrow">VETO TELEGRAM · AUDIO LAB / 01</span>
+          <div><span class="veto-voice-eyebrow">VETOGRAM · AUDIO LAB / 01</span>
             <h1>Voice<span> Studio.</span></h1>
             <p>Обработка голоса в реальном времени и запись голосовых без загрузки на сервер.</p>
           </div>
@@ -607,7 +609,7 @@
         </div>
         <div id="voiceStatus" class="veto-voice-status" role="status" aria-live="polite">Микрофон выключен. Ничего не записывается.</div>
         <div class="veto-voice-footnote"><span>⎔</span>
-          <p>Voice Studio обрабатывает звук на устройстве и не загружает записи в VETO. Отправка происходит только по твоему нажатию через системное меню. Эффекты меняют звучание, но не гарантируют анонимность и пока не работают внутри обычных Telegram-звонков.</p>
+          <p>Voice Studio обрабатывает звук на устройстве и не загружает записи в Vetogram. Отправка происходит только по твоему нажатию через системное меню. Эффекты меняют звучание, но не гарантируют анонимность и пока не работают внутри обычных Telegram-звонков.</p>
         </div>
       </section>
     </section>
@@ -853,7 +855,7 @@
         </div>
         <div class="viewer-sync-state" id="viewerSyncState">Проверяю состояние…</div>
         <button class="secondary-button" id="viewerSetupButton" type="button">Подключить Deep Intelligence</button>
-        <small class="privacy-note">Новый просмотр сначала фиксируется как быстрый сигнал. Затем VETO Telegram подтверждает доступную Telegram-личность или оставляет просмотр неатрибутированным.</small>
+        <small class="privacy-note">Новый просмотр сначала фиксируется как быстрый сигнал. Затем Vetogram подтверждает доступную Telegram-личность или оставляет просмотр неатрибутированным.</small>
       </section>
 
       <section class="viewer-list-preview">
@@ -892,7 +894,7 @@
       <div class="page-head">
         <span class="kicker">Инсайты</span>
         <h1>Analytics</h1>
-        <p>Сейчас — аналитика публикаций VETO Telegram. После Deep Intelligence здесь появится аналитика аудитории.</p>
+        <p>Сейчас — аналитика публикаций Vetogram. После Deep Intelligence здесь появится аналитика аудитории.</p>
       </div>
 
       <div class="stat-grid">
@@ -987,13 +989,13 @@
       <section class="analytics-card intelligence-brief-card" id="intelligenceBriefCard">
         <div class="block-head compact">
           <div>
-            <span class="kicker">VETO BRIEF</span>
+            <span class="kicker">VETOGRAM BRIEF</span>
             <h2>Что это значит</h2>
           </div>
           <span class="lock-badge" id="intelligenceBriefConfidence">Evidence</span>
         </div>
         <div class="intelligence-brief-list" id="intelligenceBriefList">
-          <div class="intel-empty">VETO Telegram сформирует выводы только после появления подтверждённых данных.</div>
+          <div class="intel-empty">Vetogram сформирует выводы только после появления подтверждённых данных.</div>
         </div>
       </section>
 
@@ -1054,7 +1056,7 @@
 
     <section class="screen" data-screen="privacy">
       <div class="page-head privacy-page-head">
-        <span class="kicker">VETO PRIVACY</span>
+        <span class="kicker">VETOGRAM PRIVACY</span>
         <h1>Privacy Center</h1>
         <p>Anti-Delete, Edit History, Smart Inbox и Media Vault — с отдельными переключателями, прозрачным статусом доступа и понятным хранением данных.</p>
       </div>
@@ -1063,7 +1065,7 @@
         <div class="ghost-orb">◌</div>
         <div class="ghost-command-copy">
           <span class="status-pill" id="privacyStatusPill"><i></i><span id="privacyStatusText">Проверяю</span></span>
-          <h2>VETO Protection</h2>
+          <h2>Vetogram Protection</h2>
           <p id="privacyHeroText">Разрешённые сообщения сохраняются с момента включения — даже если позже переписку очистят в Telegram.</p>
         </div>
         <div class="ghost-badges">
@@ -1079,9 +1081,9 @@
         <div class="veto-business-journey-head">
           <div class="veto-business-journey-emblem" aria-hidden="true">↗</div>
           <div class="veto-business-journey-heading">
-            <span class="kicker">VETO · ПОДКЛЮЧЕНИЕ ЧАТОВ</span>
+            <span class="kicker">VETOGRAM · ПОДКЛЮЧЕНИЕ ЧАТОВ</span>
             <h2 id="privacyBusinessOnboardingTitle">Сохрани важное. Даже после удаления.</h2>
-            <p id="privacyBusinessOnboardingHint">Один раз разреши VETO получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.</p>
+            <p id="privacyBusinessOnboardingHint">Один раз разреши Vetogram получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.</p>
           </div>
           <span class="veto-business-state" id="privacyBusinessOnboardingState" role="status" aria-live="polite">Проверяю</span>
         </div>
@@ -1092,19 +1094,19 @@
           </div>
           <div class="veto-business-step">
             <span class="veto-business-step-number">02</span>
-            <div><strong>Добавь VETO Telegram</strong><p>Вставь имя бота в поле подключения.</p><code>@Storypilotlab_bot</code></div>
+            <div><strong>Добавь Vetogram</strong><p>Вставь имя бота в поле подключения.</p><code>@Vetotg_bot</code></div>
             <button type="button" id="privacyBusinessCopyButton" aria-label="Скопировать имя бота">Копировать</button>
           </div>
           <div class="veto-business-step">
             <span class="veto-business-step-number">03</span>
-            <div><strong>Выбери, какие чаты защищать</strong><p>«Только выбранные чаты» → отметь личные переписки. Не нужны права отвечать, удалять или отмечать прочитанным. Затем вернись в VETO.</p></div>
+            <div><strong>Выбери, какие чаты защищать</strong><p>«Только выбранные чаты» → отметь личные переписки. Не нужны права отвечать, удалять или отмечать прочитанным. Затем вернись в Vetogram.</p></div>
           </div>
         </div>
         <div class="veto-business-wizard-highlight">
-          <span>НОВОЕ · ПОДКЛЮЧЕНИЕ ВНУТРИ VETO</span>
+          <span>НОВОЕ · ПОДКЛЮЧЕНИЕ ВНУТРИ Vetogram</span>
           <strong>Выбери чаты — мы поможем подключить их без поиска настроек.</strong>
           <p>Для этого сначала нужно авторизовать свой Telegram через номер или QR. Перед активацией ты сам отметишь разрешённые личные переписки и подтвердишь права.</p>
-          <button type="button" id="privacyBusinessWizardButton">Выбрать чаты в StoryLab <b>↗</b></button>
+          <button type="button" id="privacyBusinessWizardButton">Выбрать чаты в Vetogram <b>↗</b></button>
         </div>
         <div class="veto-business-journey-actions">
           <button type="button" class="veto-business-verify" id="privacyBusinessVerifyButton">Проверить подключение <span>↗</span></button>
@@ -1115,14 +1117,14 @@
       <section class="ghost-archive-promise" aria-label="Как сохраняются очищенные переписки">
         <div class="ghost-archive-promise-mark">◎</div>
         <div class="ghost-archive-promise-body">
-          <strong>Очистил чат в Telegram? Копия останется в VETO.</strong>
-          <p>Только сообщения, которые VETO успел получить из разрешённых чатов <b>до удаления</b>. Старые или секретные чаты задним числом восстановить нельзя.</p>
+          <strong>Очистил чат в Telegram? Копия останется в Vetogram.</strong>
+          <p>Только сообщения, которые Vetogram успел получить из разрешённых чатов <b>до удаления</b>. Старые или секретные чаты задним числом восстановить нельзя.</p>
         </div>
         <button type="button" id="privacyBackupGuideButton" class="ghost-archive-promise-link">Как включить ↗</button>
       </section>
 
       <section class="veto-mirror-privacy-entrance">
-        <div><span>↗</span><section><small>VETO · LIVE CHATS</small><strong>Мой Telegram — все чаты</strong><p>Открывай живые диалоги вместе с ранее сохранёнными и удалёнными сообщениями.</p></section></div>
+        <div><span>↗</span><section><small>VETOGRAM · LIVE CHATS</small><strong>Мой Telegram — все чаты</strong><p>Открывай живые диалоги вместе с ранее сохранёнными и удалёнными сообщениями.</p></section></div>
         <button type="button" data-open-screen="telegram">Открыть чаты <span>→</span></button>
       </section>
       <section class="ghost-backup-panel" aria-label="Резервные копии личных диалогов Telegram">
@@ -1137,7 +1139,7 @@
         <button class="ghost-backup-cta" id="privacyBackupHistoryButton" type="button">Сохранить конкретный чат <span>→</span></button>
       </section>
       <section class="ghost-health-grid">
-        <article><span>Диалоги</span><strong id="privacyStatThreads">0</strong><small>в VETO Inbox</small></article>
+        <article><span>Диалоги</span><strong id="privacyStatThreads">0</strong><small>в Vetogram Inbox</small></article>
         <article><span>Удалено</span><strong id="privacyStatDeleted">0</strong><small>сохранено</small></article>
         <article><span>Изменено</span><strong id="privacyStatEdited">0</strong><small>с историей</small></article>
         <article><span>Сообщения</span><strong id="privacyStatMessages">0</strong><small>в архиве</small></article>
@@ -1209,17 +1211,17 @@
           </div>
           <div class="setting-row">
             <span class="setting-icon cyan">◉</span>
-            <span class="setting-copy"><strong>VETO Inbox</strong><small>Читать сохранённые копии здесь без вызова readBusinessMessage.</small></span>
+            <span class="setting-copy"><strong>Vetogram Inbox</strong><small>Читать сохранённые копии здесь без вызова readBusinessMessage.</small></span>
             <label class="switch"><input id="privacyGhostInboxSwitch" type="checkbox" /><span></span></label>
           </div>
           <div class="setting-row">
             <span class="setting-icon cyan">⌖</span>
-            <span class="setting-copy"><strong>VETO Focus</strong><small>Alert открывает точно нужный чат и удалённое/изменённое сообщение с контекстом.</small></span>
+            <span class="setting-copy"><strong>Vetogram Focus</strong><small>Alert открывает точно нужный чат и удалённое/изменённое сообщение с контекстом.</small></span>
             <label class="switch"><input id="privacyGhostFocusSwitch" type="checkbox" checked /><span></span></label>
           </div>
           <div class="setting-row">
             <span class="setting-icon rose">⌁</span>
-            <span class="setting-copy"><strong>Удаления · уведомления</strong><small>Присылать VETO alert в чат бота, когда входящее сообщение удалили.</small></span>
+            <span class="setting-copy"><strong>Удаления · уведомления</strong><small>Присылать Vetogram alert в чат бота, когда входящее сообщение удалили.</small></span>
             <label class="switch"><input id="privacyNotifyDeletesSwitch" type="checkbox" checked /><span></span></label>
           </div>
           <div class="setting-row">
@@ -1229,7 +1231,7 @@
           </div>
           <div class="setting-row ghost-notification-testing">
             <span class="setting-icon">♢</span>
-            <span class="setting-copy"><strong>Тест уведомлений</strong><small>Отправить настоящий тест в чат @Storypilotlab_bot. Удаления, изменения и Story-просмотры имеют отдельные настройки.</small></span>
+            <span class="setting-copy"><strong>Тест уведомлений</strong><small>Отправить настоящий тест в чат @Vetotg_bot. Удаления, изменения и Story-просмотры имеют отдельные настройки.</small></span>
             <button class="ghost-test-notify-button" id="privacyTestNotificationButton" type="button">Проверить →</button>
           </div>
           <div class="setting-row retention-row">
@@ -1247,7 +1249,7 @@
       </section>
 
       <section class="privacy-truth-card">
-        <div><strong>Read receipts</strong><span>Открытие VETO Inbox не отправляет команду «прочитано» в Telegram.</span><em>SERVER</em></div>
+        <div><strong>Read receipts</strong><span>Открытие Vetogram Inbox не отправляет команду «прочитано» в Telegram.</span><em>SERVER</em></div>
         <div><strong>Online status</strong><span>Если открыть обычный чат в официальном Telegram, само приложение Telegram управляет online/read.</span><em>TELEGRAM</em></div>
       </section>
 
@@ -1271,18 +1273,18 @@
           <button type="button" data-smart-filter="watch"><span>Watch</span><strong id="smartInboxWatch">0</strong><small>изменения / удаления</small></button>
           <button type="button" data-smart-filter="all"><span>All</span><strong id="smartInboxAll">0</strong><small>доступные диалоги</small></button>
         </div>
-        <p class="smart-inbox-note">VETO Telegram не называет сообщения «непрочитанными», если Telegram не дал такого сигнала. Приоритет — это объяснимая оценка по последнему входящему событию, свежести, правкам и удалениям.</p>
+        <p class="smart-inbox-note">Vetogram не называет сообщения «непрочитанными», если Telegram не дал такого сигнала. Приоритет — это объяснимая оценка по последнему входящему событию, свежести, правкам и удалениям.</p>
       </section>
 
       <section class="smart-brief-card" id="smartBriefCard">
         <div class="smart-brief-head">
           <div>
-            <span class="kicker">VETO BRIEF</span>
+            <span class="kicker">VETOGRAM BRIEF</span>
             <h2 id="smartBriefTitle">Собираю сигналы</h2>
           </div>
           <span class="smart-brief-status" id="smartBriefStatus">LIVE</span>
         </div>
-        <p id="smartBriefDetail">VETO Telegram поднимет только объяснимые сигналы из доступных Telegram-событий.</p>
+        <p id="smartBriefDetail">Vetogram поднимет только объяснимые сигналы из доступных Telegram-событий.</p>
         <div class="smart-brief-reasons" id="smartBriefReasons"></div>
         <button type="button" class="smart-brief-primary" id="smartBriefPrimary" hidden>Открыть диалог</button>
       </section>
@@ -1290,7 +1292,7 @@
       <section class="privacy-inbox-card">
         <div class="block-head compact">
           <div>
-            <span class="kicker">VETO Inbox</span>
+            <span class="kicker">Vetogram Inbox</span>
             <h2>Диалоги</h2>
           </div>
           <div class="privacy-live-control">
@@ -1324,8 +1326,8 @@
         <button class="privacy-more-button" id="privacyDeletedMore" type="button" hidden>Показать ещё удалённые сообщения ↓</button>
         <div class="empty-state show" id="privacyEmpty">
           <div class="empty-icon">◌</div>
-          <strong id="privacyEmptyTitle">VETO Inbox пока пуст</strong>
-          <span id="privacyEmptyText">Включи VETO Privacy и разреши боту выбранные Telegram Business-чаты. Сохраняются только новые доступные сообщения.</span>
+          <strong id="privacyEmptyTitle">Vetogram Inbox пока пуст</strong>
+          <span id="privacyEmptyText">Включи Vetogram Privacy и разреши боту выбранные Telegram Business-чаты. Сохраняются только новые доступные сообщения.</span>
         </div>
       </section>
 
@@ -1337,13 +1339,13 @@
       <div class="page-head studio-page-head">
         <span class="kicker">GHOST CREATOR</span>
         <h1>Creator Studio</h1>
-        <p class="studio-positioning">Создавай фирменные emoji, sticker packs и Telegram-ассеты внутри VETO Telegram — от prompt или готового логотипа до пакета.</p>
+        <p class="studio-positioning">Создавай фирменные emoji, sticker packs и Telegram-ассеты внутри Vetogram — от prompt или готового логотипа до пакета.</p>
       </div>
 
       <section class="studio-hero">
         <div class="studio-hero-top">
           <div class="studio-hero-copy">
-            <span class="studio-badge"><i></i> VETO Brand Engine</span>
+            <span class="studio-badge"><i></i> Vetogram Brand Engine</span>
             <h2>Brand → Telegram Pack</h2>
             <p>Один визуальный язык для статуса, сообщений, Stories и сообщества. Без ручной возни с размерами и форматами.</p>
           </div>
@@ -1356,7 +1358,7 @@
         </div>
         <div class="studio-map">
           <article><span>01 · INPUT</span><strong>Prompt / Logo</strong></article>
-          <article><span>02 · CREATE</span><strong>VETO AI / Upload</strong></article>
+          <article><span>02 · CREATE</span><strong>Vetogram AI / Upload</strong></article>
           <article><span>03 · PACKAGE</span><strong>Emoji / Sticker</strong></article>
           <article><span>04 · PUBLISH</span><strong>Telegram Pack</strong></article>
         </div>
@@ -1407,13 +1409,13 @@
               <strong>Добавить бренд-ассет</strong>
               <small>PNG · JPG · WEBP · WEBM</small>
             </button>
-            <img id="studioAssetImage" alt="VETO Studio asset" hidden />
+            <img id="studioAssetImage" alt="Vetogram Studio asset" hidden />
             <video id="studioAssetVideo" muted loop playsinline hidden></video>
           </div>
           <div class="studio-asset-meta" id="studioAssetMeta">Загрузи логотип или создай его по prompt</div>
 
           <div class="studio-form-grid">
-            <label class="studio-field"><span>Название pack</span><input class="studio-input" id="studioPackTitle" value="VETO Brand Pack" maxlength="64" /></label>
+            <label class="studio-field"><span>Название pack</span><input class="studio-input" id="studioPackTitle" value="Vetogram Brand Pack" maxlength="64" /></label>
             <label class="studio-field"><span>Short name</span><input class="studio-input" id="studioShortName" value="ghost_brand" maxlength="40" /></label>
             <label class="studio-field"><span>Emoji</span><input class="studio-input" id="studioEmoji" value="✨" maxlength="8" /></label>
           </div>
@@ -1444,7 +1446,7 @@
           <div>
             <span class="kicker">ONE LOGO → SYSTEM</span>
             <h2>Brand Pack Engine</h2>
-            <p>Из одного логотипа VETO Telegram собирает единый набор из 6–12 custom emoji или stickers, автоматически подбирает акцент и готовит весь pack к публикации.</p>
+            <p>Из одного логотипа Vetogram собирает единый набор из 6–12 custom emoji или stickers, автоматически подбирает акцент и готовит весь pack к публикации.</p>
           </div>
           <span class="brand-pack-mode" id="brandPackMode">STATIC · WEBP</span>
         </div>
@@ -1494,7 +1496,7 @@
         <div class="brand-pack-empty" id="brandPackEmpty">
           <span>✦</span>
           <strong>Сначала добавь логотип выше</strong>
-          <small>После этого VETO Telegram соберёт согласованный набор Core · Done · Private · Watch · Priority · Focus и другие.</small>
+          <small>После этого Vetogram соберёт согласованный набор Core · Done · Private · Watch · Priority · Focus и другие.</small>
         </div>
 
         <div class="brand-pack-grid" id="brandPackGrid"></div>
@@ -1517,16 +1519,16 @@
       <section class="studio-truth">
         <article><strong>Static AI</strong><span>Prompt generation активируется через OPENAI_API_KEY; загрузка собственного бренда работает без AI.</span></article>
         <article><strong>Animated</strong><span>Brand Pack умеет локально собирать VP9 WEBM motion прямо в Telegram WebView; если WebView не поддерживает encoder, static pack остаётся полностью рабочим.</span></article>
-        <article><strong>VETO positioning</strong><span>Creator Studio — часть VETO Telegram рядом с Privacy, Stories и Intelligence, а не отдельный бот.</span></article>
+        <article><strong>Vetogram positioning</strong><span>Creator Studio — часть Vetogram рядом с Privacy, Stories и Intelligence, а не отдельный бот.</span></article>
       </section>
     </section>
 
 
     <section class="screen relay-screen relay-consumer-screen" data-screen="relay">
       <div class="page-head relay-page-head">
-        <span class="kicker">VETO ЗАЩИТА</span>
+        <span class="kicker">VETOGRAM ЗАЩИТА</span>
         <h1>Защита Telegram</h1>
-        <p>Никаких серверов и настроек. VETO сам проверит доступные пути и выберет лучший.</p>
+        <p>Никаких серверов и настроек. Vetogram сам проверит доступные пути и выберет лучший.</p>
       </div>
 
       <section class="relay-hero relay-consumer-hero" id="relayHero">
@@ -1540,10 +1542,10 @@
           <span class="relay-mode-badge">ТОЛЬКО ДЛЯ TELEGRAM</span>
         </div>
         <h2 id="relayPowerState">Защита выключена</h2>
-        <p id="relayStateText">Нажми один раз — VETO сам выберет рабочий путь и передаст его Telegram.</p>
+        <p id="relayStateText">Нажми один раз — Vetogram сам выберет рабочий путь и передаст его Telegram.</p>
         <button class="relay-power-button relay-consumer-power" id="relayPowerButton" type="button">
           <span class="relay-power-icon">◉</span>
-          <span><strong>Защитить Telegram</strong><small>VETO всё выберет автоматически</small></span>
+          <span><strong>Защитить Telegram</strong><small>Vetogram всё выберет автоматически</small></span>
         </button>
         <button class="relay-disable-button" id="relayDisableButton" type="button" hidden>
           <span>○</span><strong>Отключить защиту</strong><small>Покажем 3 простых шага</small>
@@ -1571,7 +1573,7 @@
         <div>
           <span>СОСТОЯНИЕ</span>
           <strong id="relaySimpleStatus">Готово к включению</strong>
-          <small id="relaySimpleStatusText">VETO автоматически выберет лучший доступный путь.</small>
+          <small id="relaySimpleStatusText">Vetogram автоматически выберет лучший доступный путь.</small>
         </div>
         <button id="relayRefreshButton" type="button">↻ Проверить</button>
       </section>
@@ -1584,8 +1586,8 @@
           </div>
           <div class="relay-route-grid">
             <article><span>Сервер</span><strong id="relayRouteLabel">Автовыбор</strong><small id="relayRouteId">ещё не выбран</small></article>
-            <article><span>Регион</span><strong id="relayRouteRegion">АВТО</strong><small>VETO</small></article>
-            <article><span>Задержка</span><strong id="relayRouteLatency">—</strong><small>проверка VETO</small></article>
+            <article><span>Регион</span><strong id="relayRouteRegion">АВТО</strong><small>Vetogram</small></article>
+            <article><span>Задержка</span><strong id="relayRouteLatency">—</strong><small>проверка Vetogram</small></article>
             <article><span>Состояние</span><strong id="relayRouteHealth">—</strong><small>не статус Telegram</small></article>
           </div>
           <button class="relay-rotate-button" id="relayRotateButton" type="button" hidden>⇄ Попробовать другой путь</button>
@@ -1594,19 +1596,19 @@
 
       <section class="relay-consumer-facts">
         <article><span>✓</span><div><strong>Только Telegram</strong><small>Браузер, банки и остальные приложения работают как раньше.</small></div></article>
-        <article><span>↻</span><div><strong>Запасной путь</strong><small>Если текущий сервер перестал отвечать, VETO предложит или включит запасной при проверке.</small></div></article>
-        <article><span>●</span><div><strong>Статус сохраняется</strong><small>Закрыл VETO и вернулся — зелёный статус останется.</small></div></article>
+        <article><span>↻</span><div><strong>Запасной путь</strong><small>Если текущий сервер перестал отвечать, Vetogram предложит или включит запасной при проверке.</small></div></article>
+        <article><span>●</span><div><strong>Статус сохраняется</strong><small>Закрыл Vetogram и вернулся — зелёный статус останется.</small></div></article>
         <article><span>!</span><div><strong>Звонки — без гарантии стабильности</strong><small>Для стабильных звонков и видео нужен отдельный режим связи.</small></div></article>
       </section>
 
       <section class="relay-emergency-card">
-        <div><span>АВАРИЙНЫЙ ДОСТУП</span><strong>Telegram не открывается совсем?</strong><p>Открой VETO Connect в обычном браузере и включи защиту оттуда.</p></div>
+        <div><span>АВАРИЙНЫЙ ДОСТУП</span><strong>Telegram не открывается совсем?</strong><p>Открой Vetogram Connect в обычном браузере и включи защиту оттуда.</p></div>
         <button id="relayEmergencyButton" type="button">Открыть ↗</button>
       </section>
 
       <section class="relay-note">
         <span>ПРИВАТНОСТЬ</span>
-        <strong>VETO не читает содержимое твоих Telegram-сообщений.</strong>
+        <strong>Vetogram не читает содержимое твоих Telegram-сообщений.</strong>
         <p>Мы управляем только выбором пути подключения. Реальный статус proxy показывает сам Telegram.</p>
       </section>
     </section>
@@ -1615,7 +1617,7 @@
       <div class="page-head">
         <span class="kicker">История</span>
         <h1>Архив</h1>
-        <p>Последние публикации VETO Telegram и настройки аудитории, с которыми они ушли.</p>
+        <p>Последние публикации Vetogram и настройки аудитории, с которыми они ушли.</p>
       </div>
 
       <section class="archive-list" id="archiveList"></section>
@@ -1630,7 +1632,7 @@
 
   <nav class="bottom-nav" aria-label="Главная навигация">
     <button class="nav-item active" data-nav="telegram" type="button" aria-label="Чаты"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5c0 4.8-3.9 8.5-8.7 8.5-1.3 0-2.7-.3-3.8-.9L3 20l1.2-4.2C3.4 14.5 3 13 3 11.5 3 6.8 6.9 3 11.5 3S20 6.8 20 11.5Z"/></svg><small>Чаты</small></button>
-    <button class="nav-item" data-nav="home" type="button" aria-label="Инструменты VETO"><img class="veto-nav-brand-mark" src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="24" height="24" aria-hidden="true" /><small>VETO</small></button>
+    <button class="nav-item" data-nav="home" type="button" aria-label="Инструменты Vetogram"><img class="veto-nav-brand-mark" src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="24" height="24" aria-hidden="true" /><small>Vetogram</small></button>
     <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg><small>Stories</small></button>
     <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5.2c0 5 3.2 8.7 8 10.8 4.8-2.1 8-5.8 8-10.8V6z"/><path d="m9 12 2 2 4-4"/></svg><small>Vault</small></button>
     <button class="nav-item" data-nav="studio" type="button" aria-label="Студия"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/></svg><small>Studio</small></button>
@@ -1662,5 +1664,6 @@
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
   <script src="/veto-launch-polish.js?v=20261019-launch-01" defer></script>
+  <script src="/vetogram-header.js?v=20261021-v1" defer></script>
 </body>
 </html>
