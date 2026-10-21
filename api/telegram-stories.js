@@ -1,4 +1,5 @@
 import { Api } from 'teleproto';
+import { streamStoryMedia } from '../lib/story-media-stream.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import { getViewerSession } from '../lib/viewer-sync-store.js';
@@ -23,7 +24,7 @@ function telegramFailure(error) {
   if (/AUTH_KEY|SESSION_REVOKED|not authorized/i.test(raw))
     return {status:409,error:'Telegram-сессия истекла. Подключи аккаунт заново.'};
   if (/STORY_MEDIA_TOO_LARGE/i.test(raw))
-    return {status:413,error:'История слишком большая для безопасного просмотра внутри Mini App.'};
+    return {status:413,error:'История превышает технический лимит 32 МБ. Открыть её внутри VETO пока нельзя.'};
   return {status:503,error:'Не удалось безопасно загрузить истории Telegram.'};
 }
 
@@ -145,11 +146,7 @@ export default async function handler(req,res) {
       if (!file) return respond(res,404,{error:'История удалена или недоступна.'});
       // UI requires an explicit no-receipt mode header before rendering media.
       // This is our RPC policy, not a guarantee about other Telegram clients.
-      res.setHeader('X-Veto-Story-Mode','ghost-no-receipt');
-      res.setHeader('Content-Type',file.mime);
-      res.setHeader('Content-Disposition','inline');
-      res.setHeader('Content-Length',String(file.buffer.length));
-      return res.status(200).end(file.buffer);
+      return await streamStoryMedia(res,file.buffer,file.mime);
     });
   } catch(error) {
     const fault = telegramFailure(error);
