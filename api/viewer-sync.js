@@ -1,5 +1,6 @@
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
+import { safeCodeStatus, codeResendWindow } from '../lib/telegram-code-delivery.js';
 import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import {
@@ -19,6 +20,7 @@ import {
 } from '../lib/viewer-sync-store.js';
 import {
   beginUserAuth,
+  resendUserAuth,
   verifyUserCode,
   verifyUserPassword,
   revokeUserSession,
@@ -409,11 +411,17 @@ export default async function handler(req, res) {
       // closes while the owner copies it, allow continuing the existing challenge
       // instead of forcing another code request (which can hit FLOOD_WAIT).
       const expiry = Date.parse(loginChallenge?.expires_at || '');
-      const loginPending = Number.isFinite(expiry)
+      let loginPending = Number.isFinite(expiry)
         && expiry > Date.now()
         && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage)
         ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString() }
         : null;
+      if (loginPending?.stage === 'code') {
+        // Only safe delivery metadata goes to the client. Session, phone and
+        // phoneCodeHash remain in the encrypted server-side challenge.
+        const saved = await openJson(loginChallenge.challenge_ciphertext, 'auth:' + userId).catch(() => null);
+        if (saved) loginPending = safeCodeStatus(saved, loginPending.expiresAt);
+      }
 
       res.status(200).json({
         ok: true,
@@ -537,10 +545,8 @@ export default async function handler(req, res) {
           if (pending?.phone === requestedPhone) {
             res.status(200).json({
               ok: true,
-              stage: 'code',
-              delivery: pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+              ...safeCodeStatus(pending, new Date(expiresAt).toISOString()),
               reused: true,
-              expiresAt: new Date(expiresAt).toISOString(),
             });
             return;
           }
@@ -586,10 +592,51 @@ export default async function handler(req, res) {
 
       res.status(200).json({
         ok: true,
-        stage: 'code',
-        delivery: auth.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+        ...safeCodeStatus(auth, new Date(now.getTime() + AUTH_TTL_MS).toISOString()),
         reused: false,
-        expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
+      });
+      return;
+    }
+
+    if (action === 'resend_code') {
+      const challenge = await getAuthChallenge(userId);
+      const expiry = Date.parse(challenge?.expires_at || '');
+      if (challenge?.stage !== 'code' || !Number.isFinite(expiry) || expiry <= Date.now()) {
+        res.status(410).json({ ok: false, error: 'Срок действия запроса истёк. Начни подключение заново.' });
+        return;
+      }
+      const saved = await openJson(challenge.challenge_ciphertext, 'auth:' + userId);
+      const retry = codeResendWindow(saved);
+      if (!saved?.nextDelivery || retry.retryAfterSeconds === null) {
+        res.status(409).json({ ok: false, error: 'Telegram не разрешил другой способ доставки. Проверь официальный чат или используй QR-вход.' });
+        return;
+      }
+      if (!retry.allowed) {
+        const seconds = retry.retryAfterSeconds;
+        res.setHeader('Retry-After', String(seconds));
+        res.status(429).json({
+          ok: false,
+          error: 'Следующий способ доставки станет доступен после ожидания Telegram.',
+          retryAfterSeconds: seconds,
+        });
+        return;
+      }
+
+      const renewed = await resendUserAuth(saved);
+      const nextExpiry = new Date(Date.now() + AUTH_TTL_MS).toISOString();
+      // Save the new hash atomically as a replacement for the previous challenge.
+      await saveAuthChallenge({
+        telegram_user_id: userId,
+        challenge_ciphertext: await sealJson(renewed, 'auth:' + userId),
+        stage: 'code',
+        created_at: challenge.created_at,
+        expires_at: nextExpiry,
+      });
+      res.status(200).json({
+        ok: true,
+        ...safeCodeStatus(renewed, nextExpiry),
+        reused: false,
+        resent: true,
       });
       return;
     }
@@ -769,6 +816,16 @@ export default async function handler(req, res) {
       });
     }
 
+    if (error?.code === 'TELEGRAM_RETRY_NOT_READY') {
+      const seconds = Math.max(1, Number(error.retryAfterSeconds) || 60);
+      res.setHeader('Retry-After', String(seconds));
+      res.status(429).json({ ok: false, error: 'Повторный запрос пока запрещён Telegram.', retryAfterSeconds: seconds });
+      return;
+    }
+    if (error?.code === 'TELEGRAM_RESEND_NOT_ALLOWED') {
+      res.status(409).json({ ok: false, error: 'Повторная отправка сейчас недоступна. Используй исходный код или QR.' });
+      return;
+    }
     if (error?.code === 'TELEGRAM_ACCOUNT_MISMATCH') {
       res.status(409).json({ ok:false, error:TELEGRAM_OWNER_MESSAGE });
       return;
