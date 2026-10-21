@@ -2330,7 +2330,7 @@
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Теперь введи код из Telegram</h2>
-      <p>${reused ? 'Продолжаем прежний запрос, новый код не отправляли. ' : ''}${deliveryMessage} Проверь официальный чат «Telegram» с синей галочкой во всех своих устройствах. Запрос принят Telegram, но доставка сообщения VETO не подтверждена.</p>
+      <p>${reused ? 'Продолжаем прежний запрос, новый код не отправляли. ' : ''}${deliveryMessage} Проверь официальный чат «Telegram» с синей галочкой во всех своих устройствах. Telegram принял запрос, но фактическая доставка кода не подтверждена.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
