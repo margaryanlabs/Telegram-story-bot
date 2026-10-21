@@ -1,0 +1,19 @@
+name: Telegram auth regression
+on:
+  pull_request:
+  push:
+    branches:
+      - fix/telegram-code-resend-delivery-20261021
+permissions:
+  contents: read
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - run: npm test
