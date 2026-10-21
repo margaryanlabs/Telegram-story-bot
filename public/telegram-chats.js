@@ -22,7 +22,7 @@
   let chatFilterTimer=null;
   const labels={
     private:'личный чат',group:'группа',channel:'канал',bot:'бот',
-    saved:'избранное',copy:'сохранённая копия VETO',other:'чат',
+    saved:'избранное',copy:'сохранённая копия Vetogram',other:'чат',
   };
   const mediaLabels={
     photo:'▣ Фотография',video:'▹ Видео',audio:'♫ Аудио',
@@ -66,7 +66,7 @@
   async function request(action,payload={}){
     resetOwner();
     const signed=String(tg?.initData||'');
-    if(!signed)throw new Error('Открой VETO в Telegram для доступа к твоим чатам.');
+    if(!signed)throw new Error('Открой Vetogram в Telegram для доступа к твоим чатам.');
     const abort=new AbortController();
     const timer=setTimeout(()=>abort.abort(),22000);
     try{
@@ -94,7 +94,7 @@
   async function sendChatRequest(chatId,message,nonce,replyTo=null){
     if(resetOwner())throw new Error('Telegram-аккаунт изменился');
     const signed=String(tg?.initData||'');
-    if(!signed)throw new Error('Открой VETO из Telegram для отправки');
+    if(!signed)throw new Error('Открой Vetogram из Telegram для отправки');
     const abort=new AbortController();
     const timer=setTimeout(()=>abort.abort(),26000);
     try {
@@ -774,7 +774,7 @@
     const next={
       unavailable:'Состояние Privacy не удалось проверить. Не считай архив активным.',
       enable_privacy:'Включи Anti-Delete и защищённый Inbox в Privacy.',
-      connect_business:'Подключи Telegram Business к VETO, чтобы бот получал разрешённые события.',
+      connect_business:'Подключи Telegram Business к Vetogram, чтобы бот получал разрешённые события.',
       grant_messages:'Подключи Business-бота для нужных личных чатов. Отмечать сообщения прочитанными для архива не нужно.',
       test_archive:'Доступы выглядят готовыми. Проверь на новом сообщении в разрешённом чате.',
     };
@@ -809,7 +809,7 @@
     if($('vetoIntelSearchInput'))$('vetoIntelSearchInput').value='';
     if($('vetoIntelSearchResults'))$('vetoIntelSearchResults').replaceChildren();
     if($('vetoIntelSearchStatus'))$('vetoIntelSearchStatus').textContent=
-      'Облачный Telegram. Сохранённые копии VETO Vault доступны только при отдельном выборе.';
+      'Облачный Telegram. Сохранённые копии Vetogram Vault доступны только при отдельном выборе.';
     if($('vetoIntelSearchSubmit'))$('vetoIntelSearchSubmit').disabled=false;
     if(close){
       if($('vetoIntelSearchPanel'))$('vetoIntelSearchPanel').hidden=true;
@@ -828,7 +828,7 @@
         '<time>'+safe(validDate)+'</time></div>'+
         '<p>'+safe(result.snippet||'')+'</p>'+
         '<div class="veto-intelligence-hit-foot"><small>'+
-        (result.source==='veto-vault'?'↶ Сохранённая копия VETO':result.saved?'✓ Telegram + копия VETO':'Telegram')+
+        (result.source==='veto-vault'?'↶ Сохранённая копия Vetogram':result.saved?'✓ Telegram + копия Vetogram':'Telegram')+
         (result.deleted?' · удалено после сохранения':'')+
         ' · #'+safe(result.messageId)+' · '+(result.out?'Исходящее':'Входящее')+'</small>'+
         '<button type="button" data-veto-intel-open="'+index+'">Открыть чат ↗</button></div>'+
@@ -940,8 +940,8 @@
           ?' Эта порция: '+Number(coverage.segmentStart||0)+'–'+
             Number(coverage.segmentEnd||0)+' из '+Number(coverage.totalSegments||0)+
             ' · проверено '+Number(coverage.scannedMessages||0)+' сохранённых сообщений.'
-          :' Архив VETO временно недоступен.'
-        :' Архив VETO не запрашивался.';
+          :' Архив Vetogram временно недоступен.'
+        :' Архив Vetogram не запрашивался.';
       const partial=coverage.partial?' Поиск по архиву ещё не завершён.':'';
       status.textContent=(count
         ?'Найдено '+count+' реальных сообщений. «Обещания» — гипотезы, проверяй контекст.'
@@ -992,7 +992,7 @@
       proof.classList.toggle('archive-only',Boolean(p)&&!p.verified);
       proof.textContent=p?.verified
         ?'✓ Подтверждён Telegram '+(p.username?'@'+p.username:p.accountName||'владельца')+' · чаты только этого аккаунта'
-        :p ? '◈ Только собственный архив VETO · живой аккаунт не подтверждён' : '◌ Проверяю личный Telegram · чужие чаты не показываются';
+        :p ? '◈ Только собственный архив Vetogram · живой аккаунт не подтверждён' : '◌ Проверяю личный Telegram · чужие чаты не показываются';
     }
     $('telegramMirrorUpdated').textContent=state.chats.length
       ?String(state.chats.length)+' загружено · LIVE':'LIVE · По запросу';
@@ -1121,7 +1121,7 @@
       if($('telegramMirrorAccessButton')){
         $('telegramMirrorAccessButton').textContent = 'Подключить ↗';
       }
-      showNotice(error.message,/Подключи|подключён|Открой VETO|аккаунт|авторизуй/i.test(error.message));
+      showNotice(error.message,/Подключи|подключён|Открой Vetogram|аккаунт|авторизуй/i.test(error.message));
     }finally{
       if(generation===state.generation){
         state.loading=false;
@@ -1427,7 +1427,7 @@
     }else if(mime.startsWith('audio/')){
       const audio=document.createElement('audio');
       audio.controls=true;audio.preload='metadata';audio.src=href;
-      audio.setAttribute('aria-label',archive?'Сохранённое аудио из VETO Vault':'Аудиосообщение из Telegram');
+      audio.setAttribute('aria-label',archive?'Сохранённое аудио из Vetogram Vault':'Аудиосообщение из Telegram');
       wrapper.appendChild(audio);
     }else if(['video/mp4','video/webm'].includes(mime)){
       const video=document.createElement('video');
@@ -1474,7 +1474,7 @@
   }
   async function openArchivedFile(button){
     if(!state.thread||!button||button.disabled)return;
-    if(!tg?.initData){toast('Открой VETO внутри Telegram');return;}
+    if(!tg?.initData){toast('Открой Vetogram внутри Telegram');return;}
     const id=Number(button.dataset.mirrorFile||0);
     if(!Number.isSafeInteger(id)||id<=0)return;
     const chatId=String(state.thread.id),ownerKey=state.ownerInitData,epoch=state.threadGeneration;
@@ -1651,9 +1651,9 @@
           ?'<div class="veto-mirror-reply-tag">↩ '+safe(replySource?.text?.slice(0,90)||('Ответ на сообщение '+message.replyTo))+'</div>'
           :'';
         const savedBanner=message.deleted
-          ?'<div class="veto-mirror-preserved-flag deleted">↶ УДАЛЕНО В TELEGRAM · СОХРАНЕНО В VETO</div>'
+          ?'<div class="veto-mirror-preserved-flag deleted">↶ УДАЛЕНО В TELEGRAM · СОХРАНЕНО В Vetogram</div>'
           :message.preservedOnly
-            ?'<div class="veto-mirror-preserved-flag">◈ СОХРАНЁННАЯ КОПИЯ VETO</div>'
+            ?'<div class="veto-mirror-preserved-flag">◈ СОХРАНЁННАЯ КОПИЯ Vetogram</div>'
             :'';
         const isAudio=['voice','audio'].includes(message.media);
         const cachedFile=state.expandedAttachments.get(String(message.id));
@@ -1682,7 +1682,7 @@
           (message.pending?'<span class="veto-mirror-send-pending">◌ Отправляется…</span>':'')+
           (message.sent?'<span class="veto-mirror-send-accepted" title="Telegram принял отправку, статус прочтения неизвестен">✓ Принято</span>':'')+
           (message.edited?'<span>изменено</span>':'')+
-          (message.saved&&!message.deleted?'<span title="Сохранено в VETO">↶</span>':'')+
+          (message.saved&&!message.deleted?'<span title="Сохранено в Vetogram">↶</span>':'')+
           '<time>'+safe(messageTime(message.date))+'</time></footer></div></article>';
       }).join('');
     }
@@ -1994,14 +1994,14 @@
         state.thread={...state.thread,...data.chat,
           savedCopy:Boolean(state.thread.savedCopy||data.chat.savedCopy)};
         $('telegramThreadMeta').textContent=(labels[data.chat.type]||'чат')+
-          (state.thread.savedCopy?' · сохранённая история VETO':' · Telegram');
+          (state.thread.savedCopy?' · сохранённая история Vetogram':' · Telegram');
       }
       state.threadLoading=false;
       renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
       rememberHotThread();
       renderSendComposer();
       syncLabel(data.archiveDeferred
-        ?'Telegram подключён · синхронизирую архив VETO…'
+        ?'Telegram подключён · синхронизирую архив Vetogram…'
         :'Telegram подключён · проверка каждые 26 сек.');
       scheduleThreadSync();
       if(data.archiveDeferred===true)
@@ -2145,7 +2145,7 @@
       (result.deleted===true&&result.saved===true)?'veto-vault':'telegram-cloud';
     const vaultOffset=result.vaultOffset;
     if(source==='veto-vault'&&(!Number.isSafeInteger(vaultOffset)||vaultOffset<0)){
-      threadNotice('Точная позиция сохранённой копии отсутствует. Проверь сообщение в VETO Vault.');return;
+      threadNotice('Точная позиция сохранённой копии отсутствует. Проверь сообщение в Vetogram Vault.');return;
     }
     threadNotice('Ищу точный источник сообщения #'+messageId+'…');
     const controller=new AbortController();
@@ -2296,7 +2296,7 @@
     notice.innerHTML='<div><span>↶</span><p>'+
       'Подтверждённых удалений в твоём собственном сохранённом архиве: <b>'+safe(deleted)+
       '</b>. Сохранённых диалогов: <b>'+safe(saved)+
-      '</b>. LIVE подключение показывает только текущую историю Telegram. Удалённые сообщения доступны только если VETO сохранил их до удаления и получил событие об удалении. '+
+      '</b>. LIVE подключение показывает только текущую историю Telegram. Удалённые сообщения доступны только если Vetogram сохранил их до удаления и получил событие об удалении. '+
       'Для будущих удалений включи Anti-Delete через Telegram Business для выбранных или всех личных чатов. История через код/QR сохраняет содержимое выбранных чатов, но без события Telegram не доказывает удаление.'+
       '</p></div><button type="button" data-mirror-privacy-open="1">Настроить Privacy ↗</button>';
   });
@@ -2307,7 +2307,7 @@
     if(typeof window.VetoTelegramOpenAccountConnection==='function'){
       window.VetoTelegramOpenAccountConnection();
     }else{
-      toast('Открой VETO внутри Telegram');
+      toast('Открой Vetogram внутри Telegram');
     }
   });
   $('telegramMirrorRefresh')?.addEventListener('click',()=>loadChats({reset:true}));
