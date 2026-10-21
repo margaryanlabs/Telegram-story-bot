@@ -163,7 +163,15 @@ function inlineMenu(settings = {}, origin = '') {
 
   if (!ready) {
     return {
-      inline_keyboard: [
+      inline_keyboard: origin ? [
+        [{ text: '🚀 Открыть VETO', web_app: { url: new URL('/studio.html', origin).toString() } }],
+        [{ text: '💬 Мои чаты · подключить', web_app: { url: ghostAppUrl(origin, { screen:'telegram' }) } }],
+        [{ text: '📸 Мои Stories', web_app: { url: ghostAppUrl(origin, { screen:'publish' }) } }],
+        [{ text: '↶ Anti-Delete · настроить', web_app: { url: ghostAppUrl(origin, { screen:'privacy' }) } }],
+        [{ text: '✅ Проверить Anti-Delete', callback_data: 'connect:check' }],
+        [{ text: '🔔 Управление уведомлениями', callback_data: 'view:alerts' }],
+        [{ text: '❔ Как подключиться', callback_data: 'view:howto' }],
+      ] : [
         ...chatPathButtons,
         [{ text: '⌁ Аккаунт и Stories · подключение', callback_data: 'view:connect' }],
         ...(origin ? [[
@@ -178,7 +186,12 @@ function inlineMenu(settings = {}, origin = '') {
   const connectionText = '✅ Telegram подключён';
   return {
     inline_keyboard: [
+      ...(origin ? [
+        [{ text: '🚀 Открыть VETO', web_app: { url: new URL('/studio.html', origin).toString() } }],
+      ] : []),
       ...chatPathButtons,
+      [{ text: '✅ Проверить Anti-Delete', callback_data: 'connect:check' }],
+      [{ text: '🔔 Управление уведомлениями', callback_data: 'view:alerts' }],
       [
         { text: mark('all', '🌍 Все'), callback_data: 'aud:all' },
         { text: mark('contacts', '👥 Мои контакты'), callback_data: 'aud:contacts' },
@@ -303,20 +316,21 @@ async function clearReplyKeyboard(token, chatId) {
 }
 
 function homeText(settings) {
-  const firstRun = '◉ VETO Telegram · выбери, что нужно\n\n'
-    + '💬 ОТКРЫТЬ МОИ ЧАТЫ\nНажми «Мои чаты», подключи свой Telegram по номеру + коду или QR. Telegram Business не нужен.\n\n'
-    + '↶ СОХРАНЯТЬ УДАЛЁННЫЕ СООБЩЕНИЯ\nНажми «Anti-Delete». Для автоматического получения новых сообщений подключи @Storypilotlab_bot в Telegram → Настройки → Telegram для бизнеса → Чат-боты и выбери личные чаты. Premium не требуется.\n\n'
-    + 'Разрешения выдаются в самом Telegram. Ранее удалённые сообщения восстановить нельзя.';
-  if (!settings.bc) return firstRun;
-
-  if (!settings.canStories) {
-    return firstRun + '\n\n✓ Business-бот подключён. Для работы архива отправь тестовое сообщение из выбранного личного чата. Право управлять Stories здесь не требуется.';
-  }
-
-  const excluded = settings.excluded?.length
-    ? `\n🚫 Не увидят Stories: ${settings.excluded.map(u => `@${u}`).join(', ')}`
-    : '';
-  return firstRun + `\n\n📸 Stories также подключены · ${audienceLabel(settings.audience, settings.selected)}${excluded}`;
+  const text = '✦ VETO · Твой Telegram. Твой контроль.\n\n'
+    + 'Выбери, что хочешь подключить:\n\n'
+    + '💬 ЧАТЫ И STORIES\n'
+    + 'Открой Mini App → «Мои чаты» → номер + код или QR. Для просмотра своих переписок Telegram Business не нужен.\n\n'
+    + '↶ ANTI-DELETE\n'
+    + 'Открой Telegram → Настройки → Telegram для бизнеса → Чат-боты (или Аккаунт → Автоматизация чатов). '
+    + 'Добавь @vetotg_bot, выбери только нужные личные чаты и вернись на кнопку «✅ Проверить Anti-Delete».\n\n'
+    + '📸 STORIES ЧЕРЕЗ БОТА\n'
+    + 'Если хочешь публиковать, изменять и удалять Stories от имени аккаунта через Business-бота — разреши «Управление историями». Для Anti-Delete и чтения Stories это необязательно.\n\n'
+    + '👻 Просмотр чужих Stories: VETO не отправляет явную отметку, но полная невидимость не гарантируется Telegram. Реакция или ответ раскроют просмотр.\n\n'
+    + '🔒 Доступ выдаётся только с твоего согласия. Коды и 2FA никогда не отправляй сообщением боту. '
+    + 'Удалённые до подключения сообщения восстановить нельзя.';
+  return settings.bc
+    ? text + '\n\n✓ Business-связь сохранена; проверь получение нового сообщения из разрешённого чата.'
+    : text;
 }
 
 function settingsText(settings, live = null) {
@@ -336,7 +350,7 @@ function connectText(settings, live = null) {
   }
 
   return '💬 ЖИВЫЕ ЧАТЫ\nОткрой Mini App → «Мои чаты» → номер + код Telegram или QR. Business для этого не нужен.\n\n'
-    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @Storypilotlab_bot → выбери личные чаты.\n\n'
+    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @vetotg_bot → выбери личные чаты.\n\n'
     + 'Можно пользоваться только одним способом или обоими. Не отправляй коды боту.';
 }
 
@@ -541,7 +555,8 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
   const lines = visible.map(event => {
     const sender = event.direction === 'outgoing' ? 'Вы' : (event.sender || event.chatTitle || 'Telegram user');
     const preview = String(event.preview || 'Сообщение').replace(/\s+/g, ' ').trim().slice(0, 180);
-    return `• ${sender}: ${preview}`;
+    const chat = event.chatTitle && event.chatTitle !== sender ? ` · чат «${String(event.chatTitle).slice(0,60)}»` : '';
+    return `• ${sender}: ${preview}${chat}`;
   });
 
   const extra = stored.length > visible.length
@@ -565,7 +580,7 @@ async function sendGhostDeleteAlert(token, ownerChatId, origin, events = [], set
 
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `👻 Anti-Delete\n\nTelegram сообщил об удалении ${Number(deletedMessageCount || stored.length)} сообщени${Number(deletedMessageCount || stored.length) === 1 ? 'я' : 'й'}.\n${lines.join('\n')}${extra}\n\n${copyNote}${unseenNote}${mediaStatus}`,
+    text: `👻 VETO · Anti-Delete\n🕒 Время фиксации: ${new Date().toLocaleString('ru-RU', { timeZone: 'UTC' })} UTC\n\nTelegram сообщил об удалении ${Number(deletedMessageCount || stored.length)} сообщени${Number(deletedMessageCount || stored.length) === 1 ? 'я' : 'й'}.\n${lines.join('\n')}${extra}\n\n${copyNote}${unseenNote}${mediaStatus}`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -596,7 +611,7 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings
   const sender = row.sender_display_name || (row.sender_username ? `@${row.sender_username}` : null) || row.chat_title || 'Telegram user';
   await tg(token, 'sendMessage', {
     chat_id: ownerChatId,
-    text: `✏️ Edit History\n\n${sender} изменил сообщение:\n${ghostMessagePreview(row)}\n\nВерсия сохранена в VETO Vault.`,
+    text: `✏️ VETO · Edit History\n\n${sender} изменил сообщение${row.chat_title ? ` в чате «${String(row.chat_title).slice(0,60)}»` : ''}:\n${ghostMessagePreview(row)}\n\nДоступные предыдущие версии сохранены в VETO Vault.`,
     disable_notification: false,
     reply_markup: {
       inline_keyboard: [
@@ -620,6 +635,25 @@ async function sendGhostEditAlert(token, ownerChatId, origin, row = {}, settings
     },
   });
   return true;
+}
+
+async function sendVetoAlertSettings(token, chatId, origin) {
+  if (!origin) return;
+  await tg(token, 'sendMessage', {
+    chat_id: chatId,
+    text: '🔔 VETO · Уведомления\n\n'
+      + '↶ Удалили сообщение: уведомление и сохранённая копия, если она была получена до удаления.\n'
+      + '✎ Изменили сообщение: уведомление и доступная история правок.\n'
+      + '👁 Просмотрели Story: уведомление только при подтверждении Telegram; неизвестные просмотры остаются неизвестными.\n\n'
+      + 'Включай и выключай типы уведомлений по отдельности в VETO. Для Stories нужны подключённый аккаунт и работающий фоновый watcher. '
+      + 'Оповещения не должны приходить задним числом после отключения.',
+    disable_web_page_preview: true,
+    reply_markup: {inline_keyboard: [
+      [{text:'↶ Удаления и изменения · ON/OFF',web_app:{url:ghostAppUrl(origin,{screen:'privacy'})}}],
+      [{text:'👁 Просмотры Stories · ON/OFF',web_app:{url:ghostAppUrl(origin,{screen:'viewers'})}}],
+      [{text:'🛡 Политика приватности',url:new URL('/privacy-policy.html',origin).toString()}],
+    ]},
+  });
 }
 
 async function sendAppShortcut(token, chatId, origin, screen, text, buttonText) {
@@ -1175,10 +1209,12 @@ export default async function handler(req, res) {
           await saveSettings(token, chatId, origin, next);
           await showPanel(token, chatId, origin, next, '🗑 Последняя Story удалена.', messageId);
         }
+      } else if (action === 'view:alerts') {
+        await sendVetoAlertSettings(token, chatId, origin);
       } else if (action === 'view:live-chats') {
         await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой VETO Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
       } else if (action === 'view:archive-guide') {
-        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Storypilotlab_bot и выбери личные переписки. Затем VETO Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
+        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @vetotg_bot и выбери личные переписки. Затем VETO Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);
@@ -1189,7 +1225,7 @@ export default async function handler(req, res) {
         } else if (refreshed.live) {
           await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, true), messageId);
         } else {
-          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO Telegram пока не получил активный Business Connection.\n\nЕсли @Storypilotlab_bot уже выбран в Telegram, как на экране настроек: выключи «Управление историями», включи снова, сохрани и нажми проверить ещё раз. Переподключать весь бот не нужно.', messageId);
+          await showPanel(token, chatId, origin, refreshed.settings, '⏳ VETO пока не видит активного Telegram Business-подключения.\n\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты (или Аккаунт → Автоматизация чатов) → выбери @vetotg_bot и разреши выбранные личные чаты.\n\nВернись и нажми «✅ Проверить Anti-Delete». Разрешение «Управление историями» для архива не требуется. Если Telegram просит Premium, это ограничение Telegram.', messageId);
         }
       } else if (action === 'view:settings') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
@@ -1237,13 +1273,29 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (command === '/alerts') {
+      await sendVetoAlertSettings(token, chatId, origin);
+      res.status(200).json({ ok:true, screen:'alerts' });
+      return;
+    }
+
+    if (command === '/privacy') {
+      await tg(token, 'sendMessage', {
+        chat_id: chatId,
+        text: '🔒 VETO · Политика конфиденциальности\n\nКакие данные обрабатываются, как отключить Telegram, управлять архивом и запросить удаление.',
+        reply_markup: {inline_keyboard: [[{text:'🔒 Открыть Privacy Policy',url:new URL('/privacy-policy.html',origin).toString()}]]},
+      });
+      res.status(200).json({ok:true, screen:'privacy-policy'});
+      return;
+    }
+
     if (command === '/ghost') {
       await sendAppShortcut(
         token,
         chatId,
         origin,
         'privacy',
-        '↶ VETO Privacy · Anti-Delete\n\nАвтоматическое сохранение: Telegram → Настройки → Telegram для бизнеса → Чат-боты → @Storypilotlab_bot → выбери личные чаты.\n\nТакже можно вручную сохранить выбранный чат через личный Telegram-аккаунт. Старые удаления не восстановить.',
+        '↶ VETO Privacy · Anti-Delete\n\nАвтоматическое сохранение: Telegram → Настройки → Telegram для бизнеса → Чат-боты → @vetotg_bot → выбери личные чаты.\n\nТакже можно вручную сохранить выбранный чат через личный Telegram-аккаунт. Старые удаления не восстановить.',
         '🛡 Открыть Privacy',
       );
       res.status(200).json({ ok: true, screen: 'privacy' });
@@ -1278,7 +1330,7 @@ export default async function handler(req, res) {
         chatId,
         origin,
         'publish',
-        '📸 Stories\n\nПубликация, аудитория, исключения и защита контента.',
+        '📸 Stories\n\nПубликация, аудитория, исключения и защита контента.\n\nЕсли публикуешь через Telegram Business-бота, открой его разрешения и включи «Управление историями». Для личного просмотра Stories и Anti-Delete это право не нужно.',
         '📸 Открыть Stories',
       );
       res.status(200).json({ ok: true, screen: 'publish' });

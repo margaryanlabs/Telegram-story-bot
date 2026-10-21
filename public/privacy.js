@@ -372,7 +372,7 @@
 
 
   async function copyBusinessBotUsername() {
-    const username = '@Storypilotlab_bot';
+    const username = '@vetotg_bot';
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(username);
@@ -1284,7 +1284,7 @@
     openSheet(`
       <span class="kicker">VETO PRIVACY · ПОДКЛЮЧЕНИЕ В 2 ШАГА</span>
       <h2>Какие переписки защищать?</h2>
-      <p>StoryLab подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
+      <p>VETO подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
       <fieldset class="veto-business-scope-options">
         <legend>Охват Anti-Delete</legend>
         <label><input type="radio" name="vetoBusinessScope" value="all-private" checked><span><b>Все личные переписки</b><small>Существующие и будущие — без ограничения 12 чатами. Не включает группы, каналы и секретные чаты.</small></span></label>
@@ -1404,12 +1404,13 @@
       <h2>${linked ? 'Осталось проверить разрешения' : 'Один шаг — и переписки под защитой'}</h2>
       <p>Для автоматического Anti-Delete нужно один раз подключить VETO как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
       <div class="veto-business-sheet-steps">
-        <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
-        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Storypilotlab_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
+        <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса (или «Аккаунт» → «Автоматизация чатов», если так называется пункт в твоей версии)</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
+        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @vetotg_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
         <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты». Для архива не нужны права отвечать, удалять сообщения или отмечать их прочитанными.</span></section></div>
-        <div><b>04</b><section><strong>Вернись в VETO</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
+        <div><b>04</b><section><strong>Stories — дополнительное разрешение</strong><span>Если хочешь публиковать, изменять или удалять свои Stories через Business-бота, включи «Управление историями» в его разрешениях. Для Anti-Delete и обычного просмотра чужих Stories оно не требуется.</span></section></div>
+        <div><b>05</b><section><strong>Вернись в VETO</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
       </div>
-      <p class="privacy-archive-limit">Без Premium. Это не передаёт VETO старую переписку и не открывает секретные чаты. VETO сохраняет только разрешённые новые события, которые Telegram доставил после подключения, — удалённое ранее восстановить нельзя.</p>
+      <p class="privacy-archive-limit">Доступность Telegram Business зависит от аккаунта: если Telegram запрашивает Premium, VETO не может обойти это ограничение. Это не передаёт VETO старую переписку и не открывает секретные чаты. VETO сохраняет только разрешённые новые события, которые Telegram доставил после подключения, — удалённое ранее восстановить нельзя.</p>
       <div class="sheet-actions">
         <button class="accent" data-privacy-recheck-access="1">✓ Проверить подключение</button>
         <button data-privacy-close="1">Вернуться к чатам</button>
@@ -1769,7 +1770,7 @@
         : backup.running ? 'Автоматически продолжаю копирование выбранного чата.' : 'Копирование приостановлено — всё уже сохранённое осталось в VETO.'}</p>
       ${error ? `<p class="privacy-archive-limit">${escapeHtml(error)}</p>` : ''}
       ${complete && backup.notifyCompletion
-        ? '<p>Уведомление: ' + (alerted === true ? 'доставлено в бот.' : 'не доставлено. Открой @Storypilotlab_bot и нажми Start.') + '</p>'
+        ? '<p>Уведомление: ' + (alerted === true ? 'доставлено в бот.' : 'не доставлено. Открой @vetotg_bot и нажми Start.') + '</p>'
         : ''}
       <p class="privacy-archive-limit">Доступны только сообщения, которые Telegram сохранил и предоставил аккаунту. Старые медиа — отметки о вложениях, не файлы.</p>
       <div class="sheet-actions">
@@ -1887,7 +1888,7 @@
     const button = event.currentTarget;
     button.disabled=true;
     try { await request('test_alert'); toast('Тест доставлен в Telegram. Проверь чат с VETO.'); }
-    catch (error) { toast('Проверь бота @Storypilotlab_bot: '+error.message); }
+    catch (error) { toast('Проверь бота @vetotg_bot: '+error.message); }
     finally {button.disabled=false;}
   });
   $('privacyDeletedMore')?.addEventListener('click', loadMoreDeletedFeed);

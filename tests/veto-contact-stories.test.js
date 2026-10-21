@@ -33,13 +33,13 @@ test('only Telegram-visible real contacts appear, no fabricated or expired stori
   assert.ok(!JSON.stringify(result).includes('accessHash'));
 });
 
-test('Ghost View never requires Premium, official cooldown, or timed stealth',()=>{
+test('Read-only story mode does not invoke official Premium stealth and never guarantees anonymity',()=>{
   const api=source('api/telegram-stories.js'), ui=source('public/telegram-stories.js');
   const policy=source('lib/telegram-contact-stories.js');
   assert.doesNotMatch(api,/ActivateStealthMode|ensureStealth|requireStealth|stealthStatus|PREMIUM_ACCOUNT_REQUIRED/);
   assert.doesNotMatch(ui,/premium|stealthUntil|expiryTimer|canActivate|x-veto-stealth-until/i);
   assert.doesNotMatch(policy,/STEALTH_SAFETY_SECONDS|stealthStatus|requireStealth/);
-  assert.match(ui,/Ghost View · без отметок о просмотре/);
+  assert.match(ui,/Режим без явной отметки · анонимность не гарантирована/);
 });
 
 test('backend authenticates Telegram owner and never silently reports story reads',()=>{
@@ -55,12 +55,13 @@ test('backend authenticates Telegram owner and never silently reports story read
   assert.match(api,/GetStoriesByID/);
   assert.match(api,/const file = await downloadContactStory\(client,story,user\)/);
   assert.match(api,/viewMode:'ghost-no-receipt'/);
-  assert.match(api,/X-Veto-Story-Mode','ghost-no-receipt'/);
+  assert.match(source('lib/story-media-stream.js'),/X-Veto-Story-Mode', 'ghost-no-receipt'/);
   assert.doesNotMatch(api,/new Api\.stories\.(ReadStories|IncrementStoryViews|SendReaction|ActivateStealthMode)/);
   assert.doesNotMatch(api,/client\.invoke\(new Api\.stories/);
   assert.match(api,/STORY_RPC_NOT_ALLOWLISTED/);
-  assert.ok(STORY_MEDIA_LIMIT_BYTES<=4*1024*1024);
+  assert.ok(STORY_MEDIA_LIMIT_BYTES <= 32 * 1024 * 1024);
   assert.match(api,/private, no-store/);
+  assert.match(api,/await streamStoryMedia\(res,file\.buffer,file\.mime\)/);
 });
 
 test('stories are wired into the existing chat page, not a second app',()=>{

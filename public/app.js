@@ -623,7 +623,9 @@
 
     const { response, data } = await requestJson(`/api/viewer-sync${query}`, options, {
       retry: !action,
-      timeoutMs: 18000,
+      // Telegram MTProto may spend time connecting before choosing the
+      // delivery route; an 18s WebView abort made healthy logins look broken.
+      timeoutMs: ['send_code','setup_email','verify_email_code'].includes(action) ? 45000 : 18000,
     });
 
     if (!response.ok || !data.ok) {
@@ -1960,11 +1962,16 @@
     const pending = viewerState.loginPending;
     if (!pending || Date.parse(pending.expiresAt || '') <= Date.now()) return '';
     const password = ['password', 'qr_password'].includes(pending.stage);
+    const email = ['email_setup','email_code'].includes(pending.stage);
+    const explanation = password ? 'Telegram ожидает пароль двухэтапной проверки.'
+      : pending.stage === 'email_setup' ? 'Telegram запросил настройку email для входа.'
+      : pending.stage === 'email_code' ? 'Telegram ожидает подтверждение email. Проверь почту.'
+      : 'Код запрошен у Telegram. Проверь официальный чат «Telegram» на своих устройствах.';
     return `
       <div class="auth-resume-card">
         <strong>Ты уже начал подключение</strong>
-        <p>${password ? 'Telegram ожидает пароль двухэтапной проверки.' : 'Код запрошен у Telegram. Ищи его в официальном чате «Telegram» с синей галочкой, не в чате StoryLab. Если приложение закрылось, новый код запрашивать не нужно.'}</p>
-        <button class="accent" data-sheet-action="viewer-resume-login">${password ? 'Продолжить ввод пароля' : 'Ввести полученный код'} →</button>
+        <p>${explanation} Новый код пока запрашивать не нужно.</p>
+        <button class="accent" data-sheet-action="viewer-resume-login">${password ? 'Продолжить ввод пароля' : email ? 'Продолжить проверку email' : 'Ввести полученный код'} →</button>
       </div>
     `;
   }
@@ -2032,16 +2039,18 @@
     openSheet(`
       <span class="kicker">НЕОБЯЗАТЕЛЬНО · PRIVACY</span>
       <h2>Подключи архив личных чатов</h2>
-      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Premium не требуется.</p>
+      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Если Telegram запрашивает Premium для Business, это ограничение твоего аккаунта Telegram. Основные чаты и Stories можно подключать отдельно.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
-        <div class="sheet-item"><strong>2 · Добавь VETO Telegram</strong><span>Технический username сейчас @Storypilotlab_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
+        <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Telegram → Настройки → Telegram для бизнеса → Чат-боты. В некоторых версиях: Аккаунт → Автоматизация чатов.</span></div>
+        <div class="sheet-item"><strong>2 · Добавь @vetotg_bot</strong><span>Скопируй имя бота и вставь его в Telegram → Чат-боты. Выбери только нужные личные чаты.</span></div>
         <div class="sheet-item"><strong>3 · Выбери личные чаты</strong><span>Включи «Только выбранные чаты» и права для сообщений; остальные разрешения не нужны для архива. Секретные чаты не поддерживаются.</span></div>
-        <div class="sheet-item"><strong>4 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
+        <div class="sheet-item"><strong>4 · Stories — дополнительное право</strong><span>Хочешь публиковать, менять и удалять Stories через Business-бота? Включи «Управление историями». Для Anti-Delete и обычного просмотра Stories оно не требуется.</span></div>
+        <div class="sheet-item"><strong>5 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="go-ghost">Открыть настройку чатов</button>
-        <button data-sheet-action="account-connect">Подключить обычный аккаунт</button>
+        <button class="accent" data-sheet-action="business-copy-name">Скопировать @vetotg_bot</button>
+        <button data-sheet-action="go-ghost">Проверить Anti-Delete в VETO</button>
+        <button data-sheet-action="account-connect">Чаты и Stories — другой способ</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
@@ -2170,17 +2179,37 @@
   }
 
   function viewerPhoneSheet() {
+    const dialCodes = [
+      ['+7','🇷🇺 Россия · +7'],
+      ['+374','🇦🇲 Армения · +374'],
+      ['+995','🇬🇪 Грузия · +995'],
+      ['+971','🇦🇪 ОАЭ · +971'],
+      ['+1','🇺🇸 США/Канада · +1'],
+      ['+44','🇬🇧 Великобритания · +44'],
+      ['+49','🇩🇪 Германия · +49'],
+      ['+33','🇫🇷 Франция · +33'],
+    ];
+    const existingPhone = String(viewerPendingPhone || '').replace(/[()\s-]/g,'');
+    const currentCode = [...dialCodes].sort((a,b)=>b[0].length-a[0].length)
+      .find(([code])=>existingPhone.startsWith(code))?.[0] || '+7';
+    const national = existingPhone.startsWith(currentCode)
+      ? existingPhone.slice(currentCode.length) : existingPhone;
+    const countryChoices = dialCodes.map(([code,label]) =>
+      '<option value="'+code+'"'+(code===currentCode ? ' selected' : '')+'>'+label+'</option>').join('');
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="active">1 · Номер</span><span>2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Введи номер Telegram</h2>
-      <p>Укажи тот номер, на который зарегистрирован твой Telegram. Мы попросим Telegram отправить код подтверждения.</p>
+      <p>Подключай только <strong>свой</strong> Telegram: аккаунт с этим номером должен совпадать с аккаунтом, из которого ты открыл @vetotg_bot. Для друга открой VETO с его собственного Telegram — подключение чужих аккаунтов запрещено.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
-          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 / +374 / +971…" value="${escapeHtml(viewerPendingPhone)}" />
+          <div class="veto-phone-entry">
+            <select id="viewerPhoneCountry" aria-label="Страна и телефонный код" autocomplete="tel-country-code">${countryChoices}</select>
+            <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="Номер без кода страны" value="${escapeHtml(national)}" />
+          </div>
         </div>
-        <div class="auth-help">Международный формат, начиная с +. Проверь официальный чат «Telegram» с синей галочкой во всех своих активных устройствах. SMS может не прийти — способ доставки выбирает Telegram.</div>
+        <div class="auth-help">Формат +374… или другой международный. Код может прийти в официальный чат «Telegram» на другом устройстве, на email входа либо по SMS — способ выбирает Telegram. Некоторые сторонние входы не поддерживают SMS. Никогда не отправляй код боту или другому человеку.</div>
       </div>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
@@ -2190,25 +2219,135 @@
     `);
   }
 
+  function viewerEmailSetupSheet(reused = false) {
+    openSheet(`
+      <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM · ПОЧТА</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Email</span><span>3 · Код</span></div>
+      <h2>Telegram запрашивает email для входа</h2>
+      <p>${reused ? 'Сохранили начатую проверку.' : 'Telegram потребовал дополнительно подтвердить адрес почты.'} Введи свой email только в VETO — код подтверждения придёт на почту. Это отдельный этап Telegram, не сообщение от бота.</p>
+      <div class="auth-form"><div class="auth-field">
+        <label for="viewerLoginEmail">Твой email для входа в Telegram</label>
+        <input id="viewerLoginEmail" type="email" autocomplete="email" inputmode="email" placeholder="name@example.com" maxlength="254" />
+      </div></div>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-setup-email">Отправить код на email</button>
+        <button data-sheet-action="viewer-cancel-login">Отменить вход</button>
+      </div>
+    `);
+  }
+
+  function viewerEmailCodeSheet(pattern = '', reused = false) {
+    openSheet(`
+      <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM · EMAIL</span>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Email-код</span><span>3 · Telegram-код</span></div>
+      <h2>Проверь входящие письма</h2>
+      <p>${reused ? 'Продолжаем предыдущий запрос. Новый email-код не отправлялся.' : 'Telegram выбрал подтверждение через email.'}
+      ${pattern ? 'Письмо для ' + escapeHtml(pattern) + '.' : 'Проверь почту, привязанную к Telegram.'}
+      Введи код из письма в VETO. Не пересылай его в чат бота.</p>
+      <div class="auth-form"><div class="auth-field">
+        <label for="viewerEmailCode">Код из письма Telegram</label>
+        <input id="viewerEmailCode" type="text" inputmode="text" autocomplete="one-time-code" maxlength="12" placeholder="Код из email" />
+      </div></div>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-verify-email-code">Подтвердить email</button>
+        <button data-sheet-action="viewer-cancel-login">Отменить вход</button>
+      </div>
+    `);
+  }
+
+  let viewerCodeTimer = null;
+
+  function viewerChannelLabel(channel) {
+    return ({
+      telegram_app: 'в приложение Telegram',
+      sms: 'по SMS',
+      call: 'звонком',
+      missed_call: 'пропущенным звонком',
+      flash_call: 'звонком с кодом в номере',
+      fragment: 'через Fragment',
+      email: 'по электронной почте',
+    })[channel] || 'доступным способом Telegram';
+  }
+
+  function rememberViewerCodeChallenge(data) {
+    viewerState.loginPending = {
+      stage: 'code',
+      expiresAt: data.expiresAt || new Date(Date.now() + 600000).toISOString(),
+      delivery: data.delivery || 'other',
+      nextDelivery: data.nextDelivery || null,
+      resendAt: data.resendAt || null,
+    };
+  }
+
+  function refreshViewerCodeTimer() {
+    const challenge = viewerState.loginPending;
+    const deadline = Date.parse(challenge?.resendAt || '');
+    const remaining = Number.isFinite(deadline) ? Math.max(0, Math.ceil((deadline - Date.now()) / 1000)) : 0;
+    const expiry = Date.parse(challenge?.expiresAt || '');
+    const valid = challenge?.stage === 'code' && Number.isFinite(expiry) && expiry > Date.now();
+    const allowed = Boolean(valid && challenge?.nextDelivery && !remaining);
+    const button = $('viewerResendButton');
+    if (button) button.disabled = !allowed;
+    const label = !challenge?.nextDelivery
+      ? 'Telegram пока не предложил другой способ доставки.'
+      : remaining
+        ? 'Другой способ доставки ' + viewerChannelLabel(challenge.nextDelivery) + ' станет доступен через ' + Math.floor(remaining / 60) + ':' + String(remaining % 60).padStart(2, '0')
+        : 'Telegram разрешил запросить следующий способ: ' + viewerChannelLabel(challenge.nextDelivery) + '.';
+    document.querySelectorAll('[data-viewer-countdown]').forEach(node => { node.textContent = label; });
+  }
+
+  function startViewerCodeTimer() {
+    if (viewerCodeTimer) clearInterval(viewerCodeTimer);
+    refreshViewerCodeTimer();
+    viewerCodeTimer = setInterval(() => {
+      if (!document.querySelector('[data-viewer-countdown]')) {
+        clearInterval(viewerCodeTimer);
+        viewerCodeTimer = null;
+        return;
+      }
+      refreshViewerCodeTimer();
+    }, 1000);
+  }
+
+  function viewerShowLoginStage(data) {
+    if (data?.stage === 'email_setup') viewerEmailSetupSheet(data?.reused === true);
+    else if (data?.stage === 'email_code') viewerEmailCodeSheet(data.emailPattern, data?.reused === true);
+    else if (['password','qr_password'].includes(data?.stage)) viewerPasswordSheet();
+    else {
+      rememberViewerCodeChallenge(data || {});
+      viewerCodeSheet(data?.delivery || 'other', data?.reused === true);
+    }
+  }
+
   function viewerCodeSheet(delivery, reused = false) {
+    const channel = viewerState.loginPending?.delivery || delivery || 'other';
+    const deliveryMessage = channel === 'telegram_app'
+      ? 'Telegram выбрал доставку кода внутрь приложения, а не по SMS.'
+      : 'Telegram выбрал доставку ' + viewerChannelLabel(channel) + '.';
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>Теперь введи код из Telegram</h2>
-      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте StoryLab. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
+      <p>${reused ? 'Продолжаем прежний запрос, новый код не отправляли. ' : ''}${deliveryMessage} Проверь официальный чат «Telegram» с синей галочкой во всех своих устройствах. Telegram принял запрос, но фактическая доставка кода не подтверждена.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
           <input id="viewerCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="12345" maxlength="8" />
         </div>
       </div>
+      <p class="auth-security-note" data-viewer-countdown role="status"></p>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-code">Подтвердить</button>
+        <button id="viewerResendButton" data-sheet-action="viewer-resend-code" disabled>Отправить повторно</button>
         <button data-sheet-action="viewer-code-help">Код не пришёл?</button>
+        <button data-sheet-action="viewer-start-qr">Войти через QR</button>
         <button data-sheet-action="close">Закрыть (вход сохранится)</button>
       </div>
     `);
+    startViewerCodeTimer();
   }
 
   function viewerNoCodeSheet() {
@@ -2218,13 +2357,68 @@
       <div class="sheet-list">
         <div class="sheet-item"><strong>1 · Проверь официальный чат «Telegram»</strong><span>Открой поиск Telegram, введи Telegram и найди сервисный аккаунт с синей галочкой. Это не чат нашего бота и не раздел SMS.</span></div>
         <div class="sheet-item"><strong>2 · Проверь другие свои устройства</strong><span>Telegram нередко присылает код на уже авторизованный телефон или компьютер вместо SMS.</span></div>
-        <div class="sheet-item"><strong>3 · Не запрашивай код много раз</strong><span>Повторные запросы могут аннулировать предыдущий код и вызвать ограничение Telegram. Если есть второй экран, попробуй QR-вход.</span></div>
+        <div class="sheet-item"><strong>3 · Проверь почту и метод доставки</strong><span>Telegram может выбрать код на email или другой способ, а SMS для сторонних приложений иногда недоступен.</span></div>
+        <div class="sheet-item"><strong>4 · Проверь чей аккаунт открыт</strong><span>Открывай @vetotg_bot из Telegram того же человека, чей номер подключаешь. Из своего Mini App чужой номер подключить нельзя.</span></div>
+        <div class="sheet-item"><strong>5 · Не запрашивай код много раз</strong><span>Telegram может временно ограничить попытки. Если есть второй экран, используй QR этого же аккаунта; не проси друга прислать код.</span></div>
+        <div class="sheet-item"><strong>6 · Повторная доставка</strong><span data-viewer-countdown>Ожидаем данные Telegram…</span></div>
       </div>
-      <p class="auth-security-note">Никогда не пересылай код другим людям. StoryLab не умеет доставить код вручную: способ выбирает Telegram.</p>
+      <p class="auth-security-note">Никогда не пересылай код другим людям. VETO не умеет доставить код вручную: способ выбирает Telegram.</p>
       <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-auth-diagnostics">Проверить отправку кода</button>
+        <button id="viewerResendButton" data-sheet-action="viewer-resend-code" disabled>Отправить повторно</button>
         <button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button>
         <button data-sheet-action="viewer-start-qr">Подключить через QR</button>
         <button data-sheet-action="viewer-cancel-login">Отменить запрос и сменить номер</button>
+      </div>
+    `);
+    startViewerCodeTimer();
+  }
+
+  function viewerAuthDiagnosticsSheet(events) {
+    const titles = {
+      'auth.send_code_attempt': 'VETO начал запрос кода',
+      'auth.delivery_selected': 'Telegram выбрал способ доставки',
+      'auth.send_code_failed': 'Ошибка запроса кода',
+    };
+    const reasons = {
+      RATE_LIMIT:'Telegram ограничил частоту попыток.',
+      DELIVERY_UNAVAILABLE:'Telegram не смог доставить код этим способом.',
+      APP_CONFIGURATION:'Ошибка настроек подключения VETO.',
+      EMAIL_VERIFICATION:'Нужна проверка почты Telegram.',
+      UNSUPPORTED_TELEGRAM_STEP:'Telegram запросил пока неподдерживаемый шаг входа.',
+      APP_LOGIN_RESTRICTED:'Telegram ограничил вход из стороннего приложения.',
+      PHONE_INVALID:'Номер не принят Telegram.',
+      CONNECTIVITY:'Ошибка соединения между VETO и Telegram.',
+      STORAGE:'Защищённое хранилище временно недоступно.',
+      UNCLASSIFIED:'Telegram не вернул распознаваемую причину.',
+    };
+    const delivery = {
+      telegram_app:'Код направлен в приложение Telegram',
+      email:'Код направлен на почту входа',
+      email_setup:'Telegram просит настроить почту входа',
+      sms_or_other:'Доставка по одному из доступных каналов — SMS не гарантируется',
+      sms:'Telegram выбрал SMS', call:'Telegram выбрал звонок', missed_call:'Telegram выбрал пропущенный звонок',
+      flash_call:'Telegram выбрал короткий звонок', fragment:'Telegram выбрал Fragment', other:'Канал доставки неизвестен',
+    };
+    const visible=Array.isArray(events)?events.slice(0,8):[];
+    const rows=visible.map(item=>{
+      const label=titles[item.type]||'Событие авторизации';
+      const detail=item.reason?reasons[item.reason]||'Проверь соединение'
+        :item.delivery?delivery[item.delivery]||'Способ доставки неизвестен'
+        :'Ожидаем следующий этап';
+      const time=item.at?new Date(item.at).toLocaleString('ru-RU'):'';
+      return '<div class="sheet-item"><strong>'+escapeHtml(label)+'</strong><span>'+
+        escapeHtml(detail)+(time?' · '+escapeHtml(time):'')+'</span></div>';
+    }).join('');
+    openSheet(`
+      <span class="kicker">VETO · ДИАГНОСТИКА ВХОДА</span>
+      <h2>Куда ушёл запрос?</h2>
+      <p>Только безопасные состояния авторизации. Здесь нет номера, кода, почты или Telegram-сессии.</p>
+      <div class="sheet-list">${rows||'<div class="sheet-item"><strong>Запрос кода не зафиксирован</strong><span>Открой VETO из Telegram владельца номера и повтори один раз. Если запрос уже делали, попробуй QR со второго устройства.</span></div>'}</div>
+      <p class="auth-security-note">Статус «Telegram выбрал доставку» означает ответ Telegram, но не подтверждает получение сообщения пользователем.</p>
+      <div class="sheet-actions">
+        <button class="accent" data-sheet-action="viewer-code-help">Вернуться к подсказкам</button>
+        <button data-sheet-action="viewer-start-qr">Войти по QR</button>
       </div>
     `);
   }
@@ -2886,6 +3080,27 @@
       connectionHelpSheet();
       return;
     }
+    if (action === 'business-copy-name') {
+      const botName = '@vetotg_bot';
+      try {
+        if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(botName);
+        else {
+          const input = document.createElement('textarea');
+          input.value = botName;
+          input.setAttribute('readonly', '');
+          input.style.position = 'fixed';
+          input.style.opacity = '0';
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          input.remove();
+        }
+        showToast('Имя бота скопировано. Открой Telegram → Чат-боты и вставь его.');
+      } catch {
+        showToast('Скопируй имя вручную: ' + botName);
+      }
+      return;
+    }
     if (action === 'business-help') {
       businessConnectionHelpSheet();
       return;
@@ -2908,8 +3123,7 @@
     if (action === 'viewer-resume-login') {
       const pending = viewerState.loginPending;
       if (pending && Date.parse(pending.expiresAt || '') > Date.now()) {
-        if (['password', 'qr_password'].includes(pending.stage)) viewerPasswordSheet();
-        else viewerCodeSheet('telegram_app');
+        viewerShowLoginStage(pending);
       } else {
         await refreshViewerSync({ silent: true });
         connectionHelpSheet();
@@ -2920,8 +3134,23 @@
       viewerNoCodeSheet();
       return;
     }
+    if (action === 'viewer-auth-diagnostics') {
+      await runViewerAuthAction(actionTarget, async () => {
+        const result=await viewerApi('auth_diagnostics',{},null);
+        viewerAuthDiagnosticsSheet(result.events);
+      });
+      return;
+    }
+    if (action === 'viewer-resend-code') {
+      await runViewerAuthAction(actionTarget, async () => {
+        const data = await viewerApi('resend_code', {}, null);
+        viewerShowLoginStage(data);
+        showToast('Telegram принял повторный запрос; получение сообщения не подтверждено.');
+      });
+      return;
+    }
     if (action === 'viewer-back-code') {
-      viewerCodeSheet('telegram_app');
+      viewerCodeSheet(viewerState.loginPending?.delivery || 'other', true);
       return;
     }
     if (action === 'viewer-cancel-login') {
@@ -3010,14 +3239,36 @@
       return;
     }
     if (action === 'viewer-send-code') {
-      const phone = ($('viewerPhone')?.value || '').trim();
+      const local = ($('viewerPhone')?.value || '').trim().replace(/[()\s-]/g,'');
+      const prefix = $('viewerPhoneCountry')?.value || '+7';
+      const phone = local.startsWith('+') ? local : prefix + local;
       await runViewerAuthAction(actionTarget, async () => {
-        if (!/^\+[\d\s()-]{7,24}$/.test(phone)) {
-          throw new Error('Введи номер с кодом страны, например +374…');
+        if (!/^\+[1-9]\d{6,14}$/.test(phone)) {
+          throw new Error('Проверь страну и номер Telegram. Можно вставить полный номер с +.');
         }
         const data = await viewerApi('send_code', { phone }, null);
         viewerPendingPhone = phone;
-        viewerCodeSheet(data.delivery, data.reused === true);
+        viewerShowLoginStage(data);
+      });
+      return;
+    }
+    if (action === 'viewer-setup-email') {
+      const email = ($('viewerLoginEmail')?.value || '').trim();
+      await runViewerAuthAction(actionTarget, async () => {
+        if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,30}$/.test(email))
+          throw new Error('Проверь адрес email');
+        const data = await viewerApi('setup_email', { email }, null);
+        viewerShowLoginStage(data);
+      });
+      return;
+    }
+    if (action === 'viewer-verify-email-code') {
+      const code = ($('viewerEmailCode')?.value || '').trim();
+      await runViewerAuthAction(actionTarget, async () => {
+        if (!/^[a-zA-Z0-9]{3,12}$/.test(code))
+          throw new Error('Проверь код из письма Telegram');
+        const data = await viewerApi('verify_email_code', { code }, null);
+        viewerShowLoginStage(data);
       });
       return;
     }

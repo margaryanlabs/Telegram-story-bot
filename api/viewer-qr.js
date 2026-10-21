@@ -81,8 +81,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  await deleteAuthChallenge(userId).catch(() => {});
-
+  // Keep a valid phone challenge if the QR stream fails or the user cancels.
+  // It is invalidated only after successful QR authorization.
   noStore(res);
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');

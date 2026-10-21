@@ -72,7 +72,7 @@
     const owner = String(tg?.initData || '');
     if (!owner) throw new Error('Открой VETO через Telegram и подключи личный аккаунт.');
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(),35000);
+    const timer = setTimeout(() => controller.abort(),90000);
     try {
       const response = await fetch('/api/telegram-stories',{
         method:'POST',headers:{
@@ -96,8 +96,8 @@
       if (response.headers.get('x-veto-story-mode') !== 'ghost-no-receipt')
         throw new Error('VETO не подтвердил Ghost View. Просмотр заблокирован.');
       const blob = await response.blob();
-      if (blob.size > 4*1024*1024 || !blob.size)
-        throw new Error('Этот файл слишком большой для просмотра.');
+      if (blob.size > 32*1024*1024 || !blob.size)
+        throw new Error('История превышает 32 МБ. Пока попробуй другое видео.');
       return {blob,kind};
     } catch(error) {
       if (error?.name === 'AbortError') throw new Error('Telegram не ответил. Просмотр не был открыт.');
@@ -107,7 +107,7 @@
   function statusText() {
     if (state.lastError) return 'Не удалось обновить · нажми ↻';
     return state.viewMode==='ghost-no-receipt'
-      ? 'Ghost View · без отметок о просмотре'
+      ? 'Режим без явной отметки · анонимность не гарантирована'
       : 'Проверяю Ghost View…';
   }
   function syncKnownContactAvatars() {
@@ -265,14 +265,14 @@
       '<div class="veto-story-stage-head"><span class="veto-story-stage-avatar">'+
       safe(initials(contact.name))+'</span><div><strong>'+safe(contact.name)+'</strong>'+
       '<small>'+safe(formatTime(story.createdAt))+' · Telegram</small></div>'+
-      '<span class="veto-story-protection">◈ Ghost View</span>'+ 
+      '<span class="veto-story-protection">◈ Без явной отметки</span>'+ 
       '<button type="button" class="veto-story-stage-pin" data-veto-story-favorite="'+safe(contact.userId)+'" '+
       'aria-pressed="'+String(state.favorites.has(String(contact.userId)))+'" aria-label="'+
       (state.favorites.has(String(contact.userId))?'Убрать из избранного: ':'В избранное: ')+safe(contact.name)+'">'+
       (state.favorites.has(String(contact.userId))?'★':'☆')+'</button>'+
       '<button type="button" class="veto-story-close" data-veto-story-close="1" aria-label="Закрыть">×</button></div>'+
       '<div class="veto-story-media" id="vetoStoryMedia"><div class="veto-story-spinner"></div>'+
-      '<span>Загружаю историю без отметки о просмотре…</span></div>'+
+      '<span>Загружаю историю без явного запроса отметки…</span></div>'+
       '<button class="veto-story-skip previous" data-veto-story-back="1" aria-label="Предыдущая история"></button>'+
       '<button class="veto-story-skip next" data-veto-story-next="1" aria-label="Следующая история"></button>'+
       '<p class="veto-story-caption">'+safe(story.caption||'')+'</p>'+

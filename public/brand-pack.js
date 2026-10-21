@@ -2,6 +2,8 @@
   const tg = window.Telegram?.WebApp || null;
   const $ = id => document.getElementById(id);
 
+  const BRAND_PACK_COMING_SOON = true;
+
   const state = {
     assets: [],
     staticAssets: [],
@@ -91,6 +93,12 @@
   }
 
   function renderControls() {
+    if (BRAND_PACK_COMING_SOON) {
+      ['brandPackBuildButton','brandPackAnimateButton','brandPackPublishButton','brandPackRestoreButton']
+        .map($).filter(Boolean).forEach(button => {button.disabled = true;button.setAttribute('aria-disabled','true');});
+      if ($('brandPackStatus')) $('brandPackStatus').textContent = 'Скоро · Полный Brand Pack Engine пока не запускается';
+      return;
+    }
     document.querySelectorAll('[data-brand-count]').forEach(button => {
       button.classList.toggle('active', Number(button.dataset.brandCount) === state.count);
     });
@@ -436,6 +444,7 @@
   }
 
   function bind() {
+    if (BRAND_PACK_COMING_SOON) return;
     document.querySelectorAll('[data-brand-count]').forEach(button => {
       button.addEventListener('click', () => {
         state.count = Number(button.dataset.brandCount || 8);
