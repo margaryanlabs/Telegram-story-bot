@@ -623,7 +623,9 @@
 
     const { response, data } = await requestJson(`/api/viewer-sync${query}`, options, {
       retry: !action,
-      timeoutMs: 18000,
+      // Telegram MTProto may spend time connecting before choosing the
+      // delivery route; an 18s WebView abort made healthy logins look broken.
+      timeoutMs: ['send_code','setup_email','verify_email_code'].includes(action) ? 45000 : 18000,
     });
 
     if (!response.ok || !data.ok) {
