@@ -1,7 +1,7 @@
 import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { normalizeTelegramPhone } from '../lib/telegram-phone.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
-import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
+import { classifyTelegramAuthError, safeTelegramAuthReason } from '../lib/telegram-auth-feedback.js';
 import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import {
@@ -581,6 +581,10 @@ export default async function handler(req, res) {
 
       // Telegram selects the delivery mechanism. Do not mislabel email-based
       // challenges as SMS; that made valid logins impossible to complete.
+      await recordActivityEvent(userId,'auth.send_code_attempt',{
+        // Contains no phone, email, Telegram challenge or authorization secret.
+        route:'phone',
+      }).catch(() => {});
       const auth = await beginUserAuth(requestedPhone);
       const stage = auth.delivery === 'email_setup' ? 'email_setup'
         : auth.delivery === 'email' ? 'email_code' : 'code';
@@ -804,7 +808,17 @@ export default async function handler(req, res) {
 
     res.status(400).json({ ok: false, error: 'Unknown action' });
   } catch (error) {
-    const description = error?.errorMessage || error?.message || String(error);
+    const reason = safeTelegramAuthReason(error);
+    if (req.method === 'POST' && String(req.body?.action || '') === 'send_code') {
+      await recordActivityEvent(userId,'auth.send_code_failed',{
+        reason,
+        // No phone number, code, email, device, IP or MTProto state.
+      }).catch(() => {});
+    }
+    const description = String(error?.errorMessage || error?.message || String(error))
+      .replace(/\\+?\\d{7,15}/g,'[redacted-number]')
+      .replace(/[^\\s@]+@[^\\s@]+/g,'[redacted-email]')
+      .slice(0,350);
     if (/viewer_crypto|private json|PRIVATE_SESSION_CRYPTO|encryption key version|Viewer Sync store/i.test(description)) {
       console.warn('Viewer Sync secure key unavailable', {
         telegram_user_id: userId,
@@ -837,6 +851,7 @@ export default async function handler(req, res) {
     res.status(feedback.status).json({
       ok: false,
       error: feedback.message,
+      errorCode: reason,
       ...(feedback.retryAfterSeconds ? { retryAfterSeconds: feedback.retryAfterSeconds } : {}),
     });
   }
