@@ -155,7 +155,7 @@ test('Preserved-only chat is accessible without a live Telegram session and neve
  assert.ok(api.includes('archiveHasMore:stored.hasMore'));
  assert.ok(ui.includes("data-mirror-filter"));
  assert.ok(ui.includes("message.deleted"));
- assert.ok(ui.includes("УДАЛЕНО В TELEGRAM · СОХРАНЕНО В VETO"));
+ assert.ok(ui.includes("УДАЛЕНО В TELEGRAM · СОХРАНЕНО В Vetogram"));
  assert.ok(ui.includes("state.archiveHasMore"));
  assert.ok(ui.includes('state.archiveOffset'));
  assert.ok(!api.includes('Telegram can recover already deleted messages'));
