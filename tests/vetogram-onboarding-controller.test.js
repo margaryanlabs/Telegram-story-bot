@@ -79,3 +79,14 @@ test('already connected owner does not silently expand existing rights',async()=
   assert.equal(connection.scope,'preserve');assert.equal(connection.storiesConsent,true);
   assert.equal(connection.antiDeleteConsent,false);
 });
+test('existing owner can adjust chat scope without requesting either capability again',async()=>{
+  const f=fixture(true,true);await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true});
+  f.select('all-private');f.inputs.businessWizardConsent.checked=true;await f.change();
+  assert.equal(f.action.disabled,false);
+  await f.apply();
+  const connection=f.requests.find(r=>r.body.action==='connect').body;
+  assert.equal(connection.scope,'all-private');
+  assert.equal(connection.scopeConsent,true);
+  assert.equal(connection.storiesConsent,false);
+  assert.equal(connection.antiDeleteConsent,false);
+});
