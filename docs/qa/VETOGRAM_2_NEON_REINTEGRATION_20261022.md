@@ -137,3 +137,27 @@ Must run two consenting test accounts, one non-Premium, through v4 QR/phone logi
 4. Validate original `v4` key fingerprint, private S3 health, and schema v5 only after an approved additive migration.
 5. Run real consensual two-account Ghost View, Business Stories without Premium, Anti-Delete/edit/delete, alerts, iOS/Android tests.
 6. Obtain explicit **ДЕПЛОЙ** before merging or enabling production.
+
+
+## Confirmed external CI blocker — GitHub personal-account billing lock
+
+**Verified on 22 October 2026 from the user's GitHub Actions screenshot**, run #39773447540, workflow "Vetogram Verification", job "verify":
+
+> The job was not started because your account is locked due to a billing issue.
+
+A separate **notice**, not a failure cause, says the `ubuntu-latest` label will migrate to Ubuntu 26 starting October 19, 2026.
+
+The first CI step never started. Therefore the run offers **no evidence at all** about Node syntax, `npm ci`, unit tests, or Vercel build quality. Changing the runner image, disabling the workflow, or editing application code cannot resolve this account lock.
+
+The repository `margaryanlabs/Telegram-story-bot` is verified **public**; GitHub reports its owner `margaryanlabs` is a **User** (personal account), not an organization. Billing must be investigated under the owner's personal GitHub Settings → Billing & licensing. GitHub documents that a failed authorization hold can lock Actions even when the account appears to be on Free and displays no amount owing. If there are no active fees or payment issues, the user can request billing lock review from GitHub Support. Where available and appropriate, downgrading to GitHub Free may retain advanced access for public repositories. **Do not charge a card, increase a budget or change billing on the user's behalf without authorization.**
+
+Independent remaining build obstacle: `package-lock.json` does not match Neon/AWS SDK additions in `package.json`. The current local build environment has Node 22 but cannot resolve `registry.npmjs.org`; attempts to refresh dependencies here would fail for lack of network access. Do not fabricate integrity hashes or bypass `npm ci`. A trusted, network-enabled environment can run:
+
+```sh
+npm run lock:refresh
+npm run lock:check
+npm ci --no-audit --no-fund
+npm run vercel-build
+```
+
+The lockfile must be reviewed and committed only after successful registry-backed regeneration. Real Telegram verification is still pending. **Production must not deploy until explicitly authorized and all release gates pass.**
