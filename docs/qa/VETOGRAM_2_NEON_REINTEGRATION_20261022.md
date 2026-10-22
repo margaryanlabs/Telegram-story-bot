@@ -215,3 +215,24 @@ When ready for a controlled, paid-minute-eligible Preview, review **Vercel → p
 - Verify Ghost View (two consenting accounts), Stories without Premium, Anti-Delete/edit notifications, iOS/Android before production.
 
 **No merge, production deploy, environment edit, Telegram rights change, credential rotation or database migration performed in this follow-up.**
+
+
+## 22 October — Vercel 340-test build logs and quota-limited recheck
+
+Latest actual Vercel Preview build for commit `e747fcd` (build `dpl_9pzfrNaeFy7RakDrUC2eSbW4iRAn`) ran `npm run vercel-build`. The npm package install **succeeded** (103 packages installed), all JS syntax checks passed, and the Node test suite reported **340 tests, 335 passed, 4 failed, 1 skipped**. This disproves the assumption that the stale lockfile alone necessarily prevented Vercel's current install; the stale lock remains a reproducibility / future `npm ci` blocker, especially for the CI lock-check.
+
+All four failures were directly explained by the Preview-scoped `VETO_STORAGE_PROVIDER=neon` with missing Preview Neon key/DB credentials; the tests themselves were simulating a Supabase-signed store endpoint using `globalThis.fetch`:
+- `tests/privacy-delivery.test.js`: three failures, `NEON_PRIVATE_STORAGE_NOT_CONFIGURED`, during mocked message ingest, expected store failure and bounded archive read.
+- `tests/vetogram-webhook-flow.test.js`: one failure; expected successful signed Bot API webhook archiving, got HTTP 503 from the Neon provider before reaching its mock.
+
+**Fixes committed after build e747fcd:**
+- `tests/privacy-delivery.test.js` pins its file-local mocked transport to Supabase and restores the inherited provider via a Node `after()` hook.
+- `tests/vetogram-webhook-flow.test.js` pins the provider to Supabase only for the webhook mock test, restoring it in `finally`. Production code, Neon adapters and private archives remain untouched.
+- Both test files load the existing real `lib/viewer-sync-store.js` and preserve assertions for failure propagation and webhook retries. The isolated mocks must NOT be mistaken for live Neon integration proofs.
+
+**Important:** The four previously failed tests have **not yet been rerun** in the Vercel builder since these commits; do not claim a passing 340/340 suite or a READY Preview.
+
+A user-authorized attempt to initiate a new Preview-only deployment of the corrected PR head received an actual Vercel API **402**:
+`api-deployments-free-per-day`, message `Resource is limited - try again in 24 hours`, `retryAfter: 86400`. The linked Vercel CLI is unavailable in this execution environment, so no deployment could be started. This is a **daily API deployment quota**, not a reported production site error. **Do not purchase capacity or change billing automatically.** Re-check after the quota resets; full Preview readiness and original v4 key/Neon v5 remain release blockers.
+
+GitHub Actions remains account-billing locked. This branch remains draft; no production merge, no production redeploy, no Neon schema migrations, no Telegram session mutations were performed.
