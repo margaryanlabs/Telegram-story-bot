@@ -194,3 +194,24 @@ When ready for a controlled, paid-minute-eligible Preview, review **Vercel → p
 - A **preview with authorized Neon database + original v4 encryption key + S3 vault** is required to execute `npm run neon:preflight`. Production-only key values must not be disclosed or silently copied to public build logs.
 - Live two-account Ghost View / nonPremium Business Story publish / actual message edit-delete alert / Android-iOS verification not completed.
 - Absolutely no production promotion, forced build, paid credit use, credential alteration, data migration or Telegram session write was performed.
+
+
+## 22 October — incremental fixes after billing-lock diagnosis
+
+**New commits on PR #179, no production deployment:**
+
+1. **Neon v4 service health**: `api/health.js` no longer erroneously requires Supabase cipher `v3` when VETOGRAM selects Neon `v4`. The shared `sessionCryptoReady` check is now used. `VETO_NEON_CRON_ENABLED` and a long `CRON_SECRET` are needed to mark Neon cron configured; UI/health labels it `neon-configured-not-live-verified`, not as proven live. Three provider/scheduler configuration scenarios passed in the JS harness.
+2. **Anti-Delete webhook duplicate prevention**: `lib/neon-archive-store.js` only processes previously undeleted messages; resulting events are filtered by rows actually changed in `UPDATE/DELETE RETURNING`. Repeat delivery and a stale pre-update SELECT no longer produce duplicate delete notifications in an independently executed JS harness. Regression tests were committed.
+3. **Privacy retention consistency**: `lib/neon-media-store.js` deletes expired message edit versions before removing message rows, after the media vault removal succeeds. Neon database schema contains no cascade reference between those tables. A read-only Neon count showed **107 versions, zero orphaned versions** before this change. The database was NOT mutated.
+4. **Permanent deletion without Anti-Delete**: `lib/neon-archive-store.js` also purges the corresponding edit versions when privacy settings specify no deleted-message retention. A focused JS harness scenario passed. No existing archived row was modified.
+
+**What these checks are not:** The app's `npm ci`, `npm run vercel-build`, full Node test suite, real Telegram two-account checks or a working protected Vercel Preview have NOT run in this environment. This runtime has Node 22 but cannot resolve GitHub or npm registry and has no npm package cache. Do not substitute static syntax or harness checks for full tests.
+
+**Unresolved hard release gates:**
+- Regenerate `package-lock.json` against a trusted npm registry (Neon and two AWS SDK packages still missing) and commit it; `npm ci` + full tests must pass.
+- Validate second Vercel team's protected Preview credentials/permissions and run a real Preview with original `v4` key compatibility, Neon health, private S3 and Telegram API auth. No sensitive environment values may be printed or copied insecurely.
+- Review and apply staged Neon `db/neon/005_business_connection_write_leases.sql` only in an approved release window, then prove cross-instance contention.
+- Restore GitHub Actions only if desired; GitHub account's **billing lock** stops it before running, but Actions is not intrinsically required for a Vercel deployment.
+- Verify Ghost View (two consenting accounts), Stories without Premium, Anti-Delete/edit notifications, iOS/Android before production.
+
+**No merge, production deploy, environment edit, Telegram rights change, credential rotation or database migration performed in this follow-up.**
