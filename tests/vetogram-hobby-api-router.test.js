@@ -33,7 +33,7 @@ test('Hobby adapter preserves source request path and does not touch Telegram au
   assert.doesNotMatch(router,/getViewerSession|TELEGRAM_BOT_TOKEN|business_connection_id|updateConnectedBot/i);
 });
 
-test('all 32 routed handlers import and answer unauthenticated requests without external calls',async()=>{
+test('all 33 routed handlers import and answer unauthenticated requests without external calls',async()=>{
   const {default:router}=await import('../api/router.js');
   const endpoints=readdirSync(new URL('../api/',import.meta.url)).filter(p=>p.endsWith('.js')&&p!=='router.js').map(p=>p.slice(0,-3));
   const previous=globalThis.fetch,token=process.env.TELEGRAM_BOT_TOKEN;let external=0;

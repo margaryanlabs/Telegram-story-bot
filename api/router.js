@@ -10,6 +10,7 @@ const endpointLoaders = {
   "emoji-studio": () => import("./emoji-studio.js"),
   "health": () => import("./health.js"),
   "miniapp": () => import("./miniapp.js"),
+  "neon-maintenance": () => import("./neon-maintenance.js"),
   "privacy-backup-worker": () => import("./privacy-backup-worker.js"),
   "privacy-backup": () => import("./privacy-backup.js"),
   "privacy-media-recover": () => import("./privacy-media-recover.js"),
