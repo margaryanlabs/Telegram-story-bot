@@ -1,7 +1,17 @@
-import test from 'node:test';
+import test, {after} from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { captureBusinessMessage, listPrivacyThreads } from '../lib/viewer-sync-store.js';
+
+// These are Supabase gateway contract tests with a mocked fetch. Preview uses
+// Neon without Neon credentials, so pin the mocked provider explicitly.
+const previousProvider = process.env.VETO_STORAGE_PROVIDER;
+process.env.VETO_STORAGE_PROVIDER = 'supabase';
+after(() => {
+  if (previousProvider === undefined) delete process.env.VETO_STORAGE_PROVIDER;
+  else process.env.VETO_STORAGE_PROVIDER = previousProvider;
+});
+
 
 function source(path) {
   return readFileSync(new URL('../' + path, import.meta.url), 'utf8');
