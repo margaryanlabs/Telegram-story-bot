@@ -77,7 +77,7 @@ test('Portal is visibly a local-only preview, not a falsely live public URL',()=
   const html=read('public/studio.html'),ui=read('public/story-engine.js');
   assert.match(html,/не публичная ссылка/);
   assert.match(html,/не кликабельная ссылка Telegram/);
-  assert.match(ui,/Публичная ссылка появится после подключения серверного хранилища/);
+  assert.match(ui,/Публичной ссылки пока нет/);
   assert.match(ui,/ownerId===state.owner/);
   assert.match(read('public/story-engine-core.js'),/data:image/);
 });
@@ -93,4 +93,14 @@ test('slow photo decoding and export never carry an old Telegram owner into a ne
   assert.match(ui,/Аккаунт или черновик изменился/);
   assert.match(ui,/if\(state\.owner!=='0'\)/);
   assert.match(ui,/window\.addEventListener\('focus'/);
+});
+
+test('asynchronous photo, draft, and export flows never cross Telegram identities',()=>{
+  const ui=read('public/story-engine.js');
+  assert.match(ui,/state\.draft\?\.id!==d\.id/);
+  assert.match(ui,/state\.owner!==requestedOwner \|\| d\.ownerId!==requestedOwner/);
+  assert.match(ui,/reader\.onload=[\s\S]*?owner\(\)!==selectedOwner/);
+  assert.match(ui,/toBlob\(resolve,'image\/jpeg',[\s\S]*?owner\(\)!==exportOwner/);
+  assert.match(ui,/if\(state\.owner!=='0'\)\{/);
+  assert.match(ui,/pageshow/);
 });
