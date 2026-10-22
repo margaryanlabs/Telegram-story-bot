@@ -94,3 +94,22 @@ test('new phone-code and 2FA events use the sealed session cipher not literal v3
   assert.match(backend,/crypto: sealedSession\.split\('\.'\)\[0\]/);
   assert.match(backend,/crypto: sealed2faSession\.split\('\.'\)\[0\]/);
 });
+
+test('Neon missing encryption key is separate from SQL outage', async () => {
+  const config=await runtime(()=>{
+    throw new Error('PRIVATE_SESSION_CRYPTO_UNAVAILABLE');
+  }, {provider:'neon'});
+  assert.equal(config.storageStatus,'reachable');
+  assert.equal(config.secureSessionCrypto,false);
+  assert.equal(config.newConnectionsReady,false);
+  assert.ok(config.missing.includes('PRIVATE_SESSION_CRYPTO'));
+  assert.ok(!config.missing.includes('STORAGE_GATEWAY_UNAVAILABLE'));
+});
+test('Neon unreachable SQL still reports server outage without prompting session deletion', async () => {
+  const config=await runtime(()=>{
+    throw new Error('fetch failed');
+  }, {provider:'neon'});
+  assert.equal(config.storageStatus,'unavailable');
+  assert.ok(config.missing.includes('STORAGE_GATEWAY_UNAVAILABLE'));
+  assert.ok(!config.missing.includes('PRIVATE_SESSION_CRYPTO'));
+});
