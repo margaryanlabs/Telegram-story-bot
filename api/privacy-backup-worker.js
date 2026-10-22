@@ -1,3 +1,5 @@
+import { selectedStorageProvider } from '../lib/storage-provider.js';
+import { neonCronAuthorized } from '../lib/neon-scheduler-auth.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { verifyEdgeSignature } from '../lib/viewer-sync-signing.js';
 import {
@@ -14,6 +16,7 @@ const MAX_JOBS=2;
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 
 function authorized(req) {
+  if (selectedStorageProvider()==='neon') return neonCronAuthorized(req);
   const timestamp=String(req.headers['x-story-trigger-timestamp']||'');
   const signature=String(req.headers['x-story-trigger-signature']||'');
   const body=typeof req.body==='string'?req.body:JSON.stringify(req.body||{});

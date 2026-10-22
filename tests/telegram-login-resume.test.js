@@ -18,7 +18,7 @@ test('Telegram Mini App can resume a code or 2FA challenge after reopening',()=>
    'loginPending: data.loginPending || null',
    'data-sheet-action="viewer-resume-login"',
    "action === 'viewer-resume-login'",
-   "viewerCodeSheet('telegram_app')",
+   "viewerCodeSheet(viewerCodeDelivery)",
    'viewerPasswordSheet()',
  ]) assert.ok(app.includes(snippet), 'Missing Mini App continuation: '+snippet);
 });

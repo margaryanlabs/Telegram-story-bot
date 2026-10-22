@@ -1,3 +1,5 @@
+import { selectedStorageProvider } from '../lib/storage-provider.js';
+import { neonCronAuthorized } from '../lib/neon-scheduler-auth.js';
 import { verifyEdgeSignature } from '../lib/viewer-sync-signing.js';
 import {
   claimAutomationJobs,
@@ -39,6 +41,7 @@ async function tg(token, method, body) {
 }
 
 function authorized(req) {
+  if (selectedStorageProvider()==='neon') return neonCronAuthorized(req);
   const timestamp = String(req.headers['x-story-trigger-timestamp'] || '');
   const signature = String(req.headers['x-story-trigger-signature'] || '');
   const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});

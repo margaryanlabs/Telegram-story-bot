@@ -1,4 +1,4 @@
-/* Vetogram inbox header: accessible manual expand, automatic collapse when scrolling.
+/* Vetogram inbox header: accessible manual expand and collapse.
    No network, chat inspection, storage, or account-side effects. */
 (() => {
   'use strict';
@@ -6,9 +6,9 @@
   const toggle=document.getElementById('vetogramHeaderToggle');
   if(!heading||!toggle)return;
 
-  let expanded=false;
-  let lastScrollY=Math.max(0,window.scrollY||0);
-  let ticking=false;
+  let expanded=true;
+  // Only apply the Telegram chrome inset to an in-app launch (visual hint only; API verifies the signature).
+  if(window.Telegram?.WebApp?.initData){document.body.classList.add('vetogram-in-tg');}
   const activate=Boolean(window.Telegram?.WebApp?.HapticFeedback?.impactOccurred);
 
   function setExpanded(next) {
@@ -25,25 +25,6 @@
     }
   });
 
-  function onScroll(){
-    ticking=false;
-    const y=Math.max(0,window.scrollY||0);
-    const movingDown=y>lastScrollY+5;
-    if(expanded&&movingDown&&y>64&&
-       document.body.classList.contains('veto-chat-active')&&
-       !document.body.classList.contains('veto-chat-thread')){
-      setExpanded(false);
-    }
-    lastScrollY=y;
-  }
-  window.addEventListener('scroll',()=>{
-    if(ticking)return;
-    ticking=true;
-    if(typeof window.requestAnimationFrame==='function'){
-      window.requestAnimationFrame(onScroll);
-    }else{
-      onScroll();
-    }
-  },{passive:true});
-  setExpanded(false);
+  // The header remains expanded when scrolling; collapse is manual only.
+  setExpanded(true);
 })();

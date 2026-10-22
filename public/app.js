@@ -109,6 +109,8 @@
     backgroundReady: false,
     newConnectionsReady: null,
     secureSessionCrypto: null,
+    cipherVersion: null,
+    storageStatus: null,
     session: null,
     loginPending: null,
     story: null,
@@ -759,6 +761,8 @@
           backgroundReady: Boolean(data.config?.backgroundReady),
           newConnectionsReady: Boolean(data.config?.newConnectionsReady),
           secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
+          cipherVersion: data.config?.cipherVersion || null,
+          storageStatus: data.config?.storageStatus || null,
           degraded: true,
           error: data.storageError || 'Deep Intelligence временно восстанавливает соединение',
         };
@@ -768,6 +772,8 @@
           backgroundReady: Boolean(data.config?.backgroundReady),
           newConnectionsReady: Boolean(data.config?.newConnectionsReady),
           secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
+          cipherVersion: data.config?.cipherVersion || null,
+          storageStatus: data.config?.storageStatus || null,
           session: data.session || null,
           loginPending: data.loginPending || null,
           story: data.story || null,
@@ -789,6 +795,8 @@
         secureSessionCrypto: data.config?.secureSessionCrypto === undefined
           ? viewerState.secureSessionCrypto
           : Boolean(data.config?.secureSessionCrypto),
+        cipherVersion: data.config?.cipherVersion || viewerState.cipherVersion,
+        storageStatus: data.config?.storageStatus || viewerState.storageStatus,
         degraded: data.config?.configured === false ? false : true,
         error: error.message,
       };
@@ -971,9 +979,10 @@
 
     syncState.className = 'viewer-sync-state';
     if (viewerState.degraded) {
-      $('viewerSyncTitle').textContent = 'Deep Intelligence восстанавливает соединение.';
-      $('viewerSyncText').textContent = viewerState.error || 'Данные зрителей временно недоступны. Публикация Stories продолжает работать.';
-      syncState.textContent = 'Временная проблема хранилища · повторяем автоматически';
+      $('viewerSyncTitle').textContent = viewerState.storageStatus === 'unavailable'
+        ? 'Сервер хранения VETOGRAM недоступен.' : 'Deep Intelligence восстанавливает соединение.';
+      $('viewerSyncText').textContent = viewerState.error || 'Сохранённый Telegram-аккаунт не отключён. Требуется восстановить сервер.';
+      syncState.textContent = 'Хранилище недоступно · сессию не удаляем';
       syncState.classList.add('warn');
       syncButton.textContent = connected ? 'Управление Deep Intelligence' : 'Обновить';
     } else if (viewerState.configured === false) {
@@ -999,9 +1008,13 @@
       syncState.classList.add('warn');
       syncButton.textContent = 'Переподключить';
     } else if (viewerState.newConnectionsReady === false) {
-      $('viewerSyncTitle').textContent = 'Deep Intelligence защищён.';
-      $('viewerSyncText').textContent = 'Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.';
-      syncState.textContent = 'Защищённая сессия storage · setup required';
+      $('viewerSyncTitle').textContent = viewerState.storageStatus === 'unavailable'
+        ? 'Хранилище VETOGRAM временно недоступно.' : 'Deep Intelligence защищён.';
+      $('viewerSyncText').textContent = viewerState.storageStatus === 'unavailable'
+        ? 'Это проблема сервера, а не подтверждение выхода из Telegram. Не удаляй сессию и не отправляй код повторно.'
+        : 'Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.';
+      syncState.textContent = viewerState.storageStatus === 'unavailable'
+        ? 'Сервер хранения · недоступен' : 'Защищённая сессия storage · setup required';
       syncState.classList.add('warn');
       syncButton.textContent = 'Проверить Security';
     } else {
@@ -1533,7 +1546,8 @@
     }
     await refreshViewerSync({ silent:true });
     if (viewerState.session?.connected === true && viewerState.session?.identityMismatch !== true) {
-      profileSheet();
+      const opened = await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
+      if (!opened) profileSheet();
     } else {
       connectionHelpSheet();
     }
@@ -1744,7 +1758,7 @@
     const businessConnected = state.businessPermissions?.connected === true || state.connection === 'needs_permission';
     const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
     const session = viewerState.session;
-    const cryptoVersion = session?.cryptoVersion || (viewerState.secureSessionCrypto ? 'v3' : null);
+    const cryptoVersion = session?.cryptoVersion || viewerState.cipherVersion || null;
     const account = session?.account || state.accountConnection?.account || {};
     const lastError = String(session?.lastError || '').trim();
 
@@ -2085,7 +2099,7 @@
               <span></span>
             </label>
           </div>
-          <div class="sheet-item"><strong>Защита подключения</strong><span>${viewerState.secureSessionCrypto ? 'Защищённое шифрование v3 активно' : 'Требуется обновление защиты подключения'}</span></div>
+          <div class="sheet-item"><strong>Защита подключения</strong><span>${viewerState.secureSessionCrypto ? 'Защищённое шифрование сессии активно' : 'Требуется обновление защиты подключения'}</span></div>
           <div class="sheet-item"><strong>Последнее обновление данных</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
         </div>
         <div class="sheet-actions">
@@ -2097,12 +2111,15 @@
     }
 
     if (viewerState.newConnectionsReady === false) {
+      const storageUnavailable = viewerState.storageStatus === 'unavailable';
       openSheet(`
-        <span class="kicker">SECURITY</span>
-        <h2>Новое подключение приостановлено</h2>
-        <p>Vetogram не создаст приватное подключение, пока защищённое хранилище не подтверждено.</p>
+        <span class="kicker">${storageUnavailable ? 'VETOGRAM · СЕРВЕР' : 'SECURITY'}</span>
+        <h2>${storageUnavailable ? 'Хранилище временно недоступно' : 'Новое подключение приостановлено'}</h2>
+        <p>${storageUnavailable
+          ? 'Сервер архива и сессий не отвечает. Это не значит, что ты вышел из Telegram. Существующие подключения и архивы не удалены; дождись восстановления сервера, не запрашивай новый код.'
+          : 'Vetogram не создаст приватное подключение, пока защищённое хранилище не подтверждено.'}</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Stories & Privacy</strong><span>Продолжают работать независимо.</span></div>
+          <div class="sheet-item"><strong>Stories & Privacy</strong><span>${storageUnavailable ? 'Доступность зависит от состояния серверного хранилища.' : 'Некоторые функции работают независимо.'}</span></div>
           <div class="sheet-item"><strong>Existing Intelligence</strong><span>Существующая сессия, если она есть, не отключается автоматически.</span></div>
           <div class="sheet-item"><strong>New private session</strong><span>Создание заблокировано, пока защита не готова.</span></div>
         </div>
@@ -2190,12 +2207,25 @@
     `);
   }
 
+  function viewerEmailSheet() {
+    openSheet(`<span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span><h2>Telegram запрашивает email для входа</h2>
+      <p>Адрес будет привязан к входу в Telegram. Укажи свой email только если согласен. Это запрос Telegram, а не подписка VETOGRAM.</p>
+      <label class="auth-field">Email<input id="viewerLoginEmail" type="email" autocomplete="email" maxlength="254"></label>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
+      <div class="sheet-actions"><button class="accent" data-sheet-action="viewer-send-email">Согласен, получить email-код</button><button data-sheet-action="viewer-start-qr">Использовать QR</button><button data-sheet-action="close">Позже</button></div>`);
+  }
+
+  let viewerCodeDelivery='telegram_app';
   function viewerCodeSheet(delivery, reused = false) {
+    if (delivery === 'email_setup') { viewerEmailSheet(); return; }
+    viewerCodeDelivery=delivery || viewerCodeDelivery;
+    delivery=viewerCodeDelivery;
+    const emailCode = delivery === 'email_code' || delivery === 'email_setup_code';
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
-      <h2>Теперь введи код из Telegram</h2>
-      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте Vetogram. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
+      <h2>${emailCode?'Введи код из email':'Теперь введи код из Telegram'}</h2>
+      <p>${emailCode ? 'Telegram отправил код на email для входа. Введи его здесь; код не сохраняется.' : reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'}${emailCode?'':' Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте Vetogram. SMS может не прийти. Возвращайся сюда без нового запроса.'}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2212,6 +2242,12 @@
   }
 
   function viewerNoCodeSheet() {
+    if (['email_code','email_setup_code'].includes(viewerCodeDelivery)) {
+      openSheet(`<span class="kicker">EMAIL-КОД TELEGRAM</span><h2>Проверь почту для входа в Telegram</h2>
+        <p>Проверь входящие и спам своего email. Код отправляет Telegram. Не пересылай его в чаты. Если почта недоступна, используй QR с уже авторизованного устройства.</p>
+        <div class="sheet-actions"><button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button><button data-sheet-action="viewer-start-qr">Использовать QR</button><button data-sheet-action="close">Позже</button></div>`);
+      return;
+    }
     openSheet(`
       <span class="kicker">ПОМОЩЬ · КОД TELEGRAM</span>
       <h2>Код не приходит?</h2>
@@ -2378,6 +2414,7 @@
             await refresh();
             await refreshViewerAnalytics({ silent: true });
             switchScreen('telegram');
+            await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
             break;
           }
 
@@ -2909,7 +2946,7 @@
       const pending = viewerState.loginPending;
       if (pending && Date.parse(pending.expiresAt || '') > Date.now()) {
         if (['password', 'qr_password'].includes(pending.stage)) viewerPasswordSheet();
-        else viewerCodeSheet('telegram_app');
+        else viewerCodeSheet(pending.delivery || 'telegram_app');
       } else {
         await refreshViewerSync({ silent: true });
         connectionHelpSheet();
@@ -2921,7 +2958,7 @@
       return;
     }
     if (action === 'viewer-back-code') {
-      viewerCodeSheet('telegram_app');
+      viewerCodeSheet(viewerCodeDelivery);
       return;
     }
     if (action === 'viewer-cancel-login') {
@@ -3021,12 +3058,22 @@
       });
       return;
     }
+    if (action === 'viewer-send-email') {
+      const email=$('viewerLoginEmail')?.value || '';
+      await runViewerAuthAction(actionTarget,async()=>{
+        const data=await viewerApi('send_login_email',{email},null);
+        if($('viewerLoginEmail'))$('viewerLoginEmail').value='';
+        viewerCodeSheet(data.delivery);
+      });return;
+    }
     if (action === 'viewer-verify-code') {
       const code = ($('viewerCode')?.value || '').trim();
       await runViewerAuthAction(actionTarget, async () => {
         if (!/^\d{3,8}$/.test(code)) throw new Error('Проверь код из Telegram');
         const data = await viewerApi('verify_code', { code }, null);
-        if (data.needsPassword) {
+        if ($('viewerCode')) $('viewerCode').value='';
+        if (data.nextCode) { viewerCodeSheet(data.delivery); }
+        else if (data.needsPassword) {
           viewerPasswordSheet();
         } else {
           closeSheet();
@@ -3039,6 +3086,7 @@
           await refresh();
           await refreshViewerAnalytics({ silent: true });
           switchScreen('telegram');
+          await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
         }
       });
       return;
@@ -3048,6 +3096,7 @@
       await runViewerAuthAction(actionTarget, async () => {
         if (!password) throw new Error('Введи пароль двухэтапной проверки Telegram');
         await viewerApi('verify_password', { password }, null);
+        if ($('viewerPassword')) $('viewerPassword').value='';
         closeSheet();
         viewerPendingPhone = '';
         notify('success');
@@ -3056,6 +3105,7 @@
         await refresh();
         await refreshViewerAnalytics({ silent: true });
         switchScreen('telegram');
+        await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
       });
       return;
     }

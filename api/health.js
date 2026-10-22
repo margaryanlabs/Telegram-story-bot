@@ -1,3 +1,4 @@
+import { selectedStorageProvider, sessionCryptoReady, neonCronConfigured } from '../lib/storage-provider.js';
 import { viewerCryptoHealth, viewerStoreHealth } from '../lib/viewer-sync-store.js';
 import { telegramWebhookHealth } from '../lib/telegram-webhook-health.js';
 
@@ -20,7 +21,9 @@ export default async function handler(req, res) {
     version: 'v8',
     token_configured: Boolean(token),
     mtproto_configured: Boolean(process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH),
-    background_trigger: 'supabase-signed',
+    background_trigger: selectedStorageProvider() === 'neon'
+      ? (neonCronConfigured() ? 'neon-configured-not-live-verified' : 'neon-disabled')
+      : 'supabase-signed',
     vercel_cron_required: false,
     secure_session_crypto: 'checking',
     store: 'checking',
@@ -48,7 +51,7 @@ export default async function handler(req, res) {
         viewerStoreHealth(),
       ]);
       status.secure_session_crypto =
-        secureCrypto?.ready === true && secureCrypto?.version === 'v3'
+        sessionCryptoReady(secureCrypto)
           ? 'ready'
           : 'unavailable';
       status.store = storeHealth?.storage === 'ok' ? 'ready' : 'degraded';

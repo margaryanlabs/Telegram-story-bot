@@ -10,6 +10,7 @@ const endpointLoaders = {
   "emoji-studio": () => import("./emoji-studio.js"),
   "health": () => import("./health.js"),
   "miniapp": () => import("./miniapp.js"),
+  "neon-maintenance": () => import("./neon-maintenance.js"),
   "privacy-backup-worker": () => import("./privacy-backup-worker.js"),
   "privacy-backup": () => import("./privacy-backup.js"),
   "privacy-media-recover": () => import("./privacy-media-recover.js"),
@@ -59,7 +60,7 @@ export default async function vetogramApiRouter(req,res) {
     }
     return await module.default(req,res);
   } catch(err) {
-    console.error('[Vetogram API] unhandled endpoint error',route,err?.message||String(err));
+    console.error('[Vetogram API] unhandled endpoint error',route);
     if (!res.headersSent) return res.status(500).json({ok:false,error:'Internal server error'});
   }
 }

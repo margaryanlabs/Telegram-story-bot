@@ -1257,69 +1257,66 @@
     } finally { clearTimeout(timeout); }
   }
 
+  let businessWizardSnapshot = null;
   function renderBusinessWizardPicker(result) {
-    const state = String(result.state || '');
-    if (state === 'storylab') {
-      openSheet(`
-        <span class="kicker">Vetogram · УЖЕ ПОДКЛЮЧЕНО</span><h2>Business-бот активен</h2>
-        <p>Telegram подтвердил, что Vetogram уже подключён. Мы не перезаписываем выбранные чаты и другие разрешения автоматически.</p>
-        <p>Для изменения списка открой Telegram → Настройки → Для бизнеса → Чат-боты. Отправь тестовое сообщение из разрешённого чата, чтобы проверить реальный архив.</p>
-        <div class="sheet-actions"><button class="accent" data-business-close="1">Понятно</button></div>
-      `);
+    businessWizardSnapshot = result;
+    if (result.state === 'other_bot') {
+      openSheet(`<span class="kicker">VETOGRAM · ПОДКЛЮЧЕНИЕ</span><h2>Подключён другой Business-бот</h2>
+        <p>Vetogram не заменит его. Сохрани текущее подключение или отключи другого бота самостоятельно в Telegram.</p>
+        <div class="sheet-actions"><button data-business-manual="1">Ручной способ</button><button data-business-close="1">Закрыть</button></div>`);
       return;
     }
-    if (state === 'other_bot') {
-      openSheet(`
-        <span class="kicker">ПРИВАТНОСТЬ · КОНФЛИКТ</span><h2>У тебя уже подключён другой Business-бот</h2>
-        <p>Telegram допускает одного Business-бота на аккаунт. Vetogram не отключит и не заменит другого бота без твоего решения.</p>
-        <p>Если хочешь сменить бота, сделай это самостоятельно в Telegram → Для бизнеса → Чат-боты. Или используй резервную копию выбранной переписки без Business.</p>
-        <div class="sheet-actions">
-          <button class="accent" data-business-backup="1">Резервная копия без Business</button>
-          <button data-business-close="1">Закрыть</button>
-        </div>
-      `);
-      return;
-    }
+    const existing = result.state === 'storylab';
     const chats = Array.isArray(result.chats) ? result.chats : [];
+    const d = result.diagnostics || {};
+    const recipientLabels={existingChats:'существующие чаты',newChats:'будущие чаты',contacts:'контакты',nonContacts:'не-контакты'};
+    const recipients=result.recipients || {};
+    const currentScope=Object.entries(recipientLabels).filter(([key])=>recipients[key]).map(([,label])=>label).join(', ') || 'выбранные чаты';
+    const rightsLabels={reply:'ответы',readMessages:'отметки прочтения',deleteSentMessages:'удаление отправленных',deleteReceivedMessages:'удаление входящих',editName:'имя',editBio:'биография',editProfilePhoto:'фото профиля',editUsername:'username',viewGifts:'просмотр подарков',sellGifts:'продажа подарков',changeGiftSettings:'настройки подарков',transferAndUpgradeGifts:'перевод подарков',transferStars:'перевод Stars',manageStories:'управление Stories'};
+    const currentRights=Object.entries(rightsLabels).filter(([key])=>result.rights?.[key]).map(([,label])=>label).join(', ') || 'дополнительные права не выданы';
+
     openSheet(`
-      <span class="kicker">Vetogram PRIVACY · ПОДКЛЮЧЕНИЕ В 2 ШАГА</span>
-      <h2>Какие переписки защищать?</h2>
-      <p>Vetogram подключит Business-бота только к отмеченным личным перепискам. Telegram не даёт доступа к секретным чатам. После подключения начнём сохранять новые события.</p>
+      <span class="kicker">VETOGRAM 2.0 · РАЗРЕШЕНИЯ</span><h2>Один вход. Твой контроль.</h2>
+      <p>Авторизация → Разрешения → Проверка → Готово</p>
+      <div class="veto-consent-boundary" role="status">
+        <p>✓ Telegram-аккаунт подключён</p>
+        <p>${existing ? '✓ Business-бот подключён' : '○ Business-бот ещё не подключён'}</p>
+        ${existing?`<p>Текущий охват: ${recipients.excludeSelected?'все, кроме: ':''}${escapeHtml(currentScope)}; выбранных: ${Number(recipients.selectedCount||0)}, исключений: ${Number(recipients.excludeUsers?.length||0)}.</p><p>Сохранённые права: ${escapeHtml(currentRights)}.</p>`:''}
+        <p>${result.rights?.manageStories ? '✓ Управление Stories разрешено' : '○ Управление Stories требует согласия'}</p>
+        <p>Ghost View доступен через существующую сессию. Live-проверка в этом мастере не выполнена.</p>
+        <p>Anti-Delete: ${d.antiDelete ? 'включён' : 'не подтверждён'} · тестовое удаление: не проверено.</p>
+        <p>Серверное подключение: ${escapeHtml(d.botApi || 'не проверено')}</p>
+      </div>
       <fieldset class="veto-business-scope-options">
-        <legend>Охват Anti-Delete</legend>
-        <label><input type="radio" name="vetoBusinessScope" value="all-private" checked><span><b>Все личные переписки</b><small>Существующие и будущие — без ограничения 12 чатами. Не включает группы, каналы и секретные чаты.</small></span></label>
-        <label><input type="radio" name="vetoBusinessScope" value="selected"><span><b>Только выбранные</b><small>До 12 личных переписок из списка ниже.</small></span></label>
+        <legend>Какие личные переписки разрешены боту?</legend>
+        ${existing ? '<label><input type="radio" name="vetoBusinessScope" value="preserve" checked><span><b>Сохранить текущий охват и исключения</b><small>Не расширяет доступ и сохраняет действующие права.</small></span></label>' : ''}
+        ${[['all-private','Все существующие и будущие','Контакты и не-контакты'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
+          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='all-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
       </fieldset>
-      <div class="veto-consent-chat-list" role="group" aria-label="Доступные личные переписки" hidden>
-        ${chats.length ? chats.map(chat => `
-          <label class="veto-consent-chat">
-            <input type="checkbox" data-business-selected value="${escapeHtml(chat.chatId)}" />
-            <span class="veto-consent-chat-avatar">${escapeHtml(initials(chat.title))}</span>
-            <span class="veto-consent-chat-copy"><strong>${escapeHtml(chat.title)}</strong><small>${escapeHtml(chat.username ? '@'+chat.username : 'Личный Telegram-чат')}</small></span>
-          </label>`).join('') : '<div class="ghost-backup-summary">Не найдено доступных обычных личных диалогов. Открой чат в Telegram и попробуй снова.</div>'}
+      <div class="veto-consent-chat-list" role="group" aria-label="Личные чаты и исключения">
+        ${chats.map(chat=>`<div class="veto-consent-chat"><span class="veto-consent-chat-copy"><strong>${escapeHtml(chat.title)}</strong></span>
+          <label><input type="checkbox" data-business-selected value="${escapeHtml(chat.chatId)}"> Выбрать</label>
+          <label><input type="checkbox" data-business-excluded value="${escapeHtml(chat.chatId)}"> Исключить</label></div>`).join('') || '<p>Нет доступных диалогов для выбора. Широкие режимы доступны после явного согласия.</p>'}
       </div>
-      <div class="veto-consent-boundary">
-        <strong>Что именно разрешаем?</strong>
-        <p>✓ Получать новые сообщения, изменения и удаления в рамках выбранного охвата. Telegram Business не передаёт старую историю.</p>
-        <p>✕ Без права отвечать, удалять, отмечать прочитанным, менять профиль, управлять Stories или переводить средства.</p>
-        <p>Это не восстанавливает сообщения, удалённые до подключения.</p>
-      </div>
-      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent" />
-        <span>Я разрешаю боту получать и сохранять новые события в обозначенных личных чатах. Для режима «Все» это касается также будущих личных переписок, пока я не отключу доступ.</span>
-      </label>
-      <p class="veto-consent-selected-count" id="businessWizardCount">Все текущие и будущие личные чаты — после подтверждения</p>
-      <div class="sheet-actions">
-        <button class="accent" data-business-apply="1" disabled>Подключить выбранные чаты</button>
-        <button data-business-manual="1">Настроить вручную</button>
-        <button data-business-close="1">Отмена</button>
-      </div>
-    `);
+      ${existing ? '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span>Я подтверждаю выбранный охват личных чатов. Существующие права сохранятся; новые права выдаются только по отдельному согласию.</span></label>' : '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span><b>Включить VETOGRAM полностью.</b> Я разрешаю подключить @Vetotg_bot к выбранному охвату личных переписок (по умолчанию ко всем нынешним и будущим), получать и сохранять новые сообщения, правки и удаления, уведомлять меня, а также публиковать, изменять и удалять мои Stories от моего имени. Не включает группы и секретные чаты. Все разрешения можно позже отозвать.</span></label>'}
+      ${existing ? `
+      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardAntiDelete"><span>Дополнительно включить Anti-Delete, Edit History и Inbox: сохранять новые сообщения, изменения и удаления.</span></label>
+      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardStories" ${result.rights?.manageStories?'disabled':''}><span>${result.rights?.manageStories?'Управление Stories уже разрешено и будет сохранено.':'Дополнительно разрешить управление Stories: публикацию, изменение и удаление от моего имени.'}</span></label>` : '<div class="veto-consent-boundary"><strong>Что активируется после подтверждения</strong><p>✓ Anti-Delete · Edit History · уведомления · управление Stories. Ghost View работает через отдельную авторизованную сессию. Для Stories сохраняется существующий Business-способ публикации; Telegram может ограничивать доступность отдельных действий.</p><p>Разрешения выдаются только после установки галочки и нажатия «Подтвердить». Никаких ручных переключателей в Telegram Business.</p></div>'}
+      <div class="veto-consent-boundary"><p>Без права отвечать, удалять сообщения, отмечать прочитанным, менять профиль, управлять подарками и средствами — при новом подключении. При существующем подключении сохраняются права, перечисленные выше.</p></div>
+      <p id="businessWizardCount" aria-live="polite"></p>
+      <div class="sheet-actions"><button class="accent" data-business-apply="1" disabled>Подтвердить разрешения</button>
+        <button data-business-manual="1">Ручной способ</button><button data-business-close="1">Позже</button>
+        ${existing?'<button data-business-revoke="1">Отозвать Business-доступ…</button>':''}
+        ${result.rights?.manageStories?'<button data-business-revoke-stories="1">Отозвать только Stories…</button>':''}
+      </div>`);
+    updateBusinessWizardConsent();
   }
 
   async function openBusinessWizard() {
     openSheet('<span class="kicker">Vetogram PRIVACY</span><h2>Проверяю твой Telegram…</h2><p>Ищем только личные диалоги. Никакие сообщения пока не копируем и разрешения не меняем.</p>');
     try {
       const result = await businessWizardRequest('prepare');
+      if (result.enabled === false) { privacyBusinessGuideSheet(); return; }
       renderBusinessWizardPicker(result);
     } catch (error) {
       openSheet(`
@@ -1335,65 +1332,81 @@
     }
   }
 
+  window.VetoTelegramOpenUnifiedOnboarding = async ({automatic=false}={}) => {
+    if (!automatic) { await openBusinessWizard(); return true; }
+    try {
+      const result = await businessWizardRequest('prepare');
+      if (result.enabled === false) return false;
+      renderBusinessWizardPicker(result);
+      return true;
+    } catch { return false; }
+  };
+
   function updateBusinessWizardConsent() {
+    const scope = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value;
     const selected = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])];
-    const approved = $('businessWizardConsent')?.checked === true;
-    const all = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value === 'all-private';
+    const excluded = [...($('sheet')?.querySelectorAll('[data-business-excluded]:checked') || [])];
     const picker = $('sheet')?.querySelector('.veto-consent-chat-list');
-    if (picker) picker.hidden = all;
-    const valid = approved && (all || (selected.length > 0 && selected.length <= 12));
+    if (picker) picker.hidden = scope === 'preserve';
+    for (const el of $('sheet')?.querySelectorAll('[data-business-selected]') || []) el.disabled = scope !== 'selected-private';
+    const fresh = businessWizardSnapshot?.state === 'none';
+    // On an existing connection changing recipients is independent of requesting
+    // new capabilities. Preserve Story rights and archive settings unless opted in.
+    const existingScopeChange = businessWizardSnapshot?.state === 'storylab' && scope !== 'preserve';
+    const featureConsent = fresh || existingScopeChange || $('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true;
+    const valid = $('businessWizardConsent')?.checked === true && scope &&
+      (scope !== 'selected-private' || (selected.length > 0 && selected.length <= 12)) && excluded.length <= 12 &&
+      !selected.some(el=>scope==='selected-private' && excluded.some(ex=>ex.value===el.value)) && featureConsent;
     const count = $('businessWizardCount');
-    if (count) count.textContent = all
-      ? 'Все нынешние и будущие личные переписки · без групп, каналов и секретных чатов'
-      : selected.length
-        ? `Выбрано: ${selected.length} из 12 допустимых чатов`
-        : 'Не выбрано ни одного чата';
-    const action = $('sheet')?.querySelector('[data-business-apply]');
-    if (action) action.disabled = !valid;
+    if (count) count.textContent = scope==='preserve'?'Сохраним текущие чаты, исключения и права.':`Выбрано: ${scope==='selected-private'?selected.length:'по охвату'} · исключений: ${excluded.length}/12`;
+    const button = $('sheet')?.querySelector('[data-business-apply]');
+    if (button) button.disabled = !valid;
   }
 
   async function applyBusinessWizard(button) {
-    const chats = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])].map(el => el.value);
-    const all = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value === 'all-private';
-    if ((!all && (!chats.length || chats.length > 12)) || $('businessWizardConsent')?.checked !== true) {
-      toast('Выбери охват и подтверди согласие');
-      return;
-    }
-    button.disabled = true;
-    button.textContent = 'Подключаю выбранные чаты…';
+    updateBusinessWizardConsent();
+    if (button.disabled) return;
+    const scope = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value;
+    button.disabled = true;button.textContent = 'Проверяю и подключаю…';
     try {
       const result = await businessWizardRequest('connect', {
-        chatIds:all ? [] : chats,scope:all ? 'all-private' : 'selected-private',
-        allChatsConsent:all,consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',
+        snapshotToken:businessWizardSnapshot?.snapshotToken,scope,scopeConsent:$('businessWizardConsent')?.checked===true,
+        chatIds:scope==='selected-private'?[...$('sheet').querySelectorAll('[data-business-selected]:checked')].map(el=>el.value):[],
+        excludeChatIds:scope==='preserve'?[]:[...$('sheet').querySelectorAll('[data-business-excluded]:checked')].map(el=>el.value),
+        antiDeleteConsent:$('businessWizardAntiDelete')?.checked===true || (businessWizardSnapshot?.state==='none' && $('businessWizardConsent')?.checked===true),
+        storiesConsent:$('businessWizardStories')?.checked===true || (businessWizardSnapshot?.state==='none' && $('businessWizardConsent')?.checked===true),
+        consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',
       });
       await Promise.allSettled([loadTelegramConnection({silent:true}),refresh({silent:true})]);
-      openSheet(`
-        <span class="kicker">Vetogram PRIVACY · ЗАПРОС ПРИНЯТ</span>
-        <h2>Telegram подключил Vetogram</h2>
-        <p>${result.scope === 'all-current-and-future-private'
-          ? 'Разрешён охват всех существующих и будущих личных переписок (но не групп, каналов или секретных чатов).'
-          : 'Выбрано '+Number(result.selectedCount||chats.length)+' личных чатов.'}
-          Telegram принял подключение; фактическую доставку ещё требуется проверить новым сообщением.</p>
-        ${result.settingsUpdated ? '' : '<p>Настройки архива пока не обновились: включи Anti-Delete, Edit History и Inbox в Privacy Center.</p>'}
-        <div class="veto-consent-boundary"><strong>Как проверить</strong><p>1. Попроси собеседника отправить новое сообщение в выбранный чат.</p><p>2. Найди его в Vetogram Inbox.</p><p>3. Попроси собеседника удалить его и проверь сохранённую копию.</p></div>
-        <div class="sheet-actions">
-          <button class="accent" data-business-close="1">Проверить в Privacy Center →</button>
-        </div>
-      `);
-      try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
+      const archiveIncomplete = result.archiveConsentRequested === true && result.settingsUpdated !== true;
+      openSheet(`<span class="kicker">VETOGRAM · ПРОВЕРКА</span><h2>${archiveIncomplete?'Anti-Delete ещё не активирован полностью':'Разрешения подтверждены Telegram'}</h2>
+        <p>Business-бот подключён. Управление Stories: ${result.manageStories?'разрешено':'не разрешено'}. Настройки архива: ${result.settingsUpdated?'сохранены':archiveIncomplete?'ошибка сохранения':'не изменялись'}.</p>
+        ${archiveIncomplete?'<p>Сервер ещё не подтвердил архивирование. Сообщения могут не сохраняться. Перепроверить подключение и настройки, не выполняя повторную запись без проверки.</p>':''}
+        <p>Bot API: ${escapeHtml(result.delivery?.botApi || 'не проверено')}. Новому Business Connection ID может потребоваться доставка webhook.</p>
+        <div class="veto-consent-boundary"><strong>Работоспособность ещё нужно проверить</strong><p>С согласившимся тестовым собеседником: новое сообщение → сохранение → изменение → удаление → сохранённая копия и уведомление. Публикацию Stories проверь отдельно, в том числе без Premium.</p></div>
+        <div class="sheet-actions"><button data-business-retry="1">Проверить статус</button>${archiveIncomplete?'':'<button class="accent" data-business-close="1">Готово</button>'}<button data-business-close="1">Закрыть</button></div>`);
     } catch (error) {
-      // A Telegram RPC may succeed even when its HTTP response times out.
-      // Never auto-resend a consent write: ask the user to recheck state.
-      openSheet(`
-        <span class="kicker">Vetogram · ПРОВЕРКА</span><h2>Проверь состояние подключения</h2>
-        <p>${escapeHtml(error.message)}</p>
-        <p>Не подключаем автоматически ещё раз: Telegram мог уже принять запрос. Сначала запросим его текущий статус.</p>
-        <div class="sheet-actions">
-          <button class="accent" data-business-retry="1">Проверить статус ↻</button>
-          <button data-business-manual="1">Настроить через Telegram</button>
-          <button data-business-close="1">Закрыть</button>
-        </div>
-      `);
+      openSheet(`<span class="kicker">VETOGRAM · ПРОВЕРКА</span><h2>Требуется повторная проверка</h2><p>${escapeHtml(error.message)}</p>
+        <p>Не повторяем запись: Telegram мог принять запрос до таймаута.</p><div class="sheet-actions"><button data-business-retry="1">Проверить статус</button><button data-business-manual="1">Ручной способ</button><button data-business-close="1">Закрыть</button></div>`);
+    }
+  }
+
+  function confirmBusinessRevoke(storiesOnly) {
+    openSheet(`<span class="kicker">VETOGRAM · ОТЗЫВ ДОСТУПА</span><h2>${storiesOnly?'Отключить управление Stories?':'Отключить Business-бота?'}</h2>
+      <p>${storiesOnly?'Права на сообщения и охват чатов сохранятся.':'Новые события Anti-Delete перестанут поступать через Business. Авторизованная сессия и сохранённый архив останутся.'}</p>
+      <div class="sheet-actions"><button data-business-confirm-revoke="${storiesOnly?'stories':'all'}">Подтверждаю отзыв</button><button data-business-retry="1">Отмена</button></div>`);
+  }
+  async function revokeBusiness(button) {
+    button.disabled = true;
+    const storiesOnly = button.dataset.businessConfirmRevoke === 'stories';
+    try {
+      await businessWizardRequest(storiesOnly?'revoke-stories':'disconnect',{
+        snapshotToken:businessWizardSnapshot?.snapshotToken,consent:true,
+        approval:storiesOnly?'REVOKE_STORIES_ACCESS':'REVOKE_BUSINESS_ACCESS',
+      });
+      await openBusinessWizard();
+    } catch(error) {
+      openSheet(`<h2>Проверь состояние доступа</h2><p>${escapeHtml(error.message)}</p><button data-business-retry="1">Проверить статус</button>`);
     }
   }
 
@@ -2035,7 +2048,7 @@
       const button=$('sheet')?.querySelector('[data-backup-all-start]');
       if(button)button.disabled=!event.target.checked;
     }
-    if (event.target.matches('[data-business-selected],#businessWizardConsent,input[name="vetoBusinessScope"]')) updateBusinessWizardConsent();
+    if (event.target.matches('[data-business-selected],[data-business-excluded],#businessWizardConsent,#businessWizardAntiDelete,#businessWizardStories,input[name="vetoBusinessScope"]')) updateBusinessWizardConsent();
   });
 
   $('sheet')?.addEventListener('input', event => {
@@ -2045,9 +2058,12 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
-    const button = event.target.closest('[data-business-apply],[data-business-close],[data-business-retry],[data-business-manual],[data-business-account],[data-business-backup]');
+    const button = event.target.closest('[data-business-apply],[data-business-close],[data-business-retry],[data-business-manual],[data-business-account],[data-business-backup],[data-business-revoke],[data-business-revoke-stories],[data-business-confirm-revoke]');
     if (button) {
-      if (button.hasAttribute('data-business-apply')) await applyBusinessWizard(button);
+      if (button.hasAttribute('data-business-confirm-revoke')) await revokeBusiness(button);
+      else if (button.hasAttribute('data-business-revoke')) confirmBusinessRevoke(false);
+      else if (button.hasAttribute('data-business-revoke-stories')) confirmBusinessRevoke(true);
+      else if (button.hasAttribute('data-business-apply')) await applyBusinessWizard(button);
       else if (button.hasAttribute('data-business-close')) closeSheet();
       else if (button.hasAttribute('data-business-retry')) await openBusinessWizard();
       else if (button.hasAttribute('data-business-manual')) privacyBusinessGuideSheet();

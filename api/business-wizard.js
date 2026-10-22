@@ -1,11 +1,11 @@
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
-import { getViewerSession, updatePrivacySettings } from '../lib/viewer-sync-store.js';
+import { getViewerSession, updatePrivacySettings, getPrivacySettings, getBusinessConnectionState } from '../lib/viewer-sync-store.js';
 import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 import { withBackupClient, listBackupDialogs } from '../lib/telegram-history-backup.js';
-import { readBusinessConsentState, connectBusinessSelectedChats,
-  assertBusinessConnectionAvailable, connectBusinessAllPrivateChats, CONSENT_APPROVAL, BUSINESS_BOT_USERNAME } from '../lib/telegram-business-consent.js';
+import { readBusinessConsentState, connectBusiness, disconnectBusiness, signConsentSnapshot,
+  verifyConsentSnapshot, unifiedOnboardingEnabled, withBusinessWriteLock, CONSENT_APPROVAL, BUSINESS_BOT_USERNAME } from '../lib/telegram-business-consent.js';
 
 const BOT = String(process.env.TELEGRAM_BOT_TOKEN || '');
 const json = (res, code, body) => res.status(code).json({ ok:code >= 200 && code < 300, ...body });
@@ -30,24 +30,49 @@ function safeFailure(error) {
   return { status:503,error:'Не удалось подтвердить Business-подключение. Проверь Telegram и попробуй снова.' };
 }
 
-export default async function handler(req, res) {
+export async function verifyStoredBusinessConnection(token,ownerId) {
+  try {
+    const stored=await getBusinessConnectionState(ownerId);
+    if(!stored?.businessConnectionId) return {botApi:'pending-webhook',serverState:'pending'};
+    const response=await fetch(`https://api.telegram.org/bot${token}/getBusinessConnection`,{
+      method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({business_connection_id:stored.businessConnectionId}),signal:AbortSignal.timeout(4500),
+    });
+    const data=await response.json();
+    const connection=data?.result;
+    if(!response.ok || !data.ok || String(connection?.user?.id)!==String(ownerId)
+      || String(connection?.user_chat_id)!==String(ownerId)) return {botApi:'not-verified',serverState:'not-verified'};
+    return {botApi:connection.is_enabled?'verified':'disabled',serverState:'verified'};
+  } catch {return {botApi:'not-verified',serverState:'pending'};}
+}
+
+const DEFAULT_DEPENDENCIES = { getViewerSession, updatePrivacySettings, getPrivacySettings, openJson,
+  withBackupClient, listBackupDialogs, verifyStoredBusinessConnection };
+export function createBusinessWizardHandler(overrides={}) {
+  const {token=BOT,...dependencies}=overrides;
+  const {getViewerSession,updatePrivacySettings,getPrivacySettings,openJson,withBackupClient,
+    listBackupDialogs,verifyStoredBusinessConnection}={...DEFAULT_DEPENDENCIES,...dependencies};
+  return async function handler(req, res) {
   res.setHeader('Cache-Control','private, no-store, max-age=0');
   res.setHeader('Content-Type','application/json; charset=utf-8');
   if (req.method !== 'POST') return json(res,405,{error:'Method not allowed'});
-  if (!BOT) return json(res,503,{error:'Vetogram Telegram не настроен'});
-  const owner = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''),BOT);
+  if (!token) return json(res,503,{error:'Vetogram Telegram не настроен'});
+  const owner = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''),token);
   if (!owner?.id) return json(res,401,{error:'Открой Vetogram внутри своего Telegram'});
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}; }
   catch { return json(res,400,{error:'Некорректный запрос'}); }
   const action = String(body.action || '');
-  if (!['prepare','connect'].includes(action)) return json(res,400,{error:'Unknown action'});
+  if (!['prepare','connect','disconnect','revoke-stories'].includes(action)) return json(res,400,{error:'Unknown action'});
   // Never auto-enable a Business connection: a fresh explicit selection
   // and exact approval marker are mandatory, and all selected peers are
   // resolved again from the same authenticated user's live MTProto session.
-  if (action === 'connect' && (body.consent !== true || body.approval !== CONSENT_APPROVAL)) {
+  if (action !== 'prepare' && (body.consent !== true || body.approval !== (action === 'disconnect' ? 'REVOKE_BUSINESS_ACCESS' : action === 'revoke-stories' ? 'REVOKE_STORIES_ACCESS' : CONSENT_APPROVAL))) {
     return json(res,409,{error:'Подтверди подключение выбранных личных переписок.'});
   }
+  if (!unifiedOnboardingEnabled()) return action === 'prepare'
+    ? json(res,200,{enabled:false,state:'disabled'})
+    : json(res,409,{error:'Новое подключение ещё не выпущено. Используй ручной способ.'});
   const ownerId = String(owner.id);
   try {
     const session = await getViewerSession(ownerId);
@@ -60,57 +85,70 @@ export default async function handler(req, res) {
     const decrypted = await openJson(session.session_ciphertext,'session:'+ownerId);
     if (!decrypted?.session) return json(res,409,{needsSession:true,error:'Сессия Telegram отсутствует. Подключи аккаунт заново.'});
 
+    const verifySnapshot = state => verifyConsentSnapshot(body.snapshotToken,ownerId,state,token);
     if (action === 'prepare') {
       const info = await withBackupClient(decrypted.session,async client => {
         await verifyTelegramClientOwner(client,ownerId);
-        const { status } = await readBusinessConsentState(client);
-        const chats = status.state === 'none' ? await listBackupDialogs(client) : [];
-        return { status,chats };
+        const state = await readBusinessConsentState(client);
+        const chats = state.status.state !== 'other_bot' ? await listBackupDialogs(client) : [];
+        return { state,chats };
       });
+      const [settings,delivery] = await Promise.all([
+        getPrivacySettings(ownerId).catch(()=>null),verifyStoredBusinessConnection(token,ownerId),
+      ]);
       return json(res,200,{
-        state:info.status.state,
-        connectedBot:info.status.connectedBot,
-        recipients:info.status.recipients,
-        chats:info.chats.slice(0,55),
-        allowConnect:info.status.state === 'none' && info.chats.length > 0,
-        noReplaceOtherBot:true,scope:'selected-private-chats-only',
-        permissions:{reply:false,readMessages:false,deleteMessages:false,manageStories:false},
+        enabled:true,...info.state.status,chats:info.chats.slice(0,100),
+        snapshotToken:signConsentSnapshot(ownerId,info.state,token),
+        allowConnect:info.state.status.state !== 'other_bot',noReplaceOtherBot:true,
+        permissions:info.state.status.rights || {reply:false,readMessages:false,manageStories:false},
+        requestedPermissions:{reply:false,readMessages:false,deleteMessages:false,manageStories:'separate-opt-in'},
+        diagnostics:{telegramAccount:true,businessBot:info.state.status.state==='storylab',
+          manageStories:info.state.status.rights?.manageStories===true,
+          ghostView:'available-with-existing-session-live-test-not-verified',
+          antiDelete:settings?.antiDelete===true,antiDeleteProof:'not-verified-in-this-onboarding',...delivery},
       });
     }
-
-    const allPrivate = body.scope === 'all-private';
-    if (allPrivate && body.allChatsConsent !== true) return json(res,409,{error:'Разрешение на все существующие и будущие личные чаты требует отдельного подтверждения.'});
-    if (!allPrivate && (!Array.isArray(body.chatIds) || body.chatIds.length < 1 || body.chatIds.length > 12)) {
-      return json(res,400,{error:'Выбери от 1 до 12 личных переписок.'});
-    }
-    // Don't retry a write automatically after timeout. Re-run prepare first.
-    const result = await withBackupClient(decrypted.session,async client => {
+    // Existing owners may change only their recipients without granting a new
+    // Story or archive capability. Never allow that shortcut on a new account.
+    if (action === 'connect' && body.antiDeleteConsent !== true && body.storiesConsent !== true
+      && body.scope === 'preserve')
+      return json(res,409,{error:'Нет изменений: выбери нужную возможность или новый охват чатов.'});
+    const result = await withBusinessWriteLock(ownerId,()=>withBackupClient(decrypted.session,async client => {
       await verifyTelegramClientOwner(client,ownerId);
-      return allPrivate
-        ? connectBusinessAllPrivateChats(client)
-        : connectBusinessSelectedChats(client,body.chatIds);
-    });
-    // This was an explicit opt-in for an automatic archive: configure only the
-    // minimal server-side retention and archive switches for this owner.
+      if (action === 'connect' && body.antiDeleteConsent !== true && body.storiesConsent !== true) {
+        const current = await readBusinessConsentState(client);
+        if (current.status.state !== 'storylab') {
+          throw Object.assign(new Error('Первое подключение требует явного согласия на Anti-Delete или Stories.'),{status:409});
+        }
+      }
+      if (action === 'disconnect') return disconnectBusiness(client,verifySnapshot);
+      return connectBusiness(client,{
+        scope:action === 'revoke-stories' ? 'preserve' : body.scope,
+        scopeConsent:body.scopeConsent===true,chatIds:body.chatIds,excludeChatIds:body.excludeChatIds,
+        storiesConsent:body.storiesConsent===true,revokeStories:action==='revoke-stories',verifySnapshot,
+      });
+    },{requestRetries:1,floodSleepThreshold:0}));
     let settingsUpdated = false;
-    try {
-      await updatePrivacySettings(ownerId,{ antiDelete:true,editHistory:true,ghostInbox:true });
-      settingsUpdated = true;
-    } catch {
-      // The Business connection cannot safely be rolled back on store failure.
-      // Surface partial completion and allow the user to enable privacy switches manually.
+    if (action === 'connect' && body.antiDeleteConsent === true) {
+      try {
+        await updatePrivacySettings(ownerId,{ antiDelete:true,editHistory:true,ghostInbox:true });
+        settingsUpdated = true;
+      } catch { /* Keep the Telegram result and report partial completion. */ }
     }
-    return json(res,200,{
-      ...result,
-      scope:allPrivate ? 'all-current-and-future-private' : 'selected-private',
-      settingsUpdated,
-      note:settingsUpdated
-        ? 'Telegram принял подключение. Отправь тестовое сообщение из разрешённого личного чата, чтобы проверить реальное сохранение.'
-        : 'Telegram принял подключение, но включение архива пока не подтверждено. Включи Anti-Delete в Privacy Center.',
-    });
+    // getConnectedBots has no Bot API connection ID. Never invent/reuse a stale
+    // ID as proof of delivery: the signed webhook supplies new IDs, then this
+    // read-only Bot API verification confirms owner + rights independently.
+    const delivery = await verifyStoredBusinessConnection(token,ownerId);
+    if (action === 'disconnect') delivery.serverState = 'pending-webhook';
+    return json(res,200,{...result,settingsUpdated,
+      archiveConsentRequested:action==='connect' && body.antiDeleteConsent===true,
+      scope:body.scope || 'preserve',delivery,
+      note:'Подключение и права проверены в Telegram. Доставка событий, публикация и удаление требуют отдельной проверки.'});
   } catch (error) {
     const safe = safeFailure(error);
     if (safe.status >= 500) console.warn('Business wizard unavailable',safe.status);
     return json(res,safe.status,{error:safe.error});
   }
 }
+}
+export default createBusinessWizardHandler();

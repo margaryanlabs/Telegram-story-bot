@@ -1,3 +1,6 @@
+import { sessionCryptoReady, expectedCipherVersion, neonCronConfigured } from '../lib/storage-provider.js';
+import { selectedStorageProvider } from '../lib/storage-provider.js';
+import { normalizeTelegramPhone } from '../lib/telegram-auth-feedback.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
 import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
@@ -19,6 +22,7 @@ import {
 } from '../lib/viewer-sync-store.js';
 import {
   beginUserAuth,
+  sendUserLoginEmail,
   verifyUserCode,
   verifyUserPassword,
   revokeUserSession,
@@ -34,26 +38,47 @@ async function configState() {
     && process.env.TELEGRAM_BOT_TOKEN
   );
   let secureSessionCrypto = false;
+  let storageReachable = false;
   if (storage && telegram) {
     try {
       const cryptoHealth = await viewerCryptoHealth();
-      secureSessionCrypto = cryptoHealth?.ready === true && cryptoHealth?.version === 'v3';
-    } catch {
-      secureSessionCrypto = false;
+      storageReachable = true;
+      // Legacy Supabase uses v3; the existing Neon sessions use independent v4.
+      secureSessionCrypto = sessionCryptoReady(cryptoHealth);
+    } catch (error) {
+      // The Neon adapter can reach SQL and still reject a missing or invalid
+      // local encryption key. Do not misdiagnose that as a database outage.
+      const cryptoConfigurationError = /^(?:PRIVATE_SESSION_CRYPTO_UNAVAILABLE|VETO_NEON_SESSION_KEY_NOT_CONFIGURED|NEON_SESSION_KEY_VERSION_UNAVAILABLE)$/
+        .test(String(error?.message || ''));
+      storageReachable = cryptoConfigurationError;
+      // Neither case proves the Telegram session was revoked. No destructive
+      // action is necessary: keep ciphertext and report the right blocker.
     }
   }
 
   return {
     configured: storage && telegram,
-    backgroundReady: storage && telegram,
+    // This is a readiness indication for cron configuration, not proof of a
+    // running scheduler; the release preflight must confirm live deliveries.
+    backgroundReady: storage && telegram && storageReachable
+      && (selectedStorageProvider()==='supabase' || neonCronConfigured()),
     newConnectionsReady: storage && telegram && secureSessionCrypto,
     secureSessionCrypto,
-    scheduler: 'supabase_pg_cron',
+    // v4 is the independent Neon cipher; v3 remains the legacy Supabase cipher.
+    cipherVersion: secureSessionCrypto ? expectedCipherVersion() : null,
+    storageProvider: selectedStorageProvider(),
+    storageStatus: !storage || !telegram ? 'not-configured' : storageReachable ? 'reachable' : 'unavailable',
+    scheduler: selectedStorageProvider() === 'neon'
+      ? (neonCronConfigured() ? 'neon-configured-not-live-verified' : 'neon-disabled')
+      : 'supabase_pg_cron',
     missing: [
+      selectedStorageProvider() === 'neon' && !process.env.VETO_NEON_DATABASE_URL ? 'VETO_NEON_DATABASE_URL' : null,
+      selectedStorageProvider() === 'neon' && !process.env.VETO_NEON_SESSION_KEY ? 'VETO_NEON_SESSION_KEY' : null,
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
       !process.env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_BOT_TOKEN' : null,
-      storage && telegram && !secureSessionCrypto ? 'PRIVATE_SESSION_CRYPTO' : null,
+      storage && telegram && !storageReachable ? 'STORAGE_GATEWAY_UNAVAILABLE' : null,
+      storage && telegram && storageReachable && !secureSessionCrypto ? 'PRIVATE_SESSION_CRYPTO' : null,
     ].filter(Boolean),
   };
 }
@@ -382,7 +407,7 @@ export default async function handler(req, res) {
             story: null,
             viewers: [],
             analytics: null,
-            storageError: 'Deep Intelligence временно восстанавливает соединение. Публикация Stories работает независимо.',
+            storageError: 'Сервер хранения VETOGRAM временно недоступен. Сохранённая Telegram-сессия не удалена. Не запрашивай новый код и не отключай бота — сначала восстанови сервер.',
           });
           return;
         }
@@ -412,7 +437,8 @@ export default async function handler(req, res) {
       const loginPending = Number.isFinite(expiry)
         && expiry > Date.now()
         && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage)
-        ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString() }
+        ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString(),
+          delivery:loginChallenge.stage === 'code' ? (await openJson(loginChallenge.challenge_ciphertext,`auth:${userId}`).catch(()=>null))?.delivery || 'telegram_app' : null }
         : null;
 
       res.status(200).json({
@@ -520,11 +546,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'send_code') {
-      const requestedPhone = String(body.phone || '').replace(/[^+\\d]/g, '');
-      if (!/^\\+\\d{7,15}$/.test(requestedPhone)) {
-        res.status(400).json({ ok: false, error: 'Введи номер Telegram в международном формате, начиная с +.' });
-        return;
-      }
+      const requestedPhone = normalizeTelegramPhone(body.phone);
 
       // Telegram may deliver codes inside its official service chat, not via
       // SMS or our bot. Preserve the existing challenge until it expires.
@@ -538,7 +560,7 @@ export default async function handler(req, res) {
             res.status(200).json({
               ok: true,
               stage: 'code',
-              delivery: pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+              delivery: pending.delivery || (pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other'),
               reused: true,
               expiresAt: new Date(expiresAt).toISOString(),
             });
@@ -587,11 +609,22 @@ export default async function handler(req, res) {
       res.status(200).json({
         ok: true,
         stage: 'code',
-        delivery: auth.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+        delivery: auth.delivery || (auth.isCodeViaApp ? 'telegram_app' : 'sms_or_other'),
         reused: false,
         expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
       return;
+    }
+
+    if (action === 'send_login_email') {
+      const challenge=await getAuthChallenge(userId);
+      if(!challenge || challenge.stage!=='code' || Date.parse(challenge.expires_at)<Date.now()) {
+        res.status(410).json({ok:false,error:'Вход устарел. Начни заново.'});return;
+      }
+      const auth=await openJson(challenge.challenge_ciphertext,`auth:${userId}`);
+      const next=await sendUserLoginEmail(auth,body.email);
+      await saveAuthChallenge({...challenge,telegram_user_id:userId,challenge_ciphertext:await sealJson(next,`auth:${userId}`)});
+      res.status(200).json({ok:true,stage:'code',delivery:next.delivery});return;
     }
 
     if (action === 'verify_code') {
@@ -605,6 +638,10 @@ export default async function handler(req, res) {
       const auth = await openJson(challenge.challenge_ciphertext, `auth:${userId}`);
       const result = await verifyUserCode(auth, body.code);
 
+      if (result.nextCode) {
+        await saveAuthChallenge({...challenge,telegram_user_id:userId,challenge_ciphertext:await sealJson(result.authState,`auth:${userId}`)});
+        res.status(200).json({ok:true,nextCode:true,stage:'code',delivery:result.authState.delivery});return;
+      }
       if (result.needsPassword) {
         const next = await sealJson({ ...auth, session: result.session }, `auth:${userId}`);
         await saveAuthChallenge({
@@ -626,9 +663,10 @@ export default async function handler(req, res) {
         throw error;
       }
 
+      const sealedSession = await sealJson({ session: result.session }, `session:${userId}`);
       await upsertViewerSession({
         telegram_user_id: userId,
-        session_ciphertext: await sealJson({ session: result.session }, `session:${userId}`),
+        session_ciphertext: sealedSession,
         status: 'active',
         telegram_account_user_id: result.user?.id || null,
         telegram_account_username: result.user?.username || null,
@@ -639,7 +677,7 @@ export default async function handler(req, res) {
       await deleteAuthChallenge(userId);
       await recordActivityEvent(userId, 'session.created', {
         method: 'phone',
-        crypto: 'v3',
+        crypto: sealedSession.split('.')[0],
         connection: 'deep_intelligence',
         status: 'active',
       }, {
@@ -679,9 +717,10 @@ export default async function handler(req, res) {
         throw error;
       }
 
+      const sealed2faSession = await sealJson({ session: result.session }, `session:${userId}`);
       await upsertViewerSession({
         telegram_user_id: userId,
-        session_ciphertext: await sealJson({ session: result.session }, `session:${userId}`),
+        session_ciphertext: sealed2faSession,
         status: 'active',
         telegram_account_user_id: result.user?.id || null,
         telegram_account_username: result.user?.username || null,
@@ -692,7 +731,7 @@ export default async function handler(req, res) {
       await deleteAuthChallenge(userId);
       await recordActivityEvent(userId, 'session.created', {
         method: challenge.stage === 'qr_password' ? 'qr_2fa' : 'phone_2fa',
-        crypto: 'v3',
+        crypto: sealed2faSession.split('.')[0],
         connection: 'deep_intelligence',
         status: 'active',
       }, {
@@ -749,7 +788,7 @@ export default async function handler(req, res) {
     if (/viewer_crypto|private json|PRIVATE_SESSION_CRYPTO|encryption key version|Viewer Sync store/i.test(description)) {
       console.warn('Viewer Sync secure key unavailable', {
         telegram_user_id: userId,
-        error: description,
+        errorStatus: classifyTelegramAuthError(error).status,
       });
       res.status(503).json({
         ok: false,
@@ -760,12 +799,12 @@ export default async function handler(req, res) {
     if (/Viewer Sync store|schema cache|timeout|temporar|fetch failed|network/i.test(description)) {
       console.warn('Viewer Sync API degraded', {
         telegram_user_id: userId,
-        error: description,
+        errorStatus: classifyTelegramAuthError(error).status,
       });
     } else {
       console.error('Viewer Sync API error', {
         telegram_user_id: userId,
-        error: description,
+        errorStatus: classifyTelegramAuthError(error).status,
       });
     }
 
