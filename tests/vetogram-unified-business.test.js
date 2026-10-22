@@ -1,10 +1,22 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { Api } from 'teleproto';
 import { connectBusiness, disconnectBusiness, readBusinessConsentState, signConsentSnapshot,
   verifyConsentSnapshot, businessRights, recipientSnapshot, rightsSnapshot, withBusinessWriteLock, unifiedOnboardingEnabled } from '../lib/telegram-business-consent.js';
 import { createBusinessWizardHandler, verifyStoredBusinessConnection } from '../api/business-wizard.js';
+
+// Business consent unit fixtures intentionally use the non-Neon transport.
+// Vercel Preview selects Neon without preview-only secrets; never let unit
+// tests invoke a real database lease. Full Neon contract/preflight remains
+// separately verified by its dedicated suite and release gate.
+const originalUnitProvider = process.env.VETO_STORAGE_PROVIDER;
+process.env.VETO_STORAGE_PROVIDER = 'supabase';
+after(() => {
+  if (originalUnitProvider === undefined) delete process.env.VETO_STORAGE_PROVIDER;
+  else process.env.VETO_STORAGE_PROVIDER = originalUnitProvider;
+});
+
 
 function clientFixture(initial=[],mode='success') {
   let bots=initial,reads=0,writes=0;
