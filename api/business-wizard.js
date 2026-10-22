@@ -140,7 +140,9 @@ export function createBusinessWizardHandler(overrides={}) {
     // read-only Bot API verification confirms owner + rights independently.
     const delivery = await verifyStoredBusinessConnection(token,ownerId);
     if (action === 'disconnect') delivery.serverState = 'pending-webhook';
-    return json(res,200,{...result,settingsUpdated,scope:body.scope || 'preserve',delivery,
+    return json(res,200,{...result,settingsUpdated,
+      archiveConsentRequested:action==='connect' && body.antiDeleteConsent===true,
+      scope:body.scope || 'preserve',delivery,
       note:'Подключение и права проверены в Telegram. Доставка событий, публикация и удаление требуют отдельной проверки.'});
   } catch (error) {
     const safe = safeFailure(error);
