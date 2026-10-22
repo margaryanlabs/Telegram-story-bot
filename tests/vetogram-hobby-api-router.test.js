@@ -11,6 +11,10 @@ test('Hobby adapter exposes every existing API endpoint via one function without
   assert.equal(config.functions,undefined);
   assert.ok(config.routes.some(route=>route.dest==='/api/router.js?route=$1'));
   const router=read('api/router.js');
+  // A missing viewer-sync route silently makes every owner session look disconnected.
+  assert.ok(router.includes('"viewer-sync": () => import("./viewer-sync.js")'));
+  assert.ok(router.includes('"telegram-chats": () => import("./telegram-chats.js")'));
+  assert.ok(router.includes('"telegram-stories": () => import("./telegram-stories.js")'));
   const endpoints=readdirSync(new URL('../api/',import.meta.url))
     .filter(path=>path.endsWith('.js')&&path!=='router.js')
     .map(path=>path.slice(0,-3));
