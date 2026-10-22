@@ -129,12 +129,13 @@ function paint(target){
   ctx.font='600 12px system-ui,sans-serif';ctx.textAlign='left';
   ctx.fillStyle='rgba(255,255,255,.91)';ctx.fillText('VETO / STORY',100,66);
   const center=t.layout==='center';
-  const x=center?270:53,start=center?388:675;
+  const x=center?270:53,start=Math.max(260,Math.min(740,Number(d.textY)|| (center?388:675)));
+  const titleSize=Math.max(32,Math.min(66,Number(d.fontSize)||51));
   ctx.textAlign=center?'center':'left';
   ctx.fillStyle=t.accent;ctx.font='600 13px system-ui,sans-serif';
   ctx.fillText('A MOMENT WORTH SHARING',x,start-49);
-  ctx.fillStyle='#ffffff';ctx.font='800 51px system-ui,sans-serif';
-  const used=drawLines(ctx,d.title||t.title,x,start,center?440:435,51,center?'center':'left',3);
+  ctx.fillStyle='#ffffff';ctx.font='800 '+titleSize+'px system-ui,sans-serif';
+  const used=drawLines(ctx,d.title||t.title,x,start,center?440:435,titleSize,center?'center':'left',3);
   ctx.font='400 21px system-ui,sans-serif';ctx.fillStyle='rgba(255,255,255,.88)';
   drawLines(ctx,d.subtitle||t.subtitle,x,start+used+12,center?400:410,21,center?'center':'left',3);
   if(d.portal){
@@ -155,6 +156,8 @@ function render(){
   $('seRetention').value=String(state.draft.retentionDays);
   $('seRemixAllowed').checked=state.draft.remixable;
   $('seBranding').checked=state.draft.branding===true;
+  $('seTextY').value=String(state.draft.textY);
+  $('seFontSize').value=String(state.draft.fontSize);
   const p=state.draft.portal;
   $('sePortalType').value=p?.type||'';
   $('sePortalTitle').value=p?.title||'';
@@ -263,6 +266,8 @@ function setup(){
   $('seRetention').addEventListener('change',e=>{if(state.draft)state.draft.retentionDays=Number(e.target.value)});
   $('seRemixAllowed').addEventListener('change',e=>{if(state.draft)state.draft.remixable=e.target.checked});
   $('seBranding').addEventListener('change',e=>{if(state.draft){state.draft.branding=e.target.checked;paint(canvas)}});
+  $('seTextY').addEventListener('input',e=>{if(state.draft){state.draft.textY=Number(e.target.value);paint(canvas)}});
+  $('seFontSize').addEventListener('input',e=>{if(state.draft){state.draft.fontSize=Number(e.target.value);paint(canvas)}});
   $('seNew').addEventListener('click',()=>{if(!state.owner || state.owner==='0')return notify('Открой VETOGRAM в Telegram',true);applyDraft(newStoryDraft({ownerId:state.owner}));notify('Новая Story готова')});
   $('seUpload').addEventListener('click',()=>$('seFile').click());
   $('seFile').addEventListener('change',async e=>{
