@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261019-brand-v2" />
   <link rel="stylesheet" href="/veto-launch-polish.css?v=20261019-launch-01" />
   <link rel="stylesheet" href="/vetogram-header.css?v=20261021-v1" />
+  <link rel="stylesheet" href="/story-engine.css?v=20261022-se1" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -145,6 +146,7 @@
         <div class="veto-command-home-grid" aria-label="Инструменты Vetogram">
           <button type="button" data-open-screen="privacy"><span>↶</span><strong>Privacy Vault</strong><small>Anti-Delete и сохранённые копии</small></button>
           <button type="button" data-open-screen="viewers"><span>◉</span><strong>Stories Intel</strong><small>Просмотры и аудитория</small></button>
+          <button type="button" data-open-screen="story-engine"><span>✧</span><strong>VETO Story Engine</strong><small>Создавай · Portal · Remix</small></button>
           <button type="button" data-open-screen="voice"><span>♫</span><strong>Voice Lab</strong><small>Голосовые и эффекты</small></button>
           <button type="button" data-open-screen="relay"><span>⇄</span><strong>Relay</strong><small>Дополнительное подключение</small></button>
         </div>
@@ -1335,10 +1337,104 @@
     </section>
 
 
+
+    <section class="screen se-engine" data-screen="story-engine" id="seEngine" aria-label="VETO Story Engine">
+      <div class="se-masthead">
+        <div>
+          <span class="se-eyebrow">VETOGRAM / STORY ENGINE · CREATOR FIRST</span>
+          <h1>Make a story.<br><em>Make it matter.</em></h1>
+          <p>Создавай киношные Stories в собственном редакторе. Сохраняй проект на устройстве, подбирай шаблон и передавай готовую картинку в публикацию Telegram.</p>
+          <div class="se-masthead-actions">
+            <button class="se-button primary" id="seNew" type="button">＋ Новая Story</button>
+            <button class="se-button" type="button" data-open-screen="studio">✦ Sticker Studio</button>
+          </div>
+        </div>
+        <img class="se-masthead-mark" src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" />
+      </div>
+
+      <div class="se-headrow"><h2>Signature templates</h2><span class="se-compact-tag">10 ORIGINAL LOOKS</span></div>
+      <div class="se-templates" id="seTemplates" aria-label="Выбери шаблон Story"></div>
+
+      <div class="se-headrow"><h2>Story Composer</h2><small id="seAccountStatus">Загружаем локальное пространство</small></div>
+      <div class="se-editor-shell">
+        <div class="se-stage">
+          <div class="se-screen-label"><span>LIVE PREVIEW / 9:16</span><span id="seTemplateName">NOIR</span></div>
+          <div class="se-canvas-frame"><canvas id="seCanvas" width="540" height="960" aria-label="Предпросмотр твоей истории"></canvas></div>
+          <div class="se-stage-foot"><span>1080×1920 EXPORT</span><span>YOUR DEVICE FIRST</span><span>TELEGRAM READY</span></div>
+          <div class="se-controls-row" style="width:100%">
+            <button class="se-button" id="seDownload" type="button">↓ JPEG</button>
+            <button class="se-button primary" id="sePublish" type="button">Продолжить публикацию →</button>
+          </div>
+        </div>
+        <div class="se-controls">
+          <div class="se-panel">
+            <span class="se-eyebrow">01 · COMPOSE</span>
+            <h3>Твоя история</h3>
+            <label class="se-label">Заголовок<input id="seTitle" class="se-input" maxlength="90" placeholder="Сделай акцент" /></label>
+            <label class="se-label">Подзаголовок<textarea id="seSubtitle" class="se-input se-textarea" maxlength="180" placeholder="Что хочешь сказать?"></textarea></label>
+            <label class="se-label">Подпись для Telegram<textarea id="seCaption" class="se-input se-textarea" maxlength="800" placeholder="Необязательная подпись"></textarea></label>
+            <div class="se-controls-row">
+              <button class="se-button" id="seUpload" type="button">↑ Добавить фото</button>
+              <button class="se-button" id="seClearPhoto" type="button">Убрать фото</button>
+            </div>
+            <input id="seFile" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+            <div class="se-inline-warning">JPG, PNG или WEBP до 8 МБ. Видео и полноценный монтаж — следующий этап; здесь экспортируется фотография.</div>
+          </div>
+          <div class="se-panel">
+            <span class="se-eyebrow">02 · SMART DIRECTION</span>
+            <h3>Идея за одно действие</h3>
+            <p>Напиши тему. Подберём шаблон и текстовые акценты локально — без платной AI-генерации и загрузки фотографий.</p>
+            <label class="se-label">Тема<input class="se-input" id="seBrief" maxlength="500" placeholder="Например: birthday party в Дубае" /></label>
+            <div class="se-controls-row"><button class="se-button" type="button" id="seBriefGenerate">✧ Подобрать оформление</button></div>
+          </div>
+          <div class="se-panel">
+            <span class="se-eyebrow">03 · PORTAL</span>
+            <h3>Продолжение Story</h3>
+            <p>Создай мини-страницу и настрой действие. Пока доступен локальный предпросмотр, не публичная ссылка.</p>
+            <label class="se-label">Формат
+              <select class="se-input" id="sePortalType"><option value="">Без Portal</option></select>
+            </label>
+            <label class="se-label">Название<input class="se-input" id="sePortalTitle" maxlength="90" placeholder="Join the experience" /></label>
+            <label class="se-label">Описание<textarea class="se-input se-textarea" id="sePortalDescription" maxlength="300" placeholder="Что увидит посетитель"></textarea></label>
+            <label class="se-label">Текст действия<input class="se-input" id="sePortalCta" maxlength="42" placeholder="Открыть" /></label>
+            <label class="se-label">HTTPS-ссылка<input class="se-input" id="sePortalLink" type="url" inputmode="url" maxlength="400" placeholder="https://example.com" /></label>
+            <div class="se-controls-row">
+              <button class="se-button primary" id="sePortalSave" type="button">Сохранить Portal</button>
+              <button class="se-button" id="sePortalRemove" type="button">Отвязать</button>
+            </div>
+            <div class="se-portal-preview" id="sePortalPreview" aria-label="Предпросмотр Portal"></div>
+            <div class="se-inline-warning">CTA на изображении — визуальный элемент, не кликабельная ссылка Telegram. Публикация публичного Portal и сбор ответов потребуют отдельного защищённого backend.</div>
+          </div>
+          <div class="se-panel">
+            <span class="se-eyebrow">04 · YOUR VAULT</span>
+            <h3>Черновик и хранение</h3>
+            <p>Локальное хранение на этом устройстве. Проекты не синхронизируются между телефонами и не отправляются на наш сервер.</p>
+            <label class="se-label">Срок хранения проекта<select class="se-input" id="seRetention"></select></label>
+            <label class="se-checkbox"><input type="checkbox" id="seRemixAllowed" /> Разрешить создавать копии шаблона</label>
+            <div class="se-controls-row">
+              <button class="se-button primary" id="seSave" type="button">✓ Сохранить</button>
+              <button class="se-button" id="seRemix" type="button">⧉ Remix</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="seNotice" class="se-notice" role="status" aria-live="polite" hidden></div>
+
+      <div class="se-headrow"><h2>My drafts</h2><small>Только этот Telegram и это устройство</small></div>
+      <div class="se-drafts" id="seDraftList"></div>
+      <div class="se-footnote">
+        STORY ENGINE · Ранняя функциональная версия. Публикация требует подтверждения в существующем экране Stories.
+        Черновики и Portal хранятся локально в браузере. Нет облачной синхронизации, публичного Portal, аналитики конверсий или настоящей генеративной AI-модели.
+        Срок хранения черновиков проверяется при следующем открытии; это не фоновая серверная очистка.
+      </div>
+    </section>
+
     <section class="screen" data-screen="studio">
       <div class="page-head studio-page-head">
         <span class="kicker">GHOST CREATOR</span>
         <h1>Creator Studio</h1>
+        <button type="button" class="se-button primary" data-open-screen="story-engine">✧ Открыть Story Engine →</button>
         <p class="studio-positioning">Создавай фирменные emoji, sticker packs и Telegram-ассеты внутри Vetogram — от prompt или готового логотипа до пакета.</p>
       </div>
 
@@ -1662,6 +1758,7 @@
   <script src="/telegram-stories.js?v=20261019-veto-discovery-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
+  <script type="module" src="/story-engine.js?v=20261022-se1"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
   <script src="/veto-launch-polish.js?v=20261019-launch-01" defer></script>
   <script src="/vetogram-header.js?v=20261021-v1" defer></script>
