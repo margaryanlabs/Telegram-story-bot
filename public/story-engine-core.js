@@ -37,7 +37,7 @@ export function newStoryDraft({templateId='noir',ownerId,now=Date.now(),id=globa
   const t=templateById(templateId);
   return {version:1,id:id||String(now),ownerId:String(ownerId),templateId:t.id,
     title:t.title,subtitle:t.subtitle,caption:'',imageDataUrl:'',imageMime:'',
-    portal:null,remixable:false,retentionDays:30,createdAt:now,updatedAt:now,status:'draft'};
+    portal:null,remixable:false,branding:false,retentionDays:30,createdAt:now,updatedAt:now,status:'draft'};
 }
 export function normalizeDraft(input,ownerId,now=Date.now()){
   if(!input||String(input.ownerId)!==String(ownerId))throw new Error('DRAFT_OWNER_MISMATCH');
@@ -49,7 +49,7 @@ export function normalizeDraft(input,ownerId,now=Date.now()){
   return {...base,title:trimText(input.title,MAX_TITLE),subtitle:trimText(input.subtitle,MAX_SUBTITLE),
     caption:trimText(input.caption,800),retentionDays,portal,
     imageDataUrl,imageMime:imageDataUrl?String(input.imageMime||'image/jpeg'):'',
-    remixable:input.remixable===true,createdAt:Number(input.createdAt)||now,
+    remixable:input.remixable===true,branding:input.branding===true,createdAt:Number(input.createdAt)||now,
     updatedAt:Number(input.updatedAt)||now,status:'draft'};
 }
 export function isExpired(draft,now=Date.now()){
