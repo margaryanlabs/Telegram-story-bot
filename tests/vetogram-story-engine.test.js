@@ -20,6 +20,7 @@ test('all story drafts require a real owner ID and preserve selected retention',
   const back=normalizeDraft(d,'123',2000);
   assert.equal(back.title,d.title);assert.equal(back.retentionDays,90);
   assert.equal(back.ownerId,'123');assert.equal(back.id,'draft-1');
+  assert.equal(back.branding,false,'watermark is opt-in, never forced');
   assert.throws(()=>normalizeDraft(d,'456'),/DRAFT_OWNER_MISMATCH/);
   assert.deepEqual(RETENTION_DAYS,[7,30,90,180,365]);
 });
