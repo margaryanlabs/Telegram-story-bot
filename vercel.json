@@ -1,10 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/*.js": {
-      "maxDuration": 60
-    }
-  },
   "headers": [
     {
       "source": "/studio.html",
@@ -95,6 +90,33 @@
           "value": "public, max-age=0, must-revalidate"
         }
       ]
+    }
+  ],
+  "builds": [
+    {
+      "src": "api/router.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 60
+      }
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "^/api/([A-Za-z0-9-]+)$",
+      "dest": "/api/router.js?route=$1"
+    },
+    {
+      "src": "^/$",
+      "dest": "/public/studio.html"
+    },
+    {
+      "src": "^/(.*)$",
+      "dest": "/public/$1"
     }
   ]
 }
