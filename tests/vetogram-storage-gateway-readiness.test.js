@@ -14,6 +14,7 @@ function runtime(health, { credentials = true, storeConfigured = true } = {}) {
   const fn = runInNewContext(backend.slice(start, end) + '\nconfigState;', {
     viewerDbConfigured: () => storeConfigured,
     viewerCryptoHealth: async () => health(),
+    selectedStorageProvider: () => 'supabase',
     process: {env:credentials ? {
       TELEGRAM_API_ID:'fixture-id',
       TELEGRAM_API_HASH:'fixture-hash',

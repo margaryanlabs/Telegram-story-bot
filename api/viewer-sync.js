@@ -1,3 +1,4 @@
+import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { normalizeTelegramPhone } from '../lib/telegram-auth-feedback.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
@@ -51,11 +52,15 @@ async function configState() {
 
   return {
     configured: storage && telegram,
-    backgroundReady: storage && telegram && storageReachable,
+    // Neon cron remains explicitly disabled until a signed trigger is verified.
+    backgroundReady: selectedStorageProvider() === 'supabase' && storage && telegram && storageReachable,
     newConnectionsReady: storage && telegram && secureSessionCrypto,
     secureSessionCrypto,
+    // v4 is the independent Neon cipher; v3 remains the legacy Supabase cipher.
+    cipherVersion: secureSessionCrypto ? (selectedStorageProvider() === 'neon' ? 'v4' : 'v3') : null,
+    storageProvider: selectedStorageProvider(),
     storageStatus: !storage || !telegram ? 'not-configured' : storageReachable ? 'reachable' : 'unavailable',
-    scheduler: 'supabase_pg_cron',
+    scheduler: selectedStorageProvider() === 'neon' ? 'not_migrated' : 'supabase_pg_cron',
     missing: [
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,

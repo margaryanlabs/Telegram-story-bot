@@ -2095,7 +2095,7 @@
               <span></span>
             </label>
           </div>
-          <div class="sheet-item"><strong>Защита подключения</strong><span>${viewerState.secureSessionCrypto ? 'Защищённое шифрование v3 активно' : 'Требуется обновление защиты подключения'}</span></div>
+          <div class="sheet-item"><strong>Защита подключения</strong><span>${viewerState.secureSessionCrypto ? 'Защищённое шифрование сессии активно' : 'Требуется обновление защиты подключения'}</span></div>
           <div class="sheet-item"><strong>Последнее обновление данных</strong><span>${viewerState.session.lastPollAt ? new Date(viewerState.session.lastPollAt).toLocaleString('ru-RU') : 'ещё не запускалась'}</span></div>
         </div>
         <div class="sheet-actions">
