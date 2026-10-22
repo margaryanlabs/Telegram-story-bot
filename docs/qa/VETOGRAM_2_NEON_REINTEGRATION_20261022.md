@@ -171,3 +171,26 @@ The lockfile must be reviewed and committed only after successful registry-backe
 - The smoke test skip **does not imply release readiness**; `npm run neon:preflight` with secure, correctly scoped credentials is still mandatory before launch, along with schema v5, media access, and live Telegram checks.
 - The current tool-side Node 22 runtime cannot resolve either `registry.npmjs.org` or `github.com`, and npm cache is empty. Thus `npm run lock:refresh`, `npm ci`, `npm run vercel-build` could not be executed. The lockfile mismatch is still a hard build blocker; no fake package integrity entries were added.
 - Branch remains a **draft PR**. No production deploy, team billing change, database migration, or credentials change took place.
+
+
+## 22 October — isolated onboarding tests and Preview cancellation investigation
+
+### Code change
+
+`tests/vetogram-unified-business.test.js` now explicitly uses the Supabase (mocked unit-fixture) provider for that file's test process and restores the previous environment variable in the Node test after hook. This prevents ordinary Business consent tests from inadvertently acquiring a real Neon v5 database lease when Vercel Preview has `VETO_STORAGE_PROVIDER=neon`. It **does not** suppress any separate Neon integration test or the explicit release preflight.
+
+New source-based checks: parsing the five touched files succeeded; the source still contains the per-owner Neon lease, partial archive-persistence warning and separately gated Neon smoke test. These checks **do not** establish a successful npm install or full test suite.
+
+### Vercel Preview cancellation
+
+The current Vercel project `veto` reports Preview state `CANCELED`; individual deployments have `errorLink` referencing the Vercel documentation for **Ignored Build Step**. Per Vercel official docs, a configured Ignore Build Step command exiting 0 cancels the build before npm installation. This is a **strong lead, not verified project configuration**: the connected Vercel API returns partial project metadata and detailed build logs remain inaccessible due to team scope 403.
+
+When ready for a controlled, paid-minute-eligible Preview, review **Vercel → project veto → Settings → Build and Deployment → Ignored Build Step**. Do not disable an intentionally configured no-build mode without verifying owner intent and any build quota/billing consequences. Do not override it in `vercel.json` simply to force automatic billing.
+
+### Unresolved release gates
+
+- Exact **three missing lockfile dependencies:** `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, and `@neondatabase/serverless`. Correct `npm run lock:refresh` requires access to the npm registry. This assistant environment cannot resolve the npm/GitHub hosts, and user GitHub Actions are locked due to billing, so no full suite can be asserted.
+- The **Neon v5 Business lease table** is staged as additive SQL but is not applied; the current database schema is v4.
+- A **preview with authorized Neon database + original v4 encryption key + S3 vault** is required to execute `npm run neon:preflight`. Production-only key values must not be disclosed or silently copied to public build logs.
+- Live two-account Ghost View / nonPremium Business Story publish / actual message edit-delete alert / Android-iOS verification not completed.
+- Absolutely no production promotion, forced build, paid credit use, credential alteration, data migration or Telegram session write was performed.
