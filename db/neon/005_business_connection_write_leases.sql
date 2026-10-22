@@ -10,3 +10,8 @@ CREATE TABLE IF NOT EXISTS public.veto_business_write_leases (
 REVOKE ALL ON TABLE public.veto_business_write_leases FROM PUBLIC;
 CREATE INDEX IF NOT EXISTS veto_business_write_leases_expires_at_idx
   ON public.veto_business_write_leases (expires_at);
+
+-- Keep the same reversible schema-version ledger used by Neon v1–v4.
+INSERT INTO public.veto_storage_migrations(version,note)
+VALUES(5,'Owner-scoped atomic Business settings lease; original owner data unchanged')
+ON CONFLICT(version) DO NOTHING;
