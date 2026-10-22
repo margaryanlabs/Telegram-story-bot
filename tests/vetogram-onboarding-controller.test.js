@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const source=readFileSync(new URL('../public/privacy.js',import.meta.url),'utf8');
-function fixture(enabled=true,existing=false) {
+function fixture(enabled=true,existing=false,archiveWriteFails=false) {
   const requests=[],listeners={},inputs={};
   const action={disabled:true,textContent:''},picker={hidden:false};
   let scope=existing?'preserve':'all-private',selected=[];
@@ -26,7 +26,7 @@ function fixture(enabled=true,existing=false) {
     let result={ok:true};
     if(url==='/api/business-wizard') {
       result=body.action==='prepare'?{ok:true,enabled,state:existing?'storylab':'none',rights:existing?{manageStories:false}:null,chats:[{chatId:'101',title:'Test peer'}],snapshotToken:'fixture-snapshot',diagnostics:{}}:
-        {ok:true,connected:true,manageStories:body.storiesConsent,settingsUpdated:body.antiDeleteConsent,delivery:{botApi:'pending-webhook'}};
+        {ok:true,connected:true,manageStories:body.storiesConsent,archiveConsentRequested:body.antiDeleteConsent,settingsUpdated:body.antiDeleteConsent && !archiveWriteFails,delivery:{botApi:'pending-webhook'}};
     }
     return {ok:true,json:async()=>result};
   };
@@ -89,4 +89,14 @@ test('existing owner can adjust chat scope without requesting either capability 
   assert.equal(connection.scopeConsent,true);
   assert.equal(connection.storiesConsent,false);
   assert.equal(connection.antiDeleteConsent,false);
+});
+
+test('partial onboarding never labels Anti-Delete as ready if archive settings failed to save',async()=>{
+  const f=fixture(true,false,true);
+  assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),true);
+  f.inputs.businessWizardConsent.checked=true;await f.change();await f.apply();
+  assert.match(f.content.innerHTML,/Anti-Delete ещё не активирован полностью/);
+  assert.match(f.content.innerHTML,/Сообщения могут не сохраняться/);
+  assert.doesNotMatch(f.content.innerHTML,/data-business-close="1">Готово/);
+  assert.match(f.content.innerHTML,/data-business-retry="1"/);
 });
