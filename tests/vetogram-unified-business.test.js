@@ -116,7 +116,9 @@ test('API checks cryptographic Mini App auth and never enables Anti-Delete impli
 test('API reports partial archive settings failure without rolling back the Business connection',async()=>{
   const a=apiFixture(clientFixture(),true);const p=await a.request({action:'prepare'});
   const res=await a.request({action:'connect',consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',snapshotToken:p.body.snapshotToken,...all,antiDeleteConsent:true});
-  assert.equal(res.code,200);assert.equal(res.body.connected,true);assert.equal(res.body.settingsUpdated,false);assert.equal(a.f.writes,1);
+  assert.equal(res.code,200);assert.equal(res.body.connected,true);assert.equal(res.body.settingsUpdated,false);
+  assert.equal(res.body.archiveConsentRequested,true,'explicit opt-in must not be hidden on storage failure');
+  assert.equal(a.f.writes,1);
 });
 test('production feature gate is off unless explicitly enabled',()=>{
   const before=process.env.VERCEL_ENV,flag=process.env.VETOGRAM_UNIFIED_ONBOARDING;
