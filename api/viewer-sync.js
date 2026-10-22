@@ -1,3 +1,4 @@
+import { sessionCryptoReady, expectedCipherVersion } from '../lib/storage-provider.js';
 import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { normalizeTelegramPhone } from '../lib/telegram-auth-feedback.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
@@ -43,9 +44,7 @@ async function configState() {
       const cryptoHealth = await viewerCryptoHealth();
       storageReachable = true;
       // Legacy Supabase uses v3; the existing Neon sessions use independent v4.
-      const expectedVersion = selectedStorageProvider() === 'neon' ? 'v4' : 'v3';
-      secureSessionCrypto = cryptoHealth?.ready === true
-        && (cryptoHealth?.cipherVersion || cryptoHealth?.version) === expectedVersion;
+      secureSessionCrypto = sessionCryptoReady(cryptoHealth);
     } catch {
       // A storage outage is not proof of a revoked Telegram session or a
       // missing encryption key. Never prompt users to delete or reset either.
@@ -60,7 +59,7 @@ async function configState() {
     newConnectionsReady: storage && telegram && secureSessionCrypto,
     secureSessionCrypto,
     // v4 is the independent Neon cipher; v3 remains the legacy Supabase cipher.
-    cipherVersion: secureSessionCrypto ? (selectedStorageProvider() === 'neon' ? 'v4' : 'v3') : null,
+    cipherVersion: secureSessionCrypto ? expectedCipherVersion() : null,
     storageProvider: selectedStorageProvider(),
     storageStatus: !storage || !telegram ? 'not-configured' : storageReachable ? 'reachable' : 'unavailable',
     scheduler: selectedStorageProvider() === 'neon' ? 'not_migrated' : 'supabase_pg_cron',
@@ -654,9 +653,10 @@ export default async function handler(req, res) {
         throw error;
       }
 
+      const sealedSession = await sealJson({ session: result.session }, `session:${userId}`);
       await upsertViewerSession({
         telegram_user_id: userId,
-        session_ciphertext: await sealJson({ session: result.session }, `session:${userId}`),
+        session_ciphertext: sealedSession,
         status: 'active',
         telegram_account_user_id: result.user?.id || null,
         telegram_account_username: result.user?.username || null,
@@ -667,7 +667,7 @@ export default async function handler(req, res) {
       await deleteAuthChallenge(userId);
       await recordActivityEvent(userId, 'session.created', {
         method: 'phone',
-        crypto: 'v3',
+        crypto: sealedSession.split('.')[0],
         connection: 'deep_intelligence',
         status: 'active',
       }, {
@@ -707,9 +707,10 @@ export default async function handler(req, res) {
         throw error;
       }
 
+      const sealed2faSession = await sealJson({ session: result.session }, `session:${userId}`);
       await upsertViewerSession({
         telegram_user_id: userId,
-        session_ciphertext: await sealJson({ session: result.session }, `session:${userId}`),
+        session_ciphertext: sealed2faSession,
         status: 'active',
         telegram_account_user_id: result.user?.id || null,
         telegram_account_username: result.user?.username || null,
@@ -720,7 +721,7 @@ export default async function handler(req, res) {
       await deleteAuthChallenge(userId);
       await recordActivityEvent(userId, 'session.created', {
         method: challenge.stage === 'qr_password' ? 'qr_2fa' : 'phone_2fa',
-        crypto: 'v3',
+        crypto: sealed2faSession.split('.')[0],
         connection: 'deep_intelligence',
         status: 'active',
       }, {

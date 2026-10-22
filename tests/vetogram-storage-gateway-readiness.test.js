@@ -15,6 +15,9 @@ function runtime(health, { credentials = true, storeConfigured = true, provider 
     viewerDbConfigured: () => storeConfigured,
     viewerCryptoHealth: async () => health(),
     selectedStorageProvider: () => provider,
+    expectedCipherVersion: () => provider === 'neon' ? 'v4' : 'v3',
+    sessionCryptoReady: detail => detail?.ready === true
+      && (detail?.cipherVersion || detail?.version) === (provider === 'neon' ? 'v4' : 'v3'),
     process: {env:credentials ? {
       TELEGRAM_API_ID:'fixture-id',
       TELEGRAM_API_HASH:'fixture-hash',
@@ -77,4 +80,17 @@ test('unverified Neon v4 key prevents owner session activation without modifying
   assert.equal(config.storageStatus,'reachable');
   assert.equal(config.newConnectionsReady,false);
   assert.ok(config.missing.includes('PRIVATE_SESSION_CRYPTO'));
+});
+
+test('QR and phone share the exact v4/v3 readiness requirement', async () => {
+  const provider = await import('../lib/storage-provider.js');
+  assert.equal(provider.sessionCryptoReady({ready:true,version:'v4',cipherVersion:'v4'},'neon'),true);
+  assert.equal(provider.sessionCryptoReady({ready:true,version:'v3'},'neon'),false);
+  assert.equal(provider.sessionCryptoReady({ready:true,version:'v3'},'supabase'),true);
+  assert.equal(provider.sessionCryptoReady({ready:false,version:'v4'},'neon'),false);
+  assert.match(read('api/viewer-qr.js'),/sessionCryptoReady\(cryptoHealth\)/);
+});
+test('new phone-code and 2FA events use the sealed session cipher not literal v3',()=>{
+  assert.match(backend,/crypto: sealedSession\.split\('\.'\)\[0\]/);
+  assert.match(backend,/crypto: sealed2faSession\.split\('\.'\)\[0\]/);
 });

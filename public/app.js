@@ -109,6 +109,7 @@
     backgroundReady: false,
     newConnectionsReady: null,
     secureSessionCrypto: null,
+    cipherVersion: null,
     storageStatus: null,
     session: null,
     loginPending: null,
@@ -760,6 +761,7 @@
           backgroundReady: Boolean(data.config?.backgroundReady),
           newConnectionsReady: Boolean(data.config?.newConnectionsReady),
           secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
+          cipherVersion: data.config?.cipherVersion || null,
           storageStatus: data.config?.storageStatus || null,
           degraded: true,
           error: data.storageError || 'Deep Intelligence временно восстанавливает соединение',
@@ -770,6 +772,7 @@
           backgroundReady: Boolean(data.config?.backgroundReady),
           newConnectionsReady: Boolean(data.config?.newConnectionsReady),
           secureSessionCrypto: Boolean(data.config?.secureSessionCrypto),
+          cipherVersion: data.config?.cipherVersion || null,
           storageStatus: data.config?.storageStatus || null,
           session: data.session || null,
           loginPending: data.loginPending || null,
@@ -792,6 +795,7 @@
         secureSessionCrypto: data.config?.secureSessionCrypto === undefined
           ? viewerState.secureSessionCrypto
           : Boolean(data.config?.secureSessionCrypto),
+        cipherVersion: data.config?.cipherVersion || viewerState.cipherVersion,
         storageStatus: data.config?.storageStatus || viewerState.storageStatus,
         degraded: data.config?.configured === false ? false : true,
         error: error.message,
@@ -1754,7 +1758,7 @@
     const businessConnected = state.businessPermissions?.connected === true || state.connection === 'needs_permission';
     const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
     const session = viewerState.session;
-    const cryptoVersion = session?.cryptoVersion || (viewerState.secureSessionCrypto ? 'v3' : null);
+    const cryptoVersion = session?.cryptoVersion || viewerState.cipherVersion || null;
     const account = session?.account || state.accountConnection?.account || {};
     const lastError = String(session?.lastError || '').trim();
 
