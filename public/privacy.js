@@ -1350,7 +1350,10 @@
     if (picker) picker.hidden = scope === 'preserve';
     for (const el of $('sheet')?.querySelectorAll('[data-business-selected]') || []) el.disabled = scope !== 'selected-private';
     const fresh = businessWizardSnapshot?.state === 'none';
-    const featureConsent = fresh || $('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true;
+    // On an existing connection changing recipients is independent of requesting
+    // new capabilities. Preserve Story rights and archive settings unless opted in.
+    const existingScopeChange = businessWizardSnapshot?.state === 'storylab' && scope !== 'preserve';
+    const featureConsent = fresh || existingScopeChange || $('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true;
     const valid = $('businessWizardConsent')?.checked === true && scope &&
       (scope !== 'selected-private' || (selected.length > 0 && selected.length <= 12)) && excluded.length <= 12 &&
       !selected.some(el=>scope==='selected-private' && excluded.some(ex=>ex.value===el.value)) && featureConsent;
