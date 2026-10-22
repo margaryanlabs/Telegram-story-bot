@@ -45,10 +45,14 @@ async function configState() {
       storageReachable = true;
       // Legacy Supabase uses v3; the existing Neon sessions use independent v4.
       secureSessionCrypto = sessionCryptoReady(cryptoHealth);
-    } catch {
-      // A storage outage is not proof of a revoked Telegram session or a
-      // missing encryption key. Never prompt users to delete or reset either.
-      storageReachable = false;
+    } catch (error) {
+      // The Neon adapter can reach SQL and still reject a missing or invalid
+      // local encryption key. Do not misdiagnose that as a database outage.
+      const cryptoConfigurationError = /^(?:PRIVATE_SESSION_CRYPTO_UNAVAILABLE|VETO_NEON_SESSION_KEY_NOT_CONFIGURED|NEON_SESSION_KEY_VERSION_UNAVAILABLE)$/
+        .test(String(error?.message || ''));
+      storageReachable = cryptoConfigurationError;
+      // Neither case proves the Telegram session was revoked. No destructive
+      // action is necessary: keep ciphertext and report the right blocker.
     }
   }
 
