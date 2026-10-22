@@ -116,3 +116,24 @@ Must run two consenting test accounts, one non-Premium, through v4 QR/phone logi
 - Do not update Vercel production env or activate scheduled triggers.
 - Do not reset Neon or Supabase, delete sessions, overwrite encryption keys or mass-revoke Business bot rights.
 - Do not claim `READY` from code inspection, static parity or old build checks.
+ 
+## Follow-up 22 Oct — auth and partial Business setup
+
+**Status: release blocked, NO DEPLOYMENT.**
+
+- QR login previously accepted only `cryptoHealth.version === 'v3'`. New code uses provider-sensitive `sessionCryptoReady()` and requires verified `v4` for Neon, `v3` for Supabase. The phone/2FA session-created audit now reports the actual sealed cipher version. `public/app.js` reports the configured cipher.
+- Business permissions may be accepted by Telegram even if the subsequent Anti-Delete server-settings write fails. The response now reports `archiveConsentRequested` separately from `settingsUpdated`. The UI shows **incomplete Anti-Delete setup** and withholds the green “Готово” action until storage settings are confirmed. Story-only consent does not falsely trigger this warning. Two focused test files updated; full test execution remains unverified.
+- Added `scripts/vetogram-verify-lock.mjs`, `npm run lock:check`, `npm run lock:refresh`. The check compares all root direct dependencies and is expected to fail until the committed npm lock is regenerated in a trusted network-enabled checkout. `npm run lock:refresh` uses `--package-lock-only --ignore-scripts --no-audit --no-fund`. No install or source scripts were executed in this run.
+- Connected GitHub reports a current PR check job failed before executing **any steps**, with two reported check annotations that this connector cannot read. The cause could be runner startup/billing/policy; it is **not evidence of failing application tests**.
+- Connected Vercel metadata shows latest Preview **CANCELED**. Team-scoped detailed build logs and authenticated production health are blocked by connector **403**. No claim of working Preview or production health.
+- Connected Vercel env inspection (names/targets only): `VETO_STORAGE_PROVIDER=neon` for production and preview; original Neon DB, v4 key and private S3 credentials are scoped production-only, not preview. Sensitive values were not decrypted. `VETOGRAM_UNIFIED_ONBOARDING` is still absent.
+- Existing Neon schema is v4; the additive v5 owner-leases migration remains **NOT APPLIED**. No row or session changes performed.
+
+### Required release path
+
+1. Regenerate the npm lock in an authorized network-enabled workspace: `npm run lock:refresh`. Review/commit the lockfile on this PR and run `npm run lock:check && npm ci && npm run vercel-build`.
+2. Resolve GitHub runner startup issue by inspecting the two annotations in repository UI and checking Actions settings/billing only if indicated. Do not pay or increase budgets without owner approval.
+3. Ensure controlled Preview secrets are configured safely and build can run, then execute `npm run neon:preflight` without exposing credentials.
+4. Validate original `v4` key fingerprint, private S3 health, and schema v5 only after an approved additive migration.
+5. Run real consensual two-account Ghost View, Business Stories without Premium, Anti-Delete/edit/delete, alerts, iOS/Android tests.
+6. Obtain explicit **ДЕПЛОЙ** before merging or enabling production.
