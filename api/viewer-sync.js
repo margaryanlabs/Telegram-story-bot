@@ -36,26 +36,32 @@ async function configState() {
     && process.env.TELEGRAM_BOT_TOKEN
   );
   let secureSessionCrypto = false;
+  let storageReachable = false;
   if (storage && telegram) {
     try {
       const cryptoHealth = await viewerCryptoHealth();
+      storageReachable = true;
       secureSessionCrypto = cryptoHealth?.ready === true && cryptoHealth?.version === 'v3';
     } catch {
-      secureSessionCrypto = false;
+      // A storage outage is not proof of a revoked Telegram session or a
+      // missing encryption key. Never prompt users to delete or reset either.
+      storageReachable = false;
     }
   }
 
   return {
     configured: storage && telegram,
-    backgroundReady: storage && telegram,
+    backgroundReady: storage && telegram && storageReachable,
     newConnectionsReady: storage && telegram && secureSessionCrypto,
     secureSessionCrypto,
+    storageStatus: !storage || !telegram ? 'not-configured' : storageReachable ? 'reachable' : 'unavailable',
     scheduler: 'supabase_pg_cron',
     missing: [
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
       !process.env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_BOT_TOKEN' : null,
-      storage && telegram && !secureSessionCrypto ? 'PRIVATE_SESSION_CRYPTO' : null,
+      storage && telegram && !storageReachable ? 'STORAGE_GATEWAY_UNAVAILABLE' : null,
+      storage && telegram && storageReachable && !secureSessionCrypto ? 'PRIVATE_SESSION_CRYPTO' : null,
     ].filter(Boolean),
   };
 }
@@ -384,7 +390,7 @@ export default async function handler(req, res) {
             story: null,
             viewers: [],
             analytics: null,
-            storageError: 'Deep Intelligence временно восстанавливает соединение. Публикация Stories работает независимо.',
+            storageError: 'Сервер хранения VETOGRAM временно недоступен. Сохранённая Telegram-сессия не удалена. Не запрашивай новый код и не отключай бота — сначала восстанови сервер.',
           });
           return;
         }
