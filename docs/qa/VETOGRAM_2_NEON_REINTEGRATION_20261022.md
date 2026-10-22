@@ -161,3 +161,13 @@ npm run vercel-build
 ```
 
 The lockfile must be reviewed and committed only after successful registry-backed regeneration. Real Telegram verification is still pending. **Production must not deploy until explicitly authorized and all release gates pass.**
+
+
+## Follow-up: GitHub billing blocker and safe Neon Preview smoke gating
+
+- The user supplied a screenshot from GitHub Actions #39773447540 showing the actual error: **"The job was not started because your account is locked due to a billing issue."** This conclusively explains why no CI steps or test logs are present. A separate Ubuntu 26 migration notice is unrelated.
+- GitHub's official guidance ([Unlocking a locked account](https://docs.github.com/en/billing/how-tos/troubleshooting/locked-account)) confirms failed payment authorization holds can block even free public-repository Actions. Account owner must inspect **Settings → Billing & licensing**, choose appropriate Free-plan downgrade or seek GitHub Support review if no actionable bill. Never process payments without the owner's consent.
+- `tests/neon-runtime-smoke.test.js` is now gated by **both** `VETO_STORAGE_PROVIDER=neon` and `neonStorageConfigured()`, avoiding a false CI failure on a preview environment where the provider selector is present but the production-only private database/session secrets are intentionally unavailable.
+- The smoke test skip **does not imply release readiness**; `npm run neon:preflight` with secure, correctly scoped credentials is still mandatory before launch, along with schema v5, media access, and live Telegram checks.
+- The current tool-side Node 22 runtime cannot resolve either `registry.npmjs.org` or `github.com`, and npm cache is empty. Thus `npm run lock:refresh`, `npm ci`, `npm run vercel-build` could not be executed. The lockfile mismatch is still a hard build blocker; no fake package integrity entries were added.
+- Branch remains a **draft PR**. No production deploy, team billing change, database migration, or credentials change took place.
