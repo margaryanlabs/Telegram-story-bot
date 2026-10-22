@@ -90,5 +90,5 @@ test('Refreshing or loading older messages restores the same visual anchor',()=>
   assert.ok(ui.includes('anchor:rememberedAnchor'));
   assert.ok(ui.includes('el.getBoundingClientRect().top-box.getBoundingClientRect().top-anchor.top'));
   assert.ok(ui.includes('state.archiveOffset'));
-  assert.ok(ui.includes('УДАЛЕНО В TELEGRAM · СОХРАНЕНО В VETO'));
+  assert.ok(ui.includes('УДАЛЕНО В TELEGRAM · СОХРАНЕНО В Vetogram'));
 });
