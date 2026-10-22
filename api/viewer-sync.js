@@ -72,6 +72,8 @@ async function configState() {
       ? (neonCronConfigured() ? 'neon-configured-not-live-verified' : 'neon-disabled')
       : 'supabase_pg_cron',
     missing: [
+      selectedStorageProvider() === 'neon' && !process.env.VETO_NEON_DATABASE_URL ? 'VETO_NEON_DATABASE_URL' : null,
+      selectedStorageProvider() === 'neon' && !process.env.VETO_NEON_SESSION_KEY ? 'VETO_NEON_SESSION_KEY' : null,
       !process.env.TELEGRAM_API_ID ? 'TELEGRAM_API_ID' : null,
       !process.env.TELEGRAM_API_HASH ? 'TELEGRAM_API_HASH' : null,
       !process.env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_BOT_TOKEN' : null,

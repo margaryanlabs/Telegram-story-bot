@@ -23,6 +23,10 @@ function runtime(health, { credentials = true, storeConfigured = true, provider 
       TELEGRAM_API_ID:'fixture-id',
       TELEGRAM_API_HASH:'fixture-hash',
       TELEGRAM_BOT_TOKEN:'fixture-token',
+      ...(provider === 'neon' && storeConfigured ? {
+        VETO_NEON_DATABASE_URL:'fixture-only-never-contacted',
+        VETO_NEON_SESSION_KEY:'fixture-only-never-contacted',
+      } : {}),
     }:{}},
   });
   return fn();
@@ -120,4 +124,13 @@ test('Neon cron configured flag is reflected in both health routes without claim
   assert.doesNotMatch(read('api/health.js'),/secureCrypto\?\.version\s*===\s*'v3'/);
   assert.match(read('api/health.js'),/neon-configured-not-live-verified/);
   assert.match(backend,/neonCronConfigured\(\)/);
+});
+
+test('Neon preview missing credentials reports the exact server settings and never forces Telegram re-login', async () => {
+  const config=await runtime(()=>{throw Error('must not call storage')},{provider:'neon',storeConfigured:false});
+  assert.equal(config.storageStatus,'not-configured');
+  assert.equal(config.newConnectionsReady,false);
+  assert.ok(config.missing.includes('VETO_NEON_DATABASE_URL'));
+  assert.ok(config.missing.includes('VETO_NEON_SESSION_KEY'));
+  assert.ok(!config.missing.includes('TELEGRAM_API_ID'));
 });
