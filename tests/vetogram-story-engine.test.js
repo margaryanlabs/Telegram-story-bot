@@ -81,3 +81,16 @@ test('Portal is visibly a local-only preview, not a falsely live public URL',()=
   assert.match(ui,/ownerId===state.owner/);
   assert.match(read('public/story-engine-core.js'),/data:image/);
 });
+
+
+test('slow photo decoding and export never carry an old Telegram owner into a new identity',()=>{
+  const ui=read('public/story-engine.js');
+  assert.match(ui,/sourceOwner=state\.owner,sourceId=state\.draft\.id/);
+  assert.match(ui,/state\.owner!==sourceOwner \|\| owner\(\)!==sourceOwner/);
+  assert.match(ui,/selectedOwner=state\.owner,selectedDraftId=state\.draft\.id/);
+  assert.match(ui,/owner\(\)!==selectedOwner \|\| state\.owner!==selectedOwner/);
+  assert.match(ui,/exportOwner=state\.owner,exportDraftId=state\.draft\.id/);
+  assert.match(ui,/Аккаунт или черновик изменился/);
+  assert.match(ui,/if\(state\.owner!=='0'\)/);
+  assert.match(ui,/window\.addEventListener\('focus'/);
+});
