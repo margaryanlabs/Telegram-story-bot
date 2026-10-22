@@ -81,7 +81,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  await deleteAuthChallenge(userId).catch(() => {});
+  // Keep a still-valid phone-code challenge while trying QR in another screen.
+  // Clear the challenge only after successful authorization.
 
   noStore(res);
   res.statusCode = 200;
@@ -155,12 +156,12 @@ export default async function handler(req, res) {
       return;
     }
 
+    const encryptedSession = await sealJson(
+      { session: result.session }, `session:${userId}`,
+    );
     await upsertViewerSession({
       telegram_user_id: userId,
-      session_ciphertext: await sealJson(
-        { session: result.session },
-        `session:${userId}`,
-      ),
+      session_ciphertext: encryptedSession,
       status: 'active',
       telegram_account_user_id: result.user.id || null,
       telegram_account_username: result.user.username || null,
@@ -171,7 +172,7 @@ export default async function handler(req, res) {
     await deleteAuthChallenge(userId).catch(() => {});
     await recordActivityEvent(userId, 'session.created', {
       method: 'qr',
-      crypto: 'v3',
+      crypto: encryptedSession.split('.')[0],
       connection: 'deep_intelligence',
       status: 'active',
     }, {
