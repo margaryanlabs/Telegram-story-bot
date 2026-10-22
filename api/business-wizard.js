@@ -108,10 +108,19 @@ export function createBusinessWizardHandler(overrides={}) {
           antiDelete:settings?.antiDelete===true,antiDeleteProof:'not-verified-in-this-onboarding',...delivery},
       });
     }
-    if (action === 'connect' && body.antiDeleteConsent !== true && body.storiesConsent !== true)
-      return json(res,409,{error:'Выбери и подтверди хотя бы одну возможность.'});
+    // Existing owners may change only their recipients without granting a new
+    // Story or archive capability. Never allow that shortcut on a new account.
+    if (action === 'connect' && body.antiDeleteConsent !== true && body.storiesConsent !== true
+      && body.scope === 'preserve')
+      return json(res,409,{error:'Нет изменений: выбери нужную возможность или новый охват чатов.'});
     const result = await withBusinessWriteLock(ownerId,()=>withBackupClient(decrypted.session,async client => {
       await verifyTelegramClientOwner(client,ownerId);
+      if (action === 'connect' && body.antiDeleteConsent !== true && body.storiesConsent !== true) {
+        const current = await readBusinessConsentState(client);
+        if (current.status.state !== 'storylab') {
+          throw Object.assign(new Error('Первое подключение требует явного согласия на Anti-Delete или Stories.'),{status:409});
+        }
+      }
       if (action === 'disconnect') return disconnectBusiness(client,verifySnapshot);
       return connectBusiness(client,{
         scope:action === 'revoke-stories' ? 'preserve' : body.scope,
