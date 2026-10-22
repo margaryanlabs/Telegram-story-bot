@@ -1,3 +1,4 @@
+import { sessionCryptoReady } from '../lib/storage-provider.js';
 import QRCode from 'qrcode';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import { sealJson } from '../lib/viewer-sync-crypto.js';
@@ -58,7 +59,7 @@ export default async function handler(req, res) {
 
   try {
     const cryptoHealth = await viewerCryptoHealth();
-    if (cryptoHealth?.ready !== true || cryptoHealth?.version !== 'v3') {
+    if (!sessionCryptoReady(cryptoHealth)) {
       throw new Error('private_crypto_not_ready');
     }
   } catch {
