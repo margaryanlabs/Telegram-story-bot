@@ -1291,16 +1291,17 @@
         <legend>Какие личные переписки разрешены боту?</legend>
         ${existing ? '<label><input type="radio" name="vetoBusinessScope" value="preserve" checked><span><b>Сохранить текущий охват и исключения</b><small>Не расширяет доступ и сохраняет действующие права.</small></span></label>' : ''}
         ${[['all-private','Все существующие и будущие','Контакты и не-контакты'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
-          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='selected-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
+          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='all-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
       </fieldset>
       <div class="veto-consent-chat-list" role="group" aria-label="Личные чаты и исключения">
         ${chats.map(chat=>`<div class="veto-consent-chat"><span class="veto-consent-chat-copy"><strong>${escapeHtml(chat.title)}</strong></span>
           <label><input type="checkbox" data-business-selected value="${escapeHtml(chat.chatId)}"> Выбрать</label>
           <label><input type="checkbox" data-business-excluded value="${escapeHtml(chat.chatId)}"> Исключить</label></div>`).join('') || '<p>Нет доступных диалогов для выбора. Широкие режимы доступны после явного согласия.</p>'}
       </div>
-      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span>Я разрешаю указанный охват личных чатов. Для широких режимов он включает соответствующие будущие события. Не включает группы, каналы и секретные чаты.</span></label>
-      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardAntiDelete"><span>Включить Anti-Delete, Edit History и Inbox: получать и сохранять новые сообщения, изменения и удаления; уведомлять об удалениях согласно моим настройкам. Старые удалённые сообщения не восстанавливаются.</span></label>
-      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardStories" ${result.rights?.manageStories?'disabled':''}><span>${result.rights?.manageStories?'Управление Stories уже разрешено и будет сохранено.':'Разрешить управление Stories: публикацию, изменение и удаление от моего имени. Это не гарантирует доступность публикации для любого аккаунта.'}</span></label>
+      ${existing ? '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span>Я подтверждаю выбранный охват личных чатов. Существующие права сохранятся; новые права выдаются только по отдельному согласию.</span></label>' : '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span><b>Включить VETOGRAM полностью.</b> Я разрешаю подключить @Vetotg_bot к выбранному охвату личных переписок (по умолчанию ко всем нынешним и будущим), получать и сохранять новые сообщения, правки и удаления, уведомлять меня, а также публиковать, изменять и удалять мои Stories от моего имени. Не включает группы и секретные чаты. Все разрешения можно позже отозвать.</span></label>'}
+      ${existing ? `
+      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardAntiDelete"><span>Дополнительно включить Anti-Delete, Edit History и Inbox: сохранять новые сообщения, изменения и удаления.</span></label>
+      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardStories" ${result.rights?.manageStories?'disabled':''}><span>${result.rights?.manageStories?'Управление Stories уже разрешено и будет сохранено.':'Дополнительно разрешить управление Stories: публикацию, изменение и удаление от моего имени.'}</span></label>` : '<div class="veto-consent-boundary"><strong>Что активируется после подтверждения</strong><p>✓ Anti-Delete · Edit History · уведомления · управление Stories. Ghost View работает через отдельную авторизованную сессию. Для Stories сохраняется существующий Business-способ публикации; Telegram может ограничивать доступность отдельных действий.</p><p>Разрешения выдаются только после установки галочки и нажатия «Подтвердить». Никаких ручных переключателей в Telegram Business.</p></div>'}
       <div class="veto-consent-boundary"><p>Без права отвечать, удалять сообщения, отмечать прочитанным, менять профиль, управлять подарками и средствами — при новом подключении. При существующем подключении сохраняются права, перечисленные выше.</p></div>
       <p id="businessWizardCount" aria-live="polite"></p>
       <div class="sheet-actions"><button class="accent" data-business-apply="1" disabled>Подтвердить разрешения</button>
@@ -1348,10 +1349,11 @@
     const picker = $('sheet')?.querySelector('.veto-consent-chat-list');
     if (picker) picker.hidden = scope === 'preserve';
     for (const el of $('sheet')?.querySelectorAll('[data-business-selected]') || []) el.disabled = scope !== 'selected-private';
+    const fresh = businessWizardSnapshot?.state === 'none';
+    const featureConsent = fresh || $('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true;
     const valid = $('businessWizardConsent')?.checked === true && scope &&
       (scope !== 'selected-private' || (selected.length > 0 && selected.length <= 12)) && excluded.length <= 12 &&
-      !selected.some(el=>scope==='selected-private' && excluded.some(ex=>ex.value===el.value)) &&
-      ($('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true);
+      !selected.some(el=>scope==='selected-private' && excluded.some(ex=>ex.value===el.value)) && featureConsent;
     const count = $('businessWizardCount');
     if (count) count.textContent = scope==='preserve'?'Сохраним текущие чаты, исключения и права.':`Выбрано: ${scope==='selected-private'?selected.length:'по охвату'} · исключений: ${excluded.length}/12`;
     const button = $('sheet')?.querySelector('[data-business-apply]');
@@ -1368,7 +1370,8 @@
         snapshotToken:businessWizardSnapshot?.snapshotToken,scope,scopeConsent:$('businessWizardConsent')?.checked===true,
         chatIds:scope==='selected-private'?[...$('sheet').querySelectorAll('[data-business-selected]:checked')].map(el=>el.value):[],
         excludeChatIds:scope==='preserve'?[]:[...$('sheet').querySelectorAll('[data-business-excluded]:checked')].map(el=>el.value),
-        antiDeleteConsent:$('businessWizardAntiDelete')?.checked===true,storiesConsent:$('businessWizardStories')?.checked===true,
+        antiDeleteConsent:$('businessWizardAntiDelete')?.checked===true || (businessWizardSnapshot?.state==='none' && $('businessWizardConsent')?.checked===true),
+        storiesConsent:$('businessWizardStories')?.checked===true || (businessWizardSnapshot?.state==='none' && $('businessWizardConsent')?.checked===true),
         consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',
       });
       await Promise.allSettled([loadTelegramConnection({silent:true}),refresh({silent:true})]);
