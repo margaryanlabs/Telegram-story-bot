@@ -157,3 +157,22 @@ test('same-owner writes are serialized per instance and locks release after fail
   await assert.rejects(withBusinessWriteLock('111',async()=>{throw Error('fixture failure')}),/fixture failure/);
   await assert.doesNotReject(withBusinessWriteLock('111',async()=>{}));
 });
+test('existing Business owner may change only chat scope; first-time owner still needs explicit feature consent',async()=>{
+  const prior=own({existingChats:true,users:[],excludeUsers:[]},{manageStories:true});
+  const existing=apiFixture(clientFixture([prior]));
+  const p=await existing.request({action:'prepare'});
+  const body={action:'connect',consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',
+    snapshotToken:p.body.snapshotToken,scope:'all-private',scopeConsent:true,
+    storiesConsent:false,antiDeleteConsent:false};
+  const updated=await existing.request(body);
+  assert.equal(updated.code,200);
+  assert.equal(updated.body.manageStories,true);
+  assert.equal(existing.f.writes,1);
+  assert.equal(existing.settingsWrites,0);
+  assert.equal(existing.f.bots[0].rights.manageStories,true);
+
+  const fresh=apiFixture();const f=await fresh.request({action:'prepare'});
+  const denied=await fresh.request({...body,snapshotToken:f.body.snapshotToken});
+  assert.equal(denied.code,409);
+  assert.equal(fresh.f.writes,0);
+});
