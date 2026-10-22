@@ -18,6 +18,7 @@ function runtime(health, { credentials = true, storeConfigured = true, provider 
     expectedCipherVersion: () => provider === 'neon' ? 'v4' : 'v3',
     sessionCryptoReady: detail => detail?.ready === true
       && (detail?.cipherVersion || detail?.version) === (provider === 'neon' ? 'v4' : 'v3'),
+    neonCronConfigured: () => false,
     process: {env:credentials ? {
       TELEGRAM_API_ID:'fixture-id',
       TELEGRAM_API_HASH:'fixture-hash',
@@ -112,4 +113,11 @@ test('Neon unreachable SQL still reports server outage without prompting session
   assert.equal(config.storageStatus,'unavailable');
   assert.ok(config.missing.includes('STORAGE_GATEWAY_UNAVAILABLE'));
   assert.ok(!config.missing.includes('PRIVATE_SESSION_CRYPTO'));
+});
+
+test('Neon cron configured flag is reflected in both health routes without claiming live delivery',()=>{
+  assert.match(read('api/health.js'),/sessionCryptoReady\(secureCrypto\)/);
+  assert.doesNotMatch(read('api/health.js'),/secureCrypto\?\.version\s*===\s*'v3'/);
+  assert.match(read('api/health.js'),/neon-configured-not-live-verified/);
+  assert.match(backend,/neonCronConfigured\(\)/);
 });
