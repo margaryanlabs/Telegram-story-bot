@@ -83,7 +83,7 @@
     voice:'voice',
     voicestudio:'voice',
     relay: 'relay',
-    studio: 'studio',
+    studio: 'story-engine',
     'story-engine':'story-engine',
     storyengine:'story-engine',
     creator: 'studio',
