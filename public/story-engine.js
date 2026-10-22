@@ -47,7 +47,7 @@ async function saveDraft(){
   await transact('readwrite',st=>st.put({key:storageKey(d),ownerId:d.ownerId,draft:d}));
   // IndexedDB is async: a changed Telegram identity must never restore an old
   // owner's image or draft on the newly active screen.
-  if(state.owner!==d.ownerId || owner()!==d.ownerId)return;
+  if(state.owner!==d.ownerId || owner()!==d.ownerId || state.draft?.id!==d.id)return;
   state.draft=d;notify('Черновик сохранён только на этом устройстве');
   await listDrafts();
 }
@@ -78,10 +78,15 @@ async function listDrafts(){
       const btn=document.createElement('button');btn.type='button';btn.textContent=label;
       btn.addEventListener('click',async()=>{
         try{
+          requireOwner();
+          if(state.owner!==requestedOwner || d.ownerId!==requestedOwner)
+            throw Error('Аккаунт изменился. Открой черновики заново.');
           if(act==='delete'){
             if(!window.confirm('Удалить локальный черновик?'))return;
+            if(state.owner!==requestedOwner || owner()!==requestedOwner)return;
             await transact('readwrite',st=>st.delete(row.key));
-            if(state.draft?.id===d.id)applyDraft(newStoryDraft({ownerId:state.owner}));
+            if(state.owner!==requestedOwner || owner()!==requestedOwner)return;
+            if(state.draft?.id===d.id)applyDraft(newStoryDraft({ownerId:requestedOwner}));
             await listDrafts();return;
           }
           if(act==='copy'){
@@ -330,7 +335,7 @@ function setup(){
       const raw={type,title:$('sePortalTitle').value,description:$('sePortalDescription').value,
         cta:$('sePortalCta').value,link:$('sePortalLink').value};
       state.draft.portal=normalizePortal(raw);render();
-      notify('Portal сохранён в проекте. Публичная ссылка появится после подключения серверного хранилища.');
+      notify('Portal добавлен в текущий проект. Нажми «Сохранить», чтобы записать его на устройстве. Публичной ссылки пока нет.');
     }catch(e){notify(e.message,true)}
   }
   $('sePortalSave').addEventListener('click',readPortal);
