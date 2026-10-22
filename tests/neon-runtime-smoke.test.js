@@ -1,13 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { selectedStorageProvider } from '../lib/storage-provider.js';
+import { selectedStorageProvider, neonStorageConfigured } from '../lib/storage-provider.js';
 import { neonStoreOperation } from '../lib/neon-store.js';
 import { sealNeonJson, openNeonJson } from '../lib/neon-private-crypto.js';
 
 // Vercel branch-scoped preview env exercises real Neon HTTP SQL during the build.
 // It reads only; no real Telegram owner session or private content is created.
 test('Neon staging environment is truly reachable and can seal sessions', {
-  skip: selectedStorageProvider() !== 'neon' ? 'Supabase default, no Neon staging env' : false,
+  // Preview and GitHub unit tests may have VETO_STORAGE_PROVIDER=neon without
+  // the production-only key/DB URL. Release readiness remains a separate,
+  // mandatory `npm run neon:preflight` check in a secure test environment.
+  skip: selectedStorageProvider() !== 'neon' || !neonStorageConfigured()
+    ? 'No fully configured Neon smoke-test environment; run explicit secure preflight before release'
+    : false,
 }, async () => {
   const health=await neonStoreOperation('health');
   assert.equal(health.mediaVault,true,'Neon private media bucket must be reachable');
