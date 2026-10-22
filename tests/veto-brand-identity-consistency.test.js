@@ -17,7 +17,7 @@ test('VETO uses its real original split-V silhouette (not fabricated V-star)',()
   assert.match(svg,/vetoFlame/);
   assert.doesNotMatch(html,/aria-hidden="true">V<span>✦<\/span>/);
   assert.match(html,/class="veto-inbox-signature" aria-hidden="true"><img src="\/veto-telegram-mark\.svg\?v=20261019-brand-v2"/);
-  assert.match(html,/class="veto-inbox-wordmark">VETOGRAM/);
+  assert.match(html,/class="veto-inbox-wordmark" aria-label="VETOGRAM"><span>VETO<\/span><i>GRAM/);
 });
 
 test('One consistent mark appears in welcome, command center, inbox, tab and favicon',()=>{
@@ -43,7 +43,7 @@ test('Brandmark uses original geometry with accessible text and mobile sizing',(
   assert.match(css,/@media\(max-width:440px\)/);
   assert.match(css,/@media\(max-width:360px\)/);
   assert.doesNotMatch(css,/\.veto-inbox-signature span\{/);
-  assert.match(html,/class="veto-inbox-title-copy"><span class="veto-inbox-wordmark">VETOGRAM/);
+  assert.match(html,/class="veto-inbox-title-copy"><span class="veto-inbox-wordmark" aria-label="VETOGRAM"><span>VETO<\/span><i>GRAM/);
 });
 
 test('The actual branded SVG rasterizes for browser previews and Telegram bot photo',async()=>{

@@ -10,14 +10,14 @@ const js = read('public/vetogram-header.js');
 
 test('Vetogram keeps the canonical red/silver split-V identity in its real inbox',()=>{
   assert.match(html, /<title>Vetogram/);
-  assert.match(html, /class="veto-inbox-wordmark">VETOGRAM/);
-  assert.match(html, /class="veto-mirror-heading vetogram-header"/);
+  assert.match(html, /aria-label="VETOGRAM"><span>VETO<\/span><i>GRAM/);
+  assert.match(html, /class="veto-mirror-heading vetogram-header is-expanded"/);
   assert.match(html, /veto-telegram-mark\.svg\?v=20261019-brand-v2/);
   assert.doesNotMatch(html, /VETO Telegram|StoryLab|Buy Veta/i);
 });
 
 test('the final stylesheet and accessible controller are wired AFTER existing cosmetics',()=>{
-  assert.match(html, /id="vetogramHeaderToggle"[^>]+aria-controls="vetogramHeaderActions"[^>]+aria-expanded="false"/);
+  assert.match(html, /id="vetogramHeaderToggle"[^>]+aria-controls="vetogramHeaderActions"[^>]+aria-expanded="true"/);
   assert.ok(html.indexOf('vetogram-header.css')>html.indexOf('veto-launch-polish.css'));
   assert.ok(html.indexOf('vetogram-header.js')>html.indexOf('veto-launch-polish.js'));
   assert.match(css, /\.vetogram-header\.is-expanded/);
@@ -28,7 +28,7 @@ test('the final stylesheet and accessible controller are wired AFTER existing co
   assert.doesNotThrow(()=>new Script(js));
 });
 
-test('header toggle works for taps and auto-collapses on scroll without touching conversations',()=>{
+test('header toggle is expanded on load and collapses only on tap',()=>{
   const attrs={};const listeners={};const classes=new Set();const winListeners={};
   const heading={classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name)}}};
   const button={
@@ -48,15 +48,13 @@ test('header toggle works for taps and auto-collapses on scroll without touching
     addEventListener(name,handler){winListeners[name]=handler}
   };
   runInNewContext(js,{document:doc,window:win});
+  assert.equal(attrs['aria-expanded'],'true');
+  assert.ok(classes.has('is-expanded'));
+  assert.equal(winListeners.scroll,undefined);
+  win.scrollY=120;
+  assert.equal(attrs['aria-expanded'],'true');
+  listeners.click();
   assert.equal(attrs['aria-expanded'],'false');
   listeners.click();
   assert.equal(attrs['aria-expanded'],'true');
-  assert.ok(classes.has('is-expanded'));
-  win.scrollY=120;
-  winListeners.scroll();
-  assert.equal(attrs['aria-expanded'],'false');
-  assert.ok(!classes.has('is-expanded'));
-  listeners.click();
-  listeners.click();
-  assert.equal(attrs['aria-expanded'],'false');
 });

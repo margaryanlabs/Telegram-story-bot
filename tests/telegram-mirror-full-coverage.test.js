@@ -11,14 +11,13 @@ test('full Business scope is explicit, limited to private chats, and has no mess
   const ui=file('public/privacy.js');
   assert.match(lib,/connectBusinessAllPrivateChats/);
   assert.match(lib,/existingChats:true,newChats:true,contacts:true,nonContacts:true/);
-  assert.match(lib,/excludeSelected:false,users:\[\],excludeUsers:\[\]/);
-  assert.match(lib,/new Api\.BusinessBotRights\(\{\}\)/);
-  assert.match(api,/body.scope === 'all-private'/);
-  assert.match(api,/body.allChatsConsent !== true/);
+  assert.match(lib,/new Api\.BusinessBotRights\(values\)/);
+  assert.match(lib,/options.scopeConsent!==true/);
+  assert.match(api,/body.antiDeleteConsent !== true/);
   assert.match(api,/verifyTelegramClientOwner\(client,ownerId\)/);
-  assert.match(ui,/name="vetoBusinessScope" value="all-private"/);
-  assert.match(ui,/name="vetoBusinessScope" value="selected"/);
-  assert.match(ui,/allChatsConsent:all/);
+  assert.match(ui,/all-private/);
+  assert.match(ui,/selected-private/);
+  assert.match(ui,/scopeConsent:\$\('businessWizardConsent'\)/);
 });
 
 test('Private archive readiness does not depend on mark-as-read permission', () => {

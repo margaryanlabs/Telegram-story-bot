@@ -1,4 +1,4 @@
-/* Vetogram inbox header: accessible manual expand, automatic collapse when scrolling.
+/* Vetogram inbox header: accessible manual expand and collapse.
    No network, chat inspection, storage, or account-side effects. */
 (() => {
   'use strict';
@@ -7,7 +7,7 @@
   if(!heading||!toggle)return;
 
   let expanded=true;
-  // Only apply the Telegram chrome inset to a signed in-app launch.
+  // Only apply the Telegram chrome inset to an in-app launch (visual hint only; API verifies the signature).
   if(window.Telegram?.WebApp?.initData){document.body.classList.add('vetogram-in-tg');}
   const activate=Boolean(window.Telegram?.WebApp?.HapticFeedback?.impactOccurred);
 

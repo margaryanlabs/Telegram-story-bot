@@ -1533,7 +1533,8 @@
     }
     await refreshViewerSync({ silent:true });
     if (viewerState.session?.connected === true && viewerState.session?.identityMismatch !== true) {
-      profileSheet();
+      const opened = await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
+      if (!opened) profileSheet();
     } else {
       connectionHelpSheet();
     }
@@ -2190,12 +2191,25 @@
     `);
   }
 
+  function viewerEmailSheet() {
+    openSheet(`<span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span><h2>Telegram запрашивает email для входа</h2>
+      <p>Адрес будет привязан к входу в Telegram. Укажи свой email только если согласен. Это запрос Telegram, а не подписка VETOGRAM.</p>
+      <label class="auth-field">Email<input id="viewerLoginEmail" type="email" autocomplete="email" maxlength="254"></label>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
+      <div class="sheet-actions"><button class="accent" data-sheet-action="viewer-send-email">Согласен, получить email-код</button><button data-sheet-action="viewer-start-qr">Использовать QR</button><button data-sheet-action="close">Позже</button></div>`);
+  }
+
+  let viewerCodeDelivery='telegram_app';
   function viewerCodeSheet(delivery, reused = false) {
+    if (delivery === 'email_setup') { viewerEmailSheet(); return; }
+    viewerCodeDelivery=delivery || viewerCodeDelivery;
+    delivery=viewerCodeDelivery;
+    const emailCode = delivery === 'email_code' || delivery === 'email_setup_code';
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
-      <h2>Теперь введи код из Telegram</h2>
-      <p>${reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'} Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте Vetogram. SMS может не прийти. Возвращайся сюда без нового запроса.</p>
+      <h2>${emailCode?'Введи код из email':'Теперь введи код из Telegram'}</h2>
+      <p>${emailCode ? 'Telegram отправил код на email для входа. Введи его здесь; код не сохраняется.' : reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'}${emailCode?'':' Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте Vetogram. SMS может не прийти. Возвращайся сюда без нового запроса.'}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2212,6 +2226,12 @@
   }
 
   function viewerNoCodeSheet() {
+    if (['email_code','email_setup_code'].includes(viewerCodeDelivery)) {
+      openSheet(`<span class="kicker">EMAIL-КОД TELEGRAM</span><h2>Проверь почту для входа в Telegram</h2>
+        <p>Проверь входящие и спам своего email. Код отправляет Telegram. Не пересылай его в чаты. Если почта недоступна, используй QR с уже авторизованного устройства.</p>
+        <div class="sheet-actions"><button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button><button data-sheet-action="viewer-start-qr">Использовать QR</button><button data-sheet-action="close">Позже</button></div>`);
+      return;
+    }
     openSheet(`
       <span class="kicker">ПОМОЩЬ · КОД TELEGRAM</span>
       <h2>Код не приходит?</h2>
@@ -2378,6 +2398,7 @@
             await refresh();
             await refreshViewerAnalytics({ silent: true });
             switchScreen('telegram');
+            await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
             break;
           }
 
@@ -2909,7 +2930,7 @@
       const pending = viewerState.loginPending;
       if (pending && Date.parse(pending.expiresAt || '') > Date.now()) {
         if (['password', 'qr_password'].includes(pending.stage)) viewerPasswordSheet();
-        else viewerCodeSheet('telegram_app');
+        else viewerCodeSheet(pending.delivery || 'telegram_app');
       } else {
         await refreshViewerSync({ silent: true });
         connectionHelpSheet();
@@ -2921,7 +2942,7 @@
       return;
     }
     if (action === 'viewer-back-code') {
-      viewerCodeSheet('telegram_app');
+      viewerCodeSheet(viewerCodeDelivery);
       return;
     }
     if (action === 'viewer-cancel-login') {
@@ -3021,12 +3042,22 @@
       });
       return;
     }
+    if (action === 'viewer-send-email') {
+      const email=$('viewerLoginEmail')?.value || '';
+      await runViewerAuthAction(actionTarget,async()=>{
+        const data=await viewerApi('send_login_email',{email},null);
+        if($('viewerLoginEmail'))$('viewerLoginEmail').value='';
+        viewerCodeSheet(data.delivery);
+      });return;
+    }
     if (action === 'viewer-verify-code') {
       const code = ($('viewerCode')?.value || '').trim();
       await runViewerAuthAction(actionTarget, async () => {
         if (!/^\d{3,8}$/.test(code)) throw new Error('Проверь код из Telegram');
         const data = await viewerApi('verify_code', { code }, null);
-        if (data.needsPassword) {
+        if ($('viewerCode')) $('viewerCode').value='';
+        if (data.nextCode) { viewerCodeSheet(data.delivery); }
+        else if (data.needsPassword) {
           viewerPasswordSheet();
         } else {
           closeSheet();
@@ -3039,6 +3070,7 @@
           await refresh();
           await refreshViewerAnalytics({ silent: true });
           switchScreen('telegram');
+          await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
         }
       });
       return;
@@ -3048,6 +3080,7 @@
       await runViewerAuthAction(actionTarget, async () => {
         if (!password) throw new Error('Введи пароль двухэтапной проверки Telegram');
         await viewerApi('verify_password', { password }, null);
+        if ($('viewerPassword')) $('viewerPassword').value='';
         closeSheet();
         viewerPendingPhone = '';
         notify('success');
@@ -3056,6 +3089,7 @@
         await refresh();
         await refreshViewerAnalytics({ silent: true });
         switchScreen('telegram');
+        await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
       });
       return;
     }

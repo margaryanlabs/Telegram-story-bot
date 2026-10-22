@@ -465,6 +465,8 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
 
   const settings = await getStoredSettings(token, chatId);
   const live = Boolean(connection?.is_enabled);
+  // An old connection's delayed disable event must not clear a newer ID.
+  if (!live && settings.bc && String(settings.bc) !== String(connection.id)) return settings;
   const rights = Boolean(connection?.rights?.can_manage_stories);
   const readRights = Boolean(connection?.rights?.can_read_messages);
   const next = {
@@ -485,8 +487,6 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
     canReadMessages: live && readRights,
     source: notify ? 'business_connection_update' : 'business_activity_recovery',
     lastVerifiedAt: new Date().toISOString(),
-  }).catch(error => {
-    console.warn('Durable Business connection sync skipped', error?.message || String(error));
   });
 
   console.log('Vetogram business connection sync', {
@@ -972,7 +972,13 @@ export default async function handler(req, res) {
     }
 
     if (update?.business_connection) {
-      await persistBusinessConnection(token, origin, update.business_connection, { notify: true });
+      try {
+        await persistBusinessConnection(token, origin, update.business_connection, { notify: true });
+      } catch {
+        res.setHeader('Retry-After','2');
+        res.status(503).json({ok:false,error:'business_connection_store_unavailable',retryable:true});
+        return;
+      }
       res.status(200).json({ ok: true, business_connection_synced: true });
       return;
     }

@@ -1,3 +1,4 @@
+import { normalizeTelegramPhone } from '../lib/telegram-auth-feedback.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
 import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
@@ -19,6 +20,7 @@ import {
 } from '../lib/viewer-sync-store.js';
 import {
   beginUserAuth,
+  sendUserLoginEmail,
   verifyUserCode,
   verifyUserPassword,
   revokeUserSession,
@@ -412,7 +414,8 @@ export default async function handler(req, res) {
       const loginPending = Number.isFinite(expiry)
         && expiry > Date.now()
         && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage)
-        ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString() }
+        ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString(),
+          delivery:loginChallenge.stage === 'code' ? (await openJson(loginChallenge.challenge_ciphertext,`auth:${userId}`).catch(()=>null))?.delivery || 'telegram_app' : null }
         : null;
 
       res.status(200).json({
@@ -520,11 +523,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'send_code') {
-      const requestedPhone = String(body.phone || '').replace(/[^+\\d]/g, '');
-      if (!/^\\+\\d{7,15}$/.test(requestedPhone)) {
-        res.status(400).json({ ok: false, error: 'Введи номер Telegram в международном формате, начиная с +.' });
-        return;
-      }
+      const requestedPhone = normalizeTelegramPhone(body.phone);
 
       // Telegram may deliver codes inside its official service chat, not via
       // SMS or our bot. Preserve the existing challenge until it expires.
@@ -538,7 +537,7 @@ export default async function handler(req, res) {
             res.status(200).json({
               ok: true,
               stage: 'code',
-              delivery: pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+              delivery: pending.delivery || (pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other'),
               reused: true,
               expiresAt: new Date(expiresAt).toISOString(),
             });
@@ -587,11 +586,22 @@ export default async function handler(req, res) {
       res.status(200).json({
         ok: true,
         stage: 'code',
-        delivery: auth.isCodeViaApp ? 'telegram_app' : 'sms_or_other',
+        delivery: auth.delivery || (auth.isCodeViaApp ? 'telegram_app' : 'sms_or_other'),
         reused: false,
         expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
       return;
+    }
+
+    if (action === 'send_login_email') {
+      const challenge=await getAuthChallenge(userId);
+      if(!challenge || challenge.stage!=='code' || Date.parse(challenge.expires_at)<Date.now()) {
+        res.status(410).json({ok:false,error:'Вход устарел. Начни заново.'});return;
+      }
+      const auth=await openJson(challenge.challenge_ciphertext,`auth:${userId}`);
+      const next=await sendUserLoginEmail(auth,body.email);
+      await saveAuthChallenge({...challenge,telegram_user_id:userId,challenge_ciphertext:await sealJson(next,`auth:${userId}`)});
+      res.status(200).json({ok:true,stage:'code',delivery:next.delivery});return;
     }
 
     if (action === 'verify_code') {
@@ -605,6 +615,10 @@ export default async function handler(req, res) {
       const auth = await openJson(challenge.challenge_ciphertext, `auth:${userId}`);
       const result = await verifyUserCode(auth, body.code);
 
+      if (result.nextCode) {
+        await saveAuthChallenge({...challenge,telegram_user_id:userId,challenge_ciphertext:await sealJson(result.authState,`auth:${userId}`)});
+        res.status(200).json({ok:true,nextCode:true,stage:'code',delivery:result.authState.delivery});return;
+      }
       if (result.needsPassword) {
         const next = await sealJson({ ...auth, session: result.session }, `auth:${userId}`);
         await saveAuthChallenge({
@@ -749,7 +763,7 @@ export default async function handler(req, res) {
     if (/viewer_crypto|private json|PRIVATE_SESSION_CRYPTO|encryption key version|Viewer Sync store/i.test(description)) {
       console.warn('Viewer Sync secure key unavailable', {
         telegram_user_id: userId,
-        error: description,
+        errorStatus: classifyTelegramAuthError(error).status,
       });
       res.status(503).json({
         ok: false,
@@ -760,12 +774,12 @@ export default async function handler(req, res) {
     if (/Viewer Sync store|schema cache|timeout|temporar|fetch failed|network/i.test(description)) {
       console.warn('Viewer Sync API degraded', {
         telegram_user_id: userId,
-        error: description,
+        errorStatus: classifyTelegramAuthError(error).status,
       });
     } else {
       console.error('Viewer Sync API error', {
         telegram_user_id: userId,
-        error: description,
+        errorStatus: classifyTelegramAuthError(error).status,
       });
     }
 

@@ -46,7 +46,7 @@ test('Existing unrelated Business bot cannot be replaced automatically', () => {
   const own=connectionSummary({connectedBots:[{botId:999,recipients:{users:[{id:101}]}}]},'999');
   assert.equal(own.state,'storylab');
   assert.equal(own.recipients.selectedCount,1);
-  assert.throws(()=>assertBusinessConnectionAvailable(own),/уже подключён/);
+  assert.doesNotThrow(()=>assertBusinessConnectionAvailable(own));
 });
 
 test('Wizard requires owner-verified session and explicit opt-in before MTProto write', () => {
@@ -58,12 +58,13 @@ test('Wizard requires owner-verified session and explicit opt-in before MTProto 
   assert.match(api,/validateTelegramMiniApp/);
   assert.match(api,/sameTelegramAccount\(ownerId,session.telegram_account_user_id\)/);
   assert.match(api,/verifyTelegramClientOwner\(client,ownerId\)/);
-  assert.match(api,/body.consent !== true \|\| body.approval !== CONSENT_APPROVAL/);
-  assert.match(backend,/assertBusinessConnectionAvailable\(status\)/);
+  assert.match(api,/body.consent !== true/);
+  assert.match(api,/verifyConsentSnapshot/);
+  assert.match(backend,/assertBusinessConnectionAvailable\(before.status\)/);
   assert.match(backend,/new Api\.account\.UpdateConnectedBot\(/);
-  assert.match(backend,/new Api\.BusinessBotRights\(\{\}\)/);
-  assert.match(backend,/existingChats:false,newChats:false,contacts:false,nonContacts:false/);
-  assert.match(backend,/excludeSelected:false,users,excludeUsers:\[\]/);
+  assert.match(backend,/businessRights\(current\?\.rights,options.storiesConsent/);
+  assert.match(backend,/scopeConsent!==true/);
+  assert.match(backend,/excludeUsers:await resolve/);
   assert.match(frontend,/data-business-apply/);
   assert.match(frontend,/businessWizardConsent/);
   assert.match(frontend,/data-business-selected/);
@@ -72,10 +73,11 @@ test('Wizard requires owner-verified session and explicit opt-in before MTProto 
   assert.match(html,/veto-telegram-chat-ui-v2/);
 });
 
-test('Business wizard does not silently request control over read, delete, profile, Stories or gifts', () => {
+test('Business wizard does not silently request control over read, delete, profile or gifts; Stories require a separate opt-in', () => {
   const backend=src('lib/telegram-business-consent.js');
   const frontend=src('public/privacy.js');
   assert.doesNotMatch(backend,/rights:\s*new Api\.BusinessBotRights\(\{\s*readMessages:true/);
-  assert.match(frontend,/Без права отвечать, удалять, отмечать прочитанным/);
-  assert.match(frontend,/только отмеченным личным перепискам|выбранных личных чатов/);
+  assert.match(frontend,/Без права отвечать, удалять сообщения, отмечать прочитанным/);
+  assert.match(frontend,/id="businessWizardStories"/);
+  assert.match(frontend,/storiesConsent:\$\('businessWizardStories'\)/);
 });
