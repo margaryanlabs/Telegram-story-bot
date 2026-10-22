@@ -1,3 +1,5 @@
+import { selectedStorageProvider } from '../lib/storage-provider.js';
+import { neonCronAuthorized } from '../lib/neon-scheduler-auth.js';
 import { openJsonWithMeta, sealJson } from '../lib/viewer-sync-crypto.js';
 import { verifyEdgeSignature } from '../lib/viewer-sync-signing.js';
 import {
@@ -307,6 +309,7 @@ function vercelCronAuthorized(req) {
 }
 
 function authorized(req) {
+  if(selectedStorageProvider()==='neon') return neonCronAuthorized(req);
   const timestamp = String(req.headers['x-story-trigger-timestamp'] || '');
   const signature = String(req.headers['x-story-trigger-signature'] || '');
   const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
@@ -329,6 +332,10 @@ export default async function handler(req, res) {
     return;
   }
 
+  if (selectedStorageProvider()==='neon' && process.env.VETO_NEON_CRON_ENABLED!=='true') {
+    res.status(503).json({ok:false,error:'Neon background tasks are not released'});
+    return;
+  }
   if (!viewerDbConfigured()) {
     res.status(503).json({ ok: false, error: 'Viewer Sync MTProto configuration is incomplete' });
     return;
