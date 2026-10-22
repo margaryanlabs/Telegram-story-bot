@@ -4,8 +4,12 @@ import crypto from 'node:crypto';
 import webhook from '../api/webhook-v8.js';
 function response(){return {setHeader(){},status(code){this.code=code;return this},json(body){this.body=body;return this}}}
 test('mocked signed webhook preserves new/edit/delete archive flow and sends owner notifications with Mini App closed',async()=>{
-  const oldFetch=globalThis.fetch,oldToken=process.env.TELEGRAM_BOT_TOKEN,oldHash=process.env.TELEGRAM_API_HASH;
+  const oldFetch=globalThis.fetch,oldToken=process.env.TELEGRAM_BOT_TOKEN,oldHash=process.env.TELEGRAM_API_HASH,
+    oldProvider=process.env.VETO_STORAGE_PROVIDER;
   const token='fixture-token';process.env.TELEGRAM_BOT_TOKEN=token;process.env.TELEGRAM_API_HASH='fixture-hash';
+  // This test verifies the signed legacy webhook-to-store contract using
+  // in-memory fetch mocks; it must never make a real Neon database call.
+  process.env.VETO_STORAGE_PROVIDER='supabase';
   const connection={id:'new-connection',user:{id:111},user_chat_id:111,is_enabled:true,rights:{can_manage_stories:true}};
   const archive=new Map(),versions=[],alerts=[];
   let storeFail=false;
@@ -57,5 +61,6 @@ test('mocked signed webhook preserves new/edit/delete archive flow and sends own
   } finally {
     globalThis.fetch=oldFetch;if(oldToken===undefined)delete process.env.TELEGRAM_BOT_TOKEN;else process.env.TELEGRAM_BOT_TOKEN=oldToken;
     if(oldHash===undefined)delete process.env.TELEGRAM_API_HASH;else process.env.TELEGRAM_API_HASH=oldHash;
+    if(oldProvider===undefined)delete process.env.VETO_STORAGE_PROVIDER;else process.env.VETO_STORAGE_PROVIDER=oldProvider;
   }
 });
