@@ -32,7 +32,7 @@ test('saved outgoing audio deletion has a real Vault copy and a focus button', a
   assert.equal(calls.length, 1);
   const alert = calls[0].body;
   assert.match(alert.text, /Вы: \[audio\]/);
-  assert.match(alert.text, /Копия доступных сообщений сохранена в VETO Vault/);
+  assert.match(alert.text, /Копия доступных сообщений сохранена в Vetogram Vault/);
   assert.doesNotMatch(alert.text, /нет ранее сохранённой копии/);
   assert.match(alert.reply_markup.inline_keyboard[0][0].web_app.url, /chatId=chat-1/);
   assert.match(alert.reply_markup.inline_keyboard[0][0].web_app.url, /messageId=123|message=123/);
@@ -56,7 +56,7 @@ test('mixed directions count archived copies correctly without hiding sent rows'
   const message = calls[0].body.text;
   assert.match(message, /Вы: Sent/);
   assert.match(message, /A: Received/);
-  assert.match(message, /Для 1 удалённого сообщения копии в VETO Vault нет/);
+  assert.match(message, /Для 1 удалённого сообщения копии в Vetogram Vault нет/);
   assert.match(message, /Копия доступных сообщений сохранена/);
 });
 
