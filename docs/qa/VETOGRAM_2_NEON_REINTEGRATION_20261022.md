@@ -80,7 +80,18 @@ Commit the resulting lockfile only after reviewing provenance and diffs, and re-
 
 The original Neon staging secrets were configured on a different Vercel project `telegram-story-bot`. User release target is **second Vercel account** `labsmargaryan@gmail.com`, project `veto`.
 
-Do not assume `VETO_NEON_DATABASE_URL`, `VETO_NEON_SESSION_KEY`, private media `AWS_*` credentials, `TELEGRAM_*` and other existing settings are present there. The connected Vercel app currently returns **403 for that team**, preventing read-only configuration verification.
+**Updated read-only verification, 22 October 2026:** by accessing project metadata without a teamId selector, connected Vercel confirms:
+- Project ID `prj_9JVRlYLCDU4fuZ18F3En06Ih0A69`, name `veto`.
+- `VETO_STORAGE_PROVIDER=neon` already targets **production and preview**.
+- `VETO_NEON_DATABASE_URL` and `VETO_NEON_SESSION_KEY` exist for **production only**.
+- `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` exist for **production only**; the public S3 endpoint and region are scoped to production/preview.
+- Telegram bot/API credentials exist for **production only**.
+- `VETOGRAM_UNIFIED_ONBOARDING` is **not set**.
+- Latest PR preview was **CANCELED**. Build events and protected deployment logs return 403 because the connector lacks team resource access.
+
+Only environment **names, target scopes and the nonsecret Neon provider selector** were inspected; sensitive values were not decrypted or read. A present `VETO_NEON_SESSION_KEY` does NOT prove it matches the saved session fingerprint until authenticated preflight passes.
+
+**Release consequence:** merging to production without verification would immediately route the new code to Neon because the provider selector is already `neon`. Do not merge until all release checks pass. Preview requires its own secure scoped credentials (or separately authorized test setup); never expose or automatically copy production session keys to preview.
 
 **NEVER generate a new `VETO_NEON_SESSION_KEY`** if any of the three existing sessions are to remain decryptable. Reuse the original key using secure configuration transfers without printing it into chat, source code, logs or artifacts. Key-fingerprint test must pass.
 
