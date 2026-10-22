@@ -45,16 +45,22 @@ async function saveDraft(){
   const d=normalizeDraft({...state.draft,updatedAt:Date.now()},state.owner);
   if(d.imageDataUrl.length>12000000)throw Error('Изображение слишком большое для черновика');
   await transact('readwrite',st=>st.put({key:storageKey(d),ownerId:d.ownerId,draft:d}));
+  // IndexedDB is async: a changed Telegram identity must never restore an old
+  // owner's image or draft on the newly active screen.
+  if(state.owner!==d.ownerId || owner()!==d.ownerId)return;
   state.draft=d;notify('Черновик сохранён только на этом устройстве');
   await listDrafts();
 }
 async function listDrafts(){
   if(!state.owner)return;
+  const requestedOwner=state.owner;
   const rows=await transact('readonly',st=>st.getAll());
-  const mine=rows.filter(r=>r.ownerId===state.owner);
+  if(owner()!==requestedOwner || state.owner!==requestedOwner)return;
+  const mine=rows.filter(r=>r.ownerId===requestedOwner);
   const expired=mine.filter(r=>isExpired(r.draft));
   for(const row of expired)await transact('readwrite',st=>st.delete(row.key));
   const live=mine.filter(r=>!isExpired(r.draft)).sort((a,b)=>b.draft.updatedAt-a.draft.updatedAt).slice(0,40);
+  if(owner()!==requestedOwner || state.owner!==requestedOwner)return;
   const holder=$('seDraftList');holder.replaceChildren();
   if(!live.length){const empty=document.createElement('p');empty.className='se-quiet';empty.textContent='Черновиков пока нет. Создай Story и нажми «Сохранить».';holder.append(empty);return}
   for(const row of live){
@@ -181,8 +187,10 @@ function loadImageForDraft(){
   state.image=null;state.imageSrc=null;
   const url=state.draft?.imageDataUrl;
   if(!url){paint(canvas);return}
+  const sourceOwner=state.owner,sourceId=state.draft.id;
   const i=new Image();i.onload=()=>{
-    if(state.draft?.imageDataUrl!==url)return;
+    if(state.owner!==sourceOwner || owner()!==sourceOwner ||
+       state.draft?.id!==sourceId || state.draft?.imageDataUrl!==url)return;
     if(i.naturalWidth*i.naturalHeight>16000000){
       notify('Для плавной работы выбери изображение до 16 мегапикселей',true);
       state.draft.imageDataUrl='';paint(canvas);return;
@@ -199,7 +207,13 @@ async function init(){
   const current=owner();
   if(!current){
     $('seAccountStatus').textContent='Для сохранения открой в Telegram';
-    if(!state.draft){state.owner='0';applyDraft(newStoryDraft({ownerId:'0'}));}
+    // Telegram may revoke initData while this WebView stays open. Reset any
+    // previous account's canvas and fields immediately, even without reload.
+    if(state.owner!=='0'){
+      state.owner='0';state.image=null;
+      applyDraft(newStoryDraft({ownerId:'0'}));
+      $('seDraftList').replaceChildren();
+    }
     return;
   }
   if(current!==state.owner){
@@ -216,7 +230,10 @@ async function exportToPublisher(){
   try{
     if(state.draft.imageDataUrl && state.imageSrc!==state.draft.imageDataUrl)throw Error('Дождись загрузки фотографии перед экспортом');
     const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
+    const exportOwner=state.owner,exportDraftId=state.draft.id;
     const blob=await new Promise(resolve=>out.toBlob(resolve,'image/jpeg',.88));
+    if(owner()!==exportOwner || state.owner!==exportOwner ||
+       state.draft?.id!==exportDraftId)throw Error('Аккаунт или черновик изменился. Повтори экспорт.');
     if(!blob||blob.size>10*1024*1024)throw Error('Экспорт не удался: превышен лимит изображения');
     const input=$('storyFileInput');
     if(!input||typeof DataTransfer!=='function')throw Error('Telegram не поддерживает прямую передачу файла. Используй экспорт JPEG.');
@@ -234,7 +251,10 @@ async function downloadJpg(){
   if(!state.draft)return;
   if(state.draft.imageDataUrl && state.imageSrc!==state.draft.imageDataUrl)throw Error('Дождись загрузки фотографии перед экспортом');
     const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
+  const exportOwner=state.owner,exportDraftId=state.draft.id;
   const blob=await new Promise(resolve=>out.toBlob(resolve,'image/jpeg',.88));
+  if(owner()!==exportOwner || state.owner!==exportOwner ||
+     state.draft?.id!==exportDraftId)throw Error('Аккаунт или черновик изменился. Повтори экспорт.');
   if(!blob)throw Error('Экспорт недоступен');
   const url=URL.createObjectURL(blob);
   try{const a=document.createElement('a');a.download='vetogram-story.jpg';a.href=url;a.click();}
@@ -276,7 +296,11 @@ function setup(){
     if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024)return notify('Поддерживаются JPG/PNG/WEBP до 8 МБ',true);
     const reader=new FileReader();
     reader.onerror=()=>notify('Ошибка чтения файла',true);
+    const selectedOwner=state.owner,selectedDraftId=state.draft.id;
     reader.onload=()=>{
+      // A slow FileReader callback must not attach account A's photo to account B.
+      if(owner()!==selectedOwner || state.owner!==selectedOwner ||
+         state.draft?.id!==selectedDraftId)return;
       const data=String(reader.result||'');
       if(data.length>12000000)return notify('Изображение слишком велико для локального черновика',true);
       state.draft.imageDataUrl=data;state.draft.imageMime=file.type;loadImageForDraft();
@@ -319,7 +343,8 @@ function setup(){
   $('seDownload').addEventListener('click',()=>downloadJpg().catch(e=>notify(e.message,true)));
   window.addEventListener('veto:screen-changed',e=>{if(e.detail?.screen==='story-engine')void init()});
   // Coming back from Telegram app switch may change owner; do not reuse an old user's draft.
-  window.addEventListener('pageshow',()=>{if(state.owner!==owner()&&owner())void init()});
+  window.addEventListener('pageshow',()=>{if(state.owner!==owner())void init()});
+  window.addEventListener('focus',()=>{if(state.owner!==owner())void init()});
   applyDraft(newStoryDraft({ownerId:'0'}));init();
 }
 setup();
