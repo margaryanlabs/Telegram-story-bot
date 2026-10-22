@@ -33,6 +33,7 @@ const endpointLoaders = {
   "viewer-qr": () => import("./viewer-qr.js"),
   "viewer-store-health": () => import("./viewer-store-health.js"),
   "viewer-sync": () => import("./viewer-sync.js"),
+  "viewer-sync": () => import("./viewer-sync.js"),
   "viewer-watch": () => import("./viewer-watch.js"),
   "webhook-v7": () => import("./webhook-v7.js"),
   "webhook-v8": () => import("./webhook-v8.js"),
