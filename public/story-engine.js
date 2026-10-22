@@ -145,7 +145,7 @@ function paint(target){
     ctx.fillText(txt,center?270:198,y+30,260);
   }
   ctx.fillStyle='rgba(255,255,255,.7)';ctx.textAlign='right';ctx.font='500 11px system-ui,sans-serif';
-  ctx.fillText('MADE WITH VETOGRAM',487,914);
+  if(d.branding===true)ctx.fillText('MADE WITH VETOGRAM',487,914);
 }
 function render(){
   if(!state.draft)return;
@@ -154,6 +154,7 @@ function render(){
   $('seCaption').value=state.draft.caption;
   $('seRetention').value=String(state.draft.retentionDays);
   $('seRemixAllowed').checked=state.draft.remixable;
+  $('seBranding').checked=state.draft.branding===true;
   const p=state.draft.portal;
   $('sePortalType').value=p?.type||'';
   $('sePortalTitle').value=p?.title||'';
@@ -261,6 +262,7 @@ function setup(){
   $('seCaption').addEventListener('input',e=>{if(state.draft)state.draft.caption=trimText(e.target.value,800)});
   $('seRetention').addEventListener('change',e=>{if(state.draft)state.draft.retentionDays=Number(e.target.value)});
   $('seRemixAllowed').addEventListener('change',e=>{if(state.draft)state.draft.remixable=e.target.checked});
+  $('seBranding').addEventListener('change',e=>{if(state.draft){state.draft.branding=e.target.checked;paint(canvas)}});
   $('seNew').addEventListener('click',()=>{if(!state.owner || state.owner==='0')return notify('Открой VETOGRAM в Telegram',true);applyDraft(newStoryDraft({ownerId:state.owner}));notify('Новая Story готова')});
   $('seUpload').addEventListener('click',()=>$('seFile').click());
   $('seFile').addEventListener('change',async e=>{
