@@ -210,6 +210,7 @@ async function exportToPublisher(){
   if(state.busy)return;
   state.busy=true;$('sePublish').disabled=true;
   try{
+    if(state.draft.imageDataUrl && state.imageSrc!==state.draft.imageDataUrl)throw Error('Дождись загрузки фотографии перед экспортом');
     const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
     const blob=await new Promise(resolve=>out.toBlob(resolve,'image/jpeg',.88));
     if(!blob||blob.size>10*1024*1024)throw Error('Экспорт не удался: превышен лимит изображения');
@@ -227,7 +228,8 @@ async function exportToPublisher(){
 }
 async function downloadJpg(){
   if(!state.draft)return;
-  const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
+  if(state.draft.imageDataUrl && state.imageSrc!==state.draft.imageDataUrl)throw Error('Дождись загрузки фотографии перед экспортом');
+    const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
   const blob=await new Promise(resolve=>out.toBlob(resolve,'image/jpeg',.88));
   if(!blob)throw Error('Экспорт недоступен');
   const url=URL.createObjectURL(blob);
