@@ -7,14 +7,14 @@ const read = file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'
 const backend = read('api/viewer-sync.js');
 const frontend = read('public/app.js');
 
-function runtime(health, { credentials = true, storeConfigured = true } = {}) {
+function runtime(health, { credentials = true, storeConfigured = true, provider = 'supabase' } = {}) {
   const start = backend.indexOf('async function configState()');
   const end = backend.indexOf('\nfunction safeSession(', start);
   assert.ok(start >= 0 && end > start, 'configState must remain inspectable');
   const fn = runInNewContext(backend.slice(start, end) + '\nconfigState;', {
     viewerDbConfigured: () => storeConfigured,
     viewerCryptoHealth: async () => health(),
-    selectedStorageProvider: () => 'supabase',
+    selectedStorageProvider: () => provider,
     process: {env:credentials ? {
       TELEGRAM_API_ID:'fixture-id',
       TELEGRAM_API_HASH:'fixture-hash',
@@ -60,4 +60,21 @@ test('missing server credentials does not call a remote store and stays unconfig
   assert.equal(config.storageStatus, 'not-configured');
   assert.equal(config.configured, false);
   assert.equal(config.newConnectionsReady, false);
+});
+
+test('existing Neon v4 encryption is recognized only when v4 crypto is actually verified', async () => {
+  const valid=await runtime(()=>({ready:true,version:'v4',cipherVersion:'v4'}),{provider:'neon'});
+  assert.equal(valid.configured,true);
+  assert.equal(valid.secureSessionCrypto,true);
+  assert.equal(valid.newConnectionsReady,true);
+  assert.equal(valid.backgroundReady,false,'Neon cron must remain gated off until reviewed');
+  assert.equal(valid.cipherVersion,'v4');
+  const wrong=await runtime(()=>({ready:true,version:'v3'}),{provider:'neon'});
+  assert.equal(wrong.newConnectionsReady,false);
+});
+test('unverified Neon v4 key prevents owner session activation without modifying ciphertext', async () => {
+  const config=await runtime(()=>({ready:false,version:'v4',cipherVersion:'v4',reason:'NEON_SESSION_KEY_MISMATCH'}),{provider:'neon'});
+  assert.equal(config.storageStatus,'reachable');
+  assert.equal(config.newConnectionsReady,false);
+  assert.ok(config.missing.includes('PRIVATE_SESSION_CRYPTO'));
 });

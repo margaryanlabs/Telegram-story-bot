@@ -42,7 +42,10 @@ async function configState() {
     try {
       const cryptoHealth = await viewerCryptoHealth();
       storageReachable = true;
-      secureSessionCrypto = cryptoHealth?.ready === true && cryptoHealth?.version === 'v3';
+      // Legacy Supabase uses v3; the existing Neon sessions use independent v4.
+      const expectedVersion = selectedStorageProvider() === 'neon' ? 'v4' : 'v3';
+      secureSessionCrypto = cryptoHealth?.ready === true
+        && (cryptoHealth?.cipherVersion || cryptoHealth?.version) === expectedVersion;
     } catch {
       // A storage outage is not proof of a revoked Telegram session or a
       // missing encryption key. Never prompt users to delete or reset either.
