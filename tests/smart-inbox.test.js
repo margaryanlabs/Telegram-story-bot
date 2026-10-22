@@ -15,7 +15,7 @@ test('Smart Inbox v2 exposes an explainable next action', () => {
   assert.match(store, /smartBrief/);
   assert.match(store, /review_changes/);
   assert.match(privacy, /smartBriefPrimary/);
-  assert.match(html, /VETO BRIEF/);
+  assert.match(html, /VETOGRAM BRIEF/);
 });
 
 test('Smart Inbox does not claim Telegram unread state', () => {
