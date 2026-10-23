@@ -79,7 +79,7 @@ test('Portal is visibly a local-only preview, not a falsely live public URL',()=
   assert.match(html,/не публичная ссылка/);
   assert.match(html,/не кликабельная ссылка Telegram/);
   assert.match(ui,/Публичной ссылки пока нет/);
-  assert.match(ui,/ownerId===state.owner/);
+  assert.match(ui,/owner\(\)!==requestedOwner \|\| state\.owner!==requestedOwner/);
   assert.match(read('public/story-engine-core.js'),/data:image/);
 });
 
