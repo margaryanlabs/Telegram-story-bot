@@ -111,7 +111,7 @@ import {actionRecipientCandidates,actionDraftValid} from './vetogram-ai-action-c
     if(before&&matches.some(x=>x.id===before))select.value=before;
     $('vtaiActionStatus').textContent=matches.length
       ?'AI предложил имя «'+state.actionDraft.recipientQuery+'». Найдено совпадений: '+
-        matches.length+'. Выбери и подтвердите правильный чат.'
+        matches.length+'. Выбери и подтверди правильный чат.'
       :'AI предложил имя «'+state.actionDraft.recipientQuery+
         '». Среди загруженных чатов совпадений нет. Загрузите следующие страницы или используй обычный выбор чата.';
   }
@@ -179,6 +179,7 @@ import {actionRecipientCandidates,actionDraftValid} from './vetogram-ai-action-c
       if(prompt.length>3000)return notice('Сократи текст клиента или цель: максимальная длина запроса с условиями — 3000 символов.',true);
     }
     if(prompt.length>3000)return notice('Запрос с инструкциями превышает 3000 символов. Сократи текст, чтобы AI ничего не потерял.',true);
+    if(mode==='action'){state.actionDraft=null;state.actionRecipientConfirmed=null;}
     const approvedNotes=$('vtaiIncludeMemory').checked
       ?buildMemoryContext(state.memory,[...state.selectedNotes],owner()):[];
     // One-shot consent: notes cannot silently leak into the next request.
