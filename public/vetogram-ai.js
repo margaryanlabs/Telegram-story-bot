@@ -369,6 +369,9 @@ import {followupCandidates} from './vetogram-followup-core.js';
         if(!window.confirm('Скопировать только последний предпросмотр чата «'+item.title+
           '» в локальный черновик ответа? Полный диалог нужно проверить самому. AI-провайдер ничего не получит до отдельного согласия.'))return;
         setMode('reply');
+        // Never leave an earlier AI reply available for sending from this new context.
+        state.last=null;state.sendIntent=null;state.reviewedApprovalId=null;
+        $('vtaiSend').disabled=true;
         $('vtaiText').value='Подготовь короткий ответ на последний предпросмотр в моём чате «'+
           item.title+'». Учитывай, что это не полный диалог: уточняй детали, не придумывай обещаний или сроков.\n'+item.preview;
         $('vtaiConsent').checked=false;$('vtaiIncludeMemory').checked=false;
