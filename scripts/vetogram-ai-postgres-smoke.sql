@@ -89,6 +89,44 @@ BEGIN
   GET DIAGNOSTICS n=ROW_COUNT;
   IF n<>0 THEN RAISE EXCEPTION 'CI_TASK_STALE_RESTORE_ALLOWED'; END IF;
   RAISE NOTICE 'VETOGRAM Task Cloud SQL CAS/tombstone smoke PASS';
+  -- One-shot reminders: owner isolation, pending-only cancel, atomic claims,
+  -- no automatic replay after an uncertain attempt.
+  PERFORM public.vetogram_schedule_reminder(
+    98760001,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,
+    now()+interval '6 minutes',now()+interval '12 minutes','Asia/Yerevan');
+  SELECT count(*) INTO n FROM public.vetogram_reminders
+    WHERE owner_id=98760001 AND state='pending';
+  IF n<>1 THEN RAISE EXCEPTION 'CI_REMINDER_CREATION_FAILED'; END IF;
+  UPDATE public.vetogram_reminders SET state='canceled',enabled_by_owner=false
+    WHERE owner_id=98760001 AND task_id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid
+      AND state='pending';
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>1 THEN RAISE EXCEPTION 'CI_REMINDER_CANCEL_FAILED'; END IF;
+  PERFORM public.vetogram_schedule_reminder(
+    98760001,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid,
+    now()+interval '6 minutes',now()+interval '12 minutes','Asia/Yerevan');
+  -- Advance CI-only clock by moving a synthetic due row backward.
+  UPDATE public.vetogram_reminders SET remind_at=now()-interval '1 minute'
+    WHERE owner_id=98760001 AND task_id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid;
+  SELECT count(*) INTO n FROM public.vetogram_claim_reminders(8);
+  IF n<>1 THEN RAISE EXCEPTION 'CI_REMINDER_CLAIM_FAILED'; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_claim_reminders(8);
+  IF n<>0 THEN RAISE EXCEPTION 'CI_REMINDER_DUPLICATE_CLAIM'; END IF;
+  UPDATE public.vetogram_reminders SET state='sent',completed_at=now()
+    WHERE owner_id=98760001 AND task_id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid
+      AND state='claimed';
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>1 THEN RAISE EXCEPTION 'CI_REMINDER_COMPLETION_FAILED'; END IF;
+  -- Stale scheduling must not override already sent rows without manual action.
+  BEGIN
+    PERFORM public.vetogram_schedule_reminder(
+      98760001,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid,
+      now()+interval '10 minutes',now()+interval '20 minutes','Asia/Yerevan');
+    RAISE EXCEPTION 'CI_REMINDER_REPLAY_ALLOWED';
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM <> 'VETO_REMINDER_ALREADY_ATTEMPTED' THEN RAISE; END IF;
+  END;
+  RAISE NOTICE 'VETOGRAM Reminders: metadata-only one-shot claim PASS';
   RAISE NOTICE 'VETOGRAM AI smoke passed: grants, audit, pause, quotas, memory CAS';
 END $$;
 ROLLBACK;
