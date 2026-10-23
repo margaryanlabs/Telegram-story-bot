@@ -101,3 +101,20 @@ test('Telegram confirmation displays complete owner-approved outgoing text',()=>
   assert.match(send,/action:'send_message',chatId,message/);
   assert.match(send,/if\(!safeIdentity\(\)\)return;/);
 });
+
+test('switching Telegram accounts clears hidden AI, Story, Portal and Negotiator data',()=>{
+  const js=read('public/vetogram-ai.js');
+  const a=js.indexOf('  function reset(){');
+  const b=js.indexOf('  function addBubble(',a);
+  assert.ok(a>=0&&b>a);
+  const reset=js.slice(a,b);
+  for(const id of ['vtaiNegRecipient','vtaiStoryTitle','vtaiStorySubtitle',
+    'vtaiStoryCaption','vtaiPortalTitle','vtaiPortalDescription',
+    'vtaiPortalCta','vtaiNegGoal','vtaiQuota'])
+    assert.ok(reset.includes("'"+id+"'"),'Private state not cleared: '+id);
+  assert.match(reset,/state\.approvals=\[\];state\.memory=\[\]/);
+  assert.match(reset,/state\.negotiationPolicy=null/);
+  assert.match(reset,/state\.sendIntent=null/);
+  assert.match(reset,/vtaiDraft'\)\.readOnly=false/);
+  assert.match(reset,/setMode\('chat'\)/);
+});
