@@ -82,3 +82,16 @@ Build a per-owner durable AI usage ledger with daily limits and user-visible all
    delivery/retry behavior with two separate Telegram test accounts.
 5. Hold parent PR #179 and Story Engine #180 release dependencies unchanged;
    no merges/deploys to main from this draft until gates pass.
+
+
+## Approval Center + AI Memory continuation (23 October 2026)
+
+- Added **Approval Center** inside the original VETOGRAM AI screen. Owner-scoped, session-only queue: up to 12 editable draft messages, each expiring after 30 minutes. Users can review, reject and explicitly confirm real Telegram sends. No timed/background sends. A previously verified recipient is rechecked by the original send API. Queue and send nonce are cleared on account change.
+- Added **AI Memory beta**, intentionally not advertised as durable memory. Maximum eight user-written session-only notes, up to three manually selected per AI request. Existing consent checkbox is required, plus a separate opt-in for note transmission; the note opt-in automatically resets after a request. No Telegram chats are auto-read or stored.
+- API normalizes and bounds the user-supplied reference notes. The provider receives them inside the **untrusted user message**, not a system/developer prompt; the quota reservation includes those notes. No notes are logged or persisted by VETOGRAM.
+- Added **Reply with AI** directly from a live Telegram chat: explicit confirmation copies only the latest available incoming text to the local AI draft. No model call until AI consent and user action. Outgoing, deleted and preserved-only messages are excluded. Chat ID remains owner-scoped and recipient is revalidated on send.
+- Added shared browser+Node testable `public/vetogram-ai-workspace-core.js`, markup/CSS, regression tests in `tests/vetogram-ai-workspace.test.js`. Changed the AI controller script to a browser ES module. UI elements and module wiring validated by static source checks.
+- **Privacy limitation:** session-only queue and notes disappear when the Mini App is closed or refreshed; they are not encrypted cloud data or persistent records. They must not be marketed as durable CRM/AI Memory. No autonomous negotiations or scheduled follow-ups have been implemented.
+- **Validation limitation:** source inspection and local JS parser/model checks only. The complete npm test suite, provider/API requests, Neon transaction integration, Android/iOS WebView and deployment have **not** been run on the actual repo runtime. Main/production, Telegram permissions, Neon database and published Stories remain unchanged.
+
+Next: real owner-separated mobile QA; per-chat consent and granular, revocable agent scopes; encrypted durable action/audit ledger before Autopilot. The parent PR #179/#180 gates still apply.
