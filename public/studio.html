@@ -1479,6 +1479,15 @@
             <button type="button" class="vtai-action" id="vtaiTasksCopy">Копировать список</button>
             <button type="button" class="vtai-action vtai-danger" id="vtaiTasksClear">Очистить задачи окна</button>
           </div>
+
+          <div class="vtai-row">
+            <button type="button" class="vtai-action" id="vtaiTasksCloudLoad">↓ Загрузить облачные задачи</button>
+            <button type="button" class="vtai-action" id="vtaiTasksCloudSave">↑ Сохранить зашифрованную копию</button>
+            <button type="button" class="vtai-action vtai-danger" id="vtaiTasksCloudErase">Удалить облачные данные</button>
+          </div>
+          <p class="vtai-note" id="vtaiTasksCloudStatus" role="status" aria-live="polite">
+            Облако выключено до единого релиза. Кнопки выполняют действия только по твоему подтверждению. Защита на сервере AES-256-GCM, это не E2EE; VETOGRAM может расшифровать задачи. Удаление очищает активные зашифрованные данные, оставляя техническую версию записи для защиты от старых устройств. Резервные копии хостинга могут сохраняться некоторое время.
+          </p>
           <p class="vtai-note">Фразы «завтра» и «в пятницу» остаются только цитатой из источника. Конкретную дату выбираешь ты: VETOGRAM не придумывает её и не включает напоминания.</p>
         </section>
 
