@@ -265,7 +265,7 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
     if(!validNegotiatorSend(chatId,message))return notice('Разрешение Negotiator истекло или ответ изменён. Создай новый черновик.',true);
     const title=state.dialogs.find(c=>String(c.id)===chatId)?.title||'чат';
     // No autonomous sends. This confirmation is separate from AI-provider consent.
-    if(!window.confirm('Отправить это сообщение от твоего имени в чат «'+String(title).slice(0,70)+'»?\n\n'+message.slice(0,650)))return;
+    if(!window.confirm('Отправить ПОЛНЫЙ текст сообщения от твоего имени в чат «'+String(title).slice(0,70)+'»?\n\n'+message))return;
     if(!safeIdentity())return;
     if(!window.crypto?.randomUUID)return notice('Безопасная отправка не поддерживается этим браузером',true);
     // Keep a stable Telegram random_id for uncertain delivery retries.
