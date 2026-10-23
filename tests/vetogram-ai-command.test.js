@@ -70,3 +70,11 @@ test('AI screen wiring and syntax check integrated into project',()=>{
   assert.match(app,/ai:'home'/);
   assert.match(pkg.scripts.check,/node --check public\/vetogram-ai\.js/);
 });
+
+test('translation and negotiation prompts must never silently lose trailing input',()=>{
+  const raw='Переведи на английский:\n'+'А'.repeat(2999);
+  assert.throws(()=>normalizeAiInput({mode:'translate',prompt:raw}),/AI_PROMPT_TOO_LONG/);
+  assert.equal(normalizeAiInput({mode:'chat',prompt:'x'.repeat(3000)}).prompt.length,3000);
+  const client=read('public/vetogram-ai.js');
+  assert.match(client,/if\(prompt\.length>3000\)return notice/);
+});
