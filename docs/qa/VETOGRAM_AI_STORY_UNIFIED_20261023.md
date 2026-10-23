@@ -401,3 +401,42 @@ migration, scheduled task or Telegram message has been executed.**
   Neon migration or AI-provider QA. No production or deployment changes.
 - Keep this in the same **draft PR #181** for the one coordinated VETOGRAM
   release after dependent Story Engine/onboarding work and complete QA.
+
+
+## VETO Task Center — review-first tasks, no scheduling (continued development)
+
+- Added **VETO Task Center** to the EXISTING VETO AI screen alongside
+  Second Brain, Focus, Approval Center and Story Director.
+- The user must explicitly confirm each candidate extracted by Second Brain
+  before it becomes a task. Exact source quotes and literal relative deadline
+  phrases are retained; the AI cannot turn "tomorrow" into a fabricated
+  absolute calendar date.
+- New pure module `public/vetogram-task-center-core.js` enforces:
+  - owner-bound IDs and source evidence, valid task kind and UUID;
+  - maximum 24 tasks per open WebView session;
+  - prevention of duplicate title/source items;
+  - allowed states: open / deferred / done;
+  - only status and explicit ISO manual due date may be edited;
+  - due/overdue display is based solely on a date manually chosen by owner.
+- Task Center UI can filter by status; mark complete/deferred/reopen; choose
+  exact due dates via `datetime-local`, clear those dates, individually
+  delete tasks, copy the list with confirmation, and clear all.
+- "Prepare follow-up" opens an editable **local AI Reply prompt**, clears
+  previous send intent/AI output and earlier recipient, unchecks AI consent,
+  and requires the owner to select a Telegram chat and separately approve
+  any future send. No message is sent while managing tasks.
+- Task state stays strictly in the authenticated owner's **current browser
+  memory**. It is erased on account switch/closing WebView. This is
+  explicitly disclosed; the cloud AI Memory store is a different product
+  surface and is NOT silently synchronized.
+- No background worker, notification schedule, Calendar, localStorage,
+  server task table, Telegram sending, or billing is added in this milestone.
+  A true reminder service would require explicit opt-in and independent
+  server persistence/worker/notification tests and consent before release.
+- Added `tests/vetogram-task-center.test.js`, responsive task-date controls
+  and syntax check in `package.json`. 17/17 executed source/parser/pure
+  behavior checks passed. Full Node test suite, Vercel Preview, Neon SQL,
+  multi-device or Telegram WebView testing NOT completed.
+- The combined PR remains **draft**, no intermediate deployment, main merge,
+  Neon migration or change to Telegram production sessions. Release planned
+  as one reviewed batch once all modules and QA are complete.
