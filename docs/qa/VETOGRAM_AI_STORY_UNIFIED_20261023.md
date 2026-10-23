@@ -144,3 +144,32 @@ Next: real owner-separated mobile QA; per-chat consent and granular, revocable a
   server-enforced grant scopes, revocation, stateful workers, anti-abuse
   enforcement and privacy/legal review before touching live inbound chats.
 - Database migration for AI usage remains staged but **not applied**.
+
+
+## Encrypted AI Memory + server-scoped Negotiator grants (continuation)
+
+### Code added in PR #181 (NOT DEPLOYED)
+- **AI Memory server storage**: `lib/vetogram-ai-memory-crypto.js` implements AES-256-GCM with independent `VETOGRAM_AI_MEMORY_KEY` (64 hex digits / 32 bytes), authenticated owner ID in AAD and versioned ciphertext envelope. This is **server-side encryption at rest**, NOT end-to-end encryption: authorized backend instances holding the key can decrypt notes.
+- Manual **additive** `migrations/vetogram-ai-memory-20261023.sql` creates `public.vetogram_ai_memory_store` with owner ID, encrypted snapshot and monotonic revision. Label and content are stored inside the encrypted snapshot, not as plaintext columns.
+- `/api/vetogram-ai-memory` requires signed Telegram Mini App auth on every request; explicit header consent for snapshot writes; maximum 8 validated notes. A revision-based compare-and-swap prevents stale writes from silently overwriting another device's changes (HTTP 409). No automatic AI prompt ingestion, data extraction from Telegram or backups are implemented.
+- User-initiated **load / save / clear cloud copy** actions in the existing AI Memory UI, with revision and account-switch protection. Locally edited notes still live only in the current WebView until the owner explicitly uploads. Cloud wipes do not alter unsaved local notes.
+
+### Server-side draft grants
+- Manual **additive** `migrations/vetogram-ai-draft-grants-20261023.sql` creates one current drafting grant per Telegram owner. Fields: chat, currency, price bounds, allowed discount, expiry and revocation time. No private messages stored.
+- `/api/vetogram-ai-grants` allows issuing/status/revoking a **draft-only** permission after signed owner auth; creating/revoking requires a consent header. Issuing a new grant atomically replaces the previous one.
+- The **Negotiator AI API** now requires an existing unexpired server grant for the exact owner and chat ID **before** reserving budget or reaching the model. It re-reads grant state after the model returns, validates monetary output against server-held bounds and rejects out-of-policy drafts (HTTP 422). The Telegram chat ID is NOT forwarded to the model.
+- Client explicitly asks owner consent before creating the grant and provides a manual revoke action.
+- **No autonomous sending privileges** are granted. Existing `/api/telegram-send` remains an owner-confirmed direct action, not a delegated tool. Revoking a draft grant does not control Telegram's independent manual-send permissions.
+
+### Release operations (not completed)
+1. Confirm PR #179 / #180 prerequisites, schemas, permissions and Vercel build readiness.
+2. Review/backup target Neon schema. **Manually** apply the two migrations to the intended DB only when authorized; test CAS concurrency, revoke races, migration idempotence and DB role grants.
+3. Generate distinct server-only secrets and handle secure key backup and rotation. The memory key must not be the Telegram-session encryption key. Losing the memory key makes existing cloud notes undecryptable.
+4. Enable only after tests: `VETOGRAM_AI_MEMORY_ENABLED=true`, `VETOGRAM_AI_GRANTS_ENABLED=true`, and existing AI provider/quota flags, as appropriate. Do not expose these secrets in client JS.
+5. Run full `npm run check && npm test` with a real dependency install, validate the Vercel Preview, run Android/iOS Telegram E2E with two accounts and external provider billing safety checks. **Not yet run**.
+6. Validate privacy disclosures, retention/deletion and applicable Telegram permissions for cross-user content before granting any background agent actions.
+7. GitHub commit CI reported `Vercel – veto` failure with upgrade-to-Pro / build-rate-limit URL during this work. Do not treat as passing QA or deploy ready.
+
+Current source-level validation: JS modules and newly introduced tests parse, bounded note/UUID and owner/grant policy checks pass. Production, live DB, provider account, BotFather and Telegram user sessions remain unchanged.
+
+Next independent milestone: server-side request audit entries and *explicit* per-chat opt-in for any AI ingestion. No 24/7 autonomous negotiator or durable workflow worker is part of this PR.
