@@ -33,3 +33,14 @@ Existing optimistic CAS, deletion tombstones and owner validation remain. Confli
 5. Keep all feature flags default-OFF until gates pass. No merge into main, Neon write, live Telegram action or Vercel deploy has been done by this work.
 
 **Operational caution:** The staged revision of the sixth migration changes the scheduling function signature from five to six arguments. It is safe to revise only because this sixth migration has **not been applied**. If any environment has independently applied an older version, pause and write a separately reviewed migration that reconciles old functions and grants; do not blindly replay this revised SQL onto that environment.
+
+
+## 24 October follow-up — expired queue reconciliation and list priority
+
+When a worker is unavailable, a reminder whose allowed delivery window has passed must not stay pending forever and block the owner's encrypted task updates. The staged sixth SQL migration now defines `vetogram_expire_owner_reminders(owner)` under the existing per-owner PostgreSQL transaction lock. It marks only this owner's truly expired **pending** reminders `skipped`, with two strict limits: more than 60 minutes after `remind_at`, **or** more than 10 minutes after the saved `task_due_at`. Both boundaries match the existing worker's pure logic. It neither invokes Bot API nor retries a message.
+
+Encrypted Task Cloud mutations run this reconciliation *inside* the owner lock before checking whether pending reminders remain. Owner reminder listing calls the same function before reading records, so stale pending rows become visible as skipped even without a scheduled worker. Global worker cleanup now uses both bounds. Queued, still-deliverable reminders continue to block cloud saves/erases; the user can cancel them explicitly. Claimed/in-progress sends are not reverted.
+
+The 40-record per-owner list now sorts `pending` first (soonest due first), then `claimed`, then history, preventing old sent/skipped records from hiding active cancellable reminders.
+
+**Validation recorded:** 6/6 pure reminder checks and offline six-migration preflight passed from connected GitHub code; source-based regression cases and disposable-Postgres smoke SQL were updated. Real PostgreSQL SQL execution, runner-based npm suite, Telegram Bot API and mobile WebView QA remain unverified. No production migrations or scheduler configuration were performed.
