@@ -749,6 +749,19 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
   document.querySelectorAll('[data-open-screen="ai"][data-ai-mode="story"]').forEach(b=>b.addEventListener('click',()=>setMode('story')));
   // One-tap reply from the currently open Telegram thread. Local copy only.
   // Require fresh consent before passing someone else's content to any AI model.
+  window.addEventListener('vetogram:brief-prefill',event=>{
+    const detail=event?.detail||{};
+    if(!safeIdentity()||detail.ownerId!==owner()||detail.signed!==signed())return;
+    if(!/^-?\d{1,22}$/.test(String(detail.chatId||'')))return;
+    const value=String(detail.text||'').slice(0,2800).trim();
+    if(!value)return;
+    setMode('brief');
+    $('vtaiText').value=value;
+    $('vtaiConsent').checked=false;
+    $('vtaiIncludeMemory').checked=false;
+    state.brief=null;renderBrief();
+    notice('Сообщение вставлено в локальный черновик. Прочитай его и отдельно разреши AI-анализ.');
+  });
   window.addEventListener('vetogram:ai-prefill',event=>{
     const detail=event?.detail||{};
     if(!safeIdentity()||detail.ownerId!==owner()||detail.signed!==signed())return;
