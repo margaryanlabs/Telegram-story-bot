@@ -1461,6 +1461,21 @@
           <p class="vtai-note">Перед отправкой появится отдельное подтверждение. Отправляется от твоего авторизованного Telegram-аккаунта, а не от бота.</p>
         </section>
         
+        <section class="vtai-panel" id="vtaiFocusPanel" aria-label="Smart Inbox и Follow-up Focus">
+          <div class="vtai-row vtai-heading-row">
+            <h2>Follow-up Focus <span id="vtaiFocusCount" class="vtai-count">0</span></h2>
+            <button type="button" class="vtai-action" id="vtaiFocusRefresh">Проверить мои чаты</button>
+          </div>
+          <p class="vtai-note">Локальная подсказка по последним предпросмотрам загруженных чатов: только подтверждённые входящие непрочитанные сообщения с возможным вопросом или действием. Это не доказательство обязательства и не автоматический AI-анализ.</p>
+          <p class="vtai-note" id="vtaiFocusStatus" role="status" aria-live="polite">Нажми «Проверить мои чаты». Никакие сообщения не отправляются AI автоматически.</p>
+          <div id="vtaiFocusList" class="vtai-workspace-list" aria-live="polite"></div>
+          <div class="vtai-row">
+            <button type="button" class="vtai-action" id="vtaiFocusMore" hidden>Показать ещё чаты ↓</button>
+            <button type="button" class="vtai-action" id="vtaiFocusRestore" hidden>Вернуть скрытые карточки</button>
+          </div>
+          <p class="vtai-note">«Скрыть» действует только в открытом окне. Настоящих отложенных сообщений, уведомлений, фонового слежения и отметок «прочитано» здесь нет.</p>
+        </section>
+
         <section class="vtai-panel" id="vtaiAgentControl" aria-label="VETO Agent Control">
           <div class="vtai-row vtai-heading-row">
             <h2>VETO Agent Control</h2>
