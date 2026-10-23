@@ -5,7 +5,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -24,7 +24,9 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
-    state.memoryRevision=null;state.memoryBusy=false;$('vtaiMemoryCloudStatus').textContent='Облачные заметки не загружены. Серверное шифрование, не E2EE.';
+    state.memoryRevision=null;state.memoryBusy=false;state.agentPaused=null;state.agentBusy=false;
+    $('vtaiAgentState').textContent='Статус не проверен для текущего аккаунта.';
+    $('vtaiAgentEvents').replaceChildren();$('vtaiMemoryCloudStatus').textContent='Облачные заметки не загружены. Серверное шифрование, не E2EE.';
     state.negotiationPolicy=null;state.negotiationDraft=null;state.negotiationGrant=null;$('vtaiNegNotice').textContent='Сначала выбери чат и введи условия.';
     $('vtaiIncludeMemory').checked=false;$('vtaiMemoryLabel').value='';$('vtaiMemoryContent').value='';
     renderApprovals();renderMemory();
@@ -76,7 +78,8 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
         headers:{'content-type':'application/json','x-telegram-init-data':requestOwner,
           ...(consent===true?{'x-vetogram-ai-consent':'yes'}:{}),
           ...(consent==='memory'?{'x-vetogram-memory-consent':'yes'}:{}),
-          ...(consent==='grant'?{'x-vetogram-grant-consent':'yes'}:{})},
+          ...(consent==='grant'?{'x-vetogram-grant-consent':'yes'}:{}),
+          ...(consent==='agent'?{'x-vetogram-agent-consent':'yes'}:{})},
         body:JSON.stringify(body),signal:abort.signal});
       const json=await result.json().catch(()=>({}));
       if(signed()!==requestOwner||!owner()){reset();throw Error('Аккаунт изменился. Действие отменено.');}
@@ -435,9 +438,84 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
     }catch(error){notice('Укажи название и содержание заметки.',true)}
   }
 
+
+  function renderAgentEvents(events){
+    const list=$('vtaiAgentEvents');list.replaceChildren();
+    const labels={
+      grant_issued:'Выдано разрешение на черновики',
+      grant_revoked:'Разрешение отозвано',
+      drafting_paused:'Подготовка AI остановлена',
+      drafting_resumed:'Подготовка AI возобновлена'
+    };
+    for(const event of (Array.isArray(events)?events:[]).slice(0,30)){
+      if(!labels[event?.kind])continue;
+      const card=document.createElement('div');card.className='vtai-workspace-item';
+      const headline=document.createElement('strong');headline.textContent=labels[event.kind];
+      const meta=document.createElement('p');
+      const date=new Date(event.at);
+      const stamp=Number.isFinite(date.getTime())?date.toLocaleString('ru-RU'):'Дата неизвестна';
+      meta.textContent=stamp+(event.chatId?' · чат '+String(event.chatId).slice(0,22):'');
+      card.append(headline,meta);list.append(card);
+    }
+    if(!list.childNodes.length){
+      const label=document.createElement('p');label.className='vtai-note';
+      label.textContent='История изменений отсутствует.';list.append(label);
+    }
+  }
+  function agentStateText(paused){
+    state.agentPaused=paused===true;
+    $('vtaiAgentState').textContent=paused
+      ?'Серверная подготовка переговорных черновиков остановлена. Активные разрешения отозваны.'
+      :'Серверная подготовка черновиков не остановлена. Выдача разрешений требует отдельного подтверждения.';
+    $('vtaiAgentPause').disabled=state.agentPaused===true;
+    $('vtaiAgentResume').disabled=state.agentPaused===false;
+  }
+  async function agentStatus(){
+    if(state.agentBusy||state.busy||!safeIdentity())return;
+    state.agentBusy=true;
+    try{
+      const response=await request('/api/vetogram-ai-agent',{action:'status'});
+      agentStateText(response.draftingPaused);
+      notice('Состояние Agent Control получено от сервера.');
+    }catch(error){state.agentPaused=null;$('vtaiAgentState').textContent='Не удалось подтвердить серверный статус. Действия AI недоступны.';notice(error.message,true);}
+    finally{state.agentBusy=false;}
+  }
+  async function changeAgentPause(paused){
+    if(state.agentBusy||state.busy||!safeIdentity())return;
+    const detail=paused?'Остановить выдачу разрешений на черновики и отозвать действующее разрешение?'
+      :'Разрешить снова создавать черновики AI? Это не включает отправку или автоматический агент.';
+    if(!window.confirm(detail))return;
+    if(!safeIdentity())return;
+    state.agentBusy=true;
+    try{
+      const result=await request('/api/vetogram-ai-agent',{action:paused?'pause':'resume'},'agent');
+      agentStateText(result.draftingPaused);
+      if(paused){
+        state.negotiationPolicy=null;state.negotiationDraft=null;state.negotiationGrant=null;
+        $('vtaiReview').hidden=true;$('vtaiSend').disabled=true;
+      }
+      await agentHistory(true);
+      notice(paused?'Сервер подтвердил остановку черновиков.':'Сервер подтвердил возобновление режима черновиков.');
+    }catch(error){state.agentPaused=null;$('vtaiAgentState').textContent='Последнее изменение не подтверждено. Обнови статус.';notice(error.message,true);}
+    finally{state.agentBusy=false;}
+  }
+  async function agentHistory(internal=false){
+    if(!internal&&(state.busy||state.agentBusy||!safeIdentity()))return;
+    try{
+      const response=await request('/api/vetogram-ai-agent',{action:'history'});
+      renderAgentEvents(response.events);
+      if(!internal)notice('Журнал разрешений загружен. Тексты переписок не сохраняются.');
+    }catch(error){if(!internal)notice(error.message,true);}
+  }
+
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiNegLoadChats').addEventListener('click',()=>void loadChats());
+  $('vtaiAgentRefresh').addEventListener('click',()=>void agentStatus());
+  $('vtaiAgentPause').addEventListener('click',()=>void changeAgentPause(true));
+  $('vtaiAgentResume').addEventListener('click',()=>void changeAgentPause(false));
+  $('vtaiAgentHistory').addEventListener('click',()=>void agentHistory());
+
   $('vtaiNegRevoke').addEventListener('click',async()=>{
     if(!safeIdentity()||state.busy)return;
     if(!window.confirm('Отозвать серверное разрешение Negotiator для твоего аккаунта?'))return;
