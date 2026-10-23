@@ -24,6 +24,9 @@ test('SQL journal is metadata only and grant trigger is attached to issue & revo
   assert.match(sql,/ON CONFLICT\(owner_id\) DO NOTHING/);
   assert.match(sql,/FOR UPDATE/);
   assert.match(sql,/UPDATE public.vetogram_ai_draft_grants SET revoked_at=now\(\)/);
+  assert.match(sql,/CREATE OR REPLACE FUNCTION public\.vetogram_ai_issue_draft_grant/);
+  assert.match(sql,/pg_advisory_xact_lock/);
+  assert.match(sql,/VALUES\(OLD.owner_id,'grant_revoked',OLD.grant_id,OLD.chat_id\)/);
   assert.match(sql,/IF TG_OP='INSERT' THEN/);
   assert.doesNotMatch(sql,/CREATE TABLE[^;]*(?:prompt_text|message_body|ai_reply|session_ciphertext)/i);
 });
