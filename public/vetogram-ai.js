@@ -380,6 +380,21 @@ import {followupCandidates} from './vetogram-followup-core.js';
         $('vtaiDraft').value='';$('vtaiReview').hidden=true;
         notice('Ответ только в локальном черновике. Проверь полный диалог, затем отдельно разреши AI-запрос.');
       });
+      const analyze=document.createElement('button');analyze.type='button';analyze.className='vtai-action';
+      analyze.textContent='Найти договорённости';
+      analyze.addEventListener('click',()=>{
+        if(!safeIdentity())return;
+        if(!followupCandidates(state.dialogs).some(c=>c.id===item.id))
+          return notice('Обнови список чатов перед анализом.',true);
+        if(!window.confirm('Перенести этот короткий предпросмотр в локальный Second Brain? Полный диалог и точные договорённости нужно проверять самостоятельно. Передача AI потребует отдельного согласия.'))return;
+        setMode('brief');
+        state.brief=null;state.last=null;state.sendIntent=null;
+        $('vtaiText').value=item.preview;
+        $('vtaiConsent').checked=false;$('vtaiIncludeMemory').checked=false;
+        $('vtaiReview').hidden=true;$('vtaiSend').disabled=true;
+        renderBrief();
+        notice('Предпросмотр вставлен в локальный Second Brain. Для AI-анализа нажми кнопку и отдельно разреши передачу.');
+      });
       const hide=document.createElement('button');hide.type='button';hide.className='vtai-action';
       hide.textContent='Скрыть в этом окне';
       hide.addEventListener('click',()=>{
@@ -387,7 +402,7 @@ import {followupCandidates} from './vetogram-followup-core.js';
         state.focusHidden.add(item.id);
         renderFollowups();
       });
-      actions.append(draft,hide);card.append(title,preview,reason,actions);list.append(card);
+      actions.append(draft,analyze,hide);card.append(title,preview,reason,actions);list.append(card);
     }
   }
   async function loadChats({more=false,seekChatId=null}={}){
