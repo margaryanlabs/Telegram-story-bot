@@ -1362,6 +1362,7 @@
           <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI Reply</button>
           <button type="button" data-vtai-mode="story" aria-pressed="false">▣ Story Director</button>
           <button type="button" data-vtai-mode="campaign" aria-pressed="false">✦ Story-to-Sale</button>
+          <button type="button" data-vtai-mode="negotiator" aria-pressed="false">◇ Negotiator Lab</button>
         </div>
         <section class="vtai-panel">
           <h2>Новый запрос</h2>
@@ -1374,6 +1375,33 @@
               <option value="грузинский">Грузинский</option>
             </select>
           </label>
+          <section id="vtaiNegPanel" class="vtai-neg-panel" hidden aria-label="Безопасные настройки Negotiator">
+            <h2>Negotiator Lab · только черновики</h2>
+            <p class="vtai-note">Никаких автоматических переговоров и отправок. Выбери один чат, установи жёсткие ограничения, получи черновик и отдельно подтверди каждый ответ.</p>
+            <div class="vtai-row">
+              <button type="button" class="vtai-action" id="vtaiNegLoadChats">Загрузить мои чаты</button>
+              <label class="vtai-label vtai-grow">Разрешённый чат
+                <select id="vtaiNegRecipient" class="vtai-input"><option value="">Сначала загрузить чаты</option></select>
+              </label>
+            </div>
+            <div class="vtai-two">
+              <label class="vtai-label">Валюта
+                <select id="vtaiNegCurrency" class="vtai-input">
+                  <option>USD</option><option>EUR</option><option>AMD</option><option>RUB</option><option>GEL</option><option>GBP</option>
+                </select>
+              </label>
+              <label class="vtai-label">Исходная цена<input id="vtaiNegAsking" class="vtai-input" type="number" min="0.01" max="10000000" step="0.01" value="500"></label>
+              <label class="vtai-label">Минимальная цена<input id="vtaiNegFloor" class="vtai-input" type="number" min="0.01" max="10000000" step="0.01" value="475"></label>
+              <label class="vtai-label">Макс. скидка, %<input id="vtaiNegDiscount" class="vtai-input" type="number" min="0" max="30" step="1" value="5"></label>
+              <label class="vtai-label">Срок разрешения
+                <select id="vtaiNegMinutes" class="vtai-input"><option value="15">15 минут</option><option value="60" selected>1 час</option><option value="120">2 часа</option></select>
+              </label>
+            </div>
+            <label class="vtai-label">Цель переговоров
+              <input id="vtaiNegGoal" class="vtai-input" maxlength="300" placeholder="Например: обсудить стоимость дизайна без предоплаты" />
+            </label>
+            <div class="vtai-note" id="vtaiNegNotice" aria-live="polite">Сначала выбери чат и введи условия. Никто не получит сообщение автоматически.</div>
+          </section>
           <label class="vtai-label">Напиши AI
             <textarea id="vtaiText" class="vtai-input" maxlength="3000" placeholder="Спроси AI или попроси подготовить сообщение…"></textarea>
           </label>
