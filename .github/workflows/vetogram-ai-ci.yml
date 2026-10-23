@@ -1,0 +1,65 @@
+name: VETOGRAM AI safe release checks
+on:
+  push:
+    branches: [feat/vetogram-ai-story-unified-20261023]
+  pull_request:
+    branches: [feat/vetogram-story-engine-20261022]
+permissions:
+  contents: read
+concurrency:
+  group: vetogram-ai-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Offline release gate, syntax and all Node tests
+        run: npm run vercel-build
+        env:
+          VETOGRAM_AI_ENABLED: 'false'
+          VETOGRAM_AI_QUOTA_READY: 'false'
+          VETOGRAM_AI_MEMORY_ENABLED: 'false'
+          VETOGRAM_AI_GRANTS_ENABLED: 'false'
+  disposable-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vetogram_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d vetogram_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: postgres
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGDATABASE: vetogram_ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply four additive migrations to temporary PostgreSQL
+        run: |
+          set -eu
+          for migration in \
+            migrations/vetogram-ai-usage-20261023.sql \
+            migrations/vetogram-ai-memory-20261023.sql \
+            migrations/vetogram-ai-draft-grants-20261023.sql \
+            migrations/vetogram-ai-agent-control-20261023.sql; do
+            psql -v ON_ERROR_STOP=1 -f "$migration"
+          done
+      - name: Validate grant issue, pause, quota and memory CAS
+        run: psql -v ON_ERROR_STOP=1 -f scripts/vetogram-ai-postgres-smoke.sql
