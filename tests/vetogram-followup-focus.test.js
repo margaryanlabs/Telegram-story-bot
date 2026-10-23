@@ -60,6 +60,10 @@ test('Focus user actions stay local until separate provider consent',()=>{
   assert.match(js,/vtaiFocusMore'\)\.addEventListener\('click',\(\)=>void loadChats\(\{more:true\}\)\)/);
   assert.match(js,/window\.confirm\('Скопировать только последний предпросмотр/);
   assert.match(js,/vtaiConsent'\)\.checked=false/);
+  assert.match(js,/analyze\.textContent='Найти договорённости'/);
+  assert.match(js,/setMode\('brief'\)/);
+  assert.match(js,/state\.brief=null;state\.last=null;state\.sendIntent=null/);
+
   assert.match(js,/state\.focusHidden\.clear\(\)/);
   assert.match(js,/state\.last=null;state\.sendIntent=null;state\.reviewedApprovalId=null/);
   assert.doesNotMatch(js,/autoReply|autoRead|automaticFollowup|sendBackground/);
