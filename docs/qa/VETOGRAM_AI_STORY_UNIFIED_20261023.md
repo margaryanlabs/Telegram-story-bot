@@ -282,3 +282,39 @@ Next independent milestone: server-side request audit entries and *explicit* per
   inspected deployment metadata only, changed no Vercel configuration or domains.
 - GitHub Actions workflow conclusion remains failure without accessible job steps.
   Real Node and disposable PostgreSQL test execution remain **unverified**.
+
+
+## 23 Oct continuation — account isolation, full send confirmation, CI investigation
+- **Fixed a real disclosure risk on Telegram account switch.** The controller
+  previously cleared AI thread, approvals and Memory but left hidden recipient
+  options in Negotiator and hidden Story Director / Portal text fields. Reset
+  now clears every one of those hidden drafts, price/goal fields, quota banner,
+  recipient selections, consent and pending send nonce; returns AI to Chat mode.
+  Added regression test to prevent cross-owner UI state carry-over.
+- **Fixed truncated send confirmation.** The native confirmation previously
+  showed only the first 650 characters while sending up to 4096. It now passes
+  the complete outgoing string to the confirmation; the editable review textbox
+  retains the whole message. Native dialog rendering of very long text still
+  requires Android/iOS QA, since WebView itself may truncate a modal visually.
+  Added regression assertion ensuring the 650-character slice is absent.
+- Connected GitHub REST returned two CI jobs concluding failure in ~3–4 seconds,
+  with no runner assignment, no steps, and `billable.UBUNTU.total_ms=0`.
+  Therefore these are **pre-execution runner/scheduling failures**, not a
+  demonstrated Node assertion or PostgreSQL migration failure. CI must be
+  enabled/runner access reviewed in GitHub organization/repository and billing
+  before normal QA can be trusted.
+- CI Node version adjusted from 20 to **24**, matching the connected Vercel
+  project runtime. The adjustment has not been verified by a runner.
+- Connected Vercel project `veto` on the SECOND user's account showed canceled
+  branch previews linked to Ignored Build Step, while production's READY
+  deployment is based on another earlier commit. No setting was modified
+  and no build was triggered; changing skip-build behavior would potentially
+  consume deployment quota.
+- Vercel project's current `vercel.json` uses explicit legacy `builds`
+  configuration. Vercel documents that Project Build & Development settings
+  are ignored for legacy `builds`. Do not assume `vercel-build` is executed
+  by Vercel itself: that script is expressly invoked by our GitHub Actions
+  job, whose runners have not yet started. Release requires separate green
+  Node/SQL test evidence.
+- All four AI migrations remain unapplied and AI backend switches remain
+  unconfigured/off; no new Preview, production, payment or Telegram send.
