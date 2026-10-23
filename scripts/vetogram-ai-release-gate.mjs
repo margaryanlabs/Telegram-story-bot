@@ -10,7 +10,8 @@ const paths=[
   'api/vetogram-ai.js','api/vetogram-ai-agent.js','api/vetogram-ai-grants.js',
   'api/vetogram-ai-memory.js','api/router.js',
   'lib/vetogram-ai-agent-control.js','lib/vetogram-ai-grants.js',
-  'lib/vetogram-ai-quota.js','lib/vetogram-ai-memory-crypto.js'
+  'lib/vetogram-ai-quota.js','lib/vetogram-ai-memory-crypto.js',
+  'api/vetogram-tasks.js','lib/vetogram-task-cloud-store.js','lib/vetogram-task-cloud-crypto.js'
 ];
 const files=Object.fromEntries(paths.map(x=>[x,read(x)]));
 const migrations=inspectAiMigrationSources(migrationSources);
