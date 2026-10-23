@@ -41,7 +41,7 @@ export default async function handler(req,res){
   try {
     // Reserve global + per-owner conservative AI units atomically before any
     // external provider call. Database unreachable or migration missing => deny.
-    quota=await reserveAiBudget(owner.id,parsed,instruction);
+    quota=await reserveAiBudget(owner.id,parsed,instruction,process.env,userPrompt);
   }catch(error){
     const kind=aiQuotaErrorKind(error);
     if(kind==='owner')return reply(res,429,{error:'Дневной лимит AI исчерпан. Попробуй завтра (UTC).'});
