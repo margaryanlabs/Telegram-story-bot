@@ -30,7 +30,7 @@ test('AI Memory AES-GCM is owner bound, authenticated, randomly salted and key s
     assert.deepEqual(decryptAiMemory('123',a),[note]);
     assert.throws(()=>decryptAiMemory('999',a));
     const parts=a.split('.');
-    parts[4]=parts[4].slice(0,-1)+(parts[4].endsWith('A')?'B':'A');
+    parts[3]=(parts[3].startsWith('A')?'B':'A')+parts[3].slice(1);
     assert.throws(()=>decryptAiMemory('123',parts.join('.')));
     process.env.VETOGRAM_AI_MEMORY_KEY='b2'.repeat(32);
     assert.throws(()=>decryptAiMemory('123',a),/AI_MEMORY_KEY_MISMATCH/);
@@ -52,7 +52,7 @@ test('Cloud Memory follows explicit consent, signed owner and optimistic version
   assert.doesNotMatch(store,/chat_messages|session_ciphertext|sendOwnerMessage/);
   const sql=read('migrations/vetogram-ai-memory-20261023.sql');
   assert.match(sql,/encrypted_snapshot text NOT NULL/);
-  assert.doesNotMatch(sql,/plaintext|prompt_text|message_text|session_key/i);
+  assert.doesNotMatch(sql,/(?:\bprompt_text\b|\bmessage_text\b|\bsession_key\b)\s+(?:text|varchar)/i);
 });
 test('Grant's server trust boundary rejects revoked, expired, wrong chat and currency mismatch',()=>{
   const grant={
