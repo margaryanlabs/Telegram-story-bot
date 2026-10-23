@@ -6,7 +6,7 @@ import {AI_MODES,normalizeAiInput,normalizeAiOutput,systemInstruction}
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
 test('AI assistant has bounded modes, prompt and client-supplied history only',()=>{
-  assert.deepEqual(AI_MODES,['chat','translate','reply','story']);
+  assert.deepEqual(AI_MODES,['chat','translate','reply','story','campaign']);
   assert.throws(()=>normalizeAiInput({mode:'autopilot',prompt:'send everything'}),/AI_MODE_INVALID/);
   assert.throws(()=>normalizeAiInput({mode:'chat',prompt:'x'}),/AI_PROMPT_REQUIRED/);
   const input=normalizeAiInput({mode:'chat',prompt:'x'.repeat(4500),
@@ -21,6 +21,9 @@ test('Story AI responses are typed, truncated and cannot contain fake actions',(
   assert.deepEqual(obj.story,{title:'A',subtitle:'B',caption:'C'});
   assert.throws(()=>normalizeAiOutput('story','not json'),/AI_STORY_FORMAT_INVALID/);
   assert.throws(()=>normalizeAiOutput('story','{"title":"","subtitle":""}'),/AI_STORY_FORMAT_INVALID/);
+  const campaign=normalizeAiOutput('campaign',JSON.stringify({title:'Sale',subtitle:'Offer',caption:'Now',portal:{type:'offer',title:'Buy',description:'Details',cta:'Открыть'}}));
+  assert.equal(campaign.portal.type,'offer');
+  assert.throws(()=>normalizeAiOutput('campaign',JSON.stringify({title:'Sale',subtitle:'Offer',portal:{type:'unknown'}})),/AI_PORTAL_FORMAT_INVALID/);
   const plain=normalizeAiOutput('reply','Reply yes');
   assert.equal(plain.story,undefined);
   assert.equal(plain.text,'Reply yes');
@@ -47,6 +50,9 @@ test('AI UI requires reviewed send, and Story Engine is review-only',()=>{
   assert.match(ui,/id="vtaiConsent"/);
   assert.match(ui,/id="vtaiApplyStory"/);
   assert.match(ui,/data-ai-mode="story"/);
+  assert.match(ui,/data-vtai-mode="campaign"/);
+  assert.match(ui,/id="vtaiReplacePortal"/);
+  assert.match(story,/normalizePortal\(\{/);
   assert.match(client,/window\.confirm\(/);
   assert.match(client,/crypto\.randomUUID/);
   assert.match(client,/action:'send_message'/);
