@@ -21,24 +21,77 @@ CREATE INDEX IF NOT EXISTS vetogram_reminders_due_idx
   ON public.vetogram_reminders(remind_at) WHERE state='pending';
 REVOKE ALL ON TABLE public.vetogram_reminders FROM PUBLIC;
 
+-- Task Cloud + Reminders 2.1: both task mutations and reminder scheduling
+-- acquire the SAME per-owner transaction lock. All task snapshots are opaque.
+-- Conservatively block any cloud write/erase while this owner has a PENDING
+-- reminder, because PostgreSQL cannot inspect task fields inside ciphertext.
+-- Explicitly cancel pending reminders before saving a changed task snapshot.
+CREATE OR REPLACE FUNCTION public.vetogram_task_cloud_write(
+  p_owner bigint,p_revision integer,p_ciphertext text,p_erase boolean
+) RETURNS TABLE(next_revision integer,next_updated_at timestamptz)
+LANGUAGE plpgsql SECURITY INVOKER
+SET search_path=public,pg_temp AS $$
+DECLARE changed integer;
+BEGIN
+  IF p_owner IS NULL OR p_owner<=0 OR p_revision IS NULL OR
+     p_revision<0 OR p_revision>2147483646 OR p_erase IS NULL OR
+     (p_erase AND (p_revision=0 OR p_ciphertext IS NOT NULL)) OR
+     (NOT p_erase AND (p_ciphertext IS NULL OR
+       length(p_ciphertext)<1 OR length(p_ciphertext)>60000)) THEN
+    RAISE EXCEPTION 'VETO_TASK_WRITE_INVALID' USING ERRCODE='P0001';
+  END IF;
+  PERFORM pg_advisory_xact_lock(hashtext('veto-reminders:'||p_owner::text)::bigint);
+  IF EXISTS(SELECT 1 FROM public.vetogram_reminders
+    WHERE owner_id=p_owner AND state='pending') THEN
+    RAISE EXCEPTION 'VETO_TASK_PENDING_REMINDERS' USING ERRCODE='P0001';
+  END IF;
+  IF p_erase THEN
+    UPDATE public.vetogram_task_cloud SET encrypted_snapshot=NULL,
+       revision=revision+1,updated_at=now()
+     WHERE owner_id=p_owner AND revision=p_revision
+       AND encrypted_snapshot IS NOT NULL;
+  ELSIF p_revision=0 THEN
+    INSERT INTO public.vetogram_task_cloud(owner_id,encrypted_snapshot,revision)
+      VALUES(p_owner,p_ciphertext,1) ON CONFLICT(owner_id) DO NOTHING;
+  ELSE
+    UPDATE public.vetogram_task_cloud SET encrypted_snapshot=p_ciphertext,
+       revision=revision+1,updated_at=now()
+     WHERE owner_id=p_owner AND revision=p_revision;
+  END IF;
+  GET DIAGNOSTICS changed=ROW_COUNT;
+  IF changed<>1 THEN
+    RAISE EXCEPTION 'VETO_TASK_REVISION_CONFLICT' USING ERRCODE='P0001';
+  END IF;
+  RETURN QUERY SELECT c.revision,c.updated_at FROM public.vetogram_task_cloud c
+    WHERE c.owner_id=p_owner;
+END; $$;
+REVOKE ALL ON FUNCTION public.vetogram_task_cloud_write(bigint,integer,text,boolean) FROM PUBLIC;
+
 -- Single owner-specific transaction lock serializes quota and upsert,
 -- and a claimed job is NEVER reissued without a fresh explicit new request
 -- (the UI does not expose replacing a claimed job).
 CREATE OR REPLACE FUNCTION public.vetogram_schedule_reminder(
   p_owner bigint,p_task uuid,p_remind_at timestamptz,
-  p_due_at timestamptz,p_zone text
+  p_due_at timestamptz,p_zone text,p_cloud_revision integer
 ) RETURNS text LANGUAGE plpgsql SECURITY INVOKER
 SET search_path=public,pg_temp AS $$
-DECLARE n integer; current_state text;
+DECLARE n integer; current_state text; cloud_revision integer;
 BEGIN
   IF p_owner IS NULL OR p_owner<=0 OR p_task IS NULL OR
      p_remind_at IS NULL OR p_due_at IS NULL OR
      p_remind_at<now()+interval '2 minutes' OR
      p_remind_at>now()+interval '365 days' OR p_remind_at>p_due_at OR
-     p_zone IS NULL OR length(p_zone) NOT BETWEEN 1 AND 64 THEN
+     p_zone IS NULL OR length(p_zone) NOT BETWEEN 1 AND 64 OR
+     p_cloud_revision IS NULL OR p_cloud_revision<1 THEN
     RAISE EXCEPTION 'VETO_REMINDER_INVALID' USING ERRCODE='P0001';
   END IF;
   PERFORM pg_advisory_xact_lock(hashtext('veto-reminders:'||p_owner::text)::bigint);
+  -- Reject a stale pre-lock encrypted snapshot from another device.
+  SELECT revision INTO cloud_revision FROM public.vetogram_task_cloud
+    WHERE owner_id=p_owner AND encrypted_snapshot IS NOT NULL;
+  IF cloud_revision IS DISTINCT FROM p_cloud_revision THEN
+    RAISE EXCEPTION 'VETO_REMINDER_TASK_REVISION_CONFLICT' USING ERRCODE='P0001';
+  END IF;
   SELECT state INTO current_state FROM public.vetogram_reminders
     WHERE owner_id=p_owner AND task_id=p_task FOR UPDATE;
   IF current_state IN ('claimed','sent') THEN
@@ -61,7 +114,7 @@ BEGIN
   RETURN 'pending';
 END; $$;
 REVOKE ALL ON FUNCTION public.vetogram_schedule_reminder(
-  bigint,uuid,timestamptz,timestamptz,text) FROM PUBLIC;
+  bigint,uuid,timestamptz,timestamptz,text,integer) FROM PUBLIC;
 
 -- Atomic claim marks the send attempt BEFORE the external network call.
 -- A claimed reminder is NOT retried automatically after an uncertain timeout,
