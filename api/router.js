@@ -25,6 +25,7 @@ const endpointLoaders = {
   "telegram-intelligence-search": () => import("./telegram-intelligence-search.js"),
   "telegram-message-context": () => import("./telegram-message-context.js"),
   "telegram-send": () => import("./telegram-send.js"),
+  "vetogram-ai": () => import("./vetogram-ai.js"),
   "telegram-sticker-preview": () => import("./telegram-sticker-preview.js"),
   "telegram-sticker-previews": () => import("./telegram-sticker-previews.js"),
   "telegram-stories": () => import("./telegram-stories.js"),
