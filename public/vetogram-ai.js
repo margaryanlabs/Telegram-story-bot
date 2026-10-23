@@ -283,7 +283,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       notice('Запрос на создание напоминания принят сервером. Оно не отправляется сейчас.');
       await request('/api/vetogram-reminders',{action:'list'}).then(result=>{
         if(safeIdentity()){state.reminders=result.reminders||[];
-          state.reminderSchedulingConfigured=result.schedulingConfigured===true;renderReminders();}
+          state.reminderSchedulingConfigured=result.schedulingConfigured===true;renderReminders();renderTasks();}
       });
     }catch(error){notice('Не удалось создать напоминание: '+error.message,true);}
     finally{state.reminderBusy=false}
@@ -346,7 +346,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     $('vtaiTaskStatus').textContent=summary.total
       ?'Всего: '+summary.total+' · активных: '+summary.open+
         (summary.overdue?' · прошедшие вручную указанные сроки: '+summary.overdue:'')+
-        ' · только в этом окне, без уведомлений.'
+        ' · локальные изменения сохраняются вручную; напоминания настраиваются отдельно.'
       :'Задач нет. Подтверди пункт в Second Brain, чтобы добавить его.';
     for(const [id,status] of [['vtaiTasksOpen','open'],['vtaiTasksDeferred','deferred'],
       ['vtaiTasksDone','done'],['vtaiTasksAll','all']]){
