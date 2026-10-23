@@ -68,3 +68,19 @@ The editor persists options and link-hub links alongside other Portal configurat
 ### Verification
 
 Static JavaScript syntax and UI element wiring inspected. Added unit/source contract checks for poll choices, safe link hubs and interactive preview. Full Node test suite and phone/browser E2E tests remain unconfirmed until a build environment allows testing; do not treat GitHub status or canceled Vercel deployments as proof of successful compilation.
+
+## Shareable public Portal cards — 23 October 2026
+
+Implemented a no-database delivery stage **without migrating Neon or modifying the personal-message vault**:
+
+- `/portal.html` is a static, privacy-isolated page with responsive VETOGRAM styling, accessible buttons, a Story continuation CTA, and a visible host for any outgoing HTTPS link.
+- The owner explicitly confirms before generating a shareable URL from `Story Engine → Portal → Создать ссылку`. Copy and open actions are available, and the text is selectable if clipboard access fails.
+- `story-portal-share.js` serializes **only** normalized, bounded Portal fields (type, title, description, CTA, HTTPS destinations, poll choices) into a base64url fragment. The fragment is not part of HTTP requests and no Telegram owner IDs, draft media, history, or authentication tokens are included. Max payload 3400 UTF-8 bytes.
+- The recipient can load the Portal page without connecting a Telegram account. Poll votes, RSVP or waitlist acknowledgements are visibly **local-only**; links open only on a user's click.
+- A **client-enforced 30-day expiry** is checked. It is not cryptographically secure: the fragment is deliberately **unsigned and editable**, cannot be revoked, and can be re-encoded by anyone. It must NOT be marketed as private, signed, or as an enforceable link TTL.
+- `vercel.json` configures CSP to prevent network connections/form submissions, no-referrer, noindex, nosniff, camera/mic/location restrictions, and no-store on the public Portal page.
+- Public HTML contains no user-supplied innerHTML. All fields are rendered with textContent. Only HTTPS destination links with validated domains can be shown.
+- No generated VETOGRAM share URL is functional on a public domain until **this PR and its parent PR #179 have been reviewed, tested, approved, and deployed**.
+- The visual CTA embedded in a JPEG Story is **not** a clickable Telegram media area. Links are separately shareable only. Publishing clickable media areas, actual vote/lead collection, moderation, analytics, strong expiry/revocation, and owner-managed public Portal editing require an authorized backend release.
+
+Added `tests/vetogram-public-portal.test.js` for serialization, UTF-8, sanitization, owner-private-data isolation, expiry, CSP, static hosting and explicit consent. No production deploy, migration or billable AI call was made.
