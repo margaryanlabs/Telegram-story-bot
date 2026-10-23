@@ -283,6 +283,25 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     }catch(error){notice('Не удалось создать напоминание: '+error.message,true);}
     finally{state.reminderBusy=false}
   }
+  async function cancelAllReminders(){
+    if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
+    const count=state.reminders.filter(r=>r.status==='pending').length;
+    if(!window.confirm('Отменить ВСЕ ещё ожидающие напоминания для этого Telegram-аккаунта? Если отправка уже началась, её отменить нельзя. Это не выключает возможность создавать новые напоминания.'))return;
+    if(!safeIdentity())return;
+    state.reminderBusy=true;$('vtaiReminderCancelAll').disabled=true;
+    try{
+      const result=await request('/api/vetogram-reminders',{action:'cancel_all'},'reminder');
+      if(!Number.isSafeInteger(result.canceledCount)||result.canceledCount<0)
+        throw Error('Отмена не подтверждена сервером');
+      const current=await request('/api/vetogram-reminders',{action:'list'});
+      if(!safeIdentity())return;
+      state.reminders=Array.isArray(current.reminders)?current.reminders:[];
+      renderReminders();
+      notice('Отменено ожидающих: '+result.canceledCount+
+        '. Уже начатые отправки могли продолжиться.');
+    }catch(error){notice('Не удалось отменить все напоминания: '+error.message,true)}
+    finally{state.reminderBusy=false;$('vtaiReminderCancelAll').disabled=false}
+  }
   async function cancelReminder(taskId){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
     if(!window.confirm('Отменить это напоминание? Если Telegram-отправка уже началась, остановить её может быть невозможно.'))return;
@@ -1112,6 +1131,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   $('vtaiTasksCloudSave').addEventListener('click',()=>void saveTasksCloud());
   $('vtaiTasksCloudErase').addEventListener('click',()=>void eraseTasksCloud());
   $('vtaiReminderRefresh').addEventListener('click',()=>void loadReminders());
+  $('vtaiReminderCancelAll').addEventListener('click',()=>void cancelAllReminders());
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiFocusRefresh').addEventListener('click',()=>void loadChats());
