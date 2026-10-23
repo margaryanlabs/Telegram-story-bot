@@ -249,6 +249,8 @@ function render(){
   $('sePortalLinksFields').hidden=$('sePortalType').value!=='links';
   $('sePortalTry').disabled=!p;
   $('sePortalCreateLink').disabled=!p;
+  $('sePortalAttachStory').disabled=!p;
+  if(!p)$('sePortalAttachStory').checked=false;
   const portal=$('sePortalPreview');portal.replaceChildren();
   if(p){
     const type=PORTAL_TYPES.find(v=>v.id===p.type);
@@ -281,6 +283,8 @@ function loadImageForDraft(){
 }
 function applyDraft(d){
   clearPublicPortalLink();
+  // Publishing a public clickable link always needs a fresh opt-in.
+  $('sePortalAttachStory').checked=false;
   state.selectedLayer=null;state.dragLayer=null;
   state.draft=normalizeDraft(d,state.owner||'0');loadImageForDraft();render();
 }
@@ -320,7 +324,15 @@ async function exportToPublisher(){
     if(!input||typeof DataTransfer!=='function')throw Error('Telegram не поддерживает прямую передачу файла. Используй экспорт JPEG.');
     const file=new File([blob],'vetogram-story.jpg',{type:'image/jpeg'});
     const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;
+    const attachPortal=$('sePortalAttachStory').checked && Boolean(state.draft.portal);
+    // No URL is sent unless the owner explicitly selected the checkbox.
+    const portalLink=attachPortal?makePublicPortalUrl(state.draft.portal,window.location.origin):null;
     input.dispatchEvent(new Event('change',{bubbles:true}));
+    window.VetoTelegramPortalHandoff=portalLink?{
+      url:portalLink,ownerId:exportOwner,draftId:exportDraftId
+    }:null;
+    window.dispatchEvent(new CustomEvent('veto:portal-handoff'));
+
     $('storyCaption').value=state.draft.caption||'';
     $('storyCaption').dispatchEvent(new Event('input',{bubbles:true}));
     window.VetoTelegramNavigate?.('publish');
