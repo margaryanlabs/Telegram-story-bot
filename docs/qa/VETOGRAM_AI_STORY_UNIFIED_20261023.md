@@ -264,3 +264,21 @@ Next independent milestone: server-side request audit entries and *explicit* per
 - Added `tests/vetogram-ai-dialogs.test.js` and a syntax check to `package.json`. UI buttons are hidden when no further page exists and share the owner-account request guard. An Approval Center draft for an older chat now resolves that recipient on demand before confirming send.
 - Performed 14 targeted in-memory JS behavioral/parser checks for page limits, deduplication, sendable-type filtering, targets, HTML wiring and module syntax, all passed. This is not the full Node suite or Telegram E2E.
 - Build remains blocked by Vercel build-rate-limit and unverified GitHub Actions jobs. No production DB, Telegram session, deployed app, or customer message was changed.
+
+
+## Vercel GitHub status discrepancy (23 October continuation)
+- Vercel project inspection used the explicitly intended second connected
+  account, project `veto` under labsmargaryan. The latest PR #181 deployment
+  `dpl_FaUHh1rWAxhPoEJDCtUqWBgThc9B` for
+  `1aa24b29120fc1fef4601903e3133d058b7b4dfa` reports
+  `CANCELED`, `target=null` and
+  `https://vercel.com/docs/platform/projects#ignored-build-step` as errorLink.
+  **It is not a ready Preview even though GitHub's Vercel commit status says success.**
+- Connected Vercel project production listing shows a READY deployment at a
+  different main/production commit `6504a387d2b88961df3689792cd1c6d4d0e68571`.
+  The combined AI + Story Engine branch is therefore not publicly deployed.
+- Check Ignored Build Step / project Git settings and build quotas in the intended
+  Vercel account before requesting another Preview. This investigation
+  inspected deployment metadata only, changed no Vercel configuration or domains.
+- GitHub Actions workflow conclusion remains failure without accessible job steps.
+  Real Node and disposable PostgreSQL test execution remain **unverified**.
