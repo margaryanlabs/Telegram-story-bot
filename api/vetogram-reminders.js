@@ -30,6 +30,8 @@ export default async function handler(req,res){
   }catch(error){
     if(/VETO_REMINDER_(?:LIMIT|ALREADY_ATTEMPTED)/.test(error?.message||''))
       return respond(res,409,{error:'Достигнут лимит или отправка уже выполнялась'});
+    if(error?.message==='REMINDER_UNSAVED_TASK_CHANGES')
+      return respond(res,409,{error:'Срок задачи изменился. Сначала сохрани облачную копию.'});
     if(/REMINDER_(?:TASK|TIME|ZONE|AFTER|OWNER|STATUS)/.test(error?.message||''))
       return respond(res,400,{error:'Неверный срок, задача или часовой пояс'});
     return respond(res,503,{error:'Напоминания недоступны. Проверь соединение и облачную копию задач.'});
