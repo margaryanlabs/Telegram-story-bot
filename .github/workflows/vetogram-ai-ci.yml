@@ -27,6 +27,7 @@ jobs:
           VETOGRAM_AI_QUOTA_READY: 'false'
           VETOGRAM_AI_MEMORY_ENABLED: 'false'
           VETOGRAM_AI_GRANTS_ENABLED: 'false'
+          VETOGRAM_TASKS_CLOUD_ENABLED: 'false'
   disposable-postgres:
     runs-on: ubuntu-latest
     timeout-minutes: 12
@@ -51,14 +52,15 @@ jobs:
       PGDATABASE: vetogram_ci
     steps:
       - uses: actions/checkout@v4
-      - name: Apply four additive migrations to temporary PostgreSQL
+      - name: Apply five additive migrations to temporary PostgreSQL
         run: |
           set -eu
           for migration in \
             migrations/vetogram-ai-usage-20261023.sql \
             migrations/vetogram-ai-memory-20261023.sql \
             migrations/vetogram-ai-draft-grants-20261023.sql \
-            migrations/vetogram-ai-agent-control-20261023.sql; do
+            migrations/vetogram-ai-agent-control-20261023.sql \
+            migrations/vetogram-task-cloud-20261023.sql; do
             psql -v ON_ERROR_STOP=1 -f "$migration"
           done
       - name: Validate grant issue, pause, quota and memory CAS
