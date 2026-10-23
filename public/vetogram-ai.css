@@ -50,3 +50,6 @@ textarea.vtai-input{min-height:110px;resize:vertical}
 #vtaiAgentState{border:1px solid rgba(255,255,255,.11);padding:11px 13px;border-radius:12px;background:rgba(255,255,255,.035)}
 #vtaiAgentEvents{max-height:370px;overflow-y:auto}
 #vtaiAgentControl .vtai-row{align-items:center}
+
+/* Keep incremental dialog paging controls hidden until another verified page exists. */
+#vtaiMoreChats[hidden],#vtaiNegMoreChats[hidden]{display:none!important}
