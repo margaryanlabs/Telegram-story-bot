@@ -126,6 +126,27 @@ BEGIN
   EXCEPTION WHEN SQLSTATE 'P0001' THEN
     IF SQLERRM <> 'VETO_REMINDER_ALREADY_ATTEMPTED' THEN RAISE; END IF;
   END;
+  -- Owner-scoped bulk cancel: other owners and completed attempts survive.
+  PERFORM public.vetogram_schedule_reminder(
+    98760001,'cccccccc-cccc-4ccc-8ccc-cccccccccccc'::uuid,
+    now()+interval '8 minutes',now()+interval '16 minutes','Asia/Yerevan');
+  PERFORM public.vetogram_schedule_reminder(
+    98760002,'dddddddd-dddd-4ddd-8ddd-dddddddddddd'::uuid,
+    now()+interval '8 minutes',now()+interval '16 minutes','Asia/Yerevan');
+  UPDATE public.vetogram_reminders SET state='canceled',
+      enabled_by_owner=false,updated_at=now(),completed_at=now()
+    WHERE owner_id=98760001 AND state='pending';
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>1 THEN RAISE EXCEPTION 'CI_CANCEL_ALL_COUNT_FAILED'; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_reminders
+    WHERE owner_id=98760001 AND state='pending';
+  IF n<>0 THEN RAISE EXCEPTION 'CI_CANCEL_ALL_LEFT_PENDING'; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_reminders
+    WHERE owner_id=98760002 AND state='pending';
+  IF n<>1 THEN RAISE EXCEPTION 'CI_CANCEL_ALL_CROSSED_OWNER'; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_reminders
+    WHERE owner_id=98760001 AND state='sent';
+  IF n<>1 THEN RAISE EXCEPTION 'CI_CANCEL_ALL_MODIFIED_ALREADY_SENT'; END IF;
   RAISE NOTICE 'VETOGRAM Reminders: metadata-only one-shot claim PASS';
   RAISE NOTICE 'VETOGRAM AI smoke passed: grants, audit, pause, quotas, memory CAS';
 END $$;
