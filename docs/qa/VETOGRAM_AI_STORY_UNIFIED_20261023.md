@@ -356,3 +356,13 @@ migration, scheduled task or Telegram message has been executed.**
   draft PR, finish modules, validate all parent dependencies, then perform one
   separately approved controlled deployment/migration/release. No partial
   publishing or intermediate main merge.
+
+
+## Continued development — VETO Second Brain / evidence-backed commitments
+
+- Added an eighth AI mode, `brief`, to the existing VETOGRAM AI screen. The owner may paste up to 3000 characters of permitted chat text or explicitly use **◈** in an open owner-linked Telegram thread to copy the latest visible incoming message into a **local draft** only. The chat entrypoint has separate user confirmation; the AI-provider request still requires separate `vtaiConsent` and deliberate submit. No automatic ingestion or background watch.
+- Backend only accepts typed JSON with short summary and **up to five** candidate tasks (`task`, `followup`, `meeting`, `payment`). Each card must include a literal `sourceQuote` from the user-provided text. Any `deadlineText` must also appear verbatim in that source or the response is rejected; omitted dates are represented as `null`. This is model-generated candidate extraction, **not guaranteed factual verification**.
+- Frontend renders source-linked cards with the quoted original text, explicit/unverified labels and plain-text DOM rendering. The owner can copy a candidate or explicitly confirm saving it as a **session-only** AI Memory note (subject to the existing eight-note cap). Cloud saving remains a separate user action. No scheduled reminders, Calendar access, negotiations, payments or outgoing Telegram messages occur.
+- Added `tests/vetogram-ai-brief.test.js`: source-based quote/deadline enforcement, missing/evidence-free data, zero items, quota, local prefill and no autonomous model calls. Existing AI modes expectation updated to eight; conservative per-user and global usage estimator includes `brief`. Existing `/api/vetogram-ai` verifies each extracted quote against the already normalized, explicitly provided owner text.
+- Targeted in-memory evaluation confirmed mode registration, accepted literal evidence, rejected fabricated deadline/quote, unsafe kind and fabricated certainty, and all 67 referenced AI DOM IDs. Syntax checks of changed source modules passed. **Full npm test suite, provider responses, disposable PostgreSQL, mobile Telegram WebView and Vercel Preview are not verified.**
+- These changes stay in the draft PR #181. Per the owner's release decision, **do not merge, deploy, apply production migrations or change live env** until all VETOGRAM NEXT modules and prerequisite QA are complete; release in one controlled batch.
