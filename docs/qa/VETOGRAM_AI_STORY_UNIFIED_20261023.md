@@ -95,3 +95,52 @@ Build a per-owner durable AI usage ledger with daily limits and user-visible all
 - **Validation limitation:** source inspection and local JS parser/model checks only. The complete npm test suite, provider/API requests, Neon transaction integration, Android/iOS WebView and deployment have **not** been run on the actual repo runtime. Main/production, Telegram permissions, Neon database and published Stories remain unchanged.
 
 Next: real owner-separated mobile QA; per-chat consent and granular, revocable agent scopes; encrypted durable action/audit ledger before Autopilot. The parent PR #179/#180 gates still apply.
+
+
+## Negotiator Lab + stricter accounting (23 October, later continuation)
+
+### Implemented in the same Mini App / PR #181
+- New **Negotiator Lab** within VETO AI. This is a single-request,
+  human-reviewed **drafting simulator**, NOT an active negotiation agent.
+  Nothing can read chats, watch users, send automatically, commit to a sale,
+  transfer money or accept a contract in the background.
+- User selects **one already accessible chat**, currency
+  (USD/EUR/AMD/RUB/GEL/GBP), asking price, hard minimum price,
+  maximum discount 0–30%, permission duration 5–120 minutes and negotiation
+  goal. They supply the customer text explicitly and approve transmission
+  before calling AI.
+- `public/vetogram-negotiator-core.js` creates a session-only frozen policy
+  bound to owner and recipient. Effective minimum is the greater of the
+  stated floor and the asking price minus allowed discount. Responses are
+  strict JSON drafts. The local review gate rejects wrong owner, wrong chat,
+  expired policy, invalid action/currency, prices outside bounds, and a
+  mismatch between AI's numeric quote and the price visibly written in its
+  reply. Ambiguous money formats block instead of being guessed.
+- The model never receives the Telegram chat ID; the ID stays local for
+  recipient validation. The only provider input is the user-supplied
+  scenario, non-secret numeric limits and any separately consented notes.
+- Allowed drafts still require an **explicit, separate human confirmation**
+  through the pre-existing `/api/telegram-send` backend. The AI endpoint
+  has no Telegram sending capability and grants no server-side autonomous
+  privileges. Editing/reviewing an Approval Center draft is a separate
+  human action; do not advertise this as an agent that enforces monetary
+  restrictions after arbitrary manual rewrites.
+- Negotiation requests longer than 3,000 characters **including constraints**
+  are rejected rather than silently trimmed before transmission.
+- AI daily usage accounting now includes the exact provider-facing prompt
+  (including user-selected notes); still a conservative usage-unit budget,
+  not verified token spend or actual USD billing.
+- New `tests/vetogram-negotiator.test.js` covers owner/dialog binding, TTL,
+  price range, discount bound, currencies, mismatched visible offers, strict
+  JSON validation and forbidden background actions. AI mode and budget
+  regression tests updated. JS syntax and deterministic function checks
+  were performed; full CI, WebView, Neon/provider integration still unverified.
+
+### Launch restrictions
+- Keep feature branch and parent PR #180 unreleased until #179 prerequisites
+  and other mobile/production checks complete.
+- No durable grant/permissions ledger, webhook automation or permanent
+  AI Memory has been shipped. For real AI Autopilot/Negotiator add
+  server-enforced grant scopes, revocation, stateful workers, anti-abuse
+  enforcement and privacy/legal review before touching live inbound chats.
+- Database migration for AI usage remains staged but **not applied**.
