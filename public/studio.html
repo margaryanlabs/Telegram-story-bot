@@ -1452,6 +1452,17 @@
               <button class="se-button primary" id="sePortalSave" type="button">Сохранить Portal</button>
               <button class="se-button" id="sePortalRemove" type="button">Отвязать</button>
               <button class="se-button" id="sePortalTry" type="button" disabled>↗ Попробовать Portal</button>
+              <button class="se-button" id="sePortalCreateLink" type="button" disabled>🔗 Создать ссылку</button>
+            </div>
+            <div id="sePortalShareResult" class="se-portal-share-result" hidden>
+              <label class="se-label">Публичная ссылка на Portal
+                <input id="sePortalPublicLink" type="text" class="se-input" readonly aria-label="Публичная ссылка Portal" />
+              </label>
+              <div class="se-controls-row">
+                <button type="button" class="se-button primary" id="sePortalCopyLink">Копировать ссылку</button>
+                <button type="button" class="se-button" id="sePortalOpenLink">Открыть</button>
+              </div>
+              <p class="se-inline-warning">Публикуется только текст и действия Portal, без фотографий, сообщений или данных Telegram. Любой получатель ссылки может прочитать и изменить содержимое. Отозвать ссылку пока нельзя. Ссылка начнёт открываться после выпуска этой версии сайта.</p>
             </div>
             <div class="se-portal-preview" id="sePortalPreview" aria-label="Предпросмотр Portal"></div>
             <div class="se-inline-warning">CTA на изображении — визуальный элемент, не кликабельная ссылка Telegram. Публикация публичного Portal и сбор ответов потребуют отдельного защищённого backend.</div>
