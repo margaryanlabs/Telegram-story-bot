@@ -69,3 +69,22 @@ test('notes must be validated on server and passed as untrusted user context',()
   assert.match(core,/\.map\(x=>clip\(x,510\)\)/);
   assert.doesNotMatch(server,/getViewerSession|withBackupClient|client\.getDialogs|sendOwnerMessage/);
 });
+
+test('inline chat AI reply requires a local owner-confirmed copy, not autonomous provider access',()=>{
+  const src=read('public/telegram-chats.js'),ui=read('public/vetogram-ai.js'),html=read('public/studio.html');
+  const start=src.indexOf("$('telegramThreadReplyAI')?.addEventListener");
+  const end=src.indexOf("$('telegramThreadSearchToggle')?.addEventListener",start);
+  assert.ok(start>=0&&end>start);
+  const action=src.slice(start,end);
+  assert.match(action,/resetOwner\(\)/);
+  assert.match(action,/canSendInThread\(state.thread\)/);
+  assert.match(action,/!m\?\.out&&!m\?\.deleted/);
+  assert.match(action,/window\.confirm\(/);
+  assert.match(action,/vetogram:ai-prefill/);
+  assert.doesNotMatch(action,/fetch\(|telegram-send|vetogram-ai'/);
+  assert.match(ui,/vetogram:ai-prefill/);
+  assert.match(ui,/detail\.ownerId!==owner\(\)/);
+  assert.match(ui,/detail\.signed!==signed\(\)/);
+  assert.match(ui,/vtaiConsent'\)\.checked=false/);
+  assert.ok(html.includes('id="telegramThreadReplyAI"'));
+});
