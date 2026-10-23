@@ -86,6 +86,9 @@ export function dialogInfo(d){
     id:safeId(d?.id),title:title(d),type,username:username||null,
     peerId:peerId||null,
     preview:preview(d?.message),date:dateString(d?.message),
+    // Missing direction is unknown, not an incoming message.
+    lastMessageOut:typeof d?.message?.out==='boolean'?d.message.out:null,
+    previewFromArchive:false,
     unreadCount:Math.max(0,Math.min(99999,Number(d?.unreadCount||0))),
     pinned:Boolean(d?.pinned),archived:Boolean(d?.archived||d?.folderId===1),
     muted:Boolean(d?.dialog?.notifySettings?.muteUntil),
@@ -127,7 +130,8 @@ export function archivedDialog(row){
   return {
     id:safeId(row?.chatId),title,type:'copy',username:null,peerId:null,
     preview:clean(row?.preview||row?.deletedPreview||'Есть сохранённая переписка',180),
-    date:row?.lastAt||null,unreadCount:0,pinned:false,muted:false,
+    date:row?.lastAt||null,lastMessageOut:null,previewFromArchive:true,
+    unreadCount:0,pinned:false,muted:false,
     verified:false,nativeUrl:null,
     archiveOnly:true,savedCopy:true,archived:true,
     savedCount:Math.max(0,Number(row?.messageCount||0)),
@@ -146,6 +150,8 @@ export function decorateRemote(remote,archiveRows){
     return {...chat,savedCopy:true,
       date:preservedIsNewer?row.lastAt:chat.date,
       preview:preservedIsNewer?clean(row.preview||row.deletedPreview||chat.preview,180):chat.preview,
+      previewFromArchive:preservedIsNewer,
+      lastMessageOut:preservedIsNewer?null:chat.lastMessageOut,
       savedCount:Math.max(0,Number(row.messageCount||0)),
       deletedCount:Math.max(0,Number(row.deletedCount||0)),
       lastDeletedAt:row.lastDeletedAt||null,
