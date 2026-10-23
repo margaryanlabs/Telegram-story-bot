@@ -173,3 +173,20 @@ Next: real owner-separated mobile QA; per-chat consent and granular, revocable a
 Current source-level validation: JS modules and newly introduced tests parse, bounded note/UUID and owner/grant policy checks pass. Production, live DB, provider account, BotFather and Telegram user sessions remain unchanged.
 
 Next independent milestone: server-side request audit entries and *explicit* per-chat opt-in for any AI ingestion. No 24/7 autonomous negotiator or durable workflow worker is part of this PR.
+
+## Agent Control metadata audit + emergency stop (continued 23 October)
+- In the same draft PR, added **`migrations/vetogram-ai-agent-control-20261023.sql`**. Must be applied **after** `vetogram-ai-draft-grants-20261023.sql` and only after human authorization. It creates an owner-scoped drafting-control table, a metadata-only event journal and PostgreSQL triggers for grant issuance/revocation.
+- `vetogram_ai_set_drafting_pause(owner,boolean)` is transaction-scoped. Pause flips the owner control flag, revokes any current drafting grant, and journals the change within a single PostgreSQL transaction. A BEFORE grant trigger checks the control row with `FOR UPDATE`, blocking newly issued grants while paused. A new issuance after resume still requires separate signed owner consent. The control is for *drafting only*: it does not disable ordinary user-confirmed Telegram sending.
+- `/api/vetogram-ai-agent`: signed Telegram Mini App authorization on every request. `status` and `history` are read-only; `pause`/`resume` require explicit change consent. The audit query is limited to the latest 30 rows for the authenticated owner.
+- Journal stores only event type, timestamp, owner ID, grant UUID and chat ID. No message content, prompts, generated AI replies, keys or Telegram sessions are stored. Retention/deletion policy must be approved before launch. Draft actions themselves are not logged in this phase.
+- Mini App **Agent Control** UI has explicit pause/resume, status refresh and history; entries are rendered with `textContent` to avoid interpreting metadata as HTML.
+- Added `tests/vetogram-ai-agent-control.test.js` covering event projection, no plaintext messages, owner's pause and revocation boundaries, code integration and request auth.
+- Completed JavaScript parser inspection of the changed modules, 56 client DOM IDs checked, and basic deterministic event projection tests. Full Node test suite, SQL migration, concurrent pause/issue tests and real Telegram/Vercel Preview remain unverified.
+- Vercel has a build-rate-limit blocker. This PR remains **draft**, and the production site and Neon DB were not modified.
+
+### Release order and critical operations
+1. Validate parent PRs #179 and #180, verify Neon v5 and current encryption keys.
+2. Test all three AI migrations plus this fourth Agent Control migration on disposable Postgres, including concurrent issue/revoke/pause edge cases.
+3. Review DB function permissions and logging retention; test signed-owner denial with separate Telegram accounts.
+4. Establish provider billing caps and safe environment key rotation.
+5. Execute full checks, build, mobile Telegram E2E and explicit owner approval before any merge or deployment.
