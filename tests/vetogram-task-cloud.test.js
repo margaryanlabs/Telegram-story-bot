@@ -52,8 +52,8 @@ test('Signed Telegram owner is mandatory and writes require explicit task consen
   assert.match(api,/VETOGRAM_TASKS_CLOUD_ENABLED/);
   assert.match(api,/private, no-store/);
   assert.match(route,/"vetogram-tasks"/);
-  assert.match(store,/ON CONFLICT\(owner_id\) DO NOTHING/);
-  assert.match(store,/AND revision=\$3::integer/);
+  assert.match(store,/public\.vetogram_task_cloud_write/);
+  assert.match(store,/\[id,rev,encrypted,false\]/);
   assert.match(store,/TASK_CLOUD_VERSION_CONFLICT/);
   assert.doesNotMatch(api,/sendOwnerMessage|withBackupClient|telegram-send/);
 });
@@ -63,8 +63,9 @@ test('Deleted task ciphertext leaves version tombstone instead of exposing old t
   assert.match(sql,/encrypted_snapshot text/);
   assert.match(sql,/revision integer/);
   assert.match(sql,/REVOKE ALL ON TABLE public\.vetogram_task_cloud FROM PUBLIC/);
-  assert.match(store,/encrypted_snapshot=NULL,revision=revision\+1/);
-  assert.match(store,/AND revision=\$2::integer AND encrypted_snapshot IS NOT NULL/);
+  assert.match(store,/\[id,rev,null,true\]/);
+  assert.match(read('migrations/vetogram-reminders-20261024.sql'),/encrypted_snapshot=NULL/);
+  assert.match(read('migrations/vetogram-reminders-20261024.sql'),/AND encrypted_snapshot IS NOT NULL/);
   assert.match(store,/row\.encrypted_snapshot===null\?\[\]/);
   assert.doesNotMatch(sql,/CREATE TABLE[^;]*(?:task_title|message_text|telegram_session)/i);
 });
@@ -80,4 +81,24 @@ test('Task cloud frontend never syncs automatically or sends any Telegram messag
   assert.match(js,/x-vetogram-tasks-consent/);
   assert.match(js,/state\.taskCloudRevision=null;state\.taskCloudBusy=false/);
   assert.doesNotMatch(js,/setInterval|localStorage|sessionStorage/);
+});
+
+test('Task Cloud writes and reminder scheduling share a safe per-owner lock',()=>{
+  const migration=read('migrations/vetogram-reminders-20261024.sql');
+  const store=read('lib/vetogram-task-cloud-store.js');
+  const api=read('api/vetogram-tasks.js');
+  const fn=migration.slice(migration.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_task_cloud_write'),
+    migration.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_schedule_reminder'));
+  const schedule=migration.slice(migration.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_schedule_reminder'));
+  const lock="pg_advisory_xact_lock(hashtext('veto-reminders:'||p_owner::text)::bigint)";
+  assert.ok(fn.includes(lock));
+  assert.ok(schedule.includes(lock));
+  assert.match(fn,/VETO_TASK_PENDING_REMINDERS/);
+  assert.match(fn,/state='pending'/);
+  assert.match(fn,/VETO_TASK_REVISION_CONFLICT/);
+  assert.match(fn,/revision=p_revision/);
+  assert.match(store,/vetogram_task_cloud_write/);
+  assert.match(api,/VETO_TASK_PENDING_REMINDERS/);
+  assert.match(api,/return respond\(res,409/);
+  assert.doesNotMatch(migration,/CREATE TABLE[^;]*?(?:task_title|source_quote|message_text)/i);
 });
