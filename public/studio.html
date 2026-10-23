@@ -1491,6 +1491,17 @@
           <p class="vtai-note">Фразы «завтра» и «в пятницу» остаются только цитатой из источника. Конкретную дату выбираешь ты: VETOGRAM не придумывает её и не включает напоминания.</p>
         </section>
 
+        <section class="vtai-panel" id="vtaiRemindersPanel" aria-label="VETO Reminders">
+          <div class="vtai-row vtai-heading-row">
+            <h2>VETO Reminders <span id="vtaiReminderCount" class="vtai-count">0</span></h2>
+            <button type="button" class="vtai-action" id="vtaiReminderRefresh">Обновить</button>
+          </div>
+          <p class="vtai-note">Одноразовые Telegram-уведомления только тебе, по точному сроку задачи. Сначала вручную сохрани задачу в зашифрованном облаке и начни диалог с ботом VETOGRAM. Отдельно подтверди каждый запуск.</p>
+          <p id="vtaiReminderStatus" class="vtai-note" role="status" aria-live="polite">Напоминания отключены до общего релиза. Никакие сообщения не отправляются сейчас.</p>
+          <div id="vtaiReminderList" class="vtai-workspace-list" aria-live="polite"></div>
+          <p class="vtai-note">Тело напоминания не содержит твоих задач или переписок. Возможны задержки проверки и недоставка. Сетевые попытки не повторяются автоматически, чтобы не прислать дубль. Созданные напоминания можно отменить до начала отправки.</p>
+        </section>
+
         <section class="vtai-panel" id="vtaiFocusPanel" aria-label="Smart Inbox и Follow-up Focus">
           <div class="vtai-row vtai-heading-row">
             <h2>Follow-up Focus <span id="vtaiFocusCount" class="vtai-count">0</span></h2>
