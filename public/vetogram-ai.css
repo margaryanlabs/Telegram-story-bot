@@ -63,3 +63,15 @@ textarea.vtai-input{min-height:110px;resize:vertical}
 #vtaiFocusMore[hidden],#vtaiFocusRestore[hidden]{display:none!important}
 #vtaiFocusList .vtai-workspace-item{overflow-wrap:anywhere}
 #vtaiFocusStatus{padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.04)}
+
+/* VETO Task Center: compact manually scheduled dates, never automatic alerts. */
+.vtai-task-date-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.vtai-task-date-row .vtai-label{min-width:178px;flex:1}
+.vtai-task-date-row .vtai-input{min-height:42px}
+.vtai-task-date-row .vtai-action{min-height:42px}
+#vtaiTasksPanel [aria-pressed="true"]{border-color:rgba(244,106,128,.6);background:rgba(204,67,88,.22)}
+#vtaiTasksList .vtai-workspace-item{overflow-wrap:anywhere}
+@media(max-width:570px){
+  .vtai-task-date-row .vtai-label{flex-basis:100%}
+  .vtai-task-date-row .vtai-action{flex:1}
+}
