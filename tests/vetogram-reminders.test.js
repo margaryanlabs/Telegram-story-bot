@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {validateReminderInput,reminderBelongsToActiveTask}
+import {validateReminderInput,reminderBelongsToActiveTask,reminderSchedulingConfigured}
   from '../lib/vetogram-reminder-core.js';
 const source=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const taskId='12345678-1234-4123-8123-123456789012';
@@ -60,7 +60,7 @@ test('queue is metadata-only, at-most-once claim, and no insecure cron paths',()
   assert.match(store,/AND attempt_id=\$3::uuid AND state='claimed'/);
   assert.doesNotMatch(migration,/CREATE TABLE[^;]*(?:message_text|source_quote|task_title|prompt_text)/i);
   assert.match(worker,/neonCronAuthorized/);
-  assert.match(worker,/VETOGRAM_REMINDERS_WORKER_ENABLED!=='true'/);
+  assert.match(worker,/reminderSchedulingConfigured/);
   assert.match(worker,/loadTaskCloud\(owner\)/);
   assert.match(worker,/reminderBelongsToActiveTask/);
   assert.match(worker,/generic self-notification/);
@@ -129,4 +129,26 @@ test('worker deadline grace and one-hour lateness limits are independently enfor
   assert.match(ui,/Сначала отмени его в VETO Reminders/);
   assert.ok((ui.match(/taskReminderEditAllowed\(task\.id\)/g)||[]).length>=4);
   assert.ok((ui.match(/renderReminders\(\);renderTasks\(\)/g)||[]).length>=2);
+});
+
+test('no new reminders until operator configures worker AND scheduler',()=>{
+  const on={VETOGRAM_REMINDERS_ENABLED:'true',
+    VETOGRAM_REMINDERS_WORKER_ENABLED:'true',
+    VETOGRAM_REMINDERS_SCHEDULER_READY:'true'};
+  assert.equal(reminderSchedulingConfigured(on),true);
+  for(const flag of Object.keys(on)){
+    assert.equal(reminderSchedulingConfigured({...on,[flag]:'false'}),false,flag);
+    assert.equal(reminderSchedulingConfigured({...on,[flag]:undefined}),false,flag);
+  }
+  const api=source('api/vetogram-reminders.js');
+  const worker=source('api/vetogram-reminder-worker.js');
+  const ui=source('public/vetogram-ai.js');
+  assert.match(api,/schedulingConfigured:reminderSchedulingConfigured\(\)/);
+  assert.match(api,/if\(!reminderSchedulingConfigured\(\)\)return respond\(res,503/);
+  assert.match(api,/cancelOwnerReminder\(owner.id,body.taskId\)/);
+  assert.match(api,/cancelAllOwnerPendingReminders\(owner.id\)/);
+  assert.match(worker,/if\(!reminderSchedulingConfigured\(\)\)/);
+  assert.match(ui,/state.reminderSchedulingConfigured=result.schedulingConfigured===true/);
+  assert.match(ui,/state.reminderSchedulingConfigured!==true/);
+  assert.match(ui,/Просмотр и отмена остаются доступны/);
 });
