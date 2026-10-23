@@ -9,7 +9,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open'};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -28,7 +28,9 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;state.focusHidden.clear();
-    state.tasks=[];state.taskFilter='open';renderTasks();
+    state.tasks=[];state.taskFilter='open';state.taskCloudRevision=null;state.taskCloudBusy=false;
+    $('vtaiTasksCloudStatus').textContent='Облачные задачи этого аккаунта не загружены. Ничего не синхронизируется автоматически.';
+    renderTasks();
     $('vtaiFocusList').replaceChildren();$('vtaiFocusCount').textContent='0';
     $('vtaiFocusMore').hidden=true;$('vtaiFocusRestore').hidden=true;
     $('vtaiFocusStatus').textContent='Проверь мои чаты. Данные прошлого аккаунта очищены.';
@@ -137,6 +139,79 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     $('vtaiSend').disabled=!canSendDraft();
     notice('Чат выбран вручную. Отправка не выполнена.');
   }
+  function taskCloudStatus(message,error=false){
+    $('vtaiTasksCloudStatus').textContent=message;
+    if(error)notice(message,true);
+  }
+  async function loadTasksCloud(){
+    if(state.taskCloudBusy||state.busy||!safeIdentity())return;
+    if(state.tasks.length&&!window.confirm(
+      'Заменить задачи в текущем окне облачной версией? Несохранённые местные изменения будут потеряны.'))return;
+    if(!safeIdentity())return;
+    state.taskCloudBusy=true;
+    $('vtaiTasksCloudLoad').disabled=true;
+    try{
+      const result=await request('/api/vetogram-tasks',{action:'load'});
+      if(!safeIdentity())return;
+      const fromCloud=(Array.isArray(result.tasks)?result.tasks:[])
+        .map(task=>({...task,owner:owner()}));
+      if(!Number.isSafeInteger(result.revision)||result.revision<0)
+        throw Error('Сервер вернул неверную версию данных.');
+      if(ownerTasks(fromCloud,owner()).length!==fromCloud.length)
+        throw Error('Серверная копия не прошла проверку. Ничего не заменено.');
+      state.tasks=fromCloud;state.taskCloudRevision=result.revision;
+      state.taskFilter='open';renderTasks();
+      taskCloudStatus('Облачные задачи загружены. Версия '+result.revision+
+        '. Дальнейшие правки требуют ручного сохранения.');
+    }catch(error){taskCloudStatus('Облачные задачи не загружены: '+error.message,true);}
+    finally{state.taskCloudBusy=false;$('vtaiTasksCloudLoad').disabled=false;}
+  }
+  async function saveTasksCloud(){
+    if(state.taskCloudBusy||state.busy||!safeIdentity())return;
+    if(!Number.isSafeInteger(state.taskCloudRevision)||state.taskCloudRevision<0)
+      return taskCloudStatus('Сначала загрузи облачную версию, чтобы не перезаписать чужие изменения.',true);
+    if(!window.confirm('Зашифровать и вручную сохранить '+state.tasks.length+
+      ' задач на сервере VETOGRAM? Это серверное шифрование, НЕ E2EE.'))return;
+    if(!safeIdentity())return;
+    state.taskCloudBusy=true;
+    $('vtaiTasksCloudSave').disabled=true;$('vtaiTasksCloudErase').disabled=true;
+    try{
+      const tasks=ownerTasks(state.tasks,owner()).map(({owner:unused,...data})=>data);
+      const result=await request('/api/vetogram-tasks',{
+        action:'save',revision:state.taskCloudRevision,tasks
+      },'tasks');
+      if(!safeIdentity())return;
+      if(!Number.isSafeInteger(result.revision))throw Error('Сохранение не подтверждено сервером');
+      state.taskCloudRevision=result.revision;
+      taskCloudStatus('Сервер подтвердил зашифрованную копию задач. Версия '+result.revision+
+        '. Изменения после этого нужно сохранять вручную.');
+    }catch(error){taskCloudStatus('Облачное сохранение не выполнено: '+error.message,true);}
+    finally{state.taskCloudBusy=false;$('vtaiTasksCloudSave').disabled=false;
+      $('vtaiTasksCloudErase').disabled=false;}
+  }
+  async function eraseTasksCloud(){
+    if(state.taskCloudBusy||state.busy||!safeIdentity())return;
+    if(!Number.isSafeInteger(state.taskCloudRevision)||state.taskCloudRevision<1)
+      return taskCloudStatus('Загрузи существующую облачную копию для удаления.',true);
+    if(!window.confirm('Удалить серверный зашифрованный снимок задач? Останется только техническая версия записи. Локальные задачи в окне останутся. Резервные копии могут сохраняться согласно политике хостинга.'))return;
+    if(!safeIdentity())return;
+    state.taskCloudBusy=true;
+    $('vtaiTasksCloudErase').disabled=true;$('vtaiTasksCloudSave').disabled=true;
+    try{
+      const result=await request('/api/vetogram-tasks',{
+        action:'erase',revision:state.taskCloudRevision
+      },'tasks');
+      if(result.deleted!==true||!Number.isSafeInteger(result.revision))
+        throw Error('Удаление не подтверждено сервером');
+      if(!safeIdentity())return;
+      state.taskCloudRevision=result.revision;
+      taskCloudStatus('Зашифрованное содержимое удалено из активной таблицы. Версия '+
+        result.revision+'. Локальные задачи сохранены в окне.');
+    }catch(error){taskCloudStatus('Не удалось подтвердить удаление: '+error.message,true);}
+    finally{state.taskCloudBusy=false;$('vtaiTasksCloudErase').disabled=false;
+      $('vtaiTasksCloudSave').disabled=false;}
+  }
+
   function renderTasks(){
     const list=$('vtaiTasksList');list.replaceChildren();
     const summary=taskOverview(state.tasks,owner());
@@ -333,7 +408,8 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
           ...(consent===true?{'x-vetogram-ai-consent':'yes'}:{}),
           ...(consent==='memory'?{'x-vetogram-memory-consent':'yes'}:{}),
           ...(consent==='grant'?{'x-vetogram-grant-consent':'yes'}:{}),
-          ...(consent==='agent'?{'x-vetogram-agent-consent':'yes'}:{})},
+          ...(consent==='agent'?{'x-vetogram-agent-consent':'yes'}:{}),
+          ...(consent==='tasks'?{'x-vetogram-tasks-consent':'yes'}:{})},
         body:JSON.stringify(body),signal:abort.signal});
       const json=await result.json().catch(()=>({}));
       if(signed()!==requestOwner||!owner()){reset();throw Error('Аккаунт изменился. Действие отменено.');}
@@ -933,6 +1009,9 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
         ()=>notice('Не удалось скопировать.',true));
     else notice('Буфер обмена недоступен.',true);
   });
+  $('vtaiTasksCloudLoad').addEventListener('click',()=>void loadTasksCloud());
+  $('vtaiTasksCloudSave').addEventListener('click',()=>void saveTasksCloud());
+  $('vtaiTasksCloudErase').addEventListener('click',()=>void eraseTasksCloud());
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiFocusRefresh').addEventListener('click',()=>void loadChats());
