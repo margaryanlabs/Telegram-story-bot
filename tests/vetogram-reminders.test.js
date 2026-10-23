@@ -113,3 +113,20 @@ test('reminder worker ignores missed/late deadlines instead of unexpected catch-
   assert.match(sql,/r\.remind_at>=now\(\)-interval '1 hour'/);
   assert.match(store,/remind_at<now\(\)-interval '1 hour'/);
 });
+
+test('worker deadline grace and one-hour lateness limits are independently enforced',()=>{
+  const start=Date.parse('2026-10-24T12:00:00.000Z');
+  const at=m=>new Date(start+m*60000).toISOString();
+  const early={taskId,remindAt:at(30),dueAt:at(90)};
+  const lateDue={taskId,remindAt:at(90),dueAt:at(90)};
+  const active=reminder=>({id:taskId,status:'open',dueAt:reminder.dueAt});
+  assert.equal(reminderBelongsToActiveTask(active(early),early,start+31*60000),true);
+  assert.equal(reminderBelongsToActiveTask(active(early),early,start+91*60000),false);
+  assert.equal(reminderBelongsToActiveTask(active(lateDue),lateDue,start+100*60000),true);
+  assert.equal(reminderBelongsToActiveTask(active(lateDue),lateDue,start+101*60000),false);
+  const ui=source('public/vetogram-ai.js');
+  assert.match(ui,/function taskReminderEditAllowed\(taskId\)/);
+  assert.match(ui,/Сначала отмени его в VETO Reminders/);
+  assert.ok((ui.match(/taskReminderEditAllowed\(task\.id\)/g)||[]).length>=4);
+  assert.ok((ui.match(/renderReminders\(\);renderTasks\(\)/g)||[]).length>=2);
+});
