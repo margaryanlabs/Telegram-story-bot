@@ -4,7 +4,7 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -22,7 +22,7 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
   }
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
-    state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;
+    state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
     $('vtaiIncludeMemory').checked=false;$('vtaiMemoryLabel').value='';$('vtaiMemoryContent').value='';
     renderApprovals();renderMemory();
     $('vtaiConsent').checked=false;$('vtaiReplacePortal').checked=false;$('vtaiPortalReview').hidden=true;
@@ -132,6 +132,8 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
       state.dialogs=chats;
       const picker=$('vtaiRecipients');picker.replaceChildren(new Option('Выбрать получателя',''));
       for(const c of chats)picker.append(new Option(String(c.title||'Чат').slice(0,90),String(c.id)));
+      if(state.suggestedChatId&&chats.some(c=>String(c.id)===state.suggestedChatId))
+        picker.value=state.suggestedChatId;
       notice(chats.length?'Чаты загружены. AI не получил их содержимое.':'Доступных чатов для отправки нет.',!chats.length);
     }catch(error){notice(error.message,true)}
     finally{setBusy(false);$('vtaiSend').disabled=!state.last||!state.dialogs.length||state.mode==='story';}
@@ -325,6 +327,22 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
   $('vtaiApplyStory').addEventListener('click',()=>void applyStory());
   document.querySelectorAll('[data-vtai-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.vtaiMode)));
   document.querySelectorAll('[data-open-screen="ai"][data-ai-mode="story"]').forEach(b=>b.addEventListener('click',()=>setMode('story')));
+  // One-tap reply from the currently open Telegram thread. Local copy only.
+  // Require fresh consent before passing someone else's content to any AI model.
+  window.addEventListener('vetogram:ai-prefill',event=>{
+    const detail=event?.detail||{};
+    if(!safeIdentity()||detail.ownerId!==owner()||detail.signed!==signed())return;
+    if(!/^-?\d{1,22}$/.test(String(detail.chatId||'')))return;
+    setMode('reply');
+    const message=String(detail.text||'').slice(0,1500).trim();
+    if(!message)return;
+    const person=String(detail.chatTitle||'Telegram').slice(0,80);
+    $('vtaiText').value='Подготовь вежливый и конкретный ответ на сообщение из чата «'+person+'»:\n'+message;
+    $('vtaiConsent').checked=false;
+    $('vtaiIncludeMemory').checked=false;
+    state.suggestedChatId=String(detail.chatId);
+    notice('Сообщение вставлено только в черновик. Проверь текст и разрешения перед AI-запросом.');
+  });
   window.addEventListener('veto:screen-changed',e=>{
     if(e?.detail?.screen==='ai')safeIdentity();
     else if(state.busy===false)$('vtaiNotice').hidden=true;
