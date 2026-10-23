@@ -90,7 +90,8 @@ test('Grant SQL stores no private Telegram messages and revoke is owner guarded'
   assert.match(sql,/mode='approval-only'/);
   assert.match(sql,/revoked_at/);
   assert.match(store,/WHERE owner_id=\$1::bigint AND grant_id=\$2::uuid AND revoked_at IS NULL/);
-  assert.match(store,/ON CONFLICT\(owner_id\) DO UPDATE/);
+  assert.match(store,/SELECT public\.vetogram_ai_issue_draft_grant\(/);
+  assert.match(read('migrations/vetogram-ai-agent-control-20261023.sql'),/ON CONFLICT\(owner_id\) DO UPDATE/);
   assert.doesNotMatch(sql,/session_ciphertext|message_text|ai_prompt/);
 });
 test('Frontend exposes guarded cloud memory and negotiation revoke controls',()=>{
