@@ -23,13 +23,14 @@ test('explicit reminder requires task UUID, time window, and valid IANA time zon
 test('due-time task recheck prevents reminders after deletion, completion or edits',()=>{
   const reminder={taskId,remindAt:iso(1800000),dueAt:iso(3600000)};
   const task={id:taskId,status:'open',dueAt:reminder.dueAt};
-  assert.equal(reminderBelongsToActiveTask(task,reminder),true);
-  assert.equal(reminderBelongsToActiveTask(null,reminder),false);
-  assert.equal(reminderBelongsToActiveTask({...task,status:'done'},reminder),false);
-  assert.equal(reminderBelongsToActiveTask({...task,status:'deferred'},reminder),false);
-  assert.equal(reminderBelongsToActiveTask({...task,dueAt:iso(7200000)},reminder),false);
-  assert.equal(reminderBelongsToActiveTask(task,{...reminder,taskId:'other'}),false);
-  assert.equal(reminderBelongsToActiveTask(task,{...reminder,remindAt:iso(7200000)}),false);
+  const justDue=now+1800000;
+  assert.equal(reminderBelongsToActiveTask(task,reminder,justDue),true);
+  assert.equal(reminderBelongsToActiveTask(null,reminder,justDue),false);
+  assert.equal(reminderBelongsToActiveTask({...task,status:'done'},reminder,justDue),false);
+  assert.equal(reminderBelongsToActiveTask({...task,status:'deferred'},reminder,justDue),false);
+  assert.equal(reminderBelongsToActiveTask({...task,dueAt:iso(7200000)},reminder,justDue),false);
+  assert.equal(reminderBelongsToActiveTask(task,{...reminder,taskId:'other'},justDue),false);
+  assert.equal(reminderBelongsToActiveTask(task,{...reminder,remindAt:iso(7200000)},justDue),false);
 });
 test('owner API blocks unsigned access and requires separate scheduling consent',()=>{
   const api=source('api/vetogram-reminders.js');
@@ -98,4 +99,17 @@ test('cancel-all action is owner-scoped, consent-gated and atomic with worker cl
   assert.match(ui,/Есть ожидающее серверное напоминание/);
   assert.match(ui,/Изменения задачи требуют ручного облачного сохранения/);
 
+});
+
+test('reminder worker ignores missed/late deadlines instead of unexpected catch-up messages',()=>{
+  const reminder={taskId,remindAt:iso(30*60000),dueAt:iso(90*60000)};
+  const task={id:taskId,status:'open',dueAt:reminder.dueAt};
+  assert.equal(reminderBelongsToActiveTask(task,reminder,now+31*60000),true);
+  assert.equal(reminderBelongsToActiveTask(task,reminder,now+29*60000),false);
+  assert.equal(reminderBelongsToActiveTask(task,reminder,now+90*60000),true);
+  assert.equal(reminderBelongsToActiveTask(task,reminder,now+101*60000),false);
+  const sql=source('migrations/vetogram-reminders-20261024.sql');
+  const store=source('lib/vetogram-reminder-store.js');
+  assert.match(sql,/r\.remind_at>=now\(\)-interval '1 hour'/);
+  assert.match(store,/remind_at<now\(\)-interval '1 hour'/);
 });
