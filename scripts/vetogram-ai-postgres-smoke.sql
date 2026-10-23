@@ -60,6 +60,35 @@ BEGIN
     WHERE owner_id=98760001 AND revision=2;
   GET DIAGNOSTICS n=ROW_COUNT;
   IF n<>1 THEN RAISE EXCEPTION 'CI_MEMORY_DELETE_FAILED'; END IF;
+  -- Encrypted Task Center rows: owner isolation, CAS and version tombstone.
+  INSERT INTO public.vetogram_task_cloud(owner_id,encrypted_snapshot,revision)
+    VALUES(98760001,'task1.fake-ci-ciphertext',1);
+  UPDATE public.vetogram_task_cloud
+    SET encrypted_snapshot='task1.updated-ci-ciphertext',
+      revision=revision+1,updated_at=now()
+    WHERE owner_id=98760001 AND revision=1;
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>1 THEN RAISE EXCEPTION 'CI_TASK_VERSIONED_UPDATE_FAILED'; END IF;
+  UPDATE public.vetogram_task_cloud
+    SET encrypted_snapshot=NULL,revision=revision+1,updated_at=now()
+    WHERE owner_id=98760001 AND revision=1 AND encrypted_snapshot IS NOT NULL;
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>0 THEN RAISE EXCEPTION 'CI_TASK_STALE_WIPE_ALLOWED'; END IF;
+  UPDATE public.vetogram_task_cloud
+    SET encrypted_snapshot=NULL,revision=revision+1,updated_at=now()
+    WHERE owner_id=98760001 AND revision=2 AND encrypted_snapshot IS NOT NULL;
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>1 THEN RAISE EXCEPTION 'CI_TASK_TOMBSTONE_FAILED'; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_task_cloud
+    WHERE owner_id=98760001 AND revision=3 AND encrypted_snapshot IS NULL;
+  IF n<>1 THEN RAISE EXCEPTION 'CI_TASK_TOMBSTONE_MISSING'; END IF;
+  -- A stale client carrying the original revision cannot restore deleted tasks.
+  UPDATE public.vetogram_task_cloud
+    SET encrypted_snapshot='stale',revision=revision+1
+    WHERE owner_id=98760001 AND revision=1;
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>0 THEN RAISE EXCEPTION 'CI_TASK_STALE_RESTORE_ALLOWED'; END IF;
+  RAISE NOTICE 'VETOGRAM Task Cloud SQL CAS/tombstone smoke PASS';
   RAISE NOTICE 'VETOGRAM AI smoke passed: grants, audit, pause, quotas, memory CAS';
 END $$;
 ROLLBACK;
