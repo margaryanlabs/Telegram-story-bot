@@ -366,3 +366,38 @@ migration, scheduled task or Telegram message has been executed.**
 - Added `tests/vetogram-ai-brief.test.js`: source-based quote/deadline enforcement, missing/evidence-free data, zero items, quota, local prefill and no autonomous model calls. Existing AI modes expectation updated to eight; conservative per-user and global usage estimator includes `brief`. Existing `/api/vetogram-ai` verifies each extracted quote against the already normalized, explicitly provided owner text.
 - Targeted in-memory evaluation confirmed mode registration, accepted literal evidence, rejected fabricated deadline/quote, unsafe kind and fabricated certainty, and all 67 referenced AI DOM IDs. Syntax checks of changed source modules passed. **Full npm test suite, provider responses, disposable PostgreSQL, mobile Telegram WebView and Vercel Preview are not verified.**
 - These changes stay in the draft PR #181. Per the owner's release decision, **do not merge, deploy, apply production migrations or change live env** until all VETOGRAM NEXT modules and prerequisite QA are complete; release in one controlled batch.
+
+
+## Smart Inbox + Follow-up Focus — unified development, staged only
+
+- Extended **the existing** Smart Inbox scoring (question/action hints, Telegram unread
+  count) rather than inventing a parallel inbox or falsely claiming new unread
+  state. The **Follow-up Focus** panel resides in the existing VETO AI screen.
+- The owner explicitly loads dialog metadata through the existing owner-verified
+  `/api/telegram-chats` flow. The API now marks `lastMessageOut` as true/false
+  only when the last live message direction is known. It distinguishes
+  `previewFromArchive` if a newer preserved copy was substituted for the live
+  last-message preview.
+- Pure testable `public/vetogram-followup-core.js` ranks up to eight candidates
+  per view. It **rejects** unknown or outgoing direction, saved-only/archive
+  previews, non-sendable chats, channels, zero unread count, and previews
+  without existing server question/action signals. Labels are **possible**
+  questions or deadlines, not established obligations.
+- Each Focus card shows a short excerpt, an explainable reason and unread count
+  from Telegram. Actions: manually prefill AI Reply, manually prefill Second
+  Brain, or hide in the current WebView session. Both AI handoffs require a
+  local-copy confirmation and reset third-party AI text consent before any
+  provider call. A new Reply prefill invalidates the previous model answer and
+  send nonce; no earlier prepared text can be sent accidentally.
+- Hidden items and dialog metadata stay in session RAM, cleared on Telegram
+  owner switch, with no follow-up worker, notifications, Telegram read-status
+  changes, persistence or automatic messages. The UI can request additional
+  chat pages explicitly within the existing bounded 500-dialog limit.
+- Regression tests: `tests/vetogram-followup-focus.test.js`, including live
+  direction, archived-copy exclusion, score sorting, cap, DOM controls, and
+  explicit consent/reply reset. Syntax check added to `package.json`.
+- Performed 12 targeted syntax/source/behavior checks, all passed in this run;
+  **not** a full Node suite, live Telegram two-account E2E, mobile Preview,
+  Neon migration or AI-provider QA. No production or deployment changes.
+- Keep this in the same **draft PR #181** for the one coordinated VETOGRAM
+  release after dependent Story Engine/onboarding work and complete QA.
