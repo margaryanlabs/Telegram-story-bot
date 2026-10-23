@@ -30,3 +30,13 @@ export function actionDraftValid(action){
     typeof action.recipientQuery==='string'&&action.recipientQuery.trim()&&
     typeof action.message==='string'&&action.message.trim()&&action.message.length<=4096);
 }
+
+export function isExplicitActionCommand(value){
+  const text=String(value??'').trim();
+  if(/^\/(?:msg|message|написать)\s+\S[\s\S]{2,}$/iu.test(text))return true;
+  const match=text.match(/^(?:напиши|отправь|сообщи)\s+(?:сообщение\s+)?([^\s,:]{2,45})[,:]?\s+(?:что|чтобы)(?:\s|$)/iu);
+  if(!match)return false;
+  // Do not turn requests for AI-written content or help into chat sending.
+  return !new Set(['мне','текст','код','пост','рассказ','историю','эссе','ответ']).has(
+    match[1].toLocaleLowerCase());
+}
