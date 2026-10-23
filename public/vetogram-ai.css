@@ -53,3 +53,8 @@ textarea.vtai-input{min-height:110px;resize:vertical}
 
 /* Keep incremental dialog paging controls hidden until another verified page exists. */
 #vtaiMoreChats[hidden],#vtaiNegMoreChats[hidden]{display:none!important}
+
+/* Action suggestions are not contacts selected by the model. */
+#vtaiActionPanel[hidden],#vtaiActionMore[hidden]{display:none!important}
+#vtaiActionStatus{padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.045)}
+#vtaiActionMatches{width:100%;min-height:44px}
