@@ -75,3 +75,24 @@ test('Mini App uses existing chats, reviewed send and never enables agent backgr
   assert.match(ui,/vtaiNegRecipient'\)\.value/);
   assert.doesNotMatch(ui,/autonomousSend|autopilotEnabled|bulkSend/);
 });
+
+test('checks localized money words and suffix symbols in the actual proposed message',()=>{
+  const policy=p();
+  for(const [reply,amount] of [
+    ['Offer $475.00',475],['Offer 475$',475],['Offer 475 USD',475],
+    ['Offer USD 475',475],['Offer 475 dollars',475],['Могу предложить 475 долларов',475]
+  ]){
+    const result=assess(policy,proposal(reply,amount));
+    assert.equal(result.allowed,true,'valid visible price: '+reply);
+  }
+  for(const [reply,structuredAmount] of [
+    ['Могу предложить 450 долларов',475],['Могу предложить 450$',475],
+    ['I offer 450 USD',475],['I offer €475',475],
+    ['I offer 475 dollars or 450 dollars',475],
+    ['I can do 450',null],['I can agree to 475',475],
+    ['Total 1,200 USD',475],['450 US dollars',475]
+  ]){
+    const result=assess(policy,proposal(reply,structuredAmount));
+    assert.equal(result.allowed,false,'must reject ambiguous or dishonest terms: '+reply);
+  }
+});
