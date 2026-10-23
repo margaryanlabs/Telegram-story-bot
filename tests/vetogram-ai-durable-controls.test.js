@@ -78,7 +78,7 @@ test('Negotiator server checks permission twice and denies unauthorized model dr
   assert.match(code,/return reply\(res,403,\{error:'Нет действующего серверного разрешения/);
   assert.match(code,/return reply\(res,422,\{error:'AI предложил условия/);
   assert.ok(code.indexOf('getAiDraftGrant(owner.id,grantId)')<
-    code.indexOf('reserveAiBudget(owner.id,parsed,instruction')));
+    code.indexOf('reserveAiBudget(owner.id,parsed,instruction'));
   const grants=read('api/vetogram-ai-grants.js');
   assert.match(grants,/x-vetogram-grant-consent/);
   assert.match(grants,/VETOGRAM_AI_GRANTS_ENABLED/);
