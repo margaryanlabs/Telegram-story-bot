@@ -1,6 +1,8 @@
 import {validateTelegramMiniApp} from '../lib/telegram-miniapp-auth.js';
 import {normalizeAiInput,normalizeAiOutput,systemInstruction} from '../lib/vetogram-ai-core.js';
 import {reserveAiBudget,aiQuotaErrorKind} from '../lib/vetogram-ai-quota.js';
+import {getAiDraftGrant,trustedGrantPolicy} from '../lib/vetogram-ai-grants.js';
+import {verifyNegotiationProposal} from '../public/vetogram-negotiator-core.js';
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const reply=(res,status,body)=>res.status(status).json({ok:status<400,...body});
 function providerConfig(){
@@ -26,6 +28,20 @@ export default async function handler(req,res){
     if(JSON.stringify(body||{}).length>12500)throw Error('AI_INPUT_TOO_LARGE');
     parsed=normalizeAiInput(body);
   }catch(error){return reply(res,400,{error:String(error.message||'AI_INPUT_INVALID')})}
+  // Mandatory server check for Negotiator draft requests, not send privileges.
+  // A malicious browser cannot mint its own drafting grant by editing UI state.
+  let draftingGrant=null,draftingPolicy=null;
+  if(parsed.mode==='negotiator'){
+    try{
+      const grantId=String(body.grantId||''),chatId=String(body.chatId||'');
+      if(!/^[a-f0-9-]{36}$/i.test(grantId)||!(/^-?\d{1,22}$/).test(chatId))
+        throw Error('AI_GRANT_INVALID');
+      draftingGrant=await getAiDraftGrant(owner.id,grantId);
+      draftingPolicy=trustedGrantPolicy(owner.id,draftingGrant,chatId);
+    }catch{
+      return reply(res,403,{error:'Нет действующего серверного разрешения Negotiator для этого чата.'});
+    }
+  }
   // This endpoint never opens Telegram conversations or invokes a send action.
   // Only explicitly supplied text is passed to the model. No OTP, session or user ID.
   const instruction=systemInstruction(parsed.mode);
@@ -74,6 +90,15 @@ export default async function handler(req,res){
       output=result?.output_text|| (result?.output||[]).flatMap(item=>item.content||[]).map(item=>item.text||'').join('');
     }
     const answer=normalizeAiOutput(parsed.mode,output);
+    if(parsed.mode==='negotiator'){
+      // Verify the grant still exists after the external model completed, and
+      // enforce price constraints on SERVER, not only inside a user WebView.
+      const current=await getAiDraftGrant(owner.id,draftingGrant.grantId);
+      const livePolicy=trustedGrantPolicy(owner.id,current,draftingPolicy.chatId);
+      const verdict=verifyNegotiationProposal(livePolicy,answer.negotiation,
+        {owner:String(owner.id),chatId:livePolicy.chatId});
+      if(!verdict.allowed)return reply(res,422,{error:'AI предложил условия за пределами разрешения. Черновик отклонён.'});
+    }
     return reply(res,200,{...answer,mode:parsed.mode,provider:provider.provider,
       sent:false,published:false,requiresOwnerApproval:true,
       quota:{utcDay:quota.utcDay,remainingRequests:quota.ownerRemainingRequests}});
