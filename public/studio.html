@@ -1360,6 +1360,7 @@
           <button type="button" data-vtai-mode="chat" aria-pressed="true" class="active">✧ AI-чат</button>
           <button type="button" data-vtai-mode="translate" aria-pressed="false">⇄ Перевод</button>
           <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI Reply</button>
+          <button type="button" data-vtai-mode="action" aria-pressed="false">⌁ AI Action</button>
           <button type="button" data-vtai-mode="story" aria-pressed="false">▣ Story Director</button>
           <button type="button" data-vtai-mode="campaign" aria-pressed="false">✦ Story-to-Sale</button>
           <button type="button" data-vtai-mode="negotiator" aria-pressed="false">◇ Negotiator Lab</button>
@@ -1375,6 +1376,19 @@
               <option value="грузинский">Грузинский</option>
             </select>
           </label>
+          <section id="vtaiActionPanel" class="vtai-neg-panel" hidden aria-label="AI Action, подготовка сообщения">
+            <h2>AI Action · управляй словами</h2>
+            <p class="vtai-note">Например: «Напиши Артуру, что завтра в 15:00 созвонимся». AI подготовит текст, но получателя ты выберешь сам. Никаких автоматических отправок.</p>
+            <div id="vtaiActionStatus" class="vtai-note" aria-live="polite">Опиши, кому и что нужно написать.</div>
+            <div class="vtai-row">
+              <button type="button" class="vtai-action" id="vtaiActionFind">Найти получателя в моих чатах</button>
+            </div>
+            <label class="vtai-label">Предложенные совпадения (не выбранные автоматически)
+              <select id="vtaiActionMatches" class="vtai-input" aria-label="Выбери нужный чат"><option value="">Сначала подготовь сообщение</option></select>
+            </label>
+            <button type="button" class="vtai-action" id="vtaiActionChoose">Использовать выбранный чат</button>
+            <p class="vtai-note">Проверяй имя и получателя перед отправкой. AI не имеет доступа к списку переписок и не может подтвердить, что это нужный человек.</p>
+          </section>
           <section id="vtaiNegPanel" class="vtai-neg-panel" hidden aria-label="Безопасные настройки Negotiator">
             <h2>Negotiator Lab · только черновики</h2>
             <p class="vtai-note">Никаких автоматических переговоров и отправок. Выбери один чат, установи жёсткие ограничения, получи черновик и отдельно подтверди каждый ответ.</p>
