@@ -684,6 +684,12 @@
           <textarea id="storyCaption" maxlength="2048" rows="3" placeholder="Можно оставить пустой"></textarea>
         </label>
 
+        <div class="story-portal-handoff" id="storyPortalHandoff" hidden>
+          <strong>↗ Интерактивный Portal</strong>
+          <label><input id="storyPortalConfirm" type="checkbox" checked /> Добавить кликабельную ссылку в Telegram Story</label>
+          <small id="storyPortalLinkHost">Ссылка подготовлена в VETO Studio</small>
+          <p>Только стандартная аудитория через Telegram Business. Ссылка публичная: текст Portal доступен всем, у кого она есть. Ты можешь отключить её здесь.</p>
+        </div>
         <div class="composer-summary">
           <span id="composerAudience">Аудитория: Стандарт</span>
           <span id="composerProtection">Защита: выкл</span>
@@ -1464,6 +1470,11 @@
               </div>
               <p class="se-inline-warning">Публикуется только текст и действия Portal, без фотографий, сообщений или данных Telegram. Любой получатель ссылки может прочитать и изменить содержимое. Отозвать ссылку пока нельзя. Ссылка начнёт открываться после выпуска этой версии сайта.</p>
             </div>
+            <label class="se-checkbox se-portal-story-option">
+              <input id="sePortalAttachStory" type="checkbox" disabled />
+              Добавить кликабельный Portal на опубликованную Story
+            </label>
+            <div class="se-inline-warning">Только при стандартной публикации через Telegram Business с правом Stories. Ссылка содержит публичное описание Portal, а её получатель сможет открыть страницу. Другие аудитории пока публикуются без ссылки.</div>
             <div class="se-portal-preview" id="sePortalPreview" aria-label="Предпросмотр Portal"></div>
             <div class="se-inline-warning">На Story кнопка CTA пока нарисована и не является кликабельной: публичную ссылку можно скопировать и отправить отдельно. Чтобы прикреплять её к самой Telegram Story и собирать голоса/заявки, потребуется отдельная проверка Telegram API и защищённое серверное хранение.</div>
           </div>
