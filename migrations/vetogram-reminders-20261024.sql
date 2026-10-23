@@ -74,7 +74,7 @@ SET search_path=public,pg_temp AS $$
   WITH due AS (
     SELECT r.owner_id,r.task_id FROM public.vetogram_reminders r
      WHERE r.state='pending' AND r.enabled_by_owner
-       AND r.remind_at<=now() AND r.remind_at>=now()-interval '1 day'
+       AND r.remind_at<=now() AND r.remind_at>=now()-interval '1 hour'
      ORDER BY r.remind_at ASC LIMIT LEAST(GREATEST(p_limit,1),8)
      FOR UPDATE SKIP LOCKED
   ), claimed AS (
