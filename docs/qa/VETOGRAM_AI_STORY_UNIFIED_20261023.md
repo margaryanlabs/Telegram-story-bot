@@ -533,3 +533,40 @@ migration, scheduled task or Telegram message has been executed.**
   real Telegram conversations. **Do not** enable reminder worker flags or
   schedule cron before isolated delivery testing, a Bot API consent/bot-start
   flow, user-facing retention terms and explicit combined release approval.
+
+
+## Reminders control hardening — pending cancellation and Hobby schedule limits
+
+- This branch already contains VETO Reminders from the coordinated development
+  stream: signed Telegram owner API, optional worker, metadata-only queue,
+  time-zone checked one-shot reminders, separate consent, at-most-once
+  network attempt, generic Bot API self-notification, and user cancellation.
+  The new work did **not** duplicate those existing modules.
+- Added a single explicit owner-only action `cancel_all` to cancel **every
+  pending** reminder with one atomic SQL update. Both owner signed initData
+  and the existing `x-vetogram-reminder-consent: yes` are required.
+  Worker-claimed or completed attempts are not retroactively canceled,
+  and the API response explicitly reports `claimedMayStillSend:true`.
+- UI includes **Отменить все ожидающие**, warns clearly that in-flight
+  sends may continue, and refreshes the owner-scoped list after success.
+  Task cards disclose outstanding server-side reminders even after locally
+  changing their due date or status; local edits alone do not cancel a
+  previously saved server reminder.
+- Added signed-API and client regression assertions and disposable-Postgres
+  owner-isolation checks for cancel-all (other owners and already-sent
+  reminders remain untouched). Source/parser/DOM assertions were checked
+  locally; CI full Node/Postgres runner execution remains unverified.
+- Official Vercel Cron documentation (2026) says Hobby cron runs at most
+  **once per day** and may execute anywhere in the hour. Therefore the
+  current Hobby project cannot truthfully promise a reminder exactly
+  15 minutes before a meeting without an independent reliable scheduling
+  worker such as the planned VPS / external scheduler. A dedicated
+  authenticated scheduler with operational logging and clock accuracy
+  checks is a release dependency. No cron was activated or deployed here.
+  See https://vercel.com/docs/cron-jobs/usage-and-pricing
+- Telegram Bot API delivery to private accounts requires that the person
+  has already initiated the bot conversation; otherwise a generic
+  `sendMessage` may receive a forbidden error. No bot notifications
+  were actually sent during this work.
+- Feature flags remain OFF; no production DB, keys, bot sessions,
+  main-branch merge or deployment were changed in this stage.
