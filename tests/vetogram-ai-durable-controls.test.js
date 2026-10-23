@@ -49,6 +49,10 @@ test('Cloud Memory follows explicit consent, signed owner and optimistic version
   assert.match(store,/revision=revision\+1/);
   assert.match(store,/AND revision=\$3::integer/);
   assert.match(store,/AI_MEMORY_VERSION_CONFLICT/);
+  assert.match(store,/export async function eraseAiMemory/);
+  assert.match(store,/DELETE FROM public\.vetogram_ai_memory_store WHERE owner_id=\$1::bigint AND revision=\$2::integer/);
+  assert.match(api,/body\.action==='erase'/);
+
   assert.doesNotMatch(store,/chat_messages|session_ciphertext|sendOwnerMessage/);
   const sql=read('migrations/vetogram-ai-memory-20261023.sql');
   assert.match(sql,/encrypted_snapshot text NOT NULL/);
@@ -100,6 +104,9 @@ test('Frontend exposes guarded cloud memory and negotiation revoke controls',()=
     'vtaiMemoryCloudStatus','vtaiNegRevoke'])
     assert.ok(html.includes('id="'+id+'"'),'missing '+id);
   assert.match(ui,/await writeMemoryCloud\(state.memory\)/);
+  assert.match(ui,/action:'erase',revision:state\.memoryRevision/);
+  assert.doesNotMatch(ui,/writeMemoryCloud\(\[\]\)/);
+
   assert.match(ui,/state.memoryRevision/);
   assert.match(ui,/x-vetogram-memory-consent/);
   assert.match(ui,/x-vetogram-grant-consent/);
