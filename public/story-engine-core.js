@@ -96,8 +96,25 @@ export function normalizePortal(input){
   const type=PORTAL_TYPES.find(p=>p.id===input.type);
   const link=trimText(input.link,400);
   if(link&&!safeExternalUrl(link))throw Error('PORTAL_HTTPS_LINK_REQUIRED');
+  const rawOptions=Array.isArray(input.options)?input.options:String(input.optionsText||'').split(String.fromCharCode(10));
+  const options=[...new Set(rawOptions.map(v=>trimText(v,65)).filter(Boolean))].slice(0,5);
+  const rawLinks=Array.isArray(input.links)?input.links:
+    String(input.linksText||'').split(String.fromCharCode(10)).filter(Boolean).map(row=>{
+      const cut=row.indexOf('|');
+      return cut<0?{label:'Ссылка',url:row.trim()}:
+        {label:row.slice(0,cut).trim(),url:row.slice(cut+1).trim()};
+    });
+  const links=[];
+  if(type.id==='links'){
+    for(const raw of rawLinks.slice(0,4)){
+      const target=trimText(raw?.url,400);
+      if(!safeExternalUrl(target))throw Error('PORTAL_HTTPS_LINK_REQUIRED');
+      links.push({label:trimText(raw?.label,42)||'Ссылка',url:safeExternalUrl(target)});
+    }
+  }
   return {type:type.id,title:trimText(input.title,90),description:trimText(input.description,MAX_PORTAL_TEXT),
-    cta:trimText(input.cta,42)||type.cta,link:link?safeExternalUrl(link):''};
+    cta:trimText(input.cta,42)||type.cta,link:link?safeExternalUrl(link):'',
+    options:type.id==='poll'?(options.length>=2?options:['Да','Нет']):[],links};
 }
 export function remixDraft(source,ownerId,{now=Date.now(),id=globalThis.crypto?.randomUUID?.()}={}){
   if(String(source?.ownerId)!==String(ownerId))throw Error('REMIX_OWNER_MISMATCH');
