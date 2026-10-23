@@ -353,6 +353,21 @@ async function downloadJpg(){
   try{const a=document.createElement('a');a.download='vetogram-story.jpg';a.href=url;a.click();}
   finally{setTimeout(()=>URL.revokeObjectURL(url),5000)}
 }
+// VETO AI may offer copy only. It cannot trigger a publish or change an audience.
+window.addEventListener('vetogram:ai-story-suggestion',event=>{
+  const requested=event?.detail||{},incoming=requested.story;
+  if(!incoming||!state.draft||state.owner==='0'||
+      requested.ownerId!==state.owner||owner()!==state.owner){
+    notify('Story не изменена: проверь подключённый аккаунт.',true);return;
+  }
+  const title=trimText(incoming.title,90),subtitle=trimText(incoming.subtitle,180);
+  if(!title||!subtitle){notify('Текст AI не подходит для Story.',true);return;}
+  state.draft.title=title;state.draft.subtitle=subtitle;
+  state.draft.caption=trimText(incoming.caption,800);
+  render();
+  notify('AI-текст добавлен в текущую Story. Проверь его перед сохранением.');
+});
+
 function setup(){
   const holder=$('seTemplates');
   for(const t of STORY_TEMPLATES){
