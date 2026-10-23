@@ -418,10 +418,22 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
     await writeMemoryCloud(state.memory);
   }
   async function eraseMemoryCloud(){
+    if(state.memoryBusy||state.busy||!safeIdentity())return;
+    if(!Number.isSafeInteger(state.memoryRevision)||state.memoryRevision<1)
+      return memoryStatus('Сначала загрузи существующую облачную копию.',true);
+    if(!window.confirm('Безвозвратно удалить зашифрованную запись AI Memory из Neon? Локальные заметки останутся в этом окне.'))return;
     if(!safeIdentity())return;
-    if(!window.confirm('Стереть все заметки из облачной копии? Локальные заметки в текущем окне останутся.'))return;
-    const ok=await writeMemoryCloud([]);
-    if(ok)memoryStatus('Облачная копия очищена. Локальные заметки в текущем окне сохранены.');
+    state.memoryBusy=true;
+    $('vtaiMemoryCloudErase').disabled=true;$('vtaiMemoryCloudSave').disabled=true;
+    try{
+      const result=await request('/api/vetogram-ai-memory',
+        {action:'erase',revision:state.memoryRevision},'memory');
+      if(result.deleted!==true)throw Error('Удаление не подтверждено сервером');
+      if(!safeIdentity())return;
+      state.memoryRevision=0;
+      memoryStatus('Зашифрованная запись удалена из Neon. Локальные заметки в этом окне сохранены.');
+    }catch(error){memoryStatus('Не удалось удалить облачную запись: '+error.message,true);}
+    finally{state.memoryBusy=false;$('vtaiMemoryCloudErase').disabled=false;$('vtaiMemoryCloudSave').disabled=false;}
   }
 
   function addMemory(){
