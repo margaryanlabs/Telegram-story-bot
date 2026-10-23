@@ -38,3 +38,9 @@ textarea.vtai-input{min-height:110px;resize:vertical}
 .vtai-workspace-item .vtai-consent{align-items:center}
 .vtai-workspace-item .vtai-consent input{flex-shrink:0}
 #vtaiPortalReview[hidden]{display:none!important}
+
+.vtai-neg-panel{display:grid;gap:12px;padding:16px;border-radius:16px;border:1px solid rgba(233,113,124,.3);background:linear-gradient(165deg,rgba(138,43,60,.14),rgba(28,33,48,.4))}
+.vtai-neg-panel h2{color:#fff;font-size:17px;margin:0}
+.vtai-neg-panel[hidden]{display:none!important}
+.vtai-grow{flex:1;min-width:170px}
+#vtaiNegNotice{padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.055)}
