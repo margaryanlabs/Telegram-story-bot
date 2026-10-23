@@ -1434,7 +1434,23 @@
           <button class="vtai-action" id="vtaiQueue" type="button">＋ В очередь подтверждений</button>
           <p class="vtai-note">Перед отправкой появится отдельное подтверждение. Отправляется от твоего авторизованного Telegram-аккаунта, а не от бота.</p>
         </section>
-        <section class="vtai-panel" aria-label="VETO Approval Center">
+        
+        <section class="vtai-panel" id="vtaiAgentControl" aria-label="VETO Agent Control">
+          <div class="vtai-row vtai-heading-row">
+            <h2>VETO Agent Control</h2>
+            <button id="vtaiAgentRefresh" type="button" class="vtai-action">Обновить статус</button>
+          </div>
+          <p class="vtai-note">Управляет только серверными разрешениями на подготовку переговорных черновиков. Не меняет обычные права Telegram или ручную отправку сообщений.</p>
+          <p id="vtaiAgentState" role="status" aria-live="polite" class="vtai-note">Статус ещё не проверен.</p>
+          <div class="vtai-row">
+            <button id="vtaiAgentPause" type="button" class="vtai-action vtai-danger">Остановить подготовку AI</button>
+            <button id="vtaiAgentResume" type="button" class="vtai-action">Возобновить подготовку</button>
+            <button id="vtaiAgentHistory" type="button" class="vtai-action">История разрешений</button>
+          </div>
+          <div id="vtaiAgentEvents" class="vtai-workspace-list" aria-live="polite"></div>
+          <p class="vtai-note">В журнале сохраняются лишь время, категория изменения, идентификатор разрешения и чата. Тексты сообщений, запросы и ответы AI не записываются.</p>
+        </section>
+<section class="vtai-panel" aria-label="VETO Approval Center">
           <div class="vtai-row vtai-heading-row">
             <h2>Approval Center <span id="vtaiApprovalCount" class="vtai-count">0</span></h2>
             <button type="button" class="vtai-action" id="vtaiClearApprovals">Очистить очередь</button>
