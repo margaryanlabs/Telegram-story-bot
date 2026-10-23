@@ -32,7 +32,7 @@ This feature branch starts from the unmerged VETOGRAM 2.0 onboarding PR #179 hea
 ## Proposed next iterations
 1. Build **private**, owner-verified Story drafts / Portal persistence on an approved schema, with encryption, retention and real secure public publication identifiers.
 2. Sign canonical share/Remix tokens with expirations and revocations; enforce template ownership, link domain policy, report abuse; no private photo inheritance.
-3. Introduce actual public Portal routes with anti-abuse, TTL, privacy disclosure, safe form fields and data export/deletion.
+3. The stateless public Portal card route is now coded in this branch; follow with signed, revocable, owner-managed Portal routes, protected form storage, anti-abuse, enforced TTL, privacy disclosure and data export/deletion.
 4. Add local video editing pipeline and Telegram-supported video encoding if target devices support it.
 5. Add optional metered generative AI provider abstraction after budget/consent and meaningful demand.
 6. Release Stars subscriptions/referrals only after feature costs and Telegram Platform policies are reviewed.
@@ -51,7 +51,7 @@ The Story Engine controller now snapshots the active Telegram owner and draft ID
 - Expanded the owner-scoped IndexedDB draft model to persist photo grading and layer placement, while normalizing values and discarding unsafe/invalid layers. Existing drafts default to original photo and no layers.
 - Remix of a private draft does not inherit private image, Portal or original layer text; it keeps only the shape and editable layout with placeholder text.
 - Added model and UI contract regression tests. No server migrations, credentials, production rollout, Story publish API changes, or paid AI calls.
-- Remaining: live Android/iOS WebView gestures, actual preview build tests, video editing, public Portal link/response pipeline, cross-account cloud storage and generative AI.
+- Remaining: live Android/iOS WebView gestures, actual preview build tests, video editing, trusted Portal response/analytics pipeline, cryptographically signed public link revocation, cross-account cloud storage and generative AI.
 
 ## Portal interactions — 23 October 2026
 
