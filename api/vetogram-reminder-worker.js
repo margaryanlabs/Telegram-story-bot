@@ -1,6 +1,6 @@
 import {neonCronAuthorized} from '../lib/neon-scheduler-auth.js';
 import {loadTaskCloud} from '../lib/vetogram-task-cloud-store.js';
-import {reminderBelongsToActiveTask} from '../lib/vetogram-reminder-core.js';
+import {reminderBelongsToActiveTask,reminderSchedulingConfigured} from '../lib/vetogram-reminder-core.js';
 import {claimDueReminders,completeReminderAttempt} from '../lib/vetogram-reminder-store.js';
 
 // generic self-notification only: never put task titles, quotes or contact data in Bot API calls.
@@ -22,8 +22,7 @@ export async function deliverGenericReminder(token,owner,fetcher=fetch){
 export default async function handler(req,res){
   res.setHeader('Cache-Control','private, no-store');
   if(req.method!=='POST')return res.status(405).json({ok:false,error:'POST required'});
-  if(process.env.VETOGRAM_REMINDERS_ENABLED!=='true'||
-     process.env.VETOGRAM_REMINDERS_WORKER_ENABLED!=='true')
+  if(!reminderSchedulingConfigured())
     return res.status(503).json({ok:false,error:'Reminder worker disabled'});
   if(!neonCronAuthorized(req))return res.status(401).json({ok:false,error:'Unauthorized'});
   const token=String(process.env.TELEGRAM_BOT_TOKEN||'');
