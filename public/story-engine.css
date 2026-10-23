@@ -122,6 +122,10 @@
 .se-portal-extra{padding:12px;margin-top:10px;border:1px solid rgba(255,255,255,.12);
  border-radius:14px;background:rgba(255,255,255,.03)}
 .se-portal-extra small{display:block;color:#aaa3b1;font-size:10px;line-height:1.55;margin-top:8px}
+.se-portal-share-result{padding:13px;margin:11px 0;border:1px solid rgba(255,116,140,.24);
+ border-radius:15px;background:rgba(212,52,83,.08);overflow-wrap:anywhere}
+.se-portal-share-result[hidden]{display:none!important}
+.se-portal-share-result .se-input{font-size:11px!important;letter-spacing:-.015em}
 .se-portal-demo-overlay{position:fixed;inset:0;z-index:9999;background:rgba(2,2,8,.88);
  display:flex;align-items:center;justify-content:center;padding:16px}
 .se-portal-demo{width:min(100%,440px);max-height:90dvh;overflow-y:auto;outline:none;
