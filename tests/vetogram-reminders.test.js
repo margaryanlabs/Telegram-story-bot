@@ -41,6 +41,8 @@ test('owner API blocks unsigned access and requires separate scheduling consent'
   assert.match(api,/private, no-store/);
   assert.match(store,/loadTaskCloud\(id\)/);
   assert.match(store,/task\.status!=='open'/);
+  assert.match(store,/fields\.dueAt!==task\.dueAt/);
+  assert.match(api,/REMINDER_UNSAVED_TASK_CHANGES/);
   assert.match(store,/public\.vetogram_schedule_reminder/);
   assert.match(store,/WHERE owner_id=\$1::bigint AND task_id=\$2::uuid AND state='pending'/);
   assert.match(router,/"vetogram-reminders"/);
