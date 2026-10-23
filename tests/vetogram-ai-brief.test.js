@@ -51,3 +51,22 @@ test('Second Brain is included in quota and cannot auto-send or read Telegram ch
   assert.match(ui,/makeMemoryNote/);
   assert.match(ui,/window\.confirm\('Добавить эту AI-гипотезу/);
 });
+
+test('in-chat Second Brain only pre-fills a locally confirmed, visible owner-bound message',()=>{
+  const chat=read('public/telegram-chats.js'),ui=read('public/vetogram-ai.js');
+  const html=read('public/studio.html');
+  const start=chat.indexOf("$('telegramThreadBriefAI')?.addEventListener");
+  const end=chat.indexOf("$('telegramThreadSearchToggle')?.addEventListener",start);
+  assert.ok(start>=0&&end>start);
+  const fragment=chat.slice(start,end);
+  assert.match(fragment,/resetOwner\(\)/);
+  assert.match(fragment,/!m\?\.out&&!m\?\.deleted&&!m\?\.preservedOnly/);
+  assert.match(fragment,/window\.confirm\(/);
+  assert.match(fragment,/vetogram:brief-prefill/);
+  assert.doesNotMatch(fragment,/fetch\(|sendOwnerMessage|\/api\/vetogram-ai/);
+  assert.match(ui,/detail\.ownerId!==owner\(\)/);
+  assert.match(ui,/detail\.signed!==signed\(\)/);
+  assert.match(ui,/vtaiConsent'\)\.checked=false/);
+  assert.match(ui,/setMode\('brief'\)/);
+  assert.match(html,/id="telegramThreadBriefAI"/);
+});
