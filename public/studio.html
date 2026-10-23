@@ -1436,9 +1436,22 @@
             <label class="se-label">Описание<textarea class="se-input se-textarea" id="sePortalDescription" maxlength="300" placeholder="Что увидит посетитель"></textarea></label>
             <label class="se-label">Текст действия<input class="se-input" id="sePortalCta" maxlength="42" placeholder="Открыть" /></label>
             <label class="se-label">HTTPS-ссылка<input class="se-input" id="sePortalLink" type="url" inputmode="url" maxlength="400" placeholder="https://example.com" /></label>
+            <div class="se-portal-extra" id="sePortalPollFields" hidden>
+              <label class="se-label">Варианты опроса (от 2 до 5, по одному в строке)
+                <textarea class="se-input se-textarea" id="sePortalOptions" maxlength="360" rows="3" placeholder="Первый вариант&#10;Второй вариант"></textarea>
+              </label>
+              <small>Ответы будут показаны только в предпросмотре. Публичной системы голосования пока нет.</small>
+            </div>
+            <div class="se-portal-extra" id="sePortalLinksFields" hidden>
+              <label class="se-label">Дополнительные ссылки — подпись | https://адрес
+                <textarea class="se-input se-textarea" id="sePortalLinks" maxlength="1800" rows="3" placeholder="Мой канал | https://t.me/example"></textarea>
+              </label>
+              <small>До 4 ссылок HTTPS. Открытие только после нажатия.</small>
+            </div>
             <div class="se-controls-row">
               <button class="se-button primary" id="sePortalSave" type="button">Сохранить Portal</button>
               <button class="se-button" id="sePortalRemove" type="button">Отвязать</button>
+              <button class="se-button" id="sePortalTry" type="button" disabled>↗ Попробовать Portal</button>
             </div>
             <div class="se-portal-preview" id="sePortalPreview" aria-label="Предпросмотр Portal"></div>
             <div class="se-inline-warning">CTA на изображении — визуальный элемент, не кликабельная ссылка Telegram. Публикация публичного Portal и сбор ответов потребуют отдельного защищённого backend.</div>
