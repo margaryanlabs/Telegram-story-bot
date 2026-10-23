@@ -1,5 +1,6 @@
 
 import {showPortalPreview} from './story-portal-preview.js';
+import {makePublicPortalUrl} from './story-portal-share.js';
 import { STORY_TEMPLATES,PORTAL_TYPES,RETENTION_DAYS,templateById,
   trimText,safeExternalUrl,newStoryDraft,normalizeDraft,normalizePortal,
   remixDraft,draftFromBrief,isExpired,PHOTO_EFFECTS,STORY_LAYER_STYLES,
@@ -217,6 +218,10 @@ function renderLayers(){
   const selected=layers.find(layer=>layer.id===state.selectedLayer);
   if(selected)$('seLayerSize').value=String(selected.size);
 }
+function clearPublicPortalLink(){
+  $('sePortalShareResult').hidden=true;
+  $('sePortalPublicLink').value='';
+}
 function render(){
   if(!state.draft)return;
   $('seTitle').value=state.draft.title;
@@ -243,6 +248,7 @@ function render(){
   $('sePortalPollFields').hidden=$('sePortalType').value!=='poll';
   $('sePortalLinksFields').hidden=$('sePortalType').value!=='links';
   $('sePortalTry').disabled=!p;
+  $('sePortalCreateLink').disabled=!p;
   const portal=$('sePortalPreview');portal.replaceChildren();
   if(p){
     const type=PORTAL_TYPES.find(v=>v.id===p.type);
@@ -274,6 +280,7 @@ function loadImageForDraft(){
   i.src=url;
 }
 function applyDraft(d){
+  clearPublicPortalLink();
   state.selectedLayer=null;state.dragLayer=null;
   state.draft=normalizeDraft(d,state.owner||'0');loadImageForDraft();render();
 }
@@ -472,11 +479,46 @@ function setup(){
       const raw={type,title:$('sePortalTitle').value,description:$('sePortalDescription').value,
         cta:$('sePortalCta').value,link:$('sePortalLink').value,
         optionsText:$('sePortalOptions').value,linksText:$('sePortalLinks').value};
-      state.draft.portal=normalizePortal(raw);render();
+      state.draft.portal=normalizePortal(raw);
+      clearPublicPortalLink();render();
       notify('Portal добавлен в текущий проект. Нажми «Сохранить», чтобы записать его на устройстве. Публичной ссылки пока нет.');
     }catch(e){notify(e.message,true)}
   }
   $('sePortalSave').addEventListener('click',readPortal);
+  $('sePortalCreateLink').addEventListener('click',()=>{
+    try{
+      requireOwner();
+      const portal=state.draft.portal;
+      if(!portal)throw Error('Сначала сохрани Portal');
+      if(!window.confirm('Создать публичную ссылку? Текст Portal и его ссылки станут доступны каждому получателю. Ссылку нельзя отозвать и её содержимое можно изменить. Фото, чаты и данные Telegram в неё не попадут.'))return;
+      const url=makePublicPortalUrl(portal,window.location.origin);
+      $('sePortalPublicLink').value=url;
+      $('sePortalShareResult').hidden=false;
+      notify('Ссылка подготовлена. Она заработает после выпуска Story Engine на сайт.');
+    }catch(error){notify(error.message,true)}
+  });
+  $('sePortalCopyLink').addEventListener('click',async()=>{
+    try{
+      requireOwner();
+      const value=$('sePortalPublicLink').value;
+      if(!value)throw Error('Сначала создай ссылку');
+      if(!navigator.clipboard?.writeText)throw Error('Копирование недоступно');
+      await navigator.clipboard.writeText(value);
+      notify('Ссылка скопирована');
+    }catch(error){
+      $('sePortalPublicLink').select();
+      notify('Скопируй выделенный адрес вручную: '+error.message,true);
+    }
+  });
+  $('sePortalOpenLink').addEventListener('click',()=>{
+    try{
+      requireOwner();
+      const url=$('sePortalPublicLink').value;
+      if(!url)throw Error('Сначала создай ссылку');
+      if(tg?.openLink)tg.openLink(url);
+      else window.open(url,'_blank','noopener,noreferrer');
+    }catch(error){notify(error.message,true)}
+  });
   $('sePortalTry').addEventListener('click',()=>{
     try{
       requireOwner();
@@ -488,7 +530,10 @@ function setup(){
       });
     }catch(error){notify(error.message,true)}
   });
-  $('sePortalRemove').addEventListener('click',()=>{if(!state.draft)return;state.draft.portal=null;render();notify('Portal отвязан')});
+  $('sePortalRemove').addEventListener('click',()=>{
+    if(!state.draft)return;
+    state.draft.portal=null;clearPublicPortalLink();render();notify('Portal отвязан');
+  });
   $('sePortalType').addEventListener('change',()=>{
     const item=PORTAL_TYPES.find(p=>p.id===$('sePortalType').value);
     if(item)$('sePortalCta').value=item.cta;
