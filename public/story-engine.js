@@ -1,4 +1,5 @@
 
+import {showPortalPreview} from './story-portal-preview.js';
 import { STORY_TEMPLATES,PORTAL_TYPES,RETENTION_DAYS,templateById,
   trimText,safeExternalUrl,newStoryDraft,normalizeDraft,normalizePortal,
   remixDraft,draftFromBrief,isExpired,PHOTO_EFFECTS,STORY_LAYER_STYLES,
@@ -237,6 +238,11 @@ function render(){
   $('sePortalDescription').value=p?.description||'';
   $('sePortalLink').value=p?.link||'';
   $('sePortalCta').value=p?.cta||'';
+  $('sePortalOptions').value=(p?.options||[]).join(String.fromCharCode(10));
+  $('sePortalLinks').value=(p?.links||[]).map(x=>x.label+' | '+x.url).join(String.fromCharCode(10));
+  $('sePortalPollFields').hidden=$('sePortalType').value!=='poll';
+  $('sePortalLinksFields').hidden=$('sePortalType').value!=='links';
+  $('sePortalTry').disabled=!p;
   const portal=$('sePortalPreview');portal.replaceChildren();
   if(p){
     const type=PORTAL_TYPES.find(v=>v.id===p.type);
@@ -464,16 +470,26 @@ function setup(){
     if(!type){state.draft.portal=null;render();return}
     try{
       const raw={type,title:$('sePortalTitle').value,description:$('sePortalDescription').value,
-        cta:$('sePortalCta').value,link:$('sePortalLink').value};
+        cta:$('sePortalCta').value,link:$('sePortalLink').value,
+        optionsText:$('sePortalOptions').value,linksText:$('sePortalLinks').value};
       state.draft.portal=normalizePortal(raw);render();
       notify('Portal добавлен в текущий проект. Нажми «Сохранить», чтобы записать его на устройстве. Публичной ссылки пока нет.');
     }catch(e){notify(e.message,true)}
   }
   $('sePortalSave').addEventListener('click',readPortal);
+  $('sePortalTry').addEventListener('click',()=>{
+    try{
+      requireOwner();
+      if(!state.draft.portal)throw Error('Сначала настрой Portal и нажми «Сохранить Portal»');
+      showPortalPreview(state.draft.portal);
+    }catch(error){notify(error.message,true)}
+  });
   $('sePortalRemove').addEventListener('click',()=>{if(!state.draft)return;state.draft.portal=null;render();notify('Portal отвязан')});
   $('sePortalType').addEventListener('change',()=>{
     const item=PORTAL_TYPES.find(p=>p.id===$('sePortalType').value);
     if(item)$('sePortalCta').value=item.cta;
+    $('sePortalPollFields').hidden=$('sePortalType').value!=='poll';
+    $('sePortalLinksFields').hidden=$('sePortalType').value!=='links';
   });
   $('sePublish').addEventListener('click',exportToPublisher);
   $('seDownload').addEventListener('click',()=>downloadJpg().catch(e=>notify(e.message,true)));
