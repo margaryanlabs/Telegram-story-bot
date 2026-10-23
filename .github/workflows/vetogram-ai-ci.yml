@@ -24,8 +24,7 @@ jobs:
           node-version: '24'
       - name: Validate migrations, API contracts, and pure Node core
         run: |
-          npm run ai:preflight
-          node --test tests/vetogram-ai-release-gate.test.js tests/vetogram-reminders.test.js tests/vetogram-task-cloud.test.js
+          npm run ci:offline
         env:
           VETOGRAM_AI_ENABLED: 'false'
           VETOGRAM_TASKS_CLOUD_ENABLED: 'false'
