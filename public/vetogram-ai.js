@@ -1,5 +1,6 @@
 import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNotes,buildMemoryContext,MAX_MEMORY_NOTES} from './vetogram-ai-workspace-core.js';
 import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from './vetogram-negotiator-core.js';
+import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from './vetogram-ai-dialogs-core.js';
 (() => {
   'use strict';
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
@@ -214,23 +215,15 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
       while(hasMore&&page<=10){
         const result=await request('/api/telegram-chats',{action:'list',page});
         if(startedOwner!==signed())throw Error('Аккаунт изменился.');
-        const incoming=(Array.isArray(result.chats)?result.chats:[]).filter(c=>
-          c&&!c.archiveOnly&&c.serverCanSend!==false&&
-          ['private','group','bot','saved'].includes(c.type)&&
-          /^-?\d{1,22}$/.test(String(c.id)));
-        const ids=new Set(merged.map(c=>String(c.id)));
-        for(const c of incoming)if(!ids.has(String(c.id))){
-          ids.add(String(c.id));merged.push(c);
-        }
+        merged=mergeSendableDialogs(merged,result.chats);
         hasMore=result.hasMore===true;
         page++;
-        // Do not crawl all Telegram dialogs unless a specific owner-chosen
-        // recipient needs resolution. Otherwise load one page per click.
-        if(!validTarget||merged.some(c=>String(c.id)===validTarget))break;
+        // Search older dialogs only on explicit owner-selected chat intent.
+        if(!shouldContinueDialogLookup(page,hasMore,validTarget,merged))break;
       }
-      state.dialogs=merged.slice(0,500);
+      state.dialogs=merged;
       state.chatNextPage=page;
-      state.chatHasMore=hasMore&&page<=10;
+      state.chatHasMore=hasMoreDialogPages(page,hasMore);
       const populate=(id,title,previous)=>{
         const pick=$(id);pick.replaceChildren(new Option(title,''));
         for(const c of state.dialogs)pick.append(new Option(String(c.title||'Чат').slice(0,90),String(c.id)));
