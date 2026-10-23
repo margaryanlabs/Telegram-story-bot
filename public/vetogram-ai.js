@@ -7,7 +7,7 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -25,7 +25,8 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
   }
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
-    state.actionDraft=null;state.actionRecipientConfirmed=null;
+    state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;
+    $('vtaiBriefList').replaceChildren();$('vtaiBriefStatus').textContent='Нет результатов для текущего аккаунта.';
     state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
     state.memoryRevision=null;state.memoryBusy=false;state.agentPaused=null;state.agentBusy=false;state.chatNextPage=0;state.chatHasMore=false;
     $('vtaiMoreChats').hidden=true;$('vtaiNegMoreChats').hidden=true;$('vtaiActionMore').hidden=true;
@@ -64,7 +65,7 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
     card.scrollIntoView?.({block:'nearest',behavior:'smooth'});
   }
   function setMode(mode){
-    if(!['chat','translate','reply','story','campaign','negotiator','action'].includes(mode))return;
+    if(!['chat','translate','reply','story','campaign','negotiator','action','brief'].includes(mode))return;
     if(state.mode!==mode){state.history=[];$('vtaiThread').replaceChildren();state.last=null;state.reviewedApprovalId=null;
       $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;}
     if(mode!=='negotiator'){state.negotiationPolicy=null;state.negotiationDraft=null;$('vtaiDraft').readOnly=false;}
@@ -72,6 +73,8 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
     state.mode=mode;
     $('vtaiNegPanel').hidden=mode!=='negotiator';
     $('vtaiActionPanel').hidden=mode!=='action';
+    $('vtaiBriefPanel').hidden=mode!=='brief';
+    if(mode!=='brief'){state.brief=null;$('vtaiBriefList').replaceChildren();}
     document.querySelectorAll('[data-vtai-mode]').forEach(b=>{
       b.classList.toggle('active',b.dataset.vtaiMode===mode);
       b.setAttribute('aria-pressed',String(b.dataset.vtaiMode===mode));
@@ -82,11 +85,12 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
       translate:'Вставь текст для перевода…',
       reply:'Опиши ситуацию или вставь сообщение, на которое нужен ответ…',
       action:'Например: напиши Артуру, что созвонимся завтра в 15:00…',
+      brief:'Вставь конкретное сообщение или фрагмент переписки для поиска задач и сроков…',
       story:'О чём создать Story? Для кого, какой стиль и предложение?',
       campaign:'Что продаём или анонсируем? Кто покупатель и какое действие нужно?',
       negotiator:'Вставь сообщение клиента, на которое нужно подготовить ответ…'
     }[mode];
-    $('vtaiCreate').textContent=mode==='action'?'Подготовить действие':mode==='negotiator'?'Подготовить ответ на переговоры':mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
+    $('vtaiCreate').textContent=mode==='brief'?'Разобрать договорённости':mode==='action'?'Подготовить действие':mode==='negotiator'?'Подготовить ответ на переговоры':mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
   }
   function actionRecipientReady(chatId){
     return state.mode!=='action'||(actionDraftValid(state.actionDraft)&&
@@ -95,7 +99,7 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
   }
   function canSendDraft(){
     return Boolean(state.last&&state.dialogs.length&&
-      !['story','campaign'].includes(state.mode)&&
+      !['story','campaign','brief'].includes(state.mode)&&
       (state.mode!=='negotiator'||Boolean(state.negotiationDraft))&&
       actionRecipientReady($('vtaiRecipients').value));
   }
@@ -126,6 +130,54 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
       '. Проверь весь текст в редакторе перед отдельным подтверждением отправки.';
     $('vtaiSend').disabled=!canSendDraft();
     notice('Чат выбран вручную. Отправка не выполнена.');
+  }
+  function renderBrief(){
+    const list=$('vtaiBriefList');list.replaceChildren();
+    if(!state.brief?.items?.length){
+      $('vtaiBriefStatus').textContent=state.brief
+        ?'Явных договорённостей не найдено. AI мог упустить детали; проверь исходный текст.'
+        :'Для анализа вставь выбранное сообщение.';
+      return;
+    }
+    const kinds={task:'Задача',followup:'Связаться повторно',meeting:'Встреча',payment:'Оплата'};
+    $('vtaiBriefStatus').textContent='Найдено '+state.brief.items.length+
+      ' пунктов. Проверь источник, прежде чем сохранять.';
+    for(const item of state.brief.items){
+      const card=document.createElement('article');card.className='vtai-workspace-item';
+      const head=document.createElement('strong');head.textContent=(kinds[item.kind]||'Задача')+' · '+item.title;
+      const date=document.createElement('p');
+      date.textContent='Срок: '+(item.deadlineText||'не указан')+
+        (item.certainty==='unclear'?' · требует проверки':'');
+      const quote=document.createElement('p');quote.textContent='Из текста: «'+item.sourceQuote+'»';
+      const buttons=document.createElement('div');buttons.className='vtai-row';
+      const save=document.createElement('button');save.type='button';save.className='vtai-action';
+      save.textContent='Добавить в мои заметки';
+      save.addEventListener('click',()=>{
+        if(!safeIdentity()||!state.brief?.items.includes(item))return;
+        if(state.memory.length>=MAX_MEMORY_NOTES)return notice('В AI Memory допускается максимум 8 заметок.',true);
+        if(!window.crypto?.randomUUID)return notice('В этом браузере не поддерживаются безопасные идентификаторы.',true);
+        if(!window.confirm('Добавить эту AI-гипотезу в локальную Memory? Это не напоминание, а заметка, требующая твоей проверки.'))return;
+        try{
+          const label=(kinds[item.kind]||'Задача')+': '+item.title;
+          const note=makeMemoryNote({owner:owner(),id:crypto.randomUUID(),label:label.slice(0,55),
+            content:('Срок: '+(item.deadlineText||'не установлен')+
+              '. Источник: '+item.sourceQuote+
+              (item.certainty==='unclear'?'. Нужно подтвердить.':'')).slice(0,450)});
+          state.memory=[...state.memory,note];renderMemory();
+          notice('Добавлено в заметки открытой сессии. Облако и напоминания не включались.');
+        }catch{notice('Не удалось создать заметку.',true)}
+      });
+      const copy=document.createElement('button');copy.type='button';copy.className='vtai-action';
+      copy.textContent='Копировать';
+      copy.addEventListener('click',()=>{
+        const text=item.title+(item.deadlineText?' · '+item.deadlineText:'')+
+          '\nИсточник: '+item.sourceQuote;
+        if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text)
+          .then(()=>notice('Пункт скопирован.'),()=>notice('Не удалось скопировать.',true));
+        else notice('Копирование не поддерживается.',true);
+      });
+      buttons.append(save,copy);card.append(head,date,quote,buttons);list.append(card);
+    }
   }
   function setBusy(value){
     state.busy=value;
@@ -192,7 +244,11 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
     notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
       let grant=null;
-      if(mode==='action'){
+      if(mode==='brief'){
+        state.brief=answer.brief||null;
+        $('vtaiReview').hidden=true;renderBrief();
+        notice('Second Brain подготовил разбор. Никаких напоминаний или сообщений не создано.');
+      }else if(mode==='action'){
         state.actionDraft=null;state.actionRecipientConfirmed=null;
         if(actionDraftValid(answer.action)){
           state.actionDraft=answer.action;
