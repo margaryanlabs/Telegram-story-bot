@@ -6,7 +6,7 @@ import {AI_MODES,normalizeAiInput,normalizeAiOutput,systemInstruction}
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
 test('AI assistant has bounded modes, prompt and client-supplied history only',()=>{
-  assert.deepEqual(AI_MODES,['chat','translate','reply','story','campaign','negotiator']);
+  assert.deepEqual(AI_MODES,['chat','translate','reply','story','campaign','negotiator','action']);
   assert.throws(()=>normalizeAiInput({mode:'autopilot',prompt:'send everything'}),/AI_MODE_INVALID/);
   assert.throws(()=>normalizeAiInput({mode:'chat',prompt:'x'}),/AI_PROMPT_REQUIRED/);
   assert.throws(()=>normalizeAiInput({mode:'chat',prompt:'x'.repeat(4500)}),/AI_PROMPT_TOO_LONG/);
