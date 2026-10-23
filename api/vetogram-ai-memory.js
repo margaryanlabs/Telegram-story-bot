@@ -1,5 +1,5 @@
 import {validateTelegramMiniApp} from '../lib/telegram-miniapp-auth.js';
-import {readAiMemory,saveAiMemory} from '../lib/vetogram-ai-memory-store.js';
+import {readAiMemory,saveAiMemory,eraseAiMemory} from '../lib/vetogram-ai-memory-store.js';
 const respond=(res,status,body)=>res.status(status).json({ok:status<400,...body});
 export default async function handler(req,res){
   res.setHeader('Cache-Control','private, no-store, max-age=0');
@@ -16,7 +16,7 @@ export default async function handler(req,res){
     body=typeof req.body==='string'?JSON.parse(req.body):req.body;
     if(!body||typeof body!=='object'||Array.isArray(body)||
       JSON.stringify(body).length>12000)throw Error('INVALID_BODY');
-    if(!['list','replace'].includes(body.action))throw Error('INVALID_ACTION');
+    if(!['list','replace','erase'].includes(body.action))throw Error('INVALID_ACTION');
   }catch{return respond(res,400,{error:'Неверный запрос AI Memory'})}
   try{
     if(body.action==='list'){
@@ -25,6 +25,7 @@ export default async function handler(req,res){
     }
     if(req.headers['x-vetogram-memory-consent']!=='yes')
       return respond(res,403,{error:'Требуется отдельное разрешение на сохранение заметок'});
+    if(body.action==='erase')return respond(res,200,await eraseAiMemory(identity.id,body.revision));
     return respond(res,200,await saveAiMemory(identity.id,body.revision,body.notes));
   }catch(error){
     if(error?.message==='AI_MEMORY_VERSION_CONFLICT')
