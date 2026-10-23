@@ -2407,6 +2407,23 @@
     window.dispatchEvent(new CustomEvent('vetogram:ai-prefill',{detail:target}));
     window.VetoTelegramNavigate?.('ai');
   });
+  $('telegramThreadBriefAI')?.addEventListener('click',()=>{
+    if(resetOwner()||!state.thread||!canSendInThread(state.thread))
+      return toast('Открой доступный чат');
+    const candidate=[...state.messages].reverse().find(m=>
+      !m?.out&&!m?.deleted&&!m?.preservedOnly&&
+      typeof m?.text==='string'&&m.text.trim());
+    if(!candidate)return toast('Нет доступного входящего текста для разбора');
+    if(!window.confirm('Скопировать последнее входящее сообщение только в локальный черновик Second Brain? Передача AI отдельно требует твоего разрешения.'))return;
+    const target={
+      ownerId:String(tg?.initDataUnsafe?.user?.id||''),signed:String(tg?.initData||''),
+      chatId:String(state.thread.id),chatTitle:String(state.thread.title||'Telegram'),
+      text:String(candidate.text).slice(0,2800)
+    };
+    if(!/^\d{1,20}$/.test(target.ownerId)||!target.signed)return toast('Подключи свой Telegram');
+    window.dispatchEvent(new CustomEvent('vetogram:brief-prefill',{detail:target}));
+    window.VetoTelegramNavigate?.('ai');
+  });
   $('telegramThreadSearchToggle')?.addEventListener('click',()=>{
     const bar=$('telegramThreadFind');
     if(!bar)return;
