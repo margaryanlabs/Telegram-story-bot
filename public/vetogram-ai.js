@@ -36,7 +36,22 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
     $('vtaiThread').replaceChildren();$('vtaiText').value='';$('vtaiDraft').value='';
     $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
     $('vtaiRecipients').replaceChildren();$('vtaiRecipients').append(new Option('Сначала загрузить чаты',''));
+    // Owner-switch privacy: remove hidden form data as well as visible history.
+    $('vtaiNegRecipient').replaceChildren(new Option('Сначала загрузить чаты',''));
+    for(const id of ['vtaiStoryTitle','vtaiStorySubtitle','vtaiStoryCaption',
+      'vtaiPortalTitle','vtaiPortalDescription','vtaiPortalCta','vtaiNegGoal'])
+      $(id).value='';
+    $('vtaiPortalType').value='offer';
+    $('vtaiNegCurrency').value='USD';$('vtaiNegAsking').value='500';
+    $('vtaiNegFloor').value='475';$('vtaiNegDiscount').value='5';
+    $('vtaiNegMinutes').value='60';
+    $('vtaiDraft').readOnly=false;
+    $('vtaiQuota').textContent='Потребление AI ограничено дневным бюджетом. Данные Telegram не анализируются автоматически.';
+    state.busy=false;
+    $('vtaiCreate').disabled=false;$('vtaiLoadChats').disabled=false;
+    $('vtaiNegLoadChats').disabled=false;
     $('vtaiSend').disabled=true;
+    setMode('chat');
   }
   function addBubble(text,kind){
     const card=document.createElement('div');card.className='vtai-bubble '+kind;
