@@ -54,7 +54,7 @@ test('Cloud Memory follows explicit consent, signed owner and optimistic version
   assert.match(sql,/encrypted_snapshot text NOT NULL/);
   assert.doesNotMatch(sql,/(?:\bprompt_text\b|\bmessage_text\b|\bsession_key\b)\s+(?:text|varchar)/i);
 });
-test('Grant's server trust boundary rejects revoked, expired, wrong chat and currency mismatch',()=>{
+test('Server grant trust boundary rejects revoked, expired, wrong chat and currency mismatch',()=>{
   const grant={
     grantId:'12345678-1234-4123-8123-123456789012',
     chatId:'777',currency:'USD',askingCents:50000,minCents:47500,
