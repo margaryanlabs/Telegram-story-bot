@@ -3,12 +3,13 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
 import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from './vetogram-ai-dialogs-core.js';
 import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from './vetogram-ai-action-core.js';
 import {followupCandidates} from './vetogram-followup-core.js';
+import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOverview} from './vetogram-task-center-core.js';
 (() => {
   'use strict';
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set()};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open'};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -27,6 +28,7 @@ import {followupCandidates} from './vetogram-followup-core.js';
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;state.focusHidden.clear();
+    state.tasks=[];state.taskFilter='open';renderTasks();
     $('vtaiFocusList').replaceChildren();$('vtaiFocusCount').textContent='0';
     $('vtaiFocusMore').hidden=true;$('vtaiFocusRestore').hidden=true;
     $('vtaiFocusStatus').textContent='Проверь мои чаты. Данные прошлого аккаунта очищены.';
@@ -135,6 +137,118 @@ import {followupCandidates} from './vetogram-followup-core.js';
     $('vtaiSend').disabled=!canSendDraft();
     notice('Чат выбран вручную. Отправка не выполнена.');
   }
+  function renderTasks(){
+    const list=$('vtaiTasksList');list.replaceChildren();
+    const summary=taskOverview(state.tasks,owner());
+    $('vtaiTaskCount').textContent=String(summary.total);
+    $('vtaiTasksOpenCount').textContent=String(summary.open);
+    $('vtaiTasksDeferredCount').textContent=String(summary.deferred);
+    $('vtaiTasksDoneCount').textContent=String(summary.done);
+    $('vtaiTaskStatus').textContent=summary.total
+      ?'Всего: '+summary.total+' · активных: '+summary.open+
+        (summary.overdue?' · прошедшие вручную указанные сроки: '+summary.overdue:'')+
+        ' · только в этом окне, без уведомлений.'
+      :'Задач нет. Подтверди пункт в Second Brain, чтобы добавить его.';
+    for(const [id,status] of [['vtaiTasksOpen','open'],['vtaiTasksDeferred','deferred'],
+      ['vtaiTasksDone','done'],['vtaiTasksAll','all']]){
+      $(id).setAttribute('aria-pressed',String(state.taskFilter===status));
+    }
+    const displayed=summary.tasks.filter(t=>state.taskFilter==='all'||t.status===state.taskFilter);
+    const kinds={task:'Задача',followup:'Follow-up',meeting:'Встреча',payment:'Оплата'};
+    for(const task of displayed){
+      const card=document.createElement('article');card.className='vtai-workspace-item';
+      const title=document.createElement('strong');
+      title.textContent=(kinds[task.kind]||'Задача')+' · '+task.title;
+      const evidence=document.createElement('p');
+      evidence.textContent='Исходная цитата: «'+task.sourceQuote+'»';
+      const source=document.createElement('p');
+      source.textContent='Срок из текста: '+(task.deadlineText||'не указан')+
+        '. '+(task.certainty==='unclear'?'Детали надо проверить.':'Подтверждено пользователем как задача.');
+      const meta=document.createElement('p');
+      const overdue=task.status==='open'&&task.dueAt!==null&&Date.parse(task.dueAt)<Date.now();
+      meta.textContent='Статус: '+(task.status==='done'?'выполнена':task.status==='deferred'?'отложена':'активна')+
+        ' · точная дата: '+(task.dueAt?new Date(task.dueAt).toLocaleString('ru-RU'):'не задана')+
+        (overdue?' · срок прошёл':'')+'. Автонапоминаний нет.';
+      const dueRow=document.createElement('div');dueRow.className='vtai-task-date-row';
+      const dateLabel=document.createElement('label');dateLabel.className='vtai-label';
+      dateLabel.textContent='Точная дата вручную';
+      const date=document.createElement('input');date.type='datetime-local';
+      date.className='vtai-input';date.setAttribute('aria-label','Точная дата '+task.title);
+      if(task.dueAt){
+        const local=new Date(task.dueAt);
+        const offset=new Date(local.getTime()-local.getTimezoneOffset()*60000);
+        date.value=offset.toISOString().slice(0,16);
+      }
+      dateLabel.append(date);
+      const saveDue=document.createElement('button');saveDue.type='button';saveDue.className='vtai-action';
+      saveDue.textContent='Сохранить дату';
+      saveDue.addEventListener('click',()=>{
+        if(!safeIdentity())return;
+        if(!date.value)return notice('Выбери дату или нажми «Убрать дату».',true);
+        const time=Date.parse(date.value);
+        if(!Number.isFinite(time))return notice('Неверная дата.',true);
+        if(!window.confirm('Привязать вручную выбранное время к задаче? Это НЕ создаёт уведомление.'))return;
+        try{
+          state.tasks=updateOwnerTask(state.tasks,owner(),task.id,{dueAt:new Date(time).toISOString()});
+          renderTasks();notice('Дата задачи записана только в память окна. Напоминание не создавалось.');
+        }catch{notice('Не удалось обновить дату.',true)}
+      });
+      const clearDue=document.createElement('button');clearDue.type='button';clearDue.className='vtai-action';
+      clearDue.textContent='Убрать дату';
+      clearDue.addEventListener('click',()=>{
+        if(!safeIdentity())return;
+        try{state.tasks=updateOwnerTask(state.tasks,owner(),task.id,{dueAt:null});renderTasks()}
+        catch{notice('Не удалось убрать дату.',true)}
+      });
+      dueRow.append(dateLabel,saveDue,clearDue);
+      const actions=document.createElement('div');actions.className='vtai-row';
+      const change=(label,status)=>{
+        const button=document.createElement('button');button.type='button';button.className='vtai-action';
+        button.textContent=label;button.addEventListener('click',()=>{
+          if(!safeIdentity())return;
+          try{state.tasks=updateOwnerTask(state.tasks,owner(),task.id,{status});renderTasks()}
+          catch{notice('Задача другого аккаунта или уже удалена.',true)}
+        });
+        actions.append(button);
+      };
+      if(task.status!=='done')change('✓ Готово','done');
+      if(task.status!=='deferred')change('Отложить','deferred');
+      if(task.status!=='open')change('Вернуть в работу','open');
+      if(task.status!=='done'){
+        const follow=document.createElement('button');follow.type='button';follow.className='vtai-action';
+        follow.textContent='Подготовить follow-up';
+        follow.addEventListener('click',()=>{
+          if(!safeIdentity()||!ownerTasks(state.tasks,owner()).some(t=>t.id===task.id))
+            return notice('Задача недоступна для текущего аккаунта.',true);
+          if(!window.confirm('Подготовить текст follow-up по этой задаче? Он останется черновиком и не будет никому отправлен.'))return;
+          setMode('reply');
+          state.last=null;state.sendIntent=null;state.reviewedApprovalId=null;
+          $('vtaiText').value='Составь короткий, уважительный текст для уточнения статуса этой задачи. Не утверждай, что сроки согласованы, если это не подтверждено. Не обещай оплату или действия от моего имени без подтверждения.\nЗадача: '+
+            task.title+'\nЦитата из исходного текста: '+task.sourceQuote+
+            '\nСрок из сообщения: '+(task.deadlineText||'не указан')+'.';
+          $('vtaiConsent').checked=false;$('vtaiIncludeMemory').checked=false;
+          $('vtaiReview').hidden=true;$('vtaiSend').disabled=true;
+          notice('Follow-up только в черновике. Получателя и полный текст нужно проверить вручную.');
+        });
+        actions.append(follow);
+      }
+      const del=document.createElement('button');del.type='button';del.className='vtai-action vtai-danger';
+      del.textContent='Удалить задачу';
+      del.addEventListener('click',()=>{
+        if(!safeIdentity()||!window.confirm('Удалить эту задачу из текущего окна без восстановления?'))return;
+        state.tasks=ownerTasks(state.tasks,owner()).filter(t=>t.id!==task.id);
+        renderTasks();
+      });
+      actions.append(del);
+      card.append(title,evidence,source,meta,dueRow,actions);list.append(card);
+    }
+    if(!displayed.length){
+      const empty=document.createElement('p');empty.className='vtai-note';
+      empty.textContent='В этом разделе задач пока нет.';
+      list.append(empty);
+    }
+  }
+
   function renderBrief(){
     const list=$('vtaiBriefList');list.replaceChildren();
     if(!state.brief?.items?.length){
@@ -171,6 +285,25 @@ import {followupCandidates} from './vetogram-followup-core.js';
           notice('Добавлено в заметки открытой сессии. Облако и напоминания не включались.');
         }catch{notice('Не удалось создать заметку.',true)}
       });
+      const addTask=document.createElement('button');addTask.type='button';addTask.className='vtai-action';
+      addTask.textContent='＋ В Task Center';
+      addTask.addEventListener('click',()=>{
+        if(!safeIdentity()||!state.brief?.items.includes(item))return;
+        if(state.tasks.length>=MAX_TASKS)return notice('Максимум 24 задачи в текущем окне.',true);
+        if(!window.crypto?.randomUUID)return notice('Безопасные идентификаторы недоступны.',true);
+        if(!window.confirm('Создать задачу из этого AI-разбора? Проверь цитату и срок самостоятельно. Точные даты, напоминания и отправки НЕ создаются.'))return;
+        try{
+          const task=makeOwnerTask({owner:owner(),id:crypto.randomUUID(),
+            title:item.title,kind:item.kind,sourceQuote:item.sourceQuote,
+            deadlineText:item.deadlineText,certainty:item.certainty});
+          state.tasks=addOwnerTask(state.tasks,task,owner());
+          state.taskFilter='open';renderTasks();
+          notice('Задача добавлена в текущем окне. Срок нужно задать вручную.');
+        }catch(error){
+          notice(error?.message==='TASK_DUPLICATE'?'Эта задача уже находится в Task Center.':
+            'Не удалось добавить задачу.',true);
+        }
+      });
       const copy=document.createElement('button');copy.type='button';copy.className='vtai-action';
       copy.textContent='Копировать';
       copy.addEventListener('click',()=>{
@@ -180,7 +313,7 @@ import {followupCandidates} from './vetogram-followup-core.js';
           .then(()=>notice('Пункт скопирован.'),()=>notice('Не удалось скопировать.',true));
         else notice('Копирование не поддерживается.',true);
       });
-      buttons.append(save,copy);card.append(head,date,quote,buttons);list.append(card);
+      buttons.append(save,addTask,copy);card.append(head,date,quote,buttons);list.append(card);
     }
   }
   function setBusy(value){
@@ -771,6 +904,33 @@ import {followupCandidates} from './vetogram-followup-core.js';
     }catch(error){if(!internal)notice(error.message,true);}
   }
 
+  for(const [id,status] of [['vtaiTasksOpen','open'],['vtaiTasksDeferred','deferred'],
+    ['vtaiTasksDone','done'],['vtaiTasksAll','all']]){
+    $(id).addEventListener('click',()=>{
+      if(!safeIdentity())return;
+      state.taskFilter=status;renderTasks();
+    });
+  }
+  $('vtaiTasksClear').addEventListener('click',()=>{
+    if(!safeIdentity()||!state.tasks.length)return;
+    if(!window.confirm('Удалить все задачи Task Center из этого окна? Они не сохранены в облаке.'))return;
+    state.tasks=[];renderTasks();notice('Все задачи окна удалены.');
+  });
+  $('vtaiTasksCopy').addEventListener('click',()=>{
+    if(!safeIdentity())return;
+    const all=taskOverview(state.tasks,owner()).tasks;
+    if(!all.length)return notice('Задач для копирования нет.',true);
+    if(!window.confirm('Скопировать список задач и исходные цитаты в буфер обмена этого устройства?'))return;
+    const value=all.map(t=>
+      '['+(t.status==='done'?'✓':t.status==='deferred'?'–':' ')+'] '+t.title+
+      ' · '+(t.dueAt?new Date(t.dueAt).toLocaleString('ru-RU'):'дата не назначена')+
+      '\nИсточник: '+t.sourceQuote).join('\n\n');
+    if(navigator.clipboard?.writeText)
+      navigator.clipboard.writeText(value).then(
+        ()=>notice('Задачи скопированы. Проверь, кому передаёшь текст.'),
+        ()=>notice('Не удалось скопировать.',true));
+    else notice('Буфер обмена недоступен.',true);
+  });
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiFocusRefresh').addEventListener('click',()=>void loadChats());
@@ -862,5 +1022,5 @@ import {followupCandidates} from './vetogram-followup-core.js';
   });
   window.addEventListener('pageshow',()=>{if(state.identity&&state.identity!==signed())reset()});
   setMode('chat');
-  renderApprovals();renderMemory();
+  renderApprovals();renderMemory();renderTasks();
 })();
