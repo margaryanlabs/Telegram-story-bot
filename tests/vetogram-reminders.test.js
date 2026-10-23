@@ -171,3 +171,18 @@ test('reminder scheduling validates cloud revision inside the owner lock',()=>{
   assert.match(schedule,/encrypted_snapshot IS NOT NULL/);
   assert.match(api,/VETO_REMINDER_TASK_REVISION_CONFLICT/);
 });
+
+test('expired pending reminders reconcile without sends and release task write blockage',()=>{
+  const sql=source('migrations/vetogram-reminders-20261024.sql');
+  const store=source('lib/vetogram-reminder-store.js');
+  const fn=sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_expire_owner_reminders'),
+    sql.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_task_cloud_write'));
+  assert.match(fn,/WHERE owner_id=p_owner AND state='pending'/);
+  assert.match(fn,/remind_at<now\(\)-interval '1 hour'/);
+  assert.match(fn,/task_due_at<now\(\)-interval '10 minutes'/);
+  assert.match(fn,/REVOKE ALL ON FUNCTION public\.vetogram_expire_owner_reminders/);
+  assert.match(sql,/PERFORM public\.vetogram_expire_owner_reminders\(p_owner\)/);
+  assert.match(store,/SELECT public\.vetogram_expire_owner_reminders\(\$1::bigint\)/);
+  assert.match(store,/task_due_at<now\(\)-interval '10 minutes'/);
+  assert.doesNotMatch(fn,/sendMessage|TELEGRAM_BOT_TOKEN|message_text|task_title/);
+});
