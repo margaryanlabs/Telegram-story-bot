@@ -50,9 +50,9 @@ test('AI UI requires reviewed send, and Story Engine is review-only',()=>{
   assert.match(client,/window\.confirm\(/);
   assert.match(client,/crypto\.randomUUID/);
   assert.match(client,/action:'send_message'/);
-  assert.match(client,/vetogram:ai-story-suggestion/);
+  assert.match(client,/VetoTelegramApplyAiStory/);
   assert.match(story,/vetogram:ai-story-suggestion/);
-  assert.match(story,/requested\.ownerId!==state\.owner/);
+  assert.match(story,/owner\(\)!==requestedOwner/);
   assert.match(story,/state\.draft\.caption=trimText/);
   assert.match(story,/function exportToPublisher/);
   assert.doesNotMatch(client,/autoSend|backgroundSend|setInterval\(/);
