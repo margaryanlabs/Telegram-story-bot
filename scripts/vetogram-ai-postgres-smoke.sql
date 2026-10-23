@@ -89,22 +89,42 @@ BEGIN
   GET DIAGNOSTICS n=ROW_COUNT;
   IF n<>0 THEN RAISE EXCEPTION 'CI_TASK_STALE_RESTORE_ALLOWED'; END IF;
   RAISE NOTICE 'VETOGRAM Task Cloud SQL CAS/tombstone smoke PASS';
+  -- Dummy ciphertext only: SQL tests owner locking without decryption.
+  PERFORM public.vetogram_task_cloud_write(98760001,3,'ci.task.v4',false);
+  PERFORM public.vetogram_task_cloud_write(98760002,0,'ci.other.v1',false);
   -- One-shot reminders: owner isolation, pending-only cancel, atomic claims,
   -- no automatic replay after an uncertain attempt.
   PERFORM public.vetogram_schedule_reminder(
     98760001,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,
-    now()+interval '6 minutes',now()+interval '12 minutes','Asia/Yerevan');
+    now()+interval '6 minutes',now()+interval '12 minutes','Asia/Yerevan',4);
   SELECT count(*) INTO n FROM public.vetogram_reminders
     WHERE owner_id=98760001 AND state='pending';
   IF n<>1 THEN RAISE EXCEPTION 'CI_REMINDER_CREATION_FAILED'; END IF;
+  blocked:=false;
+  BEGIN
+    PERFORM public.vetogram_task_cloud_write(98760001,4,'ci.other-device',false);
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM='VETO_TASK_PENDING_REMINDERS' THEN blocked:=true; ELSE RAISE; END IF;
+  END;
+  IF NOT blocked THEN RAISE EXCEPTION 'CI_PENDING_REMINDER_ALLOWED_CLOUD_SAVE'; END IF;
   UPDATE public.vetogram_reminders SET state='canceled',enabled_by_owner=false
     WHERE owner_id=98760001 AND task_id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid
       AND state='pending';
   GET DIAGNOSTICS n=ROW_COUNT;
   IF n<>1 THEN RAISE EXCEPTION 'CI_REMINDER_CANCEL_FAILED'; END IF;
+  PERFORM public.vetogram_task_cloud_write(98760001,4,'ci.after-cancel',false);
+  blocked:=false;
+  BEGIN
+    PERFORM public.vetogram_schedule_reminder(
+      98760001,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid,
+      now()+interval '6 minutes',now()+interval '12 minutes','Asia/Yerevan',4);
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM='VETO_REMINDER_TASK_REVISION_CONFLICT' THEN blocked:=true; ELSE RAISE; END IF;
+  END;
+  IF NOT blocked THEN RAISE EXCEPTION 'CI_STALE_REMINDER_SNAPSHOT_ACCEPTED'; END IF;
   PERFORM public.vetogram_schedule_reminder(
     98760001,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid,
-    now()+interval '6 minutes',now()+interval '12 minutes','Asia/Yerevan');
+    now()+interval '6 minutes',now()+interval '12 minutes','Asia/Yerevan',5);
   -- Advance CI-only clock by moving a synthetic due row backward.
   UPDATE public.vetogram_reminders SET remind_at=now()-interval '1 minute'
     WHERE owner_id=98760001 AND task_id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid;
@@ -121,7 +141,7 @@ BEGIN
   BEGIN
     PERFORM public.vetogram_schedule_reminder(
       98760001,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid,
-      now()+interval '10 minutes',now()+interval '20 minutes','Asia/Yerevan');
+      now()+interval '10 minutes',now()+interval '20 minutes','Asia/Yerevan',5);
     RAISE EXCEPTION 'CI_REMINDER_REPLAY_ALLOWED';
   EXCEPTION WHEN SQLSTATE 'P0001' THEN
     IF SQLERRM <> 'VETO_REMINDER_ALREADY_ATTEMPTED' THEN RAISE; END IF;
@@ -129,10 +149,10 @@ BEGIN
   -- Owner-scoped bulk cancel: other owners and completed attempts survive.
   PERFORM public.vetogram_schedule_reminder(
     98760001,'cccccccc-cccc-4ccc-8ccc-cccccccccccc'::uuid,
-    now()+interval '8 minutes',now()+interval '16 minutes','Asia/Yerevan');
+    now()+interval '8 minutes',now()+interval '16 minutes','Asia/Yerevan',5);
   PERFORM public.vetogram_schedule_reminder(
     98760002,'dddddddd-dddd-4ddd-8ddd-dddddddddddd'::uuid,
-    now()+interval '8 minutes',now()+interval '16 minutes','Asia/Yerevan');
+    now()+interval '8 minutes',now()+interval '16 minutes','Asia/Yerevan',1);
   UPDATE public.vetogram_reminders SET state='canceled',
       enabled_by_owner=false,updated_at=now(),completed_at=now()
     WHERE owner_id=98760001 AND state='pending';
