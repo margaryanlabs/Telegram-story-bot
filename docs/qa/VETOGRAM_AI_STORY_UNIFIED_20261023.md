@@ -254,3 +254,13 @@ Next independent milestone: server-side request audit entries and *explicit* per
 - Verified the existing Vercel adapter has a configured `maxDuration` of 60 seconds, while the AI provider AbortController timeout is 17 seconds. No deployment timeout adjustments were needed.
 - Tried an isolated `git clone` to run tests locally; local container DNS could not resolve github.com. Existing GitHub Actions jobs remained unsuccessful with unavailable detailed logs. Therefore full repo tests, live AI calls, browser E2E and PostgreSQL smoke remain **unverified**, and Vercel production was left unchanged.
 - PR #181 remains draft. Parent Story Engine PR #180 and onboarding PR #179 are still required for release.
+
+
+## Dialog paging and owner-chosen older chat — next continuation
+
+- Previously the AI reply selector called `/api/telegram-chats` only for page zero (24 dialogs). Older live conversations were not selectable, including a chat that the owner explicitly opened before tapping "Reply with VETO AI."
+- Now `loadChats` supports explicit incremental "Ещё чаты" buttons in both the Reply review panel and Negotiator Lab. A target selected by the owner in an already open Telegram thread can be sought across server-provided dialog pages, stopping once the exact owner-chosen numeric chat ID is located.
+- Client page/recipient logic lives in testable pure `public/vetogram-ai-dialogs-core.js`; deduplicates ID rows and excludes archive-only, invalid, non-sendable or channel rows. Bounded to up to 11 pages (API maximum 500 dialogs), and DOES NOT automatically crawl all chats without an explicit sought recipient. Neither list previews nor full message content are transmitted to any LLM.
+- Added `tests/vetogram-ai-dialogs.test.js` and a syntax check to `package.json`. UI buttons are hidden when no further page exists and share the owner-account request guard. An Approval Center draft for an older chat now resolves that recipient on demand before confirming send.
+- Performed 14 targeted in-memory JS behavioral/parser checks for page limits, deduplication, sendable-type filtering, targets, HTML wiring and module syntax, all passed. This is not the full Node suite or Telegram E2E.
+- Build remains blocked by Vercel build-rate-limit and unverified GitHub Actions jobs. No production DB, Telegram session, deployed app, or customer message was changed.
