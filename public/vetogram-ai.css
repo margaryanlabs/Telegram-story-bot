@@ -58,3 +58,8 @@ textarea.vtai-input{min-height:110px;resize:vertical}
 #vtaiActionPanel[hidden],#vtaiActionMore[hidden]{display:none!important}
 #vtaiActionStatus{padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.045)}
 #vtaiActionMatches{width:100%;min-height:44px}
+
+/* Local Smart Inbox Focus: readable, low-noise and responsive. */
+#vtaiFocusMore[hidden],#vtaiFocusRestore[hidden]{display:none!important}
+#vtaiFocusList .vtai-workspace-item{overflow-wrap:anywhere}
+#vtaiFocusStatus{padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.04)}
