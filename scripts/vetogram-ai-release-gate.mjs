@@ -11,7 +11,9 @@ const paths=[
   'api/vetogram-ai-memory.js','api/router.js',
   'lib/vetogram-ai-agent-control.js','lib/vetogram-ai-grants.js',
   'lib/vetogram-ai-quota.js','lib/vetogram-ai-memory-crypto.js',
-  'api/vetogram-tasks.js','lib/vetogram-task-cloud-store.js','lib/vetogram-task-cloud-crypto.js'
+  'api/vetogram-tasks.js','lib/vetogram-task-cloud-store.js','lib/vetogram-task-cloud-crypto.js',
+  'api/vetogram-reminders.js','api/vetogram-reminder-worker.js',
+  'lib/vetogram-reminder-store.js'
 ];
 const files=Object.fromEntries(paths.map(x=>[x,read(x)]));
 const migrations=inspectAiMigrationSources(migrationSources);
