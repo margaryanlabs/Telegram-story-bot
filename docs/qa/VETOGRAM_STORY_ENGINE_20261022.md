@@ -52,3 +52,19 @@ The Story Engine controller now snapshots the active Telegram owner and draft ID
 - Remix of a private draft does not inherit private image, Portal or original layer text; it keeps only the shape and editable layout with placeholder text.
 - Added model and UI contract regression tests. No server migrations, credentials, production rollout, Story publish API changes, or paid AI calls.
 - Remaining: live Android/iOS WebView gestures, actual preview build tests, video editing, public Portal link/response pipeline, cross-account cloud storage and generative AI.
+
+## Portal interactions — 23 October 2026
+
+The existing five Portal categories now have functional **local-only previews**:
+- Invite and Waitlist expose an explicit acknowledgement button, clearly marked as a simulation (no contact information collection).
+- Offer opens only an explicitly configured HTTPS URL, after a click and with the hostname visible.
+- Links supports one primary HTTPS destination and up to four additional labeled, validated HTTPS destinations.
+- Poll supports two to five distinct options, keyboard-operable choice controls, and on-screen selection feedback; votes are never sent or stored.
+
+The editor persists options and link-hub links alongside other Portal configuration in the owner-scoped device-local draft. Rendering uses DOM textContent instead of user-derived markup. External links use rel="noopener noreferrer". Preview modals close on app navigation and Telegram owner/draft change and clean up event listeners.
+
+**Not yet released:** public URLs, event/RSVP/waitlist submissions, actual vote counts, analytics, or backend persistence of Portal responses. These need a specifically approved backend schema, authentication, moderation, retention, user-facing privacy notice and anti-abuse limits. No Neon schema changes, Vercel production deployment or AI charges were performed. Portal previews must not be advertised as deployed public mini-sites.
+
+### Verification
+
+Static JavaScript syntax and UI element wiring inspected. Added unit/source contract checks for poll choices, safe link hubs and interactive preview. Full Node test suite and phone/browser E2E tests remain unconfirmed until a build environment allows testing; do not treat GitHub status or canceled Vercel deployments as proof of successful compilation.
