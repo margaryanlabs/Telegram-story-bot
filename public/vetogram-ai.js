@@ -107,6 +107,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
       state.negotiationDraft=null;
       state.negotiationPolicy=negotiationPolicy;
       $('vtaiNegNotice').textContent='Условия применены только к одному AI-запросу. Отправка остаётся ручной.';
+      if(prompt.length>3000)return notice('Сократи текст клиента или цель: максимальная длина запроса с условиями — 3000 символов.',true);
     }
     const approvedNotes=$('vtaiIncludeMemory').checked
       ?buildMemoryContext(state.memory,[...state.selectedNotes],owner()):[];
