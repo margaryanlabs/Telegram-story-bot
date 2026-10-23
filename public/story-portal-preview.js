@@ -1,7 +1,8 @@
 import {normalizePortal,safeExternalUrl,PORTAL_TYPES,trimText} from './story-engine-core.js';
 
 /** Interactive LOCAL Portal preview: no public URL or server-side response storage. */
-export function showPortalPreview(raw) {
+export function showPortalPreview(raw,{stillAuthorized=()=>true}={}) {
+  if(!stillAuthorized())throw Error('Telegram-аккаунт изменился');
   const portal=normalizePortal(raw);
   const doc=document,returnFocus=doc.activeElement;
   const overlay=doc.createElement('div');overlay.className='se-portal-demo-overlay';
@@ -20,7 +21,20 @@ export function showPortalPreview(raw) {
   const disclaimer=doc.createElement('p');disclaimer.className='se-portal-demo-disclaimer';
   disclaimer.textContent='Локальный интерактивный предпросмотр: голосования, приглашения и заявки не отправляются и не хранятся на сервере. Публичного Portal пока нет.';
   const oldOverflow=doc.body.style.overflow;
-  const done=()=>{doc.removeEventListener('keydown',onKeys);overlay.remove();doc.body.style.overflow=oldOverflow;returnFocus?.focus?.()};
+  let closed=false;
+  const done=()=>{
+    if(closed)return;
+    closed=true;
+    doc.removeEventListener('keydown',onKeys);
+    window.removeEventListener('veto:screen-changed',onContextChange);
+    window.removeEventListener('pageshow',onContextChange);
+    window.removeEventListener('focus',onContextChange);
+    overlay.remove();doc.body.style.overflow=oldOverflow;returnFocus?.focus?.();
+  };
+  const onContextChange=e=>{
+    if(e?.type==='veto:screen-changed'&&e.detail?.screen!=='story-engine')return done();
+    if(!stillAuthorized())done();
+  };
   const onKeys=e=>{
     if(e.key==='Escape'){e.preventDefault();done();return}
     if(e.key==='Tab'){
@@ -75,6 +89,9 @@ export function showPortalPreview(raw) {
   panel.append(close,type,title,desc,actions,feedback,disclaimer);
   overlay.append(panel);doc.body.append(overlay);
   doc.body.style.overflow='hidden';doc.addEventListener('keydown',onKeys);
+  window.addEventListener('veto:screen-changed',onContextChange);
+  window.addEventListener('pageshow',onContextChange);
+  window.addEventListener('focus',onContextChange);
   close.focus();
   return {close:done};
 }
