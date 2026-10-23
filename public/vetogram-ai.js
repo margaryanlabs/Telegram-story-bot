@@ -1,10 +1,11 @@
 import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNotes,buildMemoryContext,MAX_MEMORY_NOTES} from './vetogram-ai-workspace-core.js';
+import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from './vetogram-negotiator-core.js';
 (() => {
   'use strict';
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -23,6 +24,7 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
+    state.negotiationPolicy=null;state.negotiationDraft=null;$('vtaiNegNotice').textContent='Сначала выбери чат и введи условия.';
     $('vtaiIncludeMemory').checked=false;$('vtaiMemoryLabel').value='';$('vtaiMemoryContent').value='';
     renderApprovals();renderMemory();
     $('vtaiConsent').checked=false;$('vtaiReplacePortal').checked=false;$('vtaiPortalReview').hidden=true;
@@ -38,10 +40,12 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
     card.scrollIntoView?.({block:'nearest',behavior:'smooth'});
   }
   function setMode(mode){
-    if(!['chat','translate','reply','story','campaign'].includes(mode))return;
+    if(!['chat','translate','reply','story','campaign','negotiator'].includes(mode))return;
     if(state.mode!==mode){state.history=[];$('vtaiThread').replaceChildren();state.last=null;state.reviewedApprovalId=null;
       $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;}
+    if(mode!=='negotiator'){state.negotiationPolicy=null;state.negotiationDraft=null;$('vtaiDraft').readOnly=false;}
     state.mode=mode;
+    $('vtaiNegPanel').hidden=mode!=='negotiator';
     document.querySelectorAll('[data-vtai-mode]').forEach(b=>{
       b.classList.toggle('active',b.dataset.vtaiMode===mode);
       b.setAttribute('aria-pressed',String(b.dataset.vtaiMode===mode));
@@ -52,9 +56,10 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
       translate:'Вставь текст для перевода…',
       reply:'Опиши ситуацию или вставь сообщение, на которое нужен ответ…',
       story:'О чём создать Story? Для кого, какой стиль и предложение?',
-      campaign:'Что продаём или анонсируем? Кто покупатель и какое действие нужно?'
+      campaign:'Что продаём или анонсируем? Кто покупатель и какое действие нужно?',
+      negotiator:'Вставь сообщение клиента, на которое нужно подготовить ответ…'
     }[mode];
-    $('vtaiCreate').textContent=mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
+    $('vtaiCreate').textContent=mode==='negotiator'?'Подготовить ответ на переговоры':mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
   }
   function setBusy(value){
     state.busy=value;
@@ -81,10 +86,28 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
     if(!$('vtaiConsent').checked)return notice('Разреши передачу введённого текста AI-провайдеру',true);
     const original=$('vtaiText').value.trim();
     if(original.length<2||original.length>3000)return notice('Введите от 2 до 3000 символов',true);
-    const prompt=state.mode==='translate'
+    let prompt=state.mode==='translate'
       ?'Переведи точно на '+$('vtaiLanguageSelect').value+'. Верни только перевод:\n'+original
       :original;
     const mode=state.mode,oldHistory=[...state.history];
+    let negotiationPolicy=null;
+    if(mode==='negotiator'){
+      const chatId=$('vtaiNegRecipient').value;
+      const match=state.dialogs.find(c=>String(c.id)===chatId);
+      if(!match)return notice('Сначала загрузи и выбери один собственный чат.',true);
+      try{
+        negotiationPolicy=makeNegotiationPolicy({
+          owner:owner(),chatId,currency:$('vtaiNegCurrency').value,
+          minPrice:$('vtaiNegFloor').value,askingPrice:$('vtaiNegAsking').value,
+          maxDiscountPct:$('vtaiNegDiscount').value,
+          minutes:$('vtaiNegMinutes').value
+        });
+        prompt=negotiationBrief(negotiationPolicy,$('vtaiNegGoal').value,original);
+      }catch(error){return notice('Проверь цену, скидку, срок и цель: '+error.message,true);}
+      state.negotiationDraft=null;
+      state.negotiationPolicy=negotiationPolicy;
+      $('vtaiNegNotice').textContent='Условия применены только к одному AI-запросу. Отправка остаётся ручной.';
+    }
     const approvedNotes=$('vtaiIncludeMemory').checked
       ?buildMemoryContext(state.memory,[...state.selectedNotes],owner()):[];
     // One-shot consent: notes cannot silently leak into the next request.
@@ -98,7 +121,29 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
       addBubble(original,'user');addBubble(answer.text,'assistant');
       if(mode==='chat')state.history=[...oldHistory,{role:'user',text:prompt},{role:'assistant',text:answer.text}].slice(-6);
       state.last=answer.text;
-      if(['story','campaign'].includes(mode)&&answer.story){
+      if(mode==='negotiator'){
+        const proposal=answer.negotiation;
+        const result=verifyNegotiationProposal(negotiationPolicy,proposal,{
+          owner:owner(),chatId:negotiationPolicy.chatId
+        });
+        $('vtaiNegNotice').textContent=result.allowed
+          ?'Черновик проверен: '+result.reason+'. Прочитай перед отправкой.'
+          :'Предложение заблокировано: '+result.reason+'. Исправь условия и сгенерируй заново.';
+        $('vtaiDraft').value=proposal?.reply||answer.text;
+        $('vtaiDraft').readOnly=true;
+        if(result.allowed){
+          state.negotiationDraft=proposal;
+          state.negotiationPolicy=negotiationPolicy;
+          $('vtaiRecipients').value=negotiationPolicy.chatId;
+          $('vtaiReview').hidden=false;
+          $('vtaiSend').disabled=false;
+        }else{
+          state.negotiationDraft=null;
+          $('vtaiReview').hidden=true;
+        }
+        notice(result.allowed?'Переговорный ответ готов. Только ручное подтверждение.'
+          :'AI предложил действие вне указанных границ. Отправка заблокирована.',!result.allowed);
+      }else if(['story','campaign'].includes(mode)&&answer.story){
         $('vtaiStoryTitle').value=answer.story.title;
         $('vtaiStorySubtitle').value=answer.story.subtitle;
         $('vtaiStoryCaption').value=answer.story.caption;
@@ -119,7 +164,8 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
         notice('Текст подготовлен. Ничего не отправлено.');
       }
     }catch(error){notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);}
-    finally{setBusy(false);$('vtaiSend').disabled=!state.last||['story','campaign'].includes(state.mode)||!state.dialogs.length;}
+    finally{setBusy(false);$('vtaiSend').disabled=!state.last||['story','campaign'].includes(state.mode)||!state.dialogs.length||
+      (state.mode==='negotiator'&&!state.negotiationDraft);}
   }
   async function loadChats(){
     if(state.busy||!safeIdentity())return;
@@ -132,11 +178,19 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
       state.dialogs=chats;
       const picker=$('vtaiRecipients');picker.replaceChildren(new Option('Выбрать получателя',''));
       for(const c of chats)picker.append(new Option(String(c.title||'Чат').slice(0,90),String(c.id)));
+      const negPicker=$('vtaiNegRecipient');negPicker.replaceChildren(new Option('Выбери один чат',''));
+      for(const c of chats)negPicker.append(new Option(String(c.title||'Чат').slice(0,90),String(c.id)));
       if(state.suggestedChatId&&chats.some(c=>String(c.id)===state.suggestedChatId))
         picker.value=state.suggestedChatId;
       notice(chats.length?'Чаты загружены. AI не получил их содержимое.':'Доступных чатов для отправки нет.',!chats.length);
     }catch(error){notice(error.message,true)}
-    finally{setBusy(false);$('vtaiSend').disabled=!state.last||!state.dialogs.length||state.mode==='story';}
+    finally{setBusy(false);$('vtaiSend').disabled=!state.last||!state.dialogs.length||['story','campaign'].includes(state.mode)||(state.mode==='negotiator'&&!state.negotiationDraft);}
+  }
+  function validNegotiatorSend(chatId,message){
+    if(state.mode!=='negotiator')return true;
+    const policy=state.negotiationPolicy,proposal=state.negotiationDraft;
+    if(!policy||!proposal||message!==proposal.reply)return false;
+    return verifyNegotiationProposal(policy,proposal,{owner:owner(),chatId}).allowed;
   }
   const requestedSendKey=(ownerId,chatId,text)=>JSON.stringify([ownerId,chatId,text]);
   async function send(){
@@ -145,6 +199,7 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
     if(!state.dialogs.some(c=>String(c.id)===chatId))return notice('Выбери чат из списка',true);
     const message=$('vtaiDraft').value.trim();
     if(!message||message.length>4096)return notice('Длина сообщения: 1–4096 символов',true);
+    if(!validNegotiatorSend(chatId,message))return notice('Разрешение Negotiator истекло или ответ изменён. Создай новый черновик.',true);
     const title=state.dialogs.find(c=>String(c.id)===chatId)?.title||'чат';
     // No autonomous sends. This confirmation is separate from AI-provider consent.
     if(!window.confirm('Отправить это сообщение от твоего имени в чат «'+String(title).slice(0,70)+'»?\n\n'+message.slice(0,650)))return;
@@ -234,6 +289,7 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
     const chat=state.dialogs.find(x=>String(x.id)===chatId);
     const message=$('vtaiDraft').value.trim();
     if(!chat||!message||message.length>4096)return notice('Сначала подготовь ответ и выбери получателя.',true);
+    if(!validNegotiatorSend(chatId,message))return notice('Negotiator: условия или срок больше не действуют.',true);
     if(!window.crypto?.randomUUID)return notice('Невозможно создать безопасный черновик.',true);
     try{
       const key=requestedSendKey(owner(),chatId,message);
@@ -313,6 +369,7 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
 
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
+  $('vtaiNegLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiSend').addEventListener('click',()=>void send());
   $('vtaiQueue').addEventListener('click',queueCurrent);
   $('vtaiClearApprovals').addEventListener('click',()=>{
