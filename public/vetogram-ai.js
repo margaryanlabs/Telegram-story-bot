@@ -5,7 +5,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,memoryRevision:null,memoryBusy:false};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -24,6 +24,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
+    state.memoryRevision=null;state.memoryBusy=false;$('vtaiMemoryCloudStatus').textContent='Облачные заметки не загружены. Серверное шифрование, не E2EE.';
     state.negotiationPolicy=null;state.negotiationDraft=null;$('vtaiNegNotice').textContent='Сначала выбери чат и введи условия.';
     $('vtaiIncludeMemory').checked=false;$('vtaiMemoryLabel').value='';$('vtaiMemoryContent').value='';
     renderApprovals();renderMemory();
@@ -73,7 +74,8 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
     try{
       const result=await fetch(url,{method:'POST',
         headers:{'content-type':'application/json','x-telegram-init-data':requestOwner,
-          ...(consent?{'x-vetogram-ai-consent':'yes'}:{})},
+          ...(consent===true?{'x-vetogram-ai-consent':'yes'}:{}),
+          ...(consent==='memory'?{'x-vetogram-memory-consent':'yes'}:{})},
         body:JSON.stringify(body),signal:abort.signal});
       const json=await result.json().catch(()=>({}));
       if(signed()!==requestOwner||!owner()){reset();throw Error('Аккаунт изменился. Действие отменено.');}
@@ -354,6 +356,54 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
       list.append(empty);
     }
   }
+
+  function memoryStatus(text,isError=false){
+    $('vtaiMemoryCloudStatus').textContent=text;
+    if(isError)notice(text,true);
+  }
+  async function loadMemoryCloud(){
+    if(state.memoryBusy||state.busy||!safeIdentity())return;
+    if(state.memory.length&&!window.confirm('Загрузить серверную копию? Несохранённые локальные заметки будут заменены.'))return;
+    state.memoryBusy=true;
+    $('vtaiMemoryCloudLoad').disabled=true;
+    try{
+      const result=await request('/api/vetogram-ai-memory',{action:'list'});
+      if(!safeIdentity())return;
+      state.memory=Array.isArray(result.notes)?result.notes.map(note=>({...note,owner:owner()})):[];
+      state.memoryRevision=result.revision;
+      state.selectedNotes.clear();$('vtaiIncludeMemory').checked=false;
+      renderMemory();memoryStatus('Заметки загружены из зашифрованного хранилища VETOGRAM. Ревизия: '+result.revision+'.');
+    }catch(error){memoryStatus('Облачная память не загружена: '+error.message,true);}
+    finally{state.memoryBusy=false;$('vtaiMemoryCloudLoad').disabled=false;}
+  }
+  async function writeMemoryCloud(notes){
+    if(state.memoryBusy||state.busy||!safeIdentity())return false;
+    if(!Number.isSafeInteger(state.memoryRevision))return memoryStatus('Сначала загрузите облачные заметки, чтобы не перезаписать другую версию.',true),false;
+    state.memoryBusy=true;
+    $('vtaiMemoryCloudSave').disabled=true;$('vtaiMemoryCloudErase').disabled=true;
+    try{
+      const rows=notes.map(note=>({id:note.id,label:note.label,content:note.content,createdAt:note.createdAt}));
+      const result=await request('/api/vetogram-ai-memory',
+        {action:'replace',revision:state.memoryRevision,notes:rows},'memory');
+      if(!safeIdentity())return false;
+      state.memoryRevision=result.revision;
+      memoryStatus('Сервер подтвердил зашифрованное сохранение. Ревизия: '+result.revision+'.');
+      return true;
+    }catch(error){memoryStatus('Не сохранено: '+error.message,true);return false;}
+    finally{state.memoryBusy=false;$('vtaiMemoryCloudSave').disabled=false;$('vtaiMemoryCloudErase').disabled=false;}
+  }
+  async function saveMemoryCloud(){
+    if(!safeIdentity())return;
+    if(!window.confirm('Сохранить выбранные локальные заметки в серверное зашифрованное хранилище VETOGRAM? Это не E2EE.'))return;
+    await writeMemoryCloud(state.memory);
+  }
+  async function eraseMemoryCloud(){
+    if(!safeIdentity())return;
+    if(!window.confirm('Стереть все заметки из облачной копии? Локальные заметки в текущем окне останутся.'))return;
+    const ok=await writeMemoryCloud([]);
+    if(ok)memoryStatus('Облачная копия очищена. Локальные заметки в текущем окне сохранены.');
+  }
+
   function addMemory(){
     if(!safeIdentity())return;
     if(state.memory.length>=MAX_MEMORY_NOTES)return notice('Можно сохранить до восьми заметок на время этой сессии.',true);
@@ -378,6 +428,9 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
     state.approvals=[];state.reviewedApprovalId=null;renderApprovals();
   });
   $('vtaiAddMemory').addEventListener('click',addMemory);
+  $('vtaiMemoryCloudLoad').addEventListener('click',()=>void loadMemoryCloud());
+  $('vtaiMemoryCloudSave').addEventListener('click',()=>void saveMemoryCloud());
+  $('vtaiMemoryCloudErase').addEventListener('click',()=>void eraseMemoryCloud());
   $('vtaiClearMemory').addEventListener('click',()=>{
     if(!safeIdentity())return;
     state.memory=[];state.selectedNotes.clear();$('vtaiIncludeMemory').checked=false;renderMemory();
