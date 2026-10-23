@@ -5,7 +5,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -24,7 +24,8 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
-    state.memoryRevision=null;state.memoryBusy=false;state.agentPaused=null;state.agentBusy=false;
+    state.memoryRevision=null;state.memoryBusy=false;state.agentPaused=null;state.agentBusy=false;state.chatNextPage=0;state.chatHasMore=false;
+    $('vtaiMoreChats').hidden=true;$('vtaiNegMoreChats').hidden=true;
     $('vtaiAgentState').textContent='Статус не проверен для текущего аккаунта.';
     $('vtaiAgentEvents').replaceChildren();$('vtaiMemoryCloudStatus').textContent='Облачные заметки не загружены. Серверное шифрование, не E2EE.';
     state.negotiationPolicy=null;state.negotiationDraft=null;state.negotiationGrant=null;$('vtaiNegNotice').textContent='Сначала выбери чат и введи условия.';
@@ -191,24 +192,69 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
     finally{setBusy(false);$('vtaiSend').disabled=!state.last||['story','campaign'].includes(state.mode)||!state.dialogs.length||
       (state.mode==='negotiator'&&!state.negotiationDraft);}
   }
-  async function loadChats(){
+  // Telegram returns only 24 dialogs in the initial page. Other existing
+  // conversations stay accessible by explicit "more" or target lookup.
+  // Only dialog metadata enters this screen; chat messages are never sent to AI.
+  async function loadChats({more=false,seekChatId=null}={}){
     if(state.busy||!safeIdentity())return;
-    setBusy(true);notice('Загружаю только список твоих чатов, без передачи сообщений AI.');
+    const searchId=String(seekChatId||(more?'':state.suggestedChatId)||'');
+    const validTarget=/^-?\d{1,22}$/.test(searchId)?searchId:null;
+    if(more&&!state.chatHasMore)return;
+    const startedOwner=signed();
+    setBusy(true);
+    notice(validTarget?'Нахожу выбранную переписку среди доступных чатов…':
+      more?'Загружаю следующую страницу чатов…':'Загружаю список твоих чатов без передачи сообщений AI.');
+    let page=more?state.chatNextPage:0;
+    let merged=more?[...state.dialogs]:[];
+    let hasMore=more?state.chatHasMore:true;
     try{
-      const data=await request('/api/telegram-chats',{action:'list',page:0});
-      // Server still validates the owner and recipient before every send.
-      const chats=(data.chats||[]).filter(c=>!c.archiveOnly&&c.serverCanSend!==false &&
-        ['private','group','bot','saved'].includes(c.type)&&/^-?\d{1,22}$/.test(String(c.id)));
-      state.dialogs=chats;
-      const picker=$('vtaiRecipients');picker.replaceChildren(new Option('Выбрать получателя',''));
-      for(const c of chats)picker.append(new Option(String(c.title||'Чат').slice(0,90),String(c.id)));
-      const negPicker=$('vtaiNegRecipient');negPicker.replaceChildren(new Option('Выбери один чат',''));
-      for(const c of chats)negPicker.append(new Option(String(c.title||'Чат').slice(0,90),String(c.id)));
-      if(state.suggestedChatId&&chats.some(c=>String(c.id)===state.suggestedChatId))
-        picker.value=state.suggestedChatId;
-      notice(chats.length?'Чаты загружены. AI не получил их содержимое.':'Доступных чатов для отправки нет.',!chats.length);
-    }catch(error){notice(error.message,true)}
-    finally{setBusy(false);$('vtaiSend').disabled=!state.last||!state.dialogs.length||['story','campaign'].includes(state.mode)||(state.mode==='negotiator'&&!state.negotiationDraft);}
+      const selected=$('vtaiRecipients').value;
+      const negSelected=$('vtaiNegRecipient').value;
+      // At most 11 bounded pages: first 24 then ten pages of 50 (max 500).
+      while(hasMore&&page<=10){
+        const result=await request('/api/telegram-chats',{action:'list',page});
+        if(startedOwner!==signed())throw Error('Аккаунт изменился.');
+        const incoming=(Array.isArray(result.chats)?result.chats:[]).filter(c=>
+          c&&!c.archiveOnly&&c.serverCanSend!==false&&
+          ['private','group','bot','saved'].includes(c.type)&&
+          /^-?\d{1,22}$/.test(String(c.id)));
+        const ids=new Set(merged.map(c=>String(c.id)));
+        for(const c of incoming)if(!ids.has(String(c.id))){
+          ids.add(String(c.id));merged.push(c);
+        }
+        hasMore=result.hasMore===true;
+        page++;
+        // Do not crawl all Telegram dialogs unless a specific owner-chosen
+        // recipient needs resolution. Otherwise load one page per click.
+        if(!validTarget||merged.some(c=>String(c.id)===validTarget))break;
+      }
+      state.dialogs=merged.slice(0,500);
+      state.chatNextPage=page;
+      state.chatHasMore=hasMore&&page<=10;
+      const populate=(id,title,previous)=>{
+        const pick=$(id);pick.replaceChildren(new Option(title,''));
+        for(const c of state.dialogs)pick.append(new Option(String(c.title||'Чат').slice(0,90),String(c.id)));
+        if(previous&&state.dialogs.some(c=>String(c.id)===previous))pick.value=previous;
+      };
+      populate('vtaiRecipients','Выбрать получателя',selected);
+      populate('vtaiNegRecipient','Выбери один чат',negSelected);
+      if(validTarget&&state.dialogs.some(c=>String(c.id)===validTarget))
+        $('vtaiRecipients').value=validTarget;
+      $('vtaiMoreChats').hidden=!state.chatHasMore;
+      $('vtaiNegMoreChats').hidden=!state.chatHasMore;
+      notice(validTarget&&!state.dialogs.some(c=>String(c.id)===validTarget)
+        ?'Переписка не найдена среди доступных Telegram-диалогов.':
+        state.dialogs.length?'Доступно чатов: '+state.dialogs.length+'. Содержимое не передано AI.':
+        'Нет доступных диалогов для отправки.',!state.dialogs.length||
+          Boolean(validTarget&&!state.dialogs.some(c=>String(c.id)===validTarget)));
+    }catch(error){
+      notice('Не удалось загрузить чаты: '+error.message,true);
+    }finally{
+      setBusy(false);
+      $('vtaiSend').disabled=!state.last||!state.dialogs.length||
+        ['story','campaign'].includes(state.mode)||
+        (state.mode==='negotiator'&&!state.negotiationDraft);
+    }
   }
   function validNegotiatorSend(chatId,message){
     if(state.mode!=='negotiator')return true;
@@ -328,7 +374,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
     if(state.busy||!safeIdentity())return;
     const item=activeApprovals(state.approvals,owner()).find(entry=>entry.id===id);
     if(!item)return notice('Черновик больше не доступен.',true);
-    if(!state.dialogs.some(chat=>String(chat.id)===item.chatId))await loadChats();
+    if(!state.dialogs.some(chat=>String(chat.id)===item.chatId))await loadChats({seekChatId:item.chatId});
     if(!safeIdentity()||!state.dialogs.some(chat=>String(chat.id)===item.chatId))
       return notice('Этот Telegram-чат сейчас недоступен.',true);
     setMode('reply');
@@ -524,6 +570,8 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiNegLoadChats').addEventListener('click',()=>void loadChats());
+  $('vtaiMoreChats').addEventListener('click',()=>void loadChats({more:true}));
+  $('vtaiNegMoreChats').addEventListener('click',()=>void loadChats({more:true}));
   $('vtaiAgentRefresh').addEventListener('click',()=>void agentStatus());
   $('vtaiAgentPause').addEventListener('click',()=>void changeAgentPause(true));
   $('vtaiAgentResume').addEventListener('click',()=>void changeAgentPause(false));
