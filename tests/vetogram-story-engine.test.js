@@ -76,7 +76,7 @@ test('the real VETOGRAM Mini App integrates a new screen but keeps the legacy St
 });
 test('Portal is visibly a local-only preview, not a falsely live public URL',()=>{
   const html=read('public/studio.html'),ui=read('public/story-engine.js');
-  assert.match(html,/не публичная ссылка/);
+  assert.match(html,/создай отдельную публичную ссылку/);
   assert.match(html,/не кликабельная ссылка Telegram/);
   assert.match(ui,/Публичной ссылки пока нет/);
   assert.match(ui,/owner\(\)!==requestedOwner \|\| state\.owner!==requestedOwner/);
