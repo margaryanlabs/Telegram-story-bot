@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { publishPhotoStory, publishPhotoStoryUserSession, deleteStoryUserSession, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
+import {validateStoryPortalLink} from '../lib/story-portal-media-area.js';
 import {
   getBusinessConnectionState,
   getViewerSession,
@@ -640,6 +641,21 @@ export default async function handler(req, res) {
 
       const caption = String(body.caption || '').slice(0, 2048);
       const nonce = String(body.nonce || crypto.randomUUID()).slice(0, 120);
+      // Clickable Portal areas are opt-in and only supported in Business Bot
+      // API standard-audience posts. Reject unsupported requests before writes.
+      let portalLink = null;
+      if (body.portalLink !== undefined && body.portalLink !== null && body.portalLink !== '') {
+        if (settings.audience !== 'standard' || !canPublishBusiness) {
+          res.status(409).json({ok:false,error:'Кликабельный Portal пока доступен только для стандартной аудитории Telegram Business. Отключи ссылку или выбери стандартную аудиторию.'});
+          return;
+        }
+        try {
+          portalLink = validateStoryPortalLink(body.portalLink, {host:req.headers.host});
+        } catch(error) {
+          res.status(400).json({ok:false,error:'Недействительная или слишком длинная ссылка Portal. Создай новую в VETO Studio.',code:error.message});
+          return;
+        }
+      }
 
       if (nonce && settings.lastPublishNonce === nonce && settings.lastStory) {
         res.status(200).json({
@@ -670,6 +686,7 @@ export default async function handler(req, res) {
             excluded: pre.excluded,
             nonce: `${chatId}:${nonce}`,
             protect: pre.protect,
+            portalLink,
           });
         } else {
           const decrypted = await openJson(userSessionRow.session_ciphertext, `session:${chatId}`);
@@ -720,6 +737,7 @@ export default async function handler(req, res) {
           published: true,
           storyId: String(story.id),
           transport: story.transport,
+          portalAreaAttached: Boolean(portalLink && story.transport === 'bot-api'),
           verifiedAudience: story.verifiedAudience || next.audience || 'standard',
           cleanedUsernames: [...skippedExcluded, ...skippedSelected],
           state: publicState(next, { live: true, storyPermission: true }),
