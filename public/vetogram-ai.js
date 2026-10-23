@@ -274,7 +274,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     if(!safeIdentity())return;
     state.reminderBusy=true;
     try{
-      await request('/api/vetogram-reminders',{action:'schedule',taskId:task.id,
+      await request('/api/vetogram-reminders',{action:'schedule',taskId:task.id,dueAt:task.dueAt,
         remindAt:new Date(reminderEpoch).toISOString(),timeZone},'reminder');
       notice('Запрос на создание напоминания принят сервером. Оно не отправляется сейчас.');
       await request('/api/vetogram-reminders',{action:'list'}).then(result=>{
