@@ -5,7 +5,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,memoryRevision:null,memoryBusy:false};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -25,7 +25,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
     state.memoryRevision=null;state.memoryBusy=false;$('vtaiMemoryCloudStatus').textContent='Облачные заметки не загружены. Серверное шифрование, не E2EE.';
-    state.negotiationPolicy=null;state.negotiationDraft=null;$('vtaiNegNotice').textContent='Сначала выбери чат и введи условия.';
+    state.negotiationPolicy=null;state.negotiationDraft=null;state.negotiationGrant=null;$('vtaiNegNotice').textContent='Сначала выбери чат и введи условия.';
     $('vtaiIncludeMemory').checked=false;$('vtaiMemoryLabel').value='';$('vtaiMemoryContent').value='';
     renderApprovals();renderMemory();
     $('vtaiConsent').checked=false;$('vtaiReplacePortal').checked=false;$('vtaiPortalReview').hidden=true;
@@ -75,7 +75,8 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
       const result=await fetch(url,{method:'POST',
         headers:{'content-type':'application/json','x-telegram-init-data':requestOwner,
           ...(consent===true?{'x-vetogram-ai-consent':'yes'}:{}),
-          ...(consent==='memory'?{'x-vetogram-memory-consent':'yes'}:{})},
+          ...(consent==='memory'?{'x-vetogram-memory-consent':'yes'}:{}),
+          ...(consent==='grant'?{'x-vetogram-grant-consent':'yes'}:{})},
         body:JSON.stringify(body),signal:abort.signal});
       const json=await result.json().catch(()=>({}));
       if(signed()!==requestOwner||!owner()){reset();throw Error('Аккаунт изменился. Действие отменено.');}
@@ -118,7 +119,23 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
     setBusy(true);$('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
     notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
-      const answer=await request('/api/vetogram-ai',{mode,prompt,history:mode==='chat'?oldHistory:[],notes:approvedNotes},true);
+      let grant=null;
+      if(mode==='negotiator'){
+        if(!window.confirm('Разрешить VETOGRAM AI готовить черновик переговоров только для выбранного чата и в заданных пределах? Никакая автоматическая отправка не включается.'))return;
+        const issued=await request('/api/vetogram-ai-grants',{
+          action:'issue',chatId:negotiationPolicy.chatId,currency:negotiationPolicy.currency,
+          askingPrice:$('vtaiNegAsking').value,minPrice:$('vtaiNegFloor').value,
+          maxDiscountPct:negotiationPolicy.discountPct,minutes:$('vtaiNegMinutes').value
+        },'grant');
+        grant=issued.grant;
+        if(!grant?.active||grant.chatId!==negotiationPolicy.chatId)
+          throw Error('Сервер не подтвердил ограниченное разрешение.');
+        state.negotiationGrant=grant;
+        $('vtaiNegNotice').textContent='Серверное разрешение создано. Только черновики, без автоматической отправки.';
+      }
+      const answer=await request('/api/vetogram-ai',
+        {mode,prompt,history:mode==='chat'?oldHistory:[],notes:approvedNotes,
+          ...(grant?{grantId:grant.grantId,chatId:grant.chatId}:{})},true);
       if(state.mode!==mode)return notice('Режим изменился. Ответ не применён.',true);
       if(Number.isInteger(Number(answer?.quota?.remainingRequests)))$('vtaiQuota').textContent='Осталось AI-запросов на сегодня (UTC): '+Number(answer.quota.remainingRequests)+'.';
       addBubble(original,'user');addBubble(answer.text,'assistant');
@@ -421,6 +438,19 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiNegLoadChats').addEventListener('click',()=>void loadChats());
+  $('vtaiNegRevoke').addEventListener('click',async()=>{
+    if(!safeIdentity()||state.busy)return;
+    if(!window.confirm('Отозвать серверное разрешение Negotiator для твоего аккаунта?'))return;
+    try{
+      const status=await request('/api/vetogram-ai-grants',{action:'status'});
+      const grant=status.grant;
+      if(!grant){$('vtaiNegNotice').textContent='Активных разрешений нет.';return;}
+      await request('/api/vetogram-ai-grants',{action:'revoke',grantId:grant.grantId},'grant');
+      state.negotiationGrant=null;state.negotiationPolicy=null;state.negotiationDraft=null;
+      $('vtaiReview').hidden=true;$('vtaiSend').disabled=true;
+      $('vtaiNegNotice').textContent='Разрешение отозвано на сервере.';
+    }catch(error){notice('Не удалось проверить или отозвать разрешение: '+error.message,true);}
+  });
   $('vtaiSend').addEventListener('click',()=>void send());
   $('vtaiQueue').addEventListener('click',queueCurrent);
   $('vtaiClearApprovals').addEventListener('click',()=>{
