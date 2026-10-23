@@ -89,7 +89,7 @@ export default async function handler(req,res){
       const result=await response.json();
       output=result?.output_text|| (result?.output||[]).flatMap(item=>item.content||[]).map(item=>item.text||'').join('');
     }
-    const answer=normalizeAiOutput(parsed.mode,output);
+    const answer=normalizeAiOutput(parsed.mode,output,parsed.prompt);
     if(parsed.mode==='negotiator'){
       // Verify the grant still exists after the external model completed, and
       // enforce price constraints on SERVER, not only inside a user WebView.
