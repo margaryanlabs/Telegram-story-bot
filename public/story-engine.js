@@ -353,19 +353,29 @@ async function downloadJpg(){
   try{const a=document.createElement('a');a.download='vetogram-story.jpg';a.href=url;a.click();}
   finally{setTimeout(()=>URL.revokeObjectURL(url),5000)}
 }
-// VETO AI may offer copy only. It cannot trigger a publish or change an audience.
-window.addEventListener('vetogram:ai-story-suggestion',event=>{
-  const requested=event?.detail||{},incoming=requested.story;
-  if(!incoming||!state.draft||state.owner==='0'||
-      requested.ownerId!==state.owner||owner()!==state.owner){
-    notify('Story не изменена: проверь подключённый аккаунт.',true);return;
-  }
+// VETO AI can apply *text only* after checking the active Telegram owner.
+// No async task may cross accounts. Media, Portal, audience and publish state stay untouched.
+async function applyAiStorySuggestion(requested){
+  const requestedOwner=String(requested?.ownerId||'');
+  if(!requestedOwner||owner()!==requestedOwner)return false;
+  await init();
+  if(owner()!==requestedOwner||state.owner!==requestedOwner||!state.draft)return false;
+  const incoming=requested.story;
+  if(!incoming||typeof incoming!=='object')return false;
   const title=trimText(incoming.title,90),subtitle=trimText(incoming.subtitle,180);
-  if(!title||!subtitle){notify('Текст AI не подходит для Story.',true);return;}
-  state.draft.title=title;state.draft.subtitle=subtitle;
+  if(!title||!subtitle)return false;
+  const draftId=state.draft.id;
+  if(owner()!==requestedOwner||state.draft.id!==draftId)return false;
+  state.draft.title=title;
+  state.draft.subtitle=subtitle;
   state.draft.caption=trimText(incoming.caption,800);
   render();
-  notify('AI-текст добавлен в текущую Story. Проверь его перед сохранением.');
+  notify('AI-текст добавлен в текущую Story. Проверь результат и сохрани черновик.');
+  return true;
+}
+window.VetoTelegramApplyAiStory=applyAiStorySuggestion;
+window.addEventListener('vetogram:ai-story-suggestion',event=>{
+  void applyAiStorySuggestion(event?.detail).catch(()=>{});
 });
 
 function setup(){
