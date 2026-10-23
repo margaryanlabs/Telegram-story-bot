@@ -1401,7 +1401,32 @@
             </label>
           </div>
           <button class="vtai-action vtai-primary" id="vtaiSend" type="button" disabled>Проверить и отправить в Telegram →</button>
+          <button class="vtai-action" id="vtaiQueue" type="button">＋ В очередь подтверждений</button>
           <p class="vtai-note">Перед отправкой появится отдельное подтверждение. Отправляется от твоего авторизованного Telegram-аккаунта, а не от бота.</p>
+        </section>
+        <section class="vtai-panel" aria-label="VETO Approval Center">
+          <div class="vtai-row vtai-heading-row">
+            <h2>Approval Center <span id="vtaiApprovalCount" class="vtai-count">0</span></h2>
+            <button type="button" class="vtai-action" id="vtaiClearApprovals">Очистить очередь</button>
+          </div>
+          <p class="vtai-note">Неотправленные черновики — только в памяти открытого окна. Через 30 минут истекают. Никакая отправка не запускается без твоего выбора и подтверждения.</p>
+          <div id="vtaiApprovalList" class="vtai-workspace-list" aria-live="polite"></div>
+        </section>
+        <section class="vtai-panel" aria-label="VETO AI Memory">
+          <div class="vtai-row vtai-heading-row">
+            <h2>AI Memory · заметки</h2>
+            <button type="button" class="vtai-action" id="vtaiClearMemory">Очистить заметки</button>
+          </div>
+          <p class="vtai-note">Это первая версия: заметки существуют только пока открыто приложение. AI не читает переписки. Выбери до трёх заметок, затем отдельно разреши использовать их в следующем запросе.</p>
+          <div class="vtai-two">
+            <label class="vtai-label">Название заметки<input id="vtaiMemoryLabel" class="vtai-input" maxlength="55" placeholder="Например: стиль общения"></label>
+            <label class="vtai-label">Содержание<textarea id="vtaiMemoryContent" class="vtai-input" maxlength="450" placeholder="Что должен учитывать AI…"></textarea></label>
+          </div>
+          <button type="button" class="vtai-action" id="vtaiAddMemory">＋ Добавить заметку</button>
+          <div id="vtaiMemoryList" class="vtai-workspace-list" aria-live="polite"></div>
+          <label class="vtai-consent"><input type="checkbox" id="vtaiIncludeMemory">
+            <span>Разрешаю отправить выбранные заметки вместе с моим следующим запросом AI-провайдеру. Без флажка заметки не передаются.</span>
+          </label>
         </section>
         <section class="vtai-panel" id="vtaiStoryReview" hidden>
           <h2>Story Director — текст для редактора</h2>
