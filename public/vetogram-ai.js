@@ -2,12 +2,13 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
 import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from './vetogram-negotiator-core.js';
 import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from './vetogram-ai-dialogs-core.js';
 import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from './vetogram-ai-action-core.js';
+import {followupCandidates} from './vetogram-followup-core.js';
 (() => {
   'use strict';
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set()};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -25,7 +26,10 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
   }
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
-    state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;
+    state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;state.focusHidden.clear();
+    $('vtaiFocusList').replaceChildren();$('vtaiFocusCount').textContent='0';
+    $('vtaiFocusMore').hidden=true;$('vtaiFocusRestore').hidden=true;
+    $('vtaiFocusStatus').textContent='Проверь мои чаты. Данные прошлого аккаунта очищены.';
     $('vtaiBriefList').replaceChildren();$('vtaiBriefStatus').textContent='Нет результатов для текущего аккаунта.';
     state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
     state.memoryRevision=null;state.memoryBusy=false;state.agentPaused=null;state.agentBusy=false;state.chatNextPage=0;state.chatHasMore=false;
@@ -331,6 +335,58 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
   // Telegram returns only 24 dialogs in the initial page. Other existing
   // conversations stay accessible by explicit "more" or target lookup.
   // Only dialog metadata enters this screen; chat messages are never sent to AI.
+  function renderFollowups(){
+    const list=$('vtaiFocusList');list.replaceChildren();
+    const candidates=followupCandidates(state.dialogs,{hiddenIds:[...state.focusHidden]});
+    $('vtaiFocusCount').textContent=String(candidates.length);
+    $('vtaiFocusMore').hidden=!state.chatHasMore;
+    $('vtaiFocusRestore').hidden=state.focusHidden.size===0;
+    if(!state.dialogs.length){
+      $('vtaiFocusStatus').textContent='Сначала загрузи свои чаты. Отправки AI не выполняются.';
+      return;
+    }
+    $('vtaiFocusStatus').textContent=candidates.length
+      ?'Возможно требуют ответа: '+candidates.length+
+        '. Это лишь эвристика по загруженным живым предпросмотрам и статусу непрочитанных.'
+      :'Подтверждённых входящих вопросов в загруженных предпросмотрах не обнаружено.';
+    for(const item of candidates){
+      const card=document.createElement('article');card.className='vtai-workspace-item';
+      const title=document.createElement('strong');title.textContent=item.title;
+      const preview=document.createElement('p');
+      preview.textContent='Последний предпросмотр: «'+item.preview+'»';
+      const reason=document.createElement('p');
+      reason.textContent=item.reason+' · непрочитанных: '+item.unread+
+        ' · оценка, не факт обязательства';
+      const actions=document.createElement('div');actions.className='vtai-row';
+      const draft=document.createElement('button');draft.type='button';draft.className='vtai-action';
+      draft.textContent='Подготовить ответ';
+      draft.addEventListener('click',()=>{
+        if(!safeIdentity())return;
+        const current=followupCandidates(state.dialogs);
+        if(!current.some(c=>c.id===item.id))return notice('Данные чата изменились. Обнови список.',true);
+        const chat=state.dialogs.find(c=>String(c.id)===item.id);
+        if(!chat)return notice('Чат не найден.',true);
+        if(!window.confirm('Скопировать только последний предпросмотр чата «'+item.title+
+          '» в локальный черновик ответа? Полный диалог нужно проверить самому. AI-провайдер ничего не получит до отдельного согласия.'))return;
+        setMode('reply');
+        $('vtaiText').value='Подготовь короткий ответ на последний предпросмотр в моём чате «'+
+          item.title+'». Учитывай, что это не полный диалог: уточняй детали, не придумывай обещаний или сроков.\n'+item.preview;
+        $('vtaiConsent').checked=false;$('vtaiIncludeMemory').checked=false;
+        state.suggestedChatId=item.id;
+        $('vtaiRecipients').value=item.id; // current owner-loaded list only
+        $('vtaiDraft').value='';$('vtaiReview').hidden=true;
+        notice('Ответ только в локальном черновике. Проверь полный диалог, затем отдельно разреши AI-запрос.');
+      });
+      const hide=document.createElement('button');hide.type='button';hide.className='vtai-action';
+      hide.textContent='Скрыть в этом окне';
+      hide.addEventListener('click',()=>{
+        if(!safeIdentity())return;
+        state.focusHidden.add(item.id);
+        renderFollowups();
+      });
+      actions.append(draft,hide);card.append(title,preview,reason,actions);list.append(card);
+    }
+  }
   async function loadChats({more=false,seekChatId=null}={}){
     if(state.busy||!safeIdentity())return;
     const searchId=String(seekChatId||(more?'':state.suggestedChatId)||'');
@@ -371,7 +427,7 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
       $('vtaiMoreChats').hidden=!state.chatHasMore;
       $('vtaiNegMoreChats').hidden=!state.chatHasMore;
       $('vtaiActionMore').hidden=!state.chatHasMore;
-      renderActionMatches();
+      renderActionMatches();renderFollowups();
       notice(validTarget&&!state.dialogs.some(c=>String(c.id)===validTarget)
         ?'Переписка не найдена среди доступных Telegram-диалогов.':
         state.dialogs.length?'Доступно чатов: '+state.dialogs.length+'. Содержимое не передано AI.':
@@ -699,6 +755,12 @@ import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from
 
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
+  $('vtaiFocusRefresh').addEventListener('click',()=>void loadChats());
+  $('vtaiFocusMore').addEventListener('click',()=>void loadChats({more:true}));
+  $('vtaiFocusRestore').addEventListener('click',()=>{
+    if(!safeIdentity())return;
+    state.focusHidden.clear();renderFollowups();
+  });
   $('vtaiNegLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiMoreChats').addEventListener('click',()=>void loadChats({more:true}));
   $('vtaiNegMoreChats').addEventListener('click',()=>void loadChats({more:true}));
