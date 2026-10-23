@@ -1,9 +1,10 @@
+import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNotes,buildMemoryContext,MAX_MEMORY_NOTES} from './vetogram-ai-workspace-core.js';
 (() => {
   'use strict';
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -20,6 +21,9 @@
   }
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
+    state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;
+    $('vtaiIncludeMemory').checked=false;$('vtaiMemoryLabel').value='';$('vtaiMemoryContent').value='';
+    renderApprovals();renderMemory();
     $('vtaiConsent').checked=false;$('vtaiReplacePortal').checked=false;$('vtaiPortalReview').hidden=true;
     $('vtaiThread').replaceChildren();$('vtaiText').value='';$('vtaiDraft').value='';
     $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
@@ -34,7 +38,7 @@
   }
   function setMode(mode){
     if(!['chat','translate','reply','story','campaign'].includes(mode))return;
-    if(state.mode!==mode){state.history=[];$('vtaiThread').replaceChildren();state.last=null;
+    if(state.mode!==mode){state.history=[];$('vtaiThread').replaceChildren();state.last=null;state.reviewedApprovalId=null;
       $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;}
     state.mode=mode;
     document.querySelectorAll('[data-vtai-mode]').forEach(b=>{
@@ -80,10 +84,14 @@
       ?'Переведи точно на '+$('vtaiLanguageSelect').value+'. Верни только перевод:\n'+original
       :original;
     const mode=state.mode,oldHistory=[...state.history];
+    const approvedNotes=$('vtaiIncludeMemory').checked
+      ?buildMemoryContext(state.memory,[...state.selectedNotes],owner()):[];
+    // One-shot consent: notes cannot silently leak into the next request.
+    $('vtaiIncludeMemory').checked=false;
     setBusy(true);$('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
     notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
-      const answer=await request('/api/vetogram-ai',{mode,prompt,history:mode==='chat'?oldHistory:[]},true);
+      const answer=await request('/api/vetogram-ai',{mode,prompt,history:mode==='chat'?oldHistory:[],notes:approvedNotes},true);
       if(state.mode!==mode)return notice('Режим изменился. Ответ не применён.',true);
       if(Number.isInteger(Number(answer?.quota?.remainingRequests)))$('vtaiQuota').textContent='Осталось AI-запросов на сегодня (UTC): '+Number(answer.quota.remainingRequests)+'.';
       addBubble(original,'user');addBubble(answer.text,'assistant');
@@ -149,7 +157,15 @@
         action:'send_message',chatId,message,nonce:state.sendIntent.nonce
       });
       notice(result.sent?'Telegram принял сообщение.':'Отправка не подтверждена.',!result.sent);
-      if(result.sent){$('vtaiDraft').value='';$('vtaiReview').hidden=true;state.last=null;state.sendIntent=null;}
+      if(result.sent){
+        const reviewed=state.approvals.find(x=>x.id===state.reviewedApprovalId);
+        if(reviewed&&reviewed.chatId===chatId&&reviewed.message===message&&reviewed.owner===owner()){
+          state.approvals=state.approvals.filter(x=>x.id!==reviewed.id);
+          renderApprovals();
+        }
+        state.reviewedApprovalId=null;
+        $('vtaiDraft').value='';$('vtaiReview').hidden=true;state.last=null;state.sendIntent=null;
+      }
     }catch(error){notice(error.message+'. Если произошёл сбой сети, сначала проверь чат, прежде чем отправлять снова.',true)}
     finally{setBusy(false)}
   }
@@ -179,9 +195,131 @@
       notice('Тексты добавлены в Story Engine. Проверь кадр и сохрани черновик.');
     }catch(error){notice('Перенос в Story Engine не удался. Сохрани текст вручную.',true)}
   }
+
+  function renderApprovals(){
+    const list=$('vtaiApprovalList');list.replaceChildren();
+    const now=Date.now(),user=owner();
+    state.approvals=/^\d{1,20}$/.test(user)
+      ?activeApprovals(state.approvals,user,now):[];
+    $('vtaiApprovalCount').textContent=String(state.approvals.length);
+    if(!state.approvals.length){
+      const empty=document.createElement('p');empty.className='vtai-note';
+      empty.textContent='Очередь пуста. Подготовь ответ, выбери получателя и добавь сообщение.';
+      list.append(empty);return;
+    }
+    for(const item of state.approvals){
+      const card=document.createElement('article');card.className='vtai-workspace-item';
+      const head=document.createElement('strong');head.textContent=item.chatTitle;
+      const body=document.createElement('p');body.textContent=item.message;
+      const actions=document.createElement('div');actions.className='vtai-row';
+      const review=document.createElement('button');review.type='button';review.className='vtai-action';
+      review.textContent='Проверить и отправить';
+      review.addEventListener('click',()=>void reviewApproval(item.id));
+      const drop=document.createElement('button');drop.type='button';drop.className='vtai-action';
+      drop.textContent='Отклонить';
+      drop.addEventListener('click',()=>{
+        if(!safeIdentity())return;
+        state.approvals=state.approvals.filter(entry=>entry.id!==item.id);renderApprovals();
+      });
+      actions.append(review,drop);card.append(head,body,actions);list.append(card);
+    }
+  }
+  function queueCurrent(){
+    if(state.busy||!safeIdentity())return;
+    const chatId=$('vtaiRecipients').value;
+    const chat=state.dialogs.find(x=>String(x.id)===chatId);
+    const message=$('vtaiDraft').value.trim();
+    if(!chat||!message||message.length>4096)return notice('Сначала подготовь ответ и выбери получателя.',true);
+    if(!window.crypto?.randomUUID)return notice('Невозможно создать безопасный черновик.',true);
+    try{
+      const key=requestedSendKey(owner(),chatId,message);
+      const nonce=state.sendIntent?.key===key?state.sendIntent.nonce:crypto.randomUUID();
+      const pending=makeApproval({owner:owner(),chatId,chatTitle:chat.title,message,
+        nonce,id:crypto.randomUUID()});
+      state.approvals=queueApproval(state.approvals,pending);
+      renderApprovals();notice('Добавлено в Approval Center. Ничего не отправлено.');
+    }catch(error){notice('Не удалось создать черновик подтверждения.',true)}
+  }
+  async function reviewApproval(id){
+    if(state.busy||!safeIdentity())return;
+    const item=activeApprovals(state.approvals,owner()).find(entry=>entry.id===id);
+    if(!item)return notice('Черновик больше не доступен.',true);
+    if(!state.dialogs.some(chat=>String(chat.id)===item.chatId))await loadChats();
+    if(!safeIdentity()||!state.dialogs.some(chat=>String(chat.id)===item.chatId))
+      return notice('Этот Telegram-чат сейчас недоступен.',true);
+    setMode('reply');
+    $('vtaiRecipients').value=item.chatId;
+    $('vtaiDraft').value=item.message;
+    $('vtaiReview').hidden=false;
+    state.last=item.message;
+    state.reviewedApprovalId=item.id;
+    state.sendIntent={key:requestedSendKey(owner(),item.chatId,item.message),nonce:item.nonce};
+    $('vtaiSend').disabled=false;
+    $('vtaiReview').scrollIntoView?.({block:'start',behavior:'smooth'});
+    notice('Проверь получателя и текст. Отправка требует отдельного подтверждения.');
+  }
+  function renderMemory(){
+    const list=$('vtaiMemoryList');list.replaceChildren();
+    const user=owner();
+    state.memory=/^\d{1,20}$/.test(user)?activeMemoryNotes(state.memory,user):[];
+    for(const note of state.memory){
+      const card=document.createElement('article');card.className='vtai-workspace-item';
+      const label=document.createElement('label');label.className='vtai-consent';
+      const choose=document.createElement('input');choose.type='checkbox';
+      choose.checked=state.selectedNotes.has(note.id);
+      choose.addEventListener('change',()=>{
+        if(!safeIdentity())return;
+        if(choose.checked&&state.selectedNotes.size>=3){
+          choose.checked=false;notice('Можно использовать максимум три заметки за запрос.',true);return;
+        }
+        if(choose.checked)state.selectedNotes.add(note.id);
+        else state.selectedNotes.delete(note.id);
+      });
+      const title=document.createElement('strong');title.textContent=note.label;
+      const body=document.createElement('p');body.textContent=note.content;
+      label.append(choose,title);
+      const drop=document.createElement('button');drop.type='button';drop.className='vtai-action';
+      drop.textContent='Удалить';
+      drop.addEventListener('click',()=>{
+        if(!safeIdentity())return;
+        state.memory=state.memory.filter(x=>x.id!==note.id);state.selectedNotes.delete(note.id);
+        renderMemory();
+      });
+      card.append(label,body,drop);list.append(card);
+    }
+    if(!state.memory.length){
+      const empty=document.createElement('p');empty.className='vtai-note';
+      empty.textContent='Пока пусто. Заметки исчезнут после закрытия Mini App.';
+      list.append(empty);
+    }
+  }
+  function addMemory(){
+    if(!safeIdentity())return;
+    if(state.memory.length>=MAX_MEMORY_NOTES)return notice('Можно сохранить до восьми заметок на время этой сессии.',true);
+    if(!window.crypto?.randomUUID)return notice('Браузер не поддерживает безопасные идентификаторы.',true);
+    try{
+      const note=makeMemoryNote({owner:owner(),id:crypto.randomUUID(),
+        label:$('vtaiMemoryLabel').value,content:$('vtaiMemoryContent').value});
+      state.memory=[...state.memory,note];
+      $('vtaiMemoryLabel').value='';$('vtaiMemoryContent').value='';
+      renderMemory();
+      notice('Заметка добавлена только в память окна. Она не передана AI.');
+    }catch(error){notice('Укажи название и содержание заметки.',true)}
+  }
+
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiSend').addEventListener('click',()=>void send());
+  $('vtaiQueue').addEventListener('click',queueCurrent);
+  $('vtaiClearApprovals').addEventListener('click',()=>{
+    if(!safeIdentity())return;
+    state.approvals=[];state.reviewedApprovalId=null;renderApprovals();
+  });
+  $('vtaiAddMemory').addEventListener('click',addMemory);
+  $('vtaiClearMemory').addEventListener('click',()=>{
+    if(!safeIdentity())return;
+    state.memory=[];state.selectedNotes.clear();$('vtaiIncludeMemory').checked=false;renderMemory();
+  });
   $('vtaiApplyStory').addEventListener('click',()=>void applyStory());
   document.querySelectorAll('[data-vtai-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.vtaiMode)));
   document.querySelectorAll('[data-open-screen="ai"][data-ai-mode="story"]').forEach(b=>b.addEventListener('click',()=>setMode('story')));
@@ -191,4 +329,5 @@
   });
   window.addEventListener('pageshow',()=>{if(state.identity&&state.identity!==signed())reset()});
   setMode('chat');
+  renderApprovals();renderMemory();
 })();
