@@ -285,7 +285,6 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   }
   async function cancelAllReminders(){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
-    const count=state.reminders.filter(r=>r.status==='pending').length;
     if(!window.confirm('Отменить ВСЕ ещё ожидающие напоминания для этого Telegram-аккаунта? Если отправка уже началась, её отменить нельзя. Это не выключает возможность создавать новые напоминания.'))return;
     if(!safeIdentity())return;
     state.reminderBusy=true;$('vtaiReminderCancelAll').disabled=true;
@@ -345,10 +344,13 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       source.textContent='Срок из текста: '+(task.deadlineText||'не указан')+
         '. '+(task.certainty==='unclear'?'Детали надо проверить.':'Подтверждено пользователем как задача.');
       const meta=document.createElement('p');
+      const pendingReminder=state.reminders.some(r=>r.taskId===task.id&&r.status==='pending');
       const overdue=task.status==='open'&&task.dueAt!==null&&Date.parse(task.dueAt)<Date.now();
       meta.textContent='Статус: '+(task.status==='done'?'выполнена':task.status==='deferred'?'отложена':'активна')+
         ' · точная дата: '+(task.dueAt?new Date(task.dueAt).toLocaleString('ru-RU'):'не задана')+
-        (overdue?' · срок прошёл':'')+'. Автонапоминаний нет.';
+        (overdue?' · срок прошёл':'')+
+        (pendingReminder?' · ⚠ Есть ожидающее серверное напоминание — отменяется отдельно':'')+
+        '. Изменения задачи требуют ручного облачного сохранения.';
       const dueRow=document.createElement('div');dueRow.className='vtai-task-date-row';
       const dateLabel=document.createElement('label');dateLabel.className='vtai-label';
       dateLabel.textContent='Точная дата вручную';
