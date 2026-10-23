@@ -46,17 +46,42 @@ export function verifyNegotiationProposal(policy,proposal,{owner,chatId,now=Date
   }else if(/(?:[$€֏₽₾£]|\b(?:USD|EUR|AMD|RUB|GEL|GBP)\b|(?:доллар|евро|рубл|драм|лари))/i.test(reply)){
     return blocked('В ответе указана валюта, но AI не подтвердил сумму');
   }
-  // Independent surface scan guards against a model claiming one structured
-  // price but writing a different amount in the actual user-visible reply.
-  // Ambiguous amount formats deliberately fail closed for manual rewriting.
-  const moneyPattern=/(?:[$€֏₽₾£]\s*(\d[\d,.]*)|(\d[\d,.]*)\s*(?:USD|EUR|AMD|RUB|GEL|GBP)\b)/gi;
-  for(const match of reply.matchAll(moneyPattern)){
-    const amount=String(match[1]||match[2]||'');
+  // Cross-check monetary figures in the VISIBLE reply, not only model JSON.
+  // Handles USD 475, $475, 475$, 475 dollars, 475 долларов, 475,00 евро.
+  // Ambiguous money notation fails closed rather than inventing an exchange rate.
+  const names={
+    USD:/^(?:\$|USD|dollars?|доллар(?:ов|а|ы)?|долл\.?)$/iu,
+    EUR:/^(?:€|EUR|euros?|евро)$/iu,
+    AMD:/^(?:֏|AMD|dram(?:s)?|драм(?:ов|а|ы)?|դրամ)$/iu,
+    RUB:/^(?:₽|RUB|roubles?|rubles?|рубл(?:ей|я|ь|и)?)$/iu,
+    GEL:/^(?:₾|GEL|lari|лар(?:и|ей)?|ლარი)$/iu,
+    GBP:/^(?:£|GBP|pounds?|фунт(?:ов|а|ы)?)$/iu
+  };
+  const token=String.raw`(?:USD|EUR|AMD|RUB|GEL|GBP|dollars?|euros?|drams?|roubles?|rubles?|lari|pounds?|доллар(?:ов|а|ы)?|долл\.?|евро|драм(?:ов|а|ы)?|рубл(?:ей|я|ь|и)?|лар(?:и|ей)?|фунт(?:ов|а|ы)?|դրամ|ლარი|[$€֏₽₾£])`;
+  const number=String.raw`(?:\d{1,7}(?:[.,]\d{1,2})?)(?![\d.,])`;
+  const figures=new RegExp('('+token+')\\s*('+number+')|('+number+')\\s*('+token+')','giu');
+  const currencyMentions=new RegExp(token,'giu');
+  let explicitFigures=0;
+  const seenCurrencies=[...reply.matchAll(currencyMentions)].map(item=>
+    Object.keys(names).find(cur=>names[cur].test(item[0]))||null);
+  if(seenCurrencies.some(cur=>!cur||cur!==policy.currency))
+    return blocked('В тексте встречается другая или неизвестная валюта');
+  for(const match of reply.matchAll(figures)){
+    explicitFigures++;
+    const amount=String(match[2]||match[3]||'');
     if(quoteCents===null)return blocked('Сумма в тексте не подтверждена структурированным ответом');
     let written;
-    try{written=cents(amount)}catch{return blocked('Неоднозначная денежная сумма в тексте')}
+    try{written=cents(amount.replace(',','.'))}catch{return blocked('Неоднозначная денежная сумма в тексте')}
     if(written!==quoteCents)return blocked('Сумма в тексте не совпадает с проверенным предложением');
   }
+  if(seenCurrencies.length&&explicitFigures===0)
+    return blocked('Денежное предложение не удалось однозначно прочитать');
+  if(quoteCents!==null&&explicitFigures===0)
+    return blocked('Указанная AI сумма отсутствует в видимом ответе');
+  // If the model omitted quotedPrice, bare multi-digit numbers are unsafe
+  // during commercial negotiations: they may represent an implicit price.
+  if(quoteCents===null&&/\d{2,}/.test(reply))
+    return blocked('Числовые условия требуют ручного пересмотра');
   // No derived automatic send privilege: even a passing proposal requires
   // the ordinary editor, existing-dialog validation and separate confirmation.
   return {allowed:true,requiresApproval:true,reason:proposal.decision==='escalate'
