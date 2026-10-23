@@ -1,4 +1,4 @@
-.vtai-root{padding:clamp(12px,3vw,28px);max-width:980px;margin:0 auto 90px;color:var(--text-primary,#f7f7fa)}
+.vtai-root{padding:clamp(12px,3vw,28px);max-width:980px;margin:0 auto 90px;color:#f7f7fa}
 .vtai-hero{padding:26px;border:1px solid rgba(255,255,255,.13);border-radius:25px;background:radial-gradient(ellipse at 85% 8%,rgba(230,64,81,.24),transparent 55%),linear-gradient(145deg,#111521,#080a10)}
 .vtai-kicker{display:block;color:#f28f99;letter-spacing:.15em;font-size:10px;font-weight:800;margin-bottom:12px}
 .vtai-hero h1{font-size:clamp(27px,6vw,44px);line-height:1.05;letter-spacing:-.045em;color:#fff;margin:0 0 11px}
@@ -24,3 +24,5 @@ textarea.vtai-input{min-height:110px;resize:vertical}
 #vtaiNotice[data-error="true"]{border-color:#944d58;color:#ffd4dd}
 .vtai-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:570px){.vtai-root{padding:12px 10px 78px}.vtai-hero{padding:20px 16px}.vtai-panel{padding:14px}.vtai-two{grid-template-columns:1fr}}
+
+.vtai-panel[hidden],.vtai-label[hidden],#vtaiNotice[hidden]{display:none!important}
