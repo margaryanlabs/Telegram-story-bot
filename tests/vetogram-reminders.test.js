@@ -186,3 +186,14 @@ test('expired pending reminders reconcile without sends and release task write b
   assert.match(store,/task_due_at<now\(\)-interval '10 minutes'/);
   assert.doesNotMatch(fn,/sendMessage|TELEGRAM_BOT_TOKEN|message_text|task_title/);
 });
+
+test('owner list puts pending and claimed jobs first even after long reminder history',()=>{
+  const store=source('lib/vetogram-reminder-store.js');
+  const list=store.slice(store.indexOf('export async function listOwnerReminders'),
+    store.indexOf('export async function scheduleOwnerReminder'));
+  assert.match(list,/WHERE owner_id=\$1::bigint ORDER BY CASE WHEN state='pending' THEN 0/);
+  assert.match(list,/WHEN state='claimed' THEN 1 ELSE 2 END ASC/);
+  assert.match(list,/CASE WHEN state='pending' THEN remind_at END ASC NULLS LAST/);
+  assert.match(list,/LIMIT 40/);
+  assert.match(list,/vetogram_expire_owner_reminders/);
+});
