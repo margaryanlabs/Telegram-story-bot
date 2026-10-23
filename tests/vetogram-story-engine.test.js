@@ -150,3 +150,32 @@ test('Story editor exposes working layer gestures and photo controls inside exis
   assert.match(ui,/normalizeStoryLayers\(d\.layers\)/);
   assert.match(read('public/story-engine.css'),/touch-action:none/);
 });
+
+test('Polls and Link Hubs retain bounded safe structured Portal configs',()=>{
+  const p=normalizePortal({type:'poll',title:'Выбор',optionsText:'Да\nНет\nДа\nВозможно'});
+  assert.deepEqual(p.options,['Да','Нет','Возможно']);
+  assert.deepEqual(normalizePortal({type:'poll',optionsText:'Один'}).options,['Да','Нет']);
+  const hub=normalizePortal({type:'links',linksText:'Канал | https://t.me/vetogram\nСайт | https://example.com'});
+  assert.equal(hub.links.length,2);assert.equal(hub.links[0].label,'Канал');
+  assert.equal(hub.links[1].url,'https://example.com/');
+  assert.throws(()=>normalizePortal({type:'links',linksText:'Опасно | javascript:alert(1)'}),/HTTPS_LINK/);
+  assert.throws(()=>normalizePortal({type:'links',linksText:'HTTP | http://example.com'}),/HTTPS_LINK/);
+  const d=newStoryDraft({ownerId:'123',id:'portal',now:100});
+  d.portal=p;assert.deepEqual(normalizeDraft(d,'123',200).portal.options,p.options);
+  assert.throws(()=>normalizeDraft(d,'567',200),/OWNER_MISMATCH/);
+});
+test('all five Portal types have honest local interactive previews',()=>{
+  const html=read('public/studio.html'),client=read('public/story-engine.js');
+  const preview=read('public/story-portal-preview.js'),css=read('public/story-engine.css');
+  for(const id of ['sePortalTry','sePortalPollFields','sePortalLinksFields','sePortalOptions','sePortalLinks']){
+    assert.match(html,new RegExp('id="'+id+'"'));
+    assert.match(client,new RegExp(id));
+  }
+  assert.match(client,/showPortalPreview\(state\.draft\.portal/);
+  assert.match(preview,/aria-pressed/);
+  assert.match(preview,/noopener noreferrer/);
+  assert.match(preview,/textContent='Выбран вариант/);
+  assert.match(preview,/не отправляются и не хранятся на сервере/);
+  assert.doesNotMatch(preview,/innerHTML\s*=/);
+  assert.match(css,/se-portal-demo-overlay/);
+});
