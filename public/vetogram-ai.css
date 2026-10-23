@@ -26,3 +26,15 @@ textarea.vtai-input{min-height:110px;resize:vertical}
 @media(max-width:570px){.vtai-root{padding:12px 10px 78px}.vtai-hero{padding:20px 16px}.vtai-panel{padding:14px}.vtai-two{grid-template-columns:1fr}}
 
 .vtai-panel[hidden],.vtai-label[hidden],#vtaiNotice[hidden]{display:none!important}
+
+.vtai-heading-row{justify-content:space-between}
+.vtai-heading-row h2{display:flex;gap:10px;align-items:center}
+.vtai-count{display:inline-grid;place-items:center;min-width:23px;height:23px;padding:0 5px;border-radius:9px;background:rgba(222,81,101,.17);font-size:12px;color:#ff9ca8}
+.vtai-workspace-list{display:grid;gap:10px}
+.vtai-workspace-item{display:grid;gap:10px;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);min-width:0}
+.vtai-workspace-item strong{color:#fff;font-size:14px;overflow-wrap:anywhere}
+.vtai-workspace-item p{white-space:pre-wrap;overflow-wrap:anywhere;color:#bbc5d2;font-size:13px;line-height:1.5;margin:0;max-height:135px;overflow:auto}
+.vtai-workspace-item .vtai-action{font-size:12px;padding:9px 12px}
+.vtai-workspace-item .vtai-consent{align-items:center}
+.vtai-workspace-item .vtai-consent input{flex-shrink:0}
+#vtaiPortalReview[hidden]{display:none!important}
