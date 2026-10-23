@@ -63,3 +63,5 @@ jobs:
           done
       - name: Validate grant issue, pause, quota and memory CAS
         run: psql -v ON_ERROR_STOP=1 -f scripts/vetogram-ai-postgres-smoke.sql
+      - name: Test concurrent grant issue versus emergency pause
+        run: bash scripts/vetogram-ai-postgres-race.sh
