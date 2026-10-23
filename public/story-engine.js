@@ -364,11 +364,28 @@ async function applyAiStorySuggestion(requested){
   if(!incoming||typeof incoming!=='object')return false;
   const title=trimText(incoming.title,90),subtitle=trimText(incoming.subtitle,180);
   if(!title||!subtitle)return false;
+  let approvedPortal=null;
+  if(requested.replacePortal===true){
+    try{
+      // Only owner-approved text fields. Never inherit model URLs, chat data,
+      // media, external form endpoints or existing private Portal responses.
+      approvedPortal=normalizePortal({
+        type:requested.portal?.type,
+        title:requested.portal?.title,description:requested.portal?.description,
+        cta:requested.portal?.cta,link:'',links:[],options:[]
+      });
+    }catch{return false;}
+  }
   const draftId=state.draft.id;
   if(owner()!==requestedOwner||state.draft.id!==draftId)return false;
   state.draft.title=title;
   state.draft.subtitle=subtitle;
   state.draft.caption=trimText(incoming.caption,800);
+  if(requested.replacePortal===true){
+    state.draft.portal=approvedPortal;
+    clearPublicPortalLink();
+    $('sePortalAttachStory').checked=false;
+  }
   render();
   notify('AI-текст добавлен в текущую Story. Проверь результат и сохрани черновик.');
   return true;
