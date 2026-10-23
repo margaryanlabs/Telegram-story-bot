@@ -1,12 +1,13 @@
 import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNotes,buildMemoryContext,MAX_MEMORY_NOTES} from './vetogram-ai-workspace-core.js';
 import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from './vetogram-negotiator-core.js';
 import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from './vetogram-ai-dialogs-core.js';
+import {actionRecipientCandidates,actionDraftValid} from './vetogram-ai-action-core.js';
 (() => {
   'use strict';
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -24,9 +25,12 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
   }
   function reset(){
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
+    state.actionDraft=null;state.actionRecipientConfirmed=null;
     state.approvals=[];state.memory=[];state.selectedNotes.clear();state.reviewedApprovalId=null;state.suggestedChatId=null;
     state.memoryRevision=null;state.memoryBusy=false;state.agentPaused=null;state.agentBusy=false;state.chatNextPage=0;state.chatHasMore=false;
-    $('vtaiMoreChats').hidden=true;$('vtaiNegMoreChats').hidden=true;
+    $('vtaiMoreChats').hidden=true;$('vtaiNegMoreChats').hidden=true;$('vtaiActionMore').hidden=true;
+    $('vtaiActionMatches').replaceChildren(new Option('Сначала подготовь сообщение',''));
+    $('vtaiActionStatus').textContent='Опиши, кому и что нужно написать.';
     $('vtaiAgentState').textContent='Статус не проверен для текущего аккаунта.';
     $('vtaiAgentEvents').replaceChildren();$('vtaiMemoryCloudStatus').textContent='Облачные заметки не загружены. Серверное шифрование, не E2EE.';
     state.negotiationPolicy=null;state.negotiationDraft=null;state.negotiationGrant=null;$('vtaiNegNotice').textContent='Сначала выбери чат и введи условия.';
@@ -60,12 +64,14 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
     card.scrollIntoView?.({block:'nearest',behavior:'smooth'});
   }
   function setMode(mode){
-    if(!['chat','translate','reply','story','campaign','negotiator'].includes(mode))return;
+    if(!['chat','translate','reply','story','campaign','negotiator','action'].includes(mode))return;
     if(state.mode!==mode){state.history=[];$('vtaiThread').replaceChildren();state.last=null;state.reviewedApprovalId=null;
       $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;}
     if(mode!=='negotiator'){state.negotiationPolicy=null;state.negotiationDraft=null;$('vtaiDraft').readOnly=false;}
+    if(mode!=='action'){state.actionDraft=null;state.actionRecipientConfirmed=null;}
     state.mode=mode;
     $('vtaiNegPanel').hidden=mode!=='negotiator';
+    $('vtaiActionPanel').hidden=mode!=='action';
     document.querySelectorAll('[data-vtai-mode]').forEach(b=>{
       b.classList.toggle('active',b.dataset.vtaiMode===mode);
       b.setAttribute('aria-pressed',String(b.dataset.vtaiMode===mode));
@@ -75,16 +81,56 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
       chat:'Спроси AI или попроси подготовить сообщение…',
       translate:'Вставь текст для перевода…',
       reply:'Опиши ситуацию или вставь сообщение, на которое нужен ответ…',
+      action:'Например: напиши Артуру, что созвонимся завтра в 15:00…',
       story:'О чём создать Story? Для кого, какой стиль и предложение?',
       campaign:'Что продаём или анонсируем? Кто покупатель и какое действие нужно?',
       negotiator:'Вставь сообщение клиента, на которое нужно подготовить ответ…'
     }[mode];
-    $('vtaiCreate').textContent=mode==='negotiator'?'Подготовить ответ на переговоры':mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
+    $('vtaiCreate').textContent=mode==='action'?'Подготовить действие':mode==='negotiator'?'Подготовить ответ на переговоры':mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
+  }
+  function actionRecipientReady(chatId){
+    return state.mode!=='action'||(actionDraftValid(state.actionDraft)&&
+      state.actionRecipientConfirmed===String(chatId)&&
+      state.dialogs.some(c=>String(c.id)===String(chatId)));
+  }
+  function canSendDraft(){
+    return Boolean(state.last&&state.dialogs.length&&
+      !['story','campaign'].includes(state.mode)&&
+      (state.mode!=='negotiator'||Boolean(state.negotiationDraft))&&
+      actionRecipientReady($('vtaiRecipients').value));
+  }
+  function renderActionMatches(){
+    const select=$('vtaiActionMatches'),before=select.value;
+    select.replaceChildren(new Option('Выбери получателя из совпадений',''));
+    if(!actionDraftValid(state.actionDraft))return;
+    const matches=actionRecipientCandidates(state.dialogs,state.actionDraft.recipientQuery);
+    for(const match of matches){
+      const label=match.title+(match.username?' · @'+match.username:'')+' · '+match.id;
+      select.append(new Option(label,match.id));
+    }
+    if(before&&matches.some(x=>x.id===before))select.value=before;
+    $('vtaiActionStatus').textContent=matches.length
+      ?'AI предложил имя «'+state.actionDraft.recipientQuery+'». Найдено совпадений: '+
+        matches.length+'. Выбери и подтвердите правильный чат.'
+      :'AI предложил имя «'+state.actionDraft.recipientQuery+
+        '». Среди загруженных чатов совпадений нет. Загрузите следующие страницы или используй обычный выбор чата.';
+  }
+  function chooseActionRecipient(){
+    if(!safeIdentity()||!actionDraftValid(state.actionDraft))return;
+    const id=$('vtaiActionMatches').value;
+    const chat=state.dialogs.find(c=>String(c.id)===id);
+    if(!chat)return notice('Сначала выбери найденного получателя.',true);
+    $('vtaiRecipients').value=id;
+    state.actionRecipientConfirmed=id;
+    $('vtaiActionStatus').textContent='Получатель подтверждён: '+chat.title+
+      '. Проверь весь текст в редакторе перед отдельным подтверждением отправки.';
+    $('vtaiSend').disabled=!canSendDraft();
+    notice('Чат выбран вручную. Отправка не выполнена.');
   }
   function setBusy(value){
     state.busy=value;
     $('vtaiCreate').disabled=value;$('vtaiLoadChats').disabled=value;
-    $('vtaiSend').disabled=value||!state.last||['story','campaign'].includes(state.mode);
+    $('vtaiSend').disabled=value||!canSendDraft();
   }
   async function request(url,body,consent=false){
     const requestOwner=signed();
@@ -141,7 +187,21 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
     notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
       let grant=null;
-      if(mode==='negotiator'){
+      if(mode==='action'){
+        state.actionDraft=null;state.actionRecipientConfirmed=null;
+        if(actionDraftValid(answer.action)){
+          state.actionDraft=answer.action;
+          $('vtaiDraft').value=answer.action.message;
+          $('vtaiReview').hidden=false;
+          renderActionMatches();
+          $('vtaiSend').disabled=true;
+          notice('AI подготовил черновик, но не нашёл и не выбрал адресата автоматически. Выбери чат вручную.');
+        }else{
+          $('vtaiReview').hidden=true;state.last=null;
+          $('vtaiActionStatus').textContent=answer.text;
+          notice('AI уточняет запрос. Никакое действие не выполнено.');
+        }
+      }else if(mode==='negotiator'){
         if(!window.confirm('Разрешить VETOGRAM AI готовить черновик переговоров только для выбранного чата и в заданных пределах? Никакая автоматическая отправка не включается.'))return;
         const issued=await request('/api/vetogram-ai-grants',{
           action:'issue',chatId:negotiationPolicy.chatId,currency:negotiationPolicy.currency,
@@ -205,8 +265,7 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
         notice('Текст подготовлен. Ничего не отправлено.');
       }
     }catch(error){notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);}
-    finally{setBusy(false);$('vtaiSend').disabled=!state.last||['story','campaign'].includes(state.mode)||!state.dialogs.length||
-      (state.mode==='negotiator'&&!state.negotiationDraft);}
+    finally{setBusy(false);$('vtaiSend').disabled=!canSendDraft();}
   }
   // Telegram returns only 24 dialogs in the initial page. Other existing
   // conversations stay accessible by explicit "more" or target lookup.
@@ -250,6 +309,8 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
         $('vtaiRecipients').value=validTarget;
       $('vtaiMoreChats').hidden=!state.chatHasMore;
       $('vtaiNegMoreChats').hidden=!state.chatHasMore;
+      $('vtaiActionMore').hidden=!state.chatHasMore;
+      renderActionMatches();
       notice(validTarget&&!state.dialogs.some(c=>String(c.id)===validTarget)
         ?'Переписка не найдена среди доступных Telegram-диалогов.':
         state.dialogs.length?'Доступно чатов: '+state.dialogs.length+'. Содержимое не передано AI.':
@@ -259,9 +320,7 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
       notice('Не удалось загрузить чаты: '+error.message,true);
     }finally{
       setBusy(false);
-      $('vtaiSend').disabled=!state.last||!state.dialogs.length||
-        ['story','campaign'].includes(state.mode)||
-        (state.mode==='negotiator'&&!state.negotiationDraft);
+      $('vtaiSend').disabled=!canSendDraft();
     }
   }
   function validNegotiatorSend(chatId,message){
@@ -278,6 +337,7 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
     const message=$('vtaiDraft').value.trim();
     if(!message||message.length>4096)return notice('Длина сообщения: 1–4096 символов',true);
     if(!validNegotiatorSend(chatId,message))return notice('Разрешение Negotiator истекло или ответ изменён. Создай новый черновик.',true);
+    if(!actionRecipientReady(chatId))return notice('AI Action: сначала вручную подтверди получателя.',true);
     const title=state.dialogs.find(c=>String(c.id)===chatId)?.title||'чат';
     // No autonomous sends. This confirmation is separate from AI-provider consent.
     if(!window.confirm('Отправить ПОЛНЫЙ текст сообщения от твоего имени в чат «'+String(title).slice(0,70)+'»?\n\n'+message))return;
@@ -368,6 +428,7 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
     const message=$('vtaiDraft').value.trim();
     if(!chat||!message||message.length>4096)return notice('Сначала подготовь ответ и выбери получателя.',true);
     if(!validNegotiatorSend(chatId,message))return notice('Negotiator: условия или срок больше не действуют.',true);
+    if(!actionRecipientReady(chatId))return notice('AI Action: получатель не подтверждён.',true);
     if(!window.crypto?.randomUUID)return notice('Невозможно создать безопасный черновик.',true);
     try{
       const key=requestedSendKey(owner(),chatId,message);
@@ -580,6 +641,16 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
   $('vtaiNegLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiMoreChats').addEventListener('click',()=>void loadChats({more:true}));
   $('vtaiNegMoreChats').addEventListener('click',()=>void loadChats({more:true}));
+  $('vtaiActionFind').addEventListener('click',()=>void loadChats());
+  $('vtaiActionMore').addEventListener('click',()=>void loadChats({more:true}));
+  $('vtaiActionChoose').addEventListener('click',chooseActionRecipient);
+  $('vtaiRecipients').addEventListener('change',()=>{
+    if(state.mode==='action'){
+      state.actionRecipientConfirmed=null;
+      $('vtaiSend').disabled=true;
+      $('vtaiActionStatus').textContent='Получатель изменён. Выбери его снова в AI Action.';
+    }
+  });
   $('vtaiAgentRefresh').addEventListener('click',()=>void agentStatus());
   $('vtaiAgentPause').addEventListener('click',()=>void changeAgentPause(true));
   $('vtaiAgentResume').addEventListener('click',()=>void changeAgentPause(false));
