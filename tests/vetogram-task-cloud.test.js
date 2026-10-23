@@ -102,3 +102,13 @@ test('Task Cloud writes and reminder scheduling share a safe per-owner lock',()=
   assert.match(api,/return respond\(res,409/);
   assert.doesNotMatch(migration,/CREATE TABLE[^;]*?(?:task_title|source_quote|message_text)/i);
 });
+
+test('task-cloud mutation first expires undeliverably old pending reminder jobs',()=>{
+  const sql=read('migrations/vetogram-reminders-20261024.sql');
+  const fn=sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_task_cloud_write'),
+    sql.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_schedule_reminder'));
+  const sweep=fn.indexOf('PERFORM public.vetogram_expire_owner_reminders(p_owner)');
+  const conflict=fn.indexOf('VETO_TASK_PENDING_REMINDERS');
+  assert.ok(sweep>0&&conflict>sweep);
+  assert.match(fn,/pg_advisory_xact_lock/);
+});
