@@ -481,7 +481,11 @@ function setup(){
     try{
       requireOwner();
       if(!state.draft.portal)throw Error('Сначала настрой Portal и нажми «Сохранить Portal»');
-      showPortalPreview(state.draft.portal);
+      const currentOwner=state.owner,currentDraftId=state.draft.id;
+      showPortalPreview(state.draft.portal,{
+        stillAuthorized:()=>owner()===currentOwner && state.owner===currentOwner &&
+          state.draft?.id===currentDraftId
+      });
     }catch(error){notify(error.message,true)}
   });
   $('sePortalRemove').addEventListener('click',()=>{if(!state.draft)return;state.draft.portal=null;render();notify('Portal отвязан')});
