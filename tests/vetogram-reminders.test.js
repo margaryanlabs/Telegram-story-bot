@@ -154,3 +154,20 @@ test('no new reminders until operator configures worker AND scheduler',()=>{
   assert.doesNotMatch(ui,/только в этом окне, без уведомлений/);
   assert.match(ui,/result.schedulingConfigured===true;renderReminders\(\);renderTasks\(\)/);
 });
+
+test('reminder scheduling validates cloud revision inside the owner lock',()=>{
+  const migration=source('migrations/vetogram-reminders-20261024.sql');
+  const store=source('lib/vetogram-reminder-store.js');
+  const api=source('api/vetogram-reminders.js');
+  assert.match(store,/snapshot\.revision/);
+  assert.match(store,/\$6::integer\) AS status/);
+  assert.match(migration,/p_cloud_revision integer/);
+  const schedule=migration.slice(migration.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_schedule_reminder'));
+  const lock=schedule.indexOf("pg_advisory_xact_lock(hashtext('veto-reminders:'");
+  const check=schedule.indexOf('SELECT revision INTO cloud_revision');
+  const mutation=schedule.indexOf('INSERT INTO public.vetogram_reminders');
+  assert.ok(lock>=0&&check>lock&&mutation>check);
+  assert.match(schedule,/VETO_REMINDER_TASK_REVISION_CONFLICT/);
+  assert.match(schedule,/encrypted_snapshot IS NOT NULL/);
+  assert.match(api,/VETO_REMINDER_TASK_REVISION_CONFLICT/);
+});
