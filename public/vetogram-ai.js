@@ -252,7 +252,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       const result=await request('/api/vetogram-reminders',{action:'list'});
       if(!safeIdentity())return;
       state.reminders=Array.isArray(result.reminders)?result.reminders:[];
-      renderReminders();
+      renderReminders();renderTasks();
     }catch(error){
       $('vtaiReminderStatus').textContent='Не удалось загрузить уведомления: '+error.message;
     }finally{state.reminderBusy=false;$('vtaiReminderRefresh').disabled=false}
@@ -295,7 +295,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       const current=await request('/api/vetogram-reminders',{action:'list'});
       if(!safeIdentity())return;
       state.reminders=Array.isArray(current.reminders)?current.reminders:[];
-      renderReminders();
+      renderReminders();renderTasks();
       notice('Отменено ожидающих: '+result.canceledCount+
         '. Уже начатые отправки могли продолжиться.');
     }catch(error){notice('Не удалось отменить все напоминания: '+error.message,true)}
@@ -310,12 +310,24 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       const result=await request('/api/vetogram-reminders',{action:'cancel',taskId},'reminder');
       if(result.canceled!==true)throw Error('Отмена не подтверждена сервером');
       const list=await request('/api/vetogram-reminders',{action:'list'});
-      if(safeIdentity()){state.reminders=list.reminders||[];renderReminders();}
+      if(safeIdentity()){state.reminders=list.reminders||[];renderReminders();renderTasks();}
       notice('Напоминание отменено до обработки.');
     }catch(error){notice('Не удалось отменить: '+error.message,true);}
     finally{state.reminderBusy=false}
   }
 
+  function taskReminderEditAllowed(taskId){
+    const reminder=state.reminders.find(r=>r.taskId===String(taskId)&&
+      (r.status==='pending'||r.status==='claimed'));
+    if(!reminder)return true;
+    if(reminder.status==='pending'){
+      notice('У этой задачи есть серверное напоминание. Сначала отмени его в VETO Reminders, затем изменяй дату, статус или удаляй задачу.',true);
+      return false;
+    }
+    // Claimed means Telegram send MAY already be in progress. Never promise
+    // local task edits can stop an in-flight Bot API call.
+    return window.confirm('Отправка напоминания могла уже начаться. Изменение задачи сейчас НЕ отменит возможное сообщение. Всё равно изменить задачу?');
+  }
   function renderTasks(){
     const list=$('vtaiTasksList');list.replaceChildren();
     const summary=taskOverview(state.tasks,owner());
@@ -366,6 +378,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       saveDue.textContent='Сохранить дату';
       saveDue.addEventListener('click',()=>{
         if(!safeIdentity())return;
+        if(!taskReminderEditAllowed(task.id))return;
         if(!date.value)return notice('Выбери дату или нажми «Убрать дату».',true);
         const time=Date.parse(date.value);
         if(!Number.isFinite(time))return notice('Неверная дата.',true);
@@ -379,6 +392,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       clearDue.textContent='Убрать дату';
       clearDue.addEventListener('click',()=>{
         if(!safeIdentity())return;
+        if(!taskReminderEditAllowed(task.id))return;
         try{state.tasks=updateOwnerTask(state.tasks,owner(),task.id,{dueAt:null});renderTasks()}
         catch{notice('Не удалось убрать дату.',true)}
       });
@@ -400,6 +414,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
         const button=document.createElement('button');button.type='button';button.className='vtai-action';
         button.textContent=label;button.addEventListener('click',()=>{
           if(!safeIdentity())return;
+        if(!taskReminderEditAllowed(task.id))return;
           try{state.tasks=updateOwnerTask(state.tasks,owner(),task.id,{status});renderTasks()}
           catch{notice('Задача другого аккаунта или уже удалена.',true)}
         });
@@ -431,7 +446,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       const del=document.createElement('button');del.type='button';del.className='vtai-action vtai-danger';
       del.textContent='Удалить задачу';
       del.addEventListener('click',()=>{
-        if(!safeIdentity()||!window.confirm('Удалить эту задачу из текущего окна без восстановления?'))return;
+        if(!safeIdentity()||!taskReminderEditAllowed(task.id)||!window.confirm('Удалить эту задачу из текущего окна без восстановления?'))return;
         state.tasks=ownerTasks(state.tasks,owner()).filter(t=>t.id!==task.id);
         renderTasks();
       });
