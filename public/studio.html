@@ -1452,6 +1452,15 @@
             <label class="vtai-label">Содержание<textarea id="vtaiMemoryContent" class="vtai-input" maxlength="450" placeholder="Что должен учитывать AI…"></textarea></label>
           </div>
           <button type="button" class="vtai-action" id="vtaiAddMemory">＋ Добавить заметку</button>
+          <div class="vtai-row">
+            <button type="button" class="vtai-action" id="vtaiMemoryCloudLoad">↓ Загрузить из защищённого хранилища</button>
+            <button type="button" class="vtai-action" id="vtaiMemoryCloudSave">↑ Сохранить зашифрованную копию</button>
+            <button type="button" class="vtai-action" id="vtaiMemoryCloudErase">Удалить облачную копию</button>
+          </div>
+          <p class="vtai-note" id="vtaiMemoryCloudStatus" aria-live="polite">
+            Облачное сохранение требует явного действия. Шифрование на сервере, не сквозное (не E2EE). Сервер VETOGRAM может расшифровать заметки. Никогда не сохраняй здесь коды входа и пароли.
+          </p>
+
           <div id="vtaiMemoryList" class="vtai-workspace-list" aria-live="polite"></div>
           <label class="vtai-consent"><input type="checkbox" id="vtaiIncludeMemory">
             <span>Разрешаю отправить выбранные заметки вместе с моим следующим запросом AI-провайдеру. Без флажка заметки не передаются.</span>
