@@ -1,7 +1,7 @@
 import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNotes,buildMemoryContext,MAX_MEMORY_NOTES} from './vetogram-ai-workspace-core.js';
 import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from './vetogram-negotiator-core.js';
 import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from './vetogram-ai-dialogs-core.js';
-import {actionRecipientCandidates,actionDraftValid} from './vetogram-ai-action-core.js';
+import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from './vetogram-ai-action-core.js';
 (() => {
   'use strict';
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
@@ -155,6 +155,10 @@ import {actionRecipientCandidates,actionDraftValid} from './vetogram-ai-action-c
     if(!$('vtaiConsent').checked)return notice('Разреши передачу введённого текста AI-провайдеру',true);
     const original=$('vtaiText').value.trim();
     if(original.length<2||original.length>3000)return notice('Введите от 2 до 3000 символов',true);
+    if(state.mode==='chat'&&isExplicitActionCommand(original)){
+      setMode('action');
+      notice('Распознана команда для сообщения. AI подготовит только черновик; получателя выберешь сам.');
+    }
     let prompt=state.mode==='translate'
       ?'Переведи точно на '+$('vtaiLanguageSelect').value+'. Верни только перевод:\n'+original
       :original;
