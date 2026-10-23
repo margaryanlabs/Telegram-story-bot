@@ -94,4 +94,8 @@ test('cancel-all action is owner-scoped, consent-gated and atomic with worker cl
   assert.match(ui,/vtaiReminderCancelAll'\)\.addEventListener/);
   assert.match(ui,/Уже начатые отправки могли продолжиться/);
   assert.match(html,/id="vtaiReminderCancelAll"/);
+  assert.match(ui,/const pendingReminder=state\.reminders\.some/);
+  assert.match(ui,/Есть ожидающее серверное напоминание/);
+  assert.match(ui,/Изменения задачи требуют ручного облачного сохранения/);
+
 });
