@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {normalizeAiInput,normalizeAiOutput,systemInstruction} from '../lib/vetogram-ai-core.js';
 import {estimateAiUnits} from '../lib/vetogram-ai-budgets.js';
-import {actionRecipientCandidates,actionDraftValid} from '../public/vetogram-ai-action-core.js';
+import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from '../public/vetogram-ai-action-core.js';
 const source=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const chat=(id,title,username=null)=>({id:String(id),title,username,type:'private'});
 
@@ -79,4 +79,25 @@ test('AI Action is included in real quota estimates',()=>{
   const input=normalizeAiInput({mode:'action',prompt:'Напиши Артуру, что встречаемся завтра'});
   const units=estimateAiUnits(input,systemInstruction('action'));
   assert.ok(Number.isFinite(units)&&units>input.prompt.length);
+});
+
+test('explicit chat commands enter reviewed AI Action without hijacking writing requests',()=>{
+  for(const prompt of [
+    'Напиши Артуру, что завтра позвоню',
+    'Отправь Марине, что встреча перенесена',
+    'Сообщи Петру, чтобы он проверил документ',
+    '/msg Артур: созвонимся завтра',
+    '/message Maria: hello'
+  ])assert.equal(isExplicitActionCommand(prompt),true,prompt);
+  for(const prompt of [
+    'Напиши мне, что ты думаешь',
+    'Напиши код, что делает эта функция',
+    'Напиши историю, что случилось дальше',
+    'Расскажи про Telegram',
+    'Отправь мне список советов',
+    'Напиши Артуру'
+  ])assert.equal(isExplicitActionCommand(prompt),false,prompt);
+  const ui=source('public/vetogram-ai.js');
+  assert.match(ui,/state\.mode==='chat'&&isExplicitActionCommand\(original\)/);
+  assert.match(ui,/setMode\('action'\)/);
 });
