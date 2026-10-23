@@ -27,6 +27,7 @@ const endpointLoaders = {
   "telegram-send": () => import("./telegram-send.js"),
   "vetogram-ai": () => import("./vetogram-ai.js"),
   "vetogram-ai-memory": () => import("./vetogram-ai-memory.js"),
+  "vetogram-ai-grants": () => import("./vetogram-ai-grants.js"),
   "telegram-sticker-preview": () => import("./telegram-sticker-preview.js"),
   "telegram-sticker-previews": () => import("./telegram-sticker-previews.js"),
   "telegram-stories": () => import("./telegram-stories.js"),
