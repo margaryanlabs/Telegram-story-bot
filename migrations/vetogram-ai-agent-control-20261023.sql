@@ -27,8 +27,14 @@ SET search_path=public,pg_temp AS $$
 DECLARE is_paused boolean;
 BEGIN
   -- Allow revocations even while paused, but forbid new/renewed grants.
-  IF NEW.revoked_at IS NULL AND
-    (TG_OP='INSERT' OR OLD.revoked_at IS NOT NULL OR NEW.grant_id IS DISTINCT FROM OLD.grant_id) THEN
+  IF TG_OP='INSERT' THEN
+    -- An INSERT has no OLD row; check NEW values only.
+    IF NEW.revoked_at IS NOT NULL THEN RETURN NEW; END IF;
+  ELSIF NEW.revoked_at IS NOT NULL OR
+    (OLD.revoked_at IS NULL AND NEW.grant_id IS NOT DISTINCT FROM OLD.grant_id) THEN
+    RETURN NEW;
+  END IF;
+  IF NEW.revoked_at IS NULL THEN
     INSERT INTO public.vetogram_ai_agent_control(owner_id) VALUES(NEW.owner_id)
       ON CONFLICT(owner_id) DO NOTHING;
     SELECT drafting_paused INTO is_paused FROM public.vetogram_ai_agent_control
@@ -44,7 +50,10 @@ CREATE OR REPLACE FUNCTION public.vetogram_ai_grant_event()
 RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
 SET search_path=public,pg_temp AS $$
 BEGIN
-  IF TG_OP='INSERT' OR NEW.grant_id IS DISTINCT FROM OLD.grant_id THEN
+  IF TG_OP='INSERT' THEN
+    INSERT INTO public.vetogram_ai_agent_events(owner_id,kind,grant_id,chat_id)
+      VALUES(NEW.owner_id,'grant_issued',NEW.grant_id,NEW.chat_id);
+  ELSIF NEW.grant_id IS DISTINCT FROM OLD.grant_id THEN
     INSERT INTO public.vetogram_ai_agent_events(owner_id,kind,grant_id,chat_id)
       VALUES(NEW.owner_id,'grant_issued',NEW.grant_id,NEW.chat_id);
   ELSIF NEW.revoked_at IS NOT NULL AND NEW.revoked_at IS DISTINCT FROM OLD.revoked_at THEN
