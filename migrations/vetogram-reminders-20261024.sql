@@ -21,6 +21,28 @@ CREATE INDEX IF NOT EXISTS vetogram_reminders_due_idx
   ON public.vetogram_reminders(remind_at) WHERE state='pending';
 REVOKE ALL ON TABLE public.vetogram_reminders FROM PUBLIC;
 
+-- Expired jobs can never be safely delivered again. Reconcile them even
+-- when the external worker was unavailable, using a per-owner advisory lock.
+-- This changes ONLY this owner's pending reminder metadata.
+CREATE OR REPLACE FUNCTION public.vetogram_expire_owner_reminders(p_owner bigint)
+RETURNS integer LANGUAGE plpgsql SECURITY INVOKER
+SET search_path=public,pg_temp AS $$
+DECLARE changed integer;
+BEGIN
+  IF p_owner IS NULL OR p_owner<=0 THEN
+    RAISE EXCEPTION 'VETO_REMINDER_OWNER_INVALID' USING ERRCODE='P0001';
+  END IF;
+  PERFORM pg_advisory_xact_lock(hashtext('veto-reminders:'||p_owner::text)::bigint);
+  UPDATE public.vetogram_reminders SET state='skipped',
+    completed_at=now(),updated_at=now()
+    WHERE owner_id=p_owner AND state='pending' AND
+      (remind_at<now()-interval '1 hour' OR
+       task_due_at<now()-interval '10 minutes');
+  GET DIAGNOSTICS changed=ROW_COUNT;
+  RETURN changed;
+END; $$;
+REVOKE ALL ON FUNCTION public.vetogram_expire_owner_reminders(bigint) FROM PUBLIC;
+
 -- Task Cloud + Reminders 2.1: both task mutations and reminder scheduling
 -- acquire the SAME per-owner transaction lock. All task snapshots are opaque.
 -- Conservatively block any cloud write/erase while this owner has a PENDING
@@ -41,6 +63,8 @@ BEGIN
     RAISE EXCEPTION 'VETO_TASK_WRITE_INVALID' USING ERRCODE='P0001';
   END IF;
   PERFORM pg_advisory_xact_lock(hashtext('veto-reminders:'||p_owner::text)::bigint);
+  -- Owner-scoped expiry cannot race with another owner's reminder queue.
+  PERFORM public.vetogram_expire_owner_reminders(p_owner);
   IF EXISTS(SELECT 1 FROM public.vetogram_reminders
     WHERE owner_id=p_owner AND state='pending') THEN
     RAISE EXCEPTION 'VETO_TASK_PENDING_REMINDERS' USING ERRCODE='P0001';
