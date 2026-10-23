@@ -570,3 +570,39 @@ migration, scheduled task or Telegram message has been executed.**
   were actually sent during this work.
 - Feature flags remain OFF; no production DB, keys, bot sessions,
   main-branch merge or deployment were changed in this stage.
+
+
+## Reminder reliability hardening — time limits and safe task edits
+
+- Reviewed the existing staged `VETO Reminders` API, one-shot claim worker,
+  Task Center UI and sixth additive migration instead of building duplicates.
+  The owner must save an encrypted cloud task with a manually chosen exact due
+  date, start the bot beforehand, and explicitly authorize a one-time
+  reminder. The generic Bot API message intentionally contains no task title,
+  quote, contact or prompt.
+- **Late-delivery guard:** a reminder is now delivered only within **one hour
+  of the requested notification time**, and no later than **ten minutes
+  after the task's due date**. The claim SQL and stale-pending cleanup both
+  use the same one-hour bound. A delayed worker skips expired notifications
+  rather than unexpectedly alerting users much later. This is an at-most-once
+  best-effort service; delivery isn't guaranteed, and no automatic retries
+  are introduced.
+- **Pending reminder edit guard:** date changes, task completion, deferral,
+  and deletion require canceling a known pending server reminder first.
+  A claimed/in-progress reminder cannot be safely canceled and now warns the
+  user before changing the task. Refresh and cancellation operations rerender
+  the Task Center to surface the latest known reminder states.
+- Important consistency limit: the WebView may not have loaded current
+  server reminder metadata. Unsaved local changes are **not** server-side
+  changes. The worker rechecks the current saved encrypted task snapshot
+  immediately before sending, but a user who has not saved a task edit can
+  still receive a prior scheduled reminder. UI therefore must not promise
+  that marking a task done locally revokes a scheduled notification.
+- Expanded `tests/vetogram-reminders.test.js` with deterministic time tests
+  for early, on-time, expired, post-due, and owner-edited scenarios and
+  checks guarding task edits. A separate 17/17 targeted V8 syntax/behavior/UI
+  check passed. **Full Node/SQL integration, cron execution, live Telegram
+  sending, and deployment have NOT been tested or enabled.**
+- Existing user plan remains intact: keep changes in draft PR #181;
+  no parent PR merges, schema changes to production Neon, real reminders,
+  scheduler activation, bot sends or Preview/production deployments yet.
