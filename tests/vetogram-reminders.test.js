@@ -78,3 +78,20 @@ test('VETO Task Center reminders UI uses explicit owner confirmation and no back
   assert.match(js,/cancelReminder\(item\.taskId\)/);
   assert.doesNotMatch(js,/setInterval|localStorage|sessionStorage/);
 });
+
+test('cancel-all action is owner-scoped, consent-gated and atomic with worker claim',()=>{
+  const api=source('api/vetogram-reminders.js');
+  const store=source('lib/vetogram-reminder-store.js');
+  const ui=source('public/vetogram-ai.js');
+  const html=source('public/studio.html');
+  assert.match(api,/!\\['list','schedule','cancel','cancel_all'\\]\\.includes\\(body\\.action\\)/);
+  assert.match(api,/body\\.action==='cancel_all'/);
+  assert.match(api,/x-vetogram-reminder-consent/);
+  assert.match(store,/export async function cancelAllOwnerPendingReminders/);
+  assert.match(store,/WHERE owner_id=\\$1::bigint AND state='pending' RETURNING task_id/);
+  assert.match(store,/claimedMayStillSend:true/);
+  assert.match(ui,/action:'cancel_all'/);
+  assert.match(ui,/vtaiReminderCancelAll'\\)\\.addEventListener/);
+  assert.match(ui,/Уже начатые отправки могли продолжиться/);
+  assert.match(html,/id="vtaiReminderCancelAll"/);
+});
