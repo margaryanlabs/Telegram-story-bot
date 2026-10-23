@@ -167,6 +167,22 @@ BEGIN
   SELECT count(*) INTO n FROM public.vetogram_reminders
     WHERE owner_id=98760001 AND state='sent';
   IF n<>1 THEN RAISE EXCEPTION 'CI_CANCEL_ALL_MODIFIED_ALREADY_SENT'; END IF;
+  -- A job missed for longer than the allowed delivery window becomes skipped,
+  -- not permanently pending. Other owners' pending jobs are unchanged.
+  PERFORM public.vetogram_schedule_reminder(
+    98760001,'ffffffff-ffff-4fff-8fff-ffffffffffff'::uuid,
+    now()+interval '6 minutes',now()+interval '16 minutes','Asia/Yerevan',5);
+  UPDATE public.vetogram_reminders SET remind_at=now()-interval '61 minutes'
+    WHERE owner_id=98760001 AND task_id='ffffffff-ffff-4fff-8fff-ffffffffffff'::uuid;
+  SELECT public.vetogram_expire_owner_reminders(98760001) INTO n;
+  IF n<>1 THEN RAISE EXCEPTION 'CI_OWNER_EXPIRE_COUNT'; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_reminders WHERE owner_id=98760001
+    AND task_id='ffffffff-ffff-4fff-8fff-ffffffffffff'::uuid AND state='skipped';
+  IF n<>1 THEN RAISE EXCEPTION 'CI_OWNER_EXPIRE_STATE'; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_reminders WHERE owner_id=98760002
+    AND state='pending';
+  IF n<>1 THEN RAISE EXCEPTION 'CI_OWNER_EXPIRE_CROSSED_OWNER'; END IF;
+  PERFORM public.vetogram_task_cloud_write(98760001,5,'ci.after-expire',false);
   RAISE NOTICE 'VETOGRAM Reminders: metadata-only one-shot claim PASS';
   RAISE NOTICE 'VETOGRAM AI smoke passed: grants, audit, pause, quotas, memory CAS';
 END $$;
