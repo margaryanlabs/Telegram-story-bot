@@ -9,7 +9,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false,reminderSchedulingConfigured:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -29,7 +29,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;state.focusHidden.clear();
     state.tasks=[];state.taskFilter='open';state.taskCloudRevision=null;state.taskCloudBusy=false;
-    state.reminders=[];state.reminderBusy=false;
+    state.reminders=[];state.reminderBusy=false;state.reminderSchedulingConfigured=null;
     $('vtaiReminderStatus').textContent='Напоминания не загружены. Никакие уведомления не запущены.';
     $('vtaiReminderList').replaceChildren();$('vtaiReminderCount').textContent='0';
     $('vtaiTasksCloudStatus').textContent='Облачные задачи этого аккаунта не загружены. Ничего не синхронизируется автоматически.';
@@ -241,9 +241,10 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       }
       list.append(row);
     }
-    $('vtaiReminderStatus').textContent=data.length
-      ?'Напоминаний: '+data.length+'. Очередь проверяется сервером только после отдельного включения; доставка не гарантирована.'
-      :'Для этого аккаунта нет загруженных напоминаний. Создание требует сохранённой облачной задачи.';
+    const schedulingNote=state.reminderSchedulingConfigured===true
+      ?'Планировщик отмечен как настроенный; доставку Telegram это не гарантирует.'
+      :'Создание новых напоминаний отключено до настройки планировщика. Просмотр и отмена остаются доступны.';
+    $('vtaiReminderStatus').textContent=(data.length?'Напоминаний: '+data.length+'. ':'Для этого аккаунта нет загруженных напоминаний. ')+schedulingNote;
   }
   async function loadReminders(){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy)return;
@@ -252,6 +253,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       const result=await request('/api/vetogram-reminders',{action:'list'});
       if(!safeIdentity())return;
       state.reminders=Array.isArray(result.reminders)?result.reminders:[];
+      state.reminderSchedulingConfigured=result.schedulingConfigured===true;
       renderReminders();renderTasks();
     }catch(error){
       $('vtaiReminderStatus').textContent='Не удалось загрузить уведомления: '+error.message;
@@ -259,6 +261,8 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   }
   async function scheduleReminder(task,leadMinutes){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
+    if(state.reminderSchedulingConfigured!==true)
+      return notice('Новые напоминания пока отключены. Обнови список: сервер должен подтвердить настройку планировщика.',true);
     if(!ownerTasks(state.tasks,owner()).some(t=>t.id===task.id&&t.status==='open'&&t.dueAt))
       return notice('Выбери активную задачу с точной датой.',true);
     if(!Number.isSafeInteger(state.taskCloudRevision)||state.taskCloudRevision<1)
@@ -278,7 +282,8 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
         remindAt:new Date(reminderEpoch).toISOString(),timeZone},'reminder');
       notice('Запрос на создание напоминания принят сервером. Оно не отправляется сейчас.');
       await request('/api/vetogram-reminders',{action:'list'}).then(result=>{
-        if(safeIdentity()){state.reminders=result.reminders||[];renderReminders();}
+        if(safeIdentity()){state.reminders=result.reminders||[];
+          state.reminderSchedulingConfigured=result.schedulingConfigured===true;renderReminders();}
       });
     }catch(error){notice('Не удалось создать напоминание: '+error.message,true);}
     finally{state.reminderBusy=false}
@@ -295,6 +300,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       const current=await request('/api/vetogram-reminders',{action:'list'});
       if(!safeIdentity())return;
       state.reminders=Array.isArray(current.reminders)?current.reminders:[];
+      state.reminderSchedulingConfigured=current.schedulingConfigured===true;
       renderReminders();renderTasks();
       notice('Отменено ожидающих: '+result.canceledCount+
         '. Уже начатые отправки могли продолжиться.');
@@ -310,7 +316,9 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       const result=await request('/api/vetogram-reminders',{action:'cancel',taskId},'reminder');
       if(result.canceled!==true)throw Error('Отмена не подтверждена сервером');
       const list=await request('/api/vetogram-reminders',{action:'list'});
-      if(safeIdentity()){state.reminders=list.reminders||[];renderReminders();renderTasks();}
+      if(safeIdentity()){state.reminders=list.reminders||[];
+        state.reminderSchedulingConfigured=list.schedulingConfigured===true;
+        renderReminders();renderTasks();}
       notice('Напоминание отменено до обработки.');
     }catch(error){notice('Не удалось отменить: '+error.message,true);}
     finally{state.reminderBusy=false}
