@@ -482,3 +482,54 @@ migration, scheduled task or Telegram message has been executed.**
   retention policy, enable opt-in feature flag, run all unit/API/Postgres/mobile
   checks, then one controlled batch release. None of those live operations
   were performed.
+
+
+## VETO Reminders — opt-in one-shot self-notifications, UNRELEASED (24 Oct)
+
+- Added SIXTH staged migration `migrations/vetogram-reminders-20261024.sql`
+  (not applied). It stores ONLY reminder metadata: Telegram owner ID, task
+  UUID, exact UTC trigger/due time, owner's IANA timezone, consented/pending
+  state and one delivery-attempt token. NO task title, source quote, chat text,
+  LLM messages, session keys or alternate recipients in the queue.
+- New `/api/vetogram-reminders` (same Vercel router/function) provides
+  owner-authenticated list, schedule and pending-only cancellation. Creation and
+  cancellation require `x-vetogram-reminder-consent: yes`; the client asks the
+  owner before **each** action. Scheduling validates that the same signed owner
+  has previously saved an active task with manually chosen cloud due time.
+  Time must be at least two minutes ahead, at most 365 days ahead, <= task due
+  and have a valid IANA time zone. Up to 24 pending reminders per owner.
+- Task UI supports `0/15/60/1440` minutes before the owner's selected due
+  date; reminders screen shows latest metadata and permits canceling only
+  pending jobs. Updates to tasks are NOT automatically synchronized; if the
+  encrypted cloud task was deleted/completed/changed or its due time changed,
+  the worker skips it when due. UI prompts first to open/start the Telegram
+  bot, since Telegram Bot API cannot initiate conversations with users.
+- New `/api/vetogram-reminder-worker` requires the existing
+  `neonCronAuthorized` server-only bearer verifier (Neon cron enabled) and
+  **two default-off flags**:
+  `VETOGRAM_REMINDERS_ENABLED=true` and
+  `VETOGRAM_REMINDERS_WORKER_ENABLED=true`. No scheduled invocation or Vercel
+  cron was configured. No live notifications were sent.
+- Worker sends ONLY generic self-notification (no private details). SQL
+  `FOR UPDATE SKIP LOCKED` atomically changes pending -> claimed and sets
+  immutable attempt UUID *before* the Bot API request. Delivery result is
+  marked sent/failed/skipped once. It is at-most-one-attempt, NOT guaranteed
+  exactly-once delivery. Uncertain network outcomes are never retried
+  automatically to prevent duplicate messages; delivery can be missed.
+  Pending jobs > 24h late become skipped. Cancellation after claim cannot
+  guarantee prevention of send. Owners should be warned accordingly.
+- Sixth migration and new runtime checks added to the offline release
+  preflight, disposable PostgreSQL smoke, CI migration order, Node syntax
+  checks; regression test `tests/vetogram-reminders.test.js` validates
+  time zone/range, owner consent, active task check, atomic claims, no plain
+  message text and client cancellation.
+- Current source-only validation passed: six-migration static preflight and
+  all new reminder-specific API/worker contracts, reminder pure-function
+  behavior, JS parser checks and DOM bindings. The full Node suite, actual
+  SQL execution/concurrency, Telegram Bot API, timezone UI in WebView,
+  worker scheduler availability and true delivery guarantees remain
+  **UNVERIFIED** until the final release QA.
+- No changes to `main`, production Vercel settings/domains, live Neon, or
+  real Telegram conversations. **Do not** enable reminder worker flags or
+  schedule cron before isolated delivery testing, a Bot API consent/bot-start
+  flow, user-facing retention terms and explicit combined release approval.
