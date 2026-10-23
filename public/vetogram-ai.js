@@ -75,7 +75,7 @@
     const original=$('vtaiText').value.trim();
     if(original.length<2||original.length>3000)return notice('Введите от 2 до 3000 символов',true);
     const prompt=state.mode==='translate'
-      ?'Переведи точно на '+$('vtaiLanguage').value+'. Верни только перевод:\n'+original
+      ?'Переведи точно на '+$('vtaiLanguageSelect').value+'. Верни только перевод:\n'+original
       :original;
     const mode=state.mode,oldHistory=[...state.history];
     setBusy(true);$('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
