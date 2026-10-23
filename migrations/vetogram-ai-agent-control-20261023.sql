@@ -168,6 +168,8 @@ BEGIN
   IF p_owner_id IS NULL OR p_owner_id<1 OR p_pause IS NULL THEN
     RAISE EXCEPTION 'VETOGRAM_AGENT_INVALID_CHANGE' USING ERRCODE='P0001';
   END IF;
+  -- Same advisory transaction lock is acquired FIRST by grant issuance.
+  PERFORM pg_advisory_xact_lock(hashtext('vetogram-ai-agent:' || p_owner_id::text)::bigint);
   INSERT INTO public.vetogram_ai_agent_control(owner_id) VALUES(p_owner_id)
     ON CONFLICT(owner_id) DO NOTHING;
   -- Serialize with concurrent grant issuance via trigger's row lock.
