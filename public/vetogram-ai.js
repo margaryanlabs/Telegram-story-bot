@@ -137,24 +137,29 @@
     }catch(error){notice(error.message+'. Если произошёл сбой сети, сначала проверь чат, прежде чем отправлять снова.',true)}
     finally{setBusy(false)}
   }
-  function applyStory(){
-    if(!safeIdentity())return;
+  async function applyStory(){
+    if(state.busy||!safeIdentity())return;
+    const snapshot=signed(),requestedOwner=owner();
     const story={
       title:$('vtaiStoryTitle').value.trim().slice(0,90),
       subtitle:$('vtaiStorySubtitle').value.trim().slice(0,180),
       caption:$('vtaiStoryCaption').value.trim().slice(0,800)
     };
     if(!story.title||!story.subtitle)return notice('У Story нужны заголовок и подзаголовок',true);
-    const approved=window.confirm('Перенести эти тексты в текущий черновик Story Engine? Фото, слои и Portal останутся прежними.');
-    if(!approved)return;
-    window.dispatchEvent(new CustomEvent('vetogram:ai-story-suggestion',{detail:{ownerId:owner(),story}}));
-    if(window.VetoTelegramNavigate?.('story-engine'))notice('Тексты переданы в Story Engine. Проверь кадр и сохрани черновик.');
-    else notice('Story Engine временно недоступен',true);
+    if(!window.confirm('Перенести этот текст в текущий черновик? Фото, слои и Portal сохранятся.'))return;
+    if(!window.VetoTelegramNavigate?.('story-engine'))return notice('Story Engine недоступен.',true);
+    if(typeof window.VetoTelegramApplyAiStory!=='function')return notice('Story Engine ещё не готов. Повтори действие.',true);
+    try{
+      const applied=await window.VetoTelegramApplyAiStory({ownerId:requestedOwner,story});
+      if(snapshot!==signed()||requestedOwner!==owner())return notice('Аккаунт изменился, перенос отменён.',true);
+      if(!applied)return notice('Не удалось применить текст. Попробуй снова.',true);
+      notice('Тексты добавлены в Story Engine. Проверь кадр и сохрани черновик.');
+    }catch(error){notice('Перенос в Story Engine не удался. Сохрани текст вручную.',true)}
   }
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiSend').addEventListener('click',()=>void send());
-  $('vtaiApplyStory').addEventListener('click',applyStory);
+  $('vtaiApplyStory').addEventListener('click',()=>void applyStory());
   document.querySelectorAll('[data-vtai-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.vtaiMode)));
   document.querySelectorAll('[data-open-screen="ai"][data-ai-mode="story"]').forEach(b=>b.addEventListener('click',()=>setMode('story')));
   window.addEventListener('veto:screen-changed',e=>{
