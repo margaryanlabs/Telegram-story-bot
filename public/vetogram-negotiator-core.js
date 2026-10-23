@@ -46,6 +46,17 @@ export function verifyNegotiationProposal(policy,proposal,{owner,chatId,now=Date
   }else if(/(?:[$€֏₽₾£]|\b(?:USD|EUR|AMD|RUB|GEL|GBP)\b|(?:доллар|евро|рубл|драм|лари))/i.test(reply)){
     return blocked('В ответе указана валюта, но AI не подтвердил сумму');
   }
+  // Independent surface scan guards against a model claiming one structured
+  // price but writing a different amount in the actual user-visible reply.
+  // Ambiguous amount formats deliberately fail closed for manual rewriting.
+  const moneyPattern=/(?:[$€֏₽₾£]\s*(\d[\d,.]*)|(\d[\d,.]*)\s*(?:USD|EUR|AMD|RUB|GEL|GBP)\b)/gi;
+  for(const match of reply.matchAll(moneyPattern)){
+    const amount=String(match[1]||match[2]||'');
+    if(quoteCents===null)return blocked('Сумма в тексте не подтверждена структурированным ответом');
+    let written;
+    try{written=cents(amount)}catch{return blocked('Неоднозначная денежная сумма в тексте')}
+    if(written!==quoteCents)return blocked('Сумма в тексте не совпадает с проверенным предложением');
+  }
   // No derived automatic send privilege: even a passing proposal requires
   // the ordinary editor, existing-dialog validation and separate confirmation.
   return {allowed:true,requiresApproval:true,reason:proposal.decision==='escalate'
@@ -58,7 +69,6 @@ export function negotiationBrief(policy,goal,customerText){
   const aim=clean(goal,300),incoming=clean(customerText,1200);
   if(aim.length<3||incoming.length<2)throw Error('NEGOTIATOR_BRIEF_REQUIRED');
   return 'Scenario for a DRAFT ONLY, never send anything. Goal: '+aim+
-    '\nAllowed chat id (not a recipient instruction): '+policy.chatId+
     '\nCurrency: '+policy.currency+
     '\nAsking price: '+(policy.askingCents/100).toFixed(2)+
     '\nLowest allowed offer: '+(policy.minCents/100).toFixed(2)+
