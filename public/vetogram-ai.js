@@ -9,7 +9,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -29,6 +29,9 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;state.focusHidden.clear();
     state.tasks=[];state.taskFilter='open';state.taskCloudRevision=null;state.taskCloudBusy=false;
+    state.reminders=[];state.reminderBusy=false;
+    $('vtaiReminderStatus').textContent='Напоминания не загружены. Никакие уведомления не запущены.';
+    $('vtaiReminderList').replaceChildren();$('vtaiReminderCount').textContent='0';
     $('vtaiTasksCloudStatus').textContent='Облачные задачи этого аккаунта не загружены. Ничего не синхронизируется автоматически.';
     renderTasks();
     $('vtaiFocusList').replaceChildren();$('vtaiFocusCount').textContent='0';
@@ -212,6 +215,89 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       $('vtaiTasksCloudSave').disabled=false;}
   }
 
+  function renderReminders(){
+    const list=$('vtaiReminderList');list.replaceChildren();
+    const data=Array.isArray(state.reminders)?state.reminders:[];
+    $('vtaiReminderCount').textContent=String(data.filter(r=>r.status==='pending').length);
+    const translate={pending:'Запланировано',claimed:'Выполняется (отмена уже не гарантируется)',
+      sent:'Отправлено Telegram',failed:'Доставка не подтверждена',skipped:'Пропущено',
+      canceled:'Отменено'};
+    for(const item of data){
+      const row=document.createElement('article');row.className='vtai-workspace-item';
+      const matching=ownerTasks(state.tasks,owner()).find(t=>t.id===item.taskId);
+      const title=document.createElement('strong');
+      title.textContent=matching?.title||'Задача '+item.taskId.slice(0,8);
+      const meta=document.createElement('p');
+      meta.textContent=(translate[item.status]||'Неизвестное состояние')+
+        ' · '+new Date(item.remindAt).toLocaleString('ru-RU')+
+        ' · '+String(item.timeZone||'UTC')+
+        '. Уведомления не содержат текста задачи.';
+      row.append(title,meta);
+      if(item.status==='pending'){
+        const cancel=document.createElement('button');cancel.type='button';cancel.className='vtai-action vtai-danger';
+        cancel.textContent='Отменить до отправки';
+        cancel.addEventListener('click',()=>void cancelReminder(item.taskId));
+        row.append(cancel);
+      }
+      list.append(row);
+    }
+    $('vtaiReminderStatus').textContent=data.length
+      ?'Напоминаний: '+data.length+'. Очередь проверяется сервером только после отдельного включения; доставка не гарантирована.'
+      :'Для этого аккаунта нет загруженных напоминаний. Создание требует сохранённой облачной задачи.';
+  }
+  async function loadReminders(){
+    if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy)return;
+    state.reminderBusy=true;$('vtaiReminderRefresh').disabled=true;
+    try{
+      const result=await request('/api/vetogram-reminders',{action:'list'});
+      if(!safeIdentity())return;
+      state.reminders=Array.isArray(result.reminders)?result.reminders:[];
+      renderReminders();
+    }catch(error){
+      $('vtaiReminderStatus').textContent='Не удалось загрузить уведомления: '+error.message;
+    }finally{state.reminderBusy=false;$('vtaiReminderRefresh').disabled=false}
+  }
+  async function scheduleReminder(task,leadMinutes){
+    if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
+    if(!ownerTasks(state.tasks,owner()).some(t=>t.id===task.id&&t.status==='open'&&t.dueAt))
+      return notice('Выбери активную задачу с точной датой.',true);
+    if(!Number.isSafeInteger(state.taskCloudRevision)||state.taskCloudRevision<1)
+      return notice('Сначала загрузи и сохрани эту задачу в зашифрованное облако.',true);
+    const lead=Number(leadMinutes);
+    if(![0,15,60,1440].includes(lead))return notice('Неверный интервал напоминания.',true);
+    const reminderEpoch=Date.parse(task.dueAt)-lead*60000;
+    if(!Number.isFinite(reminderEpoch)||reminderEpoch<Date.now()+120000)
+      return notice('Для напоминания нужно не менее двух минут до назначенного времени.',true);
+    const timeZone=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
+    if(!window.confirm('Создать одноразовое Telegram-напоминание лично тебе на '+
+      new Date(reminderEpoch).toLocaleString('ru-RU')+' ('+timeZone+')? Бот должен быть запущен тобой заранее. В уведомлении не будет текста задачи, доставка не гарантирована.'))return;
+    if(!safeIdentity())return;
+    state.reminderBusy=true;
+    try{
+      await request('/api/vetogram-reminders',{action:'schedule',taskId:task.id,
+        remindAt:new Date(reminderEpoch).toISOString(),timeZone},'reminder');
+      notice('Запрос на создание напоминания принят сервером. Оно не отправляется сейчас.');
+      await request('/api/vetogram-reminders',{action:'list'}).then(result=>{
+        if(safeIdentity()){state.reminders=result.reminders||[];renderReminders();}
+      });
+    }catch(error){notice('Не удалось создать напоминание: '+error.message,true);}
+    finally{state.reminderBusy=false}
+  }
+  async function cancelReminder(taskId){
+    if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
+    if(!window.confirm('Отменить это напоминание? Если Telegram-отправка уже началась, остановить её может быть невозможно.'))return;
+    if(!safeIdentity())return;
+    state.reminderBusy=true;
+    try{
+      const result=await request('/api/vetogram-reminders',{action:'cancel',taskId},'reminder');
+      if(result.canceled!==true)throw Error('Отмена не подтверждена сервером');
+      const list=await request('/api/vetogram-reminders',{action:'list'});
+      if(safeIdentity()){state.reminders=list.reminders||[];renderReminders();}
+      notice('Напоминание отменено до обработки.');
+    }catch(error){notice('Не удалось отменить: '+error.message,true);}
+    finally{state.reminderBusy=false}
+  }
+
   function renderTasks(){
     const list=$('vtaiTasksList');list.replaceChildren();
     const summary=taskOverview(state.tasks,owner());
@@ -276,6 +362,18 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
         catch{notice('Не удалось убрать дату.',true)}
       });
       dueRow.append(dateLabel,saveDue,clearDue);
+      if(task.status==='open'&&task.dueAt){
+        const reminderRow=document.createElement('div');reminderRow.className='vtai-row';
+        const lead=document.createElement('select');lead.className='vtai-input';
+        lead.setAttribute('aria-label','Когда напомнить о задаче '+task.title);
+        for(const [minutes,label] of [[0,'В указанный срок'],[15,'За 15 минут'],
+          [60,'За 1 час'],[1440,'За сутки']])
+          lead.append(new Option(label,String(minutes)));
+        const schedule=document.createElement('button');schedule.type='button';
+        schedule.className='vtai-action';schedule.textContent='⏰ Напомнить мне';
+        schedule.addEventListener('click',()=>void scheduleReminder(task,Number(lead.value)));
+        reminderRow.append(lead,schedule);dueRow.append(reminderRow);
+      }
       const actions=document.createElement('div');actions.className='vtai-row';
       const change=(label,status)=>{
         const button=document.createElement('button');button.type='button';button.className='vtai-action';
@@ -409,7 +507,8 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
           ...(consent==='memory'?{'x-vetogram-memory-consent':'yes'}:{}),
           ...(consent==='grant'?{'x-vetogram-grant-consent':'yes'}:{}),
           ...(consent==='agent'?{'x-vetogram-agent-consent':'yes'}:{}),
-          ...(consent==='tasks'?{'x-vetogram-tasks-consent':'yes'}:{})},
+          ...(consent==='tasks'?{'x-vetogram-tasks-consent':'yes'}:{}),
+          ...(consent==='reminder'?{'x-vetogram-reminder-consent':'yes'}:{})},
         body:JSON.stringify(body),signal:abort.signal});
       const json=await result.json().catch(()=>({}));
       if(signed()!==requestOwner||!owner()){reset();throw Error('Аккаунт изменился. Действие отменено.');}
@@ -1012,6 +1111,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   $('vtaiTasksCloudLoad').addEventListener('click',()=>void loadTasksCloud());
   $('vtaiTasksCloudSave').addEventListener('click',()=>void saveTasksCloud());
   $('vtaiTasksCloudErase').addEventListener('click',()=>void eraseTasksCloud());
+  $('vtaiReminderRefresh').addEventListener('click',()=>void loadReminders());
   $('vtaiCreate').addEventListener('click',()=>void generate());
   $('vtaiLoadChats').addEventListener('click',()=>void loadChats());
   $('vtaiFocusRefresh').addEventListener('click',()=>void loadChats());
@@ -1103,5 +1203,5 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   });
   window.addEventListener('pageshow',()=>{if(state.identity&&state.identity!==signed())reset()});
   setMode('chat');
-  renderApprovals();renderMemory();renderTasks();
+  renderApprovals();renderMemory();renderTasks();renderReminders();
 })();
