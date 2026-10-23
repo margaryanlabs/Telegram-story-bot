@@ -83,6 +83,7 @@
     try{
       const answer=await request('/api/vetogram-ai',{mode,prompt,history:mode==='chat'?oldHistory:[]},true);
       if(state.mode!==mode)return notice('Режим изменился. Ответ не применён.',true);
+      if(Number.isInteger(Number(answer?.quota?.remainingRequests)))$('vtaiQuota').textContent='Осталось AI-запросов на сегодня (UTC): '+Number(answer.quota.remainingRequests)+'.';
       addBubble(original,'user');addBubble(answer.text,'assistant');
       if(mode==='chat')state.history=[...oldHistory,{role:'user',text:prompt},{role:'assistant',text:answer.text}].slice(-6);
       state.last=answer.text;
