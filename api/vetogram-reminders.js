@@ -1,5 +1,5 @@
 import {validateTelegramMiniApp} from '../lib/telegram-miniapp-auth.js';
-import {listOwnerReminders,scheduleOwnerReminder,cancelOwnerReminder} from '../lib/vetogram-reminder-store.js';
+import {listOwnerReminders,scheduleOwnerReminder,cancelOwnerReminder,cancelAllOwnerPendingReminders} from '../lib/vetogram-reminder-store.js';
 const respond=(res,status,data)=>res.status(status).json({ok:status<400,...data});
 export default async function handler(req,res){
   res.setHeader('Cache-Control','private, no-store, max-age=0');
@@ -16,13 +16,14 @@ export default async function handler(req,res){
     body=typeof req.body==='string'?JSON.parse(req.body):req.body;
     if(!body||typeof body!=='object'||Array.isArray(body)||
       JSON.stringify(body).length>1200||
-      !['list','schedule','cancel'].includes(body.action))throw Error('INVALID_BODY');
+      !['list','schedule','cancel','cancel_all'].includes(body.action))throw Error('INVALID_BODY');
   }catch{return respond(res,400,{error:'Неверный запрос напоминаний'})}
   try{
     if(body.action==='list')return respond(res,200,await listOwnerReminders(owner.id));
     if(req.headers['x-vetogram-reminder-consent']!=='yes')
       return respond(res,403,{error:'Нужно явное разрешение на создание или отмену уведомления'});
     if(body.action==='schedule')return respond(res,200,await scheduleOwnerReminder(owner.id,body));
+    if(body.action==='cancel_all')return respond(res,200,await cancelAllOwnerPendingReminders(owner.id));
     const result=await cancelOwnerReminder(owner.id,body.taskId);
     if(!result.canceled)return respond(res,409,{
       error:'Напоминание уже отправлено, обрабатывается или не существует'});
