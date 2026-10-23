@@ -188,7 +188,8 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       state.taskCloudRevision=result.revision;
       taskCloudStatus('Сервер подтвердил зашифрованную копию задач. Версия '+result.revision+
         '. Изменения после этого нужно сохранять вручную.');
-    }catch(error){taskCloudStatus('Облачное сохранение не выполнено: '+error.message,true);}
+    }catch(error){taskCloudStatus('Облачное сохранение не выполнено: '+error.message+
+      ' Локальные изменения остаются в текущем окне; сначала проверь напоминания.',true);}
     finally{state.taskCloudBusy=false;$('vtaiTasksCloudSave').disabled=false;
       $('vtaiTasksCloudErase').disabled=false;}
   }
@@ -210,7 +211,8 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       state.taskCloudRevision=result.revision;
       taskCloudStatus('Зашифрованное содержимое удалено из активной таблицы. Версия '+
         result.revision+'. Локальные задачи сохранены в окне.');
-    }catch(error){taskCloudStatus('Не удалось подтвердить удаление: '+error.message,true);}
+    }catch(error){taskCloudStatus('Удаление не подтверждено: '+error.message+
+      ' Обнови серверную копию перед новой попыткой; локальные задачи не удалены.',true);}
     finally{state.taskCloudBusy=false;$('vtaiTasksCloudErase').disabled=false;
       $('vtaiTasksCloudSave').disabled=false;}
   }
