@@ -440,3 +440,45 @@ migration, scheduled task or Telegram message has been executed.**
 - The combined PR remains **draft**, no intermediate deployment, main merge,
   Neon migration or change to Telegram production sessions. Release planned
   as one reviewed batch once all modules and QA are complete.
+
+
+## Task Center 2.0 — opt-in encrypted cloud snapshots (still NOT DEPLOYED)
+
+- Added the **fifth** staged additive SQL migration:
+  `migrations/vetogram-task-cloud-20261023.sql`. It creates an owner-bound
+  snapshot table with opaque ciphertext, integer revision and update time.
+  The migration is NOT applied to live Neon and the new endpoint is OFF by
+  default (`VETOGRAM_TASKS_CLOUD_ENABLED` must be explicitly set to true).
+- Uses independent `VETOGRAM_TASKS_KEY` (64 hexadecimal digits, 32 random
+  bytes, server-only), AES-256-GCM with randomized IV, authentication tag and
+  per-owner AAD. Distinct encryption domain from session keys and AI Memory.
+  The VETOGRAM backend holding this key can decrypt content; **NOT E2EE**.
+  Do not reuse or expose Telegram-session or AI Memory encryption secrets.
+- Owner authentication relies on signed Telegram Mini App initData; the client
+  never selects the owner ID for database operations. Payload validation
+  enforces 24-task cap, UUIDs, owner-bound content, source quotes, manual ISO
+  due dates, allowed status and duplicated-task rejection.
+- Client offers **manual** load, save and erase controls. Cloud revisions use
+  optimistic compare-and-swap so a stale device cannot silently overwrite a
+  newer saved snapshot; loading requires explicit confirmation if it replaces
+  unsaved local tasks. Any subsequent local edits are NOT auto-synchronized.
+- Cloud erase removes `encrypted_snapshot` from the active table and
+  increments the revision; a **technical owner/revision tombstone** remains to
+  block stale restoration. Backups and retained infrastructure snapshots may
+  preserve encrypted historical versions until their retention expires.
+  "Erase" never deletes local in-window tasks and has a separate confirmation.
+- No task worker, actual reminders, Telegram sends, app notifications, contact
+  scanning, automatic AI ingestion or payment integration added.
+- Added `tests/vetogram-task-cloud.test.js`; wired a fifth migration into
+  static release preflight, CI disposable Postgres migration order and
+  compare-and-swap/tombstone smoke, and registered `/api/vetogram-tasks`
+  through the existing Vercel Hobby API router. No new Vercel Function.
+- Verified 16 source/parser/DOM/release-contract checks and 12 pure validation
+  behavioral checks in the authoring environment. Full Node tests, live AES
+  test runtime, disposable Postgres, end-to-end Telegram/Vercel remain
+  unverified due to existing external CI runner/Preview issues.
+- **Release order:** apply parent Story and AI migrations only after separate
+  approval, apply fifth task migration, configure distinct production key and
+  retention policy, enable opt-in feature flag, run all unit/API/Postgres/mobile
+  checks, then one controlled batch release. None of those live operations
+  were performed.
