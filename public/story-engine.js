@@ -1,7 +1,8 @@
 
 import { STORY_TEMPLATES,PORTAL_TYPES,RETENTION_DAYS,templateById,
   trimText,safeExternalUrl,newStoryDraft,normalizeDraft,normalizePortal,
-  remixDraft,draftFromBrief,isExpired } from './story-engine-core.js';
+  remixDraft,draftFromBrief,isExpired,PHOTO_EFFECTS,STORY_LAYER_STYLES,
+  normalizeStoryLayer,normalizeStoryLayers } from './story-engine-core.js';
 
 // VETO Story Engine lives inside the existing Telegram Mini App.
 // No asset or draft is uploaded to a backend. The device-local vault is not
@@ -10,7 +11,7 @@ const $=id=>document.getElementById(id);
 const canvas=$('seCanvas');
 const root=$('seEngine');
 if(!canvas||!root)throw new Error('STORY_ENGINE_SCREEN_MISSING');
-const state={draft:null,owner:null,db:null,image:null,imageSrc:null,busy:false,revision:0,loaded:false};
+const state={draft:null,owner:null,db:null,image:null,imageSrc:null,busy:false,revision:0,loaded:false,selectedLayer:null,dragLayer:null};
 const tg=window.Telegram?.WebApp;
 const owner=()=>tg?.initData && /^\d{1,20}$/.test(String(tg.initDataUnsafe?.user?.id||''))?
   String(tg.initDataUnsafe.user.id):'';
@@ -129,7 +130,14 @@ function paint(target){
   ctx.fillStyle=g;ctx.fillRect(0,0,540,960);
   if(state.image?.complete&&state.image.naturalWidth){
     const iw=state.image.naturalWidth,ih=state.image.naturalHeight,r=Math.max(540/iw,960/ih),sw=iw*r,sh=ih*r;
-    ctx.drawImage(state.image,(540-sw)/2,(960-sh)/2,sw,sh);
+    const zoom=Math.max(1,Math.min(2.5,Number(d.photoZoom)||1));
+    const zw=sw*zoom,zh=sh*zoom,px=Math.max(-1,Math.min(1,Number(d.photoX)||0)),py=Math.max(-1,Math.min(1,Number(d.photoY)||0));
+    const dx=(540-zw)/2+(zw-540)*px/2,dy=(960-zh)/2+(zh-960)*py/2;
+    const filters={original:'none',cinema:'contrast(1.22) saturate(.84)',mono:'grayscale(1) contrast(1.12)',
+      warm:'sepia(.26) saturate(1.25) contrast(1.07)',cool:'hue-rotate(14deg) saturate(.75) contrast(1.1)',
+      vivid:'saturate(1.55) contrast(1.08)'};
+    ctx.save();ctx.filter=filters[d.photoEffect]||'none';
+    ctx.drawImage(state.image,dx,dy,zw,zh);ctx.restore();
     const tint=ctx.createLinearGradient(0,0,0,960);
     tint.addColorStop(0,'rgba(0,0,0,.24)');tint.addColorStop(.53,'rgba(4,5,9,.22)');tint.addColorStop(1,'rgba(0,0,0,.85)');
     ctx.fillStyle=tint;ctx.fillRect(0,0,540,960);
@@ -149,6 +157,26 @@ function paint(target){
   const used=drawLines(ctx,d.title||t.title,x,start,center?440:435,titleSize,center?'center':'left',3);
   ctx.font='400 21px system-ui,sans-serif';ctx.fillStyle='rgba(255,255,255,.88)';
   drawLines(ctx,d.subtitle||t.subtitle,x,start+used+12,center?400:410,21,center?'center':'left',3);
+  // Separate editable text layers. Canvas pixels are exported as-is; no DOM,
+  // remote media or scripts are executed from user-supplied text.
+  for(const layer of normalizeStoryLayers(d.layers)){
+    const lx=layer.x*540,ly=layer.y*960;
+    ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='800 '+layer.size+'px system-ui,sans-serif';
+    const boxWidth=Math.min(455,ctx.measureText(layer.text).width+35);
+    if(layer.style==='pill'){
+      ctx.fillStyle=t.accent;ctx.beginPath();
+      ctx.roundRect(lx-boxWidth/2,ly-layer.size*.83,boxWidth,layer.size*1.7,13);ctx.fill();
+      ctx.fillStyle='#0c0d12';ctx.fillText(layer.text,lx,ly,boxWidth-22);
+    } else if(layer.style==='outline'){
+      ctx.strokeStyle='rgba(0,0,0,.82)';ctx.lineWidth=5;ctx.lineJoin='round';
+      ctx.strokeText(layer.text,lx,ly,455);ctx.fillStyle='#fff';ctx.fillText(layer.text,lx,ly,455);
+    } else{
+      ctx.shadowColor='rgba(0,0,0,.68)';ctx.shadowBlur=12;
+      ctx.fillStyle='#fff';ctx.fillText(layer.text,lx,ly,455);
+    }
+    ctx.restore();
+  }
   if(d.portal){
     const txt=trimText(d.portal.cta,30).toUpperCase();
     const y=center?825:857;
@@ -158,6 +186,35 @@ function paint(target){
   }
   ctx.fillStyle='rgba(255,255,255,.7)';ctx.textAlign='right';ctx.font='500 11px system-ui,sans-serif';
   if(d.branding===true)ctx.fillText('MADE WITH VETOGRAM',487,914);
+}
+function renderLayers(){
+  const layers=normalizeStoryLayers(state.draft?.layers),holder=$('seLayerList');
+  holder.replaceChildren();
+  if(!layers.some(layer=>layer.id===state.selectedLayer))state.selectedLayer=null;
+  if(!layers.length){
+    const note=document.createElement('div');note.className='se-layer-empty';
+    note.textContent='Добавь надпись: её можно будет переместить прямо на изображении.';
+    holder.append(note);
+  }
+  for(const layer of layers){
+    const button=document.createElement('button');button.type='button';
+    button.className='se-layer-chip'+(state.selectedLayer===layer.id?' active':'');
+    const name=document.createElement('span');name.textContent=layer.text;
+    const style=document.createElement('small');style.textContent=layer.style;
+    button.append(name,style);
+    button.setAttribute('aria-pressed',state.selectedLayer===layer.id?'true':'false');
+    button.addEventListener('click',()=>{
+      state.selectedLayer=layer.id;
+      $('seLayerText').value=layer.text;
+      $('seLayerStyle').value=layer.style;
+      renderLayers();paint(canvas);
+    });
+    holder.append(button);
+  }
+  $('seLayerRemove').disabled=!state.selectedLayer;
+  $('seLayerSize').disabled=!state.selectedLayer;
+  const selected=layers.find(layer=>layer.id===state.selectedLayer);
+  if(selected)$('seLayerSize').value=String(selected.size);
 }
 function render(){
   if(!state.draft)return;
@@ -169,6 +226,11 @@ function render(){
   $('seBranding').checked=state.draft.branding===true;
   $('seTextY').value=String(state.draft.textY);
   $('seFontSize').value=String(state.draft.fontSize);
+  $('sePhotoEffect').value=state.draft.photoEffect||'original';
+  $('sePhotoZoom').value=String(Math.round((state.draft.photoZoom||1)*100));
+  $('sePhotoX').value=String(Math.round((state.draft.photoX||0)*100));
+  $('sePhotoY').value=String(Math.round((state.draft.photoY||0)*100));
+  renderLayers();
   const p=state.draft.portal;
   $('sePortalType').value=p?.type||'';
   $('sePortalTitle').value=p?.title||'';
@@ -206,6 +268,7 @@ function loadImageForDraft(){
   i.src=url;
 }
 function applyDraft(d){
+  state.selectedLayer=null;state.dragLayer=null;
   state.draft=normalizeDraft(d,state.owner||'0');loadImageForDraft();render();
 }
 async function init(){
@@ -293,6 +356,74 @@ function setup(){
   $('seBranding').addEventListener('change',e=>{if(state.draft){state.draft.branding=e.target.checked;paint(canvas)}});
   $('seTextY').addEventListener('input',e=>{if(state.draft){state.draft.textY=Number(e.target.value);paint(canvas)}});
   $('seFontSize').addEventListener('input',e=>{if(state.draft){state.draft.fontSize=Number(e.target.value);paint(canvas)}});
+  for(const [id,key,factor] of [['sePhotoZoom','photoZoom',100],['sePhotoX','photoX',100],['sePhotoY','photoY',100]]){
+    $(id).addEventListener('input',e=>{if(state.draft){state.draft[key]=Number(e.target.value)/factor;paint(canvas)}});
+  }
+  $('sePhotoEffect').addEventListener('change',e=>{
+    if(state.draft){state.draft.photoEffect=PHOTO_EFFECTS.includes(e.target.value)?e.target.value:'original';paint(canvas)}
+  });
+  $('sePhotoReset').addEventListener('click',()=>{
+    if(!state.draft)return;
+    Object.assign(state.draft,{photoZoom:1,photoX:0,photoY:0,photoEffect:'original'});render();
+  });
+  $('seLayerAdd').addEventListener('click',()=>{
+    if(!state.draft)return;
+    const text=trimText($('seLayerText').value,90);
+    if(!text)return notify('Напиши текст нового слоя',true);
+    if((state.draft.layers||[]).length>=6)return notify('Максимум 6 текстовых слоёв',true);
+    const id=window.crypto?.randomUUID?.()||Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
+    const layer=normalizeStoryLayer({id,text,style:$('seLayerStyle').value,x:.5,y:.52,size:27});
+    state.draft.layers=normalizeStoryLayers([...(state.draft.layers||[]),layer]);
+    state.selectedLayer=layer.id;renderLayers();paint(canvas);
+    notify('Слой добавлен — перетащи его прямо на Story');
+  });
+  $('seLayerRemove').addEventListener('click',()=>{
+    if(!state.draft||!state.selectedLayer)return;
+    state.draft.layers=(state.draft.layers||[]).filter(layer=>layer.id!==state.selectedLayer);
+    state.selectedLayer=null;renderLayers();paint(canvas);
+  });
+  $('seLayerSize').addEventListener('input',e=>{
+    const layer=state.draft?.layers?.find(item=>item.id===state.selectedLayer);
+    if(layer){layer.size=Number(e.target.value);paint(canvas)}
+  });
+  $('seLayerText').addEventListener('input',e=>{
+    const layer=state.draft?.layers?.find(item=>item.id===state.selectedLayer);
+    if(layer){layer.text=trimText(e.target.value,90);paint(canvas);renderLayers()}
+  });
+  $('seLayerStyle').addEventListener('change',e=>{
+    const layer=state.draft?.layers?.find(item=>item.id===state.selectedLayer);
+    if(layer){layer.style=STORY_LAYER_STYLES.includes(e.target.value)?e.target.value:'plain';renderLayers();paint(canvas)}
+  });
+  function pointerRatio(event){
+    const r=canvas.getBoundingClientRect();
+    return {x:Math.min(.91,Math.max(.09,(event.clientX-r.left)/r.width)),
+      y:Math.min(.91,Math.max(.09,(event.clientY-r.top)/r.height))};
+  }
+  canvas.addEventListener('pointerdown',event=>{
+    if(!state.draft||state.owner!==owner())return;
+    const p=pointerRatio(event);
+    const layers=state.draft.layers||[];
+    const hit=[...layers].reverse().find(layer=>Math.abs(layer.x-p.x)<.24 && Math.abs(layer.y-p.y)<.055);
+    if(!hit)return;
+    state.selectedLayer=hit.id;state.dragLayer={owner:state.owner,draftId:state.draft.id,pointerId:event.pointerId};
+    canvas.setPointerCapture?.(event.pointerId);event.preventDefault();
+    $('seLayerText').value=hit.text;$('seLayerStyle').value=hit.style;
+    renderLayers();
+  });
+  canvas.addEventListener('pointermove',event=>{
+    const drag=state.dragLayer;
+    if(!drag||drag.pointerId!==event.pointerId)return;
+    if(owner()!==drag.owner||state.owner!==drag.owner||state.draft?.id!==drag.draftId){
+      state.dragLayer=null;return;
+    }
+    const layer=state.draft.layers?.find(item=>item.id===state.selectedLayer);
+    if(!layer)return;
+    const p=pointerRatio(event);layer.x=p.x;layer.y=p.y;
+    paint(canvas);event.preventDefault();
+  });
+  const endDrag=()=>{state.dragLayer=null;};
+  canvas.addEventListener('pointerup',endDrag);
+  canvas.addEventListener('pointercancel',endDrag);
   $('seNew').addEventListener('click',()=>{if(!state.owner || state.owner==='0')return notify('Открой VETOGRAM в Telegram',true);applyDraft(newStoryDraft({ownerId:state.owner}));notify('Новая Story готова')});
   $('seUpload').addEventListener('click',()=>$('seFile').click());
   $('seFile').addEventListener('change',async e=>{

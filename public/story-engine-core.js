@@ -23,6 +23,33 @@ export const PORTAL_TYPES=Object.freeze([
   {id:'poll',name:'Вопрос',cta:'Ответить'}
 ]);
 export const RETENTION_DAYS=Object.freeze([7,30,90,180,365]);
+export const PHOTO_EFFECTS=Object.freeze(['original','cinema','mono','warm','cool','vivid']);
+export const STORY_LAYER_STYLES=Object.freeze(['plain','pill','outline']);
+const clamp=(value,min,max,fallback)=>{
+  const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
+};
+export function normalizeStoryLayer(input){
+  if(!input||typeof input!=='object')throw Error('INVALID_STORY_LAYER');
+  const id=String(input.id||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,64);
+  if(!id)throw Error('STORY_LAYER_ID_REQUIRED');
+  const style=STORY_LAYER_STYLES.includes(input.style)?input.style:'plain';
+  return {id,text:trimText(input.text,90),style,
+    x:clamp(input.x,.09,.91,.5),y:clamp(input.y,.09,.91,.55),
+    size:Math.round(clamp(input.size,17,45,27))};
+}
+export function normalizeStoryLayers(value){
+  if(!Array.isArray(value))return [];
+  const seen=new Set(),out=[];
+  for(const raw of value.slice(0,20)){
+    try {
+      const layer=normalizeStoryLayer(raw);
+      if(seen.has(layer.id)||!layer.text)continue;
+      seen.add(layer.id);out.push(layer);
+      if(out.length>=6)break;
+    }catch{}
+  }
+  return out;
+}
 export const MAX_TITLE=90,MAX_SUBTITLE=180,MAX_PORTAL_TEXT=300;
 export const templateById=id=>STORY_TEMPLATES.find(t=>t.id===id)||STORY_TEMPLATES[0];
 export function trimText(text,limit=180){return String(text??'').normalize('NFC').replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,limit);}
@@ -37,7 +64,9 @@ export function newStoryDraft({templateId='noir',ownerId,now=Date.now(),id=globa
   const t=templateById(templateId);
   return {version:1,id:id||String(now),ownerId:String(ownerId),templateId:t.id,
     title:t.title,subtitle:t.subtitle,caption:'',imageDataUrl:'',imageMime:'',
-    portal:null,remixable:false,branding:false,textY:t.layout==='center'?388:675,fontSize:51,retentionDays:30,createdAt:now,updatedAt:now,status:'draft'};
+    portal:null,remixable:false,branding:false,textY:t.layout==='center'?388:675,fontSize:51,
+    photoEffect:'original',photoZoom:1,photoX:0,photoY:0,layers:[],
+    retentionDays:30,createdAt:now,updatedAt:now,status:'draft'};
 }
 export function normalizeDraft(input,ownerId,now=Date.now()){
   if(!input||String(input.ownerId)!==String(ownerId))throw new Error('DRAFT_OWNER_MISMATCH');
@@ -48,6 +77,10 @@ export function normalizeDraft(input,ownerId,now=Date.now()){
     ? input.imageDataUrl:'';
   return {...base,title:trimText(input.title,MAX_TITLE),subtitle:trimText(input.subtitle,MAX_SUBTITLE),
     caption:trimText(input.caption,800),retentionDays,portal,
+    photoEffect:PHOTO_EFFECTS.includes(input.photoEffect)?input.photoEffect:'original',
+    photoZoom:clamp(input.photoZoom,1,2.5,1),
+    photoX:clamp(input.photoX,-1,1,0),photoY:clamp(input.photoY,-1,1,0),
+    layers:normalizeStoryLayers(input.layers),
     textY:Math.max(260,Math.min(740,Math.round(Number(input.textY)||base.textY))),
     fontSize:Math.max(32,Math.min(66,Math.round(Number(input.fontSize)||51))),
     imageDataUrl,imageMime:imageDataUrl?String(input.imageMime||'image/jpeg'):'',
@@ -71,7 +104,9 @@ export function remixDraft(source,ownerId,{now=Date.now(),id=globalThis.crypto?.
   if(source.remixable!==true)throw Error('REMIX_NOT_ALLOWED');
   const base=normalizeDraft(source,ownerId,now);
   // A remix is a fresh independent draft. Never inherit a prior Portal response URL.
-  return {...base,id:id||String(now),imageDataUrl:'',imageMime:'',portal:null,createdAt:now,updatedAt:now};
+  return {...base,id:id||String(now),imageDataUrl:'',imageMime:'',portal:null,
+    layers:base.layers.map(layer=>({...layer,text:'EDIT YOUR TEXT'})),
+    createdAt:now,updatedAt:now};
 }
 /** Offline composition assistant. No AI model is used and no image is generated. */
 export function draftFromBrief(brief,ownerId,{now=Date.now(),id=globalThis.crypto?.randomUUID?.()}={}){

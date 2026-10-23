@@ -102,4 +102,17 @@
  .se-drafts{grid-template-columns:1fr}.se-panel{padding:14px;border-radius:17px}
  .se-headrow{margin:20px 0 11px}.se-headrow h2{font-size:18px!important}
 }
+.se-engine #seCanvas{touch-action:none;user-select:none;cursor:grab}
+.se-engine #seCanvas:active{cursor:grabbing}
+.se-photo-adjust{display:grid;gap:6px;margin-top:14px;padding:12px 13px;border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;background:rgba(0,0,0,.15)}
+.se-photo-adjust .se-button{padding:10px;margin-top:7px}
+.se-layer-list{display:flex;flex-direction:column;gap:6px;margin-top:11px}
+.se-layer-chip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;
+  background:rgba(255,255,255,.035);color:#eae8ef;border:1px solid rgba(255,255,255,.10);
+  border-radius:11px;font-size:12px;text-align:left;min-height:42px;width:100%;cursor:pointer}
+.se-layer-chip.active{border-color:rgba(255,112,136,.7);background:rgba(234,78,108,.12)}
+.se-layer-chip small{color:#c6a3ad;font-size:10px}
+.se-layer-empty{color:#9996a3;font-size:11px;line-height:1.5;padding:12px;border-radius:10px;
+  border:1px dashed rgba(255,255,255,.12)}
 @media(prefers-reduced-motion:reduce){.se-engine *{transition:none!important;animation:none!important}}

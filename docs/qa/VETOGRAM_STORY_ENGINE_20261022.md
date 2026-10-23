@@ -43,3 +43,12 @@ This feature branch starts from the unmerged VETOGRAM 2.0 onboarding PR #179 hea
 The Story Engine controller now snapshots the active Telegram owner and draft ID before asynchronous FileReader image imports and canvas export, and checks both again before mutating the draft or handing media to the legacy Story publisher. IndexedDB write completion cannot restore an old owner's draft onto a newly active account; the draft list abandons stale reads; picture decoding similarly aborts if the owner or draft changes. Loss of Telegram initData clears the previous canvas and draft list on focus, page-show and screen re-entry. The regression test `tests/vetogram-story-engine.test.js` includes source guards for these cases.
 
 **Verification scope:** static source contract and syntax parser checks passed for the new modules; 35 distinct editor element IDs referenced in the module were matched in the existing Mini App HTML. The full Node test suite and real Telegram WebView image-to-publisher flow remain unverified while build authorization/quota is blocked. Device-local draft data is not encrypted and does not constitute a secure cloud vault; do not store unusually sensitive media until an encrypted implementation exists.
+
+## Story Engine 1.1 — photo grading and draggable layers (23 October 2026)
+
+- Added six validated photo effects, cover zoom 100–250%, bounded X/Y crop pans. These are applied in the actual Canvas rendering shared by preview and the 1080×1920 JPEG publisher handoff.
+- Introduced six independent local text layers per draft: plain text, accent pill, outline; selectable list, individual font sizing and direct pointer/touch repositioning on the preview. Inputs are text-only Canvas drawing; no HTML injection or remote AI use.
+- Expanded the owner-scoped IndexedDB draft model to persist photo grading and layer placement, while normalizing values and discarding unsafe/invalid layers. Existing drafts default to original photo and no layers.
+- Remix of a private draft does not inherit private image, Portal or original layer text; it keeps only the shape and editable layout with placeholder text.
+- Added model and UI contract regression tests. No server migrations, credentials, production rollout, Story publish API changes, or paid AI calls.
+- Remaining: live Android/iOS WebView gestures, actual preview build tests, video editing, public Portal link/response pipeline, cross-account cloud storage and generative AI.

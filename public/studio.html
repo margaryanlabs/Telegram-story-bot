@@ -1382,10 +1382,44 @@
               <button class="se-button" id="seClearPhoto" type="button">Убрать фото</button>
             </div>
             <input id="seFile" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+            <div class="se-photo-adjust">
+              <label class="se-label">Цвет фотографии<select class="se-input" id="sePhotoEffect">
+                <option value="original">Original · без эффекта</option>
+                <option value="cinema">Cinema · контраст</option>
+                <option value="mono">Noir · чёрно-белый</option>
+                <option value="warm">Warm · золотой час</option>
+                <option value="cool">Ice · холодный</option>
+                <option value="vivid">Vivid · насыщенность</option>
+              </select></label>
+              <label class="se-label">Увеличение кадра<input type="range" id="sePhotoZoom" min="100" max="250" value="100" step="5" /></label>
+              <div class="se-split">
+                <label class="se-label">Сдвиг по горизонтали<input type="range" id="sePhotoX" min="-100" max="100" value="0" step="5" /></label>
+                <label class="se-label">Сдвиг по вертикали<input type="range" id="sePhotoY" min="-100" max="100" value="0" step="5" /></label>
+              </div>
+              <button class="se-button" type="button" id="sePhotoReset">Сбросить кадр</button>
+            </div>
             <div class="se-inline-warning">JPG, PNG или WEBP до 8 МБ. Видео и полноценный монтаж — следующий этап; здесь экспортируется фотография.</div>
           </div>
+          <div class="se-panel se-layer-panel">
+            <span class="se-eyebrow">02 · LAYERS</span>
+            <h3>Текстовые слои</h3>
+            <p>Добавляй надписи и плашки поверх Story. Коснись слоя на кадре и перетащи его пальцем.</p>
+            <label class="se-label">Текст слоя<input class="se-input" type="text" id="seLayerText" maxlength="90" placeholder="Например: JUST DROPPED" /></label>
+            <label class="se-label">Стиль<select class="se-input" id="seLayerStyle">
+              <option value="plain">Чистая типографика</option>
+              <option value="pill">Цветная плашка</option>
+              <option value="outline">Контурный текст</option>
+            </select></label>
+            <div class="se-controls-row">
+              <button class="se-button primary" type="button" id="seLayerAdd">＋ Добавить слой</button>
+              <button class="se-button" type="button" id="seLayerRemove" disabled>Удалить выбранный</button>
+            </div>
+            <div id="seLayerList" class="se-layer-list" aria-label="Слои текущей Story"></div>
+            <label class="se-label">Размер выбранного слоя<input type="range" id="seLayerSize" min="17" max="45" step="1" value="27" disabled /></label>
+            <p class="se-inline-warning">Не больше 6 слоёв. Слои входят в JPEG и сохраняются вместе с черновиком.</p>
+          </div>
           <div class="se-panel">
-            <span class="se-eyebrow">02 · SMART DIRECTION</span>
+            <span class="se-eyebrow">03 · SMART DIRECTION</span>
             <h3>Идея за одно действие</h3>
             <p>Напиши тему. Подберём шаблон и текстовые акценты локально — без платной AI-генерации и загрузки фотографий.</p>
             <label class="se-label">Тема<input class="se-input" id="seBrief" maxlength="500" placeholder="Например: birthday party в Дубае" /></label>

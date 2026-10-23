@@ -3,7 +3,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {STORY_TEMPLATES,PORTAL_TYPES,RETENTION_DAYS,newStoryDraft,
- normalizeDraft,normalizePortal,remixDraft,draftFromBrief,isExpired,safeExternalUrl,templateById} from '../public/story-engine-core.js';
+ normalizeDraft,normalizePortal,remixDraft,draftFromBrief,isExpired,safeExternalUrl,templateById,
+ PHOTO_EFFECTS,STORY_LAYER_STYLES,normalizeStoryLayer,normalizeStoryLayers} from '../public/story-engine-core.js';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 
 test('Story Engine comes with 10 original 9:16 templates and five Portal models',()=>{
@@ -103,4 +104,49 @@ test('asynchronous photo, draft, and export flows never cross Telegram identitie
   assert.match(ui,/toBlob\(resolve,'image\/jpeg',[\s\S]*?owner\(\)!==exportOwner/);
   assert.match(ui,/if\(state\.owner!=='0'\)\{/);
   assert.match(ui,/pageshow/);
+});
+
+test('Story Engine stores photo color, zoom and crop controls with safe bounds',()=>{
+  const d=newStoryDraft({ownerId:'123',id:'frame',now:100});
+  Object.assign(d,{photoEffect:'cinema',photoZoom:12,photoX:-15,photoY:3});
+  const normalized=normalizeDraft(d,'123',200);
+  assert.equal(normalized.photoEffect,'cinema');
+  assert.equal(normalized.photoZoom,2.5);assert.equal(normalized.photoX,-1);assert.equal(normalized.photoY,1);
+  assert.ok(PHOTO_EFFECTS.includes(normalized.photoEffect));
+  assert.equal(normalizeDraft({...d,photoEffect:'javascript:evil'},'123').photoEffect,'original');
+});
+test('user text layers are limited, normalized and preserved in local drafts',()=>{
+  const d=newStoryDraft({ownerId:'123',id:'layers',now:10});
+  d.layers=Array.from({length:10},(_,i)=>({id:'overlay-'+i,
+    text:'My label '+i,style:i===0?'pill':'outline',x:7,y:-6,size:999}));
+  const normalized=normalizeDraft(d,'123');
+  assert.equal(normalized.layers.length,6);
+  assert.equal(normalized.layers[0].x,.91);assert.equal(normalized.layers[0].y,.09);
+  assert.equal(normalized.layers[0].size,45);assert.equal(normalized.layers[0].style,'pill');
+  assert.equal(normalizeStoryLayers([{id:'x',text:'A'},{id:'x',text:'B'},{id:'y',text:''}]).length,1);
+  assert.throws(()=>normalizeStoryLayer({id:'!!!',text:'bad'}),/LAYER_ID/);
+  assert.deepEqual(STORY_LAYER_STYLES,['plain','pill','outline']);
+});
+test('Remix scrubs personal text overlay content, media and portal data',()=>{
+  const d=newStoryDraft({ownerId:'123',id:'source',now:200});d.remixable=true;
+  d.layers=[{id:'a',text:'My private invitation 123',style:'pill',x:.7,y:.5,size:26}];
+  d.imageDataUrl='data:image/png;base64,AAAA';
+  d.portal=normalizePortal({type:'links',link:'https://example.com'});
+  const remix=remixDraft(d,'123',{now:300,id:'remix'});
+  assert.equal(remix.imageDataUrl,'');assert.equal(remix.portal,null);
+  assert.equal(remix.layers[0].text,'EDIT YOUR TEXT');
+  assert.equal(remix.layers[0].style,'pill');
+});
+test('Story editor exposes working layer gestures and photo controls inside existing Telegram UI',()=>{
+  const html=read('public/studio.html'),ui=read('public/story-engine.js');
+  for(const id of ['seLayerText','seLayerAdd','seLayerList','seLayerRemove','seLayerSize',
+    'sePhotoEffect','sePhotoZoom','sePhotoX','sePhotoY','sePhotoReset']){
+    assert.match(html,new RegExp('id="'+id+'"'));
+    assert.match(ui,new RegExp(id));
+  }
+  assert.match(ui,/setPointerCapture/);
+  assert.match(ui,/canvas\.addEventListener\('pointermove'/);
+  assert.match(ui,/ctx\.filter=filters\[d\.photoEffect\]/);
+  assert.match(ui,/normalizeStoryLayers\(d\.layers\)/);
+  assert.match(read('public/story-engine.css'),/touch-action:none/);
 });
