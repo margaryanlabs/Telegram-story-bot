@@ -1361,6 +1361,7 @@
           <button type="button" data-vtai-mode="translate" aria-pressed="false">⇄ Перевод</button>
           <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI Reply</button>
           <button type="button" data-vtai-mode="action" aria-pressed="false">⌁ AI Action</button>
+          <button type="button" data-vtai-mode="brief" aria-pressed="false">◈ Second Brain</button>
           <button type="button" data-vtai-mode="story" aria-pressed="false">▣ Story Director</button>
           <button type="button" data-vtai-mode="campaign" aria-pressed="false">✦ Story-to-Sale</button>
           <button type="button" data-vtai-mode="negotiator" aria-pressed="false">◇ Negotiator Lab</button>
@@ -1376,6 +1377,13 @@
               <option value="грузинский">Грузинский</option>
             </select>
           </label>
+          <section id="vtaiBriefPanel" class="vtai-neg-panel" hidden aria-label="Second Brain: задачи и договорённости">
+            <h2>Second Brain · договорённости</h2>
+            <p class="vtai-note">Вставь сообщение или текст беседы, который тебе разрешено использовать. AI выделит до пяти задач и договорённостей, покажет цитату-основание и сроки только из исходного текста.</p>
+            <p class="vtai-note" id="vtaiBriefStatus" role="status" aria-live="polite">Ничего не анализируется автоматически. Результат остаётся черновиком в этом окне.</p>
+            <div id="vtaiBriefList" class="vtai-workspace-list" aria-live="polite"></div>
+            <p class="vtai-note">Добавление в AI Memory — отдельное действие; это не календарь, не уведомление и не автоматическое напоминание. Данные собеседников отправляются модели только после твоего разрешения.</p>
+          </section>
           <section id="vtaiActionPanel" class="vtai-neg-panel" hidden aria-label="AI Action, подготовка сообщения">
             <h2>AI Action · управляй словами</h2>
             <p class="vtai-note">Например: «Напиши Артуру, что завтра в 15:00 созвонимся». AI подготовит текст, но получателя ты выберешь сам. Никаких автоматических отправок.</p>
