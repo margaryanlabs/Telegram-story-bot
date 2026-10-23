@@ -32,7 +32,7 @@
     card.scrollIntoView?.({block:'nearest',behavior:'smooth'});
   }
   function setMode(mode){
-    if(!['chat','translate','reply','story'].includes(mode))return;
+    if(!['chat','translate','reply','story','campaign'].includes(mode))return;
     if(state.mode!==mode){state.history=[];$('vtaiThread').replaceChildren();state.last=null;
       $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;}
     state.mode=mode;
@@ -45,14 +45,15 @@
       chat:'Спроси AI или попроси подготовить сообщение…',
       translate:'Вставь текст для перевода…',
       reply:'Опиши ситуацию или вставь сообщение, на которое нужен ответ…',
-      story:'О чём создать Story? Для кого, какой стиль и предложение?'
+      story:'О чём создать Story? Для кого, какой стиль и предложение?',
+      campaign:'Что продаём или анонсируем? Кто покупатель и какое действие нужно?'
     }[mode];
-    $('vtaiCreate').textContent=mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
+    $('vtaiCreate').textContent=mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
   }
   function setBusy(value){
     state.busy=value;
     $('vtaiCreate').disabled=value;$('vtaiLoadChats').disabled=value;
-    $('vtaiSend').disabled=value||!state.last||state.mode==='story';
+    $('vtaiSend').disabled=value||!state.last||['story','campaign'].includes(state.mode);
   }
   async function request(url,body,consent=false){
     const requestOwner=signed();
@@ -87,11 +88,19 @@
       addBubble(original,'user');addBubble(answer.text,'assistant');
       if(mode==='chat')state.history=[...oldHistory,{role:'user',text:prompt},{role:'assistant',text:answer.text}].slice(-6);
       state.last=answer.text;
-      if(mode==='story'&&answer.story){
+      if(['story','campaign'].includes(mode)&&answer.story){
         $('vtaiStoryTitle').value=answer.story.title;
         $('vtaiStorySubtitle').value=answer.story.subtitle;
         $('vtaiStoryCaption').value=answer.story.caption;
         $('vtaiStoryReview').hidden=false;
+        $('vtaiPortalReview').hidden=!answer.portal;
+        $('vtaiReplacePortal').checked=false;
+        if(answer.portal){
+          $('vtaiPortalType').value=answer.portal.type;
+          $('vtaiPortalTitle').value=answer.portal.title;
+          $('vtaiPortalDescription').value=answer.portal.description;
+          $('vtaiPortalCta').value=answer.portal.cta;
+        }
         notice('Текст готов. Отредактируй его и перенеси в Story Engine.');
       }else{
         $('vtaiDraft').value=answer.text;
@@ -100,7 +109,7 @@
         notice('Текст подготовлен. Ничего не отправлено.');
       }
     }catch(error){notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);}
-    finally{setBusy(false);$('vtaiSend').disabled=!state.last||state.mode==='story'||!state.dialogs.length;}
+    finally{setBusy(false);$('vtaiSend').disabled=!state.last||['story','campaign'].includes(state.mode)||!state.dialogs.length;}
   }
   async function loadChats(){
     if(state.busy||!safeIdentity())return;
@@ -147,11 +156,18 @@
       caption:$('vtaiStoryCaption').value.trim().slice(0,800)
     };
     if(!story.title||!story.subtitle)return notice('У Story нужны заголовок и подзаголовок',true);
-    if(!window.confirm('Перенести этот текст в текущий черновик? Фото, слои и Portal сохранятся.'))return;
+    const replacePortal=!$('vtaiPortalReview').hidden&&$('vtaiReplacePortal').checked;
+    const portal=replacePortal?{
+      type:$('vtaiPortalType').value,title:$('vtaiPortalTitle').value.trim(),
+      description:$('vtaiPortalDescription').value.trim(),
+      cta:$('vtaiPortalCta').value.trim()
+    }:null;
+    if(replacePortal&&(!portal.title||!portal.cta))return notice('Заполни заголовок и кнопку Portal',true);
+    if(!window.confirm(replacePortal?'Заменить текст Story и текущий Portal? Это не публикация.':'Перенести текст в текущий черновик? Фото, слои и Portal сохранятся.'))return;
     if(!window.VetoTelegramNavigate?.('story-engine'))return notice('Story Engine недоступен.',true);
     if(typeof window.VetoTelegramApplyAiStory!=='function')return notice('Story Engine ещё не готов. Повтори действие.',true);
     try{
-      const applied=await window.VetoTelegramApplyAiStory({ownerId:requestedOwner,story});
+      const applied=await window.VetoTelegramApplyAiStory({ownerId:requestedOwner,story,replacePortal,portal});
       if(snapshot!==signed()||requestedOwner!==owner())return notice('Аккаунт изменился, перенос отменён.',true);
       if(!applied)return notice('Не удалось применить текст. Попробуй снова.',true);
       notice('Тексты добавлены в Story Engine. Проверь кадр и сохрани черновик.');
