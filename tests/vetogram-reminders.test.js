@@ -151,4 +151,6 @@ test('no new reminders until operator configures worker AND scheduler',()=>{
   assert.match(ui,/state.reminderSchedulingConfigured=result.schedulingConfigured===true/);
   assert.match(ui,/state.reminderSchedulingConfigured!==true/);
   assert.match(ui,/Просмотр и отмена остаются доступны/);
+  assert.doesNotMatch(ui,/только в этом окне, без уведомлений/);
+  assert.match(ui,/result.schedulingConfigured===true;renderReminders\(\);renderTasks\(\)/);
 });
