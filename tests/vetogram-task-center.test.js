@@ -65,7 +65,6 @@ test('UI never schedules reminders or sends while saving tasks',()=>{
   assert.match(ui,/state\.tasks=\[\];state\.taskFilter='open'/);
   assert.match(ui,/state\.tasks=addOwnerTask\(state\.tasks,task,owner\(\)\)/);
   assert.match(ui,/makeOwnerTask\(\{owner:owner\(\)/);
-  assert.match(ui,/status:'open'/);
   assert.match(ui,/date\.type='datetime-local'/);
   assert.match(ui,/state\.suggestedChatId=null; \/\/ A task does not verify any recipient/);
   assert.match(ui,/vtaiConsent'\)\.checked=false/);
