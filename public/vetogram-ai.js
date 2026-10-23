@@ -115,6 +115,7 @@ import {makeNegotiationPolicy,verifyNegotiationProposal,negotiationBrief} from '
       $('vtaiNegNotice').textContent='Условия применены только к одному AI-запросу. Отправка остаётся ручной.';
       if(prompt.length>3000)return notice('Сократи текст клиента или цель: максимальная длина запроса с условиями — 3000 символов.',true);
     }
+    if(prompt.length>3000)return notice('Запрос с инструкциями превышает 3000 символов. Сократи текст, чтобы AI ничего не потерял.',true);
     const approvedNotes=$('vtaiIncludeMemory').checked
       ?buildMemoryContext(state.memory,[...state.selectedNotes],owner()):[];
     // One-shot consent: notes cannot silently leak into the next request.
