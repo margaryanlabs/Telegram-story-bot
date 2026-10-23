@@ -3,6 +3,7 @@ import {loadTaskCloud} from '../lib/vetogram-task-cloud-store.js';
 import {reminderBelongsToActiveTask} from '../lib/vetogram-reminder-core.js';
 import {claimDueReminders,completeReminderAttempt} from '../lib/vetogram-reminder-store.js';
 
+// generic self-notification only: never put task titles, quotes or contact data in Bot API calls.
 export async function deliverGenericReminder(token,owner,fetcher=fetch){
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),5000);
