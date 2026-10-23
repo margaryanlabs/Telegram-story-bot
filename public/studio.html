@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="/veto-launch-polish.css?v=20261019-launch-01" />
   <link rel="stylesheet" href="/vetogram-header.css?v=20261021-v1" />
   <link rel="stylesheet" href="/story-engine.css?v=20261022-se1" />
+  <link rel="stylesheet" href="/vetogram-ai.css?v=20261023-ai1" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -147,6 +148,7 @@
           <button type="button" data-open-screen="privacy"><span>↶</span><strong>Privacy Vault</strong><small>Anti-Delete и сохранённые копии</small></button>
           <button type="button" data-open-screen="viewers"><span>◉</span><strong>Stories Intel</strong><small>Просмотры и аудитория</small></button>
           <button type="button" data-open-screen="story-engine"><span>✧</span><strong>VETO Story Engine</strong><small>Создавай · Portal · Remix</small></button>
+          <button type="button" data-open-screen="ai"><span>✦</span><strong>VETO AI</strong><small>Команды · перевод · ответы · Story Director</small></button>
           <button type="button" data-open-screen="voice"><span>♫</span><strong>Voice Lab</strong><small>Голосовые и эффекты</small></button>
           <button type="button" data-open-screen="relay"><span>⇄</span><strong>Relay</strong><small>Дополнительное подключение</small></button>
         </div>
@@ -452,6 +454,7 @@
             <div class="veto-mirror-thread-avatar" id="telegramThreadAvatar">TG</div>
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
             <a id="telegramThreadOpenNative" class="veto-mirror-icon-btn veto-mirror-native-link" aria-label="Открыть этот чат в Telegram" title="Открыть в Telegram" href="#" target="_blank" rel="noopener noreferrer" hidden>↗</a>
+            <button type="button" class="veto-mirror-icon-btn" data-open-screen="ai" aria-label="VETO AI для сообщений" title="VETO AI">✦</button>
             <button type="button" id="telegramThreadSearchToggle" class="veto-mirror-icon-btn" aria-label="Поиск по загруженным сообщениям" aria-controls="telegramThreadFind" aria-expanded="false" title="Поиск в переписке">⌕</button>
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
           </div>
@@ -1344,6 +1347,73 @@
 
 
 
+    
+    <section class="screen" data-screen="ai" aria-label="VETOGRAM AI">
+      <div class="vtai-root" id="vtaiRoot">
+        <header class="vtai-hero">
+          <span class="vtai-kicker">VETOGRAM / INTELLIGENT COMMAND</span>
+          <h1>VETO <span>AI.</span><br>Управляй словами.</h1>
+          <p>Общайся с AI, переводи, готовь ответы и создавай тексты Stories. AI не читает твои чаты автоматически и ничего не отправляет без отдельного подтверждения.</p>
+        </header>
+        <div class="vtai-modes" role="group" aria-label="Выбор AI-инструмента">
+          <button type="button" data-vtai-mode="chat" aria-pressed="true" class="active">✧ AI-чат</button>
+          <button type="button" data-vtai-mode="translate" aria-pressed="false">⇄ Перевод</button>
+          <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI Reply</button>
+          <button type="button" data-vtai-mode="story" aria-pressed="false">▣ Story Director</button>
+        </div>
+        <section class="vtai-panel">
+          <h2>Новый запрос</h2>
+          <label class="vtai-label" id="vtaiLanguage" hidden>Язык перевода
+            <select class="vtai-input" id="vtaiLanguageSelect" aria-label="Язык перевода">
+              <option value="английский">Английский</option>
+              <option value="русский">Русский</option>
+              <option value="армянский">Армянский</option>
+              <option value="арабский">Арабский</option>
+              <option value="грузинский">Грузинский</option>
+            </select>
+          </label>
+          <label class="vtai-label">Напиши AI
+            <textarea id="vtaiText" class="vtai-input" maxlength="3000" placeholder="Спроси AI или попроси подготовить сообщение…"></textarea>
+          </label>
+          <label class="vtai-consent">
+            <input type="checkbox" id="vtaiConsent" />
+            <span>Разрешаю передать только введённый здесь текст AI-провайдеру. Не вставляй чужие личные сообщения без необходимых согласий.</span>
+          </label>
+          <div class="vtai-row"><button id="vtaiCreate" class="vtai-action vtai-primary" type="button">Спросить VETO AI</button></div>
+          <div id="vtaiNotice" role="status" aria-live="polite" hidden></div>
+        </section>
+        <section class="vtai-panel" aria-label="Диалог с VETO AI">
+          <h2>AI-диалог</h2>
+          <div id="vtaiThread" class="vtai-thread" aria-live="polite"></div>
+          <p class="vtai-note">AI-переписка хранится только в памяти текущего окна и не подменяет Telegram. Уточнения контекста задаются в этом разделе.</p>
+        </section>
+        <section class="vtai-panel" id="vtaiReview" hidden>
+          <h2>Подтверждение отправки</h2>
+          <label class="vtai-label">Редактируемый черновик
+            <textarea id="vtaiDraft" class="vtai-input" maxlength="4096"></textarea>
+          </label>
+          <div class="vtai-row">
+            <button class="vtai-action" id="vtaiLoadChats" type="button">Загрузить мои чаты</button>
+            <label class="vtai-label" style="flex:1;min-width:170px">Получатель
+              <select id="vtaiRecipients" class="vtai-input"><option value="">Сначала загрузить чаты</option></select>
+            </label>
+          </div>
+          <button class="vtai-action vtai-primary" id="vtaiSend" type="button" disabled>Проверить и отправить в Telegram →</button>
+          <p class="vtai-note">Перед отправкой появится отдельное подтверждение. Отправляется от твоего авторизованного Telegram-аккаунта, а не от бота.</p>
+        </section>
+        <section class="vtai-panel" id="vtaiStoryReview" hidden>
+          <h2>Story Director — текст для редактора</h2>
+          <div class="vtai-two">
+            <label class="vtai-label">Заголовок<input id="vtaiStoryTitle" class="vtai-input" maxlength="90" /></label>
+            <label class="vtai-label">Подзаголовок<input id="vtaiStorySubtitle" class="vtai-input" maxlength="180" /></label>
+          </div>
+          <label class="vtai-label">Подпись для Telegram<textarea id="vtaiStoryCaption" class="vtai-input" maxlength="800"></textarea></label>
+          <button class="vtai-action vtai-primary" id="vtaiApplyStory" type="button">Перенести в Story Engine →</button>
+          <p class="vtai-note">Содержимое переносится только в локальный редактор. Фото, личные медиа, существующие слои и Portal остаются на устройстве. Публикация всегда отдельно.</p>
+        </section>
+      </div>
+    </section>
+
     <section class="screen se-engine" data-screen="story-engine" id="seEngine" aria-label="VETO Story Engine">
       <div class="se-masthead">
         <div>
@@ -1352,6 +1422,7 @@
           <p>Создавай киношные Stories в собственном редакторе. Сохраняй проект на устройстве, подбирай шаблон и передавай готовую картинку в публикацию Telegram.</p>
           <div class="se-masthead-actions">
             <button class="se-button primary" id="seNew" type="button">＋ Новая Story</button>
+            <button class="se-button" type="button" data-open-screen="ai" data-ai-mode="story">✦ AI Director</button>
             <button class="se-button" type="button" data-open-screen="creator">✦ Sticker Studio</button>
           </div>
         </div>
@@ -1833,6 +1904,7 @@
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script type="module" src="/story-engine.js?v=20261022-se1"></script>
+  <script src="/vetogram-ai.js?v=20261023-ai1"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
   <script src="/veto-launch-polish.js?v=20261019-launch-01" defer></script>
   <script src="/vetogram-header.js?v=20261021-v1" defer></script>
