@@ -44,3 +44,9 @@ textarea.vtai-input{min-height:110px;resize:vertical}
 .vtai-neg-panel[hidden]{display:none!important}
 .vtai-grow{flex:1;min-width:170px}
 #vtaiNegNotice{padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.055)}
+
+/* Agent Control distinguishes an emergency server permission stop. */
+.vtai-danger{border-color:rgba(244,105,121,.5)!important;background:rgba(164,41,58,.13)!important;color:#ffbac3!important}
+#vtaiAgentState{border:1px solid rgba(255,255,255,.11);padding:11px 13px;border-radius:12px;background:rgba(255,255,255,.035)}
+#vtaiAgentEvents{max-height:370px;overflow-y:auto}
+#vtaiAgentControl .vtai-row{align-items:center}
