@@ -190,3 +190,29 @@ Next independent milestone: server-side request audit entries and *explicit* per
 3. Review DB function permissions and logging retention; test signed-owner denial with separate Telegram accounts.
 4. Establish provider billing caps and safe environment key rotation.
 5. Execute full checks, build, mobile Telegram E2E and explicit owner approval before any merge or deployment.
+
+
+## Release hardening: atomic SQL grants + actual AI Memory deletion (23 Oct 2026)
+
+**Changes in the existing draft PR only; no live database or deployment writes.**
+
+### Critical Postgres concurrency fix
+- Prior to this patch, grant issue used a direct INSERT/ON CONFLICT that locked the grant row first, then the BEFORE trigger acquired the control row. Concurrent pause acquired control first, then attempted to revoke the grant. This inverted lock order could cause deadlocks on concurrent issue/pause.
+- Issue now calls `public.vetogram_ai_issue_draft_grant(...)` in one database transaction. That function and `public.vetogram_ai_set_drafting_pause(...)` acquire the SAME per-owner advisory transaction lock first, followed by the control row, followed by the grant row.
+- Replacing a grant now writes TWO audit entries: revoke the superseded grant, then issue the replacement. The change is part of the database transaction.
+- The SQL procedure is part of the **unapplied** fourth migration `migrations/vetogram-ai-agent-control-20261023.sql`. Draft grant issuing will fail closed until that migration has been installed and DB privileges reviewed.
+
+### AI Memory erase semantics
+- The previous UI “delete cloud copy” action wrote an empty encrypted snapshot; the database still retained an owner row. This was misleading.
+- Added a new `erase` action to `/api/vetogram-ai-memory`, with signed owner auth, explicit memory consent, and compare-and-swap revision protection.
+- The database operation is `DELETE FROM ... WHERE owner_id=$1 AND revision=$2 RETURNING owner_id`. A stale tab gets a 409 revision conflict; no other owner can be deleted.
+- UI now invokes that action directly, requires confirmation, and retains local in-window notes exactly as disclosed. This deletes the VETOGRAM application table row, but cannot by itself guarantee immediate eradication from independent Neon point-in-time backups or external infrastructure snapshots. Retention / backup disclosures require approval.
+
+### Automated static preflight
+- Added `npm run ai:preflight`, backed by `scripts/vetogram-ai-release-gate.mjs` and pure `lib/vetogram-ai-release-gate.js`.
+- Checks four additive migrations, consistent owner-lock order for grant/pause, grant replacement audit, owner auth, action consent, default-off backend feature flags, AI quota protection, and lack of direct Telegram sending tools in AI endpoints.
+- Added mutation tests demonstrating that the preflight rejects missing migrations, broken lock ordering, and unsafe API capabilities.
+- `npm run vercel-build` now runs the offline AI preflight BEFORE the existing syntax and Node test suite.
+- The preflight **does not** parse or execute SQL against PostgreSQL, prove migrations safe on the real database, run Telegram E2E, or override Vercel build rate limiting. The migration procedure and tests still require a disposable Postgres instance, two-account QA and an authorized release process.
+
+**Current state:** No production changes. PR #181 stays draft, based on Story Engine PR #180 and onboarding PR #179. All Neon migration files are staged but unapplied.
