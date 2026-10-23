@@ -16,7 +16,8 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
     if(!/^\d{1,20}$/.test(id)||!init){
       reset();notice('Открой VETOGRAM внутри собственного Telegram',true);return false;
     }
-    if(state.identity!==init){reset();state.identity=init;}
+    if(state.identity===null){state.identity=init;return true;}
+    if(state.identity!==init){reset();state.identity=init;notice('Аккаунт изменился. Предыдущие черновики и заметки очищены.');}
     return true;
   }
   function reset(){
@@ -145,6 +146,7 @@ import {makeApproval,activeApprovals,queueApproval,makeMemoryNote,activeMemoryNo
     const title=state.dialogs.find(c=>String(c.id)===chatId)?.title||'чат';
     // No autonomous sends. This confirmation is separate from AI-provider consent.
     if(!window.confirm('Отправить это сообщение от твоего имени в чат «'+String(title).slice(0,70)+'»?\n\n'+message.slice(0,650)))return;
+    if(!safeIdentity())return;
     if(!window.crypto?.randomUUID)return notice('Безопасная отправка не поддерживается этим браузером',true);
     // Keep a stable Telegram random_id for uncertain delivery retries.
     // A new recipient/message/owner gets a different send intent.
