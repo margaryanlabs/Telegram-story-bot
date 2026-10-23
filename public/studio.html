@@ -1360,6 +1360,7 @@
           <button type="button" data-vtai-mode="translate" aria-pressed="false">⇄ Перевод</button>
           <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI Reply</button>
           <button type="button" data-vtai-mode="story" aria-pressed="false">▣ Story Director</button>
+          <button type="button" data-vtai-mode="campaign" aria-pressed="false">✦ Story-to-Sale</button>
         </div>
         <section class="vtai-panel">
           <h2>Новый запрос</h2>
@@ -1409,6 +1410,22 @@
             <label class="vtai-label">Подзаголовок<input id="vtaiStorySubtitle" class="vtai-input" maxlength="180" /></label>
           </div>
           <label class="vtai-label">Подпись для Telegram<textarea id="vtaiStoryCaption" class="vtai-input" maxlength="800"></textarea></label>
+          <div id="vtaiPortalReview" hidden>
+            <h2>Предложение Portal</h2>
+            <div class="vtai-two">
+              <label class="vtai-label">Тип Portal<select id="vtaiPortalType" class="vtai-input">
+                <option value="offer">Предложение</option><option value="invite">Приглашение</option>
+                <option value="waitlist">Лист ожидания</option><option value="poll">Опрос</option>
+              </select></label>
+              <label class="vtai-label">Текст кнопки<input id="vtaiPortalCta" class="vtai-input" maxlength="42"></label>
+            </div>
+            <label class="vtai-label">Заголовок<input id="vtaiPortalTitle" class="vtai-input" maxlength="90"></label>
+            <label class="vtai-label">Описание<textarea id="vtaiPortalDescription" class="vtai-input" maxlength="300"></textarea></label>
+            <label class="vtai-consent"><input id="vtaiReplacePortal" type="checkbox">
+              <span>Отдельно разрешаю заменить текущий Portal этим черновиком. Существующий Portal не изменится, если флажок выключен.</span>
+            </label>
+            <p class="vtai-note">Это только черновик Portal. Форма, приём заявок, оплата и аналитика не подключены.</p>
+          </div>
           <button class="vtai-action vtai-primary" id="vtaiApplyStory" type="button">Перенести в Story Engine →</button>
           <p class="vtai-note">Содержимое переносится только в локальный редактор. Фото, личные медиа, существующие слои и Portal остаются на устройстве. Публикация всегда отдельно.</p>
         </section>
