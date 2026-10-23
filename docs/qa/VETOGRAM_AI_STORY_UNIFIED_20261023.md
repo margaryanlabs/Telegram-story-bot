@@ -318,3 +318,41 @@ Next independent milestone: server-side request audit entries and *explicit* per
   Node/SQL test evidence.
 - All four AI migrations remain unapplied and AI backend switches remain
   unconfigured/off; no new Preview, production, payment or Telegram send.
+
+
+## Product development before one combined release: VETO AI Action
+
+**Build-only milestone; no merge, Preview, live provider connection, database
+migration, scheduled task or Telegram message has been executed.**
+
+- Adds a seventh VETO AI mode: **AI Action**. The owner may ask
+  "Напиши Артуру, что завтра созвонимся" in the normal AI chat or the dedicated
+  AI Action tab; explicit messages beginning with /msg or /message also switch
+  to reviewed drafting. Ordinary writing requests such as "Напиши мне текст"
+  remain in chat. The new mode produces a structured JSON **draft_message**
+  or a **clarify** question only.
+- The AI provider never sees Telegram dialogs or MTProto recipient IDs.
+  It produces only the owner-provided recipient-name hint and a draft message.
+  Frontend `public/vetogram-ai-action-core.js` matches that hint locally
+  against separately owner-verified Telegram dialog metadata. No contact
+  selection is automatic; an owner must click **Использовать выбранный чат**.
+- Duplicate names remain separate options, with chat ID displayed to aid
+  disambiguation. Recipient change resets the approval. The final untruncated
+  message still requires the existing independent user-confirmed
+  `/api/telegram-send` action. Existing Approval Center may queue a confirmed
+  draft but never schedule or send it in the background.
+- A model output asking to send, publish, delete, transfer funds, or call tools
+  is denied as an unsupported action; only `draft_message` and `clarify`
+  pass server typed validation. Draft mode included in conservative AI
+  quota reservation. No contacts are auto-read and no replies are auto-sent.
+- Adds `tests/vetogram-ai-action.test.js` for strict parsing,
+  no-action clarification, recipient matching, UI permission state, prohibited
+  intents and quota. Updates AI core, budget, test expectations, UI and CSS.
+- Targeted in-memory validation: explicit-command cases, JS parser,
+  64 current AI DOM selectors, action draft and manual recipient logic passed.
+  **Not verified:** actual LLM structured outputs, Android/iOS Telegram UX,
+  full `npm test`, PostgreSQL integration or Vercel Preview.
+- **Release batching agreement:** keep VETOGRAM NEXT development in this
+  draft PR, finish modules, validate all parent dependencies, then perform one
+  separately approved controlled deployment/migration/release. No partial
+  publishing or intermediate main merge.
