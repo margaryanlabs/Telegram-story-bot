@@ -223,6 +223,8 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
           if(!window.confirm('Подготовить текст follow-up по этой задаче? Он останется черновиком и не будет никому отправлен.'))return;
           setMode('reply');
           state.last=null;state.sendIntent=null;state.reviewedApprovalId=null;
+          state.suggestedChatId=null; // A task does not verify any recipient.
+          $('vtaiRecipients').value='';
           $('vtaiText').value='Составь короткий, уважительный текст для уточнения статуса этой задачи. Не утверждай, что сроки согласованы, если это не подтверждено. Не обещай оплату или действия от моего имени без подтверждения.\nЗадача: '+
             task.title+'\nЦитата из исходного текста: '+task.sourceQuote+
             '\nСрок из сообщения: '+(task.deadlineText||'не указан')+'.';
