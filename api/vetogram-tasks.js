@@ -25,7 +25,9 @@ export default async function handler(req,res){
     if(body.action==='erase')return respond(res,200,await eraseTaskCloud(user.id,body.revision));
     return respond(res,200,await saveTaskCloud(user.id,body.revision,body.tasks));
   }catch(error){
-    if(error?.message==='TASK_CLOUD_VERSION_CONFLICT')
+    if(/VETO_TASK_PENDING_REMINDERS/.test(error?.message||''))
+      return respond(res,409,{error:'Есть ожидающие серверные напоминания. Сначала отмени их в VETO Reminders, затем повтори сохранение или удаление.'});
+    if(/VETO_TASK_REVISION_CONFLICT/.test(error?.message||'')||error?.message==='TASK_CLOUD_VERSION_CONFLICT')
       return respond(res,409,{error:'Задачи изменились в другом окне. Загрузи облачную версию перед изменением.'});
     if(/^(?:TASK_CLOUD_(?:INVALID|COUNT|ITEM|DUPLICATE|TOO_LARGE|REVISION|DATE|OWNER)|TASK_INVALID|TASK_DATE_INVALID)/.test(error?.message||''))
       return respond(res,400,{error:'Неверные данные задач'});
