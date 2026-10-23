@@ -183,6 +183,17 @@ BEGIN
     AND state='pending';
   IF n<>1 THEN RAISE EXCEPTION 'CI_OWNER_EXPIRE_CROSSED_OWNER'; END IF;
   PERFORM public.vetogram_task_cloud_write(98760001,5,'ci.after-expire',false);
+  -- A job can also become impossible when task deadline grace expires,
+  -- even though its reminder time is less than one hour ago.
+  PERFORM public.vetogram_schedule_reminder(
+    98760001,'abcdabcd-abcd-4bcd-8bcd-abcdabcdabcd'::uuid,
+    now()+interval '6 minutes',now()+interval '16 minutes','Asia/Yerevan',6);
+  UPDATE public.vetogram_reminders SET
+    remind_at=now()-interval '20 minutes',task_due_at=now()-interval '11 minutes'
+    WHERE owner_id=98760001 AND task_id='abcdabcd-abcd-4bcd-8bcd-abcdabcdabcd'::uuid;
+  SELECT public.vetogram_expire_owner_reminders(98760001) INTO n;
+  IF n<>1 THEN RAISE EXCEPTION 'CI_TASK_DUE_GRACE_EXPIRY_FAILED'; END IF;
+  PERFORM public.vetogram_task_cloud_write(98760001,6,'ci.after-due-expire',false);
   RAISE NOTICE 'VETOGRAM Reminders: metadata-only one-shot claim PASS';
   RAISE NOTICE 'VETOGRAM AI smoke passed: grants, audit, pause, quotas, memory CAS';
 END $$;
