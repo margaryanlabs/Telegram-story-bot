@@ -1,4 +1,5 @@
 import {validateTelegramMiniApp} from '../lib/telegram-miniapp-auth.js';
+import {reminderSchedulingConfigured} from '../lib/vetogram-reminder-core.js';
 import {listOwnerReminders,scheduleOwnerReminder,cancelOwnerReminder,cancelAllOwnerPendingReminders} from '../lib/vetogram-reminder-store.js';
 const respond=(res,status,data)=>res.status(status).json({ok:status<400,...data});
 export default async function handler(req,res){
@@ -19,10 +20,17 @@ export default async function handler(req,res){
       !['list','schedule','cancel','cancel_all'].includes(body.action))throw Error('INVALID_BODY');
   }catch{return respond(res,400,{error:'Неверный запрос напоминаний'})}
   try{
-    if(body.action==='list')return respond(res,200,await listOwnerReminders(owner.id));
+    if(body.action==='list')return respond(res,200,{
+      ...await listOwnerReminders(owner.id),schedulingConfigured:reminderSchedulingConfigured()
+    });
     if(req.headers['x-vetogram-reminder-consent']!=='yes')
       return respond(res,403,{error:'Нужно явное разрешение на создание или отмену уведомления'});
-    if(body.action==='schedule')return respond(res,200,await scheduleOwnerReminder(owner.id,body));
+    if(body.action==='schedule'){
+      if(!reminderSchedulingConfigured())return respond(res,503,{
+        error:'Новые напоминания пока недоступны: планировщик доставки не настроен. Ранее созданные можно просмотреть и отменить.'
+      });
+      return respond(res,200,await scheduleOwnerReminder(owner.id,body));
+    }
     if(body.action==='cancel_all')return respond(res,200,await cancelAllOwnerPendingReminders(owner.id));
     const result=await cancelOwnerReminder(owner.id,body.taskId);
     if(!result.canceled)return respond(res,409,{
