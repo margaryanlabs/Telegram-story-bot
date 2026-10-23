@@ -88,3 +88,16 @@ test('inline chat AI reply requires a local owner-confirmed copy, not autonomous
   assert.match(ui,/vtaiConsent'\)\.checked=false/);
   assert.ok(html.includes('id="telegramThreadReplyAI"'));
 });
+
+test('Telegram confirmation displays complete owner-approved outgoing text',()=>{
+  const js=read('public/vetogram-ai.js');
+  const beginning=js.indexOf('  async function send(){');
+  const end=js.indexOf('  async function applyStory(){',beginning);
+  assert.ok(beginning>=0&&end>beginning);
+  const send=js.slice(beginning,end);
+  assert.match(send,/window\.confirm\(/);
+  assert.match(send,/ПОЛНЫЙ текст сообщения/);
+  assert.doesNotMatch(send,/message\.slice\(0,\s*650\)/);
+  assert.match(send,/action:'send_message',chatId,message/);
+  assert.match(send,/if\(!safeIdentity\(\)\)return;/);
+});
