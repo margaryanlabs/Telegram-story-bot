@@ -216,3 +216,31 @@ Next independent milestone: server-side request audit entries and *explicit* per
 - The preflight **does not** parse or execute SQL against PostgreSQL, prove migrations safe on the real database, run Telegram E2E, or override Vercel build rate limiting. The migration procedure and tests still require a disposable Postgres instance, two-account QA and an authorized release process.
 
 **Current state:** No production changes. PR #181 stays draft, based on Story Engine PR #180 and onboarding PR #179. All Neon migration files are staged but unapplied.
+
+
+## 23 October CI expansion — separate Node and disposable PostgreSQL checks
+- Added GitHub Actions workflow `.github/workflows/vetogram-ai-ci.yml` for the PR branch.
+  **Node job:** lockfile npm install, `npm run vercel-build` (offline AI preflight,
+  JS syntax, Node tests), with all AI flags forced OFF and no user secrets.
+  **Database job:** temporary PostgreSQL 16 service with invented test data,
+  four staged migrations, `scripts/vetogram-ai-postgres-smoke.sql` and
+  `scripts/vetogram-ai-postgres-race.sh`.
+- SQL smoke covers grant issue/replace/audit, emergency pause, blocked issue while
+  paused, owner isolation, resume not reactivating old grants, owner daily quota
+  rejection and version-aware AI Memory UPDATE/DELETE.
+- Race script opens two separate sessions and deliberately holds a per-owner
+  advisory lock while a second session executes emergency pause. It uses DB
+  lock/statement timeouts; final invariant is no active grant after pause.
+- The first GitHub Actions runs report `failure`, but connector job metadata
+  contains **no step details**, and job log download returns BlobNotFound/404.
+  Therefore no actual Node or PostgreSQL execution is claimed as PASS. This
+  can indicate a run-infrastructure/billing issue but the exact reason remains
+  **unconfirmed**. Do not mistake it for a passing migration or conclude from it
+  that the SQL itself failed. Vercel still reports build-rate-limit.
+- In-process checks via GitHub file retrieval + pure JavaScript execution:
+  AI release structural migration/API gates PASS, wrong grant-lock mutation
+  rejected, bounded negotiation cases PASS; source-level parser checks PASS.
+  These do **not** replace the blocked GitHub Actions and runtime tests.
+- Once GitHub Actions execution is available, inspect job steps/logs and repair
+  failures before any migration, deployment, secret configuration or merge.
+- No production database or Vercel environment changes were made in this step.
