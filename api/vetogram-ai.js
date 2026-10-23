@@ -1,5 +1,6 @@
 import {validateTelegramMiniApp} from '../lib/telegram-miniapp-auth.js';
 import {normalizeAiInput,normalizeAiOutput,systemInstruction} from '../lib/vetogram-ai-core.js';
+import {reserveAiBudget,aiQuotaErrorKind} from '../lib/vetogram-ai-quota.js';
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const reply=(res,status,body)=>res.status(status).json({ok:status<400,...body});
 function providerConfig(){
@@ -29,6 +30,17 @@ export default async function handler(req,res){
   // Only explicitly supplied text is passed to the model. No OTP, session or user ID.
   const instruction=systemInstruction(parsed.mode);
   const history=parsed.history;
+  let quota;
+  try {
+    // Reserve global + per-owner conservative AI units atomically before any
+    // external provider call. Database unreachable or migration missing => deny.
+    quota=await reserveAiBudget(owner.id,parsed,instruction);
+  }catch(error){
+    const kind=aiQuotaErrorKind(error);
+    if(kind==='owner')return reply(res,429,{error:'Дневной лимит AI исчерпан. Попробуй завтра (UTC).'});
+    if(kind==='global')return reply(res,503,{error:'Дневной бюджет VETOGRAM AI исчерпан. Попробуй завтра.'});
+    return reply(res,503,{error:'Защита бюджета AI пока недоступна. Запрос не отправлен модели.'});
+  }
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),17000);
   try{
@@ -56,7 +68,8 @@ export default async function handler(req,res){
     }
     const answer=normalizeAiOutput(parsed.mode,output);
     return reply(res,200,{...answer,mode:parsed.mode,provider:provider.provider,
-      sent:false,published:false,requiresOwnerApproval:true});
+      sent:false,published:false,requiresOwnerApproval:true,
+      quota:{utcDay:quota.utcDay,remainingRequests:quota.ownerRemainingRequests}});
   }catch(error){
     // Never log prompts, responses, provider keys, Telegram signed initData, or IDs.
     const unavailable=error?.name==='AbortError'?'AI не успел ответить. Попробуй снова.':'AI сейчас недоступен или вернул неподходящий ответ.';
