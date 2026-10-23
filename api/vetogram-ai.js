@@ -22,9 +22,9 @@ export default async function handler(req,res){
   if(process.env.VETOGRAM_AI_ENABLED!=='true')return reply(res,503,{error:'VETOGRAM AI ещё не включён администратором'});
   const provider=providerConfig();
   if(!provider)return reply(res,503,{error:'AI-провайдер ещё не подключён'});
-  let parsed;
+  let parsed,body;
   try{
-    const body=typeof req.body==='string'?JSON.parse(req.body):req.body;
+    body=typeof req.body==='string'?JSON.parse(req.body):req.body;
     if(JSON.stringify(body||{}).length>12500)throw Error('AI_INPUT_TOO_LARGE');
     parsed=normalizeAiInput(body);
   }catch(error){return reply(res,400,{error:String(error.message||'AI_INPUT_INVALID')})}
