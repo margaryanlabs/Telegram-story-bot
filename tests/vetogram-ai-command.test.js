@@ -9,7 +9,8 @@ test('AI assistant has bounded modes, prompt and client-supplied history only',(
   assert.deepEqual(AI_MODES,['chat','translate','reply','story','campaign','negotiator']);
   assert.throws(()=>normalizeAiInput({mode:'autopilot',prompt:'send everything'}),/AI_MODE_INVALID/);
   assert.throws(()=>normalizeAiInput({mode:'chat',prompt:'x'}),/AI_PROMPT_REQUIRED/);
-  const input=normalizeAiInput({mode:'chat',prompt:'x'.repeat(4500),
+  assert.throws(()=>normalizeAiInput({mode:'chat',prompt:'x'.repeat(4500)}),/AI_PROMPT_TOO_LONG/);
+  const input=normalizeAiInput({mode:'chat',prompt:'x'.repeat(3000),
     history:Array.from({length:15},(_,i)=>({role:i%2?'assistant':'user',text:'T'.repeat(1000)}))});
   assert.equal(input.prompt.length,3000);
   assert.equal(input.history.length,6);
