@@ -19,6 +19,8 @@ test('conservative units include Unicode, bounded context and output allowance',
   assert.ok(a>MAX_AI_OUTPUT_TOKENS);
   assert.ok(b>a);
   assert.ok(b<25000);
+  const withNotes={...bigger,notes:['Long chosen note '.repeat(22)]};
+  assert.ok(estimateAiUnits(withNotes,systemInstruction('chat'),withNotes.prompt+' '+withNotes.notes.join(' '))>b);
 });
 test('quota classification never leaks secrets or prompts',()=>{
   assert.equal(aiQuotaErrorKind(new Error('VETOGRAM_AI_OWNER_LIMIT')),'owner');
@@ -27,8 +29,8 @@ test('quota classification never leaks secrets or prompts',()=>{
 });
 test('AI endpoint must reserve before external provider call',()=>{
   const src=read('api/vetogram-ai.js');
-  assert.match(src,/reserveAiBudget\(owner.id,parsed,instruction\)/);
-  assert.ok(src.indexOf('reserveAiBudget(owner.id,parsed,instruction)') <
+  assert.match(src,/reserveAiBudget\(owner.id,parsed,instruction,process.env,userPrompt\)/);
+  assert.ok(src.indexOf('reserveAiBudget(owner.id,parsed,instruction,process.env,userPrompt)') <
     src.indexOf("fetch('https://generativelanguage.googleapis.com/"));
   assert.match(src,/VETOGRAM_AI_ENABLED/);
   assert.match(src,/quota:\{utcDay:/);
