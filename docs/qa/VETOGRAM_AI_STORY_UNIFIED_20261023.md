@@ -244,3 +244,13 @@ Next independent milestone: server-side request audit entries and *explicit* per
 - Once GitHub Actions execution is available, inspect job steps/logs and repair
   failures before any migration, deployment, secret configuration or merge.
 - No production database or Vercel environment changes were made in this step.
+
+
+## Follow-up quality fixes — negotiating actual message wording and long prompts
+
+- Hardened the Negotiator's visible-message price scanner to reject false structured quotes when the draft contains mismatching local-language pricing, including "450 долларов", "450$", "450 USD", reversed "USD 450", mixed currencies and ambiguous values. Multiple inconsistent offers fail closed. Explicitly reported amounts still require manual sender confirmation.
+- New test cases include valid and invalid USD price forms in English and Russian. In-memory execution of 17 targeted JS parse / currency / oversized-prompt checks completed successfully. This is not a live AI/provider or PostgreSQL test.
+- Updated prompt validation: requests over 3000 characters are **rejected** instead of silently truncated. This guards the end of a translation or negotiation from disappearing. The Telegram WebView presents the limit before sending, and regression tests verify this behavior.
+- Verified the existing Vercel adapter has a configured `maxDuration` of 60 seconds, while the AI provider AbortController timeout is 17 seconds. No deployment timeout adjustments were needed.
+- Tried an isolated `git clone` to run tests locally; local container DNS could not resolve github.com. Existing GitHub Actions jobs remained unsuccessful with unavailable detailed logs. Therefore full repo tests, live AI calls, browser E2E and PostgreSQL smoke remain **unverified**, and Vercel production was left unchanged.
+- PR #181 remains draft. Parent Story Engine PR #180 and onboarding PR #179 are still required for release.
