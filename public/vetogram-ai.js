@@ -3,7 +3,7 @@
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false};
+  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -19,7 +19,8 @@
     return true;
   }
   function reset(){
-    state.history=[];state.last=null;state.dialogs=[];state.identity=null;
+    state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
+    $('vtaiConsent').checked=false;$('vtaiReplacePortal').checked=false;$('vtaiPortalReview').hidden=true;
     $('vtaiThread').replaceChildren();$('vtaiText').value='';$('vtaiDraft').value='';
     $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
     $('vtaiRecipients').replaceChildren();$('vtaiRecipients').append(new Option('Сначала загрузить чаты',''));
@@ -80,7 +81,7 @@
       :original;
     const mode=state.mode,oldHistory=[...state.history];
     setBusy(true);$('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
-    notice('Запрос отправлен AI-провайдеру. Telegram-сообщения не отправляются.');
+    notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
       const answer=await request('/api/vetogram-ai',{mode,prompt,history:mode==='chat'?oldHistory:[]},true);
       if(state.mode!==mode)return notice('Режим изменился. Ответ не применён.',true);
@@ -126,6 +127,7 @@
     }catch(error){notice(error.message,true)}
     finally{setBusy(false);$('vtaiSend').disabled=!state.last||!state.dialogs.length||state.mode==='story';}
   }
+  const requestedSendKey=(ownerId,chatId,text)=>JSON.stringify([ownerId,chatId,text]);
   async function send(){
     if(state.busy||!safeIdentity())return;
     const chatId=$('vtaiRecipients').value;
@@ -136,14 +138,18 @@
     // No autonomous sends. This confirmation is separate from AI-provider consent.
     if(!window.confirm('Отправить это сообщение от твоего имени в чат «'+String(title).slice(0,70)+'»?\n\n'+message.slice(0,650)))return;
     if(!window.crypto?.randomUUID)return notice('Безопасная отправка не поддерживается этим браузером',true);
+    // Keep a stable Telegram random_id for uncertain delivery retries.
+    // A new recipient/message/owner gets a different send intent.
+    const intentKey=requestedSendKey(owner(),chatId,message);
+    if(state.sendIntent?.key!==intentKey)state.sendIntent={key:intentKey,nonce:window.crypto.randomUUID()};
     setBusy(true);
     notice('Отправляю после твоего подтверждения…');
     try{
       const result=await request('/api/telegram-send',{
-        action:'send_message',chatId,message,nonce:window.crypto.randomUUID()
+        action:'send_message',chatId,message,nonce:state.sendIntent.nonce
       });
       notice(result.sent?'Telegram принял сообщение.':'Отправка не подтверждена.',!result.sent);
-      if(result.sent){$('vtaiDraft').value='';$('vtaiReview').hidden=true;state.last=null;}
+      if(result.sent){$('vtaiDraft').value='';$('vtaiReview').hidden=true;state.last=null;state.sendIntent=null;}
     }catch(error){notice(error.message+'. Если произошёл сбой сети, сначала проверь чат, прежде чем отправлять снова.',true)}
     finally{setBusy(false)}
   }
