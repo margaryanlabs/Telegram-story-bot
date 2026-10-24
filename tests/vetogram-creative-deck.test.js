@@ -131,7 +131,6 @@ test('actual UI changes one style at a time without erasing typed text or sendin
   assert.equal(h.input.focused,true);
   h.setMode('story');
   assert.equal(h.input.value,'Начальный текст пользователя');
-  assert.equal(h.container.children.length,4);
   assert.equal(h.container.children.length,6);
   assert.equal(h.title.textContent,'Как выглядит твоя Story?');
   h.setMode('action');
