@@ -54,3 +54,45 @@ test('all Task Cloud and Reminders async callbacks are fenced to the signed orig
   assert.match(js,/if\(oldRequestCanReset\(state\.identity,requestOwner\)\)reset\(\)/);
   assert.doesNotMatch(js,/\!owner\(\)\)\{reset\(\);throw Error/);
 });
+
+test('AI Memory, AI generation and manual Telegram send never mutate a switched owner',()=>{
+  const js=read('public/vetogram-ai.js');
+  for(const name of ['async function loadMemoryCloud()',
+    'async function writeMemoryCloud(','async function eraseMemoryCloud()',
+    'async function generate()','async function send()']){
+    const start=js.indexOf(name);
+    assert.ok(start>=0,name);
+    const end=js.indexOf('\n  }\n',start);
+    assert.ok(end>start,'Missing method end: '+name);
+    const part=js.slice(start,end);
+    assert.match(part,/const scope=ownerRequestScope\(\)/,name);
+    assert.match(part,/if\(!isOwnerRequestCurrent\(scope\)\)return/,name);
+    assert.match(part,/catch\(error\)\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
+    assert.match(part,/finally\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
+  }
+  assert.match(js,/if\(oldRequestCanReset\(state\.identity,requestOwner\)\)reset\(\)/);
+});
+test('Second Brain and AI Action consume a response only after the AI provider returns',()=>{
+  const js=read('public/vetogram-ai.js');
+  const start=js.indexOf('async function generate()');
+  const end=js.indexOf('async function send()',start);
+  const body=js.slice(start,end);
+  const answer=body.indexOf("const answer=await request('/api/vetogram-ai'");
+  const grant=body.indexOf("const issued=await request('/api/vetogram-ai-grants'");
+  const brief=body.indexOf('state.brief=answer.brief');
+  const action=body.indexOf('actionDraftValid(answer.action)');
+  assert.ok(answer>grant,'Provider request must follow explicit Negotiator grant');
+  assert.ok(brief>answer,'Second Brain cannot use answer before provider response');
+  assert.ok(action>answer,'AI Action cannot use answer before provider response');
+  assert.match(body,/if\(!isOwnerRequestCurrent\(scope\)\)return;\n      if\(state\.mode!==mode\)/);
+});
+test('manual send ignores a stale network result before modifying draft or state',()=>{
+  const js=read('public/vetogram-ai.js');
+  const start=js.indexOf('async function send()');
+  const end=js.indexOf('\n  }\n',start);
+  const body=js.slice(start,end);
+  const response=body.indexOf("const result=await request('/api/telegram-send'");
+  const guard=body.indexOf('if(!isOwnerRequestCurrent(scope))return;',response);
+  const clearDraft=body.indexOf("$('vtaiDraft').value=''",response);
+  assert.ok(response>=0&&guard>response&&clearDraft>guard);
+});
