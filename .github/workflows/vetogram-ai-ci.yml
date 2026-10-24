@@ -93,3 +93,5 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f scripts/vetogram-ai-postgres-smoke.sql
       - name: Test concurrent grant issue versus emergency pause
         run: bash scripts/vetogram-ai-postgres-race.sh
+      - name: Test cross-device Task Cloud and reminder scheduling races
+        run: bash scripts/vetogram-task-reminder-race.sh
