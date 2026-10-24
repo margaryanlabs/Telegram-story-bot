@@ -15,7 +15,7 @@
     stickerPreviewUrls:new Map(),recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
-    threadSearch:'',threadSearchIndex:0,deliveryStage:null,
+    threadSearch:'',threadSearchIndex:0,deliveryStage:null,inboxReturn:null,
     intelResults:[],intelTimeline:[],intelQuery:'',intelEpoch:0,intelBusy:false,
     intelNextPage:null,intelIncludeVault:false,intelCoverage:null,intelFocus:null,
   };
@@ -1382,7 +1382,7 @@
     state.syncRunId++; // stale poll completions must not unlock another owner's sync
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
-    state.chats=[];state.messages=[];state.thread=null;
+    state.chats=[];state.messages=[];state.thread=null;state.inboxReturn=null;
     clearTimeout(chatFilterTimer);chatFilterTimer=null;
     closeVetoMessengerTools();
     clearIntelSearch({close:true});
@@ -1888,6 +1888,7 @@
   }
 
   function setThread(chat){
+    $('telegramChatsView')?.classList.remove('vg37-return');
     $('telegramChatsView').hidden=true;
     $('telegramThreadView').hidden=false;
     $('telegramThreadTitle').textContent=chat.title;
@@ -1923,6 +1924,17 @@
   }
   async function openThread(chat){
     if(resetOwner()||!chat)return;
+    // Remember this owner's actual inbox position before fullscreen chat moves
+    // the page to the top. Do not persist across owner changes or navigation.
+    if($('telegramChatsView')?.hidden===false){
+      const scroller=document.scrollingElement;
+      state.inboxReturn={
+        ownerKey:state.ownerInitData,chatId:String(chat.id),
+        windowY:Math.max(0,Number(scroller?.scrollTop??window.scrollY??0)),
+        viewY:Math.max(0,Number($('telegramChatsView')?.scrollTop||0)),
+        listY:Math.max(0,Number($('telegramMirrorList')?.scrollTop||0)),
+      };
+    }
     revokeMediaUrls();
     haptic();
     cancelVoiceCapture();
@@ -2070,17 +2082,37 @@
     state.replyTo=null;state.pendingAttachment=null;renderReplyPreview();renderAttachmentChip();
     $('telegramThreadView').hidden=true;
     $('telegramChatsView').hidden=false;
+    $('telegramChatsView')?.classList.add('vg37-return');
     $('telegramMirror')?.classList.remove('thread-mode');
     window.VetoThemeDock?.('inbox');
     revokeMediaUrls();
     renderSendComposer();
     renderChats();
+    // Restore the exact in-memory inbox offset and keyboard focus after layout
+    // settles. Guard owner/thread identity so a delayed frame cannot show another
+    // account's position or steal focus from a newly opened conversation.
+    const savedPosition=state.inboxReturn;
+    const restoreInboxPosition=()=>{
+      if(!savedPosition || savedPosition.ownerKey!==state.ownerInitData ||
+        savedPosition.ownerKey!==String(tg?.initData||'') || state.thread ||
+        $('telegramChatsView')?.hidden)return;
+      const view=$('telegramChatsView'),list=$('telegramMirrorList');
+      if(view)view.scrollTop=savedPosition.viewY;
+      if(list)list.scrollTop=savedPosition.listY;
+      window.scrollTo({top:savedPosition.windowY,behavior:'instant'});
+      const chat=[...list?.querySelectorAll('[data-mirror-chat]')||[]]
+        .find(el=>String(el.dataset.mirrorChat)===savedPosition.chatId);
+      chat?.focus?.({preventScroll:true});
+    };
+    if(typeof window.requestAnimationFrame==='function')
+      window.requestAnimationFrame(restoreInboxPosition);
+    else restoreInboxPosition();
     // Show cached chat list instantly, reconcile server-side ordering when it
     // is old. Never delay the Back gesture on a round trip to Telegram.
     if(state.connectionProof?.verified&&state.ownerInitData===String(tg?.initData||'')&&
        !state.loading&&navigator.onLine!==false&&Date.now()-state.lastListFetchedAt>45000)
       void loadChats({reset:true});
-    window.scrollTo({top:0,behavior:'instant'});
+    if(!savedPosition)window.scrollTo({top:0,behavior:'instant'});
   }
   function closeVetoMessengerTools(){
     const pane=$('vetoMessengerTools'),button=$('vetoMessengerToolsToggle');
