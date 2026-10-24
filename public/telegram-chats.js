@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,lastListFetchedAt:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
-    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
+    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],stickerSets:[],stickerPack:null,
@@ -1177,7 +1177,9 @@
       if(generation!==state.generation||signed!==String(tg?.initData||'')){resetOwner();throw new Error('Сменился Telegram-аккаунт');}
       if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
         throw new Error('Изображение недоступно');
-      return URL.createObjectURL(blob);
+      const href=URL.createObjectURL(blob);
+      if(action==='photo')state.mediaMimeByUrl.set(href,blob.type.toLowerCase());
+      return href;
     }finally{clearTimeout(timer);}
   }
   // At most one MTProto avatar request in flight, and six per app session:
@@ -1237,7 +1239,9 @@
     const save=$('telegramThreadPhotoSave');
     if(!dialog||!img||!save)return;
     img.src=href;
-    save.href=href;save.download='veto-chat-photo-'+String(messageId)+'.jpg';
+    const mime=state.mediaMimeByUrl.get(href)||'image/jpeg';
+    const extension=mime==='image/png'?'png':mime==='image/webp'?'webp':mime==='image/gif'?'gif':'jpg';
+    save.href=href;save.download='vetogram-photo-'+String(messageId)+'.'+extension;
     if(typeof dialog.showModal==='function'&&!dialog.open)dialog.showModal();
     else dialog.setAttribute('open','');
   }
@@ -1290,13 +1294,15 @@
               throw new Error('Telegram account changed');
             if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
               throw new Error('private_photo_unavailable');
-            return URL.createObjectURL(blob);
+            const href=URL.createObjectURL(blob);
+            state.mediaMimeByUrl.set(href,blob.type.toLowerCase());
+            return href;
           })()
         :photoRequest('photo',ownerChatId,id);
       request.then(href=>{
         if(generation!==state.threadGeneration||String(state.thread?.id)!==ownerChatId||
            ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){
-          URL.revokeObjectURL(href);return;
+          state.mediaMimeByUrl.delete(href);URL.revokeObjectURL(href);return;
         }
         rememberPreview(id,href);
         const container=[...scroller.querySelectorAll('[data-mirror-preview]')]
@@ -1424,7 +1430,7 @@
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
     state.stickerPreviewUrls.clear();
-    state.mediaPreviewUrls.clear();state.previewSeen.clear();state.previewInflight.clear();
+    state.mediaPreviewUrls.clear();state.mediaMimeByUrl.clear();state.previewSeen.clear();state.previewInflight.clear();
     state.previewEpoch++;state.previewActive=0;
     state.expandedAttachments.clear();state.expandedBytes=0;
   }
@@ -1446,6 +1452,7 @@
     const wrapper=document.createElement('div');
     wrapper.className='veto-mirror-media-reveal';
     const mime=String(blob.type||'application/octet-stream').toLowerCase();
+    if(mime.startsWith('image/'))state.mediaMimeByUrl.set(href,mime);
     if(['image/jpeg','image/png','image/webp','image/gif'].includes(mime)){
       const thumb=document.createElement('button');thumb.type='button';
       thumb.className='veto-mirror-inline-photo-btn';thumb.dataset.mirrorPhoto=key;
@@ -1489,6 +1496,7 @@
         .find(el=>el.dataset.mirrorExpanded===oldestKey);
       if(oldSlot)oldSlot.replaceWith(expandedFileButton(oldestKey,old.archive));
       state.mediaUrls=state.mediaUrls.filter(url=>url!==old.href);
+      state.mediaMimeByUrl.delete(old.href);
       URL.revokeObjectURL(old.href);
     }
   }
