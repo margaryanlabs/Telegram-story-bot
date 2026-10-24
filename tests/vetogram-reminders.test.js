@@ -197,3 +197,24 @@ test('owner list puts pending and claimed jobs first even after long reminder hi
   assert.match(list,/LIMIT 40/);
   assert.match(list,/vetogram_expire_owner_reminders/);
 });
+
+
+test('disposable Postgres CI exercises both cross-device lock orderings',()=>{
+  const race=source('scripts/vetogram-task-reminder-race.sh');
+  const workflow=source('.github/workflows/vetogram-ai-ci.yml');
+  const migration=source('migrations/vetogram-reminders-20261024.sql');
+  assert.match(race,/set -euo pipefail/);
+  assert.match(race,/PGOPTIONS/);
+  assert.match(race,/pg_advisory_xact_lock\(hashtext\('veto-reminders:98760005'\)/);
+  assert.match(race,/pg_advisory_xact_lock\(hashtext\('veto-reminders:98760006'\)/);
+  assert.match(race,/CI_STALE_REMINDER_ACCEPTED_DURING_CLOUD_EDIT/);
+  assert.match(race,/CI_CLOUD_EDIT_ALLOWED_DURING_REMINDER_SCHEDULE/);
+  assert.match(race,/CI_CLOUD_REVISION_LOST_AFTER_SCHEDULE_RACE/);
+  assert.match(race,/CI_CLOUD_WRITE_BYPASSED_PENDING_REMINDER/);
+  assert.match(race,/CI_VALID_REMINDER_LOST_AFTER_WRITE_RACE/);
+  assert.match(workflow,/bash -n scripts\/vetogram-task-reminder-race\.sh/);
+  assert.match(workflow,/run: bash scripts\/vetogram-task-reminder-race\.sh/);
+  assert.match(migration,/VETO_REMINDER_TASK_REVISION_CONFLICT/);
+  assert.match(migration,/VETO_TASK_PENDING_REMINDERS/);
+  assert.doesNotMatch(race,/api\.telegram\.org|TELEGRAM_BOT_TOKEN|https?:\/\//);
+});
