@@ -961,6 +961,35 @@
       }
     }
   }
+  // Derived solely from currently loaded, account-scoped chats. Never an
+  // overall Telegram total, archive-health claim or persisted usage profile.
+  function renderInboxPulse(){
+    const panel=$('vgxInboxPulse');
+    if(!panel)return;
+    const summary=window.VetogramInboxPulse?.summarize(state.chats);
+    if(!summary||!summary.loaded){
+      panel.hidden=true;
+      for(const id of ['vgxPulseUnread','vgxPulseFocus','vgxPulseDeleted']){
+        const el=$(id);if(el)el.textContent='0';
+      }
+      return;
+    }
+    panel.hidden=false;
+    const values={
+      vgxPulseUnread:summary.unreadChats,
+      vgxPulseFocus:summary.attentionChats,
+      vgxPulseDeleted:summary.deletedMessages
+    };
+    for(const [id,value] of Object.entries(values)){
+      const el=$(id);
+      if(el)el.textContent=value>999?'999+':String(value);
+    }
+    panel.querySelectorAll('[data-vgx-pulse-filter]').forEach(button=>{
+      const active=button.dataset.vgxPulseFilter===state.filter;
+      button.setAttribute('aria-pressed',String(active));
+      button.classList.toggle('active',active);
+    });
+  }
   function renderChats(){
     const list=$('telegramMirrorList');
     if(!list)return;
@@ -977,6 +1006,7 @@
     if($('vetoMessengerConnectCta'))$('vetoMessengerConnectCta').hidden=ready;
     renderPrivacyDiagnostics();
     $('telegramMirrorCount').textContent=String(state.chats.length);
+    renderInboxPulse();
     const proof=$('telegramMirrorAccountProof');
     const drawer=$('telegramMirrorAccessDrawer');
     const drawerStatus=$('telegramMirrorAccessDrawerStatus');
@@ -2337,6 +2367,16 @@
     clearTimeout(chatFilterTimer);chatFilterTimer=null;
     state.search='';$('telegramMirrorSearch').value='';renderChats();
     $('telegramMirrorSearch').focus();
+  });
+  // Pulse tiles reuse the existing owner-checked filter handler. No new
+  // request, permission grant or side effect is triggered by this shortcut.
+  $('vgxInboxPulse')?.addEventListener('click',event=>{
+    const button=event.target.closest('[data-vgx-pulse-filter]');
+    if(!button||resetOwner())return;
+    const filter=button.dataset.vgxPulseFilter;
+    if(!['unread','focus','copies'].includes(filter))return;
+    $('telegramMirrorFilters')?.querySelector(
+      '[data-mirror-filter="'+filter+'"]')?.click();
   });
   $('telegramMirrorFilters')?.addEventListener('click',event=>{
     const button=event.target.closest('[data-mirror-filter]');
