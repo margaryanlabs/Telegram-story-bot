@@ -86,18 +86,21 @@ async function configState() {
 function safeSession(row, userId = '') {
   if (!row) return null;
   const cipherVersion = String(row.session_ciphertext || '').split('.')[0] || null;
+  const ownerVerified=sameTelegramAccount(userId,row.telegram_account_user_id);
   return {
     connected: isOwnActiveViewerSession(userId, row),
-    identityMismatch: row.status === 'active' && !sameTelegramAccount(userId, row.telegram_account_user_id),
+    identityMismatch: row.status === 'active' && !ownerVerified,
     status: row.status,
     cryptoVersion: /^v\d+$/.test(cipherVersion || '') ? cipherVersion : null,
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null,
-    account: {
+    // No metadata from another account may be exposed through this signed
+    // Mini App session, even if legacy storage returned an active mismatched row.
+    account: ownerVerified ? {
       id: row.telegram_account_user_id || null,
       username: row.telegram_account_username || '',
       firstName: row.telegram_account_first_name || '',
-    },
+    } : null,
     preferences: {
       notifyEnabled: row.notify_enabled !== false,
       notifyAnonymousGap: row.notify_anonymous_gap !== false,
