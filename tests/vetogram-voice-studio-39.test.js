@@ -79,21 +79,26 @@ test('voice UI separates requesting, recording and idle without fake audio activ
   const items={telegramThreadVoiceStatus:status,telegramThreadVoicePreview:preview,
     telegramThreadVoiceState:phase,telegramThreadVoiceTimer:timer,
     telegramThreadVoiceSend:voiceSend};
+  const preset={dataset:{chatVoicePreset:'original'},disabled:false,
+    setAttribute(name,value){this[name]=value}};
   const state={voiceStarting:true,recording:null,voiceDraft:null,voicePreset:'original',sendInFlight:false};
   const render=runInNewContext(drawVoice+';renderVoiceDraft',{
-    state,$:id=>items[id],document:{querySelectorAll:()=>[]},canSendInThread:()=>true,
+    state,$:id=>items[id],document:{querySelectorAll:()=>[preset]},canSendInThread:()=>true,
     Date,Math,String,Boolean,
   });
   render();
   assert.equal(status.hidden,false);assert.equal(status.dataset.phase,'requesting');
   assert.equal(phase.textContent,'Запрашиваю доступ к микрофону');
   assert.equal(timer.textContent,'Ожидаю разрешение…');
+  assert.equal(preset.disabled,true,'do not change effect while browser permission is pending');
   state.voiceStarting=false;state.recording={started:Date.now()-3700};
   render();
   assert.equal(status.dataset.phase,'recording');assert.equal(phase.textContent,'Идёт запись');
+  assert.equal(preset.disabled,true);
   assert.match(timer.textContent,/\/ 00:45/);
   state.recording=null;render();
   assert.equal(status.hidden,true);assert.equal(status.dataset.phase,'idle');
+  assert.equal(preset.disabled,false);
 });
 test('screen readers receive voice state without 350ms timer announcements',()=>{
   assert.match(html,/id="telegramThreadVoiceStatus"[^>]*role="status" aria-live="polite"/);
@@ -116,4 +121,41 @@ test('premium 3.9 voice layout keeps readable mobile actions and reduced-motion 
   assert.match(part,/button:disabled/);
   assert.doesNotMatch(part,/fetch\(|setInterval\(|localStorage/);
   assert.equal((css.match(/\{/g)||[]).length,(css.match(/\}/g)||[]).length);
+});
+
+
+test('Stop remains available throughout recording, while attachments cannot interrupt mic capture',()=>{
+  const start=js.indexOf("    for(const id of ['telegramThreadAttachButton'");
+  const end=js.indexOf("    form.classList.toggle('is-readonly'",start);
+  assert.ok(start>0&&end>start);
+  const controller=js.slice(start,end);
+  function run({recording,starting,attachment}){
+    const btns={};
+    for(const id of ['telegramThreadAttachButton','telegramThreadAudioButton',
+      'telegramThreadStickersButton','telegramThreadRecordVoice']){
+      btns[id]={
+        classList:{toggle(){}},
+        setAttribute(name,value){this[name]=value},
+        disabled:false
+      };
+    }
+    const state={recording:recording?{started:123}:null,voiceStarting:starting,
+      pendingAttachment:attachment?{file:{}}:null,sendInFlight:false};
+    runInNewContext(controller,{state,available:true,writable:true,
+      $:id=>btns[id],Boolean,String});
+    return btns;
+  }
+  const on=run({recording:true,starting:false,attachment:true});
+  assert.equal(on.telegramThreadRecordVoice.disabled,false);
+  assert.equal(on.telegramThreadRecordVoice['aria-pressed'],'true');
+  for(const id of ['telegramThreadAttachButton','telegramThreadAudioButton',
+    'telegramThreadStickersButton'])
+    assert.equal(on[id].disabled,true,id+' must stay disabled while recording');
+  const pending=run({recording:false,starting:true,attachment:false});
+  assert.equal(pending.telegramThreadRecordVoice.disabled,true);
+  assert.equal(pending.telegramThreadRecordVoice['aria-busy'],'true');
+  assert.equal(pending.telegramThreadAttachButton.disabled,true);
+  const idle=run({recording:false,starting:false,attachment:false});
+  assert.equal(idle.telegramThreadRecordVoice.disabled,false);
+  assert.equal(idle.telegramThreadAttachButton.disabled,false);
 });
