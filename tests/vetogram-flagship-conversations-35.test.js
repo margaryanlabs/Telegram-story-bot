@@ -74,3 +74,18 @@ test('all finish CSS blocks balance and keyboard/mobile has accessible motion fa
   assert.match(extra,/:focus-visible/);
   assert.match(extra,/@media\(max-height:440px\)/);
 });
+
+
+test('Telegram send flags indicate accepted-not-read and mobile controls remain 44px',()=>{
+  const chat=read('telegram-chats.js');
+  assert.match(chat,/message\.pending\?'<span class="veto-mirror-send-pending">/);
+  assert.match(chat,/message\.sent\?'<span class="veto-mirror-send-accepted"/);
+  assert.match(chat,/статус прочтения неизвестен/);
+  assert.match(css,/\.veto-mirror-send-pending\{/);
+  assert.match(css,/\.veto-mirror-send-accepted\{/);
+  assert.match(css,/\.veto-mirror-open-vault\{/);
+  const extra=css.slice(css.indexOf('Stronger than the legacy narrow-chat 32px icon rule'));
+  assert.match(extra,/\.veto-mirror-back\{\s*min-width:44px;width:44px;height:44px/);
+  assert.match(extra,/> \.veto-mirror-icon-btn:not\(\.veto-mirror-back\)/);
+  assert.match(extra,/min-width:44px;width:44px;height:44px/);
+});
