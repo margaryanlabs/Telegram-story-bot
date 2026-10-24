@@ -40,3 +40,20 @@ Use `npm run qa:core:offline` on a local Node.js 22+ checkout. It runs only buil
 - Validate on Android and iOS Telegram WebViews. Public monetization, referrals and AI background workers remain out of scope for this preflight and should remain disabled until reviewed.
 
 No production deployment, database migration, Telegram credential change or new paid service was performed in this step.
+
+## Follow-up: owner ID versus bot private-chat ID
+
+Telegram Bot API `BusinessConnection.user.id` identifies the account that owns a connection; `BusinessConnection.user_chat_id` is the separate private-chat destination for bot messages. They may differ. Previously the Anti-Delete message archive, deletion lookup, and Business connection persistence keyed storage by `user_chat_id`, while Mini App archive reads and session ownership use signed `user.id`. That could make an archive inaccessible to its true owner whenever the two IDs were different.
+
+The **draft implementation now**:
+- indexes new/edit/delete archived records and server connection state by the owner's `connection.user.id`;
+- uses `connection.user_chat_id` only where the bot sends its progress, edit and delete notifications or manages its menu button;
+- rejects archive new/edit/delete events when the referenced Business connection ID does not match the freshly fetched connection; absent/unverified owner identity never writes archived content;
+- checks `message.from.id` against the connected account owner before publishing photo Stories sent to the bot;
+- validates the actual connection ID, owner and current Story permission in the Mini App `refreshConnection`; mismatches retain cached data for a later review but authorize **no** publish.
+
+**Offline checks:** five new `tests/vetogram-business-owner-routing.test.js` cases were executed with isolated V8 and mocked store requests, all passed. Five updated `tests/vetogram-miniapp-readiness.test.js` cases also passed against the real controller function, including foreign owner, wrong connection token and missing `manageStories`. `tests/vetogram-webhook-flow.test.js` now deliberately uses different `user.id` and `user_chat_id` and asserts database owner and notification destination separately, but its **complete native Node integration test has not been run**.
+
+**Data note:** previously archived records, if any, could have been keyed to `user_chat_id`. Do not migrate, merge or expose records based on an unverified mapping. Before public launch, inspect record counts and reconcile owner ↔ Business connection with a verified, consent-aware migration only if needed. No live data or migration was changed.
+
+No GitHub Actions, paid runner, live Telegram test, Vercel deploy or database mutation was performed.
