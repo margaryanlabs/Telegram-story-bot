@@ -75,3 +75,32 @@ textarea.vtai-input{min-height:110px;resize:vertical}
   .vtai-task-date-row .vtai-label{flex-basis:100%}
   .vtai-task-date-row .vtai-action{flex:1}
 }
+
+
+/* VETOGRAM mobile polish · UI-only, preserves owner/consent interactions. */
+.vtai-modes{scroll-margin-top:16px}
+.vtai-modes button,.vtai-action{min-height:44px;transition:background .16s,border-color .16s,transform .16s}
+.vtai-modes button:focus-visible,.vtai-action:focus-visible,
+.vtai-input:focus-visible{outline:2px solid #ff9fa9;outline-offset:2px}
+.vtai-modes button:active,.vtai-action:active:not(:disabled){transform:scale(.985)}
+.vtai-workspace-item{box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.vtai-workspace-item p{line-height:1.63}
+.vtai-panel{min-width:0;overflow-wrap:anywhere}
+.vtai-row>button{max-width:100%}
+@media(max-width:570px){
+  .vtai-root{padding:12px 12px calc(105px + env(safe-area-inset-bottom,0px))}
+  .vtai-hero{border-radius:21px;padding:23px 17px}
+  .vtai-hero h1{font-size:clamp(28px,8vw,37px);line-height:1.12}
+  .vtai-hero p{font-size:13px;line-height:1.62}
+  .vtai-panel{border-radius:17px;padding:15px}
+  .vtai-input{font-size:16px}
+  .vtai-modes{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;
+    padding-bottom:9px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .vtai-modes button{flex:0 0 auto;white-space:nowrap;padding:10px 13px}
+  .vtai-task-date-row .vtai-action{min-height:44px}
+  .vtai-workspace-item .vtai-action{min-height:42px}
+  .vtai-bubble{max-width:95%;font-size:13.5px;line-height:1.55}
+}
+@media(prefers-reduced-motion:reduce){
+  .vtai-modes button,.vtai-action{transition:none!important;transform:none!important}
+}
