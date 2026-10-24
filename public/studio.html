@@ -201,11 +201,25 @@
         <div class="vg26-resume-recent" id="vg26ResumeRecent" role="group" aria-label="Недавние инструменты">
           <span class="vg26-resume-empty">Начни с чатов, Stories или AI — здесь появятся твои быстрые переходы.</span>
         </div>
-        <div class="vg26-resume-flows" role="group" aria-label="Готовые сценарии Vetogram">
-          <button type="button" data-open-screen="telegram"><span class="vg26-flow-icon">◉</span><strong>Вернуться к общению</strong><small>Твои чаты и ответы</small><em>↗</em></button>
-          <button type="button" data-open-screen="privacy"><span class="vg26-flow-icon">↶</span><strong>Проверить защиту</strong><small>Anti-Delete и архив</small><em>↗</em></button>
-          <button type="button" data-open-screen="story-engine"><span class="vg26-flow-icon">✧</span><strong>Создать Story</strong><small>Визуальный редактор</small><em>↗</em></button>
+        <div class="vg30-workflows-heading">
+          <div><span class="vg26-resume-eyebrow">ONE-TAP WORKFLOWS</span><h3>С чего начнём?</h3></div>
+          <small>Один выбор — готовый инструмент. Без автоматических отправок.</small>
         </div>
+        <div class="vg26-resume-flows vg30-flow-deck" role="group" aria-label="Быстрые сценарии VETOGRAM">
+          <button class="vg30-flow" type="button" data-vg30-flow="reply" aria-pressed="false">
+            <span class="vg26-flow-icon" aria-hidden="true">✦</span><span class="vg30-flow-copy"><span class="vg30-flow-eyebrow">VETO AI</span><strong>Ответить красиво</strong><small>AI-помощник для твоего ответа</small></span><em aria-hidden="true">↗</em>
+          </button>
+          <button class="vg30-flow" type="button" data-vg30-flow="campaign" aria-pressed="false">
+            <span class="vg26-flow-icon" aria-hidden="true">✳</span><span class="vg30-flow-copy"><span class="vg30-flow-eyebrow">STORY-TO-SALE</span><strong>Создать сильную Story</strong><small>Идея, текст и призыв к действию</small></span><em aria-hidden="true">↗</em>
+          </button>
+          <button class="vg30-flow" type="button" data-vg30-flow="privacy" aria-pressed="false">
+            <span class="vg26-flow-icon" aria-hidden="true">↶</span><span class="vg30-flow-copy"><span class="vg30-flow-eyebrow">PRIVACY VAULT</span><strong>Проверить Anti-Delete</strong><small>Архив, удалённые и разрешения</small></span><em aria-hidden="true">↗</em>
+          </button>
+          <button class="vg30-flow" type="button" data-vg30-flow="voice" aria-pressed="false">
+            <span class="vg26-flow-icon" aria-hidden="true">♫</span><span class="vg30-flow-copy"><span class="vg30-flow-eyebrow">VOICE LAB</span><strong>Сделать голосовое</strong><small>Запись, обработка и эффекты</small></span><em aria-hidden="true">↗</em>
+          </button>
+        </div>
+        <p class="vg30-flow-status" id="vg30FlowStatus" role="status" aria-live="polite">Всё запускается только после твоего нажатия.</p>
       </section>
       <details class="veto-command-advanced" id="vetoCommandAdvanced">
         <summary><span>Все инструменты и состояние системы</span><b>⌄</b></summary>
@@ -2188,6 +2202,7 @@
   <script src="/vetogram-header.js?v=20261021-v1" defer></script>
   <script src="/vetogram-command-2026.js?v=20261024-premium-r1" defer></script>
   <script src="/vetogram-resume-2026.js?v=20261024-retention-r1" defer></script>
+  <script type="module" src="/vetogram-workflows-2026.js?v=20261024-premium-workflows-r1"></script>
   <script type="module" src="/vetogram-mission-2026.js?v=20261024-cinematic-v1"></script>
 </body>
 </html>
