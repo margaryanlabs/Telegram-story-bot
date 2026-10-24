@@ -464,3 +464,75 @@ html:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen
     animation:none!important;transition:none!important;transform:none!important;
   }
 }
+
+
+/* Story Studio / editorial templates must stay readable on 320–393px phones. */
+.screen[data-screen="story-engine"] .se-template{
+  min-height:112px;
+  transition:transform .2s var(--vg32-ease),border-color .2s,box-shadow .2s;
+}
+.screen[data-screen="story-engine"] .se-template strong{
+  font-size:clamp(11px,1.2vw,13px)!important;
+  line-height:1.25!important;
+  overflow-wrap:anywhere;
+}
+.screen[data-screen="story-engine"] .se-template small{
+  font-size:10px!important;line-height:1.3!important;
+}
+.screen[data-screen="story-engine"] .se-template:focus-visible{
+  outline:3px solid #ffa8a1;outline-offset:3px;
+}
+.screen[data-screen="story-engine"] .se-template.active{
+  border-color:#ff9e9b!important;
+  box-shadow:0 0 0 2px rgba(255,155,153,.17),0 12px 30px rgba(0,3,20,.16)!important;
+}
+/* AI's eight real modes are easy to discover without wrapping over the editor. */
+.screen[data-screen="ai"] .vtai-modes{
+  display:flex!important;flex-wrap:nowrap!important;
+  overflow-x:auto!important;overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  scroll-padding-inline:9px;scroll-snap-type:x proximity;
+  padding:3px 3px 12px;
+}
+.screen[data-screen="ai"] .vtai-modes button{
+  flex:0 0 auto!important;scroll-snap-align:start;
+  min-height:45px!important;white-space:nowrap;
+}
+.screen[data-screen="ai"] .vtai-modes button:focus-visible,
+.screen[data-screen="story-engine"] .se-input:focus-visible{
+  outline:2px solid var(--vgx-focus,#ffb09c);outline-offset:2px;
+}
+@media(max-width:600px){
+  .screen[data-screen="story-engine"] .se-templates{
+    display:flex!important;flex-wrap:nowrap!important;
+    gap:9px!important;overflow-x:auto!important;overflow-y:hidden!important;
+    scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    padding:4px 3px 12px;scrollbar-width:thin;
+  }
+  .screen[data-screen="story-engine"] .se-templates .se-template{
+    flex:0 0 128px!important;width:128px!important;
+    height:126px!important;min-height:126px;
+    padding:12px!important;border-radius:15px!important;
+    scroll-snap-align:start;
+  }
+  .screen[data-screen="story-engine"] .se-templates .se-template strong{
+    font-size:12px!important;
+  }
+  .screen[data-screen="story-engine"] .se-templates .se-template small{
+    font-size:10px!important;
+  }
+  .screen[data-screen="ai"] .vtai-panel{
+    padding:15px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .screen[data-screen="story-engine"] .se-templates,
+  .screen[data-screen="ai"] .vtai-modes{
+    scroll-behavior:auto!important;
+  }
+  .screen[data-screen="story-engine"] .se-template{
+    transition:none!important;transform:none!important;
+  }
+}
