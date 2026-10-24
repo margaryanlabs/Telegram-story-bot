@@ -1,0 +1,199 @@
+/* VETOGRAM · 2026 COMMAND EXPERIENCE / cinematic release candidate.
+   A single final paint layer for existing screens. No changes to Telegram,
+   AI permissions, account ownership or data flow. */
+:root{
+  --vg27-bg:#090e18;--vg27-panel:#111925;--vg27-panel2:#182132;
+  --vg27-border:rgba(210,222,249,.12);--vg27-border-strong:rgba(239,206,213,.22);
+  --vg27-ink:#f9f9fd;--vg27-sub:#b1bdcc;--vg27-dim:#8493a9;
+  --vg27-hot:#fc7d84;--vg27-hot2:#ffb18f;--vg27-good:#78d9b5;
+  --vg27-glow:0 28px 70px rgba(1,6,19,.3);
+}
+html[data-veto-theme="pearl"],html[data-veto-theme="linen"]{
+  --vg27-bg:#f5f5f8;--vg27-panel:#ffffff;--vg27-panel2:#eff2f7;
+  --vg27-border:rgba(33,53,86,.12);--vg27-border-strong:rgba(147,76,93,.2);
+  --vg27-ink:#1d2639;--vg27-sub:#59687c;--vg27-dim:#728092;
+  --vg27-hot:#c94a64;--vg27-hot2:#e17e6a;--vg27-good:#168867;
+  --vg27-glow:0 17px 46px rgba(22,41,76,.1);
+}
+html[data-veto-theme="slate"]{
+  --vg27-bg:#142434;--vg27-panel:#1d2d3c;--vg27-panel2:#233b4c;
+  --vg27-border:rgba(196,235,252,.14);--vg27-ink:#f1faff;
+  --vg27-sub:#c0d0df;--vg27-dim:#9ab0c0;
+}
+/* One coherent typographic rhythm across the modules. */
+body{letter-spacing:-.005em}
+.app-shell{max-width:1040px!important;width:min(100%,1040px)!important}
+.screen[data-screen="home"]{max-width:960px;margin-inline:auto}
+.screen :is(button,input,textarea,select){accent-color:var(--vg27-hot)}
+.screen :is(button,summary,a,input,textarea,select):focus-visible{
+  outline:2px solid var(--vg27-hot)!important;outline-offset:3px}
+.screen :is(h1,h2,h3){text-wrap:balance}
+.topbar{border-radius:16px}
+.topbar .brand-copy span{max-width:min(34vw,320px)}
+/* Luxury is clarity: prominent action, restraint, and depth, not more cards. */
+.screen[data-screen="home"] .veto-command-home{
+  background:
+    radial-gradient(ellipse 65% 65% at 100% 0%,rgba(255,125,129,.22),transparent 74%),
+    radial-gradient(ellipse 62% 80% at -10% 110%,rgba(96,114,218,.24),transparent 70%),
+    linear-gradient(130deg,#0e182b 0%,#182039 49%,#1b1725 100%)!important;
+  border-color:rgba(218,224,242,.17)!important;
+  border-radius:32px!important;
+  box-shadow:0 26px 84px rgba(4,7,24,.32),inset 0 1px rgba(255,255,255,.085)!important;
+  padding:clamp(24px,5vw,50px)!important;
+}
+.screen[data-screen="home"] .veto-command-home-top{letter-spacing:.16em!important}
+.screen[data-screen="home"] .veto-command-home h1{
+  font-size:clamp(39px,7.6vw,73px)!important;
+  font-weight:900!important;line-height:1.02!important;
+  letter-spacing:-.075em!important;max-width:760px;text-wrap:balance}
+.screen[data-screen="home"] .veto-command-home h1 em{
+  background:linear-gradient(105deg,#fff0e9 0%,#ffa997 43%,#f37b96 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.screen[data-screen="home"] .veto-command-home>p{
+  font-size:clamp(13px,1.5vw,16px)!important;line-height:1.7!important;
+  max-width:520px!important;color:#c6c8d6!important}
+.screen[data-screen="home"] .veto-command-home-actions>button{
+  min-height:55px!important;border-radius:16px!important;font-size:14px!important;
+  transition:transform .18s,border-color .18s,box-shadow .18s}
+.screen[data-screen="home"] .veto-command-home-primary{
+  background:linear-gradient(120deg,#ff9c84,#fb768b)!important;
+  color:#2f1720!important;box-shadow:0 10px 30px rgba(228,89,115,.21)}
+.screen[data-screen="home"] .veto-command-home-connect{
+  background:rgba(255,255,255,.075)!important;color:#fcf8fa!important;
+  border-color:rgba(255,255,255,.19)!important}
+.screen[data-screen="home"] .veto-command-home-grid{gap:10px!important}
+.screen[data-screen="home"] .veto-command-home-grid button{
+  border-radius:18px!important;min-height:115px!important;
+  background:rgba(255,255,255,.052)!important;
+  border-color:rgba(243,234,252,.11)!important;
+  padding:17px 17px 15px!important;box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.screen[data-screen="home"] .veto-command-home-grid button:hover{
+  border-color:rgba(255,168,166,.46)!important;
+  background:rgba(251,135,145,.095)!important;transform:translateY(-2px)}
+.screen[data-screen="home"] .veto-command-home-grid button strong{font-size:14px!important}
+.screen[data-screen="home"] .veto-command-home-grid button small{line-height:1.5!important}
+/* Mission Control: status is mirrored from existing owner-scoped app UI.
+   Permission != proof of delivered messages or published Story. */
+.vg27-mission{
+  position:relative;isolation:isolate;overflow:hidden;
+  display:grid;gap:17px;margin:16px 0 14px;padding:clamp(18px,3.2vw,27px);
+  border:1px solid var(--vg27-border);border-radius:25px;
+  background:linear-gradient(128deg,color-mix(in srgb,var(--vg27-panel) 94%,#f47e8f),
+    var(--vg27-panel));box-shadow:var(--vg27-glow);color:var(--vg27-ink);
+}
+.vg27-mission:before{content:"";position:absolute;z-index:-1;
+  width:250px;height:250px;right:-90px;top:-145px;border-radius:50%;
+  background:radial-gradient(circle,rgba(251,131,152,.15),transparent 74%);pointer-events:none}
+.vg27-mission-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.vg27-eyebrow{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.15em;
+  font-weight:850;color:var(--vg27-hot)}
+.vg27-pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--vg27-hot);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--vg27-hot) 16%,transparent)}
+.vg27-mission-heading h2{margin:9px 0 6px;font-size:clamp(20px,3.2vw,29px);
+  line-height:1.15;letter-spacing:-.045em;color:var(--vg27-ink)}
+.vg27-mission-heading p{font-size:12px;color:var(--vg27-sub);margin:0;line-height:1.6}
+.vg27-mission-signature{font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--vg27-dim);
+  border:1px solid var(--vg27-border);padding:7px 9px;border-radius:9px;white-space:nowrap}
+.vg27-mission-statuses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.vg27-mission-state{position:relative;min-width:0;display:flex;align-items:center;gap:11px;
+  min-height:74px;text-align:left;color:var(--vg27-ink);
+  background:color-mix(in srgb,var(--vg27-panel2) 78%,transparent);
+  border:1px solid var(--vg27-border);border-radius:17px;
+  padding:11px 12px;font:inherit;cursor:pointer;transition:transform .17s,border-color .17s}
+.vg27-mission-state:hover{transform:translateY(-2px);border-color:var(--vg27-border-strong)}
+.vg27-mission-state:active{transform:scale(.98)}
+.vg27-mission-icon{display:grid;place-items:center;flex:none;width:41px;height:41px;
+  border-radius:12px;background:color-mix(in srgb,var(--vg27-hot) 14%,transparent);
+  color:var(--vg27-hot);font-size:23px;font-weight:750}
+.vg27-mission-label{display:grid;gap:5px;font-size:9px;font-weight:850;
+  letter-spacing:.13em;color:var(--vg27-dim);min-width:0}
+.vg27-mission-label strong{font-size:12px;line-height:1.35;letter-spacing:0;
+  color:var(--vg27-sub);font-weight:760;overflow-wrap:anywhere}
+.vg27-mission-label strong[data-status="available"],
+.vg27-mission-label strong[data-status="permission"]{color:var(--vg27-good)}
+.vg27-mission-chevron{margin-left:auto;color:var(--vg27-dim);align-self:center;font-size:14px}
+.vg27-mission-bottom{display:flex;justify-content:space-between;align-items:center;
+  gap:12px;border-top:1px solid var(--vg27-border);padding-top:15px}
+.vg27-mission-bottom>span{flex:1;color:var(--vg27-dim);font-size:11px;
+  line-height:1.65;max-width:510px}
+.vg27-mission-bottom>span>span{color:var(--vg27-hot)}
+.vg27-mission-bottom>button{min-height:44px;flex:none;border-radius:12px;
+  border:1px solid color-mix(in srgb,var(--vg27-hot) 50%,transparent);
+  padding:10px 16px;background:color-mix(in srgb,var(--vg27-hot) 13%,var(--vg27-panel));
+  color:var(--vg27-ink);font:inherit;font-weight:800;font-size:12px;cursor:pointer}
+.vg27-mission-bottom>button:hover{background:color-mix(in srgb,var(--vg27-hot) 22%,var(--vg27-panel))}
+/* Inbox: one calm surface, dense but readable, no huge empty hero. */
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header{
+  border-color:rgba(229,226,247,.19)!important;
+  background:linear-gradient(120deg,#131d31,#1b2540 62%,#292136)!important}
+#telegramMirror .veto-mirror-search-wrap{border-radius:15px!important}
+#telegramMirror .veto-mirror-chat{border-radius:17px!important}
+#telegramMirror .veto-mirror-chat-title strong{font-weight:820}
+#telegramMirror .veto-mirror-filters button{min-height:38px;border-radius:12px}
+#telegramMirror .veto-mirror-chat:is(:hover,:focus-visible){border-color:var(--vg27-border-strong)}
+/* Publishing should feel like a creator product, not a technical dashboard. */
+.screen[data-screen="publish"] .hero-card{border-radius:28px!important;
+  background:radial-gradient(ellipse 90% 95% at 88% -15%,rgba(255,125,138,.19),transparent 67%),
+   radial-gradient(ellipse 70% 90% at -20% 110%,rgba(103,119,215,.18),transparent 70%),
+   var(--vg27-panel)!important;
+  border:1px solid var(--vg27-border)!important;box-shadow:var(--vg27-glow)}
+.screen[data-screen="publish"] .hero-copy h1{letter-spacing:-.065em!important;
+  line-height:1.03!important}
+.screen[data-screen="publish"] .composer-card{border-radius:23px!important}
+.screen[data-screen="publish"] :is(.primary-button,.text-button){min-height:44px}
+/* Vault: defensive privacy with readable state, never false green readiness. */
+.screen[data-screen="privacy"] .ghost-command-card,
+.screen[data-screen="privacy"] .veto-business-journey{
+  border-radius:25px!important;border-color:var(--vg27-border-strong)!important;
+  box-shadow:var(--vg27-glow)}
+.screen[data-screen="privacy"] .privacy-page-head h1{
+  font-size:clamp(31px,5.5vw,48px)!important;letter-spacing:-.055em}
+.screen[data-screen="privacy"] .ghost-enable-all{min-height:50px;border-radius:15px}
+/* AI and Story Studio are siblings in one product design language. */
+.vtai-root .vtai-hero,.se-engine .se-masthead{
+  border-radius:28px!important;border:1px solid var(--vg27-border-strong)!important;
+  box-shadow:var(--vg27-glow);
+  background:radial-gradient(ellipse 72% 100% at 94% 0%,rgba(255,130,142,.23),transparent 72%),
+    linear-gradient(138deg,#101c2e,#201d31)!important}
+.vtai-root .vtai-panel,.se-engine .se-panel{
+  border-radius:21px!important;border-color:var(--vg27-border)!important}
+.vtai-root .vtai-workspace-item{border-radius:16px;min-width:0}
+.vtai-root .vtai-modes button{min-height:44px;border-radius:13px}
+.vtai-root .vtai-modes button.active{background:rgba(245,111,134,.17)!important;
+  border-color:rgba(255,158,165,.65)!important;color:#ffe4df}
+.se-engine .se-template{border-radius:14px}
+.se-engine .se-button{min-height:44px;border-radius:13px}
+/* Responsive and safe-area, including Fold's narrow outside display. */
+@media(max-width:700px){
+  .vg27-mission-statuses{grid-template-columns:1fr}
+  .vg27-mission-state{min-height:58px}
+  .vg27-mission-icon{width:37px;height:37px}
+  .vg27-mission-bottom{align-items:stretch;flex-direction:column}
+  .vg27-mission-bottom>button{width:100%}
+  .screen[data-screen="home"] .veto-command-home h1{font-size:clamp(38px,8.3vw,54px)!important}
+}
+@media(max-width:480px){
+  .app-shell{padding-inline:12px!important;
+    padding-bottom:calc(128px + env(safe-area-inset-bottom,0px))!important}
+  .topbar{gap:6px}
+  .screen[data-screen="home"] .veto-command-home{padding:24px 18px!important;border-radius:24px!important}
+  .screen[data-screen="home"] .veto-command-home h1{font-size:clamp(37px,10vw,48px)!important}
+  .screen[data-screen="home"] .veto-command-home-grid button{min-height:107px!important;padding:14px!important}
+  .screen[data-screen="home"] .veto-command-home-actions>button{min-height:52px!important}
+  .vg27-mission{padding:17px 15px;border-radius:22px}
+  .bottom-nav{width:calc(100% - 18px)!important}
+  .bottom-nav .nav-item{min-width:0}
+  .bottom-nav .nav-item small{font-size:9px!important}
+  .vtai-root{padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+  .se-engine{padding-bottom:calc(122px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:350px){
+  .screen[data-screen="home"] .veto-command-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .screen[data-screen="home"] .veto-command-home-grid button strong{font-size:12px!important}
+  .vg27-mission-signature{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .screen[data-screen="home"] .veto-command-home-grid button,
+  .vg27-mission-state{transition:none!important;transform:none!important}
+}
