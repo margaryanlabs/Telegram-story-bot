@@ -105,8 +105,8 @@ function safeSession(row, userId = '') {
       notifyEnabled: row.notify_enabled !== false,
       notifyAnonymousGap: row.notify_anonymous_gap !== false,
     },
-    lastPollAt: row.last_poll_at || null,
-    lastError: row.last_error || null,
+    lastPollAt: ownerVerified ? row.last_poll_at || null : null,
+    lastError: ownerVerified ? row.last_error || null : null,
   };
 }
 
