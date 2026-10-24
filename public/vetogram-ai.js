@@ -639,10 +639,34 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       ?buildMemoryContext(state.memory,[...state.selectedNotes],owner()):[];
     // One-shot consent: notes cannot silently leak into the next request.
     $('vtaiIncludeMemory').checked=false;
+    const scope=ownerRequestScope();
     setBusy(true);$('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
     notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
       let grant=null;
+if(mode==='negotiator'){
+        if(!window.confirm('Разрешить VETOGRAM AI готовить черновик переговоров только для выбранного чата и в заданных пределах? Никакая автоматическая отправка не включается.'))return;
+        const issued=await request('/api/vetogram-ai-grants',{
+          action:'issue',chatId:negotiationPolicy.chatId,currency:negotiationPolicy.currency,
+          askingPrice:$('vtaiNegAsking').value,minPrice:$('vtaiNegFloor').value,
+          maxDiscountPct:negotiationPolicy.discountPct,minutes:$('vtaiNegMinutes').value
+        },'grant');
+        if(!isOwnerRequestCurrent(scope))return;
+        grant=issued.grant;
+        if(!grant?.active||grant.chatId!==negotiationPolicy.chatId)
+          throw Error('Сервер не подтвердил ограниченное разрешение.');
+        state.negotiationGrant=grant;
+        $('vtaiNegNotice').textContent='Серверное разрешение создано. Только черновики, без автоматической отправки.';
+      }
+      const answer=await request('/api/vetogram-ai',
+        {mode,prompt,history:mode==='chat'?oldHistory:[],notes:approvedNotes,
+          ...(grant?{grantId:grant.grantId,chatId:grant.chatId}:{})},true);
+      if(!isOwnerRequestCurrent(scope))return;
+      if(state.mode!==mode)return notice('Режим изменился. Ответ не применён.',true);
+      if(Number.isInteger(Number(answer?.quota?.remainingRequests)))$('vtaiQuota').textContent='Осталось AI-запросов на сегодня (UTC): '+Number(answer.quota.remainingRequests)+'.';
+      addBubble(original,'user');addBubble(answer.text,'assistant');
+      if(mode==='chat')state.history=[...oldHistory,{role:'user',text:prompt},{role:'assistant',text:answer.text}].slice(-6);
+      state.last=answer.text;
       if(mode==='brief'){
         state.brief=answer.brief||null;
         $('vtaiReview').hidden=true;renderBrief();
@@ -662,27 +686,6 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
           notice('AI уточняет запрос. Никакое действие не выполнено.');
         }
       }else if(mode==='negotiator'){
-        if(!window.confirm('Разрешить VETOGRAM AI готовить черновик переговоров только для выбранного чата и в заданных пределах? Никакая автоматическая отправка не включается.'))return;
-        const issued=await request('/api/vetogram-ai-grants',{
-          action:'issue',chatId:negotiationPolicy.chatId,currency:negotiationPolicy.currency,
-          askingPrice:$('vtaiNegAsking').value,minPrice:$('vtaiNegFloor').value,
-          maxDiscountPct:negotiationPolicy.discountPct,minutes:$('vtaiNegMinutes').value
-        },'grant');
-        grant=issued.grant;
-        if(!grant?.active||grant.chatId!==negotiationPolicy.chatId)
-          throw Error('Сервер не подтвердил ограниченное разрешение.');
-        state.negotiationGrant=grant;
-        $('vtaiNegNotice').textContent='Серверное разрешение создано. Только черновики, без автоматической отправки.';
-      }
-      const answer=await request('/api/vetogram-ai',
-        {mode,prompt,history:mode==='chat'?oldHistory:[],notes:approvedNotes,
-          ...(grant?{grantId:grant.grantId,chatId:grant.chatId}:{})},true);
-      if(state.mode!==mode)return notice('Режим изменился. Ответ не применён.',true);
-      if(Number.isInteger(Number(answer?.quota?.remainingRequests)))$('vtaiQuota').textContent='Осталось AI-запросов на сегодня (UTC): '+Number(answer.quota.remainingRequests)+'.';
-      addBubble(original,'user');addBubble(answer.text,'assistant');
-      if(mode==='chat')state.history=[...oldHistory,{role:'user',text:prompt},{role:'assistant',text:answer.text}].slice(-6);
-      state.last=answer.text;
-      if(mode==='negotiator'){
         const proposal=answer.negotiation;
         const result=verifyNegotiationProposal(negotiationPolicy,proposal,{
           owner:owner(),chatId:negotiationPolicy.chatId
@@ -724,8 +727,11 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         $('vtaiSend').disabled=!state.dialogs.length;
         notice('Текст подготовлен. Ничего не отправлено.');
       }
-    }catch(error){notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);}
-    finally{setBusy(false);$('vtaiSend').disabled=!canSendDraft();}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);}
+    finally{if(isOwnerRequestCurrent(scope)){
+      setBusy(false);$('vtaiSend').disabled=!canSendDraft();
+    }}
   }
   // Telegram returns only 24 dialogs in the initial page. Other existing
   // conversations stay accessible by explicit "more" or target lookup.
