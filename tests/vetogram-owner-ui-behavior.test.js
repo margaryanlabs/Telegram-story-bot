@@ -6,6 +6,7 @@ import vm from 'node:vm';
 // Execute the actual functions from the browser controller, not rewritten test
 // doubles. This intentionally runs offline without DOM, npm packages or APIs.
 const browser=readFileSync(new URL('../public/vetogram-ai.js',import.meta.url),'utf8');
+const storyController=readFileSync(new URL('../public/story-engine.js',import.meta.url),'utf8');
 function controller(name,context){
   const start=browser.indexOf('  '+name+'(');
   assert.ok(start>=0,'Controller function missing: '+name);
@@ -384,4 +385,58 @@ test('clipboard and bulk task clearing use current owner after explicit consent'
   const navigation=story.indexOf('VetoTelegramNavigate',guard);
   const apply=story.indexOf('VetoTelegramApplyAiStory',navigation);
   assert.ok(approval>=0&&guard>approval&&navigation>guard&&apply>navigation);
+});
+
+
+test('Story Engine receiver rejects owner switch while waiting for init',async()=>{
+  const marker='async function applyAiStorySuggestion(';
+  const start=storyController.indexOf(marker),end=storyController.indexOf('\n}\n',start);
+  assert.ok(start>=0&&end>start);
+  let resolveInit;
+  const ownerState={owner:'111',draft:{id:'story-A',title:'Original title',
+    subtitle:'Original subtitle',caption:'Old',photo:'kept'}};
+  let owner='111',renders=0;
+  const fn=vm.runInNewContext('('+storyController.slice(start,end+2)+')',
+    vm.createContext({
+      owner:()=>owner,
+      init:()=>new Promise(resolve=>{resolveInit=resolve}),
+      state:ownerState,
+      trimText:(x,n)=>String(x).slice(0,n),
+      normalizePortal:x=>x,clearPublicPortalLink:()=>{},
+      $:()=>({checked:true}),render:()=>{renders++},notify:()=>{}
+    }));
+  const promise=fn({ownerId:'111',story:{title:'Account A private title',subtitle:'Private subtitle'}});
+  owner='222';ownerState.owner='222';
+  ownerState.draft={id:'story-B',title:'Account B original',subtitle:'B subtitle'};
+  resolveInit();
+  const success=await promise;
+  assert.equal(success,false);
+  assert.equal(ownerState.draft.title,'Account B original');
+  assert.equal(renders,0);
+});
+test('Story Engine receiver accepts owner-approved text only, preserving unrelated media and portal',async()=>{
+  const marker='async function applyAiStorySuggestion(';
+  const start=storyController.indexOf(marker),end=storyController.indexOf('\n}\n',start);
+  assert.ok(start>=0&&end>start);
+  const savedPortal={type:'link',title:'Existing portal'};
+  const state={owner:'111',draft:{id:'story-A',title:'Old',subtitle:'Old',
+    caption:'Old caption',photoId:'keep-this-photo',portal:savedPortal}};
+  let renders=0,clears=0;
+  const fn=vm.runInNewContext('('+storyController.slice(start,end+2)+')',
+    vm.createContext({owner:()=> '111',init:async()=>{},state,
+      trimText:(x,n)=>String(x??'').slice(0,n),
+      normalizePortal:x=>x,clearPublicPortalLink:()=>{clears++},
+      $:()=>({checked:true}),render:()=>{renders++},notify:()=>{}
+    }));
+  const success=await fn({ownerId:'111',story:{
+    title:'Proposed AI title',subtitle:'Proposed subtitle',caption:'Suggested'
+  },replacePortal:false});
+  assert.equal(success,true);
+  assert.equal(state.draft.title,'Proposed AI title');
+  assert.equal(state.draft.subtitle,'Proposed subtitle');
+  assert.equal(state.draft.caption,'Suggested');
+  assert.equal(state.draft.photoId,'keep-this-photo');
+  assert.equal(state.draft.portal,savedPortal);
+  assert.equal(renders,1);
+  assert.equal(clears,0);
 });
