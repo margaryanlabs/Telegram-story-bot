@@ -168,3 +168,31 @@
 }
 .se-engine .se-button:focus-visible,.se-engine .se-template:focus-visible,
 .se-engine .se-layer-chip:focus-visible{outline:2px solid #ff91a0;outline-offset:3px}
+
+
+/* 2026-10-24 · Story Engine finish: clearer hierarchy and controls only. */
+.se-engine .se-masthead{
+  border-color:rgba(255,144,172,.20);
+  background:radial-gradient(ellipse 70% 75% at 100% 0%,rgba(207,53,84,.28),transparent 72%),
+    radial-gradient(ellipse 70% 95% at 0 100%,rgba(72,100,157,.13),transparent 68%),#121019;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 13px 36px rgba(6,5,15,.14);
+}
+.se-engine .se-panel{border-color:rgba(186,172,204,.17);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.se-engine .se-button.primary{
+  background:linear-gradient(115deg,#d94464,#f77580);
+  box-shadow:0 8px 20px rgba(217,59,97,.16);
+}
+.se-engine .se-button.primary:hover{filter:brightness(1.08)}
+.se-engine #seUndoAiText:not([hidden]){
+  border-color:rgba(255,149,168,.43);
+  background:linear-gradient(120deg,rgba(244,88,119,.13),rgba(139,71,116,.1));
+}
+.se-engine .se-input:focus-visible{
+  outline:2px solid #f68fa3;outline-offset:2px;
+}
+@media(max-width:600px){
+  .se-engine .se-masthead{border-radius:23px;padding:23px 18px}
+  .se-engine .se-panel{border-radius:17px}
+  .se-engine .se-button{min-height:44px}
+}
