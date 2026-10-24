@@ -64,6 +64,24 @@ test('mocked signed webhook preserves new/edit/delete archive flow and sends own
     const connectionFailure=await send({business_connection:connection});assert.equal(connectionFailure.code,503);
     assert.equal(connectionFailure.body.retryable,true);
     storeFail=false;assert.equal((await send({business_connection:connection})).code,200);
+    const previousVersions=versions.length,previousAlerts=alerts.length;
+    connection.is_enabled=false;
+    const revokedMessage=await send({business_message:{...message,message_id:91,text:'must not archive'}});
+    assert.equal(revokedMessage.code,200);
+    assert.equal(revokedMessage.body.privacy_message_ignored,'business_connection_disabled');
+    const revokedDelete=await send({deleted_business_messages:{
+      business_connection_id:'new-connection',chat:message.chat,message_ids:[1]}});
+    assert.equal(revokedDelete.code,200);
+    assert.equal(revokedDelete.body.privacy_delete_ignored,'business_connection_disabled');
+    assert.equal(archive.has(91),false);
+    assert.equal(versions.length,previousVersions);
+    assert.equal(alerts.length,previousAlerts);
+    connection.is_enabled='unknown';
+    assert.equal((await send({business_message:{...message,message_id:92}})).code,503);
+    assert.equal((await send({deleted_business_messages:{
+      business_connection_id:'new-connection',chat:message.chat,message_ids:[1]}})).code,503);
+    assert.equal(archive.has(92),false);
+    connection.is_enabled=true;
   } finally {
     globalThis.fetch=oldFetch;if(oldToken===undefined)delete process.env.TELEGRAM_BOT_TOKEN;else process.env.TELEGRAM_BOT_TOKEN=oldToken;
     if(oldHash===undefined)delete process.env.TELEGRAM_API_HASH;else process.env.TELEGRAM_API_HASH=oldHash;
