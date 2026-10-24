@@ -676,3 +676,97 @@ html:is([data-veto-theme="slate"]){--vgx-row:rgba(35,53,74,.88)}
 @media(prefers-reduced-motion:reduce){
   #telegramMirror .vgx-inbox-pulse-grid button{transition:none;transform:none}
 }
+
+
+/* VETOGRAM 3.0 / R4 · mobile editorial layout.
+   Six real destinations remain visible and tappable; a swipe rail replaces
+   two rows of heavy cards, while the user keeps explicit control of actions. */
+@media(max-width:600px){
+  .screen[data-screen="home"] .veto-command-home{
+    padding:21px 16px 18px!important;
+    border-radius:24px!important;
+  }
+  .screen[data-screen="home"] .veto-command-home h1{
+    font-size:clamp(31px,8.6vw,40px)!important;
+    line-height:1.065!important;
+    margin-bottom:11px!important;
+  }
+  .screen[data-screen="home"] .veto-command-home>p{
+    max-width:38ch;line-height:1.57!important;
+    margin-bottom:17px!important;
+  }
+  .screen[data-screen="home"] .veto-command-home-actions button{
+    min-height:50px!important;border-radius:14px!important;
+  }
+  .screen[data-screen="home"] .veto-command-home-grid{
+    display:grid!important;
+    grid-auto-flow:column!important;
+    grid-template-columns:none!important;
+    grid-template-rows:minmax(0,1fr);
+    grid-auto-columns:minmax(163px,56%);
+    gap:9px;
+    width:100%;max-width:100%;
+    overflow-x:auto;overflow-y:hidden;
+    overscroll-behavior-inline:contain;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(252,139,147,.3) transparent;
+    padding:3px 1px 10px!important;
+  }
+  .screen[data-screen="home"] .veto-command-home-grid button{
+    scroll-snap-align:start;align-self:stretch;
+    min-width:0;min-height:101px!important;
+    padding:14px 12px!important;
+    border-radius:16px!important;
+    white-space:normal!important;
+  }
+  .screen[data-screen="home"] .veto-command-home-grid button strong{
+    font-size:13px!important;line-height:1.25!important;
+  }
+  .screen[data-screen="home"] .veto-command-home-grid button small{
+    font-size:10.5px!important;line-height:1.45!important;
+  }
+  .screen[data-screen="home"] .vg27-mission{margin-top:10px!important;border-radius:18px}
+  .screen[data-screen="home"] .vg26-resume{margin-top:10px!important;border-radius:18px}
+  .screen[data-screen="home"] .vg30-flow-deck .vg30-flow{
+    min-height:110px;padding:13px 11px!important;border-radius:16px!important;
+  }
+  .screen[data-screen="home"] .vg30-flow-deck .vg30-flow .vg26-flow-icon{
+    display:none;
+  }
+  .screen[data-screen="home"] .vg30-flow-deck .vg30-flow-copy strong{
+    font-size:13px;line-height:1.3;
+  }
+  .screen[data-screen="home"] .vg30-flow-deck .vg30-flow small{
+    font-size:10px;line-height:1.45;
+  }
+  /* Chat identity is compact, while critical connection warnings stay visible. */
+  #telegramMirror .vg26-inbox-shortcuts{
+    display:flex;gap:8px;
+    min-width:0;overflow-x:auto;overflow-y:hidden;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  #telegramMirror .vg26-inbox-shortcuts button{
+    flex:0 0 auto;min-height:44px;white-space:nowrap;
+  }
+  .bottom-nav .nav-item{
+    touch-action:manipulation;
+  }
+}
+@media(max-width:340px){
+  .screen[data-screen="home"] .veto-command-home-grid{
+    grid-template-columns:none!important;
+    grid-auto-columns:minmax(153px,81%)!important;
+  }
+  .screen[data-screen="home"] .vg30-flow-deck{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .screen[data-screen="home"] .veto-command-home-grid{
+    scroll-behavior:auto!important;
+  }
+}
