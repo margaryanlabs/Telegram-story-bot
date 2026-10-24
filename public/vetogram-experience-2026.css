@@ -42,6 +42,22 @@ html[data-veto-theme="slate"]{
 }
 :where(.topbar,.bottom-nav,.vg26-command-dialog){-webkit-font-smoothing:antialiased}
 /* Premium chat geometry: comfortable density without oversized cards. */
+#telegramMirror .veto-mirror-filters{
+  overflow-x:auto;overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none
+}
+#telegramMirror .veto-mirror-filters button{
+  flex:0 0 auto;min-height:41px;border-radius:999px;letter-spacing:0;
+}
+#telegramMirror .veto-mirror-filters button:is([data-mirror-filter="focus"],[data-mirror-filter="copies"]){
+  background:color-mix(in srgb,var(--vgx-hot) 9%,var(--ct-chip,var(--vg26-surface-2)));
+  border-color:color-mix(in srgb,var(--vgx-hot) 25%,var(--vgx-hairline));
+  color:var(--ct-chip-text,var(--vgx-ink));
+}
+#telegramMirror .veto-mirror-filters button:is([data-mirror-filter="focus"],[data-mirror-filter="copies"]).active{
+  background:linear-gradient(120deg,#ff9788,#ee7389);border-color:transparent;
+  color:#251b29
+}
 #telegramMirror .veto-mirror-chat-list{display:grid;gap:3px}
 #telegramMirror .veto-mirror-chat{
   min-height:68px!important;margin-inline:0!important;
