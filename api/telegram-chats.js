@@ -161,12 +161,11 @@ export function decorateRemote(remote,archiveRows){
 async function archiveThreads(ownerId){
   try {
     const result=await listPrivacyThreads(ownerId);
-    return Array.isArray(result?.threads)
-      ? result.threads.filter(row=>safeId(row?.chatId)&&Number(row?.messageCount||0)>0)
-      : [];
+    if(!Array.isArray(result?.threads))throw Error('archive_thread_list_invalid');
+    return result.threads.filter(row=>safeId(row?.chatId)&&Number(row?.messageCount||0)>0);
   }catch {
-    // If private archive is unavailable, do not invent saved chats.
-    return [];
+    // An unavailable archive is not evidence that the owner has zero saved chats.
+    return Object.assign([],{unavailable:true});
   }
 }
 async function archivedMessages(ownerId,chatId,offset=0){
@@ -306,6 +305,10 @@ export default async function handler(req,res){
       }else warning='Подключи свой Telegram для живых чатов. Ранее сохранённые копии VETO доступны отдельно.';
       // Both requests were already running while MTProto connected.
       const [history,permissionState]=await Promise.all([historyPromise,permissionStatePromise]);
+      if(history.unavailable){
+        const unavailable='Защищённый архив временно недоступен. Сохранённые и удалённые сообщения могут отсутствовать в списке.';
+        warning=warning?warning+' · '+unavailable:unavailable;
+      }
       const chats=decorateRemote(live.chats,history);
       if(page===0){
         const liveIds=new Set(chats.map(c=>c.id));
@@ -314,7 +317,10 @@ export default async function handler(req,res){
           if(!liveIds.has(entry.id))chats.push(entry);
         }
       }
-      if(warning && !history.length)return respond(res,409,{error:warning});
+      if(warning && !history.length && !live.chats.length)
+        return respond(res,history.unavailable?503:409,{
+          error:warning,...(history.unavailable?{archiveUnavailable:true}:{})
+        });
       return respond(res,200,{
         chats:orderChatRows(chats).map(chat=>({...chat,inbox:inboxSignals(chat)})),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
         updatedAt:new Date().toISOString(),warning,
@@ -377,13 +383,17 @@ export default async function handler(req,res){
       if(creds?.session)storedPromise=archivedMessages(userId,chatId,archiveOffset);
     }
     const [stored,history]=await Promise.all([storedPromise,historyPromise]);
+    if(history.unavailable){
+      const notice='Защищённый список сохранённых чатов временно недоступен.';
+      warning=warning?warning+' · '+notice:notice;
+    }
     if(stored.unavailable){
       const notice='Защищённый архив временно недоступен. Ранее сохранённые сообщения могут быть не видны.';
       warning=warning?warning+' · '+notice:notice;
     }
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
     if(!chat && threadArchive)chat=archivedDialog(threadArchive);
-    if(!chat&&stored.unavailable)return respond(res,503,{
+    if(!chat&&(stored.unavailable||history.unavailable))return respond(res,503,{
       error:'Архив временно недоступен. Нельзя подтвердить отсутствие сохранённого чата.',
       archiveUnavailable:true,
     });
