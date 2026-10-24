@@ -12,7 +12,7 @@
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],stickerSets:[],stickerPack:null,
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
-    stickerPreviewUrls:new Map(),recording:null,lastRichFailure:null,
+    stickerPreviewUrls:new Map(),recording:null,voiceStarting:false,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
     threadSearch:'',threadSearchIndex:0,deliveryStage:null,inboxReturn:null,activePhotoId:null,
@@ -138,12 +138,20 @@
       if($(id))$(id).disabled=!available;
     }
     const voiceButton=$('telegramThreadRecordVoice');
-    if(voiceButton){voiceButton.disabled=!writable || Boolean(state.pendingAttachment) || (state.sendInFlight&&!state.recording);
-      voiceButton.classList.toggle('recording',Boolean(state.recording));
-      voiceButton.setAttribute('aria-pressed',String(Boolean(state.recording)));
-      voiceButton.setAttribute('aria-label',state.recording?'Завершить запись голосового':'Начать запись голосового');
-      voiceButton.textContent=state.recording?'■':'◉';
-      voiceButton.title=state.recording?'Завершить запись и прослушать':'Записать голосовое';}
+    if(voiceButton){
+      const starting=Boolean(state.voiceStarting),recording=Boolean(state.recording);
+      voiceButton.disabled=starting || !writable || Boolean(state.pendingAttachment) ||
+        (state.sendInFlight&&!recording);
+      voiceButton.classList.toggle('recording',recording);
+      voiceButton.classList.toggle('is-requesting-mic',starting);
+      voiceButton.setAttribute('aria-busy',String(starting));
+      voiceButton.setAttribute('aria-pressed',String(recording));
+      voiceButton.setAttribute('aria-label',starting?'Запрашиваю доступ к микрофону':
+        recording?'Завершить запись голосового':'Начать запись голосового');
+      voiceButton.textContent=starting?'…':recording?'■':'◉';
+      voiceButton.title=starting?'Ожидаю разрешение на микрофон':
+        recording?'Завершить запись и прослушать':'Записать голосовое';
+    }
 
     form.classList.toggle('is-readonly',!writable);
     field.disabled=!writable; // The next draft is editable while the previous send is pending.
@@ -544,12 +552,23 @@
   function renderVoiceDraft(){
     const status=$('telegramThreadVoiceStatus'),preview=$('telegramThreadVoicePreview');
     if(!status||!preview)return;
-    status.hidden=!state.recording;
+    status.hidden=!state.recording&&!state.voiceStarting;
+    status.dataset.phase=state.voiceStarting?'requesting':state.recording?'recording':'idle';
     preview.hidden=!state.voiceDraft;
+    const phase=$('telegramThreadVoiceState');
+    if(phase){
+      const label=state.voiceStarting?'Запрашиваю доступ к микрофону':
+        state.recording?'Идёт запись':'';
+      if(phase.textContent!==label)phase.textContent=label;
+    }
     const duration=state.recording?Math.floor((Date.now()-state.recording.started)/1000):0;
-    if(state.recording && $('telegramThreadVoiceTimer')){
-      $('telegramThreadVoiceTimer').textContent='● '+String(Math.floor(duration/60)).padStart(2,'0')+
-        ':'+String(duration%60).padStart(2,'0')+' · Нажми ■, чтобы закончить';
+    const timer=$('telegramThreadVoiceTimer');
+    if(timer){
+      const label=state.recording
+        ?String(Math.floor(duration/60)).padStart(2,'0')+':'+
+          String(duration%60).padStart(2,'0')+' / 00:45 · нажми ■ для прослушивания'
+        :state.voiceStarting?'Ожидаю разрешение…':'';
+      if(timer.textContent!==label)timer.textContent=label;
     }
     const draft=state.voiceDraft;
     if(draft && $('telegramThreadVoiceLabel')){
@@ -635,12 +654,14 @@
       try{state.recording.recorder.stop()}catch{}
       return;
     }
-    if(!canSendInThread(state.thread)||state.sendInFlight)return;
+    if(state.voiceStarting||!canSendInThread(state.thread)||state.sendInFlight)return;
     if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
       toast('Запись голоса недоступна в этом браузере Telegram');return;
     }
     const origin=String(state.thread.id),signed=String(tg?.initData||'');
     const generation=++state.voicePermissionGeneration;
+    state.voiceStarting=true;
+    renderSendComposer();
     let stream,effect;
     try {
       stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
@@ -694,11 +715,19 @@
     }catch(error){
       stream?.getTracks().forEach(track=>track.stop());
       effect?.close();
-      toast(error.message||'Микрофон недоступен');
+      if(generation===state.voicePermissionGeneration)
+        toast(error.message||'Микрофон недоступен');
+    }finally{
+      // A delayed permission response cannot clear a newer owner's request.
+      if(generation===state.voicePermissionGeneration){
+        state.voiceStarting=false;
+        renderSendComposer();
+      }
     }
   }
   function cancelVoiceCapture(){
     state.voicePermissionGeneration++;
+    state.voiceStarting=false;
     if(state.recording){
       state.recording.cancelled=true;
       clearTimeout(state.recording.timer);clearInterval(state.recording.tick);
