@@ -770,3 +770,20 @@ html:is([data-veto-theme="slate"]){--vgx-row:rgba(35,53,74,.88)}
     scroll-behavior:auto!important;
   }
 }
+
+
+/* Tool discovery stays explicit on touchscreens. */
+.screen[data-screen="home"] .vgx-tools-heading{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin:19px 2px 9px;
+}
+.screen[data-screen="home"] .vgx-tools-heading strong{
+  font-size:12px;font-weight:850;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--vgx-ink);
+}
+.screen[data-screen="home"] .vgx-tools-heading span{
+  color:var(--vgx-quiet);font-size:11px;line-height:1.45;text-align:right;
+}
+@media(min-width:701px){
+  .screen[data-screen="home"] .vgx-tools-heading span{display:none}
+}
