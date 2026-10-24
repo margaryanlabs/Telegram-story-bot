@@ -112,3 +112,16 @@ test('integration stays within app navigation and has an accessible search modal
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.doesNotMatch(source,/localStorage|sessionStorage|fetch\(|XMLHttpRequest/);
 });
+
+
+test('all declarative navigation buttons point to real screens, including Story Engine and Vault',()=>{
+  const actualScreens=[...html.matchAll(/<section[^>]+data-screen="([^"]+)"/g)].map(x=>x[1]);
+  assert.equal(new Set(actualScreens).size,actualScreens.length);
+  const allButtons=[...html.matchAll(/data-open-screen="([^"]+)"/g)].map(x=>x[1]);
+  const missing=allButtons.filter(x=>!actualScreens.includes(x));
+  assert.deepEqual(missing,[]);
+  assert.ok(actualScreens.includes('publish'));
+  assert.ok(actualScreens.includes('privacy'));
+  assert.ok(actualScreens.includes('studio'));
+  assert.doesNotMatch(html,/data-open-screen="(?:stories|ghost|creator)"/);
+});
