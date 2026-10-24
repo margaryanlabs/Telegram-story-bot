@@ -16,6 +16,14 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     const box=$('vtaiNotice');box.textContent=String(message||'');box.hidden=false;
     box.dataset.error=error?'true':'false';
   }
+  // A response must never write into another signed Telegram owner's UI.
+  // This guard is intentionally pure: stale finally/catch blocks must not
+  // reset the current owner's loading flags or surface old-account errors.
+  const ownerRequestScope=()=>({identity:state.identity,ownerId:owner()});
+  const isOwnerRequestCurrent=scope=>Boolean(scope&&scope.identity&&
+    state.identity===scope.identity&&signed()===scope.identity&&
+    owner()===scope.ownerId);
+
   function safeIdentity(){
     const id=owner(),init=signed();
     if(!/^\d{1,20}$/.test(id)||!init){
@@ -151,11 +159,12 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     if(state.tasks.length&&!window.confirm(
       'Заменить задачи в текущем окне облачной версией? Несохранённые местные изменения будут потеряны.'))return;
     if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     state.taskCloudBusy=true;
     $('vtaiTasksCloudLoad').disabled=true;
     try{
       const result=await request('/api/vetogram-tasks',{action:'load'});
-      if(!safeIdentity())return;
+      if(!isOwnerRequestCurrent(scope))return;
       const fromCloud=(Array.isArray(result.tasks)?result.tasks:[])
         .map(task=>({...task,owner:owner()}));
       if(!Number.isSafeInteger(result.revision)||result.revision<0)
@@ -166,8 +175,11 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       state.taskFilter='open';renderTasks();
       taskCloudStatus('Облачные задачи загружены. Версия '+result.revision+
         '. Дальнейшие правки требуют ручного сохранения.');
-    }catch(error){taskCloudStatus('Облачные задачи не загружены: '+error.message,true);}
-    finally{state.taskCloudBusy=false;$('vtaiTasksCloudLoad').disabled=false;}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      taskCloudStatus('Облачные задачи не загружены: '+error.message,true);}
+    finally{if(isOwnerRequestCurrent(scope)){
+      state.taskCloudBusy=false;$('vtaiTasksCloudLoad').disabled=false;
+    }}
   }
   async function saveTasksCloud(){
     if(state.taskCloudBusy||state.busy||!safeIdentity())return;
@@ -176,6 +188,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     if(!window.confirm('Зашифровать и вручную сохранить '+state.tasks.length+
       ' задач на сервере VETOGRAM? Это серверное шифрование, НЕ E2EE.'))return;
     if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     state.taskCloudBusy=true;
     $('vtaiTasksCloudSave').disabled=true;$('vtaiTasksCloudErase').disabled=true;
     try{
@@ -183,15 +196,18 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       const result=await request('/api/vetogram-tasks',{
         action:'save',revision:state.taskCloudRevision,tasks
       },'tasks');
-      if(!safeIdentity())return;
+      if(!isOwnerRequestCurrent(scope))return;
       if(!Number.isSafeInteger(result.revision))throw Error('Сохранение не подтверждено сервером');
       state.taskCloudRevision=result.revision;
       taskCloudStatus('Сервер подтвердил зашифрованную копию задач. Версия '+result.revision+
         '. Изменения после этого нужно сохранять вручную.');
-    }catch(error){taskCloudStatus('Облачное сохранение не выполнено: '+error.message+
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      taskCloudStatus('Облачное сохранение не выполнено: '+error.message+
       ' Локальные изменения остаются в текущем окне; сначала проверь напоминания.',true);}
-    finally{state.taskCloudBusy=false;$('vtaiTasksCloudSave').disabled=false;
-      $('vtaiTasksCloudErase').disabled=false;}
+    finally{if(isOwnerRequestCurrent(scope)){
+      state.taskCloudBusy=false;$('vtaiTasksCloudSave').disabled=false;
+      $('vtaiTasksCloudErase').disabled=false;
+    }}
   }
   async function eraseTasksCloud(){
     if(state.taskCloudBusy||state.busy||!safeIdentity())return;
@@ -199,6 +215,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       return taskCloudStatus('Загрузи существующую облачную копию для удаления.',true);
     if(!window.confirm('Удалить серверный зашифрованный снимок задач? Останется только техническая версия записи. Локальные задачи в окне останутся. Резервные копии могут сохраняться согласно политике хостинга.'))return;
     if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     state.taskCloudBusy=true;
     $('vtaiTasksCloudErase').disabled=true;$('vtaiTasksCloudSave').disabled=true;
     try{
@@ -207,14 +224,17 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
       },'tasks');
       if(result.deleted!==true||!Number.isSafeInteger(result.revision))
         throw Error('Удаление не подтверждено сервером');
-      if(!safeIdentity())return;
+      if(!isOwnerRequestCurrent(scope))return;
       state.taskCloudRevision=result.revision;
       taskCloudStatus('Зашифрованное содержимое удалено из активной таблицы. Версия '+
         result.revision+'. Локальные задачи сохранены в окне.');
-    }catch(error){taskCloudStatus('Удаление не подтверждено: '+error.message+
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      taskCloudStatus('Удаление не подтверждено: '+error.message+
       ' Обнови серверную копию перед новой попыткой; локальные задачи не удалены.',true);}
-    finally{state.taskCloudBusy=false;$('vtaiTasksCloudErase').disabled=false;
-      $('vtaiTasksCloudSave').disabled=false;}
+    finally{if(isOwnerRequestCurrent(scope)){
+      state.taskCloudBusy=false;$('vtaiTasksCloudErase').disabled=false;
+      $('vtaiTasksCloudSave').disabled=false;
+    }}
   }
 
   function renderReminders(){
@@ -250,16 +270,19 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   }
   async function loadReminders(){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy)return;
+    const scope=ownerRequestScope();
     state.reminderBusy=true;$('vtaiReminderRefresh').disabled=true;
     try{
       const result=await request('/api/vetogram-reminders',{action:'list'});
-      if(!safeIdentity())return;
+      if(!isOwnerRequestCurrent(scope))return;
       state.reminders=Array.isArray(result.reminders)?result.reminders:[];
       state.reminderSchedulingConfigured=result.schedulingConfigured===true;
       renderReminders();renderTasks();
-    }catch(error){
+    }catch(error){if(isOwnerRequestCurrent(scope)){
       $('vtaiReminderStatus').textContent='Не удалось загрузить уведомления: '+error.message;
-    }finally{state.reminderBusy=false;$('vtaiReminderRefresh').disabled=false}
+    }}finally{if(isOwnerRequestCurrent(scope)){
+      state.reminderBusy=false;$('vtaiReminderRefresh').disabled=false;
+    }}
   }
   async function scheduleReminder(task,leadMinutes){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
@@ -278,52 +301,64 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     if(!window.confirm('Создать одноразовое Telegram-напоминание лично тебе на '+
       new Date(reminderEpoch).toLocaleString('ru-RU')+' ('+timeZone+')? Бот должен быть запущен тобой заранее. В уведомлении не будет текста задачи, доставка не гарантирована.'))return;
     if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     state.reminderBusy=true;
     try{
       await request('/api/vetogram-reminders',{action:'schedule',taskId:task.id,dueAt:task.dueAt,
         remindAt:new Date(reminderEpoch).toISOString(),timeZone},'reminder');
+      if(!isOwnerRequestCurrent(scope))return;
       notice('Запрос на создание напоминания принят сервером. Оно не отправляется сейчас.');
       await request('/api/vetogram-reminders',{action:'list'}).then(result=>{
-        if(safeIdentity()){state.reminders=result.reminders||[];
+        if(isOwnerRequestCurrent(scope)){state.reminders=result.reminders||[];
           state.reminderSchedulingConfigured=result.schedulingConfigured===true;renderReminders();renderTasks();}
       });
-    }catch(error){notice('Не удалось создать напоминание: '+error.message,true);}
-    finally{state.reminderBusy=false}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      notice('Не удалось создать напоминание: '+error.message,true);}
+    finally{if(isOwnerRequestCurrent(scope))state.reminderBusy=false}
   }
   async function cancelAllReminders(){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
     if(!window.confirm('Отменить ВСЕ ещё ожидающие напоминания для этого Telegram-аккаунта? Если отправка уже началась, её отменить нельзя. Это не выключает возможность создавать новые напоминания.'))return;
     if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     state.reminderBusy=true;$('vtaiReminderCancelAll').disabled=true;
     try{
       const result=await request('/api/vetogram-reminders',{action:'cancel_all'},'reminder');
+      if(!isOwnerRequestCurrent(scope))return;
       if(!Number.isSafeInteger(result.canceledCount)||result.canceledCount<0)
         throw Error('Отмена не подтверждена сервером');
       const current=await request('/api/vetogram-reminders',{action:'list'});
-      if(!safeIdentity())return;
+      if(!isOwnerRequestCurrent(scope))return;
       state.reminders=Array.isArray(current.reminders)?current.reminders:[];
       state.reminderSchedulingConfigured=current.schedulingConfigured===true;
       renderReminders();renderTasks();
       notice('Отменено ожидающих: '+result.canceledCount+
         '. Уже начатые отправки могли продолжиться.');
-    }catch(error){notice('Не удалось отменить все напоминания: '+error.message,true)}
-    finally{state.reminderBusy=false;$('vtaiReminderCancelAll').disabled=false}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      notice('Не удалось отменить все напоминания: '+error.message,true)}
+    finally{if(isOwnerRequestCurrent(scope)){
+      state.reminderBusy=false;$('vtaiReminderCancelAll').disabled=false;
+    }}
   }
   async function cancelReminder(taskId){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
     if(!window.confirm('Отменить это напоминание? Если Telegram-отправка уже началась, остановить её может быть невозможно.'))return;
     if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     state.reminderBusy=true;
     try{
       const result=await request('/api/vetogram-reminders',{action:'cancel',taskId},'reminder');
+      if(!isOwnerRequestCurrent(scope))return;
       if(result.canceled!==true)throw Error('Отмена не подтверждена сервером');
       const list=await request('/api/vetogram-reminders',{action:'list'});
-      if(safeIdentity()){state.reminders=list.reminders||[];
+      if(!isOwnerRequestCurrent(scope))return;
+      if(isOwnerRequestCurrent(scope)){state.reminders=list.reminders||[];
         state.reminderSchedulingConfigured=list.schedulingConfigured===true;
         renderReminders();renderTasks();}
       notice('Напоминание отменено до обработки.');
-    }catch(error){notice('Не удалось отменить: '+error.message,true);}
-    finally{state.reminderBusy=false}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      notice('Не удалось отменить: '+error.message,true);}
+    finally{if(isOwnerRequestCurrent(scope))state.reminderBusy=false}
   }
 
   function taskReminderEditAllowed(taskId){
