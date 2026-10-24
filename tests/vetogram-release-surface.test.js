@@ -72,3 +72,17 @@ test('UI navigation aliases retain Creator separately from Story Engine',()=>{
   assert.match(html,/data-vg26-destination="creator"/);
   assert.match(nav,/studio\|creator\|story-engine/);
 });
+
+test('all connection, security, and onboarding sheet buttons have a handler',()=>{
+  const app=read('public/app.js');
+  const sheetActions=new Set([...app.matchAll(/data-sheet-action=['"]([^'"]+)['"]/g)]
+    .map(match=>match[1]));
+  const handled=new Set([...app.matchAll(/(?:action|sheetAction)\s*===\s*['"]([^'"]+)['"]/g)]
+    .map(match=>match[1]));
+  assert.ok(sheetActions.size>=30,'Unexpectedly small onboarding action list');
+  const missing=[...sheetActions].filter(action=>!handled.has(action));
+  assert.deepEqual(missing,[],'Visible sheet buttons with no click handler');
+  for(const critical of ['viewer-send-code','viewer-verify-code','viewer-start-qr',
+    'viewer-verify-password','viewer-cancel-login','security-revoke-session'])
+    assert.ok(sheetActions.has(critical),'Critical owner action is no longer reachable: '+critical);
+});
