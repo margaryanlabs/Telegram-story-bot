@@ -1,0 +1,246 @@
+/* VETOGRAM 3.0 / Experience refinement.
+ * Loaded LAST. Scoped presentation-only styles: never hide native Telegram
+ * controls, invent a connected state or modify business/auth semantics.
+ */
+html{
+  --vgx-ink:#f7f8fc;
+  --vgx-quiet:#aab7cc;
+  --vgx-panel:linear-gradient(155deg,#131f34,#101a2d 76%,#17192d);
+  --vgx-hairline:rgba(178,197,229,.145);
+  --vgx-shadow:0 14px 38px rgba(0,5,19,.22);
+  --vgx-hot:#ff907e;
+  --vgx-focus:#ffb09c;
+  --vgx-radius:22px;
+}
+html[data-veto-theme="pearl"],html[data-veto-theme="linen"]{
+  --vgx-ink:#19283e;
+  --vgx-quiet:#62748c;
+  --vgx-panel:linear-gradient(155deg,#fff,#f5f7fb);
+  --vgx-hairline:rgba(39,69,108,.15);
+  --vgx-shadow:0 12px 30px rgba(25,39,70,.09);
+  --vgx-hot:#bb4e62;
+  --vgx-focus:#ad445d;
+}
+html[data-veto-theme="slate"]{
+  --vgx-panel:linear-gradient(155deg,#233449,#1c2b3e);
+}
+:where(.screen[data-screen="telegram"],.screen[data-screen="privacy"],
+ .screen[data-screen="ai"],.screen[data-screen="story-engine"],
+ .screen[data-screen="publish"],.screen[data-screen="studio"]){
+  min-width:0;scroll-margin-top:14px;
+}
+:where(.screen[data-screen="telegram"],.screen[data-screen="privacy"],
+ .screen[data-screen="ai"],.screen[data-screen="story-engine"],
+ .screen[data-screen="publish"],.screen[data-screen="studio"]) :is(button,a,input,textarea,select):focus-visible{
+  outline:2px solid var(--vgx-focus);outline-offset:3px;
+}
+/* Primary navigation should be calm and familiar, never a floating wall. */
+.bottom-nav .nav-item{position:relative}
+.bottom-nav .nav-item.active:after{
+  content:"";position:absolute;top:5px;left:calc(50% - 8px);
+  width:16px;height:2px;border-radius:99px;background:#fff8;pointer-events:none
+}
+:where(.topbar,.bottom-nav,.vg26-command-dialog){-webkit-font-smoothing:antialiased}
+/* Premium chat geometry: comfortable density without oversized cards. */
+#telegramMirror .veto-mirror-chat-list{display:grid;gap:3px}
+#telegramMirror .veto-mirror-chat{
+  min-height:68px!important;margin-inline:0!important;
+  border:1px solid transparent!important;
+  border-radius:16px!important;
+  box-shadow:none!important;
+  transition:background .14s ease,border-color .14s ease,transform .14s ease;
+}
+#telegramMirror .veto-mirror-chat:is(:hover,:focus-visible){
+  border-color:var(--vgx-hairline)!important;
+  background:color-mix(in srgb,var(--ct-elev,var(--vg26-surface-2)) 76%,transparent)!important;
+}
+#telegramMirror .veto-mirror-chat:active{transform:scale(.997)}
+#telegramMirror .veto-mirror-chat-title strong{font-weight:790;letter-spacing:-.025em}
+#telegramMirror .veto-mirror-chat-main>small{line-height:1.4}
+#telegramMirror .veto-mirror-search-wrap{
+  min-height:50px;border-radius:15px!important;
+  border:1px solid var(--vgx-hairline)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)
+}
+#telegramMirror .veto-mirror-search-wrap:focus-within{
+  border-color:color-mix(in srgb,var(--vgx-hot) 63%,var(--vgx-hairline))!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--vgx-hot) 10%,transparent)!important;
+}
+#telegramMirror .veto-mirror-thread-bar{
+  border-bottom:1px solid var(--vgx-hairline);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)
+}
+#telegramMirror .veto-mirror-compose-field{
+  border-radius:16px!important;min-height:47px
+}
+#telegramMirror .veto-mirror-send-button{min-width:44px;min-height:44px}
+#telegramMirror .veto-mirror-thread-bottom{
+  padding-bottom:max(12px,env(safe-area-inset-bottom,0px))
+}
+/* Consistent low-noise surfaces across working screens. */
+.screen[data-screen="privacy"] :is(.veto-business-journey,.veto-mirror-access-center,
+ .privacy-inbox-card,.smart-brief-card,.ghost-command-card),
+.screen[data-screen="viewers"] :is(.quick-start-card,.viewer-analytics-card,
+ .intelligence-brief-card,.live-timeline-card),
+.screen[data-screen="publish"] :is(.composer-card,.audience-block,.privacy-block),
+.screen[data-screen="studio"] :is(.studio-panel,.studio-workspace),
+.screen[data-screen="ai"] .vtai-panel{
+  border-radius:var(--vgx-radius)!important;
+  box-shadow:var(--vgx-shadow)
+}
+.screen[data-screen="ai"] .vtai-panel{
+  background:var(--vgx-panel)!important;
+  border-color:var(--vgx-hairline)!important;
+}
+.screen[data-screen="ai"] .vtai-hero{
+  border-radius:28px!important;
+  background:radial-gradient(ellipse at 90% 0%,rgba(255,125,137,.2),transparent 48%),
+  linear-gradient(125deg,#10203a,#151e32 60%,#241b32)!important;
+}
+.screen[data-screen="ai"] .vtai-modes{
+  display:flex;flex-wrap:nowrap;overflow:auto;gap:7px;
+  scroll-snap-type:x proximity;scrollbar-width:none;padding:2px 1px 10px
+}
+.screen[data-screen="ai"] .vtai-modes::-webkit-scrollbar{display:none}
+.screen[data-screen="ai"] .vtai-modes button{
+  flex:0 0 auto;white-space:nowrap;scroll-snap-align:start;
+  border-radius:999px!important;font-weight:750;font-size:12px;
+  min-height:44px;box-shadow:none
+}
+.screen[data-screen="ai"] .vtai-modes button.active{
+  background:linear-gradient(125deg,#ff907f,#ed7188)!important;
+  color:#231b29!important;border-color:transparent!important
+}
+.screen[data-screen="ai"] .vtai-input{
+  min-height:47px;border-radius:14px;
+  background:color-mix(in srgb,var(--vg26-surface) 84%,transparent);
+  border-color:var(--vgx-hairline);font-size:16px
+}
+.screen[data-screen="ai"] .vtai-action{
+  min-height:44px;border-radius:13px;font-weight:720
+}
+.screen[data-screen="ai"] .vtai-action.vtai-primary{
+  box-shadow:0 12px 28px rgba(224,75,106,.20);
+  min-height:48px;background:linear-gradient(124deg,#fa907f,#ed6d85)!important;
+  color:#221927!important;border-color:transparent!important
+}
+/* Creative Deck: strong product-level visual language, not a developer panel. */
+.vg26-creative-deck{
+  position:relative;display:grid;gap:14px;padding:clamp(17px,2.7vw,23px);
+  border:1px solid var(--vgx-hairline);border-radius:24px;
+  color:var(--vgx-ink);background:
+    radial-gradient(circle at 99% -20%,rgba(255,121,129,.16),transparent 45%),
+    var(--vgx-panel);
+  box-shadow:var(--vgx-shadow);overflow:hidden;isolation:isolate;
+}
+.vg26-creative-deck[hidden]{display:none!important}
+.vg26-creative-deck:before{
+  content:"";pointer-events:none;position:absolute;
+  top:-88px;right:-44px;width:172px;height:172px;border:1px solid var(--vgx-hairline);
+  border-radius:50%;box-shadow:0 0 0 25px rgba(255,157,150,.018);
+}
+.vg26-creative-head{
+  display:flex;justify-content:space-between;gap:15px;align-items:flex-start;
+  position:relative;z-index:1
+}
+.vg26-creative-kicker{
+  font-size:10px;font-weight:850;letter-spacing:.14em;color:var(--vgx-hot)
+}
+.vg26-creative-head h2{
+  color:var(--vgx-ink);font-size:clamp(20px,3vw,25px);
+  line-height:1.1;letter-spacing:-.045em;margin:7px 0 6px;font-weight:850
+}
+.vg26-creative-head p{
+  color:var(--vgx-quiet);font-size:12px;line-height:1.5;margin:0;
+  max-width:590px
+}
+.vg26-creative-no-send{
+  position:relative;z-index:1;flex:none;max-width:126px;
+  border:1px solid var(--vgx-hairline);padding:7px 10px;border-radius:999px;
+  color:var(--vgx-quiet);font-weight:700;font-size:10px;text-align:center
+}
+.vg26-creative-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.vg26-creative-card{
+  display:flex;flex-direction:column;align-items:flex-start;gap:11px;
+  position:relative;min-width:0;min-height:126px;text-align:left;
+  padding:13px 12px 14px;border:1px solid var(--vgx-hairline);border-radius:17px;
+  background:color-mix(in srgb,var(--vg26-surface-2) 85%,transparent);
+  color:var(--vgx-ink);font:inherit;cursor:pointer;
+  transition:transform .16s,border-color .16s,background .16s,box-shadow .16s
+}
+.vg26-creative-card:hover{
+  border-color:color-mix(in srgb,var(--vgx-hot) 64%,transparent);
+  background:color-mix(in srgb,var(--vgx-hot) 9%,var(--vg26-surface-2));
+  box-shadow:0 7px 21px rgba(0,4,17,.09)
+}
+.vg26-creative-card:active{transform:scale(.98)}
+.vg26-creative-symbol{
+  display:grid;place-items:center;width:37px;height:37px;border-radius:12px;
+  font-size:23px;color:var(--vgx-hot);
+  background:color-mix(in srgb,var(--vgx-hot) 12%,var(--vg26-surface-2))
+}
+.vg26-creative-copy{display:grid;gap:4px;padding-right:4px;min-width:0}
+.vg26-creative-copy strong{font-size:13px;line-height:1.22;letter-spacing:-.02em;font-weight:800}
+.vg26-creative-copy small{font-size:11px;color:var(--vgx-quiet);line-height:1.4}
+.vg26-creative-arrow{position:absolute;right:12px;top:13px;color:var(--vgx-quiet)}
+.vg26-creative-feedback{
+  color:var(--vgx-quiet);font-size:12px;line-height:1.55;min-height:0;margin:0
+}
+.vg26-creative-feedback:empty{display:none}
+.vg26-creative-card:focus-visible{outline:2px solid var(--vgx-hot);outline-offset:3px}
+/* Story editor should feel like a creation suite, not a diagnostics page. */
+.se-engine .se-masthead{border-radius:27px}
+.se-engine .se-canvas-frame{box-shadow:0 20px 54px rgba(0,3,15,.34);overflow:hidden}
+.se-engine .se-templates{gap:11px}
+.se-engine .se-template{
+  border-radius:16px;transition:transform .18s,border-color .18s,box-shadow .18s
+}
+.se-engine .se-template:hover{
+  transform:translateY(-2px);box-shadow:0 12px 26px rgba(4,6,16,.14)
+}
+.se-engine .se-button{min-height:45px}
+.se-engine #seUndoAiText:not([hidden]){
+  background:color-mix(in srgb,var(--vgx-hot) 12%,transparent);
+  border-color:color-mix(in srgb,var(--vgx-hot) 34%,transparent)
+}
+/* Light palettes must not produce dark surfaces with dark text. */
+html[data-veto-theme="pearl"] .screen[data-screen="ai"] .vtai-panel,
+html[data-veto-theme="linen"] .screen[data-screen="ai"] .vtai-panel{
+  background:var(--vgx-panel)!important;color:var(--vgx-ink)
+}
+html[data-veto-theme="pearl"] .screen[data-screen="ai"] .vtai-panel h2,
+html[data-veto-theme="linen"] .screen[data-screen="ai"] .vtai-panel h2{
+  color:var(--vgx-ink)
+}
+html[data-veto-theme="pearl"] .screen[data-screen="ai"] .vtai-input,
+html[data-veto-theme="linen"] .screen[data-screen="ai"] .vtai-input{
+  background:#fff;color:#1e2c40;border-color:var(--vgx-hairline)
+}
+html[data-veto-theme="pearl"] .screen[data-screen="ai"] .vtai-hero,
+html[data-veto-theme="linen"] .screen[data-screen="ai"] .vtai-hero{
+  color:#fff
+}
+/* Phones: swipeable controls, generous text, no horizontal scroll. */
+@media(max-width:740px){
+  .vg26-creative-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .vg26-creative-card{min-height:111px;gap:7px}
+  .vg26-creative-head{gap:10px}
+  .vg26-creative-no-send{font-size:9px}
+  .screen[data-screen="ai"] .vtai-modes{margin-bottom:12px}
+}
+@media(max-width:390px){
+  .vg26-creative-deck{padding:15px 13px;border-radius:20px}
+  .vg26-creative-head{flex-direction:column;gap:8px}
+  .vg26-creative-head h2{font-size:23px}
+  .vg26-creative-no-send{position:absolute;right:0;top:0;max-width:91px}
+  .vg26-creative-kicker{max-width:calc(100% - 95px)}
+  .vg26-creative-options{gap:7px}
+  .vg26-creative-card{padding:12px 10px;min-height:116px;border-radius:14px}
+  .vg26-creative-copy strong{font-size:12px}
+  .vg26-creative-copy small{font-size:10px}
+  #telegramMirror .veto-mirror-chat{min-height:64px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .vg26-creative-card,.se-engine .se-template,
+  #telegramMirror .veto-mirror-chat{transition:none!important;transform:none!important}
+}
