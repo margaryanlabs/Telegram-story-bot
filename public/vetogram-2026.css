@@ -1,0 +1,226 @@
+/* VETOGRAM 3.0 · 2026 premium experience.
+   Layered after legacy styles; presentation only. No business logic,
+   user data, auth, permissions or browser storage. */
+html{
+  --vg26-bg:#080e1b;--vg26-surface:#111b2d;--vg26-surface-2:#162238;
+  --vg26-stroke:rgba(157,179,218,.14);--vg26-ink:#f7f9ff;
+  --vg26-muted:#aebbd0;--vg26-coral:#fa7880;--vg26-shine:#ffb09d;
+  --vg26-shadow:0 18px 55px rgba(1,7,25,.26);
+}
+html[data-veto-theme="pearl"],html[data-veto-theme="linen"]{
+  --vg26-bg:#f4f6fa;--vg26-surface:#fff;--vg26-surface-2:#f0f3f8;
+  --vg26-stroke:rgba(42,66,104,.15);--vg26-ink:#1a283d;
+  --vg26-muted:#65728a;--vg26-coral:#ca5264;--vg26-shine:#db6c5e;
+  --vg26-shadow:0 12px 32px rgba(25,43,76,.09);
+}
+html[data-veto-theme="slate"]{--vg26-bg:#172332;--vg26-surface:#1d2b3a;--vg26-surface-2:#26384a}
+body{font-feature-settings:"ss01" on;-webkit-tap-highlight-color:transparent}
+:where(.topbar,.bottom-nav,.veto-command-home,.veto-mirror,.vg26-command-dialog){font-synthesis:none}
+.app-shell{min-width:0}
+.topbar{position:relative;z-index:35;gap:9px;max-width:1120px;margin-inline:auto;padding:4px 2px 0}
+.topbar .brand{flex:1 1 auto;min-width:0}
+.topbar .brand-copy strong{font-size:clamp(15px,2vw,18px);font-weight:850;letter-spacing:-.035em}
+.topbar .brand-copy span{font-size:10px;letter-spacing:0;line-height:1.3;opacity:.73;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .brand-mark{width:40px;height:40px;border-radius:13px;box-shadow:0 8px 20px rgba(15,28,46,.13)}
+.topbar .profile-button,.topbar #vetoGlobalThemeToggle{min-width:42px;min-height:42px;flex:none}
+.vg26-command-trigger{display:flex;align-items:center;justify-content:center;gap:8px;
+  min-width:44px;height:42px;flex:0 1 auto;padding:0 13px;
+  border-radius:13px;border:1px solid var(--vg26-stroke);
+  background:var(--vg26-surface);color:var(--vg26-ink);
+  box-shadow:inset 0 1px rgba(255,255,255,.045);font:inherit;cursor:pointer}
+.vg26-command-trigger>span:first-child{font-size:24px;line-height:1;color:var(--vg26-coral)}
+.vg26-command-trigger-label{font-size:12px;font-weight:730;white-space:nowrap}
+.vg26-command-trigger kbd{font-size:10px;padding:3px 5px;border-radius:5px;
+  background:var(--vg26-surface-2);color:var(--vg26-muted);white-space:nowrap}
+.vg26-command-trigger:hover{border-color:var(--vg26-coral)}
+.vg26-command-trigger:focus-visible,.vg26-command-dialog button:focus-visible,
+.vg26-inbox-shortcuts button:focus-visible{outline:2px solid var(--vg26-coral);outline-offset:3px}
+/* Bottom navigation: measured, predictable, room for the active task */
+.bottom-nav{width:min(calc(100% - 22px),584px)!important;
+  min-height:68px;height:auto!important;padding:6px 7px!important;
+  border-radius:23px!important;border:1px solid var(--vg26-stroke)!important;
+  background:color-mix(in srgb,var(--vg26-surface) 95%,transparent)!important;
+  box-shadow:0 14px 48px rgba(1,8,27,.32)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(128%);
+  backdrop-filter:blur(22px) saturate(128%)}
+.bottom-nav .nav-item{min-width:0;min-height:54px;border-radius:17px;
+  gap:4px;color:var(--vg26-muted);transition:background .15s,color .15s}
+.bottom-nav .nav-item svg,.bottom-nav .nav-item img{width:22px;height:22px;flex:none}
+.bottom-nav .nav-item small{font-size:10px!important;font-weight:760;letter-spacing:.01em}
+.bottom-nav .nav-item.active{
+  background:linear-gradient(145deg,#f78b83,#f36f89)!important;
+  color:#261827!important;box-shadow:0 5px 18px rgba(240,91,111,.22)!important}
+.bottom-nav .nav-item.active small{color:inherit}
+.action-dock{bottom:calc(89px + env(safe-area-inset-bottom,0px))}
+/* An understandable command home: strong action then compact capabilities. */
+.screen[data-screen="home"] .veto-command-home{
+  position:relative;overflow:hidden;gap:17px;padding:clamp(20px,3.6vw,37px)!important;
+  border-radius:29px!important;border:1px solid rgba(175,194,227,.19)!important;
+  background:
+    radial-gradient(ellipse at 85% -10%,rgba(249,121,126,.21),transparent 42%),
+    radial-gradient(ellipse at -15% 110%,rgba(79,107,183,.24),transparent 45%),
+    linear-gradient(134deg,#101c32 1%,#151c35 54%,#211d34 100%)!important;
+  box-shadow:var(--vg26-shadow)!important;isolation:isolate}
+.screen[data-screen="home"] .veto-command-home:before{
+  width:270px;height:270px;right:-125px;top:-145px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 0 0 34px rgba(255,255,255,.018),0 0 0 74px rgba(255,255,255,.014)}
+.screen[data-screen="home"] .veto-command-home-top{display:flex;flex-wrap:wrap;align-items:center;gap:9px;
+  font-size:10px;color:#d5d9e8;letter-spacing:.12em;text-transform:uppercase}
+.screen[data-screen="home"] .veto-command-home-top strong{
+  padding:5px 9px;color:#ffb6ad;background:rgba(245,108,129,.105);
+  border:1px solid rgba(255,154,161,.24);border-radius:999px;
+  font-size:10px;letter-spacing:0;text-transform:none}
+.screen[data-screen="home"] .veto-command-home h1{
+  max-width:680px;font-size:clamp(35px,7vw,65px)!important;line-height:1.02!important;
+  letter-spacing:-.065em!important;color:#fafaff!important;
+  font-weight:850!important;margin:0}
+.screen[data-screen="home"] .veto-command-home h1 em{color:#ff928b!important}
+.screen[data-screen="home"] .veto-command-home>p{
+  max-width:560px;font-size:clamp(13px,2.1vw,16px);line-height:1.6;
+  color:#c9d3e5!important;margin:0}
+.screen[data-screen="home"] .veto-command-home-actions{gap:10px;display:flex;flex-wrap:wrap}
+.screen[data-screen="home"] .veto-command-home-actions>button{
+  border-radius:16px!important;min-height:58px;min-width:0;font-size:14px;
+  padding:12px 17px;box-shadow:none}
+.screen[data-screen="home"] .veto-command-home-primary{
+  flex:1 1 220px;background:linear-gradient(126deg,#ff9a89,#fa7181)!important;
+  border-color:rgba(255,180,161,.6)!important;color:#211a29!important}
+.screen[data-screen="home"] .veto-command-home-connect{
+  flex:1 1 220px;background:rgba(255,255,255,.075)!important;color:#f3f7ff!important;
+  border:1px solid rgba(208,225,255,.19)!important}
+.screen[data-screen="home"] .veto-command-home-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.screen[data-screen="home"] .veto-command-home-grid button{
+  display:grid;grid-template-columns:38px 1fr;column-gap:10px;row-gap:3px;
+  min-height:88px;border-radius:17px!important;padding:13px!important;
+  background:rgba(16,28,50,.55)!important;
+  border:1px solid rgba(175,194,225,.14)!important;color:#f3f6ff!important}
+.screen[data-screen="home"] .veto-command-home-grid button>span{
+  display:grid;place-items:center;width:36px;height:36px;border-radius:11px;
+  background:rgba(250,113,130,.12);color:#ff9a9f;font-size:22px;grid-row:span 2}
+.screen[data-screen="home"] .veto-command-home-grid button>strong{
+  font-size:13px;font-weight:800;line-height:1.22;overflow-wrap:anywhere}
+.screen[data-screen="home"] .veto-command-home-grid button>small{
+  font-size:11px;line-height:1.35;color:#b9c7db!important;overflow-wrap:anywhere}
+.screen[data-screen="home"] .veto-command-home-grid button:hover,
+.screen[data-screen="home"] .veto-command-home-grid button:focus-visible{
+  border-color:rgba(255,161,155,.55)!important;background:rgba(25,39,68,.8)!important}
+.screen[data-screen="home"] .veto-command-advanced{margin-top:8px}
+.screen[data-screen="home"] .veto-command-advanced summary{
+  min-height:48px;font-weight:730;border-radius:15px}
+.screen[data-screen="home"] .veto-command-advanced summary:focus-visible{outline:2px solid #fa8d87;outline-offset:2px}
+/* Inbox becomes message-first: a compact header and useful one-tap actions. */
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .veto-mirror-heading.vetogram-header{
+  min-height:65px!important;padding:9px 11px!important;margin:0 0 10px!important;
+  border-radius:17px!important;box-shadow:0 9px 25px rgba(1,8,28,.17)!important}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is-expanded{
+  min-height:98px!important;padding:12px 13px!important}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header h1{
+  font-size:clamp(20px,5.4vw,25px)!important;line-height:1.13}
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .veto-inbox-tagline{
+  font-size:10px!important}
+#telegramMirror .veto-mirror-eyebrow{display:none!important}
+#telegramMirror .veto-mirror-list{padding:9px 11px 26px!important}
+.vg26-inbox-shortcuts{display:flex;gap:8px;align-items:center;overflow-x:auto;
+  scrollbar-width:none;margin:4px 0 13px;padding:2px 0 6px;
+  -webkit-overflow-scrolling:touch}
+.vg26-inbox-shortcuts::-webkit-scrollbar{display:none}
+.vg26-inbox-shortcuts button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  white-space:nowrap;flex:none;min-height:39px;padding:8px 13px;
+  background:var(--vg26-surface-2);border:1px solid var(--vg26-stroke);
+  color:var(--vg26-ink);border-radius:12px;font:inherit;font-size:12px;
+  font-weight:750;cursor:pointer}
+.vg26-inbox-shortcuts button span{color:var(--vg26-coral);font-size:17px}
+.vg26-inbox-shortcuts button:active{transform:scale(.98)}
+#telegramMirror :is(.veto-mirror-chat,.veto-mirror-chat-row,.veto-messenger-row){
+  border-radius:16px;transition:background .14s,border-color .14s}
+#telegramMirror :is(input[type=search],.veto-mirror-search input){font-size:16px}
+#telegramMirror .veto-mirror-list :is(button,summary):focus-visible{
+  outline:2px solid var(--vg26-coral);outline-offset:2px}
+/* Command palette: actual navigation, not a fictitious connected state. */
+.vg26-command-dialog{position:fixed;inset:0;z-index:2147482000;margin:auto;
+  width:min(94vw,540px);max-width:540px;max-height:min(88dvh,780px);
+  border:1px solid var(--vg26-stroke);border-radius:24px;
+  background:var(--vg26-surface);color:var(--vg26-ink);
+  box-shadow:0 35px 105px rgba(0,0,0,.58);
+  padding:0;overflow:hidden}
+.vg26-command-dialog:not([open]){display:none}
+.vg26-command-dialog::backdrop{background:rgba(1,7,19,.76);
+  -webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px)}
+.vg26-command-head{display:flex;gap:12px;align-items:center;padding:20px 20px 13px}
+.vg26-command-mark{display:grid;place-items:center;width:45px;height:45px;
+  border-radius:14px;background:var(--vg26-surface-2);flex:none}
+.vg26-command-mark img{width:39px;height:39px}
+.vg26-command-head>div{min-width:0;flex:1}
+.vg26-command-eyebrow{font-size:9px;letter-spacing:.15em;color:var(--vg26-coral);font-weight:800}
+.vg26-command-head h2{font-size:21px;letter-spacing:-.045em;font-weight:850;
+  color:var(--vg26-ink);margin:5px 0 0;line-height:1.15}
+.vg26-command-close{width:39px;height:39px;border-radius:12px;
+  color:var(--vg26-muted);font-size:26px;background:var(--vg26-surface-2);
+  border:1px solid var(--vg26-stroke);cursor:pointer}
+.vg26-command-search{display:flex;gap:12px;align-items:center;
+  margin:0 17px 12px;padding:0 15px;height:52px;border-radius:14px;
+  border:1px solid var(--vg26-stroke);background:var(--vg26-surface-2)}
+.vg26-command-search>span{color:var(--vg26-coral);font-size:25px}
+.vg26-command-search input{width:100%;min-width:0;border:0;outline:0;background:none;
+  color:var(--vg26-ink);font:inherit;font-size:16px}
+.vg26-command-search input::placeholder{color:var(--vg26-muted)}
+.vg26-command-results{display:grid;gap:5px;max-height:52dvh;overflow:auto;
+  padding:3px 14px 14px;overscroll-behavior:contain}
+.vg26-command-results button{display:flex;align-items:center;gap:13px;
+  min-height:60px;width:100%;padding:9px 12px;border:1px solid transparent;
+  border-radius:14px;background:transparent;color:var(--vg26-ink);
+  text-align:left;font:inherit;cursor:pointer}
+.vg26-command-results button[hidden]{display:none!important}
+.vg26-command-results button:hover,.vg26-command-results button:focus-visible{
+  background:var(--vg26-surface-2);border-color:var(--vg26-stroke)}
+.vg26-command-results button>span{display:grid;place-items:center;
+  width:39px;height:39px;flex:none;border-radius:13px;
+  background:color-mix(in srgb,var(--vg26-coral) 13%,var(--vg26-surface-2));
+  color:var(--vg26-coral);font-size:22px}
+.vg26-command-results button strong{display:grid;flex:1;min-width:0;
+  gap:3px;font-size:13px;font-weight:800}
+.vg26-command-results button strong small{font-size:11px;font-weight:450;color:var(--vg26-muted)}
+.vg26-command-results button em{font-style:normal;color:var(--vg26-muted);font-size:17px}
+.vg26-command-empty{padding:25px;text-align:center;color:var(--vg26-muted);font-size:13px}
+.vg26-command-foot{display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:12px 20px 15px;border-top:1px solid var(--vg26-stroke);
+  color:var(--vg26-muted);font-size:10px}
+.vg26-command-foot kbd{padding:5px 7px;border:1px solid var(--vg26-stroke);
+  border-radius:7px;color:var(--vg26-muted)}
+@media(min-width:900px){
+  .screen[data-screen="home"] .veto-command-home-grid button{min-height:97px}
+  .screen[data-screen="home"] .veto-command-home{gap:22px}
+}
+@media(max-width:700px){
+  .vg26-command-trigger{padding:0 11px}
+  .vg26-command-trigger-label,.vg26-command-trigger kbd{display:none}
+  .topbar .brand-copy span{display:none}
+  .screen[data-screen="home"] .veto-command-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:420px){
+  .topbar{gap:7px}
+  .topbar .brand-mark{width:36px;height:36px}
+  .topbar .brand-copy strong{font-size:15px}
+  .screen[data-screen="home"] .veto-command-home{padding:20px 16px!important;border-radius:22px!important;gap:15px}
+  .screen[data-screen="home"] .veto-command-home h1{font-size:37px!important}
+  .screen[data-screen="home"] .veto-command-home-top{font-size:9px;letter-spacing:.08em}
+  .screen[data-screen="home"] .veto-command-home-grid{gap:8px}
+  .screen[data-screen="home"] .veto-command-home-grid button{
+    min-height:91px;grid-template-columns:1fr;gap:5px;padding:11px!important}
+  .screen[data-screen="home"] .veto-command-home-grid button>span{
+    grid-row:auto;width:30px;height:30px;font-size:19px}
+  .screen[data-screen="home"] .veto-command-home-grid button>strong{font-size:12px}
+  .screen[data-screen="home"] .veto-command-home-grid button>small{font-size:10px}
+  .bottom-nav{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  .bottom-nav .nav-item small{font-size:9px!important}
+  .vg26-command-dialog{max-height:90dvh;width:calc(100% - 18px);border-radius:21px}
+  .vg26-command-head{padding:17px 15px 11px}
+  .vg26-command-results{max-height:56dvh}
+}
+@media(prefers-reduced-motion:reduce){
+  .bottom-nav .nav-item,.vg26-inbox-shortcuts button,
+  .vg26-command-results button{transition:none!important;animation:none!important;transform:none!important}
+}
