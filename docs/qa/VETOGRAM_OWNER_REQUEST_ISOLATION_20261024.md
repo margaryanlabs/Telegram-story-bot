@@ -70,3 +70,22 @@ A stale HTTP reply may reset the UI only if its original signed owner *and reque
 Two dependency-free behavior tests were added to `tests/vetogram-owner-ui-behavior.test.js`: (1) deferred A network reply delivered after A→B→A is rejected and does not clear fresh A; (2) a changed signed Telegram identity before a reply invalidates the former owner's UI. These tests execute the actual controller `request()` implementation with controlled fake network responses, no real network.
 
 **Current evidence:** 7/7 executable browser-controller scenarios and 12/12 pure/source owner-scope scenarios passed inside a V8 evaluation harness against GitHub branch sources; browser JavaScript syntax parsed. This is **not** confirmation that full native Node `node --test`, GitHub Actions, real Telegram WebView, or production deployment passed. Existing CI/lockfile blockers are unchanged.
+
+
+## 24 October — Task Center / Second Brain / Story Engine UI confirmation audit
+
+A second pass over `public/vetogram-ai.js` identified owner-sensitive user decisions whose confirmation dialogs were not revalidated after closing:
+
+- Task Center: save/remove date, change status (including a previously claimed reminder), remove a task, and convert a task to a follow-up
+- Second Brain: save a suggested note or task, or copy a quote
+- Task Center bulk actions: clear all local tasks or copy quoted content to the clipboard
+- AI Memory: save the local notes to the server cloud after explicit user approval
+- VETO AI → Story Engine: navigate and apply suggested text to a draft after confirmation
+
+All now capture `ownerRequestScope()` before confirmation and reject further mutations if signed identity or reset epoch has changed. The Story Engine transfer also checks scope **before navigation**, **before invoking the receiver**, and after the receiver's awaited response. No stale result/error notice is written into another owner's UI; clipboard completion notices are also scoped.
+
+The actual `public/story-engine.js` receiver, `applyAiStorySuggestion`, was verified to check `requested.ownerId` before and after its asynchronous `init()`. New runtime tests exercise (a) A→B during receiver initialization, where no A text may overwrite B, and (b) accepted owner-approved text only, leaving existing media and Portal intact when Portal replacement is not requested.
+
+The behavior tests extract actual controller functions and execute them with mocked DOM, Telegram identity, and deferred operations. **17/17 V8-executed behavioral scenarios passed** from the fetched GitHub branch source, including 10 new owner-switch/receiver cases beyond the earlier seven. These tests are registered in the offline Node suite, but **full GitHub Actions `node --test` and real Telegram WebView remain unverified** because GitHub jobs fail before runner steps. No production release was made.
+
+Before release, separately validate the exact native Telegram mobile UX and run the complete Node/PG CI suite with a trustworthy npm lockfile. All changes remain in Draft PR #181 only.
