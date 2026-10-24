@@ -12,8 +12,8 @@
     "lock:check": "node scripts/vetogram-verify-lock.mjs",
     "lock:refresh": "npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
     "ai:preflight": "node scripts/vetogram-ai-release-gate.mjs",
-    "ci:offline": "npm run ai:preflight && node --test tests/vetogram-ai-release-gate.test.js tests/vetogram-reminders.test.js tests/vetogram-task-cloud.test.js tests/vetogram-lock-audit.test.js tests/vetogram-owner-scope.test.js tests/vetogram-owner-ui-behavior.test.js tests/vetogram-business-readiness.test.js tests/vetogram-story-publish-result.test.js tests/vetogram-miniapp-readiness.test.js",
-    "qa:core:offline": "node --test tests/vetogram-business-readiness.test.js tests/vetogram-story-publish-result.test.js tests/vetogram-miniapp-readiness.test.js"
+    "ci:offline": "npm run ai:preflight && node --test tests/vetogram-ai-release-gate.test.js tests/vetogram-reminders.test.js tests/vetogram-task-cloud.test.js tests/vetogram-lock-audit.test.js tests/vetogram-owner-scope.test.js tests/vetogram-owner-ui-behavior.test.js tests/vetogram-business-readiness.test.js tests/vetogram-story-publish-result.test.js tests/vetogram-miniapp-readiness.test.js tests/vetogram-business-owner-routing.test.js",
+    "qa:core:offline": "node --test tests/vetogram-business-readiness.test.js tests/vetogram-story-publish-result.test.js tests/vetogram-miniapp-readiness.test.js tests/vetogram-business-owner-routing.test.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.821.0",
