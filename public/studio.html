@@ -585,8 +585,15 @@
               <strong>Фото из переписки · только на этом устройстве</strong>
               <button type="button" id="telegramThreadPhotoClose" aria-label="Закрыть просмотр фотографии">×</button>
             </div>
-            <img id="telegramThreadPhotoFull" alt="Фото из собственной переписки"/>
-            <a id="telegramThreadPhotoSave" download="veto-chat-photo.jpg" rel="noopener" href="#">Сохранить фото ↓</a>
+            <div class="veto-mirror-photo-stage" id="telegramThreadPhotoStage" aria-label="Загруженные фото из этой переписки">
+              <button type="button" class="veto-mirror-photo-step" id="telegramThreadPhotoPrev" aria-label="Предыдущее загруженное фото" hidden>‹</button>
+              <img id="telegramThreadPhotoFull" alt="Фото из собственной переписки"/>
+              <button type="button" class="veto-mirror-photo-step" id="telegramThreadPhotoNext" aria-label="Следующее загруженное фото" hidden>›</button>
+            </div>
+            <div class="veto-mirror-photo-foot">
+              <span id="telegramThreadPhotoCount" class="veto-mirror-photo-count" role="status" aria-live="polite" hidden></span>
+              <a id="telegramThreadPhotoSave" download="vetogram-photo.jpg" rel="noopener" href="#">Сохранить фото ↓</a>
+            </div>
           </dialog>
           <div class="veto-mirror-thread-bottom">
             <div id="telegramThreadReplyPreview" class="veto-mirror-reply-preview" hidden>
