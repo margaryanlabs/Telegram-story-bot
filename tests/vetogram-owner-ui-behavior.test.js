@@ -154,3 +154,54 @@ test('Second Brain and AI Action execute provider call before using its response
     assert.equal(state.busy,false);
   }
 });
+
+
+test('shared HTTP boundary rejects old A response after A → B → A, without resetting fresh A',async()=>{
+  let resolveFetch,resetCount=0;
+  const pending=new Promise(resolve=>{resolveFetch=resolve});
+  const state={identity:'signed-A',requestEpoch:1};
+  let signed='signed-A',ownerId='111';
+  const context={state,
+    signed:()=>signed,owner:()=>ownerId,
+    ownerRequestScope:()=>({identity:state.identity,ownerId,epoch:state.requestEpoch}),
+    isOwnerRequestCurrent:scope=>scope.identity===state.identity&&
+      scope.identity===signed&&scope.ownerId===ownerId&&scope.epoch===state.requestEpoch,
+    oldRequestCanReset:(current,original)=>current===original,
+    reset:()=>{resetCount++;state.identity=null;state.requestEpoch++},
+    AbortController,fetch:async()=>pending,setTimeout,clearTimeout
+  };
+  const original=controller('async function request',context);
+  const result=original('/api/vetogram-ai',{mode:'brief'},true);
+  // A completes after the active account has already changed to B and back
+  // to A, but the reset epoch has advanced. The old result is not valid.
+  state.identity='signed-B';signed='signed-B';ownerId='222';state.requestEpoch++;
+  state.identity='signed-A';signed='signed-A';ownerId='111';state.requestEpoch++;
+  resolveFetch({ok:true,json:async()=>({ok:true,brief:{tasks:['old']}})});
+  await assert.rejects(result,/Старый запрос отменён/);
+  assert.equal(resetCount,0);
+  assert.equal(state.identity,'signed-A');
+  assert.equal(state.requestEpoch,3);
+});
+test('shared HTTP boundary rejects response for a different signed Telegram account',async()=>{
+  let resolveFetch,resetCount=0;
+  const pending=new Promise(resolve=>{resolveFetch=resolve});
+  const state={identity:'signed-B',requestEpoch:4};
+  let signed='signed-B',ownerId='222';
+  const context={state,signed:()=>signed,owner:()=>ownerId,
+    ownerRequestScope:()=>({identity:state.identity,ownerId,epoch:state.requestEpoch}),
+    isOwnerRequestCurrent:scope=>scope.identity===state.identity&&
+      scope.identity===signed&&scope.ownerId===ownerId&&scope.epoch===state.requestEpoch,
+    oldRequestCanReset:(current,original)=>current===original,
+    reset:()=>{resetCount++;state.identity=null;state.requestEpoch++},
+    AbortController,fetch:async()=>pending,setTimeout,clearTimeout
+  };
+  const request=controller('async function request',context);
+  const outcome=request('/api/vetogram-ai',{mode:'chat'},true);
+  // The currently signed Telegram account changes before the HTTP reply.
+  signed='signed-C';ownerId='333';
+  resolveFetch({ok:true,json:async()=>({ok:true,text:'private B data'})});
+  await assert.rejects(outcome,/Аккаунт изменился/);
+  assert.equal(resetCount,1);
+  assert.equal(state.identity,null);
+  assert.equal(state.requestEpoch,5);
+});
