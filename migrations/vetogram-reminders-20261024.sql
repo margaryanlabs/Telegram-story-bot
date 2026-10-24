@@ -152,7 +152,10 @@ SET search_path=public,pg_temp AS $$
     SELECT r.owner_id,r.task_id FROM public.vetogram_reminders r
      WHERE r.state='pending' AND r.enabled_by_owner
        AND r.remind_at<=now() AND r.remind_at>=now()-interval '1 hour'
-     ORDER BY r.remind_at ASC LIMIT LEAST(GREATEST(p_limit,1),8)
+       AND r.task_due_at>=now()-interval '10 minutes'
+     -- NULL must never turn LIMIT into an unbounded claim.
+     ORDER BY r.remind_at ASC
+     LIMIT LEAST(GREATEST(COALESCE(p_limit,8),1),8)
      FOR UPDATE SKIP LOCKED
   ), claimed AS (
     UPDATE public.vetogram_reminders r SET state='claimed',
