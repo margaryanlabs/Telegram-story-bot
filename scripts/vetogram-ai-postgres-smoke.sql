@@ -194,6 +194,29 @@ BEGIN
   SELECT public.vetogram_expire_owner_reminders(98760001) INTO n;
   IF n<>1 THEN RAISE EXCEPTION 'CI_TASK_DUE_GRACE_EXPIRY_FAILED'; END IF;
   PERFORM public.vetogram_task_cloud_write(98760001,6,'ci.after-due-expire',false);
+  -- A caller passing NULL must never claim an unbounded queue.
+  -- Synthetic metadata-only rows are rolled back after this smoke.
+  FOR issued IN 1..10 LOOP
+    INSERT INTO public.vetogram_reminders(
+      owner_id,task_id,remind_at,task_due_at,time_zone)
+    VALUES(98760100,md5('vetogram-ci-claim-'||issued::text)::uuid,
+      now()-interval '1 minute',now()+interval '1 hour','UTC');
+  END LOOP;
+  -- This reminder is within the one-hour window but its TASK deadline has
+  -- already expired; it must not be claimed or delivered.
+  INSERT INTO public.vetogram_reminders(
+    owner_id,task_id,remind_at,task_due_at,time_zone)
+  VALUES(98760100,'cddccddc-cddc-4ddc-8ddc-cddccddccddc'::uuid,
+    now()-interval '20 minutes',now()-interval '11 minutes','UTC');
+  SELECT count(*) INTO n FROM public.vetogram_claim_reminders(NULL);
+  IF n<>8 THEN RAISE EXCEPTION 'CI_NULL_CLAIM_LIMIT_NOT_CAPPED: %',n; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_claim_reminders(999);
+  IF n<>2 THEN RAISE EXCEPTION 'CI_OVERSIZED_CLAIM_LIMIT_NOT_CAPPED: %',n; END IF;
+  SELECT count(*) INTO n FROM public.vetogram_reminders
+    WHERE owner_id=98760100 AND
+      task_id='cddccddc-cddc-4ddc-8ddc-cddccddccddc'::uuid AND state='pending';
+  IF n<>1 THEN RAISE EXCEPTION 'CI_PAST_DEADLINE_WAS_CLAIMED'; END IF;
+  RAISE NOTICE 'Reminder bounded claim and expired task deadline smoke PASS';
   RAISE NOTICE 'VETOGRAM Reminders: metadata-only one-shot claim PASS';
   RAISE NOTICE 'VETOGRAM AI smoke passed: grants, audit, pause, quotas, memory CAS';
 END $$;
