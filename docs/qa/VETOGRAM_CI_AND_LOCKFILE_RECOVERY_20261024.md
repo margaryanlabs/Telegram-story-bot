@@ -50,3 +50,26 @@ Two independent PostgreSQL sessions exercise both orderings:
 A `pg_try_advisory_xact_lock` handshake waits until the background session actually holds the intended owner lock, avoiding an unreliable fixed 0.5-second delay. The dependency-free CI job additionally syntax-checks both shell race scripts with `bash -n`. Source assertions verify that both scenarios remain connected to the temporary-Postgres job. **The actual concurrent SQL cases have not yet run** because the GitHub Actions jobs have failed before taking any steps; no production database was accessed.
 
 Lockfile regeneration was attempted from the working container on 24 October, but npm registry DNS resolution returned `EAI_AGAIN`, so it remains blocked. Do not manually fabricate package integrity metadata. The current branch still needs a trusted network-enabled `npm run lock:refresh` before `npm ci` can pass.
+
+
+## 24 October: executable browser-function regressions and bounded reminder claims
+
+### Browser tests (dependency-free)
+
+Added `tests/vetogram-owner-ui-behavior.test.js` and registered it in `npm run ci:offline` (the regular `npm test` glob includes it as well). The test executes functions extracted from the **current browser controller source**, in Node's built-in `vm` sandbox with mocked DOM and network; it does not send messages or connect to a provider. It exercises:
+
+1. Mode changes immediately clear old draft, nonce, approval and Send eligibility.
+2. Hidden or stale drafts cannot reach the Telegram send request.
+3. After an uncertain network response, a second **explicitly user-confirmed** attempt uses the same Telegram nonce, rather than a new random ID.
+4. An async Approval Center chat lookup cannot restore owner A's draft into B's editor.
+5. Real `generate()` branching for Second Brain and AI Action processes the returned response in sequence, rather than referring to it before it exists.
+
+**Evidence:** five browser controller functions/scenarios evaluated with a V8 sandbox against fetched GitHub source: **5/5 passed**, browser source JS parse passed. The full Node `node --test` runner remains unverified until a trusted checkout/runner becomes available.
+
+### Draft migration: claim bounds and task expiry
+
+The staged, unapplied `migrations/vetogram-reminders-20261024.sql` now caps `vetogram_claim_reminders(NULL)` with `LEAST(GREATEST(COALESCE(p_limit,8),1),8)`. Previously PostgreSQL's `LIMIT NULL` semantics could allow an unbounded claim if a caller supplied NULL. The due-query also requires the task deadline not to be beyond the allowed 10-minute grace period. This matches the existing reminder worker's deadline policy and avoids consuming a send attempt for clearly obsolete jobs.
+
+The disposable PostgreSQL smoke adds ten synthetic due rows plus one deadline-expired row, asserts a NULL limit claims **exactly eight**, oversized limit claims **exactly two remaining**, and the deadline-expired row remains unclaimed. Node source regression checks enforce both SQL clauses and smoke coverage. SQL **has not** been executed against PostgreSQL in this work; review and execute in isolated CI before ever applying the migration.
+
+All tests use fake owner IDs and fake ciphertext. No live Telegram API calls, Neon migrations, Vercel changes, merge or production deployment.
