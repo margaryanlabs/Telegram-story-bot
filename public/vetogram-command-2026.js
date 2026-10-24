@@ -37,7 +37,7 @@
     input.focus();
   }
   function navigate(screen){
-    if(!/^(telegram|home|publish|privacy|studio|story-engine|ai|voice|viewers|chats|analytics|relay|archive)$/.test(screen))
+    if(!/^(telegram|home|publish|privacy|studio|creator|story-engine|ai|voice|viewers|chats|analytics|relay|archive)$/.test(screen))
       return false;
     if(typeof window.VetoTelegramNavigate==='function')
       return window.VetoTelegramNavigate(screen)!==false;
