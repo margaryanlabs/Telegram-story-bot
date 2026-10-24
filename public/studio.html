@@ -505,6 +505,26 @@
             <button type="button" data-mirror-filter="copies">Сохранённые <span aria-hidden="true">↶</span></button>
             <button type="button" class="veto-filters-more" id="vetoMessengerFiltersToggle" aria-expanded="false" aria-controls="telegramMirrorFilters">Фильтры <span>⌄</span></button>
           </div>
+          <section class="vgx-inbox-pulse" id="vgxInboxPulse" aria-label="Сводка по загруженным чатам" hidden>
+            <div class="vgx-inbox-pulse-heading">
+              <span><i aria-hidden="true"></i> ТВОЙ INBOX PULSE</span>
+              <small>Только загруженные чаты · не общая статистика Telegram</small>
+            </div>
+            <div class="vgx-inbox-pulse-grid" role="group" aria-label="Быстрая фильтрация">
+              <button type="button" data-vgx-pulse-filter="unread" aria-pressed="false" title="Чаты с непрочитанными сообщениями">
+                <span class="vgx-pulse-icon" aria-hidden="true">◉</span>
+                <span><strong id="vgxPulseUnread">0</strong><small>Непрочитано</small></span><b aria-hidden="true">↗</b>
+              </button>
+              <button type="button" data-vgx-pulse-filter="focus" aria-pressed="false" title="Чаты с локальными сигналами внимания">
+                <span class="vgx-pulse-icon" aria-hidden="true">✦</span>
+                <span><strong id="vgxPulseFocus">0</strong><small>Важное</small></span><b aria-hidden="true">↗</b>
+              </button>
+              <button type="button" data-vgx-pulse-filter="copies" aria-pressed="false" title="Удалённые сообщения в доступных сохранённых чатах">
+                <span class="vgx-pulse-icon" aria-hidden="true">↶</span>
+                <span><strong id="vgxPulseDeleted">0</strong><small>Удалено</small></span><b aria-hidden="true">↗</b>
+              </button>
+            </div>
+          </section>
           <div id="telegramMirrorAccountProof" class="veto-mirror-account-proof" role="status" aria-live="polite"><span class="veto-mirror-live-pip"></span> Личный Telegram ещё не проверен · отображение чатов остановлено до подтверждения</div>
 
           <p class="veto-mirror-focus-hint">Локальная сортировка без отметок «прочитано» и изменения оригинальных чатов.</p>
@@ -2190,6 +2210,7 @@
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
   <script src="/chat-theme.js?v=20261018-global-theme-v1"></script>
+  <script src="/vetogram-inbox-pulse-core.js?v=20261024-inbox-pulse-v1"></script>
   <script src="/telegram-chats.js?v=20261019-messenger-first-v1"></script>
   <script src="/telegram-stories.js?v=20261019-veto-discovery-v1"></script>
   <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
