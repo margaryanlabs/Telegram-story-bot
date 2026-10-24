@@ -4,6 +4,20 @@ set -euo pipefail
 # The workflow first applies both Task Cloud and Reminder migrations.
 export PGOPTIONS="-c statement_timeout=12000 -c lock_timeout=7000"
 
+# Synchronize against the actual advisory lock instead of relying on a fixed
+# sleep in an arbitrarily scheduled CI runner. A successful try-lock is scoped
+# only to its own one-statement transaction and releases immediately.
+wait_for_owner_lock(){
+  local owner="$1" result
+  for ((i=0;i<40;i++)); do
+    result="$(psql -v ON_ERROR_STOP=1 -Atq -c "SELECT pg_try_advisory_xact_lock(hashtext('veto-reminders:${owner}')::bigint)")"
+    if [[ "$result" == "f" ]]; then return 0; fi
+    sleep 0.1
+  done
+  printf 'CI_OWNER_LOCK_NOT_OBSERVED owner=%s\n' "$owner" >&2
+  return 1
+}
+
 # Device A edits the encrypted cloud snapshot while device B has read revision 1.
 psql -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
 SELECT public.vetogram_task_cloud_write(98760005,0,'ci.device-a.v1',false);
@@ -16,7 +30,7 @@ SELECT public.vetogram_task_cloud_write(98760005,1,'ci.device-a.v2',false);
 COMMIT;
 SQL
 editor=$!
-sleep 0.5
+wait_for_owner_lock 98760005
 # A stale device may pass an old pre-lock read, but its reminder MUST fail
 # after the shared advisory lock is released and the current revision is checked.
 psql -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
@@ -53,7 +67,7 @@ SELECT public.vetogram_schedule_reminder(
 COMMIT;
 SQL
 scheduler=$!
-sleep 0.5
+wait_for_owner_lock 98760006
 psql -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
 DO $$
 DECLARE rejected boolean:=false;
