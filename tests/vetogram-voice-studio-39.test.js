@@ -35,7 +35,7 @@ function fixture(){
     state,tg,navigator:{mediaDevices:{getUserMedia:()=>{requested++;return permission}}},
     window:{MediaRecorder:Recorder},MediaRecorder:Recorder,
     document:{hidden:false},canSendInThread:()=>true,
-    renderSendComposer:()=>{calls.redraw++},toast:msg=>calls.toast.push(String(msg)),
+    renderSendComposer:()=>{calls.redraw++},renderVoiceDraft:()=>{},toast:msg=>calls.toast.push(String(msg)),
     processedVoiceStream:async stream=>({recordStream:stream,close(){}}),
     clearTimeout(){},clearInterval(){},setTimeout:()=>1,setInterval:()=>2,
     Date,Blob,File:class{},URL:{createObjectURL:()=> 'blob:mock'},
