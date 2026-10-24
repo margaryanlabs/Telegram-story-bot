@@ -1941,9 +1941,10 @@
       // Live messages are valid even when Privacy storage is slow or offline.
       // Don't mislabel lack of stored evidence as restored deletions.
       if(ownerKey===state.ownerInitData&&
-         generation===state.threadGeneration&&String(state.thread?.id)===chatId&&
-         state.thread?.savedCopy===true)
-        threadNotice('Облачная история открыта. Защищённый архив пока не ответил; обнови чат позже.');
+         generation===state.threadGeneration&&String(state.thread?.id)===chatId){
+        threadNotice('Защищённый архив пока недоступен. Сообщения Telegram остаются доступными; сохранённые копии появятся после восстановления архива.');
+        syncLabel('Telegram подключён · архив ожидает повторной проверки');
+      }
     }
   }
   async function loadMessages({reset=false}={}){
