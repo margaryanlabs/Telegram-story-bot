@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const canvas=$('seCanvas');
 const root=$('seEngine');
 if(!canvas||!root)throw new Error('STORY_ENGINE_SCREEN_MISSING');
-const state={draft:null,owner:null,db:null,image:null,imageSrc:null,busy:false,revision:0,loaded:false,selectedLayer:null,dragLayer:null};
+const state={draft:null,owner:null,db:null,image:null,imageSrc:null,busy:false,revision:0,loaded:false,selectedLayer:null,dragLayer:null,aiUndo:null};
 const tg=window.Telegram?.WebApp;
 const owner=()=>tg?.initData && /^\d{1,20}$/.test(String(tg.initDataUnsafe?.user?.id||''))?
   String(tg.initDataUnsafe.user.id):'';
@@ -281,7 +281,41 @@ function loadImageForDraft(){
   i.onerror=()=>notify('Не удалось загрузить изображение',true);
   i.src=url;
 }
+function discardAiUndo(){
+  state.aiUndo=null;
+  const control=$('seUndoAiText');
+  if(control){control.hidden=true;control.disabled=true;control.style.display='none';}
+}
+// Restore only AI-edited text/Portal; never replace media, layers or photos.
+const aiEditableFields=(draft,portalIncluded)=>JSON.stringify({
+  title:draft.title,subtitle:draft.subtitle,caption:draft.caption,
+  ...(portalIncluded?{portal:draft.portal}: {})
+});
+function undoAiStorySuggestion(){
+  const undo=state.aiUndo;
+  if(!undo)return false;
+  if(!owner()||owner()!==state.owner||undo.ownerId!==state.owner||
+     !state.draft||state.draft.id!==undo.draftId){
+    discardAiUndo();return false;
+  }
+  if(aiEditableFields(state.draft,undo.portalIncluded)!==undo.after){
+    discardAiUndo();
+    notify('После AI ты изменил текст или Portal вручную. Отмена недоступна, чтобы сохранить твои правки.',true);
+    return false;
+  }
+  state.draft.title=undo.before.title;
+  state.draft.subtitle=undo.before.subtitle;
+  state.draft.caption=undo.before.caption;
+  if(undo.portalIncluded){
+    state.draft.portal=undo.before.portal;
+    clearPublicPortalLink();$('sePortalAttachStory').checked=false;
+  }
+  discardAiUndo();render();
+  notify('AI-изменения отменены. Фото, слои и настройки Story сохранены.');
+  return true;
+}
 function applyDraft(d){
+  discardAiUndo();
   clearPublicPortalLink();
   // Publishing a public clickable link always needs a fresh opt-in.
   $('sePortalAttachStory').checked=false;
@@ -378,6 +412,13 @@ async function applyAiStorySuggestion(requested){
   }
   const draftId=state.draft.id;
   if(owner()!==requestedOwner||state.draft.id!==draftId)return false;
+  const portalIncluded=requested.replacePortal===true;
+  const before={
+    title:state.draft.title,subtitle:state.draft.subtitle,
+    caption:state.draft.caption,
+    ...(portalIncluded?{portal:state.draft.portal==null?null:
+      JSON.parse(JSON.stringify(state.draft.portal))}: {})
+  };
   state.draft.title=title;
   state.draft.subtitle=subtitle;
   state.draft.caption=trimText(incoming.caption,800);
@@ -386,8 +427,14 @@ async function applyAiStorySuggestion(requested){
     clearPublicPortalLink();
     $('sePortalAttachStory').checked=false;
   }
+  state.aiUndo={
+    ownerId:requestedOwner,draftId,portalIncluded,before,
+    after:aiEditableFields(state.draft,portalIncluded)
+  };
+  const undo=$('seUndoAiText');
+  if(undo){undo.hidden=false;undo.disabled=false;undo.style.display='';}
   render();
-  notify('AI-текст добавлен в текущую Story. Проверь результат и сохрани черновик.');
+  notify('AI-текст добавлен в Story. Проверь или отмени изменения перед сохранением.');
   return true;
 }
 window.VetoTelegramApplyAiStory=applyAiStorySuggestion;
@@ -396,6 +443,7 @@ window.addEventListener('vetogram:ai-story-suggestion',event=>{
 });
 
 function setup(){
+  $('seUndoAiText').addEventListener('click',()=>void undoAiStorySuggestion());
   const holder=$('seTemplates');
   for(const t of STORY_TEMPLATES){
     const b=document.createElement('button');b.type='button';b.dataset.seTemplate=t.id;b.className='se-template';
