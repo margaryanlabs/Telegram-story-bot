@@ -3269,17 +3269,31 @@
 
   renderNetworkStatus();
 
-  const updateVetoSpotlight = (clientX, clientY) => {
-    const x = Math.max(0, Math.min(window.innerWidth, Number(clientX || 0)));
-    const y = Math.max(0, Math.min(window.innerHeight, Number(clientY || 0)));
-    document.body.style.setProperty('--veto-x', `${x}px`);
-    document.body.style.setProperty('--veto-y', `${y}px`);
-  };
-  window.addEventListener('pointermove', event => updateVetoSpotlight(event.clientX, event.clientY), { passive:true });
-  window.addEventListener('touchmove', event => {
-    const touch = event.touches?.[0];
-    if (touch) updateVetoSpotlight(touch.clientX, touch.clientY);
-  }, { passive:true });
+  // Pointer spotlight is purely decorative. Do not recalculate two large
+  // gradients on every mobile scroll/touch, or when reduced motion is requested.
+  // Batch desktop movement into one visual update per animation frame.
+  const finePointer = typeof window.matchMedia === 'function'
+    && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reducedSpotlightMotion = typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (finePointer && !reducedSpotlightMotion && typeof window.requestAnimationFrame === 'function') {
+    let spotlightQueued = false;
+    let spotlightX = 0;
+    let spotlightY = 0;
+    window.addEventListener('pointermove', event => {
+      if (document.visibilityState === 'hidden') return;
+      spotlightX = Math.max(0, Math.min(window.innerWidth, Number(event.clientX || 0)));
+      spotlightY = Math.max(0, Math.min(window.innerHeight, Number(event.clientY || 0)));
+      if (spotlightQueued) return;
+      spotlightQueued = true;
+      window.requestAnimationFrame(() => {
+        spotlightQueued = false;
+        if (document.visibilityState === 'hidden') return;
+        document.body.style.setProperty('--veto-x', `${spotlightX}px`);
+        document.body.style.setProperty('--veto-y', `${spotlightY}px`);
+      });
+    }, { passive:true });
+  }
 
   window.addEventListener('unhandledrejection', event => {
     const message = event?.reason?.message || String(event?.reason || '');
