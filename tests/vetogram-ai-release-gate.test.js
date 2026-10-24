@@ -43,12 +43,12 @@ test('release gate guards API auth, grant rechecks, quotas, and absence of sende
 });
 
 
-test('release CI checks the draft PR once, without duplicate push runs',()=>{
+test('cost-safe development keeps GitHub Actions opt-in only',()=>{
   const workflow=read('.github/workflows/vetogram-ai-ci.yml');
-  assert.match(workflow,/^on:\s*\n  pull_request:\s*\n/m);
+  assert.match(workflow,/^on:\s*\n  workflow_dispatch:\s*\n/m);
   assert.doesNotMatch(workflow,/^  push:/m);
-  assert.match(workflow,/branches: \[feat\/vetogram-story-engine-20261022\]/);
-  assert.match(workflow,/types: \[opened, synchronize, reopened, ready_for_review\]/);
+  assert.doesNotMatch(workflow,/^  pull_request:/m);
+  assert.doesNotMatch(workflow,/^  schedule:/m);
   for(const job of ['offline-contracts','node-tests','disposable-postgres'])
     assert.match(workflow,new RegExp('^  '+job+':','m'));
   assert.match(workflow,/npm run ci:offline/);
