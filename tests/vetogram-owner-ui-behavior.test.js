@@ -205,3 +205,88 @@ test('shared HTTP boundary rejects response for a different signed Telegram acco
   assert.equal(state.identity,null);
   assert.equal(state.requestEpoch,5);
 });
+
+
+function taskEditorSwitchFixture(kind){
+  const ui=fakeUi(),created=[],original={
+    owner:'111',id:uuid,title:'Account A task',sourceQuote:'Account A original quote',
+    deadlineText:null,certainty:'explicit',status:'open',dueAt:null,
+    kind:'task',createdAt:12345
+  };
+  const state={identity:'signed-A',requestEpoch:1,taskFilter:'open',
+    reminders:[],tasks:[original],last:'',sendIntent:null,
+    reviewedApprovalId:null};
+  const counters={updates:0,mode:0,confirm:0};
+  const element=tag=>{
+    const node={tag,children:[],events:{},value:'',textContent:'',
+      type:'',className:'',hidden:false,disabled:false,
+      append(...children){this.children.push(...children)},
+      setAttribute(){},
+      addEventListener(name,callback){this.events[name]=callback}};
+    created.push(node);
+    return node;
+  };
+  const switchAccount=()=>{
+    counters.confirm++;
+    state.identity='signed-B';state.requestEpoch++;
+    // Same task UUID on B is deliberately adversarial.
+    state.tasks=[{...original,owner:'222',title:'Account B task'}];
+    return true;
+  };
+  const context={...ui,state,document:{createElement:element},
+    owner:()=>state.identity==='signed-A'?'111':'222',
+    ownerTasks:(items,owner)=>items.filter(t=>t.owner===owner),
+    taskOverview:()=>({total:1,open:1,deferred:0,done:0,overdue:0,
+      tasks:[original]}),
+    ownerRequestScope:()=>({identity:state.identity,epoch:state.requestEpoch}),
+    isOwnerRequestCurrent:s=>s.identity===state.identity&&s.epoch===state.requestEpoch,
+    safeIdentity:()=>true,taskReminderEditAllowed:()=>kind==='status'?switchAccount():true,
+    updateOwnerTask:()=>{counters.updates++;return []},
+    renderTasks:()=>{throw Error('Stale edit must never redraw B')},
+    setMode:()=>{counters.mode++;throw Error('Stale task must not open B editor')},
+    window:{confirm:switchAccount},notice:()=>{}};
+  controller('function renderTasks',context)();
+  const button=label=>created.find(n=>n.tag==='button'&&n.textContent===label);
+  return {state,counters,created,button,original};
+}
+test('Task Center date edit cannot cross account while confirmation modal is open',()=>{
+  const f=taskEditorSwitchFixture('date');
+  const date=f.created.find(n=>n.tag==='input'&&n.type==='datetime-local');
+  assert.ok(date);
+  date.value='2026-11-24T18:30';
+  const button=f.button('Сохранить дату');
+  assert.ok(button?.events.click);
+  button.events.click();
+  assert.equal(f.counters.confirm,1);
+  assert.equal(f.counters.updates,0);
+  assert.equal(f.state.tasks[0].owner,'222');
+  assert.equal(f.state.tasks[0].title,'Account B task');
+});
+test('Task Center delete cannot delete B task after A confirmation',()=>{
+  const f=taskEditorSwitchFixture('delete');
+  const button=f.button('Удалить задачу');
+  assert.ok(button?.events.click);
+  button.events.click();
+  assert.equal(f.counters.confirm,1);
+  assert.equal(f.state.tasks.length,1);
+  assert.equal(f.state.tasks[0].owner,'222');
+});
+test('Task Center follow-up cannot copy private task A into B draft',()=>{
+  const f=taskEditorSwitchFixture('followup');
+  const button=f.button('Подготовить follow-up');
+  assert.ok(button?.events.click);
+  button.events.click();
+  assert.equal(f.counters.confirm,1);
+  assert.equal(f.counters.mode,0);
+  assert.equal(f.state.tasks[0].owner,'222');
+  assert.equal(f.created.some(n=>n.textContent==='Account B task'),false);
+});
+test('Task Center status updates reject owner switch during claimed-reminder consent',()=>{
+  const f=taskEditorSwitchFixture('status');
+  const button=f.button('✓ Готово');
+  assert.ok(button?.events.click);
+  button.events.click();
+  assert.equal(f.counters.confirm,1);
+  assert.equal(f.counters.updates,0);
+  assert.equal(f.state.tasks[0].owner,'222');
+});
