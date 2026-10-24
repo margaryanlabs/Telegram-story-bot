@@ -124,3 +124,67 @@ test('explicit action confirmation cannot be carried from Telegram owner A to B'
   const grant=ai.indexOf("await request('/api/vetogram-ai-grants'",confirm);
   assert.ok(scope>=0&&confirm>scope&&guard>confirm&&grant>guard);
 });
+
+
+test('chat pagination and Agent Control discard stale owner results and errors',()=>{
+  const js=read('public/vetogram-ai.js');
+  for(const name of ['async function loadChats(','async function agentStatus()',
+    'async function changeAgentPause(','async function agentHistory(']){
+    const start=js.indexOf(name),end=js.indexOf('\n  }\n',start);
+    assert.ok(start>=0&&end>start,name);
+    const body=js.slice(start,end);
+    assert.match(body,/const scope=ownerRequestScope\(\)/,name);
+    assert.match(body,/if\(!isOwnerRequestCurrent\(scope\)\)return/,name);
+  }
+  const chats=js.slice(js.indexOf('async function loadChats('),
+    js.indexOf('function validNegotiatorSend('));
+  assert.match(chats,/if\(!isOwnerRequestCurrent\(scope\)\)return;\n      state\.dialogs=merged/);
+  assert.match(chats,/catch\(error\)\{\n      if\(isOwnerRequestCurrent\(scope\)\)/);
+  assert.match(chats,/finally\{\n      if\(isOwnerRequestCurrent\(scope\)\)/);
+  const agent=js.slice(js.indexOf('async function changeAgentPause('),
+    js.indexOf('async function agentHistory('));
+  assert.match(agent,/if\(!isOwnerRequestCurrent\(scope\)\)return;\n      notice/);
+  assert.match(agent,/finally\{if\(isOwnerRequestCurrent\(scope\)\)state\.agentBusy=false/);
+});
+test('mode switching invalidates stale draft, nonce, send eligibility and approval context',()=>{
+  const js=read('public/vetogram-ai.js');
+  const switchMode=js.slice(js.indexOf('function setMode('),
+    js.indexOf('function actionRecipientReady(',js.indexOf('function setMode(')));
+  assert.match(switchMode,/if\(state\.mode!==mode\)\{/);
+  assert.match(switchMode,/state\.last=null;state\.reviewedApprovalId=null;state\.sendIntent=null/);
+  assert.match(switchMode,/\$\('vtaiDraft'\)\.value='';\$\('vtaiSend'\)\.disabled=true/);
+  const send=js.slice(js.indexOf('async function send()'),
+    js.indexOf('function applyStory(',js.indexOf('async function send()')));
+  assert.match(send,/if\(!canSendDraft\(\)\|\|\$\('vtaiReview'\)\.hidden\)/);
+  const queue=js.slice(js.indexOf('function queueCurrent()'),
+    js.indexOf('async function reviewApproval('));
+  assert.match(queue,/if\(!canSendDraft\(\)\|\|\$\('vtaiReview'\)\.hidden\)/);
+});
+test('Approval Center waits for chat lookup then rechecks signed account and saved approval',()=>{
+  const js=read('public/vetogram-ai.js');
+  const start=js.indexOf('async function reviewApproval(');
+  const end=js.indexOf('function renderMemory(',start);
+  const body=js.slice(start,end);
+  const lookup=body.indexOf('await loadChats({seekChatId:item.chatId})');
+  const guard=body.indexOf('if(!isOwnerRequestCurrent(scope))return;',lookup);
+  const live=body.indexOf('activeApprovals(state.approvals,owner()).some(entry=>entry.id===id)',guard);
+  const apply=body.indexOf("setMode('reply')",live);
+  assert.ok(lookup>=0&&guard>lookup&&live>guard&&apply>live);
+  assert.match(body,/const scope=ownerRequestScope\(\)/);
+});
+test('Negotiator revoke and Follow-up previews cannot cross owner during confirmation',()=>{
+  const js=read('public/vetogram-ai.js');
+  const revoke=js.slice(js.indexOf("$('vtaiNegRevoke').addEventListener"),
+    js.indexOf("$('vtaiSend').addEventListener",js.indexOf("$('vtaiNegRevoke').addEventListener")));
+  const scope=revoke.indexOf('const scope=ownerRequestScope()');
+  const confirm=revoke.indexOf('window.confirm(',scope);
+  const before=revoke.indexOf('if(!isOwnerRequestCurrent(scope))return;',confirm);
+  const fetch=revoke.indexOf("await request('/api/vetogram-ai-grants',{action:'status'})",before);
+  const beforeRevoke=revoke.indexOf('if(!isOwnerRequestCurrent(scope))return;',fetch);
+  const revokeCall=revoke.indexOf("await request('/api/vetogram-ai-grants',{action:'revoke'",beforeRevoke);
+  assert.ok(scope>=0&&confirm>scope&&before>confirm&&fetch>before&&beforeRevoke>fetch&&revokeCall>beforeRevoke);
+  const followups=js.slice(js.indexOf('function renderFollowups()'),js.indexOf('async function loadChats('));
+  assert.equal((followups.match(/const scope=ownerRequestScope\(\)/g)||[]).length,2);
+  assert.equal((followups.match(/if\(!isOwnerRequestCurrent\(scope\)\)return;/g)||[]).length,2);
+  assert.equal((followups.match(/window\.confirm\(/g)||[]).length,2);
+});
