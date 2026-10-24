@@ -57,3 +57,27 @@ The **draft implementation now**:
 **Data note:** previously archived records, if any, could have been keyed to `user_chat_id`. Do not migrate, merge or expose records based on an unverified mapping. Before public launch, inspect record counts and reconcile owner ↔ Business connection with a verified, consent-aware migration only if needed. No live data or migration was changed.
 
 No GitHub Actions, paid runner, live Telegram test, Vercel deploy or database mutation was performed.
+
+## Session ownership and login recovery audit
+
+The phone-code and QR flows were reviewed after the Anti-Delete owner-key corrections. `api/viewer-sync.js` previously treated the persisted `status:'active'` flag as sufficient for several sensitive actions, even though its session status response already compared the persisted Telegram account ID to the signed Mini App owner. This inconsistency could accept a stale or misbound encrypted session for an unrelated action.
+
+The draft now uses `isOwnActiveViewerSession(ownerId,row)` for:
+- active-state responses; only the owner's encrypted session can be reported as connected;
+- test Telegram alerts, viewer export, Story registration and notification preference writes;
+- analytics access and continuation-of-login checks after reopening the Mini App;
+- duplicate phone-code / QR login guards, which do **not** overwrite an unverified active row.
+
+When a stored active session does not match the authenticated Mini App owner, its `account`, last polling information and last error are redacted. The UI still gets `identityMismatch:true` so it can show a recovery message, but does not receive unrelated profile data. These mismatches do **not** trigger automatic session revocation, deletion or re-auth requests.
+
+The new `tests/vetogram-viewer-owner-sessions.test.js` exercises actual viewer API route handlers in a mocked VM and checks strict owner-bound session status, private-field redaction, denial of four sensitive operations, valid-owner success, and QR / phone-code non-overwrite. **7/7 cases passed** in the isolated JavaScript harness with current GitHub source; native Mini App login with a real Telegram code/QR remains unverified. The earlier report that codes did not arrive cannot be closed by mocked tests alone.
+
+### Before releasing
+
+Use a consenting test account to:
+1. Sign in using **one** phone-code request. If the code is delivered through Telegram's official service chat, resume the pending challenge rather than requesting a new code.
+2. Verify phone + code + optional 2FA and QR on a second device, then restart the WebView and confirm that the existing encrypted session loads without re-authorizing.
+3. Deliberately open the Mini App from another Telegram account; ensure it cannot see the first account's profile, archived messages or Story analytics.
+4. Disconnect explicitly, and confirm only the intended owner's private session is revoked. If a legacy row is misbound, investigate safely before any data migration.
+
+All changes are draft-only. No Telegram code request, QR scan, message sending, production deployment or database mutation took place during this code audit.
