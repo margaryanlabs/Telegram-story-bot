@@ -24,7 +24,7 @@ function instance({withNavigate=true}={}){
   const keys=['vg26CommandDialog','vg26CommandOpen','vg26CommandSearch',
     'vg26CommandEmpty','vg26CommandClose'];
   const el=Object.fromEntries(keys.map(k=>[k,element(k)]));
-  const destinations=['telegram','privacy','story-engine','ai','connect'];
+  const destinations=['telegram','privacy','story-engine','creator','ai','connect'];
   const items=destinations.map(v=>{
     const e=element(v,'Открыть '+v);
     e.dataset={vg26Destination:v,vg26Keywords:v==='telegram'?'чаты сообщения':v};
@@ -118,10 +118,26 @@ test('all declarative navigation buttons point to real screens, including Story 
   const actualScreens=[...html.matchAll(/<section[^>]+data-screen="([^"]+)"/g)].map(x=>x[1]);
   assert.equal(new Set(actualScreens).size,actualScreens.length);
   const allButtons=[...html.matchAll(/data-open-screen="([^"]+)"/g)].map(x=>x[1]);
-  const missing=allButtons.filter(x=>!actualScreens.includes(x));
+  const aliases=new Set(['creator']);
+  const missing=allButtons.filter(x=>!actualScreens.includes(x)&&!aliases.has(x));
   assert.deepEqual(missing,[]);
   assert.ok(actualScreens.includes('publish'));
   assert.ok(actualScreens.includes('privacy'));
   assert.ok(actualScreens.includes('studio'));
-  assert.doesNotMatch(html,/data-open-screen="(?:stories|ghost|creator)"/);
+  assert.doesNotMatch(html,/data-open-screen="(?:stories|ghost)"/);
+  assert.equal(allButtons.filter(x=>x==='creator').length,4);
+  assert.match(html,/data-vg26-destination="creator"/);
+  const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+  assert.match(app,/creator:\s*'studio'/);
+  assert.match(source,/studio\|creator\|story-engine/);
+});
+
+test('Creator palette opens the sticker editor, without taking over the Story Engine tab',()=>{
+  const f=instance();
+  f.el.vg26CommandOpen.click();
+  f.items.find(x=>x.dataset.vg26Destination==='creator').click();
+  assert.deepEqual(f.calls,['creator']);
+  assert.equal(f.el.vg26CommandDialog.open,false);
+  assert.match(html,/data-nav="studio"/);
+  assert.match(html,/data-vg26-destination="story-engine"/);
 });
