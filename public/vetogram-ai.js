@@ -546,7 +546,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         if(!safeIdentity()||!state.brief?.items.includes(item))return;
         if(state.memory.length>=MAX_MEMORY_NOTES)return notice('В AI Memory допускается максимум 8 заметок.',true);
         if(!window.crypto?.randomUUID)return notice('В этом браузере не поддерживаются безопасные идентификаторы.',true);
+        const scope=ownerRequestScope();
         if(!window.confirm('Добавить эту AI-гипотезу в локальную Memory? Это не напоминание, а заметка, требующая твоей проверки.'))return;
+        if(!isOwnerRequestCurrent(scope)||!state.brief?.items.includes(item))return;
         try{
           const label=(kinds[item.kind]||'Задача')+': '+item.title;
           const note=makeMemoryNote({owner:owner(),id:crypto.randomUUID(),label:label.slice(0,55),
@@ -563,7 +565,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         if(!safeIdentity()||!state.brief?.items.includes(item))return;
         if(state.tasks.length>=MAX_TASKS)return notice('Максимум 24 задачи в текущем окне.',true);
         if(!window.crypto?.randomUUID)return notice('Безопасные идентификаторы недоступны.',true);
+        const scope=ownerRequestScope();
         if(!window.confirm('Создать задачу из этого AI-разбора? Проверь цитату и срок самостоятельно. Точные даты, напоминания и отправки НЕ создаются.'))return;
+        if(!isOwnerRequestCurrent(scope)||!state.brief?.items.includes(item))return;
         try{
           const task=makeOwnerTask({owner:owner(),id:crypto.randomUUID(),
             title:item.title,kind:item.kind,sourceQuote:item.sourceQuote,
@@ -579,10 +583,13 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       const copy=document.createElement('button');copy.type='button';copy.className='vtai-action';
       copy.textContent='Копировать';
       copy.addEventListener('click',()=>{
+        if(!safeIdentity()||!state.brief?.items.includes(item))return;
+        const scope=ownerRequestScope();
         const text=item.title+(item.deadlineText?' · '+item.deadlineText:'')+
           '\nИсточник: '+item.sourceQuote;
         if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text)
-          .then(()=>notice('Пункт скопирован.'),()=>notice('Не удалось скопировать.',true));
+          .then(()=>{if(isOwnerRequestCurrent(scope))notice('Пункт скопирован.');},
+            ()=>{if(isOwnerRequestCurrent(scope))notice('Не удалось скопировать.',true);});
         else notice('Копирование не поддерживается.',true);
       });
       buttons.append(save,addTask,copy);card.append(head,date,quote,buttons);list.append(card);
@@ -942,7 +949,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function applyStory(){
     if(state.busy||!safeIdentity())return;
-    const snapshot=signed(),requestedOwner=owner();
+    const scope=ownerRequestScope(),requestedOwner=scope.ownerId;
     const story={
       title:$('vtaiStoryTitle').value.trim().slice(0,90),
       subtitle:$('vtaiStorySubtitle').value.trim().slice(0,180),
@@ -957,14 +964,17 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     }:null;
     if(replacePortal&&(!portal.title||!portal.cta))return notice('Заполни заголовок и кнопку Portal',true);
     if(!window.confirm(replacePortal?'Заменить текст Story и текущий Portal? Это не публикация.':'Перенести текст в текущий черновик? Фото, слои и Portal сохранятся.'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     if(!window.VetoTelegramNavigate?.('story-engine'))return notice('Story Engine недоступен.',true);
+    if(!isOwnerRequestCurrent(scope))return;
     if(typeof window.VetoTelegramApplyAiStory!=='function')return notice('Story Engine ещё не готов. Повтори действие.',true);
     try{
       const applied=await window.VetoTelegramApplyAiStory({ownerId:requestedOwner,story,replacePortal,portal});
-      if(snapshot!==signed()||requestedOwner!==owner())return notice('Аккаунт изменился, перенос отменён.',true);
+      if(!isOwnerRequestCurrent(scope))return;
       if(!applied)return notice('Не удалось применить текст. Попробуй снова.',true);
       notice('Тексты добавлены в Story Engine. Проверь кадр и сохрани черновик.');
-    }catch(error){notice('Перенос в Story Engine не удался. Сохрани текст вручную.',true)}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      notice('Перенос в Story Engine не удался. Сохрани текст вручную.',true)}
   }
 
   function renderApprovals(){
@@ -1119,7 +1129,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function saveMemoryCloud(){
     if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     if(!window.confirm('Сохранить выбранные локальные заметки в серверное зашифрованное хранилище VETOGRAM? Это не E2EE.'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     await writeMemoryCloud(state.memory);
   }
   async function eraseMemoryCloud(){
@@ -1253,22 +1265,28 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   $('vtaiTasksClear').addEventListener('click',()=>{
     if(!safeIdentity()||!state.tasks.length)return;
+    const scope=ownerRequestScope();
     if(!window.confirm('Удалить все задачи Task Center из этого окна? Они не сохранены в облаке.'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     state.tasks=[];renderTasks();notice('Все задачи окна удалены.');
   });
   $('vtaiTasksCopy').addEventListener('click',()=>{
     if(!safeIdentity())return;
     const all=taskOverview(state.tasks,owner()).tasks;
     if(!all.length)return notice('Задач для копирования нет.',true);
+    const scope=ownerRequestScope();
     if(!window.confirm('Скопировать список задач и исходные цитаты в буфер обмена этого устройства?'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     const value=all.map(t=>
       '['+(t.status==='done'?'✓':t.status==='deferred'?'–':' ')+'] '+t.title+
       ' · '+(t.dueAt?new Date(t.dueAt).toLocaleString('ru-RU'):'дата не назначена')+
       '\nИсточник: '+t.sourceQuote).join('\n\n');
     if(navigator.clipboard?.writeText)
       navigator.clipboard.writeText(value).then(
-        ()=>notice('Задачи скопированы. Проверь, кому передаёшь текст.'),
-        ()=>notice('Не удалось скопировать.',true));
+        ()=>{if(isOwnerRequestCurrent(scope))
+          notice('Задачи скопированы. Проверь, кому передаёшь текст.');},
+        ()=>{if(isOwnerRequestCurrent(scope))
+          notice('Не удалось скопировать.',true);});
     else notice('Буфер обмена недоступен.',true);
   });
   $('vtaiTasksCloudLoad').addEventListener('click',()=>void loadTasksCloud());
