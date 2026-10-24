@@ -74,11 +74,13 @@ test('the real VETOGRAM Mini App integrates a new screen but keeps the legacy St
   assert.match(ui,/input\.dispatchEvent\(new Event\('change'/);
   assert.doesNotMatch(ui,/publish_story|TELEGRAM_BOT_TOKEN|sendMessage\(/);
 });
-test('Portal is visibly a local-only preview, not a falsely live public URL',()=>{
+test('Portal stays a local draft until owner explicitly approves an isolated public link',()=>{
   const html=read('public/studio.html'),ui=read('public/story-engine.js');
-  assert.match(html,/создай отдельную публичную ссылку/);
-  assert.match(html,/не кликабельная ссылка Telegram/);
+  assert.match(html,/id="sePortalCreateLink"/);
+  assert.match(html,/без фотографий, сообщений или данных Telegram/);
   assert.match(ui,/Публичной ссылки пока нет/);
+  assert.match(ui,/window\.confirm\('Создать публичную ссылку/);
+  assert.match(ui,/makePublicPortalUrl\(portal,window\.location\.origin\)/);
   assert.match(ui,/owner\(\)!==requestedOwner \|\| state\.owner!==requestedOwner/);
   assert.match(read('public/story-engine-core.js'),/data:image/);
 });
