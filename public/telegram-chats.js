@@ -582,7 +582,7 @@
     for(const btn of document.querySelectorAll('[data-chat-voice-preset]')){
       const active=btn.dataset.chatVoicePreset===state.voicePreset;
       btn.setAttribute('aria-pressed',String(active));
-      btn.disabled=Boolean(state.recording);
+      btn.disabled=Boolean(state.recording||state.voiceStarting);
     }
     if($('telegramThreadVoiceSend'))$('telegramThreadVoiceSend').disabled=Boolean(state.sendInFlight||!canSendInThread(state.thread));
   }
