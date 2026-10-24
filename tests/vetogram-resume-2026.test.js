@@ -36,7 +36,7 @@ function fixture(){
   class Observer{
     constructor(fn){observed=fn}
     observe(target,options){assert.equal(options.attributes,true);
-      assert.deepEqual(options.attributeFilter,['class']);}
+      assert.deepEqual(Array.from(options.attributeFilter),['class']);}
   }
   vm.runInNewContext(code,vm.createContext({
     document:doc,window:win,MutationObserver:Observer,
