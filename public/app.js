@@ -2206,6 +2206,7 @@
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
+        <button data-sheet-action="viewer-start-qr">Войти через QR со второго устройства</button>
         <button data-sheet-action="viewer-back-setup">Назад</button>
       </div>
     `);
@@ -2240,6 +2241,7 @@
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-code">Подтвердить</button>
         <button data-sheet-action="viewer-code-help">Код не пришёл?</button>
+        <button data-sheet-action="viewer-start-qr">QR-вход со второго устройства</button>
         <button data-sheet-action="close">Закрыть (вход сохранится)</button>
       </div>
     `);
