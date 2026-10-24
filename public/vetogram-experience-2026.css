@@ -321,3 +321,173 @@ html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
   .screen[data-screen="ai"] :is(.vtai-panel p,.vtai-panel small){
   color:inherit
 }
+
+
+/* VETOGRAM 3.1 / clarity-over-chrome release pass, 24 Oct 2026.
+   Works on the existing real screen DOM; no simulated Telegram state.
+   Reduces stacked dashboard density, improves one-thumb chat ergonomics.
+*/
+html{
+  --vgx-strong:#fff7f6;--vgx-tint:rgba(255,143,142,.105);
+  --vgx-row:rgba(21,32,51,.74);
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"]){
+  --vgx-strong:#2c2435;--vgx-tint:rgba(187,78,98,.08);
+  --vgx-row:rgba(238,243,250,.9);
+}
+html:is([data-veto-theme="slate"]){--vgx-row:rgba(35,53,74,.88)}
+/* One primary hero, one real status strip, and a fast return path.
+   All advanced content remains available through its native disclosure. */
+.screen[data-screen="home"] .veto-command-home{
+  padding:clamp(24px,4.5vw,42px)!important;border-radius:28px!important;
+  box-shadow:0 26px 72px rgba(3,9,28,.31)!important;
+}
+.screen[data-screen="home"] .veto-command-home-top{
+  font-size:10px!important;letter-spacing:.17em;
+}
+.screen[data-screen="home"] .veto-command-home h1{
+  max-width:690px!important;line-height:1.035!important;
+  font-size:clamp(38px,6.4vw,66px)!important;
+}
+.screen[data-screen="home"] .veto-command-home-actions{
+  gap:10px;align-items:stretch;
+}
+.screen[data-screen="home"] .veto-command-home-actions button{
+  min-height:54px!important;box-shadow:none!important;
+}
+.screen[data-screen="home"] .veto-command-home-grid{
+  gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.screen[data-screen="home"] .veto-command-home-grid button{
+  min-height:104px!important;min-width:0;
+  border-radius:17px!important;text-align:left;
+  transition:border-color .16s,background .16s,transform .16s;
+}
+.screen[data-screen="home"] .veto-command-home-grid button:is(:hover,:focus-visible){
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--vgx-hot) 56%,transparent)!important;
+}
+.screen[data-screen="home"] .veto-command-home-grid button small{
+  line-height:1.45!important;overflow-wrap:anywhere;
+}
+.screen[data-screen="home"] .vg27-mission{
+  margin-top:13px;border-radius:22px;
+}
+.screen[data-screen="home"] .vg27-mission-state{
+  min-width:0;min-height:72px;border-radius:15px;
+}
+.screen[data-screen="home"] .vg27-mission-label{min-width:0}
+.screen[data-screen="home"] .vg27-mission-label strong{overflow-wrap:anywhere}
+.screen[data-screen="home"] .vg26-resume{margin-top:13px;border-radius:22px}
+.screen[data-screen="home"] .vg26-resume-flows button{min-height:76px}
+.screen[data-screen="home"] .veto-command-advanced{
+  margin-top:14px;border-radius:17px;
+}
+/* Inbox: conversational first, not giant marketing cards. */
+#telegramMirror .veto-mirror-search-wrap{
+  min-height:49px!important;border-radius:15px!important;
+  box-shadow:0 6px 20px rgba(1,10,26,.10);
+}
+#telegramMirror .veto-mirror-chat{
+  min-height:72px!important;border-radius:15px!important;
+  margin:0!important;box-shadow:none!important;
+}
+#telegramMirror .veto-mirror-chat-list{gap:3px!important}
+#telegramMirror .veto-mirror-chat:is(:hover,:focus-visible){
+  background:color-mix(in srgb,var(--vgx-tint) 80%,var(--ct-panel,#111b2d))!important;
+  border-color:var(--vgx-hairline)!important;
+}
+#telegramMirror .veto-mirror-filters{
+  gap:7px;scrollbar-width:none;padding-bottom:6px;
+}
+#telegramMirror .veto-mirror-filters button{
+  min-height:42px!important;white-space:nowrap;padding-inline:13px;
+}
+#telegramMirror .veto-mirror-empty{
+  max-width:520px;margin-inline:auto;
+  border-radius:22px!important;
+}
+#telegramMirror .veto-mirror-thread-bar{
+  min-height:58px;backdrop-filter:blur(13px);
+}
+#telegramMirror .veto-mirror-compose :is(button,input,textarea):focus-visible{
+  outline:2px solid var(--vgx-focus);outline-offset:2px;
+}
+/* Never turn a status or a permission into a decorative success. */
+#vg27Mission :is([data-status="checking"],[data-status="setup"]){
+  text-decoration:none;opacity:.94;
+}
+#vg27Mission [data-status="permission"]{color:var(--vgx-quiet)}
+/* Tools: maintain consistent reading width and quiet typography. */
+.screen[data-screen="ai"] .vtai-root,
+.screen[data-screen="story-engine"] .se-engine{max-width:980px;margin-inline:auto}
+.screen[data-screen="ai"] .vtai-panel,
+.screen[data-screen="story-engine"] .se-panel{
+  box-shadow:0 8px 29px rgba(0,0,0,.09);
+}
+.screen[data-screen="ai"] .vtai-workspace-item{
+  border-radius:15px;min-width:0;
+}
+.screen[data-screen="ai"] .vtai-modes button,
+.screen[data-screen="story-engine"] .se-button{min-height:44px}
+@media(max-width:700px){
+  .screen[data-screen="home"] .veto-command-home-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .screen[data-screen="home"] .veto-command-home-grid button{
+    min-height:90px!important;padding:13px!important;
+  }
+  .screen[data-screen="home"] .veto-command-home h1{
+    font-size:clamp(34px,8vw,50px)!important;
+  }
+  .screen[data-screen="home"] .vg27-mission-statuses{gap:8px}
+}
+@media(max-width:480px){
+  .app-shell{padding-inline:11px!important;
+    padding-bottom:calc(117px + env(safe-area-inset-bottom,0px))!important;
+  }
+  .screen[data-screen="home"] .veto-command-home{
+    padding:22px 17px!important;border-radius:23px!important;
+  }
+  .screen[data-screen="home"] .veto-command-home h1{
+    font-size:clamp(34px,9vw,43px)!important;
+    letter-spacing:-.058em!important;
+  }
+  .screen[data-screen="home"] .veto-command-home>p{font-size:13px!important}
+  .screen[data-screen="home"] .veto-command-home-actions{
+    display:grid;grid-template-columns:1fr;
+  }
+  .screen[data-screen="home"] .veto-command-home-actions button{
+    min-height:52px!important;width:100%;
+  }
+  .screen[data-screen="home"] .veto-command-home-grid{gap:8px}
+  .screen[data-screen="home"] .veto-command-home-grid button{
+    min-height:86px!important;border-radius:15px!important;
+  }
+  .screen[data-screen="home"] .vg27-mission{padding:17px 14px!important}
+  .screen[data-screen="home"] .vg26-resume{padding:16px 14px!important}
+  .bottom-nav{width:calc(100% - 16px)!important;
+    bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
+    min-height:64px!important;
+  }
+  .bottom-nav .nav-item{min-height:50px!important;min-width:0}
+  .bottom-nav .nav-item small{font-size:10px!important}
+  .topbar .vg26-command-trigger{min-width:44px;max-width:48px;padding:0!important}
+  .topbar .vg26-command-trigger-label,.topbar .vg26-command-trigger kbd{display:none}
+  #telegramMirror .veto-mirror-chat{min-height:68px!important}
+  .vtai-root{padding-bottom:calc(114px + env(safe-area-inset-bottom,0px))}
+  .se-engine{padding-bottom:calc(114px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:340px){
+  .screen[data-screen="home"] .veto-command-home-grid{grid-template-columns:1fr!important}
+  .screen[data-screen="home"] .veto-command-home-grid button{min-height:69px!important}
+  .topbar .brand-copy span{display:none}
+}
+@media(hover:none){
+  .screen[data-screen="home"] .veto-command-home-grid button:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .screen[data-screen="home"] .veto-command-home-grid button{
+    transition:none!important;transform:none!important
+  }
+}
