@@ -461,14 +461,15 @@ async function refreshConnection(token, chatId, baseUrl, settings) {
     }).catch(() => {});
     return { settings: next, live: true, rights, readRights };
   } catch (error) {
-    // A transient Telegram/API failure must not destroy a previously valid
-    // Business connection. Keep the durable/menu state and surface degraded live status.
+    // Keep the stored connection for future retries, but never report
+    // *verified* live rights from cached data while Telegram is unreachable.
+    // A stale cached right must not authorize a Story publish request.
     console.warn('Business connection verification deferred', error?.message || String(error));
     return {
       settings,
-      live: Boolean(settings.bc),
-      rights: Boolean(settings.canStories),
-      readRights: Boolean(settings.canReadMessages),
+      live: false,
+      rights: false,
+      readRights: false,
       degraded: true,
     };
   }
