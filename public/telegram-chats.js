@@ -135,12 +135,12 @@
     const writable=canSendInThread(state.thread);
     const available=writable && !state.sendInFlight;
     for(const id of ['telegramThreadAttachButton','telegramThreadAudioButton','telegramThreadStickersButton']){
-      if($(id))$(id).disabled=!available;
+      if($(id))$(id).disabled=!available || Boolean(state.recording||state.voiceStarting);
     }
     const voiceButton=$('telegramThreadRecordVoice');
     if(voiceButton){
       const starting=Boolean(state.voiceStarting),recording=Boolean(state.recording);
-      voiceButton.disabled=starting || !writable || Boolean(state.pendingAttachment) ||
+      voiceButton.disabled=starting || !writable || (Boolean(state.pendingAttachment)&&!recording) ||
         (state.sendInFlight&&!recording);
       voiceButton.classList.toggle('recording',recording);
       voiceButton.classList.toggle('is-requesting-mic',starting);
