@@ -152,7 +152,7 @@ test('Bot API verification cannot write an older Connection ID or accept another
   process.env.TELEGRAM_API_HASH='fixture';process.env.TELEGRAM_BOT_TOKEN='test-token';
   let owner=111,storeOps=[];
   globalThis.fetch=async(url,options)=>{
-    if(String(url).includes('/getBusinessConnection')) return {ok:true,json:async()=>({ok:true,result:{id:'old',user:{id:owner},user_chat_id:owner,is_enabled:true}})};
+    if(String(url).includes('/getBusinessConnection')) return {ok:true,json:async()=>({ok:true,result:{id:'old',user:{id:owner},user_chat_id:900100,is_enabled:true}})};
     const p=JSON.parse(options.body);storeOps.push(p.op);assert.equal(p.op,'get_business_connection_state');
     return {ok:true,json:async()=>({ok:true,data:{businessConnectionId:'old'}})};
   };
