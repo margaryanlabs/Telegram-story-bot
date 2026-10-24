@@ -15,7 +15,7 @@
     stickerPreviewUrls:new Map(),recording:null,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
     threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
-    threadSearch:'',threadSearchIndex:0,deliveryStage:null,inboxReturn:null,
+    threadSearch:'',threadSearchIndex:0,deliveryStage:null,inboxReturn:null,activePhotoId:null,
     intelResults:[],intelTimeline:[],intelQuery:'',intelEpoch:0,intelBusy:false,
     intelNextPage:null,intelIncludeVault:false,intelCoverage:null,intelFocus:null,
   };
@@ -1225,13 +1225,50 @@
       '" aria-label="Развернуть фотографию" title="Увеличить фото">'+
       '<img class="veto-mirror-inline-photo" src="'+safe(href)+'" alt="'+safe(label)+'" loading="lazy" /></button>';
   }
+  // Gallery includes ONLY image blobs already loaded for this signed owner and
+  // current thread. No prefetched downloads, no additional permissions.
+  function loadedPhotoIds(){
+    if(!state.thread || state.ownerInitData!==String(tg?.initData||''))return [];
+    return (state.messages||[]).filter(message=>{
+      const href=state.mediaPreviewUrls.get(String(message.id));
+      return typeof href==='string' && href.startsWith('blob:') &&
+        state.mediaUrls.includes(href) &&
+        String(state.mediaMimeByUrl.get(href)||'').startsWith('image/');
+    }).map(message=>String(message.id));
+  }
+  function refreshPhotoNavigation(){
+    const ids=loadedPhotoIds(),index=ids.indexOf(String(state.activePhotoId||''));
+    const hasGallery=index>=0&&ids.length>1;
+    const prev=$('telegramThreadPhotoPrev'),next=$('telegramThreadPhotoNext');
+    const counter=$('telegramThreadPhotoCount');
+    if(prev)prev.hidden=!hasGallery||index<=0;
+    if(next)next.hidden=!hasGallery||index>=ids.length-1;
+    if(counter){
+      counter.hidden=!hasGallery;
+      counter.textContent=hasGallery?(index+1)+' из '+ids.length+' загруженных':'';
+    }
+    const photo=$('telegramThreadPhotoFull');
+    if(photo&&hasGallery)photo.alt='Фото '+(index+1)+' из '+ids.length+' загруженных в этой переписке';
+    else if(photo)photo.alt='Фото из собственной переписки';
+  }
+  function moveLoadedPhoto(direction){
+    const dialog=$('telegramThreadPhotoDialog');
+    if(resetOwner()||!dialog?.open||!state.thread)return;
+    const ids=loadedPhotoIds(),index=ids.indexOf(String(state.activePhotoId||''));
+    if(index<0)return;
+    const next=index+(direction<0?-1:1);
+    if(next<0||next>=ids.length)return;
+    openPhotoViewer(ids[next]);
+  }
   function closePhotoViewer(){
+    state.activePhotoId=null;
     const dialog=$('telegramThreadPhotoDialog');
     if(!dialog)return;
     if(typeof dialog.close==='function' && dialog.open)dialog.close();
     else dialog.removeAttribute('open');
     if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
     if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
+    refreshPhotoNavigation();
   }
   function openPhotoViewer(messageId){
     if(resetOwner()||!state.thread)return;
@@ -1244,6 +1281,8 @@
     const mime=state.mediaMimeByUrl.get(href)||'image/jpeg';
     const extension=mime==='image/png'?'png':mime==='image/webp'?'webp':mime==='image/gif'?'gif':'jpg';
     save.href=href;save.download='vetogram-photo-'+String(messageId)+'.'+extension;
+    state.activePhotoId=String(messageId);
+    refreshPhotoNavigation();
     if(typeof dialog.showModal==='function'&&!dialog.open)dialog.showModal();
     else dialog.setAttribute('open','');
   }
@@ -1432,7 +1471,7 @@
     state.mediaUrls.forEach(value=>{try{URL.revokeObjectURL(value);}catch{}});
     state.mediaUrls=[];
     state.stickerPreviewUrls.clear();
-    state.mediaPreviewUrls.clear();state.mediaMimeByUrl.clear();state.previewSeen.clear();state.previewInflight.clear();
+    state.mediaPreviewUrls.clear();state.mediaMimeByUrl.clear();state.activePhotoId=null;state.previewSeen.clear();state.previewInflight.clear();
     state.previewEpoch++;state.previewActive=0;
     state.expandedAttachments.clear();state.expandedBytes=0;
   }
@@ -2557,11 +2596,37 @@
     const button=$('telegramThreadJumpLatest');
     if(button)button.hidden=true;
   });
+  // Navigate only photos already downloaded for the current signed thread.
+  // Native Escape remains the dialog's close behavior.
+  $('telegramThreadPhotoPrev')?.addEventListener('click',()=>moveLoadedPhoto(-1));
+  $('telegramThreadPhotoNext')?.addEventListener('click',()=>moveLoadedPhoto(1));
+  $('telegramThreadPhotoDialog')?.addEventListener('keydown',event=>{
+    if(!['ArrowLeft','ArrowRight'].includes(event.key))return;
+    event.preventDefault();
+    moveLoadedPhoto(event.key==='ArrowLeft'?-1:1);
+  });
+  const photoStage=$('telegramThreadPhotoStage');
+  let photoSwipeStart=null;
+  photoStage?.addEventListener('touchstart',event=>{
+    if(event.touches.length!==1){photoSwipeStart=null;return;}
+    photoSwipeStart={x:event.touches[0].clientX,y:event.touches[0].clientY};
+  },{passive:true});
+  photoStage?.addEventListener('touchend',event=>{
+    const from=photoSwipeStart;
+    photoSwipeStart=null;
+    if(!from||event.changedTouches.length!==1)return;
+    const dx=event.changedTouches[0].clientX-from.x;
+    const dy=event.changedTouches[0].clientY-from.y;
+    if(Math.abs(dx)<65||Math.abs(dx)<Math.abs(dy)*1.5)return;
+    moveLoadedPhoto(dx>0?-1:1);
+  },{passive:true});
+  photoStage?.addEventListener('touchcancel',()=>{photoSwipeStart=null},{passive:true});
   $('telegramThreadPhotoClose')?.addEventListener('click',closePhotoViewer);
   $('telegramThreadPhotoDialog')?.addEventListener('click',event=>{
     if(event.target===event.currentTarget)closePhotoViewer();
   });
   $('telegramThreadPhotoDialog')?.addEventListener('close',()=>{
+    state.activePhotoId=null;refreshPhotoNavigation();
     if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
     if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
   });
