@@ -96,3 +96,31 @@ test('manual send ignores a stale network result before modifying draft or state
   const clearDraft=body.indexOf("$('vtaiDraft').value=''",response);
   assert.ok(response>=0&&guard>response&&clearDraft>guard);
 });
+
+
+test('explicit action confirmation cannot be carried from Telegram owner A to B',()=>{
+  const js=read('public/vetogram-ai.js');
+  const actions=['async function loadTasksCloud()','async function saveTasksCloud()',
+    'async function eraseTasksCloud()','async function scheduleReminder(',
+    'async function cancelAllReminders()','async function cancelReminder(',
+    'async function loadMemoryCloud()','async function eraseMemoryCloud()',
+    'async function send()'];
+  for(const name of actions){
+    const at=js.indexOf(name),end=js.indexOf('\n  }\n',at);
+    assert.ok(at>=0&&end>at,name);
+    const body=js.slice(at,end);
+    const scope=body.indexOf('const scope=ownerRequestScope()');
+    const confirm=body.indexOf('window.confirm(');
+    const resume=body.indexOf('if(!isOwnerRequestCurrent(scope))return;',confirm);
+    const firstRequest=body.indexOf('await request(',confirm);
+    assert.ok(scope>=0&&confirm>scope&&resume>confirm&&firstRequest>resume,
+      'Confirmation must revalidate original owner before network: '+name);
+  }
+  const start=js.indexOf('async function generate()'),end=js.indexOf('async function send()',start);
+  const ai=js.slice(start,end);
+  const scope=ai.indexOf('const scope=ownerRequestScope()');
+  const confirm=ai.indexOf("window.confirm('Разрешить VETOGRAM AI готовить");
+  const guard=ai.indexOf('if(!isOwnerRequestCurrent(scope))return;',confirm);
+  const grant=ai.indexOf("await request('/api/vetogram-ai-grants'",confirm);
+  assert.ok(scope>=0&&confirm>scope&&guard>confirm&&grant>guard);
+});
