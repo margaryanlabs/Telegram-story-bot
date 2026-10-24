@@ -1354,7 +1354,11 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   });
   $('vtaiApplyStory').addEventListener('click',()=>void applyStory());
   document.querySelectorAll('[data-vtai-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.vtaiMode)));
-  document.querySelectorAll('[data-open-screen="ai"][data-ai-mode="story"]').forEach(b=>b.addEventListener('click',()=>setMode('story')));
+  // Explicit user-selected deep links. Never generate, inspect chats or send on navigation.
+  document.querySelectorAll('[data-open-screen="ai"][data-ai-mode]').forEach(b=>b.addEventListener('click',()=>{
+    const requested=String(b.dataset.aiMode||'');
+    if(requested==='story'||requested==='reply')setMode(requested);
+  }));
   // One-tap reply from the currently open Telegram thread. Local copy only.
   // Require fresh consent before passing someone else's content to any AI model.
   window.addEventListener('vetogram:brief-prefill',event=>{
