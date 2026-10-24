@@ -997,3 +997,41 @@ html.veto-keyboard-open body.veto-chat-thread #telegramMirror .veto-mirror-threa
     animation:none!important;transition:none!important;transform:none!important;
   }
 }
+
+
+/* Delivery indicators mirror the real pending/accepted message states only. */
+#telegramMirror .veto-mirror-send-pending{
+  color:var(--ct-muted,#adbed5);font-size:10px;font-weight:700;
+}
+#telegramMirror .veto-mirror-send-accepted{
+  color:var(--ct-muted,#b8c9dd);font-size:10px;font-weight:700;
+}
+#telegramMirror .veto-mirror-open-vault{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;max-width:100%;
+  padding:9px 12px;border-radius:12px;
+  border:1px solid var(--ct-line,rgba(167,190,222,.22));
+  background:var(--ct-chip,rgba(166,197,230,.1));
+  color:var(--ct-chip-text,var(--ct-text,#dce8f8));
+  font:inherit;font-size:12px;line-height:1.35;
+  overflow-wrap:anywhere;
+}
+#telegramMirror .veto-mirror-open-vault:focus-visible{
+  outline:2px solid var(--vg34-focus,#ffb59d);outline-offset:2px;
+}
+@media(max-width:660px){
+  /* Stronger than the legacy narrow-chat 32px icon rule; no hidden actions. */
+  body.veto-chat-thread #telegramMirror .veto-mirror-thread-bar .veto-mirror-back{
+    min-width:44px;width:44px;height:44px;flex:0 0 44px;
+  }
+  body.veto-chat-thread #telegramMirror .veto-mirror-thread-bar > .veto-mirror-icon-btn:not(.veto-mirror-back),
+  body.veto-chat-thread #telegramMirror .veto-mirror-thread-bar > .veto-mirror-native-link{
+    min-width:44px;width:44px;height:44px;flex:1 1 44px;max-width:58px;
+  }
+  body.veto-chat-thread #telegramMirror .veto-mirror-thread-avatar{
+    flex:0 0 38px;min-width:38px;width:38px;height:38px;
+  }
+  body.veto-chat-thread #telegramMirror .veto-mirror-thread-person{
+    flex:1 1 calc(100% - 112px);min-width:0;
+  }
+}
