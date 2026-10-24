@@ -140,6 +140,8 @@
     const voiceButton=$('telegramThreadRecordVoice');
     if(voiceButton){voiceButton.disabled=!writable || Boolean(state.pendingAttachment) || (state.sendInFlight&&!state.recording);
       voiceButton.classList.toggle('recording',Boolean(state.recording));
+      voiceButton.setAttribute('aria-pressed',String(Boolean(state.recording)));
+      voiceButton.setAttribute('aria-label',state.recording?'Завершить запись голосового':'Начать запись голосового');
       voiceButton.textContent=state.recording?'■':'◉';
       voiceButton.title=state.recording?'Завершить запись и прослушать':'Записать голосовое';}
 
