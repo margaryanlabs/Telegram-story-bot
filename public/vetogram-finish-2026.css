@@ -168,3 +168,299 @@ html[data-veto-theme="linen"] .screen[data-screen="home"] .vg30-flow-deck .vg30-
   #telegramMirror .veto-mirror-chat,.bottom-nav .nav-item,
   .vtai-root .vtai-modes button {transition:none!important;transform:none!important;}
 }
+
+
+/* VETOGRAM 3.3 / Product art direction
+ * Actual product components, six real destinations, and live status only.
+ * One hero, the existing signed permission matrix, one discovery collection.
+ */
+:root{
+  --vg33-accent:#ff9b90;
+  --vg33-subtle:rgba(181,197,228,.17);
+  --vg33-card:#111c2d;
+  --vg33-inset:rgba(255,255,255,.048);
+  --vg33-text:#f6f8ff;
+  --vg33-muted:#b8c6da;
+}
+.screen[data-screen="home"] .veto-command-home{
+  min-height:284px;
+  padding:clamp(23px,4.3vw,40px)!important;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:center;
+  gap:clamp(11px,1.5vw,17px)!important;
+  border:1px solid rgba(252,196,197,.25)!important;
+  background:
+    radial-gradient(ellipse 55% 92% at 100% -18%,rgba(243,103,128,.23),transparent 72%),
+    radial-gradient(ellipse 70% 100% at 5% 115%,rgba(86,109,212,.19),transparent 72%),
+    linear-gradient(115deg,#0d1728 0%,#142036 52%,#1b1a2d 100%)!important;
+  box-shadow:0 22px 65px rgba(3,9,24,.23),inset 0 1px rgba(255,255,255,.085)!important;
+}
+.screen[data-screen="home"] .veto-command-home::before{
+  content:"";inset:0 0 auto!important;width:100%!important;height:1px!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  background:linear-gradient(90deg,transparent,rgba(255,172,158,.57),transparent)!important;
+}
+.screen[data-screen="home"] .veto-command-home::after{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  opacity:.32;
+  background-image:linear-gradient(rgba(255,255,255,.038) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.038) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:linear-gradient(95deg,transparent 10%,black 100%);
+}
+.screen[data-screen="home"] .veto-command-home > :not(.vg33-hero-sigil){
+  position:relative;z-index:2;
+}
+.screen[data-screen="home"] .veto-command-home-top{
+  width:fit-content;max-width:100%;gap:9px;flex-wrap:wrap;
+  color:rgba(248,248,255,.82)!important;
+  font-size:10px!important;letter-spacing:.1em!important
+}
+.screen[data-screen="home"] .veto-command-home-top strong{
+  font-size:10px!important;letter-spacing:.015em;white-space:nowrap;
+  color:#ffb0a3!important;border-color:rgba(255,174,168,.25)!important
+}
+.screen[data-screen="home"] .veto-command-home h1{
+  max-width:760px;
+  font-size:clamp(38px,5.7vw,64px)!important;
+  line-height:1.075!important;
+  letter-spacing:-.066em!important;
+}
+.screen[data-screen="home"] .veto-command-home h1 em{
+  display:inline-block;
+  background:linear-gradient(100deg,#ffe7da 4%,#ffa994 54%,#fc829c 100%);
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.screen[data-screen="home"] .veto-command-home > p{
+  max-width:52ch!important;color:#ced7e7!important;
+  font-size:clamp(13px,1.7vw,15px)!important;line-height:1.65!important;
+}
+.screen[data-screen="home"] .vg33-hero-sigil{
+  position:absolute;right:4%;top:50%;z-index:1;
+  width:clamp(115px,19vw,224px);aspect-ratio:1;
+  display:grid;place-items:center;transform:translateY(-50%);
+  opacity:.72;pointer-events:none;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,153,154,.16),rgba(255,153,154,.027) 54%,transparent 69%);
+  box-shadow:inset 0 0 0 1px rgba(255,183,181,.075),0 0 76px rgba(253,115,136,.08);
+}
+.screen[data-screen="home"] .vg33-hero-sigil img{
+  display:block;width:58%;height:58%;object-fit:contain;
+  filter:drop-shadow(0 15px 26px rgba(0,0,0,.2));
+}
+.screen[data-screen="home"] .veto-command-home-actions{
+  width:min(100%,580px);gap:10px;
+}
+.screen[data-screen="home"] .veto-command-home-actions>button{
+  flex:1 1 210px;
+  min-height:54px!important;border-radius:15px!important;
+  touch-action:manipulation;
+}
+.screen[data-screen="home"] .veto-command-home-actions .veto-command-home-primary{
+  background:linear-gradient(110deg,#ffb09d,#fb8395 92%)!important;
+  border-color:rgba(255,215,204,.7)!important;
+  box-shadow:0 11px 25px rgba(247,119,141,.2)!important;
+}
+.screen[data-screen="home"] .veto-command-home-actions .veto-command-home-connect{
+  background:rgba(255,255,255,.075)!important;
+  color:#f7f8ff!important;border-color:rgba(223,224,255,.2)!important;
+}
+.screen[data-screen="home"] .veto-command-home-actions>button:is(:hover,:focus-visible){
+  box-shadow:0 15px 31px rgba(247,119,141,.19)!important;
+}
+.screen[data-screen="home"] .vg27-mission{
+  margin:12px 0!important;
+  border-radius:22px!important;
+  box-shadow:0 8px 25px rgba(3,9,24,.09)!important;
+}
+.screen[data-screen="home"] .vg27-mission-heading{gap:11px}
+.screen[data-screen="home"] .vg27-mission-heading h2{
+  font-size:clamp(18px,2.8vw,24px)!important;letter-spacing:-.045em;
+}
+/* Separate tool discovery from hero and real account permissions. */
+.screen[data-screen="home"] .vg33-tools-panel{
+  min-width:0;margin:4px 0 10px;
+  padding:clamp(14px,2.6vw,22px);
+  border:1px solid var(--vgx-hairline);border-radius:23px;
+  background:linear-gradient(145deg,rgba(31,43,64,.72),rgba(18,28,44,.48));
+  box-shadow:inset 0 1px rgba(255,255,255,.038);
+}
+.screen[data-screen="home"] .vg33-tools-heading{
+  margin:0 3px 13px!important;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.screen[data-screen="home"] .vg33-tools-heading strong{
+  color:var(--vgx-ink)!important;font-size:14px!important;
+  letter-spacing:-.01em!important;text-transform:none!important;
+}
+.screen[data-screen="home"] .vg33-tools-heading span{
+  font-size:11px!important;color:var(--vgx-quiet)!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-auto-flow:row!important;grid-auto-columns:auto!important;
+  padding:0!important;margin:0!important;overflow:visible!important;
+  gap:10px!important;scroll-snap-type:none!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button{
+  position:relative;display:grid!important;
+  grid-template-columns:43px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  align-content:center;column-gap:11px;row-gap:4px;
+  width:100%!important;min-width:0!important;
+  min-height:100px!important;
+  padding:13px!important;border-radius:17px!important;
+  border:1px solid var(--vg33-subtle)!important;
+  background:linear-gradient(142deg,#142138,#111c2e)!important;
+  color:var(--vg33-text)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.05)!important;
+  text-align:left;overflow:hidden;
+  transition:transform .2s var(--vg32-ease),border-color .2s,box-shadow .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button>span{
+  display:grid;place-items:center;
+  width:42px;height:42px;grid-row:1 / span 2!important;
+  border-radius:14px;
+  background:rgba(255,153,146,.12)!important;color:#ffae9c!important;
+  font-size:23px!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button>strong{
+  min-width:0;color:#f4f6ff!important;
+  font-size:13px!important;line-height:1.28;font-weight:790;
+  letter-spacing:-.025em;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button>small{
+  min-width:0;color:#aebed4!important;
+  font-size:11px!important;line-height:1.4!important;
+  overflow-wrap:break-word;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:nth-child(2)>span{
+  background:rgba(111,155,251,.13)!important;color:#a1c0fa!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:nth-child(3)>span{
+  background:rgba(172,135,246,.15)!important;color:#c9b3ff!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:nth-child(4)>span{
+  background:rgba(255,148,189,.14)!important;color:#ffb0ce!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:nth-child(5)>span{
+  background:rgba(110,218,186,.12)!important;color:#9ce3cb!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:nth-child(6)>span{
+  background:rgba(175,195,220,.1)!important;color:#c1d3e7!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:is(:hover,:focus-visible){
+  border-color:rgba(255,169,159,.58)!important;
+  background:linear-gradient(142deg,#1b2a42,#17233a)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.06),0 10px 25px rgba(0,7,24,.2)!important;
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:active{
+  transform:scale(.985)!important;
+}
+/* Keep utilities subordinate to the current conversation. */
+#telegramMirror .veto-mirror-chat-list{
+  gap:2px!important;
+}
+#telegramMirror .veto-mirror-chat{
+  border-radius:13px!important;min-height:67px!important;
+}
+#telegramMirror .veto-mirror-chat:not(:last-child){
+  border-bottom:1px solid rgba(177,191,222,.045)!important;
+}
+#telegramMirror .veto-mirror-search-wrap{
+  border-radius:14px!important;
+}
+#telegramMirror .veto-mirror-chat:is(:focus-visible,:hover){
+  box-shadow:inset 3px 0 rgba(255,155,144,.75)!important;
+}
+.bottom-nav .nav-item.active{
+  background:color-mix(in srgb,var(--vgx-hot) 11%,transparent)!important;
+}
+.bottom-nav .nav-item.active:after{
+  background:var(--vgx-hot,#ff907e);
+  width:18px;left:calc(50% - 9px);height:2px;
+}
+/* The current owner permissions remain visible without claiming live delivery. */
+#vg27Mission [data-status="permission"]{
+  color:var(--vgx-quiet)!important;
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="home"] .vg33-tools-panel{
+  background:linear-gradient(145deg,#fbfdff,#f1f4fa)!important;
+  border-color:rgba(40,63,97,.14)!important;
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button{
+  background:linear-gradient(155deg,#fff,#f6f8fc)!important;
+  color:#25354c!important;border-color:rgba(35,62,97,.15)!important;
+  box-shadow:0 4px 16px rgba(24,44,73,.045)!important;
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button strong{
+  color:#24344d!important;
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button small{
+  color:#596e88!important;
+}
+@media(max-width:900px){
+  .screen[data-screen="home"] .vg33-hero-sigil{opacity:.34;right:0}
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:600px){
+  .screen[data-screen="home"] .veto-command-home{
+    min-height:unset;gap:13px!important;padding:22px 18px!important;
+  }
+  .screen[data-screen="home"] .veto-command-home h1{
+    font-size:clamp(32px,9.2vw,43px)!important;letter-spacing:-.052em!important;
+  }
+  .screen[data-screen="home"] .vg33-hero-sigil{
+    top:20%;right:-24px;width:134px;opacity:.19;transform:none;
+  }
+  .screen[data-screen="home"] .veto-command-home > p{
+    max-width:41ch;font-size:13px!important;line-height:1.5!important;
+  }
+  .screen[data-screen="home"] .veto-command-home-actions{
+    display:grid;grid-template-columns:minmax(0,1fr);gap:8px;
+  }
+  .screen[data-screen="home"] .veto-command-home-actions>button{
+    flex:none;min-height:49px!important;
+  }
+  .screen[data-screen="home"] .vg33-tools-panel{padding:13px;border-radius:19px}
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid{
+    gap:8px!important;
+  }
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button{
+    grid-template-columns:1fr!important;grid-template-rows:auto auto auto!important;
+    align-content:start;gap:6px;min-height:117px!important;
+    padding:12px!important;
+  }
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button>span{
+    grid-row:auto!important;width:35px;height:35px;font-size:20px!important;
+    border-radius:11px;
+  }
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button>strong{
+    font-size:12px!important;
+  }
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button>small{
+    font-size:10px!important;
+  }
+  .screen[data-screen="home"] .vg33-tools-heading{margin-bottom:10px!important}
+}
+@media(max-width:350px){
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-auto-flow:row!important;grid-auto-columns:auto!important;
+  }
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button{
+    grid-template-columns:40px minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;min-height:77px!important;
+  }
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button>span{
+    grid-row:1 / span 2!important;
+  }
+  .screen[data-screen="home"] .vg33-tools-heading span{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button{
+    animation:none!important;transition:none!important;transform:none!important;
+  }
+}
