@@ -633,7 +633,7 @@
               </div>
               <small class="veto-voice-tools-note">Ниже/Выше изменяют высоту голоса на устройстве; Робот — звучание. Выбери эффект до записи, прослушай результат перед отправкой.</small>
             </details>
-            <div id="telegramThreadVoiceStatus" class="veto-mirror-voice-status" role="status" hidden><i aria-hidden="true"></i><span id="telegramThreadVoiceTimer">● 00:00 · Идёт запись</span></div>
+            <div id="telegramThreadVoiceStatus" class="veto-mirror-voice-status" role="status" aria-live="polite" aria-atomic="true" hidden><i aria-hidden="true"></i><strong id="telegramThreadVoiceState">Идёт запись</strong><span id="telegramThreadVoiceTimer" aria-hidden="true">00:00 / 00:45</span></div>
             <div id="telegramThreadVoicePreview" class="veto-mirror-voice-preview" hidden>
               <strong id="telegramThreadVoiceLabel">Голосовое готово · проверь запись</strong>
               <audio id="telegramThreadVoicePlayer" controls preload="metadata"></audio>
@@ -656,7 +656,7 @@
                   <span aria-hidden="true">◉</span>
                   <textarea id="telegramThreadCompose" maxlength="4096" rows="1" placeholder="Сообщение" aria-label="Написать сообщение" disabled></textarea>
                 </label>
-                <button type="button" id="telegramThreadRecordVoice" class="veto-mirror-tool-btn veto-mirror-mic-btn" aria-label="Начать запись голосового" aria-pressed="false" title="Записать голосовое" disabled>♫</button>
+                <button type="button" id="telegramThreadRecordVoice" class="veto-mirror-tool-btn veto-mirror-mic-btn" aria-label="Начать запись голосового" aria-pressed="false" aria-busy="false" title="Записать голосовое" disabled>♫</button>
                 <button type="submit" class="veto-mirror-send-button" id="telegramThreadSend" aria-label="Отправить сообщение" title="Отправить в Telegram от моего имени" disabled>➤</button>
               </form>
 
