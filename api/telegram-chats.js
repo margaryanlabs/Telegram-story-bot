@@ -187,7 +187,11 @@ async function archivedMessages(ownerId,chatId,offset=0){
       hasMore:Boolean(result?.hasMore),
       nextOffset:offset+rows.length,
     };
-  }catch{return {messages:[],hasMore:false,nextOffset:offset};}
+  }catch{
+    // Unreachable archive is NOT the same as an empty archive. The caller must
+    // preserve Telegram messages while surfacing a storage warning.
+    return {messages:[],hasMore:false,nextOffset:offset,unavailable:true};
+  }
 }
 export function combineLiveAndPreserved(live=[],preserved=[]){
   const map=new Map();
@@ -249,6 +253,10 @@ export default async function handler(req,res){
     // owner-scoped by the signed Mini App user id, with no public media links.
     if(action==='thread_archive'){
       const saved=await archivedMessages(userId,chatId,archiveOffset);
+      if(saved.unavailable)return respond(res,503,{
+        error:'Защищённый архив временно недоступен. Живые сообщения не удалены; попробуй синхронизацию позже.',
+        archiveUnavailable:true,
+      });
       return respond(res,200,{
         messages:saved.messages,archiveHasMore:saved.hasMore,
         archiveNextOffset:saved.nextOffset,source:'owner-private-archive',
@@ -369,8 +377,16 @@ export default async function handler(req,res){
       if(creds?.session)storedPromise=archivedMessages(userId,chatId,archiveOffset);
     }
     const [stored,history]=await Promise.all([storedPromise,historyPromise]);
+    if(stored.unavailable){
+      const notice='Защищённый архив временно недоступен. Ранее сохранённые сообщения могут быть не видны.';
+      warning=warning?warning+' · '+notice:notice;
+    }
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
     if(!chat && threadArchive)chat=archivedDialog(threadArchive);
+    if(!chat&&stored.unavailable)return respond(res,503,{
+      error:'Архив временно недоступен. Нельзя подтвердить отсутствие сохранённого чата.',
+      archiveUnavailable:true,
+    });
     if(!chat)return respond(res,404,{error:'Чат не найден в Telegram и нет ранее сохранённой копии VETO.'});
     return respond(res,200,{
       chat, messages:combineLiveAndPreserved(liveMessages,stored.messages),
