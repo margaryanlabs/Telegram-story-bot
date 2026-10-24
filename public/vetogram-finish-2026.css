@@ -1,0 +1,170 @@
+/* VETOGRAM 3.2 / finishing layer — real Mini App, not a preview.
+ * Motion communicates navigation and touch, never an imaginary connection.
+ * No changes to Telegram auth, permissions, AI, private content or payments.
+ */
+:root {
+  --vg32-ease: cubic-bezier(.22,1,.36,1);
+  --vg32-stroke: color-mix(in srgb,var(--vgx-ink,#f4f6fd) 12%,transparent);
+  --vg32-accent: var(--vgx-hot,#ff907e);
+}
+@keyframes vg32-enter {
+  from { opacity: .4; transform: translate3d(0,10px,0); }
+  to { opacity: 1; transform: translate3d(0,0,0); }
+}
+@keyframes vg32-rise {
+  from { opacity: 0; transform: translate3d(0,12px,0) scale(.985); }
+  to { opacity: 1; transform: translate3d(0,0,0) scale(1); }
+}
+@keyframes vg32-checking {
+  0%,100% { opacity: .5; }
+  50% { opacity: 1; }
+}
+@keyframes vg32-arrow {
+  from { transform: translate3d(-3px,0,0); opacity:.65; }
+  to { transform: translate3d(0,0,0); opacity:1; }
+}
+/* Animate only the active screen and avoid animating the Telegram's own chrome.
+ * Hidden/inactive screens retain the existing app controller's display rules.
+ */
+.app-shell > .screen.active:not([data-screen="telegram"]) {
+  animation: vg32-enter .3s var(--vg32-ease) both;
+}
+.screen[data-screen="home"].active .veto-command-home {
+  animation: vg32-rise .46s var(--vg32-ease) both;
+}
+.screen[data-screen="home"].active .vg27-mission {
+  animation: vg32-rise .44s .045s var(--vg32-ease) both;
+}
+.screen[data-screen="home"].active .vg26-resume {
+  animation: vg32-rise .44s .085s var(--vg32-ease) both;
+}
+/* The hero takes the first glance, not the full phone viewport. */
+.screen[data-screen="home"] .veto-command-home {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--vg32-stroke);
+  border-radius: 25px;
+}
+.screen[data-screen="home"] .veto-command-home::before {
+  content:""; position:absolute; inset:0 0 auto;
+  height:1px; background:linear-gradient(90deg,transparent,rgba(255,172,155,.52),transparent);
+  pointer-events:none;
+}
+.screen[data-screen="home"] .veto-command-home h1 {
+  text-wrap:balance;
+  letter-spacing:-.055em;
+}
+.screen[data-screen="home"] .veto-command-home > p {
+  max-width: 59ch; text-wrap:pretty; line-height:1.55;
+}
+.screen[data-screen="home"] .veto-command-home-actions button,
+.screen[data-screen="home"] .veto-command-home-grid button,
+.screen[data-screen="home"] .vg30-flow-deck button,
+.screen[data-screen="home"] .vg27-mission-state {
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .22s var(--vg32-ease),border-color .2s ease,
+    box-shadow .22s ease,background-color .22s ease;
+}
+.screen[data-screen="home"] .veto-command-home-actions button:active,
+.screen[data-screen="home"] .veto-command-home-grid button:active,
+.screen[data-screen="home"] .vg30-flow-deck button:active,
+.screen[data-screen="home"] .vg27-mission-state:active {
+  transform:scale(.982);
+}
+.screen[data-screen="home"] .veto-command-home-grid button:focus-visible,
+.screen[data-screen="home"] .vg30-flow-deck button:focus-visible,
+.screen[data-screen="home"] .vg27-mission-state:focus-visible,
+.bottom-nav .nav-item:focus-visible {
+  outline: 3px solid var(--vgx-focus,#ffb09c);
+  outline-offset: 3px;
+}
+.screen[data-screen="home"] .veto-command-home-grid button:is(:hover,:focus-visible) {
+  box-shadow:0 12px 30px rgba(2,9,25,.14),inset 0 1px rgba(255,255,255,.075)!important;
+}
+.screen[data-screen="home"] .veto-command-home-grid button>span {
+  transition:transform .24s var(--vg32-ease),background .2s ease;
+}
+@media (hover:hover) and (pointer:fine) {
+  .screen[data-screen="home"] .veto-command-home-grid button:hover>span {
+    transform:rotate(-7deg) scale(1.07);
+  }
+}
+/* Status pulses ONLY during a real pending check, never for unverified 'ready'.
+ * Semantics/data-status continue to come from the existing signed API.
+ */
+#vg27Mission [data-status="checking"] { animation:vg32-checking 1.4s ease-in-out infinite; }
+#vg27Mission [data-status="ready"],
+#vg27Mission [data-status="connected"] { animation:none; }
+#vg27Mission .vg27-mission-state {overflow:hidden}
+#vg27Mission .vg27-mission-state .vg27-mission-chevron {
+  transition:transform .22s var(--vg32-ease);
+}
+#vg27Mission .vg27-mission-state:is(:hover,:focus-visible) .vg27-mission-chevron {
+  transform:translate3d(3px,-3px,0);
+}
+/* Keep one-tap workflow cards legible and their state visually traceable. */
+.screen[data-screen="home"] .vg30-flow-deck .vg30-flow[aria-pressed="true"] {
+  border-color:color-mix(in srgb,var(--vg32-accent) 68%,transparent)!important;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--vg32-accent) 20%,transparent),
+             0 13px 35px rgba(7,11,27,.16)!important;
+}
+.screen[data-screen="home"] .vg30-flow-deck .vg30-flow em {
+  transition:transform .24s var(--vg32-ease),opacity .22s ease;
+}
+.screen[data-screen="home"] .vg30-flow-deck .vg30-flow:is(:hover,:focus-visible) em {
+  transform:translate3d(3px,-3px,0);
+}
+/* Inbox first: compact rows, real message state, no nonfunctional demo bubbles. */
+#telegramMirror .veto-mirror-chat {
+  transition:background-color .17s ease,border-color .17s ease,
+    box-shadow .2s ease,transform .2s var(--vg32-ease)!important;
+}
+#telegramMirror .veto-mirror-chat:focus-visible {
+  outline:2px solid var(--vgx-focus,#ffb09c); outline-offset:-2px;
+}
+#telegramMirror .veto-mirror-chat:active { transform:scale(.992)!important; }
+/* Preserve Telegram keyboard focus and prevent iOS input zoom. */
+#telegramMirror :is(input,textarea),
+.vtai-root :is(input,textarea,select),
+.se-engine :is(input,textarea,select) { font-size:max(16px,1em); }
+.vtai-root :is(.vtai-action,.vtai-modes button),
+.se-engine :is(.se-button,.se-template) { min-height:44px; }
+.vtai-root .vtai-modes button,
+.bottom-nav .nav-item { transition:color .16s ease,background-color .16s ease,
+    border-color .16s ease,transform .22s var(--vg32-ease); }
+.bottom-nav .nav-item:active {transform:scale(.94)}
+/* Explicit light themes: subtle surfaces without dark-only unreadable labels. */
+html[data-veto-theme="pearl"] .screen[data-screen="home"] .veto-command-home,
+html[data-veto-theme="linen"] .screen[data-screen="home"] .veto-command-home {
+  border-color:rgba(36,54,84,.16);
+}
+html[data-veto-theme="pearl"] .screen[data-screen="home"] .vg30-flow-deck .vg30-flow[aria-pressed="true"],
+html[data-veto-theme="linen"] .screen[data-screen="home"] .vg30-flow-deck .vg30-flow[aria-pressed="true"] {
+  box-shadow:0 7px 22px rgba(44,46,65,.11)!important;
+}
+/* The bottom Telegram safe area is a functional target, not decorative padding. */
+@media(max-width:700px) {
+  .bottom-nav .nav-item {min-width:0;min-height:48px;}
+  .screen[data-screen="home"] .veto-command-home{border-radius:21px;}
+  .screen[data-screen="home"] .veto-command-home h1{line-height:1.04;}
+  .screen[data-screen="home"] .veto-command-home-grid button{min-height:96px!important;}
+  .screen[data-screen="home"] .vg30-flow-deck .vg30-flow{min-height:88px;}
+}
+@media(max-width:365px) {
+  .screen[data-screen="home"] .veto-command-home-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .screen[data-screen="home"] .veto-command-home-grid button{min-width:0;padding:10px!important;}
+  .screen[data-screen="home"] .veto-command-home-actions button{min-height:48px;}
+  .screen[data-screen="home"] .vg27-mission-signature{display:none;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .app-shell > .screen.active,
+  .screen[data-screen="home"].active :is(.veto-command-home,.vg27-mission,.vg26-resume),
+  #vg27Mission [data-status="checking"] {
+    animation:none!important;
+  }
+  .screen[data-screen="home"] :is(.veto-command-home-actions button,.veto-command-home-grid button,
+    .vg30-flow-deck button,.vg27-mission-state,.vg27-mission-chevron),
+  #telegramMirror .veto-mirror-chat,.bottom-nav .nav-item,
+  .vtai-root .vtai-modes button {transition:none!important;transform:none!important;}
+}
