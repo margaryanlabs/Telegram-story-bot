@@ -4,6 +4,7 @@ import {mergeSendableDialogs,shouldContinueDialogLookup,hasMoreDialogPages} from
 import {actionRecipientCandidates,actionDraftValid,isExplicitActionCommand} from './vetogram-ai-action-core.js';
 import {followupCandidates} from './vetogram-followup-core.js';
 import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOverview} from './vetogram-task-center-core.js';
+import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.js';
 (() => {
   'use strict';
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
@@ -20,9 +21,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   // This guard is intentionally pure: stale finally/catch blocks must not
   // reset the current owner's loading flags or surface old-account errors.
   const ownerRequestScope=()=>({identity:state.identity,ownerId:owner(),epoch:state.requestEpoch});
-  const isOwnerRequestCurrent=scope=>Boolean(scope&&scope.identity&&
-    state.identity===scope.identity&&signed()===scope.identity&&
-    owner()===scope.ownerId&&state.requestEpoch===scope.epoch);
+  const isOwnerRequestCurrent=scope=>ownerScopeMatches(scope,ownerRequestScope(),signed());
 
   function safeIdentity(){
     const id=owner(),init=signed();
@@ -580,7 +579,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     $('vtaiSend').disabled=value||!canSendDraft();
   }
   async function request(url,body,consent=false){
-    const requestOwner=signed();
+    const requestOwner=signed(),requestOwnerId=owner();
     const abort=new AbortController();
     const timeout=setTimeout(()=>abort.abort(),21000);
     try{
@@ -594,7 +593,10 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
           ...(consent==='reminder'?{'x-vetogram-reminder-consent':'yes'}:{})},
         body:JSON.stringify(body),signal:abort.signal});
       const json=await result.json().catch(()=>({}));
-      if(signed()!==requestOwner||!owner()){reset();throw Error('Аккаунт изменился. Действие отменено.');}
+      if(signed()!==requestOwner||owner()!==requestOwnerId||!requestOwnerId){
+        if(oldRequestCanReset(state.identity,requestOwner))reset();
+        throw Error('Аккаунт изменился. Действие отменено.');
+      }
       if(!result.ok||!json.ok)throw Error(json.error||'Сервис недоступен');
       return json;
     }finally{clearTimeout(timeout)}
