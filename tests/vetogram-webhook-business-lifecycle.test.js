@@ -77,7 +77,7 @@ test('after Business revocation, queued create/edit/delete webhooks are acknowle
   assert.equal(f.calls.alerts.length,0);
 });
 test('unknown Business status returns retryable 503, never falsely stores or acknowledges',async()=>{
-  const f=fixture(undefined);
+  const f=fixture(null);
   for(const action of ['business_message','deleted_business_messages']){
     const payload=action==='business_message'?newMessage:{
       business_connection_id:'connected-A',chat:{id:333},message_ids:[17]};
