@@ -3,7 +3,7 @@ import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { normalizeTelegramPhone } from '../lib/telegram-auth-feedback.js';
 import { openJson, sealJson } from '../lib/viewer-sync-crypto.js';
 import { classifyTelegramAuthError } from '../lib/telegram-auth-feedback.js';
-import { sameTelegramAccount, requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
+import { sameTelegramAccount, requireOwnTelegramAccount, isOwnActiveViewerSession, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import {
   viewerDbConfigured,
@@ -87,7 +87,7 @@ function safeSession(row, userId = '') {
   if (!row) return null;
   const cipherVersion = String(row.session_ciphertext || '').split('.')[0] || null;
   return {
-    connected: row.status === 'active' && sameTelegramAccount(userId, row.telegram_account_user_id),
+    connected: isOwnActiveViewerSession(userId, row),
     identityMismatch: row.status === 'active' && !sameTelegramAccount(userId, row.telegram_account_user_id),
     status: row.status,
     cryptoVersion: /^v\d+$/.test(cipherVersion || '') ? cipherVersion : null,
@@ -418,14 +418,15 @@ export default async function handler(req, res) {
       const storyId = Number(Array.isArray(rawStoryId) ? rawStoryId[0] : rawStoryId || 0);
       const wantsAnalytics = String(req.query?.analytics || '') === '1';
 
+      const ownerSessionActive = isOwnActiveViewerSession(userId, session);
       const [storyData, analytics, loginChallenge] = await Promise.all([
         Number.isInteger(storyId) && storyId > 0
           ? getViewerStoryData(userId, storyId).catch(() => null)
           : Promise.resolve(null),
-        wantsAnalytics && session?.status === 'active'
+        wantsAnalytics && ownerSessionActive
           ? getViewerAnalytics(userId).catch(() => null)
           : Promise.resolve(null),
-        session?.status === 'active'
+        ownerSessionActive
           ? Promise.resolve(null)
           : getAuthChallenge(userId).catch(() => null),
       ]);
@@ -463,7 +464,7 @@ export default async function handler(req, res) {
 
     if (action === 'test_alert') {
       const session = await getViewerSession(userId);
-      if (!session || session.status !== 'active') {
+      if (!isOwnActiveViewerSession(userId, session)) {
         res.status(409).json({ ok: false, error: 'Сначала подключи Deep Intelligence' });
         return;
       }
@@ -479,7 +480,7 @@ export default async function handler(req, res) {
 
     if (action === 'export_csv') {
       const session = await getViewerSession(userId);
-      if (!session || session.status !== 'active') {
+      if (!isOwnActiveViewerSession(userId, session)) {
         res.status(409).json({ ok: false, error: 'Сначала подключи Deep Intelligence' });
         return;
       }
@@ -505,8 +506,8 @@ export default async function handler(req, res) {
 
     if (action === 'preferences') {
       const session = await getViewerSession(userId);
-      if (!session) {
-        res.status(409).json({ ok: false, error: 'Deep Intelligence ещё не подключён' });
+      if (!isOwnActiveViewerSession(userId, session)) {
+        res.status(409).json({ ok: false, error: 'Подтверди подключение своего Telegram-аккаунта перед изменением настроек.' });
         return;
       }
 
@@ -527,7 +528,7 @@ export default async function handler(req, res) {
 
     if (action === 'register_stories') {
       const session = await getViewerSession(userId);
-      if (!session || session.status !== 'active') {
+      if (!isOwnActiveViewerSession(userId, session)) {
         res.status(409).json({ ok: false, error: 'Сначала подключи Deep Intelligence' });
         return;
       }
@@ -591,7 +592,10 @@ export default async function handler(req, res) {
       }
       const linked = await getViewerSession(userId);
       if (linked?.status === 'active') {
-        res.status(409).json({ ok: false, error: 'Этот Telegram-аккаунт уже подключён. Обнови статус подключения.' });
+        res.status(409).json({ ok: false,
+          error: isOwnActiveViewerSession(userId,linked)
+            ? 'Этот Telegram-аккаунт уже подключён. Обнови статус подключения.'
+            : 'Сохранена сессия, владелец которой не подтверждён. Не запрашивай новый код: сначала проверь и отключи старую сессию через настройки.' });
         return;
       }
 
