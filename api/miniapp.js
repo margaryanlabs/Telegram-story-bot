@@ -1,3 +1,4 @@
+import {businessConnectionReadiness} from '../lib/vetogram-business-readiness.js';
 import crypto from 'node:crypto';
 import { publishPhotoStory, publishPhotoStoryUserSession, deleteStoryUserSession, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
 import {validateStoryPortalLink} from '../lib/story-portal-media-area.js';
@@ -429,9 +430,16 @@ async function refreshConnection(token, chatId, baseUrl, settings) {
     const connection = await tg(token, 'getBusinessConnection', {
       business_connection_id: settings.bc,
     });
-    const live = Boolean(connection?.is_enabled);
-    const rights = Boolean(connection?.rights?.can_manage_stories);
-    const readRights = Boolean(connection?.rights?.can_read_messages);
+    // A Bot API result for a different Telegram account/connection must
+    // never authorize a Story or overwrite this owner's durable connection.
+    const verified=businessConnectionReadiness(chatId,settings.bc,connection);
+    if (verified.botApi==='not-verified') {
+      return {settings,live:false,rights:false,readRights:false,
+        degraded:true,ownerUnverified:true};
+    }
+    const live=verified.botApi==='verified';
+    const rights=live && verified.storiesPermission==='granted';
+    const readRights=live && connection.rights?.can_read_messages===true;
 
     if (!live) {
       const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
