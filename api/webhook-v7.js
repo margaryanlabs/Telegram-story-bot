@@ -461,7 +461,9 @@ async function refreshConnection(token, chatId, origin, settings) {
 
 async function persistBusinessConnection(token, origin, connection, { notify = false } = {}) {
   const chatId = connection?.user_chat_id;
-  if (!chatId) return null;
+  const ownerUserId = connection?.user?.id;
+  if (!chatId || !ownerUserId || !connection?.id)
+    throw new Error('BUSINESS_CONNECTION_OWNER_UNVERIFIED');
 
   const settings = await getStoredSettings(token, chatId);
   const live = Boolean(connection?.is_enabled);
@@ -480,7 +482,8 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
 
   await saveSettings(token, chatId, origin, next);
   await upsertBusinessConnectionState({
-    telegramUserId: chatId,
+    // Database and signed Mini App use User.id, not the chat with the bot.
+    telegramUserId: ownerUserId,
     businessConnectionId: live ? connection.id : null,
     isEnabled: live,
     canManageStories: live && rights,
@@ -1496,6 +1499,9 @@ export default async function handler(req, res) {
       }
 
       const connection = await tg(token, 'getBusinessConnection', { business_connection_id: connectionId });
+      if (!message?.from?.id || String(connection?.user?.id)!==String(message.from.id) ||
+          String(connection?.id)!==String(connectionId))
+        throw new Error('BUSINESS_STORY_OWNER_OR_CONNECTION_MISMATCH');
       if (!connection.is_enabled) throw new Error('Business connection is disabled');
       if (!connection.rights?.can_manage_stories) throw new Error('Нет права can_manage_stories');
       if (current.audience === 'standard' && current.excluded?.length) {
