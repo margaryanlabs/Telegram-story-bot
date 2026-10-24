@@ -157,10 +157,10 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function loadTasksCloud(){
     if(state.taskCloudBusy||state.busy||!safeIdentity())return;
+    const scope=ownerRequestScope();
     if(state.tasks.length&&!window.confirm(
       'Заменить задачи в текущем окне облачной версией? Несохранённые местные изменения будут потеряны.'))return;
-    if(!safeIdentity())return;
-    const scope=ownerRequestScope();
+    if(!isOwnerRequestCurrent(scope))return;
     state.taskCloudBusy=true;
     $('vtaiTasksCloudLoad').disabled=true;
     try{
@@ -186,10 +186,10 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     if(state.taskCloudBusy||state.busy||!safeIdentity())return;
     if(!Number.isSafeInteger(state.taskCloudRevision)||state.taskCloudRevision<0)
       return taskCloudStatus('Сначала загрузи облачную версию, чтобы не перезаписать чужие изменения.',true);
+    const scope=ownerRequestScope();
     if(!window.confirm('Зашифровать и вручную сохранить '+state.tasks.length+
       ' задач на сервере VETOGRAM? Это серверное шифрование, НЕ E2EE.'))return;
-    if(!safeIdentity())return;
-    const scope=ownerRequestScope();
+    if(!isOwnerRequestCurrent(scope))return;
     state.taskCloudBusy=true;
     $('vtaiTasksCloudSave').disabled=true;$('vtaiTasksCloudErase').disabled=true;
     try{
@@ -214,9 +214,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     if(state.taskCloudBusy||state.busy||!safeIdentity())return;
     if(!Number.isSafeInteger(state.taskCloudRevision)||state.taskCloudRevision<1)
       return taskCloudStatus('Загрузи существующую облачную копию для удаления.',true);
-    if(!window.confirm('Удалить серверный зашифрованный снимок задач? Останется только техническая версия записи. Локальные задачи в окне останутся. Резервные копии могут сохраняться согласно политике хостинга.'))return;
-    if(!safeIdentity())return;
     const scope=ownerRequestScope();
+    if(!window.confirm('Удалить серверный зашифрованный снимок задач? Останется только техническая версия записи. Локальные задачи в окне останутся. Резервные копии могут сохраняться согласно политике хостинга.'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     state.taskCloudBusy=true;
     $('vtaiTasksCloudErase').disabled=true;$('vtaiTasksCloudSave').disabled=true;
     try{
@@ -299,10 +299,10 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     if(!Number.isFinite(reminderEpoch)||reminderEpoch<Date.now()+120000)
       return notice('Для напоминания нужно не менее двух минут до назначенного времени.',true);
     const timeZone=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
+    const scope=ownerRequestScope();
     if(!window.confirm('Создать одноразовое Telegram-напоминание лично тебе на '+
       new Date(reminderEpoch).toLocaleString('ru-RU')+' ('+timeZone+')? Бот должен быть запущен тобой заранее. В уведомлении не будет текста задачи, доставка не гарантирована.'))return;
-    if(!safeIdentity())return;
-    const scope=ownerRequestScope();
+    if(!isOwnerRequestCurrent(scope))return;
     state.reminderBusy=true;
     try{
       await request('/api/vetogram-reminders',{action:'schedule',taskId:task.id,dueAt:task.dueAt,
@@ -319,9 +319,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function cancelAllReminders(){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
-    if(!window.confirm('Отменить ВСЕ ещё ожидающие напоминания для этого Telegram-аккаунта? Если отправка уже началась, её отменить нельзя. Это не выключает возможность создавать новые напоминания.'))return;
-    if(!safeIdentity())return;
     const scope=ownerRequestScope();
+    if(!window.confirm('Отменить ВСЕ ещё ожидающие напоминания для этого Telegram-аккаунта? Если отправка уже началась, её отменить нельзя. Это не выключает возможность создавать новые напоминания.'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     state.reminderBusy=true;$('vtaiReminderCancelAll').disabled=true;
     try{
       const result=await request('/api/vetogram-reminders',{action:'cancel_all'},'reminder');
@@ -343,9 +343,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function cancelReminder(taskId){
     if(!safeIdentity()||state.reminderBusy||state.taskCloudBusy||state.busy)return;
-    if(!window.confirm('Отменить это напоминание? Если Telegram-отправка уже началась, остановить её может быть невозможно.'))return;
-    if(!safeIdentity())return;
     const scope=ownerRequestScope();
+    if(!window.confirm('Отменить это напоминание? Если Telegram-отправка уже началась, остановить её может быть невозможно.'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     state.reminderBusy=true;
     try{
       const result=await request('/api/vetogram-reminders',{action:'cancel',taskId},'reminder');
@@ -646,6 +646,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       let grant=null;
       if(mode==='negotiator'){
         if(!window.confirm('Разрешить VETOGRAM AI готовить черновик переговоров только для выбранного чата и в заданных пределах? Никакая автоматическая отправка не включается.'))return;
+        if(!isOwnerRequestCurrent(scope))return;
         const issued=await request('/api/vetogram-ai-grants',{
           action:'issue',chatId:negotiationPolicy.chatId,currency:negotiationPolicy.currency,
           askingPrice:$('vtaiNegAsking').value,minPrice:$('vtaiNegFloor').value,
@@ -876,14 +877,14 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     if(!actionRecipientReady(chatId))return notice('AI Action: сначала вручную подтверди получателя.',true);
     const title=state.dialogs.find(c=>String(c.id)===chatId)?.title||'чат';
     // No autonomous sends. This confirmation is separate from AI-provider consent.
+    const scope=ownerRequestScope();
     if(!window.confirm('Отправить ПОЛНЫЙ текст сообщения от твоего имени в чат «'+String(title).slice(0,70)+'»?\n\n'+message))return;
-    if(!safeIdentity())return;
+    if(!isOwnerRequestCurrent(scope))return;
     if(!window.crypto?.randomUUID)return notice('Безопасная отправка не поддерживается этим браузером',true);
     // Keep a stable Telegram random_id for uncertain delivery retries.
     // A new recipient/message/owner gets a different send intent.
     const intentKey=requestedSendKey(owner(),chatId,message);
     if(state.sendIntent?.key!==intentKey)state.sendIntent={key:intentKey,nonce:window.crypto.randomUUID()};
-    const scope=ownerRequestScope();
     setBusy(true);
     notice('Отправляю после твоего подтверждения…');
     try{
@@ -1038,8 +1039,8 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function loadMemoryCloud(){
     if(state.memoryBusy||state.busy||!safeIdentity())return;
-    if(state.memory.length&&!window.confirm('Загрузить серверную копию? Несохранённые локальные заметки будут заменены.'))return;
     const scope=ownerRequestScope();
+    if(state.memory.length&&!window.confirm('Загрузить серверную копию? Несохранённые локальные заметки будут заменены.'))return;
     state.memoryBusy=true;
     $('vtaiMemoryCloudLoad').disabled=true;
     try{
@@ -1085,9 +1086,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     if(state.memoryBusy||state.busy||!safeIdentity())return;
     if(!Number.isSafeInteger(state.memoryRevision)||state.memoryRevision<1)
       return memoryStatus('Сначала загрузи существующую облачную копию.',true);
-    if(!window.confirm('Безвозвратно удалить зашифрованную запись AI Memory из Neon? Локальные заметки останутся в этом окне.'))return;
-    if(!safeIdentity())return;
     const scope=ownerRequestScope();
+    if(!window.confirm('Безвозвратно удалить зашифрованную запись AI Memory из Neon? Локальные заметки останутся в этом окне.'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     state.memoryBusy=true;
     $('vtaiMemoryCloudErase').disabled=true;$('vtaiMemoryCloudSave').disabled=true;
     try{
