@@ -95,7 +95,7 @@ test('partial onboarding never labels Anti-Delete as ready if archive settings f
   const f=fixture(true,false,true);
   assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),true);
   f.inputs.businessWizardConsent.checked=true;await f.change();await f.apply();
-  assert.match(f.content.innerHTML,/Anti-Delete ещё не активирован полностью/);
+  assert.match(f.content.innerHTML,/Anti-Delete: ошибка настройки/);
   assert.match(f.content.innerHTML,/Сообщения могут не сохраняться/);
   assert.doesNotMatch(f.content.innerHTML,/data-business-close="1">Готово/);
   assert.match(f.content.innerHTML,/data-business-retry="1"/);
@@ -107,5 +107,5 @@ test('story-only consent does not show a false Anti-Delete storage warning',asyn
   f.inputs.businessWizardStories.checked=true;
   await f.change();await f.apply();
   assert.doesNotMatch(f.content.innerHTML,/Anti-Delete ещё не активирован полностью/);
-  assert.match(f.content.innerHTML,/Разрешения подтверждены Telegram/);
+  assert.match(f.content.innerHTML,/Права записаны — ожидаем проверку подключения/);
 });
