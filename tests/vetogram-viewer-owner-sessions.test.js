@@ -66,6 +66,10 @@ test('viewer status redacts private profile fields of a mismatched stored accoun
   assert.equal(result.connected,false);
   assert.equal(result.identityMismatch,true);
   assert.equal(result.account,null);
+  const sensitive=sessionView({...activeRow('222'),
+    last_error:'private remote error',last_poll_at:'2030-01-01'},'111');
+  assert.equal(sensitive.lastError,null);
+  assert.equal(sensitive.lastPollAt,null);
   const valid=sessionView(activeRow(),'111');
   assert.equal(valid.connected,true);
   assert.equal(valid.account.username,'private_owner');
