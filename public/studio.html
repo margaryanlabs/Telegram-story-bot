@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="/story-engine.css?v=20261024-release-polish" />
   <link rel="stylesheet" href="/vetogram-ai.css?v=20261024-release-polish" />
   <link rel="stylesheet" href="/vetogram-2026.css?v=20261024-premium-r1" />
+  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261024-cinematic-v1" />
   <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261024-v3-premium-deck" />
 </head>
 <body>
@@ -158,6 +159,37 @@
           <button type="button" data-open-screen="ai"><span>✦</span><strong>VETO AI</strong><small>Команды · перевод · ответы · Story Director</small></button>
           <button type="button" data-open-screen="voice"><span>♫</span><strong>Voice Lab</strong><small>Голосовые и эффекты</small></button>
           <button type="button" data-open-screen="relay"><span>⇄</span><strong>Relay</strong><small>Дополнительное подключение</small></button>
+        </div>
+      </section>
+      <section class="vg27-mission" id="vg27Mission" aria-label="Состояние и быстрый старт Vetogram">
+        <div class="vg27-mission-heading">
+          <div>
+            <span class="vg27-eyebrow"><span class="vg27-pulse-dot" aria-hidden="true"></span> СОСТОЯНИЕ СИСТЕМЫ</span>
+            <h2 id="vg27MissionTitle">Проверяем подключение</h2>
+            <p id="vg27MissionDetail">Без автоматических подключений и скрытых действий.</p>
+          </div>
+          <span class="vg27-mission-signature" aria-hidden="true">V / 03</span>
+        </div>
+        <div class="vg27-mission-statuses" aria-label="Статусы возможностей">
+          <button type="button" class="vg27-mission-state" data-open-screen="telegram">
+            <span class="vg27-mission-icon" aria-hidden="true">◎</span>
+            <span class="vg27-mission-label">TELEGRAM <strong id="vg27MissionAccount" data-status="checking">Проверяем</strong></span>
+            <span class="vg27-mission-chevron" aria-hidden="true">↗</span>
+          </button>
+          <button type="button" class="vg27-mission-state" data-open-screen="privacy">
+            <span class="vg27-mission-icon" aria-hidden="true">↶</span>
+            <span class="vg27-mission-label">ANTI-DELETE <strong id="vg27MissionPrivacy" data-status="checking">Проверяем</strong></span>
+            <span class="vg27-mission-chevron" aria-hidden="true">↗</span>
+          </button>
+          <button type="button" class="vg27-mission-state" data-open-screen="publish">
+            <span class="vg27-mission-icon" aria-hidden="true">✳</span>
+            <span class="vg27-mission-label">STORIES <strong id="vg27MissionStories" data-status="checking">Проверяем</strong></span>
+            <span class="vg27-mission-chevron" aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <div class="vg27-mission-bottom">
+          <span><span aria-hidden="true">◈</span> Разрешения не означают, что сообщения уже восстановлены или Story опубликована.</span>
+          <button type="button" id="vg27MissionAction">Подключить Telegram →</button>
         </div>
       </section>
       <section class="vg26-resume" id="vg26Resume" aria-label="Продолжить работу в Vetogram">
@@ -2156,5 +2188,6 @@
   <script src="/vetogram-header.js?v=20261021-v1" defer></script>
   <script src="/vetogram-command-2026.js?v=20261024-premium-r1" defer></script>
   <script src="/vetogram-resume-2026.js?v=20261024-retention-r1" defer></script>
+  <script type="module" src="/vetogram-mission-2026.js?v=20261024-cinematic-v1"></script>
 </body>
 </html>
