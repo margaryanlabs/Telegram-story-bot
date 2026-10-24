@@ -812,7 +812,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     const searchId=String(seekChatId||(more?'':state.suggestedChatId)||'');
     const validTarget=/^-?\d{1,22}$/.test(searchId)?searchId:null;
     if(more&&!state.chatHasMore)return;
-    const startedOwner=signed();
+    const scope=ownerRequestScope();
     setBusy(true);
     notice(validTarget?'Нахожу выбранную переписку среди доступных чатов…':
       more?'Загружаю следующую страницу чатов…':'Загружаю список твоих чатов без передачи сообщений AI.');
@@ -825,13 +825,14 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       // At most 11 bounded pages: first 24 then ten pages of 50 (max 500).
       while(hasMore&&page<=10){
         const result=await request('/api/telegram-chats',{action:'list',page});
-        if(startedOwner!==signed())throw Error('Аккаунт изменился.');
+        if(!isOwnerRequestCurrent(scope))return;
         merged=mergeSendableDialogs(merged,result.chats);
         hasMore=result.hasMore===true;
         page++;
         // Search older dialogs only on explicit owner-selected chat intent.
         if(!shouldContinueDialogLookup(page,hasMore,validTarget,merged))break;
       }
+      if(!isOwnerRequestCurrent(scope))return;
       state.dialogs=merged;
       state.chatNextPage=page;
       state.chatHasMore=hasMoreDialogPages(page,hasMore);
@@ -854,10 +855,13 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         'Нет доступных диалогов для отправки.',!state.dialogs.length||
           Boolean(validTarget&&!state.dialogs.some(c=>String(c.id)===validTarget)));
     }catch(error){
-      notice('Не удалось загрузить чаты: '+error.message,true);
+      if(isOwnerRequestCurrent(scope))
+        notice('Не удалось загрузить чаты: '+error.message,true);
     }finally{
-      setBusy(false);
-      $('vtaiSend').disabled=!canSendDraft();
+      if(isOwnerRequestCurrent(scope)){
+        setBusy(false);
+        $('vtaiSend').disabled=!canSendDraft();
+      }
     }
   }
   function validNegotiatorSend(chatId,message){
@@ -1155,40 +1159,54 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function agentStatus(){
     if(state.agentBusy||state.busy||!safeIdentity())return;
+    const scope=ownerRequestScope();
     state.agentBusy=true;
     try{
       const response=await request('/api/vetogram-ai-agent',{action:'status'});
+      if(!isOwnerRequestCurrent(scope))return;
       agentStateText(response.draftingPaused);
       notice('Состояние Agent Control получено от сервера.');
-    }catch(error){state.agentPaused=null;$('vtaiAgentState').textContent='Не удалось подтвердить серверный статус. Действия AI недоступны.';notice(error.message,true);}
-    finally{state.agentBusy=false;}
+    }catch(error){if(isOwnerRequestCurrent(scope)){
+      state.agentPaused=null;
+      $('vtaiAgentState').textContent='Не удалось подтвердить серверный статус. Действия AI недоступны.';
+      notice(error.message,true);
+    }}finally{if(isOwnerRequestCurrent(scope))state.agentBusy=false;}
   }
   async function changeAgentPause(paused){
     if(state.agentBusy||state.busy||!safeIdentity())return;
     const detail=paused?'Остановить выдачу разрешений на черновики и отозвать действующее разрешение?'
       :'Разрешить снова создавать черновики AI? Это не включает отправку или автоматический агент.';
+    const scope=ownerRequestScope();
     if(!window.confirm(detail))return;
-    if(!safeIdentity())return;
+    if(!isOwnerRequestCurrent(scope))return;
     state.agentBusy=true;
     try{
       const result=await request('/api/vetogram-ai-agent',{action:paused?'pause':'resume'},'agent');
+      if(!isOwnerRequestCurrent(scope))return;
       agentStateText(result.draftingPaused);
       if(paused){
         state.negotiationPolicy=null;state.negotiationDraft=null;state.negotiationGrant=null;
         $('vtaiReview').hidden=true;$('vtaiSend').disabled=true;
       }
       await agentHistory(true);
+      if(!isOwnerRequestCurrent(scope))return;
       notice(paused?'Сервер подтвердил остановку черновиков.':'Сервер подтвердил возобновление режима черновиков.');
-    }catch(error){state.agentPaused=null;$('vtaiAgentState').textContent='Последнее изменение не подтверждено. Обнови статус.';notice(error.message,true);}
-    finally{state.agentBusy=false;}
+    }catch(error){if(isOwnerRequestCurrent(scope)){
+      state.agentPaused=null;
+      $('vtaiAgentState').textContent='Последнее изменение не подтверждено. Обнови статус.';
+      notice(error.message,true);
+    }}finally{if(isOwnerRequestCurrent(scope))state.agentBusy=false;}
   }
   async function agentHistory(internal=false){
     if(!internal&&(state.busy||state.agentBusy||!safeIdentity()))return;
+    if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     try{
       const response=await request('/api/vetogram-ai-agent',{action:'history'});
+      if(!isOwnerRequestCurrent(scope))return;
       renderAgentEvents(response.events);
       if(!internal)notice('Журнал разрешений загружен. Тексты переписок не сохраняются.');
-    }catch(error){if(!internal)notice(error.message,true);}
+    }catch(error){if(!internal&&isOwnerRequestCurrent(scope))notice(error.message,true);}
   }
 
   for(const [id,status] of [['vtaiTasksOpen','open'],['vtaiTasksDeferred','deferred'],
@@ -1251,16 +1269,21 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
 
   $('vtaiNegRevoke').addEventListener('click',async()=>{
     if(!safeIdentity()||state.busy)return;
+    const scope=ownerRequestScope();
     if(!window.confirm('Отозвать серверное разрешение Negotiator для твоего аккаунта?'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     try{
       const status=await request('/api/vetogram-ai-grants',{action:'status'});
+      if(!isOwnerRequestCurrent(scope))return;
       const grant=status.grant;
       if(!grant){$('vtaiNegNotice').textContent='Активных разрешений нет.';return;}
       await request('/api/vetogram-ai-grants',{action:'revoke',grantId:grant.grantId},'grant');
+      if(!isOwnerRequestCurrent(scope))return;
       state.negotiationGrant=null;state.negotiationPolicy=null;state.negotiationDraft=null;
       $('vtaiReview').hidden=true;$('vtaiSend').disabled=true;
       $('vtaiNegNotice').textContent='Разрешение отозвано на сервере.';
-    }catch(error){notice('Не удалось проверить или отозвать разрешение: '+error.message,true);}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      notice('Не удалось проверить или отозвать разрешение: '+error.message,true);}
   });
   $('vtaiSend').addEventListener('click',()=>void send());
   $('vtaiQueue').addEventListener('click',queueCurrent);
