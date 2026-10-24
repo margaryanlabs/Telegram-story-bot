@@ -208,7 +208,9 @@ test('shared HTTP boundary rejects response for a different signed Telegram acco
 
 
 function taskEditorSwitchFixture(kind){
-  const ui=fakeUi(),created=[],original={
+  const ui=fakeUi(),created=[];
+  ui.get('vtaiTasksList').append=()=>{};
+  const original={
     owner:'111',id:uuid,title:'Account A task',sourceQuote:'Account A original quote',
     deadlineText:null,certainty:'explicit',status:'open',dueAt:null,
     kind:'task',createdAt:12345
