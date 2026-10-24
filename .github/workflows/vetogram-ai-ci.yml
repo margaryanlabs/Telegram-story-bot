@@ -1,10 +1,9 @@
 name: VETOGRAM AI safe release checks
-# Draft PR #181 is the only release integration route. One commit previously
-# triggered BOTH push and pull_request checks, doubling runner minutes.
+# COST-SAFE DEVELOPMENT MODE: No automatic runners on pushes, PR updates
+# or draft changes. Keep this workflow for explicit future manual execution
+# only after the repository owner intentionally enables/spends on Actions.
 on:
-  pull_request:
-    branches: [feat/vetogram-story-engine-20261022]
-    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
