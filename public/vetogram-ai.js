@@ -86,8 +86,13 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   function setMode(mode){
     if(!['chat','translate','reply','story','campaign','negotiator','action','brief'].includes(mode))return;
-    if(state.mode!==mode){state.history=[];$('vtaiThread').replaceChildren();state.last=null;state.reviewedApprovalId=null;
-      $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;}
+    if(state.mode!==mode){
+      // A draft approved for one mode is never reusable in another mode.
+      state.history=[];$('vtaiThread').replaceChildren();
+      state.last=null;state.reviewedApprovalId=null;state.sendIntent=null;
+      $('vtaiDraft').value='';$('vtaiSend').disabled=true;
+      $('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
+    }
     if(mode!=='negotiator'){state.negotiationPolicy=null;state.negotiationDraft=null;$('vtaiDraft').readOnly=false;}
     if(mode!=='action'){state.actionDraft=null;state.actionRecipientConfirmed=null;}
     state.mode=mode;
@@ -873,6 +878,8 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   const requestedSendKey=(ownerId,chatId,text)=>JSON.stringify([ownerId,chatId,text]);
   async function send(){
     if(state.busy||!safeIdentity())return;
+    if(!canSendDraft()||$('vtaiReview').hidden)
+      return notice('Подготовь и проверь новый черновик в текущем режиме, прежде чем отправлять.',true);
     const chatId=$('vtaiRecipients').value;
     if(!state.dialogs.some(c=>String(c.id)===chatId))return notice('Выбери чат из списка',true);
     const message=$('vtaiDraft').value.trim();
@@ -967,6 +974,8 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   function queueCurrent(){
     if(state.busy||!safeIdentity())return;
+    if(!canSendDraft()||$('vtaiReview').hidden)
+      return notice('Сначала подготовь и проверь черновик в текущем режиме.',true);
     const chatId=$('vtaiRecipients').value;
     const chat=state.dialogs.find(x=>String(x.id)===chatId);
     const message=$('vtaiDraft').value.trim();
@@ -985,11 +994,14 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function reviewApproval(id){
     if(state.busy||!safeIdentity())return;
+    const scope=ownerRequestScope();
     const item=activeApprovals(state.approvals,owner()).find(entry=>entry.id===id);
     if(!item)return notice('Черновик больше не доступен.',true);
     if(!state.dialogs.some(chat=>String(chat.id)===item.chatId))await loadChats({seekChatId:item.chatId});
-    if(!safeIdentity()||!state.dialogs.some(chat=>String(chat.id)===item.chatId))
-      return notice('Этот Telegram-чат сейчас недоступен.',true);
+    if(!isOwnerRequestCurrent(scope))return;
+    if(!activeApprovals(state.approvals,owner()).some(entry=>entry.id===id)||
+       !state.dialogs.some(chat=>String(chat.id)===item.chatId))
+      return notice('Этот черновик или Telegram-чат больше не доступен.',true);
     setMode('reply');
     $('vtaiRecipients').value=item.chatId;
     $('vtaiDraft').value=item.message;
