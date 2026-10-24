@@ -19,7 +19,7 @@ test('storage failure reports unavailable rather than an empty successful archiv
   const reader=archiveReader(async()=>{throw Error('storage offline')});
   const result=await reader('111','222',0);
   assert.equal(result.unavailable,true);
-  assert.deepEqual(result.messages,[]);
+  assert.equal(result.messages.length,0);
   assert.equal(result.hasMore,false);
   assert.equal(result.nextOffset,0);
 });
