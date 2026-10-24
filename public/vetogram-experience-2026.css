@@ -252,3 +252,41 @@ html[data-veto-theme="linen"] .screen[data-screen="ai"] .vtai-hero{
   .vg26-creative-card,.se-engine .se-template,
   #telegramMirror .veto-mirror-chat{transition:none!important;transform:none!important}
 }
+
+
+/* Form-level light theme parity: a polished light theme must remain legible
+ * and never depend on a dark-only label or notification color. */
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] :is(.vtai-label,.vtai-consent,.vtai-note){
+  color:#52617a
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] :is(.vtai-workspace-item,.vtai-neg-panel){
+  background:rgba(30,51,81,.035);border-color:rgba(35,62,98,.14);color:#19283e
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] :is(.vtai-workspace-item strong,.vtai-neg-panel h2){
+  color:#19283e
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] .vtai-workspace-item p{color:#53637c}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] .vtai-action:not(.vtai-primary){
+  color:#263850;background:#fff;border-color:rgba(35,62,98,.18)
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] .vtai-bubble.assistant{
+  color:#20334c;background:#ecf0f6
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] .vtai-bubble.user{
+  color:#fff;background:#9f485f
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] #vtaiNotice{
+  background:#eff4fa;color:#284064;border-color:rgba(39,75,118,.22)
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] #vtaiNotice[data-error="true"]{
+  background:#fff1f2;color:#963d4c;border-color:#e8b5c0
+}
