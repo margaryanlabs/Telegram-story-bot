@@ -25,6 +25,8 @@ jobs:
       - name: Validate migrations, API contracts, and pure Node core
         run: |
           npm run ci:offline
+          bash -n scripts/vetogram-ai-postgres-race.sh
+          bash -n scripts/vetogram-task-reminder-race.sh
         env:
           VETOGRAM_AI_ENABLED: 'false'
           VETOGRAM_TASKS_CLOUD_ENABLED: 'false'
