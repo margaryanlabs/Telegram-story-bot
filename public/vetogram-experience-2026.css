@@ -290,3 +290,18 @@ html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
   .screen[data-screen="ai"] #vtaiNotice[data-error="true"]{
   background:#fff1f2;color:#963d4c;border-color:#e8b5c0
 }
+
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] .vtai-modes button:not(.active){
+  color:#34465f;background:#fff;border-color:rgba(35,62,98,.18)
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] :is(#vtaiAgentState,#vtaiActionStatus,
+    #vtaiFocusStatus,#vtaiTasksCloudStatus,#vtaiNegNotice){
+  color:#34465f;background:rgba(35,64,101,.05);
+  border-color:rgba(35,62,98,.15)
+}
+html:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  .screen[data-screen="ai"] :is(.vtai-panel p,.vtai-panel small){
+  color:inherit
+}
