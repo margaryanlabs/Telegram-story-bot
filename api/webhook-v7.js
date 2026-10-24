@@ -995,6 +995,13 @@ export default async function handler(req, res) {
         const connection = await tg(token, 'getBusinessConnection', {
           business_connection_id: connectionId,
         });
+        // Revoked Business access is a terminal condition, not an archive
+        // transport failure. Acknowledge the event without retaining content.
+        if (connection?.is_enabled === false) {
+          res.status(200).json({ok:true,privacy_message_ignored:'business_connection_disabled'});
+          return;
+        }
+        if (connection?.is_enabled !== true) throw new Error('BUSINESS_CONNECTION_STATE_UNVERIFIED');
         result = await archiveBusinessMessage(
           connection,
           privacyBusinessMessage,
@@ -1062,6 +1069,11 @@ export default async function handler(req, res) {
         const connection = await tg(token, 'getBusinessConnection', {
           business_connection_id: deleted.business_connection_id,
         });
+        if (connection?.is_enabled === false) {
+          res.status(200).json({ok:true,privacy_delete_ignored:'business_connection_disabled'});
+          return;
+        }
+        if (connection?.is_enabled !== true) throw new Error('BUSINESS_CONNECTION_STATE_UNVERIFIED');
         result = await archiveDeletedBusinessMessages(connection, deleted);
 
         if (result?.retained && Array.isArray(result?.mediaRecovery) && result.mediaRecovery.length) {
