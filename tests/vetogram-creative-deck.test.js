@@ -6,9 +6,9 @@ import {CREATIVE_PRESETS,buildCreativeDraft} from '../public/vetogram-creative-p
 
 const load=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 test('premium presets exist for real Reply / Story / Campaign modes only',()=>{
-  for(const mode of ['reply','story','campaign']){
-    assert.equal(CREATIVE_PRESETS[mode].length,4);
-    assert.equal(new Set(CREATIVE_PRESETS[mode].map(x=>x.id)).size,4);
+  for(const [mode,size] of [['reply',8],['story',6],['campaign',4]]){
+    assert.equal(CREATIVE_PRESETS[mode].length,size);
+    assert.equal(new Set(CREATIVE_PRESETS[mode].map(x=>x.id)).size,size);
     for(const item of CREATIVE_PRESETS[mode]){
       assert.ok(item.title&&item.description&&item.instruction);
       assert.ok(item.instruction.length<350);
@@ -114,7 +114,7 @@ function harness(){
 test('actual UI changes one style at a time without erasing typed text or sending',()=>{
   const h=harness();
   assert.equal(h.deck.hidden,false);
-  assert.equal(h.container.children.length,4);
+  assert.equal(h.container.children.length,8);
   h.click(0);
   assert.equal(h.container.children[0].attributes['aria-pressed'],'true');
   assert.equal(h.container.children[0].classList.contains('is-selected'),true);
@@ -132,6 +132,7 @@ test('actual UI changes one style at a time without erasing typed text or sendin
   h.setMode('story');
   assert.equal(h.input.value,'Начальный текст пользователя');
   assert.equal(h.container.children.length,4);
+  assert.equal(h.container.children.length,6);
   assert.equal(h.title.textContent,'Как выглядит твоя Story?');
   h.setMode('action');
   assert.equal(h.deck.hidden,true);
@@ -169,4 +170,21 @@ test('premium chat filters expose real Focus and saved-copy navigation, not mock
     html.indexOf('</nav>',html.indexOf('<nav class="bottom-nav"')));
   for(const label of ['Чаты','Истории','Защита','Студия'])
     assert.ok(labels.includes('<small>'+label+'</small>'),label);
+});
+
+
+test('new high-value Reply/Story personas are draft-only and do not invent facts',()=>{
+  for(const id of ['premium','boundary','followup','persuasive']){
+    const item=CREATIVE_PRESETS.reply.find(p=>p.id===id);
+    assert.ok(item?.instruction&&item.title);
+    const draft=buildCreativeDraft('reply',id,'Привет, отвечаю завтра');
+    assert.equal(draft.ok,true);
+    assert.match(draft.value,/Привет, отвечаю завтра/);
+    assert.match(draft.value,/не отправлять автоматически/);
+  }
+  for(const id of ['editorial','minimal']){
+    const draft=buildCreativeDraft('story',id,'Запуск новой коллекции');
+    assert.equal(draft.ok,true);
+    assert.match(draft.value,/Запуск новой коллекции/);
+  }
 });
