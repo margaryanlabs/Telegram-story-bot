@@ -11,13 +11,13 @@ const js = read('public/vetogram-header.js');
 test('Vetogram keeps the canonical red/silver split-V identity in its real inbox',()=>{
   assert.match(html, /<title>Vetogram/);
   assert.match(html, /aria-label="VETOGRAM"><span>VETO<\/span><i>GRAM/);
-  assert.match(html, /class="veto-mirror-heading vetogram-header is-expanded"/);
+  assert.match(html, /class="veto-mirror-heading vetogram-header"/);
   assert.match(html, /veto-telegram-mark\.svg\?v=20261019-brand-v2/);
   assert.doesNotMatch(html, /VETO Telegram|StoryLab|Buy Veta/i);
 });
 
 test('the final stylesheet and accessible controller are wired AFTER existing cosmetics',()=>{
-  assert.match(html, /id="vetogramHeaderToggle"[^>]+aria-controls="vetogramHeaderActions"[^>]+aria-expanded="true"/);
+  assert.match(html, /id="vetogramHeaderToggle"[^>]+aria-controls="vetogramHeaderActions"[^>]+aria-expanded="false"/);
   assert.ok(html.indexOf('vetogram-header.css')>html.indexOf('veto-launch-polish.css'));
   assert.ok(html.indexOf('vetogram-header.js')>html.indexOf('veto-launch-polish.js'));
   assert.match(css, /\.vetogram-header\.is-expanded/);
