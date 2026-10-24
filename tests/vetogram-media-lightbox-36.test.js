@@ -5,21 +5,25 @@ import vm from 'node:vm';
 
 const read=name=>readFileSync(new URL('../public/'+name,import.meta.url),'utf8');
 const code=read('telegram-chats.js'),html=read('studio.html'),css=read('vetogram-finish-2026.css');
-const start=code.indexOf('  function openPhotoViewer(messageId){');
+const start=code.indexOf('  function loadedPhotoIds(){');
 const end=code.indexOf('  function inlineImage(message){',start);
 assert.ok(start>0&&end>start,'must test the actual media viewer controller');
 const realOpen=code.slice(start,end);
 
 function fixture(mime='image/jpeg',href='blob:my-photo',valid=true){
-  const img={},save={},dialog={open:false,showModal(){this.open=true}};
-  const elements={telegramThreadPhotoDialog:dialog,telegramThreadPhotoFull:img,telegramThreadPhotoSave:save};
+  const img={},save={},counter={},prev={},next={};
+  const dialog={open:false,showModal(){this.open=true}};
+  const elements={telegramThreadPhotoDialog:dialog,telegramThreadPhotoFull:img,
+    telegramThreadPhotoSave:save,telegramThreadPhotoPrev:prev,
+    telegramThreadPhotoNext:next,telegramThreadPhotoCount:counter};
   const state={
-    thread:{id:'my-chat'},
+    thread:{id:'my-chat'},ownerInitData:'signed',activePhotoId:null,
+    messages:[{id:42,media:'photo'}],
     mediaPreviewUrls:new Map([['42',href]]),
     mediaUrls:valid?[href]:[],
     mediaMimeByUrl:new Map([[href,mime]])
   };
-  const context={resetOwner:()=>false,state,$:key=>elements[key]};
+  const context={resetOwner:()=>false,state,$:key=>elements[key],tg:{initData:'signed'}};
   vm.runInNewContext(realOpen+';openPhotoViewer(42)',context);
   return {img,save,dialog};
 }
@@ -44,7 +48,7 @@ test('photo viewer refuses non-owner or non-live local blob links',()=>{
     mediaUrls:['blob:a'],mediaMimeByUrl:new Map([['blob:a','image/png']])};
   let opened=false;
   const $=()=>({showModal(){opened=true}});
-  vm.runInNewContext(realOpen+';openPhotoViewer(42)',{resetOwner:()=>true,state,$});
+  vm.runInNewContext(realOpen+';openPhotoViewer(42)',{resetOwner:()=>true,state,$,tg:{initData:'signed'}});
   assert.equal(opened,false);
 });
 test('MIME is derived from downloaded Blob for live/archive/expanded images only',()=>{
