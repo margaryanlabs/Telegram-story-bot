@@ -773,8 +773,10 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         if(!current.some(c=>c.id===item.id))return notice('Данные чата изменились. Обнови список.',true);
         const chat=state.dialogs.find(c=>String(c.id)===item.id);
         if(!chat)return notice('Чат не найден.',true);
+        const scope=ownerRequestScope();
         if(!window.confirm('Скопировать только последний предпросмотр чата «'+item.title+
           '» в локальный черновик ответа? Полный диалог нужно проверить самому. AI-провайдер ничего не получит до отдельного согласия.'))return;
+        if(!isOwnerRequestCurrent(scope))return;
         setMode('reply');
         // Never leave an earlier AI reply available for sending from this new context.
         state.last=null;state.sendIntent=null;state.reviewedApprovalId=null;
@@ -793,7 +795,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         if(!safeIdentity())return;
         if(!followupCandidates(state.dialogs).some(c=>c.id===item.id))
           return notice('Обнови список чатов перед анализом.',true);
+        const scope=ownerRequestScope();
         if(!window.confirm('Перенести этот короткий предпросмотр в локальный Second Brain? Полный диалог и точные договорённости нужно проверять самостоятельно. Передача AI потребует отдельного согласия.'))return;
+        if(!isOwnerRequestCurrent(scope))return;
         setMode('brief');
         state.brief=null;state.last=null;state.sendIntent=null;
         $('vtaiText').value=item.preview;
