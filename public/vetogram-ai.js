@@ -644,7 +644,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
       let grant=null;
-if(mode==='negotiator'){
+      if(mode==='negotiator'){
         if(!window.confirm('Разрешить VETOGRAM AI готовить черновик переговоров только для выбранного чата и в заданных пределах? Никакая автоматическая отправка не включается.'))return;
         const issued=await request('/api/vetogram-ai-grants',{
           action:'issue',chatId:negotiationPolicy.chatId,currency:negotiationPolicy.currency,
@@ -883,12 +883,14 @@ if(mode==='negotiator'){
     // A new recipient/message/owner gets a different send intent.
     const intentKey=requestedSendKey(owner(),chatId,message);
     if(state.sendIntent?.key!==intentKey)state.sendIntent={key:intentKey,nonce:window.crypto.randomUUID()};
+    const scope=ownerRequestScope();
     setBusy(true);
     notice('Отправляю после твоего подтверждения…');
     try{
       const result=await request('/api/telegram-send',{
         action:'send_message',chatId,message,nonce:state.sendIntent.nonce
       });
+      if(!isOwnerRequestCurrent(scope))return;
       notice(result.sent?'Telegram принял сообщение.':'Отправка не подтверждена.',!result.sent);
       if(result.sent){
         const reviewed=state.approvals.find(x=>x.id===state.reviewedApprovalId);
@@ -899,8 +901,9 @@ if(mode==='negotiator'){
         state.reviewedApprovalId=null;
         $('vtaiDraft').value='';$('vtaiReview').hidden=true;state.last=null;state.sendIntent=null;
       }
-    }catch(error){notice(error.message+'. Если произошёл сбой сети, сначала проверь чат, прежде чем отправлять снова.',true)}
-    finally{setBusy(false)}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      notice(error.message+'. Если произошёл сбой сети, сначала проверь чат, прежде чем отправлять снова.',true)}
+    finally{if(isOwnerRequestCurrent(scope))setBusy(false)}
   }
   async function applyStory(){
     if(state.busy||!safeIdentity())return;
@@ -1036,33 +1039,42 @@ if(mode==='negotiator'){
   async function loadMemoryCloud(){
     if(state.memoryBusy||state.busy||!safeIdentity())return;
     if(state.memory.length&&!window.confirm('Загрузить серверную копию? Несохранённые локальные заметки будут заменены.'))return;
+    const scope=ownerRequestScope();
     state.memoryBusy=true;
     $('vtaiMemoryCloudLoad').disabled=true;
     try{
       const result=await request('/api/vetogram-ai-memory',{action:'list'});
-      if(!safeIdentity())return;
+      if(!isOwnerRequestCurrent(scope))return;
       state.memory=Array.isArray(result.notes)?result.notes.map(note=>({...note,owner:owner()})):[];
       state.memoryRevision=result.revision;
       state.selectedNotes.clear();$('vtaiIncludeMemory').checked=false;
       renderMemory();memoryStatus('Заметки загружены из зашифрованного хранилища VETOGRAM. Ревизия: '+result.revision+'.');
-    }catch(error){memoryStatus('Облачная память не загружена: '+error.message,true);}
-    finally{state.memoryBusy=false;$('vtaiMemoryCloudLoad').disabled=false;}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      memoryStatus('Облачная память не загружена: '+error.message,true);}
+    finally{if(isOwnerRequestCurrent(scope)){
+      state.memoryBusy=false;$('vtaiMemoryCloudLoad').disabled=false;
+    }}
   }
   async function writeMemoryCloud(notes){
     if(state.memoryBusy||state.busy||!safeIdentity())return false;
     if(!Number.isSafeInteger(state.memoryRevision))return memoryStatus('Сначала загрузите облачные заметки, чтобы не перезаписать другую версию.',true),false;
+    const scope=ownerRequestScope();
     state.memoryBusy=true;
     $('vtaiMemoryCloudSave').disabled=true;$('vtaiMemoryCloudErase').disabled=true;
     try{
       const rows=notes.map(note=>({id:note.id,label:note.label,content:note.content,createdAt:note.createdAt}));
       const result=await request('/api/vetogram-ai-memory',
         {action:'replace',revision:state.memoryRevision,notes:rows},'memory');
-      if(!safeIdentity())return false;
+      if(!isOwnerRequestCurrent(scope))return false;
       state.memoryRevision=result.revision;
       memoryStatus('Сервер подтвердил зашифрованное сохранение. Ревизия: '+result.revision+'.');
       return true;
-    }catch(error){memoryStatus('Не сохранено: '+error.message,true);return false;}
-    finally{state.memoryBusy=false;$('vtaiMemoryCloudSave').disabled=false;$('vtaiMemoryCloudErase').disabled=false;}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      memoryStatus('Не сохранено: '+error.message,true);return false;}
+    finally{if(isOwnerRequestCurrent(scope)){
+      state.memoryBusy=false;$('vtaiMemoryCloudSave').disabled=false;
+      $('vtaiMemoryCloudErase').disabled=false;
+    }}
   }
   async function saveMemoryCloud(){
     if(!safeIdentity())return;
@@ -1075,17 +1087,22 @@ if(mode==='negotiator'){
       return memoryStatus('Сначала загрузи существующую облачную копию.',true);
     if(!window.confirm('Безвозвратно удалить зашифрованную запись AI Memory из Neon? Локальные заметки останутся в этом окне.'))return;
     if(!safeIdentity())return;
+    const scope=ownerRequestScope();
     state.memoryBusy=true;
     $('vtaiMemoryCloudErase').disabled=true;$('vtaiMemoryCloudSave').disabled=true;
     try{
       const result=await request('/api/vetogram-ai-memory',
         {action:'erase',revision:state.memoryRevision},'memory');
       if(result.deleted!==true)throw Error('Удаление не подтверждено сервером');
-      if(!safeIdentity())return;
+      if(!isOwnerRequestCurrent(scope))return;
       state.memoryRevision=0;
       memoryStatus('Зашифрованная запись удалена из Neon. Локальные заметки в этом окне сохранены.');
-    }catch(error){memoryStatus('Не удалось удалить облачную запись: '+error.message,true);}
-    finally{state.memoryBusy=false;$('vtaiMemoryCloudErase').disabled=false;$('vtaiMemoryCloudSave').disabled=false;}
+    }catch(error){if(isOwnerRequestCurrent(scope))
+      memoryStatus('Не удалось удалить облачную запись: '+error.message,true);}
+    finally{if(isOwnerRequestCurrent(scope)){
+      state.memoryBusy=false;$('vtaiMemoryCloudErase').disabled=false;
+      $('vtaiMemoryCloudSave').disabled=false;
+    }}
   }
 
   function addMemory(){
