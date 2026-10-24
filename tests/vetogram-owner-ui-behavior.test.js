@@ -425,7 +425,12 @@ test('Story Engine receiver accepts owner-approved text only, preserving unrelat
   const fn=vm.runInNewContext('('+storyController.slice(start,end+2)+')',
     vm.createContext({owner:()=> '111',init:async()=>{},state,
       trimText:(x,n)=>String(x??'').slice(0,n),
-      normalizePortal:x=>x,clearPublicPortalLink:()=>{clears++},
+      normalizePortal:x=>x,
+      aiEditableFields:(draft,withPortal)=>JSON.stringify({
+        title:draft.title,subtitle:draft.subtitle,caption:draft.caption,
+        ...(withPortal?{portal:draft.portal}:{})
+      }),
+      clearPublicPortalLink:()=>{clears++},
       $:()=>({checked:true,style:{},hidden:true,disabled:true}),render:()=>{renders++},notify:()=>{}
     }));
   const success=await fn({ownerId:'111',story:{
