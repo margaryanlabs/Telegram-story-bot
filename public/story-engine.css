@@ -148,3 +148,23 @@
 .se-portal-demo-feedback{font-size:12px!important;color:#ffadbd!important;min-height:18px}
 .se-portal-demo-disclaimer{padding:12px;border-top:1px solid rgba(255,255,255,.12);
  font-size:10px!important;color:#b0aab7!important}
+
+
+/* VETOGRAM mobile design pass: larger usable targets, legible template cards,
+   and a dedicated undo action. Presentation-only: no Story/Telegram behavior. */
+@media(max-width:600px){
+  .se-engine .se-masthead h1{font-size:clamp(29px,8vw,35px)!important;line-height:1.12}
+  .se-engine .se-masthead p{font-size:13px;line-height:1.65}
+  .se-engine .se-templates{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .se-engine .se-template{min-height:106px;height:auto;padding:12px 9px}
+  .se-engine .se-template strong{font-size:11px;line-height:1.25}
+  .se-engine .se-template small{font-size:10px;line-height:1.35}
+  .se-engine .se-controls-row{display:flex;flex-wrap:wrap;gap:9px}
+  .se-engine .se-controls-row .se-button{flex:1 1 120px;min-height:46px}
+  .se-engine #seUndoAiText:not([hidden]){flex:1 1 100%;min-height:44px}
+  .se-engine .se-input{font-size:16px}
+  .se-engine .se-portal-demo{max-height:calc(100dvh - 32px);padding:19px}
+  .se-engine .se-portal-demo-close{min-width:44px;min-height:44px}
+}
+.se-engine .se-button:focus-visible,.se-engine .se-template:focus-visible,
+.se-engine .se-layer-chip:focus-visible{outline:2px solid #ff91a0;outline-offset:3px}
