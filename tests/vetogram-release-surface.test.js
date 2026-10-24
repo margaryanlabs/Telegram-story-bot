@@ -86,3 +86,21 @@ test('all connection, security, and onboarding sheet buttons have a handler',()=
     'viewer-verify-password','viewer-cancel-login','security-revoke-session'])
     assert.ok(sheetActions.has(critical),'Critical owner action is no longer reachable: '+critical);
 });
+
+test('phone and code login surfaces provide explicit QR recovery without resending codes',()=>{
+  const app=read('public/app.js');
+  const phone=app.slice(app.indexOf('function viewerPhoneSheet()'),
+    app.indexOf('function viewerEmailSheet()'));
+  const code=app.slice(app.indexOf('function viewerCodeSheet('),
+    app.indexOf('function viewerNoCodeSheet()'));
+  assert.match(phone,/data-sheet-action="viewer-start-qr"/);
+  assert.match(code,/data-sheet-action="viewer-start-qr"/);
+  assert.match(code,/data-sheet-action="viewer-code-help"/);
+  assert.match(app,/if \(action === 'viewer-start-qr'\)/);
+  // Moving to QR is a user click; it must not quietly cancel the code challenge.
+  const backend=read('api/viewer-qr.js');
+  assert.match(backend,/Keep a still-valid phone-code challenge while trying QR/);
+  const startup=backend.slice(backend.indexOf('Keep a still-valid phone-code challenge'),
+    backend.indexOf('const result = await beginUserQrAuth'));
+  assert.doesNotMatch(startup,/deleteAuthChallenge\(/);
+});
