@@ -76,3 +76,40 @@ test('photo navigation remains accessible and reduced-motion safe',()=>{
   assert.match(art,/:focus-visible/);
   assert.equal((css.match(/\{/g)||[]).length,(css.match(/\}/g)||[]).length);
 });
+
+
+test('swipe direction, threshold, vertical scroll and arrow keys have real event handlers',()=>{
+  const start=chats.indexOf('  // Navigate only photos already downloaded');
+  const end=chats.indexOf("  $('telegramThreadPhotoClose')?.addEventListener",start);
+  assert.ok(start>0&&end>start);
+  const code=chats.slice(start,end);
+  const events={prev:{},next:{},dialog:{},stage:{}},moves=[];
+  const button=(name)=>({
+    addEventListener:(type,fn)=>{events[name][type]=fn}
+  });
+  const elements={telegramThreadPhotoPrev:button('prev'),
+    telegramThreadPhotoNext:button('next'),
+    telegramThreadPhotoDialog:button('dialog'),
+    telegramThreadPhotoStage:button('stage')};
+  runInNewContext(code,{$:id=>elements[id],moveLoadedPhoto:dir=>moves.push(dir)});
+  events.prev.click();events.next.click();
+  assert.equal(moves.join(','),'-1,1');
+  let prevented=0;
+  events.dialog.keydown({key:'ArrowLeft',preventDefault(){prevented++}});
+  events.dialog.keydown({key:'ArrowRight',preventDefault(){prevented++}});
+  events.dialog.keydown({key:'Escape',preventDefault(){throw Error('Escape handled by native dialog')}});
+  assert.equal(moves.join(','),'-1,1,-1,1');assert.equal(prevented,2);
+  const touch=(type,x,y,count=1)=>{
+    const points=Array.from({length:count},()=>({clientX:x,clientY:y}));
+    events.stage[type](
+      type==='touchstart'?{touches:points}:{changedTouches:points}
+    );
+  };
+  touch('touchstart',180,120);touch('touchend',100,126);
+  touch('touchstart',100,120);touch('touchend',180,118);
+  assert.equal(moves.join(','),'-1,1,-1,1,1,-1');
+  touch('touchstart',100,120);touch('touchend',130,125);
+  touch('touchstart',100,120);touch('touchend',175,240);
+  touch('touchstart',100,120,2);touch('touchend',5,121);
+  assert.equal(moves.length,6,'short, vertical and two-finger gestures must not navigate');
+});
