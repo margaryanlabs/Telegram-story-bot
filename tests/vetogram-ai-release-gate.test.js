@@ -41,3 +41,16 @@ test('release gate guards API auth, grant rechecks, quotas, and absence of sende
   const missing=runtime();missing['lib/vetogram-ai-grants.js']='';
   assert.ok(inspectAiRuntimeContract(missing).failures.includes('GRANT_ISSUE_PROCEDURE'));
 });
+
+
+test('release CI checks the draft PR once, without duplicate push runs',()=>{
+  const workflow=read('.github/workflows/vetogram-ai-ci.yml');
+  assert.match(workflow,/^on:\s*\n  pull_request:\s*\n/m);
+  assert.doesNotMatch(workflow,/^  push:/m);
+  assert.match(workflow,/branches: \[feat\/vetogram-story-engine-20261022\]/);
+  assert.match(workflow,/types: \[opened, synchronize, reopened, ready_for_review\]/);
+  for(const job of ['offline-contracts','node-tests','disposable-postgres'])
+    assert.match(workflow,new RegExp('^  '+job+':','m'));
+  assert.match(workflow,/npm run ci:offline/);
+  assert.match(workflow,/bash scripts\/vetogram-task-reminder-race\.sh/);
+});
