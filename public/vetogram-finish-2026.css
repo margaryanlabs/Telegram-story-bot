@@ -1170,3 +1170,71 @@ html.veto-keyboard-open body.veto-chat-thread #telegramMirror .veto-mirror-threa
     backdrop-filter:none;-webkit-backdrop-filter:none;
   }
 }
+
+
+/* VETOGRAM 3.7 · deliberate navigation motion, never fake message motion.
+ * Runs when actual inbox/thread visibility changes, not on polling, scroll or render.
+ */
+@keyframes vg37-thread-enter{
+  from{opacity:.72;transform:translate3d(12px,0,0)}
+  to{opacity:1;transform:none}
+}
+@keyframes vg37-inbox-return{
+  from{opacity:.72;transform:translate3d(-9px,0,0)}
+  to{opacity:1;transform:none}
+}
+@keyframes vg37-photo-open{
+  from{opacity:.65;transform:translate3d(0,9px,0) scale(.988)}
+  to{opacity:1;transform:none}
+}
+@keyframes vg37-photo-shade{
+  from{background:rgba(1,5,14,.65)}
+  to{background:rgba(1,5,14,.9)}
+}
+body.veto-chat-thread #telegramMirror.thread-mode
+  #telegramThreadView.veto-mirror-thread:not([hidden]){
+  animation:vg37-thread-enter .26s cubic-bezier(.18,.82,.24,1) both;
+  will-change:auto;
+}
+#telegramMirror:not(.thread-mode)
+  #telegramChatsView.veto-mirror-list.vg37-return:not([hidden]){
+  animation:vg37-inbox-return .21s cubic-bezier(.22,1,.36,1) both;
+  will-change:auto;
+}
+#telegramMirror .veto-mirror-photo-dialog[open]{
+  animation:vg37-photo-open .24s cubic-bezier(.2,.8,.2,1) both;
+}
+#telegramMirror .veto-mirror-photo-dialog[open]::backdrop{
+  animation:vg37-photo-shade .22s ease-out both;
+}
+/* The original real chat list stays legible when returned to, including
+ * keyboard focus; neither transient state changes sorting or read receipts. */
+#telegramMirror #telegramMirrorList .veto-mirror-chat:focus-visible{
+  outline:2px solid var(--vg34-focus,#ffb59d);
+  outline-offset:-3px;
+}
+#telegramMirror #telegramMirrorList .veto-mirror-chat{
+  scroll-margin-block:72px 90px;
+}
+#telegramMirror #telegramThreadMessages .veto-mirror-bubble{
+  animation:none!important;
+}
+@media(max-width:520px){
+  body.veto-chat-thread #telegramMirror.thread-mode
+    #telegramThreadView.veto-mirror-thread:not([hidden]){
+    animation-duration:.19s;
+  }
+  #telegramMirror .veto-mirror-photo-dialog[open]{
+    animation-duration:.18s;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.veto-chat-thread #telegramMirror.thread-mode
+    #telegramThreadView.veto-mirror-thread:not([hidden]),
+  #telegramMirror:not(.thread-mode)
+    #telegramChatsView.veto-mirror-list.vg37-return:not([hidden]),
+  #telegramMirror .veto-mirror-photo-dialog[open],
+  #telegramMirror .veto-mirror-photo-dialog[open]::backdrop{
+    animation:none!important;transform:none!important;
+  }
+}
