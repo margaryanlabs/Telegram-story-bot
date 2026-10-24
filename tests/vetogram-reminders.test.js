@@ -205,6 +205,10 @@ test('disposable Postgres CI exercises both cross-device lock orderings',()=>{
   const migration=source('migrations/vetogram-reminders-20261024.sql');
   assert.match(race,/set -euo pipefail/);
   assert.match(race,/PGOPTIONS/);
+  assert.match(race,/pg_try_advisory_xact_lock/);
+  assert.match(race,/wait_for_owner_lock 98760005/);
+  assert.match(race,/wait_for_owner_lock 98760006/);
+  assert.doesNotMatch(race,/sleep 0\.5/);
   assert.match(race,/pg_advisory_xact_lock\(hashtext\('veto-reminders:98760005'\)/);
   assert.match(race,/pg_advisory_xact_lock\(hashtext\('veto-reminders:98760006'\)/);
   assert.match(race,/CI_STALE_REMINDER_ACCEPTED_DURING_CLOUD_EDIT/);
