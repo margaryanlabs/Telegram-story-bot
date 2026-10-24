@@ -75,21 +75,21 @@ wait "$scheduler"
 # A second owner and the immutable data boundary are checked explicitly.
 psql -v ON_ERROR_STOP=1 <<'SQL'
 DO $$
-DECLARE count_valid integer; ciphertext text; revision integer;
+DECLARE count_valid integer; ciphertext text; stored_revision integer;
 BEGIN
   SELECT count(*) INTO count_valid FROM public.vetogram_reminders
     WHERE owner_id=98760005 AND state='pending';
   IF count_valid<>0 THEN
     RAISE EXCEPTION 'CI_STALE_OWNER_HAS_UNEXPECTED_PENDING_REMINDER';
   END IF;
-  SELECT encrypted_snapshot,revision INTO ciphertext,revision
-    FROM public.vetogram_task_cloud WHERE owner_id=98760005;
-  IF ciphertext<>'ci.device-a.v2' OR revision<>2 THEN
+  SELECT c.encrypted_snapshot,c.revision INTO ciphertext,stored_revision
+    FROM public.vetogram_task_cloud c WHERE c.owner_id=98760005;
+  IF ciphertext<>'ci.device-a.v2' OR stored_revision<>2 THEN
     RAISE EXCEPTION 'CI_CLOUD_REVISION_LOST_AFTER_SCHEDULE_RACE';
   END IF;
-  SELECT encrypted_snapshot,revision INTO ciphertext,revision
-    FROM public.vetogram_task_cloud WHERE owner_id=98760006;
-  IF ciphertext<>'ci.device-b.v1' OR revision<>1 THEN
+  SELECT c.encrypted_snapshot,c.revision INTO ciphertext,stored_revision
+    FROM public.vetogram_task_cloud c WHERE c.owner_id=98760006;
+  IF ciphertext<>'ci.device-b.v1' OR stored_revision<>1 THEN
     RAISE EXCEPTION 'CI_CLOUD_WRITE_BYPASSED_PENDING_REMINDER';
   END IF;
   SELECT count(*) INTO count_valid FROM public.vetogram_reminders
