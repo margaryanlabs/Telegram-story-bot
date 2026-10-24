@@ -9,7 +9,7 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false,reminderSchedulingConfigured:null};
+  const state={identity:null,requestEpoch:0,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false,reminderSchedulingConfigured:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -19,10 +19,10 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
   // A response must never write into another signed Telegram owner's UI.
   // This guard is intentionally pure: stale finally/catch blocks must not
   // reset the current owner's loading flags or surface old-account errors.
-  const ownerRequestScope=()=>({identity:state.identity,ownerId:owner()});
+  const ownerRequestScope=()=>({identity:state.identity,ownerId:owner(),epoch:state.requestEpoch});
   const isOwnerRequestCurrent=scope=>Boolean(scope&&scope.identity&&
     state.identity===scope.identity&&signed()===scope.identity&&
-    owner()===scope.ownerId);
+    owner()===scope.ownerId&&state.requestEpoch===scope.epoch);
 
   function safeIdentity(){
     const id=owner(),init=signed();
@@ -34,6 +34,8 @@ import {MAX_TASKS,makeOwnerTask,ownerTasks,addOwnerTask,updateOwnerTask,taskOver
     return true;
   }
   function reset(){
+    // Invalidate every in-flight owner-bound request, even after A→B→A.
+    state.requestEpoch+=1;
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;state.focusHidden.clear();
     state.tasks=[];state.taskFilter='open';state.taskCloudRevision=null;state.taskCloudBusy=false;
