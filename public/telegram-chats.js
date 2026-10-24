@@ -1271,7 +1271,7 @@
     refreshPhotoNavigation();
   }
   function openPhotoViewer(messageId){
-    if(resetOwner()||!state.thread)return;
+    if(resetOwner()||!state.thread||state.ownerInitData!==String(tg?.initData||''))return;
     const href=state.mediaPreviewUrls.get(String(messageId));
     if(!href||!state.mediaUrls.includes(href)||!href.startsWith('blob:'))return;
     const dialog=$('telegramThreadPhotoDialog'),img=$('telegramThreadPhotoFull');
@@ -1283,8 +1283,10 @@
     save.href=href;save.download='vetogram-photo-'+String(messageId)+'.'+extension;
     state.activePhotoId=String(messageId);
     refreshPhotoNavigation();
-    if(typeof dialog.showModal==='function'&&!dialog.open)dialog.showModal();
-    else dialog.setAttribute('open','');
+    if(!dialog.open){
+      if(typeof dialog.showModal==='function')dialog.showModal();
+      else dialog.setAttribute('open','');
+    }
   }
   function inlineImage(message){
     if(message?.media!=='photo')return '';
