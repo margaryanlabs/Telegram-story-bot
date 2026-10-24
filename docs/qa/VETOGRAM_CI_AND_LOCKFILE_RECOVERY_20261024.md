@@ -37,3 +37,16 @@ Review `git diff -- package-lock.json`, confirm exact npm registry integrity fie
 ## Current evidence and limits
 
 The live offline audit correctly reported the three missing dependencies; its synthetic positive test passed; new JavaScript helper, CLI and test file parsed syntactically. **This is not evidence of an npm install or actual GitHub Actions run.** All six additive AI migrations remain staged and unapplied. No changes to production, Vercel environment, ignored-build setting, GitHub billing, Neon data or main branch.
+
+
+## 24 October — concurrent Task Cloud + reminder race coverage
+
+The existing `disposable-postgres` job now also runs `scripts/vetogram-task-reminder-race.sh` after applying the six additive migrations. It uses only fake ciphertext and dedicated synthetic owner IDs (`98760005`, `98760006`).
+
+Two independent PostgreSQL sessions exercise both orderings:
+1. An owner cloud write acquires the lock, updates the revision, and an old-revision reminder request waits then must fail with `VETO_REMINDER_TASK_REVISION_CONFLICT`. The new encrypted snapshot must stay saved, no stale reminder may be created.
+2. Scheduling an owner reminder acquires the lock, followed by a competing cloud save which must fail with `VETO_TASK_PENDING_REMINDERS`. The original ciphertext/revision and the newly pending reminder must survive.
+
+A `pg_try_advisory_xact_lock` handshake waits until the background session actually holds the intended owner lock, avoiding an unreliable fixed 0.5-second delay. The dependency-free CI job additionally syntax-checks both shell race scripts with `bash -n`. Source assertions verify that both scenarios remain connected to the temporary-Postgres job. **The actual concurrent SQL cases have not yet run** because the GitHub Actions jobs have failed before taking any steps; no production database was accessed.
+
+Lockfile regeneration was attempted from the working container on 24 October, but npm registry DNS resolution returned `EAI_AGAIN`, so it remains blocked. Do not manually fabricate package integrity metadata. The current branch still needs a trusted network-enabled `npm run lock:refresh` before `npm ci` can pass.
