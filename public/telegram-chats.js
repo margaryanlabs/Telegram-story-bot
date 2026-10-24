@@ -961,6 +961,35 @@
       }
     }
   }
+  // Derived solely from currently loaded, account-scoped chats. Never an
+  // overall Telegram total, archive-health claim or persisted usage profile.
+  function renderInboxPulse(){
+    const panel=$('vgxInboxPulse');
+    if(!panel)return;
+    const summary=window.VetogramInboxPulse?.summarize(state.chats);
+    if(!summary||!summary.loaded){
+      panel.hidden=true;
+      for(const id of ['vgxPulseUnread','vgxPulseFocus','vgxPulseDeleted']){
+        const el=$(id);if(el)el.textContent='0';
+      }
+      return;
+    }
+    panel.hidden=false;
+    const values={
+      vgxPulseUnread:summary.unreadChats,
+      vgxPulseFocus:summary.attentionChats,
+      vgxPulseDeleted:summary.deletedMessages
+    };
+    for(const [id,value] of Object.entries(values)){
+      const el=$(id);
+      if(el)el.textContent=value>999?'999+':String(value);
+    }
+    panel.querySelectorAll('[data-vgx-pulse-filter]').forEach(button=>{
+      const active=button.dataset.vgxPulseFilter===state.filter;
+      button.setAttribute('aria-pressed',String(active));
+      button.classList.toggle('active',active);
+    });
+  }
   function renderChats(){
     const list=$('telegramMirrorList');
     if(!list)return;
@@ -977,6 +1006,7 @@
     if($('vetoMessengerConnectCta'))$('vetoMessengerConnectCta').hidden=ready;
     renderPrivacyDiagnostics();
     $('telegramMirrorCount').textContent=String(state.chats.length);
+    renderInboxPulse();
     const proof=$('telegramMirrorAccountProof');
     const drawer=$('telegramMirrorAccessDrawer');
     const drawerStatus=$('telegramMirrorAccessDrawerStatus');
@@ -1941,9 +1971,10 @@
       // Live messages are valid even when Privacy storage is slow or offline.
       // Don't mislabel lack of stored evidence as restored deletions.
       if(ownerKey===state.ownerInitData&&
-         generation===state.threadGeneration&&String(state.thread?.id)===chatId&&
-         state.thread?.savedCopy===true)
-        threadNotice('Облачная история открыта. Защищённый архив пока не ответил; обнови чат позже.');
+         generation===state.threadGeneration&&String(state.thread?.id)===chatId){
+        threadNotice('Защищённый архив пока недоступен. Сообщения Telegram остаются доступными; сохранённые копии появятся после восстановления архива.');
+        syncLabel('Telegram подключён · архив ожидает повторной проверки');
+      }
     }
   }
   async function loadMessages({reset=false}={}){
@@ -2337,6 +2368,16 @@
     state.search='';$('telegramMirrorSearch').value='';renderChats();
     $('telegramMirrorSearch').focus();
   });
+  // Pulse tiles reuse the existing owner-checked filter handler. No new
+  // request, permission grant or side effect is triggered by this shortcut.
+  $('vgxInboxPulse')?.addEventListener('click',event=>{
+    const button=event.target.closest('[data-vgx-pulse-filter]');
+    if(!button||resetOwner())return;
+    const filter=button.dataset.vgxPulseFilter;
+    if(!['unread','focus','copies'].includes(filter))return;
+    $('telegramMirrorFilters')?.querySelector(
+      '[data-mirror-filter="'+filter+'"]')?.click();
+  });
   $('telegramMirrorFilters')?.addEventListener('click',event=>{
     const button=event.target.closest('[data-mirror-filter]');
     if(!button)return;
@@ -2389,6 +2430,40 @@
       $('telegramThreadCompose')?.focus();
       haptic();
     }
+  });
+  // The user explicitly elects ONE visible incoming message for AI draft.
+  // It is copied locally; nothing is transmitted to an AI provider here.
+  $('telegramThreadReplyAI')?.addEventListener('click',()=>{
+    if(resetOwner()||!state.thread||!canSendInThread(state.thread))return toast('Открой доступный личный чат');
+    const candidate=[...state.messages].reverse().find(m=>
+      !m?.out&&!m?.deleted&&!m?.preservedOnly&&typeof m?.text==='string'&&m.text.trim());
+    if(!candidate)return toast('В этом чате пока нет доступного входящего текста');
+    if(!window.confirm('Передать последнее входящее сообщение в локальный черновик VETO AI? AI-провайдер ничего не получит без твоего следующего разрешения.'))return;
+    const target={
+      ownerId:String(tg?.initDataUnsafe?.user?.id||''),signed:String(tg?.initData||''),
+      chatId:String(state.thread.id),chatTitle:String(state.thread.title||'Telegram'),
+      text:String(candidate.text).slice(0,1500)
+    };
+    if(!/^\d{1,20}$/.test(target.ownerId)||!target.signed)return toast('Подключи свой Telegram');
+    window.dispatchEvent(new CustomEvent('vetogram:ai-prefill',{detail:target}));
+    window.VetoTelegramNavigate?.('ai');
+  });
+  $('telegramThreadBriefAI')?.addEventListener('click',()=>{
+    if(resetOwner()||!state.thread||!canSendInThread(state.thread))
+      return toast('Открой доступный чат');
+    const candidate=[...state.messages].reverse().find(m=>
+      !m?.out&&!m?.deleted&&!m?.preservedOnly&&
+      typeof m?.text==='string'&&m.text.trim());
+    if(!candidate)return toast('Нет доступного входящего текста для разбора');
+    if(!window.confirm('Скопировать последнее входящее сообщение только в локальный черновик Second Brain? Передача AI отдельно требует твоего разрешения.'))return;
+    const target={
+      ownerId:String(tg?.initDataUnsafe?.user?.id||''),signed:String(tg?.initData||''),
+      chatId:String(state.thread.id),chatTitle:String(state.thread.title||'Telegram'),
+      text:String(candidate.text).slice(0,2800)
+    };
+    if(!/^\d{1,20}$/.test(target.ownerId)||!target.signed)return toast('Подключи свой Telegram');
+    window.dispatchEvent(new CustomEvent('vetogram:brief-prefill',{detail:target}));
+    window.VetoTelegramNavigate?.('ai');
   });
   $('telegramThreadSearchToggle')?.addEventListener('click',()=>{
     const bar=$('telegramThreadFind');

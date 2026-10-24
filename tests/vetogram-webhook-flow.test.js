@@ -10,7 +10,8 @@ test('mocked signed webhook preserves new/edit/delete archive flow and sends own
   // This test verifies the signed legacy webhook-to-store contract using
   // in-memory fetch mocks; it must never make a real Neon database call.
   process.env.VETO_STORAGE_PROVIDER='supabase';
-  const connection={id:'new-connection',user:{id:111},user_chat_id:111,is_enabled:true,rights:{can_manage_stories:true}};
+  // Intentionally different: user.id owns the archive, user_chat_id only receives notifications.
+  const connection={id:'new-connection',user:{id:111},user_chat_id:888222,is_enabled:true,rights:{can_manage_stories:true}};
   const archive=new Map(),versions=[],alerts=[];
   let storeFail=false;
   globalThis.fetch=async(url,options)=>{
@@ -27,10 +28,14 @@ test('mocked signed webhook preserves new/edit/delete archive flow and sends own
     const {op,args}=body;let data;
     if(op==='capture_business_message') {
       if(storeFail)throw Error('fixture storage unavailable');
-      const row=args.row;versions.push(row.text_content);archive.set(row.message_id,row);
+      const row=args.row;
+      assert.equal(row.telegram_user_id,'111');
+      assert.equal(row.business_connection_id,'new-connection');
+      versions.push(row.text_content);archive.set(row.message_id,row);
       data={captured:true,settings:{antiDelete:true,editHistory:true,notifyEdits:true}};
     } else if(op==='mark_business_messages_deleted') {
       if(storeFail)throw Error('fixture storage unavailable');
+      assert.equal(String(args.userId),'111');
       const events=[];
       for(const id of args.messageIds) {
         const row=archive.get(id);if(row){row.deleted_at=args.deletedAt;events.push({chatId:row.chat_id,messageId:id,preview:row.text_content,direction:row.direction})}
@@ -38,7 +43,8 @@ test('mocked signed webhook preserves new/edit/delete archive flow and sends own
       data={affected:events.length,retained:events.length>0,events,settings:{notifyDeletes:true},mediaRecovery:[]};
     } else if(op==='upsert_business_connection_state') {
       if(storeFail)throw Error('fixture storage unavailable');
-      assert.equal(args.row.businessConnectionId,'new-connection');data=args.row;
+      assert.equal(args.row.businessConnectionId,'new-connection');
+      assert.equal(String(args.row.telegramUserId),'111');data=args.row;
     } else throw Error('Unexpected store operation: '+op);
     return {ok:true,json:async()=>({ok:true,data})};
   };
@@ -50,7 +56,7 @@ test('mocked signed webhook preserves new/edit/delete archive flow and sends own
     assert.equal(edit.body.edit_alert_sent,true);assert.deepEqual(versions,['before','after']);
     const del=await send({deleted_business_messages:{business_connection_id:'new-connection',chat:message.chat,message_ids:[1]}});
     assert.equal(del.body.retained,true);assert.equal(del.body.alert_sent,true);assert.ok(archive.get(1).deleted_at);
-    assert.equal(alerts.length,2);assert.ok(alerts.every(a=>String(a.chat_id)==='111'));
+    assert.equal(alerts.length,2);assert.ok(alerts.every(a=>String(a.chat_id)==='888222'));
     assert.match(alerts[1].text,/after/);
     storeFail=true;
     assert.equal((await send({business_message:{...message,message_id:2}})).code,503);
@@ -58,6 +64,24 @@ test('mocked signed webhook preserves new/edit/delete archive flow and sends own
     const connectionFailure=await send({business_connection:connection});assert.equal(connectionFailure.code,503);
     assert.equal(connectionFailure.body.retryable,true);
     storeFail=false;assert.equal((await send({business_connection:connection})).code,200);
+    const previousVersions=versions.length,previousAlerts=alerts.length;
+    connection.is_enabled=false;
+    const revokedMessage=await send({business_message:{...message,message_id:91,text:'must not archive'}});
+    assert.equal(revokedMessage.code,200);
+    assert.equal(revokedMessage.body.privacy_message_ignored,'business_connection_disabled');
+    const revokedDelete=await send({deleted_business_messages:{
+      business_connection_id:'new-connection',chat:message.chat,message_ids:[1]}});
+    assert.equal(revokedDelete.code,200);
+    assert.equal(revokedDelete.body.privacy_delete_ignored,'business_connection_disabled');
+    assert.equal(archive.has(91),false);
+    assert.equal(versions.length,previousVersions);
+    assert.equal(alerts.length,previousAlerts);
+    connection.is_enabled='unknown';
+    assert.equal((await send({business_message:{...message,message_id:92}})).code,503);
+    assert.equal((await send({deleted_business_messages:{
+      business_connection_id:'new-connection',chat:message.chat,message_ids:[1]}})).code,503);
+    assert.equal(archive.has(92),false);
+    connection.is_enabled=true;
   } finally {
     globalThis.fetch=oldFetch;if(oldToken===undefined)delete process.env.TELEGRAM_BOT_TOKEN;else process.env.TELEGRAM_BOT_TOKEN=oldToken;
     if(oldHash===undefined)delete process.env.TELEGRAM_API_HASH;else process.env.TELEGRAM_API_HASH=oldHash;

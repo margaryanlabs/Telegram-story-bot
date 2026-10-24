@@ -86,6 +86,9 @@ export function dialogInfo(d){
     id:safeId(d?.id),title:title(d),type,username:username||null,
     peerId:peerId||null,
     preview:preview(d?.message),date:dateString(d?.message),
+    // Missing direction is unknown, not an incoming message.
+    lastMessageOut:typeof d?.message?.out==='boolean'?d.message.out:null,
+    previewFromArchive:false,
     unreadCount:Math.max(0,Math.min(99999,Number(d?.unreadCount||0))),
     pinned:Boolean(d?.pinned),archived:Boolean(d?.archived||d?.folderId===1),
     muted:Boolean(d?.dialog?.notifySettings?.muteUntil),
@@ -127,7 +130,8 @@ export function archivedDialog(row){
   return {
     id:safeId(row?.chatId),title,type:'copy',username:null,peerId:null,
     preview:clean(row?.preview||row?.deletedPreview||'Есть сохранённая переписка',180),
-    date:row?.lastAt||null,unreadCount:0,pinned:false,muted:false,
+    date:row?.lastAt||null,lastMessageOut:null,previewFromArchive:true,
+    unreadCount:0,pinned:false,muted:false,
     verified:false,nativeUrl:null,
     archiveOnly:true,savedCopy:true,archived:true,
     savedCount:Math.max(0,Number(row?.messageCount||0)),
@@ -146,6 +150,8 @@ export function decorateRemote(remote,archiveRows){
     return {...chat,savedCopy:true,
       date:preservedIsNewer?row.lastAt:chat.date,
       preview:preservedIsNewer?clean(row.preview||row.deletedPreview||chat.preview,180):chat.preview,
+      previewFromArchive:preservedIsNewer,
+      lastMessageOut:preservedIsNewer?null:chat.lastMessageOut,
       savedCount:Math.max(0,Number(row.messageCount||0)),
       deletedCount:Math.max(0,Number(row.deletedCount||0)),
       lastDeletedAt:row.lastDeletedAt||null,
@@ -155,12 +161,11 @@ export function decorateRemote(remote,archiveRows){
 async function archiveThreads(ownerId){
   try {
     const result=await listPrivacyThreads(ownerId);
-    return Array.isArray(result?.threads)
-      ? result.threads.filter(row=>safeId(row?.chatId)&&Number(row?.messageCount||0)>0)
-      : [];
+    if(!Array.isArray(result?.threads))throw Error('archive_thread_list_invalid');
+    return result.threads.filter(row=>safeId(row?.chatId)&&Number(row?.messageCount||0)>0);
   }catch {
-    // If private archive is unavailable, do not invent saved chats.
-    return [];
+    // An unavailable archive is not evidence that the owner has zero saved chats.
+    return Object.assign([],{unavailable:true});
   }
 }
 async function archivedMessages(ownerId,chatId,offset=0){
@@ -181,7 +186,11 @@ async function archivedMessages(ownerId,chatId,offset=0){
       hasMore:Boolean(result?.hasMore),
       nextOffset:offset+rows.length,
     };
-  }catch{return {messages:[],hasMore:false,nextOffset:offset};}
+  }catch{
+    // Unreachable archive is NOT the same as an empty archive. The caller must
+    // preserve Telegram messages while surfacing a storage warning.
+    return {messages:[],hasMore:false,nextOffset:offset,unavailable:true};
+  }
 }
 export function combineLiveAndPreserved(live=[],preserved=[]){
   const map=new Map();
@@ -243,6 +252,10 @@ export default async function handler(req,res){
     // owner-scoped by the signed Mini App user id, with no public media links.
     if(action==='thread_archive'){
       const saved=await archivedMessages(userId,chatId,archiveOffset);
+      if(saved.unavailable)return respond(res,503,{
+        error:'Защищённый архив временно недоступен. Живые сообщения не удалены; попробуй синхронизацию позже.',
+        archiveUnavailable:true,
+      });
       return respond(res,200,{
         messages:saved.messages,archiveHasMore:saved.hasMore,
         archiveNextOffset:saved.nextOffset,source:'owner-private-archive',
@@ -292,6 +305,10 @@ export default async function handler(req,res){
       }else warning='Подключи свой Telegram для живых чатов. Ранее сохранённые копии VETO доступны отдельно.';
       // Both requests were already running while MTProto connected.
       const [history,permissionState]=await Promise.all([historyPromise,permissionStatePromise]);
+      if(history.unavailable){
+        const unavailable='Защищённый архив временно недоступен. Сохранённые и удалённые сообщения могут отсутствовать в списке.';
+        warning=warning?warning+' · '+unavailable:unavailable;
+      }
       const chats=decorateRemote(live.chats,history);
       if(page===0){
         const liveIds=new Set(chats.map(c=>c.id));
@@ -300,7 +317,10 @@ export default async function handler(req,res){
           if(!liveIds.has(entry.id))chats.push(entry);
         }
       }
-      if(warning && !history.length)return respond(res,409,{error:warning});
+      if(warning && !history.length && !live.chats.length)
+        return respond(res,history.unavailable?503:409,{
+          error:warning,...(history.unavailable?{archiveUnavailable:true}:{})
+        });
       return respond(res,200,{
         chats:orderChatRows(chats).map(chat=>({...chat,inbox:inboxSignals(chat)})),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
         updatedAt:new Date().toISOString(),warning,
@@ -363,8 +383,20 @@ export default async function handler(req,res){
       if(creds?.session)storedPromise=archivedMessages(userId,chatId,archiveOffset);
     }
     const [stored,history]=await Promise.all([storedPromise,historyPromise]);
+    if(history.unavailable){
+      const notice='Защищённый список сохранённых чатов временно недоступен.';
+      warning=warning?warning+' · '+notice:notice;
+    }
+    if(stored.unavailable){
+      const notice='Защищённый архив временно недоступен. Ранее сохранённые сообщения могут быть не видны.';
+      warning=warning?warning+' · '+notice:notice;
+    }
     const threadArchive=history.find(t=>safeId(t.chatId)===chatId);
     if(!chat && threadArchive)chat=archivedDialog(threadArchive);
+    if(!chat&&(stored.unavailable||history.unavailable))return respond(res,503,{
+      error:'Архив временно недоступен. Нельзя подтвердить отсутствие сохранённого чата.',
+      archiveUnavailable:true,
+    });
     if(!chat)return respond(res,404,{error:'Чат не найден в Telegram и нет ранее сохранённой копии VETO.'});
     return respond(res,200,{
       chat, messages:combineLiveAndPreserved(liveMessages,stored.messages),

@@ -1,0 +1,137 @@
+.vtai-root{padding:clamp(12px,3vw,28px);max-width:980px;margin:0 auto 90px;color:#f7f7fa}
+.vtai-hero{padding:26px;border:1px solid rgba(255,255,255,.13);border-radius:25px;background:radial-gradient(ellipse at 85% 8%,rgba(230,64,81,.24),transparent 55%),linear-gradient(145deg,#111521,#080a10)}
+.vtai-kicker{display:block;color:#f28f99;letter-spacing:.15em;font-size:10px;font-weight:800;margin-bottom:12px}
+.vtai-hero h1{font-size:clamp(27px,6vw,44px);line-height:1.05;letter-spacing:-.045em;color:#fff;margin:0 0 11px}
+.vtai-hero h1 span{color:#eb6d7b}.vtai-hero p{color:#abb3c2;line-height:1.5;max-width:620px;margin:0}
+.vtai-modes{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.vtai-modes button,.vtai-action{border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.06);color:inherit;padding:11px 15px;cursor:pointer;font:inherit}
+.vtai-modes button.active{border-color:#f17387;background:rgba(209,61,82,.2);color:#fff}
+.vtai-panel{border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(13,18,29,.93);padding:20px;margin:14px 0;display:grid;gap:12px}
+.vtai-panel h2{font-size:17px;color:#fff;margin:0}.vtai-label{font-size:12px;color:#c6cbd7;display:grid;gap:6px}
+.vtai-input{width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.19);border-radius:12px;padding:12px;background:#101722;color:#fff;font:inherit;outline:none}
+.vtai-input:focus{border-color:#fc8a98}.vtai-input::placeholder{color:#76808f}
+textarea.vtai-input{min-height:110px;resize:vertical}
+.vtai-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.vtai-primary{background:linear-gradient(135deg,#d3485e,#eb6876);border-color:#e86c7e;color:#fff;font-weight:750}
+.vtai-action:disabled{opacity:.52;cursor:not-allowed}
+.vtai-consent{display:flex;gap:9px;align-items:flex-start;color:#aeb6c3;font-size:12px;line-height:1.5}
+.vtai-consent input{margin-top:3px;accent-color:#e96878}
+.vtai-thread{display:grid;gap:10px;max-height:320px;overflow:auto}
+.vtai-bubble{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;padding:12px 15px;border-radius:15px;max-width:89%;font-size:14px;color:#fff}
+.vtai-bubble.user{justify-self:end;background:#672937}.vtai-bubble.assistant{justify-self:start;background:#242e40}
+.vtai-note{color:#99a4b3;font-size:12px;line-height:1.5}
+#vtaiNotice{padding:10px 13px;border-radius:12px;border:1px solid #3c495f;color:#d8e0ed;background:#172033}
+#vtaiNotice[data-error="true"]{border-color:#944d58;color:#ffd4dd}
+.vtai-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:570px){.vtai-root{padding:12px 10px 78px}.vtai-hero{padding:20px 16px}.vtai-panel{padding:14px}.vtai-two{grid-template-columns:1fr}}
+
+.vtai-panel[hidden],.vtai-label[hidden],#vtaiNotice[hidden]{display:none!important}
+
+.vtai-heading-row{justify-content:space-between}
+.vtai-heading-row h2{display:flex;gap:10px;align-items:center}
+.vtai-count{display:inline-grid;place-items:center;min-width:23px;height:23px;padding:0 5px;border-radius:9px;background:rgba(222,81,101,.17);font-size:12px;color:#ff9ca8}
+.vtai-workspace-list{display:grid;gap:10px}
+.vtai-workspace-item{display:grid;gap:10px;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);min-width:0}
+.vtai-workspace-item strong{color:#fff;font-size:14px;overflow-wrap:anywhere}
+.vtai-workspace-item p{white-space:pre-wrap;overflow-wrap:anywhere;color:#bbc5d2;font-size:13px;line-height:1.5;margin:0;max-height:135px;overflow:auto}
+.vtai-workspace-item .vtai-action{font-size:12px;padding:9px 12px}
+.vtai-workspace-item .vtai-consent{align-items:center}
+.vtai-workspace-item .vtai-consent input{flex-shrink:0}
+#vtaiPortalReview[hidden]{display:none!important}
+
+.vtai-neg-panel{display:grid;gap:12px;padding:16px;border-radius:16px;border:1px solid rgba(233,113,124,.3);background:linear-gradient(165deg,rgba(138,43,60,.14),rgba(28,33,48,.4))}
+.vtai-neg-panel h2{color:#fff;font-size:17px;margin:0}
+.vtai-neg-panel[hidden]{display:none!important}
+.vtai-grow{flex:1;min-width:170px}
+#vtaiNegNotice{padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.055)}
+
+/* Agent Control distinguishes an emergency server permission stop. */
+.vtai-danger{border-color:rgba(244,105,121,.5)!important;background:rgba(164,41,58,.13)!important;color:#ffbac3!important}
+#vtaiAgentState{border:1px solid rgba(255,255,255,.11);padding:11px 13px;border-radius:12px;background:rgba(255,255,255,.035)}
+#vtaiAgentEvents{max-height:370px;overflow-y:auto}
+#vtaiAgentControl .vtai-row{align-items:center}
+
+/* Keep incremental dialog paging controls hidden until another verified page exists. */
+#vtaiMoreChats[hidden],#vtaiNegMoreChats[hidden]{display:none!important}
+
+/* Action suggestions are not contacts selected by the model. */
+#vtaiActionPanel[hidden],#vtaiActionMore[hidden]{display:none!important}
+#vtaiActionStatus{padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.045)}
+#vtaiActionMatches{width:100%;min-height:44px}
+
+/* Local Smart Inbox Focus: readable, low-noise and responsive. */
+#vtaiFocusMore[hidden],#vtaiFocusRestore[hidden]{display:none!important}
+#vtaiFocusList .vtai-workspace-item{overflow-wrap:anywhere}
+#vtaiFocusStatus{padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.04)}
+
+/* VETO Task Center: compact manually scheduled dates, never automatic alerts. */
+.vtai-task-date-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.vtai-task-date-row .vtai-label{min-width:178px;flex:1}
+.vtai-task-date-row .vtai-input{min-height:42px}
+.vtai-task-date-row .vtai-action{min-height:42px}
+#vtaiTasksPanel [aria-pressed="true"]{border-color:rgba(244,106,128,.6);background:rgba(204,67,88,.22)}
+#vtaiTasksList .vtai-workspace-item{overflow-wrap:anywhere}
+@media(max-width:570px){
+  .vtai-task-date-row .vtai-label{flex-basis:100%}
+  .vtai-task-date-row .vtai-action{flex:1}
+}
+
+
+/* VETOGRAM mobile polish · UI-only, preserves owner/consent interactions. */
+.vtai-modes{scroll-margin-top:16px}
+.vtai-modes button,.vtai-action{min-height:44px;transition:background .16s,border-color .16s,transform .16s}
+.vtai-modes button:focus-visible,.vtai-action:focus-visible,
+.vtai-input:focus-visible{outline:2px solid #ff9fa9;outline-offset:2px}
+.vtai-modes button:active,.vtai-action:active:not(:disabled){transform:scale(.985)}
+.vtai-workspace-item{box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.vtai-workspace-item p{line-height:1.63}
+.vtai-panel{min-width:0;overflow-wrap:anywhere}
+.vtai-row>button{max-width:100%}
+@media(max-width:570px){
+  .vtai-root{padding:12px 12px calc(105px + env(safe-area-inset-bottom,0px))}
+  .vtai-hero{border-radius:21px;padding:23px 17px}
+  .vtai-hero h1{font-size:clamp(28px,8vw,37px);line-height:1.12}
+  .vtai-hero p{font-size:13px;line-height:1.62}
+  .vtai-panel{border-radius:17px;padding:15px}
+  .vtai-input{font-size:16px}
+  .vtai-modes{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;
+    padding-bottom:9px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .vtai-modes button{flex:0 0 auto;white-space:nowrap;padding:10px 13px}
+  .vtai-task-date-row .vtai-action{min-height:44px}
+  .vtai-workspace-item .vtai-action{min-height:42px}
+  .vtai-bubble{max-width:95%;font-size:13.5px;line-height:1.55}
+}
+@media(prefers-reduced-motion:reduce){
+  .vtai-modes button,.vtai-action{transition:none!important;transform:none!important}
+}
+
+
+/* 2026-10-24 · VETOGRAM NEXT visual finish. CSS only; never changes owner state
+   or automatic sending. Maintains responsive and reduced-motion behavior. */
+.vtai-root .vtai-hero{
+  border-color:rgba(255,146,164,.22);
+  background:radial-gradient(ellipse 74% 80% at 98% 1%,rgba(231,76,104,.27),transparent 72%),
+    radial-gradient(ellipse 65% 75% at 3% 100%,rgba(68,105,184,.17),transparent 70%),
+    linear-gradient(145deg,#141b2a,#090d15);
+  box-shadow:0 20px 52px rgba(3,7,17,.21),inset 0 1px 0 rgba(255,255,255,.055);
+}
+.vtai-root .vtai-panel{
+  border-color:rgba(157,177,215,.17);
+  background:linear-gradient(155deg,rgba(28,39,59,.94),rgba(11,16,27,.96));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+.vtai-root .vtai-modes button.active{
+  background:linear-gradient(120deg,rgba(229,77,101,.3),rgba(131,67,104,.23));
+  border-color:rgba(251,132,155,.57);
+  box-shadow:0 4px 15px rgba(224,64,96,.10);
+}
+.vtai-root .vtai-primary{
+  background:linear-gradient(118deg,#d94863,#f77980);
+  box-shadow:0 7px 18px rgba(223,67,95,.14);
+}
+.vtai-root .vtai-primary:hover:not(:disabled){filter:brightness(1.06)}
+@media(max-width:570px){
+  .vtai-root .vtai-panel{padding:16px 14px;gap:13px}
+  .vtai-root .vtai-row{gap:8px}
+  .vtai-root .vtai-modes button{min-height:44px}
+}

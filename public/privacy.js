@@ -1379,10 +1379,13 @@
       });
       await Promise.allSettled([loadTelegramConnection({silent:true}),refresh({silent:true})]);
       const archiveIncomplete = result.archiveConsentRequested === true && result.settingsUpdated !== true;
-      openSheet(`<span class="kicker">VETOGRAM · ПРОВЕРКА</span><h2>${archiveIncomplete?'Anti-Delete ещё не активирован полностью':'Разрешения подтверждены Telegram'}</h2>
-        <p>Business-бот подключён. Управление Stories: ${result.manageStories?'разрешено':'не разрешено'}. Настройки архива: ${result.settingsUpdated?'сохранены':archiveIncomplete?'ошибка сохранения':'не изменялись'}.</p>
+      const botVerified=result.delivery?.botApi==='verified';
+      const rightsProof=result.delivery?.storiesPermission||'unknown';
+      openSheet(`<span class="kicker">VETOGRAM · ПРОВЕРКА</span><h2>${archiveIncomplete?'Anti-Delete: ошибка настройки':botVerified?'Business-подключение подтверждено':'Права записаны — ожидаем проверку подключения'}</h2>
+        <p>Telegram подтвердил сохранение выбранных разрешений. Проверка Bot API: ${botVerified?'владелец и подключение совпадают':'ещё не завершена'}. Управление Stories: ${result.manageStories?'запрошено и подтверждено через MTProto':'не разрешено'}. Настройки архива: ${result.settingsUpdated?'сохранены':archiveIncomplete?'ошибка сохранения':'не изменялись'}.</p>
+        <p>Проверка права Stories через Bot API: ${rightsProof==='granted'?'разрешено':rightsProof==='not-granted'?'не разрешено':'нет данных'}. Получение событий Anti-Delete и реальная публикация не подтверждаются одной проверкой подключения.</p>
         ${archiveIncomplete?'<p>Сервер ещё не подтвердил архивирование. Сообщения могут не сохраняться. Перепроверить подключение и настройки, не выполняя повторную запись без проверки.</p>':''}
-        <p>Bot API: ${escapeHtml(result.delivery?.botApi || 'не проверено')}. Новому Business Connection ID может потребоваться доставка webhook.</p>
+        <p>Bot API: ${escapeHtml(result.delivery?.botApi || 'не проверено')}. Новому Business Connection ID может потребоваться доставка webhook. Не объявляем Anti-Delete работающим до тестового удаления сообщения.</p>
         <div class="veto-consent-boundary"><strong>Работоспособность ещё нужно проверить</strong><p>С согласившимся тестовым собеседником: новое сообщение → сохранение → изменение → удаление → сохранённая копия и уведомление. Публикацию Stories проверь отдельно, в том числе без Premium.</p></div>
         <div class="sheet-actions"><button data-business-retry="1">Проверить статус</button>${archiveIncomplete?'':'<button class="accent" data-business-close="1">Готово</button>'}<button data-business-close="1">Закрыть</button></div>`);
     } catch (error) {

@@ -11,7 +11,7 @@ import {
   deleteAuthChallenge,
 } from '../lib/viewer-sync-store.js';
 import { beginUserQrAuth, revokeUserSession } from '../lib/viewer-sync-telegram.js';
-import { requireOwnTelegramAccount, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
+import { requireOwnTelegramAccount, isOwnActiveViewerSession, TELEGRAM_OWNER_MESSAGE } from '../lib/telegram-session-owner.js';
 
 const AUTH_TTL_MS = 10 * 60 * 1000;
 const QR_STREAM_MS = 52_000;
@@ -74,7 +74,9 @@ export default async function handler(req, res) {
   try {
     const existing = await getViewerSession(userId);
     if (existing?.status === 'active') {
-      jsonError(res, 409, 'Deep Intelligence уже подключён');
+      jsonError(res, 409, isOwnActiveViewerSession(userId,existing)
+        ? 'Telegram уже подключён — обнови статус сессии.'
+        : 'Существующая сессия не прошла проверку владельца или ключа. QR-вход остановлен: сначала проверь старую сессию в настройках.');
       return;
     }
   } catch (error) {

@@ -73,6 +73,8 @@
 
   const SCREEN_ALIASES = {
     home: 'home',
+    ai: 'ai',
+    vetogramai: 'ai',
     stories: 'publish',
     publish: 'publish',
     ghost: 'privacy',
@@ -1506,7 +1508,7 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home', 'story-engine':'studio' };
+  const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home', ai:'home', 'story-engine':'studio' };
   function switchScreen(name) {
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);

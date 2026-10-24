@@ -1,0 +1,99 @@
+name: VETOGRAM AI safe release checks
+# COST-SAFE DEVELOPMENT MODE: No automatic runners on pushes, PR updates
+# or draft changes. Keep this workflow for explicit future manual execution
+# only after the repository owner intentionally enables/spends on Actions.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: vetogram-ai-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  # Dependency-free checks: this job provides useful signal even if npm's
+  # registry/lockfile is broken. No credentials, database or Telegram required.
+  offline-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate migrations, API contracts, and pure Node core
+        run: |
+          npm run ci:offline
+          bash -n scripts/vetogram-ai-postgres-race.sh
+          bash -n scripts/vetogram-task-reminder-race.sh
+        env:
+          VETOGRAM_AI_ENABLED: 'false'
+          VETOGRAM_TASKS_CLOUD_ENABLED: 'false'
+          VETOGRAM_REMINDERS_ENABLED: 'false'
+          VETOGRAM_REMINDERS_WORKER_ENABLED: 'false'
+          VETOGRAM_REMINDERS_SCHEDULER_READY: 'false'
+  node-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Check exact committed npm lockfile before install
+        run: npm run lock:check
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Offline release gate, syntax and all Node tests
+        run: npm run vercel-build
+        env:
+          VETOGRAM_AI_ENABLED: 'false'
+          VETOGRAM_AI_QUOTA_READY: 'false'
+          VETOGRAM_AI_MEMORY_ENABLED: 'false'
+          VETOGRAM_AI_GRANTS_ENABLED: 'false'
+          VETOGRAM_TASKS_CLOUD_ENABLED: 'false'
+          VETOGRAM_REMINDERS_ENABLED: 'false'
+          VETOGRAM_REMINDERS_WORKER_ENABLED: 'false'
+  disposable-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vetogram_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d vetogram_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: postgres
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGDATABASE: vetogram_ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply six additive migrations to temporary PostgreSQL
+        run: |
+          set -eu
+          for migration in \
+            migrations/vetogram-ai-usage-20261023.sql \
+            migrations/vetogram-ai-memory-20261023.sql \
+            migrations/vetogram-ai-draft-grants-20261023.sql \
+            migrations/vetogram-ai-agent-control-20261023.sql \
+            migrations/vetogram-task-cloud-20261023.sql \
+            migrations/vetogram-reminders-20261024.sql; do
+            psql -v ON_ERROR_STOP=1 -f "$migration"
+          done
+      - name: Validate grant issue, pause, quota and memory CAS
+        run: psql -v ON_ERROR_STOP=1 -f scripts/vetogram-ai-postgres-smoke.sql
+      - name: Test concurrent grant issue versus emergency pause
+        run: bash scripts/vetogram-ai-postgres-race.sh
+      - name: Test cross-device Task Cloud and reminder scheduling races
+        run: bash scripts/vetogram-task-reminder-race.sh
