@@ -82,6 +82,9 @@ function harness(){
   nodes.vtaiText=input;
   const makeNode=tag=>({
     tagName:tag,dataset:{},textContent:'',type:'',className:'',
+    classList:{values:new Set(),toggle(name,active){
+      if(active)this.values.add(name);else this.values.delete(name);
+    },contains(name){return this.values.has(name)}},
     children:[],attributes:{},handlers:{},
     append(...items){this.children.push(...items)},
     setAttribute(name,value){this.attributes[name]=value},
@@ -113,16 +116,21 @@ test('actual UI changes one style at a time without erasing typed text or sendin
   assert.equal(h.deck.hidden,false);
   assert.equal(h.container.children.length,4);
   h.click(0);
+  assert.equal(h.container.children[0].attributes['aria-pressed'],'true');
+  assert.equal(h.container.children[0].classList.contains('is-selected'),true);
   const first=h.input.value;
   assert.match(first,/Начальный текст пользователя/);
   assert.match(first,/уверенный/);
   h.click(1);
+  assert.equal(h.container.children[0].attributes['aria-pressed'],'false');
+  assert.equal(h.container.children[1].attributes['aria-pressed'],'true');
   assert.match(h.input.value,/Начальный текст пользователя/);
   assert.match(h.input.value,/тёплый/);
   assert.doesNotMatch(h.input.value,/уверенный/);
   assert.equal(h.input.value.split('МОЙ ИСХОДНЫЙ ЗАПРОС:').length,2);
   assert.equal(h.input.focused,true);
   h.setMode('story');
+  assert.equal(h.input.value,'Начальный текст пользователя');
   assert.equal(h.container.children.length,4);
   assert.equal(h.title.textContent,'Как выглядит твоя Story?');
   h.setMode('action');
@@ -136,4 +144,14 @@ test('UI refuses to exceed textarea length and preserves long user draft',()=>{
   h.click(0);
   assert.equal(h.input.value,long);
   assert.match(h.feedback.textContent,/слишком длинный/);
+});
+
+
+test('switching AI modes retains manually edited text instead of restoring stale template',()=>{
+  const h=harness();
+  h.click(0);
+  h.input.value+='\nМоя дополнительная ручная правка';
+  h.setMode('story');
+  assert.match(h.input.value,/Моя дополнительная ручная правка/);
+  assert.match(h.input.value,/уверенный/);
 });
