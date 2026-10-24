@@ -59,3 +59,14 @@ Draft safety also needed a mode-level invariant. Changing AI mode now clears the
 - Reopen an Approval Center item whose chat requires asynchronous lookup; switch account while loading and ensure no A draft, nonce or recipient is copied to B
 - Confirm a Follow-up preview into Second Brain while switching account mid-confirmation; the copy must be rejected
 - Verify regular reviewed approvals and edited, explicit-send drafts still require human confirmation and remain available on their owning account
+
+
+## 24 October follow-up — shared HTTP request generation gate
+
+The generic `request(url, body, consent)` function now captures `ownerRequestScope()` **before** initiating the fetch (signed init data + Telegram user ID + local reset generation). It refuses to dispatch when the scope is already invalid. After parsing the HTTP JSON and *before returning it to any caller*, it rejects responses from a different Telegram owner **or a different epoch**, even if the user has switched A → B → A and the visible init-data string once again matches A.
+
+A stale HTTP reply may reset the UI only if its original signed owner *and request epoch* still own that UI. A previously issued request must never delete a newer A/B state. This is a second defensive boundary in addition to per-feature callbacks, to protect future consumers as well.
+
+Two dependency-free behavior tests were added to `tests/vetogram-owner-ui-behavior.test.js`: (1) deferred A network reply delivered after A→B→A is rejected and does not clear fresh A; (2) a changed signed Telegram identity before a reply invalidates the former owner's UI. These tests execute the actual controller `request()` implementation with controlled fake network responses, no real network.
+
+**Current evidence:** 7/7 executable browser-controller scenarios and 12/12 pure/source owner-scope scenarios passed inside a V8 evaluation harness against GitHub branch sources; browser JavaScript syntax parsed. This is **not** confirmation that full native Node `node --test`, GitHub Actions, real Telegram WebView, or production deployment passed. Existing CI/lockfile blockers are unchanged.
