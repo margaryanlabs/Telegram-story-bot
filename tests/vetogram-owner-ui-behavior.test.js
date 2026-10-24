@@ -403,7 +403,7 @@ test('Story Engine receiver rejects owner switch while waiting for init',async()
       state:ownerState,
       trimText:(x,n)=>String(x).slice(0,n),
       normalizePortal:x=>x,clearPublicPortalLink:()=>{},
-      $:()=>({checked:true}),render:()=>{renders++},notify:()=>{}
+      $:()=>({checked:true,style:{},hidden:true,disabled:true}),render:()=>{renders++},notify:()=>{}
     }));
   const promise=fn({ownerId:'111',story:{title:'Account A private title',subtitle:'Private subtitle'}});
   owner='222';ownerState.owner='222';
@@ -426,7 +426,7 @@ test('Story Engine receiver accepts owner-approved text only, preserving unrelat
     vm.createContext({owner:()=> '111',init:async()=>{},state,
       trimText:(x,n)=>String(x??'').slice(0,n),
       normalizePortal:x=>x,clearPublicPortalLink:()=>{clears++},
-      $:()=>({checked:true}),render:()=>{renders++},notify:()=>{}
+      $:()=>({checked:true,style:{},hidden:true,disabled:true}),render:()=>{renders++},notify:()=>{}
     }));
   const success=await fn({ownerId:'111',story:{
     title:'Proposed AI title',subtitle:'Proposed subtitle',caption:'Suggested'
