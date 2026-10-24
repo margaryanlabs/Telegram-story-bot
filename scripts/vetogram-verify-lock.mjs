@@ -16,6 +16,11 @@ if(result.missingPackages.length){
   console.error('VETOGRAM_LOCKFILE_MISSING_PACKAGES: missing npm resolution entries:');
   for(const name of result.missingPackages)console.error('  -',name);
 }
+if(result.invalidResolutions.length){
+  console.error('VETOGRAM_LOCKFILE_INVALID_RESOLUTIONS: missing or unsafe direct package metadata:');
+  for(const issue of result.invalidResolutions)
+    console.error('  -',issue.name,issue.reason);
+}
 if(!result.ok){
   console.error('Repair in a network-enabled trusted checkout: npm run lock:refresh');
   console.error('Then: npm run lock:check && npm ci --ignore-scripts --no-audit --no-fund');
