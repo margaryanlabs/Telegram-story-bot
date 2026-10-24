@@ -224,3 +224,91 @@ body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header .v
   .bottom-nav .nav-item,.vg26-inbox-shortcuts button,
   .vg26-command-results button{transition:none!important;animation:none!important;transform:none!important}
 }
+
+
+/* Cohesive surfaces for Stories, Privacy, Voice and creation tools. */
+:where(.screen[data-screen="publish"],.screen[data-screen="privacy"],
+  .screen[data-screen="viewers"],.screen[data-screen="studio"],
+  .screen[data-screen="voice"],.screen[data-screen="chats"]){
+  --vg26-local-stroke:var(--vg26-stroke);
+  min-width:0;
+}
+:where(.screen[data-screen="privacy"],.screen[data-screen="viewers"],
+  .screen[data-screen="studio"],.screen[data-screen="chats"]) .page-head{
+  padding:6px 0 12px;margin-bottom:16px;
+}
+:where(.screen[data-screen="privacy"],.screen[data-screen="viewers"],
+  .screen[data-screen="studio"],.screen[data-screen="chats"]) .page-head h1{
+  font-size:clamp(29px,5.6vw,47px)!important;line-height:1.08;letter-spacing:-.055em
+}
+:where(.screen[data-screen="privacy"],.screen[data-screen="viewers"],
+  .screen[data-screen="studio"],.screen[data-screen="chats"]) .page-head p{
+  max-width:630px;line-height:1.65;font-size:13px;
+}
+.screen[data-screen="publish"] .hero-card{
+  border-radius:25px;box-shadow:var(--vg26-shadow);
+  background:radial-gradient(ellipse at 100% 0%,rgba(242,104,135,.24),transparent 50%),
+    linear-gradient(139deg,#15263e,#1e233c 65%,#292039);
+}
+.screen[data-screen="publish"] .hero-copy h1{
+  font-size:clamp(34px,7vw,55px)!important;letter-spacing:-.06em;line-height:1.02
+}
+.screen[data-screen="publish"] :is(.composer-card,.audience-block,
+  .privacy-block,.connection-strip,.last-story-card){
+  border-radius:20px;box-shadow:0 7px 25px rgba(0,5,20,.08)
+}
+.screen[data-screen="privacy"] .ghost-command-card{
+  border-radius:24px;box-shadow:var(--vg26-shadow);
+  background:radial-gradient(ellipse at 100% -20%,rgba(250,120,138,.17),transparent 50%),
+    linear-gradient(133deg,#17263e,#1a2034)
+}
+.screen[data-screen="privacy"] :is(.veto-business-journey,.veto-mirror-access-center,
+  .privacy-inbox-card,.smart-brief-card){
+  border-radius:19px;
+}
+.screen[data-screen="privacy"] :is(.ghost-enable-all,button[id*="privacy"],
+  .veto-business-journey button){min-height:42px}
+.screen[data-screen="viewers"] :is(.quick-start-card,.viewer-analytics-card,
+  .intelligence-brief-card,.live-timeline-card,.top-audience-card,
+  .story-performance-card){
+  border-radius:19px;
+}
+.screen[data-screen="studio"] :is(.studio-hero,.studio-panel,.studio-workspace){
+  border-radius:22px;
+}
+.screen[data-screen="studio"] .studio-page-head>.se-button{min-height:44px}
+.screen[data-screen="ai"] .vtai-hero,.screen[data-screen="story-engine"] .se-masthead{
+  box-shadow:var(--vg26-shadow);
+  border-color:rgba(183,206,248,.17)
+}
+.screen[data-screen="story-engine"] .se-masthead{
+  background:radial-gradient(ellipse at 96% 0%,rgba(248,113,131,.26),transparent 57%),
+    linear-gradient(130deg,#14233b,#1b2036 62%,#282036)
+}
+.screen[data-screen="story-engine"] .se-masthead h1{
+  font-size:clamp(33px,5.4vw,52px)!important;
+  font-weight:850;letter-spacing:-.055em;
+}
+.screen[data-screen="voice"] .veto-voice-header h1{
+  letter-spacing:-.055em;line-height:1.1
+}
+.screen[data-screen="voice"] :is(.veto-voice-monitor-card,.veto-voice-presets-panel){
+  border-radius:22px;
+}
+.screen[data-screen="voice"] .veto-voice-button{min-height:43px}
+/* Reliable and readable active focus on every primary working screen. */
+:where(.screen[data-screen="publish"],.screen[data-screen="privacy"],
+  .screen[data-screen="viewers"],.screen[data-screen="studio"],
+  .screen[data-screen="voice"]) button:focus-visible{
+  outline:2px solid var(--vg26-coral);outline-offset:3px;
+}
+@media(max-width:570px){
+  :where(.screen[data-screen="publish"],.screen[data-screen="privacy"],
+    .screen[data-screen="viewers"],.screen[data-screen="studio"],
+    .screen[data-screen="voice"]) {padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .screen[data-screen="publish"] .hero-card,.screen[data-screen="privacy"] .ghost-command-card{
+    border-radius:20px;
+  }
+  .screen[data-screen="story-engine"] .se-masthead h1{font-size:clamp(31px,8vw,39px)!important}
+  .screen[data-screen="studio"] .studio-page-head>.se-button{width:100%}
+}
