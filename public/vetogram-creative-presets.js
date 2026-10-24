@@ -32,12 +32,23 @@ import {CREATIVE_PRESETS,buildCreativeDraft} from './vetogram-creative-presets-c
     // Native 'input' does NOT fire when value is set programmatically.
     // Notify any existing optional live word counters without creating requests.
     input.dispatchEvent(new Event('input',{bubbles:true}));
+    for(const button of list.children){
+      const selected=button.dataset.vg26Preset===id;
+      button.classList.toggle('is-selected',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    }
     feedback.textContent='Стиль добавлен в поле ниже. Проверь текст и нажми «Создать» только когда будешь готов.';
     input.focus({preventScroll:true});
   }
   function render(){
     const mode=currentMode();
     if(mode===lastMode)return;
+    // Leaving a mode removes only OUR untouched generated wrapper, keeping
+    // the user's original prompt. Never delete a manually edited draft.
+    if(generated&&input.value===generated){
+      input.value=original;
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    }
     lastMode=mode;
     original='';generated='';
     const presets=CREATIVE_PRESETS[mode];
@@ -54,6 +65,7 @@ import {CREATIVE_PRESETS,buildCreativeDraft} from './vetogram-creative-presets-c
       button.dataset.vg26Preset=preset.id;
       button.dataset.vg26PresetMode=mode;
       button.setAttribute('aria-label',preset.title+': '+preset.description);
+      button.setAttribute('aria-pressed','false');
       const icon=document.createElement('span');icon.className='vg26-creative-symbol';
       icon.textContent=preset.symbol;icon.setAttribute('aria-hidden','true');
       const texts=document.createElement('span');texts.className='vg26-creative-copy';
