@@ -30,3 +30,12 @@ The controller now issues the AI request first and then renders the relevant mod
 3. Issue user-confirmed Telegram send from A and switch to B: verify any network-side send separately under A; ensure no stale UI messages/clears on B. Avoid retrying uncertain sends automatically.
 4. Test `brief` and `action` modes with a valid mocked AI provider response and separately granted Negotiator flow.
 5. Validate pending reminders, cloud optimistic CAS, consent headers, role and quota checks against disposable Postgres before any release.
+
+
+## Follow-up: explicit confirmation must be owner-bound before network
+
+After initial source review, an additional race was found: a user can open an explicit `window.confirm` under A, switch to B, and press OK. Capturing the owner *after* confirmation would authorize the subsequent network call under B even though A supplied the task/chat target. This is distinct from suppressing stale responses.
+
+For all nine relevant confirmations (Task Cloud load/save/erase, Reminders schedule/cancel/cancel-all, AI Memory load/erase, manual Telegram message send), capture the signed owner + account ID + generation **before** the confirmation and revalidate **after** it, before building or sending a network request. For the Negotiator grant confirmation, revalidate before `/api/vetogram-ai-grants` is called. Ordinary writeMemoryCloud and loadReminders calls without confirmations also use request/response identity fences.
+
+The owner-scope test suite now includes this pre-network confirmation invariant. Eight source-grounded regression tests executed via a V8 evaluation harness against current GitHub source: **8/8 passed**; browser module syntax parsing passed. This is not a genuine mobile/WebView or full Node test run. No external effects, deployment, DB writes or feature flags were changed.
