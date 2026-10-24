@@ -584,7 +584,11 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     $('vtaiSend').disabled=value||!canSendDraft();
   }
   async function request(url,body,consent=false){
-    const requestOwner=signed(),requestOwnerId=owner();
+    // Bind *every* HTTP call to its original signed owner and reset epoch.
+    // This also protects consumers added later that forget their own fence.
+    const requestScope=ownerRequestScope();
+    const requestOwner=requestScope.identity,requestOwnerId=requestScope.ownerId;
+    if(!isOwnerRequestCurrent(requestScope))throw Error('Нужно открыть VETOGRAM внутри Telegram.');
     const abort=new AbortController();
     const timeout=setTimeout(()=>abort.abort(),21000);
     try{
@@ -599,9 +603,14 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         body:JSON.stringify(body),signal:abort.signal});
       const json=await result.json().catch(()=>({}));
       if(signed()!==requestOwner||owner()!==requestOwnerId||!requestOwnerId){
-        if(oldRequestCanReset(state.identity,requestOwner))reset();
+        // Reset only the UI that still belongs to this SAME request epoch.
+        // A response from A cannot reset a newer A session after A→B→A.
+        if(state.requestEpoch===requestScope.epoch&&
+          oldRequestCanReset(state.identity,requestOwner))reset();
         throw Error('Аккаунт изменился. Действие отменено.');
       }
+      if(!isOwnerRequestCurrent(requestScope))
+        throw Error('Старый запрос отменён после обновления Telegram-сеанса.');
       if(!result.ok||!json.ok)throw Error(json.error||'Сервис недоступен');
       return json;
     }finally{clearTimeout(timeout)}
