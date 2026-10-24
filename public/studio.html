@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="/story-engine.css?v=20261024-release-polish" />
   <link rel="stylesheet" href="/vetogram-ai.css?v=20261024-release-polish" />
   <link rel="stylesheet" href="/vetogram-2026.css?v=20261024-premium-r1" />
+  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261024-v3-premium-deck" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -1393,6 +1394,18 @@
           <button type="button" data-vtai-mode="campaign" aria-pressed="false">✦ Story-to-Sale</button>
           <button type="button" data-vtai-mode="negotiator" aria-pressed="false">◇ Negotiator Lab</button>
         </div>
+        <section class="vg26-creative-deck" id="vg26CreativeDeck" aria-label="Быстрые стили черновика" hidden>
+          <div class="vg26-creative-head">
+            <div>
+              <span class="vg26-creative-kicker">VETOGRAM · CREATIVE DECK</span>
+              <h2 id="vg26CreativeTitle">Выбери подачу</h2>
+              <p>Один клик — и стиль готов в редакторе. Никаких запросов AI и отправок без тебя.</p>
+            </div>
+            <span class="vg26-creative-no-send">Только черновик</span>
+          </div>
+          <div class="vg26-creative-options" id="vg26CreativeOptions" role="group" aria-label="Стиль черновика"></div>
+          <p class="vg26-creative-feedback" id="vg26CreativeFeedback" role="status" aria-live="polite"></p>
+        </section>
         <section class="vtai-panel">
           <h2>Новый запрос</h2>
           <label class="vtai-label" id="vtaiLanguage" hidden>Язык перевода
@@ -2137,6 +2150,7 @@
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script type="module" src="/story-engine.js?v=20261022-se1"></script>
   <script type="module" src="/vetogram-ai.js?v=20261023-ai2"></script>
+  <script type="module" src="/vetogram-creative-presets.js?v=20261024-creative-deck-r1"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
   <script src="/veto-launch-polish.js?v=20261019-launch-01" defer></script>
   <script src="/vetogram-header.js?v=20261021-v1" defer></script>
