@@ -81,3 +81,18 @@ Use a consenting test account to:
 4. Disconnect explicitly, and confirm only the intended owner's private session is revoked. If a legacy row is misbound, investigate safely before any data migration.
 
 All changes are draft-only. No Telegram code request, QR scan, message sending, production deployment or database mutation took place during this code audit.
+
+## Archive outage integrity and recovery
+
+This draft hardening addresses an Anti-Delete trust problem: `api/telegram-chats.js` previously swallowed secure-store failures in `archivedMessages()` and `archiveThreads()` and returned the **same empty collection** that a genuinely empty archive would return. The deferred `thread_archive` endpoint could therefore respond HTTP 200 with zero restored messages even though the archive might be full but temporarily offline.
+
+The new behavior keeps owner-scoped, independently verified **live Telegram chats and messages available** while making archival failures explicit:
+
+- An unavailable message archive is tagged `unavailable:true`; `thread_archive` responds **503** plus a user-safe archival warning. Genuine empty results stay 200 with an empty list.
+- An unavailable saved-thread list is differentiated from a valid empty thread list. The chat listing returns 503 when **both** the live Telegram list and saved archive are unavailable; otherwise it preserves the live chat list with an explicit warning.
+- For an independently available live thread, an archival outage appears in the response's warning. If neither a live chat nor an archive copy can be confirmed, the API returns 503 instead of falsely asserting the conversation never existed.
+- In the Mini App, deferred archive synchronization failures are visible for **all** owner-matched live chats, rather than only archived-copy conversations. It never reports a restored deleted message unless the archive service actually responded with evidence.
+
+Added `tests/vetogram-archive-unavailable.test.js` to the no-cost `npm run qa:core:offline` suite. **8/8 source-grounded V8-executed cases passed**, including a real handler mock showing an archive outage preserves working Telegram live chats with a warning. No actual Telegram webhook, archive storage or Vercel service was contacted. Native `node --test` and real two-account Anti-Delete event delivery remain separate pre-release acceptance gates.
+
+No production migration, merge, deployment, credential action or paid service use in this change.
