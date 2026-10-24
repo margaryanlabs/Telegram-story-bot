@@ -429,11 +429,13 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       saveDue.textContent='Сохранить дату';
       saveDue.addEventListener('click',()=>{
         if(!safeIdentity())return;
-        if(!taskReminderEditAllowed(task.id))return;
+        const scope=ownerRequestScope();
+        if(!taskReminderEditAllowed(task.id)||!isOwnerRequestCurrent(scope))return;
         if(!date.value)return notice('Выбери дату или нажми «Убрать дату».',true);
         const time=Date.parse(date.value);
         if(!Number.isFinite(time))return notice('Неверная дата.',true);
         if(!window.confirm('Привязать вручную выбранное время к задаче? Это НЕ создаёт уведомление.'))return;
+        if(!isOwnerRequestCurrent(scope))return;
         try{
           state.tasks=updateOwnerTask(state.tasks,owner(),task.id,{dueAt:new Date(time).toISOString()});
           renderTasks();notice('Дата задачи записана только в память окна. Напоминание не создавалось.');
@@ -443,7 +445,8 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       clearDue.textContent='Убрать дату';
       clearDue.addEventListener('click',()=>{
         if(!safeIdentity())return;
-        if(!taskReminderEditAllowed(task.id))return;
+        const scope=ownerRequestScope();
+        if(!taskReminderEditAllowed(task.id)||!isOwnerRequestCurrent(scope))return;
         try{state.tasks=updateOwnerTask(state.tasks,owner(),task.id,{dueAt:null});renderTasks()}
         catch{notice('Не удалось убрать дату.',true)}
       });
@@ -465,7 +468,8 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         const button=document.createElement('button');button.type='button';button.className='vtai-action';
         button.textContent=label;button.addEventListener('click',()=>{
           if(!safeIdentity())return;
-        if(!taskReminderEditAllowed(task.id))return;
+          const scope=ownerRequestScope();
+          if(!taskReminderEditAllowed(task.id)||!isOwnerRequestCurrent(scope))return;
           try{state.tasks=updateOwnerTask(state.tasks,owner(),task.id,{status});renderTasks()}
           catch{notice('Задача другого аккаунта или уже удалена.',true)}
         });
@@ -480,7 +484,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         follow.addEventListener('click',()=>{
           if(!safeIdentity()||!ownerTasks(state.tasks,owner()).some(t=>t.id===task.id))
             return notice('Задача недоступна для текущего аккаунта.',true);
+          const scope=ownerRequestScope();
           if(!window.confirm('Подготовить текст follow-up по этой задаче? Он останется черновиком и не будет никому отправлен.'))return;
+          if(!isOwnerRequestCurrent(scope))return;
           setMode('reply');
           state.last=null;state.sendIntent=null;state.reviewedApprovalId=null;
           state.suggestedChatId=null; // A task does not verify any recipient.
@@ -497,7 +503,11 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       const del=document.createElement('button');del.type='button';del.className='vtai-action vtai-danger';
       del.textContent='Удалить задачу';
       del.addEventListener('click',()=>{
-        if(!safeIdentity()||!taskReminderEditAllowed(task.id)||!window.confirm('Удалить эту задачу из текущего окна без восстановления?'))return;
+        if(!safeIdentity())return;
+        const scope=ownerRequestScope();
+        if(!taskReminderEditAllowed(task.id)||!isOwnerRequestCurrent(scope))return;
+        if(!window.confirm('Удалить эту задачу из текущего окна без восстановления?'))return;
+        if(!isOwnerRequestCurrent(scope))return;
         state.tasks=ownerTasks(state.tasks,owner()).filter(t=>t.id!==task.id);
         renderTasks();
       });
