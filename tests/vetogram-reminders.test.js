@@ -222,3 +222,16 @@ test('disposable Postgres CI exercises both cross-device lock orderings',()=>{
   assert.match(migration,/VETO_TASK_PENDING_REMINDERS/);
   assert.doesNotMatch(race,/api\.telegram\.org|TELEGRAM_BOT_TOKEN|https?:\/\//);
 });
+
+
+test('Postgres claim never bypasses null cap or expired task deadline',()=>{
+  const sql=source('migrations/vetogram-reminders-20261024.sql');
+  const claim=sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.vetogram_claim_reminders'));
+  assert.match(claim,/LIMIT LEAST\(GREATEST\(COALESCE\(p_limit,8\),1\),8\)/);
+  assert.match(claim,/AND r\.task_due_at>=now\(\)-interval '10 minutes'/);
+  assert.match(claim,/FOR UPDATE SKIP LOCKED/);
+  const smoke=source('scripts/vetogram-ai-postgres-smoke.sql');
+  assert.match(smoke,/public\.vetogram_claim_reminders\(NULL\)/);
+  assert.match(smoke,/CI_NULL_CLAIM_LIMIT_NOT_CAPPED/);
+  assert.match(smoke,/CI_PAST_DEADLINE_WAS_CLAIMED/);
+});
