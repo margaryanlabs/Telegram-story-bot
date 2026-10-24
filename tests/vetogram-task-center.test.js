@@ -57,7 +57,7 @@ test('Capacity and status overview are bounded and honest about manual dates',()
   assert.equal(summary.open,22);assert.equal(summary.overdue,1);
   assert.equal(summary.tasks[0].id,uuid(1));
 });
-test('UI never schedules reminders or sends while saving tasks',()=>{
+test('UI keeps task saves local and gates Telegram reminders behind explicit consent',()=>{
   const ui=read('public/vetogram-ai.js'),html=read('public/studio.html');
   for(const id of ['vtaiTasksPanel','vtaiTaskCount','vtaiTasksOpen','vtaiTasksDeferred',
     'vtaiTasksDone','vtaiTasksAll','vtaiTasksList','vtaiTasksCopy','vtaiTasksClear'])
@@ -69,6 +69,12 @@ test('UI never schedules reminders or sends while saving tasks',()=>{
   assert.match(ui,/state\.suggestedChatId=null; \/\/ A task does not verify any recipient/);
   assert.match(ui,/vtaiConsent'\)\.checked=false/);
   assert.match(ui,/Подготовить follow-up/);
-  assert.match(ui,/Никаких уведомлений|Автонапоминаний нет/);
+  // Reminders are now an explicit opt-in feature; they must never be
+  // scheduled by saving or editing a task.
+  assert.match(ui,/Дата задачи записана только в память окна\. Напоминание не создавалось/);
+  assert.match(ui,/state\.reminderSchedulingConfigured!==true/);
+  assert.match(ui,/window\.confirm\('Создать одноразовое Telegram-напоминание лично тебе/);
+  assert.match(ui,/request\('\/api\/vetogram-reminders',\{action:'schedule'/);
+  assert.match(ui,/schedule\.addEventListener\('click',\(\)=>void scheduleReminder\(task,Number\(lead\.value\)\)\)/);
   assert.doesNotMatch(ui,/localStorage|sessionStorage|indexedDB|setInterval|autoSend/);
 });
