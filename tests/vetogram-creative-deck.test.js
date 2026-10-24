@@ -155,3 +155,18 @@ test('switching AI modes retains manually edited text instead of restoring stale
   assert.match(h.input.value,/Моя дополнительная ручная правка/);
   assert.match(h.input.value,/уверенный/);
 });
+
+
+test('premium chat filters expose real Focus and saved-copy navigation, not mock buttons',()=>{
+  const html=load('../public/studio.html');
+  const filters=html.slice(html.indexOf('id="telegramMirrorFilters"'),
+    html.indexOf('id="telegramMirrorAccountProof"'));
+  assert.ok(filters.includes('data-mirror-filter="focus"'));
+  assert.ok(filters.includes('data-mirror-filter="copies"'));
+  assert.doesNotMatch(filters,/class="veto-filter-advanced"[^>]*data-mirror-filter="focus"/);
+  assert.doesNotMatch(filters,/class="veto-filter-advanced"[^>]*data-mirror-filter="copies"/);
+  const labels=html.slice(html.indexOf('<nav class="bottom-nav"'),
+    html.indexOf('</nav>',html.indexOf('<nav class="bottom-nav"')));
+  for(const label of ['Чаты','Истории','Защита','Студия'])
+    assert.ok(labels.includes('<small>'+label+'</small>'),label);
+});
