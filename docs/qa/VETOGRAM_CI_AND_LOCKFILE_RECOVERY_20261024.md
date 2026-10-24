@@ -86,3 +86,20 @@ The prior workflow triggered on **both push and pull_request**, creating two sep
 The generic `public/vetogram-ai.js` request wrapper captures the signed owner **and** `requestEpoch` at dispatch and refuses to apply a response after account changes, including A→B→A re-entry. A stale response is not permitted to reset the newer A/B owner UI. Two additional executable browser-function regression cases now exercise the actual request function with deferred mock HTTP responses and cross-owner/epoch transitions. The expanded behavioral suite passed **7/7** and owner-isolation regressions passed **12/12**, using isolated V8 evaluation of the current GitHub files. These checks are neither a native Node CI execution nor a substitute for full release QA.
 
 Lockfile still lists only `qrcode`, `sharp`, `teleproto` in the root despite manifest also listing `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `@neondatabase/serverless`. Both PR #181 and its parent branch contain the same stale lock hash. No authentic, complete registry resolution could be generated from the current DNS-blocked work container; do not substitute placeholder lockfile integrity values or claim the `npm ci` blocker is resolved.
+
+
+## 24 October — stronger exact-dependency lockfile validation
+
+The existing offline `auditNpmLock` checked only root dependency specs and the presence of direct package nodes. It could accidentally accept a matching root declaration with a wrong installed package version, an absent `resolved` reference or a missing `integrity` value.
+
+The offline auditor now enforces for each direct package:
+- exact version pins must equal `packages['node_modules/'+name].version` (semver ranges/aliases excluded from that strict version rule);
+- non-symlink direct package nodes must have a resolved HTTP(S)/file source and syntactically valid `sha256`, `sha384` or `sha512` integrity metadata;
+- legitimate linked workspace package nodes remain exempt from tarball requirements;
+- failures surface individually under `VETOGRAM_LOCKFILE_INVALID_RESOLUTIONS` with package name/reason.
+
+Three new tests verify version tampering, missing `resolved` and `integrity`, and legal linked workspace entries. **7/7 auditor test callbacks passed** when evaluated against actual branch source in a V8 harness. This is a metadata-structure check, not tarball hashing; `npm ci` remains mandatory.
+
+Confirmed from the current branch and parent: the real lockfile still lists only `qrcode`, `sharp`, `teleproto` in its root and lacks root/spec/package nodes for `@aws-sdk/client-s3@3.821.0`, `@aws-sdk/s3-request-presigner@3.821.0` and `@neondatabase/serverless@1.0.2`. The three present direct packages have resolved URLs and integrity hashes. No valid lockfile was generated or claimed. `npm run lock:refresh` still requires a network-enabled trusted checkout, followed by `npm run lock:check` and `npm ci`.
+
+Recent GitHub Actions checks continue to fail before runner steps, so the release stays blocked and this change stays in draft PR #181 only.
