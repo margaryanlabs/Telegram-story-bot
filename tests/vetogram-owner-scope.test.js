@@ -49,9 +49,11 @@ test('all Task Cloud and Reminders async callbacks are fenced to the signed orig
     assert.match(body,/catch\(error\)\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
     assert.match(body,/finally\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
   }
-  assert.match(js,/const requestOwner=signed\(\),requestOwnerId=owner\(\)/);
+  assert.match(js,/const requestScope=ownerRequestScope\(\)/);
+  assert.match(js,/const requestOwner=requestScope\.identity,requestOwnerId=requestScope\.ownerId/);
   assert.match(js,/signed\(\)!==requestOwner\|\|owner\(\)!==requestOwnerId/);
-  assert.match(js,/if\(oldRequestCanReset\(state\.identity,requestOwner\)\)reset\(\)/);
+  assert.match(js,/oldRequestCanReset\(state\.identity,requestOwner\)\)reset\(\)/);
+  assert.match(js,/state\.requestEpoch===requestScope\.epoch/);
   assert.doesNotMatch(js,/\!owner\(\)\)\{reset\(\);throw Error/);
 });
 
@@ -70,7 +72,8 @@ test('AI Memory, AI generation and manual Telegram send never mutate a switched 
     assert.match(part,/catch\(error\)\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
     assert.match(part,/finally\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
   }
-  assert.match(js,/if\(oldRequestCanReset\(state\.identity,requestOwner\)\)reset\(\)/);
+  assert.match(js,/oldRequestCanReset\(state\.identity,requestOwner\)\)reset\(\)/);
+  assert.match(js,/state\.requestEpoch===requestScope\.epoch/);
 });
 test('Second Brain and AI Action consume a response only after the AI provider returns',()=>{
   const js=read('public/vetogram-ai.js');
