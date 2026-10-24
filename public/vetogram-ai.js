@@ -1041,6 +1041,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     if(state.memoryBusy||state.busy||!safeIdentity())return;
     const scope=ownerRequestScope();
     if(state.memory.length&&!window.confirm('Загрузить серверную копию? Несохранённые локальные заметки будут заменены.'))return;
+    if(!isOwnerRequestCurrent(scope))return;
     state.memoryBusy=true;
     $('vtaiMemoryCloudLoad').disabled=true;
     try{
