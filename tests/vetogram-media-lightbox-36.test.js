@@ -70,3 +70,28 @@ test('real image viewer has touch-safe controls, reduced motion and is not a dem
   assert.doesNotMatch(part,/fetch\(|setInterval\(|localStorage|new Image\(/);
   assert.equal((css.match(/\{/g)||[]).length,(css.match(/\}/g)||[]).length);
 });
+
+
+test('voice record control announces its actual state without sending or recording automatically',()=>{
+  const begin=code.indexOf("    const voiceButton=$('telegramThreadRecordVoice');");
+  const end=code.indexOf("    form.classList.toggle('is-readonly'",begin);
+  assert.ok(begin>0&&end>begin);
+  const handler=code.slice(begin,end);
+  for(const on of [false,true]){
+    const attrs={},classes={};
+    const voice={
+      setAttribute:(name,value)=>{attrs[name]=value},
+      classList:{toggle:(name,val)=>{classes[name]=val}}
+    };
+    const state={recording:on?{started:123}:null,pendingAttachment:null,sendInFlight:false};
+    vm.runInNewContext(handler,{
+      state,writable:true,$:id=>id==='telegramThreadRecordVoice'?voice:null,Boolean,String
+    });
+    assert.equal(attrs['aria-pressed'],String(on));
+    assert.equal(attrs['aria-label'],on?'Завершить запись голосового':'Начать запись голосового');
+    assert.equal(classes.recording,on);
+    assert.equal(voice.textContent,on?'■':'◉');
+    assert.equal(voice.disabled,false);
+  }
+  assert.doesNotMatch(handler,/getUserMedia\(|\.start\(|sendOutgoing\(|fetch\(/);
+});
