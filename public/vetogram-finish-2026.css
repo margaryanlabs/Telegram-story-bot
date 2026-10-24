@@ -536,3 +536,236 @@ html:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen
     transition:none!important;transform:none!important;
   }
 }
+
+
+/* VETOGRAM 3.4 · premium interaction system
+ * Quiet depth, strong hierarchy, no synthetic data/online indicators,
+ * no perpetual animations and no extra JS/network activity.
+ */
+:root {
+  --vg34-ink: #f4f6ff;
+  --vg34-secondary: #b8c4d9;
+  --vg34-border: rgba(192,207,238,.16);
+  --vg34-focus: #ffb59d;
+  --vg34-glass: rgba(20,31,51,.95);
+  --vg34-spring: cubic-bezier(.22,1,.36,1);
+}
+/* Make the brand chrome feel like one coherent system instead of five panels. */
+.topbar {
+  border:1px solid color-mix(in srgb,var(--vgx-hairline,rgba(160,180,218,.18)) 82%,transparent)!important;
+  border-radius:19px!important;
+  background:color-mix(in srgb,var(--vgx-panel,#141c2a) 93%,transparent)!important;
+  box-shadow:0 9px 24px rgba(4,10,26,.10),inset 0 1px rgba(255,255,255,.045)!important;
+}
+.topbar .brand-mark {
+  box-shadow:0 8px 19px rgba(1,10,29,.21),0 0 0 1px rgba(255,255,255,.09)!important;
+}
+.topbar .brand-copy strong {
+  letter-spacing:-.047em!important;
+}
+.topbar :is(.vg26-command-trigger,.profile-button,#vetoGlobalThemeToggle) {
+  transition:background-color .2s,border-color .2s,transform .2s var(--vg34-spring);
+}
+.topbar :is(.vg26-command-trigger,.profile-button,#vetoGlobalThemeToggle):active {
+  transform:scale(.955);
+}
+.topbar :is(.vg26-command-trigger,.profile-button,#vetoGlobalThemeToggle):focus-visible {
+  outline:2px solid var(--vg34-focus);outline-offset:3px;
+}
+/* Cinematic but quiet: the existing hero receives a single soft edge reflection. */
+.screen[data-screen="home"] .veto-command-home {
+  box-shadow:0 22px 68px rgba(3,9,25,.23),
+    inset 0 1px rgba(255,255,255,.095),0 1px 0 rgba(255,255,255,.025)!important;
+}
+.screen[data-screen="home"] .veto-command-home h1{
+  text-wrap:balance;
+}
+.screen[data-screen="home"] .veto-command-home-actions .veto-command-home-primary {
+  position:relative;overflow:hidden;isolation:isolate;
+}
+.screen[data-screen="home"] .veto-command-home-actions .veto-command-home-primary::after{
+  content:"";position:absolute;inset:1px;z-index:-1;
+  border-radius:inherit;pointer-events:none;opacity:.45;
+  background:linear-gradient(112deg,rgba(255,255,255,.31),transparent 55%);
+}
+.screen[data-screen="home"] .vg33-tools-panel{
+  box-shadow:0 11px 34px rgba(3,9,25,.10),inset 0 1px rgba(255,255,255,.04);
+}
+.screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:focus-visible{
+  outline:2px solid #ffbdac!important;outline-offset:3px!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:hover{
+    transform:translate3d(0,-3px,0);
+  }
+  .screen[data-screen="home"] .veto-command-home-actions>button:hover{
+    transform:translate3d(0,-2px,0);
+  }
+}
+/* Permission cards: neutral until real app state resolves, no fake green beacons. */
+#vg27Mission .vg27-mission-state{
+  background:color-mix(in srgb,var(--vg27-panel2,#1b273b) 89%,transparent);
+  border-color:var(--vg27-border,rgba(185,199,230,.17));
+  box-shadow:inset 0 1px rgba(255,255,255,.037);
+}
+#vg27Mission .vg27-mission-label strong[data-status="checking"]{
+  color:var(--vg27-sub,var(--vg34-secondary));
+}
+#vg27Mission .vg27-mission-state:focus-visible{
+  outline:2px solid var(--vg34-focus);outline-offset:3px;
+}
+/* The live messenger is the flagship screen; reading remains primary. */
+body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .veto-mirror-heading.vetogram-header{
+  border-color:rgba(207,206,236,.2);
+  background:linear-gradient(120deg,#112035 0%,#192640 61%,#2b263a 100%);
+  box-shadow:0 10px 30px rgba(3,9,23,.20),inset 0 1px rgba(255,255,255,.08);
+}
+#telegramMirror .veto-mirror-search-wrap{
+  border:1px solid var(--vgx-hairline,rgba(173,195,228,.16))!important;
+  background:color-mix(in srgb,var(--vgx-panel,#152238) 94%,transparent)!important;
+  box-shadow:0 3px 15px rgba(0,10,32,.06)!important;
+  transition:border-color .18s,box-shadow .18s;
+}
+#telegramMirror .veto-mirror-search-wrap:focus-within{
+  border-color:rgba(255,158,147,.55)!important;
+  box-shadow:0 0 0 3px rgba(255,151,143,.09)!important;
+}
+#telegramMirror .veto-mirror-chat{
+  border-radius:13px!important;
+  transition:background-color .16s,border-color .16s,box-shadow .16s,transform .16s var(--vg34-spring);
+}
+#telegramMirror .veto-mirror-chat:active{
+  transform:scale(.995)!important;
+}
+#telegramMirror .veto-mirror-filters button.active,
+#telegramMirror .veto-mirror-filters button[aria-pressed="true"]{
+  border-color:rgba(255,153,146,.55)!important;
+  background:color-mix(in srgb,var(--vgx-hot,#ff9889) 16%,var(--vgx-panel,#172439))!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.04);
+}
+/* Recessed composer with a single confident send action. Disabled is still disabled. */
+#telegramMirror .veto-mirror-thread-footer{
+  border-top:1px solid var(--vgx-hairline,rgba(164,180,213,.16));
+}
+#telegramMirror .veto-mirror-compose-field{
+  min-height:50px!important;border-radius:17px!important;
+  transition:border-color .16s,box-shadow .16s;
+}
+#telegramMirror .veto-mirror-compose-field:focus-within{
+  border-color:rgba(255,166,153,.55)!important;
+  box-shadow:0 0 0 3px rgba(255,152,143,.10)!important;
+}
+#telegramMirror .veto-mirror-send-button:not(:disabled){
+  border-radius:15px!important;
+  background:linear-gradient(145deg,#ffad97,#fa8194)!important;
+  color:#291722!important;
+  box-shadow:0 8px 18px rgba(224,84,112,.20)!important;
+  transition:transform .18s var(--vg34-spring),filter .18s,box-shadow .18s;
+}
+#telegramMirror .veto-mirror-send-button:not(:disabled):active{transform:scale(.94)}
+#telegramMirror .veto-mirror-send-button:disabled{
+  opacity:.44!important;box-shadow:none!important;cursor:not-allowed;
+}
+/* Bottom-nav selection should be precise, not a giant coloured pill. */
+.bottom-nav{
+  border-color:var(--vgx-hairline,rgba(188,204,235,.19))!important;
+  box-shadow:0 12px 38px rgba(3,8,24,.25),inset 0 1px rgba(255,255,255,.055)!important;
+}
+.bottom-nav .nav-item.active{
+  border-radius:15px!important;
+  color:var(--vgx-ink,#f4f6ff)!important;
+}
+.bottom-nav .nav-item.active::after{
+  top:4px!important;
+  background:var(--vgx-hot,#ff9184)!important;
+  box-shadow:0 0 10px rgba(249,130,143,.32);
+}
+.bottom-nav .nav-item:focus-visible{
+  outline:2px solid var(--vg34-focus)!important;outline-offset:2px;
+}
+/* AI is a drafting workspace, not a carousel of fake generated text. */
+.screen[data-screen="ai"] .vtai-hero{
+  border:1px solid rgba(255,159,159,.21)!important;
+  box-shadow:0 16px 39px rgba(4,10,24,.14),inset 0 1px rgba(255,255,255,.07)!important;
+}
+.screen[data-screen="ai"] .vtai-hero h1{
+  letter-spacing:-.055em!important;line-height:1.07!important;
+  text-wrap:balance;
+}
+.screen[data-screen="ai"] .vtai-modes button{
+  transition:background-color .18s,border-color .18s,color .18s,transform .18s var(--vg34-spring)!important;
+}
+.screen[data-screen="ai"] .vtai-modes button.active{
+  box-shadow:0 6px 16px rgba(223,94,117,.14)!important;
+}
+.screen[data-screen="ai"] .vtai-input{
+  border-radius:13px!important;
+  transition:border-color .17s,box-shadow .17s;
+}
+.screen[data-screen="ai"] .vtai-input:focus-visible{
+  border-color:rgba(255,156,152,.65)!important;
+  box-shadow:0 0 0 3px rgba(255,155,151,.12)!important;
+}
+.screen[data-screen="ai"] .vtai-bubble{
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 5px 15px rgba(0,0,0,.07);
+}
+/* Story creation = cinematic, but its controls must win over the art. */
+.screen[data-screen="story-engine"] .se-masthead{
+  border-color:rgba(255,149,161,.27)!important;
+  box-shadow:0 17px 48px rgba(5,8,21,.18),inset 0 1px rgba(255,255,255,.07)!important;
+}
+.screen[data-screen="story-engine"] .se-masthead h1{
+  letter-spacing:-.057em!important;text-wrap:balance;
+}
+.screen[data-screen="story-engine"] .se-stage{
+  box-shadow:0 10px 37px rgba(4,8,19,.13)!important;
+}
+.screen[data-screen="story-engine"] .se-templates .se-template.active{
+  outline:2px solid rgba(255,166,151,.53);outline-offset:1px;
+  box-shadow:0 10px 24px rgba(5,7,20,.19)!important;
+}
+.screen[data-screen="story-engine"] .se-button.primary:not(:disabled){
+  background:linear-gradient(115deg,#ff9e91,#f77792)!important;
+  color:#311622!important;border-color:rgba(255,196,184,.58)!important;
+  box-shadow:0 9px 22px rgba(238,100,125,.19)!important;
+}
+.screen[data-screen="story-engine"] .se-button:disabled{
+  opacity:.45!important;cursor:not-allowed;
+}
+@media(max-width:620px){
+  .topbar{border-radius:15px!important}
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .veto-mirror-heading.vetogram-header{
+    min-height:59px!important;border-radius:16px!important;
+  }
+  body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .veto-mirror-heading.vetogram-header.is-expanded{
+    min-height:111px!important;
+  }
+  #telegramMirror .veto-mirror-chat{min-height:66px!important}
+  #telegramMirror .veto-mirror-compose-field{min-height:48px!important}
+  .screen[data-screen="story-engine"] .se-masthead h1{
+    font-size:clamp(29px,8vw,37px)!important;
+  }
+  .screen[data-screen="ai"] .vtai-hero h1{
+    font-size:clamp(29px,8vw,38px)!important;
+  }
+}
+@media(max-width:360px){
+  .topbar{gap:5px!important}
+  .bottom-nav .nav-item small{font-size:9.5px!important}
+}
+@media(hover:none),(pointer:coarse){
+  .screen[data-screen="home"] .vg33-tools-panel .veto-command-home-grid button:hover,
+  .screen[data-screen="home"] .veto-command-home-actions>button:hover{
+    transform:none!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .topbar :is(.vg26-command-trigger,.profile-button,#vetoGlobalThemeToggle),
+  #telegramMirror .veto-mirror-chat,#telegramMirror .veto-mirror-compose-field,
+  #telegramMirror .veto-mirror-send-button,
+  .screen[data-screen="ai"] :is(.vtai-modes button,.vtai-input),
+  .screen[data-screen="story-engine"] :is(.se-template,.se-button){
+    transition:none!important;animation:none!important;transform:none!important;
+  }
+}
