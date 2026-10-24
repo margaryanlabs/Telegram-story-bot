@@ -14,12 +14,12 @@ test('Telegram Android inbox reserves its own chrome touch-safe area',()=>{
   assert.match(script,/Telegram\?\.WebApp\?\.initData/);
 });
 
-test('Chat controls are visible on initial load and not auto-collapsed on scroll',()=>{
+test('Mobile header starts compact and opens only on user tap',()=>{
   const html=read('public/studio.html');
   const js=read('public/vetogram-header.js');
-  assert.match(html,/veto-mirror-heading vetogram-header is-expanded/);
-  assert.match(html,/id="vetogramHeaderToggle"[^>]*aria-expanded="true"/);
-  assert.match(js,/setExpanded\(true\);/);
+  assert.match(html,/veto-mirror-heading vetogram-header/);
+  assert.match(html,/id="vetogramHeaderToggle"[^>]*aria-expanded="false"/);
+  assert.match(js,/setExpanded\(!compactOnPhone\);/);
   assert.doesNotMatch(js,/addEventListener\('scroll'/);
   assert.match(js,/toggle\.addEventListener\('click'/);
 });
