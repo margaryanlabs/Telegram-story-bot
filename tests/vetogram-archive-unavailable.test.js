@@ -74,3 +74,82 @@ test('deferred archive sync reports temporary failure for live, not only saved-c
   assert.doesNotMatch(sync,/state\.thread\?\.savedCopy===true/);
   assert.match(sync,/syncLabel\('Telegram подключён · архив ожидает повторной проверки'\)/);
 });
+
+
+function archiveThreadReader(listPrivacyThreads){
+  const start=api.indexOf('async function archiveThreads(');
+  const end=api.indexOf('async function archivedMessages(',start);
+  assert.ok(start>=0&&end>start);
+  return vm.runInNewContext('('+api.slice(start,end).trim()+')',
+    vm.createContext({
+      listPrivacyThreads,
+      safeId:x=>String(x||'')
+    }));
+}
+test('saved-chat list flags storage failure, but genuine empty list is still empty',async()=>{
+  const failure=await archiveThreadReader(async()=>{throw Error('timeout')})('111');
+  assert.equal(failure.unavailable,true);
+  assert.equal(failure.length,0);
+  const broken=await archiveThreadReader(async()=>null)('111');
+  assert.equal(broken.unavailable,true);
+  const empty=await archiveThreadReader(async()=>({threads:[]}))('111');
+  assert.equal(empty.length,0);
+  assert.equal(empty.unavailable,undefined);
+});
+function listHandler({storedAvailable=false,telegramLive=false}={}){
+  const pos=api.indexOf('export default async function handler(');
+  const code=api.slice(pos).replace(/^export default /,'')+'\nhandler;';
+  const failedList=Object.assign([],{unavailable:true});
+  const ctxt={
+    BOT:'fixture-bot',
+    validateTelegramMiniApp:()=>({id:111}),
+    validChatId:x=>/^\d+$/.test(x),
+    FIRST_PAGE_SIZE:24,PAGE_SIZE:50,MAX_DIALOGS:500,
+    shouldFetchLiveFirst:()=>false,
+    archiveThreads:async()=>storedAvailable?[]:failedList,
+    getPrivacySettings:async()=>({antiDelete:true}),
+    getBusinessConnectionState:async()=>null,
+    getViewerSession:async()=>telegramLive?{
+      status:'active',telegram_account_user_id:'111',session_ciphertext:'private'
+    }:null,
+    sameTelegramAccount:(a,b)=>String(a)===String(b),
+    openJson:async()=>({session:'mock-session'}),
+    withBackupClient:async(_session,callback)=>callback({
+      getDialogs:async()=>[{id:222}]
+    }),
+    verifyTelegramClientOwner:async()=>({verified:true,name:'A',username:'a'}),
+    dialogPageBounds:()=>({start:0,count:24}),
+    dialogInfo:dialog=>({id:String(dialog.id),title:'Live conversation',type:'private'}),
+    decorateRemote:chats=>chats,
+    archivedDialog:row=>row,
+    orderChatRows:chats=>chats,
+    inboxSignals:()=>({score:0}),
+    privacyReadiness:()=>({ready:false,nextAction:'test_archive'}),
+    respond:(res,status,body)=>res.status(status).json({ok:status<400,...body})
+  };
+  return vm.runInNewContext(code,vm.createContext(ctxt));
+}
+function response(){
+  return {setHeader(){return this},status(code){this.code=code;return this},
+    json(payload){this.payload=payload;return this}};
+}
+test('offline archive list with no live Telegram returns 503 rather than no archived chats',async()=>{
+  const handler=listHandler({storedAvailable:false,telegramLive:false});
+  const res=response();
+  await handler({method:'POST',headers:{'x-telegram-init-data':'mock'},
+    body:{action:'list',page:0}},res);
+  assert.equal(res.code,503);
+  assert.equal(res.payload.archiveUnavailable,true);
+  assert.match(res.payload.error,/архив/);
+});
+test('working Telegram chats remain visible while offline archive shows honest warning',async()=>{
+  const handler=listHandler({storedAvailable:false,telegramLive:true});
+  const res=response();
+  await handler({method:'POST',headers:{'x-telegram-init-data':'mock'},
+    body:{action:'list',page:0}},res);
+  assert.equal(res.code,200);
+  assert.equal(res.payload.chats.length,1);
+  assert.equal(res.payload.chats[0].title,'Live conversation');
+  assert.match(res.payload.warning,/архив/);
+  assert.equal(res.payload.connection.verified,true);
+});
