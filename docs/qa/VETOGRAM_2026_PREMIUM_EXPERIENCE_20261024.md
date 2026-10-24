@@ -13,7 +13,7 @@ This change is an incremental redesign of the **existing Mini App**, not a new p
 
 ## Quality gates / scope
 
-The new `tests/vetogram-creative-deck.test.js` covers real allowed modes, prompt preservation and lengths, actual Mini App script/HTML wiring, lack of implicit network calls, interactive selection, mode changes and long-input rejection. **9/9 tests passed** when executing exact GitHub source in an isolated JavaScript runtime; they are also registered in the free offline Node suites and `package.json` syntax checks.
+The new `tests/vetogram-creative-deck.test.js` covers real allowed modes, prompt preservation and lengths, actual Mini App script/HTML wiring, lack of implicit network calls, interactive selection, mode changes and long-input rejection. **10/10 tests passed** when executing exact GitHub source in an isolated JavaScript runtime; they are also registered in the free offline Node suites and `package.json` syntax checks.
 
 This is not a statement that every VETOGRAM module has been visually reviewed on physical devices or that all Telegram APIs work live. Final release QA must check iPhone/Android Telegram WebViews, chat composer behavior, light/dark contrast, touch targets, accessibility, privacy consent, and actual connected account functions.
 
@@ -25,3 +25,13 @@ No new backend services, migrations, payment settings, paid API calls, merge or 
 2. Confirm real chat filters and message composer retain expected keyboard/autofocus behavior with last-loaded CSS.
 3. Add a real paid subscription/entitlement screen only after its Telegram Stars backend is verified. No mock "Pro active" badges or fictitious stats.
 4. Complete UX smoke for Anti-Delete archival errors, Story publication permission status, and AI reply review before launch.
+
+
+## Premium chat experience follow-up
+
+- Promoted the **existing, working** `data-mirror-filter="focus"` (Важное) and `data-mirror-filter="copies"` (Сохранённые) controls out of the advanced drawer, using existing Telegram chat filtering instead of creating a mock second inbox.
+- Made filter controls comfortably tap-sized and horizontally scrollable on narrow phones. The built-in Telegram owner/session and content guardrails remain unchanged.
+- All five primary bottom tabs now use consistent Russian labels: Чаты, Vetogram, Истории, Защита, Студия.
+- Expanded regression tests to cover this actual DOM wiring. **10/10** Creative Deck and promoted-filter source-grounded tests passed in isolated JavaScript execution, with both browser modules parsing and style braces balanced. Real iOS/Android WebView visual QA is still pending.
+
+No new payments or hosted services are required, and no release merge or production deploy occurred.
