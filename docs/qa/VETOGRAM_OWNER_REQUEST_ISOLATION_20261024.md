@@ -39,3 +39,23 @@ After initial source review, an additional race was found: a user can open an ex
 For all nine relevant confirmations (Task Cloud load/save/erase, Reminders schedule/cancel/cancel-all, AI Memory load/erase, manual Telegram message send), capture the signed owner + account ID + generation **before** the confirmation and revalidate **after** it, before building or sending a network request. For the Negotiator grant confirmation, revalidate before `/api/vetogram-ai-grants` is called. Ordinary writeMemoryCloud and loadReminders calls without confirmations also use request/response identity fences.
 
 The owner-scope test suite now includes this pre-network confirmation invariant. Eight source-grounded regression tests executed via a V8 evaluation harness against current GitHub source: **8/8 passed**; browser module syntax parsing passed. This is not a genuine mobile/WebView or full Node test run. No external effects, deployment, DB writes or feature flags were changed.
+
+
+## 24 October follow-up — chat paging, Agent Control and stale send contexts
+
+An additional owner-switch audit found that `loadChats` could apply A's fetched Telegram dialog metadata, error notices, and loading-state finalizers to B's AI UI. The same pattern existed in `agentStatus`, `changeAgentPause`, `agentHistory` and the asynchronous Negotiator grant-revoke click handler. All now capture `ownerRequestScope()` before request/consent and verify `isOwnerRequestCurrent(scope)` before applying data/errors/finalizers. This prevents A's recipient list or agent grant status being presented under B.
+
+Draft safety also needed a mode-level invariant. Changing AI mode now clears the previous send intent/nonce, reviewed approval, model reply and visible draft, and disables Send. Both Send and Approval Center's Queue require an eligible, visible draft in the current mode. Reviewing an earlier owner-bound approval may load more chats; the controller now rechecks both the original signed owner and that the approval still exists before restoring its recipient, text and nonce. The Follow-up preview's two explicit confirmations also revalidate the original owner before copying preview content into AI inputs.
+
+**Validation**: Twelve owner-scope and send-context test callbacks were executed directly against current GitHub JavaScript source through an isolated V8 harness (12 passed; 0 failures). Browser module parsed successfully in V8 after stripping module-only import lines. This is source/pure JavaScript regression verification, **not** a full `npm test` run, actual Telegram WebView E2E, remote PostgreSQL execution, or proof of deploy readiness.
+
+**Unresolved release blockers**: `package-lock.json` still lacks three npm resolutions and GitHub CI jobs have been failing before execution. As independently rechecked from the current work container, DNS resolution for `registry.npmjs.org` and `github.com` returns temporary resolution errors; no dependency tree was fabricated and no secrets, Neon, Vercel settings or production data were touched.
+
+### Acceptance cases for final QA
+
+- Start A's paginated chat load, switch to B while a page is outstanding, then verify B's recipient picker, counters, focus list, notice and loading state remain untouched by A's response or error
+- Start an Agent Control status/history/pause action on A and switch to B; verify no stale status or negotiated grant actions appear on B
+- Switch from Negotiator to ordinary chat or AI Action, ensure Send is disabled and old text/nonce cannot be reused
+- Reopen an Approval Center item whose chat requires asynchronous lookup; switch account while loading and ensure no A draft, nonce or recipient is copied to B
+- Confirm a Follow-up preview into Second Brain while switching account mid-confirmation; the copy must be rejected
+- Verify regular reviewed approvals and edited, explicit-send drafts still require human confirmation and remain available on their owning account
