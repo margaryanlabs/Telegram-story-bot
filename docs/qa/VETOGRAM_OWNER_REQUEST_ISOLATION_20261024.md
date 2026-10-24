@@ -89,3 +89,12 @@ The actual `public/story-engine.js` receiver, `applyAiStorySuggestion`, was veri
 The behavior tests extract actual controller functions and execute them with mocked DOM, Telegram identity, and deferred operations. **17/17 V8-executed behavioral scenarios passed** from the fetched GitHub branch source, including 10 new owner-switch/receiver cases beyond the earlier seven. These tests are registered in the offline Node suite, but **full GitHub Actions `node --test` and real Telegram WebView remain unverified** because GitHub jobs fail before runner steps. No production release was made.
 
 Before release, separately validate the exact native Telegram mobile UX and run the complete Node/PG CI suite with a trustworthy npm lockfile. All changes remain in Draft PR #181 only.
+
+
+## Story Engine: reversible AI text edits (24 October)
+
+The Story Engine now offers a one-step "Отменить AI-текст" button after an AI suggestion is applied. Undo restores the original title, subtitle and caption. An earlier Portal is also restored when its replacement was explicitly requested. Photos, text layers and other visual settings are never rolled back.
+
+Undo belongs to the currently open Telegram account and draft. Switching draft/account invalidates it. The editor checks whether the user changed the affected fields manually; if so, undo is rejected to preserve those edits. Undo does not publish or save anything automatically.
+
+Seven new executable function tests cover these behaviors. All seven passed in an isolated V8 run alongside all 17 previous behavioral tests. This is not a native Telegram WebView test or a passing hosted CI run. The PR remains draft and no production changes were made.
