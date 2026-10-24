@@ -1,0 +1,59 @@
+name: VETOGRAM — repair npm lockfile (one-shot)
+on:
+  push:
+    branches:
+      - feat/vetogram-ai-story-unified-20261023
+    paths:
+      - .github/workflows/vetogram-lock-recovery.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vetogram-lock-recovery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  restore-lockfile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout existing feature branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: true
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Resolve exact pinned dependencies and regenerate lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Verify real clean npm installation (not merely static metadata)
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Verify VETOGRAM lockfile contract
+        run: npm run lock:check
+
+      - name: Commit only regenerated npm lockfile
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "Lockfile was already in sync."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- package-lock.json
+          git commit -m "fix(build): regenerate VETOGRAM npm lockfile from pinned dependencies"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Offline release preflight after dependency repair
+        run: |
+          npm run ai:preflight
+          npm run check
+          npm test
