@@ -73,3 +73,16 @@ The staged, unapplied `migrations/vetogram-reminders-20261024.sql` now caps `vet
 The disposable PostgreSQL smoke adds ten synthetic due rows plus one deadline-expired row, asserts a NULL limit claims **exactly eight**, oversized limit claims **exactly two remaining**, and the deadline-expired row remains unclaimed. Node source regression checks enforce both SQL clauses and smoke coverage. SQL **has not** been executed against PostgreSQL in this work; review and execute in isolated CI before ever applying the migration.
 
 All tests use fake owner IDs and fake ciphertext. No live Telegram API calls, Neon migrations, Vercel changes, merge or production deployment.
+
+
+## 24 October — runner diagnostics and no duplicate CI invocations
+
+API investigation of GitHub Actions run `40051314052` confirmed all three jobs (`offline-contracts`, `node-tests`, `disposable-postgres`) failed with **`steps: []`**, **`runner_id: 0`**, empty `runner_name`, and completed roughly two seconds after creation. Job log download returned **`BlobNotFound`**. Source unit/SQL tests **did not run**. GitHub's 480 indexed workflow runs returned **zero successful runs** when filtered by `status=success` at the time of the check. This strongly indicates an execution/runner provisioning block, but the REST response does not identify whether billing, permissions, org policy, or a platform issue caused it. An owner with GitHub repository billing/policy access should inspect Settings → Actions and billing/spending controls before any deployment.
+
+The prior workflow triggered on **both push and pull_request**, creating two separate workflow runs (and thus potentially doubling billed minutes) per change on the PR branch. The draft PR remains the release integration route; the workflow now uses **only pull_request** events targeted to `feat/vetogram-story-engine-20261022` (opened, synchronize, reopened, ready_for_review). All three jobs remain unchanged. A new regression in `tests/vetogram-ai-release-gate.test.js` checks this topology; the actual source assertion executed in the V8 harness passed. The workflow itself still cannot prove success until GitHub assigns a runner.
+
+## Shared owner HTTP gate
+
+The generic `public/vetogram-ai.js` request wrapper captures the signed owner **and** `requestEpoch` at dispatch and refuses to apply a response after account changes, including A→B→A re-entry. A stale response is not permitted to reset the newer A/B owner UI. Two additional executable browser-function regression cases now exercise the actual request function with deferred mock HTTP responses and cross-owner/epoch transitions. The expanded behavioral suite passed **7/7** and owner-isolation regressions passed **12/12**, using isolated V8 evaluation of the current GitHub files. These checks are neither a native Node CI execution nor a substitute for full release QA.
+
+Lockfile still lists only `qrcode`, `sharp`, `teleproto` in the root despite manifest also listing `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `@neondatabase/serverless`. Both PR #181 and its parent branch contain the same stale lock hash. No authentic, complete registry resolution could be generated from the current DNS-blocked work container; do not substitute placeholder lockfile integrity values or claim the `npm ci` blocker is resolved.
