@@ -174,6 +174,14 @@ html[data-veto-theme="slate"]{
   box-shadow:0 7px 21px rgba(0,4,17,.09)
 }
 .vg26-creative-card:active{transform:scale(.98)}
+.vg26-creative-card.is-selected,.vg26-creative-card[aria-pressed="true"]{
+  border-color:color-mix(in srgb,var(--vgx-hot) 73%,transparent);
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--vgx-hot) 14%,var(--vg26-surface-2)),
+    color-mix(in srgb,var(--vgx-hot) 5%,var(--vg26-surface-2)));
+  box-shadow:inset 0 1px 0 rgba(255,186,164,.12),0 7px 22px rgba(4,6,18,.11)
+}
+.vg26-creative-card.is-selected .vg26-creative-arrow{color:var(--vgx-hot)}
 .vg26-creative-symbol{
   display:grid;place-items:center;width:37px;height:37px;border-radius:12px;
   font-size:23px;color:var(--vgx-hot);
