@@ -292,3 +292,96 @@ test('Task Center status updates reject owner switch during claimed-reminder con
   assert.equal(f.counters.updates,0);
   assert.equal(f.state.tasks[0].owner,'222');
 });
+
+
+test('AI Memory cloud save never uses B data after A consent dialog',async()=>{
+  const ui=fakeUi(),state={identity:'signed-A',requestEpoch:1,memory:[{owner:'111'}]};
+  let writes=0;
+  const context={...ui,state,
+    safeIdentity:()=>true,
+    ownerRequestScope:()=>({identity:state.identity,epoch:state.requestEpoch}),
+    isOwnerRequestCurrent:s=>s.identity===state.identity&&s.epoch===state.requestEpoch,
+    window:{confirm:()=>{state.identity='signed-B';state.requestEpoch=2;
+      state.memory=[{owner:'222'}];return true}},
+    writeMemoryCloud:async()=>{writes++}
+  };
+  await controller('async function saveMemoryCloud',context)();
+  assert.equal(writes,0);
+  assert.equal(state.memory[0].owner,'222');
+});
+test('Story Engine transfer rejects stale owner before navigating or applying A story',async()=>{
+  const ui=fakeUi(),state={identity:'signed-A',requestEpoch:1,busy:false};
+  ui.get('vtaiStoryTitle').value='Account A title';
+  ui.get('vtaiStorySubtitle').value='Account A subtitle';
+  ui.get('vtaiPortalReview').hidden=true;
+  let navigation=0,applied=0;
+  const context={...ui,state,safeIdentity:()=>true,
+    ownerRequestScope:()=>({identity:state.identity,epoch:state.requestEpoch,ownerId:'111'}),
+    isOwnerRequestCurrent:s=>s.identity===state.identity&&s.epoch===state.requestEpoch,
+    notice:()=>{},
+    window:{
+      confirm:()=>{state.identity='signed-B';state.requestEpoch=2;return true},
+      VetoTelegramNavigate:()=>{navigation++;return true},
+      VetoTelegramApplyAiStory:async()=>{applied++;return true}
+    }
+  };
+  await controller('async function applyStory',context)();
+  assert.equal(navigation,0);
+  assert.equal(applied,0);
+});
+test('Second Brain confirmations cannot save A quote/task in B workspace',()=>{
+  for(const action of ['Добавить в мои заметки','＋ В Task Center']){
+    const ui=fakeUi(),created=[];
+    ui.get('vtaiBriefList').append=()=>{};
+    const item={kind:'task',title:'Account A payment',sourceQuote:'Account A private source quote',
+      deadlineText:'tomorrow',certainty:'explicit'};
+    const state={identity:'signed-A',requestEpoch:1,brief:{items:[item]},memory:[],tasks:[]};
+    const counters={writes:0};
+    const element=tag=>{
+      const node={tag,events:{},children:[],value:'',textContent:'',
+        append(...children){this.children.push(...children)},
+        addEventListener(name,handler){this.events[name]=handler}};
+      created.push(node);return node;
+    };
+    const context={...ui,state,document:{createElement:element},
+      safeIdentity:()=>true,owner:()=>state.identity==='signed-A'?'111':'222',
+      ownerRequestScope:()=>({identity:state.identity,epoch:state.requestEpoch}),
+      isOwnerRequestCurrent:s=>s.identity===state.identity&&s.epoch===state.requestEpoch,
+      window:{crypto:{randomUUID:()=>uuid},confirm:()=>{
+        state.identity='signed-B';state.requestEpoch++;
+        state.brief={items:[]};return true;
+      }},
+      MAX_MEMORY_NOTES:8,MAX_TASKS:24,
+      crypto:{randomUUID:()=>uuid},
+      makeMemoryNote:()=>{counters.writes++;throw Error('Should not create A note in B')},
+      makeOwnerTask:()=>{counters.writes++;throw Error('Should not create A task in B')},
+      renderMemory:()=>{counters.writes++},
+      renderTasks:()=>{counters.writes++},
+      notice:()=>{}
+    };
+    controller('function renderBrief',context)();
+    const button=created.find(e=>e.tag==='button'&&e.textContent===action);
+    assert.ok(button?.events.click,action);
+    button.events.click();
+    assert.equal(counters.writes,0);
+    assert.equal(state.memory.length,0);
+    assert.equal(state.tasks.length,0);
+  }
+});
+test('clipboard and bulk task clearing use current owner after explicit consent',()=>{
+  const js=browser;
+  const start=js.indexOf("$('vtaiTasksClear').addEventListener");
+  const stop=js.indexOf("$('vtaiTasksCloudLoad').addEventListener",start);
+  const taskHandlers=js.slice(start,stop);
+  assert.match(taskHandlers,/const scope=ownerRequestScope\(\)/);
+  assert.equal((taskHandlers.match(/if\(!isOwnerRequestCurrent\(scope\)\)return;/g)||[]).length,2);
+  assert.match(taskHandlers,/navigator\.clipboard\.writeText\(value\)\.then\(/);
+  assert.match(taskHandlers,/if\(isOwnerRequestCurrent\(scope\)\)/);
+  const story=js.slice(js.indexOf('async function applyStory()'),
+    js.indexOf('function renderApprovals()',js.indexOf('async function applyStory()')));
+  const approval=story.indexOf('window.confirm(');
+  const guard=story.indexOf('if(!isOwnerRequestCurrent(scope))return;',approval);
+  const navigation=story.indexOf('VetoTelegramNavigate',guard);
+  const apply=story.indexOf('VetoTelegramApplyAiStory',navigation);
+  assert.ok(approval>=0&&guard>approval&&navigation>guard&&apply>navigation);
+});
