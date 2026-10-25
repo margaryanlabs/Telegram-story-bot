@@ -275,6 +275,12 @@
       toast('Микрофон выключен при выходе из Voice Studio.');
     }
   });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&(state.active||state.micStarting)){
+      stopMic();
+      toast('Микрофон выключен при сворачивании Vetogram.');
+    }
+  });
   window.addEventListener('pagehide',()=>{
     stopMic();releaseRecording();cancelAnimationFrame(state.raf);state.raf=0;
   });
