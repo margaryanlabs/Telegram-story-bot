@@ -110,13 +110,13 @@
 
   <main class="app-shell">
     <header class="topbar">
-      <div class="brand">
+      <button type="button" class="brand veto-reborn-brand" id="vetoNavHome" aria-label="Открыть инструменты и главную Vetogram">
         <div class="brand-mark veto-mark" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /><i></i></div>
         <div class="brand-copy">
           <strong>Vetogram</strong>
           <span>Чаты · Истории · Приватность · AI</span>
         </div>
-      </div>
+      </button>
       <button class="vg26-command-trigger" id="vg26CommandOpen" type="button"
         aria-label="Быстрые действия Vetogram" aria-haspopup="dialog" aria-controls="vg26CommandDialog"
         aria-keyshortcuts="Control+K Meta+K" title="Поиск и быстрые действия">
@@ -2187,14 +2187,12 @@
     </section>
   </main>
 
-  <nav class="bottom-nav" aria-label="Главная навигация">
+  <nav class="bottom-nav veto-reborn-navigation" aria-label="Основные разделы">
     <button class="nav-item active" data-nav="telegram" type="button" aria-label="Чаты"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5c0 4.8-3.9 8.5-8.7 8.5-1.3 0-2.7-.3-3.8-.9L3 20l1.2-4.2C3.4 14.5 3 13 3 11.5 3 6.8 6.9 3 11.5 3S20 6.8 20 11.5Z"/></svg><small data-ui-text="chats">Чаты</small></button>
-    <button class="nav-item" data-nav="home" type="button" aria-label="Инструменты Vetogram"><img class="veto-nav-brand-mark" src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="24" height="24" aria-hidden="true" /><small data-ui-text="home">Vetogram</small></button>
-    <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg><small data-ui-text="stories">Истории</small></button>
-    <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5.2c0 5 3.2 8.7 8 10.8 4.8-2.1 8-5.8 8-10.8V6z"/><path d="m9 12 2 2 4-4"/></svg><small data-ui-text="privacy">Защита</small></button>
-    <button class="nav-item" data-nav="studio" type="button" aria-label="Студия"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/></svg><small data-ui-text="studio">Студия</small></button>
+    <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg><small data-ui-text="stories">Истории</small></button>
+    <button class="nav-item veto-reborn-ai-tab" data-nav="ai" type="button" aria-label="VETO AI"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 14.5 9.5 21.2 12l-6.7 2.5L12 21.2l-2.5-6.7L2.8 12l6.7-2.5z"/></svg><small>VETO AI</small></button>
+    <button class="nav-item" data-nav="privacy" type="button" aria-label="Защита"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5.2c0 5 3.2 8.7 8 10.8 4.8-2.1 8-5.8 8-10.8V6z"/><path d="m9 12 2 2 4-4"/></svg><small data-ui-text="privacy">Защита</small></button>
   </nav>
-
   <dialog class="vg26-command-dialog" id="vg26CommandDialog" aria-labelledby="vg26CommandTitle">
     <div class="vg26-command-head">
       <span class="vg26-command-mark"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /></span>
@@ -2233,7 +2231,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/veto-device-polish.js?v=20261025-cross-screen-42"></script>
-  <script src="/app.js?v=20261025-noir-1"></script>
+  <script src="/vetogram-country-picker.js?v=20261025-reborn-1"></script>
+  <script src="/app.js?v=20261025-reborn-1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
   <script src="/privacy.js?v=20261025-noir-3"></script>
   <script src="/chat-theme.js?v=20261018-global-theme-v1"></script>
