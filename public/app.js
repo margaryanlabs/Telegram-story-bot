@@ -1624,8 +1624,9 @@
     }
     await refreshViewerSync({ silent:true });
     if (viewerState.session?.connected === true && viewerState.session?.identityMismatch !== true) {
-      const opened = await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
-      if (!opened) profileSheet();
+      // A signed personal account login is separate from optional Business
+      // access. Never launch permission changes when a user taps "My account".
+      profileSheet();
     } else {
       connectionHelpSheet();
     }
