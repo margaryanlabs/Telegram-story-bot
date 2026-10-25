@@ -497,12 +497,12 @@ html#vetogram.vetogram-noir.veto-keyboard-open{scroll-padding-bottom:24px}
 #vetogram.vetogram-noir #seTemplates .se-template{isolation:isolate;overflow:hidden}
 #vetogram.vetogram-noir #seTemplates .se-template-canvas{
   position:absolute;inset:0;display:block;width:100%;height:100%;
-  border-radius:inherit;pointer-events:none;opacity:.97;z-index:-1;
+  border-radius:inherit;pointer-events:none;opacity:.97;z-index:0;
 }
 #vetogram.vetogram-noir #seTemplates .se-template::after{
   content:'';position:absolute;inset:35% 0 0;
   background:linear-gradient(transparent,#070a11c9);
-  pointer-events:none;z-index:-1;
+  pointer-events:none;z-index:0;
 }
 #vetogram.vetogram-noir #seTemplates .se-template strong,
 #vetogram.vetogram-noir #seTemplates .se-template small,
