@@ -248,7 +248,7 @@
   const exitFocus = () => {
     if (!focusActive) return;
     focusActive = false;
-    engine.classList.remove('v4-studio-focus','v4-studio-tools-open');
+    engine.classList.remove('v4-studio-focus','v4-studio-tools-open','v4-layer-direct-edit');
     document.body.classList.remove('v4-lock-scroll');
     const button = byId('v4CanvasFocus');
     if (button) { button.textContent = '⤢ На весь экран'; button.setAttribute('aria-pressed','false'); }
@@ -285,12 +285,23 @@
     inspectorClose.hidden=true;
     controls.prepend(inspectorClose);
     const closeTools=()=>{
-      engine.classList.remove('v4-studio-tools-open');
+      engine.classList.remove('v4-studio-tools-open','v4-layer-direct-edit');
       toolButton.setAttribute('aria-expanded','false');
       inspectorClose.hidden=true;
       toolButton.focus({preventScroll:true});
     };
     inspectorClose.addEventListener('click',closeTools);
+    // Selecting a live canvas text layer opens its actual settings directly.
+    // We never duplicate editor controls or create unsaved shadow state.
+    window.addEventListener('vetogram:story-layer-selected',()=>{
+      if(!focusActive || !engine.classList.contains('active'))return;
+      engine.classList.add('v4-studio-tools-open','v4-layer-direct-edit');
+      toolButton.setAttribute('aria-expanded','true');
+      inspectorClose.hidden=false;
+      byId('seTabLayers')?.click();
+      byId('seLayerText')?.focus({preventScroll:true});
+      announce('Выбран текстовый слой. Можно изменить текст, стиль и размер.');
+    });
     function enterFocus() {
       lastFocus = document.activeElement;
       focusActive = true;
