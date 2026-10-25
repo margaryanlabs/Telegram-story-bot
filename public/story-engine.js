@@ -674,8 +674,12 @@ function setup(){
       return;
     }
     pendingHeadingTap=null;
-    checkpoint();
-    state.selectedLayer=hit.id;state.dragLayer={owner:state.owner,draftId:state.draft.id,pointerId:event.pointerId};
+    // Merely tapping a layer opens its inspector; don't create an undo entry
+    // or move the layer for natural finger jitter.
+    state.selectedLayer=hit.id;state.dragLayer={
+      owner:state.owner,draftId:state.draft.id,pointerId:event.pointerId,
+      startX:event.clientX,startY:event.clientY,started:false
+    };
     canvas.setPointerCapture?.(event.pointerId);event.preventDefault();
     $('seLayerText').value=hit.text;$('seLayerStyle').value=hit.style;
     renderLayers();
@@ -696,7 +700,13 @@ function setup(){
       state.dragLayer=null;return;
     }
     const layer=state.draft.layers?.find(item=>item.id===state.selectedLayer);
-    if(!layer)return;
+    if(!layer||activePhotoGesture)return;
+    if(!drag.started){
+      if(Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY)<12)return;
+      // Exactly one history checkpoint for a real drag, never for selection.
+      historyGroup='';checkpoint();drag.started=true;
+      if(pendingTextTap?.pointerId===event.pointerId)pendingTextTap.moved=true;
+    }
     const p=pointerRatio(event);layer.x=p.x;layer.y=p.y;
     paint(canvas);event.preventDefault();
   });
