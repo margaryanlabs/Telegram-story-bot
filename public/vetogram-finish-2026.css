@@ -1655,3 +1655,173 @@ body.veto-chat-thread #telegramMirror.thread-mode
     animation:none!important;transition:none!important;transform:none!important;
   }
 }
+
+
+/* VETOGRAM 4.1 · responsive fit & interaction contract across 13 REAL screens.
+ * Avoids changing auth, Telegram threads, API state, media permissions or routes.
+ * Typography adapts to Fold/320px phones without clipping labels or controls.
+ */
+:where(.screen[data-screen]) {
+  min-width:0;
+}
+:where(.screen[data-screen]) > :where(section,div,article,header) {
+  min-width:0;
+  max-width:100%;
+}
+:where(.screen[data-screen]) :is(h1,h2,h3,p,strong,small,label) {
+  overflow-wrap:break-word;
+}
+:where(.screen[data-screen]) :is(button,a,input,textarea,select) {
+  -webkit-tap-highlight-color:rgba(245,151,148,.09);
+}
+:where(.screen[data-screen]) :is(button,a,input,textarea,select):focus-visible {
+  outline:2px solid var(--vg34-focus,var(--accent,#ffad9e));
+  outline-offset:3px;
+}
+:where(.screen[data-screen]) button:disabled {
+  cursor:not-allowed;
+}
+:where(.screen[data-screen]) :is(img,video,canvas) {
+  max-width:100%;
+}
+/* Shared secondary-page editorial rhythm. Specific module heroes override
+ * this with their richer designs; don't flatten any custom Story canvas. */
+.screen:is([data-screen="viewers"],[data-screen="analytics"],
+  [data-screen="privacy"],[data-screen="chats"],[data-screen="studio"],
+  [data-screen="relay"],[data-screen="archive"]) .page-head{
+  min-width:0;
+  margin-block-end:clamp(14px,2.4vw,22px);
+}
+.screen:is([data-screen="viewers"],[data-screen="analytics"],
+  [data-screen="privacy"],[data-screen="chats"],[data-screen="studio"],
+  [data-screen="relay"],[data-screen="archive"]) .page-head h1{
+  letter-spacing:-.045em;
+  line-height:1.08;
+  text-wrap:balance;
+}
+.screen:is([data-screen="viewers"],[data-screen="analytics"],
+  [data-screen="privacy"],[data-screen="chats"],[data-screen="studio"],
+  [data-screen="relay"],[data-screen="archive"]) .page-head p{
+  max-width:62ch;line-height:1.6;
+  color:var(--muted,var(--ct-muted,#aebacf));
+}
+.screen:is([data-screen="viewers"],[data-screen="analytics"],
+  [data-screen="privacy"],[data-screen="chats"],[data-screen="studio"],
+  [data-screen="relay"],[data-screen="archive"]) .page-head .kicker{
+  letter-spacing:.10em;
+}
+.screen[data-screen="analytics"] .stat-grid,
+.screen[data-screen="chats"] .smart-inbox-grid,
+.screen[data-screen="viewers"] .quick-steps,
+.screen[data-screen="studio"] .studio-hero,
+.screen[data-screen="ai"] .vtai-root,
+.screen[data-screen="story-engine"] .se-engine,
+.screen[data-screen="relay"] .relay-hero,
+.screen[data-screen="voice"] .veto-voice,
+.screen[data-screen="publish"] .hero-card{
+  min-width:0;max-width:100%;
+}
+.screen[data-screen="chats"] .smart-inbox-overview,
+.screen[data-screen="analytics"] .stat-card,
+.screen[data-screen="viewers"] .quick-start-card,
+.screen[data-screen="privacy"] .ghost-command-card,
+.screen[data-screen="studio"] .studio-hero,
+.screen[data-screen="relay"] .relay-hero,
+.screen[data-screen="archive"] .archive-list,
+.screen[data-screen="voice"] .veto-voice-monitor-card{
+  box-sizing:border-box;min-width:0;
+}
+/* Real filter controls and text inputs remain touchable; no invisible
+ * click overlays or pseudo-elements covering the actual controls. */
+.screen[data-screen="chats"] .smart-inbox-grid button,
+.screen[data-screen="story-engine"] .se-masthead-actions button,
+.screen[data-screen="voice"] .veto-voice-button,
+.screen[data-screen="ai"] .vtai-modes button{
+  touch-action:manipulation;
+}
+.screen[data-screen="chats"] .smart-inbox-grid button{
+  min-height:50px;
+}
+.screen[data-screen="chats"] .smart-inbox-grid button:focus-visible{
+  outline:2px solid var(--vg34-focus,#ffb59d);outline-offset:2px;
+}
+.screen[data-screen="archive"] :is(.archive-list,.empty-state){
+  max-width:100%;min-width:0;
+}
+@media(max-width:720px){
+  /* Several older grid styles assumed tablets. Distribute true page columns
+   * without forcing any backend or canvas-derived content to resize. */
+  .screen[data-screen="analytics"] .stat-grid,
+  .screen[data-screen="viewers"] .quick-steps{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .screen[data-screen="story-engine"] .se-masthead-actions{
+    display:flex;flex-wrap:wrap;align-items:stretch;gap:9px;
+  }
+  .screen[data-screen="story-engine"] .se-masthead-actions button{
+    min-height:44px;
+  }
+  .screen[data-screen="relay"] .relay-page-head,
+  .screen[data-screen="studio"] .studio-page-head{
+    min-width:0;
+  }
+}
+@media(max-width:480px){
+  .screen:is([data-screen="viewers"],[data-screen="analytics"],
+    [data-screen="privacy"],[data-screen="chats"],[data-screen="studio"],
+    [data-screen="relay"],[data-screen="archive"]) .page-head h1{
+    font-size:clamp(28px,8.6vw,39px);
+  }
+  .screen[data-screen="analytics"] .stat-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+  }
+  .screen[data-screen="viewers"] .quick-steps{
+    grid-template-columns:minmax(0,1fr);
+  }
+  .screen[data-screen="chats"] .smart-inbox-grid{
+    display:grid;
+    grid-template-columns:none;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(150px,67%);
+    gap:9px;
+    overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x proximity;
+    overscroll-behavior-inline:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+    padding:2px 2px 10px;
+  }
+  .screen[data-screen="chats"] .smart-inbox-grid button{
+    scroll-snap-align:start;
+    min-width:0;
+    min-height:68px;
+  }
+  .screen[data-screen="story-engine"] .se-masthead-actions button{
+    flex:1 1 150px;min-width:0;
+    overflow-wrap:anywhere;
+  }
+  /* Prevent iOS auto-zoom when a text field receives focus; this is local to
+   * editing controls, never a global change to body typography. */
+  :where(.screen[data-screen]) :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select){
+    font-size:max(16px,1em);
+  }
+}
+@media(max-width:360px){
+  .screen[data-screen="analytics"] .stat-grid{
+    grid-template-columns:minmax(0,1fr);
+  }
+  .screen[data-screen="chats"] .smart-inbox-grid{
+    grid-auto-columns:minmax(154px,76%);
+  }
+}
+/* Don't animate large dashboard layouts on repeated data refreshes. */
+@media(prefers-reduced-motion:reduce){
+  :where(.screen[data-screen]) :is(button,a,input,textarea,select){
+    scroll-behavior:auto;
+  }
+  .screen[data-screen="chats"] .smart-inbox-grid button,
+  .screen[data-screen="story-engine"] .se-masthead-actions button{
+    animation:none!important;transition:none!important;transform:none!important;
+  }
+}
