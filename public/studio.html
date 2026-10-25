@@ -153,7 +153,7 @@
         <div class="veto-command-home-top"><span>VETOGRAM / ЛИЧНЫЙ ЦЕНТР</span><i aria-hidden="true"></i><strong>Чаты · Истории · ИИ</strong></div>
         <div class="vg33-hero-sigil" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="140" height="140" /></div>
         <h1>Твоё пространство.<br><em>Твой ритм.</em></h1>
-        <p>Чаты, истории и инструменты — всегда под рукой.</p>
+        <p>Переписка, приватность, истории и ИИ — в одном ритме, без лишних экранов.</p>
         <div class="veto-command-home-actions">
           <button type="button" class="veto-command-home-primary" id="vetoHomeChatsPrimary" data-open-screen="telegram"><span>▤</span><strong>Открыть мои чаты</strong><b>↗</b></button>
           <button type="button" class="veto-command-home-connect" id="vetoHomeConnectPrimary"><span>⌁</span><strong>Подключение Telegram</strong><b>→</b></button>
@@ -676,7 +676,7 @@
         <div class="veto-voice-header">
           <div><span class="veto-voice-eyebrow">VETOGRAM · ГОЛОС</span>
             <h1>Голосовая<span> студия.</span></h1>
-            <p>Обработка голоса в реальном времени и запись голосовых без загрузки на сервер.</p>
+            <p>Выбери звучание, включи микрофон и запиши голосовое прямо на устройстве.</p>
           </div>
           <div class="veto-voice-security"><i></i> НА УСТРОЙСТВЕ</div>
         </div>
@@ -1482,17 +1482,17 @@
         <div class="vtai-modes" role="group" aria-label="Выбор AI-инструмента">
           <button type="button" data-vtai-mode="chat" aria-pressed="true" class="active">✧ AI-чат</button>
           <button type="button" data-vtai-mode="translate" aria-pressed="false">⇄ Перевод</button>
-          <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI Reply</button>
-          <button type="button" data-vtai-mode="action" aria-pressed="false">⌁ AI Action</button>
-          <button type="button" data-vtai-mode="brief" aria-pressed="false">◈ Задачи и договорённости</button>
-          <button type="button" data-vtai-mode="story" aria-pressed="false">▣ Режиссёр историй</button>
+          <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI-ответ</button>
+          <button type="button" data-vtai-mode="action" aria-pressed="false">⌁ AI-действия</button>
+          <button type="button" data-vtai-mode="brief" aria-pressed="false">◈ Задачи</button>
+          <button type="button" data-vtai-mode="story" aria-pressed="false">▣ AI-режиссёр</button>
           <button type="button" data-vtai-mode="campaign" aria-pressed="false">✦ История для продаж</button>
-          <button type="button" data-vtai-mode="negotiator" aria-pressed="false">◇ Переговоры Lab</button>
+          <button type="button" data-vtai-mode="negotiator" aria-pressed="false">◇ Переговоры</button>
         </div>
         <section class="vg26-creative-deck" id="vg26CreativeDeck" aria-label="Быстрые стили черновика" hidden>
           <div class="vg26-creative-head">
             <div>
-              <span class="vg26-creative-kicker">VETOGRAM · CREATIVE DECK</span>
+              <span class="vg26-creative-kicker">VETOGRAM · СТИЛИ</span>
               <h2 id="vg26CreativeTitle">Выбери подачу</h2>
               <p>Один клик — и стиль готов в редакторе. Никаких запросов AI и отправок без тебя.</p>
             </div>
@@ -1523,14 +1523,14 @@
             </select>
           </label>
           <section id="vtaiBriefPanel" class="vtai-neg-panel" hidden aria-label="Second Brain: задачи и договорённости">
-            <h2>Задачи и договорённости · договорённости</h2>
+            <h2>Задачи и договорённости</h2>
             <p class="vtai-note">Вставь сообщение или текст беседы, который тебе разрешено использовать. AI выделит до пяти задач и договорённостей, покажет цитату-основание и сроки только из исходного текста.</p>
             <p class="vtai-note" id="vtaiBriefStatus" role="status" aria-live="polite">Ничего не анализируется автоматически. Результат остаётся черновиком в этом окне.</p>
             <div id="vtaiBriefList" class="vtai-workspace-list" aria-live="polite"></div>
             <p class="vtai-note">Добавление в Память ИИ — отдельное действие; это не календарь, не уведомление и не автоматическое напоминание. Данные собеседников отправляются модели только после твоего разрешения.</p>
           </section>
           <section id="vtaiActionPanel" class="vtai-neg-panel" hidden aria-label="AI Action, подготовка сообщения">
-            <h2>AI Action · управляй словами</h2>
+            <h2>AI-действия · подготовка сообщения</h2>
             <p class="vtai-note">Например: «Напиши Артуру, что завтра в 15:00 созвонимся». AI подготовит текст, но получателя ты выберешь сам. Никаких автоматических отправок.</p>
             <div id="vtaiActionStatus" class="vtai-note" aria-live="polite">Опиши, кому и что нужно написать.</div>
             <div class="vtai-row">
@@ -1544,7 +1544,7 @@
             <p class="vtai-note">Проверяй имя и получателя перед отправкой. AI не имеет доступа к списку переписок и не может подтвердить, что это нужный человек.</p>
           </section>
           <section id="vtaiNegPanel" class="vtai-neg-panel" hidden aria-label="Безопасные настройки Negotiator">
-            <h2>Переговоры Lab · только черновики</h2>
+            <h2>Переговоры · только черновики</h2>
             <p class="vtai-note">Никаких автоматических переговоров и отправок. Выбери один чат, установи жёсткие ограничения, получи черновик и отдельно подтверди каждый ответ.</p>
             <div class="vtai-row">
               <button type="button" class="vtai-action" id="vtaiNegLoadChats">Загрузить мои чаты</button>
@@ -1736,7 +1736,7 @@
 
     <section class="screen se-engine" data-screen="story-engine" id="seEngine" aria-label="VETO Story Engine">
       <header class="noir-studio-head">
-        <div><span class="se-eyebrow">VETOGRAM / РЕДАКТОР ИСТОРИЙ</span><h1>Твоя история.</h1><small id="seAccountStatus">Загружаем пространство</small></div>
+        <div><span class="se-eyebrow">VETOGRAM / РЕДАКТОР ИСТОРИЙ</span><h1>Создай момент.</h1><small id="seAccountStatus">Проверяем доступ к черновикам</small></div>
         <button class="se-button" id="seNew" data-ui-text="newStory" type="button">＋ Новая</button>
       </header>
       <div class="noir-studio-modes" role="group" aria-label="Режим редактора">
