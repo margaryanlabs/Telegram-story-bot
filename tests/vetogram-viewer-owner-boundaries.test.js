@@ -43,7 +43,7 @@ function session(){
   const calls=[],requests=[],notices=[],nodes=new Map();
   const el=id=>{
     if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',checked:false,
-      hidden:false,src:'',className:'',disabled:false,
+      hidden:id==='sheet',src:'',className:'',disabled:false,
       removeAttribute(){},click(){},
     });
     return nodes.get(id);
