@@ -45,7 +45,7 @@ function focusHarness(){
     addEventListener(name,fn){listeners.set('doc:'+name,fn)}
   };
   const win={addEventListener(name,fn){listeners.set('win:'+name,fn)}};
-  const byId=id=>elements.get(id)||null;
+  const byId=id=>Array.from(elements.values()).find(x=>x.id===id)||null;
   const $=(selector,base)=>{
     if(base!==engine)return null;
     if(selector==='.se-stage')return stage;
@@ -66,7 +66,7 @@ function focusHarness(){
     return prevented;
   };
   return {ctx,el,body,sheet,doc,engine,listeners,announcements,sendEscape,
-    focusButton:el('v4CanvasFocus'),toolsButton:el('v4CanvasTools'),
+    focusButton:byId('v4CanvasFocus'),toolsButton:byId('v4CanvasTools'),
     ...ctx.exports};
 }
 
