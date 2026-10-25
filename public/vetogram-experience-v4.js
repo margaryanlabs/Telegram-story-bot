@@ -224,7 +224,8 @@
     toolButton.className = 'se-button v4-tools-button';
     toolButton.textContent = 'Инструменты';
     toolButton.setAttribute('aria-expanded','false');
-    toolButton.setAttribute('aria-controls', 'seToolText');
+    controls.id = controls.id || 'v4StudioControls';
+    toolButton.setAttribute('aria-controls', controls.id);
     toolButton.hidden = true;
     canvasActions.append(focusButton, toolButton);
     function enterFocus() {
