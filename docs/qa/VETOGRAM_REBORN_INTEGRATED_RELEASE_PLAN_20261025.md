@@ -306,3 +306,8 @@ The originally chosen **first Canvas Noir** direction is retained; the current s
 - Detailed device/state and screen acceptance matrix saved as `docs/qa/VETOGRAM_CANVAS_NOIR_V410_VISUAL_ACCEPTANCE.md`. It is marked **NOT visually approved** until actual 320/359/390/430/768/1024px + Fold landscape + iOS/Android Telegram WebView screenshots and keyboard/overflow checks are reviewed.
 - Last read-only release-surface check against the current branch confirmed 44/44 CSS/JS assets, 13 screen routes, 615 distinct DOM IDs, balanced canonical CSS braces, parsable changed JS and all 13 focused Node test suite paths present. This is not a `npm test` or Playwright run. Full Node test, dependency install, device E2E, live Telegram and final one-time deployment remain blocked.
 - Kept PR #185 **draft**. No merge, deployment, paid CI runner, Neon migration, AI provider credits or Telegram permission change.
+
+### V4.10 cascade follow-up
+
+- Found and fixed a shared CSS specificity collision: the premium global `topbar display:flex!important` and fixed `bottom-nav display:grid!important` overrode classic immersive Messenger hide rules. Added high-specificity `body.veto-chat-active .topbar{display:none!important}` and `body.veto-chat-thread .bottom-nav,#actionDock{display:none!important}` to existing `vetogram-noir.css`, preserving full-viewport chat layout.
+- Extended `tests/vetogram-v4-visual-hierarchy.test.js` to **10/10 isolated** real mode-controller/source cases, including explicit shell-vs-chat specificity. Native WebView visual verification is still pending.
