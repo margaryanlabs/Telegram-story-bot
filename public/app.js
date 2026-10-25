@@ -413,8 +413,13 @@
         nonce: composerNonce || (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
       });
 
-      const publishedStoryId = result.storyId || state.lastStory;
-      selectedViewerStory = publishedStoryId || selectedViewerStory;
+      const publishedStoryId = String(result.storyId || '');
+      if (result.published !== true || !/^[1-9]\d*$/.test(publishedStoryId)) {
+        const error = new Error('Telegram не подтвердил ID новой Story. Проверь свои Stories перед повторной публикацией.');
+        error.uncertain = true;
+        throw error;
+      }
+      selectedViewerStory = publishedStoryId;
       const publishedAudience = audienceLabel(result.verifiedAudience || state.audience);
       const cleaned = Array.isArray(result.cleanedUsernames) ? result.cleanedUsernames : [];
 
@@ -599,14 +604,38 @@
     };
     if (action) options.body = JSON.stringify({ action, ...payload });
 
-    const { response, data } = await requestJson('/api/miniapp', options, {
-      retry: !action || action === 'check' || action === 'publish_story',
-      timeoutMs: action === 'publish_story' ? 45000 : 15000,
-    });
+    let response, data;
+    try {
+      ({ response, data } = await requestJson('/api/miniapp', options, {
+        // A Telegram Story POST is not guaranteed idempotent on Bot API.
+        // Retrying automatically after a lost response can publish it twice.
+        retry: !action || action === 'check',
+        timeoutMs: action === 'publish_story' ? 45000 : 15000,
+      }));
+    } catch (error) {
+      if (signedOwner !== String(tg?.initData || ''))
+        throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
+      if (action === 'publish_story') {
+        const uncertain = new Error('Связь прервалась: публикация могла пройти. Проверь свои Stories в Telegram перед новой попыткой.');
+        uncertain.uncertain = true;
+        throw uncertain;
+      }
+      throw error;
+    }
 
     if (signedOwner !== String(tg?.initData || ''))
       throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Vetogram');
+    if (!response.ok || !data.ok) {
+      const message = data.error || 'Не удалось обновить Vetogram';
+      if (action === 'publish_story' &&
+          (response.status >= 500 ||
+            (response.status === 409 && /обрабатывается|processing/i.test(message)))) {
+        const uncertain = new Error(message + ' Результат публикации не подтверждён. Проверь свои Stories перед повторной отправкой.');
+        uncertain.uncertain = true;
+        throw uncertain;
+      }
+      throw new Error(message);
+    }
 
     if (Array.isArray(data.activity)) {
       state.activity = data.activity;
