@@ -36,6 +36,8 @@
     diagnostics: null,
     diagnosticsLoading: false,
     activeThread: null,
+    archiveThreadEpoch: 0,
+    refreshInFlight: false,
     query: '',
     filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'all',
     deepLinkHandled: false,
@@ -125,6 +127,8 @@
     privacyState.deletedFeedLoading=false;privacyState.deletedFeedHasMore=false;
     privacyState.diagnostics=null;privacyState.diagnosticsLoading=false;
     privacyState.activeThread=null;privacyState.loadingOlderThread=false;
+    privacyState.archiveThreadEpoch++;
+    privacyState.refreshInFlight=false;
     privacyState.query='';privacyState.filter='all';
     privacyState.deepLinkHandled=true; // Never replay previous owner's deep link.
     privacyState.lastTotalMessages=0;privacyState.lastRefreshAt=null;
@@ -972,6 +976,8 @@
   }
 
   function closeSheet() {
+    privacyState.archiveThreadEpoch++;
+    privacyState.activeThread=null;
     // Telegram BackButton must not allow an unobserved backup loop to continue.
     privacyState.backup.stopRequested = true;
     revokeMediaUrl();
@@ -990,6 +996,8 @@
   // controller. Closing from either route must still terminate Privacy work.
   window.addEventListener('vetogram:modal-closed',()=>{
     privacyState.backup.stopRequested=true;
+    privacyState.archiveThreadEpoch++;
+    privacyState.activeThread=null;
     revokeMediaUrl();
   });
 
@@ -1194,20 +1202,29 @@
   }
 
   async function openThread(chatId, { silent = false, mode = 'all', focusMessageId = null } = {}) {
+    const lease=ownerLease();
+    // A newer chat selection or explicit sheet close supersedes this response.
+    const intent=++privacyState.archiveThreadEpoch;
     const thread = privacyState.threads.find(item => String(item.chatId) === String(chatId))
       || { chatId, title: 'Telegram chat' };
     try {
       const data = await request('list_messages', { chatId, limit: 150, offset: 0 });
-      const items = data.messages || [];
+      assertOwner(lease);
+      if(intent!==privacyState.archiveThreadEpoch)return false;
+      const items = Array.isArray(data.messages) ? data.messages : [];
       renderThreadSheet(thread, items, { mode, focusMessageId, hasMore:data.hasMore === true, offset:items.length });
+      return true;
     } catch (error) {
-      if (!silent) toast(error.message);
+      if(error?.code!=='VETO_PRIVACY_OWNER_CHANGED' &&
+         intent===privacyState.archiveThreadEpoch && !silent)toast(error.message);
+      return false;
     }
   }
 
   async function loadOlderThread() {
     const active = privacyState.activeThread;
     if (!active || !active.hasMore || privacyState.loadingOlderThread) return;
+    const lease=ownerLease(),intent=privacyState.archiveThreadEpoch;
     privacyState.loadingOlderThread = true;
     const button = $('sheet')?.querySelector('[data-privacy-thread-more]');
     if (button) { button.disabled = true; button.textContent = 'Загружаю…'; }
@@ -1215,6 +1232,9 @@
       const data = await request('list_messages', {
         chatId:active.thread.chatId, limit:150, offset:active.offset || 0,
       });
+      assertOwner(lease);
+      if(intent!==privacyState.archiveThreadEpoch ||
+         privacyState.activeThread!==active)return;
       const older = Array.isArray(data.messages) ? data.messages : [];
       const ids = new Set(active.messages.map(x => String(x.message_id)));
       const additions = older.filter(x => !ids.has(String(x.message_id)));
@@ -1228,8 +1248,12 @@
       const sheet = $('sheet');
       if (sheet) sheet.scrollTop = 0;
     } catch (error) {
-      toast(error.message);
-      if (button) { button.disabled = false; button.textContent = 'Повторить загрузку'; }
+      if(error?.code!=='VETO_PRIVACY_OWNER_CHANGED' &&
+         intent===privacyState.archiveThreadEpoch &&
+         privacyState.activeThread===active){
+        toast(error.message);
+        if (button) { button.disabled = false; button.textContent = 'Повторить загрузку'; }
+      }
     } finally { privacyState.loadingOlderThread = false; }
   }
 
@@ -1241,19 +1265,28 @@
       : ghostDeepLink.mode === 'focus'
         ? 'focus'
         : 'all';
-    await openThread(ghostDeepLink.chatId, {
+    const opened=await openThread(ghostDeepLink.chatId, {
       silent: false,
       mode,
       focusMessageId: ghostDeepLink.messageId,
     });
-    if (ghostDeepLink.mode === 'edit' && ghostDeepLink.messageId) {
-      setTimeout(() => openVersions(ghostDeepLink.chatId, ghostDeepLink.messageId), 220);
+    if (opened && ghostDeepLink.mode === 'edit' && ghostDeepLink.messageId) {
+      const intent=privacyState.archiveThreadEpoch;
+      setTimeout(() => {
+        if(intent===privacyState.archiveThreadEpoch &&
+           String(privacyState.activeThread?.thread?.chatId)===ghostDeepLink.chatId)
+          void openVersions(ghostDeepLink.chatId, ghostDeepLink.messageId);
+      },220);
     }
   }
 
   async function openVersions(chatId, messageId) {
+    const lease=ownerLease(),intent=privacyState.archiveThreadEpoch;
     try {
       const data = await request('versions', { chatId, messageId });
+      assertOwner(lease);
+      if(intent!==privacyState.archiveThreadEpoch ||
+         String(privacyState.activeThread?.thread?.chatId)!==String(chatId))return;
       const versions = data.versions || [];
       const body = versions.map((item, index) => `
         <div class="privacy-version">
@@ -1273,7 +1306,8 @@
         </div>
       `);
     } catch (error) {
-      toast(error.message);
+      if(error?.code!=='VETO_PRIVACY_OWNER_CHANGED' &&
+         intent===privacyState.archiveThreadEpoch)toast(error.message);
     }
   }
 
