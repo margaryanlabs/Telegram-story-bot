@@ -108,6 +108,7 @@
   let composerPreviewUrl = '';
   let composerNonce = '';
   let composerBusy = false;
+  let composerGeneration = 0;
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -300,6 +301,8 @@
   }
 
   function resetComposer({ keepCaption = false } = {}) {
+    // Invalidate any in-flight image compression before it can replace a new draft.
+    composerGeneration++;
     composerFile = null;
     composerDataUrl = '';
     composerNonce = '';
@@ -320,7 +323,11 @@
   }
 
   async function prepareComposerFile(file) {
-    if (!file) return;
+    if (!file || state.processing) return;
+    const generation = ++composerGeneration;
+    const signedOwner = String(tg?.initData || '');
+    const isCurrent = () => generation === composerGeneration &&
+      signedOwner === String(tg?.initData || '');
 
     composerBusy = true;
     $('composerState').textContent = 'Подготавливаю…';
@@ -329,6 +336,7 @@
 
     try {
       const prepared = await compressStoryImage(file);
+      if (!isCurrent()) return;
       composerFile = file;
       composerDataUrl = prepared.dataUrl;
       composerNonce = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
@@ -342,12 +350,15 @@
       $('pickStoryMedia').hidden = true;
       notify('success');
     } catch (error) {
+      if (!isCurrent()) return;
       resetComposer({ keepCaption: true });
       notify('error');
       showToast(error.message);
     } finally {
-      composerBusy = false;
-      renderPublish();
+      if (isCurrent()) {
+        composerBusy = false;
+        renderPublish();
+      }
     }
   }
 
