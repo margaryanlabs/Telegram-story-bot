@@ -61,6 +61,13 @@ test('expired, malformed and absent challenges never offer a stale resume contro
     assert.equal(f.context.viewerState.loginPending,null);
   }
 });
+test('OTP error recovery is never interpreted as code receipt',()=>{
+  assert.match(app,/viewerData\?\.loginPending/);
+  assert.match(app,/viewerAuthRecovery/);
+  assert.match(app,/Продолжить начатый вход/);
+  assert.match(app,/Отменить запрос и сменить номер/);
+  assert.doesNotMatch(app,/viewerAuthRecovery[\s\S]{0,800}viewerApi\('send_code'/);
+});
 test('the success and password paths never automatically open Business permission requests',()=>{
   assert.doesNotMatch(app,/VetoTelegramOpenUnifiedOnboarding\?\.\(\{automatic:true\}\)/);
   assert.match(app,/viewerState\.loginPending = \{\s*stage:'code', delivery:data\.delivery/);
