@@ -131,6 +131,20 @@
       modules.forEach(node => body.append(node));
       // Ensure externally focused controls are not stranded inside a closed panel.
       disclosure.addEventListener('focusin', () => { disclosure.open = true; });
+      // Opening a task mode or receiving a genuinely pending approval reveals
+      // the existing real workspace instead of leaving controls inaccessible.
+      aiRoot.addEventListener('click', event => {
+        const mode = event.target.closest('[data-vtai-mode]')?.dataset.vtaiMode;
+        if (mode === 'brief') disclosure.open = true;
+      });
+      const pending = byId('vtaiApprovalCount');
+      if (pending) {
+        const revealPending = () => {
+          if (Number(pending.textContent?.trim()) > 0) disclosure.open = true;
+        };
+        new MutationObserver(revealPending).observe(pending,{childList:true,characterData:true,subtree:true});
+        revealPending();
+      }
     }
   }
 
