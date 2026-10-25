@@ -60,7 +60,8 @@ export function verifyNegotiationProposal(policy,proposal,{owner,chatId,now=Date
   const token=String.raw`(?:USD|EUR|AMD|RUB|GEL|GBP|dollars?|euros?|drams?|roubles?|rubles?|lari|pounds?|доллар(?:ов|а|ы)?|долл\.?|евро|драм(?:ов|а|ы)?|рубл(?:ей|я|ь|и)?|лар(?:и|ей)?|фунт(?:ов|а|ы)?|դրամ|ლარი|[$€֏₽₾£])`;
   // Allow sentence-final punctuation after a verified price; still reject unfinished decimals and grouping.
   const number=String.raw`(?:\d{1,7}(?:[.,]\d{1,2})?)(?![\d,]|\.\d)`;
-  const figures=new RegExp('('+token+')\\s*('+number+')|('+number+')\\s*('+token+')','giu');
+  // Never read the tail of 1,475 or 1.475 as a separate, cheaper offer of 475.
+  const figures=new RegExp('('+token+')\\s*('+number+')|(?<![\\d,.])('+number+')\\s*('+token+')','giu');
   const currencyMentions=new RegExp(token,'giu');
   let explicitFigures=0;
   const seenCurrencies=[...reply.matchAll(currencyMentions)].map(item=>
