@@ -1491,7 +1491,15 @@
       if($(id))$(id).value='';
     }
     if($('telegramMirrorSearch'))$('telegramMirrorSearch').value='';
-    if($('telegramThreadMessages'))$('telegramThreadMessages').replaceChildren();
+    const oldThreadBox=$('telegramThreadMessages');
+    if(oldThreadBox){
+      // A reused WebView must not expose old-owner message actions, even
+      // before the next thread's async render finishes.
+      delete oldThreadBox.dataset.mirrorOwnerId;
+      delete oldThreadBox.dataset.mirrorThreadId;
+      delete oldThreadBox.dataset.mirrorThreadGeneration;
+      oldThreadBox.replaceChildren();
+    }
     if($('telegramMirrorList'))$('telegramMirrorList').replaceChildren();
     if($('telegramThreadView'))$('telegramThreadView').hidden=true;
     if($('telegramChatsView'))$('telegramChatsView').hidden=false;
@@ -1995,7 +2003,13 @@
       ?'<div class="veto-mirror-first-preview" role="status"><span>ПОСЛЕДНЕЕ ИЗ СПИСКА</span><p>'+
         safe(String(chat.preview).slice(0,200))+'</p><small>Открываю историю из Telegram…</small></div>'
       :empty('Открываю переписку','Получаю последние сообщения из Telegram…');
-    $('telegramThreadMessages').innerHTML=teaser;
+    const threadBox=$('telegramThreadMessages');
+    // Public DOM markers describe the currently verified UI owner/thread,
+    // without exposing Telegram signed initData, session or private messages.
+    threadBox.dataset.mirrorOwnerId=String(tg?.initDataUnsafe?.user?.id||'');
+    threadBox.dataset.mirrorThreadId=String(chat.id);
+    threadBox.dataset.mirrorThreadGeneration=String(state.threadGeneration);
+    threadBox.innerHTML=teaser;
     if($('telegramThreadJumpLatest'))$('telegramThreadJumpLatest').hidden=true;
     renderSendComposer();
     threadNotice('');
@@ -2160,6 +2174,12 @@
     closeThreadSearch();
     cancelVoiceCapture();
     state.thread=null;state.threadLoading=false;state.intelFocus=null;
+    const oldThreadBox=$('telegramThreadMessages');
+    if(oldThreadBox){
+      delete oldThreadBox.dataset.mirrorOwnerId;
+      delete oldThreadBox.dataset.mirrorThreadId;
+      delete oldThreadBox.dataset.mirrorThreadGeneration;
+    }
     state.deliveryStage=null;renderDeliveryStatus();
     state.replyTo=null;state.pendingAttachment=null;renderReplyPreview();renderAttachmentChip();
     $('telegramThreadView').hidden=true;
