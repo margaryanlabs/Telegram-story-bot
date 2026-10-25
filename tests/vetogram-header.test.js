@@ -11,13 +11,13 @@ const js = read('public/vetogram-header.js');
 test('Vetogram keeps the canonical red/silver split-V identity in its real inbox',()=>{
   assert.match(html, /<title>Vetogram/);
   assert.match(html, /aria-label="VETOGRAM"><span>VETO<\/span><i>GRAM/);
-  assert.match(html, /class="veto-mirror-heading vetogram-header is-expanded"/);
+  assert.match(html, /class="veto-mirror-heading vetogram-header"/);
   assert.match(html, /veto-telegram-mark\.svg\?v=20261019-brand-v2/);
   assert.doesNotMatch(html, /VETO Telegram|StoryLab|Buy Veta/i);
 });
 
 test('the final stylesheet and accessible controller are wired AFTER existing cosmetics',()=>{
-  assert.match(html, /id="vetogramHeaderToggle"[^>]+aria-controls="vetogramHeaderActions"[^>]+aria-expanded="true"/);
+  assert.match(html, /id="vetogramHeaderToggle"[^>]+aria-controls="vetogramHeaderActions"[^>]+aria-expanded="false"/);
   assert.ok(html.indexOf('vetogram-header.css')>html.indexOf('veto-launch-polish.css'));
   assert.ok(html.indexOf('vetogram-header.js')>html.indexOf('veto-launch-polish.js'));
   assert.match(css, /\.vetogram-header\.is-expanded/);
@@ -28,7 +28,7 @@ test('the final stylesheet and accessible controller are wired AFTER existing co
   assert.doesNotThrow(()=>new Script(js));
 });
 
-test('header toggle is expanded on load and collapses only on tap',()=>{
+test('desktop header expands on load; user tap collapses and expands',()=>{
   const attrs={};const listeners={};const classes=new Set();const winListeners={};
   const heading={classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name)}}};
   const button={
@@ -44,6 +44,7 @@ test('header toggle is expanded on load and collapses only on tap',()=>{
   };
   const win={
     scrollY:0,
+    matchMedia(query){return {matches:false}},
     requestAnimationFrame(fn){fn();return 1},
     addEventListener(name,handler){winListeners[name]=handler}
   };
@@ -57,4 +58,22 @@ test('header toggle is expanded on load and collapses only on tap',()=>{
   assert.equal(attrs['aria-expanded'],'false');
   listeners.click();
   assert.equal(attrs['aria-expanded'],'true');
+});
+
+test('phone opens with compact header, and can explicitly expand it',()=>{
+  const attrs={}, listeners={}, classes=new Set();
+  const header={classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name)}}};
+  const toggle={setAttribute(k,v){attrs[k]=v},addEventListener(k,cb){listeners[k]=cb}};
+  const document={
+    querySelector:s=>s==='#telegramMirror .vetogram-header'?header:null,
+    getElementById:id=>id==='vetogramHeaderToggle'?toggle:null,
+    body:{classList:{add(){}}}
+  };
+  const window={matchMedia:q=>({matches:q==='(max-width: 620px)'})};
+  runInNewContext(js,{document,window});
+  assert.equal(attrs['aria-expanded'],'false');
+  assert.equal(classes.has('is-expanded'),false);
+  listeners.click();
+  assert.equal(attrs['aria-expanded'],'true');
+  assert.equal(classes.has('is-expanded'),true);
 });

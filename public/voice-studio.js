@@ -14,7 +14,7 @@
   const state={
     context:null,stream:null,source:null,nodes:null,oscillator:null,
     recorder:null,chunks:[],recordedBlob:null,recordedUrl:null,
-    preset:'clean',morph:75,active:false,recording:false,
+    preset:'clean',morph:75,active:false,recording:false,micStarting:false,micEpoch:0,
     startedAt:0,raf:0,monitor:false,
   };
   const extFor=mime=>mime.includes('mp4')?'m4a':mime.includes('ogg')?'ogg':'webm';
@@ -22,8 +22,12 @@
     const el=$('voiceStatus');if(el){el.textContent=String(message);el.dataset.state='visible';}
   };
   function updateButtons(){
-    $('voiceMicButton').disabled=!audioSupported||state.active;
-    $('voiceMicStop').disabled=!state.active;
+    $('voiceMicButton').disabled=!audioSupported||state.active||state.micStarting;
+    $('voiceMicButton').setAttribute('aria-busy',String(state.micStarting));
+    $('voiceMicStop').disabled=!state.active&&!state.micStarting;
+    $('voiceMicStop').textContent=state.micStarting?'Отменить запрос':'Отключить';
+    $('voiceMicStop').setAttribute('aria-label',state.micStarting?
+      'Отменить запрос доступа к микрофону':'Выключить микрофон');
     $('voiceRecord').disabled=!state.active||state.recording;
     $('voiceStopRecord').disabled=!state.recording;
     $('voiceShare').disabled=!state.recordedBlob;
@@ -35,8 +39,9 @@
       btn.setAttribute('aria-pressed',String(active));
     });
     $('voiceMicState').textContent=state.recording?'● Запись':
-      state.active?'● Микрофон включён':'◌ Микрофон выключен';
+      state.active?'● Микрофон включён':state.micStarting?'◌ Запрашиваю доступ к микрофону':'◌ Микрофон выключен';
     $('voiceMicState').classList.toggle('live',state.active);
+    $('voiceMicState').classList.toggle('is-requesting-mic',state.micStarting);
     $('voiceMicState').classList.toggle('recording',state.recording);
   }
   function setStrength(){
@@ -86,6 +91,8 @@
     if($('voiceMonitor'))$('voiceMonitor').checked=false;
   }
   function stopMic(){
+    state.micEpoch++;
+    state.micStarting=false;
     if(state.recording){try{state.recorder?.stop()}catch{};state.recording=false;}
     stopMonitor();
     if(state.oscillator){try{state.oscillator.stop()}catch{}}
@@ -98,12 +105,16 @@
     updateButtons();
   }
   async function startMic(){
-    if(state.active||!audioSupported){
+    if(state.active||state.micStarting||!audioSupported){
       if(!audioSupported)toast('В этом WebView запись пока недоступна. Открой VETO в актуальном Telegram на Android или iOS.');
       return;
     }
-    $('voiceMicButton').disabled=true;
+    const epoch=++state.micEpoch;
+    state.micStarting=true;
+    updateButtons();
     toast('Запрашиваю разрешение на микрофон…');
+    const isCurrent=()=>epoch===state.micEpoch&&!document.hidden&&
+      document.querySelector('.screen.active')?.dataset?.screen==='voice';
     let stream=null,context=null;
     try{
       // Only initiated by a real tap. Neither audio nor microphone data goes to our server.
@@ -111,9 +122,18 @@
         echoCancellation:true,noiseSuppression:true,autoGainControl:false,
         channelCount:1,
       },video:false});
+      if(!isCurrent()){
+        stream.getTracks().forEach(track=>track.stop());
+        return;
+      }
       const AudioContextClass=window.AudioContext||window.webkitAudioContext;
       context=new AudioContextClass();
       await context.resume();
+      if(!isCurrent()){
+        stream.getTracks().forEach(track=>track.stop());
+        await context.close().catch(()=>{});
+        return;
+      }
       const source=context.createMediaStreamSource(stream);
       const highpass=context.createBiquadFilter();highpass.type='highpass';highpass.frequency.value=75;
       const low=context.createBiquadFilter();low.type='lowshelf';low.frequency.value=250;
@@ -146,10 +166,16 @@
     }catch(error){
       stream?.getTracks()?.forEach(t=>t.stop());
       context?.close().catch(()=>{});
-      const denied=error?.name==='NotAllowedError'||error?.name==='PermissionDeniedError';
-      toast(denied?'Telegram не разрешил доступ к микрофону. Разреши его в настройках приложения.':
-        'Не удалось открыть микрофон. Проверь разрешения и попробуй ещё раз.');
-      updateButtons();
+      if(epoch===state.micEpoch){
+        const denied=error?.name==='NotAllowedError'||error?.name==='PermissionDeniedError';
+        toast(denied?'Telegram не разрешил доступ к микрофону. Разреши его в настройках приложения.':
+          'Не удалось открыть микрофон. Проверь разрешения и попробуй ещё раз.');
+      }
+    }finally{
+      if(epoch===state.micEpoch){
+        state.micStarting=false;
+        updateButtons();
+      }
     }
   }
   function releaseRecording(){
@@ -244,9 +270,15 @@
     }else{stopMonitor();toast('Мониторинг выключен. Запись обработанного голоса доступна.');}
   });
   window.addEventListener('veto:screen-changed',event=>{
-    if(event.detail?.screen!=='voice'&&state.active){
+    if(event.detail?.screen!=='voice'&&(state.active||state.micStarting)){
       stopMic();
       toast('Микрофон выключен при выходе из Voice Studio.');
+    }
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&(state.active||state.micStarting)){
+      stopMic();
+      toast('Микрофон выключен при сворачивании Vetogram.');
     }
   });
   window.addEventListener('pagehide',()=>{

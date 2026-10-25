@@ -10,6 +10,11 @@
   const editable=element=>Boolean(element?.matches?.(
     'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),textarea,select,[contenteditable="true"]'
   ));
+  const editableOnActiveScreen=element=>{
+    if(!editable(element))return false;
+    const screen=element.closest?.('.screen');
+    return !screen||screen.classList.contains('active');
+  };
   function measure() {
     frame=0;
     const vv=window.visualViewport;
@@ -20,7 +25,7 @@
     const bottom=Math.max(0,Math.round(layoutHeight-(top+visibleHeight)));
     // Browser toolbars may change visualViewport. Only an editable focus AND
     // a substantial viewport reduction qualify as a keyboard.
-    const keyboard=editable(document.activeElement) && scale<=1.05 &&
+    const keyboard=editableOnActiveScreen(document.activeElement) && scale<=1.05 &&
       (bottom>110 || visibleHeight<layoutHeight*0.73);
     const signature=[visibleHeight,bottom,keyboard].join('/');
     if(signature===previous)return;
@@ -39,6 +44,15 @@
   window.visualViewport?.addEventListener('resize',schedule,{passive:true});
   window.visualViewport?.addEventListener('scroll',schedule,{passive:true});
   document.addEventListener('focusin',schedule);
+  // Navigation can hide the focused input before the keyboard resize event.
+  // Clear the abandoned focus so a prior screen cannot hold keyboard geometry.
+  window.addEventListener('veto:screen-changed',()=>{
+    const focused=document.activeElement;
+    const screen=focused?.closest?.('.screen');
+    if(editable(focused)&&screen&&!screen.classList.contains('active'))
+      focused.blur?.();
+    schedule();
+  });
   document.addEventListener('focusout',()=>{
     // Focus transfer between inputs may happen in the same turn.
     setTimeout(schedule,80);

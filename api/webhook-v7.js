@@ -461,7 +461,9 @@ async function refreshConnection(token, chatId, origin, settings) {
 
 async function persistBusinessConnection(token, origin, connection, { notify = false } = {}) {
   const chatId = connection?.user_chat_id;
-  if (!chatId) return null;
+  const ownerUserId = connection?.user?.id;
+  if (!chatId || !ownerUserId || !connection?.id)
+    throw new Error('BUSINESS_CONNECTION_OWNER_UNVERIFIED');
 
   const settings = await getStoredSettings(token, chatId);
   const live = Boolean(connection?.is_enabled);
@@ -480,7 +482,8 @@ async function persistBusinessConnection(token, origin, connection, { notify = f
 
   await saveSettings(token, chatId, origin, next);
   await upsertBusinessConnectionState({
-    telegramUserId: chatId,
+    // Database and signed Mini App use User.id, not the chat with the bot.
+    telegramUserId: ownerUserId,
     businessConnectionId: live ? connection.id : null,
     isEnabled: live,
     canManageStories: live && rights,
@@ -992,6 +995,13 @@ export default async function handler(req, res) {
         const connection = await tg(token, 'getBusinessConnection', {
           business_connection_id: connectionId,
         });
+        // Revoked Business access is a terminal condition, not an archive
+        // transport failure. Acknowledge the event without retaining content.
+        if (connection?.is_enabled === false) {
+          res.status(200).json({ok:true,privacy_message_ignored:'business_connection_disabled'});
+          return;
+        }
+        if (connection?.is_enabled !== true) throw new Error('BUSINESS_CONNECTION_STATE_UNVERIFIED');
         result = await archiveBusinessMessage(
           connection,
           privacyBusinessMessage,
@@ -1059,6 +1069,11 @@ export default async function handler(req, res) {
         const connection = await tg(token, 'getBusinessConnection', {
           business_connection_id: deleted.business_connection_id,
         });
+        if (connection?.is_enabled === false) {
+          res.status(200).json({ok:true,privacy_delete_ignored:'business_connection_disabled'});
+          return;
+        }
+        if (connection?.is_enabled !== true) throw new Error('BUSINESS_CONNECTION_STATE_UNVERIFIED');
         result = await archiveDeletedBusinessMessages(connection, deleted);
 
         if (result?.retained && Array.isArray(result?.mediaRecovery) && result.mediaRecovery.length) {
@@ -1496,6 +1511,9 @@ export default async function handler(req, res) {
       }
 
       const connection = await tg(token, 'getBusinessConnection', { business_connection_id: connectionId });
+      if (!message?.from?.id || String(connection?.user?.id)!==String(message.from.id) ||
+          String(connection?.id)!==String(connectionId))
+        throw new Error('BUSINESS_STORY_OWNER_OR_CONNECTION_MISMATCH');
       if (!connection.is_enabled) throw new Error('Business connection is disabled');
       if (!connection.rights?.can_manage_stories) throw new Error('Нет права can_manage_stories');
       if (current.audience === 'standard' && current.excluded?.length) {

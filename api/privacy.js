@@ -205,7 +205,9 @@ async function ghostDiagnostics(token, userId) {
   ].every(Boolean);
 
   return {
-    status: coreReady ? 'ready' : 'attention',
+    // Configured infrastructure is not evidence of delivered delete events.
+    // Show full readiness only with a real persisted owner-scoped delete proof.
+    status: !coreReady ? 'attention' : lastDelete ? 'ready' : 'configured',
     checkedAt: new Date().toISOString(),
     checks,
     business: {
@@ -228,7 +230,7 @@ async function ghostDiagnostics(token, userId) {
     },
     note: lastDelete
       ? 'At least one real Telegram delete event has been captured by VETO Privacy.'
-      : 'Core pipeline can be ready even before the first real delete event. No synthetic deletion is created.',
+      : 'Infrastructure may be configured, but no real delete event has been captured yet. Test a new message, edit and deletion in an allowed private chat.'
   };
 }
 

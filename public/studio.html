@@ -19,7 +19,12 @@
   <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261019-brand-v2" />
   <link rel="stylesheet" href="/veto-launch-polish.css?v=20261019-launch-01" />
   <link rel="stylesheet" href="/vetogram-header.css?v=20261021-v1" />
-  <link rel="stylesheet" href="/story-engine.css?v=20261022-se1" />
+  <link rel="stylesheet" href="/story-engine.css?v=20261024-release-polish" />
+  <link rel="stylesheet" href="/vetogram-ai.css?v=20261024-release-polish" />
+  <link rel="stylesheet" href="/vetogram-2026.css?v=20261024-premium-r1" />
+  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261024-cinematic-v1" />
+  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261024-v3-premium-deck" />
+  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261025-ui-fit-41" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -108,9 +113,14 @@
         <div class="brand-mark veto-mark" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /><i></i></div>
         <div class="brand-copy">
           <strong>Vetogram</strong>
-          <span>Private Telegram OS · Stories · Chats · Relay · Intelligence</span>
+          <span>Чаты · Истории · Приватность · AI</span>
         </div>
       </div>
+      <button class="vg26-command-trigger" id="vg26CommandOpen" type="button"
+        aria-label="Быстрые действия Vetogram" aria-haspopup="dialog" aria-controls="vg26CommandDialog"
+        aria-keyshortcuts="Control+K Meta+K" title="Поиск и быстрые действия">
+        <span aria-hidden="true">⌕</span><span class="vg26-command-trigger-label">Найти инструмент</span><kbd>⌘ K</kbd>
+      </button>
       <div class="veto-global-appearance" id="vetoGlobalAppearance">
         <button type="button" id="vetoGlobalThemeToggle" class="veto-global-theme-toggle" aria-label="Тема Vetogram" aria-haspopup="true" aria-expanded="false" aria-controls="vetoGlobalThemeMenu" title="Тема приложения">◐</button>
         <div id="vetoGlobalThemeMenu" class="veto-global-theme-menu" hidden>
@@ -136,20 +146,86 @@
 
     <section class="screen active control-home" data-screen="home">
       <section class="veto-command-home" aria-label="Vetogram Command Hub">
-        <div class="veto-command-home-top"><span>VETOGRAM / PRIVATE TELEGRAM</span><i aria-hidden="true"></i><strong>Твой контроль</strong></div>
-        <h1>Telegram.<br><em>На твоих условиях.</em></h1>
-        <p>Переписки — главное. Всё остальное на расстоянии одного касания.</p>
+        <div class="veto-command-home-top"><span>VETOGRAM / ЛИЧНЫЙ ЦЕНТР</span><i aria-hidden="true"></i><strong>Чаты · Stories · AI</strong></div>
+        <div class="vg33-hero-sigil" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="140" height="140" /></div>
+        <h1>Твой Telegram.<br><em>Больше возможностей.</em></h1>
+        <p>Общайся, создавай Stories и управляй приватностью в одном месте. Только те действия, которые выбираешь ты.</p>
         <div class="veto-command-home-actions">
           <button type="button" class="veto-command-home-primary" id="vetoHomeChatsPrimary" data-open-screen="telegram"><span>▤</span><strong>Открыть мои чаты</strong><b>↗</b></button>
           <button type="button" class="veto-command-home-connect" id="vetoHomeConnectPrimary"><span>⌁</span><strong>Подключение Telegram</strong><b>→</b></button>
         </div>
-        <div class="veto-command-home-grid" aria-label="Инструменты Vetogram">
-          <button type="button" data-open-screen="privacy"><span>↶</span><strong>Privacy Vault</strong><small>Anti-Delete и сохранённые копии</small></button>
-          <button type="button" data-open-screen="viewers"><span>◉</span><strong>Stories Intel</strong><small>Просмотры и аудитория</small></button>
-          <button type="button" data-open-screen="story-engine"><span>✧</span><strong>VETO Story Engine</strong><small>Создавай · Portal · Remix</small></button>
-          <button type="button" data-open-screen="voice"><span>♫</span><strong>Voice Lab</strong><small>Голосовые и эффекты</small></button>
-          <button type="button" data-open-screen="relay"><span>⇄</span><strong>Relay</strong><small>Дополнительное подключение</small></button>
+
+      </section>
+      <section class="vg27-mission" id="vg27Mission" aria-label="Состояние и быстрый старт Vetogram">
+        <div class="vg27-mission-heading">
+          <div>
+            <span class="vg27-eyebrow"><span class="vg27-pulse-dot" aria-hidden="true"></span> СОСТОЯНИЕ СИСТЕМЫ</span>
+            <h2 id="vg27MissionTitle">Проверяем подключение</h2>
+            <p id="vg27MissionDetail">Без автоматических подключений и скрытых действий.</p>
+          </div>
+          <span class="vg27-mission-signature" aria-hidden="true">V / 03</span>
         </div>
+        <div class="vg27-mission-statuses" aria-label="Статусы возможностей">
+          <button type="button" class="vg27-mission-state" data-open-screen="telegram">
+            <span class="vg27-mission-icon" aria-hidden="true">◎</span>
+            <span class="vg27-mission-label">TELEGRAM <strong id="vg27MissionAccount" data-status="checking">Проверяем</strong></span>
+            <span class="vg27-mission-chevron" aria-hidden="true">↗</span>
+          </button>
+          <button type="button" class="vg27-mission-state" data-open-screen="privacy">
+            <span class="vg27-mission-icon" aria-hidden="true">↶</span>
+            <span class="vg27-mission-label">ANTI-DELETE <strong id="vg27MissionPrivacy" data-status="checking">Проверяем</strong></span>
+            <span class="vg27-mission-chevron" aria-hidden="true">↗</span>
+          </button>
+          <button type="button" class="vg27-mission-state" data-open-screen="publish">
+            <span class="vg27-mission-icon" aria-hidden="true">✳</span>
+            <span class="vg27-mission-label">STORIES <strong id="vg27MissionStories" data-status="checking">Проверяем</strong></span>
+            <span class="vg27-mission-chevron" aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <div class="vg27-mission-bottom">
+          <span><span aria-hidden="true">◈</span> Разрешения не означают, что сообщения уже восстановлены или Story опубликована.</span>
+          <button type="button" id="vg27MissionAction">Подключить Telegram →</button>
+        </div>
+      </section>
+      <section class="vg33-tools-panel" aria-label="Возможности Vetogram">
+        <div class="vgx-tools-heading vg33-tools-heading"><strong>Твои инструменты</strong><span>Открой нужное в одно касание</span></div>
+        <div class="veto-command-home-grid" aria-label="Инструменты Vetogram">
+          <button type="button" data-open-screen="privacy"><span>↶</span><strong>Anti-Delete</strong><small>Удалённые и изменённые сообщения</small></button>
+          <button type="button" data-open-screen="viewers"><span>◉</span><strong>Просмотры Stories</strong><small>Аудитория и активность</small></button>
+          <button type="button" data-open-screen="story-engine"><span>✧</span><strong>Story Studio</strong><small>Шаблоны, Portal и Remix</small></button>
+          <button type="button" data-open-screen="ai"><span>✦</span><strong>VETO AI</strong><small>Ответы, перевод и идеи</small></button>
+          <button type="button" data-open-screen="voice"><span>♫</span><strong>Voice Studio</strong><small>Запись и обработка голоса</small></button>
+          <button type="button" data-open-screen="relay"><span>⇄</span><strong>Relay</strong><small>Отдельный путь подключения</small></button>
+        </div>
+      </section>
+      <section class="vg26-resume" id="vg26Resume" aria-label="Продолжить работу в Vetogram">
+        <div class="vg26-resume-head">
+          <div><span class="vg26-resume-eyebrow">ТВОЙ РИТМ</span><h2>Продолжить работу</h2></div>
+          <span class="vg26-resume-privacy">Без истории сообщений</span>
+        </div>
+        <p class="vg26-resume-intro">Разделы, которые ты открывал в этом сеансе. Только названия инструментов — без чатов и содержимого.</p>
+        <div class="vg26-resume-recent" id="vg26ResumeRecent" role="group" aria-label="Недавние инструменты">
+          <span class="vg26-resume-empty">Начни с чатов, Stories или AI — здесь появятся твои быстрые переходы.</span>
+        </div>
+        <div class="vg30-workflows-heading">
+          <div><span class="vg26-resume-eyebrow">БЫСТРЫЕ СЦЕНАРИИ</span><h3>С чего начнём?</h3></div>
+          <small>Один выбор — готовый инструмент. Без автоматических отправок.</small>
+        </div>
+        <div class="vg26-resume-flows vg30-flow-deck" role="group" aria-label="Быстрые сценарии VETOGRAM">
+          <button class="vg30-flow" type="button" data-vg30-flow="reply" aria-pressed="false">
+            <span class="vg26-flow-icon" aria-hidden="true">✦</span><span class="vg30-flow-copy"><span class="vg30-flow-eyebrow">VETO AI</span><strong>Ответить красиво</strong><small>AI-помощник для твоего ответа</small></span><em aria-hidden="true">↗</em>
+          </button>
+          <button class="vg30-flow" type="button" data-vg30-flow="campaign" aria-pressed="false">
+            <span class="vg26-flow-icon" aria-hidden="true">✳</span><span class="vg30-flow-copy"><span class="vg30-flow-eyebrow">STORY-TO-SALE</span><strong>Создать сильную Story</strong><small>Идея, текст и призыв к действию</small></span><em aria-hidden="true">↗</em>
+          </button>
+          <button class="vg30-flow" type="button" data-vg30-flow="privacy" aria-pressed="false">
+            <span class="vg26-flow-icon" aria-hidden="true">↶</span><span class="vg30-flow-copy"><span class="vg30-flow-eyebrow">PRIVACY VAULT</span><strong>Проверить Anti-Delete</strong><small>Архив, удалённые и разрешения</small></span><em aria-hidden="true">↗</em>
+          </button>
+          <button class="vg30-flow" type="button" data-vg30-flow="voice" aria-pressed="false">
+            <span class="vg26-flow-icon" aria-hidden="true">♫</span><span class="vg30-flow-copy"><span class="vg30-flow-eyebrow">VOICE LAB</span><strong>Сделать голосовое</strong><small>Запись, обработка и эффекты</small></span><em aria-hidden="true">↗</em>
+          </button>
+        </div>
+        <p class="vg30-flow-status" id="vg30FlowStatus" role="status" aria-live="polite">Всё запускается только после твоего нажатия.</p>
       </section>
       <details class="veto-command-advanced" id="vetoCommandAdvanced">
         <summary><span>Все инструменты и состояние системы</span><b>⌄</b></summary>
@@ -319,11 +395,11 @@
           <div><span class="kicker">Быстрые действия</span><h2>Что сделать сейчас</h2></div>
         </div>
         <div class="control-actions">
-          <button type="button" data-open-screen="stories"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
-          <button type="button" data-open-screen="studio"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
+          <button type="button" data-open-screen="publish"><span>＋</span><strong>Новая Story</strong><small>Аудитория и защита</small></button>
+          <button type="button" data-open-screen="creator"><span>✦</span><strong>Создать Brand Pack</strong><small>6–12 emoji · motion</small></button>
           <button type="button" data-open-screen="telegram"><span>▤</span><strong>Мои чаты</strong><small>Настоящий Telegram внутри Vetogram</small></button>
           <button type="button" data-open-screen="voice"><span>◉</span><strong>Voice Studio</strong><small>Живые эффекты · голосовые</small></button>
-          <button type="button" data-open-screen="ghost"><span>◌</span><strong>Privacy</strong><small>Anti-Delete · Inbox · Vault</small></button>
+          <button type="button" data-open-screen="privacy"><span>◌</span><strong>Privacy</strong><small>Anti-Delete · Inbox · Vault</small></button>
           <button type="button" data-open-screen="relay"><span>◉</span><strong>Защита Telegram</strong><small>Одно нажатие · Автовыбор</small></button>
         </div>
       </section>
@@ -347,11 +423,16 @@
     <section class="screen" data-screen="telegram" aria-label="Мои живые Telegram чаты">
       <section class="veto-mirror" id="telegramMirror" data-chat-theme="graphite">
         <div class="veto-mirror-list" id="telegramChatsView">
-          <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETOGRAM · CLOUD CHATS <span class="veto-mirror-readonly">ЧАТЫ + АРХИВ</span></div>
-          <div class="veto-mirror-heading vetogram-header is-expanded">
+          <div class="veto-mirror-eyebrow"><span class="veto-mirror-live-pip"></span> VETOGRAM · ЛИЧНЫЕ ЧАТЫ <span class="veto-mirror-readonly">ЧАТЫ + АРХИВ</span></div>
+          <div class="veto-mirror-heading vetogram-header">
             <div class="veto-messenger-title"><button type="button" class="veto-messenger-exit" data-open-screen="home" aria-label="В главное меню Vetogram">← Vetogram</button><span class="veto-inbox-signature" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="46" height="46" /></span><div class="veto-inbox-title-copy"><span class="veto-inbox-wordmark" aria-label="VETOGRAM"><span>VETO</span><i>GRAM</i></span><h1>Чаты</h1><span class="veto-inbox-tagline">Твой Telegram. Под твоим контролем.</span></div></div>
             <div class="veto-mirror-header-actions" id="vetogramHeaderActions"><button type="button" class="veto-mirror-icon-btn veto-messenger-tools-toggle" id="vetoMessengerToolsToggle" aria-label="Инструменты Vetogram" aria-controls="vetoMessengerTools" aria-expanded="false" title="Инструменты Vetogram">✦</button><button type="button" class="veto-mirror-icon-btn" id="telegramMirrorArchiveLink" aria-label="Открыть защиту и архив">↶</button><button class="veto-mirror-icon-btn" type="button" id="telegramMirrorRefresh" aria-label="Обновить чаты">↻</button></div>
-            <button type="button" id="vetogramHeaderToggle" aria-label="Свернуть верхнюю панель чатов" aria-controls="vetogramHeaderActions" aria-expanded="true" title="Свернуть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <button type="button" id="vetogramHeaderToggle" aria-label="Развернуть верхнюю панель чатов" aria-controls="vetogramHeaderActions" aria-expanded="false" title="Развернуть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          </div>
+          <div class="vg26-inbox-shortcuts" role="group" aria-label="Быстрые инструменты для чатов">
+            <button type="button" data-open-screen="ai" data-ai-mode="reply"><span aria-hidden="true">✦</span> AI-ответ</button>
+            <button type="button" data-open-screen="privacy"><span aria-hidden="true">↶</span> Anti-Delete</button>
+            <button type="button" data-open-screen="story-engine"><span aria-hidden="true">✧</span> Создать Story</button>
           </div>
           <button type="button" id="vetoMessengerConnectCta" class="veto-messenger-connect-cta" hidden><span>⌁</span><strong>Подключить мой Telegram</strong><small>Чтобы увидеть свои чаты</small><b>↗</b></button>
           <div class="veto-messenger-tools" id="vetoMessengerTools" hidden>
@@ -360,7 +441,7 @@
               <button type="button" data-veto-messenger-tool="access"><span>⌁</span><strong>Подключения</strong><small>Мой Telegram</small></button>
               <button type="button" data-open-screen="privacy"><span>↶</span><strong>Архив</strong><small>Privacy Vault</small></button>
               <button type="button" data-open-screen="voice"><span>♫</span><strong>Голос</strong><small>Voice Lab</small></button>
-              <button type="button" data-open-screen="studio"><span>✦</span><strong>Стикеры</strong><small>Creator Studio</small></button>
+              <button type="button" data-open-screen="creator"><span>✦</span><strong>Стикеры</strong><small>Creator Studio</small></button>
               <button type="button" data-open-screen="relay"><span>⇄</span><strong>Relay</strong><small>Подключение</small></button>
             </div>
           <details class="veto-mirror-access-drawer" id="telegramMirrorAccessDrawer"><summary><span class="veto-mirror-access-drawer-icon">◈</span><strong>Подключение и защита переписок</strong><small id="telegramMirrorAccessDrawerStatus">Проверяем права</small><b>⌄</b></summary>
@@ -424,16 +505,36 @@
             <button class="veto-filter-advanced" type="button" data-mirror-filter="bot">Боты</button>
             <button class="veto-filter-advanced" type="button" data-mirror-filter="saved">Избранное</button>
             <button class="veto-filter-advanced" type="button" data-mirror-filter="pinned">Закреплённые</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="focus">Важное <span>⌑</span></button>
+            <button type="button" data-mirror-filter="focus">Важное <span aria-hidden="true">⌑</span></button>
             <button type="button" data-mirror-filter="unread">Непрочитанные</button>
             <button class="veto-filter-advanced" type="button" data-mirror-filter="archived">Архив</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="copies">Копии Vetogram <span>↶</span></button>
+            <button type="button" data-mirror-filter="copies">Сохранённые <span aria-hidden="true">↶</span></button>
             <button type="button" class="veto-filters-more" id="vetoMessengerFiltersToggle" aria-expanded="false" aria-controls="telegramMirrorFilters">Фильтры <span>⌄</span></button>
           </div>
+          <section class="vgx-inbox-pulse" id="vgxInboxPulse" aria-label="Сводка по загруженным чатам" hidden>
+            <div class="vgx-inbox-pulse-heading">
+              <span><i aria-hidden="true"></i> SMART INBOX</span>
+              <small>Из загруженных чатов · по запросу</small>
+            </div>
+            <div class="vgx-inbox-pulse-grid" role="group" aria-label="Быстрая фильтрация">
+              <button type="button" data-vgx-pulse-filter="unread" aria-pressed="false" title="Чаты с непрочитанными сообщениями">
+                <span class="vgx-pulse-icon" aria-hidden="true">◉</span>
+                <span><strong id="vgxPulseUnread">0</strong><small>Непрочитанные чаты</small></span><b aria-hidden="true">↗</b>
+              </button>
+              <button type="button" data-vgx-pulse-filter="focus" aria-pressed="false" title="Чаты с локальными сигналами внимания">
+                <span class="vgx-pulse-icon" aria-hidden="true">✦</span>
+                <span><strong id="vgxPulseFocus">0</strong><small>Внимание</small></span><b aria-hidden="true">↗</b>
+              </button>
+              <button type="button" data-vgx-pulse-filter="copies" aria-pressed="false" title="Количество загруженных чатов с сохранёнными копиями">
+                <span class="vgx-pulse-icon" aria-hidden="true">↶</span>
+                <span><strong id="vgxPulseSaved">0</strong><small>Сохранённые</small></span><b aria-hidden="true">↗</b>
+              </button>
+            </div>
+          </section>
           <div id="telegramMirrorAccountProof" class="veto-mirror-account-proof" role="status" aria-live="polite"><span class="veto-mirror-live-pip"></span> Личный Telegram ещё не проверен · отображение чатов остановлено до подтверждения</div>
 
           <p class="veto-mirror-focus-hint">Локальная сортировка без отметок «прочитано» и изменения оригинальных чатов.</p>
-          <div class="veto-mirror-headline"><span>ДИАЛОГИ И СОХРАНЁННЫЕ КОПИИ</span><span id="telegramMirrorUpdated">LIVE · По запросу</span></div>
+          <div class="veto-mirror-headline"><span>МОИ ДИАЛОГИ</span><span id="telegramMirrorUpdated">Обновление по запросу</span></div>
           <div id="telegramMirrorNotice" class="veto-mirror-notice" hidden></div>
           <div class="veto-mirror-chat-list" id="telegramMirrorList" aria-live="polite">
             <div class="veto-mirror-empty"><span class="veto-mirror-loader"></span><strong>Открываю Telegram…</strong><small>Доступны чаты твоего подключённого аккаунта</small></div>
@@ -452,6 +553,9 @@
             <div class="veto-mirror-thread-avatar" id="telegramThreadAvatar">TG</div>
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
             <a id="telegramThreadOpenNative" class="veto-mirror-icon-btn veto-mirror-native-link" aria-label="Открыть этот чат в Telegram" title="Открыть в Telegram" href="#" target="_blank" rel="noopener noreferrer" hidden>↗</a>
+            <button type="button" class="veto-mirror-icon-btn" data-open-screen="ai" data-ai-mode="reply" aria-label="VETO AI для сообщений" title="VETO AI">✦</button>
+            <button type="button" class="veto-mirror-icon-btn" id="telegramThreadReplyAI" aria-label="Предложить ответ AI на последнее входящее сообщение" title="Ответить с VETO AI">↳</button>
+            <button type="button" class="veto-mirror-icon-btn" id="telegramThreadBriefAI" aria-label="Разобрать последнее входящее сообщение на задачи" title="VETO Second Brain">◈</button>
             <button type="button" id="telegramThreadSearchToggle" class="veto-mirror-icon-btn" aria-label="Поиск по загруженным сообщениям" aria-controls="telegramThreadFind" aria-expanded="false" title="Поиск в переписке">⌕</button>
             <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
           </div>
@@ -481,8 +585,15 @@
               <strong>Фото из переписки · только на этом устройстве</strong>
               <button type="button" id="telegramThreadPhotoClose" aria-label="Закрыть просмотр фотографии">×</button>
             </div>
-            <img id="telegramThreadPhotoFull" alt="Фото из собственной переписки"/>
-            <a id="telegramThreadPhotoSave" download="veto-chat-photo.jpg" rel="noopener" href="#">Сохранить фото ↓</a>
+            <div class="veto-mirror-photo-stage" id="telegramThreadPhotoStage" aria-label="Загруженные фото из этой переписки">
+              <button type="button" class="veto-mirror-photo-step" id="telegramThreadPhotoPrev" aria-label="Предыдущее загруженное фото" hidden>‹</button>
+              <img id="telegramThreadPhotoFull" alt="Фото из собственной переписки"/>
+              <button type="button" class="veto-mirror-photo-step" id="telegramThreadPhotoNext" aria-label="Следующее загруженное фото" hidden>›</button>
+            </div>
+            <div class="veto-mirror-photo-foot">
+              <span id="telegramThreadPhotoCount" class="veto-mirror-photo-count" role="status" aria-live="polite" hidden></span>
+              <a id="telegramThreadPhotoSave" download="vetogram-photo.jpg" rel="noopener" href="#">Сохранить фото ↓</a>
+            </div>
           </dialog>
           <div class="veto-mirror-thread-bottom">
             <div id="telegramThreadReplyPreview" class="veto-mirror-reply-preview" hidden>
@@ -522,7 +633,7 @@
               </div>
               <small class="veto-voice-tools-note">Ниже/Выше изменяют высоту голоса на устройстве; Робот — звучание. Выбери эффект до записи, прослушай результат перед отправкой.</small>
             </details>
-            <div id="telegramThreadVoiceStatus" class="veto-mirror-voice-status" role="status" hidden><i aria-hidden="true"></i><span id="telegramThreadVoiceTimer">● 00:00 · Идёт запись</span></div>
+            <div id="telegramThreadVoiceStatus" class="veto-mirror-voice-status" role="status" aria-live="polite" aria-atomic="true" hidden><i aria-hidden="true"></i><strong id="telegramThreadVoiceState">Идёт запись</strong><span id="telegramThreadVoiceTimer" aria-hidden="true">00:00 / 00:45</span></div>
             <div id="telegramThreadVoicePreview" class="veto-mirror-voice-preview" hidden>
               <strong id="telegramThreadVoiceLabel">Голосовое готово · проверь запись</strong>
               <audio id="telegramThreadVoicePlayer" controls preload="metadata"></audio>
@@ -545,7 +656,7 @@
                   <span aria-hidden="true">◉</span>
                   <textarea id="telegramThreadCompose" maxlength="4096" rows="1" placeholder="Сообщение" aria-label="Написать сообщение" disabled></textarea>
                 </label>
-                <button type="button" id="telegramThreadRecordVoice" class="veto-mirror-tool-btn veto-mirror-mic-btn" aria-label="Начать или завершить запись голосового" title="Записать голосовое" disabled>♫</button>
+                <button type="button" id="telegramThreadRecordVoice" class="veto-mirror-tool-btn veto-mirror-mic-btn" aria-label="Начать запись голосового" aria-pressed="false" aria-busy="false" title="Записать голосовое" disabled>♫</button>
                 <button type="submit" class="veto-mirror-send-button" id="telegramThreadSend" aria-label="Отправить сообщение" title="Отправить в Telegram от моего имени" disabled>➤</button>
               </form>
 
@@ -566,12 +677,12 @@
         </div>
         <div class="veto-voice-monitor-card">
           <div class="veto-voice-monitor-top">
-            <div><span class="veto-voice-input-label">MICROPHONE INPUT</span><strong id="voiceMicState">◌ Микрофон выключен</strong></div>
+            <div><span class="veto-voice-input-label">МИКРОФОН</span><strong id="voiceMicState">◌ Микрофон выключен</strong></div>
             <span class="veto-voice-signal">▂▅▇ · LIVE DSP</span>
           </div>
           <canvas id="voiceSpectrum" width="760" height="220" aria-label="Визуализация звука"></canvas>
           <div class="veto-voice-monitor-controls">
-            <button id="voiceMicButton" class="veto-voice-button primary" type="button">◉ Включить микрофон</button>
+            <button id="voiceMicButton" class="veto-voice-button primary" type="button" aria-busy="false">◉ Включить микрофон</button>
             <button id="voiceMicStop" class="veto-voice-button subdued" type="button" disabled>Отключить</button>
             <label class="veto-voice-headphones"><input id="voiceMonitor" type="checkbox" /><span>Слушать себя <small>Только в наушниках</small></span></label>
           </div>
@@ -1170,8 +1281,8 @@
         <button type="button" data-ghost-jump="edited"><span>≋</span><strong>Изменённые</strong><small>История правок по чатам</small></button>
         <button type="button" data-ghost-jump="media"><span>▣</span><strong>Media Vault</strong><small>Сохранённые вложения</small></button>
         <button type="button" data-ghost-jump="all"><span>☰</span><strong>Все чаты</strong><small>Полный Ghost Inbox</small></button>
-        <button type="button" data-open-screen="studio"><span>✦</span><strong>Creator Studio</strong><small>Brand Pack Engine · motion</small></button>
-        <button type="button" data-open-screen="stories"><span>＋</span><strong>Stories</strong><small>Публикация и точная аудитория</small></button>
+        <button type="button" data-open-screen="creator"><span>✦</span><strong>Creator Studio</strong><small>Brand Pack Engine · motion</small></button>
+        <button type="button" data-open-screen="publish"><span>＋</span><strong>Stories</strong><small>Публикация и точная аудитория</small></button>
       </section>
 
       <section class="ghost-access-strip" id="privacyAccessStrip">
@@ -1267,19 +1378,19 @@
     <section class="screen" data-screen="chats">
       <div class="page-head chats-page-head">
         <span class="kicker">SMART INBOX</span>
-        <h1>Chats</h1>
+        <h1>Чаты</h1>
         <p>Твои сохранённые копии разрешённых переписок, правки и удаления — независимо от того, остался ли оригинальный чат в Telegram.</p>
       </div>
 
       <section class="smart-inbox-overview">
         <div class="smart-inbox-title">
-          <div><span class="kicker">PRIORITY</span><h2>Что требует внимания</h2></div>
-          <span class="tiny-note">без read-status</span>
+          <div><span class="kicker">ПРИОРИТЕТЫ</span><h2>Что требует внимания</h2></div>
+          <span class="tiny-note">без отметки «прочитано»</span>
         </div>
         <div class="smart-inbox-grid">
-          <button type="button" data-smart-filter="action"><span>Action</span><strong id="smartInboxAction">0</strong><small>вероятно нужен ответ</small></button>
-          <button type="button" data-smart-filter="watch"><span>Watch</span><strong id="smartInboxWatch">0</strong><small>изменения / удаления</small></button>
-          <button type="button" data-smart-filter="all"><span>All</span><strong id="smartInboxAll">0</strong><small>доступные диалоги</small></button>
+          <button type="button" data-smart-filter="action"><span>Действия</span><strong id="smartInboxAction">0</strong><small>вероятно нужен ответ</small></button>
+          <button type="button" data-smart-filter="watch"><span>Изменения</span><strong id="smartInboxWatch">0</strong><small>изменения / удаления</small></button>
+          <button type="button" data-smart-filter="all"><span>Все</span><strong id="smartInboxAll">0</strong><small>доступные диалоги</small></button>
         </div>
         <p class="smart-inbox-note">Vetogram не называет сообщения «непрочитанными», если Telegram не дал такого сигнала. Приоритет — это объяснимая оценка по последнему входящему событию, свежести, правкам и удалениям.</p>
       </section>
@@ -1344,24 +1455,283 @@
 
 
 
+    
+    <section class="screen" data-screen="ai" aria-label="VETOGRAM AI">
+      <div class="vtai-root" id="vtaiRoot">
+        <header class="vtai-hero">
+          <span class="vtai-kicker">VETOGRAM / AI-ИНСТРУМЕНТЫ</span>
+          <h1>VETO <span>AI.</span><br>Управляй словами.</h1>
+          <p>Общайся с AI, переводи, готовь ответы и создавай тексты Stories. AI не читает твои чаты автоматически и ничего не отправляет без отдельного подтверждения.</p>
+        </header>
+        <div class="vtai-modes" role="group" aria-label="Выбор AI-инструмента">
+          <button type="button" data-vtai-mode="chat" aria-pressed="true" class="active">✧ AI-чат</button>
+          <button type="button" data-vtai-mode="translate" aria-pressed="false">⇄ Перевод</button>
+          <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI Reply</button>
+          <button type="button" data-vtai-mode="action" aria-pressed="false">⌁ AI Action</button>
+          <button type="button" data-vtai-mode="brief" aria-pressed="false">◈ Second Brain</button>
+          <button type="button" data-vtai-mode="story" aria-pressed="false">▣ Story Director</button>
+          <button type="button" data-vtai-mode="campaign" aria-pressed="false">✦ Story-to-Sale</button>
+          <button type="button" data-vtai-mode="negotiator" aria-pressed="false">◇ Negotiator Lab</button>
+        </div>
+        <section class="vg26-creative-deck" id="vg26CreativeDeck" aria-label="Быстрые стили черновика" hidden>
+          <div class="vg26-creative-head">
+            <div>
+              <span class="vg26-creative-kicker">VETOGRAM · CREATIVE DECK</span>
+              <h2 id="vg26CreativeTitle">Выбери подачу</h2>
+              <p>Один клик — и стиль готов в редакторе. Никаких запросов AI и отправок без тебя.</p>
+            </div>
+            <span class="vg26-creative-no-send">Только черновик</span>
+          </div>
+          <div class="vg26-creative-options" id="vg26CreativeOptions" role="group" aria-label="Стиль черновика"></div>
+          <p class="vg26-creative-feedback" id="vg26CreativeFeedback" role="status" aria-live="polite"></p>
+        </section>
+        <section class="vtai-panel">
+          <h2>Новый запрос</h2>
+          <label class="vtai-label" id="vtaiLanguage" hidden>Язык перевода
+            <select class="vtai-input" id="vtaiLanguageSelect" aria-label="Язык перевода">
+              <option value="английский">Английский</option>
+              <option value="русский">Русский</option>
+              <option value="армянский">Армянский</option>
+              <option value="арабский">Арабский</option>
+              <option value="грузинский">Грузинский</option>
+            </select>
+          </label>
+          <section id="vtaiBriefPanel" class="vtai-neg-panel" hidden aria-label="Second Brain: задачи и договорённости">
+            <h2>Second Brain · договорённости</h2>
+            <p class="vtai-note">Вставь сообщение или текст беседы, который тебе разрешено использовать. AI выделит до пяти задач и договорённостей, покажет цитату-основание и сроки только из исходного текста.</p>
+            <p class="vtai-note" id="vtaiBriefStatus" role="status" aria-live="polite">Ничего не анализируется автоматически. Результат остаётся черновиком в этом окне.</p>
+            <div id="vtaiBriefList" class="vtai-workspace-list" aria-live="polite"></div>
+            <p class="vtai-note">Добавление в AI Memory — отдельное действие; это не календарь, не уведомление и не автоматическое напоминание. Данные собеседников отправляются модели только после твоего разрешения.</p>
+          </section>
+          <section id="vtaiActionPanel" class="vtai-neg-panel" hidden aria-label="AI Action, подготовка сообщения">
+            <h2>AI Action · управляй словами</h2>
+            <p class="vtai-note">Например: «Напиши Артуру, что завтра в 15:00 созвонимся». AI подготовит текст, но получателя ты выберешь сам. Никаких автоматических отправок.</p>
+            <div id="vtaiActionStatus" class="vtai-note" aria-live="polite">Опиши, кому и что нужно написать.</div>
+            <div class="vtai-row">
+              <button type="button" class="vtai-action" id="vtaiActionFind">Найти получателя в моих чатах</button>
+              <button type="button" class="vtai-action" id="vtaiActionMore" hidden>Ещё чаты ↓</button>
+            </div>
+            <label class="vtai-label">Предложенные совпадения (не выбранные автоматически)
+              <select id="vtaiActionMatches" class="vtai-input" aria-label="Выбери нужный чат"><option value="">Сначала подготовь сообщение</option></select>
+            </label>
+            <button type="button" class="vtai-action" id="vtaiActionChoose">Использовать выбранный чат</button>
+            <p class="vtai-note">Проверяй имя и получателя перед отправкой. AI не имеет доступа к списку переписок и не может подтвердить, что это нужный человек.</p>
+          </section>
+          <section id="vtaiNegPanel" class="vtai-neg-panel" hidden aria-label="Безопасные настройки Negotiator">
+            <h2>Negotiator Lab · только черновики</h2>
+            <p class="vtai-note">Никаких автоматических переговоров и отправок. Выбери один чат, установи жёсткие ограничения, получи черновик и отдельно подтверди каждый ответ.</p>
+            <div class="vtai-row">
+              <button type="button" class="vtai-action" id="vtaiNegLoadChats">Загрузить мои чаты</button>
+              <button type="button" class="vtai-action" id="vtaiNegMoreChats" hidden>Ещё чаты ↓</button>
+              <label class="vtai-label vtai-grow">Разрешённый чат
+                <select id="vtaiNegRecipient" class="vtai-input"><option value="">Сначала загрузить чаты</option></select>
+              </label>
+            </div>
+            <div class="vtai-two">
+              <label class="vtai-label">Валюта
+                <select id="vtaiNegCurrency" class="vtai-input">
+                  <option>USD</option><option>EUR</option><option>AMD</option><option>RUB</option><option>GEL</option><option>GBP</option>
+                </select>
+              </label>
+              <label class="vtai-label">Исходная цена<input id="vtaiNegAsking" class="vtai-input" type="number" min="0.01" max="10000000" step="0.01" value="500"></label>
+              <label class="vtai-label">Минимальная цена<input id="vtaiNegFloor" class="vtai-input" type="number" min="0.01" max="10000000" step="0.01" value="475"></label>
+              <label class="vtai-label">Макс. скидка, %<input id="vtaiNegDiscount" class="vtai-input" type="number" min="0" max="30" step="1" value="5"></label>
+              <label class="vtai-label">Срок разрешения
+                <select id="vtaiNegMinutes" class="vtai-input"><option value="15">15 минут</option><option value="60" selected>1 час</option><option value="120">2 часа</option></select>
+              </label>
+            </div>
+            <label class="vtai-label">Цель переговоров
+              <input id="vtaiNegGoal" class="vtai-input" maxlength="300" placeholder="Например: обсудить стоимость дизайна без предоплаты" />
+            </label>
+            <div class="vtai-note" id="vtaiNegNotice" aria-live="polite">Сначала выбери чат и введи условия. Никто не получит сообщение автоматически.</div>
+            <button id="vtaiNegRevoke" type="button" class="vtai-action">Отозвать разрешение Negotiator</button>
+          </section>
+          <label class="vtai-label">Напиши AI
+            <textarea id="vtaiText" class="vtai-input" maxlength="3000" placeholder="Спроси AI или попроси подготовить сообщение…"></textarea>
+          </label>
+          <label class="vtai-consent">
+            <input type="checkbox" id="vtaiConsent" />
+            <span>Разрешаю передать только введённый здесь текст AI-провайдеру. Не вставляй чужие личные сообщения без необходимых согласий.</span>
+          </label>
+          <div class="vtai-row"><button id="vtaiCreate" class="vtai-action vtai-primary" type="button">Спросить VETO AI</button></div>
+          <p class="vtai-note" id="vtaiQuota" aria-live="polite">Потребление AI ограничено дневным бюджетом. Данные Telegram не анализируются автоматически.</p>
+          <div id="vtaiNotice" role="status" aria-live="polite" hidden></div>
+        </section>
+        <section class="vtai-panel" aria-label="Диалог с VETO AI">
+          <h2>AI-диалог</h2>
+          <div id="vtaiThread" class="vtai-thread" aria-live="polite"></div>
+          <p class="vtai-note">AI-переписка хранится только в памяти текущего окна и не подменяет Telegram. Уточнения контекста задаются в этом разделе.</p>
+        </section>
+        <section class="vtai-panel" id="vtaiReview" hidden>
+          <h2>Подтверждение отправки</h2>
+          <label class="vtai-label">Редактируемый черновик
+            <textarea id="vtaiDraft" class="vtai-input" maxlength="4096"></textarea>
+          </label>
+          <div class="vtai-row">
+            <button class="vtai-action" id="vtaiLoadChats" type="button">Загрузить мои чаты</button>
+            <button class="vtai-action" id="vtaiMoreChats" type="button" hidden>Ещё чаты ↓</button>
+            <label class="vtai-label" style="flex:1;min-width:170px">Получатель
+              <select id="vtaiRecipients" class="vtai-input"><option value="">Сначала загрузить чаты</option></select>
+            </label>
+          </div>
+          <button class="vtai-action vtai-primary" id="vtaiSend" type="button" disabled>Проверить и отправить в Telegram →</button>
+          <button class="vtai-action" id="vtaiQueue" type="button">＋ В очередь подтверждений</button>
+          <p class="vtai-note">Перед отправкой появится отдельное подтверждение. Отправляется от твоего авторизованного Telegram-аккаунта, а не от бота.</p>
+        </section>
+        
+        <section class="vtai-panel" id="vtaiTasksPanel" aria-label="VETO Task Center">
+          <div class="vtai-row vtai-heading-row">
+            <h2>Task Center <span id="vtaiTaskCount" class="vtai-count">0</span></h2>
+            <span class="vtai-note">Только в открытом окне</span>
+          </div>
+          <p class="vtai-note">Проверенные тобой пункты из Second Brain. Здесь можно назначить точную дату вручную, отложить, завершить или подготовить follow-up. Никаких уведомлений и фоновых отправок.</p>
+          <p class="vtai-note" id="vtaiTaskStatus" role="status" aria-live="polite">Задач пока нет. Выбери пункт в Second Brain и подтверди добавление.</p>
+          <div class="vtai-row">
+            <button type="button" class="vtai-action" id="vtaiTasksOpen">Активные <span id="vtaiTasksOpenCount">0</span></button>
+            <button type="button" class="vtai-action" id="vtaiTasksDeferred">Отложено <span id="vtaiTasksDeferredCount">0</span></button>
+            <button type="button" class="vtai-action" id="vtaiTasksDone">Готово <span id="vtaiTasksDoneCount">0</span></button>
+            <button type="button" class="vtai-action" id="vtaiTasksAll">Все задачи</button>
+          </div>
+          <div class="vtai-workspace-list" id="vtaiTasksList" aria-live="polite"></div>
+          <div class="vtai-row">
+            <button type="button" class="vtai-action" id="vtaiTasksCopy">Копировать список</button>
+            <button type="button" class="vtai-action vtai-danger" id="vtaiTasksClear">Очистить задачи окна</button>
+          </div>
+
+          <div class="vtai-row">
+            <button type="button" class="vtai-action" id="vtaiTasksCloudLoad">↓ Загрузить облачные задачи</button>
+            <button type="button" class="vtai-action" id="vtaiTasksCloudSave">↑ Сохранить зашифрованную копию</button>
+            <button type="button" class="vtai-action vtai-danger" id="vtaiTasksCloudErase">Удалить облачные данные</button>
+          </div>
+          <p class="vtai-note" id="vtaiTasksCloudStatus" role="status" aria-live="polite">
+            Облако выключено до единого релиза. Кнопки выполняют действия только по твоему подтверждению. Защита на сервере AES-256-GCM, это не E2EE; VETOGRAM может расшифровать задачи. Удаление очищает активные зашифрованные данные, оставляя техническую версию записи для защиты от старых устройств. Резервные копии хостинга могут сохраняться некоторое время.
+          </p>
+          <p class="vtai-note">Фразы «завтра» и «в пятницу» остаются только цитатой из источника. Конкретную дату выбираешь ты: VETOGRAM не придумывает её и не включает напоминания.</p>
+        </section>
+
+        <section class="vtai-panel" id="vtaiRemindersPanel" aria-label="VETO Reminders">
+          <div class="vtai-row vtai-heading-row">
+            <h2>VETO Reminders <span id="vtaiReminderCount" class="vtai-count">0</span></h2>
+            <button type="button" class="vtai-action" id="vtaiReminderRefresh">Обновить</button>
+            <button type="button" class="vtai-action vtai-danger" id="vtaiReminderCancelAll">Отменить все ожидающие</button>
+          </div>
+          <p class="vtai-note">Одноразовые Telegram-уведомления только тебе, по точному сроку задачи. Сначала вручную сохрани задачу в зашифрованном облаке и начни диалог с ботом VETOGRAM. Отдельно подтверди каждый запуск.</p>
+          <p id="vtaiReminderStatus" class="vtai-note" role="status" aria-live="polite">Напоминания отключены до общего релиза. Никакие сообщения не отправляются сейчас.</p>
+          <div id="vtaiReminderList" class="vtai-workspace-list" aria-live="polite"></div>
+          <p class="vtai-note">Тело напоминания не содержит твоих задач или переписок. Возможны задержки проверки и недоставка. Сетевые попытки не повторяются автоматически, чтобы не прислать дубль. Созданные напоминания можно отменить до начала отправки.</p>
+        </section>
+
+        <section class="vtai-panel" id="vtaiFocusPanel" aria-label="Smart Inbox и Follow-up Focus">
+          <div class="vtai-row vtai-heading-row">
+            <h2>Follow-up Focus <span id="vtaiFocusCount" class="vtai-count">0</span></h2>
+            <button type="button" class="vtai-action" id="vtaiFocusRefresh">Проверить мои чаты</button>
+          </div>
+          <p class="vtai-note">Локальная подсказка по последним предпросмотрам загруженных чатов: только подтверждённые входящие непрочитанные сообщения с возможным вопросом или действием. Это не доказательство обязательства и не автоматический AI-анализ.</p>
+          <p class="vtai-note" id="vtaiFocusStatus" role="status" aria-live="polite">Нажми «Проверить мои чаты». Никакие сообщения не отправляются AI автоматически.</p>
+          <div id="vtaiFocusList" class="vtai-workspace-list" aria-live="polite"></div>
+          <div class="vtai-row">
+            <button type="button" class="vtai-action" id="vtaiFocusMore" hidden>Показать ещё чаты ↓</button>
+            <button type="button" class="vtai-action" id="vtaiFocusRestore" hidden>Вернуть скрытые карточки</button>
+          </div>
+          <p class="vtai-note">«Скрыть» действует только в открытом окне. Настоящих отложенных сообщений, уведомлений, фонового слежения и отметок «прочитано» здесь нет.</p>
+        </section>
+
+        <section class="vtai-panel" id="vtaiAgentControl" aria-label="VETO Agent Control">
+          <div class="vtai-row vtai-heading-row">
+            <h2>VETO Agent Control</h2>
+            <button id="vtaiAgentRefresh" type="button" class="vtai-action">Обновить статус</button>
+          </div>
+          <p class="vtai-note">Управляет только серверными разрешениями на подготовку переговорных черновиков. Не меняет обычные права Telegram или ручную отправку сообщений.</p>
+          <p id="vtaiAgentState" role="status" aria-live="polite" class="vtai-note">Статус ещё не проверен.</p>
+          <div class="vtai-row">
+            <button id="vtaiAgentPause" type="button" class="vtai-action vtai-danger">Остановить подготовку AI</button>
+            <button id="vtaiAgentResume" type="button" class="vtai-action">Возобновить подготовку</button>
+            <button id="vtaiAgentHistory" type="button" class="vtai-action">История разрешений</button>
+          </div>
+          <div id="vtaiAgentEvents" class="vtai-workspace-list" aria-live="polite"></div>
+          <p class="vtai-note">В журнале сохраняются лишь время, категория изменения, идентификатор разрешения и чата. Тексты сообщений, запросы и ответы AI не записываются.</p>
+        </section>
+<section class="vtai-panel" aria-label="VETO Approval Center">
+          <div class="vtai-row vtai-heading-row">
+            <h2>Approval Center <span id="vtaiApprovalCount" class="vtai-count">0</span></h2>
+            <button type="button" class="vtai-action" id="vtaiClearApprovals">Очистить очередь</button>
+          </div>
+          <p class="vtai-note">Неотправленные черновики — только в памяти открытого окна. Через 30 минут истекают. Никакая отправка не запускается без твоего выбора и подтверждения.</p>
+          <div id="vtaiApprovalList" class="vtai-workspace-list" aria-live="polite"></div>
+        </section>
+        <section class="vtai-panel" aria-label="VETO AI Memory">
+          <div class="vtai-row vtai-heading-row">
+            <h2>AI Memory · заметки</h2>
+            <button type="button" class="vtai-action" id="vtaiClearMemory">Очистить заметки</button>
+          </div>
+          <p class="vtai-note">Это первая версия: заметки существуют только пока открыто приложение. AI не читает переписки. Выбери до трёх заметок, затем отдельно разреши использовать их в следующем запросе.</p>
+          <div class="vtai-two">
+            <label class="vtai-label">Название заметки<input id="vtaiMemoryLabel" class="vtai-input" maxlength="55" placeholder="Например: стиль общения"></label>
+            <label class="vtai-label">Содержание<textarea id="vtaiMemoryContent" class="vtai-input" maxlength="450" placeholder="Что должен учитывать AI…"></textarea></label>
+          </div>
+          <button type="button" class="vtai-action" id="vtaiAddMemory">＋ Добавить заметку</button>
+          <div class="vtai-row">
+            <button type="button" class="vtai-action" id="vtaiMemoryCloudLoad">↓ Загрузить из защищённого хранилища</button>
+            <button type="button" class="vtai-action" id="vtaiMemoryCloudSave">↑ Сохранить зашифрованную копию</button>
+            <button type="button" class="vtai-action" id="vtaiMemoryCloudErase">Удалить облачную копию</button>
+          </div>
+          <p class="vtai-note" id="vtaiMemoryCloudStatus" aria-live="polite">
+            Облачное сохранение требует явного действия. Шифрование на сервере, не сквозное (не E2EE). Сервер VETOGRAM может расшифровать заметки. Никогда не сохраняй здесь коды входа и пароли.
+          </p>
+
+          <div id="vtaiMemoryList" class="vtai-workspace-list" aria-live="polite"></div>
+          <label class="vtai-consent"><input type="checkbox" id="vtaiIncludeMemory">
+            <span>Разрешаю отправить выбранные заметки вместе с моим следующим запросом AI-провайдеру. Без флажка заметки не передаются.</span>
+          </label>
+        </section>
+        <section class="vtai-panel" id="vtaiStoryReview" hidden>
+          <h2>Story Director — текст для редактора</h2>
+          <div class="vtai-two">
+            <label class="vtai-label">Заголовок<input id="vtaiStoryTitle" class="vtai-input" maxlength="90" /></label>
+            <label class="vtai-label">Подзаголовок<input id="vtaiStorySubtitle" class="vtai-input" maxlength="180" /></label>
+          </div>
+          <label class="vtai-label">Подпись для Telegram<textarea id="vtaiStoryCaption" class="vtai-input" maxlength="800"></textarea></label>
+          <div id="vtaiPortalReview" hidden>
+            <h2>Предложение Portal</h2>
+            <div class="vtai-two">
+              <label class="vtai-label">Тип Portal<select id="vtaiPortalType" class="vtai-input">
+                <option value="offer">Предложение</option><option value="invite">Приглашение</option>
+                <option value="waitlist">Лист ожидания</option><option value="poll">Опрос</option>
+              </select></label>
+              <label class="vtai-label">Текст кнопки<input id="vtaiPortalCta" class="vtai-input" maxlength="42"></label>
+            </div>
+            <label class="vtai-label">Заголовок<input id="vtaiPortalTitle" class="vtai-input" maxlength="90"></label>
+            <label class="vtai-label">Описание<textarea id="vtaiPortalDescription" class="vtai-input" maxlength="300"></textarea></label>
+            <label class="vtai-consent"><input id="vtaiReplacePortal" type="checkbox">
+              <span>Отдельно разрешаю заменить текущий Portal этим черновиком. Существующий Portal не изменится, если флажок выключен.</span>
+            </label>
+            <p class="vtai-note">Это только черновик Portal. Форма, приём заявок, оплата и аналитика не подключены.</p>
+          </div>
+          <button class="vtai-action vtai-primary" id="vtaiApplyStory" type="button">Перенести в Story Engine →</button>
+          <p class="vtai-note">Содержимое переносится только в локальный редактор. Фото, личные медиа, существующие слои и Portal остаются на устройстве. Публикация всегда отдельно.</p>
+        </section>
+      </div>
+    </section>
+
     <section class="screen se-engine" data-screen="story-engine" id="seEngine" aria-label="VETO Story Engine">
       <div class="se-masthead">
         <div>
-          <span class="se-eyebrow">VETOGRAM / STORY ENGINE · CREATOR FIRST</span>
-          <h1>Make a story.<br><em>Make it matter.</em></h1>
+          <span class="se-eyebrow">VETOGRAM / РЕДАКТОР ИСТОРИЙ</span>
+          <h1>История, которую<br><em>хочется смотреть.</em></h1>
           <p>Создавай киношные Stories в собственном редакторе. Сохраняй проект на устройстве, подбирай шаблон и передавай готовую картинку в публикацию Telegram.</p>
           <div class="se-masthead-actions">
             <button class="se-button primary" id="seNew" type="button">＋ Новая Story</button>
-            <button class="se-button" type="button" data-open-screen="creator">✦ Sticker Studio</button>
+            <button class="se-button" type="button" data-open-screen="ai" data-ai-mode="story">✦ AI Director</button>
+            <button class="se-button" type="button" data-open-screen="creator">✦ Стикеры</button>
           </div>
         </div>
         <img class="se-masthead-mark" src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" />
       </div>
 
-      <div class="se-headrow"><h2>Signature templates</h2><span class="se-compact-tag">10 ORIGINAL LOOKS</span></div>
+      <div class="se-headrow"><h2>Фирменные шаблоны</h2><span class="se-compact-tag">10 ФИРМЕННЫХ СТИЛЕЙ</span></div>
       <div class="se-templates" id="seTemplates" aria-label="Выбери шаблон Story"></div>
 
-      <div class="se-headrow"><h2>Story Composer</h2><small id="seAccountStatus">Загружаем локальное пространство</small></div>
+      <div class="se-headrow"><h2>Редактор Story</h2><small id="seAccountStatus">Загружаем локальное пространство</small></div>
       <div class="se-editor-shell">
         <div class="se-stage">
           <div class="se-screen-label"><span>LIVE PREVIEW / 9:16</span><span id="seTemplateName">NOIR</span></div>
@@ -1488,6 +1858,8 @@
             <div class="se-controls-row">
               <button class="se-button primary" id="seSave" type="button">✓ Сохранить</button>
               <button class="se-button" id="seRemix" type="button">⧉ Remix</button>
+              <button class="se-button" id="seUndoAiText" type="button" hidden disabled
+                style="display:none" title="Вернуть текст до последнего применения AI, не меняя фото и слои">↶ Отменить AI-текст</button>
             </div>
           </div>
         </div>
@@ -1495,12 +1867,13 @@
 
       <div id="seNotice" class="se-notice" role="status" aria-live="polite" hidden></div>
 
-      <div class="se-headrow"><h2>My drafts</h2><small>Только этот Telegram и это устройство</small></div>
+      <div class="se-headrow"><h2>Мои черновики</h2><small>Только этот Telegram и это устройство</small></div>
       <div class="se-drafts" id="seDraftList"></div>
       <div class="se-footnote">
-        STORY ENGINE · Ранняя функциональная версия. Публикация требует подтверждения в существующем экране Stories.
-        Черновики и Portal хранятся локально в браузере. Нет облачной синхронизации, публичного Portal, аналитики конверсий или настоящей генеративной AI-модели.
-        Срок хранения черновиков проверяется при следующем открытии; это не фоновая серверная очистка.
+        Черновики Story сохраняются только на этом устройстве. AI-текст попадает в редактор
+        лишь после твоего подтверждения; изменения можно отменить до ручной правки.
+        Публикация в Telegram требует отдельного подтверждения. Ссылки Portal становятся
+        доступны другим людям только после того, как ты сам создашь и отправишь ссылку.
       </div>
     </section>
 
@@ -1803,10 +2176,32 @@
   <nav class="bottom-nav" aria-label="Главная навигация">
     <button class="nav-item active" data-nav="telegram" type="button" aria-label="Чаты"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5c0 4.8-3.9 8.5-8.7 8.5-1.3 0-2.7-.3-3.8-.9L3 20l1.2-4.2C3.4 14.5 3 13 3 11.5 3 6.8 6.9 3 11.5 3S20 6.8 20 11.5Z"/></svg><small>Чаты</small></button>
     <button class="nav-item" data-nav="home" type="button" aria-label="Инструменты Vetogram"><img class="veto-nav-brand-mark" src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="24" height="24" aria-hidden="true" /><small>Vetogram</small></button>
-    <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg><small>Stories</small></button>
-    <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5.2c0 5 3.2 8.7 8 10.8 4.8-2.1 8-5.8 8-10.8V6z"/><path d="m9 12 2 2 4-4"/></svg><small>Vault</small></button>
-    <button class="nav-item" data-nav="studio" type="button" aria-label="Студия"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/></svg><small>Studio</small></button>
+    <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg><small>Истории</small></button>
+    <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5.2c0 5 3.2 8.7 8 10.8 4.8-2.1 8-5.8 8-10.8V6z"/><path d="m9 12 2 2 4-4"/></svg><small>Защита</small></button>
+    <button class="nav-item" data-nav="studio" type="button" aria-label="Студия"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/></svg><small>Студия</small></button>
   </nav>
+
+  <dialog class="vg26-command-dialog" id="vg26CommandDialog" aria-labelledby="vg26CommandTitle">
+    <div class="vg26-command-head">
+      <span class="vg26-command-mark"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /></span>
+      <div><span class="vg26-command-eyebrow">VETOGRAM · БЫСТРЫЙ ДОСТУП</span><h2 id="vg26CommandTitle">Что хочешь сделать?</h2></div>
+      <button type="button" class="vg26-command-close" id="vg26CommandClose" aria-label="Закрыть поиск">×</button>
+    </div>
+    <label class="vg26-command-search"><span aria-hidden="true">⌕</span><input id="vg26CommandSearch" type="search" autocomplete="off" placeholder="Чаты, Stories, AI, защита…" aria-label="Найти инструмент"/></label>
+    <div class="vg26-command-results" role="group" aria-label="Быстрые действия">
+      <button type="button" data-vg26-destination="telegram" data-vg26-keywords="переписка чат сообщения"><span>▤</span><strong>Мои чаты<small>Читать и отвечать</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="privacy" data-vg26-keywords="антиделит удалённые изменения архив"><span>↶</span><strong>Anti-Delete<small>Архив, изменения, доступы</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="publish" data-vg26-keywords="истории опубликовать публикация"><span>◉</span><strong>Мои Stories<small>Публикация и аудитория</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="story-engine" data-vg26-keywords="сторис шаблон дизайн portal редактор"><span>✧</span><strong>Story Engine<small>Дизайн, шаблоны и Portal</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="ai" data-vg26-keywords="нейросеть ии переписать ответ память переговоры"><span>✦</span><strong>VETO AI<small>Подготовить ответ и Story</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="voice" data-vg26-keywords="аудио звук голос"><span>♫</span><strong>Voice Studio<small>Запись и обработка голоса</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="viewers" data-vg26-keywords="кто видел просмотры аудитория"><span>◎</span><strong>Просмотры<small>Stories и статистика</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="creator" data-vg26-keywords="стикеры emoji creator"><span>✳</span><strong>Creator Studio<small>Стикеры и оформление</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="connect" data-vg26-keywords="номер QR код вход аккаунт подключение"><span>⌁</span><strong>Подключить Telegram<small>Проверить свой аккаунт</small></strong><em>↗</em></button>
+    </div>
+    <p class="vg26-command-empty" id="vg26CommandEmpty" hidden>Не найдено. Попробуй «чаты», «AI» или «Stories».</p>
+    <div class="vg26-command-foot"><span>Только навигация. Ничего не отправляется без твоего действия.</span><kbd>Esc</kbd></div>
+  </dialog>
 
   <div class="action-dock" id="actionDock">
     <button class="primary-button" id="mainButton" type="button">
@@ -1823,18 +2218,25 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/veto-device-polish.js?v=20261019-mobile-polish-v1"></script>
-  <script src="/app.js?v=20261019-messenger-first-v1"></script>
+  <script src="/veto-device-polish.js?v=20261025-cross-screen-42"></script>
+  <script src="/app.js?v=20261025-release-safety-44"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
-  <script src="/privacy.js?v=20261017-veto-telegram-chat-ui-v2"></script>
+  <script src="/privacy.js?v=20261025-release-proof-44"></script>
   <script src="/chat-theme.js?v=20261018-global-theme-v1"></script>
-  <script src="/telegram-chats.js?v=20261019-messenger-first-v1"></script>
+  <script src="/vetogram-inbox-pulse-core.js?v=20261024-inbox-pulse-v1"></script>
+  <script src="/telegram-chats.js?v=20261025-signed-chat-41"></script>
   <script src="/telegram-stories.js?v=20261019-veto-discovery-v1"></script>
-  <script src="/voice-studio.js?v=20261016-veto-smart-inbox-v1"></script>
+  <script src="/voice-studio.js?v=20261025-cross-screen-42"></script>
   <script src="/studio-module.js?v=20261007-veto-telegram-v2"></script>
   <script type="module" src="/story-engine.js?v=20261022-se1"></script>
+  <script type="module" src="/vetogram-ai.js?v=20261023-ai2"></script>
+  <script type="module" src="/vetogram-creative-presets.js?v=20261024-creative-deck-r1"></script>
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
   <script src="/veto-launch-polish.js?v=20261019-launch-01" defer></script>
-  <script src="/vetogram-header.js?v=20261021-v1" defer></script>
+  <script src="/vetogram-header.js?v=20261025-compact-header-41" defer></script>
+  <script src="/vetogram-command-2026.js?v=20261024-premium-r1" defer></script>
+  <script src="/vetogram-resume-2026.js?v=20261024-retention-r1" defer></script>
+  <script type="module" src="/vetogram-workflows-2026.js?v=20261024-premium-workflows-r1"></script>
+  <script type="module" src="/vetogram-mission-2026.js?v=20261024-cinematic-v1"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+import {businessConnectionReadiness} from '../lib/vetogram-business-readiness.js';
 import crypto from 'node:crypto';
 import { publishPhotoStory, publishPhotoStoryUserSession, deleteStoryUserSession, friendlyPublishError, STORY_PERIOD_SECONDS } from '../lib/story-app-publisher.js';
 import {validateStoryPortalLink} from '../lib/story-portal-media-area.js';
@@ -11,6 +12,7 @@ import {
   upsertBusinessConnectionState,
 } from '../lib/viewer-sync-store.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
+import {telegramOwnerError} from '../lib/telegram-owner-runtime.js';
 
 const MAX_SAVED_USERS = 100;
 const MAX_HISTORY = 12;
@@ -429,9 +431,16 @@ async function refreshConnection(token, chatId, baseUrl, settings) {
     const connection = await tg(token, 'getBusinessConnection', {
       business_connection_id: settings.bc,
     });
-    const live = Boolean(connection?.is_enabled);
-    const rights = Boolean(connection?.rights?.can_manage_stories);
-    const readRights = Boolean(connection?.rights?.can_read_messages);
+    // A Bot API result for a different Telegram account/connection must
+    // never authorize a Story or overwrite this owner's durable connection.
+    const verified=businessConnectionReadiness(chatId,settings.bc,connection);
+    if (verified.botApi==='not-verified') {
+      return {settings,live:false,rights:false,readRights:false,
+        degraded:true,ownerUnverified:true};
+    }
+    const live=verified.botApi==='verified';
+    const rights=live && verified.storiesPermission==='granted';
+    const readRights=live && connection.rights?.can_read_messages===true;
 
     if (!live) {
       const next = { ...settings, bc: null, canStories: false, canReadMessages: false };
@@ -461,14 +470,15 @@ async function refreshConnection(token, chatId, baseUrl, settings) {
     }).catch(() => {});
     return { settings: next, live: true, rights, readRights };
   } catch (error) {
-    // A transient Telegram/API failure must not destroy a previously valid
-    // Business connection. Keep the durable/menu state and surface degraded live status.
+    // Keep the stored connection for future retries, but never report
+    // *verified* live rights from cached data while Telegram is unreachable.
+    // A stale cached right must not authorize a Story publish request.
     console.warn('Business connection verification deferred', error?.message || String(error));
     return {
       settings,
-      live: Boolean(settings.bc),
-      rights: Boolean(settings.canStories),
-      readRights: Boolean(settings.canReadMessages),
+      live: false,
+      rights: false,
+      readRights: false,
       degraded: true,
     };
   }
@@ -692,6 +702,7 @@ export default async function handler(req, res) {
           const decrypted = await openJson(userSessionRow.session_ciphertext, `session:${chatId}`);
           story = await publishPhotoStoryUserSession({
             session: decrypted.session,
+            ownerId: String(chatId),
             imageBuffer,
             caption,
             audience: pre.audience,
@@ -746,8 +757,13 @@ export default async function handler(req, res) {
       } catch (error) {
         const next = { ...pre, processing: false };
         await saveSettings(token, chatId, baseUrl, next).catch(() => {});
+        const ownerFailure = telegramOwnerError(error);
         const description = error?.telegram?.description || error?.errorMessage || error?.message || String(error);
-        res.status(500).json({ ok: false, error: friendlyPublishError(description) });
+        res.status(ownerFailure?.status || 500).json({
+          ok: false,
+          error: ownerFailure?.error || friendlyPublishError(description),
+          uncertain: !ownerFailure && /STORY_PUBLISH_RESULT_UNCERTAIN|timed out|timeout|ECONNRESET|ETIMEDOUT|network/i.test(description),
+        });
         return;
       }
     }

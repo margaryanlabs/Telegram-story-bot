@@ -149,7 +149,8 @@ test('Preserved-only chat is accessible without a live Telegram session and neve
  const api=read('api/telegram-chats.js'),ui=read('public/telegram-chats.js');
  assert.ok(api.includes('archiveThreads(userId)'));
  assert.ok(api.includes("if(!chat && threadArchive)chat=archivedDialog(threadArchive)"));
- assert.ok(api.includes("if(warning && !history.length)return respond(res,409"));
+ assert.ok(api.includes("if(warning && !history.length && !live.chats.length)"));
+ assert.ok(api.includes("history.unavailable?503:409"));
  assert.ok(api.includes('listPrivacyMessages(ownerId,chatId,ARCHIVE_PAGE,offset)'));
  assert.ok(api.includes("deleted:Boolean(row.deleted_at),saved:true"));
  assert.ok(api.includes('archiveHasMore:stored.hasMore'));

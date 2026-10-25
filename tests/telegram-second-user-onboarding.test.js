@@ -34,7 +34,7 @@ test('Phone code, 2FA and QR sign-in all reject cross-account sessions BEFORE DB
   assert.ok(sync.includes('revokeUserSession(result.session)'));
   assert.ok(qr.includes('revokeUserSession(result.session)'));
   assert.ok(sync.includes("identityMismatch: row.status === 'active'"));
-  assert.ok(sync.includes("sameTelegramAccount(userId, row.telegram_account_user_id)"));
+  assert.ok(sync.includes("sameTelegramAccount(userId,row.telegram_account_user_id)"));
   assert.ok(mini.includes("String(userSessionRow.telegram_account_user_id || '') === String(chatId)"));
   assert.ok(qr.includes("error:TELEGRAM_OWNER_MESSAGE"));
 });

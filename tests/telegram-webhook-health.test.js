@@ -42,7 +42,13 @@ test('Existing Mini App and Telegram message flows both use fresh UI build ident
   const studio = readFileSync(new URL('../public/studio.html',import.meta.url),'utf8');
   const setup = readFileSync(new URL('../api/setup.js',import.meta.url),'utf8');
   const webhook = readFileSync(new URL('../api/webhook-v7.js',import.meta.url),'utf8');
-  assert.ok(studio.includes('/app.js?v=20261019-messenger-first-v1'));
+  // The app identifier must advance with the current owner-scoped integration;
+  // hard-coding a retired version incorrectly breaks every future release.
+  const appScripts=studio.split('\n').filter(line=>line.includes('src="/app.js?v='));
+  assert.equal(appScripts.length,1,'exactly one versioned /app.js entry must be loaded');
+  const appVersion=appScripts[0].split('/app.js?v=')[1]?.split('"')[0]||'';
+  assert.match(appVersion,/^[0-9]{8}-[a-z0-9-]+$/);
+  assert.ok(Number(appVersion.slice(0,8))>=20261025,'app.js must use current owner-safe build');
   assert.ok(studio.includes('/privacy.js?v=20261017-veto-telegram-chat-ui-v2'));
   assert.match(setup,/CONTROL_BUILD = '20261021-vetogram-identity-v1'/);
   assert.match(webhook,/CONTROL_BUILD = '20261021-vetogram-identity-v1'/);

@@ -73,6 +73,8 @@
 
   const SCREEN_ALIASES = {
     home: 'home',
+    ai: 'ai',
+    vetogramai: 'ai',
     stories: 'publish',
     publish: 'publish',
     ghost: 'privacy',
@@ -106,6 +108,8 @@
   let composerPreviewUrl = '';
   let composerNonce = '';
   let composerBusy = false;
+  let composerGeneration = 0;
+  let composerOwner = '';
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -298,9 +302,12 @@
   }
 
   function resetComposer({ keepCaption = false } = {}) {
+    // Invalidate any in-flight image compression before it can replace a new draft.
+    composerGeneration++;
     composerFile = null;
     composerDataUrl = '';
     composerNonce = '';
+    composerOwner = '';
     composerBusy = false;
     if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl = '';
@@ -318,7 +325,11 @@
   }
 
   async function prepareComposerFile(file) {
-    if (!file) return;
+    if (!file || state.processing) return;
+    const generation = ++composerGeneration;
+    const signedOwner = String(tg?.initData || '');
+    const isCurrent = () => generation === composerGeneration &&
+      signedOwner === String(tg?.initData || '');
 
     composerBusy = true;
     $('composerState').textContent = 'Подготавливаю…';
@@ -327,7 +338,9 @@
 
     try {
       const prepared = await compressStoryImage(file);
+      if (!isCurrent()) return;
       composerFile = file;
+      composerOwner = signedOwner;
       composerDataUrl = prepared.dataUrl;
       composerNonce = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
@@ -340,16 +353,26 @@
       $('pickStoryMedia').hidden = true;
       notify('success');
     } catch (error) {
+      if (!isCurrent()) return;
       resetComposer({ keepCaption: true });
       notify('error');
       showToast(error.message);
     } finally {
-      composerBusy = false;
-      renderPublish();
+      if (generation === composerGeneration) {
+        if (signedOwner !== String(tg?.initData || '')) {
+          // A new Telegram account must not inherit a half-prepared Story.
+          resetComposer();
+        } else {
+          composerBusy = false;
+          renderPublish();
+        }
+      }
     }
   }
 
   async function publishComposerStory() {
+    const signedOwner = String(tg?.initData || '');
+    if (composerBusy || state.processing) return;
     if (!telegramAccountReady()) {
       try { await api('check'); } catch {}
       if (!telegramAccountReady()) {
@@ -357,11 +380,16 @@
         return;
       }
     }
+    if (signedOwner !== String(tg?.initData || '')) return;
+    if (composerDataUrl && composerOwner !== signedOwner) {
+      resetComposer();
+      showToast('Telegram-аккаунт изменился. Выбери фото заново.');
+      return;
+    }
     if (!composerDataUrl) {
       $('storyFileInput').click();
       return;
     }
-    if (composerBusy || state.processing) return;
 
     if (state.audience === 'selected' && !state.selected?.length) {
       showToast('Добавь людей для режима «Выбранные»');
@@ -385,8 +413,13 @@
         nonce: composerNonce || (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
       });
 
-      const publishedStoryId = result.storyId || state.lastStory;
-      selectedViewerStory = publishedStoryId || selectedViewerStory;
+      const publishedStoryId = String(result.storyId || '');
+      if (result.published !== true || !/^[1-9]\d*$/.test(publishedStoryId)) {
+        const error = new Error('Telegram не подтвердил ID новой Story. Проверь свои Stories перед повторной публикацией.');
+        error.uncertain = true;
+        throw error;
+      }
+      selectedViewerStory = publishedStoryId;
       const publishedAudience = audienceLabel(result.verifiedAudience || state.audience);
       const cleaned = Array.isArray(result.cleanedUsernames) ? result.cleanedUsernames : [];
 
@@ -559,23 +592,50 @@
   }
 
   async function api(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const signedOwner = String(tg?.initData || '');
+    if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
       headers: {
-        'x-telegram-init-data': tg.initData,
+        'x-telegram-init-data': signedOwner,
         'content-type':'application/json',
       },
     };
     if (action) options.body = JSON.stringify({ action, ...payload });
 
-    const { response, data } = await requestJson('/api/miniapp', options, {
-      retry: !action || action === 'check' || action === 'publish_story',
-      timeoutMs: action === 'publish_story' ? 45000 : 15000,
-    });
+    let response, data;
+    try {
+      ({ response, data } = await requestJson('/api/miniapp', options, {
+        // A Telegram Story POST is not guaranteed idempotent on Bot API.
+        // Retrying automatically after a lost response can publish it twice.
+        retry: !action || action === 'check',
+        timeoutMs: action === 'publish_story' ? 45000 : 15000,
+      }));
+    } catch (error) {
+      if (signedOwner !== String(tg?.initData || ''))
+        throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
+      if (action === 'publish_story') {
+        const uncertain = new Error('Связь прервалась: публикация могла пройти. Проверь свои Stories в Telegram перед новой попыткой.');
+        uncertain.uncertain = true;
+        throw uncertain;
+      }
+      throw error;
+    }
 
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Vetogram');
+    if (signedOwner !== String(tg?.initData || ''))
+      throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
+    if (!response.ok || !data.ok) {
+      const message = data.error || 'Не удалось обновить Vetogram';
+      if (action === 'publish_story' &&
+          (response.status >= 500 ||
+            (response.status === 409 && /обрабатывается|processing/i.test(message)))) {
+        const uncertain = new Error(message + ' Результат публикации не подтверждён. Проверь свои Stories перед повторной отправкой.');
+        uncertain.uncertain = true;
+        throw uncertain;
+      }
+      throw new Error(message);
+    }
 
     if (Array.isArray(data.activity)) {
       state.activity = data.activity;
@@ -613,13 +673,14 @@
   }
 
   async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const signedOwner = String(tg?.initData || '');
+    if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
     const options = {
       method: action ? 'POST' : 'GET',
       headers: {
-        'x-telegram-init-data': tg.initData,
+        'x-telegram-init-data': signedOwner,
         'content-type':'application/json',
       },
     };
@@ -630,6 +691,8 @@
       timeoutMs: 18000,
     });
 
+    if (signedOwner !== String(tg?.initData || ''))
+      throw new Error('Telegram-аккаунт изменился. Старые данные просмотров не применены.');
     if (!response.ok || !data.ok) {
       const error = new Error(data.error || 'Deep Intelligence временно недоступен');
       error.viewerData = data;
@@ -639,12 +702,13 @@
   }
 
   async function automationsApi(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const signedOwner = String(tg?.initData || '');
+    if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
       headers: {
-        'x-telegram-init-data': tg.initData,
+        'x-telegram-init-data': signedOwner,
         'content-type':'application/json',
       },
     };
@@ -654,6 +718,8 @@
       retry: !action || action === 'refresh',
       timeoutMs: 12000,
     });
+    if (signedOwner !== String(tg?.initData || ''))
+      throw new Error('Telegram-аккаунт изменился. Старые Automation данные не применены.');
     if (!response.ok || !data.ok) throw new Error(data.error || 'Automation Center временно недоступен');
     return data;
   }
@@ -721,7 +787,8 @@
   }
 
   async function refreshViewerAnalytics({ silent = true } = {}) {
-    if (!tg?.initData || !viewerState.session?.connected) {
+    const signedOwner = String(tg?.initData || '');
+    if (!signedOwner || !viewerState.session?.connected) {
       viewerState.analytics = null;
       renderAnalytics();
       return;
@@ -731,29 +798,35 @@
       const { response, data } = await requestJson('/api/viewer-sync?analytics=1', {
         method: 'GET',
         headers: {
-          'x-telegram-init-data': tg.initData,
+          'x-telegram-init-data': signedOwner,
           'content-type':'application/json',
         },
       }, { retry:true, timeoutMs:18000 });
+      if (signedOwner !== String(tg?.initData || '')) return;
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось загрузить Viewer Analytics');
       viewerState.analytics = data.analytics || null;
     } catch (error) {
+      if (signedOwner !== String(tg?.initData || '')) return;
       if (!silent) showToast(error.message);
     }
-    renderAnalytics();
+    if (signedOwner === String(tg?.initData || '')) renderAnalytics();
   }
 
   async function refreshViewerSync({ silent = false } = {}) {
+    const signedOwner = String(tg?.initData || '');
     try {
       let data = await viewerApi();
+      if (signedOwner !== String(tg?.initData || '')) return;
 
       const history = activeStoryHistory().filter(item => Number(item.ts || 0) > 0);
       const historyKey = history.map(item => `${item.id}:${item.ts}:${item.deleted ? 1 : 0}`).join('|');
 
       if (data.session?.connected && historyKey && historyKey !== viewerRegisteredKey) {
         await viewerApi('register_stories', { stories: history }, null);
+        if (signedOwner !== String(tg?.initData || '')) return;
         viewerRegisteredKey = historyKey;
         data = await viewerApi();
+        if (signedOwner !== String(tg?.initData || '')) return;
       }
 
       if (data.degraded) {
@@ -786,6 +859,7 @@
         };
       }
     } catch (error) {
+      if (signedOwner !== String(tg?.initData || '')) return;
       const data = error.viewerData || {};
       viewerState = {
         ...viewerState,
@@ -804,6 +878,7 @@
       };
       if (!silent && data.config?.configured !== false) showToast(error.message);
     }
+    if (signedOwner !== String(tg?.initData || '')) return;
     renderViewers();
     renderHome();
   }
@@ -1506,9 +1581,10 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home', 'story-engine':'studio' };
+  const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home', ai:'home', 'story-engine':'studio' };
   function switchScreen(name) {
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
+    if (composerOwner && composerOwner !== String(tg?.initData || '')) resetComposer();
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
     if (!activeScreen) {
       showToast('Раздел временно недоступен');
@@ -2204,6 +2280,7 @@
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
+        <button data-sheet-action="viewer-start-qr">Войти через QR со второго устройства</button>
         <button data-sheet-action="viewer-back-setup">Назад</button>
       </div>
     `);
@@ -2238,6 +2315,7 @@
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-code">Подтвердить</button>
         <button data-sheet-action="viewer-code-help">Код не пришёл?</button>
+        <button data-sheet-action="viewer-start-qr">QR-вход со второго устройства</button>
         <button data-sheet-action="close">Закрыть (вход сохранится)</button>
       </div>
     `);
@@ -3267,17 +3345,31 @@
 
   renderNetworkStatus();
 
-  const updateVetoSpotlight = (clientX, clientY) => {
-    const x = Math.max(0, Math.min(window.innerWidth, Number(clientX || 0)));
-    const y = Math.max(0, Math.min(window.innerHeight, Number(clientY || 0)));
-    document.body.style.setProperty('--veto-x', `${x}px`);
-    document.body.style.setProperty('--veto-y', `${y}px`);
-  };
-  window.addEventListener('pointermove', event => updateVetoSpotlight(event.clientX, event.clientY), { passive:true });
-  window.addEventListener('touchmove', event => {
-    const touch = event.touches?.[0];
-    if (touch) updateVetoSpotlight(touch.clientX, touch.clientY);
-  }, { passive:true });
+  // Pointer spotlight is purely decorative. Do not recalculate two large
+  // gradients on every mobile scroll/touch, or when reduced motion is requested.
+  // Batch desktop movement into one visual update per animation frame.
+  const finePointer = typeof window.matchMedia === 'function'
+    && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reducedSpotlightMotion = typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (finePointer && !reducedSpotlightMotion && typeof window.requestAnimationFrame === 'function') {
+    let spotlightQueued = false;
+    let spotlightX = 0;
+    let spotlightY = 0;
+    window.addEventListener('pointermove', event => {
+      if (document.visibilityState === 'hidden') return;
+      spotlightX = Math.max(0, Math.min(window.innerWidth, Number(event.clientX || 0)));
+      spotlightY = Math.max(0, Math.min(window.innerHeight, Number(event.clientY || 0)));
+      if (spotlightQueued) return;
+      spotlightQueued = true;
+      window.requestAnimationFrame(() => {
+        spotlightQueued = false;
+        if (document.visibilityState === 'hidden') return;
+        document.body.style.setProperty('--veto-x', `${spotlightX}px`);
+        document.body.style.setProperty('--veto-y', `${spotlightY}px`);
+      });
+    }, { passive:true });
+  }
 
   window.addEventListener('unhandledrejection', event => {
     const message = event?.reason?.message || String(event?.reason || '');

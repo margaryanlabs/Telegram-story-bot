@@ -1,4 +1,5 @@
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
+import {businessConnectionReadiness} from '../lib/vetogram-business-readiness.js';
 import { getViewerSession, updatePrivacySettings, getPrivacySettings, getBusinessConnectionState } from '../lib/viewer-sync-store.js';
 import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
@@ -39,10 +40,12 @@ export async function verifyStoredBusinessConnection(token,ownerId) {
       body:JSON.stringify({business_connection_id:stored.businessConnectionId}),signal:AbortSignal.timeout(4500),
     });
     const data=await response.json();
-    const connection=data?.result;
-    if(!response.ok || !data.ok || String(connection?.user?.id)!==String(ownerId)
-      || String(connection?.user_chat_id)!==String(ownerId)) return {botApi:'not-verified',serverState:'not-verified'};
-    return {botApi:connection.is_enabled?'verified':'disabled',serverState:'verified'};
+    if(!response.ok || data?.ok!==true)
+      return {botApi:'not-verified',serverState:'not-verified',
+        storiesPermission:'unknown',messageEventsProven:false};
+    // user_chat_id is a *chat* ID, and may differ from the signed user ID.
+    // Check both the requested connection token and its authenticated owner.
+    return businessConnectionReadiness(ownerId,stored.businessConnectionId,data?.result);
   } catch {return {botApi:'not-verified',serverState:'pending'};}
 }
 
