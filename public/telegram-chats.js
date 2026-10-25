@@ -2555,6 +2555,33 @@
       haptic();
     }
   });
+  // V4 context action: prepare the EXACT user-selected incoming message
+  // as an AI reply draft. No provider request or Telegram send occurs here.
+  // The signed owner, open chat and generation are rechecked after consent.
+  window.VetoTelegramPrepareSelectedAiReply = messageId => {
+    const id=Number(messageId);
+    if(!Number.isSafeInteger(id)||id<1||resetOwner()||
+       !state.thread||!canSendInThread(state.thread))return false;
+    const message=state.messages.find(m=>Number(m.id)===id);
+    if(!message||message.out||message.deleted||message.preservedOnly||
+       typeof message.text!=='string'||!message.text.trim())return false;
+    const signed=String(tg?.initData||'');
+    const ownerId=String(tg?.initDataUnsafe?.user?.id||'');
+    const chatId=String(state.thread.id);
+    const generation=state.threadGeneration;
+    if(!signed||!/^[0-9]{1,20}$/.test(ownerId))return false;
+    if(!window.confirm('Подготовить AI-ответ на выбранное сообщение? Текст сначала попадёт только в локальный черновик. Отправка провайдеру потребует отдельного разрешения.'))return false;
+    if(resetOwner()||signed!==String(tg?.initData||'')||
+       generation!==state.threadGeneration||chatId!==String(state.thread?.id)||
+       !state.messages.some(m=>m===message))return false;
+    window.dispatchEvent(new CustomEvent('vetogram:ai-prefill',{detail:{
+      ownerId,signed,chatId,chatTitle:String(state.thread.title||'Telegram'),
+      text:message.text.slice(0,1500)
+    }}));
+    window.VetoTelegramNavigate?.('ai');
+    return true;
+  };
+
   // The user explicitly elects ONE visible incoming message for AI draft.
   // It is copied locally; nothing is transmitted to an AI provider here.
   $('telegramThreadReplyAI')?.addEventListener('click',()=>{
