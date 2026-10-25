@@ -26,6 +26,27 @@
     input.focus({preventScroll:true});
     // No click on vtaiCreate and no consent-checkbox mutation.
   });
+  // Follow the *real* selected AI mode across the existing controller.
+  // A mode badge is not a provider status and does not trigger any AI calls.
+  const modes=root.querySelector('.vtai-modes');
+  const modeHint=root.querySelector('.veto-reborn-ai-header small');
+  const labels=Object.freeze({
+    chat:'AI-чат',translate:'Перевод',reply:'AI Reply',action:'AI Action',
+    brief:'Задачи',story:'Stories',campaign:'Продажи',negotiator:'Переговоры'
+  });
+  function syncModeHint(){
+    if(!modes||!modeHint)return;
+    const pressed=modes.querySelector('[data-vtai-mode][aria-pressed="true"]');
+    const selected=pressed?.dataset.vtaiMode;
+    modeHint.textContent=selected&&Object.hasOwn(labels,selected)
+      ? labels[selected]:'Режим не выбран';
+  }
+  if(modes&&modeHint){
+    new MutationObserver(syncModeHint).observe(modes,{
+      subtree:true,attributes:true,attributeFilter:['aria-pressed']
+    });
+    syncModeHint();
+  }
   new MutationObserver(sync).observe(conversation,{childList:true});
   sync();
 })();
