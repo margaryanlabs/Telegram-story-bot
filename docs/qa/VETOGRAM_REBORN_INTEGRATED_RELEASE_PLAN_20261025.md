@@ -58,3 +58,12 @@ Personal-account management is now distinct from Business onboarding; opening pr
 - Onboarding copy no longer marks Stories publishing or viewer identities as automatically available after login.
 - Account profile no longer interprets `state.connection === 'needs_permission'` as a connected bot. It shows permission required separately and does not claim the receipt of Anti-Delete events from mere stored configuration.
 - Source/DOM contract tests for modal, consent, identity and truthful status passed **8/8** in an isolated JavaScript harness. Full repository suite and real Telegram verification remain pending until the coordinated release gate.
+
+
+### Login recovery and explicit Business opt-in — latest code fix
+
+- The client now mirrors the server's pending OTP challenge immediately after a successful `send_code` or a resumed valid challenge, preserving the expiry/delivery classification and allowing a return to code/2FA without making another Telegram request.
+- On server HTTP 409 with an existing valid challenge, the user sees explicit **Resume login** or **Cancel & switch phone** actions; neither is executed automatically. A stale/expired challenge never presents that option.
+- Removed both automatic Business permission wizard invocations after successful OTP and after successful Telegram 2FA. Privacy/Anti-Delete is a separate opt-in, never an implicit sequel to personal account login.
+- Removed duplicate close buttons from the Business confirmation outcome; preserved the warning when archive settings were not saved.
+- Targeted four login-recovery checks passed in an isolated JavaScript harness. No claims of Telegram code delivery or full npm test completion.
