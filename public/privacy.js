@@ -11,6 +11,8 @@
   const allowedInitialFilters = new Set(['smart','action','watch','all','deleted','edited','media']);
 
   const privacyState = {
+    ownerInitData: String(tg?.initData||''),
+    ownerEpoch: 0,
     loading: false,
     settings: {
       antiDelete: false,
@@ -99,6 +101,59 @@
 
   function haptic(type = 'light') {
     try { tg?.HapticFeedback?.impactOccurred(type); } catch {}
+  }
+
+  // Reset owner-scoped UI state before the next paint. Nothing from a prior
+  // signed Telegram account may remain in the Vault, Smart Inbox or sheets.
+  function resetPrivacyOwner() {
+    const current=String(tg?.initData||'');
+    if(current===privacyState.ownerInitData)return false;
+    privacyState.backup.stopRequested=true;
+    allBackup.stop=true;
+    allBackup.running=false;allBackup.index=0;allBackup.total=0;allBackup.queued=0;
+    allBackup.longRetention=false;
+    closeSheet();
+    privacyState.ownerInitData=current;
+    privacyState.ownerEpoch++;
+    privacyState.loading=false;privacyState.degraded=false;
+    privacyState.settings={
+      antiDelete:false,editHistory:false,ghostInbox:false,ghostFocus:true,
+      notifyDeletes:true,notifyEdits:true,retentionDays:30
+    };
+    privacyState.threads=[];privacyState.smartSummary=null;privacyState.smartBrief=null;
+    privacyState.deletedFeed=[];privacyState.deletedFeedLoaded=false;
+    privacyState.deletedFeedLoading=false;privacyState.deletedFeedHasMore=false;
+    privacyState.diagnostics=null;privacyState.diagnosticsLoading=false;
+    privacyState.activeThread=null;privacyState.loadingOlderThread=false;
+    privacyState.query='';privacyState.filter='all';
+    privacyState.deepLinkHandled=true; // Never replay previous owner's deep link.
+    privacyState.lastTotalMessages=0;privacyState.lastRefreshAt=null;
+    privacyState.connection={
+      loaded:false,live:false,ready:false,state:'unknown',readMessages:false,error:false
+    };
+    privacyState.backup={
+      chats:[],jobs:[],selected:null,offsetId:0,totalSaved:0,totalRead:0,
+      totalMedia:0,running:false,stopRequested:false,auto:false,notifyCompletion:true
+    };
+    businessWizardSnapshot=null;businessWizardSignedOwner='';
+    if($('privacySearch'))$('privacySearch').value='';
+    if($('privacyThreads'))$('privacyThreads').replaceChildren();
+    if($('privacyDeletedMore'))$('privacyDeletedMore').hidden=true;
+    return true;
+  }
+  function ownerLease(){
+    resetPrivacyOwner();
+    if(!privacyState.ownerInitData)throw new Error('Открой Vetogram внутри Telegram');
+    return {signed:privacyState.ownerInitData,epoch:privacyState.ownerEpoch};
+  }
+  function assertOwner(lease){
+    if(lease.signed!==String(tg?.initData||'') ||
+       lease.epoch!==privacyState.ownerEpoch){
+      resetPrivacyOwner();
+      const error=new Error('Telegram-аккаунт изменился. Повтори действие.');
+      error.code='VETO_PRIVACY_OWNER_CHANGED';
+      throw error;
+    }
   }
 
   function privacyScreenActive() {
@@ -424,6 +479,7 @@
   }
 
   function render() {
+    resetPrivacyOwner();
     const settings = privacyState.settings || {};
     const enabled = anyEnabled(settings);
     const complete = fullyEnabled(settings);
@@ -589,8 +645,10 @@
       privacyStatMessages: totals.messages,
       privacyStatVault: totals.vault,
     };
+    const vaultVerified=Boolean(privacyState.lastRefreshAt && !privacyState.degraded &&
+      privacyState.ownerInitData && privacyState.ownerInitData===String(tg?.initData||''));
     for (const [id, value] of Object.entries(statMap)) {
-      if ($(id)) $(id).textContent = String(value);
+      if ($(id)) $(id).textContent = vaultVerified ? String(value) : '—';
     }
 
     if ($('privacyRetentionLabel')) {
