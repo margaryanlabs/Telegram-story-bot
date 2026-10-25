@@ -1466,9 +1466,9 @@
     <section class="screen" data-screen="ai" aria-label="VETOGRAM AI"><span id="vetoOrb" class="noir-orb" role="img" data-busy="false" aria-label="ИИ ожидает запрос"></span>
       <div class="vtai-root" id="vtaiRoot">
         <header class="vtai-hero">
-          <span class="vtai-kicker">VETOGRAM / AI-ИНСТРУМЕНТЫ</span>
-          <h1>VETO <span>AI.</span><br>Управляй словами.</h1>
-          <p>Общайся с AI, переводи, готовь ответы и создавай тексты историй. AI не читает твои чаты автоматически и ничего не отправляет без отдельного подтверждения.</p>
+          <span class="vtai-kicker">VETOGRAM · ЛИЧНЫЙ ИИ</span>
+          <h1>VETO <span>AI</span></h1>
+          <p>Разговоры, идеи, перевод и помощь с сообщениями. Ты управляешь данными и отправкой.</p>
         </header>
         <div class="vtai-modes" role="group" aria-label="Выбор AI-инструмента">
           <button type="button" data-vtai-mode="chat" aria-pressed="true" class="active">✧ AI-чат</button>
@@ -1492,8 +1492,18 @@
           <div class="vg26-creative-options" id="vg26CreativeOptions" role="group" aria-label="Стиль черновика"></div>
           <p class="vg26-creative-feedback" id="vg26CreativeFeedback" role="status" aria-live="polite"></p>
         </section>
+        <section class="vtai-panel veto-reborn-ai-conversation" aria-label="Диалог с VETO AI">
+          <div class="veto-reborn-ai-header"><span aria-hidden="true">✦</span><h2>Твой диалог</h2><small>Личная рабочая область</small></div>
+          <div id="vtaiThread" class="vtai-thread" aria-live="polite"></div>
+          <div class="veto-reborn-ai-starters" id="vetoRebornAiStarters" role="group" aria-label="Примеры запросов">
+            <button type="button" data-reborn-ai-prompt="Помоги сформулировать ответ — вежливо и уверенно.">Написать ответ <span>↗</span></button>
+            <button type="button" data-reborn-ai-prompt="Предложи три идеи для моей истории в Telegram.">Идеи для Stories <span>↗</span></button>
+            <button type="button" data-reborn-ai-prompt="Помоги разобраться в сложном разговоре, не делая предположений.">Разобрать разговор <span>↗</span></button>
+          </div>
+          <p class="vtai-note veto-reborn-ai-privacy-note">Текст отправляется AI только после отдельного согласия. Диалог хранится в этом окне.</p>
+        </section>
         <section class="vtai-panel">
-          <h2>Новый запрос</h2>
+          <h2>Напиши VETO AI</h2>
           <label class="vtai-label" id="vtaiLanguage" hidden>Язык перевода
             <select class="vtai-input" id="vtaiLanguageSelect" aria-label="Язык перевода">
               <option value="английский">Английский</option>
@@ -1563,11 +1573,6 @@
           <div class="vtai-row"><button id="vtaiCreate" class="vtai-action vtai-primary" type="button">Спросить VETO AI</button></div>
           <p class="vtai-note" id="vtaiQuota" aria-live="polite">Потребление AI ограничено дневным бюджетом. Данные Telegram не анализируются автоматически.</p>
           <div id="vtaiNotice" role="status" aria-live="polite" hidden></div>
-        </section>
-        <section class="vtai-panel" aria-label="Диалог с VETO AI">
-          <h2>AI-диалог</h2>
-          <div id="vtaiThread" class="vtai-thread" aria-live="polite"></div>
-          <p class="vtai-note">AI-переписка хранится только в памяти текущего окна и не подменяет Telegram. Уточнения контекста задаются в этом разделе.</p>
         </section>
         <section class="vtai-panel" id="vtaiReview" hidden>
           <h2>Подтверждение отправки</h2>
