@@ -168,7 +168,7 @@ test('premium chat filters expose real Focus and saved-copy navigation, not mock
   const labels=html.slice(html.indexOf('<nav class="bottom-nav"'),
     html.indexOf('</nav>',html.indexOf('<nav class="bottom-nav"')));
   for(const label of ['Чаты','Истории','Защита','Студия'])
-    assert.ok(labels.includes('<small>'+label+'</small>'),label);
+    assert.match(labels,new RegExp('<small(?: [^>]*)?>'+label+'</small>'));
 });
 
 

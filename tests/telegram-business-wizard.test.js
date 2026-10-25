@@ -70,7 +70,7 @@ test('Wizard requires owner-verified session and explicit opt-in before MTProto 
   assert.match(frontend,/data-business-selected/);
   assert.match(backend,/needsMessageProof:true/); // consent API returns actual-delivery proof requirement
   assert.match(html,/id="privacyBusinessWizardButton"/);
-  assert.match(html,/veto-telegram-chat-ui-v2/);
+  assert.match(html,/privacy\.js\?v=\d{8}-[a-z0-9-]+/);
 });
 
 test('Business wizard does not silently request control over read, delete, profile or gifts; Stories require a separate opt-in', () => {

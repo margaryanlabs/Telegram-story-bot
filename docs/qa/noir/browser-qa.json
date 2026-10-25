@@ -1,0 +1,454 @@
+{
+  "commit": "93aaa495efef6a760bd5b33bc5910cddc78bae71",
+  "environment": "Chromium iframe viewports; unsigned Telegram session",
+  "checks": [
+    {
+      "w": "320",
+      "s": "home",
+      "client": 303,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 303
+    },
+    {
+      "w": "320",
+      "s": "telegram",
+      "client": 303,
+      "navHeight": 68,
+      "padding": "97px",
+      "scroll": 303
+    },
+    {
+      "w": "320",
+      "s": "publish",
+      "client": 303,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 303
+    },
+    {
+      "w": "320",
+      "s": "privacy",
+      "client": 303,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 303
+    },
+    {
+      "w": "320",
+      "s": "story-engine",
+      "client": 303,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 303
+    },
+    {
+      "w": "320",
+      "s": "voice",
+      "client": 303,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 303
+    },
+    {
+      "w": "320",
+      "s": "ai",
+      "client": 303,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 303
+    },
+    {
+      "w": "360",
+      "s": "home",
+      "client": 343,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 343
+    },
+    {
+      "w": "360",
+      "s": "telegram",
+      "client": 343,
+      "navHeight": 68,
+      "padding": "97px",
+      "scroll": 343
+    },
+    {
+      "w": "360",
+      "s": "publish",
+      "client": 343,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 343
+    },
+    {
+      "w": "360",
+      "s": "privacy",
+      "client": 343,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 343
+    },
+    {
+      "w": "360",
+      "s": "story-engine",
+      "client": 343,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 343
+    },
+    {
+      "w": "360",
+      "s": "voice",
+      "client": 343,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 343
+    },
+    {
+      "w": "360",
+      "s": "ai",
+      "client": 343,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 343
+    },
+    {
+      "w": "390",
+      "s": "home",
+      "client": 373,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 373
+    },
+    {
+      "w": "390",
+      "s": "telegram",
+      "client": 373,
+      "navHeight": 68,
+      "padding": "97px",
+      "scroll": 373
+    },
+    {
+      "w": "390",
+      "s": "publish",
+      "client": 373,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 373
+    },
+    {
+      "w": "390",
+      "s": "privacy",
+      "client": 373,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 373
+    },
+    {
+      "w": "390",
+      "s": "story-engine",
+      "client": 373,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 373
+    },
+    {
+      "w": "390",
+      "s": "voice",
+      "client": 373,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 373
+    },
+    {
+      "w": "390",
+      "s": "ai",
+      "client": 373,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 373
+    },
+    {
+      "w": "430",
+      "s": "home",
+      "client": 413,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 413
+    },
+    {
+      "w": "430",
+      "s": "telegram",
+      "client": 413,
+      "navHeight": 68,
+      "padding": "97px",
+      "scroll": 413
+    },
+    {
+      "w": "430",
+      "s": "publish",
+      "client": 413,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 413
+    },
+    {
+      "w": "430",
+      "s": "privacy",
+      "client": 413,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 413
+    },
+    {
+      "w": "430",
+      "s": "story-engine",
+      "client": 413,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 413
+    },
+    {
+      "w": "430",
+      "s": "voice",
+      "client": 413,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 413
+    },
+    {
+      "w": "430",
+      "s": "ai",
+      "client": 413,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 413
+    },
+    {
+      "w": "725",
+      "s": "home",
+      "client": 708,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 708
+    },
+    {
+      "w": "725",
+      "s": "telegram",
+      "client": 708,
+      "navHeight": 68,
+      "padding": "97px",
+      "scroll": 708
+    },
+    {
+      "w": "725",
+      "s": "publish",
+      "client": 708,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 708
+    },
+    {
+      "w": "725",
+      "s": "privacy",
+      "client": 708,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 708
+    },
+    {
+      "w": "725",
+      "s": "story-engine",
+      "client": 708,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 708
+    },
+    {
+      "w": "725",
+      "s": "voice",
+      "client": 708,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 708
+    },
+    {
+      "w": "725",
+      "s": "ai",
+      "client": 708,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 708
+    },
+    {
+      "w": "768",
+      "s": "home",
+      "client": 751,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 751
+    },
+    {
+      "w": "768",
+      "s": "telegram",
+      "client": 751,
+      "navHeight": 68,
+      "padding": "97px",
+      "scroll": 751
+    },
+    {
+      "w": "768",
+      "s": "publish",
+      "client": 751,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 751
+    },
+    {
+      "w": "768",
+      "s": "privacy",
+      "client": 751,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 751
+    },
+    {
+      "w": "768",
+      "s": "story-engine",
+      "client": 751,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 751
+    },
+    {
+      "w": "768",
+      "s": "voice",
+      "client": 751,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 751
+    },
+    {
+      "w": "768",
+      "s": "ai",
+      "client": 751,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 751
+    },
+    {
+      "w": "1024",
+      "s": "home",
+      "client": 1007,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1007
+    },
+    {
+      "w": "1024",
+      "s": "telegram",
+      "client": 1007,
+      "navHeight": 68,
+      "padding": "97px",
+      "scroll": 1007
+    },
+    {
+      "w": "1024",
+      "s": "publish",
+      "client": 1007,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1007
+    },
+    {
+      "w": "1024",
+      "s": "privacy",
+      "client": 1007,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1007
+    },
+    {
+      "w": "1024",
+      "s": "story-engine",
+      "client": 1007,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1007
+    },
+    {
+      "w": "1024",
+      "s": "voice",
+      "client": 1007,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1007
+    },
+    {
+      "w": "1024",
+      "s": "ai",
+      "client": 1007,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1007
+    },
+    {
+      "w": "1440",
+      "s": "home",
+      "client": 1423,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1423
+    },
+    {
+      "w": "1440",
+      "s": "telegram",
+      "client": 1423,
+      "navHeight": 68,
+      "padding": "97px",
+      "scroll": 1423
+    },
+    {
+      "w": "1440",
+      "s": "publish",
+      "client": 1423,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1423
+    },
+    {
+      "w": "1440",
+      "s": "privacy",
+      "client": 1423,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1423
+    },
+    {
+      "w": "1440",
+      "s": "story-engine",
+      "client": 1423,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1423
+    },
+    {
+      "w": "1440",
+      "s": "voice",
+      "client": 1423,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1423
+    },
+    {
+      "w": "1440",
+      "s": "ai",
+      "client": 1423,
+      "navHeight": 68.5,
+      "padding": "97px",
+      "scroll": 1423
+    }
+  ]
+}

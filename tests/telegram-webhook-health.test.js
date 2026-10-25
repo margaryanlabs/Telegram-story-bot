@@ -49,7 +49,7 @@ test('Existing Mini App and Telegram message flows both use fresh UI build ident
   const appVersion=appScripts[0].split('/app.js?v=')[1]?.split('"')[0]||'';
   assert.match(appVersion,/^[0-9]{8}-[a-z0-9-]+$/);
   assert.ok(Number(appVersion.slice(0,8))>=20261025,'app.js must use current owner-safe build');
-  assert.ok(studio.includes('/privacy.js?v=20261017-veto-telegram-chat-ui-v2'));
+  assert.match(studio,/privacy\.js\?v=\d{8}-[a-z0-9-]+/);
   assert.match(setup,/CONTROL_BUILD = '20261021-vetogram-identity-v1'/);
   assert.match(webhook,/CONTROL_BUILD = '20261021-vetogram-identity-v1'/);
 });

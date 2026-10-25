@@ -136,7 +136,7 @@ test('Remix scrubs personal text overlay content, media and portal data',()=>{
   d.portal=normalizePortal({type:'links',link:'https://example.com'});
   const remix=remixDraft(d,'123',{now:300,id:'remix'});
   assert.equal(remix.imageDataUrl,'');assert.equal(remix.portal,null);
-  assert.equal(remix.layers[0].text,'EDIT YOUR TEXT');
+  assert.equal(remix.layers[0].text,'ТВОЙ ТЕКСТ');
   assert.equal(remix.layers[0].style,'pill');
 });
 test('Story editor exposes working layer gestures and photo controls inside existing Telegram UI',()=>{
