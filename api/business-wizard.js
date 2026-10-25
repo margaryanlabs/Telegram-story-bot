@@ -58,7 +58,7 @@ async function businessWriteReadiness() {
   try {
     const {neonStoreOperation}=await import('../lib/neon-store.js');
     const result=await neonStoreOperation('health',{});
-    return {ready:result?.backend==='neon' && Number(result?.schemaVersion)>=5};
+    return {ready:result?.backend==='neon' && Number(result?.schemaVersion)>=5 && result.businessLeaseReady===true};
   } catch {return {ready:false};}
 }
 
