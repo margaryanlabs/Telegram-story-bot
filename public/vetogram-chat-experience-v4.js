@@ -32,6 +32,7 @@
   const buttons = {};
   for (const [key,label] of [
     ['reply','↩ Ответить'],
+    ['ai','✦ AI-ответ на это сообщение'],
     ['copy','⧉ Скопировать текст'],
     ['search','⌕ Найти в переписке'],
     ['archive','◈ Архив и защита']
@@ -88,6 +89,10 @@
     const text=messageText(bubble);
     excerpt.textContent=text?text.slice(0,160):'Медиа или сохранённое сообщение';
     buttons.reply.disabled=!bubble.querySelector('[data-mirror-reply]');
+    buttons.ai.disabled=!text||bubble.classList.contains('outgoing')||
+      bubble.classList.contains('is-deleted')||
+      !Number.isSafeInteger(Number(bubble.dataset.mirrorMessageId))||
+      typeof window.VetoTelegramPrepareSelectedAiReply!=='function';
     buttons.copy.disabled=!text;
     buttons.search.disabled=!text;
     bubble.classList.add('v4-message-selected');
@@ -109,6 +114,13 @@
       dismiss();
       // Delegate to the existing owner-scoped reply handler. No message is sent.
       existing?.click();
+      return;
+    }
+    if(action==='ai'){
+      const id=Number(bubble.dataset.mirrorMessageId);
+      dismiss();
+      if(Number.isSafeInteger(id)&&id>0)
+        window.VetoTelegramPrepareSelectedAiReply?.(id);
       return;
     }
     if(action==='copy'){
