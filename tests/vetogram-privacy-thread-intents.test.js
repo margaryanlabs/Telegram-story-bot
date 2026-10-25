@@ -100,3 +100,25 @@ test('late edit history, media and background refresh are guarded',()=>{
   assert.match(src,/if \(!tg\?\.initData \|\| privacyState\.refreshInFlight/);
   assert.match(src,/if\(intent===privacyState\.archiveThreadEpoch\)privacyState\.loadingOlderThread=false/);
 });
+
+test('Canvas Noir Vault presents only verified archive status and accessible refresh',()=>{
+  const html=readFileSync(new URL('../public/studio.html',import.meta.url),'utf8');
+  const noir=readFileSync(new URL('../public/vetogram-noir.css',import.meta.url),'utf8');
+  const experience=readFileSync(new URL('../public/vetogram-experience-v4.js',import.meta.url),'utf8');
+  for(const id of ['privacyStatThreads','privacyStatDeleted','privacyStatEdited',
+    'privacyStatMessages','privacyStatVault']){
+    assert.match(html,new RegExp('id="'+id+'">—</strong>'));
+  }
+  for(const id of ['privacyEvidenceBar','privacyEvidenceStatus','privacyEvidenceRefresh']){
+    assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1);
+  }
+  assert.match(src,/evidence\.dataset\.verified=String\(archiveReady\)/);
+  assert.match(src,/privacyState\.lastRefreshAt\)/);
+  assert.match(src,/privacyEvidenceRefresh'\)\?\.addEventListener\('click'/);
+  assert.match(src,/Promise\.allSettled\(\[/);
+  assert.match(experience,/vaultStats\.after\(vaultEvidence\)/);
+  assert.match(experience,/vaultEvidence\.after\(vaultActions\)/);
+  assert.match(noir,/V4\.4 Verified Vault/);
+  assert.match(noir,/\#privacyEvidenceRefresh/);
+  assert.equal((noir.match(/\{/g)||[]).length,(noir.match(/\}/g)||[]).length);
+});
