@@ -54,3 +54,38 @@ The current V4 experience controller relocates DOM nodes rather than cloning the
 - `tests/vetogram-v4-experience.test.js` — source-bound regression checks.
 
 This is an engineering continuation of the **selected Canvas Noir direction**, not a completion certificate for every promised V4 functionality.
+
+
+## Follow-up implementation — richer everyday interactions
+
+**GitHub continuation in the same draft PR #184**, without touching production or Telegram API behavior.
+
+1. **Messenger gesture layer** (`public/vetogram-chat-experience-v4.js`):
+   - Long press / context menu / Shift+F10 on a real, signed-in thread bubble.
+   - User-initiated reply delegates to original `data-mirror-reply` handler.
+   - Explicit clipboard copy of rendered message text with success/error feedback.
+   - Local search through the existing per-thread search controller.
+   - Archive navigates to the existing Privacy screen without implying the selected message is archived.
+   - Right swipe on touch/pen opens the existing reply composer. No swipe auto-send and no data upload.
+   - Dialog selection is revoked if message DOM or signed Telegram account changes; light theme and reduced motion supported.
+2. **Story Studio composition** (`public/story-engine-core.js`, `public/story-engine.js`):
+   - Pure non-mutating `applyStoryTemplate` retains owner ID, image, caption, layers, authored title/subtitle and manual text placement.
+   - Only unchanged original template defaults update when switching styles.
+   - All ten template tiles now draw **live 108×192 local canvas previews** with the same canvas paint function as the full 9:16 composition. Throttled to limit repeated rendering; thumbnail work is skipped when editor focus overlays it.
+   - The existing undo/redo checkpoint and actual export/publish handoff are kept.
+3. **UX correctness**:
+   - Removed the V4 nested setup disclosure around the messenger's pre-existing native `telegramMirrorAccessDrawer`.
+   - Added an independently dismissible immersive Story inspector, proper `aria-controls`, focus control and Escape behavior.
+   - The additional chat controller is registered in `npm run check`. Added explicit source tests and functional template-switch cases.
+
+### Validation for this continuation
+
+- Fetched committed JS for new V4 experience, chat gestures and real Story Engine; all syntax parsed in isolated JS checks (ES module imports were stripped **only for the syntax harness**, not in source).
+- CSS brace count balanced, no new CSS file; the NOIR canonical sheet contains all styling.
+- The source-bound V4 test file was exercised in an isolated mock harness: **6/6 passed**.
+- Pure Story template helper was executed on actual fetched source: **9/9 checked scenarios passed**, including user text/media preservation and no mutation of source draft.
+- GitHub committed source and HTML include all new scripts; existing syntax-gate script references both V4 controllers.
+
+**Still pending:** native `npm run vercel-build` / full Node suite in checkout, full browser/WebView interaction tests, drag/swipe conflict checks on physical Android/iPhone/Fold, codec/auth/AI/publish E2E. The mocked checks are **not** production validation.
+
+**The project is not complete.** This PR is an integration slice, not a claim that all screens were structurally rebuilt or every previously listed product feature is ready.
