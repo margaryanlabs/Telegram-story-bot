@@ -2053,7 +2053,7 @@
       <div class="sheet-list connection-center-list">
         <div class="sheet-item"><strong>Vetogram открыт внутри Telegram</strong><span>${tg?.initData ? '✓ Да' : '○ Открой Mini App из Telegram'}</span></div>
         <div class="sheet-item"><strong>Основное подключение аккаунта</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Telegram подключён') : '○ Не подключено · номер + код или QR'}</span></div>
-        <div class="sheet-item"><strong>Публикация Stories</strong><span>${storiesReady ? '✓ Готово' : '○ Станет доступно после подключения Telegram'}</span></div>
+        <div class="sheet-item"><strong>Публикация Stories</strong><span>${storiesReady ? '✓ Личная сессия подключена · право публикации проверяется при попытке' : '○ Сначала подключи Telegram. Возможность публикации зависит от разрешений и ограничений Telegram'}</span></div>
         <div class="sheet-item"><strong>Дополнительная Privacy</strong><span>${privacyPermission ? '✓ Доступ к выбранным Business‑чатам включён' : '○ Не включена · это нормально, функция необязательная'}</span></div>
         <div class="sheet-item"><strong>Защита сессии</strong><span>${viewerState.secureSessionCrypto ? '✓ Сессия хранится в зашифрованном виде' : accountConnected ? '⚠ Нужна повторная проверка защиты' : '○ Появится после подключения'}</span></div>
         ${businessConnected ? `<div class="sheet-item"><strong>Telegram Business</strong><span>✓ Подключён${businessStories ? ' · может управлять Stories' : ''}</span></div>` : ''}
@@ -2126,8 +2126,8 @@
 
       <div class="connection-what-next">
         <strong>Что будет после подключения?</strong>
-        <div><span>✓</span><p><b>Stories</b><small>сможешь публиковать Story из Vetogram</small></p></div>
-        <div><span>✓</span><p><b>Просмотры</b><small>станет доступна аналитика твоих Stories</small></p></div>
+        <div><span>○</span><p><b>Stories</b><small>редактор доступен, публикация зависит от возможностей и разрешений Telegram</small></p></div>
+        <div><span>○</span><p><b>Просмотры</b><small>покажем только те данные о просмотрах, которые фактически вернёт Telegram</small></p></div>
         <div><span>✓</span><p><b>Privacy — отдельно</b><small>доступ к сообщениям не включается автоматически</small></p></div>
       </div>
 
