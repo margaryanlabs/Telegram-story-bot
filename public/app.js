@@ -1660,6 +1660,7 @@
     if (returnTo?.isConnected && typeof returnTo.focus==='function')
       returnTo.focus({preventScroll:true});
     try { tg?.BackButton?.hide(); } catch {}
+    window.dispatchEvent(new CustomEvent('vetogram:modal-closed'));
   }
 
   // One modal coordinator shared by account onboarding and the Privacy
