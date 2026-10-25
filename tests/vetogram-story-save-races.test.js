@@ -87,3 +87,33 @@ test('editor owner check guards asynchronous image errors and save revisions',()
   assert.match(story,/state\.draft!==reference \|\| state\.revision!==revision/);
   assert.match(story,/i\.onerror=\(\)=>\{\s*if\(state\.owner!==sourceOwner/);
 });
+
+test('IndexedDB save waits for commit: put success followed by abort must reject',async()=>{
+  const section=story.slice(story.indexOf('async function transact(mode,fn){'),
+    story.indexOf('const storageKey=d=>'));
+  assert.match(section,/tx\.oncomplete=\(\)=>resolve\(result\)/);
+  let tx,request;
+  const state={
+    db:{transaction(){
+      tx={objectStore:()=>({put(){
+        request={result:'written'};
+        return request;
+      }})};
+      return tx;
+    }}
+  };
+  const ctx=vm.createContext({state,openVault:async()=>state.db,Error});
+  new vm.Script(section+'\nthis.exports={transact};').runInContext(ctx);
+  const pending=ctx.exports.transact('readwrite',store=>store.put({}));
+  request.onsuccess();
+  tx.onabort();
+  await assert.rejects(pending,/Local storage transaction aborted/);
+});
+test('only committed IndexedDB results are marked saved; export checks editor revision',()=>{
+  assert.match(story,/tx\.oncomplete=\(\)=>resolve\(result\)/);
+  assert.doesNotMatch(story,/request\.onsuccess=\(\)=>resolve\(request\.result\)/);
+  const snapshots=story.match(/exportRevision=state\.revision/g)||[];
+  assert.equal(snapshots.length,2,'publisher handoff and JPG download');
+  const fences=story.match(/state\.revision!==exportRevision/g)||[];
+  assert.equal(fences.length,2,'both exports reject stale edits');
+});
