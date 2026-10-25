@@ -1207,11 +1207,18 @@
           <div class="veto-business-journey-heading">
             <span class="kicker">VETOGRAM · ПОДКЛЮЧЕНИЕ ЧАТОВ</span>
             <h2 id="privacyBusinessOnboardingTitle">Сохрани важное. Даже после удаления.</h2>
-            <p id="privacyBusinessOnboardingHint">Один раз разреши Vetogram получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.</p>
+            <p id="privacyBusinessOnboardingHint">Для защиты выбери нужные личные чаты и подтверди разрешения прямо в Vetogram. Это отдельное согласие.</p>
           </div>
           <span class="veto-business-state" id="privacyBusinessOnboardingState" role="status" aria-live="polite">Проверяю</span>
         </div>
-        <div class="veto-business-journey-steps" id="privacyBusinessOnboardingSteps">
+        <div class="veto-business-wizard-highlight">
+          <span>ПОДКЛЮЧЕНИЕ ПРЯМО В VETOGRAM</span>
+          <strong>Один раз выбери личные чаты и включи Anti-Delete без ручного поиска настроек.</strong>
+          <p>Для этого сначала нужно авторизовать свой Telegram через номер или QR. Перед активацией ты сам отметишь разрешённые личные переписки и подтвердишь права.</p>
+          <button type="button" id="privacyBusinessWizardButton">Включить Anti-Delete <b>↗</b></button>
+        </div>
+        <details class="veto-business-manual-fallback"><summary>Резервная ручная настройка — если авто не работает</summary>
+<div class="veto-business-journey-steps" id="privacyBusinessOnboardingSteps">
           <div class="veto-business-step">
             <span class="veto-business-step-number">01</span>
             <div><strong>Открой Telegram Business</strong><p>Telegram → Настройки → Telegram для бизнеса → Чат-боты.</p></div>
@@ -1226,15 +1233,10 @@
             <div><strong>Выбери, какие чаты защищать</strong><p>«Только выбранные чаты» → отметь личные переписки. Не нужны права отвечать, удалять или отмечать прочитанным. Затем вернись в Vetogram.</p></div>
           </div>
         </div>
-        <div class="veto-business-wizard-highlight">
-          <span>НОВОЕ · ПОДКЛЮЧЕНИЕ ВНУТРИ Vetogram</span>
-          <strong>Выбери чаты — мы поможем подключить их без поиска настроек.</strong>
-          <p>Для этого сначала нужно авторизовать свой Telegram через номер или QR. Перед активацией ты сам отметишь разрешённые личные переписки и подтвердишь права.</p>
-          <button type="button" id="privacyBusinessWizardButton">Выбрать чаты в Vetogram <b>↗</b></button>
-        </div>
+        </details>
         <div class="veto-business-journey-actions">
           <button type="button" class="veto-business-verify" id="privacyBusinessVerifyButton">Проверить подключение <span>↗</span></button>
-          <button type="button" class="veto-business-more" id="privacyBusinessDetailsButton">Настроить вручную</button>
+          <button type="button" class="veto-business-more" id="privacyBusinessDetailsButton">Как работает доступ</button>
         </div>
         <p class="veto-business-disclosure">Без Premium · Без доступа к секретным чатам · Telegram разрешает подключить только одного Business-бота. Резервную копию выбранного чата можно сделать отдельно, без Business.</p>
       </section>
