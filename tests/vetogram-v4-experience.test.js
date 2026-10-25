@@ -1,12 +1,9 @@
 /* V4 source-bound safety checks. Not a browser/Telegram E2E test. */
-'use strict';
-const {test} = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
-const path = require('node:path');
-const root = path.resolve(__dirname,'..');
-const read = name => fs.readFileSync(path.join(root,'public',name),'utf8');
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const read = name => readFileSync(new URL('../public/'+name,import.meta.url),'utf8');
 const html = read('studio.html');
 const script = read('vetogram-experience-v4.js');
 const styles = read('vetogram-noir.css');
