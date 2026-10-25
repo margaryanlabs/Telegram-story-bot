@@ -118,6 +118,9 @@
   let composerGeneration = 0;
   let composerOwner = '';
   let composerSignedIdentity=String(tg?.initData||'');
+  let viewerOwnerEpoch=0;
+  let viewerSyncIntent=0;
+  let viewerAnalyticsIntent=0;
   let composerPendingFileName = '';
   let composerPortalHandoff = null;
   let composerFromStudio=false;
@@ -365,16 +368,51 @@
 
   function ensureComposerIdentity(){
     const current=String(tg?.initData||'');
-    if(current===composerSignedIdentity)return;
+    if(current===composerSignedIdentity)return false;
     composerSignedIdentity=current;
-    // Read only the *new* account's draft key before clearing visible media.
+    // Invalidate every owner-bound read, even if another A session is opened
+    // after A → B → A. Never retain another owner's viewers/automation.
+    viewerOwnerEpoch++;
+    viewerSyncIntent++;
+    viewerAnalyticsIntent++;
+    viewerRegisteredKey='';
+    viewerSearchQuery='';
+    selectedViewerStory=null;
+    viewerPendingPhone='';
+    viewerAuthBusy=false;
+    viewerQrAbortController?.abort();
+    viewerQrAbortController=null;
+    viewerState={
+      configured:null,backgroundReady:false,newConnectionsReady:null,
+      secureSessionCrypto:null,cipherVersion:null,storageStatus:null,
+      session:null,loginPending:null,story:null,viewers:[],analytics:null,
+      degraded:false,error:null
+    };
+    automationState={loaded:false,rules:{},jobs:[],busy:false,error:null};
+    state={
+      ...state,connection:'unknown',ready:false,audience:'standard',
+      selected:[],excluded:[],protect:false,lastStory:null,history:[],
+      activity:[],analytics:null,processing:false,
+      accountConnection:{connected:false,account:null},
+      businessPermissions:{connected:false,stories:false,messages:false},
+      viewerSync:{available:false,requiresUserSession:true}
+    };
+    // Read only the incoming owner's caption. Purge shared legacy storage.
     const key=captionDraftStorageKey();
     let ownCaption='';
-    try{if(key)ownCaption=sessionStorage.getItem(key)||'';}catch{}
+    try{
+      sessionStorage.removeItem(DRAFT_CAPTION_KEY);
+      if(key)ownCaption=sessionStorage.getItem(key)||'';
+    }catch{}
     resetComposer({keepCaption:true});
     $('storyCaption').value=ownCaption.slice(0,2048);
     $('captionCounter').textContent=$('storyCaption').value.length+' / 2048';
-    showToast('Telegram-аккаунт изменился. Фото и Portal предыдущей сессии очищены.');
+    renderViewers();
+    renderAnalytics();
+    renderHome();
+    renderConnection();
+    if(current)showToast('Telegram-аккаунт изменился. Архив, зрители и предыдущая сессия очищены.');
+    return true;
   }
   async function prepareComposerFile(file,{stillCurrent=null}={}) {
     if (!file || state.processing) return false;
@@ -930,7 +968,11 @@
   }
 
   async function refreshViewerAnalytics({ silent = true } = {}) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const epoch=viewerOwnerEpoch,intent=++viewerAnalyticsIntent;
+    const isCurrent=()=>epoch===viewerOwnerEpoch &&
+      intent===viewerAnalyticsIntent && signedOwner===String(tg?.initData||'');
     if (!signedOwner || !viewerState.session?.connected) {
       viewerState.analytics = null;
       renderAnalytics();
@@ -945,31 +987,36 @@
           'content-type':'application/json',
         },
       }, { retry:true, timeoutMs:18000 });
-      if (signedOwner !== String(tg?.initData || '')) return;
+      if (!isCurrent())return;
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось загрузить Viewer Analytics');
       viewerState.analytics = data.analytics || null;
     } catch (error) {
-      if (signedOwner !== String(tg?.initData || '')) return;
+      if (!isCurrent())return;
       if (!silent) showToast(error.message);
     }
-    if (signedOwner === String(tg?.initData || '')) renderAnalytics();
+    if (isCurrent())renderAnalytics();
   }
 
   async function refreshViewerSync({ silent = false } = {}) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    if(!signedOwner)return;
+    const epoch=viewerOwnerEpoch,intent=++viewerSyncIntent;
+    const isCurrent=()=>epoch===viewerOwnerEpoch &&
+      intent===viewerSyncIntent && signedOwner===String(tg?.initData||'');
     try {
       let data = await viewerApi();
-      if (signedOwner !== String(tg?.initData || '')) return;
+      if (!isCurrent())return;
 
       const history = activeStoryHistory().filter(item => Number(item.ts || 0) > 0);
       const historyKey = history.map(item => `${item.id}:${item.ts}:${item.deleted ? 1 : 0}`).join('|');
 
       if (data.session?.connected && historyKey && historyKey !== viewerRegisteredKey) {
         await viewerApi('register_stories', { stories: history }, null);
-        if (signedOwner !== String(tg?.initData || '')) return;
+        if (!isCurrent())return;
         viewerRegisteredKey = historyKey;
         data = await viewerApi();
-        if (signedOwner !== String(tg?.initData || '')) return;
+        if (!isCurrent())return;
       }
 
       if (data.degraded) {
@@ -1002,7 +1049,7 @@
         };
       }
     } catch (error) {
-      if (signedOwner !== String(tg?.initData || '')) return;
+      if (!isCurrent())return;
       const data = error.viewerData || {};
       viewerState = {
         ...viewerState,
@@ -1021,7 +1068,7 @@
       };
       if (!silent && data.config?.configured !== false) showToast(error.message);
     }
-    if (signedOwner !== String(tg?.initData || '')) return;
+    if (!isCurrent())return;
     renderViewers();
     renderHome();
   }
