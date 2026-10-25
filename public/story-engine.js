@@ -439,23 +439,39 @@ async function exportToPublisher(){
        state.draft?.id!==exportDraftId || state.revision!==exportRevision)
       throw Error('Аккаунт или Story изменились во время экспорта. Повтори экспорт.');
     if(!blob||blob.size>10*1024*1024)throw Error('Экспорт не удался: превышен лимит изображения');
-    const input=$('storyFileInput');
-    if(!input||typeof DataTransfer!=='function')throw Error('Telegram не поддерживает прямую передачу файла. Используй экспорт JPEG.');
     const file=new File([blob],'vetogram-story.jpg',{type:'image/jpeg'});
-    const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;
     const attachPortal=$('sePortalAttachStory').checked && Boolean(state.draft.portal);
-    // No URL is sent unless the owner explicitly selected the checkbox.
+    // The Editor never publishes: a second *unchecked* Portal consent
+    // appears in the Publisher even after a user opted in here.
     const portalLink=attachPortal?makePublicPortalUrl(state.draft.portal,window.location.origin):null;
-    input.dispatchEvent(new Event('change',{bubbles:true}));
-    window.VetoTelegramPortalHandoff=portalLink?{
-      url:portalLink,ownerId:exportOwner,draftId:exportDraftId
-    }:null;
-    window.dispatchEvent(new CustomEvent('veto:portal-handoff'));
-
-    $('storyCaption').value=state.draft.caption||'';
-    $('storyCaption').dispatchEvent(new Event('input',{bubbles:true}));
-    window.VetoTelegramNavigate?.('publish');
-    notify('Изображение передано в публикацию. Проверь аудиторию и подтверди отправку.');
+    const stillCurrent=()=>owner()===exportOwner && state.owner===exportOwner &&
+      state.draft?.id===exportDraftId && state.revision===exportRevision;
+    if(typeof window.VetoTelegramStageStory==='function'){
+      const accepted=await window.VetoTelegramStageStory({
+        file,caption:state.draft.caption||'',portalLink,
+        ownerId:exportOwner,draftId:exportDraftId,stillCurrent
+      });
+      if(!accepted || !stillCurrent())
+        throw Error('Story изменилась во время подготовки. Повтори передачу.');
+    }else{
+      // Keep a legacy bridge for older cached app.js, but never rely on
+      // DataTransfer in new iOS WebViews where the API can be unavailable.
+      const input=$('storyFileInput');
+      if(!input||typeof DataTransfer!=='function')
+        throw Error('Передача недоступна в этом Telegram WebView. Повтори после обновления приложения.');
+      const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;
+      input.dispatchEvent(new Event('change',{bubbles:true}));
+      window.VetoTelegramPortalHandoff=portalLink?{
+        url:portalLink,ownerId:exportOwner,draftId:exportDraftId
+      }:null;
+      window.dispatchEvent(new CustomEvent('veto:portal-handoff'));
+      $('storyCaption').value=state.draft.caption||'';
+      $('storyCaption').dispatchEvent(new Event('input',{bubbles:true}));
+    }
+    if(!stillCurrent())throw Error('Story изменилась во время передачи. Повтори экспорт.');
+    if(!window.VetoTelegramNavigate?.('publish'))
+      throw Error('Раздел публикации недоступен. Story не отправлена.');
+    notify('Кадр готов к проверке. Выбери аудиторию и отдельно подтверди публикацию.');
   }catch(error){notify(error.message,true)}
   finally{state.busy=false;$('sePublish').disabled=false}
 }
