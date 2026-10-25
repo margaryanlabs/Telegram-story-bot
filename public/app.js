@@ -857,13 +857,16 @@
     return data;
   }
 
-  async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
+  async function viewerApi(action = null, payload = {}, storyId = undefined) {
+    // Default arguments are evaluated before the function body. Resolve
+    // selectedViewerStory AFTER owner reset, not in the parameter list.
     ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
     const epoch=viewerOwnerEpoch;
     if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
-    const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
+    const scopedStoryId=storyId===undefined?selectedViewerStory:storyId;
+    const query = scopedStoryId ? `?storyId=${encodeURIComponent(scopedStoryId)}` : '';
     const options = {
       method: action ? 'POST' : 'GET',
       headers: {
