@@ -773,7 +773,11 @@
   }
 
   async function api(action = null, payload = {}) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const epoch=viewerOwnerEpoch;
+    const isCurrent=()=>epoch===viewerOwnerEpoch &&
+      signedOwner===String(tg?.initData||'');
     if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
@@ -794,7 +798,7 @@
         timeoutMs: action === 'publish_story' ? 45000 : 15000,
       }));
     } catch (error) {
-      if (signedOwner !== String(tg?.initData || ''))
+      if (!isCurrent())
         throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
       if (action === 'publish_story') {
         const uncertain = new Error('Связь прервалась: публикация могла пройти. Проверь свои Stories в Telegram перед новой попыткой.');
@@ -804,7 +808,7 @@
       throw error;
     }
 
-    if (signedOwner !== String(tg?.initData || ''))
+    if (!isCurrent())
       throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
     if (!response.ok || !data.ok) {
       const message = data.error || 'Не удалось обновить Vetogram';
@@ -854,7 +858,9 @@
   }
 
   async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const epoch=viewerOwnerEpoch;
     if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
@@ -872,7 +878,7 @@
       timeoutMs: 18000,
     });
 
-    if (signedOwner !== String(tg?.initData || ''))
+    if (epoch!==viewerOwnerEpoch || signedOwner!==String(tg?.initData||''))
       throw new Error('Telegram-аккаунт изменился. Старые данные просмотров не применены.');
     if (!response.ok || !data.ok) {
       const error = new Error(data.error || 'Аналитика аудитории временно недоступен');
@@ -883,7 +889,9 @@
   }
 
   async function automationsApi(action = null, payload = {}) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const epoch=viewerOwnerEpoch;
     if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
@@ -899,7 +907,7 @@
       retry: !action || action === 'refresh',
       timeoutMs: 12000,
     });
-    if (signedOwner !== String(tg?.initData || ''))
+    if (epoch!==viewerOwnerEpoch || signedOwner!==String(tg?.initData||''))
       throw new Error('Telegram-аккаунт изменился. Старые Automation данные не применены.');
     if (!response.ok || !data.ok) throw new Error(data.error || 'Automation Center временно недоступен');
     return data;
@@ -2793,14 +2801,17 @@
   }
 
   async function setAudience(mode) {
+    ensureComposerIdentity();
+    const epoch=viewerOwnerEpoch;
     const previous = state.audience;
     state.audience = mode;
     render();
     haptic();
     try {
       await api('audience', { value:mode });
-      showToast('Аудитория сохранена');
+      if(epoch===viewerOwnerEpoch)showToast('Аудитория сохранена');
     } catch (error) {
+      if(epoch!==viewerOwnerEpoch)return;
       state.audience = previous;
       render();
       showToast(error.message);
@@ -2809,14 +2820,17 @@
   }
 
   async function setProtect(value) {
+    ensureComposerIdentity();
+    const epoch=viewerOwnerEpoch;
     const previous = state.protect;
     state.protect = value;
     render();
     haptic();
     try {
       await api('protect', { value });
-      showToast(value ? 'Защита включена' : 'Защита выключена');
+      if(epoch===viewerOwnerEpoch)showToast(value ? 'Защита включена' : 'Защита выключена');
     } catch (error) {
+      if(epoch!==viewerOwnerEpoch)return;
       state.protect = previous;
       render();
       showToast(error.message);
