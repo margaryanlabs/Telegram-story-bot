@@ -428,10 +428,11 @@ async function exportToPublisher(){
   try{
     if(state.draft.imageDataUrl && state.imageSrc!==state.draft.imageDataUrl)throw Error('Дождись загрузки фотографии перед экспортом');
     const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
-    const exportOwner=state.owner,exportDraftId=state.draft.id;
+    const exportOwner=state.owner,exportDraftId=state.draft.id,exportRevision=state.revision;
     const blob=await new Promise(resolve=>out.toBlob(resolve,'image/jpeg',.88));
     if(owner()!==exportOwner || state.owner!==exportOwner ||
-       state.draft?.id!==exportDraftId)throw Error('Аккаунт или черновик изменился. Повтори экспорт.');
+       state.draft?.id!==exportDraftId || state.revision!==exportRevision)
+      throw Error('Аккаунт или Story изменились во время экспорта. Повтори экспорт.');
     if(!blob||blob.size>10*1024*1024)throw Error('Экспорт не удался: превышен лимит изображения');
     const input=$('storyFileInput');
     if(!input||typeof DataTransfer!=='function')throw Error('Telegram не поддерживает прямую передачу файла. Используй экспорт JPEG.');
@@ -457,10 +458,11 @@ async function downloadJpg(){
   if(!state.draft)return;
   if(state.draft.imageDataUrl && state.imageSrc!==state.draft.imageDataUrl)throw Error('Дождись загрузки фотографии перед экспортом');
     const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
-  const exportOwner=state.owner,exportDraftId=state.draft.id;
+  const exportOwner=state.owner,exportDraftId=state.draft.id,exportRevision=state.revision;
   const blob=await new Promise(resolve=>out.toBlob(resolve,'image/jpeg',.88));
   if(owner()!==exportOwner || state.owner!==exportOwner ||
-     state.draft?.id!==exportDraftId)throw Error('Аккаунт или черновик изменился. Повтори экспорт.');
+     state.draft?.id!==exportDraftId || state.revision!==exportRevision)
+    throw Error('Аккаунт или Story изменились во время экспорта. Повтори экспорт.');
   if(!blob)throw Error('Экспорт недоступен');
   const url=URL.createObjectURL(blob);
   try{const a=document.createElement('a');a.download='vetogram-story.jpg';a.href=url;a.click();}
