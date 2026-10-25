@@ -2349,10 +2349,11 @@
       <div class="sheet-actions"><button class="accent" data-sheet-action="viewer-send-email">Согласен, получить email-код</button><button data-sheet-action="viewer-start-qr">Использовать QR</button><button data-sheet-action="close">Позже</button></div>`);
   }
 
-  let viewerCodeDelivery='telegram_app';
+  let viewerCodeDelivery='unknown';
   function viewerCodeSheet(delivery, reused = false) {
     if (delivery === 'email_setup') { viewerEmailSheet(); return; }
-    viewerCodeDelivery=delivery || viewerCodeDelivery;
+    // Missing delivery metadata is not evidence of Telegram-app delivery.
+    viewerCodeDelivery=delivery || 'unknown';
     delivery=viewerCodeDelivery;
     const emailCode = delivery === 'email_code' || delivery === 'email_setup_code';
     openSheet(`
@@ -3090,7 +3091,7 @@
       const pending = viewerState.loginPending;
       if (pending && Date.parse(pending.expiresAt || '') > Date.now()) {
         if (['password', 'qr_password'].includes(pending.stage)) viewerPasswordSheet();
-        else viewerCodeSheet(pending.delivery || 'telegram_app');
+        else viewerCodeSheet(pending.delivery || 'unknown');
       } else {
         await refreshViewerSync({ silent: true });
         connectionHelpSheet();
@@ -3201,7 +3202,7 @@
         // The server persisted this challenge. Keep local state in sync so
         // returning from the sheet offers "Resume code", not another send.
         viewerState.loginPending = {
-          stage:'code', delivery:data.delivery || 'telegram_app',
+          stage:'code', delivery:data.delivery || 'unknown',
           expiresAt:data.expiresAt || null,
         };
         viewerCodeSheet(data.delivery, data.reused === true);
@@ -3224,7 +3225,7 @@
         if ($('viewerCode')) $('viewerCode').value='';
         if (data.nextCode) {
           viewerState.loginPending = { ...(viewerState.loginPending||{}),
-            stage:'code', delivery:data.delivery||'telegram_app' };
+            stage:'code', delivery:data.delivery||'unknown' };
           viewerCodeSheet(data.delivery);
         } else if (data.needsPassword) {
           viewerState.loginPending = { ...(viewerState.loginPending||{}), stage:'password' };
