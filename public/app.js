@@ -3240,7 +3240,7 @@
         await refresh();
         await refreshViewerAnalytics({ silent: true });
         switchScreen('telegram');
-        await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
+        // Optional Business access starts only from Privacy after explicit consent.
       });
       return;
     }
