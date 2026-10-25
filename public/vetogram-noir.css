@@ -588,3 +588,14 @@ html#vetogram[data-veto-theme="pearl"] .v4-message-feedback,
 html#vetogram[data-veto-theme="linen"] .v4-message-feedback{
   color:#52617b;
 }
+
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .v4-inspector-close{
+  position:sticky;top:0;z-index:5;align-self:flex-end;
+  width:auto;min-height:44px!important;padding:9px 15px!important;
+  margin:0 0 8px!important;border-radius:12px!important;
+  color:var(--noir-text)!important;background:var(--noir-raised)!important;
+  border:1px solid var(--noir-border)!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .v4-inspector-close[hidden]{
+  display:none!important;
+}
