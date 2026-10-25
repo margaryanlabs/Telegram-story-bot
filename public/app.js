@@ -447,16 +447,26 @@
       throw Error('Telegram-аккаунт изменился. Передача отменена.');
     if(!file || file.type!=='image/jpeg' || file.size>10*1024*1024)
       throw Error('Story Engine передал неподдерживаемый JPEG.');
+    // Validate the public link BEFORE staging any private media, so an
+    // oversized Portal never leaves a half-imported publisher attachment.
+    let validatedPortal=null;
+    if(portalLink){
+      try{
+        const url=new URL(String(portalLink));
+        if(String(portalLink).length>1900 ||
+           url.origin!==window.location.origin || url.pathname!=='/portal.html' ||
+           url.search || url.username || url.password ||
+           !/^#p=[A-Za-z0-9_-]{1,5000}$/.test(url.hash))throw Error('invalid');
+        validatedPortal=url.toString();
+      }catch{
+        throw Error('Portal-ссылка недействительна или слишком длинная (до 1900 символов). Уменьши описание Portal.');
+      }
+    }
     const ready=await prepareComposerFile(file,{stillCurrent});
     if(!ready || signed!==String(tg?.initData||'') || !stillCurrent())
       return false;
-    if(portalLink){
-      const url=new URL(String(portalLink));
-      if(String(portalLink).length>1900 || url.origin!==window.location.origin ||
-         url.pathname!=='/portal.html' || url.search || url.username || url.password ||
-         !/^#p=[A-Za-z0-9_-]{1,5000}$/.test(url.hash))
-        throw Error('Portal-ссылка недействительна или слишком длинная (до 1900 символов). Уменьши описание Portal.');
-      composerPortalHandoff={url:url.toString(),signed,
+    if(validatedPortal){
+      composerPortalHandoff={url:validatedPortal,signed,
         generation:composerGeneration,draftId:String(draftId||'')};
     }
     syncComposerPortal(); // publisher consent is unchecked by default
