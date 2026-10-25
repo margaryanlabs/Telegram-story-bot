@@ -669,6 +669,9 @@ function setup(){
     canvas.setPointerCapture?.(event.pointerId);event.preventDefault();
     $('seLayerText').value=hit.text;$('seLayerStyle').value=hit.style;
     renderLayers();
+    window.dispatchEvent(new CustomEvent('vetogram:story-layer-selected',{
+      detail:{layerId:hit.id}
+    }));
   });
   canvas.addEventListener('pointermove',event=>{
     const drag=state.dragLayer;
