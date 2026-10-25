@@ -115,3 +115,17 @@ test('visual motion respects preference and all four nav items remain present',(
   }
   assert.match(html,/data-reborn-nav="four"|class="bottom-nav"/);
 });
+
+test('immersive chats are free from normal dashboard max-width and gutters',()=>{
+  assert.match(css,/body\.veto-chat-active:not\(\.veto-chat-thread\) \.app-shell/);
+  assert.match(css,/body\.veto-chat-thread \.app-shell/);
+  assert.match(css,/max-width:none!important/);
+  assert.match(css,/height:100dvh!important;overflow:hidden!important/);
+});
+test('Fold landscape and system contrast modes retain tappable actual controls',()=>{
+  assert.match(css,/@media\(max-height:560px\) and \(orientation:landscape\)/);
+  assert.match(css,/#seEngine\.v4-studio-focus \.se-canvas-frame/);
+  assert.match(css,/@media\(prefers-contrast:more\)/);
+  assert.match(css,/@media\(forced-colors:active\)/);
+  assert.match(css,/\.bottom-nav \.nav-item\.active/);
+});
