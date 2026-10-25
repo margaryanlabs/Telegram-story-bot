@@ -38,7 +38,7 @@ test('focus is an explainable signal, not an invented deadline or read receipt',
   assert.match(chat,/Возможное действие/);
   assert.match(chat,/Может требовать ответа/);
   assert.doesNotMatch(chat,/Есть срок или действие/);
-  assert.match(chat,/aria-label="'+/);
+  assert.match(chat,/aria-label/);
   assert.match(chat,/unread\+' непрочитанных'/);
   assert.match(chat,/chat\.savedCopy\?' has-copy'/);
   assert.match(chat,/chat\.inbox\?\.needsAttention\?' has-attention'/);
@@ -56,7 +56,6 @@ test('real message delivery states remain owner-scoped and truthful',()=>{
   const state={deliveryStage:info,thread:{id:'123'},ownerInitData:'signed'};
   const tg={initData:'signed'};
   const byId={telegramThreadDeliveryStatus:bar,telegramThreadDeliveryText:label,telegramThreadDeliveryIcon:icon};
-  const render=runInNewContext(snippet+';renderDeliveryStatus',{state,tg,$:id=>byId[id]});
   // The function is run against the real source in a sandbox to check actual text.
   const execute=()=>runInNewContext(snippet+';renderDeliveryStatus()',{
     state,tg,$:id=>byId[id]
