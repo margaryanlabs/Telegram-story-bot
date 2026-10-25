@@ -8,7 +8,7 @@
   const $ = id => document.getElementById(id);
   const tg = window.Telegram?.WebApp;
   let selectedBubble = null, selectedInitData = '';
-  let activePress = null;
+  let activePress = null, activeSwipe = null;
   const menu = document.createElement('dialog');
   menu.id = 'v4MessageActions';
   menu.className = 'v4-message-actions';
@@ -156,14 +156,33 @@
     const bubble=findBubble(event);
     if(!bubble||!visibleOwner())return;
     activePress={bubble,pointerId:event.pointerId,x:event.clientX,y:event.clientY,
-      timer:setTimeout(()=>{activePress=null;openFor(bubble);},480)};
+      timer:setTimeout(()=>{activePress=null;activeSwipe=null;openFor(bubble);},480)};
+    if(event.pointerType==='touch' || event.pointerType==='pen'){
+      activeSwipe={bubble,pointerId:event.pointerId,x:event.clientX,y:event.clientY,
+        signed:String(tg?.initData||'')};
+    }
   });
   host.addEventListener('pointermove',event=>{
     if(!activePress||activePress.pointerId!==event.pointerId)return;
     if(Math.hypot(event.clientX-activePress.x,event.clientY-activePress.y)>12)cancelPress();
   },{passive:true});
-  for(const event of ['pointerup','pointercancel','pointerleave','scroll']){
-    host.addEventListener(event,cancelPress,{passive:true});
+  host.addEventListener('pointerup',event=>{
+    const gesture=activeSwipe;
+    const dx=gesture?event.clientX-gesture.x:0;
+    const dy=gesture?event.clientY-gesture.y:0;
+    if(gesture && gesture.pointerId===event.pointerId &&
+        dx>72 && Math.abs(dy)<40 && Math.abs(dx)>2*Math.abs(dy) &&
+        gesture.signed && gesture.signed===String(tg?.initData||'') &&
+        visibleOwner() && gesture.bubble.isConnected && host.contains(gesture.bubble)){
+      // A right swipe means "reply", never "send". The existing composer
+      // decides whether this message and owner may actually be replied to.
+      gesture.bubble.querySelector('[data-mirror-reply]')?.click();
+      try{tg?.HapticFeedback?.selectionChanged?.();}catch{}
+    }
+    activeSwipe=null;cancelPress();
+  },{passive:true});
+  for(const event of ['pointercancel','pointerleave','scroll']){
+    host.addEventListener(event,()=>{cancelPress();activeSwipe=null;},{passive:true});
   }
   host.addEventListener('contextmenu',event=>{
     const bubble=findBubble(event);
@@ -185,7 +204,8 @@
     for(const bubble of host.querySelectorAll('[data-mirror-message-id]:not([data-v4-message-ready])')){
       bubble.dataset.v4MessageReady='1';
       bubble.tabIndex=0;
-      bubble.setAttribute('aria-label','Сообщение. Нажми Shift+F10 для действий');
+      bubble.setAttribute('aria-keyshortcuts','Shift+F10 ContextMenu');
+      bubble.title='Долгое нажатие — действия; свайп вправо — ответ';
     }
     if(menu.open && selectedBubble && !selectedBubble.isConnected)dismiss();
   }
