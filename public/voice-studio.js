@@ -25,6 +25,9 @@
     $('voiceMicButton').disabled=!audioSupported||state.active||state.micStarting;
     $('voiceMicButton').setAttribute('aria-busy',String(state.micStarting));
     $('voiceMicStop').disabled=!state.active&&!state.micStarting;
+    $('voiceMicStop').textContent=state.micStarting?'Отменить запрос':'Отключить';
+    $('voiceMicStop').setAttribute('aria-label',state.micStarting?
+      'Отменить запрос доступа к микрофону':'Выключить микрофон');
     $('voiceRecord').disabled=!state.active||state.recording;
     $('voiceStopRecord').disabled=!state.recording;
     $('voiceShare').disabled=!state.recordedBlob;
@@ -38,6 +41,7 @@
     $('voiceMicState').textContent=state.recording?'● Запись':
       state.active?'● Микрофон включён':state.micStarting?'◌ Запрашиваю доступ к микрофону':'◌ Микрофон выключен';
     $('voiceMicState').classList.toggle('live',state.active);
+    $('voiceMicState').classList.toggle('is-requesting-mic',state.micStarting);
     $('voiceMicState').classList.toggle('recording',state.recording);
   }
   function setStrength(){
