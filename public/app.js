@@ -1852,7 +1852,8 @@
 
   function securityCenterSheet() {
     const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
-    const businessConnected = state.businessPermissions?.connected === true || state.connection === 'needs_permission';
+    const businessConnected = state.businessPermissions?.connected === true;
+    const businessNeedsPermission = !businessConnected && state.connection === 'needs_permission';
     const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
     const session = viewerState.session;
     const cryptoVersion = session?.cryptoVersion || viewerState.cipherVersion || null;
@@ -2054,9 +2055,9 @@
         <div class="sheet-item"><strong>Vetogram открыт внутри Telegram</strong><span>${tg?.initData ? '✓ Да' : '○ Открой Mini App из Telegram'}</span></div>
         <div class="sheet-item"><strong>Основное подключение аккаунта</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Telegram подключён') : '○ Не подключено · номер + код или QR'}</span></div>
         <div class="sheet-item"><strong>Публикация Stories</strong><span>${storiesReady ? '✓ Личная сессия подключена · право публикации проверяется при попытке' : '○ Сначала подключи Telegram. Возможность публикации зависит от разрешений и ограничений Telegram'}</span></div>
-        <div class="sheet-item"><strong>Дополнительная Privacy</strong><span>${privacyPermission ? '✓ Доступ к выбранным Business‑чатам включён' : '○ Не включена · это нормально, функция необязательная'}</span></div>
+        <div class="sheet-item"><strong>Дополнительная Privacy</strong><span>${businessConnected && privacyPermission ? '○ Разрешение Business обнаружено · получение сообщений и удалений ещё нужно проверить' : businessNeedsPermission ? '○ Business требует отдельного согласия' : '○ Не включена · это нормально, функция необязательная'}</span></div>
         <div class="sheet-item"><strong>Защита сессии</strong><span>${viewerState.secureSessionCrypto ? '✓ Сессия хранится в зашифрованном виде' : accountConnected ? '⚠ Нужна повторная проверка защиты' : '○ Появится после подключения'}</span></div>
-        ${businessConnected ? `<div class="sheet-item"><strong>Telegram Business</strong><span>✓ Подключён${businessStories ? ' · может управлять Stories' : ''}</span></div>` : ''}
+        ${businessConnected ? `<div class="sheet-item"><strong>Telegram Business</strong><span>✓ Подключение обнаружено${businessStories ? ' · право Stories присутствует' : ''}; доставка событий отдельно не проверена</span></div>` : ''}
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="account-connect">${accountConnected ? 'Управлять подключением' : 'Подключить Telegram'}</button>
