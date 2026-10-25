@@ -89,12 +89,20 @@
   const vaultScreen = screens('privacy');
   const vaultHero = vaultScreen && $('.ghost-command-card', vaultScreen);
   const vaultStats = vaultScreen && $('.ghost-health-grid', vaultScreen);
+  const vaultEvidence = vaultScreen && byId('privacyEvidenceBar');
   const vaultActions = vaultScreen && $('.ghost-quick-grid', vaultScreen);
   if (vaultHero && vaultStats && vaultActions) {
     vaultStats.classList.add('v4-vault-overview');
     vaultActions.classList.add('v4-vault-actions');
     vaultHero.after(vaultStats);
-    vaultStats.after(vaultActions);
+    // Ground the next action in a real last-success timestamp, not a
+    // misleading fixed 'Protected' status or an illustration.
+    if (vaultEvidence) {
+      vaultStats.after(vaultEvidence);
+      vaultEvidence.after(vaultActions);
+    } else {
+      vaultStats.after(vaultActions);
+    }
   }
 
   // Story publication: the media picker and audience are primary; fine controls stay available.
