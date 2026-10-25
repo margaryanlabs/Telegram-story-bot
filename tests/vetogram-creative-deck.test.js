@@ -167,7 +167,7 @@ test('premium chat filters expose real Focus and saved-copy navigation, not mock
   assert.doesNotMatch(filters,/class="veto-filter-advanced"[^>]*data-mirror-filter="copies"/);
   const labels=html.slice(html.indexOf('<nav class="bottom-nav"'),
     html.indexOf('</nav>',html.indexOf('<nav class="bottom-nav"')));
-  for(const label of ['Чаты','Истории','Защита','Студия'])
+  for(const label of ['Чаты','Истории','VETO AI','Защита'])
     assert.match(labels,new RegExp('<small(?: [^>]*)?>'+label+'</small>'));
 });
 
