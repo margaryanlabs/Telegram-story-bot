@@ -50,6 +50,27 @@ export function normalizeStoryLayers(value){
   }
   return out;
 }
+/** Pure, bounded two-finger photo transform for the real 9:16 canvas.
+ * All coordinates are CSS pixels, measured in the canvas' client rectangle.
+ * This function does not touch accounts, network, or local draft storage.
+ */
+export function calculatePhotoPinch(start,first,second,width,height){
+  const finitePoint=p=>p&&Number.isFinite(Number(p.x))&&Number.isFinite(Number(p.y));
+  if(!start||!finitePoint(first)||!finitePoint(second)||
+     !Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0||
+     !Number.isFinite(start.distance)||start.distance<=0)
+    throw Error('STORY_GESTURE_INVALID');
+  const distance=Math.hypot(Number(second.x)-Number(first.x),Number(second.y)-Number(first.y));
+  const centerX=(Number(first.x)+Number(second.x))/2;
+  const centerY=(Number(first.y)+Number(second.y))/2;
+  const zoom=clamp(Number(start.zoom)*distance/start.distance,1,2.5,1);
+  // At native zoom there is no crop to pan. Otherwise a deliberate two-finger
+  // movement shifts the image within bounded values; no canvas pixel data leaks.
+  const x=zoom<=1.01?0:clamp(Number(start.photoX)+(centerX-start.centerX)*2/width,-1,1,0);
+  const y=zoom<=1.01?0:clamp(Number(start.photoY)+(centerY-start.centerY)*2/height,-1,1,0);
+  return {photoZoom:zoom,photoX:x,photoY:y};
+}
+
 export const MAX_TITLE=90,MAX_SUBTITLE=180,MAX_PORTAL_TEXT=300;
 export const templateById=id=>STORY_TEMPLATES.find(t=>t.id===id)||STORY_TEMPLATES[0];
 
