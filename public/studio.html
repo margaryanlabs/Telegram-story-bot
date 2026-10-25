@@ -1265,12 +1265,16 @@
         <button class="ghost-backup-cta" id="privacyBackupHistoryButton" type="button">Сохранить конкретный чат <span>→</span></button>
       </section>
       <section class="ghost-health-grid">
-        <article><span>Диалоги</span><strong id="privacyStatThreads">0</strong><small>в сохранённых чатах</small></article>
-        <article><span>Удалено</span><strong id="privacyStatDeleted">0</strong><small>сохранено</small></article>
-        <article><span>Изменено</span><strong id="privacyStatEdited">0</strong><small>с историей</small></article>
-        <article><span>Сообщения</span><strong id="privacyStatMessages">0</strong><small>в архиве</small></article>
-        <article><span>Медиаархив</span><strong id="privacyStatVault">0</strong><small>независимых копий</small></article>
+        <article><span>Диалоги</span><strong id="privacyStatThreads">—</strong><small>в сохранённых чатах</small></article>
+        <article><span>Удалено</span><strong id="privacyStatDeleted">—</strong><small>сохранено</small></article>
+        <article><span>Изменено</span><strong id="privacyStatEdited">—</strong><small>с историей</small></article>
+        <article><span>Сообщения</span><strong id="privacyStatMessages">—</strong><small>в архиве</small></article>
+        <article><span>Медиаархив</span><strong id="privacyStatVault">—</strong><small>независимых копий</small></article>
       </section>
+      <div class="v4-vault-evidence" id="privacyEvidenceBar" aria-label="Статус синхронизации архива">
+        <span id="privacyEvidenceStatus">Архив ещё не проверен</span>
+        <button id="privacyEvidenceRefresh" type="button" aria-label="Обновить архив и проверить подключение Telegram">↻ Обновить</button>
+      </div>
 
       <button class="ghost-latest-deleted" id="ghostLatestDeletedCard" type="button" hidden>
         <span class="ghost-latest-icon">↶</span>
