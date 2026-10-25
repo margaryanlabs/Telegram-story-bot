@@ -673,12 +673,13 @@
   }
 
   async function automationsApi(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const signedOwner = String(tg?.initData || '');
+    if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
       headers: {
-        'x-telegram-init-data': tg.initData,
+        'x-telegram-init-data': signedOwner,
         'content-type':'application/json',
       },
     };
@@ -688,6 +689,8 @@
       retry: !action || action === 'refresh',
       timeoutMs: 12000,
     });
+    if (signedOwner !== String(tg?.initData || ''))
+      throw new Error('Telegram-аккаунт изменился. Старые Automation данные не применены.');
     if (!response.ok || !data.ok) throw new Error(data.error || 'Automation Center временно недоступен');
     return data;
   }
