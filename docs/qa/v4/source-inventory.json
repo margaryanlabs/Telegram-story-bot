@@ -1,0 +1,243 @@
+{
+  "evidence": "static source inventory; not runtime QA",
+  "studio_lines": 2258,
+  "screens": [
+    {
+      "route": "home",
+      "id": null
+    },
+    {
+      "route": "telegram",
+      "id": null
+    },
+    {
+      "route": "voice",
+      "id": null
+    },
+    {
+      "route": "publish",
+      "id": null
+    },
+    {
+      "route": "viewers",
+      "id": null
+    },
+    {
+      "route": "analytics",
+      "id": null
+    },
+    {
+      "route": "privacy",
+      "id": null
+    },
+    {
+      "route": "chats",
+      "id": null
+    },
+    {
+      "route": "ai",
+      "id": null
+    },
+    {
+      "route": "story-engine",
+      "id": "seEngine"
+    },
+    {
+      "route": "studio",
+      "id": null
+    },
+    {
+      "route": "relay",
+      "id": null
+    },
+    {
+      "route": "archive",
+      "id": null
+    }
+  ],
+  "stylesheets_in_cascade_order": [
+    "/app.css",
+    "/chat-themes.css",
+    "/chat-media.css",
+    "/studio-module.css",
+    "/relay-module.css",
+    "/veto-global-ui.css",
+    "/telegram-stories.css",
+    "/veto-device-polish.css",
+    "/veto-messenger-rebirth.css",
+    "/veto-launch-polish.css",
+    "/vetogram-header.css",
+    "/story-engine.css",
+    "/vetogram-ai.css",
+    "/vetogram-2026.css",
+    "/vetogram-mission-2026.css",
+    "/vetogram-experience-2026.css",
+    "/vetogram-finish-2026.css",
+    "/vetogram-noir.css"
+  ],
+  "script_entries": [
+    "https://telegram.org/js/telegram-web-app.js",
+    "/veto-device-polish.js",
+    "/app.js",
+    "/relay-module.js",
+    "/privacy.js",
+    "/chat-theme.js",
+    "/vetogram-inbox-pulse-core.js",
+    "/telegram-chats.js",
+    "/telegram-stories.js",
+    "/voice-studio.js",
+    "/studio-module.js",
+    "/story-engine.js",
+    "/vetogram-ai.js",
+    "/vetogram-creative-presets.js",
+    "/brand-pack.js",
+    "/veto-launch-polish.js",
+    "/vetogram-header.js",
+    "/vetogram-command-2026.js",
+    "/vetogram-resume-2026.js",
+    "/vetogram-workflows-2026.js",
+    "/vetogram-mission-2026.js",
+    "/vetogram-noir.js",
+    "/vetogram-locale.js"
+  ],
+  "static_dialogs": [
+    {
+      "tag": "section",
+      "id": "vetoWelcome"
+    },
+    {
+      "tag": "dialog",
+      "id": "telegramThreadPhotoDialog"
+    },
+    {
+      "tag": "dialog",
+      "id": "sePreviewDialog"
+    },
+    {
+      "tag": "dialog",
+      "id": "vg26CommandDialog"
+    },
+    {
+      "tag": "section",
+      "id": "sheet"
+    }
+  ],
+  "app_sheet_functions": [
+    "openSheet",
+    "closeSheet",
+    "privacyPromiseSheet",
+    "featureGuideSheet",
+    "allFeaturesSheet",
+    "securityCenterSheet",
+    "renderAutomationCenterSheet",
+    "automationCenterSheet",
+    "profileSheet",
+    "connectionHelpSheet",
+    "businessConnectionHelpSheet",
+    "viewerSetupSheet",
+    "viewerPhoneSheet",
+    "viewerEmailSheet",
+    "viewerCodeSheet",
+    "viewerNoCodeSheet",
+    "viewerPasswordSheet",
+    "viewerQrSheet",
+    "viewerStorySheet"
+  ],
+  "duplicate_ids": [],
+  "css": [
+    {
+      "path": "/app.css",
+      "bytes": 195565,
+      "important_count": 220
+    },
+    {
+      "path": "/chat-themes.css",
+      "bytes": 25956,
+      "important_count": 7
+    },
+    {
+      "path": "/chat-media.css",
+      "bytes": 4656,
+      "important_count": 0
+    },
+    {
+      "path": "/studio-module.css",
+      "bytes": 12421,
+      "important_count": 0
+    },
+    {
+      "path": "/relay-module.css",
+      "bytes": 19840,
+      "important_count": 7
+    },
+    {
+      "path": "/veto-global-ui.css",
+      "bytes": 37758,
+      "important_count": 25
+    },
+    {
+      "path": "/telegram-stories.css",
+      "bytes": 9747,
+      "important_count": 2
+    },
+    {
+      "path": "/veto-device-polish.css",
+      "bytes": 11986,
+      "important_count": 4
+    },
+    {
+      "path": "/veto-messenger-rebirth.css",
+      "bytes": 22393,
+      "important_count": 27
+    },
+    {
+      "path": "/veto-launch-polish.css",
+      "bytes": 13246,
+      "important_count": 7
+    },
+    {
+      "path": "/vetogram-header.css",
+      "bytes": 8319,
+      "important_count": 5
+    },
+    {
+      "path": "/story-engine.css",
+      "bytes": 15439,
+      "important_count": 22
+    },
+    {
+      "path": "/vetogram-ai.css",
+      "bytes": 8690,
+      "important_count": 11
+    },
+    {
+      "path": "/vetogram-2026.css",
+      "bytes": 22508,
+      "important_count": 64
+    },
+    {
+      "path": "/vetogram-mission-2026.css",
+      "bytes": 12409,
+      "important_count": 70
+    },
+    {
+      "path": "/vetogram-experience-2026.css",
+      "bytes": 34061,
+      "important_count": 122
+    },
+    {
+      "path": "/vetogram-finish-2026.css",
+      "bytes": 74390,
+      "important_count": 299
+    },
+    {
+      "path": "/vetogram-noir.css",
+      "bytes": 36483,
+      "important_count": 554
+    }
+  ],
+  "limits": [
+    "Does not enumerate dynamically generated DOM outside app.js sheet functions.",
+    "No authenticated Telegram state, device or accessibility certification."
+  ]
+}
