@@ -140,3 +140,24 @@ This slice fixes defects in existing V4 UI controllers, not in a standalone prev
 1. Real Telegram WebView QA: account switch during an open message action, navigation between two chats while a long press is queued, two-finger swipe/scroll, native long-press and hardware keyboard.
 2. Story editor: tap versus drag, undo/redo, pinch zoom, changing draft/owner mid-gesture, and visual inspector on mobile/Fold.
 3. Full npm verification then final integrated release review of PR #179 → #185. Keep one deploy after success, not per commit.
+
+## V4.3 owner-safe Privacy / Secure Vault (25 October 2026)
+
+This release-blocking UI privacy fix is implemented inside the same actual Mini App and stacked draft PR #185. No API contracts, server schema, Telegram permissions or deployment settings changed.
+
+### Risk removed from the current interface
+- The Privacy client previously kept `threads`, deleted-message feed, active archived thread, diagnostics, backup selection and Business UI state in memory across Telegram user switches. Unlike the Chats client, its refresh path did not check the signed owner before applying asynchronously returned data.
+- A delayed `/api/privacy` response, open media, backup results or connection-check result from account A could otherwise overwrite the UI after account B was selected. Because V4.1 promotes archived evidence into the primary Privacy surface, this needed correction before visual release review.
+
+### Safeguards implemented
+1. `privacyState.ownerInitData` and monotonic `ownerEpoch` now scope all displayed Private Archive state. On account change, close any private sheet and reset threads, counts, deleted feed, brief, diagnostics, active archived thread, media URL, backup selection/queue and Business wizard snapshots. Stop in-progress client backup loops. The background archive worker is not changed or implicitly enabled.
+2. API calls to `/api/privacy`, `/api/miniapp`, `/api/privacy-media`, `/api/privacy-media-recover`, `/api/privacy-backup` and Business wizard check the captured signed `initData` and epoch **after** awaited results. Old responses are discarded. Retry requests cannot silently switch identity between attempts.
+3. Backup batch loops and confirmation sheets return without updating the new user's UI when the captured identity becomes stale. Stale failures do not restore old Privacy settings over a new account.
+4. While verified owner data is not loaded (or the archive is degraded), archive counters and Smart Inbox counts show **—** instead of fabricated zeroes, and the actionable brief says **Проверяем архив Telegram**, not `CLEAR`. A real empty archive can still display zero **after** a successful verified refresh.
+5. No signed `initData` or message bodies are exposed in new DOM attributes; the privacy reset and lease live entirely in client memory.
+
+### Validation & remaining QA
+- Added `tests/vetogram-privacy-owner-leases.test.js` with real-source isolated tests for owner reset, in-flight old response rejection, A→B→A epoch mismatch, stale Telegram connection proof rejection, and guarded media/backup/Business routes.
+- The committed Privacy script was fetched and passed JavaScript parsing. An isolated live V8 harness exercised stale responses and account-switch logic; **6/6 targeted guard assertions passed**. This is NOT a successful full Node suite, browser/WebView E2E, live Telegram verification or proof of backend event delivery.
+- Required later: physical Android/Fold/iOS user-switch during active Media Vault, archive thread, background queue, Business sheet and slow/offline response; confirmed new-owner contents and backdrop clean-up; full `npm test`, `npm run vercel-build` and final preflight.
+- Neon schema v5 was already migrated; **do not repeat migration**. Keep `VETOGRAM_UNIFIED_ONBOARDING` OFF and PR Draft. No production deploy, merge or paid CI runner run in this stage.
