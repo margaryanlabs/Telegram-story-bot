@@ -669,6 +669,25 @@
     for (const [id, value] of Object.entries(statMap)) {
       if ($(id)) $(id).textContent = archiveReady ? String(value) : '—';
     }
+    const evidence=$('privacyEvidenceStatus');
+    if(evidence){
+      const verifiedAt=archiveReady ? new Date(privacyState.lastRefreshAt) : null;
+      const clock=verifiedAt && Number.isFinite(verifiedAt.getTime())
+        ? verifiedAt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})
+        : '';
+      evidence.textContent=!tg?.initData
+        ? 'Открой Vetogram в Telegram, чтобы проверить архив'
+        : navigator.onLine===false
+          ? 'Нет сети · данные архива не подтверждены'
+          : privacyState.degraded
+            ? 'Нет подтверждения архива · обнови данные'
+            : privacyState.loading && !archiveReady
+              ? 'Проверяю архив этого аккаунта…'
+              : archiveReady
+                ? 'Архив проверен · '+clock+' · только полученные события'
+                : 'Архив ещё не проверен';
+      evidence.dataset.verified=String(archiveReady);
+    }
 
     if ($('privacyRetentionLabel')) {
       $('privacyRetentionLabel').textContent = Number(settings.retentionDays || 30) === 3650
@@ -2086,6 +2105,18 @@
     }, 12000);
   }
 
+  $('privacyEvidenceRefresh')?.addEventListener('click', async event => {
+    const button=event.currentTarget;
+    if(button.disabled)return;
+    button.disabled=true;button.setAttribute('aria-busy','true');
+    try {
+      await Promise.allSettled([
+        refresh({silent:false}),loadTelegramConnection({silent:true})
+      ]);
+    } finally {
+      button.disabled=false;button.removeAttribute('aria-busy');
+    }
+  });
   $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
   $('privacyVaultCheckButton')?.addEventListener('click', openVaultMediaRecovery);
   $('privacyBackupGuideButton')?.addEventListener('click', privacyBusinessGuideSheet);
