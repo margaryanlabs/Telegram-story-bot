@@ -1853,7 +1853,6 @@
   function securityCenterSheet() {
     const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
     const businessConnected = state.businessPermissions?.connected === true;
-    const businessNeedsPermission = !businessConnected && state.connection === 'needs_permission';
     const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
     const session = viewerState.session;
     const cryptoVersion = session?.cryptoVersion || viewerState.cipherVersion || null;
@@ -2042,7 +2041,8 @@
 
   function profileSheet() {
     const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
-    const businessConnected = state.businessPermissions?.connected === true || state.connection === 'needs_permission';
+    const businessConnected = state.businessPermissions?.connected === true;
+    const businessNeedsPermission = !businessConnected && state.connection === 'needs_permission';
     const businessStories = state.businessPermissions?.stories === true;
     const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
     const storiesReady = telegramAccountReady();
