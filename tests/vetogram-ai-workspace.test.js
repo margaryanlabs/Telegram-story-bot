@@ -99,7 +99,7 @@ test('Telegram confirmation displays complete owner-approved outgoing text',()=>
   assert.match(send,/ПОЛНЫЙ текст сообщения/);
   assert.doesNotMatch(send,/message\.slice\(0,\s*650\)/);
   assert.match(send,/action:'send_message',chatId,message/);
-  assert.match(send,/if\(!safeIdentity\(\)\)return;/);
+  assert.match(send,/if\(state\.busy\|\|!safeIdentity\(\)\)return;/);
 });
 
 test('switching Telegram accounts clears hidden AI, Story, Portal and Negotiator data',()=>{
