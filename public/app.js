@@ -1233,7 +1233,7 @@
     quickViewer.textContent = connected
       ? 'Готово'
       : viewerState.newConnectionsReady === false
-        ? 'Security setup'
+        ? 'Нужно настроить защиту'
         : 'Нужно подключить';
     quickStory.textContent = hasStory ? `#${item.id}` : 'Нужно опубликовать';
 
@@ -1242,7 +1242,7 @@
     $('quickStoryStep').classList.toggle('done', hasStory);
 
     const completed = [Boolean(state.ready), connected, hasStory].filter(Boolean).length;
-    quickBadge.textContent = completed === 3 ? '3/3 · READY' : `${completed}/3`;
+    quickBadge.textContent = completed === 3 ? '3/3 · ГОТОВО' : `${completed}/3`;
     quickBadge.classList.toggle('ready', completed === 3);
 
     if (!state.ready) {
@@ -1275,8 +1275,10 @@
       syncButton.textContent = 'Что осталось подключить';
     } else if (connected) {
       const account = viewerState.session?.account || {};
-      $('viewerSyncTitle').textContent = 'Аналитика аудитории активен.';
-      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем Vetogram подтверждает доступную личность.';
+      $('viewerSyncTitle').textContent = 'Аналитика аудитории подключена.';
+      $('viewerSyncText').textContent = viewerState.backgroundReady
+        ? 'Fast Alerts включены: сервер проверяет события в фоне. Личность зрителя показывается только после подтверждения Telegram.'
+        : 'Аккаунт подключён, но фоновые проверки пока не подтверждены. Обновляй данные вручную или настрой безопасный cron.';
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
       syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
