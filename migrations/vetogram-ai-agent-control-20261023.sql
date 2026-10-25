@@ -117,7 +117,7 @@ BEGIN
     created_at=now(),expires_at=EXCLUDED.expires_at,revoked_at=NULL,mode='approval-only'
   RETURNING * INTO saved;
   RETURN to_jsonb(saved);
-END; $;
+END; $$;
 
 REVOKE ALL ON FUNCTION public.vetogram_ai_issue_draft_grant(bigint,uuid,text,text,bigint,bigint,integer,integer) FROM PUBLIC;
 
