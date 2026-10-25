@@ -701,6 +701,7 @@ export default async function handler(req, res) {
           const decrypted = await openJson(userSessionRow.session_ciphertext, `session:${chatId}`);
           story = await publishPhotoStoryUserSession({
             session: decrypted.session,
+            ownerId: String(chatId),
             imageBuffer,
             caption,
             audience: pre.audience,
