@@ -64,6 +64,11 @@
   menu.addEventListener('click',event=>{if(event.target===menu)dismiss();});
   window.addEventListener('veto:screen-changed',dismiss);
   window.addEventListener('pagehide',dismiss);
+  function clearIfOwnerChanged(){
+    if(menu.open && (!tg?.initData || tg.initData!==selectedInitData))dismiss();
+  }
+  window.addEventListener('focus',clearIfOwnerChanged);
+  document.addEventListener('visibilitychange',clearIfOwnerChanged);
 
   function visibleOwner(){
     return Boolean(tg?.initData && /^\d{1,20}$/.test(String(tg.initDataUnsafe?.user?.id||'')) &&
@@ -111,7 +116,8 @@
       try{
         if(!navigator.clipboard?.writeText)throw Error('CLIPBOARD_UNAVAILABLE');
         await navigator.clipboard.writeText(text);
-        if(selectedBubble===bubble)feedback.textContent='Текст скопирован';
+        if(selectedBubble===bubble && selectedInitData===tg?.initData)
+          feedback.textContent='Текст скопирован';
       }catch{
         if(selectedBubble===bubble)feedback.textContent='Не удалось скопировать. Выдели текст вручную.';
       }
