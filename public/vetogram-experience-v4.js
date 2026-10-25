@@ -59,6 +59,9 @@
   progressive({scope:'telegram', selector:'.veto-mirror-privacy-note',
     title:'Как защищаются сообщения', description:'Архив и ограничения',
     className:'v4-chat-explain'});
+  progressive({scope:'telegram', selector:'.vg26-inbox-shortcuts',
+    title:'Действия с перепиской', description:'AI-ответ, архив и новая история',
+    className:'v4-chat-shortcuts'});
   const connectCta = byId('vetoMessengerConnectCta');
   if (chatGuide && connectCta) {
     function syncGuide() {
@@ -70,6 +73,14 @@
     const observer = new MutationObserver(syncGuide);
     observer.observe(connectCta, {attributes:true,attributeFilter:['hidden','class','style']});
     syncGuide();
+  }
+
+  // Privacy: one explicit setup route, not an instructional wall on every visit.
+  const privacySetup = progressive({scope:'privacy', selector:'#privacyBusinessOnboarding',
+    title:'Настроить Anti-Delete', description:'Подключение бота и выбор разрешённых чатов',
+    className:'v4-privacy-setup'});
+  if (privacySetup) {
+    byId('privacyEnableAllButton')?.addEventListener('click', () => { privacySetup.open = true; });
   }
 
   // Privacy: the archive and verified events stay visible; setup/backup explanations are opt-in.
@@ -107,6 +118,28 @@
   const ai = screens('ai');
   const aiRoot = ai && $('#vtaiRoot', ai);
   if (aiRoot) {
+    const modeRail = $('.vtai-modes', aiRoot);
+    if (modeRail) {
+      const secondaryModes = Array.from(modeRail.querySelectorAll('[data-vtai-mode]'))
+        .filter(button => !['chat','translate','reply'].includes(button.dataset.vtaiMode));
+      if (secondaryModes.length) {
+        const extra = document.createElement('details');
+        extra.className = 'v4-ai-modes-extra';
+        const summary = document.createElement('summary');
+        summary.textContent = 'Другие режимы';
+        const actions = document.createElement('div');
+        actions.className = 'v4-ai-mode-actions';
+        extra.append(summary, actions);
+        modeRail.append(extra);
+        secondaryModes.forEach(button => actions.append(button));
+        const syncSelected = () => {
+          if (secondaryModes.some(button => button.getAttribute('aria-pressed') === 'true'))
+            extra.open = true;
+        };
+        modeRail.addEventListener('click', () => queueMicrotask(syncSelected));
+        syncSelected();
+      }
+    }
     const advancedIds = [
       'vtaiTasksPanel', 'vtaiRemindersPanel', 'vtaiFocusPanel', 'vtaiAgentControl'
     ];
