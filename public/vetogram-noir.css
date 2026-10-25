@@ -971,3 +971,107 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet input{
 @media(prefers-reduced-motion:reduce){
   #vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-filters{scroll-snap-type:none}
 }
+
+
+/* V4.1 Canvas Noir — Evidence-first Vault and genuine Voice state.
+   Reuses real Privacy counters/actions and live recorder flags. */
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-overview{
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:10px!important;margin:14px 0 10px!important;min-width:0;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-overview>article{
+  min-width:0;padding:16px 13px!important;border:1px solid var(--noir-border)!important;
+  border-radius:16px!important;background:var(--noir-surface)!important;
+  display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-overview>article>span{
+  color:var(--noir-muted)!important;font:600 11px/1.4 Inter,system-ui,sans-serif;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-overview>article>strong{
+  font:700 clamp(22px,3vw,32px)/1.1 Inter,system-ui,sans-serif!important;
+  color:var(--noir-text)!important;letter-spacing:-.045em;overflow-wrap:anywhere;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-overview>article>small{
+  color:var(--noir-muted)!important;font-size:10px;line-height:1.4;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-actions{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:9px!important;margin:0 0 14px!important;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-actions>button{
+  min-width:0;min-height:72px!important;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:center;gap:4px;text-align:left;
+  padding:12px 14px!important;border:1px solid var(--noir-border)!important;
+  background:var(--noir-surface)!important;border-radius:16px!important;
+  color:var(--noir-text)!important;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-actions>button:hover{
+  border-color:var(--noir-coral)!important;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-actions>button>span{
+  color:var(--noir-coral)!important;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-actions>button>small{
+  color:var(--noir-muted)!important;font-size:11px;
+}
+#vetogram.vetogram-noir [data-screen="voice"] .veto-voice-monitor-card{
+  background:radial-gradient(ellipse at 85% 0%,color-mix(in srgb,var(--noir-ai) 12%,transparent),transparent 60%),var(--noir-surface)!important;
+  overflow:hidden;
+}
+#vetogram.vetogram-noir [data-screen="voice"] .veto-voice-monitor-card #voiceSpectrum{
+  display:block;width:100%;max-width:100%;height:auto;max-height:240px;
+}
+#vetogram.vetogram-noir [data-screen="voice"] .veto-voice-signal{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 11px;border:1px solid var(--noir-border);
+  border-radius:999px;background:var(--noir-raised);color:var(--noir-muted);
+  font:700 10px/1.2 Inter,system-ui,sans-serif;letter-spacing:.045em;
+  white-space:normal;text-align:center;
+}
+#vetogram.vetogram-noir [data-screen="voice"] [data-capture-state="live"] .veto-voice-signal{
+  color:var(--noir-ai);border-color:color-mix(in srgb,var(--noir-ai) 45%,var(--noir-border));
+}
+#vetogram.vetogram-noir [data-screen="voice"] [data-capture-state="recording"] .veto-voice-signal{
+  color:var(--noir-coral);border-color:var(--noir-coral);
+  animation:v4-record-light 1.5s ease-in-out infinite;
+}
+@keyframes v4-record-light{50%{opacity:.62}}
+#vetogram.vetogram-noir [data-screen="voice"] .veto-voice-presets{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;
+}
+#vetogram.vetogram-noir [data-screen="voice"] .veto-voice-presets>button{
+  min-width:0;min-height:80px;border-radius:14px!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .veto-reborn-ai-header small{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  min-height:30px;padding:5px 10px;border-radius:999px;
+  background:var(--noir-raised);border:1px solid var(--noir-border);
+  color:var(--noir-muted)!important;white-space:nowrap;font-size:11px!important;
+}
+@media(max-width:760px){
+  #vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-overview{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  #vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:380px){
+  #vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-overview{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;
+  }
+  #vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-overview>article{
+    padding:12px!important;
+  }
+  #vetogram.vetogram-noir [data-screen="voice"] .veto-voice-presets{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #vetogram.vetogram-noir [data-screen="ai"] .veto-reborn-ai-header small{
+    font-size:10px!important;padding-inline:7px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #vetogram.vetogram-noir [data-screen="voice"] [data-capture-state="recording"] .veto-voice-signal{
+    animation:none!important;
+  }
+}
