@@ -523,6 +523,9 @@
   async function publishComposerStory() {
     ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const publishEpoch=viewerOwnerEpoch;
+    const isPublishOwner=()=>publishEpoch===viewerOwnerEpoch &&
+      signedOwner===String(tg?.initData||'');
     if (composerBusy || state.processing) return;
     if(composerPortalHandoff &&
        composerPortalHandoff.signed!==signedOwner){
@@ -537,7 +540,7 @@
         return;
       }
     }
-    if (signedOwner !== String(tg?.initData || '')) return;
+    if (!isPublishOwner())return;
     if (composerDataUrl && composerOwner !== signedOwner) {
       resetComposer();
       showToast('Telegram-аккаунт изменился. Выбери фото заново.');
@@ -574,8 +577,10 @@
       return;
     }
 
+    if(!isPublishOwner())return;
     composerBusy = true;
     state.processing = true;
+    const publishingGeneration=composerGeneration;
     renderPublish();
     haptic('medium');
 
@@ -586,6 +591,9 @@
         nonce: composerNonce || (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
         ...(attachPortal?{portalLink:composerPortalHandoff.url}:{}),
       });
+      // Never apply a Telegram response to another WebView owner or another
+      // attachment. Do not retry when the remote result might be uncertain.
+      if(!isPublishOwner()||publishingGeneration!==composerGeneration)return;
 
       const publishedStoryId = String(result.storyId || '');
       if (result.published !== true || !/^[1-9]\d*$/.test(publishedStoryId)) {
@@ -607,8 +615,10 @@
 
       if (viewerState.session?.connected) {
         await refreshViewerSync({ silent:true });
+        if(!isPublishOwner())return;
         await refreshViewerAnalytics({ silent:true });
       }
+      if(!isPublishOwner())return;
 
       openSheet(`
         <span class="kicker">Опубликовано</span>
@@ -630,14 +640,17 @@
         </div>
       `);
     } catch (error) {
+      if(!isPublishOwner())return;
       state.processing = false;
       notify('error');
       showToast(error.message);
       throw error;
     } finally {
-      composerBusy = false;
-      state.processing = false;
-      renderPublish();
+      if(isPublishOwner()){
+        composerBusy = false;
+        state.processing = false;
+        renderPublish();
+      }
     }
   }
 
