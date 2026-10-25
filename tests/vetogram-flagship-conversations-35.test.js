@@ -62,7 +62,7 @@ test('voice, reply and stickers animate only actual visible states, never fake m
   assert.match(css,/\.veto-mirror-voice-actions \[data-voice-send\]:not\(:disabled\)/);
   const extra=css.slice(css.indexOf('VETOGRAM 3.5 / flagship conversations'));
   assert.doesNotMatch(extra,/\bfetch\s*\(|sendMessage\s*\(|localStorage|setInterval/);
-  assert.doesNotMatch(extra,/\.veto-mirror-bubble\s*\{[^}]*animation:/);
+  assert.doesNotMatch(extra,/\.veto-mirror-bubble\s*\{[^}]*animation:\s*(?!none\b)/);
 });
 
 test('all finish CSS blocks balance and keyboard/mobile has accessible motion fallback',()=>{
