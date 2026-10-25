@@ -12,6 +12,7 @@ import {
   upsertBusinessConnectionState,
 } from '../lib/viewer-sync-store.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
+import {telegramOwnerError} from '../lib/telegram-owner-runtime.js';
 
 const MAX_SAVED_USERS = 100;
 const MAX_HISTORY = 12;
@@ -756,8 +757,13 @@ export default async function handler(req, res) {
       } catch (error) {
         const next = { ...pre, processing: false };
         await saveSettings(token, chatId, baseUrl, next).catch(() => {});
+        const ownerFailure = telegramOwnerError(error);
         const description = error?.telegram?.description || error?.errorMessage || error?.message || String(error);
-        res.status(500).json({ ok: false, error: friendlyPublishError(description) });
+        res.status(ownerFailure?.status || 500).json({
+          ok: false,
+          error: ownerFailure?.error || friendlyPublishError(description),
+          uncertain: !ownerFailure && /STORY_PUBLISH_RESULT_UNCERTAIN|timed out|timeout|ECONNRESET|ETIMEDOUT|network/i.test(description),
+        });
         return;
       }
     }
