@@ -1330,7 +1330,6 @@
         <div class="sheet-actions">
           ${error.needsSession ? '<button class="accent" data-business-account="1">Подключить мой Telegram →</button>' : '<button class="accent" data-business-retry="1">Повторить проверку →</button>'}
           <button data-business-close="1">Закрыть</button>
-          <button data-business-close="1">Закрыть</button>
         </div>
       `);
     }
