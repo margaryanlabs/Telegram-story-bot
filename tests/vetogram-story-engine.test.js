@@ -217,7 +217,7 @@ test('V4 untouched template copy updates appropriately, but never silently overw
 test('V4 template thumbnails use the real canvas composition and avoid rerouting publishing',()=>{
   const client=read('public/story-engine.js'),css=read('public/vetogram-noir.css');
   assert.match(client,/paint\(preview,d\)/);
-  assert.match(client,/preview\.width=108/);
+  assert.match(client,/thumbnail\.width=108/);
   assert.match(client,/state\.draft=applyStoryTemplate\(state\.draft,t\.id\)/);
   assert.match(client,/requestedOwner!==['"]0['"]&&owner\(\)!==requestedOwner/);
   assert.match(css,/se-template-canvas/);
