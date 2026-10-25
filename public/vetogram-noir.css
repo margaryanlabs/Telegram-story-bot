@@ -1188,3 +1188,48 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet input{
 @media(prefers-reduced-motion:reduce){
   #vetogram.vetogram-noir #privacyEvidenceRefresh:active{transform:none}
 }
+
+/* V4.6 Publisher source provenance — reflects a real completed 9:16 JPEG
+   transfer, never suggests publication or Telegram authorization. */
+#vetogram.vetogram-noir [data-screen="publish"] .v4-publish-from-studio{
+  display:flex;align-items:center;gap:11px;
+  margin:11px 0;padding:12px 14px;border-radius:14px;
+  border:1px solid var(--noir-border);
+  background:var(--noir-raised);color:var(--noir-text);
+}
+#vetogram.vetogram-noir [data-screen="publish"] .v4-publish-from-studio[hidden]{
+  display:none!important;
+}
+#vetogram.vetogram-noir [data-screen="publish"] .v4-publish-from-studio>span{
+  display:grid;place-items:center;flex:none;width:29px;height:29px;
+  border:1px solid var(--noir-border);border-radius:9px;
+  color:var(--noir-coral);font-size:17px;font-weight:700;
+}
+#vetogram.vetogram-noir [data-screen="publish"] .v4-publish-from-studio>div{
+  display:flex;flex-direction:column;gap:3px;min-width:0;
+}
+#vetogram.vetogram-noir [data-screen="publish"] .v4-publish-from-studio strong{
+  font-size:12px;font-weight:700;line-height:1.35;
+}
+#vetogram.vetogram-noir [data-screen="publish"] .v4-publish-from-studio small{
+  color:var(--noir-muted);font-size:11px;line-height:1.4;
+}
+#vetogram.vetogram-noir [data-screen="publish"] #storyPortalHandoff{
+  border:1px solid var(--noir-border);border-radius:15px;
+  background:var(--noir-surface);padding:14px;
+}
+#vetogram.vetogram-noir [data-screen="publish"] #storyPortalHandoff[hidden]{
+  display:none!important;
+}
+#vetogram.vetogram-noir [data-screen="publish"] #storyPortalHandoff label{
+  display:flex;align-items:flex-start;gap:10px;min-height:44px;
+  line-height:1.5;font-weight:600;
+}
+#vetogram.vetogram-noir [data-screen="publish"] #storyPortalConfirm{
+  flex:none;width:20px;height:20px;margin-top:1px;accent-color:var(--noir-coral);
+}
+@media(max-width:430px){
+  #vetogram.vetogram-noir [data-screen="publish"] .v4-publish-from-studio{
+    padding:11px 12px;gap:9px;
+  }
+}
