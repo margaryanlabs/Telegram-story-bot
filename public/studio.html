@@ -677,12 +677,12 @@
         </div>
         <div class="veto-voice-monitor-card">
           <div class="veto-voice-monitor-top">
-            <div><span class="veto-voice-input-label">MICROPHONE INPUT</span><strong id="voiceMicState">◌ Микрофон выключен</strong></div>
+            <div><span class="veto-voice-input-label">МИКРОФОН</span><strong id="voiceMicState">◌ Микрофон выключен</strong></div>
             <span class="veto-voice-signal">▂▅▇ · LIVE DSP</span>
           </div>
           <canvas id="voiceSpectrum" width="760" height="220" aria-label="Визуализация звука"></canvas>
           <div class="veto-voice-monitor-controls">
-            <button id="voiceMicButton" class="veto-voice-button primary" type="button">◉ Включить микрофон</button>
+            <button id="voiceMicButton" class="veto-voice-button primary" type="button" aria-busy="false">◉ Включить микрофон</button>
             <button id="voiceMicStop" class="veto-voice-button subdued" type="button" disabled>Отключить</button>
             <label class="veto-voice-headphones"><input id="voiceMonitor" type="checkbox" /><span>Слушать себя <small>Только в наушниках</small></span></label>
           </div>
