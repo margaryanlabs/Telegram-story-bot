@@ -901,6 +901,13 @@
     }
   }
 
+  // The Mini App BackButton and backdrop are owned by the shared dialog
+  // controller. Closing from either route must still terminate Privacy work.
+  window.addEventListener('vetogram:modal-closed',()=>{
+    privacyState.backup.stopRequested=true;
+    revokeMediaUrl();
+  });
+
   function revokeMediaUrl() {
     if (privacyState.mediaObjectUrl) {
       URL.revokeObjectURL(privacyState.mediaObjectUrl);
