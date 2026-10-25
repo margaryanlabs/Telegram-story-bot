@@ -32,3 +32,13 @@ Telegram itself supports in-app MTProto `account.updateConnectedBot` without Pre
 Pure source syntax and a focused isolated VETOGRAM REBORN source-contract test harness pass. **This is not full Node/npm or visual/integration certification**. The Business-feature flag remains disabled in production, the Neon migration remains unapplied as part of this task, and live Telegram code delivery plus Business event reception have not been verified.
 
 User explicitly requested **no more intermediate deployments**. Honor that instruction.
+
+## Additional verified engineering findings and fixes
+
+- Read-only inspection of connected Neon project `veto-telegram-free` / main on 2026-10-25 found **schema version 4** and **no `public.veto_business_write_leases` table**. This is a confirmed production blocker, not an assumption; do not enable Business writes until migration v5 and lease preflight have been reviewed and applied.
+- Fixed **15 invalid login modal CSS selectors** that mistakenly searched for `body` under itself/the root `#vetogram`. The actual root is `<html id="vetogram" class="vetogram-noir">`.
+- Corrected the shared modal: both `app.js` and `privacy.js` now delegate to one controller for background navigation, safe-area, keyboard focus and Telegram BackButton handling. Closing also halts local Privacy backup work and releases temporary media URLs.
+- Scope-specific Business checkboxes: selecting exact chats disables exclusion boxes, while preserve scope disables and clears both selectors. This avoids stale or contradictory consent payloads.
+- Removed duplicate close buttons and corrected misleading Anti-Delete status copy: saved settings alone are **not** proof of an incoming delete event.
+- One isolated 4-check source contract suite passed (new tests at `tests/vetogram-reborn-modal-permissions.test.js`); the +7 shared-code country-picker interaction passed an isolated harness. These are **not** real Telegram or browser tests.
+- Normal Node test suite / full build / physical WebView verification remain outstanding under the one-final-release gate.
