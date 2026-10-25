@@ -104,7 +104,9 @@
     if(state.context){state.context.close().catch(()=>{});}
     state.context=null;state.stream=null;state.nodes=null;state.oscillator=null;
     state.recorder=null;state.source=null;state.active=false;
-    state.sessionOwner='';
+    // Manual disconnect keeps a finished recording available for download;
+    // leaving the screen or switching owners revokes it separately.
+    if(!state.recordedBlob)state.sessionOwner='';
     cancelAnimationFrame(state.raf);state.raf=0;
     updateButtons();
   }
@@ -188,6 +190,7 @@
   function releaseRecording(){
     if(state.recordedUrl)URL.revokeObjectURL(state.recordedUrl);
     state.recordedUrl=null;state.recordedBlob=null;
+    if(!state.active&&!state.micStarting)state.sessionOwner='';
     $('voicePlayer').removeAttribute('src');
     $('voiceResult').hidden=true;
     updateButtons();
@@ -228,8 +231,13 @@
       }else toast('Запись пустая. Повтори с включённым микрофоном.');
       updateButtons();
     };
+    try{recorder.start(250);}
+    catch{
+      state.recordingEpoch++;
+      toast('Не удалось начать запись на этом устройстве. Попробуй другой формат.');
+      updateButtons();return;
+    }
     state.recorder=recorder;state.recording=true;state.startedAt=Date.now();
-    recorder.start(250);
     toast('Идёт запись голоса с выбранным эффектом. Она остаётся только на этом устройстве.');
     updateButtons();
   }
