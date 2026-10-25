@@ -109,6 +109,7 @@
   let composerNonce = '';
   let composerBusy = false;
   let composerGeneration = 0;
+  let composerOwner = '';
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -306,6 +307,7 @@
     composerFile = null;
     composerDataUrl = '';
     composerNonce = '';
+    composerOwner = '';
     composerBusy = false;
     if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl = '';
@@ -338,6 +340,7 @@
       const prepared = await compressStoryImage(file);
       if (!isCurrent()) return;
       composerFile = file;
+      composerOwner = signedOwner;
       composerDataUrl = prepared.dataUrl;
       composerNonce = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
@@ -368,6 +371,8 @@
   }
 
   async function publishComposerStory() {
+    const signedOwner = String(tg?.initData || '');
+    if (composerBusy || state.processing) return;
     if (!telegramAccountReady()) {
       try { await api('check'); } catch {}
       if (!telegramAccountReady()) {
@@ -375,11 +380,16 @@
         return;
       }
     }
+    if (signedOwner !== String(tg?.initData || '')) return;
+    if (composerDataUrl && composerOwner !== signedOwner) {
+      resetComposer();
+      showToast('Telegram-аккаунт изменился. Выбери фото заново.');
+      return;
+    }
     if (!composerDataUrl) {
       $('storyFileInput').click();
       return;
     }
-    if (composerBusy || state.processing) return;
 
     if (state.audience === 'selected' && !state.selected?.length) {
       showToast('Добавь людей для режима «Выбранные»');
@@ -1530,6 +1540,7 @@
   const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home', ai:'home', 'story-engine':'studio' };
   function switchScreen(name) {
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
+    if (composerOwner && composerOwner !== String(tg?.initData || '')) resetComposer();
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
     if (!activeScreen) {
       showToast('Раздел временно недоступен');
