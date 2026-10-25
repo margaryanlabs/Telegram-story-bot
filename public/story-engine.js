@@ -5,7 +5,7 @@ import {showPortalPreview} from './story-portal-preview.js';
 import {makePublicPortalUrl} from './story-portal-share.js';
 import { STORY_TEMPLATES,PORTAL_TYPES,RETENTION_DAYS,templateById,
   trimText,safeExternalUrl,newStoryDraft,normalizeDraft,normalizePortal,
-  remixDraft,draftFromBrief,isExpired,applyStoryTemplate,PHOTO_EFFECTS,STORY_LAYER_STYLES,
+  remixDraft,draftFromBrief,isExpired,applyStoryTemplate,calculatePhotoPinch,PHOTO_EFFECTS,STORY_LAYER_STYLES,
   normalizeStoryLayer,normalizeStoryLayers } from './story-engine-core.js';
 
 // VETO Story Engine lives inside the existing Telegram Mini App.
@@ -150,10 +150,11 @@ function drawLines(ctx,text,x,y,maxWidth,fontSize,align='left',maxLines=3){
 }
 let templatePreviewPending=false;
 let templatePreviewLastDraw=0;
+let activePhotoGesture=false;
 function scheduleTemplatePreviews(){
   const holder=$('seTemplates');
   if(templatePreviewPending||!holder?.children.length||!state.draft||
-      !root.classList.contains('active')||root.classList.contains('v4-studio-focus'))return;
+      !root.classList.contains('active')||activePhotoGesture)return;
   templatePreviewPending=true;
   const requestedOwner=state.owner,requestedDraft=state.draft.id;
   const delay=Math.max(0,240-(Date.now()-templatePreviewLastDraw));
@@ -683,6 +684,77 @@ function setup(){
   const endDrag=()=>{state.dragLayer=null;};
   canvas.addEventListener('pointerup',endDrag);
   canvas.addEventListener('pointercancel',endDrag);
+  // Two-finger gestures alter ONLY the owner's loaded photo. One finger still
+  // drags text layers through the original handler above. This is a local
+  // canvas interaction and never triggers publishing or network requests.
+  const photoPointers=new Map();
+  let photoGesture=null;
+  function releasePhotoPointer(event){
+    photoPointers.delete(event.pointerId);
+    if(photoPointers.size<2){
+      const wasActive=Boolean(photoGesture);
+      photoGesture=null;activePhotoGesture=false;
+      if(wasActive&&state.draft&&state.owner===owner()){
+        paint(canvas);
+        scheduleTemplatePreviews();
+      }
+    }
+  }
+  function clearPhotoGesture(){
+    photoPointers.clear();photoGesture=null;activePhotoGesture=false;
+  }
+  canvas.addEventListener('pointerdown',event=>{
+    if(event.pointerType!=='touch'||!state.image?.naturalWidth||
+       !state.draft||state.owner!==owner())return;
+    photoPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(photoPointers.size===2){
+      const [a,b]=[...photoPointers.values()];
+      const distance=Math.hypot(a.x-b.x,a.y-b.y);
+      if(distance<12)return;
+      historyGroup='';checkpoint();
+      state.dragLayer=null;
+      const d=state.draft;
+      photoGesture={owner:state.owner,draftId:d.id,zoom:Number(d.photoZoom)||1,
+        photoX:Number(d.photoX)||0,photoY:Number(d.photoY)||0,
+        distance,centerX:(a.x+b.x)/2,centerY:(a.y+b.y)/2};
+      activePhotoGesture=true;
+      event.preventDefault();
+    }
+  });
+  canvas.addEventListener('pointermove',event=>{
+    if(!photoPointers.has(event.pointerId))return;
+    photoPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    const g=photoGesture;
+    if(!g||photoPointers.size!==2)return;
+    if(owner()!==g.owner||state.owner!==g.owner||state.draft?.id!==g.draftId){
+      clearPhotoGesture();return;
+    }
+    const [a,b]=[...photoPointers.values()];
+    const rect=canvas.getBoundingClientRect();
+    try{
+      Object.assign(state.draft,calculatePhotoPinch(g,a,b,rect.width,rect.height));
+    }catch{return;}
+    $('sePhotoZoom').value=String(Math.round(state.draft.photoZoom*100));
+    $('sePhotoX').value=String(Math.round(state.draft.photoX*100));
+    $('sePhotoY').value=String(Math.round(state.draft.photoY*100));
+    paint(canvas);event.preventDefault();
+  });
+  canvas.addEventListener('pointerup',releasePhotoPointer);
+  canvas.addEventListener('pointercancel',releasePhotoPointer);
+  canvas.addEventListener('lostpointercapture',releasePhotoPointer);
+  window.addEventListener('veto:screen-changed',event=>{
+    if(event.detail?.screen!=='story-engine')clearPhotoGesture();
+  });
+  // Double-tap/double-click provides a one-action zoom reset/toggle.
+  canvas.addEventListener('dblclick',event=>{
+    if(!state.image?.naturalWidth||!state.draft||state.owner!==owner())return;
+    event.preventDefault();historyGroup='';checkpoint();
+    const zoomed=(Number(state.draft.photoZoom)||1)>1.08;
+    state.draft.photoZoom=zoomed?1:1.65;
+    if(zoomed){state.draft.photoX=0;state.draft.photoY=0;}
+    render();
+    notify(zoomed?'Фото возвращено к исходному масштабу':'Фото увеличено. Два пальца — масштаб и положение.');
+  });
   $('seNew').addEventListener('click',()=>{if(!state.owner || state.owner==='0')return notify('Открой VETOGRAM в Telegram',true);applyDraft(newStoryDraft({ownerId:state.owner}));notify('Новая Story готова')});
   $('seUpload').addEventListener('click',()=>$('seFile').click());
   $('seFile').addEventListener('change',async e=>{
