@@ -509,3 +509,59 @@ html#vetogram.vetogram-noir.veto-keyboard-open{scroll-padding-bottom:24px}
 #vetogram.vetogram-noir #seTemplates .noir-template-type{
   position:relative;z-index:1;text-shadow:0 2px 8px #000c;
 }
+
+/* V4 messenger: long-press/keyboard contextual actions on real message bubbles. */
+#vetogram.vetogram-noir .veto-mirror-bubble.v4-message-selected .veto-mirror-bubble-inner{
+  outline:2px solid var(--noir-coral);outline-offset:3px;
+  transition:outline-color 140ms ease;
+}
+#vetogram.vetogram-noir .veto-mirror-bubble:focus-visible .veto-mirror-bubble-inner{
+  outline:2px solid var(--noir-coral);outline-offset:3px;
+}
+dialog.v4-message-actions {
+  position:fixed;inset:auto 0 0;margin:0 auto;padding:0;
+  width:min(560px,100vw);max-width:100vw;max-height:min(78dvh,680px);
+  overflow:auto;border:1px solid #34405a;border-bottom:0;
+  border-radius:24px 24px 0 0;background:#101827;color:#e4ebf8;
+  box-shadow:0 -24px 75px #0009;font-family:Inter,system-ui,sans-serif;
+}
+dialog.v4-message-actions::backdrop{
+  background:rgba(1,5,12,.78);backdrop-filter:blur(5px);
+}
+.v4-message-actions-panel {
+  padding:22px 18px max(22px,calc(env(safe-area-inset-bottom,0px) + 18px));
+  display:grid;gap:16px;
+}
+.v4-message-actions-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.v4-message-actions-heading strong{font-size:19px;letter-spacing:-.035em}
+.v4-message-close{
+  display:grid;place-items:center;min-width:44px;min-height:44px;border:1px solid #293951;
+  border-radius:13px;color:#e4ebf8;background:#1b273a;font-size:26px;cursor:pointer;
+}
+.v4-message-excerpt{
+  margin:0;padding:15px 16px;max-height:110px;overflow:auto;
+  border-left:3px solid #ff7887;border-radius:0 14px 14px 0;
+  background:#1c2940;color:#c6d3e6;font-size:13px;line-height:1.55;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.v4-message-actions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v4-message-actions-grid button{
+  min-height:56px;text-align:left;padding:12px 14px;background:#1a2740;
+  border:1px solid #35435e;border-radius:15px;color:#e4ebf8;
+  font:600 13px/1.4 Inter,system-ui,sans-serif;cursor:pointer;
+}
+.v4-message-actions-grid button:active{transform:scale(.98)}
+.v4-message-actions-grid button:disabled{opacity:.42;cursor:not-allowed;transform:none}
+.v4-message-actions button:focus-visible{
+  outline:2px solid #ff7887;outline-offset:3px;
+}
+.v4-message-feedback{color:#b2c4db;font-size:12px;min-height:16px}
+@media(max-width:359px){
+  .v4-message-actions-panel{padding-inline:12px}
+  .v4-message-actions-grid{gap:7px}
+  .v4-message-actions-grid button{font-size:12px;padding:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .v4-message-actions-grid button:active{transform:none}
+  #vetogram.vetogram-noir .veto-mirror-bubble.v4-message-selected .veto-mirror-bubble-inner{transition:none}
+}
