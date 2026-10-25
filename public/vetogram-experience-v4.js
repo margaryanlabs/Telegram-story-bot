@@ -61,14 +61,11 @@
     className:'v4-chat-explain'});
   const connectCta = byId('vetoMessengerConnectCta');
   if (chatGuide && connectCta) {
-    let userToggled = false;
-    chatGuide.addEventListener('toggle', () => { if (chatGuide.dataset.v4Auto !== '1') userToggled = true; });
     function syncGuide() {
-      if (userToggled) return;
       const disconnected = !connectCta.hidden && getComputedStyle(connectCta).display !== 'none';
-      chatGuide.dataset.v4Auto = '1';
-      chatGuide.open = disconnected;
-      queueMicrotask(() => { delete chatGuide.dataset.v4Auto; });
+      // Auto-expand help when login is actually needed; never force-close a
+      // disclosure the user opened to inspect permissions.
+      if (disconnected) chatGuide.open = true;
     }
     const observer = new MutationObserver(syncGuide);
     observer.observe(connectCta, {attributes:true,attributeFilter:['hidden','class','style']});
@@ -111,10 +108,13 @@
   const aiRoot = ai && $('#vtaiRoot', ai);
   if (aiRoot) {
     const advancedIds = [
-      'vtaiTasksPanel', 'vtaiRemindersPanel', 'vtaiFocusPanel',
-      'vtaiSettingsPanel', 'vtaiApprovalPanel', 'vtaiMemoryPanel'
+      'vtaiTasksPanel', 'vtaiRemindersPanel', 'vtaiFocusPanel', 'vtaiAgentControl'
     ];
-    const modules = advancedIds.map(byId).filter(node => node && aiRoot.contains(node));
+    const modules = [
+      ...advancedIds.map(byId),
+      $('[aria-label="VETO Approval Center"]', aiRoot),
+      $('[aria-label="VETO AI Memory"]', aiRoot)
+    ].filter(node => node && aiRoot.contains(node));
     if (modules.length) {
       const disclosure = document.createElement('details');
       disclosure.className = 'v4-disclosure v4-ai-workspace';
