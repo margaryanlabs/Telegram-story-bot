@@ -1482,3 +1482,80 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet:focus-visible{
   #vetogram.vetogram-noir [data-screen="telegram"] #telegramMirror
     :is(.veto-mirror-row,.veto-chat-row){transition:none!important}
 }
+
+
+/* V4.10 pearl / linen light-mode contrast pass.
+   Older AI and Story styles embed white-on-black literals. Re-map *editor
+   controls and text* to Noir tokens while preserving dark story artwork,
+   message bubbles and the actual exported canvas colors. */
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  [data-screen="ai"] .vtai-root{
+  color:var(--noir-text)!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  [data-screen="ai"] :is(.vtai-panel h2,.vtai-neg-panel h2,.vtai-workspace-item strong,
+    .vtai-label,.vtai-consent,.vtai-note,.vtai-workspace-item p){
+  color:var(--noir-text)!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  [data-screen="ai"] :is(.vtai-input,#vtaiText){
+  color:var(--noir-text)!important;background:var(--noir-bg)!important;
+  border-color:var(--noir-border)!important;
+  caret-color:var(--noir-coral)!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  [data-screen="ai"] :is(.vtai-input,#vtaiText)::placeholder{
+  color:var(--noir-muted)!important;opacity:1;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  [data-screen="ai"] :is(.vtai-workspace-item,.vtai-neg-panel,
+    #vtaiActionStatus,#vtaiNegNotice,#vtaiFocusStatus){
+  background:var(--noir-raised)!important;
+  color:var(--noir-text)!important;
+  border-color:var(--noir-border)!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  #seEngine{
+  --se-white:var(--noir-text);--se-muted:var(--noir-muted);
+  --se-border:var(--noir-border);
+  color:var(--noir-text)!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  #seEngine :is(.se-panel,.se-controls,.se-drafts){
+  color:var(--noir-text);
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  #seEngine .se-panel{
+  background:var(--noir-surface)!important;
+  border-color:var(--noir-border)!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  #seEngine :is(.se-label,.se-panel p,.se-quiet,.se-headrow small){
+  color:var(--noir-muted)!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  #seEngine :is(.se-input,.se-textarea){
+  background:var(--noir-bg)!important;color:var(--noir-text)!important;
+  border-color:var(--noir-border)!important;
+  caret-color:var(--noir-coral)!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  #seEngine .se-input::placeholder{
+  color:var(--noir-muted)!important;opacity:1;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  #seEngine .se-stage{
+  /* Canvas remains a dark photograph workbench, not a recolored export. */
+  color:#dde7f6!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  #seEngine .se-stage .se-screen-label{
+  color:#becadd!important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  [data-screen="privacy"] .v4-vault-evidence,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+  [data-screen="publish"] .v4-publish-from-studio{
+  color:var(--noir-text)!important;background:var(--noir-surface)!important;
+  border-color:var(--noir-border)!important;
+}
