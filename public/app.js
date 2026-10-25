@@ -1662,6 +1662,10 @@
     try { tg?.BackButton?.hide(); } catch {}
   }
 
+  // One modal coordinator shared by account onboarding and the Privacy
+  // module. Both control the same #sheet/#sheetBackdrop elements.
+  window.VetoTelegramModal = Object.freeze({open:openSheet,close:closeSheet});
+
   let vetoWelcomeStep = 0;
 
   function vetoWelcomeSeen() {
