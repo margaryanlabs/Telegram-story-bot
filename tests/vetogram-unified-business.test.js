@@ -114,6 +114,7 @@ function response() {return {headers:{},setHeader(k,v){this.headers[k]=v},status
 function apiFixture(f=clientFixture(),settingsFailure=false) {
   let settingsWrites=0;
   const handler=createBusinessWizardHandler({token:'test-token',
+    businessWriteReadiness:async()=>({ready:true}),
     getViewerSession:async()=>({status:'active',session_ciphertext:'encrypted-fixture',telegram_account_user_id:'111'}),
     openJson:async()=>({session:'fixture-only'}),
     withBackupClient:async(_session,callback,options)=>{if(options)assert.equal(options.requestRetries,1);return callback(f.client)},
@@ -137,6 +138,24 @@ test('API reports partial archive settings failure without rolling back the Busi
   assert.equal(res.code,200);assert.equal(res.body.connected,true);assert.equal(res.body.settingsUpdated,false);
   assert.equal(res.body.archiveConsentRequested,true,'explicit opt-in must not be hidden on storage failure');
   assert.equal(a.f.writes,1);
+});
+test('development and preview never auto-enable Business without explicit flag',()=>{
+  const before=process.env.VERCEL_ENV,flag=process.env.VETOGRAM_UNIFIED_ONBOARDING;
+  try {
+    for(const env of ['preview','development','test','production']){
+      process.env.VERCEL_ENV=env;
+      delete process.env.VETOGRAM_UNIFIED_ONBOARDING;
+      assert.equal(unifiedOnboardingEnabled(),false,'unflagged '+env);
+      process.env.VETOGRAM_UNIFIED_ONBOARDING='0';
+      assert.equal(unifiedOnboardingEnabled(),false,'flag 0 '+env);
+      process.env.VETOGRAM_UNIFIED_ONBOARDING='1';
+      assert.equal(unifiedOnboardingEnabled(),true,'explicitly flagged '+env);
+    }
+  } finally {
+    if(before===undefined)delete process.env.VERCEL_ENV;else process.env.VERCEL_ENV=before;
+    if(flag===undefined)delete process.env.VETOGRAM_UNIFIED_ONBOARDING;
+    else process.env.VETOGRAM_UNIFIED_ONBOARDING=flag;
+  }
 });
 test('production feature gate is off unless explicitly enabled',()=>{
   const before=process.env.VERCEL_ENV,flag=process.env.VETOGRAM_UNIFIED_ONBOARDING;
