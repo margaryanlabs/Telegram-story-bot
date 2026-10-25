@@ -84,3 +84,26 @@ Personal-account management is now distinct from Business onboarding; opening pr
 - Mocked regression suite exercised the production webhook handler code: **6/6** Business lifecycle and duplicate-delete cases, **5/5** optional-v8-UI-failure cases passed in an isolated JS harness. No Bot API credentials, user messages, Neon writes, Vercel build or deployment were used.
 - Full repository Node suite, Telegram signed connection + webhook live-delivery QA, actual publication and mobile design verification remain release gates. Business flag stays disabled until those gates are complete.
 
+## V4.1 Canvas Noir continuation — restored cross-chat design stages (25 October)
+
+The approved direction is **Canvas Noir**, option 1 from the V4 visual exploration: dark, centered, restrained, contextual tools, **all product modules**, not Story Lab alone. Source of truth: PR #182 (NOIR) → #183 (V4 audit) → #184 (Canvas Noir) → current #185 (REBORN). Keep this stacked integration until one final verified release. Do not start an independent preview product.
+
+### Newly implemented here (actual app, not a standalone mock)
+
+- **Privacy / Secure Vault:** move the same `ghost-health-grid` and `ghost-quick-grid` DOM nodes directly below the real `ghost-command-card`. Actual archived counts and existing deleted/edited/media/all filters become the main product surface. Long setup, backup and manual Business permissions remain available below and keep their original IDs/listeners.
+- **Voice Studio:** the "signal" label was previously permanently rendered as processing even with microphone off. The label and visual state now observe the existing `voiceMicState` classes set by `voice-studio.js` (`is-requesting-mic`, `live`, `recording`). Initial offline HTML says microphone OFF. Animating the recording border occurs only for the genuine recording flag, and stops with reduced motion.
+- **VETO AI:** the real `aria-pressed` AI mode controls drive the small conversation-header mode label; the starter draft logic remains local, manually triggered and cannot bypass AI provider consent.
+- **Responsive NOIR:** original Voice preset controls, actual media spectrum, actual Privacy statistics/actions and AI context chip now have 760/380px layout rules; no additional stylesheet or API.
+- Four new isolated real-source checks passed in a V8 harness covering Vault DOM references, pure Voice status mapping, AI selected mode and CSS/HTML source wiring. **This is not a full Node test run, browser rendering or live Telegram test**.
+
+### Remaining approved V4 stages (not falsely declared finished)
+
+1. **Chats / messenger:** live two-account keyboard and swipe inspection, multi-photo and media lightbox interactions, owner isolation, clear connection/archived state, compact Fold thread/composer.
+2. **Stories / Story Engine:** canvas-first Quick / Pro / AI Director, real export and handoff, layers, zoom/drag, Remix; verify codec support and publishing rights. Do not represent local presets as generated AI.
+3. **VETO AI:** direct conversation and human-approved send, translate/rewrite and Story ideas; verify live provider errors, quota, mode focus and permission-preserving memory/task/approval workspaces.
+4. **Privacy / Secure Vault:** confirm actual newly archived message, edit, delete, alert and optional media across two accounts, and that settings-only states never advertise retained evidence. Maintain optional, explicit Business permissions.
+5. **Voice Studio:** test real mic permission, cancellation, start/stop, original vs processed local recording, audio export and share on Telegram Android/iOS/WebView; live status must follow device state.
+6. **System-level UX:** RU first, review EN/HY fallback, responsive 320/360/390/430/Fold/tablet/desktop, focus/back/keyboard/safe areas, dark/light, no scroll traps, reduced motion and 44px interaction targets.
+7. **Final release:** verify tests/build in checked-out repo and real Telegram flows first. Neon v5 is **already applied**, so use read-only preflight only; never repeat it. Keep production feature flag disabled until a signed real-world test, then one controlled deploy/rollback.
+
+As before, no intermediate Vercel release, GitHub merge, new Neon write, credential change or user-data manipulation is part of this stage.
