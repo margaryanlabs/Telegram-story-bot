@@ -74,6 +74,17 @@ function audienceLabel(state = {}) {
   return '⚡ Стандарт Telegram';
 }
 
+// The v8 wrapper adds optional UI around the v7 source of truth.
+// A Telegram transport error while showing a progress message or cleaning
+ // up a picker must never suppress the real webhook processing.
+async function bestEffortUi(label, operation) {
+  try { return await operation(); }
+  catch (error) {
+    console.warn('Vetogram optional webhook UI failed',label,error?.message||String(error));
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -104,17 +115,17 @@ export default async function handler(req, res) {
   const imageMessage = isSupportedImageMessage(message);
 
   // Capture picker prompt before v7 clears its state, so cleanup remains reliable.
-  const before = (pickerResult || pickerCancel || imageMessage)
-    ? await getStoredState(token, chatId)
+  const before = (pickerResult || pickerCancel || imageMessage) && chatId
+    ? (await bestEffortUi('prior_picker_state',()=>getStoredState(token, chatId))) || {}
     : {};
 
   let progressMessage = null;
   if (imageMessage && chatId) {
-    progressMessage = await tg(token, 'sendMessage', {
+    progressMessage = await bestEffortUi('story_progress',()=>tg(token, 'sendMessage', {
       chat_id: chatId,
       text: '⏳ Публикую Story…',
       disable_notification: true,
-    });
+    }));
   }
 
   // Capture the v7 JSON result without changing the HTTP response Telegram receives.
@@ -131,13 +142,13 @@ export default async function handler(req, res) {
 
   // Native picker is useful, but its helper messages should disappear after the choice.
   if ((pickerResult || pickerCancel) && chatId) {
-    await deleteMessage(token, chatId, before.pickerMessage);
-    await deleteMessage(token, chatId, message?.message_id);
+    await bestEffortUi('picker_cleanup',()=>deleteMessage(token, chatId, before.pickerMessage));
+    await bestEffortUi('picker_selection_cleanup',()=>deleteMessage(token, chatId, message?.message_id));
   }
 
   // The main panel can sit far above the newly sent photo. Keep immediate feedback near the photo.
   if (imageMessage && chatId && progressMessage?.message_id) {
-    const after = await getStoredState(token, chatId);
+    const after = (await bestEffortUi('updated_story_state',()=>getStoredState(token, chatId))) || {};
     const success = Boolean(resultPayload?.ok && resultPayload?.story_id);
 
     if (success) {
@@ -147,11 +158,11 @@ export default async function handler(req, res) {
       ];
       if (after.excludedCount) parts.push(`🚫 Исключений: ${after.excludedCount}`);
       if (after.protect) parts.push('🛡 Защита включена');
-      await editMessage(token, chatId, progressMessage.message_id, parts.join('\n'));
+      await bestEffortUi('story_published_notice',()=>editMessage(token, chatId, progressMessage.message_id, parts.join('\n')));
     } else if (resultPayload?.duplicate) {
-      await editMessage(token, chatId, progressMessage.message_id, '✅ Эта Story уже обработана — дубликат не создаю.');
+      await bestEffortUi('story_duplicate_notice',()=>editMessage(token, chatId, progressMessage.message_id, '✅ Эта Story уже обработана — дубликат не создаю.'));
     } else {
-      await editMessage(token, chatId, progressMessage.message_id, '❌ Story не опубликована. Причина показана в VETO Telegram.');
+      await bestEffortUi('story_failed_notice',()=>editMessage(token, chatId, progressMessage.message_id, '❌ Story не опубликована. Причина показана в VETO Telegram.'));
     }
   }
 }
