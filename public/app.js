@@ -120,6 +120,7 @@
   let composerSignedIdentity=String(tg?.initData||'');
   let composerPendingFileName = '';
   let composerPortalHandoff = null;
+  let composerFromStudio=false;
   // A public Portal link is not part of the caption: Telegram's Story link
   // area exists only for Business Bot API + standard audience.
   function syncComposerPortal(){
@@ -342,6 +343,7 @@
     composerOwner = '';
     composerPendingFileName = '';
     composerBusy = false;
+    composerFromStudio=false;
     clearComposerPortal();
     if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl = '';
@@ -381,6 +383,7 @@
     // Replacing the photo must never retain an earlier prepared Portal,
     // nonce, image or preview (even while compression is still running).
     clearComposerPortal();
+    composerFromStudio=false;
     composerPendingFileName=String(file.name||'');
     composerFile=null;composerDataUrl='';composerOwner='';composerNonce='';
     if(composerPreviewUrl)URL.revokeObjectURL(composerPreviewUrl);
@@ -470,6 +473,10 @@
         generation:composerGeneration,draftId:String(draftId||'')};
     }
     syncComposerPortal(); // publisher consent is unchecked by default
+    composerFromStudio=true;
+    $('mediaFileName').textContent='VETOGRAM · STORY 9:16';
+    $('mediaFileMeta').textContent='Кадр подготовлен · отправка отдельно';
+    renderPublish();
     $('storyCaption').value=String(caption||'').slice(0,800);
     $('storyCaption').dispatchEvent(new Event('input',{bubbles:true}));
     return true;
@@ -1065,6 +1072,9 @@
 
   function renderPublish() {
     ensureComposerIdentity();
+    const sourceBadge=$('storySourceStatus');
+    if(sourceBadge)sourceBadge.hidden=!(composerFromStudio && composerDataUrl &&
+      composerOwner===String(tg?.initData||''));
     const latest = activeStoryHistory()[0] || null;
     $('metricAudience').textContent = audienceLabel(state.audience);
     $('metricLast').textContent = latest ? relativeTime(latest.ts) : '—';
@@ -1096,7 +1106,7 @@
       composerState.textContent = state.processing ? 'Публикую…' : 'Подготавливаю…';
       composerState.className = 'composer-state busy';
     } else if (composerDataUrl) {
-      composerState.textContent = 'Готово';
+      composerState.textContent = composerFromStudio ? 'Кадр · 9:16' : 'Готово';
       composerState.className = 'composer-state ready';
     } else {
       composerState.textContent = 'Не выбрано';
