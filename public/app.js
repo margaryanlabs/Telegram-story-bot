@@ -5,7 +5,14 @@
   const qs = new URLSearchParams(location.search);
 
   const CODE_AUDIENCE = { s:'standard', a:'all', c:'contacts', f:'close', u:'selected' };
-  const DRAFT_CAPTION_KEY = 'story-pilot:draft-caption';
+  // The old unscoped caption key could expose a previous Telegram user's
+  // unpublished text after switching accounts in the same WebView.
+  const DRAFT_CAPTION_KEY = 'story-pilot:draft-caption'; // legacy purge only
+  const captionDraftStorageKey=()=>{
+    const id=String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id||'');
+    return window.Telegram?.WebApp?.initData && /^\d{1,20}$/.test(id)
+      ? DRAFT_CAPTION_KEY+':owner:'+id : '';
+  };
   const VETO_WELCOME_KEY = 'veto-telegram:welcome:v1';
 
   function decodeHistory(value) {
@@ -342,7 +349,10 @@
     if (!keepCaption) {
       $('storyCaption').value = '';
       $('captionCounter').textContent = '0 / 2048';
-      try { sessionStorage.removeItem(DRAFT_CAPTION_KEY); } catch {}
+      try {
+        const key=captionDraftStorageKey();
+        if(key)sessionStorage.removeItem(key);
+      } catch {}
     }
 
     $('mediaPreview').hidden = true;
@@ -350,8 +360,8 @@
     renderPublish();
   }
 
-  async function prepareComposerFile(file) {
-    if (!file || state.processing) return;
+  async function prepareComposerFile(file,{stillCurrent=null}={}) {
+    if (!file || state.processing) return false;
     const generation = ++composerGeneration;
     const signedOwner = String(tg?.initData || '');
     // Replacing the photo must never retain an earlier prepared Portal,
@@ -365,7 +375,8 @@
     $('mediaPreview').hidden=true;
     $('pickStoryMedia').hidden=false;
     const isCurrent = () => generation === composerGeneration &&
-      signedOwner === String(tg?.initData || '');
+      signedOwner === String(tg?.initData || '') &&
+      (!stillCurrent || stillCurrent()===true);
 
     composerBusy = true;
     $('composerState').textContent = 'Подготавливаю…';
@@ -374,7 +385,7 @@
 
     try {
       const prepared = await compressStoryImage(file);
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       composerFile = file;
       composerOwner = signedOwner;
       syncComposerPortal();
@@ -389,11 +400,13 @@
       $('mediaPreview').hidden = false;
       $('pickStoryMedia').hidden = true;
       notify('success');
+      return true;
     } catch (error) {
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       resetComposer({ keepCaption: true });
       notify('error');
       showToast(error.message);
+      return false;
     } finally {
       if (generation === composerGeneration) {
         if (signedOwner !== String(tg?.initData || '')) {
@@ -407,9 +420,45 @@
     }
   }
 
+  // Direct Story Engine → Publisher bridge. No DataTransfer requirement
+  // (missing on some native iOS WebViews), no simulated transfer success.
+  // The caller's revision fence runs after every await of image compression.
+  window.VetoTelegramStageStory=async ({
+    file,caption='',portalLink=null,ownerId='',draftId='',stillCurrent=null
+  }={})=>{
+    const signed=String(tg?.initData||'');
+    const currentId=String(tg?.initDataUnsafe?.user?.id||'');
+    if(!signed || !/^\d{1,20}$/.test(currentId) ||
+       String(ownerId)!==currentId || typeof stillCurrent!=='function')
+      throw Error('Telegram-аккаунт изменился. Передача отменена.');
+    if(!file || file.type!=='image/jpeg' || file.size>10*1024*1024)
+      throw Error('Story Engine передал неподдерживаемый JPEG.');
+    const ready=await prepareComposerFile(file,{stillCurrent});
+    if(!ready || signed!==String(tg?.initData||'') || !stillCurrent())
+      return false;
+    if(portalLink){
+      const url=new URL(String(portalLink));
+      if(url.origin!==window.location.origin || url.pathname!=='/portal.html' ||
+         !/^#p=[A-Za-z0-9_-]{1,5000}$/.test(url.hash))
+        throw Error('Portal-ссылка недействительна. Проверь редактор Story.');
+      composerPortalHandoff={url:url.toString(),signed,
+        generation:composerGeneration,draftId:String(draftId||'')};
+    }
+    syncComposerPortal(); // publisher consent is unchecked by default
+    $('storyCaption').value=String(caption||'').slice(0,800);
+    $('storyCaption').dispatchEvent(new Event('input',{bubbles:true}));
+    return true;
+  };
+
   async function publishComposerStory() {
     const signedOwner = String(tg?.initData || '');
     if (composerBusy || state.processing) return;
+    if(composerPortalHandoff &&
+       composerPortalHandoff.signed!==signedOwner){
+      resetComposer();
+      showToast('Telegram-аккаунт изменился. Подготовь историю заново.');
+      return;
+    }
     if (!telegramAccountReady()) {
       try { await api('check'); } catch {}
       if (!telegramAccountReady()) {
@@ -3435,7 +3484,7 @@
     clearComposerPortal();
     const signed=String(tg?.initData||'');
     const user=String(tg?.initDataUnsafe?.user?.id||'');
-    if(!signed||!/^\d{1,20}$/.test(user)||
+    if(state.processing || !signed||!/^\d{1,20}$/.test(user)||
        !candidate||String(candidate.ownerId)!==user ||
        !composerPendingFileName||composerPendingFileName!=='vetogram-story.jpg')return;
     try{
@@ -3456,7 +3505,10 @@
 
   $('storyCaption').addEventListener('input', event => {
     $('captionCounter').textContent = `${event.target.value.length} / 2048`;
-    try { sessionStorage.setItem(DRAFT_CAPTION_KEY, event.target.value || ''); } catch {}
+    try {
+      const key=captionDraftStorageKey();
+      if(key)sessionStorage.setItem(key,event.target.value||'');
+    } catch {}
   });
 
   $('mainButton').addEventListener('click', async () => {
@@ -3476,7 +3528,9 @@
   } catch {}
 
   try {
-    const draftCaption = sessionStorage.getItem(DRAFT_CAPTION_KEY) || '';
+    sessionStorage.removeItem(DRAFT_CAPTION_KEY);
+    const key=captionDraftStorageKey();
+    const draftCaption=key?(sessionStorage.getItem(key)||''):'';
     if (draftCaption) {
       $('storyCaption').value = draftCaption.slice(0, 2048);
       $('captionCounter').textContent = `${$('storyCaption').value.length} / 2048`;
