@@ -2897,10 +2897,12 @@
   });
   $('sheetBackdrop').addEventListener('click', closeSheet);
   document.addEventListener('keydown',event=>{
-    if(event.key==='Escape'&&!$('sheet').hidden){
-      event.preventDefault();
-      closeSheet();
-    }
+    if(event.key!=='Escape'||$('sheet').hidden)return;
+    // The country list has its own Escape action. Close that list first,
+    // never dismiss the entire authorization flow on the same key press.
+    if ($('viewerCountryPicker')?.hidden===false)return;
+    event.preventDefault();
+    closeSheet();
   });
 
   $('sheet').addEventListener('input', event => {
