@@ -1446,7 +1446,7 @@
           <span class="activity-event-icon">◌</span>
           <div>
             <strong>Пока тихо</strong>
-            <small>Новые Privacy, Stories и Intelligence события появятся здесь автоматически.</small>
+            <small>События архива, историй и аналитики появятся здесь автоматически.</small>
           </div>
         </div>
       `;

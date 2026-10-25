@@ -6,13 +6,13 @@
   if(!holder)return;
   const registry=Object.freeze({
     telegram:{label:'Чаты',symbol:'◉'},
-    privacy:{label:'Privacy Vault',symbol:'↶'},
-    publish:{label:'Stories',symbol:'◎'},
-    'story-engine':{label:'Story Engine',symbol:'✧'},
+    privacy:{label:'Личный архив',symbol:'↶'},
+    publish:{label:'Истории',symbol:'◎'},
+    'story-engine':{label:'Студия историй',symbol:'✧'},
     ai:{label:'VETO AI',symbol:'✦'},
-    voice:{label:'Voice Studio',symbol:'♫'},
+    voice:{label:'Голосовая студия',symbol:'♫'},
     viewers:{label:'Просмотры',symbol:'◈'},
-    studio:{label:'Creator Studio',symbol:'✳'},
+    studio:{label:'Студия стикеров',symbol:'✳'},
     relay:{label:'Relay',symbol:'⇄'},
     analytics:{label:'Аналитика',symbol:'▥'},
     archive:{label:'Архив',symbol:'▤'}
@@ -23,7 +23,7 @@
     if(!recent.length){
       const hint=document.createElement('span');
       hint.className='vg26-resume-empty';
-      hint.textContent='Начни с чатов, Stories или AI — здесь появятся твои быстрые переходы.';
+      hint.textContent='Начни с чатов, историй или ИИ — здесь появятся твои быстрые переходы.';
       holder.append(hint);
       return;
     }

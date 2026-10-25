@@ -26,7 +26,7 @@ test('Business Story permission and Privacy permission are distinct from deliver
   const x=missionPresentation({hasStatus:true,accountReady:true,
     privacyPermission:true,storiesBusiness:true});
   assert.equal(x.privacyState,'permission');
-  assert.equal(x.stories,'Business-доступ найден');
+  assert.equal(x.stories,'Бизнес-доступ найден');
   assert.doesNotMatch(x.stories,/опубликован|готова|работает/i);
 });
 test('a stale Business flag never grants Story access without an account',()=>{
