@@ -15,6 +15,11 @@ const composerVars=app.slice(app.indexOf('  let composerFile ='),
   app.indexOf('  let viewerState ='));
 const composerActions=app.slice(app.indexOf('  function resetComposer('),
   app.indexOf('  function relativeTime('));
+// Node does not accept plain-object mock files in URL.createObjectURL().
+class FakeBrowserURL extends URL{
+  static createObjectURL(){return 'blob:local-preview'}
+  static revokeObjectURL(){}
+}
 assert.match(composerVars,/let composerPortalHandoff/);
 assert.match(composerActions,/window\.VetoTelegramStageStory/);
 
@@ -47,7 +52,7 @@ function setup({slow=false}={}){
   };
   const storage={removed:[],removeItem(key){this.removed.push(key)}};
   const ctx=vm.createContext({
-    state,tg,window,URL,Date,Math,JSON,Event:class{constructor(type){this.type=type}},
+    state,tg,window,URL:FakeBrowserURL,Date,Math,JSON,Event:class{constructor(type){this.type=type}},
     sessionStorage:storage,selectedViewerStory:null,
     viewerState:{session:{connected:false}},
     $:el,formatBytes:n=>String(n),notify:()=>{},renderPublish:()=>{},
