@@ -442,7 +442,7 @@ export default async function handler(req, res) {
         && expiry > Date.now()
         && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage)
         ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString(),
-          delivery:loginChallenge.stage === 'code' ? (await openJson(loginChallenge.challenge_ciphertext,`auth:${userId}`).catch(()=>null))?.delivery || 'telegram_app' : null }
+          delivery:loginChallenge.stage === 'code' ? (await openJson(loginChallenge.challenge_ciphertext,`auth:${userId}`).catch(()=>null))?.delivery || 'unknown' : null }
         : null;
 
       res.status(200).json({
