@@ -302,6 +302,16 @@
       byId('seLayerText')?.focus({preventScroll:true});
       announce('Выбран текстовый слой. Можно изменить текст, стиль и размер.');
     });
+    window.addEventListener('vetogram:story-heading-selected',()=>{
+      if(!focusActive || !engine.classList.contains('active'))return;
+      engine.classList.add('v4-studio-tools-open');
+      engine.classList.remove('v4-layer-direct-edit');
+      toolButton.setAttribute('aria-expanded','true');
+      inspectorClose.hidden=false;
+      byId('seTabText')?.click();
+      byId('seTitle')?.focus({preventScroll:true});
+      announce('Редактирование заголовка истории.');
+    });
     function enterFocus() {
       lastFocus = document.activeElement;
       focusActive = true;
