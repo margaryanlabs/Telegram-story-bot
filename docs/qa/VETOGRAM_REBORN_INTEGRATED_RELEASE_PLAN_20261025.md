@@ -225,3 +225,8 @@ Continue implementation in existing `margaryanlabs/Telegram-story-bot` branch an
 - **8/8** additional static cross-module assertions passed with freshly fetched GitHub files; `app.js`, `story-engine.js`, and `vetogram-ai.js` parse correctly.
 - `tests/vetogram-story-portal-publish-contract.test.js` added as Node suite for the *real* Portal encoding + server validation/media-area interface. **Not executed in the isolated tool environment**; required in the full Node suite.
 - Release blockers unchanged: full local Node tests and `npm run vercel-build`, native iOS/Fold/Android import/preview, two signed Telegram accounts, live standard Business post with area verification and alternative user-session photo-only publish, AI provider budget and consent, complete Canvas Noir screenshots. No deployment, Neon migration, merge, permission change or flag flip performed here.
+
+### V4.6 Canvas Noir follow-through
+- Added a compact provenance indicator in the live Publisher **only after** a successful, owner-matched, prepared `1080×1920` editor JPEG. Copy explicitly says the frame is **not yet published**. The indicator clears on manual replacement, composer reset or account change; no fake backend work or duplicated preview.
+- Reused canonical `vetogram-noir.css` (no extra cascading stylesheet) for small-screen publisher alignment, confirmed source badge and a prominent, accessible Portal opt-in checkbox. CSS and updated `app.js` / `story-engine.js` / `vetogram-ai.js` are cache-busted in `studio.html`.
+- Re-ran the isolated actual-source handoff suite after the UI change: **8/8 passed**. The Portal/server codec test is committed but still requires a full Node run. Android/iOS WebView and live Telegram Business publish remain unverified.
