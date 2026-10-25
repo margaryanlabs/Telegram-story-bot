@@ -1651,3 +1651,16 @@ html#vetogram.vetogram-noir body.veto-chat-active .veto-messenger-title{
     padding-inline:8px!important;
   }
 }
+
+
+/* V4.10 verified specificity repair — immersive chats are not a fifth
+   dashboard page. Never render the app chrome above/under an open thread.
+   These scoped !important rules intentionally outrank the shared Noir
+   nav display:grid and topbar display:flex declarations. */
+html#vetogram.vetogram-noir body.veto-chat-active .topbar{
+  display:none!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-thread .bottom-nav,
+html#vetogram.vetogram-noir body.veto-chat-thread #actionDock{
+  display:none!important;
+}
