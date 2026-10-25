@@ -1233,3 +1233,22 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet input{
     padding:11px 12px;gap:9px;
   }
 }
+
+/* V4.8: The Telegram native keyboard reduces visualViewport height.
+   Keep the shared Owner/Privacy modal inside that visible area on
+   Safari/Android. This overrides Noir's fixed bottom:0!important only
+   while the real device viewport observer reports a focused keyboard. */
+html#vetogram.vetogram-noir.veto-keyboard-open body.veto-sheet-open #sheet{
+  bottom:var(--veto-visual-bottom,0px)!important;
+  max-height:min(90dvh,calc(var(--veto-visible-height,100dvh) - 12px))!important;
+  scroll-padding-bottom:24px;
+}
+html#vetogram.vetogram-noir body.veto-sheet-open #sheet:focus-visible{
+  outline:2px solid var(--noir-accent,var(--noir-text));
+  outline-offset:-3px;
+}
+@media(prefers-reduced-motion:reduce){
+  html#vetogram.vetogram-noir.veto-keyboard-open body.veto-sheet-open #sheet{
+    scroll-behavior:auto!important;
+  }
+}
