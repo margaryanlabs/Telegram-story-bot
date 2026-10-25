@@ -80,7 +80,7 @@ test('unrecognized screens and the home itself never enter recent list',()=>{
 test('real page includes new module and responsive, keyboard accessible UI',()=>{
   assert.match(html,/id="vg26ResumeRecent"/);
   assert.match(html,/src="\/vetogram-resume-2026\.js\?/);
-  assert.match(html,/class="vg26-resume-flows"/);
+  assert.match(html,/class="vg26-resume-flows(?:\s|"|>)/);
   assert.match(css,/\.vg26-resume-flows\{display:grid/);
   assert.match(css,/@media\(max-width:620px\)/);
   assert.match(css,/\.vg26-resume :is\(button\):focus-visible/);
