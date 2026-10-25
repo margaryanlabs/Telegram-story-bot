@@ -167,3 +167,63 @@ test('source keeps escape and native BackButton on one canonical shared sheet',(
   assert.match(source,/closeSheet\(\{restoreFocus:false\}\)/);
   assert.match(source,/if\(isCurrent\(\) && !\$\('sheet'\)\?\.hidden\)showViewerAuthError\(error\)/);
 });
+
+test('keyboard Tab wraps inside live modal and cannot escape to underlying chats',()=>{
+  const sectionText=section("  document.addEventListener('keydown',event=>{",
+    "  $('sheet').addEventListener('input'");
+  let handler=null,focused='',closed=0;
+  const first={getClientRects:()=>[{}],focus(){focused='first'}};
+  const last={getClientRects:()=>[{}],focus(){focused='last'}};
+  const sheet={
+    hidden:false,querySelectorAll:()=>[first,last],
+    contains:n=>[first,last].includes(n),focus(){focused='sheet'}
+  };
+  const doc={
+    activeElement:last,querySelector:()=>null,
+    addEventListener:(name,fn)=>{if(name==='keydown')handler=fn}
+  };
+  const ctx=vm.createContext({
+    $:name=>name==='sheet'?sheet:null,
+    document:doc,getComputedStyle:()=>({visibility:'visible'}),
+    closeSheet(){closed++}
+  });
+  new vm.Script(sectionText).runInContext(ctx);
+  assert.ok(handler,'must install real key handler');
+  let blocked=false;
+  handler({key:'Tab',shiftKey:false,preventDefault(){blocked=true}});
+  assert.equal(blocked,true);assert.equal(focused,'first');
+  doc.activeElement=first;blocked=false;
+  handler({key:'Tab',shiftKey:true,preventDefault(){blocked=true}});
+  assert.equal(blocked,true);assert.equal(focused,'last');
+  assert.equal(closed,0);
+});
+test('native dialog and country picker win Escape priority over shared modal',()=>{
+  const keyboard=section("  document.addEventListener('keydown',event=>{",
+    "  $('sheet').addEventListener('input'");
+  const sheet={hidden:false};
+  let handler,closed=0,countryOpen=true,dialogOpen=false;
+  const doc={
+    querySelector:()=>dialogOpen?{}:null,
+    addEventListener:(name,fn)=>{if(name==='keydown')handler=fn}
+  };
+  new vm.Script(keyboard).runInContext(vm.createContext({
+    document:doc,$:name=>name==='sheet'?sheet:name==='viewerCountryPicker'?
+      {hidden:!countryOpen}:null,
+    closeSheet(){closed++}
+  }));
+  handler({key:'Escape',preventDefault(){}});
+  assert.equal(closed,0);
+  countryOpen=false;dialogOpen=true;
+  handler({key:'Escape',preventDefault(){}});
+  assert.equal(closed,0);
+  dialogOpen=false;
+  handler({key:'Escape',preventDefault(){}});
+  assert.equal(closed,1);
+});
+test('Noir keyboard modal has visualViewport override with safe-area and reduced motion',()=>{
+  const css=readFileSync(new URL('../public/vetogram-noir.css',import.meta.url),'utf8');
+  assert.match(css,/html#vetogram\.vetogram-noir\.veto-keyboard-open body\.veto-sheet-open #sheet/);
+  assert.match(css,/bottom:var\(--veto-visual-bottom,0px\)!important/);
+  assert.match(css,/max-height:min\(90dvh,calc\(var\(--veto-visible-height,100dvh\) - 12px\)\)!important/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
