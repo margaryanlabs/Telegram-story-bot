@@ -60,6 +60,18 @@
     smooth(n.feedback.gain,Math.min(.32,profile.echo*k*.65));
     smooth(n.output.gain,.9);
   }
+  function paintIdleSpectrum(){
+    const canvas=$('voiceSpectrum'),ctx=canvas?.getContext('2d');
+    if(!ctx)return;
+    const w=canvas.width,h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#090d13';ctx.fillRect(0,0,w,h);
+    // Static resting baseline, never fabricated motion when mic is off.
+    ctx.fillStyle='rgba(186,210,237,.24)';
+    const stride=w/90;
+    for(let i=0;i<90;i++)ctx.fillRect(i*stride+2,h*.51-1,
+      Math.max(2,stride-3),2);
+  }
   function draw(){
     const canvas=$('voiceSpectrum');
     if(!canvas)return;
@@ -75,14 +87,15 @@
     for(let i=0;i<90;i++){
       const value=hasAudio
         ?Math.abs((bins[Math.floor(i*bins.length/90)]||128)-128)/128
-        :Math.abs(Math.sin((i*2.15)+(Date.now()/2500)))*.085;
+        :0;
       const height=5+Math.max(.06,value)*h*.68;
       const edge=Math.abs(i-44.5)/44.5;
       const alpha=.32+.55*(1-edge);
       ctx.fillStyle='rgba(186,210,237,'+alpha.toFixed(2)+')';
       ctx.fillRect(i*stride+2,center-height/2,Math.max(2,stride-3),height);
     }
-    state.raf=requestAnimationFrame(draw);
+    if(state.active)state.raf=requestAnimationFrame(draw);
+    else state.raf=0;
   }
   function stopMonitor(){
     if(!state.nodes||!state.context)return;
@@ -108,6 +121,7 @@
     // leaving the screen or switching owners revokes it separately.
     if(!state.recordedBlob)state.sessionOwner='';
     cancelAnimationFrame(state.raf);state.raf=0;
+    paintIdleSpectrum();
     updateButtons();
   }
   async function startMic(){
@@ -327,5 +341,6 @@
     cancelAnimationFrame(state.raf);state.raf=0;
   });
   updateButtons();
+  paintIdleSpectrum();
   if(!audioSupported)toast('Микрофон и запись в этом WebView не поддерживаются. Нужна актуальная версия Telegram.');
 })();
