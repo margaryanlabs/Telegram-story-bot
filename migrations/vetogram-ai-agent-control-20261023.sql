@@ -83,50 +83,12 @@ CREATE OR REPLACE FUNCTION public.vetogram_ai_issue_draft_grant(
  p_min_cents bigint,p_asking_cents bigint,p_max_discount integer,
  p_minutes integer
 ) RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER
-SET search_path=public,pg_temp AS $
+SET search_path=public,pg_temp AS $$
 DECLARE is_paused boolean;
 DECLARE saved public.vetogram_ai_draft_grants%ROWTYPE;
 BEGIN
   IF p_owner_id IS NULL OR p_owner_id<1 OR p_grant_id IS NULL OR
-     p_chat_id !~ '^-?[0-9]{1,22}
-  p_owner_id bigint,p_pause boolean
-) RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER
-SET search_path=public,pg_temp AS $$
-DECLARE previous boolean;
-BEGIN
-  IF p_owner_id IS NULL OR p_owner_id<1 OR p_pause IS NULL THEN
-    RAISE EXCEPTION 'VETOGRAM_AGENT_INVALID_CHANGE' USING ERRCODE='P0001';
-  END IF;
-  -- Same advisory lock and row-lock order as grant issuance.
-  PERFORM pg_advisory_xact_lock(hashtext('vetogram-ai-agent:' || p_owner_id::text)::bigint);
-  INSERT INTO public.vetogram_ai_agent_control(owner_id) VALUES(p_owner_id)
-    ON CONFLICT(owner_id) DO NOTHING;
-  -- Serialize with concurrent grant issuance via control row lock.
-  SELECT drafting_paused INTO previous FROM public.vetogram_ai_agent_control
-    WHERE owner_id=p_owner_id FOR UPDATE;
-  IF previous IS DISTINCT FROM p_pause THEN
-    UPDATE public.vetogram_ai_agent_control
-      SET drafting_paused=p_pause,updated_at=now() WHERE owner_id=p_owner_id;
-    IF p_pause THEN
-      UPDATE public.vetogram_ai_draft_grants SET revoked_at=now()
-        WHERE owner_id=p_owner_id AND revoked_at IS NULL;
-    END IF;
-    INSERT INTO public.vetogram_ai_agent_events(owner_id,kind)
-      VALUES(p_owner_id,CASE WHEN p_pause THEN 'drafting_paused' ELSE 'drafting_resumed' END);
-  END IF;
-  RETURN jsonb_build_object('draftingPaused',p_pause,'changed',previous IS DISTINCT FROM p_pause);
-END; $$;
-
-REVOKE ALL ON FUNCTION public.vetogram_ai_set_drafting_pause(bigint,boolean) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.vetogram_ai_guard_draft_grant() FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.vetogram_ai_grant_event() FROM PUBLIC;
-
--- Verify on a temporary DB, with owner and real credentials:
--- * issue grant -> grant_issued
--- * pause -> grant_revoked + drafting_paused atomically
--- * issue while paused -> blocked; resume -> issue accepted
--- * separate owners remain isolated; concurrent pause/issue serializes.
- OR p_chat_id='0' OR
+     p_chat_id !~ '^-?[0-9]{1,22}$' OR p_chat_id='0' OR
      p_currency NOT IN ('USD','EUR','AMD','RUB','GEL','GBP') OR
      p_min_cents IS NULL OR p_min_cents<1 OR
      p_asking_cents IS NULL OR p_asking_cents<p_min_cents OR
