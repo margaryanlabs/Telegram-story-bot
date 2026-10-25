@@ -66,9 +66,14 @@ async function transact(mode,fn){
   return new Promise((resolve,reject)=>{
     const tx=state.db.transaction('drafts',mode);
     const st=tx.objectStore('drafts');
+    let result;
     const request=fn(st);
-    request.onsuccess=()=>resolve(request.result);
+    // A successful put() request is NOT yet a committed IndexedDB
+    // transaction. The entire transaction can still abort afterwards.
+    request.onsuccess=()=>{result=request.result;};
     request.onerror=()=>reject(request.error||Error('Local draft operation failed'));
+    tx.oncomplete=()=>resolve(result);
+    tx.onerror=()=>reject(tx.error||Error('Local draft transaction failed'));
     tx.onabort=()=>reject(tx.error||Error('Local storage transaction aborted'));
   });
 }
