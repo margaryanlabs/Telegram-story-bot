@@ -355,9 +355,14 @@
       notify('error');
       showToast(error.message);
     } finally {
-      if (isCurrent()) {
-        composerBusy = false;
-        renderPublish();
+      if (generation === composerGeneration) {
+        if (signedOwner !== String(tg?.initData || '')) {
+          // A new Telegram account must not inherit a half-prepared Story.
+          resetComposer();
+        } else {
+          composerBusy = false;
+          renderPublish();
+        }
       }
     }
   }
@@ -572,12 +577,13 @@
   }
 
   async function api(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const signedOwner = String(tg?.initData || '');
+    if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
       method: action ? 'POST' : 'GET',
       headers: {
-        'x-telegram-init-data': tg.initData,
+        'x-telegram-init-data': signedOwner,
         'content-type':'application/json',
       },
     };
@@ -588,6 +594,8 @@
       timeoutMs: action === 'publish_story' ? 45000 : 15000,
     });
 
+    if (signedOwner !== String(tg?.initData || ''))
+      throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
     if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось обновить Vetogram');
 
     if (Array.isArray(data.activity)) {
