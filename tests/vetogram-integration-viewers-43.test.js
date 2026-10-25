@@ -100,3 +100,19 @@ test('main Mini App imports the new owner-scoped integration controller, not a c
   assert.match(html,/\/app\.js\?v=20261025-owner-integration-43/);
   assert.doesNotMatch(html,/\/app\.js\?v=20261019-messenger-first-v1/);
 });
+
+
+
+test('Automation Center request cannot return old account settings after Telegram owner swap',async()=>{
+  const source=part('  async function automationsApi(action = null, payload = {}) {',
+    '  function automationRuleEnabled(');
+  let signed='owner-A';
+  const future=deferred();
+  const tg={get initData(){return signed}};
+  const requestJson=()=>future.promise;
+  const run=new Function('tg','requestJson',source+';return automationsApi')(tg,requestJson);
+  const pending=run('refresh');
+  signed='owner-B';
+  future.resolve({response:{ok:true},data:{ok:true,rules:{enabled:true}}});
+  await assert.rejects(pending,/Telegram-аккаунт изменился/);
+});
