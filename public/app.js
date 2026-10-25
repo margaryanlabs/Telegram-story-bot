@@ -2528,7 +2528,7 @@
             await refresh();
             await refreshViewerAnalytics({ silent: true });
             switchScreen('telegram');
-            await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
+            // Business access is a separate, explicit opt-in from Privacy.
             break;
           }
 
@@ -3177,6 +3177,12 @@
         }
         const data = await viewerApi('send_code', { phone }, null);
         viewerPendingPhone = phone;
+        // The server persisted this challenge. Keep local state in sync so
+        // returning from the sheet offers "Resume code", not another send.
+        viewerState.loginPending = {
+          stage:'code', delivery:data.delivery || 'telegram_app',
+          expiresAt:data.expiresAt || null,
+        };
         viewerCodeSheet(data.delivery, data.reused === true);
       });
       return;
@@ -3195,12 +3201,17 @@
         if (!/^\d{3,8}$/.test(code)) throw new Error('Проверь код из Telegram');
         const data = await viewerApi('verify_code', { code }, null);
         if ($('viewerCode')) $('viewerCode').value='';
-        if (data.nextCode) { viewerCodeSheet(data.delivery); }
-        else if (data.needsPassword) {
+        if (data.nextCode) {
+          viewerState.loginPending = { ...(viewerState.loginPending||{}),
+            stage:'code', delivery:data.delivery||'telegram_app' };
+          viewerCodeSheet(data.delivery);
+        } else if (data.needsPassword) {
+          viewerState.loginPending = { ...(viewerState.loginPending||{}), stage:'password' };
           viewerPasswordSheet();
         } else {
           closeSheet();
           viewerPendingPhone = '';
+          viewerState.loginPending = null;
           notify('success');
           showToast('Telegram успешно подключён');
           await refreshViewerSync({ silent: true });
@@ -3209,7 +3220,7 @@
           await refresh();
           await refreshViewerAnalytics({ silent: true });
           switchScreen('telegram');
-          await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
+          // No unsolicited Business permission wizard after login.
         }
       });
       return;
@@ -3222,6 +3233,7 @@
         if ($('viewerPassword')) $('viewerPassword').value='';
         closeSheet();
         viewerPendingPhone = '';
+        viewerState.loginPending = null;
         notify('success');
         showToast('Telegram успешно подключён');
         await refreshViewerSync({ silent: true });
