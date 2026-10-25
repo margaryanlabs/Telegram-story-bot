@@ -83,6 +83,20 @@
     title:'Резервная копия переписок', description:'Дополнительное сохранение истории',
     className:'v4-privacy-backup'});
 
+  // V4.1 Vault: real archived evidence comes before setup marketing.
+  // Move the *original* statistics and filter actions; existing handlers,
+  // owner-scoped data and IDs remain authoritative. Never clone private data.
+  const vaultScreen = screens('privacy');
+  const vaultHero = vaultScreen && $('.ghost-command-card', vaultScreen);
+  const vaultStats = vaultScreen && $('.ghost-health-grid', vaultScreen);
+  const vaultActions = vaultScreen && $('.ghost-quick-grid', vaultScreen);
+  if (vaultHero && vaultStats && vaultActions) {
+    vaultStats.classList.add('v4-vault-overview');
+    vaultActions.classList.add('v4-vault-actions');
+    vaultHero.after(vaultStats);
+    vaultStats.after(vaultActions);
+  }
+
   // Story publication: the media picker and audience are primary; fine controls stay available.
   progressive({scope:'publish', selector:'#privacyBlock',
     title:'Дополнительные настройки публикации', description:'Точный контроль истории',
@@ -115,6 +129,30 @@
   progressive({scope:'voice', selector:'.veto-voice-footnote',
     title:'О приватности записи', description:'Что происходит со звуком',
     className:'v4-voice-info'});
+
+  // Voice Studio: indicators must reflect the real recorder, not a decorative
+  // equalizer saying "processing" when the microphone has never been enabled.
+  // The existing recorder owns the classes: live, recording, is-requesting-mic.
+  function voiceCaptureState(node) {
+    if (node?.classList?.contains('recording')) return ['recording','● ИДЁТ ЗАПИСЬ'];
+    if (node?.classList?.contains('live')) return ['live','● МИКРОФОН ВКЛЮЧЁН'];
+    if (node?.classList?.contains('is-requesting-mic')) return ['requesting','◌ ЗАПРОС ДОСТУПА'];
+    return ['off','◌ МИКРОФОН ВЫКЛЮЧЕН'];
+  }
+  const voiceMicState = byId('voiceMicState');
+  const voiceMonitorCard = voiceMicState?.closest('.veto-voice-monitor-card');
+  const voiceSignal = voiceMonitorCard && $('.veto-voice-signal', voiceMonitorCard);
+  if (voiceMicState && voiceMonitorCard && voiceSignal) {
+    const syncVoiceSignal = () => {
+      const [state, label] = voiceCaptureState(voiceMicState);
+      voiceMonitorCard.dataset.captureState = state;
+      if (voiceSignal.textContent !== label) voiceSignal.textContent = label;
+    };
+    new MutationObserver(syncVoiceSignal).observe(voiceMicState,{
+      attributes:true,attributeFilter:['class'],childList:true,characterData:true,subtree:true
+    });
+    syncVoiceSignal();
+  }
 
   // AI: direct dialogue is primary; advanced task and approval consoles are optional.
   const ai = screens('ai');
