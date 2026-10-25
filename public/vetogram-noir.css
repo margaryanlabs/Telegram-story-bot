@@ -684,24 +684,24 @@ html#vetogram[data-veto-theme="linen"] .v4-message-feedback{
 #vetogram.vetogram-noir .veto-reborn-brand:focus-visible{
   outline:2px solid var(--noir-coral);border-radius:12px;
 }
-#vetogram.vetogram-noir .veto-reborn-navigation {
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] {
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
   padding-inline:max(12px,calc((100vw - 620px)/2))!important;
 }
-#vetogram.vetogram-noir .veto-reborn-navigation .nav-item{
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item{
   min-height:58px!important;gap:6px!important;
 }
-#vetogram.vetogram-noir .veto-reborn-navigation .nav-item small{
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item small{
   font-size:11px!important;letter-spacing:-.01em!important;
 }
-#vetogram.vetogram-noir .veto-reborn-navigation .veto-reborn-ai-tab{
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .veto-reborn-ai-tab{
   color:var(--noir-ai)!important;
 }
-#vetogram.vetogram-noir .veto-reborn-navigation .veto-reborn-ai-tab.active{
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .veto-reborn-ai-tab.active{
   color:var(--noir-ai)!important;
   background:color-mix(in srgb,var(--noir-ai) 14%,transparent)!important;
 }
-#vetogram.vetogram-noir .veto-reborn-navigation .nav-item:focus-visible{
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item:focus-visible{
   outline-offset:-2px!important;
 }
 /* Native Telegram header is outside this page. The app never copies its safe
@@ -817,9 +817,9 @@ html#vetogram[data-veto-theme="linen"] .v4-message-feedback{
 /* The folded-phone layout retains tappable tabs; system keyboard consumes the
    remaining viewport instead of being trapped behind app navigation. */
 @media(max-width:359px){
-  #vetogram.vetogram-noir .veto-reborn-navigation .nav-item small{font-size:10px!important}
+  #vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item small{font-size:10px!important}
   #vetogram.vetogram-noir body.veto-sheet-open #sheet {padding-inline:15px!important}
-  #vetogram.vetogram-noir .veto-reborn-navigation .nav-item{padding-inline:2px!important}
+  #vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item{padding-inline:2px!important}
 }
 @media(prefers-reduced-motion:reduce){
   #vetogram.vetogram-noir #sheet .veto-country-option{transition:none!important}
