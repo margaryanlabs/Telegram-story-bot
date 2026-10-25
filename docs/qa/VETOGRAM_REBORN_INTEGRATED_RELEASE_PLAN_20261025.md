@@ -288,3 +288,21 @@ Continue implementation in existing `margaryanlabs/Telegram-story-bot` branch an
 2. Real two-account Telegram WebView E2E: Anti-Delete, signed chats, viewers, Story publishing (Business standard Portal vs personal user session), Voice mic permissions, cross-owner privacy, AI consent & budgets.
 3. Responsive and keyboard/safe-area screenshot/interaction review on Android, iOS and Fold, plus production service readiness/configuration and any approved database migrations.
 4. One controlled final merge/deploy only after the above QA; **nothing deployed, merged, billed or migrated in this phase.**
+
+
+## V4.10 Canvas Noir premium visual pass (26 October 2026)
+
+The originally chosen **first Canvas Noir** direction is retained; the current source has **not** passed native visual QA. Do not state design is finished or launch-ready on the strength of these assertions.
+
+### Existing-code implementation (not a parallel mockup)
+- Updated the single canonical `public/vetogram-noir.css` design system across authentic Chats, Privacy, Publisher, Story Studio, AI and Voice. Added deliberate spacing, 44px+ controls, mobile-only 3-primary-mode AI rail with active secondary mode visibility, scrollable Story tabs, real selected preset states, focused search, quieter cards, reduced-motion/contrast behavior, 320/359px Fold fixes and narrow landscape layout.
+- Corrected the old main-app 1180px width from narrowing the immersive conversation. Chat list uses a deliberate 760px max width while an open Telegram thread is truly full-height and full-width.
+- Replaced inherited theme token fallbacks with four independent themes: graphite stays near-black, slate has its own blue-grey dark palette, pearl is a clean white, linen is warm neutral. Explicit light-mode text/input styles fix older AI and Story white-on-light form fields. No color filter on the actual exported Story canvas.
+- `public/vetogram-experience-v4.js` now synchronizes the secondary AI dropdown with the **real currently selected mode** and updates its accessible label. Switching back to primary chat/translation/reply closes the extra list; user manual browsing remains possible. Nothing is auto-generated, sent or published by this enhancement.
+- Tightened Russian UI copy across Story Studio, Voice, AI and Home; removed duplicate headings and mislabeled secondary AI modes, preserving IDs, actual event handlers and API semantics. Updated only the preexisting asset cache keys.
+- Added `tests/vetogram-v4-visual-hierarchy.test.js` (9/9 isolated source/real-mode-controller cases) and `tests/vetogram-v4-light-theme.test.js` (5/5 source/token and contrast cases); `qa:reborn:offline` now includes **13 suites**. The computed text/muted/coral colors on slate/pearl/linen backgrounds and surfaces meet **WCAG 4.5:1 at the token level**. Component overlays, canvas artwork, device display scaling and screenshot fidelity are NOT established by this calculation.
+
+### Explicit outstanding visual acceptance
+- Detailed device/state and screen acceptance matrix saved as `docs/qa/VETOGRAM_CANVAS_NOIR_V410_VISUAL_ACCEPTANCE.md`. It is marked **NOT visually approved** until actual 320/359/390/430/768/1024px + Fold landscape + iOS/Android Telegram WebView screenshots and keyboard/overflow checks are reviewed.
+- Last read-only release-surface check against the current branch confirmed 44/44 CSS/JS assets, 13 screen routes, 615 distinct DOM IDs, balanced canonical CSS braces, parsable changed JS and all 13 focused Node test suite paths present. This is not a `npm test` or Playwright run. Full Node test, dependency install, device E2E, live Telegram and final one-time deployment remain blocked.
+- Kept PR #185 **draft**. No merge, deployment, paid CI runner, Neon migration, AI provider credits or Telegram permission change.
