@@ -11,10 +11,16 @@ import { createBusinessWizardHandler, verifyStoredBusinessConnection } from '../
 // tests invoke a real database lease. Full Neon contract/preflight remains
 // separately verified by its dedicated suite and release gate.
 const originalUnitProvider = process.env.VETO_STORAGE_PROVIDER;
+const originalOnboardingFlag = process.env.VETOGRAM_UNIFIED_ONBOARDING;
+// The API fixture exercises permitted onboarding, independently of VERCEL_ENV.
+// Tests below explicitly clear this flag when asserting the production gate.
 process.env.VETO_STORAGE_PROVIDER = 'supabase';
+process.env.VETOGRAM_UNIFIED_ONBOARDING = '1';
 after(() => {
   if (originalUnitProvider === undefined) delete process.env.VETO_STORAGE_PROVIDER;
   else process.env.VETO_STORAGE_PROVIDER = originalUnitProvider;
+  if (originalOnboardingFlag === undefined) delete process.env.VETOGRAM_UNIFIED_ONBOARDING;
+  else process.env.VETOGRAM_UNIFIED_ONBOARDING = originalOnboardingFlag;
 });
 
 

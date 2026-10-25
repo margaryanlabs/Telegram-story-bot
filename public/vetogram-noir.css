@@ -263,3 +263,413 @@ html#vetogram.vetogram-noir.veto-keyboard-open{scroll-padding-bottom:24px}
 #vetogram.vetogram-noir #telegramMirrorFilters{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:6px!important;overflow-x:auto!important;scrollbar-width:none!important;padding:4px 0 8px!important}
 #vetogram.vetogram-noir #telegramMirrorFilters>button{flex:0 0 auto!important;min-height:40px!important;white-space:nowrap!important;padding:8px 13px!important;border:1px solid var(--noir-border)!important;border-radius:20px!important;background:var(--noir-surface)!important;color:var(--noir-muted)!important;box-shadow:none!important;font-size:12px!important}
 #vetogram.vetogram-noir #telegramMirrorFilters>button[aria-pressed="true"]{color:var(--noir-coral)!important;border-color:var(--noir-coral)!important;background:color-mix(in srgb,var(--noir-coral) 8%,var(--noir-surface))!important}
+
+/* V4 / Canvas Noir: interaction architecture and focused surfaces.
+   This is part of the existing canonical NOIR sheet, not a new cascade layer. */
+#vetogram.vetogram-noir .v4-disclosure {
+  margin:12px 0;
+  border:1px solid var(--noir-border);
+  border-radius:16px;
+  background:color-mix(in srgb,var(--noir-surface) 64%,transparent);
+  overflow:clip;
+  min-width:0;
+}
+#vetogram.vetogram-noir .v4-disclosure>summary {
+  position:relative;list-style:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  gap:4px;min-height:58px;padding:13px 46px 13px 16px;
+  color:var(--noir-text);touch-action:manipulation;
+}
+#vetogram.vetogram-noir .v4-disclosure>summary::-webkit-details-marker{display:none}
+#vetogram.vetogram-noir .v4-disclosure>summary::after {
+  content:'+';position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:22px;font-weight:300;color:var(--noir-muted);transition:transform 200ms ease;
+}
+#vetogram.vetogram-noir .v4-disclosure[open]>summary::after {
+  content:'−';transform:translateY(-50%);
+}
+#vetogram.vetogram-noir .v4-disclosure>summary strong {
+  font-size:14px;font-weight:700;letter-spacing:-.015em;
+}
+#vetogram.vetogram-noir .v4-disclosure>summary small {
+  color:var(--noir-muted);font-size:11px;line-height:1.4;
+}
+#vetogram.vetogram-noir .v4-disclosure[open]>summary{border-bottom:1px solid var(--noir-border)}
+#vetogram.vetogram-noir .v4-disclosure-body{padding:14px;min-width:0}
+#vetogram.vetogram-noir .v4-disclosure-body>.block,
+#vetogram.vetogram-noir .v4-disclosure-body>.studio-hero,
+#vetogram.vetogram-noir .v4-disclosure-body>.brand-pack-card,
+#vetogram.vetogram-noir .v4-disclosure-body>.veto-business-journey,
+#vetogram.vetogram-noir .v4-disclosure-body>.veto-mirror-access-center,
+#vetogram.vetogram-noir .v4-disclosure-body>.ghost-backup-panel{
+  margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;
+}
+/* Home: primary chat action and current activity outrank the complete app catalogue. */
+#vetogram.vetogram-noir [data-screen="home"].active {display:flex!important;flex-direction:column;gap:14px}
+#vetogram.vetogram-noir .veto-command-home{
+  order:0;min-height:0!important;padding:18px 0 14px!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+#vetogram.vetogram-noir .veto-command-home h1{
+  font-size:clamp(32px,7vw,56px)!important;line-height:1.03!important;
+  letter-spacing:-.065em!important;margin:10px 0!important;
+}
+#vetogram.vetogram-noir .veto-command-home>p{max-width:30ch;font-size:13px!important;line-height:1.55!important}
+#vetogram.vetogram-noir .veto-command-home-actions{margin-top:16px!important}
+#vetogram.vetogram-noir .v4-home-toolbox{order:4;background:none!important;border-color:var(--noir-border)!important}
+#vetogram.vetogram-noir .v4-home-toolbox .vg33-tools-panel{display:block!important}
+#vetogram.vetogram-noir .vg26-resume{order:2!important}
+#vetogram.vetogram-noir .control-activity{order:3!important}
+#vetogram.vetogram-noir .vg27-mission{order:1!important}
+#vetogram.vetogram-noir .veto-command-advanced{order:5!important}
+#vetogram.vetogram-noir .v4-home-toolbox .veto-command-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+#vetogram.vetogram-noir .v4-home-toolbox .veto-command-home-grid button{
+  min-height:84px!important;padding:12px!important;
+}
+/* Messenger: reserved disclosure treatment, real search and inbox retain prominence. */
+#vetogram.vetogram-noir [data-screen="telegram"] .v4-chat-setup,
+#vetogram.vetogram-noir [data-screen="telegram"] .v4-chat-explain {
+  margin:8px 0!important;background:transparent!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .v4-chat-setup .veto-mirror-access-head{
+  margin-top:0!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .v4-chat-explain .veto-mirror-privacy-note{
+  margin:0!important;border:0!important;background:transparent!important;
+}
+/* Privacy: verified data, archive navigation and event timeline are the foreground. */
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-disclosure {
+  background:transparent!important;margin-block:10px!important;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .ghost-health-grid {
+  display:grid!important;grid-template-columns:repeat(auto-fit,minmax(112px,1fr))!important;
+}
+/* Publisher and audience: remove tutorial surface from primary selection. */
+#vetogram.vetogram-noir [data-screen="publish"] .hero-stats {display:none!important}
+#vetogram.vetogram-noir [data-screen="publish"] .v4-publish-advanced {margin:14px 0!important}
+#vetogram.vetogram-noir [data-screen="viewers"] .v4-viewers-setup {
+  background:transparent!important;
+}
+/* AI: dialogue remains visible; secondary consoles share a single opt-in surface. */
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-hero {padding:14px 0!important}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-hero h1 {
+  font-size:clamp(30px,6vw,44px)!important;line-height:1.05!important;
+  letter-spacing:-.055em!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-hero p {font-size:12px!important;line-height:1.55!important}
+#vetogram.vetogram-noir .v4-ai-workspace .v4-disclosure-body {display:grid;gap:12px}
+#vetogram.vetogram-noir .v4-ai-workspace .vtai-panel{margin:0!important}
+/* Voice and Sticker Studio: actual live stage before documentation. */
+#vetogram.vetogram-noir [data-screen="voice"] .veto-voice-header{padding-block:8px 14px!important}
+#vetogram.vetogram-noir [data-screen="voice"] #voiceSpectrum{
+  display:block;width:100%;border-radius:12px;
+}
+#vetogram.vetogram-noir [data-screen="studio"] .studio-hero{min-height:0!important}
+#vetogram.vetogram-noir [data-screen="studio"] .studio-page-head{padding-bottom:8px!important}
+#vetogram.vetogram-noir [data-screen="studio"] .studio-workspace{margin-top:12px!important}
+/* Real interactive full-screen composer. Escape, close button and navigation restore normal mode. */
+#vetogram.vetogram-noir .v4-focus-button{
+  flex:1 0 auto!important;min-width:100px!important;
+  border:1px solid var(--noir-coral)!important;color:var(--noir-text)!important;
+}
+#vetogram.vetogram-noir body.v4-lock-scroll{overflow:hidden!important;overscroll-behavior:none}
+#vetogram.vetogram-noir body.v4-lock-scroll .bottom-nav,
+#vetogram.vetogram-noir body.v4-lock-scroll #actionDock {display:none!important}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus{
+  display:block!important;position:fixed!important;inset:0!important;z-index:210!important;
+  height:100dvh!important;width:100vw!important;overflow:auto!important;
+  overscroll-behavior:contain;background:var(--noir-bg)!important;
+  padding:calc(var(--noir-safe-top) + 8px) 12px calc(var(--noir-safe-bottom) + 12px)!important;
+  margin:0!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus>.noir-studio-head,
+#vetogram.vetogram-noir #seEngine.v4-studio-focus>.noir-studio-modes,
+#vetogram.vetogram-noir #seEngine.v4-studio-focus>.se-headrow,
+#vetogram.vetogram-noir #seEngine.v4-studio-focus>.se-drafts,
+#vetogram.vetogram-noir #seEngine.v4-studio-focus>.se-footnote{display:none!important}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .se-editor-shell{
+  display:flex!important;flex-direction:column!important;gap:0!important;
+  max-width:900px;margin-inline:auto;height:100%;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .se-stage{
+  display:flex!important;position:relative!important;top:auto!important;
+  width:100%;height:100%!important;min-height:0!important;max-height:none!important;
+  gap:8px!important;justify-content:space-between;
+  padding:6px 8px 8px!important;background:transparent!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .se-canvas-frame{
+  width:min(42dvh,calc(100vw - 28px),420px)!important;height:auto!important;
+  max-width:100%!important;max-height:calc(100dvh - 190px)!important;
+  aspect-ratio:9/16!important;min-height:0!important;
+  margin:auto!important;border-radius:13px!important;
+  box-shadow:0 12px 50px #0009!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .noir-canvas-actions,
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .noir-export-row {
+  flex:0 0 auto;max-width:580px;width:100%;margin-inline:auto!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .noir-canvas-actions .se-button{min-height:44px!important}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .se-controls{display:none!important}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus.v4-studio-tools-open .se-controls{
+  position:fixed!important;bottom:calc(var(--noir-safe-bottom) + 4px);left:50%;
+  transform:translateX(-50%);width:min(680px,calc(100vw - 16px))!important;
+  max-height:min(63dvh,600px);overflow:auto;z-index:215;
+  display:flex!important;flex-direction:column!important;gap:0;
+  padding:12px!important;border:1px solid var(--noir-border)!important;
+  border-radius:20px!important;background:var(--noir-surface)!important;
+  box-shadow:0 -16px 60px #000a!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus.v4-studio-tools-open .se-panel{
+  padding-bottom:16px!important;
+}
+#vetogram.vetogram-noir .v4-sr-only{
+  position:absolute!important;width:1px!important;height:1px!important;
+  padding:0!important;margin:-1px!important;overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+}
+@media(min-width:1000px){
+  #vetogram.vetogram-noir [data-screen="home"].active{display:flex!important}
+  #vetogram.vetogram-noir .v4-home-toolbox .veto-command-home-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:699px){
+  #vetogram.vetogram-noir [data-screen="studio"] .studio-workspace{
+    display:flex!important;flex-direction:column!important;gap:12px!important;
+  }
+  #vetogram.vetogram-noir [data-screen="studio"] .studio-workspace>.studio-panel:nth-child(2){
+    order:-1!important;
+  }
+  #vetogram.vetogram-noir #seEngine.v4-studio-focus .se-stage{padding-inline:0!important}
+  #vetogram.vetogram-noir #seEngine.v4-studio-focus .noir-canvas-actions{flex-wrap:wrap}
+  #vetogram.vetogram-noir #seEngine.v4-studio-focus .noir-canvas-actions button{flex:1 1 25%!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #vetogram.vetogram-noir .v4-disclosure>summary::after{transition:none!important}
+}
+
+/* V4 focused chat shortcuts and secondary AI modes. */
+#vetogram.vetogram-noir .v4-chat-shortcuts{background:transparent!important;margin:4px 0!important}
+#vetogram.vetogram-noir .v4-chat-shortcuts .vg26-inbox-shortcuts{
+  display:flex!important;margin:0!important;flex-wrap:wrap!important;
+}
+#vetogram.vetogram-noir .v4-privacy-setup{background:transparent!important}
+#vetogram.vetogram-noir .v4-privacy-setup .veto-business-journey{
+  display:block!important;min-width:0!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-modes>.v4-ai-modes-extra{
+  flex:0 0 auto;min-width:0;position:relative;
+  border:1px solid var(--noir-border);border-radius:12px;
+  background:var(--noir-surface);color:var(--noir-text);
+}
+#vetogram.vetogram-noir [data-screen="ai"] .v4-ai-modes-extra>summary{
+  min-height:44px;display:flex;align-items:center;padding:9px 14px;
+  cursor:pointer;font-size:12px;font-weight:650;white-space:nowrap;list-style:none;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .v4-ai-modes-extra>summary::-webkit-details-marker{display:none}
+#vetogram.vetogram-noir [data-screen="ai"] .v4-ai-modes-extra>summary::after{
+  content:'⌄';margin-left:8px;color:var(--noir-coral);
+}
+#vetogram.vetogram-noir [data-screen="ai"] .v4-ai-modes-extra[open]>summary::after{content:'⌃'}
+#vetogram.vetogram-noir [data-screen="ai"] .v4-ai-mode-actions{
+  display:flex;gap:6px;flex-wrap:wrap;padding:8px;
+  background:var(--noir-surface);max-width:min(480px,calc(100vw - 40px));
+}
+#vetogram.vetogram-noir [data-screen="ai"] .v4-ai-mode-actions button{
+  display:inline-flex!important;align-items:center!important;
+  min-height:42px!important;margin:0!important;border-radius:10px!important;
+  padding:8px 12px!important;white-space:normal!important;
+  border:1px solid var(--noir-border)!important;
+  background:var(--noir-raised)!important;color:var(--noir-text)!important;
+  font-size:12px!important;box-shadow:none!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .v4-ai-mode-actions button[aria-pressed="true"]{
+  border-color:var(--noir-coral)!important;color:var(--noir-coral)!important;
+}
+@media(max-width:699px){
+  #vetogram.vetogram-noir [data-screen="ai"] .vtai-modes{flex-wrap:wrap!important;overflow:visible!important}
+  #vetogram.vetogram-noir [data-screen="ai"] .v4-ai-modes-extra{flex-basis:100%!important}
+  #vetogram.vetogram-noir [data-screen="ai"] .v4-ai-mode-actions{max-width:100%}
+}
+
+/* Live gallery thumbnails are rendered by the same composition painter as export. */
+#vetogram.vetogram-noir #seTemplates .se-template{isolation:isolate;overflow:hidden}
+#vetogram.vetogram-noir #seTemplates .se-template-canvas{
+  position:absolute;inset:0;display:block;width:100%;height:100%;
+  border-radius:inherit;pointer-events:none;opacity:.97;z-index:0;
+}
+#vetogram.vetogram-noir #seTemplates .se-template::after{
+  content:'';position:absolute;inset:35% 0 0;
+  background:linear-gradient(transparent,#070a11c9);
+  pointer-events:none;z-index:0;
+}
+#vetogram.vetogram-noir #seTemplates .se-template strong,
+#vetogram.vetogram-noir #seTemplates .se-template small,
+#vetogram.vetogram-noir #seTemplates .noir-template-type{
+  position:relative;z-index:1;text-shadow:0 2px 8px #000c;
+}
+
+/* V4 messenger: long-press/keyboard contextual actions on real message bubbles. */
+#vetogram.vetogram-noir .veto-mirror-bubble.v4-message-selected .veto-mirror-bubble-inner{
+  outline:2px solid var(--noir-coral);outline-offset:3px;
+  transition:outline-color 140ms ease;
+}
+#vetogram.vetogram-noir .veto-mirror-bubble:focus-visible .veto-mirror-bubble-inner{
+  outline:2px solid var(--noir-coral);outline-offset:3px;
+}
+dialog.v4-message-actions {
+  position:fixed;inset:auto 0 0;margin:0 auto;padding:0;
+  width:min(560px,100vw);max-width:100vw;max-height:min(78dvh,680px);
+  overflow:auto;border:1px solid #34405a;border-bottom:0;
+  border-radius:24px 24px 0 0;background:#101827;color:#e4ebf8;
+  box-shadow:0 -24px 75px #0009;font-family:Inter,system-ui,sans-serif;
+}
+dialog.v4-message-actions::backdrop{
+  background:rgba(1,5,12,.78);backdrop-filter:blur(5px);
+}
+.v4-message-actions-panel {
+  padding:22px 18px max(22px,calc(env(safe-area-inset-bottom,0px) + 18px));
+  display:grid;gap:16px;
+}
+.v4-message-actions-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.v4-message-actions-heading strong{font-size:19px;letter-spacing:-.035em}
+.v4-message-close{
+  display:grid;place-items:center;min-width:44px;min-height:44px;border:1px solid #293951;
+  border-radius:13px;color:#e4ebf8;background:#1b273a;font-size:26px;cursor:pointer;
+}
+.v4-message-excerpt{
+  margin:0;padding:15px 16px;max-height:110px;overflow:auto;
+  border-left:3px solid #ff7887;border-radius:0 14px 14px 0;
+  background:#1c2940;color:#c6d3e6;font-size:13px;line-height:1.55;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.v4-message-actions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v4-message-actions-grid button{
+  min-height:56px;text-align:left;padding:12px 14px;background:#1a2740;
+  border:1px solid #35435e;border-radius:15px;color:#e4ebf8;
+  font:600 13px/1.4 Inter,system-ui,sans-serif;cursor:pointer;
+}
+.v4-message-actions-grid button:active{transform:scale(.98)}
+.v4-message-actions-grid button:disabled{opacity:.42;cursor:not-allowed;transform:none}
+.v4-message-actions button:focus-visible{
+  outline:2px solid #ff7887;outline-offset:3px;
+}
+.v4-message-feedback{color:#b2c4db;font-size:12px;min-height:16px}
+@media(max-width:359px){
+  .v4-message-actions-panel{padding-inline:12px}
+  .v4-message-actions-grid{gap:7px}
+  .v4-message-actions-grid button{font-size:12px;padding:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .v4-message-actions-grid button:active{transform:none}
+  #vetogram.vetogram-noir .veto-mirror-bubble.v4-message-selected .veto-mirror-bubble-inner{transition:none}
+}
+
+/* Preserve vertical scrolling while detecting a deliberate right swipe for reply. */
+#vetogram.vetogram-noir #telegramThreadMessages [data-mirror-message-id]{
+  touch-action:pan-y pinch-zoom;
+}
+html#vetogram[data-veto-theme="pearl"] dialog.v4-message-actions,
+html#vetogram[data-veto-theme="linen"] dialog.v4-message-actions{
+  color:#14213a;background:#fff;border-color:#c7d1e1;
+}
+html#vetogram[data-veto-theme="pearl"] .v4-message-excerpt,
+html#vetogram[data-veto-theme="linen"] .v4-message-excerpt{
+  background:#edf1fa;color:#34435c;
+}
+html#vetogram[data-veto-theme="pearl"] .v4-message-close,
+html#vetogram[data-veto-theme="linen"] .v4-message-close,
+html#vetogram[data-veto-theme="pearl"] .v4-message-actions-grid button,
+html#vetogram[data-veto-theme="linen"] .v4-message-actions-grid button{
+  background:#f3f5fa;color:#14213a;border-color:#c7d1e1;
+}
+html#vetogram[data-veto-theme="pearl"] .v4-message-feedback,
+html#vetogram[data-veto-theme="linen"] .v4-message-feedback{
+  color:#52617b;
+}
+
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .v4-inspector-close{
+  position:sticky;top:0;z-index:5;align-self:flex-end;
+  width:auto;min-height:44px!important;padding:9px 15px!important;
+  margin:0 0 8px!important;border-radius:12px!important;
+  color:var(--noir-text)!important;background:var(--noir-raised)!important;
+  border:1px solid var(--noir-border)!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus .v4-inspector-close[hidden]{
+  display:none!important;
+}
+
+/* V4 messenger — one focused title row, contextual tools stay one tap away. */
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-bar {
+  display:flex!important;align-items:center!important;gap:7px!important;
+  padding:10px 12px!important;min-height:66px!important;
+  position:relative;overflow:visible!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-person {
+  flex:1 1 auto!important;min-width:0!important;overflow:hidden!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-person strong,
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-person span {
+  display:block!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more{
+  position:relative;flex:0 0 auto!important;z-index:30;
+}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more-trigger {
+  display:grid;place-items:center;width:40px;height:40px;
+  border:1px solid rgba(255,255,255,.20);border-radius:12px;
+  background:rgba(255,255,255,.10);color:#fff;
+  font-size:21px;font-weight:750;line-height:1;letter-spacing:.06em;
+  cursor:pointer;list-style:none;
+}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more-trigger::-webkit-details-marker{display:none}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more-trigger:focus-visible{
+  outline:2px solid #ff7887;outline-offset:2px;
+}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more[open] .v4-thread-more-trigger {
+  background:#ff7887;color:#090b12;
+}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more-panel {
+  position:absolute;right:0;top:calc(100% + 8px);
+  width:min(290px,calc(100vw - 24px));padding:8px;max-height:55dvh;overflow:auto;
+  background:var(--ct-panel,#111a2b);color:var(--ct-text,#e4e8f2);
+  border:1px solid var(--ct-line,#34405a);border-radius:18px;
+  box-shadow:0 22px 65px #0009;display:flex;flex-direction:column;gap:4px;
+}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more-panel .v4-thread-menu-action {
+  display:flex!important;align-items:center!important;gap:12px!important;
+  width:100%!important;min-width:0!important;height:auto!important;min-height:49px!important;
+  padding:10px 12px!important;border:0!important;border-radius:12px!important;
+  background:transparent!important;color:var(--ct-text,#e4e8f2)!important;
+  text-align:left!important;font-size:18px!important;box-shadow:none!important;
+}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more-panel .v4-thread-menu-action:active,
+#vetogram.vetogram-noir #telegramMirror .v4-thread-more-panel .v4-thread-menu-action:focus-visible{
+  background:var(--ct-hover,#25324a)!important;
+}
+#vetogram.vetogram-noir #telegramMirror .v4-thread-menu-caption {
+  display:inline-block;min-width:0;flex:1;color:inherit;
+  font:600 12px/1.4 Inter,system-ui,sans-serif;
+  white-space:normal;
+}
+@media(max-width:359px){
+  #vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-bar{
+    gap:4px!important;padding-inline:7px!important;
+  }
+  #vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-avatar {
+    width:34px!important;height:34px!important;flex:0 0 34px!important;
+  }
+  #vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-bar>.veto-mirror-icon-btn{
+    min-width:34px!important;width:34px!important;
+  }
+}
+
+/* Directly selecting text on the fullscreen canvas exposes the real layer
+   inspector even in Quick mode; the editor's existing data is authoritative. */
+#vetogram.vetogram-noir #seEngine.v4-layer-direct-edit
+.se-editor-shell[data-mode="quick"] .noir-editor-tabs button[data-se-tool="Layers"]{
+  display:inline-flex!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus.v4-studio-tools-open
+.v4-inspector-close{display:inline-flex!important}

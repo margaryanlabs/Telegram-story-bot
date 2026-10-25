@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {STORY_TEMPLATES,PORTAL_TYPES,RETENTION_DAYS,newStoryDraft,
- normalizeDraft,normalizePortal,remixDraft,draftFromBrief,isExpired,safeExternalUrl,templateById,
+ normalizeDraft,normalizePortal,remixDraft,draftFromBrief,isExpired,safeExternalUrl,templateById,applyStoryTemplate,
  PHOTO_EFFECTS,STORY_LAYER_STYLES,normalizeStoryLayer,normalizeStoryLayers} from '../public/story-engine-core.js';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 
@@ -180,4 +180,46 @@ test('all five Portal types have honest local interactive previews',()=>{
   assert.match(preview,/не отправляются и не хранятся на сервере/);
   assert.doesNotMatch(preview,/innerHTML\s*=/);
   assert.match(css,/se-portal-demo-overlay/);
+});
+
+test('V4 style switching preserves the actual creator content, media and placement',()=>{
+  const draft=newStoryDraft({ownerId:'123',id:'creator',now:100});
+  const photo='data:image/png;base64,AAAA';
+  Object.assign(draft,{title:'Мой собственный текст',subtitle:'Действительно мой момент',
+    caption:'Не публиковать без разрешения',textY:457,imageDataUrl:photo,
+    layers:[{id:'mine',text:'Частный слой',style:'pill',x:.5,y:.5,size:28}]});
+  const styled=applyStoryTemplate(draft,'voyage');
+  assert.equal(styled.templateId,'voyage');
+  assert.equal(styled.ownerId,draft.ownerId);
+  assert.equal(styled.title,draft.title);
+  assert.equal(styled.subtitle,draft.subtitle);
+  assert.equal(styled.textY,draft.textY);
+  assert.equal(styled.imageDataUrl,photo);
+  assert.equal(styled.layers[0].text,'Частный слой');
+  assert.equal(draft.templateId,'noir','old draft must remain intact for history');
+  assert.throws(()=>applyStoryTemplate(null,'noir'),/STORY_DRAFT_REQUIRED/);
+});
+
+test('V4 untouched template copy updates appropriately, but never silently overwrites authored copy',()=>{
+  const original=newStoryDraft({ownerId:'123',id:'template',now:100});
+  const styled=applyStoryTemplate(original,'birthday');
+  assert.equal(styled.title,templateById('birthday').title);
+  assert.equal(styled.subtitle,templateById('birthday').subtitle);
+  assert.equal(styled.textY,388,'center stays center');
+  const next=applyStoryTemplate(styled,'launch');
+  assert.equal(next.title,templateById('launch').title);
+  assert.equal(next.textY,675,'default text position follows new layout');
+  const custom=applyStoryTemplate({...original,title:'Авторский заголовок',textY:480},'launch');
+  assert.equal(custom.title,'Авторский заголовок');
+  assert.equal(custom.textY,480);
+});
+
+test('V4 template thumbnails use the real canvas composition and avoid rerouting publishing',()=>{
+  const client=read('public/story-engine.js'),css=read('public/vetogram-noir.css');
+  assert.match(client,/paint\(preview,d\)/);
+  assert.match(client,/thumbnail\.width=108/);
+  assert.match(client,/state\.draft=applyStoryTemplate\(state\.draft,t\.id\)/);
+  assert.match(client,/requestedOwner!==['"]0['"]&&owner\(\)!==requestedOwner/);
+  assert.match(css,/se-template-canvas/);
+  assert.doesNotMatch(client,/\.src\s*=\s*['"]https:\/\//);
 });
