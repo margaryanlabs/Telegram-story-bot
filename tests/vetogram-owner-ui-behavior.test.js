@@ -423,7 +423,7 @@ test('Story Engine receiver accepts owner-approved text only, preserving unrelat
     caption:'Old caption',photoId:'keep-this-photo',portal:savedPortal}};
   let renders=0,clears=0;
   const fn=vm.runInNewContext('('+storyController.slice(start,end+2)+')',
-    vm.createContext({owner:()=> '111',init:async()=>{},state,
+    vm.createContext({checkpoint:()=>{},owner:()=> '111',init:async()=>{},state,
       trimText:(x,n)=>String(x??'').slice(0,n),
       normalizePortal:x=>x,
       aiEditableFields:(draft,withPortal)=>JSON.stringify({

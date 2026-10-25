@@ -16,7 +16,7 @@ test('first-run onboarding explains product, functions and two-step activation',
   assert.match(html, /Relay/);
   assert.match(html, /нужны 2 шага/);
   assert.match(html, /Подключи Telegram/);
-  assert.match(html, /Опубликуй тестовую Story/);
+  assert.match(html, /Опубликуй тестовую историю/);
   assert.match(html, /id="activationScore">0\/2/);
 });
 

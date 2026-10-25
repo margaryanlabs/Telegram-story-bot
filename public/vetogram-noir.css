@@ -1,0 +1,254 @@
+/* VETOGRAM NOIR — canonical product tokens and responsive composition.
+   Existing feature styles remain compatible; this file owns the shared shell. */
+:root {
+  --noir-bg:#070a11; --noir-surface:#111a2b; --noir-raised:#18243a;
+  --noir-border:#263550; --noir-coral:#ff7887; --noir-ai:#8a83f5;
+  --noir-on-accent:#070a11; --noir-text:#dde7f6; --noir-muted:#a0afc8; --noir-radius:18px;
+  --noir-ease:cubic-bezier(.2,.8,.2,1); --noir-fast:160ms; --noir-enter:240ms;
+  --noir-nav-height:72px; --noir-action-height:0px;
+  --noir-safe-bottom:max(env(safe-area-inset-bottom,0px),var(--tg-content-safe-area-inset-bottom,0px));
+  --noir-safe-top:max(env(safe-area-inset-top,0px),var(--tg-content-safe-area-inset-top,0px));
+  --noir-bottom-space:calc(var(--noir-nav-height) + var(--noir-action-height) + var(--noir-safe-bottom) + 28px);
+}
+html[data-veto-theme="pearl"],html[data-veto-theme="linen"] {
+  --noir-bg:#f3f5fa;--noir-surface:#fff;--noir-raised:#e8edf7;
+  --noir-on-accent:#ffffff;--noir-border:#c7d1e1;--noir-text:#14213a;--noir-muted:#52617b;--noir-coral:#b72d50;--noir-ai:#5d52bb;
+}
+html.vetogram-noir {color-scheme:dark;scroll-padding-block:76px var(--noir-bottom-space);background:var(--noir-bg)}
+html.vetogram-noir[data-veto-theme="pearl"],html.vetogram-noir[data-veto-theme="linen"]{color-scheme:light}
+.vetogram-noir body{background:var(--noir-bg)!important;color:var(--noir-text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.vetogram-noir *, .vetogram-noir *::before,.vetogram-noir *::after{box-sizing:border-box}
+.vetogram-noir [hidden]{display:none!important}
+.vetogram-noir :where(button,input,textarea,select){font:inherit}
+.vetogram-noir :where(button,a,input,textarea,select,summary):focus-visible{outline:2px solid var(--noir-coral)!important;outline-offset:3px}
+.vetogram-noir :where(button,summary){touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.vetogram-noir :where(input,textarea,select){color:var(--noir-text);accent-color:var(--noir-coral)}
+.vetogram-noir :where(input,textarea,select)::placeholder{color:var(--noir-muted);opacity:.85}
+.vetogram-noir :where(button):disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.vetogram-noir :where(h1,h2,h3,p){overflow-wrap:break-word}
+.vetogram-noir :where(.veto-stage-fx,.ambient,.hero-glow,.vg33-hero-sigil){display:none!important}
+.vetogram-noir .app-shell{max-width:1180px!important;margin-inline:auto!important;padding:0 24px var(--noir-bottom-space)!important;min-width:0}
+.vetogram-noir .screen{min-width:0;scroll-margin-block-end:var(--noir-bottom-space)}
+.vetogram-noir .screen.active:not([data-screen="telegram"]){animation:noir-enter var(--noir-enter) var(--noir-ease) both}
+.vetogram-noir .topbar{min-height:72px;padding:12px 0!important;background:var(--noir-bg)!important;border:0!important;border-bottom:1px solid var(--noir-border)!important;box-shadow:none!important;gap:12px}
+.vetogram-noir .brand-mark{width:38px!important;height:38px!important;border-radius:12px!important;box-shadow:none!important}
+.vetogram-noir .brand-copy strong{font-size:19px!important;letter-spacing:-.04em}
+.vetogram-noir .brand-copy>span{display:none!important}
+.vetogram-noir .brand-mark>i{display:none!important} /* Brand decoration must not imply a connection. */
+.vetogram-noir :where(.profile-button,.veto-global-theme-toggle,#vg26CommandOpen){min-width:44px;min-height:44px;box-shadow:none!important;border-radius:14px!important;background:var(--noir-surface)!important}
+.vetogram-noir .bottom-nav{position:fixed!important;inset:auto 0 0!important;width:100%!important;max-width:none!important;transform:none!important;margin:0!important;border-radius:0!important;border:0!important;border-top:1px solid var(--noir-border)!important;background:var(--noir-bg)!important;padding:7px max(12px,calc((100vw - 680px)/2)) calc(7px + var(--noir-safe-bottom))!important;gap:4px!important;backdrop-filter:none!important;box-shadow:0 -10px 24px #0000000d!important;z-index:70;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))}
+.vetogram-noir .bottom-nav .nav-item{min-width:0!important;min-height:53px!important;border-radius:12px!important;background:transparent!important;border:0!important;box-shadow:none!important;color:var(--noir-muted)!important;gap:5px!important;padding:6px!important}
+.vetogram-noir .bottom-nav .nav-item.active{color:var(--noir-coral)!important;background:color-mix(in srgb,var(--noir-coral) 9%,transparent)!important}
+.vetogram-noir .bottom-nav .nav-item::after{display:none!important}
+.vetogram-noir .bottom-nav .nav-item :is(svg,img){width:22px!important;height:22px!important;filter:none!important}
+.vetogram-noir .bottom-nav .nav-item small{font-size:10px!important;font-weight:600!important;white-space:nowrap}
+.vetogram-noir #actionDock{bottom:var(--noir-nav-height)!important;left:0!important;right:0!important;transform:none!important;width:100%!important;max-width:none!important;padding:9px max(16px,calc((100vw - 720px)/2))!important;background:var(--noir-bg)!important;border:0!important;border-top:1px solid var(--noir-border)!important;border-radius:0!important;z-index:65}
+.vetogram-noir #actionDock.hidden{display:none!important}
+.vetogram-noir #actionDock .primary-button{min-height:46px!important;background:var(--noir-coral)!important;color:var(--noir-on-accent)!important;border-radius:12px!important;box-shadow:none!important}
+.vetogram-noir :where(.page-head,.veto-voice-header){padding:24px 0 16px!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important}
+.vetogram-noir :where(.page-head h1,.veto-voice-header h1){font-size:clamp(26px,4vw,38px)!important;line-height:1.1!important;letter-spacing:-.045em!important;color:var(--noir-text)!important}
+.vetogram-noir :where(.page-head p,.veto-voice-header p){font-size:14px!important;line-height:1.6!important;color:var(--noir-muted)!important;max-width:66ch}
+.vetogram-noir :where(.kicker,.se-eyebrow){font-size:10px!important;font-weight:700;letter-spacing:.13em;color:var(--noir-muted)!important}
+.vetogram-noir :where(.block,.analytics-card,.viewer-sync-card,.viewer-story-card,.viewer-list-preview,.studio-workspace,.brand-pack-card,.relay-consumer-card,.veto-voice-monitor-card,.veto-voice-presets-panel,.veto-voice-capture,.vtai-panel,.ghost-command-card,.ghost-backup-panel,.privacy-inbox-card,.smart-brief-card,.ghost-access-strip,.veto-business-journey){border:1px solid var(--noir-border)!important;background:var(--noir-surface)!important;box-shadow:none!important;border-radius:var(--noir-radius)!important;padding:20px!important;margin-block:12px!important;color:var(--noir-text)!important}
+.vetogram-noir :where(.block,.analytics-card,.viewer-sync-card,.ghost-command-card,.vtai-panel,.veto-voice) :where(p,small){color:var(--noir-muted)}
+.vetogram-noir :where(.secondary-button,.se-button,.vtai-action,.veto-voice-button){min-height:44px;border-radius:12px!important;border:1px solid var(--noir-border)!important;background:var(--noir-raised)!important;color:var(--noir-text)!important;box-shadow:none!important;transition:transform var(--noir-fast) var(--noir-ease),background-color var(--noir-fast)}
+.vetogram-noir :where(.se-button.primary,.vtai-primary,.veto-voice-button.primary){background:var(--noir-coral)!important;color:var(--noir-on-accent)!important;border-color:transparent!important}
+.vetogram-noir button:active:not(:disabled){transform:scale(.98)}
+/* Home — editorial heading, compact truthful status and working shortcuts. */
+.vetogram-noir [data-screen="home"]{display:none;gap:20px}
+.vetogram-noir [data-screen="home"].active{display:flex!important;flex-direction:column}
+.vetogram-noir .veto-command-home{padding:28px 0 0!important;border:0!important;background:none!important;border-radius:0!important;box-shadow:none!important;animation:none!important;min-height:0!important}
+.vetogram-noir .veto-command-home::before,.vetogram-noir .veto-command-home::after{display:none!important}
+.vetogram-noir .veto-command-home-top{font-size:10px!important;color:var(--noir-muted)!important;letter-spacing:.1em}
+.vetogram-noir .veto-command-home-top strong{display:none!important}
+.vetogram-noir .veto-command-home h1{margin:16px 0 10px!important;font-size:clamp(32px,5vw,52px)!important;line-height:1.06!important;letter-spacing:-.055em!important}
+.vetogram-noir .veto-command-home h1 em{background:none!important;-webkit-text-fill-color:var(--noir-muted)!important;color:var(--noir-muted)!important;font-style:normal}
+.vetogram-noir .veto-command-home>p{font-size:14px!important;line-height:1.5!important;max-width:60ch!important;margin:0!important;color:var(--noir-muted)!important}
+.vetogram-noir .veto-command-home-actions{display:flex!important;gap:10px!important;margin-top:18px!important}
+.vetogram-noir .veto-command-home-actions button{flex:1;min-width:0;min-height:48px!important;padding:12px 16px!important;border-radius:12px!important;box-shadow:none!important;font-size:13px!important;background:var(--noir-surface)!important;border:1px solid var(--noir-border)!important;color:var(--noir-text)!important}
+.vetogram-noir .veto-command-home-actions .veto-command-home-primary{background:var(--noir-coral)!important;border-color:transparent!important;color:var(--noir-on-accent)!important}
+.vetogram-noir .veto-command-home-actions button>span{display:none}
+.vetogram-noir .vg27-mission{order:1;padding:16px!important;margin:0!important;border-radius:16px!important;border:1px solid var(--noir-border)!important;background:var(--noir-surface)!important;box-shadow:none!important;animation:none!important}
+.vetogram-noir .vg27-mission-heading h2{font-size:16px!important;margin:8px 0 4px!important;letter-spacing:-.02em}
+.vetogram-noir .vg27-mission-heading p{font-size:12px!important;line-height:1.5!important;margin:0!important;color:var(--noir-muted)!important}
+.vetogram-noir .vg27-eyebrow{font-size:9px!important;letter-spacing:.1em}
+.vetogram-noir .vg27-mission-signature{display:none!important}
+.vetogram-noir .vg27-mission-statuses{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:0!important;margin:14px 0 0!important;border-top:1px solid var(--noir-border)}
+.vetogram-noir .vg27-mission-state{display:block!important;min-height:64px!important;padding:10px 8px!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;text-align:left!important}
+.vetogram-noir .vg27-mission-state+.vg27-mission-state{border-left:1px solid var(--noir-border)!important}
+.vetogram-noir .vg27-mission-icon,.vetogram-noir .vg27-mission-chevron{display:none!important}
+.vetogram-noir .vg27-mission-label{font-size:9px!important;color:var(--noir-muted)!important;letter-spacing:.06em}
+.vetogram-noir .vg27-mission-label strong{display:block;font-size:11px!important;line-height:1.5!important;margin-top:5px;color:var(--noir-text)!important;white-space:normal}
+.vetogram-noir .vg27-mission-bottom{display:block!important;border-top:1px solid var(--noir-border)!important;padding:8px 0 0!important;margin:0!important}
+.vetogram-noir .vg27-mission-bottom>span{font-size:10px!important;line-height:1.5!important;color:var(--noir-muted)!important}
+.vetogram-noir .vg27-mission-bottom button{display:none!important} /* The shared connection button remains above. */
+.vetogram-noir .vg33-tools-panel{order:2;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important}
+.vetogram-noir .vg33-tools-heading{margin-bottom:12px!important}
+.vetogram-noir .vg33-tools-heading>strong{font-size:17px!important}
+.vetogram-noir .vg33-tools-heading>span{display:none!important}
+.vetogram-noir .veto-command-home-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;overflow:visible!important;scroll-snap-type:none!important}
+.vetogram-noir .veto-command-home-grid button{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:flex-start!important;min-width:0!important;min-height:110px!important;padding:16px!important;border:1px solid var(--noir-border)!important;border-radius:16px!important;background:var(--noir-surface)!important;box-shadow:none!important;gap:8px!important;flex-basis:auto!important;scroll-snap-align:none!important}
+.vetogram-noir .veto-command-home-grid button>span{display:grid!important;place-items:center;width:30px!important;height:30px!important;border:0!important;border-radius:9px!important;background:var(--noir-raised)!important;box-shadow:none!important;color:var(--noir-coral)!important;font-size:20px!important}
+.vetogram-noir .veto-command-home-grid button>strong{font-size:13px!important;line-height:1.3!important}
+.vetogram-noir .veto-command-home-grid button>small{font-size:11px!important;color:var(--noir-muted)!important;line-height:1.5!important}
+.vetogram-noir .vg26-resume{order:3;background:none!important;border:0!important;border-top:1px solid var(--noir-border)!important;border-radius:0!important;padding:20px 0 0!important;margin:0!important;box-shadow:none!important;animation:none!important}
+.vetogram-noir .vg26-resume-head h2{font-size:17px!important;margin:0!important}
+.vetogram-noir .vg26-resume-eyebrow,.vetogram-noir .vg26-resume-intro,.vetogram-noir .vg30-workflows-heading,.vetogram-noir .vg30-flow-deck,.vetogram-noir .vg30-flow-status{display:none!important}
+.vetogram-noir .vg26-resume-recent{margin:12px 0 0!important}
+.vetogram-noir .veto-command-advanced{order:5;border:0!important;border-top:1px solid var(--noir-border)!important;border-radius:0!important;background:none!important;margin:0!important;box-shadow:none!important}
+.vetogram-noir .veto-command-advanced>summary{min-height:48px;padding:14px 0!important;font-size:12px!important;color:var(--noir-muted)!important}
+/* Messenger rows, search and contextual tools use one surface language. */
+.vetogram-noir #telegramMirror{background:var(--noir-bg)!important;border:0!important;box-shadow:none!important;border-radius:0!important;color:var(--noir-text)!important}
+.vetogram-noir #telegramMirror .veto-mirror-heading.vetogram-header{background:none!important;border:0!important;border-radius:0!important;padding:16px 0!important;box-shadow:none!important;min-height:70px!important}
+.vetogram-noir .veto-mirror-heading::before,.vetogram-noir .veto-mirror-heading::after{display:none!important}
+.vetogram-noir .veto-inbox-signature,.vetogram-noir .veto-inbox-wordmark,.vetogram-noir .veto-inbox-tagline,.vetogram-noir .veto-mirror-eyebrow{display:none!important}
+.vetogram-noir .veto-messenger-title h1{font-size:28px!important;letter-spacing:-.045em!important}
+.vetogram-noir #telegramChatsView{padding:0!important}
+.vetogram-noir .vg26-inbox-shortcuts{gap:8px!important;margin-block:10px!important}
+.vetogram-noir .vg26-inbox-shortcuts button{min-height:40px!important;padding:8px 12px!important;border-radius:12px!important;background:var(--noir-surface)!important;box-shadow:none!important;font-size:12px!important;border-color:var(--noir-border)!important}
+.vetogram-noir #telegramMirror .veto-mirror-search-wrap{background:var(--noir-surface)!important;border:1px solid var(--noir-border)!important;border-radius:12px!important;padding:0 12px!important;margin:12px 0!important;min-height:46px!important}
+.vetogram-noir #telegramMirrorSearch{background:none!important;font-size:16px!important;min-height:44px!important}
+.vetogram-noir #telegramMirror :where(.veto-mirror-row,.veto-chat-row){border-radius:0!important;border:0!important;border-bottom:1px solid var(--noir-border)!important;background:none!important;box-shadow:none!important;min-height:76px!important;padding:12px 0!important}
+.vetogram-noir #telegramMirror :where(.veto-mirror-filters,.veto-inbox-filters){gap:6px!important;scrollbar-width:none}
+.vetogram-noir #telegramMirror :where(.veto-mirror-filter,.veto-inbox-filter){min-height:40px!important;border-radius:20px!important;background:var(--noir-surface)!important;color:var(--noir-muted)!important;font-size:12px!important}
+.vetogram-noir .veto-story-strip{background:none!important;border:0!important;border-radius:0!important;padding:8px 0!important;margin:0!important;box-shadow:none!important}
+.vetogram-noir .veto-story-viewer:not([hidden]){background:#070a11!important;animation:noir-viewer var(--noir-enter) var(--noir-ease)}
+.vetogram-noir .veto-story-viewer{padding-top:var(--noir-safe-top);padding-bottom:var(--noir-safe-bottom)}
+/* Publisher and Privacy: compact task heads, no landing-page hero. */
+.vetogram-noir [data-screen="publish"] .hero-card{background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:24px 0 12px!important;min-height:0!important}
+.vetogram-noir [data-screen="publish"] .hero-copy h1{font-size:30px!important;line-height:1.08!important;letter-spacing:-.045em!important;margin:12px 0!important}
+.vetogram-noir [data-screen="publish"] .hero-copy p{font-size:13px!important;line-height:1.5!important;color:var(--noir-muted)!important;margin:0!important;max-width:60ch}
+.vetogram-noir [data-screen="publish"] .hero-stats{gap:8px!important;margin-top:16px!important}
+.vetogram-noir [data-screen="publish"] .hero-stats>div{background:none!important;border:0!important;border-left:1px solid var(--noir-border)!important;border-radius:0!important;padding:2px 12px!important;min-height:0!important}
+.vetogram-noir [data-screen="publish"] .hero-stats span{font-size:10px!important}
+.vetogram-noir [data-screen="publish"] .hero-stats strong{font-size:12px!important;margin-top:6px!important}
+.vetogram-noir .composer-card{background:var(--noir-surface)!important;border:1px solid var(--noir-border)!important;border-radius:18px!important;padding:16px!important;box-shadow:none!important}
+.vetogram-noir .connection-strip{background:none!important;border:0!important;border-block:1px solid var(--noir-border)!important;border-radius:0!important;padding:14px 0!important;box-shadow:none!important}
+.vetogram-noir .ghost-command-card{display:grid!important;grid-template-columns:1fr auto!important;gap:16px!important;align-items:center}
+.vetogram-noir .ghost-orb,.vetogram-noir .ghost-badges{display:none!important}
+.vetogram-noir .ghost-command-copy h2{font-size:21px!important;letter-spacing:-.03em!important;margin:10px 0!important}
+.vetogram-noir .ghost-command-copy p{font-size:13px!important;line-height:1.6!important;color:var(--noir-muted)!important}
+.vetogram-noir .ghost-enable-all{background:var(--noir-raised)!important;border:1px solid var(--noir-border)!important;box-shadow:none!important;border-radius:12px!important;padding:12px!important;min-height:48px}
+.vetogram-noir .ghost-enable-all small{display:none}
+.vetogram-noir .ghost-health-grid{gap:10px!important}
+/* Studio: a canvas-first editor with one contextual inspector. */
+.vetogram-noir .noir-studio-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:22px 0 16px}
+.vetogram-noir .noir-studio-head h1{font-size:30px;letter-spacing:-.045em;line-height:1.1;margin:7px 0}
+.vetogram-noir #seAccountStatus{font-size:11px;color:var(--noir-muted)}
+.vetogram-noir .noir-studio-modes{display:flex;padding:4px;gap:4px;background:var(--noir-surface);border:1px solid var(--noir-border);border-radius:14px;margin:0 0 16px;width:max-content;max-width:100%}
+.vetogram-noir .noir-studio-modes button{min-height:42px;border:0;border-radius:10px;padding:8px 18px;background:none;color:var(--noir-muted);font-size:13px;font-weight:650;white-space:nowrap}
+.vetogram-noir .noir-studio-modes button[aria-pressed="true"]{background:var(--noir-raised);color:var(--noir-text);box-shadow:0 2px 6px #0001}
+.vetogram-noir #seEngine .se-editor-shell{display:grid!important;grid-template-columns:minmax(260px,.95fr) minmax(300px,1.05fr)!important;gap:20px!important;align-items:start!important}
+.vetogram-noir #seEngine .se-stage{position:sticky!important;top:16px!important;display:flex!important;flex-direction:column;align-items:center;gap:12px!important;padding:16px!important;background:var(--noir-surface)!important;border:1px solid var(--noir-border)!important;border-radius:20px!important;box-shadow:none!important;min-width:0!important}
+.vetogram-noir #seEngine .se-screen-label{font-size:9px!important;letter-spacing:.12em;width:100%;color:var(--noir-muted)!important;display:flex;justify-content:space-between;margin:0!important}
+.vetogram-noir #seEngine .se-canvas-frame{width:min(100%,320px)!important;max-width:none!important;padding:0!important;aspect-ratio:9/16!important;border:1px solid #44516a!important;border-radius:8px!important;box-shadow:0 12px 28px #0003!important;overflow:hidden}
+.vetogram-noir #seCanvas{width:100%!important;height:100%!important;display:block;touch-action:none;border-radius:0!important}
+.vetogram-noir .noir-canvas-actions{display:flex;gap:6px;width:100%}
+.vetogram-noir .noir-canvas-actions button{flex:1;min-width:0;font-size:11px!important;padding:8px!important;min-height:40px!important}
+.vetogram-noir .noir-canvas-actions button:nth-child(-n+2){flex:0 0 40px;font-size:20px!important}
+.vetogram-noir .noir-export-row{width:100%;display:flex!important;gap:8px!important;margin:0!important}
+.vetogram-noir .noir-export-row .se-button{flex:1;min-width:0;font-size:12px!important;padding:10px!important}
+.vetogram-noir #seEngine .se-controls{display:flex!important;flex-direction:column!important;gap:0!important;min-width:0!important}
+.vetogram-noir .noir-editor-tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--noir-border);scrollbar-width:none;margin-bottom:16px}
+.vetogram-noir .noir-editor-tabs button{flex:1 0 auto;min-height:44px;border:0;border-bottom:2px solid transparent;color:var(--noir-muted);font-size:12px;padding:10px;background:none}
+.vetogram-noir .noir-editor-tabs button[aria-selected="true"]{color:var(--noir-coral);border-bottom-color:var(--noir-coral)}
+.vetogram-noir .noir-template-heading{display:flex;justify-content:space-between;align-items:center;margin:0 0 8px}
+.vetogram-noir .noir-template-heading h2{font-size:13px;margin:0}
+.vetogram-noir .noir-template-heading span{font-size:10px;color:var(--noir-muted)}
+.vetogram-noir #seTemplates{display:flex!important;gap:8px!important;overflow-x:auto!important;scroll-snap-type:x proximity;scrollbar-width:thin;margin:0 0 18px!important;padding:3px 3px 10px!important;grid-template-columns:none!important}
+.vetogram-noir #seTemplates .se-template{position:relative;flex:0 0 84px!important;min-width:84px!important;min-height:130px!important;aspect-ratio:9/14!important;padding:10px 7px!important;border-radius:8px!important;border:1px solid var(--noir-border)!important;display:flex!important;flex-direction:column;justify-content:flex-end!important;gap:5px!important;background:linear-gradient(160deg,var(--se-start),var(--se-end))!important;box-shadow:none!important;scroll-snap-align:start}
+.vetogram-noir #seTemplates .se-template.active{outline:2px solid var(--noir-coral)!important;outline-offset:1px!important}
+.vetogram-noir #seTemplates .se-template strong{font-size:9px!important;letter-spacing:.03em;color:#fff!important}
+.vetogram-noir #seTemplates .se-template small{font-size:8px!important;color:#ffffffc9!important}
+.vetogram-noir #seTemplates .noir-template-type{font-size:12px;line-height:1.05;letter-spacing:-.03em;font-weight:800;color:#fff;white-space:pre-line;max-width:65px;position:absolute;top:34px;left:8px}
+.vetogram-noir #seTemplates .se-template>i{position:absolute;top:12px;left:8px;width:18px;height:2px;background:var(--se-accent)}
+.vetogram-noir #seEngine .se-panel{background:none!important;border:0!important;border-top:1px solid var(--noir-border)!important;border-radius:0!important;padding:16px 0!important;box-shadow:none!important;margin:0!important;min-width:0}
+.vetogram-noir #seEngine .se-panel h3{font-size:16px!important;margin:7px 0 14px!important;letter-spacing:-.02em}
+.vetogram-noir #seEngine .se-panel p{font-size:12px!important;line-height:1.6;color:var(--noir-muted)}
+.vetogram-noir #seEngine .se-label{font-size:12px!important;gap:7px!important;margin:0 0 14px!important;color:var(--noir-muted)!important}
+.vetogram-noir #seEngine .se-input{width:100%;min-height:44px!important;padding:10px 12px!important;background:var(--noir-surface)!important;border:1px solid var(--noir-border)!important;border-radius:10px!important;color:var(--noir-text)!important;box-shadow:none!important;font-size:16px!important}
+.vetogram-noir #seEngine textarea.se-input{min-height:74px!important;resize:vertical}
+.vetogram-noir #seEngine .se-split{display:grid!important;grid-template-columns:1fr 1fr;gap:12px}
+.vetogram-noir #seEngine input[type="range"]{min-height:36px;width:100%;accent-color:var(--noir-coral)}
+.vetogram-noir #seEngine .se-controls-row{gap:8px!important;display:flex;flex-wrap:wrap}
+.vetogram-noir #seEngine .se-controls-row .se-button{font-size:12px!important;padding:10px 12px!important}
+.vetogram-noir #seEngine .se-inline-warning,.vetogram-noir #seEngine .se-footnote{font-size:11px!important;line-height:1.6;color:var(--noir-muted)!important;border-color:var(--noir-border)!important}
+.vetogram-noir #seEngine .se-photo-adjust{background:none!important;padding:14px 0!important;border:0!important}
+.vetogram-noir #seEngine .se-layer-chip{background:var(--noir-surface)!important;border-color:var(--noir-border)!important;border-radius:12px!important;min-height:44px}
+.vetogram-noir #seEngine .se-layer-chip.active{border-color:var(--noir-coral)!important}
+.vetogram-noir #seEngine .se-notice{position:sticky;bottom:calc(var(--noir-nav-height) + 10px);z-index:8;background:var(--noir-raised);color:var(--noir-text);border:1px solid var(--noir-border);border-radius:12px;padding:12px;font-size:12px;margin-top:12px}
+.vetogram-noir #seEngine .se-notice.error{border-color:var(--noir-coral)}
+.vetogram-noir .noir-ai-entry{border-top:1px solid var(--noir-border);padding-top:18px;margin-top:20px}
+.vetogram-noir .noir-orb{display:inline-block;width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 30% 28%,#dce3ff 0%,#8a83f5 25%,#483c89 62%,#151c31 100%);box-shadow:0 0 22px #8a83f51a;vertical-align:middle}
+.vetogram-noir #vetoOrb{float:right;margin:24px 8px}
+.vetogram-noir .noir-orb[data-busy="true"]{animation:noir-orb 1.3s ease-in-out infinite}
+.vetogram-noir .noir-story-preview{border:1px solid var(--noir-border);border-radius:18px;background:#070a11;color:#dde7f6;width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:16px;overflow:auto;box-shadow:0 30px 90px #0008}
+.vetogram-noir .noir-story-preview::backdrop{background:#02050be6}
+.vetogram-noir .noir-story-preview header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.vetogram-noir .noir-story-preview h2{font-size:14px;margin:0}
+.vetogram-noir #sePreviewCanvas{display:block;width:auto;max-width:100%;height:min(72dvh,680px);aspect-ratio:9/16;margin:auto;border-radius:6px}
+.vetogram-noir .noir-story-preview p{font-size:11px;color:#a0afc8;text-align:center;margin-bottom:0}
+.vetogram-noir #seEngine .se-headrow{margin:24px 0 12px!important}
+.vetogram-noir #seEngine .se-headrow h2{font-size:17px!important}
+.vetogram-noir .se-drafts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
+.vetogram-noir .se-draft-card{background:var(--noir-surface)!important;border:1px solid var(--noir-border)!important;border-radius:14px!important}
+@keyframes noir-enter{from{opacity:.5;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes noir-viewer{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+@keyframes noir-orb{50%{transform:scale(1.1);box-shadow:0 0 30px #8a83f547}}
+@media(min-width:1000px){
+  .vetogram-noir [data-screen="home"].active{display:grid!important;grid-template-columns:1.2fr 1fr;align-items:start}
+  .vetogram-noir .veto-command-home{grid-column:1}
+  .vetogram-noir .vg27-mission{grid-column:2;grid-row:1;margin-top:28px!important}
+  .vetogram-noir .vg33-tools-panel,.vetogram-noir .vg26-resume,.vetogram-noir .veto-command-advanced{grid-column:1/-1}
+  .vetogram-noir .veto-command-home-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+}
+@media(max-width:699px){
+  .vetogram-noir .app-shell{padding-inline:16px!important}
+  .vetogram-noir .topbar{min-height:62px!important}
+  .vetogram-noir .veto-command-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .vetogram-noir .veto-command-home-grid button{min-height:100px!important;padding:14px!important;gap:8px!important}
+  .vetogram-noir #seEngine .se-editor-shell{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}
+  .vetogram-noir #seEngine .se-stage{position:relative!important;top:auto!important;padding:12px!important;gap:9px!important}
+  .vetogram-noir #seEngine .se-canvas-frame{width:auto!important;height:clamp(190px,38dvh,340px)!important;max-width:100%!important}
+  .vetogram-noir .noir-studio-head{padding-block:18px 12px}
+  .vetogram-noir .noir-studio-head h1{font-size:27px}
+  .vetogram-noir .noir-studio-modes{width:100%;margin-bottom:12px}
+  .vetogram-noir .noir-studio-modes button{flex:1;min-width:0;padding:8px;font-size:12px}
+  .vetogram-noir #seTemplates .se-template{min-height:104px!important;flex-basis:72px!important;min-width:72px!important}
+  .vetogram-noir #seTemplates .noir-template-type{font-size:10px;top:28px;max-width:55px}
+  .vetogram-noir .ghost-command-card{grid-template-columns:1fr!important}
+  .vetogram-noir :where(.block,.vtai-panel,.veto-business-journey){padding:16px!important}
+  .vetogram-noir #seEngine .se-headrow small{font-size:10px}
+}
+@media(max-width:359px){
+  .vetogram-noir .app-shell{padding-inline:10px!important}
+  .vetogram-noir .veto-command-home h1{font-size:29px!important}
+  .vetogram-noir .veto-command-home-actions{flex-direction:column}
+  .vetogram-noir .vg27-mission{padding:12px!important}
+  .vetogram-noir .vg27-mission-label strong{font-size:10px!important}
+  .vetogram-noir .noir-studio-modes button{font-size:11px}
+  .vetogram-noir .bottom-nav{padding-inline:6px!important}
+}
+/* Keep focused fields in view; the shared device module detects keyboards. */
+html.vetogram-noir.veto-keyboard-open .bottom-nav{display:none!important}
+html.vetogram-noir.veto-keyboard-open #actionDock{display:none!important}
+html.vetogram-noir.veto-keyboard-open #seEngine .se-stage{display:none!important}
+html.vetogram-noir.veto-keyboard-open{scroll-padding-bottom:24px}
+@media(prefers-reduced-motion:reduce){
+  .vetogram-noir,.vetogram-noir *{scroll-behavior:auto!important}
+  .vetogram-noir *, .vetogram-noir *::before,.vetogram-noir *::after{animation:none!important;transition:none!important}
+}
+
+.vetogram-noir .noir-locale{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 16px;font-size:12px;color:var(--noir-text)}
+.vetogram-noir .noir-locale select{min-height:44px;background:var(--noir-raised);color:var(--noir-text);border:1px solid var(--noir-border);border-radius:10px;padding:8px}
+.vetogram-noir .control-activity{order:4;background:none!important;border:0!important;border-top:1px solid var(--noir-border)!important;border-radius:0!important;box-shadow:none!important;margin:0!important;padding:20px 0!important;grid-column:1/-1}
+.vetogram-noir .control-activity .kicker,.vetogram-noir .control-activity .tiny-note{display:none!important}
+.vetogram-noir .control-activity h2{font-size:17px!important}
+.vetogram-noir .control-activity-row{border:0!important;border-bottom:1px solid var(--noir-border)!important;background:none!important;border-radius:0!important;box-shadow:none!important;min-height:60px!important;padding:12px 0!important;color:var(--noir-text)!important}
+.vetogram-noir .control-activity-row small{color:var(--noir-muted)!important;font-size:12px!important}
+.vetogram-noir #telegramMirror .veto-mirror-chat{background:none!important;border:0!important;border-bottom:1px solid var(--noir-border)!important;border-radius:0!important;box-shadow:none!important;min-height:76px!important;padding:12px 4px!important}
+.vetogram-noir #telegramMirror .veto-mirror-chat-avatar{width:48px!important;height:48px!important;border-radius:50%!important}
+.vetogram-noir #telegramMirror .veto-mirror-chat-title strong{font-size:15px!important;color:var(--noir-text)!important}
+.vetogram-noir body.veto-chat-thread .bottom-nav{display:none!important}
+.vetogram-noir #seMusicPlayer{display:block;width:100%;margin:14px 0}
+.vetogram-noir [data-mode="quick"] .noir-editor-tabs button[data-se-tool="Layers"],.vetogram-noir [data-mode="quick"] .noir-editor-tabs button[data-se-tool="Portal"]{display:none}

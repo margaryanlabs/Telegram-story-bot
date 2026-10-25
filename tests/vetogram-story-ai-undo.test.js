@@ -30,7 +30,8 @@ function fixture(){
   const context={state,owner:()=>ownerId,init:async()=>{}, 
     trimText:(text,max)=>String(text??'').slice(0,max),
     normalizePortal:input=>({...input}),normalizeDraft:(draft,user)=>({...draft,ownerId:user}),
-    newStoryDraft:()=>({}),loadImageForDraft:()=>{},
+    newStoryDraft:()=>({}),loadImageForDraft:()=>{},checkpoint:()=>{},
+    soundtrack:null,history:{reset(){}},updateHistoryButtons:()=>{},historyGroup:'',
     clearPublicPortalLink:()=>{linkClears++},
     render:()=>{renders++},
     notify:(message,error)=>notices.push({message,error}),
@@ -122,5 +123,5 @@ test('Story Engine exposes accessible undo control and one explicit event bindin
   assert.match(html,/id="seUndoAiText"[^>]*hidden disabled/);
   assert.match(html,/Отменить AI-текст/);
   assert.match(source,/\$\('seUndoAiText'\)\.addEventListener\('click',\(\)=>void undoAiStorySuggestion\(\)\)/);
-  assert.match(source,/function applyDraft\(d\)\{\n  discardAiUndo\(\)/);
+  assert.match(source,/function applyDraft\(d,preserveHistory=false\)\{[\s\S]*?discardAiUndo\(\)/);
 });

@@ -435,7 +435,7 @@
       openSheet(`
         <span class="kicker">Опубликовано</span>
         <h2>Story #${escapeHtml(publishedStoryId)} уже в Telegram</h2>
-        <p>Аудитория: ${escapeHtml(publishedAudience)} · Deep Intelligence ${viewerState.session?.connected ? 'подхватит просмотры автоматически' : 'можно подключить позже'}.</p>
+        <p>Аудитория: ${escapeHtml(publishedAudience)} · Аналитика аудитории ${viewerState.session?.connected ? 'подхватит просмотры автоматически' : 'можно подключить позже'}.</p>
         <div class="sheet-list">
           <div class="sheet-item"><strong>Публикация</strong><span>Готово · ${escapeHtml(result.transport || 'Telegram')}</span></div>
           <div class="sheet-item"><strong>Защита</strong><span>${state.protect ? 'Включена' : 'Выключена'}</span></div>
@@ -694,7 +694,7 @@
     if (signedOwner !== String(tg?.initData || ''))
       throw new Error('Telegram-аккаунт изменился. Старые данные просмотров не применены.');
     if (!response.ok || !data.ok) {
-      const error = new Error(data.error || 'Deep Intelligence временно недоступен');
+      const error = new Error(data.error || 'Аналитика аудитории временно недоступен');
       error.viewerData = data;
       throw error;
     }
@@ -744,13 +744,13 @@
     const rule = String(job?.ruleKey || '');
     const event = job?.event || {};
     if (rule === 'security_changes') {
-      if (event.type === 'session.created') return 'Deep Intelligence connected';
-      if (event.type === 'session.revoked') return 'Deep Intelligence revoked';
+      if (event.type === 'session.created') return 'Аналитика подключена';
+      if (event.type === 'session.revoked') return 'Аналитика отключена';
       return 'Security event';
     }
     if (rule === 'smart_action') {
       return event.actorDisplayName
-        || (event.actorUsername ? '@' + event.actorUsername : 'Smart Inbox action');
+        || (event.actorUsername ? '@' + event.actorUsername : 'Действие во входящих');
     }
     if (rule === 'watch_changes') {
       const actor = event.actorDisplayName
@@ -839,7 +839,7 @@
           cipherVersion: data.config?.cipherVersion || null,
           storageStatus: data.config?.storageStatus || null,
           degraded: true,
-          error: data.storageError || 'Deep Intelligence временно восстанавливает соединение',
+          error: data.storageError || 'Аналитика аудитории временно восстанавливает соединение',
         };
       } else {
         viewerState = {
@@ -898,18 +898,18 @@
       $('connectionIcon').textContent = '✓';
       $('connectionTitle').textContent = personalConnected ? 'Telegram Account подключён' : 'Готов к публикации';
       $('connectionText').textContent = personalConnected
-        ? 'Защищённая Telegram-сессия активна · Stories и Intelligence доступны'
+        ? 'Защищённая Telegram-сессия активна · истории и аналитика доступны'
         : 'Telegram Business подключён · Stories доступны';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Готово';
-      $('heroTitle').innerHTML = 'Stories.<br><span>Под контролем.</span>';
+      $('heroTitle').innerHTML = 'Истории.<br><span>Твой момент.</span>';
       $('heroText').textContent = 'Фото, аудитория, защита, публикация и аналитика — всё прямо внутри Vetogram.';
     } else if (permission) {
       $('heroStatusPill').querySelector('span').textContent = 'Нужно разрешение';
       $('connectionIcon').className = 'connection-icon warn';
       $('connectionIcon').textContent = '!';
       $('connectionTitle').textContent = 'Business подключён частично';
-      $('connectionText').textContent = 'Для Stories можно дать Manage Stories или подключить аккаунт по QR/номеру';
+      $('connectionText').textContent = 'Для историй можно дать право управления историями или подключить аккаунт по QR/номеру';
       $('checkButton').textContent = 'Проверить';
       $('metricAccount').textContent = 'Права';
     } else {
@@ -1045,7 +1045,7 @@
     } else if (!connected && viewerState.newConnectionsReady === false) {
       quickPrimary.textContent = 'Проверить Security';
     } else if (!connected) {
-      quickPrimary.textContent = 'Подключить Intelligence';
+      quickPrimary.textContent = 'Подключить аналитику';
     } else if (!hasStory) {
       quickPrimary.textContent = 'Опубликовать Story';
     } else {
@@ -1057,27 +1057,27 @@
     syncState.className = 'viewer-sync-state';
     if (viewerState.degraded) {
       $('viewerSyncTitle').textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Сервер хранения VETOGRAM недоступен.' : 'Deep Intelligence восстанавливает соединение.';
+        ? 'Сервер хранения VETOGRAM недоступен.' : 'Аналитика аудитории восстанавливает соединение.';
       $('viewerSyncText').textContent = viewerState.error || 'Сохранённый Telegram-аккаунт не отключён. Требуется восстановить сервер.';
       syncState.textContent = 'Хранилище недоступно · сессию не удаляем';
       syncState.classList.add('warn');
-      syncButton.textContent = connected ? 'Управление Deep Intelligence' : 'Обновить';
+      syncButton.textContent = connected ? 'Управление Аналитика аудитории' : 'Обновить';
     } else if (viewerState.configured === false) {
-      $('viewerSyncTitle').textContent = 'Deep Intelligence backend почти готов.';
+      $('viewerSyncTitle').textContent = 'Аналитика аудитории backend почти готов.';
       $('viewerSyncText').textContent = 'Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.';
-      syncState.textContent = 'Нужно завершить серверную настройку Deep Intelligence';
+      syncState.textContent = 'Нужно завершить серверную настройку Аналитика аудитории';
       syncState.classList.add('warn');
       syncButton.textContent = 'Что осталось подключить';
     } else if (connected) {
       const account = viewerState.session?.account || {};
-      $('viewerSyncTitle').textContent = 'Deep Intelligence активен.';
+      $('viewerSyncTitle').textContent = 'Аналитика аудитории активен.';
       $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем Vetogram подтверждает доступную личность.';
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
       syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
-      syncButton.textContent = 'Управление Deep Intelligence';
+      syncButton.textContent = 'Управление Аналитика аудитории';
     } else if (viewerState.session?.status === 'reauth_required') {
-      $('viewerSyncTitle').textContent = 'Нужно переподключить Deep Intelligence.';
+      $('viewerSyncTitle').textContent = 'Нужно переподключить Аналитика аудитории.';
       $('viewerSyncText').textContent = viewerState.session?.lastError || 'Telegram-сессия больше не авторизована.';
       syncState.textContent = viewerState.newConnectionsReady === false
         ? 'Повторное подключение временно закрыто Security'
@@ -1086,7 +1086,7 @@
       syncButton.textContent = 'Переподключить';
     } else if (viewerState.newConnectionsReady === false) {
       $('viewerSyncTitle').textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Хранилище VETOGRAM временно недоступно.' : 'Deep Intelligence защищён.';
+        ? 'Хранилище VETOGRAM временно недоступно.' : 'Аналитика аудитории защищён.';
       $('viewerSyncText').textContent = viewerState.storageStatus === 'unavailable'
         ? 'Это проблема сервера, а не подтверждение выхода из Telegram. Не удаляй сессию и не отправляй код повторно.'
         : 'Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.';
@@ -1096,9 +1096,9 @@
       syncButton.textContent = 'Проверить Security';
     } else {
       $('viewerSyncTitle').textContent = 'Подключи аналитику зрителей.';
-      $('viewerSyncText').textContent = 'Для Deep Intelligence используется отдельное защищённое подключение Telegram только к данным твоих собственных Stories. Код входа и 2FA не сохраняются.';
+      $('viewerSyncText').textContent = 'Для Аналитика аудитории используется отдельное защищённое подключение Telegram только к данным твоих собственных Stories. Код входа и 2FA не сохраняются.';
       syncState.textContent = viewerState.configured === null ? 'Проверяю состояние…' : 'Не подключено';
-      syncButton.textContent = 'Подключить Intelligence';
+      syncButton.textContent = 'Подключить аналитику';
     }
 
     const query = viewerSearchQuery.trim().toLowerCase();
@@ -1109,10 +1109,10 @@
         .some(value => String(value).toLowerCase().includes(query));
     });
 
-    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} confirmed` : 'Deep Intelligence';
+    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} подтверждено` : 'Аналитика аудитории';
 
     if (!connected) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Подключи Deep Intelligence, чтобы видеть подтверждённых зрителей и историю взаимодействий.</div>';
+      $('viewerList').innerHTML = '<div class="viewer-empty">Подключи Аналитика аудитории, чтобы видеть подтверждённых зрителей и историю взаимодействий.</div>';
       return;
     }
 
@@ -1172,7 +1172,7 @@
 
     const intel = viewerState.analytics;
     const connected = viewerState.session?.connected === true;
-    $('viewerAnalyticsBadge').textContent = connected ? 'Live data' : 'Deep Intelligence';
+    $('viewerAnalyticsBadge').textContent = connected ? 'Данные просмотров' : 'Аналитика аудитории';
     $('exportCsvButton').disabled = !connected;
     $('intelUnique').textContent = intel ? String(intel.uniqueViewers || 0) : '—';
     $('intelRepeat').textContent = intel ? String(intel.repeatViewers || 0) : '—';
@@ -1402,13 +1402,13 @@
     }
     if (type === 'session.created') {
       return {
-        title: 'Deep Intelligence подключён',
+        title: 'Аналитика аудитории подключён',
         detail: `${event?.payload?.method === 'qr' ? 'QR' : 'Telegram auth'} · encrypted ${event?.payload?.crypto || 'v3'}`,
       };
     }
     if (type === 'session.revoked') {
       return {
-        title: 'Deep Intelligence отключён',
+        title: 'Аналитика аудитории отключён',
         detail: 'Приватная Telegram session отозвана',
       };
     }
@@ -1495,22 +1495,22 @@
     if ($('homeGhostState')) $('homeGhostState').textContent = ghostPermission ? 'Включено' : 'Anti‑Delete и архив';
     if ($('homeChatsState')) $('homeChatsState').textContent = ghostPermission ? 'Архив доступен' : 'Опционально';
     if ($('homeIntelState')) $('homeIntelState').textContent = intelConnected ? 'Доступно' : 'Аналитика аудитории';
-    if ($('homeSecurityState')) $('homeSecurityState').textContent = intelConnected ? 'Encrypted session' : 'Контроль доступа';
+    if ($('homeSecurityState')) $('homeSecurityState').textContent = intelConnected ? 'Защищённая сессия' : 'Контроль доступа';
 
     const accountBadge = $('vetoAccountBadge');
     const privacyBadge = $('vetoPrivacyBadge');
     const storiesBadge = $('vetoStoriesBadge');
     const connectButton = $('connectTelegramButton');
     if (accountBadge) {
-      accountBadge.textContent = telegramReady ? (intelConnected ? 'Account · Secure' : 'Account · Business') : 'Account · Not connected';
+      accountBadge.textContent = telegramReady ? (intelConnected ? 'Аккаунт · Подключён' : 'Бизнес-чаты · Подключены') : 'Аккаунт · Не подключён';
       accountBadge.classList.toggle('ready', telegramReady);
     }
     if (privacyBadge) {
-      privacyBadge.textContent = ghostPermission ? 'Privacy · Active' : 'Privacy · Optional';
+      privacyBadge.textContent = ghostPermission ? 'Архив · Доступ разрешён' : 'Архив · По желанию';
       privacyBadge.classList.toggle('ready', ghostPermission);
     }
     if (storiesBadge) {
-      storiesBadge.textContent = telegramReady ? `Stories · ${businessStories ? 'Business' : intelConnected ? 'Account' : 'Ready'}` : 'Stories · Waiting';
+      storiesBadge.textContent = telegramReady ? `Истории · ${businessStories ? 'Бизнес-чаты' : intelConnected ? 'Аккаунт' : 'Готово'}` : 'Истории · Ожидание';
       storiesBadge.classList.toggle('ready', telegramReady);
     }
     if (connectButton) {
@@ -1604,7 +1604,7 @@
     });
     $('actionDock')?.classList.toggle('hidden', target !== 'publish');
     haptic();
-    window.scrollTo({ top:0, behavior:'smooth' });
+    window.scrollTo({ top:0, behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth' });
     if (target === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
     if (target === 'analytics' && tg?.initData) refreshViewerAnalytics({ silent: true });
     // The Privacy module is loaded separately and must refresh whether a
@@ -1925,7 +1925,7 @@
           <span class="automation-rule-icon">⌾</span>
           <span class="automation-rule-copy">
             <strong>Security changes</strong>
-            <small>Подключение или отзыв Deep Intelligence session.</small>
+            <small>Подключение или отзыв Аналитика аудитории session.</small>
           </span>
           <b>${securityEnabled ? 'ON' : 'OFF'}</b>
         </button>
@@ -2780,7 +2780,7 @@
   $('testAlertButton').addEventListener('click', async () => {
     const button = $('testAlertButton');
     if (!viewerState.session?.connected) {
-      showToast('Сначала подключи Deep Intelligence');
+      showToast('Сначала подключи Аналитика аудитории');
       return;
     }
 
@@ -2812,7 +2812,7 @@
   $('exportCsvButton').addEventListener('click', async () => {
     const button = $('exportCsvButton');
     if (!viewerState.session?.connected || button.disabled) {
-      showToast('Сначала подключи Deep Intelligence');
+      showToast('Сначала подключи Аналитика аудитории');
       return;
     }
 
@@ -3261,7 +3261,7 @@
         <div class="sheet-item"><strong>Исключено</strong><span>${story.countsKnown === false ? '— · старый архив' : `${story.excluded || 0} пользователей`}</span></div>
         <div class="sheet-item"><strong>Выбрано</strong><span>${story.countsKnown === false ? '— · старый архив' : `${story.selected || 0} пользователей`}</span></div>
         <div class="sheet-item"><strong>Статус</strong><span>${story.deleted ? 'Удалена' : 'Опубликована'}</span></div>
-        ${story.lastSyncAt ? `<div class="sheet-item"><strong>Deep Intelligence</strong><span>${Number(story.views || 0)} views · ${Number(story.identified || 0)} identified · ${Number(story.reactions || 0)} reactions</span></div>` : ''}
+        ${story.lastSyncAt ? `<div class="sheet-item"><strong>Аналитика аудитории</strong><span>${Number(story.views || 0)} views · ${Number(story.identified || 0)} identified · ${Number(story.reactions || 0)} reactions</span></div>` : ''}
       </div>
       <div class="sheet-actions">
         ${story.deleted ? '' : `<button data-delete-story="${story.id}">Удалить Story</button>`}

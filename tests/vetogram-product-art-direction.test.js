@@ -9,7 +9,7 @@ const finish=read('vetogram-finish-2026.css');
 test('3.3 uses the real Vetogram product identity and leaves account controls wired',()=>{
   assert.match(html,/<div class="vg33-hero-sigil" aria-hidden="true">/);
   assert.match(html,/veto-telegram-mark\.svg/);
-  assert.match(html,/<h1>Твой Telegram\.<br><em>Больше возможностей\.<\/em><\/h1>/);
+  assert.match(html,/<h1>Твоё пространство\.<br><em>Твой ритм\.<\/em><\/h1>/);
   assert.match(html,/id="vetoHomeChatsPrimary" data-open-screen="telegram"/);
   assert.match(html,/id="vetoHomeConnectPrimary"/);
   for(const key of ['vg27MissionAccount','vg27MissionPrivacy','vg27MissionStories','vg27MissionAction'])

@@ -97,7 +97,7 @@ test('Story handoff, viewer and auto action paths preserve user-facing permissio
 
 test('main Mini App imports the new owner-scoped integration controller, not a cached old script',()=>{
   const html=readFileSync(new URL('../public/studio.html',import.meta.url),'utf8');
-  assert.match(html,/\/app\.js\?v=20261025-release-safety-44/);
+  assert.match(html,/\/app\.js\?v=20261025-noir-1/);
   assert.doesNotMatch(html,/\/app\.js\?v=20261019-messenger-first-v1/);
 });
 

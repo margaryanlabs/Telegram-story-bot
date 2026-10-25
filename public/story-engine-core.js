@@ -4,16 +4,16 @@
  * Drafts are intentionally device-local until a permissioned cloud vault ships.
  */
 export const STORY_TEMPLATES = Object.freeze([
-  {id:'noir',name:'NOIR',mood:'Luxury',start:'#09090d',end:'#421322',accent:'#ff687c',layout:'center',title:'OWN THE MOMENT',subtitle:'The night is yours.'},
-  {id:'editorial',name:'EDITORIAL',mood:'Minimal',start:'#171a20',end:'#43434b',accent:'#ededed',layout:'bottom',title:'A NEW PERSPECTIVE',subtitle:'Less noise. More meaning.'},
-  {id:'voyage',name:'VOYAGE',mood:'Travel',start:'#09141e',end:'#1b6070',accent:'#9ce9dd',layout:'bottom',title:'BEYOND THE MAP',subtitle:'Every destination has a story.'},
-  {id:'birthday',name:'AFTERGLOW',mood:'Birthday',start:'#231018',end:'#b84a77',accent:'#ffe3a7',layout:'center',title:'TONIGHT IS YOURS',subtitle:'Another year. Another beautiful chapter.'},
-  {id:'invitation',name:'INVITATION',mood:'Event',start:'#0e0d13',end:'#58424b',accent:'#e7c59b',layout:'center',title:'YOU ARE INVITED',subtitle:'An evening worth remembering.'},
-  {id:'launch',name:'LAUNCH',mood:'Business',start:'#05070a',end:'#252d49',accent:'#94bdff',layout:'bottom',title:'SOMETHING NEW',subtitle:'The next chapter starts here.'},
-  {id:'product',name:'OBJECT',mood:'Product',start:'#101119',end:'#654632',accent:'#ffd5ab',layout:'bottom',title:'MADE TO MATTER',subtitle:'Thoughtfully designed.'},
-  {id:'romance',name:'AMOUR',mood:'Romantic',start:'#211019',end:'#915966',accent:'#ffcdca',layout:'center',title:'ONLY US',subtitle:'A thousand little moments.'},
-  {id:'midnight',name:'MIDNIGHT',mood:'Party',start:'#0d0922',end:'#502575',accent:'#e1afff',layout:'center',title:'AFTER HOURS',subtitle:'Meet us where the lights begin.'},
-  {id:'signal',name:'SIGNAL',mood:'Link',start:'#080c0e',end:'#124a4c',accent:'#82f2d0',layout:'bottom',title:'OPEN THE NEXT',subtitle:'There is more to this story.'}
+  {id:'noir',name:'НУАР',mood:'Премиальный',start:'#09090d',end:'#421322',accent:'#ff687c',layout:'center',title:'ТВОЙ МОМЕНТ',subtitle:'Эта ночь принадлежит тебе.'},
+  {id:'editorial',name:'РЕДАКЦИЯ',mood:'Минимализм',start:'#171a20',end:'#43434b',accent:'#ededed',layout:'bottom',title:'НОВЫЙ ВЗГЛЯД',subtitle:'Меньше шума. Больше смысла.'},
+  {id:'voyage',name:'ВОЯЖ',mood:'Путешествия',start:'#09141e',end:'#1b6070',accent:'#9ce9dd',layout:'bottom',title:'ЗА ГРАНИЦАМИ КАРТЫ',subtitle:'В каждом месте — своя история.'},
+  {id:'birthday',name:'СИЯНИЕ',mood:'День рождения',start:'#231018',end:'#b84a77',accent:'#ffe3a7',layout:'center',title:'ТВОЙ ВЕЧЕР',subtitle:'Ещё один год. Ещё одна красивая глава.'},
+  {id:'invitation',name:'ПРИГЛАШЕНИЕ',mood:'Событие',start:'#0e0d13',end:'#58424b',accent:'#e7c59b',layout:'center',title:'ТЫ ПРИГЛАШЁН',subtitle:'Вечер, который запомнится.'},
+  {id:'launch',name:'ЗАПУСК',mood:'Бизнес',start:'#05070a',end:'#252d49',accent:'#94bdff',layout:'bottom',title:'НОВАЯ ГЛАВА',subtitle:'Всё начинается здесь.'},
+  {id:'product',name:'ОБЪЕКТ',mood:'Продукт',start:'#101119',end:'#654632',accent:'#ffd5ab',layout:'bottom',title:'СОЗДАНО СО СМЫСЛОМ',subtitle:'Продумано до мелочей.'},
+  {id:'romance',name:'АМУР',mood:'Романтика',start:'#211019',end:'#915966',accent:'#ffcdca',layout:'center',title:'ТОЛЬКО МЫ',subtitle:'Тысяча маленьких мгновений.'},
+  {id:'midnight',name:'ПОЛНОЧЬ',mood:'Вечеринка',start:'#0d0922',end:'#502575',accent:'#e1afff',layout:'center',title:'ПОСЛЕ ПОЛУНОЧИ',subtitle:'Там, где загораются огни.'},
+  {id:'signal',name:'СИГНАЛ',mood:'Ссылка',start:'#080c0e',end:'#124a4c',accent:'#82f2d0',layout:'bottom',title:'СЛЕДУЮЩИЙ ШАГ',subtitle:'У этой истории есть продолжение.'}
 ]);
 export const PORTAL_TYPES=Object.freeze([
   {id:'invite',name:'Приглашение',cta:'Принять приглашение'},
@@ -122,7 +122,7 @@ export function remixDraft(source,ownerId,{now=Date.now(),id=globalThis.crypto?.
   const base=normalizeDraft(source,ownerId,now);
   // A remix is a fresh independent draft. Never inherit a prior Portal response URL.
   return {...base,id:id||String(now),imageDataUrl:'',imageMime:'',portal:null,
-    layers:base.layers.map(layer=>({...layer,text:'EDIT YOUR TEXT'})),
+    layers:base.layers.map(layer=>({...layer,text:'ТВОЙ ТЕКСТ'})),
     createdAt:now,updatedAt:now};
 }
 /** Offline composition assistant. No AI model is used and no image is generated. */

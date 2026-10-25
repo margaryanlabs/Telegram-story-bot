@@ -73,6 +73,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     $('vtaiDraft').readOnly=false;
     $('vtaiQuota').textContent='Потребление AI ограничено дневным бюджетом. Данные Telegram не анализируются автоматически.';
     state.busy=false;
+    window.dispatchEvent(new CustomEvent('vetogram:ai-busy',{detail:{busy:false}}));
     $('vtaiCreate').disabled=false;$('vtaiLoadChats').disabled=false;
     $('vtaiNegLoadChats').disabled=false;
     $('vtaiSend').disabled=true;
@@ -597,6 +598,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   function setBusy(value){
     state.busy=value;
+    window.dispatchEvent(new CustomEvent('vetogram:ai-busy',{detail:{busy:value===true}}));
     $('vtaiCreate').disabled=value;$('vtaiLoadChats').disabled=value;
     $('vtaiSend').disabled=value||!canSendDraft();
   }

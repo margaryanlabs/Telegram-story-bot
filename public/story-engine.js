@@ -1,3 +1,5 @@
+import {setupStorySoundtrack} from './story-soundtrack.js';
+import {createStoryHistory} from './story-history-core.js';
 
 import {showPortalPreview} from './story-portal-preview.js';
 import {makePublicPortalUrl} from './story-portal-share.js';
@@ -15,6 +17,30 @@ const root=$('seEngine');
 if(!canvas||!root)throw new Error('STORY_ENGINE_SCREEN_MISSING');
 const state={draft:null,owner:null,db:null,image:null,imageSrc:null,busy:false,revision:0,loaded:false,selectedLayer:null,dragLayer:null,aiUndo:null};
 const tg=window.Telegram?.WebApp;
+const history=createStoryHistory();
+let historyGroup='';
+let soundtrack=null;
+const editorIdentity=()=>owner()||'0';
+function updateHistoryButtons(){
+  if($('seUndo'))$('seUndo').disabled=!history.canUndo;
+  if($('seRedo'))$('seRedo').disabled=!history.canRedo;
+}
+function recordEdit(id){
+  if(historyGroup!==id){checkpoint();historyGroup=id;}
+}
+function checkpoint(){
+  if(editorIdentity()!==state.owner)return;
+  history.checkpoint(state.draft,state.owner);
+  queueMicrotask(updateHistoryButtons);
+}
+function restoreHistory(direction){
+  historyGroup='';
+  if(editorIdentity()!==state.owner)return;
+  const d=history[direction](state.draft,state.owner);
+  if(!d){updateHistoryButtons();return;}
+  applyDraft(d,true);updateHistoryButtons();
+  notify(direction==='undo'?'Действие отменено':'Действие повторено');
+}
 const owner=()=>tg?.initData && /^\d{1,20}$/.test(String(tg.initDataUnsafe?.user?.id||''))?
   String(tg.initDataUnsafe.user.id):'';
 const notify=(message,error=false)=>{
@@ -148,13 +174,13 @@ function paint(target){
   ctx.strokeRect(30,30,480,900);
   ctx.fillStyle=t.accent;ctx.fillRect(51,61,36,3);
   ctx.font='600 12px system-ui,sans-serif';ctx.textAlign='left';
-  ctx.fillStyle='rgba(255,255,255,.91)';ctx.fillText('VETO / STORY',100,66);
+  ctx.fillStyle='rgba(255,255,255,.91)';ctx.fillText('VETOGRAM / ИСТОРИЯ',100,66);
   const center=t.layout==='center';
   const x=center?270:53,start=Math.max(260,Math.min(740,Number(d.textY)|| (center?388:675)));
   const titleSize=Math.max(32,Math.min(66,Number(d.fontSize)||51));
   ctx.textAlign=center?'center':'left';
   ctx.fillStyle=t.accent;ctx.font='600 13px system-ui,sans-serif';
-  ctx.fillText('A MOMENT WORTH SHARING',x,start-49);
+  ctx.fillText('МОМЕНТ, КОТОРЫМ СТОИТ ПОДЕЛИТЬСЯ',x,start-49,435);
   ctx.fillStyle='#ffffff';ctx.font='800 '+titleSize+'px system-ui,sans-serif';
   const used=drawLines(ctx,d.title||t.title,x,start,center?440:435,titleSize,center?'center':'left',3);
   ctx.font='400 21px system-ui,sans-serif';ctx.fillStyle='rgba(255,255,255,.88)';
@@ -179,6 +205,14 @@ function paint(target){
     }
     ctx.restore();
   }
+  if(target===canvas&&state.selectedLayer){
+    const selected=(d.layers||[]).find(layer=>layer.id===state.selectedLayer);
+    if(selected){
+      ctx.save();ctx.strokeStyle='#ff7887';ctx.lineWidth=2;ctx.setLineDash([5,5]);
+      ctx.strokeRect(selected.x*540-120,selected.y*960-selected.size,240,selected.size*2);
+      ctx.restore();
+    }
+  }
   if(d.portal){
     const txt=trimText(d.portal.cta,30).toUpperCase();
     const y=center?825:857;
@@ -187,7 +221,7 @@ function paint(target){
     ctx.fillText(txt,center?270:198,y+30,260);
   }
   ctx.fillStyle='rgba(255,255,255,.7)';ctx.textAlign='right';ctx.font='500 11px system-ui,sans-serif';
-  if(d.branding===true)ctx.fillText('MADE WITH VETOGRAM',487,914);
+  if(d.branding===true)ctx.fillText('СОЗДАНО В VETOGRAM',487,914);
 }
 function renderLayers(){
   const layers=normalizeStoryLayers(state.draft?.layers),holder=$('seLayerList');
@@ -202,7 +236,7 @@ function renderLayers(){
     const button=document.createElement('button');button.type='button';
     button.className='se-layer-chip'+(state.selectedLayer===layer.id?' active':'');
     const name=document.createElement('span');name.textContent=layer.text;
-    const style=document.createElement('small');style.textContent=layer.style;
+    const style=document.createElement('small');style.textContent=({plain:'Текст',pill:'Плашка',outline:'Контур'})[layer.style]||'Текст';
     button.append(name,style);
     button.setAttribute('aria-pressed',state.selectedLayer===layer.id?'true':'false');
     button.addEventListener('click',()=>{
@@ -261,8 +295,9 @@ function render(){
     const prompt=document.createElement('p');prompt.textContent='Выбери тип Portal и создай интерактивное продолжение Story.';portal.append(prompt);
   }
   $('seTemplateName').textContent=templateById(state.draft.templateId).name;
-  document.querySelectorAll('[data-se-template]').forEach(b=>b.classList.toggle('active',b.dataset.seTemplate===state.draft.templateId));
+  document.querySelectorAll('[data-se-template]').forEach(b=>{const active=b.dataset.seTemplate===state.draft.templateId;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
   paint(canvas);
+  if($('sePreviewDialog')?.open)paint($('sePreviewCanvas'));
 }
 function loadImageForDraft(){
   state.image=null;state.imageSrc=null;
@@ -303,6 +338,7 @@ function undoAiStorySuggestion(){
     notify('После AI ты изменил текст или Portal вручную. Отмена недоступна, чтобы сохранить твои правки.',true);
     return false;
   }
+  checkpoint();
   state.draft.title=undo.before.title;
   state.draft.subtitle=undo.before.subtitle;
   state.draft.caption=undo.before.caption;
@@ -314,13 +350,15 @@ function undoAiStorySuggestion(){
   notify('AI-изменения отменены. Фото, слои и настройки Story сохранены.');
   return true;
 }
-function applyDraft(d){
+function applyDraft(d,preserveHistory=false){
+  if(!preserveHistory){soundtrack?.clear();history.reset(state.owner||'0',d.id);historyGroup='';}
+  $('sePreviewDialog')?.close?.();
   discardAiUndo();
   clearPublicPortalLink();
   // Publishing a public clickable link always needs a fresh opt-in.
   $('sePortalAttachStory').checked=false;
   state.selectedLayer=null;state.dragLayer=null;
-  state.draft=normalizeDraft(d,state.owner||'0');loadImageForDraft();render();
+  state.draft=normalizeDraft(d,state.owner||'0');loadImageForDraft();render();updateHistoryButtons();
 }
 async function init(){
   const current=owner();
@@ -413,6 +451,7 @@ async function applyAiStorySuggestion(requested){
   const draftId=state.draft.id;
   if(owner()!==requestedOwner||state.draft.id!==draftId)return false;
   const portalIncluded=requested.replacePortal===true;
+  checkpoint();
   const before={
     title:state.draft.title,subtitle:state.draft.subtitle,
     caption:state.draft.caption,
@@ -443,15 +482,84 @@ window.addEventListener('vetogram:ai-story-suggestion',event=>{
 });
 
 function setup(){
+  soundtrack=setupStorySoundtrack({paint,notify,
+    scope:()=>({owner:state.owner,id:state.draft?.id}),
+    isCurrent:value=>Boolean(value&&value.owner===state.owner&&editorIdentity()===state.owner&&value.id===state.draft?.id)});
+  // Each editing handler records its own pre-mutation snapshot.
+  root.addEventListener('focusout',()=>{historyGroup='';});
+  $('seUndo').addEventListener('click',()=>restoreHistory('undo'));
+  $('seRedo').addEventListener('click',()=>restoreHistory('redo'));
+  root.addEventListener('keydown',event=>{
+    if(!(event.ctrlKey||event.metaKey)||event.altKey||event.target.closest('input,textarea,select'))return;
+    if(event.key.toLowerCase()==='z'){
+      event.preventDefault();restoreHistory(event.shiftKey?'redo':'undo');
+    }
+  });
+  const tabs=[...root.querySelectorAll('[data-se-tool]')];
+  function selectTool(tool,focus=false){
+    tabs.forEach(tab=>{
+      const selected=tab.dataset.seTool===tool;
+      tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;
+      const panel=$(tab.getAttribute('aria-controls'));if(panel)panel.hidden=!selected;
+      if(selected&&focus)tab.focus();
+    });
+  }
+  tabs.forEach(tab=>{
+    tab.addEventListener('click',()=>selectTool(tab.dataset.seTool));
+    tab.addEventListener('keydown',event=>{
+      const visible=tabs.filter(item=>!item.hidden),index=visible.indexOf(tab);
+      let next;
+      if(event.key==='ArrowRight')next=(index+1)%visible.length;
+      if(event.key==='ArrowLeft')next=(index+visible.length-1)%visible.length;
+      if(event.key==='Home')next=0;if(event.key==='End')next=visible.length-1;
+      if(next!==undefined){event.preventDefault();selectTool(visible[next].dataset.seTool,true);}
+    });
+  });
+  function selectMode(mode){
+    root.querySelectorAll('[data-se-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.seMode===mode)));
+    root.querySelector('.se-editor-shell').dataset.mode=mode;
+    tabs.forEach(tab=>{tab.hidden=mode==='quick'&&['Layers','Portal'].includes(tab.dataset.seTool);});
+    selectTool(mode==='director'?'Director':mode==='pro'?'Layers':'Text');
+  }
+  root.querySelectorAll('[data-se-mode]').forEach(button=>button.addEventListener('click',()=>selectMode(button.dataset.seMode)));
+  selectMode('quick');
+  $('seMagicRemix').addEventListener('click',()=>{
+    if(!state.draft||editorIdentity()!==state.owner)return;
+    checkpoint();
+    const index=STORY_TEMPLATES.findIndex(t=>t.id===state.draft.templateId);
+    const next=STORY_TEMPLATES[(index+1)%STORY_TEMPLATES.length];
+    state.draft.templateId=next.id;state.draft.textY=next.layout==='center'?388:675;
+    render();notify('Новый стиль применён локально. Фото, текст и слои сохранены. Можно отменить.');
+  });
+  $('sePreview').addEventListener('click',()=>{
+    if(!state.draft||editorIdentity()!==state.owner)return;
+    if(state.draft.imageDataUrl&&state.imageSrc!==state.draft.imageDataUrl)return notify('Дождись загрузки фотографии',true);
+    paint($('sePreviewCanvas'));$('sePreviewDialog').showModal();
+  });
+  $('sePreviewClose').addEventListener('click',()=>$('sePreviewDialog').close());
+  window.addEventListener('veto:screen-changed',()=>{$('sePreviewDialog').close();});
+  window.addEventListener('pagehide',()=>{$('sePreviewDialog').close();});
+  canvas.addEventListener('keydown',event=>{
+    const deltas={ArrowLeft:[-.01,0],ArrowRight:[.01,0],ArrowUp:[0,-.01],ArrowDown:[0,.01]};
+    const delta=deltas[event.key],layer=state.draft?.layers?.find(l=>l.id===state.selectedLayer);
+    if(!delta||!layer||state.owner!==owner())return;
+    event.preventDefault();if(!event.repeat)checkpoint();
+    const step=event.shiftKey?5:1;
+    layer.x=Math.max(.09,Math.min(.91,layer.x+delta[0]*step));
+    layer.y=Math.max(.09,Math.min(.91,layer.y+delta[1]*step));paint(canvas);
+  });
   $('seUndoAiText').addEventListener('click',()=>void undoAiStorySuggestion());
   const holder=$('seTemplates');
   for(const t of STORY_TEMPLATES){
     const b=document.createElement('button');b.type='button';b.dataset.seTemplate=t.id;b.className='se-template';
     b.style.setProperty('--se-start',t.start);b.style.setProperty('--se-end',t.end);b.style.setProperty('--se-accent',t.accent);
     const mark=document.createElement('i'),title=document.createElement('strong'),small=document.createElement('small');
-    title.textContent=t.name;small.textContent=t.mood;b.append(mark,title,small);
+    title.textContent=t.name;small.textContent=t.mood;
+    const type=document.createElement('span');type.className='noir-template-type';type.textContent=t.title;
+    b.setAttribute('aria-label',t.name+' · '+t.mood);b.setAttribute('aria-pressed','false');
+    b.append(mark,type,title,small);
     b.addEventListener('click',()=>{
-      if(!state.draft)return;state.draft.templateId=t.id;
+      if(!state.draft)return;historyGroup='';checkpoint();state.draft.templateId=t.id;
       state.draft.title=t.title;state.draft.subtitle=t.subtitle;render();
     });
     holder.append(b);
@@ -462,24 +570,24 @@ function setup(){
   for(const p of PORTAL_TYPES){
     const el=document.createElement('option');el.value=p.id;el.textContent=p.name;$('sePortalType').append(el);
   }
-  const update=(key,max)=>e=>{if(!state.draft)return;state.draft[key]=trimText(e.target.value,max);paint(canvas)};
+  const update=(key,max)=>e=>{if(!state.draft)return;recordEdit(e.target.id);state.draft[key]=trimText(e.target.value,max);paint(canvas)};
   $('seTitle').addEventListener('input',update('title',90));
   $('seSubtitle').addEventListener('input',update('subtitle',180));
-  $('seCaption').addEventListener('input',e=>{if(state.draft)state.draft.caption=trimText(e.target.value,800)});
-  $('seRetention').addEventListener('change',e=>{if(state.draft)state.draft.retentionDays=Number(e.target.value)});
-  $('seRemixAllowed').addEventListener('change',e=>{if(state.draft)state.draft.remixable=e.target.checked});
-  $('seBranding').addEventListener('change',e=>{if(state.draft){state.draft.branding=e.target.checked;paint(canvas)}});
-  $('seTextY').addEventListener('input',e=>{if(state.draft){state.draft.textY=Number(e.target.value);paint(canvas)}});
-  $('seFontSize').addEventListener('input',e=>{if(state.draft){state.draft.fontSize=Number(e.target.value);paint(canvas)}});
+  $('seCaption').addEventListener('input',e=>{if(state.draft){recordEdit(e.target.id);state.draft.caption=trimText(e.target.value,800)}});
+  $('seRetention').addEventListener('change',e=>{if(state.draft){checkpoint();state.draft.retentionDays=Number(e.target.value)}});
+  $('seRemixAllowed').addEventListener('change',e=>{if(state.draft){checkpoint();state.draft.remixable=e.target.checked}});
+  $('seBranding').addEventListener('change',e=>{if(state.draft){checkpoint();state.draft.branding=e.target.checked;paint(canvas)}});
+  $('seTextY').addEventListener('input',e=>{if(state.draft){recordEdit(e.target.id);state.draft.textY=Number(e.target.value);paint(canvas)}});
+  $('seFontSize').addEventListener('input',e=>{if(state.draft){recordEdit(e.target.id);state.draft.fontSize=Number(e.target.value);paint(canvas)}});
   for(const [id,key,factor] of [['sePhotoZoom','photoZoom',100],['sePhotoX','photoX',100],['sePhotoY','photoY',100]]){
-    $(id).addEventListener('input',e=>{if(state.draft){state.draft[key]=Number(e.target.value)/factor;paint(canvas)}});
+    $(id).addEventListener('input',e=>{if(state.draft){recordEdit(e.target.id);state.draft[key]=Number(e.target.value)/factor;paint(canvas)}});
   }
   $('sePhotoEffect').addEventListener('change',e=>{
-    if(state.draft){state.draft.photoEffect=PHOTO_EFFECTS.includes(e.target.value)?e.target.value:'original';paint(canvas)}
+    if(state.draft){checkpoint();state.draft.photoEffect=PHOTO_EFFECTS.includes(e.target.value)?e.target.value:'original';paint(canvas)}
   });
   $('sePhotoReset').addEventListener('click',()=>{
     if(!state.draft)return;
-    Object.assign(state.draft,{photoZoom:1,photoX:0,photoY:0,photoEffect:'original'});render();
+    checkpoint();Object.assign(state.draft,{photoZoom:1,photoX:0,photoY:0,photoEffect:'original'});render();
   });
   $('seLayerAdd').addEventListener('click',()=>{
     if(!state.draft)return;
@@ -488,26 +596,26 @@ function setup(){
     if((state.draft.layers||[]).length>=6)return notify('Максимум 6 текстовых слоёв',true);
     const id=window.crypto?.randomUUID?.()||Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
     const layer=normalizeStoryLayer({id,text,style:$('seLayerStyle').value,x:.5,y:.52,size:27});
-    state.draft.layers=normalizeStoryLayers([...(state.draft.layers||[]),layer]);
+    checkpoint();state.draft.layers=normalizeStoryLayers([...(state.draft.layers||[]),layer]);
     state.selectedLayer=layer.id;renderLayers();paint(canvas);
     notify('Слой добавлен — перетащи его прямо на Story');
   });
   $('seLayerRemove').addEventListener('click',()=>{
     if(!state.draft||!state.selectedLayer)return;
-    state.draft.layers=(state.draft.layers||[]).filter(layer=>layer.id!==state.selectedLayer);
+    checkpoint();state.draft.layers=(state.draft.layers||[]).filter(layer=>layer.id!==state.selectedLayer);
     state.selectedLayer=null;renderLayers();paint(canvas);
   });
   $('seLayerSize').addEventListener('input',e=>{
     const layer=state.draft?.layers?.find(item=>item.id===state.selectedLayer);
-    if(layer){layer.size=Number(e.target.value);paint(canvas)}
+    if(layer){recordEdit(e.target.id);layer.size=Number(e.target.value);paint(canvas)}
   });
   $('seLayerText').addEventListener('input',e=>{
     const layer=state.draft?.layers?.find(item=>item.id===state.selectedLayer);
-    if(layer){layer.text=trimText(e.target.value,90);paint(canvas);renderLayers()}
+    if(layer){recordEdit(e.target.id);layer.text=trimText(e.target.value,90);paint(canvas);renderLayers()}
   });
   $('seLayerStyle').addEventListener('change',e=>{
     const layer=state.draft?.layers?.find(item=>item.id===state.selectedLayer);
-    if(layer){layer.style=STORY_LAYER_STYLES.includes(e.target.value)?e.target.value:'plain';renderLayers();paint(canvas)}
+    if(layer){checkpoint();layer.style=STORY_LAYER_STYLES.includes(e.target.value)?e.target.value:'plain';renderLayers();paint(canvas)}
   });
   function pointerRatio(event){
     const r=canvas.getBoundingClientRect();
@@ -520,6 +628,7 @@ function setup(){
     const layers=state.draft.layers||[];
     const hit=[...layers].reverse().find(layer=>Math.abs(layer.x-p.x)<.24 && Math.abs(layer.y-p.y)<.055);
     if(!hit)return;
+    checkpoint();
     state.selectedLayer=hit.id;state.dragLayer={owner:state.owner,draftId:state.draft.id,pointerId:event.pointerId};
     canvas.setPointerCapture?.(event.pointerId);event.preventDefault();
     $('seLayerText').value=hit.text;$('seLayerStyle').value=hit.style;
@@ -554,12 +663,12 @@ function setup(){
          state.draft?.id!==selectedDraftId)return;
       const data=String(reader.result||'');
       if(data.length>12000000)return notify('Изображение слишком велико для локального черновика',true);
-      state.draft.imageDataUrl=data;state.draft.imageMime=file.type;loadImageForDraft();
+      checkpoint();state.draft.imageDataUrl=data;state.draft.imageMime=file.type;loadImageForDraft();
       notify('Фото загружено. Исходник остаётся на устройстве.');
     };
     reader.readAsDataURL(file);
   });
-  $('seClearPhoto').addEventListener('click',()=>{if(!state.draft)return;state.draft.imageDataUrl='';state.draft.imageMime='';loadImageForDraft()});
+  $('seClearPhoto').addEventListener('click',()=>{if(!state.draft)return;checkpoint();state.draft.imageDataUrl='';state.draft.imageMime='';loadImageForDraft()});
   $('seSave').addEventListener('click',async()=>{try{await saveDraft()}catch(e){notify(e.message,true)}});
   $('seRemix').addEventListener('click',()=>{
     try{requireOwner();applyDraft(remixDraft({...state.draft,remixable:true},state.owner));notify('Независимая копия создана. Исходный черновик не изменён.')}
@@ -576,12 +685,12 @@ function setup(){
   function readPortal(){
     if(!state.draft)return;
     const type=$('sePortalType').value;
-    if(!type){state.draft.portal=null;render();return}
+    if(!type){checkpoint();state.draft.portal=null;render();return}
     try{
       const raw={type,title:$('sePortalTitle').value,description:$('sePortalDescription').value,
         cta:$('sePortalCta').value,link:$('sePortalLink').value,
         optionsText:$('sePortalOptions').value,linksText:$('sePortalLinks').value};
-      state.draft.portal=normalizePortal(raw);
+      const normalizedPortal=normalizePortal(raw);checkpoint();state.draft.portal=normalizedPortal;
       clearPublicPortalLink();render();
       notify('Portal добавлен в текущий проект. Нажми «Сохранить», чтобы записать его на устройстве. Публичной ссылки пока нет.');
     }catch(e){notify(e.message,true)}
@@ -634,7 +743,7 @@ function setup(){
   });
   $('sePortalRemove').addEventListener('click',()=>{
     if(!state.draft)return;
-    state.draft.portal=null;clearPublicPortalLink();render();notify('Portal отвязан');
+    checkpoint();state.draft.portal=null;clearPublicPortalLink();render();notify('Portal отвязан');
   });
   $('sePortalType').addEventListener('change',()=>{
     const item=PORTAL_TYPES.find(p=>p.id===$('sePortalType').value);
