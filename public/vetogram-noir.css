@@ -673,3 +673,153 @@ html#vetogram[data-veto-theme="linen"] .v4-message-feedback{
 }
 #vetogram.vetogram-noir #seEngine.v4-studio-focus.v4-studio-tools-open
 .v4-inspector-close{display:inline-flex!important}
+
+/* REBORN / foundation — four predictable destinations, usable real account
+   setup, honest safe areas. Extends canonical tokens; no new CSS cascade file. */
+#vetogram.vetogram-noir .veto-reborn-brand {
+  border:0;background:transparent;color:var(--noir-text);
+  cursor:pointer;text-align:start;min-width:0;
+}
+#vetogram.vetogram-noir .veto-reborn-brand:focus-visible{
+  outline:2px solid var(--noir-coral);border-radius:12px;
+}
+#vetogram.vetogram-noir .veto-reborn-navigation {
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  padding-inline:max(12px,calc((100vw - 620px)/2))!important;
+}
+#vetogram.vetogram-noir .veto-reborn-navigation .nav-item{
+  min-height:58px!important;gap:6px!important;
+}
+#vetogram.vetogram-noir .veto-reborn-navigation .nav-item small{
+  font-size:11px!important;letter-spacing:-.01em!important;
+}
+#vetogram.vetogram-noir .veto-reborn-navigation .veto-reborn-ai-tab{
+  color:var(--noir-ai)!important;
+}
+#vetogram.vetogram-noir .veto-reborn-navigation .veto-reborn-ai-tab.active{
+  color:var(--noir-ai)!important;
+  background:color-mix(in srgb,var(--noir-ai) 14%,transparent)!important;
+}
+#vetogram.vetogram-noir .veto-reborn-navigation .nav-item:focus-visible{
+  outline-offset:-2px!important;
+}
+/* Native Telegram header is outside this page. The app never copies its safe
+   inset into document top padding, avoiding a double-inset on Fold / Android. */
+#vetogram.vetogram-noir body.veto-sheet-open{overflow:hidden!important;overscroll-behavior:none}
+#vetogram.vetogram-noir body.veto-sheet-open .bottom-nav,
+#vetogram.vetogram-noir body.veto-sheet-open #actionDock {display:none!important}
+#vetogram.vetogram-noir body.veto-sheet-open .sheet-backdrop {
+  z-index:190!important;background:rgba(3,6,12,.72)!important;
+  backdrop-filter:blur(4px)!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet {
+  z-index:191!important;position:fixed!important;left:50%!important;right:auto!important;
+  bottom:0!important;transform:translateX(-50%)!important;
+  width:min(100%,620px)!important;
+  max-height:min(90dvh,calc(var(--veto-visible-height,100dvh) - 20px))!important;
+  padding:12px 20px max(24px,env(safe-area-inset-bottom,0px))!important;
+  background:var(--noir-bg)!important;color:var(--noir-text)!important;
+  border:1px solid var(--noir-border)!important;
+  border-bottom:0!important;border-radius:28px 28px 0 0!important;
+  overflow-y:auto!important;overscroll-behavior:contain;
+  box-shadow:0 -20px 70px rgba(0,0,0,.6)!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet .sheet-handle {
+  margin-bottom:16px!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet .kicker{
+  font-size:11px!important;letter-spacing:.13em!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet h2 {
+  font-size:clamp(25px,6vw,34px)!important;line-height:1.1!important;
+  margin:15px 0!important;letter-spacing:-.052em!important;color:var(--noir-text)!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet p{
+  font-size:13px!important;line-height:1.53!important;color:var(--noir-muted)!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet .auth-help{
+  font-size:12px!important;line-height:1.55!important;
+  margin-top:12px!important;color:var(--noir-muted)!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet .sheet-actions{
+  display:grid!important;gap:10px!important;margin:20px 0 0!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet .sheet-actions button{
+  min-height:52px!important;border-radius:16px!important;
+  font-size:14px!important;font-weight:650!important;
+  background:var(--noir-raised)!important;color:var(--noir-text)!important;
+  box-shadow:none!important;padding:14px 18px!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet .sheet-actions button.accent{
+  color:#fff!important;
+  border-color:transparent!important;
+  background:linear-gradient(120deg,#ad3040,#ff6558)!important;
+}
+#vetogram.vetogram-noir body.veto-sheet-open #sheet input{
+  min-height:51px!important;font-size:16px!important;
+  color:var(--noir-text)!important;border:1px solid var(--noir-border)!important;
+  background:var(--noir-surface)!important;border-radius:16px!important;
+}
+/* Country picker is intentionally part of the account sheet: changing a
+   calling code never requests or silently retries an MTProto login code. */
+#vetogram.vetogram-noir #sheet .veto-country-trigger {
+  display:flex!important;align-items:center;min-height:52px!important;
+  width:100%;margin:8px 0 10px;padding:11px 14px;
+  border-radius:16px;border:1px solid var(--noir-border);
+  background:var(--noir-surface);color:var(--noir-text);
+  text-align:start;font-size:14px;font-weight:700;cursor:pointer;
+}
+#vetogram.vetogram-noir #sheet .veto-country-trigger[aria-expanded="true"]{
+  border-color:var(--noir-coral)!important;
+}
+#vetogram.vetogram-noir #sheet .veto-country-picker{
+  margin:0 0 12px;padding:13px;border:1px solid var(--noir-border);
+  background:var(--noir-surface);border-radius:17px;
+}
+#vetogram.vetogram-noir #sheet .veto-country-picker label{
+  display:block;margin:0 0 8px;color:var(--noir-text);font-size:12px;
+}
+#vetogram.vetogram-noir #sheet .veto-country-picker input{
+  min-height:48px!important;width:100%!important;padding:11px 12px!important;
+}
+#vetogram.vetogram-noir #sheet .veto-country-options{
+  display:grid;gap:3px;overflow-y:auto;max-height:min(34dvh,270px);
+  overscroll-behavior:contain;margin-top:10px;
+}
+#vetogram.vetogram-noir #sheet .veto-country-option{
+  display:flex;align-items:center;gap:13px;width:100%;min-height:45px;
+  border:0;border-radius:10px;padding:8px 11px;text-align:left;
+  background:transparent;color:var(--noir-text);font-size:15px;
+}
+#vetogram.vetogram-noir #sheet .veto-country-option strong {
+  font-size:13px;font-weight:600;flex:1;
+}
+#vetogram.vetogram-noir #sheet .veto-country-option small {
+  color:var(--noir-muted);font-size:12px;font-variant-numeric:tabular-nums;
+}
+#vetogram.vetogram-noir #sheet .veto-country-option:is(:hover,:focus-visible),
+#vetogram.vetogram-noir #sheet .veto-country-option[aria-selected="true"]{
+  background:color-mix(in srgb,var(--noir-coral) 12%,transparent);
+}
+#vetogram.vetogram-noir #sheet .veto-country-picker p{
+  font-size:11px!important;line-height:1.4!important;
+}
+#vetogram.vetogram-noir #sheet .veto-country-empty{padding:12px!important}
+#vetogram.vetogram-noir #sheet .veto-login-stage{
+  display:flex;gap:5px;flex-wrap:wrap;margin:15px 0!important;
+}
+#vetogram.vetogram-noir #sheet .veto-login-stage span{
+  min-height:34px;display:inline-flex;align-items:center;
+  padding:5px 9px!important;font-size:11px!important;
+  border:1px solid var(--noir-border);border-radius:11px!important;
+}
+/* The folded-phone layout retains tappable tabs; system keyboard consumes the
+   remaining viewport instead of being trapped behind app navigation. */
+@media(max-width:359px){
+  #vetogram.vetogram-noir .veto-reborn-navigation .nav-item small{font-size:10px!important}
+  #vetogram.vetogram-noir body.veto-sheet-open #sheet {padding-inline:15px!important}
+  #vetogram.vetogram-noir .veto-reborn-navigation .nav-item{padding-inline:2px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #vetogram.vetogram-noir #sheet .veto-country-option{transition:none!important}
+}
