@@ -565,3 +565,26 @@ dialog.v4-message-actions::backdrop{
   .v4-message-actions-grid button:active{transform:none}
   #vetogram.vetogram-noir .veto-mirror-bubble.v4-message-selected .veto-mirror-bubble-inner{transition:none}
 }
+
+/* Preserve vertical scrolling while detecting a deliberate right swipe for reply. */
+#vetogram.vetogram-noir #telegramThreadMessages [data-mirror-message-id]{
+  touch-action:pan-y pinch-zoom;
+}
+html#vetogram[data-veto-theme="pearl"] dialog.v4-message-actions,
+html#vetogram[data-veto-theme="linen"] dialog.v4-message-actions{
+  color:#14213a;background:#fff;border-color:#c7d1e1;
+}
+html#vetogram[data-veto-theme="pearl"] .v4-message-excerpt,
+html#vetogram[data-veto-theme="linen"] .v4-message-excerpt{
+  background:#edf1fa;color:#34435c;
+}
+html#vetogram[data-veto-theme="pearl"] .v4-message-close,
+html#vetogram[data-veto-theme="linen"] .v4-message-close,
+html#vetogram[data-veto-theme="pearl"] .v4-message-actions-grid button,
+html#vetogram[data-veto-theme="linen"] .v4-message-actions-grid button{
+  background:#f3f5fa;color:#14213a;border-color:#c7d1e1;
+}
+html#vetogram[data-veto-theme="pearl"] .v4-message-feedback,
+html#vetogram[data-veto-theme="linen"] .v4-message-feedback{
+  color:#52617b;
+}
