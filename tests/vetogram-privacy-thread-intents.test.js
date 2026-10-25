@@ -93,7 +93,7 @@ test('pagination deduplicates message IDs without losing active thread',async()=
   assert.equal(s.renders.at(-1).options.preserveScroll,true);
 });
 test('late edit history, media and background refresh are guarded',()=>{
-  assert.match(src,/const intent=privacyState.archiveThreadEpoch;[\s\S]*setTimeout\(\(\s*=>\s*\{/);
+  assert.match(src,/const intent=privacyState.archiveThreadEpoch;[\s\S]*setTimeout\(\(\)\s*=>\s*\{/);
   assert.match(src,/String\(privacyState\.activeThread\?\.thread\?\.chatId\)!==String\(chatId\)/);
   assert.match(src,/const blob = await response\.blob\(\);[\s\S]*intent!==privacyState\.archiveThreadEpoch/);
   assert.match(src,/privacyState\.refreshInFlight=true/);
