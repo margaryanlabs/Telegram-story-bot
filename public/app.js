@@ -452,9 +452,10 @@
       return false;
     if(portalLink){
       const url=new URL(String(portalLink));
-      if(url.origin!==window.location.origin || url.pathname!=='/portal.html' ||
+      if(String(portalLink).length>1900 || url.origin!==window.location.origin ||
+         url.pathname!=='/portal.html' || url.search || url.username || url.password ||
          !/^#p=[A-Za-z0-9_-]{1,5000}$/.test(url.hash))
-        throw Error('Portal-ссылка недействительна. Проверь редактор Story.');
+        throw Error('Portal-ссылка недействительна или слишком длинная (до 1900 символов). Уменьши описание Portal.');
       composerPortalHandoff={url:url.toString(),signed,
         generation:composerGeneration,draftId:String(draftId||'')};
     }
@@ -3506,7 +3507,9 @@
        !composerPendingFileName||composerPendingFileName!=='vetogram-story.jpg')return;
     try{
       const url=new URL(String(candidate.url||''));
-      if(url.origin!==window.location.origin || url.pathname!=='/portal.html' ||
+      if(String(candidate.url||'').length>1900 ||
+         url.origin!==window.location.origin || url.pathname!=='/portal.html' ||
+         url.search || url.username || url.password ||
          !/^#p=[A-Za-z0-9_-]{1,5000}$/.test(url.hash))return;
       composerPortalHandoff={
         url:url.toString(),signed,generation:composerGeneration,
