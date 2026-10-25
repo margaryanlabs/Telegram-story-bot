@@ -922,6 +922,7 @@
       if (!quiet) toast('Архив Vetogram настройки сохранены');
       return true;
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return false;
       privacyState.settings = previous;
       render();
       toast(error.message);
@@ -1331,6 +1332,7 @@
         </div>
       `);
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       toast(error.message);
       if (button) {
         button.disabled = false;
@@ -1429,6 +1431,7 @@
       if (result.enabled === false) { businessUnavailableSheet(); return; }
       renderBusinessWizardPicker(result);
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       openSheet(`
         <span class="kicker">Vetogram · ПОДКЛЮЧЕНИЕ</span><h2>Нужно подключить свой Telegram</h2>
         <p>${escapeHtml(error.message)}</p>
@@ -1592,6 +1595,7 @@
       if(!response.ok||!data.ok)throw new Error(data.error||'Media Vault недоступен');
       return data;
     }catch(error){
+      assertOwner(lease);
       if(error?.name==='AbortError')throw new Error('Telegram отвечает слишком долго. Попробуй ещё раз.');
       throw error;
     }finally{clearTimeout(timeout);}
@@ -1618,6 +1622,7 @@
         </div>
       `);
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       openSheet(`
         <span class="kicker">Vetogram MEDIA VAULT</span><h2>Не удалось проверить</h2>
         <p>${escapeHtml(error.message)}</p>
@@ -1643,6 +1648,7 @@
       `);
       if(data.recovered>0){toast('Media Vault сохранил '+data.recovered+' файлов');await refresh({silent:true});}
     } catch(error){
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       toast(error.message);
       if(button){button.disabled=false;button.textContent='Повторить попытку';}
     }
@@ -1666,6 +1672,7 @@
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось сохранить переписку');
       return data;
     } catch (error) {
+      assertOwner(lease);
       if (error?.name === 'AbortError') throw new Error('Telegram отвечает слишком долго. Повтори попытку.');
       throw error;
     } finally { clearTimeout(timeout); }
@@ -1747,6 +1754,7 @@
         </div>
       `);
     } catch(error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       openSheet(`
         <span class="kicker">Vetogram · HISTORY</span><h2>Нужно подключение Telegram</h2>
         <p>${escapeHtml(error.message)}</p>
@@ -1759,6 +1767,7 @@
   }
   async function runAllBackupQueue() {
     if (allBackup.running || allBackup.index>=allBackup.total) return;
+    const lease=ownerLease();
     allBackup.running=true;allBackup.stop=false;
     renderAllBackupProgress();
     let error='';
@@ -1771,6 +1780,7 @@
           offset:allBackup.index,mediaEnabled:false,
           retentionConsent:allBackup.longRetention,
         });
+        assertOwner(lease);
         const oldIndex=allBackup.index;
         allBackup.index=Number(data.nextOffset||oldIndex);
         saveAllBackupIndex();
@@ -1783,8 +1793,12 @@
         if (title) title.textContent=allBackup.index+' / '+allBackup.total;
         if (body) body.textContent='личных чатов добавлено в очередь';
         if(data.warning){error=data.warning;break;}
-      } catch(e){error=e.message;break;}
+      } catch(e){
+        if(e?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
+        error=e.message;break;
+      }
     }
+    if(lease.epoch!==privacyState.ownerEpoch){resetPrivacyOwner();return;}
     allBackup.running=false;
     renderAllBackupProgress({error});
   }
@@ -1942,6 +1956,7 @@
   }
 
   async function runBackupPage(button, offsetId = 0) {
+    const lease=ownerLease();
     const backup = privacyState.backup;
     const chat = backup.selected;
     if (backup.running || !chat) return;
@@ -1958,6 +1973,7 @@
           notifyCompletion:backup.notifyCompletion,
           includeMedia:backup.mediaEnabled === true,
         });
+        assertOwner(lease);
         pages += 1;
         backup.totalSaved += Number(data.saved || 0);
         backup.totalMedia += Number(data.mediaSaved || 0);
@@ -1990,6 +2006,7 @@
       await refresh({silent:true});
     } catch (error) {
       backup.running = false;
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       renderBackupProgress({error:error.message});
       toast(error.message);
     } finally {
