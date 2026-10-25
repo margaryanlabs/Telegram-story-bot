@@ -1825,3 +1825,42 @@ body.veto-chat-thread #telegramMirror.thread-mode
     animation:none!important;transition:none!important;transform:none!important;
   }
 }
+
+
+/* VETOGRAM 4.2 · real cross-screen mic/keyboard interaction states.
+ * Permission request is neutral; only actual active recording uses the
+ * existing live-state treatment. Keyboard geometry belongs to active screen.
+ */
+.screen[data-screen="voice"] .veto-voice-monitor-top strong.is-requesting-mic{
+  color:var(--ct-muted,#c7d5e6);
+  font-weight:750;
+}
+.screen[data-screen="voice"] #voiceMicButton[aria-busy="true"]{
+  cursor:progress;
+  opacity:.62;
+  box-shadow:none;
+}
+.screen[data-screen="voice"] #voiceMicStop[aria-label="Отменить запрос доступа к микрофону"]{
+  min-height:46px;
+  border-color:rgba(240,180,169,.36);
+  background:var(--ct-elev,rgba(158,178,208,.13));
+  color:var(--ct-text,#f0f4fa);
+  opacity:1;
+}
+.screen[data-screen="voice"] #voiceMicStop:focus-visible,
+.screen[data-screen="voice"] #voiceMicButton:focus-visible{
+  outline:2px solid var(--vg34-focus,#ffb59d);
+  outline-offset:3px;
+}
+@media(max-width:480px){
+  .screen[data-screen="voice"] :is(#voiceMicButton,#voiceMicStop){
+    min-height:48px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .screen[data-screen="voice"] :is(#voiceMicButton,#voiceMicStop){
+    animation:none!important;
+    transition:none!important;
+    transform:none!important;
+  }
+}
