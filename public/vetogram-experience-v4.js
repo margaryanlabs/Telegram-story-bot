@@ -101,6 +101,16 @@
     title:'Подключение аналитики', description:'Разрешения и подробности',
     className:'v4-viewers-setup'});
 
+  // Analytics keeps verified metrics/timelines in view; exports are secondary.
+  progressive({scope:'analytics', selector:'.evidence-export-card',
+    title:'Экспорт аналитики', description:'Файл CSV по запросу',
+    className:'v4-analytics-export'});
+
+  // Relay power/status stay visible; technical facts are disclosed only when needed.
+  progressive({scope:'relay', selector:'.relay-consumer-facts',
+    title:'Как работает Relay', description:'Резервный доступ и ограничения',
+    className:'v4-relay-facts'});
+
   // Sticker creation: show the actual input and editable stage instead of an introductory landing.
   progressive({scope:'studio', selector:'.studio-hero',
     title:'Как создаются стикеры', description:'Процесс и возможности',
