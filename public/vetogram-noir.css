@@ -10,9 +10,20 @@
   --noir-safe-top:max(env(safe-area-inset-top,0px),var(--tg-content-safe-area-inset-top,0px));
   --noir-bottom-space:calc(var(--noir-nav-height) + var(--noir-action-height) + var(--noir-safe-bottom) + 28px);
 }
-html[data-veto-theme="pearl"],html[data-veto-theme="linen"] {
+html[data-veto-theme="pearl"] {
   --noir-bg:#f3f5fa;--noir-surface:#fff;--noir-raised:#e8edf7;
-  --noir-on-accent:#ffffff;--noir-border:#c7d1e1;--noir-text:#14213a;--noir-muted:#52617b;--noir-coral:#b72d50;--noir-ai:#5d52bb;
+  --noir-on-accent:#fff;--noir-border:#c7d1e1;--noir-text:#14213a;
+  --noir-muted:#52617b;--noir-coral:#b72d50;--noir-ai:#5d52bb;
+}
+html[data-veto-theme="linen"] {
+  --noir-bg:#f4f0e9;--noir-surface:#fffbf5;--noir-raised:#ede5da;
+  --noir-on-accent:#fff;--noir-border:#cbbdae;--noir-text:#322b26;
+  --noir-muted:#5f574d;--noir-coral:#963c4a;--noir-ai:#4c4a91;
+}
+html[data-veto-theme="slate"] {
+  --noir-bg:#172535;--noir-surface:#223548;--noir-raised:#2c4258;
+  --noir-on-accent:#172535;--noir-border:#435e74;--noir-text:#f0f4fa;
+  --noir-muted:#b7cada;--noir-coral:#ff99a7;--noir-ai:#b5a6ff;
 }
 html#vetogram.vetogram-noir {color-scheme:dark;scroll-padding-block:76px var(--noir-bottom-space);background:var(--noir-bg)}
 html#vetogram.vetogram-noir[data-veto-theme="pearl"],html#vetogram.vetogram-noir[data-veto-theme="linen"]{color-scheme:light}
@@ -1614,5 +1625,29 @@ html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen
   }
   #vetogram.vetogram-noir [data-screen="voice"] .veto-voice-signal{
     forced-color-adjust:auto;
+  }
+}
+
+
+/* V4.10: dedicated immersive messenger width independent of dashboard.
+   Chat body is the product; dashboard gutters must not narrow it. */
+html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread) .app-shell{
+  width:100%!important;max-width:760px!important;
+  padding:0 12px var(--noir-bottom-space)!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-thread .app-shell{
+  width:100%!important;max-width:none!important;
+  padding:0!important;height:100dvh!important;overflow:hidden!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-thread #telegramMirror{
+  width:100%;height:100dvh;min-height:0!important;
+  overflow:hidden!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-active .veto-messenger-title{
+  min-width:0;
+}
+@media(max-width:420px){
+  html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread) .app-shell{
+    padding-inline:8px!important;
   }
 }
