@@ -110,6 +110,30 @@
   let composerBusy = false;
   let composerGeneration = 0;
   let composerOwner = '';
+  let composerPendingFileName = '';
+  let composerPortalHandoff = null;
+  // A public Portal link is not part of the caption: Telegram's Story link
+  // area exists only for Business Bot API + standard audience.
+  function syncComposerPortal(){
+    const panel=$('storyPortalHandoff'),consent=$('storyPortalConfirm');
+    if(!panel||!consent)return;
+    const current=Boolean(composerPortalHandoff &&
+      composerPortalHandoff.generation===composerGeneration &&
+      composerPortalHandoff.signed===String(tg?.initData||''));
+    panel.hidden=!current;
+    if(!current)consent.checked=false;
+    if(current){
+      let host='Portal';
+      try{host=new URL(composerPortalHandoff.url).host;}catch{}
+      $('storyPortalLinkHost').textContent=
+        'Публичная ссылка · '+host+' · требуется отдельное подтверждение';
+    }
+  }
+  function clearComposerPortal(){
+    composerPortalHandoff=null;
+    if($('storyPortalConfirm'))$('storyPortalConfirm').checked=false;
+    syncComposerPortal();
+  }
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -308,7 +332,9 @@
     composerDataUrl = '';
     composerNonce = '';
     composerOwner = '';
+    composerPendingFileName = '';
     composerBusy = false;
+    clearComposerPortal();
     if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl = '';
     $('storyFileInput').value = '';
@@ -328,6 +354,16 @@
     if (!file || state.processing) return;
     const generation = ++composerGeneration;
     const signedOwner = String(tg?.initData || '');
+    // Replacing the photo must never retain an earlier prepared Portal,
+    // nonce, image or preview (even while compression is still running).
+    clearComposerPortal();
+    composerPendingFileName=String(file.name||'');
+    composerFile=null;composerDataUrl='';composerOwner='';composerNonce='';
+    if(composerPreviewUrl)URL.revokeObjectURL(composerPreviewUrl);
+    composerPreviewUrl='';
+    $('mediaPreviewImage').removeAttribute('src');
+    $('mediaPreview').hidden=true;
+    $('pickStoryMedia').hidden=false;
     const isCurrent = () => generation === composerGeneration &&
       signedOwner === String(tg?.initData || '');
 
@@ -341,6 +377,7 @@
       if (!isCurrent()) return;
       composerFile = file;
       composerOwner = signedOwner;
+      syncComposerPortal();
       composerDataUrl = prepared.dataUrl;
       composerNonce = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
@@ -390,6 +427,22 @@
       $('storyFileInput').click();
       return;
     }
+    const attachPortal=Boolean(composerPortalHandoff &&
+      composerPortalHandoff.generation===composerGeneration &&
+      composerPortalHandoff.signed===signedOwner &&
+      $('storyPortalConfirm')?.checked);
+    if(attachPortal && state.audience!=='standard'){
+      showToast('Portal доступен только для стандартной аудитории Telegram Business. Измени аудиторию или отключи ссылку.');
+      return;
+    }
+    if(attachPortal && state.businessPermissions?.stories!==true){
+      showToast('Для кликабельного Portal требуется разрешение Stories в Telegram Business. Отключи ссылку или настрой Business.');
+      return;
+    }
+    // Separate confirmation for a publicly clickable Telegram link area.
+    if(attachPortal && !window.confirm(
+      'Прикрепить публичную ссылку Portal к истории? Её содержимое увидят все, у кого есть ссылка. Это действие не отменяется удалением черновика.'
+    ))return;
 
     if (state.audience === 'selected' && !state.selected?.length) {
       showToast('Добавь людей для режима «Выбранные»');
@@ -411,6 +464,7 @@
         imageBase64: composerDataUrl,
         caption: $('storyCaption').value || '',
         nonce: composerNonce || (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
+        ...(attachPortal?{portalLink:composerPortalHandoff.url}:{}),
       });
 
       const publishedStoryId = String(result.storyId || '');
@@ -418,6 +472,10 @@
         const error = new Error('Telegram не подтвердил ID новой Story. Проверь свои Stories перед повторной публикацией.');
         error.uncertain = true;
         throw error;
+      }
+      if(attachPortal && result.portalAreaAttached!==true){
+        // Story may be live already: NEVER auto-retry to attach a missing link.
+        showToast('Story опубликована, но прикрепление Portal не подтверждено. Проверь историю в Telegram.');
       }
       selectedViewerStory = publishedStoryId;
       const publishedAudience = audienceLabel(result.verifiedAudience || state.audience);
@@ -436,6 +494,9 @@
         <span class="kicker">Опубликовано</span>
         <h2>Story #${escapeHtml(publishedStoryId)} уже в Telegram</h2>
         <p>Аудитория: ${escapeHtml(publishedAudience)} · Аналитика аудитории ${viewerState.session?.connected ? 'подхватит просмотры автоматически' : 'можно подключить позже'}.</p>
+        ${attachPortal ? `<p>${result.portalAreaAttached===true
+          ?'Кликабельный Portal подтверждён Telegram Bot API.'
+          :'Portal не подтверждён. Проверь Story в Telegram, не отправляй повторно.'}</p>` : ''}
         <div class="sheet-list">
           <div class="sheet-item"><strong>Публикация</strong><span>Готово · ${escapeHtml(result.transport || 'Telegram')}</span></div>
           <div class="sheet-item"><strong>Защита</strong><span>${state.protect ? 'Включена' : 'Выключена'}</span></div>
@@ -3365,6 +3426,30 @@
 
   $('storyFileInput').addEventListener('change', event => {
     prepareComposerFile(event.target.files?.[0] || null);
+  });
+  // Story Engine emits this only after the real file input change. Bind the
+  // opt-in link to that exact pending JPEG generation and signed user.
+  window.addEventListener('veto:portal-handoff',()=>{
+    const candidate=window.VetoTelegramPortalHandoff;
+    window.VetoTelegramPortalHandoff=null;
+    clearComposerPortal();
+    const signed=String(tg?.initData||'');
+    const user=String(tg?.initDataUnsafe?.user?.id||'');
+    if(!signed||!/^\d{1,20}$/.test(user)||
+       !candidate||String(candidate.ownerId)!==user ||
+       !composerPendingFileName||composerPendingFileName!=='vetogram-story.jpg')return;
+    try{
+      const url=new URL(String(candidate.url||''));
+      if(url.origin!==window.location.origin || url.pathname!=='/portal.html' ||
+         !/^#p=[A-Za-z0-9_-]{1,5000}$/.test(url.hash))return;
+      composerPortalHandoff={
+        url:url.toString(),signed,generation:composerGeneration,
+        draftId:String(candidate.draftId||'')
+      };
+      syncComposerPortal();
+    }catch{
+      // Invalid/foreign links cannot be silently added to a Story.
+    }
   });
 
   $('removeStoryMedia').addEventListener('click', () => resetComposer({ keepCaption: true }));
