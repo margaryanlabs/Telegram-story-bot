@@ -67,7 +67,7 @@ test('AI UI requires reviewed send, and Story Engine is review-only',()=>{
 test('AI screen wiring and syntax check integrated into project',()=>{
   const app=read('public/app.js'),pkg=JSON.parse(read('package.json'));
   assert.match(app,/ai: 'ai'/);
-  assert.match(app,/ai:'home'/);
+  assert.match(app,/ai:'ai'/);
   assert.match(pkg.scripts.check,/node --check public\/vetogram-ai\.js/);
 });
 
