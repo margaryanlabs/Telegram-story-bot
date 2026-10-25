@@ -121,6 +121,8 @@ test('duplicate delete delivery is acknowledged without a second Anti-Delete ale
   const repeat=await f.call(payload);
   assert.equal(repeat.code,200);
   assert.equal(repeat.payload.privacy_delete_captured,false);
+  assert.equal(repeat.payload.retained,false);
+  assert.equal(repeat.payload.retention_enabled,true);
   assert.equal(repeat.payload.alert_sent,false);
   assert.equal(f.calls.deletions.length,2);
   assert.deepEqual(f.calls.alerts.map(x=>x.kind),['delete']);
@@ -133,7 +135,8 @@ test('delete event with no known archived messages cannot claim copy preserved o
   const unknown=await f.call(payload);
   assert.equal(unknown.payload.affected,0);
   assert.equal(unknown.payload.alert_sent,false);
-  assert.equal(unknown.payload.retained,true); // Feature enabled != event captured.
+  assert.equal(unknown.payload.retained,false);
+  assert.equal(unknown.payload.retention_enabled,true); // Feature enabled != event captured.
 });
 test('unsigned webhook never reaches Telegram or the private archive',async()=>{
   const f=fixture(true);
