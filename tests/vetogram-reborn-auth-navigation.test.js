@@ -87,3 +87,36 @@ test('open sheet hides bottom navigation and restores it after close',()=>{
   assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.match(css,/max-height:min\(90dvh/);
 });
+
+test('country dropdown preserves national digits when +7 is shared by Russia and Kazakhstan',()=>{
+  const handlers=()=>({
+    events:{},children:[],hidden:true,value:'',dataset:{},
+    addEventListener(name,callback){this.events[name]=callback},
+    setAttribute(){},replaceChildren(){this.children=[]},
+    append(...elements){this.children.push(...elements)},
+    contains(target){return this.children.includes(target)},
+    closest(){return this},focus(){},setSelectionRange(){},dispatchEvent(event){
+      this.events[event.type]?.(event);
+    }
+  });
+  const phone=handlers(),trigger=handlers(),panel=handlers(),search=handlers(),options=handlers();
+  phone.value='+7 912 123 45 67';
+  const ids={viewerPhone:phone,viewerCountryTrigger:trigger,
+    viewerCountryPicker:panel,viewerCountrySearch:search,viewerCountryOptions:options};
+  const document={
+    getElementById:id=>ids[id]||null,
+    addEventListener(){},
+    createElement:()=>handlers()
+  };
+  const window={};
+  runInNewContext(picker,{window,document,AbortController,Event:class {constructor(type){this.type=type}},
+    Object,Set,String,Number});
+  window.VetogramCountryPicker.mount();
+  trigger.events.click();
+  const kazakhstan=options.children.find(button=>button.dataset.iso==='KZ');
+  assert.ok(kazakhstan,'Kazakhstan must be selectable as a distinct +7 country');
+  options.events.click({target:kazakhstan});
+  assert.equal(phone.value,'+7  912 123 45 67'.replace('  ',' '));
+  assert.equal(panel.hidden,true);
+  assert.match(trigger.textContent,/Казахстан/);
+});
