@@ -26,10 +26,14 @@ function updateHistoryButtons(){
   if($('seRedo'))$('seRedo').disabled=!history.canRedo;
 }
 function recordEdit(id){
+  // Consecutive keystrokes share one undo checkpoint, but each keystroke
+  // still invalidates any IndexedDB save snapshot currently in flight.
   if(historyGroup!==id){checkpoint();historyGroup=id;}
+  state.revision++;
 }
 function checkpoint(){
   if(editorIdentity()!==state.owner)return;
+  state.revision++;
   history.checkpoint(state.draft,state.owner);
   queueMicrotask(updateHistoryButtons);
 }
@@ -71,13 +75,18 @@ async function transact(mode,fn){
 const storageKey=d=>d.ownerId+':'+d.id;
 async function saveDraft(){
   requireOwner();
+  const reference=state.draft,revision=state.revision;
   const d=normalizeDraft({...state.draft,updatedAt:Date.now()},state.owner);
   if(d.imageDataUrl.length>12000000)throw Error('Изображение слишком большое для черновика');
   await transact('readwrite',st=>st.put({key:storageKey(d),ownerId:d.ownerId,draft:d}));
-  // IndexedDB is async: a changed Telegram identity must never restore an old
-  // owner's image or draft on the newly active screen.
+  // IndexedDB is async: a changed owner, draft or edits after the button
+  // press may never be overwritten with an older saved snapshot.
   if(state.owner!==d.ownerId || owner()!==d.ownerId || state.draft?.id!==d.id)return;
-  state.draft=d;notify('Черновик сохранён только на этом устройстве');
+  const hasNewEdits=state.draft!==reference || state.revision!==revision;
+  if(!hasNewEdits)state.draft.updatedAt=d.updatedAt;
+  notify(hasNewEdits
+    ?'Версия на момент нажатия сохранена. Есть более новые правки — нажми «Сохранить» ещё раз.'
+    :'Черновик сохранён только на этом устройстве');
   await listDrafts();
 }
 async function listDrafts(){
@@ -340,7 +349,11 @@ function loadImageForDraft(){
     }
     state.image=i;state.imageSrc=url;paint(canvas);
   };
-  i.onerror=()=>notify('Не удалось загрузить изображение',true);
+  i.onerror=()=>{
+    if(state.owner!==sourceOwner || owner()!==sourceOwner ||
+       state.draft?.id!==sourceId || state.draft?.imageDataUrl!==url)return;
+    notify('Не удалось загрузить изображение',true);
+  };
   i.src=url;
 }
 function discardAiUndo(){
@@ -378,6 +391,7 @@ function undoAiStorySuggestion(){
   return true;
 }
 function applyDraft(d,preserveHistory=false){
+  state.revision++;
   if(!preserveHistory){soundtrack?.clear();history.reset(state.owner||'0',d.id);historyGroup='';}
   $('sePreviewDialog')?.close?.();
   discardAiUndo();
