@@ -170,7 +170,9 @@
   }
 
   async function loadTelegramConnection({ silent = true } = {}) {
+    resetPrivacyOwner();
     if (!tg?.initData || navigator.onLine === false) return privacyState.connection;
+    const lease=ownerLease();
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
@@ -178,12 +180,13 @@
       const response = await fetch('/api/miniapp', {
         method: 'GET',
         headers: {
-          'x-telegram-init-data': tg.initData,
+          'x-telegram-init-data': lease.signed,
           'content-type': 'application/json',
         },
         signal: controller.signal,
       });
       const data = await response.json().catch(() => ({}));
+      assertOwner(lease);
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось проверить Telegram');
 
       privacyState.connection = {
@@ -197,6 +200,10 @@
       render();
       return privacyState.connection;
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED' ||
+          lease.epoch!==privacyState.ownerEpoch){
+        resetPrivacyOwner();return privacyState.connection;
+      }
       privacyState.connection = {
         ...privacyState.connection,
         loaded: true,
@@ -211,7 +218,7 @@
   }
 
   async function request(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const lease=ownerLease();
 
     const retryable = !action || action === 'list_messages' || action === 'versions';
     const attempts = retryable ? 2 : 1;
@@ -219,6 +226,7 @@
 
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       if (attempt) await new Promise(resolve => setTimeout(resolve, 550));
+      assertOwner(lease); // Never retry an old owner's request as a new owner.
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 16000);
@@ -226,13 +234,14 @@
         const response = await fetch('/api/privacy', {
           method: action ? 'POST' : 'GET',
           headers: {
-            'x-telegram-init-data': tg.initData,
+            'x-telegram-init-data': lease.signed,
             'content-type': 'application/json',
           },
           body: action ? JSON.stringify({ action, ...payload }) : undefined,
           signal: controller.signal,
         });
         const data = await response.json().catch(() => ({}));
+        assertOwner(lease);
         if (response.ok && data.ok) return data;
 
         const error = new Error(data.error || 'Vetogram Inbox временно недоступен');
@@ -240,6 +249,7 @@
         lastError = error;
         if (!retryable || ![502,503,504].includes(response.status) || attempt === attempts - 1) throw error;
       } catch (error) {
+        assertOwner(lease); // Also reject stale network failures/abort callbacks.
         const normalized = error?.name === 'AbortError'
           ? new Error('Vetogram Inbox отвечает слишком долго')
           : error;
@@ -837,13 +847,16 @@
   }
 
   async function refresh({ silent = false, background = false } = {}) {
+    resetPrivacyOwner();
     if (!tg?.initData || privacyState.loading || navigator.onLine === false) return;
+    const lease=ownerLease();
     privacyState.loading = !background;
     if (!background) render();
 
     const before = privacyState.lastTotalMessages || threadTotals().messages;
     try {
       const data = await request();
+      assertOwner(lease);
       privacyState.degraded = Boolean(data.degraded);
       if (data.settings) {
         privacyState.settings = { ...privacyState.settings, ...data.settings };
@@ -865,9 +878,16 @@
         haptic('soft');
       }
     } catch (error) {
-      privacyState.degraded = true;
-      if (!silent) toast(error.message);
+      if(error?.code!=='VETO_PRIVACY_OWNER_CHANGED' &&
+         lease.epoch===privacyState.ownerEpoch){
+        privacyState.degraded = true;
+        if (!silent) toast(error.message);
+      }
     } finally {
+      if(lease.epoch!==privacyState.ownerEpoch ||
+         lease.signed!==String(tg?.initData||'')){
+        resetPrivacyOwner();
+      }else{
       privacyState.loading = false;
       render();
       if (privacyState.filter === 'deleted') {
@@ -875,6 +895,7 @@
       }
       if (!privacyState.deepLinkHandled && ghostDeepLink.chatId) {
         setTimeout(() => maybeOpenGhostDeepLink(), 60);
+      }
       }
     }
   }
