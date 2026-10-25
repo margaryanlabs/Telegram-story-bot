@@ -177,7 +177,7 @@ test('actual producer and UI require separate consent and use new native bridge'
   assert.doesNotMatch(html,/id="storyPortalConfirm" type="checkbox" checked/);
   assert.match(app,/attachPortal\?\{portalLink:composerPortalHandoff\.url\}:\{\}/);
   assert.match(app,/result\.portalAreaAttached===true/);
-  assert.match(html,/app\.js\?v=20261025-v4-6/);
+  assert.match(html,/app\.js\?v=20261026-v4-7/);
   assert.match(html,/id="storySourceStatus" hidden/);
   assert.match(app,/if\(sourceBadge\)sourceBadge\.hidden=!\(composerFromStudio/);
   assert.match(noir,/V4\.6 Publisher source provenance/);
