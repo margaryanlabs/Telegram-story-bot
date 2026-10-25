@@ -87,3 +87,27 @@ test('selected-message AI draft retains user confirmation and owner checks',()=>
   assert.match(actions,/VetoTelegramPrepareSelectedAiReply/);
   assert.match(actions,/buttons\.ai\.disabled/);
 });
+
+test('tapping canvas text opens the existing inspector without treating a pinch as a tap',()=>{
+  const engine=read('story-engine.js'),experience=read('vetogram-experience-v4.js');
+  assert.match(engine,/pendingHeadingTap/);
+  assert.match(engine,/vetogram:story-heading-selected/);
+  assert.match(engine,/vetogram:story-layer-selected/);
+  assert.match(engine,/pendingTextTap=null;pendingHeadingTap=null/);
+  assert.match(engine,/activePhotoGesture/);
+  assert.match(experience,/addEventListener\('vetogram:story-heading-selected'/);
+  assert.match(experience,/byId\('seTabText'\)\?\.click\(\)/);
+  assert.match(experience,/byId\('seTitle'\)\?\.focus/);
+  assert.match(experience,/byId\('seTabLayers'\)\?\.click\(\)/);
+  assert.match(experience,/v4-studio-tools-open/);
+});
+
+test('V4 chat menu keeps real search/back controls outside secondary actions',()=>{
+  const html=read('studio.html'),client=read('vetogram-experience-v4.js');
+  assert.match(html,/id="telegramThreadBack"/);
+  assert.match(html,/id="telegramThreadSearchToggle"/);
+  assert.match(client,/threadBar\.append\(menu\)/);
+  assert.match(client,/tools\.append\(button\)/);
+  assert.match(client,/threadView\.hidden/);
+  assert.doesNotMatch(client,/window\.VetoTelegramPrepareSelectedAiReply\s*=\s*async/);
+});
