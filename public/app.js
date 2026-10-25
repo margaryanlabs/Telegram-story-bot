@@ -2126,22 +2126,22 @@
 
   function businessConnectionHelpSheet() {
     openSheet(`
-      <span class="kicker">НЕОБЯЗАТЕЛЬНО · PRIVACY</span>
-      <h2>Подключи архив личных чатов</h2>
-      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Premium не требуется.</p>
+      <span class="kicker">VETOGRAM · BUSINESS</span>
+      <h2>Anti-Delete подключается в Vetogram</h2>
+      <p>Сначала авторизуй свой Telegram через номер или QR. Для Anti-Delete разреши только нужные личные чаты и подтверди доступ отдельно от Stories.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
-        <div class="sheet-item"><strong>2 · Добавь Vetogram</strong><span>Технический username сейчас @Vetotg_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
-        <div class="sheet-item"><strong>3 · Выбери личные чаты</strong><span>Включи «Только выбранные чаты» и права для сообщений; остальные разрешения не нужны для архива. Секретные чаты не поддерживаются.</span></div>
-        <div class="sheet-item"><strong>4 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
+        <div class="sheet-item"><strong>Основной аккаунт</strong><span>Живые чаты, Story Studio и AI без Telegram Business-бота.</span></div>
+        <div class="sheet-item"><strong>Дополнительная защита</strong><span>Бот может получать новые события из выбранных тобой личных чатов после разрешения. Старые удаления не восстановятся.</span></div>
+        <div class="sheet-item"><strong>Без лишнего доступа</strong><span>Нет автоматического разрешения на все личные чаты или управления Stories. Отзыв Business-подключения доступен отдельно.</span></div>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="go-ghost">Открыть настройку чатов</button>
-        <button data-sheet-action="account-connect">Подключить обычный аккаунт</button>
+        <button class="accent" data-sheet-action="go-ghost">Открыть настройку Anti-Delete</button>
+        <button data-sheet-action="account-connect">Подключить основной аккаунт</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
   }
+
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
