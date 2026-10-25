@@ -65,7 +65,9 @@
     excerpt.textContent='';
     feedback.textContent='';
   }
-  menu.addEventListener('close',clearSelection);
+  // Native dialog close events can arrive after a new selection was opened.
+  // Do not clear the newly selected bubble if that newer dialog is open.
+  menu.addEventListener('close',()=>{if(!menu.open)clearSelection();});
   function dismiss(){ if(menu.open)menu.close(); else clearSelection(); }
   close.addEventListener('click',dismiss);
   menu.addEventListener('click',event=>{if(event.target===menu)dismiss();});
@@ -179,18 +181,25 @@
     if(activePress?.timer)clearTimeout(activePress.timer);
     activePress=null;
   }
+  function cancelSwipe(){
+    if(activeSwipe?.bubble){
+      activeSwipe.bubble.classList.remove('v4-swiping-reply');
+      activeSwipe.bubble.style.removeProperty('--v4-swipe-reply-x');
+    }
+    activeSwipe=null;
+  }
   host.addEventListener('pointerdown',event=>{
-    cancelPress();
+    cancelPress();cancelSwipe();
     if(event.pointerType==='mouse' && event.button!==0)return;
     activePointers.add(event.pointerId);
     // A two-finger scroll/pinch must never become a swipe-to-reply.
-    if(activePointers.size>1){activeSwipe=null;return;}
+    if(activePointers.size>1){cancelSwipe();return;}
     const bubble=findBubble(event);
     if(!bubble||!visibleOwner())return;
     const signed=String(tg?.initData||''), boundThread=threadKey();
     activePress={bubble,pointerId:event.pointerId,x:event.clientX,y:event.clientY,
       timer:setTimeout(()=>{
-        activePress=null;activeSwipe=null;
+        activePress=null;cancelSwipe();
         if(activePointers.size===1 && signed===String(tg?.initData||'') &&
           boundThread===threadKey() && visibleOwner() && bubble.isConnected)
           openFor(bubble);
@@ -201,9 +210,23 @@
     }
   });
   host.addEventListener('pointermove',event=>{
-    if(activeSwipe?.pointerId===event.pointerId &&
-        (Math.abs(event.clientY-activeSwipe.y)>18 ||
-         event.clientX-activeSwipe.x < -14)) activeSwipe=null;
+    if(activeSwipe?.pointerId===event.pointerId){
+      const dx=event.clientX-activeSwipe.x,dy=event.clientY-activeSwipe.y;
+      if(Math.abs(dy)>18 || dx < -14 ||
+         activeSwipe.signed!==String(tg?.initData||'') ||
+         activeSwipe.threadKey!==threadKey() || !visibleOwner()){
+        cancelSwipe();
+      }else if(dx>14 && activePointers.size===1){
+        // Direct touch feedback from the actual bubble, with no saved data,
+        // network call or trigger before a completed deliberate gesture.
+        activeSwipe.bubble.classList.add('v4-swiping-reply');
+        activeSwipe.bubble.style.setProperty('--v4-swipe-reply-x',
+          Math.min(42,Math.round(dx*.45))+'px');
+      }else{
+        activeSwipe.bubble.classList.remove('v4-swiping-reply');
+        activeSwipe.bubble.style.removeProperty('--v4-swipe-reply-x');
+      }
+    }
     if(!activePress||activePress.pointerId!==event.pointerId)return;
     if(Math.hypot(event.clientX-activePress.x,event.clientY-activePress.y)>12)cancelPress();
   },{passive:true});
@@ -223,15 +246,15 @@
       gesture.bubble.querySelector('[data-mirror-reply]')?.click();
       try{tg?.HapticFeedback?.selectionChanged?.();}catch{}
     }
-    activeSwipe=null;cancelPress();
+    cancelSwipe();cancelPress();
   },{passive:true});
   for(const event of ['pointercancel','pointerleave']){
     host.addEventListener(event,eventData=>{
       activePointers.delete(eventData.pointerId);
-      cancelPress();activeSwipe=null;
+      cancelPress();cancelSwipe();
     },{passive:true});
   }
-  host.addEventListener('scroll',()=>{cancelPress();activeSwipe=null;},{passive:true});
+  host.addEventListener('scroll',()=>{cancelPress();cancelSwipe();},{passive:true});
   host.addEventListener('contextmenu',event=>{
     const bubble=findBubble(event);
     if(!bubble||!visibleOwner())return;
