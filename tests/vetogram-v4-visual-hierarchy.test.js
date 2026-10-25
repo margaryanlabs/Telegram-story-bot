@@ -129,3 +129,10 @@ test('Fold landscape and system contrast modes retain tappable actual controls',
   assert.match(css,/@media\(forced-colors:active\)/);
   assert.match(css,/\.bottom-nav \.nav-item\.active/);
 });
+
+test('immersive chats outrank shared Noir header and nav display declarations',()=>{
+  assert.match(css,/html#vetogram\.vetogram-noir body\.veto-chat-active \.topbar\{\s*display:none!important/);
+  assert.match(css,/html#vetogram\.vetogram-noir body\.veto-chat-thread \.bottom-nav,\s*html#vetogram\.vetogram-noir body\.veto-chat-thread #actionDock\{\s*display:none!important/);
+  assert.match(css,/#vetogram\.vetogram-noir \.bottom-nav\{[^}]*display:grid!important/);
+  assert.match(css,/#vetogram\.vetogram-noir \.topbar\{[^}]*display:flex!important/);
+});
