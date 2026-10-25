@@ -52,6 +52,22 @@ export function normalizeStoryLayers(value){
 }
 export const MAX_TITLE=90,MAX_SUBTITLE=180,MAX_PORTAL_TEXT=300;
 export const templateById=id=>STORY_TEMPLATES.find(t=>t.id===id)||STORY_TEMPLATES[0];
+
+/**
+ * Change the visual style without destroying a user's own words or private draft media.
+ * Only default template copy is refreshed; an edited heading, caption and text
+ * position survive the switch. Returns a new object for undo/redo checkpoints.
+ */
+export function applyStoryTemplate(draft,nextId){
+  if(!draft||typeof draft!=='object')throw Error('STORY_DRAFT_REQUIRED');
+  const previous=templateById(draft.templateId),next=templateById(nextId);
+  const wasDefaultPosition=Number(draft.textY)===(previous.layout==='center'?388:675);
+  return {...draft,templateId:next.id,
+    title:draft.title===previous.title?next.title:draft.title,
+    subtitle:draft.subtitle===previous.subtitle?next.subtitle:draft.subtitle,
+    textY:wasDefaultPosition?(next.layout==='center'?388:675):draft.textY};
+}
+
 export function trimText(text,limit=180){return String(text??'').normalize('NFC').replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,limit);}
 export function safeExternalUrl(text) {
   try{
