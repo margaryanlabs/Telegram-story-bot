@@ -161,3 +161,20 @@ This release-blocking UI privacy fix is implemented inside the same actual Mini 
 - The committed Privacy script was fetched and passed JavaScript parsing. An isolated live V8 harness exercised stale responses and account-switch logic; **6/6 targeted guard assertions passed**. This is NOT a successful full Node suite, browser/WebView E2E, live Telegram verification or proof of backend event delivery.
 - Required later: physical Android/Fold/iOS user-switch during active Media Vault, archive thread, background queue, Business sheet and slow/offline response; confirmed new-owner contents and backdrop clean-up; full `npm test`, `npm run vercel-build` and final preflight.
 - Neon schema v5 was already migrated; **do not repeat migration**. Keep `VETOGRAM_UNIFIED_ONBOARDING` OFF and PR Draft. No production deploy, merge or paid CI runner run in this stage.
+
+## V4.4 Privacy ↔ Chats archive navigation and verified Vault UI (25 October 2026)
+
+### Fixes in the real Mini App
+- Archive thread now has a monotonic `archiveThreadEpoch`. Rapidly opening thread A then B cannot display A's delayed result over B. Explicit sheet close or Telegram native Back invalidates outstanding archive responses, and Privacy owner switching invalidates both epochs.
+- The "Load older messages" request checks both the captured epoch **and active thread object**, so a delayed page cannot merge the wrong chat or overwrite a switched archive sheet. Buttons are restored only while still current; a stale request cannot unlock an unrelated new pagination request.
+- Edit History dialogs and archived photo/video/audio blobs check their originating owner + thread before rendering; stale media never gets a fresh object URL attached to the wrong sheet. Delayed deep-link Edit History launch is also gated by the active archived thread.
+- Parallel foreground/background refreshes of the same archive are serialized with an in-memory `refreshInFlight` flag. Switching owner clears that flag before the new owner's own refresh.
+- The user-facing Canvas Noir Vault now displays a compact **real verified-sync timestamp** and a functional "↻ Обновить" action. The action invokes existing owner-scoped archive refresh and Telegram connection check; it does not create fake activity or claim Anti-Delete delivery.
+- On initial HTML paint, the five Vault metrics use **—** instead of fabricated `0`. Numbers appear only after a successful, non-degraded owner-matched archive fetch. The refreshed status identifies empty/offline/pending/unverified states precisely.
+- Native archive message modal polished for 320–430px mobile and Fold: sticky identity header, visible close/refresh touch targets, horizontal scrollable filters, readable message bubbles, reduced-motion handling. Existing real buttons and handlers stay intact. Header refresh now has an accessible label.
+
+### Verification
+- Added `tests/vetogram-privacy-thread-intents.test.js` running real production handlers in an isolated Node VM with controlled promises. Test scenarios: out-of-order A→B, pagination after chat switch, close while fetch in flight, duplicate-ID pagination preserving offset, plus UI/source acceptance.
+- The 6 targeted test cases were executed in an isolated JavaScript harness over freshly fetched GitHub sources; **6/6 passed**. Privacy JS and V4 presentation script parsed; the canonical CSS braces remain balanced.
+- No complete npm test suite, WebView rendering screenshots, iOS/Android/Fold gestures, actual Telegram signed-owner use, live archive status check, or webhook/Business integration test was executed in this slice. Do not claim those as complete.
+- A final build and real-device QA are still release blockers, along with the entire other V4 module stack. **No deploy / merge / Neon migration / production flag change.**
