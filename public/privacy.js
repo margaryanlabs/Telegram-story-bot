@@ -286,7 +286,7 @@
         <div class="ghost-delete-proof ready">
           <span>↶</span>
           <div>
-            <strong>Настоящее удаление уже поймано</strong>
+            <strong>Есть сохранённое реальное удаление</strong>
             <small>${escapeHtml(diagnostics.liveDeleteProof.chatTitle || 'Telegram chat')} · ${escapeHtml(formatWhen(diagnostics.liveDeleteProof.deletedAt))}</small>
           </div>
         </div>
@@ -303,7 +303,7 @@
 
     openSheet(`
       <span class="kicker">GHOST DIAGNOSTICS</span>
-      <h2>${diagnostics.status === 'ready' ? 'Privacy готова' : 'Нужна проверка'}</h2>
+      <h2>${diagnostics.status === 'ready' ? 'Настройка и удаление подтверждены' : diagnostics.status === 'configured' ? 'Подключено · ждём тест удаления' : 'Нужна проверка'}</h2>
       <p>Проверяю не UI, а реальную цепочку Anti-Delete. Каждый статус ниже приходит с backend/Telegram.</p>
       <div class="ghost-diagnostic-list">${rows}</div>
       ${liveProof}
@@ -326,7 +326,7 @@
       privacyState.diagnostics = data.diagnostics || null;
       renderDiagnosticsSheet(privacyState.diagnostics);
       if (!silent) {
-        toast(privacyState.diagnostics?.status === 'ready' ? 'Privacy pipeline готов' : 'Есть пункты, которые требуют внимания');
+        toast(privacyState.diagnostics?.status === 'ready' ? 'Есть реальное подтверждение удаления' : privacyState.diagnostics?.status === 'configured' ? 'Подключение настроено. Проверь реальное удаление в разрешённом чате.' : 'Есть пункты, которые требуют внимания');
       }
     } catch (error) {
       if (!silent) toast(error.message);
