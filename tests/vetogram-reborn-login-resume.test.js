@@ -86,3 +86,13 @@ test('server respects unfinished challenges and never silently sends another cod
   assert.match(send,/retryAfterSeconds/);
   assert.match(send,/config\.newConnectionsReady !== true/);
 });
+
+test('a resumed code challenge never invents Telegram-app delivery metadata',()=>{
+  // A failed encrypted-state read does not reveal the original channel.
+  assert.ok(api.includes("?.delivery || 'unknown' : null"));
+  assert.ok(app.includes("let viewerCodeDelivery='unknown'"));
+  assert.ok(app.includes("viewerCodeDelivery=delivery || 'unknown'"));
+  assert.ok(app.includes("viewerCodeSheet(pending.delivery || 'unknown')"));
+  assert.ok(app.includes("stage:'code', delivery:data.delivery || 'unknown'"));
+  assert.doesNotMatch(app,/pending\.delivery \|\| 'telegram_app'/);
+});
