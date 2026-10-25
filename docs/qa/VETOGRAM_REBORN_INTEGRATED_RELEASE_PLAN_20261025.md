@@ -74,3 +74,13 @@ Personal-account management is now distinct from Business onboarding; opening pr
 - Removed both automatic Business permission wizard invocations after successful OTP and after successful Telegram 2FA. Privacy/Anti-Delete is a separate opt-in, never an implicit sequel to personal account login.
 - Removed duplicate close buttons from the Business confirmation outcome; preserved the warning when archive settings were not saved.
 - Targeted four login-recovery checks passed in an isolated JavaScript harness. No claims of Telegram code delivery or full npm test completion.
+
+## Webhook reliability continuation — 25 October 2026
+
+- **Anti-Delete idempotency:** `api/webhook-v7.js` now sends a delete alert only when the archive actually reports newly deleted, retained messages (`result.events.length>0`). Before this, Telegram's normal retry of the same update could notify the user again merely because `deleted.message_ids` was nonempty.
+- **Honest delete API:** per-update `retained` is true only when a previously stored message was newly tombstoned, while `retention_enabled` separately describes the user's configuration. A replay does not pretend to create a new deletion.
+- **Known limitation:** for a deletion whose message was never captured in the archive, the Bot API deletion event alone does not establish the missing message's contents. Without a separate idempotent unknown-deletion ledger, this code deliberately does not emit an unprovable/repeated "copy preserved" notification. This behavior needs clear product communication.
+- **Story webhook hardening:** in `api/webhook-v8.js`, optional Bot API progress messages, picker state reads, picker cleanup and final status edits now fail independently; errors are logged, not allowed to prevent the actual `webhook-v7` publisher from running or override its response.
+- Mocked regression suite exercised the production webhook handler code: **6/6** Business lifecycle and duplicate-delete cases, **5/5** optional-v8-UI-failure cases passed in an isolated JS harness. No Bot API credentials, user messages, Neon writes, Vercel build or deployment were used.
+- Full repository Node suite, Telegram signed connection + webhook live-delivery QA, actual publication and mobile design verification remain release gates. Business flag stays disabled until those gates are complete.
+
