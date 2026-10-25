@@ -199,6 +199,8 @@
     if (button) { button.textContent = '⤢ На весь экран'; button.setAttribute('aria-pressed','false'); }
     const tools = byId('v4CanvasTools');
     if (tools) { tools.setAttribute('aria-expanded','false'); tools.hidden = true; }
+    const closeInspector = byId('v4InspectorClose');
+    if (closeInspector) closeInspector.hidden = true;
     if (lastFocus?.isConnected) lastFocus.focus({preventScroll:true});
     announce('Обычный режим редактора');
   };
@@ -220,6 +222,20 @@
     toolButton.setAttribute('aria-controls', controls.id);
     toolButton.hidden = true;
     canvasActions.append(focusButton, toolButton);
+    const inspectorClose=document.createElement('button');
+    inspectorClose.id='v4InspectorClose';
+    inspectorClose.type='button';
+    inspectorClose.className='se-button v4-inspector-close';
+    inspectorClose.textContent='× Закрыть инструменты';
+    inspectorClose.hidden=true;
+    controls.prepend(inspectorClose);
+    const closeTools=()=>{
+      engine.classList.remove('v4-studio-tools-open');
+      toolButton.setAttribute('aria-expanded','false');
+      inspectorClose.hidden=true;
+      toolButton.focus({preventScroll:true});
+    };
+    inspectorClose.addEventListener('click',closeTools);
     function enterFocus() {
       lastFocus = document.activeElement;
       focusActive = true;
@@ -235,10 +251,10 @@
     toolButton.addEventListener('click', () => {
       const open = engine.classList.toggle('v4-studio-tools-open');
       toolButton.setAttribute('aria-expanded',String(open));
+      inspectorClose.hidden=!open;
       if (open) {
-        const selected = $('[role="tab"][aria-selected="true"]', controls);
-        selected?.scrollIntoView({block:'nearest',behavior:reduced()?'auto':'smooth'});
-      } else focusButton.focus({preventScroll:true});
+        inspectorClose.focus({preventScroll:true});
+      } else toolButton.focus({preventScroll:true});
     });
     // While choosing a tool, keep the canvas visible; closing tools returns to creation.
     controls.addEventListener('click', event => {
@@ -249,7 +265,8 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && focusActive) {
         event.preventDefault();
-        exitFocus();
+        if (engine.classList.contains('v4-studio-tools-open')) closeTools();
+        else exitFocus();
       }
     });
     window.addEventListener('veto:screen-changed', event => {
