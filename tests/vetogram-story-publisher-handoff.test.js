@@ -10,6 +10,7 @@ import {readFileSync} from 'node:fs';
 const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
 const html=readFileSync(new URL('../public/studio.html',import.meta.url),'utf8');
 const engine=readFileSync(new URL('../public/story-engine.js',import.meta.url),'utf8');
+const ai=readFileSync(new URL('../public/vetogram-ai.js',import.meta.url),'utf8');
 
 const composerVars=app.slice(app.indexOf('  let composerFile ='),
   app.indexOf('  let viewerState ='));
@@ -163,6 +164,7 @@ test('foreign owner, portal host and invalid links are rejected',async()=>{
     /Portal-ссылка/
   );
   assert.equal(s.getState().composerPortalHandoff,null);
+  assert.equal(s.getState().composerDataUrl,'');
 });
 test('actual producer and UI require separate consent and use new native bridge',()=>{
   assert.match(engine,/await window\.VetoTelegramStageStory\(/);
@@ -173,4 +175,26 @@ test('actual producer and UI require separate consent and use new native bridge'
   assert.match(app,/attachPortal\?\{portalLink:composerPortalHandoff\.url\}:\{\}/);
   assert.match(app,/result\.portalAreaAttached===true/);
   assert.match(html,/app\.js\?v=20261025-v4-6/);
+  assert.match(ai,/signed:scope\.identity,story,replacePortal,portal/);
+  assert.match(engine,/const requestedSigned=String\(requested\?\.signed\|\|''\)/);
 });
+test('AI → Story editor rejects sessionless and stale-session apply requests',async()=>{
+  const handler=engine.slice(engine.indexOf('async function applyAiStorySuggestion(requested){'),
+    engine.indexOf('window.VetoTelegramApplyAiStory='));
+  assert.match(handler,/requestedSigned!==String\(tg\?\.initData\|\|''\)/);
+  let ready;
+  const tg={initData:'signed-owner-a'};
+  const ctx=vm.createContext({
+    tg,state:{owner:'111',draft:{id:'story-1'}},owner:()=> '111',
+    init:()=>new Promise(resolve=>{ready=resolve}),
+  });
+  new vm.Script(handler+'\nthis.exports={applyAiStorySuggestion};').runInContext(ctx);
+  const sample={ownerId:'111',story:{title:'Новый текст',subtitle:'Проверка'}};
+  assert.equal(await ctx.exports.applyAiStorySuggestion(sample),false);
+  assert.equal(await ctx.exports.applyAiStorySuggestion({...sample,signed:'signed-B'}),false);
+  const pending=ctx.exports.applyAiStorySuggestion({...sample,signed:'signed-owner-a'});
+  tg.initData='signed-owner-b';
+  ready();
+  assert.equal(await pending,false);
+});
+
