@@ -382,6 +382,10 @@
     viewerAuthBusy=false;
     viewerQrAbortController?.abort();
     viewerQrAbortController=null;
+    // The sheet is shared with Privacy, account connection and MFA.
+    // Never leave the previous owner's private dialog visible or restore
+    // keyboard focus to its old, now-detached input element.
+    if(!$('sheet')?.hidden)closeSheet({restoreFocus:false});
     viewerState={
       configured:null,backgroundReady:false,newConnectionsReady:null,
       secureSessionCrypto:null,cipherVersion:null,storageStatus:null,
@@ -1811,6 +1815,9 @@
       showToast('Раздел временно недоступен');
       return false;
     }
+    // Navigation must not leave a previous account, conversation or
+    // authorization sheet floating over a different active screen.
+    if(target!==currentScreen && !$('sheet')?.hidden)closeSheet({restoreFocus:false});
     currentScreen = target;
     document.querySelectorAll('.screen').forEach(screen => {
       const active = screen === activeScreen;
@@ -1868,7 +1875,7 @@
     try { tg?.BackButton?.show(); } catch {}
   }
 
-  function closeSheet() {
+  function closeSheet({restoreFocus=true}={}) {
     if (viewerQrAbortController) {
       viewerQrAbortController.abort();
       viewerQrAbortController = null;
@@ -1879,7 +1886,7 @@
     document.body.classList.remove('veto-sheet-open');
     const returnTo=sheetReturnFocus;
     sheetReturnFocus=null;
-    if (returnTo?.isConnected && typeof returnTo.focus==='function')
+    if (restoreFocus && returnTo?.isConnected && typeof returnTo.focus==='function')
       returnTo.focus({preventScroll:true});
     try { tg?.BackButton?.hide(); } catch {}
     window.dispatchEvent(new CustomEvent('vetogram:modal-closed'));
@@ -2506,7 +2513,12 @@
   }
 
   async function runViewerAuthAction(button, task) {
+    ensureComposerIdentity();
     if (viewerAuthBusy) return;
+    const ownerEpoch=viewerOwnerEpoch;
+    const signed=String(tg?.initData||'');
+    const isCurrent=()=>ownerEpoch===viewerOwnerEpoch &&
+      signed===String(tg?.initData||'');
     viewerAuthBusy = true;
     const previous = button?.textContent || '';
     if (button) {
@@ -2516,10 +2528,11 @@
     try {
       await task();
     } catch (error) {
-      showViewerAuthError(error);
+      if(isCurrent() && !$('sheet')?.hidden)showViewerAuthError(error);
     } finally {
+      if(!isCurrent())return;
       viewerAuthBusy = false;
-      if (button?.isConnected) {
+      if (button?.isConnected && !$('sheet')?.hidden) {
         button.disabled = false;
         button.textContent = previous;
       }
