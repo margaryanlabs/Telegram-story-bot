@@ -189,3 +189,28 @@ test('leaving fullscreen Telegram chat restores navigation classes on other scre
   assert.match(theme,/window\.addEventListener\('veto:screen-changed',\(\)=>dock\(\)\)/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
+
+
+test('backgrounding Mini App stops both pending grants and active microphone',()=>{
+  const start=source.indexOf("  document.addEventListener('visibilitychange',()=>{");
+  const end=source.indexOf("  window.addEventListener('pagehide'",start);
+  assert.ok(start>=0&&end>start);
+  const events={},messages=[],state={active:false,micStarting:true};
+  let hidden=false,stops=0;
+  const document={get hidden(){return hidden},
+    addEventListener:(name,fn)=>{events[name]=fn}};
+  vm.runInNewContext(source.slice(start,end),{
+    state,document,stopMic(){stops++;state.active=false;state.micStarting=false},
+    toast:msg=>messages.push(msg)
+  });
+  assert.ok(events.visibilitychange);
+  events.visibilitychange();assert.equal(stops,0,'visible app keeps user-owned mic state');
+  hidden=true;events.visibilitychange();
+  assert.equal(stops,1);
+  assert.equal(state.micStarting,false);
+  assert.match(messages[0],/сворачивании Vetogram/);
+  hidden=false;state.active=true;
+  events.visibilitychange();assert.equal(stops,1);
+  hidden=true;events.visibilitychange();
+  assert.equal(stops,2);assert.equal(state.active,false);
+});
