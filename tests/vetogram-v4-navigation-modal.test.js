@@ -71,6 +71,7 @@ function harness(){
   });
   const ctx=vm.createContext({
     ...variables,document,window,tg,
+    SCREEN_ALIASES:{telegram:'telegram',ai:'ai',home:'home',publish:'publish',privacy:'privacy'},
     $:node,sessionStorage:{getItem:()=>'',removeItem(){}},
     DRAFT_CAPTION_KEY:'story-pilot:draft-caption',
     captionDraftStorageKey:()=>null,
