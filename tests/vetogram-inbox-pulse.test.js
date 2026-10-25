@@ -70,12 +70,12 @@ test('UI renders real counters, marks selected filter and wipes old owner counts
   assert.equal(f.get('vgxInboxPulse').hidden,false);
   assert.equal(f.get('vgxPulseUnread').textContent,'1');
   assert.equal(f.get('vgxPulseFocus').textContent,'1');
-  assert.equal(f.get('vgxPulseDeleted').textContent,'4');
+  assert.equal(f.get('vgxPulseSaved').textContent,'1');
   assert.equal(f.tiles[1].attributes['aria-pressed'],'true');
   f.state.chats=[]; // Signed identity switched: resetOwner clears all chat data.
   f.fn();
   assert.equal(f.get('vgxInboxPulse').hidden,true);
-  assert.equal(f.get('vgxPulseDeleted').textContent,'0');
+  assert.equal(f.get('vgxPulseSaved').textContent,'0');
   assert.equal(f.get('vgxPulseFocus').textContent,'0');
   assert.equal(f.get('vgxPulseUnread').textContent,'0');
 });
@@ -93,7 +93,7 @@ test('all Pulse actions reuse existing chat filters, not synthetic requests',()=
 });
 test('premium Pulse is accessible, compact, responsive and not exposed when hidden',()=>{
   assert.match(html,/id="vgxInboxPulse"[^>]*hidden/);
-  assert.match(html,/Только загруженные чаты/);
+  assert.match(html,/Из загруженных чатов/);
   assert.match(css,/#telegramMirror \.vgx-inbox-pulse\[hidden\]\{display:none!important\}/);
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css,/@media\(max-width:365px\)/);
