@@ -31,7 +31,7 @@ test('no blanket Business rights or all-private scope are preselected',()=>{
   assert.doesNotMatch(privacy,/storiesConsent:[^\n]+\|\| \(businessWizardSnapshot/);
 });
 
-test('Business permission UI never applies a stale owner's consent or chat list',()=>{
+test('Business permission UI never reuses a prior account consent or chat list',()=>{
   assert.match(privacy,/const signedOwner=String\(tg\.initData\)/);
   assert.match(privacy,/String\(tg\?\.initData\|\|''\)!==signedOwner/);
   assert.match(privacy,/businessWizardSignedOwner/);
