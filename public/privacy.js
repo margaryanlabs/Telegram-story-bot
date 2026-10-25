@@ -1307,7 +1307,7 @@
         ${existing?`<p>Текущий охват: ${recipients.excludeSelected?'все, кроме: ':''}${escapeHtml(currentScope)}; выбранных: ${Number(recipients.selectedCount||0)}, исключений: ${Number(recipients.excludeUsers?.length||0)}.</p><p>Сохранённые права: ${escapeHtml(currentRights)}.</p>`:''}
         <p>${result.rights?.manageStories ? '✓ Управление Stories разрешено' : '○ Управление Stories требует согласия'}</p>
         <p>Ghost View доступен через существующую сессию. Live-проверка в этом мастере не выполнена.</p>
-        <p>Anti-Delete: ${d.antiDelete ? 'включён' : 'не подтверждён'} · тестовое удаление: не проверено.</p>
+        <p>Anti-Delete: ${d.antiDelete ? 'настройка сохранена; получение удалений ещё не проверено' : 'не настроен'}.</p>
         <p>Серверное подключение: ${escapeHtml(d.botApi || 'не проверено')}</p>
       </div>
       <fieldset class="veto-business-scope-options">
