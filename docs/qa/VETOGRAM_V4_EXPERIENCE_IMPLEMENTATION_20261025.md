@@ -89,3 +89,24 @@ This is an engineering continuation of the **selected Canvas Noir direction**, n
 **Still pending:** native `npm run vercel-build` / full Node suite in checkout, full browser/WebView interaction tests, drag/swipe conflict checks on physical Android/iPhone/Fold, codec/auth/AI/publish E2E. The mocked checks are **not** production validation.
 
 **The project is not complete.** This PR is an integration slice, not a claim that all screens were structurally rebuilt or every previously listed product feature is ready.
+
+
+## Continuation: live gesture-first interactions (25 October)
+
+A further V4 slice was committed on the same draft branch after the earlier source-audit checks:
+
+- **Actual Story canvas** now supports two-touch, bounded photo pinch-to-zoom and center-pan (local, owner-bound, draft-bound) with one checkpoint per gesture. Double-click/double-tap toggles photo zoom. Pure geometry is defined in `story-engine-core.js`; moving a photo changes the same normalized draft fields as the legacy slider controls. The local Story preview gallery avoids expensive repaint during active two-finger manipulation.
+- **Canvas contextual editing** detects a deliberate, motion-limited tap on a selected text layer or on the authored headline. In fullscreen Canvas Noir it opens the *real* corresponding Layers or Text inspector. Actual layer dragging and two-finger image manipulation do not trigger the tap-to-edit action.
+- **Messenger header** reuses the same existing Back, avatar, title, Telegram link and search; secondary AI reply / task extraction / refresh controls are relocated into an accessible native disclosure. No button IDs, sender checks or controller handlers were copied or bypassed.
+- **Exact-message AI drafts** are now prepared from the user-selected real incoming message (not implicitly the latest message). The messenger controller re-checks Telegram signed initData, owner, current thread and generation, rejects outbound/deleted/archived-only content, and requires an explicit confirmation before publishing a local draft event; actual provider request/sending remains under its separate consent gate. The V4 context menu invokes this existing new guarded controller.
+- **QA tests**: `tests/vetogram-v4-gestures.test.js` exercises bounded pinch geometry, canvas interaction wiring, thread-header hierarchy and selected-message AI consent. In an isolated connector-side JS test harness **8 of 8** checks passed. Four changed JavaScript sources passed parsing and source CSS brace balance passed.
+
+**Important:** these isolated checks are not a substitute for the repository's normal Node/Vercel builds, live browser screenshots or signed Telegram E2E. The PR remains a draft, and release/production stays untouched.
+
+### Remaining release risks
+
+- Confirm real mobile touch pointer capture, scroll vs. swipe and keyboard-driven inspector layout in a physical Telegram WebView.
+- Verify message-selection accessibility and owner switches after Telegram account reconnect; assert no AI prompt crosses accounts.
+- Validate media preview performance when switching ten templates with a high-resolution photo.
+- Run full `npm run vercel-build` and repository tests in a CI checkout, and update screenshots for all 13 routes.
+- Continue modularization beyond the existing 18 stylesheets and 2258-line main HTML. The present patch improves real interactions but does not claim that the entire V4 experience is complete.
