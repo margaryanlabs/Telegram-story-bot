@@ -1075,3 +1075,30 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet input{
     animation:none!important;
   }
 }
+
+/* V4.2 — physical swipe-to-reply feedback on the existing message DOM.
+   Never simulates message delivery; only previews the gesture in progress. */
+#vetogram.vetogram-noir #telegramThreadMessages .veto-mirror-bubble.v4-swiping-reply{
+  position:relative;
+}
+#vetogram.vetogram-noir #telegramThreadMessages .veto-mirror-bubble.v4-swiping-reply .veto-mirror-bubble-inner{
+  transform:translate3d(var(--v4-swipe-reply-x,0px),0,0);
+  transition:none!important;
+}
+#vetogram.vetogram-noir #telegramThreadMessages .veto-mirror-bubble.v4-swiping-reply::before{
+  content:"↩";
+  position:absolute;left:2px;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;width:32px;height:32px;
+  border-radius:50%;background:var(--noir-raised);color:var(--noir-coral);
+  border:1px solid var(--noir-border);
+  font-size:19px;pointer-events:none;
+}
+#vetogram.vetogram-noir #telegramThreadMessages [data-mirror-message-id]:focus-visible{
+  outline:2px solid var(--noir-coral)!important;outline-offset:2px;
+  border-radius:14px;
+}
+@media(prefers-reduced-motion:reduce){
+  #vetogram.vetogram-noir #telegramThreadMessages .veto-mirror-bubble.v4-swiping-reply .veto-mirror-bubble-inner{
+    transition:none!important;
+  }
+}
