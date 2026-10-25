@@ -5,7 +5,7 @@ import {showPortalPreview} from './story-portal-preview.js';
 import {makePublicPortalUrl} from './story-portal-share.js';
 import { STORY_TEMPLATES,PORTAL_TYPES,RETENTION_DAYS,templateById,
   trimText,safeExternalUrl,newStoryDraft,normalizeDraft,normalizePortal,
-  remixDraft,draftFromBrief,isExpired,PHOTO_EFFECTS,STORY_LAYER_STYLES,
+  remixDraft,draftFromBrief,isExpired,applyStoryTemplate,PHOTO_EFFECTS,STORY_LAYER_STYLES,
   normalizeStoryLayer,normalizeStoryLayers } from './story-engine-core.js';
 
 // VETO Story Engine lives inside the existing Telegram Mini App.
@@ -559,8 +559,11 @@ function setup(){
     b.setAttribute('aria-label',t.name+' · '+t.mood);b.setAttribute('aria-pressed','false');
     b.append(mark,type,title,small);
     b.addEventListener('click',()=>{
-      if(!state.draft)return;historyGroup='';checkpoint();state.draft.templateId=t.id;
-      state.draft.title=t.title;state.draft.subtitle=t.subtitle;render();
+      if(!state.draft||state.owner!==owner())return;
+      if(state.draft.templateId===t.id)return;
+      historyGroup='';checkpoint();
+      state.draft=applyStoryTemplate(state.draft,t.id);
+      render();notify('Оформление изменено — твой текст и фото сохранены');
     });
     holder.append(b);
   }
