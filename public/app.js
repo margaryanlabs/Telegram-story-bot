@@ -1581,7 +1581,7 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home', ai:'home', 'story-engine':'studio' };
+  const NAV_PARENT = {home:'telegram',chats:'privacy',telegram:'telegram',voice:'ai',archive:'publish',analytics:'ai',viewers:'publish',relay:'ai',ai:'ai',studio:'publish','story-engine':'publish'};
   function switchScreen(name) {
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
     if (composerOwner && composerOwner !== String(tg?.initData || '')) resetComposer();
@@ -1636,6 +1636,8 @@
     $('sheetContent').innerHTML = html;
     $('sheetBackdrop').hidden = false;
     $('sheet').hidden = false;
+    document.documentElement.classList.add('veto-sheet-open');
+    document.body.classList.add('veto-sheet-open');
     try { tg?.BackButton?.show(); } catch {}
   }
 
@@ -1646,6 +1648,8 @@
     }
     $('sheetBackdrop').hidden = true;
     $('sheet').hidden = true;
+    document.documentElement.classList.remove('veto-sheet-open');
+    document.body.classList.remove('veto-sheet-open');
     try { tg?.BackButton?.hide(); } catch {}
   }
 
@@ -2273,9 +2277,22 @@
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
-          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 / +374 / +971…" value="${escapeHtml(viewerPendingPhone)}" />
+          <button type="button" class="veto-country-trigger" id="viewerCountryTrigger"
+            aria-expanded="false" aria-haspopup="dialog" aria-controls="viewerCountryPicker">🌐 Выбрать страну</button>
+          <div class="veto-country-picker" id="viewerCountryPicker" role="dialog"
+            aria-label="Выбрать страну для номера Telegram" hidden>
+            <label for="viewerCountrySearch">Поиск по стране или коду</label>
+            <input id="viewerCountrySearch" type="search" autocomplete="off"
+              placeholder="Армения, Россия, +971…" aria-label="Поиск страны" />
+            <div id="viewerCountryOptions" class="veto-country-options" role="listbox"
+              aria-label="Страны и телефонные коды"></div>
+            <p>Страны с общим кодом, например +7, можно выбрать вручную. Отправку кода выполняет Telegram.</p>
+          </div>
+          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel"
+            aria-describedby="viewerPhoneHint" placeholder="+374 99 123 456"
+            value="${escapeHtml(viewerPendingPhone)}" />
         </div>
-        <div class="auth-help">Международный формат, начиная с +. Проверь официальный чат «Telegram» с синей галочкой во всех своих активных устройствах. SMS может не прийти — способ доставки выбирает Telegram.</div>
+        <div class="auth-help" id="viewerPhoneHint">Выбери страну или введи полный номер с +. Код отправляет Telegram, а не бот Vetogram. Его доставка в приложение или SMS зависит от Telegram.</div>
       </div>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
@@ -2284,6 +2301,7 @@
         <button data-sheet-action="viewer-back-setup">Назад</button>
       </div>
     `);
+    window.VetogramCountryPicker?.mount();
   }
 
   function viewerEmailSheet() {
@@ -2304,7 +2322,7 @@
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>${emailCode?'Введи код из email':'Теперь введи код из Telegram'}</h2>
-      <p>${emailCode ? 'Telegram отправил код на email для входа. Введи его здесь; код не сохраняется.' : reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'}${emailCode?'':' Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте Vetogram. SMS может не прийти. Возвращайся сюда без нового запроса.'}</p>
+      <p>${emailCode ? 'Telegram указал email как способ подтверждения. Введи код, если он пришёл; Vetogram не сохраняет код.' : reused ? 'Предыдущий запрос ещё действует: новый код не отправлялся.' : delivery === 'telegram_app' ? 'Telegram принял запрос и указал доставку кода в приложение. Получение кода на устройстве не подтверждено.' : 'Запрос принят Telegram; способ доставки выбирает сам Telegram. Фактическое получение кода ещё не подтверждено.'}${emailCode?'':' Проверь официальный чат «Telegram» на своих авторизованных устройствах. Не запрашивай повторно без необходимости.'}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2590,6 +2608,7 @@
   }
 
   document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
+  $('vetoNavHome')?.addEventListener('click',()=>switchScreen('home'));
 
   document.querySelectorAll('[data-open-screen]').forEach(button => {
     button.addEventListener('click', () => switchScreen(button.dataset.openScreen));
