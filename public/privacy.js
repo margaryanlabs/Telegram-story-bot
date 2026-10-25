@@ -881,8 +881,8 @@
     content.innerHTML = html;
     backdrop.hidden = false;
     sheet.hidden = false;
-    document.body.classList.add('veto-sheet-open');
-    document.documentElement.classList.add('veto-sheet-open');
+    document.body?.classList?.add('veto-sheet-open');
+    document.documentElement?.classList?.add('veto-sheet-open');
     try { tg?.BackButton?.show(); } catch {}
   }
 
@@ -895,8 +895,8 @@
     } else {
       if ($('sheetBackdrop')) $('sheetBackdrop').hidden = true;
       if ($('sheet')) $('sheet').hidden = true;
-      document.body.classList.remove('veto-sheet-open');
-      document.documentElement.classList.remove('veto-sheet-open');
+      document.body?.classList?.remove('veto-sheet-open');
+      document.documentElement?.classList?.remove('veto-sheet-open');
       try { tg?.BackButton?.hide(); } catch {}
     }
   }
