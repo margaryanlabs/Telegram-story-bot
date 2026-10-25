@@ -1090,8 +1090,11 @@ export default async function handler(req, res) {
         if (
           result?.retained
           && result?.settings?.notifyDeletes !== false
-          && Array.isArray(deleted?.message_ids)
-          && deleted.message_ids.length
+          // A replayed webhook has no newly tombstoned messages. Never
+          // notify again merely because the original update listed IDs.
+          // Missing uncaptured messages are not proof of a stored copy.
+          && Array.isArray(result?.events)
+          && result.events.length > 0
         ) {
           result.alertSent = await sendGhostDeleteAlert(
             token,
