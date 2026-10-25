@@ -10,6 +10,7 @@ const mtprotoOwner=read('lib/telegram-owner-runtime.js');
 const send=read('api/telegram-send.js');
 const compose=read('lib/telegram-chat-compose.js');
 const privacy=read('public/privacy.js');
+const html=read('public/studio.html');
 function section(source,open,close){
   const a=source.indexOf(open),b=source.indexOf(close,a+open.length);
   assert.ok(a>=0&&b>a,'Missing real code: '+open);
@@ -131,4 +132,20 @@ test('Telegram text sending still enforces real owner proof and nonce controls',
   assert.match(compose,/function validateSendNonce\(value\)/);
   assert.match(compose,/function makeRandomId\(ownerId, chatId, nonce\)/);
   assert.match(privacy,/scopeConsent:/);
+});
+
+
+test('backend returns explicit owner mismatch or unverifiable session, not fabricated Story result',()=>{
+  assert.match(server,/const ownerFailure = telegramOwnerError\(error\)/);
+  assert.match(server,/res\.status\(ownerFailure\?\.status \|\| 500\)/);
+  assert.match(server,/error: ownerFailure\?\.error \|\| friendlyPublishError\(description\)/);
+  assert.match(server,/uncertain: !ownerFailure/);
+  assert.match(mtprotoOwner,/status: 409/);
+  assert.match(mtprotoOwner,/status: 503/);
+});
+test('release uses latest static client assets and keeps security contracts on screen',()=>{
+  assert.match(html,/\/app\.js\?v=20261025-release-safety-44/);
+  assert.match(html,/\/privacy\.js\?v=20261025-release-proof-44/);
+  assert.match(ui,/Проверь свои Stories в Telegram перед новой попыткой/);
+  assert.match(privacy,/Подключено · ждём тест удаления/);
 });
