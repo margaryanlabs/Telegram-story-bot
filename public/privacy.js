@@ -1351,21 +1351,31 @@
       closeSheet();return;
     }
     const scope = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value;
-    const selected = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])];
-    const excluded = [...($('sheet')?.querySelectorAll('[data-business-excluded]:checked') || [])];
+
     const picker = $('sheet')?.querySelector('.veto-consent-chat-list');
     if (picker) picker.hidden = scope === 'preserve';
-    for (const el of $('sheet')?.querySelectorAll('[data-business-selected]') || []) el.disabled = scope !== 'selected-private';
+    for (const el of $('sheet')?.querySelectorAll('[data-business-selected]') || []) {
+      el.disabled = scope !== 'selected-private';
+      if (el.disabled) el.checked = false;
+    }
+    for (const el of $('sheet')?.querySelectorAll('[data-business-excluded]') || []) {
+      // Exclusions only make sense with a broad recipient scope. The selected
+      // list already defines its own exact boundary; 'preserve' is immutable.
+      el.disabled = scope === 'selected-private' || scope === 'preserve';
+      if (el.disabled) el.checked = false;
+    }
+    const effectiveSelected = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked')||[])];
+    const effectiveExcluded = [...($('sheet')?.querySelectorAll('[data-business-excluded]:checked')||[])];
     const fresh = businessWizardSnapshot?.state === 'none';
     // On an existing connection changing recipients is independent of requesting
     // new capabilities. Preserve Story rights and archive settings unless opted in.
     const existingScopeChange = businessWizardSnapshot?.state === 'storylab' && scope !== 'preserve';
     const featureConsent = (fresh && ($('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true)) || existingScopeChange || $('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true;
     const valid = $('businessWizardConsent')?.checked === true && scope &&
-      (scope !== 'selected-private' || (selected.length > 0 && selected.length <= 12)) && excluded.length <= 12 &&
-      !selected.some(el=>scope==='selected-private' && excluded.some(ex=>ex.value===el.value)) && featureConsent;
+      (scope !== 'selected-private' || (effectiveSelected.length > 0 && effectiveSelected.length <= 12)) && effectiveExcluded.length <= 12 &&
+      !effectiveSelected.some(el=>scope==='selected-private' && effectiveExcluded.some(ex=>ex.value===el.value)) && featureConsent;
     const count = $('businessWizardCount');
-    if (count) count.textContent = scope==='preserve'?'Сохраним текущие чаты, исключения и права.':`Выбрано: ${scope==='selected-private'?selected.length:'по охвату'} · исключений: ${excluded.length}/12`;
+    if (count) count.textContent = scope==='preserve'?'Сохраним текущие чаты, исключения и права.':`Выбрано: ${scope==='selected-private'?effectiveSelected.length:'по охвату'} · исключений: ${effectiveExcluded.length}/12`;
     const button = $('sheet')?.querySelector('[data-business-apply]');
     if (button) button.disabled = !valid;
   }
