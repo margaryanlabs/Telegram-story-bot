@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261024-cinematic-v1" />
   <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261024-v3-premium-deck" />
   <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261025-ui-fit-41" />
-  <link rel="stylesheet" href="/vetogram-noir.css?v=20261025-noir-2" />
+  <link rel="stylesheet" href="/vetogram-noir.css?v=20261025-noir-3" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -372,7 +372,7 @@
       <section class="veto-trust-card" id="vetoTrustCard">
         <div class="veto-trust-mark"><span>⌁</span><i></i></div>
         <div class="veto-trust-copy">
-          <span class="kicker">VETOGRAM PRIVACY PROMISE</span>
+          <span class="kicker">VETOGRAM · ПРИВАТНОСТЬ PROMISE</span>
           <strong>Переписка не превращается в рекламный профиль.</strong>
           <p>Доступ используется только для включённых функций. Что сохраняется, зачем и как отключить — можно проверить в один тап.</p>
         </div>
@@ -1178,7 +1178,7 @@
 
     <section class="screen" data-screen="privacy">
       <div class="page-head privacy-page-head">
-        <span class="kicker">VETOGRAM PRIVACY</span>
+        <span class="kicker">VETOGRAM · ПРИВАТНОСТЬ</span>
         <h1>Центр приватности</h1>
         <p>Удалённые сообщения, история изменений, умные входящие и медиаархив — с отдельными переключателями, прозрачным статусом доступа и понятным хранением данных.</p>
       </div>
@@ -1261,7 +1261,7 @@
         <button class="ghost-backup-cta" id="privacyBackupHistoryButton" type="button">Сохранить конкретный чат <span>→</span></button>
       </section>
       <section class="ghost-health-grid">
-        <article><span>Диалоги</span><strong id="privacyStatThreads">0</strong><small>в Vetogram Входящие</small></article>
+        <article><span>Диалоги</span><strong id="privacyStatThreads">0</strong><small>в сохранённых чатах</small></article>
         <article><span>Удалено</span><strong id="privacyStatDeleted">0</strong><small>сохранено</small></article>
         <article><span>Изменено</span><strong id="privacyStatEdited">0</strong><small>с историей</small></article>
         <article><span>Сообщения</span><strong id="privacyStatMessages">0</strong><small>в архиве</small></article>
@@ -1283,7 +1283,7 @@
         <button type="button" data-ghost-jump="deleted"><span>↶</span><strong>Удалённые</strong><small>Сразу к сохранённым удалениям</small></button>
         <button type="button" data-ghost-jump="edited"><span>≋</span><strong>Изменённые</strong><small>История правок по чатам</small></button>
         <button type="button" data-ghost-jump="media"><span>▣</span><strong>Медиаархив</strong><small>Сохранённые вложения</small></button>
-        <button type="button" data-ghost-jump="all"><span>☰</span><strong>Все чаты</strong><small>Полный Приватность Входящие</small></button>
+        <button type="button" data-ghost-jump="all"><span>☰</span><strong>Все чаты</strong><small>Все сохранённые чаты</small></button>
         <button type="button" data-open-screen="creator"><span>✦</span><strong>Студия стикеров</strong><small>Бренд-наборы · анимация</small></button>
         <button type="button" data-open-screen="publish"><span>＋</span><strong>Истории</strong><small>Публикация и точная аудитория</small></button>
       </section>
@@ -1333,22 +1333,22 @@
           </div>
           <div class="setting-row">
             <span class="setting-icon cyan">◉</span>
-            <span class="setting-copy"><strong>Vetogram Входящие</strong><small>Читать сохранённые копии без отметки о прочтении в Telegram.</small></span>
+            <span class="setting-copy"><strong>Сохранённые чаты</strong><small>Читать сохранённые копии без отметки о прочтении в Telegram.</small></span>
             <label class="switch"><input id="privacyGhostInboxSwitch" type="checkbox" /><span></span></label>
           </div>
           <div class="setting-row">
             <span class="setting-icon cyan">⌖</span>
-            <span class="setting-copy"><strong>Vetogram Focus</strong><small>Alert открывает точно нужный чат и удалённое/изменённое сообщение с контекстом.</small></span>
+            <span class="setting-copy"><strong>Точный переход</strong><small>Уведомление открывает точно нужный чат и удалённое/изменённое сообщение с контекстом.</small></span>
             <label class="switch"><input id="privacyGhostFocusSwitch" type="checkbox" checked /><span></span></label>
           </div>
           <div class="setting-row">
             <span class="setting-icon rose">⌁</span>
-            <span class="setting-copy"><strong>Удаления · уведомления</strong><small>Присылать Vetogram alert в чат бота, когда входящее сообщение удалили.</small></span>
+            <span class="setting-copy"><strong>Удаления · уведомления</strong><small>Присылать уведомление в чат бота, когда входящее сообщение удалили.</small></span>
             <label class="switch"><input id="privacyNotifyDeletesSwitch" type="checkbox" checked /><span></span></label>
           </div>
           <div class="setting-row">
             <span class="setting-icon violet">✎</span>
-            <span class="setting-copy"><strong>Изменения · уведомления</strong><small>Присылать alert, когда входящее сообщение изменили.</small></span>
+            <span class="setting-copy"><strong>Изменения · уведомления</strong><small>Присылать уведомление, когда входящее сообщение изменили.</small></span>
             <label class="switch"><input id="privacyNotifyEditsSwitch" type="checkbox" checked /><span></span></label>
           </div>
           <div class="setting-row ghost-notification-testing">
@@ -1371,8 +1371,8 @@
       </section>
 
       <section class="privacy-truth-card">
-        <div><strong>Отметки о прочтении</strong><span>Открытие Vetogram Входящие не отправляет команду «прочитано» в Telegram.</span><em>SERVER</em></div>
-        <div><strong>Статус в сети</strong><span>Если открыть обычный чат в официальном Telegram, само приложение Telegram управляет online/read.</span><em>TELEGRAM</em></div>
+        <div><strong>Отметки о прочтении</strong><span>Просмотр сохранённых чатов не отправляет команду «прочитано» в Telegram.</span><em>АРХИВ</em></div>
+        <div><strong>Статус в сети</strong><span>Если открыть обычный чат в официальном Telegram, само приложение Telegram управляет статусом в сети и отметками о прочтении.</span><em>TELEGRAM</em></div>
       </section>
 
 
@@ -1414,7 +1414,7 @@
       <section class="privacy-inbox-card">
         <div class="block-head compact">
           <div>
-            <span class="kicker">Vetogram Входящие</span>
+            <span class="kicker">Сохранённые чаты</span>
             <h2>Диалоги</h2>
           </div>
           <div class="privacy-live-control">
@@ -1448,7 +1448,7 @@
         <button class="privacy-more-button" id="privacyDeletedMore" type="button" hidden>Показать ещё удалённые сообщения ↓</button>
         <div class="empty-state show" id="privacyEmpty">
           <div class="empty-icon">◌</div>
-          <strong id="privacyEmptyTitle">Vetogram Входящие пока пуст</strong>
+          <strong id="privacyEmptyTitle">Сохранённые чаты пока пуст</strong>
           <span id="privacyEmptyText">Включи Vetogram Приватность и разреши боту выбранные Telegram Business-чаты. Сохраняются только новые доступные сообщения.</span>
         </div>
       </section>
@@ -1884,7 +1884,7 @@
       <div class="se-headrow"><h2>Мои черновики</h2><small>Только этот Telegram и это устройство</small></div>
       <div class="se-drafts" id="seDraftList"></div>
       <div class="se-footnote">
-        Черновики история сохраняются только на этом устройстве. AI-текст попадает в редактор
+        Черновики историй сохраняются только на этом устройстве. AI-текст попадает в редактор
         лишь после твоего подтверждения; изменения можно отменить до ручной правки.
         Публикация в Telegram требует отдельного подтверждения. Ссылки Портал становятся
         доступны другим людям только после того, как ты сам создашь и отправишь ссылку.
@@ -1904,7 +1904,7 @@
           <div class="studio-hero-copy">
             <span class="studio-badge"><i></i> Фирменный стиль</span>
             <h2>От бренда к набору Telegram</h2>
-            <p>Один визуальный язык для статуса, сообщений, Истории и сообщества. Без ручной возни с размерами и форматами.</p>
+            <p>Один визуальный язык для статуса, сообщений, историй и сообщества. Без ручной возни с размерами и форматами.</p>
           </div>
         </div>
         <div class="studio-capabilities">
@@ -2076,7 +2076,7 @@
       <section class="studio-truth">
         <article><strong>Изображения с ИИ</strong><span>Для генерации изображений нужен подключённый ИИ-провайдер. Собственный логотип можно загрузить без ИИ.</span></article>
         <article><strong>Анимация</strong><span>Бренд-набор умеет локально собирать видео WEBM прямо в Telegram WebView; если WebView не поддерживает кодирование видео, static набор остаётся полностью рабочим.</span></article>
-        <article><strong>О студии</strong><span>Студия стикеров — часть Vetogram рядом с Приватность, Истории и Аналитика, а не отдельный бот.</span></article>
+        <article><strong>О студии</strong><span>Студия стикеров — часть Vetogram рядом с приватностью, историями и аналитикой, а не отдельный бот.</span></article>
       </section>
     </section>
 
@@ -2205,9 +2205,9 @@
     <div class="vg26-command-results" role="group" aria-label="Быстрые действия">
       <button type="button" data-vg26-destination="telegram" data-vg26-keywords="переписка чат сообщения"><span>▤</span><strong>Мои чаты<small>Читать и отвечать</small></strong><em>↗</em></button>
       <button type="button" data-vg26-destination="privacy" data-vg26-keywords="антиделит удалённые изменения архив"><span>↶</span><strong>Anti-Delete<small>Архив, изменения, доступы</small></strong><em>↗</em></button>
-      <button type="button" data-vg26-destination="publish" data-vg26-keywords="истории опубликовать публикация"><span>◉</span><strong>Мои Истории<small>Публикация и аудитория</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="publish" data-vg26-keywords="истории опубликовать публикация"><span>◉</span><strong>Мои истории<small>Публикация и аудитория</small></strong><em>↗</em></button>
       <button type="button" data-vg26-destination="story-engine" data-vg26-keywords="сторис шаблон дизайн portal редактор"><span>✧</span><strong>Студия историй<small>Дизайн, шаблоны и Портал</small></strong><em>↗</em></button>
-      <button type="button" data-vg26-destination="ai" data-vg26-keywords="нейросеть ии переписать ответ память переговоры"><span>✦</span><strong>VETO AI<small>Подготовить ответ и история</small></strong><em>↗</em></button>
+      <button type="button" data-vg26-destination="ai" data-vg26-keywords="нейросеть ии переписать ответ память переговоры"><span>✦</span><strong>VETO AI<small>Подготовить ответ и историю</small></strong><em>↗</em></button>
       <button type="button" data-vg26-destination="voice" data-vg26-keywords="аудио звук голос"><span>♫</span><strong>Голосовая студия<small>Запись и обработка голоса</small></strong><em>↗</em></button>
       <button type="button" data-vg26-destination="viewers" data-vg26-keywords="кто видел просмотры аудитория"><span>◎</span><strong>Просмотры<small>Истории и статистика</small></strong><em>↗</em></button>
       <button type="button" data-vg26-destination="creator" data-vg26-keywords="стикеры emoji creator"><span>✳</span><strong>Студия стикеров<small>Стикеры и оформление</small></strong><em>↗</em></button>
@@ -2235,7 +2235,7 @@
   <script src="/veto-device-polish.js?v=20261025-cross-screen-42"></script>
   <script src="/app.js?v=20261025-noir-1"></script>
   <script src="/relay-module.js?v=20261007-veto-relay-v7"></script>
-  <script src="/privacy.js?v=20261025-release-proof-44"></script>
+  <script src="/privacy.js?v=20261025-noir-3"></script>
   <script src="/chat-theme.js?v=20261018-global-theme-v1"></script>
   <script src="/vetogram-inbox-pulse-core.js?v=20261024-inbox-pulse-v1"></script>
   <script src="/telegram-chats.js?v=20261025-signed-chat-41"></script>

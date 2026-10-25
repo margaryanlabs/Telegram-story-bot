@@ -145,7 +145,7 @@ test('backend returns explicit owner mismatch or unverifiable session, not fabri
 });
 test('release uses latest static client assets and keeps security contracts on screen',()=>{
   assert.match(html,/\/app\.js\?v=20261025-noir-1/);
-  assert.match(html,/\/privacy\.js\?v=20261025-release-proof-44/);
+  assert.match(html,/\/privacy\.js\?v=20261025-noir-3/);
   assert.match(ui,/Проверь свои Stories в Telegram перед новой попыткой/);
   assert.match(privacy,/Подключено · ждём тест удаления/);
 });

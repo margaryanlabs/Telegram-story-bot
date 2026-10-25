@@ -440,15 +440,15 @@
       statusText.textContent = privacyState.loading
         ? 'Синхронизация'
         : privacyState.degraded
-          ? 'Vetogram Privacy восстанавливает связь'
+          ? 'Архив Vetogram восстанавливает связь'
           : !privacyState.connection.loaded
-            ? 'Проверяю Telegram'
+            ? (tg?.initData ? 'Проверяю Telegram' : 'Открой в Telegram')
             : complete && !connectionLive
               ? 'Нужно подключить Telegram'
               : operational
                 ? 'Настроено · проверь сообщением'
                 : enabled
-                  ? 'Vetogram Privacy частично активна'
+                  ? 'Выбраны некоторые настройки'
                   : 'Режим выключен';
     }
 
@@ -456,10 +456,10 @@
       $('privacyHeroText').textContent = complete && connectionLive && !privacyState.connection.error
         ? 'Защита настроена. Vetogram может сохранять новые сообщения из выбранных личных чатов. Для проверки отправь тестовое сообщение — Telegram не раскрывает боту весь список разрешённых чатов.'
         : complete && privacyState.connection.loaded && !connectionLive
-          ? 'Vetogram Privacy настроена, но Telegram Business ещё не подключён. Добавь бота ниже — настройки защиты сохранятся.'
+          ? 'Архив Vetogram настроен, но Telegram Business ещё не подключён. Добавь бота ниже — настройки защиты сохранятся.'
             : enabled
-            ? 'Часть защиты уже включена. Можно включить всю Vetogram Privacy одной кнопкой.'
-            : 'Включи Vetogram Privacy одной кнопкой — дальше всё работает автоматически.';
+            ? 'Часть настроек сохранена. Подключи Telegram и проверь получение тестового сообщения.'
+            : 'Подключи Telegram, выбери разрешённые чаты и проверь сохранение тестового сообщения.';
     }
 
     const enableAll = $('privacyEnableAllButton');
@@ -503,7 +503,7 @@
     if (accessIcon) accessIcon.textContent = connectionLive && !privacyState.connection.error ? '✓' : '◌';
     if (accessTitle) {
       accessTitle.textContent = !privacyState.connection.loaded
-        ? 'Проверяю Telegram'
+        ? (tg?.initData ? 'Проверяю Telegram' : 'Открой в Telegram')
         : connectionLive && !privacyState.connection.error
           ? 'Telegram Business подключён'
             : privacyState.connection.error
@@ -515,7 +515,7 @@
         ? 'Бот связан. В Telegram выбери личные чаты и отправь тестовое сообщение — право отмечать прочитанным для архива не нужно.'
         : connectionLive
           ? 'Проверка соединения временно недоступна. Повтори попытку, не меняя разрешения.'
-          : 'Vetogram Privacy сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
+          : 'Архив Vetogram сохраняет только те новые чаты и сообщения, к которым Telegram дал Business-боту доступ.';
     }
     if (accessAction) {
       accessAction.textContent = connectionLive ? 'Проверить' : 'Настроить';
@@ -669,7 +669,7 @@
       empty.classList.toggle('show', visible.length === 0);
       if ($('privacyEmptyTitle')) {
         $('privacyEmptyTitle').textContent = !enabled
-          ? 'Vetogram Privacy ещё не включена'
+          ? 'Архив Vetogram ещё не включена'
           : (privacyState.filter === 'deleted' ? privacyState.deletedFeed.length : privacyState.threads.length) && !visible.length
             ? 'Ничего не найдено'
             : privacyState.filter === 'deleted'
@@ -678,7 +678,7 @@
       }
       if ($('privacyEmptyText')) {
         $('privacyEmptyText').textContent = !enabled
-          ? 'Нажми «Включить Vetogram Privacy» — дальше новые события будут сохраняться автоматически.'
+          ? 'Нажми «Включить Архив Vetogram» — дальше новые события будут сохраняться автоматически.'
           : (privacyState.filter === 'deleted' ? privacyState.deletedFeed.length : privacyState.threads.length) && !visible.length
             ? 'Измени поиск или фильтр.'
             : privacyState.filter === 'deleted'
@@ -835,7 +835,7 @@
       privacyState.smartBrief = data.smartBrief || privacyState.smartBrief;
       privacyState.lastTotalMessages = threadTotals().messages;
       render();
-      if (!quiet) toast('Vetogram Privacy настройки сохранены');
+      if (!quiet) toast('Архив Vetogram настройки сохранены');
       return true;
     } catch (error) {
       privacyState.settings = previous;

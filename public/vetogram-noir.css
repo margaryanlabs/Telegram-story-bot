@@ -252,3 +252,14 @@ html#vetogram.vetogram-noir.veto-keyboard-open{scroll-padding-bottom:24px}
 #vetogram.vetogram-noir body.veto-chat-thread .bottom-nav{display:none!important}
 #vetogram.vetogram-noir #seMusicPlayer{display:block;width:100%;margin:14px 0}
 #vetogram.vetogram-noir [data-mode="quick"] .noir-editor-tabs button[data-se-tool="Layers"],#vetogram.vetogram-noir [data-mode="quick"] .noir-editor-tabs button[data-se-tool="Portal"]{display:none}
+
+#vetogram.vetogram-noir .veto-business-journey-head{display:flex!important;flex-wrap:wrap!important;gap:12px!important;align-items:flex-start!important}
+#vetogram.vetogram-noir .veto-business-journey-emblem{display:none!important}
+#vetogram.vetogram-noir .veto-business-journey-heading{flex:1 1 230px!important;min-width:0!important}
+#vetogram.vetogram-noir .veto-business-journey-heading h2{font-size:19px!important;line-height:1.25!important;letter-spacing:-.025em!important}
+#vetogram.vetogram-noir .veto-business-journey-heading p{font-size:12px!important;line-height:1.6!important}
+#vetogram.vetogram-noir .noir-template-heading{gap:12px!important}
+
+#vetogram.vetogram-noir #telegramMirrorFilters{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:6px!important;overflow-x:auto!important;scrollbar-width:none!important;padding:4px 0 8px!important}
+#vetogram.vetogram-noir #telegramMirrorFilters>button{flex:0 0 auto!important;min-height:40px!important;white-space:nowrap!important;padding:8px 13px!important;border:1px solid var(--noir-border)!important;border-radius:20px!important;background:var(--noir-surface)!important;color:var(--noir-muted)!important;box-shadow:none!important;font-size:12px!important}
+#vetogram.vetogram-noir #telegramMirrorFilters>button[aria-pressed="true"]{color:var(--noir-coral)!important;border-color:var(--noir-coral)!important;background:color-mix(in srgb,var(--noir-coral) 8%,var(--noir-surface))!important}
