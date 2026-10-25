@@ -1,4 +1,5 @@
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
+import { selectedStorageProvider } from '../lib/storage-provider.js';
 import {businessConnectionReadiness} from '../lib/vetogram-business-readiness.js';
 import { getViewerSession, updatePrivacySettings, getPrivacySettings, getBusinessConnectionState } from '../lib/viewer-sync-store.js';
 import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
@@ -49,12 +50,24 @@ export async function verifyStoredBusinessConnection(token,ownerId) {
   } catch {return {botApi:'not-verified',serverState:'pending'};}
 }
 
+// Do not expose production Business writes when the cross-instance DB lease has
+// not been deployed. This read-only check is intentionally not a migration.
+async function businessWriteReadiness() {
+  if (process.env.VERCEL_ENV !== 'production') return {ready:true};
+  if (selectedStorageProvider() !== 'neon') return {ready:false};
+  try {
+    const {neonStoreOperation}=await import('../lib/neon-store.js');
+    const result=await neonStoreOperation('health',{});
+    return {ready:result?.backend==='neon' && Number(result?.schemaVersion)>=5};
+  } catch {return {ready:false};}
+}
+
 const DEFAULT_DEPENDENCIES = { getViewerSession, updatePrivacySettings, getPrivacySettings, openJson,
-  withBackupClient, listBackupDialogs, verifyStoredBusinessConnection };
+  withBackupClient, listBackupDialogs, verifyStoredBusinessConnection, businessWriteReadiness };
 export function createBusinessWizardHandler(overrides={}) {
   const {token=BOT,...dependencies}=overrides;
   const {getViewerSession,updatePrivacySettings,getPrivacySettings,openJson,withBackupClient,
-    listBackupDialogs,verifyStoredBusinessConnection}={...DEFAULT_DEPENDENCIES,...dependencies};
+    listBackupDialogs,verifyStoredBusinessConnection,businessWriteReadiness}={...DEFAULT_DEPENDENCIES,...dependencies};
   return async function handler(req, res) {
   res.setHeader('Cache-Control','private, no-store, max-age=0');
   res.setHeader('Content-Type','application/json; charset=utf-8');
@@ -75,7 +88,11 @@ export function createBusinessWizardHandler(overrides={}) {
   }
   if (!unifiedOnboardingEnabled()) return action === 'prepare'
     ? json(res,200,{enabled:false,state:'disabled'})
-    : json(res,409,{error:'Новое подключение ещё не выпущено. Используй ручной способ.'});
+    : json(res,409,{error:'Автоматическое подключение ещё проходит проверку перед выпуском.'});
+  const readiness=await businessWriteReadiness();
+  if(readiness?.ready!==true) return action==='prepare'
+    ? json(res,200,{enabled:false,state:'requires-server-readiness'})
+    : json(res,503,{error:'Серверная защита подключения ещё не подготовлена. Разрешения Telegram не изменены.'});
   const ownerId = String(owner.id);
   try {
     const session = await getViewerSession(ownerId);
