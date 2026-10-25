@@ -1236,15 +1236,17 @@
 
   async function businessWizardRequest(action, payload = {}) {
     if (!tg?.initData) throw new Error('Открой Vetogram из Telegram, чтобы подтвердить аккаунт');
+    const signedOwner=String(tg.initData);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 27000);
     try {
       const response = await fetch('/api/business-wizard', {
         method:'POST',
-        headers:{ 'content-type':'application/json','x-telegram-init-data':tg.initData },
+        headers:{ 'content-type':'application/json','x-telegram-init-data':signedOwner },
         body:JSON.stringify({action,...payload}),signal:controller.signal,
       });
       const result = await response.json().catch(() => ({}));
+      if (String(tg?.initData||'')!==signedOwner) throw new Error('Аккаунт Telegram изменился. Обнови разрешения для нового аккаунта.');
       if (!response.ok || !result.ok) {
         const err = new Error(result.error || 'Не удалось проверить подключение');
         err.needsSession = Boolean(result.needsSession);
@@ -1258,7 +1260,9 @@
   }
 
   let businessWizardSnapshot = null;
+  let businessWizardSignedOwner = '';
   function renderBusinessWizardPicker(result) {
+    businessWizardSignedOwner=String(tg?.initData||'');
     businessWizardSnapshot = result;
     if (result.state === 'other_bot') {
       openSheet(`<span class="kicker">VETOGRAM · ПОДКЛЮЧЕНИЕ</span><h2>Подключён другой Business-бот</h2>
@@ -1343,6 +1347,10 @@
   };
 
   function updateBusinessWizardConsent() {
+    if (businessWizardSignedOwner && String(tg?.initData||'')!==businessWizardSignedOwner) {
+      businessWizardSnapshot=null;
+      closeSheet();return;
+    }
     const scope = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value;
     const selected = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])];
     const excluded = [...($('sheet')?.querySelectorAll('[data-business-excluded]:checked') || [])];
@@ -1364,6 +1372,9 @@
   }
 
   async function applyBusinessWizard(button) {
+    if (!businessWizardSnapshot || String(tg?.initData||'')!==businessWizardSignedOwner) {
+      closeSheet();toast('Аккаунт Telegram изменился. Перепроверь разрешения.');return;
+    }
     updateBusinessWizardConsent();
     if (button.disabled) return;
     const scope = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value;
