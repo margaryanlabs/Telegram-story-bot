@@ -53,7 +53,8 @@ export async function verifyStoredBusinessConnection(token,ownerId) {
 // Do not expose production Business writes when the cross-instance DB lease has
 // not been deployed. This read-only check is intentionally not a migration.
 async function businessWriteReadiness() {
-  if (process.env.VERCEL_ENV !== 'production') return {ready:true};
+  // Preview traffic uses real Telegram accounts and can mutate real bot
+  // permissions, too. Every environment requires the same atomic lease.
   if (selectedStorageProvider() !== 'neon') return {ready:false};
   try {
     const {neonStoreOperation}=await import('../lib/neon-store.js');
