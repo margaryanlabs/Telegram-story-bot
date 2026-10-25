@@ -25,7 +25,7 @@ class FakeBrowserURL extends URL{
 assert.match(composerVars,/let composerPortalHandoff/);
 assert.match(composerActions,/window\.VetoTelegramStageStory/);
 
-function setup({slow=false}={}){
+function setup({slow=false,publishSlow=false}={}){
   const nodes=new Map(),calls=[],toasts=[],sheets=[],signals=[];
   const el=id=>{
     if(!nodes.has(id))nodes.set(id,{
@@ -44,7 +44,7 @@ function setup({slow=false}={}){
     confirm:()=>true,
     Telegram:{WebApp:tg}
   };
-  let complete=null;
+  let complete=null,finishPublish=null;
   const compress=async file=>slow?new Promise(resolve=>{complete=()=>resolve({
       dataUrl:'data:image/jpeg;base64,QUJD',blob:{size:600}
     })}):{dataUrl:'data:image/jpeg;base64,QUJD',blob:{size:600}};
@@ -61,10 +61,14 @@ function setup({slow=false}={}){
     showToast:v=>toasts.push(String(v)),haptic:()=>{},
     compressStoryImage:compress,telegramAccountReady:()=>true,
     api:async(action,payload)=>{
-      calls.push({action,payload});return {
+      calls.push({action,payload});
+      const result={
         published:true,storyId:'789',verifiedAudience:'standard',
         portalAreaAttached:!!payload.portalLink,transport:'bot-api'
       };
+      if(publishSlow&&action==='publish_story')
+        return new Promise(resolve=>{finishPublish=()=>resolve(result)});
+      return result;
     },
     audienceLabel:()=> 'Стандарт',escapeHtml:x=>String(x),
     refreshViewerSync:async()=>{},refreshViewerAnalytics:async()=>{},
@@ -73,12 +77,13 @@ function setup({slow=false}={}){
   });
   new vm.Script(composerVars+'\n'+composerActions+
     '\nthis.exports={prepareComposerFile,publishComposerStory,resetComposer,'+
-    'getState:()=>({composerDataUrl,composerPortalHandoff,composerGeneration,composerOwner,composerFromStudio})};'
+    'getState:()=>({composerDataUrl,composerPortalHandoff,composerGeneration,composerOwner,composerFromStudio}),'+
+    'invalidateOwner:()=>{viewerOwnerEpoch++;composerGeneration++;state.processing=true;composerBusy=true;}};'
   ).runInContext(ctx);
   const url='https://vetogram.test/portal.html#p=abc_DEF-21';
   const jpeg={name:'vetogram-story.jpg',type:'image/jpeg',size:700};
   return {...ctx.exports,window,state,el,calls,toasts,sheets,signals,url,jpeg,storage,
-    complete:()=>complete?.()};
+    complete:()=>complete?.(),finishPublish:()=>finishPublish?.()};
 }
 test('direct bridge stages JPEG without DataTransfer and requires a new Portal consent',async()=>{
   const s=setup();
@@ -204,3 +209,19 @@ test('AI → Story editor rejects sessionless and stale-session apply requests',
   assert.equal(await pending,false);
 });
 
+test('old Story publish cannot overwrite a new owner composer after A → B switch',async()=>{
+  const s=setup({publishSlow:true});
+  await s.window.VetoTelegramStageStory({
+    file:s.jpeg,caption:'Private A',ownerId:'111',stillCurrent:()=>true
+  });
+  const pending=s.publishComposerStory();
+  assert.equal(s.calls.length,1);
+  // A new owner's async publication is in progress at the same time the old
+  // network response returns. Old finally must not unlock the new composer.
+  s.invalidateOwner();
+  s.finishPublish();
+  await pending;
+  assert.equal(s.state.processing,true);
+  assert.equal(s.sheets.length,0);
+  assert.equal(s.toasts.some(x=>/Story #789/.test(x)),false);
+});
