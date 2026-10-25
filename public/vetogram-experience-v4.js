@@ -53,27 +53,19 @@
   if (mission) mission.setAttribute('aria-label', 'Проверенные статусы Telegram и защиты');
 
   // Messenger: keep chat/search immediately accessible; long connection guide is secondary.
-  const chatGuide = progressive({scope:'telegram', selector:'.veto-mirror-access-center',
-    title:'Подключение и безопасность', description:'Управление доступом к Telegram',
-    className:'v4-chat-setup'});
+  // The V3 messenger already provides its own native connection disclosure.
+  // Do not nest a second details element around that same onboarding controller.
+  const chatGuide = byId('telegramMirrorAccessDrawer') || progressive({scope:'telegram',
+    selector:'.veto-mirror-access-center', title:'Подключение и безопасность',
+    description:'Управление доступом к Telegram', className:'v4-chat-setup'});
   progressive({scope:'telegram', selector:'.veto-mirror-privacy-note',
     title:'Как защищаются сообщения', description:'Архив и ограничения',
     className:'v4-chat-explain'});
   progressive({scope:'telegram', selector:'.vg26-inbox-shortcuts',
     title:'Действия с перепиской', description:'AI-ответ, архив и новая история',
     className:'v4-chat-shortcuts'});
-  const connectCta = byId('vetoMessengerConnectCta');
-  if (chatGuide && connectCta) {
-    function syncGuide() {
-      const disconnected = !connectCta.hidden && getComputedStyle(connectCta).display !== 'none';
-      // Auto-expand help when login is actually needed; never force-close a
-      // disclosure the user opened to inspect permissions.
-      if (disconnected) chatGuide.open = true;
-    }
-    const observer = new MutationObserver(syncGuide);
-    observer.observe(connectCta, {attributes:true,attributeFilter:['hidden','class','style']});
-    syncGuide();
-  }
+  // The explicit connection CTA remains visible until Telegram confirms
+  // ownership. Do not override the native drawer's own open/close state.
 
   // Privacy: one explicit setup route, not an instructional wall on every visit.
   const privacySetup = progressive({scope:'privacy', selector:'#privacyBusinessOnboarding',
