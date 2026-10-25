@@ -103,14 +103,14 @@ test('switch clears old Viewers, analytics, archives, permissions and Automation
   const x=s.get();
   assert.equal(x.state.ready,false);
   assert.equal(x.state.audience,'standard');
-  assert.deepEqual(x.state.history,[]);
-  assert.deepEqual(x.state.activity,[]);
-  assert.deepEqual(x.state.selected,[]);
+  assert.equal(x.state.history.length,0);
+  assert.equal(x.state.activity.length,0);
+  assert.equal(x.state.selected.length,0);
   assert.equal(x.state.accountConnection.connected,false);
   assert.equal(x.viewer.session,null);
-  assert.deepEqual(x.viewer.viewers,[]);
+  assert.equal(x.viewer.viewers.length,0);
   assert.equal(x.viewer.analytics,null);
-  assert.deepEqual(x.automations.jobs,[]);
+  assert.equal(x.automations.jobs.length,0);
   assert.equal(x.viewerRegisteredKey,'');
   assert.equal(x.selectedViewerStory,null);
   assert.equal(s.el('storyCaption').value,'Draft for B');
@@ -131,7 +131,7 @@ test('A → B → A prevents the original A Viewers response from returning',asy
   s.openRequests.viewer[1].resolve({
     session:{connected:true},viewers:[{name:'old-B'}],config:{}});
   await oldB;
-  assert.deepEqual(s.get().viewer.viewers,[]);
+  assert.equal(s.get().viewer.viewers.length,0);
   s.openRequests.viewer[2].resolve({
     session:{connected:true,account:{firstName:'Current A'}},
     viewers:[{name:'current-A'}],config:{}});
