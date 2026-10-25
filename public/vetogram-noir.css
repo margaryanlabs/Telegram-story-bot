@@ -824,3 +824,150 @@ html#vetogram[data-veto-theme="linen"] .v4-message-feedback{
 @media(prefers-reduced-motion:reduce){
   #vetogram.vetogram-noir #sheet .veto-country-option{transition:none!important}
 }
+
+/* REBORN STAGE 2 — conversation-first AI, simplified messenger hierarchy.
+   These are real, existing panels and message sources, never mock screens. */
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-root{
+  display:flex!important;flex-direction:column!important;gap:12px!important;
+  max-width:850px;margin:0 auto;padding-bottom:calc(var(--noir-bottom-space) + 16px);
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-hero{
+  min-height:0!important;padding:16px 0 4px!important;margin:0!important;
+  display:block!important;background:none!important;border:0!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-hero h1{
+  font-size:clamp(29px,7.8vw,44px)!important;letter-spacing:-.06em!important;
+  line-height:1.06!important;margin:6px 0!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-hero p{
+  max-width:58ch;font-size:13px!important;line-height:1.45!important;
+  margin:7px 0 0!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-modes{
+  display:flex!important;flex-wrap:wrap!important;gap:8px!important;
+  padding:4px 0!important;margin:0 0 3px!important;overflow:visible!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-modes>[data-vtai-mode]{
+  flex:0 0 auto!important;min-width:0!important;border-radius:18px!important;
+  min-height:43px!important;padding:9px 15px!important;
+}
+#vetogram.vetogram-noir .veto-reborn-ai-conversation{
+  order:0;margin:0!important;padding:18px!important;
+  min-height:280px;border-radius:24px!important;
+  border:1px solid var(--noir-border)!important;
+  background:radial-gradient(ellipse at 78% 0%,color-mix(in srgb,var(--noir-ai) 13%,transparent),transparent 60%),var(--noir-surface)!important;
+  display:flex;flex-direction:column;gap:14px;
+}
+#vetogram.vetogram-noir .veto-reborn-ai-header{
+  display:flex;align-items:center;gap:11px;
+}
+#vetogram.vetogram-noir .veto-reborn-ai-header>span{
+  display:grid;place-items:center;flex:0 0 40px;
+  width:40px;height:40px;border-radius:14px;
+  background:color-mix(in srgb,var(--noir-ai) 17%,var(--noir-bg));
+  color:var(--noir-ai);font-size:23px;
+}
+#vetogram.vetogram-noir .veto-reborn-ai-header h2{
+  margin:0!important;font-size:18px!important;letter-spacing:-.025em;
+}
+#vetogram.vetogram-noir .veto-reborn-ai-header small{
+  margin-inline-start:auto;font-size:11px;color:var(--noir-muted);
+}
+#vetogram.vetogram-noir .veto-reborn-ai-conversation #vtaiThread{
+  min-height:95px!important;max-height:min(52dvh,530px);
+  overflow-y:auto;overscroll-behavior:contain;border:none!important;
+  background:transparent!important;scrollbar-width:thin;
+}
+#vetogram.vetogram-noir .veto-reborn-ai-starters{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;
+}
+#vetogram.vetogram-noir .veto-reborn-ai-starters[hidden]{display:none!important}
+#vetogram.vetogram-noir .veto-reborn-ai-starters button{
+  display:flex;align-items:center;gap:9px;justify-content:space-between;
+  min-height:45px;border-radius:14px;border:1px solid var(--noir-border);
+  padding:9px 12px;background:var(--noir-raised);color:var(--noir-text);
+  font-size:12px;font-weight:600;cursor:pointer;text-align:left;
+}
+#vetogram.vetogram-noir .veto-reborn-ai-starters button span{
+  color:var(--noir-ai);
+}
+#vetogram.vetogram-noir .veto-reborn-ai-privacy-note{
+  font-size:10px!important;line-height:1.45!important;
+  margin:0!important;color:var(--noir-muted)!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-root>.vtai-panel:not(.veto-reborn-ai-conversation){
+  margin:0!important;
+}
+#vetogram.vetogram-noir [data-screen="ai"] .vtai-root>.vtai-panel>h2{
+  margin:0 0 10px!important;
+}
+/* Chat entry: conversation list is the destination, not a dashboard. */
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-eyebrow,
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-inbox-tagline,
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-focus-hint,
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-headline{
+  display:none!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-heading{
+  padding:12px 12px 10px!important;margin:0!important;
+  min-height:64px!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-inbox-signature{
+  width:34px!important;height:34px!important;flex:0 0 34px!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-inbox-signature img{
+  width:34px!important;height:34px!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-inbox-wordmark{
+  display:none!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-inbox-title-copy h1{
+  font-size:25px!important;letter-spacing:-.045em!important;
+  margin:0!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-search-wrap{
+  margin:8px 12px!important;border-radius:16px!important;
+  min-height:49px!important;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-filters{
+  padding:3px 12px 8px!important;
+  display:flex!important;overflow-x:auto!important;flex-wrap:nowrap!important;
+  gap:7px!important;scrollbar-width:none;scroll-snap-type:x proximity;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-filters button{
+  flex:0 0 auto;min-height:39px!important;scroll-snap-align:start;
+}
+#vetogram.vetogram-noir [data-screen="telegram"] #telegramMirrorList{
+  margin:0!important;padding:0 6px!important;
+}
+#vetogram.vetogram-noir .veto-business-manual-fallback{
+  margin:16px 0 4px;padding:12px 14px;
+  border:1px solid var(--noir-border);border-radius:15px;
+  background:var(--noir-surface);font-size:12px;
+}
+#vetogram.vetogram-noir .veto-business-manual-fallback summary{
+  color:var(--noir-muted);cursor:pointer;font-weight:600;
+  min-height:35px;display:flex;align-items:center;
+}
+#vetogram.vetogram-noir .veto-business-manual-fallback ol{
+  margin:10px 0;padding-inline-start:22px;line-height:1.7;
+}
+#vetogram.vetogram-noir .veto-business-manual-fallback button{
+  min-height:44px;border-radius:11px;padding:10px 13px;
+  color:var(--noir-text);border:1px solid var(--noir-border);
+  background:var(--noir-raised);
+}
+#vetogram.vetogram-noir .veto-business-choices-hint{
+  font-size:12px!important;color:var(--noir-muted)!important;line-height:1.45;
+}
+@media(max-width:430px){
+  #vetogram.vetogram-noir [data-screen="ai"] .vtai-hero{padding-top:9px!important}
+  #vetogram.vetogram-noir .veto-reborn-ai-conversation{padding:14px!important;border-radius:19px!important}
+  #vetogram.vetogram-noir .veto-reborn-ai-header small{display:none!important}
+  #vetogram.vetogram-noir .veto-reborn-ai-starters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  #vetogram.vetogram-noir .veto-reborn-ai-starters button{padding:10px;font-size:11px}
+  #vetogram.vetogram-noir .veto-reborn-ai-starters button:last-child{grid-column:1/-1}
+}
+@media(prefers-reduced-motion:reduce){
+  #vetogram.vetogram-noir [data-screen="telegram"] .veto-mirror-filters{scroll-snap-type:none}
+}
