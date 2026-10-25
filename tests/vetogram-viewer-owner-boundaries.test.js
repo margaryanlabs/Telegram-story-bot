@@ -172,3 +172,29 @@ test('main, Viewer and Automation API rejects A → B → A late responses',()=>
   assert.match(source,/window\.addEventListener\('focus',ensureComposerIdentity\)/);
   assert.match(source,/window\.addEventListener\('pageshow',ensureComposerIdentity\)/);
 });
+
+test('viewer API selects default Story ID only after account cleanup',async()=>{
+  let url='';
+  const tg={initData:'signed-B'};
+  const ctx=vm.createContext({
+    tg,viewerOwnerEpoch:0,selectedViewerStory:'old-account-story',
+    ensureComposerIdentity(){
+      ctx.selectedViewerStory=null;
+      ctx.viewerOwnerEpoch++;
+    },
+    requestJson:async requested=>{
+      url=requested;
+      return {response:{ok:true},data:{ok:true}};
+    },encodeURIComponent,
+    Error,
+  });
+  new vm.Script(viewerApiFn+'\nthis.exports={viewerApi};').runInContext(ctx);
+  const result=await ctx.exports.viewerApi();
+  assert.equal(result.ok,true);
+  assert.equal(url,'/api/viewer-sync');
+  assert.equal(ctx.viewerOwnerEpoch,1);
+  assert.equal(ctx.selectedViewerStory,null);
+});
+test('connected Viewer copy is conditional on confirmed background readiness',()=>{
+  assert.match(source,/viewerState\.backgroundReady\s*\? 'Fast Alerts/);
+});
