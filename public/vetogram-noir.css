@@ -1559,3 +1559,60 @@ html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen
   color:var(--noir-text)!important;background:var(--noir-surface)!important;
   border-color:var(--noir-border)!important;
 }
+
+
+/* V4.10 narrow landscape / split-screen: action controls remain reachable,
+   not an immersive animation or a duplicate mobile app layout. */
+@media(max-height:560px) and (orientation:landscape){
+  #vetogram.vetogram-noir .topbar{
+    min-height:50px!important;padding-block:6px!important;
+  }
+  #vetogram.vetogram-noir .brand-mark{
+    width:31px!important;height:31px!important;
+  }
+  #vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item{
+    min-height:46px!important;
+  }
+  #vetogram.vetogram-noir [data-screen="voice"] #voiceSpectrum{
+    max-height:112px;
+  }
+  #vetogram.vetogram-noir #seEngine.v4-studio-focus{
+    overflow:auto!important;
+  }
+  #vetogram.vetogram-noir #seEngine.v4-studio-focus .se-editor-shell{
+    min-height:0;
+  }
+  #vetogram.vetogram-noir #seEngine.v4-studio-focus .se-canvas-frame{
+    width:min(27dvh,calc(100vw - 50px))!important;
+    max-height:calc(100dvh - 132px)!important;
+  }
+  #vetogram.vetogram-noir [data-screen="ai"] .veto-reborn-ai-conversation #vtaiThread{
+    max-height:min(42dvh,260px);
+  }
+  html#vetogram.vetogram-noir body.veto-sheet-open #sheet{
+    max-height:calc(var(--veto-visible-height,100dvh) - 8px)!important;
+    border-radius:16px 16px 0 0!important;
+  }
+}
+/* Stronger system contrast should strengthen the active selection, never
+   activate or simulate a Telegram capability. */
+@media(prefers-contrast:more){
+  #vetogram.vetogram-noir :where(button,a,input,textarea,select,summary):focus-visible{
+    outline-width:3px!important;
+    outline-offset:2px!important;
+  }
+  #vetogram.vetogram-noir .bottom-nav .nav-item.active,
+  #vetogram.vetogram-noir [data-screen="ai"] .vtai-modes [aria-pressed="true"],
+  #vetogram.vetogram-noir [data-screen="voice"] #voicePresetGrid>button[aria-pressed="true"]{
+    outline:2px solid currentColor;outline-offset:-3px;
+  }
+}
+@media(forced-colors:active){
+  #vetogram.vetogram-noir .bottom-nav .nav-item.active,
+  #vetogram.vetogram-noir [data-screen="ai"] .vtai-modes [aria-pressed="true"]{
+    border:2px solid Highlight!important;color:Highlight!important;
+  }
+  #vetogram.vetogram-noir [data-screen="voice"] .veto-voice-signal{
+    forced-color-adjust:auto;
+  }
+}
