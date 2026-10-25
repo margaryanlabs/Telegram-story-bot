@@ -1000,7 +1000,7 @@
     const summary=window.VetogramInboxPulse?.summarize(state.chats);
     if(!summary||!summary.loaded){
       panel.hidden=true;
-      for(const id of ['vgxPulseUnread','vgxPulseFocus','vgxPulseDeleted']){
+      for(const id of ['vgxPulseUnread','vgxPulseFocus','vgxPulseSaved']){
         const el=$(id);if(el)el.textContent='0';
       }
       return;
@@ -1009,7 +1009,7 @@
     const values={
       vgxPulseUnread:summary.unreadChats,
       vgxPulseFocus:summary.attentionChats,
-      vgxPulseDeleted:summary.deletedMessages
+      vgxPulseSaved:summary.savedChats
     };
     for(const [id,value] of Object.entries(values)){
       const el=$(id);
@@ -1038,6 +1038,12 @@
     renderPrivacyDiagnostics();
     $('telegramMirrorCount').textContent=String(state.chats.length);
     renderInboxPulse();
+    // Filter controls reflect the current real view after a shortcut or owner reset.
+    $('telegramMirrorFilters')?.querySelectorAll('[data-mirror-filter]').forEach(button=>{
+      const active=button.dataset.mirrorFilter===state.filter;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
     const proof=$('telegramMirrorAccountProof');
     const drawer=$('telegramMirrorAccessDrawer');
     const drawerStatus=$('telegramMirrorAccessDrawerStatus');
@@ -1056,7 +1062,7 @@
         :p ? '◈ Только собственный архив Vetogram · живой аккаунт не подтверждён' : '◌ Проверяю личный Telegram · чужие чаты не показываются';
     }
     $('telegramMirrorUpdated').textContent=state.chats.length
-      ?String(state.chats.length)+' загружено · LIVE':'LIVE · По запросу';
+      ?String(state.chats.length)+' чатов загружено · по запросу':'Обновление по запросу';
     if(!items.length){
       list.innerHTML=state.loading
         ?empty('Подключаюсь к Telegram','Загружаю настоящие чаты…','↻')
@@ -1066,10 +1072,12 @@
     }else{
       list.innerHTML=items.map(chat=>{
         const unread=Math.max(0,Number(chat.unreadCount||0));
-        const badge=unread?'<span class="veto-mirror-unread">'+
+        const badge=unread?'<span class="veto-mirror-unread" aria-label="'+
+          safe(unread+' непрочитанных сообщений')+'">'+
           safe(unread>99?'99+':unread)+'</span>':'';
         const focusTag=chat.inbox?.needsAttention
-          ?'<span class="veto-mirror-focus-tag">⌑ '+safe(chat.inbox.action?'Есть срок или действие':'Возможен вопрос')+'</span>':'';
+          ?'<span class="veto-mirror-focus-tag">⌑ '+
+            safe(chat.inbox.action?'Возможное действие':'Может требовать ответа')+'</span>':'';
         const retained=chat.savedCopy
           ?'<span class="veto-mirror-chat-retained">'+(Number(chat.deletedCount||0)>0
             ?'↶ '+safe(chat.deletedCount)+' удалено':'◈ СОХРАНЕНО')+'</span>' : '';
@@ -1077,8 +1085,12 @@
         const image=avatar?'<img class="veto-mirror-avatar-img" src="'+safe(avatar)+'" alt="" />':safe(initials(chat.title));
         return '<button class="veto-mirror-chat'+(unread?' unread':'')+
           (chat.archiveOnly?' is-cleared':'')+
+          (chat.inbox?.needsAttention?' has-attention':'')+
+          (chat.savedCopy?' has-copy':'')+
           '" type="button" data-mirror-chat="'+safe(chat.id)+
-          '" aria-label="'+safe('Открыть '+chat.title)+'">'+
+          '" aria-label="'+safe('Открыть '+chat.title+
+            (unread?' · '+unread+' непрочитанных':'')+
+            (chat.savedCopy?' · есть сохранённая копия':''))+'">'+
           '<span class="veto-mirror-chat-avatar avatar-'+safe(chat.type)+'" data-veto-avatar="'+safe(chat.id)+'">'+
           image+'</span>'+
           '<span class="veto-mirror-chat-main">'+
