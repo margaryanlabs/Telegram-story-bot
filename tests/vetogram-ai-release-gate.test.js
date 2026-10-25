@@ -23,6 +23,17 @@ test('release gate recognizes staged migration order and fails closed for missin
   const missing=migrations();delete missing[AI_MIGRATIONS[3]];
   assert.equal(inspectAiMigrationSources(missing).ok,false);
 });
+test('release gate rejects malformed Neon PL/pgSQL dollar delimiters',()=>{
+  const file=AI_MIGRATIONS[3];
+  const good=inspectAiMigrationSources(migrations());
+  assert.equal(good.ok,true);
+  const brokenClose=migrations();
+  brokenClose[file]=brokenClose[file].replace('END; $$;',()=> 'END; $;');
+  assert.ok(inspectAiMigrationSources(brokenClose).failures.includes('SQL_FUNCTION_DELIMITERS:'+file));
+  const brokenOpen=migrations();
+  brokenOpen[file]=brokenOpen[file].replace('AS $$',()=> 'AS $');
+  assert.ok(inspectAiMigrationSources(brokenOpen).failures.includes('SQL_FUNCTION_DELIMITERS:'+file));
+});
 test('release gate detects inverted grant/pause locks to prevent deadlocks',()=>{
   const bad=migrations();
   bad[AI_MIGRATIONS[3]]=bad[AI_MIGRATIONS[3]].replace(
