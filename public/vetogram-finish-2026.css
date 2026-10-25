@@ -1473,3 +1473,185 @@ body.veto-chat-thread #telegramMirror.thread-mode
     transform:none!important;
   }
 }
+
+
+/* VETOGRAM 4.0 · Smart Inbox: meaningful focus over decorative metrics.
+ * Tiles and badges describe ONLY real, currently loaded Telegram chats.
+ * No fake LIVE indicators, fake read receipts or periodic animations.
+ */
+#telegramMirror .vgx-inbox-pulse{
+  position:relative;isolation:isolate;
+  gap:12px;
+  border:1px solid var(--ct-line,var(--vgx-hairline,rgba(173,195,223,.18)));
+  border-radius:19px;
+  background:var(--ct-panel,var(--vgx-panel,#182439));
+  box-shadow:0 14px 38px var(--ct-shadow,rgba(1,8,21,.12)),inset 0 1px rgba(255,255,255,.055);
+}
+#telegramMirror .vgx-inbox-pulse-heading{
+  align-items:flex-start;gap:12px;
+}
+#telegramMirror .vgx-inbox-pulse-heading>span{
+  letter-spacing:.062em;font-size:11px;font-weight:830;
+  color:var(--ct-text,var(--vgx-ink,#f3f6fe));
+}
+#telegramMirror .vgx-inbox-pulse-heading i{
+  width:7px;height:7px;flex:0 0 7px;
+  background:#f9a48f;box-shadow:0 0 0 4px rgba(245,140,148,.09);
+}
+#telegramMirror .vgx-inbox-pulse-heading small{
+  max-width:56%;font-size:10px;line-height:1.4;
+  font-weight:550;color:var(--ct-muted,var(--vgx-quiet,#a8b7ca));
+}
+#telegramMirror .vgx-inbox-pulse-grid{
+  min-width:0;gap:9px;
+}
+#telegramMirror .vgx-inbox-pulse-grid button{
+  position:relative;
+  align-items:center;
+  min-width:0;min-height:75px;
+  padding:12px 11px;
+  border-radius:14px;
+  border:1px solid var(--ct-line,var(--vgx-hairline,rgba(176,196,227,.17)));
+  background:var(--ct-elev,rgba(157,181,218,.08));
+  color:var(--ct-text,var(--vgx-ink,#edf3fb));
+  box-shadow:inset 0 1px rgba(255,255,255,.032);
+  transition:transform .16s cubic-bezier(.18,.9,.25,1),
+    background-color .16s,border-color .16s,box-shadow .16s;
+}
+#telegramMirror .vgx-inbox-pulse-grid button[aria-pressed="true"]{
+  border-color:rgba(245,149,154,.57);
+  background:color-mix(in srgb,var(--ct-elev,#233249) 82%,#f58c99);
+  box-shadow:inset 0 0 0 1px rgba(246,151,164,.15);
+}
+#telegramMirror .vgx-inbox-pulse-grid button:focus-visible{
+  outline:2px solid var(--vg34-focus,#ffb59d);outline-offset:3px;
+}
+#telegramMirror .vgx-inbox-pulse-grid button .vgx-pulse-icon{
+  display:grid;place-items:center;
+  width:34px;height:34px;flex:0 0 34px;
+  border-radius:11px;
+  color:var(--ct-text,var(--vgx-ink,#f1f5fb));
+  background:var(--ct-chip,rgba(153,182,221,.11));
+}
+#telegramMirror .vgx-inbox-pulse-grid button>span:nth-child(2){
+  gap:5px;align-content:center;
+}
+#telegramMirror .vgx-inbox-pulse-grid strong{
+  font-size:25px;font-weight:820;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+#telegramMirror .vgx-inbox-pulse-grid small{
+  font-size:10.5px;font-weight:670;line-height:1.28;
+  color:var(--ct-muted,var(--vgx-quiet,#b8c8dc));
+}
+#telegramMirror .vgx-inbox-pulse-grid button>b{display:none}
+@media(hover:hover) and (pointer:fine){
+  #telegramMirror .vgx-inbox-pulse-grid button:hover{
+    transform:translateY(-2px);
+    border-color:rgba(245,155,153,.4);
+    box-shadow:0 8px 18px var(--ct-shadow,rgba(1,10,25,.12));
+  }
+}
+/* The signed user's actual dialogs are the most important thing on screen.
+ * Attention means heuristics, unread means server-supplied unreadCount.
+ * Persisted Vault copies remain visually different from live Telegram data.
+ */
+#telegramMirror .veto-mirror-chat-list{
+  gap:3px;
+}
+#telegramMirror .veto-mirror-chat{
+  position:relative;min-width:0;isolation:isolate;
+  transition:background-color .16s,border-color .16s,transform .15s;
+}
+#telegramMirror .veto-mirror-chat.has-attention::before{
+  content:"";position:absolute;
+  top:20px;bottom:20px;left:2px;width:3px;
+  background:linear-gradient(180deg,#ffae91,#e97c95);
+  border-radius:99px;pointer-events:none;
+}
+#telegramMirror .veto-mirror-chat.has-copy .veto-mirror-chat-retained{
+  border:1px solid var(--ct-line,rgba(160,183,211,.17));
+  background:var(--ct-chip,rgba(159,185,219,.09));
+  padding:3px 6px;border-radius:8px;
+}
+#telegramMirror .veto-mirror-chat .veto-mirror-focus-tag{
+  color:var(--ct-muted,#e8bbab);
+  font-size:10px;font-weight:720;line-height:1.3;
+}
+#telegramMirror .veto-mirror-chat .veto-mirror-unread{
+  min-width:21px;min-height:21px;padding-inline:6px;
+  background:var(--ct-accent,#ffa38f);
+  color:var(--ct-active-ink,#1d2638);
+  border-radius:999px;font-size:11px;font-weight:820;
+  font-variant-numeric:tabular-nums;
+}
+#telegramMirror .veto-mirror-chat:focus-visible{
+  outline:2px solid var(--vg34-focus,#ffb59d)!important;
+  outline-offset:-2px!important;
+}
+#telegramMirror .veto-mirror-chat:active{transform:scale(.995)}
+/* Statuses come from real owner-scoped sending/acceptance and preserve
+ * uncertainty. Never paint an unconfirmed message as 'read'. */
+#telegramMirror .veto-mirror-send-pending{
+  font-weight:700;color:var(--ct-muted,#cbb4b0);
+}
+#telegramMirror .veto-mirror-send-accepted{
+  font-weight:700;color:var(--ct-muted,#9ec8b4);
+}
+#telegramMirror .veto-mirror-delivery-status[data-state="sending"]{
+  border-inline-start:3px solid #9db1cb;
+}
+#telegramMirror .veto-mirror-delivery-status[data-state="accepted"]{
+  border-inline-start:3px solid #87bb9f;
+}
+#telegramMirror .veto-mirror-delivery-status[data-state="uncertain"]{
+  border-inline-start:3px solid #ebc38d;
+}
+#telegramMirror .veto-mirror-delivery-status[data-state="failed"]{
+  border-inline-start:3px solid #ee9da1;
+}
+#telegramMirror .veto-mirror-delivery-status[hidden]{display:none!important}
+@media(max-width:600px){
+  #telegramMirror .vgx-inbox-pulse{padding:13px}
+  #telegramMirror .vgx-inbox-pulse-heading{gap:7px}
+  #telegramMirror .vgx-inbox-pulse-grid button{
+    min-height:71px;padding:11px 9px;gap:7px;
+  }
+}
+@media(max-width:420px){
+  #telegramMirror .vgx-inbox-pulse-grid{
+    display:grid;
+    grid-auto-flow:column;
+    grid-template-columns:none;
+    grid-auto-columns:minmax(145px,52%);
+    overflow-x:auto;overflow-y:hidden;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+    padding:2px 2px 10px;
+  }
+  #telegramMirror .vgx-inbox-pulse-grid button{
+    scroll-snap-align:start;
+    min-width:0;min-height:74px;
+  }
+  #telegramMirror .vgx-inbox-pulse-grid button .vgx-pulse-icon{
+    width:30px;height:30px;flex-basis:30px;
+  }
+}
+@media(max-width:360px){
+  #telegramMirror .vgx-inbox-pulse-grid button .vgx-pulse-icon{
+    display:grid;
+  }
+  #telegramMirror .vgx-inbox-pulse-heading small{
+    max-width:53%;font-size:9px;
+  }
+}
+@media(hover:none),(pointer:coarse){
+  #telegramMirror .vgx-inbox-pulse-grid button:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  #telegramMirror :is(.vgx-inbox-pulse-grid button,.veto-mirror-chat){
+    animation:none!important;transition:none!important;transform:none!important;
+  }
+}
