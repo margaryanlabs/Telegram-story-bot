@@ -57,3 +57,20 @@ test('saved protection settings alone never prove real Anti-Delete delivery',()=
   assert.match(privacy,/Bot API/);
   assert.match(privacy,/тестового удаления сообщения/);
 });
+
+test('personal account management does not silently trigger Business consent wizard',()=>{
+  const entry=app.split('window.VetoTelegramOpenAccountConnection = async () => {')[1]
+    ?.split('\n  };')[0];
+  assert.ok(entry,'account-management entry must exist');
+  assert.match(entry,/profileSheet\(\)/);
+  assert.match(entry,/connectionHelpSheet\(\)/);
+  assert.doesNotMatch(entry,/VetoTelegramOpenUnifiedOnboarding/);
+  assert.match(app,/Anti-Delete подключается в Vetogram/);
+});
+
+test('UI does not promise Stories publishing or viewer details without Telegram proof',()=>{
+  assert.match(app,/право публикации проверяется при попытке/);
+  assert.match(app,/публикация зависит от возможностей и разрешений Telegram/);
+  assert.match(app,/данные о просмотрах, которые фактически вернёт Telegram/);
+  assert.doesNotMatch(app,/<b>Stories<\/b><small>сможешь публиковать Story из Vetogram/);
+});
