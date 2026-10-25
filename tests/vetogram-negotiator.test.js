@@ -94,7 +94,8 @@ test('checks localized money words and suffix symbols in the actual proposed mes
     ['I offer 450 USD',475],['I offer €475',475],
     ['I offer 475 dollars or 450 dollars',475],
     ['I can do 450',null],['I can agree to 475',475],
-    ['Total 1,200 USD',475],['450 US dollars',475]
+    ['Total 1,200 USD',475],['Total 1,475 USD',475],
+    ['Total 1.475 USD',475],['450 US dollars',475]
   ]){
     const result=assess(policy,proposal(reply,structuredAmount));
     assert.equal(result.allowed,false,'must reject ambiguous or dishonest terms: '+reply);
