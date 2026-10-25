@@ -107,3 +107,36 @@ The approved direction is **Canvas Noir**, option 1 from the V4 visual explorati
 7. **Final release:** verify tests/build in checked-out repo and real Telegram flows first. Neon v5 is **already applied**, so use read-only preflight only; never repeat it. Keep production feature flag disabled until a signed real-world test, then one controlled deploy/rollback.
 
 As before, no intermediate Vercel release, GitHub merge, new Neon write, credential change or user-data manipulation is part of this stage.
+
+## V4.2 Mobile interactions and draft-history integrity — 25 October 2026
+
+This slice fixes defects in existing V4 UI controllers, not in a standalone preview.
+
+### Messenger gesture trust boundary
+
+- `telegram-chats.js` now stamps the currently rendered message host with only its public Telegram owner numeric ID, chat ID and the in-memory thread generation. These markers are cleared on Back and on owner switch. The signed `initData`, session material and messages are **never** put in dataset attributes.
+- The existing V4 message context menu and swipe-to-reply require the currently signed owner to agree with the live DOM owner, selected thread and thread generation. A queued long-press callback checks these constraints before showing any message excerpt.
+- Two-finger touch/pinch, vertical movement and scroll cancel the gesture. Stale menus close when owner/thread changes.
+- Rightward touch move shows a brief, distance-bound reply affordance on the actual message bubble. Releasing/canceling removes the style. Only an explicitly completed swipe delegates to the original `data-mirror-reply` button; no automatic message send or Telegram API action.
+- Fixed asynchronous native-dialog close behavior so an old `close` event cannot clear a newly opened selection.
+
+### Story Studio layer gestures
+
+- Touching an existing text layer now selects it without changing its coordinates or recording an undo snapshot.
+- Finger jitter under 12px is ignored. At 12px, the first deliberate move records exactly one undo checkpoint, followed by smooth local layer movement.
+- Existing signed owner/draft checks remain before any text position change; switching owners cancels the drag.
+- Pinch-to-zoom, export, manual publish confirmation and prior history/AI actions are unchanged.
+
+### Verification and limitations
+
+- Added `tests/vetogram-v4-mobile-gesture-boundaries.test.js` to the existing `node --test tests/*.test.js` suite discovery.
+- Ran **5/5 isolated JavaScript regression cases** against freshly fetched actual source, including executing the original Story canvas pointer handlers and owner-check function; all passed.
+- Parsed the changed controllers and checked the canonical CSS brace balance.
+- A complete Node dependency install, full npm test/build, real gesture performance on Fold/iOS/Android, and live signed two-account E2E have **not** run in this continuation. GitHub CI for PRs aimed at the V4 integration branch is not configured to run automatically.
+- No production Vercel deployment, Business permission change, schema migration, GitHub merge or paid runner invocation. Neon schema v5 remains completed.
+
+### Next release gates
+
+1. Real Telegram WebView QA: account switch during an open message action, navigation between two chats while a long press is queued, two-finger swipe/scroll, native long-press and hardware keyboard.
+2. Story editor: tap versus drag, undo/redo, pinch zoom, changing draft/owner mid-gesture, and visual inspector on mobile/Fold.
+3. Full npm verification then final integrated release review of PR #179 → #185. Keep one deploy after success, not per commit.
