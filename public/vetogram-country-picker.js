@@ -87,8 +87,12 @@
       if(!next)return;
       const oldCode=selected?.dial;
       const old=phone.value.trim();
-      const national=oldCode && old.startsWith('+'+oldCode)
-        ? old.slice(oldCode.length+1).trim():'';
+      // Preserve a valid national part when a shared-code number (+7/+1)
+      // is assigned its explicit country, or when switching another country.
+      // Never reuse foreign-country digits when their calling code is unknown.
+      const preservedCode=oldCode || (old.startsWith('+'+next.dial)?next.dial:'');
+      const national=preservedCode && old.startsWith('+'+preservedCode)
+        ? old.slice(preservedCode.length+1).trim():'';
       selected=next;
       phone.value='+'+next.dial+(national?' '+national:' ');
       phone.dispatchEvent(new Event('input',{bubbles:true}));
