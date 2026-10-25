@@ -51,3 +51,9 @@ test('production Neon check requires actual atomic Business lease table as well 
   assert.match(wizard,/if\(readiness\?\.ready!==true\)/);
   assert.doesNotMatch(wizard,/CREATE TABLE|ALTER TABLE/);
 });
+
+test('saved protection settings alone never prove real Anti-Delete delivery',()=>{
+  assert.match(privacy,/получение удалений ещё не проверено/);
+  assert.match(privacy,/Bot API/);
+  assert.match(privacy,/тестового удаления сообщения/);
+});
