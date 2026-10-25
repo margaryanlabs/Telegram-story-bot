@@ -1102,3 +1102,89 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet input{
     transition:none!important;
   }
 }
+
+/* V4.4 Verified Vault — concise, evidence-first status + archive sheets.
+   No simulated protection status, no duplicated metrics or inaccessible actions. */
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-evidence{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;min-width:0;padding:3px 2px 14px;margin:0 0 12px;
+  border-bottom:1px solid var(--noir-border);color:var(--noir-muted);
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-evidence>span{
+  display:inline-flex;align-items:center;gap:8px;min-width:0;
+  font-size:12px;font-weight:550;line-height:1.45;overflow-wrap:anywhere;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-evidence>span::before{
+  content:"";flex:none;width:7px;height:7px;border-radius:50%;
+  background:var(--noir-muted);opacity:.6;
+}
+#vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-evidence>span[data-verified="true"]::before{
+  background:#66baa0;opacity:1;
+}
+#vetogram.vetogram-noir #privacyEvidenceRefresh{
+  flex:0 0 auto;min-height:44px;min-width:104px;
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:8px 13px;border:1px solid var(--noir-border);
+  border-radius:12px;background:var(--noir-surface);
+  color:var(--noir-text);font-size:12px;font-weight:700;
+}
+#vetogram.vetogram-noir #privacyEvidenceRefresh:active{transform:scale(.98)}
+#vetogram.vetogram-noir #sheet .privacy-sheet-head{
+  position:sticky;top:0;z-index:2;min-width:0;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:12px 0 14px!important;
+  margin:0 0 14px!important;
+  border-bottom:1px solid var(--noir-border)!important;
+  background:var(--noir-surface)!important;
+}
+#vetogram.vetogram-noir #sheet .privacy-sheet-head h2{
+  margin:3px 0 0!important;font-size:clamp(18px,4.5vw,25px)!important;
+  line-height:1.15;letter-spacing:-.035em;overflow-wrap:anywhere;
+}
+#vetogram.vetogram-noir #sheet .privacy-sheet-head-actions{
+  display:flex;align-items:center;flex:0 0 auto;gap:6px;min-width:0;
+}
+#vetogram.vetogram-noir #sheet .privacy-sheet-head-actions .mini-chip{
+  min-width:44px;min-height:44px;display:inline-flex;align-items:center;
+  justify-content:center;border-radius:11px!important;
+}
+#vetogram.vetogram-noir #sheet .ghost-thread-modes{
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  scroll-snap-type:x proximity;padding:2px 0 8px;
+}
+#vetogram.vetogram-noir #sheet .ghost-thread-modes::-webkit-scrollbar{display:none}
+#vetogram.vetogram-noir #sheet .ghost-thread-modes button{
+  flex:1 0 auto;min-height:44px;scroll-snap-align:start;
+  border-radius:11px!important;white-space:nowrap;font-size:12px;
+}
+#vetogram.vetogram-noir #sheet .privacy-message-list{
+  display:flex;flex-direction:column;gap:9px;min-width:0;
+  padding:10px 0 18px;
+}
+#vetogram.vetogram-noir #sheet .privacy-message{
+  min-width:0;max-width:94%;
+  border-radius:15px!important;border:1px solid var(--noir-border)!important;
+  padding:12px 14px!important;box-shadow:none!important;
+  overflow-wrap:anywhere;
+}
+#vetogram.vetogram-noir #sheet .privacy-message.outgoing{margin-left:auto}
+#vetogram.vetogram-noir #sheet .privacy-message footer{
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+}
+#vetogram.vetogram-noir #sheet .privacy-more-button{
+  display:block;width:100%;min-height:46px;margin:4px 0 14px;
+  border:1px solid var(--noir-border);border-radius:12px;
+  background:var(--noir-raised);color:var(--noir-text);
+}
+@media(max-width:430px){
+  #vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-evidence{
+    gap:8px;align-items:flex-start;
+  }
+  #vetogram.vetogram-noir [data-screen="privacy"] .v4-vault-evidence>span{font-size:11px}
+  #vetogram.vetogram-noir #privacyEvidenceRefresh{min-width:96px;padding:8px 9px}
+  #vetogram.vetogram-noir #sheet .privacy-message{max-width:100%;padding:10px 12px!important}
+  #vetogram.vetogram-noir #sheet .privacy-sheet-head{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+  #vetogram.vetogram-noir #privacyEvidenceRefresh:active{transform:none}
+}
