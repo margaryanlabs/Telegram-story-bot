@@ -644,13 +644,14 @@
   }
 
   async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const signedOwner = String(tg?.initData || '');
+    if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
     const options = {
       method: action ? 'POST' : 'GET',
       headers: {
-        'x-telegram-init-data': tg.initData,
+        'x-telegram-init-data': signedOwner,
         'content-type':'application/json',
       },
     };
@@ -661,6 +662,8 @@
       timeoutMs: 18000,
     });
 
+    if (signedOwner !== String(tg?.initData || ''))
+      throw new Error('Telegram-аккаунт изменился. Старые данные просмотров не применены.');
     if (!response.ok || !data.ok) {
       const error = new Error(data.error || 'Deep Intelligence временно недоступен');
       error.viewerData = data;
@@ -752,7 +755,8 @@
   }
 
   async function refreshViewerAnalytics({ silent = true } = {}) {
-    if (!tg?.initData || !viewerState.session?.connected) {
+    const signedOwner = String(tg?.initData || '');
+    if (!signedOwner || !viewerState.session?.connected) {
       viewerState.analytics = null;
       renderAnalytics();
       return;
@@ -762,29 +766,35 @@
       const { response, data } = await requestJson('/api/viewer-sync?analytics=1', {
         method: 'GET',
         headers: {
-          'x-telegram-init-data': tg.initData,
+          'x-telegram-init-data': signedOwner,
           'content-type':'application/json',
         },
       }, { retry:true, timeoutMs:18000 });
+      if (signedOwner !== String(tg?.initData || '')) return;
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось загрузить Viewer Analytics');
       viewerState.analytics = data.analytics || null;
     } catch (error) {
+      if (signedOwner !== String(tg?.initData || '')) return;
       if (!silent) showToast(error.message);
     }
-    renderAnalytics();
+    if (signedOwner === String(tg?.initData || '')) renderAnalytics();
   }
 
   async function refreshViewerSync({ silent = false } = {}) {
+    const signedOwner = String(tg?.initData || '');
     try {
       let data = await viewerApi();
+      if (signedOwner !== String(tg?.initData || '')) return;
 
       const history = activeStoryHistory().filter(item => Number(item.ts || 0) > 0);
       const historyKey = history.map(item => `${item.id}:${item.ts}:${item.deleted ? 1 : 0}`).join('|');
 
       if (data.session?.connected && historyKey && historyKey !== viewerRegisteredKey) {
         await viewerApi('register_stories', { stories: history }, null);
+        if (signedOwner !== String(tg?.initData || '')) return;
         viewerRegisteredKey = historyKey;
         data = await viewerApi();
+        if (signedOwner !== String(tg?.initData || '')) return;
       }
 
       if (data.degraded) {
@@ -817,6 +827,7 @@
         };
       }
     } catch (error) {
+      if (signedOwner !== String(tg?.initData || '')) return;
       const data = error.viewerData || {};
       viewerState = {
         ...viewerState,
@@ -835,6 +846,7 @@
       };
       if (!silent && data.config?.configured !== false) showToast(error.message);
     }
+    if (signedOwner !== String(tg?.initData || '')) return;
     renderViewers();
     renderHome();
   }
