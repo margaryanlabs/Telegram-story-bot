@@ -20,7 +20,13 @@ const contrast=(a,b)=>{
 test('pearl and linen foreground tokens meet 4.5:1 on background and surface',()=>{
   const light=css.match(/html\[data-veto-theme="pearl"\],html\[data-veto-theme="linen"\]\s*\{([^}]+)\}/)?.[1];
   assert.ok(light,'light themes must share explicit tokens');
-  const token=name=>light.match(new RegExp('--'+name+':(#[0-9a-fA-F]{6})'))?.[1];
+  const token=name=>{
+    const value=light.match(new RegExp('--'+name+':(#[0-9a-fA-F]{3,6})'))?.[1];
+    if(!value)return null;
+    return value.length===4
+      ?'#'+[...value.slice(1)].map(c=>c+c).join('')
+      :value;
+  };
   const text=token('noir-text'),muted=token('noir-muted'),bg=token('noir-bg'),
     surface=token('noir-surface'),coral=token('noir-coral');
   for(const foreground of [text,muted,coral])
