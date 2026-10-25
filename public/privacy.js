@@ -1316,7 +1316,7 @@
     openSheet('<span class="kicker">Vetogram PRIVACY</span><h2>Проверяю твой Telegram…</h2><p>Ищем только личные диалоги. Никакие сообщения пока не копируем и разрешения не меняем.</p>');
     try {
       const result = await businessWizardRequest('prepare');
-      if (result.enabled === false) { privacyBusinessGuideSheet(); return; }
+      if (result.enabled === false) { businessUnavailableSheet(); return; }
       renderBusinessWizardPicker(result);
     } catch (error) {
       openSheet(`
@@ -1414,23 +1414,38 @@
   }
 
   function privacyBusinessGuideSheet() {
-    const linked = Boolean(privacyState.connection.live);
     openSheet(`
-      <span class="kicker">Vetogram · ЛИЧНЫЕ ПЕРЕПИСКИ</span>
-      <h2>${linked ? 'Осталось проверить разрешения' : 'Один шаг — и переписки под защитой'}</h2>
-      <p>Для автоматического Anti-Delete нужно один раз подключить Vetogram как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
-      <div class="veto-business-sheet-steps">
-        <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
-        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Vetotg_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
-        <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты». Для архива не нужны права отвечать, удалять сообщения или отмечать их прочитанными.</span></section></div>
-        <div><b>04</b><section><strong>Вернись в Vetogram</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
-      </div>
-      <p class="privacy-archive-limit">Без Premium. Это не передаёт Vetogram старую переписку и не открывает секретные чаты. Vetogram сохраняет только разрешённые новые события, которые Telegram доставил после подключения, — удалённое ранее восстановить нельзя.</p>
+      <span class="kicker">VETOGRAM · ANTI-DELETE</span>
+      <h2>Подключение прямо в Vetogram</h2>
+      <p>После входа в твой Telegram можно выбрать личные чаты и подтвердить доступ здесь. Защита не включается сама: согласие на Anti-Delete и Stories выдаётся отдельно.</p>
+      <div class="veto-consent-boundary"><strong>Что будет после разрешения</strong>
+        <p>Новые сообщения, правки и удаления из разрешённых чатов смогут попадать в архив после подтверждения доставки событий. Старые удалённые сообщения не восстановятся.</p></div>
       <div class="sheet-actions">
-        <button class="accent" data-privacy-recheck-access="1">✓ Проверить подключение</button>
-        <button data-privacy-close="1">Вернуться к чатам</button>
+        <button class="accent" data-business-retry="1">Настроить в Vetogram →</button>
+        <button data-business-close="1">Позже</button>
       </div>
-    `);
+      <details class="veto-business-manual-fallback"><summary>Если автоматический способ недоступен</summary>
+        <p>Резервный вариант нужен только если Telegram или сервер отклоняют автоматическое подключение. Premium не требуется, но Telegram разрешает только одного Business-бота.</p>
+        <ol>
+          <li>Telegram → Настройки → Telegram для бизнеса → Чат-боты.</li>
+          <li>Добавь @Vetotg_bot и выбери только нужные личные чаты.</li>
+          <li>Вернись сюда и проверь подключение. Согласия Anti-Delete и Stories остаются отдельными.</li>
+        </ol>
+        <button type="button" data-privacy-copy-bot="1">Скопировать @Vetotg_bot</button>
+      </details>`);
+  }
+
+  function businessUnavailableSheet() {
+    openSheet(`
+      <span class="kicker">VETOGRAM · ПРОВЕРКА ПОДКЛЮЧЕНИЯ</span>
+      <h2>Автоматическое подключение ещё не включено</h2>
+      <p>Мы готовим проверенный вход без ручной настройки Telegram Business. Пока серверная защита и доставка событий не подтверждены, Vetogram не изменяет твои разрешения.</p>
+      <p>Обычные чаты, Stories и AI доступны через отдельный вход в Telegram, без Business-бота.</p>
+      <div class="sheet-actions"><button data-business-close="1">Понятно</button></div>
+      <details class="veto-business-manual-fallback"><summary>Резервная ручная настройка</summary>
+        <p>Если нужно подключить Business раньше выпуска автоматической версии, это можно сделать в Telegram → Настройки → Telegram для бизнеса → Чат-боты. Бот: @Vetotg_bot. Выбирай только разрешённые личные чаты.</p>
+        <button type="button" data-privacy-copy-bot="1">Скопировать имя бота</button>
+      </details>`);
   }
 
   async function mediaRecoveryApi(action) {
