@@ -17,23 +17,40 @@ const contrast=(a,b)=>{
   return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
 };
 
-test('pearl and linen foreground tokens meet 4.5:1 on background and surface',()=>{
-  const light=css.match(/html\[data-veto-theme="pearl"\],html\[data-veto-theme="linen"\]\s*\{([^}]+)\}/)?.[1];
-  assert.ok(light,'light themes must share explicit tokens');
+const tokens=theme=>{
+  const section=css.match(new RegExp('html\\[data-veto-theme="'+theme+
+    '"\\]\\s*\\{([^}]+)\\}'))?.[1];
+  assert.ok(section,'missing independent '+theme+' palette');
   const token=name=>{
-    const value=light.match(new RegExp('--'+name+':(#[0-9a-fA-F]{3,6})'))?.[1];
-    if(!value)return null;
+    const value=section.match(new RegExp('--'+name+':(#[0-9a-fA-F]{3,6})'))?.[1];
+    assert.ok(value,theme+':'+name);
     return value.length===4
       ?'#'+[...value.slice(1)].map(c=>c+c).join('')
       :value;
   };
-  const text=token('noir-text'),muted=token('noir-muted'),bg=token('noir-bg'),
-    surface=token('noir-surface'),coral=token('noir-coral');
-  for(const foreground of [text,muted,coral])
-    for(const background of [bg,surface])
-      assert.ok(contrast(foreground,background)>=4.5,
-        foreground+' on '+background+': '+contrast(foreground,background).toFixed(2)+':1');
+  return Object.fromEntries(['noir-bg','noir-surface','noir-text','noir-muted',
+    'noir-coral'].map(k=>[k,token(k)]));
+};
+
+test('pearl, linen and slate foreground tokens meet WCAG 4.5:1',()=>{
+  for(const theme of ['pearl','linen','slate']){
+    const palette=tokens(theme);
+    for(const foreground of ['noir-text','noir-muted','noir-coral'])
+      for(const background of ['noir-bg','noir-surface']){
+        const a=palette[foreground],b=palette[background];
+        assert.ok(contrast(a,b)>=4.5,
+          theme+' '+foreground+' on '+background+': '+contrast(a,b).toFixed(2)+':1');
+      }
+  }
 });
+test('white, linen and slate are distinct selectable presentation themes',()=>{
+  const light=tokens('pearl'),warm=tokens('linen'),slate=tokens('slate');
+  assert.notEqual(light['noir-bg'],warm['noir-bg']);
+  assert.notEqual(light['noir-surface'],warm['noir-surface']);
+  assert.notEqual(slate['noir-bg'],warm['noir-bg']);
+  assert.notEqual(slate['noir-bg'],light['noir-bg']);
+});
+
 test('AI mode/composer labels and notes use light-mode text tokens',()=>{
   const section=css.slice(css.indexOf('/* V4.10 pearl / linen light-mode'));
   assert.match(section,/\.vtai-panel h2/);
