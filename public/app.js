@@ -3169,7 +3169,27 @@
   });
   $('sheetBackdrop').addEventListener('click', closeSheet);
   document.addEventListener('keydown',event=>{
-    if(event.key!=='Escape'||$('sheet').hidden)return;
+    const sheet=$('sheet');
+    if(sheet?.hidden || document.querySelector('dialog[open]'))return;
+    if(event.key==='Tab'){
+      // A real aria-modal must not allow Tab to move into another user's
+      // chats behind a visible authentication / archive sheet.
+      const focusable=[...sheet.querySelectorAll(
+        'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
+      )].filter(el=>el.getClientRects().length &&
+        getComputedStyle(el).visibility!=='hidden');
+      if(!focusable.length){event.preventDefault();sheet.focus();return;}
+      const first=focusable[0],last=focusable[focusable.length-1];
+      const inside=sheet.contains(document.activeElement);
+      if(event.shiftKey && (!inside||document.activeElement===first)){
+        event.preventDefault();last.focus();return;
+      }
+      if(!event.shiftKey && (!inside||document.activeElement===last)){
+        event.preventDefault();first.focus();
+      }
+      return;
+    }
+    if(event.key!=='Escape')return;
     // The country list has its own Escape action. Close that list first,
     // never dismiss the entire authorization flow on the same key press.
     if ($('viewerCountryPicker')?.hidden===false)return;
