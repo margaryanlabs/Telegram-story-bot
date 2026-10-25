@@ -492,3 +492,20 @@ html#vetogram.vetogram-noir.veto-keyboard-open{scroll-padding-bottom:24px}
   #vetogram.vetogram-noir [data-screen="ai"] .v4-ai-modes-extra{flex-basis:100%!important}
   #vetogram.vetogram-noir [data-screen="ai"] .v4-ai-mode-actions{max-width:100%}
 }
+
+/* Live gallery thumbnails are rendered by the same composition painter as export. */
+#vetogram.vetogram-noir #seTemplates .se-template{isolation:isolate;overflow:hidden}
+#vetogram.vetogram-noir #seTemplates .se-template-canvas{
+  position:absolute;inset:0;display:block;width:100%;height:100%;
+  border-radius:inherit;pointer-events:none;opacity:.97;z-index:-1;
+}
+#vetogram.vetogram-noir #seTemplates .se-template::after{
+  content:'';position:absolute;inset:35% 0 0;
+  background:linear-gradient(transparent,#070a11c9);
+  pointer-events:none;z-index:-1;
+}
+#vetogram.vetogram-noir #seTemplates .se-template strong,
+#vetogram.vetogram-noir #seTemplates .se-template small,
+#vetogram.vetogram-noir #seTemplates .noir-template-type{
+  position:relative;z-index:1;text-shadow:0 2px 8px #000c;
+}
