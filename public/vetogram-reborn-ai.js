@@ -31,8 +31,8 @@
   const modes=root.querySelector('.vtai-modes');
   const modeHint=root.querySelector('.veto-reborn-ai-header small');
   const labels=Object.freeze({
-    chat:'AI-чат',translate:'Перевод',reply:'AI Reply',action:'AI Action',
-    brief:'Задачи',story:'Stories',campaign:'Продажи',negotiator:'Переговоры'
+    chat:'AI-чат',translate:'Перевод',reply:'Ответы AI',action:'Действия AI',
+    brief:'Задачи',story:'Истории',campaign:'Продажи',negotiator:'Переговоры'
   });
   function syncModeHint(){
     if(!modes||!modeHint)return;
