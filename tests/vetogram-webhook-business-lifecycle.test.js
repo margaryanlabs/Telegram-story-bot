@@ -14,7 +14,7 @@ const token='fixture-token',secret=crypto.createHash('sha256').update(token).dig
 const newMessage={business_connection_id:'connected-A',chat:{id:333},
   from:{id:333},message_id:17,text:'Owner-approved test'};
 
-function fixture(state=true){
+function fixture(state=true,{duplicateDelete=false}={}){
   const calls={archive:[],deletions:[],alerts:[],connectionReads:0};
   const connection={id:'connected-A',user:{id:111},
     user_chat_id:999999,is_enabled:state};
@@ -37,7 +37,9 @@ function fixture(state=true){
     archiveBusinessMediaVault:async()=>{throw Error('No media allowed in test')},
     archiveDeletedBusinessMessages:async(_connection,deleted)=>{
       calls.deletions.push(deleted);
-      return {retained:true,affected:1,events:[{chatId:'333',messageId:17}],
+      const fresh=!duplicateDelete || calls.deletions.length===1;
+      return {retained:true,affected:fresh?1:0,
+        events:fresh?[{chatId:'333',messageId:17}]:[],
         settings:{notifyDeletes:true},mediaRecovery:[]};
     },
     sendGhostEditAlert:async(_token,destination)=>{
@@ -107,6 +109,31 @@ test('verified active connection retains new/edit/delete events and notifies own
   assert.equal(f.calls.deletions.length,1);
   assert.equal(f.calls.alerts.length,2);
   assert.ok(f.calls.alerts.every(x=>x.destination===999999));
+});
+test('duplicate delete delivery is acknowledged without a second Anti-Delete alert',async()=>{
+  const f=fixture(true,{duplicateDelete:true});
+  const payload={deleted_business_messages:{
+    business_connection_id:'connected-A',chat:{id:333},message_ids:[17]}};
+  const first=await f.call(payload);
+  assert.equal(first.code,200);
+  assert.equal(first.payload.privacy_delete_captured,true);
+  assert.equal(first.payload.alert_sent,true);
+  const repeat=await f.call(payload);
+  assert.equal(repeat.code,200);
+  assert.equal(repeat.payload.privacy_delete_captured,false);
+  assert.equal(repeat.payload.alert_sent,false);
+  assert.equal(f.calls.deletions.length,2);
+  assert.deepEqual(f.calls.alerts.map(x=>x.kind),['delete']);
+});
+test('delete event with no known archived messages cannot claim copy preserved or alert sent',async()=>{
+  const f=fixture(true,{duplicateDelete:true});
+  const payload={deleted_business_messages:{
+    business_connection_id:'connected-A',chat:{id:333},message_ids:[17]}};
+  await f.call(payload); // First delivery wins, verified new deletion.
+  const unknown=await f.call(payload);
+  assert.equal(unknown.payload.affected,0);
+  assert.equal(unknown.payload.alert_sent,false);
+  assert.equal(unknown.payload.retained,true); // Feature enabled != event captured.
 });
 test('unsigned webhook never reaches Telegram or the private archive',async()=>{
   const f=fixture(true);
