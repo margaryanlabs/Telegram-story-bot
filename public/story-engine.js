@@ -493,9 +493,13 @@ async function downloadJpg(){
 // No async task may cross accounts. Media, Portal, audience and publish state stay untouched.
 async function applyAiStorySuggestion(requested){
   const requestedOwner=String(requested?.ownerId||'');
-  if(!requestedOwner||owner()!==requestedOwner)return false;
+  const requestedSigned=String(requested?.signed||'');
+  if(!requestedOwner||!requestedSigned||
+     requestedSigned!==String(tg?.initData||'')||
+     owner()!==requestedOwner)return false;
   await init();
-  if(owner()!==requestedOwner||state.owner!==requestedOwner||!state.draft)return false;
+  if(requestedSigned!==String(tg?.initData||'') ||
+     owner()!==requestedOwner||state.owner!==requestedOwner||!state.draft)return false;
   const incoming=requested.story;
   if(!incoming||typeof incoming!=='object')return false;
   const title=trimText(incoming.title,90),subtitle=trimText(incoming.subtitle,180);
@@ -513,7 +517,8 @@ async function applyAiStorySuggestion(requested){
     }catch{return false;}
   }
   const draftId=state.draft.id;
-  if(owner()!==requestedOwner||state.draft.id!==draftId)return false;
+  if(owner()!==requestedOwner||String(tg?.initData||'')!==requestedSigned||
+     state.draft.id!==draftId)return false;
   const portalIncluded=requested.replacePortal===true;
   checkpoint();
   const before={
