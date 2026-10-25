@@ -995,7 +995,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     if(!isOwnerRequestCurrent(scope))return;
     if(typeof window.VetoTelegramApplyAiStory!=='function')return notice('Story Engine ещё не готов. Повтори действие.',true);
     try{
-      const applied=await window.VetoTelegramApplyAiStory({ownerId:requestedOwner,story,replacePortal,portal});
+      const applied=await window.VetoTelegramApplyAiStory({
+        ownerId:requestedOwner,signed:scope.identity,story,replacePortal,portal
+      });
       if(!isOwnerRequestCurrent(scope))return;
       if(!applied)return notice('Не удалось применить текст. Попробуй снова.',true);
       notice('Тексты добавлены в Story Engine. Проверь кадр и сохрани черновик.');
