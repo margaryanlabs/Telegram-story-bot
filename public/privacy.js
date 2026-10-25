@@ -1195,7 +1195,8 @@
         <div><span class="kicker">${mode === 'focus' ? 'Vetogram FOCUS' : 'Vetogram Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
         <div class="privacy-sheet-head-actions">
           <button class="mini-chip" type="button" data-privacy-close="1">← Список</button>
-          <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
+          <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}"
+            aria-label="Обновить сообщения архива" title="Обновить сообщения архива">↻</button>
         </div>
       </div>
       <p>Архивная копия. Vetogram не вызывает readBusinessMessage при просмотре этого экрана.</p>
