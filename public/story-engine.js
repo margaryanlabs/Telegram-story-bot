@@ -658,6 +658,7 @@ function setup(){
     return {x:Math.min(.91,Math.max(.09,(event.clientX-r.left)/r.width)),
       y:Math.min(.91,Math.max(.09,(event.clientY-r.top)/r.height))};
   }
+  let pendingTextTap=null;
   canvas.addEventListener('pointerdown',event=>{
     if(!state.draft||state.owner!==owner())return;
     const p=pointerRatio(event);
@@ -669,11 +670,14 @@ function setup(){
     canvas.setPointerCapture?.(event.pointerId);event.preventDefault();
     $('seLayerText').value=hit.text;$('seLayerStyle').value=hit.style;
     renderLayers();
-    window.dispatchEvent(new CustomEvent('vetogram:story-layer-selected',{
-      detail:{layerId:hit.id}
-    }));
+    pendingTextTap={pointerId:event.pointerId,layerId:hit.id,
+      ownerId:state.owner,draftId:state.draft.id,
+      x:event.clientX,y:event.clientY,moved:false};
   });
   canvas.addEventListener('pointermove',event=>{
+    if(pendingTextTap?.pointerId===event.pointerId &&
+       Math.hypot(event.clientX-pendingTextTap.x,event.clientY-pendingTextTap.y)>12)
+      pendingTextTap.moved=true;
     const drag=state.dragLayer;
     if(!drag||drag.pointerId!==event.pointerId)return;
     if(owner()!==drag.owner||state.owner!==drag.owner||state.draft?.id!==drag.draftId){
@@ -685,8 +689,17 @@ function setup(){
     paint(canvas);event.preventDefault();
   });
   const endDrag=()=>{state.dragLayer=null;};
-  canvas.addEventListener('pointerup',endDrag);
-  canvas.addEventListener('pointercancel',endDrag);
+  canvas.addEventListener('pointerup',event=>{
+    const candidate=pendingTextTap;
+    pendingTextTap=null;endDrag();
+    if(!candidate||candidate.pointerId!==event.pointerId||candidate.moved||
+       activePhotoGesture||state.owner!==candidate.ownerId||
+       state.draft?.id!==candidate.draftId||owner()!==candidate.ownerId)return;
+    window.dispatchEvent(new CustomEvent('vetogram:story-layer-selected',{
+      detail:{layerId:candidate.layerId}
+    }));
+  });
+  canvas.addEventListener('pointercancel',()=>{pendingTextTap=null;endDrag();});
   // Two-finger gestures alter ONLY the owner's loaded photo. One finger still
   // drags text layers through the original handler above. This is a local
   // canvas interaction and never triggers publishing or network requests.
@@ -705,6 +718,7 @@ function setup(){
   }
   function clearPhotoGesture(){
     photoPointers.clear();photoGesture=null;activePhotoGesture=false;
+    pendingTextTap=null;
   }
   canvas.addEventListener('pointerdown',event=>{
     if(event.pointerType!=='touch'||!state.image?.naturalWidth||
@@ -716,6 +730,7 @@ function setup(){
       if(distance<12)return;
       historyGroup='';checkpoint();
       state.dragLayer=null;
+      pendingTextTap=null;
       const d=state.draft;
       photoGesture={owner:state.owner,draftId:d.id,zoom:Number(d.photoZoom)||1,
         photoX:Number(d.photoX)||0,photoY:Number(d.photoY)||0,
