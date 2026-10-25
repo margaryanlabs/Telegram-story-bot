@@ -870,6 +870,10 @@
   }
 
   function openSheet(html) {
+    if (window.VetoTelegramModal?.open) {
+      window.VetoTelegramModal.open(html);
+      return;
+    }
     const content = $('sheetContent');
     const backdrop = $('sheetBackdrop');
     const sheet = $('sheet');
@@ -877,6 +881,8 @@
     content.innerHTML = html;
     backdrop.hidden = false;
     sheet.hidden = false;
+    document.body.classList.add('veto-sheet-open');
+    document.documentElement.classList.add('veto-sheet-open');
     try { tg?.BackButton?.show(); } catch {}
   }
 
@@ -884,9 +890,15 @@
     // Telegram BackButton must not allow an unobserved backup loop to continue.
     privacyState.backup.stopRequested = true;
     revokeMediaUrl();
-    if ($('sheetBackdrop')) $('sheetBackdrop').hidden = true;
-    if ($('sheet')) $('sheet').hidden = true;
-    try { tg?.BackButton?.hide(); } catch {}
+    if (window.VetoTelegramModal?.close) {
+      window.VetoTelegramModal.close();
+    } else {
+      if ($('sheetBackdrop')) $('sheetBackdrop').hidden = true;
+      if ($('sheet')) $('sheet').hidden = true;
+      document.body.classList.remove('veto-sheet-open');
+      document.documentElement.classList.remove('veto-sheet-open');
+      try { tg?.BackButton?.hide(); } catch {}
+    }
   }
 
   function revokeMediaUrl() {
