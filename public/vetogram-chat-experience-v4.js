@@ -7,7 +7,12 @@
   if (!host || document.getElementById('v4MessageActions')) return;
   const $ = id => document.getElementById(id);
   const tg = window.Telegram?.WebApp;
-  let selectedBubble = null, selectedInitData = '';
+  let selectedBubble = null, selectedInitData = '', selectedThreadKey = '';
+  const activePointers = new Set();
+  const threadKey = () => [
+    host.dataset.mirrorOwnerId||'',host.dataset.mirrorThreadId||'',
+    host.dataset.mirrorThreadGeneration||''
+  ].join(':');
   let activePress = null, activeSwipe = null;
   const menu = document.createElement('dialog');
   menu.id = 'v4MessageActions';
@@ -56,6 +61,7 @@
     selectedBubble?.classList.remove('v4-message-selected');
     selectedBubble=null;
     selectedInitData='';
+    selectedThreadKey='';
     excerpt.textContent='';
     feedback.textContent='';
   }
@@ -72,7 +78,10 @@
   document.addEventListener('visibilitychange',clearIfOwnerChanged);
 
   function visibleOwner(){
-    return Boolean(tg?.initData && /^\d{1,20}$/.test(String(tg.initDataUnsafe?.user?.id||'')) &&
+    const id=String(tg?.initDataUnsafe?.user?.id||'');
+    return Boolean(tg?.initData && /^\d{1,20}$/.test(id) &&
+      host.dataset.mirrorOwnerId===id &&
+      host.dataset.mirrorThreadId && host.dataset.mirrorThreadGeneration &&
       document.querySelector('[data-screen="telegram"].active') &&
       $('telegramThreadView')?.hidden===false);
   }
@@ -86,6 +95,7 @@
     dismiss();
     selectedBubble=bubble;
     selectedInitData=tg.initData;
+    selectedThreadKey=threadKey();
     const text=messageText(bubble);
     excerpt.textContent=text?text.slice(0,160):'Медиа или сохранённое сообщение';
     buttons.reply.disabled=!bubble.querySelector('[data-mirror-reply]');
@@ -104,7 +114,8 @@
   }
   async function applyAction(action){
     if(!selectedBubble?.isConnected || !host.contains(selectedBubble) ||
-        !visibleOwner() || tg.initData!==selectedInitData){
+        !visibleOwner() || tg.initData!==selectedInitData ||
+        threadKey()!==selectedThreadKey){
       dismiss();return;
     }
     const bubble=selectedBubble;
@@ -171,26 +182,41 @@
   host.addEventListener('pointerdown',event=>{
     cancelPress();
     if(event.pointerType==='mouse' && event.button!==0)return;
+    activePointers.add(event.pointerId);
+    // A two-finger scroll/pinch must never become a swipe-to-reply.
+    if(activePointers.size>1){activeSwipe=null;return;}
     const bubble=findBubble(event);
     if(!bubble||!visibleOwner())return;
+    const signed=String(tg?.initData||''), boundThread=threadKey();
     activePress={bubble,pointerId:event.pointerId,x:event.clientX,y:event.clientY,
-      timer:setTimeout(()=>{activePress=null;activeSwipe=null;openFor(bubble);},480)};
+      timer:setTimeout(()=>{
+        activePress=null;activeSwipe=null;
+        if(activePointers.size===1 && signed===String(tg?.initData||'') &&
+          boundThread===threadKey() && visibleOwner() && bubble.isConnected)
+          openFor(bubble);
+      },480)};
     if(event.pointerType==='touch' || event.pointerType==='pen'){
       activeSwipe={bubble,pointerId:event.pointerId,x:event.clientX,y:event.clientY,
-        signed:String(tg?.initData||'')};
+        signed,threadKey:boundThread};
     }
   });
   host.addEventListener('pointermove',event=>{
+    if(activeSwipe?.pointerId===event.pointerId &&
+        (Math.abs(event.clientY-activeSwipe.y)>18 ||
+         event.clientX-activeSwipe.x < -14)) activeSwipe=null;
     if(!activePress||activePress.pointerId!==event.pointerId)return;
     if(Math.hypot(event.clientX-activePress.x,event.clientY-activePress.y)>12)cancelPress();
   },{passive:true});
   host.addEventListener('pointerup',event=>{
     const gesture=activeSwipe;
+    const singlePointer=activePointers.size===1 && activePointers.has(event.pointerId);
+    activePointers.delete(event.pointerId);
     const dx=gesture?event.clientX-gesture.x:0;
     const dy=gesture?event.clientY-gesture.y:0;
-    if(gesture && gesture.pointerId===event.pointerId &&
+    if(singlePointer && gesture && gesture.pointerId===event.pointerId &&
         dx>72 && Math.abs(dy)<40 && Math.abs(dx)>2*Math.abs(dy) &&
         gesture.signed && gesture.signed===String(tg?.initData||'') &&
+        gesture.threadKey===threadKey() &&
         visibleOwner() && gesture.bubble.isConnected && host.contains(gesture.bubble)){
       // A right swipe means "reply", never "send". The existing composer
       // decides whether this message and owner may actually be replied to.
@@ -199,9 +225,13 @@
     }
     activeSwipe=null;cancelPress();
   },{passive:true});
-  for(const event of ['pointercancel','pointerleave','scroll']){
-    host.addEventListener(event,()=>{cancelPress();activeSwipe=null;},{passive:true});
+  for(const event of ['pointercancel','pointerleave']){
+    host.addEventListener(event,eventData=>{
+      activePointers.delete(eventData.pointerId);
+      cancelPress();activeSwipe=null;
+    },{passive:true});
   }
+  host.addEventListener('scroll',()=>{cancelPress();activeSwipe=null;},{passive:true});
   host.addEventListener('contextmenu',event=>{
     const bubble=findBubble(event);
     if(!bubble||!visibleOwner())return;
@@ -225,7 +255,9 @@
       bubble.setAttribute('aria-keyshortcuts','Shift+F10 ContextMenu');
       bubble.title='Долгое нажатие — действия; свайп вправо — ответ';
     }
-    if(menu.open && selectedBubble && !selectedBubble.isConnected)dismiss();
+    if(menu.open && selectedBubble &&
+      (!selectedBubble.isConnected || !visibleOwner() ||
+        tg?.initData!==selectedInitData || threadKey()!==selectedThreadKey))dismiss();
   }
   new MutationObserver(prepareMessages).observe(host,{childList:true,subtree:true});
   prepareMessages();
