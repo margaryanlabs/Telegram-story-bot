@@ -1,0 +1,53 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+
+const read=name=>readFileSync(new URL('../'+name,import.meta.url),'utf8');
+const html=read('public/studio.html');
+const app=read('public/app.js');
+const privacy=read('public/privacy.js');
+const css=read('public/vetogram-noir.css');
+const neon=read('lib/neon-store.js');
+const wizard=read('api/business-wizard.js');
+
+test('mobile login sheet matches its real html root and dismisses app navigation',()=>{
+  assert.match(html,/<html id="vetogram"[^>]*class="[^"]*vetogram-noir/);
+  assert.match(css,/html#vetogram\.vetogram-noir body\.veto-sheet-open #sheet/);
+  assert.match(css,/html#vetogram\.vetogram-noir body\.veto-sheet-open \.bottom-nav/);
+  assert.doesNotMatch(css.replaceAll('html#vetogram.vetogram-noir body.veto-sheet-open',''),/#vetogram\.vetogram-noir body\.veto-sheet-open/);
+  assert.match(html,/id="sheet" role="dialog" aria-modal="true"/);
+  assert.match(html,/tabindex="-1" hidden/);
+  assert.match(app,/\$\('sheet'\)\.focus\(\{preventScroll:true\}\)/);
+  assert.match(app,/sheetReturnFocus/);
+  assert.match(app,/returnTo\.focus\(\{preventScroll:true\}\)/);
+  assert.match(app,/\$\('viewerCountryPicker'\)\?\.hidden===false/);
+});
+
+test('both business and personal-login flows use one sheet and a safe Telegram Back event',()=>{
+  assert.match(app,/window\.VetoTelegramModal = Object\.freeze\(\{open:openSheet,close:closeSheet\}\)/);
+  assert.match(privacy,/window\.VetoTelegramModal\?\.open/);
+  assert.match(privacy,/window\.VetoTelegramModal\?\.close/);
+  assert.match(app,/new CustomEvent\('vetogram:modal-closed'\)/);
+  assert.match(privacy,/addEventListener\('vetogram:modal-closed'/);
+  assert.match(privacy,/privacyState\.backup\.stopRequested=true/);
+});
+
+test('business wizard strips disabled scopes and does not offer conflicting selected/excluded peers',()=>{
+  assert.match(privacy,/el\.disabled = scope !== 'selected-private'/);
+  assert.match(privacy,/el\.disabled = scope === 'selected-private' \|\| scope === 'preserve'/);
+  assert.match(privacy,/if \(el\.disabled\) el\.checked = false/);
+  assert.match(privacy,/effectiveSelected\.length > 0 && effectiveSelected\.length <= 12/);
+  assert.match(privacy,/effectiveExcluded\.length <= 12/);
+  assert.match(privacy,/antiDeleteConsent:\$\('businessWizardAntiDelete'\)\?\.checked===true/);
+  assert.match(privacy,/storiesConsent:\$\('businessWizardStories'\)\?\.checked===true/);
+  const errorArea=privacy.split('<h2>Нужно подключить свой Telegram</h2>')[1]?.split('</div>')[0]||'';
+  assert.equal((errorArea.match(/data-business-close="1"/g)||[]).length,1);
+});
+
+test('production Neon check requires actual atomic Business lease table as well as schema version',()=>{
+  assert.match(neon,/to_regclass\('public\.veto_business_write_leases'\)/);
+  assert.match(neon,/businessLeaseReady:lease\?\.ready===true/);
+  assert.match(wizard,/Number\(result\?\.schemaVersion\)>=5 && result\.businessLeaseReady===true/);
+  assert.match(wizard,/if\(readiness\?\.ready!==true\)/);
+  assert.doesNotMatch(wizard,/CREATE TABLE|ALTER TABLE/);
+});
