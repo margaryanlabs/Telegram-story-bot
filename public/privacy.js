@@ -1272,6 +1272,7 @@
   }
 
   async function loadMedia(chatId, messageId, mediaType, fileName = '') {
+    const lease=ownerLease();
     const button = document.querySelector(`[data-privacy-media="${CSS.escape(String(messageId))}"][data-privacy-chat-id="${CSS.escape(String(chatId))}"]`);
     const original = button?.innerHTML;
     if (button) {
@@ -1282,14 +1283,16 @@
     try {
       const query = new URLSearchParams({ chatId:String(chatId), messageId:String(messageId) });
       const response = await fetch(`/api/privacy-media?${query}`, {
-        headers: { 'x-telegram-init-data': tg?.initData || '' },
+        headers: { 'x-telegram-init-data': lease.signed },
       });
+      assertOwner(lease);
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'Не удалось открыть медиа');
       }
 
       const blob = await response.blob();
+      assertOwner(lease);
       revokeMediaUrl();
       privacyState.mediaObjectUrl = URL.createObjectURL(blob);
       const url = privacyState.mediaObjectUrl;
@@ -1333,8 +1336,8 @@
 
 
   async function businessWizardRequest(action, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram из Telegram, чтобы подтвердить аккаунт');
-    const signedOwner=String(tg.initData);
+    const lease=ownerLease();
+    const signedOwner=lease.signed;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 27000);
     try {
@@ -1344,7 +1347,7 @@
         body:JSON.stringify({action,...payload}),signal:controller.signal,
       });
       const result = await response.json().catch(() => ({}));
-      if (String(tg?.initData||'')!==signedOwner) throw new Error('Аккаунт Telegram изменился. Обнови разрешения для нового аккаунта.');
+      assertOwner(lease);
       if (!response.ok || !result.ok) {
         const err = new Error(result.error || 'Не удалось проверить подключение');
         err.needsSession = Boolean(result.needsSession);
@@ -1567,19 +1570,20 @@
   }
 
   async function mediaRecoveryApi(action) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const lease=ownerLease();
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),45000);
     try {
       const response=await fetch('/api/privacy-media-recover',{
         method:'POST',headers:{
-          'x-telegram-init-data':tg.initData,
+          'x-telegram-init-data':lease.signed,
           'content-type':'application/json',
         },
         body:JSON.stringify({action,confirm:action==='recover'}),
         signal:controller.signal,
       });
       const data=await response.json().catch(()=>({}));
+      assertOwner(lease);
       if(!response.ok||!data.ok)throw new Error(data.error||'Media Vault недоступен');
       return data;
     }catch(error){
@@ -1640,19 +1644,20 @@
   }
 
   async function backupApi(action, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const lease=ownerLease();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000);
     try {
       const response = await fetch('/api/privacy-backup', {
         method:'POST', headers:{
-          'x-telegram-init-data':tg.initData,
+          'x-telegram-init-data':lease.signed,
           'content-type':'application/json',
         },
         body:JSON.stringify({ action,...payload }),
         signal:controller.signal,
       });
       const data = await response.json().catch(() => ({}));
+      assertOwner(lease);
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось сохранить переписку');
       return data;
     } catch (error) {
