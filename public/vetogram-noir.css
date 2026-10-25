@@ -664,3 +664,12 @@ html#vetogram[data-veto-theme="linen"] .v4-message-feedback{
     min-width:34px!important;width:34px!important;
   }
 }
+
+/* Directly selecting text on the fullscreen canvas exposes the real layer
+   inspector even in Quick mode; the editor's existing data is authoritative. */
+#vetogram.vetogram-noir #seEngine.v4-layer-direct-edit
+.se-editor-shell[data-mode="quick"] .noir-editor-tabs button[data-se-tool="Layers"]{
+  display:inline-flex!important;
+}
+#vetogram.vetogram-noir #seEngine.v4-studio-focus.v4-studio-tools-open
+.v4-inspector-close{display:inline-flex!important}
