@@ -48,3 +48,30 @@ test('V4 includes safe reduced-motion/keyboard semantics and no new stylesheet',
   assert.match(script,/aria-expanded/);
   assert.doesNotMatch(html,/<link[^>]+href="\/vetogram-experience-v4\.css/);
 });
+
+test('V4 chat actions are real owner-scoped message interactions, not simulated chat data',()=>{
+  const chat=read('vetogram-chat-experience-v4.js');
+  assert.doesNotThrow(()=>new vm.Script(chat));
+  assert.match(html,/vetogram-chat-experience-v4\.js/);
+  assert.match(chat,/selectedInitData/);
+  assert.match(chat,/visibleOwner\(\)/);
+  assert.match(chat,/tg\.initData!==selectedInitData/);
+  assert.match(chat,/\[data-mirror-message-id\]/);
+  assert.match(chat,/\[data-mirror-reply\]/);
+  assert.match(chat,/pointerdown/);
+  assert.match(chat,/dx>72/);
+  assert.match(chat,/aria-keyshortcuts/);
+  assert.match(chat,/document\.createElement\('dialog'\)/);
+  assert.match(chat,/navigator\.clipboard\.writeText\(text\)/);
+  assert.match(chat,/window\.VetoTelegramNavigate\?\.\('privacy'\)/);
+  assert.doesNotMatch(chat,/\bfetch\s*\(/);
+  assert.doesNotMatch(chat,/\bsendMessage\s*\(/);
+  assert.doesNotMatch(chat,/\blocalStorage\s*\./);
+});
+
+test('V4 does not nest a duplicate Telegram connection guide',()=>{
+  assert.match(script,/byId\('telegramMirrorAccessDrawer'\) \|\| progressive/);
+  assert.match(html,/id="telegramMirrorAccessDrawer"/);
+  assert.match(styles,/v4-message-actions/);
+  assert.match(styles,/se-template-canvas/);
+});
