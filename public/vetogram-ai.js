@@ -10,7 +10,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,requestEpoch:0,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false,reminderSchedulingConfigured:null};
+  const state={identity:null,requestEpoch:0,generateIntent:0,generateAbort:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false,reminderSchedulingConfigured:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -35,6 +35,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   function reset(){
     // Invalidate every in-flight owner-bound request, even after A→B→A.
     state.requestEpoch+=1;
+    state.generateIntent++;
+    state.generateAbort?.abort();
+    state.generateAbort=null;
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;state.focusHidden.clear();
     state.tasks=[];state.taskFilter='open';state.taskCloudRevision=null;state.taskCloudBusy=false;
@@ -88,6 +91,13 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   function setMode(mode){
     if(!['chat','translate','reply','story','campaign','negotiator','action','brief'].includes(mode))return;
     if(state.mode!==mode){
+      // Switching AI modes cancels the prior active generation. A → B → A
+      // must not accept an old A response just because the name matches.
+      const wasGenerating=Boolean(state.generateAbort);
+      state.generateIntent++;
+      state.generateAbort?.abort();
+      state.generateAbort=null;
+      if(wasGenerating)setBusy(false);
       // A draft approved for one mode is never reusable in another mode.
       state.history=[];$('vtaiThread').replaceChildren();
       state.last=null;state.reviewedApprovalId=null;state.sendIntent=null;
@@ -602,13 +612,16 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     $('vtaiCreate').disabled=value;$('vtaiLoadChats').disabled=value;
     $('vtaiSend').disabled=value||!canSendDraft();
   }
-  async function request(url,body,consent=false){
+  async function request(url,body,consent=false,externalSignal=null){
     // Bind *every* HTTP call to its original signed owner and reset epoch.
     // This also protects consumers added later that forget their own fence.
     const requestScope=ownerRequestScope();
     const requestOwner=requestScope.identity,requestOwnerId=requestScope.ownerId;
     if(!isOwnerRequestCurrent(requestScope))throw Error('Нужно открыть VETOGRAM внутри Telegram.');
     const abort=new AbortController();
+    const onExternalAbort=()=>abort.abort();
+    if(externalSignal?.aborted)abort.abort();
+    else externalSignal?.addEventListener('abort',onExternalAbort,{once:true});
     const timeout=setTimeout(()=>abort.abort(),21000);
     try{
       const result=await fetch(url,{method:'POST',
@@ -632,7 +645,10 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         throw Error('Старый запрос отменён после обновления Telegram-сеанса.');
       if(!result.ok||!json.ok)throw Error(json.error||'Сервис недоступен');
       return json;
-    }finally{clearTimeout(timeout)}
+    }finally{
+      clearTimeout(timeout);
+      externalSignal?.removeEventListener('abort',onExternalAbort);
+    }
   }
   async function generate(){
     if(state.busy||!safeIdentity())return;
@@ -673,6 +689,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     // One-shot consent: notes cannot silently leak into the next request.
     $('vtaiIncludeMemory').checked=false;
     const scope=ownerRequestScope();
+    const intent=++state.generateIntent;
+    const generationAbort=new AbortController();
+    state.generateAbort=generationAbort;
     setBusy(true);$('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
     notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
@@ -684,8 +703,8 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
           action:'issue',chatId:negotiationPolicy.chatId,currency:negotiationPolicy.currency,
           askingPrice:$('vtaiNegAsking').value,minPrice:$('vtaiNegFloor').value,
           maxDiscountPct:negotiationPolicy.discountPct,minutes:$('vtaiNegMinutes').value
-        },'grant');
-        if(!isOwnerRequestCurrent(scope))return;
+        },'grant',generationAbort.signal);
+        if(!isOwnerRequestCurrent(scope)||intent!==state.generateIntent)return;
         grant=issued.grant;
         if(!grant?.active||grant.chatId!==negotiationPolicy.chatId)
           throw Error('Сервер не подтвердил ограниченное разрешение.');
@@ -694,9 +713,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       }
       const answer=await request('/api/vetogram-ai',
         {mode,prompt,history:mode==='chat'?oldHistory:[],notes:approvedNotes,
-          ...(grant?{grantId:grant.grantId,chatId:grant.chatId}:{})},true);
-      if(!isOwnerRequestCurrent(scope))return;
-      if(state.mode!==mode)return notice('Режим изменился. Ответ не применён.',true);
+          ...(grant?{grantId:grant.grantId,chatId:grant.chatId}:{})},true,generationAbort.signal);
+      if(!isOwnerRequestCurrent(scope)||intent!==state.generateIntent)return;
+      if(state.mode!==mode)return;
       if(Number.isInteger(Number(answer?.quota?.remainingRequests)))$('vtaiQuota').textContent='Осталось AI-запросов на сегодня (UTC): '+Number(answer.quota.remainingRequests)+'.';
       addBubble(original,'user');addBubble(answer.text,'assistant');
       if(mode==='chat')state.history=[...oldHistory,{role:'user',text:prompt},{role:'assistant',text:answer.text}].slice(-6);
@@ -761,11 +780,16 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         $('vtaiSend').disabled=!state.dialogs.length;
         notice('Текст подготовлен. Ничего не отправлено.');
       }
-    }catch(error){if(isOwnerRequestCurrent(scope))
-      notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);}
-    finally{if(isOwnerRequestCurrent(scope)){
-      setBusy(false);$('vtaiSend').disabled=!canSendDraft();
-    }}
+    }catch(error){
+      if(isOwnerRequestCurrent(scope)&&intent===state.generateIntent)
+        notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);
+    }
+    finally{
+      if(isOwnerRequestCurrent(scope)&&intent===state.generateIntent){
+        state.generateAbort=null;
+        setBusy(false);$('vtaiSend').disabled=!canSendDraft();
+      }
+    }
   }
   // Telegram returns only 24 dialogs in the initial page. Other existing
   // conversations stay accessible by explicit "more" or target lookup.
