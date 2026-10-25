@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const read=name=>readFileSync(new URL('../public/'+name,import.meta.url),'utf8');
 const source=read('voice-studio.js'),viewportSource=read('veto-device-polish.js'),html=read('studio.html');
+const theme=read('chat-theme.js'),css=read('vetogram-finish-2026.css');
 const segment=(start,end)=>{
   const a=source.indexOf(start),b=source.indexOf(end,a+start.length);
   assert.ok(a>=0&&b>a,'missing real voice handler: '+start);
@@ -69,11 +70,14 @@ test('duplicate taps while getUserMedia is pending start only one permission req
   assert.equal(f.calls(),1);
   assert.equal(f.state.micStarting,true);
   assert.equal(f.ui.voiceMicStop.disabled,false,'Stop must cancel pending permission');
+  assert.equal(f.ui.voiceMicStop.textContent,'Отменить запрос');
+  assert.equal(f.ui.voiceMicStop.attributes['aria-label'],'Отменить запрос доступа к микрофону');
   assert.equal(f.ui.voiceMicButton.attributes['aria-busy'],'true');
   f.permission.reject(new Error('Denied'));
   await Promise.all([a,b]);
   assert.equal(f.state.micStarting,false);
   assert.equal(f.ui.voiceMicButton.disabled,false);
+  assert.equal(f.ui.voiceMicStop.textContent,'Отключить');
 });
 test('leaving the screen while permission pending closes a late stream and never activates mic',async()=>{
   const f=micFixture(),run=f.startMic();
@@ -150,4 +154,38 @@ test('voice and device scripts are current-release assets and navigation has exp
   assert.match(viewportSource,/window\.addEventListener\('veto:screen-changed'/);
   assert.match(html,/\/voice-studio\.js\?v=20261025-cross-screen-42/);
   assert.match(html,/\/veto-device-polish\.js\?v=20261025-cross-screen-42/);
+});
+
+
+test('leaving fullscreen Telegram chat restores navigation classes on other screens',()=>{
+  const begin=theme.indexOf('  function dock(where) {');
+  const end=theme.indexOf('  let selected=',begin);
+  assert.ok(begin>=0&&end>begin);
+  const code=theme.slice(begin,end);
+  let screen='telegram';
+  const flags={},body={classList:{toggle:(key,val)=>{flags[key]=val}}};
+  const bar={insertBefore(control){control.parentElement=bar}};
+  const thread={insertBefore(control){control.parentElement=thread}};
+  const heading={insertBefore(control){control.parentElement=heading}};
+  const control={parentElement:thread};
+  const document={body,
+    querySelector:selector=>{
+      if(selector==='.screen[data-screen="telegram"]')
+        return {classList:{contains:()=>screen==='telegram'}};
+      if(selector.includes('thread-bar'))return thread;
+      if(selector.includes('header-actions'))return heading;
+      return null;
+    },
+    getElementById:()=>({hidden:false})
+  };
+  const dock=vm.runInNewContext(code+';dock',{document,bar,control,closeMenu(){}});
+  dock('thread');
+  assert.equal(flags['veto-chat-active'],true);
+  assert.equal(flags['veto-chat-thread'],true);
+  screen='ai';dock();
+  assert.equal(flags['veto-chat-active'],false);
+  assert.equal(flags['veto-chat-thread'],false);
+  assert.equal(control.parentElement,bar);
+  assert.match(theme,/window\.addEventListener\('veto:screen-changed',\(\)=>dock\(\)\)/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
 });
