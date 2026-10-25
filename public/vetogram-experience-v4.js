@@ -183,6 +183,61 @@
     }
   }
 
+  // The actual thread previously exposed seven equally weighted header icons,
+  // squeezing the name down to almost nothing on phones and the folded Fold.
+  // Keep Back, identity, Telegram link and Search immediate; move secondary
+  // actions into a native keyboard-accessible disclosure without cloning them.
+  const threadView=byId('telegramThreadView');
+  const threadBar=threadView && $('.veto-mirror-thread-bar',threadView);
+  if(threadBar && !byId('v4ThreadMore')){
+    const menu=document.createElement('details');
+    menu.id='v4ThreadMore';
+    menu.className='v4-thread-more';
+    const summary=document.createElement('summary');
+    summary.className='v4-thread-more-trigger';
+    summary.textContent='···';
+    summary.setAttribute('aria-label','Дополнительные действия с перепиской');
+    summary.setAttribute('title','Действия с перепиской');
+    const tools=document.createElement('div');
+    tools.className='v4-thread-more-panel';
+    tools.setAttribute('role','group');
+    tools.setAttribute('aria-label','Инструменты открытого чата');
+    menu.append(summary,tools);
+    const secondary=[
+      threadBar.querySelector('[data-open-screen="ai"]'),
+      byId('telegramThreadReplyAI'),
+      byId('telegramThreadBriefAI'),
+      byId('telegramThreadRefresh')
+    ].filter(Boolean);
+    secondary.forEach(button=>{
+      // Existing handlers and access checks are unchanged by DOM relocation.
+      button.classList.add('v4-thread-menu-action');
+      button.setAttribute('title',button.getAttribute('aria-label')||'Действие с чатом');
+      const caption=document.createElement('span');
+      caption.className='v4-thread-menu-caption';
+      caption.textContent=button.getAttribute('aria-label')||'Действие с чатом';
+      button.append(caption);
+      tools.append(button);
+    });
+    threadBar.append(menu);
+    tools.addEventListener('click',event=>{
+      if(event.target.closest('button'))menu.open=false;
+    });
+    document.addEventListener('pointerdown',event=>{
+      if(menu.open && !menu.contains(event.target))menu.open=false;
+    },{passive:true});
+    document.addEventListener('keydown',event=>{
+      if(event.key==='Escape' && menu.open){
+        event.preventDefault();menu.open=false;summary.focus();
+      }
+    });
+    window.addEventListener('veto:screen-changed',()=>{menu.open=false;});
+    if(threadView){
+      new MutationObserver(()=>{if(threadView.hidden)menu.open=false;})
+        .observe(threadView,{attributes:true,attributeFilter:['hidden']});
+    }
+  }
+
   // Immersive canvas is the *real* editor canvas, not a mock or exported screenshot.
   const engine = byId('seEngine');
   const stage = engine && $('.se-stage', engine);
