@@ -153,6 +153,40 @@ test('production disabled prepare exposes capability only and performs no sessio
     assert.equal(res.code,200);assert.equal(res.body.enabled,false);assert.equal(res.body.snapshotToken,undefined);
   } finally {if(before===undefined)delete process.env.VERCEL_ENV;else process.env.VERCEL_ENV=before;if(flag===undefined)delete process.env.VETOGRAM_UNIFIED_ONBOARDING;else process.env.VETOGRAM_UNIFIED_ONBOARDING=flag;}
 });
+test('production Business wizard fails closed before reading an owner session when Neon schema is unready',async()=>{
+  const before=process.env.VERCEL_ENV,flag=process.env.VETOGRAM_UNIFIED_ONBOARDING;
+  try {
+    process.env.VERCEL_ENV='production';
+    process.env.VETOGRAM_UNIFIED_ONBOARDING='1';
+    let sessionReads=0;
+    const handler=createBusinessWizardHandler({
+      token:'test-token',
+      businessWriteReadiness:async()=>({ready:false}),
+      getViewerSession:async()=>{sessionReads++;throw Error('must not read session');}
+    });
+    const req=async body=>{
+      const res=response();
+      await handler({method:'POST',
+        headers:{'x-telegram-init-data':signedInit(111,'test-token')},body},res);
+      return res;
+    };
+    const prepared=await req({action:'prepare'});
+    assert.equal(prepared.code,200);
+    assert.equal(prepared.body.enabled,false);
+    assert.equal(prepared.body.state,'requires-server-readiness');
+    assert.equal(prepared.body.snapshotToken,undefined);
+    const blocked=await req({action:'connect',
+      scope:'selected-private',chatIds:['101'],antiDeleteConsent:true,
+      consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS'});
+    assert.equal(blocked.code,503);
+    assert.equal(sessionReads,0);
+  } finally {
+    if(before===undefined)delete process.env.VERCEL_ENV;else process.env.VERCEL_ENV=before;
+    if(flag===undefined)delete process.env.VETOGRAM_UNIFIED_ONBOARDING;
+    else process.env.VETOGRAM_UNIFIED_ONBOARDING=flag;
+  }
+});
+
 test('Bot API verification cannot write an older Connection ID or accept another owner',async()=>{
   const previous=globalThis.fetch,hash=process.env.TELEGRAM_API_HASH,token=process.env.TELEGRAM_BOT_TOKEN;
   process.env.TELEGRAM_API_HASH='fixture';process.env.TELEGRAM_BOT_TOKEN='test-token';
