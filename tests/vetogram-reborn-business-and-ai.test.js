@@ -45,6 +45,7 @@ test('production Business gate checks Neon migration before any session or Teleg
   assert.ok(on>0 && ready>on && readSession>ready);
   assert.match(api,/selectedStorageProvider\(\) !== 'neon'/);
   assert.match(api,/Number\(result\?\.schemaVersion\)>=5/);
+  assert.match(api,/result\.businessLeaseReady===true/);
   assert.match(api,/state:'requires-server-readiness'/);
   assert.match(api,/Серверная защита подключения ещё не подготовлена/);
   assert.doesNotMatch(api,/CREATE TABLE|ALTER TABLE/);
