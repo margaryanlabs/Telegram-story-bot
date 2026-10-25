@@ -15,7 +15,7 @@ const savePart=story.slice(story.indexOf('const storageKey=d=>'),
 assert.match(historyPart,/function checkpoint/);
 assert.match(savePart,/async function saveDraft/);
 
-function fixture(){
+function makeHarness(){
   let currentOwner='111',commit=null,lastStored=null,reads=0;
   const messages=[];
   const initial={id:'story-1',ownerId:'111',title:'Draft A',caption:'',
@@ -45,7 +45,7 @@ function fixture(){
     setOwner:id=>{currentOwner=id}};
 }
 test('editing during slow save keeps new on-screen text and warns of unsaved changes',async()=>{
-  const t=fixture(),ref=t.state.draft;
+  const t=makeHarness(),ref=t.state.draft;
   const saving=t.api.saveDraft();
   t.api.recordEdit('seTitle');t.state.draft.title='Newest edit';
   assert.equal(t.lastStored.draft.title,'Draft A');
@@ -56,7 +56,7 @@ test('editing during slow save keeps new on-screen text and warns of unsaved cha
   assert.equal(t.reads,1);
 });
 test('unchanged save updates only the timestamp, not the entire live draft',async()=>{
-  const t=fixture(),ref=t.state.draft;
+  const t=makeHarness(),ref=t.state.draft;
   const saving=t.api.saveDraft();
   t.commit();await saving;
   assert.equal(t.state.draft,ref);
@@ -64,7 +64,7 @@ test('unchanged save updates only the timestamp, not the entire live draft',asyn
   assert.match(t.messages.at(-1),/сохранён только на этом устройстве/);
 });
 test('old owner commit cannot change the new owner draft',async()=>{
-  const t=fixture(),saving=t.api.saveDraft();
+  const t=makeHarness(),saving=t.api.saveDraft();
   t.setOwner('222');t.state.owner='222';
   t.state.draft={id:'story-2',ownerId:'222',imageDataUrl:'',title:'Owner B'};
   t.commit();await saving;
@@ -73,7 +73,7 @@ test('old owner commit cannot change the new owner draft',async()=>{
   assert.equal(t.reads,0);
 });
 test('replacing draft object with same id still protects newer content',async()=>{
-  const t=fixture(),saving=t.api.saveDraft();
+  const t=makeHarness(),saving=t.api.saveDraft();
   t.state.draft={...t.state.draft,title:'Recovered by undo'};
   t.state.revision++;
   t.commit();await saving;
