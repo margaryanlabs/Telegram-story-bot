@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../public/vetogram-ai.js',import.meta.url),'utf8');
 const modePart=source.slice(source.indexOf('  function setMode(mode){'),
-  source.indexOf('  function actionRecipientReady()'));
+  source.indexOf('  function actionRecipientReady('));
 const busyPart=source.slice(source.indexOf('  function setBusy(value){'),
   source.indexOf('  async function request('));
 const requestPart=source.slice(source.indexOf('  async function request('),
