@@ -145,3 +145,14 @@ test('manual mic stop preserves already-finished file until screen exit',async()
   s.signal('win:veto:screen-changed',{detail:{screen:'ai'}});
   assert.equal(s.element('voiceResult').hidden,true);
 });
+
+test('idle spectrum never simulates audio and remains static after stop',async()=>{
+  const s=studio();
+  assert.match(source,/function paintIdleSpectrum\(\)/);
+  assert.doesNotMatch(source,/Math\.sin\(\(i\*2\.15\)\+\(Date\.now\(\)\/2500\)\)/);
+  assert.match(source,/if\(state\.active\)state\.raf=requestAnimationFrame\(draw\)/);
+  s.mic();await s.flush();
+  s.emit('voiceMicStop');
+  assert.equal(s.element('voiceMicState').classList.contains('live'),false);
+  assert.equal(s.element('voiceResult').hidden,true);
+});
