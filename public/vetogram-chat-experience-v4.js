@@ -71,10 +71,17 @@
   function dismiss(){ if(menu.open)menu.close(); else clearSelection(); }
   close.addEventListener('click',dismiss);
   menu.addEventListener('click',event=>{if(event.target===menu)dismiss();});
-  window.addEventListener('veto:screen-changed',dismiss);
-  window.addEventListener('pagehide',dismiss);
+  window.addEventListener('veto:screen-changed',()=>{
+    cancelGestures();dismiss();
+  });
+  window.addEventListener('pagehide',()=>{
+    cancelGestures();dismiss();
+  });
   function clearIfOwnerChanged(){
-    if(menu.open && (!tg?.initData || tg.initData!==selectedInitData))dismiss();
+    const stale=menu.open && (!visibleOwner() || !selectedBubble?.isConnected ||
+      tg?.initData!==selectedInitData || threadKey()!==selectedThreadKey);
+    if(stale)dismiss();
+    if(!visibleOwner())cancelGestures();
   }
   window.addEventListener('focus',clearIfOwnerChanged);
   document.addEventListener('visibilitychange',clearIfOwnerChanged);
@@ -94,6 +101,9 @@
   }
   function openFor(bubble){
     if(!visibleOwner() || !bubble?.isConnected || !host.contains(bubble))return false;
+    // Opening a native <dialog> can retarget the finger's eventual pointerup:
+    // clear pointer tracking immediately, not just after the host receives it.
+    cancelGestures();
     dismiss();
     selectedBubble=bubble;
     selectedInitData=tg.initData;
@@ -187,6 +197,9 @@
       activeSwipe.bubble.style.removeProperty('--v4-swipe-reply-x');
     }
     activeSwipe=null;
+  }
+  function cancelGestures(){
+    cancelPress();cancelSwipe();activePointers.clear();
   }
   host.addEventListener('pointerdown',event=>{
     cancelPress();cancelSwipe();
@@ -282,6 +295,20 @@
       (!selectedBubble.isConnected || !visibleOwner() ||
         tg?.initData!==selectedInitData || threadKey()!==selectedThreadKey))dismiss();
   }
-  new MutationObserver(prepareMessages).observe(host,{childList:true,subtree:true});
+  // Changing between threads can update only host dataset attributes, and
+  // pressing Back only hides the thread. A childList-only observer misses both.
+  const monitor=new MutationObserver(()=>{
+    prepareMessages();
+    clearIfOwnerChanged();
+  });
+  monitor.observe(host,{
+    childList:true,subtree:true,attributes:true,
+    attributeFilter:['data-mirror-owner-id','data-mirror-thread-id',
+      'data-mirror-thread-generation']
+  });
+  const threadView=$('telegramThreadView');
+  if(threadView)monitor.observe(threadView,{
+    attributes:true,attributeFilter:['hidden']
+  });
   prepareMessages();
 })();
