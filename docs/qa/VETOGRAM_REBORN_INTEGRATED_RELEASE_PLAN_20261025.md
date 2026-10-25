@@ -178,3 +178,28 @@ This release-blocking UI privacy fix is implemented inside the same actual Mini 
 - The 6 targeted test cases were executed in an isolated JavaScript harness over freshly fetched GitHub sources; **6/6 passed**. Privacy JS and V4 presentation script parsed; the canonical CSS braces remain balanced.
 - No complete npm test suite, WebView rendering screenshots, iOS/Android/Fold gestures, actual Telegram signed-owner use, live archive status check, or webhook/Business integration test was executed in this slice. Do not claim those as complete.
 - A final build and real-device QA are still release blockers, along with the entire other V4 module stack. **No deploy / merge / Neon migration / production flag change.**
+
+## V4.5 Story / Voice / AI owner-safe lifecycle (25 October 2026)
+
+Continue implementation in existing `margaryanlabs/Telegram-story-bot` branch and PR #185. This stage does **not** deploy, enable unified onboarding, touch Neon, consume AI provider quota, change permissions or merge.
+
+### Story Studio
+- Fixed potential loss of text/layer changes while `saveDraft()` awaits IndexedDB: a monotonic editor revision is now incremented by checkpoints, successive text keystrokes and draft switches. An old persisted snapshot cannot overwrite a newer live document; UI says when fresh edits still need a follow-up save.
+- IndexedDB transaction wrapper now resolves **only on `tx.oncomplete`**, not `put().onsuccess`. A later transaction abort must not yield a false saved confirmation.
+- Photo image error callbacks are owner/draft/image gated, so a stale image cannot show an error on another user's story.
+- JPEG download and publisher handoff check both signed owner/draft **and revision** after async encoding; a change made during `toBlob()` cancels the handoff rather than producing a mismatched image/caption snapshot. Audience confirmation remains separate.
+
+### Voice Studio
+- Every `MediaRecorder` callback is bound to a recording epoch, active recorder instance and the Telegram signed session. Cancelling mic, leaving Voice, switching account, hiding/pagehide invalidates late onstop and stops tracks. Private pending blobs and object URLs are cleared on leaving; manual mic disconnect after a completed recording still allows download until exit.
+- Late `getUserMedia` permission after exiting or owner switch is rejected and tracks immediately stopped; recorder.start exceptions now leave a usable UI.
+- Spectrum no longer uses sine/time-generated fake "audio" bars: a static low baseline when mic is off; actual analyser drives active bars only. Visual V4 capture statuses remain derived from real recorder flags.
+
+### AI
+- AI mode change cancels its active generation through `AbortController`, resets the disabled composer, and increments a monotonic generation intent. A→B→A mode changes cannot apply an old reply even when the current mode name returns to A.
+- Existing signed-owner `request()` gains an **optional, one-request cancellation signal** that propagates to grant issuance and main AI inference. Stale catch/finally blocks do not overwrite the new request's UI or incorrectly unlock a new request.
+- The AI active mode text is displayed fully in Russian, and starter shortcuts remain draft-only, without auto-send.
+
+### Isolated verification / remaining release gates
+- Added real-controller tests: `tests/vetogram-v4-voice-session.test.js` (**6/6 isolated simulated-recorder cases**), `tests/vetogram-story-save-races.test.js` (**7/7 isolated store and editor cases**), and `tests/vetogram-ai-mode-generation.test.js` (**4/4 isolated cancellation cases**). These passed by execution of freshly fetched production controllers in an isolated JS harness, not the complete repository CI suite.
+- Updated `studio.html` cache keys for the four changed Story/Voice/AI runtime files to ensure correct integration in the final single release.
+- Still required before production: `npm test` (full suite), `npm run vercel-build`, native Android/Fold/iOS microphone permission and recording, real IndexedDB transaction abort, AI provider budget/consent, signed Telegram two-owner switching, multi-module visual inspection, webhook/media/Story publisher E2E.
