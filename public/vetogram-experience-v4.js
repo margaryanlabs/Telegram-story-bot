@@ -180,11 +180,33 @@
         extra.append(summary, actions);
         modeRail.append(extra);
         secondaryModes.forEach(button => actions.append(button));
+        // A secondary mode must remain identifiable when the extra-mode
+        // disclosure is closed. The text is the *actual pressed mode*, never
+        // a fabricated AI state. Allow users to close the list manually.
+        const defaultSummary = 'Другие режимы';
+        let lastSelected = '';
         const syncSelected = () => {
-          if (secondaryModes.some(button => button.getAttribute('aria-pressed') === 'true'))
-            extra.open = true;
+          const selected = secondaryModes.find(button =>
+            button.getAttribute('aria-pressed') === 'true');
+          const mode = selected?.dataset.vtaiMode || '';
+          const name = selected?.textContent?.replace(/^[^\p{L}\p{N}]+/u,'').trim() || '';
+          summary.textContent = mode ? 'Режим: ' + name : defaultSummary;
+          summary.setAttribute('aria-label',mode
+            ? 'Текущий режим: ' + name + '. Открыть список режимов'
+            : 'Показать остальные режимы VETO AI');
+          extra.dataset.selectedMode = mode;
+          if(mode!==lastSelected){
+            extra.open=Boolean(mode);
+            lastSelected=mode;
+          }
         };
         modeRail.addEventListener('click', () => queueMicrotask(syncSelected));
+        const modeObserver=new MutationObserver(syncSelected);
+        secondaryModes.forEach(button=>modeObserver.observe(button,{
+          attributes:true,attributeFilter:['aria-pressed']
+        }));
+        // Mutations of primary modes are not required here: the AI
+        // controller updates the secondary aria-pressed flags on each switch.
         syncSelected();
       }
     }
