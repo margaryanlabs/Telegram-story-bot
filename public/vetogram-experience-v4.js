@@ -69,8 +69,8 @@
 
   // Privacy: one explicit setup route, not an instructional wall on every visit.
   const privacySetup = progressive({scope:'privacy', selector:'#privacyBusinessOnboarding',
-    title:'Настроить Anti-Delete', description:'Подключение бота и выбор разрешённых чатов',
-    className:'v4-privacy-setup'});
+    title:'Подключить Anti-Delete', description:'Выбор личных чатов прямо в Vetogram',
+    className:'v4-privacy-setup', open:true});
   if (privacySetup) {
     byId('privacyEnableAllButton')?.addEventListener('click', () => { privacySetup.open = true; });
   }
