@@ -6,7 +6,7 @@ This is an implementation in the existing `margaryanlabs/Telegram-story-bot` Min
 
 `main` was inspected at `6504a387d2b88961df3689792cd1c6d4d0e68571`. The current integrated product is a stack: PR #179 → #180 → #181. The redesign starts from the frozen PR #181 head `c8235b022dc748c973b7968b9f74b3ddafa5bfbd`, rather than dropping those existing Story Engine, AI, owner-isolation and release-safety changes. This base is a **draft release candidate, not verified stable production**. The redesign PR targets #181's branch to isolate the new diff. Review/merge upstream dependencies before retargeting to main.
 
-No backend API, authorization, permission, database, migration, secret or Vercel configuration changes are included. No production deployment or paid service purchase was performed.
+No backend API, authorization, permission, database, migration or secret changes are included. For the authorized preview QA, the existing Vercel Ignored Build Step whitelist was narrowly extended to permit `feat/vetogram-3-premium-redesign` in addition to the existing #181 branch. The production condition and deployment protection remain intact. No production deployment or paid service purchase was performed.
 
 ## Audit evidence
 
@@ -24,7 +24,7 @@ All nine user-provided screenshots from 25 October were inspected. The files sho
 | `1000067922(1).jpg` | Layers, local template helper, Portal and storage are arranged as separate long forms. | One selected inspector at a time; visible distinction between local composition and real AI handoff. |
 | `1000067924(1).jpg` | Publication has a landing-page hero, connection strip, floating action and floating navigation. | Smaller publishing header and shared geometry for navigation/action dock. |
 
-Privacy, analytics, viewers, stickers, Voice and AI were also inspected in the current source. Their full signed-in browser journeys were **not** available. The existing preview URL opened to Vercel's “You Need Access” screen. The cloud browser could not connect to the development container's localhost; direct local file navigation was blocked by browser policy. No bypass of those browser restrictions was attempted.
+Privacy, analytics, viewers, stickers, Voice and AI were also inspected in the current source. Their full signed-in browser journeys were **not** available. Initially the preview URL opened to Vercel’s “You Need Access” screen and the cloud browser could not connect to the development container’s localhost. Authorized Vercel preview sharing subsequently enabled browser inspection. No bypass of browser protocol restrictions was attempted.
 
 ## Implemented
 
@@ -51,20 +51,39 @@ Privacy, analytics, viewers, stickers, Voice and AI were also inspected in the c
 - This repository is plain JavaScript; no TypeScript project or dedicated lint task exists. All new runtime modules were added to the existing syntax gate.
 - Ten new history/locale/soundtrack tests passed. Soundtrack tests use a fake recorder: they prove input validation, unsupported-browser behavior, download orchestration and cleanup, **not an actual phone codec or audio recording**.
 - A DOM/canvas harness executed the full actual Story Engine module against the actual HTML: no duplicate IDs, no removed existing IDs, correct inspector parentage, ten templates, text/layer updates, Remix, undo/redo, preview and owner-switch history reset passed. This is not a layout browser or Telegram test.
-- New CSS parsed successfully with PostCSS: 228 rules, approximately 32.8 kB / 6.4 kB gzip. No measured FPS, LCP or phone-memory benchmark is claimed.
+- New CSS parsed successfully with PostCSS: approximately 36.5 kB / 6.6 kB gzip. The browser revealed higher-specificity legacy selectors overriding some early NOIR rules; the canonical stylesheet is now scoped to the root `#vetogram` ID to resolve that conflict. No measured FPS, LCP or phone-memory benchmark is claimed.
 - Declared text/background contrast ratios: dark main 13.95:1; dark muted 7.84:1; light main 16.05:1; light muted 6.26:1; dark coral CTA 7.82:1; light CTA 5.99:1. These token checks do not establish full accessibility conformance.
 - `git diff --check` passed. No changes under `api/`, `lib/`, `vercel.json` or `package-lock.json`.
 - The upstream base itself had three pre-existing test failures caused by a retired privacy.js cache key (699 pass / 3 fail / 1 skip). Assertions now require a versioned current asset rather than that obsolete exact key. Copy/navigation source assertions and sandbox collaborators were updated for the intentional UI and history changes; owner/permission/media isolation assertions remain.
 
 ## Remaining release gates
 
-1. **Visual/device QA is pending.** No new browser-rendered screenshot, before/after rendering comparison or measured overflow result is claimed. Check 320/360/390/430/725/768/1024/1440 CSS-pixel widths, folded/unfolded Fold, iPhone keyboard/safe areas, Android and actual Telegram WebViews.
+1. **Physical-device QA remains pending.** Chromium rendered the real Mini App at iframe outer widths 320/360/390/430/725/768/1024/1440, across Home, Chats, Publish, Privacy, Studio, Voice and AI: **56 combinations, zero document horizontal overflows, zero insufficient bottom-reserve results**. Mobile/Fold screenshots were saved and visually inspected. This does not emulate an actual Samsung/iPhone keyboard, device performance, safe-area hardware or signed Telegram WebView.
 2. Verify real chats, code/QR login, Anti-Delete edit/delete delivery, publishing confirmation/Story ID, no-receipt viewing, Voice permission lifecycle and AI provider behavior with consenting real accounts. Passing mocks do not prove these integrations.
 3. Play and download a clip on Android/iOS; verify actual audio, supported codecs, cancellation and Telegram compatibility. WebM can need conversion. A multilayer video timeline, audio trimming and cloud music catalogue are not implemented.
 4. EN/HY cover the new chrome/tools, with Russian fallback. Full legacy diagnostics, server errors and older dynamic components still require localization. A fully localized whole-app EN/HY release is not claimed.
 5. The earlier feature CSS files are retained for compatibility with the large existing app; the new token/composition stylesheet overrides their presentation. A wider removal of legacy CSS should follow rendered regression checks.
-6. This is a draft stacked redesign; it is **not** certified launch-ready or visually signed off. No production release should be inferred from the automated results.
+6. This remains a draft stacked redesign, not a launch certification. Signed-in private data, physical devices and real integrations remain release gates. No production release should be inferred from passing layout checks.
 
 ## Local review
 
 Run the existing build gates, then serve the actual `public` directory, for example `python3 -m http.server 4173 --directory public`. Open `/studio.html?screen=home` and navigate all five tabs. This serves the real app assets; signed Telegram integrations still require their real backend and a genuine Telegram Mini App session.
+
+## Browser review and screenshots
+
+- Runtime preview commit: `93aaa495efef6a760bd5b33bc5910cddc78bae71`; Vercel preview deployment `dpl_G1omkRV4eSGXS9CGFEH5KwghTBZp`, **READY**, `target: null` (preview).
+- Preview: https://veto-k8qsygurx-labsmargaryan-5386.vercel.app (Vercel Authentication; an authorized temporary share URL is provided privately to the user, never committed here).
+- `/noir-review.html` frames the **same actual** `/studio.html` assets, without mock messages or forged Telegram identity. It only changes iframe width and invokes the existing navigation controller for QA. It is not an alternative product.
+- [Browser measurements](noir/browser-qa.json) retain all 56 final-runtime checks. The dimensions are iframe outer widths; native desktop scrollbars reduce document client width slightly.
+- Real browser interaction checks: text editing → undo restored the original title; Quick/Pro modes changed inspectors; modal preview opened/closed; RU/EN/HY navigation labels changed and Russian was restored; light-theme selection was exercised. No real microphone, video codec, AI generation, Telegram messaging or publication was performed.
+- Original viewport screenshots are retained with `-390` / `-725` filenames. The mobile/Fold images below are exact crops of those screenshots to remove the external QA framing, with no generated pixels or fictional content. Compared against the supplied old screenshots, the editor now puts the canvas first, the publisher has a compact task head, and the chat filters occupy one horizontal rail. This is not an identical-device pixel benchmark.
+
+| Home | Story Studio |
+| --- | --- |
+| ![Home](noir/home-mobile.jpg) | ![Studio](noir/studio-mobile.jpg) |
+
+| Chats | Privacy | Stories |
+| --- | --- | --- |
+| ![Chats](noir/chats-mobile.jpg) | ![Privacy](noir/privacy-mobile.jpg) | ![Stories](noir/stories-mobile.jpg) |
+
+![Fold Studio](noir/studio-fold.jpg)
