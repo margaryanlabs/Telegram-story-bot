@@ -1127,7 +1127,10 @@ export default async function handler(req, res) {
       res.status(200).json({
         ok: true,
         privacy_delete_captured: Boolean(result?.affected),
-        retained: Boolean(result?.retained),
+        // "retained" describes THIS update, not merely the user's
+        // Anti-Delete preference. A replay has no newly archived deletion.
+        retained: Boolean(result?.retained && Number(result?.affected || 0)>0),
+        retention_enabled: Boolean(result?.retained),
         affected: Number(result?.affected || 0),
         alert_sent: Boolean(result?.alertSent),
         media_recovery_attempted: Array.isArray(result?.mediaRecoveryResults) ? result.mediaRecoveryResults.length : 0,
