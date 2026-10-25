@@ -15,7 +15,8 @@ const actual=()=>({
   app:read('public/app.js'),
   story:read('public/story-engine.js'),
   ai:read('public/vetogram-ai.js'),
-  exists:relative=>existsSync(join(root,relative))
+  exists:relative=>existsSync(join(root,relative)),
+  readSource:relative=>readFileSync(join(root,relative),'utf8')
 });
 const check=change=>inspectReleaseSurface({...actual(),...change});
 
@@ -71,4 +72,25 @@ test('missing signed AI→Story or owner epoch invalidation must block release',
   assert.notEqual(unsafeApp,original.app);
   const appResult=check({app:unsafeApp});
   assert.ok(appResult.errors.includes('MISSING_OWNER_EPOCH_INVALIDATION'));
+});
+
+test('a missing imported module breaks the offline release gate',()=>{
+  const safe=actual();
+  const result=check({readSource:path=>{
+    const text=safe.readSource(path);
+    return path==='public/story-engine.js'
+      ?text+"\nimport './this-script-must-not-exist.js';"
+      :text;
+  }});
+  assert.ok(result.errors.some(error=>error.startsWith(
+    'MISSING_MODULE_IMPORT: public/story-engine.js -> public/this-script-must-not-exist.js'
+  )));
+});
+test('a module imported from a classic script is rejected',()=>{
+  const safe=actual();
+  const result=check({readSource:path=>{
+    const text=safe.readSource(path);
+    return path==='public/app.js'?text+"\nimport './story-engine-core.js';":text;
+  }});
+  assert.ok(result.errors.includes('UNDECLARED_MODULE_SCRIPT: public/app.js'));
 });
