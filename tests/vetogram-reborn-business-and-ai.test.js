@@ -44,6 +44,8 @@ test('production Business gate checks Neon migration before any session or Teleg
   const readSession=api.indexOf('const session = await getViewerSession');
   assert.ok(on>0 && ready>on && readSession>ready);
   assert.match(api,/selectedStorageProvider\(\) !== 'neon'/);
+  assert.doesNotMatch(api,/VERCEL_ENV !== 'production'\) return \{ready:true\}/);
+
   assert.match(api,/Number\(result\?\.schemaVersion\)>=5/);
   assert.match(api,/result\.businessLeaseReady===true/);
   assert.match(api,/state:'requires-server-readiness'/);
