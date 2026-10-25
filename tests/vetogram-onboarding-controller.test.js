@@ -6,7 +6,7 @@ const source=readFileSync(new URL('../public/privacy.js',import.meta.url),'utf8'
 function fixture(enabled=true,existing=false,archiveWriteFails=false) {
   const requests=[],listeners={},inputs={};
   const action={disabled:true,textContent:''},picker={hidden:false};
-  let scope=existing?'preserve':'all-private',selected=[];
+  let scope=existing?'preserve':'selected-private',selected=[];
   for(const id of ['businessWizardConsent','businessWizardAntiDelete','businessWizardStories']) inputs[id]={checked:false};
   const content={innerHTML:''},backdrop={hidden:true};
   const sheet={hidden:true,addEventListener(name,fn){listeners[name]=fn},
@@ -41,33 +41,43 @@ test('automatic handoff does not show the new wizard when production capability 
   const f=fixture(false);assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),false);
   assert.equal(f.sheet.hidden,true);assert.equal(f.content.innerHTML,'');assert.equal(f.requests.length,1);
 });
-test('new owner sees all private chats as the default and gives one explicit bundled consent',async()=>{
+test('first Business connection requires separately chosen peers and capabilities',async()=>{
   const f=fixture();assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),true);
-  assert.match(f.content.innerHTML,/Включить VETOGRAM полностью/);
-  assert.doesNotMatch(f.content.innerHTML,/<input type="checkbox" id="businessWizardStories"/);
-  assert.doesNotMatch(f.content.innerHTML,/<input type="checkbox" id="businessWizardAntiDelete"/);
-  assert.equal(f.action.disabled,true);
-  assert.ok(!f.requests.some(r=>r.body.action==='connect'));
-  f.inputs.businessWizardConsent.checked=true;await f.change();assert.equal(f.action.disabled,false);
+  assert.match(f.content.innerHTML,/id="businessWizardStories"/);
+  assert.match(f.content.innerHTML,/id="businessWizardAntiDelete"/);
+  assert.match(f.content.innerHTML,/не включаются автоматически/);
+  assert.doesNotMatch(f.content.innerHTML,/value="all-private" checked/);
+  f.inputs.businessWizardConsent.checked=true;await f.change();
+  assert.equal(f.action.disabled,true,'scope consent alone cannot enable any capability');
+  f.inputs.businessWizardStories.checked=true;await f.change();
+  assert.equal(f.action.disabled,true,'no selected private chat');
+  f.select('selected-private',['101']);await f.change();
+  assert.equal(f.action.disabled,false);
   await f.apply();
   const connection=f.requests.find(r=>r.body.action==='connect').body;
-  assert.equal(connection.scope,'all-private');
+  assert.equal(connection.scope,'selected-private');
+  assert.deepEqual(Array.from(connection.chatIds),['101']);
   assert.equal(connection.storiesConsent,true);
-  assert.equal(connection.antiDeleteConsent,true);
+  assert.equal(connection.antiDeleteConsent,false);
   assert.equal(connection.scopeConsent,true);
   assert.equal(connection.snapshotToken,'fixture-snapshot');
   assert.equal(f.requests.filter(r=>r.body.action==='connect').length,1);
 });
-test('selected-only mode still requires an actual chat and never enables rights without consent',async()=>{
+test('first user may request Anti-Delete without granting Story management',async()=>{
   const f=fixture();await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true});
-  f.select('selected-private');f.inputs.businessWizardConsent.checked=true;await f.change();
-  assert.equal(f.action.disabled,true);assert.equal(f.requests.filter(r=>r.body.action==='connect').length,0);
-  f.select('selected-private',['101']);await f.change();assert.equal(f.action.disabled,false);
+  f.inputs.businessWizardConsent.checked=true;
+  f.select('selected-private',['101']);await f.change();
+  assert.equal(f.action.disabled,true,'consent to scope alone is insufficient');
+  f.inputs.businessWizardAntiDelete.checked=true;await f.change();
+  assert.equal(f.action.disabled,false);
   await f.apply();
   const connection=f.requests.find(r=>r.body.action==='connect').body;
-  assert.equal(connection.scope,'selected-private');assert.deepEqual(Array.from(connection.chatIds),['101']);
-  assert.equal(connection.storiesConsent,true);assert.equal(connection.antiDeleteConsent,true);
+  assert.equal(connection.scope,'selected-private');
+  assert.deepEqual(Array.from(connection.chatIds),['101']);
+  assert.equal(connection.storiesConsent,false);
+  assert.equal(connection.antiDeleteConsent,true);
 });
+
 test('already connected owner does not silently expand existing rights',async()=>{
   const f=fixture(true,true);await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true});
   assert.match(f.content.innerHTML,/<input type="checkbox" id="businessWizardStories"/);
@@ -91,10 +101,14 @@ test('existing owner can adjust chat scope without requesting either capability 
   assert.equal(connection.antiDeleteConsent,false);
 });
 
-test('partial onboarding never labels Anti-Delete as ready if archive settings failed to save',async()=>{
+test('partial onboarding never labels Anti-Delete ready when storage fails',async()=>{
   const f=fixture(true,false,true);
   assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),true);
-  f.inputs.businessWizardConsent.checked=true;await f.change();await f.apply();
+  f.inputs.businessWizardConsent.checked=true;
+  f.inputs.businessWizardAntiDelete.checked=true;
+  f.select('selected-private',['101']);await f.change();
+  assert.equal(f.action.disabled,false);
+  await f.apply();
   assert.match(f.content.innerHTML,/Anti-Delete: ошибка настройки/);
   assert.match(f.content.innerHTML,/Сообщения могут не сохраняться/);
   assert.doesNotMatch(f.content.innerHTML,/data-business-close="1">Готово/);
