@@ -75,6 +75,10 @@ test('UI does not promise Stories publishing or viewer details without Telegram 
   assert.doesNotMatch(app,/<b>Stories<\/b><small>сможешь публиковать Story из Vetogram/);
 });
 
+test('after Business consent the wizard has one accessible exit, not duplicate close buttons',()=>{
+  assert.match(privacy,/archiveIncomplete\?'Закрыть':'Готово'/);
+  assert.doesNotMatch(privacy,/data-business-close="1">Готово<\/button>'\}<button data-business-close="1">Закрыть/);
+});
 test('account profile distinguishes missing Business consent from verified incoming events',()=>{
   assert.match(app,/const businessConnected = state\.businessPermissions\?\.connected === true/);
   assert.match(app,/businessNeedsPermission/);
