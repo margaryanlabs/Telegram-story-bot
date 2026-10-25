@@ -51,3 +51,7 @@ Test **all** of the following before marking `Design: Approved`.
 ## One release, not a stream of previews
 
 Keep PR #185 draft. Before one merge/deploy: clean `npm ci` and `npm run vercel-build`, visual/browser acceptance matrix, two signed Telegram accounts, real Story publishing, AI authorization and voice permission on devices. Do not spend credits, enable flags, apply Neon migrations or activate Telegram Business without a separate verified release plan.
+
+### Source QA follow-up: immersive chat chrome specificity
+
+The common Noir topbar uses `display:flex!important` and nav uses `display:grid!important`. These higher-specificity rules would otherwise defeat the older messenger's `body.veto-chat-active .topbar{display:none}` and `body.veto-chat-thread .bottom-nav{display:none!important}`. Added an explicit high-specificity immersive-chat override in the **same Noir stylesheet** and a regression test. This is tested for CSS contract correctness, not via an actual WebView screenshot.
