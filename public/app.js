@@ -1632,12 +1632,17 @@
   };
 
 
+  let sheetReturnFocus = null;
   function openSheet(html) {
+    // Store focus once for a modal flow. Subsequent steps (phone -> code ->
+    // 2FA) replace the sheet contents without losing the return target.
+    if ($('sheet').hidden) sheetReturnFocus = document.activeElement;
     $('sheetContent').innerHTML = html;
     $('sheetBackdrop').hidden = false;
     $('sheet').hidden = false;
     document.documentElement.classList.add('veto-sheet-open');
     document.body.classList.add('veto-sheet-open');
+    $('sheet').focus({preventScroll:true});
     try { tg?.BackButton?.show(); } catch {}
   }
 
@@ -1650,6 +1655,10 @@
     $('sheet').hidden = true;
     document.documentElement.classList.remove('veto-sheet-open');
     document.body.classList.remove('veto-sheet-open');
+    const returnTo=sheetReturnFocus;
+    sheetReturnFocus=null;
+    if (returnTo?.isConnected && typeof returnTo.focus==='function')
+      returnTo.focus({preventScroll:true});
     try { tg?.BackButton?.hide(); } catch {}
   }
 
@@ -2887,6 +2896,12 @@
     `);
   });
   $('sheetBackdrop').addEventListener('click', closeSheet);
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&!$('sheet').hidden){
+      event.preventDefault();
+      closeSheet();
+    }
+  });
 
   $('sheet').addEventListener('input', event => {
     const kind = event.target?.dataset?.peopleInput;
