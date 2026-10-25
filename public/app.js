@@ -117,6 +117,7 @@
   let composerBusy = false;
   let composerGeneration = 0;
   let composerOwner = '';
+  let composerSignedIdentity=String(tg?.initData||'');
   let composerPendingFileName = '';
   let composerPortalHandoff = null;
   // A public Portal link is not part of the caption: Telegram's Story link
@@ -360,6 +361,19 @@
     renderPublish();
   }
 
+  function ensureComposerIdentity(){
+    const current=String(tg?.initData||'');
+    if(current===composerSignedIdentity)return;
+    composerSignedIdentity=current;
+    // Read only the *new* account's draft key before clearing visible media.
+    const key=captionDraftStorageKey();
+    let ownCaption='';
+    try{if(key)ownCaption=sessionStorage.getItem(key)||'';}catch{}
+    resetComposer({keepCaption:true});
+    $('storyCaption').value=ownCaption.slice(0,2048);
+    $('captionCounter').textContent=$('storyCaption').value.length+' / 2048';
+    showToast('Telegram-аккаунт изменился. Фото и Portal предыдущей сессии очищены.');
+  }
   async function prepareComposerFile(file,{stillCurrent=null}={}) {
     if (!file || state.processing) return false;
     const generation = ++composerGeneration;
@@ -451,6 +465,7 @@
   };
 
   async function publishComposerStory() {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
     if (composerBusy || state.processing) return;
     if(composerPortalHandoff &&
@@ -1038,6 +1053,7 @@
   }
 
   function renderPublish() {
+    ensureComposerIdentity();
     const latest = activeStoryHistory()[0] || null;
     $('metricAudience').textContent = audienceLabel(state.audience);
     $('metricLast').textContent = latest ? relativeTime(latest.ts) : '—';
@@ -1693,6 +1709,7 @@
   // Pages without a bottom-tab button still belong to an existing tab.
   const NAV_PARENT = {home:'telegram',chats:'privacy',telegram:'telegram',voice:'ai',archive:'publish',analytics:'ai',viewers:'publish',relay:'ai',ai:'ai',studio:'publish','story-engine':'publish'};
   function switchScreen(name) {
+    ensureComposerIdentity();
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
     if (composerOwner && composerOwner !== String(tg?.initData || '')) resetComposer();
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
@@ -3516,6 +3533,8 @@
       await publishComposerStory();
     } catch {}
   });
+  window.addEventListener('focus',ensureComposerIdentity);
+  window.addEventListener('pageshow',ensureComposerIdentity);
 
   try {
     tg?.ready();
