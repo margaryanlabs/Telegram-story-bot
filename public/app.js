@@ -1846,11 +1846,14 @@
   // Messenger and Privacy modules share the same owner-scoped account login.
   // The Business-bot permission is an independent optional archive feature.
   window.VetoTelegramOpenAccountConnection = async () => {
+    ensureComposerIdentity();
     if (!tg?.initData) {
       showToast('Открой Vetogram внутри своего Telegram');
       return;
     }
+    const signed=String(tg.initData),epoch=viewerOwnerEpoch;
     await refreshViewerSync({ silent:true });
+    if(epoch!==viewerOwnerEpoch||signed!==String(tg?.initData||''))return;
     if (viewerState.session?.connected === true && viewerState.session?.identityMismatch !== true) {
       // A signed personal account login is separate from optional Business
       // access. Never launch permission changes when a user taps "My account".
