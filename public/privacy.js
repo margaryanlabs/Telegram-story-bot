@@ -596,17 +596,23 @@
     }
 
     const totals = threadTotals();
+    const archiveReady=Boolean(privacyState.lastRefreshAt && !privacyState.degraded &&
+      privacyState.ownerInitData && privacyState.ownerInitData===String(tg?.initData||''));
     const summary = privacyState.smartSummary || {
       action: privacyState.threads.filter(thread => thread.smartState === 'action').length,
       watch: privacyState.threads.filter(thread => thread.smartState === 'watch').length,
       archive: privacyState.threads.filter(thread => thread.smartState === 'archive').length,
       likelyNeedsReply: privacyState.threads.filter(thread => thread.actionLikely).length,
     };
-    if ($('smartInboxAction')) $('smartInboxAction').textContent = String(summary.action || 0);
-    if ($('smartInboxWatch')) $('smartInboxWatch').textContent = String(summary.watch || 0);
-    if ($('smartInboxAll')) $('smartInboxAll').textContent = String(privacyState.threads.length);
+    if ($('smartInboxAction')) $('smartInboxAction').textContent = archiveReady ? String(summary.action || 0) : '—';
+    if ($('smartInboxWatch')) $('smartInboxWatch').textContent = archiveReady ? String(summary.watch || 0) : '—';
+    if ($('smartInboxAll')) $('smartInboxAll').textContent = archiveReady ? String(privacyState.threads.length) : '—';
 
-    const brief = privacyState.smartBrief || {
+    const brief = !archiveReady ? {
+      status:'pending',title:'Проверяем архив Telegram',
+      detail:'Результаты появятся после успешной загрузки данных этого аккаунта.',
+      primaryChatId:'',primaryAction:'archive',reasons:[]
+    } : privacyState.smartBrief || {
       status: summary.action > 0 ? 'action' : summary.watch > 0 ? 'watch' : 'clear',
       title: summary.action > 0
         ? `${summary.action} диалог(а) требуют внимания`
@@ -621,7 +627,8 @@
     const briefCard = $('smartBriefCard');
     if (briefCard) {
       briefCard.classList.remove('action','watch','clear');
-      briefCard.classList.add(['action','watch','clear'].includes(String(brief.status)) ? String(brief.status) : 'clear');
+      if (['action','watch','clear'].includes(String(brief.status)))
+        briefCard.classList.add(String(brief.status));
     }
     if ($('smartBriefTitle')) $('smartBriefTitle').textContent = brief.title || 'Vetogram Brief';
     if ($('smartBriefDetail')) $('smartBriefDetail').textContent = brief.detail || '';
@@ -630,7 +637,7 @@
         ? 'ACTION'
         : brief.status === 'watch'
           ? 'WATCH'
-          : 'CLEAR';
+          : brief.status === 'pending' ? 'ПРОВЕРЯЮ' : 'CLEAR';
     }
     if ($('smartBriefReasons')) {
       const reasons = Array.isArray(brief.reasons) ? brief.reasons : [];
@@ -655,10 +662,8 @@
       privacyStatMessages: totals.messages,
       privacyStatVault: totals.vault,
     };
-    const vaultVerified=Boolean(privacyState.lastRefreshAt && !privacyState.degraded &&
-      privacyState.ownerInitData && privacyState.ownerInitData===String(tg?.initData||''));
     for (const [id, value] of Object.entries(statMap)) {
-      if ($(id)) $(id).textContent = vaultVerified ? String(value) : '—';
+      if ($(id)) $(id).textContent = archiveReady ? String(value) : '—';
     }
 
     if ($('privacyRetentionLabel')) {
