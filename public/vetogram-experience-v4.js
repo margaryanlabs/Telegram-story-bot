@@ -273,7 +273,9 @@
       if(menu.open && !menu.contains(event.target))menu.open=false;
     },{passive:true});
     document.addEventListener('keydown',event=>{
-      if(event.key==='Escape' && menu.open){
+      if(event.key==='Escape' && menu.open &&
+         byId('sheet')?.hidden!==false &&
+         !document.querySelector('dialog[open]')){
         event.preventDefault();menu.open=false;summary.focus();
       }
     });
@@ -302,7 +304,11 @@
     if (tools) { tools.setAttribute('aria-expanded','false'); tools.hidden = true; }
     const closeInspector = byId('v4InspectorClose');
     if (closeInspector) closeInspector.hidden = true;
-    if (lastFocus?.isConnected) lastFocus.focus({preventScroll:true});
+    // A screen transition has already hidden the editor; returning focus
+    // to an element within a hidden screen strands keyboard users.
+    if(engine.classList.contains('active') && lastFocus?.isConnected)
+      lastFocus.focus({preventScroll:true});
+    lastFocus=null;
     announce('Обычный режим редактора');
   };
   if (stage && canvasActions && controls) {
@@ -385,7 +391,9 @@
       }
     });
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && focusActive) {
+      if (event.key === 'Escape' && focusActive &&
+          byId('sheet')?.hidden!==false &&
+          !document.querySelector('dialog[open]')) {
         event.preventDefault();
         if (engine.classList.contains('v4-studio-tools-open')) closeTools();
         else exitFocus();
