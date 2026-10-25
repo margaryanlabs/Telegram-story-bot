@@ -7,7 +7,7 @@ import {existsSync,readFileSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-export function inspectReleaseSurface({html,app,story,ai,exists}){
+export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
   const errors=[];
   const add=(ok,message)=>{if(!ok)errors.push(message)};
   const idMatches=[...html.matchAll(/<[\w-]+\b[^>]*\bid=["']([^"']+)["']/g)];
@@ -38,6 +38,32 @@ export function inspectReleaseSurface({html,app,story,ai,exists}){
   add(screens.length===new Set(screens).size,'DUPLICATE_SCREEN_NAMES');
 
   const scripts=rawAssets.filter(p=>/\.js(?:\?|$)/.test(p));
+  // Validate the exact module graph loaded by the shipping HTML, not just
+  // the top-level script. A bad relative import otherwise breaks a screen
+  // at runtime while every linked top-level asset exists.
+  const importedDependencies=[];
+  const scriptTags=[...html.matchAll(/<script\b[^>]*\bsrc=["'](\/[^"']+\.js(?:\?[^"']*)?)["'][^>]*>/gi)];
+  if(typeof readSource==='function'){
+    for(const match of scriptTags){
+      const path='public'+match[1].split(/[?#]/)[0];
+      if(!exists(path))continue; // MISSING_ASSET already reported above.
+      const module=/\btype=["']module["']/.test(match[0]);
+      const source=readSource(path);
+      const refs=[...source.matchAll(/\b(?:import|export)\s+(?:[^;"']*?\s+from\s+)?["'](\.[^"']+)["']/g)];
+      if(refs.length&&!module)
+        errors.push('UNDECLARED_MODULE_SCRIPT: '+path);
+      for(const ref of refs){
+        const pieces=path.split('/').slice(0,-1);
+        for(const token of ref[1].split('/')){
+          if(token==='..')pieces.pop();
+          else if(token!=='.'&&token)pieces.push(token);
+        }
+        const dependency=pieces.join('/');
+        importedDependencies.push(dependency);
+        add(exists(dependency),'MISSING_MODULE_IMPORT: '+path+' -> '+dependency);
+      }
+    }
+  }
   const position=path=>scripts.findIndex(p=>p.split(/[?#]/)[0]===path);
   for(const dependent of ['/story-engine.js','/vetogram-ai.js','/privacy.js',
     '/telegram-chats.js','/voice-studio.js']){
@@ -67,7 +93,8 @@ export function inspectReleaseSurface({html,app,story,ai,exists}){
 
   return {ok:errors.length===0,errors,
     counts:{uniqueDomIds:ids.length,localAssets:localPaths.length,
-      screens:screens.length,loadedScripts:scripts.length}};
+      screens:screens.length,loadedScripts:scripts.length,
+      moduleImports:importedDependencies.length}};
 }
 
 const current=process.argv[1]?resolve(process.argv[1]):'';
@@ -77,7 +104,8 @@ if(current===fileURLToPath(import.meta.url)){
   const result=inspectReleaseSurface({
     html:read('public/studio.html'),app:read('public/app.js'),
     story:read('public/story-engine.js'),ai:read('public/vetogram-ai.js'),
-    exists:relative=>existsSync(join(root,relative))
+    exists:relative=>existsSync(join(root,relative)),
+    readSource:relative=>readFileSync(join(root,relative),'utf8')
   });
   if(result.ok)console.log('VETOGRAM_RELEASE_SURFACE_OK',JSON.stringify(result.counts));
   else{
