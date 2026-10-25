@@ -513,28 +513,28 @@
           </div>
           <section class="vgx-inbox-pulse" id="vgxInboxPulse" aria-label="Сводка по загруженным чатам" hidden>
             <div class="vgx-inbox-pulse-heading">
-              <span><i aria-hidden="true"></i> ТВОЙ INBOX PULSE</span>
-              <small>Только загруженные чаты · не общая статистика Telegram</small>
+              <span><i aria-hidden="true"></i> SMART INBOX</span>
+              <small>Из загруженных чатов · по запросу</small>
             </div>
             <div class="vgx-inbox-pulse-grid" role="group" aria-label="Быстрая фильтрация">
               <button type="button" data-vgx-pulse-filter="unread" aria-pressed="false" title="Чаты с непрочитанными сообщениями">
                 <span class="vgx-pulse-icon" aria-hidden="true">◉</span>
-                <span><strong id="vgxPulseUnread">0</strong><small>Непрочитано</small></span><b aria-hidden="true">↗</b>
+                <span><strong id="vgxPulseUnread">0</strong><small>Чатов без прочтения</small></span><b aria-hidden="true">↗</b>
               </button>
               <button type="button" data-vgx-pulse-filter="focus" aria-pressed="false" title="Чаты с локальными сигналами внимания">
                 <span class="vgx-pulse-icon" aria-hidden="true">✦</span>
-                <span><strong id="vgxPulseFocus">0</strong><small>Важное</small></span><b aria-hidden="true">↗</b>
+                <span><strong id="vgxPulseFocus">0</strong><small>Внимание</small></span><b aria-hidden="true">↗</b>
               </button>
-              <button type="button" data-vgx-pulse-filter="copies" aria-pressed="false" title="Удалённые сообщения в доступных сохранённых чатах">
+              <button type="button" data-vgx-pulse-filter="copies" aria-pressed="false" title="Количество загруженных чатов с сохранёнными копиями">
                 <span class="vgx-pulse-icon" aria-hidden="true">↶</span>
-                <span><strong id="vgxPulseDeleted">0</strong><small>Удалено</small></span><b aria-hidden="true">↗</b>
+                <span><strong id="vgxPulseSaved">0</strong><small>Сохранённые</small></span><b aria-hidden="true">↗</b>
               </button>
             </div>
           </section>
           <div id="telegramMirrorAccountProof" class="veto-mirror-account-proof" role="status" aria-live="polite"><span class="veto-mirror-live-pip"></span> Личный Telegram ещё не проверен · отображение чатов остановлено до подтверждения</div>
 
           <p class="veto-mirror-focus-hint">Локальная сортировка без отметок «прочитано» и изменения оригинальных чатов.</p>
-          <div class="veto-mirror-headline"><span>МОИ ДИАЛОГИ</span><span id="telegramMirrorUpdated">LIVE · По запросу</span></div>
+          <div class="veto-mirror-headline"><span>МОИ ДИАЛОГИ</span><span id="telegramMirrorUpdated">Обновление по запросу</span></div>
           <div id="telegramMirrorNotice" class="veto-mirror-notice" hidden></div>
           <div class="veto-mirror-chat-list" id="telegramMirrorList" aria-live="polite">
             <div class="veto-mirror-empty"><span class="veto-mirror-loader"></span><strong>Открываю Telegram…</strong><small>Доступны чаты твоего подключённого аккаунта</small></div>
@@ -1378,19 +1378,19 @@
     <section class="screen" data-screen="chats">
       <div class="page-head chats-page-head">
         <span class="kicker">SMART INBOX</span>
-        <h1>Chats</h1>
+        <h1>Чаты</h1>
         <p>Твои сохранённые копии разрешённых переписок, правки и удаления — независимо от того, остался ли оригинальный чат в Telegram.</p>
       </div>
 
       <section class="smart-inbox-overview">
         <div class="smart-inbox-title">
-          <div><span class="kicker">PRIORITY</span><h2>Что требует внимания</h2></div>
-          <span class="tiny-note">без read-status</span>
+          <div><span class="kicker">ПРИОРИТЕТЫ</span><h2>Что требует внимания</h2></div>
+          <span class="tiny-note">без отметки «прочитано»</span>
         </div>
         <div class="smart-inbox-grid">
-          <button type="button" data-smart-filter="action"><span>Action</span><strong id="smartInboxAction">0</strong><small>вероятно нужен ответ</small></button>
-          <button type="button" data-smart-filter="watch"><span>Watch</span><strong id="smartInboxWatch">0</strong><small>изменения / удаления</small></button>
-          <button type="button" data-smart-filter="all"><span>All</span><strong id="smartInboxAll">0</strong><small>доступные диалоги</small></button>
+          <button type="button" data-smart-filter="action"><span>Действия</span><strong id="smartInboxAction">0</strong><small>вероятно нужен ответ</small></button>
+          <button type="button" data-smart-filter="watch"><span>Изменения</span><strong id="smartInboxWatch">0</strong><small>изменения / удаления</small></button>
+          <button type="button" data-smart-filter="all"><span>Все</span><strong id="smartInboxAll">0</strong><small>доступные диалоги</small></button>
         </div>
         <p class="smart-inbox-note">Vetogram не называет сообщения «непрочитанными», если Telegram не дал такого сигнала. Приоритет — это объяснимая оценка по последнему входящему событию, свежести, правкам и удалениям.</p>
       </section>
