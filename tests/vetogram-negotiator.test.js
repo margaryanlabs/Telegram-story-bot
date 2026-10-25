@@ -33,6 +33,10 @@ test('valid quote is still manual approval; account, chat and expiry are enforce
   const good=assess(p(),proposal('We can offer $475.00.',475));
   assert.equal(good.allowed,true);
   assert.equal(good.requiresApproval,true);
+  // A final punctuation mark is not part of the currency amount.
+  assert.equal(assess(p(),proposal('We can offer $475.00.',475)).allowed,true);
+  assert.equal(assess(p(),proposal('We can offer USD 475.',475)).allowed,true);
+  assert.equal(assess(p(),proposal('We can offer $450.00.',475)).allowed,false);
   assert.equal(assess(p(),proposal('Hello',475),{chatId:'999'}).allowed,false);
   assert.equal(assess(p(),proposal('Hello',475),{owner:'999'}).allowed,false);
   assert.equal(assess(p(),proposal('Hello',475),{now:p().expiresAt}).allowed,false);
