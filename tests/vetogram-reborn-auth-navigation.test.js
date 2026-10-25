@@ -109,7 +109,7 @@ test('country dropdown preserves national digits when +7 is shared by Russia and
     createElement:()=>handlers()
   };
   const window={};
-  runInNewContext(picker,{window,document,AbortController,Event:class {constructor(type){this.type=type}},
+  vm.runInNewContext(picker,{window,document,AbortController,Event:class {constructor(type){this.type=type}},
     Object,Set,String,Number});
   window.VetogramCountryPicker.mount();
   trigger.events.click();
@@ -119,4 +119,14 @@ test('country dropdown preserves national digits when +7 is shared by Russia and
   assert.equal(phone.value,'+7  912 123 45 67'.replace('  ',' '));
   assert.equal(panel.hidden,true);
   assert.match(trigger.textContent,/Казахстан/);
+
+  // Choosing a DIFFERENT calling code must reset the national digits.
+  // Previously +7 912... turned into +995 912... without explicit intent.
+  trigger.events.click();
+  const georgia=options.children.find(button=>button.dataset.iso==='GE');
+  assert.ok(georgia,'Georgia +995 must be selectable');
+  options.events.click({target:georgia});
+  assert.equal(phone.value,'+995 ');
+  assert.equal(panel.hidden,true);
+  assert.match(trigger.textContent,/Грузия/);
 });
