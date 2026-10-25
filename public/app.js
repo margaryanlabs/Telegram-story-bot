@@ -2257,6 +2257,27 @@
     if (slot) {
       slot.textContent = message;
       slot.hidden = false;
+      // 409 means an existing *server-side* Telegram challenge is still
+      // active. Never turn it into an automatic second SendCode request.
+      const pending = error?.viewerData?.loginPending;
+      if (pending && ['code','password','qr_password'].includes(pending.stage)
+          && Date.parse(pending.expiresAt||'') > Date.now()) {
+        viewerState.loginPending={stage:pending.stage,expiresAt:pending.expiresAt};
+        $('viewerAuthRecovery')?.remove();
+        const controls=document.createElement('div');
+        controls.id='viewerAuthRecovery';
+        controls.className='sheet-actions viewer-auth-recovery';
+        const resume=document.createElement('button');
+        resume.type='button';
+        resume.dataset.sheetAction='viewer-resume-login';
+        resume.textContent='Продолжить начатый вход';
+        const cancel=document.createElement('button');
+        cancel.type='button';
+        cancel.dataset.sheetAction='viewer-cancel-login';
+        cancel.textContent='Отменить запрос и сменить номер';
+        controls.append(resume,cancel);
+        slot.insertAdjacentElement('afterend',controls);
+      }
     } else {
       showToast(message);
     }
