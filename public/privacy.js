@@ -857,8 +857,10 @@
 
   async function refresh({ silent = false, background = false } = {}) {
     resetPrivacyOwner();
-    if (!tg?.initData || privacyState.loading || navigator.onLine === false) return;
+    if (!tg?.initData || privacyState.refreshInFlight ||
+        navigator.onLine === false) return;
     const lease=ownerLease();
+    privacyState.refreshInFlight=true;
     privacyState.loading = !background;
     if (!background) render();
 
@@ -897,6 +899,7 @@
          lease.signed!==String(tg?.initData||'')){
         resetPrivacyOwner();
       }else{
+      privacyState.refreshInFlight=false;
       privacyState.loading = false;
       render();
       if (privacyState.filter === 'deleted') {
@@ -978,6 +981,7 @@
   function closeSheet() {
     privacyState.archiveThreadEpoch++;
     privacyState.activeThread=null;
+    privacyState.loadingOlderThread=false;
     // Telegram BackButton must not allow an unobserved backup loop to continue.
     privacyState.backup.stopRequested = true;
     revokeMediaUrl();
@@ -998,6 +1002,7 @@
     privacyState.backup.stopRequested=true;
     privacyState.archiveThreadEpoch++;
     privacyState.activeThread=null;
+    privacyState.loadingOlderThread=false;
     revokeMediaUrl();
   });
 
@@ -1205,6 +1210,7 @@
     const lease=ownerLease();
     // A newer chat selection or explicit sheet close supersedes this response.
     const intent=++privacyState.archiveThreadEpoch;
+    privacyState.loadingOlderThread=false;
     const thread = privacyState.threads.find(item => String(item.chatId) === String(chatId))
       || { chatId, title: 'Telegram chat' };
     try {
@@ -1254,7 +1260,9 @@
         toast(error.message);
         if (button) { button.disabled = false; button.textContent = 'Повторить загрузку'; }
       }
-    } finally { privacyState.loadingOlderThread = false; }
+    } finally {
+      if(intent===privacyState.archiveThreadEpoch)privacyState.loadingOlderThread=false;
+    }
   }
 
   async function maybeOpenGhostDeepLink() {
@@ -1312,7 +1320,7 @@
   }
 
   async function loadMedia(chatId, messageId, mediaType, fileName = '') {
-    const lease=ownerLease();
+    const lease=ownerLease(),intent=privacyState.archiveThreadEpoch;
     const button = document.querySelector(`[data-privacy-media="${CSS.escape(String(messageId))}"][data-privacy-chat-id="${CSS.escape(String(chatId))}"]`);
     const original = button?.innerHTML;
     if (button) {
@@ -1333,6 +1341,8 @@
 
       const blob = await response.blob();
       assertOwner(lease);
+      if(intent!==privacyState.archiveThreadEpoch ||
+         String(privacyState.activeThread?.thread?.chatId)!==String(chatId))return;
       revokeMediaUrl();
       privacyState.mediaObjectUrl = URL.createObjectURL(blob);
       const url = privacyState.mediaObjectUrl;
@@ -1366,7 +1376,8 @@
         </div>
       `);
     } catch (error) {
-      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED' ||
+         intent!==privacyState.archiveThreadEpoch)return;
       toast(error.message);
       if (button) {
         button.disabled = false;
@@ -2188,6 +2199,7 @@
 
   function onVetoScreenChanged(event) {
     const screen = event?.detail?.screen;
+    resetPrivacyOwner();
     if (screen !== 'privacy' && screen !== 'chats') return;
     refresh({ silent:true });
     loadTelegramConnection({ silent:true });
