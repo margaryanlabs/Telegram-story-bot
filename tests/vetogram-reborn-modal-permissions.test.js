@@ -74,3 +74,11 @@ test('UI does not promise Stories publishing or viewer details without Telegram 
   assert.match(app,/данные о просмотрах, которые фактически вернёт Telegram/);
   assert.doesNotMatch(app,/<b>Stories<\/b><small>сможешь публиковать Story из Vetogram/);
 });
+
+test('account profile distinguishes missing Business consent from verified incoming events',()=>{
+  assert.match(app,/const businessConnected = state\.businessPermissions\?\.connected === true/);
+  assert.match(app,/businessNeedsPermission/);
+  assert.match(app,/доставка событий отдельно не проверена/);
+  assert.match(app,/получение сообщений и удалений ещё нужно проверить/);
+  assert.doesNotMatch(app,/state\.businessPermissions\?\.connected === true \|\| state\.connection === 'needs_permission'/);
+});
