@@ -127,8 +127,8 @@
       const items=await list();
       if(items.length>=MAX_BOOKS){status("Достигнут предел 30 EPUB. Удали старую книгу.");return}
       const buffer=await file.arrayBuffer();
-      const raw=new Uint8Array(buffer);
-      if(raw[0]!==0x50||raw[1]!==0x4b)throw Error("Файл не является корректным EPUB-архивом");
+      if(!window.VetoEpubGuard?.inspect)throw Error("Модуль проверки EPUB не загрузился");
+      window.VetoEpubGuard.inspect(buffer);
       // Hash-based stable ID prevents duplicate imports without sending the book to any server.
       const digest=await crypto.subtle.digest("SHA-256",buffer);
       const id=[...new Uint8Array(digest)].slice(0,16).map(v=>v.toString(16).padStart(2,"0")).join("");
