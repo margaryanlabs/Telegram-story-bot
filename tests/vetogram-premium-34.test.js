@@ -25,25 +25,21 @@ function simulateHeader(phone=false){
   return {attributes,listeners,classes};
 }
 
-test('phone has compact chat header, expandable without scroll listeners',()=>{
-  const state=simulateHeader(true);
-  assert.equal(state.attributes['aria-expanded'],'false');
-  assert.equal(state.classes.has('is-expanded'),false);
-  state.listeners.click();
-  assert.equal(state.attributes['aria-expanded'],'true');
-  state.listeners.click();
-  assert.equal(state.attributes['aria-expanded'],'false');
+test('phone uses compact permanent VETOGRAM brand row, not an accordion',()=>{
   assert.match(html,/class="veto-mirror-heading vetogram-header"/);
-  assert.match(html,/id="vetogramHeaderToggle"[^>]*aria-expanded="false"/);
-  assert.doesNotMatch(header,/addEventListener\('scroll'/);
+  assert.match(html,/class="veto-inbox-signature"/);
+  assert.match(html,/veto-telegram-mark\\.svg/);
+  assert.doesNotMatch(html,/id="vetogramHeaderToggle"/);
+  assert.doesNotMatch(header,/toggle\\.addEventListener/);
+  assert.doesNotMatch(header,/addEventListener\\('scroll'/);
 });
 
-test('desktop retains expanded header with the same manual disclosure',()=>{
-  const state=simulateHeader(false);
-  assert.equal(state.attributes['aria-expanded'],'true');
-  assert.equal(state.classes.has('is-expanded'),true);
-  state.listeners.click();
-  assert.equal(state.attributes['aria-expanded'],'false');
+test('desktop keeps access to tools without expanding the header',()=>{
+  const compact=read('vetogram-header.css');
+  assert.match(compact,/height:54px!important/);
+  assert.match(compact,/vetoMessengerToolsToggle/);
+  assert.match(html,/id="vetoMessengerToolsToggle"/);
+  assert.match(header,/title\\.classList\\.remove\\?\\./);
 });
 
 test('real flagship screen keeps navigation/permissions, no fake success state',()=>{
