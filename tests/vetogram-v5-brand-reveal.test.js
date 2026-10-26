@@ -34,8 +34,12 @@ test('reveal never obstructs onboarding or runs again on second auth event',()=>
  runInNewContext(code,context);
  events['vetogram:telegram-session-connected']();
  assert.equal(stage.hidden,true);
- // The owner can finish onboarding later; duplicate auth events must not replay.
+ // The owner can finish onboarding; reveal then plays exactly once.
  welcome.hidden=true;
+ events['vetogram:telegram-session-connected']();
+ assert.equal(stage.hidden,false);
+ events['pagehide']();
+ assert.equal(stage.hidden,true);
  events['vetogram:telegram-session-connected']();
  assert.equal(stage.hidden,true);
 });
