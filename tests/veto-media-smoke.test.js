@@ -69,3 +69,21 @@ test("Films experience stays separate from messenger and validates archive items
   assert.match(styles, /veto-film-rail/);
   assert.doesNotMatch(films, /innerHTML\s*=/);
 });
+
+test("V4 entertainment home and full-screen listening room are isolated", () => {
+  const v4 = readFileSync(new URL("../public/media-v4.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../public/media-v4.css", import.meta.url), "utf8");
+  execFileSync(process.execPath, ["--check", join(process.cwd(), "public/media-v4.js")], {stdio:"pipe"});
+  assert.match(html, /id="homeView"/);
+  assert.match(html, /data-tab="home"/);
+  assert.match(html, /media-v4\.css/);
+  assert.match(html, /media-v4\.js/);
+  assert.match(v4, /v4-listening/);
+  assert.match(v4, /aria-modal/);
+  assert.match(v4, /data-v4-search/);
+  assert.match(v4, /v4PlayPause/);
+  assert.match(v4, /localStorage\.setItem/);
+  assert.match(css, /prefers-reduced-motion/);
+  assert.match(css, /v4-dock/);
+  assert.doesNotMatch(v4, /TELEGRAM_BOT_TOKEN|telegram-session-owner|api\.telegram\.org\/bot/i);
+});
