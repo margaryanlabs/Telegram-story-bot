@@ -1225,7 +1225,7 @@
       selectedViewerStory = item.id;
       $('viewerStoryTitle').textContent = `Story #${item.id} · ${audienceLabel(item.audience)}`;
     } else {
-      $('viewerStoryTitle').textContent = 'Нет опубликованных Stories';
+      $('viewerStoryTitle').textContent = viewerUi('viewerNoStories','Нет опубликованных Stories');
     }
 
     const story = viewerState.story && String(viewerState.story.story_id) === String(selectedViewerStory)
@@ -1260,7 +1260,7 @@
     $('quickStoryStep').classList.toggle('done', hasStory);
 
     const completed = [Boolean(state.ready), connected, hasStory].filter(Boolean).length;
-    quickBadge.textContent = completed === 3 ? '3/3 · ГОТОВО' : `${completed}/3`;
+    quickBadge.textContent = completed === 3 ? viewerUi('viewerFullReady','3/3 · ГОТОВО') : `${completed}/3`;
     quickBadge.classList.toggle('ready', completed === 3);
 
     if (!state.ready) {
@@ -1335,28 +1335,28 @@
         .some(value => String(value).toLowerCase().includes(query));
     });
 
-    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} подтверждено` : 'Аналитика аудитории';
+    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} ${viewerUi('viewerListConfirmed','подтверждено')}` : viewerUi('viewerListLabel','Аналитика аудитории');
 
     if (!connected) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Подключи Аналитика аудитории, чтобы видеть подтверждённых зрителей и историю взаимодействий.</div>';
+      $('viewerList').innerHTML = `<div class="viewer-empty">${viewerUi('viewerEmptyConnect','Подключи Аналитика аудитории, чтобы видеть подтверждённых зрителей и историю взаимодействий.')}</div>`;
       return;
     }
 
     if (!selectedViewerStory) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Vetogram.</div>';
+      $('viewerList').innerHTML = `<div class="viewer-empty">${viewerUi('viewerEmptyPublish','Сначала опубликуй Story через Vetogram.')}</div>`;
       return;
     }
 
     if (!viewers.length) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Подтверждённых зрителей пока нет. Новый просмотр сначала проходит окно приватности Telegram.</div>';
+      $('viewerList').innerHTML = `<div class="viewer-empty">${viewerUi('viewerEmptyUnverified','Подтверждённых зрителей пока нет. Новый просмотр сначала проходит окно приватности Telegram.')}</div>`;
       return;
     }
 
     $('viewerList').innerHTML = viewers.map(viewer => {
       const name = viewer.display_name || (viewer.username ? '@' + viewer.username : 'Telegram user');
-      const username = viewer.username ? '@' + viewer.username : 'без username';
+      const username = viewer.username ? '@' + viewer.username : viewerUi('viewerNoUsername','без username');
       const viewedAt = viewer.viewed_at
-        ? new Date(viewer.viewed_at).toLocaleString('ru-RU', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' })
+        ? new Date(viewer.viewed_at).toLocaleString((window.VetogramI18n?.getLocale?.()==='hy' ? 'hy-AM' : window.VetogramI18n?.getLocale?.()==='en' ? 'en-US' : 'ru-RU'), { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' })
         : '—';
       const initials = String(viewer.display_name || viewer.username || 'TG').trim().slice(0, 2).toUpperCase();
       const reaction = viewer.reaction_json?.value ? ` · ${viewer.reaction_json.value}` : '';
@@ -1365,11 +1365,11 @@
           <div class="viewer-avatar">${escapeHtml(initials)}</div>
           <div class="viewer-copy">
             <strong>${escapeHtml(name)}</strong>
-            <span>${escapeHtml(username)}${viewer.is_contact ? ' · контакт' : ''}</span>
+            <span>${escapeHtml(username)}${viewer.is_contact ? ' · '+viewerUi('viewerContact','контакт') : ''}</span>
           </div>
           <div class="viewer-side">
             <strong>${escapeHtml(viewedAt)}</strong>
-            <span>confirmed${escapeHtml(reaction)}</span>
+            <span>${viewerUi('viewerVerified','confirmed')}${escapeHtml(reaction)}</span>
           </div>
         </div>`;
     }).join('');
