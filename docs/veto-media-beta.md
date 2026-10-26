@@ -83,3 +83,14 @@ QA checklist:
 - Saves do not survive clearing browser storage, private browsing limits, or Telegram's WebView storage eviction. Failure is reported rather than guaranteeing persistence.
 - Separate V5 conversation preview tested with a mock browser storage backing in headless Chromium (390px + 1440px). Film and book save, reload-like document rebuild and retrieval succeeded, with no JS page errors or horizontal overflow. This is not an end-to-end Telegram login, platform SDK or external streaming test.
 - No paid streaming catalog, license, VETOGRAM auth/bot changes, merge or production deployment.
+
+
+## V6 reliability and recovery (2026-10-26)
+
+- `public/media-v5.js`: transactional browser-local saved items. When localStorage writes fail, an attempted Save/Unsave is rolled back instead of claiming it persisted.
+- `window.VetoPersonal.importCollection`: manual JSON backup restore. Validates file format/version, maximum 60 items per collection, unique IDs, bounded strings, HTTPS-only links and a complete replacement with rollback if saving fails. The UI asks before replacement; no file goes to a server.
+- `public/media-v6.js` and `media-v6.css`: provider status only updates after this tab actually receives success/failure from Audius, Gutenberg, LibriVox or Internet Archive. Unchecked providers are not falsely marked healthy. Includes a playback-retry banner and source link if browser audio cannot load. Includes a browser-local 'continue' rail for saved films and books.
+- `public/media.js`: source catalog requests now use 12s AbortController timeouts, report bounded provider results to V6, and show a nonfatal message on media element errors. `media-films.js` reports archive query result after a successful public-domain-flagged selection.
+- Standalone `veto-media-preview-v6.html` lives as a separate conversation-generated file, not a deployed site. Headless browser QA of the preview used 390px and 1440px screens with simulated provider responses: music loading, archive film entry, book reader/save, saved-item continuation, audio-error fallback, JSON import, unsafe URL rejection, and no horizontal overflow or page JS errors. Browser QA with mock responses **does not verify any external live stream, Telegram WebView compatibility, or actual music/movie licensing**.
+- Source catalogs verified against current upstream API documentation for Audius and Gutendex. Their read APIs can be used without a paid key at lower limits, but every actual track's streamability, territory, and rights require further checks. Internet Archive uploaded license metadata is not legal proof for other jurisdictions.
+- Remaining gates for launch: real Android/iOS Telegram playback, full library export/import and EPUB sandbox-security tests, stream/cross-origin behavior, real film rights, bot entrypoint, host, review and monetization. **Do not merge or deploy VETOGRAM.**
