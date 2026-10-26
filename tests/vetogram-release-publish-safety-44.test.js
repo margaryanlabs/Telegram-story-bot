@@ -147,11 +147,11 @@ test('release uses latest static client assets and keeps security contracts on s
   // Versions change during V4 releases; insist on unique cache-busted real
   // imports instead of pinning obsolete query strings from an old build.
   for(const asset of ['app.js','privacy.js']){
-    const imports=[...html.matchAll(/<script\\b[^>]*\\bsrc="([^"]+)"[^>]*><\\/script>/g)]
+    const imports=[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*><\/script>/g)]
       .map(match=>match[1])
       .filter(src=>src.startsWith('/'+asset+'?v='));
     assert.equal(imports.length,1,'missing or duplicate versioned '+asset);
-    assert.match(imports[0],/\\?v=[A-Za-z0-9-]+$/);
+    assert.match(imports[0],/\?v=[A-Za-z0-9-]+$/);
   }
   assert.match(ui,/Проверь свои Stories в Telegram перед новой попыткой/);
   assert.match(privacy,/Подключено · ждём тест удаления/);
