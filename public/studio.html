@@ -8,24 +8,24 @@
   <title>Vetogram — чаты, истории и приватность</title>
   <meta name="description" content="Vetogram — private control layer for Stories, Chats, Privacy, Intelligence, Relay and Automations." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/chat-themes.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/chat-media.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/studio-module.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/veto-global-ui.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/telegram-stories.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/veto-device-polish.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/veto-launch-polish.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/vetogram-header.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/story-engine.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/vetogram-ai.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/vetogram-2026.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261026-v412-runtime-ui" />
-  <link rel="stylesheet" href="/vetogram-noir.css?v=20261026-v412-runtime-ui" />
+  <link rel="stylesheet" href="/app.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/chat-themes.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/chat-media.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/studio-module.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/veto-global-ui.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/telegram-stories.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/veto-device-polish.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/veto-launch-polish.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/vetogram-header.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/story-engine.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/vetogram-ai.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/vetogram-2026.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261026-v412b-runtime-ui" />
+  <link rel="stylesheet" href="/vetogram-noir.css?v=20261026-v412b-runtime-ui" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -516,7 +516,7 @@
             <button type="button" data-mirror-filter="copies">Сохранённые <span aria-hidden="true">↶</span></button>
             <button type="button" class="veto-filters-more" id="vetoMessengerFiltersToggle" aria-expanded="false" aria-controls="telegramMirrorFilters">Фильтры <span>⌄</span></button>
           </div>
-          <section class="vgx-inbox-pulse" id="vgxInboxPulse" aria-label="Сводка по загруженным чатам" hidden>
+          <details class="vgx-inbox-pulse" id="vgxInboxPulse" aria-label="Сводка по загруженным чатам" hidden><summary class="v4-inbox-pulse-toggle">Умные входящие <span>Фильтры и приоритеты ▾</span></summary>
             <div class="vgx-inbox-pulse-heading">
               <span><i aria-hidden="true"></i> УМНЫЕ ВХОДЯЩИЕ</span>
               <small>Из загруженных чатов · по запросу</small>
@@ -535,7 +535,7 @@
                 <span><strong id="vgxPulseSaved">0</strong><small>Сохранённые</small></span><b aria-hidden="true">↗</b>
               </button>
             </div>
-          </section>
+          </details>
           <div id="telegramMirrorAccountProof" class="veto-mirror-account-proof" role="status" aria-live="polite"><span class="veto-mirror-live-pip"></span> Личный Telegram ещё не проверен · отображение чатов остановлено до подтверждения</div>
 
           <p class="veto-mirror-focus-hint">Локальная сортировка без отметок «прочитано» и изменения оригинальных чатов.</p>
@@ -2252,31 +2252,31 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/veto-device-polish.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/vetogram-country-picker.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/app.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/relay-module.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/privacy.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/chat-theme.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/vetogram-inbox-pulse-core.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/telegram-chats.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/telegram-stories.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/voice-studio.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/studio-module.js?v=20261026-v412-runtime-ui"></script>
-  <script type="module" src="/story-engine.js?v=20261026-v412-runtime-ui"></script>
-  <script type="module" src="/vetogram-ai.js?v=20261026-v412-runtime-ui"></script>
-  <script type="module" src="/vetogram-creative-presets.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/brand-pack.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/veto-launch-polish.js?v=20261026-v412-runtime-ui" defer></script>
-  <script src="/vetogram-header.js?v=20261026-v412-runtime-ui" defer></script>
-  <script src="/vetogram-command-2026.js?v=20261026-v412-runtime-ui" defer></script>
-  <script src="/vetogram-resume-2026.js?v=20261026-v412-runtime-ui" defer></script>
-  <script type="module" src="/vetogram-workflows-2026.js?v=20261026-v412-runtime-ui"></script>
-  <script type="module" src="/vetogram-mission-2026.js?v=20261026-v412-runtime-ui"></script>
-  <script src="/vetogram-noir.js?v=20261026-v412-runtime-ui" defer></script>
-  <script src="/vetogram-experience-v4.js?v=20261026-v412-runtime-ui" defer></script>
-  <script src="/vetogram-chat-experience-v4.js?v=20261026-v412-runtime-ui" defer></script>
-  <script src="/vetogram-reborn-ai.js?v=20261026-v412-runtime-ui" defer></script>
-  <script type="module" src="/vetogram-locale.js?v=20261026-v412-runtime-ui"></script>
+  <script src="/veto-device-polish.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/vetogram-country-picker.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/app.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/relay-module.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/privacy.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/chat-theme.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/vetogram-inbox-pulse-core.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/telegram-chats.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/telegram-stories.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/voice-studio.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/studio-module.js?v=20261026-v412b-runtime-ui"></script>
+  <script type="module" src="/story-engine.js?v=20261026-v412b-runtime-ui"></script>
+  <script type="module" src="/vetogram-ai.js?v=20261026-v412b-runtime-ui"></script>
+  <script type="module" src="/vetogram-creative-presets.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/brand-pack.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/veto-launch-polish.js?v=20261026-v412b-runtime-ui" defer></script>
+  <script src="/vetogram-header.js?v=20261026-v412b-runtime-ui" defer></script>
+  <script src="/vetogram-command-2026.js?v=20261026-v412b-runtime-ui" defer></script>
+  <script src="/vetogram-resume-2026.js?v=20261026-v412b-runtime-ui" defer></script>
+  <script type="module" src="/vetogram-workflows-2026.js?v=20261026-v412b-runtime-ui"></script>
+  <script type="module" src="/vetogram-mission-2026.js?v=20261026-v412b-runtime-ui"></script>
+  <script src="/vetogram-noir.js?v=20261026-v412b-runtime-ui" defer></script>
+  <script src="/vetogram-experience-v4.js?v=20261026-v412b-runtime-ui" defer></script>
+  <script src="/vetogram-chat-experience-v4.js?v=20261026-v412b-runtime-ui" defer></script>
+  <script src="/vetogram-reborn-ai.js?v=20261026-v412b-runtime-ui" defer></script>
+  <script type="module" src="/vetogram-locale.js?v=20261026-v412b-runtime-ui"></script>
 </body>
 </html>
