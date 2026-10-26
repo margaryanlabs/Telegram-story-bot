@@ -18,6 +18,7 @@ import {
   deleteAuthChallenge,
   claimLoginCodeLease,
   releaseLoginCodeLease,
+  deferLoginCodeLease,
   loginCodeLeaseReady,
   getViewerStoryData,
   getViewerAnalytics,
@@ -26,6 +27,7 @@ import {
 } from '../lib/viewer-sync-store.js';
 import {
   beginUserAuth,
+  resendUserAuthCode,
   sendUserLoginEmail,
   verifyUserCode,
   verifyUserPassword,
@@ -36,6 +38,42 @@ const AUTH_TTL_MS = 10 * 60 * 1000;
 // Guards duplicate code requests handled by this serverless instance only.
 // An atomic storage claim is required for cross-instance serialization.
 const inFlightLoginCodeOwners = new Set();
+
+// Public authorization metadata only. Never return phoneCodeHash, MTProto
+// sessions, verification values, masked email addresses, or login URLs.
+function codeStatus(auth = {}) {
+  const nextDelivery = ['sms','call','flash_call','missed_call','fragment_sms'].includes(auth.nextDelivery)
+    ? auth.nextDelivery : null;
+  const availableAt = Date.parse(auth.resendAvailableAt || '');
+  return {
+    sentCodeType: /^auth\.SentCodeType[A-Za-z]+$/.test(auth.sentCodeType || '') ? auth.sentCodeType : 'unknown',
+    codeFormat: ['word','phrase'].includes(auth.codeFormat) ? auth.codeFormat : 'digits',
+    codeLength: Number.isInteger(auth.codeLength) && auth.codeLength>=1 && auth.codeLength<=10 ? auth.codeLength : null,
+    nextDelivery,
+    resendAvailableAt: nextDelivery && Number.isFinite(availableAt) ? new Date(availableAt).toISOString() : null,
+    canResend: Boolean(auth.canResend && nextDelivery && Number.isFinite(availableAt)),
+  };
+}
+
+async function completePhoneAuthorization(userId, result) {
+  try {
+    requireOwnTelegramAccount(userId, result.user);
+  } catch (error) {
+    await revokeUserSession(result.session).catch(() => {});
+    throw error;
+  }
+  const ciphertext = await sealJson({session:result.session}, `session:${userId}`);
+  const stored = await upsertViewerSession({
+    telegram_user_id:userId, session_ciphertext:ciphertext, status:'active',
+    telegram_account_user_id:result.user?.id || null,
+    telegram_account_username:result.user?.username || null,
+    telegram_account_first_name:result.user?.firstName || null,
+    last_error:null, updated_at:new Date().toISOString(),
+  });
+  if (!isOwnActiveViewerSession(userId, stored)) throw new Error('AUTH_SESSION_PERSISTENCE_UNCONFIRMED');
+  await deleteAuthChallenge(userId);
+  return {connected:true,status:'active',account:result.user};
+}
 
 async function configState() {
   const storage = viewerDbConfigured();
@@ -454,11 +492,14 @@ export default async function handler(req, res) {
       // closes while the owner copies it, allow continuing the existing challenge
       // instead of forcing another code request (which can hit FLOOD_WAIT).
       const expiry = Date.parse(loginChallenge?.expires_at || '');
+      const pendingAuth = loginChallenge?.stage === 'code' && Number.isFinite(expiry) && expiry > Date.now()
+        ? await openJson(loginChallenge.challenge_ciphertext,`auth:${userId}`).catch(()=>null) : null;
       const loginPending = Number.isFinite(expiry)
         && expiry > Date.now()
         && ['code', 'password', 'qr_password'].includes(loginChallenge?.stage)
         ? { stage: loginChallenge.stage, expiresAt: new Date(expiry).toISOString(),
-          delivery:loginChallenge.stage === 'code' ? (await openJson(loginChallenge.challenge_ciphertext,`auth:${userId}`).catch(()=>null))?.delivery || 'unknown' : null }
+          delivery:loginChallenge.stage === 'code' ? pendingAuth?.delivery || 'unknown' : null,
+          ...(loginChallenge.stage === 'code' ? codeStatus(pendingAuth || {}) : {}) }
         : null;
 
       res.status(200).json({
@@ -590,7 +631,8 @@ export default async function handler(req, res) {
             res.status(200).json({
               ok: true,
               stage: 'code',
-              delivery: pending.delivery || (pending.isCodeViaApp ? 'telegram_app' : 'sms_or_other'),
+              delivery: pending.delivery || 'unknown',
+              ...codeStatus(pending),
               reused: true,
               expiresAt: new Date(expiresAt).toISOString(),
             });
@@ -645,8 +687,9 @@ export default async function handler(req, res) {
             return;
           }
           if (claimed?.acquired !== true) {
-            res.setHeader('Retry-After','5');
-            res.status(429).json({ok:false,retryAfterSeconds:5,
+            const retryAfterSeconds=Math.max(5,Math.ceil(Number(claimed?.retryAfterSeconds)||5));
+            res.setHeader('Retry-After',String(retryAfterSeconds));
+            res.status(429).json({ok:false,retryAfterSeconds,
               error:'Другой запрос кода уже выполняется. Новый код не отправлялся.'});
             return;
           }
@@ -660,6 +703,7 @@ export default async function handler(req, res) {
               if(saved?.phone===requestedPhone) {
                 res.status(200).json({ok:true,stage:'code',
                   delivery:saved.delivery||'unknown',
+                  ...codeStatus(saved),
                   reused:true,expiresAt:new Date(updatedExpires).toISOString()});
                 return;
               }
@@ -675,12 +719,18 @@ export default async function handler(req, res) {
         // Neon lease until expiry rather than immediately sending a second code.
         telegramSendMayHaveOccurred=true;
       const auth = await beginUserAuth(requestedPhone);
+      if (auth.connected === true) {
+        const session=await completePhoneAuthorization(userId,auth);
+        telegramSendMayHaveOccurred=false;
+        res.status(200).json({ok:true,stage:'connected',session});
+        return;
+      }
       const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
       const storedChallenge=await saveAuthChallenge({
         telegram_user_id: userId,
         challenge_ciphertext: payload,
-        stage: 'code',
+        stage: auth.needsPassword === true ? 'password' : 'code',
         created_at: now.toISOString(),
         expires_at: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
@@ -689,8 +739,10 @@ export default async function handler(req, res) {
 
       res.status(200).json({
         ok: true,
-        stage: 'code',
-        delivery: auth.delivery || (auth.isCodeViaApp ? 'telegram_app' : 'sms_or_other'),
+        stage: auth.needsPassword === true ? 'password' : 'code',
+        needsPassword: auth.needsPassword === true,
+        delivery: auth.delivery || 'unknown',
+        ...codeStatus(auth),
         reused: false,
         expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
@@ -698,6 +750,11 @@ export default async function handler(req, res) {
         // The matching encrypted challenge is durable; subsequent requests
         // reuse it. The lease may now be released without a second send.
         telegramSendMayHaveOccurred=false;
+      } catch (error) {
+        const feedback=classifyTelegramAuthError(error);
+        if (leaseToken && telegramSendMayHaveOccurred && feedback.retryAfterSeconds)
+          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds).catch(()=>{});
+        throw error;
       } finally {
         if (leaseToken && !telegramSendMayHaveOccurred)
           await releaseLoginCodeLease(userId,leaseToken).catch(()=>{});
@@ -708,9 +765,75 @@ export default async function handler(req, res) {
       }
     }
 
+    if (action === 'resend_code') {
+      const codeOwner=String(userId);
+      if (inFlightLoginCodeOwners.has(codeOwner)) {
+        res.setHeader('Retry-After','3');
+        res.status(429).json({ok:false,retryAfterSeconds:3,error:'Запрос кода уже выполняется. Дождись ответа.'});return;
+      }
+      inFlightLoginCodeOwners.add(codeOwner);
+      let leaseToken=null, telegramSendMayHaveOccurred=false;
+      try {
+        if (config.newConnectionsReady !== true || selectedStorageProvider() !== 'neon') {
+          res.status(503).json({ok:false,error:'Безопасная повторная отправка пока недоступна. Продолжи вход с текущим кодом или используй QR.'});return;
+        }
+        leaseToken=randomUUID();
+        const claimed=await claimLoginCodeLease(userId,leaseToken);
+        if (claimed?.acquired !== true) {
+          const retryAfterSeconds=Math.max(5,Math.ceil(Number(claimed?.retryAfterSeconds)||5));
+          res.setHeader('Retry-After',String(retryAfterSeconds));
+          res.status(429).json({ok:false,retryAfterSeconds,error:'Другой запрос кода уже выполняется или Telegram ограничил попытки. Новый код не запрашивался.'});return;
+        }
+        const challenge=await getAuthChallenge(userId);
+        const expiry=Date.parse(challenge?.expires_at || '');
+        if (challenge?.stage !== 'code' || !Number.isFinite(expiry) || expiry<=Date.now()) {
+          res.status(410).json({ok:false,error:'Вход устарел. Начни подключение заново.'});return;
+        }
+        const auth=await openJson(challenge.challenge_ciphertext,`auth:${userId}`);
+        const status=codeStatus(auth);
+        if (!status.canResend) {
+          res.status(409).json({ok:false,error:'Telegram не предоставил доступный способ повторной отправки. Используй текущий код или QR.'});return;
+        }
+        const retryAfterSeconds=Math.ceil((Date.parse(status.resendAvailableAt)-Date.now())/1000);
+        if (retryAfterSeconds>0) {
+          res.setHeader('Retry-After',String(retryAfterSeconds));
+          res.status(429).json({ok:false,retryAfterSeconds,error:'Telegram ещё не разрешил повторную отправку.'});return;
+        }
+        // Never repeat a resend after an unknown Telegram/storage outcome.
+        // Keep the database lease until expiry unless a new challenge is durable.
+        telegramSendMayHaveOccurred=true;
+        const next=await resendUserAuthCode(auth);
+        if (next.connected === true) {
+          const session=await completePhoneAuthorization(userId,next);
+          telegramSendMayHaveOccurred=false;
+          res.status(200).json({ok:true,stage:'connected',session});return;
+        }
+        const now=new Date();
+        const stored=await saveAuthChallenge({
+          telegram_user_id:userId,stage:next.needsPassword===true?'password':'code',created_at:now.toISOString(),
+          expires_at:new Date(now.getTime()+AUTH_TTL_MS).toISOString(),
+          challenge_ciphertext:await sealJson(next,`auth:${userId}`),
+        });
+        if (!stored?.challenge_ciphertext) throw new Error('AUTH_CHALLENGE_PERSISTENCE_UNCONFIRMED');
+        telegramSendMayHaveOccurred=false;
+        res.status(200).json({ok:true,stage:next.needsPassword===true?'password':'code',
+          needsPassword:next.needsPassword===true,delivery:next.delivery || 'unknown',
+          ...codeStatus(next),reused:false,expiresAt:stored.expires_at});
+      } catch (error) {
+        const feedback=classifyTelegramAuthError(error);
+        if (leaseToken && telegramSendMayHaveOccurred && feedback.retryAfterSeconds)
+          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds).catch(()=>{});
+        throw error;
+      } finally {
+        if (leaseToken && !telegramSendMayHaveOccurred) await releaseLoginCodeLease(userId,leaseToken).catch(()=>{});
+        inFlightLoginCodeOwners.delete(codeOwner);
+      }
+      return;
+    }
+
     if (action === 'send_login_email') {
       const challenge=await getAuthChallenge(userId);
-      if(!challenge || challenge.stage!=='code' || Date.parse(challenge.expires_at)<Date.now()) {
+      if(!challenge || challenge.stage!=='code' || !Number.isFinite(Date.parse(challenge.expires_at)) || Date.parse(challenge.expires_at)<=Date.now()) {
         res.status(410).json({ok:false,error:'Вход устарел. Начни заново.'});return;
       }
       const auth=await openJson(challenge.challenge_ciphertext,`auth:${userId}`);
@@ -721,7 +844,7 @@ export default async function handler(req, res) {
 
     if (action === 'verify_code') {
       const challenge = await getAuthChallenge(userId);
-      if (!challenge || challenge.stage !== 'code' || new Date(challenge.expires_at).getTime() < Date.now()) {
+      if (!challenge || challenge.stage !== 'code' || !Number.isFinite(Date.parse(challenge.expires_at)) || Date.parse(challenge.expires_at) <= Date.now()) {
         await deleteAuthChallenge(userId).catch(() => {});
         res.status(410).json({ ok: false, error: 'Код устарел. Вернись к номеру и запроси новый.' });
         return;
@@ -732,7 +855,7 @@ export default async function handler(req, res) {
 
       if (result.nextCode) {
         await saveAuthChallenge({...challenge,telegram_user_id:userId,challenge_ciphertext:await sealJson(result.authState,`auth:${userId}`)});
-        res.status(200).json({ok:true,nextCode:true,stage:'code',delivery:result.authState.delivery});return;
+        res.status(200).json({ok:true,nextCode:true,stage:'code',delivery:result.authState.delivery,...codeStatus(result.authState)});return;
       }
       if (result.needsPassword) {
         const next = await sealJson({ ...auth, session: result.session }, `auth:${userId}`);
@@ -792,7 +915,7 @@ export default async function handler(req, res) {
 
     if (action === 'verify_password') {
       const challenge = await getAuthChallenge(userId);
-      if (!challenge || !['password', 'qr_password'].includes(challenge.stage) || new Date(challenge.expires_at).getTime() < Date.now()) {
+      if (!challenge || !['password', 'qr_password'].includes(challenge.stage) || !Number.isFinite(Date.parse(challenge.expires_at)) || Date.parse(challenge.expires_at) <= Date.now()) {
         await deleteAuthChallenge(userId).catch(() => {});
         res.status(410).json({ ok: false, error: 'Авторизация устарела. Начни подключение заново.' });
         return;
