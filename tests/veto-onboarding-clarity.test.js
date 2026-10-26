@@ -9,7 +9,7 @@ function read(path) {
 test('first-run onboarding explains product, functions and two-step activation', () => {
   const html = read('public/studio.html');
 
-  assert.match(html, /Твои переписки/);
+  assert.match(html, /<h1 class="v5-welcome-title">VETOGRAM/);
   assert.match(html, /id="vetoWelcomeExplore"/);
   assert.match(html, /id="vetoWelcomeNext"/);
   assert.match(html, /Семь функций/);
@@ -42,7 +42,7 @@ test('connection wizard recommends phone plus code on the current phone', () => 
   assert.match(app, /Я на этом телефоне/);
   assert.match(app, /номер \+ код/);
   assert.match(app, /У меня есть второй экран/);
-  assert.match(app, /Settings → Devices/);
+  assert.match(app, /Telegram → Настройки → Устройства/);
   assert.match(app, /Код Telegram и 2FA‑пароль не сохраняются/);
 });
 
@@ -53,5 +53,5 @@ test('Privacy is explicitly optional and separate from normal Story setup', () =
   assert.match(html, /Privacy/);
   assert.match(html, /Необязательно/);
   assert.match(app, /доступ к сообщениям не включается автоматически/);
-  assert.match(app, /Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить/);
+  assert.match(app, /Живые чаты, Story Studio и AI без Telegram Business-бота/);
 });

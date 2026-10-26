@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
+import {classifyTelegramAuthError} from '../lib/telegram-auth-feedback.js';
 
 const app=readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
 const api=readFileSync(new URL('../api/viewer-sync.js',import.meta.url),'utf8');
+const codeStatusSource=api.slice(api.indexOf('function codeStatus('),api.indexOf('\nasync function completePhoneAuthorization('));
 
 function errorFixture() {
   const inserted=[];
@@ -14,7 +16,7 @@ function errorFixture() {
   };
   const elements={viewerAuthError:slot};
   const notices=[];
-  const context=vm.createContext({
+  const context=vm.createContext({classifyTelegramAuthError,
     $:id=>elements[id]||null,
     viewerState:{loginPending:null},
     notify:kind=>notices.push(kind),
@@ -70,10 +72,11 @@ test('OTP error recovery is never interpreted as code receipt',()=>{
 });
 test('the success and password paths never automatically open Business permission requests',()=>{
   assert.doesNotMatch(app,/VetoTelegramOpenUnifiedOnboarding\?\.\(\{automatic:true\}\)/);
-  assert.match(app,/viewerState\.loginPending = \{\s*stage:'code', delivery:data\.delivery/);
+  assert.match(app,/function rememberViewerChallenge\(data\)/);
+  assert.match(app,/function rememberViewerChallenge\(data\)[\s\S]{0,180}stage:'code',delivery:data\.delivery/);
   assert.match(app,/stage:'password'/);
   assert.match(app,/viewerState\.loginPending = null/);
-  assert.match(app,/data\.reused === true/);
+  assert.match(app,/data\.reused\s*===\s*true/);
 });
 test('server respects unfinished challenges and never silently sends another code',()=>{
   const send=api.split("if (action === 'send_code') {")[1]
@@ -93,7 +96,7 @@ test('a resumed code challenge never invents Telegram-app delivery metadata',()=
   assert.ok(app.includes("let viewerCodeDelivery='unknown'"));
   assert.ok(app.includes("viewerCodeDelivery=delivery || 'unknown'"));
   assert.ok(app.includes("viewerCodeSheet(pending.delivery || 'unknown')"));
-  assert.ok(app.includes("stage:'code', delivery:data.delivery || 'unknown'"));
+  assert.ok(app.includes("delivery:data.delivery || 'unknown'"));
   assert.doesNotMatch(app,/pending\.delivery \|\| 'telegram_app'/);
 });
 
@@ -108,7 +111,7 @@ test('concurrent OTP sends on one API runtime call Telegram only once', async()=
   let releaseTelegram;
   const telegramPending=new Promise(resolve=>{releaseTelegram=resolve});
   let sent=0, persisted=null;
-  const ctx=vm.createContext({
+  const ctx=vm.createContext({classifyTelegramAuthError,
     userId:'123456',body:{phone:'+37499123456'},
     config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
     inFlightLoginCodeOwners:new Set(),
@@ -127,7 +130,7 @@ test('concurrent OTP sends on one API runtime call Telegram only once', async()=
     },
   });
   const send=vm.runInContext(
-    '(async function(res){const action="send_code";'+sendBranch+'})',ctx
+    '(function(){'+codeStatusSource+';return async function(res){const action="send_code";'+sendBranch+'}})()',ctx
   );
   const response=()=>({
     headers:{},statusCode:0,body:null,
@@ -161,7 +164,7 @@ test('failed OTP send releases the request gate for a later retry',async()=>{
   const branch=api.slice(start,end);
   let attempts=0;
   const owners=new Set();
-  const context=vm.createContext({
+  const context=vm.createContext({classifyTelegramAuthError,
     userId:'123456',body:{phone:'+37499123456'},
     config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
     inFlightLoginCodeOwners:owners,
@@ -178,7 +181,7 @@ test('failed OTP send releases the request gate for a later retry',async()=>{
     },
   });
   const run=vm.runInContext(
-    '(async function(res){const action="send_code";'+branch+'})',context
+    '(function(){'+codeStatusSource+';return async function(res){const action="send_code";'+branch+'}})()',context
   );
   const response=()=>({
     statusCode:0,body:null,
@@ -209,7 +212,7 @@ test('Neon OTP lease serializes across separate server runtimes',async()=>{
     json(v){this.data=v;return this},
   });
   const runtime=name=>{
-    const scope=vm.createContext({
+    const scope=vm.createContext({classifyTelegramAuthError,
       userId:'123456',body:{phone:'+37499123456'},
       config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
       selectedStorageProvider:()=> 'neon',
@@ -238,7 +241,7 @@ test('Neon OTP lease serializes across separate server runtimes',async()=>{
       },
     });
     return vm.runInContext(
-      '(async function(res){const action="send_code";'+realBranch+'})',scope
+      '(function(){'+codeStatusSource+';return async function(res){const action="send_code";'+realBranch+'}})()',scope
     );
   };
   const sendA=runtime('A'),sendB=runtime('B');
@@ -266,7 +269,7 @@ test('Neon rejects login-code sends if the v6 lease table is unavailable',async(
   const end=api.indexOf("    if (action === 'send_login_email') {",start);
   const realBranch=api.slice(start,end);
   let sends=0;
-  const scope=vm.createContext({
+  const scope=vm.createContext({classifyTelegramAuthError,
     userId:'123456',body:{phone:'+37499123456'},
     config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
     selectedStorageProvider:()=> 'neon',
@@ -281,7 +284,7 @@ test('Neon rejects login-code sends if the v6 lease table is unavailable',async(
     beginUserAuth:async()=>{sends++;throw Error('MUST_NOT_SEND')},
   });
   const run=vm.runInContext(
-    '(async function(res){const action="send_code";'+realBranch+'})',scope
+    '(function(){'+codeStatusSource+';return async function(res){const action="send_code";'+realBranch+'}})()',scope
   );
   const res={
     code:0,data:null,status(n){this.code=n;return this},
@@ -298,7 +301,7 @@ test('Neon v6 readiness gates new Telegram logins without touching Supabase',asy
   const end=api.indexOf('\nfunction safeSession(',start);
   assert.ok(start>=0&&end>start);
   const actualFn=api.slice(start,end).trim();
-  const makeContext=(provider,leaseReady)=>vm.createContext({
+  const makeContext=(provider,leaseReady)=>vm.createContext({classifyTelegramAuthError,
     process:{env:{
       TELEGRAM_API_ID:'123',TELEGRAM_API_HASH:'test',TELEGRAM_BOT_TOKEN:'test',
       VETO_NEON_DATABASE_URL:'postgresql://fake/not-used',
@@ -343,7 +346,7 @@ test('Neon does not acknowledge a sent OTP if challenge persistence is unconfirm
   const end=api.indexOf("    if (action === 'send_login_email') {",start);
   const actual=api.slice(start,end);
   let sent=0,released=0;
-  const scope=vm.createContext({
+  const scope=vm.createContext({classifyTelegramAuthError,
     userId:'123456',body:{phone:'+37499123456'},
     config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
     selectedStorageProvider:()=> 'neon',
@@ -363,7 +366,7 @@ test('Neon does not acknowledge a sent OTP if challenge persistence is unconfirm
     },
   });
   const handler=vm.runInContext(
-    '(async function(res){const action="send_code";'+actual+'})',scope
+    '(function(){'+codeStatusSource+';return async function(res){const action="send_code";'+actual+'}})()',scope
   );
   const response={
     code:0,status(n){this.code=n;return this},json(){return this},

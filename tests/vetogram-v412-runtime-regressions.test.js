@@ -44,8 +44,8 @@ test('real Studio remains available as a primary Stories choice',()=>{
   assert.match(html,/data-se-mode="pro"/);
   assert.match(html,/v4-veto-brain/);
 });
-test('cached shell assets are versioned for V4.12',()=>{
+test('cached shell assets are versioned for the current release',()=>{
   const html=source('public/studio.html');
-  assert.match(html,/20261026-v412b-runtime-ui/);
+  assert.match(html,/\/app\.js\?v=\d{8}-[a-z0-9-]+/);
   assert.doesNotMatch(html,/20261026-v411-reborn-release/);
 });

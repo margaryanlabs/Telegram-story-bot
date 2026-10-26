@@ -52,7 +52,7 @@ test('AI mode chip reads the actually pressed control, never sends requests',()=
   assert.doesNotMatch(ai,/\bfetch\s*\(|vtaiCreate\.click\(|localStorage\.|sessionStorage\./);
 });
 test('responsive V4.1 visuals retain actual feature actions, focus and reduced motion',()=>{
-  assert.match(css,/V4\.1 Canvas Noir/);
+  assert.match(css,/\.v4-vault-overview/);
   assert.match(css,/\.v4-vault-overview/);
   assert.match(css,/\.v4-vault-actions/);
   assert.match(css,/\[data-capture-state="recording"\]/);

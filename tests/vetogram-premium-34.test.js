@@ -52,7 +52,7 @@ test('real flagship screen keeps navigation/permissions, no fake success state',
   for(const id of ['vg27MissionAccount','vg27MissionPrivacy','vg27MissionStories',
     'telegramThreadCompose','telegramThreadSend','seTemplates','vtaiRoot'])
     assert.match(html,new RegExp('id="'+id+'"'));
-  for(const copy of ['VETOGRAM · ЛИЧНЫЕ ЧАТЫ','VETOGRAM / AI-ИНСТРУМЕНТЫ',
+  for(const copy of ['VETOGRAM · ЛИЧНЫЕ ЧАТЫ','aria-label="VETOGRAM AI"',
     'VETOGRAM / РЕДАКТОР ИСТОРИЙ','10 вариантов'])
     assert.ok(html.includes(copy));
 });

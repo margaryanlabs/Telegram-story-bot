@@ -93,7 +93,9 @@ export default async function handler(req,res){
       const input=[{role:'developer',content:instruction},...history.map(row=>({role:row.role,content:row.text})),{role:'user',content:userPrompt}];
       const response=await fetch('https://api.openai.com/v1/responses',{
         method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+provider.key},
-        body:JSON.stringify({model:process.env.VETOGRAM_OPENAI_MODEL||'gpt-4.1-mini',input,max_output_tokens:700}),
+        // History is already supplied explicitly. Do not retain a retrievable
+        // provider-side Response object for private owner-consented content.
+        body:JSON.stringify({model:process.env.VETOGRAM_OPENAI_MODEL||'gpt-4.1-mini',input,max_output_tokens:700,store:false}),
         signal:controller.signal
       });
       if(!response.ok)throw Error('AI_PROVIDER_UNAVAILABLE');

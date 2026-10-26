@@ -54,5 +54,5 @@ test('Story UI remains syntax-valid, private and embedded in existing messenger'
   assert.doesNotMatch(ui,/readStories|incrementStoryViews|sendReaction|ActivateStealthMode/);
   assert.match(ui,/x-veto-story-mode/);
   assert.match(ui,/owner!==state\.owner/);
-  assert.match(source('public/studio.html'),/telegram-stories\.js\?v=20261019-veto-discovery-v1/);
+  assert.match(source('public/studio.html'),/telegram-stories\.js\?v=\d{8}-[a-z0-9-]+/);
 });

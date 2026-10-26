@@ -27,7 +27,7 @@ function fixture(){
     photoId:'owner-media',layers:[{id:'layer1',text:'Keep me'}],
     portal:oldPortal,photoZoom:1.4
   }};
-  const context={state,owner:()=>ownerId,init:async()=>{}, 
+  const context={state,tg:{get initData(){return 'signed-'+ownerId}},owner:()=>ownerId,init:async()=>{}, 
     trimText:(text,max)=>String(text??'').slice(0,max),
     normalizePortal:input=>({...input}),normalizeDraft:(draft,user)=>({...draft,ownerId:user}),
     newStoryDraft:()=>({}),loadImageForDraft:()=>{},checkpoint:()=>{},
@@ -41,7 +41,7 @@ function fixture(){
   return {state,button,attached,oldPortal,notices,
     setOwner:value=>{ownerId=value},renders:()=>renders,linkClears:()=>linkClears,...handlers};
 }
-const proposal=(portal=false)=>({ownerId:'111',story:{
+const proposal=(portal=false)=>({ownerId:'111',signed:'signed-111',story:{
   title:'AI title',subtitle:'AI subtitle',caption:'AI caption'
 },replacePortal:portal,portal:portal?{type:'offer',title:'New offer',cta:'Learn more'}:null});
 
@@ -111,7 +111,7 @@ test('opening another draft invalidates old undo and does not restore prior AI t
 test('each new AI suggestion allows undo of latest edit only',async()=>{
   const f=fixture();
   await f.applyAiStorySuggestion(proposal());
-  await f.applyAiStorySuggestion({ownerId:'111',story:{title:'Second AI title',
+  await f.applyAiStorySuggestion({ownerId:'111',signed:'signed-111',story:{title:'Second AI title',
     subtitle:'Second AI subtitle',caption:'Second AI caption'},replacePortal:false});
   assert.equal(f.state.draft.title,'Second AI title');
   assert.equal(f.undoAiStorySuggestion(),true);

@@ -42,7 +42,9 @@ test('UI retains uncertain media nonce but never automatically sends another mes
  assert.match(outgoing,/state\.lastRichFailure=\{intent,nonce\}/);
  assert.match(outgoing,/error\?\.uncertain===true/);
  assert.match(outgoing,/String\(state\.thread\?\.id\)===chatId/);
- assert.match(outgoing,/if\(ownerKey!==state\.ownerInitData/);
+ assert.match(outgoing,/const current=\(\)=>ownerKey===state\.ownerInitData&&ownerKey===String\(tg\?\.initData\|\|''\)&&/);
+ assert.match(outgoing,/generation===state\.threadGeneration&&String\(state\.thread\?\.id\)===chatId/);
+ assert.ok(outgoing.indexOf('if(!current())')<outgoing.indexOf('await richRequest(action,request)'));
  assert.equal((outgoing.match(/await richRequest\(action,request\)/g)||[]).length,1);
  assert.doesNotMatch(outgoing,/setTimeout\([^)]*sendRichOutgoing/);
  assert.doesNotMatch(ui,/localStorage|sessionStorage|indexedDB/i);

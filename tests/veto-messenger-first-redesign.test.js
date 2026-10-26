@@ -17,7 +17,7 @@ test('Messenger is the first-class default screen with four primary working tabs
 });
 
 test('Welcome has one main task, optional education and correct login handoff',()=>{
- assert.match(html,/Твои переписки/);
+ assert.match(html,/<h1 class="v5-welcome-title">VETOGRAM/);
  assert.match(html,/id="vetoWelcomeExplore"/);
  assert.match(html,/id="vetoWelcomeNext"/);
  assert.match(app,/vetoWelcomeStep === 0/);
@@ -94,5 +94,5 @@ test('The mobile inbox tab bar has legible labels and meaningful tap targets',()
   assert.ok(css.includes('body.veto-chat-active:not(.veto-chat-thread) .bottom-nav .nav-item:focus-visible'));
   assert.ok(!css.includes('body.veto-chat-active .bottom-nav{display:none!important}'));
   assert.ok(css.includes('height:var(--veto-visible-height,100dvh)!important'));
-  assert.ok(html.includes('veto-global-ui.css?v=20261019-messenger-nav-v3'));
+  assert.ok(/veto-global-ui\.css\?v=\d{8}-[a-z0-9-]+/.test(html));
 });

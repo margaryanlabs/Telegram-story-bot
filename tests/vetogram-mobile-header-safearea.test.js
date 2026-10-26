@@ -10,8 +10,10 @@ test('Telegram Android inbox reserves its own chrome touch-safe area',()=>{
   assert.match(css,/body\.vetogram-in-tg\.veto-chat-active/);
   assert.match(css,/--tg-content-safe-area-inset-top/);
   assert.match(css,/--tg-safe-area-inset-top/);
-  assert.match(css,/padding-top:max\(56px/);
+  assert.match(css,/padding-top:var\(--vetogram-top\)/);
   assert.match(script,/Telegram\?\.WebApp\?\.initData/);
+  assert.match(css,/--vetogram-top:max\(var\(--vetogram-sdk-content-top/);
+  assert.doesNotMatch(css,/padding-top:max\(56px/);
 });
 
 test('Mobile header starts compact and opens only on user tap',()=>{

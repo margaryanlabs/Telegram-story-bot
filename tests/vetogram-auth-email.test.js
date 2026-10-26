@@ -17,8 +17,16 @@ test('sendCode preserves Telegram email/login delivery steps without email or co
   const beforeId=process.env.TELEGRAM_API_ID,beforeHash=process.env.TELEGRAM_API_HASH;
   process.env.TELEGRAM_API_ID='12345';process.env.TELEGRAM_API_HASH='fixture-hash';
   try {
-    for(const [sent,delivery] of [[{emailRequired:true},'email_setup'],[{emailCodeSent:true},'email_code'],[{isCodeViaApp:true},'telegram_app'],[{},'sms_or_other']]) {
-      const result=await beginUserAuth('+37499123456',{clientFactory:()=>fakeClient(undefined,{phoneCodeHash:'test-hash',...sent})});
+    for(const [type,delivery] of [
+      [new Api.auth.SentCodeTypeSetUpEmailRequired({}),'email_setup'],
+      [new Api.auth.SentCodeTypeEmailCode({emailPattern:'t***@example.com',length:6}),'email_code'],
+      [new Api.auth.SentCodeTypeApp({length:5}),'telegram_app'],
+      [new Api.auth.SentCodeTypeSms({length:5}),'sms'],
+    ]) {
+      const result=await beginUserAuth('+37499123456',{clientFactory:()=>fakeClient(async rpc=>{
+        assert.ok(rpc instanceof Api.auth.SendCode);
+        return new Api.auth.SentCode({phoneCodeHash:'test-hash',type});
+      })});
       assert.equal(result.delivery,delivery);assert.equal(result.session,'test-session');assert.equal(result.email,undefined);assert.equal(result.code,undefined);
     }
   } finally {if(beforeId===undefined)delete process.env.TELEGRAM_API_ID;else process.env.TELEGRAM_API_ID=beforeId;if(beforeHash===undefined)delete process.env.TELEGRAM_API_HASH;else process.env.TELEGRAM_API_HASH=beforeHash;}

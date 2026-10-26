@@ -15,7 +15,7 @@ function safeSendError(error) {
   const ownership=telegramOwnerError(error);
   if (ownership) return ownership;
   if (Number.isInteger(error?.status) && error.status>=400 && error.status<600) {
-    return { status:error.status,error:String(error.message).slice(0,240) };
+    return { status:error.status,error:String(error.message).slice(0,240),uncertain:error.uncertain===true };
   }
   const raw=String(error?.errorMessage || error?.message || '');
   if (/RANDOM_ID_DUPLICATE/i.test(raw))

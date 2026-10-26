@@ -17,9 +17,30 @@
     if (dock) observer.observe(dock);
     if (action) observer.observe(action);
   }
+  // Move the *existing* owner-scoped Story strip; its controller, listeners,
+  // cache and media permissions remain singular across both destinations.
+  function placeStoryStrip(screen) {
+    const strip = document.querySelector('.veto-story-strip');
+    const target = document.getElementById('v5StoriesWatch');
+    const inbox = document.getElementById('telegramChatsView');
+    const heading = inbox?.querySelector('.veto-mirror-heading');
+    if (!strip || !target || !heading) return;
+    if (screen === 'publish') {
+      if (strip.parentElement !== target) target.appendChild(strip);
+    } else if (strip.parentElement !== inbox) {
+      heading.insertAdjacentElement('afterend', strip);
+    }
+  }
+  document.getElementById('v5StoriesWatchButton')?.addEventListener('click', () => {
+    const target = document.getElementById('v5StoriesWatch');
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    target?.scrollIntoView?.({block: 'start', behavior: reduced ? 'auto' : 'smooth'});
+    target?.querySelector('[data-veto-story-refresh]')?.focus({preventScroll: true});
+  });
   window.addEventListener('resize', measureChrome, {passive: true});
   window.addEventListener('veto:screen-changed', event => {
     root.dataset.noirScreen = event.detail?.screen || 'home';
+    placeStoryStrip(root.dataset.noirScreen);
     requestAnimationFrame(measureChrome);
   });
   // Native, keyboard-accessible disclosures replace repeated onboarding walls.
@@ -38,5 +59,6 @@
     orb.dataset.busy = String(event.detail?.busy === true);
     orb.setAttribute('aria-label', event.detail?.busy === true ? 'ИИ обрабатывает запрос' : 'ИИ ожидает запрос');
   });
+  placeStoryStrip(document.querySelector('.screen.active')?.dataset.screen);
   measureChrome();
 })();

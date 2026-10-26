@@ -196,5 +196,5 @@ test('viewer API selects default Story ID only after account cleanup',async()=>{
   assert.equal(ctx.selectedViewerStory,null);
 });
 test('connected Viewer copy is conditional on confirmed background readiness',()=>{
-  assert.match(source,/viewerState\.backgroundReady\s*\? 'Fast Alerts/);
+  assert.match(source,/viewerState\.backgroundReady\s*\? viewerUi\('viewerBackgroundConfiguredInfo'/);
 });

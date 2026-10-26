@@ -93,7 +93,7 @@ test('slow photo decoding and export never carry an old Telegram owner into a ne
   assert.match(ui,/selectedOwner=state\.owner,selectedDraftId=state\.draft\.id/);
   assert.match(ui,/owner\(\)!==selectedOwner \|\| state\.owner!==selectedOwner/);
   assert.match(ui,/exportOwner=state\.owner,exportDraftId=state\.draft\.id/);
-  assert.match(ui,/Аккаунт или черновик изменился/);
+  assert.match(ui,/Аккаунт или (?:черновик изменился|Story изменились)/);
   assert.match(ui,/if\(state\.owner!=='0'\)/);
   assert.match(ui,/window\.addEventListener\('focus'/);
 });

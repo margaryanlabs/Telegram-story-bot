@@ -5,8 +5,10 @@ const read = name => readFileSync(new URL('../'+name,import.meta.url),'utf8');
 
 test('All static named buttons on VETO Telegram have a controller or declared action',()=>{
  const html=read('public/studio.html');
- const controllers=['public/app.js','public/privacy.js','public/relay-module.js','public/studio-module.js','public/story-engine.js','public/story-soundtrack.js','public/brand-pack.js','public/telegram-chats.js','public/voice-studio.js','public/chat-theme.js','public/vetogram-header.js','public/vetogram-ai.js',
-  'public/vetogram-command-2026.js','public/vetogram-mission-2026.js'].map(read).join('\n');
+ const scripts=[...html.matchAll(/<script\b[^>]*src="(\/[^"?]+\.js)(?:\?[^" ]*)?"[^>]*>/g)]
+   .map(match=>'public'+match[1]);
+ assert.ok(scripts.includes('public/app.js'),'real app controller is linked');
+ const controllers=scripts.map(read).join('\n');
  const buttons=[...html.matchAll(/<button\b([\s\S]*?)>/g)].map(match=>match[1]);
  const missing=[];
  for(const attrs of buttons) {

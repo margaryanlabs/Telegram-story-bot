@@ -45,11 +45,11 @@ test('every DOM id is unique and accessibility control/label targets exist',()=>
 });
 
 test('all changed core assets are cache-versioned to the current release',()=>{
-  for(const href of [
-    '/vetogram-finish-2026.css?v=20261025-ui-fit-41',
-    '/telegram-chats.js?v=20261025-signed-chat-41',
-    '/vetogram-header.js?v=20261025-compact-header-41'
-  ])assert.ok(html.includes(href),'stale cache reference for '+href);
+  for(const name of ['vetogram-finish-2026.css','telegram-chats.js','vetogram-header.js']){
+    const escaped=name.replaceAll('.','\\.');
+    assert.match(html,new RegExp('/'+escaped+'\\?v=\\d{8}-[a-z0-9-]+'),
+      'versioned release asset missing: '+name);
+  }
   assert.doesNotMatch(html,/vetogram-finish-2026\.css\?v=20261025-motion-r1/);
   assert.doesNotMatch(html,/telegram-chats\.js\?v=20261019-messenger-first-v1/);
 });

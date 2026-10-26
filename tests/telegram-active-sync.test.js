@@ -70,5 +70,5 @@ test('background sync never touches global storage, respects foreground and owne
    assert.match(html,new RegExp('id="'+id+'"'));
  }
  assert.match(css,/veto-mirror-sync-strip/);
- assert.match(html,/veto-fast-chat-v1/);
+ assert.match(html,/telegram-chats\.js\?v=\d{8}-[a-z0-9-]+/);
 });

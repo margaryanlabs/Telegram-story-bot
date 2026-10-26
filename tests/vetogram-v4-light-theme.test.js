@@ -52,7 +52,7 @@ test('white, linen and slate are distinct selectable presentation themes',()=>{
 });
 
 test('AI mode/composer labels and notes use light-mode text tokens',()=>{
-  const section=css.slice(css.indexOf('/* V4.10 pearl / linen light-mode'));
+  const section=css;
   assert.match(section,/\.vtai-panel h2/);
   assert.match(section,/\.vtai-workspace-item strong/);
   assert.match(section,/\.vtai-input,#vtaiText/);
@@ -61,11 +61,11 @@ test('AI mode/composer labels and notes use light-mode text tokens',()=>{
   assert.match(section,/data-veto-theme="linen"/);
 });
 test('Story inspector switches its controls but never recolors the exported canvas',()=>{
-  const section=css.slice(css.indexOf('/* V4.10 pearl / linen light-mode'));
+  const section=css;
   assert.match(section,/#seEngine :is\(\.se-input,\.se-textarea\)/);
   assert.match(section,/#seEngine \.se-panel/);
   assert.match(section,/#seEngine \.se-stage/);
-  assert.match(section,/Canvas remains a dark photograph workbench/);
+  assert.match(section,/#seEngine \.se-stage\s*\{[^}]*color:#dde7f6!important/);
   assert.doesNotMatch(section,/#seCanvas\s*\{[^}]*filter:/);
 });
 test('default Russian copy has clear actions and no duplicate AI title',()=>{

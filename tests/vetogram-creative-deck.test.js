@@ -159,8 +159,8 @@ test('switching AI modes retains manually edited text instead of restoring stale
 
 test('premium chat filters expose real Focus and saved-copy navigation, not mock buttons',()=>{
   const html=load('../public/studio.html');
-  const filters=html.slice(html.indexOf('id="telegramMirrorFilters"'),
-    html.indexOf('id="telegramMirrorAccountProof"'));
+  const filters=html.match(/<div\b[^>]*id="telegramMirrorFilters"[^>]*>([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(filters,'real filter group exists');
   assert.ok(filters.includes('data-mirror-filter="focus"'));
   assert.ok(filters.includes('data-mirror-filter="copies"'));
   assert.doesNotMatch(filters,/class="veto-filter-advanced"[^>]*data-mirror-filter="focus"/);

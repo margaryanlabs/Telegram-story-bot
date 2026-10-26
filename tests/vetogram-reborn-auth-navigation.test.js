@@ -50,9 +50,9 @@ test('actual Telegram account sheet exposes searchable country, international ph
     assert.match(app,new RegExp('id="'+id+'"'),id);
   }
   assert.match(app,/VetogramCountryPicker\?\.mount\(\)/);
-  assert.match(app,/viewerCodeSheet\(data\.delivery,\s*data\.reused === true\)/);
+  assert.match(app,/viewerCodeSheet\(data\.delivery,\s*data\.reused\s*===\s*true\)/);
   assert.match(app,/Фактическое получение кода ещё не подтверждено/);
-  assert.match(app,/data\.reused === true/);
+  assert.match(app,/data\.reused\s*===\s*true/);
 });
 
 test('server preserves outstanding code challenge and does not imply delivered SMS',()=>{

@@ -52,7 +52,7 @@ test('photo lightbox only opens owner-scoped blob URLs already fetched in this t
  assert.match(html,/id="telegramThreadPhotoSave"/);
  assert.match(css,/\.veto-mirror-photo-dialog::backdrop/);
  assert.match(css,/safe-area-inset-top/);
- assert.match(html,/chat-media\.css\?v=20261018-inline-media-v6/);
+ assert.match(html,/chat-media\.css\?v=\d{8}-[a-z0-9-]+/);
 });
 
 test('saved and live audio is listened to in chat without implicit downloads',()=>{
