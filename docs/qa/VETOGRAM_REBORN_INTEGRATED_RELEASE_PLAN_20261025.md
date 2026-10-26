@@ -388,3 +388,12 @@ The originally chosen **first Canvas Noir** direction is retained; the current s
 5. Neon v6 additive OTP lease table already applied/verified. Do not repeat migration 006.
 
 **Status: DRAFT / NOT READY TO DEPLOY AS A FULLY TESTED RELEASE.** No Vercel production deployment or PR merge was made in this continuation.
+
+## V4.11 AI provider-readiness UX — 2026-10-26
+
+- **No-cost visibility for a missing AI provider.** `GET /api/vetogram-ai` now verifies the signed Mini App owner and returns only `configured` and the machine-readable `state` (`disabled`, `provider_missing` or `configured`). No prompt, chat content, private key, Telegram ID, budget reservation or model request is made by this read-only route. Private, no-store cache headers still apply.
+- Real `public/vetogram-ai.js` checks readiness only on owner-authorized AI screen entry; limits repeated checks to one per 60 seconds, uses an 8-second abort, and rejects stale results after owner switch or request intent invalidation. If explicitly disabled, the generate button is disabled with a clear explanation; other local drafts and tools remain available.
+- Readiness means **environment configured, not live model verified**. Generated text still requires affirmative `x-vetogram-ai-consent` and quota checks on POST. An unavailable status check does not fabricate a model response. A language change re-renders cached RU/EN/HY availability text without a second API request.
+- New `tests/vetogram-ai-provider-readiness.test.js` covers six security/readiness cases plus cached language switching: **7/7 pass in isolated V8 execution of actual API/client code with fake network**. Voice Studio recording 6/6, mobile gesture boundaries 5/5 and Canvas Noir Voice/Privacy Vault 4/4 also passed in their isolated harnesses (**22/22 newly executed focused tests**, not full npm run).
+- Production Vercel still lacks an enabled AI provider configuration according to the prior environment audit. **Real inference is disabled**, and user has not authorized a provider key or spend. Do not say VETO AI or every function is live. Do not deploy on this basis alone.
+- The full clean current-head `npm ci && npm run vercel-build`, device screenshot acceptance, and consented Telegram E2E are still outstanding. Container has Node 22/npm 10 but direct GitHub git/HTTPS is DNS-blocked; no local repo checkout/build succeeded. GitHub Actions remains bypassed; no Vercel production deployment or PR merge occurred.
