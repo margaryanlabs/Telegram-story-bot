@@ -12,6 +12,13 @@ const labels={
   musicExport:['↓ Скачать клип до 8 секунд','↓ Download up to 8s clip','↓ Ներբեռնել մինչև 8 վրկ․ հոլովակ'],
   title:['Заголовок','Title','Վերնագիր'],subtitle:['Подзаголовок','Subtitle','Ենթավերնագիր'],caption:['Подпись для Telegram','Telegram caption','Telegram-ի նկարագրություն'],
   save:['✓ Сохранить','✓ Save','✓ Պահպանել'],search:['Найти чат…','Find a chat…','Գտնել զրույց…'],
+  viewersHead:['Зрители','Viewers','Դիտողները'],
+  analyticsHead:['Аналитика','Analytics','Վերլուծություն'],
+  privacyCenterHead:['Центр приватности','Privacy Center','Գաղտնիության կենտրոն'],
+  composeHead:['Создай момент.','Create a moment.','Ստեղծիր պահը։'],
+  stickersHead:['Студия стикеров','Sticker Studio','Սթիքերների ստուդիա'],
+  relayHead:['Защита Telegram','Telegram Protection','Telegram-ի պաշտպանություն'],
+  archiveHead:['Архив','Archive','Արխիվ'],
 };
 export function normalizeLocale(value){return UI_LOCALES.includes(value)?value:'ru';}
 export function uiText(key,locale='ru',fallback=''){
