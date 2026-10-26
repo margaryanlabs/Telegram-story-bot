@@ -9,7 +9,7 @@
 - Music discovery/search via public Audius endpoints and user-initiated HTML5 streaming for publicly accessible tracks; skip stream-gated/scheduled items; artwork-driven active-track scene, seek, queue next/previous, local favorites, playback errors.
 - Books search via Gutendex public-domain flag, Russian/English filters, cover images, in-app TXT reader **only if** source allows cross-origin fetch, font controls, reading position and local favorites.
 - Local TXT import (2 MB max) with reader and reading-position persistence; files are processed in the browser and never uploaded.
-- LibriVox catalog browse; playback intentionally opens the authorized LibriVox source, not copied MP3 files.
+- LibriVox catalog browsing and in-app playback of available chapter stream URLs from the official API, with original-source deep links; no copied MP3 files.
 - WebApp ready/expand if opened inside Telegram, but public browser route works without Telegram login.
 - Status and failure states for unavailable providers, localStorage-limited devices and failed streams.
 
@@ -20,7 +20,7 @@
 - Audius is an open catalog but every track's redistribution/monetization rights and API terms must be reviewed for a commercial VETO product.
 - Project Gutenberg public-domain metadata is not a worldwide clearance. Respect local copyright rules, particular edition and territorial restrictions. Do not mirror the complete Gutenberg website.
 - The Living Reading Lab / Book Studio code is not stored in this repository. This is a new browser TXT reader using its product direction, **not a source-level migration** of PURE/CINEMA/DEEP, EPUB or the publishing studio.
-- Audiobook audio streaming, EPUB parsing, cloud bookmark sync, subscriptions/Stars, recommendation AI, moderation and full catalog ingestion require subsequent development.
+- Audiobook WebView stream verification, EPUB parsing, cloud bookmark sync, subscriptions/Stars, recommendation AI, moderation and full catalog ingestion require subsequent development.
 - No bot is provisioned or configured. To use as a distinct Telegram Mini App, register a separate bot with @BotFather and connect a deployed HTTPS URL. Do not point the existing VETOGRAM bot at MEDIA.
 - No deployment was made by this branch.
 
@@ -30,7 +30,7 @@
 |---|---|---|---|
 | Audius https://docs.audius.co/api/ | Independent music | Catalog + audio client | Confirm API terms & rights per item before monetizing |
 | Gutendex https://gutendex.com/ | Gutenberg book metadata | Browse/search/filters + best-effort TXT reader | Public domain status varies by country and edition |
-| LibriVox https://librivox.org/api/info | Public-domain audiobooks | Browse/source deep links | Attribution, recording and territorial rights |
+| LibriVox https://librivox.org/api/info | Public-domain audiobooks | Browse/source links + best-effort in-app chapter streaming | Attribution, recording and territorial rights |
 | Open Library https://openlibrary.org/developers/api | Book metadata | Planned (not connected) | Not a bulk third-party database or unrestricted reading API |
 | Jamendo https://devportal.jamendo.com/api_terms_of_use | Independent CC music | Not connected | Commercial API use requires separate arrangement |
 | Yandex Music, VK Music, Spotify | Commercial popular catalogs | Not connected | Licensing, territorial rights, partner integration required |
