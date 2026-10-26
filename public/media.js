@@ -64,9 +64,26 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => e.classList.add("hidden"), 4500);
   }
   async function getJSON(url) {
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok) throw new Error("HTTP " + response.status);
-    return response.json();
+    const host = new URL(url).hostname;
+    const source = host === "api.audius.co" ? "music" : host === "gutendex.com" ? "books" :
+      host === "librivox.org" ? "audiobooks" : null;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    let ok = false;
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" }, signal: controller.signal
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const result = await response.json();
+      ok = true;
+      return result;
+    } finally {
+      clearTimeout(timer);
+      if (source) document.dispatchEvent(new CustomEvent("veto:provider", {
+        detail: { source, ok }
+      }));
+    }
   }
   function time(seconds) {
     if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -420,6 +437,14 @@
     });
     $("favoriteNow").addEventListener("click", () => {
       const t = state.tracks[state.current]; if (!t) return; toggleTrack(t); updateHeart(); renderTracks(state.tracks, $("tracksList"));
+    });
+    audio.addEventListener("error", () => {
+      if (!audio.getAttribute("src")) return;
+      syncPlayUI();
+      toast("Не удалось загрузить аудиопоток. Проверь соединение или открой источник.");
+      document.dispatchEvent(new CustomEvent("veto:stream-error", { detail: {
+        provider: state.audioBookPlayback ? "audiobooks" : "music"
+      }}));
     });
     audio.addEventListener("play", syncPlayUI); audio.addEventListener("pause", syncPlayUI);
     audio.addEventListener("ended", () => {
