@@ -29,6 +29,9 @@ import {
 } from '../lib/viewer-sync-telegram.js';
 
 const AUTH_TTL_MS = 10 * 60 * 1000;
+// Guards duplicate code requests handled by this serverless instance only.
+// An atomic storage claim is required for cross-instance serialization.
+const inFlightLoginCodeOwners = new Set();
 
 async function configState() {
   const storage = viewerDbConfigured();
@@ -550,6 +553,16 @@ export default async function handler(req, res) {
     }
 
     if (action === 'send_code') {
+      const codeOwner=String(userId);
+      if (inFlightLoginCodeOwners.has(codeOwner)) {
+        res.setHeader('Retry-After', '3');
+        res.status(429).json({ ok:false,
+          error:'Запрос кода уже выполняется. Дождись ответа — второй код не отправлялся.',
+          retryAfterSeconds:3 });
+        return;
+      }
+      inFlightLoginCodeOwners.add(codeOwner);
+      try {
       const requestedPhone = normalizeTelegramPhone(body.phone);
 
       // Telegram may deliver codes inside its official service chat, not via
@@ -621,6 +634,9 @@ export default async function handler(req, res) {
         expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
       return;
+      } finally {
+        inFlightLoginCodeOwners.delete(codeOwner);
+      }
     }
 
     if (action === 'send_login_email') {
