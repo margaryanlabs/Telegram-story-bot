@@ -5,15 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#090d18">
   <meta name="description" content="VETO MEDIA — музыка, книги и аудиокниги внутри Telegram.">
-  <title>VETO MEDIA — Музыка и книги</title>
+  <title>VETO MEDIA V4 — Музыка, кино и книги</title>
   <link rel="icon" href="./veto-telegram-mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./media.css">
   <link rel="stylesheet" href="./media-reader.css">
   <link rel="stylesheet" href="./media-films.css">
+  <link rel="stylesheet" href="./media-v4.css">
   <script defer src="./media.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
   <script defer src="./media-epub.js"></script>
   <script defer src="./media-films.js"></script>
+  <script defer src="./media-v4.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
@@ -33,13 +35,14 @@
         <div class="hero-art" aria-hidden="true"><div class="hero-glow"></div><div class="hero-disc"><div class="disc-center"><img src="./veto-telegram-mark.svg" alt=""></div></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="floating-label">VETO <b>IMMERSIVE AUDIO</b></div></div>
       </section>
       <div class="tabs-wrap">
-        <nav class="tabs" aria-label="Разделы" id="mainTabs"><button type="button" class="tab is-active" data-tab="music">♫ Музыка</button><button type="button" class="tab" data-tab="films">◉ Фильмы</button><button type="button" class="tab" data-tab="books">▤ Книги</button><button type="button" class="tab" data-tab="audiobooks">◉ Аудиокниги</button><button type="button" class="tab" data-tab="library">♡ Моё</button></nav>
+        <nav class="tabs" aria-label="Разделы" id="mainTabs"><button type="button" class="tab is-active" data-tab="home">⌂ Главная</button><button type="button" class="tab" data-tab="music">♫ Музыка</button><button type="button" class="tab" data-tab="films">◉ Фильмы</button><button type="button" class="tab" data-tab="books">▤ Книги</button><button type="button" class="tab" data-tab="audiobooks">◉ Аудиокниги</button><button type="button" class="tab" data-tab="library">♡ Моё</button></nav>
       </div>
       <section class="search-wrap" id="searchSection">
         <div class="searchbox"><span class="search-icon">⌕</span><input id="searchInput" type="search" placeholder="Поиск музыки, артистов, книг..." autocomplete="off" maxlength="100"><button id="searchClear" class="search-clear" type="button" aria-label="Очистить поиск">×</button></div>
         <div class="search-explainer" id="sourceLabel">Музыка независимых артистов · Audius</div>
       </section>
-      <section id="musicView" class="view is-active" aria-label="Музыка">
+      <section id="homeView" class="view is-active" aria-label="Главная VETO MEDIA"></section>
+      <section id="musicView" class="view" aria-label="Музыка">
         <div class="section-top"><div><span class="overline">VETO / MUSIC</span><h2>На твоей волне</h2><p>Новые звучания. Никакого визуального шума.</p></div><div class="section-buttons"><button class="chip is-active" id="trendingButton" type="button">Популярное</button><button class="chip" id="newButton" type="button">Новинки</button></div></div>
         <div class="music-layout">
           <div class="feature-track" id="featureTrack"><div class="feature-overlay"><span class="feature-kicker">NOW DISCOVERING</span><div class="feature-title">Музыка, которая остаётся.</div><p>Выбери трек — и пространство оживёт.</p></div><div class="feature-rings" aria-hidden="true"><i></i><i></i><i></i></div></div>
