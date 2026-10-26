@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="VETO MEDIA — музыка, книги и аудиокниги внутри Telegram.">
+  <title>VETO MEDIA — Музыка и книги</title>
+  <link rel="icon" href="./veto-telegram-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./media.css">
+  <script defer src="./media.js"></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><img src="./veto-telegram-mark.svg" alt="VETO" width="38" height="38"><div><div class="brand-title">VETO <span>MEDIA</span></div><div class="brand-sub">YOUR WORLD. YOUR SOUND.</div></div></div>
+      <div class="top-actions"><span class="live-chip"><span></span> Telegram Mini App</span><button class="icon-btn" id="themeButton" aria-label="Переключить тему" title="Тема">☼</button></div>
+    </header>
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> MEDIA EXPERIENCE / 001</div>
+          <h1>Мир, который<br><em>звучит и читается.</em></h1>
+          <p>Открывай музыку, погружайся в книги и сохраняй то, что вдохновляет. Без переходов между приложениями.</p>
+          <div class="hero-actions"><button type="button" class="primary-btn" id="discoverButton">Открыть музыку <span>↗</span></button><button type="button" class="quiet-btn" id="booksButton">Перейти к книгам <span>→</span></button></div>
+        </div>
+        <div class="hero-art" aria-hidden="true"><div class="hero-glow"></div><div class="hero-disc"><div class="disc-center"><img src="./veto-telegram-mark.svg" alt=""></div></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="floating-label">VETO <b>IMMERSIVE AUDIO</b></div></div>
+      </section>
+      <div class="tabs-wrap">
+        <nav class="tabs" aria-label="Разделы" id="mainTabs"><button type="button" class="tab is-active" data-tab="music">♫ Музыка</button><button type="button" class="tab" data-tab="books">▤ Книги</button><button type="button" class="tab" data-tab="audiobooks">◉ Аудиокниги</button><button type="button" class="tab" data-tab="library">♡ Моё</button></nav>
+      </div>
+      <section class="search-wrap" id="searchSection">
+        <div class="searchbox"><span class="search-icon">⌕</span><input id="searchInput" type="search" placeholder="Поиск музыки, артистов, книг..." autocomplete="off" maxlength="100"><button id="searchClear" class="search-clear" type="button" aria-label="Очистить поиск">×</button></div>
+        <div class="search-explainer" id="sourceLabel">Музыка независимых артистов · Audius</div>
+      </section>
+      <section id="musicView" class="view is-active" aria-label="Музыка">
+        <div class="section-top"><div><span class="overline">VETO / MUSIC</span><h2>На твоей волне</h2><p>Новые звучания. Никакого визуального шума.</p></div><div class="section-buttons"><button class="chip is-active" id="trendingButton" type="button">Популярное</button><button class="chip" id="newButton" type="button">Новинки</button></div></div>
+        <div class="music-layout">
+          <div class="feature-track" id="featureTrack"><div class="feature-overlay"><span class="feature-kicker">NOW DISCOVERING</span><div class="feature-title">Музыка, которая остаётся.</div><p>Выбери трек — и пространство оживёт.</p></div><div class="feature-rings" aria-hidden="true"><i></i><i></i><i></i></div></div>
+          <div class="music-panel">
+            <div class="panel-heading"><h3>Коллекция</h3><span id="musicCount">Загружаем…</span></div>
+            <div class="tracks-list" id="tracksList" aria-live="polite"><div class="loading">Ищем музыку…</div></div>
+          </div>
+        </div>
+        <p class="source-note">Источником музыкальных записей служит <a href="https://audius.co/" target="_blank" rel="noopener noreferrer">Audius</a>. Доступность воспроизведения и права использования зависят от конкретной записи и условий источника. Полный каталог коммерческих хитов пока не подключён.</p>
+      </section>
+      <section id="booksView" class="view" aria-label="Книги">
+        <div class="section-top"><div><span class="overline">VETO / BOOKS</span><h2>Тишина между строк</h2><p>Классика и тексты для глубокого чтения.</p></div><label class="import-btn">＋ Свой TXT <input type="file" id="bookUpload" accept=".txt,text/plain" hidden></label></div>
+        <div class="shelf-filter"><button class="chip is-active" data-booklang="all">Все языки</button><button class="chip" data-booklang="ru">Русский</button><button class="chip" data-booklang="en">English</button></div>
+        <div class="books-grid" id="booksGrid" aria-live="polite"><div class="loading">Открываем библиотеку…</div></div>
+        <p class="source-note">Каталог: <a href="https://www.gutenberg.org/" target="_blank" rel="noopener noreferrer">Project Gutenberg</a> через Gutendex. Правовой статус произведений может различаться по странам; автоматической перепродажи и копирования защищённых произведений нет.</p>
+      </section>
+      <section id="audiobooksView" class="view" aria-label="Аудиокниги"><div class="section-top"><div><span class="overline">VETO / AUDIOBOOKS</span><h2>Истории, у которых есть голос</h2><p>Открытые аудиокниги с атрибуцией авторов и чтецов.</p></div></div><div id="audioBooksGrid" class="books-grid"><div class="loading">Ищем записи…</div></div><p class="source-note">LibriVox публикует аудиозаписи произведений общественного достояния. Каждая карточка ведёт на оригинальную страницу записи.</p></section>
+      <section id="libraryView" class="view" aria-label="Избранное"><div class="section-top"><div><span class="overline">VETO / PERSONAL</span><h2>Моя коллекция</h2><p>Любимые треки, закладки и история чтения хранятся на этом устройстве.</p></div></div><div class="library-grid"><div><h3>Любимые треки</h3><div id="favoriteTracks" class="tracks-list"></div></div><div><h3>Мои книги</h3><div id="favoriteBooks" class="books-grid books-grid-small"></div></div></div></section>
+    </main>
+    <footer class="footer"><img src="./veto-telegram-mark.svg" alt="" width="24" height="24"><span>VETO MEDIA <strong>·</strong> MADE FOR YOUR WORLD</span><span>Independent beta / 2026</span></footer>
+  </div>
+  <div class="player hidden" id="player" role="region" aria-label="Музыкальный плеер"><div class="player-cover" id="playerCover"></div><div class="player-info"><strong id="playerTitle">—</strong><span id="playerArtist">—</span></div><div class="player-controls"><button type="button" id="prevButton" title="Предыдущий трек" aria-label="Предыдущий">⏮</button><button type="button" id="playButton" class="play-control" title="Воспроизведение" aria-label="Воспроизведение">▶</button><button type="button" id="nextButton" title="Следующий трек" aria-label="Следующий">⏭</button></div><div class="progress"><span id="currentTime">0:00</span><input type="range" id="seek" min="0" max="1000" value="0" aria-label="Перемотка"><span id="duration">0:00</span></div><button id="favoriteNow" class="player-heart" type="button" aria-label="В избранное">♡</button><audio id="audio" preload="none"></audio></div>
+  <div class="reader-backdrop hidden" id="readerBackdrop"><div class="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle"><div class="reader-top"><button type="button" id="closeReader" class="icon-btn" aria-label="Закрыть">←</button><div class="reader-heading"><strong id="readerTitle">Книга</strong><span id="readerAuthor"></span></div><button id="decreaseFont" class="text-control" type="button" aria-label="Уменьшить шрифт">A−</button><button id="increaseFont" class="text-control" type="button" aria-label="Увеличить шрифт">A+</button><button id="saveBook" class="text-control" type="button" aria-label="Сохранить книгу">♡</button></div><div class="reader-content" id="readerContent" tabindex="0"></div><div class="reader-bottom"><span id="readingProgress">0%</span><span>VETO READING LAB</span><a href="#" id="openOriginal" target="_blank" rel="noopener noreferrer">Оригинал ↗</a></div></div></div>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
