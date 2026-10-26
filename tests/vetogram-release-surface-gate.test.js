@@ -185,3 +185,26 @@ test('dynamic relative imports cannot climb above the public directory',()=>{
     'UNSAFE_MODULE_IMPORT: public/app.js -> __outside_public__.js'
   ));
 });
+
+
+test('mixing one stale CSS/JS release tag must block a WebView launch',()=>{
+  const original=actual();
+  const assets=[...original.html.matchAll(/<(?:script|link)\b[^>]*\b(?:src|href)=["'](\/[^"']+\.(?:js|css)\?v=([^"']+))["']/gi)];
+  assert.equal(assets.length,44);
+  const versions=assets.map(m=>m[2]);
+  assert.equal(new Set(versions).size,1,'all 44 boot assets share a cache identity');
+  const target=assets[0][1];
+  const stale=original.html.replace(target,target.replace(/\?v=[^&#]+/,'?v=stale-previous-release'));
+  assert.notEqual(stale,original.html);
+  const result=check({html:stale});
+  assert.ok(result.errors.includes('MIXED_RELEASE_ASSET_VERSIONS'));
+});
+
+test('a missing version on one script must block the release',()=>{
+  const original=actual();
+  const source=original.html.match(/\/vetogram-ai\.js\?v=([A-Za-z0-9_-]+)/)?.[0];
+  assert.ok(source);
+  const changed=original.html.replace(source,'/vetogram-ai.js');
+  const result=check({html:changed});
+  assert.ok(result.errors.includes('MIXED_RELEASE_ASSET_VERSIONS'));
+});
