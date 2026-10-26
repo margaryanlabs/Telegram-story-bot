@@ -60,8 +60,12 @@
         .map(x=>({id:String(x.identifier),title:clean(x.title)||"Без названия",year:clean(x.year||x.date||"Архив").slice(0,4)}));
       if(!items.length)throw Error("Empty selection");
       paint();
+      document.dispatchEvent(new CustomEvent("veto:provider",{detail:{source:"films",ok:true}}));
     } catch (_) {
-      if(req===activeRequest)showError("Internet Archive недоступен из этого браузера. В VETO нет нелицензированных фильмов.");
+      if(req===activeRequest){
+        showError("Internet Archive недоступен из этого браузера или не вернул открытых записей.");
+        document.dispatchEvent(new CustomEvent("veto:provider",{detail:{source:"films",ok:false}}));
+      }
     } finally {clearTimeout(timer);loading=false}
   }
   function open(item) {
