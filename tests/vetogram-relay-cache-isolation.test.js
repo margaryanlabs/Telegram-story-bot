@@ -148,3 +148,13 @@ test('Relay can install and activate without Cache Storage global',async()=>{
   assert.equal(x.stored.size,0);
   assert.deepEqual(x.deleted,[]);
 });
+
+
+test('Relay emergency HTML bypasses stale HTTP cache while SW keeps offline shell',()=>{
+  const config=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
+  const header=config.headers.find(x=>x.source==='/relay.html');
+  assert.ok(header);
+  assert.equal(header.headers.find(x=>x.key==='Cache-Control')?.value,'no-store, max-age=0');
+  assert.match(script,/'\/relay\.html'/);
+  assert.match(script,/cache\.addAll\(SHELL\)/);
+});
