@@ -174,3 +174,26 @@ test("V8 local audio queue does not upload personal files", () => {
   assert.match(styles,/v8-local-track/);
   assert.doesNotMatch(audioTool,/\bfetch\(|XMLHttpRequest|TELEGRAM_BOT_TOKEN|telegram-session-owner/i);
 });
+
+
+test("V9 local DJ queue supports reordering, deletion, shuffle and repeat without cloud uploads", () => {
+  const v8=readFileSync(new URL("../public/media-v8.js",import.meta.url),"utf8");
+  const v9css=readFileSync(new URL("../public/media-v9.css",import.meta.url),"utf8");
+  execFileSync(process.execPath,["--check",join(process.cwd(),"public/media-v8.js")],{stdio:"pipe"});
+  assert.match(html,/media-v9\.css/);
+  assert.match(v8,/v9Shuffle/);
+  assert.match(v8,/v9Repeat/);
+  assert.match(v8,/aria-pressed/);
+  assert.match(v8,/function move\(i,delta\)/);
+  assert.match(v8,/function remove\(i\)/);
+  assert.match(v8,/audio\.removeAttribute\("src"\)/);
+  assert.match(v8,/URL\.revokeObjectURL/);
+  assert.match(v8,/function navigate\(delta,ended=false\)/);
+  assert.match(v8,/repeat==="one"/);
+  assert.match(v8,/shuffle&&records\.length>1/);
+  assert.match(v8,/getCurrentIndex/);
+  assert.match(v9css,/v8-queue-row/);
+  assert.match(v9css,/v9-mini-action/);
+  assert.match(v9css,/prefers-reduced-motion/);
+  assert.doesNotMatch(v8,/\bfetch\(|XMLHttpRequest|TELEGRAM_BOT_TOKEN|telegram-session-owner/i);
+});
