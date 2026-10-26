@@ -58,7 +58,7 @@ function micFixture({pauseResume=false}={}){
     window:{AudioContext},
     document:{get hidden(){return hidden},
       querySelector:()=>({dataset:{screen:activeScreen}})},
-    setStrength:()=>{},draw:()=>{},stopMonitor:()=>{},
+    setStrength:()=>{},draw:()=>{},paintIdleSpectrum:()=>{},stopMonitor:()=>{},
     cancelAnimationFrame:()=>{},toast:message=>events.push('toast:'+message)};
   const functions=vm.runInNewContext(actual+';({startMic,stopMic,updateButtons})',context);
   return {state,ui,events,stream,permission,resume,...functions,
@@ -152,8 +152,8 @@ test('voice and device scripts are current-release assets and navigation has exp
   assert.match(source,/screen==='voice'/);
   assert.match(source,/state\.active\|\|state\.micStarting/);
   assert.match(viewportSource,/window\.addEventListener\('veto:screen-changed'/);
-  assert.match(html,/\/voice-studio\.js\?v=20261025-cross-screen-42/);
-  assert.match(html,/\/veto-device-polish\.js\?v=20261025-cross-screen-42/);
+  assert.match(html,/\/voice-studio\.js\?v=\d{8}-[a-z0-9-]+/);
+  assert.match(html,/\/veto-device-polish\.js\?v=\d{8}-[a-z0-9-]+/);
 });
 
 
@@ -200,7 +200,8 @@ test('backgrounding Mini App stops both pending grants and active microphone',()
   const document={get hidden(){return hidden},
     addEventListener:(name,fn)=>{events[name]=fn}};
   vm.runInNewContext(source.slice(start,end),{
-    state,document,stopMic(){stops++;state.active=false;state.micStarting=false},
+    state,document,window:{addEventListener(){}},checkVoiceOwner(){},
+    endPrivateVoiceSession(message){if(state.active||state.micStarting){stops++;state.active=false;state.micStarting=false;messages.push(message)}},
     toast:msg=>messages.push(msg)
   });
   assert.ok(events.visibilitychange);

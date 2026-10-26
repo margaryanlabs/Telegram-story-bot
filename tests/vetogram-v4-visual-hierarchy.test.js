@@ -9,7 +9,7 @@ import {readFileSync} from 'node:fs';
 
 const read=file=>readFileSync(new URL('../public/'+file,import.meta.url),'utf8');
 const html=read('studio.html');
-const css=read('vetogram-noir.css');
+const css=read('vetogram-noir.css').replace(/\s*([{}:;,])\s*/g,'$1');
 const script=read('vetogram-experience-v4.js');
 const modeStart=script.indexOf('    if (modeRail) {');
 const modeEnd=script.indexOf('    const advancedIds =',modeStart);

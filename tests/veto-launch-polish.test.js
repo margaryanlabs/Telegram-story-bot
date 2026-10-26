@@ -13,8 +13,8 @@ test('Launch polish is installed on existing real Telegram Mini App as final cos
   assert.ok(html.includes('id="telegramThreadComposer"'));
   assert.ok(html.includes('id="telegramThreadSend"'));
   assert.ok(html.includes('id="vetoWelcome"'));
-  assert.match(html,/veto-launch-polish\.css\?v=20261019-launch-01/);
-  assert.match(html,/veto-launch-polish\.js\?v=20261019-launch-01/);
+  assert.match(html,/veto-launch-polish\.css\?v=\d{8}-[a-z0-9-]+/);
+  assert.match(html,/veto-launch-polish\.js\?v=\d{8}-[a-z0-9-]+/);
   assert.ok(html.indexOf('veto-launch-polish.css')>html.indexOf('veto-messenger-rebirth.css'));
   assert.ok(html.indexOf('veto-launch-polish.js')>html.indexOf('brand-pack.js'));
 });

@@ -20,7 +20,7 @@ test('One Telegram code challenge is reused until expiry instead of sending anot
 test('Login UX points to official Telegram chat, provides recovery and does not auto-resend', () => {
   const app = read('public/app.js');
   assert.match(app, /официальном чате «Telegram»/);
-  assert.ok(app.includes("viewerCodeSheet(data.delivery, data.reused === true)"));
+  assert.match(app,/viewerCodeSheet\(data\.delivery,\s*data\.reused\s*===\s*true\)/);
   for (const action of ["viewer-code-help", "viewer-back-code", "viewer-cancel-login", "viewer-start-qr"]) {
     assert.ok(app.includes('data-sheet-action="' + action + '"'), 'Missing login recovery action: ' + action);
   }

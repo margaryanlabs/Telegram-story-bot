@@ -87,7 +87,7 @@ test('pagination deduplicates message IDs without losing active thread',async()=
   const old=s.loadOlderThread();
   s.pending[1].resolve({messages:[{message_id:1},{message_id:3}],hasMore:false});
   await old;
-  assert.deepEqual(s.state.activeThread.messages.map(x=>x.message_id),[1,3,4]);
+  assert.deepEqual(Array.from(s.state.activeThread.messages,x=>x.message_id),[1,3,4]);
   assert.equal(s.state.activeThread.offset,4);
   assert.equal(s.state.loadingOlderThread,false);
   assert.equal(s.renders.at(-1).options.preserveScroll,true);
@@ -118,7 +118,7 @@ test('Canvas Noir Vault presents only verified archive status and accessible ref
   assert.match(src,/Promise\.allSettled\(\[/);
   assert.match(experience,/vaultStats\.after\(vaultEvidence\)/);
   assert.match(experience,/vaultEvidence\.after\(vaultActions\)/);
-  assert.match(noir,/V4\.4 Verified Vault/);
+  assert.match(noir,/\.v4-vault-evidence>span\[data-verified="true"\]/);
   assert.match(noir,/\#privacyEvidenceRefresh/);
   assert.equal((noir.match(/\{/g)||[]).length,(noir.match(/\}/g)||[]).length);
 });

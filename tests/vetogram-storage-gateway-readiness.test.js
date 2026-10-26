@@ -19,6 +19,7 @@ function runtime(health, { credentials = true, storeConfigured = true, provider 
     sessionCryptoReady: detail => detail?.ready === true
       && (detail?.cipherVersion || detail?.version) === (provider === 'neon' ? 'v4' : 'v3'),
     neonCronConfigured: () => false,
+    loginCodeLeaseReady: async () => true,
     process: {env:credentials ? {
       TELEGRAM_API_ID:'fixture-id',
       TELEGRAM_API_HASH:'fixture-hash',

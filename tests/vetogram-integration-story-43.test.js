@@ -10,6 +10,7 @@ const between=(body,start,end)=>{
   assert.ok(a>0&&b>a,'missing actual source: '+start);
   return body.slice(a,b);
 };
+const composerVars=between(app,'  let composerFile =','  let viewerState =');
 const lifecycle=between(app,'  function resetComposer({ keepCaption = false } = {}) {','  function relativeTime(');
 const apiCode=between(app,'  async function api(action = null, payload = {}) {','  async function viewerApi(');
 function delay(){
@@ -20,15 +21,18 @@ function delay(){
 function composerFixture(){
   let owner='owner-A',uuid=0,apiCalls=0;
   const jobs=new Map(),alerts=[],elements={};
+  const blank=()=>({value:'',textContent:'',hidden:false,src:'',className:'',removeAttribute(k){if(k==='src')this.src=''},click(){this.clicked=true}});
   for(const id of ['storyFileInput','storyCaption','captionCounter','mediaPreview','pickStoryMedia',
     'mediaPreviewImage','mediaFileName','mediaFileMeta','composerState']){
-    elements[id]={value:'',textContent:'',hidden:false,src:'',className:'',click(){this.clicked=true}};
+    elements[id]=blank();
   }
   const externalState={processing:false,ready:true,audience:'standard',selected:[],excluded:[],protect:false};
   const scope={
     tg:{get initData(){return owner}},
-    $:id=>elements[id],externalState,externalViewer:{session:{connected:false}},
+    $:id=>elements[id]||(elements[id]=blank()),externalState,externalViewer:{session:{connected:false}},
     window:{crypto:{randomUUID:()=>String(++uuid)}},
+    Event:class{constructor(type){this.type=type}},
+    captionDraftStorageKey:()=>'',renderViewers(){},renderAnalytics(){},renderHome(){},renderConnection(){},closeSheet(){},
     sessionStorage:{removeItem(){}},URL:{createObjectURL:f=>'blob:'+f.name,revokeObjectURL(){}},
     compressStoryImage:file=>{const f=delay();jobs.set(file.name,f);return f.promise},
     renderPublish(){},notify(){},showToast:m=>alerts.push(m),formatBytes:n=>String(n),
@@ -36,8 +40,8 @@ function composerFixture(){
     audienceLabel:x=>x,haptic(){},refreshViewerSync:async()=>{},
     refreshViewerAnalytics:async()=>{},escapeHtml:String,openSheet(){},connectionHelpSheet(){}
   };
-  const prelude="let composerFile=null,composerDataUrl='',composerPreviewUrl='',composerNonce='',composerBusy=false,composerGeneration=0,composerOwner='';"+
-    "let selectedViewerStory=null; const state=externalState,viewerState=externalViewer;";
+  const prelude=composerVars+"let selectedViewerStory=null;let state=externalState;let viewerState=externalViewer;"+
+    "let viewerRegisteredKey='',viewerSearchQuery='',viewerPendingPhone='',viewerAuthBusy=false,viewerQrAbortController=null;let automationState={};";
   const exposed="return {prepareComposerFile,resetComposer,publishComposerStory,snapshot:()=>({composerFile,composerDataUrl,composerOwner,composerBusy})};";
   const controller=new Function(...Object.keys(scope),prelude+lifecycle+exposed)(...Object.values(scope));
   return {controller,jobs,elements,alerts,state:externalState,
@@ -88,6 +92,7 @@ test('stale main API response cannot mutate new owner Story, activity or avatar'
   let owner='owner-A',renders=0,avatars=0;const deferred=delay();
   const scope={tg:{get initData(){return owner}},requestJson:()=>deferred.promise,
     state:{ready:false,history:[]},selectedViewerStory:null,
+    viewerOwnerEpoch:0,ensureComposerIdentity(){},
     render(){renders++},setAvatar(){avatars++}};
   const run=new Function(...Object.keys(scope),apiCode+';return api')(...Object.values(scope));
   const pending=run('check');owner='owner-B';

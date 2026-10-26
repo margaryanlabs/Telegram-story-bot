@@ -35,7 +35,10 @@ test('Only cursors and counts are persisted; never Telegram message content or s
 
 test('Mobile Telegram sheet close and hidden WebView stop the automatic loop',()=>{
   const ui=read('public/privacy.js');
-  assert.ok(ui.includes('function closeSheet() {\n    // Telegram BackButton'));
+  const closing=ui.slice(ui.indexOf('function closeSheet() {'),ui.indexOf('// The Mini App BackButton'));
+  assert.match(closing,/privacyState\.backup\.stopRequested = true/);
+  assert.match(closing,/privacyState\.archiveThreadEpoch\+\+/);
+  assert.match(closing,/VetoTelegramModal\.close/);
   assert.ok(ui.includes("if (document.hidden) {"));
   assert.ok(ui.includes('privacyState.backup.stopRequested = true;'));
   assert.ok(ui.includes('data-backup-pause'));

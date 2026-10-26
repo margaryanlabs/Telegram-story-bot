@@ -94,7 +94,7 @@ test('source keeps localized priority card labels without touching their routes'
   ]){
     assert.ok(html.includes('data-smart-filter="'+filter+'"><span>'+text+'</span>'));
   }
-  assert.match(html,/<h1>Чаты<\/h1>/);
+  assert.match(html,/<h1(?:\s[^>]*)?>Чаты<\/h1>/);
   assert.match(html,/<span class="kicker">ПРИОРИТЕТЫ<\/span>/);
   assert.match(html,/id="telegramMirrorUpdated">Обновление по запросу/);
 });

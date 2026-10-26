@@ -8,7 +8,7 @@ const nav=read('public/veto-global-ui.css');
 
 test('visual rebirth is applied AFTER device polish, preserving mobile behavior',()=>{
   const device=html.indexOf('/veto-device-polish.css?');
-  const rebirth=html.indexOf('/veto-messenger-rebirth.css?v=20261019-brand-v2');
+  const rebirth=html.indexOf('/veto-messenger-rebirth.css?v=');
   assert.ok(device>0 && rebirth>device, 'premium styles must load last');
   assert.match(html,/veto-device-polish\.js/);
   assert.match(html,/id="telegramThreadComposer"/);

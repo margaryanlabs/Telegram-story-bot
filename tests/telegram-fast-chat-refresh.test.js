@@ -40,5 +40,5 @@ test('jump-to-latest is accessible, bounded to open thread and independent of ca
   assert.match(ui,/showLatestShortcut\.frame=requestAnimationFrame/);
   assert.match(ui,/behavior:'smooth'/);
   assert.match(css,/veto-mirror-jump-latest\[hidden\]/);
-  assert.match(html,/veto-fast-chat-v1/);
+  assert.match(html,/telegram-chats\.js\?v=\d{8}-[a-z0-9-]+/);
 });

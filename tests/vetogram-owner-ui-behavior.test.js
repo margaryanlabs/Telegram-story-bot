@@ -126,12 +126,12 @@ test('Approval Center never restores account A draft after asynchronous chat loa
 test('Second Brain and AI Action execute provider call before using its response',async()=>{
   for(const mode of ['brief','action']){
     const ui=fakeUi(),state={identity:'signed-A',requestEpoch:1,
-      busy:false,mode,history:[],memory:[],selectedNotes:new Set(),
+      busy:false,generateIntent:0,mode,history:[],memory:[],selectedNotes:new Set(),
       actionDraft:null,actionRecipientConfirmed:null,dialogs:[],last:null};
     ui.get('vtaiConsent').checked=true;
     ui.get('vtaiText').value='Summarize the deadline';
     const actions=[],scope=()=>({identity:state.identity,epoch:state.requestEpoch});
-    const ctx={...ui,state,window:{confirm:()=>true},
+    const ctx={...ui,state,AbortController,window:{confirm:()=>true},
       safeIdentity:()=>true,isExplicitActionCommand:()=>false,
       owner:()=> '111',ownerRequestScope:scope,
       isOwnerRequestCurrent:s=>s.identity===state.identity&&s.epoch===state.requestEpoch,
@@ -398,14 +398,14 @@ test('Story Engine receiver rejects owner switch while waiting for init',async()
   let owner='111',renders=0;
   const fn=vm.runInNewContext('('+storyController.slice(start,end+2)+')',
     vm.createContext({
-      owner:()=>owner,
+      tg:{get initData(){return 'signed-'+owner}},owner:()=>owner,
       init:()=>new Promise(resolve=>{resolveInit=resolve}),
       state:ownerState,
       trimText:(x,n)=>String(x).slice(0,n),
       normalizePortal:x=>x,clearPublicPortalLink:()=>{},
       $:()=>({checked:true,style:{},hidden:true,disabled:true}),render:()=>{renders++},notify:()=>{}
     }));
-  const promise=fn({ownerId:'111',story:{title:'Account A private title',subtitle:'Private subtitle'}});
+  const promise=fn({ownerId:'111',signed:'signed-111',story:{title:'Account A private title',subtitle:'Private subtitle'}});
   owner='222';ownerState.owner='222';
   ownerState.draft={id:'story-B',title:'Account B original',subtitle:'B subtitle'};
   resolveInit();
@@ -423,7 +423,7 @@ test('Story Engine receiver accepts owner-approved text only, preserving unrelat
     caption:'Old caption',photoId:'keep-this-photo',portal:savedPortal}};
   let renders=0,clears=0;
   const fn=vm.runInNewContext('('+storyController.slice(start,end+2)+')',
-    vm.createContext({checkpoint:()=>{},owner:()=> '111',init:async()=>{},state,
+    vm.createContext({tg:{initData:'signed-111'},checkpoint:()=>{},owner:()=> '111',init:async()=>{},state,
       trimText:(x,n)=>String(x??'').slice(0,n),
       normalizePortal:x=>x,
       aiEditableFields:(draft,withPortal)=>JSON.stringify({
@@ -433,7 +433,7 @@ test('Story Engine receiver accepts owner-approved text only, preserving unrelat
       clearPublicPortalLink:()=>{clears++},
       $:()=>({checked:true,style:{},hidden:true,disabled:true}),render:()=>{renders++},notify:()=>{}
     }));
-  const success=await fn({ownerId:'111',story:{
+  const success=await fn({ownerId:'111',signed:'signed-111',story:{
     title:'Proposed AI title',subtitle:'Proposed subtitle',caption:'Suggested'
   },replacePortal:false});
   assert.equal(success,true);

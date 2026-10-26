@@ -9,7 +9,7 @@ const css = read('public/vetogram-header.css');
 const js = read('public/vetogram-header.js');
 
 test('Vetogram keeps the canonical red/silver split-V identity in its real inbox',()=>{
-  assert.match(html, /<title>Vetogram/);
+  assert.match(html, /<title>VETOGRAM/);
   assert.match(html, /aria-label="VETOGRAM"><span>VETO<\/span><i>GRAM/);
   assert.match(html, /class="veto-mirror-heading vetogram-header"/);
   assert.match(html, /veto-telegram-mark\.svg\?v=20261019-brand-v2/);

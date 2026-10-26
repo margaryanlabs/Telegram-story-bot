@@ -22,7 +22,10 @@ test('Phone code, 2FA and QR sign-in all reject cross-account sessions BEFORE DB
   const qr=read('api/viewer-qr.js');
   const mini=read('api/miniapp.js');
   const safety="requireOwnTelegramAccount(userId, result.user)";
-  assert.equal(sync.split(safety).length-1,2);
+  assert.equal(sync.split(safety).length-1,3);
+  const directSuccess=sync.slice(sync.indexOf('async function completePhoneAuthorization('),sync.indexOf('async function configState()'));
+  assert.ok(directSuccess.includes(safety));
+  assert.ok(directSuccess.indexOf(safety)<directSuccess.indexOf('await upsertViewerSession({')); 
   assert.equal(qr.split(safety).length-1,1);
   const codeSection=sync.split("if (action === 'verify_code')")[1].split("if (action === 'verify_password')")[0];
   const passwordSection=sync.split("if (action === 'verify_password')")[1].split("if (action === 'disconnect')")[0];

@@ -18,10 +18,10 @@ test('Business walkthrough uses Telegram settings, never requests an OTP or expa
   const code = source('public/privacy.js');
   const guide = code.split('function privacyBusinessGuideSheet()')[1].split('async function mediaRecoveryApi')[0];
   assert.match(guide, /Telegram для бизнеса/);
-  assert.match(guide, /Выбери личные чаты|Выбрать личные чаты/);
+  assert.match(guide, /выбрать личные чаты|выбери только нужные личные чаты/i);
   assert.match(guide, /data-privacy-copy-bot/);
-  assert.match(guide, /data-privacy-recheck-access/);
-  assert.match(guide, /не нужны права отвечать, удалять сообщения или отмечать их прочитанными/);
+  assert.match(guide, /data-business-retry/);
+  assert.match(guide, /Защита не включается сама[\s\S]*?согласие на Anti-Delete и Stories выдаётся отдельно/);
   assert.doesNotMatch(guide, /send_code|verify_code|2FA|введи код/);
 });
 
@@ -54,5 +54,5 @@ test('Connect journey retains a mobile layout and never claims to retrieve past 
   assert.match(css, /\.veto-business-journey/);
   assert.match(css, /@media\(max-width:400px\)/);
   assert.match(css, /prefers-reduced-motion:reduce/);
-  assert.match(app, /архив сохраняет только доступные новые события|Архив сохраняет только доступные новые события/);
+  assert.match(app, /новые события из выбранных тобой личных чатов после разрешения[\s\S]*?Старые удаления не восстановятся/);
 });
