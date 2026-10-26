@@ -105,3 +105,24 @@ test("V5 personal collections are browser-local, bounded and linked from media.h
   assert.match(visual, /prefers-reduced-motion/);
   assert.doesNotMatch(v5, /TELEGRAM_BOT_TOKEN|telegram-session-owner|api\.telegram\.org\/bot/i);
 });
+
+test("V6 source reporting, bounded collection restore and audio recovery", () => {
+  const v6=readFileSync(new URL("../public/media-v6.js",import.meta.url),"utf8");
+  const css=readFileSync(new URL("../public/media-v6.css",import.meta.url),"utf8");
+  const v5=readFileSync(new URL("../public/media-v5.js",import.meta.url),"utf8");
+  execFileSync(process.execPath,["--check",join(process.cwd(),"public/media-v6.js")],{stdio:"pipe"});
+  assert.match(html,/media-v6\.js/);
+  assert.match(html,/media-v6\.css/);
+  assert.match(v6,/veto:provider/);
+  assert.match(v6,/veto:stream-error/);
+  assert.match(v6,/v6Recovery/);
+  assert.match(v6,/v6Continue/);
+  assert.match(v6,/v6ImportFile/);
+  assert.match(v5,/window\.VetoPersonal/);
+  assert.match(v5,/importCollection\(input\)/);
+  assert.match(v5,/data\[type\]=previous/);
+  assert.match(v5,/!persist\(\)/);
+  assert.match(js,/AbortController/);
+  assert.match(css,/v6-source-flyout/);
+  assert.doesNotMatch(v6,/TELEGRAM_BOT_TOKEN|telegram-session-owner|api\.telegram\.org\/bot/i);
+});
