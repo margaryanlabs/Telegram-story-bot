@@ -136,3 +136,15 @@ test('cached AI status changes RU EN HY without a new network or provider call',
   assert.equal(s.calls.length,1,'locale switches must repaint only cached owner state');
   assert.equal(s.controls.vtaiCreate.disabled,true);
 });
+
+
+test('Hobby single-function adapter routes the AI status GET unchanged',()=>{
+  const router=readFileSync(new URL('../api/router.js',import.meta.url),'utf8');
+  const config=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
+  assert.ok(config.builds.some(b=>b.src==='api/router.js'&&b.use==='@vercel/node'));
+  assert.ok(config.routes.some(r=>
+    r.src==='^/api/([A-Za-z0-9-]+)$'&&r.dest==='/api/router.js?route=$1'));
+  assert.match(router,/"vetogram-ai":\s*\(\)\s*=>\s*import\("\.\/vetogram-ai\.js"\)/);
+  assert.match(router,/return await module\.default\(req,res\)/);
+  assert.doesNotMatch(router,/\breq\.method\s*=/);
+});
