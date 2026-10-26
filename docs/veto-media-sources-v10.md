@@ -40,3 +40,16 @@ Files: public/media-import.js, public/media-import.css, public/media.js bridge a
 - Host stand-alone VETO MEDIA on HTTPS, test live audio and video on Telegram Android and iOS, then verify EPUB security before launch. Do not deploy VETOGRAM production.
 - For each provider build explicit adapter facts: catalog ID, source, streaming permission, territorial rights, source attribution, last validation.
 - Claim in previous user-shared discussion about VK API restrictions beginning September 2026 was not independently verified and should not be used as a product decision without official documentation.
+
+## V11 — Unified discovery and series catalog (2026-10-27)
+
+- Separate modules public/media-discovery.js and public/media-discovery.css add an explicitly triggered search across Audius music, TVmaze series, Gutendex public-domain books and Internet Archive Prelinger archival film metadata. No unauthorized streaming or unrequested crawling.
+- TVmaze's https://www.tvmaze.com/api documents CORS, at least 20 calls per 10 seconds/IP and CC BY-SA data licensing. The UI credits TVmaze and links to the item. This is TV series information, NOT free TV episodes. Poster/image-specific rights need additional review.
+- Audius results can be handed to the existing audio player on the user's click. Streams remain subject to territorial rights, browser codecs and provider availability.
+- Gutendex books are explicitly filtered to copyright:false. The Gutenberg reader bridge can open such books, but worldwide translation rights remain a separate legal review.
+- Cinema search currently returns only public-domain-labelled records from the Prelinger archive, with links to original Internet Archive items. Uploaded license metadata does not prove worldwide rights.
+- Mass-market feature films via TMDB are not yet added because the intended commercial service needs a suitable commercial API and poster-content license. Open Library is not used as a high-volume commercial backend.
+- User saves up to 100 Discover items locally. This is not an account-level synchronization or subscription. Search runs per user query with abort and timeout, has a five-minute in-memory result cache, and reports provider failures separately.
+- Dedicated test file tests/veto-media-discovery.test.js validates source normalization, permission flags and user-facing module wiring.
+- Standalone preview veto-media-preview-v11.html tested via Chromium at 390 and 1440 px with mock provider responses. Four synthetic cards rendered; category filters and series detail modal worked, with no JS errors or horizontal overflow. TVmaze 503 was also simulated and the other three results remained. Synthetic screenshots DO NOT prove availability of the pictured films.
+- The series detail window participates in Telegram native BackButton flow. Actual Android/iOS Telegram HTTPS/WebView streaming and EPUB safety remain launch blockers. All changes remain in Draft PR #191; no merge or production deploy.
