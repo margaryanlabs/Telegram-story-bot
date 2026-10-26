@@ -57,3 +57,11 @@ QA checklist:
 ## Project architecture
 
 \`Telegram-story-bot\` currently contains VETOGRAM and this isolated sibling **frontend** for shared brand assets. It is not a shared production backend. After beta validation, move VETO MEDIA into a dedicated repository/domain, retain shared design tokens, and onboard its own Telegram Mini App bot.
+
+
+## V3 entertainment continuation — 2026-10-26
+
+- Modular film tab added to `/media.html` with `media-films.js` and `media-films.css`. Search/list of archived video items from the Prelinger collection with public-domain metadata indicators, poster thumbnails from Internet Archive, spotlight, horizontal reel, film details and opt-in Internet Archive iframe player with original-source fallback.
+- The archive API is a third-party dependency. Failure or CORS rejection yields a clearly labeled error with archive source, never invented film catalog entries.
+- Preview artifact `veto-media-preview-v3.html` was constructed independently for visual design review; it includes the full immersive home, five-button mobile dock, cinematic film rail and playback mock testing. Modular parity with the standalone preview is work in progress. Preview asset is stored in the conversation and is not an automatic production deploy.
+- Browser UI smoke tests used a 390px mobile and 1440px desktop viewport, including navigation, film modal, no horizontal overflow, and test provider responses. Production Telegram Android/iOS streaming, licensing outside the U.S. and payment remain unverified.
