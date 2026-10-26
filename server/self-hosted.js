@@ -7,6 +7,7 @@ import {realpath,stat} from 'node:fs/promises';
 import {dirname,extname,resolve,sep} from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import vetogramApiRouter from '../api/router.js';
+import {vetogramStagingMarker} from '../lib/markarian-release.js';
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'../public');
 const MAX_BODY=8*1024*1024;
@@ -75,6 +76,13 @@ export function createHandler({apiHandler=vetogramApiRouter,publicRoot=ROOT}={})
   attachResponseMethods(res);res.setHeader('X-Content-Type-Options','nosniff');
   let url;try{url=new URL(req.url||'/','http://127.0.0.1');}catch{res.status(400).end();return;}
   const path=url.pathname;
+  if(path==='/api/markarian-release'){
+   if(req.method!=='GET'){res.status(405).json({error:'Method not allowed'});return;}
+   const marker=vetogramStagingMarker();
+   if(!marker){res.status(404).json({error:'Not found'});return;}
+   res.setHeader('Cache-Control','no-store');
+   res.json(marker);return;
+  }
   if(path.startsWith('/api/')){
    const route=path.slice(5);
    if(!/^[A-Za-z0-9-]+$/.test(route)){res.status(404).json({ok:false,error:'Not found'});return;}

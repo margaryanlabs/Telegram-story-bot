@@ -43,3 +43,9 @@ The current REBORN branch describes Neon provider mode and schema version 6, inc
 - Real production Docker image build, `sharp` system dependency behavior, complete Node tests, Telegram MTProto login, provider API, traffic/load limits, database migration, backup restoration, worker schedules, WebSocket compatibility or multi-server runtime.
 - No live VPS and no production DNS or webhook changes. A successful static HTTP test is not proof of working Anti-Delete or live Chat/Stories.
 - The native adapter is intentionally optional, preserving existing Vercel behavior. It can serve as the basis for Coolify staging only.
+
+## Per-instance source identity (staging only)
+
+The optional portable `server/self-hosted.js` now answers `GET /api/markarian-release` only when `MARKARIAN_RELEASE_ENABLED=staging-only`, `MARKARIAN_ENVIRONMENT=staging` and `MARKARIAN_SOURCE_SHA` is an exact lowercase 40-character Git commit. Otherwise the route returns HTTP 404 and exposes no source metadata. The dedicated `Dockerfile.selfhost` refuses to build when the mandatory Docker build argument `MARKARIAN_SOURCE_SHA` is absent or malformed, then carries this **declared** SHA into the staging runtime. The original Vercel deployment path remains unchanged.
+
+Run `node --test tests/markarian-release.test.js tests/self-hosted.test.js` in a complete trusted checkout. On a staging server, verify that `/api/health` reaches a real **test** Telegram bot and isolated data, and that `/api/markarian-release` matches the exact reviewed release SHA. Neither one proves registry image digest, encryption-key recovery, Business rights, mobile chat or Anti-Delete; test those separately. NEVER point staging to production Telegram sessions or webhook credentials merely to satisfy health.
