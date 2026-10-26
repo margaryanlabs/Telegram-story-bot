@@ -37,7 +37,7 @@
     const e=$(id);
     return Boolean(e && !e.classList.contains("hidden") &&
        (e.classList.contains("open") || e.classList.contains("active") ||
-        e.classList.contains("is-active") || id==="readerBackdrop" || id==="vetoFilmOverlay" || id==="mediaEpubOverlay"));
+        e.classList.contains("is-active") || id==="readerBackdrop" || id==="vetoFilmOverlay" || id==="mediaEpubOverlay" || id==="v11DetailModal"));
   };
   // The BackButton steps out of modal readers and mini-app sections without
   // closing the Telegram sheet or exposing any account-sensitive state.
