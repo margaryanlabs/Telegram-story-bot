@@ -105,10 +105,11 @@
     currentQuery=text;$("v11Search").value=text;
     const seq=++sequence;if(abort)abort.abort();
     abort=new AbortController();
+    const requestController=abort;
     for(const type of types){sourceState[type]="loading";groups[type]=[];}
     announce("Ищем «"+text+"» в четырёх каталогах…");render();
-    const timer=setTimeout(()=>abort?.abort(),11000);
-    try{await Promise.allSettled(types.map(type=>one(type,text,seq,abort)));}finally{clearTimeout(timer);}
+    const timer=setTimeout(()=>requestController.abort(),11000);
+    try{await Promise.allSettled(types.map(type=>one(type,text,seq,requestController)));}finally{clearTimeout(timer);}
     if(seq!==sequence)return;
     const total=types.reduce((n,t)=>n+groups[t].length,0);
     const failures=types.filter(t=>sourceState[t]!=="done").length;
