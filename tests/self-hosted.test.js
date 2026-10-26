@@ -51,3 +51,25 @@ test('static root is private, denies unsupported files and symlink escapes',asyn
   });
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('staging release identity is disabled unless explicitly enabled',async()=>{
+ const original={MARKARIAN_RELEASE_ENABLED:process.env.MARKARIAN_RELEASE_ENABLED,MARKARIAN_ENVIRONMENT:process.env.MARKARIAN_ENVIRONMENT,MARKARIAN_SOURCE_SHA:process.env.MARKARIAN_SOURCE_SHA};
+ try{
+  delete process.env.MARKARIAN_RELEASE_ENABLED;
+  delete process.env.MARKARIAN_ENVIRONMENT;
+  delete process.env.MARKARIAN_SOURCE_SHA;
+  await onServer(createHandler({apiHandler:async(req,res)=>res.status(404).end()}),async base=>{
+   const absent=await fetch(base+'/api/markarian-release');assert.equal(absent.status,404);
+   process.env.MARKARIAN_RELEASE_ENABLED='staging-only';
+   process.env.MARKARIAN_ENVIRONMENT='staging';
+   process.env.MARKARIAN_SOURCE_SHA='a'.repeat(40);
+   const ok=await fetch(base+'/api/markarian-release');assert.equal(ok.status,200);
+   assert.deepEqual(await ok.json(),{schema:'markarian-app-release/v1',environment:'staging',product:'vetogram',repository:'margaryanlabs/Telegram-story-bot',commit:'a'.repeat(40)});
+   assert.match(ok.headers.get('cache-control'),/no-store/);
+  });
+ }finally{
+  for(const [key,val] of Object.entries(original)){
+   if(val===undefined)delete process.env[key];else process.env[key]=val;
+  }
+ }
+});
