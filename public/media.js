@@ -529,5 +529,16 @@
     try { tg?.ready(); tg?.expand(); } catch (_) {}
     setTab("home");
   }
+  // Narrow player bridge for user-confirmed metadata matches. Imported metadata
+  // alone never initiates playback or claims rights to a VK/Yandex recording.
+  window.VetoMediaMusic=Object.freeze({
+    playMatchedAudius(raw) {
+      const track=trackFrom(raw);
+      if(!track||track.gated)throw Error("Запись недоступна в Audius");
+      state.tracks=[track];state.current=-1;
+      playTrack(0);
+      return {provider:"Audius",trackId:track.id};
+    }
+  });
   init();
 })();
