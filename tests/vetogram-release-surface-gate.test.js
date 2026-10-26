@@ -94,3 +94,18 @@ test('a module imported from a classic script is rejected',()=>{
   }});
   assert.ok(result.errors.includes('UNDECLARED_MODULE_SCRIPT: public/app.js'));
 });
+
+test('Portal opt-in cannot be smuggled via reordered HTML attributes',()=>{
+  const original=actual();
+  const tag='<input id="storyPortalConfirm" type="checkbox" />';
+  assert.ok(original.html.includes(tag));
+  for(const attack of [
+    '<input checked id="storyPortalConfirm" type="checkbox" />',
+    '<input checked="false" type="checkbox" id="storyPortalConfirm" />',
+    '<input type="checkbox" id="storyPortalConfirm" checked />',
+    '<input checked="checked" id="storyPortalConfirm" type="checkbox" />'
+  ]){
+    const result=check({html:original.html.replace(tag,attack)});
+    assert.ok(result.errors.includes('PORTAL_MUST_REQUIRE_FRESH_OPT_IN'),attack);
+  }
+});
