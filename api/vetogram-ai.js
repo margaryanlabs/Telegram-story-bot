@@ -13,11 +13,22 @@ function providerConfig(){
 export default async function handler(req,res){
   res.setHeader('Cache-Control','private, no-store, max-age=0');
   res.setHeader('X-Content-Type-Options','nosniff');
-  if(req.method!=='POST')return reply(res,405,{error:'POST required'});
+  if(req.method!=='POST'&&req.method!=='GET')return reply(res,405,{error:'GET or POST required'});
   if(!BOT)return reply(res,503,{error:'Telegram не настроен'});
   const signed=String(req.headers['x-telegram-init-data']||'');
   const owner=validateTelegramMiniApp(signed,BOT);
   if(!owner?.id)return reply(res,401,{error:'Открой VETOGRAM через свой Telegram'});
+  // Zero-provider-cost, owner-authorized readiness check. No consent header is
+  // necessary because GET contains no prompt, history, notes, or message body.
+  // Never expose configured keys, owner IDs, quota internals or model prompts.
+  if(req.method==='GET'){
+    const enabled=process.env.VETOGRAM_AI_ENABLED==='true';
+    const provider=enabled?providerConfig():null;
+    return reply(res,200,{
+      configured:Boolean(enabled&&provider),
+      state:!enabled?'disabled':!provider?'provider_missing':'configured'
+    });
+  }
   if(req.headers['x-vetogram-ai-consent']!=='yes')return reply(res,403,{error:'Для AI-запроса нужно явно разрешить передачу текста'});
   if(process.env.VETOGRAM_AI_ENABLED!=='true')return reply(res,503,{error:'VETOGRAM AI ещё не включён администратором'});
   const provider=providerConfig();
