@@ -8,7 +8,7 @@ const origin='https://veto.example';
 const okResponse=value=>({
   ok:true,value,clone(){return okResponse(value);}
 });
-function harness({online=true}={}){
+function harness({online=true,cacheUnavailable=false}={}){
   const listeners={},stored=new Map(),deleted=[],requests=[];
   const awaiting=[];
   const cache={
@@ -17,7 +17,7 @@ function harness({online=true}={}){
     put:async(request,response)=>{stored.set(request.url,response);}
   };
   const caches={
-    open:async()=>cache,
+    open:async()=>{if(cacheUnavailable)throw Error('CACHE_STORAGE_UNAVAILABLE');return cache},
     keys:async()=>['veto-relay-shell-v1','unrelated-cache','veto-relay-shell-v411-20261026'],
     delete:async key=>{deleted.push(key);return true;}
   };
@@ -107,4 +107,18 @@ test('Relay page versions, SW precache and updateViaCache match',()=>{
   assert.match(boot,/updateViaCache:'none'/);
   assert.doesNotMatch(script,/ignoreSearch\s*:\s*true/);
   assert.doesNotMatch(script,/keys\.filter\(key\s*=>\s*key\s*!==\s*CACHE_NAME\)/);
+});
+
+
+test('Relay online still works when Cache Storage is disabled or full',async()=>{
+  const x=harness({cacheUnavailable:true});
+  const path='/relay.html';
+  const response=await x.invoke(path);
+  assert.equal(response.value,'network:'+origin+path);
+  assert.equal(x.requests.length,1);
+});
+test('Relay offline Cache Storage failure degrades safely, not to old assets',async()=>{
+  const x=harness({cacheUnavailable:true,online:false});
+  const response=await x.invoke('/relay.html');
+  assert.equal(response.networkError,true);
 });
