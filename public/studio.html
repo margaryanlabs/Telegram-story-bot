@@ -504,15 +504,15 @@
           </section>
           <div class="veto-mirror-filters" id="telegramMirrorFilters" role="group" aria-label="Фильтр по чатам">
             <button type="button" data-mirror-filter="all" class="active">Все <span id="telegramMirrorCount">—</span></button>
-            <button type="button" data-mirror-filter="private">Личные</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="group">Группы</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="channel">Каналы</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="bot">Боты</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="saved">Избранное</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="pinned">Закреплённые</button>
+            <button type="button" data-mirror-filter="private" data-ui-text="filterPrivate">Личные</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="group" data-ui-text="filterGroups">Группы</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="channel" data-ui-text="filterChannels">Каналы</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="bot" data-ui-text="filterBots">Боты</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="saved" data-ui-text="filterSaved">Избранное</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="pinned" data-ui-text="filterPinned">Закреплённые</button>
             <button type="button" data-mirror-filter="focus">Важное <span aria-hidden="true">⌑</span></button>
-            <button type="button" data-mirror-filter="unread">Непрочитанные</button>
-            <button class="veto-filter-advanced" type="button" data-mirror-filter="archived">Архив</button>
+            <button type="button" data-mirror-filter="unread" data-ui-text="filterUnread">Непрочитанные</button>
+            <button class="veto-filter-advanced" type="button" data-mirror-filter="archived" data-ui-text="filterArchived">Архив</button>
             <button type="button" data-mirror-filter="copies">Сохранённые <span aria-hidden="true">↶</span></button>
             <button type="button" class="veto-filters-more" id="vetoMessengerFiltersToggle" aria-expanded="false" aria-controls="telegramMirrorFilters">Фильтры <span>⌄</span></button>
           </div>
@@ -612,8 +612,8 @@
             <div class="veto-mirror-sticker-drawer" id="telegramThreadStickerDrawer" hidden role="group" aria-label="Стикеры Telegram">
               <div class="veto-stickers-head"><strong id="vetoStickerDrawerTitle">Стикеры Telegram</strong><button type="button" id="telegramThreadStickersClose" aria-label="Закрыть стикеры">×</button></div>
               <div class="veto-stickers-tabs" role="group" aria-label="Раздел стикеров">
-                <button type="button" data-sticker-tab="recent" aria-pressed="true">Недавние</button>
-                <button type="button" data-sticker-tab="packs" aria-pressed="false">Мои наборы</button>
+                <button type="button" data-sticker-tab="recent" aria-pressed="true" data-ui-text="stickerRecent">Недавние</button>
+                <button type="button" data-sticker-tab="packs" aria-pressed="false" data-ui-text="stickerPacks">Мои наборы</button>
               </div>
               <div class="veto-stickers-find">
                 <button type="button" id="vetoStickersBackPack" hidden aria-label="Назад к наборам">←</button>
@@ -1446,10 +1446,10 @@
           <button type="button" data-privacy-filter="smart">Smart</button>
           <button type="button" data-privacy-filter="action">Action</button>
           <button type="button" data-privacy-filter="watch">Watch</button>
-          <button class="active" type="button" data-privacy-filter="all">Все</button>
-          <button type="button" data-privacy-filter="deleted">Удалённые</button>
-          <button type="button" data-privacy-filter="edited">Изменённые</button>
-          <button type="button" data-privacy-filter="media">Медиа</button>
+          <button class="active" type="button" data-privacy-filter="all" data-ui-text="privacyFilterAll">Все</button>
+          <button type="button" data-privacy-filter="deleted" data-ui-text="privacyFilterDeleted">Удалённые</button>
+          <button type="button" data-privacy-filter="edited" data-ui-text="privacyFilterEdited">Изменённые</button>
+          <button type="button" data-privacy-filter="media" data-ui-text="privacyFilterMedia">Медиа</button>
         </div>
 
         <div class="privacy-summary">
@@ -1480,14 +1480,14 @@
           <p>Разговоры, идеи, перевод и помощь с сообщениями. Ты управляешь данными и отправкой.</p>
         </header>
         <div class="vtai-modes" role="group" aria-label="Выбор AI-инструмента">
-          <button type="button" data-vtai-mode="chat" aria-pressed="true" class="active">✧ AI-чат</button>
-          <button type="button" data-vtai-mode="translate" aria-pressed="false">⇄ Перевод</button>
-          <button type="button" data-vtai-mode="reply" aria-pressed="false">↗ AI-ответ</button>
-          <button type="button" data-vtai-mode="action" aria-pressed="false">⌁ AI-действия</button>
-          <button type="button" data-vtai-mode="brief" aria-pressed="false">◈ Задачи</button>
-          <button type="button" data-vtai-mode="story" aria-pressed="false">▣ AI-режиссёр</button>
-          <button type="button" data-vtai-mode="campaign" aria-pressed="false">✦ История для продаж</button>
-          <button type="button" data-vtai-mode="negotiator" aria-pressed="false">◇ Переговоры</button>
+          <button type="button" data-vtai-mode="chat" aria-pressed="true" class="active" data-ui-text="aiModeChat">✧ AI-чат</button>
+          <button type="button" data-vtai-mode="translate" aria-pressed="false" data-ui-text="aiModeTranslate">⇄ Перевод</button>
+          <button type="button" data-vtai-mode="reply" aria-pressed="false" data-ui-text="aiModeReply">↗ AI-ответ</button>
+          <button type="button" data-vtai-mode="action" aria-pressed="false" data-ui-text="aiModeAction">⌁ AI-действия</button>
+          <button type="button" data-vtai-mode="brief" aria-pressed="false" data-ui-text="aiModeBrief">◈ Задачи</button>
+          <button type="button" data-vtai-mode="story" aria-pressed="false" data-ui-text="aiModeStory">▣ AI-режиссёр</button>
+          <button type="button" data-vtai-mode="campaign" aria-pressed="false" data-ui-text="aiModeCampaign">✦ История для продаж</button>
+          <button type="button" data-vtai-mode="negotiator" aria-pressed="false" data-ui-text="aiModeNegotiator">◇ Переговоры</button>
         </div>
         <section class="vg26-creative-deck" id="vg26CreativeDeck" aria-label="Быстрые стили черновика" hidden>
           <div class="vg26-creative-head">
