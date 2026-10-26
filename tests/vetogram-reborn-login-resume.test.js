@@ -291,3 +291,48 @@ test('Neon rejects login-code sends if the v6 lease table is unavailable',async(
   assert.equal(res.code,503);
   assert.equal(sends,0);
 });
+
+
+test('Neon v6 readiness gates new Telegram logins without touching Supabase',async()=>{
+  const start=api.indexOf('async function configState() {');
+  const end=api.indexOf('\nfunction safeSession(',start);
+  assert.ok(start>=0&&end>start);
+  const actualFn=api.slice(start,end).trim();
+  const makeContext=(provider,leaseReady)=>vm.createContext({
+    process:{env:{
+      TELEGRAM_API_ID:'123',TELEGRAM_API_HASH:'test',TELEGRAM_BOT_TOKEN:'test',
+      VETO_NEON_DATABASE_URL:'postgresql://fake/not-used',
+      VETO_NEON_SESSION_KEY:'never-a-real-secret',
+    }},
+    viewerDbConfigured:()=>true,
+    viewerCryptoHealth:async()=>({ready:true,cipherVersion:provider==='neon'?'v4':'v3'}),
+    sessionCryptoReady:()=>true,
+    selectedStorageProvider:()=>provider,
+    neonCronConfigured:()=>false,
+    expectedCipherVersion:()=>provider==='neon'?'v4':'v3',
+    loginCodeLeaseReady:async()=>leaseReady,
+  });
+  for(const [provider,leaseReady,expected] of [
+    ['neon',false,false],['neon',true,true],['supabase',false,true]
+  ]){
+    const ctx=makeContext(provider,leaseReady);
+    const fn=vm.runInContext('('+actualFn+')',ctx);
+    const result=await fn();
+    assert.equal(result.newConnectionsReady,expected,provider);
+    assert.equal(result.missing.includes('NEON_LOGIN_CODE_LEASE_V6'),
+      provider==='neon'&&!leaseReady,provider);
+  }
+});
+
+test('Neon v6 SQL lease uses atomic conflict handling and token-checked release',()=>{
+  const neon=readFileSync(new URL('../lib/neon-store.js',import.meta.url),'utf8');
+  const migration=readFileSync(new URL('../db/neon/006_login_code_request_leases.sql',import.meta.url),'utf8');
+  assert.match(migration,/CREATE TABLE IF NOT EXISTS public\.veto_login_code_leases/);
+  assert.match(migration,/telegram_user_id bigint PRIMARY KEY/);
+  assert.match(migration,/REVOKE ALL ON TABLE public\.veto_login_code_leases FROM PUBLIC/);
+  assert.match(neon,/case 'claim_login_code_lease':/);
+  assert.match(neon,/ON CONFLICT \(telegram_user_id\) DO UPDATE/);
+  assert.match(neon,/WHERE public\.veto_login_code_leases\.expires_at < now\(\)/);
+  assert.match(neon,/case 'release_login_code_lease':/);
+  assert.match(neon,/WHERE telegram_user_id=\$1::bigint AND lease_token=\$2::uuid/);
+});
