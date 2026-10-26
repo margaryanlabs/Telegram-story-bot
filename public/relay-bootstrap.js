@@ -239,7 +239,7 @@
   document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', () => copyValue(button.dataset.copy)));
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/relay-sw.js', { scope:'/' }).catch(() => {});
+    navigator.serviceWorker.register('/relay-sw.js', { scope:'/', updateViaCache:'none' }).catch(() => {});
   }
 
   setNetwork();
