@@ -1,0 +1,23 @@
+/* Device QA intentionally hidden from normal users; activated by ?media_qa=1. */
+.v12-qa-panel{position:fixed;z-index:210;right:12px;top:12px;width:min(410px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;background:linear-gradient(155deg,#202943,#111827);border:1px solid #ffffff3c;color:#eef0fb;padding:18px;border-radius:20px;box-shadow:0 30px 85px #000c;font-size:12px;line-height:1.55}
+.v12-qa-top{display:flex;justify-content:space-between;align-items:start;gap:12px}.v12-qa-top h2{margin:6px 0 12px;font-size:24px;line-height:1.1;letter-spacing:-.055em;color:#fff}
+.v12-qa-top small{color:#ffc2ae;font-size:10px;letter-spacing:.16em}
+.v12-qa-top button{border:1px solid #ffffff25;border-radius:10px;padding:7px 11px;font-size:20px;color:#fff;background:#ffffff15}
+.v12-qa-panel p{color:#bbc9e1;margin:5px 0 16px}
+.v12-qa-facts{display:grid;gap:6px;padding:11px 0;border-block:1px solid #ffffff26;margin-bottom:14px}
+.v12-qa-fact{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px}
+.v12-qa-fact strong{font-size:11px;font-weight:750}
+.v12-qa-fact strong.ok,.v12-qa-result span.ok{color:#8be5bc}
+.v12-qa-fact strong.unknown{color:#e2ad9d}
+.v12-qa-buttons{display:flex;gap:7px;flex-wrap:wrap}
+.v12-qa-buttons button{border:1px solid #ffffff29;background:#ffffff12;color:#eaeffb;padding:11px 12px;border-radius:11px;font-size:11px}
+.v12-qa-buttons button:first-child{border:0;color:#191a2c;background:linear-gradient(120deg,#ffc4a6,#f590b2);font-weight:800}
+.v12-qa-buttons button:disabled{opacity:.55}
+.v12-qa-results{margin-top:14px;display:grid;gap:7px}
+.v12-qa-result{display:flex;justify-content:space-between;align-items:start;gap:12px;border:1px solid #ffffff1d;padding:9px;border-radius:9px}
+.v12-qa-result strong{flex:none}.v12-qa-result span{text-align:right}
+.v12-qa-result span.warning{color:#ffb3a5}
+.v12-qa-panel .v12-qa-note{font-size:10px;color:#9faecb;margin-top:16px}
+.v12-qa-panel.collapsed{max-height:70px;overflow:hidden}
+.v12-qa-panel.collapsed>:not(.v12-qa-top){display:none}
+@media(max-width:650px){.v12-qa-panel{top:8px;right:8px;width:calc(100vw - 16px);max-height:55dvh;padding:13px}.v12-qa-top h2{font-size:20px}}
