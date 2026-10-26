@@ -44,15 +44,29 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
   const importedDependencies=[];
   const scriptTags=[...html.matchAll(/<script\b[^>]*\bsrc=["'](\/[^"']+\.js(?:\?[^"']*)?)["'][^>]*>/gi)];
   if(typeof readSource==='function'){
+    // Classic scripts cannot use static ESM syntax. Start module traversal only
+    // from script tags the browser actually loads as type="module".
+    const moduleQueue=[];
+    const inspectedModules=new Set();
+    const importRefs=source=>[...source.matchAll(
+      /\\b(?:import|export)\\s+(?:[^;"']*?\\s+from\\s+)?["'](\\.[^"']+)["']/g
+    )];
     for(const match of scriptTags){
       const path='public'+match[1].split(/[?#]/)[0];
-      if(!exists(path))continue; // MISSING_ASSET already reported above.
-      const module=/\btype=["']module["']/.test(match[0]);
-      const source=readSource(path);
-      const refs=[...source.matchAll(/\b(?:import|export)\s+(?:[^;"']*?\s+from\s+)?["'](\.[^"']+)["']/g)];
-      if(refs.length&&!module)
+      if(!exists(path))continue; // MISSING_ASSET already reported.
+      const isModule=/\\btype=["']module["']/.test(match[0]);
+      const refs=importRefs(readSource(path));
+      if(refs.length&&!isModule)
         errors.push('UNDECLARED_MODULE_SCRIPT: '+path);
-      for(const ref of refs){
+      if(isModule)moduleQueue.push(path);
+    }
+    // Check the full static ESM dependency graph. First-level-only checking
+    // missed missing imports inside imported modules and caused blank screens.
+    while(moduleQueue.length){
+      const path=moduleQueue.shift();
+      if(inspectedModules.has(path))continue;
+      inspectedModules.add(path);
+      for(const ref of importRefs(readSource(path))){
         const pieces=path.split('/').slice(0,-1);
         for(const token of ref[1].split('/')){
           if(token==='..')pieces.pop();
@@ -60,7 +74,14 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
         }
         const dependency=pieces.join('/');
         importedDependencies.push(dependency);
-        add(exists(dependency),'MISSING_MODULE_IMPORT: '+path+' -> '+dependency);
+        if(!dependency.startsWith('public/')){
+          errors.push('UNSAFE_MODULE_IMPORT: '+path+' -> '+dependency);
+          continue;
+        }
+        const found=exists(dependency);
+        add(found,'MISSING_MODULE_IMPORT: '+path+' -> '+dependency);
+        if(found&&!inspectedModules.has(dependency))
+          moduleQueue.push(dependency);
       }
     }
   }
