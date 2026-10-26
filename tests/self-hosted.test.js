@@ -32,6 +32,7 @@ test('static root is private, denies unsupported files and symlink escapes',asyn
  try{
   writeFileSync(join(dir,'studio.html'),'private site');
   writeFileSync(join(dir,'portal.html'),'portal');
+  writeFileSync(join(dir,'relay.html'),'relay');
   writeFileSync(join(dir,'app.js'),'const x=1');
   writeFileSync(join(dir,'secret.env'),'topsecret');
   symlinkSync('/etc/hosts',join(dir,'leak.txt'));
@@ -40,6 +41,9 @@ test('static root is private, denies unsupported files and symlink escapes',asyn
    assert.match(home.headers.get('cache-control'),/no-store/);
    const portal=await fetch(base+'/portal.html');
    assert.match(portal.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+   const relay=await fetch(base+'/relay.html');
+   assert.match(relay.headers.get('content-security-policy'),/connect-src 'self'/);
+   assert.equal(relay.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
    assert.equal((await fetch(base+'/secret.env')).status,404);
    assert.equal((await fetch(base+'/leak.txt')).status,404);
    assert.equal((await fetch(base+'/api/not%2Froute')).status,404);
