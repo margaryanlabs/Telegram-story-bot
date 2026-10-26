@@ -153,6 +153,9 @@ export default async function handler(req,res) {
     });
   } catch(error) {
     const fault = telegramFailure(error);
+    // Do not log owner IDs, story IDs, tokens, chat texts, sessions or media.
+    // A status/operation breadcrumb is sufficient to diagnose production.
+    console.warn('[vetogram-stories]',JSON.stringify({action,status:fault.status}));
     return respond(res,fault.status,fault);
   }
 }

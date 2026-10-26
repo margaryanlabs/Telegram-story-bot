@@ -88,7 +88,7 @@ export function dialogInfo(d){
     preview:preview(d?.message),date:dateString(d?.message),
     // Missing direction is unknown, not an incoming message.
     lastMessageOut:typeof d?.message?.out==='boolean'?d.message.out:null,
-    previewFromArchive:false,
+    previewFromArchive:false,archiveOnly:false,
     unreadCount:Math.max(0,Math.min(99999,Number(d?.unreadCount||0))),
     pinned:Boolean(d?.pinned),archived:Boolean(d?.archived||d?.folderId===1),
     muted:Boolean(d?.dialog?.notifySettings?.muteUntil),
@@ -300,7 +300,9 @@ export default async function handler(req,res){
         }catch(error){
           const stop=telegramOwnerError(error);
           if(stop)return respond(res,stop.status,{error:stop.error});
-          warning=errorMessage(error).error;
+          const fault=errorMessage(error);
+          console.warn('[vetogram-chats]',JSON.stringify({action:'list',status:fault.status||503}));
+          warning=fault.error;
         }
       }else warning='Подключи свой Telegram для живых чатов. Ранее сохранённые копии VETO доступны отдельно.';
       // Both requests were already running while MTProto connected.
@@ -373,7 +375,9 @@ export default async function handler(req,res){
       }catch(error){
         const stop=telegramOwnerError(error);
         if(stop)return respond(res,stop.status,{error:stop.error});
-        warning=errorMessage(error).error;
+        const fault=errorMessage(error);
+        console.warn('[vetogram-chats]',JSON.stringify({action:'thread',status:fault.status||503}));
+        warning=fault.error;
       }
     }
     // A chat that vanished from Telegram must still open its saved owner copies.
