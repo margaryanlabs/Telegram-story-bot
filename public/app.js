@@ -2353,7 +2353,7 @@
         </button>
         <button class="connection-method-card" data-sheet-action="viewer-start-qr">
           <span class="method-icon">⌁</span>
-          <div><strong>У меня есть второй экран</strong><small>Покажем QR. Отсканируй его через Telegram → Settings → Devices.</small></div>
+          <div><strong>У меня есть второй экран</strong><small>Покажем QR. Отсканируй его через Telegram → Настройки → Устройства.</small></div>
           <em>QR</em>
         </button>
       </div>
@@ -2487,6 +2487,11 @@
   function showViewerAuthError(error) {
     const message = String(error?.message || error || 'Не удалось войти в Telegram');
     const slot = $('viewerAuthError');
+    const retrySeconds=Number(error?.viewerData?.retryAfterSeconds || 0);
+    if (Number.isFinite(retrySeconds) && retrySeconds>0 && viewerState.loginPending?.stage==='code') {
+      const previousAt=Date.parse(viewerState.loginPending.resendAvailableAt || '') || 0;
+      viewerState.loginPending.resendAvailableAt=new Date(Math.max(previousAt,Date.now()+Math.ceil(retrySeconds)*1000)).toISOString();
+    }
     if (slot) {
       slot.textContent = message;
       slot.hidden = false;
@@ -2495,7 +2500,7 @@
       const pending = error?.viewerData?.loginPending;
       if (pending && ['code','password','qr_password'].includes(pending.stage)
           && Date.parse(pending.expiresAt||'') > Date.now()) {
-        viewerState.loginPending={stage:pending.stage,expiresAt:pending.expiresAt};
+        viewerState.loginPending={...pending};
         $('viewerAuthRecovery')?.remove();
         const controls=document.createElement('div');
         controls.id='viewerAuthRecovery';
@@ -2589,55 +2594,134 @@
   }
 
   let viewerCodeDelivery='unknown';
+  let viewerCodeRetryTimer=null;
+
+  function viewerDeliveryInfo(delivery) {
+    return ({
+      telegram_app:{title:'Введи код из Telegram',text:'Telegram указал доставку в приложение. Проверь официальный служебный чат «Telegram» на уже авторизованных устройствах. Это не SMS и не чат бота VETOGRAM.'},
+      sms:{title:'Введи код из SMS',text:'Telegram указал доставку по SMS на твой номер. Проверь сообщения телефона. Фактическое получение кода ещё не подтверждено.'},
+      call:{title:'Код в телефонном звонке',text:'Telegram указал телефонный звонок. Введи код, который продиктует Telegram. Фактический звонок ещё не подтверждён.'},
+      flash_call:{title:'Подтверждение звонком',text:'Telegram выбрал подтверждение звонком. Автоматическое распознавание звонка в этом браузере недоступно. Используй доступный повтор или QR-вход.'},
+      missed_call:{title:'Код из номера звонка',text:'Telegram указал пропущенный звонок. Используй требуемые Telegram цифры номера входящего звонка. Фактический звонок ещё не подтверждён.'},
+      email_code:{title:'Введи код из email',text:'Telegram указал доставку на email для входа. Проверь входящие и спам своей почты. VETOGRAM не сохраняет код.'},
+      email_setup_code:{title:'Введи код из email',text:'Telegram отправляет код подтверждения email. Проверь свою почту. VETOGRAM не сохраняет код.'},
+      fragment_sms:{title:'Подтверждение через Fragment',text:'Telegram выбрал доставку через Fragment. Проверь свой официальный аккаунт Fragment. SMS на обычный номер не обещано.'},
+      firebase_sms:{title:'Telegram запрашивает проверку устройства',text:'Telegram выбрал Firebase SMS. Этот способ требует проверки официального мобильного клиента и не поддерживается браузером VETOGRAM. Используй QR-вход или доступную альтернативу Telegram.'},
+      unknown:{title:'Введи код подтверждения',text:'Запрос принят Telegram, но подтверждённые данные о канале доставки отсутствуют. VETOGRAM не утверждает, что отправлено SMS или сообщение в приложение.'},
+    })[delivery] || {title:'Введи код подтверждения',text:'Канал доставки не распознан. Используй QR-вход или проверь подключение позже.'};
+  }
+
+  function viewerResendPolicy(pending, now=Date.now()) {
+    const at=Date.parse(pending?.resendAvailableAt || '');
+    const next=({sms:'SMS',call:'звонок',flash_call:'подтверждение звонком',missed_call:'пропущенный звонок',fragment_sms:'Fragment'})[pending?.nextDelivery];
+    const valid=pending?.stage==='code' && pending?.canResend===true && Boolean(next)
+      && Number.isFinite(at) && at>0 && at<=now+86400000
+      && Date.parse(pending?.expiresAt || '')>now;
+    return {available:valid,ready:valid && now>=at,seconds:valid?Math.max(0,Math.ceil((at-now)/1000)):0,next:next||''};
+  }
+
+  function rememberViewerChallenge(data) {
+    const previous=viewerState.loginPending || {};
+    viewerState.loginPending={
+      stage:'code',delivery:data.delivery || 'unknown',
+      expiresAt:data.expiresAt || previous.expiresAt || null,
+      sentCodeType:typeof data.sentCodeType==='string'?data.sentCodeType:'unknown',
+      nextDelivery:typeof data.nextDelivery==='string'?data.nextDelivery:null,
+      resendAvailableAt:typeof data.resendAvailableAt==='string'?data.resendAvailableAt:null,
+      canResend:data.canResend===true,
+      codeFormat:['word','phrase'].includes(data.codeFormat)?data.codeFormat:'digits',
+    };
+  }
+
+  async function renderViewerLoginResult(data) {
+    if (data.stage==='connected') {
+      closeSheet();
+      viewerPendingPhone='';viewerState.loginPending=null;
+      markVetoWelcomeSeen();
+      notify('success');showToast('Telegram успешно подключён');
+      await refreshViewerSync({silent:true});await refresh();
+      switchScreen('telegram');
+      return;
+    }
+    if (data.needsPassword===true || data.stage==='password') {
+      viewerState.loginPending={stage:'password',expiresAt:data.expiresAt||null};
+      viewerPasswordSheet();return;
+    }
+    rememberViewerChallenge(data);
+    viewerCodeSheet(data.delivery,data.reused===true);
+  }
+
+  function viewerResendControls() {
+    const policy=viewerResendPolicy(viewerState.loginPending);
+    return policy.available
+      ? `<p id="viewerResendHint" role="status" aria-live="polite"></p><button type="button" data-sheet-action="viewer-resend-code" id="viewerResendCode" disabled>Повтор через Telegram</button>`
+      : '<p class="auth-security-note">Telegram не предоставил доступный способ повторной отправки. Новый код автоматически не запрашивается. QR-вход со второго устройства доступен отдельно.</p>';
+  }
+
+  function syncViewerResendCountdown() {
+    clearInterval(viewerCodeRetryTimer);
+    const identity=String(tg?.initData||''),epoch=viewerOwnerEpoch;
+    const update=()=>{
+      const button=$('viewerResendCode'),hint=$('viewerResendHint');
+      if(!button || $('sheet')?.hidden || identity!==String(tg?.initData||'') || epoch!==viewerOwnerEpoch){
+        clearInterval(viewerCodeRetryTimer);viewerCodeRetryTimer=null;return;
+      }
+      const policy=viewerResendPolicy(viewerState.loginPending);
+      button.disabled=viewerAuthBusy || !policy.ready;
+      button.textContent=policy.available?`Запросить ${policy.next}`:'Повтор недоступен';
+      if(hint)hint.textContent=policy.ready
+        ? `Telegram разрешил запросить ${policy.next}. Отправка произойдёт только после нажатия.`
+        : policy.available?`Следующий способ: ${policy.next} · через ${policy.seconds} с`:'Запрос истёк. Начни вход заново или используй QR.';
+    };
+    update();
+    if($('viewerResendCode'))viewerCodeRetryTimer=setInterval(update,1000);
+  }
+
   function viewerCodeSheet(delivery, reused = false) {
     if (delivery === 'email_setup') { viewerEmailSheet(); return; }
-    // Missing delivery metadata is not evidence of Telegram-app delivery.
     viewerCodeDelivery=delivery || 'unknown';
-    delivery=viewerCodeDelivery;
-    const emailCode = delivery === 'email_code' || delivery === 'email_setup_code';
+    const info=viewerDeliveryInfo(viewerCodeDelivery);
+    const textCode=['word','phrase'].includes(viewerState.loginPending?.codeFormat);
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
-      <h2>${emailCode?'Введи код из email':'Теперь введи код из Telegram'}</h2>
-      <p>${emailCode ? 'Telegram указал email как способ подтверждения. Введи код, если он пришёл; Vetogram не сохраняет код.' : reused ? 'Предыдущий запрос ещё действует: новый код не отправлялся.' : delivery === 'telegram_app' ? 'Telegram принял запрос и указал доставку кода в приложение. Получение кода на устройстве не подтверждено.' : 'Запрос принят Telegram; способ доставки выбирает сам Telegram. Фактическое получение кода ещё не подтверждено.'}${emailCode?'':' Проверь официальный чат «Telegram» на своих авторизованных устройствах. Не запрашивай повторно без необходимости.'}</p>
-      <div class="auth-form">
-        <div class="auth-field">
-          <label for="viewerCode">Код</label>
-          <input id="viewerCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="12345" maxlength="8" />
-        </div>
-      </div>
+      <h2>${escapeHtml(info.title)}</h2>
+      <p>${reused?'Предыдущий запрос ещё действует: новый код не отправлялся. ':''}${escapeHtml(info.text)}</p>
+      <div class="auth-form"><div class="auth-field">
+        <label for="viewerCode">${textCode?'Код: слово или фраза':'Код'}</label>
+        <input id="viewerCode" type="text" inputmode="${textCode?'text':'numeric'}" autocomplete="one-time-code" placeholder="${textCode?'Код Telegram':'12345'}" maxlength="${textCode?'128':'10'}" />
+      </div></div>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-code">Подтвердить</button>
+        ${viewerResendControls()}
         <button data-sheet-action="viewer-code-help">Код не пришёл?</button>
         <button data-sheet-action="viewer-start-qr">QR-вход со второго устройства</button>
         <button data-sheet-action="close">Закрыть (вход сохранится)</button>
       </div>
     `);
+    syncViewerResendCountdown();
   }
 
   function viewerNoCodeSheet() {
-    if (['email_code','email_setup_code'].includes(viewerCodeDelivery)) {
-      openSheet(`<span class="kicker">EMAIL-КОД TELEGRAM</span><h2>Проверь почту для входа в Telegram</h2>
-        <p>Проверь входящие и спам своего email. Код отправляет Telegram. Не пересылай его в чаты. Если почта недоступна, используй QR с уже авторизованного устройства.</p>
-        <div class="sheet-actions"><button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button><button data-sheet-action="viewer-start-qr">Использовать QR</button><button data-sheet-action="close">Позже</button></div>`);
-      return;
-    }
+    const info=viewerDeliveryInfo(viewerCodeDelivery);
     openSheet(`
-      <span class="kicker">ПОМОЩЬ · КОД TELEGRAM</span>
-      <h2>Код не приходит?</h2>
+      <span class="kicker">ПОМОЩЬ · КОД TELEGRAM</span><h2>Код не приходит?</h2>
+      <p>${escapeHtml(info.text)}</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1 · Проверь официальный чат «Telegram»</strong><span>Открой поиск Telegram, введи Telegram и найди сервисный аккаунт с синей галочкой. Это не чат нашего бота и не раздел SMS.</span></div>
-        <div class="sheet-item"><strong>2 · Проверь другие свои устройства</strong><span>Telegram нередко присылает код на уже авторизованный телефон или компьютер вместо SMS.</span></div>
-        <div class="sheet-item"><strong>3 · Не запрашивай код много раз</strong><span>Повторные запросы могут аннулировать предыдущий код и вызвать ограничение Telegram. Если есть второй экран, попробуй QR-вход.</span></div>
+        <div class="sheet-item"><strong>Не повторяй запрос без необходимости</strong><span>Telegram ограничивает частоту входа. Доступная альтернатива и время ожидания ниже получены из ответа Telegram.</span></div>
+        <div class="sheet-item"><strong>QR-вход со второго устройства</strong><span>Открой Telegram → Настройки → Устройства → Подключить устройство и отсканируй QR с другого экрана.</span></div>
       </div>
-      <p class="auth-security-note">Никогда не пересылай код другим людям. Vetogram не умеет доставить код вручную: способ выбирает Telegram.</p>
+      <p class="auth-security-note">Никогда не пересылай код другим людям. VETOGRAM не может доставить код вручную или гарантировать SMS.</p>
+      <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
+        ${viewerResendControls()}
         <button class="accent" data-sheet-action="viewer-back-code">У меня есть код</button>
         <button data-sheet-action="viewer-start-qr">Подключить через QR</button>
         <button data-sheet-action="viewer-cancel-login">Отменить запрос и сменить номер</button>
       </div>
     `);
+    syncViewerResendCountdown();
   }
 
   function viewerPasswordSheet(hint = '') {
@@ -2664,7 +2748,7 @@
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ ЧЕРЕЗ QR</span>
       <h2>Отсканируй QR со второго экрана</h2>
-      <p>Открой Telegram на телефоне → Settings → Devices → Link Desktop Device и отсканируй QR. Если Vetogram открыт на этом же телефоне, проще вернуться и выбрать номер + код.</p>
+      <p>Открой Telegram на телефоне → Настройки → Устройства → Подключить устройство и отсканируй QR. Если Vetogram открыт на этом же телефоне, проще вернуться и выбрать номер + код.</p>
       <div class="viewer-qr-card">
         <div class="viewer-qr-frame">
           <div class="viewer-qr-loader" id="viewerQrLoader">⌁</div>
@@ -2697,7 +2781,7 @@
       }
       if (loader) loader.hidden = true;
       if (status) status.textContent = 'QR готов';
-      if (meta) meta.textContent = 'Telegram → Settings → Devices → Link Desktop Device, либо открой подтверждение кнопкой.';
+      if (meta) meta.textContent = 'Telegram → Настройки → Устройства → Link Desktop Device, либо открой подтверждение кнопкой.';
       if (openButton) {
         openButton.disabled = false;
         openButton.dataset.qrUri = event.uri || '';
@@ -3347,7 +3431,7 @@
         try {
           window.location.href = uri;
         } catch {
-          showToast('Открой QR через Telegram → Settings → Devices');
+          showToast('Открой QR через Telegram → Настройки → Устройства');
         }
       }
       return;
@@ -3369,6 +3453,14 @@
     }
     if (action === 'viewer-back-code') {
       viewerCodeSheet(viewerCodeDelivery);
+      return;
+    }
+    if (action === 'viewer-resend-code') {
+      if (!viewerResendPolicy(viewerState.loginPending).ready) return;
+      await runViewerAuthAction(actionTarget, async () => {
+        const data=await viewerApi('resend_code',{},null);
+        await renderViewerLoginResult(data);
+      });
       return;
     }
     if (action === 'viewer-cancel-login') {
@@ -3466,11 +3558,7 @@
         viewerPendingPhone = phone;
         // The server persisted this challenge. Keep local state in sync so
         // returning from the sheet offers "Resume code", not another send.
-        viewerState.loginPending = {
-          stage:'code', delivery:data.delivery || 'unknown',
-          expiresAt:data.expiresAt || null,
-        };
-        viewerCodeSheet(data.delivery, data.reused === true);
+        await renderViewerLoginResult(data);
       });
       return;
     }
@@ -3479,18 +3567,19 @@
       await runViewerAuthAction(actionTarget,async()=>{
         const data=await viewerApi('send_login_email',{email},null);
         if($('viewerLoginEmail'))$('viewerLoginEmail').value='';
+        rememberViewerChallenge(data);
         viewerCodeSheet(data.delivery);
       });return;
     }
     if (action === 'viewer-verify-code') {
       const code = ($('viewerCode')?.value || '').trim();
       await runViewerAuthAction(actionTarget, async () => {
-        if (!/^\d{3,8}$/.test(code)) throw new Error('Проверь код из Telegram');
+        const textCode=['word','phrase'].includes(viewerState.loginPending?.codeFormat);
+        if (textCode ? (!code || code.length>128 || /[\r\n\u0000]/.test(code)) : !/^\d{3,10}$/.test(code)) throw new Error('Проверь код из Telegram');
         const data = await viewerApi('verify_code', { code }, null);
         if ($('viewerCode')) $('viewerCode').value='';
         if (data.nextCode) {
-          viewerState.loginPending = { ...(viewerState.loginPending||{}),
-            stage:'code', delivery:data.delivery||'unknown' };
+          rememberViewerChallenge(data);
           viewerCodeSheet(data.delivery);
         } else if (data.needsPassword) {
           viewerState.loginPending = { ...(viewerState.loginPending||{}), stage:'password' };

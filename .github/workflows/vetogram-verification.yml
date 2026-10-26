@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, feat/vetogram-4-experience-implementation-20261025]
+    branches: [main, feat/vetogram-4-experience-implementation-20261025, fix/vetogram-v412-full-gates-20261026]
 
 permissions:
   contents: read
