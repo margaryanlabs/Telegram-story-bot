@@ -17,19 +17,20 @@ const RELAY_PATHS = new Set([
 ]);
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL))
-      .catch(() => {}).then(() => self.skipWaiting())
-  );
+  const precache = typeof caches !== 'undefined'
+    ? caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)).catch(() => {})
+    : Promise.resolve();
+  event.waitUntil(precache.then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(
+  const retire = typeof caches !== 'undefined'
+    ? caches.keys().then(keys => Promise.all(
       keys.filter(key => key.startsWith('veto-relay-shell-') && key !== CACHE_NAME)
         .map(key => caches.delete(key))
-    )).then(() => self.clients.claim())
-  );
+    )).catch(() => {})
+    : Promise.resolve();
+  event.waitUntil(retire.then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', event => {
@@ -40,7 +41,9 @@ self.addEventListener('fetch', event => {
 
   event.respondWith((async() => {
     // Disabled/full Cache Storage must not break the emergency online path.
-    const cache = await caches.open(CACHE_NAME).catch(() => null);
+    const cache = typeof caches !== 'undefined'
+      ? await caches.open(CACHE_NAME).catch(() => null)
+      : null;
     try {
       // Network-first avoids stale JS/CSS when Telegram WebView comes online.
       const response = await fetch(request, { cache:'no-store' });
