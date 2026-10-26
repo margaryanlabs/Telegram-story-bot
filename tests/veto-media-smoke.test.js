@@ -126,3 +126,28 @@ test("V6 source reporting, bounded collection restore and audio recovery", () =>
   assert.match(css,/v6-source-flyout/);
   assert.doesNotMatch(v6,/TELEGRAM_BOT_TOKEN|telegram-session-owner|api\.telegram\.org\/bot/i);
 });
+
+test("V7 Telegram native launch is optional and respects safe areas", () => {
+  const sdk=readFileSync(new URL("../public/media-telegram.js",import.meta.url),"utf8");
+  const css=readFileSync(new URL("../public/media-telegram.css",import.meta.url),"utf8");
+  execFileSync(process.execPath,["--check",join(process.cwd(),"public/media-telegram.js")],{stdio:"pipe"});
+  assert.match(html,/https:\/\/telegram\.org\/js\/telegram-web-app\.js/);
+  assert.match(html,/media-telegram\.js/);
+  assert.match(html,/media-telegram\.css/);
+  assert.match(sdk,/typeof webApp\.initData/);
+  assert.match(sdk,/webApp\.BackButton/);
+  assert.match(sdk,/webApp\.openLink/);
+  assert.match(sdk,/contentSafeAreaInset/);
+  assert.match(sdk,/themeChanged/);
+  assert.match(sdk,/mediaHost = "browser"/);
+  assert.match(css,/prefers-reduced-motion/);
+  assert.match(css,/--media-tg-bottom/);
+  assert.doesNotMatch(sdk,/TELEGRAM_BOT_TOKEN|telegram-session-owner|api\.telegram\.org\/bot/i);
+});
+test("V7 audiobook restores the last listening chapter without a backend", () => {
+  assert.match(js,/AUDIO_PROGRESS_KEY/);
+  assert.match(js,/readAudioBookmark/);
+  assert.match(js,/rememberAudioBookmark/);
+  assert.match(js,/loadedmetadata/);
+  assert.match(js,/localStorage\.setItem\(AUDIO_PROGRESS_KEY/);
+});
