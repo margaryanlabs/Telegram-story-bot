@@ -35,6 +35,11 @@ if (selectedStorageProvider() !== 'neon') {
       Number(store?.schemaVersion) >= 5 ? 'version 5 or newer' : 'apply reviewed Business lease migration before release');
     report('atomic-business-lease', store?.businessLeaseReady === true,
       store?.businessLeaseReady ? 'table present' : 'owner-scoped lease table unavailable');
+    // Migration 006 is staged in GitHub only; NEVER apply it from preflight.
+    report('postgres-schema-v6-login-code-lease',
+      Number(store?.schemaVersion) >= 6 && store?.loginCodeLeaseReady === true,
+      store?.loginCodeLeaseReady ? 'v6 table present; live OTP E2E still required'
+        : 'apply reviewed 006_login_code_request_leases.sql before launch');
     report('private-media-bucket', store?.mediaVault === true, 'private S3 bucket HEAD only');
   } catch {
     report('postgres-schema-v5', false, 'database not reachable or schema unavailable');
