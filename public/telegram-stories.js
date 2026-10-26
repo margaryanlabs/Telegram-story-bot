@@ -404,7 +404,7 @@
   });
   window.addEventListener('veto:screen-changed',event=>{
     resetOwner();
-    if (event.detail?.screen==='telegram')void loadStories();
+    if (['telegram','publish'].includes(event.detail?.screen))void loadStories();
     else closeViewer();
   });
   window.addEventListener('pageshow',resetOwner);
