@@ -72,7 +72,7 @@ function restore(){
 let records=restore(),active=null,matches=new Map(),searchId="",lastSearch=0;
 const setStatus=(s,error=false)=>{const el=$("v10Status");el.textContent=s;el.classList.toggle("error",error)};
 const save=arr=>{try{localStorage.setItem(KEY,JSON.stringify(arr));records=arr;return true}catch{setStatus("Локальное хранилище недоступно. Список не изменён.",true);return false}};
-const panel=create("section","v10-import");panel.id="v10Import";
+const panel=create("section","v10-import");panel.id="v10Section";
 panel.innerHTML='<div class="v10-orbit" aria-hidden="true">♫</div>'+
  '<div class="v10-top"><div><small>VETO MUSIC / LIBRARY BRIDGE</small><h3>Вся твоя музыка.<br><em>Один плейлист.</em></h3>'+
  '<p>Перенеси названия и исполнителей из VK Музыки, CSV, TXT или JSON. Затем найди совпадение в разрешённом каталоге Audius.</p></div>'+
