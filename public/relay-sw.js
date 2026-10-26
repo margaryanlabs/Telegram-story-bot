@@ -39,18 +39,19 @@ self.addEventListener('fetch', event => {
   if (url.origin !== location.origin || !RELAY_PATHS.has(url.pathname)) return;
 
   event.respondWith((async() => {
-    const cache = await caches.open(CACHE_NAME);
+    // Disabled/full Cache Storage must not break the emergency online path.
+    const cache = await caches.open(CACHE_NAME).catch(() => null);
     try {
       // Network-first avoids stale JS/CSS when Telegram WebView comes online.
       const response = await fetch(request, { cache:'no-store' });
-      if (response.ok) {
+      if (response.ok && cache) {
         const copy = response.clone();
         event.waitUntil(cache.put(request, copy).catch(() => {}));
       }
       return response;
     } catch {
       // Respect the exact versioned URL: ignoreSearch would return old JS.
-      return await cache.match(request) || Response.error();
+      return (cache ? await cache.match(request).catch(() => null) : null) || Response.error();
     }
   })());
 });
