@@ -118,17 +118,31 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       b.setAttribute('aria-pressed',String(b.dataset.vtaiMode===mode));
     });
     $('vtaiLanguage').hidden=mode!=='translate';
-    $('vtaiText').placeholder={
-      chat:'Спроси AI или попроси подготовить сообщение…',
-      translate:'Вставь текст для перевода…',
-      reply:'Опиши ситуацию или вставь сообщение, на которое нужен ответ…',
-      action:'Например: напиши Артуру, что созвонимся завтра в 15:00…',
-      brief:'Вставь конкретное сообщение или фрагмент переписки для поиска задач и сроков…',
-      story:'О чём создать Story? Для кого, какой стиль и предложение?',
-      campaign:'Что продаём или анонсируем? Кто покупатель и какое действие нужно?',
-      negotiator:'Вставь сообщение клиента, на которое нужно подготовить ответ…'
-    }[mode];
-    $('vtaiCreate').textContent=mode==='brief'?'Разобрать договорённости':mode==='action'?'Подготовить действие':mode==='negotiator'?'Подготовить ответ на переговоры':mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
+    // UI language affects presentation only; mode, drafts, approvals and
+    // request generations are not changed by repainting the selected mode.
+    const tr=(key,ru)=>typeof window!=='undefined'
+      ?(window.VetogramI18n?.t?.(key,ru)||ru):ru;
+    const prompts={
+      chat:['aiPromptChat','Спроси AI или попроси подготовить сообщение…'],
+      translate:['aiPromptTranslate','Вставь текст для перевода…'],
+      reply:['aiPromptReply','Опиши ситуацию или вставь сообщение, на которое нужен ответ…'],
+      action:['aiPromptAction','Например: напиши Артуру, что созвонимся завтра в 15:00…'],
+      brief:['aiPromptBrief','Вставь конкретное сообщение или фрагмент переписки для поиска задач и сроков…'],
+      story:['aiPromptStory','О чём создать Story? Для кого, какой стиль и предложение?'],
+      campaign:['aiPromptCampaign','Что продаём или анонсируем? Кто покупатель и какое действие нужно?'],
+      negotiator:['aiPromptNegotiator','Вставь сообщение клиента, на которое нужно подготовить ответ…']
+    };
+    const actions={
+      brief:['aiCreateBrief','Разобрать договорённости'],
+      action:['aiCreateAction','Подготовить действие'],
+      negotiator:['aiCreateNegotiator','Подготовить ответ на переговоры'],
+      campaign:['aiCreateCampaign','Создать Story + Portal'],
+      story:['aiCreateStory','Создать текст для Stories'],
+    };
+    const [placeholderKey,placeholderRu]=prompts[mode];
+    const [actionKey,actionRu]=actions[mode]||['aiCreateAsk','Спросить VETO AI'];
+    $('vtaiText').placeholder=tr(placeholderKey,placeholderRu);
+    $('vtaiCreate').textContent=tr(actionKey,actionRu);
   }
   function actionRecipientReady(chatId){
     return state.mode!=='action'||(actionDraftValid(state.actionDraft)&&
@@ -1464,7 +1478,8 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     notice('Сообщение вставлено только в черновик. Проверь текст и разрешения перед AI-запросом.');
   });
   window.addEventListener('vetogram:locale-changed',()=>{
-    // A locale switch must never call the model or submit a new OTP/chat request.
+    // Repaint the SAME mode. No history, draft, permission or request is cleared.
+    setMode(state.mode);
     if(state.identity&&state.aiAvailability!==null)void checkAiAvailability();
   });
   window.addEventListener('veto:screen-changed',e=>{
