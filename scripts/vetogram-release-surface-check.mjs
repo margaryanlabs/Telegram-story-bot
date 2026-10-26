@@ -49,12 +49,12 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
     const moduleQueue=[];
     const inspectedModules=new Set();
     const importRefs=source=>[...source.matchAll(
-      /\\b(?:import|export)\\s+(?:[^;"']*?\\s+from\\s+)?["'](\\.[^"']+)["']/g
+      /\b(?:import|export)\s+(?:[^;"']*?\s+from\s+)?["'](\.[^"']+)["']/g
     )];
     for(const match of scriptTags){
       const path='public'+match[1].split(/[?#]/)[0];
       if(!exists(path))continue; // MISSING_ASSET already reported.
-      const isModule=/\\btype=["']module["']/.test(match[0]);
+      const isModule=/\btype=["']module["']/.test(match[0]);
       const refs=importRefs(readSource(path));
       if(refs.length&&!isModule)
         errors.push('UNDECLARED_MODULE_SCRIPT: '+path);
