@@ -1969,6 +1969,8 @@
     welcome.hidden = true;
     document.documentElement.classList.remove('veto-welcome-open');
     markVetoWelcomeSeen();
+    // Show the session-confirmed brand only after closing onboarding.
+    if (viewerState.session?.connected===true) window.VetoBrandReveal?.();
     if (openConnection) {
       setTimeout(() => telegramAccountReady() ? profileSheet() : connectionHelpSheet(), 120);
     }
