@@ -27,10 +27,16 @@
     // a substantial viewport reduction qualify as a keyboard.
     const keyboard=editableOnActiveScreen(document.activeElement) && scale<=1.05 &&
       (bottom>110 || visibleHeight<layoutHeight*0.73);
-    const signature=[visibleHeight,bottom,keyboard].join('/');
+    // Telegram content safe area and device notch overlap: never sum them.
+    const safeNumber=value=>Math.max(0,Math.min(160,Number(value)||0));
+    const contentTop=safeNumber(telegram?.contentSafeAreaInset?.top);
+    const deviceTop=safeNumber(telegram?.safeAreaInset?.top);
+    const signature=[visibleHeight,bottom,keyboard,contentTop,deviceTop].join('/');
     if(signature===previous)return;
     previous=signature;
     root.style.setProperty('--veto-visible-height',visibleHeight+'px');
+    root.style.setProperty('--vetogram-sdk-content-top',contentTop+'px');
+    root.style.setProperty('--vetogram-sdk-device-top',deviceTop+'px');
     root.style.setProperty('--veto-visual-bottom',keyboard?bottom+'px':'0px');
     root.classList.toggle('veto-keyboard-open',keyboard);
   }
@@ -58,5 +64,7 @@
     setTimeout(schedule,80);
   });
   telegram?.onEvent?.('viewportChanged',schedule);
+  telegram?.onEvent?.('safeAreaChanged',schedule);
+  telegram?.onEvent?.('contentSafeAreaChanged',schedule);
   measure();
 })();
