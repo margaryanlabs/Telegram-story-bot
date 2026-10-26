@@ -43,7 +43,7 @@ test('real Studio remains available as a primary Stories choice',()=>{
   assert.match(html,/data-open-screen="story-engine"/);
   assert.match(html,/data-se-mode="pro"/);
   // V5 returned to the established, recognizable split-V logo.
-  assert.match(html,/class="veto-ai-mark" src="\\/veto-telegram-mark\\.svg/);
+  assert.match(html,/class="veto-ai-mark" src="\/veto-telegram-mark\.svg/);
 });
 test('cached shell assets are versioned for the current release',()=>{
   const html=source('public/studio.html');
