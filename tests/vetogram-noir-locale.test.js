@@ -169,3 +169,72 @@ test('bottom navigation exposes localized screen-reader labels',()=>{
       assert.ok(uiText(key,locale),screen+':'+locale);
   }
 });
+
+
+test('AI mode locale repaints preserve signed drafts and mode-specific approvals',()=>{
+  const browser=readFileSync(new URL('../public/vetogram-ai.js',import.meta.url),'utf8');
+  const first=browser.indexOf('  function setMode(mode){');
+  const end=browser.indexOf('  function actionRecipientReady(',first);
+  assert.ok(first>0 && end>first);
+  const actual=browser.slice(first,end);
+  const modes=[
+    ['chat','aiPromptChat','aiCreateAsk'],
+    ['translate','aiPromptTranslate','aiCreateAsk'],
+    ['reply','aiPromptReply','aiCreateAsk'],
+    ['story','aiPromptStory','aiCreateStory'],
+    ['campaign','aiPromptCampaign','aiCreateCampaign'],
+    ['negotiator','aiPromptNegotiator','aiCreateNegotiator'],
+    ['action','aiPromptAction','aiCreateAction'],
+    ['brief','aiPromptBrief','aiCreateBrief']
+  ];
+  for(const [mode,promptKey,actionKey] of modes){
+    let lang='ru';
+    const elements=new Map(),buttons=modes.map(([value])=>({
+      dataset:{vtaiMode:value},
+      classList:{toggle(){}},
+      setAttribute(){}
+    }));
+    const $=id=>{
+      if(!elements.has(id))elements.set(id,{
+        value:'',textContent:'',placeholder:'',checked:false,
+        hidden:false,readOnly:false,disabled:false,replaceChildren(){}
+      });
+      return elements.get(id);
+    };
+    const history=[{role:'user',text:'Private owner A message'}];
+    const sendIntent={nonce:'private owner A nonce'};
+    const approval={chatId:'44',owner:'111'};
+    const state={
+      mode,history,last:'Owner A draft',sendIntent,
+      reviewedApprovalId:'grant-A',generateIntent:7,generateAbort:null,
+      negotiationPolicy:approval,negotiationDraft:approval,
+      actionDraft:approval,actionRecipientConfirmed:'44',
+      brief:{tasks:[{title:'private task A'}]}
+    };
+    $('vtaiText').value='Private owner A prompt';
+    $('vtaiDraft').value='Private owner A draft';
+    $('vtaiConsent').checked=true;
+    const ctx=vm.createContext({
+      state,$,document:{querySelectorAll:()=>buttons},
+      window:{VetogramI18n:{t:(key,ru)=>uiText(key,lang,ru)}},
+      setBusy:()=>{throw Error('Locale repaint must not affect busy or requests')}
+    });
+    const apply=vm.runInContext('('+actual.trim()+')',ctx);
+    for(const language of ['ru','en','hy']){
+      lang=language;apply(mode);
+      assert.equal($('vtaiText').placeholder,uiText(promptKey,language),mode+':'+language);
+      assert.equal($('vtaiCreate').textContent,uiText(actionKey,language),mode+':'+language);
+      assert.equal($('vtaiText').value,'Private owner A prompt');
+      assert.equal($('vtaiDraft').value,'Private owner A draft');
+      assert.equal($('vtaiConsent').checked,true);
+      assert.equal(state.generateIntent,7,'locale repaint must not cancel a request');
+      assert.equal(state.last,'Owner A draft');
+      assert.equal(state.history,history);
+      assert.equal(state.sendIntent,sendIntent);
+      assert.equal(state.reviewedApprovalId,'grant-A');
+      if(mode==='negotiator')assert.equal(state.negotiationPolicy,approval);
+      if(mode==='action')assert.equal(state.actionDraft,approval);
+      if(mode==='brief')assert.equal(state.brief.tasks[0].title,'private task A');
+    }
+  }
+});
