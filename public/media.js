@@ -12,7 +12,7 @@
   });
   const STATE_KEY = "veto-media-beta-v1";
   const state = { tab: "music", tracks: [], books: [], audiobooks: [], current: -1,
-    lang: "all", musicMode: "trending", search: "", readerBook: null, readerSize: 19,
+    lang: "all", musicMode: "trending", search: "", readerBook: null, audioBookPlayback: null, readerSize: 19,
     favorites: { tracks: [], books: [] }, progress: {} };
   const audio = $("audio");
   let searchTimer = 0;
@@ -131,9 +131,8 @@
       row.append(node("span", "track-number", String(index + 1).padStart(2, "0")));
       const imgWrapper = node("div", "track-placeholder", "♫");
       imgWrapper.className = "track-placeholder";
-      if (addImage(imgWrapper, t.artwork, "track-image", "")) {
-        imgWrapper.textContent = ""; addImage(imgWrapper, t.artwork, "track-image", "");
-      }
+      imgWrapper.textContent = "";
+      if (!addImage(imgWrapper, t.artwork, "track-image", "")) imgWrapper.textContent = "♫";
       row.append(imgWrapper);
       const meta = node("div", "track-meta");
       meta.append(node("strong", "", t.title), node("small", "", t.artist));
@@ -143,6 +142,12 @@
       heart.type = "button"; heart.setAttribute("aria-label", "Сохранить " + t.title);
       heart.addEventListener("click", () => { toggleTrack(t); renderTracks(tracks, parent); updateHeart(); });
       row.append(heart);
+      if (t.url) {
+        const sourceLink = node("a", "track-button", "↗");
+        sourceLink.href = t.url; sourceLink.target = "_blank";
+        sourceLink.rel = "noopener noreferrer"; sourceLink.title = "На Audius";
+        row.append(sourceLink);
+      }
       const play = node("button", "track-button", "▶");
       play.type = "button"; play.setAttribute("aria-label", "Слушать " + t.title);
       play.addEventListener("click", () => {
@@ -166,7 +171,8 @@
   function playTrack(index) {
     const t = state.tracks[index];
     if (!t || t.gated) { toast("Этот трек недоступен для воспроизведения."); return; }
-    state.current = index;
+    state.current = index; state.audioBookPlayback = null;
+    $("favoriteNow").classList.remove("hidden");
     $("player").classList.remove("hidden");
     $("playerTitle").textContent = t.title;
     $("playerArtist").textContent = t.artist;
@@ -328,9 +334,11 @@
         card.append(cover);
         const details = node("div", "book-details");
         details.append(node("strong", "", b.title), node("small", "", b.authors?.[0] ? (b.authors[0].first_name || "") + " " + (b.authors[0].last_name || "") : "LibriVox"));
-        const link = node("a", "import-btn", "Слушать ↗");
+        const button = node("button", "import-btn", "Слушать здесь ▶");
+        button.type = "button"; button.addEventListener("click", () => playAudioBook(b));
+        const link = node("a", "source-note", "Источник ↗");
         link.href = safeURL(b.url_librivox); link.target = "_blank"; link.rel = "noopener noreferrer";
-        details.append(link); card.append(details); el.append(card);
+        details.append(button, link); card.append(details); el.append(card);
       }
       if (!state.audiobooks.length) el.append(node("div", "empty", "Записей не найдено."));
     } catch (_) {
@@ -340,6 +348,32 @@
       link.href = "https://librivox.org/search"; link.target = "_blank"; link.rel = "noopener noreferrer";
       info.append(link); el.append(info);
     }
+  }
+  async function playAudioBook(book) {
+    try {
+      toast("Подключаем запись LibriVox…");
+      const response = await getJSON(API.audiobooks + "?id=" + encodeURIComponent(String(book.id)) + "&format=json&extended=1");
+      const details = response?.books?.[0];
+      const sections = (Array.isArray(details?.sections) ? details.sections : []).filter(x => safeURL(x.listen_url));
+      if (!sections.length) { toast("Для этой книги доступен только оригинальный источник."); return; }
+      state.audioBookPlayback = { book, sections, index: 0 };
+      playAudioBookChapter(0);
+    } catch (_) { toast("LibriVox не разрешил загрузить главы. Открой оригинальный источник по ссылке."); }
+  }
+  function playAudioBookChapter(index) {
+    const playback = state.audioBookPlayback;
+    if (!playback || index < 0 || index >= playback.sections.length) return;
+    playback.index = index; state.current = -1;
+    const section = playback.sections[index];
+    $("player").classList.remove("hidden");
+    $("favoriteNow").classList.add("hidden");
+    $("playerTitle").textContent = playback.book.title;
+    $("playerArtist").textContent = section.title || "Глава " + (index + 1);
+    $("playerCover").style.backgroundImage = urlBackground(playback.book.coverart_thumbnail);
+    $("seek").value = "0"; $("currentTime").textContent = "0:00";
+    $("duration").textContent = time(Number(section.playtime) || 0);
+    audio.src = safeURL(section.listen_url);
+    audio.play().catch(() => toast("Не удалось запустить главу. Используй ссылку на LibriVox."));
   }
   function renderLibrary() {
     renderTracks(state.favorites.tracks, $("favoriteTracks"));
@@ -375,13 +409,24 @@
     $("searchClear").addEventListener("click", () => { $("searchInput").value = ""; performSearch(); });
     $("themeButton").addEventListener("click", () => document.body.classList.toggle("light"));
     $("playButton").addEventListener("click", () => audio.paused ? audio.play().catch(() => toast("Этот источник недоступен.")) : audio.pause());
-    $("prevButton").addEventListener("click", () => { if (state.tracks.length) playTrack((state.current - 1 + state.tracks.length) % state.tracks.length); });
-    $("nextButton").addEventListener("click", () => { if (state.tracks.length) playTrack((state.current + 1) % state.tracks.length); });
+    $("prevButton").addEventListener("click", () => {
+      if (state.audioBookPlayback) playAudioBookChapter(Math.max(0, state.audioBookPlayback.index - 1));
+      else if (state.tracks.length) playTrack((state.current - 1 + state.tracks.length) % state.tracks.length);
+    });
+    $("nextButton").addEventListener("click", () => {
+      if (state.audioBookPlayback) playAudioBookChapter(Math.min(state.audioBookPlayback.sections.length - 1, state.audioBookPlayback.index + 1));
+      else if (state.tracks.length) playTrack((state.current + 1) % state.tracks.length);
+    });
     $("favoriteNow").addEventListener("click", () => {
       const t = state.tracks[state.current]; if (!t) return; toggleTrack(t); updateHeart(); renderTracks(state.tracks, $("tracksList"));
     });
     audio.addEventListener("play", syncPlayUI); audio.addEventListener("pause", syncPlayUI);
-    audio.addEventListener("ended", () => { syncPlayUI(); if (state.tracks.length > 1) playTrack((state.current + 1) % state.tracks.length); });
+    audio.addEventListener("ended", () => {
+      syncPlayUI();
+      if (state.audioBookPlayback) {
+        if (state.audioBookPlayback.index + 1 < state.audioBookPlayback.sections.length) playAudioBookChapter(state.audioBookPlayback.index + 1);
+      } else if (state.tracks.length > 1) playTrack((state.current + 1) % state.tracks.length);
+    });
     audio.addEventListener("error", () => {
       if (audio.src) toast("Аудиопоток не загрузился. Возможно, источник ограничил доступ к записи."); syncPlayUI();
     });
