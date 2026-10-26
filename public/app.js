@@ -1099,6 +1099,23 @@
     if (!isCurrent())return;
     renderViewers();
     renderHome();
+    renderViewerPendingLoginNotice();
+  }
+
+  // Returning from Telegram's official service chat must not strand the owner
+  // on an unauthorized inbox or cause a second sendCode request.
+  function renderViewerPendingLoginNotice(){
+    const notice=$('viewerPendingLoginNotice');
+    if(!notice)return;
+    const pending=viewerState.loginPending;
+    const expiry=Date.parse(pending?.expiresAt||'');
+    const active=Boolean(!viewerState.session?.connected &&
+      pending && ['code','password','qr_password'].includes(pending.stage) &&
+      Number.isFinite(expiry) && expiry>Date.now());
+    notice.hidden=!active;
+    if(active)notice.textContent=pending.stage==='code'
+      ?'Telegram запросил код · продолжить вход →'
+      :'Завершить подтверждение Telegram →';
   }
 
   function renderConnection() {
@@ -2648,6 +2665,7 @@
       viewerPasswordSheet();return;
     }
     rememberViewerChallenge(data);
+    renderViewerPendingLoginNotice();
     viewerCodeSheet(data.delivery,data.reused===true);
   }
 
@@ -3086,6 +3104,20 @@
     }
   });
   $('profileButton').addEventListener('click', profileSheet);
+  $('viewerPendingLoginNotice')?.addEventListener('click', async () => {
+    // Reload only signed owner-scoped server state; never request a new code.
+    await refreshViewerSync({silent:true});
+    const pending=viewerState.loginPending;
+    if(pending && Date.parse(pending.expiresAt||'')>Date.now()){
+      if(['password','qr_password'].includes(pending.stage))viewerPasswordSheet();
+      else if(pending.stage==='code')viewerCodeSheet(pending.delivery||'unknown',true);
+      else connectionHelpSheet();
+    }else connectionHelpSheet();
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden && viewerState.loginPending && tg?.initData)
+      void refreshViewerSync({silent:true});
+  });
   $('connectTelegramButton')?.addEventListener('click', async () => {
     // A returning user may have closed Telegram's WebView to copy a login code.
     // Load the server-side pending challenge before showing the onboarding menu.
