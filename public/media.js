@@ -74,7 +74,7 @@
     return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
   }
   function setTab(next) {
-    if (!["music", "films", "books", "audiobooks", "library"].includes(next)) return;
+    if (!["home", "music", "films", "books", "audiobooks", "library"].includes(next)) return;
     state.tab = next; state.search = ""; $("searchInput").value = "";
     document.querySelectorAll(".tab").forEach(x => {
       x.classList.toggle("is-active", x.dataset.tab === next);
@@ -82,7 +82,7 @@
     });
     document.querySelectorAll(".view").forEach(x => x.classList.toggle("is-active", x.id === next + "View"));
     $("sourceLabel").textContent = ({
-      music: "Независимые артисты · Audius", films: "Архивное кино · Internet Archive", books: "Книги общественного достояния · Gutenberg",
+      home: "Вся медиавселенная · VETO", music: "Независимые артисты · Audius", films: "Архивное кино · Internet Archive", books: "Книги общественного достояния · Gutenberg",
       audiobooks: "Классика голосом · LibriVox", library: "Сохранено на устройстве"
     })[next];
     $("searchSection").classList.toggle("hidden", next === "audiobooks");
@@ -458,7 +458,7 @@
     });
     const tg = window.Telegram?.WebApp;
     try { tg?.ready(); tg?.expand(); } catch (_) {}
-    setTab("music");
+    setTab("home");
   }
   init();
 })();
