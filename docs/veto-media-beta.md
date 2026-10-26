@@ -74,3 +74,12 @@ QA checklist:
 - User-facing browser-only `veto-media-preview-v4.html` built and tested separately with mocked public catalog responses. At 390 and 1440 px, both home and film rail showed no horizontal overflow; modal music room opened, switched theme and closed with no JS page errors. This is *not* a live-provider WebView or production acceptance test.
 - Source repo `margaryanlabs/Telegram-story-bot` uses a dedicated Draft PR with all VETO MEDIA additions. Do not merge/deploy while VETOGRAM PR #185 remains in development.
 - Provider limitations unchanged: no paid Russian/international chart catalog; cinema intentionally restricted to third-party archive metadata flagged public domain, territorial rights must be verified; Gutenberg books and Audius streams can fail in Telegram due to CORS, region or provider restrictions.
+
+
+## V5 Personal Universe (2026-10-26)
+
+- New `media-v5.js` and `media-v5.css` provide a private on-device watchlist for film archive entries and books opened in the reader, in addition to the existing music favorites. Films created solely as design concepts in a preview are labeled explicitly as concepts when saved.
+- Accessible Save/Unsave controls are added to film/book details; the personal tab displays two lists, totals and source links. Browser localStorage is used with a maximum of 60 entries per category, bounded strings, HTTPS-only source links and no upload/API write. User can export a portable JSON list manually; there is no import or account-level sync.
+- Saves do not survive clearing browser storage, private browsing limits, or Telegram's WebView storage eviction. Failure is reported rather than guaranteeing persistence.
+- Separate V5 conversation preview tested with a mock browser storage backing in headless Chromium (390px + 1440px). Film and book save, reload-like document rebuild and retrieval succeeded, with no JS page errors or horizontal overflow. This is not an end-to-end Telegram login, platform SDK or external streaming test.
+- No paid streaming catalog, license, VETOGRAM auth/bot changes, merge or production deployment.
