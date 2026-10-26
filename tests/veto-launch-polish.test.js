@@ -21,7 +21,9 @@ test('Launch polish is installed on existing real Telegram Mini App as final cos
 
 test('VETO hero keeps true canonical mark and clarity-first tagline',()=>{
   assert.match(html,/veto-inbox-signature" aria-hidden="true"><img src="\/veto-telegram-mark\.svg/);
-  assert.match(html,/class="veto-inbox-tagline">Твой Telegram\. Под твоим контролем\./);
+  // The logo and uppercase wordmark replace the oversized tagline in chat chrome.
+  assert.ok(html.includes('class="veto-inbox-wordmark"'));
+  assert.ok(html.includes('class="veto-inbox-signature"'));
   for(const cls of [
     '.veto-mirror-heading::before','.veto-inbox-tagline','.veto-mirror-chat',
     '.veto-story-ring','.veto-mirror-bubble.outgoing','.veto-mirror-send-button',
