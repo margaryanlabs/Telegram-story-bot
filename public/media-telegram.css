@@ -41,3 +41,14 @@ html[data-media-host="telegram"] button{touch-action:manipulation}
  html[data-media-host="telegram"] .v4-record,
  html[data-media-host="telegram"] .v4-equalizer i{animation:none!important}
 }
+
+/* Compact source indicator rather than clipped status in Telegram headers. */
+@media(max-width:650px){
+ html[data-media-host="telegram"] .v6-source-button{
+  width:64px;min-width:64px;max-width:64px;overflow:hidden;white-space:nowrap;
+  font-size:0;display:flex;align-items:center;justify-content:center
+ }
+ html[data-media-host="telegram"] .v6-source-button::after{
+  content:"API ◉";font-size:11px;font-weight:800;letter-spacing:.04em
+ }
+}
