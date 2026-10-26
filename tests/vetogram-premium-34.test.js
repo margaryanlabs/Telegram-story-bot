@@ -26,20 +26,20 @@ function simulateHeader(phone=false){
 }
 
 test('phone uses compact permanent VETOGRAM brand row, not an accordion',()=>{
-  assert.match(html,/class="veto-mirror-heading vetogram-header"/);
-  assert.match(html,/class="veto-inbox-signature"/);
-  assert.match(html,/veto-telegram-mark\\.svg/);
-  assert.doesNotMatch(html,/id="vetogramHeaderToggle"/);
-  assert.doesNotMatch(header,/toggle\\.addEventListener/);
-  assert.doesNotMatch(header,/addEventListener\\('scroll'/);
+  assert.ok(html.includes('class="veto-mirror-heading vetogram-header"'));
+  assert.ok(html.includes('class="veto-inbox-signature"'));
+  assert.ok(html.includes('veto-telegram-mark.svg'));
+  assert.ok(!html.includes('id="vetogramHeaderToggle"'));
+  assert.ok(!header.includes('toggle.addEventListener'));
+  assert.ok(!header.includes("addEventListener('scroll'"));
 });
 
 test('desktop keeps access to tools without expanding the header',()=>{
   const compact=read('vetogram-header.css');
-  assert.match(compact,/height:54px!important/);
-  assert.match(compact,/vetoMessengerToolsToggle/);
-  assert.match(html,/id="vetoMessengerToolsToggle"/);
-  assert.match(header,/title\\.classList\\.remove\\?\\./);
+  assert.ok(compact.includes('height:54px!important'));
+  assert.ok(compact.includes('vetoMessengerToolsToggle'));
+  assert.ok(html.includes('id="vetoMessengerToolsToggle"'));
+  assert.ok(header.includes('title.classList.remove?.'));
 });
 
 test('real flagship screen keeps navigation/permissions, no fake success state',()=>{
