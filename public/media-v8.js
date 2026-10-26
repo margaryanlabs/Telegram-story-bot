@@ -11,7 +11,7 @@
   const MAX_FILES=12,MAX_PER_FILE=100*1048576,MAX_TOTAL=300*1048576;
   const FORMATS=/\.(?:mp3|m4a|aac|ogg|wav|flac|opus)$/i;
   const VOLUME_KEY="veto-media-v8-volume",SPEED_KEY="veto-media-v8-speed";
-  let records=[],current=-1,expiresAt=0,sleepTick=null,lastPlayerSource="";
+  let records=[],current=-1,expiresAt=0,sleepTick=null,lastPlayerSource="",shuffle=false,repeat="all";
   function stored(key,fallback){try{const value=Number(localStorage.getItem(key));return Number.isFinite(value)?value:fallback}catch{return fallback}}
   function store(key,v){try{localStorage.setItem(key,String(v))}catch{}}
   function announce(msg){
@@ -25,10 +25,19 @@
     $("v8LocalCount").textContent=records.length+" файлов";
     if(!records.length){root.append(make("div","v8-empty","Выбери собственные треки — они появятся здесь."));return}
     records.forEach((rec,i)=>{
-      const button=make("button","v8-local-track"+(isLocal()&&current===i?" active":""),"");
-      button.type="button";button.append(make("span","v8-local-number",String(i+1).padStart(2,"0")),
+      const row=make("div","v8-queue-row"+(isLocal()&&current===i?" active":""));
+      const button=make("button","v8-local-track","");button.type="button";
+      button.append(make("span","v8-local-number",String(i+1).padStart(2,"0")),
         make("span","v8-local-name",rec.title),make("span","v8-local-play",current===i&&isLocal()?"♫":"▶"));
-      button.addEventListener("click",()=>playLocal(i));root.append(button);
+      button.addEventListener("click",()=>playLocal(i));
+      const action=make("div","v9-row-actions");
+      for(const [name,symbol,fn,disabled] of [
+        ["Выше","↑",()=>move(i,-1),i===0],["Ниже","↓",()=>move(i,1),i===records.length-1],
+        ["Удалить","×",()=>remove(i),false]]){
+        const b=make("button","v9-mini-action",symbol);b.type="button";b.disabled=disabled;b.title=name;
+        b.setAttribute("aria-label",name+": "+rec.title);b.addEventListener("click",fn);action.append(b);
+      }
+      row.append(button,action);root.append(row);
     });
   }
   function cleanup(){
@@ -53,8 +62,29 @@
     audio.play().catch(()=>announce("Не удалось воспроизвести файл: формат может не поддерживаться этим браузером."));
     announce("Играет локально: "+record.title);
   }
-  function navigate(delta){
+  function move(i,delta){
+    const next=i+delta;if(i<0||i>=records.length||next<0||next>=records.length)return;
+    const active=records[current],item=records.splice(i,1)[0];records.splice(next,0,item);
+    current=active?records.indexOf(active):-1;paint();
+  }
+  function remove(i){
+    if(i<0||i>=records.length)return;
+    const wasActive=isLocal()&&current===i;
+    const removed=records[i];
+    if(wasActive){audio.pause();audio.removeAttribute("src");audio.load();}
+    records.splice(i,1);URL.revokeObjectURL(removed.url);
+    if(wasActive){current=-1;if(records.length)playLocal(Math.min(i,records.length-1));else paint();}
+    else {if(current>i)current--;paint();}
+    announce("Убрано из очереди: "+removed.title);
+  }
+  function navigate(delta,ended=false){
     if(!isLocal()||!records.length)return;
+    if(ended&&repeat==="one"){playLocal(current);return;}
+    if(ended&&repeat==="off"&&current===records.length-1){audio.pause();audio.currentTime=0;return}
+    if(shuffle&&records.length>1&&delta>0){
+      let next=Math.floor(Math.random()*(records.length-1));if(next>=current)next++;
+      playLocal(next);return;
+    }
     playLocal((current+delta+records.length)%records.length);
   }
   const box=make("section","v8-local");
@@ -70,6 +100,20 @@
   const input=make("input");input.type="file";input.id="v8MusicInput";input.accept="audio/*,.mp3,.m4a,.aac,.ogg,.wav,.flac,.opus";input.multiple=true;input.hidden=true;box.append(input);
   const queueTop=make("div","v8-local-queue-head");queueTop.append(make("strong","","Мой плейлист"));
   const count=make("small","","0 файлов");count.id="v8LocalCount";queueTop.append(count);box.append(queueTop);
+  const queueTools=make("div","v9-queue-tools");
+  const random=make("button","v9-mode-button","⇄ Перемешать");random.id="v9Shuffle";random.type="button";
+  const cycle=make("button","v9-mode-button","↻ Повтор: все");cycle.id="v9Repeat";cycle.type="button";
+  random.setAttribute("aria-pressed","false");cycle.setAttribute("aria-label","Режим повтора");
+  random.addEventListener("click",()=>{
+    shuffle=!shuffle;random.classList.toggle("active",shuffle);random.setAttribute("aria-pressed",String(shuffle));
+    announce(shuffle?"Случайное воспроизведение включено":"Случайное воспроизведение выключено");
+  });
+  cycle.addEventListener("click",()=>{
+    repeat=repeat==="all"?"one":repeat==="one"?"off":"all";
+    cycle.textContent="↻ Повтор: "+({all:"все",one:"один",off:"выкл."})[repeat];
+    cycle.classList.toggle("active",repeat!=="off");
+  });
+  queueTools.append(random,cycle);box.append(queueTools);
   const queue=make("div","v8-local-queue");queue.id="v8LocalQueue";box.append(queue);
   const status=make("p","v8-local-status","Максимум 12 файлов до 100 МБ каждый, суммарно до 300 МБ.");status.id="v8LocalStatus";status.setAttribute("role","status");box.append(status);
   const sectionTop=music.querySelector(".section-top,.section-head");
@@ -99,7 +143,7 @@
   document.addEventListener("ended",event=>{
     if(event.target!==audio||!isLocal())return;
     event.stopPropagation();event.stopImmediatePropagation();
-    navigate(1);
+    navigate(1,true);
   },true);
   audio.addEventListener("loadstart",()=>{
     if(audio.src!==lastPlayerSource){
@@ -167,7 +211,8 @@
   });
   paint();
   window.VetoMediaV8=Object.freeze({
-    isLocal,queueCount:()=>records.length,playLocal,
+    isLocal,queueCount:()=>records.length,playLocal,move,remove,
+    list:()=>records.map(x=>x.title),getCurrentIndex:()=>current,
     currentTitle:()=>records[current]?.title||null
   });
 })();
