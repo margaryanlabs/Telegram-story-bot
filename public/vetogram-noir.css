@@ -1763,3 +1763,35 @@ html#vetogram.vetogram-noir [data-screen="ai"] #vetoOrb{
 #vetogram.vetogram-noir .bottom-nav .v4-veto-brain{
   width:27px!important;height:27px!important;
 }
+
+/* V4.12b: deliberate opt-in analytics, messenger first. */
+html#vetogram.vetogram-noir #vgxInboxPulse{
+  margin:5px 0 8px!important;padding:0!important;
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;overflow:visible!important;
+}
+html#vetogram.vetogram-noir #vgxInboxPulse>.v4-inbox-pulse-toggle{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:41px;padding:9px 12px;border-radius:12px;
+  border:1px solid var(--noir-border);color:var(--noir-muted);
+  background:var(--noir-surface);font-size:12px;font-weight:650;
+  list-style:none;cursor:pointer;
+}
+html#vetogram.vetogram-noir #vgxInboxPulse>.v4-inbox-pulse-toggle::-webkit-details-marker{display:none}
+html#vetogram.vetogram-noir #vgxInboxPulse>.v4-inbox-pulse-toggle span{
+  font-size:11px;color:var(--noir-muted);font-weight:500;
+}
+html#vetogram.vetogram-noir #vgxInboxPulse[open] .vgx-inbox-pulse-heading{margin-top:10px}
+@media(max-width:699px){
+  html#vetogram.vetogram-noir [data-screen="telegram"] .v4-chat-shortcuts{
+    padding:0!important;margin:5px 0!important;border:0!important;
+    background:transparent!important;box-shadow:none!important;
+  }
+  html#vetogram.vetogram-noir [data-screen="telegram"] .v4-chat-shortcuts>summary{
+    padding:8px 12px!important;min-height:40px!important;border:1px solid var(--noir-border);
+    border-radius:12px;background:var(--noir-surface);font-size:12px!important;
+  }
+  html#vetogram.vetogram-noir [data-screen="telegram"] .v4-chat-shortcuts>summary small{
+    display:none!important;
+  }
+}
