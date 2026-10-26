@@ -87,3 +87,21 @@ test("V4 entertainment home and full-screen listening room are isolated", () => 
   assert.match(css, /v4-dock/);
   assert.doesNotMatch(v4, /TELEGRAM_BOT_TOKEN|telegram-session-owner|api\.telegram\.org\/bot/i);
 });
+
+test("V5 personal collections are browser-local, bounded and linked from media.html", () => {
+  const v5=readFileSync(new URL("../public/media-v5.js", import.meta.url), "utf8");
+  const visual=readFileSync(new URL("../public/media-v5.css", import.meta.url), "utf8");
+  execFileSync(process.execPath, ["--check", join(process.cwd(),"public/media-v5.js")], {stdio:"pipe"});
+  assert.match(html, /media-v5\.js/);
+  assert.match(html, /media-v5\.css/);
+  assert.match(v5, /veto-media-personal-v5/);
+  assert.match(v5, /localStorage\.setItem/);
+  assert.match(v5, /MAX=60/);
+  assert.match(v5, /veto-media-v5-watchlist/);
+  assert.match(v5, /v5SaveFilm/);
+  assert.match(v5, /v5SaveBook/);
+  assert.match(v5, /URL\.createObjectURL/);
+  assert.match(visual, /v5-personal/);
+  assert.match(visual, /prefers-reduced-motion/);
+  assert.doesNotMatch(v5, /TELEGRAM_BOT_TOKEN|telegram-session-owner|api\.telegram\.org\/bot/i);
+});
