@@ -1,3 +1,12 @@
+## V4.11 OTP safety continuation — 2026-10-26 (STAGED, NOT APPLIED)
+
+- Migration `db/neon/006_login_code_request_leases.sql` added to this PR only. **Neon main is still only verified at schema v5**; migration v6 has NOT been applied. Never represent the v6 login lease as live. Existing migration v5 remains complete; do not reapply it.
+- `api/viewer-sync.js` now retains the same-runtime duplicate-send guard and, for the explicitly selected Neon provider only, claims an atomic owner-scoped 180-second lease before `beginUserAuth`. It rechecks the challenge under the lease; a second Vercel instance gets HTTP 429 rather than sending an overlapping code. The release is token-checked and best effort; ambiguous Telegram send/failed challenge persistence holds the lease until expiry.
+- A successful Neon code response now requires actual persisted encrypted challenge evidence. The legacy Supabase code path is left unchanged and **does not have distributed OTP serialization**.
+- `configState()` reads the Neon v6 lease readiness without sending a code and exposes `newConnectionsReady=false` plus `NEON_LOGIN_CODE_LEASE_V6` if unavailable. `npm run neon:preflight` now requires v6 as a read-only release gate.
+- Added actual-controller isolated regressions for two separate server instances, missing migration, database persistence failure and readiness. Pure V8 source handlers were executed with fake Telegram/storage; **no genuine Telegram login/Neon SQL/physical device test or full Node/npm build has run**.
+- Release order must be: review v6 SQL, obtain authorization for one additive migration, apply/verify v6 independently, run full `npm ci` + `npm run vercel-build`, test Telegram phone/QR and Business permissions with consented test accounts, approve Android/iOS/Fold Canvas Noir, and deploy once. Do not merge this draft or toggle Business flags until all gates pass.
+
 ## Neon schema status — verified 2026-10-25
 - Project: `veto-telegram-free` (`small-glitter-11116693`), branch `main` (`br-super-king-b9vfmlr4`), database `veto_telegram`.
 - **Migration 005 successfully applied in one transaction**: `CREATE TABLE IF NOT EXISTS`, `REVOKE ALL FROM PUBLIC`, `CREATE INDEX IF NOT EXISTS`, ledger version 5 with `ON CONFLICT DO NOTHING`.
