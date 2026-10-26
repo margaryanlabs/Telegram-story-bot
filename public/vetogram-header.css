@@ -176,3 +176,11 @@ body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is
   .veto-consent-chat{flex-wrap:wrap}
   .veto-consent-chat label{min-height:44px;display:flex;align-items:center;gap:6px}
 }
+
+/* Fold/tablet require the same measured inset as narrow Android WebViews. */
+body.vetogram-in-tg{
+  --vetogram-top:max(var(--vetogram-sdk-content-top,0px),
+    var(--vetogram-sdk-device-top,0px),
+    var(--tg-content-safe-area-inset-top,0px),
+    var(--tg-safe-area-inset-top,0px),env(safe-area-inset-top,0px));
+}
