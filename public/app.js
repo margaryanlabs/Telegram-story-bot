@@ -1295,11 +1295,12 @@
       const account = viewerState.session?.account || {};
       $('viewerSyncTitle').textContent = viewerUi('viewerLinkedTitle',"Аналитика аудитории подключена.");
       $('viewerSyncText').textContent = viewerState.backgroundReady
-        ? viewerUi('viewerBackgroundConfiguredInfo',"Fast Alerts включены: сервер проверяет события в фоне. Личность зрителя показывается только после подтверждения Telegram.")
+        ? viewerUi('viewerBackgroundConfiguredInfo','Фоновые проверки настроены, но фактическая доставка уведомлений ещё не подтверждена. Проверь тестовым событием.')
         : viewerUi('viewerBackgroundPendingInfo',"Аккаунт подключён, но фоновые проверки пока не подтверждены. Обновляй данные вручную или настрой безопасный cron.");
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
-      syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
-      syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
+      syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? viewerUi('viewerBgConfiguredBadge','фоновые проверки настроены · доставка не подтверждена') : viewerUi('viewerBgPendingBadge','фоновый cron требует настройки')} · ${viewerUi('viewerAlerts','уведомления')} ${alertsOn ? viewerUi('viewerEnabled','вкл') : viewerUi('viewerDisabled','выкл')}`;
+      // A configured background scheduler does not prove a delivered alert.
+      syncState.classList.add('warn');
       syncButton.textContent = viewerUi('viewerManageAnalytics',"Управление Аналитика аудитории");
     } else if (viewerState.session?.status === 'reauth_required') {
       $('viewerSyncTitle').textContent = viewerUi('viewerReauthTitle',"Нужно переподключить Аналитика аудитории.");
@@ -3718,6 +3719,13 @@
   });
 
   renderNetworkStatus();
+
+  // Redraw only local presentation after a language change; no refetch, OTP,
+  // Telegram permissions, AI calls or user-data modifications.
+  window.addEventListener('vetogram:locale-changed', () => {
+    renderViewers();
+    renderHome();
+  });
 
   // Pointer spotlight is purely decorative. Do not recalculate two large
   // gradients on every mobile scroll/touch, or when reduced motion is requested.
