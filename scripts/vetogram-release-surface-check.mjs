@@ -48,17 +48,23 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
     // from script tags the browser actually loads as type="module".
     const moduleQueue=[];
     const inspectedModules=new Set();
-    const importRefs=source=>[...source.matchAll(
+    const staticImportRefs=source=>[...source.matchAll(
       /\b(?:import|export)\s+(?:[^;"']*?\s+from\s+)?["'](\.[^"']+)["']/g
     )];
+    // Dynamic ESM imports are allowed in classic scripts, but a missing literal
+    // dependency still breaks the screen at runtime and must block the release.
+    const dynamicImportRefs=source=>[...source.matchAll(
+      /\bimport\s*\(\s*["'](\.[^"']+)["']\s*\)/g
+    )];
+    const importRefs=source=>[...staticImportRefs(source),...dynamicImportRefs(source)];
     for(const match of scriptTags){
       const path='public'+match[1].split(/[?#]/)[0];
       if(!exists(path))continue; // MISSING_ASSET already reported.
       const isModule=/\btype=["']module["']/.test(match[0]);
-      const refs=importRefs(readSource(path));
-      if(refs.length&&!isModule)
+      const source=readSource(path);
+      if(staticImportRefs(source).length&&!isModule)
         errors.push('UNDECLARED_MODULE_SCRIPT: '+path);
-      if(isModule)moduleQueue.push(path);
+      if(isModule||dynamicImportRefs(source).length)moduleQueue.push(path);
     }
     // Check the full static ESM dependency graph. First-level-only checking
     // missed missing imports inside imported modules and caused blank screens.
@@ -68,7 +74,7 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
       inspectedModules.add(path);
       for(const ref of importRefs(readSource(path))){
         const pieces=path.split('/').slice(0,-1);
-        for(const token of ref[1].split('/')){
+        for(const token of ref[1].split(/[?#]/)[0].split('/')){
           if(token==='..')pieces.pop();
           else if(token!=='.'&&token)pieces.push(token);
         }
