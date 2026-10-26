@@ -18,6 +18,7 @@ import {
   deleteAuthChallenge,
   claimLoginCodeLease,
   releaseLoginCodeLease,
+  loginCodeLeaseReady,
   getViewerStoryData,
   getViewerAnalytics,
   getViewerExportData,
@@ -45,6 +46,7 @@ async function configState() {
   );
   let secureSessionCrypto = false;
   let storageReachable = false;
+  let otpLeaseReady = selectedStorageProvider() !== 'neon';
   if (storage && telegram) {
     try {
       const cryptoHealth = await viewerCryptoHealth();
@@ -62,13 +64,20 @@ async function configState() {
     }
   }
 
+  // Neon v6 must be proven before inviting a new login. Read-only check;
+  // no migrations or Telegram requests occur during status refresh.
+  if (storage && telegram && secureSessionCrypto && !otpLeaseReady) {
+    try { otpLeaseReady=await loginCodeLeaseReady(); } catch { otpLeaseReady=false; }
+  }
+
   return {
     configured: storage && telegram,
     // This is a readiness indication for cron configuration, not proof of a
     // running scheduler; the release preflight must confirm live deliveries.
     backgroundReady: storage && telegram && storageReachable
       && (selectedStorageProvider()==='supabase' || neonCronConfigured()),
-    newConnectionsReady: storage && telegram && secureSessionCrypto,
+    newConnectionsReady: storage && telegram && secureSessionCrypto && otpLeaseReady,
+    loginCodeLeaseReady: otpLeaseReady,
     secureSessionCrypto,
     // v4 is the independent Neon cipher; v3 remains the legacy Supabase cipher.
     cipherVersion: secureSessionCrypto ? expectedCipherVersion() : null,
@@ -85,6 +94,7 @@ async function configState() {
       !process.env.TELEGRAM_BOT_TOKEN ? 'TELEGRAM_BOT_TOKEN' : null,
       storage && telegram && !storageReachable ? 'STORAGE_GATEWAY_UNAVAILABLE' : null,
       storage && telegram && storageReachable && !secureSessionCrypto ? 'PRIVATE_SESSION_CRYPTO' : null,
+      storage && telegram && secureSessionCrypto && !otpLeaseReady ? 'NEON_LOGIN_CODE_LEASE_V6' : null,
     ].filter(Boolean),
   };
 }
