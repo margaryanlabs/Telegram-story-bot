@@ -74,7 +74,7 @@
     return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
   }
   function setTab(next) {
-    if (!["music", "books", "audiobooks", "library"].includes(next)) return;
+    if (!["music", "films", "books", "audiobooks", "library"].includes(next)) return;
     state.tab = next; state.search = ""; $("searchInput").value = "";
     document.querySelectorAll(".tab").forEach(x => {
       x.classList.toggle("is-active", x.dataset.tab === next);
@@ -82,11 +82,12 @@
     });
     document.querySelectorAll(".view").forEach(x => x.classList.toggle("is-active", x.id === next + "View"));
     $("sourceLabel").textContent = ({
-      music: "Независимые артисты · Audius", books: "Книги общественного достояния · Gutenberg",
+      music: "Независимые артисты · Audius", films: "Архивное кино · Internet Archive", books: "Книги общественного достояния · Gutenberg",
       audiobooks: "Классика голосом · LibriVox", library: "Сохранено на устройстве"
     })[next];
     $("searchSection").classList.toggle("hidden", next === "audiobooks");
     if (next === "music") loadMusic();
+    if (next === "films") window.VetoFilms?.load();
     if (next === "books") loadBooks();
     if (next === "audiobooks") loadAudioBooks();
     if (next === "library") renderLibrary();
