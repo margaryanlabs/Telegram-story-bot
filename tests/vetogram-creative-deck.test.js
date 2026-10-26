@@ -167,13 +167,13 @@ test('premium chat filters expose real Focus and saved-copy navigation, not mock
   assert.doesNotMatch(filters,/class="veto-filter-advanced"[^>]*data-mirror-filter="copies"/);
   // Check the actual four navigable destinations and accessible text.
   // Bare <small> and localized <small data-ui-text> are both valid markup.
-  const nav=html.match(/<nav\\b[^>]*class="[^"]*\\bbottom-nav\\b[^"]*"[^>]*>([\\s\\S]*?)<\\/nav>/);
+  const nav=html.match(/<nav\b[^>]*class="[^"]*\bbottom-nav\b[^"]*"[^>]*>([\s\S]*?)<\/nav>/);
   assert.ok(nav,'real bottom navigation exists');
-  const items=[...nav[1].matchAll(/<button\\b([^>]*)>([\\s\\S]*?)<\\/button>/g)];
+  const items=[...nav[1].matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)];
   assert.deepEqual(items.map(([,attrs])=>attrs.match(/data-nav="([^"]+)"/)?.[1]),
     ['telegram','publish','ai','privacy']);
   const labels=items.map(([,attrs,inside])=>
-    inside.match(/<small\\b[^>]*>([^<]+)<\\/small>/)?.[1]?.trim());
+    inside.match(/<small\b[^>]*>([^<]+)<\/small>/)?.[1]?.trim());
   assert.deepEqual(labels,['Чаты','Истории','VETO AI','Защита']);
 });
 
