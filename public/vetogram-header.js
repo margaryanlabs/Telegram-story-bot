@@ -8,6 +8,6 @@
   if(webApp?.initData)document.body.classList.add('vetogram-in-tg');
   const title=document.querySelector('#telegramMirror .vetogram-header');
   if(!title)return;
-  title.classList.remove('is-expanded');
+  title.classList.remove?.('is-expanded');
   title.setAttribute('aria-label','VETOGRAM — чаты');
 })();
