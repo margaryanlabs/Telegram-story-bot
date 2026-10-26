@@ -51,8 +51,15 @@ async function serveStatic(path,req,res,root){
   const ext=extname(real).toLowerCase();if(!Object.prototype.hasOwnProperty.call(MIME,ext)){res.status(404).end();return;}
   res.setHeader('Content-Type',MIME[ext]);res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Cache-Control',privateHtml.has(name)?'no-store, max-age=0':'public, max-age=300');
+  if(name==='studio.html')res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  if(name==='relay.html'){
+   res.setHeader('Referrer-Policy','no-referrer');
+   res.setHeader('X-Robots-Tag','noindex, nofollow, noarchive');
+   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+  }
   if(name==='portal.html'){
    res.setHeader('X-Robots-Tag','noindex, nofollow, noarchive');
+   res.setHeader('Referrer-Policy','no-referrer');
    res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
   }
   res.setHeader('Content-Length',String(file.size));
