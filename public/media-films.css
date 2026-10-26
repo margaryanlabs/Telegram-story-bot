@@ -1,0 +1,49 @@
+/* VETO MEDIA Films · cinematic modular screen */
+.veto-film-toolbar{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:0 0 22px}
+.veto-film-toolbar h2{font-size:clamp(30px,4vw,42px);letter-spacing:-.06em;line-height:1.08;margin:10px 0}
+.veto-film-toolbar p,.veto-film-source-note{color:var(--muted);font-size:12px;line-height:1.75;max-width:690px}
+.veto-film-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.veto-film-actions button{border:1px solid var(--line);border-radius:999px;background:var(--panel);padding:10px 14px;color:var(--text);font-size:12px}
+.veto-film-actions input{background:var(--panel);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:10px 12px;max-width:170px}
+.veto-film-hero{min-height:350px;position:relative;isolation:isolate;border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:34px;display:flex;align-items:end;overflow:hidden;background:radial-gradient(circle at 80% 20%,rgba(255,182,118,.34),transparent 26%),linear-gradient(135deg,#353f67,#141b2b 62%,#382641);background-size:cover;box-shadow:0 22px 70px #0005}
+.veto-film-hero:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,rgba(5,9,19,.91) 0%,rgba(5,9,19,.18) 90%)}
+.veto-film-copy{position:relative;max-width:670px}
+.veto-film-copy small,.veto-film-section-label{font-size:10px;font-weight:800;color:#ffb9a3;letter-spacing:.18em}
+.veto-film-copy h3{font-size:clamp(30px,4vw,52px);line-height:1.03;letter-spacing:-.055em;margin:14px 0}
+.veto-film-copy p{font-size:13px;max-width:480px;color:#d9dff0;line-height:1.7}
+.veto-film-hero button{margin-top:10px;border:0;border-radius:12px;padding:13px 19px;color:#131827;background:linear-gradient(135deg,#ffb290,#ec6e8c);font-weight:750}
+.veto-film-rail-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:32px 0 14px}
+.veto-film-rail-head h3{font-size:22px;letter-spacing:-.04em;margin:5px 0}
+.veto-film-rail-head span{font-size:12px;color:var(--muted)}
+.veto-film-arrows{display:flex;gap:8px}
+.veto-film-arrows button{border:1px solid var(--line);background:var(--panel);color:var(--text);width:38px;height:38px;border-radius:50%;font-size:17px}
+.veto-film-rail{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 2px 14px;overscroll-behavior-x:contain}
+.veto-film-rail::-webkit-scrollbar{display:none}
+.veto-film-item{min-height:285px;border:1px solid rgba(255,255,255,.16);border-radius:20px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:17px;background:linear-gradient(125deg,#404c71,#20253e 50%,#4a2b46);background-size:cover;background-position:center;box-shadow:0 18px 35px #0004;isolation:isolate;transition:transform .25s ease}
+.veto-film-item:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(9,12,21,.07) 20%,rgba(6,9,20,.85))}
+.veto-film-item:hover{transform:translateY(-4px)}
+.veto-film-item-wide{flex:0 0 235px;width:235px;min-height:320px;scroll-snap-align:start}
+.veto-film-top{font-size:9px;letter-spacing:.17em;color:#ffe1cf}
+.veto-film-bottom small,.veto-film-bottom strong{display:block;color:#fff}
+.veto-film-bottom strong{font-size:20px;letter-spacing:-.04em;line-height:1.12;margin:8px 0 12px}
+.veto-film-bottom small{color:#e9caca;font-size:10px;letter-spacing:.05em}
+.veto-film-play{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);backdrop-filter:blur(8px);color:#fff;border-radius:10px;padding:10px 14px;font-size:12px}
+.veto-film-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.veto-film-notice{padding:24px;min-width:100%;border:1px dashed var(--line);border-radius:15px;background:var(--panel);color:var(--muted);font-size:13px}
+.veto-film-notice a{color:#ffb5a3}
+.veto-film-overlay{position:fixed;inset:0;z-index:100;background:rgba(5,8,16,.88);backdrop-filter:blur(16px);display:grid;place-items:center;padding:14px}
+.veto-film-dialog{width:min(970px,100%);background:#11192b;border:1px solid #ffffff2d;border-radius:22px;color:#fff;box-shadow:0 32px 90px #0009;overflow:hidden}
+.veto-film-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #ffffff1b}
+.veto-film-dialog-header strong,.veto-film-dialog-header small{display:block}
+.veto-film-dialog-header strong{font-size:17px}.veto-film-dialog-header small{color:#abb9d1;font-size:11px}
+.veto-film-dialog-header button{border:1px solid #ffffff27;border-radius:11px;padding:10px;background:#ffffff16;color:#fff}
+.veto-film-dialog-body{padding:24px}
+.veto-film-dialog-buttons{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0}
+.veto-film-dialog-buttons button,.veto-film-dialog-buttons a{border:1px solid #ffffff28;border-radius:12px;background:#ffffff0e;padding:11px 13px;color:#fff;text-decoration:none;font-size:12px}
+.veto-film-dialog-buttons button:first-child{background:linear-gradient(135deg,#ffb199,#f36d8d);border:0;color:#111729;font-weight:800}
+.veto-film-dialog p{color:#aebbd0;font-size:11px;line-height:1.7}
+.veto-film-embed{width:100%;min-height:0}
+.veto-film-iframe{width:100%;min-height:230px;aspect-ratio:16/9;border:0;border-radius:12px;background:#060a12}
+body.veto-film-open{overflow:hidden}
+@media(max-width:700px){.veto-film-toolbar{display:block}.veto-film-actions{margin-top:18px}.veto-film-hero{min-height:310px;padding:22px;border-radius:19px}.veto-film-copy h3{font-size:31px}.veto-film-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.veto-film-grid .veto-film-item{min-height:240px}.veto-film-item-wide{flex-basis:215px;min-height:285px}.veto-film-dialog{height:100dvh;border-radius:0;display:flex;flex-direction:column}.veto-film-overlay{padding:0}.veto-film-dialog-body{overflow:auto;flex:1}.veto-film-iframe{min-height:170px}}
+@media(prefers-reduced-motion:reduce){.veto-film-item{transition:none!important}}
