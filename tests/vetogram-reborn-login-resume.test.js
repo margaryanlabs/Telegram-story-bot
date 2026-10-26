@@ -151,3 +151,43 @@ test('concurrent OTP sends on one API runtime call Telegram only once', async()=
   assert.equal(laterResponse.body.reused,true);
   assert.equal(sent,1);
 });
+
+
+test('failed OTP send releases the request gate for a later retry',async()=>{
+  const start=api.indexOf("    if (action === 'send_code') {");
+  const end=api.indexOf("    if (action === 'send_login_email') {",start);
+  assert.ok(start>=0&&end>start);
+  const branch=api.slice(start,end);
+  let attempts=0;
+  const owners=new Set();
+  const context=vm.createContext({
+    userId:'123456',body:{phone:'+37499123456'},
+    config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
+    inFlightLoginCodeOwners:owners,
+    normalizeTelegramPhone:value=>value,
+    getAuthChallenge:async()=>null,
+    getViewerSession:async()=>null,
+    isOwnActiveViewerSession:()=>false,
+    sealJson:async data=>JSON.stringify(data),
+    saveAuthChallenge:async row=>row,
+    beginUserAuth:async phone=>{
+      if(++attempts===1)throw new Error('SIMULATED_TELEGRAM_UNAVAILABLE');
+      return {phone,phoneCodeHash:'test-hash',delivery:'telegram_app',session:'stub'};
+    },
+  });
+  const run=vm.runInContext(
+    '(async function(res){const action="send_code";'+branch+'})',context
+  );
+  const response=()=>({
+    statusCode:0,body:null,
+    setHeader(){},status(code){this.statusCode=code;return this},
+    json(data){this.body=data;return this},
+  });
+  await assert.rejects(run(response()),/SIMULATED_TELEGRAM_UNAVAILABLE/);
+  assert.equal(owners.size,0);
+  const next=response();
+  await run(next);
+  assert.equal(attempts,2);
+  assert.equal(next.statusCode,200);
+  assert.equal(owners.size,0);
+});
