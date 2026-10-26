@@ -53,3 +53,19 @@ test("EPUB reader loads only user-provided local files and disables scripts", ()
   assert.match(epub, /"deep"/);
   assert.doesNotMatch(epub, /uploadToServer|TELEGRAM_BOT_TOKEN|innerHTML\s*=/);
 });
+
+test("Films experience stays separate from messenger and validates archive items", () => {
+  const films = readFileSync(new URL("../public/media-films.js", import.meta.url), "utf8");
+  const styles = readFileSync(new URL("../public/media-films.css", import.meta.url), "utf8");
+  execFileSync(process.execPath, ["--check", join(process.cwd(), "public/media-films.js")], {stdio:"pipe"});
+  assert.match(html, /id="filmsView"/);
+  assert.match(html, /data-tab="films"/);
+  assert.match(html, /media-films\.js/);
+  assert.match(html, /media-films\.css/);
+  for (const id of ["vetoFilmRail","vetoFilmHero","vetoFilmEmbed","vetoFilmClose"]) assert.ok(html.includes('id="'+id+'"'));
+  assert.match(films, /licenseurl:\*publicdomain\*/);
+  assert.match(films, /\/publicdomain\/i/);
+  assert.match(films, /\/\^\[A-Za-z0-9_.-\]/);
+  assert.match(styles, /veto-film-rail/);
+  assert.doesNotMatch(films, /innerHTML\s*=/);
+});
