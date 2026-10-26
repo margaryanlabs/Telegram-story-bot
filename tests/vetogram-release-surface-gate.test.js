@@ -52,9 +52,11 @@ test('a prechecked public Portal checkbox is a release blocker',()=>{
 });
 test('loading dependent Story controller before app.js is blocked',()=>{
   const original=actual();
-  const first='/app.js?v=20261026-v4-8';
-  const dependent='/story-engine.js?v=20261025-v4-6';
-  assert.ok(original.html.includes(first)&&original.html.includes(dependent));
+  const urls=[...original.html.matchAll(/<script\\b[^>]*\\bsrc=["'](\\/[^"']+\\.js\\?v=[^"']+)["']/g)]
+    .map(match=>match[1]);
+  const first=urls.find(url=>url.startsWith('/app.js?v='));
+  const dependent=urls.find(url=>url.startsWith('/story-engine.js?v='));
+  assert.ok(first&&dependent,'both current boot scripts must be found');
   const status=check({html:original.html.replaceAll(first,'TEST_SWAP')
     .replaceAll(dependent,first).replaceAll('TEST_SWAP',dependent)});
   assert.ok(status.errors.includes('WRONG_BOOTSTRAP_ORDER: /story-engine.js'));
