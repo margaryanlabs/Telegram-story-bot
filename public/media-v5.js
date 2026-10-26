@@ -22,11 +22,14 @@
   function typeName(type){return type==='films'?'Фильм':'Книга'}
   function exists(type,id){return data[type].some(v=>v.id===id)}
   function toggle(type,entry){
-    if(!entry?.id||!entry?.title)return;
+    if(!['films','books'].includes(type)||!entry?.id||!entry?.title)return;
+    const previous=data[type].slice();
     const found=data[type].findIndex(x=>x.id===entry.id);
-    if(found>=0){data[type].splice(found,1);toast(typeName(type)+' удалён из коллекции')}
-    else{data[type].unshift({...entry,date:now()});data[type]=data[type].slice(0,MAX);toast(typeName(type)+' добавлен в коллекцию ♡')}
-    persist();paint();refreshButtons();
+    if(found>=0)data[type].splice(found,1);
+    else {data[type].unshift({...entry,date:now()});data[type]=data[type].slice(0,MAX)}
+    if(!persist()){data[type]=previous;paint();refreshButtons();return}
+    toast(typeName(type)+(found>=0?' удалён из коллекции':' добавлен в коллекцию ♡'));
+    paint();refreshButtons();
   }
   function getFilm(){
     const title=cap($('movieName')?.textContent||$('vetoFilmModalTitle')?.textContent||'');
@@ -89,6 +92,33 @@
   $('v5Export')?.addEventListener('click',()=>{
     const blob=new Blob([JSON.stringify({format:'veto-media-v5-watchlist',version:1,exported:now(),films:data.films,books:data.books},null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='veto-media-collection.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),6000);toast('Список сохранён на устройстве');
+  });
+  window.VetoPersonal=Object.freeze({
+    snapshot:()=>({films:data.films.map(x=>({...x})),books:data.books.map(x=>({...x}))}),
+    importCollection(input){
+      if(!input||input.format!=='veto-media-v5-watchlist'||input.version!==1)throw Error('Формат резервной копии не поддерживается');
+      const updated={};
+      for(const kind of ['films','books']){
+        if(!Array.isArray(input[kind])||input[kind].length>MAX)throw Error('Слишком много элементов');
+        const ids=new Set();updated[kind]=[];
+        for(const item of input[kind]){
+          if(!item||typeof item.id!=='string'||item.id.length<3||item.id.length>500||
+             typeof item.title!=='string'||!item.title.trim()||item.title.length>180||
+             typeof item.source!=='string'||item.source.length>1200)throw Error('Некорректная запись в архиве');
+          const link=safeUrl(item.source);
+          if(!link||ids.has(item.id))throw Error('Недопустимая или повторная ссылка');
+          ids.add(item.id);
+          updated[kind].push({id:cap(item.id,500),title:cap(item.title),source:link,
+            label:cap(item.label,90),date:cap(item.date,30)});
+        }
+      }
+      const original={films:data.films,books:data.books};
+      data.films=updated.films;data.books=updated.books;
+      if(!persist()){data.films=original.films;data.books=original.books;throw Error('Устройство не разрешило сохранить библиотеку')}
+      paint();refreshButtons();
+      toast('Коллекция восстановлена: '+(data.films.length+data.books.length)+' элементов');
+      return {films:data.films.length,books:data.books.length};
+    }
   });
   const observeIds=['movieName','movieTitle','vetoFilmModalTitle','readerTitle','movieTrailer','filmEmbedHost','readerContent'];
   const debounce=()=>{clearTimeout(refreshButtons.timer);refreshButtons.timer=setTimeout(refreshButtons,50)};
