@@ -16,7 +16,7 @@ const modeEnd=script.indexOf('    const advancedIds =',modeStart);
 assert.ok(modeStart>0 && modeEnd>modeStart);
 const realModeController=script.slice(modeStart,modeEnd);
 
-function modeHarness(){
+function modeHarness(translate=null){
   class Node{
     constructor(tag='button',mode='',textContent=''){
       this.tag=tag;this.dataset={vtaiMode:mode};
@@ -37,8 +37,13 @@ function modeHarness(){
   ].map(([mode,label])=>new Node('button',mode,label));
   const modeRail=new Node('div');
   let updated=null;
+  const localeListeners={};
+  const fakeWindow={
+    VetogramI18n:{t:(key,ru)=>typeof translate==='function'?translate(key,ru):ru},
+    addEventListener:(name,handler)=>{localeListeners[name]=handler}
+  };
   const ctx=vm.createContext({
-    modeRail,document:{createElement:tag=>new Node(tag)},
+    modeRail,window:fakeWindow,document:{createElement:tag=>new Node(tag)},
     queueMicrotask:fn=>fn(),
     MutationObserver:class{
       constructor(fn){updated=fn}
@@ -56,7 +61,9 @@ function modeHarness(){
       updated?.();
     },
     reopen(){disclosure.open=true;modeRail.handlers.click?.()},
-    modes
+    modes,
+    renameMode:(mode,name)=>{const node=modes.find(x=>x.dataset.vtaiMode===mode);if(node)node.textContent=name},
+    localeChanged:()=>localeListeners['vetogram:locale-changed']?.()
   };
 }
 test('active secondary AI mode is visible in collapsed summary',()=>{
@@ -135,4 +142,39 @@ test('immersive chats outrank shared Noir header and nav display declarations',(
   assert.match(css,/html#vetogram\.vetogram-noir body\.veto-chat-thread \.bottom-nav,\s*html#vetogram\.vetogram-noir body\.veto-chat-thread #actionDock\{\s*display:none!important/);
   assert.match(css,/#vetogram\.vetogram-noir \.bottom-nav\{[^}]*display:grid!important/);
   assert.match(css,/#vetogram\.vetogram-noir \.topbar\{[^}]*display:flex!important/);
+});
+
+
+test('Canvas Noir AI mode summary and aria-label follow language changes',()=>{
+  let locale='en';
+  const words={
+    en:{
+      aiModePrefix:'Mode: ',aiOtherModes:'More modes',
+      aiModeAriaPrefix:'Current mode: ',
+      aiModeAriaSuffix:'. Open modes',
+      aiOtherModesAria:'Show more VETO AI modes'
+    },
+    hy:{
+      aiModePrefix:'Ռեժիմ՝ ',aiOtherModes:'Այլ ռեժիմներ',
+      aiModeAriaPrefix:'Ընթացիկ ռեժիմ՝ ',
+      aiModeAriaSuffix:'. Բացել ռեժիմների ցանկը',
+      aiOtherModesAria:'Ցուցադրել VETO AI-ի մյուս ռեժիմները'
+    }
+  };
+  const h=modeHarness((key,ru)=>words[locale]?.[key]||ru);
+  h.select('story');
+  h.renameMode('story','▣ AI Director');
+  h.localeChanged();
+  assert.equal(h.disclosure.dataset.selectedMode,'story');
+  assert.equal(h.summary.textContent,'Mode: AI Director');
+  assert.match(h.summary.getAttribute('aria-label'),/^Current mode:/);
+  locale='hy';
+  h.renameMode('story','▣ AI ռեժիսոր');
+  h.localeChanged();
+  assert.equal(h.summary.textContent,'Ռեժիմ՝ AI ռեժիսոր');
+  assert.match(h.summary.getAttribute('aria-label'),/^Ընթացիկ ռեժիմ/);
+  h.select('chat');
+  assert.equal(h.summary.textContent,'Այլ ռեժիմներ');
+  assert.equal(h.disclosure.open,false);
+  assert.match(h.summary.getAttribute('aria-label'),/VETO AI/);
 });
