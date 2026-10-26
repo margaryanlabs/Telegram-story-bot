@@ -17,9 +17,9 @@
   };
   const reveal = () => {
     if (alreadyPlayed || document.hidden) return;
-    alreadyPlayed = true;
-    // Never cover first-time guidance or an unfinished code challenge.
+    // Wait until first-time guidance is dismissed; do not consume the reveal.
     if (!document.getElementById('vetoWelcome')?.hidden) return;
+    alreadyPlayed = true;
     stage.hidden = false;
     requestAnimationFrame(() => stage.classList.add('is-visible'));
     hideTask = setTimeout(() => {
