@@ -9,9 +9,11 @@
   <link rel="icon" href="./veto-telegram-mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./media.css">
   <link rel="stylesheet" href="./media-reader.css">
+  <link rel="stylesheet" href="./media-films.css">
   <script defer src="./media.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
   <script defer src="./media-epub.js"></script>
+  <script defer src="./media-films.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
@@ -31,7 +33,7 @@
         <div class="hero-art" aria-hidden="true"><div class="hero-glow"></div><div class="hero-disc"><div class="disc-center"><img src="./veto-telegram-mark.svg" alt=""></div></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="floating-label">VETO <b>IMMERSIVE AUDIO</b></div></div>
       </section>
       <div class="tabs-wrap">
-        <nav class="tabs" aria-label="Разделы" id="mainTabs"><button type="button" class="tab is-active" data-tab="music">♫ Музыка</button><button type="button" class="tab" data-tab="books">▤ Книги</button><button type="button" class="tab" data-tab="audiobooks">◉ Аудиокниги</button><button type="button" class="tab" data-tab="library">♡ Моё</button></nav>
+        <nav class="tabs" aria-label="Разделы" id="mainTabs"><button type="button" class="tab is-active" data-tab="music">♫ Музыка</button><button type="button" class="tab" data-tab="films">◉ Фильмы</button><button type="button" class="tab" data-tab="books">▤ Книги</button><button type="button" class="tab" data-tab="audiobooks">◉ Аудиокниги</button><button type="button" class="tab" data-tab="library">♡ Моё</button></nav>
       </div>
       <section class="search-wrap" id="searchSection">
         <div class="searchbox"><span class="search-icon">⌕</span><input id="searchInput" type="search" placeholder="Поиск музыки, артистов, книг..." autocomplete="off" maxlength="100"><button id="searchClear" class="search-clear" type="button" aria-label="Очистить поиск">×</button></div>
@@ -48,6 +50,17 @@
         </div>
         <p class="source-note">Источником музыкальных записей служит <a href="https://audius.co/" target="_blank" rel="noopener noreferrer">Audius</a>. Доступность воспроизведения и права использования зависят от конкретной записи и условий источника. Полный каталог коммерческих хитов пока не подключён.</p>
       </section>
+
+      <section id="filmsView" class="view" aria-label="Фильмы">
+        <div class="veto-film-toolbar"><div><span class="overline">VETO / FILMS · OPEN CULTURE</span><h2>Кино. На большом экране.</h2><p>Подборки фильмов из открытого архива Internet Archive. Права и доступность проверяются для каждой страны отдельно.</p></div><div class="veto-film-actions"><input type="search" id="vetoFilmSearch" placeholder="Поиск по фильмам" aria-label="Поиск фильмов"><button type="button" id="vetoFilmRetry">Обновить</button></div></div>
+        <div class="veto-film-hero" id="vetoFilmHero">
+          <div class="veto-film-copy"><small>VETO FILM SPOTLIGHT</small><h3 id="vetoFilmTitle">Истории оживают.</h3><p id="vetoFilmDescription">Фильмы, хроника и документальные записи — со ссылками на первоисточники.</p><button type="button" id="vetoFilmSpotlight">Открыть фильм ↗</button></div>
+        </div>
+        <div class="veto-film-rail-head"><div><small class="veto-film-section-label">ARCHIVAL CINEMA</small><h3>Открытая коллекция</h3><span id="vetoFilmCount">Загружаем…</span></div><div class="veto-film-arrows"><button type="button" id="vetoFilmPrev" aria-label="Листать назад">←</button><button type="button" id="vetoFilmNext" aria-label="Листать вперёд">→</button></div></div>
+        <div id="vetoFilmRail" class="veto-film-rail"><div class="veto-film-notice">Открой кино-раздел, чтобы загрузить фильмы.</div></div>
+        <div id="vetoFilmGrid" class="veto-film-grid"></div>
+        <p class="veto-film-source-note">Источник: <a href="https://archive.org/details/prelinger" target="_blank" rel="noopener noreferrer">Prelinger Archives / Internet Archive</a>. Используются записи, отмеченные в метаданных как public domain. Это не заменяет проверку прав на отдельные записи и в других странах.</p>
+      </section>
       <section id="booksView" class="view" aria-label="Книги">
         <div class="section-top"><div><span class="overline">VETO / BOOKS</span><h2>Тишина между строк</h2><p>Классика и тексты для глубокого чтения.</p></div><label class="import-btn">＋ Свой TXT <input type="file" id="bookUpload" accept=".txt,text/plain" hidden></label></div>
         <div class="shelf-filter"><button class="chip is-active" data-booklang="all">Все языки</button><button class="chip" data-booklang="ru">Русский</button><button class="chip" data-booklang="en">English</button></div>
@@ -61,6 +74,13 @@
   </div>
   <div class="player hidden" id="player" role="region" aria-label="Музыкальный плеер"><div class="player-cover" id="playerCover"></div><div class="player-info"><strong id="playerTitle">—</strong><span id="playerArtist">—</span></div><div class="player-controls"><button type="button" id="prevButton" title="Предыдущий трек" aria-label="Предыдущий">⏮</button><button type="button" id="playButton" class="play-control" title="Воспроизведение" aria-label="Воспроизведение">▶</button><button type="button" id="nextButton" title="Следующий трек" aria-label="Следующий">⏭</button></div><div class="progress"><span id="currentTime">0:00</span><input type="range" id="seek" min="0" max="1000" value="0" aria-label="Перемотка"><span id="duration">0:00</span></div><button id="favoriteNow" class="player-heart" type="button" aria-label="В избранное">♡</button><audio id="audio" preload="none"></audio></div>
   <div class="reader-backdrop hidden" id="readerBackdrop"><div class="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle"><div class="reader-top"><button type="button" id="closeReader" class="icon-btn" aria-label="Закрыть">←</button><div class="reader-heading"><strong id="readerTitle">Книга</strong><span id="readerAuthor"></span></div><button id="decreaseFont" class="text-control" type="button" aria-label="Уменьшить шрифт">A−</button><button id="increaseFont" class="text-control" type="button" aria-label="Увеличить шрифт">A+</button><button id="saveBook" class="text-control" type="button" aria-label="Сохранить книгу">♡</button></div><div class="reader-content" id="readerContent" tabindex="0"></div><div class="reader-bottom"><span id="readingProgress">0%</span><span>VETO READING LAB</span><a href="#" id="openOriginal" target="_blank" rel="noopener noreferrer">Оригинал ↗</a></div></div></div>
+
+  <div id="vetoFilmOverlay" class="veto-film-overlay hidden" role="presentation">
+    <div class="veto-film-dialog" role="dialog" aria-modal="true" aria-labelledby="vetoFilmModalTitle">
+      <div class="veto-film-dialog-header"><div><strong id="vetoFilmModalTitle">Фильм</strong><small id="vetoFilmModalLabel">Internet Archive</small></div><button type="button" id="vetoFilmClose" aria-label="Закрыть">×</button></div>
+      <div class="veto-film-dialog-body"><div class="veto-film-dialog-buttons"><button type="button" id="vetoFilmEmbedButton">▶ Смотреть здесь</button><a id="vetoFilmOriginal" href="https://archive.org/details/prelinger" target="_blank" rel="noopener noreferrer">Оригинальный источник ↗</a></div><div id="vetoFilmEmbed" class="veto-film-embed"></div><p>Видео загружается непосредственно с Internet Archive только после нажатия «Смотреть здесь». Если Telegram ограничивает iframe, открой оригинальный источник.</p></div>
+    </div>
+  </div>
   <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
