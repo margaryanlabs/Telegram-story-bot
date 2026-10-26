@@ -123,3 +123,12 @@ QA checklist:
 - **Browser verification**: mocked Audius discovery while testing actual local WAV audio files (330/440/550 Hz) in headless Chromium at 390px and 1440px. Verified adding 3 local tracks, reorder preserving playing track, removing a different track, removing the currently playing track with the next track taking over, repeat and shuffle buttons, queue clear, no horizontal overflow or JavaScript page exceptions. These test WAV files are generated only for QA and are not distributed in production.
 - Live third-party Audius/Internet Archive streams were not validated in Telegram Android or iPhone. Catalog service availability, regional copyright clearance, and Telegram's real audio focus rules remain gating. Film availability is separate from uploaded Internet Archive copyright labels; avoid claiming global playback rights.
 - No deployment or merge, and no modifications to VETOGRAM messaging, session, authorization, Stories, or production infrastructure.
+
+
+## V11 status (2026-10-27)
+- Unified search Discover is implemented under public/media-discovery.js + CSS and linked into media.html, media.js and the six-button mobile dock.
+- Providers: Audius tracks (playback request only on click), TVmaze television metadata (CC BY-SA source attribution and no episode player), Gutenberg public-domain texts (reader bridge), and Internet Archive public-domain-labelled Prelinger archival records (source links).
+- Per-source failure and search cancellation do not drop results from the other providers. Search metadata is cached for up to 5 minutes only in the current page; no background scraping.
+- Favorites from Discover are saved locally, separately from the existing V5 library; no account sync or server upload. V11 TVmaze details use the Telegram BackButton when hosted inside a genuine WebApp.
+- Browser QA of separate standalone V11 preview in Chromium (390x844 and 1440x900) with four MOCK responses: four cards rendered, filters and TVmaze details modal worked; a simulated TVmaze HTTP 503 left three other providers active. No JS page exceptions or horizontal overflow reported.
+- The preview's synthetic Sherlock Archive record is for QA only. Actual live results, stream access, mobile Telegram WebView, poster licensing and copyrighted movies have not been verified. No VETOGRAM production merge or deployment.
