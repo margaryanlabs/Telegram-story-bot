@@ -125,3 +125,61 @@ test('Portal opt-in cannot be smuggled via reordered HTML attributes',()=>{
     assert.ok(result.errors.includes('PORTAL_MUST_REQUIRE_FRESH_OPT_IN'),attack);
   }
 });
+
+
+test('missing literal dynamic import from a classic script blocks release',()=>{
+  const safe=actual();
+  const status=check({readSource:path=>{
+    const source=safe.readSource(path);
+    return path==='public/app.js'
+      ?source+"\nimport('./__missing_from_classic__.js');"
+      :source;
+  }});
+  assert.ok(status.errors.includes(
+    'MISSING_MODULE_IMPORT: public/app.js -> public/__missing_from_classic__.js'
+  ));
+  assert.equal(status.errors.includes('UNDECLARED_MODULE_SCRIPT: public/app.js'),false,
+    'dynamic imports are valid in classic browser scripts');
+});
+
+test('missing transitive dynamic import blocks release even when parent module exists',()=>{
+  const safe=actual();
+  const parent='public/vetogram-creative-presets-core.js';
+  assert.ok(safe.exists(parent));
+  const status=check({readSource:path=>{
+    const source=safe.readSource(path);
+    return path===parent
+      ?source+"\nconst unused=()=>import('./__missing_nested_dynamic__.js');"
+      :source;
+  }});
+  assert.ok(status.errors.includes(
+    'MISSING_MODULE_IMPORT: '+parent+' -> public/__missing_nested_dynamic__.js'
+  ));
+});
+
+test('relative static module imports support version query parameters',()=>{
+  const safe=actual();
+  const status=check({readSource:path=>{
+    const source=safe.readSource(path);
+    return path==='public/story-engine.js'
+      ?source+"\nimport './story-engine-core.js?v=offline';"
+      :source;
+  }});
+  assert.ok(!status.errors.some(error=>
+    error.includes('public/story-engine-core.js?v=offline')),
+    'query parameters do not belong to the checked file-system path');
+  assert.equal(status.ok,true);
+});
+
+test('dynamic relative imports cannot climb above the public directory',()=>{
+  const safe=actual();
+  const status=check({readSource:path=>{
+    const source=safe.readSource(path);
+    return path==='public/app.js'
+      ?source+"\nimport('../__outside_public__.js');"
+      :source;
+  }});
+  assert.ok(status.errors.includes(
+    'UNSAFE_MODULE_IMPORT: public/app.js -> __outside_public__.js'
+  ));
+});
