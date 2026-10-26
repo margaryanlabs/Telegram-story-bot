@@ -158,10 +158,10 @@ body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is
    actually running inside Telegram. Never hide the native Telegram controls. */
 @media(max-width:620px) {
   body.vetogram-in-tg.veto-chat-active:not(.veto-chat-thread) .app-shell {
-    padding-top:max(56px,calc(var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px) + 12px))!important;
+    padding-top:var(--vetogram-top)!important;
   }
   body.vetogram-in-tg.veto-chat-active:not(.veto-chat-thread) #telegramMirror .veto-mirror-heading.vetogram-header {
-    top:max(56px,calc(var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,0px) + 12px));
+    top:var(--vetogram-top);
   }
 }
 
@@ -169,7 +169,7 @@ body.veto-chat-active:not(.veto-chat-thread) #telegramMirror .vetogram-header.is
 #telegramMirror .vetogram-header .veto-inbox-wordmark>span{color:#edf1f6}
 #telegramMirror .vetogram-header .veto-inbox-wordmark>i{color:#ff6e68;font-style:normal}
 @media(max-width:620px){
-  body.vetogram-in-tg{--vetogram-top:max(56px,calc(var(--tg-content-safe-area-inset-top,0px) + var(--tg-safe-area-inset-top,env(safe-area-inset-top,0px)) + 12px))}
+  body.vetogram-in-tg{--vetogram-top:max(var(--vetogram-sdk-content-top,0px),var(--vetogram-sdk-device-top,0px),var(--tg-content-safe-area-inset-top,0px),var(--tg-safe-area-inset-top,0px),env(safe-area-inset-top,0px))}
   body.vetogram-in-tg:not(.veto-chat-active) .app-shell,
   body.vetogram-in-tg.veto-chat-thread .app-shell{padding-top:var(--vetogram-top)!important}
   body.vetogram-in-tg .sheet{max-height:calc(100dvh - var(--vetogram-top) - env(safe-area-inset-bottom,0px));overscroll-behavior:contain}
