@@ -23,12 +23,13 @@ function fixture(response){
   const tg={initData:'signed-owner'};
   const data={activity:[],history:[],lastStory:'884',ready:true};
   const fn=new Function('tg','state','requestJson','render','setAvatar',
+    'ensureComposerIdentity','viewerOwnerEpoch',
     appApi+';return api')(
       tg,data,async(url,options,policy)=>{
         attempts++;
         assert.equal(url,'/api/miniapp');
         return response({options,policy,attempts});
-      },()=>{},()=>{}
+      },()=>{},()=>{},()=>{},0
     );
   return {fn,tg,attempts:()=>attempts};
 }
@@ -76,6 +77,8 @@ function publishFixture(answer){
     'renderPublish','haptic','api','resetComposer','notify','showToast','audienceLabel',
     'escapeHtml','openSheet','connectionHelpSheet','refreshViewerSync','refreshViewerAnalytics',
     "let composerBusy=false,composerDataUrl='data:image/jpeg;base64,photo',composerOwner='signed-owner',composerNonce='nonce',selectedViewerStory=null;"+
+    "let composerPortalHandoff=null,composerGeneration=0,viewerOwnerEpoch=0;"+
+    'function ensureComposerIdentity(){};'+
     appPublish+';return publishComposerStory')(
     tg,state,{session:{connected:false}},id=>fields[id],()=>true,
     ()=>{},()=>{},async()=>answer,()=>{clears++},()=>{},()=>{},x=>x,
