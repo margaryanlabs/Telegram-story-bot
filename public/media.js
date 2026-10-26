@@ -91,7 +91,7 @@
     return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
   }
   function setTab(next) {
-    if (!["home", "music", "films", "books", "audiobooks", "library"].includes(next)) return;
+    if (!["home", "discover", "music", "films", "books", "audiobooks", "library"].includes(next)) return;
     state.tab = next; state.search = ""; $("searchInput").value = "";
     document.querySelectorAll(".tab").forEach(x => {
       x.classList.toggle("is-active", x.dataset.tab === next);
@@ -99,10 +99,10 @@
     });
     document.querySelectorAll(".view").forEach(x => x.classList.toggle("is-active", x.id === next + "View"));
     $("sourceLabel").textContent = ({
-      home: "Вся медиавселенная · VETO", music: "Независимые артисты · Audius", films: "Архивное кино · Internet Archive", books: "Книги общественного достояния · Gutenberg",
+      home: "Вся медиавселенная · VETO", discover: "Все каталоги · Audius / TVmaze / Gutenberg / Archive", music: "Независимые артисты · Audius", films: "Архивное кино · Internet Archive", books: "Книги общественного достояния · Gutenberg",
       audiobooks: "Классика голосом · LibriVox", library: "Сохранено на устройстве"
     })[next];
-    $("searchSection").classList.toggle("hidden", next === "audiobooks");
+    $("searchSection").classList.toggle("hidden", ["audiobooks","discover","home","films"].includes(next));
     if (next === "music") loadMusic();
     if (next === "films") window.VetoFilms?.load();
     if (next === "books") loadBooks();
@@ -531,6 +531,14 @@
   }
   // Narrow player bridge for user-confirmed metadata matches. Imported metadata
   // alone never initiates playback or claims rights to a VK/Yandex recording.
+  window.VetoMediaBooks=Object.freeze({
+    openPublicDomain(raw) {
+      const book=bookFrom(raw);
+      if(!book || book.source!=="gutenberg")throw Error("Only Gutenberg public-domain books can be opened");
+      openBook(book);
+      return {provider:"Project Gutenberg",bookId:book.id};
+    }
+  });
   window.VetoMediaMusic=Object.freeze({
     playMatchedAudius(raw) {
       const track=trackFrom(raw);
