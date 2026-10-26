@@ -96,3 +96,58 @@ test('a resumed code challenge never invents Telegram-app delivery metadata',()=
   assert.ok(app.includes("stage:'code', delivery:data.delivery || 'unknown'"));
   assert.doesNotMatch(app,/pending\.delivery \|\| 'telegram_app'/);
 });
+
+
+test('concurrent OTP sends on one API runtime call Telegram only once', async()=>{
+  const start=api.indexOf("    if (action === 'send_code') {");
+  const end=api.indexOf("    if (action === 'send_login_email') {",start);
+  assert.ok(start>=0 && end>start);
+  const sendBranch=api.slice(start,end);
+  assert.match(sendBranch,/inFlightLoginCodeOwners\.has\(codeOwner\)/);
+  assert.match(sendBranch,/finally\s*\{\s*inFlightLoginCodeOwners\.delete\(codeOwner\)/);
+  let releaseTelegram;
+  const telegramPending=new Promise(resolve=>{releaseTelegram=resolve});
+  let sent=0, persisted=null;
+  const ctx=vm.createContext({
+    userId:'123456',body:{phone:'+37499123456'},
+    config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
+    inFlightLoginCodeOwners:new Set(),
+    normalizeTelegramPhone:value=>value,
+    getAuthChallenge:async()=>persisted,
+    getViewerSession:async()=>null,
+    isOwnActiveViewerSession:()=>false,
+    openJson:async ciphertext=>JSON.parse(ciphertext),
+    sealJson:async data=>JSON.stringify(data),
+    saveAuthChallenge:async row=>{persisted=row;return row},
+    beginUserAuth:async phone=>{
+      sent++;
+      await telegramPending;
+      return {phone,phoneCodeHash:'test-hash',session:'test-session',delivery:'telegram_app'};
+    },
+  });
+  const send=vm.runInContext(
+    '(async function(res){const action="send_code";'+sendBranch+'})',ctx
+  );
+  const response=()=>({
+    headers:{},statusCode:0,body:null,
+    setHeader(name,value){this.headers[name]=value},
+    status(code){this.statusCode=code;return this},
+    json(data){this.body=data;return this},
+  });
+  const firstResponse=response(),secondResponse=response();
+  const first=send(firstResponse);
+  await send(secondResponse);
+  assert.equal(secondResponse.statusCode,429);
+  assert.equal(secondResponse.body.retryAfterSeconds,3);
+  assert.equal(secondResponse.headers['Retry-After'],'3');
+  releaseTelegram();
+  await first;
+  assert.equal(firstResponse.statusCode,200);
+  assert.equal(firstResponse.body.reused,false);
+  assert.equal(sent,1);
+  const laterResponse=response();
+  await send(laterResponse);
+  assert.equal(laterResponse.statusCode,200);
+  assert.equal(laterResponse.body.reused,true);
+  assert.equal(sent,1);
+});
