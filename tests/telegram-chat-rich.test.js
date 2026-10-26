@@ -33,7 +33,7 @@ test('incoming reply IDs are scoped to real messages, invalid ids cannot target 
 
 test('raw uploads are bounded and verified before memory allocation',()=>{
  assert.equal(MEDIA_LIMIT_BYTES,2*1024*1024);
- assert.deepEqual(MEDIA_KINDS,['photo','document','voice']);
+ assert.deepEqual(MEDIA_KINDS,['photo','document','voice','video','audio']);
  const binary=Buffer.from('Photo').toString('base64');
  const photo=decodeMediaInput({kind:'photo',mime:'image/png',name:'pic.png',base64:binary});
  assert.equal(photo.buffer.toString(),'Photo');

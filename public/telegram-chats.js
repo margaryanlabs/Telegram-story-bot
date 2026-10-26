@@ -287,7 +287,7 @@
     const chip=$('telegramThreadAttachmentChip'),label=$('telegramThreadAttachmentLabel');
     if(!chip||!label)return;
     chip.hidden=!state.pendingAttachment;
-    const f=state.pendingAttachment;
+    const f=state.pendingAttachment?.file||state.pendingAttachment;
     label.textContent=f?('◫ '+f.name+' · '+Math.ceil(f.size/1024)+' КБ'):'';
   }
   function readFileAsBase64(file){
@@ -312,19 +312,58 @@
   function richSendIntent(action,chatId,pending,caption,replyTo,stickerId){
     return {
       action,chatId,file:pending?.file||pending||null,
+      kind:pending?.kind||null,
       caption,replyTo,stickerId:action==='send_sticker'?String(stickerId?.id||stickerId):null,
       stickerSetId:action==='send_sticker'?(stickerId?.setId||null):null,
     };
   }
   function sameRichIntent(a,b){
     return Boolean(a&&b&&a.action===b.action&&a.chatId===b.chatId&&
-      a.file===b.file&&a.caption===b.caption&&a.replyTo===b.replyTo&&
+      a.file===b.file&&a.kind===b.kind&&a.caption===b.caption&&a.replyTo===b.replyTo&&
       a.stickerId===b.stickerId&&a.stickerSetId===b.stickerSetId);
+  }
+  function attachmentKind(mime){
+    if(['image/jpeg','image/png','image/webp'].includes(mime))return 'photo';
+    if(mime==='video/mp4')return 'video';
+    if(['audio/mpeg','audio/mp4','audio/ogg','audio/webm'].includes(mime))return 'audio';
+    return 'document';
+  }
+  // Parse metadata locally only after an explicit Send. No media, URL or
+  // preview is persisted; a failed/late decoder never triggers a network send.
+  function localMediaMetadata(file,kind){
+    if(!['video','audio'].includes(kind))return Promise.resolve({});
+    return new Promise((resolve,reject)=>{
+      const media=document.createElement(kind),url=URL.createObjectURL(file);
+      let finished=false;
+      const done=(error,data)=>{
+        if(finished)return;finished=true;clearTimeout(timer);
+        media.onloadedmetadata=null;media.onerror=null;
+        media.removeAttribute('src');
+        try{media.load()}catch{}
+        URL.revokeObjectURL(url);
+        if(error)reject(error);else resolve(data);
+      };
+      const timer=setTimeout(()=>done(new Error('Не удалось прочитать медиа. Выбери другой файл.')),6000);
+      media.preload='metadata';
+      media.onloadedmetadata=()=>{
+        const duration=Number(media.duration);
+        const width=kind==='video'?Number(media.videoWidth):0,height=kind==='video'?Number(media.videoHeight):0;
+        if(!Number.isFinite(duration)||duration<=0||duration>86400||
+          (kind==='video'&&(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>8192||height>8192))){
+          done(new Error('Не удалось определить длительность или размер медиа. Выбери другой файл.'));return;
+        }
+        done(null,{duration,width,height});
+      };
+      media.onerror=()=>done(new Error('Браузер не смог прочитать этот медиафайл.'));
+      media.src=url;
+    });
   }
   async function sendRichOutgoing(action,attachmentOrIndex=null){
     const chat=state.thread,field=$('telegramThreadCompose');
     if(!canSendInThread(chat)||state.sendInFlight)return;
-    const chatId=String(chat.id),ownerKey=state.ownerInitData;
+    const chatId=String(chat.id),ownerKey=state.ownerInitData,generation=state.threadGeneration;
+    const current=()=>ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
+      generation===state.threadGeneration&&String(state.thread?.id)===chatId;
     const replyTo=state.replyTo?.id||null;
     const voiceSend=action==='send_media' && attachmentOrIndex?.kind==='voice';
     const pending=action==='send_media'?(attachmentOrIndex||state.pendingAttachment):null;
@@ -344,22 +383,24 @@
         const file=pending?.file||pending;
         if(!file||file.size>2*1024*1024||file.size<1)
           throw new Error('Выбери файл не больше 2 МБ');
-        const kind=pending?.kind||(['image/jpeg','image/png','image/webp'].includes(file.type)?'photo':'document');
+        const kind=pending?.kind||attachmentKind(file.type);
+        const metadata=await localMediaMetadata(file,kind);
+        if(!current())throw new Error('Чат или аккаунт изменился. Отправка отменена.');
         request={...request,kind,name:file.name,mime:file.type,base64:await readFileAsBase64(file),
-          caption,duration:Number(pending?.duration||0)};
+          caption,duration:Number(pending?.duration||0),...metadata};
       }else if(action==='send_sticker')request={...request,
         stickerId:String(attachmentOrIndex?.id||attachmentOrIndex),
         ...(attachmentOrIndex?.setId?{setId:String(attachmentOrIndex.setId)}:{})};
       else return;
       // A file read can outlive both the original thread and the Telegram owner.
-      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();throw new Error('Аккаунт изменился. Отправка отменена.');}
-      if(String(state.thread?.id)!==chatId)throw new Error('Чат изменился. Отправка отменена.');
+      if(!current())throw new Error('Чат или аккаунт изменился. Отправка отменена.');
       await richRequest(action,request);
-      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
+      if(!current())return;
       if(String(state.thread?.id)===chatId){
         const mediaTitle=action==='send_sticker'?'Стикер'
           :request.kind==='voice'?'Голосовое сообщение'
-            :request.kind==='photo'?'Фотография':'Документ';
+            :request.kind==='photo'?'Фотография':request.kind==='video'?'Видео'
+              :request.kind==='audio'?'Аудио':'Документ';
         touchRecentChat(chatId,request.caption||mediaTitle,new Date().toISOString());
         setDeliveryStatus('accepted',chatId,deliveryKind);
         if(field&&!voiceSend)field.value='';
@@ -372,12 +413,12 @@
         renderReplyPreview();renderAttachmentChip();
         threadNotice('');
         // Confirm with authoritative history. No second send on any outcome.
-        setTimeout(()=>{if(String(state.thread?.id)===chatId&&!state.threadLoading&&!state.sendInFlight)
+        setTimeout(()=>{if(current()&&!state.threadLoading&&!state.sendInFlight)
           loadMessages({reset:true});},750);
       }
       try{tg?.HapticFeedback?.notificationOccurred('success')}catch{}
     }catch(error){
-      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
+      if(!current())return;
       if(error?.uncertain===true && String(state.thread?.id)===chatId)
         state.lastRichFailure={intent,nonce};
       if(String(state.thread?.id)===chatId){
@@ -390,7 +431,7 @@
       }
       // Never automatically retry: server acknowledgement may be lost.
     }finally{
-      if(ownerKey===state.ownerInitData){state.sendInFlight=false;renderSendComposer();}
+      if(current()){state.sendInFlight=false;renderSendComposer();}
     }
   }
   // Installed packs are fetched only after explicit user action, read from the
@@ -402,7 +443,9 @@
   }
   function closeStickerDrawer(){
     state.stickerEpoch++;
-    closeStickerDrawer();
+    const pane=$('telegramThreadStickerDrawer');
+    if(pane)pane.hidden=true;
+    $('telegramThreadStickersButton')?.setAttribute('aria-expanded','false');
   }
   function stickerShownItems(){
     const source=state.stickerTab==='recent'?state.stickers:state.stickerPack?.stickers||[];
@@ -539,6 +582,7 @@
     if(!pane)return;
     if(!pane.hidden){closeStickerDrawer();return;}
     pane.hidden=false;
+    $('telegramThreadStickersButton')?.setAttribute('aria-expanded','true');
     await selectStickerTab(state.stickerTab);
   }
   function dropVoiceDraft(){
@@ -2376,7 +2420,7 @@
       toast('Поддерживаются MP3, M4A, OGG, WebM');return;
     }
     if(!canSendInThread(state.thread))return;
-    state.pendingAttachment={file,kind:'document'};
+    state.pendingAttachment={file,kind:'audio'};
     renderAttachmentChip();renderSendComposer();
   });
   $('telegramThreadFileInput')?.addEventListener('change',event=>{
@@ -2384,7 +2428,7 @@
     if(!file)return;
     if(file.size<1||file.size>2*1024*1024){toast('Выбери фото или документ до 2 МБ');event.target.value='';return;}
     if(!canSendInThread(state.thread))return;
-    state.pendingAttachment={file,kind:['image/jpeg','image/png','image/webp'].includes(file.type)?'photo':'document'};
+    state.pendingAttachment={file,kind:attachmentKind(file.type)};
     renderAttachmentChip();renderSendComposer();
   });
   $('telegramThreadAttachmentClear')?.addEventListener('click',()=>{
