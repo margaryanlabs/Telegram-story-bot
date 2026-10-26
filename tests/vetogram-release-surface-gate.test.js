@@ -86,6 +86,22 @@ test('a missing imported module breaks the offline release gate',()=>{
     'MISSING_MODULE_IMPORT: public/story-engine.js -> public/this-script-must-not-exist.js'
   )));
 });
+test('a missing transitive ESM dependency blocks the release',()=>{
+  const safe=actual();
+  const parent='public/vetogram-creative-presets-core.js';
+  const missing='public/__vetogram_missing_nested_dependency__.js';
+  assert.ok(safe.exists(parent));
+  const result=check({readSource:path=>{
+    const source=safe.readSource(path);
+    return path===parent
+      ?source+"\\nimport './__vetogram_missing_nested_dependency__.js';"
+      :source;
+  }});
+  assert.ok(result.errors.includes(
+    'MISSING_MODULE_IMPORT: '+parent+' -> '+missing
+  ));
+});
+
 test('a module imported from a classic script is rejected',()=>{
   const safe=actual();
   const result=check({readSource:path=>{
