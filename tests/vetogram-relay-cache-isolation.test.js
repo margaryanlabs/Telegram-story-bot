@@ -8,7 +8,7 @@ const origin='https://veto.example';
 const okResponse=value=>({
   ok:true,value,clone(){return okResponse(value);}
 });
-function harness({online=true,cacheUnavailable=false}={}){
+function harness({online=true,cacheUnavailable=false,cacheMissing=false}={}){
   const listeners={},stored=new Map(),deleted=[],requests=[];
   const awaiting=[];
   const cache={
@@ -32,7 +32,8 @@ function harness({online=true,cacheUnavailable=false}={}){
     return okResponse('network:'+request.url);
   };
   const Response={error:()=>({ok:false,networkError:true})};
-  vm.runInNewContext(script,{self:worker,caches,fetch,URL,Response,location:{origin}});
+  vm.runInNewContext(script,{self:worker,fetch,URL,Response,location:{origin},
+    ...(cacheMissing?{}:{caches})});
   const event=type=>{
     let promise=null;
     const e={
@@ -121,4 +122,29 @@ test('Relay offline Cache Storage failure degrades safely, not to old assets',as
   const x=harness({cacheUnavailable:true,online:false});
   const response=await x.invoke('/relay.html');
   assert.equal(response.networkError,true);
+});
+
+
+test('Relay does not require Cache Storage global for emergency online network',async()=>{
+  const x=harness({cacheMissing:true});
+  const response=await x.invoke('/relay.html');
+  assert.equal(response.value,'network:'+origin+'/relay.html');
+  assert.equal(x.requests.length,1);
+  assert.equal(x.requests[0].opts.cache,'no-store');
+});
+test('Relay without Cache Storage global fails offline safely and skips unrelated URLs',async()=>{
+  const x=harness({cacheMissing:true,online:false});
+  assert.equal((await x.invoke('/relay-bootstrap.js?v=20261026-v411-relay')).networkError,true);
+  assert.equal(await x.invoke('/api/viewer-sync'),null);
+  assert.equal(await x.invoke('/studio.html'),null);
+});
+test('Relay can install and activate without Cache Storage global',async()=>{
+  const x=harness({cacheMissing:true});
+  const install=x.event('install');
+  x.listeners.install(install.e);
+  const activate=x.event('activate');
+  x.listeners.activate(activate.e);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(x.stored.size,0);
+  assert.deepEqual(x.deleted,[]);
 });
