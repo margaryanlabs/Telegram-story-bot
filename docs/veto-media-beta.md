@@ -65,3 +65,12 @@ QA checklist:
 - The archive API is a third-party dependency. Failure or CORS rejection yields a clearly labeled error with archive source, never invented film catalog entries.
 - Preview artifact `veto-media-preview-v3.html` was constructed independently for visual design review; it includes the full immersive home, five-button mobile dock, cinematic film rail and playback mock testing. Modular parity with the standalone preview is work in progress. Preview asset is stored in the conversation and is not an automatic production deploy.
 - Browser UI smoke tests used a 390px mobile and 1440px desktop viewport, including navigation, film modal, no horizontal overflow, and test provider responses. Production Telegram Android/iOS streaming, licensing outside the U.S. and payment remain unverified.
+
+
+## V4 immersive continuation (2026-10-26)
+
+- New standalone VETO MEDIA **Home** is the default tab; cinematic hero, mood shortcuts for Audius search and cross-links to Films/Books/Audiobooks. Mobile bottom navigation is included.
+- New `public/media-v4.js` + `public/media-v4.css`: full-screen **Listening Room** is bound to the real browser audio element, with an animated vinyl scene, current track metadata, previous/play/next controls, seek bar and Pulse/Aurora/Midnight color themes. Motion reflects playback state, **not live audio-frequency measurements**.
+- User-facing browser-only `veto-media-preview-v4.html` built and tested separately with mocked public catalog responses. At 390 and 1440 px, both home and film rail showed no horizontal overflow; modal music room opened, switched theme and closed with no JS page errors. This is *not* a live-provider WebView or production acceptance test.
+- Source repo `margaryanlabs/Telegram-story-bot` uses a dedicated Draft PR with all VETO MEDIA additions. Do not merge/deploy while VETOGRAM PR #185 remains in development.
+- Provider limitations unchanged: no paid Russian/international chart catalog; cinema intentionally restricted to third-party archive metadata flagged public domain, territorial rights must be verified; Gutenberg books and Audius streams can fail in Telegram due to CORS, region or provider restrictions.
