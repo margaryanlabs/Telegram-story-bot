@@ -18,6 +18,13 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
   const rawAssets=[...html.matchAll(/<(?:script|link)\b[^>]*\b(?:src|href)=["']([^"']+)["'][^>]*>/gi)]
     .map(match=>match[1]).filter(value=>value.startsWith('/') &&
       /\.(?:js|css)(?:[?#]|$)/i.test(value));
+
+  // A single V4 release must not mix old and new WebView cache identities.
+  // Telegram WebView can otherwise silently display stale scripts after deploy.
+  const assetVersions=rawAssets.map(url=>url.match(/[?&]v=([^&#]+)/)?.[1]||'');
+  add(assetVersions.length>0&&assetVersions.every(v=>/^[A-Za-z0-9_-]+$/.test(v))&&
+      new Set(assetVersions).size===1,
+      'MIXED_RELEASE_ASSET_VERSIONS');
   const localPaths=rawAssets.map(url=>url.split(/[?#]/)[0]);
   const seen=new Set();
   for(const file of localPaths){
