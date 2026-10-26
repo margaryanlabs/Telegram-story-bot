@@ -283,6 +283,7 @@
     if (!area) return;
     area.innerHTML = '<div class="veto-story-blocked"><span>◈</span><strong>Просмотр заблокирован</strong>'+
       '<p>'+safe(message)+'</p>'+
+      '<button type="button" data-veto-story-retry="1">Повторить загрузку</button>'+ 
       '<button type="button" data-veto-story-close="1">Закрыть</button></div>';
     const caption = viewer.querySelector('.veto-story-caption');
     if (caption) caption.textContent='';
@@ -370,6 +371,11 @@
     renderBar(true);
   });
   viewer.addEventListener('click',event=>{
+    if(event.target.closest('[data-veto-story-retry]')){
+      if(!state.mediaBusy && Number.isInteger(state.activePeer) && state.activePeer>=0)
+        void openStory(state.activePeer,state.activeStory);
+      return;
+    }
     const favorite=event.target.closest('[data-veto-story-favorite]');
     if (favorite) {toggleFavorite(favorite.dataset.vetoStoryFavorite);return;}
     if (event.target.closest('[data-veto-story-close]')) {closeViewer();return;}
