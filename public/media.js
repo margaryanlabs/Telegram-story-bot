@@ -367,15 +367,43 @@
       info.append(link); el.append(info);
     }
   }
+  const AUDIO_PROGRESS_KEY="veto-media-audiobook-progress-v1";
+  let audioBookmark=null,lastAudioSave=0;
+  function readAudioBookmark(bookId){
+    try{
+      const value=JSON.parse(localStorage.getItem(AUDIO_PROGRESS_KEY)||"{}");
+      const saved=value[String(bookId)];
+      if(!saved||!Number.isInteger(saved.chapter)||saved.chapter<0)return null;
+      return {chapter:saved.chapter,second:Math.max(0,Number(saved.second)||0)};
+    }catch{return null}
+  }
+  function rememberAudioBookmark(){
+    const playback=state.audioBookPlayback;
+    if(!playback?.book?.id||!Number.isFinite(audio.currentTime))return;
+    try{
+      const data=JSON.parse(localStorage.getItem(AUDIO_PROGRESS_KEY)||"{}");
+      const record=data&&typeof data==="object"&&!Array.isArray(data)?data:{};
+      record[String(playback.book.id)]={chapter:playback.index,
+        second:Math.max(0,Math.floor(audio.currentTime)),at:Date.now()};
+      const entries=Object.entries(record).sort((a,b)=>(b[1]?.at||0)-(a[1]?.at||0)).slice(0,40);
+      localStorage.setItem(AUDIO_PROGRESS_KEY,JSON.stringify(Object.fromEntries(entries)));
+    }catch{} // local-only save cannot block playback
+  }
   async function playAudioBook(book) {
     try {
       toast("Подключаем запись LibriVox…");
       const response = await getJSON(API.audiobooks + "?id=" + encodeURIComponent(String(book.id)) + "&format=json&extended=1");
       const details = response?.books?.[0];
-      const sections = (Array.isArray(details?.sections) ? details.sections : []).filter(x => safeURL(x.listen_url));
+      const sections = (Array.isArray(details?.sections) ? details.sections : [])
+        .filter(x => safeURL(x.listen_url))
+        .sort((a,b)=>(Number(a.section_number)||0)-(Number(b.section_number)||0));
       if (!sections.length) { toast("Для этой книги доступен только оригинальный источник."); return; }
-      state.audioBookPlayback = { book, sections, index: 0 };
-      playAudioBookChapter(0);
+      const saved=readAudioBookmark(book.id);
+      const index=saved&&saved.chapter<sections.length?saved.chapter:0;
+      state.audioBookPlayback = { book, sections, index };
+      audioBookmark=saved&&index===saved.chapter?saved.second:null;
+      playAudioBookChapter(index);
+      if(saved)toast("Продолжаем главу "+(index+1)+" — место прослушивания сохранено на устройстве.");
     } catch (_) { toast("LibriVox не разрешил загрузить главы. Открой оригинальный источник по ссылке."); }
   }
   function playAudioBookChapter(index) {
@@ -391,6 +419,14 @@
     $("seek").value = "0"; $("currentTime").textContent = "0:00";
     $("duration").textContent = time(Number(section.playtime) || 0);
     audio.src = safeURL(section.listen_url);
+    const restoreSeconds=audioBookmark;audioBookmark=null;
+    if(Number.isFinite(restoreSeconds)&&restoreSeconds>0){
+      audio.addEventListener("loadedmetadata",()=>{
+        if(state.audioBookPlayback===playback && Number.isFinite(audio.duration) && audio.duration>restoreSeconds+2){
+          try{audio.currentTime=restoreSeconds}catch{}
+        }
+      },{once:true});
+    }
     audio.play().catch(() => toast("Не удалось запустить главу. Используй ссылку на LibriVox."));
   }
   function renderLibrary() {
@@ -445,6 +481,14 @@
       document.dispatchEvent(new CustomEvent("veto:stream-error", { detail: {
         provider: state.audioBookPlayback ? "audiobooks" : "music"
       }}));
+    });
+    audio.addEventListener("timeupdate",()=>{
+      if(!state.audioBookPlayback||Date.now()-lastAudioSave<4000)return;
+      lastAudioSave=Date.now();rememberAudioBookmark();
+    });
+    audio.addEventListener("pause",rememberAudioBookmark);
+    document.addEventListener("visibilitychange",()=>{
+      if(document.visibilityState==="hidden")rememberAudioBookmark();
     });
     audio.addEventListener("play", syncPlayUI); audio.addEventListener("pause", syncPlayUI);
     audio.addEventListener("ended", () => {
