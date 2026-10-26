@@ -71,6 +71,6 @@ test('Story inspector switches its controls but never recolors the exported canv
 test('default Russian copy has clear actions and no duplicate AI title',()=>{
   assert.match(html,/data-vtai-mode="reply"[^>]*>↗ AI-ответ<\/button>/);
   assert.match(html,/data-vtai-mode="action"[^>]*>⌁ AI-действия<\/button>/);
-  assert.match(html,/<h2>Задачи и договорённости<\/h2>/);
+  assert.match(html,/<h2 data-ui-text="tasksAgreements">Задачи и договорённости<\/h2>/);
   assert.doesNotMatch(html,/Задачи и договорённости · договорённости/);
 });
