@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#090d18">
   <meta name="description" content="VETO MEDIA — музыка, фильмы, книги и аудиокниги в Telegram Mini App.">
-  <title>VETO MEDIA V10 — Музыка, кино и книги</title>
+  <title>VETO MEDIA V11 — Музыка, кино и книги</title>
   <link rel="icon" href="./veto-telegram-mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./media.css">
   <link rel="stylesheet" href="./media-reader.css">
@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="./media-v8.css">
   <link rel="stylesheet" href="./media-v9.css">
   <link rel="stylesheet" href="./media-import.css">
+  <link rel="stylesheet" href="./media-discovery.css">
   <script defer src="https://telegram.org/js/telegram-web-app.js"></script>
   <script defer src="./media.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
@@ -28,6 +29,7 @@
   <script defer src="./media-telegram.js"></script>
   <script defer src="./media-v8.js"></script>
   <script defer src="./media-import.js"></script>
+  <script defer src="./media-discovery.js"></script>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
@@ -47,13 +49,47 @@
         <div class="hero-art" aria-hidden="true"><div class="hero-glow"></div><div class="hero-disc"><div class="disc-center"><img src="./veto-telegram-mark.svg" alt=""></div></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="floating-label">VETO <b>IMMERSIVE AUDIO</b></div></div>
       </section>
       <div class="tabs-wrap">
-        <nav class="tabs" aria-label="Разделы" id="mainTabs"><button type="button" class="tab is-active" data-tab="home">⌂ Главная</button><button type="button" class="tab" data-tab="music">♫ Музыка</button><button type="button" class="tab" data-tab="films">◉ Фильмы</button><button type="button" class="tab" data-tab="books">▤ Книги</button><button type="button" class="tab" data-tab="audiobooks">◉ Аудиокниги</button><button type="button" class="tab" data-tab="library">♡ Моё</button></nav>
+        <nav class="tabs" aria-label="Разделы" id="mainTabs"><button type="button" class="tab is-active" data-tab="home">⌂ Главная</button><button type="button" class="tab" data-tab="discover">✦ Поиск</button><button type="button" class="tab" data-tab="music">♫ Музыка</button><button type="button" class="tab" data-tab="films">◉ Фильмы</button><button type="button" class="tab" data-tab="books">▤ Книги</button><button type="button" class="tab" data-tab="audiobooks">◉ Аудиокниги</button><button type="button" class="tab" data-tab="library">♡ Моё</button></nav>
       </div>
       <section class="search-wrap" id="searchSection">
         <div class="searchbox"><span class="search-icon">⌕</span><input id="searchInput" type="search" placeholder="Поиск музыки, артистов, книг..." autocomplete="off" maxlength="100"><button id="searchClear" class="search-clear" type="button" aria-label="Очистить поиск">×</button></div>
         <div class="search-explainer" id="sourceLabel">Музыка независимых артистов · Audius</div>
       </section>
       <section id="homeView" class="view is-active" aria-label="Главная VETO MEDIA"></section>
+
+      <section id="discoverView" class="view" aria-label="Единый поиск по медиакаталогам">
+        <div class="v11-discovery">
+          <div class="v11-hero">
+            <span class="v11-overline">VETO UNIVERSE / DISCOVERY ENGINE</span>
+            <h1>Одна вселенная.<br><em>Миллионы историй.</em></h1>
+            <p>Ищи музыку, сериалы, книги и архивное кино в одном месте. Мы показываем реальный источник каждой записи — без выдуманных фильмов и платного контента без прав.</p>
+            <form id="v11SearchForm" class="v11-search-form" role="search">
+              <span aria-hidden="true">⌕</span>
+              <input id="v11Search" type="search" maxlength="80" minlength="2" autocomplete="off" placeholder="Название, исполнитель, автор, сериал…" aria-label="Единый поиск">
+              <button type="submit">Найти ↗</button>
+            </form>
+            <div class="v11-prompts" aria-label="Примеры поиска">
+              <button type="button" data-v11-prompt="Sherlock">✦ Sherlock</button>
+              <button type="button" data-v11-prompt="Jazz">♫ Jazz</button>
+              <button type="button" data-v11-prompt="Space">◈ Space</button>
+              <button type="button" data-v11-prompt="Friends">◎ Friends</button>
+            </div>
+          </div>
+          <p class="v11-legal-note">Поиск включает общедоступные каталоги Audius, TVmaze, Gutenberg и Internet Archive. Наличие записи в каталоге не означает, что её можно бесплатно смотреть или воспроизводить.</p>
+          <div class="v11-nav"><h2>Открывай свой следующий мир</h2><small>Четыре независимых источника · никаких пиратских потоков</small></div>
+          <div class="v11-filters" role="group" aria-label="Тип медиаконтента">
+            <button type="button" class="active" data-v11-filter="all" aria-pressed="true">Всё <small>0</small></button>
+            <button type="button" data-v11-filter="music" aria-pressed="false">♫ Музыка <small>0</small></button>
+            <button type="button" data-v11-filter="shows" aria-pressed="false">◉ Сериалы <small>0</small></button>
+            <button type="button" data-v11-filter="books" aria-pressed="false">▤ Книги <small>0</small></button>
+            <button type="button" data-v11-filter="films" aria-pressed="false">✦ Киноархив <small>0</small></button>
+          </div>
+          <div id="v11ProviderStatus" class="v11-provider-status" aria-live="polite"></div>
+          <p id="v11Status" class="v11-status" role="status">Выбери тему или введи запрос — каталоги загрузятся только после поиска.</p>
+          <div id="v11Results" class="v11-results"><div class="v11-empty">Ищи музыку, сериалы, книги и архивное кино.</div></div>
+          <p class="v11-legal-note">Сведения о сериалах: <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener noreferrer">TVmaze, CC BY-SA</a>. TVmaze — справочник, а не видеосервис. Каталог книг: <a href="https://www.gutenberg.org/" target="_blank" rel="noopener noreferrer">Project Gutenberg</a>. Киноархив: <a href="https://archive.org/details/prelinger" target="_blank" rel="noopener noreferrer">Internet Archive</a>.</p>
+        </div>
+      </section>
       <section id="musicView" class="view" aria-label="Музыка">
         <div class="section-top"><div><span class="overline">VETO / MUSIC</span><h2>На твоей волне</h2><p>Новые звучания. Никакого визуального шума.</p></div><div class="section-buttons"><button class="chip is-active" id="trendingButton" type="button">Популярное</button><button class="chip" id="newButton" type="button">Новинки</button></div></div>
         <div class="music-layout">
@@ -94,6 +130,17 @@
     <div class="veto-film-dialog" role="dialog" aria-modal="true" aria-labelledby="vetoFilmModalTitle">
       <div class="veto-film-dialog-header"><div><strong id="vetoFilmModalTitle">Фильм</strong><small id="vetoFilmModalLabel">Internet Archive</small></div><button type="button" id="vetoFilmClose" aria-label="Закрыть">×</button></div>
       <div class="veto-film-dialog-body"><div class="veto-film-dialog-buttons"><button type="button" id="vetoFilmEmbedButton">▶ Смотреть здесь</button><a id="vetoFilmOriginal" href="https://archive.org/details/prelinger" target="_blank" rel="noopener noreferrer">Оригинальный источник ↗</a></div><div id="vetoFilmEmbed" class="veto-film-embed"></div><p>Видео загружается непосредственно с Internet Archive только после нажатия «Смотреть здесь». Если Telegram ограничивает iframe, открой оригинальный источник.</p></div>
+    </div>
+  </div>
+
+  <div id="v11DetailModal" class="v11-modal hidden" role="presentation">
+    <div class="v11-modal-card" role="dialog" aria-modal="true" aria-labelledby="v11DetailTitle">
+      <button id="v11DetailClose" type="button" class="v11-modal-close" aria-label="Закрыть">×</button>
+      <small class="v11-overline">VETO CINEMA / TV SERIES CATALOG</small>
+      <h3 id="v11DetailTitle">Описание сериала</h3>
+      <p id="v11DetailInfo"></p><p id="v11DetailText"></p>
+      <p class="v11-legal-note">Это сведения о сериале, а не ссылка на бесплатное воспроизведение.</p>
+      <a id="v11DetailSource" class="v11-detail-source" href="https://www.tvmaze.com/" target="_blank" rel="noopener noreferrer">Подробнее на TVmaze ↗</a>
     </div>
   </div>
   <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
