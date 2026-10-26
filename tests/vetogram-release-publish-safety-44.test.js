@@ -159,3 +159,10 @@ test('release uses latest static client assets and keeps security contracts on s
   assert.match(ui,/Проверь свои Stories в Telegram перед новой попыткой/);
   assert.match(privacy,/Подключено · ждём тест удаления/);
 });
+
+test('successful Story screen does not promise unverified automatic viewers',()=>{
+  const handoff=section(ui,'  async function publishComposerStory() {','  function relativeTime(');
+  assert.doesNotMatch(handoff,/подхватит просмотры автоматически/);
+  assert.match(handoff,/покажет только подтверждённые просмотры после обновления/);
+  assert.match(handoff,/viewerState\.session\?\.connected/);
+});
