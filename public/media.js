@@ -95,7 +95,7 @@
     if (!raw || !raw.id || !raw.title) return null;
     return {
       id: String(raw.id), title: String(raw.title), artist: String(raw.user?.name || raw.user?.handle || "Независимый артист"),
-      artwork: safeURL(raw.artwork?._480x480 || raw.artwork?._150x150 || ""),
+      artwork: safeURL(raw.artwork?.["480x480"] || raw.artwork?.["150x150"] || raw.artwork?._480x480 || raw.artwork?._150x150 || ""),
       duration: Number(raw.duration) || 0, url: safeURL(raw.permalink || ""),
       gated: Boolean(raw.is_stream_gated || raw.is_delete || raw.is_unlisted || raw.is_scheduled_release)
     };
