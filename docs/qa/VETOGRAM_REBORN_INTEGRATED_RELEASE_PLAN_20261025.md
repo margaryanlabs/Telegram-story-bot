@@ -350,3 +350,41 @@ The originally chosen **first Canvas Noir** direction is retained; the current s
 **Connector-backed isolated execution, NOT the full Node runner:** locale 6/6 tests passed, Canvas Noir visual hierarchy 11/11 tests passed, and light theme 5/5 tests passed (**22/22 isolated focused tests**). Current shipping HTML: 13 screens, 615 unique DOM IDs with no duplicates, 44 linked local JS/CSS files all found, 108 `data-ui-text` / `data-ui-label` / `data-ui-placeholder` bindings using 102 distinct known dictionary keys. The Canvas Noir controller parsed without a syntax error.
 
 **Release is still blocked:** Most supporting copy, dynamic runtime status strings, sheets and notifications are Russian; **complete RU/EN/HY localization is not done**. The current PR head has not passed a real clean `npm ci && npm run vercel-build`, there are no current-commit Android/iPhone/Fold WebView screenshots, real consented Telegram E2E is pending, and live AI inference requires an enabled provider key and budget. Never claim all features or visual QA are complete; do not promote to Production yet.
+
+## V4.11 non-GitHub-Actions source QA continuation — 2026-10-26
+
+### What changed in existing PR #185
+
+- Fixed the **Story publication safety test**, which still expected obsolete `/app.js?v=20261025-reborn-1` and `/privacy.js?v=20261025-noir-3` query strings. The test now checks exactly one current versioned local script for each asset. Updated fixture wiring for `ensureComposerIdentity`, `viewerOwnerEpoch` and `composerGeneration` so regressions actually execute the current owner/generation guards.
+- Corrected two **owner-scope test expectations**: the live AI generation guard checks both signed account and request-intent epoch; older tests required a weaker owner-only comparison. Retained owner and intent assertions.
+- Business wizard tests now validate actual signed owner leases and `assertOwner(lease)` after the request, instead of a removed inline check; AI presentation assertion accounts for `data-ui-text="askVetoAI"`.
+- The genuine Story success sheet no longer claims viewer events will be captured automatically solely because the viewer session is connected. It truthfully says that only confirmed view information can appear after data refresh. Added a regression assertion.
+
+### Verification performed without GitHub Actions
+
+`functions.exec` loaded current GitHub source into an isolated V8 execution harness; no node_modules installation or external network, Telegram, AI or database writes were performed during these **source-level** tests:
+
+| Suite | Isolated checks passing |
+| --- | ---: |
+| Story publisher and non-idempotent POST safety | 13/13 |
+| Real Anti-Delete persisted-proof and Archive diagnostics | 5/5 |
+| OTP resume, duplicate suppression and Neon v6 guard (mocked) | 13/13 |
+| Owner-bound A→B→A / AI async and Task Cloud boundaries | 12/12 |
+| Business wizard consent and AI UI source contracts | 5/5 |
+| Country picker, onboarding and navigation (+7/GE/AM) | 7/7 |
+| Canvas Noir visual hierarchy, Fold CSS and disclosure controls | 11/11 |
+| RU/EN/HY locale switching and safe user content | 6/6 |
+| Light-theme tokens and Story canvas isolation | 5/5 |
+| **Total** | **77/77** |
+
+**These 77 checks are NOT equivalent to a full `node --test`, `npm ci`, production deployment build, screenshot-based responsive browser QA, real Telegram MTProto delivery, live Anti-Delete permission/event, Story publishing, microphone or AI provider call.** All dependencies remain necessary to authorize the single final deployment.
+
+### Outstanding blockers / no deployment authorization
+
+1. Full clean checkout of current branch followed by `npm ci --no-audit --no-fund` and `npm run vercel-build`; GitHub Actions still fails before assigning a runner and local sandbox DNS cannot fetch the repo. The known Vercel READY preview built older SHA `ddb22fa`, not this head.
+2. Real signed Telegram accounts on mobile: OTP delivery, QR, owner swap, session recovery, consented Business rights, an actual deleted message archived and a published Story with confirmed Telegram ID. Avoid testing these against unrelated users.
+3. Current-branch Android / iPhone / Fold screenshot acceptance for 13 screens / 4 themes, including safe area and keyboard, long strings, accessibility.
+4. AI remains disabled until an explicit provider key, budget, quotas and provider call are available; API + storage tables alone do not make inference live. Broader UX copy and dynamic states in EN/HY still need localization.
+5. Neon v6 additive OTP lease table already applied/verified. Do not repeat migration 006.
+
+**Status: DRAFT / NOT READY TO DEPLOY AS A FULLY TESTED RELEASE.** No Vercel production deployment or PR merge was made in this continuation.
