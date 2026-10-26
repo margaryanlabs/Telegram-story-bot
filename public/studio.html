@@ -8,24 +8,24 @@
   <title>VETOGRAM — чаты, истории и приватность</title>
   <meta name="description" content="VETOGRAM — личные чаты Telegram, истории, AI, голосовая студия и понятный контроль приватности." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/chat-themes.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/chat-media.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/studio-module.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/veto-global-ui.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/telegram-stories.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/veto-device-polish.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/veto-launch-polish.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/vetogram-header.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/story-engine.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/vetogram-ai.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/vetogram-2026.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261026-v5-restore-ui" />
-  <link rel="stylesheet" href="/vetogram-noir.css?v=20261026-v5-restore-ui" />
+  <link rel="stylesheet" href="/app.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/chat-themes.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/chat-media.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/studio-module.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/veto-global-ui.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/telegram-stories.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/veto-device-polish.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/veto-launch-polish.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/vetogram-header.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/story-engine.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/vetogram-ai.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/vetogram-2026.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/vetogram-noir.css?v=20261026-v5-chat-rescue" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -579,6 +579,7 @@
             <small id="telegramThreadSyncStatus">Обновление при открытом чате · без отметки «прочитано»</small>
             <button type="button" id="telegramThreadSyncNow" aria-label="Проверить новые сообщения">↻</button>
           </div>
+          <div class="veto-mirror-thread-connect" id="telegramThreadConnectNotice" hidden><span>Подключи личный Telegram для отправки.</span><button type="button" id="telegramThreadConnectButton">Продолжить вход →</button></div>
           <div class="veto-mirror-thread-body" id="telegramThreadMessages" aria-live="polite"></div>
           <button type="button" id="telegramThreadJumpLatest" class="veto-mirror-jump-latest"
             aria-label="Перейти к последним сообщениям" title="К последним сообщениям" hidden>↓ <span>Последние</span></button>
@@ -2263,31 +2264,31 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/veto-device-polish.js?v=20261026-v5-restore-ui"></script>
-  <script src="/vetogram-country-picker.js?v=20261026-v5-restore-ui"></script>
-  <script src="/app.js?v=20261026-v5-restore-ui"></script>
-  <script src="/relay-module.js?v=20261026-v5-restore-ui"></script>
-  <script src="/privacy.js?v=20261026-v5-restore-ui"></script>
-  <script src="/chat-theme.js?v=20261026-v5-restore-ui"></script>
-  <script src="/vetogram-inbox-pulse-core.js?v=20261026-v5-restore-ui"></script>
-  <script src="/telegram-chats.js?v=20261026-v5-restore-ui"></script>
-  <script src="/telegram-stories.js?v=20261026-v5-restore-ui"></script>
-  <script src="/voice-studio.js?v=20261026-v5-restore-ui"></script>
-  <script src="/studio-module.js?v=20261026-v5-restore-ui"></script>
-  <script type="module" src="/story-engine.js?v=20261026-v5-restore-ui"></script>
-  <script type="module" src="/vetogram-ai.js?v=20261026-v5-restore-ui"></script>
-  <script type="module" src="/vetogram-creative-presets.js?v=20261026-v5-restore-ui"></script>
-  <script src="/brand-pack.js?v=20261026-v5-restore-ui"></script>
-  <script src="/veto-launch-polish.js?v=20261026-v5-restore-ui" defer></script>
-  <script src="/vetogram-header.js?v=20261026-v5-restore-ui" defer></script>
-  <script src="/vetogram-command-2026.js?v=20261026-v5-restore-ui" defer></script>
-  <script src="/vetogram-resume-2026.js?v=20261026-v5-restore-ui" defer></script>
-  <script type="module" src="/vetogram-workflows-2026.js?v=20261026-v5-restore-ui"></script>
-  <script type="module" src="/vetogram-mission-2026.js?v=20261026-v5-restore-ui"></script>
-  <script src="/vetogram-noir.js?v=20261026-v5-restore-ui" defer></script>
-  <script src="/vetogram-experience-v4.js?v=20261026-v5-restore-ui" defer></script>
-  <script src="/vetogram-chat-experience-v4.js?v=20261026-v5-restore-ui" defer></script>
-  <script src="/vetogram-reborn-ai.js?v=20261026-v5-restore-ui" defer></script>
-  <script type="module" src="/vetogram-locale.js?v=20261026-v5-restore-ui"></script>
+  <script src="/veto-device-polish.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/vetogram-country-picker.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/app.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/relay-module.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/privacy.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/chat-theme.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/vetogram-inbox-pulse-core.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/telegram-chats.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/telegram-stories.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/voice-studio.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/studio-module.js?v=20261026-v5-chat-rescue"></script>
+  <script type="module" src="/story-engine.js?v=20261026-v5-chat-rescue"></script>
+  <script type="module" src="/vetogram-ai.js?v=20261026-v5-chat-rescue"></script>
+  <script type="module" src="/vetogram-creative-presets.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/brand-pack.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/veto-launch-polish.js?v=20261026-v5-chat-rescue" defer></script>
+  <script src="/vetogram-header.js?v=20261026-v5-chat-rescue" defer></script>
+  <script src="/vetogram-command-2026.js?v=20261026-v5-chat-rescue" defer></script>
+  <script src="/vetogram-resume-2026.js?v=20261026-v5-chat-rescue" defer></script>
+  <script type="module" src="/vetogram-workflows-2026.js?v=20261026-v5-chat-rescue"></script>
+  <script type="module" src="/vetogram-mission-2026.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/vetogram-noir.js?v=20261026-v5-chat-rescue" defer></script>
+  <script src="/vetogram-experience-v4.js?v=20261026-v5-chat-rescue" defer></script>
+  <script src="/vetogram-chat-experience-v4.js?v=20261026-v5-chat-rescue" defer></script>
+  <script src="/vetogram-reborn-ai.js?v=20261026-v5-chat-rescue" defer></script>
+  <script type="module" src="/vetogram-locale.js?v=20261026-v5-chat-rescue"></script>
 </body>
 </html>
