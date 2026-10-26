@@ -31,7 +31,7 @@ test('successful personal MTProto link invalidates any older archive-only inbox'
  const app=read('public/app.js'),chat=read('public/telegram-chats.js');
  assert.match(app,/wasConnected=viewerState\.session\?\.connected===true/);
  assert.match(app,/new CustomEvent\('vetogram:telegram-session-connected'\)/);
- assert.match(chat,/pendingLoginRefresh:true/);
+ assert.match(chat,/pendingLoginRefresh=true/);
  assert.match(chat,/vetogram:telegram-session-connected/);
  assert.match(chat,/void loadChats\(\{reset:true\}\)/);
 });
