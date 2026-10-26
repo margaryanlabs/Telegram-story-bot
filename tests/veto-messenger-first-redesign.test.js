@@ -17,7 +17,8 @@ test('Messenger is the first-class default screen with four primary working tabs
 });
 
 test('Welcome has one main task, optional education and correct login handoff',()=>{
- assert.match(html,/<h1 class="v5-welcome-title">VETOGRAM/);
+ assert.match(html,/<h1 class="v5-welcome-title"><span class="v5-welcome-veto">VETO<\/span>/);
+ assert.match(html,/class="veto-brand-reveal-wordmark" aria-label="VETOGRAM"/);
  assert.match(html,/id="vetoWelcomeExplore"/);
  assert.match(html,/id="vetoWelcomeNext"/);
  assert.match(app,/vetoWelcomeStep === 0/);
