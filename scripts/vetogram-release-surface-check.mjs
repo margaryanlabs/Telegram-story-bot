@@ -77,8 +77,14 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
 
   add(/id=["']sheet["'][^>]*\brole=["']dialog["'][^>]*\baria-modal=["']true["']/.test(html),
     'MISSING_SHARED_MODAL_CONTRACT');
-  add(/id=["']storyPortalConfirm["'][^>]*\btype=["']checkbox["']/.test(html) &&
-      !/id=["']storyPortalConfirm["'][^>]*\bchecked(?:\s|=|\/|>)/.test(html),
+  // Boolean checked is unsafe regardless of attribute order (and even if
+  // rendered as checked="false": HTML treats presence as true).
+  const portalControls=[...html.matchAll(/<input\b[^>]*>/gi)]
+    .map(match=>match[0])
+    .filter(tag=>/\bid\s*=\s*["']storyPortalConfirm["']/.test(tag));
+  add(portalControls.length===1 &&
+      /\btype\s*=\s*["']checkbox["']/.test(portalControls[0]) &&
+      !/\bchecked(?:\s|=|\/|>)/i.test(portalControls[0]),
     'PORTAL_MUST_REQUIRE_FRESH_OPT_IN');
   add(/window\.VetoTelegramStageStory\s*=\s*async/.test(app) &&
       /await window\.VetoTelegramStageStory\(/.test(story),
