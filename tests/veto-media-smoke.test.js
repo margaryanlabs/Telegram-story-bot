@@ -151,3 +151,26 @@ test("V7 audiobook restores the last listening chapter without a backend", () =>
   assert.match(js,/loadedmetadata/);
   assert.match(js,/localStorage\.setItem\(AUDIO_PROGRESS_KEY/);
 });
+
+
+test("V8 local audio queue does not upload personal files", () => {
+  const audioTool=readFileSync(new URL("../public/media-v8.js",import.meta.url),"utf8");
+  const styles=readFileSync(new URL("../public/media-v8.css",import.meta.url),"utf8");
+  execFileSync(process.execPath,["--check",join(process.cwd(),"public/media-v8.js")],{stdio:"pipe"});
+  assert.match(html,/media-v8\.js/);
+  assert.match(html,/media-v8\.css/);
+  assert.match(audioTool,/MAX_FILES=12/);
+  assert.match(audioTool,/MAX_PER_FILE=100\*1048576/);
+  assert.match(audioTool,/MAX_TOTAL=300\*1048576/);
+  assert.match(audioTool,/URL\.createObjectURL/);
+  assert.match(audioTool,/URL\.revokeObjectURL/);
+  assert.match(audioTool,/isLocal\(\)/);
+  assert.match(audioTool,/v8MusicInput/);
+  assert.match(audioTool,/audio\.playbackRate/);
+  assert.match(audioTool,/audio\.volume/);
+  assert.match(audioTool,/setActionHandler/);
+  assert.match(audioTool,/v8Sleep/);
+  assert.match(styles,/prefers-reduced-motion/);
+  assert.match(styles,/v8-local-track/);
+  assert.doesNotMatch(audioTool,/\bfetch\(|XMLHttpRequest|TELEGRAM_BOT_TOKEN|telegram-session-owner/i);
+});
