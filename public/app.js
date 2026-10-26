@@ -1218,6 +1218,7 @@
   }
 
   function renderViewers() {
+    const viewerUi=(key,ru)=>window.VetogramI18n?.t?.(key,ru)||ru;
     const item = preferredStory();
 
     if (item) {
@@ -1246,13 +1247,13 @@
     const quickPrimary = $('quickPrimaryButton');
     const testAlertButton = $('testAlertButton');
 
-    quickTelegram.textContent = state.ready ? 'Готово' : 'Нужно подключить';
+    quickTelegram.textContent = state.ready ? viewerUi('viewerReady',"Готово") : viewerUi('viewerNeedConnect',"Нужно подключить");
     quickViewer.textContent = connected
-      ? 'Готово'
+      ? viewerUi('viewerReady',"Готово")
       : viewerState.newConnectionsReady === false
-        ? 'Нужно настроить защиту'
-        : 'Нужно подключить';
-    quickStory.textContent = hasStory ? `#${item.id}` : 'Нужно опубликовать';
+        ? viewerUi('viewerSecuritySetup',"Нужно настроить защиту")
+        : viewerUi('viewerNeedConnect',"Нужно подключить");
+    quickStory.textContent = hasStory ? `#${item.id}` : viewerUi('viewerNeedPublish',"Нужно опубликовать");
 
     $('quickTelegramStep').classList.toggle('done', Boolean(state.ready));
     $('quickViewerStep').classList.toggle('done', connected);
@@ -1263,15 +1264,15 @@
     quickBadge.classList.toggle('ready', completed === 3);
 
     if (!state.ready) {
-      quickPrimary.textContent = 'Проверить Telegram';
+      quickPrimary.textContent = viewerUi('viewerCheckTelegram',"Проверить Telegram");
     } else if (!connected && viewerState.newConnectionsReady === false) {
-      quickPrimary.textContent = 'Проверить Security';
+      quickPrimary.textContent = viewerUi('viewerCheckSecurity',"Проверить Security");
     } else if (!connected) {
-      quickPrimary.textContent = 'Подключить аналитику';
+      quickPrimary.textContent = viewerUi('viewerConnectAnalytics',"Подключить аналитику");
     } else if (!hasStory) {
-      quickPrimary.textContent = 'Опубликовать Story';
+      quickPrimary.textContent = viewerUi('viewerPublishStory',"Опубликовать Story");
     } else {
-      quickPrimary.textContent = 'Обновить данные';
+      quickPrimary.textContent = viewerUi('viewerRefreshData',"Обновить данные");
     }
 
     testAlertButton.disabled = !connected;
@@ -1279,50 +1280,50 @@
     syncState.className = 'viewer-sync-state';
     if (viewerState.degraded) {
       $('viewerSyncTitle').textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Сервер хранения VETOGRAM недоступен.' : 'Аналитика аудитории восстанавливает соединение.';
-      $('viewerSyncText').textContent = viewerState.error || 'Сохранённый Telegram-аккаунт не отключён. Требуется восстановить сервер.';
-      syncState.textContent = 'Хранилище недоступно · сессию не удаляем';
+        ? viewerUi('viewerStorageDownTitle',"Сервер хранения VETOGRAM недоступен.") : viewerUi('viewerRecoveringTitle',"Аналитика аудитории восстанавливает соединение.");
+      $('viewerSyncText').textContent = viewerState.error || viewerUi('viewerSessionPreserved',"Сохранённый Telegram-аккаунт не отключён. Требуется восстановить сервер.");
+      syncState.textContent = viewerUi('viewerStorageSessionKept',"Хранилище недоступно · сессию не удаляем");
       syncState.classList.add('warn');
-      syncButton.textContent = connected ? 'Управление Аналитика аудитории' : 'Обновить';
+      syncButton.textContent = connected ? viewerUi('viewerManageAnalytics',"Управление Аналитика аудитории") : 'Обновить';
     } else if (viewerState.configured === false) {
-      $('viewerSyncTitle').textContent = 'Аналитика аудитории backend почти готов.';
-      $('viewerSyncText').textContent = 'Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.';
-      syncState.textContent = 'Нужно завершить серверную настройку Аналитика аудитории';
+      $('viewerSyncTitle').textContent = viewerUi('viewerBackendTitle',"Аналитика аудитории backend почти готов.");
+      $('viewerSyncText').textContent = viewerUi('viewerBackendInfo',"Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.");
+      syncState.textContent = viewerUi('viewerBackendBadge',"Нужно завершить серверную настройку Аналитика аудитории");
       syncState.classList.add('warn');
-      syncButton.textContent = 'Что осталось подключить';
+      syncButton.textContent = viewerUi('viewerRemaining',"Что осталось подключить");
     } else if (connected) {
       const account = viewerState.session?.account || {};
-      $('viewerSyncTitle').textContent = 'Аналитика аудитории подключена.';
+      $('viewerSyncTitle').textContent = viewerUi('viewerLinkedTitle',"Аналитика аудитории подключена.");
       $('viewerSyncText').textContent = viewerState.backgroundReady
-        ? 'Fast Alerts включены: сервер проверяет события в фоне. Личность зрителя показывается только после подтверждения Telegram.'
-        : 'Аккаунт подключён, но фоновые проверки пока не подтверждены. Обновляй данные вручную или настрой безопасный cron.';
+        ? viewerUi('viewerBackgroundConfiguredInfo',"Fast Alerts включены: сервер проверяет события в фоне. Личность зрителя показывается только после подтверждения Telegram.")
+        : viewerUi('viewerBackgroundPendingInfo',"Аккаунт подключён, но фоновые проверки пока не подтверждены. Обновляй данные вручную или настрой безопасный cron.");
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
       syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
       syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
-      syncButton.textContent = 'Управление Аналитика аудитории';
+      syncButton.textContent = viewerUi('viewerManageAnalytics',"Управление Аналитика аудитории");
     } else if (viewerState.session?.status === 'reauth_required') {
-      $('viewerSyncTitle').textContent = 'Нужно переподключить Аналитика аудитории.';
-      $('viewerSyncText').textContent = viewerState.session?.lastError || 'Telegram-сессия больше не авторизована.';
+      $('viewerSyncTitle').textContent = viewerUi('viewerReauthTitle',"Нужно переподключить Аналитика аудитории.");
+      $('viewerSyncText').textContent = viewerState.session?.lastError || viewerUi('viewerSessionExpired',"Telegram-сессия больше не авторизована.");
       syncState.textContent = viewerState.newConnectionsReady === false
-        ? 'Повторное подключение временно закрыто Security'
-        : 'Требуется повторная авторизация';
+        ? viewerUi('viewerReauthBlocked',"Повторное подключение временно закрыто Security")
+        : viewerUi('viewerReauthRequired',"Требуется повторная авторизация");
       syncState.classList.add('warn');
-      syncButton.textContent = 'Переподключить';
+      syncButton.textContent = viewerUi('viewerReconnect',"Переподключить");
     } else if (viewerState.newConnectionsReady === false) {
       $('viewerSyncTitle').textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Хранилище VETOGRAM временно недоступно.' : 'Аналитика аудитории защищён.';
+        ? viewerUi('viewerStorageTemporaryTitle',"Хранилище VETOGRAM временно недоступно.") : viewerUi('viewerProtectedTitle',"Аналитика аудитории защищён.");
       $('viewerSyncText').textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Это проблема сервера, а не подтверждение выхода из Telegram. Не удаляй сессию и не отправляй код повторно.'
-        : 'Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.';
+        ? viewerUi('viewerStorageRetryInfo',"Это проблема сервера, а не подтверждение выхода из Telegram. Не удаляй сессию и не отправляй код повторно.")
+        : viewerUi('viewerGuardInfo',"Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.");
       syncState.textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Сервер хранения · недоступен' : 'Защищённая сессия storage · setup required';
+        ? viewerUi('viewerStorageBadge',"Сервер хранения · недоступен") : viewerUi('viewerGuardBadge',"Защищённая сессия storage · setup required");
       syncState.classList.add('warn');
-      syncButton.textContent = 'Проверить Security';
+      syncButton.textContent = viewerUi('viewerCheckSecurity',"Проверить Security");
     } else {
-      $('viewerSyncTitle').textContent = 'Подключи аналитику зрителей.';
-      $('viewerSyncText').textContent = 'Для Аналитика аудитории используется отдельное защищённое подключение Telegram только к данным твоих собственных Stories. Код входа и 2FA не сохраняются.';
-      syncState.textContent = viewerState.configured === null ? 'Проверяю состояние…' : 'Не подключено';
-      syncButton.textContent = 'Подключить аналитику';
+      $('viewerSyncTitle').textContent = viewerUi('viewerStartTitle',"Подключи аналитику зрителей.");
+      $('viewerSyncText').textContent = viewerUi('viewerStartInfo',"Для Аналитика аудитории используется отдельное защищённое подключение Telegram только к данным твоих собственных Stories. Код входа и 2FA не сохраняются.");
+      syncState.textContent = viewerState.configured === null ? viewerUi('viewerChecking',"Проверяю состояние…") : viewerUi('viewerDisconnected',"Не подключено");
+      syncButton.textContent = viewerUi('viewerConnectAnalytics',"Подключить аналитику");
     }
 
     const query = viewerSearchQuery.trim().toLowerCase();
