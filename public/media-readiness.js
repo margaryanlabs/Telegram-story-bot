@@ -34,8 +34,8 @@
  diagnostics.https=location.protocol==="https:" || location.hostname==="localhost";
  diagnostics.hostHint=!!(window.Telegram?.WebApp?.initData && typeof window.Telegram.WebApp.initData==="string");
  const probeAudio=document.createElement("audio");
- diagnostics.mp3=!!probeAudio.canPlayType?.("audio/mpeg").replace(/no/i,"");
- diagnostics.m4a=!!probeAudio.canPlayType?.("audio/mp4; codecs=mp4a.40.2").replace(/no/i,"");
+ diagnostics.mp3=Boolean(probeAudio.canPlayType?.("audio/mpeg"));
+ diagnostics.m4a=Boolean(probeAudio.canPlayType?.("audio/mp4; codecs=mp4a.40.2"));
  try{const key="veto-qa-test";localStorage.setItem(key,"1");diagnostics.storage=localStorage.getItem(key)==="1";localStorage.removeItem(key)}catch{}
  diagnostics.indexedDb=!!window.indexedDB;
  renderFacts();
@@ -77,5 +77,5 @@
    const a=document.createElement("a");a.href=url;a.download="veto-media-device-check.json";a.click();
    setTimeout(()=>URL.revokeObjectURL(url),3000);
  };
- $("v12QaHide").onclick=()=>{panel.hidden=!panel.hidden;};
+ $("v12QaHide").onclick=()=>{panel.classList.toggle("collapsed");$("v12QaHide").textContent=panel.classList.contains("collapsed")?"＋":"×";};
 })();
