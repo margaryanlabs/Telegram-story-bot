@@ -336,3 +336,43 @@ test('Neon v6 SQL lease uses atomic conflict handling and token-checked release'
   assert.match(neon,/case 'release_login_code_lease':/);
   assert.match(neon,/WHERE telegram_user_id=\$1::bigint AND lease_token=\$2::uuid/);
 });
+
+
+test('Neon does not acknowledge a sent OTP if challenge persistence is unconfirmed',async()=>{
+  const start=api.indexOf("    if (action === 'send_code') {");
+  const end=api.indexOf("    if (action === 'send_login_email') {",start);
+  const actual=api.slice(start,end);
+  let sent=0,released=0;
+  const scope=vm.createContext({
+    userId:'123456',body:{phone:'+37499123456'},
+    config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
+    selectedStorageProvider:()=> 'neon',
+    randomUUID:()=> 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+    inFlightLoginCodeOwners:new Set(),
+    normalizeTelegramPhone:value=>value,
+    getAuthChallenge:async()=>null,
+    getViewerSession:async()=>null,
+    isOwnActiveViewerSession:()=>false,
+    claimLoginCodeLease:async()=>({acquired:true}),
+    releaseLoginCodeLease:async()=>{released++;return {released:true}},
+    sealJson:async data=>JSON.stringify(data),
+    saveAuthChallenge:async()=>null,
+    beginUserAuth:async phone=>{
+      sent++;
+      return {phone,phoneCodeHash:'fake-hash',delivery:'telegram_app',session:'fake'};
+    },
+  });
+  const handler=vm.runInContext(
+    '(async function(res){const action="send_code";'+actual+'})',scope
+  );
+  const response={
+    code:0,status(n){this.code=n;return this},json(){return this},
+    setHeader(){},
+  };
+  await assert.rejects(handler(response),/AUTH_CHALLENGE_PERSISTENCE_UNCONFIRMED/);
+  assert.equal(sent,1);
+  assert.equal(response.code,0);
+  // Avoid immediately retrying when Telegram could have delivered a code.
+  // The bounded database lease expires instead of being cleared early.
+  assert.equal(released,0);
+});
