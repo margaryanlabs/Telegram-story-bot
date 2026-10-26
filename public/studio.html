@@ -8,24 +8,25 @@
   <title>VETOGRAM — чаты, истории и приватность</title>
   <meta name="description" content="VETOGRAM — личные чаты Telegram, истории, AI, голосовая студия и понятный контроль приватности." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/chat-themes.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/chat-media.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/studio-module.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/veto-global-ui.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/telegram-stories.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/veto-device-polish.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/veto-launch-polish.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/vetogram-header.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/story-engine.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/vetogram-ai.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/vetogram-2026.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261026-v5-chat-rescue" />
-  <link rel="stylesheet" href="/vetogram-noir.css?v=20261026-v5-chat-rescue" />
+  <link rel="stylesheet" href="/app.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/chat-themes.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/chat-media.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/studio-module.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/veto-global-ui.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/telegram-stories.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/veto-device-polish.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/veto-launch-polish.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/vetogram-header.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/story-engine.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/vetogram-ai.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/vetogram-2026.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/vetogram-noir.css?v=20261026-v5-brand-intro" />
+  <link rel="stylesheet" href="/vetogram-brand-reveal.css?v=20261026-v5-brand-intro" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -41,7 +42,7 @@
   <section class="veto-welcome" id="vetoWelcome" hidden aria-modal="true" aria-label="Добро пожаловать в Vetogram">
     <div class="veto-welcome-shell">
       <div class="veto-welcome-top">
-        <div class="veto-welcome-brand"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /><div><strong>VETOGRAM</strong><small>Telegram с дополнительными возможностями</small></div></div>
+        <div class="veto-welcome-brand"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /><div><strong>VETO</strong><small>Чаты. Приватность. Контроль.</small></div></div>
         <button class="veto-welcome-skip" id="vetoWelcomeSkip" type="button">Пропустить</button>
       </div>
 
@@ -49,7 +50,7 @@
         <article class="veto-intro-step active" data-veto-intro-step="0">
           <div class="veto-intro-orbit"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="Vetogram" /><i></i><b></b></div>
           <span class="kicker">ДОБРО ПОЖАЛОВАТЬ</span>
-          <h1 class="v5-welcome-title">VETOGRAM<br><em>Твой Telegram. Больше.</em></h1>
+          <h1 class="v5-welcome-title"><span class="v5-welcome-veto">VETO</span><br><em>Твой Telegram. Больше.</em></h1>
           <p>Подключи свой Telegram и сразу переходи к чатам. Умный поиск, стикеры, голос, Истории и защита доступны тогда, когда нужны.</p>
           <div class="veto-first-choice-intro" aria-label="Выбор способа подключения переписок">
             <button type="button" data-veto-start-action="live-chats"><b>💬 Мои чаты</b><small>Войти по номеру / QR · без Business</small><em>→</em></button>
@@ -108,7 +109,15 @@
     </div>
   </section>
 
-  <main class="app-shell">
+  <div class="veto-brand-reveal" id="vetoBrandReveal" aria-hidden="true" hidden>
+     <div class="veto-brand-reveal-inner">
+       <img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="88" height="88" />
+       <strong class="veto-brand-reveal-wordmark" aria-label="VETOGRAM"><span>VETO</span><em>GRAM</em></strong>
+       <small>Чаты. Приватность. Контроль.</small>
+     </div>
+   </div>
+
+   <main class="app-shell">
     <header class="topbar">
       <div class="brand">
         <button type="button" class="veto-reborn-brand" id="vetoNavHome" aria-label="Открыть инструменты и главную Vetogram">
@@ -2264,31 +2273,32 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/veto-device-polish.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/vetogram-country-picker.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/app.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/relay-module.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/privacy.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/chat-theme.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/vetogram-inbox-pulse-core.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/telegram-chats.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/telegram-stories.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/voice-studio.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/studio-module.js?v=20261026-v5-chat-rescue"></script>
-  <script type="module" src="/story-engine.js?v=20261026-v5-chat-rescue"></script>
-  <script type="module" src="/vetogram-ai.js?v=20261026-v5-chat-rescue"></script>
-  <script type="module" src="/vetogram-creative-presets.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/brand-pack.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/veto-launch-polish.js?v=20261026-v5-chat-rescue" defer></script>
-  <script src="/vetogram-header.js?v=20261026-v5-chat-rescue" defer></script>
-  <script src="/vetogram-command-2026.js?v=20261026-v5-chat-rescue" defer></script>
-  <script src="/vetogram-resume-2026.js?v=20261026-v5-chat-rescue" defer></script>
-  <script type="module" src="/vetogram-workflows-2026.js?v=20261026-v5-chat-rescue"></script>
-  <script type="module" src="/vetogram-mission-2026.js?v=20261026-v5-chat-rescue"></script>
-  <script src="/vetogram-noir.js?v=20261026-v5-chat-rescue" defer></script>
-  <script src="/vetogram-experience-v4.js?v=20261026-v5-chat-rescue" defer></script>
-  <script src="/vetogram-chat-experience-v4.js?v=20261026-v5-chat-rescue" defer></script>
-  <script src="/vetogram-reborn-ai.js?v=20261026-v5-chat-rescue" defer></script>
-  <script type="module" src="/vetogram-locale.js?v=20261026-v5-chat-rescue"></script>
+  <script src="/veto-device-polish.js?v=20261026-v5-brand-intro"></script>
+  <script src="/vetogram-country-picker.js?v=20261026-v5-brand-intro"></script>
+  <script src="/vetogram-brand-reveal.js?v=20261026-v5-brand-intro"></script>
+  <script src="/app.js?v=20261026-v5-brand-intro"></script>
+  <script src="/relay-module.js?v=20261026-v5-brand-intro"></script>
+  <script src="/privacy.js?v=20261026-v5-brand-intro"></script>
+  <script src="/chat-theme.js?v=20261026-v5-brand-intro"></script>
+  <script src="/vetogram-inbox-pulse-core.js?v=20261026-v5-brand-intro"></script>
+  <script src="/telegram-chats.js?v=20261026-v5-brand-intro"></script>
+  <script src="/telegram-stories.js?v=20261026-v5-brand-intro"></script>
+  <script src="/voice-studio.js?v=20261026-v5-brand-intro"></script>
+  <script src="/studio-module.js?v=20261026-v5-brand-intro"></script>
+  <script type="module" src="/story-engine.js?v=20261026-v5-brand-intro"></script>
+  <script type="module" src="/vetogram-ai.js?v=20261026-v5-brand-intro"></script>
+  <script type="module" src="/vetogram-creative-presets.js?v=20261026-v5-brand-intro"></script>
+  <script src="/brand-pack.js?v=20261026-v5-brand-intro"></script>
+  <script src="/veto-launch-polish.js?v=20261026-v5-brand-intro" defer></script>
+  <script src="/vetogram-header.js?v=20261026-v5-brand-intro" defer></script>
+  <script src="/vetogram-command-2026.js?v=20261026-v5-brand-intro" defer></script>
+  <script src="/vetogram-resume-2026.js?v=20261026-v5-brand-intro" defer></script>
+  <script type="module" src="/vetogram-workflows-2026.js?v=20261026-v5-brand-intro"></script>
+  <script type="module" src="/vetogram-mission-2026.js?v=20261026-v5-brand-intro"></script>
+  <script src="/vetogram-noir.js?v=20261026-v5-brand-intro" defer></script>
+  <script src="/vetogram-experience-v4.js?v=20261026-v5-brand-intro" defer></script>
+  <script src="/vetogram-chat-experience-v4.js?v=20261026-v5-brand-intro" defer></script>
+  <script src="/vetogram-reborn-ai.js?v=20261026-v5-brand-intro" defer></script>
+  <script type="module" src="/vetogram-locale.js?v=20261026-v5-brand-intro"></script>
 </body>
 </html>
