@@ -677,13 +677,15 @@ export default async function handler(req, res) {
       const auth = await beginUserAuth(requestedPhone);
       const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
-      await saveAuthChallenge({
+      const storedChallenge=await saveAuthChallenge({
         telegram_user_id: userId,
         challenge_ciphertext: payload,
         stage: 'code',
         created_at: now.toISOString(),
         expires_at: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
+      if(!storedChallenge?.challenge_ciphertext)
+        throw new Error('AUTH_CHALLENGE_PERSISTENCE_UNCONFIRMED');
 
       res.status(200).json({
         ok: true,
