@@ -132,6 +132,16 @@ const labels={
   viewerAlerts:["уведомления","notifications","ծանուցումներ"],
   viewerEnabled:["вкл","on","միացված"],
   viewerDisabled:["выкл","off","անջատված"],
+  viewerNoStories:["Нет опубликованных Stories","No published Stories","Հրապարակված պատմություններ չկան"],
+  viewerListConfirmed:["подтверждено","verified","հաստատված"],
+  viewerListLabel:["Аналитика аудитории","Audience analytics","Լսարանի վերլուծություն"],
+  viewerEmptyConnect:["Подключи Аналитика аудитории, чтобы видеть подтверждённых зрителей и историю взаимодействий.","Connect audience analytics to see verified viewers and interaction history.","Միացրու լսարանի վերլուծությունը՝ հաստատված դիտողներին և փոխազդեցությունների պատմությունը տեսնելու համար։"],
+  viewerEmptyPublish:["Сначала опубликуй Story через Vetogram.","Publish a Story through Vetogram first.","Նախ պատմություն հրապարակիր Vetogram-ով։"],
+  viewerEmptyUnverified:["Подтверждённых зрителей пока нет. Новый просмотр сначала проходит окно приватности Telegram.","No verified viewers yet. New views are subject to Telegram privacy restrictions.","Հաստատված դիտողներ դեռ չկան։ Նոր դիտումները ենթարկվում են Telegram-ի գաղտնիության սահմանափակումներին։"],
+  viewerNoUsername:["без username","no username","առանց օգտանվան"],
+  viewerContact:["контакт","contact","կոնտակտ"],
+  viewerVerified:["confirmed","verified","հաստատված"],
+  viewerFullReady:["3/3 · ГОТОВО","3/3 · READY","3/3 · ՊԱՏՐԱՍՏ Է"],
 };
 export function normalizeLocale(value){return UI_LOCALES.includes(value)?value:'ru';}
 export function uiText(key,locale='ru',fallback=''){
