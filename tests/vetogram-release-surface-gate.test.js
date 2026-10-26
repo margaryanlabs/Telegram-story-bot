@@ -94,7 +94,7 @@ test('a missing transitive ESM dependency blocks the release',()=>{
   const result=check({readSource:path=>{
     const source=safe.readSource(path);
     return path===parent
-      ?source+"\\nimport './__vetogram_missing_nested_dependency__.js';"
+      ?source+"\nimport './__vetogram_missing_nested_dependency__.js';"
       :source;
   }});
   assert.ok(result.errors.includes(
