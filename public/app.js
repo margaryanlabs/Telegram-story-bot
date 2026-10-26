@@ -627,7 +627,7 @@
       openSheet(`
         <span class="kicker">Опубликовано</span>
         <h2>Story #${escapeHtml(publishedStoryId)} уже в Telegram</h2>
-        <p>Аудитория: ${escapeHtml(publishedAudience)} · Аналитика аудитории ${viewerState.session?.connected ? 'подхватит просмотры автоматически' : 'можно подключить позже'}.</p>
+        <p>Аудитория: ${escapeHtml(publishedAudience)} · Аналитика аудитории ${viewerState.session?.connected ? 'покажет только подтверждённые просмотры после обновления' : 'можно подключить позже'}.</p>
         ${attachPortal ? `<p>${result.portalAreaAttached===true
           ?'Кликабельный Portal подтверждён Telegram Bot API.'
           :'Portal не подтверждён. Проверь Story в Telegram, не отправляй повторно.'}</p>` : ''}
