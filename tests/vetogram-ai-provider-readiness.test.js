@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
+import {uiText} from '../public/vetogram-locale-core.js';
 
 const api=readFileSync(new URL('../api/vetogram-ai.js',import.meta.url),'utf8');
 const client=readFileSync(new URL('../public/vetogram-ai.js',import.meta.url),'utf8');
@@ -71,9 +72,11 @@ function clientFixture(reply){
     aiAvailabilityIntent:0,aiAvailabilityCheckedAt:0,busy:false};
   const controls={vtaiCreate:{disabled:false},vtaiQuota:{textContent:''}};
   const calls=[];
+  let activeLocale='ru';
+  const window={VetogramI18n:{t:(key,ru)=>uiText(key,activeLocale,ru)}};
   const scope=()=>({identity:state.identity,epoch:state.requestEpoch,ownerId:'123'});
   const sandbox={
-    state,$:id=>controls[id],
+    state,window,$:id=>controls[id],
     safeIdentity:()=>true,
     ownerRequestScope:scope,
     isOwnerRequestCurrent:x=>x.identity===state.identity&&x.epoch===state.requestEpoch,
@@ -81,7 +84,7 @@ function clientFixture(reply){
     AbortController,setTimeout,clearTimeout,Date,
   };
   const check=vm.runInNewContext('('+clientHandler+')',sandbox);
-  return {check,controls,calls,state};
+  return {check,controls,calls,state,setLocale:value=>{activeLocale=value}};
 }
 test('client shows disabled generation, keeps drafts, and never transmits prompt',async()=>{
   const s=clientFixture(async()=>({ok:true,json:async()=>({configured:false,state:'provider_missing'})}));
@@ -117,4 +120,19 @@ test('late A status cannot overwrite B account availability or private UI',async
   assert.equal(s.state.aiAvailability,null);
   assert.equal(s.controls.vtaiQuota.textContent,'Новый аккаунт');
   assert.equal(s.controls.vtaiCreate.disabled,false);
+});
+
+
+test('cached AI status changes RU EN HY without a new network or provider call',async()=>{
+  const s=clientFixture(async()=>({ok:true,json:async()=>({configured:false,state:'provider_missing'})}));
+  await s.check();
+  assert.match(s.controls.vtaiQuota.textContent,/не подключена/);
+  s.setLocale('en');
+  await s.check();
+  assert.match(s.controls.vtaiQuota.textContent,/not connected yet/);
+  s.setLocale('hy');
+  await s.check();
+  assert.match(s.controls.vtaiQuota.textContent,/AI գեներացումը/);
+  assert.equal(s.calls.length,1,'locale switches must repaint only cached owner state');
+  assert.equal(s.controls.vtaiCreate.disabled,true);
 });
