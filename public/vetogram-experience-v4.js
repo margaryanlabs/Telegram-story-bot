@@ -174,7 +174,9 @@
         const extra = document.createElement('details');
         extra.className = 'v4-ai-modes-extra';
         const summary = document.createElement('summary');
-        summary.textContent = 'Другие режимы';
+        const ui=(key,ru)=>typeof window==='undefined' ? ru :
+          (window.VetogramI18n?.t?.(key,ru)||ru);
+        summary.textContent = ui('aiOtherModes','Другие режимы');
         const actions = document.createElement('div');
         actions.className = 'v4-ai-mode-actions';
         extra.append(summary, actions);
@@ -183,17 +185,17 @@
         // A secondary mode must remain identifiable when the extra-mode
         // disclosure is closed. The text is the *actual pressed mode*, never
         // a fabricated AI state. Allow users to close the list manually.
-        const defaultSummary = 'Другие режимы';
+        const defaultSummary = () => ui('aiOtherModes','Другие режимы');
         let lastSelected = '';
         const syncSelected = () => {
           const selected = secondaryModes.find(button =>
             button.getAttribute('aria-pressed') === 'true');
           const mode = selected?.dataset.vtaiMode || '';
           const name = selected?.textContent?.replace(/^[^\p{L}\p{N}]+/u,'').trim() || '';
-          summary.textContent = mode ? 'Режим: ' + name : defaultSummary;
+          summary.textContent = mode ? ui('aiModePrefix','Режим: ') + name : defaultSummary();
           summary.setAttribute('aria-label',mode
-            ? 'Текущий режим: ' + name + '. Открыть список режимов'
-            : 'Показать остальные режимы VETO AI');
+            ? ui('aiModeAriaPrefix','Текущий режим: ') + name + ui('aiModeAriaSuffix','. Открыть список режимов')
+            : ui('aiOtherModesAria','Показать остальные режимы VETO AI'));
           extra.dataset.selectedMode = mode;
           if(mode!==lastSelected){
             extra.open=Boolean(mode);
@@ -207,6 +209,10 @@
         }));
         // Mutations of primary modes are not required here: the AI
         // controller updates the secondary aria-pressed flags on each switch.
+        // A language change updates real mode buttons without changing
+        // their aria-pressed attributes, so explicitly refresh the summary.
+        if(typeof window!=='undefined')
+          window.addEventListener('vetogram:locale-changed',syncSelected);
         syncSelected();
       }
     }
