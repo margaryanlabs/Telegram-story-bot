@@ -4,7 +4,7 @@
   const $=id=>document.getElementById(id);
   const state={
     chats:[],page:0,hasMore:true,loading:false,
-    filter:'all',search:'',generation:0,lastListFetchedAt:0,
+    filter:'all',search:'',generation:0,lastListFetchedAt:0,pendingLoginRefresh:false,
     thread:null,messages:[],threadLoading:false,threadLoadError:null,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
@@ -134,6 +134,14 @@
     if(!form || !field || !button)return;
     const writable=canSendInThread(state.thread);
     const available=writable && !state.sendInFlight;
+    const access=$('telegramThreadConnectNotice');
+    if(access){
+      const disconnected=Boolean(state.thread&&!state.connectionProof?.verified);
+      access.hidden=!disconnected;
+      access.querySelector('span').textContent=state.thread?.archiveOnly
+        ?'Сохранённая копия: для новых сообщений подключи свой Telegram.'
+        :'Личный Telegram не подтверждён. Подключение требуется для отправки.';
+    }
     for(const id of ['telegramThreadAttachButton','telegramThreadAudioButton','telegramThreadStickersButton']){
       if($(id))$(id).disabled=!available || Boolean(state.recording||state.voiceStarting);
     }
@@ -1158,7 +1166,7 @@
   }
   async function loadChats({reset=false}={}){
     resetOwner();
-    if(state.loading)return;
+    if(state.loading){if(reset)state.pendingLoginRefresh=true;return;}
     const generation=++state.generation;
     // Keep the verified, in-memory conversation list visible during a same-
     // account refresh. Fresh data atomically replaces it only on success.
@@ -1245,6 +1253,11 @@
         $('telegramMirrorRefresh')?.classList.remove('is-refreshing');
         $('telegramMirrorRefresh')?.removeAttribute('aria-busy');
         renderChats();
+        if(state.pendingLoginRefresh){
+          state.pendingLoginRefresh=false;
+          // Defer until the prior server request has fully released state.
+          queueMicrotask(()=>{if(state.ownerInitData===String(tg?.initData||''))void loadChats({reset:true});});
+        }
       }
     }
   }
@@ -2103,7 +2116,17 @@
       renderMessages();
       renderSendComposer();
       syncLabel('Предпросмотр из памяти · обновляю Telegram…',true);
-    }else syncLabel('Подключаюсь к Telegram…',true);
+    }else if(!state.connectionProof?.verified)
+      syncLabel('Личная сессия не подтверждена · проверь вход');
+    else syncLabel('Подключаюсь к Telegram…',true);
+    // An old saved copy is readable, but an unverified live connection cannot
+    // produce new Telegram messages. Do not leave a false endless spinner.
+    if(!state.connectionProof?.verified&&!chat.archiveOnly){
+      state.threadLoading=false;
+      state.threadLoadError='Подключи свой Telegram и завершите ввод кода в приложении.';
+      renderMessages();
+      return;
+    }
     await loadMessages({reset:true});
   }
   // First paint comes from owner-verified MTProto; archived deletion evidence
@@ -2770,6 +2793,16 @@
     state.activePhotoId=null;refreshPhotoNavigation();
     if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
     if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
+  });
+  $('telegramThreadConnectButton')?.addEventListener('click',()=>{
+    window.VetoTelegramOpenAccountConnection?.();
+  });
+  window.addEventListener('vetogram:telegram-session-connected',()=>{
+    if(resetOwner())return;
+    // Archive cards from before login must be replaced with actual MTProto
+    // dialogs after verification, even if the inbox is already nonempty.
+    if(state.thread)back();
+    void loadChats({reset:true});
   });
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
