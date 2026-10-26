@@ -37,7 +37,7 @@ test('Business permission UI never reuses a prior account consent or chat list',
   assert.match(request,/const lease=ownerLease\(\)/);
   assert.match(request,/const signedOwner=lease\.signed/);
   assert.match(request,/assertOwner\(lease\)/);
-  assert.match(privacy,/String\(tg\?\.initData\|\|''\)!==signedOwner/);
+  assert.match(request,/x-telegram-init-data':signedOwner/);
   assert.match(privacy,/businessWizardSignedOwner/);
   assert.match(privacy,/!businessWizardSnapshot \|\| String\(tg\?\.initData\|\|''\)!==businessWizardSignedOwner/);
 });
