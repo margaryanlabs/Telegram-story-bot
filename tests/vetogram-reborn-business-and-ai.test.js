@@ -32,7 +32,11 @@ test('no blanket Business rights or all-private scope are preselected',()=>{
 });
 
 test('Business permission UI never reuses a prior account consent or chat list',()=>{
-  assert.match(privacy,/const signedOwner=String\(tg\.initData\)/);
+  const request=privacy.slice(privacy.indexOf('async function businessWizardRequest('),
+    privacy.indexOf('let businessWizardSnapshot',privacy.indexOf('async function businessWizardRequest(')));
+  assert.match(request,/const lease=ownerLease\(\)/);
+  assert.match(request,/const signedOwner=lease\.signed/);
+  assert.match(request,/assertOwner\(lease\)/);
   assert.match(privacy,/String\(tg\?\.initData\|\|''\)!==signedOwner/);
   assert.match(privacy,/businessWizardSignedOwner/);
   assert.match(privacy,/!businessWizardSnapshot \|\| String\(tg\?\.initData\|\|''\)!==businessWizardSignedOwner/);
@@ -56,7 +60,7 @@ test('production Business gate checks Neon migration before any session or Teleg
 test('AI conversation is visible ahead of real composer and examples are local-only',()=>{
   const screen=html.indexOf('data-screen="ai"');
   const conversation=html.indexOf('class="vtai-panel veto-reborn-ai-conversation"',screen);
-  const form=html.indexOf('<h2>Напиши VETO AI</h2>',screen);
+  const form=html.indexOf('<h2 data-ui-text="askVetoAI">Напиши VETO AI</h2>',screen);
   assert.ok(screen>0&&conversation>screen&&form>conversation);
   assert.equal((html.match(/id="vtaiThread"/g)||[]).length,1);
   assert.match(html,/vetogram-reborn-ai\.js\?v=/);
