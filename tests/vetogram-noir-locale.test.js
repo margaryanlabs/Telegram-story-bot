@@ -113,3 +113,42 @@ test('switching RU, EN, HY translates marked chrome, never chat or AI user conte
   assert.equal(liveMessage.textContent,'Личный текст пользователя');
   assert.equal(values.get('vetogram-ui-locale'),'hy');
 });
+
+
+test('chat and privacy filters plus AI mode tabs remain localized and actionable',()=>{
+  const html=readFileSync(new URL('../public/studio.html',import.meta.url),'utf8');
+  const bindings=[
+    ['data-mirror-filter="private"','filterPrivate'],
+    ['data-mirror-filter="group"','filterGroups'],
+    ['data-mirror-filter="channel"','filterChannels'],
+    ['data-mirror-filter="bot"','filterBots'],
+    ['data-mirror-filter="saved"','filterSaved'],
+    ['data-mirror-filter="pinned"','filterPinned'],
+    ['data-mirror-filter="unread"','filterUnread'],
+    ['data-mirror-filter="archived"','filterArchived'],
+    ['data-privacy-filter="all"','privacyFilterAll'],
+    ['data-privacy-filter="deleted"','privacyFilterDeleted'],
+    ['data-privacy-filter="edited"','privacyFilterEdited'],
+    ['data-privacy-filter="media"','privacyFilterMedia'],
+    ['data-vtai-mode="chat"','aiModeChat'],
+    ['data-vtai-mode="translate"','aiModeTranslate'],
+    ['data-vtai-mode="reply"','aiModeReply'],
+    ['data-vtai-mode="action"','aiModeAction'],
+    ['data-vtai-mode="brief"','aiModeBrief'],
+    ['data-vtai-mode="story"','aiModeStory'],
+    ['data-vtai-mode="campaign"','aiModeCampaign'],
+    ['data-vtai-mode="negotiator"','aiModeNegotiator'],
+    ['data-sticker-tab="recent"','stickerRecent'],
+    ['data-sticker-tab="packs"','stickerPacks'],
+  ];
+  const buttons=[...html.matchAll(/<button\b([^>]*)>([^<]+)<\/button>/g)];
+  for(const [action,key] of bindings){
+    const matches=buttons.filter(match=>
+      match[1].includes(action)&&match[1].includes('data-ui-text="'+key+'"'));
+    assert.equal(matches.length,1,'missing translated actionable button '+action);
+    assert.equal(matches[0][2].trim(),uiText(key,'ru'));
+    for(const lang of ['en','hy'])
+      assert.ok(uiText(key,lang)&&uiText(key,lang)!==uiText(key,'ru'),
+        key+' must have a translated label in '+lang);
+  }
+});
