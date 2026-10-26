@@ -379,7 +379,7 @@
   }
   function rememberAudioBookmark(){
     const playback=state.audioBookPlayback;
-    if(!playback?.book?.id||!Number.isFinite(audio.currentTime))return;
+    if(!playback?.book?.id||!Number.isFinite(audio.currentTime)||audio.readyState<1)return;
     try{
       const data=JSON.parse(localStorage.getItem(AUDIO_PROGRESS_KEY)||"{}");
       const record=data&&typeof data==="object"&&!Array.isArray(data)?data:{};
