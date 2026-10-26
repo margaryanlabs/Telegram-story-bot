@@ -1,0 +1,94 @@
+/* VETOGRAM V5.1 — canonical silver/coral brand, no persistent wordmark
+   in the messenger's compact header; accessible label remains in the DOM. */
+.veto-brand-reveal[hidden]{display:none!important}
+.veto-brand-reveal{
+  position:fixed;inset:0;z-index:10020;pointer-events:none;
+  display:grid;place-items:center;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 45%,#1c2637 0%,#0b101b 50%,#070911 100%);
+  opacity:0;transition:opacity .34s ease;
+}
+.veto-brand-reveal.is-visible{opacity:1}
+.veto-brand-reveal-inner{
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  text-align:center;max-width:calc(100vw - 36px);
+  transform:translateY(17px) scale(.96);
+  filter:blur(8px);
+  transition:transform .55s cubic-bezier(.2,.75,.2,1),filter .55s ease;
+}
+.veto-brand-reveal.is-visible .veto-brand-reveal-inner{
+  transform:translateY(0) scale(1);filter:blur(0);
+}
+.veto-brand-reveal-inner:before{
+  content:"";position:absolute;width:260px;height:150px;
+  top:-40px;border-radius:50%;filter:blur(75px);
+  background:radial-gradient(ellipse,rgba(251,105,105,.23),transparent 74%);
+  z-index:-1;
+}
+.veto-brand-reveal-inner>img{
+  width:78px;height:78px;object-fit:contain;
+  filter:drop-shadow(0 12px 30px rgba(250,103,111,.22));
+}
+.veto-brand-reveal-wordmark{
+  display:flex;align-items:baseline;justify-content:center;
+  gap:0;font-size:clamp(36px,9vw,58px);font-weight:850;
+  line-height:1.04;letter-spacing:.025em;white-space:nowrap;
+}
+.veto-brand-reveal-wordmark span{color:#f0f3f9}
+.veto-brand-reveal-wordmark em{font-style:normal;color:#ff7780}
+.veto-brand-reveal-inner>small{
+  font-size:12px;letter-spacing:.09em;color:#a9b3c8;font-weight:500;
+}
+/* The product title is shown only during intro, then the icon remains. */
+html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .vetogram-header .veto-inbox-title-copy{
+    display:none!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .vetogram-header .veto-messenger-exit{
+    display:none!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .vetogram-header .veto-messenger-title{
+    min-width:38px!important;flex:1 1 auto!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .vetogram-header .veto-inbox-signature{
+    display:flex!important;visibility:visible!important;
+    width:38px!important;height:38px!important;min-width:38px!important;
+    border:0!important;background:none!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .vetogram-header .veto-inbox-signature img{
+    width:38px!important;height:38px!important;object-fit:contain;
+}
+/* Welcome is VETO. Each permission/function has its own readable card. */
+.veto-welcome-brand strong,.v5-welcome-veto{
+  color:#f0f3f9!important;letter-spacing:.035em;font-weight:850;
+}
+.veto-welcome .veto-intro-step.active{
+  animation:vetogram-welcome-enter .45s cubic-bezier(.22,.75,.2,1) both;
+}
+.veto-welcome .veto-intro-function-grid>div,
+.veto-welcome .veto-simple-steps>div,
+.veto-welcome .veto-promise-mini>div{
+  border-radius:16px;
+  transition:transform .22s ease,border-color .22s ease,background .22s ease;
+}
+@media(hover:hover){
+  .veto-welcome .veto-intro-function-grid>div:hover,
+  .veto-welcome .veto-simple-steps>div:hover{
+    transform:translateY(-3px);border-color:rgba(255,117,127,.35);
+  }
+}
+@keyframes vetogram-welcome-enter{
+  from{opacity:0;transform:translateY(13px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .veto-brand-reveal,.veto-brand-reveal-inner,
+  .veto-welcome .veto-intro-step.active,
+  .veto-welcome .veto-intro-function-grid>div,
+  .veto-welcome .veto-simple-steps>div{
+    animation:none!important;transition:none!important;transform:none!important;filter:none!important;
+  }
+}
