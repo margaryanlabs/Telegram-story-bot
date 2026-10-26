@@ -9,6 +9,7 @@
 - Music discovery/search via public Audius endpoints and user-initiated HTML5 streaming for publicly accessible tracks; skip stream-gated/scheduled items; artwork-driven active-track scene, seek, queue next/previous, local favorites, playback errors.
 - Books search via Gutendex public-domain flag, Russian/English filters, cover images, in-app TXT reader **only if** source allows cross-origin fetch, font controls, reading position and local favorites.
 - Local TXT import (2 MB max) with reader and reading-position persistence; files are processed in the browser and never uploaded.
+- Personal EPUB shelf in browser IndexedDB (DRM-free, up to 35 MB per book and 30 books), EPUB.js renderer, chapter navigation, last-read location, adjustable font, and PURE/CINEMA/DEEP reading modes with local per-book notes.
 - LibriVox catalog browsing and in-app playback of available chapter stream URLs from the official API, with original-source deep links; no copied MP3 files.
 - WebApp ready/expand if opened inside Telegram, but public browser route works without Telegram login.
 - Status and failure states for unavailable providers, localStorage-limited devices and failed streams.
@@ -19,8 +20,8 @@
 - No Spotify, Yandex Music, VK Music, major-label streaming, or Telegram file scraping is built in. Their catalogs are not interchangeable public content APIs. No license bypass.
 - Audius is an open catalog but every track's redistribution/monetization rights and API terms must be reviewed for a commercial VETO product.
 - Project Gutenberg public-domain metadata is not a worldwide clearance. Respect local copyright rules, particular edition and territorial restrictions. Do not mirror the complete Gutenberg website.
-- The original **Living Reading Lab 2.4 / «ПОКА ТЫ ЖДАЛ»** code and publishing lab were located in the user's connected Google Drive (canonical release folder: https://drive.google.com/drive/folders/1Z4NYDNTjajUJEfm9DewX-41hkaZb9PLj ; source kit `Poka_Ty_Zhdal_Book_First_2_4_Source_Kit.zip`). This new browser TXT reader follows that product direction, but **is not yet a source-level migration** of PURE/CINEMA/DEEP, EPUB, highlights or the publishing studio. The source kit contains the user's original unpublished book manuscript; because this GitHub repo is public, do not copy that source kit or manuscript into the repository without an explicit publishing decision. Future reuse should extract generic reader/editor components only and preserve rights-gating.
-- Audiobook WebView stream verification, EPUB parsing, cloud bookmark sync, subscriptions/Stars, recommendation AI, moderation and full catalog ingestion require subsequent development.
+- The original **Living Reading Lab 2.4 / «ПОКА ТЫ ЖДАЛ»** code and publishing lab were located in the user's connected Google Drive (canonical release folder: https://drive.google.com/drive/folders/1Z4NYDNTjajUJEfm9DewX-41hkaZb9PLj ; source kit `Poka_Ty_Zhdal_Book_First_2_4_Source_Kit.zip`). The beta includes a newly implemented personal EPUB reader with PURE/CINEMA/DEEP modes inspired by that product, but **is not yet a source-level migration** of the original Living Reading Lab modules, its editorial publishing studio, highlights, EPUB archive export/import, or full rights-ledger workflow. The source kit contains the user's original unpublished book manuscript; because this GitHub repo is public, do not copy that source kit or manuscript into the repository without an explicit publishing decision. Future reuse should extract generic reader/editor components only and preserve rights-gating.
+- Audiobook WebView stream verification, EPUB structure-security hardening (the original Living Reader's full ZIP and metadata validation was not migrated), cloud bookmark sync, subscriptions/Stars, recommendation AI, moderation and full catalog ingestion require subsequent development.
 - No bot is provisioned or configured. To use as a distinct Telegram Mini App, register a separate bot with @BotFather and connect a deployed HTTPS URL. Do not point the existing VETOGRAM bot at MEDIA.
 - No deployment was made by this branch.
 
@@ -48,7 +49,7 @@ QA checklist:
 2. Open as normal web page and inside Telegram WebView, check no phone auth request.
 3. Audius trending/search/stream; fail closed for unavailable or gated tracks.
 4. Gutenberg search RU/EN, public-domain labels, open source TXT when permitted; otherwise original source link.
-5. Local TXT import, reader size and progress across reload.
+5. Local TXT import, reader size and progress across reload; local EPUB import, reading mode, pagination, chapter navigation, and IndexedDB persistence. Verify no EPUB executable scripts run and malicious ZIP structures are rejected before any public launch.
 6. Favorites, previous/next, seek and reduced motion.
 7. LibriVox source attribution + clickthrough.
 8. No changes to VETOGRAM flow or production deployment.
