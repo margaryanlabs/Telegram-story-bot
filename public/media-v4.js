@@ -18,7 +18,7 @@
   document.querySelectorAll("[data-v4-open]").forEach(b=>b.addEventListener("click",()=>nav(b.dataset.v4Open)));
   document.querySelectorAll("[data-v4-search]").forEach(b=>b.addEventListener("click",()=>nav("music",b.dataset.v4Search)));
   const dock=node("nav","v4-dock");dock.setAttribute("aria-label","Навигация VETO MEDIA");
-  for(const [id,label,symbol] of [["home","Главная","⌂"],["music","Музыка","♫"],["films","Кино","◉"],["books","Книги","▤"],["library","Моё","♡"]]){
+  for(const [id,label,symbol] of [["home","Главная","⌂"],["discover","Поиск","⌕"],["music","Музыка","♫"],["films","Кино","◉"],["books","Книги","▤"],["library","Моё","♡"]]){
     const b=node("button",id==="home"?"active":"");b.dataset.open=id;b.type="button";
     b.append(node("span","",symbol),node("small","",label));
     b.addEventListener("click",()=>nav(id));dock.append(b);
