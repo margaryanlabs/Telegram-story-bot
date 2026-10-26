@@ -86,6 +86,11 @@ const labels={
   aiModeNegotiator:["◇ Переговоры","◇ Negotiations","◇ Բանակցություններ"],
   stickerRecent:["Недавние","Recent","Վերջինները"],
   stickerPacks:["Мои наборы","My packs","Իմ հավաքածուները"],
+  aiOtherModes:["Другие режимы","More modes","Այլ ռեժիմներ"],
+  aiModePrefix:["Режим: ","Mode: ","Ռեժիմ՝ "],
+  aiModeAriaPrefix:["Текущий режим: ","Current mode: ","Ընթացիկ ռեժիմ՝ "],
+  aiModeAriaSuffix:[". Открыть список режимов",". Open modes",". Բացել ռեժիմների ցանկը"],
+  aiOtherModesAria:["Показать остальные режимы VETO AI","Show more VETO AI modes","Ցուցադրել VETO AI-ի մյուս ռեժիմները"],
 };
 export function normalizeLocale(value){return UI_LOCALES.includes(value)?value:'ru';}
 export function uiText(key,locale='ru',fallback=''){
