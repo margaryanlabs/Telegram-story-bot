@@ -27,3 +27,11 @@ html[data-media-host=telegram] .v8-local-actions button{touch-action:manipulatio
 @media(max-width:780px){.v8-local{padding:19px}.v8-local-heading{display:block}.v8-local-actions{margin-top:19px}.v8-local-queue{grid-template-columns:1fr}.v8-player-tools{justify-content:center}}
 @media(max-width:420px){.v8-local-heading h3{font-size:24px}.v8-local-actions button{padding:11px 13px;font-size:11px}.v8-player-tools{gap:10px}.v8-tool{font-size:10px}.v8-tool input[type=range]{width:72px}}
 @media(prefers-reduced-motion:reduce){.v8-local-track,.v8-local-actions button{transition:none!important}}
+
+/* The full-screen player shortcut must remain above the docked mini-player.
+   Other sections keep their ordinary unobtrusive position. */
+@media(max-width:650px){
+  body.veto-v4:has(.player:not(.hidden)) .v4-listen-trigger{
+    bottom:calc(180px + var(--media-tg-bottom,0px));
+  }
+}
