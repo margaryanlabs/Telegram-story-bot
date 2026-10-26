@@ -3,7 +3,10 @@
   "use strict";
   const $ = id => document.getElementById(id);
   const webApp = window.Telegram?.WebApp;
-  if (!webApp || typeof webApp.ready !== "function") {
+  // The SDK script can also load in a normal browser. Only a Telegram launch
+  // supplies initData; it is a host hint here, never an authentication proof.
+  if (!webApp || typeof webApp.ready !== "function" ||
+      typeof webApp.initData !== "string" || !webApp.initData.length) {
     document.documentElement.dataset.mediaHost = "browser";
     return;
   }
@@ -44,7 +47,7 @@
       accessible("readerBackdrop") ||
       accessible("vetoFilmOverlay") ||
       $("v4Listening")?.classList.contains("open") ||
-      !$("v6SourceFlyout")?.classList.contains("hidden");
+      Boolean($("v6SourceFlyout") && !$("v6SourceFlyout").classList.contains("hidden"));
     if(modalOpen)return true;
     const selected=document.querySelector(".tab.is-active")?.dataset.tab;
     return Boolean(selected && selected!=="home");
@@ -59,7 +62,7 @@
     if(accessible("readerBackdrop"))return $("closeReader")?.click();
     if(accessible("vetoFilmOverlay"))return $("vetoFilmClose")?.click();
     if($("v4Listening")?.classList.contains("open"))return $("v4ListenClose")?.click();
-    if(!$("v6SourceFlyout")?.classList.contains("hidden"))return $("v6SourceButton")?.click();
+    if($("v6SourceFlyout") && !$("v6SourceFlyout").classList.contains("hidden"))return $("v6SourceButton")?.click();
     const home=document.querySelector('.tab[data-tab="home"]');
     if(home){home.click();window.scrollTo({top:0,behavior:"instant"})}
   }
