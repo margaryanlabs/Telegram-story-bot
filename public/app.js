@@ -1101,7 +1101,7 @@
     // Rebuild the LIVE Telegram inbox after an owner-verified account link.
     // Prior archive rows may exist, so screen navigation alone does not
     // re-fetch them. This event is owner-scoped and contains no session data.
-    if(!wasConnected&&viewerState.session?.connected===true)
+    if(!wasConnected&&viewerState.session?.connected===true && typeof CustomEvent === 'function')
       window.dispatchEvent(new CustomEvent('vetogram:telegram-session-connected'));
     renderViewers();
     renderHome();
