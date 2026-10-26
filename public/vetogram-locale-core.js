@@ -147,6 +147,20 @@ const labels={
   aiProviderUnknown:["Статус AI пока не подтверждён. Проверка не передала никаких сообщений или данных модели.","AI availability is not yet confirmed. No messages or model data were shared by this check.","AI-ի հասանելիությունը դեռ հաստատված չէ։ Այս ստուգումը ոչ մի հաղորդագրություն չի փոխանցել մոդելին։"],
   aiProviderCheckFailed:["Не удалось проверить AI-провайдера. Повтори попытку после восстановления соединения.","Could not check the AI provider. Try again when the connection is restored.","Չհաջողվեց ստուգել AI մատակարարին։ Կրկին փորձիր կապը վերականգնելուց հետո։"],
   aiProviderMustEnable:["Генерация AI не подключена. Провайдер нужно включить в настройках сервера.","AI generation is not enabled. A provider must be configured on the server.","AI գեներացումը միացված չէ։ Սերվերում պետք է կարգավորել մատակարարին։"],
+  aiPromptChat:["Спроси AI или попроси подготовить сообщение…","Ask AI or request a message draft…","Հարցրու AI-ին կամ խնդրիր պատրաստել հաղորդագրության սևագիր…"],
+  aiPromptTranslate:["Вставь текст для перевода…","Paste text to translate…","Տեղադրիր թարգմանվող տեքստը…"],
+  aiPromptReply:["Опиши ситуацию или вставь сообщение, на которое нужен ответ…","Describe the situation or paste the message to reply to…","Նկարագրիր իրավիճակը կամ տեղադրիր հաղորդագրությունը՝ պատասխան պատրաստելու համար…"],
+  aiPromptAction:["Например: напиши Артуру, что созвонимся завтра в 15:00…","For example: draft a message to Arthur about a call at 3 PM tomorrow…","Օրինակ՝ Արթուրին գրիր վաղը ժամը 15:00-ի զանգի մասին…"],
+  aiPromptBrief:["Вставь конкретное сообщение или фрагмент переписки для поиска задач и сроков…","Paste a message or chat excerpt to extract tasks and deadlines…","Տեղադրիր հաղորդագրություն կամ զրույցի հատված՝ առաջադրանքներն ու ժամկետները գտնելու համար…"],
+  aiPromptStory:["О чём создать Story? Для кого, какой стиль и предложение?","What should this Story be about? Audience, style and offer?","Ինչի՞ մասին լինի պատմությունը։ Ո՞ւմ համար, ի՞նչ ոճով և առաջարկով։"],
+  aiPromptCampaign:["Что продаём или анонсируем? Кто покупатель и какое действие нужно?","What are you selling or announcing? Who is the buyer and desired action?","Ի՞նչ ենք վաճառում կամ հայտարարում։ Ո՞վ է գնորդը և ի՞նչ գործողություն է պետք։"],
+  aiPromptNegotiator:["Вставь сообщение клиента, на которое нужно подготовить ответ…","Paste the client message to prepare a reply…","Տեղադրիր հաճախորդի հաղորդագրությունը՝ պատասխան պատրաստելու համար…"],
+  aiCreateBrief:["Разобрать договорённости","Extract agreements","Վերլուծել պայմանավորվածությունները"],
+  aiCreateAction:["Подготовить действие","Prepare action","Պատրաստել գործողություն"],
+  aiCreateNegotiator:["Подготовить ответ на переговоры","Draft negotiation reply","Պատրաստել բանակցային պատասխան"],
+  aiCreateCampaign:["Создать Story + Portal","Create Story + Portal","Ստեղծել Story + Portal"],
+  aiCreateStory:["Создать текст для Stories","Write Story text","Գրել Stories-ի տեքստ"],
+  aiCreateAsk:["Спросить VETO AI","Ask VETO AI","Հարցնել VETO AI-ին"],
 };
 export function normalizeLocale(value){return UI_LOCALES.includes(value)?value:'ru';}
 export function uiText(key,locale='ru',fallback=''){
