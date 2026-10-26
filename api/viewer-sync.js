@@ -684,7 +684,7 @@ export default async function handler(req, res) {
         created_at: now.toISOString(),
         expires_at: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
-      if(!storedChallenge?.challenge_ciphertext)
+      if(leaseToken && !storedChallenge?.challenge_ciphertext)
         throw new Error('AUTH_CHALLENGE_PERSISTENCE_UNCONFIRMED');
 
       res.status(200).json({
