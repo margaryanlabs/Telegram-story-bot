@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { sessionCryptoReady, expectedCipherVersion, neonCronConfigured } from '../lib/storage-provider.js';
 import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { normalizeTelegramPhone } from '../lib/telegram-auth-feedback.js';
@@ -15,6 +16,8 @@ import {
   getAuthChallenge,
   saveAuthChallenge,
   deleteAuthChallenge,
+  claimLoginCodeLease,
+  releaseLoginCodeLease,
   getViewerStoryData,
   getViewerAnalytics,
   getViewerExportData,
@@ -615,6 +618,52 @@ export default async function handler(req, res) {
         return;
       }
 
+
+      // Neon uses one atomic, owner-scoped lease across all Vercel instances.
+      // The token is never returned to the browser or logged.
+      let leaseToken = null;
+      let telegramSendMayHaveOccurred = false;
+      try {
+        if (selectedStorageProvider() === 'neon') {
+          leaseToken=randomUUID();
+          let claimed;
+          try {
+            claimed=await claimLoginCodeLease(userId,leaseToken);
+          } catch {
+            res.status(503).json({ok:false,
+              error:'Защита от повторного запроса кода пока не готова. Код не запрашивался.'});
+            return;
+          }
+          if (claimed?.acquired !== true) {
+            res.setHeader('Retry-After','5');
+            res.status(429).json({ok:false,retryAfterSeconds:5,
+              error:'Другой запрос кода уже выполняется. Новый код не отправлялся.'});
+            return;
+          }
+          // A competing instance may have saved a valid challenge after our
+          // initial read but before the atomic claim. Recheck under the lease.
+          const updated=await getAuthChallenge(userId);
+          const updatedExpires=Date.parse(updated?.expires_at||'');
+          if(updated && Number.isFinite(updatedExpires) && updatedExpires>Date.now()) {
+            if(updated.stage==='code') {
+              const saved=await openJson(updated.challenge_ciphertext,`auth:${userId}`);
+              if(saved?.phone===requestedPhone) {
+                res.status(200).json({ok:true,stage:'code',
+                  delivery:saved.delivery||'unknown',
+                  reused:true,expiresAt:new Date(updatedExpires).toISOString()});
+                return;
+              }
+            }
+            res.status(409).json({ok:false,
+              error:'Есть незавершённый вход. Продолжи его или явно отмени предыдущий код.',
+              loginPending:{stage:updated.stage,expiresAt:new Date(updatedExpires).toISOString()}});
+            return;
+          }
+        }
+
+        // On MTProto timeout the delivery outcome may be unknown. Retain the
+        // Neon lease until expiry rather than immediately sending a second code.
+        telegramSendMayHaveOccurred=true;
       const auth = await beginUserAuth(requestedPhone);
       const payload = await sealJson(auth, `auth:${userId}`);
       const now = new Date();
@@ -633,6 +682,14 @@ export default async function handler(req, res) {
         reused: false,
         expiresAt: new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
       });
+
+        // The matching encrypted challenge is durable; subsequent requests
+        // reuse it. The lease may now be released without a second send.
+        telegramSendMayHaveOccurred=false;
+      } finally {
+        if (leaseToken && !telegramSendMayHaveOccurred)
+          await releaseLoginCodeLease(userId,leaseToken).catch(()=>{});
+      }
       return;
       } finally {
         inFlightLoginCodeOwners.delete(codeOwner);
