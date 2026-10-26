@@ -127,6 +127,11 @@ const labels={
   viewerStartInfo:["Для Аналитика аудитории используется отдельное защищённое подключение Telegram только к данным твоих собственных Stories. Код входа и 2FA не сохраняются.","Audience analytics uses a separate secure Telegram connection for your own Stories only. Login codes and 2FA passwords are not stored.","Լսարանի վերլուծության համար օգտագործվում է առանձին անվտանգ Telegram կապ՝ միայն քո պատմությունների տվյալներին։ Մուտքի կոդերն ու 2FA գաղտնաբառերը չեն պահվում։"],
   viewerChecking:["Проверяю состояние…","Checking status…","Ստուգվում է կարգավիճակը…"],
   viewerDisconnected:["Не подключено","Not connected","Միացված չէ"],
+  viewerBgConfiguredBadge:["фоновые проверки настроены · доставка не подтверждена","background configured · delivery unverified","ֆոնային ստուգումները կարգավորված են · առաքումը հաստատված չէ"],
+  viewerBgPendingBadge:["фоновый cron требует настройки","background scheduler needs setup","ֆոնային ժամանակացույցը կարգավորման կարիք ունի"],
+  viewerAlerts:["уведомления","notifications","ծանուցումներ"],
+  viewerEnabled:["вкл","on","միացված"],
+  viewerDisabled:["выкл","off","անջատված"],
 };
 export function normalizeLocale(value){return UI_LOCALES.includes(value)?value:'ru';}
 export function uiText(key,locale='ru',fallback=''){
