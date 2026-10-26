@@ -619,7 +619,22 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   // No AI credits, history, notes, chat IDs or consent flag are sent here.
   async function checkAiAvailability(){
     if(!safeIdentity())return;
-    if(state.aiAvailability!==null&&Date.now()-state.aiAvailabilityCheckedAt<60000)return;
+    // Cached checks should still repaint on RU/EN/HY switching, without
+    // repeating the signed HTTP request or touching user chat content.
+    const tr=(key,ru)=>window.VetogramI18n?.t?.(key,ru)||ru;
+    const paintAiAvailability=()=>{
+      const description=state.aiAvailability===false
+        ?tr('aiProviderDisabled','Генерация AI пока не подключена. Чаты и черновики доступны, но модель не вызывается.')
+        :state.aiAvailability===true
+          ?tr('aiProviderConfigured','AI-провайдер настроен. Работа модели проверится после твоего согласия на запрос. Действуют лимиты бюджета.')
+          :tr('aiProviderUnknown','Статус AI пока не подтверждён. Проверка не передала никаких сообщений или данных модели.');
+      $('vtaiQuota').textContent=description;
+      $('vtaiCreate').disabled=state.busy||state.aiAvailability===false;
+    };
+    if(state.aiAvailability!==null&&Date.now()-state.aiAvailabilityCheckedAt<60000){
+      paintAiAvailability();
+      return;
+    }
     const scope=ownerRequestScope();
     const intent=++state.aiAvailabilityIntent;
     const controller=new AbortController();
@@ -634,19 +649,12 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       if(!isOwnerRequestCurrent(scope)||intent!==state.aiAvailabilityIntent)return;
       state.aiAvailability=response.ok?data.configured===true:null;
       state.aiAvailabilityCheckedAt=Date.now();
-      if(state.aiAvailability===false){
-        $('vtaiQuota').textContent='Генерация AI пока не подключена. Чаты и черновики доступны, но модель не вызывается.';
-      }else if(state.aiAvailability===true){
-        $('vtaiQuota').textContent='AI-провайдер настроен. Работа модели проверится после твоего согласия на запрос. Действуют лимиты бюджета.';
-      }else{
-        $('vtaiQuota').textContent='Статус AI пока не подтверждён. Проверка не передала никаких сообщений или данных модели.';
-      }
-      $('vtaiCreate').disabled=state.busy||state.aiAvailability===false;
+      paintAiAvailability();
     }catch{
       if(isOwnerRequestCurrent(scope)&&intent===state.aiAvailabilityIntent){
         state.aiAvailability=null;
         state.aiAvailabilityCheckedAt=0;
-        $('vtaiQuota').textContent='Не удалось проверить AI-провайдера. Повтори попытку после восстановления соединения.';
+        $('vtaiQuota').textContent=tr('aiProviderCheckFailed','Не удалось проверить AI-провайдера. Повтори попытку после восстановления соединения.');
       }
     }finally{clearTimeout(timeout)}
   }
@@ -690,7 +698,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   }
   async function generate(){
     if(state.busy||!safeIdentity())return;
-    if(state.aiAvailability===false)return notice('Генерация AI не подключена. Провайдер нужно включить в настройках сервера.',true);
+    if(state.aiAvailability===false)return notice(window.VetogramI18n?.t?.('aiProviderMustEnable','Генерация AI не подключена. Провайдер нужно включить в настройках сервера.')||'Генерация AI не подключена. Провайдер нужно включить в настройках сервера.',true);
     if(!$('vtaiConsent').checked)return notice('Разреши передачу введённого текста AI-провайдеру',true);
     const original=$('vtaiText').value.trim();
     if(original.length<2||original.length>3000)return notice('Введите от 2 до 3000 символов',true);
@@ -1454,6 +1462,10 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     $('vtaiIncludeMemory').checked=false;
     state.suggestedChatId=String(detail.chatId);
     notice('Сообщение вставлено только в черновик. Проверь текст и разрешения перед AI-запросом.');
+  });
+  window.addEventListener('vetogram:locale-changed',()=>{
+    // A locale switch must never call the model or submit a new OTP/chat request.
+    if(state.identity&&state.aiAvailability!==null)void checkAiAvailability();
   });
   window.addEventListener('veto:screen-changed',e=>{
     if(e?.detail?.screen==='ai')void checkAiAvailability();
