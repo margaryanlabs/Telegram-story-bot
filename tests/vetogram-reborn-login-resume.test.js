@@ -193,3 +193,101 @@ test('failed OTP send releases the request gate for a later retry',async()=>{
   assert.equal(next.statusCode,200);
   assert.equal(owners.size,0);
 });
+
+test('Neon OTP lease serializes across separate server runtimes',async()=>{
+  const start=api.indexOf("    if (action === 'send_code') {");
+  const end=api.indexOf("    if (action === 'send_login_email') {",start);
+  assert.ok(start>0 && end>start);
+  const realBranch=api.slice(start,end);
+  const active=new Map();
+  let challenge=null, sends=0, releaseSend;
+  const pending=new Promise(resolve=>{releaseSend=resolve});
+  const response=()=>({
+    code:0,data:null,headers:{},
+    setHeader(k,v){this.headers[k]=v},
+    status(n){this.code=n;return this},
+    json(v){this.data=v;return this},
+  });
+  const runtime=name=>{
+    const scope=vm.createContext({
+      userId:'123456',body:{phone:'+37499123456'},
+      config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
+      selectedStorageProvider:()=> 'neon',
+      randomUUID:()=>name==='A'
+        ?'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa'
+        :'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb',
+      inFlightLoginCodeOwners:new Set(),
+      normalizeTelegramPhone:v=>v,
+      getAuthChallenge:async()=>challenge,
+      getViewerSession:async()=>null,
+      isOwnActiveViewerSession:()=>false,
+      openJson:async ciphertext=>JSON.parse(ciphertext),
+      sealJson:async value=>JSON.stringify(value),
+      saveAuthChallenge:async row=>{challenge=row;return row},
+      claimLoginCodeLease:async(user,token)=>{
+        if(active.has(user))return {acquired:false};
+        active.set(user,token);return {acquired:true};
+      },
+      releaseLoginCodeLease:async(user,token)=>{
+        if(active.get(user)!==token)return {released:false};
+        active.delete(user);return {released:true};
+      },
+      beginUserAuth:async phone=>{
+        sends++;await pending;
+        return {phone,phoneCodeHash:'hash',session:'stub',delivery:'telegram_app'};
+      },
+    });
+    return vm.runInContext(
+      '(async function(res){const action="send_code";'+realBranch+'})',scope
+    );
+  };
+  const sendA=runtime('A'),sendB=runtime('B');
+  const first=response(),second=response();
+  const started=sendA(first);
+  // Let A reach the persisted lease while its simulated Telegram request waits.
+  await new Promise(resolve=>setImmediate(resolve));
+  await sendB(second);
+  assert.equal(second.code,429);
+  assert.equal(second.data.retryAfterSeconds,5);
+  assert.equal(sends,1);
+  releaseSend();
+  await started;
+  assert.equal(first.code,200);
+  assert.equal(active.size,0);
+  const later=response();
+  await sendB(later);
+  assert.equal(later.code,200);
+  assert.equal(later.data.reused,true);
+  assert.equal(sends,1);
+});
+
+test('Neon rejects login-code sends if the v6 lease table is unavailable',async()=>{
+  const start=api.indexOf("    if (action === 'send_code') {");
+  const end=api.indexOf("    if (action === 'send_login_email') {",start);
+  const realBranch=api.slice(start,end);
+  let sends=0;
+  const scope=vm.createContext({
+    userId:'123456',body:{phone:'+37499123456'},
+    config:{newConnectionsReady:true},AUTH_TTL_MS:600000,
+    selectedStorageProvider:()=> 'neon',
+    randomUUID:()=> 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+    inFlightLoginCodeOwners:new Set(),
+    normalizeTelegramPhone:v=>v,
+    getAuthChallenge:async()=>null,
+    getViewerSession:async()=>null,
+    isOwnActiveViewerSession:()=>false,
+    claimLoginCodeLease:async()=>{throw Error('MISSING_NEON_V6_TABLE')},
+    releaseLoginCodeLease:async()=>({released:false}),
+    beginUserAuth:async()=>{sends++;throw Error('MUST_NOT_SEND')},
+  });
+  const run=vm.runInContext(
+    '(async function(res){const action="send_code";'+realBranch+'})',scope
+  );
+  const res={
+    code:0,data:null,status(n){this.code=n;return this},
+    json(v){this.data=v;return this},
+  };
+  await run(res);
+  assert.equal(res.code,503);
+  assert.equal(sends,0);
+});
