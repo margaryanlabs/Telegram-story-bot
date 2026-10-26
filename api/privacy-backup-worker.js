@@ -1,3 +1,4 @@
+import { archiveWebAppUrl } from '../lib/vetogram-public-origin.js';
 import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { neonCronAuthorized } from '../lib/neon-scheduler-auth.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
@@ -26,10 +27,7 @@ function authorized(req) {
 }
 async function notifyCompleted(ownerId, job, total,media) {
   if(!BOT||job.notify_completion===false)return false;
-  const url=new URL('https://telegram-story-bot-murex.vercel.app/studio.html');
-  url.searchParams.set('screen','chats');
-  url.searchParams.set('chat',String(job.chat_id));
-  url.searchParams.set('v','20261016-veto-smart-inbox-v1');
+  const archiveUrl=archiveWebAppUrl(process.env.STORY_PILOT_BASE_URL,job.chat_id);
   const response=await fetch('https://api.telegram.org/bot'+BOT+'/sendMessage',{
     method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({
@@ -38,7 +36,7 @@ async function notifyCompleted(ownerId, job, total,media) {
         +'\nСохранено текстовых сообщений: '+Number(total||0)
         +'\nМедиафайлов в Vault: '+Number(media||0)
         +'\n\nАрхив остаётся отдельно от Telegram согласно выбранному сроку хранения.',
-      reply_markup:{inline_keyboard:[[{text:'Открыть копию',web_app:{url:url.toString()}}]]},
+      ...(archiveUrl?{reply_markup:{inline_keyboard:[[{text:'Открыть копию',web_app:{url:archiveUrl}}]]}}:{}),
     }),
     signal:AbortSignal.timeout(4500),
   });
