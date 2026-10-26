@@ -46,6 +46,7 @@
       accessible("mediaEpubOverlay") ||
       accessible("readerBackdrop") ||
       accessible("vetoFilmOverlay") ||
+      accessible("v11DetailModal") ||
       $("v4Listening")?.classList.contains("open") ||
       Boolean($("v6SourceFlyout") && !$("v6SourceFlyout").classList.contains("hidden"));
     if(modalOpen)return true;
@@ -61,6 +62,7 @@
     if(accessible("mediaEpubOverlay"))return $("mediaEpubOverlay").querySelector(".epub-action")?.click();
     if(accessible("readerBackdrop"))return $("closeReader")?.click();
     if(accessible("vetoFilmOverlay"))return $("vetoFilmClose")?.click();
+    if(accessible("v11DetailModal"))return $("v11DetailClose")?.click();
     if($("v4Listening")?.classList.contains("open"))return $("v4ListenClose")?.click();
     if($("v6SourceFlyout") && !$("v6SourceFlyout").classList.contains("hidden"))return $("v6SourceButton")?.click();
     const home=document.querySelector('.tab[data-tab="home"]');
@@ -68,7 +70,7 @@
   }
   safeCall(()=>webApp.BackButton?.onClick?.(back));
   function initListeners(){
-    const nodes=["mediaEpubOverlay","readerBackdrop","vetoFilmOverlay","v4Listening","v6SourceFlyout","mainTabs"]
+    const nodes=["mediaEpubOverlay","readerBackdrop","vetoFilmOverlay","v11DetailModal","v4Listening","v6SourceFlyout","mainTabs"]
       .map($).filter(Boolean);
     const observer = new MutationObserver(syncBack);
     for(const e of nodes) observer.observe(e,{attributes:true,attributeFilter:["class"],subtree:e.id==="mainTabs"});
