@@ -5,7 +5,7 @@
   const state={
     chats:[],page:0,hasMore:true,loading:false,
     filter:'all',search:'',generation:0,lastListFetchedAt:0,
-    thread:null,messages:[],threadLoading:false,
+    thread:null,messages:[],threadLoading:false,threadLoadError:null,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),expandedAttachments:new Map(),expandedBytes:0,
@@ -1753,7 +1753,11 @@
     if(!state.messages.length){
       box.innerHTML=state.threadLoading
         ?empty('Загружаю сообщения','Получаю историю напрямую из Telegram…')
-        :empty('Пустой чат','В Telegram нет доступных сообщений');
+        :state.threadLoadError
+          ?empty('История пока недоступна',state.threadLoadError+' · Нажми ↻ для повторной проверки')
+          :state.thread?.archiveOnly
+            ?empty('Сохранённая переписка','Новые сообщения появятся только после подтверждения живого Telegram-чата')
+            :empty('Пустой чат','В Telegram нет доступных сообщений');
     }else{
       let day='';
       let previous=null;
@@ -2040,7 +2044,7 @@
     // block this newly selected dialog for the rest of the session.
     state.threadLoading=false;
     state.syncFailures=0;state.lastSyncedAt=null;
-    state.thread=chat;state.messages=[];state.threadHasMore=false;
+    state.thread=chat;state.messages=[];state.threadHasMore=false;state.threadLoadError=null;
     state.intelFocus=null;
     state.deliveryStage=null;renderDeliveryStatus();
     closeThreadSearch();
@@ -2101,7 +2105,7 @@
     const rememberedAnchor=state.messages.length?visibleMessageAnchor():null;
     const generation=++state.threadGeneration;
     state.syncRunId++;state.syncBusy=false; // current history load supersedes any old poll
-    state.threadLoading=true;
+    state.threadLoading=true;state.threadLoadError=null;
     if(reset&&!rememberedAnchor)state.messages=[];
     $('telegramThreadOlder').hidden=true;
     if(reset&&state.messages.length)renderMessages();
@@ -2148,7 +2152,7 @@
         $('telegramThreadMeta').textContent=(labels[data.chat.type]||'чат')+
           (state.thread.savedCopy?' · сохранённая история Vetogram':' · Telegram');
       }
-      state.threadLoading=false;
+      state.threadLoading=false;state.threadLoadError=null;
       renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
       rememberHotThread();
       renderSendComposer();
@@ -2160,8 +2164,8 @@
         void mergeDeferredArchive(chatId,generation,ownerKey);
     }catch(error){
       if(generation!==state.threadGeneration)return;
-      state.threadLoading=false;
-      threadNotice(error.message);
+      state.threadLoading=false;state.threadLoadError=String(error?.message||'Telegram не ответил').slice(0,180);
+      threadNotice(state.threadLoadError);
       syncLabel('Нет подтверждения Telegram · проверю снова');
       scheduleThreadSync(45000);
       if(reset)renderMessages();
