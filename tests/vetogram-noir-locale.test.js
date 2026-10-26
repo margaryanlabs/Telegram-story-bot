@@ -152,3 +152,20 @@ test('chat and privacy filters plus AI mode tabs remain localized and actionable
         key+' must have a translated label in '+lang);
   }
 });
+
+
+test('bottom navigation exposes localized screen-reader labels',()=>{
+  const html=readFileSync(new URL('../public/studio.html',import.meta.url),'utf8');
+  const nav=html.match(/<nav\b[^>]*class="[^"]*\bbottom-nav\b[^"]*"[^>]*>[\s\S]*?<\/nav>/)?.[0]||'';
+  assert.ok(nav,'main navigation exists');
+  for(const [screen,key] of [
+    ['telegram','chats'],['publish','stories'],['privacy','privacy']
+  ]){
+    const button=[...nav.matchAll(/<button\b([^>]*)>/g)].map(x=>x[1])
+      .find(attrs=>attrs.includes('data-nav="'+screen+'"'));
+    assert.ok(button,'missing screen '+screen);
+    assert.ok(button.includes('data-ui-label="'+key+'"'),screen);
+    for(const locale of ['ru','en','hy'])
+      assert.ok(uiText(key,locale),screen+':'+locale);
+  }
+});
