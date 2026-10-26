@@ -52,7 +52,7 @@ test('a prechecked public Portal checkbox is a release blocker',()=>{
 });
 test('loading dependent Story controller before app.js is blocked',()=>{
   const original=actual();
-  const urls=[...original.html.matchAll(/<script\\b[^>]*\\bsrc=["'](\\/[^"']+\\.js\\?v=[^"']+)["']/g)]
+  const urls=[...original.html.matchAll(/<script\b[^>]*\bsrc=["'](\/[^"']+\.js\?v=[^"']+)["']/g)]
     .map(match=>match[1]);
   const first=urls.find(url=>url.startsWith('/app.js?v='));
   const dependent=urls.find(url=>url.startsWith('/story-engine.js?v='));
