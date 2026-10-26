@@ -142,6 +142,11 @@ const labels={
   viewerContact:["контакт","contact","կոնտակտ"],
   viewerVerified:["confirmed","verified","հաստատված"],
   viewerFullReady:["3/3 · ГОТОВО","3/3 · READY","3/3 · ՊԱՏՐԱՍՏ Է"],
+  aiProviderDisabled:["Генерация AI пока не подключена. Чаты и черновики доступны, но модель не вызывается.","AI generation is not connected yet. Chats and drafts remain available, but no model is called.","AI գեներացումը դեռ միացված չէ։ Զրույցներն ու սևագրերը հասանելի են, բայց մոդելը չի կանչվում։"],
+  aiProviderConfigured:["AI-провайдер настроен. Работа модели проверится после твоего согласия на запрос. Действуют лимиты бюджета.","An AI provider is configured. Model operation will be checked after you consent to a request. Budget limits apply.","AI մատակարարը կարգավորված է։ Մոդելի աշխատանքը կստուգվի միայն քո համաձայնությամբ։ Գործում են բյուջեի սահմանաչափեր։"],
+  aiProviderUnknown:["Статус AI пока не подтверждён. Проверка не передала никаких сообщений или данных модели.","AI availability is not yet confirmed. No messages or model data were shared by this check.","AI-ի հասանելիությունը դեռ հաստատված չէ։ Այս ստուգումը ոչ մի հաղորդագրություն չի փոխանցել մոդելին։"],
+  aiProviderCheckFailed:["Не удалось проверить AI-провайдера. Повтори попытку после восстановления соединения.","Could not check the AI provider. Try again when the connection is restored.","Չհաջողվեց ստուգել AI մատակարարին։ Կրկին փորձիր կապը վերականգնելուց հետո։"],
+  aiProviderMustEnable:["Генерация AI не подключена. Провайдер нужно включить в настройках сервера.","AI generation is not enabled. A provider must be configured on the server.","AI գեներացումը միացված չէ։ Սերվերում պետք է կարգավորել մատակարարին։"],
 };
 export function normalizeLocale(value){return UI_LOCALES.includes(value)?value:'ru';}
 export function uiText(key,locale='ru',fallback=''){
