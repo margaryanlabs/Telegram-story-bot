@@ -1715,3 +1715,64 @@ html#vetogram.vetogram-noir body.veto-chat-thread #actionDock{
 #vetogram.vetogram-noir .veto-mirror-retry-thread:focus-visible{
   outline:2px solid var(--noir-coral);outline-offset:3px;
 }
+
+
+/* V5.1 mobile conversation quality: the actual visual viewport wins over
+   the keyboard-obscured layout viewport. The late immersive 100dvh override
+   previously defeated earlier, correct keyboard-aware chat geometry. */
+html#vetogram.vetogram-noir body.veto-chat-thread .app-shell,
+html#vetogram.vetogram-noir body.veto-chat-thread #telegramMirror,
+html#vetogram.vetogram-noir body.veto-chat-thread #telegramMirror .veto-mirror-thread{
+  box-sizing:border-box;
+  height:var(--veto-visible-height,100dvh)!important;
+  max-height:var(--veto-visible-height,100dvh)!important;
+  min-height:0!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-thread #telegramMirror .veto-mirror-thread{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+html#vetogram.vetogram-noir body.veto-chat-thread #telegramMirror .veto-mirror-thread-body{
+  flex:1 1 auto;
+  min-height:0!important;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+}
+html#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-person{
+  min-width:0;
+}
+html#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-person :is(strong,span){
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+html#vetogram.vetogram-noir #telegramMirror .veto-mirror-bubble-inner{
+  overflow-wrap:anywhere;
+}
+html#vetogram.vetogram-noir #telegramMirror #telegramThreadCompose{
+  font-size:16px!important;
+  line-height:1.45;
+  min-width:0;
+}
+@media(max-width:600px){
+  html#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-bar
+  :is(.veto-mirror-icon-btn,.veto-mirror-back){
+    min-width:40px;
+    min-height:40px;
+    touch-action:manipulation;
+  }
+  html#vetogram.vetogram-noir #telegramMirror
+  :is(.veto-mirror-send-button,.veto-mirror-mic-btn){
+    min-width:44px;
+    min-height:44px;
+    touch-action:manipulation;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  html#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-body{
+    scroll-behavior:auto!important;
+  }
+}
