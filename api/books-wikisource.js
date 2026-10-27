@@ -9,6 +9,16 @@ const MAX_BYTES = 2_600_000;
 const PAGE_SIZE = 20;
 const PREFILL = Object.freeze({ru:'Пушкин',hy:'Թումանյան'});
 const MAX_CHAPTERS = 60;
+const TRANSLATION_CATEGORIES = Object.freeze({
+  en:'Переводы с английского языка',
+  fr:'Переводы с французского языка',
+  de:'Переводы с немецкого языка',
+  it:'Переводы с итальянского языка',
+  es:'Переводы с испанского языка'
+});
+const TRANSLATION_PAGE_SIZE = 24;
+const TRANSLATION_SEARCH_SIZE = 24;
+
 const send = (res,status,value) => {
   res.setHeader('Content-Type','application/json; charset=utf-8');
   res.setHeader('X-Content-Type-Options','nosniff');
@@ -97,6 +107,60 @@ function bookFromEntry(entry,wiki) {
     key:'ws-'+wiki+'-'+id
   };
 }
+/**
+ * Search Russian translations by *source category*, not by matching foreign
+ * author names in unsorted Russian pages. The MediaWiki category is an
+ * editorial assertion of translation language, not a guarantee that a specific
+ * edition can be redistributed under a country's copyright law.
+ */
+export async function translationsCatalog(req,res) {
+  const from=limited(req.query.original,2)||'en';
+  if(!Object.prototype.hasOwnProperty.call(TRANSLATION_CATEGORIES,from))
+    return send(res,400,{ok:false,error:'Unsupported original language'});
+  const q=limited(req.query.q,100);
+  const page=boundedInt(req.query.page??'1',1,300);
+  if(!page)return send(res,400,{ok:false,error:'Invalid page'});
+  const category=TRANSLATION_CATEGORIES[from];
+  const categoryTitle='Категория:'+category;
+  let rows=[], nextCursor=null, total=null;
+  if(q){
+    // CirrusSearch incategory restricts the result set to certified source
+    // category membership, unlike general full-text author search.
+    const search=await wikiGet('ru',{
+      action:'query',list:'search',srsearch:'incategory:"'+category+'" '+q,
+      srnamespace:'0',srlimit:TRANSLATION_SEARCH_SIZE,
+      sroffset:(page-1)*TRANSLATION_SEARCH_SIZE,srwhat:'text',srinfo:'totalhits'
+    });
+    rows=Array.isArray(search.query?.search)?search.query.search:[];
+    total=Math.max(0,Number(search.query?.searchinfo?.totalhits)||0);
+  }else{
+    const cursor=limited(req.query.cursor,260);
+    // A continuation token is opaque upstream, passed only as a query
+    // parameter to the hard-coded ru.wikisource.org endpoint.
+    const params={action:'query',list:'categorymembers',cmtitle:categoryTitle,
+      cmnamespace:'0',cmtype:'page',cmlimit:TRANSLATION_PAGE_SIZE};
+    if(cursor)params.cmcontinue=cursor;
+    const result=await wikiGet('ru',params);
+    rows=Array.isArray(result.query?.categorymembers)?result.query.categorymembers:[];
+    nextCursor=typeof result.continue?.cmcontinue==='string'
+      ? result.continue.cmcontinue.slice(0,260):null;
+  }
+  const books=rows.filter(x=>x.ns===0 && Number.isSafeInteger(x.pageid) && x.pageid>0)
+    .map(row=>({
+      ...bookFromEntry(row,'ru'),
+      isTranslation:true,
+      originalLanguage:from,
+      source:'Русский перевод · Викитека',
+      rightsNotice:'Русский перевод зарубежного произведения. Проверьте права переводчика и издания на странице оригинала.',
+      sourceCategory:sourceUrl('ru',categoryTitle)
+    }));
+  return send(res,200,{
+    ok:true,source:'wikisource',collection:'translations',wiki:'ru',
+    originalLanguage:from,categoryUrl:sourceUrl('ru',categoryTitle),
+    page,count:total,nextPage:q && rows.length===TRANSLATION_SEARCH_SIZE && page*TRANSLATION_SEARCH_SIZE<total?page+1:null,
+    nextCursor,books
+  });
+}
 export async function catalog(req,res,wiki) {
   const q=limited(req.query.q,100) || PREFILL[wiki];
   const page=boundedInt(req.query.page??'1',1,300);
@@ -158,10 +222,11 @@ export async function fullText(req,res,wiki) {
 }
 export default async function handler(req,res){
   if(req.method!=='GET')return send(res,405,{ok:false,error:'Method not allowed'});
-  const wiki=limited(req.query.wiki,3);
+  const wiki=req.query.collection==='translations'?'ru':limited(req.query.wiki,3);
   if(!Object.prototype.hasOwnProperty.call(WIKIS,wiki))
     return send(res,400,{ok:false,error:'Unsupported wiki'});
   try {
+    if(req.query.collection==='translations')return await translationsCatalog(req,res);
     if(req.query.mode==='text')return await fullText(req,res,wiki);
     return await catalog(req,res,wiki);
   }catch(error){
