@@ -1629,6 +1629,16 @@ html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen
 }
 
 
+/* V5.1: protect global navigation from native Telegram Close/menu chrome.
+   Content safe-area insets supplied by Telegram are subtracted so browsers
+   that already reserve that space do not get a second huge top margin.
+   Open threads continue hiding the global topbar entirely. */
+@media(max-width:600px) and (orientation:portrait){
+  html#vetogram.vetogram-noir.v4-telegram-webview .topbar{
+    padding-top:max(12px,calc(54px - var(--noir-safe-top)))!important;
+  }
+}
+
 /* V4.10: dedicated immersive messenger width independent of dashboard.
    Chat body is the product; dashboard gutters must not narrow it. */
 html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread) .app-shell{
