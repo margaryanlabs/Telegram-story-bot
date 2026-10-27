@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./cinema.css">
   <script defer src="https://telegram.org/js/telegram-web-app.js"></script>
   <script defer src="./cinema-catalog.js"></script>
+  <script defer src="./cinema-provider.js"></script>
   <script defer src="./cinema.js"></script>
 </head>
 <body>
@@ -53,12 +54,12 @@
       </section>
       <section id="cinemaContinue" class="cinema-section hidden"><div class="cinema-section-head"><div><span class="cinema-overline">YOUR STORIES</span><h2>Продолжить просмотр</h2></div></div><div class="cinema-rail" id="cinemaContinueList"></div></section>
       <section class="cinema-section" id="cinemaBrowse">
-        <div class="cinema-section-head"><div><span class="cinema-overline" id="cinemaSectionKicker">HANDPICKED FILMS</span><h2 id="cinemaSectionTitle">Истории, которые остаются</h2><p id="cinemaSectionDescription">Полные короткометражные фильмы с открытыми лицензиями.</p></div></div>
+        <div class="cinema-section-head"><div><span class="cinema-overline" id="cinemaSectionKicker">HANDPICKED FILMS</span><h2 id="cinemaSectionTitle">Истории, которые остаются</h2><p id="cinemaSectionDescription">Русские полнометражные фильмы и открытая коллекция авторского кино.</p></div></div>
         <div class="cinema-chips" id="cinemaGenres" role="group" aria-label="Жанры"></div>
         <div class="cinema-grid" id="cinemaGrid" aria-live="polite"></div>
         <p class="cinema-empty hidden" id="cinemaEmpty">Фильмы не найдены. Попробуй другой запрос.</p>
       </section>
-      <section class="cinema-trust"><span>✦ ОТКРЫТАЯ КОЛЛЕКЦИЯ</span><p>Каждый фильм сопровождается ссылками на автора, источник и условия использования. Коммерческие релизы с пиратских ресурсов не подключаются. Озвучка появляется в списке только при наличии разрешённого аудиофайла.</p><a href="https://studio.blender.org/films/" target="_blank" rel="noopener noreferrer">Коллекция Blender Studio ↗</a></section>
+      <section class="cinema-trust"><span>✦ ОФИЦИАЛЬНЫЕ ПЛЕЕРЫ</span><p>Смотрим фильмы во встроенном плеере официального канала правообладателя или открытого архива. Видеофайлы на наши серверы не загружаются. Доступность зависит от источника, региона и правил встраивания.</p><a href="https://studio.blender.org/films/" target="_blank" rel="noopener noreferrer">Коллекция Blender Studio ↗</a></section>
     </main>
   </div>
   <nav class="cinema-bottom" aria-label="Мобильная навигация" id="cinemaBottom">
@@ -80,8 +81,8 @@
   <section class="cinema-player-overlay hidden" id="cinemaPlayer" role="dialog" aria-modal="true" aria-label="Видеоплеер">
     <div class="cinema-player-shell">
       <header><button type="button" id="cinemaPlayerClose" class="cinema-back">← Назад</button><strong id="cinemaPlayerTitle"></strong><span>VETOGRAM CINEMA</span></header>
-      <div class="cinema-video-wrap"><video id="cinemaVideo" controls playsinline preload="metadata" crossorigin="anonymous" aria-label="Видеофильм"></video><div class="cinema-loading" id="cinemaPlayerMessage" role="status">Загружаем видео…</div></div>
-      <div class="cinema-video-toolbar">
+      <div class="cinema-video-wrap" id="cinemaVideoWrap"><video id="cinemaVideo" controls playsinline preload="metadata" crossorigin="anonymous" aria-label="Видеофильм"></video><div class="cinema-loading" id="cinemaPlayerMessage" role="status">Загружаем видео…</div></div>
+      <div class="cinema-video-toolbar" id="cinemaVideoToolbar">
         <button type="button" id="cinemaRewind">↶ 10 сек.</button><button type="button" id="cinemaForward">10 сек. ↷</button>
         <label>Скорость <select id="cinemaSpeed" aria-label="Скорость воспроизведения"><option value=".75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
         <label>Качество <select id="cinemaQuality" aria-label="Качество видео"><option value="0">Авто</option></select></label>
