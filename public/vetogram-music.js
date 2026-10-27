@@ -61,7 +61,21 @@ function row(track,index,context){
   if(track.source==="demo")pool=unique([...demoTracks,...state.tracks]);
   playTrack(track,pool);
  };
- e.append(no,cover,main,tag,like,play);
+ const share=dom("button","track-btn share","↗");share.type="button";share.title="Поделиться в Telegram";
+ share.setAttribute("aria-label","Поделиться: "+track.title);
+ share.onclick=()=>window.VetogramMusicSocial?.shareTrack?.(track)||send("Обнови страницу для открытия меню поделиться");
+ e.append(no,cover,main,tag,like,play,share);
+ if(track.source==="local"){
+  const actions=dom("div","personal-actions");
+  for(const [name,symbol,cb] of [
+   ["Выше","↑",()=>window.VetogramMusic?.moveLocal(track.id,-1)],
+   ["Ниже","↓",()=>window.VetogramMusic?.moveLocal(track.id,1)],
+   ["Удалить","×",()=>{if(confirm("Удалить «"+track.title+"» из своей библиотеки?"))window.VetogramMusic?.removeLocal(track.id).catch(()=>send("Не удалось удалить файл из хранилища"))}]]){
+   const button=dom("button","personal-action",symbol);button.type="button";button.title=name;
+   button.setAttribute("aria-label",name+": "+track.title);button.onclick=cb;actions.append(button);
+  }
+  e.append(actions);
+ }
  return e;
 }
 function paintRows(target,tracks,context,empty){
