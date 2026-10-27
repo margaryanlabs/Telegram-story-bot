@@ -55,7 +55,7 @@
  const PROVIDERS={
   mcu:{url:"https://www.disneyplus.com/browse/page-60f4707d-19bb-4c0c-9390-ab269137be50",name:"Disney+ · Marvel"},
   potter:{url:"https://www.harrypotter.com/features/how-to-stream-harry-potter-wherever-you-are",name:"Wizarding World · где смотреть"},
-  legacy:{url:"https://www.disneyplus.com/browse/page-60f4707d-19bb-4c0c-9390-ab269137be50",name:"Disney+ · Marvel"}
+  legacy:{url:"https://www.justwatch.com/ru",name:"JustWatch · проверить по стране"}
  };
  function slug(s){return s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
  const bundle=(rows,kind,franchise,hue)=>rows.map(([title,original,year],i)=>({
