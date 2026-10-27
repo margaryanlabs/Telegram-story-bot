@@ -74,3 +74,27 @@ Common works such as "Гамлет" (Шекспир) and "Три мушкетё�
 
 ### Added checks
 `tests/vetogram-books-wikisource.test.js` includes category pagination/cursor, source-constrained search, invalid source rejection, translation index + edition selection and attribution checks. The PR is still a draft until the GitHub Actions build is green and real works open inside Telegram on mobile.
+
+## Reading Studio 2.0 — visual / UX upgrade
+
+This iteration preserves the same standalone `/books.html` route; Vetogram Chats/Stories/Auth were not changed.
+
+### Entrance and shelf
+- Premium charcoal/champagne editorial visual system; CSS-built book sculpture with respectful reduced-motion fallback (no heavy 3D/WebGL assets).
+- Fully data-driven **Continue Reading** section shown only when a previously opened book has local reading progress; this is not fake sample usage.
+- Cover placeholders are typographic when the source does not provide a trusted cover. Russian translations remain distinct from English originals.
+- Keyboard-accessible tabs, headings and book cards; original-source attribution remains available.
+
+### Immersive reader
+- Dynamic text pagination uses reading viewport width and height, selected font size, leading and line width. It avoids long "pages" that are thousands of characters on a phone.
+- Every computed page stores an absolute character offset; changing typography or browser viewport reflows to a nearby page containing the same position, rather than saving fragile page numbers.
+- Three paper themes; two font families; three line spacing modes; regular/narrow reading columns.
+- Distraction-free focus mode with persistent exit button, swipe navigation, tap near the left/right page edge, keyboard arrows and native Telegram BackButton integration.
+- Progress indicator represents the approximate position **in the currently loaded chapter/part**, not a false whole-book percentage. Reading history, bookmarks and saved quotes remain per device.
+- Lightweight page-turn micro-motion; `prefers-reduced-motion` disables the animation.
+
+### Validation and remaining tasks
+- `tests/vetogram-books-reading-studio.test.js` checks realistic mobile/desktop page capacities, position retention after reflow, empty/Armenian text behavior and DOM control wiring.
+- Independent V8 smoke test exercised the in-app layout logic on 375px and 1024px views with larger fonts, confirming monotonic offsets and reflow behavior.
+- These static and simulated checks do **not** replace real Android/iPhone Telegram WebView rendering, accessibility auditing, legal content verification or a green CI.
+- GitHub Actions jobs have recently failed within seconds without step detail; root cause remains unconfirmed. The development branch should **not** be merged or deployed until build and manual testing pass.
