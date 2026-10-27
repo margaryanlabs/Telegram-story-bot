@@ -778,7 +778,7 @@
   // VETO COMPASS: in-book map, search and persistent user landmarks.
   // Only searches text already loaded in the reader. No network API calls.
   function parseBookmarkToken(token){
-    const found=/^(root|\\d+):(@?)(\\d+)$/.exec(String(token||''));
+    const found=/^(root|\d+):(@?)(\d+)$/.exec(String(token||''));
     if(!found)return null;
     const chapter=found[1]==='root'?null:Number(found[1]);
     if(chapter!==null && !Number.isSafeInteger(chapter))return null;
@@ -867,7 +867,7 @@
         if(offset<0)break;
         const snippetStart=Math.max(0,offset-65);
         const snippetEnd=Math.min(state.rawText.length,offset+needle.length+100);
-        const preview=state.rawText.slice(snippetStart,snippetEnd).replace(/\\s+/g,' ').trim();
+        const preview=state.rawText.slice(snippetStart,snippetEnd).replace(/\s+/g,' ').trim();
         const item=node('button','compass-match');
         item.type='button';
         const at=Math.floor(offset/Math.max(1,state.rawText.length)*100);
