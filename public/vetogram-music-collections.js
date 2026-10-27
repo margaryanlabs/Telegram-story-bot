@@ -11,7 +11,7 @@ const cap=(s,max=100)=>String(s??"").replace(/[\u0000-\u001f\u007f]/g," ").trim(
 const safe=u=>{try{const x=new URL(String(u));return x.protocol==="https:"?x.href:""}catch{return""}};
 const pick=x=>x&&x.id&&x.title?{
  id:cap(x.id,160),title:cap(x.title,120),artist:cap(x.artist,95),
- source:["audius","radio","local","demo","metadata","stream","archive","ccmixter","openverse"].includes(x.source)?x.source:"metadata",
+ source:["audius","radio","local","demo","metadata","stream","archive","ccmixter","openverse","experimental"].includes(x.source)?x.source:"metadata",
  artwork:safe(x.artwork),stream:["radio","stream","archive","ccmixter","openverse"].includes(x.source)?safe(x.stream):"",homepage:x.source==="radio"?safe(x.homepage):"",
  permalink:["archive","ccmixter","openverse"].includes(x.source)?safe(x.permalink):"",
  license:["archive","ccmixter","openverse"].includes(x.source)?cap(x.license,32):"",

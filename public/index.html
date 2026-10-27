@@ -4,8 +4,8 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css"><link rel="stylesheet" href="./vetogram-music-openverse.css">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script></head>
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css"><link rel="stylesheet" href="./vetogram-music-openverse.css"><link rel="stylesheet" href="./vetogram-music-experimental.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script><script defer src="./vetogram-music-experimental.js"></script></head>
 <body>
 <div class="app" id="app">
 <aside class="sidebar" aria-label="Навигация">
@@ -42,6 +42,17 @@
    <div class="hero-pills"><span><b>♫</b> ТОЛЬКО АУДИО</span><span><b>◉</b> ОДИН PLAY</span><span><b>✧</b> БЕЗ ВИДЕО</span></div></div>
    <div class="hero-stage" aria-hidden="true"><div class="vinyl-large"><div class="vinyl-ring"></div><div class="vinyl-label"><span>V</span><small>VETOGRAM<br>MUSIC</small></div></div><div class="floating-note note-one">♫</div><div class="floating-note note-two">♪</div><div class="hero-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="hero-card">NOW PLAYING<span>THE SOUND OF YOU</span><b>∞</b></div></div>
   </div>
+  <section class="experimental-home" aria-labelledby="experimental-home-title">
+   <small>VETOGRAM MUSIC / AUDIO BETA</small>
+   <h2 id="experimental-home-title">Любимые хиты. <em>Ищи и слушай.</em></h2>
+   <p>Экспериментальный поиск отдельных аудиозаписей. Никаких видеоплееров и переходов. Не все треки доступны: внешние источники могут ограничивать поток.</p>
+   <div class="experimental-shortcuts">
+    <button type="button" data-experimental-query="MACAN">MACAN</button>
+    <button type="button" data-experimental-query="Баста">Баста</button>
+    <button type="button" data-experimental-query="Sirusho">Sirusho</button>
+    <button type="button" data-experimental-query="The Weeknd">The Weeknd</button>
+   </div>
+  </section>
   <section class="native-home audio-home" aria-labelledby="native-home-title">
  <div class="native-home-topline">VETOGRAM MUSIC</div>
  <h2 id="native-home-title">Нажал Play. <em>И слушаешь.</em></h2>
@@ -193,6 +204,13 @@
    <p class="open-audio-status" id="openAudioSearchStatus" role="status">Найди исполнителя или название песни.</p>
    <div id="openAudioSearchResults" class="open-audio-results"></div>
    <div class="open-audio-more-wrap"><button id="openAudioSearchMore" class="open-audio-more" type="button" hidden>＋ Ещё музыка</button></div>
+  </section>
+  <section class="experimental-search" aria-labelledby="experimental-search-title">
+   <div class="experimental-search-head"><div><small>VETOGRAM / EXPERIMENTAL</small><h2 id="experimental-search-title">Популярная музыка</h2></div><span>АУДИО · БЕТА</span></div>
+   <p>Экспериментальный поиск полных аудиопотоков. Нажми Play для проверки конкретной записи. Источник может быть недоступен в твоём регионе или временно не работать.</p>
+   <div id="experimentalStatus" class="experimental-status" role="status">Введи исполнителя или название песни.</div>
+   <div id="experimentalResults" class="experimental-results"></div>
+   <details class="experimental-info"><summary>О подключении</summary><p>Используются неофициальные внешние серверы. Потоки не сохраняются на сервер Vetogram, доступность и разрешения правообладателей не подтверждены. Некоммерческая бета не отменяет авторских прав.</p></details>
   </section>
  </section>
  <section class="page" data-view="library">
