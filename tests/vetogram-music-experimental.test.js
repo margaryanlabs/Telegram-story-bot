@@ -85,8 +85,8 @@ test("music UI has search, favorite, no video embeds, and reliable fallbacks",()
  assert.doesNotMatch(src,/<iframe|document\.createElement\(["']iframe|yt-dlp|youtube-dl|downloadAudio/);
  assert.match(src,/Экспериментальный каталог сейчас не отвечает/);
  assert.match(src,/Promise.any/);
- assert.match(src,/api/v1/videos//);
- assert.match(src,/api/v1/search/);
+ assert.match(src,/api\/v1\/videos\//);
+ assert.match(src,/api\/v1\/search/);
  assert.match(html,/Некоммерческая бета не отменяет авторских прав/);
  assert.match(style,/@media\(max-width:640px\)/);
  for(const p of ["vetogram-music.js","vetogram-music-experimental.js"])
