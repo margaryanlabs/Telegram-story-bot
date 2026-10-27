@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {books:[], page:1, nextPage:null, count:0, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, theme:'dark'};
+  const state = {source:'ru',books:[], page:1, nextPage:null, count:0, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,theme:'dark'};
   const STORAGE = 'vetogram-books-v1';
   const readJSON = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(STORAGE + ':' + key)); return v ?? fallback; }
@@ -37,15 +37,40 @@
     try {const u=new URL(url);return u.protocol==='https:' && ['www.gutenberg.org','gutenberg.org'].includes(u.hostname)?u.href:'';}
     catch{return '';}
   }
+  function isWiki(book){return book?.provider==='wikisource' && ['ru','hy'].includes(book.wiki);}
+  function bookKey(book){return isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
+  function setSourceInfo(){
+    const isGutenberg=state.source==='gutenberg';
+    $('languageFilter').hidden=!isGutenberg;
+    document.querySelector('.topics').hidden=!isGutenberg;
+    const choices={
+      ru:['Русская Викитека · классическая литература и исторические тексты','Русская классика','https://ru.wikisource.org/wiki/Special:Copyright'],
+      hy:['Հայերեն Վիքիդարան · հայկական գրականություն и тексты на армянском','Հայ գրականություն','https://hy.wikisource.org/wiki/Special:Copyright'],
+      gutenberg:['Project Gutenberg · публичный каталог классических произведений','Мировая классика','https://www.gutenberg.org/policy/terms_of_use']
+    };
+    const item=choices[state.source]||choices.ru;
+    $('sourceDescription').textContent=item[0];
+    $('sourceLegal').textContent=isGutenberg
+      ?'Источник: Project Gutenberg. Статус произведения зависит от законодательства вашей страны и перевода.'
+      :'Источник: Викитека. Права зависят от произведения, перевода и страны; проверьте условия на странице оригинала.';
+    $('sourceLegalLink').href=item[2];
+    $('catalogCountLabel').textContent=isGutenberg?'книг в каталоге':'результатов в подборке';
+    $('bookSearch').placeholder=state.source==='hy'?'Գրքի անուն կամ հեղինակ…': 'Название книги или автор…';
+    for(const b of document.querySelectorAll('[data-books-source]')){
+      const active=b.dataset.booksSource===state.source;
+      b.classList.toggle('active',active);
+      b.setAttribute('aria-pressed',String(active));
+    }
+  }
   function updateSavedCount(){ $('savedCount').textContent=Object.keys(saved).length; }
   function compactTitle(title){return String(title||'Без названия').slice(0,160);}
-  function fullName(book){return (book.authors||[]).join(', ') || 'Автор неизвестен';}
+  function fullName(book){return (book.authors||[]).join(', ') || (isWiki(book)?(book.wiki==='hy'?'Հայերեն Վիքիդարան':'Русская Викитека'):'Автор неизвестен');}
   function formatCount(n){return Number(n||0).toLocaleString('ru-RU');}
   function refreshTabs() {
     for(const b of document.querySelectorAll('.topics [data-topic]')){
       b.classList.toggle('active',b.dataset.topic===state.topic);
     }
-    $('shelfTitle').textContent=state.query ? 'Результаты поиска' : state.topic ? 'По вашему выбору' : 'Популярные книги';
+    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
     $('shelfEyebrow').textContent=state.query ? 'SEARCH / RESULTS' : 'DISCOVER / 01';
   }
   function card(book) {
@@ -62,20 +87,20 @@
     }else{cover.classList.add('placeholder');cover.textContent=compactTitle(book.title);}
     main.append(cover,node('h3','',compactTitle(book.title)),node('p','',fullName(book)));
     const meta=node('div','book-bottom');
-    meta.append(node('span','',(book.language||'').toUpperCase()),node('span','',progress[book.id] ? 'Продолжить ↗' : 'Читать ↗'));
+    meta.append(node('span','',(book.language||'').toUpperCase()),node('span','',progress[bookKey(book)] ? 'Продолжить ↗' : 'Читать ↗'));
     main.append(meta);
     main.addEventListener('click',()=>openBook(book));
     article.append(main);
-    const save=node('button','book-saved',saved[book.id]?'♥':'♡');
-    save.title=saved[book.id]?'Убрать из библиотеки':'Сохранить в библиотеку';
+    const save=node('button','book-saved',saved[bookKey(book)]?'♥':'♡');
+    save.title=saved[bookKey(book)]?'Убрать из библиотеки':'Сохранить в библиотеку';
     save.setAttribute('aria-label',save.title);
     save.addEventListener('click',()=> {
-      if(saved[book.id])delete saved[book.id]; else saved[book.id]=book;
+      if(saved[bookKey(book)])delete saved[bookKey(book)]; else saved[bookKey(book)]=book;
       persist('saved',saved);updateSavedCount();
-      save.textContent=saved[book.id]?'♥':'♡';
-      save.title=saved[book.id]?'Убрать из библиотеки':'Сохранить в библиотеку';
+      save.textContent=saved[bookKey(book)]?'♥':'♡';
+      save.title=saved[bookKey(book)]?'Убрать из библиотеки':'Сохранить в библиотеку';
       save.setAttribute('aria-label',save.title);
-      toast(saved[book.id]?'Книга добавлена на полку':'Книга убрана с полки');
+      toast(saved[bookKey(book)]?'Книга добавлена на полку':'Книга убрана с полки');
     });
     article.append(save);
     return article;
@@ -90,11 +115,14 @@
     if(reset){state.page=1;state.books=[];$('catalogGrid').replaceChildren();$('catalogStatus').textContent='Загружаем книги…';}
     $('loadMore').hidden=true;
     refreshTabs();
-    const params=new URLSearchParams({page:String(state.page),lang:state.lang});
+    const params=new URLSearchParams({page:String(state.page)});
+    if(state.source==='gutenberg')params.set('lang',state.lang);
+    else params.set('wiki',state.source);
     if(state.query)params.set('q',state.query);
-    if(state.topic)params.set('topic',state.topic);
+    if(state.topic && state.source==='gutenberg')params.set('topic',state.topic);
     try {
-      const response=await fetch('/api/books?'+params,{signal:abort.signal});
+      const endpoint=state.source==='gutenberg'?'/api/books':'/api/books-wikisource';
+      const response=await fetch(endpoint+'?'+params,{signal:abort.signal});
       const data=await response.json();
       if(!response.ok||!data.ok)throw new Error(data.error||'Сервис книг временно недоступен');
       if(request!==state.request)return;
@@ -135,15 +163,15 @@
   async function cachedText(id) {
     const db=await database();if(!db)return null;
     return new Promise(resolve=>{try{
-      const req=db.transaction('texts','readonly').objectStore('texts').get(Number(id));
+      const req=db.transaction('texts','readonly').objectStore('texts').get(String(id));
       req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>resolve(null);
     }catch{resolve(null);}});
   }
-  async function cacheText(book,text){
+  async function cacheText(key, data){
     const db=await database();if(!db)return;
     try{
       const tx=db.transaction('texts','readwrite');
-      tx.objectStore('texts').put({id:Number(book.id),book,text,at:Date.now()});
+      tx.objectStore('texts').put({id:String(key),book:data.book,text:data.text,chapters:data.chapters||[],attribution:data.attribution||null,at:Date.now()});
     }catch{}
   }
   function stripGutenbergFrame(value){
@@ -187,77 +215,120 @@
     for(const el of document.querySelectorAll('[data-read-theme]'))el.classList.toggle('active',el.dataset.readTheme===prefs.theme);
     persist('prefs',prefs);
   }
+  function bookmarkToken(){return String(state.activeChapter??'root')+':'+state.currentPage;}
   function showPage(page, scroll=true){
     if(!state.current||!state.pages.length)return;
     state.currentPage=Math.min(Math.max(0,page),state.pages.length-1);
     const currentPageText=state.pages[state.currentPage];
-    $('readerCopy').textContent=currentPageText; // Safe: never inject remote text into HTML.
-    $('chapterTitle').textContent=chapterFromPage(currentPageText,state.currentPage);
+    $('readerCopy').textContent=currentPageText;
+    const chapterName=state.activeChapter===null?'':state.chapters[state.activeChapter]?.label;
+    $('chapterTitle').textContent=chapterName || chapterFromPage(currentPageText,state.currentPage);
     $('pageNumber').textContent='СТРАНИЦА '+(state.currentPage+1);
     $('readerPageLabel').textContent=(state.currentPage+1)+' / '+state.pages.length;
     $('progressFill').style.width=((state.currentPage+1)/state.pages.length*100)+'%';
-    $('prevPage').disabled=state.currentPage===0;
-    $('nextPage').disabled=state.currentPage===state.pages.length-1;
-    const isMarked=progress[state.current.id]?.bookmarks?.includes(state.currentPage);
+    $('prevPage').disabled=state.currentPage===0 && (state.activeChapter===null || !isWiki(state.current));
+    $('nextPage').disabled=state.currentPage===state.pages.length-1 && (!isWiki(state.current) || !state.chapters.length || state.activeChapter===state.chapters.length-1);
+    const key=bookKey(state.current);
+    const mark=bookmarkToken();
+    const isMarked=progress[key]?.bookmarks?.includes(mark);
     $('bookmarkButton').textContent=isMarked?'♥':'♧';
-    progress[state.current.id]={
-      ...(progress[state.current.id]||{}),
-      page:state.currentPage, at:Date.now(), title:state.current.title,
-      authors:state.current.authors, cover:state.current.cover,language:state.current.language
+    progress[key]={
+      ...(progress[key]||{}),id:state.current.id,provider:state.current.provider||'gutenberg',
+      wiki:state.current.wiki||null,chapter:state.activeChapter,page:state.currentPage,
+      at:Date.now(),title:state.current.title,authors:state.current.authors,
+      cover:state.current.cover,language:state.current.language,sourceUrl:state.current.sourceUrl
     };
     persist('progress',progress);
     if(scroll)$('readerScroll').scrollTop=0;
   }
-  async function openBook(book) {
-    if(!book||!Number.isSafeInteger(Number(book.id)))return;
-    state.current=book;state.pages=[];
-    $('reader').hidden=false;
-    $('readerTitle').textContent=compactTitle(book.title);
-    $('readerAuthor').textContent=fullName(book);
-    $('readerCopy').textContent='Открываем книгу…';
+  function renderChapters(){
+    const wrap=$('readerChapters'),select=$('chapterSelect');
+    wrap.hidden=!state.chapters.length || !isWiki(state.current);
+    select.replaceChildren(new Option('Начало книги',''));
+    for(let i=0;i<state.chapters.length;i++){
+      select.add(new Option(state.chapters[i].label.slice(0,110),String(i)));
+    }
+    select.value=state.activeChapter===null?'':String(state.activeChapter);
+  }
+  async function loadChapter(book,chapter=null,resume=false){
+    const key=bookKey(book);
+    const request=++state.requestBook;
+    state.pages=[];state.activeChapter=chapter;
+    $('readerCopy').textContent='Загружаем текст…';
     $('readerPageLabel').textContent='…';
-    $('readerSettings').hidden=true;
-    $('readerSettingsButton').setAttribute('aria-expanded','false');
-    applyPrefs();
+    const cacheId=key+':'+(chapter===null?'root':chapter);
     try{
-      let data=await cachedText(book.id);
+      let data=await cachedText(cacheId);
       if(!data?.text){
-        const response=await fetch('/api/books?mode=text&id='+encodeURIComponent(book.id));
+        const params=new URLSearchParams({mode:'text',id:String(book.id)});
+        if(isWiki(book))params.set('wiki',book.wiki);
+        if(chapter!==null && isWiki(book))params.set('chapter',String(chapter));
+        const endpoint=isWiki(book)?'/api/books-wikisource':'/api/books';
+        const response=await fetch(endpoint+'?'+params);
         const result=await response.json();
-        if(!response.ok||!result.ok)throw new Error(result.error||'Не удалось открыть полный текст');
-        data={book:result.book,text:result.text};
-        await cacheText(result.book,result.text);
+        if(!response.ok || !result.ok)throw new Error(result.error||'Не удалось открыть полный текст');
+        data={book:result.book,text:result.text,chapters:result.chapters||[],attribution:result.attribution||null};
+        await cacheText(cacheId,data);
       }
-      // If the user navigated back while loading, ignore the late response.
-      if(!$('reader').hidden && state.current?.id===book.id){
-        state.current=data.book||book;
-        $('readerTitle').textContent=compactTitle(state.current.title);
-        $('readerAuthor').textContent=fullName(state.current);
-        state.pages=paginate(stripGutenbergFrame(data.text));
-        const resume=progress[book.id]?.page||0;
-        showPage(resume);
-      }
+      if($('reader').hidden || state.requestBook!==request || bookKey(state.current)!==key)return;
+      state.current={...book,...(data.book||{})};
+      state.chapters=data.chapters||[];
+      state.activeChapter=chapter;
+      $('readerTitle').textContent=compactTitle(state.current.title);
+      $('readerAuthor').textContent=fullName(state.current);
+      $('readerSourceLink').href=data.attribution?.source||state.current.sourceUrl||'https://www.gutenberg.org/';
+      renderChapters();
+      const text=isWiki(book)?data.text:stripGutenbergFrame(data.text);
+      state.pages=paginate(text);
+      const p=progress[key];
+      showPage(resume && p?.chapter===chapter ? Number(p.page)||0 : 0);
     }catch(e){
-      if(!$('reader').hidden && state.current?.id===book.id){
-        $('readerCopy').textContent='Не удалось загрузить полный текст этой книги. Вернитесь в каталог и попробуйте другой экземпляр.';
+      if(!$('reader').hidden && state.requestBook===request){
+        $('readerCopy').textContent='Не удалось открыть текст. Вернитесь к книгам и попробуйте другой результат.';
         $('readerPageLabel').textContent='—';
-        toast(e.message||'Сбой источника');
+        toast(e.message||'Сервис чтения недоступен');
       }
     }
   }
+  async function openBook(book){
+    if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
+    ++state.requestBook;
+    state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;
+    $('reader').hidden=false;
+    $('readerTitle').textContent=compactTitle(book.title);
+    $('readerAuthor').textContent=fullName(book);
+    $('readerSettings').hidden=true;
+    $('readerSettingsButton').setAttribute('aria-expanded','false');
+    $('readerSourceLink').href=book.sourceUrl||'https://www.gutenberg.org/';
+    $('readerChapters').hidden=true;
+    applyPrefs();
+    const old=progress[bookKey(book)];
+    const chapter=isWiki(book)&&Number.isInteger(old?.chapter)&&old.chapter>=0?old.chapter:null;
+    await loadChapter(book,chapter,true);
+  }
   function closeReader(){
-    $('reader').hidden=true;
-    state.current=null;state.pages=[];
+    ++state.requestBook;
+    $('reader').hidden=true;state.current=null;state.pages=[];state.chapters=[];
+    state.activeChapter=null;
     $('readerSettings').hidden=true;
     updateSavedCount();
   }
-  function flip(dir){if(state.pages.length)showPage(state.currentPage+dir);}
+  function flip(dir){
+    if(!state.pages.length || !state.current)return;
+    const target=state.currentPage+dir;
+    if(target>=0 && target<state.pages.length){showPage(target);return;}
+    if(!isWiki(state.current) || !state.chapters.length)return;
+    if(dir>0 && state.activeChapter===null){void loadChapter(state.current,0);return;}
+    if(dir>0 && state.activeChapter<state.chapters.length-1){void loadChapter(state.current,state.activeChapter+1);return;}
+    if(dir<0 && state.activeChapter!==null){void loadChapter(state.current,state.activeChapter===0?null:state.activeChapter-1);return;}
+  }
   function bookmark(){
     if(!state.current)return;
-    const id=state.current.id;
+    const id=bookKey(state.current);
     const list=[...(progress[id]?.bookmarks||[])];
-    const i=list.indexOf(state.currentPage);
-    if(i===-1)list.push(state.currentPage);else list.splice(i,1);
+    const token=bookmarkToken();
+    const i=list.indexOf(token);
+    if(i===-1)list.push(token);else list.splice(i,1);
     progress[id]={...(progress[id]||{}),bookmarks:list};
     persist('progress',progress);showPage(state.currentPage,false);
     toast(i===-1?'Закладка сохранена':'Закладка удалена');
@@ -266,7 +337,7 @@
     if(!state.current)return;
     const selection=window.getSelection()?.toString().trim().slice(0,800);
     if(!selection||selection.length<4){toast('Сначала выделите фразу в тексте');return;}
-    quotes.unshift({bookId:state.current.id,title:state.current.title,page:state.currentPage,quote:selection,at:Date.now()});
+    quotes.unshift({bookId:bookKey(state.current),title:state.current.title,page:state.currentPage,chapter:state.activeChapter,quote:selection,at:Date.now()});
     if(quotes.length>80)quotes.length=80;
     persist('quotes',quotes);
     window.getSelection()?.removeAllRanges();
@@ -290,7 +361,7 @@
     if(reading.length){
       host.append(node('p','eyebrow','ПРОДОЛЖИТЬ ЧТЕНИЕ'));
       reading.slice(0,12).forEach(([id,p])=>{
-        const book=saved[id]||{id:Number(id),title:p.title,authors:p.authors,cover:p.cover,language:p.language};
+        const book=saved[id]||{id:Number(p.id||id.split('-').at(-1)),provider:p.provider,wiki:p.wiki,title:p.title,authors:p.authors,cover:p.cover,language:p.language,sourceUrl:p.sourceUrl};
         modalRow(host,compactTitle(book.title),'Страница '+((p.page||0)+1),'Читать',()=>{$('bookModal').hidden=true;openBook(book);});
       });
     }
@@ -308,6 +379,18 @@
     }
   }
 
+  for(const button of document.querySelectorAll('[data-books-source]'))button.addEventListener('click',()=>{
+    if(state.source===button.dataset.booksSource)return;
+    state.source=button.dataset.booksSource;
+    state.query='';state.topic='';state.page=1;
+    $('bookSearch').value='';
+    setSourceInfo();loadCatalog(true);
+  });
+  $('chapterSelect').addEventListener('change',()=>{
+    if(!state.current)return;
+    const value=$('chapterSelect').value;
+    void loadChapter(state.current,value===''?null:Number(value));
+  });
   $('searchForm').addEventListener('submit',event=>{
     event.preventDefault();state.query=$('bookSearch').value.trim();loadCatalog(true);
   });
@@ -352,5 +435,5 @@
     if(Math.abs(dx)>85 && Math.abs(dx)>Math.abs(dy)*2.2)flip(dx<0?1:-1);
     touchStart=null;
   },{passive:true});
-  updateSavedCount();applyPrefs();loadCatalog(true);
+  updateSavedCount();applyPrefs();setSourceInfo();loadCatalog(true);
 })();
