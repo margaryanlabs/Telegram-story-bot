@@ -209,3 +209,52 @@ test('translation list shows selectable Russian editions instead of pretending t
     assert.equal(bad.code,404);
   });
 });
+
+
+test('Russian literary genre shelf loads real romance/novel category members',async()=>{
+  await withFetch(async url=>{
+    const u=new URL(url);
+    assert.equal(u.hostname,'ru.wikisource.org');
+    assert.equal(u.searchParams.get('list'),'categorymembers');
+    assert.equal(u.searchParams.get('cmtitle'),'Категория:Романы');
+    assert.equal(u.searchParams.get('cmnamespace'),'0');
+    return Response.json({
+      continue:{cmcontinue:'page|some-next-index',continue:'-||'},
+      query:{categorymembers:[{pageid:455,ns:0,title:'Обломов (Гончаров)'}]}
+    });
+  },async()=>{
+    const res=fakeResponse();
+    await wikisource({method:'GET',query:{collection:'genres',genre:'novels'}},res);
+    assert.equal(res.code,200);
+    assert.equal(res.payload.genre,'novels');
+    assert.equal(res.payload.nextCursor,'page|some-next-index');
+    assert.equal(res.payload.books[0].language,'ru');
+    assert.equal(res.payload.books[0].provider,'wikisource');
+    assert.equal(res.payload.books[0].id,455);
+  });
+});
+test('Russian literary genre search is restricted to category and main namespace',async()=>{
+  await withFetch(async url=>{
+    const u=new URL(url);
+    assert.equal(u.searchParams.get('list'),'search');
+    assert.match(u.searchParams.get('srsearch'),/incategory:"Фантастика"/);
+    assert.match(u.searchParams.get('srsearch'),/Беляев/);
+    assert.equal(u.searchParams.get('srnamespace'),'0');
+    return Response.json({query:{searchinfo:{totalhits:1},search:[
+      {pageid:989,ns:0,title:'Аэлита (Толстой)'}
+    ]}});
+  },async()=>{
+    const res=fakeResponse();
+    await wikisource({method:'GET',query:{collection:'genres',genre:'fantasy',q:'Беляев'}},res);
+    assert.equal(res.code,200);
+    assert.equal(res.payload.count,1);
+    assert.equal(res.payload.books.length,1);
+  });
+});
+test('unsupported genre never creates upstream requests',async()=>{
+  await withFetch(async()=>{throw Error('Unexpected network');},async()=>{
+    const response=fakeResponse();
+    await wikisource({method:'GET',query:{collection:'genres',genre:'../../secret'}},response);
+    assert.equal(response.code,400);
+  });
+});
