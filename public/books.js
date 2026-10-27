@@ -261,7 +261,7 @@
     choice.forEach((book,index)=>{
       const item=node('button','featured-edition');
       item.type='button';item.setAttribute('aria-label','Читать '+book.title);
-      const frame=node('div','featured-edition-cover');
+      const frame=node('div','book-cover featured-edition-cover');
       coverArtwork(frame,book);
       const detail=node('div','featured-edition-info');
       detail.append(node('span','featured-overline',String(index+1).padStart(2,'0')+' / ИЗБРАННОЕ'),
