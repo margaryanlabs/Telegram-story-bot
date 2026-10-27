@@ -32,7 +32,7 @@ function showPage(page){
   document.dispatchEvent(new CustomEvent("vetogram:page-leave",{detail:{page:state.page}}));
  }
  state.page=page;
- $(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
+ $$(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
  $$("[data-page]").forEach(el=>{el.classList.toggle("active",el.dataset.page===page);if(el.dataset.page===page)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")});
  $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",archive:"БИБЛИОТЕКА",mixter:"ТРЕКИ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
  window.scrollTo({top:0,behavior:"instant"});
@@ -285,10 +285,10 @@ function renderRadio(){
 }
 $("radioForm").onsubmit=e=>{e.preventDefault();radioSearch($("radioInput").value)};
 $("[data-radio]").forEach(b=>b.onclick=()=>{$("radioInput").value=b.dataset.radio;radioSearch(b.dataset.radio)});
-$("[data-audio-radio]").forEach(b=>b.addEventListener("click",()=>{
+document.querySelectorAll("[data-audio-radio]").forEach(b=>b.addEventListener("click",()=>{
  showPage("radio");$("radioInput").value=b.dataset.audioRadio;radioSearch(b.dataset.audioRadio,true);
 }));
-$("[data-audio-preset]").forEach(b=>b.addEventListener("click",()=>{
+document.querySelectorAll("[data-audio-preset]").forEach(b=>b.addEventListener("click",()=>{
  showPage("catalog");window.VetogramCatalog?.selectPreset?.(b.dataset.audioPreset);
 }));
 function openDb(){return new Promise((resolve,reject)=>{if(!("indexedDB"in window))return resolve(null);
