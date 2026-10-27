@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,lastListFetchedAt:0,
     thread:null,messages:[],threadLoading:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
-    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarActive:0,avatarLoaded:0,
+    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],stickerSets:[],stickerPack:null,
@@ -1217,7 +1217,11 @@
       });
       if(!response.ok)throw new Error('Telegram не отдаёт изображение');
       const blob=await response.blob();
-      if(generation!==state.generation||signed!==String(tg?.initData||'')){resetOwner();throw new Error('Сменился Telegram-аккаунт');}
+      // Avatar requests are independent of list pagination; an in-flight page
+      // transition must not discard a valid same-owner profile picture.
+      if((action!=='avatar'&&generation!==state.generation)||signed!==String(tg?.initData||'')){
+        resetOwner();throw new Error('Сменился Telegram-аккаунт');
+      }
       if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
         throw new Error('Изображение недоступно');
       const href=URL.createObjectURL(blob);
@@ -1225,38 +1229,71 @@
       return href;
     }finally{clearTimeout(timer);}
   }
-  // At most one MTProto avatar request in flight, and six per app session:
-  // never attempt to download hundreds of profile photos when browsing dialogs.
+  // Demand-driven avatar loading. The old lifetime cap of six meant all other
+  // contact photos remained initials even when the owner scrolled further down.
+  // Keep bounded MTProto concurrency, never request invisible or archived-only
+  // chats, and retry failed visible avatars only after a cooldown.
   function queueVisibleAvatars(){
-    if(!tg?.initData||state.avatarLoaded>=6)return;
-    const visible=[...document.querySelectorAll('[data-veto-avatar]')]
-      .filter(el=>!state.avatarUrls.has(el.dataset.vetoAvatar))
-      .slice(0,6-state.avatarLoaded);
+    if(!tg?.initData||$('telegramChatsView')?.hidden||
+      document.querySelector('.screen.active')?.dataset?.screen!=='telegram')return;
+    const now=Date.now();
+    const visible=[...document.querySelectorAll('#telegramMirrorList [data-veto-avatar]')]
+      .filter(el=>{
+        const id=String(el.dataset.vetoAvatar||'');
+        if(!id||state.avatarUrls.has(id)||state.avatarRequested.has(id)||
+          (state.avatarRetryAt.get(id)||0)>now||
+          el.closest('.veto-mirror-chat.is-cleared'))return false;
+        const rect=el.getBoundingClientRect();
+        return rect.bottom>=-180&&rect.top<=window.innerHeight+180;
+      }).slice(0,12);
     for(const el of visible){
-      const id=String(el.dataset.vetoAvatar||'');
-      if(!id||state.avatarRequested.has(id))continue;
+      const id=String(el.dataset.vetoAvatar);
       state.avatarRequested.add(id);
       state.avatarQueue.push(id);
     }
     runAvatarQueue();
   }
   function runAvatarQueue(){
-    while(state.avatarActive<1&&state.avatarQueue.length&&state.avatarLoaded<6){
+    while(state.avatarActive<2&&state.avatarQueue.length){
       const id=state.avatarQueue.shift();
-      state.avatarActive++;state.avatarLoaded++;
+      if(state.avatarUrls.has(id))continue;
+      const epoch=state.avatarEpoch,ownerKey=state.ownerInitData;
+      state.avatarActive++;
       photoRequest('avatar',id).then(href=>{
+        if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData||
+          ownerKey!==String(tg?.initData||'')){
+          URL.revokeObjectURL(href);return;
+        }
         state.avatarUrls.set(id,href);
-        for(const el of document.querySelectorAll('[data-veto-avatar]')){
+        for(const el of document.querySelectorAll('#telegramMirrorList [data-veto-avatar]')){
           if(el.dataset.vetoAvatar!==id)continue;
           const img=document.createElement('img');
           img.className='veto-mirror-avatar-img';img.alt='';img.src=href;
           el.replaceChildren(img);
         }
-      }).catch(()=>{}).finally(()=>{
-        state.avatarActive--;runAvatarQueue();
+      }).catch(()=>{
+        if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData)return;
+        state.avatarRequested.delete(id);
+        state.avatarRetryAt.set(id,Date.now()+90000);
+      }).finally(()=>{
+        if(epoch!==state.avatarEpoch)return;
+        state.avatarActive=Math.max(0,state.avatarActive-1);
+        runAvatarQueue();
       });
     }
   }
+  // Scrolls happen both in the full-page WebView and nested inbox containers.
+  // One animation-frame callback covers both without per-scroll DOM rebuilding.
+  let avatarScrollScheduled=false;
+  function scheduleVisibleAvatars(){
+    if(avatarScrollScheduled)return;
+    avatarScrollScheduled=true;
+    requestAnimationFrame(()=>{
+      avatarScrollScheduled=false;
+      queueVisibleAvatars();
+    });
+  }
+  window.addEventListener('scroll',scheduleVisibleAvatars,{capture:true,passive:true});
   function rememberPreview(messageId,href){
     state.mediaPreviewUrls.set(String(messageId),href);
     state.mediaUrls.push(href);
@@ -1507,7 +1544,8 @@
     // Restore the five-tab inbox after an identity switch; a stale fullscreen
     // thread class must never strand the next Telegram owner without navigation.
     window.VetoThemeDock?.('inbox');
-    state.avatarQueue=[];state.avatarRequested.clear();state.avatarLoaded=0;
+    state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
+    state.avatarRetryAt.clear();state.avatarActive=0;
     state.avatarUrls.forEach(href=>{try{URL.revokeObjectURL(href)}catch{}});
     state.avatarUrls.clear();
     revokeMediaUrls();
