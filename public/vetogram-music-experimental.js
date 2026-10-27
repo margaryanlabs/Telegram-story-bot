@@ -17,7 +17,7 @@ const HOSTS=Object.freeze([
 const INVIDIOUS=Object.freeze(["https://inv.nadeko.net","https://invidious.nerdvpn.de","https://invidious.tiekoetter.com"]);
 const ID=/^[A-Za-z0-9_-]{11}$/;
 const MAX_RESULTS=35;
-let tracks=[],searchVersion=0,loading=false,lastQuery="",currentHost=HOSTS[0],currentKind="piped";
+let tracks=[],searchVersion=0,loading=false,lastQuery="",currentHost=HOSTS[0],currentKind="piped",lastPlayState="idle";
 const text=(s,n=110)=>String(s??"").replace(/[\u0000-\u001f\u007f]/g," ").replace(/<[^>]*>/g,"").replace(/\s+/g," ").trim().slice(0,n);
 function validURL(value){
  try{
@@ -53,15 +53,18 @@ function normalize(x){
  if(!id||!title||!Number.isFinite(duration)||duration<35||duration>1200||
     /(?:live stream|прямой эфир|часовая подборка)/i.test(title))return null;
  return {id:"experimental:"+id,source:"experimental",videoId:id,title,artist,duration,
-  artwork:"https://i.ytimg.com/vi/"+id+"/hqdefault.jpg",playable:true};
+  artwork:"https://i.ytimg.com/vi/"+id+"/hqdefault.jpg",playable:false};
 }
 function chooseAudio(data){
  if(data?.livestream||data?.liveNow||data?.error||(!Array.isArray(data?.audioStreams)&&!Array.isArray(data?.adaptiveFormats)))return"";
  const audio=byId("audio");
- const streamList=Array.isArray(data.audioStreams)?data.audioStreams:
-   Array.isArray(data.adaptiveFormats)?data.adaptiveFormats.map(s=>({
-    url:s.url,mimeType:s.type,bitrate:s.bitrate,videoOnly:false
-   })):[];
+ // Do not discard adaptive audio because an empty audioStreams field exists.
+ const streamList=[
+  ...(Array.isArray(data.audioStreams)?data.audioStreams:[]),
+  ...(Array.isArray(data.adaptiveFormats)?data.adaptiveFormats.map(s=>({
+   url:s.url,mimeType:s.type||s.mimeType,bitrate:s.bitrate,videoOnly:false
+  })):[])
+ ];
  const list=streamList.filter(s=>{
   if(!s||s.videoOnly||!validURL(s.url)||!/^audio\//i.test(String(s.mimeType||"")))return false;
   return !audio?.canPlayType||audio.canPlayType(String(s.mimeType).split(";")[0])!=="";
@@ -153,16 +156,14 @@ function render(){
  const fragment=document.createDocumentFragment();
  tracks.forEach((track,index)=>{
   const row=element("article","experimental-track");
+  row.dataset.videoId=track.videoId;
   const art=element("img","experimental-cover");
   art.src=track.artwork;art.alt="";art.loading="lazy";
   const copy=element("div","experimental-copy");
   copy.append(element("strong","",track.title),element("small","",track.artist));
   const play=element("button","experimental-play","▶");play.type="button";
-  play.setAttribute("aria-label","Слушать "+track.title);
-  play.onclick=()=>{
-   notice("Подключаем аудио: "+track.title+"…");
-   app.play(track,tracks);
-  };
+  play.setAttribute("aria-label","Проверить аудио и слушать "+track.title);
+  play.onclick=()=>app.play(track,tracks);
   const like=element("button","experimental-like","♡");like.type="button";
   like.setAttribute("aria-label","Добавить в избранное "+track.title);
   like.onclick=()=>{app.toggleLike(track);like.textContent="♥"};
@@ -194,7 +195,21 @@ for(const button of document.querySelectorAll("[data-experimental-query]")){
   app.search(query);
  });
 }
+function report({status,track}={}){
+ if(!track)return;
+ lastPlayState=status||"idle";
+ const row=[...root.querySelectorAll(".experimental-track")].find(x=>x.dataset.videoId===track.videoId);
+ const button=row?.querySelector(".experimental-play");
+ if(status==="pending"){notice("Проверяем аудио: "+track.title+"…");if(button){button.textContent="…";button.disabled=true}}
+ if(status==="playing"){notice("Играет: "+track.title);if(button){button.textContent="Ⅱ";button.disabled=false}}
+ if(status==="requires-tap"){notice("Трек загружен. Нажми Play в нижнем плеере, чтобы включить звук.");if(button){button.textContent="▶";button.disabled=false}}
+ if(status==="unavailable"){
+  notice("Источник нашёл название, но не предоставил работающий аудиопоток для этой песни.");
+  if(row)row.classList.add("experimental-unavailable");
+  if(button){button.textContent="↻";button.disabled=false;button.setAttribute("aria-label","Повторить попытку: "+track.title)}
+ }
+}
 window.VetogramExperimental=Object.freeze({
- resolve,search,tracks:()=>tracks.slice(),status:()=>({loading,count:tracks.length,term:lastQuery})
+ resolve,search,report,tracks:()=>tracks.slice(),status:()=>({loading,count:tracks.length,term:lastQuery,lastPlayState})
 });
 })();
