@@ -38,7 +38,7 @@ test('catalog contains unique true films with direct Commons filenames and verif
   const ctx={window:{}};
   vm.runInNewContext(catalog,ctx,{filename:'cinema-catalog.js'});
   const f=ctx.window.VetogramCinemaCatalog;
-  assert.ok(Array.isArray(f)&&f.length>=15);
+  assert.ok(Array.isArray(f)&&f.length>=18);
   assert.equal(new Set(f.map(x=>x.id)).size,f.length);
   for(const x of f){
     assert.ok(x.id&&x.title&&x.original&&x.creator);
@@ -83,4 +83,17 @@ test('official RUTUBE player adapter validates rights metadata and rejects unsaf
   assert.throws(()=>adapter.assertAuthorized({url:'https://rutube.ru/play/embed/test'}),/не подтверждён/);
   assert.throws(()=>adapter.assertAuthorized({url:'http://rutube.ru/play/embed/test',licensed:true,license:'ok',credit:'ok'}),/HTTPS/);
   assert.equal(adapter.assertAuthorized({url:'https://rutube.ru/play/embed/test',licensed:true,license:'ok',credit:'ok'}).licensed,true);
+});
+
+test('premium Russian movies shelf and approved source selector stay wired',()=>{
+ assert.match(html,/id="cinemaRussian"/);
+ assert.match(html,/id="cinemaRussianRail"/);
+ assert.match(html,/id="cinemaProviderSelect"/);
+ assert.match(html,/id="cinemaSourceSwitch"/);
+ assert.match(script,/fetchApprovedSources/);
+ assert.match(script,/approvedSources/);
+ assert.match(script,/\/sources/);
+ assert.match(script,/function sourceLabel/);
+ assert.match(css,/cinema-russian-rail/);
+ assert.match(css,/cinema-source-switch/);
 });
