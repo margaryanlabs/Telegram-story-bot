@@ -37,3 +37,18 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background:ra
 .author-discovery>span{font-size:11px;color:#a59e9e;font-weight:650;margin-right:2px}
 .author-discovery button{background:rgba(244,203,175,.05);border:1px solid rgba(235,191,160,.2);color:#d5bbab;border-radius:999px;padding:7px 12px;font-size:11px}
 .author-discovery button:hover{background:rgba(244,203,175,.16);color:#fff3e7}
+
+/* Foreign literature with Russian translations: distinct discoverability */
+.source-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+.source-tabs button[data-books-source="translated"].active{background:linear-gradient(120deg,#664336,#2c2730);border-color:rgba(248,184,138,.85)}
+.translation-filters{display:flex;align-items:center;gap:8px;overflow-x:auto;white-space:nowrap;padding:9px 0 2px;margin:0 0 9px;scrollbar-width:none}
+.translation-filters[hidden]{display:none!important}
+.translation-filters>span{font-size:11px;color:#9f969a;flex-shrink:0}
+.translation-filters button{padding:9px 12px;flex-shrink:0;background:#191b22;border:1px solid rgba(246,210,189,.15);border-radius:10px;color:#c1ada4;font-size:11px;letter-spacing:0}
+.translation-filters button.active{background:#e8b58f;border-color:#e8b58f;color:#241c21;font-weight:760}
+.translation-tag{align-self:flex-start;margin:-5px 0 7px;padding:4px 7px;font-size:9px;font-weight:760;color:#f1bda0;letter-spacing:.06em;border:1px solid rgba(248,186,147,.24);border-radius:5px;background:rgba(250,195,155,.08)}
+@media(max-width:750px){
+  .source-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .source-tabs button:nth-child(3){grid-column:auto}
+  .translation-filters{margin:2px 0 12px}
+}
