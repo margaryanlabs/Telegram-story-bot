@@ -4,7 +4,7 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css">
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css">
 <script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script></head>
 <body>
 <div class="app" id="app">
@@ -53,7 +53,13 @@
   <button data-page="library" type="button" class="native-home-option"><span>♡</span><strong>Моя музыка</strong><small>Личные файлы</small></button>
  </div>
  </section>
- <section class="audio-home-panel"><div><span class="audio-panel-eyebrow">МУЗЫКА БЕЗ ОСТАНОВКИ</span><h2>Русская музыка. <em>Прямой эфир.</em></h2><p>Прямой эфир в нашем аудиоплеере. Конкретную песню здесь выбрать нельзя.</p></div><button class="audio-oneplay" type="button" data-audio-radio="Russia">▶ Включить русский эфир</button></section>
+ <section class="audio-home-panel"><div><span class="audio-panel-eyebrow">МУЗЫКА БЕЗ ОСТАНОВКИ</span><h2>Русская музыка. <em>Прямой эфир.</em></h2><p>Прямой эфир в нашем аудиоплеере. Конкретную песню здесь выбрать нельзя.</p></div><div class="audio-station-actions">
+ <button type="button" data-audio-station="rusradio" class="audio-oneplay">▶ Русское Радио</button>
+ <button type="button" data-audio-station="russianmix" class="audio-oneplay">▶ Russian Mix</button>
+ <button type="button" data-audio-station="dfm" class="audio-oneplay">▶ DFM Русская</button>
+ <button type="button" data-audio-station="maximum" class="audio-oneplay">▶ Maximum</button>
+ <button type="button" data-audio-radio="Russia" class="audio-more-stations">Ещё станции</button>
+ </div></section>
  <div class="section-head"><div><span class="overline">CURATED FOR THE MOMENT</span><h2>С чего начнём?</h2></div><button class="text-action" type="button" data-page="catalog">Открыть каталог ↗</button></div>
   <div class="mood-grid" id="moodGrid">
    <button type="button" data-mood="chill" class="mood-card mood-chill"><small>01 / VIBE</small><strong>Расслабиться</strong><span>Chill & ambient ↗</span><b>◡</b></button>
@@ -61,7 +67,7 @@
    <button type="button" data-mood="hip-hop" class="mood-card mood-focus"><small>03 / VIBE</small><strong>На своей волне</strong><span>Hip-hop & beats ↗</span><b>◉</b></button>
   </div>
   <div class="charts-home-entry"><div><small>ПОПУЛЯРНАЯ МУЗЫКА</small><strong>Треки для прослушивания</strong><p>Настоящие записи в нашем плеере — без видео.</p></div><button type="button" data-page="charts">Слушать ↗</button></div>
-  <div class="section-head"><div><span class="overline">DISCOVER THE NEW</span><h2>Открытые треки <span class="section-muted">/ Audius</span></h2></div><button class="text-action" type="button" data-page="catalog">Больше музыки ↗</button></div>
+  <div class="section-head"><div><span class="overline">DISCOVER THE NEW</span><h2>Доступная музыка</h2></div><button class="text-action" type="button" data-page="catalog">Больше музыки ↗</button></div>
   <div id="homeTracks" class="track-list"><div class="skeleton-card">Загружаем доступную музыку…</div></div>
   <div class="social-invite"><div><small>SHARE THE SOUND</small><h3>Хорошая музыка — для друзей.</h3><p>Отправляй треки и плейлисты прямо в Telegram. Твои личные аудиофайлы остаются приватными, пока ты сам их не отправишь.</p></div><button type="button" id="shareInvite">↗ Пригласить в Vetogram Music</button></div>
   <div class="section-head lower-head"><div><span class="overline">YOUR OWN FREQUENCY</span><h2>Музыка из твоего мира</h2></div></div>
@@ -80,7 +86,7 @@
     <div class="charts-hero-art" aria-hidden="true"><div class="charts-record"><div class="charts-center-disc">V</div></div></div>
   </div>
   <div class="charts-block">
-    <div class="charts-head"><div><span class="overline">ACTUAL AUDIUS DATA</span><h2>Топ <em>треков</em></h2><p>Популярные доступные записи. Это не чарт всех известных российских хитов.</p></div>
+    <div class="charts-head"><div><span class="overline">СЛУШАТЬ СЕЙЧАС</span><h2>Топ <em>треков</em></h2><p>Популярные доступные записи. Это не чарт всех известных российских хитов.</p></div>
       <button type="button" class="charts-refresh" id="chartsRefresh">↻ Обновить</button>
     </div>
     <div class="charts-filters" aria-label="Период чарта">
@@ -166,11 +172,11 @@
  <p class="mixter-footnote">Музыка принадлежит авторам. В каталог попадают только треки с указанной CC BY-лицензией и HTTPS-ссылкой на MP3. Использование требует атрибуции автора и соблюдения условий лицензии; записи с NC/ND и сомнительными ссылками исключаются. Если браузер блокирует внешний API по CORS, пользуйся ссылкой на источник. Это не библиотека всех оригинальных коммерческих хитов.</p>
 </section>
 <section class="page" data-view="search">
-  <div class="page-title"><span class="overline">DISCOVER / AUDIO ONLY</span><h1>Найди свой <em>звук.</em></h1><p>Поиск открытой музыки Audius и твоих личных треков. Популярные хиты других сервисов требуют разрешённого источника.</p></div>
+  <div class="page-title"><span class="overline">DISCOVER / AUDIO ONLY</span><h1>Найди свой <em>звук.</em></h1><p>Поиск открытой музыки Audius и твоих личных треков. Выбирай песни с полноценным аудиопотоком.</p></div>
   <form id="searchForm" class="big-search"><span>⌕</span><input id="searchInput" type="search" maxlength="80" autocomplete="off" placeholder="Исполнитель, песня, настроение…" aria-label="Поиск музыки"><button type="submit">Искать ↗</button></form>
   <div class="search-topics" id="topics"><button data-query="chill" type="button">Chill</button><button data-query="Electronic" type="button">Electronic</button><button data-query="Hip Hop" type="button">Hip Hop</button><button data-query="Jazz" type="button">Jazz</button><button data-query="Ambient" type="button">Ambient</button></div>
   <p class="source-line" id="searchStatus" role="status">Введи название или выбери настроение.</p>
-  <div class="section-head small-heading"><h2>Результаты поиска</h2><small>Официальный API Audius</small></div>
+  <div class="section-head small-heading"><h2>Результаты поиска</h2><small>Музыкальные записи</small></div>
   <div id="searchResults" class="track-list"><div class="empty-state"><span>⌕</span>Музыка ждёт твоего запроса</div></div>
  </section>
  <section class="page" data-view="library">
@@ -186,7 +192,7 @@
     <button id="telegramShareAudio" type="button">↗ Поделиться аудио в Telegram</button>
    </div>
    <p id="telegramAudioStatus" class="native-share-status" role="status">Отправка работает через системные возможности устройства. Отдельный музыкальный бот пока не подключён к серверу.</p>
-   <p class="native-share-foot">Здесь можно передавать только свои файлы, которые ты вправе отправлять. Мы не скачиваем чужие песни из Apple, VK, Яндекса или YouTube и не передаём их в Telegram без разрешения.</p>
+   <p class="native-share-foot">Здесь можно передавать только свои файлы, которые ты вправе отправлять. Загружать в Telegram можно только свои аудиофайлы, которыми ты вправе распоряжаться.</p>
   </section>
   <div class="section-head small-heading"><h2>Мои аудиофайлы</h2><button class="text-action" type="button" data-page="import">＋ Добавить</button></div><div id="localTracks" class="track-list"></div>
   <div class="section-head small-heading"><h2>Музыка по ссылкам</h2><button class="text-action" type="button" data-page="import">＋ Добавить URL</button></div><div id="streamTracks" class="track-list"></div>
@@ -205,11 +211,11 @@
    <div class="import-panel featured"><div class="import-icon">⇧</div><span>01 / PRIVATE AUDIO</span><h3>Загрузить аудио</h3><p>MP3, M4A, WAV и другие поддерживаемые браузером форматы. Файлы остаются на твоём устройстве, включая копии, сохранённые из Telegram.</p><label class="upload-label" for="fileInput">＋ Выбрать аудиофайлы</label><input id="fileInput" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.opus,.flac" multiple hidden>
    <div class="upload-footnote">До 20 файлов за раз, до 30 МБ каждый. Можно сохранить на устройстве между открытиями — пока браузер не очистит данные.</div></div>
    <div class="import-panel"><div class="import-icon">↗</div><span>02 / TELEGRAM</span><h3>Музыка из Telegram</h3><p>Сохрани аудиофайл из своего чата или канала на устройство, затем добавь его выше. Автоматическое чтение чатов Mini App не поддерживает.</p><button type="button" class="outlined-btn" id="telegramInfo">Как добавить из Telegram ↗</button></div>
-   <div class="import-panel"><div class="import-icon">♡</div><span>03 / VK & YANDEX</span><h3>Перенести плейлист</h3><p>Вставь список «Исполнитель — Название» или импортируй CSV/JSON. Это перенос списка, не защищённых аудиозаписей VK или Яндекса.</p><button type="button" class="outlined-btn" id="jumpToMetadata">Импортировать список ↗</button></div>
+   <div class="import-panel"><div class="import-icon">♡</div><span>03 / VK & YANDEX</span><h3>Перенести плейлист</h3><p>Вставь список «Исполнитель — Название» или импортируй CSV/JSON. Это перенос названий, а не самих аудиофайлов.</p><button type="button" class="outlined-btn" id="jumpToMetadata">Импортировать список ↗</button></div>
   </div>
 
   <section class="direct-import" id="directImport" aria-label="Добавить музыкальные ссылки">
-   <div class="direct-import-heading"><div><span class="overline">YOUR TRACKS / UNIVERSAL AUDIO</span><h2>Слушай по <em>своей ссылке.</em></h2><p>Добавляй прямые HTTPS-ссылки на аудиофайлы и музыкальные M3U-плейлисты, к которым у тебя есть доступ. Плеер не требует логина в VK или Яндекс и не скачивает файлы на наш сервер.</p></div><div class="direct-icon" aria-hidden="true">♫</div></div>
+   <div class="direct-import-heading"><div><span class="overline">YOUR TRACKS / UNIVERSAL AUDIO</span><h2>Слушай по <em>своей ссылке.</em></h2><p>Добавляй прямые HTTPS-ссылки на аудиофайлы и музыкальные M3U-плейлисты, к которым у тебя есть доступ. Доступные потоки проигрываются внутри VETOGRAM без загрузки на наш сервер.</p></div><div class="direct-icon" aria-hidden="true">♫</div></div>
    <div class="direct-mode-label">01 / ОДНА АУДИОССЫЛКА</div>
    <form id="directForm" class="direct-form">
     <label for="directUrl">Прямой адрес MP3 / M4A / OGG / WAV / радио</label>
@@ -220,10 +226,10 @@
    <div class="direct-mode-label">02 / M3U-ПЛЕЙЛИСТ С АУДИОССЫЛКАМИ</div>
    <div class="direct-m3u"><label class="direct-file" for="directM3U">⇧ Загрузить M3U / TXT<input type="file" id="directM3U" accept=".m3u,.txt,audio/x-mpegurl,text/plain" hidden></label><span>или вставь строки формата <code>#EXTINF:-1,Artist — Song</code> и HTTPS-ссылки</span></div>
    <textarea id="directM3UText" rows="4" maxlength="160000" spellcheck="false" placeholder="#EXTM3U&#10;#EXTINF:-1,Artist — Song&#10;https://example.com/track.mp3"></textarea>
-   <div class="direct-actions"><button type="button" id="directM3UImport" class="outlined-btn">Импортировать M3U ↗</button><span id="directStatus" role="status">Только прямые аудиоссылки. Ссылка на страницу VK/Яндекса/YouTube — не аудиопоток.</span></div>
+   <div class="direct-actions"><button type="button" id="directM3UImport" class="outlined-btn">Импортировать M3U ↗</button><span id="directStatus" role="status">Вставь адрес самого аудиофайла или потоковой станции.</span></div>
    <p class="direct-footnote">Музыка играет непосредственно с сервера источника. Некоторые ссылки требуют авторизацию, блокируют воспроизведение или не поддерживаются WebView. Формат HLS/M3U8 не является обычным музыкальным M3U-плейлистом.</p>
   </section>
-  <div class="metadata-panel" id="metadataPanel"><div><span class="overline">YOUR TASTE / ONE LIBRARY</span><h2>Импорт названий</h2><p>Каждая строка: <b>Исполнитель — Название</b>. Мы добавим записи в медиатеку без подмены на другой трек.</p></div><textarea id="playlistText" rows="5" placeholder="Кино — Группа крови&#10;Земфира — Искала&#10;Miyagi — Captain"></textarea><div class="import-actions"><button class="primary-btn" id="importTextButton" type="button">＋ Импортировать</button><label for="playlistInput" class="outlined-btn">CSV / JSON / TXT</label><input id="playlistInput" type="file" accept=".csv,.json,.txt,text/plain,application/json,text/csv" hidden><button class="outlined-btn" type="button" id="exportMeta">Экспортировать список ↗</button></div><p id="importStatus" class="source-line" role="status">Список хранится в браузере. Мы не запрашиваем логин и пароль VK или Яндекса.</p></div>
+  <div class="metadata-panel" id="metadataPanel"><div><span class="overline">YOUR TASTE / ONE LIBRARY</span><h2>Импорт названий</h2><p>Каждая строка: <b>Исполнитель — Название</b>. Мы добавим записи в медиатеку без подмены на другой трек.</p></div><textarea id="playlistText" rows="5" placeholder="Кино — Группа крови&#10;Земфира — Искала&#10;Miyagi — Captain"></textarea><div class="import-actions"><button class="primary-btn" id="importTextButton" type="button">＋ Импортировать</button><label for="playlistInput" class="outlined-btn">CSV / JSON / TXT</label><input id="playlistInput" type="file" accept=".csv,.json,.txt,text/plain,application/json,text/csv" hidden><button class="outlined-btn" type="button" id="exportMeta">Экспортировать список ↗</button></div><p id="importStatus" class="source-line" role="status">Список хранится только в этом браузере.</p></div>
   <div class="note-banner"><span>ⓘ</span><div><b>Про фоновое прослушивание</b><p>В браузере и Telegram Mini App используем системный Media Session и управление через наушники, где это поддерживается. Telegram может приостановить WebView при сворачивании — непрерывный фон на Android/iPhone нужно отдельно проверить. Для гарантированного фона возможен нативный проигрыватель Telegram через музыкального бота.</p></div></div>
  </section>
  <footer class="footer">VETOGRAM MUSIC <span>·</span> Доступная музыка Audius и личная коллекция <span>·</span> BETA 2026</footer>
