@@ -44,6 +44,27 @@ test("safe audio source validation never selects plaintext/private host or video
  assert.equal(chooseAudio({livestream:true,audioStreams:[good]}),"");
 });
 
+test("Invidious alternate audio formats are checked even when audioStreams is empty",()=>{
+ const media={audioStreams:[],adaptiveFormats:[{url:"https://cdn.example.org/song.m4a",type:"audio/mp4",bitrate:96000}]};
+ assert.equal(chooseAudio(media),"https://cdn.example.org/song.m4a");
+});
+
+test("A search result is not misrepresented as confirmed playable media",()=>{
+ const candidate=normalize({type:"video",videoId:"y14ulAguQv4",title:"Test Song",author:"Artist",lengthSeconds:230});
+ assert.equal(candidate.playable,false);
+});
+
+test("Failed stream resolution clears the stale now-playing UI",()=>{
+ assert.match(core,/function clearFailedTrack\(/);
+ assert.match(core,/state\.now=null;state\.queue=\[\];state\.index=-1/);
+ assert.match(core,/clearFailedTrack\("Подключаем: "\+track\.title\)/);
+ assert.match(core,/provider\.report\?\.\(\{status:"unavailable",track\}\)/);
+ assert.match(core,/err\?\.name==="NotAllowedError"/);
+ assert.match(core,/event==="playing"/);
+ assert.match(src,/function report\(/);
+ assert.match(src,/Источник нашёл название, но не предоставил работающий аудиопоток/);
+});
+
 test("native audio player handles experimental tracks on demand, including next/previous queue",()=>{
  assert.match(core,/track\.source==="experimental"&&!resolved/);
  assert.match(core,/provider\.resolve\(track\)/);
