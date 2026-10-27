@@ -72,8 +72,8 @@
     $('v13Volume').value=String(Math.round(audio.volume*100));$('v13Speed').value=String(audio.playbackRate);
     $('v13Demo').textContent=isDemo()?'♫  Переключить тестовый звук ↗':'♫  Слушать тестовый звук VETO ↗';
   }
-  function open(){if(!wasOpen)lastFocused=document.activeElement;wasOpen=true;el.classList.add('open');el.setAttribute('aria-hidden','false');document.body.classList.add('v13-open');sync();$('v13Close').focus()}
-  function close(){wasOpen=false;el.classList.remove('open');el.setAttribute('aria-hidden','true');document.body.classList.remove('v13-open');lastFocused?.focus?.();}
+  function open(){if(!wasOpen)lastFocused=document.activeElement;wasOpen=true;el.classList.add('open');el.setAttribute('aria-hidden','false');document.body.classList.add('v13-open');sync();window.VetoTelegramMedia?.syncBack?.();$('v13Close').focus()}
+  function close(){wasOpen=false;el.classList.remove('open');el.setAttribute('aria-hidden','true');document.body.classList.remove('v13-open');window.VetoTelegramMedia?.syncBack?.();lastFocused?.focus?.();}
   launcher.addEventListener('click',open);$('v13Close').addEventListener('click',close);
   function switchScene(scene){if(!['ember','aurora','noir'].includes(scene))return;el.dataset.scene=scene;
     el.querySelectorAll('[data-v13-scene]').forEach(b=>{const yes=b.dataset.v13Scene===scene;b.classList.toggle('active',yes);b.setAttribute('aria-pressed',String(yes))});
