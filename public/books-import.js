@@ -268,5 +268,42 @@
     await save({id,book,chapters:parsed.chapters,contents:parsed.contents,at:Date.now()});
     return book;
   }
-  window.VetogramBooksImport=Object.freeze({importFile,get,list,remove});
+  /** Preserve all accessible Wikisource chapters together as a reader-owned offline
+   * copy. It is never called for licensed catalog metadata or protected providers.
+   */
+  async function saveWikisourceEdition(sourceBook,chapters,contents){
+    if(sourceBook?.provider!=='wikisource'||!['ru','hy'].includes(sourceBook.wiki)
+      ||!Number.isSafeInteger(Number(sourceBook.id))||Number(sourceBook.id)<1)
+      throw new Error('Офлайн-сборка доступна только для текстов Викитеки');
+    if(!Array.isArray(chapters)||!Array.isArray(contents)||!chapters.length
+      ||chapters.length!==contents.length||chapters.length>MAX_CHAPTERS)
+      throw new Error('Части книги отсутствуют или превышен лимит устройства');
+    let total=0;
+    const safeChapters=[],safeContents=[];
+    for(let i=0;i<chapters.length;i++){
+      const title=short(chapters[i]?.label||chapters[i]?.title,120);
+      const value=String(contents[i]||'').trim();
+      if(!title||value.length<60)throw new Error('Некоторые главы не загрузились. Офлайн-копия не создана');
+      total+=value.length;
+      if(total>MAX_TOTAL_TEXT)throw new Error('Книга слишком большая для памяти мобильной читалки');
+      safeChapters.push({title,label:title});
+      safeContents.push(value);
+    }
+    const id=Math.floor(Date.now()*1000+Math.random()*999);
+    const originalUrl='https://'+sourceBook.wiki+'.wikisource.org/wiki/'+
+      encodeURIComponent(String(sourceBook.title||'').replace(/ /g,'_')).replace(/%2F/gi,'/');
+    const book={
+      id,provider:'local',key:'local-'+id,localOnly:true,
+      title:short(sourceBook.title,200)||'Книга из Викитеки',
+      authors:Array.isArray(sourceBook.authors)?sourceBook.authors.slice(0,5).map(x=>short(x,100)):[],
+      language:sourceBook.wiki,cover:'',readable:true,format:'wikisource',
+      source:'Викитека · офлайн-сборка доступных глав',
+      sourceUrl:originalUrl,licensedSource:'wikisource',
+      sourceChapters:safeChapters.length,
+      rightsNotice:'Текст и перевод принадлежат авторам/редакторам источника; проверьте его лицензию и правовой статус.'
+    };
+    await save({id,book,chapters:safeChapters,contents:safeContents,at:Date.now()});
+    return book;
+  }
+  window.VetogramBooksImport=Object.freeze({importFile,saveWikisourceEdition,get,list,remove});
 })();
