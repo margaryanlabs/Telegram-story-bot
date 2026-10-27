@@ -215,3 +215,16 @@ Official reference examples: https://megogo.net/ru/view/2453151-garri-potter-i-f
 - Added `tests/cinema-200-real-films.test.js` to check complete manifest structure and integration.
 
 Do not call these 200 entries live on the public Vercel URL until a new deployment succeeds; previous Vercel attempts failed HTTP 402 `api-deployments-free-per-day`.
+
+## Series module — 28 Oct 2026
+
+- `/public/cinema-series-episodes.js` contains 99 original studio RUTUBE episodic or multi-episode videos (63 Star Media / 36 Mars Media), published by the original source channel. Each has video ID, original iframe URL, source credit and thumbnail. Russian metadata originates from producer feeds, but real video playback and territorial permissions remain untested.
+- `/public/cinema-popular-series.js` contains 34 trending series' discovery cards with explicit Russian-audio catalogue evidence. 31 direct Kinopoisk series pages show 'Аудиодорожки: Русский'. Three Netflix series have official `am-ru` pages listing Russian in the Audio section: Stranger Things (80057281), Wednesday (81231974), Squid Game (81040344). Current Netflix Armenia subscription/playability is still subject to provider terms.
+- The main `cinema.html` has a dedicated Series tab in both desktop and mobile nav; premium 'popular with Russian audio' shelf and on-platform episode shelf. `cinema.js` adds manifests before first render, de-duplicates IDs, filters Series separately from Films, and displays a season/episode dropdown for same-show original studio videos. No fake season count is displayed.
+- Series episode grouping uses Cyrillic-aware expressions without JavaScript ASCII `\b` behind Cyrillic words. 99 original episodes organize into about 37 show/season groups from producer titles, retaining explicit season suffixes when present. 'All episodes' compilation uploads are separate originals, not artificial downloads.
+- The 34 'hit' series have `discoveryOnly:true`, `player:null`: open exact Kinopoisk or Netflix title page, NOT a fake watch URL. HBO and Netflix streams are not redistributed in Cinema and their branding/auth remains intact. Russian audio listing is distinct from regional availability.
+- `tests/cinema-series.test.js` covers all manifests, IDs/iframe URLs, 34 RU-audio source entries, Cyrillic grouping, and UI hooks.
+- The previous 200 full-length movies and the earlier Russian Marvel/Potter discovery catalog are preserved. No branch merge, secrets, database migrations or production Messenger changes.
+- Publishing requires a successful deployment of `feat/vetogram-cinema-standalone-20261027` to independent `vetogram-cinema-theater` Vercel project. Earlier Vercel REST deploy returned HTTP 402 daily deployment quota exhausted. The currently public theater is an older READY build and MUST NOT be described as displaying this new Series section until verified.
+
+Official sample catalogues: https://www.kinopoisk.ru/series/464963/ (Game of Thrones); https://www.kinopoisk.ru/series/1316601/ (House of the Dragon); https://www.kinopoisk.ru/series/79848/ (The Sopranos); https://www.netflix.com/am-ru/title/80057281 (Stranger Things); https://www.netflix.com/am-ru/title/81231974 (Wednesday); https://www.netflix.com/am-ru/title/81040344 (Squid Game).
