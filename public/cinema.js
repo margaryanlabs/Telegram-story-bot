@@ -14,6 +14,14 @@
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
   const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/"};
+  // The initial 200 feature films appear instantly in their studio tabs.
+  // Their RUTUBE API cursor still begins from page 1 and remains authoritative.
+  for(const film of (window.VetogramCinemaFeatured200||[])){
+    const target=film.id.match(/^rutube-(mosfilm|lenfilm|gorky|starmedia)-[a-f0-9]{32}$/i)?.[1];
+    if(!target||!Object.hasOwn(STUDIO_LINKS,target))continue;
+    const rows=studio.results.get(target)||[];
+    rows.push(film);studio.results.set(target,rows);
+  }
   const discovery={slides:[],index:0,lastKey:"",timer:null,prefetching:false,expanding:false,received:0,franchise:"mcu"};
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
 
