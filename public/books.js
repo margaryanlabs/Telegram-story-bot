@@ -775,8 +775,153 @@
     window.getSelection()?.removeAllRanges();
     toast('Цитата сохранена');
   }
+  // VETO COMPASS: in-book map, search and persistent user landmarks.
+  // Only searches text already loaded in the reader. No network API calls.
+  function parseBookmarkToken(token){
+    const found=/^(root|\\d+):(@?)(\\d+)$/.exec(String(token||''));
+    if(!found)return null;
+    const chapter=found[1]==='root'?null:Number(found[1]);
+    if(chapter!==null && !Number.isSafeInteger(chapter))return null;
+    return {chapter,offset:found[2]?Number(found[3]):null,page:found[2]?null:Number(found[3])};
+  }
+  async function jumpToReadingPoint(target){
+    if(!state.current)return;
+    const book=state.current,identity=bookKey(book);
+    const part=target.chapter===null||target.chapter===undefined?null:Number(target.chapter);
+    if(part!==null && (!Number.isSafeInteger(part)||part<0||part>=state.chapters.length)){
+      toast('Глава больше недоступна');return;
+    }
+    $('bookModal').hidden=true;
+    stopNarration();
+    if(part!==state.activeChapter){
+      await loadChapter(book,part);
+    }
+    if($('reader').hidden||!state.current||bookKey(state.current)!==identity||!state.pages.length)return;
+    const offset=Number(target.offset);
+    const fallback=Number(target.page);
+    const page=Number.isFinite(offset)&&target.offset!==null&&target.offset!==undefined
+      ?nearestPage(Math.max(0,offset))
+      :Number.isSafeInteger(fallback)&&fallback>=0?fallback:0;
+    showPage(page);
+    if(target.highlight)highlightReadingMatch(target.highlight);
+  }
+  function highlightReadingMatch(value){
+    if(state.flow)return;
+    const content=String(state.pages[state.currentPage]||'');
+    const term=String(value||'').trim().slice(0,160);
+    if(!term)return;
+    const index=content.toLocaleLowerCase().indexOf(term.toLocaleLowerCase());
+    if(index<0)return;
+    const marker=node('mark','reader-search-mark',content.slice(index,index+term.length));
+    $('readerCopy').replaceChildren(document.createTextNode(content.slice(0,index)),
+      marker,document.createTextNode(content.slice(index+term.length)));
+  }
+  function compassSection(host,title){
+    const section=node('section','compass-section');
+    section.append(node('h3','',title));host.append(section);return section;
+  }
+  function showReaderCompass(){
+    if(!state.current||!state.pages.length)return;
+    const key=bookKey(state.current);
+    const host=modal('VETO COMPASS');
+    host.classList.add('compass-content');
+    const intro=node('div','compass-intro');
+    intro.append(node('span','compass-eyebrow','YOUR READING UNIVERSE'),
+      node('strong','',compactTitle(state.current.title)),
+      node('p','','Поиск и закладки в загруженной главе. Всё работает прямо в читалке.'));
+    host.append(intro);
+    const chapter=state.activeChapter;
+    const timeline=compassSection(host,'Карта текущей части');
+    const rail=node('div','compass-rail'),range=node('input','compass-range');
+    range.type='range';range.min='0';range.max='1000';range.step='1';
+    range.value=String(state.rawText.length?Math.round((state.pageOffsets[state.currentPage]||0)/state.rawText.length*1000):0);
+    range.setAttribute('aria-label','Перемещение по текущей главе');
+    const percent=node('output','compass-percent',Math.round(Number(range.value)/10)+'%');
+    range.addEventListener('input',()=>{percent.textContent=Math.round(Number(range.value)/10)+'%';});
+    range.addEventListener('change',()=>{void jumpToReadingPoint({chapter,offset:Math.floor(state.rawText.length*Number(range.value)/1000)});});
+    rail.append(range,percent);timeline.append(rail);
+    const quick=node('div','compass-quick');
+    const beginning=node('button','','В начало');
+    beginning.type='button';beginning.addEventListener('click',()=>{void jumpToReadingPoint({chapter,offset:0});});
+    const ending=node('button','','В конец главы');
+    ending.type='button';ending.addEventListener('click',()=>{void jumpToReadingPoint({chapter,offset:state.rawText.length});});
+    quick.append(beginning,ending);timeline.append(quick);
+
+    const find=compassSection(host,'Найти в тексте');
+    const field=node('input','compass-input');
+    field.type='search';field.maxLength=100;field.placeholder='Слово или фраза…';
+    field.setAttribute('aria-label','Поиск по текущей главе');
+    const results=node('div','compass-results');
+    find.append(field,results);
+    const renderMatches=()=>{
+      results.replaceChildren();
+      const needle=field.value.trim().toLocaleLowerCase();
+      if(needle.length<2){
+        results.append(node('p','compass-hint','Введите минимум 2 символа.'));
+        return;
+      }
+      const haystack=state.rawText.toLocaleLowerCase();
+      let position=0,found=0;
+      while(found<40){
+        const offset=haystack.indexOf(needle,position);
+        if(offset<0)break;
+        const snippetStart=Math.max(0,offset-65);
+        const snippetEnd=Math.min(state.rawText.length,offset+needle.length+100);
+        const preview=state.rawText.slice(snippetStart,snippetEnd).replace(/\\s+/g,' ').trim();
+        const item=node('button','compass-match');
+        item.type='button';
+        const at=Math.floor(offset/Math.max(1,state.rawText.length)*100);
+        item.append(node('span','',preview),node('small','',at+'% главы'));
+        item.addEventListener('click',()=>{void jumpToReadingPoint({chapter,offset,highlight:field.value.trim()});});
+        results.append(item);
+        found++;position=offset+Math.max(1,needle.length);
+      }
+      if(!found)results.append(node('p','compass-hint','Совпадений в текущей главе нет.'));
+      if(found===40)results.append(node('p','compass-hint','Показаны первые 40 совпадений.'));
+    };
+    field.addEventListener('input',renderMatches);
+    renderMatches();
+
+    const bookmarks=compassSection(host,'Ваши закладки');
+    const renderMarks=()=>{
+      [...bookmarks.children].filter(c=>c.className==='compass-row').forEach(x=>x.remove());
+      const savedMarks=progress[key]?.bookmarks||[];
+      if(!savedMarks.length){bookmarks.append(node('p','compass-hint','Поставьте закладку кнопкой ♧ на странице.'));return;}
+      for(const token of savedMarks.slice(-60).reverse()){
+        const target=parseBookmarkToken(token);
+        if(!target)continue;
+        const row=node('button','compass-row');
+        row.type='button';row.textContent=
+          (target.chapter===null?'Начало':(state.chapters[target.chapter]?.label||'Часть '+(target.chapter+1)))+
+          ' · '+(target.offset===null?'стр. '+((target.page||0)+1):'позиция '+(target.offset+1));
+        row.addEventListener('click',()=>{void jumpToReadingPoint(target);});
+        bookmarks.append(row);
+      }
+    };
+    renderMarks();
+
+    const notebook=compassSection(host,'Цитаты из книги');
+    const own=quotes.filter(x=>x.bookId===key).slice(0,35);
+    if(!own.length)notebook.append(node('p','compass-hint','Выделите фразу и нажмите ❝ для сохранения.'));
+    for(const item of own){
+      const group=node('div','compass-quote');
+      const visit=node('button','compass-quote-open','❝ '+String(item.quote||'').slice(0,350));
+      visit.type='button';
+      visit.addEventListener('click',()=>{void jumpToReadingPoint({chapter:item.chapter,offset:item.offset??null,page:item.page,highlight:item.quote});});
+      const copy=node('button','compass-quote-copy','Копировать');
+      copy.type='button';
+      copy.addEventListener('click',async()=>{
+        try{await navigator.clipboard.writeText(item.quote);toast('Цитата скопирована');}
+        catch{toast('Копирование недоступно в этом браузере');}
+      });
+      group.append(visit,copy);notebook.append(group);
+    }
+    field.focus({preventScroll:true});
+  }
+
   function modal(title){
-    $('modalTitle').textContent=title;$('modalContent').replaceChildren();$('bookModal').hidden=false;
+    $('modalTitle').textContent=title;$('modalContent').classList.remove('compass-content');
+    $('modalContent').replaceChildren();$('bookModal').hidden=false;
     return $('modalContent');
   }
   function modalRow(host,title,subtitle,action,handler){
@@ -1024,10 +1169,12 @@
   }catch{}
   $('prevPage').addEventListener('click',()=>flip(-1));
   $('nextPage').addEventListener('click',()=>flip(1));
+  $('readerCompassButton').addEventListener('click',showReaderCompass);
   $('bookmarkButton').addEventListener('click',bookmark);
   $('saveQuote').addEventListener('click',quote);
   document.addEventListener('keydown',event=>{
-    if($('reader').hidden || !$('bookModal').hidden)return;
+    if(!$('bookModal').hidden){if(event.key==='Escape'){$('bookModal').hidden=true;event.preventDefault();}return;}
+    if($('reader').hidden)return;
     if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;
     if(state.flow && event.key==='ArrowDown'){event.preventDefault();stepFlow(1);return;}
     if(state.flow && event.key==='ArrowUp'){event.preventDefault();stepFlow(-1);return;}
