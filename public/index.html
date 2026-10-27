@@ -17,7 +17,7 @@
  <nav class="side-nav" id="sideNav">
   <button class="nav-item active" data-page="home" type="button"><span>⌂</span> Главная</button>
   <button class="nav-item" data-page="search" type="button"><span>⌕</span> Поиск музыки</button>
-  <button class="nav-item" data-page="charts" type="button"><span>▤</span> Чарты и страны</button>
+  <button class="nav-item" data-page="charts" type="button"><span>▤</span> Чарты</button>
   <button class="nav-item" data-page="library" type="button"><span>♡</span> Моя музыка</button>
   <button class="nav-item" data-page="radio" type="button"><span>◉</span> Радио</button>
   <button class="nav-item" data-page="import" type="button"><span>⇧</span> Добавить музыку</button>
@@ -45,10 +45,7 @@
    <button type="button" data-mood="electronic" class="mood-card mood-energy"><small>02 / VIBE</small><strong>Поймать энергию</strong><span>Electronic & dance ↗</span><b>ϟ</b></button>
    <button type="button" data-mood="hip-hop" class="mood-card mood-focus"><small>03 / VIBE</small><strong>На своей волне</strong><span>Hip-hop & beats ↗</span><b>◉</b></button>
   </div>
-  <div class="charts-home-entry">
-    <div><small>REAL MUSIC / CHARTS &amp; COUNTRIES</small><strong>Чарты. Россия. Армения.</strong><p>Топ Audius, доступные русские и армянские треки, настоящее радио по странам. Без вымышленных рейтингов.</p></div>
-    <div class="charts-home-actions"><button type="button" data-home-region="ru">🇷🇺 Русская музыка ↗</button><button type="button" data-home-region="am">🇦🇲 Հայկական ↗</button><button type="button" data-page="charts">Все чарты ↗</button></div>
-  </div>
+  <div class="charts-home-entry"><div><small>MUSIC / CHARTS</small><strong>Чарты</strong><p>Топ-треки Audius по периодам и жанрам.</p></div><button type="button" data-page="charts">Открыть чарты ↗</button></div>
   <div class="section-head"><div><span class="overline">DISCOVER THE NEW</span><h2>Открытые треки <span class="section-muted">/ Audius</span></h2></div><button class="text-action" type="button" data-page="search">Найти ещё ↗</button></div>
   <div id="homeTracks" class="track-list"><div class="skeleton-card">Загружаем доступную музыку…</div></div>
   <div class="social-invite"><div><small>SHARE THE SOUND</small><h3>Хорошая музыка — для друзей.</h3><p>Отправляй треки и плейлисты прямо в Telegram. Твои личные аудиофайлы остаются приватными, пока ты сам их не отправишь.</p></div><button type="button" id="shareInvite">↗ Пригласить в Vetogram Music</button></div>
@@ -56,55 +53,41 @@
   <div class="feature-strip"><div><span>01 / TELEGRAM & PERSONAL LIBRARY</span><h3>Любимые треки остаются твоими.</h3><p>Загрузи собственные аудиофайлы или сохранённые из Telegram песни — слушай в нашей библиотеке. На сервер мы их не отправляем.</p><button data-page="import" class="secondary-btn" type="button">Моя музыка ↗</button></div><div class="feature-strip-art">V<span>♫</span></div></div>
  </section>
  
- <section class="page" data-view="charts" aria-label="Чарты и музыка по странам">
+ <section class="page" data-view="charts" aria-label="Музыкальные чарты">
   <div class="charts-hero">
-   <div class="charts-hero-glow" aria-hidden="true">♫</div>
-   <div class="charts-hero-copy">
-    <span class="overline">VETOGRAM MUSIC / REAL DISCOVERY</span>
-    <h1>Музыка <em>без границ.</em></h1>
-    <p>Настоящие чарты Audius, поиск доступных русских и армянских исполнителей, живые станции России и Армении. Всё зависит от наличия записей у источника.</p>
-    <div class="charts-hero-tags"><span>♫ WORLDWIDE</span><span>🇷🇺 RUSSIAN MUSIC</span><span>🇦🇲 ARMENIAN MUSIC</span></div>
-   </div>
-   <div class="charts-hero-art" aria-hidden="true"><div class="charts-record"><div class="charts-center-disc">V</div></div></div>
+    <div class="charts-hero-glow" aria-hidden="true">♫</div>
+    <div class="charts-hero-copy">
+      <span class="overline">VETOGRAM MUSIC / CHARTS</span>
+      <h1>Чарты <em>музыки.</em></h1>
+      <p>Настоящий рейтинг Audius — с выбором периода и жанра. Без вымышленных позиций.</p>
+      <div class="charts-hero-tags"><span>♫ AUDIUS TRENDING</span><span>◉ REAL TRACKS</span></div>
+    </div>
+    <div class="charts-hero-art" aria-hidden="true"><div class="charts-record"><div class="charts-center-disc">V</div></div></div>
   </div>
   <div class="charts-block">
-   <div class="charts-head"><div><span class="overline">ACTUAL AUDIUS DATA / NOT VK OR YANDEX RANKINGS</span><h2>Топ-треки <em>Audius</em></h2><p>Рейтинг самого Audius, а не выдуманный общий мировой топ. Данные загружаются из открытого API.</p></div><button type="button" class="charts-refresh" id="chartsRefresh">↻ Обновить</button></div>
-   <div class="charts-filters" aria-label="Период чарта">
-    <button type="button" class="active" data-chart-period="week" aria-pressed="true">Неделя</button>
-    <button type="button" data-chart-period="month" aria-pressed="false">Месяц</button>
-    <button type="button" data-chart-period="year" aria-pressed="false">Год</button>
-    <button type="button" data-chart-period="allTime" aria-pressed="false">Всё время</button>
-   </div>
-   <div class="charts-genres" aria-label="Жанр чарта">
-    <button type="button" class="active" data-chart-genre="all" aria-pressed="true">Все жанры</button>
-    <button type="button" data-chart-genre="Electronic" aria-pressed="false">Electronic</button>
-    <button type="button" data-chart-genre="Hip-Hop/Rap" aria-pressed="false">Hip-Hop</button>
-    <button type="button" data-chart-genre="Pop" aria-pressed="false">Pop</button>
-   </div>
-   <div class="charts-status" id="chartsStatus" role="status">Открой чарты — появится реальный рейтинг Audius.</div>
-   <div id="chartsTracks" class="charts-list"></div>
-  </div>
-  <div class="charts-regions">
-   <div class="charts-head"><div><span class="overline">LANGUAGE & CULTURE / LIVE SEARCH</span><h2>Наши <em>звуки.</em></h2><p>Русская и армянская музыка в доступном каталоге Audius. Если конкретного трека нет, покажем результаты поиска, а не чужую запись вместо него.</p></div></div>
-   <div class="region-controls" aria-label="Музыкальные регионы">
-    <button type="button" data-region="ru" class="active" aria-pressed="true"><span>🇷🇺</span><b>Русская музыка</b><small>Русский · Russian</small></button>
-    <button type="button" data-region="am" aria-pressed="false"><span>🇦🇲</span><b>Армянская музыка</b><small>Հայերեն · Armenian</small></button>
-   </div>
-   <div class="region-query"><label for="regionSearch">Исполнитель или песня</label><div><input id="regionSearch" type="search" maxlength="65" placeholder="Кино, Zemfira, Armenian music…" autocomplete="off"><button type="button" id="regionSearchGo">⌕ Найти</button></div></div>
-   <p class="charts-status" id="regionStatus" role="status">Выбери страну: поиск откроет реально доступные записи.</p>
-   <div id="regionTracks" class="charts-list"></div>
-  </div>
-  <div class="charts-stations">
-   <div class="charts-head"><div><span class="overline">LIVE FROM THE REGION / RADIO BROWSER</span><h2>Радио <em>Россия · Армения</em></h2><p>Настоящие радиостанции по коду страны в каталоге Radio Browser. Воспроизведение зависит от вещателя.</p></div><button type="button" id="stationRefresh" class="charts-refresh">↻ Станции</button></div>
-   <div class="region-controls region-radio"><button type="button" data-station="RU" aria-pressed="false"><span>🇷🇺</span><b>Россия</b><small>Прямой эфир</small></button><button type="button" data-station="AM" class="active" aria-pressed="true"><span>🇦🇲</span><b>Армения</b><small>Прямой эфир</small></button></div>
-   <p id="stationStatus" class="charts-status" role="status">Станции загружаются по вашему выбору.</p>
-   <div id="regionStations" class="charts-station-grid"></div>
+    <div class="charts-head"><div><span class="overline">ACTUAL AUDIUS DATA</span><h2>Топ-треки <em>Audius</em></h2><p>Рейтинг предоставлен Audius. Он не является общим чартом Spotify, VK или Яндекс Музыки.</p></div>
+      <button type="button" class="charts-refresh" id="chartsRefresh">↻ Обновить</button>
+    </div>
+    <div class="charts-filters" aria-label="Период чарта">
+      <button type="button" class="active" data-chart-period="week" aria-pressed="true">Неделя</button>
+      <button type="button" data-chart-period="month" aria-pressed="false">Месяц</button>
+      <button type="button" data-chart-period="year" aria-pressed="false">Год</button>
+      <button type="button" data-chart-period="allTime" aria-pressed="false">Всё время</button>
+    </div>
+    <div class="charts-genres" aria-label="Жанр чарта">
+      <button type="button" class="active" data-chart-genre="all" aria-pressed="true">Все жанры</button>
+      <button type="button" data-chart-genre="Electronic" aria-pressed="false">Electronic</button>
+      <button type="button" data-chart-genre="Hip-Hop/Rap" aria-pressed="false">Hip-Hop</button>
+      <button type="button" data-chart-genre="Pop" aria-pressed="false">Pop</button>
+    </div>
+    <p class="charts-status" id="chartsStatus" role="status">Открой чарты, чтобы загрузить рейтинг Audius.</p>
+    <div id="chartsTracks" class="charts-list"></div>
   </div>
  </section>
  <section class="page" data-view="search">
   <div class="page-title"><span class="overline">DISCOVER / AUDIO ONLY</span><h1>Найди свой <em>звук.</em></h1><p>Поиск открытой музыки Audius и твоих личных треков. Популярные хиты других сервисов требуют разрешённого источника.</p></div>
   <form id="searchForm" class="big-search"><span>⌕</span><input id="searchInput" type="search" maxlength="80" autocomplete="off" placeholder="Исполнитель, песня, настроение…" aria-label="Поиск музыки"><button type="submit">Искать ↗</button></form>
-  <div class="search-topics" id="topics"><button data-query="chill" type="button">Chill</button><button data-query="Electronic" type="button">Electronic</button><button data-query="Hip Hop" type="button">Hip Hop</button><button data-query="Jazz" type="button">Jazz</button><button data-query="Ambient" type="button">Ambient</button><button data-query="Russian music" type="button">🇷🇺 Русская музыка</button><button data-query="Armenian music" type="button">🇦🇲 Հայկական երաժշտություն</button></div>
+  <div class="search-topics" id="topics"><button data-query="chill" type="button">Chill</button><button data-query="Electronic" type="button">Electronic</button><button data-query="Hip Hop" type="button">Hip Hop</button><button data-query="Jazz" type="button">Jazz</button><button data-query="Ambient" type="button">Ambient</button></div>
   <p class="source-line" id="searchStatus" role="status">Введи название или выбери настроение.</p>
   <div class="section-head small-heading"><h2>Результаты поиска</h2><small>Официальный API Audius</small></div>
   <div id="searchResults" class="track-list"><div class="empty-state"><span>⌕</span>Музыка ждёт твоего запроса</div></div>
