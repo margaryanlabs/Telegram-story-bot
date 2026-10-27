@@ -104,3 +104,29 @@ test('text editing and Telegram owner switch clear owner-bound retry state',()=>
   assert.match(code,/state\.lastSendFailures\.clear\(\);state\.lastRichFailure=null/);
   assert.match(code,/failed&&failed\.message!==event\.target\.value\.trim\(\)/);
 });
+
+test('reopened chat restores only the matching uncertain reply context',()=>{
+  const start=code.indexOf('    const failedSend=state.lastSendFailures.get(String(chat.id));');
+  const end=code.indexOf('    renderReplyPreview();renderAttachmentChip();',start);
+  assert.ok(start>0&&end>start,'test real reply restoration controller');
+  const snippet=code.slice(start,end);
+  function run({chatId='A',draft='Привет',failedText='Привет',replyTo=42}={}){
+    const state={
+      replyTo:null,drafts:new Map([['A',draft]]),
+      lastSendFailures:new Map([['A',{
+        chatId:'A',message:failedText,replyTo,nonce:'nonce-1',
+      }]]),
+    };
+    vm.runInNewContext(snippet,{state,chat:{id:chatId}});
+    return state.replyTo;
+  }
+  assert.equal(run().id,42,'matching reply restores same target');
+  assert.equal(run({draft:'Новый текст'}),null,'fresh draft cannot inherit stale reply');
+  assert.equal(run({chatId:'B'}),null,'another chat cannot inherit A reply');
+  assert.equal(run({replyTo:null}),null,'plain send never invents a reply');
+});
+
+test('uncertain retry warning is shown after history load, not auto-retransmitted',()=>{
+  assert.match(code,/await loadMessages\(\{reset:true\}\);[\s\S]*?const unresolved=state\.lastSendFailures\.get/);
+  assert.match(code,/Отправка не подтверждена\. Проверь оригинальный Telegram перед повтором/);
+});
