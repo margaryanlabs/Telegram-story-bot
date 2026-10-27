@@ -239,6 +239,7 @@ function renderHome(){paintRows("homeTracks",unique([...state.local,...state.tra
 function renderSearch(){paintRows("searchResults",unique([...state.search,...state.local.filter(t=>{const q=($("searchInput").value||"").toLowerCase();return q&&(t.title+" "+t.artist).toLowerCase().includes(q)})]),"search","Нет результатов. Попробуй другое название.")}
 async function runSearch(raw){
  const query=clean(raw,80).trim();if(query.length<2){$("searchStatus").textContent="Введи минимум два символа";return}
+ document.dispatchEvent(new CustomEvent("vetogram:search-query",{detail:{query}}));
  const abort=newAbort("activeController"),timer=setTimeout(()=>abort.abort(),11500);
  $("searchStatus").textContent="Ищем «"+query+"» в Audius…";
  try{const data=await apiJson("https://api.audius.co/v1/tracks/search?query="+encodeURIComponent(query)+"&limit=25",abort.signal);
