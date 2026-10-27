@@ -176,3 +176,18 @@ The channel fetch now uses the documented \`origin__type=rtb,rst,ifrm,rspa\` vid
 **Actual attempted preview deployment:** Vercel project \`veto\` under labsmargaryan account was deployed to preview from Cinema PR (not production), deployment ID \`dpl_2nDZ8D6mCe3XeTHQRjkwvA6BryLL\`. Vercel returned **CANCELED / Ignored Build Step**. Production and \`main\` were not modified; this preview URL is not a working movie site. Do not infer successful access to RUTUBE based on mocked tests. Vercel build settings must be changed or a dedicated Cinema preview project provisioned before actual stream tests. Avoid repeated preview redeploys while the ignored-step rule still blocks them, as canceled builds can count toward quotas.
 
 Validation performed: JS syntax checks, DOM ID bindings, mock RUTUBE upstream API and same-origin Vercel handler (200 for configured studio, client-supplied invalid channel rejected). No live RUTUBE channel feed or player has yet been verified in a running Telegram WebView.
+
+
+## Franchise collection and sources — October 27, 2026
+
+Cinema now includes 71 discovery-only entries in public/cinema-franchises.js: MCU 37; Potter/Fantastic Beasts 11; legacy Marvel/X-Men/Spider-Man 23.
+These are title-discovery cards without video streams, playback permission, or verified Russian dubbing. Their buttons link to the official film collection or region-specific availability reference, never to an unverified upload.
+The new homepage has a dedicated franchise shelf (MCU, Potter, legacy). The playback route branches on discoveryOnly BEFORE attempting to initialize its player.
+Existing rights-holder RUTUBE original embedded players remain; the unrelated RUTUBE label has been removed from generic movie listings, and a one-source provider selector is hidden. Original player/source attribution is retained.
+Alternate legitimate source directory links to official Mosfilm YouTube, Mosfilm VK and subtitled YouTube channels. They are navigation links, not automatically inserted movie streams.
+No TMDB copyrighted poster images were imported because commercial access and licensing have not been obtained.
+New regression checks: tests/cinema-franchises.test.js.
+
+Latest changes are committed in the draft PR, but the public theater preview is an older build due to the Vercel 402 daily deployment limit. Do not claim 71 new franchise cards are live until a READY deployment is checked.
+
+References: https://www.harrypotter.com/features/how-to-stream-harry-potter-wherever-you-are ; https://www.disneyplus.com/browse/page-60f4707d-19bb-4c0c-9390-ab269137be50 ; https://www.mosfilm.ru/about/news/mosfilm-novyy-sayt-k-100-letiyu-kinostudii/ ; https://rutube.ru/info/embed/ ; https://developer.themoviedb.org/docs/faq
