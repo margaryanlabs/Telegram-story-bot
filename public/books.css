@@ -805,3 +805,67 @@ body::before{z-index:-1;background:
  .world-book-main,.world-book-left,.world-book-right,.world-book-main .world-book-face:after,
  .veto-book-world:before{animation:none!important}
 }
+
+
+/* VETOGRAM · 200 RU EDITIONS — intentionally separate from full-text shelves. */
+.source-tabs button[data-books-source="hot200"]{position:relative;border-color:#ed55703e!important;
+ background:linear-gradient(112deg,#631a2d,#211822)!important;color:#fff!important}
+.source-tabs button[data-books-source="hot200"] b{background:#f04660!important;color:#fff!important;
+ border-radius:7px;padding:5px;font:900 12px/1 system-ui,sans-serif!important}
+.source-tabs button[data-books-source="hot200"].active{
+ border-color:#fa5b76!important;
+ background:linear-gradient(112deg,#e62b4d,#751c39)!important;
+ box-shadow:0 10px 29px #dd23473f,inset 0 1px #ffccd54a!important}
+.hot-filters{display:flex;align-items:center;gap:8px;margin:12px 0 18px;
+ overflow:auto;scrollbar-width:none;scroll-snap-type:x proximity;padding:3px 1px 12px}
+.hot-filters[hidden]{display:none!important}
+.hot-filters button{flex:0 0 auto;min-height:40px;padding:10px 14px;scroll-snap-align:start;
+ border:1px solid #c3c7d02c;border-radius:12px;
+ background:linear-gradient(145deg,#1c1e26,#11131b);
+ color:#c9cad3;font:730 11px/1.2 system-ui,sans-serif;
+ transition:background .2s,transform .2s,border-color .2s}
+.hot-filters button:hover{border-color:#fa516e84;transform:translateY(-2px)}
+.hot-filters button.active{background:linear-gradient(112deg,#d42f50,#7a1933);
+ border-color:#ff7590;color:#fff;box-shadow:0 7px 17px #b81e4033}
+.hot-filters button:focus-visible{outline:2px solid #ff5878;outline-offset:3px}
+.editorial-modal{display:flex;flex-direction:column;gap:16px}
+.hot-book-head{display:grid;grid-template-columns:minmax(92px,135px) minmax(0,1fr);
+ align-items:center;gap:20px;background:linear-gradient(130deg,#20212b,#11141b);
+ padding:16px;border:1px solid #afb7c12d;border-radius:18px}
+.hot-book-jacket{display:flex;align-items:center;justify-content:center;
+ min-height:185px;aspect-ratio:.69;position:relative;overflow:hidden;
+ border:1px solid #e6557870;border-radius:4px 10px 10px 3px;
+ background:linear-gradient(140deg,#842039,#1b202b);
+ box-shadow:inset 6px 0 8px #0007,9px 13px 21px #0006}
+.hot-book-jacket.artwork-cover .jacket-title{font-size:clamp(13px,1.6vw,19px);
+ color:#fff;line-height:1.2}
+.hot-book-jacket.artwork-cover .jacket-visual{opacity:.8}
+.hot-book-jacket .jacket-strap,.hot-book-jacket .jacket-footer{font-size:7px}
+.hot-book-summary{min-width:0;display:flex;flex-direction:column;gap:8px}
+.hot-book-genre{align-self:flex-start;display:inline-flex;padding:7px 9px;border-radius:8px;
+ background:#85213c;color:#ffb8c7;font:800 10px/1.2 system-ui,sans-serif;
+ letter-spacing:.04em;text-transform:uppercase}
+.hot-book-summary h3{font:850 clamp(23px,3vw,34px)/1.06 Inter,system-ui,sans-serif;
+ letter-spacing:-.055em;color:#f7f7fa;margin:0;text-wrap:balance}
+.hot-book-summary p{color:#bdc0ca;font:13px/1.5 system-ui,sans-serif;margin:0}
+.hot-book-summary .hot-book-flags{color:#fe819b;font-size:9px;font-weight:800;letter-spacing:.1em}
+.hot-book-disclaimer{color:#aeb3c1;font:12px/1.7 system-ui,sans-serif;line-height:1.7;
+ padding:15px 17px;border-left:3px solid #e64c67;border-radius:0 8px 8px 0;
+ background:#25202a;margin:0}
+.hot-book-actions{display:flex;flex-wrap:wrap;gap:10px}
+.hot-book-actions a,.hot-book-actions button{display:inline-flex;justify-content:center;align-items:center;
+ padding:13px 16px;min-height:44px;border-radius:11px;text-decoration:none;
+ font:800 10px/1.4 system-ui,sans-serif;letter-spacing:.065em;text-align:center}
+.hot-book-main-action{background:linear-gradient(120deg,#ef3458,#9d1c3a);
+ color:#fff;border:1px solid #f56786}
+.hot-book-secondary-action{background:#222631;color:#d8dce5;border:1px solid #929bad66}
+@media(max-width:520px){
+ .hot-filters{gap:6px;padding-bottom:10px}
+ .hot-filters button{min-height:38px;padding:9px 11px}
+ .hot-book-head{grid-template-columns:103px minmax(0,1fr);gap:13px;padding:12px}
+ .hot-book-jacket{min-height:150px}
+ .hot-book-summary h3{font-size:22px}
+ .hot-book-actions{flex-direction:column}
+ .hot-book-actions a,.hot-book-actions button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.hot-filters button{transition:none!important}}
