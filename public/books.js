@@ -157,6 +157,23 @@
     }
     reflowReader();
   }
+  // Procedural jacket art: every work gets a stable cover with no external
+  // image generator, no stock asset, no layout shift, and no made-up reviews.
+  function coverArtwork(host,book){
+    host.replaceChildren();
+    host.classList.add('placeholder','artwork-cover');
+    const name=compactTitle(book.title);
+    let checksum=0;
+    for(const letter of name)checksum=(checksum*31+letter.codePointAt(0))%1000003;
+    host.dataset.coverStyle=String(checksum%6);
+    host.append(
+      node('span','artwork-imprint','VETOGRAM · BOOKS'),
+      node('span','artwork-symbol',['✦','◌','◇','✧','⌁','⋆'][checksum%6]),
+      node('strong','artwork-title',name),
+      node('span','artwork-author',fullName(book)),
+      node('span','artwork-bottom','LIBRARY EDITION · '+(book.language||'RU').toUpperCase())
+    );
+  }
   function updateSavedCount(){ $('savedCount').textContent=Object.keys(saved).length; }
   function compactTitle(title){return String(title||'Без названия').slice(0,160);}
   function fullName(book){return (book.authors||[]).join(', ') || (isWiki(book)?(book.wiki==='hy'?'Հայերեն Վիքիդարան':'Русская Викитека'):'Автор неизвестен');}
@@ -177,9 +194,9 @@
     const imageUrl=safeCover(book.cover);
     if(imageUrl){
       const img=node('img');img.src=imageUrl;img.alt='';img.loading='lazy';img.decoding='async';
-      img.onerror=()=>{img.remove();cover.classList.add('placeholder');cover.textContent=compactTitle(book.title);};
+      img.onerror=()=>coverArtwork(cover,book);
       cover.append(img);
-    }else{cover.classList.add('placeholder');cover.textContent=compactTitle(book.title);}
+    }else{coverArtwork(cover,book);}
     main.append(cover,node('h3','',compactTitle(book.title)),node('p','',fullName(book)));
     const meta=node('div','book-bottom');
     meta.append(node('span','',(book.language||'').toUpperCase()),
