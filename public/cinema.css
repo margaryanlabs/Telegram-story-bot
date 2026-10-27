@@ -67,3 +67,20 @@
 .cinema-player-source{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .cinema-original-source{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:9px 14px;border:1px solid rgba(250,117,98,.4);border-radius:10px;background:rgba(250,117,98,.1);color:var(--accent-soft);font-size:12px;font-weight:750;text-decoration:none;transition:background .18s,border-color .18s}
 .cinema-original-source:hover{background:rgba(250,117,98,.18);border-color:var(--accent)}
+
+/* VETOGRAM Cinema · licensed public movie studio browser */
+.cinema-studios{padding:27px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(160deg,rgba(250,117,98,.055),rgba(17,24,42,.80) 35%,rgba(17,24,42,.30));margin-top:30px}
+.cinema-studio-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:23px 0 12px}
+.cinema-studio-tab{border:1px solid var(--line);background:var(--panel-2);color:var(--muted);padding:12px 18px;min-height:44px;border-radius:40px;font-size:12px;font-weight:800;transition:border-color .2s,color .2s,background .2s}
+.cinema-studio-tab.active{border-color:rgba(250,117,98,.65);background:rgba(250,117,98,.15);color:var(--text)}
+.cinema-studio-tab:hover{border-color:var(--accent);color:var(--text)}
+.cinema-studio-status{margin:13px 0 20px;font-size:12px;line-height:1.6;color:var(--muted)}
+.cinema-studio-grid{margin-bottom:12px}
+.cinema-studio-link{display:inline-flex;align-items:center;min-height:40px;margin-top:10px;color:var(--accent-soft);font-size:12px;text-underline-offset:4px}
+.cinema-studios .cinema-more{margin-top:16px;margin-bottom:6px}
+@media(max-width:650px){
+ .cinema-studios{padding:18px 13px 20px;margin:22px -5px 0;border-radius:18px}
+ .cinema-studio-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:19px -2px 11px}
+ .cinema-studio-tab{flex:0 0 auto;padding:11px 14px;min-height:42px}
+ .cinema-studio-grid{gap:11px}
+}
