@@ -610,8 +610,12 @@
     $('progressFill').style.width=percentage+'%';
     $('readerProgressPercent').textContent=percentage+'%';
     $('readerProgressLabel').textContent='Место в текущей части';
-    $('prevPage').disabled=state.currentPage===0 && (state.activeChapter===null || !isWiki(state.current));
-    $('nextPage').disabled=state.currentPage===state.pages.length-1 && (!isWiki(state.current) || !state.chapters.length || state.activeChapter===state.chapters.length-1);
+    const chaptersAvailable=state.chapters.length>0&&(isWiki(state.current)||isLocal(state.current));
+    const previousChapter=chaptersAvailable && state.activeChapter!==null && state.activeChapter>0;
+    $('prevPage').disabled=state.currentPage===0 && !previousChapter;
+    const nextChapter=chaptersAvailable &&
+      (state.activeChapter===null || state.activeChapter<state.chapters.length-1);
+    $('nextPage').disabled=state.currentPage===state.pages.length-1 && !nextChapter;
     const key=bookKey(state.current);
     const mark=bookmarkToken();
     const isMarked=progress[key]?.bookmarks?.includes(mark);
@@ -761,7 +765,11 @@
     if(!state.current)return;
     const selection=window.getSelection()?.toString().trim().slice(0,800);
     if(!selection||selection.length<4){toast('Сначала выделите фразу в тексте');return;}
-    quotes.unshift({bookId:bookKey(state.current),title:state.current.title,page:state.currentPage,chapter:state.activeChapter,quote:selection,at:Date.now()});
+    const currentPage=String(state.pages[state.currentPage]||'');
+    const withinPage=currentPage.toLocaleLowerCase().indexOf(selection.toLocaleLowerCase());
+    const approximateOffset=(state.pageOffsets[state.currentPage]||0)+Math.max(0,withinPage);
+    quotes.unshift({bookId:bookKey(state.current),title:state.current.title,page:state.currentPage,
+      chapter:state.activeChapter,offset:approximateOffset,quote:selection,at:Date.now()});
     if(quotes.length>80)quotes.length=80;
     persist('quotes',quotes);
     window.getSelection()?.removeAllRanges();
