@@ -96,6 +96,47 @@
       b.setAttribute('aria-pressed',String(active));
     }
   }
+  function bookFromProgress(key,item){
+    const id=Number(item.id||String(key).split('-').at(-1));
+    if(!Number.isSafeInteger(id)||id<1)return null;
+    return saved[key]||{
+      id,provider:item.provider,wiki:item.wiki,title:item.title,
+      authors:item.authors,cover:item.cover,language:item.language,
+      sourceUrl:item.sourceUrl
+    };
+  }
+  function renderContinueShelf(){
+    const shelf=$('continueShelf');
+    const latest=Object.entries(progress)
+      .filter(([key,item])=>item && item.title && Number.isFinite(Number(item.at)))
+      .sort((a,b)=>(b[1].at||0)-(a[1].at||0))[0];
+    if(!latest){shelf.hidden=true;return;}
+    const [key,p]=latest;
+    const book=bookFromProgress(key,p);
+    if(!book){shelf.hidden=true;return;}
+    shelf.hidden=false;
+    $('continueTitle').textContent=compactTitle(book.title);
+    const name=(book.authors||[]).join(', ');
+    const position=p.chapter!==null && Number.isInteger(p.chapter)
+      ?'Часть '+(p.chapter+1)+' · '+(Math.max(0,Number(p.page)||0)+1)+' стр.'
+      :'Страница '+(Math.max(0,Number(p.page)||0)+1);
+    $('continueDetails').textContent=(name?name+' · ':'')+position;
+    $('continueFill').style.width=Math.round(Math.max(0,Math.min(1,Number(p.fraction)||0))*100)+'%';
+    $('continueAction').onclick=()=>openBook(book);
+  }
+  function setFocus(enabled){
+    const value=Boolean(enabled);
+    state.focus=value;
+    $('reader').dataset.focus=String(value);
+    $('readerFocusButton').setAttribute('aria-pressed',String(value));
+    $('readerFocusButton').title=value?'Вернуть управление':'Режим погружения';
+    $('readerFocusExit').hidden=!value;
+    if(value){
+      $('readerSettings').hidden=true;
+      $('readerSettingsButton').setAttribute('aria-expanded','false');
+    }
+    reflowReader();
+  }
   function updateSavedCount(){ $('savedCount').textContent=Object.keys(saved).length; }
   function compactTitle(title){return String(title||'Без названия').slice(0,160);}
   function fullName(book){return (book.authors||[]).join(', ') || (isWiki(book)?(book.wiki==='hy'?'Հայերեն Վիքիդարան':'Русская Викитека'):'Автор неизвестен');}
@@ -415,6 +456,7 @@
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
     ++state.requestBook;
     state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;state.rawText='';state.pageOffsets=[];
+    setFocus(false);
     $('reader').hidden=false;
     $('readerTitle').textContent=compactTitle(book.title);
     $('readerAuthor').textContent=fullName(book);
@@ -554,11 +596,45 @@
     $('readerSettings').hidden=!$('readerSettings').hidden;
     $('readerSettingsButton').setAttribute('aria-expanded',String(!$('readerSettings').hidden));
   });
-  $('smallerFont').addEventListener('click',()=>{prefs.font-=1;applyPrefs();});
-  $('largerFont').addEventListener('click',()=>{prefs.font+=1;applyPrefs();});
+  $('smallerFont').addEventListener('click',()=>{prefs.font-=1;applyPrefs(true);});
+  $('largerFont').addEventListener('click',()=>{prefs.font+=1;applyPrefs(true);});
   for(const button of document.querySelectorAll('[data-read-theme]'))button.addEventListener('click',()=>{
-    prefs.theme=button.dataset.readTheme;applyPrefs();
+    prefs.theme=button.dataset.readTheme;applyPrefs(true);
   });
+  for(const selector of ['read-font','read-leading','read-width']){
+    for(const button of document.querySelectorAll('[data-'+selector+']')){
+      button.addEventListener('click',()=>{
+        if(selector==='read-font')prefs.fontFace=button.dataset.readFont;
+        if(selector==='read-leading')prefs.leading=button.dataset.readLeading;
+        if(selector==='read-width')prefs.width=button.dataset.readWidth;
+        applyPrefs(true);
+      });
+    }
+  }
+  $('readerFocusButton').addEventListener('click',()=>setFocus(!state.focus));
+  $('readerFocusExit').addEventListener('click',()=>setFocus(false));
+  $('readerScroll').addEventListener('click',event=>{
+    if(!state.pages.length||!state.current||!event.isTrusted)return;
+    if(event.target.closest('button,a,input,select'))return;
+    const selection=window.getSelection();
+    if(selection && !selection.isCollapsed)return;
+    const box=$('readerScroll').getBoundingClientRect();
+    const relativeX=event.clientX-box.left;
+    if(relativeX<box.width*.16)flip(-1);
+    else if(relativeX>box.width*.84)flip(1);
+  });
+  let resizeDebounce;
+  window.addEventListener('resize',()=>{
+    if($('reader').hidden||!state.pages.length)return;
+    clearTimeout(resizeDebounce);
+    resizeDebounce=setTimeout(reflowReader,150);
+  });
+  try{
+    const tgBack=window.Telegram?.WebApp?.BackButton;
+    if(tgBack){
+      tgBack.onClick(()=>{if(!$('reader').hidden)closeReader();});
+    }
+  }catch{}
   $('prevPage').addEventListener('click',()=>flip(-1));
   $('nextPage').addEventListener('click',()=>flip(1));
   $('bookmarkButton').addEventListener('click',bookmark);
@@ -567,7 +643,7 @@
     if($('reader').hidden || !$('bookModal').hidden)return;
     if(event.key==='ArrowRight'){event.preventDefault();flip(1);}
     if(event.key==='ArrowLeft'){event.preventDefault();flip(-1);}
-    if(event.key==='Escape')closeReader();
+    if(event.key==='Escape'){ if(state.focus)setFocus(false);else closeReader(); }
   });
   let touchStart=null;
   $('readerScroll').addEventListener('touchstart',e=>{
@@ -579,5 +655,5 @@
     if(Math.abs(dx)>85 && Math.abs(dx)>Math.abs(dy)*2.2)flip(dx<0?1:-1);
     touchStart=null;
   },{passive:true});
-  updateSavedCount();applyPrefs();setSourceInfo();loadCatalog(true);
+  updateSavedCount();applyPrefs();renderContinueShelf();setSourceInfo();loadCatalog(true);
 })();
