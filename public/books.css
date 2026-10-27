@@ -324,3 +324,20 @@ body{background:radial-gradient(ellipse 95% 45% at 48% -5%,#29222a 0%,#121217 60
  .book-cover .artwork-symbol{font-size:39px!important}
  .book-cover .artwork-bottom{font-size:6px!important}
 }
+
+/* Accessible narration: optional OS/browser voice, no artificial audio recording. */
+.reader-audio-button{display:grid;place-items:center;height:40px;min-width:40px;border:1px solid var(--reader-line);
+ border-radius:11px;font-size:20px;background:transparent;color:var(--reader-color);transition:background .2s,border-color .2s}
+.reader-audio-button[aria-pressed="true"]{color:#f3c5a2;background:#ac775f38;border-color:#cc9474}
+.reader-audio-button:focus-visible{outline:2px solid #e5ad8a;outline-offset:2px}
+.reader[data-theme="light"] .reader-audio-button[aria-pressed="true"],
+.reader[data-theme="sepia"] .reader-audio-button[aria-pressed="true"]{color:#75533e}
+@media(max-width:530px){
+ .reader-top{padding-inline:9px;gap:5px}
+ .reader-audio-button{width:32px;min-width:32px;height:36px;font-size:16px}
+ .reader-focus-button{width:32px;height:36px}
+ .reader-flow-button{width:35px;min-width:35px;height:36px}
+ .reader-settings-button{width:35px;height:36px}
+ .reader-identity{min-width:0}
+ .reader-identity strong{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+}
