@@ -48,3 +48,24 @@ node --check public/cinema-catalog.js
 ## Later, when authorized to deploy
 
 Deploy public folder over HTTPS, then use a dedicated Cinema bot/entry via @BotFather with URL \`https://<HOST>/cinema.html\`. Production bot credentials are **not** stored in client assets; verify origin and Telegram initData server-side if accounts/subscriptions are added. Actual deployment, DNS, bot linking and live playback QA remain pending owner's explicit command.
+
+
+## V2 feature-branch development (27 October 2026; not deployed)
+
+Cinema now includes **15 items: 12 Blender/open films plus 3 full Russian-language Mosfilm channel videos**. These three are referenced through RUTUBE's documented iframe embedding interface, with RUTUBE as the streaming provider and rights holder's channel credited:
+
+| Entry | Official video |
+|---|---|
+| Любовь и голуби | https://rutube.ru/video/68781d890618ea50933ec020fd5060bf/ |
+| Афоня | https://rutube.ru/video/97251d193ac780c0138596f3aea972c0/ |
+| Тот самый Мюнхгаузен — серия 1 | https://rutube.ru/video/2a0058219dc6990f2a356fbc47a59923/ |
+
+Official embed format: \`https://rutube.ru/play/embed/VIDEO_ID\` — documented at https://rutube.ru/info/embed/.
+
+- \`public/cinema-provider.js\` is loaded before \`cinema.js\`; it supports authorised \`iframe\`, HTTPS MP4/WebM, native HLS and on-demand hls.js. RUTUBE is the only currently enabled iframe origin.
+- Film pages, search, favorites and brand colors are the same UI; RUTUBE frames replace the HTML5 player only for official embed entries.
+- No Russian voiceover is synthesized or copied, no movie is downloaded/uploaded/rehosted, and there is no Kinogo/HDRezka integration.
+- RUTUBE has its own controls and licensing; a third-party iframe cannot automatically use our HTML5 seek or audio controls. No false playback-sync claims.
+- Public RUTUBE embedding is not a Creative Commons film license and commercial distribution rights may need separate approval.
+- Unit/static DOM tests and a mocked iframe interaction check passed. Actual end-to-end network playback in Telegram on Android and iOS is **not verified**.
+- Four-product repo status is documented in \`docs/VETOGRAM-FOUR-APPS.md\`.
