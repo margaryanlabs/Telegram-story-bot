@@ -4,8 +4,8 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script></head>
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script></head>
 <body>
 <div class="app" id="app">
 <aside class="sidebar" aria-label="Навигация">
@@ -17,6 +17,7 @@
  <nav class="side-nav" id="sideNav">
   <button class="nav-item active" data-page="home" type="button"><span>⌂</span> Главная</button>
   <button class="nav-item" data-page="search" type="button"><span>⌕</span> Поиск музыки</button>
+  <button class="nav-item" data-page="charts" type="button"><span>▤</span> Чарты и страны</button>
   <button class="nav-item" data-page="library" type="button"><span>♡</span> Моя музыка</button>
   <button class="nav-item" data-page="radio" type="button"><span>◉</span> Радио</button>
   <button class="nav-item" data-page="import" type="button"><span>⇧</span> Добавить музыку</button>
@@ -49,6 +50,52 @@
   <div class="social-invite"><div><small>SHARE THE SOUND</small><h3>Хорошая музыка — для друзей.</h3><p>Отправляй треки и плейлисты прямо в Telegram. Твои личные аудиофайлы остаются приватными, пока ты сам их не отправишь.</p></div><button type="button" id="shareInvite">↗ Пригласить в Vetogram Music</button></div>
   <div class="section-head lower-head"><div><span class="overline">YOUR OWN FREQUENCY</span><h2>Музыка из твоего мира</h2></div></div>
   <div class="feature-strip"><div><span>01 / TELEGRAM & PERSONAL LIBRARY</span><h3>Любимые треки остаются твоими.</h3><p>Загрузи собственные аудиофайлы или сохранённые из Telegram песни — слушай в нашей библиотеке. На сервер мы их не отправляем.</p><button data-page="import" class="secondary-btn" type="button">Моя музыка ↗</button></div><div class="feature-strip-art">V<span>♫</span></div></div>
+ </section>
+ 
+ <section class="page" data-view="charts" aria-label="Чарты и музыка по странам">
+  <div class="charts-hero">
+   <div class="charts-hero-glow" aria-hidden="true">♫</div>
+   <div class="charts-hero-copy">
+    <span class="overline">VETOGRAM MUSIC / REAL DISCOVERY</span>
+    <h1>Музыка <em>без границ.</em></h1>
+    <p>Настоящие чарты Audius, поиск доступных русских и армянских исполнителей, живые станции России и Армении. Всё зависит от наличия записей у источника.</p>
+    <div class="charts-hero-tags"><span>♫ WORLDWIDE</span><span>🇷🇺 RUSSIAN MUSIC</span><span>🇦🇲 ARMENIAN MUSIC</span></div>
+   </div>
+   <div class="charts-hero-art" aria-hidden="true"><div class="charts-record"><div class="charts-center-disc">V</div></div></div>
+  </div>
+  <div class="charts-block">
+   <div class="charts-head"><div><span class="overline">ACTUAL AUDIUS DATA / NOT VK OR YANDEX RANKINGS</span><h2>Топ-треки <em>Audius</em></h2><p>Рейтинг самого Audius, а не выдуманный общий мировой топ. Данные загружаются из открытого API.</p></div><button type="button" class="charts-refresh" id="chartsRefresh">↻ Обновить</button></div>
+   <div class="charts-filters" aria-label="Период чарта">
+    <button type="button" class="active" data-chart-period="week" aria-pressed="true">Неделя</button>
+    <button type="button" data-chart-period="month" aria-pressed="false">Месяц</button>
+    <button type="button" data-chart-period="year" aria-pressed="false">Год</button>
+    <button type="button" data-chart-period="allTime" aria-pressed="false">Всё время</button>
+   </div>
+   <div class="charts-genres" aria-label="Жанр чарта">
+    <button type="button" class="active" data-chart-genre="all" aria-pressed="true">Все жанры</button>
+    <button type="button" data-chart-genre="Electronic" aria-pressed="false">Electronic</button>
+    <button type="button" data-chart-genre="Hip-Hop/Rap" aria-pressed="false">Hip-Hop</button>
+    <button type="button" data-chart-genre="Pop" aria-pressed="false">Pop</button>
+   </div>
+   <div class="charts-status" id="chartsStatus" role="status">Открой чарты — появится реальный рейтинг Audius.</div>
+   <div id="chartsTracks" class="charts-list"></div>
+  </div>
+  <div class="charts-regions">
+   <div class="charts-head"><div><span class="overline">LANGUAGE & CULTURE / LIVE SEARCH</span><h2>Наши <em>звуки.</em></h2><p>Русская и армянская музыка в доступном каталоге Audius. Если конкретного трека нет, покажем результаты поиска, а не чужую запись вместо него.</p></div></div>
+   <div class="region-controls" aria-label="Музыкальные регионы">
+    <button type="button" data-region="ru" class="active" aria-pressed="true"><span>🇷🇺</span><b>Русская музыка</b><small>Русский · Russian</small></button>
+    <button type="button" data-region="am" aria-pressed="false"><span>🇦🇲</span><b>Армянская музыка</b><small>Հայերեն · Armenian</small></button>
+   </div>
+   <div class="region-query"><label for="regionSearch">Исполнитель или песня</label><div><input id="regionSearch" type="search" maxlength="65" placeholder="Кино, Zemfira, Armenian music…" autocomplete="off"><button type="button" id="regionSearchGo">⌕ Найти</button></div></div>
+   <p class="charts-status" id="regionStatus" role="status">Выбери страну: поиск откроет реально доступные записи.</p>
+   <div id="regionTracks" class="charts-list"></div>
+  </div>
+  <div class="charts-stations">
+   <div class="charts-head"><div><span class="overline">LIVE FROM THE REGION / RADIO BROWSER</span><h2>Радио <em>Россия · Армения</em></h2><p>Настоящие радиостанции по коду страны в каталоге Radio Browser. Воспроизведение зависит от вещателя.</p></div><button type="button" id="stationRefresh" class="charts-refresh">↻ Станции</button></div>
+   <div class="region-controls region-radio"><button type="button" data-station="RU" aria-pressed="false"><span>🇷🇺</span><b>Россия</b><small>Прямой эфир</small></button><button type="button" data-station="AM" class="active" aria-pressed="true"><span>🇦🇲</span><b>Армения</b><small>Прямой эфир</small></button></div>
+   <p id="stationStatus" class="charts-status" role="status">Станции загружаются по вашему выбору.</p>
+   <div id="regionStations" class="charts-station-grid"></div>
+  </div>
  </section>
  <section class="page" data-view="search">
   <div class="page-title"><span class="overline">DISCOVER / AUDIO ONLY</span><h1>Найди свой <em>звук.</em></h1><p>Поиск открытой музыки Audius и твоих личных треков. Популярные хиты других сервисов требуют разрешённого источника.</p></div>
@@ -103,7 +150,7 @@
  <footer class="footer">VETOGRAM MUSIC <span>·</span> Доступная музыка Audius и личная коллекция <span>·</span> BETA 2026</footer>
 </main>
 <div class="player-bar" id="playerBar"><button type="button" class="mini-art" id="miniArt" aria-label="Открыть большой плеер">♫</button><button type="button" class="mini-track" id="miniTrack"><b id="miniTitle">Выбери музыку</b><span id="miniArtist">Vetogram Music</span></button><button id="miniLike" class="icon-btn" title="Нравится" type="button">♡</button><div class="mini-controls"><button type="button" id="miniPrev" aria-label="Предыдущий">⏮</button><button type="button" id="miniPlay" aria-label="Воспроизвести">▶</button><button type="button" id="miniNext" aria-label="Следующий">⏭</button></div><div class="mini-progress"><input type="range" min="0" max="1000" value="0" id="miniSeek" aria-label="Позиция трека"><span id="miniTime">0:00</span></div><button type="button" class="social-quick" id="shareQuick" title="Поделиться треком" aria-label="Поделиться текущим треком">↗</button><button type="button" class="open-full" id="openPlayer" title="Полный плеер" aria-label="Открыть полноэкранный плеер">↗</button></div>
-<nav class="mobile-nav" aria-label="Мобильная навигация"><button type="button" class="active" data-page="home"><span>⌂</span>Главная</button><button type="button" data-page="search"><span>⌕</span>Поиск</button><button type="button" data-page="library"><span>♡</span>Моё</button><button type="button" data-page="radio"><span>◉</span>Радио</button><button type="button" data-page="import"><span>＋</span>Добавить</button></nav>
+<nav class="mobile-nav" aria-label="Мобильная навигация"><button type="button" class="active" data-page="home"><span>⌂</span>Главная</button><button type="button" data-page="search"><span>⌕</span>Поиск</button><button type="button" data-page="charts"><span>▤</span>Чарты</button><button type="button" data-page="library"><span>♡</span>Моё</button><button type="button" data-page="radio"><span>◉</span>Радио</button><button type="button" data-page="import"><span>＋</span>Добавить</button></nav>
 <div class="studio" id="studio" role="dialog" aria-modal="true" aria-label="Полноэкранный плеер" aria-hidden="true"><div class="studio-glow glow-a"></div><div class="studio-glow glow-b"></div><div class="studio-lines" aria-hidden="true"></div>
  <div class="studio-head"><div class="brand-mini"><b>VETOGRAM</b> <span>MUSIC</span></div><span class="playing-label"><i></i> NOW PLAYING</span><button type="button" id="closeStudio" class="studio-close" aria-label="Закрыть плеер">✕</button></div>
  <div class="studio-content"><div class="studio-art-area"><div class="studio-rings"><div class="studio-vinyl" id="studioVinyl"><div class="studio-vinyl-label" id="studioCover">V</div></div></div><div class="studio-wave" id="studioWave" aria-hidden="true"></div></div>
