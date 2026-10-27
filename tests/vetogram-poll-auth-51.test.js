@@ -31,7 +31,7 @@ function fixture(status,{deferred=false}={}){
   const logs=[];
   let complete=null;
   const ctx=vm.createContext({
-    state,tg:{initData:'signed'},resetOwner:()=>false,
+    state,tg:{initData:'signed'},resetOwner:()=>false,stopThreadSync:()=>{},
     $:id=>id==='telegramThreadCompose'?input:
       id==='telegramMirrorList'?{replaceChildren(){logs.push('clear-list')}}:
       id==='telegramThreadTitle'||id==='telegramThreadMeta'?{textContent:''}:null,
