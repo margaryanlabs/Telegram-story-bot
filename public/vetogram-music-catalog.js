@@ -44,7 +44,7 @@ const endpoint=(query,offset,limit=LIMIT)=>{
  u.searchParams.set("query",query);u.searchParams.set("limit",String(limit));u.searchParams.set("offset",String(offset));
  return u.href;
 };
-let items=[],q="",offset=0,busy=false,complete=false,active=null,group="world",preset="world";
+let items=[],q="",offset=0,busy=false,complete=false,active=null,group="ru",preset="ru";
 const status=$("catalogStatus"),list=$("catalogResults"),more=$("catalogMore"),queryInput=$("catalogQuery");
 function textNode(tag,cls,value){const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=String(value);return el}
 function setStatus(s){status.textContent=s}
@@ -67,7 +67,7 @@ function trackCard(track,index){
   const img=textNode("img");img.src=track.artwork;img.loading="lazy";img.alt="";img.onerror=()=>img.remove();cover.append(img);
  }
  const info=textNode("div","catalog-details");
- info.append(textNode("strong","",track.title),textNode("span","",track.artist),textNode("small","","AUDIUS · "+(track.duration?Math.floor(track.duration/60)+":"+String(Math.floor(track.duration%60)).padStart(2,"0"):"АУДИО")));
+ info.append(textNode("strong","",track.title),textNode("span","",track.artist),textNode("small","",track.duration?Math.floor(track.duration/60)+":"+String(Math.floor(track.duration%60)).padStart(2,"0"):"♫"));
  const play=textNode("button","catalog-play","▶");play.type="button";play.setAttribute("aria-label","Слушать "+track.title);
  play.onclick=()=>V.play(track,items);
  const like=textNode("button","catalog-like","♡");like.type="button";like.title="В избранное";like.setAttribute("aria-label","Добавить в избранное "+track.title);
@@ -87,7 +87,7 @@ async function loadMore(){
  if(busy||complete||!q)return;
  busy=true;more.disabled=true;more.hidden=true;
  if(!items.length)render();
- setStatus('Ищем «'+q+'» · Audius…');
+ setStatus('Ищем «'+q+'»…');
  const controller=new AbortController();active=controller;
  const timer=setTimeout(()=>controller.abort(),12000);
  try{
@@ -105,7 +105,7 @@ async function loadMore(){
   }
   offset+=raw.length;
   complete=raw.length<LIMIT||offset>=MAX_RESULTS;
-  setStatus(items.length+" записей показано · Audius · "+(complete?"Конец доступной выдачи.":"Можно загрузить ещё.")+" Результаты — не официальные чарты стран.");
+  setStatus(items.length+" доступных треков · "+(complete?"Выдано всё.":"Можно загрузить ещё.")+" Нажми ▶ для прослушивания.");
   render();
  }catch(err){
   if(active!==controller)return;
@@ -123,7 +123,7 @@ function search(term){
  const candidate=clean(term,80);
  if(candidate.length<2){setStatus("Введите минимум 2 символа для поиска");return}
  active?.abort();q=candidate;items=[];offset=0;complete=false;busy=false;queryInput.value=q;
- list.replaceChildren();setStatus("Подключаем музыкальный каталог Audius…");
+ list.replaceChildren();setStatus("Загружаем музыку…");
  more.hidden=true;loadMore();
 }
 root.querySelectorAll("[data-catalog-group]").forEach(b=>b.onclick=()=>{
@@ -133,8 +133,13 @@ root.querySelectorAll("[data-catalog-group]").forEach(b=>b.onclick=()=>{
  preset=first.id;buttons();search(first.q);
 });
 $("catalogForm").onsubmit=e=>{e.preventDefault();preset="";buttons();search(queryInput.value)};
+function selectPreset(id){
+ const target=PRESETS.find(x=>x.id===id);
+ if(!target)return false;
+ group=target.group;preset=target.id;buttons();search(target.q);return true;
+}
 more.onclick=loadMore;
-document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS[0].q)}});
+document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS.find(x=>x.id==="ru").q)}});
 buttons();
-window.VetogramCatalog=Object.freeze({search,loadMore,normalize,endpoint,state:()=>({query:q,count:items.length,offset,complete})});
+window.VetogramCatalog=Object.freeze({search,selectPreset,loadMore,normalize,endpoint,state:()=>({query:q,count:items.length,offset,complete})});
 })();

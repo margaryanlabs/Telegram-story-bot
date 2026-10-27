@@ -107,8 +107,9 @@ function card(t){
  const article=mk("article","mixter-track");
  const artwork=mk("div","mixter-art","♫");
  const info=mk("div","mixter-details");
- info.append(mk("strong","",t.title),mk("span","",t.artist),mk("small","",t.license+" · CCMIXTER"));
- const urls=mk("div","mixter-links");
+ info.append(mk("strong","",t.title),mk("span","",t.artist),mk("small","",t.license));
+ const urls=mk("details","mixter-links");
+ const summary=mk("summary","","ⓘ Об авторе и лицензии");urls.append(summary);
  const origin=mk("a","","Источник ↗");origin.href=t.permalink;origin.target="_blank";origin.rel="noopener noreferrer";
  const rights=mk("a","","Лицензия ↗");
  rights.href=t.license_url;rights.target="_blank";rights.rel="noopener noreferrer";
@@ -146,7 +147,7 @@ async function load(){
  const controller=new AbortController();running=controller;
  const timer=setTimeout(()=>controller.abort(),14000);
  const more=$("mixterMore");more.hidden=true;more.disabled=true;
- status("Ищем треки с разрешённой лицензией на ccMixter…");
+ status("Загружаем музыку…");
  try{
   const result=await fetch(endpoint(genre,offset,term),{signal:controller.signal,credentials:"omit",headers:{Accept:"application/json"}});
   if(!result.ok)throw Error("HTTP "+result.status);

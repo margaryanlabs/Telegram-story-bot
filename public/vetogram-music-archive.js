@@ -13,8 +13,8 @@ function buildCard(song){
  const image=tag("img","archive-cover");image.src=SAFE_URL(song.artwork);image.alt="";image.loading="lazy";
  image.onerror=()=>{image.style.display="none"};
  const body=tag("div","archive-description");
- body.append(tag("strong","",song.title),tag("small","",song.artist),tag("span","archive-license",song.license+" · INTERNET ARCHIVE"));
- const links=tag("div","archive-links");
+ body.append(tag("strong","",song.title),tag("small","",song.artist),tag("span","archive-license",song.license));
+ const links=tag("details","archive-links");links.append(tag("summary","","ⓘ Автор и лицензия"));
  const source=tag("a","","Источник ↗");source.href=SAFE_URL(song.permalink);source.target="_blank";source.rel="noopener noreferrer";
  const lic=tag("a","","Лицензия ↗");lic.href=SAFE_URL(song.license_url);lic.target="_blank";lic.rel="noopener noreferrer";
  links.append(source,lic);body.append(links);
@@ -110,7 +110,7 @@ async function load(){
  if(busy||complete||page>=300)return;
  const wantedPage=page+1;busy=true;const ctl=new AbortController();active=ctl;const stop=setTimeout(()=>ctl.abort(),17000);
  const button=$("archiveMore");button.disabled=true;button.hidden=true;
- status("Ищем разрешённые музыкальные записи…");
+ status("Загружаем записи…");
  try{
   const payload=await providerPage(license,wantedPage,ctl.signal);
   if(!payload?.ok||!Array.isArray(payload.items))throw Error("Некорректный ответ каталога");
