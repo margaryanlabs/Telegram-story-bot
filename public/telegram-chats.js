@@ -1858,8 +1858,11 @@
       box.innerHTML=state.threadLoading
         ?empty('Загружаю сообщения','Получаю историю напрямую из Telegram…')
         :state.threadLoadError
-          ?empty('Не удалось загрузить историю',
-              'Нажми ↻ вверху переписки, чтобы повторить запрос. Отправку не повторяй без проверки.','↻')
+          ?'<div class="veto-mirror-retry-state">'+
+              empty('Не удалось загрузить историю',
+                'Соединение с Telegram прервалось. Сохранённая история этого аккаунта не удалена.','↻')+
+              '<button type="button" class="veto-mirror-retry-thread" data-mirror-retry-thread>'+
+              '↻ Повторить загрузку</button></div>'
           :empty('Пустой чат','В Telegram нет доступных сообщений');
     }else{
       let day='';
@@ -2661,6 +2664,11 @@
     }
   });
   $('telegramThreadMessages')?.addEventListener('click',event=>{
+    if(event.target.closest('[data-mirror-retry-thread]')){
+      if(!resetOwner()&&state.thread&&!state.threadLoading)
+        void loadMessages({reset:true});
+      return;
+    }
     const photo=event.target.closest('[data-mirror-photo]');
     if(photo){openPhotoViewer(photo.dataset.mirrorPhoto);return;}
     const retry=event.target.closest('[data-mirror-preview]');
