@@ -86,11 +86,15 @@ async function lookup(raw){
    // Piped exposes music_songs on instances supporting YouTube Music;
    // fall back to ordinary videos when the instance does not support that filter.
    for(const filter of ["music_songs","videos"]){
-    const data=await readJson(host+"/search?q="+encodeURIComponent(term)+"&filter="+filter);
-    const items=Array.isArray(data?.items)?data.items:Array.isArray(data?.results)?data.results:[];
-    const unique=new Set();
-    const list=items.map(normalize).filter(t=>t&&!unique.has(t.videoId)&&unique.add(t.videoId)).slice(0,MAX_RESULTS);
-    if(list.length){currentHost=host;return list}
+    try{
+     const data=await readJson(host+"/search?q="+encodeURIComponent(term)+"&filter="+filter);
+     const items=Array.isArray(data?.items)?data.items:Array.isArray(data?.results)?data.results:[];
+     const unique=new Set();
+     const list=items.map(normalize).filter(t=>t&&!unique.has(t.videoId)&&unique.add(t.videoId)).slice(0,MAX_RESULTS);
+     if(list.length){currentHost=host;return list}
+    }catch{
+     // A particular filter can be unsupported without making the whole host unusable.
+    }
    }
    unavailable++;
   }catch{unavailable++}
