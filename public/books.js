@@ -1408,7 +1408,46 @@
       help.textContent='Встроенный просмотр не поддерживается этим браузером. Откройте официальную ссылку выше.';
     }
   }
+  function showEditorialBook(book){
+    const host=modal('VETOGRAM · 200 КНИГ');
+    host.classList.add('editorial-modal');
+    const head=node('div','hot-book-head');
+    const emblem=node('div','hot-book-jacket');
+    coverArtwork(emblem,book);
+    const body=node('div','hot-book-summary');
+    body.append(node('span','hot-book-genre',book.genreLabel||'Зарубежная литература'),
+      node('h3','',compactTitle(book.title)),
+      node('p','',fullName(book)));
+    const flags=node('p','hot-book-flags','RU · ЗАРУБЕЖНОЕ ПРОИЗВЕДЕНИЕ · ПОИСК ИЗДАНИЯ');
+    body.append(flags);
+    head.append(emblem,body);host.append(head);
+    host.append(node('p','hot-book-disclaimer',
+      'Эта книга входит в нашу подборку 200 популярных произведений. '+
+      'Здесь указаны название и автор; права на современный русский перевод '+
+      'принадлежат правообладателям. Наличие полного текста внутри VETOGRAM не подтверждено.'));
+    const actions=node('div','hot-book-actions');
+    const search=safeBookLink(book.sourceUrl);
+    if(search){
+      const link=node('a','hot-book-main-action','НАЙТИ РУССКОЕ ИЗДАНИЕ ↗');
+      link.href=search;link.target='_blank';
+      link.rel='noopener noreferrer';link.referrerPolicy='no-referrer';
+      actions.append(link);
+    }
+    const seek=node('button','hot-book-secondary-action','ПОИСК В ОТКРЫТОЙ БИБЛИОТЕКЕ');
+    seek.type='button';
+    seek.addEventListener('click',()=>{
+      $('bookModal').hidden=true;
+      state.source='ru';persist('source',state.source);
+      state.query=book.title;
+      $('bookSearch').value=book.title;
+      setSourceInfo();
+      void loadCatalog(true);
+      $('catalogSearch').scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
+    });
+    actions.append(seek);host.append(actions);
+  }
   function showDiscoverBook(book){
+    if(book?.provider==='editorial'){showEditorialBook(book);return;}
     const host=modal('О книге');
     const panel=node('div','discover-detail');
     const coverUrl=safeCover(book.cover);
