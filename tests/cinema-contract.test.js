@@ -37,13 +37,23 @@ test('catalog contains unique true films with direct Commons filenames and verif
   const ctx={window:{}};
   vm.runInNewContext(catalog,ctx,{filename:'cinema-catalog.js'});
   const f=ctx.window.VetogramCinemaCatalog;
-  assert.ok(Array.isArray(f)&&f.length>=10);
+  assert.ok(Array.isArray(f)&&f.length>=15);
   assert.equal(new Set(f.map(x=>x.id)).size,f.length);
   for(const x of f){
     assert.ok(x.id&&x.title&&x.original&&x.creator);
-    assert.ok(x.license&&/^https:\/\/creativecommons\.org\//.test(x.licenseUrl));
-    assert.ok(/^https:\/\//.test(x.site));
-    assert.ok(/\.(webm|ogv)$/.test(x.file),x.file);
+    assert.ok(x.license&&/^https:\/\//.test(x.licenseUrl));
+    if(x.player) {
+      assert.ok(/^https:\/\/rutube\.ru\/play\/embed\/[a-f0-9]{32}$/.test(x.player.url));
+      assert.ok(/^https:\/\/rutube\.ru\/video\/[a-f0-9]{32}\/$/.test(x.sourcePage));
+      assert.equal(x.player.type,'iframe');
+      assert.equal(x.player.licensed,true);
+      assert.equal(x.spoken,'Русский');
+      assert.ok(x.player.credit&&x.player.license);
+    } else {
+      assert.ok(/^https:\/\/creativecommons\.org\//.test(x.licenseUrl));
+      assert.ok(/^https:\/\//.test(x.site));
+      assert.ok(/\.(webm|ogv)$/.test(x.file),x.file);
+    }
     assert.deepEqual(Array.from(x.editions),[],'no imaginary dubbed streams');
   }
 });
@@ -56,5 +66,8 @@ test('cinema contains honest licensed media handling and no piracy domains',()=>
   assert.match(script,/localStorage/);
   assert.match(script,/requestPictureInPicture/);
   assert.match(script,/quality|Quality|cinemaQuality/);
+  assert.match(script,/VetogramCinemaProvider\.attach/);
+  assert.match(html,/cinema-provider\.js/);
+  assert.match(html,/id="cinemaVideoWrap"/);
   assert.doesNotMatch(script+catalog,/kinogo|hdrezka|baskino|lostfilm|rutor|torrents?/i);
 });
