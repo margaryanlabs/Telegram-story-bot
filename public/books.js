@@ -236,8 +236,13 @@
         if(!window.confirm('Удалить локальную книгу «'+compactTitle(book.title)+'» и её прогресс с этого устройства?'))return;
         try{
           await window.VetogramBooksImport.remove(book.id);
-          delete saved[bookKey(book)];delete progress[bookKey(book)];
-          persist('saved',saved);persist('progress',progress);updateSavedCount();
+          const identity=bookKey(book);
+          delete saved[identity];delete progress[identity];
+          for(let i=quotes.length-1;i>=0;i--)if(quotes[i].bookId===identity)quotes.splice(i,1);
+          for(let i=readingNotes.length-1;i>=0;i--)if(readingNotes[i].bookId===identity)readingNotes.splice(i,1);
+          persist('saved',saved);persist('progress',progress);
+          persist('quotes',quotes);persist('readingNotes',readingNotes);
+          updateSavedCount();
           if(state.source==='local')await loadCatalog(true);
           renderContinueShelf();toast('Книга удалена с устройства');
         }catch(error){toast(error.message||'Не удалось удалить книгу');}
