@@ -73,3 +73,14 @@ An affordable/free beta is realistic for personal files and open-license content
 - This beta does NOT provide unauthorized free copies of VK/Yandex protected music, scraping, DRM bypass or full mainstream music catalogs. A free beta does not remove licensing obligations. Legal test content includes user-supplied/authorized audio and provider-allowed Audius streams.
 - Android and iPhone native background behavior still requires device tests; the WebView can be suspended on minimize. The native Telegram player for user-sent files is a viable complementary path, not yet launched.
 - Audius playback, Radio Browser station compatibility and Web Share support vary with network, browser and territorial rights. The hosted UI was externally fetched but not end-to-end exercised in a real Telegram mobile client.
+
+
+## V3 personal audio connectors (2026-10-27)
+
+- Added `public/vetogram-music-direct.js` and `public/vetogram-music-direct.css` to the music-only UI; users can add individually entered HTTPS audio URLs or upload/paste a plain M3U file with EXTINF artist/title metadata. The user's browser streams the source directly; Vetogram never fetches/hosts the audio server-side.
+- Direct audio URLs must be HTTPS, without credentials or fragments. Yandex/VK/Spotify/YouTube page URLs, private/localhost hosts, HLS/M3U8 and HTML pages are not considered direct audio file streams. Browser codec support and source anti-hotlink rules still apply.
+- M3U file parsing caps 160 KiB input and 150 unique entries; it ignores non-HTTPS unsupported entries, extracts Cyrillic artist/title pairs and explicitly rejects HLS manifests (`#EXT-X-`). The full playlist is stored only in browser localStorage; no private stream URLs included in friend-share metadata links.
+- Added local library section for these user-provided streams, including playback through the existing audio element, persistent reorder/removal and metadata-only Telegram playlist sharing.
+- `tests/vetogram-music-direct.test.js` covers source validation, duplicate and HLS handling, Unicode, UI hook and source syntax. Manual pure-parser checks confirmed two Cyrillic tracks parsed correctly, duplicates removed and unsupported links rejected. Full repository test suite and Android/iOS Telegram playback still outstanding.
+- Public music-only Vercel site: https://vetogram-music-live.vercel.app/ . Vercel confirmed READY and external fetch verified the HTML and direct-import JS/CSS. An HTTPS page and JS presence are not a guarantee any particular external music provider plays successfully.
+- Bot module remains code-only with no Telegram bot token or webhook deployed. No protected VK/Yandex scraping or commercial audio redistribution is included.
