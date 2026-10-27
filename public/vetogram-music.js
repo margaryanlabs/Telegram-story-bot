@@ -24,11 +24,11 @@ state.mood=saved.mood==="aurora"?"aurora":"ember";
 document.documentElement.dataset.ambient=state.mood;
 const unique=list=>{const s=new Set();return list.filter(x=>{if(!x?.id||s.has(x.id))return false;s.add(x.id);return true;})};
 function showPage(page){
- if(!["home","search","charts","catalog","library","radio","import"].includes(page))return;
+ if(!["home","search","charts","catalog","originals","library","radio","import"].includes(page))return;
  state.page=page;
  $$(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
  $$("[data-page]").forEach(el=>{el.classList.toggle("active",el.dataset.page===page);if(el.dataset.page===page)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")});
- $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
+ $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",originals:"ОРИГИНАЛЫ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
  window.scrollTo({top:0,behavior:"instant"});
  if(page==="library")renderLibrary();
  if(page==="home")renderHome();
