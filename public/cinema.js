@@ -40,7 +40,19 @@
     if(state.selected){closeDetails();return}
   }
   if(tg){
-    try{tg.ready();tg.expand();tg.setHeaderColor?.("#090d18");tg.setBackgroundColor?.("#090d18");tg.BackButton?.onClick(exitOverlay)}catch(_){}
+    try{tg.ready();tg.expand();tg.setHeaderColor?.("#08090d");tg.setBackgroundColor?.("#08090d");tg.BackButton?.onClick(exitOverlay)}catch(_){}
+  }else{
+    // Async Telegram SDK must never block the normal website from rendering.
+    window.addEventListener("load",()=>{
+      try{
+        const delayed=window.Telegram?.WebApp;
+        if(!delayed?.version)return;
+        delayed.ready();delayed.expand();
+        delayed.setHeaderColor?.("#08090d");
+        delayed.setBackgroundColor?.("#08090d");
+        delayed.BackButton?.onClick(exitOverlay);
+      }catch(_){}
+    },{once:true});
   }
   function setTab(tab){
     if(!["home","catalog","search","library"].includes(tab))return;
