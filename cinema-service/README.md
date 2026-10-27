@@ -228,3 +228,12 @@ Do not call these 200 entries live on the public Vercel URL until a new deployme
 - Publishing requires a successful deployment of `feat/vetogram-cinema-standalone-20261027` to independent `vetogram-cinema-theater` Vercel project. Earlier Vercel REST deploy returned HTTP 402 daily deployment quota exhausted. The currently public theater is an older READY build and MUST NOT be described as displaying this new Series section until verified.
 
 Official sample catalogues: https://www.kinopoisk.ru/series/464963/ (Game of Thrones); https://www.kinopoisk.ru/series/1316601/ (House of the Dragon); https://www.kinopoisk.ru/series/79848/ (The Sopranos); https://www.netflix.com/am-ru/title/80057281 (Stranger Things); https://www.netflix.com/am-ru/title/81231974 (Wednesday); https://www.netflix.com/am-ru/title/81040344 (Squid Game).
+
+## Playable series only policy — 28 October 2026
+
+User explicitly rejected series collections that route to platforms where the title cannot be watched in Cinema. `public/cinema.html` now omits `cinema-popular-series.js` and its formerly visible hit series shelf (34 discovery-only external Kinopoisk records). Such metadata is kept in the unused archive file, NOT imported by the application.
+The Series tab and homepage now feature only actual RUTUBE originals from rights-holder original uploader channels: 99 true episode/compilation records, 63 Star Media and 36 Mars Media. 37 groups identified, episode selector uses actual episode numbers, e.g. `Женщина в беде` episodes 1-4.
+99 records have matching original RUTUBE video pages and embed IDs plus artwork. This is NOT confirmation that all 99 actually play in Armenia/Telegram WebView; individual playback remains subject to current publisher and geography.
+`Игра престолов` and `Дом Дракона` remain unavailable as in-app streaming: their catalogue/audio existence at Kinopoisk is not an authorized source or in-app player. They are not shown as playable or promoted into visible shelves.
+QA: JS syntax passed, all DOM ID references resolve, 99 source IDs and iframe links validated, grouping has 37 shows, `Женщина в беде` 1–4 episode picker behaves correctly. Tests in `tests/cinema-series.test.js` updated.
+Release: feature branch/PR only; Vercel 402 daily deploy limit remains the publication blocker. Existing public Cinema URL serves the older build.
