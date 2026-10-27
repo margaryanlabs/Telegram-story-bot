@@ -169,11 +169,6 @@
     </header>
     <div class="reader-progress-track"><div id="progressFill"></div></div>
     <button id="readerTocButton" class="reader-toc-shortcut" type="button" hidden aria-label="Открыть содержание и выбрать том">СОДЕРЖАНИЕ <span id="readerChapterCount">—</span> <span aria-hidden="true">↗</span></button>
-    <div class="reader-download-bar" id="readerDownloadBar" hidden>
-      <div class="reader-download-copy"><strong>ВСЕ ГЛАВЫ — ВМЕСТЕ</strong><span id="readerDownloadHint">Сохрани доступные главы на устройстве для чтения без интернета.</span></div>
-      <button id="readerSaveAllChapters" type="button">СОХРАНИТЬ КНИГУ ↧</button>
-      <a id="readerOfficialEpub" href="https://ws-export.wmcloud.org/" target="_blank" rel="noopener noreferrer">EPUB ОТ ВИКИТЕКИ ↗</a>
-    </div>
     <div class="reader-trace"><span id="readerProgressLabel">Начало истории</span><span id="readerProgressPercent">0%</span></div>
     <div id="readerSettings" class="reader-settings" hidden>
       <div><span>Размер текста</span><button id="smallerFont" type="button" aria-label="Уменьшить шрифт">A−</button><span id="fontValue">19</span><button id="largerFont" type="button" aria-label="Увеличить шрифт">A+</button></div>
@@ -184,6 +179,11 @@
       <div><span>Чтение вслух</span><button type="button" data-read-speed="0.85">Медленно</button><button type="button" data-read-speed="1">Обычно</button><button type="button" data-read-speed="1.2">Быстрее</button></div>
       <div class="read-tech-note"><strong>VETO FLOW</strong><span>Выделяет текущий абзац, смягчает фон и помогает удерживать внимание. Работает без отправки текста на сервер.</span></div>
       <div id="readerChapters" hidden><label for="chapterSelect">Содержание</label><select id="chapterSelect" aria-label="Выберите главу"><option value="">Начало книги</option></select></div>
+    <div class="reader-download-bar" id="readerDownloadBar" hidden>
+      <div class="reader-download-copy"><strong>ВСЕ ГЛАВЫ — ВМЕСТЕ</strong><span id="readerDownloadHint">Сохрани доступные главы на устройстве для чтения без интернета.</span></div>
+      <button id="readerSaveAllChapters" type="button">СОХРАНИТЬ КНИГУ ↧</button>
+      <a id="readerOfficialEpub" href="https://ws-export.wmcloud.org/" target="_blank" rel="noopener noreferrer">EPUB ОТ ВИКИТЕКИ ↗</a>
+    </div>
       <div class="reader-attribution"><span>Текст адаптирован для читалки</span><a id="readerSourceLink" href="https://www.gutenberg.org/" target="_blank" rel="noopener noreferrer">Оригинал и авторские права ↗</a></div>
     </div>
     <div class="flow-guide" id="flowGuide" hidden>
