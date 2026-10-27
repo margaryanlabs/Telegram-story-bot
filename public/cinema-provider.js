@@ -95,7 +95,7 @@
         if (message.type === "player:error") onError("RUTUBE: "+String(data.text||"Ошибка воспроизведения").slice(0,180));
       }
       window.addEventListener("message",onMessage);
-      frame.addEventListener("load", onReady, {once:true});
+      frame.addEventListener("load", () => { if (!iframeId) onReady(); }, {once:true});
       frame.addEventListener("error", () => onError("Встроенный плеер не загрузился. Откройте оригинальный источник."));
       video.hidden = true;
       container.append(frame);
