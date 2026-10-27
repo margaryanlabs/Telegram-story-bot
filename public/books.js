@@ -58,7 +58,7 @@
   function isWiki(book){return book?.provider==='wikisource' && ['ru','hy'].includes(book.wiki);}
   function isLocal(book){return book?.provider==='local' && Number.isSafeInteger(Number(book.id));}
   function isCatalogBook(book){return ['googlebooks','openlibrary'].includes(book?.provider);}
-  function bookKey(book){return isLocal(book)?'local-'+book.id:isCatalogBook(book)?'gb-'+String(book.id):book?.provider==='openlibrary'?'ol-'+String(book.id):isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
+  function bookKey(book){return isLocal(book)?'local-'+book.id:book?.provider==='googlebooks'?'gb-'+String(book.id):book?.provider==='openlibrary'?'ol-'+String(book.id):isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
   function setSourceInfo(){
     const isGutenberg=state.source==='gutenberg';
     const isTranslated=state.source==='translated';
