@@ -203,7 +203,7 @@ test('translation list shows selectable Russian editions instead of pretending t
     await wikisource({method:'GET',query:{wiki:'ru',mode:'text',id:'99',chapter:'0'}},second);
     assert.equal(second.code,200);
     assert.match(second.payload.text,/основной текст/);
-    assert.match(second.payload.attribution.source,/\/Том_1\/ДО$/);
+    assert.match(decodeURIComponent(new URL(second.payload.attribution.source).pathname),/\/Том_1\/ДО$/);
     const bad=fakeResponse();
     await wikisource({method:'GET',query:{wiki:'ru',mode:'text',id:'99',chapter:'60'}},bad);
     assert.equal(bad.code,404);
