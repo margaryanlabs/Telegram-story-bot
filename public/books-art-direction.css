@@ -203,3 +203,11 @@ body[data-books-source="complete"] .book:first-child .book-saved{top:15px;left:1
  .veto-book-world,.book{transition:none!important}
  .world-book,.world-book-main .world-book-face:after{animation:none!important}
 }
+
+/* The full-text home shelf should feel like a bookstore, not an engineering
+   disclaimer. Other mixed-source shelves still keep their honest labels. */
+body[data-books-source="complete"] .library-clarity,
+body[data-books-source="local"] .library-clarity{display:none!important}
+body[data-books-source="complete"] .book-extent-badge[data-kind="full"]{
+  border-color:#e4e7f25e;background:#ffffff12;color:#f4f5fa;letter-spacing:.08em
+}
