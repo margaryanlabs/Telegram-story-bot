@@ -11,8 +11,8 @@ const cap=(s,max=100)=>String(s??"").replace(/[\u0000-\u001f\u007f]/g," ").trim(
 const safe=u=>{try{const x=new URL(String(u));return x.protocol==="https:"?x.href:""}catch{return""}};
 const pick=x=>x&&x.id&&x.title?{
  id:cap(x.id,160),title:cap(x.title,120),artist:cap(x.artist,95),
- source:["audius","radio","local","demo","metadata","stream","archive"].includes(x.source)?x.source:"metadata",
- artwork:safe(x.artwork),stream:["radio","stream","archive"].includes(x.source)?safe(x.stream):"",homepage:x.source==="radio"?safe(x.homepage):""
+ source:["audius","radio","local","demo","metadata","stream","archive","ccmixter"].includes(x.source)?x.source:"metadata",
+ artwork:safe(x.artwork),stream:["radio","stream","archive","ccmixter"].includes(x.source)?safe(x.stream):"",homepage:x.source==="radio"?safe(x.homepage):""
 }:null;
 let lists=[];
 try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v))lists=v.slice(0,MAX).filter(p=>p&&typeof p.name==="string"&&Array.isArray(p.tracks)).map(p=>({
@@ -24,7 +24,7 @@ function save(n){try{localStorage.setItem(KEY,JSON.stringify(n));lists=n;return 
 function btn(text,klass,fn){const e=el("button",klass,text);e.type="button";e.onclick=fn;return e}
 function available(t){
  if(t.source==="local")return V.local().find(x=>x.id===t.id)||null;
- if(["radio","stream","archive"].includes(t.source)&&!t.stream)return V.queue().find(x=>x.id===t.id&&x.stream)||null;
+ if(["radio","stream","archive","ccmixter"].includes(t.source)&&!t.stream)return V.queue().find(x=>x.id===t.id&&x.stream)||null;
  return t.source==="metadata"?null:t;
 }
 function getSources(){
