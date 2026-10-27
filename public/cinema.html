@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="./cinema-premiere.css">
   <script async src="https://telegram.org/js/telegram-web-app.js"></script>
   <script defer src="./cinema-catalog.js"></script>
+  <script defer src="./cinema-russian-audio.js"></script>
   <script defer src="./cinema-franchises.js"></script>
   <script defer src="./cinema-artwork.js"></script>
   <script defer src="./cinema-provider.js"></script>
@@ -70,6 +71,7 @@
           <button type="button" class="cinema-universe-tab" data-franchise="potter" aria-pressed="false">Гарри Поттер</button>
           <button type="button" class="cinema-universe-tab" data-franchise="legacy" aria-pressed="false">Люди Икс / Spider-Man</button>
         </div>
+        <label class="cinema-russian-filter"><input type="checkbox" id="cinemaFranchiseAllLanguages" aria-label="Показать фильмы без подтверждённой русской озвучки"> Показать все названия, включая фильмы без подтверждённой русской дорожки</label>
         <p id="cinemaFranchiseNote" class="cinema-franchise-note">Карточки для поиска официального просмотра. Не каждый фильм доступен в нашем встроенном плеере.</p>
         <div class="cinema-rail cinema-editorial-rail cinema-franchise-rail" id="cinemaFranchiseRail"></div>
       </section>
