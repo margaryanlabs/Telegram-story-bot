@@ -210,22 +210,45 @@
     }
     reflowReader();
   }
-  // Procedural jacket art: every work gets a stable cover with no external
-  // image generator, no stock asset, no layout shift, and no made-up reviews.
+  // Editorial covers are original abstractions, never copied publisher jackets.
+  const jacketProfiles=Object.freeze({
+    1007153:['divide','scarlet'],1012811:['volcano','amber'],
+    1002630:['fortress','wine'],1002606:['bloom','rose'],
+    1043860:['compass','ocean'],1006903:['horizon','indigo'],
+    17623:['moon','night'],1028921:['colonnade','slate'],
+    1002632:['echo','violet'],1002620:['fortress','ink'],
+    1002619:['waves','navy'],1016200:['orbit','cobalt'],
+    1004780:['horizon','amber'],1004212:['prism','rose'],
+    1007015:['bloom','violet'],1009370:['divide','wine'],
+    1026179:['steps','slate'],1002637:['dunes','amber']
+  });
+  const motifs=['divide','orbit','fortress','bloom','compass','horizon','moon','colonnade','echo','waves','prism','steps','volcano','dunes'];
+  const tones=['scarlet','indigo','rose','amber','slate','cobalt','wine','ink','ocean','night','navy','violet'];
+  function jacketProfile(book){
+    let hash=0;
+    for(const c of String(book?.title||''))hash=(hash*33+c.codePointAt(0))%987653;
+    const chosen=jacketProfiles[Number(book?.id)];
+    return {motif:chosen?.[0]||motifs[hash%motifs.length],
+      tone:chosen?.[1]||tones[Math.floor(hash/13)%tones.length]};
+  }
   function coverArtwork(host,book){
     host.replaceChildren();
-    host.classList.add('placeholder','artwork-cover');
+    host.classList.add('placeholder','artwork-cover','editorial-cover');
+    const {motif,tone}=jacketProfile(book);
+    host.dataset.motif=motif;host.dataset.tone=tone;
     const name=compactTitle(book.title);
-    let checksum=0;
-    for(const letter of name)checksum=(checksum*31+letter.codePointAt(0))%1000003;
-    host.dataset.coverStyle=String(checksum%6);
-    host.append(
-      node('span','artwork-imprint','VETOGRAM · BOOKS'),
-      node('span','artwork-symbol',['✦','◌','◇','✧','⌁','⋆'][checksum%6]),
-      node('strong','artwork-title',name),
-      node('span','artwork-author',fullName(book)),
-      node('span','artwork-bottom','LIBRARY EDITION · '+(book.language||'RU').toUpperCase())
-    );
+    const art=node('span','jacket-visual');
+    art.setAttribute('aria-hidden','true');
+    art.append(node('span','jacket-shape jacket-shape-one'),
+      node('span','jacket-shape jacket-shape-two'),node('span','jacket-shape jacket-shape-three'));
+    const top=node('span','jacket-strap');
+    top.append(node('span','jacket-folio','V / BOOKS'),node('span','jacket-edition','ДИЗАЙН ЧИТАЛКИ'));
+    const title=node('strong','jacket-title',name);
+    title.dataset.length=name.length>48?'long':name.length>27?'medium':'short';
+    const author=node('span','jacket-author',fullName(book));
+    const bottom=node('span','jacket-footer');
+    bottom.append(node('span','','VETOGRAM READING'),node('span','jacket-star','✳'));
+    host.append(art,top,title,author,bottom);
   }
   function updateSavedCount(){ $('savedCount').textContent=Object.keys(saved).length; }
   function compactTitle(title){return String(title||'Без названия').slice(0,160);}
@@ -405,13 +428,21 @@
     main.type='button';
     main.setAttribute('aria-label',(isCatalogBook(book)?'Подробнее: ':'Читать: ')+compactTitle(book.title));
     const cover=node('div','book-cover');
+    coverArtwork(cover,book);
     const imageUrl=safeCover(book.cover);
     if(imageUrl){
-      const img=node('img');img.src=imageUrl;img.alt='';img.loading='lazy';img.decoding='async';
-      img.onerror=()=>coverArtwork(cover,book);
+      const img=node('img','source-edition-cover');
+      img.src=imageUrl;img.alt='Изображение обложки из каталога источника';
+      img.loading='lazy';img.decoding='async';
+      img.onerror=()=>img.remove();
+      img.onload=()=>cover.classList.add('has-source-art');
       cover.append(img);
-    }else{coverArtwork(cover,book);}
-    main.append(cover,node('h3','',compactTitle(book.title)),node('p','',fullName(book)));
+    }
+    const heading=node('div','book-card-label');
+    heading.append(node('span','book-card-type',
+      isLocal(book)?'МОЯ КНИГА':book.curatedWholeText?'ЧИТАТЬ ЦЕЛИКОМ':isCatalogBook(book)?'КАТАЛОГ':'ЛИТЕРАТУРА'),
+      node('span','book-card-arrow','↗'));
+    main.append(cover,heading,node('h3','',compactTitle(book.title)),node('p','',fullName(book)));
     const meta=node('div','book-bottom');
     meta.append(node('span','',(book.language||'').toUpperCase()),
       node('span','',isCatalogBook(book)?(book.previewUrl?'Превью ↗':'О книге ↗'):progress[bookKey(book)]?'Продолжить ↗':'Читать ↗'));
