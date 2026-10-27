@@ -12,7 +12,11 @@ export const CHANNELS=Object.freeze({
   lenfilm:Object.freeze({id:1792500,label:"Киностудия «Ленфильм»",hue:218,
     channelUrl:"https://rutube.ru/channel/1792500/"}),
   gorky:Object.freeze({id:48160110,label:"Киностудия Горького",hue:28,
-    channelUrl:"https://rutube.ru/channel/48160110/"})
+    channelUrl:"https://rutube.ru/channel/48160110/"}),
+  starmedia:Object.freeze({id:141565,label:"Star Media",hue:295,
+    channelUrl:"https://rutube.ru/channel/141565/"}),
+  marsmedia:Object.freeze({id:29207414,label:"Марс Медиа",hue:44,
+    channelUrl:"https://rutube.ru/channel/29207414/"})
 });
 const VIDEO_ID=/^[a-f0-9]{32}$/i;
 const EXCLUDE=/(трейлер|тизер|анонс|подкаст|интервью|пресс[- ]?конференц|съёмк|съемк|кастинг|репортаж|фильм о фильме|реклама|шортс|промо)/i;
