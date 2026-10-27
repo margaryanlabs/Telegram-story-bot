@@ -8,7 +8,7 @@
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
   const state={tab:"home",genre:"Все",query:"",selected:null,playing:null,request:0,
-    library:loadLibrary(),sources:new Map(),posters:new Map(),subtitleBlob:null,pendingTime:0,embedHandle:null};
+    library:loadLibrary(),sources:new Map(),posters:new Map(),subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0;
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
@@ -85,7 +85,7 @@
     const list=selectedFilms();
     $("cinemaGrid").replaceChildren(...list.map(filmCard));
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
-    text("cinemaCount",list.length+" из "+films.length+" фильмов · Creative Commons");
+    text("cinemaCount",list.length+" из "+films.length+" фильмов · официальные источники");
     const genres=["Все",...new Set(films.flatMap(f=>f.genres))];
     $("cinemaGenres").replaceChildren(...genres.map(g=>{
       const b=node("button","cinema-chip"+(state.genre===g?" active":""));b.type="button";b.textContent=g;
@@ -194,7 +194,7 @@
   }
   function closePlayer(){
     ++state.request;try{saveProgress(true)}catch(_){}
-    try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;
+    try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;state.embedDuration=0;
     $("cinemaVideoToolbar").classList.remove("hidden");video.hidden=false;
     video.pause();video.removeAttribute("src");video.load();cleanupSubtitle();
     state.playing=null;$("cinemaPlayer").classList.add("hidden");
@@ -245,6 +245,7 @@
     cleanupSubtitle();video.pause();video.removeAttribute("src");video.load();
     const token=++state.request;
     if(f.player){
+      state.embedDuration=0;state.embedLastSave=0;
       $("cinemaVideoToolbar").classList.add("hidden");
       video.removeAttribute("poster");
       $("cinemaPlayerSource").href=filmPage(f);
@@ -254,6 +255,23 @@
         const handle=await window.VetogramCinemaProvider.attach({
           video,container:$("cinemaVideoWrap"),source:f.player,
           allowedIframeOrigins:["https://rutube.ru"],
+          resumeAt:state.library.progress[f.id]?.t||0,
+          onEvent:(event)=>{
+            if(token!==state.request||state.playing?.id!==f.id)return;
+            if(event.type==="duration"){state.embedDuration=event.duration;return}
+            if(event.type==="ended"){
+              delete state.library.progress[f.id];saveLibrary();toast("Фильм досмотрен");render();return
+            }
+            if(event.type==="time"&&event.time>5){
+              const duration=state.embedDuration||event.duration||f.minutes*60;
+              if(Date.now()-state.embedLastSave>4000){
+                state.embedLastSave=Date.now();
+                if(event.time/duration>.96)delete state.library.progress[f.id];
+                else state.library.progress[f.id]={t:Math.floor(event.time),d:duration,at:Date.now()};
+                saveLibrary();
+              }
+            }
+          },
           onReady:()=>{if(token===state.request)setPlayerMessage("")},
           onError:(reason)=>{if(token===state.request)setPlayerMessage(reason)}
         });
