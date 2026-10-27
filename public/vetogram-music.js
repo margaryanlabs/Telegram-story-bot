@@ -61,7 +61,7 @@ function row(track,index,context){
  const cover=dom("div","track-cover","♫"),url=safe(track.artwork);
  if(url){const img=dom("img");img.src=url;img.alt="";img.loading="lazy";img.addEventListener("error",()=>img.remove());cover.append(img)}
  const main=dom("div","track-info");main.append(dom("b","",track.title||"Без названия"),dom("small","",track.artist||"Неизвестный исполнитель"));
- const tag=dom("span","source-tag",track.source==="local"?"МОЙ ФАЙЛ":track.source==="stream"?"ПО ССЫЛКЕ":track.source==="demo"?"ОРИГИНАЛЬНОЕ ДЕМО":track.source==="radio"?"LIVE RADIO":track.source==="archive"?"ARCHIVE · CC":track.source==="ccmixter"?"CCMIXTER · CC":track.source==="openverse"?"♫ · CC":track.source==="metadata"?"ТОЛЬКО СПИСОК":"AUDIUS");
+ const tag=dom("span","source-tag",track.source==="local"?"МОЙ ФАЙЛ":track.source==="stream"?"ПО ССЫЛКЕ":track.source==="demo"?"ОРИГИНАЛЬНОЕ ДЕМО":track.source==="radio"?"LIVE RADIO":track.source==="archive"?"ARCHIVE · CC":track.source==="ccmixter"?"CCMIXTER · CC":track.source==="openverse"?"♫ · CC":track.source==="experimental"?"БЕТА · AUDIO":track.source==="metadata"?"ТОЛЬКО СПИСОК":"AUDIUS");
  const like=dom("button","track-btn like",favorited(track)?"♥":"♡");
  like.type="button";like.title=favorited(track)?"Убрать из избранного":"В избранное";like.setAttribute("aria-label",like.title);
  like.onclick=()=>toggleLike(track);
@@ -103,7 +103,24 @@ function paintRows(target,tracks,context,empty){
 const ART_COLORS=[[238,132,166],[153,143,235],[105,186,205],[237,161,118],[176,132,222]];
 function palette(t){let sum=0;for(const c of String(t?.title||t?.id||"Vetogram"))sum=(sum*31+c.charCodeAt(0))>>>0;
  const c=ART_COLORS[sum%ART_COLORS.length];app.style.setProperty("--accent",c.join(","));}
-function playTrack(track,collection){
+let experimentalRequest=0;
+function playTrack(track,collection,resolved=false){
+ if(!track)return;
+ if(track.source==="experimental"&&!resolved){
+  const token=++experimentalRequest;
+  const provider=window.VetogramExperimental;
+  if(!provider?.resolve){send("Экспериментальный источник пока не подключён.");return}
+  audio.pause();send("Подключаем аудиопоток…");
+  provider.resolve(track).then(url=>{
+   if(token!==experimentalRequest)return;
+   playTrack({...track,stream:url},collection,true);
+  }).catch(()=>{
+   if(token===experimentalRequest)send("Сейчас эта песня недоступна. Выбери другую или проверь позже.");
+  });
+  return;
+ }
+ if(!resolved)experimentalRequest++;
+
  if(!track)return;const found=state.local.find(x=>x.id===track.id);
  if(track.source==="local"&&found)track=found;
  if(track.source==="metadata"){send("Это название песни, а не аудиозапись");return}
