@@ -103,7 +103,7 @@
   function artElement(f,wide){
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
     div.style.setProperty("--film-hue",String(f.hue));
-    const badge=node("span","cinema-card-art-badge");badge.textContent=f.player?"МОСФИЛЬМ · RU":"OPEN FILM";div.append(badge);
+    const badge=node("span","cinema-card-art-badge");badge.textContent=f.player?(f.player.provider||"STREAM")+" · "+(f.spoken==="Русский"||f.spoken==="ru"?"RU":"FILM"):"OPEN FILM";div.append(badge);
     const title=node("span","cinema-card-art-title");title.textContent=f.title;div.append(title);
     const poster=state.posters.get(f.id);
     if(poster){const img=node("img");img.loading="lazy";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{img.remove();state.posters.delete(f.id)};div.prepend(img)}
@@ -195,10 +195,10 @@
     text("cinemaDetailsMeta",f.original+" · "+f.year+" · "+f.minutes+" мин · "+f.genres.join(" / "));
     text("cinemaDetailsSynopsis",f.synopsis);
     text("cinemaDetailsCreator",f.creator);
-    text("cinemaDetailsLanguage",f.player?"Язык: русский. Видео воспроизводится официальным плеером RUTUBE без скачивания на наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
+    text("cinemaDetailsLanguage",f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
     $("cinemaDetailsSource").href=filmPage(f);
     $("cinemaDetailsLicense").href=f.licenseUrl;
-    text("cinemaDetailsLicense","Лицензия: "+f.license+" ↗");
+    text("cinemaDetailsLicense",(f.player?"Основание встраивания: ":"Лицензия: ")+f.license+" ↗");
     $("cinemaDetailsFavorite").textContent=state.library.favorites.includes(f.id)?"♥ В избранном":"♡ В избранное";
     const art=$("cinemaDetailsArt");art.replaceChildren();
     art.style.background="radial-gradient(circle at 65% 30%,hsl("+f.hue+" 50% 45%),transparent 62%),linear-gradient(120deg,#29334f,#31223c)";
@@ -277,7 +277,7 @@
     $("cinemaPlayer").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
     text("cinemaPlayerTitle",f.title);text("cinemaPlayerCredit",f.creator+" · "+f.license);
     $("cinemaPlayerSource").href=filmPage(f);
-    text("cinemaSubtitleStatus",f.player?"Оригинальная русская дорожка — управление звуком и качеством внутри плеера RUTUBE.":"Проверяем русские субтитры…");
+    text("cinemaSubtitleStatus",f.player?(f.player.type==="iframe"?"Управление качеством, звуком и субтитрами находится внутри видеоплеера провайдера.":"Выбор языка зависит от доступных дорожек провайдера."):"Проверяем русские субтитры…");
     $("cinemaAudio").replaceChildren(new Option("Оригинал · "+f.spoken,"original"));
     $("cinemaAudio").value="original";
     $("cinemaSpeed").value="1";video.playbackRate=1;
@@ -287,10 +287,12 @@
     const token=++state.request;
     if(f.player){
       state.embedDuration=0;state.embedLastSave=0;
-      $("cinemaVideoToolbar").classList.add("hidden");
+      const embedded=f.player.type==="iframe";
+      $("cinemaVideoToolbar").classList.toggle("hidden",embedded);
+      if(!embedded)state.pendingTime=state.library.progress[f.id]?.t||0;
       video.removeAttribute("poster");
       $("cinemaPlayerSource").href=filmPage(f);
-      setPlayerMessage("Подключаем официальный плеер RUTUBE…");
+      setPlayerMessage("Подключаем видеопровайдера…");
       try{
         if(!window.VetogramCinemaProvider)throw Error("Модуль видеопровайдера не загрузился");
         const handle=await window.VetogramCinemaProvider.attach({
