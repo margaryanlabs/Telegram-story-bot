@@ -12,7 +12,7 @@ A dependency-free, Node built-in test command was added to `package.json`:
 npm run qa:free
 ```
 
-It uses `node --check` on the Telegram client and media API and `node --test` for **14** key, actual-source regression files. It needs an existing Node.js 22+/npm installation and a local repository checkout, but **does not require npm install, GitHub Actions, Vercel, paid API keys or a live Telegram session**. Tests do not send Telegram messages. This is a narrower command than `qa:reborn:offline` (29 test files), some of which import third-party dependencies such as sharp.
+It uses `node --check` on **six** client and Telegram API sources and `node --test` for **16** focused, actual-source regression files. It needs an existing Node.js 22+/npm installation and a local repository checkout, but **does not require npm install, GitHub Actions, Vercel, paid API keys or a live Telegram session**. Tests do not send Telegram messages. This is a narrower command than `qa:reborn:offline` (30 test files), some of which import third-party dependencies such as sharp.
 
 For this checkpoint, the connected GitHub files were independently inspected using a JavaScript isolate: **29/29 test sources parsed successfully after normalizing ES-module imports**. This is **syntax-only**, not 29 passing Node tests. The shipping Telegram client plus the new polling controller were also executed against mock state: 503 preserved messages and drafts; 401, 403 and 409 revoked account-bound UI state and scrubbed messages, images and unsent drafts. No real user data was used.
 
@@ -25,3 +25,12 @@ For this checkpoint, the connected GitHub files were independently inspected usi
 Before production: a full dependency-aware build on a no-cost environment that can access the repository and npm packages; manual Telegram Mini App tests for real OTP, linked account ownership, two-account switching, 100+ dialogs, large photos, sticker/file sends, voice drafts, and Stories; comparison of production branch with PR #185. Passing the isolated checks alone is not sufficient to claim production readiness.
 
 Never weaken login verification, disable auth checks, fabricate chat/photos, or silently enable costs merely to make a preview look ready.
+
+## 2026-10-27 — safer polling and no-cost CI
+
+- Updated `.github/workflows/vetogram-verification.yml` from automatic `push` / `pull_request` to **manual `workflow_dispatch` only** on PR #185's feature branch. This prevents future automatic runner requests *once this workflow version is active*; other branches can still have their own workflow configuration. Restore automated checks only when the owner explicitly authorizes runner usage and has verified GitHub billing. Existing repository branch protection rules may still require a passing check to merge.
+- Extended `npm run qa:free` to six dependency-free `node --check` checks and sixteen `node --test` suites. Included an invariant check to prevent accidental reintroduction of paid runner triggers or dependency installs into zero-budget QA. This command **was not executed as a full Node test suite** in this session; the current working container cannot fetch a checkout from GitHub.
+- Fixed a specific race in shipping `pollThread`: an old failed poll from chat A can return after A→B→A, causing a stale 401/403 to erase valid state or a stale 503 to overwrite the current connection indicator. The catch path now requires both the same `threadGeneration` and `syncRunId` as the launched poll, alongside the same signed owner/chat. Four new regression cases were added to `tests/vetogram-poll-auth-51.test.js`. Independent execution of the exact controller with fake asynchronous transport returned the expected six cases: stale 401/403/503 ignored, current 401/403 correctly revoked, current 503 retained verified history.
+- The owner reconnect action was inspected: `window.VetoTelegramOpenAccountConnection` is defined in `public/app.js`, and the fallback `connectTelegramButton` is defined in `public/studio.html`; no broken selector could be confirmed from source alone.
+
+The prior Vercel preview remained canceled; no new deployment was triggered, no live Telegram account accessed, and production was not modified.
