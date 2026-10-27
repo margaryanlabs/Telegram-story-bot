@@ -44,3 +44,19 @@
 @media(prefers-reduced-motion:reduce){
  .cinema-hero-bg,.cinema-card,.cinema-card-art img,.cinema-primary{animation:none!important;transition:none!important}
 }
+
+/* Editorial Russian-audio shelf */
+.cinema-russian-section{margin-top:35px}
+.cinema-russian-section .cinema-section-head h2{font-size:clamp(25px,3.4vw,37px)}
+.cinema-ru-symbol{font-size:23px;color:var(--accent);font-weight:450}
+.cinema-rail-label{font-size:10px;color:var(--accent-soft);letter-spacing:.13em;font-weight:800;white-space:nowrap}
+.cinema-russian-rail{display:flex;overflow-x:auto;gap:15px;padding:20px 2px 17px;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:rgba(250,117,98,.35) transparent}
+.cinema-russian-rail .cinema-card{flex:0 0 168px;width:168px;text-align:left}
+.cinema-russian-rail .cinema-card-art{aspect-ratio:3/4}
+.cinema-russian-rail .cinema-card-name{display:block;font-size:14px;line-height:1.36}
+@media(max-width:650px){
+ .cinema-rail-label{display:none}
+ .cinema-russian-rail{gap:11px;margin-right:-18px;padding-right:22px}
+ .cinema-russian-rail .cinema-card{flex-basis:139px;width:139px}
+ .cinema-russian-section{margin-top:26px}
+}
