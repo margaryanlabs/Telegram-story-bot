@@ -216,6 +216,16 @@ const start=()=>{
  loadCharts();loadRegion();loadStations();
 };
 document.addEventListener("vetogram:charts-open",start);
+document.querySelectorAll("[data-home-region]").forEach(button=>button.addEventListener("click",()=>{
+ const country=button.dataset.homeRegion;
+ if(!["ru","am"].includes(country))return;
+ V.showPage("charts");
+ data.region=country;
+ selectButtons("[data-region]","region",country);
+ $("regionSearch").value="";
+ loadRegion();
+ $("regionTracks").scrollIntoView({behavior:"smooth",block:"center"});
+}));
 window.VetogramCharts=Object.freeze({open:start,mapAudius,mapRadio,chartEndpoint,radioEndpoint,searchEndpoint,
  state:()=>({period:data.period,genre:data.genre,region:data.region,country:data.country,chartCount:data.charts.length,regionCount:data.regional.length,stationCount:data.stations.length})});
 })();
