@@ -1629,6 +1629,32 @@ html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen
 }
 
 
+/* V5.1: Story preset tiles display the real painted preview once.
+   The previous extra template title sat on top of the title already painted
+   into the canvas, producing overlapping/duplicated Russian text. */
+#vetogram.vetogram-noir #seTemplates .se-template{
+  padding:0!important;gap:0!important;justify-content:flex-end!important;
+}
+#vetogram.vetogram-noir #seTemplates .se-template-canvas{
+  inset:0 0 34px!important;height:calc(100% - 34px)!important;
+  border-radius:7px 7px 0 0!important;
+}
+#vetogram.vetogram-noir #seTemplates .noir-template-type,
+#vetogram.vetogram-noir #seTemplates .se-template>i{display:none!important}
+#vetogram.vetogram-noir #seTemplates .se-template strong,
+#vetogram.vetogram-noir #seTemplates .se-template small{
+  display:block;flex:none;width:100%;max-width:100%;
+  position:relative;z-index:2;background:#080b13;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  text-shadow:none!important;
+}
+#vetogram.vetogram-noir #seTemplates .se-template strong{
+  padding:5px 5px 1px;line-height:14px!important;
+}
+#vetogram.vetogram-noir #seTemplates .se-template small{
+  padding:0 5px 6px;line-height:12px!important;
+}
+
 /* V5.1: protect global navigation from native Telegram Close/menu chrome.
    Content safe-area insets supplied by Telegram are subtracted so browsers
    that already reserve that space do not get a second huge top margin.
