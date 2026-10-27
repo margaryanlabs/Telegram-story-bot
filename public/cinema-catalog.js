@@ -95,7 +95,27 @@
      license:"Официальное публичное встраивание RUTUBE",licenseUrl:"https://rutube.ru/info/embed/",
      player:{type:"iframe",url:"https://rutube.ru/play/embed/8f50ed5a7841ff1418671a3c6b7440d4",licensed:true,license:"Публичный плеер RUTUBE",credit:"Киноконцерн «Мосфильм»"}}
   );
-  films.unshift(...mosfilm);
+  // Two separately verified FULL movies from the official Lenfilm RUTUBE channel.
+  // Metadata embedded here so these titles remain visible when API is offline.
+  const lenfilm=[
+    {id:"lenfilm-old-hottabych",title:"Старик Хоттабыч",original:"Старик Хоттабыч",year:1956,minutes:86,
+     genres:["Советское кино","Фэнтези","Русский язык"],hue:211,
+     synopsis:"Школьник Волька освобождает из старинного сосуда джинна Хоттабыча, и знакомый мир превращается в череду невероятных приключений.",
+     creator:"Киностудия «Ленфильм» · режиссёр Геннадий Казанский",spoken:"Русский",
+     sourcePage:"https://rutube.ru/video/947b7d08b3a5edbeee65a6a6ea716df0/",
+     license:"Публичный iframe-плеер RUTUBE",licenseUrl:"https://rutube.ru/info/embed/",
+     player:{type:"iframe",provider:"RUTUBE",url:"https://rutube.ru/play/embed/947b7d08b3a5edbeee65a6a6ea716df0",
+       licensed:true,license:"Официальный публичный RUTUBE embed",credit:"Киностудия «Ленфильм»"}},
+    {id:"lenfilm-wedding-malinovka",title:"Свадьба в Малиновке",original:"Свадьба в Малиновке",year:1967,minutes:95,
+     genres:["Советское кино","Комедия","Русский язык"],hue:49,
+     synopsis:"Во время Гражданской войны в село Малиновка приходит красный командир Назар. Ему предстоит сорвать планы бандитов и спасти свою дочь.",
+     creator:"Киностудия «Ленфильм» · режиссёр Андрей Тутышкин",spoken:"Русский",
+     sourcePage:"https://rutube.ru/video/be1e1f4dc5b959d96fccca6b061ae409/",
+     license:"Публичный iframe-плеер RUTUBE",licenseUrl:"https://rutube.ru/info/embed/",
+     player:{type:"iframe",provider:"RUTUBE",url:"https://rutube.ru/play/embed/be1e1f4dc5b959d96fccca6b061ae409",
+       licensed:true,license:"Официальный публичный RUTUBE embed",credit:"Киностудия «Ленфильм»"}}
+  ];
+  films.unshift(...mosfilm,...lenfilm);
   films.forEach(function(f){f.editions=[]; /* optional approved: [{id:'ru',label:'Русский',url:'https://...',license:'...',credit:'...'}] */});
   window.VetogramCinemaCatalog=Object.freeze(films.map(function(f){return Object.freeze(f)}));
 })();
