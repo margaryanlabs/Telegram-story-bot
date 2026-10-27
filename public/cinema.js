@@ -8,7 +8,7 @@
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
   const state={tab:"home",genre:"Все",query:"",selected:null,playing:null,request:0,
-    library:loadLibrary(),sources:new Map(),posters:new Map(),approvedProviders:new Map(),subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
+    library:loadLibrary(),sources:new Map(),posters:new Map(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0;
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
@@ -130,9 +130,10 @@
       state.approvedProviders.set(f.id,checked);
       if(state.playing?.id===f.id){
         const selected=$("cinemaProviderSelect");
-        const old=selected.value;
-        selected.replaceChildren(...approvedSources(f).map((src,i)=>new Option(sourceLabel(src),String(i))));
-        selected.value=old;
+        const oldUrl=state.activePlayerSource?.url;
+        const all=approvedSources(f);
+        selected.replaceChildren(...all.map((src,i)=>new Option(sourceLabel(src),String(i))));
+        selected.value=String(Math.max(0,all.findIndex(x=>x.url===oldUrl)));
       }
     }catch(_){/* backend may not be deployed */}
     finally{clearTimeout(timer)}
@@ -288,7 +289,7 @@
     try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;state.embedDuration=0;
     $("cinemaVideoToolbar").classList.remove("hidden");video.hidden=false;
     video.pause();video.removeAttribute("src");video.load();cleanupSubtitle();
-    state.playing=null;$("cinemaPlayer").classList.add("hidden");
+    state.playing=null;state.activePlayerSource=null;$("cinemaPlayer").classList.add("hidden");
     document.body.classList.toggle("cinema-modal-open",Boolean(state.selected));updateBack();render();
   }
   function saveProgress(force){
@@ -327,12 +328,13 @@
     try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;
     state.playing=f;setHistory(f);updateBack();buzz();
     const choices=approvedSources(f);
-    const current=choices.find(x=>chosenSource&&x.id===chosenSource.id)||chosenSource||choices[0];
+    const current=choices.find(x=>chosenSource&&x.url===chosenSource.url)||chosenSource||choices[0];
+    state.activePlayerSource=current||null;
     const providerSelect=$("cinemaProviderSelect");
     $("cinemaSourceSwitch").classList.toggle("hidden",!f.player);
     providerSelect.replaceChildren(...choices.map((src,i)=>new Option(sourceLabel(src),String(i))));
     providerSelect.value=String(Math.max(0,choices.findIndex(src=>src.id===current?.id)));
-    providerSelect.onchange=()=>{const next=choices[Number(providerSelect.value)];if(next)play(f,next)};
+    providerSelect.onchange=()=>{const next=approvedSources(f)[Number(providerSelect.value)];if(next)play(f,next)};
     text("cinemaProviderHint",choices.length>1?choices.length+" проверенных вариантов":"Видеопоток предоставляется источником");
     $("cinemaPlayer").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
     text("cinemaPlayerTitle",f.title);text("cinemaPlayerCredit",f.creator+" · "+f.license);
