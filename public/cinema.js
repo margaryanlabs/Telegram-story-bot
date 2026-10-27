@@ -1,7 +1,7 @@
 /* VETOGRAM CINEMA V1 — independent Telegram Mini App. Zero pirate sources. */
 (function () {
   "use strict";
-  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaSeriesEpisodes||[]),...(window.VetogramCinemaFranchises||[])];
+  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaSeriesEpisodes||[]),...(window.VetogramCinemaPopularSeries||[]),...(window.VetogramCinemaFranchises||[])];
   let films=[...new Map(filmInputs.map(f=>[f.id,f])).values()];
   const $=id=>document.getElementById(id);
   const BASE="https://commons.wikimedia.org/w/api.php";
@@ -512,10 +512,28 @@
       return b;
     }));
   }
+  function renderPopularSeries(){
+    const rail=$("cinemaSeriesPopularRail");
+    const list=(window.VetogramCinemaPopularSeries||[]).filter(x=>x.seriesGroup==="global");
+    rail.replaceChildren(...list.map(item=>{
+      // Text-only editorial identity: no false cinema player and no borrowed poster licensing.
+      const card=node("article","cinema-popular-show");
+      card.style.setProperty("--film-hue",String(item.hue||210));
+      const artwork=node("div","cinema-popular-show-art");
+      const badge=node("small","cinema-popular-show-badge");badge.textContent="ВСТРОЕННЫЙ ПЛЕЕР НЕ ПОДКЛЮЧЁН";
+      const label=node("strong","cinema-popular-show-name");label.textContent=item.title;
+      artwork.append(badge,label);
+      const desc=node("span","cinema-popular-show-info");
+      desc.textContent=item.year+" · русская дорожка указана в каталоге";
+      card.append(artwork,desc);
+      return card;
+    }));
+  }
   function renderSeriesCollections(){
     const groups=groupedSeries();
     $("cinemaSeriesHub").classList.toggle("hidden",state.tab!=="series");
     if(state.tab==="series"){
+      renderPopularSeries();
       const q=state.query.trim().toLocaleLowerCase("ru");
       const visible=q?groups.filter(g=>seriesShowName(g[0]).toLocaleLowerCase("ru").includes(q)):groups;
       $("cinemaSeriesPlayableRail").replaceChildren(...visible.slice(0,80).map(seriesShowCard));
