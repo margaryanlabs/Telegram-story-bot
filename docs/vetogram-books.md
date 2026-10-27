@@ -230,3 +230,17 @@ The previous design had poor-quality, repetitive book placeholders (six colors p
 - Independent V8 simulated-screen smoke test: all three real hero covers and three recommendation items rendered, 18 curated items in catalog; tapping `Белые ночи` opened a book and paginated the text. Core JS static parsing passed; DOM ID mapping has no missing or duplicated entries. Node regression file `tests/vetogram-books-jacket-studio.test.js` added.
 
 **Release status:** work remains on draft PR #193. New stage deployment requires Vercel API/build quota to be restored, otherwise last published stage preview does not show these changes. Real Android/iOS Telegram WebView screenshots and responsive visual inspection remain outstanding. Do not present old preview as Jacket Studio 06.
+
+
+## VETOGRAM Books — TOP 200: зарубежные хиты на русском (28 October 2026)
+
+A separate **"200 ХИТОВ · НА РУССКОМ"** tab presents an editorially selected set of **200 different foreign-language works known from Russian book editions**. This is a *hand-picked discovery collection*, **not a live or scientifically ranked top-200 sales chart**. The list may be revised as verified publication evidence becomes available.
+
+- New static `public/books-top200.json`: exactly 200 unique title+author pairs in 10 genres, 20 each: romantasy, epic fantasy, science fiction, YA/dystopia, thrillers, horror, contemporary fiction, romance, crime/mystery, and nonfiction.
+- Included contemporary titles seen in 2025–2026 Russian market/reading lists, such as `Четвёртое крыло`, `Железное пламя`, `Ониксовый шторм`, `Рассвет Жатвы`, and established popular foreign works.
+- Frontend reads the **one same-origin static JSON file**, keeps it in an in-memory promise, filters client-side by genre / title / author with Russian `ё/е` normalization, and renders only 24 cards per page. Changing genres does not make 200 provider API calls.
+- All 200 are displayed as **editorial discovery / metadata** with procedural VETOGRAM jackets. Clicking opens a native branded detail sheet with a Google Books **search** for a Russian edition; it does not masquerade as a specific publisher's approved edition. The reader can optionally search for a freely available Russian text in the Wikisource source tab.
+- Every item sets `provider:editorial`, `readable:false`, `access:metadata`. None creates a fake full-text endpoint, fabricated availability, paid-book scrape, or unlicensed translation. Availability and territorial rights of specific print/ebook translations must be validated before a commercial catalog claims a directly readable edition.
+- Design: red/silver Noir tab, horizontally scrolling genre chips, procedural personalized jackets, detail-sheet call-to-actions, copyright notices. Works without authentic licensed covers display only original CSS editorial artwork.
+- `tests/vetogram-books-top200.test.js` checks count, uniqueness, genre distribution, familiar books, rights flags and frontend wiring. Independent JS simulated viewport confirmed 24/48 paginated cards, exact 20-card genre filter, native modal, and a single static JSON request.
+- Public Vercel stage deployment may still be on an earlier revision due to free deploy API quota. **Do not represent previous preview URL as having TOP 200 until a new deployment is confirmed READY and live HTTP checks pass.**
