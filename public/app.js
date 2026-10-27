@@ -1110,6 +1110,22 @@
 
   // Returning from Telegram's official service chat must not strand the owner
   // on an unauthorized inbox or cause a second sendCode request.
+  // One offer after a successful personal login; no permission is granted here.
+  let businessOfferOwner = '';
+  function offerBusinessConsentAfterLogin(){
+    const signed=String(tg?.initData||'');
+    const ownerId=String(tg?.initDataUnsafe?.user?.id||'');
+    if(!signed || !ownerId || viewerState.session?.connected!==true ||
+       viewerState.session?.identityMismatch===true || businessOfferOwner===ownerId)return;
+    businessOfferOwner=ownerId;
+    setTimeout(()=>{
+      if(signed!==String(tg?.initData||'') || viewerState.session?.connected!==true ||
+         document.hidden)return;
+      if(typeof window.VetoTelegramOpenUnifiedOnboarding==='function')
+        void window.VetoTelegramOpenUnifiedOnboarding({automatic:true});
+    },220);
+  }
+
   function renderViewerPendingLoginNotice(){
     const notice=$('viewerPendingLoginNotice');
     if(!notice)return;
@@ -2600,6 +2616,7 @@
         </div>
         <div class="auth-help" id="viewerPhoneHint">Выбери страну или введи полный номер с +. Код отправляет Telegram, а не бот Vetogram. Его доставка в приложение или SMS зависит от Telegram.</div>
       </div>
+      <label class="veto-login-legal"><input type="checkbox" id="viewerPhoneLegal" /> <span>Я принимаю <a href="/terms.html" target="_blank" rel="noopener noreferrer">Условия использования</a> и ознакомился с <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">Политикой конфиденциальности</a>. Разрешения Anti-Delete запрашиваются отдельно.</span></label>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
@@ -2666,6 +2683,7 @@
       notify('success');showToast('Telegram успешно подключён');
       await refreshViewerSync({silent:true});await refresh();
       switchScreen('telegram');
+      offerBusinessConsentAfterLogin();
       return;
     }
     if (data.needsPassword===true || data.stage==='password') {
@@ -2899,7 +2917,7 @@
             await refresh();
             await refreshViewerAnalytics({ silent: true });
             switchScreen('telegram');
-            // Business access is a separate, explicit opt-in from Privacy.
+            offerBusinessConsentAfterLogin();
             break;
           }
 
@@ -3594,6 +3612,8 @@
         if (!/^\+[\d\s()-]{7,24}$/.test(phone)) {
           throw new Error('Введи номер с кодом страны, например +374…');
         }
+        if($('viewerPhoneLegal') && !$('viewerPhoneLegal').checked)
+          throw new Error('Прочитай и прими условия использования для продолжения.');
         const data = await viewerApi('send_code', { phone }, null);
         viewerPendingPhone = phone;
         // The server persisted this challenge. Keep local state in sync so
@@ -3636,7 +3656,7 @@
           await refresh();
           await refreshViewerAnalytics({ silent: true });
           switchScreen('telegram');
-          // No unsolicited Business permission wizard after login.
+          offerBusinessConsentAfterLogin();
         }
       });
       return;
@@ -3656,7 +3676,7 @@
         await refresh();
         await refreshViewerAnalytics({ silent: true });
         switchScreen('telegram');
-        // Optional Business access starts only from Privacy after explicit consent.
+        offerBusinessConsentAfterLogin();
       });
       return;
     }
