@@ -224,8 +224,13 @@
       if(id&&href)resources.set(id,{path:pathNormalize(directory,href),type:item.getAttribute('media-type')||''});
     }
     const contents=[],chapters=[];
+    const spine=nodes(first(opf,'spine'),'itemref');
+    // Never truncate silently: a partial imported EPUB must not be labeled a
+    // complete book. The user can choose a smaller volume instead.
+    if(spine.length>MAX_CHAPTERS)
+      throw new Error('EPUB содержит более '+MAX_CHAPTERS+' разделов. Нужен отдельный том: импорт неполного файла запрещён.');
     let total=0;
-    for(const link of nodes(first(opf,'spine'),'itemref').slice(0,MAX_CHAPTERS)){
+    for(const link of spine){
       const item=resources.get(link.getAttribute('idref'));
       if(!item||!zip.has(item.path)||!/xhtml|html/i.test(item.type))continue;
       const chapterHtml=await zipRead(buffer,zip,item.path);
