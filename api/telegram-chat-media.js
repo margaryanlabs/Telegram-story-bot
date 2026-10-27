@@ -164,7 +164,7 @@ export default async function handler(req,res){
       }
       return null;
     });
-    if(batch)return res.status(200).json({ok:true,avatars:result.avatars||{}});
+    if(batch)return res.status(200).json({ok:true,avatars:result?.avatars||{}});
     if(!result)return deny(res,404,'Вложение недоступно или превышает лимит 4 МБ');
     res.setHeader('Content-Type',result.mime);
     res.setHeader('Content-Disposition',action==='attachment'?'attachment; filename="storylab-attachment.bin"':'inline');
