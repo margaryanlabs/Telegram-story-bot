@@ -21,14 +21,23 @@ function fixture({status=503,succeed=false}={}){
     syncRunId:1,syncBusy:false,liveHasMore:true,archiveHasMore:false,
     threadHasMore:true,threadOffset:1,archiveOffset:0,ownerInitData:'signed',
     threadCache:new Map([['77',{messages:stored}]]),
+    chats:[{id:'77',title:'Private chat'}],page:1,hasMore:true,
+    avatarEpoch:1,avatarQueue:[],avatarRequested:new Set(),
+    avatarRetryAt:new Map(),avatarActive:0,avatarUrls:new Map([['77','blob:avatar']]),
+    drafts:new Map([['77','private draft']]),draftVersions:new Map(),
+    lastSendFailure:null,lastSendFailures:new Map(),lastRichFailure:null,
+    lastRichFailures:new Map(),
     connectionProof:{verified:true},
   };
   const more={hidden:false,disabled:false},meta={textContent:''};
+  const title={textContent:'Private chat'};
+  const chatList={replaceChildren(){events.push({action:'list-cleared'})}};
   const events=[];
   let release;
   const ctx=vm.createContext({
     state,tg:{initData:'signed'},resetOwner:()=>false,
-    $:id=>id==='telegramThreadOlder'?more:id==='telegramThreadMeta'?meta:null,
+    $:id=>id==='telegramThreadOlder'?more:id==='telegramThreadMeta'?meta:
+      id==='telegramThreadTitle'?title:id==='telegramMirrorList'?chatList:null,
     visibleMessageAnchor:()=>null,renderMessages:(options={})=>events.push({
       action:'render',count:state.messages.length,options,
     }),
@@ -37,6 +46,7 @@ function fixture({status=503,succeed=false}={}){
     syncLabel:text=>events.push({action:'sync',text}),
     scheduleThreadSync:()=>events.push({action:'schedule'}),
     revokeMediaUrls:()=>events.push({action:'revoke'}),
+    URL:{revokeObjectURL:()=>events.push({action:'avatar-revoked'})},
     request:()=>new Promise((resolve,reject)=>{release=()=>{
       if(succeed)resolve({messages:[{id:3,date:'2026-10-27T13:00:00Z',text:'third'}],
         liveHasMore:false,archiveHasMore:false,canSend:true});
@@ -76,9 +86,14 @@ test('a genuine 401/403/409 clears sensitive history and verified send permissio
     f.settle();await pending;
     assert.equal(f.state.messages.length,0);
     assert.equal(f.state.threadCache.size,0);
+    assert.equal(f.state.chats.length,0,'old inbox no longer accessible');
+    assert.equal(f.state.avatarUrls.size,0);
+    assert.equal(f.state.drafts.size,0);
     assert.equal(f.state.connectionProof,null);
     assert.equal(f.state.thread.serverCanSend,false);
     assert.ok(f.events.some(e=>e.action==='revoke'));
+    assert.ok(f.events.some(e=>e.action==='avatar-revoked'));
+    assert.ok(f.events.some(e=>e.action==='list-cleared'));
     assert.ok(f.events.some(e=>e.action==='composer'));
     assert.ok(!f.events.some(e=>e.action==='schedule'));
   }
