@@ -59,6 +59,44 @@ export function normalizeVolume(item){
     rightsNotice:'Описание и обложка из Google Books. Полные современные книги доступны только через официальные ссылки правообладателей.'
   };
 }
+/**
+ * Human-initiated Open Library fallback, for bibliography only.
+ * High traffic/commercial use requires a partner arrangement or data dumps.
+ */
+export function normalizeOpenLibrary(item){
+  const key=String(item?.key||'');
+  if(!key.startsWith('/works/') || !/^OL[0-9]+W$/.test(key.slice(7)))return null;
+  const languages=Array.isArray(item.language)?item.language:[];
+  if(!languages.includes('rus'))return null;
+  const title=clean(item.title,260);
+  if(!title)return null;
+  const id=key.split('/').at(-1);
+  const cover=Number.isSafeInteger(item.cover_i)&&item.cover_i>0
+    ?'https://covers.openlibrary.org/b/id/'+item.cover_i+'-M.jpg':'';
+  return {
+    id,provider:'openlibrary',key:'ol-'+id,title,
+    subtitle:'',authors:Array.isArray(item.author_name)?item.author_name.slice(0,4).map(x=>clean(x,100)):[],
+    language:'ru',cover,summary:'',publishedDate:item.first_publish_year?String(item.first_publish_year):'',
+    publisher:'',pageCount:null,source:'Open Library · библиография',
+    sourceUrl:'https://openlibrary.org'+key,previewUrl:'',buyUrl:'',
+    readable:false,embeddable:false,access:'metadata',
+    rightsNotice:'Книга в Open Library помечена как имеющая русское издание. Конкретный русский текст и перевод здесь не предоставлены.'
+  };
+}
+async function openLibraryFallback(query,page,collection){
+  const url=new URL('https://openlibrary.org/search.json');
+  url.searchParams.set('q',query+' language:rus');
+  url.searchParams.set('fields','key,title,author_name,language,cover_i,first_publish_year');
+  url.searchParams.set('limit',String(PAGE_SIZE));
+  url.searchParams.set('page',String(page));
+  const payload=await upstream(url);
+  const books=(Array.isArray(payload.docs)?payload.docs:[]).map(normalizeOpenLibrary).filter(Boolean);
+  const count=Math.max(0,Number(payload.numFound??payload.num_found)||0);
+  return {ok:true,source:'openlibrary',collection,page,query,count,total:count,
+    books,nextPage:books.length&&page<20&&page*PAGE_SIZE<count?page+1:null,
+    rightsNotice:'Open Library предоставляет метаданные, а не свободные полные тексты. Использовать как высоконагруженную коммерческую базу без согласования нельзя.'
+  };
+}
 async function upstream(url){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),12500);
@@ -114,7 +152,12 @@ export default async function handler(req,res){
       rightsNotice:'Каталог книг и официальные страницы издателей. Наличие полного текста внутри VETOGRAM не подразумевается.'
     });
   }catch(error){
-    console.error('[Books discover]',error?.message);
-    return send(res,error.status===429?503:502,{ok:false,error:'Каталог новых книг временно недоступен. Другие библиотеки работают отдельно.'});
+    console.error('[Books discover] Google provider unavailable:',error?.message);
+    try{
+      return send(res,200,await openLibraryFallback(query,page,collection));
+    }catch(fallbackError){
+      console.error('[Books discover] Open Library fallback unavailable:',fallbackError?.message);
+      return send(res,503,{ok:false,error:'Каталог новых книг временно недоступен. Русская классика и личные книги остаются доступны.'});
+    }
   }
 }
