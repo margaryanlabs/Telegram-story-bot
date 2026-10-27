@@ -84,7 +84,7 @@
     <div class="cinema-player-shell">
       <header><button type="button" id="cinemaPlayerClose" class="cinema-back">← Назад</button><strong id="cinemaPlayerTitle"></strong><span>VETOGRAM CINEMA</span></header>
       <div class="cinema-source-switch" id="cinemaSourceSwitch"><label for="cinemaProviderSelect">ПЛЕЕР / ОЗВУЧКА</label><select id="cinemaProviderSelect" aria-label="Выбрать доступный видеоплеер или озвучку"><option value="0">Автоматически</option></select><span id="cinemaProviderHint" aria-live="polite">Выберите доступный источник</span></div>
-      <div class="cinema-video-wrap" id="cinemaVideoWrap"><video id="cinemaVideo" controls playsinline preload="metadata" crossorigin="anonymous" aria-label="Видеофильм"></video><div class="cinema-loading" id="cinemaPlayerMessage" role="status">Загружаем видео…</div></div>
+      <div class="cinema-video-wrap" id="cinemaVideoWrap"><video id="cinemaVideo" controls playsinline preload="metadata" aria-label="Видеофильм"></video><div class="cinema-loading" id="cinemaPlayerMessage" role="status">Загружаем видео…</div></div>
       <div class="cinema-video-toolbar" id="cinemaVideoToolbar">
         <button type="button" id="cinemaRewind">↶ 10 сек.</button><button type="button" id="cinemaForward">10 сек. ↷</button>
         <label>Скорость <select id="cinemaSpeed" aria-label="Скорость воспроизведения"><option value=".75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
