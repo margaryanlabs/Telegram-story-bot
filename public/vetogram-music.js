@@ -284,7 +284,7 @@ function renderRadio(){
  });
 }
 $("radioForm").onsubmit=e=>{e.preventDefault();radioSearch($("radioInput").value)};
-$("[data-radio]").forEach(b=>b.onclick=()=>{$("radioInput").value=b.dataset.radio;radioSearch(b.dataset.radio)});
+$$("[data-radio]").forEach(b=>b.onclick=()=>{$("radioInput").value=b.dataset.radio;radioSearch(b.dataset.radio)});
 // Direct radio streams verified with current Radio Browser checks (RU, HTTPS, lastcheckok=1).
 // Broadcasters operate and license their own live programming. These are NOT on-demand tracks.
 const RUSSIAN_RADIO=Object.freeze([
