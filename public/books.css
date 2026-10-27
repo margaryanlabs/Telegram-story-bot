@@ -411,3 +411,53 @@ body{background:radial-gradient(ellipse 95% 45% at 48% -5%,#29222a 0%,#121217 60
 .reading-genres button:focus-visible{outline:2px solid #eec7ac;outline-offset:2px}
 @media(max-width:550px){.reading-genres{gap:6px}.reading-genres button{padding:9px 11px;min-height:35px;font-size:11px}}
 @media(prefers-reduced-motion:reduce){.reading-genres button{transition:none}}
+
+/* VETO COMPASS / READING ATLAS: ink-dark navigation overlay that reads the
+   current in-memory chapter; lightweight, keyboard-friendly, offline. */
+.reader-bottom #readerCompassButton{font:normal 26px/1.1 Georgia,serif;color:#e9b998}
+.compass-content{display:flex;flex-direction:column;gap:17px;padding-top:11px}
+.compass-intro{display:flex;flex-direction:column;gap:7px;padding:15px 16px 16px;border-radius:15px;
+  background:radial-gradient(circle at 92% 5%,#8f614c42,transparent 55%),linear-gradient(110deg,#30252b,#1a1b23);
+  border:1px solid #ddaf8d30}
+.compass-eyebrow{color:#e9b999;font:750 9px/1.2 system-ui,sans-serif;letter-spacing:.2em}
+.compass-intro strong{font:normal clamp(20px,3vw,27px)/1.2 Georgia,serif;color:#f9e4d1;text-wrap:balance}
+.compass-intro p{font:12px/1.6 system-ui,sans-serif;color:#c2b2ab;margin:0}
+.compass-section{display:flex;flex-direction:column;gap:10px}
+.compass-section h3{font:650 14px/1.4 system-ui,sans-serif;letter-spacing:.015em;color:#e8d8ca;margin:0}
+.compass-rail{display:flex;gap:14px;align-items:center;background:#25232c;padding:15px;border:1px solid #e1b18e26;border-radius:13px}
+.compass-range{appearance:none;-webkit-appearance:none;min-width:0;flex:1;height:5px;border-radius:10px;
+  background:linear-gradient(90deg,#b27767,#e5b78e);outline-offset:7px}
+.compass-range::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:#f5d4b4;border:3px solid #72504a;box-shadow:0 0 0 4px #e7aa8b27}
+.compass-range::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#f5d4b4;border:3px solid #72504a}
+.compass-percent{font:750 12px/1 system-ui,sans-serif;color:#eac9ae;min-width:36px;text-align:right}
+.compass-quick{display:flex;gap:8px}
+.compass-quick button{padding:10px 15px;border:1px solid #e9bb994a;border-radius:9px;
+  color:#ebc6ad;background:#342a2d;font-size:11px;font-weight:700}
+.compass-input{width:100%;min-height:48px;padding:11px 15px;background:#11141a;border:1px solid #e9bb994a;
+  border-radius:13px;color:#f4e7da;font-size:14px;outline-offset:2px}
+.compass-input:focus{border-color:#efbe9e;outline:1px solid #ddae8a60}
+.compass-results{display:flex;flex-direction:column;gap:6px;max-height:245px;overflow:auto;overscroll-behavior:contain}
+.compass-match,.compass-row{display:flex;flex-direction:column;align-items:start;gap:5px;text-align:left;width:100%;
+  padding:12px 14px;background:#23222a;border:1px solid #d6af8f29;border-radius:10px;color:#ece0d5;
+  font:12px/1.55 system-ui,sans-serif;overflow-wrap:anywhere}
+.compass-match:hover,.compass-row:hover{background:#342d35;border-color:#d3a4897f}
+.compass-match small{color:#cfa891;font-size:10px}
+.compass-row{padding:10px 13px;color:#edc6ad}
+.compass-hint{margin:0;color:#b6aaa4;font:11px/1.6 system-ui,sans-serif}
+.compass-quote{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;
+ padding:9px 0;border-bottom:1px solid #d8b69b21}
+.compass-quote-open{border:0;background:transparent;color:#e5d4c4;text-align:left;
+  font:italic 13px/1.5 Georgia,serif;max-height:85px;overflow:hidden}
+.compass-quote-copy{font:650 10px/1.2 system-ui,sans-serif;color:#e6c4a9;border-radius:9px;
+  border:1px solid #daa78366;background:#46312e;padding:9px 11px}
+.reader-search-mark{background:#f4c27a;color:#26171b;padding:2px 0;border-radius:2px}
+.compass-section button:focus-visible{outline:2px solid #e7b98d;outline-offset:3px}
+@media(max-width:530px){
+ .reader-bottom{gap:5px;padding-inline:7px}
+ .reader-bottom button{min-width:36px;width:38px;height:38px}
+ .reader-bottom #readerPageLabel{font-size:11px;min-width:52px;text-align:center}
+ .compass-content{gap:15px}.compass-intro{padding:14px}
+ .compass-quote{grid-template-columns:1fr}.compass-quote-copy{justify-self:start}
+}
+@media(prefers-reduced-motion:reduce){.compass-match,.compass-row{transition:none}}
