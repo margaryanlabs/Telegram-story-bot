@@ -105,6 +105,13 @@ function songRow(t,group,index,imported=false){
   const play=e("button","song-play","▶");play.type="button";play.setAttribute("aria-label","Слушать "+t.title);
   play.onclick=()=>playFrom(group,t.id);
   actions.append(heart,play);
+  if(t.kind==="local"){
+   const remove=e("button","remove-file","×");
+   remove.type="button";remove.title="Удалить аудиофайл с этого устройства";
+   remove.setAttribute("aria-label","Удалить "+t.title);
+   remove.onclick=()=>removeLocal(t.id);
+   actions.append(remove);
+  }
  }
  row.append(actions);return row;
 }
@@ -363,8 +370,27 @@ function databasePut(rec){
 async function initLibrary(){
  try{state.db=await openDb();state.dbReady=true;
   const rows=await databaseAll();state.local=rows.map(x=>({id:x.id,name:x.name,artist:x.artist,size:x.size,blob:x.blob,at:x.at}));
-  renderCounts();
+  renderCounts();if(state.route==="library")renderLibrary();
  }catch{state.db=null;state.dbReady=false;notice("Локальное хранение файлов недоступно. Включи хранилище браузера.");}
+}
+function databaseDelete(id){
+ return new Promise((resolve,reject)=>{
+  if(!state.db)return resolve();
+  const tx=state.db.transaction("files","readwrite");tx.objectStore("files").delete(id);
+  tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);
+ });
+}
+async function removeLocal(id){
+ const entry=state.local.find(x=>x.id===id);
+ if(!entry)return;
+ if(state.current?.id===id){++activation;audio.pause();audio.removeAttribute("src");audio.load();
+  state.current=null;$("player").classList.add("hidden");closeStudio();}
+ try{await databaseDelete(id);}catch{notice("Файл удалён из текущего списка, но хранилище отказало в удалении.");}
+ state.local=state.local.filter(x=>x.id!==id);
+ state.queue=state.queue.filter(x=>x.id!==id);
+ const uri=state.objectUrls.get(id);if(uri){URL.revokeObjectURL(uri);state.objectUrls.delete(id);}
+ state.liked=state.liked.filter(x=>x.id!==id);
+ save(STORE_KEY,state.liked);renderCounts();renderLibrary();notice("Удалено с этого устройства: "+entry.name);
 }
 function chooseFiles(){$("audioPicker").click()}
 $("chooseFile").onclick=chooseFiles;
