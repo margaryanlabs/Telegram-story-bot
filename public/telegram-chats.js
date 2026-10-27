@@ -1229,10 +1229,28 @@
       return href;
     }finally{clearTimeout(timer);}
   }
-  // Demand-driven avatar loading. The old lifetime cap of six meant all other
-  // contact photos remained initials even when the owner scrolled further down.
-  // Keep bounded MTProto concurrency, never request invisible or archived-only
-  // chats, and retry failed visible avatars only after a cooldown.
+  // A single signed MTProto connection now downloads up to six visible contact
+  // thumbnails. Previously each avatar opened a separate serverless connection,
+  // repeated dialog discovery, and often exhausted Telegram's rate limits.
+  async function fetchAvatarBatch(ids,ownerKey){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),24000);
+    try{
+      const response=await fetch('/api/telegram-chat-media',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-telegram-init-data':ownerKey},
+        body:JSON.stringify({action:'avatar_batch',chatIds:ids}),
+        signal:controller.signal,
+      });
+      if(!response.ok)throw new Error('avatar_batch_unavailable');
+      const body=await response.json();
+      if(!body?.ok||!body.avatars||typeof body.avatars!=='object')
+        throw new Error('avatar_batch_unavailable');
+      return body.avatars;
+    }finally{clearTimeout(timeout);}
+  }
+  // Only owner-verified, on-screen chats are queued; archived-only threads do
+  // not invoke live MTProto. A missing image cools down before explicit retry.
   function queueVisibleAvatars(){
     if(!tg?.initData||$('telegramChatsView')?.hidden||
       document.querySelector('.screen.active')?.dataset?.screen!=='telegram')return;
@@ -1254,15 +1272,29 @@
     runAvatarQueue();
   }
   function runAvatarQueue(){
-    while(state.avatarActive<2&&state.avatarQueue.length){
-      const id=state.avatarQueue.shift();
-      if(state.avatarUrls.has(id))continue;
-      const epoch=state.avatarEpoch,ownerKey=state.ownerInitData;
-      state.avatarActive++;
-      photoRequest('avatar',id).then(href=>{
-        if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData||
-          ownerKey!==String(tg?.initData||'')){
-          URL.revokeObjectURL(href);return;
+    if(state.avatarActive||!state.avatarQueue.length)return;
+    const ids=state.avatarQueue.splice(0,6).filter(id=>!state.avatarUrls.has(id));
+    if(!ids.length){runAvatarQueue();return;}
+    const epoch=state.avatarEpoch,ownerKey=state.ownerInitData;
+    state.avatarActive=1;
+    fetchAvatarBatch(ids,ownerKey).then(avatars=>{
+      if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData||
+         ownerKey!==String(tg?.initData||''))return;
+      for(const id of ids){
+        const base64=avatars[id];
+        let href=null;
+        if(typeof base64==='string'&&base64.length>0&&base64.length<=256000){
+          try{
+            const bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+            if(bytes.length>=3&&bytes.length<=180*1024&&
+              bytes[0]===0xff&&bytes[1]===0xd8)
+              href=URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
+          }catch{/* Bad media: skip this avatar, keep other images. */}
+        }
+        if(!href){
+          state.avatarRequested.delete(id);
+          state.avatarRetryAt.set(id,Date.now()+90000);
+          continue;
         }
         state.avatarUrls.set(id,href);
         for(const el of document.querySelectorAll('#telegramMirrorList [data-veto-avatar]')){
@@ -1271,19 +1303,21 @@
           img.className='veto-mirror-avatar-img';img.alt='';img.src=href;
           el.replaceChildren(img);
         }
-      }).catch(()=>{
-        if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData)return;
+      }
+    }).catch(()=>{
+      if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData)return;
+      for(const id of ids){
         state.avatarRequested.delete(id);
         state.avatarRetryAt.set(id,Date.now()+90000);
-      }).finally(()=>{
-        if(epoch!==state.avatarEpoch)return;
-        state.avatarActive=Math.max(0,state.avatarActive-1);
-        runAvatarQueue();
-      });
-    }
+      }
+    }).finally(()=>{
+      if(epoch!==state.avatarEpoch)return;
+      state.avatarActive=0;
+      queueVisibleAvatars();
+      runAvatarQueue();
+    });
   }
-  // Scrolls happen both in the full-page WebView and nested inbox containers.
-  // One animation-frame callback covers both without per-scroll DOM rebuilding.
+  // A single animation-frame probe handles nested + window-level scrolls.
   let avatarScrollScheduled=false;
   function scheduleVisibleAvatars(){
     if(avatarScrollScheduled)return;
@@ -1294,7 +1328,7 @@
     });
   }
   window.addEventListener('scroll',scheduleVisibleAvatars,{capture:true,passive:true});
-  function rememberPreview(messageId,href){
+    function rememberPreview(messageId,href){
     state.mediaPreviewUrls.set(String(messageId),href);
     state.mediaUrls.push(href);
   }
