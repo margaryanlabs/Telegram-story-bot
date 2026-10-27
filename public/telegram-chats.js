@@ -2018,6 +2018,9 @@
     }else{
       let day='';
       let previous=null;
+      // O(1) reply lookups on large chats. The old .find() inside every
+      // bubble render repeated a full history scan for each reply.
+      const messageById=new Map(state.messages.map(message=>[Number(message.id),message]));
       box.innerHTML=state.messages.map(message=>{
         const date=message.date?new Date(message.date):null;
         const dayKey=date&&!Number.isNaN(date.getTime())?date.toDateString():'';
@@ -2037,7 +2040,7 @@
               ?'Независимая копия · Media Vault'
               :message.saved?'Сохранена отметка о вложении':'Файл доступен в Telegram')+'</small></div>':'';
         const replySource=Number(message.replyTo)>0
-          ?state.messages.find(m=>Number(m.id)===Number(message.replyTo)):null;
+          ?messageById.get(Number(message.replyTo)):null;
         const replyMarkup=Number(message.replyTo)>0
           ?'<div class="veto-mirror-reply-tag">↩ '+safe(replySource?.text?.slice(0,90)||('Ответ на сообщение '+message.replyTo))+'</div>'
           :'';
