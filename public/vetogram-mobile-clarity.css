@@ -89,3 +89,18 @@
 @media(prefers-reduced-motion:reduce){
  #vetogram.vetogram-noir .veto-business-consent-intro *{animation:none!important;transition:none!important}
 }
+
+/* Single readable registration acknowledgement; never prechecked. */
+#vetogram.vetogram-noir .veto-login-legal{
+ display:flex;align-items:flex-start;gap:10px;margin:14px 0;
+ padding:14px 13px;border-radius:15px;background:rgba(255,255,255,.045);
+ border:1px solid rgba(255,255,255,.10);
+}
+#vetogram.vetogram-noir .veto-login-legal input[type="checkbox"]{
+ width:20px;height:20px;min-width:20px;flex:0 0 20px;accent-color:#ce8b98;
+ margin:1px 0 0;
+}
+#vetogram.vetogram-noir .veto-login-legal span{font-size:12px;line-height:1.65;color:var(--noir-text,#f7f8fc)}
+#vetogram.vetogram-noir .veto-login-legal a{color:#e7abb8;text-decoration:underline;text-underline-offset:3px}
+#vetogram.vetogram-noir .veto-business-consent-intro a:focus-visible,
+#vetogram.vetogram-noir .veto-login-legal a:focus-visible{outline:2px solid #ce8b98;outline-offset:3px}
