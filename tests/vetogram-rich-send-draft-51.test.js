@@ -16,7 +16,7 @@ function fixture(){
   const state={
     thread:{id:'A'},ownerInitData:'signed',sendInFlight:false,
     pendingAttachment,replyTo:{id:42},lastRichFailure:null,
-    drafts:new Map([['A','Старый текст']]),
+    drafts:new Map([['A','Старый текст']]),draftVersions:new Map([['A',0]]),
   };
   const field={value:'Старый текст'};
   const nodes={telegramThreadCompose:field,
@@ -102,4 +102,40 @@ test('late rich ACK after opening chat B leaves B composer intact',async()=>{
   f.accept();await task;
   assert.equal(f.field.value,'Текст B');
   assert.equal(f.state.drafts.get('B'),'Текст B');
+});
+
+test('late media ACK after leaving chat A removes unchanged original A caption only',async()=>{
+  const f=fixture(),task=f.send('send_media');
+  for(let i=0;i<6&&f.calls.length<1;i++)await Promise.resolve();
+  f.state.thread={id:'B'};
+  f.field.value='Черновик B';
+  f.state.drafts.set('B','Черновик B');
+  f.accept();await task;
+  assert.equal(f.state.drafts.has('A'),false);
+  assert.equal(f.state.drafts.get('B'),'Черновик B');
+  assert.equal(f.field.value,'Черновик B');
+});
+
+test('typed identical text with newer version remains after older media ACK',async()=>{
+  const f=fixture(),task=f.send('send_media');
+  for(let i=0;i<6&&f.calls.length<1;i++)await Promise.resolve();
+  // The user deliberately typed the same string again; equality alone
+  // cannot distinguish a new draft from an old sent caption.
+  f.state.draftVersions.set('A',1);
+  f.state.drafts.set('A','Старый текст');
+  f.accept();await task;
+  assert.equal(f.state.drafts.get('A'),'Старый текст');
+  assert.equal(f.field.value,'Старый текст');
+});
+
+test('edited A draft survives media ACK after moving to chat B',async()=>{
+  const f=fixture(),task=f.send('send_media');
+  for(let i=0;i<6&&f.calls.length<1;i++)await Promise.resolve();
+  f.state.draftVersions.set('A',1);
+  f.state.drafts.set('A','Новый черновик A');
+  f.state.thread={id:'B'};
+  f.field.value='Черновик B';
+  f.accept();await task;
+  assert.equal(f.state.drafts.get('A'),'Новый черновик A');
+  assert.equal(f.field.value,'Черновик B');
 });
