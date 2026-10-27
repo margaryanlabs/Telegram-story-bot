@@ -31,7 +31,7 @@ function fixture(){
   const context=vm.createContext({
     state,tg:{initData:'signed'},
     $:id=>nodes[id]||null,resetOwner:()=>false,
-    revokeMediaUrls(){},haptic(){},cancelVoiceCapture(){},
+    revokeMediaUrls(){},cancelThreadRequest(){},haptic(){},cancelVoiceCapture(){},
     stopThreadSync(){},renderDeliveryStatus(){},closeThreadSearch(){},
     restoreUncertainRichMedia:()=>false,
     renderReplyPreview(){},renderAttachmentChip(){},
