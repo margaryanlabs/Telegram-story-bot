@@ -58,16 +58,38 @@ export async function makeLibraryReply(update,store){
     return replyText(id,
       "♫ Vetogram Music · моя библиотека\n\n"+
       "Пришли своё MP3/M4A в личный чат — сохраню запись по file_id и верну её для прослушивания через Telegram.\n"+
-      "/list — мои треки\n/play 1 — воспроизвести первый\n/search название — найти у себя\n/delete 1 — удалить запись из библиотеки\n\n"+
+      "/list — мои треки\n/play 1 — воспроизвести первый\n/album 1 — отправить подборку до 10 треков в нативный плеер\n/search название — найти у себя\n/delete 1 — удалить запись из библиотеки\n\n"+
       "Музыка остаётся приватной; бот не видит другие чаты. Это не публичный каталог.");
   if(/^\/list(?:@\w+)?(?:\s+\d{1,3})?$/i.test(cmd)){
-    const page=Math.min(15,Math.max(1,Number(cmd.match(/\s+(\d{1,3})$/)?.[1]||1)));
+    const askedPage=Math.min(15,Math.max(1,Number(cmd.match(/\s+(\d{1,3})$/)?.[1]||1)));
+    const page=askedPage;
     const items=await store.list(id,{offset:(page-1)*20,limit:20});
     if(!items.total)return replyText(id,"Пока пусто. Отправь аудиозапись (♫), и она появится здесь.");
+    if(!items.tracks.length)return replyText(id,"Этой страницы нет. Всего страниц: "+Math.ceil(items.total/20)+". Отправь /list 1.");
     const listed=items.tracks.map((t,i)=>trackText(t,items.offset+i+1));
     const totalPages=Math.ceil(items.total/20);
     return replyText(id,"♫ Моя музыка · "+items.total+" треков · стр. "+page+"/"+totalPages+
       "\n\n"+listed.join("\n")+"\n\n/play N — слушать · /delete N — убрать · /list "+(page+1)+" — дальше");
+  }
+  // Telegram media groups keep tracks in Telegram's native music interface.
+  // One explicit user request returns at most ten files, not a bulk broadcast.
+  const album=cmd.match(/^\/album(?:@\w+)?(?:\s+(\d{1,2}))?$/i);
+  if(album){
+    const page=Number(album[1]||"1");
+    if(!Number.isInteger(page)||page<1||page>30)return replyText(id,"Выбери страницу от 1 до 30: /album 1");
+    const offset=(page-1)*10;
+    const data=await store.list(id,{offset,limit:10});
+    if(!data.total)return replyText(id,"В библиотеке пока нет музыки. Отправь сюда свой MP3/M4A.");
+    if(!data.tracks.length)return replyText(id,"На этой странице песен нет. Открой /list.");
+    if(data.tracks.length===1){
+      const song=data.tracks[0];
+      return {method:"sendAudio",body:{chat_id:id,audio:song.file_id,title:song.title,performer:song.performer,
+        caption:"♫ Твоя музыка · альбом "+page+" · Vetogram Music"}};
+    }
+    return {method:"sendMediaGroup",body:{chat_id:id,media:data.tracks.map((track,i)=>({
+      type:"audio",media:track.file_id,title:track.title,performer:track.performer,
+      ...(i===0?{caption:"♫ Личная подборка Vetogram Music · "+data.tracks.length+" аудио · стр. "+page}: {})
+    }))}};
   }
   const play=cmd.match(/^\/play(?:@\w+)?\s+(\d{1,3})$/i);
   if(play){
