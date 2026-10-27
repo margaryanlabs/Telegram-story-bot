@@ -101,3 +101,20 @@ test('chat avatars and previews are scoped to the signed account and do not pers
   assert.match(source,/URL\.revokeObjectURL\(href\)/);
   assert.doesNotMatch(source,/avatarLoaded>=6/);
 });
+
+test('warm thread previews remain owner-scoped while reducing repeat opens',()=>{
+  const source=read('telegram-chats.js');
+  assert.match(source,/while\(state\.threadCache\.size>6\)/);
+  assert.match(source,/Date\.now\(\)-value\.at>300000/);
+  assert.match(source,/state\.threadCache\.clear\(\)/);
+  assert.match(source,/if\(restoreHotThread\(chat\.id\)\)/);
+});
+
+test('Telegram native header and Story preview labels have no stacked title overlay',()=>{
+  const script=read('vetogram-experience-v4.js');
+  const css=read('vetogram-noir.css');
+  assert.match(script,/WebApp\?\.initData\) root\.classList\.add\('v4-telegram-webview'\)/);
+  assert.match(css,/\.v4-telegram-webview \.topbar/);
+  assert.match(css,/#seTemplates \.noir-template-type,[\s\S]*?display:none!important/);
+  assert.match(css,/#seTemplates \.se-template-canvas\{[\s\S]*?height:calc\(100% - 34px\)/);
+});
