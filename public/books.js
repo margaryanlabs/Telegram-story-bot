@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {source:'translated',original:'en',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark'};
+  const state = {source:'translated',original:'en',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false};
   const STORAGE = 'vetogram-books-v1';
   const readJSON = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(STORAGE + ':' + key)); return v ?? fallback; }
@@ -12,7 +12,7 @@
   const saved = readJSON('saved', {});
   const progress = readJSON('progress', {});
   const quotes = readJSON('quotes', []);
-  const prefs = Object.assign({font:19,theme:'dark'},readJSON('prefs',{}));
+  const prefs = Object.assign({font:19,theme:'dark',fontFace:'literary',leading:'comfortable',width:'normal'},readJSON('prefs',{}));
   const rememberedSource=readJSON('source','translated');
   if(['translated','ru','hy','gutenberg'].includes(rememberedSource))state.source=rememberedSource;
   const rememberedOriginal=readJSON('original','en');
@@ -229,50 +229,114 @@
     if(end && end.index>100)text=text.slice(0,end.index);
     return text.replace(/\n{4,}/g,'\n\n\n').trim();
   }
+  function readableViewport(){
+    const paper=$('readerPaper');
+    const scroll=$('readerScroll');
+    const idealWidth=prefs.width==='narrow'?520:640;
+    const actualWidth=Math.min(idealWidth,Math.max(260,scroll?.clientWidth||window.innerWidth||390));
+    const contentWidth=Math.max(205,actualWidth-(actualWidth<500?45:92));
+    const height=Math.max(260,scroll?.clientHeight||window.innerHeight-140||570);
+    const leading={compact:1.48,comfortable:1.72,airy:1.96}[prefs.leading]||1.72;
+    const font=Math.max(14,Math.min(30,Number(prefs.font)||19));
+    const lines=Math.max(9,Math.floor((height-215)/(leading*font)));
+    const capacity=Math.floor((contentWidth/(font*(prefs.fontFace==='modern'?.55:.52)))*lines*.9);
+    return Math.max(280,Math.min(2900,capacity));
+  }
   function paginate(value){
-    // Logical reading segments, independent from screen size; less DOM/memory than the entire book.
-    const paragraphs=value.split(/\n\s*\n/);
-    const chunks=[];let current='';
-    const flush=()=>{if(current.trim())chunks.push(current.trim());current='';};
-    for(let paragraph of paragraphs){
-      paragraph=paragraph.trim();
-      if(!paragraph)continue;
-      if(paragraph.length>9500){
-        flush();
-        for(let i=0;i<paragraph.length;i+=7600)chunks.push(paragraph.slice(i,i+7600));
-        continue;
+    // Responsive logical pages. Reflows when viewport, font or leading changes.
+    // Keep absolute character offsets so a typography change never jumps to
+    // the wrong part of a long book.
+    const text=String(value||'').replace(/\r\n?/g,'\n').trim();
+    state.rawText=text;
+    state.pageOffsets=[];
+    if(!text){state.pageOffsets=[0];return ['Текст недоступен.'];}
+    const budget=readableViewport();
+    const pages=[];
+    let cursor=0, guard=0;
+    while(cursor<text.length && guard++<30000){
+      let end=Math.min(text.length,cursor+budget);
+      if(end<text.length){
+        const minBreak=cursor+Math.floor(budget*.64);
+        const para=text.lastIndexOf('\n\n',end);
+        const sentenceSlice=text.slice(minBreak,end);
+        const endings=[...sentenceSlice.matchAll(/[.!?…]\s+/g)];
+        const sentence=endings.length?minBreak+endings[endings.length-1].index+endings[endings.length-1][0].length:-1;
+        const space=text.lastIndexOf(' ',end);
+        if(para>=minBreak)end=para+2;
+        else if(sentence>=minBreak)end=sentence;
+        else if(space>=minBreak)end=space+1;
       }
-      if(current.length+paragraph.length>7600 && current)flush();
-      current+=(current?'\n\n':'')+paragraph;
+      if(end<=cursor)end=Math.min(text.length,cursor+Math.max(1,budget));
+      state.pageOffsets.push(cursor);
+      pages.push(text.slice(cursor,end).trim());
+      cursor=end;
+      while(cursor<text.length && /\s/.test(text.charAt(cursor)))cursor++;
     }
-    flush();
-    return chunks.length?chunks:['Текст недоступен.'];
+    return pages.length?pages:['Текст недоступен.'];
+  }
+  function nearestPage(offset){
+    const offsets=state.pageOffsets;
+    let low=0,high=offsets.length-1,result=0;
+    while(low<=high){
+      const mid=Math.floor((low+high)/2);
+      if(offsets[mid]<=offset){result=mid;low=mid+1;}
+      else high=mid-1;
+    }
+    return result;
+  }
+  function reflowReader(){
+    if(!state.pages.length || !state.current || !state.rawText)return;
+    const offset=state.pageOffsets[state.currentPage]||0;
+    state.pages=paginate(state.rawText);
+    showPage(nearestPage(offset),false);
   }
   function chapterFromPage(text, index){
     const first=text.slice(0,300).split('\n').map(s=>s.trim()).find(s=>
       /^(chapter\s+[ivxlcdm\d]+|глава\s+[ivxlcdm\d]+|part\s+[ivxlcdm\d]+|часть\s+[ivxlcdm\d]+)/i.test(s));
     return first || 'Продолжение истории';
   }
-  function applyPrefs(){
+  function applyPrefs(reflow=false){
     prefs.font=Math.max(14,Math.min(30,Number(prefs.font)||19));
     if(!['dark','light','sepia'].includes(prefs.theme))prefs.theme='dark';
-    $('reader').dataset.theme=prefs.theme;
-    $('reader').style.setProperty('--reader-size',prefs.font+'px');
+    if(!['literary','modern'].includes(prefs.fontFace))prefs.fontFace='literary';
+    if(!['compact','comfortable','airy'].includes(prefs.leading))prefs.leading='comfortable';
+    if(!['narrow','normal'].includes(prefs.width))prefs.width='normal';
+    const reader=$('reader');
+    reader.dataset.theme=prefs.theme;
+    reader.dataset.font=prefs.fontFace;
+    reader.dataset.leading=prefs.leading;
+    reader.dataset.width=prefs.width;
+    reader.style.setProperty('--reader-size',prefs.font+'px');
     $('fontValue').textContent=prefs.font;
-    for(const el of document.querySelectorAll('[data-read-theme]'))el.classList.toggle('active',el.dataset.readTheme===prefs.theme);
+    for(const selector of ['read-theme','read-font','read-leading','read-width']){
+      const current=selector==='read-theme'?prefs.theme:selector==='read-font'?prefs.fontFace:selector==='read-leading'?prefs.leading:prefs.width;
+      for(const el of document.querySelectorAll('[data-'+selector+']')){
+        const active=el.dataset[selector.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]===current;
+        el.classList.toggle('active',active);
+        el.setAttribute('aria-pressed',String(active));
+      }
+    }
     persist('prefs',prefs);
+    if(reflow)reflowReader();
   }
-  function bookmarkToken(){return String(state.activeChapter??'root')+':'+state.currentPage;}
+  function bookmarkToken(){return String(state.activeChapter??'root')+':@'+(state.pageOffsets[state.currentPage]||0);}
   function showPage(page, scroll=true){
     if(!state.current||!state.pages.length)return;
     state.currentPage=Math.min(Math.max(0,page),state.pages.length-1);
     const currentPageText=state.pages[state.currentPage];
     $('readerCopy').textContent=currentPageText;
+    const paper=$('readerPaper');
+    paper.classList.toggle('is-continuation',state.currentPage>0);
+    paper.classList.remove('turn-forward','turn-backward');
     const chapterName=state.activeChapter===null?'':state.chapters[state.activeChapter]?.label;
     $('chapterTitle').textContent=chapterName || chapterFromPage(currentPageText,state.currentPage);
     $('pageNumber').textContent='СТРАНИЦА '+(state.currentPage+1);
     $('readerPageLabel').textContent=(state.currentPage+1)+' / '+state.pages.length;
-    $('progressFill').style.width=((state.currentPage+1)/state.pages.length*100)+'%';
+    const offset=state.pageOffsets[state.currentPage]||0;
+    const percentage=state.rawText.length ? Math.max(0,Math.min(100,Math.round(offset/state.rawText.length*100))) : 0;
+    $('progressFill').style.width=percentage+'%';
+    $('readerProgressPercent').textContent=percentage+'%';
+    $('readerProgressLabel').textContent='Место в текущей части';
     $('prevPage').disabled=state.currentPage===0 && (state.activeChapter===null || !isWiki(state.current));
     $('nextPage').disabled=state.currentPage===state.pages.length-1 && (!isWiki(state.current) || !state.chapters.length || state.activeChapter===state.chapters.length-1);
     const key=bookKey(state.current);
@@ -281,7 +345,7 @@
     $('bookmarkButton').textContent=isMarked?'♥':'♧';
     progress[key]={
       ...(progress[key]||{}),id:state.current.id,provider:state.current.provider||'gutenberg',
-      wiki:state.current.wiki||null,chapter:state.activeChapter,page:state.currentPage,
+      wiki:state.current.wiki||null,chapter:state.activeChapter,page:state.currentPage,offset:state.pageOffsets[state.currentPage]||0,fraction:state.rawText.length?(state.pageOffsets[state.currentPage]||0)/state.rawText.length:0,
       at:Date.now(),title:state.current.title,authors:state.current.authors,
       cover:state.current.cover,language:state.current.language,sourceUrl:state.current.sourceUrl
     };
@@ -335,7 +399,10 @@
       const text=isWiki(book)?data.text:stripGutenbergFrame(data.text);
       state.pages=paginate(text);
       const p=progress[key];
-      showPage(resume && p?.chapter===chapter ? Number(p.page)||0 : 0);
+      const position=resume&&p?.chapter===chapter
+        ? Number.isFinite(Number(p.offset))?nearestPage(Math.max(0,Number(p.offset))):Math.max(0,Number(p.page)||0)
+        :0;
+      showPage(position);
     }catch(e){
       if(!$('reader').hidden && state.requestBook===request){
         $('readerCopy').textContent='Не удалось открыть текст. Вернитесь к книгам и попробуйте другой результат.';
@@ -347,7 +414,7 @@
   async function openBook(book){
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
     ++state.requestBook;
-    state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;
+    state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;state.rawText='';state.pageOffsets=[];
     $('reader').hidden=false;
     $('readerTitle').textContent=compactTitle(book.title);
     $('readerAuthor').textContent=fullName(book);
@@ -363,14 +430,24 @@
   function closeReader(){
     ++state.requestBook;
     $('reader').hidden=true;state.current=null;state.pages=[];state.chapters=[];
-    state.activeChapter=null;
+    state.activeChapter=null;state.rawText='';state.pageOffsets=[];
+    setFocus(false);
     $('readerSettings').hidden=true;
-    updateSavedCount();
+    updateSavedCount();renderContinueShelf();
   }
   function flip(dir){
     if(!state.pages.length || !state.current)return;
     const target=state.currentPage+dir;
-    if(target>=0 && target<state.pages.length){showPage(target);return;}
+    if(target>=0 && target<state.pages.length){
+      showPage(target);
+      if(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
+        const paper=$('readerPaper');
+        paper.classList.remove('turn-forward','turn-backward');
+        void paper.offsetWidth;
+        paper.classList.add(dir>0?'turn-forward':'turn-backward');
+      }
+      return;
+    }
     if(!isWiki(state.current) || !state.chapters.length)return;
     if(dir>0 && state.activeChapter===null){void loadChapter(state.current,0);return;}
     if(dir>0 && state.activeChapter<state.chapters.length-1){void loadChapter(state.current,state.activeChapter+1);return;}
