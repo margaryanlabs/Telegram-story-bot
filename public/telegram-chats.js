@@ -223,12 +223,15 @@
       const delivered=await sendChatRequest(chatId,message,nonce,replyToId);
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       state.lastSendFailures.delete(chatId);
+      if(state.lastSendFailure?.chatId===chatId)state.lastSendFailure=null;
+      settleCachedTextSend(chatId,provisionalId,message,delivered);
       if(String(state.thread?.id)===chatId){
         setDeliveryStatus('accepted',chatId,'text');
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
-        if(Number.isSafeInteger(delivered.messageId)&&delivered.messageId>0){
+        const confirmedId=Number(delivered.messageId);
+        if(Number.isSafeInteger(confirmedId)&&confirmedId>0){
           state.messages.push({
-            id:delivered.messageId,date:new Date().toISOString(),
+            id:confirmedId,date:new Date().toISOString(),
             text:message,out:true,sent:true,saved:false,
           });
           state.messages.sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
@@ -262,8 +265,15 @@
       if(error.uncertain===true){
         const failure={chatId,message,nonce,replyTo:replyToId};
         state.lastSendFailure=failure;
+        state.lastSendFailures.delete(chatId);
         state.lastSendFailures.set(chatId,failure);
+        // Remember only a small number of uncertain sends in volatile RAM.
+        while(state.lastSendFailures.size>8)
+          state.lastSendFailures.delete(state.lastSendFailures.keys().next().value);
       }
+      // A navigation can cache the original optimistic bubble. Reconcile that
+      // cache even when the UI is currently displaying a different chat.
+      settleCachedTextSend(chatId,provisionalId,message,null);
       if(String(state.thread?.id)===chatId){
         setDeliveryStatus(error.uncertain?'uncertain':'failed',chatId,'text');
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
@@ -286,6 +296,27 @@
     }
   }
 
+
+  // Owner-scoped volatile cache: a late MTProto ACK must settle the source
+  // dialog's optimistic bubble even if another conversation is now open.
+  // Never create a cache entry or repaint the destination chat from this ACK.
+  function settleCachedTextSend(chatId,provisionalId,message,delivered=null){
+    const entry=state.threadCache?.get?.(chatId);
+    if(!Array.isArray(entry?.messages)||
+       !entry.messages.some(item=>String(item.id)===provisionalId))return;
+    const next=entry.messages.filter(item=>String(item.id)!==provisionalId);
+    const confirmedId=Number(delivered?.messageId);
+    if(Number.isSafeInteger(confirmedId)&&confirmedId>0&&
+       !next.some(item=>String(item.id)===String(confirmedId))){
+      next.push({id:confirmedId,date:new Date().toISOString(),
+        text:message,out:true,sent:true,saved:false});
+      next.sort((a,b)=>
+        new Date(a.date||0).getTime()-new Date(b.date||0).getTime()||
+        Number(a.id)-Number(b.id));
+    }
+    entry.messages=next;
+    entry.at=Date.now();
+  }
 
   async function richRequest(action,payload={}){
     resetOwner();
