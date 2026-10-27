@@ -17,7 +17,7 @@ function fixture({status=503,succeed=false}={}){
                 {id:2,date:'2026-10-26T11:02:00Z',text:'second'}];
   const state={
     thread:{id:'77',type:'private',serverCanSend:true},messages:stored.map(m=>({...m})),
-    threadLoading:false,threadLoadError:'',threadGeneration:7,
+    threadLoading:false,threadLoadError:'',threadAuthRejected:false,threadGeneration:7,
     syncRunId:1,syncBusy:false,liveHasMore:true,archiveHasMore:false,
     threadHasMore:true,threadOffset:1,archiveOffset:0,ownerInitData:'signed',
     threadCache:new Map([['77',{messages:stored}]]),
@@ -66,6 +66,7 @@ test('temporary 503 during owner-verified refresh retains previously loaded mess
   f.settle();await pending;
   assert.deepEqual(f.state.messages.map(m=>m.id),[1,2]);
   assert.equal(f.state.connectionProof.verified,true);
+  assert.equal(f.state.threadAuthRejected,false);
   assert.equal(f.state.threadLoadError,'Telegram network unavailable');
   assert.ok(f.events.some(e=>e.action==='render'&&e.count===2));
   assert.ok(f.events.some(e=>e.action==='schedule'),'transient error can retry later');
@@ -91,6 +92,7 @@ test('a genuine 401/403/409 clears sensitive history and verified send permissio
     assert.equal(f.state.drafts.size,0);
     assert.equal(f.state.connectionProof,null);
     assert.equal(f.state.thread.serverCanSend,false);
+    assert.equal(f.state.threadAuthRejected,true);
     assert.ok(f.events.some(e=>e.action==='revoke'));
     assert.ok(f.events.some(e=>e.action==='avatar-revoked'));
     assert.ok(f.events.some(e=>e.action==='list-cleared'));
@@ -113,4 +115,13 @@ test('history refresh is not a media revoke event',()=>{
   assert.doesNotMatch(controller,/if\(reset&&!rememberedAnchor\)state\.messages=\[\]/);
   assert.match(controller,/const generation=\+\+state\.threadGeneration/);
   assert.match(controller,/if\(!authRejected\)scheduleThreadSync\(45000\)/);
+});
+
+test('expired session shows reconnect action; transient outage keeps refresh action',()=>{
+  assert.match(source,/empty\('Нужно переподключить Telegram'/);
+  assert.match(source,/data-mirror-reconnect-thread/);
+  assert.match(source,/window\.VetoTelegramOpenAccountConnection\(\)/);
+  assert.match(source,/data-mirror-retry-thread/);
+  assert.match(source,/const authRejected=\[401,403,409\]/);
+  assert.match(source,/state\.threadAuthRejected=authRejected/);
 });
