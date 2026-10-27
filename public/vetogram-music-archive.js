@@ -34,15 +34,74 @@ function addTracks(rows){
  }
  if(items.length){if(list.querySelector(".archive-empty"))list.replaceChildren();list.append(fragment)}
 }
+// Internet Archive's public search and metadata APIs support browser CORS requests.
+// Only CC0 / CC BY recordings are listed; no server, secrets, or MP3 import jobs.
+const SOURCES=Object.freeze({
+ cc0:"http://creativecommons.org/publicdomain/zero/1.0/",
+ by3:"http://creativecommons.org/licenses/by/3.0/",
+ by4:"http://creativecommons.org/licenses/by/4.0/"
+});
+const ARCHIVE="https://archive.org";
+function safeId(x){const id=String(x||"");return /^[A-Za-z0-9._-]{1,130}$/.test(id)?id:""}
+function licenseType(x){
+ try{
+  const u=new URL(String(x));
+  if(!["http:","https:"].includes(u.protocol)||!["creativecommons.org","www.creativecommons.org"].includes(u.hostname))return"";
+  const p=u.pathname.replace(/\\/+$/,"")+"/";
+  if(p==="/publicdomain/zero/1.0/")return"CC0";
+  const m=p.match(/^\\/licenses\\/by\\/(2\\.0|2\\.5|3\\.0|4\\.0)\\/$/);
+  return m?"CC BY "+m[1]:"";
+ }catch{return""}
+}
+function archiveSearchUrl(group,p){
+ if(!Object.hasOwn(SOURCES,group)||!Number.isInteger(p)||p<1||p>300)throw Error("Неверная страница");
+ const q='collection:netlabels AND mediatype:audio AND licenseurl:"'+SOURCES[group]+'"';
+ const params=new URLSearchParams({q,rows:"4",page:String(p),output:"json"});
+ for(const f of ["identifier","title","licenseurl"])params.append("fl[]",f);
+ return ARCHIVE+"/advancedsearch.php?"+params.toString();
+}
+async function fetchJSON(url,signal,max=3200000){
+ const response=await fetch(url,{credentials:"omit",signal,headers:{Accept:"application/json"}});
+ if(!response.ok)throw Error("HTTP "+response.status);
+ if(Number(response.headers.get("content-length")||0)>max)throw Error("Слишком большой ответ архива");
+ const text=await response.text();if(text.length>max)throw Error("Слишком большой ответ архива");
+ return JSON.parse(text);
+}
+function archiveTracks(raw){
+ const meta=raw?.metadata||{},id=safeId(meta.identifier),licenseName=licenseType(Array.isArray(meta.licenseurl)?meta.licenseurl[0]:meta.licenseurl);
+ if(!id||meta.mediatype!=="audio"||!licenseName||!Array.isArray(raw.files))return[];
+ const sound=raw.files.filter(f=>f.source==="original"&&/\\.mp3$/i.test(String(f.name||"")))
+ .concat(raw.files.filter(f=>f.source==="derivative"&&/\\.mp3$/i.test(String(f.name||""))));
+ return sound.slice(0,50).filter(f=>typeof f.name==="string"&&f.name.length<260&&!f.name.includes("../")&&!f.name.startsWith("/")&&!f.name.includes("\\\\")&&!/[\\u0000-\\u001f]/.test(f.name)&&Number(f.size)>20000&&Number(f.size)<=52428800&&!f.private&&!f.is_dark)
+ .slice(0,12).map(f=>{
+  const artist=String(f.artist||f.creator||meta.creator||"Independent artist").replace(/<[^>]*>/g," ").slice(0,90);
+  const title=String(f.title||f.name.replace(/\\.mp3$/i,"").replace(/[_-]+/g," ")).replace(/<[^>]*>/g," ").slice(0,130);
+  return{id:"archive:"+id+":"+f.name.slice(0,130),source:"archive",title,artist,provider:"Internet Archive",
+  artwork:ARCHIVE+"/services/img/"+encodeURIComponent(id),
+  stream:ARCHIVE+"/download/"+encodeURIComponent(id)+"/"+encodeURIComponent(f.name).replace(/%2F/gi,"/"),
+  permalink:ARCHIVE+"/details/"+encodeURIComponent(id),license:licenseName,license_url:String(meta.licenseurl),playable:true};
+ }).filter(x=>x.artist.trim()&&x.title.trim());
+}
+async function providerPage(group,p,signal){
+ const search=await fetchJSON(archiveSearchUrl(group,p),signal,1500000);
+ const resp=search?.response||{},docs=Array.isArray(resp.docs)?resp.docs:[];
+ const results=await Promise.allSettled(docs.map(x=>{
+  const id=safeId(x.identifier);
+  if(!id)return Promise.resolve({});
+  return fetchJSON(ARCHIVE+"/metadata/"+encodeURIComponent(id),signal);
+ }));
+ const tracks=results.flatMap(x=>x.status==="fulfilled"?archiveTracks(x.value):[]);
+ return{ok:true,items:tracks,releaseCount:Number(resp.numFound)||0,
+ hasMore:p*4<(Number(resp.numFound)||0)};
+}
 async function load(){
  if(busy||complete||page>=300)return;
  const wantedPage=page+1;busy=true;const ctl=new AbortController();active=ctl;const stop=setTimeout(()=>ctl.abort(),17000);
  const button=$("archiveMore");button.disabled=true;button.hidden=true;
  status("Ищем разрешённые музыкальные записи…");
  try{
-  const response=await fetch("/api/music-archive?license="+encodeURIComponent(license)+"&page="+wantedPage,{credentials:"omit",signal:ctl.signal,headers:{Accept:"application/json"}});
-  if(!response.ok)throw Error("HTTP "+response.status);
-  const payload=await response.json();if(!payload?.ok||!Array.isArray(payload.items))throw Error("Некорректный ответ каталога");
+  const payload=await providerPage(license,wantedPage,ctl.signal);
+  if(!payload?.ok||!Array.isArray(payload.items))throw Error("Некорректный ответ каталога");
   if(active!==ctl)return;
   releaseCount=Number(payload.releaseCount)||0;
   page=wantedPage;addTracks(payload.items);
