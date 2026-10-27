@@ -69,3 +69,29 @@ test("artwork is host checked",()=>{
  assert.equal(cleanPoster("https://pic.rutubelist.ru/cover.jpg"),"https://pic.rutubelist.ru/cover.jpg");
  assert.equal(cleanPoster("https://pic.rtbcdn.ru/video/2026-10-23/poster.jpg"),"https://pic.rtbcdn.ru/video/2026-10-23/poster.jpg");
 });
+
+test("Soyuzmultfilm children films and cartoon episodes show with original posters and dates",()=>{
+ const c=parseVideo(video({
+   id:"11111111111111111111111111111111",
+   author:{id:CHANNELS.soyuzmultfilm.id,name:"Союзмультфильм"},
+   title:"Умка. Большое плавание",duration:430,
+   publication_ts:"2026-10-27T17:08:33",
+   thumbnail_url:"https://pic.rtbcdn.ru/video/2026-10-27/umka.jpg"
+ }),"soyuzmultfilm");
+ assert.ok(c);
+ assert.equal(c.contentType,"Мультфильмы");
+ assert.equal(c.publishedAt,"2026-10-27T17:08:33");
+ assert.equal(c.poster,"https://pic.rtbcdn.ru/video/2026-10-27/umka.jpg");
+ assert.equal(c.player.provider,"RUTUBE");
+ assert.equal(parseVideo(video({author:{id:CHANNELS.soyuzmultfilm.id},duration:32}),"soyuzmultfilm"),null);
+});
+test("Studio film records label series and preserve fact-checked genre terms",()=>{
+ const s=parseVideo(video({
+  title:"Женщина в беде — 4 серия (драма, 2015, сериал)",
+  author:{id:CHANNELS.starmedia.id},
+  publication_ts:"2026-10-24T20:00:00"
+ }),"starmedia");
+ assert.equal(s.contentType,"Сериалы");
+ assert.ok(s.genres.includes("Драма"));
+ assert.ok(s.genres.includes("Сериалы"));
+});
