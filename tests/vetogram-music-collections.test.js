@@ -1,0 +1,41 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {execFileSync} from "node:child_process";
+import {fileURLToPath} from "node:url";
+const root=new URL("../public/",import.meta.url);
+const html=readFileSync(new URL("index.html",root),"utf8");
+const jsPath=new URL("vetogram-music-collections.js",root);
+const js=readFileSync(jsPath,"utf8");
+const css=readFileSync(new URL("vetogram-music-collections.css",root),"utf8");
+const social=readFileSync(new URL("vetogram-music-social.js",root),"utf8");
+const core=readFileSync(new URL("vetogram-music.js",root),"utf8");
+test("collections run after native player and sharing bridge",()=>{
+ const corePos=html.indexOf('src="./vetogram-music.js"'),socialPos=html.indexOf('src="./vetogram-music-social.js"'),collectionsPos=html.indexOf('src="./vetogram-music-collections.js"');
+ assert.ok(corePos>=0&&socialPos>corePos&&collectionsPos>socialPos);
+ assert.match(html,/vetogram-music-collections\.css/);
+ assert.match(css,/vmc-section/);assert.match(css,/@media\(max-width:480px\)/);
+ execFileSync(process.execPath,["--check",fileURLToPath(jsPath)],{stdio:"pipe"});
+});
+test("named playlists are local-only and bounded",()=>{
+ assert.match(js,/localStorage\.setItem/);
+ assert.match(js,/MAX=25/);
+ assert.match(js,/MAX_TRACKS=120/);
+ assert.match(js,/V\.local\(\)/);
+ assert.match(js,/V\.metadata\(\)/);
+ assert.match(js,/S\.mixShareURL/);
+ assert.match(js,/t\.source==="metadata"/);
+ assert.match(js,/navigator|openTelegramLink/);
+ assert.doesNotMatch(js,/fetch\(|XMLHttpRequest|FileReader|TELEGRAM_BOT_TOKEN|api\.vk\.com/);
+});
+test("sharing module supports direct private-file share and opt-in JSON import",()=>{
+ assert.match(social,/navigator\.canShare/);
+ assert.match(social,/navigator\.share/);
+ assert.match(social,/Telegram\./);
+ assert.match(social,/decodeMix/);
+ assert.match(social,/mixShareURL/);
+ assert.match(social,/api\.importList/);
+ assert.match(core,/function removeLocal/);
+ assert.match(core,/function moveLocal/);
+ assert.match(core,/URL\.revokeObjectURL/);
+});
