@@ -10,9 +10,9 @@ const collection=readFileSync(new URL("vetogram-music-collections.js",root),"utf
 const catalog=readFileSync(new URL("vetogram-music-catalog.js",root),"utf8");
 const js=readFileSync(new URL("vetogram-music-openverse.js",root),"utf8");
 const css=readFileSync(new URL("vetogram-music-openverse.css",root),"utf8");
-const start=js.indexOf("const API="),end=js.indexOf("let term=",start);
-assert.ok(start>0&&end>start);
-const {normalize,endpoint}=new Function(js.slice(start,end)+"return {normalize,endpoint};")();
+const start=js.indexOf("const API="),state=js.indexOf("let term=",start),functions=js.indexOf("const clean=",state),end=js.indexOf("function attribution(",functions);
+assert.ok(start>0&&state>start&&functions>state&&end>functions);
+const {normalize,endpoint}=new Function(js.slice(start,state)+js.slice(functions,end)+"return {normalize,endpoint};")();
 const sample=(patch={})=>({
  id:"8624ba61-57f1-4f98-8a85-ece206c319cf",category:"music",mature:false,
  title:"Армянская музыка",creator:"Indie musician",license:"by",license_version:"4.0",
