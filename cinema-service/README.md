@@ -58,3 +58,36 @@ JSON fields: \`id,title_ru,original_title,year,description,poster_url,duration_s
 - Static JS parse, HTML ID bindings, mocked iframe seek, origin verification and removal were inspected with the connected source in this task.
 - Actual video streaming on Telegram Android and iOS, production PostgreSQL connectivity and reverse-proxy/CSP must be tested **before** any merge or deploy.
 - Do not merge PR #195 or publish via Vercel until explicit owner request.
+
+
+## Multi-player Russian dubbing support (Cinema 2.0)
+
+- The importer now accepts multiple JSON entries for the same movie ID with different approved playback URLs. Add \`translation_name\`, \`quality_label\`, and optional \`priority\` to each entry.
+- \`sql/002_source_variants.sql\` adds these source-level fields. Run **both** migrations via \`npm run migrate\` on a private database before starting the updated service.
+- \`GET /api/cinema/movies/:id/sources\` returns up to 30 active, reviewed, globally permitted source variants for that title. Do not expose sources with unreviewed terms or territorial restrictions.
+- In Cinema, an approved provider/translation dropdown appears above the player. Switching removes the previous iframe, preserving the shell. The original rights-holder RUTUBE film works with the static frontend while service is offline.
+- The client presents provider-specific quality/voice labels **only from approved metadata**. Third-party embedded players control their own audio and video quality menus.
+
+### Optional Kinobox discovery for administrative review
+
+Kinobox documents an API for player search by title, Kinopoisk, IMDb or TMDB ID: https://kinobox.tv/api . The documented rate limit is **2 requests/second/IP**, and the API disallows scraping a copy of its whole film database.
+
+The CLI intentionally makes a single query and outputs **unreviewed candidate metadata**; it does not publish third-party iframe URLs, bypass access restrictions, or grant distribution rights:
+
+\`\`\`sh
+cd cinema-service
+npm run discover -- title "Интерстеллар"
+npm run discover -- imdb tt0816692
+\`\`\`
+
+The output includes provider, available audio translation labels, quality and candidate iframe URL for **operator review only** (\`rights_reviewed:false\`). It cannot be passed directly to \`import.mjs\`: that requires verified rights-holder terms and the complete film metadata fields. No API key, member account, or mass streaming catalog has been obtained.
+
+### Alloha readiness and eligibility
+
+The public Alloha website (https://allohatv.com/) advertises 64,609 movies and 18,390 series. These are **provider claims, not VETOGRAM's available streaming count**. Its official access form (linked from the homepage) currently states a minimum of **300 site visitors/day during the previous week**, a player CNAME to \`streamalloha.live\`, and viewing access to site analytics. No Alloha account/domain integration has been authorized or completed. Do not invent or share a provider token or assume its videos may be republished in a paid Telegram app.
+
+## UX / Quality status
+
+- Premium homepage now contains a mobile-horizontal **«Смотреть на русском»** shelf in the existing VETO charcoal/coral theme.
+- Provider/translation selector is visible on player pages with a confirmed external stream. The code was smoke-tested on synthetic DOM and simulated backend source responses.
+- **Not yet tested on actual Telegram Android/iOS**: playback, commercials, deep links, iframe resizing, or network/provider regional restrictions. No VPS/Postgres provisioned. No merge/deployment.
