@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#090914"><meta name="description" content="Vetogram Music — твой ритм в Telegram. Локальная музыка, открытый музыкальный каталог Audius, радио и умный плеер.">
+<meta name="theme-color" content="#090914"><meta name="description" content="Vetogram Music: русская музыка, настоящий топ России, популярные оригиналы, музыкальные чарты и плеер.">
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,12 +17,12 @@
  <nav class="side-nav" id="sideNav">
   <button class="nav-item active" data-page="home" type="button"><span>⌂</span> Главная</button>
   <button class="nav-item" data-page="search" type="button"><span>⌕</span> Поиск музыки</button>
-  <button class="nav-item" data-page="charts" type="button"><span>▤</span> Чарты</button>
+  <button class="nav-item" data-page="charts" type="button"><span>▤</span> Русский топ-25</button>
+  <button class="nav-item" data-page="hits" type="button"><span>✦</span> Русские хиты</button>
   <button class="nav-item" data-page="catalog" type="button"><span>♫</span> Каталог музыки</button>
   <button class="nav-item" data-page="originals" type="button"><span>◈</span> Оригиналы</button>
   <button class="nav-item" data-page="archive" type="button"><span>♬</span> Открытая библиотека</button>
   <button class="nav-item" data-page="mixter" type="button"><span>◈</span> CC Ремиксы</button>
-  <button class="nav-item" data-page="hits" type="button"><span>✦</span> Мировые хиты</button>
   <button class="nav-item" data-page="library" type="button"><span>♡</span> Моя музыка</button>
   <button class="nav-item" data-page="radio" type="button"><span>◉</span> Радио</button>
   <button class="nav-item" data-page="import" type="button"><span>⇧</span> Добавить музыку</button>
@@ -221,7 +221,7 @@
 <section class="page" data-view="hits" aria-label="Поиск оригинальных популярных песен">
  <div class="hits-hero">
   <small>VETOGRAM MUSIC / ORIGINAL RELEASE DISCOVERY</small>
-  <h1>Здесь живут <em>оригиналы.</em></h1>
+  <h1>Русские и мировые <em>оригиналы.</em></h1>
   <p>Настоящие российские, армянские и международные релизы — поиск по официальным данным Apple Music без API-ключа. Вместо загрузки чужих MP3 открой оригинальный трек в официальном плеере.</p>
   <div class="hits-chips"><span>✦ ORIGINAL RELEASES</span><span>РУС · ՀԱՅ · WORLD</span><span>APPLE · SPOTIFY · YANDEX</span></div>
  </div>
@@ -230,10 +230,10 @@
   <p>Подборки для начала поиска. Показываем реальные релизы из музыкального каталога, а не альтернативные ремиксы с похожим названием.</p>
   <div class="hits-presets" id="hitsPresets" aria-label="Исполнители для быстрого поиска"></div>
   <form id="hitsForm" class="hits-form">
-   <input id="hitsQuery" type="search" autocomplete="off" maxlength="80" aria-label="Поиск исполнителя или песни" placeholder="Исполнитель или название песни" value="Sirusho">
+   <input id="hitsQuery" type="search" autocomplete="off" maxlength="80" aria-label="Поиск исполнителя или песни" placeholder="Исполнитель или название песни" value="MACAN">
    <select id="hitsCountry" aria-label="Регион Apple Music">
+    <option value="ru" selected>Россия</option>
     <option value="am">Армения</option>
-    <option value="ru">Россия</option>
     <option value="us">США</option>
     <option value="ge">Грузия</option>
    </select>
