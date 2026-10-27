@@ -81,6 +81,7 @@
   }
   function setSourceInfo(){
     document.body.dataset.booksSource=state.source;
+    $('libraryClarity').hidden=['complete','local','gutenberg'].includes(state.source);
     renderFeaturedEditions();
     const isGutenberg=state.source==='gutenberg';
     const isComplete=state.source==='complete';
@@ -306,12 +307,12 @@
     $('shelfEyebrow').textContent=state.query ? 'SEARCH / RESULTS' : 'DISCOVER / 01';
   }
   function bookExtent(book){
-    if(isCatalogBook(book))return {kind:'metadata',label:'КАРТОЧКА · НЕТ ТЕКСТА'};
+    if(isCatalogBook(book))return {kind:'metadata',label:'КАТАЛОГ · ОПИСАНИЕ'};
     if(isLocal(book))return {kind:'local',label:'ЛИЧНЫЙ ФАЙЛ · '+(book.format||'ТЕКСТ').toUpperCase()};
     if(book?.curatedWholeText)return {kind:'full',label:'ЦЕЛЬНЫЙ ТЕКСТ · '+Math.round(book.verifiedChars/1000)+' ТЫС. ЗНАКОВ'};
-    if(isWiki(book))return {kind:'partial',label:book.isTranslation?'ПЕРЕВОД · ПРОВЕРИТЬ ОБЪЁМ':'ТЕКСТ / ЧАСТИ · ПРОВЕРИТЬ'};
+    if(isWiki(book))return {kind:'partial',label:book.isTranslation?'РУССКИЙ ПЕРЕВОД':'ПРОИЗВЕДЕНИЕ · ЧИТАТЬ'};
     if(book?.readable && book?.source==='Project Gutenberg')return {kind:'full',label:'ПОЛНЫЙ ТЕКСТ ИСТОЧНИКА'};
-    return {kind:'metadata',label:'ОБЪЁМ НЕ ПОДТВЕРЖДЁН'};
+    return {kind:'metadata',label:'ОТКРЫТЬ КНИГУ'};
   }
   function officialWikisourceEpubUrl(book){
     if(!isWiki(book)||typeof book.title!=='string'||book.title.length>230)return '';
