@@ -11,6 +11,10 @@ if(!app||!root)return;
 const $=id=>document.getElementById(id);
 const make=(name,cls,title)=>{const node=document.createElement(name);if(cls)node.className=cls;if(title!==undefined)node.textContent=String(title);return node};
 const STORAGE="vetogram-youtube-library-v1",MAX_SAVED=50;
+const VERIFIED_CHANNELS=Object.freeze([
+ {label:"GAZ LIVE / Gazgolder",note:"Публичные загрузки: музыкальные релизы, выступления и шоу",url:"https://www.youtube.com/channel/UCthfjHehYgSyhf8ONjzJMUw"},
+ {label:"BlackStarTV",note:"Публичные загрузки музыкального лейбла Black Star и другие видео",url:"https://www.youtube.com/channel/UCFpD-o5sN0cSk8pgZSGLJ4g"}
+]);
 const REGIONS=Object.freeze([{id:"ru",label:"Русская"},{id:"hy",label:"Армянская"},{id:"en",label:"Мировая"}]);
 function clean(v,n=115){return String(v??"").replace(/[\u0000-\u001f\u007f]/g," ").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,n)}
 function validVideo(id){return /^[a-zA-Z0-9_-]{11}$/.test(String(id||""))}
@@ -153,6 +157,21 @@ function renderSaved(){
  if(!saved.length){container.append(make("p","yt-empty","Добавь ссылку на YouTube-плейлист или видео — она сохранится только на твоём устройстве."));return}
  for(const item of saved.slice().reverse())container.append(native(item,true));
 }
+function renderFeaturedChannels(){
+ const target=$("ytFeaturedChannels");if(!target)return;
+ target.replaceChildren();
+ for(const item of VERIFIED_CHANNELS){
+  const parsed=parseLink(item.url);if(!parsed)continue;
+  const obj={...parsed,label:item.label};
+  const row=native(obj);
+  const small=make("small","yt-provider-note",item.note);
+  row.querySelector(".yt-library-info")?.append(small);
+  const link=make("a","yt-provider-external","Открыть канал ↗");
+  link.href=item.url;link.target="_blank";link.rel="noopener noreferrer";
+  row.querySelector(".yt-library-actions")?.append(link);
+  target.append(row);
+ }
+}
 function renderCurated(){
  const container=$("ytCurated");container.replaceChildren();
  const selected=chosenCurated().filter(v=>(v.title+" "+v.artist).toLowerCase().includes(search));
@@ -201,8 +220,9 @@ root.querySelectorAll("[data-yt-region]").forEach(b=>b.onclick=()=>{
 });
 $("ytStop").onclick=stop;
 $("ytOpenSource").hidden=true;
-renderCurated();renderSaved();
-document.addEventListener("vetogram:youtube-open",()=>{renderCurated();renderSaved()});
+renderCurated();renderSaved();renderFeaturedChannels();
+document.addEventListener("vetogram:page-leave",e=>{if(e.detail?.page==="youtube")stop()});
+document.addEventListener("vetogram:youtube-open",()=>{renderCurated();renderSaved();renderFeaturedChannels()});
 window.VetogramYouTube=Object.freeze({parseLink,embedFor,start,open:(input,label)=>{
  const parsed=parseLink(input);if(!parsed)return false;
  app.showPage("youtube");start({...parsed,label:clean(label||"YouTube",90)});return true;
