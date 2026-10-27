@@ -7,9 +7,9 @@
   <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
   <title>VETOGRAM Books — Читать</title>
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/books.css?v=4">
+  <link rel="stylesheet" href="/books.css?v=5">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="/books.js?v=4" defer></script>
+  <script src="/books.js?v=5" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -45,6 +45,7 @@
       <button type="button" data-books-source="ru" aria-pressed="false"><b>РУ</b> Русская библиотека</button>
       <button type="button" data-books-source="hy" aria-pressed="false"><b>ՀՅ</b> Հայկական գրադարան</button>
       <button type="button" data-books-source="gutenberg" aria-pressed="false"><b>EN</b> Мировая классика</button>
+      <button type="button" data-books-source="spotlight" aria-pressed="false"><b>✦</b> Новинки и хиты · RU</button>
     </div>
     <p id="sourceDescription" class="source-description">Зарубежные произведения в русских переводах · из Русской Викитеки</p>
     <div class="translation-filters" id="translationFilters" role="group" aria-label="Язык оригинала">
@@ -54,6 +55,17 @@
       <button type="button" data-original-lang="de" aria-pressed="false">Немецкого</button>
       <button type="button" data-original-lang="it" aria-pressed="false">Итальянского</button>
       <button type="button" data-original-lang="es" aria-pressed="false">Испанского</button>
+    </div>
+    <div class="spotlight-filters" id="spotlightFilters" role="group" aria-label="Подборки современных книг" hidden>
+      <button type="button" data-spotlight="now" class="active">В центре внимания</button>
+      <button type="button" data-spotlight="new">Новинки</button>
+      <button type="button" data-spotlight="fantasy">Фантастика</button>
+      <button type="button" data-spotlight="detective">Детективы</button>
+      <button type="button" data-spotlight="romance">Романтика</button>
+      <button type="button" data-spotlight="nonfiction">Психология</button>
+      <button type="button" data-spotlight="business">Бизнес</button>
+      <button type="button" data-spotlight="youth">Young Adult</button>
+      <button type="button" data-spotlight="classics">Мировая классика</button>
     </div>
     <section class="catalog-bar" aria-label="Найти книгу">
       <form id="searchForm" class="search">
@@ -101,6 +113,7 @@
     <header class="reader-top">
       <button id="readerBack" class="reader-back" type="button" aria-label="Закрыть книгу">← <span>Библиотека</span></button>
       <div class="reader-identity"><span>СЕЙЧАС ЧИТАЕТЕ</span><strong id="readerTitle">Книга</strong></div>
+      <button id="readerFlowButton" class="reader-flow-button" type="button" aria-label="VETO FLOW — фокус по абзацам" aria-pressed="false" title="VETO FLOW">✧ <span>FLOW</span></button>
       <button id="readerFocusButton" class="reader-focus-button" type="button" aria-label="Режим погружения" aria-pressed="false" title="Скрыть лишнее">◫</button>
       <button id="readerSettingsButton" class="reader-settings-button" type="button" aria-label="Настройки чтения" aria-expanded="false">Aa</button>
     </header>
@@ -112,8 +125,15 @@
       <div><span>Шрифт</span><button type="button" data-read-font="literary">Литературный</button><button type="button" data-read-font="modern">Современный</button></div>
       <div><span>Интервал</span><button type="button" data-read-leading="compact">Плотный</button><button type="button" data-read-leading="comfortable">Комфортный</button><button type="button" data-read-leading="airy">Свободный</button></div>
       <div><span>Ширина строки</span><button type="button" data-read-width="normal">Удобная</button><button type="button" data-read-width="narrow">Узкая</button></div>
+      <div class="read-tech-note"><strong>VETO FLOW</strong><span>Выделяет текущий абзац, смягчает фон и помогает удерживать внимание. Работает без отправки текста на сервер.</span></div>
       <div id="readerChapters" hidden><label for="chapterSelect">Содержание</label><select id="chapterSelect" aria-label="Выберите главу"><option value="">Начало книги</option></select></div>
       <div class="reader-attribution"><span>Текст адаптирован для читалки</span><a id="readerSourceLink" href="https://www.gutenberg.org/" target="_blank" rel="noopener noreferrer">Оригинал и авторские права ↗</a></div>
+    </div>
+    <div class="flow-guide" id="flowGuide" hidden>
+      <span><b>✧ VETO FLOW</b> · фокус на одном абзаце</span>
+      <div><button id="flowPrevious" type="button" aria-label="Предыдущий абзац">↑</button>
+      <span id="flowPosition">1 / 1</span>
+      <button id="flowNext" type="button" aria-label="Следующий абзац">↓</button></div>
     </div>
     <div class="reader-scroll" id="readerScroll">
       <div class="reader-paper" id="readerPaper">
