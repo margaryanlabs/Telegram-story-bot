@@ -425,17 +425,39 @@
       button.setAttribute("aria-pressed",String(yes));
     });
   }
+  // Identify episodes of the SAME TV show; do not invent season count.
+  // The original uploader titles retain their exact episode numbers.
+  function seriesShowName(f){
+    return String(f.title||"")
+      .replace(/\s*(?:\.|,)?\s*(?:(?:\d+\s*)?сезон\b|все\s+серии\b|серии?\s+\d+\b|\d+\s+серия\b)[\s\S]*$/i,"")
+      .replace(/[.:\s,-]+$/g,"").trim()||String(f.title||"");
+  }
+  function seriesEpisodeNumber(f){
+    const m=String(f.title||"").match(/\b(\d+)\s*серия\b|\bсерии?\s*(\d+)\b/i);
+    return m?Number(m[1]||m[2]):999;
+  }
+  function groupedSeries(){
+    const shows=new Map();
+    for(const film of films){
+      if(film.contentType!=="Сериалы"||!film.player?.licensed)continue;
+      const show=seriesShowName(film), key=show.toLocaleLowerCase("ru");
+      const group=shows.get(key)||[];
+      group.push(film);shows.set(key,group);
+    }
+    return [...shows.values()].map(rows=>rows.sort((a,b)=>seriesEpisodeNumber(a)-seriesEpisodeNumber(b)))
+      .sort((a,b)=>uploadTime(b[0])-uploadTime(a[0]));
+  }
   function renderSeriesCollections(){
     const popular=films.filter(f=>f.seriesPopular&&f.russianAudioStatus==="catalog-listed");
-    const playable=films.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true&&f.player?.type==="iframe")
-      .sort((a,b)=>uploadTime(b)-uploadTime(a));
+    const playable=films.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true&&f.player?.type==="iframe");
+    const groups=groupedSeries();
     const home=isHome(),onSeries=state.tab==="series";
     $("cinemaPopularSeries").classList.toggle("hidden",!home&&!onSeries);
     if(home||onSeries)$("cinemaPopularSeriesRail").replaceChildren(...popular.map(filmCard));
     $("cinemaSeriesHub").classList.toggle("hidden",!onSeries);
     if(onSeries){
-      $("cinemaSeriesPlayableRail").replaceChildren(...playable.slice(0,42).map(filmCard));
-      text("cinemaSeriesStats",playable.length+" серий и сборников с исходными плеерами · "+popular.length+
+      $("cinemaSeriesPlayableRail").replaceChildren(...groups.slice(0,45).map(g=>filmCard(g[0])));
+      text("cinemaSeriesStats",playable.length+" серий и сборников · "+groups.length+" сериалов в оригинальном плеере · "+popular.length+
         " популярных сериалов с указанной русской дорожкой");
     }
   }
@@ -444,8 +466,7 @@
     renderSeriesCollections();
     const recent=films.filter(f=>f.player&&uploadTime(f)>0)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
-    const series=films.filter(f=>f.contentType==="Сериалы"&&f.player)
-      .sort((a,b)=>uploadTime(b)-uploadTime(a));
+    const series=groupedSeries().map(group=>group[0]);
     const cartoons=films.filter(f=>f.contentType==="Мультфильмы")
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
     const shelves=[
@@ -574,6 +595,19 @@
     text("cinemaDetailsTitle",f.title);
     text("cinemaDetailsMeta",[f.original,f.year,f.minutes?f.minutes+" мин":null,...(f.genres||[])].filter(Boolean).join(" · "));
     text("cinemaDetailsSynopsis",f.synopsis);
+    const episodes=f.contentType==="Сериалы"&&f.player
+      ?films.filter(v=>v.contentType==="Сериалы"&&v.player&&seriesShowName(v)===seriesShowName(f))
+        .sort((a,b)=>seriesEpisodeNumber(a)-seriesEpisodeNumber(b)):[];
+
+    $("cinemaEpisodeChooser").classList.toggle("hidden",episodes.length<=1);
+    if(episodes.length>1){
+      const select=$("cinemaEpisodeSelect");
+      select.replaceChildren(...episodes.map(v=>new Option(
+        seriesEpisodeNumber(v)!==999?"Серия "+seriesEpisodeNumber(v)+" · "+(v.minutes||"?")+" мин":
+          v.title.slice(0,90),v.id)));
+      select.value=f.id;
+      select.onchange=()=>{const next=filmById(select.value);if(next)openDetails(next)};
+    }
     text("cinemaDetailsCreator",f.creator);
     text("cinemaDetailsLanguage",f.discoveryOnly?(f.russianAudio?f.russianAudio.note+" Источник: "+f.watchProvider+".":"Русскую дорожку для этого фильма пока не подтвердил ни один проверенный официальный источник."):f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
     $("cinemaDetailsWatch").textContent=f.discoveryOnly?(f.watchAvailability==="unavailable"?"↗ Проверить статус у сервиса":f.russianAudio?"↗ Проверить просмотр на русском":"↗ Найти легальный просмотр"):"▶ Смотреть";
