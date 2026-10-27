@@ -38,3 +38,9 @@
 .originals-empty{padding:25px;color:#aaa0b0}
 @media(max-width:600px){.originals-hero{padding:23px 20px;border-radius:18px}.originals-list{grid-template-columns:1fr}.originals-card{display:grid;grid-template-columns:110px minmax(0,1fr)}.originals-image{height:100%;aspect-ratio:auto}.originals-details{padding:12px}.originals-details strong{font-size:13px}.originals-actions{gap:8px}.originals-play{padding:8px 10px}.originals-player{padding:9px;border-radius:15px}.originals-player-head{padding:7px}}
 @media(prefers-reduced-motion:reduce){.originals-tabs button,.originals-play{transition:none}}
+
+/* Real discovery continues at provider, without pretending a free catalog API exists. */
+.originals-find-more{margin-top:12px;display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 16px;border:1px solid rgba(245,199,255,.45);background:rgba(246,200,251,.09);color:#f5d4ff;border-radius:11px;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.originals-find-more:hover{background:rgba(246,200,251,.16)}
+.originals-find-more:focus-visible{outline:2px solid #e8c3fd;outline-offset:3px}
+@media(max-width:600px){.originals-find-more{width:100%}}
