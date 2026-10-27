@@ -70,6 +70,31 @@
      licenseUrl:"https://rutube.ru/info/embed/",
      player:{type:"iframe",url:"https://rutube.ru/play/embed/2a0058219dc6990f2a356fbc47a59923",licensed:true,license:"Официальный публичный RUTUBE embed",credit:"Киноконцерн «Мосфильм»"}}
   ];
+  // Full-length Russian-language films on the rights holder's official RUTUBE channel.
+  // These are PUBLIC EMBEDS, not transferable rights to download or rehost the films.
+  mosfilm.push(
+    {id:"mosfilm-ivan-vasilievich",title:"Иван Васильевич меняет профессию",original:"Ivan Vasilievich Changes Profession",year:1973,minutes:88,
+     genres:["Советское кино","Комедия","Русский язык"],hue:205,
+     synopsis:"Шурик изобретает машину времени. Царь Иван Грозный оказывается в современной Москве, а управдом Бунша — в XVI веке.",
+     creator:"Киноконцерн «Мосфильм» · режиссёр Леонид Гайдай",spoken:"Русский",
+     sourcePage:"https://rutube.ru/video/de108b940b59e5e9d361077328ca9201/",
+     license:"Официальное публичное встраивание RUTUBE",licenseUrl:"https://rutube.ru/info/embed/",
+     player:{type:"iframe",url:"https://rutube.ru/play/embed/de108b940b59e5e9d361077328ca9201",licensed:true,license:"Публичный плеер RUTUBE",credit:"Киноконцерн «Мосфильм»"}},
+    {id:"mosfilm-diamond-arm",title:"Бриллиантовая рука",original:"The Diamond Arm",year:1968,minutes:98,
+     genres:["Советское кино","Комедия","Русский язык"],hue:171,
+     synopsis:"Семён Семёнович оказывается случайным участником контрабандной операции и помогает раскрыть преступление.",
+     creator:"Киноконцерн «Мосфильм» · режиссёр Леонид Гайдай",spoken:"Русский",
+     sourcePage:"https://rutube.ru/video/1a7baf7b3eb80925774b0174b1e2c0f9/",
+     license:"Официальное публичное встраивание RUTUBE",licenseUrl:"https://rutube.ru/info/embed/",
+     player:{type:"iframe",url:"https://rutube.ru/play/embed/1a7baf7b3eb80925774b0174b1e2c0f9",licensed:true,license:"Публичный плеер RUTUBE",credit:"Киноконцерн «Мосфильм»"}},
+    {id:"mosfilm-gentlemen-of-fortune",title:"Джентльмены удачи",original:"Gentlemen of Fortune",year:1971,minutes:84,
+     genres:["Советское кино","Комедия","Русский язык"],hue:40,
+     synopsis:"Заведующий детским садом оказывается невероятно похож на опасного преступника и помогает милиции найти похищенные ценности.",
+     creator:"Киноконцерн «Мосфильм» · режиссёр Александр Серый",spoken:"Русский",
+     sourcePage:"https://rutube.ru/video/8f50ed5a7841ff1418671a3c6b7440d4/",
+     license:"Официальное публичное встраивание RUTUBE",licenseUrl:"https://rutube.ru/info/embed/",
+     player:{type:"iframe",url:"https://rutube.ru/play/embed/8f50ed5a7841ff1418671a3c6b7440d4",licensed:true,license:"Публичный плеер RUTUBE",credit:"Киноконцерн «Мосфильм»"}}
+  );
   films.unshift(...mosfilm);
   films.forEach(function(f){f.editions=[]; /* optional approved: [{id:'ru',label:'Русский',url:'https://...',license:'...',credit:'...'}] */});
   window.VetogramCinemaCatalog=Object.freeze(films.map(function(f){return Object.freeze(f)}));
