@@ -14,7 +14,8 @@ function checkUrl(raw){
  if(u.username||u.password||u.hash)throw Error("Адрес не должен содержать логин, пароль или фрагмент");
  if(denyHosts.test(u.hostname))throw Error("Это адрес страницы музыкального сервиса, а не прямой аудиофайл");
  if(/(?:^|\/)(?:localhost|127\.0\.0\.1)(?:\/|$)/i.test(u.hostname)||u.hostname==="localhost"||
- /^(127|10|169\.254|192\.168)\.\d+\.\d+\.\d+$/.test(u.hostname) ||
+ /^(?:127|10)\.\d+\.\d+\.\d+$/.test(u.hostname) ||
+ /^(?:169\.254|192\.168)\.\d+\.\d+$/.test(u.hostname) ||
  /^172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+$/.test(u.hostname)||
  u.hostname.endsWith(".local")||u.hostname==="[::1]")
   throw Error("Локальные сетевые адреса не поддерживаются");
