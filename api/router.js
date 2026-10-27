@@ -4,6 +4,7 @@
  * No authorization, webhook, or persistence operations happen here.
  */
 const endpointLoaders = {
+  "cinema-channels": () => import("./cinema-channels.js"),
   "automation-run": () => import("./automation-run.js"),
   "automations": () => import("./automations.js"),
   "business-wizard": () => import("./business-wizard.js"),
