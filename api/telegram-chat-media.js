@@ -3,10 +3,12 @@ import { getViewerSession } from '../lib/viewer-sync-store.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { withBackupClient } from '../lib/telegram-history-backup.js';
 import { verifyTelegramClientOwner, telegramOwnerError } from '../lib/telegram-owner-runtime.js';
+import sharp from 'sharp';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const AVATAR_LIMIT=180*1024;
-const PHOTO_LIMIT=4*1024*1024;
+const PHOTO_LIMIT=4*1024*1024; // Keep API response below serverless payload limits.
+const PHOTO_DOWNLOAD_LIMIT=16*1024*1024; // Oversize Telegram photos can be resized safely.
 const ATTACHMENT_LIMIT=4*1024*1024;
 const MAX_DIALOGS=500;
 const validId=value=>/^-?\d{1,22}$/.test(String(value||''));
@@ -22,10 +24,10 @@ async function getPhoto(client,dialog,messageId) {
   const message=Array.isArray(messages)?messages.find(m=>Number(m?.id)===id):null;
   if(!message?.photo && !/Photo/i.test(String(message?.media?.className||'')))return null;
   const documentedSize=Number(message?.media?.photo?.sizes?.at?.(-1)?.size||0);
-  if(documentedSize>PHOTO_LIMIT)return null;
+  if(documentedSize>PHOTO_DOWNLOAD_LIMIT)return null;
   return client.downloadMedia(message,{
     progressCallback:(loaded,total)=>{
-      if(Number(loaded)>PHOTO_LIMIT||Number(total)>PHOTO_LIMIT)
+      if(Number(loaded)>PHOTO_DOWNLOAD_LIMIT||Number(total)>PHOTO_DOWNLOAD_LIMIT)
         throw new Error('media_limit');
     },
   });
@@ -53,6 +55,23 @@ async function getAttachment(client,dialog,messageId) {
   });
   const buffer=Buffer.isBuffer(raw)?raw:raw instanceof Uint8Array?Buffer.from(raw):null;
   return buffer&&buffer.length>0&&buffer.length<=ATTACHMENT_LIMIT?{buffer,mime}:null;
+}
+// A Telegram JPEG can be larger than the response transport limit even though
+// it is perfectly viewable. Deliver a bounded display preview, not a 404.
+// Full-resolution document downloads remain separate from inline previews.
+export async function prepareInlinePhoto(raw){
+  const bytes=Buffer.isBuffer(raw)?raw:raw instanceof Uint8Array?Buffer.from(raw):null;
+  if(!bytes||!bytes.length||bytes.length>PHOTO_DOWNLOAD_LIMIT)return null;
+  if(bytes.length<=2*1024*1024)return bytes;
+  try{
+    let preview=await sharp(bytes,{limitInputPixels:40_000_000})
+      .rotate().resize({width:1440,height:1440,fit:'inside',withoutEnlargement:true})
+      .jpeg({quality:78,mozjpeg:true}).toBuffer();
+    if(preview.length>PHOTO_LIMIT)preview=await sharp(bytes,{limitInputPixels:40_000_000})
+      .rotate().resize({width:960,height:960,fit:'inside',withoutEnlargement:true})
+      .jpeg({quality:60}).toBuffer();
+    return preview.length<=PHOTO_LIMIT?preview:null;
+  }catch{return null;}
 }
 async function getAvatar(client,dialog) {
   if(!dialog?.entity?.photo)return null;
@@ -95,9 +114,14 @@ export default async function handler(req,res){
       const raw=action==='avatar'
         ? await getAvatar(client,dialog)
         : await getPhoto(client,dialog,body.messageId);
-      const max=action==='avatar'?AVATAR_LIMIT:PHOTO_LIMIT;
       const bytes=Buffer.isBuffer(raw)?raw:raw instanceof Uint8Array?Buffer.from(raw):null;
-      return bytes&&bytes.length>0&&bytes.length<=max?{buffer:bytes,mime:'image/jpeg'}:null;
+      if(action==='photo'){
+        const preview=await prepareInlinePhoto(bytes);
+        return preview?{buffer:preview,mime:'image/jpeg'}:null;
+      }
+      const max=action==='avatar'?AVATAR_LIMIT:ATTACHMENT_LIMIT;
+      return bytes&&bytes.length>0&&bytes.length<=max
+        ?{buffer:bytes,mime:action==='attachment'?'application/octet-stream':'image/jpeg'}:null;
     });
     if(!result)return deny(res,404,'Вложение недоступно или превышает лимит 4 МБ');
     res.setHeader('Content-Type',result.mime);
