@@ -4,8 +4,8 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-originals.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-hits.css">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-originals.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-hits.js"></script></head>
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-originals.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-hits.css"><link rel="stylesheet" href="./vetogram-music-russia.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-originals.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-hits.js"></script><script defer src="./vetogram-music-russia-snapshot.js"></script><script defer src="./vetogram-music-russia.js"></script></head>
 <body>
 <div class="app" id="app">
 <aside class="sidebar" aria-label="Навигация">
@@ -38,19 +38,38 @@
  <section class="page active" data-view="home">
   <div class="hero" id="hero"><div class="grain"></div><div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div>
    <div class="hero-inner"><span class="eyebrow"><i></i> THE FUTURE SOUNDS DIFFERENT</span>
-   <h1>Твоя музыка.<br><em>Твой ритм.</em></h1>
-   <p>Всё, что хочется слушать, в одном месте. Находи новое, добавляй свои треки и создавай собственную волну.</p>
-   <div class="hero-buttons"><button id="heroExplore" class="primary-btn" type="button">Открыть музыку <span>↗</span></button><button class="glass-btn" type="button" data-page="import">＋ Свои треки</button></div>
-   <div class="hero-pills"><span><b>♫</b> AUDIO FIRST</span><span><b>◉</b> LIVE RADIO</span><span><b>✧</b> PRIVATE LIBRARY</span></div></div>
+   <h1>Русская музыка.<br><em>Твой ритм.</em></h1>
+   <p>Русские хиты и настоящий топ России — сразу на главной. Слушай оригиналы у музыкальных сервисов, находи новые треки и собирай свои плейлисты.</p>
+   <div class="hero-buttons"><button id="heroExplore" class="primary-btn" type="button">Русский топ <span>↗</span></button><button class="glass-btn" type="button" data-page="import">＋ Свои треки</button></div>
+   <div class="hero-pills"><span><b>♫</b> РУССКИЕ ХИТЫ</span><span><b>◉</b> ТОП РОССИИ</span><span><b>✧</b> APPLE MUSIC</span></div></div>
    <div class="hero-stage" aria-hidden="true"><div class="vinyl-large"><div class="vinyl-ring"></div><div class="vinyl-label"><span>V</span><small>VETOGRAM<br>MUSIC</small></div></div><div class="floating-note note-one">♫</div><div class="floating-note note-two">♪</div><div class="hero-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="hero-card">NOW PLAYING<span>THE SOUND OF YOU</span><b>∞</b></div></div>
   </div>
-  <div class="section-head"><div><span class="overline">CURATED FOR THE MOMENT</span><h2>С чего начнём?</h2></div><button class="text-action" type="button" data-page="catalog">Открыть каталог ↗</button></div>
+  <section class="ru-home-spotlight ru-home" aria-labelledby="ru-home-title">
+ <div class="ru-home-topline"><span>RU / МУЗЫКА</span><span>ТОП APPLE MUSIC · РОССИЯ</span><span>25 ОРИГИНАЛЬНЫХ РЕЛИЗОВ</span></div>
+ <h2 class="ru-home-title" id="ru-home-title">Русская музыка. <em>На первом месте.</em></h2>
+ <p class="ru-home-sub">Оригинальные песни, реальные позиции в российском Apple Music. Никаких выдуманных чартов или ремиксов вместо известных записей. Полное воспроизведение зависит от Apple Music.</p>
+ <div class="ru-home-actions"><button type="button" data-page="charts">Открыть русский топ-25 ↗</button><p id="ruHomeStatus" role="status">Проверенный рейтинг Apple Music · 27 октября 2026</p></div>
+ <div class="ru-featured-heading"><h3>Сейчас слушают в России</h3></div>
+ <div id="homeRussianTracks" class="ru-list" aria-live="polite"><div class="ru-empty">Загружаем русские хиты…</div></div>
+ <div class="ru-featured-heading"><h3>Найти любимого исполнителя</h3><button type="button" class="text-action" data-page="hits">Все оригиналы ↗</button></div>
+ <div class="ru-artist-chips" aria-label="Русские исполнители">
+  <button type="button" data-russian-artist="MACAN">MACAN</button>
+  <button type="button" data-russian-artist="Баста">Баста</button>
+  <button type="button" data-russian-artist="Miyagi">Miyagi</button>
+  <button type="button" data-russian-artist="МОТ">МОТ</button>
+  <button type="button" data-russian-artist="ЕГОР КРИД">Егор Крид</button>
+  <button type="button" data-russian-artist="Дора">Дора</button>
+  <button type="button" data-russian-artist="Zivert">Zivert</button>
+  <button type="button" data-russian-artist="Artik & Asti">Artik & Asti</button>
+ </div>
+ </section>
+ <div class="section-head"><div><span class="overline">CURATED FOR THE MOMENT</span><h2>С чего начнём?</h2></div><button class="text-action" type="button" data-page="catalog">Открыть каталог ↗</button></div>
   <div class="mood-grid" id="moodGrid">
    <button type="button" data-mood="chill" class="mood-card mood-chill"><small>01 / VIBE</small><strong>Расслабиться</strong><span>Chill & ambient ↗</span><b>◡</b></button>
    <button type="button" data-mood="electronic" class="mood-card mood-energy"><small>02 / VIBE</small><strong>Поймать энергию</strong><span>Electronic & dance ↗</span><b>ϟ</b></button>
    <button type="button" data-mood="hip-hop" class="mood-card mood-focus"><small>03 / VIBE</small><strong>На своей волне</strong><span>Hip-hop & beats ↗</span><b>◉</b></button>
   </div>
-  <div class="charts-home-entry"><div><small>MUSIC / CHARTS</small><strong>Чарты</strong><p>Топ-треки Audius по периодам и жанрам.</p></div><button type="button" data-page="charts">Открыть чарты ↗</button></div>
+  <div class="charts-home-entry"><div><small>МУЗЫКА / РОССИЯ</small><strong>Русский чарт и Audius</strong><p>Сначала официальный Top Songs России от Apple Music, затем отдельный рейтинг Audius.</p></div><button type="button" data-page="charts">Смотреть чарты ↗</button></div>
   <div class="section-head"><div><span class="overline">DISCOVER THE NEW</span><h2>Открытые треки <span class="section-muted">/ Audius</span></h2></div><button class="text-action" type="button" data-page="catalog">Больше музыки ↗</button></div>
   <div id="homeTracks" class="track-list"><div class="skeleton-card">Загружаем доступную музыку…</div></div>
   <div class="social-invite"><div><small>SHARE THE SOUND</small><h3>Хорошая музыка — для друзей.</h3><p>Отправляй треки и плейлисты прямо в Telegram. Твои личные аудиофайлы остаются приватными, пока ты сам их не отправишь.</p></div><button type="button" id="shareInvite">↗ Пригласить в Vetogram Music</button></div>
@@ -64,13 +83,31 @@
     <div class="charts-hero-copy">
       <span class="overline">VETOGRAM MUSIC / CHARTS</span>
       <h1>Чарты <em>музыки.</em></h1>
-      <p>Настоящий рейтинг Audius — с выбором периода и жанра. Без вымышленных позиций.</p>
-      <div class="charts-hero-tags"><span>♫ AUDIUS TRENDING</span><span>◉ REAL TRACKS</span></div>
+      <p>На первом месте — настоящий Top Songs России от Apple Music. Ниже — отдельный мировой рейтинг Audius. Позиции не смешиваются и не выдумываются.</p>
+      <div class="charts-hero-tags"><span>♫ APPLE MUSIC · РОССИЯ</span><span>◉ AUDIUS TRENDING</span></div>
     </div>
     <div class="charts-hero-art" aria-hidden="true"><div class="charts-record"><div class="charts-center-disc">V</div></div></div>
   </div>
-  <div class="charts-block">
-    <div class="charts-head"><div><span class="overline">ACTUAL AUDIUS DATA</span><h2>Топ-треки <em>Audius</em></h2><p>Рейтинг предоставлен Audius. Он не является общим чартом Spotify, VK или Яндекс Музыки.</p></div>
+  <div class="ru-chart-hero" id="ruChartSection">
+  <small>VETOGRAM MUSIC / РОССИЯ / OFFICIAL APPLE CHART</small>
+  <h2>Русский топ-25. <em>Реальные хиты.</em></h2>
+  <p>Официальный рейтинг наиболее популярных песен Apple Music для России. Ранги отражают Apple Music, а не все российские стриминговые сервисы. Открывай оригинальные записи через плеер Apple Music.</p>
+  <div class="ru-chart-controls">
+   <a href="https://music.apple.com/ru/charts" id="ruChartsOfficial" target="_blank" rel="noopener noreferrer">Официальный источник — Apple Music ↗</a>
+   <button type="button" id="ruChartsReload">↻ Обновить русский чарт</button>
+  </div>
+  <p id="ruChartsStatus" class="ru-chart-status" role="status">Подключаем чарт России…</p>
+  <div id="ruChartsTracks" class="ru-list" aria-live="polite"><div class="ru-empty">Загружаем официальные позиции…</div></div>
+  <div class="ru-official-player" id="ruChartPlayer">
+   <div class="ru-player-heading"><strong id="ruChartNow">Официальный плеер Apple Music</strong><button type="button" id="ruChartClose">× Закрыть плеер</button></div>
+   <div id="ruChartFrame" class="ru-official-frame"><p class="ru-empty">Выбери песню из чарта России.</p></div>
+   <div class="ru-player-links"><a id="ruChartExternal" rel="noopener noreferrer" target="_blank">Открыть трек в Apple Music ↗</a>
+   <p id="ruChartFrameNote">Полное прослушивание может требовать подписку. Никаких собственных MP3 из чужих каталогов.</p></div>
+  </div>
+  <p class="ru-chart-source">Данные и обложки принадлежат Apple и правообладателям; используем их для просмотра и перехода к Apple Music. Если обновление недоступно, показываем последний проверенный снимок с точной датой, а не выдаём его за сегодняшний чарт.</p>
+ </div>
+ <div class="charts-block">
+    <div class="charts-head"><div><span class="overline">ACTUAL AUDIUS DATA</span><h2>Мировой топ <em>Audius</em></h2><p>Рейтинг предоставлен Audius. Он не является общим чартом Spotify, VK или Яндекс Музыки.</p></div>
       <button type="button" class="charts-refresh" id="chartsRefresh">↻ Обновить</button>
     </div>
     <div class="charts-filters" aria-label="Период чарта">
