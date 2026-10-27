@@ -31,6 +31,13 @@ function text(s,max=120){return String(s??"").replace(/[\u0000-\u001f\u007f]/g,"
 function https(src,host){
  try{const u=new URL(String(src));return u.protocol==="https:"&&(!host||u.hostname===host||u.hostname==="www."+host)&&!u.username&&!u.password?u.href:""}catch{return""}
 }
+function licenseHref(link){
+ try {
+  const u=new URL(String(link));
+  if(!["http:","https:"].includes(u.protocol)||!["creativecommons.org","www.creativecommons.org"].includes(u.hostname))return"";
+  u.protocol="https:";return u.href;
+ }catch{return""}
+}
 function license(link){
  try {
   const u=new URL(String(link));
@@ -57,7 +64,7 @@ function mapped(row){
  const artist=text(row.user_real_name||row.user_name||"ccMixter artist",85),title=text(row.upload_name,125);
  if(!artist||!title)return null;
  return {id:"ccmixter:"+Number(row.upload_id),title,artist,source:"ccmixter",
-  stream,artwork:"",permalink:source,license:lic,license_url:row.license_url,
+  stream,artwork:"",permalink:source,license:lic,license_url:licenseHref(row.license_url),
   attribution:artist+" — "+title+" · "+lic+" · ccMixter",
   provider:"ccMixter",playable:true};
 }
@@ -78,6 +85,14 @@ function endpoint(genre,offset,term){
  return u.href;
 }
 let genre="remix",term="",offset=0,loaded=0,finished=false,busy=false,running=null,items=[],ids=new Set();
+const seedRows=Array.isArray(window.VetogramMixterSeeds)?window.VetogramMixterSeeds:[];
+function seedExtras(){
+ if(term)return 0;
+ const before=items.length;
+ renderNew(seedRows);
+ return items.length-before;
+}
+
 function status(message){$("mixterStatus").textContent=message}
 function drawGenres(){
  const target=$("mixterGenres");target.replaceChildren();
@@ -96,7 +111,7 @@ function card(t){
  const urls=mk("div","mixter-links");
  const origin=mk("a","","Источник ↗");origin.href=t.permalink;origin.target="_blank";origin.rel="noopener noreferrer";
  const rights=mk("a","","Лицензия ↗");
- rights.href=https(t.license_url,"creativecommons.org");rights.target="_blank";rights.rel="noopener noreferrer";
+ rights.href=t.license_url;rights.target="_blank";rights.rel="noopener noreferrer";
  const attribution=mk("button","mixter-credit","Копировать атрибуцию");
  attribution.type="button";attribution.onclick=async()=>{
   try {await navigator.clipboard.writeText(t.attribution+" · "+t.permalink+" · "+t.license_url);status("Автор и лицензия скопированы")}catch{status(t.attribution)}
@@ -141,14 +156,19 @@ async function load(){
   if(running!==controller)return;
   loaded+=data.length;offset+=SEARCH_LIMIT;
   renderNew(data);
+  const starter=items.length<8?seedExtras():0;
   finished=data.length<SEARCH_LIMIT||offset>=MAX_PAGES*SEARCH_LIMIT;
-  status(items.length+" доступных MP3 в этой выдаче · "+loaded+" записей проверено · лицензии CC BY. "+(finished?"Конец доступной выдачи.":"Можно загрузить ещё."));
+  status(items.length+" доступных MP3 · "+loaded+" записей получено от API · лицензии CC BY."+
+   (starter?" Добавлено "+starter+" проверенных записей стартовой подборки из других жанров.":"")+
+   (finished?" Больше записей API в этой выдаче нет.":" Можно загрузить ещё."));
  }catch(e){
   if(running!==controller)return;
   const isNetwork=e?.name==="TypeError"||String(e?.message||"").includes("fetch");
-  if(!items.length)$("mixterTracks").replaceChildren(mk("div","mixter-empty","Не удалось получить записи напрямую из браузера."));
-  status(e?.name==="AbortError"?"Время ожидания ccMixter истекло.":isNetwork?
-   "Браузер не может подключиться к ccMixter (возможна блокировка CORS). Открой каталог на сайте источника.":"Сервис ccMixter сейчас недоступен. Попробуй другой жанр.");
+  const restored=seedExtras();
+  if(!items.length)$("mixterTracks").replaceChildren(mk("div","mixter-empty","Не удалось загрузить выдачу ccMixter. Открой каталог источника."));
+  status(e?.name==="AbortError"?"Истёк срок запроса к ccMixter.":isNetwork?
+   "Прямой API ccMixter может блокироваться браузером (CORS).":"ccMixter временно не отвечает.");
+  if(restored)status($("mixterStatus").textContent+" Показано "+restored+" заранее проверенных независимых треков; попробуй другой жанр или повтори запрос.");
  }finally{
   clearTimeout(timer);
   if(running===controller){busy=false;more.hidden=finished;more.disabled=false;more.textContent=items.length?"＋ Показать ещё записи":"↻ Повторить"}
