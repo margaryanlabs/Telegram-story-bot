@@ -122,7 +122,7 @@ function shareTrack(track){
 }
 $("shareTrack").onclick=()=>shareTrack(api.now());
 function sharePlaylist(){
- const all=api.metadata().concat(api.liked(),api.local()).filter(x=>x?.artist&&x?.title);
+ const all=api.metadata().concat(api.liked(),api.local(),api.streams?.()||[]).filter(x=>x?.artist&&x?.title);
  try{
   const mix=mixShareURL(all);
   const note="♡ Мой плейлист Vetogram Music ("+mix.count+
@@ -131,7 +131,7 @@ function sharePlaylist(){
  }catch(e){toast(e.message)}
 }
 function exportAll(){
- const entries=compact(api.metadata().concat(api.liked(),api.local()));
+ const entries=compact(api.metadata().concat(api.liked(),api.local(),api.streams?.()||[]));
  if(!entries.length)return toast("Нет песен для экспорта");
  const data={format:"vetogram-music-metadata-v2",version:2,tracks:entries.map(([artist,title])=>({artist,title}))};
  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
