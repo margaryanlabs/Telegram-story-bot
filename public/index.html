@@ -4,8 +4,8 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script></head>
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script></head>
 <body>
 <div class="app" id="app">
 <aside class="sidebar" aria-label="Навигация">
@@ -18,6 +18,7 @@
   <button class="nav-item active" data-page="home" type="button"><span>⌂</span> Главная</button>
   <button class="nav-item" data-page="search" type="button"><span>⌕</span> Поиск музыки</button>
   <button class="nav-item" data-page="charts" type="button"><span>▤</span> Чарты</button>
+  <button class="nav-item" data-page="catalog" type="button"><span>♫</span> Каталог музыки</button>
   <button class="nav-item" data-page="library" type="button"><span>♡</span> Моя музыка</button>
   <button class="nav-item" data-page="radio" type="button"><span>◉</span> Радио</button>
   <button class="nav-item" data-page="import" type="button"><span>⇧</span> Добавить музыку</button>
@@ -39,14 +40,14 @@
    <div class="hero-pills"><span><b>♫</b> AUDIO FIRST</span><span><b>◉</b> LIVE RADIO</span><span><b>✧</b> PRIVATE LIBRARY</span></div></div>
    <div class="hero-stage" aria-hidden="true"><div class="vinyl-large"><div class="vinyl-ring"></div><div class="vinyl-label"><span>V</span><small>VETOGRAM<br>MUSIC</small></div></div><div class="floating-note note-one">♫</div><div class="floating-note note-two">♪</div><div class="hero-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="hero-card">NOW PLAYING<span>THE SOUND OF YOU</span><b>∞</b></div></div>
   </div>
-  <div class="section-head"><div><span class="overline">CURATED FOR THE MOMENT</span><h2>С чего начнём?</h2></div><button class="text-action" type="button" data-page="search">Весь каталог ↗</button></div>
+  <div class="section-head"><div><span class="overline">CURATED FOR THE MOMENT</span><h2>С чего начнём?</h2></div><button class="text-action" type="button" data-page="catalog">Открыть каталог ↗</button></div>
   <div class="mood-grid" id="moodGrid">
    <button type="button" data-mood="chill" class="mood-card mood-chill"><small>01 / VIBE</small><strong>Расслабиться</strong><span>Chill & ambient ↗</span><b>◡</b></button>
    <button type="button" data-mood="electronic" class="mood-card mood-energy"><small>02 / VIBE</small><strong>Поймать энергию</strong><span>Electronic & dance ↗</span><b>ϟ</b></button>
    <button type="button" data-mood="hip-hop" class="mood-card mood-focus"><small>03 / VIBE</small><strong>На своей волне</strong><span>Hip-hop & beats ↗</span><b>◉</b></button>
   </div>
   <div class="charts-home-entry"><div><small>MUSIC / CHARTS</small><strong>Чарты</strong><p>Топ-треки Audius по периодам и жанрам.</p></div><button type="button" data-page="charts">Открыть чарты ↗</button></div>
-  <div class="section-head"><div><span class="overline">DISCOVER THE NEW</span><h2>Открытые треки <span class="section-muted">/ Audius</span></h2></div><button class="text-action" type="button" data-page="search">Найти ещё ↗</button></div>
+  <div class="section-head"><div><span class="overline">DISCOVER THE NEW</span><h2>Открытые треки <span class="section-muted">/ Audius</span></h2></div><button class="text-action" type="button" data-page="catalog">Больше музыки ↗</button></div>
   <div id="homeTracks" class="track-list"><div class="skeleton-card">Загружаем доступную музыку…</div></div>
   <div class="social-invite"><div><small>SHARE THE SOUND</small><h3>Хорошая музыка — для друзей.</h3><p>Отправляй треки и плейлисты прямо в Telegram. Твои личные аудиофайлы остаются приватными, пока ты сам их не отправишь.</p></div><button type="button" id="shareInvite">↗ Пригласить в Vetogram Music</button></div>
   <div class="section-head lower-head"><div><span class="overline">YOUR OWN FREQUENCY</span><h2>Музыка из твоего мира</h2></div></div>
@@ -84,7 +85,32 @@
     <div id="chartsTracks" class="charts-list"></div>
   </div>
  </section>
- <section class="page" data-view="search">
+ <section class="page" data-view="catalog" aria-label="Каталог музыкальных записей">
+ <div class="catalog-hero">
+  <span class="overline">VETOGRAM MUSIC / DISCOVER</span>
+  <h1>Большой музыкальный <em>каталог.</em></h1>
+  <p>Поиск по живому каталогу Audius. Русские, армянские и зарубежные запросы, жанры и новые страницы треков. Слушай настоящие доступные записи, а не нарисованные карточки.</p>
+  <div class="catalog-providers"><span>♫ LIVE AUDIUS CATALOG</span><span>РУС · ՀԱՅ · WORLD</span><span>STREAM ON DEMAND</span></div>
+ </div>
+ <div class="catalog-toolbar">
+  <div class="catalog-switch" role="group" aria-label="Направление музыки">
+   <button type="button" data-catalog-group="world" class="active" aria-pressed="true">Международная</button>
+   <button type="button" data-catalog-group="ru" aria-pressed="false">Русскоязычная</button>
+   <button type="button" data-catalog-group="am" aria-pressed="false">Հայկական / Армянская</button>
+  </div>
+  <div id="catalogPresets" class="catalog-presets" aria-label="Жанры и поисковые подборки"></div>
+  <form id="catalogForm" class="catalog-search">
+   <input id="catalogQuery" type="search" autocomplete="off" maxlength="80" value="pop" placeholder="Имя исполнителя или название песни" aria-label="Поиск в каталоге Audius">
+   <button type="submit">⌕ Найти музыку</button>
+  </form>
+  <p class="catalog-disclaimer">Региональные подборки — результаты поиска Audius, а не проверенные российские или армянские чарты. Популярные оригинальные записи могут отсутствовать. Авторские права и доступность определяются правообладателем и источником.</p>
+ </div>
+ <div class="catalog-results-head"><h2>Доступные композиции</h2><button type="button" class="text-action" data-page="radio">◉ Радио ↗</button></div>
+ <p id="catalogStatus" class="catalog-status" role="status">Выбери жанр или открой каталог для загрузки треков.</p>
+ <div id="catalogResults" class="catalog-list" aria-live="polite"></div>
+ <div class="catalog-more-wrap"><button type="button" id="catalogMore" class="catalog-more" hidden>＋ Показать ещё музыку</button></div>
+</section>
+<section class="page" data-view="search">
   <div class="page-title"><span class="overline">DISCOVER / AUDIO ONLY</span><h1>Найди свой <em>звук.</em></h1><p>Поиск открытой музыки Audius и твоих личных треков. Популярные хиты других сервисов требуют разрешённого источника.</p></div>
   <form id="searchForm" class="big-search"><span>⌕</span><input id="searchInput" type="search" maxlength="80" autocomplete="off" placeholder="Исполнитель, песня, настроение…" aria-label="Поиск музыки"><button type="submit">Искать ↗</button></form>
   <div class="search-topics" id="topics"><button data-query="chill" type="button">Chill</button><button data-query="Electronic" type="button">Electronic</button><button data-query="Hip Hop" type="button">Hip Hop</button><button data-query="Jazz" type="button">Jazz</button><button data-query="Ambient" type="button">Ambient</button></div>
