@@ -224,13 +224,26 @@
     return article;
   }
 
+  function showCatalogSkeleton(){
+    const grid=$('catalogGrid');
+    grid.replaceChildren();
+    for(let i=0;i<8;i++){
+      const article=node('article','book book-skeleton');
+      article.setAttribute('aria-hidden','true');
+      const image=node('div','skeleton-cover');
+      const line=node('div','skeleton-text');
+      const small=node('div','skeleton-text skeleton-small');
+      article.append(image,line,small);
+      grid.append(article);
+    }
+  }
   async function loadCatalog(reset=true) {
     if(state.loading && !reset)return;
     if(abort)abort.abort();
     abort=new AbortController();
     const request=++state.request;
     state.loading=true;
-    if(reset){state.page=1;state.cursor=null;state.nextCursor=null;state.books=[];$('catalogGrid').replaceChildren();$('catalogStatus').textContent='Загружаем книги…';}
+    if(reset){state.page=1;state.cursor=null;state.nextCursor=null;state.books=[];showCatalogSkeleton();$('catalogStatus').textContent='Загружаем книги…';}
     $('loadMore').hidden=true;
     refreshTabs();
     const params=new URLSearchParams({page:String(state.page)});
@@ -255,6 +268,7 @@
       state.books.push(...incoming);
       $('catalogCount').textContent=Number.isFinite(data.count)?formatCount(data.count):'—';
       const grid=$('catalogGrid');
+      if(reset)grid.replaceChildren();
       incoming.forEach(book=>grid.append(card(book)));
       if(!state.books.length){grid.append(node('div','empty-state','По этому запросу нет подходящих книг. Попробуйте другого автора, название или подборку.'));}
       $('catalogStatus').textContent=Number.isFinite(state.count)
