@@ -465,6 +465,6 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 window.addEventListener("pagehide",()=>{for(const u of state.localUrls)URL.revokeObjectURL(u);for(const u of demoUrls.values())URL.revokeObjectURL(u)});
 window.VetogramMusic=Object.freeze({showPage,search:runSearch,play:playTrack,
  now:()=>state.now,queue:()=>state.queue.slice(),local:()=>state.local.slice(),liked:()=>state.liked.slice(),metadata:()=>state.metadata.slice(),
- importList,removeLocal,moveLocal,addStreams,removeStream,moveStream,notifyLibrary,streams:()=>state.streams.slice(),
+ importList,removeLocal,moveLocal,addStreams,removeStream,moveStream,notifyLibrary,streams:()=>state.streams.slice(),toggleLike,
  state:()=>({page:state.page,now:state.now?.title||null,local:state.local.length,liked:state.liked.length,imported:state.metadata.length})});
 })();
