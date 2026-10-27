@@ -10,7 +10,7 @@
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
-    drafts:new Map(),sendInFlight:false,lastSendFailure:null,lastSendFailures:new Map(),
+    drafts:new Map(),draftVersions:new Map(),sendInFlight:false,lastSendFailure:null,lastSendFailures:new Map(),
     pendingAttachment:null,replyTo:null,stickers:[],stickerSets:[],stickerPack:null,
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
     stickerPreviewUrls:new Map(),recording:null,voiceStarting:false,lastRichFailure:null,
@@ -346,6 +346,7 @@
     const chat=state.thread,field=$('telegramThreadCompose');
     if(!canSendInThread(chat)||state.sendInFlight)return;
     const chatId=String(chat.id),ownerKey=state.ownerInitData;
+    const submittedDraftVersion=state.draftVersions.get(chatId)||0;
     const replyTo=state.replyTo?.id||null;
     const voiceSend=action==='send_media' && attachmentOrIndex?.kind==='voice';
     const pending=action==='send_media'?(attachmentOrIndex||state.pendingAttachment):null;
@@ -379,6 +380,11 @@
       if(String(state.thread?.id)!==chatId)throw new Error('Чат изменился. Отправка отменена.');
       await richRequest(action,request);
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
+      const unchangedDraft=(state.draftVersions.get(chatId)||0)===submittedDraftVersion;
+      // ACK may arrive after the owner navigated away. Clear only the
+      // original submitted caption, never a subsequently edited draft.
+      if(action==='send_media'&&!voiceSend&&unchangedDraft&&
+         state.drafts.get(chatId)===caption)state.drafts.delete(chatId);
       if(String(state.thread?.id)===chatId){
         const mediaTitle=action==='send_sticker'?'Стикер'
           :request.kind==='voice'?'Голосовое сообщение'
@@ -388,9 +394,8 @@
         // Successful sticker/voice actions never consume an unrelated text
         // draft. For media captions, clear only exactly the text we sent:
         // the user may have typed a new draft during the network round trip.
-        if(action==='send_media'&&!voiceSend){
+        if(action==='send_media'&&!voiceSend&&unchangedDraft){
           if(field&&field.value===caption)field.value='';
-          if(state.drafts.get(chatId)===caption)state.drafts.delete(chatId);
         }
         if((state.replyTo?.id||null)===replyTo)state.replyTo=null;
         if(action==='send_media'&&!voiceSend&&state.pendingAttachment===pending){
@@ -1660,7 +1665,7 @@
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
     state.sendInFlight=false;state.lastSendFailure=null;state.lastSendFailures.clear();state.lastRichFailure=null;
-    state.drafts.clear();state.pendingAttachment=null;state.replyTo=null;
+    state.drafts.clear();state.draftVersions.clear();state.pendingAttachment=null;state.replyTo=null;
     state.stickers=[];state.stickerSets=[];state.stickerPack=null;
     state.stickerTab='recent';state.stickerQuery='';state.stickerVisible=16;state.stickerEpoch++;
     closeStickerDrawer();
@@ -2641,6 +2646,7 @@
     const chatId=String(state.thread?.id||'');
     if(chatId){
       state.drafts.set(chatId,event.target.value);
+      state.draftVersions.set(chatId,(state.draftVersions.get(chatId)||0)+1);
       const failed=state.lastSendFailures.get(chatId);
       if(failed&&failed.message!==event.target.value.trim()){
         state.lastSendFailures.delete(chatId);
