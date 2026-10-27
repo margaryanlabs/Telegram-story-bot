@@ -43,6 +43,7 @@ test("pagination never follows untrusted next URL",()=>{
     has_next:true,next:"https://evil.example/steal"},"mosfilm",1);
  assert.equal(parsed.movies.length,1);
  assert.equal(parsed.skipped,1);
+ assert.equal(parsed.diagnostics.shortOrLong,1);
  assert.equal(parsed.nextPage,2);
  assert.equal(parsePage({results:[],has_next:false},"mosfilm",2).nextPage,null);
 });
@@ -54,7 +55,7 @@ test("public metadata fetch is one fixed URL per requested official page",async(
  };
  const data=await fetchChannelPage("mosfilm",5,{fetchFn,now:()=>1000});
  assert.equal(data.movies.length,1);
- assert.equal(calls[0],"https://rutube.ru/api/video/person/25963146/?page=5&format=json");
+ assert.equal(calls[0],"https://rutube.ru/api/video/person/25963146/?page=5&format=json&origin__type=rtb,rst,ifrm,rspa");
  assert.equal((await fetchChannelPage("mosfilm",5,{fetchFn,now:()=>1001})).movies.length,1);
  assert.equal(calls.length,1);
  await assert.rejects(fetchChannelPage("evil",1,{fetchFn}),/Неизвестный/);
