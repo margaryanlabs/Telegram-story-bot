@@ -55,7 +55,7 @@ export function normalizeVolume(item){
     categories:Array.isArray(info.categories)?info.categories.slice(0,4).map(c=>clean(c,80)):[],
     publisher:clean(info.publisher,140),pageCount:Number(info.pageCount)||null,
     source:'Google Books · каталог',sourceUrl:official,previewUrl:view,buyUrl:buy,
-    readable:false,access:publicDomain?'official-full-view':view?'official-preview':'metadata',
+    readable:false,embeddable:Boolean(access.embeddable && view),access:publicDomain?'official-full-view':view?'official-preview':'metadata',
     rightsNotice:'Описание и обложка из Google Books. Полные современные книги доступны только через официальные ссылки правообладателей.'
   };
 }
