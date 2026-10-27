@@ -428,12 +428,18 @@
   // Identify episodes of the SAME TV show; do not invent season count.
   // The original uploader titles retain their exact episode numbers.
   function seriesShowName(f){
-    return String(f.title||"")
-      .replace(/\s*(?:\.|,)?\s*(?:(?:\d+\s*)?сезон\b|все\s+серии\b|серии?\s+\d+\b|\d+\s+серия\b)[\s\S]*$/i,"")
-      .replace(/[.:\s,-]+$/g,"").trim()||String(f.title||"");
+    const title=String(f.title||"");
+    // \b does not work after Cyrillic letters in JS regular expressions.
+    // Preserve actual season numbers where publishers explicitly supplied them.
+    const season=title.match(/^(.*?)(?:[.,]\s*|\s+)(\d+)\s*сезон(?=\s|[.,:()!?]|$)/i);
+    const name=(season?season[1]:title)
+      .replace(/(?:[.,]\s*|\s+)(?:все\s+серии|серии\s+\d+|\d+\s+серия)(?=\s|[.,:()!?]|$)[\s\S]*$/i,"")
+      .replace(/[.:\s,-]+$/g,"").trim();
+    const fallback=title.replace(/\s*(?:\([^)]*\)|Смотреть онлайн)[\s\S]*$/i,"").trim();
+    return season?((name||fallback)+" · сезон "+season[2]):(name||fallback||title);
   }
   function seriesEpisodeNumber(f){
-    const m=String(f.title||"").match(/\b(\d+)\s*серия\b|\bсерии?\s*(\d+)\b/i);
+    const m=String(f.title||"").match(/(\d+)\s*серия(?=\s|[.,:()!?]|$)|серии\s*(\d+)(?=\s|[.,:()!?]|$)/i);
     return m?Number(m[1]||m[2]):999;
   }
   function groupedSeries(){
