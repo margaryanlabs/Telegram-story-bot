@@ -67,4 +67,5 @@ test("artwork is host checked",()=>{
  assert.equal(cleanPoster("https://evil.example/cover.png"),null);
  assert.equal(cleanPoster("http://pic.rutube.ru/cover.jpg"),null);
  assert.equal(cleanPoster("https://pic.rutubelist.ru/cover.jpg"),"https://pic.rutubelist.ru/cover.jpg");
+ assert.equal(cleanPoster("https://pic.rtbcdn.ru/video/2026-10-23/poster.jpg"),"https://pic.rtbcdn.ru/video/2026-10-23/poster.jpg");
 });
