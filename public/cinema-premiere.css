@@ -199,3 +199,15 @@ body.cinema-light{
 .cinema-browse-actions .cinema-more:disabled{opacity:.45;cursor:wait}
 .cinema-archive-status{width:100%;color:var(--muted);font-size:11px;line-height:1.6;margin:0}
 @media(max-width:650px){.cinema-sort-label{width:100%;justify-content:space-between}.cinema-sort-label select{max-width:75%}.cinema-browse-actions .cinema-more{width:100%}}
+
+
+/* Franchise discovery — clear availability status without misleading Play buttons. */
+.cinema-universe-switch{display:flex;gap:9px;flex-wrap:wrap;margin:24px 0 6px}
+.cinema-universe-tab{min-height:43px;background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:11px 19px;color:var(--muted);font-weight:750;font-size:12px;transition:background .18s,border-color .18s}
+.cinema-universe-tab.active{background:rgba(226,183,136,.13);border-color:var(--accent);color:var(--text)}
+.cinema-franchise-note{font-size:11px;line-height:1.55;color:var(--muted);margin:10px 0 0}
+.cinema-franchise-rail .cinema-card-art{background:radial-gradient(ellipse at 75% 15%,hsl(var(--film-hue,45) 36% 29%),transparent 62%),linear-gradient(150deg,#292631,#14151a 78%);aspect-ratio:16/10}
+.cinema-franchise-rail .cinema-card-art:before{background:linear-gradient(0deg,#050509cc,transparent 70%)}
+.cinema-franchise-rail .cinema-card-art-title{font-size:clamp(17px,1.7vw,24px);line-height:1.14;max-height:3.5em;-webkit-line-clamp:3}
+.cinema-franchise-rail .cinema-card-art-badge{background:#13151bc4;color:#f0d2aa;border:1px solid rgba(230,201,156,.34)}
+@media(max-width:650px){.cinema-universe-switch{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;margin-top:18px}.cinema-universe-tab{white-space:nowrap;flex:0 0 auto;padding:10px 13px}.cinema-franchise-rail .cinema-card-art-title{font-size:17px}}
