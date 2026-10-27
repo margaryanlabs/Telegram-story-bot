@@ -43,14 +43,14 @@ const SOURCES=Object.freeze({
 });
 const ARCHIVE="https://archive.org";
 function safeId(x){const id=String(x||"");return /^[A-Za-z0-9._-]{1,130}$/.test(id)?id:""}
-function licenseType(x){
- try{
-  const u=new URL(String(x));
+function licenseType(link){
+ try {
+  const u=new URL(String(link));
   if(!["http:","https:"].includes(u.protocol)||!["creativecommons.org","www.creativecommons.org"].includes(u.hostname))return"";
-  const p=u.pathname.replace(/\\/+$/,"")+"/";
+  const p=u.pathname.endsWith("/")?u.pathname:u.pathname+"/";
   if(p==="/publicdomain/zero/1.0/")return"CC0";
-  const m=p.match(/^\\/licenses\\/by\\/(2\\.0|2\\.5|3\\.0|4\\.0)\\/$/);
-  return m?"CC BY "+m[1]:"";
+  const version=["2.0","2.5","3.0","4.0"].find(v=>p==="/licenses/by/"+v+"/");
+  return version?"CC BY "+version:"";
  }catch{return""}
 }
 function archiveSearchUrl(group,p){
@@ -68,19 +68,26 @@ async function fetchJSON(url,signal,max=3200000){
  return JSON.parse(text);
 }
 function archiveTracks(raw){
- const meta=raw?.metadata||{},id=safeId(meta.identifier),licenseName=licenseType(Array.isArray(meta.licenseurl)?meta.licenseurl[0]:meta.licenseurl);
+ const meta=raw?.metadata||{},id=safeId(meta.identifier);
+ const licenseName=licenseType(Array.isArray(meta.licenseurl)?meta.licenseurl[0]:meta.licenseurl);
  if(!id||meta.mediatype!=="audio"||!licenseName||!Array.isArray(raw.files))return[];
- const sound=raw.files.filter(f=>f.source==="original"&&/\\.mp3$/i.test(String(f.name||"")))
- .concat(raw.files.filter(f=>f.source==="derivative"&&/\\.mp3$/i.test(String(f.name||""))));
- return sound.slice(0,50).filter(f=>typeof f.name==="string"&&f.name.length<260&&!f.name.includes("../")&&!f.name.startsWith("/")&&!f.name.includes("\\\\")&&!/[\\u0000-\\u001f]/.test(f.name)&&Number(f.size)>20000&&Number(f.size)<=52428800&&!f.private&&!f.is_dark)
- .slice(0,12).map(f=>{
-  const artist=String(f.artist||f.creator||meta.creator||"Independent artist").replace(/<[^>]*>/g," ").slice(0,90);
-  const title=String(f.title||f.name.replace(/\\.mp3$/i,"").replace(/[_-]+/g," ")).replace(/<[^>]*>/g," ").slice(0,130);
-  return{id:"archive:"+id+":"+f.name.slice(0,130),source:"archive",title,artist,provider:"Internet Archive",
-  artwork:ARCHIVE+"/services/img/"+encodeURIComponent(id),
-  stream:ARCHIVE+"/download/"+encodeURIComponent(id)+"/"+encodeURIComponent(f.name).replace(/%2F/gi,"/"),
-  permalink:ARCHIVE+"/details/"+encodeURIComponent(id),license:licenseName,license_url:String(meta.licenseurl),playable:true};
- }).filter(x=>x.artist.trim()&&x.title.trim());
+ const good=f=>String(f?.name||"").toLowerCase().endsWith(".mp3");
+ const sound=raw.files.filter(f=>f.source==="original"&&good(f))
+   .concat(raw.files.filter(f=>f.source==="derivative"&&good(f)));
+ const tracks=[];
+ for(const f of sound.slice(0,65)){
+  if(tracks.length>=12)break;
+  if(typeof f.name!=="string"||f.name.length>260||f.name.startsWith("/")||f.name.includes("../")||f.name.includes(String.fromCharCode(0))||!Number.isFinite(Number(f.size))||Number(f.size)<20000||Number(f.size)>52428800||f.private||f.is_dark)continue;
+  const artist=String(f.artist||f.creator||meta.creator||"Independent artist").split("<").join(" ").split(">").join(" ").slice(0,90);
+  const title=String(f.title||f.name.slice(0,-4).split("_").join(" ").split("-").join(" ")).split("<").join(" ").split(">").join(" ").slice(0,130);
+  if(!artist.trim()||!title.trim())continue;
+  tracks.push({id:"archive:"+id+":"+f.name.slice(0,130),source:"archive",title,artist,provider:"Internet Archive",
+    artwork:ARCHIVE+"/services/img/"+encodeURIComponent(id),
+    stream:ARCHIVE+"/download/"+encodeURIComponent(id)+"/"+encodeURIComponent(f.name).replaceAll("%2F","/"),
+    permalink:ARCHIVE+"/details/"+encodeURIComponent(id),license:licenseName,
+    license_url:String(Array.isArray(meta.licenseurl)?meta.licenseurl[0]:meta.licenseurl),playable:true});
+ }
+ return tracks;
 }
 async function providerPage(group,p,signal){
  const search=await fetchJSON(archiveSearchUrl(group,p),signal,1500000);
