@@ -225,6 +225,9 @@
       state.lastSendFailures.delete(chatId);
       if(state.lastSendFailure?.chatId===chatId)state.lastSendFailure=null;
       settleCachedTextSend(chatId,provisionalId,message,delivered);
+      // Also update the owner-verified inbox teaser when the owner has moved
+      // to chat B. Do not claim read status or manufacture message delivery.
+      touchRecentChat(chatId,message,new Date().toISOString());
       if(String(state.thread?.id)===chatId){
         setDeliveryStatus('accepted',chatId,'text');
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
@@ -243,7 +246,6 @@
           state.replyTo=null;renderReplyPreview();
         }
         if(!field.value.trim())state.drafts.delete(chatId);
-        touchRecentChat(chatId,message,new Date().toISOString());
         renderMessages();
         threadNotice('');
         // Replace any provisional timestamp with Telegram's own message and
@@ -288,7 +290,8 @@
         // there without overwriting the compose field of a different chat.
         state.drafts.set(chatId,message);
       }
-      toast(error.message);
+      // A delayed failure from chat A must not interrupt somebody typing in B.
+      if(String(state.thread?.id)===chatId)toast(error.message);
     }finally{
       if(ownerKey===state.ownerInitData){
         state.sendInFlight=false;state.sendInFlightChatId=null;renderSendComposer();
