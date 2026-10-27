@@ -46,18 +46,19 @@
   function safeCover(url) {
     try{
       const u=new URL(url);
-      return u.protocol==='https:' && ['www.gutenberg.org','gutenberg.org','books.google.com','books.google.ru','books.googleusercontent.com','www.googleapis.com'].includes(u.hostname)?u.href:'';
+      return u.protocol==='https:' && ['www.gutenberg.org','gutenberg.org','books.google.com','books.google.ru','books.googleusercontent.com','www.googleapis.com','covers.openlibrary.org'].includes(u.hostname)?u.href:'';
     }catch{return '';}
   }
   function safeBookLink(url){
     try{
       const u=new URL(url);
-      return u.protocol==='https:'&&['books.google.com','books.google.ru','play.google.com','books.googleusercontent.com'].includes(u.hostname)?u.href:'';
+      return u.protocol==='https:'&&['books.google.com','books.google.ru','play.google.com','books.googleusercontent.com','openlibrary.org'].includes(u.hostname)?u.href:'';
     }catch{return '';}
   }
   function isWiki(book){return book?.provider==='wikisource' && ['ru','hy'].includes(book.wiki);}
   function isLocal(book){return book?.provider==='local' && Number.isSafeInteger(Number(book.id));}
-  function bookKey(book){return isLocal(book)?'local-'+book.id:book?.provider==='googlebooks'?'gb-'+String(book.id):isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
+  function isCatalogBook(book){return ['googlebooks','openlibrary'].includes(book?.provider);}
+  function bookKey(book){return isLocal(book)?'local-'+book.id:isCatalogBook(book)?'gb-'+String(book.id):book?.provider==='openlibrary'?'ol-'+String(book.id):isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
   function setSourceInfo(){
     const isGutenberg=state.source==='gutenberg';
     const isTranslated=state.source==='translated';
@@ -84,7 +85,7 @@
     $('sourceDescription').textContent=item[0];
     $('sourceLegal').textContent=isPrivate?'Личные книги находятся только в памяти этого устройства. Добавляйте файлы, которыми имеете право пользоваться.'
       :isGutenberg?'Источник: Project Gutenberg. Статус произведения зависит от законодательства вашей страны и перевода.'
-      :isSpotlight?'Современные книги: каталог Google Books. Полный текст может быть доступен только у правообладателя; показываем официальные ссылки и превью.'
+      :isSpotlight?'Новые книги: справочные каталоги Google Books и Open Library. Официальные страницы, без обещания бесплатных полных текстов.'
       :isTranslated?'Источник: Русская Викитека. Категории определяют язык оригинала; авторские права на перевод и издание проверяются отдельно.'
       :'Источник: Викитека. Права зависят от произведения, перевода и страны; проверьте условия на странице оригинала.';
     $('sourceLegalLink').hidden=isPrivate;
@@ -208,7 +209,7 @@
     const article=node('article','book');
     const main=node('button','book-main');
     main.type='button';
-    main.setAttribute('aria-label',(book.provider==='googlebooks'?'Подробнее: ':'Читать: ')+compactTitle(book.title));
+    main.setAttribute('aria-label',(isCatalogBook(book)?'Подробнее: ':'Читать: ')+compactTitle(book.title));
     const cover=node('div','book-cover');
     const imageUrl=safeCover(book.cover);
     if(imageUrl){
@@ -219,14 +220,15 @@
     main.append(cover,node('h3','',compactTitle(book.title)),node('p','',fullName(book)));
     const meta=node('div','book-bottom');
     meta.append(node('span','',(book.language||'').toUpperCase()),
-      node('span','',book.provider==='googlebooks'?(book.previewUrl?'Превью ↗':'О книге ↗'):progress[bookKey(book)]?'Продолжить ↗':'Читать ↗'));
+      node('span','',isCatalogBook(book)?(book.previewUrl?'Превью ↗':'О книге ↗'):progress[bookKey(book)]?'Продолжить ↗':'Читать ↗'));
+    if(book.provider==='openlibrary')main.append(node('span','translation-tag','КАТАЛОГ · RU'));
     if(book.isTranslation) {
       const label=node('span','translation-tag','РУССКИЙ ПЕРЕВОД');
       main.append(label);
     }
     if(isLocal(book))main.append(node('span','translation-tag','НА ЭТОМ УСТРОЙСТВЕ'));
     main.append(meta);
-    main.addEventListener('click',()=>book.provider==='googlebooks'?showDiscoverBook(book):openBook(book));
+    main.addEventListener('click',()=>isCatalogBook(book)?showDiscoverBook(book):openBook(book));
     article.append(main);
     const save=node('button','book-saved',isLocal(book)?'×':saved[bookKey(book)]?'♥':'♡');
     save.title=isLocal(book)?'Удалить эту личную книгу':saved[bookKey(book)]?'Убрать из библиотеки':'Сохранить в библиотеку';
@@ -707,7 +709,7 @@
   }
   async function openBook(book){
     stopNarration();
-    if(book?.provider==='googlebooks'){showDiscoverBook(book);return;}
+    if(isCatalogBook(book)){showDiscoverBook(book);return;}
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
     ++state.requestBook;
     state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;state.rawText='';state.pageOffsets=[];
@@ -1080,7 +1082,7 @@
     if(ids.length){
       host.append(node('p','eyebrow','СОХРАНЁННЫЕ'));
       ids.slice(0,100).forEach(id=>{
-        modalRow(host,compactTitle(saved[id].title),fullName(saved[id]),'Открыть',()=>{$('bookModal').hidden=true;saved[id].provider==='googlebooks'?showDiscoverBook(saved[id]):openBook(saved[id]);});
+        modalRow(host,compactTitle(saved[id].title),fullName(saved[id]),'Открыть',()=>{$('bookModal').hidden=true;isCatalogBook(saved[id])?showDiscoverBook(saved[id]):openBook(saved[id]);});
       });
     }
     if(quotes.length){
