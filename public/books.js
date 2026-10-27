@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {source:'translated',original:'en',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false};
+  const state = {source:'translated',original:'en',spotlight:'now',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false};
   const STORAGE = 'vetogram-books-v1';
   const readJSON = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(STORAGE + ':' + key)); return v ?? fallback; }
@@ -14,7 +14,9 @@
   const quotes = readJSON('quotes', []);
   const prefs = Object.assign({font:19,theme:'dark',fontFace:'literary',leading:'comfortable',width:'normal'},readJSON('prefs',{}));
   const rememberedSource=readJSON('source','translated');
-  if(['translated','ru','hy','gutenberg'].includes(rememberedSource))state.source=rememberedSource;
+  if(['translated','ru','hy','gutenberg','spotlight'].includes(rememberedSource))state.source=rememberedSource;
+  const rememberedSpotlight=readJSON('spotlight','now');
+  if(['now','new','fantasy','detective','romance','nonfiction','business','youth','classics'].includes(rememberedSpotlight))state.spotlight=rememberedSpotlight;
   const rememberedOriginal=readJSON('original','en');
   if(['en','fr','de','it','es'].includes(rememberedOriginal))state.original=rememberedOriginal;
   let abort=null;
@@ -38,18 +40,29 @@
     return n;
   }
   function safeCover(url) {
-    try {const u=new URL(url);return u.protocol==='https:' && ['www.gutenberg.org','gutenberg.org'].includes(u.hostname)?u.href:'';}
-    catch{return '';}
+    try{
+      const u=new URL(url);
+      return u.protocol==='https:' && ['www.gutenberg.org','gutenberg.org','books.google.com','books.google.ru','books.googleusercontent.com','www.googleapis.com'].includes(u.hostname)?u.href:'';
+    }catch{return '';}
+  }
+  function safeBookLink(url){
+    try{
+      const u=new URL(url);
+      return u.protocol==='https:'&&['books.google.com','books.google.ru','play.google.com','books.googleusercontent.com'].includes(u.hostname)?u.href:'';
+    }catch{return '';}
   }
   function isWiki(book){return book?.provider==='wikisource' && ['ru','hy'].includes(book.wiki);}
-  function bookKey(book){return isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
+  function bookKey(book){return book?.provider==='googlebooks'?'gb-'+String(book.id):isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
   function setSourceInfo(){
     const isGutenberg=state.source==='gutenberg';
     const isTranslated=state.source==='translated';
+    const isSpotlight=state.source==='spotlight';
+    $('spotlightFilters').hidden=!isSpotlight;
     $('translationFilters').hidden=!isTranslated;
     $('languageFilter').hidden=!isGutenberg;
     document.querySelector('.topics').hidden=!isGutenberg;
     const choices={
+      spotlight:['Русскоязычные издания · современные книги и официальные страницы','Новые книги на русском','https://books.google.com/'],
       translated:['Зарубежные писатели · русские переводы из Викитеки','Зарубежная классика на русском','https://ru.wikisource.org/wiki/Special:Copyright'],
       ru:['Русская Викитека · классическая литература и исторические тексты','Русская классика','https://ru.wikisource.org/wiki/Special:Copyright'],
       hy:['Հայերեն Վիքիդարան · հայկական գրականություն и тексты на армянском','Հայ գրականություն','https://hy.wikisource.org/wiki/Special:Copyright'],
@@ -59,14 +72,20 @@
     $('sourceDescription').textContent=item[0];
     $('sourceLegal').textContent=isGutenberg
       ?'Источник: Project Gutenberg. Статус произведения зависит от законодательства вашей страны и перевода.'
+      :isSpotlight?'Современные книги: каталог Google Books. Полный текст может быть доступен только у правообладателя; показываем официальные ссылки и превью.'
       :isTranslated?'Источник: Русская Викитека. Категории определяют язык оригинала; авторские права на перевод и издание проверяются отдельно.'
       :'Источник: Викитека. Права зависят от произведения, перевода и страны; проверьте условия на странице оригинала.';
     $('sourceLegalLink').href=item[2];
-    $('catalogCountLabel').textContent=isGutenberg?'книг в каталоге':isTranslated?'переводных произведений':'результатов в подборке';
+    $('catalogCountLabel').textContent=isSpotlight?'русскоязычных изданий в результате':isGutenberg?'книг в каталоге':isTranslated?'переводных произведений':'результатов в подборке';
     $('bookSearch').placeholder=state.source==='hy'?'Գրքի անուն կամ հեղինակ…'
-      :isTranslated?'Название зарубежной книги или автор…':'Название книги или автор…';
+      :isSpotlight?'Найти современную книгу на русском…':isTranslated?'Название зарубежной книги или автор…':'Название книги или автор…';
     for(const button of document.querySelectorAll('[data-original-lang]')){
       const selected=state.original===button.dataset.originalLang;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    }
+    for(const button of document.querySelectorAll('[data-spotlight]')){
+      const selected=state.spotlight===button.dataset.spotlight;
       button.classList.toggle('active',selected);
       button.setAttribute('aria-pressed',String(selected));
     }
@@ -74,6 +93,7 @@
       ? ['Пушкин','Толстой','Чехов','Достоевский','Гоголь']
       :state.source==='hy'
       ? ['Թումանյան','Աբովյան','Րաֆֆի','Աղայան','Չարենց']
+      :isSpotlight?['Дюна','Атомные привычки','Четвёртое крыло','Гарри Поттер','1984','Психология денег']
       :isTranslated
       ? ({
           en:['Шекспир','Дойль','Диккенс','Уэллс','Лондон'],
@@ -84,7 +104,7 @@
         }[state.original]||[])
       :['Shakespeare','Austen','Dickens','Wells','Twain'];
     const authorHolder=$('authorDiscovery');
-    authorHolder.replaceChildren(node('span','',state.source==='hy'?'Հեղինակներ':'Авторы:'));
+    authorHolder.replaceChildren(node('span','',state.source==='hy'?'Հեղինակներ':isSpotlight?'Искать книги:':'Авторы:'));
     for(const name of authors){
       const b=node('button','',name);b.type='button';b.addEventListener('click',()=>{
         state.query=name;$('bookSearch').value=name;loadCatalog(true);
@@ -145,14 +165,14 @@
     for(const b of document.querySelectorAll('.topics [data-topic]')){
       b.classList.toggle('active',b.dataset.topic===state.topic);
     }
-    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
+    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
     $('shelfEyebrow').textContent=state.query ? 'SEARCH / RESULTS' : 'DISCOVER / 01';
   }
   function card(book) {
     const article=node('article','book');
     const main=node('button','book-main');
     main.type='button';
-    main.setAttribute('aria-label','Читать: '+compactTitle(book.title));
+    main.setAttribute('aria-label',(book.provider==='googlebooks'?'Подробнее: ':'Читать: ')+compactTitle(book.title));
     const cover=node('div','book-cover');
     const imageUrl=safeCover(book.cover);
     if(imageUrl){
@@ -162,13 +182,14 @@
     }else{cover.classList.add('placeholder');cover.textContent=compactTitle(book.title);}
     main.append(cover,node('h3','',compactTitle(book.title)),node('p','',fullName(book)));
     const meta=node('div','book-bottom');
-    meta.append(node('span','',(book.language||'').toUpperCase()),node('span','',progress[bookKey(book)] ? 'Продолжить ↗' : 'Читать ↗'));
+    meta.append(node('span','',(book.language||'').toUpperCase()),
+      node('span','',book.provider==='googlebooks'?(book.previewUrl?'Превью ↗':'О книге ↗'):progress[bookKey(book)]?'Продолжить ↗':'Читать ↗'));
     if(book.isTranslation) {
       const label=node('span','translation-tag','РУССКИЙ ПЕРЕВОД');
       main.append(label);
     }
     main.append(meta);
-    main.addEventListener('click',()=>openBook(book));
+    main.addEventListener('click',()=>book.provider==='googlebooks'?showDiscoverBook(book):openBook(book));
     article.append(main);
     const save=node('button','book-saved',saved[bookKey(book)]?'♥':'♡');
     save.title=saved[bookKey(book)]?'Убрать из библиотеки':'Сохранить в библиотеку';
@@ -196,6 +217,7 @@
     refreshTabs();
     const params=new URLSearchParams({page:String(state.page)});
     if(state.source==='gutenberg')params.set('lang',state.lang);
+    else if(state.source==='spotlight')params.set('collection',state.spotlight);
     else if(state.source==='translated'){
       params.set('collection','translations');
       params.set('original',state.original);
@@ -204,7 +226,7 @@
     if(state.query)params.set('q',state.query);
     if(state.topic && state.source==='gutenberg')params.set('topic',state.topic);
     try {
-      const endpoint=state.source==='gutenberg'?'/api/books':'/api/books-wikisource';
+      const endpoint=state.source==='gutenberg'?'/api/books':state.source==='spotlight'?'/api/books-discover':'/api/books-wikisource';
       const response=await fetch(endpoint+'?'+params,{signal:abort.signal});
       const data=await response.json();
       if(!response.ok||!data.ok)throw new Error(data.error||'Сервис книг временно недоступен');
@@ -216,7 +238,7 @@
       $('catalogCount').textContent=Number.isFinite(data.count)?formatCount(data.count):'—';
       const grid=$('catalogGrid');
       incoming.forEach(book=>grid.append(card(book)));
-      if(!state.books.length){grid.append(node('div','empty-state','Пока не нашли книг по этому запросу. Попробуйте другое название или язык.'));}
+      if(!state.books.length){grid.append(node('div','empty-state','По этому запросу нет подходящих книг. Попробуйте другого автора, название или подборку.'));}
       $('catalogStatus').textContent=Number.isFinite(state.count)
         ? state.count ? 'Найдено: '+formatCount(state.count) : 'Нет результатов'
         : 'Загружено переводов и редакций: '+formatCount(state.books.length);
@@ -453,6 +475,7 @@
     }
   }
   async function openBook(book){
+    if(book?.provider==='googlebooks'){showDiscoverBook(book);return;}
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
     ++state.requestBook;
     state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;state.rawText='';state.pageOffsets=[];
@@ -528,6 +551,39 @@
     const button=node('button','',action);button.type='button';button.addEventListener('click',handler);
     row.append(text,button);host.append(row);
   }
+  function showDiscoverBook(book){
+    const host=modal('О книге');
+    const panel=node('div','discover-detail');
+    const coverUrl=safeCover(book.cover);
+    const cover=node('div','discover-detail-cover');
+    if(coverUrl){
+      const image=node('img');image.alt='Обложка книги '+compactTitle(book.title);
+      image.src=coverUrl;image.loading='lazy';cover.append(image);
+    }else cover.textContent=compactTitle(book.title);
+    const body=node('div','discover-detail-body');
+    body.append(node('span','discover-label','РУССКОЯЗЫЧНОЕ ИЗДАНИЕ'),
+      node('h3','',compactTitle(book.title)),node('p','discover-author',fullName(book)));
+    if(book.subtitle)body.append(node('p','discover-subtitle',book.subtitle));
+    if(book.publishedDate||book.publisher){
+      body.append(node('p','discover-meta',[book.publisher,book.publishedDate,book.pageCount?book.pageCount+' стр.':null].filter(Boolean).join(' · ')));
+    }
+    panel.append(cover,body);host.append(panel);
+    if(book.summary)host.append(node('p','discover-summary',String(book.summary).replace(/<[^>]*>/g,'').slice(0,640)));
+    const actions=node('div','discover-actions');
+    const addLink=(label,href,primary=false)=>{
+      const link=safeBookLink(href);
+      if(!link)return;
+      const a=node('a',primary?'discover-primary':'discover-secondary',label+' ↗');
+      a.href=link;a.target='_blank';a.rel='noopener noreferrer';a.referrerPolicy='no-referrer';
+      actions.append(a);
+    };
+    addLink(book.access==='official-full-view'?'Официальная полная версия':'Посмотреть фрагмент',book.previewUrl,Boolean(book.previewUrl));
+    addLink('Официальная страница книги',book.sourceUrl,!book.previewUrl);
+    addLink('Купить у издателя',book.buyUrl);
+    host.append(actions);
+    host.append(node('p','discover-disclaimer',
+      'Это карточка книги, не встроенный полный текст. Для современных защищённых произведений чтение доступно только через официальные страницы и разрешённые фрагменты.'));
+  }
   function library(){
     const host=modal('Моя библиотека');
     const ids=Object.keys(saved);
@@ -543,7 +599,7 @@
     if(ids.length){
       host.append(node('p','eyebrow','СОХРАНЁННЫЕ'));
       ids.slice(0,100).forEach(id=>{
-        modalRow(host,compactTitle(saved[id].title),fullName(saved[id]),'Открыть',()=>{$('bookModal').hidden=true;openBook(saved[id]);});
+        modalRow(host,compactTitle(saved[id].title),fullName(saved[id]),'Открыть',()=>{$('bookModal').hidden=true;saved[id].provider==='googlebooks'?showDiscoverBook(saved[id]):openBook(saved[id]);});
       });
     }
     if(quotes.length){
@@ -554,6 +610,12 @@
     }
   }
 
+  for(const button of document.querySelectorAll('[data-spotlight]'))button.addEventListener('click',()=>{
+    state.spotlight=button.dataset.spotlight;
+    persist('spotlight',state.spotlight);
+    state.query='';$('bookSearch').value='';
+    setSourceInfo();loadCatalog(true);
+  });
   for(const button of document.querySelectorAll('[data-original-lang]'))button.addEventListener('click',()=>{
     if(state.original===button.dataset.originalLang)return;
     state.original=button.dataset.originalLang;
