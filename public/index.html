@@ -4,8 +4,8 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css"><link rel="stylesheet" href="./vetogram-music-openverse.css">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script></head>
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css"><link rel="stylesheet" href="./vetogram-music-openverse.css"><link rel="stylesheet" href="./vetogram-music-originals.css"><link rel="stylesheet" href="./vetogram-music-youtube.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script><script defer src="./vetogram-music-originals.js"></script><script defer src="./vetogram-music-youtube.js"></script></head>
 <body>
 <div class="app" id="app">
 <aside class="sidebar" aria-label="Навигация">
@@ -17,6 +17,8 @@
  <nav class="side-nav" id="sideNav">
   <button class="nav-item active" data-page="home" type="button"><span>⌂</span> Главная</button>
   <button class="nav-item" data-page="search" type="button"><span>⌕</span> Поиск музыки</button>
+  <button class="nav-item" data-page="youtube" type="button"><span>▶</span> Клипы и плейлисты</button>
+  <button class="nav-item" data-page="originals" type="button"><span>✦</span> Оригинальные хиты</button>
   <button class="nav-item" data-page="charts" type="button"><span>▤</span> Русский топ-25</button>
   <button class="nav-item" data-page="catalog" type="button"><span>♫</span> Каталог музыки</button>
   <button class="nav-item" data-page="archive" type="button"><span>♬</span> Библиотека</button>
@@ -37,11 +39,12 @@
   <div class="hero" id="hero"><div class="grain"></div><div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div>
    <div class="hero-inner"><span class="eyebrow"><i></i> THE FUTURE SOUNDS DIFFERENT</span>
    <h1>Твоя музыка.<br><em>Один Play.</em></h1>
-   <p>Музыка должна играть здесь. Выбирай доступные треки, нажимай Play и слушай.</p>
-   <div class="hero-buttons"><button id="heroExplore" class="primary-btn" type="button">Слушать музыку <span>↗</span></button><button class="glass-btn" type="button" data-page="import">＋ Свои треки</button></div>
-   <div class="hero-pills"><span><b>♫</b> ТОЛЬКО АУДИО</span><span><b>◉</b> ОДИН PLAY</span><span><b>✧</b> БЕЗ ВИДЕО</span></div></div>
+   <p>Слушай доступные аудиозаписи или включай официальные клипы и плейлисты YouTube прямо внутри Vetogram.</p>
+   <div class="hero-buttons"><button id="heroExplore" class="primary-btn" type="button">Слушать музыку <span>↗</span></button><button class="glass-btn" type="button" data-page="youtube">▶ Популярные клипы</button></div>
+   <div class="hero-pills"><span><b>♫</b> СВОЙ АУДИОПЛЕЕР</span><span><b>▶</b> ВИДЕО YOUTUBE</span><span><b>✧</b> ПЛЕЙЛИСТЫ</span></div></div>
    <div class="hero-stage" aria-hidden="true"><div class="vinyl-large"><div class="vinyl-ring"></div><div class="vinyl-label"><span>V</span><small>VETOGRAM<br>MUSIC</small></div></div><div class="floating-note note-one">♫</div><div class="floating-note note-two">♪</div><div class="hero-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="hero-card">NOW PLAYING<span>THE SOUND OF YOU</span><b>∞</b></div></div>
   </div>
+  <div class="yt-home-entry"><div><small>VETOGRAM MUSIC / POPULAR</small><strong>Русские, армянские и мировые хиты.</strong><p>Официальные видео и публичные плейлисты в отдельном встроенном YouTube-плеере. Без скачивания треков и перехода на другой сайт для воспроизведения.</p></div><button type="button" data-page="youtube">▶ Открыть музыку</button></div>
   <section class="native-home audio-home" aria-labelledby="native-home-title">
  <div class="native-home-topline">VETOGRAM MUSIC</div>
  <h2 id="native-home-title">Нажал Play. <em>И слушаешь.</em></h2>
@@ -74,6 +77,87 @@
   <div class="feature-strip"><div><span>01 / TELEGRAM & PERSONAL LIBRARY</span><h3>Любимые треки остаются твоими.</h3><p>Загрузи собственные аудиофайлы или сохранённые из Telegram песни — слушай в нашей библиотеке. На сервер мы их не отправляем.</p><button data-page="import" class="secondary-btn" type="button">Моя музыка ↗</button></div><div class="feature-strip-art">V<span>♫</span></div></div>
  </section>
  
+<section class="page" data-view="youtube" aria-label="YouTube Музыка — официальные видео и плейлисты">
+ <div class="yt-hero">
+  <small>VETOGRAM MUSIC / YOUTUBE LIBRARY</small>
+  <h1>Музыка YouTube. <em>В одном месте.</em></h1>
+  <p>Слушай и смотри оригинальные видео, целые плейлисты и публичные загрузки каналов через официальный видимый YouTube-плеер. Ни MP3-скачиваний, ни ключа API, ни дополнительного музыкального сервера.</p>
+  <div class="yt-tags"><span>РУССКАЯ МУЗЫКА — ПЕРВОЙ</span><span>◈ ПУБЛИЧНЫЕ ПЛЕЙЛИСТЫ</span><span>▶ OFFICIAL PLAYER</span></div>
+ </div>
+ <div class="yt-section">
+  <h2>Включить сразу целую подборку</h2>
+  <p>21 проверенный оригинальный клип, распределённый по исполнителям из России, Армении и других стран. Результаты не являются рейтингом популярности YouTube.</p>
+  <div class="yt-genre-switch" aria-label="Выбор музыкального направления">
+   <button type="button" class="active" data-yt-region="ru" aria-pressed="true">Русская музыка</button>
+   <button type="button" data-yt-region="hy" aria-pressed="false">Հայկական</button>
+   <button type="button" data-yt-region="en" aria-pressed="false">Мировая</button>
+  </div>
+  <input id="ytFilterInput" class="yt-input" type="search" style="width:100%" placeholder="Найти клип в нашей подборке" maxlength="85" aria-label="Поиск внутри проверенных видео">
+  <div class="yt-section-head"><strong>Оригинальные записи</strong><span><span id="ytGenreCount">0</span> проверенных видео</span></div>
+  <div id="ytCurated"></div>
+ </div>
+ <div class="yt-section">
+  <h2>Большие российские каталоги — одним нажатием</h2>
+  <p>Проверенные публичные загрузки музыкальных лейблов. Видео из каналов могут включать клипы, выступления, интервью и шоу — это не отфильтрованные музыкальные чарты. Содержимое обновляется на YouTube, не у нас.</p>
+  <div id="ytFeaturedChannels" class="yt-saved"></div>
+ </div>
+ <div class="yt-section">
+  <h2>Подключи тысячи видео одним плейлистом</h2>
+  <p>Вставь ссылку на публичный YouTube-плейлист, YouTube Music-плейлист, отдельное видео или канал с ID <code>UC…</code>. YouTube управляет списком видео и воспроизведением — приложение не копирует записи. У некоторых видео встраивание запрещено.</p>
+  <form id="ytImportForm" class="yt-import-form">
+   <input id="ytImportUrl" class="yt-input" type="url" placeholder="https://www.youtube.com/playlist?list=PL..." aria-label="Ссылка YouTube" required>
+   <input id="ytImportLabel" class="yt-input" type="text" placeholder="Название подборки (необязательно)" maxlength="80" aria-label="Название плейлиста">
+   <button type="submit" class="yt-btn">＋ Добавить плейлист</button>
+  </form>
+  <p class="yt-disclaimer">Поддерживаются публичные плейлисты <code>PL…</code>, музыкальные альбомы <code>OLAK5uy_…</code>, публичные загрузки канала <code>UC…</code> и обычные ссылки на видео. Личные плейлисты и динамические YouTube Mix могут не поддерживаться.</p>
+  <div class="yt-section-head"><strong>Сохранённые плейлисты</strong><span><span id="ytSavedCount">0</span> / 50 на этом устройстве</span></div>
+  <div id="ytSaved" class="yt-saved"></div>
+ </div>
+ <div class="yt-section">
+  <h2>Найти ещё музыку на YouTube</h2>
+  <p>Ищи официальные клипы по названию. Без собственного ключа YouTube Data API поиск открывается на YouTube; результаты не выдаются за импортированные в VETOGRAM.</p>
+  <form id="ytSearchForm" class="yt-search-form">
+   <input id="ytSearchInput" class="yt-input" type="search" maxlength="90" placeholder="MACAN, Баста, JONY, Sirusho…" aria-label="Искать оригинальные записи на YouTube">
+   <button class="yt-btn" type="submit">⌕ Поиск на YouTube</button>
+  </form>
+ </div>
+ <p id="ytStatus" class="yt-status" role="status">Выбирай музыку, открывай подборки и сохраняй публичные ссылки.</p>
+ <div class="yt-player" id="ytPlayer">
+  <div class="yt-player-head"><strong id="ytPlaying">Ничего не воспроизводится</strong><button type="button" id="ytStop">× Закрыть плеер</button></div>
+  <div class="yt-player-frame" id="ytPlayerFrame"><p class="yt-empty">Выбери видео или плейлист, чтобы открыть официальный YouTube-плеер.</p></div>
+  <div class="yt-player-foot">
+   <a id="ytOpenSource" target="_blank" rel="noopener noreferrer">Открыть оригинал на YouTube ↗</a>
+   <p class="yt-disclaimer">Это полноценное видимое видео, а не отдельный MP3-поток. Нельзя скрывать видео, извлекать звук, блокировать рекламу или предоставлять фоновое воспроизведение в обход YouTube. Пользователь выбирает Play в плеере сам.</p>
+  <p class="yt-disclaimer">Используя встроенный плеер, ты соглашаешься с <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">Условиями YouTube</a>. Данные проигрывателя обрабатываются по <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Политике конфиденциальности Google</a>.</p>
+  </div>
+ </div>
+</section>
+<section class="page" data-view="originals" aria-label="Оригинальные музыкальные видеозаписи">
+ <div class="originals-hero">
+  <small>VETOGRAM MUSIC / OFFICIAL RELEASES</small>
+  <h1>Те самые <em>оригиналы.</em></h1>
+  <p>Проверенные публикации оригинальных записей с официальных каналов артистов и издателей. Слушай и смотри через настоящий видимый плеер YouTube — без фальшивых MP3 и подмены оригинала ремиксом.</p>
+  <div class="originals-sources"><span>◈ OFFICIAL CHANNELS</span><span>РУС · ՀԱՅ · WORLD</span><span>FREE VIDEO PLAYBACK*</span></div>
+ </div>
+ <div class="originals-toolbar">
+  <div class="originals-tabs" role="group" aria-label="Музыкальное направление">
+   <button type="button" class="active" data-originals-group="all" aria-pressed="true">Все</button>
+   <button type="button" data-originals-group="ru" aria-pressed="false">Русская</button>
+   <button type="button" data-originals-group="hy" aria-pressed="false">Армянские исполнители</button>
+   <button type="button" data-originals-group="en" aria-pressed="false">Зарубежная</button>
+  </div>
+  <input type="search" id="originalsSearch" maxlength="80" placeholder="Найти исполнителя в проверенной подборке…" aria-label="Поиск официальных публикаций">
+  <button class="originals-find-more" type="button" id="originalsFindMore">⌕ Найти ещё оригиналы на YouTube ↗</button>
+ </div>
+ <div class="originals-heading"><h2>Подтверждённые релизы</h2><span id="originalsCount">0 публикаций</span></div>
+ <div class="originals-list" id="originalsList"></div>
+ <div class="originals-player" id="originalsPlayer" aria-label="Официальный видеоплеер">
+  <div class="originals-player-head"><strong id="originalsWatching">Ничего не воспроизводится</strong><button type="button" id="originalsClose">× Закрыть плеер</button></div>
+  <div id="originalsFrame" class="originals-frame"></div>
+  <div class="originals-player-footer"><small>Видео остаётся на YouTube. Никаких загрузок на наш сервер.</small><a id="originalsOpen" target="_blank" rel="noopener noreferrer">Открыть источник ↗</a></div>
+ </div>
+ <p class="originals-notice">*Полные оригиналы доступны через видимое видео по правилам YouTube; отдельный аудиопоток и фоновое воспроизведение здесь не предоставляются. Некоторые видео недоступны для встраивания или в отдельных регионах. Если плеер заблокирован, открой источник на YouTube. Это небольшая проверенная подборка, не полная библиотека всех хитов. Поиск других песен открывает YouTube и не добавляет их автоматически в каталог VETOGRAM.</p>
+</section>
  <section class="page" data-view="charts" aria-label="Музыкальные чарты">
   <div class="charts-hero">
     <div class="charts-hero-glow" aria-hidden="true">♫</div>
