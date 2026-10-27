@@ -4,8 +4,7 @@ import process from "node:process";
 import pg from "pg";
 import {fetchChannelPage,CHANNELS} from "./official-rutube.mjs";
 const port=Number(process.env.PORT||3800);
-if(!process.env.DATABASE_URL)throw Error("DATABASE_URL is required");
-const pool=new pg.Pool({connectionString:process.env.DATABASE_URL,max:5,idleTimeoutMillis:10000,connectionTimeoutMillis:5000});
+const pool=process.env.DATABASE_URL?new pg.Pool({connectionString:process.env.DATABASE_URL,max:5,idleTimeoutMillis:10000,connectionTimeoutMillis:5000}):null;
 function respond(res,status,obj) {
  const body=JSON.stringify(obj);
  res.writeHead(status,{"Content-Type":"application/json; charset=utf-8","Cache-Control":"public, max-age=30","X-Content-Type-Options":"nosniff","Content-Length":Buffer.byteLength(body)});
@@ -34,7 +33,7 @@ const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,"http://localhost");
  try {
   if(url.pathname==="/healthz"){
-   await pool.query("SELECT 1");respond(res,200,{status:"ok",service:"cinema-catalog"});return;
+   if(pool)await pool.query("SELECT 1");respond(res,200,{status:"ok",service:"cinema-catalog",database:pool?"ready":"not_configured",public_studios:true});return;
   }
   // Independent metadata feed: live public embeds from approved rights-holder
   // channels. Does not require a private PostgreSQL row for every studio video.
@@ -53,6 +52,7 @@ const server=http.createServer(async(req,res)=>{
     }))});return;
   }
   if(url.pathname==="/api/cinema/movies"){
+   if(!pool){respond(res,503,{error:"postgres not configured; public studio channels remain available"});return}
    const q=(url.searchParams.get("q")||"").trim().slice(0,80);
    const genre=(url.searchParams.get("genre")||"").trim().slice(0,60);
    const limit=Math.min(80,Math.max(1,Number.parseInt(url.searchParams.get("limit")||"40",10)||40));
@@ -65,6 +65,7 @@ const server=http.createServer(async(req,res)=>{
   }
   const sourcesMatch=/^\/api\/cinema\/movies\/([a-z0-9][a-z0-9-]{2,90})\/sources$/.exec(url.pathname);
   if(sourcesMatch){
+    if(!pool){respond(res,503,{error:"postgres not configured"});return}
     const r=await pool.query(
       "SELECT x.id,x.provider,x.type,x.playback_url,x.source_page_url,x.rights_basis,"+
       "x.rights_evidence_url,x.attribution,x.spoken_language,x.translation_name,x.quality_label "+
@@ -82,6 +83,7 @@ const server=http.createServer(async(req,res)=>{
   }
   const m=/^\/api\/cinema\/movies\/([a-z0-9][a-z0-9-]{2,90})$/.exec(url.pathname);
   if(m){
+   if(!pool){respond(res,503,{error:"postgres not configured"});return}
    const result=await pool.query(sqlSelect+" AND m.id=$1",[m[1]]);
    respond(res,result.rowCount?200:404,result.rowCount?{movie:asFilm(result.rows[0])}:{error:"movie not found"});return;
   }
@@ -89,4 +91,4 @@ const server=http.createServer(async(req,res)=>{
  }catch(e){console.error("cinema db",e.message);respond(res,503,{error:"catalog temporarily unavailable"})}
 });
 server.listen(port,"127.0.0.1",()=>console.log("Cinema catalog listening on 127.0.0.1:"+port));
-for(const signal of ["SIGINT","SIGTERM"])process.on(signal,()=>{server.close(()=>pool.end().then(()=>process.exit(0)))});
+for(const signal of ["SIGINT","SIGTERM"])process.on(signal,()=>{server.close(()=>pool?pool.end().then(()=>process.exit(0)):process.exit(0))});
