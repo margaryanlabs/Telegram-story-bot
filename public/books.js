@@ -25,6 +25,8 @@
   let abort=null;
   let googleViewerPromise=null;
   let offlineEditionToken=0;
+  let offlineSavedBook=null;
+  const pendingChapterPrefetch=new Map();
   let toastTimer;
   let dbPromise;
   try {
@@ -251,7 +253,11 @@
     const button=$('readerSaveAllChapters');
     button.hidden=count>160;
     button.disabled=false;
-    button.textContent=count?'СОХРАНИТЬ '+count+' ГЛАВ ↧':'СОХРАНИТЬ ТЕКСТ ↧';
+    if(offlineSavedBook?.sourceWikiId===book.id&&offlineSavedBook?.sourceWiki===book.wiki){
+      button.textContent='ЧИТАТЬ ОФЛАЙН ↗';
+    }else{
+      button.textContent=count?'СОХРАНИТЬ '+count+' ГЛАВ ↧':'СОХРАНИТЬ ТЕКСТ ↧';
+    }
     $('readerDownloadHint').textContent=count
       ?'Загрузим '+count+' доступных частей подряд. Если глава не найдена, не создадим неполную копию.'
       :'Сохраним весь загруженный текст на устройстве.';
@@ -266,6 +272,11 @@
   async function saveWholeEditionOffline(){
     const book=state.current;
     if(!isWiki(book)||state.isTranslationIndex)return;
+    if(offlineSavedBook?.sourceWikiId===book.id&&offlineSavedBook?.sourceWiki===book.wiki){
+      const local=offlineSavedBook;
+      await openBook(local);
+      return;
+    }
     const importer=window.VetogramBooksImport;
     if(!importer?.saveWikisourceEdition){toast('Офлайн-хранилище недоступно');return;}
     const chapters=state.chapters.length
@@ -303,10 +314,13 @@
       }
       if(token!==offlineEditionToken||$('reader').hidden)throw new Error('Сборка отменена');
       const local=await importer.saveWikisourceEdition(book,chapters,texts);
+      local.sourceWikiId=book.id;
+      local.sourceWiki=book.wiki;
+      offlineSavedBook=local;
       saved[bookKey(local)]=local;
       persist('saved',saved);updateSavedCount();
-      $('readerDownloadHint').textContent='Сохранены все '+chapters.length+' доступных частей · можно читать офлайн';
-      button.textContent='ГОТОВО ✓';
+      $('readerDownloadHint').textContent='Сохранено '+chapters.length+' доступных частей. Нажмите, чтобы открыть одну офлайн-книгу.';
+      button.textContent='ЧИТАТЬ ОФЛАЙН ↗';
       toast('Книга сохранена на устройстве — все доступные части');
     }catch(error){
       $('readerDownloadHint').textContent=error?.message||'Не удалось загрузить книгу';
@@ -751,6 +765,31 @@
     }else flip(dir);
   }
   function bookmarkToken(){return String(state.activeChapter??'root')+':@'+(state.pageOffsets[state.currentPage]||0);}
+  // One-chapter-ahead prefetch only. No page preloading during metered or
+  // data-saver connections; no duplicate requests and no UI-facing failures.
+  async function prefetchNextChapter(){
+    const book=state.current;
+    if(!isWiki(book)||state.isTranslationIndex||!state.chapters.length)return;
+    const connectivity=navigator.connection;
+    if(connectivity?.saveData||/2g/i.test(connectivity?.effectiveType||''))return;
+    const chapter=Number.isInteger(state.activeChapter)?state.activeChapter+1:0;
+    if(chapter<0||chapter>=state.chapters.length)return;
+    const cacheId=bookKey(book)+':'+chapter;
+    if(pendingChapterPrefetch.has(cacheId))return;
+    const request=(async()=>{
+      const cached=await cachedText(cacheId);
+      if(cached?.text)return;
+      const params=new URLSearchParams({mode:'text',wiki:book.wiki,id:String(book.id),chapter:String(chapter)});
+      const response=await fetch('/api/books-wikisource?'+params);
+      if(!response.ok)return;
+      const payload=await response.json();
+      if(!payload.ok||!payload.text||payload.isTranslationIndex)return;
+      await cacheText(cacheId,{book:payload.book,text:payload.text,chapters:payload.chapters||[],
+        attribution:payload.attribution||null,isTranslationIndex:false,coverage:payload.coverage||null});
+    })().catch(()=>{}).finally(()=>pendingChapterPrefetch.delete(cacheId));
+    pendingChapterPrefetch.set(cacheId,request);
+    await request;
+  }
   function showPage(page, scroll=true){
     if(!state.current||!state.pages.length)return;
     state.currentPage=Math.min(Math.max(0,page),state.pages.length-1);
@@ -764,10 +803,20 @@
     $('pageNumber').textContent='СТРАНИЦА '+(state.currentPage+1);
     $('readerPageLabel').textContent=(state.currentPage+1)+' / '+state.pages.length;
     const offset=state.pageOffsets[state.currentPage]||0;
-    const percentage=state.rawText.length ? Math.max(0,Math.min(100,Math.round(offset/state.rawText.length*100))) : 0;
-    $('progressFill').style.width=percentage+'%';
-    $('readerProgressPercent').textContent=percentage+'%';
-    $('readerProgressLabel').textContent='Место в текущей части';
+    const percentage=state.rawText.length ? Math.max(0,Math.min(100,offset/state.rawText.length*100)) : 0;
+    const sequential=state.chapters.length>0&&!state.isTranslationIndex
+      && (isWiki(state.current)||isLocal(state.current));
+    const chapterIndex=sequential?Math.max(0,Number(state.activeChapter)||0):0;
+    // Chapter progress is an approximate whole-book location because parts can
+    // differ greatly in length. Never present this as an exact character count.
+    const overall=sequential
+      ?(chapterIndex+percentage/100)/state.chapters.length*100
+      :percentage;
+    $('progressFill').style.width=Math.round(overall)+'%';
+    $('readerProgressPercent').textContent=(sequential?'≈ ':'')+Math.round(overall)+'%';
+    $('readerProgressLabel').textContent=sequential
+      ?'Часть '+(chapterIndex+1)+' из '+state.chapters.length+' · оценка прогресса книги'
+      :'Место в текущем тексте';
     const chaptersAvailable=state.chapters.length>0&&(isWiki(state.current)||isLocal(state.current));
     const previousChapter=chaptersAvailable && state.activeChapter!==null && state.activeChapter>0;
     $('prevPage').disabled=state.currentPage===0 && !previousChapter;
@@ -786,6 +835,9 @@
     };
     persist('progress',progress);
     if(scroll)$('readerScroll').scrollTop=0;
+    if(state.pages.length && state.currentPage>=state.pages.length-2)
+      void prefetchNextChapter();
+
   }
   function renderChapters(){
     const wrap=$('readerChapters'),select=$('chapterSelect');
