@@ -221,7 +221,7 @@ export async function fullText(req,res,wiki) {
   const title=limited(root.title,220);
   if(!title)return send(res,404,{ok:false,error:'Book unavailable'});
   const isTranslationIndex=wiki==='ru' && (root.categories||[]).some(category=>
-    String(category.title||category['*']||'').includes('Списки переводов'));
+    String(category.title||category.category||category['*']||'').includes('Списки переводов'));
   const chapters=chaptersFromLinks(root.links,title,isTranslationIndex);
   const chapterId=req.query.chapter===undefined?null:boundedInt(req.query.chapter,0,MAX_CHAPTERS-1);
   if(req.query.chapter!==undefined && chapterId===null) return send(res,400,{ok:false,error:'Invalid chapter'});
