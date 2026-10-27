@@ -180,18 +180,34 @@ export async function catalog(req,res,wiki) {
     nextPage:rows.length===PAGE_SIZE && (offset+PAGE_SIZE)<count ? page+1:null,books
   });
 }
-function chaptersFromLinks(links,title){
-  const prefix=String(title).replace(/_/g,' ').trim()+'/';
+function chaptersFromLinks(links,title,allowEditions=false){
+  const normalized=value=>String(value).replace(/_/g,' ').replace(/ё/gi,'е').trim().toLowerCase();
+  const prefix=normalized(title);
+  const stem=prefix.split('(')[0].trim();
+  const author=prefix.match(/\(([^);]+)[);]/)?.[1]||'';
   const seen=new Set();
   return (Array.isArray(links)?links:[])
     .filter(link=>link.ns===0 && typeof(link.title||link['*'])==='string')
     .map(link=>String(link.title||link['*']))
-    .filter(s=>s.startsWith(prefix) && s.length>prefix.length && s.length<280)
-    .filter(s=>{if(seen.has(s))return false;seen.add(s);return true;})
-    .slice(0,MAX_CHAPTERS).map(s=>({title:s,label:s.slice(prefix.length).replace(/_/g,' ').slice(0,120)}));
+    .filter(linkTitle=>{
+      const candidate=normalized(linkTitle);
+      const nested=candidate.startsWith(prefix+'/');
+      // Translation indexes may link to versions whose titles add a
+      // translator inside parentheses. Do not treat random unrelated
+      // links as chapters, and only allow sibling versions for known indexes.
+      const edition=allowEditions && stem.length>=4 && candidate.startsWith(stem+' (')
+        && (!author || candidate.includes(author)) && candidate!==prefix;
+      return (nested || edition) && candidate.length<280;
+    })
+    .filter(link=>{const key=normalized(link);if(seen.has(key))return false;seen.add(key);return true;})
+    .slice(0,MAX_CHAPTERS).map(link=>{
+      const label=normalized(link).startsWith(prefix+'/')
+        ? link.slice(String(title).length+1):link;
+      return {title:link,label:label.replace(/_/g,' ').slice(0,120)};
+    });
 }
 async function parsed(wiki,opts) {
-  const json=await wikiGet(wiki,{action:'parse',prop:'text|links|revid',redirects:'1',...opts});
+  const json=await wikiGet(wiki,{action:'parse',prop:'text|links|revid|categories',redirects:'1',...opts});
   if(!json?.parse || typeof json.parse.text!=='string') {
     const e=new Error('Page missing or inaccessible');e.upstreamStatus=404;throw e;
   }
@@ -204,7 +220,9 @@ export async function fullText(req,res,wiki) {
   const root=await parsed(wiki,{pageid:id});
   const title=limited(root.title,220);
   if(!title)return send(res,404,{ok:false,error:'Book unavailable'});
-  const chapters=chaptersFromLinks(root.links,title);
+  const isTranslationIndex=wiki==='ru' && (root.categories||[]).some(category=>
+    String(category.title||category['*']||'').includes('Списки переводов'));
+  const chapters=chaptersFromLinks(root.links,title,isTranslationIndex);
   const chapterId=req.query.chapter===undefined?null:boundedInt(req.query.chapter,0,MAX_CHAPTERS-1);
   if(req.query.chapter!==undefined && chapterId===null) return send(res,400,{ok:false,error:'Invalid chapter'});
   if(chapterId!==null && chapterId>=chapters.length)return send(res,404,{ok:false,error:'Chapter unavailable'});
@@ -213,7 +231,11 @@ export async function fullText(req,res,wiki) {
   if((!text || text.length<60) && chapters.length===0)return send(res,422,{ok:false,error:'На этой странице нет читаемого текста. Попробуйте другую книгу или главу.'});
   const book=bookFromEntry({pageid:id,title,ns:0},wiki);
   return send(res,200,{
-    ok:true,book,text:text.length>=60?text:'Выберите главу в настройках чтения.',chapters,chapter:chapterId,
+    ok:true,book,
+    text:chapterId===null && isTranslationIndex && chapters.length
+      ? 'У этого зарубежного произведения есть несколько русских переводов. Откройте настройки Aa и выберите конкретный перевод или издание.'
+      :text.length>=60?text:'Выберите главу в настройках чтения.',
+    chapters,chapter:chapterId,isTranslationIndex,
     attribution:{
       title:part.title||title,source:sourceUrl(wiki,part.title||title),revision:Number(part.revid)||null,
       licenseUrl:book.licenseUrl,modified:'Текст адаптирован для читалки, исходное форматирование упрощено.'
