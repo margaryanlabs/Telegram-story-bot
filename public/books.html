@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0b0d">
+  <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
+  <title>VETOGRAM Books — Читать</title>
+  <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/books.css?v=1">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="/books.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/studio.html" class="back-link" aria-label="В Vetogram">←</a>
+    <div class="brand"><span class="brand-symbol">V</span><div><strong>VETOGRAM <em>BOOKS</em></strong><small>YOUR PRIVATE READING SPACE</small></div></div>
+    <button class="icon-button" id="openSaved" title="Моя библиотека" aria-label="Моя библиотека">▤</button>
+  </header>
+
+  <main class="books-main" id="booksMain">
+    <section class="hero">
+      <p class="eyebrow"><span class="hero-dot"></span> VETOGRAM / READING UNIVERSE</p>
+      <h1>Мир историй.<br><i>Внутри Telegram.</i></h1>
+      <p>Открой книгу, погрузись в чтение и возвращайся к последней странице — без отдельного приложения.</p>
+      <div class="hero-bottom"><span><strong id="catalogCount">—</strong> книг в каталоге</span><span>Без подписки · Открытая классика</span></div>
+      <div class="hero-orbit" aria-hidden="true"><span>V</span><b>✶</b></div>
+    </section>
+
+    <section class="catalog-bar" aria-label="Найти книгу">
+      <form id="searchForm" class="search">
+        <span aria-hidden="true">⌕</span>
+        <input id="bookSearch" type="search" placeholder="Название книги или автор…" aria-label="Поиск книг" autocomplete="off" maxlength="100">
+        <button type="submit">Найти</button>
+      </form>
+      <div class="filters">
+        <label for="langSelect">Язык</label>
+        <select id="langSelect" aria-label="Язык книги">
+          <option value="all">Все языки</option>
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="hy">Հայերեն</option>
+        </select>
+      </div>
+    </section>
+    <div class="shelf-heading">
+      <div><p class="eyebrow" id="shelfEyebrow">DISCOVER / 01</p><h2 id="shelfTitle">Популярные книги</h2></div>
+      <button class="text-button" id="myLibrary">Моя полка <span id="savedCount">0</span> ↗</button>
+    </div>
+    <div class="topics" role="group" aria-label="Жанр">
+      <button class="active" type="button" data-topic="">Все</button>
+      <button type="button" data-topic="fiction">Романы</button>
+      <button type="button" data-topic="science fiction">Фантастика</button>
+      <button type="button" data-topic="mystery">Детективы</button>
+      <button type="button" data-topic="history">История</button>
+      <button type="button" data-topic="children">Детям</button>
+    </div>
+    <section id="catalogGrid" class="book-grid" aria-live="polite"></section>
+    <div class="catalog-footer"><p id="catalogStatus" role="status"></p><button id="loadMore" type="button" hidden>Показать ещё ↓</button></div>
+    <footer class="book-attribution">
+      <strong>BOOKS / OPEN LIBRARY OF STORIES</strong>
+      <p>Каталог Project Gutenberg через Gutendex. Права на произведения различаются по странам и переводам. Чтение доступно только для книг с открытым полным текстом.</p>
+      <a href="https://www.gutenberg.org/policy/terms_of_use" target="_blank" rel="noopener noreferrer">Условия источника ↗</a>
+    </footer>
+  </main>
+
+  <section id="reader" class="reader" hidden aria-label="Читалка книги">
+    <header class="reader-top">
+      <button id="readerBack" class="reader-back" type="button" aria-label="Закрыть книгу">← <span>Библиотека</span></button>
+      <div class="reader-identity"><span>СЕЙЧАС ЧИТАЕТЕ</span><strong id="readerTitle">Книга</strong></div>
+      <button id="readerSettingsButton" class="reader-settings-button" type="button" aria-label="Настройки чтения" aria-expanded="false">Aa</button>
+    </header>
+    <div class="reader-progress-track"><div id="progressFill"></div></div>
+    <div id="readerSettings" class="reader-settings" hidden>
+      <div><span>Размер текста</span><button id="smallerFont" type="button" aria-label="Уменьшить шрифт">A−</button><span id="fontValue">19</span><button id="largerFont" type="button" aria-label="Увеличить шрифт">A+</button></div>
+      <div><span>Оформление</span><button type="button" data-read-theme="dark">Ночь</button><button type="button" data-read-theme="light">Бумага</button><button type="button" data-read-theme="sepia">Сепия</button></div>
+    </div>
+    <div class="reader-scroll" id="readerScroll">
+      <div class="reader-paper" id="readerPaper">
+        <div class="reader-book-meta"><div class="reader-line"></div><span id="readerAuthor">АВТОР</span><h2 id="chapterTitle">Глава</h2><p id="pageNumber">Страница 1</p></div>
+        <article class="reader-copy" id="readerCopy"></article>
+        <div class="end-mark">✦</div>
+      </div>
+    </div>
+    <div class="reader-bottom">
+      <button type="button" id="prevPage" aria-label="Предыдущая страница">←</button>
+      <span id="readerPageLabel" aria-live="polite">1 / 1</span>
+      <button type="button" id="saveQuote" title="Сохранить выделенную цитату" aria-label="Сохранить выделенную цитату">❝</button>
+      <button type="button" id="bookmarkButton" title="Закладка" aria-label="Поставить закладку">♧</button>
+      <button type="button" id="nextPage" aria-label="Следующая страница">→</button>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div id="bookModal" class="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header"><h2 id="modalTitle">Моя библиотека</h2><button id="modalClose" aria-label="Закрыть" type="button">×</button></div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+</body>
+</html>
