@@ -180,7 +180,7 @@ Validation performed: JS syntax checks, DOM ID bindings, mock RUTUBE upstream AP
 
 ## Franchise collection and sources — October 27, 2026
 
-Cinema now includes 71 discovery-only entries in public/cinema-franchises.js: MCU 37; Potter/Fantastic Beasts 11; legacy Marvel/X-Men/Spider-Man 23.
+Cinema now includes 88 discovery-only entries in public/cinema-franchises.js: MCU 38 (includes the released 2026 Spider-Man: Brand New Day with its official Sony title page); Potter/Fantastic Beasts 11; legacy Marvel/X-Men/Spider-Man and related films 39.
 These are title-discovery cards without video streams, playback permission, or verified Russian dubbing. Their buttons link to the official film collection or region-specific availability reference, never to an unverified upload.
 The new homepage has a dedicated franchise shelf (MCU, Potter, legacy). The playback route branches on discoveryOnly BEFORE attempting to initialize its player.
 Existing rights-holder RUTUBE original embedded players remain; the unrelated RUTUBE label has been removed from generic movie listings, and a one-source provider selector is hidden. Original player/source attribution is retained.
@@ -188,6 +188,6 @@ Alternate legitimate source directory links to official Mosfilm YouTube, Mosfilm
 No TMDB copyrighted poster images were imported because commercial access and licensing have not been obtained.
 New regression checks: tests/cinema-franchises.test.js.
 
-Latest changes are committed in the draft PR, but the public theater preview is an older build due to the Vercel 402 daily deployment limit. Do not claim 71 new franchise cards are live until a READY deployment is checked.
+Latest changes are committed in the draft PR, but the public theater preview is an older build due to the Vercel 402 daily deployment limit. Do not claim 88 new franchise cards are live until a READY deployment is checked.
 
 References: https://www.harrypotter.com/features/how-to-stream-harry-potter-wherever-you-are ; https://www.disneyplus.com/browse/page-60f4707d-19bb-4c0c-9390-ab269137be50 ; https://www.mosfilm.ru/about/news/mosfilm-novyy-sayt-k-100-letiyu-kinostudii/ ; https://rutube.ru/info/embed/ ; https://developer.themoviedb.org/docs/faq
