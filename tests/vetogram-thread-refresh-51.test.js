@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 
 const source=readFileSync(new URL('../public/telegram-chats.js',import.meta.url),'utf8');
-const a=source.indexOf('  function invalidateThreadAuthorization(){');
+const a=source.indexOf('  function cancelThreadRequest(){');
 const b=source.indexOf('  function back(){',a);
 assert.ok(a>0&&b>a,'test shipping thread loader, not a copy');
 const controller=source.slice(a,b);
@@ -18,6 +18,7 @@ function fixture({status=503,succeed=false}={}){
   const state={
     thread:{id:'77',type:'private',serverCanSend:true},messages:stored.map(m=>({...m})),
     threadLoading:false,threadLoadError:'',threadAuthRejected:false,threadGeneration:7,
+    threadRequestAbort:null,
     syncRunId:1,syncBusy:false,liveHasMore:true,archiveHasMore:false,
     threadHasMore:true,threadOffset:1,archiveOffset:0,ownerInitData:'signed',
     threadCache:new Map([['77',{messages:stored}]]),
@@ -51,6 +52,7 @@ function fixture({status=503,succeed=false}={}){
     scheduleThreadSync:()=>events.push({action:'schedule'}),
     revokeMediaUrls:()=>events.push({action:'revoke'}),
     URL:{revokeObjectURL:()=>events.push({action:'avatar-revoked'})},
+    AbortController,
     request:()=>new Promise((resolve,reject)=>{release=()=>{
       if(succeed)resolve({messages:[{id:3,date:'2026-10-27T13:00:00Z',text:'third'}],
         liveHasMore:false,archiveHasMore:false,canSend:true});
