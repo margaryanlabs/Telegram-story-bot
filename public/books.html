@@ -7,9 +7,9 @@
   <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
   <title>VETOGRAM Books — Читать</title>
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/books.css?v=5">
+  <link rel="stylesheet" href="/books.css?v=6">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="/books.js?v=5" defer></script>
+  <script src="/books.js?v=6" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -113,6 +113,7 @@
     <header class="reader-top">
       <button id="readerBack" class="reader-back" type="button" aria-label="Закрыть книгу">← <span>Библиотека</span></button>
       <div class="reader-identity"><span>СЕЙЧАС ЧИТАЕТЕ</span><strong id="readerTitle">Книга</strong></div>
+      <button id="readerAudioButton" class="reader-audio-button" type="button" aria-label="Читать страницу вслух" aria-pressed="false" title="Чтение вслух">♫</button>
       <button id="readerFlowButton" class="reader-flow-button" type="button" aria-label="VETO FLOW — фокус по абзацам" aria-pressed="false" title="VETO FLOW">✧ <span>FLOW</span></button>
       <button id="readerFocusButton" class="reader-focus-button" type="button" aria-label="Режим погружения" aria-pressed="false" title="Скрыть лишнее">◫</button>
       <button id="readerSettingsButton" class="reader-settings-button" type="button" aria-label="Настройки чтения" aria-expanded="false">Aa</button>
@@ -125,6 +126,7 @@
       <div><span>Шрифт</span><button type="button" data-read-font="literary">Литературный</button><button type="button" data-read-font="modern">Современный</button></div>
       <div><span>Интервал</span><button type="button" data-read-leading="compact">Плотный</button><button type="button" data-read-leading="comfortable">Комфортный</button><button type="button" data-read-leading="airy">Свободный</button></div>
       <div><span>Ширина строки</span><button type="button" data-read-width="normal">Удобная</button><button type="button" data-read-width="narrow">Узкая</button></div>
+      <div><span>Чтение вслух</span><button type="button" data-read-speed="0.85">Медленно</button><button type="button" data-read-speed="1">Обычно</button><button type="button" data-read-speed="1.2">Быстрее</button></div>
       <div class="read-tech-note"><strong>VETO FLOW</strong><span>Выделяет текущий абзац, смягчает фон и помогает удерживать внимание. Работает без отправки текста на сервер.</span></div>
       <div id="readerChapters" hidden><label for="chapterSelect">Содержание</label><select id="chapterSelect" aria-label="Выберите главу"><option value="">Начало книги</option></select></div>
       <div class="reader-attribution"><span>Текст адаптирован для читалки</span><a id="readerSourceLink" href="https://www.gutenberg.org/" target="_blank" rel="noopener noreferrer">Оригинал и авторские права ↗</a></div>
