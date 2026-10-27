@@ -13,6 +13,8 @@
   const progress = readJSON('progress', {});
   const quotes = readJSON('quotes', []);
   const prefs = Object.assign({font:19,theme:'dark'},readJSON('prefs',{}));
+  const rememberedSource=readJSON('source','ru');
+  if(['ru','hy','gutenberg'].includes(rememberedSource))state.source=rememberedSource;
   let abort=null;
   let toastTimer;
   let dbPromise;
@@ -56,6 +58,18 @@
     $('sourceLegalLink').href=item[2];
     $('catalogCountLabel').textContent=isGutenberg?'книг в каталоге':'результатов в подборке';
     $('bookSearch').placeholder=state.source==='hy'?'Գրքի անուն կամ հեղինակ…': 'Название книги или автор…';
+    const authors=state.source==='ru'
+      ? ['Пушкин','Толстой','Чехов','Достоевский','Гоголь']
+      :state.source==='hy'
+      ? ['Թումանյան','Աբովյան','Րաֆֆի','Աղայան','Չարենց']
+      :['Shakespeare','Austen','Dickens','Wells','Twain'];
+    const authorHolder=$('authorDiscovery');
+    authorHolder.replaceChildren(node('span','',state.source==='hy'?'Հեղինակներ':'Авторы:'));
+    for(const name of authors){
+      const b=node('button','',name);b.type='button';b.addEventListener('click',()=>{
+        state.query=name;$('bookSearch').value=name;loadCatalog(true);
+      });authorHolder.append(b);
+    }
     for(const b of document.querySelectorAll('[data-books-source]')){
       const active=b.dataset.booksSource===state.source;
       b.classList.toggle('active',active);
@@ -382,6 +396,7 @@
   for(const button of document.querySelectorAll('[data-books-source]'))button.addEventListener('click',()=>{
     if(state.source===button.dataset.booksSource)return;
     state.source=button.dataset.booksSource;
+    persist('source',state.source);
     state.query='';state.topic='';state.page=1;
     $('bookSearch').value='';
     setSourceInfo();loadCatalog(true);
