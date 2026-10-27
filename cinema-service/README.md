@@ -202,3 +202,16 @@ For the original studio films, we preserve the studio's Russian language metadat
 MEGOGO and Okko support rights/restrictions determined by viewer country, not whether their catalogue pages load. In particular, Armenia playback has NOT been verified for these 32 entries. Source pages must be checked in the viewer's country; failing content must not be promoted as playable.
 Additional tests: `tests/cinema-franchises.test.js` validates 32 mapped Russian listings, unavailable labels and all 88 discovery records remain streamless. DO NOT advertise `32 playable`.
 Official reference examples: https://megogo.net/ru/view/2453151-garri-potter-i-filosofskiy-kamen.html ; https://okko.tv/movie/harry-potter-and-the-order-of-the-phoenix/play ; https://megogo.net/ru/view/4512995-mstiteli-final.html ; https://megogo.net/ru/view/2012581-dedpul.html
+
+## 200 real full-length Russian studio movies — 28 Oct 2026
+
+- `public/cinema-featured-200.js` is an actual curated metadata seed of EXACTLY 200 distinct published RUTUBE videos (120 Mosfilm, 35 Lenfilm, 38 Gorky Film Studio, 7 Star Media). No fictitious titles, IDs, poster links, or MP4 URLs.
+- Seed was selected from 501 unique rights-holder channel records reachable via same-origin `/api/cinema-channels`; 200 have duration >=35 minutes and exclude obvious season/episode/trailer markers. Published uploader ID and RUTUBE embed ID were checked upstream. Some feature movies may be multi-part works; every film's playback and language are determined by the original player.
+- All 200 records were programmatically validated: 200 unique publisher/video IDs, 200 iframe IDs matching their original `https://rutube.ru/video/{id}/` page, 200 allowed public thumbnail URLs, 200 without explicit `серия/сезон/эпизод/трейлер` markers.
+- `cinema.html` loads the static manifest before `cinema.js`. Initial app films are deduped by ID. `cinema.js` pre-populates publisher tabs with the seed so posters and titles can appear without waiting for external API. Existing API still refreshes/paginates channels and discovers newer movies.
+- Metadata assets are roughly 258 KB uncompressed; poster images use `loading=lazy`, all video bytes remain with RUTUBE. No database/VPS/Railway required for this seed.
+- There are also 20 fallback catalog records and 88 franchise discovery-only records, which remain distinct from these 200. The Marvel and Potter entries are NOT part of the 200 real playable studio embeds; those require clearance/verified rightsholder playback and should not be counted as movie streams.
+- This is a code-complete offline metadata release pending a READY deployment; all runtime playback (including Russian audio, geo restrictions, WebView behavior) is not yet verified per record. RUTUBE's public embed guidance is not a sublicense to rehost or remove third-party player attribution.
+- Added `tests/cinema-200-real-films.test.js` to check complete manifest structure and integration.
+
+Do not call these 200 entries live on the public Vercel URL until a new deployment succeeds; previous Vercel attempts failed HTTP 402 `api-deployments-free-per-day`.
