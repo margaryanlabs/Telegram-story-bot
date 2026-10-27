@@ -37,7 +37,7 @@ function fixture({status=503,succeed=false}={}){
   const events=[];
   let release;
   const ctx=vm.createContext({
-    state,tg:{initData:'signed'},resetOwner:()=>false,
+    state,tg:{initData:'signed'},resetOwner:()=>false,stopThreadSync:()=>{},
     $:id=>id==='telegramThreadOlder'?more:id==='telegramThreadMeta'?meta:
       id==='telegramThreadTitle'?title:id==='telegramMirrorList'?chatList:
       id==='telegramThreadCompose'?compose:null,
