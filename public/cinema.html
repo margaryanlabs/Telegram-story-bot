@@ -14,6 +14,8 @@
   <script defer src="./cinema-russian-audio.js"></script>
   <script defer src="./cinema-franchises.js"></script>
   <script defer src="./cinema-featured-200.js"></script>
+  <script defer src="./cinema-series-episodes.js"></script>
+  <script defer src="./cinema-popular-series.js"></script>
   <script defer src="./cinema-artwork.js"></script>
   <script defer src="./cinema-provider.js"></script>
   <script defer src="./cinema.js"></script>
@@ -48,7 +50,8 @@
       <div class="cinema-section-nav">
         <nav id="cinemaTabs" aria-label="Разделы кинотеатра">
           <button type="button" class="cinema-tab active" data-tab="home" aria-current="page">⌂ Главная</button>
-          <button type="button" class="cinema-tab" data-tab="catalog">◈ Все фильмы</button>
+          <button type="button" class="cinema-tab" data-tab="catalog">◈ Фильмы</button>
+          <button type="button" class="cinema-tab" data-tab="series">▦ Сериалы</button>
           <button type="button" class="cinema-tab" data-tab="search">⌕ Поиск</button>
           <button type="button" class="cinema-tab" data-tab="library">♡ Моё</button>
         </nav>
@@ -60,6 +63,27 @@
       <section id="cinemaLatest" class="cinema-section cinema-editorial" aria-label="Недавно добавленные фильмы"><div class="cinema-section-head"><div><span class="cinema-overline">JUST ADDED / FILMS & SERIES</span><h2>Только что в коллекции <span class="cinema-heading-mark">✳</span></h2><p>Свежие публикации официальных видеоканалов</p></div><span class="cinema-shelf-label" id="cinemaSyncStatus">Обновляем каталог</span></div><div class="cinema-rail cinema-editorial-rail" id="cinemaLatestRail"></div></section>
       <section id="cinemaGenresSection" class="cinema-section cinema-categories" aria-label="Выбор жанров"><div class="cinema-section-head"><div><span class="cinema-overline">FIND YOUR STORY</span><h2>Какое кино сегодня?</h2></div></div><div id="cinemaGenreTiles" class="cinema-genre-tiles"></div></section>
       <section id="cinemaSeries" class="cinema-section cinema-editorial" aria-label="Сериалы"><div class="cinema-section-head"><div><span class="cinema-overline">SERIES / ORIGINAL STORIES</span><h2>Сериалы, которые затягивают</h2></div></div><div class="cinema-rail cinema-editorial-rail" id="cinemaSeriesRail"></div></section>
+      <section id="cinemaPopularSeries" class="cinema-section cinema-series-popular" aria-label="Популярные сериалы с русской озвучкой">
+        <div class="cinema-section-head"><div><span class="cinema-overline">WORLD SERIES / RUSSIAN AUDIO LISTED</span>
+          <h2>Хиты с русской озвучкой <span class="cinema-heading-mark">✦</span></h2>
+          <p>«Игра престолов», «Дом Дракона», «Сопрано» и другие. Русская дорожка указана в официальных каталогах; просмотр зависит от региона.</p>
+        </div></div>
+        <div id="cinemaPopularSeriesRail" class="cinema-rail cinema-editorial-rail cinema-series-hits-rail"></div>
+      </section>
+      <section id="cinemaSeriesHub" class="cinema-section cinema-series-hub hidden" aria-label="Сериалы на русском — выбор и просмотр">
+        <div class="cinema-series-intro">
+          <span class="cinema-overline">SERIES / EXCLUSIVELY IN RUSSIAN</span>
+          <h2>Сериалы. Все истории — здесь.</h2>
+          <p>Популярные зарубежные хиты с подтверждением русской дорожки, а также настоящие серии из официальных киноархивов.</p>
+          <div id="cinemaSeriesStats" class="cinema-series-stats">Загружаем коллекцию…</div>
+        </div>
+        <div class="cinema-series-hub-panel">
+          <div class="cinema-section-head"><div><span class="cinema-overline">IN CINEMA / ORIGINAL PLAYERS</span>
+            <h2>Включить прямо здесь</h2>
+            <p>Официальные сериальные публикации с исходным встроенным видеоплеером.</p></div></div>
+          <div id="cinemaSeriesPlayableRail" class="cinema-rail cinema-editorial-rail cinema-series-playable-rail"></div>
+        </div>
+      </section>
       <section id="cinemaAnimations" class="cinema-section cinema-editorial" aria-label="Мультфильмы"><div class="cinema-section-head"><div><span class="cinema-overline">FAMILY / ANIMATION</span><h2>Для всей семьи <span class="cinema-heading-mark">✦</span></h2></div></div><div class="cinema-rail cinema-editorial-rail" id="cinemaAnimationsRail"></div></section>
       <section id="cinemaFranchises" class="cinema-section cinema-franchises" aria-label="Большие кинофраншизы">
         <div class="cinema-section-head"><div>
@@ -135,7 +159,8 @@
   </div>
   <nav class="cinema-bottom" aria-label="Мобильная навигация" id="cinemaBottom">
     <button type="button" class="active" data-tab="home"><span>⌂</span><small>Главная</small></button>
-    <button type="button" data-tab="catalog"><span>◈</span><small>Каталог</small></button>
+    <button type="button" data-tab="catalog"><span>◈</span><small>Фильмы</small></button>
+    <button type="button" data-tab="series"><span>▦</span><small>Сериалы</small></button>
     <button type="button" data-tab="search"><span>⌕</span><small>Поиск</small></button>
     <button type="button" data-tab="library"><span>♡</span><small>Моё</small></button>
   </nav>
