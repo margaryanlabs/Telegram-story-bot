@@ -73,7 +73,9 @@ test("Real in-app player and license credits survive favorites and shared playli
  assert.ok(collection.includes('"openverse"'));
  assert.match(js,/details","open-audio-rights"/);
  assert.match(css,/@media\(max-width:650px\)/);
- assert.doesNotMatch(html,/YouTube|Apple Music|Spotify/);
+ assert.ok(html.includes('src="./vetogram-music-youtube.js"'));
+ assert.ok(html.includes('data-view="youtube"'));
+ assert.doesNotMatch(js,/YouTube|Spotify|Apple Music/);
 });
 test("Non-responsive extra service does not break primary catalog",()=>{
  assert.match(js,/Дополнительный поиск временно недоступен/);
