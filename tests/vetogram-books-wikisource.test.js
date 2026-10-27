@@ -205,7 +205,7 @@ test('translation list shows selectable Russian editions instead of pretending t
     assert.match(second.payload.text,/основной текст/);
     assert.match(decodeURIComponent(new URL(second.payload.attribution.source).pathname),/\/Том_1\/ДО$/);
     const bad=fakeResponse();
-    await wikisource({method:'GET',query:{wiki:'ru',mode:'text',id:'99',chapter:'60'}},bad);
+    await wikisource({method:'GET',query:{wiki:'ru',mode:'text',id:'99',chapter:'59'}},bad);
     assert.equal(bad.code,404);
   });
 });
