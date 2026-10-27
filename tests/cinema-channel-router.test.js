@@ -28,7 +28,7 @@ test("public studios list is returned without Postgres or keys",async()=>{
  const r=mkRes();
  await cinemaChannels({method:"GET",query:{mode:"list"}},r);
  assert.equal(r.statusCode,200);
- assert.equal(r.body.channels.length,5);
+ assert.equal(r.body.channels.length,6);
  assert.equal(r.body.channels[0].id,"mosfilm");
  assert.equal(r.body.channels[0].name,"Киноконцерн «Мосфильм»");
  assert.ok(r.body.channels.some(x=>x.id==="starmedia"));
