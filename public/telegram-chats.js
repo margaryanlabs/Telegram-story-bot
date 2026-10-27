@@ -1916,14 +1916,16 @@
     };
     state.threadCache.delete(chatId);
     state.threadCache.set(chatId,copy);
-    while(state.threadCache.size>4){
+    // Bound history to six recent conversations to reduce repeated cold opens.
+    while(state.threadCache.size>6){
       const oldest=state.threadCache.keys().next().value;
       state.threadCache.delete(oldest);
     }
   }
   function restoreHotThread(chatId){
     const value=state.threadCache.get(String(chatId));
-    if(!value||Date.now()-value.at>90000){
+    // Five-minute in-memory reuse; always cleared on signed owner switch.
+    if(!value||Date.now()-value.at>300000){
       state.threadCache.delete(String(chatId));return false;
     }
     state.threadCache.delete(String(chatId));
