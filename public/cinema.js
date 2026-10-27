@@ -428,39 +428,95 @@
   // Identify episodes of the SAME TV show; do not invent season count.
   // The original uploader titles retain their exact episode numbers.
   function seriesShowName(f){
-    const title=String(f.title||"");
-    // \b does not work after Cyrillic letters in JS regular expressions.
-    // Preserve actual season numbers where publishers explicitly supplied them.
-    const season=title.match(/^(.*?)(?:[.,]\s*|\s+)(\d+)\s*сезон(?=\s|[.,:()!?]|$)/i);
-    const name=(season?season[1]:title)
-      .replace(/(?:[.,]\s*|\s+)(?:все\s+серии|серии\s+\d+|\d+\s+серия)(?=\s|[.,:()!?]|$)[\s\S]*$/i,"")
-      .replace(/[.:\s,-]+$/g,"").trim();
-    const fallback=title.replace(/\s*(?:\([^)]*\)|Смотреть онлайн)[\s\S]*$/i,"").trim();
-    return season?((name||fallback)+" · сезон "+season[2]):(name||fallback||title);
+    if(f.seriesName)return f.seriesName;
+    return String(f.title||"").replace(/(?:^|[\s.,-])(?:все серии|серии подряд|\d+\s*серия|серии\s+\d+)(?=\s|[.,:()!?]|$)[\s\S]*$/i,"")
+      .replace(/\s*\([^)]*\)[\s\S]*$/,"").replace(/[.,:\s-]+$/g,"").trim()||f.title;
+  }
+  function seriesSeasonNumber(f){
+    if(Number.isInteger(f.season)&&f.season>0)return f.season;
+    const m=String(f.title||"").match(/(?:^|[\s.,-])(\d+)\s*сезон(?=\s|[.,:()!?]|$)/i);
+    return m?Number(m[1]):1;
   }
   function seriesEpisodeNumber(f){
-    const m=String(f.title||"").match(/(\d+)\s*серия(?=\s|[.,:()!?]|$)|серии\s*(\d+)(?=\s|[.,:()!?]|$)/i);
-    return m?Number(m[1]||m[2]):999;
+    if(Number.isInteger(f.episode))return f.episode;
+    const m=String(f.title||"").match(/(?:^|[\s.,-])(\d+)\s*серия(?=\s|[.,:()!?]|$)|(?:^|[\s.,-])серии\s+(\d+)(?=\s|[.,:()!?]|$)/i);
+    return m?Number(m[1]||m[2]):0;
   }
   function groupedSeries(){
     const shows=new Map();
     for(const film of films){
-      if(film.contentType!=="Сериалы"||!film.player?.licensed)continue;
-      const show=seriesShowName(film), key=show.toLocaleLowerCase("ru");
-      const group=shows.get(key)||[];
-      group.push(film);shows.set(key,group);
+      if(film.contentType!=="Сериалы"||film.player?.licensed!==true)continue;
+      const name=seriesShowName(film), key=name.toLocaleLowerCase("ru");
+      if(!shows.has(key))shows.set(key,[]);
+      shows.get(key).push(film);
     }
-    return [...shows.values()].map(rows=>rows.sort((a,b)=>seriesEpisodeNumber(a)-seriesEpisodeNumber(b)))
-      .sort((a,b)=>uploadTime(b[0])-uploadTime(a[0]));
+    const comparator=(a,b)=>seriesSeasonNumber(a)-seriesSeasonNumber(b)||
+      ((seriesEpisodeNumber(a)||999)-(seriesEpisodeNumber(b)||999))||a.title.localeCompare(b.title,"ru");
+    return [...shows.values()].map(group=>group.sort(comparator))
+      .sort((a,b)=>b.length-a.length||uploadTime(b[0])-uploadTime(a[0]));
+  }
+  function seriesShowCard(group){
+    const show=group[0];
+    const button=node("button","cinema-card cinema-series-show-card");
+    button.type="button";button.setAttribute("aria-label","Открыть сериал "+seriesShowName(show));
+    const artwork=artElement(show,false);
+    const title=artwork.querySelector(".cinema-card-art-title");
+    if(title)title.textContent=seriesShowName(show);
+    const badge=artwork.querySelector(".cinema-card-art-badge");
+    if(badge)badge.textContent="СЕРИАЛ · RU";
+    button.append(artwork);
+    const label=node("strong","cinema-card-name");label.textContent=seriesShowName(show);
+    const seasons=new Set(group.map(seriesSeasonNumber)).size;
+    const meta=node("small","cinema-card-meta");
+    meta.textContent=seasons+" "+(seasons===1?"сезон":"сезона / сезонов")+" · "+group.length+" видео · русский";
+    button.append(label,meta);
+    button.addEventListener("click",()=>openDetails(show));
+    return button;
+  }
+  function renderEpisodeChooser(f){
+    const section=$("cinemaEpisodeChooser");
+    if(f.contentType!=="Сериалы"||!f.player){section.classList.add("hidden");return}
+    const group=films.filter(x=>x.contentType==="Сериалы"&&x.player?.licensed===true&&seriesShowName(x)===seriesShowName(f));
+    if(!group.length){section.classList.add("hidden");return}
+    section.classList.remove("hidden");
+    const seasons=[...new Set(group.map(seriesSeasonNumber))].sort((a,b)=>a-b);
+    const current=seriesSeasonNumber(f);
+    const tabs=$("cinemaSeasonTabs");
+    tabs.replaceChildren(...seasons.map(n=>{
+      const b=node("button","cinema-season-tab"+(n===current?" active":""));
+      b.type="button";b.textContent="Сезон "+n;b.setAttribute("aria-pressed",String(n===current));
+      b.addEventListener("click",()=>{
+        const first=group.filter(x=>seriesSeasonNumber(x)===n).sort((a,b)=>
+          (seriesEpisodeNumber(a)||999)-(seriesEpisodeNumber(b)||999))[0];
+        if(first)openDetails(first);
+      });return b;
+    }));
+    const sorted=group.filter(x=>seriesSeasonNumber(x)===current).sort((a,b)=>
+      (seriesEpisodeNumber(a)||999)-(seriesEpisodeNumber(b)||999));
+    text("cinemaEpisodeCount",sorted.length+" видео · выбери серию для просмотра");
+    $("cinemaEpisodeGrid").replaceChildren(...sorted.map(item=>{
+      const n=seriesEpisodeNumber(item);
+      const b=node("button","cinema-episode-item"+(item.id===f.id?" active":""));
+      b.type="button";b.setAttribute("aria-current",String(item.id===f.id));
+      const art=node("span","cinema-episode-thumbnail");
+      const image=item.poster||state.posters.get(item.id);
+      if(image){const img=node("img");img.src=image;img.loading="lazy";img.alt="";art.append(img)}
+      const playBadge=node("span","cinema-episode-play");playBadge.textContent="▶";art.append(playBadge);
+      const caption=node("span","cinema-episode-caption");
+      const name=node("strong");name.textContent=n>0?"Серия "+n:"Все серии / сборник";
+      const desc=node("small");desc.textContent=(item.minutes||"?")+" мин · Русский";
+      caption.append(name,desc);b.append(art,caption);
+      b.addEventListener("click",()=>openDetails(item));
+      return b;
+    }));
   }
   function renderSeriesCollections(){
-    const playable=films.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true&&f.player?.type==="iframe");
     const groups=groupedSeries();
-    const home=isHome(),onSeries=state.tab==="series";
-    $("cinemaSeriesHub").classList.toggle("hidden",!onSeries);
-    if(onSeries){
-      $("cinemaSeriesPlayableRail").replaceChildren(...groups.slice(0,45).map(g=>filmCard(g[0])));
-      text("cinemaSeriesStats",playable.length+" реальных серий и сборников · "+groups.length+" сериалов с исходным плеером");
+    $("cinemaSeriesHub").classList.toggle("hidden",state.tab!=="series");
+    if(state.tab==="series"){
+      $("cinemaSeriesPlayableRail").replaceChildren(...groups.slice(0,80).map(seriesShowCard));
+      const count=groups.reduce((sum,g)=>sum+g.length,0);
+      text("cinemaSeriesStats",count+" реальных видео · "+groups.length+" сериалов · обложки, сезоны и серии");
     }
   }
   function refreshDiscovery(){
@@ -468,7 +524,7 @@
     renderSeriesCollections();
     const recent=films.filter(f=>f.player&&uploadTime(f)>0)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
-    const series=groupedSeries().map(group=>group[0]);
+    const series=groupedSeries();
     const cartoons=films.filter(f=>f.contentType==="Мультфильмы")
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
     const shelves=[
@@ -478,7 +534,7 @@
     ];
     for(const [sectionId,railId,rows] of shelves){
       $(sectionId).classList.toggle("hidden",!home||rows.length===0);
-      if(home&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(filmCard));
+      if(home&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(sectionId==="cinemaSeries"?seriesShowCard:filmCard));
     }
     $("cinemaGenresSection").classList.toggle("hidden",!home);
     $("cinemaFranchises").classList.toggle("hidden",!home);
@@ -597,22 +653,15 @@
     text("cinemaDetailsTitle",f.title);
     text("cinemaDetailsMeta",[f.original,f.year,f.minutes?f.minutes+" мин":null,...(f.genres||[])].filter(Boolean).join(" · "));
     text("cinemaDetailsSynopsis",f.synopsis);
-    const episodes=f.contentType==="Сериалы"&&f.player
-      ?films.filter(v=>v.contentType==="Сериалы"&&v.player&&seriesShowName(v)===seriesShowName(f))
-        .sort((a,b)=>seriesEpisodeNumber(a)-seriesEpisodeNumber(b)):[];
-
-    $("cinemaEpisodeChooser").classList.toggle("hidden",episodes.length<=1);
-    if(episodes.length>1){
-      const select=$("cinemaEpisodeSelect");
-      select.replaceChildren(...episodes.map(v=>new Option(
-        seriesEpisodeNumber(v)!==999?"Серия "+seriesEpisodeNumber(v)+" · "+(v.minutes||"?")+" мин":
-          v.title.slice(0,90),v.id)));
-      select.value=f.id;
-      select.onchange=()=>{const next=filmById(select.value);if(next)openDetails(next)};
+    if(f.contentType==="Сериалы"&&f.player){
+      text("cinemaDetailsTitle",seriesShowName(f));
+      text("cinemaDetailsMeta","Сезон "+seriesSeasonNumber(f)+" · "+(seriesEpisodeNumber(f)?"серия "+seriesEpisodeNumber(f):"сборник")+" · "+(f.minutes||"?")+" мин");
+      text("cinemaDetailsSynopsis","Выбери сезон и серию. Полный выпуск открывается во встроенном плеере источника.");
     }
+    renderEpisodeChooser(f);
     text("cinemaDetailsCreator",f.creator);
     text("cinemaDetailsLanguage",f.discoveryOnly?(f.russianAudio?f.russianAudio.note+" Источник: "+f.watchProvider+".":"Русскую дорожку для этого фильма пока не подтвердил ни один проверенный официальный источник."):f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
-    $("cinemaDetailsWatch").textContent=f.discoveryOnly?(f.watchAvailability==="unavailable"?"↗ Проверить статус у сервиса":f.russianAudio?"↗ Проверить просмотр на русском":"↗ Найти легальный просмотр"):"▶ Смотреть";
+    $("cinemaDetailsWatch").textContent=f.contentType==="Сериалы"&&f.player?"▶ Смотреть выбранную серию":f.discoveryOnly?(f.watchAvailability==="unavailable"?"↗ Проверить статус у сервиса":f.russianAudio?"↗ Проверить просмотр на русском":"↗ Найти легальный просмотр"):"▶ Смотреть";
     $("cinemaDetailsSource").textContent=f.discoveryOnly?"Страница с языками и доступностью ↗":"Перейти к источнику ↗";
     $("cinemaDetailsSource").href=filmPage(f);
     $("cinemaDetailsLicense").href=f.licenseUrl;
