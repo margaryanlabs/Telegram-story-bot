@@ -486,3 +486,15 @@ Updated all 44 `studio.html` versioned asset references to one shared
 `20261027-v51-sticker-stability` cache identity. **PR #185 remains Draft; do not
 deploy or merge while GitHub Actions cannot allocate a runner and production
 acceptance has not been completed.**
+
+
+### 2026-10-27 V5.1 messaging race / inbox outage continuation
+
+This stage repairs additional errors in the **existing** Mini App, without a deploy or Telegram message action.
+
+- **Cross-chat text sending:** a failed/uncertain send is restored as a draft for its ORIGINAL dialog even after the user navigates to a different chat. The other dialog's current compose field stays intact. One nonce is bound to an identical text **and replyTo message ID** and scoped by chat; a different reply target generates a different nonce. An ACK received after switching to another chat must not delete a newer draft of the original chat. Pending reply selections changed during network latency are preserved. The map of uncertain send intents is cleared on Telegram owner change.
+- **Verified inbox availability:** English WebView transport errors (`Failed to fetch`, `NetworkError`, `Load failed`), offline state, 429 and server 5xx no longer automatically erase the same-owner verified inbox or masquerade as session revocation. Even a previously verified account with zero chats keeps its verified state through a temporary refresh outage. Pagination cursor is not reset on transient page-load failure. **401/403/409 remain fail closed**, and unknown credentials are never promoted to verified.
+- **Tests:** new real-controller VM regression files `tests/vetogram-cross-chat-send-51.test.js` and `tests/vetogram-inbox-outage-51.test.js`, both included in `qa:reborn:offline`. Independent V8 scenarios confirmed a failed send in A restores A while B remains untouched, and a deliberate same-reply retry reuses the same nonce. Five actual-source inbox cases (verified transport failure, verified empty-inbox outage, pagination 503, unknown proof, 401 invalid login) produced expected states.
+- **Cache identity:** all 44 linked Mini App assets in `studio.html` now share `20261027-v51-message-recovery`. All changes remain in draft PR #185. No merge, production publish, credential use, Telegram messages, or database writes in this stage.
+
+Still pending: actual Node `npm ci && npm run vercel-build`, real signed two-account Telegram phone E2E, representative large photos, send-ack loss and reconnect tests, and successful Actions runner allocation. Standalone controller harnesses are not a replacement for full CI or a real deployment acceptance.
