@@ -48,3 +48,12 @@ test('versioned final stylesheet is loaded last after keyboard device styles',()
   const earlier=html.lastIndexOf('href="/veto-device-polish.css?v=');
   assert.ok(last>earlier,'this scoped fix must win against older 100dvh override');
 });
+
+test('mobile keyboard compact mode is scoped to editable input, not permanent UI hiding',()=>{
+  const keyboard=css.slice(css.indexOf('/* While typing, keep the conversation'));
+  assert.match(keyboard,/\.veto-keyboard-open body\.veto-chat-thread/);
+  assert.match(keyboard,/\.veto-mirror-thread-security,\.veto-mirror-sync-strip/);
+  assert.match(keyboard,/\[data-ai-mode\],#telegramThreadReplyAI,#telegramThreadBriefAI/);
+  assert.match(keyboard,/flex-wrap:nowrap/);
+  assert.doesNotMatch(keyboard,/\.veto-mirror-thread-body\{[^}]*display:none/);
+});
