@@ -3,7 +3,7 @@
    No scraping, account authentication, media copying or server proxy. */
 (()=>{
 "use strict";
-const $=id=>document.getElementById(id),audio=$("audio"),view=$("musicView");
+const $=id=>document.getElementById(id),audio=$("audio")||$("audioEl"),view=$("musicView")||$("music");
 if(!view||!audio)return;
 const create=(tag,cls,value)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e};
 const clean=(v,n=140)=>String(v??"").replace(/<[^>]*>/g,"").replace(/\s+/g," ").trim().slice(0,n);
@@ -140,7 +140,7 @@ async function run(query){
 $("v14SearchForm").onsubmit=e=>{e.preventDefault();run($("v14SearchInput").value)};
 function playRadio(item){
  if(!item.stream||!safe(item.stream))return setStatus("У станции нет доступной HTTPS-трансляции.");
- const title=$("playerTitle"),artist=$("playerArtist"),cover=$("playerCover");
+ const title=$("playerTitle")||$("song"),artist=$("playerArtist")||$("artist"),cover=$("playerCover");
  if(title)title.textContent=item.title;
  if(artist)artist.textContent="LIVE RADIO · "+(item.subtitle||"В прямом эфире");
  if(cover){const safeImage=safe(item.image);cover.style.backgroundImage=safeImage?'url("'+safeImage.replace(/"/g,"")+'")':"linear-gradient(135deg,#ffa893,#4854a4)"}
@@ -158,10 +158,10 @@ function playRadio(item){
 }
 const link=create("button","v14-home-launch","◉ Настройся на LIVE RADIO и подкасты →");
 link.type="button";link.onclick=()=>{
- document.querySelector('.tab[data-tab="music"]')?.click();
+ (document.querySelector('.tab[data-tab="music"]')||document.querySelector('[data-page="music"]'))?.click();
  section.scrollIntoView({behavior:"smooth",block:"start"});
 };
-$("homeView")?.append(link);
+($("homeView")||$("home"))?.append(link);
 window.VetoMediaBroadcast=Object.freeze({search:run,setTab,radioMapper,podcastMapper});
 draw();
 })();
