@@ -329,7 +329,7 @@
     if(!state.pages.length || !state.current || !state.rawText)return;
     const offset=state.pageOffsets[state.currentPage]||0;
     state.pages=paginate(state.rawText);
-    showPage(nearestPage(offset),false);
+    showPage(nearestPage(offset));
   }
   function chapterFromPage(text, index){
     const first=text.slice(0,300).split('\n').map(s=>s.trim()).find(s=>
@@ -458,6 +458,7 @@
     state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;state.rawText='';state.pageOffsets=[];
     setFocus(false);
     $('reader').hidden=false;
+    try{window.Telegram?.WebApp?.BackButton?.show();}catch{}
     $('readerTitle').textContent=compactTitle(book.title);
     $('readerAuthor').textContent=fullName(book);
     $('readerSettings').hidden=true;
@@ -472,6 +473,7 @@
   function closeReader(){
     ++state.requestBook;
     $('reader').hidden=true;state.current=null;state.pages=[];state.chapters=[];
+    try{window.Telegram?.WebApp?.BackButton?.hide();}catch{}
     state.activeChapter=null;state.rawText='';state.pageOffsets=[];
     setFocus(false);
     $('readerSettings').hidden=true;
@@ -599,7 +601,7 @@
   $('smallerFont').addEventListener('click',()=>{prefs.font-=1;applyPrefs(true);});
   $('largerFont').addEventListener('click',()=>{prefs.font+=1;applyPrefs(true);});
   for(const button of document.querySelectorAll('[data-read-theme]'))button.addEventListener('click',()=>{
-    prefs.theme=button.dataset.readTheme;applyPrefs(true);
+    prefs.theme=button.dataset.readTheme;applyPrefs(false);
   });
   for(const selector of ['read-font','read-leading','read-width']){
     for(const button of document.querySelectorAll('[data-'+selector+']')){
@@ -641,6 +643,7 @@
   $('saveQuote').addEventListener('click',quote);
   document.addEventListener('keydown',event=>{
     if($('reader').hidden || !$('bookModal').hidden)return;
+    if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;
     if(event.key==='ArrowRight'){event.preventDefault();flip(1);}
     if(event.key==='ArrowLeft'){event.preventDefault();flip(-1);}
     if(event.key==='Escape'){ if(state.focus)setFocus(false);else closeReader(); }
