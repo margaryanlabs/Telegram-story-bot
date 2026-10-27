@@ -308,8 +308,10 @@
     const chip=$('telegramThreadAttachmentChip'),label=$('telegramThreadAttachmentLabel');
     if(!chip||!label)return;
     chip.hidden=!state.pendingAttachment;
-    const f=state.pendingAttachment;
-    label.textContent=f?('◫ '+f.name+' · '+Math.ceil(f.size/1024)+' КБ'):'';
+    const attachment=state.pendingAttachment;
+    const file=attachment?.file||attachment;
+    label.textContent=file?('◫ '+String(file.name||'Вложение')+' · '+
+      Math.ceil(Number(file.size||0)/1024)+' КБ'):'';
   }
   function readFileAsBase64(file){
     return new Promise((resolve,reject)=>{
@@ -333,13 +335,35 @@
   function richSendIntent(action,chatId,pending,caption,replyTo,stickerId){
     return {
       action,chatId,file:pending?.file||pending||null,
+      kind:action==='send_media'?String(pending?.kind||'document'):null,
+      duration:action==='send_media'?Number(pending?.duration||0):0,
       caption,replyTo,stickerId:action==='send_sticker'?String(stickerId?.id||stickerId):null,
       stickerSetId:action==='send_sticker'?(stickerId?.setId||null):null,
     };
   }
+  // A lost ACK is *not* permission to resend. Restore a previously selected
+  // file only for the same signed-owner chat and unchanged caption. The user's
+  // next explicit tap triggers the normal signed send, using the old nonce.
+  function restoreUncertainRichMedia(chat){
+    const id=String(chat?.id||'');
+    if(!id||!state.ownerInitData||state.ownerInitData!==String(tg?.initData||''))return false;
+    const failure=state.lastRichFailures.get(id),intent=failure?.intent;
+    if(intent?.action!=='send_media'||intent.kind==='voice'||intent.chatId!==id)return false;
+    const file=intent.file;
+    if(!file||!Number.isFinite(Number(file.size))||file.size<1||file.size>2*1024*1024)
+      return false;
+    if(String(state.drafts.get(id)||'')!==String(intent.caption||''))return false;
+    state.pendingAttachment={file,kind:intent.kind||'document',
+      duration:Number(intent.duration||0)};
+    const replyId=Number(intent.replyTo||0);
+    if(!state.replyTo&&Number.isSafeInteger(replyId)&&replyId>0)
+      state.replyTo={id:replyId,preview:'Ответ на сообщение #'+replyId};
+    return true;
+  }
   function sameRichIntent(a,b){
     return Boolean(a&&b&&a.action===b.action&&a.chatId===b.chatId&&
-      a.file===b.file&&a.caption===b.caption&&a.replyTo===b.replyTo&&
+      a.file===b.file&&a.kind===b.kind&&a.duration===b.duration&&
+      a.caption===b.caption&&a.replyTo===b.replyTo&&
       a.stickerId===b.stickerId&&a.stickerSetId===b.stickerSetId);
   }
   async function sendRichOutgoing(action,attachmentOrIndex=null){
@@ -421,7 +445,12 @@
         // owner-scoped RAM even when the source dialog is no longer open.
         const failure={intent,nonce};
         state.lastRichFailure=failure;
+        state.lastRichFailures.delete(chatId);
         state.lastRichFailures.set(chatId,failure);
+        // Files live only in this tab. Bound retained upload references to
+        // four owner-scoped conversations, never sessionStorage/localStorage.
+        while(state.lastRichFailures.size>4)
+          state.lastRichFailures.delete(state.lastRichFailures.keys().next().value);
       }
       if(String(state.thread?.id)===chatId){
         setDeliveryStatus(error?.uncertain?'uncertain':'failed',chatId,deliveryKind);
@@ -2266,6 +2295,7 @@
     if(failedSend&&String(state.drafts.get(String(chat.id))||'').trim()===failedSend.message&&
        Number.isSafeInteger(replyId)&&replyId>0)
       state.replyTo={id:replyId,preview:'Ответ на сообщение #'+replyId};
+    restoreUncertainRichMedia(chat);
     renderReplyPreview();renderAttachmentChip();
     if($('telegramThreadStickerDrawer'))$('telegramThreadStickerDrawer').hidden=true;
     state.threadOffset=0;state.archiveOffset=0;
@@ -2279,10 +2309,16 @@
     }else syncLabel('Подключаюсь к Telegram…',true);
     await loadMessages({reset:true});
     const unresolved=state.lastSendFailures.get(String(chat.id));
+    const uncertainMedia=state.lastRichFailures.get(String(chat.id));
     if(state.ownerInitData===String(tg?.initData||'')&&
-       String(state.thread?.id)===String(chat.id)&&unresolved&&
-       String(state.drafts.get(String(chat.id))||'').trim()===unresolved.message)
-      threadNotice('Отправка не подтверждена. Проверь оригинальный Telegram перед повтором: сохранён прежний идентификатор сообщения.');
+       String(state.thread?.id)===String(chat.id)){
+      if(unresolved&&String(state.drafts.get(String(chat.id))||'').trim()===unresolved.message)
+        threadNotice('Отправка не подтверждена. Проверь оригинальный Telegram перед повтором: сохранён прежний идентификатор сообщения.');
+      else if(uncertainMedia)
+        threadNotice(state.pendingAttachment
+          ?'Файл мог быть отправлен. Проверь Telegram перед повтором. Исходное вложение восстановлено без автоматической отправки.'
+          :'Отправка медиа или стикера не подтверждена. Проверь оригинальный Telegram перед новым действием.');
+    }
   }
   // First paint comes from owner-verified MTProto; archived deletion evidence
   // is fetched afterwards and reconciled without blocking the visible chat.
