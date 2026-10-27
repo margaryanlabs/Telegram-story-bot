@@ -295,6 +295,84 @@
     b.addEventListener("click",()=>openDetails(f));
     return b;
   }
+  const GENRE_TILES=[
+    ["Фильмы","◈",18],["Сериалы","▥",288],["Мультфильмы","✳",198],
+    ["Комедия","☺",40],["Драма","◌",340],["Приключения","↗",215]
+  ];
+  const isHome=()=>state.tab==="home"&&!state.query.trim();
+  const uploadTime=f=>{const time=Date.parse(f.publishedAt||"");return Number.isFinite(time)?time:0};
+  function setHeroSlide(index){
+    if(!discovery.slides.length)return;
+    const length=discovery.slides.length;
+    discovery.index=(index+length)%length;
+    const f=discovery.slides[discovery.index];
+    const image=state.posters.get(f.id)||f.poster;
+    $("cinemaHeroBackdrop").style.backgroundImage=image?'url("'+String(image).replace(/"/g,"%22")+'")':"none";
+    text("cinemaHeroEyebrow",f.publishedAt?"ДОБАВЛЕНО В КИНОТЕКУ · "+(f.creator||"КИНО"): "ИЗБРАННОЕ · "+(f.creator||"КИНО"));
+    text("cinemaHeroTitle",f.title.length>85?f.title.slice(0,82)+"…":f.title);
+    text("cinemaHeroDescription",f.synopsis?.slice(0,195)||"Смотрите историю в официальном видеоплеере.");
+    text("cinemaHeroMeta",[f.year||"Кино",f.minutes?f.minutes+" МИН":null,f.contentType||f.genres?.[0],"РУССКАЯ ДОРОЖКА"].filter(Boolean).join(" · "));
+    text("cinemaHeroCounter",String(discovery.index+1).padStart(2,"0")+" / "+String(length).padStart(2,"0"));
+    $("cinemaHeroDots").replaceChildren(...discovery.slides.map((film,i)=>{
+      const b=node("button","cinema-hero-dot");b.type="button";
+      b.setAttribute("aria-label","Выбрать фильм "+(i+1)+": "+film.title);
+      b.setAttribute("aria-current",String(i===discovery.index));
+      b.addEventListener("click",()=>setHeroSlide(i));return b;
+    }));
+    if(!image)requestPoster(f);
+  }
+  function updateHeroDeck(){
+    const recents=films.filter(f=>f.player&&f.contentType!=="Сериалы"&&Number(f.minutes)>=35)
+      .sort((a,b)=>uploadTime(b)-uploadTime(a));
+    const all=[...recents,...films.filter(f=>f.player&&Number(f.minutes)>=40)];
+    const used=new Set(),deck=[];
+    for(const film of all) {
+      if(used.has(film.id))continue;
+      used.add(film.id);deck.push(film);
+      if(deck.length===6)break;
+    }
+    const key=deck.map(x=>x.id).join("|");
+    if(key===discovery.lastKey)return;
+    const oldId=discovery.slides[discovery.index]?.id;
+    discovery.lastKey=key;discovery.slides=deck;
+    const prior=deck.findIndex(x=>x.id===oldId);
+    setHeroSlide(prior>=0?prior:0);
+  }
+  function refreshDiscovery(){
+    const home=isHome();
+    const recent=films.filter(f=>f.player&&uploadTime(f)>0)
+      .sort((a,b)=>uploadTime(b)-uploadTime(a));
+    const series=films.filter(f=>f.contentType==="Сериалы")
+      .sort((a,b)=>uploadTime(b)-uploadTime(a));
+    const cartoons=films.filter(f=>f.contentType==="Мультфильмы")
+      .sort((a,b)=>uploadTime(b)-uploadTime(a));
+    const shelves=[
+      ["cinemaLatest","cinemaLatestRail",recent],
+      ["cinemaSeries","cinemaSeriesRail",series],
+      ["cinemaAnimations","cinemaAnimationsRail",cartoons]
+    ];
+    for(const [sectionId,railId,rows] of shelves){
+      $(sectionId).classList.toggle("hidden",!home||rows.length===0);
+      if(home&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(filmCard));
+    }
+    $("cinemaGenresSection").classList.toggle("hidden",!home);
+    if(home){
+      $("cinemaGenreTiles").replaceChildren(...GENRE_TILES.map(([label,glyph,hue])=>{
+        const button=node("button","cinema-genre-tile");
+        button.type="button";button.style.setProperty("--tile-hue",String(hue));
+        button.dataset.glyph=glyph;
+        const small=node("small");small.textContent="ОТКРЫТЬ";
+        const strong=node("strong");strong.textContent=label;
+        button.append(small,strong);
+        button.setAttribute("aria-pressed",String(state.genre===label));
+        button.addEventListener("click",()=>{
+          setTab("catalog");state.genre=label;render();
+          $("cinemaBrowse").scrollIntoView?.({behavior:"smooth",block:"start"});
+        });return button;
+      }));
+    }
+    updateHeroDeck();
+  }
   function render(){
     const list=selectedFilms();
     $("cinemaGrid").replaceChildren(...list.slice(0,200).map(filmCard));
@@ -595,8 +673,10 @@
   $("cinemaDetailsWatch").addEventListener("click",()=>{if(state.selected)play(state.selected)});
   $("cinemaDetailsFavorite").addEventListener("click",()=>{if(state.selected)toggleFavorite(state.selected)});
   $("cinemaDetailsShare").addEventListener("click",()=>{if(state.selected)shareFilm(state.selected)});
-  $("cinemaHeroWatch").addEventListener("click",()=>play(films[0]));
-  $("cinemaHeroDetails").addEventListener("click",()=>openDetails(films[0]));
+  $("cinemaHeroWatch").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(f)play(f)});
+  $("cinemaHeroDetails").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(f)openDetails(f)});
+  $("cinemaHeroPrev").addEventListener("click",()=>setHeroSlide(discovery.index-1));
+  $("cinemaHeroNext").addEventListener("click",()=>setHeroSlide(discovery.index+1));
   $("cinemaSearch").addEventListener("input",e=>{state.query=e.target.value.slice(0,90);if(state.tab==="library")setTab("search");else if(state.tab==="home"){$("cinemaHero").classList.add("hidden")}render();clearTimeout(catalogDebounce);catalogDebounce=setTimeout(()=>fetchCatalog(true),350)});
   $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";render();fetchCatalog(true)});
   $("cinemaLoadMore").addEventListener("click",()=>fetchCatalog(false));
@@ -623,8 +703,18 @@
   }
   render();
   showStudio();
-  loadStudio(true);
+  loadStudio(true).then(()=>{
+    if(typeof window.setTimeout==="function")
+      window.setTimeout(()=>warmStudioFeeds(),700);
+    else warmStudioFeeds();
+  });
   fetchCatalog(true);
+  if(typeof window.setInterval==="function"&&!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches){
+    discovery.timer=window.setInterval(()=>{
+      if(!document.hidden&&isHome()&&!state.playing&&!state.selected&&discovery.slides.length>1)
+        setHeroSlide(discovery.index+1);
+    },6800);
+  }
   // Exposes only safe navigation for a future Vetogram host. No Telegram privileged auth.
   window.VetogramCinema={openFilm:id=>{const f=filmById(id);if(f)openDetails(f)},openTab:setTab};
 })();
