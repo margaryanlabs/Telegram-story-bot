@@ -126,7 +126,7 @@ function playTrack(track,collection){
  // The stream is always a real provider URL or an in-memory, user-owned Blob URL.
  audio.src=src;audio.load();audio.play().catch(()=>send("Поток недоступен или формат не поддерживается. Выбери другой источник."));
  state.playRequested=true;
- try{if("mediaSession"in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:track.title,artist:track.artist,album:"Vetogram Music",artwork:art?[{src:art,sizes:"512x512"}]:[]});navigator.mediaSession.playbackState="playing"}}catch{}
+ try{if("mediaSession"in navigator&&typeof MediaMetadata!=="undefined"){navigator.mediaSession.metadata=new MediaMetadata({title:track.title,artist:track.artist,album:"Vetogram Music",artwork:art?[{src:art,sizes:"512x512"}]:[]})}}catch{}
  syncPlayer();renderHome();renderSearch();renderLibrary();
 }
 function next(delta,ended=false){
@@ -155,6 +155,20 @@ $("sleepSelect").onchange=e=>{if(state.sleepTimer)clearInterval(state.sleepTimer
 function syncPlayer(){
  const isPlaying=!audio.paused&&!audio.ended&&!!audio.src;
  app.dataset.playing=String(isPlaying);
+ // Native <audio> exposes play/pause and next/previous controls when WebView
+ // supports Media Session. This does NOT keep a closed Telegram Mini App alive.
+ try{
+  if("mediaSession"in navigator){
+   navigator.mediaSession.playbackState=isPlaying?"playing":audio.paused?"paused":"none";
+   if(typeof navigator.mediaSession.setPositionState==="function"&&Number.isFinite(audio.duration)&&audio.duration>0){
+    navigator.mediaSession.setPositionState({
+     duration:audio.duration,
+     playbackRate:Number.isFinite(audio.playbackRate)&&audio.playbackRate>0?audio.playbackRate:1,
+     position:Math.max(0,Math.min(audio.duration,Number(audio.currentTime)||0))
+    });
+   }
+  }
+ }catch{}
  for(const id of ["miniPlay","studioPlay"])$(id).textContent=isPlaying?"Ⅱ":"▶";
  const liked=favorited(state.now);$("miniLike").textContent=liked?"♥":"♡";$("studioLike").textContent=(liked?"♥":"♡")+(liked?" В избранном":" В избранное");
  $("shuffleButton").setAttribute("aria-pressed",String(state.shuffle));

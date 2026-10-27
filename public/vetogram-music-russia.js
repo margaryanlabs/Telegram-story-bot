@@ -34,7 +34,7 @@ function formatDate(value){
 }
 let songs=[],updated=snapshot.updated,mode="snapshot",controller=null,lastLoaded=0;
 function label(){
- return (mode==="live"?"Обновлено":"Снимок")+" "+formatDate(updated)+" · Источник: Apple Music Top Songs, Россия · "+songs.length+" песен. Воспроизведение через Apple Music.";
+ return (mode==="live"?"Обновлено":"Снимок")+" "+formatDate(updated)+" · Источник: Apple Music Top Songs, Россия · "+songs.length+" позиций. Это обзор рейтинга; Play открывает плеер Apple Music, не наш MP3-плеер.";
 }
 function goOfficial(song){window.open(song.url,"_blank","noopener,noreferrer")}
 function openPlayer(song){
@@ -64,13 +64,11 @@ function card(song,home=false){
  info.append(div("strong","",song.name),div("span","",song.artist));
  info.append(div("small","","APPLE MUSIC · РОССИЯ"));
  const actions=div("div","ru-song-actions");
- const play=div("button","ru-song-play","▶");
- play.type="button";play.title="Открыть официальный плеер Apple Music";
- play.setAttribute("aria-label","Открыть официальный плеер "+song.artist+" — "+song.name);
+ const play=div("button","ru-song-play","Плеер Apple");
+ play.type="button";play.title="Открыть видимый плеер Apple Music внутри VETOGRAM — не наш аудиопоток";
+ play.setAttribute("aria-label","Открыть официальный плеер Apple Music, а не собственный аудиоплеер, для "+song.artist+" — "+song.name);
  play.onclick=()=>openPlayer(song);
- const link=div("a","ru-song-link","Apple ↗");link.href=song.url;link.target="_blank";link.rel="noopener noreferrer";
- link.setAttribute("aria-label","Открыть "+song.name+" в Apple Music");
- actions.append(play,link);
+ actions.append(play);
  row.append(info,actions);
  return row;
 }

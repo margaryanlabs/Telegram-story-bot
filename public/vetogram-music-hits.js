@@ -105,11 +105,11 @@ function render(){
   else card.append(el("span","hits-placeholder","♫"));
   const body=el("div","hits-meta");body.append(el("strong","",t.title),el("span","",t.artist),el("small","","APPLE MUSIC · "+t.album));
   const actions=el("div","hits-actions");
-  const official=actionLink("Слушать в Apple Music ↗",t.url,"hits-apple-link");
+  const official=actionLink("Источник: Apple Music ↗",t.url,"hits-apple-link");
   official.setAttribute("aria-label","Открыть "+t.title+" у Apple Music");
-  const embed=el("button","hits-embed-button","▶ Плеер Apple");embed.type="button";
+  const embed=el("button","hits-embed-button","◈ Официальный плеер Apple");embed.type="button";
   embed.setAttribute("aria-label","Открыть официальный плеер "+t.title);
-  embed.onclick=()=>{const ep=fromShare(t.url);if(ep)openFrame(ep,t.artist+" — "+t.title);else window.open(t.url,"_blank","noopener")};
+  embed.onclick=()=>{const ep=fromShare(t.url);if(ep)openFrame(ep,t.artist+" — "+t.title);else hint("Плеер для этой ссылки недоступен. Отображаем только информацию о релизе.")};
   actions.append(embed,official);body.append(actions);card.append(body);list.append(card);
  }
 }
@@ -133,7 +133,7 @@ async function search(q,region){
   for(const t of Array.isArray(data.results)?data.results:[]){
    const song=fromApple(t);if(song&&!ids.has(song.id)){results.push(song);ids.add(song.id)}
   }
-  hint(results.length+" официальных релизов по запросу · "+COUNTRY[region]+". Данные для ознакомления; прослушивание — через сервис Apple Music.");
+  hint(results.length+" официальных релизов · "+COUNTRY[region]+". Это поиск названий и плеер Apple Music внутри страницы, а НЕ свободные аудиопотоки для нашего плеера.");
   render();
  }catch(e){
   if(controller!==ctl)return;
