@@ -149,3 +149,20 @@ Google Books API public queries require a registered application identifier (API
 - Simulated Telegram screen switched to private source, rendered a local EPUB card, opened the first chapter and navigated to the second chapter with no network request for private content.
 - Node tests added `tests/vetogram-books-private-import.test.js` for importing/deleting TXT, importing FB2, EPUB chapter parsing, and rejecting malformed/untrusted content. Genre browsing/category-search tests added to the existing Wikisource test file.
 - **Still required before production:** full local Node test suite on a checked-out repo, real Russian EPUB/FB2 files on Android/iOS Telegram WebView, device storage quota/eviction tests, permission/attribution audit and a successful production deploy. GitHub Actions failures are not used as a proxy for code correctness.
+
+## Reading Atlas: VETO COMPASS (27 Oct 2026)
+
+- The in-reader compass button opens a premium book navigation overlay without leaving the book.
+- **Reading timeline** scrubber maps the current chapter's character offset to the correct adaptive page, so line-width or font changes do not break location.
+- **Local full-text search within the currently loaded chapter** (not the whole multi-chapter work) returns up to 40 results with small context snippets. Jumping to a result safely highlights its first occurrence with text nodes + a locally constructed `mark` element; no innerHTML injection, external search API or user text upload.
+- **Bookmark map** supports current offset tokens like `0:@1234` and legacy page tokens like `0:5`; chapter-aware navigation invokes the source-specific chapter loader.
+- **Quotes** include their text location when captured from the current page. A book-specific quote list can jump back to the approximate position, copy the quote via browser clipboard permissions or stay on the device.
+- **Personal marginal notes** provide a lightweight notepad anchored to chapter/character offset. Note text is capped at 500 characters per item and the device holds up to 120 recent notes across works. Only available in browser localStorage; not server-side/encrypted/cloud-synced. Browser data clearing will erase these notes.
+- Deleting a locally imported book now also removes its associated bookmarks/progress, quotes and notes. This is an intentional per-device deletion and prompts the user before removing book files.
+
+### Bugs and verification
+- Fixed a disabled Next button on the last page of an EPUB chapter when later chapters are present.
+- Corrected bookmark-token regular-expression escaping discovered during independent checks.
+- Independent mock-WebView scenario verified: search produced 40 capped results, tapped result jumped to the correct page and highlighted safely; a real bookmark appeared in COMPASS; adding a personal note persisted it to localStorage; the reader stayed open.
+- `tests/vetogram-books-compass.test.js` adds legacy/new bookmark token compatibility, malformed bookmark rejection and reader control contracts.
+- Readiness unchanged: draft PR only, no deploy/merge, real Android/iOS WebView QA and full local Node test suite still outstanding.
