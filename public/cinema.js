@@ -11,8 +11,9 @@
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
-  const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set()};
-  const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/"};
+  const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
+  const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/"};
+  const discovery={slides:[],index:0,lastKey:"",timer:null,prefetching:false,received:0};
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
 
   function loadLibrary(){
@@ -51,6 +52,9 @@
     $("cinemaHero").classList.toggle("hidden",tab!=="home");
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
     $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
+    for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian"])
+      $(id).classList.toggle("hidden",tab!=="home");
+    if(tab==="home")setHeroSlide(discovery.index);
     render();
     if(tab!=="library")fetchCatalog(true);
     if(tab==="search")$("cinemaSearch").focus();
@@ -143,101 +147,124 @@
   }
   // Live archives from three verified Russian rights-holder channels.
   // Same-origin backend requests only; no CORS bypass or video proxy.
+  // All studio feeds return public original-player metadata. Never proxy videos.
+  const isValidStudioFilm=(f,target)=>{
+    try {
+      const u=new URL(f?.player?.url||"");
+      return f?.sourceCatalog==="rutube-official-channel" &&
+        f?.id?.startsWith("rutube-"+target+"-")&&
+        f?.player?.licensed===true&&f?.player?.type==="iframe"&&
+        u.origin==="https://rutube.ru"&&
+        /^\/play\/embed\/[a-f0-9]{32}$/i.test(u.pathname)&&
+        Number(f.minutes)>=(target==="soyuzmultfilm"?3:35)&&
+        typeof f.title==="string"&&f.title.length>0;
+    }catch(_){return false}
+  };
+  function mergeStudioPage(target,page,data){
+    if(!data||data.channel!==target||!Array.isArray(data.movies))throw Error("Некорректная выдача киностудии");
+    const old=studio.results.get(target)||[];
+    const seen=new Set(old.map(f=>f.id));
+    const global=new Set(films.map(f=>f.id));
+    let added=0;
+    for(const film of data.movies.slice(0,60).filter(x=>isValidStudioFilm(x,target))){
+      if(seen.has(film.id))continue;
+      seen.add(film.id);old.push(film);added++;
+      if(film.poster&&/^https:\/\/pic\.(?:rutube\.ru|rutubelist\.ru|rtbcdn\.su|rtbcdn\.ru)\//.test(film.poster))
+        state.posters.set(film.id,film.poster);
+      if(!global.has(film.id)){global.add(film.id);films.push(film)}
+    }
+    studio.results.set(target,old);
+    if(page===1)studio.firstPages.add(target);
+    const next=Number.isInteger(data.nextPage)&&data.nextPage>page?data.nextPage:null;
+    studio.pages.set(target,next);
+    if(next===null)studio.loaded.add(target);
+    if(target===studio.selected)studio.nextPage=next;
+    discovery.received+=added;
+    return added;
+  }
+  async function studioPage(target,page,signal){
+    const res=await fetch("/api/cinema-channels?"+new URLSearchParams({
+      channel:target,page:String(page)
+    }),{signal,headers:{Accept:"application/json"}});
+    if(!res.ok)throw Error("Канал "+target+": HTTP "+res.status);
+    return res.json();
+  }
   function showStudio(){
     const list=studio.results.get(studio.selected)||[];
-    const status=$("cinemaStudioStatus");
     $("cinemaStudioOfficial").href=STUDIO_LINKS[studio.selected];
     $("cinemaStudioGrid").replaceChildren(...list.slice(-180).map(filmCard));
     $("cinemaStudioMore").classList.toggle("hidden",studio.nextPage===null);
     $("cinemaStudioMore").disabled=studio.loading;
-    if(list.length){
-      status.textContent=list.length+" проверенных по длительности публикаций · оригинальные RUTUBE-плееры";
-    }else if(!studio.loading){
-      status.textContent="Архив пока недоступен в Cinema. Открыть официальный канал можно по ссылке ниже.";
-    }
+    text("cinemaStudioStatus",list.length
+      ?list.length+" публикаций в коллекции · оригинальные плееры RUTUBE"
+      :studio.loading?"Загружаем каталог…":"Архив временно недоступен. Откройте официальный канал по ссылке ниже.");
   }
   async function loadStudio(reset=false){
-    if(studio.loading&&!reset)return;
+    if(studio.loading)return;
     const target=studio.selected;
-    if(reset){
-      studio.nextPage=1;
-      if(studio.loaded.has(target)){
-        studio.nextPage=null;
-        showStudio();
-        return;
-      }
+    if(reset&&studio.firstPages.has(target)){
+      studio.nextPage=studio.pages.get(target)??null;showStudio();return;
     }
-    const page=studio.nextPage;
+    const page=reset?1:studio.nextPage;
     if(page===null)return;
     const ticket=++studio.ticket;
-    studio.loading=true;
-    const button=$("cinemaStudioMore");
-    button.disabled=true;
-    text("cinemaStudioStatus","Подключаем "+target+" · страница "+page+"…");
-    const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),8500);
+    studio.loading=true;showStudio();
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),11500);
     try{
       let data;
-      try {
-        const res=await fetch("/api/cinema-channels?"+new URLSearchParams({
-          channel:target,page:String(page)
-        }),{signal:controller.signal,headers:{Accept:"application/json"}});
-        if(!res.ok)throw Error("HTTP "+res.status);
-        data=await res.json();
-      }catch(apiError){
-        // Optional exported metadata works even on static-only hosting.
-        if(page!==1)throw apiError;
+      try{data=await studioPage(target,page,controller.signal)}
+      catch(error){
+        if(page!==1)throw error;
         const local=await fetch("./cinema-"+target+"-feed.json",{signal:controller.signal});
-        if(!local.ok)throw apiError;
-        data=await local.json();
-        data.nextPage=null;
+        if(!local.ok)throw error;
+        data=await local.json();data.nextPage=null;
       }
       if(ticket!==studio.ticket||target!==studio.selected)return;
-      if(!data||data.channel!==target||!Array.isArray(data.movies))throw Error("Неправильная выдача архива");
-      const valid=data.movies.slice(0,100).filter(f=>{
-        try{
-          const url=new URL(f.player?.url||"");
-          return f.sourceCatalog==="rutube-official-channel"&&
-            f.id.startsWith("rutube-"+target+"-")&&
-            f.player?.licensed===true&&f.player?.type==="iframe"&&
-            url.origin==="https://rutube.ru"&&
-            /^\/play\/embed\/[a-f0-9]{32}$/i.test(url.pathname)&&
-            Number(f.minutes)>=35;
-        }catch(_){return false}
-      });
-      const old=studio.results.get(target)||[];
-      const existing=new Set(old.map(x=>x.id));
-      for(const film of valid) {
-        if(existing.has(film.id))continue;
-        existing.add(film.id);
-        old.push(film);
-        if(film.poster&&/^https:\/\//.test(film.poster))state.posters.set(film.id,film.poster);
-        if(!films.some(x=>x.id===film.id))films.push(film);
-      }
-      studio.results.set(target,old);
-      studio.nextPage=Number.isInteger(data.nextPage)&&data.nextPage>page?data.nextPage:null;
-      if(studio.nextPage===null)studio.loaded.add(target);
-      render();showStudio();
+      mergeStudioPage(target,page,data);
+      render();
     }catch(_){
-      if(ticket===studio.ticket)text("cinemaStudioStatus",
-        "Не удалось получить каталог канала. Попробуйте снова или откройте официальный RUTUBE.");
+      if(ticket===studio.ticket)text("cinemaStudioStatus","Не удалось загрузить архив. Попробуйте ещё раз или откройте официальный канал.");
     }finally{
-      clearTimeout(timeout);
-      if(ticket===studio.ticket){studio.loading=false;button.disabled=false}
+      clearTimeout(timer);
+      if(ticket===studio.ticket){studio.loading=false;showStudio()}
     }
   }
   function switchStudio(target){
     if(!Object.hasOwn(STUDIO_LINKS,target))return;
-    studio.ticket++;
-    studio.loading=false;
-    studio.selected=target;
-    studio.nextPage=studio.loaded.has(target)?null:1;
+    studio.ticket++;studio.loading=false;studio.selected=target;
+    studio.nextPage=studio.pages.has(target)?studio.pages.get(target):1;
     document.querySelectorAll("[data-studio]").forEach(button=>{
       button.classList.toggle("active",button.dataset.studio===target);
       button.setAttribute("aria-pressed",String(button.dataset.studio===target));
     });
     showStudio();
-    if(studio.nextPage!==null)loadStudio(true);
+    if(!studio.firstPages.has(target))loadStudio(true);
+  }
+  // Lightweight background ingestion: up to two pages per original publisher,
+  // sequentially paced so a mini-app does not flood the official service.
+  async function warmStudioFeeds(){
+    if(discovery.prefetching)return;
+    discovery.prefetching=true;
+    const targets=Object.keys(STUDIO_LINKS);
+    const plan=[...targets.filter(x=>x!=="mosfilm").map(x=>[x,1]),
+      ...targets.map(x=>[x,2])];
+    for(const [target,page] of plan){
+      if(page>1&&!studio.firstPages.has(target))continue;
+      if(page===1&&studio.firstPages.has(target))continue;
+      if(page===2&&studio.pages.get(target)!==2)continue;
+      const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),11500);
+      try{
+        const data=await studioPage(target,page,ctrl.signal);
+        mergeStudioPage(target,page,data);
+        render();
+        if(studio.selected===target)showStudio();
+      }catch(_){/* individual studio failures do not block other studios */}
+      finally{clearTimeout(timeout)}
+      text("cinemaSyncStatus",films.length+" записей · 6 источников");
+      await new Promise(resolve=>setTimeout(resolve,500));
+    }
+    discovery.prefetching=false;
+    text("cinemaSyncStatus",films.length+" записей в коллекции");
   }
   function selectedFilms(){
     let list=films;
