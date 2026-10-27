@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b12">
+<meta name="description" content="Vetogram Music — твоя музыка, одна библиотека. Поиск открытых треков, личные аудиофайлы, плейлисты и атмосферный плеер.">
+<title>Vetogram Music — твой звук</title>
+<link rel="stylesheet" href="./app.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script>
+<script defer src="./app.js"></script>
+</head>
+<body>
+<div class="shell" id="shell">
+<aside class="sidebar">
+ <a href="#home" class="brand" id="logo" aria-label="Vetogram Music · на главную"><span class="brand-mark"><i></i><i></i><i></i><i></i></span><span class="brand-copy"><b>vetogram</b><small>M U S I C</small></span></a>
+ <div class="brand-caption">Твоя музыка. Твой мир.</div>
+ <div class="sidebar-divider"></div>
+ <span class="nav-caption">СЛУШАТЬ</span>
+ <nav class="side-nav" aria-label="Основная навигация">
+  <button class="nav-item selected" data-route="home" type="button"><span class="nav-icon">⌂</span><span>Главная</span></button>
+  <button class="nav-item" data-route="search" type="button"><span class="nav-icon">⌕</span><span>Поиск музыки</span></button>
+  <button class="nav-item" data-route="library" type="button"><span class="nav-icon">♡</span><span>Моя музыка</span></button>
+  <button class="nav-item" data-route="import" type="button"><span class="nav-icon">↥</span><span>Добавить музыку</span></button>
+ </nav>
+ <span class="nav-caption sidebar-secondary">КОЛЛЕКЦИЯ</span>
+ <div class="side-card" id="sidePlaylist"><span class="side-card-icon">♫</span><div><b>Понравившееся</b><small><span id="sideLikedCount">0</span> треков</small></div><span>›</span></div>
+ <div class="sidebar-bottom"><div class="free-plan"><span class="free-dot"></span> FREE ACCESS <small>BETA</small></div><p>Открытые записи и личные файлы. Без подписки на старте.</p></div>
+</aside>
+<div class="main-column">
+ <header class="topbar">
+   <div class="top-context"><span class="top-live-dot"></span><span>VETOGRAM MUSIC</span><span class="top-slash">/</span><strong id="pageHeading">Для тебя</strong></div>
+   <div class="top-tools">
+     <button class="top-search" id="topSearch" type="button"><span>⌕</span><span>Поиск по артистам и трекам</span><kbd>/</kbd></button>
+     <button class="top-upload" id="topUpload" type="button"><span>＋</span> Моя музыка</button>
+     <button class="avatar" id="avatar" title="Локальная музыкальная библиотека" type="button">VM</button>
+   </div>
+ </header>
+ <main id="main">
+  <section id="homePage" class="page active" aria-labelledby="homeTitle">
+   <div class="eyebrow-row"><span>THE SOUND IS YOURS</span><span class="eyebrow-line"></span><span>01 / EXPLORE</span></div>
+   <section class="hero" aria-label="Музыкальная вселенная">
+     <div class="hero-glow glow-one"></div><div class="hero-glow glow-two"></div>
+     <div class="hero-content">
+       <div class="hero-badge"><span class="hero-led"></span> VETOGRAM ORIGINAL EXPERIENCE</div>
+       <h1 id="homeTitle">Музыка,<br>которая <em>с тобой.</em></h1>
+       <p>Без лишнего. Открывай новые треки, собирай свою библиотеку и слушай любимое в одном красивом пространстве.</p>
+       <div class="hero-actions"><button id="heroDiscover" class="button-primary" type="button">Открыть музыку <span>↗</span></button><button id="heroLocal" class="button-translucent" type="button">＋ Свои треки</button></div>
+       <div class="hero-micro"><div class="mini-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>YOUR SOUND. YOUR SPACE.</span></div>
+     </div>
+     <div class="hero-sculpture" aria-hidden="true"><div class="hero-circle circle-a"></div><div class="hero-circle circle-b"></div><div class="hero-vinyl"><div class="vinyl-outer"><div class="vinyl-label"><div class="vinyl-center">V</div></div></div></div><span class="sculpture-label">NOW / FEEL THE MUSIC</span></div>
+   </section>
+   <div class="section-head first-head"><div><span class="section-kicker">01 — DISCOVER</span><h2>На твоей волне</h2></div><button type="button" class="text-link" data-route="search">Открыть поиск <span>↗</span></button></div>
+   <div class="mood-grid">
+    <button class="mood mood-rose" data-search="Electronic" type="button"><div class="mood-orb">◉</div><span>FREQUENCY / 01</span><strong>Электроника</strong><small>Пульс нового звука</small><i>↗</i></button>
+    <button class="mood mood-blue" data-search="Chill" type="button"><div class="mood-orb">✧</div><span>FREQUENCY / 02</span><strong>Спокойствие</strong><small>Слушай и растворяйся</small><i>↗</i></button>
+    <button class="mood mood-orange" data-search="Hip hop" type="button"><div class="mood-orb">♫</div><span>FREQUENCY / 03</span><strong>Хип-хоп</strong><small>Собственный ритм</small><i>↗</i></button>
+   </div>
+   <div class="section-head"><div><span class="section-kicker">02 — LIVE CATALOG</span><h2>Слушают сейчас <span class="heading-live">● Актуальное</span></h2></div><span id="trendingStatus" class="source-note">Получаем Audius…</span></div>
+   <div class="track-grid" id="trendingGrid" aria-live="polite"><div class="loading-card"><div class="spinner"></div><span>Загружаем открытый каталог…</span></div></div>
+   <div class="section-head"><div><span class="section-kicker">03 — NEW ARRIVALS</span><h2>Новые открытия</h2></div><button type="button" id="reloadDiscovery" class="text-link">Обновить ↻</button></div>
+   <div id="latestList" class="track-list" aria-live="polite"><div class="loading-line">Ищем новые записи…</div></div>
+   <div class="editorial"><div class="editorial-symbol">↗</div><div><span>BRING YOUR SOUND</span><h3>Твои песни — тоже здесь.</h3><p>Выбери MP3 или M4A с устройства, импортируй список из другого сервиса. Твоя библиотека остаётся под твоим контролем.</p></div><button id="editorialImport" type="button">Добавить музыку</button></div>
+  </section>
+
+  <section id="searchPage" class="page" aria-labelledby="searchTitle">
+   <div class="page-banner"><span class="section-kicker">DISCOVERY ENGINE / 02</span><h1 id="searchTitle">Найди <em>свой звук.</em></h1><p>Поиск по открытому музыкальному каталогу Audius. Коммерческие хиты Яндекса и VK не выдаём за доступные треки.</p></div>
+   <form id="searchForm" class="search-field"><span>⌕</span><input id="searchInput" type="search" maxlength="100" placeholder="Название трека, исполнитель, жанр…" autocomplete="off" aria-label="Поиск музыки"><button type="submit">Искать ↗</button></form>
+   <div class="quick-topics"><span>ПОПРОБУЙ:</span><button type="button" data-search="Pop">Pop</button><button type="button" data-search="Armenian">Armenian</button><button type="button" data-search="Electronic">Electronic</button><button type="button" data-search="Jazz">Jazz</button><button type="button" data-search="Lo-fi">Lo-fi</button></div>
+   <div class="section-head"><div><span class="section-kicker">SEARCH / AUDIUS</span><h2>Результаты</h2></div><span id="searchStatus" class="source-note">Начни поиск</span></div>
+   <div id="searchResults" class="search-results"><div class="empty-state"><span class="empty-symbol">⌕</span><strong>Весь мир открытого звука</strong><p>Введи запрос, чтобы увидеть настоящие записи.</p></div></div>
+  </section>
+
+  <section id="libraryPage" class="page" aria-labelledby="libraryTitle">
+    <div class="page-banner library-banner"><span class="section-kicker">YOUR COLLECTION / 03</span><h1 id="libraryTitle">Твоя <em>музыка.</em></h1><p>Любимые записи, свои файлы и импортированные списки. Всё сохраняется локально на этом устройстве.</p></div>
+    <div class="stats-row"><div class="stat"><strong id="statLiked">0</strong><span>ПОНРАВИЛОСЬ</span></div><div class="stat"><strong id="statLocal">0</strong><span>МОИ ФАЙЛЫ</span></div><div class="stat"><strong id="statImported">0</strong><span>ИЗ ПЛЕЙЛИСТОВ</span></div></div>
+    <div class="tab-bar" role="tablist" aria-label="Моя коллекция"><button type="button" class="selected" data-library-tab="liked">♡ Избранное</button><button type="button" data-library-tab="local">♫ Мои файлы</button><button type="button" data-library-tab="imported">↗ Из других сервисов</button></div>
+    <div id="libraryResults" class="library-results"></div>
+  </section>
+
+  <section id="importPage" class="page" aria-labelledby="importTitle">
+    <div class="page-banner import-banner"><span class="section-kicker">YOUR MUSIC / 04</span><h1 id="importTitle">Всё своё — <em>с собой.</em></h1><p>Добавляй личные аудиофайлы и собирай коллекцию из разных сервисов. Не требуется доступ к Telegram-чатам или аккаунтам VK и Яндекса.</p></div>
+    <div class="import-duo">
+      <div class="import-tile file-tile"><span class="import-icon">↥</span><small>01 / LOCAL FILES</small><h3>Слушай свои файлы</h3><p>MP3, M4A, OGG, WAV и другие поддерживаемые браузером форматы. Файлы сохраняются локально, без отправки на сервер.</p><button class="button-primary" id="chooseFile" type="button">＋ Выбрать аудиофайлы</button><small class="import-footnote">До 30 файлов за раз, до 60 МБ каждый. Доступность фонового звука зависит от устройства.</small></div>
+      <div class="import-tile service-tile"><span class="import-icon">≋</span><small>02 / COLLECTION BRIDGE</small><h3>Списки VK и Яндекса</h3><p>Перенеси названия песен. Это не загрузка чужих MP3: музыку ищем среди разрешённых источников или открываем в исходном сервисе.</p>
+      <textarea id="playlistText" rows="5" maxlength="15000" placeholder="Кино — Группа крови&#10;Мумий Тролль — Владивосток 2000" aria-label="Список названий треков"></textarea><button id="importList" class="button-outline" type="button">Импортировать список ↗</button></div>
+    </div>
+    <div class="telegram-guide"><div class="tg-badge">✈</div><div><span>TELEGRAM / YOUR FILES</span><h3>Твои песни из Telegram</h3><p>Сохрани аудиофайл из Telegram на устройство, затем открой его здесь через «Выбрать аудиофайлы». Прямой доступ ко всем твоим чатам и «Избранному» не предоставляется Mini App автоматически. Передача музыки боту — отдельная функция, которую подключим только по явному согласию.</p></div></div>
+    <div class="service-links"><a href="https://music.yandex.ru/" target="_blank" rel="noopener noreferrer">Яндекс Музыка ↗</a><a href="https://music.vk.com/" target="_blank" rel="noopener noreferrer">VK Музыка ↗</a><a href="https://audius.co/" target="_blank" rel="noopener noreferrer">Audius ↗</a></div>
+  </section>
+ </main>
+ <footer class="footer"><span>VETOGRAM MUSIC © 2026</span><span>Музыка из разрешённых источников · Beta</span></footer>
+</div>
+</div>
+<nav class="mobile-nav" aria-label="Мобильная навигация"><button data-route="home" class="selected" type="button"><span>⌂</span>Главная</button><button data-route="search" type="button"><span>⌕</span>Поиск</button><button data-route="library" type="button"><span>♡</span>Моё</button><button data-route="import" type="button"><span>＋</span>Добавить</button></nav>
+<div id="player" class="player hidden">
+ <div class="player-identity"><button id="openStudioArt" type="button" class="mini-cover" aria-label="Открыть полноэкранный плеер"><span>♫</span></button><div class="player-names"><strong id="playerTitle">Тишина</strong><span id="playerArtist">Выбери музыку</span></div><button id="miniHeart" class="mini-heart" type="button" aria-label="Сохранить трек">♡</button></div>
+ <div class="player-core"><div class="play-buttons"><button type="button" id="shuffleButton" title="Перемешать">⇄</button><button type="button" id="prevButton" aria-label="Предыдущий трек">Ⅰ◀</button><button type="button" id="playButton" class="play-main" aria-label="Воспроизведение">▶</button><button type="button" id="nextButton" aria-label="Следующий трек">▶Ⅰ</button><button type="button" id="repeatButton" title="Режим повтора">↻</button></div><div class="play-progress"><span id="currentTime">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Позиция воспроизведения"><span id="duration">0:00</span></div></div>
+ <div class="player-extras"><span class="source-pill" id="playerSource">МОЯ МУЗЫКА</span><span class="volume-icon">◖</span><input id="volume" type="range" min="0" max="100" value="80" aria-label="Громкость"><button type="button" id="openStudio" title="Полный экран" aria-label="Открыть полноэкранный плеер">⤢</button></div>
+</div>
+<div id="studio" class="studio hidden" role="dialog" aria-modal="true" aria-label="Полноэкранный музыкальный плеер">
+ <div class="studio-ambience"><div class="ambient-one"></div><div class="ambient-two"></div><div class="ambient-three"></div></div>
+ <header class="studio-header"><div class="studio-brand"><span class="studio-brand-mark">V</span><span><b>VETOGRAM</b><small>MUSIC / IMMERSIVE SESSION</small></span></div><div class="studio-header-right"><span id="studioSource">NOW PLAYING</span><button id="studioClose" type="button" aria-label="Закрыть плеер">✕</button></div></header>
+ <div class="studio-layout">
+  <div class="studio-visual"><div class="studio-halo ring-one"></div><div class="studio-halo ring-two"></div><div class="studio-halo ring-three"></div><div class="studio-disc"><div class="studio-disc-lines"></div><div id="studioArtwork" class="studio-art"><span>V</span></div><div class="studio-spindle"></div></div><div id="visualizer" class="visualizer" aria-hidden="true"></div></div>
+  <div class="studio-info"><div class="studio-eyebrow"><span class="status-dot"></span> THE MUSIC IS PLAYING <span class="tiny-line"></span> VETO / 001</div><h2 id="studioTitle">Твой звук</h2><p id="studioArtist">Выбери любимую композицию</p><div class="studio-meta"><span id="studioTrackSource">Vetogram Music</span><button id="studioHeart" type="button">♡ Сохранить</button></div>
+   <div class="studio-progress"><input id="studioSeek" type="range" min="0" max="1000" value="0" aria-label="Позиция трека"><div><span id="studioTime">0:00</span><span id="studioDuration">0:00</span></div></div>
+   <div class="studio-controls"><button id="studioPrev" type="button" aria-label="Назад">Ⅰ◀</button><button id="studioPlay" class="studio-play" type="button" aria-label="Воспроизвести">▶</button><button id="studioNext" type="button" aria-label="Вперёд">▶Ⅰ</button></div>
+   <div class="studio-options"><label>Громкость<input id="studioVolume" type="range" min="0" max="100" value="80"></label><label>Скорость<select id="studioSpeed"><option value="0.75">0.75×</option><option selected value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label><label>Таймер<select id="studioSleep"><option value="0">Выкл.</option><option value="15">15 мин.</option><option value="30">30 мин.</option><option value="60">60 мин.</option></select></label></div>
+   <div class="studio-moods" aria-label="Световая атмосфера"><span>АТМОСФЕРА</span><button type="button" class="selected" data-theme="ember">Ember</button><button type="button" data-theme="aurora">Aurora</button><button type="button" data-theme="noir">Noir</button></div>
+   <div class="studio-footer-note">Анимация отражает состояние плеера. На iPhone фоновое воспроизведение внутри Telegram может прерываться системой.</div>
+  </div>
+ </div>
+</div>
+<input type="file" id="audioPicker" accept="audio/*,.mp3,.m4a,.aac,.wav,.flac,.ogg,.opus" multiple hidden>
+<audio id="audio" preload="metadata"></audio>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body></html>
