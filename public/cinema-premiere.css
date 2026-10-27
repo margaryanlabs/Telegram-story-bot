@@ -227,3 +227,18 @@ body.cinema-light{
 .cinema-russian-filter input{accent-color:var(--accent);width:17px;height:17px;flex:0 0 17px}
 .cinema-franchise-rail .cinema-card-art-badge{font-size:8px;letter-spacing:.035em}
 @media(max-width:650px){.cinema-russian-filter{font-size:11px;align-items:flex-start}.cinema-russian-filter input{margin-top:1px}}
+
+
+/* Dedicated cinema series hub: original cinema UI, distinct from VETOGRAM messenger. */
+.cinema-series-hub{margin:45px 0 14px}
+.cinema-series-intro{border-radius:24px;padding:clamp(24px,4vw,54px);background:radial-gradient(ellipse at 88% 5%,rgba(195,143,99,.22),transparent 55%),linear-gradient(118deg,#252331,#12151d);border:1px solid rgba(236,206,165,.20);color:#fff;overflow:hidden}
+.cinema-series-intro h2{font-size:clamp(31px,5vw,64px);letter-spacing:-.06em;line-height:1.05;margin:15px 0;max-width:760px}
+.cinema-series-intro p{max-width:650px;font-size:14px;color:#e1d5c8;line-height:1.7}
+.cinema-series-stats{font-size:11px;color:#edc89c;margin-top:26px;letter-spacing:.02em}
+.cinema-series-hub-panel{margin-top:35px}
+.cinema-series-hits-rail .cinema-card{flex:0 0 clamp(210px,23vw,300px);width:clamp(210px,23vw,300px)}
+.cinema-series-hits-rail .cinema-card-art{background:radial-gradient(ellipse at 76% 9%,rgba(191,153,109,.28),transparent 58%),linear-gradient(145deg,#343039,#161720);aspect-ratio:16/10}
+.cinema-series-hits-rail .cinema-card-art-badge{font-size:8px;letter-spacing:0;color:#ffdfb6}
+.cinema-series-hits-rail .cinema-card-art-title{font-size:clamp(17px,1.7vw,23px);-webkit-line-clamp:3;max-height:4em}
+.cinema-series-playable-rail .cinema-card-art-badge{color:#fff}
+@media(max-width:650px){.cinema-series-intro{padding:26px 22px;border-radius:18px}.cinema-series-intro h2{font-size:35px}.cinema-series-intro p{font-size:12px}.cinema-series-hits-rail .cinema-card{flex-basis:216px;width:216px}.cinema-series-hub{margin-top:20px}.cinema-section-nav nav{gap:18px}}
