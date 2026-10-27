@@ -1,0 +1,54 @@
+
+/* VETO MEDIA · EPUB personal reader */
+.epub-intro{margin-top:42px;padding:28px;border:1px solid var(--line);border-radius:23px;background:linear-gradient(135deg,var(--panel),var(--panel-2))}
+.epub-intro h2{font-size:clamp(24px,3vw,35px)}
+.epub-message{color:var(--muted);font-size:12px;margin:12px 0 20px}
+.epub-shelf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.epub-shelf-item{min-width:0;display:flex;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:15px;background:var(--panel)}
+.epub-shelf-mark{width:45px;height:56px;flex:none;display:grid;place-items:center;color:#ffe0d8;border-radius:8px;background:linear-gradient(145deg,#b45e6b,#273c66);box-shadow:3px 3px 8px #0003;font-size:20px}
+.epub-shelf-meta{min-width:0;flex:1}
+.epub-shelf-meta strong,.epub-shelf-meta small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.epub-shelf-meta strong{font-size:13px}.epub-shelf-meta small{color:var(--muted);font-size:11px}
+.epub-overlay{position:fixed;inset:0;padding:14px;z-index:105;background:rgba(0,0,0,.84);backdrop-filter:blur(18px);display:grid;place-items:center}
+.epub-reader{width:min(1230px,100%);height:min(96dvh,1050px);border:1px solid rgba(255,255,255,.15);border-radius:20px;display:flex;flex-direction:column;background:#f7f2e8;color:#242837;box-shadow:0 35px 120px #000a;overflow:hidden}
+.epub-reader-head,.epub-reader-footer{display:flex;align-items:center;gap:8px;padding:12px 15px;background:#fffdf9;min-height:55px;border-bottom:1px solid #d9d5ce}
+.epub-book-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:750;font-size:13px}
+.epub-action{border:1px solid #dedad4;background:transparent;border-radius:9px;padding:8px 11px;white-space:nowrap;color:#343848;font-size:12px}
+.epub-modes{display:flex;gap:6px;align-items:center;justify-content:center;padding:8px;background:#ede9e2}
+.epub-mode{border:1px solid #c9c2b9;border-radius:40px;background:transparent;padding:6px 17px;font-size:10px;letter-spacing:.1em;color:#62636a}
+.epub-mode.is-active{background:#28334c;border-color:#28334c;color:#fff}
+.epub-reader-body{display:flex;min-height:0;flex:1}
+.epub-toc{width:225px;overflow:auto;background:#f0ece4;border-right:1px solid #ddd6cc;padding:17px;display:flex;flex-direction:column;gap:5px}
+.epub-toc button{text-align:left;border:0;border-radius:8px;padding:10px 6px;font-size:12px;line-height:1.35;color:#343848;background:transparent}
+.epub-toc button:hover{background:#e0d8ca}
+.epub-stage{min-height:0;flex:1;overflow:hidden;padding:12px 20px;background:#f7f2e8}
+.epub-deep{width:255px;padding:20px;background:#f0ece4;border-left:1px solid #ddd6cc;display:flex;flex-direction:column;gap:11px}
+.epub-deep h3{margin:0;font-size:15px}.epub-deep small{font-size:11px;color:#676775}
+.epub-deep textarea{height:195px;resize:vertical;border-radius:12px;border:1px solid #ccc6bc;background:#fffdf9;color:#333;padding:11px;font-size:14px}
+.epub-reader-footer{border-top:1px solid #d9d5ce;border-bottom:0;justify-content:space-between}
+.epub-progress{font-size:11px;color:#656673}
+.epub-overlay[data-mode="cinema"] .epub-reader{background:#111b2c;color:#fff}
+.epub-overlay[data-mode="cinema"] .epub-stage{background:#121a2d}
+.epub-overlay[data-mode="cinema"] .epub-reader-head,.epub-overlay[data-mode="cinema"] .epub-reader-footer{background:#172037;color:#fff;border-color:#2c3950}
+.epub-overlay[data-mode="cinema"] .epub-book-title,.epub-overlay[data-mode="cinema"] .epub-progress{color:#f1e4de}
+.epub-overlay[data-mode="cinema"] .epub-action{border-color:#364560;color:#f1e4de}
+.epub-overlay[data-mode="cinema"] .epub-modes{background:#1b2941}
+@media(max-width:800px){
+ .epub-toc{position:absolute;z-index:2;left:0;top:0;bottom:0;transform:translateX(-110%);box-shadow:12px 0 30px #0003;transition:transform .2s ease}
+ .epub-toc.open{transform:translateX(0)}
+ .epub-reader-body{position:relative}
+ .epub-deep{width:175px}
+ .epub-shelf{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+ .epub-intro{padding:16px;border-radius:18px;margin-top:28px}
+ .epub-shelf-item{flex-wrap:wrap}
+ .epub-overlay{padding:0}
+ .epub-reader{height:100dvh;max-height:100dvh;border:0;border-radius:0}
+ .epub-reader-head{gap:4px;padding:9px 6px}
+ .epub-reader-head .epub-action{font-size:11px;padding:7px 5px}
+ .epub-book-title{font-size:11px}
+ .epub-stage{padding:0}
+ .epub-deep{position:absolute;right:0;top:0;bottom:0;width:65%;z-index:2;box-shadow:-10px 0 25px #0003}
+ .epub-modes{padding:7px}
+}

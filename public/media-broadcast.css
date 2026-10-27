@@ -1,0 +1,49 @@
+/* VETO MEDIA V14 · LIVE SIGNAL cinematic zone + immersive global refinements */
+.v14-broadcast{isolation:isolate;position:relative;overflow:hidden;margin:38px 0 28px;padding:28px;border-radius:25px;background:radial-gradient(ellipse at 95% -10%,rgba(255,125,165,.38),transparent 38%),radial-gradient(ellipse at -15% 98%,rgba(87,113,255,.35),transparent 53%),linear-gradient(130deg,#171e35,#0f172a 63%,#2c1f38);border:1px solid #ffffff26;box-shadow:0 23px 65px #0006;color:#f5f5fc}
+.v14-ambient-mark{position:absolute;right:-92px;top:-110px;z-index:-1;width:320px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;border:1px solid #ffffff22;box-shadow:0 0 0 40px #ffffff08,0 0 0 90px #ffffff04;font-size:140px;color:#ffffff0c;animation:v14-radio-orbit 11s ease-in-out infinite;pointer-events:none}
+.v14-heading{display:flex;gap:24px;justify-content:space-between;align-items:start}
+.v14-heading span{color:#ffb3a6;letter-spacing:.18em;font-weight:850;font-size:10px}
+.v14-heading h3{font-size:clamp(30px,4.2vw,50px);line-height:1.08;letter-spacing:-.062em;margin:11px 0 13px}
+.v14-heading h3 em{font-style:normal;background:linear-gradient(100deg,#ffa68b,#ec83b4,#b6a9ff);background-clip:text;-webkit-background-clip:text;color:transparent}
+.v14-heading p{font-size:12px;line-height:1.8;max-width:600px;color:#bccae4}
+.v14-live-indicator{display:flex;align-items:center;gap:10px;flex:none;letter-spacing:.17em;font-size:9px;color:#ffd2c7;border:1px solid #ffffff26;background:#ffffff0a;padding:12px 14px;border-radius:99px}
+.v14-live-indicator i{width:9px;height:9px;border-radius:50%;background:#fd987d;box-shadow:0 0 0 4px #fd987d23,0 0 18px #fd987d;animation:v14-blink 1.4s ease-in-out infinite}
+.v14-selector{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}
+.v14-selector button{border:1px solid #ffffff31;border-radius:99px;background:#ffffff09;color:#d4cfe6;font-size:12px;font-weight:750;padding:12px 18px}
+.v14-selector button.active{border:0;background:linear-gradient(105deg,#ffc09f,#f393b8);color:#172035;box-shadow:0 9px 24px #fc829944}
+.v14-search{display:flex;gap:9px;border:1px solid #ffffff2d;background:#080e1dbb;padding:8px;border-radius:16px;max-width:690px}
+.v14-search input{flex:1;min-width:0;background:transparent;border:0;color:#fff;font-size:14px;padding:10px;outline:none}
+.v14-search input::placeholder{color:#8b9cbd}
+.v14-search button{border:0;border-radius:10px;padding:12px 17px;background:linear-gradient(110deg,#f8bd9c,#f58ab4);color:#171c31;font-weight:850;font-size:12px}
+.v14-search button:disabled{opacity:.6}
+.v14-picks{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0 7px}
+.v14-picks button{background:#ffffff10;border:1px solid #ffffff24;border-radius:99px;padding:7px 12px;color:#dbe2f1;font-size:11px}
+.v14-status{color:#c2c9db;font-size:11px;line-height:1.65;margin:12px 0}
+.v14-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-height:550px;overflow-y:auto;overscroll-behavior:contain}
+.v14-empty{grid-column:1/-1;border:1px dashed #ffffff27;border-radius:15px;padding:28px;text-align:center;color:#b3bed3;font-size:13px;background:#ffffff04}
+.v14-card{display:flex;align-items:center;gap:15px;min-width:0;padding:13px;border:1px solid #ffffff20;border-radius:17px;background:linear-gradient(120deg,#ffffff11,#ffffff07)}
+.v14-card-image{width:94px;height:94px;position:relative;flex:none;border-radius:13px;overflow:hidden;background:radial-gradient(circle at 30% 25%,#f7a3a86a,transparent 70%),#29344d}
+.v14-card-image img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover}
+.v14-card-image .v14-placeholder{position:absolute;inset:0;display:grid;place-items:center;color:#c2c7eb;font-size:42px}
+.v14-card-info{flex:1;min-width:0}
+.v14-card-info .v14-type{color:#fabba6;font-size:9px;font-weight:850;letter-spacing:.12em}
+.v14-card-info h4{font-size:15px;line-height:1.25;margin:6px 0;letter-spacing:-.035em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v14-card-info p{font-size:11px;color:#aebbd4;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin:0 0 11px}
+.v14-card-actions{display:flex;gap:8px;flex-wrap:wrap}
+.v14-card-actions button,.v14-card-actions a{border:1px solid #ffffff2b;color:#f5effa;border-radius:9px;padding:8px 10px;background:#ffffff13;font-size:10px;text-decoration:none;white-space:nowrap}
+.v14-card-actions .v14-primary{border:0;color:#1d1d2e;font-weight:800;background:linear-gradient(110deg,#ffc2a3,#f28baa)}
+.v14-card-info .v14-disclaimer{color:#e6aeac;font-size:10px}
+.v14-license{font-size:10px;line-height:1.75;color:#8fa4c5;margin:17px 2px 0}
+.v14-home-launch{display:block;width:100%;text-align:left;border:1px solid #f7a1956b;color:#ffe4e0;background:linear-gradient(120deg,#402843,#273b58);border-radius:15px;padding:16px 19px;font-size:13px;font-weight:850;margin:15px 0;box-shadow:0 12px 37px #0004}
+/* Make the immersive player visually richer across all VETO audio sources, not just demo tracks. */
+#v13Studio{--v14-amplitude:.38;--v14-hue:0deg}
+#v13Studio[data-playing="true"]{--v14-amplitude:1}
+#v13Studio .v13-disc{filter:hue-rotate(var(--v14-hue)) drop-shadow(0 0 45px rgba(236,113,167,.23))}
+#v13Studio .v13-stage:after{content:"";position:absolute;inset:14% 9%;border-radius:50%;pointer-events:none;background:conic-gradient(from 40deg,#fcaf9e10,#7c8bdc12,#e393bc16,#fcaf9e10);filter:blur(30px);mix-blend-mode:screen;opacity:var(--v14-amplitude);animation:v14-breath 9s ease-in-out infinite alternate}
+#v13Studio:not([data-playing="true"]) .v13-stage:after{animation-play-state:paused}
+@keyframes v14-radio-orbit{50%{transform:scale(1.08) rotate(20deg)}}
+@keyframes v14-blink{50%{opacity:.38;box-shadow:0 0 0 7px #fd987d18}}
+@keyframes v14-breath{50%{transform:rotate(8deg) scale(1.09);opacity:.2}}
+@media(max-width:900px){.v14-grid{grid-template-columns:1fr}.v14-heading{display:block}.v14-live-indicator{display:inline-flex;margin-top:14px}.v14-card-image{width:78px;height:78px}}
+@media(max-width:550px){.v14-broadcast{padding:19px;border-radius:20px}.v14-heading h3{font-size:33px}.v14-search input{font-size:12px;padding:7px}.v14-search button{padding:10px 11px;font-size:11px}.v14-card{gap:11px;padding:10px}.v14-card-image{width:73px;height:73px}.v14-card-info h4{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.v14-ambient-mark,.v14-live-indicator i,#v13Studio .v13-stage:after{animation:none!important}.v14-card{transition:none!important}}

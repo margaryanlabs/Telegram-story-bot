@@ -1,0 +1,54 @@
+/* VETO MEDIA V7 — Telegram WebView safe areas, native touch & readability */
+:root{--media-tg-top:0px;--media-tg-bottom:0px;--media-tg-left:0px;--media-tg-right:0px}
+html[data-media-host="telegram"]{overscroll-behavior-y:contain}
+html[data-media-host="telegram"] .app-shell{
+  padding-left:max(14px,var(--media-tg-left));
+  padding-right:max(14px,var(--media-tg-right));
+}
+html[data-media-host="telegram"] .topbar{padding-top:max(15px,var(--media-tg-top))}
+html[data-media-host="telegram"] .v4-dock{
+  padding-bottom:max(10px,calc(8px + var(--media-tg-bottom)));
+  padding-left:max(8px,var(--media-tg-left));
+  padding-right:max(8px,var(--media-tg-right));
+}
+html[data-media-host="telegram"] .v4-listening-shell{
+  padding-top:max(16px,calc(12px + var(--media-tg-top)));
+  padding-bottom:max(12px,var(--media-tg-bottom));
+}
+html[data-media-host="telegram"] .veto-film-dialog-body,
+html[data-media-host="telegram"] .reader{padding-bottom:max(18px,var(--media-tg-bottom))}
+html[data-media-host="telegram"] .v6-source-flyout{top:calc(75px + var(--media-tg-top))}
+html[data-media-host="telegram"] .v6-recovery{bottom:calc(130px + var(--media-tg-bottom))}
+html[data-media-host="telegram"] .v4-listen-trigger{bottom:calc(105px + var(--media-tg-bottom))}
+html[data-media-host="telegram"] .player{bottom:calc(12px + var(--media-tg-bottom))}
+html[data-media-host="telegram"] .v4-dock button,
+html[data-media-host="telegram"] .player-controls button,
+html[data-media-host="telegram"] .v4-listening-controls button{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+html[data-media-host="telegram"] .tab,
+html[data-media-host="telegram"] a,
+html[data-media-host="telegram"] button{touch-action:manipulation}
+@media(max-width:650px){
+ html[data-media-host="telegram"] .v4-listen-trigger{bottom:calc(92px + var(--media-tg-bottom))}
+ html[data-media-host="telegram"] .v6-recovery{bottom:calc(130px + var(--media-tg-bottom))}
+ html[data-media-host="telegram"] .player{bottom:calc(80px + var(--media-tg-bottom))}
+ html[data-media-host="telegram"] .app-shell{padding-bottom:calc(135px + var(--media-tg-bottom))}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-media-host="telegram"] .v4-home-orb,
+ html[data-media-host="telegram"] .v4-record,
+ html[data-media-host="telegram"] .v4-equalizer i{animation:none!important}
+}
+
+/* Compact source indicator rather than clipped status in Telegram headers. */
+@media(max-width:650px){
+ html[data-media-host="telegram"] .v6-source-button{
+  width:64px;min-width:64px;max-width:64px;overflow:hidden;white-space:nowrap;
+  font-size:0;display:flex;align-items:center;justify-content:center
+ }
+ html[data-media-host="telegram"] .v6-source-button::after{
+  content:"API ◉";font-size:11px;font-weight:800;letter-spacing:.04em
+ }
+}

@@ -1,0 +1,68 @@
+/* VETO MEDIA V10 — cinematic private playlists and provider match UI. */
+.v10-import{isolation:isolate;position:relative;overflow:hidden;margin:0 0 23px;padding:30px;border-radius:26px;
+ border:1px solid #ffffff24;box-shadow:0 28px 70px #0005;
+ background:radial-gradient(circle at 90% -20%,#ec76934c,transparent 38%),radial-gradient(circle at -8% 100%,#6a7cc351,transparent 48%),linear-gradient(125deg,#1a2039,#171c34 55%,#30203b);color:#fff}
+.v10-orbit{position:absolute;z-index:-1;right:-115px;top:-120px;width:340px;height:340px;border-radius:50%;display:grid;place-items:center;
+ border:1px solid #ffffff2d;box-shadow:0 0 0 34px #ffffff09,0 0 0 81px #ffffff07;transform:rotate(-28deg);
+ font-size:130px;font-weight:900;color:#ffffff0c;pointer-events:none;animation:v10-pulse 6s ease-in-out infinite}
+@keyframes v10-pulse{50%{transform:rotate(-19deg) scale(1.06)}}
+.v10-top{display:flex;justify-content:space-between;align-items:start;gap:20px}
+.v10-top small,.v10-library-head small{display:block;color:#ffb7a9;font-size:10px;letter-spacing:.18em;font-weight:800}
+.v10-top h3{font-size:clamp(29px,4.5vw,49px);line-height:1.05;letter-spacing:-.065em;margin:12px 0 15px}
+.v10-top h3 em{font-style:normal;background:linear-gradient(90deg,#ffa887,#ff88bd,#c1a4ff);color:transparent;background-clip:text;-webkit-background-clip:text}
+.v10-top p{font-size:12px;max-width:600px;line-height:1.8;color:#c6cce3;margin:0 0 23px}
+.v10-privacy-mark{padding:13px 15px;border:1px solid #ffdbca4a;border-radius:13px;background:#ffffff09;text-align:right;
+ font-size:9px;line-height:1.7;letter-spacing:.15em;color:#ffd6d1;font-weight:750;white-space:nowrap}
+.v10-import-editor{border:1px solid #ffffff1e;background:#090f2188;backdrop-filter:blur(16px);border-radius:19px;padding:19px}
+.v10-import-editor label{display:block;font-size:12px;color:#cfd4e8;margin-bottom:10px}
+.v10-import-editor textarea{display:block;width:100%;min-height:108px;resize:vertical;background:#141b2e;color:#f5f5ff;
+ padding:14px 16px;border:1px solid #ffffff25;border-radius:13px;outline:none;line-height:1.8;font:13px/1.6 inherit}
+.v10-import-editor textarea::placeholder{color:#94a0bc}
+.v10-import-editor textarea:focus{border-color:#ffb09f85;box-shadow:0 0 0 3px #ef86802b}
+.v10-buttons{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:13px}
+.v10-buttons button,.v10-summary button{border:1px solid #ffffff30;background:#ffffff0c;color:#f8f4fb;border-radius:11px;
+ padding:11px 14px;font-size:12px;font-weight:700;transition:background .2s ease,transform .2s ease}
+.v10-buttons button:hover,.v10-summary button:hover{background:#ffffff1b;transform:translateY(-1px)}
+.v10-buttons #v10Import{border:0;color:#181929;background:linear-gradient(130deg,#ffc199,#ff7fad);box-shadow:0 9px 30px #f57f9e4a}
+.v10-disclaimer{margin:13px 2px 0;color:#9eaccb;font-size:11px;line-height:1.6}
+.v10-status{margin:10px 0 16px;min-height:17px;color:#ffdfc9;font-size:12px}
+.v10-status.error{color:#ffabb6}
+.v10-library-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #ffffff1c;margin-top:24px;padding-top:18px}
+.v10-library-head h4{font-size:21px;letter-spacing:-.045em;margin:6px 0}
+.v10-library-head h4 span{border-radius:99px;background:#fa8ea62b;font-size:13px;padding:3px 9px;color:#ffb5bc}
+.v10-library-head .v10-buttons{margin:0}
+.v10-list{display:flex;flex-direction:column;gap:7px;max-height:440px;overflow-y:auto;overscroll-behavior:contain}
+.v10-empty{padding:30px 16px;text-align:center;border:1px dashed #ffffff25;border-radius:13px;color:#b1bed4;font-size:12px}
+.v10-track{display:flex;flex-wrap:wrap;align-items:center;gap:10px;min-width:0;border:1px solid #ffffff19;border-radius:13px;padding:10px 12px;background:#ffffff0a;transition:background .2s ease}
+.v10-track:hover{background:#ffffff12}
+.v10-index{color:#97a4c0;font-size:11px;min-width:20px}
+.v10-title{flex:1;min-width:100px}
+.v10-title strong,.v10-title small{display:block;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.v10-title strong{font-size:12px}.v10-title small{font-size:11px;color:#aab7d3;margin-top:4px}
+.v10-tag{font-size:10px;color:#e4b1b2;border-radius:99px;border:1px solid #ffffff20;padding:6px 8px;white-space:nowrap}
+.v10-find,.v10-remove{color:#fff;border:1px solid #ffffff24;background:#ffffff14;padding:8px 10px;border-radius:9px;font-size:11px}
+.v10-find:hover{background:#fd9b9830}
+.v10-remove{font-size:16px;padding:3px 11px}
+.v10-matches{width:100%;border-top:1px solid #ffffff22;padding:10px 4px 0}
+.v10-hint{font-size:11px;color:#b7c3d7;line-height:1.6;margin:6px 0 12px}
+.v10-warning{padding:12px;background:#cd676321;border-radius:11px;color:#ffb9ae;font-size:12px}
+.v10-match{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px;margin:7px 0;border-radius:10px;background:#080e1d88;border:1px solid #ffffff17}
+.v10-match-info{flex:1;min-width:115px}.v10-match-info strong,.v10-match-info small{display:block}
+.v10-match-info strong{font-size:12px}.v10-match-info small{font-size:11px;color:#a5b6d3;margin-top:4px}
+.v10-score{font-size:10px;color:#ffc7b4}
+.v10-play,.v10-source{border:1px solid #ffffff2a;background:#ffffff16;color:#fff;padding:8px 10px;border-radius:9px;font-size:11px;text-decoration:none}
+.v10-play{color:#141825;background:linear-gradient(115deg,#ffc19b,#f48eaa);font-weight:750}
+.v10-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px;margin:22px 0;
+ border:1px solid #ffffff25;border-radius:17px;background:radial-gradient(circle at 100% 0%,#bd5e8b36,transparent 44%),#172033}
+.v10-summary small,.v10-summary strong,.v10-summary span{display:block}
+.v10-summary small{color:#ffb3a8;font-size:10px;letter-spacing:.14em}
+.v10-summary strong{font-size:18px;letter-spacing:-.04em;margin:8px 0 3px}
+.v10-summary span{font-size:11px;color:#9eaecb}
+.v10-launch{display:block;margin:22px 0;border:1px solid #ffb29f70;border-radius:16px;padding:15px 20px;
+ color:#fbe3de;background:linear-gradient(115deg,#352038,#252b53);font-weight:800;font-size:13px;box-shadow:0 12px 30px #0004}
+@media(max-width:680px){.v10-import{padding:20px;border-radius:20px}.v10-top{display:block}
+.v10-top h3{font-size:34px}.v10-privacy-mark{display:none}.v10-import-editor{padding:13px}
+.v10-library-head{display:block}.v10-library-head .v10-buttons{margin-top:12px}
+.v10-tag{display:none}.v10-find{font-size:10px;padding:7px 8px}
+.v10-match{gap:6px}.v10-summary strong{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.v10-orbit{animation:none!important}.v10-buttons button,.v10-track{transition:none!important}}
