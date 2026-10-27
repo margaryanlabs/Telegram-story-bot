@@ -1,231 +1,83 @@
-/* Vetogram Music / Charts & Regional Discovery.
-   No fabricated ranks, fake playable recordings or scraped protected catalogs.
-   Ranking only from Audius's own trending API; regional radio from Radio Browser. */
+/* Vetogram Music — single provider Charts. Product paused: no country playlists or services.
+ * Ranks come ONLY from Audius Trending API, never fake global charts. */
 (()=>{
 "use strict";
-const V=window.VetogramMusic,S=window.VetogramMusicSocial,root=document.querySelector('[data-view="charts"]');
-if(!V||!root)return;
+const api=window.VetogramMusic,share=window.VetogramMusicSocial;
+const root=document.querySelector('[data-view="charts"]');
+if(!api||!root)return;
 const $=id=>document.getElementById(id);
-const el=(tag,klass,value)=>{const x=document.createElement(tag);if(klass)x.className=klass;if(value!==undefined)x.textContent=String(value);return x};
-const clean=(v,n=130)=>String(v??"").replace(/[\u0000-\u001f\u007f]/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim().slice(0,n);
-const https=(v)=>{try{const u=new URL(String(v));return u.protocol==="https:"?u.href:""}catch{return""}};
-const controllers={charts:null,region:null,stations:null};
-const cache=new Map(),TTL=300000,radioHosts=["https://de1.api.radio-browser.info","https://nl1.api.radio-browser.info","https://at1.api.radio-browser.info"];
-const data={period:"week",genre:"all",region:"ru",country:"AM",charts:[],regional:[],stations:[],started:false,lastCharts:"",lastRegion:"",lastStations:""};
-const model={mapAudius,mapRadio,chartEndpoint,radioEndpoint,searchEndpoint};
-function mapAudius(x){
+const make=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=String(txt);return e};
+const clean=(v,n=115)=>String(v??"").replace(/[\u0000-\u001f\u007f]/g," ").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,n);
+const https=(url)=>{try{const p=new URL(String(url));return p.protocol==="https:"?p.href:""}catch{return""}};
+const periods=["week","month","year","allTime"];
+let period="week",genre="all",items=[],running=null,lastKey="",lastAt=0;
+function endpoint(){
+ const u=new URL("https://api.audius.co/v1/tracks/trending");
+ u.searchParams.set("limit","30");
+ u.searchParams.set("time",period);
+ if(genre!=="all")u.searchParams.set("genre",genre);
+ return u.href;
+}
+function fromAudius(x){
  if(!x?.id||!x?.title||x.is_stream_gated||x.is_delete||x.is_unlisted)return null;
- const id=clean(x.id,105);
- if(!/^[a-zA-Z0-9_-]{1,105}$/.test(id))return null;
- return {id:"audius:"+id,title:clean(x.title,120),artist:clean(x.user?.name||x.user?.handle||"Audius",95),
-  artwork:https(x.artwork?.["480x480"]||x.artwork?.["150x150"]||""),permalink:https(x.permalink)||"https://audius.co/",
-  source:"audius",genre:clean(x.genre||"",35),duration:Number(x.duration)||0,plays:Number(x.play_count)||0};
+ const id=clean(x.id,100);if(!/^[a-zA-Z0-9_-]{1,100}$/.test(id))return null;
+ return {id:"audius:"+id,source:"audius",title:clean(x.title),artist:clean(x.user?.name||x.user?.handle||"Audius"),
+   artwork:https(x.artwork?.["480x480"]||x.artwork?.["150x150"]),permalink:https(x.permalink)||"https://audius.co/"};
 }
-function mapRadio(x){
- const stream=https(x?.url_resolved||x?.url);
- if(!stream||!x?.stationuuid||!x?.name||!x?.lastcheckok||x?.hls||/\.m3u8(?:\?|$)/i.test(stream))return null;
- const id=clean(x.stationuuid,100);
- return {id:"radio:"+id,title:clean(x.name,115),artist:clean(x.country||x.tags||"Радиостанция",80),
-  artwork:https(x.favicon),homepage:https(x.homepage)||"https://www.radio-browser.info/",stream,source:"radio",
-  votes:Math.max(0,Number(x.votes)||0),codec:clean(x.codec||"",22)};
-}
-function chartEndpoint(period,genre){
- if(!["week","month","year","allTime"].includes(period))throw Error("Некорректный период");
- const url=new URL("https://api.audius.co/v1/tracks/trending");
- url.searchParams.set("limit","30");url.searchParams.set("time",period);
- if(genre!=="all")url.searchParams.set("genre",genre);
- return url.href;
-}
-function searchEndpoint(query){
- const u=new URL("https://api.audius.co/v1/tracks/search");
- u.searchParams.set("query",clean(query,65));u.searchParams.set("limit","18");return u.href;
-}
-function radioEndpoint(code,host=radioHosts[0]){
- if(!["RU","AM"].includes(code))throw Error("Неизвестная страна");
- return host+"/json/stations/bycountrycodeexact/"+code.toLowerCase()+"?"+
-  new URLSearchParams({hidebroken:"true",order:"votes",reverse:"true",limit:"30"});
-}
-async function json(url,signal){
- const response=await fetch(url,{signal,credentials:"omit",headers:{Accept:"application/json"}});
- if(!response.ok)throw Error("HTTP "+response.status);
- const payload=await response.text();
- if(payload.length>2000000)throw Error("Ответ слишком большой");
- return JSON.parse(payload);
-}
-function request(kind,ttl=12000){
- controllers[kind]?.abort();
- const controller=new AbortController();
- controllers[kind]=controller;
- const timer=setTimeout(()=>controller.abort(),ttl);
- return {controller,finish:()=>clearTimeout(timer)};
-}
-function status(id,text){$(id).textContent=text}
-function selectButtons(selector,key,current){
- for(const b of root.querySelectorAll(selector)){
-  const active=b.dataset[key]===current;
-  b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));
+function render(){
+ const target=$("chartsTracks");target.replaceChildren();
+ if(!items.length){target.append(make("div","chart-empty","Рейтинг пока недоступен. Попробуй обновить."));return}
+ for(let i=0;i<items.length;i++){
+  const item=items[i],card=make("article","chart-track");
+  card.append(make("span","chart-rank",String(i+1).padStart(2,"0")));
+  const art=make("div","chart-art");
+  if(item.artwork){const img=make("img");img.loading="lazy";img.src=item.artwork;img.alt="";img.onerror=()=>img.remove();art.append(img)}
+  art.append(make("span","chart-art-fallback","♫"));
+  const body=make("div","chart-track-info");body.append(make("b","",item.title),make("small","",item.artist));
+  const tag=make("div","chart-tags");tag.append(make("span","","AUDIUS"));body.append(tag);
+  const play=make("button","chart-play","▶");play.type="button";play.setAttribute("aria-label","Слушать "+item.title);
+  play.onclick=()=>api.play(item,items);
+  const send=make("button","chart-share","↗");send.type="button";send.setAttribute("aria-label","Поделиться "+item.title);
+  send.onclick=()=>share?.shareTrack?.(item);
+  card.append(art,body,play,send);target.append(card);
  }
 }
-function tileArt(track,type="music"){
- const artwork=el("div","chart-art"),image=https(track.artwork);
- if(image){const img=el("img");img.src=image;img.alt="";img.loading="lazy";img.referrerPolicy="no-referrer";img.onerror=()=>img.remove();artwork.append(img)}
- artwork.append(el("span","chart-art-fallback",type==="radio"?"◉":"♫"));
- return artwork;
-}
-function trackRow(track,idx,pool,rank=false){
- const item=el("article","chart-track");
- if(rank)item.append(el("span","chart-rank",String(idx+1).padStart(2,"0")));
- item.append(tileArt(track));
- const body=el("div","chart-track-info");
- body.append(el("b","",track.title),el("small","",track.artist));
- const tags=el("div","chart-tags");
- tags.append(el("span","",track.source==="radio"?"LIVE RADIO":"AUDIUS"));
- if(track.genre)tags.append(el("span","",track.genre));
- body.append(tags);item.append(body);
- const listen=el("button","chart-play","▶");listen.type="button";listen.title="Слушать";
- listen.setAttribute("aria-label","Слушать "+track.title);
- listen.onclick=()=>V.play(track,pool);
- const liked=el("button","chart-like",V.liked().some(x=>x.id===track.id)?"♥":"♡");
- liked.type="button";liked.title="В избранное";liked.setAttribute("aria-label","Добавить в избранное: "+track.title);
- liked.onclick=()=>{V.toggleLike?.(track);liked.textContent=V.liked().some(x=>x.id===track.id)?"♥":"♡";};
- const addToMix=el("button","chart-add","＋");addToMix.type="button";addToMix.title="Добавить в свой плейлист";
- addToMix.setAttribute("aria-label","Добавить в плейлист: "+track.title);
- addToMix.onclick=()=>window.VetogramCollections?.chooseForTrack?.(track);
- const send=el("button","chart-share","↗");send.type="button";send.title="Поделиться в Telegram";
- send.setAttribute("aria-label","Отправить "+track.title);
- send.onclick=()=>{if(S?.shareTrack)S.shareTrack(track)};
- item.append(listen,liked,addToMix,send);
- return item;
-}
-function draw(kind,tracks,empty,rank=false){
- const target=$(kind);target.replaceChildren();
- if(!tracks.length){target.append(el("div","chart-empty",empty));return}
- tracks.forEach((track,index)=>target.append(trackRow(track,index,tracks,rank)));
-}
-function radioCard(item,pool){
- const card=el("article","chart-radio-card");card.append(tileArt(item,"radio"));
- const info=el("div","chart-radio-main");
- info.append(el("strong","",item.title),el("small","",item.artist+(item.codec?" · "+item.codec:"")));
- const meta=el("div","chart-radio-actions");
- const play=el("button","chart-radio-play","▶ В эфир");play.type="button";play.onclick=()=>V.play(item,pool);
- const link=el("a","chart-radio-source","Источник ↗");link.href=item.homepage;link.target="_blank";link.rel="noopener noreferrer";
- meta.append(play,link);
- info.append(meta);card.append(info);
- return card;
-}
-function renderStations(){
- const target=$("regionStations");target.replaceChildren();
- if(!data.stations.length){target.append(el("div","chart-empty","В этом ответе нет поддерживаемых HTTPS-радиостанций. Попробуй обновить."));return}
- for(const x of data.stations)target.append(radioCard(x,data.stations));
-}
-async function loadCharts(force=false){
- const key=data.period+"|"+data.genre,lookup="chart:"+key,old=cache.get(lookup);
- if(!force&&old&&Date.now()-old.when<TTL){data.charts=old.items;data.lastCharts=key;draw("chartsTracks",old.items,"Записей нет",true);status("chartsStatus","Audius · "+old.items.length+" треков · из недавнего ответа API");return}
- const {controller,finish}=request("charts");
- status("chartsStatus","Загружаем рейтинг Audius…");
- draw("chartsTracks",[],"Чарт загружается…");
+async function load(force=false){
+ const key=period+"|"+genre;
+ if(!force&&key===lastKey&&Date.now()-lastAt<300000){render();return}
+ running?.abort();const controller=new AbortController();running=controller;
+ const timer=setTimeout(()=>controller.abort(),11500);
+ $("chartsStatus").textContent="Загружаем рейтинг Audius…";
  try{
-  const result=await json(chartEndpoint(data.period,data.genre),controller.signal);
-  if(controllers.charts!==controller)return;
-  const rows=(Array.isArray(result?.data)?result.data:[]).map(mapAudius).filter(Boolean);
-  data.charts=rows;data.lastCharts=key;cache.set(lookup,{items:rows,when:Date.now()});
-  draw("chartsTracks",rows,"Audius не вернул доступных треков для этого периода и жанра.",true);
-  status("chartsStatus","Audius Trending · "+rows.length+" треков · "+(new Date()).toLocaleString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · рейтинг только Audius");
- }catch(e){if(controllers.charts===controller){
-  status("chartsStatus",e?.name==="AbortError"?"Не удалось дождаться ответа Audius.":"Сейчас Audius не отвечает. Попробуй снова.");
-  draw("chartsTracks",[],"Нет подтверждённых данных: рейтинг не подставляем.");
- }}finally{finish();}
+  const res=await fetch(endpoint(),{signal:controller.signal,credentials:"omit",headers:{Accept:"application/json"}});
+  if(!res.ok)throw Error("HTTP "+res.status);
+  const data=await res.json();
+  if(running!==controller)return;
+  if(!Array.isArray(data?.data))throw Error("Неверный ответ Audius");
+  items=data.data.map(fromAudius).filter(Boolean);
+  lastKey=key;lastAt=Date.now();
+  $("chartsStatus").textContent="Audius Trending · "+items.length+" треков. Это рейтинг Audius.";
+  render();
+ }catch(err){
+  if(running!==controller)return;
+  items=[];$("chartsStatus").textContent=err?.name==="AbortError"?"Время ожидания истекло.":"Рейтинг Audius сейчас недоступен.";
+  render();
+ }finally{clearTimeout(timer)}
 }
-const seed={ru:["Russian music","русская музыка","Russian rap"],am:["Armenian","Armenian music","Հայկական"]};
-async function loadRegion(query=""){
- const area=data.region,explicit=clean(query,65),key=area+":"+explicit,lookup="region:"+key,old=cache.get(lookup);
- if(old&&Date.now()-old.when<TTL){data.regional=old.items;draw("regionTracks",old.items,"Ничего не найдено");status("regionStatus","Найдено "+old.items.length+" записей Audius · результаты поиска, не национальный чарт");return}
- const {controller,finish}=request("region");
- status("regionStatus","Ищем "+(area==="ru"?"русскую":"армянскую")+" музыку в Audius…");
- draw("regionTracks",[],"Поиск выполняется…");
- const queries=explicit?[explicit]:seed[area];
- try{
-  const outputs=await Promise.allSettled(queries.map(q=>json(searchEndpoint(q),controller.signal)));
-  if(controllers.region!==controller||area!==data.region)return;
-  const tracks=[],ids=new Set();
-  for(const out of outputs){
-   if(out.status!=="fulfilled")continue;
-   for(const raw of Array.isArray(out.value?.data)?out.value.data:[]){
-    const item=mapAudius(raw);
-    if(!item||ids.has(item.id))continue;
-    ids.add(item.id);tracks.push(item);
-   }
-  }
-  if(!outputs.some(o=>o.status==="fulfilled"))throw Error("Audius search unavailable");
-  data.regional=tracks.slice(0,30);cache.set(lookup,{items:data.regional,when:Date.now()});
-  draw("regionTracks",data.regional,"Не удалось найти доступных аудиозаписей. Попробуй исполнителя или другую фразу.");
-  status("regionStatus","Audius · "+data.regional.length+" результатов запроса. Происхождение и оригинальность записи проверяй у автора.");
- }catch(e){if(controllers.region===controller){
-  status("regionStatus",e?.name==="AbortError"?"Поиск превысил время ожидания.":"Audius временно недоступен");
-  draw("regionTracks",[],"Попробуй снова.");
- }}finally{finish()}
-}
-async function loadStations(force=false){
- const country=data.country,lookup="stations:"+country,old=cache.get(lookup);
- if(!force&&old&&Date.now()-old.when<TTL){
-  data.stations=old.items;renderStations();status("stationStatus",country+" · "+old.items.length+" станций · каталог Radio Browser");return;
+function highlight(selector,key,value){
+ for(const button of root.querySelectorAll(selector)){
+  const active=button.dataset[key]===value;
+  button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active));
  }
- const {controller,finish}=request("stations",14000);
- status("stationStatus","Загружаем живые станции "+(country==="RU"?"России":"Армении")+"…");
- $("regionStations").replaceChildren(el("div","chart-empty","Ищем станции…"));
- try{
-  let payload=null,success=false;
-  for(const host of radioHosts){
-   if(controller.signal.aborted)break;
-   try{payload=await json(radioEndpoint(country,host),controller.signal);if(!Array.isArray(payload))throw Error("Неверный ответ");success=true;break;}catch(e){if(controller.signal.aborted)throw e}
-  }
-  if(controllers.stations!==controller||country!==data.country)return;
-  if(!success)throw Error("Каталог недоступен");
-  const seen=new Set();
-  data.stations=payload.map(mapRadio).filter(x=>{
-    if(!x||seen.has(x.id))return false;seen.add(x.id);return true
-  }).slice(0,20);
-  cache.set(lookup,{items:data.stations,when:Date.now()});renderStations();
-  status("stationStatus",(country==="RU"?"Россия":"Армения")+" · "+data.stations.length+" станций · порядок по голосам Radio Browser (не чарт песен)");
- }catch(e){if(controllers.stations===controller){
-  status("stationStatus",e?.name==="AbortError"?"Радиокаталог превысил время ожидания.":"Станции сейчас недоступны.");
-  $("regionStations").replaceChildren(el("div","chart-empty","Ошибка источника — попробуй обновить."));
- }}finally{finish()}
 }
-root.querySelectorAll("[data-chart-period]").forEach(b=>b.addEventListener("click",()=>{
- data.period=b.dataset.chartPeriod;selectButtons("[data-chart-period]","chartPeriod",data.period);loadCharts();
-}));
-root.querySelectorAll("[data-chart-genre]").forEach(b=>b.addEventListener("click",()=>{
- data.genre=b.dataset.chartGenre;selectButtons("[data-chart-genre]","chartGenre",data.genre);loadCharts();
-}));
-$("chartsRefresh").onclick=()=>loadCharts(true);
-root.querySelectorAll("[data-region]").forEach(b=>b.addEventListener("click",()=>{
- data.region=b.dataset.region;selectButtons("[data-region]","region",data.region);
- $("regionSearch").value="";$("regionSearch").placeholder=data.region==="ru"?"Кино, Баста, русская музыка…":"Սիրուշո, Armenian music…";
- loadRegion();
-}));
-$("regionSearchGo").onclick=()=>loadRegion($("regionSearch").value);
-$("regionSearch").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();loadRegion($("regionSearch").value)}});
-root.querySelectorAll("[data-station]").forEach(b=>b.addEventListener("click",()=>{
- data.country=b.dataset.station;selectButtons("[data-station]","station",data.country);loadStations();
-}));
-$("stationRefresh").onclick=()=>loadStations(true);
-const start=()=>{
- if(data.started)return;
- data.started=true;
- loadCharts();loadRegion();loadStations();
-};
-document.addEventListener("vetogram:charts-open",start);
-document.querySelectorAll("[data-home-region]").forEach(button=>button.addEventListener("click",()=>{
- const country=button.dataset.homeRegion;
- if(!["ru","am"].includes(country))return;
- V.showPage("charts");
- data.region=country;
- selectButtons("[data-region]","region",country);
- $("regionSearch").value="";
- loadRegion();
- $("regionTracks").scrollIntoView({behavior:"smooth",block:"center"});
-}));
-window.VetogramCharts=Object.freeze({open:start,mapAudius,mapRadio,chartEndpoint,radioEndpoint,searchEndpoint,
- state:()=>({period:data.period,genre:data.genre,region:data.region,country:data.country,chartCount:data.charts.length,regionCount:data.regional.length,stationCount:data.stations.length})});
+root.querySelectorAll("[data-chart-period]").forEach(b=>b.onclick=()=>{
+ if(!periods.includes(b.dataset.chartPeriod))return;
+ period=b.dataset.chartPeriod;highlight("[data-chart-period]","chartPeriod",period);load();
+});
+root.querySelectorAll("[data-chart-genre]").forEach(b=>b.onclick=()=>{
+ genre=b.dataset.chartGenre;highlight("[data-chart-genre]","chartGenre",genre);load();
+});
+$("chartsRefresh").onclick=()=>load(true);
+document.addEventListener("vetogram:charts-open",()=>load());
+window.VetogramCharts=Object.freeze({open:()=>load(),state:()=>({period,genre,count:items.length})});
 })();
