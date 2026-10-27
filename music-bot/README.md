@@ -7,7 +7,7 @@
 ## What is implemented
 - `server.mjs` receives only **private audio sent by its real chat owner**, via Telegram webhook with `X-Telegram-Bot-Api-Secret-Token`. MP3/M4A replies use Telegram `sendAudio` with the same bot-scoped `file_id`, so Telegram clients can use the native music player.
 - `library.mjs` stores **only metadata and bot-scoped file IDs**, no music bytes, no VK/Yandex credentials. Per-user JSON libraries under a private persistent directory, atomic rename, mode 0600 files, serialised writes, maximum 300 recordings per user. Existing `file_unique_id` recordings are deduplicated.
-- Bot commands: `/start`, `/help`, `/list` (pages up to 20), `/play 1`, `/search название`, `/delete 1`. Numbering is relative to current user library; uploading new tracks changes positions. Deleting removes **our library metadata only**, not Telegram messages/files.
+- Bot commands: `/start`, `/help`, `/list` (20 per page), `/play 1`, **`/album 1`** (at most 10 private recordings as Telegram native audio media group), `/search название`, `/delete 1`. `/album 2` sends the next 10, up to 300 personal tracks. Single-track groups use `sendAudio`. Numbering changes when new tracks arrive; `/delete` removes our metadata, not messages.
 - Protects against cross-user access: messages must be in a private chat where `message.chat.id===message.from.id`. Other chats and bot senders ignored. Webhook body limited to 128 KiB; outbound API calls have timeouts, no secrets or user data logged.
 - Dockerfile and Compose: unprivileged Node 24, private persistent named volume, read-only root filesystem, only localhost port 8787 exposed, no cap privileges. Connect to your existing HTTPS reverse proxy; nothing is billed until separately hosted.
 - `set-webhook.mjs` registers only a HTTPS endpoint with Telegram `allowed_updates: ["message"]` and secret; it does not print secrets.
@@ -23,7 +23,13 @@
    docker compose --env-file music-bot/.env -f music-bot/compose.yaml up -d --build
    ```
 4. Verify `curl -fsS http://127.0.0.1:8787/health`. Then use Node 24 with the three same secret environment variables to run `node music-bot/set-webhook.mjs`. It registers the public HTTPS webhook with Telegram. Do not pass bot token in a command-line argument or send it in chat.
-5. Test via bot's private chat: `/start`, send a permitted MP3, `/list`, `/search`, `/play 1`, `/delete 1`. Test headphone controls, screen lock and background behavior on both Android and iPhone.
+5. Test via bot's private chat: `/start`, send two or more permitted MP3/M4A, `/list`, `/album 1`, `/search`, `/play 1`, `/delete 1`. Check headphone controls, screen lock, and background behavior on Android/iPhone.
+
+## Personal-audio sharing from the Mini App
+- A new **«Поделиться аудио в Telegram»** button in My Music uses `navigator.share` only with the user's **locally imported MP3/M4A** (up to 30 MB). The user chooses the destination chat in the OS share dialog. No third-party catalog audio is extracted.
+- If file sharing is unavailable in the current browser or WebView, the application saves that same local file for manual transfer into Telegram.
+- This does not automatically send to the dedicated music bot, which needs to be created and deployed separately. It is a user-directed local-file handoff, not a background cloud uploader.
+- Telegram's native music playback after receiving an audio message may outlast the Mini App, but behavior after full closure remains device-dependent and needs real Android/iOS testing.
 
 ## Security and production caveats
 - Only a bot receiving the file can reuse its own `file_id`. IDs from a different bot are not transferable; this approach is **not** converting `file_id` into a public playable URL for a Mini App.
@@ -41,7 +47,7 @@ Official references:
 
 ## Tests
 - Existing: `tests/vetogram-music-bot.test.mjs`
-- Added: `tests/vetogram-music-library.test.mjs`
+- Added: `tests/vetogram-music-library.test.mjs`, `tests/vetogram-music-native-albums.test.mjs`, and `tests/vetogram-music-telegram-share.test.js`
 - Run locally from repository root with Node 24: `node --test tests/vetogram-music-bot.test.mjs tests/vetogram-music-library.test.mjs`
 - A JavaScript-isolate smoke test of the updated bot command dispatcher passed checks for private upload, user-scoped list/search/play/delete, cross-user and impersonated-sender rejection; the full Node test runner is not available through the GitHub connector in this session.
 
