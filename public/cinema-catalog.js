@@ -45,6 +45,32 @@
       synopsis:"Уставшая овца на необитаемом острове получает удивительное предложение начать совсем другую жизнь.",
       creator:"Blender Institute · режиссёр Mathieu Auvray",file:"Cosmos Laundromat - First Cycle - Official Blender Foundation release.webm",license:"CC BY 3.0",licenseUrl:BY3,site:"https://gooseberry.blender.org/",spoken:"Английский"}
   ];
+  // Official film streams from the rights holder's verified RUTUBE channel.
+  // Public embed permission is a PLAYER integration, not a CC license to copy.
+  const mosfilm = [
+    {id:"mosfilm-love-doves",title:"Любовь и голуби",original:"Love and Pigeons",year:1984,minutes:105,genres:["Советское кино","Комедия","Русский язык"],hue:348,
+     synopsis:"Василий Кузякин любит голубей, свою семью и спокойную деревенскую жизнь. Неожиданная курортная история ставит всё с ног на голову.",
+     creator:"Киноконцерн «Мосфильм» · режиссёр Владимир Меньшов",spoken:"Русский",
+     sourcePage:"https://rutube.ru/video/68781d890618ea50933ec020fd5060bf/",
+     license:"Публичное встраивание RUTUBE; все права на фильм сохраняются у правообладателя",
+     licenseUrl:"https://rutube.ru/info/embed/",
+     player:{type:"iframe",url:"https://rutube.ru/play/embed/68781d890618ea50933ec020fd5060bf",licensed:true,license:"Официальный публичный RUTUBE embed",credit:"Киноконцерн «Мосфильм»"}},
+    {id:"mosfilm-afonya",title:"Афоня",original:"Afonya",year:1975,minutes:92,genres:["Советское кино","Комедия","Русский язык"],hue:30,
+     synopsis:"Сантехник Афанасий Борщов прожигает жизнь, пока одна встреча не заставляет его взглянуть на себя по-новому.",
+     creator:"Киноконцерн «Мосфильм» · режиссёр Георгий Данелия",spoken:"Русский",
+     sourcePage:"https://rutube.ru/video/97251d193ac780c0138596f3aea972c0/",
+     license:"Публичное встраивание RUTUBE; все права на фильм сохраняются у правообладателя",
+     licenseUrl:"https://rutube.ru/info/embed/",
+     player:{type:"iframe",url:"https://rutube.ru/play/embed/97251d193ac780c0138596f3aea972c0",licensed:true,license:"Официальный публичный RUTUBE embed",credit:"Киноконцерн «Мосфильм»"}},
+    {id:"mosfilm-munchausen-1",title:"Тот самый Мюнхгаузен · 1 серия",original:"That Very Munchausen, Episode 1",year:1979,minutes:71,genres:["Советское кино","Комедия","Русский язык"],hue:223,
+     synopsis:"Истории барона Мюнхгаузена оживают в первой серии знаменитого фильма Марка Захарова.",
+     creator:"Киноконцерн «Мосфильм» · режиссёр Марк Захаров",spoken:"Русский",
+     sourcePage:"https://rutube.ru/video/2a0058219dc6990f2a356fbc47a59923/",
+     license:"Публичное встраивание RUTUBE; все права на фильм сохраняются у правообладателя",
+     licenseUrl:"https://rutube.ru/info/embed/",
+     player:{type:"iframe",url:"https://rutube.ru/play/embed/2a0058219dc6990f2a356fbc47a59923",licensed:true,license:"Официальный публичный RUTUBE embed",credit:"Киноконцерн «Мосфильм»"}}
+  ];
+  films.unshift(...mosfilm);
   films.forEach(function(f){f.editions=[]; /* optional approved: [{id:'ru',label:'Русский',url:'https://...',license:'...',credit:'...'}] */});
   window.VetogramCinemaCatalog=Object.freeze(films.map(function(f){return Object.freeze(f)}));
 })();
