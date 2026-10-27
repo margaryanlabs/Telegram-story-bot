@@ -1776,3 +1776,34 @@ html#vetogram.vetogram-noir #telegramMirror #telegramThreadCompose{
     scroll-behavior:auto!important;
   }
 }
+
+
+/* While typing, keep the conversation and reply field—not dashboards—
+   in the reduced viewport. Everything returns when the keyboard closes. */
+html#vetogram.vetogram-noir.veto-keyboard-open body.veto-chat-thread #telegramMirror
+:is(.veto-mirror-thread-security,.veto-mirror-sync-strip){
+  display:none!important;
+}
+@media(max-width:660px){
+  html#vetogram.vetogram-noir.veto-keyboard-open body.veto-chat-thread
+  #telegramMirror .veto-mirror-thread-bar > :is([data-ai-mode],#telegramThreadReplyAI,#telegramThreadBriefAI){
+    display:none!important;
+  }
+  html#vetogram.vetogram-noir.veto-keyboard-open body.veto-chat-thread
+  #telegramMirror .veto-mirror-thread-bar{
+    flex-wrap:nowrap;
+    gap:6px;
+    padding-block:6px;
+  }
+  html#vetogram.vetogram-noir.veto-keyboard-open body.veto-chat-thread
+  #telegramMirror .veto-mirror-thread-person{
+    flex:1 1 auto;
+    min-width:0;
+  }
+  html#vetogram.vetogram-noir.veto-keyboard-open body.veto-chat-thread
+  #telegramMirror .veto-mirror-thread-bar > .veto-mirror-icon-btn:not(.veto-mirror-back){
+    flex:0 0 42px;
+    min-width:42px;
+    max-width:42px;
+  }
+}
