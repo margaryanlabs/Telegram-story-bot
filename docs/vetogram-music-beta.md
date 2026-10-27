@@ -48,3 +48,28 @@ Telegram Bot API: https://core.telegram.org/bots/api . Mini App docs: https://co
 ## Pricing
 
 An affordable/free beta is realistic for personal files and open-license content where permitted; unlimited mainstream catalog cannot be sold cheaper than VK/Yandex without music licenses, royalty payments, and compliance. Subscription should fund user-value features (cross-device sync, playlists, AI recommendations) rather than unlicensed redistribution.
+
+
+## Social and personal-library upgrade (2026-10-27)
+
+- Public full Vetogram Music beta remains at https://vetogram-music-live.vercel.app/ ; deployment dpl_Bm52HdscMRQeyCAY1kVf2uqkYEwd was READY and its newly published HTML and social JS were externally fetched as public resources.
+- Added `public/vetogram-music-social.js` + CSS: Telegram chat-picker share for Audius track deep links (`?track=id`), opt-in friend import of metadata-only playlist links (`?mix=base64url`), default sharing of the app with friends, track-level Share actions, Up Next queue controls, and a premium social invitation card. No uploading personal playlists to a central server.
+- Telegram link format based on https://core.telegram.org/widgets/share and https://core.telegram.org/api/links . Links contain titles, performers, and IDs only; no MP3s or private Telegram initData.
+- Share links cap the mix to 14 records and approximately 1700 URL chars to stay within message length limits. Full library export is JSON, which can be downloaded or shared via supported Web Share files. The recipient must confirm the import; no automatic injection into another person's collection. Unicode/cyrillic roundtrip, bounding and damaged-link rejection verified in a standalone JS sandbox.
+- On supported mobile browsers, explicit user click can `navigator.share` the user's locally imported audio as a File through the OS chooser. Telegram may appear as a share target. This is NOT a Telegram bot upload and unsupported WebViews show an alternative message. Privacy: no user audio goes to Vetogram backend.
+- Personal local tracks have order controls and an individual delete action. Order is persisted in localStorage; deleting one clears its IndexedDB entry, revokes the local object URL, updates queue and favorites, and stops playback if it is currently playing.
+- Follow-up test files `tests/vetogram-music-social.test.js` and `tests/vetogram-music-bot.test.mjs` were added. Full test suite was not executed. Tests verify encoding, UI hooks, URL limits, webhook secret, private chat restrictions and duplicate-update filtering.
+
+## Optional music bot — code-only, not running
+
+- `music-bot/server.mjs` is a separate Node HTTP webhook service, NOT wired to an existing Vetogram messaging bot. It is not deployed and requires a new music bot token, long random webhook secret, HTTPS webhook URL and independent production review.
+- Telegram Bot API documentation: https://core.telegram.org/bots/api . Bot receives ONLY direct/private MP3 or M4A audio messages voluntarily sent to this music bot, then resends the same bot-scoped Telegram `file_id` back to the **same chat** using `sendAudio` for Telegram's own native audio player. It does not crawl personal chats, private channels or VK/Yandex protected catalogs. No getFile/download, no user library database, no cross-chat relaying.
+- Uses timing-safe verification of Telegram X-Telegram-Bot-Api-Secret-Token, private-chat ID equality and bot-sender rejection, a 128 KiB webhook body cap, 11s outbound timeout, in-memory duplicate update check, and no logging of user identifiers or raw tokens. In-memory deduplication is insufficient for production exactly-once behavior; add durable idempotency before launch.
+- Launch conditions: user explicitly connects a **separate** bot, creates secrets, verifies webhook routing, tests Telegram audio player on Android/iOS, handles content rights and privacy, abuse prevention, deletion, storage and support before accepting general public submissions.
+- The bot returns a user-submitted audio message in Telegram; it is NOT a guarantee of Mini App background playback or commercial rights for mainstream tracks.
+
+## Remaining product limitations
+
+- This beta does NOT provide unauthorized free copies of VK/Yandex protected music, scraping, DRM bypass or full mainstream music catalogs. A free beta does not remove licensing obligations. Legal test content includes user-supplied/authorized audio and provider-allowed Audius streams.
+- Android and iPhone native background behavior still requires device tests; the WebView can be suspended on minimize. The native Telegram player for user-sent files is a viable complementary path, not yet launched.
+- Audius playback, Radio Browser station compatibility and Web Share support vary with network, browser and territorial rights. The hosted UI was externally fetched but not end-to-end exercised in a real Telegram mobile client.
