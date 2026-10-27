@@ -85,10 +85,16 @@ function trackRow(track,idx,pool,rank=false){
  const listen=el("button","chart-play","▶");listen.type="button";listen.title="Слушать";
  listen.setAttribute("aria-label","Слушать "+track.title);
  listen.onclick=()=>V.play(track,pool);
+ const liked=el("button","chart-like",V.liked().some(x=>x.id===track.id)?"♥":"♡");
+ liked.type="button";liked.title="В избранное";liked.setAttribute("aria-label","Добавить в избранное: "+track.title);
+ liked.onclick=()=>{V.toggleLike?.(track);liked.textContent=V.liked().some(x=>x.id===track.id)?"♥":"♡";};
+ const addToMix=el("button","chart-add","＋");addToMix.type="button";addToMix.title="Добавить в свой плейлист";
+ addToMix.setAttribute("aria-label","Добавить в плейлист: "+track.title);
+ addToMix.onclick=()=>window.VetogramCollections?.chooseForTrack?.(track);
  const send=el("button","chart-share","↗");send.type="button";send.title="Поделиться в Telegram";
  send.setAttribute("aria-label","Отправить "+track.title);
  send.onclick=()=>{if(S?.shareTrack)S.shareTrack(track)};
- item.append(listen,send);
+ item.append(listen,liked,addToMix,send);
  return item;
 }
 function draw(kind,tracks,empty,rank=false){
@@ -130,7 +136,7 @@ async function loadCharts(force=false){
   draw("chartsTracks",[],"Нет подтверждённых данных: рейтинг не подставляем.");
  }}finally{finish();}
 }
-const seed={ru:["Russian music","русская музыка"],am:["Armenian music","Հայկական"]};
+const seed={ru:["Russian music","русская музыка","Russian rap"],am:["Armenian","Armenian music","Հայկական"]};
 async function loadRegion(query=""){
  const area=data.region,explicit=clean(query,65),key=area+":"+explicit,lookup="region:"+key,old=cache.get(lookup);
  if(old&&Date.now()-old.when<TTL){data.regional=old.items;draw("regionTracks",old.items,"Ничего не найдено");status("regionStatus","Найдено "+old.items.length+" записей Audius · результаты поиска, не национальный чарт");return}
@@ -150,6 +156,7 @@ async function loadRegion(query=""){
     ids.add(item.id);tracks.push(item);
    }
   }
+  if(!outputs.some(o=>o.status==="fulfilled"))throw Error("Audius search unavailable");
   data.regional=tracks.slice(0,30);cache.set(lookup,{items:data.regional,when:Date.now()});
   draw("regionTracks",data.regional,"Не удалось найти доступных аудиозаписей. Попробуй исполнителя или другую фразу.");
   status("regionStatus","Audius · "+data.regional.length+" результатов запроса. Происхождение и оригинальность записи проверяй у автора.");
