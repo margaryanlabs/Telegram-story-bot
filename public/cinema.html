@@ -83,9 +83,23 @@
       <section id="cinemaContinue" class="cinema-section hidden"><div class="cinema-section-head"><div><span class="cinema-overline">YOUR STORIES</span><h2>Продолжить просмотр</h2></div></div><div class="cinema-rail" id="cinemaContinueList"></div></section>
       <section class="cinema-section" id="cinemaBrowse">
         <div class="cinema-section-head"><div><span class="cinema-overline" id="cinemaSectionKicker">ALL TITLES / DISCOVER</span><h2 id="cinemaSectionTitle">Смотреть всё</h2><p id="cinemaSectionDescription">Русские полнометражные фильмы и открытая коллекция авторского кино.</p></div></div>
-        <div class="cinema-chips" id="cinemaGenres" role="group" aria-label="Жанры"></div>
+        <div class="cinema-browse-toolbar">
+          <div class="cinema-chips" id="cinemaGenres" role="group" aria-label="Жанры"></div>
+          <label class="cinema-sort-label" for="cinemaSort">Сортировка
+            <select id="cinemaSort" aria-label="Сортировка каталога">
+              <option value="recent">Недавно добавленные</option>
+              <option value="year">По году выпуска</option>
+              <option value="title">По названию</option>
+            </select>
+          </label>
+        </div>
         <div class="cinema-grid" id="cinemaGrid" aria-live="polite"></div>
-        <button class="cinema-more hidden" id="cinemaLoadMore" type="button">Загрузить ещё фильмы ↓</button>
+        <div class="cinema-browse-actions">
+          <button class="cinema-more hidden" id="cinemaMoreResults" type="button">Показать ещё из найденного ↓</button>
+          <button class="cinema-more" id="cinemaMoreStudios" type="button">Загрузить следующую подборку из шести архивов ↓</button>
+          <p id="cinemaArchiveStatus" class="cinema-archive-status" role="status">Доступны следующие страницы архивов. Загружаем по запросу, не расходуя трафик впустую.</p>
+        </div>
+        <button class="cinema-more hidden" id="cinemaLoadMore" type="button">Загрузить ещё из партнёрского каталога ↓</button>
         <p class="cinema-empty hidden" id="cinemaEmpty">Фильмы не найдены. Попробуй другой запрос.</p>
       </section>
       <section class="cinema-trust"><span>✦ ОФИЦИАЛЬНЫЕ ПЛЕЕРЫ</span><p>Смотрим фильмы во встроенном плеере официального канала правообладателя или открытого архива. Видеофайлы на наши серверы не загружаются. Доступность зависит от источника, региона и правил встраивания.</p><a href="https://studio.blender.org/films/" target="_blank" rel="noopener noreferrer">Коллекция Blender Studio ↗</a></section>
