@@ -517,3 +517,15 @@ All changes are on the existing draft PR #185 in `margaryanlabs/Telegram-story-b
 - These are **not** a passing full `npm ci`, Node test suite, real Telegram send, or Telegram WebView E2E. No evidence of actual message delivery/read receipts should be inferred from a local simulation.
 
 **Release blockers:** GitHub Actions runners have repeatedly failed before any step executes (`runner_id=0`, `steps=[]`). Diagnose Actions runner access/billing or validate a trusted checkout through another execution environment. Finish signed Telegram two-account tests, large media and chat-switch tests, full build and mobile visual verification before merge or deployment. Keep PR Draft until then.
+
+
+### 2026-10-27 VETOGRAM 5.1 — Uncertain media on chat reopen
+
+The existing draft PR #185 adds owner-scoped **manual-only** media recovery on returning to a Telegram chat.
+
+- Uncertain file/photo sends previously retained the random-id intent in RAM, but navigation cleared the visible `pendingAttachment`. It was therefore difficult or impossible to perform an **exact** deliberate retry, especially with the original attachment kind or reply target. On an owner-verified chat reopen, `restoreUncertainRichMedia(chat)` now reattaches the original in-memory File **only** when the signed user and chat match, the original caption is unchanged, the File is within the existing 2 MiB limit, and the item is not voice media. The original reply target is also restored only when appropriate. There is **no automatic Telegram send**.
+- `richSendIntent` now includes `kind` and `duration` in equality checks, preventing accidentally reusing a nonce for a different kind or duration. `lastRichFailures` retains at most **4** owner-scoped intents in RAM and is cleared on owner switch; no file is written to persistent browser storage.
+- Confirmed real code defect: the attachment chip used `pendingAttachment.name/size`, although the state stores `{file,kind}`. It now correctly resolves `pendingAttachment.file` and displays the real file name and size instead of `undefined / NaN КБ`.
+- On reopening, the app shows a clear warning that the earlier media/sticker might already have arrived, and asks the user to verify in the native Telegram app **before** tapping Send again. Voice is intentionally excluded from reconstruction as a generic document.
+- Added `tests/vetogram-rich-reopen-51.test.js` to focused offline QA (8 unit cases) and updated 44 WebView asset references to `20261027-v51-rich-recovery`. Independent current-source V8 checks confirmed same-owner unchanged-caption recovery and stable `sameRichIntent`, rejects on changed text, owner mismatch, voice or oversize file, plus accurate 2 KiB attachment chip display. Parsed the current client and three related test sources.
+- No live Telegram session, upload, send, user data or deployment was used. Full `npm ci && npm run vercel-build`, GitHub Actions allocation, two-account WebView QA and real replay/duplicate checks **remain required** before merge or production publish.
