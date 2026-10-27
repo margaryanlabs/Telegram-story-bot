@@ -27,13 +27,19 @@
       <div class="hero-orbit" aria-hidden="true"><span>V</span><b>✶</b></div>
     </section>
 
+    <div class="source-tabs" role="group" aria-label="Библиотека и язык">
+      <button type="button" data-books-source="ru" class="active" aria-pressed="true"><b>РУ</b> Русская библиотека</button>
+      <button type="button" data-books-source="hy" aria-pressed="false"><b>ՀՅ</b> Հայկական գրադարան</button>
+      <button type="button" data-books-source="gutenberg" aria-pressed="false"><b>EN</b> Мировая классика</button>
+    </div>
+    <p id="sourceDescription" class="source-description">Русская Викитека · литературные произведения на русском языке</p>
     <section class="catalog-bar" aria-label="Найти книгу">
       <form id="searchForm" class="search">
         <span aria-hidden="true">⌕</span>
         <input id="bookSearch" type="search" placeholder="Название книги или автор…" aria-label="Поиск книг" autocomplete="off" maxlength="100">
         <button type="submit">Найти</button>
       </form>
-      <div class="filters">
+      <div class="filters" id="languageFilter" hidden>
         <label for="langSelect">Язык</label>
         <select id="langSelect" aria-label="Язык книги">
           <option value="all">Все языки</option>
@@ -62,8 +68,8 @@
     <div class="catalog-footer"><p id="catalogStatus" role="status"></p><button id="loadMore" type="button" hidden>Показать ещё ↓</button></div>
     <footer class="book-attribution">
       <strong>BOOKS / OPEN LIBRARY OF STORIES</strong>
-      <p>Каталог Project Gutenberg через Gutendex. Права на произведения различаются по странам и переводам. Чтение доступно только для книг с открытым полным текстом.</p>
-      <a href="https://www.gutenberg.org/policy/terms_of_use" target="_blank" rel="noopener noreferrer">Условия источника ↗</a>
+      <p id="sourceLegal">Источник: Русская Викитека. Статус прав зависит от произведения, издания, перевода и страны чтения. Проверяйте сведения на странице оригинала.</p>
+      <a id="sourceLegalLink" href="https://ru.wikisource.org/wiki/Special:Copyright" target="_blank" rel="noopener noreferrer">Условия и лицензии источника ↗</a>
     </footer>
   </main>
 
@@ -77,6 +83,8 @@
     <div id="readerSettings" class="reader-settings" hidden>
       <div><span>Размер текста</span><button id="smallerFont" type="button" aria-label="Уменьшить шрифт">A−</button><span id="fontValue">19</span><button id="largerFont" type="button" aria-label="Увеличить шрифт">A+</button></div>
       <div><span>Оформление</span><button type="button" data-read-theme="dark">Ночь</button><button type="button" data-read-theme="light">Бумага</button><button type="button" data-read-theme="sepia">Сепия</button></div>
+      <div id="readerChapters" hidden><label for="chapterSelect">Содержание</label><select id="chapterSelect" aria-label="Выберите главу"><option value="">Начало книги</option></select></div>
+      <div class="reader-attribution"><span>Текст адаптирован для читалки</span><a id="readerSourceLink" href="https://www.gutenberg.org/" target="_blank" rel="noopener noreferrer">Оригинал и авторские права ↗</a></div>
     </div>
     <div class="reader-scroll" id="readerScroll">
       <div class="reader-paper" id="readerPaper">
