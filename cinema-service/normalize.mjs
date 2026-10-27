@@ -56,6 +56,9 @@ export function normalizeFilm(input,{allowedOrigins=["https://rutube.ru"]}={}) {
     poster_url:input.poster_url?httpsUrl(input.poster_url,"poster_url"):null,
     duration_seconds:seconds, spoken_language:optionalText(input.spoken_language,20)||"ru",genres,hue,
     provider,rights_holder:rightsHolder,attribution,source_type:kind,playback_url:play,source_page_url:sourcePage,
-    rights_basis:basis,rights_evidence_url:evidence,territories
+    rights_basis:basis,rights_evidence_url:evidence,territories,
+    translation_name:optionalText(input.translation_name,120)||"Оригинальная дорожка",
+    quality_label:optionalText(input.quality_label,24),
+    priority:Number.isInteger(input.priority)&&Math.abs(input.priority)<=100?input.priority:0
   };
 }
