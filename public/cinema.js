@@ -8,7 +8,7 @@
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
   const state={tab:"home",genre:"Все",query:"",selected:null,playing:null,request:0,
-    library:loadLibrary(),sources:new Map(),posters:new Map(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
+    library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
@@ -153,7 +153,7 @@
     const title=node("span","cinema-card-art-title");title.textContent=f.title;div.append(title);
     const poster=state.posters.get(f.id);
     if(poster){const img=node("img");img.loading="lazy";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{img.remove();state.posters.delete(f.id)};div.prepend(img)}
-    else if(!f.player)requestPoster(f);
+    else requestPoster(f);
     return div;
   }
   function filmCard(f){
@@ -194,19 +194,35 @@
     if(show)$("cinemaContinueList").replaceChildren(...progressIds.slice(0,10).map(id=>filmCard(filmById(id))));
   }
   function requestPoster(f){
-    if(state.posters.has(f.id)||state.sources.has(f.id))return;
-    // Passive lazy lookups: exact file metadata, no proxy or key.
-    const req=()=>getCommons(f).then(result=>{
-      if(!result.poster)return;state.posters.set(f.id,result.poster);
-      document.querySelectorAll(".cinema-card").forEach(card=>{
-        if(card.querySelector(".cinema-card-name")?.textContent!==f.title)return;
-        const art=card.querySelector(".cinema-card-art");
-        if(art&&!art.querySelector("img")){const img=node("img");img.loading="lazy";img.alt="Кадр: "+f.title;img.src=result.poster;img.onerror=()=>img.remove();art.prepend(img)}
-      });
-      if(f.id==="sintel")$("cinemaHeroBackdrop").style.backgroundImage='url("'+result.poster.replace(/"/g,"%22")+'")';
-    }).catch(()=>{});
-    // Defer expensive metadata requests until the browser is idle.
-    if(window.requestIdleCallback)requestIdleCallback(req,{timeout:2500});else setTimeout(req,350);
+    if(state.posters.has(f.id)||state.posterLookups.has(f.id))return;
+    state.posterLookups.add(f.id);
+    const req=()=>Promise.resolve()
+      .then(()=>f.player
+        ?(window.VetogramCinemaArtwork?.load(f)||null)
+        :getCommons(f).then(result=>result.poster))
+      .then(poster=>{
+        if(!poster)return;
+        state.posters.set(f.id,poster);
+        document.querySelectorAll(".cinema-card").forEach(card=>{
+          if(card.querySelector(".cinema-card-name")?.textContent!==f.title)return;
+          const art=card.querySelector(".cinema-card-art");
+          if(art&&!art.querySelector("img")){
+            const img=node("img");img.loading="lazy";img.alt="Кадр: "+f.title;
+            img.src=poster;img.onerror=()=>img.remove();art.prepend(img);
+          }
+        });
+        if(state.selected?.id===f.id){
+          const art=$("cinemaDetailsArt");
+          if(!art.querySelector("img")){
+            const img=node("img");img.alt="Кадр из фильма "+f.title;img.src=poster;
+            img.onerror=()=>img.remove();art.prepend(img);
+          }
+        }
+        if(f.id===films[0]?.id)
+          $("cinemaHeroBackdrop").style.backgroundImage='url("'+poster.replace(/"/g,"%22")+'")';
+      }).catch(()=>{});
+    if(window.requestIdleCallback)requestIdleCallback(req,{timeout:2300});
+    else setTimeout(req,200);
   }
   async function getCommons(f){
     if(state.sources.has(f.id))return state.sources.get(f.id);
@@ -252,6 +268,8 @@
     $("cinemaDetailsFavorite").textContent=state.library.favorites.includes(f.id)?"♥ В избранном":"♡ В избранное";
     const art=$("cinemaDetailsArt");art.replaceChildren();
     art.style.background="radial-gradient(circle at 65% 30%,hsl("+f.hue+" 50% 45%),transparent 62%),linear-gradient(120deg,#29334f,#31223c)";
+    if(state.posters.has(f.id)){const image=node("img");image.alt="Кадр из фильма "+f.title;image.src=state.posters.get(f.id);image.onerror=()=>image.remove();art.prepend(image)}
+    else requestPoster(f);
     $("cinemaDetails").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
     if(f.player)fetchApprovedSources(f);
     if(!f.player)getCommons(f).then(src=>{
@@ -469,7 +487,7 @@
     text("cinemaHeroMeta",films[0].year+" · "+films[0].minutes+" мин · "+films[0].genres.join(" / "));
     text("cinemaHeroTitle",films[0].title);
     text("cinemaHeroDescription",films[0].synopsis);
-    if(!films[0].player)getCommons(films[0]).then(src=>{if(src.poster)$("cinemaHeroBackdrop").style.backgroundImage='url("'+src.poster.replace(/"/g,"%22")+'")'}).catch(()=>{});
+    requestPoster(films[0]);
     const params=new URLSearchParams(location.search);const film=filmById(params.get(FILM_KEY));if(film)openDetails(film);
   }
   render();
