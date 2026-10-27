@@ -75,7 +75,7 @@ test('reader never advertises an unverified Wikisource page as a complete volume
   assert.match(js,/function setVolumeStatus\(book,coverage\)/);
   assert.match(js,/полнота не подтверждена/);
   assert.match(js,/каталог ограничен/);
-  assert.match(js,/КАРТОЧКА · НЕТ ТЕКСТА/);
+  assert.match(js,/КАТАЛОГ · ОПИСАНИЕ/);
   assert.match(js,/ПОЛНЫЙ ТЕКСТ ИСТОЧНИКА/);
 });
 
