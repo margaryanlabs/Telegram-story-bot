@@ -5,7 +5,7 @@
   const state={
     chats:[],page:0,hasMore:true,loading:false,
     filter:'all',search:'',generation:0,lastListFetchedAt:0,
-    thread:null,messages:[],threadLoading:false,
+    thread:null,messages:[],threadLoading:false,threadLoadError:'',
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),expandedAttachments:new Map(),expandedBytes:0,
@@ -1449,7 +1449,10 @@
       // deleted or preserved-only item as recoverable through live Telegram.
       const requestArchived=async()=>{
         const controller=new AbortController();
-        const timer=setTimeout(()=>controller.abort(),14000);
+        // Active photos must not wait 14s for a stalled private archive;
+        // retained-only evidence gets the longer archive-only allowance.
+        const archiveBudget=msg.deleted||msg.preservedOnly?14000:2800;
+        const timer=setTimeout(()=>controller.abort(),archiveBudget);
         try{
           const res=await fetch('/api/privacy-media?'+
             new URLSearchParams({chatId:ownerChatId,messageId:String(id)}),{
@@ -1564,7 +1567,7 @@
     state.syncRunId++; // stale poll completions must not unlock another owner's sync
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
-    state.chats=[];state.messages=[];state.thread=null;state.inboxReturn=null;
+    state.chats=[];state.messages=[];state.thread=null;state.threadLoadError='';state.inboxReturn=null;
     clearTimeout(chatFilterTimer);chatFilterTimer=null;
     closeVetoMessengerTools();
     clearIntelSearch({close:true});
@@ -1854,7 +1857,10 @@
     if(!state.messages.length){
       box.innerHTML=state.threadLoading
         ?empty('Загружаю сообщения','Получаю историю напрямую из Telegram…')
-        :empty('Пустой чат','В Telegram нет доступных сообщений');
+        :state.threadLoadError
+          ?empty('Не удалось загрузить историю',
+              'Нажми ↻ вверху переписки, чтобы повторить запрос. Отправку не повторяй без проверки.','↻')
+          :empty('Пустой чат','В Telegram нет доступных сообщений');
     }else{
       let day='';
       let previous=null;
@@ -2143,7 +2149,7 @@
     // block this newly selected dialog for the rest of the session.
     state.threadLoading=false;
     state.syncFailures=0;state.lastSyncedAt=null;
-    state.thread=chat;state.messages=[];state.threadHasMore=false;
+    state.thread=chat;state.messages=[];state.threadLoadError='';state.threadHasMore=false;
     state.intelFocus=null;
     state.deliveryStage=null;renderDeliveryStatus();
     closeThreadSearch();
@@ -2248,7 +2254,7 @@
         $('telegramThreadMeta').textContent=(labels[data.chat.type]||'чат')+
           (state.thread.savedCopy?' · сохранённая история Vetogram':' · Telegram');
       }
-      state.threadLoading=false;
+      state.threadLoading=false;state.threadLoadError='';
       renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
       rememberHotThread();
       renderSendComposer();
@@ -2261,8 +2267,9 @@
     }catch(error){
       if(generation!==state.threadGeneration)return;
       state.threadLoading=false;
-      threadNotice(error.message);
-      syncLabel('Нет подтверждения Telegram · проверю снова');
+      state.threadLoadError=String(error.message||'Нет ответа Telegram');
+      threadNotice(state.threadLoadError);
+      syncLabel('Нет подтверждения Telegram · нажми ↻ для повтора');
       scheduleThreadSync(45000);
       if(reset)renderMessages();
       else $('telegramThreadOlder').hidden=!state.threadHasMore;
