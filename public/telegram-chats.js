@@ -5,7 +5,7 @@
   const state={
     chats:[],page:0,hasMore:true,loading:false,
     filter:'all',search:'',generation:0,lastListFetchedAt:0,
-    thread:null,messages:[],threadLoading:false,threadLoadError:'',
+    thread:null,messages:[],threadLoading:false,threadLoadError:'',threadAuthRejected:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
@@ -1700,7 +1700,7 @@
     state.syncRunId++; // stale poll completions must not unlock another owner's sync
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
-    state.chats=[];state.messages=[];state.thread=null;state.threadLoadError='';state.inboxReturn=null;
+    state.chats=[];state.messages=[];state.thread=null;state.threadLoadError='';state.threadAuthRejected=false;state.inboxReturn=null;
     clearTimeout(chatFilterTimer);chatFilterTimer=null;
     closeVetoMessengerTools();
     clearIntelSearch({close:true});
@@ -2008,6 +2008,12 @@
     if(!state.messages.length){
       box.innerHTML=state.threadLoading
         ?empty('Загружаю сообщения','Получаю историю напрямую из Telegram…')
+        :state.threadAuthRejected
+          ?'<div class="veto-mirror-retry-state">'+
+              empty('Нужно переподключить Telegram',
+                'Доступ к сообщениям больше не подтверждён. Ранее загруженные данные скрыты.','🔒')+
+              '<button type="button" class="veto-mirror-retry-thread" data-mirror-reconnect-thread>'+
+              'Переподключить Telegram</button></div>'
         :state.threadLoadError
           ?'<div class="veto-mirror-retry-state">'+
               empty('Не удалось загрузить историю',
@@ -2306,7 +2312,7 @@
     // block this newly selected dialog for the rest of the session.
     state.threadLoading=false;
     state.syncFailures=0;state.lastSyncedAt=null;
-    state.thread=chat;state.messages=[];state.threadLoadError='';state.threadHasMore=false;
+    state.thread=chat;state.messages=[];state.threadLoadError='';state.threadAuthRejected=false;state.threadHasMore=false;
     state.intelFocus=null;
     state.deliveryStage=null;renderDeliveryStatus();
     closeThreadSearch();
@@ -2436,7 +2442,7 @@
         $('telegramThreadMeta').textContent=(labels[data.chat.type]||'чат')+
           (state.thread.savedCopy?' · сохранённая история Vetogram':' · Telegram');
       }
-      state.threadLoading=false;state.threadLoadError='';
+      state.threadLoading=false;state.threadLoadError='';state.threadAuthRejected=false;
       renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
       rememberHotThread();
       renderSendComposer();
@@ -2450,6 +2456,7 @@
       if(generation!==state.threadGeneration)return;
       state.threadLoading=false;
       const authRejected=[401,403,409].includes(Number(error?.httpStatus||0));
+      state.threadAuthRejected=authRejected;
       if(authRejected){
         // A genuine signed-session/ownership failure must not keep private
         // messages and previously downloaded media available in the UI.
@@ -2870,6 +2877,15 @@
     }
   });
   $('telegramThreadMessages')?.addEventListener('click',event=>{
+    if(event.target.closest('[data-mirror-reconnect-thread]')){
+      if(typeof window.VetoTelegramOpenAccountConnection==='function')
+        window.VetoTelegramOpenAccountConnection();
+      else{
+        window.VetoTelegramNavigate?.('home');
+        $('connectTelegramButton')?.click();
+      }
+      return;
+    }
     if(event.target.closest('[data-mirror-retry-thread]')){
       if(!resetOwner()&&state.thread&&!state.threadLoading)
         void loadMessages({reset:true});
