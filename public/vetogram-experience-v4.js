@@ -271,7 +271,10 @@
   // actions into a native keyboard-accessible disclosure without cloning them.
   const threadView=byId('telegramThreadView');
   const threadBar=threadView && $('.veto-mirror-thread-bar',threadView);
-  if(threadBar && !byId('v4ThreadMore')){
+  // The new messenger ships an accessible menu in HTML. Do not create a
+  // second V4 disclosure or move its existing action buttons out of it.
+  // Preserve the V4 fallback only for older pages without native markup.
+  if(threadBar && !byId('v4ThreadMore') && !byId('telegramThreadActions')){
     const menu=document.createElement('details');
     menu.id='v4ThreadMore';
     menu.className='v4-thread-more';
