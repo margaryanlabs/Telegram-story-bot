@@ -433,7 +433,12 @@ window.addEventListener("hashchange",()=>{
 const initial=location.hash.slice(1);showRoute(["home","search","library","import"].includes(initial)?initial:"home");
 renderCounts();renderLibrary();loadFeatured();initLibrary();
 window.VetogramMusic=Object.freeze({
- version:"1.0.0",getState:()=>({route:state.route,playing:!audio.paused,current:state.current?.title||null,liked:state.liked.length,local:state.local.length}),
+ version:"1.0.1",getState:()=>({route:state.route,playing:!audio.paused,current:state.current?.title||null,liked:state.liked.length,local:state.local.length}),
  search:performSearch,openPlayer:openStudio,parsePlaylist
 });
+// Browsers that support PWA installation can keep the UI available offline.
+// The service worker never caches third-party media or locally imported files.
+if("serviceWorker" in navigator&&location.protocol==="https:"){
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(()=>{}),{once:true});
+}
 })();
