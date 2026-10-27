@@ -67,7 +67,7 @@ function trackCard(track,index){
   const img=textNode("img");img.src=track.artwork;img.loading="lazy";img.alt="";img.onerror=()=>img.remove();cover.append(img);
  }
  const info=textNode("div","catalog-details");
- info.append(textNode("strong","",track.title),textNode("span","",track.artist),textNode("small","","AUDIUS · "+(track.duration?Math.floor(track.duration/60)+":"+String(Math.round(track.duration%60)).padStart(2,"0"):"АУДИО")));
+ info.append(textNode("strong","",track.title),textNode("span","",track.artist),textNode("small","","AUDIUS · "+(track.duration?Math.floor(track.duration/60)+":"+String(Math.floor(track.duration%60)).padStart(2,"0"):"АУДИО")));
  const play=textNode("button","catalog-play","▶");play.type="button";play.setAttribute("aria-label","Слушать "+track.title);
  play.onclick=()=>V.play(track,items);
  const like=textNode("button","catalog-like","♡");like.type="button";like.title="В избранное";like.setAttribute("aria-label","Добавить в избранное "+track.title);
