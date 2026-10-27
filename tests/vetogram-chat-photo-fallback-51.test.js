@@ -85,3 +85,16 @@ test('in-flight photo is fenced to the open chat, not unrelated inbox refresh',a
   state.thread={id:'123'};
   await assert.rejects(blocked,/Открыта другая переписка/);
 });
+
+test('live photos use a short archive deadline, retained-only evidence keeps full timeout',()=>{
+  assert.match(chats,/const archiveBudget=msg\.deleted\|\|msg\.preservedOnly\?14000:2800/);
+  assert.match(chats,/setTimeout\(\(\)=>controller\.abort\(\),archiveBudget\)/);
+});
+
+test('failed Telegram history renders an honest retry state instead of empty chat',()=>{
+  assert.match(chats,/threadLoadError:''/);
+  assert.match(chats,/empty\('Не удалось загрузить историю'/);
+  assert.match(chats,/state\.threadLoadError=String\(error\.message/);
+  assert.match(chats,/state\.threadLoading=false;state\.threadLoadError='';/);
+  assert.match(chats,/state\.thread=chat;state\.messages=\[\];state\.threadLoadError='';/);
+});
