@@ -14,16 +14,17 @@ const HOSTS=Object.freeze([
  "https://api.piped.private.coffee",
  "https://pipedapi.nosebs.ru"
 ]);
+const INVIDIOUS=Object.freeze(["https://inv.nadeko.net","https://invidious.nerdvpn.de","https://invidious.tiekoetter.com"]);
 const ID=/^[A-Za-z0-9_-]{11}$/;
 const MAX_RESULTS=35;
-let tracks=[],searchVersion=0,loading=false,lastQuery="",currentHost=HOSTS[0];
+let tracks=[],searchVersion=0,loading=false,lastQuery="",currentHost=HOSTS[0],currentKind="piped";
 const text=(s,n=110)=>String(s??"").replace(/[\u0000-\u001f\u007f]/g," ").replace(/<[^>]*>/g,"").replace(/\s+/g," ").trim().slice(0,n);
 function validURL(value){
  try{
   const u=new URL(value);
   if(u.protocol!=="https:"||u.username||u.password)return"";
   const host=u.hostname.toLowerCase();
-  if(host==="localhost"||host.endsWith(".localhost")||host.endsWith(".local")||
+  if(host.startsWith("[")||host==="localhost"||host.endsWith(".localhost")||host.endsWith(".local")||
      /^(?:127|10|192\.168|169\.254)\./.test(host)||
      /^172\.(?:1[6-9]|2\d|3[01])\./.test(host)||
      host==="::1"||host==="0.0.0.0")return"";
@@ -45,9 +46,10 @@ function videoId(raw){
 }
 function normalize(x){
  if(!x||typeof x!=="object")return null;
- if(x.type&&x.type!=="stream")return null;
- const id=videoId(x.url||x.videoId||x.id),title=text(x.title),artist=text(x.uploaderName||x.uploader||"Исполнитель",85);
- const duration=Number(x.duration);
+ if(x.type&&!["stream","video"].includes(x.type))return null;
+ if(x.liveNow||x.paid||x.premium)return null;
+ const id=videoId(x.url||x.videoId||x.id),title=text(x.title),artist=text(x.uploaderName||x.uploader||x.author||"Исполнитель",85);
+ const duration=Number(x.duration??x.lengthSeconds);
  if(!id||!title||!Number.isFinite(duration)||duration<35||duration>1200||
     /(?:live stream|прямой эфир|часовая подборка)/i.test(title))return null;
  return {id:"experimental:"+id,source:"experimental",videoId:id,title,artist,duration,
@@ -56,7 +58,11 @@ function normalize(x){
 function chooseAudio(data){
  if(data?.livestream||data?.error||!Array.isArray(data?.audioStreams))return"";
  const audio=byId("audio");
- const list=data.audioStreams.filter(s=>{
+ const streamList=Array.isArray(data.audioStreams)?data.audioStreams:
+   Array.isArray(data.adaptiveFormats)?data.adaptiveFormats.map(s=>({
+    url:s.url,mimeType:s.type,bitrate:s.bitrate,videoOnly:false
+   })):[];
+ const list=streamList.filter(s=>{
   if(!s||s.videoOnly||!validURL(s.url)||!/^audio\//i.test(String(s.mimeType||"")))return false;
   return !audio?.canPlayType||audio.canPlayType(String(s.mimeType).split(";")[0])!=="";
  }).sort((a,b)=>{
@@ -79,38 +85,56 @@ async function readJson(url,deadline=8500){
 async function lookup(raw){
  const term=text(raw,80);
  if(term.length<2)return[];
- let unavailable=0;
- const preferred=[currentHost,...HOSTS.filter(h=>h!==currentHost)];
- for(const host of preferred){
-  try{
-   // Piped exposes music_songs on instances supporting YouTube Music;
-   // fall back to ordinary videos when the instance does not support that filter.
-   for(const filter of ["music_songs","videos"]){
-    try{
-     const data=await readJson(host+"/search?q="+encodeURIComponent(term)+"&filter="+filter);
-     const items=Array.isArray(data?.items)?data.items:Array.isArray(data?.results)?data.results:[];
-     const unique=new Set();
-     const list=items.map(normalize).filter(t=>t&&!unique.has(t.videoId)&&unique.add(t.videoId)).slice(0,MAX_RESULTS);
-     if(list.length){currentHost=host;return list}
-    }catch{
-     // A particular filter can be unsupported without making the whole host unusable.
-    }
-   }
-   unavailable++;
-  }catch{unavailable++}
+ const providers=[
+  {host:currentHost,kind:currentKind},
+  ...HOSTS.filter(x=>x!==currentHost).map(host=>({host,kind:"piped"})),
+  ...INVIDIOUS.filter(x=>x!==currentHost).map(host=>({host,kind:"invidious"}))
+ ];
+ async function attempt({host,kind}){
+  const path=kind==="invidious"
+   ?["/api/v1/search?q="+encodeURIComponent(term)+"&type=video"]
+   :["/search?q="+encodeURIComponent(term)+"&filter=music_songs",
+     "/search?q="+encodeURIComponent(term)+"&filter=videos"];
+  for(const suffix of path){
+   try{
+    const data=await readJson(host+suffix,4800);
+    const items=Array.isArray(data)?data:Array.isArray(data?.items)?data.items:Array.isArray(data?.results)?data.results:[];
+    const seen=new Set();
+    const hits=items.map(normalize).filter(t=>t&&!seen.has(t.videoId)&&seen.add(t.videoId)).slice(0,MAX_RESULTS);
+    if(hits.length)return {host,kind,tracks:hits};
+   }catch{}
+  }
+  return null;
  }
- if(unavailable>=HOSTS.length)throw Error("Каталог временно недоступен");
- return [];
+ // Race public instances in small bounded batches instead of waiting
+ // sequentially for many disconnected hosts.
+ for(let i=0;i<providers.length;i+=3){
+  const batch=await Promise.all(providers.slice(i,i+3).map(attempt));
+  const result=batch.find(Boolean);
+  if(result){currentHost=result.host;currentKind=result.kind;return result.tracks}
+ }
+ throw Error("Экспериментальный каталог недоступен");
 }
 async function resolve(track){
  const id=videoId(track?.videoId||String(track?.id||"").replace(/^experimental:/,""));
  if(!id)throw Error("Недействительная запись");
- const hosts=[currentHost,...HOSTS.filter(h=>h!==currentHost)];
- for(const host of hosts){
+ const providers=[
+  {host:currentHost,kind:currentKind},
+  ...HOSTS.filter(x=>x!==currentHost).map(host=>({host,kind:"piped"})),
+  ...INVIDIOUS.filter(x=>x!==currentHost).map(host=>({host,kind:"invidious"}))
+ ];
+ async function attempt({host,kind}){
+  const path=kind==="invidious"?"/api/v1/videos/"+id:"/streams/"+id;
+  const data=await readJson(host+path,7500);
+  const url=chooseAudio(data);
+  if(!url)throw Error("No playable audio");
+  return {url,host,kind};
+ }
+ for(let i=0;i<providers.length;i+=3){
   try{
-   const data=await readJson(host+"/streams/"+id,9500);
-   const url=chooseAudio(data);
-   if(url){currentHost=host;return url}
+   const found=await Promise.any(providers.slice(i,i+3).map(attempt));
+   currentHost=found.host;currentKind=found.kind;
+   return found.url;
   }catch{}
  }
  throw Error("Сейчас нет доступного аудиопотока для этой песни");
