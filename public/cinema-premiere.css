@@ -279,3 +279,15 @@ body.cinema-light{
  .cinema-episode-chooser{margin:16px 0}
 }
 @media(prefers-reduced-motion:reduce){.cinema-season-tab,.cinema-episode-item{transition:none}}
+
+
+/* International editorial discovery: NOT playable; no fake source links. */
+.cinema-series-popular{margin-top:40px}
+.cinema-series-popular-rail{padding:20px 0 15px}
+.cinema-popular-show{flex:0 0 215px;min-width:215px;scroll-snap-align:start}
+.cinema-popular-show-art{aspect-ratio:4/5;position:relative;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;padding:16px;border-radius:14px;color:#f9efe4;background:radial-gradient(ellipse at 75% 25%,hsl(var(--film-hue,220) 48% 32%),transparent 75%),linear-gradient(150deg,#2a2937,#13141b 85%);border:1px solid rgba(255,255,255,.16)}
+.cinema-popular-show-art:after{content:"";position:absolute;width:180px;height:180px;right:-58px;top:18%;border:1px solid #fff2;border-radius:50%;box-shadow:0 0 0 30px #fff1,0 0 0 70px #fff1;pointer-events:none}
+.cinema-popular-show-badge{z-index:1;letter-spacing:.06em;font-size:9px;line-height:1.4;color:#f3dbc0}
+.cinema-popular-show-name{z-index:1;max-width:95%;font-size:clamp(23px,2.4vw,33px);font-weight:850;line-height:1.04;letter-spacing:-.05em}
+.cinema-popular-show-info{font-size:11px;color:var(--muted);display:block;line-height:1.6;margin-top:12px}
+@media(max-width:650px){.cinema-popular-show{flex-basis:182px;min-width:182px}}
