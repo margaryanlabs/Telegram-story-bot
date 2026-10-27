@@ -172,6 +172,10 @@
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     text("cinemaCount",list.length+" из "+films.length+" фильмов · официальные источники");
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
+    const russian=films.filter(f=>f.player&&(f.spoken==="Русский"||f.spoken==="ru"));
+    const showRussian=state.tab==="home"&&!state.query.trim()&&russian.length>0;
+    $("cinemaRussian").classList.toggle("hidden",!showRussian);
+    if(showRussian)$("cinemaRussianRail").replaceChildren(...russian.slice(0,15).map(filmCard));
     const genres=["Все",...new Set(films.flatMap(f=>f.genres))];
     $("cinemaGenres").replaceChildren(...genres.map(g=>{
       const b=node("button","cinema-chip"+(state.genre===g?" active":""));b.type="button";b.textContent=g;
