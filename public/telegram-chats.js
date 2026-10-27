@@ -1437,22 +1437,45 @@
       if(badge)badge.textContent='Загружаю фотографию…';
       const ownerChatId=String(state.thread.id),ownerKey=state.ownerInitData;
       const generation=state.threadGeneration,previewEpoch=state.previewEpoch;
+      // The archive is optional evidence, not a prerequisite for viewing a
+      // still-existing Telegram photo. A failed saved-media request must not
+      // hide the live original from a verified owner. Never treat a confirmed
+      // deleted or preserved-only item as recoverable through live Telegram.
+      const requestArchived=async()=>{
+        const controller=new AbortController();
+        const timer=setTimeout(()=>controller.abort(),14000);
+        try{
+          const res=await fetch('/api/privacy-media?'+
+            new URLSearchParams({chatId:ownerChatId,messageId:String(id)}),{
+              headers:{'x-telegram-init-data':ownerKey},signal:controller.signal,
+            });
+          if(!res.ok){
+            const error=new Error('private_photo_unavailable');
+            error.httpStatus=res.status;
+            throw error;
+          }
+          const blob=await res.blob();
+          if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+             generation!==state.threadGeneration||String(state.thread?.id)!==ownerChatId)
+            throw new Error('Telegram account changed');
+          if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
+            throw new Error('private_photo_unavailable');
+          const href=URL.createObjectURL(blob);
+          state.mediaMimeByUrl.set(href,blob.type.toLowerCase());
+          return href;
+        }finally{clearTimeout(timer);}
+      };
       const request=msg.saved&&msg.mediaAvailable
-        ?(async()=>{
-            const res=await fetch('/api/privacy-media?'+
-              new URLSearchParams({chatId:ownerChatId,messageId:String(id)}),{
-                headers:{'x-telegram-init-data':ownerKey},
-              });
-            if(!res.ok)throw new Error('private_photo_unavailable');
-            const blob=await res.blob();
-            if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||generation!==state.threadGeneration)
-              throw new Error('Telegram account changed');
-            if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
-              throw new Error('private_photo_unavailable');
-            const href=URL.createObjectURL(blob);
-            state.mediaMimeByUrl.set(href,blob.type.toLowerCase());
-            return href;
-          })()
+        ?requestArchived().catch(error=>{
+            const forbidden=[401,403].includes(Number(error?.httpStatus||0));
+            const sameOwner=ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'');
+            const sameThread=generation===state.threadGeneration&&
+              String(state.thread?.id)===ownerChatId;
+            if(forbidden||!sameOwner||!sameThread||msg.deleted||msg.preservedOnly||
+               state.connectionProof?.verified!==true)throw error;
+            // Recheck against the owner's real Telegram dialogs on the server.
+            return photoRequest('photo',ownerChatId,id);
+          })
         :photoRequest('photo',ownerChatId,id);
       request.then(href=>{
         if(generation!==state.threadGeneration||String(state.thread?.id)!==ownerChatId||
