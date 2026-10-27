@@ -6,7 +6,7 @@
     chats:[],page:0,hasMore:true,loading:false,
     filter:'all',search:'',generation:0,lastListFetchedAt:0,
     thread:null,messages:[],threadLoading:false,threadLoadError:'',threadAuthRejected:false,
-    threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
+    threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,threadRequestAbort:null,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
@@ -64,11 +64,16 @@
   function haptic(){
     try{tg?.HapticFeedback?.impactOccurred('light');}catch{}
   }
-  async function request(action,payload={}){
+  async function request(action,payload={},externalSignal=null){
     resetOwner();
     const signed=String(tg?.initData||'');
     if(!signed)throw new Error('Открой Vetogram в Telegram для доступа к твоим чатам.');
     const abort=new AbortController();
+    // A thread's owner/navigation lifecycle can end before the server's
+    // timeout. Abort the obsolete request instead of wasting the next 22s.
+    const forwardAbort=()=>abort.abort();
+    if(externalSignal?.aborted)abort.abort();
+    else externalSignal?.addEventListener?.('abort',forwardAbort,{once:true});
     const timer=setTimeout(()=>abort.abort(),22000);
     try{
       const response=await fetch('/api/telegram-chats',{
@@ -87,7 +92,10 @@
     }catch(err){
       if(err?.name==='AbortError')throw new Error('Telegram отвечает слишком долго. Попробуй ещё раз.');
       throw err;
-    }finally{clearTimeout(timer);}
+    }finally{
+      clearTimeout(timer);
+      externalSignal?.removeEventListener?.('abort',forwardAbort);
+    }
   }
 
   // Text sending is separate from the Business bot and its archive permissions.
@@ -1718,6 +1726,7 @@
   function resetOwner(){
     const current=String(tg?.initData||'');
     if(current===state.ownerInitData)return false;
+    cancelThreadRequest();
     closePhotoViewer();
     state.ownerInitData=current;
     state.deliveryStage=null;renderDeliveryStatus();
@@ -2198,9 +2207,15 @@
     state.thread.serverCanSend=value.serverCanSend;
     return true;
   }
+  function cancelThreadRequest(){
+    const controller=state.threadRequestAbort;
+    state.threadRequestAbort=null;
+    controller?.abort();
+  }
   // Both history refresh and live polling can discover a revoked Telegram
   // login. Fail closed immediately, never keep a stale owner's private UI.
   function invalidateThreadAuthorization(){
+    cancelThreadRequest();
     state.threadAuthRejected=true;
         // A genuine signed-session/ownership failure must not keep private
         // messages and previously downloaded media available in the UI.
@@ -2381,6 +2396,7 @@
         listY:Math.max(0,Number($('telegramMirrorList')?.scrollTop||0)),
       };
     }
+    cancelThreadRequest();
     revokeMediaUrls();
     haptic();
     cancelVoiceCapture();
@@ -2479,6 +2495,9 @@
     const rememberedAnchor=state.messages.length?visibleMessageAnchor():null;
     const generation=++state.threadGeneration;
     state.syncRunId++;state.syncBusy=false; // current history load supersedes any old poll
+    cancelThreadRequest();
+    const threadAbort=new AbortController();
+    state.threadRequestAbort=threadAbort;
     state.threadLoading=true;
     // Do not erase already verified owner-scoped history before the server
     // confirms a refresh. A missing scroll anchor is NOT missing messages.
@@ -2497,7 +2516,7 @@
         archiveOnly:Boolean(state.thread.archiveOnly),
         liveExhausted:!reset&&!state.liveHasMore,
         fastLive,
-      });
+      },threadAbort.signal);
       if(generation!==state.threadGeneration||String(state.thread?.id)!==chatId)return;
       const byId=new Map(state.messages.map(m=>[String(m.id),m]));
       (data.messages||[]).forEach(msg=>{
@@ -2551,10 +2570,13 @@
       if(!authRejected)scheduleThreadSync(45000);
       if(reset||authRejected)renderMessages({keepScroll:!authRejected,anchor:authRejected?null:rememberedAnchor});
       else $('telegramThreadOlder').hidden=!state.threadHasMore;
+    }finally{
+      if(state.threadRequestAbort===threadAbort)state.threadRequestAbort=null;
     }
   }
   function back(){
     if(!$('telegramThreadView')||$('telegramThreadView').hidden)return;
+    cancelThreadRequest();
     rememberHotThread();
     stopThreadSync();
     state.syncRunId++;state.syncBusy=false;
