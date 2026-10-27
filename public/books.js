@@ -169,6 +169,15 @@
       sourceUrl:item.sourceUrl
     };
   }
+  // Whole-book progress is approximate for multi-part works: chapter lengths
+  // vary. For one-file books it is a true character-position fraction.
+  function workProgress(chapter,chapterCount,offset,textLength,sequential){
+    const fraction=Math.max(0,Math.min(1,Number(offset||0)/Math.max(1,Number(textLength)||1)));
+    const parts=Number(chapterCount)||0;
+    if(!sequential||parts<1)return {fraction,approx:false};
+    const index=Math.max(0,Math.min(parts-1,Number.isInteger(chapter)?chapter:0));
+    return {fraction:Math.max(0,Math.min(1,(index+fraction)/parts)),approx:true};
+  }
   function renderContinueShelf(){
     const shelf=$('continueShelf');
     const latest=Object.entries(progress)
@@ -185,7 +194,7 @@
       ?'Часть '+(p.chapter+1)+' · '+(Math.max(0,Number(p.page)||0)+1)+' стр.'
       :'Страница '+(Math.max(0,Number(p.page)||0)+1);
     $('continueDetails').textContent=(name?name+' · ':'')+position;
-    $('continueFill').style.width=Math.round(Math.max(0,Math.min(1,Number(p.fraction)||0))*100)+'%';
+    $('continueFill').style.width=Math.round(Math.max(0,Math.min(1,Number(p.workFraction??p.fraction)||0))*100)+'%';
     $('continueAction').onclick=()=>openBook(book);
   }
   function setFocus(enabled){
@@ -803,20 +812,17 @@
     $('pageNumber').textContent='СТРАНИЦА '+(state.currentPage+1);
     $('readerPageLabel').textContent=(state.currentPage+1)+' / '+state.pages.length;
     const offset=state.pageOffsets[state.currentPage]||0;
-    const percentage=state.rawText.length ? Math.max(0,Math.min(100,offset/state.rawText.length*100)) : 0;
     const sequential=state.chapters.length>0&&!state.isTranslationIndex
       && (isWiki(state.current)||isLocal(state.current));
-    const chapterIndex=sequential?Math.max(0,Number(state.activeChapter)||0):0;
-    // Chapter progress is an approximate whole-book location because parts can
-    // differ greatly in length. Never present this as an exact character count.
-    const overall=sequential
-      ?(chapterIndex+percentage/100)/state.chapters.length*100
-      :percentage;
-    $('progressFill').style.width=Math.round(overall)+'%';
-    $('readerProgressPercent').textContent=(sequential?'≈ ':'')+Math.round(overall)+'%';
+    const progressValue=workProgress(state.activeChapter,state.chapters.length,
+      offset,state.rawText.length,sequential);
+    const chapterIndex=Math.max(0,Number(state.activeChapter)||0);
+    $('progressFill').style.width=Math.round(progressValue.fraction*100)+'%';
+    $('readerProgressPercent').textContent=(progressValue.approx?'≈ ':'')+
+      Math.round(progressValue.fraction*100)+'%';
     $('readerProgressLabel').textContent=sequential
-      ?'Часть '+(chapterIndex+1)+' из '+state.chapters.length+' · оценка прогресса книги'
-      :'Место в текущем тексте';
+      ?'Часть '+(chapterIndex+1)+' из '+state.chapters.length+' · примерный прогресс книги'
+      :'Место в тексте';
     const chaptersAvailable=state.chapters.length>0&&(isWiki(state.current)||isLocal(state.current));
     const previousChapter=chaptersAvailable && state.activeChapter!==null && state.activeChapter>0;
     $('prevPage').disabled=state.currentPage===0 && !previousChapter;
@@ -829,7 +835,8 @@
     $('bookmarkButton').textContent=isMarked?'♥':'♧';
     progress[key]={
       ...(progress[key]||{}),id:state.current.id,provider:state.current.provider||'gutenberg',
-      wiki:state.current.wiki||null,chapter:state.activeChapter,page:state.currentPage,offset:state.pageOffsets[state.currentPage]||0,fraction:state.rawText.length?(state.pageOffsets[state.currentPage]||0)/state.rawText.length:0,
+      wiki:state.current.wiki||null,chapter:state.activeChapter,page:state.currentPage,offset,workFraction:progressValue.fraction,
+      fraction:state.rawText.length?offset/state.rawText.length:0,
       at:Date.now(),title:state.current.title,authors:state.current.authors,
       cover:state.current.cover,language:state.current.language,sourceUrl:state.current.sourceUrl
     };
