@@ -151,3 +151,29 @@ test('EPUB uses ZIP central directory and reads chapters in spine order',async()
   assert.match(record.contents[0],/Первая глава/);
   assert.match(record.contents[1],/Вторая глава/);
 });
+
+test('offline Wikisource edition preserves every chapter in reading order and attribution',async()=>{
+  const {api,records}=harness();
+  const b={id:593345,provider:'wikisource',wiki:'ru',title:'Американский претендент',authors:['Марк Твен']};
+  const chapters=[{title:'Глава I',label:'Глава I'},{title:'Глава II',label:'Глава II'}];
+  const texts=['Русский текст первой главы. '.repeat(20),'Русский текст второй главы. '.repeat(20)];
+  const imported=await api.saveWikisourceEdition(b,chapters,texts);
+  assert.equal(imported.provider,'local');
+  assert.equal(imported.licensedSource,'wikisource');
+  assert.equal(imported.sourceChapters,2);
+  assert.match(imported.sourceUrl,/ru\.wikisource\.org/);
+  const saved=await api.get(imported.id);
+  assert.deepEqual(Array.from(saved.contents),texts);
+  assert.equal(saved.chapters[1].label,'Глава II');
+  assert.equal(records.size,1);
+});
+test('offline Wiki edition refuses missing chapters without writing an incomplete book',async()=>{
+  const {api,records}=harness();
+  const b={id:593345,provider:'wikisource',wiki:'ru',title:'Американский претендент'};
+  const chapters=[{title:'Первая глава',label:'Первая глава'},{title:'Вторая глава',label:'Вторая глава'}];
+  await assert.rejects(api.saveWikisourceEdition(b,chapters,['Длинный текст. '.repeat(15),'']),/не загрузились/);
+  await assert.rejects(api.saveWikisourceEdition(b,chapters,['Длинный текст. '.repeat(15)]),/отсутствуют/);
+  await assert.rejects(api.saveWikisourceEdition({...b,wiki:'unknown'},chapters,
+    ['Длинный текст. '.repeat(15),'Длинный текст. '.repeat(15)]),/Викитеки/);
+  assert.equal(records.size,0);
+});
