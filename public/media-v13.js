@@ -138,4 +138,5 @@
   const other=pick('playerArtist','artist');if(other)new MutationObserver(frameLoop).observe(other,{childList:true,characterData:true,subtree:true});
   window.VetoSoundStudio=Object.freeze({open,close,demo:()=>demo(0),isOpen:()=>el.classList.contains('open')});
   sync();
+  if(location.hash==='#v13'||document.querySelector('meta[name="veto-player-preview"]'))open();
 })();
