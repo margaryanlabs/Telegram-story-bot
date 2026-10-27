@@ -4,8 +4,8 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-collections.css">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-collections.js"></script></head>
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script></head>
 <body>
 <div class="app" id="app">
 <aside class="sidebar" aria-label="Навигация">
@@ -63,6 +63,7 @@
   <div class="library-stats"><div><small>ИЗБРАННОЕ</small><strong id="statLikes">0</strong></div><div><small>СВОИ ФАЙЛЫ</small><strong id="statLocal">0</strong></div><div><small>СПИСКИ ПЕСЕН</small><strong id="statMeta">0</strong></div></div>
   <div class="social-library-actions"><button id="sharePlaylist" type="button">↗ Поделиться плейлистом в Telegram</button><button type="button" id="shareAllFile">⇩ Отправить полный список JSON</button></div>
   <div class="section-head small-heading"><h2>Мои аудиофайлы</h2><button class="text-action" type="button" data-page="import">＋ Добавить</button></div><div id="localTracks" class="track-list"></div>
+  <div class="section-head small-heading"><h2>Музыка по ссылкам</h2><button class="text-action" type="button" data-page="import">＋ Добавить URL</button></div><div id="streamTracks" class="track-list"></div>
   <div class="section-head small-heading"><h2>Нравится ♡</h2></div><div id="likedTracks" class="track-list"></div>
   <div class="section-head small-heading"><h2>Импортированные названия</h2><small>Не аудиофайлы</small></div><div id="metaTracks" class="track-list"></div>
  </section>
@@ -80,6 +81,22 @@
    <div class="import-panel"><div class="import-icon">↗</div><span>02 / TELEGRAM</span><h3>Музыка из Telegram</h3><p>Сохрани аудиофайл из своего чата или канала на устройство, затем добавь его выше. Автоматическое чтение чатов Mini App не поддерживает.</p><button type="button" class="outlined-btn" id="telegramInfo">Как добавить из Telegram ↗</button></div>
    <div class="import-panel"><div class="import-icon">♡</div><span>03 / VK & YANDEX</span><h3>Перенести плейлист</h3><p>Вставь список «Исполнитель — Название» или импортируй CSV/JSON. Это перенос списка, не защищённых аудиозаписей VK или Яндекса.</p><button type="button" class="outlined-btn" id="jumpToMetadata">Импортировать список ↗</button></div>
   </div>
+
+  <section class="direct-import" id="directImport" aria-label="Добавить музыкальные ссылки">
+   <div class="direct-import-heading"><div><span class="overline">YOUR TRACKS / UNIVERSAL AUDIO</span><h2>Слушай по <em>своей ссылке.</em></h2><p>Добавляй прямые HTTPS-ссылки на аудиофайлы и музыкальные M3U-плейлисты, к которым у тебя есть доступ. Плеер не требует логина в VK или Яндекс и не скачивает файлы на наш сервер.</p></div><div class="direct-icon" aria-hidden="true">♫</div></div>
+   <div class="direct-mode-label">01 / ОДНА АУДИОССЫЛКА</div>
+   <form id="directForm" class="direct-form">
+    <label for="directUrl">Прямой адрес MP3 / M4A / OGG / WAV / радио</label>
+    <input id="directUrl" type="url" required maxlength="1200" placeholder="https://example.com/my-song.mp3" autocomplete="off" spellcheck="false">
+    <div class="direct-form-bottom"><input id="directArtist" type="text" maxlength="80" placeholder="Исполнитель" aria-label="Исполнитель"><input id="directTitle" type="text" maxlength="120" placeholder="Название трека" aria-label="Название трека"><button type="submit">＋ Добавить в мои треки</button></div>
+   </form>
+   <div class="direct-split"></div>
+   <div class="direct-mode-label">02 / M3U-ПЛЕЙЛИСТ С АУДИОССЫЛКАМИ</div>
+   <div class="direct-m3u"><label class="direct-file" for="directM3U">⇧ Загрузить M3U / TXT<input type="file" id="directM3U" accept=".m3u,.txt,audio/x-mpegurl,text/plain" hidden></label><span>или вставь строки формата <code>#EXTINF:-1,Artist — Song</code> и HTTPS-ссылки</span></div>
+   <textarea id="directM3UText" rows="4" maxlength="160000" spellcheck="false" placeholder="#EXTM3U&#10;#EXTINF:-1,Artist — Song&#10;https://example.com/track.mp3"></textarea>
+   <div class="direct-actions"><button type="button" id="directM3UImport" class="outlined-btn">Импортировать M3U ↗</button><span id="directStatus" role="status">Только прямые аудиоссылки. Ссылка на страницу VK/Яндекса/YouTube — не аудиопоток.</span></div>
+   <p class="direct-footnote">Музыка играет непосредственно с сервера источника. Некоторые ссылки требуют авторизацию, блокируют воспроизведение или не поддерживаются WebView. Формат HLS/M3U8 не является обычным музыкальным M3U-плейлистом.</p>
+  </section>
   <div class="metadata-panel" id="metadataPanel"><div><span class="overline">YOUR TASTE / ONE LIBRARY</span><h2>Импорт названий</h2><p>Каждая строка: <b>Исполнитель — Название</b>. Мы добавим записи в медиатеку без подмены на другой трек.</p></div><textarea id="playlistText" rows="5" placeholder="Кино — Группа крови&#10;Земфира — Искала&#10;Miyagi — Captain"></textarea><div class="import-actions"><button class="primary-btn" id="importTextButton" type="button">＋ Импортировать</button><label for="playlistInput" class="outlined-btn">CSV / JSON / TXT</label><input id="playlistInput" type="file" accept=".csv,.json,.txt,text/plain,application/json,text/csv" hidden><button class="outlined-btn" type="button" id="exportMeta">Экспортировать список ↗</button></div><p id="importStatus" class="source-line" role="status">Список хранится в браузере. Мы не запрашиваем логин и пароль VK или Яндекса.</p></div>
   <div class="note-banner"><span>ⓘ</span><div><b>Про фоновое прослушивание</b><p>В браузере и Telegram Mini App используем системный Media Session и управление через наушники, где это поддерживается. Telegram может приостановить WebView при сворачивании — непрерывный фон на Android/iPhone нужно отдельно проверить. Для гарантированного фона возможен нативный проигрыватель Telegram через музыкального бота.</p></div></div>
  </section>
