@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import handler,{normalizeVolume} from '../api/books-discover.js';
+import handler,{normalizeVolume,normalizeOpenLibrary} from '../api/books-discover.js';
 const oldFetch=global.fetch;
 function mockRes(){
   return {headers:{},statusCode:0,setHeader(name,value){this.headers[name]=value;},
@@ -67,4 +67,46 @@ test('rejects malicious collection and method without contacting provider',async
       assert.equal(res.statusCode,params.method==='POST'?405:400);
     }
   });
+});
+
+
+test('Open Library fallback recognizes only Russian-language work identifiers',()=>{
+  const work={key:'/works/OL12345W',title:'Мировая литература',
+    author_name:['Автор'],language:['rus','eng'],cover_i:123,first_publish_year:1991};
+  const book=normalizeOpenLibrary(work);
+  assert.equal(book.provider,'openlibrary');
+  assert.equal(book.readable,false);
+  assert.equal(book.language,'ru');
+  assert.equal(book.id,'OL12345W');
+  assert.match(book.cover,/^https:\/\/covers\.openlibrary\.org/);
+  assert.equal(book.sourceUrl,'https://openlibrary.org/works/OL12345W');
+  assert.equal(normalizeOpenLibrary({...work,language:['eng']}),null);
+  assert.equal(normalizeOpenLibrary({...work,key:'/authors/OL12345A'}),null);
+});
+test('Google upstream failure falls back to bounded Russian Open Library metadata lookup',async()=>{
+  const hits=[];
+  await using(async url=>{
+    const u=new URL(url);
+    hits.push(u.hostname);
+    if(u.hostname==='www.googleapis.com'){
+      return Response.json({error:'key not configured'},{status:403});
+    }
+    assert.equal(u.hostname,'openlibrary.org');
+    assert.match(u.searchParams.get('q'),/language:rus/);
+    assert.equal(u.searchParams.get('fields'),'key,title,author_name,language,cover_i,first_publish_year');
+    assert.equal(u.searchParams.get('limit'),'24');
+    return Response.json({numFound:1,docs:[
+      {key:'/works/OL9876W',title:'Книга с русским изданием',language:['rus'],
+        author_name:['Писатель'],cover_i:4567,first_publish_year:1990}
+    ]});
+  },async()=>{
+    const res=mockRes();
+    await handler({method:'GET',query:{collection:'classics',page:'1'}},res);
+    assert.equal(res.statusCode,200);
+    assert.equal(res.body.source,'openlibrary');
+    assert.equal(res.body.books.length,1);
+    assert.equal(res.body.books[0].readable,false);
+    assert.equal(res.body.books[0].title,'Книга с русским изданием');
+  });
+  assert.deepEqual(hits,['www.googleapis.com','openlibrary.org']);
 });
