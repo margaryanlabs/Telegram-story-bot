@@ -11,7 +11,7 @@ const css=readFileSync(new URL("vetogram-music-direct.css",dir),"utf8");
 const a=source.indexOf("function checkUrl("),b=source.indexOf("function message(",a);
 assert.ok(a>0&&b>a);
 const pure=new Function('const MAX_CHARS=160000,MAX_ITEMS=150;const clean=(v,n=120)=>String(v??"").replace(/\\s+/g," ").trim().slice(0,n);'+
- source.slice(a,b)+"return {checkUrl,parseM3u};")();
+ source.slice(source.indexOf("const denyHosts="),b)+"return {checkUrl,parseM3u};")();
 test("direct music supports personal HTTPS links and rejects invalid sources",()=>{
  assert.equal(pure.checkUrl("https://example.org/tune.mp3"),"https://example.org/tune.mp3");
  for(const url of [
