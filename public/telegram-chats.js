@@ -2194,6 +2194,40 @@
     state.thread.serverCanSend=value.serverCanSend;
     return true;
   }
+  // Both history refresh and live polling can discover a revoked Telegram
+  // login. Fail closed immediately, never keep a stale owner's private UI.
+  function invalidateThreadAuthorization(){
+    state.threadAuthRejected=true;
+        // A genuine signed-session/ownership failure must not keep private
+        // messages and previously downloaded media available in the UI.
+        state.messages=[];state.chats=[];state.threadCache.clear();
+        state.connectionProof=null;state.page=0;state.hasMore=false;
+        if(state.thread)state.thread.serverCanSend=false;
+        state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
+        state.avatarRetryAt.clear();state.avatarActive=0;
+        state.avatarUrls.forEach(url=>{try{URL.revokeObjectURL(url)}catch{}});
+        state.avatarUrls.clear();
+        $('telegramMirrorList')?.replaceChildren?.();
+        const name=$('telegramThreadTitle');
+        if(name)name.textContent='Требуется подключение Telegram';
+        const meta=$('telegramThreadMeta');
+        if(meta)meta.textContent='Доступ к переписке не подтверждён';
+        // A revoked signed owner must not retain personal drafts or media.
+        state.drafts.clear();state.draftVersions.clear();
+        state.lastSendFailure=null;state.lastSendFailures.clear();
+        state.lastRichFailure=null;state.lastRichFailures.clear();
+        state.replyTo=null;state.pendingAttachment=null;
+        const field=$('telegramThreadCompose');
+        if(field){field.value='';if(field.dataset)field.dataset.activeChat='';}
+        for(const id of ['telegramThreadFileInput','telegramThreadAudioInput']){
+          const fileField=$(id);
+          if(fileField)fileField.value='';
+        }
+        renderReplyPreview();renderAttachmentChip();
+        cancelVoiceCapture();dropVoiceDraft();
+        revokeMediaUrls();
+        renderSendComposer();
+  }
   async function pollThread({manual=false}={}){
     if(resetOwner()||!maySyncThread()||state.syncBusy||state.threadLoading||state.sendInFlight){
       if(!state.syncBusy&&maySyncThread())scheduleThreadSync(15000);
@@ -2214,7 +2248,11 @@
         signal:controller.signal,
       });
       const data=await response.json().catch(()=>({}));
-      if(!response.ok||!data.ok)throw new Error(data.error||'Не удалось обновить переписку');
+      if(!response.ok||!data.ok){
+        const issue=new Error(data.error||'Не удалось обновить переписку');
+        issue.httpStatus=response.status;
+        throw issue;
+      }
       if(generation!==state.threadGeneration||ownerKey!==state.ownerInitData||
         ownerKey!==String(tg?.initData||'')||String(state.thread?.id)!==chatId)return;
       const current=new Map(state.messages.map(m=>[String(m.id),m]));
@@ -2254,7 +2292,14 @@
         ?newItems+' новых · '+two(date.getHours())+':'+two(date.getMinutes())+' · прокрути вниз'
         :'Обновлено '+two(date.getHours())+':'+two(date.getMinutes())+' · без отметки «прочитано»');
     }catch(error){
-      if(String(state.thread?.id)===chatId && ownerKey===state.ownerInitData){
+      if(String(state.thread?.id)===chatId&&ownerKey===state.ownerInitData&&
+         ownerKey===String(tg?.initData||'')&&[401,403,409].includes(Number(error?.httpStatus||0))){
+        invalidateThreadAuthorization();
+        state.threadLoadError=String(error.message||'Сессия Telegram недоступна');
+        threadNotice(state.threadLoadError);
+        syncLabel('Доступ к Telegram не подтверждён · переподключи аккаунт');
+        renderMessages();
+      }else if(String(state.thread?.id)===chatId&&ownerKey===state.ownerInitData){
         state.syncFailures=Math.min(4,state.syncFailures+1);
         syncLabel(error?.name==='AbortError'?'Telegram отвечает медленно — повторю позже'
           :navigator.onLine===false?'Нет сети — обновление приостановлено'
@@ -2482,37 +2527,7 @@
       state.threadLoading=false;
       const authRejected=[401,403,409].includes(Number(error?.httpStatus||0));
       state.threadAuthRejected=authRejected;
-      if(authRejected){
-        // A genuine signed-session/ownership failure must not keep private
-        // messages and previously downloaded media available in the UI.
-        state.messages=[];state.chats=[];state.threadCache.clear();
-        state.connectionProof=null;state.page=0;state.hasMore=false;
-        if(state.thread)state.thread.serverCanSend=false;
-        state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
-        state.avatarRetryAt.clear();state.avatarActive=0;
-        state.avatarUrls.forEach(url=>{try{URL.revokeObjectURL(url)}catch{}});
-        state.avatarUrls.clear();
-        $('telegramMirrorList')?.replaceChildren?.();
-        const name=$('telegramThreadTitle');
-        if(name)name.textContent='Требуется подключение Telegram';
-        const meta=$('telegramThreadMeta');
-        if(meta)meta.textContent='Доступ к переписке не подтверждён';
-        // A revoked signed owner must not retain personal drafts or media.
-        state.drafts.clear();state.draftVersions.clear();
-        state.lastSendFailure=null;state.lastSendFailures.clear();
-        state.lastRichFailure=null;state.lastRichFailures.clear();
-        state.replyTo=null;state.pendingAttachment=null;
-        const field=$('telegramThreadCompose');
-        if(field){field.value='';if(field.dataset)field.dataset.activeChat='';}
-        for(const id of ['telegramThreadFileInput','telegramThreadAudioInput']){
-          const fileField=$(id);
-          if(fileField)fileField.value='';
-        }
-        renderReplyPreview();renderAttachmentChip();
-        cancelVoiceCapture();dropVoiceDraft();
-        revokeMediaUrls();
-        renderSendComposer();
-      }
+      if(authRejected)invalidateThreadAuthorization();
       state.threadLoadError=String(error.message||'Нет ответа Telegram');
       threadNotice(state.threadLoadError);
       syncLabel(authRejected
