@@ -44,7 +44,7 @@
    * Caller must invoke cleanup() on switching sources or closing the film.
    */
   async function attach(options) {
-    const {video, container, source, allowedIframeOrigins = [], onError = () => {}, onReady = () => {}} = options;
+    const {video, container, source, allowedIframeOrigins = [], onError = () => {}, onReady = () => {}, onEvent = () => {}, resumeAt = 0} = options;
     assertAuthorized(source);
     const type = detectType(source);
     if (type === "iframe") {
@@ -59,11 +59,47 @@
       frame.allowFullscreen = true;
       frame.referrerPolicy = "strict-origin-when-cross-origin";
       frame.className = "cinema-provider-frame";
+      const iframeId = url.pathname.match(/\/play\/embed\/([0-9a-f]{32})/i)?.[1] || "";
+      let seekApplied = false;
+      let duration = 0;
+      // RUTUBE documents postMessage events and player:setCurrentTime.
+      // Both origin AND the exact iframe window are checked, including on navigation.
+      function post(type, data = {}) {
+        if (frame.contentWindow) frame.contentWindow.postMessage(JSON.stringify({type,data}),url.origin);
+      }
+      function onMessage(event) {
+        if (event.origin !== url.origin || event.source !== frame.contentWindow) return;
+        let message;
+        try {
+          message = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        } catch (_) { return }
+        if (!message || typeof message !== "object" || typeof message.type !== "string") return;
+        const data = message.data && typeof message.data === "object" ? message.data : {};
+        if (data.videoId && iframeId && data.videoId !== iframeId) return;
+        if (message.type === "player:ready" || message.type === "player:init") {
+          onReady();
+          if (!seekApplied && Number.isFinite(resumeAt) && resumeAt > 5) {
+            seekApplied = true;
+            post("player:setCurrentTime",{time:Math.max(0,Math.floor(resumeAt))});
+          }
+        }
+        if (message.type === "player:durationChange" && Number.isFinite(Number(data.duration))) {
+          duration = Math.max(0,Number(data.duration));
+          onEvent({type:"duration",duration});
+        }
+        if (message.type === "player:currentTime" && Number.isFinite(Number(data.time))) {
+          onEvent({type:"time",time:Math.max(0,Number(data.time)),duration});
+        }
+        if (message.type === "player:playComplete") onEvent({type:"ended"});
+        if (message.type === "player:changeState") onEvent({type:"state",state:String(data.state||"")});
+        if (message.type === "player:error") onError("RUTUBE: "+String(data.text||"Ошибка воспроизведения").slice(0,180));
+      }
+      window.addEventListener("message",onMessage);
       frame.addEventListener("load", onReady, {once:true});
       frame.addEventListener("error", () => onError("Встроенный плеер не загрузился. Откройте оригинальный источник."));
       video.hidden = true;
       container.append(frame);
-      return {mode:"iframe", cleanup() {frame.remove(); video.hidden = false;}};
+      return {mode:"iframe", seek(time) {if(Number.isFinite(time)&&time>=0)post("player:setCurrentTime",{time:Math.floor(time)})}, cleanup() {window.removeEventListener("message",onMessage);frame.remove();video.hidden = false;}};
     }
     video.hidden = false;
     const url = source.url;
