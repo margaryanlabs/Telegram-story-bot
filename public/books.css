@@ -461,3 +461,21 @@ body{background:radial-gradient(ellipse 95% 45% at 48% -5%,#29222a 0%,#121217 60
  .compass-quote{grid-template-columns:1fr}.compass-quote-copy{justify-self:start}
 }
 @media(prefers-reduced-motion:reduce){.compass-match,.compass-row{transition:none}}
+
+/* VETO COMPASS marginalia. Personal notes are tied to an actual location,
+   rather than faking an AI-generated summary. */
+.compass-note-editor{display:block;width:100%;min-height:78px;resize:vertical;padding:13px 14px;
+  border-radius:12px;border:1px solid #cea98a57;background:#14161d;color:#f1e2d3;
+  font:13px/1.55 system-ui,sans-serif;outline-offset:2px}
+.compass-note-editor:focus{outline:1px solid #e0b18d;border-color:#e0b18d}
+.compass-note-save{align-self:flex-start;padding:11px 17px;min-height:40px;
+  border:1px solid #e9be97;border-radius:10px;background:linear-gradient(120deg,#f0c5a3,#d69b85);
+  color:#251b1e;font:760 12px/1.2 system-ui,sans-serif}
+.compass-notes{display:flex;flex-direction:column;gap:7px}
+.compass-note{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;
+  background:#232028;border:1px solid #d6b49c2a;border-radius:11px;padding:10px}
+.compass-note-visit{color:#f0dbcb;background:transparent;border:0;text-align:left;
+  font:italic 13px/1.55 Georgia,serif;overflow-wrap:anywhere}
+.compass-note-remove{border:1px solid #a8847557;color:#c5a9a2;background:#37272b;
+  border-radius:8px;font:640 10px/1 system-ui,sans-serif;padding:9px 10px}
+@media(max-width:480px){.compass-note{grid-template-columns:1fr}.compass-note-remove{justify-self:start}}
