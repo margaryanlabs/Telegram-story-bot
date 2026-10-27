@@ -13,9 +13,9 @@ const fallback=chats.slice(sourceStart,sourceEnd);
 function fixture({status=503,deleted=false,preservedOnly=false,connected=true,ownerChanged=false}={}){
   let liveCalls=0,archiveCalls=0;
   const ctx={
-    id:42,ownerChatId:'123',ownerKey:'signed',generation:7,
+    id:42,ownerChatId:'123',ownerKey:'signed',previewEpoch:1,
     msg:{saved:true,mediaAvailable:true,deleted,preservedOnly},
-    state:{ownerInitData:ownerChanged?'other-owner':'signed',threadGeneration:7,
+    state:{ownerInitData:ownerChanged?'other-owner':'signed',threadGeneration:7,previewEpoch:1,
       thread:{id:'123'},connectionProof:{verified:connected},mediaMimeByUrl:new Map()},
     tg:{initData:'signed'},
     fetch:async()=>{archiveCalls++;return {
@@ -62,27 +62,27 @@ test('owner mismatch, missing live connection and 401 never trigger fallback',as
   }
 });
 
-test('in-flight photo is fenced to the open chat, not unrelated inbox refresh',async()=>{
+test('in-flight photo survives history refresh but not owner/media switch',async()=>{
   const a=chats.indexOf('  async function photoRequest(');
   const b=chats.indexOf('  // A single signed MTProto connection',a);
   assert.ok(a>0&&b>a);
   const fn=chats.slice(a,b);
-  let resets=0;
-  const state={generation:4,threadGeneration:7,thread:{id:'123'}};
+  const state={generation:4,threadGeneration:7,previewEpoch:2,thread:{id:'123'},
+    mediaMimeByUrl:new Map()};
   const ctx={
-    state,tg:{initData:'signed'},resetOwner:()=>{resets++},
+    state,tg:{initData:'signed'},resetOwner:()=>{},
     AbortController,setTimeout,clearTimeout,
-    fetch:async()=>{state.generation++;return {
+    fetch:async()=>{state.generation++;state.threadGeneration++;return {
       ok:true,blob:async()=>({size:3072,type:'image/jpeg'}),
     }},
     URL:{createObjectURL:()=> 'blob:photo'},
   };
-  assert.equal(await vm.runInNewContext('(async()=>{'+fn+"\nreturn photoRequest('photo','123',42)})()",ctx),
-    'blob:photo');
-  assert.equal(resets,0);
-  state.thread={id:'999'};
-  const blocked=vm.runInNewContext('(async()=>{'+fn+"\nreturn photoRequest('photo','123',42)})()",ctx);
-  state.thread={id:'123'};
+  assert.equal(await vm.runInNewContext('(async()=>{'+fn+
+    "\\nreturn photoRequest('photo','123',42)})()",ctx),'blob:photo');
+  assert.equal(state.threadGeneration,8,'a new message history generation is harmless');
+  const blocked=vm.runInNewContext('(async()=>{'+fn+
+    "\\nreturn photoRequest('photo','123',42)})()",ctx);
+  state.previewEpoch++;
   await assert.rejects(blocked,/Открыта другая переписка/);
 });
 
