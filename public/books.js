@@ -265,7 +265,16 @@
       if(e.name==='AbortError')return;
       $('catalogStatus').textContent='';
       if(!state.books.length){
-        const empty=node('div','empty-state','Не удалось получить каталог. Проверьте интернет и попробуйте снова.');
+        const empty=node('div','empty-state',state.source==='spotlight'
+          ?'Официальный каталог временно недоступен. Русская и зарубежная классика остаются в других разделах.'
+          :'Не удалось получить каталог. Проверьте интернет и попробуйте снова.');
+        if(state.source==='spotlight'){
+          const query=state.query||'русские книги';
+          const official=node('a','discover-source-fallback','Искать книгу в Google Books ↗');
+          official.href='https://books.google.com/books?q='+encodeURIComponent(query);
+          official.target='_blank';official.rel='noopener noreferrer';
+          empty.append(document.createElement('br'),official);
+        }
         const retry=node('button','', 'Повторить');
         retry.type='button';retry.addEventListener('click',()=>loadCatalog(true));
         empty.append(document.createElement('br'),retry);$('catalogGrid').replaceChildren(empty);
@@ -481,7 +490,8 @@
     state.flowParagraphs=[];
     if(!state.flow){host.textContent=textValue;return;}
     const paras=String(textValue||'').split(/\n\s*\n/g).filter(x=>x.trim());
-    for(const part of paras.slice(0,150)){
+    const readableSegments=paras.length>150?[...paras.slice(0,149),paras.slice(149).join('\n\n')]:paras;
+    for(const part of readableSegments){
       const p=node('p','flow-paragraph',part.trim());
       p.tabIndex=0;p.setAttribute('role','button');
       p.setAttribute('aria-label','Фокус на абзаце');
