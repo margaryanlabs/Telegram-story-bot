@@ -11,7 +11,7 @@
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),draftVersions:new Map(),sendInFlight:false,lastSendFailure:null,lastSendFailures:new Map(),
-    pendingAttachment:null,replyTo:null,stickers:[],stickerSets:[],stickerPack:null,
+    pendingAttachment:null,replyTo:null,lastRichFailures:new Map(),stickers:[],stickerSets:[],stickerPack:null,
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
     stickerPreviewUrls:new Map(),recording:null,voiceStarting:false,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
@@ -354,10 +354,11 @@
     // media caption once; text typed while Telegram responds is a new draft.
     const caption=voiceSend||action==='send_sticker'?'':String(field?.value||'');
     const intent=richSendIntent(action,chatId,pending,caption,replyTo,attachmentOrIndex);
-    const prior=state.lastRichFailure;
+    const prior=state.lastRichFailures.get(chatId);
     const nonce=sameRichIntent(prior?.intent,intent) ? prior.nonce : window.crypto?.randomUUID?.();
     if(!nonce){toast('Нужен защищённый HTTPS');return;}
     state.lastRichFailure=null;
+    state.lastRichFailures.delete(chatId);
     state.sendInFlight=true;
     const deliveryKind=voiceSend?'voice':action==='send_sticker'?'sticker':'media';
     setDeliveryStatus('sending',chatId,deliveryKind);
@@ -380,6 +381,7 @@
       if(String(state.thread?.id)!==chatId)throw new Error('Чат изменился. Отправка отменена.');
       await richRequest(action,request);
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
+      state.lastRichFailures.delete(chatId);
       const unchangedDraft=(state.draftVersions.get(chatId)||0)===submittedDraftVersion;
       // ACK may arrive after the owner navigated away. Clear only the
       // original submitted caption, never a subsequently edited draft.
@@ -414,8 +416,13 @@
       try{tg?.HapticFeedback?.notificationOccurred('success')}catch{}
     }catch(error){
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
-      if(error?.uncertain===true && String(state.thread?.id)===chatId)
-        state.lastRichFailure={intent,nonce};
+      if(error?.uncertain===true){
+        // A lost ACK may arrive after navigation. Keep the original nonce in
+        // owner-scoped RAM even when the source dialog is no longer open.
+        const failure={intent,nonce};
+        state.lastRichFailure=failure;
+        state.lastRichFailures.set(chatId,failure);
+      }
       if(String(state.thread?.id)===chatId){
         setDeliveryStatus(error?.uncertain?'uncertain':'failed',chatId,deliveryKind);
         const warning=error?.uncertain===true
@@ -1664,7 +1671,7 @@
     clearIntelSearch({close:true});
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
-    state.sendInFlight=false;state.lastSendFailure=null;state.lastSendFailures.clear();state.lastRichFailure=null;
+    state.sendInFlight=false;state.lastSendFailure=null;state.lastSendFailures.clear();state.lastRichFailure=null;state.lastRichFailures.clear();
     state.drafts.clear();state.draftVersions.clear();state.pendingAttachment=null;state.replyTo=null;
     state.stickers=[];state.stickerSets=[];state.stickerPack=null;
     state.stickerTab='recent';state.stickerQuery='';state.stickerVisible=16;state.stickerEpoch++;
