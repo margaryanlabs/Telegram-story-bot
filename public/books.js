@@ -663,6 +663,21 @@
     $('readerAudioButton').title='Читать вслух';
     try{window.speechSynthesis?.cancel();}catch{}
   }
+  async function narrateNextPart(token){
+    if(token!==state.audioToken||!state.audioActive||!state.current)return;
+    const book=state.current;
+    if(!(isWiki(book)||isLocal(book))||state.isTranslationIndex||!state.chapters.length){
+      stopNarration();return;
+    }
+    const next=Number.isInteger(state.activeChapter)?state.activeChapter+1:0;
+    if(next>=state.chapters.length){stopNarration();return;}
+    await loadChapter(book,next);
+    if(token!==state.audioToken||!state.audioActive)return;
+    if($('reader').hidden||!state.pages.length||state.activeChapter!==next){
+      stopNarration();return;
+    }
+    speakSegment(token);
+  }
   function speakSegment(token){
     if(token!==state.audioToken||!state.current||!state.pages.length||!state.audioActive)return;
     const engine=window.speechSynthesis;
@@ -674,7 +689,7 @@
       :state.pages[state.currentPage]||'';
     if(!text.trim()){stopNarration();return;}
     try{
-      const phrase=new window.SpeechSynthesisUtterance(text.slice(0,2800));
+      const phrase=new window.SpeechSynthesisUtterance(text);
       const lang=state.current.language==='hy'?'hy-AM':state.current.language==='ru'?'ru-RU':'en-US';
       phrase.lang=lang;
       phrase.rate=Math.max(.7,Math.min(1.4,Number(prefs.speed)||1));
@@ -688,10 +703,10 @@
         if(state.flow){
           if(state.flowIndex+1<state.flowParagraphs.length){setFlowIndex(state.flowIndex+1);speakSegment(token);}
           else if(state.currentPage+1<state.pages.length){showPage(state.currentPage+1);speakSegment(token);}
-          else stopNarration();
+          else void narrateNextPart(token);
         }else if(state.currentPage+1<state.pages.length){
           showPage(state.currentPage+1);speakSegment(token);
-        }else stopNarration();
+        }else void narrateNextPart(token);
       };
       engine.speak(phrase);
     }catch{stopNarration();toast('Чтение вслух недоступно');}
