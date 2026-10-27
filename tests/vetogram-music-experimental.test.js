@@ -22,6 +22,7 @@ test("Piped discovery accepts full-length audio candidates and rejects live/inva
  const song={url:"/watch?v=y14ulAguQv4",title:"Armenian Song",uploaderName:"Artist",duration:201,type:"stream"};
  assert.equal(normalize(song)?.source,"experimental");
  assert.equal(normalize(song)?.videoId,"y14ulAguQv4");
+ assert.equal(normalize({type:"video",videoId:"y14ulAguQv4",title:"Song",author:"Singer",lengthSeconds:220})?.artist,"Singer");
  assert.equal(normalize({...song,duration:0}),null);
  assert.equal(normalize({...song,duration:3000}),null);
  assert.equal(normalize({...song,type:"channel"}),null);
@@ -38,6 +39,8 @@ test("safe audio source validation never selects plaintext/private host or video
  const good={mimeType:"audio/mp4",bitrate:128000,url:"https://cdn.example.org/audio.mp4",videoOnly:false};
  assert.equal(chooseAudio({audioStreams:[{...good,url:"http://invalid/video"},{...good,videoOnly:true},good]}),good.url);
  assert.equal(chooseAudio({audioStreams:[{...good,mimeType:"video/mp4"}]}),"");
+ assert.equal(chooseAudio({adaptiveFormats:[{url:good.url,type:"audio/mp4",bitrate:"96000"}]}),good.url);
+ assert.equal(chooseAudio({adaptiveFormats:[{url:good.url,type:"video/webm",bitrate:"96000"}]}),"");
  assert.equal(chooseAudio({livestream:true,audioStreams:[good]}),"");
 });
 
@@ -60,6 +63,9 @@ test("music UI has search, favorite, no video embeds, and reliable fallbacks",()
  assert.match(src,/app\.toggleLike\(track\)/);
  assert.doesNotMatch(src,/<iframe|document\.createElement\(["']iframe|yt-dlp|youtube-dl|downloadAudio/);
  assert.match(src,/Экспериментальный каталог сейчас не отвечает/);
+ assert.match(src,/Promise.any/);
+ assert.match(src,/api/v1/videos//);
+ assert.match(src,/api/v1/search/);
  assert.match(html,/Некоммерческая бета не отменяет авторских прав/);
  assert.match(style,/@media\(max-width:640px\)/);
  for(const p of ["vetogram-music.js","vetogram-music-experimental.js"])
