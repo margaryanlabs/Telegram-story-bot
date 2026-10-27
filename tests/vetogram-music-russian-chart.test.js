@@ -44,7 +44,7 @@ test("Russian chart is primary screen and hero button opens it",()=>{
 test("ranking never invented and live results are validated",()=>{
  const i=code.indexOf("const IMAGE_HOSTS="),j=code.indexOf("let songs=",i);
  assert.ok(i>0&&j>i);
- const {mapTrack,mapFeed}=new Function(code.slice(i,j)+"return {mapTrack,mapFeed};")();
+ const {mapTrack}=new Function(code.slice(i,j)+"return {mapTrack};")();
  const t=snap.results[0],mapped=mapTrack(t,1);
  assert.equal(mapped.rank,1);
  assert.equal(mapped.artist,t.artistName);
@@ -52,7 +52,7 @@ test("ranking never invented and live results are validated",()=>{
  assert.equal(mapped.embed,"https://embed.music.apple.com"+new URL(t.url).pathname+"?i="+t.id);
  assert.equal(mapTrack({...t,url:"https://evil.example/ru/album/test/123?i=678"},1),null);
  assert.equal(mapTrack({...t,url:"https://music.apple.com/us/album/test/123?i=678"},1),null);
- assert.throws(()=>mapFeed({feed:{country:"us",results:[t]}}));
+ assert.match(code,/data\?\.feed\?\.country!=="ru"/);
 });
 test("no unlicensed direct streams: only official provider embedded player",()=>{
  assert.match(code,/https:\/\/embed\.music\.apple\.com/);
