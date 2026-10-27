@@ -9,13 +9,14 @@ const core=readFileSync(new URL("vetogram-music.js",root),"utf8");
 const catalog=readFileSync(new URL("vetogram-music-catalog.js",root),"utf8");
 const archive=readFileSync(new URL("vetogram-music-archive.js",root),"utf8");
 const mixter=readFileSync(new URL("vetogram-music-mixter.js",root),"utf8");
-test("Music is genuinely audio-only: no Apple/YouTube/Spotify embeds or links in public UI",()=>{
- assert.doesNotMatch(html,/Apple|YouTube|Spotify/);
- for(const view of ["hits","originals","youtube"])assert.ok(!html.includes('data-view="'+view+'"'));
- for(const script of ["vetogram-music-hits.js","vetogram-music-originals.js","vetogram-music-youtube.js","vetogram-music-russia.js"])
-  assert.ok(!html.includes(script));
+test("Native audio stays separate from the visible official video player",()=>{
  assert.ok(html.includes('id="audio"'));
  assert.ok(html.includes('id="homeTracks"'));
+ assert.ok(html.includes('data-view="youtube"'));
+ assert.ok(html.includes('data-view="originals"'));
+ assert.ok(html.includes('src="./vetogram-music-youtube.js"'));
+ assert.ok(html.includes('src="./vetogram-music-originals.js"'));
+ assert.doesNotMatch(core,/yt-dlp|youtube-dl|extractAudio|downloadAudio/);
 });
 test("Russian-first search and clean native audio navigation",()=>{
  assert.ok(html.includes('data-audio-preset="ru"'));
@@ -25,7 +26,7 @@ test("Russian-first search and clean native audio navigation",()=>{
  assert.ok(catalog.includes("selectPreset"));
  assert.ok(core.includes("window.VetogramCatalog?.selectPreset"));
  assert.ok(core.includes('$$(".page").forEach'));
- assert.ok(!core.includes('"originals","youtube"'));
+ assert.ok(core.includes('"originals","youtube"'));
  assert.ok(core.includes('unique([...state.local,...state.tracks])'));
  assert.ok(!core.includes('unique([...demoTracks,...state.tracks]),"home"'));
 });
