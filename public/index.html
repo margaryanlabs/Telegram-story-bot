@@ -4,8 +4,8 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script></head>
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css"><link rel="stylesheet" href="./vetogram-music-openverse.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script></head>
 <body>
 <div class="app" id="app">
 <aside class="sidebar" aria-label="Навигация">
@@ -120,7 +120,7 @@
   </div>
   <div id="catalogPresets" class="catalog-presets" aria-label="Жанры и поисковые подборки"></div>
   <form id="catalogForm" class="catalog-search">
-   <input id="catalogQuery" type="search" autocomplete="off" maxlength="80" value="русская музыка" placeholder="Исполнитель или название песни" aria-label="Поиск в каталоге Audius">
+   <input id="catalogQuery" type="search" autocomplete="off" maxlength="80" value="русская музыка" placeholder="Исполнитель или название песни" aria-label="Поиск доступной музыки">
    <button type="submit">⌕ Найти музыку</button>
   </form>
   <p class="catalog-disclaimer">В каталоге есть независимые записи. Если известный оригинал недоступен, мы не подменяем его видео или коротким превью.</p>
@@ -129,6 +129,16 @@
  <p id="catalogStatus" class="catalog-status" role="status">Выбери жанр или открой каталог для загрузки треков.</p>
  <div id="catalogResults" class="catalog-list" aria-live="polite"></div>
  <div class="catalog-more-wrap"><button type="button" id="catalogMore" class="catalog-more" hidden>＋ Показать ещё музыку</button></div>
+ <section class="open-audio-section" aria-labelledby="openAudioTitle">
+  <div class="open-audio-header"><div>
+   <h3 id="openAudioTitle">Больше музыки для тебя</h3>
+   <p>Дополнительные аудиозаписи — один Play в нашем плеере. Русские, армянские и мировые поисковые запросы.</p>
+  </div></div>
+  <p id="openAudioStatus" class="open-audio-status" role="status">Дополнительный поиск запустится вместе с каталогом.</p>
+  <div id="openAudioResults" class="open-audio-results"><div class="open-audio-empty">Открой подборку или найди исполнителя.</div></div>
+  <div class="open-audio-more-wrap"><button type="button" class="open-audio-more" id="openAudioMore" hidden>＋ Ещё музыка</button></div>
+  <p class="open-audio-disclaimer">Включаются только доступные аудиозаписи с открытыми условиями использования. Сведения о правах, авторе и записи доступны в карточке. Некоторые источники могут быть временно недоступны или ограничивать воспроизведение.</p>
+ </section>
 </section>
 <section class="page" data-view="archive" aria-label="Большая библиотека открытой музыки">
  <div class="archive-hero">
