@@ -1764,6 +1764,7 @@
   // requests are in flight. Invalidate generations before any stale reply
   // is rendered or reused. Never persist message drafts across owners.
   function resetOwner(){
+    $('telegramThreadActions')?.removeAttribute?.('open');
     const current=String(tg?.initData||'');
     if(current===state.ownerInitData)return false;
     cancelThreadRequest();
@@ -2258,6 +2259,7 @@
   // Both history refresh and live polling can discover a revoked Telegram
   // login. Fail closed immediately, never keep a stale owner's private UI.
   function invalidateThreadAuthorization(){
+    $('telegramThreadActions')?.removeAttribute?.('open');
     // Make any pending history/archival/poll callbacks permanently stale
     // before removing private owner data. They must never repaint a revoked
     // session as a mere transport outage after this function returns.
@@ -2436,6 +2438,7 @@
   }
   async function openThread(chat){
     if(resetOwner()||!chat)return;
+    $('telegramThreadActions')?.removeAttribute?.('open');
     // Remember this owner's actual inbox position before fullscreen chat moves
     // the page to the top. Do not persist across owner changes or navigation.
     if($('telegramChatsView')?.hidden===false){
@@ -2635,6 +2638,7 @@
   }
   function back(){
     if(!$('telegramThreadView')||$('telegramThreadView').hidden)return;
+    $('telegramThreadActions')?.removeAttribute?.('open');
     cancelThreadRequest();
     rememberHotThread();
     stopThreadSync();
@@ -3020,6 +3024,26 @@
       window.VetoTelegramNavigate?.('home');
       $('connectTelegramButton')?.click();
     }
+  });
+  // Native <details> keeps all secondary chat actions keyboard accessible.
+  // It closes on selection, focus into the composer, outside tap, or Escape.
+  const threadActions=$('telegramThreadActions');
+  threadActions?.addEventListener('click',event=>{
+    if(event.target.closest('[data-thread-menu-action]'))
+      threadActions.removeAttribute('open');
+  });
+  threadActions?.addEventListener('keydown',event=>{
+    if(event.key!=='Escape'||!threadActions.open)return;
+    event.preventDefault();event.stopPropagation();
+    threadActions.removeAttribute('open');
+    threadActions.querySelector('summary')?.focus();
+  });
+  document.addEventListener('pointerdown',event=>{
+    if(threadActions?.open&&!threadActions.contains(event.target))
+      threadActions.removeAttribute('open');
+  },{passive:true});
+  $('telegramThreadCompose')?.addEventListener('focus',()=>{
+    threadActions?.removeAttribute('open');
   });
   $('telegramThreadMessages')?.addEventListener('click',event=>{
     if(event.target.closest('[data-mirror-reconnect-thread]')){
