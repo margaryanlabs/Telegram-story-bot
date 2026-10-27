@@ -98,3 +98,30 @@ This iteration preserves the same standalone `/books.html` route; Vetogram Chats
 - Independent V8 smoke test exercised the in-app layout logic on 375px and 1024px views with larger fonts, confirming monotonic offsets and reflow behavior.
 - These static and simulated checks do **not** replace real Android/iPhone Telegram WebView rendering, accessibility auditing, legal content verification or a green CI.
 - GitHub Actions jobs have recently failed within seconds without step detail; root cause remains unconfirmed. The development branch should **not** be merged or deployed until build and manual testing pass.
+
+## VETOGRAM Books 3.0 — RU discovery, jacket system, VETO FLOW
+
+### Discoverability: source tiers that must never be conflated
+1. **Readable public-domain/openly permitted texts**: Russian Wikisource (including historical Russian translations), Armenian Wikisource, Project Gutenberg/Gutendex. Some entries are poems, indices or subpages; individual rights and localization still matter.
+2. **Contemporary Russian-language bibliographic metadata**: `GET /api/books-discover?collection=now|new|fantasy|detective|romance|nonfiction|business|youth|classics&page=1&q=...`. This is a read-only metadata lookup using Google's Books API. It returns only volumes explicitly tagged `language=ru`. Covers and official preview/buy links are allowlisted. **It DOES NOT grant access to copyrighted full ebook files** and must not display a "Free full book" promise for these entries.
+3. **Google Books authorized embedded viewer**: only when `accessInfo.embeddable === true` and an official preview URL exists, on explicit user click. The viewer's own territorial/rights constraints apply. Script loads on demand. A failed embedded preview falls back to the official source page.
+
+Google Books API public queries require a registered application identifier (API key or OAuth), and Google's Terms restrict charging for use without a separate agreement or permission. **The provider is not claimed production-ready without credentials, publisher clearance and an end-to-end API test.** If the discovery feed errors, the UI offers an official Google Books web search; the free Wikisource reader remains unaffected. Do not put secrets in the client or start bulk queries to bypass rate limits. For a paid product or large-scale catalog, seek partner agreements and a correctly licensed metadata index.
+
+### Books 3.0 interface
+- Five collection tabs: translated Russian, native Russian, Armenian, worldwide Gutenberg, modern/new Russian metadata.
+- New topic chips (fantasy, detective, romance, psychology, business, YA etc.), search terms for known novels and author names.
+- CSS procedural covers: six stable palettes generated from title code points when licensed image art is missing; no fabricated reviews, rankings or fake actual source covers.
+- Lightweight skeleton book cards while network discovery loads and graceful source-specific errors.
+
+### Reading technology
+- **VETO FLOW**: click-to-focus paragraph segmentation and guided previous/next paragraph controls, dimming the rest of the current page. Reader preserves normal navigation and accessibility roles; content remains local to this reading interface.
+- Browser SpeechSynthesis narration, voice locale inferred from language, selectable speed, progression to the next page where supported. In Telegram WebView, device voices may not exist. Some platform TTS implementations use vendor network services; no categorical offline/privacy claim.
+- Distraction-free focus mode, three reader themes, font/leading/line-width customization, reflow anchored by text offset, bookshelves, progress, source links and bookmarks.
+- Text from external sources is presented using `textContent` and newly constructed text nodes, not injected HTML.
+
+### Independent checks / QA
+- Existing `tests/vetogram-books-wikisource.test.js`, `tests/vetogram-books-reading-studio.test.js`, `tests/vetogram-books-discover.test.js` and `tests/vetogram-books.test.js` require local Node.js verification.
+- Isolated source syntax check and mocked catalog/navigation smoke checks have passed; actual Google provider may require credentials.
+- GitHub Actions failure may be due to the user's repo billing/credit/CI setting, not necessarily code. The branch is purposefully draft/unmerged. Review account state outside of source code testing rather than changing production configuration.
+- Before public launch: run local `npm test` and `npm run check`, verify independent source and real Telegram WebViews on Android/iOS, test external previews, rights/attribution, mobile line-breaking, TTS engine availability and API rate limits.
