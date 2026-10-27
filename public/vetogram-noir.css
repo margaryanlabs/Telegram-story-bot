@@ -1815,7 +1815,9 @@ html#vetogram.vetogram-noir.veto-keyboard-open body.veto-chat-thread #telegramMi
 html#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-bar{
   flex-wrap:nowrap!important;
   position:relative;
+  z-index:20;
   isolation:isolate;
+  flex:none;
 }
 html#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-person{
   flex:1 1 0!important;
@@ -1845,6 +1847,8 @@ html#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-actions>summary{
 }
 html#vetogram.vetogram-noir #telegramMirror
 .veto-mirror-thread-actions>summary::-webkit-details-marker{display:none}
+html#vetogram.vetogram-noir #telegramMirror
+.veto-mirror-thread-actions>summary::marker{content:''}
 html#vetogram.vetogram-noir #telegramMirror
 .veto-mirror-thread-actions[open]>summary{
   background:var(--ct-chip,rgba(122,160,232,.2));
