@@ -12,6 +12,7 @@
   const saved = readJSON('saved', {});
   const progress = readJSON('progress', {});
   const quotes = readJSON('quotes', []);
+  const readingNotes = readJSON('readingNotes', []);
   const prefs = Object.assign({font:19,theme:'dark',fontFace:'literary',leading:'comfortable',width:'normal',speed:1},readJSON('prefs',{}));
   const rememberedSource=readJSON('source','translated');
   if(['translated','ru','hy','gutenberg','spotlight','genres','local'].includes(rememberedSource))state.source=rememberedSource;
@@ -916,6 +917,46 @@
       });
       group.append(visit,copy);notebook.append(group);
     }
+    const thoughts=compassSection(host,'Мои заметки на полях');
+    thoughts.append(node('p','compass-hint','Привязываются к текущему месту в тексте. Хранятся только на устройстве.'));
+    const editor=node('textarea','compass-note-editor');
+    editor.rows=3;editor.maxLength=500;
+    editor.placeholder='Что хочется запомнить об этой странице?';
+    editor.setAttribute('aria-label','Новая заметка к текущему месту чтения');
+    const saveNote=node('button','compass-note-save','Сохранить мысль');
+    saveNote.type='button';
+    const notesList=node('div','compass-notes');
+    const renderNotes=()=>{
+      notesList.replaceChildren();
+      const ownNotes=readingNotes.filter(x=>x.bookId===key).slice(0,45);
+      if(!ownNotes.length){notesList.append(node('p','compass-hint','Здесь появятся ваши мысли о книге.'));return;}
+      for(const item of ownNotes){
+        const row=node('div','compass-note');
+        const visit=node('button','compass-note-visit',String(item.text||'').slice(0,500));
+        visit.type='button';visit.addEventListener('click',()=>{
+          void jumpToReadingPoint({chapter:item.chapter,offset:item.offset,page:item.page});
+        });
+        const remove=node('button','compass-note-remove','Удалить');
+        remove.type='button';remove.addEventListener('click',()=>{
+          const index=readingNotes.indexOf(item);
+          if(index>=0){readingNotes.splice(index,1);persist('readingNotes',readingNotes);renderNotes();}
+        });
+        row.append(visit,remove);notesList.append(row);
+      }
+    };
+    saveNote.addEventListener('click',()=>{
+      const value=editor.value.trim();
+      if(!value){toast('Напишите заметку перед сохранением');return;}
+      readingNotes.unshift({
+        bookId:key,text:value.slice(0,500),chapter:state.activeChapter,
+        page:state.currentPage,offset:state.pageOffsets[state.currentPage]||0,at:Date.now()
+      });
+      if(readingNotes.length>120)readingNotes.length=120;
+      persist('readingNotes',readingNotes);
+      editor.value='';renderNotes();toast('Заметка сохранена на устройстве');
+    });
+    thoughts.append(editor,saveNote,notesList);
+    renderNotes();
     field.focus({preventScroll:true});
   }
 
