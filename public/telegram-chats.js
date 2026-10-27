@@ -1360,13 +1360,25 @@
       return body.avatars;
     }finally{clearTimeout(timeout);}
   }
-  // Only owner-verified, on-screen chats are queued; archived-only threads do
-  // not invoke live MTProto. A missing image cools down before explicit retry.
+  // Owner-scoped active thread takes priority over the inbox viewport.
+  // The chat header must not stay at initials just because the inbox is hidden.
+  // Archived-only threads never trigger a live Telegram avatar fetch.
   function queueVisibleAvatars(){
-    if(!tg?.initData||$('telegramChatsView')?.hidden||
+    if(!tg?.initData||
       document.querySelector('.screen.active')?.dataset?.screen!=='telegram')return;
+    const inboxVisible=$('telegramChatsView')?.hidden===false;
+    const threadVisible=$('telegramThreadView')?.hidden===false;
+    if(!inboxVisible&&!threadVisible)return;
     const now=Date.now();
-    const visible=[...document.querySelectorAll('#telegramMirrorList [data-veto-avatar]')]
+    const threadId=threadVisible&&state.connectionProof?.verified===true&&
+      state.thread&&!state.thread.archiveOnly?String(state.thread.id):null;
+    if(threadId&&!state.avatarUrls.has(threadId)&&
+      !state.avatarRequested.has(threadId)&&(state.avatarRetryAt.get(threadId)||0)<=now){
+      state.avatarRequested.add(threadId);
+      // One visible header before any pending offscreen avatar thumbnails.
+      state.avatarQueue.unshift(threadId);
+    }
+    const visible=inboxVisible?[...document.querySelectorAll('#telegramMirrorList [data-veto-avatar]')]
       .filter(el=>{
         const id=String(el.dataset.vetoAvatar||'');
         if(!id||state.avatarUrls.has(id)||state.avatarRequested.has(id)||
@@ -1374,7 +1386,7 @@
           el.closest('.veto-mirror-chat.is-cleared'))return false;
         const rect=el.getBoundingClientRect();
         return rect.bottom>=-180&&rect.top<=window.innerHeight+180;
-      }).slice(0,12);
+      }).slice(0,12):[];
     for(const el of visible){
       const id=String(el.dataset.vetoAvatar);
       state.avatarRequested.add(id);
@@ -1413,6 +1425,17 @@
           const img=document.createElement('img');
           img.className='veto-mirror-avatar-img';img.alt='';img.src=href;
           el.replaceChildren(img);
+        }
+        // Batch completion can happen after the user opened the dialog.
+        // Update its header only for the same signed owner/current chat.
+        if(state.thread&&String(state.thread.id)===id&&
+           $('telegramThreadView')?.hidden===false){
+          const header=$('telegramThreadAvatar');
+          if(header){
+            const img=document.createElement('img');
+            img.className='veto-mirror-avatar-img';img.alt='';img.src=href;
+            header.replaceChildren(img);
+          }
         }
       }
     }).catch(()=>{
@@ -2333,6 +2356,8 @@
     state.archiveHasMore=false;state.liveHasMore=!chat.archiveOnly;
     state.threadGeneration++;
     setThread(chat);
+    // The owner may open a chat before its row entered the avatar viewport.
+    queueVisibleAvatars();
     if(restoreHotThread(chat.id)){
       renderMessages();
       renderSendComposer();
