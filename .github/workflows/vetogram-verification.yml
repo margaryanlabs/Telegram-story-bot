@@ -1,9 +1,10 @@
 name: Vetogram Verification
+# ZERO-COST MODE: GitHub-hosted runners currently require owner billing.
+# Do not request runners on branch pushes or draft PR updates.
+# An authorized maintainer may trigger this workflow manually after
+# Actions becomes available; no secrets or Telegram sessions are required.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main, feat/vetogram-4-experience-implementation-20261025]
+  workflow_dispatch:
 
 permissions:
   contents: read
