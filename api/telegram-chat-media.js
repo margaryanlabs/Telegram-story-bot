@@ -133,18 +133,30 @@ export default async function handler(req,res){
       }
       if(batch){
         const avatars={};
-        for(const id of ids){
-          const dialog=allowed.get(id);
-          if(!dialog?.entity?.photo)continue;
-          try{
-            const bytes=await prepareAvatar(await getAvatar(client,dialog));
-            if(bytes)avatars[id]=bytes.toString('base64');
-          }catch(error){
-            const msg=String(error?.errorMessage||error?.message||'');
-            if(/FLOOD_WAIT|AUTH_KEY|SESSION_REVOKED|429/i.test(msg))throw error;
-            // A missing photo is not a reason to fail the other five.
+        let cursor=0,fatal=null;
+        // Up to two concurrent thumbnails within ONE owner-verified MTProto
+        // connection. The earlier serial loop could exceed the WebView's 24s
+        // batch deadline for six dialogs. Avoid an uncontrolled Promise.all(6)
+        // that can amplify Telegram flood limits or memory pressure.
+        const worker=async()=>{
+          while(cursor<ids.length&&!fatal){
+            const id=ids[cursor++],dialog=allowed.get(id);
+            if(!dialog?.entity?.photo)continue;
+            try{
+              const bytes=await prepareAvatar(await getAvatar(client,dialog));
+              if(bytes&&!fatal)avatars[id]=bytes.toString('base64');
+            }catch(error){
+              const msg=String(error?.errorMessage||error?.message||'');
+              if(/FLOOD_WAIT|AUTH_KEY|SESSION_REVOKED|429/i.test(msg)){
+                fatal=error;
+                break;
+              }
+              // One missing or corrupt profile image must not hide the others.
+            }
           }
-        }
+        };
+        await Promise.all([worker(),worker()]);
+        if(fatal)throw fatal;
         return {avatars};
       }
       const dialog=allowed.get(chatId);
