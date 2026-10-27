@@ -2421,9 +2421,9 @@
       openSheet(`
         <span class="kicker">Vetogram SECURE ACCOUNT</span>
         <h2>Защищённое подключение временно недоступно</h2>
-        <p>Vetogram не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
+        <p>Сейчас не удаётся безопасно завершить подключение. Проверь статус ещё раз — мы не будем запрашивать новый код без твоего действия.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и последующее подтверждение просмотров уже встроены.</span></div>
+          <div class="sheet-item"><strong>Текущие данные</strong><span>Подключённые функции и сохранённые данные остаются на месте.</span></div>
           <div class="sheet-item"><strong>Приватное подключение</strong><span>Новое подключение создаётся только при подтверждённом защищённом хранении.</span></div>
         </div>
         <div class="sheet-actions">
