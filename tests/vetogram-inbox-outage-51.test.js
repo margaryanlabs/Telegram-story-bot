@@ -10,7 +10,7 @@ const source=readFileSync(new URL('../public/telegram-chats.js',import.meta.url)
 const begin=source.indexOf('  async function loadChats({reset=false}={}){');
 const end=source.indexOf('  async function photoRequest(',begin);
 assert.ok(begin>0&&end>begin,'must exercise the current client load controller');
-const securityStart=source.indexOf('  function invalidateThreadAuthorization(){');
+const securityStart=source.indexOf('  function cancelThreadRequest(){');
 const securityEnd=source.indexOf('  async function pollThread(',securityStart);
 assert.ok(securityStart>0&&securityEnd>securityStart);
 const controller=source.slice(begin,end)+
@@ -47,7 +47,7 @@ function fixture({proof=true,count=1,page=0,reset=true,status=0,
     :new TypeError(errorMessage);
   const context=vm.createContext({
     state,tg:{initData:'signed'},navigator:{onLine:online},
-    resetOwner:()=>false,
+    resetOwner:()=>false,stopThreadSync:()=>{},
     $:name=>nodes[name]||null,
     request:async()=>{throw error},
     renderChats:()=>{renders++},hideNotice:()=>{notice=''},
