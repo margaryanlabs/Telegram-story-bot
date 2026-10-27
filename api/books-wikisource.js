@@ -8,7 +8,7 @@ const AGENT = 'VetogramBooks/1.2 (https://vtrg-telegram.vercel.app/books.html)';
 const MAX_BYTES = 2_600_000;
 const PAGE_SIZE = 20;
 const PREFILL = Object.freeze({ru:'Пушкин',hy:'Թումանյան'});
-const MAX_CHAPTERS = 60;
+const MAX_CHAPTERS = 320;
 const TRANSLATION_CATEGORIES = Object.freeze({
   en:'Переводы с английского языка',
   fr:'Переводы с французского языка',
@@ -259,6 +259,33 @@ function chaptersFromLinks(links,title,allowEditions=false){
       return {title:link,label:label.replace(/_/g,' ').slice(0,120)};
     });
 }
+/** Discover every available nested chapter leaf through the actual Wikimedia
+ * subpage index; direct page hyperlinks are not necessarily the full book.
+ * A subpage index is a list of available parts, not proof of completeness.
+ */
+export async function structuralChapters(wiki,title,rootLinks,allowEditions=false){
+  const known=chaptersFromLinks(rootLinks,title,allowEditions);
+  if(allowEditions)return {chapters:known,discovery:'editions',limited:false};
+  const prefix=String(title).replace(/_/g,' ').trim()+'/';
+  const result=await wikiGet(wiki,{
+    action:'query',list:'allpages',apprefix:prefix,apnamespace:0,aplimit:'max'
+  });
+  const rows=Array.isArray(result.query?.allpages)?result.query.allpages:[];
+  const limited=Boolean(result.continue?.apcontinue);
+  const candidates=rows.filter(row=>row.ns===0
+    && typeof row.title==='string' && row.title.startsWith(prefix)
+    && Number.isSafeInteger(row.pageid)&&row.pageid>0).map(row=>row.title);
+  const leaves=candidates.filter(p=>!candidates.some(other=>other!==p&&other.startsWith(p+'/')));
+  const collator=new Intl.Collator(wiki==='ru'?'ru':'hy',{numeric:true,sensitivity:'base'});
+  const chapters=[...new Set(leaves)].sort((a,b)=>collator.compare(a,b))
+    .slice(0,MAX_CHAPTERS)
+    .map(item=>({title:item,label:item.slice(prefix.length).replace(/_/g,' ').slice(0,120)}));
+  return {
+    chapters:chapters.length?chapters:known,
+    discovery:chapters.length?'subpages':'links',
+    limited:limited||leaves.length>MAX_CHAPTERS||known.length===MAX_CHAPTERS
+  };
+}
 async function parsed(wiki,opts) {
   const json=await wikiGet(wiki,{action:'parse',prop:'text|links|revid|categories',redirects:'1',...opts});
   if(!json?.parse || typeof json.parse.text!=='string') {
@@ -275,7 +302,13 @@ export async function fullText(req,res,wiki) {
   if(!title)return send(res,404,{ok:false,error:'Book unavailable'});
   const isTranslationIndex=wiki==='ru' && (root.categories||[]).some(category=>
     String(category.title||category.category||category['*']||'').includes('Списки переводов'));
-  const chapters=chaptersFromLinks(root.links,title,isTranslationIndex);
+  let structure;
+  try{structure=await structuralChapters(wiki,title,root.links,isTranslationIndex);}
+  catch(error){
+    console.error('[Books Wikisource] subpages:',error?.message);
+    structure={chapters:chaptersFromLinks(root.links,title,isTranslationIndex),discovery:'links',limited:true};
+  }
+  const chapters=structure.chapters;
   const chapterId=req.query.chapter===undefined?null:boundedInt(req.query.chapter,0,MAX_CHAPTERS-1);
   if(req.query.chapter!==undefined && chapterId===null) return send(res,400,{ok:false,error:'Invalid chapter'});
   if(chapterId!==null && chapterId>=chapters.length)return send(res,404,{ok:false,error:'Chapter unavailable'});
@@ -289,6 +322,15 @@ export async function fullText(req,res,wiki) {
       ? 'У этого зарубежного произведения есть несколько русских переводов. Откройте настройки Aa и выберите конкретный перевод или издание.'
       :text.length>=60?text:'Выберите главу в настройках чтения.',
     chapters,chapter:chapterId,isTranslationIndex,
+    coverage:{
+      kind:isTranslationIndex?'editions':chapters.length?'chaptered':'single-page',
+      foundChapters:chapters.length,limited:structure.limited,
+      completeness:'unverified',
+      note:isTranslationIndex?'Это варианты переводов, а не последовательные главы.'
+        :structure.limited?'Список глав может быть неполным. Проверяйте оригинал.'
+        :chapters.length?'Доступные главы собраны из исходного каталога. Полнота издания не подтверждена.'
+        :'Показан текст исходной страницы. Полнота всего произведения не подтверждена.'
+    },
     attribution:{
       title:part.title||title,source:sourceUrl(wiki,part.title||title),revision:Number(part.revid)||null,
       licenseUrl:book.licenseUrl,modified:'Текст адаптирован для читалки, исходное форматирование упрощено.'
