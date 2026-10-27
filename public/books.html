@@ -7,9 +7,10 @@
   <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
   <title>VETOGRAM Books — Читать</title>
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/books.css?v=6">
+  <link rel="stylesheet" href="/books.css?v=7">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="/books.js?v=6" defer></script>
+  <script src="/books-import.js?v=1" defer></script>
+  <script src="/books.js?v=7" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -46,6 +47,7 @@
       <button type="button" data-books-source="hy" aria-pressed="false"><b>ՀՅ</b> Հայկական գրադարան</button>
       <button type="button" data-books-source="gutenberg" aria-pressed="false"><b>EN</b> Мировая классика</button>
       <button type="button" data-books-source="spotlight" aria-pressed="false"><b>✦</b> Новинки и хиты · RU</button>
+      <button type="button" data-books-source="local" aria-pressed="false"><b>▤</b> Мои файлы · Офлайн</button>
     </div>
     <p id="sourceDescription" class="source-description">Зарубежные произведения в русских переводах · из Русской Викитеки</p>
     <div class="translation-filters" id="translationFilters" role="group" aria-label="Язык оригинала">
@@ -67,7 +69,18 @@
       <button type="button" data-spotlight="youth">Young Adult</button>
       <button type="button" data-spotlight="classics">Мировая классика</button>
     </div>
-    <section class="catalog-bar" aria-label="Найти книгу">
+    <section class="import-banner" id="importBanner" aria-label="Моя личная библиотека" hidden>
+      <div class="import-icon" aria-hidden="true"><span>V</span><b>+</b></div>
+      <div class="import-intro">
+        <span class="eyebrow">VETOGRAM PRIVATE LIBRARY</span>
+        <h2>Твои книги. Только твои.</h2>
+        <p>Добавляй EPUB, FB2 или TXT и читай с VETO FLOW, закладками и собственной полкой. Файлы остаются на этом устройстве.</p>
+      </div>
+      <button id="importButton" type="button" class="import-action"><span>＋</span> Добавить книгу</button>
+      <input id="importFile" type="file" accept=".epub,.fb2,.txt,application/epub+zip,text/plain" hidden aria-label="Выберите свою книгу в формате EPUB, FB2 или TXT">
+      <p id="importStatus" role="status" aria-live="polite"></p>
+    </section>
+    <section class="catalog-bar" id="catalogSearch" aria-label="Найти книгу">
       <form id="searchForm" class="search">
         <span aria-hidden="true">⌕</span>
         <input id="bookSearch" type="search" placeholder="Название книги или автор…" aria-label="Поиск книг" autocomplete="off" maxlength="100">
