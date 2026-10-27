@@ -1,0 +1,7 @@
+/* Isolated Books entry in existing Vetogram home. No overrides to chat UI. */
+.veto-command-home-grid .veto-books-entry{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;min-height:118px;text-decoration:none;border-radius:17px;padding:17px;background:linear-gradient(135deg,#261d23,#161921);border:1px solid rgba(238,185,145,.28);color:#f9f0e8;box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.veto-command-home-grid .veto-books-entry>span{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:rgba(235,182,137,.15);color:#f7bd92;font-size:22px}
+.veto-command-home-grid .veto-books-entry strong{color:#fff4e9;font-size:13px}
+.veto-command-home-grid .veto-books-entry small{font-size:10px;line-height:1.5;color:#b4a59e}
+.veto-command-home-grid .veto-books-entry:hover{border-color:rgba(246,201,169,.65);transform:translateY(-1px)}
+.veto-command-home-grid .veto-books-entry:focus-visible{outline:2px solid #efb98b;outline-offset:2px}
