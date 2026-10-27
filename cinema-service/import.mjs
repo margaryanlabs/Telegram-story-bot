@@ -28,14 +28,15 @@ async function main() {
     [f.id,f.title,f.original_title,f.year,f.synopsis,f.poster_url,f.duration_seconds,f.spoken_language,f.genres,f.hue,f.rights_holder]
    );
    await client.query(
-    "INSERT INTO cinema_playback_sources (movie_id,provider,type,playback_url,source_page_url,rights_basis,rights_evidence_url,attribution,spoken_language,territory_codes,active,rights_reviewed_at)"+
-    " VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,now())"+
+    "INSERT INTO cinema_playback_sources (movie_id,provider,type,playback_url,source_page_url,rights_basis,rights_evidence_url,attribution,spoken_language,territory_codes,translation_name,quality_label,priority,active,rights_reviewed_at)"+
+    " VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,true,now())"+
     " ON CONFLICT (movie_id,provider,playback_url) DO UPDATE SET source_page_url=EXCLUDED.source_page_url,"+
     " rights_basis=EXCLUDED.rights_basis,rights_evidence_url=EXCLUDED.rights_evidence_url,"+
     " attribution=EXCLUDED.attribution,spoken_language=EXCLUDED.spoken_language,"+
-    " territory_codes=EXCLUDED.territory_codes,active=true,rights_reviewed_at=now()",
+    " territory_codes=EXCLUDED.territory_codes,translation_name=EXCLUDED.translation_name,"+
+    " quality_label=EXCLUDED.quality_label,priority=EXCLUDED.priority,active=true,rights_reviewed_at=now()",
     [f.id,f.provider,f.source_type,f.playback_url,f.source_page_url,f.rights_basis,
-     f.rights_evidence_url,f.attribution,f.spoken_language,f.territories]
+     f.rights_evidence_url,f.attribution,f.spoken_language,f.territories,f.translation_name,f.quality_label,f.priority]
    );
   }
   await client.query("COMMIT");
