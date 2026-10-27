@@ -118,3 +118,56 @@ test('navigation, back, account reset and revocation all cancel the transport',(
   assert.match(historySource,/request\('thread',[\s\S]*?threadAbort\.signal\)/);
   assert.match(historySource,/if\(state\.threadRequestAbort===threadAbort\)/);
 });
+
+test('Back cancels deferred archive and thread fetches together',()=>{
+  const state={
+    threadRequestAbort:new AbortController(),
+    archiveRequestAbort:new AbortController(),
+  };
+  const oldHistory=state.threadRequestAbort,oldArchive=state.archiveRequestAbort;
+  const context=vm.createContext({state});
+  new vm.Script(cancelSource+'\ncancelThreadRequest()').runInContext(context);
+  assert.equal(oldHistory.signal.aborted,true);
+  assert.equal(oldArchive.signal.aborted,true);
+  assert.equal(state.threadRequestAbort,null);
+  assert.equal(state.archiveRequestAbort,null);
+});
+
+test('deferred archive cannot paint old A after signed user switches to B',async()=>{
+  const archiveSource=piece('  async function mergeDeferredArchive(',
+    '  async function loadMessages(');
+  const state={
+    thread:{id:'A'},threadGeneration:9,ownerInitData:'signed',
+    archiveRequestAbort:null,threadRequestAbort:null,messages:[{id:7,text:'A'}],
+  };
+  let started=false,networkSignal=null,repaintCount=0;
+  const context=vm.createContext({
+    state,tg:{initData:'signed'},AbortController,
+    resetOwner:()=>false,
+    request:(action,payload,signal)=>{
+      assert.equal(action,'thread_archive');
+      assert.equal(payload.chatId,'A');
+      networkSignal=signal;started=true;
+      return new Promise((resolve,reject)=>{
+        signal.addEventListener('abort',()=>reject(
+          Object.assign(new Error('obsolete request'),{name:'AbortError'})),{once:true});
+      });
+    },
+    visibleMessageAnchor:()=>null,
+    renderMessages:()=>{repaintCount++},
+    rememberHotThread:()=>{},
+    threadNotice:()=>{},
+    syncLabel:()=>{},
+  });
+  new vm.Script(cancelSource+archiveSource).runInContext(context);
+  const pending=new vm.Script("mergeDeferredArchive('A',9,'signed')").runInContext(context);
+  assert.equal(started,true);
+  assert.equal(networkSignal.aborted,false);
+  new vm.Script('cancelThreadRequest()').runInContext(context);
+  state.thread={id:'B'};state.threadGeneration++;
+  await pending;
+  assert.equal(networkSignal.aborted,true);
+  assert.equal(state.archiveRequestAbort,null);
+  assert.deepEqual(state.messages,[{id:7,text:'A'}]);
+  assert.equal(repaintCount,0);
+});
