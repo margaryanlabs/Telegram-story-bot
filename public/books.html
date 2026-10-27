@@ -7,12 +7,12 @@
   <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
   <title>VETOGRAM Books — Читать</title>
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/books.css?v=11">
+  <link rel="stylesheet" href="/books.css?v=14">
   <link rel="stylesheet" href="/books-art-direction.css?v=1">
   <link rel="stylesheet" href="/books-jacket-studio.css?v=2">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="/books-import.js?v=2" defer></script>
-  <script src="/books.js?v=13" defer></script>
+  <script src="/books.js?v=14" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -60,6 +60,7 @@
     <div class="veto-library-kicker" aria-hidden="true"><span>CURATED / OPEN / PRIVATE</span><div></div><span>YOUR NEXT CHAPTER</span></div>
     <div class="source-tabs" role="group" aria-label="Библиотека и язык">
       <button type="button" data-books-source="complete" class="active" aria-pressed="true"><b>✦</b> ЧИТАТЬ ЦЕЛИКОМ</button>
+      <button type="button" data-books-source="hot200" aria-pressed="false"><b>200</b> ХИТЫ · НА РУССКОМ</button>
       <button type="button" data-books-source="translated" aria-pressed="false"><b>🌍</b> Зарубежные · на русском</button>
       <button type="button" data-books-source="ru" aria-pressed="false"><b>РУ</b> Русская библиотека</button>
       <button type="button" data-books-source="hy" aria-pressed="false"><b>ՀՅ</b> Հայկական գրադարան</button>
@@ -76,6 +77,19 @@
       <button type="button" data-original-lang="de" aria-pressed="false">Немецкого</button>
       <button type="button" data-original-lang="it" aria-pressed="false">Итальянского</button>
       <button type="button" data-original-lang="es" aria-pressed="false">Испанского</button>
+    </div>
+    <div class="hot-filters" id="hotFilters" role="group" aria-label="Жанры подборки из 200 зарубежных книг" hidden>
+      <button type="button" data-hot-genre="all" class="active">Все 200</button>
+      <button type="button" data-hot-genre="romantasy">Ромэнтези</button>
+      <button type="button" data-hot-genre="fantasy">Фэнтези</button>
+      <button type="button" data-hot-genre="scifi">Научная фантастика</button>
+      <button type="button" data-hot-genre="dystopia">Антиутопии / YA</button>
+      <button type="button" data-hot-genre="thriller">Триллеры</button>
+      <button type="button" data-hot-genre="horror">Хоррор</button>
+      <button type="button" data-hot-genre="contemporary">Современная проза</button>
+      <button type="button" data-hot-genre="romance">Романтика</button>
+      <button type="button" data-hot-genre="mystery">Детективы</button>
+      <button type="button" data-hot-genre="nonfiction">Нон-фикшн</button>
     </div>
     <div class="reading-genres" id="readingGenres" role="group" aria-label="Жанр русской классики" hidden>
       <button type="button" data-reading-genre="novels" class="active">Романы</button>
