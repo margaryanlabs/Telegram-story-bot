@@ -6,7 +6,7 @@
     chats:[],page:0,hasMore:true,loading:false,
     filter:'all',search:'',generation:0,lastListFetchedAt:0,
     thread:null,messages:[],threadLoading:false,threadLoadError:'',threadAuthRejected:false,
-    threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,threadRequestAbort:null,
+    threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,threadRequestAbort:null,archiveRequestAbort:null,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
@@ -2208,9 +2208,12 @@
     return true;
   }
   function cancelThreadRequest(){
-    const controller=state.threadRequestAbort;
+    // Cancel both the active history and its independently deferred archive
+    // when the owner leaves this conversation. Never abort a newer request.
+    const active=[state.threadRequestAbort,state.archiveRequestAbort];
     state.threadRequestAbort=null;
-    controller?.abort();
+    state.archiveRequestAbort=null;
+    for(const controller of active)controller?.abort();
   }
   // Both history refresh and live polling can discover a revoked Telegram
   // login. Fail closed immediately, never keep a stale owner's private UI.
@@ -2456,8 +2459,13 @@
   // is fetched afterwards and reconciled without blocking the visible chat.
   // Both stages stay in memory and are invalidated on account/thread changes.
   async function mergeDeferredArchive(chatId,generation,ownerKey){
+    // Archived evidence is a separate owner-scoped request. It must not keep
+    // an obsolete thread busy after A→B, Back or Telegram account switching.
+    const archiveAbort=new AbortController();
+    state.archiveRequestAbort?.abort();
+    state.archiveRequestAbort=archiveAbort;
     try{
-      const data=await request('thread_archive',{chatId,archiveOffset:0});
+      const data=await request('thread_archive',{chatId,archiveOffset:0},archiveAbort.signal);
       if(resetOwner()||ownerKey!==state.ownerInitData||
          generation!==state.threadGeneration||String(state.thread?.id)!==chatId)return;
       const anchor=visibleMessageAnchor();
@@ -2487,6 +2495,8 @@
         threadNotice('Защищённый архив пока недоступен. Сообщения Telegram остаются доступными; сохранённые копии появятся после восстановления архива.');
         syncLabel('Telegram подключён · архив ожидает повторной проверки');
       }
+    }finally{
+      if(state.archiveRequestAbort===archiveAbort)state.archiveRequestAbort=null;
     }
   }
   async function loadMessages({reset=false}={}){
