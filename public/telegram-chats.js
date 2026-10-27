@@ -402,8 +402,14 @@
       $('telegramThreadStickerDrawer')?.hidden===false;
   }
   function closeStickerDrawer(){
-    state.stickerEpoch++;
-    closeStickerDrawer();
+    // Never recurse into this controller: account switching, successful sends,
+    // and closing the sticker panel all reach this function.
+    state.stickerEpoch++; // invalidate previously queued thumbnail responses
+    const pane=$('telegramThreadStickerDrawer');
+    if(pane)pane.hidden=true;
+    const search=$('vetoStickersSearch');
+    if(search)search.value='';
+    state.stickerQuery='';
   }
   function stickerShownItems(){
     const source=state.stickerTab==='recent'?state.stickers:state.stickerPack?.stickers||[];
