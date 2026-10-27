@@ -19,8 +19,8 @@
   <button class="nav-item" data-page="search" type="button"><span>⌕</span> Поиск музыки</button>
   <button class="nav-item" data-page="charts" type="button"><span>▤</span> Русский топ-25</button>
   <button class="nav-item" data-page="catalog" type="button"><span>♫</span> Каталог музыки</button>
-  <button class="nav-item" data-page="archive" type="button"><span>♬</span> Открытая библиотека</button>
-  <button class="nav-item" data-page="mixter" type="button"><span>◈</span> CC Ремиксы</button>
+  <button class="nav-item" data-page="archive" type="button"><span>♬</span> Библиотека</button>
+  <button class="nav-item" data-page="mixter" type="button"><span>◈</span> Ремиксы</button>
   <button class="nav-item" data-page="library" type="button"><span>♡</span> Моя музыка</button>
   <button class="nav-item" data-page="radio" type="button"><span>◉</span> Радио</button>
   <button class="nav-item" data-page="import" type="button"><span>⇧</span> Добавить музыку</button>
@@ -133,9 +133,9 @@
 <section class="page" data-view="archive" aria-label="Большая библиотека открытой музыки">
  <div class="archive-hero">
   <span class="overline">VETOGRAM MUSIC / OPEN LICENSED ARCHIVES</span>
-  <h1>Музыка без <em>границ.</em></h1>
-  <p>Живой каталог независимой музыки с Creative Commons. Здесь находятся настоящие MP3-записи, а не только названия. Файлы воспроизводятся напрямую из Internet Archive; на сервер VETOGRAM ничего не копируется.</p>
-  <div class="archive-summary"><span>♫ LIVE ARCHIVE</span><span>CC0 · CC BY · CC BY-SA</span><span>РАЗРЕШЁННЫЕ АУДИОЗАПИСИ</span></div>
+  <h1>Больше <em>музыки.</em></h1>
+  <p>Открытые аудиозаписи в твоём плеере. Выбирай жанр, нажимай Play и слушай без видео.</p>
+  <div class="archive-summary"><span>♫ ПОЛНОЕ АУДИО</span><span>CC0 · CC BY · CC BY-SA</span><span>РАЗРЕШЁННЫЕ АУДИОЗАПИСИ</span></div>
  </div>
  <div class="archive-license-bar" role="group" aria-label="Типы разрешённых лицензий">
   <button type="button" data-archive-license="cc0" class="active" aria-pressed="true">CC0 · Свободная</button>
@@ -152,20 +152,20 @@
 </section>
 <section class="page" data-view="mixter" aria-label="Музыкальная коллекция ccMixter">
  <div class="mixter-hero">
-  <span class="overline">VETOGRAM MUSIC / CREATIVE COMMONS</span>
-  <h1>Музыка из <em>нового мира.</em></h1>
-  <p>Независимые авторы, оригинальные записи и ремиксы — ещё один открытый музыкальный источник. Поиск по каталогу ccMixter без ключей, прямое воспроизведение доступных MP3 и обязательное указание автора.</p>
-  <div class="mixter-tags"><span>♫ CCMIXTER</span><span>CC BY · FULL AUDIO</span><span>NO UPLOAD / NO API KEY</span></div>
+  <span class="overline">VETOGRAM MUSIC / МУЗЫКА</span>
+  <h1>Новые <em>звуки.</em></h1>
+  <p>Оригинальные треки и ремиксы независимых исполнителей — слушай напрямую в нашем плеере.</p>
+  <div class="mixter-tags"><span>♫ ВЫБОР ТРЕКОВ</span><span>CC BY · FULL AUDIO</span><span>NO UPLOAD / NO API KEY</span></div>
  </div>
  <div class="mixter-toolbar">
   <h2>Выбери свой звук</h2>
   <div id="mixterGenres" class="mixter-genres" aria-label="Жанры ccMixter"></div>
   <form id="mixterForm" class="mixter-search">
-   <input id="mixterInput" type="search" maxlength="70" autocomplete="off" aria-label="Поиск по ccMixter" placeholder="Песня, исполнитель, настроение…">
+   <input id="mixterInput" type="search" maxlength="70" autocomplete="off" aria-label="Поиск музыки" placeholder="Песня, исполнитель, настроение…">
    <button type="submit">⌕ Искать</button>
   </form>
  </div>
- <div class="mixter-results-head"><h2>Доступные композиции</h2><a id="mixterSource" target="_blank" rel="noopener noreferrer" href="https://dig.ccmixter.org/">Открыть ccMixter ↗</a></div>
+ <div class="mixter-results-head"><h2>Доступные композиции</h2><a id="mixterSource" target="_blank" rel="noopener noreferrer" href="https://dig.ccmixter.org/" hidden tabindex="-1" aria-hidden="true">Авторская коллекция</a></div>
  <p id="mixterStatus" class="mixter-status" role="status">Выбери жанр, чтобы получить музыкальные записи.</p>
  <div id="mixterTracks" class="mixter-tracks"><div class="mixter-empty">Подборка готова к загрузке.</div></div>
  <div class="mixter-more-wrap"><button type="button" id="mixterMore" class="mixter-more" hidden>＋ Показать ещё записи</button></div>
