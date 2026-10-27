@@ -2257,6 +2257,15 @@
     state.deliveryStage=null;renderDeliveryStatus();
     closeThreadSearch();
     state.replyTo=null;state.pendingAttachment=null;
+    // A lost send acknowledgement can survive navigating to another dialog.
+    // Restore ONLY the original reply intent when exactly the same unsent
+    // text belongs to this owner and chat; otherwise do not attach a stale
+    // reply to a fresh compose draft.
+    const failedSend=state.lastSendFailures.get(String(chat.id));
+    const replyId=Number(failedSend?.replyTo||0);
+    if(failedSend&&String(state.drafts.get(String(chat.id))||'').trim()===failedSend.message&&
+       Number.isSafeInteger(replyId)&&replyId>0)
+      state.replyTo={id:replyId,preview:'Ответ на сообщение #'+replyId};
     renderReplyPreview();renderAttachmentChip();
     if($('telegramThreadStickerDrawer'))$('telegramThreadStickerDrawer').hidden=true;
     state.threadOffset=0;state.archiveOffset=0;
@@ -2269,6 +2278,11 @@
       syncLabel('Предпросмотр из памяти · обновляю Telegram…',true);
     }else syncLabel('Подключаюсь к Telegram…',true);
     await loadMessages({reset:true});
+    const unresolved=state.lastSendFailures.get(String(chat.id));
+    if(state.ownerInitData===String(tg?.initData||'')&&
+       String(state.thread?.id)===String(chat.id)&&unresolved&&
+       String(state.drafts.get(String(chat.id))||'').trim()===unresolved.message)
+      threadNotice('Отправка не подтверждена. Проверь оригинальный Telegram перед повтором: сохранён прежний идентификатор сообщения.');
   }
   // First paint comes from owner-verified MTProto; archived deletion evidence
   // is fetched afterwards and reconciled without blocking the visible chat.
