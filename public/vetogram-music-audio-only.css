@@ -1,0 +1,16 @@
+/* VETOGRAM Music — audio-only and true one-tap playback, no provider video cards. */
+.audio-home{margin-top:20px;margin-bottom:15px}
+.audio-home-panel{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-radius:20px;padding:26px 24px;margin:16px 0 25px;border:1px solid rgba(241,194,242,.20);background:radial-gradient(ellipse at 95% 20%,rgba(229,135,231,.2),transparent 50%),linear-gradient(135deg,#26182b,#12111f)}
+.audio-home-panel>div:first-child{min-width:230px;flex:1}
+.audio-panel-eyebrow{letter-spacing:.13em;font-size:10px;font-weight:800;color:#f4c9ee}
+.audio-home-panel h2{color:#fff;font-size:clamp(24px,3.5vw,37px);letter-spacing:-.04em;margin:10px 0}
+.audio-home-panel h2 em{font-style:normal;color:#f5c6e8}
+.audio-home-panel p{max-width:550px;font-size:12px;line-height:1.65;color:#b6aabd;margin:0}
+.audio-station-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:320px;flex:1}
+.audio-oneplay,.audio-more-stations{border-radius:11px;min-height:45px;text-align:left;font:inherit;font-size:12px;font-weight:800;padding:11px 13px;cursor:pointer}
+.audio-oneplay{border:1px solid rgba(248,210,247,.31);color:#29152d;background:linear-gradient(125deg,#efc6f7,#f6d1e3)}
+.audio-oneplay:hover{filter:brightness(1.09)}
+.audio-more-stations{color:#e3cbec;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+.audio-home .native-home-option:hover{background:rgba(249,197,245,.14)}
+@media(max-width:700px){.audio-home-panel{padding:20px 15px;border-radius:18px}.audio-station-actions{min-width:0;width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}.audio-oneplay,.audio-more-stations{font-size:11px;padding:10px}}
+@media(max-width:360px){.audio-station-actions{grid-template-columns:1fr}}
