@@ -1146,8 +1146,10 @@
     // Keep the verified, in-memory conversation list visible during a same-
     // account refresh. Fresh data atomically replaces it only on success.
     // Never reuse it across changed owners or unauthenticated sessions.
-    const keepVisible=Boolean(reset&&state.connectionProof?.verified&&state.chats.length&&
+    const keepVisible=Boolean(reset&&state.connectionProof?.verified&&
       state.ownerInitData===String(tg?.initData||''));
+    // A previously verified account can have zero chats; an outage must not
+    // masquerade as session revocation just because its inbox is empty.
     if(reset){
       state.page=0;state.autoPages=0;state.hasMore=true;
       if(!keepVisible){state.chats=[];state.connectionProof=null;}
@@ -1203,11 +1205,22 @@
       // failure. Keep already verified RAM-only chats visible, with an honest
       // stale-data notice and a manual retry. 401/403/409 fail closed.
       const status=Number(error?.httpStatus||0);
-      const transient=status===429||status>=500||(!status&&
-        /долго|сети|соединени|не удалось|не ответил/i.test(String(error?.message||'')));
-      if(keepVisible&&authenticated&&transient){
-        state.hasMore=true;state.page=0;
-        showNotice('Пока нет свежего ответа Telegram. Показаны ранее загруженные чаты этого аккаунта; для обновления нажми ↻. '+error.message);
+      const msg=String(error?.message||'');
+      const transient=status===429||status>=500||(!status&&(
+        error instanceof TypeError||navigator.onLine===false||
+        /failed to fetch|load failed|networkerror|network|timeout|timed out|fetch failed|долго|сети|соединени|не удалось|не ответил/i.test(msg)));
+      if(authenticated&&transient){
+        // Do not promote unknown credentials to 'verified', but never clear a
+        // previously proven same-owner connection merely for a transport
+        // failure. Preserve paginated rows and let ↻ retry normally.
+        const verified=state.connectionProof?.verified===true;
+        state.hasMore=true;
+        if(reset)state.page=0;
+        showNotice(verified
+          ? (state.chats.length
+            ?'Telegram временно не отвечает. Показаны ранее загруженные чаты этого аккаунта. Нажми ↻ для повтора.'
+            :'Telegram временно не отвечает. Подключение уже подтверждено; нажми ↻ для повтора.')
+          :'Не удалось проверить Telegram из-за соединения. Нажми ↻ для повтора; повторный вход пока не требуется.');
         return;
       }
       // Authentication and ownership failures must never leave old chats on screen.
