@@ -1,0 +1,27 @@
+/* Expanded audio discovery: same premium VETOGRAM cards, no source-branded player. */
+.open-audio-section{margin:21px 0 28px;border-top:1px solid rgba(242,208,246,.13);padding:20px 0 5px}
+.open-audio-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.open-audio-header h3{color:#fff;letter-spacing:-.03em;font-size:20px;margin:0}
+.open-audio-header p{font-size:12px;color:#bdaec4;line-height:1.55;margin:7px 0 0}
+.open-audio-status{font-size:11px;color:#c6b2cd;margin:13px 0;line-height:1.7}
+.open-audio-results{display:grid;gap:9px}
+.open-audio-track{display:grid;grid-template-columns:58px minmax(0,1fr) 39px 45px;align-items:center;gap:11px;padding:10px;border-radius:13px;background:rgba(255,255,255,.043);border:1px solid rgba(255,255,255,.085)}
+.open-audio-track:hover{background:rgba(245,195,243,.083)}
+.open-audio-cover{width:58px;height:58px;border-radius:10px;display:grid;place-items:center;color:#eac1ea;font-size:23px;background:linear-gradient(135deg,#503055,#242033);overflow:hidden}
+.open-audio-cover img{width:100%;height:100%;object-fit:cover}
+.open-audio-info{display:grid;min-width:0;gap:5px}
+.open-audio-info strong{color:#fcf9ff;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.open-audio-info span{color:#beafc9;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.open-audio-rights{font-size:10px;color:#bba1c8;display:block}
+.open-audio-rights summary{cursor:pointer;list-style-position:inside}
+.open-audio-rights a{display:inline-block;color:#e6cbe7;text-decoration:underline;text-underline-offset:2px;margin:7px 12px 2px 0;font-size:10px}
+.open-audio-play,.open-audio-like{height:39px;min-width:0;border:0;border-radius:10px;cursor:pointer;font-weight:850;font:inherit}
+.open-audio-play{background:#f1cffa;color:#231527}
+.open-audio-like{background:rgba(255,255,255,.1);color:#ebc9f4}
+.open-audio-more{border-radius:10px;border:1px solid rgba(249,208,252,.27);background:rgba(244,194,248,.13);color:#f2d8f7;cursor:pointer;font:inherit;font-size:12px;font-weight:800;padding:12px 22px}
+.open-audio-more[hidden]{display:none}
+.open-audio-more:disabled{opacity:.45;cursor:default}
+.open-audio-more-wrap{padding:17px 0;text-align:center}
+.open-audio-empty{font-size:12px;line-height:1.65;color:#b5a8bf;border:1px dashed rgba(255,255,255,.12);border-radius:11px;padding:25px;text-align:center}
+.open-audio-disclaimer{font-size:10px;line-height:1.75;color:#a89bb2;margin-top:10px}
+@media(max-width:650px){.open-audio-track{grid-template-columns:44px minmax(0,1fr) 33px 37px;gap:7px;padding:8px}.open-audio-cover{width:44px;height:44px}.open-audio-info strong{font-size:11px}.open-audio-info span{font-size:10px}.open-audio-play,.open-audio-like{height:35px}.open-audio-section{padding-top:18px}}
