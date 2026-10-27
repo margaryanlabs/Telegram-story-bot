@@ -105,3 +105,67 @@ test('bad input and other hosts are rejected without a network request',async()=
     assert.equal(res.code,405);
   });
 });
+
+
+test('foreign literature discovery uses Russian translation categories, with source attribution',async()=>{
+  await withFetch(async url=>{
+    const req=new URL(url);
+    assert.equal(req.hostname,'ru.wikisource.org');
+    assert.equal(req.searchParams.get('list'),'categorymembers');
+    assert.equal(req.searchParams.get('cmtitle'),'Категория:Переводы с французского языка');
+    assert.equal(req.searchParams.get('cmnamespace'),'0');
+    return Response.json({continue:{cmcontinue:'page|414243|98765',continue:'-||'},
+      query:{categorymembers:[{pageid:765,ns:0,title:'Три мушкетёра (Дюма)'}]}});
+  },async()=>{
+    const res=fakeResponse();
+    await wikisource({method:'GET',query:{collection:'translations',original:'fr',page:'1'}},res);
+    assert.equal(res.code,200);
+    assert.equal(res.payload.collection,'translations');
+    assert.equal(res.payload.count,null);
+    assert.equal(res.payload.nextCursor,'page|414243|98765');
+    assert.equal(res.payload.books[0].language,'ru');
+    assert.equal(res.payload.books[0].originalLanguage,'fr');
+    assert.equal(res.payload.books[0].isTranslation,true);
+    assert.equal(res.payload.books[0].key,'ws-ru-765');
+  });
+});
+test('foreign translations use server-side category-restricted full-text search',async()=>{
+  await withFetch(async url=>{
+    const req=new URL(url);
+    const search=req.searchParams.get('srsearch');
+    assert.match(search,/incategory:"Переводы с английского языка"/);
+    assert.match(search,/Дойль/);
+    assert.equal(req.searchParams.get('srnamespace'),'0');
+    return Response.json({query:{searchinfo:{totalhits:1},search:[
+      {pageid:110,ns:0,title:'Приключения Шерлока Холмса (Дойль)'}
+    ]}});
+  },async()=>{
+    const res=fakeResponse();
+    await wikisource({method:'GET',query:{collection:'translations',original:'en',q:'Дойль',page:'1'}},res);
+    assert.equal(res.code,200);
+    assert.equal(res.payload.count,1);
+    assert.equal(res.payload.books[0].isTranslation,true);
+  });
+});
+test('category browsing forwards an opaque next cursor only to the pinned Wikisource host',async()=>{
+  await withFetch(async url=>{
+    const req=new URL(url);
+    assert.equal(req.hostname,'ru.wikisource.org');
+    assert.equal(req.searchParams.get('cmcontinue'),'page|414243|98765');
+    return Response.json({query:{categorymembers:[]}});
+  },async()=>{
+    const res=fakeResponse();
+    await wikisource({method:'GET',query:{
+      collection:'translations',original:'de',page:'2',cursor:'page|414243|98765'
+    }},res);
+    assert.equal(res.code,200);
+    assert.equal(res.payload.nextCursor,null);
+  });
+});
+test('invalid original languages are rejected before calling Wikisource',async()=>{
+  await withFetch(async()=>{throw Error('unexpected network');},async()=>{
+    const res=fakeResponse();
+    await wikisource({method:'GET',query:{collection:'translations',original:'ru'}},res);
+    assert.equal(res.code,400);
+  });
+});
