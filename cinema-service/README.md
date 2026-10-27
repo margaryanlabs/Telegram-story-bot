@@ -137,3 +137,20 @@ Integration:
 - Film-studio channel totals are their own published claims, NOT counts of records loaded by our platform.
 
 Docs: https://github.com/rutube/ShowcaseTutorial ; https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/extractor/rutube.py ; https://rutube.ru/info/embed/ .
+
+
+## No-Postgres launch path (public studio archives)
+
+The public studio feed service **no longer requires** a database at boot. To run the publisher channel metadata endpoint only:
+
+\`\`\`sh
+cd cinema-service
+npm install
+PORT=3800 npm start
+curl -s http://127.0.0.1:3800/healthz
+curl -s "http://127.0.0.1:3800/api/cinema/channels?channel=mosfilm&page=1"
+curl -s "http://127.0.0.1:3800/api/cinema/channels?channel=lenfilm&page=1"
+curl -s "http://127.0.0.1:3800/api/cinema/channels?channel=gorky&page=1"
+\`\`\`
+
+Responses depend on the live RUTUBE metadata service. A request may be rejected or filtered to zero movies. The implementation only supports verified studio owners and public embeddable films. \`/api/cinema/movies\` will answer 503 until a PostgreSQL connection is configured; the UI retains its offline seed. For an actual Telegram Mini App, map \`/api/cinema/*\` to the service through a same-origin **HTTPS** reverse proxy. This has not been deployed or verified on devices yet.
