@@ -277,9 +277,9 @@
   function artElement(f,wide){
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
     div.style.setProperty("--film-hue",String(f.hue));
-    const badge=node("span","cinema-card-art-badge");badge.textContent=f.player?(f.player.provider||"STREAM")+" · "+(f.spoken==="Русский"||f.spoken==="ru"?"RU":"FILM"):"OPEN FILM";div.append(badge);
+    const badge=node("span","cinema-card-art-badge");badge.textContent=f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":f.player?"СМОТРЕТЬ · RU":"ОТКРЫТЫЙ ФИЛЬМ";div.append(badge);
     const title=node("span","cinema-card-art-title");title.textContent=f.title;div.append(title);
-    const poster=state.posters.get(f.id);
+    const poster=state.posters.get(f.id)||f.poster;
     if(poster){const img=node("img");img.loading="lazy";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{img.remove();state.posters.delete(f.id)};div.prepend(img)}
     else requestPoster(f);
     return div;
@@ -288,7 +288,7 @@
     const b=node("button","cinema-card");b.type="button";b.setAttribute("aria-label",f.title+", детали");
     b.append(artElement(f,false));
     const name=node("span","cinema-card-name");name.textContent=f.title;
-    const meta=node("small","cinema-card-meta");meta.textContent=f.year+" · "+f.minutes+" мин · "+f.genres[0];
+    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||"Русский",f.minutes?f.minutes+" мин":null,f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
     b.append(name,meta);
     const p=state.library.progress[f.id];
     if(p&&p.d>0&&p.t/p.d<.96){const bar=node("div","cinema-card-progress"),line=node("i");line.style.width=Math.round(100*p.t/p.d)+"%";bar.append(line);b.append(bar)}
@@ -297,21 +297,21 @@
   }
   function render(){
     const list=selectedFilms();
-    $("cinemaGrid").replaceChildren(...list.slice(0,180).map(filmCard));
+    $("cinemaGrid").replaceChildren(...list.slice(0,200).map(filmCard));
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
-    text("cinemaCount",list.length+" из "+films.length+" фильмов · официальные источники");
+    text("cinemaCount",list.length+" из "+films.length+" записей · официальные источники");
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
     const russian=films.filter(f=>f.player&&(f.spoken==="Русский"||f.spoken==="ru"));
     const showRussian=state.tab==="home"&&!state.query.trim()&&russian.length>0;
     $("cinemaRussian").classList.toggle("hidden",!showRussian);
     if(showRussian)$("cinemaRussianRail").replaceChildren(...russian.slice(0,15).map(filmCard));
-    const genres=["Все",...new Set(films.flatMap(f=>f.genres))];
+    const genres=["Все",...new Set(["Фильмы","Сериалы","Мультфильмы",...films.flatMap(f=>f.genres||[])])];
     $("cinemaGenres").replaceChildren(...genres.map(g=>{
       const b=node("button","cinema-chip"+(state.genre===g?" active":""));b.type="button";b.textContent=g;
       b.setAttribute("aria-pressed",String(g===state.genre));
       b.addEventListener("click",()=>{state.genre=g;buzz();render();if(state.tab!=="library")fetchCatalog(true)});return b;
     }));
-    let title="Истории, которые остаются",subtitle="Русскоязычное кино из официальных плееров и авторские открытые фильмы.";
+    let title=state.genre==="Все"?"Вся коллекция":state.genre,subtitle="Фильмы, сериалы и мультфильмы из официальных видеоканалов. Новые записи появляются в каталоге.";
     if(state.tab==="catalog")title="Каталог фильмов";
     if(state.tab==="search")title="Результаты поиска";
     if(state.tab==="library"){title="Моё избранное";subtitle="Сохраняется на этом устройстве."}
@@ -320,6 +320,7 @@
     const show=progressIds.length>0&&(state.tab==="home"||state.tab==="library");
     $("cinemaContinue").classList.toggle("hidden",!show);
     if(show)$("cinemaContinueList").replaceChildren(...progressIds.slice(0,10).map(id=>filmCard(filmById(id))));
+    refreshDiscovery();
   }
   function requestPoster(f){
     if(state.posters.has(f.id)||state.posterLookups.has(f.id))return;
@@ -346,7 +347,7 @@
             img.onerror=()=>img.remove();art.prepend(img);
           }
         }
-        if(f.id===films[0]?.id)
+        if(f.id===discovery.slides[discovery.index]?.id)
           $("cinemaHeroBackdrop").style.backgroundImage='url("'+poster.replace(/"/g,"%22")+'")';
       }).catch(()=>{});
     if(window.requestIdleCallback)requestIdleCallback(req,{timeout:2300});
