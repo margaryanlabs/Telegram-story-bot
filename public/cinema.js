@@ -1,7 +1,7 @@
 /* VETOGRAM CINEMA V1 — independent Telegram Mini App. Zero pirate sources. */
 (function () {
   "use strict";
-  const films=window.VetogramCinemaCatalog || [];
+  let films=[...(window.VetogramCinemaCatalog || [])];
   const $=id=>document.getElementById(id);
   const BASE="https://commons.wikimedia.org/w/api.php";
   const LIBRARY_KEY="vetogram.cinema.library.v1";
@@ -10,7 +10,7 @@
   const state={tab:"home",genre:"Все",query:"",selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
-  let toastTimer=0,progressTimer=0;
+  let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0;
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
 
   function loadLibrary(){
@@ -49,9 +49,49 @@
     $("cinemaHero").classList.toggle("hidden",tab!=="home");
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
     render();
+    if(tab!=="library")fetchCatalog(true);
     if(tab==="search")$("cinemaSearch").focus();
     window.scrollTo({top:0,behavior:"smooth"});
   }
+  // Backend is optional until the VPS is deployed. Initial curated films remain usable.
+  async function fetchCatalog(reset=true) {
+    const offset=reset?0:catalogNextOffset;
+    if(offset===null||state.tab==="library")return;
+    const ticket=++catalogTicket;
+    const query=state.query.trim();
+    const genre=state.genre==="Все"?"":state.genre;
+    const params=new URLSearchParams({limit:"80",offset:String(offset),q:query,genre});
+    const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),4500);
+    const button=$("cinemaLoadMore");
+    button.disabled=true;
+    if(!reset)button.textContent="Загружаем…";
+    try {
+      const response=await fetch("/api/cinema/movies?"+params.toString(),{
+        signal:timeout.signal,headers:{Accept:"application/json"}
+      });
+      if(!response.ok)throw Error("catalogue offline");
+      const data=await response.json();
+      if(ticket!==catalogTicket)return;
+      if(!data||!Array.isArray(data.movies))throw Error("invalid movie data");
+      const valid=data.movies.filter(x=>x&&typeof x.id==="string"&&typeof x.title==="string"&&
+        /^[a-z0-9][a-z0-9-]{2,90}$/.test(x.id)&&
+        x.player&&x.player.licensed===true&&/^https:\/\//.test(x.player.url)&&
+        Array.isArray(x.genres));
+      for(const film of valid){
+        if(film.poster&&/^https:\/\//.test(film.poster))state.posters.set(film.id,film.poster);
+      }
+      const incoming=new Set(valid.map(x=>x.id));
+      films=[...valid,...films.filter(f=>!incoming.has(f.id))];
+      catalogNextOffset=Number.isInteger(data.nextOffset)?data.nextOffset:null;
+      render();
+    }catch(_){
+      if(ticket===catalogTicket&&reset)catalogNextOffset=null;
+      // Do not interrupt the initial offline/curated catalogue.
+    }finally{
+      clearTimeout(timer);button.disabled=false;button.textContent="Загрузить ещё фильмы ↓";
+    }
+  }
+
   function selectedFilms(){
     let list=films;
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
@@ -86,11 +126,12 @@
     $("cinemaGrid").replaceChildren(...list.map(filmCard));
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     text("cinemaCount",list.length+" из "+films.length+" фильмов · официальные источники");
+    $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
     const genres=["Все",...new Set(films.flatMap(f=>f.genres))];
     $("cinemaGenres").replaceChildren(...genres.map(g=>{
       const b=node("button","cinema-chip"+(state.genre===g?" active":""));b.type="button";b.textContent=g;
       b.setAttribute("aria-pressed",String(g===state.genre));
-      b.addEventListener("click",()=>{state.genre=g;buzz();render()});return b;
+      b.addEventListener("click",()=>{state.genre=g;buzz();render();if(state.tab!=="library")fetchCatalog(true)});return b;
     }));
     let title="Истории, которые остаются",subtitle="Русскоязычное кино из официальных плееров и авторские открытые фильмы.";
     if(state.tab==="catalog")title="Каталог фильмов";
@@ -337,8 +378,9 @@
   $("cinemaDetailsShare").addEventListener("click",()=>{if(state.selected)shareFilm(state.selected)});
   $("cinemaHeroWatch").addEventListener("click",()=>play(films[0]));
   $("cinemaHeroDetails").addEventListener("click",()=>openDetails(films[0]));
-  $("cinemaSearch").addEventListener("input",e=>{state.query=e.target.value.slice(0,90);if(state.tab==="library")setTab("search");else if(state.tab==="home"){$("cinemaHero").classList.add("hidden")}render()});
-  $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";render()});
+  $("cinemaSearch").addEventListener("input",e=>{state.query=e.target.value.slice(0,90);if(state.tab==="library")setTab("search");else if(state.tab==="home"){$("cinemaHero").classList.add("hidden")}render();clearTimeout(catalogDebounce);catalogDebounce=setTimeout(()=>fetchCatalog(true),350)});
+  $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";render();fetchCatalog(true)});
+  $("cinemaLoadMore").addEventListener("click",()=>fetchCatalog(false));
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
   document.addEventListener("keydown",e=>{
     if(e.key==="Escape"){exitOverlay();return}
@@ -359,6 +401,7 @@
     const params=new URLSearchParams(location.search);const film=filmById(params.get(FILM_KEY));if(film)openDetails(film);
   }
   render();
+  fetchCatalog(true);
   // Exposes only safe navigation for a future Vetogram host. No Telegram privileged auth.
   window.VetogramCinema={openFilm:id=>{const f=filmById(id);if(f)openDetails(f)},openTab:setTab};
 })();
