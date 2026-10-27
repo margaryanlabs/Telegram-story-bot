@@ -106,3 +106,10 @@ test('saving Wikisource parts preserves source identity and allows reopening loc
   assert.match(js,/async function prefetchNextChapter\(\)/);
   assert.match(js,/connectivity\?\.saveData/);
 });
+
+test('device narration can cross chapter boundary without cutting the last page',()=>{
+  assert.match(js,/async function narrateNextPart\(token\)/);
+  assert.match(js,/await loadChapter\(book,next\)/);
+  assert.match(js,/else void narrateNextPart\(token\)/);
+  assert.match(js,/SpeechSynthesisUtterance\(text\)/);
+});
