@@ -166,3 +166,12 @@ Google Books API public queries require a registered application identifier (API
 - Independent mock-WebView scenario verified: search produced 40 capped results, tapped result jumped to the correct page and highlighted safely; a real bookmark appeared in COMPASS; adding a personal note persisted it to localStorage; the reader stayed open.
 - `tests/vetogram-books-compass.test.js` adds legacy/new bookmark token compatibility, malformed bookmark rejection and reader control contracts.
 - Readiness unchanged: draft PR only, no deploy/merge, real Android/iOS WebView QA and full local Node test suite still outstanding.
+
+## Preview release and modern metadata fallback — 27 October 2026
+
+- Vercel Hobby project `veto` cancels arbitrary feature branches through an **Ignored Build Step** condition, independent of GitHub Actions. Rather than modifying that production project's settings, an **isolated Vercel project** `vetogram-books-stage` was created for the Books review link only. Production messenger remains untouched.
+- Isolated stage execution identified two inaccurate Wikisource test assertions around URL encoding and a nonexistent chapter index; fixed in the branch. The stage then passed **312/312** repository tests on Vercel without using GitHub Actions.
+- Stage smoke check of `/books.html`, `/books.css` and `/books.js` returned HTTP 200. A real `/api/books-wikisource?collection=genres&genre=novels` returned 24 Russian literary works with a continuation cursor, confirming the upstream API actually responds.
+- Google Books without an authorized project API key returned 503 on the stage. A **human-initiated metadata-only Open Library fallback** was therefore added, with explicit Russian language filtering, bounded result fields and an official Open Library source URL. Full texts are not included and Russian edition availability is not a guarantee the work has a Russian full text.
+- Open Library's own rules restrict bulk or high-traffic commercial backend use. This lookup should remain a low-volume, cached evaluation feature; for broad consumer deployment, use properly licensed catalog partnerships or downloadable metadata dumps and register the integration with Open Library.
+- The fallback still requires live verification on the newest stage deployment, especially response time and source restrictions, prior to launch.
