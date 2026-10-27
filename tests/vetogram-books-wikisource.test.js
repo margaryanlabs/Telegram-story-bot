@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import wikisource,{htmlToReaderText} from '../api/books-wikisource.js';
+import wikisource,{htmlToReaderText,structuralChapters} from '../api/books-wikisource.js';
 
 const fakeResponse=()=>({
   code:0,payload:null,headers:{},
@@ -71,6 +71,9 @@ test('reader returns root text, chapter list and chosen chapter; rejects non-boo
   await withFetch(async url=>{
     requests++;
     const parsed=new URL(url);
+    if(parsed.searchParams.get('list')==='allpages')return Response.json({
+      query:{allpages:[{ns:0,pageid:515,title:'Русская книга/Глава 1'}]}
+    });
     assert.equal(parsed.searchParams.get('action'),'parse');
     if(parsed.searchParams.get('pageid')==='110') return Response.json({parse:root});
     if(parsed.searchParams.get('page')==='Русская книга/Глава 1')return Response.json({parse:chapter});
@@ -87,7 +90,7 @@ test('reader returns root text, chapter list and chosen chapter; rejects non-boo
     assert.match(second.payload.text,/Глава первая/);
     assert.equal(second.payload.attribution.revision,1235);
   });
-  assert.equal(requests,3);
+  assert.equal(requests,5);
 });
 test('bad input and other hosts are rejected without a network request',async()=>{
   await withFetch(async()=>{throw Error('network must never be reached');},async()=>{
@@ -256,5 +259,40 @@ test('unsupported genre never creates upstream requests',async()=>{
     const response=fakeResponse();
     await wikisource({method:'GET',query:{collection:'genres',genre:'../../secret'}},response);
     assert.equal(response.code,400);
+  });
+});
+
+test('complete chapter tree discovery keeps deep volume leaves and natural chapter order',async()=>{
+  await withFetch(async url=>{
+    const u=new URL(url);
+    assert.equal(u.hostname,'ru.wikisource.org');
+    assert.equal(u.searchParams.get('list'),'allpages');
+    assert.equal(u.searchParams.get('apprefix'),'Роман/Том'.split('/')[0]+'/');
+    return Response.json({query:{allpages:[
+      {ns:0,pageid:21,title:'Роман/Том 2'},
+      {ns:0,pageid:22,title:'Роман/Том 2/Глава 10'},
+      {ns:0,pageid:23,title:'Роман/Том 1/Глава 2'},
+      {ns:0,pageid:24,title:'Роман/Том 2/Глава 1'},
+      {ns:0,pageid:25,title:'Роман/Том 1/Глава 1'}
+    ]}});
+  },async()=>{
+    const r=await structuralChapters('ru','Роман',[]);
+    assert.equal(r.discovery,'subpages');
+    assert.equal(r.limited,false);
+    assert.deepEqual(r.chapters.map(c=>c.title),[
+      'Роман/Том 1/Глава 1','Роман/Том 1/Глава 2',
+      'Роман/Том 2/Глава 1','Роман/Том 2/Глава 10'
+    ]);
+    assert.ok(!r.chapters.some(c=>c.title==='Роман/Том 2'));
+  });
+});
+test('chapter tree incomplete scan is explicitly marked limited',async()=>{
+  await withFetch(async()=>Response.json({
+    continue:{apcontinue:'Rom/1'},
+    query:{allpages:[{ns:0,pageid:1,title:'Роман/Глава 1'}]}
+  }),async()=>{
+    const data=await structuralChapters('ru','Роман',[]);
+    assert.equal(data.limited,true);
+    assert.equal(data.chapters.length,1);
   });
 });
