@@ -10,7 +10,7 @@
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
-    drafts:new Map(),sendInFlight:false,lastSendFailure:null,
+    drafts:new Map(),sendInFlight:false,lastSendFailure:null,lastSendFailures:new Map(),
     pendingAttachment:null,replyTo:null,stickers:[],stickerSets:[],stickerPack:null,
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
     stickerPreviewUrls:new Map(),recording:null,voiceStarting:false,lastRichFailure:null,
@@ -180,12 +180,17 @@
     if(state.pendingAttachment){await sendRichOutgoing('send_media');return;}
     if(!message || message.length>4096)return;
     const chatId=String(chat.id),ownerKey=state.ownerInitData;
-    const savedRetry=state.lastSendFailure;
-    const retry=savedRetry?.chatId===chatId && savedRetry.message===message;
+    const replyToId=state.replyTo?.id||null;
+    const savedRetry=state.lastSendFailures.get(chatId)||state.lastSendFailure;
+    // A reply to a different message is a different send intent, even if the
+    // text matches. Never reuse Telegram's deduplication nonce across intents.
+    const retry=savedRetry?.chatId===chatId &&
+      savedRetry.message===message&&(savedRetry.replyTo??null)===replyToId;
     const nonce=retry?savedRetry.nonce:window.crypto?.randomUUID?.();
     if(!nonce){toast('Нужен защищённый HTTPS для отправки сообщений');return;}
     state.sendInFlight=true;
-    state.lastSendFailure=null;
+    state.lastSendFailures.delete(chatId);
+    if(state.lastSendFailure?.chatId===chatId)state.lastSendFailure=null;
     setDeliveryStatus('sending',chatId,'text');
     // Immediate input handoff; server delivery is still confirmed asynchronously.
     field.value='';
@@ -199,8 +204,9 @@
     renderMessages();
     renderSendComposer();
     try{
-      const delivered=await sendChatRequest(chatId,message,nonce,state.replyTo?.id||null);
+      const delivered=await sendChatRequest(chatId,message,nonce,replyToId);
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
+      state.lastSendFailures.delete(chatId);
       if(String(state.thread?.id)===chatId){
         setDeliveryStatus('accepted',chatId,'text');
         state.messages=state.messages.filter(item=>String(item.id)!==provisionalId);
@@ -212,7 +218,11 @@
           state.messages.sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
         }
         // Never erase text the user has begun writing while awaiting Telegram.
-        state.replyTo=null;renderReplyPreview();
+        // A user may have selected a new reply target while the network was
+        // in flight; only clear the reply belonging to the sent message.
+        if((state.replyTo?.id||null)===replyToId){
+          state.replyTo=null;renderReplyPreview();
+        }
         if(!field.value.trim())state.drafts.delete(chatId);
         touchRecentChat(chatId,message,new Date().toISOString());
         renderMessages();
@@ -223,14 +233,20 @@
           if(String(state.thread?.id)===chatId && !state.threadLoading && !state.sendInFlight)
             loadMessages({reset:true});
         },750);
-      } else state.drafts.delete(chatId);
+      } else if(!String(state.drafts.get(chatId)||'').trim()){
+        // A delayed acknowledgement must never destroy a fresh draft that the
+        // owner wrote before navigating away from this conversation.
+        state.drafts.delete(chatId);
+      }
       try{tg?.HapticFeedback?.notificationOccurred('success');}catch{}
     }catch(error){
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       // A send can succeed even if the HTTP confirmation is lost.
       // Retain the SAME random_id on deliberate retry, preventing duplicates.
       if(error.uncertain===true){
-        state.lastSendFailure={chatId,message,nonce};
+        const failure={chatId,message,nonce,replyTo:replyToId};
+        state.lastSendFailure=failure;
+        state.lastSendFailures.set(chatId,failure);
       }
       if(String(state.thread?.id)===chatId){
         setDeliveryStatus(error.uncertain?'uncertain':'failed',chatId,'text');
@@ -241,6 +257,10 @@
         }else state.drafts.set(chatId,field.value);
         renderMessages();
         threadNotice(error.message+(error.uncertain?' · Повтор с тем же идентификатором.':''));
+      }else if(!String(state.drafts.get(chatId)||'').trim()){
+        // A failed send belongs to its original thread; preserve that text
+        // there without overwriting the compose field of a different chat.
+        state.drafts.set(chatId,message);
       }
       toast(error.message);
     }finally{
@@ -1616,7 +1636,7 @@
     clearIntelSearch({close:true});
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
-    state.sendInFlight=false;state.lastSendFailure=null;state.lastRichFailure=null;
+    state.sendInFlight=false;state.lastSendFailure=null;state.lastSendFailures.clear();state.lastRichFailure=null;
     state.drafts.clear();state.pendingAttachment=null;state.replyTo=null;
     state.stickers=[];state.stickerSets=[];state.stickerPack=null;
     state.stickerTab='recent';state.stickerQuery='';state.stickerVisible=16;state.stickerEpoch++;
@@ -2598,8 +2618,11 @@
     const chatId=String(state.thread?.id||'');
     if(chatId){
       state.drafts.set(chatId,event.target.value);
-      if(state.lastSendFailure?.chatId===chatId && state.lastSendFailure.message!==event.target.value.trim()){
-        state.lastSendFailure=null; // The user deliberately changed their send intent.
+      const failed=state.lastSendFailures.get(chatId);
+      if(failed&&failed.message!==event.target.value.trim()){
+        state.lastSendFailures.delete(chatId);
+        if(state.lastSendFailure?.chatId===chatId)state.lastSendFailure=null;
+        // New content is a new send intent; it must receive a new nonce.
       }
     }
     renderSendComposer();
