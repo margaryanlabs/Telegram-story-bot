@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 
 const source=readFileSync(new URL('../public/telegram-chats.js',import.meta.url),'utf8');
-const a=source.indexOf('  async function loadMessages({reset=false}={}){');
+const a=source.indexOf('  function invalidateThreadAuthorization(){');
 const b=source.indexOf('  function back(){',a);
 assert.ok(a>0&&b>a,'test shipping thread loader, not a copy');
 const controller=source.slice(a,b);
