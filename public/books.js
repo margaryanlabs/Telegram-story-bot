@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {source:'translated',original:'en',spotlight:'now',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false,flow:false,flowIndex:0,flowParagraphs:[],audioToken:0,audioActive:false};
+  const state = {source:'translated',original:'en',spotlight:'now',readingGenre:'novels',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false,flow:false,flowIndex:0,flowParagraphs:[],audioToken:0,audioActive:false};
   const STORAGE = 'vetogram-books-v1';
   const readJSON = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(STORAGE + ':' + key)); return v ?? fallback; }
@@ -14,9 +14,11 @@
   const quotes = readJSON('quotes', []);
   const prefs = Object.assign({font:19,theme:'dark',fontFace:'literary',leading:'comfortable',width:'normal',speed:1},readJSON('prefs',{}));
   const rememberedSource=readJSON('source','translated');
-  if(['translated','ru','hy','gutenberg','spotlight','local'].includes(rememberedSource))state.source=rememberedSource;
+  if(['translated','ru','hy','gutenberg','spotlight','genres','local'].includes(rememberedSource))state.source=rememberedSource;
   const rememberedSpotlight=readJSON('spotlight','now');
   if(['now','new','fantasy','detective','romance','nonfiction','business','youth','classics'].includes(rememberedSpotlight))state.spotlight=rememberedSpotlight;
+  const rememberedGenre=readJSON('readingGenre','novels');
+  if(['novels','stories','novellas','fantasy','poems','folktales'].includes(rememberedGenre))state.readingGenre=rememberedGenre;
   const rememberedOriginal=readJSON('original','en');
   if(['en','fr','de','it','es'].includes(rememberedOriginal))state.original=rememberedOriginal;
   let abort=null;
@@ -60,6 +62,8 @@
     const isTranslated=state.source==='translated';
     const isSpotlight=state.source==='spotlight';
     const isPrivate=state.source==='local';
+    const isGenres=state.source==='genres';
+    $('readingGenres').hidden=!isGenres;
     $('importBanner').hidden=!isPrivate;
     $('catalogSearch').hidden=isPrivate;
     $('spotlightFilters').hidden=!isSpotlight;
@@ -67,6 +71,7 @@
     $('languageFilter').hidden=!isGutenberg;
     document.querySelector('.topics').hidden=!isGutenberg;
     const choices={
+      genres:['Романы, рассказы, повести, фантастика, стихи и сказки на русском','Читать сейчас','https://ru.wikisource.org/wiki/Special:Copyright'],
       local:['Моя личная библиотека · EPUB, FB2 и TXT без загрузки на сервер','Личные книги',''],
       spotlight:['Русскоязычные издания · современные книги и официальные страницы','Новые книги на русском','https://books.google.com/'],
       translated:['Зарубежные писатели · русские переводы из Викитеки','Зарубежная классика на русском','https://ru.wikisource.org/wiki/Special:Copyright'],
@@ -83,7 +88,7 @@
       :'Источник: Викитека. Права зависят от произведения, перевода и страны; проверьте условия на странице оригинала.';
     $('sourceLegalLink').hidden=isPrivate;
     if(!isPrivate)$('sourceLegalLink').href=item[2];
-    $('catalogCountLabel').textContent=isPrivate?'личных книг на этом устройстве':isSpotlight?'русскоязычных изданий в результате':isGutenberg?'книг в каталоге':isTranslated?'переводных произведений':'результатов в подборке';
+    $('catalogCountLabel').textContent=isGenres?'произведений в выборке':isPrivate?'личных книг на этом устройстве':isSpotlight?'русскоязычных изданий в результате':isGutenberg?'книг в каталоге':isTranslated?'переводных произведений':'результатов в подборке';
     $('bookSearch').placeholder=state.source==='hy'?'Գրքի անուն կամ հեղինակ…'
       :isSpotlight?'Найти современную книгу на русском…':isTranslated?'Название зарубежной книги или автор…':'Название книги или автор…';
     for(const button of document.querySelectorAll('[data-original-lang]')){
@@ -96,11 +101,16 @@
       button.classList.toggle('active',selected);
       button.setAttribute('aria-pressed',String(selected));
     }
+    for(const button of document.querySelectorAll('[data-reading-genre]')){
+      const selected=state.readingGenre===button.dataset.readingGenre;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    }
     const authors=state.source==='ru'
       ? ['Пушкин','Толстой','Чехов','Достоевский','Гоголь']
       :state.source==='hy'
       ? ['Թումանյան','Աբովյան','Րաֆֆի','Աղայան','Չարենց']
-      :isPrivate?[]:isSpotlight?['Дюна','Атомные привычки','Четвёртое крыло','Гарри Поттер','1984','Психология денег']
+      :isPrivate?[]:isGenres?['Достоевский','Толстой','Чехов','Грин','Беляев']:isSpotlight?['Дюна','Атомные привычки','Четвёртое крыло','Гарри Поттер','1984','Психология денег']
       :isTranslated
       ? ({
           en:['Шекспир','Дойль','Диккенс','Уэллс','Лондон'],
@@ -190,7 +200,7 @@
     for(const b of document.querySelectorAll('.topics [data-topic]')){
       b.classList.toggle('active',b.dataset.topic===state.topic);
     }
-    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='local'?'Мои книги на устройстве':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
+    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='local'?'Мои книги на устройстве':state.source==='genres'?'Книги для чтения':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
     $('shelfEyebrow').textContent=state.query ? 'SEARCH / RESULTS' : 'DISCOVER / 01';
   }
   function card(book) {
@@ -268,6 +278,10 @@
     const params=new URLSearchParams({page:String(state.page)});
     if(state.source==='gutenberg')params.set('lang',state.lang);
     else if(state.source==='spotlight')params.set('collection',state.spotlight);
+    else if(state.source==='genres'){
+      params.set('collection','genres');params.set('genre',state.readingGenre);
+      if(!state.query && state.cursor)params.set('cursor',state.cursor);
+    }
     else if(state.source==='translated'){
       params.set('collection','translations');
       params.set('original',state.original);
@@ -301,6 +315,7 @@
       if(!state.books.length){grid.append(node('div','empty-state',state.source==='local'?'Пока нет личных книг. Нажмите «Добавить книгу» и выберите EPUB, FB2 или TXT.':'По этому запросу нет подходящих книг. Попробуйте другого автора, название или подборку.'));}
       $('catalogStatus').textContent=Number.isFinite(state.count)
         ? state.count ? 'Найдено: '+formatCount(state.count) : 'Нет результатов'
+        : state.source==='genres'?'Загружено произведений: '+formatCount(state.books.length)
         : 'Загружено переводов и редакций: '+formatCount(state.books.length);
       $('loadMore').hidden=!(state.nextPage||state.nextCursor);
     }catch(e){
@@ -877,6 +892,13 @@
     }
   }
 
+  for(const button of document.querySelectorAll('[data-reading-genre]'))button.addEventListener('click',()=>{
+    if(state.readingGenre===button.dataset.readingGenre)return;
+    state.readingGenre=button.dataset.readingGenre;
+    persist('readingGenre',state.readingGenre);
+    state.query='';$('bookSearch').value='';
+    setSourceInfo();loadCatalog(true);
+  });
   for(const button of document.querySelectorAll('[data-spotlight]'))button.addEventListener('click',()=>{
     state.spotlight=button.dataset.spotlight;
     persist('spotlight',state.spotlight);
