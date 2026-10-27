@@ -113,3 +113,52 @@ test('device narration can cross chapter boundary without cutting the last page'
   assert.match(js,/else void narrateNextPart\(token\)/);
   assert.match(js,/SpeechSynthesisUtterance\(text\)/);
 });
+
+
+test('whole-edition offline pack preserves chapter order and never persists partial copies',async()=>{
+  const begin=js.indexOf('  async function saveWholeEditionOffline(){');
+  const end=js.indexOf('  function setVolumeStatus(',begin);
+  assert.ok(begin>=0&&end>begin,'Offline edition pack missing');
+  const source=js.slice(begin,end);
+  async function verify(failing=-1){
+    const book={provider:'wikisource',id:145,wiki:'ru',title:'Роман'};
+    const chapters=Array.from({length:4},(_,i)=>({
+      title:'Роман/Глава '+(i+1),label:'Глава '+(i+1)
+    }));
+    const state={current:book,isTranslationIndex:false,chapters,rawText:''};
+    const elements={
+      reader:{hidden:false},readerSaveAllChapters:{disabled:false,textContent:''},
+      readerDownloadHint:{textContent:''}
+    };
+    const savedCopies=[];
+    const imported={saveWikisourceEdition:async(_book,items,parts)=>{
+      savedCopies.push({chapters:items,parts});
+      return {provider:'local',id:99,title:'Роман'};
+    }};
+    const factory=new Function('state','$','isWiki','window','bookKey','cachedText',
+      'cacheText','fetch','persist','saved','updateSavedCount','toast','openBook',
+      'let offlineSavedBook=null;let offlineEditionToken=0;'+source+
+      'return saveWholeEditionOffline;');
+    const download=factory(state,id=>elements[id],book=>book.provider==='wikisource',
+      {VetogramBooksImport:imported},book=>'ws-'+book.id,
+      async()=>null,async()=>{},
+      async url=>{
+        const i=Number(new URL('https://unit.invalid/'+url).searchParams.get('chapter'));
+        if(i===failing)return {ok:false,json:async()=>({ok:false})};
+        await Promise.resolve();
+        return {ok:true,json:async()=>({
+          ok:true,text:('Глава '+i+' — русский текст. ').repeat(6),book,chapters
+        })};
+      },
+      ()=>{},{},()=>{},()=>{},async()=>{});
+    await download();
+    return {savedCopies,notice:elements.readerDownloadHint.textContent};
+  }
+  const complete=await verify();
+  assert.equal(complete.savedCopies.length,1);
+  assert.equal(complete.savedCopies[0].parts.length,4);
+  assert.deepEqual(complete.savedCopies[0].parts.map(x=>Number(x.match(/^Глава (\d+)/)[1])),[0,1,2,3]);
+  const failed=await verify(2);
+  assert.equal(failed.savedCopies.length,0);
+  assert.match(failed.notice,/недоступна/);
+});
