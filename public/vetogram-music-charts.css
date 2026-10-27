@@ -22,9 +22,9 @@
 .chart-art img{width:100%;height:100%;object-fit:cover;position:relative;z-index:1}.chart-art-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:24px;color:#fcd5d4}
 .chart-track-info{min-width:0;flex:1}.chart-track-info b,.chart-track-info small{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.chart-track-info b{font-size:12px;letter-spacing:-.015em}.chart-track-info small{color:#9ea8c0;font-size:11px;margin:3px 0 5px}
 .chart-tags{display:flex;flex-wrap:wrap;gap:6px}.chart-tags span{font-size:8px;letter-spacing:.05em;color:#e2acc5;border:1px solid #ffb6cf24;border-radius:5px;padding:2px 5px}
-.chart-play,.chart-share{border:1px solid #ffffff20;border-radius:11px;flex:none;width:38px;height:38px;display:grid;place-items:center;color:#f7d6e2;background:#ffffff14;font-size:17px}
+.chart-play,.chart-share,.chart-like,.chart-add{border:1px solid #ffffff20;border-radius:11px;flex:none;width:38px;height:38px;display:grid;place-items:center;color:#f7d6e2;background:#ffffff14;font-size:17px}
 .chart-play{color:#231d2d;background:linear-gradient(115deg,#ffcfaa,#f595b8);border:0;font-size:15px;box-shadow:0 7px 17px #f28fab29}
-.chart-play:hover,.chart-share:hover{filter:brightness(1.12)}
+.chart-play:hover,.chart-share:hover,.chart-like:hover,.chart-add:hover{filter:brightness(1.12)}
 .chart-empty{padding:26px 18px;text-align:center;background:#ffffff07;border:1px dashed #ffffff27;border-radius:13px;color:#b6b8ce;font-size:12px}
 .region-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:23px 0}.region-controls button{display:grid;text-align:left;grid-template-columns:40px 1fr;gap:0 12px;align-items:center;padding:16px;background:#ffffff09;color:#edeaf9;border:1px solid #ffffff22;border-radius:15px;min-width:0}
 .region-controls button.active{border-color:#f9b3ba6b;background:linear-gradient(110deg,#f8b0c91c,#c5b0fd10);box-shadow:inset 3px 0 #f5aec3}
@@ -47,3 +47,7 @@
 @media(max-width:650px){.charts-hero{padding:24px;border-radius:19px;min-height:0}.charts-hero-copy h1{font-size:40px}.charts-hero-tags{gap:6px}.charts-hero-tags span{font-size:8px;padding:7px}.charts-block,.charts-regions,.charts-stations{padding:18px;border-radius:18px}.charts-head h2{font-size:27px}.charts-head{gap:8px}.charts-refresh{font-size:10px;padding:9px}.charts-genres,.charts-filters{gap:6px}.charts-filters button,.charts-genres button{padding:8px 11px;font-size:10px}.region-controls{gap:8px}.region-controls button{grid-template-columns:30px 1fr;padding:12px;gap:0 7px}.region-controls button>span{font-size:23px}.region-controls button>b{font-size:10px}.region-controls button>small{font-size:9px}.chart-art{width:43px;height:43px}.chart-track{gap:8px;padding:9px}.chart-rank{width:18px}.chart-track-info b{font-size:11px}.chart-track-info small{font-size:10px}.chart-play,.chart-share{height:32px;width:32px}.chart-radio-card .chart-art{width:54px;height:54px}.charts-home-entry{display:block;padding:20px}.charts-home-entry strong{font-size:20px}.charts-home-entry button{margin-top:11px}}
 @media(max-width:400px){.charts-head p{font-size:10px}.chart-tags span:nth-child(2){display:none}.charts-filters button{padding:8px 10px}.region-query>div{gap:6px}.region-query button{padding:9px}}
 @media(prefers-reduced-motion:reduce){.charts-record{animation:none!important}.chart-track{transition:none!important}}
+/* Accessible in-row favorites & add-to-playlist, same controls as Listening Room. */
+.chart-like{color:#ffb0c4}.chart-add{color:#b4c7ff}.chart-like,.chart-add{font-size:18px}
+@media(max-width:600px){.chart-track{gap:7px}.chart-play,.chart-share,.chart-like,.chart-add{width:29px;height:32px;border-radius:9px;font-size:14px}.chart-rank{min-width:20px}.chart-art{width:42px;height:42px}}
+@media(max-width:375px){.chart-track .chart-share{display:none}.chart-tags span{font-size:7px}}
