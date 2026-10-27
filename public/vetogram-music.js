@@ -14,7 +14,7 @@ const safe=(url)=>{try{const u=new URL(String(url));return u.protocol==="https:"
 const format=s=>!Number.isFinite(s)||s<0?"0:00":Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
 const send=(msg)=>{const e=$("globalToast");e.textContent=msg;e.classList.add("visible");clearTimeout(send.timer);send.timer=setTimeout(()=>e.classList.remove("visible"),4200)};
 const jLoad=(k,fallback)=>{try{const x=JSON.parse(localStorage.getItem(k)||"null");return x===null?fallback:x}catch{return fallback}};
-const persist=()=>{try{localStorage.setItem(key,JSON.stringify({liked:state.liked.slice(0,250).map(x=>({id:x.id,title:x.title,artist:x.artist,source:x.source,artwork:x.artwork||"",stream: ["radio","stream"].includes(x.source)?safe(x.stream):undefined})),metadata:state.metadata.slice(0,300),streams:state.streams.slice(0,150).map(x=>({id:x.id,title:x.title,artist:x.artist,stream:x.stream,source:"stream"})),mood:state.mood}));return true}catch{send("Локальное хранилище недоступно");return false}};
+const persist=()=>{try{localStorage.setItem(key,JSON.stringify({liked:state.liked.slice(0,250).map(x=>({id:x.id,title:x.title,artist:x.artist,source:x.source,artwork:x.artwork||"",stream: ["radio","stream","archive"].includes(x.source)?safe(x.stream):undefined,permalink:x.source==="archive"?safe(x.permalink):undefined,license:x.source==="archive"?String(x.license||""):undefined,license_url:x.source==="archive"?safe(x.license_url):undefined})),metadata:state.metadata.slice(0,300),streams:state.streams.slice(0,150).map(x=>({id:x.id,title:x.title,artist:x.artist,stream:x.stream,source:"stream"})),mood:state.mood}));return true}catch{send("Локальное хранилище недоступно");return false}};
 const saved=jLoad(key,{});state.liked=Array.isArray(saved.liked)?saved.liked.slice(0,250):[];
 state.metadata=Array.isArray(saved.metadata)?saved.metadata.slice(0,300):[];
 state.streams=Array.isArray(saved.streams)?saved.streams.slice(0,150).filter(x=>x&&x.source==="stream"&&safe(x.stream)&&x.title&&x.artist).map(x=>({
@@ -24,11 +24,11 @@ state.mood=saved.mood==="aurora"?"aurora":"ember";
 document.documentElement.dataset.ambient=state.mood;
 const unique=list=>{const s=new Set();return list.filter(x=>{if(!x?.id||s.has(x.id))return false;s.add(x.id);return true;})};
 function showPage(page){
- if(!["home","search","charts","catalog","originals","library","radio","import"].includes(page))return;
+ if(!["home","search","charts","catalog","originals","archive","library","radio","import"].includes(page))return;
  state.page=page;
  $$(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
  $$("[data-page]").forEach(el=>{el.classList.toggle("active",el.dataset.page===page);if(el.dataset.page===page)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")});
- $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",originals:"ОРИГИНАЛЫ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
+ $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",originals:"ОРИГИНАЛЫ",archive:"БИБЛИОТЕКА",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
  window.scrollTo({top:0,behavior:"instant"});
  if(page==="library")renderLibrary();
  if(page==="home")renderHome();
@@ -36,6 +36,7 @@ function showPage(page){
  if(page==="search")setTimeout(()=>$("searchInput").focus({preventScroll:true}),60);
  if(page==="charts")document.dispatchEvent(new CustomEvent("vetogram:charts-open"));
  if(page==="catalog")document.dispatchEvent(new CustomEvent("vetogram:catalog-open"));
+ if(page==="archive")document.dispatchEvent(new CustomEvent("vetogram:archive-open"));
 }
 $$("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
 $("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>showPage("catalog");
@@ -53,7 +54,7 @@ function row(track,index,context){
  const cover=dom("div","track-cover","♫"),url=safe(track.artwork);
  if(url){const img=dom("img");img.src=url;img.alt="";img.loading="lazy";img.addEventListener("error",()=>img.remove());cover.append(img)}
  const main=dom("div","track-info");main.append(dom("b","",track.title||"Без названия"),dom("small","",track.artist||"Неизвестный исполнитель"));
- const tag=dom("span","source-tag",track.source==="local"?"МОЙ ФАЙЛ":track.source==="stream"?"ПО ССЫЛКЕ":track.source==="demo"?"ОРИГИНАЛЬНОЕ ДЕМО":track.source==="radio"?"LIVE RADIO":track.source==="metadata"?"ТОЛЬКО СПИСОК":"AUDIUS");
+ const tag=dom("span","source-tag",track.source==="local"?"МОЙ ФАЙЛ":track.source==="stream"?"ПО ССЫЛКЕ":track.source==="demo"?"ОРИГИНАЛЬНОЕ ДЕМО":track.source==="radio"?"LIVE RADIO":track.source==="archive"?"ARCHIVE · CC":track.source==="metadata"?"ТОЛЬКО СПИСОК":"AUDIUS");
  const like=dom("button","track-btn like",favorited(track)?"♥":"♡");
  like.type="button";like.title=favorited(track)?"Убрать из избранного":"В избранное";like.setAttribute("aria-label",like.title);
  like.onclick=()=>toggleLike(track);
