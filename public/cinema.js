@@ -1,7 +1,7 @@
 /* VETOGRAM CINEMA V1 — independent Telegram Mini App. Zero pirate sources. */
 (function () {
   "use strict";
-  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaSeriesEpisodes||[]),...(window.VetogramCinemaPopularSeries||[]),...(window.VetogramCinemaFranchises||[])];
+  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaSeriesEpisodes||[]),...(window.VetogramCinemaFranchises||[])];
   let films=[...new Map(filmInputs.map(f=>[f.id,f])).values()];
   const $=id=>document.getElementById(id);
   const BASE="https://commons.wikimedia.org/w/api.php";
@@ -337,7 +337,7 @@
   }
   function selectedFilms(){
     let list=films.filter(f=>!f.discoveryOnly||state.showUnverified||f.russianAudioStatus==="catalog-listed");
-    if(state.tab==="series")list=list.filter(f=>f.contentType==="Сериалы");
+    if(state.tab==="series")list=list.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true);
     if(state.tab==="catalog")list=list.filter(f=>f.contentType!=="Сериалы");
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
     if(state.genre!=="Все")list=list.filter(f=>(f.genres||[]).includes(state.genre)||
@@ -454,17 +454,13 @@
       .sort((a,b)=>uploadTime(b[0])-uploadTime(a[0]));
   }
   function renderSeriesCollections(){
-    const popular=films.filter(f=>f.seriesPopular&&f.russianAudioStatus==="catalog-listed");
     const playable=films.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true&&f.player?.type==="iframe");
     const groups=groupedSeries();
     const home=isHome(),onSeries=state.tab==="series";
-    $("cinemaPopularSeries").classList.toggle("hidden",!home&&!onSeries);
-    if(home||onSeries)$("cinemaPopularSeriesRail").replaceChildren(...popular.map(filmCard));
     $("cinemaSeriesHub").classList.toggle("hidden",!onSeries);
     if(onSeries){
       $("cinemaSeriesPlayableRail").replaceChildren(...groups.slice(0,45).map(g=>filmCard(g[0])));
-      text("cinemaSeriesStats",playable.length+" серий и сборников · "+groups.length+" сериалов в оригинальном плеере · "+popular.length+
-        " популярных сериалов с указанной русской дорожкой");
+      text("cinemaSeriesStats",playable.length+" реальных серий и сборников · "+groups.length+" сериалов с исходным плеером");
     }
   }
   function refreshDiscovery(){
@@ -524,7 +520,7 @@
     }));
     let title=state.genre==="Все"?"Вся коллекция":state.genre,subtitle="Фильмы, сериалы и мультфильмы из официальных видеоканалов. Новые записи появляются в каталоге.";
     if(state.tab==="catalog")title="Каталог фильмов";
-    if(state.tab==="series"){title="Все сериалы";subtitle="99 публикаций исходных плееров и популярные сериалы на русском у официальных сервисов. Доступность по региону уточняется.";}
+    if(state.tab==="series"){title="Серии для просмотра";subtitle="Публикации официальных каналов со встроенными плеерами. Доступность конкретного видео зависит от источника и региона.";}
     if(state.tab==="search")title="Результаты поиска";
     if(state.tab==="library"){title="Моё избранное";subtitle="Сохраняется на этом устройстве."}
     text("cinemaSectionTitle",title);text("cinemaSectionDescription",subtitle);
