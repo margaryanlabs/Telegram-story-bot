@@ -12,7 +12,7 @@ const safe=u=>{try{const x=new URL(String(u));return x.protocol==="https:"?x.hre
 const pick=x=>x&&x.id&&x.title?{
  id:cap(x.id,160),title:cap(x.title,120),artist:cap(x.artist,95),
  source:["audius","radio","local","demo","metadata","stream","archive","ccmixter"].includes(x.source)?x.source:"metadata",
- artwork:safe(x.artwork),stream:["radio","stream","archive","ccmixter"].includes(x.source)?safe(x.stream):"",homepage:x.source==="radio"?safe(x.homepage):""
+ artwork:safe(x.artwork),stream:["radio","stream","archive","ccmixter"].includes(x.source)?safe(x.stream):"",homepage:x.source==="radio"?safe(x.homepage):"",\n permalink:["archive","ccmixter"].includes(x.source)?safe(x.permalink):"",\n license:["archive","ccmixter"].includes(x.source)?cap(x.license,32):"",\n license_url:["archive","ccmixter"].includes(x.source)?safe(x.license_url):""
 }:null;
 let lists=[];
 try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v))lists=v.slice(0,MAX).filter(p=>p&&typeof p.name==="string"&&Array.isArray(p.tracks)).map(p=>({
@@ -116,6 +116,12 @@ function draw(){
  p.tracks.forEach((t,i)=>{
   const row=el("div","vmc-track"),info=el("div","vmc-track-info");
   info.append(el("b","",t.title),el("small","",t.artist+(t.source==="metadata"?" · только название":t.source==="local"?" · свой файл":"")));
+  if(["archive","ccmixter"].includes(t.source)){
+   const credit=el("small","",t.license+" · "+(t.source==="archive"?"Internet Archive":"ccMixter")+" · ");
+   if(t.permalink){const source=el("a","","Автор / источник ↗");source.href=t.permalink;source.target="_blank";source.rel="noopener noreferrer";credit.append(source)}
+   if(t.license_url){const lic=el("a",""," · лицензия ↗");lic.href=t.license_url;lic.target="_blank";lic.rel="noopener noreferrer";credit.append(lic)}
+   info.append(credit);
+  }
   const control=el("div","vmc-track-controls");
   control.append(btn(available(t)?"▶":"⌕","vmc-icon",()=>{
     if(available(t))play(p,t.id);
