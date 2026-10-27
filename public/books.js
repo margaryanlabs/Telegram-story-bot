@@ -251,7 +251,29 @@
     bottom.append(node('span','','VETOGRAM READING'),node('span','jacket-star','✳'));
     host.append(art,top,title,author,bottom);
   }
+  function renderHeroShowcase(){
+    const host=$('heroShowcase');
+    if(!host||host.childElementCount)return;
+    const choices=[completeEditionBooks[6],completeEditionBooks[0],completeEditionBooks[1]];
+    for(let i=0;i<choices.length;i++){
+      const book=choices[i];
+      if(!book)continue;
+      const button=node('button','hero-show-book hero-show-book-'+(i+1));
+      button.type='button';button.setAttribute('aria-label','Читать «'+book.title+'»');
+      const cover=node('div','book-cover hero-cover-art');
+      coverArtwork(cover,book);
+      button.append(cover);
+      button.addEventListener('click',()=>openBook(book));
+      host.append(button);
+    }
+    const caption=node('div','hero-show-caption');
+    caption.append(node('span','','КОЛЛЕКЦИЯ / 001'),
+      node('strong','','Истории без лишнего шума'),
+      node('span','','Нажми на любую книгу, чтобы начать.'));
+    host.append(caption);
+  }
   function renderFeaturedEditions(){
+    renderHeroShowcase();
     const section=$('featuredEditions'),host=$('featuredEditionGrid');
     if(!section||!host)return;
     section.hidden=state.source!=='complete';
