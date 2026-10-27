@@ -24,11 +24,11 @@ state.mood=saved.mood==="aurora"?"aurora":"ember";
 document.documentElement.dataset.ambient=state.mood;
 const unique=list=>{const s=new Set();return list.filter(x=>{if(!x?.id||s.has(x.id))return false;s.add(x.id);return true;})};
 function showPage(page){
- if(!["home","search","charts","catalog","originals","archive","mixter","hits","library","radio","import"].includes(page))return;
+ if(!["home","search","charts","catalog","originals","youtube","archive","mixter","hits","library","radio","import"].includes(page))return;
  state.page=page;
  $$(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
  $$("[data-page]").forEach(el=>{el.classList.toggle("active",el.dataset.page===page);if(el.dataset.page===page)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")});
- $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",originals:"ОРИГИНАЛЫ",archive:"БИБЛИОТЕКА",mixter:"CC РЕМИКСЫ",hits:"МИРОВЫЕ ХИТЫ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
+ $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",originals:"ОРИГИНАЛЫ",youtube:"YOUTUBE МУЗЫКА",archive:"БИБЛИОТЕКА",mixter:"CC РЕМИКСЫ",hits:"МИРОВЫЕ ХИТЫ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
  window.scrollTo({top:0,behavior:"instant"});
  if(page==="library")renderLibrary();
  if(page==="home")renderHome();
@@ -39,6 +39,7 @@ function showPage(page){
  if(page==="archive")document.dispatchEvent(new CustomEvent("vetogram:archive-open"));
  if(page==="mixter")document.dispatchEvent(new CustomEvent("vetogram:mixter-open"));
  if(page==="hits")document.dispatchEvent(new CustomEvent("vetogram:hits-open"));
+ if(page==="youtube")document.dispatchEvent(new CustomEvent("vetogram:youtube-open"));
 }
 $$("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
 $("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>showPage("charts");
