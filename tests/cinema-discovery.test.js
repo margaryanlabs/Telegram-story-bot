@@ -73,13 +73,13 @@ test("archives fetch six rights-holder channel pages, then sort and filter them"
 test("catalogue genre and release-year sorting are independent",()=>{
  const app=harness();
  app.films.push(
-   {id:"s1",title:"Сериал",year:2024,genres:["Сериалы"],contentType:"Сериалы",publishedAt:"2026-10-14T10:00:00"},
+   {id:"s1",title:"Сериал",year:2024,genres:["Сериалы"],contentType:"Сериалы",player:{licensed:true},publishedAt:"2026-10-14T10:00:00"},
    {id:"s2",title:"Фильм",year:1980,genres:["Фильмы"],contentType:"Фильмы",publishedAt:"2026-10-26T10:00:00"}
  );
- app.state.genre="Сериалы";
+ app.state.tab="series";app.state.genre="Сериалы";
  assert.deepEqual(app.selectedFilms().map(f=>f.id),["s1"]);
- app.state.genre="Все";app.state.sort="year";
- assert.deepEqual(app.selectedFilms().map(f=>f.id),["s1","seed","s2"]);
+ app.state.tab="catalog";app.state.genre="Все";app.state.sort="year";
+ assert.deepEqual(app.selectedFilms().map(f=>f.id),["seed","s2"]);
 });
 
 test("public movie feed is not a downloader and does not hide source credit",()=>{
