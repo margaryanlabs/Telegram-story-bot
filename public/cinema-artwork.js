@@ -5,7 +5,7 @@
 (function(){
  "use strict";
  const cache=new Map();
- const allowedImageHosts=new Set(["pic.rutube.ru","pic.rtbcdn.su","pic.rutubelist.ru"]);
+ const allowedImageHosts=new Set(["pic.rutube.ru","pic.rtbcdn.su","pic.rutubelist.ru","pic.rtbcdn.ru"]);
  function rutubeVideoId(film){
    if(!film?.player?.url)return null;
    try{
