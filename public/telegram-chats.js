@@ -2389,7 +2389,9 @@
     const generation=++state.threadGeneration;
     state.syncRunId++;state.syncBusy=false; // current history load supersedes any old poll
     state.threadLoading=true;
-    if(reset&&!rememberedAnchor)state.messages=[];
+    // Do not erase already verified owner-scoped history before the server
+    // confirms a refresh. A missing scroll anchor is NOT missing messages.
+    // openThread() already empties state.messages when the peer actually changes.
     $('telegramThreadOlder').hidden=true;
     // Show an actual loading state even for a first open/retry with no cached
     // messages; otherwise the last inbox teaser or error stays frozen.
@@ -2447,11 +2449,22 @@
     }catch(error){
       if(generation!==state.threadGeneration)return;
       state.threadLoading=false;
+      const authRejected=[401,403,409].includes(Number(error?.httpStatus||0));
+      if(authRejected){
+        // A genuine signed-session/ownership failure must not keep private
+        // messages and previously downloaded media available in the UI.
+        state.messages=[];state.threadCache.clear();state.connectionProof=null;
+        if(state.thread)state.thread.serverCanSend=false;
+        revokeMediaUrls();
+        renderSendComposer();
+      }
       state.threadLoadError=String(error.message||'Нет ответа Telegram');
       threadNotice(state.threadLoadError);
-      syncLabel('Нет подтверждения Telegram · нажми ↻ для повтора');
-      scheduleThreadSync(45000);
-      if(reset)renderMessages();
+      syncLabel(authRejected
+        ?'Telegram требует переподключения · проверь доступ'
+        :'Нет свежего ответа Telegram · история на экране сохранена');
+      if(!authRejected)scheduleThreadSync(45000);
+      if(reset||authRejected)renderMessages({keepScroll:!authRejected,anchor:authRejected?null:rememberedAnchor});
       else $('telegramThreadOlder').hidden=!state.threadHasMore;
     }
   }
