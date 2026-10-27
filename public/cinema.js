@@ -269,7 +269,8 @@
   function selectedFilms(){
     let list=films;
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
-    if(state.genre!=="Все")list=list.filter(f=>f.genres.includes(state.genre));
+    if(state.genre!=="Все")list=list.filter(f=>(f.genres||[]).includes(state.genre)||
+      (state.genre==="Фильмы"&&!f.contentType&&Number(f.minutes)>30));
     const q=state.query.trim().toLocaleLowerCase("ru-RU");
     if(q)list=list.filter(f=>(f.title+" "+f.original+" "+f.year+" "+f.genres.join(" ")).toLocaleLowerCase("ru-RU").includes(q));
     return list;
