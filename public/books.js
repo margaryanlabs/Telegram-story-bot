@@ -78,6 +78,7 @@
     ):completeEditionBooks;
   }
   function setSourceInfo(){
+    document.body.dataset.booksSource=state.source;
     const isGutenberg=state.source==='gutenberg';
     const isComplete=state.source==='complete';
     const isTranslated=state.source==='translated';
@@ -1385,6 +1386,22 @@
     btn?.click();
     $('catalogGrid').scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
   });
+  // Motion has no network payload; respects OS reduced-motion preferences.
+  const hero=document.querySelector('.hero-veto');
+  if(hero && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
+    hero.addEventListener('pointermove',event=>{
+      if(event.pointerType==='touch')return;
+      const rect=hero.getBoundingClientRect();
+      const centerX=(event.clientX-rect.left)/rect.width-.5;
+      const centerY=(event.clientY-rect.top)/rect.height-.5;
+      hero.style.setProperty('--veto-tilt-x',(centerX*7).toFixed(2)+'deg');
+      hero.style.setProperty('--veto-tilt-y',(-centerY*6).toFixed(2)+'deg');
+    });
+    hero.addEventListener('pointerleave',()=>{
+      hero.style.setProperty('--veto-tilt-x','0deg');
+      hero.style.setProperty('--veto-tilt-y','0deg');
+    });
+  }
   $('heroMyBooks').addEventListener('click',()=>{
     document.querySelector('[data-books-source="local"]')?.click();
     $('importBanner').scrollIntoView({behavior:'smooth',block:'center'});
