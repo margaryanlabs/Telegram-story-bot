@@ -36,6 +36,8 @@ test("foreign uploader, trailers, paid, private, shorts and live items rejected"
 test("other official studios require their exact channel author",()=>{
  assert.ok(parseVideo(video({author:{id:CHANNELS.lenfilm.id}}),"lenfilm"));
  assert.ok(parseVideo(video({author:{id:CHANNELS.gorky.id}}),"gorky"));
+ assert.ok(parseVideo(video({author:{id:CHANNELS.starmedia.id}}),"starmedia"));
+ assert.ok(parseVideo(video({author:{id:CHANNELS.marsmedia.id}}),"marsmedia"));
  assert.equal(parseVideo(video({author:{id:CHANNELS.mosfilm.id}}),"gorky"),null);
 });
 test("pagination never follows untrusted next URL",()=>{
