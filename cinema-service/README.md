@@ -154,3 +154,25 @@ curl -s "http://127.0.0.1:3800/api/cinema/channels?channel=gorky&page=1"
 \`\`\`
 
 Responses depend on the live RUTUBE metadata service. A request may be rejected or filtered to zero movies. The implementation only supports verified studio owners and public embeddable films. \`/api/cinema/movies\` will answer 503 until a PostgreSQL connection is configured; the UI retains its offline seed. For an actual Telegram Mini App, map \`/api/cinema/*\` to the service through a same-origin **HTTPS** reverse proxy. This has not been deployed or verified on devices yet.
+
+
+## Cinema studio stream route — Vercel integration fix, 27 October 2026
+
+The existing monorepo Vercel config routes only single-level \`/api/[name]\` calls to the single \`api/router.js\` function. The original frontend path \`/api/cinema/channels\` could never reach \`cinema-service/server.mjs\` on the VETOGRAM Vercel app.
+
+**Fixed in the Cinema feature branch:** \`api/cinema-channels.js\` is registered in \`api/router.js\`; the frontend now calls same-origin \`GET /api/cinema-channels?channel=mosfilm&page=1\`. The separate VPS endpoint still exists if a VPS is preferred. Vercel route is metadata-only: no DB, API key, video proxy or media copies. The server returns structured upstream errors (ACCESS_DENIED, TIMEOUT, BAD_RESPONSE, UNAVAILABLE) and caches successful catalogue responses.
+
+Five original film-producer channels are configured:
+- Mosfilm — 25963146 — https://rutube.ru/channel/25963146/
+- Lenfilm — 1792500 — https://rutube.ru/channel/1792500/
+- Gorky Studio — 48160110 — https://rutube.ru/channel/48160110/
+- Star Media — 141565 — https://rutube.ru/channel/141565/
+- Mars Media — 29207414 — https://rutube.ru/channel/29207414/
+
+For large foreign-dubbed film catalogs, \`Смотри кино!\` on RUTUBE has more than 5,000 reported public videos, but its rights for major Hollywood titles and third-party commercial embedding could not be established. It is deliberately not auto-imported into VETOGRAM.
+
+The channel fetch now uses the documented \`origin__type=rtb,rst,ifrm,rspa\` videos filter from \`yt-dlp/yt_dlp/extractor/rutube.py\`, excluding shorts at source where supported. Backend response includes per-page filtering diagnostics for incorrect publisher IDs, too-short clips, unknown uploader, blocked/private items and non-movie titles.
+
+**Actual attempted preview deployment:** Vercel project \`veto\` under labsmargaryan account was deployed to preview from Cinema PR (not production), deployment ID \`dpl_2nDZ8D6mCe3XeTHQRjkwvA6BryLL\`. Vercel returned **CANCELED / Ignored Build Step**. Production and \`main\` were not modified; this preview URL is not a working movie site. Do not infer successful access to RUTUBE based on mocked tests. Vercel build settings must be changed or a dedicated Cinema preview project provisioned before actual stream tests. Avoid repeated preview redeploys while the ignored-step rule still blocks them, as canceled builds can count toward quotas.
+
+Validation performed: JS syntax checks, DOM ID bindings, mock RUTUBE upstream API and same-origin Vercel handler (200 for configured studio, client-supplied invalid channel rejected). No live RUTUBE channel feed or player has yet been verified in a running Telegram WebView.
