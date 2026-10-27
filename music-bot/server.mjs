@@ -5,6 +5,7 @@
 import { createServer } from "node:http";
 import { timingSafeEqual } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { createMusicStore } from "./library.mjs";
 
 export function verifySecret(given, expected) {
   if(typeof given!=="string"||typeof expected!=="string"||!expected)return false;
@@ -33,7 +34,75 @@ export function makeReply(update) {
     reply_parameters:{message_id:m.message_id,allow_sending_without_reply:true}
   }};
 }
-export function createWebhookHandler({token,secret,fetchImpl=fetch}) {
+function ownChat(update){
+  const m=update?.message;
+  if(!m||m.chat?.type!=="private"||m.from?.is_bot||m.chat?.id!==m.from?.id)return null;
+  return m;
+}
+function replyText(chat_id,text){
+  return {method:"sendMessage",body:{chat_id,text}};
+}
+function trackText(track,index){
+  const title=String(track.title||"Без названия").replace(/[\r\n]/g," ").slice(0,76);
+  const who=String(track.performer||"Неизвестный исполнитель").replace(/[\r\n]/g," ").slice(0,67);
+  return String(index)+". "+who+" — "+title;
+}
+/* Persistent library is enabled only when a configured store is supplied.
+   The previous echo-only behavior is kept for minimal deployment and tests. */
+export async function makeLibraryReply(update,store){
+  if(!store)return makeReply(update);
+  const m=ownChat(update);
+  if(!m)return null;
+  const id=m.chat.id,cmd=String(m.text||"").trim();
+  if(/^\/(?:start|help)(?:@\w+)?$/i.test(cmd))
+    return replyText(id,
+      "♫ Vetogram Music · моя библиотека\n\n"+
+      "Пришли своё MP3/M4A в личный чат — сохраню запись по file_id и верну её для прослушивания через Telegram.\n"+
+      "/list — мои треки\n/play 1 — воспроизвести первый\n/search название — найти у себя\n/delete 1 — удалить запись из библиотеки\n\n"+
+      "Музыка остаётся приватной; бот не видит другие чаты. Это не публичный каталог.");
+  if(/^\/list(?:@\w+)?(?:\s+\d{1,3})?$/i.test(cmd)){
+    const page=Math.min(15,Math.max(1,Number(cmd.match(/\s+(\d{1,3})$/)?.[1]||1)));
+    const items=await store.list(id,{offset:(page-1)*20,limit:20});
+    if(!items.total)return replyText(id,"Пока пусто. Отправь аудиозапись (♫), и она появится здесь.");
+    const listed=items.tracks.map((t,i)=>trackText(t,items.offset+i+1));
+    const totalPages=Math.ceil(items.total/20);
+    return replyText(id,"♫ Моя музыка · "+items.total+" треков · стр. "+page+"/"+totalPages+
+      "\n\n"+listed.join("\n")+"\n\n/play N — слушать · /delete N — убрать · /list "+(page+1)+" — дальше");
+  }
+  const play=cmd.match(/^\/play(?:@\w+)?\s+(\d{1,3})$/i);
+  if(play){
+    const selected=await store.get(id,Number(play[1]));
+    if(!selected)return replyText(id,"Нет записи с таким номером. Отправь /list.");
+    return {method:"sendAudio",body:{chat_id:id,audio:selected.file_id,
+      title:selected.title,performer:selected.performer,caption:"♫ Моя музыка · Vetogram Music"}};
+  }
+  const remove=cmd.match(/^\/delete(?:@\w+)?\s+(\d{1,3})$/i);
+  if(remove){
+    const deleted=await store.remove(id,Number(remove[1]));
+    return replyText(id,deleted?"Запись убрана из личной библиотеки. Само сообщение в Telegram осталось.":"Не нашёл такой номер. /list");
+  }
+  const search=cmd.match(/^\/search(?:@\w+)?\s+(.{2,70})$/i);
+  if(search){
+    const matches=await store.search(id,search[1],{limit:20});
+    return replyText(id,matches.length?"♫ Результаты в твоей библиотеке:\n\n"+
+      matches.map(t=>trackText(t,t.index)).join("\n")+"\n\n/play N — воспроизвести":
+      "Ничего не нашёл в твоей библиотеке. /list — полный список.");
+  }
+  if(m.audio){
+    const incoming=makeReply(update);
+    if(!incoming)return null;
+    if(incoming.method!=="sendAudio")return incoming;
+    const saved=await store.add(id,m.audio);
+    return {method:"sendAudio",body:{...incoming.body,
+      caption:(saved.added?"♫ Добавлено в твою библиотеку.":"♫ Этот трек уже есть в библиотеке.")+
+      " Всего: "+saved.count+". /list — все песни. Ты можешь слушать здесь в плеере Telegram."}};
+  }
+  if(cmd.startsWith("/"))
+    return replyText(id,"Команда не распознана. /help — все возможности.");
+  return null;
+}
+
+export function createWebhookHandler({token,secret,fetchImpl=fetch,store=null}) {
   if(!token||!secret)throw Error("Music bot token and webhook secret required");
   const processed=new Map();
   return async (req,res)=>{
@@ -55,7 +124,7 @@ export function createWebhookHandler({token,secret,fetchImpl=fetch}) {
       const data=JSON.parse(json),id=data.update_id;
       if(!Number.isSafeInteger(id)||id<0){res.writeHead(400);res.end("Bad update");return;}
       if(processed.has(id)){res.writeHead(200);res.end("OK");return;}
-      const job=makeReply(data);
+      const job=await makeLibraryReply(data,store);
       if(job){
         const controller=new AbortController();
         const timer=setTimeout(()=>controller.abort(),11000);
@@ -87,6 +156,7 @@ if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
         secret=process.env.VETOGRAM_MUSIC_WEBHOOK_SECRET;
   const port=Number(process.env.PORT)||8787;
   if(!token||!secret){console.error("Set VETOGRAM_MUSIC_BOT_TOKEN and VETOGRAM_MUSIC_WEBHOOK_SECRET");process.exit(1);}
-  const handler=createWebhookHandler({token,secret});
+  const store=createMusicStore();
+  const handler=createWebhookHandler({token,secret,store});
   createServer(handler).listen(port,"0.0.0.0",()=>console.info("Vetogram Music bot webhook listening"));
 }
