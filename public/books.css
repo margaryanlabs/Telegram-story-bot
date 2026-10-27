@@ -32,3 +32,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background:ra
 @media(max-width:640px){.source-tabs{grid-template-columns:1fr 1fr;gap:7px;margin-top:18px}.source-tabs button{min-height:49px;padding:8px 10px;font-size:11px;border-radius:12px}.source-tabs button:nth-child(3){grid-column:1/-1}.source-tabs button b{width:29px;height:29px}.source-description{font-size:10px;margin-bottom:4px}}
 
 .filters[hidden],.topics[hidden]{display:none!important}
+
+.author-discovery{display:flex;gap:8px;align-items:center;overflow-x:auto;white-space:nowrap;margin:-7px 0 24px;padding:3px 0 7px;scrollbar-width:none}
+.author-discovery>span{font-size:11px;color:#a59e9e;font-weight:650;margin-right:2px}
+.author-discovery button{background:rgba(244,203,175,.05);border:1px solid rgba(235,191,160,.2);color:#d5bbab;border-radius:999px;padding:7px 12px;font-size:11px}
+.author-discovery button:hover{background:rgba(244,203,175,.16);color:#fff3e7}
