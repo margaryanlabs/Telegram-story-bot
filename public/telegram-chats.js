@@ -1206,7 +1206,9 @@
   }
   async function photoRequest(action,chatId,messageId=null){
     if(!tg?.initData)throw new Error('Telegram Mini App требуется');
-    const signed=String(tg.initData),generation=state.generation;
+    const signed=String(tg.initData);
+    const threadGeneration=state.threadGeneration;
+    const currentThread=action==='photo'?String(state.thread?.id||''):null;
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),18000);
     try{
@@ -1217,11 +1219,15 @@
       });
       if(!response.ok)throw new Error('Telegram не отдаёт изображение');
       const blob=await response.blob();
-      // Avatar requests are independent of list pagination; an in-flight page
-      // transition must not discard a valid same-owner profile picture.
-      if((action!=='avatar'&&generation!==state.generation)||signed!==String(tg?.initData||'')){
+      // List pagination increments state.generation and is unrelated to this
+      // open chat. Reject only changed owner / changed thread, not a concurrent
+      // inbox refresh while a photo is downloading.
+      if(signed!==String(tg?.initData||'')){
         resetOwner();throw new Error('Сменился Telegram-аккаунт');
       }
+      if(action==='photo'&&(threadGeneration!==state.threadGeneration||
+         currentThread!==String(state.thread?.id||'')))
+        throw new Error('Открыта другая переписка');
       if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
         throw new Error('Изображение недоступно');
       const href=URL.createObjectURL(blob);
