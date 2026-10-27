@@ -461,3 +461,28 @@ This update addresses the user's actual Android Telegram WebView observations (b
 - Versioned **all 44** HTML-linked CSS/JS assets under a single `20261027-v51-photo-recovery` identity, to avoid carrying old WebView layout/script caches into this draft preview.
 - Independent actual-source V8 harness: **503 → two attempts / preview visible**, **429 → one attempt / no retry**, **401 → one attempt / no retry**. Tested snippets and parsed all five added test sources after ESM import normalization. These are **not** full Node test results or real live Telegram performance measurements.
 - GitHub Actions remains unverified: the last pre-existing run examined had `runner_id=0` and `steps=[]`; investigate runner provision/billing. Keep draft PR #185 unmerged and un-deployed until `npm ci && npm run vercel-build`, live signed two-account test, media accessibility, and mobile visual acceptance succeed.
+
+
+### 2026-10-27 V5.1 crash recovery — sticker drawer
+
+**Confirmed critical source defect:** `public/telegram-chats.js` implemented
+`closeStickerDrawer(){ state.stickerEpoch++; closeStickerDrawer(); }`. This synchronous
+unbounded recursion could abort the JavaScript call stack when closing the drawer,
+switching an owner's account, or completing rich-message sends.
+
+**Fix:** close the existing drawer by setting `hidden=true`, clear its local search
+query, and increment the sticker epoch once to invalidate stale asynchronous
+thumbnail requests. No Telegram messages are read/sent, no credentials stored,
+and no new permissions are granted. Existing open/toggle behavior is preserved.
+
+**Tests:** new `tests/vetogram-sticker-drawer-51.test.js` runs the actual
+controller in an isolated VM to assert non-recursion, consistent visibility,
+query reset, safe operation when DOM nodes are missing, and epoch invalidation.
+Included in `qa:reborn:offline`. Independently ran the actual code excerpt
+twice: epoch 7→8→9, the panel remained hidden, and a detached panel was safe.
+This is not a browser E2E test or full Node test-suite pass.
+
+Updated all 44 `studio.html` versioned asset references to one shared
+`20261027-v51-sticker-stability` cache identity. **PR #185 remains Draft; do not
+deploy or merge while GitHub Actions cannot allocate a runner and production
+acceptance has not been completed.**
