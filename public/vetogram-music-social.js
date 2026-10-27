@@ -90,6 +90,9 @@ async function shareLocal(track){
  const filename=validName(local.artist+" — "+local.title).replace(/[\/\\:*?"<>|]/g,"_")+".mp3";
  const mime=local.blob.type||"audio/mpeg";
  const ext=(local.blob.name||"").match(/\.(mp3|m4a|wav|aac|ogg|flac|opus)$/i)?.[0]||"";
+ if(typeof File!=="function"){
+  showDialog("Отправка аудиофайла","Этот браузер не поддерживает отправку файлов напрямую. Открой Telegram и отправь оригинальный файл из хранилища устройства.",()=>telegramShare(TARGET_ORIGIN,local.artist+" — "+local.title),"Поделиться названием");return;
+ }
  const file=new File([local.blob],validName(local.title)+(ext||".mp3"),{type:mime});
  if(canSendFile(file)){
   try{await navigator.share({files:[file],title:local.title,text:"Моя музыка — Vetogram Music"});
@@ -132,8 +135,8 @@ function exportAll(){
  if(!entries.length)return toast("Нет песен для экспорта");
  const data={format:"vetogram-music-metadata-v2",version:2,tracks:entries.map(([artist,title])=>({artist,title}))};
  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
- const filename="vetogram-music-playlist.json",file=new File([blob],filename,{type:"application/json"});
- if(canSendFile(file)){
+ const filename="vetogram-music-playlist.json",file=typeof File==="function"?new File([blob],filename,{type:"application/json"}):null;
+ if(file&&canSendFile(file)){
   navigator.share({files:[file],title:"Мой плейлист Vetogram Music"}).catch(e=>{if(e?.name!=="AbortError")download(blob,filename)});
  }else download(blob,filename);
 }
