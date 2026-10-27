@@ -2453,8 +2453,22 @@
       if(authRejected){
         // A genuine signed-session/ownership failure must not keep private
         // messages and previously downloaded media available in the UI.
-        state.messages=[];state.threadCache.clear();state.connectionProof=null;
+        state.messages=[];state.chats=[];state.threadCache.clear();
+        state.connectionProof=null;state.page=0;state.hasMore=false;
         if(state.thread)state.thread.serverCanSend=false;
+        state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
+        state.avatarRetryAt.clear();state.avatarActive=0;
+        state.avatarUrls.forEach(url=>{try{URL.revokeObjectURL(url)}catch{}});
+        state.avatarUrls.clear();
+        $('telegramMirrorList')?.replaceChildren?.();
+        const name=$('telegramThreadTitle');
+        if(name)name.textContent='Требуется подключение Telegram';
+        const meta=$('telegramThreadMeta');
+        if(meta)meta.textContent='Доступ к переписке не подтверждён';
+        // A revoked signed owner must not retain personal drafts or media.
+        state.drafts.clear();state.draftVersions.clear();
+        state.lastSendFailure=null;state.lastSendFailures.clear();
+        state.lastRichFailure=null;state.lastRichFailures.clear();
         revokeMediaUrls();
         renderSendComposer();
       }
