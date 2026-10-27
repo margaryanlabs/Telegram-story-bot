@@ -7,9 +7,9 @@
   <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
   <title>VETOGRAM Books — Читать</title>
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/books.css?v=2">
+  <link rel="stylesheet" href="/books.css?v=3">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="/books.js?v=2" defer></script>
+  <script src="/books.js?v=3" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -23,16 +23,25 @@
       <p class="eyebrow"><span class="hero-dot"></span> VETOGRAM / READING UNIVERSE</p>
       <h1>Мир историй.<br><i>Внутри Telegram.</i></h1>
       <p>Открой книгу, погрузись в чтение и возвращайся к последней странице — без отдельного приложения.</p>
-      <div class="hero-bottom"><span><strong id="catalogCount">—</strong> <span id="catalogCountLabel">результатов в подборке</span></span><span>Без подписки · Открытая классика</span></div>
+      <div class="hero-bottom"><span><strong id="catalogCount">—</strong> <span id="catalogCountLabel">переводных произведений</span></span><span>Без подписки · Открытая классика</span></div>
       <div class="hero-orbit" aria-hidden="true"><span>V</span><b>✶</b></div>
     </section>
 
     <div class="source-tabs" role="group" aria-label="Библиотека и язык">
-      <button type="button" data-books-source="ru" class="active" aria-pressed="true"><b>РУ</b> Русская библиотека</button>
+      <button type="button" data-books-source="translated" class="active" aria-pressed="true"><b>🌍</b> Зарубежные · на русском</button>
+      <button type="button" data-books-source="ru" aria-pressed="false"><b>РУ</b> Русская библиотека</button>
       <button type="button" data-books-source="hy" aria-pressed="false"><b>ՀՅ</b> Հայկական գրադարան</button>
       <button type="button" data-books-source="gutenberg" aria-pressed="false"><b>EN</b> Мировая классика</button>
     </div>
-    <p id="sourceDescription" class="source-description">Русская Викитека · литературные произведения на русском языке</p>
+    <p id="sourceDescription" class="source-description">Зарубежные произведения в русских переводах · из Русской Викитеки</p>
+    <div class="translation-filters" id="translationFilters" role="group" aria-label="Язык оригинала">
+      <span>Переведено с:</span>
+      <button type="button" data-original-lang="en" class="active" aria-pressed="true">Английского</button>
+      <button type="button" data-original-lang="fr" aria-pressed="false">Французского</button>
+      <button type="button" data-original-lang="de" aria-pressed="false">Немецкого</button>
+      <button type="button" data-original-lang="it" aria-pressed="false">Итальянского</button>
+      <button type="button" data-original-lang="es" aria-pressed="false">Испанского</button>
+    </div>
     <section class="catalog-bar" aria-label="Найти книгу">
       <form id="searchForm" class="search">
         <span aria-hidden="true">⌕</span>
@@ -69,7 +78,7 @@
     <div class="catalog-footer"><p id="catalogStatus" role="status"></p><button id="loadMore" type="button" hidden>Показать ещё ↓</button></div>
     <footer class="book-attribution">
       <strong>BOOKS / OPEN LIBRARY OF STORIES</strong>
-      <p id="sourceLegal">Источник: Русская Викитека. Статус прав зависит от произведения, издания, перевода и страны чтения. Проверяйте сведения на странице оригинала.</p>
+      <p id="sourceLegal">Источник: Русская Викитека. Авторские права на русский перевод проверяются отдельно от прав на оригинал.</p>
       <a id="sourceLegalLink" href="https://ru.wikisource.org/wiki/Special:Copyright" target="_blank" rel="noopener noreferrer">Условия и лицензии источника ↗</a>
     </footer>
   </main>
