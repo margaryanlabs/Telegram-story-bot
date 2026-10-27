@@ -5,7 +5,7 @@ const V=window.VetogramMusic,root=document.querySelector('[data-view="archive"]'
 const $=id=>document.getElementById(id);
 const tag=(name,className,label)=>{const e=document.createElement(name);if(className)e.className=className;if(label!==undefined)e.textContent=String(label);return e};
 const SAFE_URL=u=>{try{const x=new URL(String(u));return x.protocol==="https:"&&(!x.username&&!x.password)?x.href:""}catch{return""}};
-const STATES={cc0:"CC0 · Общественное достояние",by3:"CC BY 3.0 · С указанием автора",by4:"CC BY 4.0 · С указанием автора"};
+const STATES={cc0:"CC0 · Общественное достояние",by3:"CC BY 3.0 · Авторство",by4:"CC BY 4.0 · Авторство",sa2:"CC BY-SA 2.0 · Сохранение лицензии",sa3:"CC BY-SA 3.0 · Сохранение лицензии",sa4:"CC BY-SA 4.0 · Сохранение лицензии"};
 let license="cc0",page=0,busy=false,complete=false,items=[],known=new Set(),active=null,releaseCount=0;
 function status(text){$("archiveStatus").textContent=text}
 function buildCard(song){
@@ -28,18 +28,21 @@ function buildCard(song){
 function addTracks(rows){
  const list=$("archiveList"),fragment=document.createDocumentFragment();
  for(const raw of rows){
-  if(!raw||raw.source!=="archive"||raw.playable!==true||!SAFE_URL(raw.stream)||!SAFE_URL(raw.permalink)||!SAFE_URL(raw.license_url)||!["CC0","CC BY 2.0","CC BY 2.5","CC BY 3.0","CC BY 4.0"].includes(raw.license)||!raw.id||known.has(raw.id))continue;
+  if(!raw||raw.source!=="archive"||raw.playable!==true||!SAFE_URL(raw.stream)||!SAFE_URL(raw.permalink)||!SAFE_URL(raw.license_url)||!["CC0","CC BY 2.0","CC BY 2.5","CC BY 3.0","CC BY 4.0","CC BY-SA 2.0","CC BY-SA 3.0","CC BY-SA 4.0"].includes(raw.license)||!raw.id||known.has(raw.id))continue;
   const t={id:String(raw.id),source:"archive",title:String(raw.title||"Без названия"),artist:String(raw.artist||"Independent artist"),artwork:SAFE_URL(raw.artwork),stream:SAFE_URL(raw.stream),permalink:SAFE_URL(raw.permalink),license:raw.license,license_url:SAFE_URL(raw.license_url)};
   items.push(t);known.add(t.id);fragment.append(buildCard(t));
  }
  if(items.length){if(list.querySelector(".archive-empty"))list.replaceChildren();list.append(fragment)}
 }
 // Internet Archive's public search and metadata APIs support browser CORS requests.
-// Only CC0 / CC BY recordings are listed; no server, secrets, or MP3 import jobs.
+// Only CC0, CC BY and CC BY-SA recordings are listed; no server, secrets, or MP3 import jobs.
 const SOURCES=Object.freeze({
  cc0:"http://creativecommons.org/publicdomain/zero/1.0/",
  by3:"http://creativecommons.org/licenses/by/3.0/",
- by4:"http://creativecommons.org/licenses/by/4.0/"
+ by4:"http://creativecommons.org/licenses/by/4.0/",
+ sa2:"http://creativecommons.org/licenses/by-sa/2.0/",
+ sa3:"http://creativecommons.org/licenses/by-sa/3.0/",
+ sa4:"http://creativecommons.org/licenses/by-sa/4.0/"
 });
 const ARCHIVE="https://archive.org";
 function safeId(x){const id=String(x||"");return /^[A-Za-z0-9._-]{1,130}$/.test(id)?id:""}
@@ -50,7 +53,9 @@ function licenseType(link){
   const p=u.pathname.endsWith("/")?u.pathname:u.pathname+"/";
   if(p==="/publicdomain/zero/1.0/")return"CC0";
   const version=["2.0","2.5","3.0","4.0"].find(v=>p==="/licenses/by/"+v+"/");
-  return version?"CC BY "+version:"";
+  if(version)return"CC BY "+version;
+  const sa=["2.0","3.0","4.0"].find(v=>p==="/licenses/by-sa/"+v+"/");
+  return sa?"CC BY-SA "+sa:"";
  }catch{return""}
 }
 function archiveSearchUrl(group,p){
