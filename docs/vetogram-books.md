@@ -53,3 +53,24 @@ Unit tests: `tests/vetogram-books-wikisource.test.js` cover RU/HY search, server
 
 ### Delivery status
 As with the main Books MVP, this work remains on an isolated GitHub PR. Production availability is **not** confirmed. A real RU/HY API smoke test from the deployed Vercel route is required before opening this to all users. GitHub Actions currently reports failure and should be diagnosed before merge.
+
+## Foreign works in Russian translation — added 2026-10-27
+
+The **"Зарубежные · на русском"** tab is now the default for new users of the Books module. Existing users keep their selected library in local storage. The tab provides five translation-source languages: English, French, German, Italian and Spanish.
+
+**Catalog discovery uses real Russian Wikisource translation categories** (rather than unverified language guesses):
+
+- `Категория:Переводы с английского языка`
+- `Категория:Переводы с французского языка`
+- `Категория:Переводы с немецкого языка`
+- `Категория:Переводы с итальянского языка`
+- `Категория:Переводы с испанского языка`
+
+`GET /api/books-wikisource?collection=translations&original=fr` fetches category members (24 at a time) and exposes the opaque `nextCursor` for continuation. A user search like `...&original=en&q=Дойль` sends a constrained CirrusSearch `incategory:"Переводы с английского языка" Дойль` query. Search results are additionally normalized as `language=ru`, `originalLanguage=en`, and `isTranslation=true`. This category membership is an editorial catalog signal, not a legal clearance guarantee.
+
+Common works such as "Гамлет" (Шекспир) and "Три мушкетёра" (Дюма) have *translation index pages* rather than full text. The API asks MediaWiki `parse` for categories and detects `Списки переводов`; when it has linked editions, the reader prompts for a particular old Russian translation, not falsely presenting the list itself as the novel. Edition candidates are restricted to links from that parent page, matching the work and author; arbitrary client page titles are never fetched. Some complex work trees and multi-volume editions need a future dedicated multi-level chapter resolver.
+
+**Rights / honesty:** original author's public domain status ≠ translator's public domain status. Each translation, editorial revision, and jurisdiction may differ. For modern in-copyright Russian translations, obtain a publisher/rights-holder license rather than scraping commercial ebook platforms. No new copyrighted ebooks are included or redistributed. Wikimedia pages must retain creator/translator attribution and any source-specific CC BY-SA/share-alike obligations. The source hyperlink is available in reader settings, including the exact selected edition URL.
+
+### Added checks
+`tests/vetogram-books-wikisource.test.js` includes category pagination/cursor, source-constrained search, invalid source rejection, translation index + edition selection and attribution checks. The PR is still a draft until the GitHub Actions build is green and real works open inside Telegram on mobile.
