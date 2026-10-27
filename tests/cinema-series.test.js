@@ -49,13 +49,17 @@ test("popular shows have evidence for listed Russian audio, not fake streaming p
    assert.ok(!x.sourcePage.includes("rutube.ru/video"));
  }
 });
-test("desktop/mobile TV tab and series/player/episode UI are all wired",()=>{
+test("desktop/mobile TV tab and real series/player/episode UI are wired with no paid-service promotion",()=>{
  const h=read("public/cinema.html"),js=read("public/cinema.js");
  assert.equal(Array.from(h.matchAll(/data-tab="series"/g)).length,2);
- for(const p of ["cinema-series-episodes.js","cinema-popular-series.js"])
+ for(const p of ["cinema-series-episodes.js"])
    assert.ok(h.indexOf(p)>0&&h.indexOf(p)<h.indexOf("cinema.js"));
- for(const id of ["cinemaPopularSeriesRail","cinemaSeriesHub","cinemaSeriesStats","cinemaSeriesPlayableRail","cinemaEpisodeChooser","cinemaEpisodeSelect"])
+ for(const id of ["cinemaSeriesHub","cinemaSeriesStats","cinemaSeriesPlayableRail","cinemaEpisodeChooser","cinemaEpisodeSelect"])
    assert.match(h,new RegExp('id="'+id+'"'));
+ assert.ok(!h.includes('src="./cinema-popular-series.js"'));
+ assert.ok(!h.includes('id="cinemaPopularSeries"'));
+ assert.ok(!js.includes("window.VetogramCinemaPopularSeries"));
+ assert.match(js,/if\(state\.tab==="series"\)list=list\.filter\(f=>f\.contentType==="Сериалы"&&f\.player\?\.licensed===true\)/);
  assert.match(js,/function groupedSeries\(/);
  assert.match(js,/function seriesEpisodeNumber\(/);
  assert.match(js,/if\(state\.tab==="series"\)list=list\.filter/);
