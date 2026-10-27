@@ -60,5 +60,29 @@
      seriesGroup:group,seriesPopular:true,publishedAt:null
    };
  });
+
+ // In the Netflix Armenia Russian-language catalogue the studio itself lists
+ // "русский" under AUDIO (not merely subtitles). Streaming remains subscriber-only.
+ const NETFLIX=[
+   ["Очень странные дела","Stranger Things",2016,"80057281","Фантастика"],
+   ["Уэнздей","Wednesday",2022,"81231974","Фэнтези"],
+   ["Игра в кальмара","Squid Game",2021,"81040344","Триллер"]
+ ];
+ for(const [title,original,year,netflixId,genre] of NETFLIX){
+   const sourcePage="https://www.netflix.com/am-ru/title/"+netflixId;
+   entries.push({
+     id:"series-netflix-discovery-"+netflixId,title,original,year,minutes:null,
+     creator:"Netflix · русская аудиодорожка в каталоге для Армении",
+     synopsis:"Русский язык указан в разделе аудио на официальной странице Netflix для Армении. Воспроизведение доступно по правилам Netflix и требует соответствующей подписки.",
+     genres:["Сериалы",genre,"Зарубежные"],contentType:"Сериалы",
+     spoken:"Русская дорожка в каталоге",hue:215,discoveryOnly:true,
+     sourceCatalog:"series-legal-discovery",russianAudioStatus:"catalog-listed",
+     russianAudio:{language:"ru",audioEvidence:"listed-by-provider",provider:"Netflix",url:sourcePage,availability:"unknown",
+       note:"Netflix для Армении указывает русский язык в разделе аудио. Смотреть на Netflix по условиям подписки."},
+     watchAvailability:"unknown",sourcePage,watchProvider:"Netflix",
+     license:"Справочная карточка; лицензии на трансляцию в Cinema нет.",licenseUrl:sourcePage,
+     player:null,poster:null,editions:[],seriesGroup:"global",seriesPopular:true,publishedAt:null
+   });
+ }
  window.VetogramCinemaPopularSeries=Object.freeze(entries);
 })();
