@@ -31,17 +31,21 @@ function fixture({status=503,succeed=false}={}){
   };
   const more={hidden:false,disabled:false},meta={textContent:''};
   const title={textContent:'Private chat'};
+  const compose={value:'private unsent text',dataset:{activeChat:'77'}};
   const chatList={replaceChildren(){events.push({action:'list-cleared'})}};
   const events=[];
   let release;
   const ctx=vm.createContext({
     state,tg:{initData:'signed'},resetOwner:()=>false,
     $:id=>id==='telegramThreadOlder'?more:id==='telegramThreadMeta'?meta:
-      id==='telegramThreadTitle'?title:id==='telegramMirrorList'?chatList:null,
+      id==='telegramThreadTitle'?title:id==='telegramMirrorList'?chatList:
+      id==='telegramThreadCompose'?compose:null,
     visibleMessageAnchor:()=>null,renderMessages:(options={})=>events.push({
       action:'render',count:state.messages.length,options,
     }),
     renderSendComposer:()=>events.push({action:'composer'}),
+    renderReplyPreview:()=>{},renderAttachmentChip:()=>{},
+    cancelVoiceCapture:()=>{},dropVoiceDraft:()=>{},
     rememberHotThread:()=>{},threadNotice:text=>events.push({action:'notice',text}),
     syncLabel:text=>events.push({action:'sync',text}),
     scheduleThreadSync:()=>events.push({action:'schedule'}),
@@ -55,7 +59,7 @@ function fixture({status=503,succeed=false}={}){
   });
   new vm.Script(controller).runInContext(ctx);
   return {
-    state,events,more,
+    state,events,more,compose,
     run:()=>new vm.Script('loadMessages({reset:true})').runInContext(ctx),
     settle:()=>release(),
   };
@@ -90,6 +94,8 @@ test('a genuine 401/403/409 clears sensitive history and verified send permissio
     assert.equal(f.state.chats.length,0,'old inbox no longer accessible');
     assert.equal(f.state.avatarUrls.size,0);
     assert.equal(f.state.drafts.size,0);
+    assert.equal(f.compose.value,'');
+    assert.equal(f.compose.dataset.activeChat,'');
     assert.equal(f.state.connectionProof,null);
     assert.equal(f.state.thread.serverCanSend,false);
     assert.equal(f.state.threadAuthRejected,true);
