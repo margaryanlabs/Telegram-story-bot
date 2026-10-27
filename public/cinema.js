@@ -452,9 +452,9 @@
   video.addEventListener("timeupdate",()=>saveProgress(false));
   video.addEventListener("pause",()=>saveProgress(true));
   video.addEventListener("ended",()=>{saveProgress(true);toast("Фильм досмотрен. Выбирай следующую историю.")});
-  video.addEventListener("error",()=>{if(state.playing&&!state.playing.player&&video.currentSrc)setPlayerMessage("Не удалось воспроизвести этот формат. Попробуйте другое качество или откройте оригинал по ссылке.")});
+  video.addEventListener("error",()=>{if(state.playing&&state.activePlayerSource?.type!=="iframe"&&video.currentSrc)setPlayerMessage("Не удалось воспроизвести этот формат. Попробуйте другое качество или откройте оригинал по ссылке.")});
   video.addEventListener("playing",()=>setPlayerMessage(""));
-  video.addEventListener("waiting",()=>{if(!state.playing?.player&&!video.paused)setPlayerMessage("Буферизация…")});
+  video.addEventListener("waiting",()=>{if(state.activePlayerSource?.type!=="iframe"&&!video.paused)setPlayerMessage("Буферизация…")});
   $("cinemaRewind").addEventListener("click",()=>{video.currentTime=Math.max(0,video.currentTime-10)});
   $("cinemaForward").addEventListener("click",()=>{video.currentTime=Math.min(video.duration||Infinity,video.currentTime+10)});
   $("cinemaSpeed").addEventListener("change",e=>{video.playbackRate=Number(e.target.value)||1});
