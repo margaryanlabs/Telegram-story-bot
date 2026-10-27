@@ -1,0 +1,68 @@
+/* Russia-first premium music experience. Authoritative rankings: Apple Music Top Songs RU. */
+.ru-home-spotlight{margin:24px 0 26px;padding:23px 24px 16px;border-radius:22px;background:radial-gradient(ellipse at 93% 6%,rgba(251,174,213,.19),transparent 48%),linear-gradient(145deg,#1d1428,#11111c);border:1px solid rgba(247,206,255,.14)}
+.ru-home-topline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ru-home-topline span{padding:6px 10px;border:1px solid rgba(239,197,254,.29);border-radius:30px;font-size:9px;font-weight:800;letter-spacing:.1em;color:#ffdbf0}
+.ru-home-title{color:#fff;font-size:clamp(23px,3vw,32px);line-height:1.16;letter-spacing:-.035em;margin:8px 0}
+.ru-home-title em{font-style:normal;color:#f3b8e5}
+.ru-home-sub{font-size:12px;line-height:1.65;color:#c4b4c9;margin:6px 0 17px}
+.ru-home-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ru-home-actions button{border:1px solid rgba(245,206,253,.3);border-radius:11px;padding:11px 15px;background:#ecc5f5;color:#26192a;font-size:12px;font-weight:850;cursor:pointer}
+.ru-home-actions p{color:#ac9bb8;font-size:11px;margin:0}
+.ru-list{display:grid;gap:8px;margin:16px 0}
+.ru-song{display:grid;grid-template-columns:32px 56px minmax(0,1fr) auto;align-items:center;gap:12px;min-width:0;border-radius:12px;border:1px solid rgba(255,255,255,.08);padding:9px 11px;background:rgba(255,255,255,.038)}
+.ru-song:hover{background:rgba(239,187,241,.083);border-color:rgba(252,200,255,.19)}
+.ru-rank{font-weight:850;font-size:12px;font-variant-numeric:tabular-nums;color:#f4c5f0}
+.ru-song:nth-child(-n+3) .ru-rank{color:#ffd3c5}
+.ru-cover{width:56px;height:56px;overflow:hidden;background:linear-gradient(125deg,#543357,#29263e);color:#e0b4ee;display:grid;place-items:center;border-radius:11px;font-size:22px}
+.ru-cover img{height:100%;width:100%;object-fit:cover}
+.ru-song-info{min-width:0;display:grid;gap:4px}
+.ru-song-info strong{font-size:13px;font-weight:800;color:#fff;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.ru-song-info span{color:#bbaec8;font-size:12px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.ru-song-info small{color:#c49bca;font-size:9px;font-weight:800;letter-spacing:.055em}
+.ru-song-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.ru-song-play{border:0;border-radius:11px;background:#f0c9f6;color:#311936;font-weight:900;font-size:13px;min-width:39px;height:39px;cursor:pointer}
+.ru-song-play:hover{filter:brightness(1.12)}
+.ru-song-link{color:#e9c9eb;font-size:11px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.ru-home .ru-song{padding:8px 9px;grid-template-columns:28px 48px minmax(0,1fr) auto}
+.ru-home .ru-cover{width:48px;height:48px}
+.ru-home .ru-song-info small{font-size:8px}
+.ru-featured-heading{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center;margin:18px 0 5px}
+.ru-featured-heading h3{margin:0;font-size:17px;color:#fff}
+.ru-featured-heading a{font-size:11px;color:#ebc4fa}
+.ru-artist-chips{display:flex;gap:8px;flex-wrap:wrap;margin:13px 0}
+.ru-artist-chips button{border-radius:99px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.066);color:#e8d8ed;padding:9px 12px;font:inherit;font-size:11px;font-weight:750;cursor:pointer}
+.ru-artist-chips button:hover{background:rgba(239,195,244,.17);border-color:rgba(239,195,244,.3)}
+.ru-chart-hero{padding:27px 26px 23px;border:1px solid rgba(252,197,249,.21);border-radius:21px;margin-bottom:18px;background:radial-gradient(ellipse at 95% 0,rgba(235,154,202,.24),transparent 43%),linear-gradient(120deg,#251729,#120f1f)}
+.ru-chart-hero small{letter-spacing:.13em;font-size:10px;color:#efbedf;font-weight:850}
+.ru-chart-hero h2{font-size:clamp(29px,4.1vw,47px);letter-spacing:-.045em;color:#fff;line-height:1.1;margin:13px 0}
+.ru-chart-hero h2 em{font-style:normal;color:#ffbddf}
+.ru-chart-hero p{font-size:12px;color:#c8b2ce;max-width:650px;line-height:1.7}
+.ru-chart-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;margin:16px 0}
+.ru-chart-controls button{border:1px solid rgba(240,193,247,.4);border-radius:10px;padding:10px 15px;color:#ecd0ef;background:rgba(255,255,255,.07);cursor:pointer}
+.ru-chart-controls a{color:#edc9f4;text-decoration:underline;font-size:12px}
+.ru-chart-status{color:#b6a7c2;font-size:11px;margin:9px 0;line-height:1.7}
+.ru-chart-source{font-size:11px;color:#aa9bb6;line-height:1.7;margin:14px 0 25px}
+.ru-official-player{padding:15px;border-radius:17px;background:#120f1c;border:1px solid rgba(255,255,255,.14);margin:19px 0 25px}
+.ru-player-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:11px}
+.ru-player-heading strong{font-size:13px;color:#f7e9fb}
+.ru-player-heading button{border:0;border-radius:10px;background:rgba(255,255,255,.08);color:#e9c7ee;padding:8px 11px;cursor:pointer}
+.ru-official-frame{width:100%;min-height:180px;background:#1a1220;border-radius:12px;overflow:hidden;display:grid;place-items:center}
+.ru-official-iframe{width:100%;height:185px;min-height:180px;border:0;display:block}
+.ru-player-links{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ru-player-links a{color:#e8c7f3;font-size:11px}
+.ru-player-links p{color:#a99bb4;font-size:10px;line-height:1.6}
+.ru-empty{color:#baaabd;font-size:12px;text-align:center;padding:28px 15px;line-height:1.65}
+@media(max-width:650px){.ru-home-spotlight{margin:16px 0 23px;padding:18px 13px;border-radius:17px}.ru-chart-hero{padding:22px 17px}.ru-song,.ru-home .ru-song{grid-template-columns:23px 42px minmax(0,1fr) auto;gap:7px;padding:7px}.ru-cover,.ru-home .ru-cover{width:42px;height:42px}.ru-song-info strong{font-size:12px}.ru-song-info span{font-size:10px}.ru-song-info small{font-size:8px}.ru-rank{font-size:11px}.ru-song-actions{flex-direction:column;gap:4px}.ru-song-play{width:33px;height:33px;min-width:33px}.ru-song-link{font-size:9px}.ru-featured-heading h3{font-size:15px}.ru-official-player{padding:10px}.ru-chart-controls{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){.ru-song{transition:none}}
+
+/* Official Russian artists: visible YouTube video player only, never ripped audio. */
+.ru-video-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:14px 0 22px}
+.ru-video{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:13px;overflow:hidden;min-width:0}
+.ru-video-image{aspect-ratio:16/9;background:linear-gradient(120deg,#482b4b,#21182e);overflow:hidden}
+.ru-video-image img{display:block;width:100%;height:100%;object-fit:cover}
+.ru-video-detail{padding:13px;display:grid;gap:5px}
+.ru-video-detail strong{color:#fff;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ru-video-detail span{font-size:11px;color:#c0b4cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ru-video-play{margin-top:6px;background:#eec6f6;color:#271529;border:0;border-radius:9px;padding:9px;font-size:11px;font-weight:850;cursor:pointer}
+.ru-video-source{color:#eac6eb;font-size:10px;text-decoration:underline;text-underline-offset:2px;padding-top:4px}
+@media(max-width:650px){.ru-video-list{grid-template-columns:1fr}.ru-video{display:grid;grid-template-columns:120px minmax(0,1fr)}.ru-video-image{aspect-ratio:auto;height:100%;min-height:100px}.ru-video-detail{padding:11px}}

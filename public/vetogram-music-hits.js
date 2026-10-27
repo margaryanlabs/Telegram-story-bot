@@ -10,7 +10,7 @@ const V=window.VetogramMusic,root=document.querySelector('[data-view="hits"]');
 if(!V||!root)return;
 const $=id=>document.getElementById(id);
 const el=(name,cls,content)=>{const t=document.createElement(name);if(cls)t.className=cls;if(content!==undefined)t.textContent=String(content);return t};
-const COUNTRY=Object.freeze({am:"Армения",ru:"Россия",us:"США",ge:"Грузия"});
+const COUNTRY=Object.freeze({ru:"Россия",am:"Армения",us:"США",ge:"Грузия"});
 const GENRES=Object.freeze([
  {name:"MACAN",country:"ru"},
  {name:"Баста",country:"ru"},
@@ -75,7 +75,7 @@ function fromShare(input){
  const page="https://music.apple.com/"+p[1]+"/album/"+encodeURIComponent(p[2])+"/"+p[3]+(id?"?i="+id:"");
  return {provider:"Apple Music",type:id?"track":"album",title:"Apple Music · "+(id?"Трек":"Альбом"),page,embed:url,height:id?180:440};
 }
-let query="",country="am",controller=null,results=[],active=null;
+let query="",country="ru",controller=null,results=[],active=null;
 function hint(message){$("hitsStatus").textContent=message}
 function actionLink(text,href,cls){
  const anchor=el("a",cls,text);anchor.href=href;anchor.target="_blank";anchor.rel="noopener noreferrer";return anchor;
@@ -158,6 +158,6 @@ $("hitsProviderForm").onsubmit=e=>{
 };
 $("hitsClose").onclick=()=>{$("hitsEmbed").replaceChildren();$("hitsCurrent").textContent="Плеер закрыт";$("hitsExternal").removeAttribute("href");active=null};
 presets();
-document.addEventListener("vetogram:hits-open",()=>{if(!query&&!controller)search("Sirusho","am")});
+document.addEventListener("vetogram:hits-open",()=>{if(!query&&!controller)search("MACAN","ru")});
 window.VetogramHits=Object.freeze({search,fromApple,fromShare,searchUrl,state:()=>({query,country,count:results.length,provider:active?.provider||""})});
 })();

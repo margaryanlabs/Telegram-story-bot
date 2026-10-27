@@ -41,7 +41,7 @@ function showPage(page){
  if(page==="hits")document.dispatchEvent(new CustomEvent("vetogram:hits-open"));
 }
 $$("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
-$("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>showPage("catalog");
+$("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>showPage("charts");
 $("themeSwitch").onclick=()=>{state.mood=state.mood==="ember"?"aurora":"ember";document.documentElement.dataset.ambient=state.mood;persist();send(state.mood==="aurora"?"Атмосфера Aurora":"Атмосфера Ember")};
 const songId=x=>String(x?.id||"");
 function favorited(t){return state.liked.some(x=>x.id===songId(t))}
