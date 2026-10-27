@@ -108,3 +108,32 @@ This contact email was historically published by an identified Alloha representa
 \`public/cinema-artwork.js\` attempts a source-scoped public RUTUBE video metadata lookup for official video thumbnails and accepts only RUTUBE image CDN hosts. If the endpoint is blocked by CORS, geography, or rate limits, the premium color-gradient fallback remains and the film card stays usable. The implementation was not validated live against the RUTUBE metadata endpoint.
 
 For iframe playback, the UI uses a non-intercepting status banner, waits for provider readiness signals (RUTUBE \`player:init\`) rather than assuming iframe.onload implies playback, and exposes a direct \"Открыть видео у источника\" link. After 13 seconds without a confirmed RUTUBE signal, it shows a helpful fallback message while leaving the iframe clickable.
+
+
+## Official big-catalogue streaming channels — new 27 October 2026
+
+**These are third-party, rights-holder-operated public RUTUBE channels, not copyrighted movie files stored by VETOGRAM.** RUTUBE explicitly permits an iframe player for publicly accessible videos, but public embedding is not permission to copy/rehost videos, remove ads/DRM or automatically charge viewers for those films.
+
+| Channel | Verified RUTUBE owner/channel | Type |
+|---|---|---|
+| Mosfilm | https://rutube.ru/channel/25963146/ | 1,000+ films *claimed by its channel*, actual filtered rows not enumerated |
+| Lenfilm | https://rutube.ru/channel/1792500/ | full movies and serial episodes among other videos |
+| Gorky Film Studio | https://rutube.ru/channel/48160110/ | 100+ public film projects, including serials; actual API rows unknown |
+
+Integration:
+1. \`cinema-service/official-rutube.mjs\` uses a fixed, publisher-only metadata route \`GET https://rutube.ru/api/video/person/<verified_channel_id>/?page=N&format=json\`. This shape is documented in \`yt-dlp/yt_dlp/extractor/rutube.py\` and the RUTUBE developer example \`rutube/ShowcaseTutorial\`. The exact endpoint response **could not be fetched live in the present environment**.
+2. Source filtering demands **exact publisher ID**, valid 32-character video ID, duration 35–360 minutes, no paid/private/live flags, and excludes trailers, promos, interviews. Every card links to the original RUTUBE page. Each movie is streamed by the original RUTUBE iframe — no HLS proxy/copying.
+3. \`GET /api/cinema/channels?channel=mosfilm&page=1\` (or lenfilm/gorky) is paginated server-side (1..120) and caches each public metadata page for ten minutes. The Cinema frontend has three dedicated studio tabs, automatic first-page loading, and \"Показать ещё фильмы\".
+4. The viewer's search results and Russian-language recommendations incorporate loaded publisher entries. No unverified third-party uploader or copied Netflix catalogue is included.
+5. For static hosting with no running metadata API, run \`npm run studios:export -- mosfilm 50 ../public/cinema-mosfilm-feed.json\` (and similarly for lenfilm/gorky). The export CLI stores a JSON of **metadata and embed URLs only**, paced to avoid hammering the source. Cinema can load these optional static JSON files.
+6. Two actual Lenfilm public videos are now also embedded in the built-in offline seed: **«Старик Хоттабыч»**, **«Свадьба в Малиновке»**. This raises the starter catalog to 20, including eight films/episodes from Russian original-language channels.
+
+### Operational status and launch gates
+
+- **Code integrated into the Draft GitHub PR only; no API host or JSON export actually executed against RUTUBE**, since live access to the channel metadata endpoint was not available.
+- No live database migrated, no static channel feed generated, no Vercel deployment and no Telegram Mini App bot URL changed.
+- Verify metadata API shape, pagination and uploader IDs in an environment with RUTUBE access before launching a production catalogue.
+- Verify playback and publisher territorial/age restrictions on Telegram Android/iOS. RUTUBE may geo-block certain content, including outside Russia.
+- Film-studio channel totals are their own published claims, NOT counts of records loaded by our platform.
+
+Docs: https://github.com/rutube/ShowcaseTutorial ; https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/extractor/rutube.py ; https://rutube.ru/info/embed/ .
