@@ -542,3 +542,18 @@ Changes are in the existing **draft PR #185**; no Telegram send, provider/billin
 - Versioned all 44 `studio.html` public assets to `20261027-v51-cross-chat-safety` for the next preview build.
 
 **Build evidence limit:** This container's `git ls-remote` still fails with `Could not resolve host: github.com`; `node` and `npm` exist but the full checkout/dependencies are not available, so full Node test execution is **not claimed**. GitHub Actions previously returned failure with `runner_id=0`, `steps=[]`. Production stays unchanged. A real Telegram two-account test, end-to-end send and replay protection, `npm ci` and `npm run vercel-build` remain release gates.
+
+
+### 2026-10-27 VETOGRAM 5.1 — Media Lifetime vs. Thread History Repaint
+
+**Critical real-app bug repaired in Draft PR #185:** the same `state.threadGeneration` counter was being used both to discard old history responses and to validate downloads of photos, preserved media, Telegram files and voice attachments. `loadMessages()` increments this counter on an ordinary refresh of the *same* open chat. Therefore legitimate in-flight photo/file downloads could be discarded as "stale" even though the verified account and chat were unchanged. Photo placeholders could remain stuck because the request was already marked as seen.
+
+**Lifecycle correction:** all photo and attachment download authorization now checks the owner signature, exact chat ID, and `state.previewEpoch` rather than the history-request counter. `previewEpoch` is invalidated and media URLs revoked when the owner changes, the chat closes, or a new chat opens. Ordinary same-chat message refreshes increment `threadGeneration` without cancelling media.
+
+**DOM correction:** history refresh replaces message buttons with new DOM nodes. An in-flight file fetch previously required the *original* button to remain `isConnected`, causing valid media to vanish. `currentAttachmentButton` now locates the current replacement button by its message ID, after owner/chat/media-epoch checks, and safely attaches the file there. Detached/stale buttons from a prior chat can no longer receive media. On fetch failure, only the currently connected same-message control is re-enabled.
+
+**Render performance:** `renderMessages` now constructs a `messageById` Map once per paint for reply previews rather than searching every loaded message for each reply bubble. This removes a potential quadratic message-history lookup cost on long conversations.
+
+**QA evidence:** added `tests/vetogram-media-refresh-51.test.js` (direct VM execution of shipping photo and attachment handlers, plus preview repaint and reply indexing contracts), and repaired the earlier photo-fallback regression harness to use the true media identity epoch. Isolated actual-source V8 scenarios confirmed: photo survives same-chat generation increment; photo fails closed after chat/epoch change; live and Vault attachments survive repaint by finding the new button, and fail closed after chat/epoch change (9/9 scenario evaluations). Client script and affected test sources parsed successfully in standalone V8. These checks DO NOT constitute a full Node test run, deployment, or signed Telegram WebView E2E.
+
+Versioned all 44 JS/CSS references in `public/studio.html` to `20261027-v51-media-lifetime` for the next preview build. Production has NOT changed. Continue blocking merge/release until `npm ci`, `npm run vercel-build`, real Telegram account checks and GitHub runner allocation can be verified.
