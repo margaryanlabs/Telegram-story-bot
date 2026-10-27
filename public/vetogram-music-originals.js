@@ -13,7 +13,18 @@ const SONGS=Object.freeze([
  {id:"4NRXx6U8ABQ",artist:"The Weeknd",title:"Blinding Lights",language:"en",publisher:"The Weeknd · официальный клип"},
  {id:"V9PVRfjEBTI",artist:"Billie Eilish",title:"BIRDS OF A FEATHER",language:"en",publisher:"Billie Eilish · официальный клип"},
  {id:"N000qglmmY0",artist:"Dua Lipa",title:"Levitating · Animated Video",language:"en",publisher:"Dua Lipa · официальный клип"},
- {id:"JGwWNGJdvx8",artist:"Ed Sheeran",title:"Shape of You",language:"en",publisher:"Ed Sheeran · официальный клип"}
+ {id:"JGwWNGJdvx8",artist:"Ed Sheeran",title:"Shape of You",language:"en",publisher:"Ed Sheeran · официальный клип"},
+ {id:"aiCL0-U9WxI",artist:"Баста",title:"Сансара",language:"ru",publisher:"Gazgolder · официальная публикация"},
+ {id:"WujKJpxaUHk",artist:"Макс Корж",title:"Горы по колено",language:"ru",publisher:"Макс Корж · официальный клип"},
+ {id:"wxxnY-QTUGU",artist:"Sirusho",title:"PreGomesh · ՊռեԳոմեշ",language:"hy",publisher:"Sirusho · Official Artist Channel"},
+ {id:"DIKIgjLGf98",artist:"Rosa Linn",title:"SNAP",language:"hy",publisher:"Rosa Linn · Official Artist Channel"},
+ {id:"ChkJpnOgIwQ",artist:"Aram MP3",title:"Not Alone",language:"hy",publisher:"Eurovision Song Contest · verified"},
+ {id:"RfH5o3XtI2c",artist:"PARG",title:"SURVIVOR",language:"hy",publisher:"Eurovision Song Contest · verified"},
+ {id:"1RG_qhN4e3M",artist:"Maléna",title:"Qami Qami · Քամի Քամի",language:"hy",publisher:"Junior Eurovision Song Contest · verified"},
+ {id:"Co8ZJIejXBA",artist:"Brunette",title:"Future Lover",language:"hy",publisher:"Eurovision Song Contest · verified"},
+ {id:"suAR1PYFNYA",artist:"Dua Lipa",title:"Houdini",language:"en",publisher:"Dua Lipa · Official Artist Channel"},
+ {id:"ZjBZ8MUnB0E",artist:"Dua Lipa",title:"Training Season",language:"en",publisher:"Dua Lipa · Official Artist Channel"},
+ {id:"vBynw9Isr28",artist:"Lady Gaga",title:"Abracadabra",language:"en",publisher:"Lady Gaga · Official Artist Channel"}
 ]);
 const $=id=>document.getElementById(id),make=(tag,cls,t)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(t!==undefined)el.textContent=t;return el};
 const watch=id=>"https://www.youtube.com/watch?v="+id;
@@ -64,6 +75,14 @@ root.querySelectorAll("[data-originals-group]").forEach(b=>b.addEventListener("c
  render();
 }));
 $("originalsSearch").addEventListener("input",e=>{query=String(e.target.value||"").trim().toLowerCase().slice(0,80);render()});
+$("originalsFindMore").onclick=()=>{
+ const terms=String($("originalsSearch").value||"").trim().slice(0,80);
+ const request=terms.length>=2?terms+" официальный клип":"official music video";
+ const url="https://www.youtube.com/results?search_query="+encodeURIComponent(request);
+ // Search is performed on YouTube itself, never scraped or misrepresented as Vetogram's own audio catalog.
+ if(window.Telegram?.WebApp?.openLink)window.Telegram.WebApp.openLink(url);
+ else window.open(url,"_blank","noopener");
+};
 $("originalsClose").onclick=()=>{stop();$("originalsOpen").hidden=true};
 $("originalsOpen").hidden=true;
 $("originalsFrame").replaceChildren(make("div","originals-stage-empty","Выбери оригинальный трек, чтобы открыть официальный видеоплеер."));
