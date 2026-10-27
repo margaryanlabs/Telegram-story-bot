@@ -44,7 +44,7 @@
    * Caller must invoke cleanup() on switching sources or closing the film.
    */
   async function attach(options) {
-    const {video, container, source, allowedIframeOrigins = [], onError = () => {}} = options;
+    const {video, container, source, allowedIframeOrigins = [], onError = () => {}, onReady = () => {}} = options;
     assertAuthorized(source);
     const type = detectType(source);
     if (type === "iframe") {
@@ -55,10 +55,12 @@
       const frame = document.createElement("iframe");
       frame.src = url.href;
       frame.title = source.label || "Лицензированный киноплеер";
-      frame.setAttribute("allow", "autoplay; fullscreen; picture-in-picture");
+      frame.setAttribute("allow", "autoplay; fullscreen; picture-in-picture; clipboard-write");
       frame.allowFullscreen = true;
-      frame.referrerPolicy = "no-referrer";
+      frame.referrerPolicy = "strict-origin-when-cross-origin";
       frame.className = "cinema-provider-frame";
+      frame.addEventListener("load", onReady, {once:true});
+      frame.addEventListener("error", () => onError("Встроенный плеер не загрузился. Откройте оригинальный источник."));
       video.hidden = true;
       container.append(frame);
       return {mode:"iframe", cleanup() {frame.remove(); video.hidden = false;}};
