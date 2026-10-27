@@ -175,3 +175,24 @@ Google Books API public queries require a registered application identifier (API
 - Google Books without an authorized project API key returned 503 on the stage. A **human-initiated metadata-only Open Library fallback** was therefore added, with explicit Russian language filtering, bounded result fields and an official Open Library source URL. Full texts are not included and Russian edition availability is not a guarantee the work has a Russian full text.
 - Open Library's own rules restrict bulk or high-traffic commercial backend use. This lookup should remain a low-volume, cached evaluation feature; for broad consumer deployment, use properly licensed catalog partnerships or downloadable metadata dumps and register the integration with Open Library.
 - The fallback still requires live verification on the newest stage deployment, especially response time and source restrictions, prior to launch.
+
+
+## Books 4.0 — honest complete volumes and VETOGRAM Noir
+
+### User-facing content truth
+- The earlier library DID NOT guarantee complete books: Wikisource can expose work indexes, single-volume pages, chapter links, or catalog entries that do not include a complete edition. Google Books/Open Library are metadata / authorized excerpts only. That is now reflected in prominent labels instead of using "full book" indiscriminately.
+- Wikisource `mode=text` now additionally queries the approved project's `list=allpages` with a root title prefix to discover *nested* `work/volume/chapter` leaves, rather than depending exclusively on links of the root page. This is bounded to an API batch of up to 500 rows and a client-visible max of 320 chapter leaves. If paging or limiting is detected, `coverage.limited` is set and the UI says so.
+- The API returns `coverage.kind`, `coverage.foundChapters`, `coverage.limited`, and `coverage.completeness='unverified'` for Wikisource. Discovery of subpages **does not prove** the whole book exists. Translated edition indexes are treated as *edition choices*, not contiguous parts of one novel. Full Gutenberg plain-text files are presented as the complete available source edition only if downloaded successfully without size truncation.
+- The reader shows volume/coverage status and a visible "СОДЕРЖАНИЕ" button when parts exist. Root pages with a very short index (<1100 characters) can automatically open the first available subpage without treating the index as the book.
+- User-imported EPUB with more than 160 spine items now **rejects instead of silently discarding** the remaining chapters. Unsupported oversize files remain unavailable rather than falsely marked complete. Additional app file limits are documented.
+- Catalog cards prominently distinguish "Полный текст источника" (Gutenberg), "Текст / части · проверить" (Wikisource), "Личный файл" (local imported) and "Карточка · нет текста" (metadata).
+
+### Visual identity / UX
+- Full landing-page reconstruction as **VETOGRAM NOIR / BOOKS 04**: true black/graphite background, red/silver split-V brand, sharp cinema editorial typography, responsive 3D CSS composition made from three books, animated sheen/ambient illumination, strong CTA with real category and own-library routing.
+- Responsive Russian and Armenian catalog controls, high contrast book shelf, six controlled procedural jacket palettes, brand-red active source buttons, branded search, legible status ribbons and in-reader chrome.
+- Heavy motion is disabled when `prefers-reduced-motion` is set; no WebGL dependency or externally licensed stock image assets.
+- Hero visual implementation is CSS/HTML and so does not demand a standalone image tool. Still requires visual review in Android/iPhone WebViews.
+
+### Launch constraints
+- Even with this improvement, not all catalog items are full books and commercial full-text access to contemporary copyrighted Russian translations requires licenses.
+- All UI/logic remains in the Books-only feature branch; isolated Vercel preview project is used so Messenger production and the intentionally ignored build steps of the original `veto` project are preserved.
