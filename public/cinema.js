@@ -8,7 +8,7 @@
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
   const state={tab:"home",genre:"Все",query:"",selected:null,playing:null,request:0,
-    library:loadLibrary(),sources:new Map(),posters:new Map(),subtitleBlob:null,pendingTime:0};
+    library:loadLibrary(),sources:new Map(),posters:new Map(),subtitleBlob:null,pendingTime:0,embedHandle:null};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0;
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
@@ -24,7 +24,7 @@
   }
   function saveLibrary(){try{localStorage.setItem(LIBRARY_KEY,JSON.stringify(state.library))}catch(_){/* private storage */}}
   function filmById(id){return films.find(f=>f.id===id)}
-  function filmPage(f){return "https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(f.file.replace(/ /g,"_"))}
+  function filmPage(f){return f.sourcePage || "https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(f.file.replace(/ /g,"_"))}
   function text(id,value){const el=$(id);if(el)el.textContent=value==null?"":String(value)}
   function node(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e}
   function toast(message){const e=$("cinemaToast");e.textContent=message;e.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove("show"),2600)}
@@ -63,11 +63,11 @@
   function artElement(f,wide){
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
     div.style.setProperty("--film-hue",String(f.hue));
-    const badge=node("span","cinema-card-art-badge");badge.textContent="OPEN FILM";div.append(badge);
+    const badge=node("span","cinema-card-art-badge");badge.textContent=f.player?"МОСФИЛЬМ · RU":"OPEN FILM";div.append(badge);
     const title=node("span","cinema-card-art-title");title.textContent=f.title;div.append(title);
     const poster=state.posters.get(f.id);
     if(poster){const img=node("img");img.loading="lazy";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{img.remove();state.posters.delete(f.id)};div.prepend(img)}
-    else requestPoster(f);
+    else if(!f.player)requestPoster(f);
     return div;
   }
   function filmCard(f){
@@ -92,7 +92,7 @@
       b.setAttribute("aria-pressed",String(g===state.genre));
       b.addEventListener("click",()=>{state.genre=g;buzz();render()});return b;
     }));
-    let title="Истории, которые остаются",subtitle="Полные короткометражные фильмы с открытыми лицензиями.";
+    let title="Истории, которые остаются",subtitle="Русскоязычное кино из официальных плееров и авторские открытые фильмы.";
     if(state.tab==="catalog")title="Каталог фильмов";
     if(state.tab==="search")title="Результаты поиска";
     if(state.tab==="library"){title="Моё избранное";subtitle="Сохраняется на этом устройстве."}
@@ -154,7 +154,7 @@
     text("cinemaDetailsMeta",f.original+" · "+f.year+" · "+f.minutes+" мин · "+f.genres.join(" / "));
     text("cinemaDetailsSynopsis",f.synopsis);
     text("cinemaDetailsCreator",f.creator);
-    text("cinemaDetailsLanguage","Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
+    text("cinemaDetailsLanguage",f.player?"Язык: русский. Видео воспроизводится официальным плеером RUTUBE без скачивания на наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
     $("cinemaDetailsSource").href=filmPage(f);
     $("cinemaDetailsLicense").href=f.licenseUrl;
     text("cinemaDetailsLicense","Лицензия: "+f.license+" ↗");
@@ -162,7 +162,7 @@
     const art=$("cinemaDetailsArt");art.replaceChildren();
     art.style.background="radial-gradient(circle at 65% 30%,hsl("+f.hue+" 50% 45%),transparent 62%),linear-gradient(120deg,#29334f,#31223c)";
     $("cinemaDetails").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
-    getCommons(f).then(src=>{
+    if(!f.player)getCommons(f).then(src=>{
       if(state.selected?.id!==f.id||!src.poster)return;
       const image=node("img");image.alt="Кадр из фильма "+f.title;image.src=src.poster;image.onerror=()=>image.remove();art.prepend(image);
     }).catch(()=>{});
@@ -194,6 +194,8 @@
   }
   function closePlayer(){
     ++state.request;try{saveProgress(true)}catch(_){}
+    try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;
+    $("cinemaVideoToolbar").classList.remove("hidden");video.hidden=false;
     video.pause();video.removeAttribute("src");video.load();cleanupSubtitle();
     state.playing=null;$("cinemaPlayer").classList.add("hidden");
     document.body.classList.toggle("cinema-modal-open",Boolean(state.selected));updateBack();render();
@@ -234,7 +236,7 @@
     $("cinemaPlayer").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
     text("cinemaPlayerTitle",f.title);text("cinemaPlayerCredit",f.creator+" · "+f.license);
     $("cinemaPlayerSource").href=filmPage(f);
-    text("cinemaSubtitleStatus","Проверяем русские субтитры…");
+    text("cinemaSubtitleStatus",f.player?"Оригинальная русская дорожка — управление звуком и качеством внутри плеера RUTUBE.":"Проверяем русские субтитры…");
     $("cinemaAudio").replaceChildren(new Option("Оригинал · "+f.spoken,"original"));
     $("cinemaAudio").value="original";
     $("cinemaSpeed").value="1";video.playbackRate=1;
@@ -242,6 +244,27 @@
     setPlayerMessage("Получаем доступные форматы из Wikimedia Commons…");
     cleanupSubtitle();video.pause();video.removeAttribute("src");video.load();
     const token=++state.request;
+    if(f.player){
+      $("cinemaVideoToolbar").classList.add("hidden");
+      video.removeAttribute("poster");
+      $("cinemaPlayerSource").href=filmPage(f);
+      setPlayerMessage("Подключаем официальный плеер RUTUBE…");
+      try{
+        if(!window.VetogramCinemaProvider)throw Error("Модуль видеопровайдера не загрузился");
+        const handle=await window.VetogramCinemaProvider.attach({
+          video,container:$("cinemaVideoWrap"),source:f.player,
+          allowedIframeOrigins:["https://rutube.ru"],
+          onError:(reason)=>{if(token===state.request)setPlayerMessage(reason)}
+        });
+        if(token!==state.request){handle.cleanup();return}
+        state.embedHandle=handle;
+        setPlayerMessage("");
+      }catch(error){
+        if(token===state.request)setPlayerMessage("Плеер недоступен: "+(error?.message||"ошибка")+". Откройте оригинал по ссылке ниже.");
+      }
+      return;
+    }
+    $("cinemaVideoToolbar").classList.remove("hidden");
     try{
       const src=await getCommons(f);
       if(token!==state.request)return;
@@ -314,7 +337,7 @@
     text("cinemaHeroMeta",films[0].year+" · "+films[0].minutes+" мин · "+films[0].genres.join(" / "));
     text("cinemaHeroTitle",films[0].title);
     text("cinemaHeroDescription",films[0].synopsis);
-    getCommons(films[0]).then(src=>{if(src.poster)$("cinemaHeroBackdrop").style.backgroundImage='url("'+src.poster.replace(/"/g,"%22")+'")'}).catch(()=>{});
+    if(!films[0].player)getCommons(films[0]).then(src=>{if(src.poster)$("cinemaHeroBackdrop").style.backgroundImage='url("'+src.poster.replace(/"/g,"%22")+'")'}).catch(()=>{});
     const params=new URLSearchParams(location.search);const film=filmById(params.get(FILM_KEY));if(film)openDetails(film);
   }
   render();
