@@ -36,14 +36,13 @@ test('nested Home activity no longer throws NotFoundError during V4 initializati
   assert.deepEqual(wrapper.children,[resume,activity]);
 });
 
-test('avatar queue keeps loading newly visible contacts beyond six, with bounded concurrency',async()=>{
+test('visible avatars load in signed batches without the old six-avatar lifetime cap',async()=>{
   const source=read('telegram-chats.js');
-  const start=source.indexOf('  // Demand-driven avatar loading.');
+  const start=source.indexOf('  // A single signed MTProto connection');
   const end=source.indexOf('  function rememberPreview(',start);
   assert.ok(start>0&&end>start);
   const snippet=source.slice(start,end);
-  let page=0,active=0,maximum=0;
-  let scroll=null;
+  let page=0,active=0,maximum=0,batches=0,scroll=null;
   const elements=Array.from({length:14},(_,n)=>({
     dataset:{vetoAvatar:String(n+1)},
     getBoundingClientRect:()=>page===Math.floor(n/7)
@@ -56,9 +55,7 @@ test('avatar queue keeps loading newly visible contacts beyond six, with bounded
     avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarUrls:new Map(),
   };
   const ctx=vm.createContext({
-    state,
-    tg:{initData:'signed'},
-    $:()=>({hidden:false}),
+    state,tg:{initData:'signed'},$:()=>({hidden:false}),
     document:{
       querySelector:()=>({dataset:{screen:'telegram'}}),
       querySelectorAll:()=>elements,
@@ -68,28 +65,35 @@ test('avatar queue keeps loading newly visible contacts beyond six, with bounded
       innerHeight:700,
       addEventListener:(name,fn)=>{if(name==='scroll')scroll=fn;},
     },
-    requestAnimationFrame:fn=>fn(),
-    URL:{revokeObjectURL:()=>{}},
-    photoRequest:async(action,id)=>{
-      assert.equal(action,'avatar');
-      active++;maximum=Math.max(maximum,active);
+    fetch:async(url,options)=>{
+      assert.equal(url,'/api/telegram-chat-media');
+      assert.equal(options.headers['x-telegram-init-data'],'signed');
+      const body=JSON.parse(options.body);
+      assert.equal(body.action,'avatar_batch');
+      assert.ok(body.chatIds.length<=6);
+      batches++;active++;maximum=Math.max(maximum,active);
+      const images=Object.fromEntries(body.chatIds.map(id=>
+        [id,Buffer.from([255,216,Number(id)]).toString('base64')]));
       await Promise.resolve();
       active--;
-      return 'blob:'+id;
+      return {ok:true,json:async()=>({ok:true,avatars:images})};
     },
+    AbortController,setTimeout,clearTimeout,
+    atob:base64=>Buffer.from(base64,'base64').toString('binary'),
+    Blob:class{constructor(parts){this.parts=parts}},
+    URL:{createObjectURL:blob=>'blob:'+blob.parts[0][2],revokeObjectURL:()=>{}},
+    requestAnimationFrame:fn=>fn(),
     Date,
   });
   new vm.Script(snippet).runInContext(ctx);
-  // Run the actual queue and its registered scroll callback.
   new vm.Script('queueVisibleAvatars()').runInContext(ctx);
   for(let i=0;i<20&&state.avatarUrls.size<7;i++)await new Promise(r=>setImmediate(r));
   assert.equal(state.avatarUrls.size,7);
-  page=1;
-  assert.equal(typeof scroll,'function');
-  scroll();
+  page=1;assert.equal(typeof scroll,'function');scroll();
   for(let i=0;i<20&&state.avatarUrls.size<14;i++)await new Promise(r=>setImmediate(r));
   assert.equal(state.avatarUrls.size,14);
-  assert.ok(maximum<=2,'at most two Telegram media requests at a time');
+  assert.ok(maximum<=1,'only one signed batch request in flight');
+  assert.equal(batches,4,'four batches instead of fourteen Telegram reconnects');
   assert.equal(state.avatarUrls.get('14'),'blob:14');
 });
 
