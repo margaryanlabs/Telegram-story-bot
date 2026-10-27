@@ -71,6 +71,8 @@
       if(b.classList.contains("cinema-tab")){if(yes)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")}
     });
     $("cinemaHero").classList.toggle("hidden",tab!=="home");
+    if(tab==="series")$("cinemaSearch").placeholder="Найти сериал по названию…";
+    else $("cinemaSearch").placeholder="Найти фильм, сериал, актёра или жанр…";
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
     $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
     $("cinemaSeriesHub").classList.toggle("hidden",tab!=="series");
@@ -514,8 +516,10 @@
     const groups=groupedSeries();
     $("cinemaSeriesHub").classList.toggle("hidden",state.tab!=="series");
     if(state.tab==="series"){
-      $("cinemaSeriesPlayableRail").replaceChildren(...groups.slice(0,80).map(seriesShowCard));
-      const count=groups.reduce((sum,g)=>sum+g.length,0);
+      const q=state.query.trim().toLocaleLowerCase("ru");
+      const visible=q?groups.filter(g=>seriesShowName(g[0]).toLocaleLowerCase("ru").includes(q)):groups;
+      $("cinemaSeriesPlayableRail").replaceChildren(...visible.slice(0,80).map(seriesShowCard));
+      const count=visible.reduce((sum,g)=>sum+g.length,0);
       text("cinemaSeriesStats",count+" реальных видео · "+groups.length+" сериалов · обложки, сезоны и серии");
     }
   }
@@ -558,6 +562,7 @@
   }
   function render(){
     const list=selectedFilms();
+    $("cinemaBrowse").classList.toggle("hidden",state.tab==="series");
     $("cinemaGrid").replaceChildren(...list.slice(0,state.visible).map(filmCard));
     $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
     $("cinemaMoreStudios").classList.toggle("hidden",state.tab==="library"||state.tab==="series");
