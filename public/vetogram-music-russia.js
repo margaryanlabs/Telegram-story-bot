@@ -74,6 +74,28 @@ function card(song,home=false){
  row.append(info,actions);
  return row;
 }
+function renderOfficialVideos(){
+ const target=$("homeRussianVideos");if(!target)return;
+ const vids=window.VetogramOriginals?.list?.().filter(x=>x.language==="ru")||[];
+ target.replaceChildren();
+ if(!vids.length){target.append(div("p","ru-empty","Оригинальные русские клипы сейчас не загружены."));return}
+ const fragment=document.createDocumentFragment();
+ for(const video of vids.slice(0,6)){
+  const card=div("article","ru-video");
+  const cover=div("div","ru-video-image");
+  const image=div("img");image.src="https://i.ytimg.com/vi/"+encodeURIComponent(video.id)+"/hqdefault.jpg";
+  image.alt="";image.loading="lazy";image.onerror=()=>image.remove();cover.append(image);
+  const info=div("div","ru-video-detail");
+  info.append(div("strong","",video.title),div("span","",video.artist));
+  const button=div("button","ru-video-play","▶ Смотреть / слушать");button.type="button";
+  button.onclick=()=>window.VetogramOriginals?.openById?.(video.id);
+  const source=div("a","ru-video-source","YouTube ↗");
+  source.href="https://www.youtube.com/watch?v="+encodeURIComponent(video.id);
+  source.target="_blank";source.rel="noopener noreferrer";
+  info.append(button,source);card.append(cover,info);fragment.append(card);
+ }
+ target.append(fragment);
+}
 function render(){
  const full=$("ruChartsTracks"),home=$("homeRussianTracks");
  full.replaceChildren();home.replaceChildren();
@@ -134,7 +156,7 @@ $("ruChartClose").onclick=()=>{
 $("ruChartExternal").hidden=true;
 $("ruChartsOfficial").href="https://music.apple.com/ru/charts";
 $("ruChartsOfficial").target="_blank";$("ruChartsOfficial").rel="noopener noreferrer";
-songs=snapshot.results.map((x,i)=>mapTrack(x,i+1)).filter(Boolean);render();
+songs=snapshot.results.map((x,i)=>mapTrack(x,i+1)).filter(Boolean);render();renderOfficialVideos();
 load();
 document.addEventListener("vetogram:charts-open",()=>load());
 window.VetogramRussiaChart=Object.freeze({open:()=>{api.showPage("charts");load()},refresh:()=>load(true),
