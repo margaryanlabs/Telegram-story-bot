@@ -397,3 +397,17 @@ body{background:radial-gradient(ellipse 95% 45% at 48% -5%,#29222a 0%,#121217 60
  #importStatus{grid-column:1/-1}
 }
 @media(max-width:440px){.import-banner{margin-top:14px}.import-intro h2{font-size:22px}.import-intro p{font-size:11px}}
+
+/* Russian reading-now rails, grounded in real Wikisource literary categories. */
+.source-tabs button[data-books-source="genres"]{background:linear-gradient(110deg,#43333d,#292533);border-color:#e0b28a4d}
+.source-tabs button[data-books-source="genres"].active{background:linear-gradient(120deg,#875d4a,#382c37);border-color:#edbe9a}
+.reading-genres{display:flex;gap:8px;align-items:center;overflow-x:auto;padding:9px 0 13px;
+  margin-bottom:6px;scrollbar-width:none}
+.reading-genres[hidden]{display:none!important}
+.reading-genres button{flex:0 0 auto;min-height:39px;padding:10px 14px;border-radius:11px;font-size:12px;
+  font-weight:630;color:#dbc4b5;border:1px solid rgba(233,191,157,.23);
+  background:linear-gradient(115deg,#26232b,#1b1c23);transition:background .18s,border-color .18s}
+.reading-genres button.active{background:linear-gradient(110deg,#ecc19f,#dcad91);color:#211922;border-color:#eec7ac;font-weight:760}
+.reading-genres button:focus-visible{outline:2px solid #eec7ac;outline-offset:2px}
+@media(max-width:550px){.reading-genres{gap:6px}.reading-genres button{padding:9px 11px;min-height:35px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){.reading-genres button{transition:none}}
