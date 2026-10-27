@@ -17,6 +17,8 @@ const provider=read('public/cinema-provider.js');
 test('standalone cinema entrypoint and assets exist, no Lovable runtime',()=>{
   assert.match(html,/<html lang="ru">/);
   assert.match(html,/cinema-catalog\.js/);
+  assert.match(html,/cinema-artwork\.js/);
+  assert.match(html,/id="cinemaOpenSource"/);
   assert.match(html,/cinema\.js/);
   assert.match(html,/veto-telegram-mark\.svg/);
   assert.doesNotMatch(html,/lovable\.app|iframe[^>]+kinogo/i);
@@ -30,7 +32,7 @@ test('all static ID bindings exist in the Cinema HTML',()=>{
   for(const id of ['cinemaVideo','cinemaQuality','cinemaAudio','cinemaGrid','cinemaDetails','cinemaPlayer'])assert.ok(ids.has(id),id);
 });
 test('standalone Javascript syntax is accepted by Node',()=>{
-  for(const f of ['public/cinema.js','public/cinema-catalog.js','public/cinema-provider.js']){
+  for(const f of ['public/cinema.js','public/cinema-catalog.js','public/cinema-provider.js','public/cinema-artwork.js']){
     assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',resolve(root,f)],{stdio:'pipe'}),f);
   }
 });
@@ -96,4 +98,13 @@ test('premium Russian movies shelf and approved source selector stay wired',()=>
  assert.match(script,/function sourceLabel/);
  assert.match(css,/cinema-russian-rail/);
  assert.match(css,/cinema-source-switch/);
+});
+
+test('provider fallback never traps viewer behind a modal overlay',()=>{
+ assert.match(script,/providerFeedbackTimer/);
+ assert.match(script,/cinemaOpenSource/);
+ assert.match(script,/cinemaPlayerMessage/);
+ assert.match(css,/\.cinema-loading\.is-provider/);
+ assert.match(css,/pointer-events:none/);
+ assert.match(html,/Открыть видео у источника/);
 });
