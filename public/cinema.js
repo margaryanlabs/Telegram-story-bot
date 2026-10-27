@@ -177,11 +177,21 @@
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),8500);
     try{
-      const res=await fetch("/api/cinema/channels?"+new URLSearchParams({
-        channel:target,page:String(page)
-      }),{signal:controller.signal,headers:{Accept:"application/json"}});
-      if(!res.ok)throw Error("HTTP "+res.status);
-      const data=await res.json();
+      let data;
+      try {
+        const res=await fetch("/api/cinema/channels?"+new URLSearchParams({
+          channel:target,page:String(page)
+        }),{signal:controller.signal,headers:{Accept:"application/json"}});
+        if(!res.ok)throw Error("HTTP "+res.status);
+        data=await res.json();
+      }catch(apiError){
+        // Optional exported metadata works even on static-only hosting.
+        if(page!==1)throw apiError;
+        const local=await fetch("./cinema-"+target+"-feed.json",{signal:controller.signal});
+        if(!local.ok)throw apiError;
+        data=await local.json();
+        data.nextPage=null;
+      }
       if(ticket!==studio.ticket||target!==studio.selected)return;
       if(!data||data.channel!==target||!Array.isArray(data.movies))throw Error("Неправильная выдача архива");
       const valid=data.movies.slice(0,100).filter(f=>{
