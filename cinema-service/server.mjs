@@ -46,6 +46,23 @@ const server=http.createServer(async(req,res)=>{
     [q,genre,limit,offset]);
    respond(res,200,{movies:result.rows.map(asFilm),nextOffset:result.rowCount===limit?offset+limit:null});return;
   }
+  const sourcesMatch=/^\/api\/cinema\/movies\/([a-z0-9][a-z0-9-]{2,90})\/sources$/.exec(url.pathname);
+  if(sourcesMatch){
+    const r=await pool.query(
+      "SELECT x.id,x.provider,x.type,x.playback_url,x.source_page_url,x.rights_basis,"+
+      "x.rights_evidence_url,x.attribution,x.spoken_language,x.translation_name,x.quality_label "+
+      "FROM cinema_playback_sources x JOIN cinema_movies m ON m.id=x.movie_id "+
+      "WHERE m.id=$1 AND m.publishing_status='published' AND x.active=true "+
+      "AND x.rights_reviewed_at IS NOT NULL AND cardinality(x.territory_codes)=0 "+
+      "ORDER BY x.priority DESC,x.id ASC LIMIT 30",[sourcesMatch[1]]
+    );
+    respond(res,200,{sources:r.rows.map(x=>({
+      id:String(x.id),provider:x.provider,type:x.type,url:x.playback_url,
+      sourcePage:x.source_page_url,licensed:true,license:x.rights_basis,
+      licenseUrl:x.rights_evidence_url,credit:x.attribution,
+      language:x.spoken_language,translation:x.translation_name,quality:x.quality_label
+    }))});return;
+  }
   const m=/^\/api\/cinema\/movies\/([a-z0-9][a-z0-9-]{2,90})$/.exec(url.pathname);
   if(m){
    const result=await pool.query(sqlSelect+" AND m.id=$1",[m[1]]);
