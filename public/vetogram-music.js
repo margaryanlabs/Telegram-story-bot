@@ -104,18 +104,35 @@ const ART_COLORS=[[238,132,166],[153,143,235],[105,186,205],[237,161,118],[176,1
 function palette(t){let sum=0;for(const c of String(t?.title||t?.id||"Vetogram"))sum=(sum*31+c.charCodeAt(0))>>>0;
  const c=ART_COLORS[sum%ART_COLORS.length];app.style.setProperty("--accent",c.join(","));}
 let experimentalRequest=0;
+function clearFailedTrack(label="Выбери песню"){
+ // A failed pending request must not leave the previous track shown as playing.
+ audio.pause();
+ audio.removeAttribute("src");
+ audio.load();
+ state.now=null;state.queue=[];state.index=-1;state.playRequested=false;
+ $("miniTitle").textContent=label;$("miniArtist").textContent="";
+ $("studioTitle").textContent=label;$("studioArtist").textContent="";
+ $("miniArt").replaceChildren();$("miniArt").textContent="♫";
+ $("studioCover").replaceChildren();$("studioCover").textContent="V";
+ try{if("mediaSession"in navigator){navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState="none"}}catch{}
+ syncPlayer();
+}
 function playTrack(track,collection,resolved=false){
  if(!track)return;
  if(track.source==="experimental"&&!resolved){
   const token=++experimentalRequest;
   const provider=window.VetogramExperimental;
   if(!provider?.resolve){send("Экспериментальный источник пока не подключён.");return}
-  audio.pause();send("Подключаем аудиопоток…");
+  clearFailedTrack("Подключаем: "+track.title);
+  provider.report?.({status:"pending",track});
   provider.resolve(track).then(url=>{
    if(token!==experimentalRequest)return;
    playTrack({...track,stream:url},collection,true);
   }).catch(()=>{
-   if(token===experimentalRequest)send("Сейчас эта песня недоступна. Выбери другую или проверь позже.");
+   if(token!==experimentalRequest)return;
+   clearFailedTrack();
+   provider.report?.({status:"unavailable",track});
+   send("Не удалось получить аудио для этой песни. Попробуй другую запись.");
   });
   return;
  }
@@ -139,7 +156,19 @@ function playTrack(track,collection,resolved=false){
  if(track.source==="radio")$("studioDuration").textContent="LIVE";
  audio.pause();audio.removeAttribute("src");
  // The stream is always a real provider URL or an in-memory, user-owned Blob URL.
- audio.src=src;audio.load();audio.play().catch(()=>send("Поток недоступен или формат не поддерживается. Выбери другой источник."));
+ audio.src=src;audio.load();
+ audio.play().catch(err=>{
+  if(audio.src!==src)return;
+  state.playRequested=false;
+  if(err?.name==="NotAllowedError"){
+   window.VetogramExperimental?.report?.({status:"requires-tap",track});
+   send("Для включения звука нажми Play в нижнем плеере.");
+  }else if(track.source==="experimental"){
+   window.VetogramExperimental?.report?.({status:"unavailable",track});
+   clearFailedTrack();
+   send("Источник не смог воспроизвести эту запись.");
+  }else send("Поток недоступен или формат не поддерживается. Выбери другой источник.");
+ });
  state.playRequested=true;
  try{if("mediaSession"in navigator&&typeof MediaMetadata!=="undefined"){navigator.mediaSession.metadata=new MediaMetadata({title:track.title,artist:track.artist,album:"Vetogram Music",artwork:art?[{src:art,sizes:"512x512"}]:[]})}}catch{}
  syncPlayer();renderHome();renderSearch();renderLibrary();
@@ -194,9 +223,17 @@ function syncPlayer(){
  $("studioDuration").textContent=live?"LIVE":format(d);
  for(const id of ["miniSeek","studioSeek"]){$(id).disabled=live||!Number.isFinite(d)||d<=0;$(id).value=String(v);}
 }
-for(const event of ["play","pause","ended","durationchange","timeupdate","loadedmetadata","waiting","error"])audio.addEventListener(event,()=>{
+for(const event of ["play","playing","pause","ended","durationchange","timeupdate","loadedmetadata","waiting","error"])audio.addEventListener(event,()=>{
  if(event==="ended")next(1,true);
- if(event==="error"&&audio.error&&audio.src)send("Источник не отдаёт воспроизводимый поток.");
+ if(event==="playing"&&state.now?.source==="experimental")window.VetogramExperimental?.report?.({status:"playing",track:state.now});
+ if(event==="error"&&audio.error&&audio.src){
+  const failed=state.now;
+  if(failed?.source==="experimental"){
+   window.VetogramExperimental?.report?.({status:"unavailable",track:failed});
+   clearFailedTrack();
+  }
+  send("Источник не отдаёт воспроизводимый поток.");
+ }
  syncPlayer();
 });
 audio.volume=.85;
