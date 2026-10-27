@@ -7,13 +7,13 @@
   const LIBRARY_KEY="vetogram.cinema.library.v1";
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
-  const state={tab:"home",genre:"Все",query:"",selected:null,playing:null,request:0,
+  const state={tab:"home",genre:"Все",query:"",sort:"recent",visible:100,selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
   const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/"};
-  const discovery={slides:[],index:0,lastKey:"",timer:null,prefetching:false,received:0};
+  const discovery={slides:[],index:0,lastKey:"",timer:null,prefetching:false,expanding:false,received:0};
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
 
   function loadLibrary(){
@@ -56,7 +56,7 @@
   }
   function setTab(tab){
     if(!["home","catalog","search","library"].includes(tab))return;
-    buzz();state.tab=tab;state.genre="Все";if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
+    buzz();state.tab=tab;state.genre="Все";state.visible=100;if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
     document.querySelectorAll("[data-tab]").forEach(b=>{
       const yes=b.dataset.tab===tab;b.classList.toggle("active",yes);
       if(b.classList.contains("cinema-tab")){if(yes)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")}
@@ -278,14 +278,64 @@
     discovery.prefetching=false;
     text("cinemaSyncStatus",films.length+" записей в коллекции");
   }
+  // Incremental client-side catalogue expansion: one page per studio per click.
+  // Original videos stay on RUTUBE; only public metadata is loaded here.
+  async function loadMoreStudioArchives(){
+    if(discovery.prefetching||discovery.expanding){
+      text("cinemaArchiveStatus","Сначала завершаем загрузку предыдущих страниц.");return;
+    }
+    if(films.length>=1800){
+      text("cinemaArchiveStatus","Уже загружено 1800 записей. Уточните поиск или выберите киностудию.");return;
+    }
+    const targets=Object.keys(STUDIO_LINKS).filter(x=>
+      studio.firstPages.has(x)&&Number.isInteger(studio.pages.get(x))&&
+      studio.pages.get(x)>0&&studio.pages.get(x)<=120);
+    if(!targets.length){
+      text("cinemaArchiveStatus","Больше страниц пока нет. Используйте поиск и жанры.");
+      $("cinemaMoreStudios").disabled=true;return;
+    }
+    discovery.expanding=true;
+    const button=$("cinemaMoreStudios");
+    button.disabled=true;
+    let added=0,failures=0;
+    try{
+      for(const target of targets){
+        const page=studio.pages.get(target);
+        if(!page||films.length>=1800)break;
+        text("cinemaArchiveStatus","Загружаем следующую страницу: "+target+"…");
+        const controller=new AbortController();
+        const timer=setTimeout(()=>controller.abort(),11000);
+        try{
+          const data=await studioPage(target,page,controller.signal);
+          added+=mergeStudioPage(target,page,data);
+        }catch(_){failures++}
+        finally{clearTimeout(timer)}
+        await new Promise(resolve=>setTimeout(resolve,260));
+      }
+      // On a fresh expansion show newly added material, not always the first 100.
+      state.visible=Math.min(1800,Math.max(state.visible+120,films.length));
+      render();
+      if(studio.firstPages.has(studio.selected))showStudio();
+      text("cinemaArchiveStatus",added>0
+        ?("Добавлено "+added+" записей · теперь "+films.length+" в открытом каталоге"+(failures?" · "+failures+" архивов ответили с ошибкой":""))
+        :("Новых записей не нашлось"+(failures?". У некоторых архивов временная ошибка.":".")));
+    }finally{
+      discovery.expanding=false;
+      button.disabled=false;
+    }
+  }
   function selectedFilms(){
     let list=films;
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
     if(state.genre!=="Все")list=list.filter(f=>(f.genres||[]).includes(state.genre)||
       (state.genre==="Фильмы"&&!f.contentType&&Number(f.minutes)>30));
     const q=state.query.trim().toLocaleLowerCase("ru-RU");
-    if(q)list=list.filter(f=>(f.title+" "+f.original+" "+f.year+" "+f.genres.join(" ")).toLocaleLowerCase("ru-RU").includes(q));
-    return list;
+    if(q)list=list.filter(f=>(f.title+" "+(f.original||"")+" "+(f.year||"")+" "+(f.creator||"")+" "+(f.genres||[]).join(" ")).toLocaleLowerCase("ru-RU").includes(q));
+    if(state.sort==="year")
+      return [...list].sort((a,b)=>(Number(b.year)||0)-(Number(a.year)||0)||(uploadTime(b)-uploadTime(a)));
+    if(state.sort==="title")
+      return [...list].sort((a,b)=>a.title.localeCompare(b.title,"ru"));
+    return [...list].sort((a,b)=>uploadTime(b)-uploadTime(a)||((Number(b.year)||0)-(Number(a.year)||0)));
   }
   function artElement(f,wide){
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
@@ -379,7 +429,7 @@
         button.append(small,strong);
         button.setAttribute("aria-pressed",String(state.genre===label));
         button.addEventListener("click",()=>{
-          setTab("catalog");state.genre=label;render();
+          setTab("catalog");state.genre=label;state.visible=100;render();
           $("cinemaBrowse").scrollIntoView?.({behavior:"smooth",block:"start"});
         });return button;
       }));
@@ -388,7 +438,9 @@
   }
   function render(){
     const list=selectedFilms();
-    $("cinemaGrid").replaceChildren(...list.slice(0,200).map(filmCard));
+    $("cinemaGrid").replaceChildren(...list.slice(0,state.visible).map(filmCard));
+    $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
+    $("cinemaMoreStudios").classList.toggle("hidden",state.tab==="library");
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     text("cinemaCount",list.length+" из "+films.length+" записей · официальные источники");
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
@@ -400,7 +452,7 @@
     $("cinemaGenres").replaceChildren(...genres.map(g=>{
       const b=node("button","cinema-chip"+(state.genre===g?" active":""));b.type="button";b.textContent=g;
       b.setAttribute("aria-pressed",String(g===state.genre));
-      b.addEventListener("click",()=>{state.genre=g;buzz();render();if(state.tab!=="library")fetchCatalog(true)});return b;
+      b.addEventListener("click",()=>{state.genre=g;state.visible=100;buzz();render();if(state.tab!=="library")fetchCatalog(true)});return b;
     }));
     let title=state.genre==="Все"?"Вся коллекция":state.genre,subtitle="Фильмы, сериалы и мультфильмы из официальных видеоканалов. Новые записи появляются в каталоге.";
     if(state.tab==="catalog")title="Каталог фильмов";
@@ -690,10 +742,16 @@
   $("cinemaHeroDetails").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(f)openDetails(f)});
   $("cinemaHeroPrev").addEventListener("click",()=>setHeroSlide(discovery.index-1));
   $("cinemaHeroNext").addEventListener("click",()=>setHeroSlide(discovery.index+1));
-  $("cinemaSearch").addEventListener("input",e=>{state.query=e.target.value.slice(0,90);if(state.tab==="library")setTab("search");else if(state.tab==="home"){$("cinemaHero").classList.add("hidden")}render();clearTimeout(catalogDebounce);catalogDebounce=setTimeout(()=>fetchCatalog(true),350)});
-  $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";render();fetchCatalog(true)});
+  $("cinemaSearch").addEventListener("input",e=>{state.query=e.target.value.slice(0,90);state.visible=100;if(state.tab==="library")setTab("search");else if(state.tab==="home"){$("cinemaHero").classList.add("hidden")}render();clearTimeout(catalogDebounce);catalogDebounce=setTimeout(()=>fetchCatalog(true),350)});
+  $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";state.visible=100;render();fetchCatalog(true)});
   $("cinemaLoadMore").addEventListener("click",()=>fetchCatalog(false));
   $("cinemaStudioMore").addEventListener("click",()=>loadStudio(false));
+  $("cinemaMoreResults").addEventListener("click",()=>{state.visible=Math.min(1800,state.visible+100);render()});
+  $("cinemaMoreStudios").addEventListener("click",loadMoreStudioArchives);
+  $("cinemaSort").addEventListener("change",event=>{
+    state.sort=["recent","year","title"].includes(event.target.value)?event.target.value:"recent";
+    state.visible=100;render();
+  });
   document.querySelectorAll("[data-studio]").forEach(button=>button.addEventListener("click",()=>switchStudio(button.dataset.studio)));
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
   document.addEventListener("keydown",e=>{
