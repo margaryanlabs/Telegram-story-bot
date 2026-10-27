@@ -16,9 +16,9 @@ test("music-only original recordings section is integrated",()=>{
 });
 test("only curated original publisher/artist URLs, no audio extraction",()=>{
  const videos=[...js.matchAll(/id:"([A-Za-z0-9_-]{11})",artist:/g)].map(m=>m[1]);
- assert.equal(videos.length,18);
- assert.equal(new Set(videos).size,18);
- for(const verified of ["aiCL0-U9WxI","WujKJpxaUHk","wxxnY-QTUGU","DIKIgjLGf98","ChkJpnOgIwQ","RfH5o3XtI2c","1RG_qhN4e3M","Co8ZJIejXBA","suAR1PYFNYA","ZjBZ8MUnB0E","vBynw9Isr28"]){
+ assert.equal(videos.length,21);
+ assert.equal(new Set(videos).size,21);
+ for(const verified of ["aiCL0-U9WxI","WujKJpxaUHk","wGFAi6WCWEY","FXdpkDlAF0M","6uHHWgJ6dsk","wxxnY-QTUGU","DIKIgjLGf98","ChkJpnOgIwQ","RfH5o3XtI2c","1RG_qhN4e3M","Co8ZJIejXBA","suAR1PYFNYA","ZjBZ8MUnB0E","vBynw9Isr28"]){
   assert.ok(videos.includes(verified),"verified official release "+verified);
  }
  assert.match(js,/youtube-nocookie\.com\/embed/);assert.match(js,/watch\?v=/);assert.match(js,/frame\.allowFullscreen=true/);
