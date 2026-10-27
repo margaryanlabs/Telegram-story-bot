@@ -8,7 +8,7 @@
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
   const state={tab:"home",genre:"Все",query:"",selected:null,playing:null,request:0,
-    library:loadLibrary(),sources:new Map(),posters:new Map(),subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
+    library:loadLibrary(),sources:new Map(),posters:new Map(),approvedProviders:new Map(),subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0;
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
@@ -92,6 +92,51 @@
     }
   }
 
+  // Catalog sources are published only after operator review. The backend's
+  // approved-sources endpoint is separate from any Kinobox discovery queue.
+  function approvedSources(f){
+    const listed=state.approvedProviders.get(f.id)||[];
+    const base=f.player?[{...f.player,id:"builtin:"+f.id,
+      provider:f.player.provider||"RUTUBE",
+      sourcePage:f.sourcePage||filmPage(f),translation:f.spoken||"Русский",
+      quality:"",language:"ru"}]:[];
+    const seen=new Set();
+    return [...listed,...base].filter(src=>{
+      if(!src||src.licensed!==true||!src.license||!src.credit||!/^https:\/\/[^/]+/.test(src.url))return false;
+      const key=src.type+"|"+src.url;
+      if(seen.has(key))return false;
+      seen.add(key);return true;
+    });
+  }
+  function sourceLabel(src){
+    return [src.provider||"Плеер",src.translation||src.language||"Оригинальная дорожка",src.quality||""].filter(Boolean).join(" · ").slice(0,145);
+  }
+  async function fetchApprovedSources(f){
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);
+    try{
+      const response=await fetch("/api/cinema/movies/"+encodeURIComponent(f.id)+"/sources",{signal:controller.signal});
+      if(!response.ok) return;
+      const data=await response.json();
+      if(!data||!Array.isArray(data.sources))return;
+      const checked=data.sources.slice(0,30).filter(x=>{
+        try{
+          const url=new URL(x.url);
+          return x.licensed===true&&!!x.license&&!!x.credit&&
+            ["iframe","video","hls"].includes(x.type)&&url.protocol==="https:"&&
+            (x.type!=="iframe"||url.origin==="https://rutube.ru"||
+             (window.VETOGRAM_CINEMA_EMBED_ORIGINS||[]).includes(url.origin));
+        }catch(_){return false}
+      });
+      state.approvedProviders.set(f.id,checked);
+      if(state.playing?.id===f.id){
+        const selected=$("cinemaProviderSelect");
+        const old=selected.value;
+        selected.replaceChildren(...approvedSources(f).map((src,i)=>new Option(sourceLabel(src),String(i))));
+        selected.value=old;
+      }
+    }catch(_){/* backend may not be deployed */}
+    finally{clearTimeout(timer)}
+  }
   function selectedFilms(){
     let list=films;
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
@@ -203,6 +248,7 @@
     const art=$("cinemaDetailsArt");art.replaceChildren();
     art.style.background="radial-gradient(circle at 65% 30%,hsl("+f.hue+" 50% 45%),transparent 62%),linear-gradient(120deg,#29334f,#31223c)";
     $("cinemaDetails").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
+    if(f.player)fetchApprovedSources(f);
     if(!f.player)getCommons(f).then(src=>{
       if(state.selected?.id!==f.id||!src.poster)return;
       const image=node("img");image.alt="Кадр из фильма "+f.title;image.src=src.poster;image.onerror=()=>image.remove();art.prepend(image);
@@ -272,12 +318,22 @@
     }catch(_){if(token===state.request)text("cinemaSubtitleStatus","Русские субтитры для этого файла не найдены. Доступна оригинальная звуковая дорожка.")}
     finally{clearTimeout(timer)}
   }
-  async function play(f){
+  async function play(f, chosenSource){
+    if(state.playing){try{saveProgress(true)}catch(_){}}
+    try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;
     state.playing=f;setHistory(f);updateBack();buzz();
+    const choices=approvedSources(f);
+    const current=choices.find(x=>chosenSource&&x.id===chosenSource.id)||chosenSource||choices[0];
+    const providerSelect=$("cinemaProviderSelect");
+    $("cinemaSourceSwitch").classList.toggle("hidden",!f.player);
+    providerSelect.replaceChildren(...choices.map((src,i)=>new Option(sourceLabel(src),String(i))));
+    providerSelect.value=String(Math.max(0,choices.findIndex(src=>src.id===current?.id)));
+    providerSelect.onchange=()=>{const next=choices[Number(providerSelect.value)];if(next)play(f,next)};
+    text("cinemaProviderHint",choices.length>1?choices.length+" проверенных вариантов":"Видеопоток предоставляется источником");
     $("cinemaPlayer").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
     text("cinemaPlayerTitle",f.title);text("cinemaPlayerCredit",f.creator+" · "+f.license);
     $("cinemaPlayerSource").href=filmPage(f);
-    text("cinemaSubtitleStatus",f.player?(f.player.type==="iframe"?"Управление качеством, звуком и субтитрами находится внутри видеоплеера провайдера.":"Выбор языка зависит от доступных дорожек провайдера."):"Проверяем русские субтитры…");
+    text("cinemaSubtitleStatus",current?(current.type==="iframe"?"Язык, качество и субтитры переключаются в меню самого видеоплеера.":"Аудиодорожки доступны, если их предоставляет источник."):"Проверяем русские субтитры…");
     $("cinemaAudio").replaceChildren(new Option("Оригинал · "+f.spoken,"original"));
     $("cinemaAudio").value="original";
     $("cinemaSpeed").value="1";video.playbackRate=1;
@@ -285,19 +341,19 @@
     setPlayerMessage("Получаем доступные форматы из Wikimedia Commons…");
     cleanupSubtitle();video.pause();video.removeAttribute("src");video.load();
     const token=++state.request;
-    if(f.player){
+    if(current){
       state.embedDuration=0;state.embedLastSave=0;
-      const embedded=f.player.type==="iframe";
+      const embedded=current.type==="iframe";
       $("cinemaVideoToolbar").classList.toggle("hidden",embedded);
       if(!embedded)state.pendingTime=state.library.progress[f.id]?.t||0;
       video.removeAttribute("poster");
-      $("cinemaPlayerSource").href=filmPage(f);
-      setPlayerMessage("Подключаем видеопровайдера…");
+      $("cinemaPlayerSource").href=current.sourcePage||filmPage(f);
+      setPlayerMessage("Подключаем "+(current.provider||"видеопровайдера")+"…");
       try{
         if(!window.VetogramCinemaProvider)throw Error("Модуль видеопровайдера не загрузился");
         const handle=await window.VetogramCinemaProvider.attach({
-          video,container:$("cinemaVideoWrap"),source:f.player,
-          allowedIframeOrigins:["https://rutube.ru"],
+          video,container:$("cinemaVideoWrap"),source:current,
+          allowedIframeOrigins:["https://rutube.ru",...(window.VETOGRAM_CINEMA_EMBED_ORIGINS||[])],
           resumeAt:state.library.progress[f.id]?.t||0,
           onEvent:(event)=>{
             if(token!==state.request||state.playing?.id!==f.id)return;
