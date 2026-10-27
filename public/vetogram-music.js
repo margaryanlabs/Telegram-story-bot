@@ -285,6 +285,20 @@ function renderRadio(){
 }
 $("radioForm").onsubmit=e=>{e.preventDefault();radioSearch($("radioInput").value)};
 $("[data-radio]").forEach(b=>b.onclick=()=>{$("radioInput").value=b.dataset.radio;radioSearch(b.dataset.radio)});
+// Direct radio streams verified with current Radio Browser checks (RU, HTTPS, lastcheckok=1).
+// Broadcasters operate and license their own live programming. These are NOT on-demand tracks.
+const RUSSIAN_RADIO=Object.freeze([
+ {key:"rusradio",title:"Русское Радио",stream:"https://rusradio.hostingradio.ru/rusradio96.aacp"},
+ {key:"russianmix",title:"Radio Record Russian Mix",stream:"https://radiorecord.hostingradio.ru/rus96.aacp"},
+ {key:"dfm",title:"DFM Russian Dance",stream:"https://dfm-dfmrusdance.hostingradio.ru/dfmrusdance96.aacp"},
+ {key:"maximum",title:"Радио Maximum",stream:"https://maximum.hostingradio.ru/maximum128.mp3"}
+]);
+document.querySelectorAll("[data-audio-station]").forEach(button=>button.addEventListener("click",()=>{
+ const target=RUSSIAN_RADIO.find(x=>x.key===button.dataset.audioStation);
+ if(!target)return;
+ const item={id:"radio:"+target.key,source:"radio",title:target.title,artist:"Музыка · прямой эфир",artwork:"",stream:target.stream};
+ playTrack(item,[item]);
+}));
 document.querySelectorAll("[data-audio-radio]").forEach(b=>b.addEventListener("click",()=>{
  showPage("radio");$("radioInput").value=b.dataset.audioRadio;radioSearch(b.dataset.audioRadio,true);
 }));
