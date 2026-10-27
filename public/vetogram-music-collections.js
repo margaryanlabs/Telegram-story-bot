@@ -12,7 +12,10 @@ const safe=u=>{try{const x=new URL(String(u));return x.protocol==="https:"?x.hre
 const pick=x=>x&&x.id&&x.title?{
  id:cap(x.id,160),title:cap(x.title,120),artist:cap(x.artist,95),
  source:["audius","radio","local","demo","metadata","stream","archive","ccmixter"].includes(x.source)?x.source:"metadata",
- artwork:safe(x.artwork),stream:["radio","stream","archive","ccmixter"].includes(x.source)?safe(x.stream):"",homepage:x.source==="radio"?safe(x.homepage):"",\n permalink:["archive","ccmixter"].includes(x.source)?safe(x.permalink):"",\n license:["archive","ccmixter"].includes(x.source)?cap(x.license,32):"",\n license_url:["archive","ccmixter"].includes(x.source)?safe(x.license_url):""
+ artwork:safe(x.artwork),stream:["radio","stream","archive","ccmixter"].includes(x.source)?safe(x.stream):"",homepage:x.source==="radio"?safe(x.homepage):"",
+ permalink:["archive","ccmixter"].includes(x.source)?safe(x.permalink):"",
+ license:["archive","ccmixter"].includes(x.source)?cap(x.license,32):"",
+ license_url:["archive","ccmixter"].includes(x.source)?safe(x.license_url):""
 }:null;
 let lists=[];
 try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v))lists=v.slice(0,MAX).filter(p=>p&&typeof p.name==="string"&&Array.isArray(p.tracks)).map(p=>({
