@@ -129,8 +129,8 @@ test('reopened chat restores only the matching uncertain reply context',()=>{
 test('uncertain retry warning is shown after history load, not auto-retransmitted',()=>{
   const opened=code.slice(code.indexOf('  async function openThread(chat){'),
     code.indexOf('  // First paint comes from owner-verified MTProto;'));
-  assert.match(opened,/const historyLoad=loadMessages\\(\\{reset:true\\}\\);/);
-  assert.match(opened,/if\\(openedGeneration!==state\\.threadGeneration\\)return;/);
-  assert.match(opened,/const unresolved=state\\.lastSendFailures\\.get/);
+  assert.match(opened,/const historyLoad=loadMessages\(\{reset:true\}\);/);
+  assert.match(opened,/if\(openedGeneration!==state\.threadGeneration\)return;/);
+  assert.match(opened,/const unresolved=state\.lastSendFailures\.get/);
   assert.match(code,/Отправка не подтверждена\. Проверь оригинальный Telegram перед повтором/);
 });
