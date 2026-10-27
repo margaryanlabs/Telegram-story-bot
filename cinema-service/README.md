@@ -91,3 +91,20 @@ The public Alloha website (https://allohatv.com/) advertises 64,609 movies and 1
 - Premium homepage now contains a mobile-horizontal **«Смотреть на русском»** shelf in the existing VETO charcoal/coral theme.
 - Provider/translation selector is visible on player pages with a confirmed external stream. The code was smoke-tested on synthetic DOM and simulated backend source responses.
 - **Not yet tested on actual Telegram Android/iOS**: playback, commercials, deep links, iframe resizing, or network/provider regional restrictions. No VPS/Postgres provisioned. No merge/deployment.
+
+
+## Alloha provider outreach — 27 October 2026
+
+The owner explicitly approved sending an email seeking pilot integration access. A partnership/test-access inquiry was sent via the connected Gmail account to **support@alloha.tv** asking for:
+- pilot access without 300 daily visitors,
+- approved Telegram WebView embedding and CNAME/domain requirements,
+- Russian dubbing and quality/catalog API features,
+- applicable catalogue rights, geography and monetisation terms.
+
+This contact email was historically published by an identified Alloha representative; current delivery/reply has not been verified. **No access credential, domain configuration, source authorization, catalogue rights or rollout approval has been received.** Keep provider status \`pending\`, do not enable Alloha in production.
+
+## Artwork and iframe fallback
+
+\`public/cinema-artwork.js\` attempts a source-scoped public RUTUBE video metadata lookup for official video thumbnails and accepts only RUTUBE image CDN hosts. If the endpoint is blocked by CORS, geography, or rate limits, the premium color-gradient fallback remains and the film card stays usable. The implementation was not validated live against the RUTUBE metadata endpoint.
+
+For iframe playback, the UI uses a non-intercepting status banner, waits for provider readiness signals (RUTUBE \`player:init\`) rather than assuming iframe.onload implies playback, and exposes a direct \"Открыть видео у источника\" link. After 13 seconds without a confirmed RUTUBE signal, it shows a helpful fallback message while leaving the iframe clickable.
