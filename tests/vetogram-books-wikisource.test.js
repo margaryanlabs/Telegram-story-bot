@@ -169,3 +169,43 @@ test('invalid original languages are rejected before calling Wikisource',async()
     assert.equal(res.code,400);
   });
 });
+
+
+test('translation list shows selectable Russian editions instead of pretending the index is a complete book',async()=>{
+  const index={
+    title:'Три мушкетёра (Дюма)',ns:0,revid:400,
+    categories:[{title:'Списки переводов'}],
+    links:[
+      {ns:0,title:'Три мушкетера (Дюма)/Том 1/ДО'},
+      {ns:0,title:'Три мушкетера (Дюма; Руммель)'},
+      {ns:0,title:'Не относящаяся к книге страница'}
+    ],
+    text:'<p>Это список различных русских переводов и изданий одного произведения, а не текст самого романа.</p>'
+  };
+  const edition={
+    title:'Три мушкетера (Дюма)/Том 1/ДО',ns:0,revid:401,links:[],
+    text:'<h1>Глава первая</h1><p>Этот русский перевод содержит основной текст произведения. Он доступен для чтения внутри читалки, с указанием источника.</p>'
+  };
+  await withFetch(async url=>{
+    const req=new URL(url);
+    const params=req.searchParams;
+    if(params.get('pageid')==='99')return Response.json({parse:index});
+    if(params.get('page')==='Три мушкетера (Дюма)/Том 1/ДО')return Response.json({parse:edition});
+    throw Error('Unexpected page selection');
+  },async()=>{
+    const first=fakeResponse();
+    await wikisource({method:'GET',query:{wiki:'ru',mode:'text',id:'99'}},first);
+    assert.equal(first.code,200);
+    assert.equal(first.payload.isTranslationIndex,true);
+    assert.equal(first.payload.chapters.length,2);
+    assert.match(first.payload.text,/выберите конкретный перевод/i);
+    const second=fakeResponse();
+    await wikisource({method:'GET',query:{wiki:'ru',mode:'text',id:'99',chapter:'0'}},second);
+    assert.equal(second.code,200);
+    assert.match(second.payload.text,/основной текст/);
+    assert.match(second.payload.attribution.source,/\/Том_1\/ДО$/);
+    const bad=fakeResponse();
+    await wikisource({method:'GET',query:{wiki:'ru',mode:'text',id:'99',chapter:'60'}},bad);
+    assert.equal(bad.code,404);
+  });
+});
