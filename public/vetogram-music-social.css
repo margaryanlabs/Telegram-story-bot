@@ -1,0 +1,41 @@
+/* Vetogram Music Social V2 · playlists, sharing and local queue */
+.social-invite{margin:32px 0;padding:26px 29px;display:flex;gap:18px;align-items:center;justify-content:space-between;position:relative;overflow:hidden;isolation:isolate;border:1px solid #f7accd30;border-radius:19px;background:radial-gradient(circle at 93% 5%,#e06fbc4c,transparent 43%),radial-gradient(circle at 10% 135%,#6a88cb45,transparent 53%),linear-gradient(125deg,#1e2238,#29213c)}
+.social-invite:after{content:"♫";pointer-events:none;position:absolute;right:18%;top:-75px;font-size:180px;font-weight:900;line-height:1;color:#ffffff0b;z-index:-1;transform:rotate(-24deg)}
+.social-invite small{font-size:9px;letter-spacing:.2em;font-weight:850;color:#ffb7bb}
+.social-invite h3{font-size:24px;letter-spacing:-.05em;margin:6px 0 3px}
+.social-invite p{font-size:11px;line-height:1.7;max-width:550px;color:#b5bad0;margin:5px 0}
+.social-invite button,.social-library-actions button{border:1px solid #ffffff3b;border-radius:11px;padding:12px 16px;font-size:11px;font-weight:850;color:#241e31;background:linear-gradient(115deg,#ffcbac,#f28cb6);flex:none;box-shadow:0 10px 28px #f387ae20}
+.social-invite button:hover,.social-library-actions button:hover{filter:brightness(1.06)}
+.social-library-actions{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 7px}
+.social-library-actions button:last-child{background:#ffffff11;color:#ded4e4;border-color:#ffffff24;box-shadow:none}
+.personal-actions{display:flex;flex:none;gap:0;border-left:1px solid #ffffff1a;margin-left:1px;padding-left:5px}
+.personal-action{width:29px;height:36px;display:grid;place-items:center;font-size:16px;background:transparent;color:#acb9d0;border:0;border-radius:8px;transition:background .2s}
+.personal-action:hover{background:#ffffff1c;color:white}
+.track-btn.share{color:#e7b1bd;font-size:17px}
+.social-quick{background:#ffffff12;color:#ffd0cd;border:1px solid #ffffff25;border-radius:10px;min-width:33px;height:35px;font-size:16px}
+.social-queue{display:none;margin:6px 0 18px;max-height:250px;overflow:hidden;min-width:0;border:1px solid #ffffff25;border-radius:14px;background:#080b1d96;box-shadow:inset 0 0 40px #f9a5c708}
+.social-queue.open{display:block}
+.social-queue-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff1b;padding:10px 15px}
+.social-queue-head strong{font-size:12px}.social-queue-head button{font-size:20px;color:#ddd1e5;border:0;background:none}
+.social-queue-list{overflow:auto;max-height:202px;scrollbar-width:thin;scrollbar-color:#a276b1 transparent}
+.social-q-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid #ffffff12;padding:9px 12px;min-width:0}
+.social-q-row.active{background:#ffb8c314}
+.social-q-num{min-width:19px;color:#9d99b2;font-size:10px}
+.social-q-title{flex:1;min-width:0;text-align:left}
+.social-q-title strong,.social-q-title small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.social-q-title strong{font-size:11px}.social-q-title small{font-size:9px;color:#aaa6c1;margin-top:2px}
+.social-q-play,.social-q-share{border:0;background:#ffffff12;color:#ffd8dd;border-radius:9px;width:29px;height:30px}
+.social-empty{color:#a8a8bd;font-size:11px;padding:21px}
+.social-modal{position:fixed;inset:0;display:none;z-index:130;align-items:center;justify-content:center;padding:15px;background:#070711eb;backdrop-filter:blur(24px)}
+.social-modal.open{display:flex}
+.social-dialog{width:min(450px,100%);padding:27px;border-radius:22px;background:radial-gradient(circle at 90% 0%,#ec7ca43f,transparent 43%),linear-gradient(135deg,#242034,#151a2e);border:1px solid #ffffff31;box-shadow:0 30px 80px #000b}
+.social-dialog h2{font-size:26px;line-height:1.16;letter-spacing:-.055em;margin:13px 0}
+.social-dialog p{font-size:12px;line-height:1.75;color:#d3c7d5;white-space:pre-line}
+.social-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:25px}
+.social-dialog-actions button{background:#ffffff16;border:1px solid #ffffff28;border-radius:10px;color:#fff;padding:11px 16px;font-weight:700;font-size:11px}
+.social-dialog-actions button:last-child{background:linear-gradient(105deg,#ffd0a4,#f39bb8);border:0;color:#221b30}
+.app[data-playing=true] .social-invite:after{animation:socialFloat 10s ease-in-out infinite}
+@keyframes socialFloat{50%{transform:translate(20px,-8px) rotate(-5deg)}}
+@media(max-width:980px){.social-invite{display:block}.social-invite button{margin-top:13px}}
+@media(max-width:570px){.social-invite{padding:21px}.social-invite h3{font-size:21px}.social-invite button{width:100%}.social-library-actions button{flex:1;min-width:140px;font-size:10px;padding:11px}.personal-action{width:25px}.track-btn.share{display:none}.social-quick{min-width:31px}.track-row:has(.personal-actions){gap:4px}.track-row:has(.personal-actions) .track-cover{width:40px;height:40px}.track-row:has(.personal-actions) .track-btn.like{display:none}.studio-actions{flex-wrap:wrap;justify-content:center;gap:16px}.social-dialog{padding:23px}}
+@media(prefers-reduced-motion:reduce){.app[data-playing=true] .social-invite:after{animation:none!important}}
