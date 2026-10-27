@@ -7,16 +7,19 @@ const $=id=>document.getElementById(id),$$=q=>Array.from(document.querySelectorA
 const audio=$("audio"),app=$("app"),MAX_FILE=30*1048576,MAX_BATCH=120*1048576;
 const key="vetogram-music-v1",DB_NAME="vetogram-music-private-v1",STORE="tracks";
 const moods={chill:"chill",electronic:"electronic","hip-hop":"hip hop"};
-const state={page:"home",tracks:[],search:[],radios:[],local:[],liked:[],metadata:[],queue:[],index:-1,now:null,shuffle:false,repeat:"all",mood:"ember",source:"",playRequested:false,localUrls:[],activeController:null,radioController:null,sleepDeadline:0,sleepTimer:null,db:null};
+const state={page:"home",tracks:[],search:[],radios:[],local:[],liked:[],metadata:[],streams:[],queue:[],index:-1,now:null,shuffle:false,repeat:"all",mood:"ember",source:"",playRequested:false,localUrls:[],activeController:null,radioController:null,sleepDeadline:0,sleepTimer:null,db:null};
 const dom=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e};
 const clean=(v,n=120)=>String(v??"").replace(/[\u0000-\u001f\u007f]/g," ").replace(/<[^>]*>/g,"").replace(/\s+/g," ").trim().slice(0,n);
 const safe=(url)=>{try{const u=new URL(String(url));return u.protocol==="https:"?u.href:""}catch{return""}};
 const format=s=>!Number.isFinite(s)||s<0?"0:00":Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
 const send=(msg)=>{const e=$("globalToast");e.textContent=msg;e.classList.add("visible");clearTimeout(send.timer);send.timer=setTimeout(()=>e.classList.remove("visible"),4200)};
 const jLoad=(k,fallback)=>{try{const x=JSON.parse(localStorage.getItem(k)||"null");return x===null?fallback:x}catch{return fallback}};
-const persist=()=>{try{localStorage.setItem(key,JSON.stringify({liked:state.liked.slice(0,250).map(x=>({id:x.id,title:x.title,artist:x.artist,source:x.source,artwork:x.artwork||"",stream:x.source==="radio"?x.stream:undefined})),metadata:state.metadata.slice(0,300),mood:state.mood}));return true}catch{send("Локальное хранилище недоступно");return false}};
+const persist=()=>{try{localStorage.setItem(key,JSON.stringify({liked:state.liked.slice(0,250).map(x=>({id:x.id,title:x.title,artist:x.artist,source:x.source,artwork:x.artwork||"",stream: ["radio","stream"].includes(x.source)?safe(x.stream):undefined})),metadata:state.metadata.slice(0,300),streams:state.streams.slice(0,150).map(x=>({id:x.id,title:x.title,artist:x.artist,stream:x.stream,source:"stream"})),mood:state.mood}));return true}catch{send("Локальное хранилище недоступно");return false}};
 const saved=jLoad(key,{});state.liked=Array.isArray(saved.liked)?saved.liked.slice(0,250):[];
 state.metadata=Array.isArray(saved.metadata)?saved.metadata.slice(0,300):[];
+state.streams=Array.isArray(saved.streams)?saved.streams.slice(0,150).filter(x=>x&&x.source==="stream"&&safe(x.stream)&&x.title&&x.artist).map(x=>({
+ id:clean(x.id,240),source:"stream",title:clean(x.title,120),artist:clean(x.artist,80),stream:safe(x.stream),artwork:""
+})):[];
 state.mood=saved.mood==="aurora"?"aurora":"ember";
 document.documentElement.dataset.ambient=state.mood;
 const unique=list=>{const s=new Set();return list.filter(x=>{if(!x?.id||s.has(x.id))return false;s.add(x.id);return true;})};
@@ -48,7 +51,7 @@ function row(track,index,context){
  const cover=dom("div","track-cover","♫"),url=safe(track.artwork);
  if(url){const img=dom("img");img.src=url;img.alt="";img.loading="lazy";img.addEventListener("error",()=>img.remove());cover.append(img)}
  const main=dom("div","track-info");main.append(dom("b","",track.title||"Без названия"),dom("small","",track.artist||"Неизвестный исполнитель"));
- const tag=dom("span","source-tag",track.source==="local"?"МОЙ ФАЙЛ":track.source==="demo"?"ОРИГИНАЛЬНОЕ ДЕМО":track.source==="radio"?"LIVE RADIO":track.source==="metadata"?"ТОЛЬКО СПИСОК":"AUDIUS");
+ const tag=dom("span","source-tag",track.source==="local"?"МОЙ ФАЙЛ":track.source==="stream"?"ПО ССЫЛКЕ":track.source==="demo"?"ОРИГИНАЛЬНОЕ ДЕМО":track.source==="radio"?"LIVE RADIO":track.source==="metadata"?"ТОЛЬКО СПИСОК":"AUDIUS");
  const like=dom("button","track-btn like",favorited(track)?"♥":"♡");
  like.type="button";like.title=favorited(track)?"Убрать из избранного":"В избранное";like.setAttribute("aria-label",like.title);
  like.onclick=()=>toggleLike(track);
@@ -56,8 +59,9 @@ function row(track,index,context){
  play.type="button";play.setAttribute("aria-label",track.source==="metadata"?"Найти в Audius":"Воспроизвести");
  play.onclick=()=>{
   if(track.source==="metadata"){showPage("search");$("searchInput").value=track.artist+" "+track.title;runSearch($("searchInput").value);return}
-  let pool=context==="search"?state.search:context==="home"?unique([...state.local,...state.tracks]):context==="liked"?state.liked:context==="local"?state.local:[track];
+  let pool=context==="search"?state.search:context==="home"?unique([...state.local,...state.tracks]):context==="liked"?state.liked:context==="local"?state.local:context==="streams"?state.streams:[track];
   if(track.source==="local")pool=state.local;
+  if(track.source==="stream")pool=state.streams;
   if(track.source==="demo")pool=unique([...demoTracks,...state.tracks]);
   playTrack(track,pool);
  };
@@ -65,12 +69,15 @@ function row(track,index,context){
  share.setAttribute("aria-label","Поделиться: "+track.title);
  share.onclick=()=>window.VetogramMusicSocial?.shareTrack?.(track)||send("Обнови страницу для открытия меню поделиться");
  e.append(no,cover,main,tag,like,play,share);
- if(track.source==="local"){
+ if(track.source==="local"||track.source==="stream"){
   const actions=dom("div","personal-actions");
   for(const [name,symbol,cb] of [
-   ["Выше","↑",()=>window.VetogramMusic?.moveLocal(track.id,-1)],
-   ["Ниже","↓",()=>window.VetogramMusic?.moveLocal(track.id,1)],
-   ["Удалить","×",()=>{if(confirm("Удалить «"+track.title+"» из своей библиотеки?"))window.VetogramMusic?.removeLocal(track.id).catch(()=>send("Не удалось удалить файл из хранилища"))}]]){
+   ["Выше","↑",()=>track.source==="local"?window.VetogramMusic?.moveLocal(track.id,-1):null],
+   ["Ниже","↓",()=>track.source==="local"?window.VetogramMusic?.moveLocal(track.id,1):null],
+   ["Удалить","×",()=>{if(confirm("Удалить «"+track.title+"» из своей библиотеки?")){
+     if(track.source==="local")window.VetogramMusic?.removeLocal(track.id).catch(()=>send("Не удалось удалить файл из хранилища"));
+     else window.VetogramMusic?.removeStream(track.id);
+   }}]]){
    const button=dom("button","personal-action",symbol);button.type="button";button.title=name;
    button.setAttribute("aria-label",name+": "+track.title);button.onclick=cb;actions.append(button);
   }
@@ -273,6 +280,7 @@ async function loadDb(){
 function renderLibrary(){
  $("statLikes").textContent=state.liked.length;$("statLocal").textContent=state.local.length;$("statMeta").textContent=state.metadata.length;
  paintRows("localTracks",state.local,"local","Ты ещё не добавил аудиофайлы. Начни с «Добавить музыку».");
+ paintRows("streamTracks",state.streams,"streams","Здесь появятся аудиозаписи, добавленные по прямым HTTPS-ссылкам.");
  // A favorite is only playable when its corresponding real audio still exists or when an official source can serve it.
  const liked=state.liked.map(t=>t.source==="local"?(state.local.find(x=>x.id===t.id)||{...t,source:"metadata"}):t);
  paintRows("likedTracks",liked,"liked","Здесь появятся треки, которые тебе понравятся.");
@@ -308,6 +316,39 @@ function moveLocal(id,delta){
  if(at<0||to<0||to>=state.local.length)return false;
  const item=state.local.splice(at,1)[0];state.local.splice(to,0,item);
  saveLocalOrder();renderLibrary();renderHome();notifyLibrary();return true;
+}
+function addStreams(items){
+ const added=[],seen=new Set(state.streams.map(x=>x.stream));
+ for(const entry of items||[]){
+  if(state.streams.length+added.length>=150)break;
+  const src=safe(entry.stream);
+  if(!src||src.length>1200||seen.has(src))continue;
+  const title=clean(entry.title,120),artist=clean(entry.artist||"Моя коллекция",80);
+  if(!title)continue;
+  const id="stream:"+src.slice(0,225);
+  added.push({id,title,artist,stream:src,source:"stream",artwork:""});
+  seen.add(src);
+ }
+ if(!added.length)return 0;
+ const previous=state.streams.slice();state.streams=unique([...added,...previous]);
+ if(!persist()){state.streams=previous;return 0;}
+ renderLibrary();renderHome();notifyLibrary();
+ return added.length;
+}
+function removeStream(id){
+ const previous=state.streams.slice(),item=state.streams.find(x=>x.id===id);
+ if(!item)return false;
+ if(state.now?.id===id){
+  audio.pause();audio.removeAttribute("src");audio.load();state.now=null;state.queue=[];state.index=-1;
+  $("miniTitle").textContent="Выбери музыку";$("miniArtist").textContent="Vetogram Music";
+  $("studioTitle").textContent="Выбери свою волну";$("studioArtist").textContent="VETOGRAM MUSIC";
+ }
+ state.streams=state.streams.filter(x=>x.id!==id);
+ state.queue=state.queue.filter(x=>x.id!==id);
+ state.liked=state.liked.filter(x=>x.id!==id);
+ if(!persist()){state.streams=previous;return false}
+ renderLibrary();syncPlayer();notifyLibrary();
+ return true;
 }
 function deriveName(name){
  const title=clean(String(name).replace(/\.[^.]+$/,""),120);
@@ -415,6 +456,6 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 window.addEventListener("pagehide",()=>{for(const u of state.localUrls)URL.revokeObjectURL(u);for(const u of demoUrls.values())URL.revokeObjectURL(u)});
 window.VetogramMusic=Object.freeze({showPage,search:runSearch,play:playTrack,
  now:()=>state.now,queue:()=>state.queue.slice(),local:()=>state.local.slice(),liked:()=>state.liked.slice(),metadata:()=>state.metadata.slice(),
- importList,removeLocal,moveLocal,notifyLibrary,
+ importList,removeLocal,moveLocal,addStreams,removeStream,notifyLibrary,streams:()=>state.streams.slice(),
  state:()=>({page:state.page,now:state.now?.title||null,local:state.local.length,liked:state.liked.length,imported:state.metadata.length})});
 })();
