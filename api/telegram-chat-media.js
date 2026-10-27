@@ -7,6 +7,8 @@ import sharp from 'sharp';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 const AVATAR_LIMIT=180*1024;
+const AVATAR_BATCH_LIMIT=6;
+const AVATAR_DOWNLOAD_LIMIT=2*1024*1024;
 const PHOTO_LIMIT=4*1024*1024; // Keep API response below serverless payload limits.
 const PHOTO_DOWNLOAD_LIMIT=16*1024*1024; // Oversize Telegram photos can be resized safely.
 const ATTACHMENT_LIMIT=4*1024*1024;
@@ -73,6 +75,19 @@ export async function prepareInlinePhoto(raw){
     return preview.length<=PHOTO_LIMIT?preview:null;
   }catch{return null;}
 }
+// Profile images are only thumbnails: convert oversized or non-JPEG images
+// to a bounded preview rather than silently leaving the owner with initials.
+export async function prepareAvatar(raw){
+  const bytes=Buffer.isBuffer(raw)?raw:raw instanceof Uint8Array?Buffer.from(raw):null;
+  if(!bytes?.length||bytes.length>AVATAR_DOWNLOAD_LIMIT)return null;
+  if(bytes.length<=AVATAR_LIMIT && bytes[0]===0xff && bytes[1]===0xd8)return bytes;
+  try{
+    const preview=await sharp(bytes,{limitInputPixels:10_000_000})
+      .rotate().resize({width:192,height:192,fit:'inside',withoutEnlargement:true})
+      .jpeg({quality:74}).toBuffer();
+    return preview.length&&preview.length<=AVATAR_LIMIT?preview:null;
+  }catch{return null;}
+}
 async function getAvatar(client,dialog) {
   if(!dialog?.entity?.photo)return null;
   return client.downloadProfilePhoto(dialog.entity,{isBig:false});
@@ -88,7 +103,12 @@ export default async function handler(req,res){
   try { body=typeof req.body==='string'?JSON.parse(req.body):req.body||{}; }
   catch { return deny(res,400,'Некорректный запрос'); }
   const chatId=String(body.chatId||''),action=String(body.action||'');
-  if(!validId(chatId)||!['avatar','photo','attachment'].includes(action))
+  const batch=action==='avatar_batch';
+  const ids=batch&&Array.isArray(body.chatIds)
+    ? [...new Set(body.chatIds.map(value=>String(value)))]:[];
+  if(batch
+    ? (ids.length<1||ids.length>AVATAR_BATCH_LIMIT||ids.some(id=>!validId(id)))
+    : (!validId(chatId)||!['avatar','photo','attachment'].includes(action)))
     return deny(res,400,'Некорректное фото или чат');
   const userId=String(owner.id);
   try{
@@ -102,13 +122,32 @@ export default async function handler(req,res){
       await verifyTelegramClientOwner(client,userId);
       // Never accept peer/access hashes from the browser: the dialog must be
       // reachable in the authenticated owner's real Telegram account.
-      const recent=await client.getDialogs({limit:60});
-      let dialog=recent.find(d=>safeId(d?.id)===chatId);
-      if(!dialog){
-        // Older but still supported conversations need the full fallback.
-        const dialogs=await client.getDialogs({limit:MAX_DIALOGS});
-        dialog=dialogs.find(d=>safeId(d?.id)===chatId);
+      // Validate every chat against the signed owner's Telegram dialogs.
+      // Never take peer data or access hashes from the requesting browser.
+      let dialogs=await client.getDialogs({limit:batch?120:60});
+      let allowed=new Map(dialogs.map(d=>[safeId(d?.id),d]));
+      const wanted=batch?ids:[chatId];
+      if(wanted.some(id=>!allowed.has(id))){
+        dialogs=await client.getDialogs({limit:MAX_DIALOGS});
+        allowed=new Map(dialogs.map(d=>[safeId(d?.id),d]));
       }
+      if(batch){
+        const avatars={};
+        for(const id of ids){
+          const dialog=allowed.get(id);
+          if(!dialog?.entity?.photo)continue;
+          try{
+            const bytes=await prepareAvatar(await getAvatar(client,dialog));
+            if(bytes)avatars[id]=bytes.toString('base64');
+          }catch(error){
+            const msg=String(error?.errorMessage||error?.message||'');
+            if(/FLOOD_WAIT|AUTH_KEY|SESSION_REVOKED|429/i.test(msg))throw error;
+            // A missing photo is not a reason to fail the other five.
+          }
+        }
+        return {avatars};
+      }
+      const dialog=allowed.get(chatId);
       if(!dialog)return null;
       if(action==='attachment')return getAttachment(client,dialog,body.messageId);
       const raw=action==='avatar'
@@ -119,10 +158,13 @@ export default async function handler(req,res){
         const preview=await prepareInlinePhoto(bytes);
         return preview?{buffer:preview,mime:'image/jpeg'}:null;
       }
-      const max=action==='avatar'?AVATAR_LIMIT:ATTACHMENT_LIMIT;
-      return bytes&&bytes.length>0&&bytes.length<=max
-        ?{buffer:bytes,mime:action==='attachment'?'application/octet-stream':'image/jpeg'}:null;
+      if(action==='avatar'){
+        const preview=await prepareAvatar(bytes);
+        return preview?{buffer:preview,mime:'image/jpeg'}:null;
+      }
+      return null;
     });
+    if(batch)return res.status(200).json({ok:true,avatars:result.avatars||{}});
     if(!result)return deny(res,404,'Вложение недоступно или превышает лимит 4 МБ');
     res.setHeader('Content-Type',result.mime);
     res.setHeader('Content-Disposition',action==='attachment'?'attachment; filename="storylab-attachment.bin"':'inline');
