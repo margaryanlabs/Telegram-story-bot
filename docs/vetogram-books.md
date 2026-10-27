@@ -125,3 +125,27 @@ Google Books API public queries require a registered application identifier (API
 - Isolated source syntax check and mocked catalog/navigation smoke checks have passed; actual Google provider may require credentials.
 - GitHub Actions failure may be due to the user's repo billing/credit/CI setting, not necessarily code. The branch is purposefully draft/unmerged. Review account state outside of source code testing rather than changing production configuration.
 - Before public launch: run local `npm test` and `npm run check`, verify independent source and real Telegram WebViews on Android/iOS, test external previews, rights/attribution, mobile line-breaking, TTS engine availability and API rate limits.
+
+
+## Books 3.1 — offline files and RU genre discovery (27 Oct 2026)
+
+### Personal library — truly private
+- Separate **Мои файлы · Офлайн** tab plus a clearly labelled "Добавить книгу" file picker accepts user-owned EPUB, FB2 and TXT.
+- `public/books-import.js` parses files entirely within the browser. Nothing is sent to Vercel or any external conversion service. Private books and chapter text are persisted in their own `vetogram-books-personal` IndexedDB database; reading position/metadata continue using device-local app storage. Data is **not synced between devices** and can be lost when app/browser storage is cleared. Users are responsible for files they import.
+- **EPUB**: parses ZIP central directory, EPUB container.xml, OPF metadata, manifest/spine and XHTML chapter body; uses native `DecompressionStream('deflate-raw')` for compressed entries and supports STORED ZIP entries. EPUBs with DRM/encryption, ZIP64 or unsupported compression are rejected. EPUB chapter HTML is reduced to plain text, avoiding any active scripts or images.
+- **FB2**: FictionBook title/author/language extracted from title-info, chapter/paragraph text from body. Files using a DOCTYPE/external entity definition are rejected. TXT includes Windows-1251 decoding fallback where UTF-8 is damaged.
+- Local import guardrails: max compressed source size 12 MB, max total reading text 5 million chars, up to 160 EPUB spine items. No arbitrary remote URLs or imported active markup.
+- Offline readers share the same native VETO FLOW focus, adaptive pagination, speaking voices when OS supports them, bookmarks, progress, and CSS-generated book-cover jackets. Users can remove their own books using the delete control.
+
+### Read Now — a broader real-text discovery workflow
+- Russian Wikisource category browsing from six verified categories: **Романы**, **Рассказы**, **Повести**, **Фантастика**, **Стихотворения**, **Русские народные сказки**.
+- `GET /api/books-wikisource?collection=genres&genre=novels&page=1` with continuation-based categorymembers paging, `...&q=...` with category-constrained CirrusSearch; category titles are backend constants, not client-provided upstream URLs.
+- Source category members can be full books, single poems, chapters, translated editions or indexes. Displayed counts are page/member totals, not a guarantee of full novels or rights clearance.
+- Single-source UI remains responsive with abortable searches, source tabs, explicit local/source labels and source attribution. Contemporary protected works still use metadata/legal previews only.
+
+### Verification completed for this iteration
+- JavaScript parsing of importer, API modules and core reader tested in an isolated JS runtime.
+- Synthetic native-format TXT and ZIP STORED EPUB fixtures exercised the actual importer: local save/list/get/delete, correct EPUB OPF title and chapter order.
+- Simulated Telegram screen switched to private source, rendered a local EPUB card, opened the first chapter and navigated to the second chapter with no network request for private content.
+- Node tests added `tests/vetogram-books-private-import.test.js` for importing/deleting TXT, importing FB2, EPUB chapter parsing, and rejecting malformed/untrusted content. Genre browsing/category-search tests added to the existing Wikisource test file.
+- **Still required before production:** full local Node test suite on a checked-out repo, real Russian EPUB/FB2 files on Android/iOS Telegram WebView, device storage quota/eviction tests, permission/attribution audit and a successful production deploy. GitHub Actions failures are not used as a proxy for code correctness.
