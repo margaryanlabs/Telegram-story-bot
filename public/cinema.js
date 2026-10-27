@@ -10,7 +10,7 @@
   const state={tab:"home",genre:"Все",query:"",selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
-  let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0;
+  let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
 
   function loadLibrary(){
@@ -285,6 +285,7 @@
     video.querySelectorAll("track").forEach(t=>t.remove());
   }
   function closePlayer(){
+    clearTimeout(providerFeedbackTimer);
     ++state.request;try{saveProgress(true)}catch(_){}
     try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;state.embedDuration=0;
     $("cinemaVideoToolbar").classList.remove("hidden");video.hidden=false;
@@ -325,6 +326,7 @@
   }
   async function play(f, chosenSource){
     if(state.playing){try{saveProgress(true)}catch(_){}}
+    clearTimeout(providerFeedbackTimer);
     try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;
     state.playing=f;setHistory(f);updateBack();buzz();
     const choices=approvedSources(f);
@@ -339,6 +341,7 @@
     $("cinemaPlayer").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
     text("cinemaPlayerTitle",f.title);text("cinemaPlayerCredit",f.creator+" · "+f.license);
     $("cinemaPlayerSource").href=filmPage(f);
+    $("cinemaOpenSource").href=filmPage(f);
     text("cinemaSubtitleStatus",current?(current.type==="iframe"?"Язык, качество и субтитры переключаются в меню самого видеоплеера.":"Аудиодорожки доступны, если их предоставляет источник."):"Проверяем русские субтитры…");
     $("cinemaAudio").replaceChildren(new Option("Оригинал · "+f.spoken,"original"));
     $("cinemaAudio").value="original";
@@ -351,10 +354,13 @@
       state.embedDuration=0;state.embedLastSave=0;
       const embedded=current.type==="iframe";
       $("cinemaVideoToolbar").classList.toggle("hidden",embedded);
+      $("cinemaPlayerMessage").classList.toggle("is-provider",embedded);
       if(!embedded)state.pendingTime=state.library.progress[f.id]?.t||0;
       video.removeAttribute("poster");
       $("cinemaPlayerSource").href=current.sourcePage||filmPage(f);
+      $("cinemaOpenSource").href=current.sourcePage||filmPage(f);
       setPlayerMessage("Подключаем "+(current.provider||"видеопровайдера")+"…");
+      if(embedded)providerFeedbackTimer=setTimeout(()=>{if(token===state.request)setPlayerMessage("Не получили подтверждение запуска плеера. Если видео не появилось, используйте ссылку на источник ниже.");},13000);
       try{
         if(!window.VetogramCinemaProvider)throw Error("Модуль видеопровайдера не загрузился");
         const handle=await window.VetogramCinemaProvider.attach({
@@ -377,17 +383,19 @@
               }
             }
           },
-          onReady:()=>{if(token===state.request)setPlayerMessage("")},
-          onError:(reason)=>{if(token===state.request)setPlayerMessage(reason)}
+          onReady:()=>{clearTimeout(providerFeedbackTimer);if(token===state.request)setPlayerMessage("")},
+          onError:(reason)=>{clearTimeout(providerFeedbackTimer);if(token===state.request)setPlayerMessage(reason)}
         });
         if(token!==state.request){handle.cleanup();return}
         state.embedHandle=handle;
       }catch(error){
+        clearTimeout(providerFeedbackTimer);
         if(token===state.request)setPlayerMessage("Плеер недоступен: "+(error?.message||"ошибка")+". Откройте оригинал по ссылке ниже.");
       }
       return;
     }
     $("cinemaVideoToolbar").classList.remove("hidden");
+    $("cinemaPlayerMessage").classList.remove("is-provider");
     try{
       const src=await getCommons(f);
       if(token!==state.request)return;
