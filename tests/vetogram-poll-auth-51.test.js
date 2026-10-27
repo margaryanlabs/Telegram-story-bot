@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 
 const source=readFileSync(new URL('../public/telegram-chats.js',import.meta.url),'utf8');
-const a=source.indexOf('  function invalidateThreadAuthorization(){');
+const a=source.indexOf('  function cancelThreadRequest(){');
 const b=source.indexOf('  function setThread(',a);
 assert.ok(a>0&&b>a,'actual owner-safe poll controllers are present');
 const controller=source.slice(a,b);
