@@ -16,7 +16,9 @@ export const CHANNELS=Object.freeze({
   starmedia:Object.freeze({id:141565,label:"Star Media",hue:295,
     channelUrl:"https://rutube.ru/channel/141565/"}),
   marsmedia:Object.freeze({id:29207414,label:"Марс Медиа",hue:44,
-    channelUrl:"https://rutube.ru/channel/29207414/"})
+    channelUrl:"https://rutube.ru/channel/29207414/"}),
+  soyuzmultfilm:Object.freeze({id:12056,label:"Союзмультфильм",hue:198,
+    channelUrl:"https://rutube.ru/u/soyuzmultfilm/"})
 });
 const VIDEO_ID=/^[a-f0-9]{32}$/i;
 const EXCLUDE=/(трейлер|тизер|анонс|подкаст|интервью|пресс[- ]?конференц|съёмк|съемк|кастинг|репортаж|фильм о фильме|реклама|шортс|промо)/i;
@@ -34,20 +36,34 @@ export function parseVideo(video,channelKey){
   if(video.is_paid===true||video.is_private===true||video.is_livestream===true||
      video.is_live===true||video.is_embeddable===false||video.embed_allowed===false)return null;
   const seconds=Number(video.duration);
-  if(!Number.isFinite(seconds)||seconds<35*60||seconds>6*60*60)return null;
+  const animation=channelKey==="soyuzmultfilm";
+  const minDuration=animation?150:35*60;
+  if(!Number.isFinite(seconds)||seconds<minDuration||seconds>6*60*60)return null;
   const title=SHORT_TEXT(video.title).slice(0,230);
   if(!title||EXCLUDE.test(title))return null;
-  const description=SHORT_TEXT(video.description).slice(0,1300);
+  const description=SHORT_TEXT(video.description).slice(0,430);
   const yearMatch=/\b(19\d{2}|20[012]\d)\b/.exec(title);
   const year=yearMatch?Number(yearMatch[1]):null;
+  const publishedAt=/^20\d{2}-\d\d-\d\dT/.test(video.publication_ts||"")?String(video.publication_ts):null;
+  const serial=!animation&&/(?:сериал|\bсерия\b|\bсерии\b|эпизод|\bсезон\b)/i.test(title);
+  const inferred=animation?"Мультфильмы":serial?"Сериалы":"Фильмы";
+  const descriptors=title+" "+description.slice(0,190);
+  const genreKeywords=[
+    ["Комедия",/(?:комеди|юмористическ)/i],["Драма",/(?:драм[ауы]|драматическ|мелодрам)/i],
+    ["Приключения",/(?:приключен)/i],["Детектив",/(?:детектив|расследовани)/i],
+    ["Фантастика",/(?:фантастик|фэнтези)/i],["Боевик",/(?:боевик|экшен)/i],
+    ["Исторические",/(?:историческ|история россии)/i],["Военные",/(?:военн|войне|война)/i],
+    ["Семейное",/(?:семейн|детск|для детей)/i]
+  ];
+  const topics=genreKeywords.filter(([,re])=>re.test(descriptors)).map(([label])=>label);
   const page="https://rutube.ru/video/"+id+"/";
   const embed="https://rutube.ru/play/embed/"+id;
   return {
     id:"rutube-"+channelKey+"-"+id,
-    title,original:title,year,minutes:Math.ceil(seconds/60),
-    synopsis:description||"Полная версия фильма на официальном канале "+channel.label+".",
+    title,original:title,year,publishedAt,minutes:Math.ceil(seconds/60),contentType:inferred,
+    synopsis:description||"Смотрите запись на официальном канале "+channel.label+".",
     poster:cleanPoster(video.thumbnail_url),
-    genres:["Русское кино",channel.label],hue:channel.hue,
+    genres:[inferred,...topics,channel.label],hue:channel.hue,
     creator:channel.label,spoken:"Русский",
     sourcePage:page,
     license:"Публичный iframe-плеер RUTUBE",
@@ -69,7 +85,7 @@ export function parsePage(data,channelKey,page){
     if(!VIDEO_ID.test(String(v?.id||"")))reasons.missingId++;
     else if(!v?.author?.id)reasons.unknownPublisher++;
     else if(String(v.author.id)!==String(CHANNELS[channelKey].id))reasons.wrongPublisher++;
-    else if(!Number.isFinite(Number(v.duration))||Number(v.duration)<35*60||Number(v.duration)>6*60*60)reasons.shortOrLong++;
+    else if(!Number.isFinite(Number(v.duration))||Number(v.duration)<(channelKey==="soyuzmultfilm"?150:35*60)||Number(v.duration)>6*60*60)reasons.shortOrLong++;
     else if(v.is_paid===true||v.is_private===true||v.is_livestream===true||v.is_live===true||
         v.is_embeddable===false||v.embed_allowed===false)reasons.blocked++;
     else reasons.notFilm++;
