@@ -8,6 +8,9 @@
   if (root.dataset.v4Experience === 'ready') return;
   root.dataset.v4Experience = 'ready';
   root.classList.add('vetogram-v4');
+  // Telegram's native Close/menu chrome overlays the top of mobile Mini Apps.
+  // Scope extra topbar clearance to an actual signed Telegram WebView only.
+  if (window.Telegram?.WebApp?.initData) root.classList.add('v4-telegram-webview');
   const byId = id => document.getElementById(id);
   const $ = (selector, base = document) => base.querySelector(selector);
   const screens = name => $('[data-screen="' + name + '"]');
