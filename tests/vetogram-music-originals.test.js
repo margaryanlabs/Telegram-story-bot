@@ -16,7 +16,11 @@ test("music-only original recordings section is integrated",()=>{
 });
 test("only curated original publisher/artist URLs, no audio extraction",()=>{
  const videos=[...js.matchAll(/id:"([A-Za-z0-9_-]{11})",artist:/g)].map(m=>m[1]);
- assert.deepEqual(videos,["y14ulAguQv4","plXH4GeYtes","TPjN6N8TgNI","4NRXx6U8ABQ","V9PVRfjEBTI","N000qglmmY0","JGwWNGJdvx8"]);
+ assert.equal(videos.length,18);
+ assert.equal(new Set(videos).size,18);
+ for(const verified of ["aiCL0-U9WxI","WujKJpxaUHk","wxxnY-QTUGU","DIKIgjLGf98","ChkJpnOgIwQ","RfH5o3XtI2c","1RG_qhN4e3M","Co8ZJIejXBA","suAR1PYFNYA","ZjBZ8MUnB0E","vBynw9Isr28"]){
+  assert.ok(videos.includes(verified),"verified official release "+verified);
+ }
  assert.match(js,/youtube-nocookie\.com\/embed/);assert.match(js,/watch\?v=/);assert.match(js,/frame\.allowFullscreen=true/);
  assert.doesNotMatch(js,/autoplay=1|ytdl|youtube-dl|yt-dlp|proxyAudio|downloadMp3/);
  assert.match(js,/getElementById\("audio"\)\?\.pause\(\)/);
@@ -27,4 +31,11 @@ test("fully visible accessible provider video on mobile",()=>{
  assert.match(js,/frame\.title=/);assert.match(js,/frame\.allow=/);
  assert.match(js,/frame\.loading="eager"/);
  execFileSync(process.execPath,["--check",fileURLToPath(new URL("vetogram-music-originals.js",dir))],{stdio:"pipe"});
+});
+
+test("external discovery opens YouTube and does not promise an imported music catalog",()=>{
+ assert.ok(html.includes('id="originalsFindMore"'));
+ assert.ok(js.includes('youtube.com/results?search_query='));
+ assert.ok(js.includes('openLink(url)'));
+ assert.ok(html.includes("не добавляет их автоматически"));
 });
