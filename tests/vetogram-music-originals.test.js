@@ -32,4 +32,10 @@ test("fully visible accessible provider video on mobile",()=>{
  assert.match(js,/frame\.loading="eager"/);
  execFileSync(process.execPath,["--check",fileURLToPath(new URL("vetogram-music-originals.js",dir))],{stdio:"pipe"});
 });
-\ntest("external discovery clearly opens provider site and does not claim extra licensed streams",()=>{\n assert.match(html,/id="originalsFindMore"/);\n assert.match(js,/youtube\\.com\\/results\\?search_query=/);\n assert.match(js,/openLink\\(url\\)/);\n assert.match(html,/не добавляет их автоматически/);\n});\n
+
+test("external discovery opens YouTube and does not promise an imported music catalog",()=>{
+ assert.ok(html.includes('id="originalsFindMore"'));
+ assert.ok(js.includes('youtube.com/results?search_query='));
+ assert.ok(js.includes('openLink(url)'));
+ assert.ok(html.includes("не добавляет их автоматически"));
+});
