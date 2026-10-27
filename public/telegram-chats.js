@@ -1304,7 +1304,7 @@
   async function photoRequest(action,chatId,messageId=null){
     if(!tg?.initData)throw new Error('Telegram Mini App требуется');
     const signed=String(tg.initData);
-    const threadGeneration=state.threadGeneration;
+    const mediaEpoch=state.previewEpoch;
     const currentThread=action==='photo'?String(state.thread?.id||''):null;
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),18000);
@@ -1330,7 +1330,7 @@
       if(signed!==String(tg?.initData||'')){
         resetOwner();throw new Error('Сменился Telegram-аккаунт');
       }
-      if(action==='photo'&&(threadGeneration!==state.threadGeneration||
+      if(action==='photo'&&(mediaEpoch!==state.previewEpoch||
          currentThread!==String(state.thread?.id||'')))
         throw new Error('Открыта другая переписка');
       if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
@@ -1552,7 +1552,7 @@
       const badge=el.querySelector('small');
       if(badge)badge.textContent='Загружаю фотографию…';
       const ownerChatId=String(state.thread.id),ownerKey=state.ownerInitData;
-      const generation=state.threadGeneration,previewEpoch=state.previewEpoch;
+      const previewEpoch=state.previewEpoch;
       // The archive is optional evidence, not a prerequisite for viewing a
       // still-existing Telegram photo. A failed saved-media request must not
       // hide the live original from a verified owner. Never treat a confirmed
@@ -1575,7 +1575,7 @@
           }
           const blob=await res.blob();
           if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
-             generation!==state.threadGeneration||String(state.thread?.id)!==ownerChatId)
+             previewEpoch!==state.previewEpoch||String(state.thread?.id)!==ownerChatId)
             throw new Error('Telegram account changed');
           if(!blob.size||blob.size>4*1024*1024||!blob.type.startsWith('image/'))
             throw new Error('private_photo_unavailable');
@@ -1590,7 +1590,7 @@
             // connection. Credentials and access errors always fail closed.
             const forbidden=[401,403,429].includes(Number(error?.httpStatus||0));
             const sameOwner=ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'');
-            const sameThread=generation===state.threadGeneration&&
+            const sameThread=previewEpoch===state.previewEpoch&&
               String(state.thread?.id)===ownerChatId;
             if(forbidden||!sameOwner||!sameThread||msg.deleted||msg.preservedOnly||
                state.connectionProof?.verified!==true)throw error;
@@ -1599,7 +1599,7 @@
           })
         :photoRequest('photo',ownerChatId,id);
       request.then(href=>{
-        if(generation!==state.threadGeneration||String(state.thread?.id)!==ownerChatId||
+        if(previewEpoch!==state.previewEpoch||String(state.thread?.id)!==ownerChatId||
            ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){
           state.mediaMimeByUrl.delete(href);URL.revokeObjectURL(href);return;
         }
@@ -1615,7 +1615,7 @@
           btn.appendChild(img);container.replaceWith(btn);
         }
       }).catch(error=>{
-        if(generation!==state.threadGeneration||ownerKey!==state.ownerInitData||
+        if(previewEpoch!==state.previewEpoch||ownerKey!==state.ownerInitData||
            ownerKey!==String(tg?.initData||'')||String(state.thread?.id)!==ownerChatId)return;
         const latest=[...scroller.querySelectorAll('[data-mirror-preview]')]
           .find(x=>Number(x.dataset.mirrorPreview)===id);
@@ -1629,7 +1629,7 @@
           if(label)label.textContent='Соединение прервалось · повторю загрузку…';
           const timer=setTimeout(()=>{
             state.previewRetryTimers.delete(id);
-            if(previewEpoch!==state.previewEpoch||generation!==state.threadGeneration||
+            if(previewEpoch!==state.previewEpoch||previewEpoch!==state.previewEpoch||
                ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
                String(state.thread?.id)!==ownerChatId)return;
             // Skip offscreen retries; a manual tap always remains available.
@@ -1647,7 +1647,7 @@
         if(previewEpoch!==state.previewEpoch)return;
         state.previewInflight.delete(id);
         state.previewActive=Math.max(0,state.previewActive-1);
-        if(ownerKey===state.ownerInitData&&generation===state.threadGeneration)
+        if(ownerKey===state.ownerInitData&&previewEpoch===state.previewEpoch)
           loadInlinePreviews();
       });
     }
@@ -1841,12 +1841,24 @@
       if(entry&&entry.node)slot.replaceChildren(entry.node);
     }
   }
+  // History refresh re-creates message buttons. Resolve the currently
+  // visible replacement by the same message ID before displaying the file;
+  // otherwise a valid download can be discarded for a detached old button.
+  function currentAttachmentButton(original,id,archive){
+    const host=$('telegramThreadMessages');
+    if(!host)return null;
+    const key=archive?'mirrorFile':'mirrorLiveFile';
+    const selector=archive?'[data-mirror-file]':'[data-mirror-live-file]';
+    const active=[...host.querySelectorAll(selector)]
+      .find(node=>Number(node.dataset[key])===Number(id));
+    return active||null;
+  }
   async function openArchivedFile(button){
     if(!state.thread||!button||button.disabled)return;
     if(!tg?.initData){toast('Открой Vetogram внутри Telegram');return;}
     const id=Number(button.dataset.mirrorFile||0);
     if(!Number.isSafeInteger(id)||id<=0)return;
-    const chatId=String(state.thread.id),ownerKey=state.ownerInitData,epoch=state.threadGeneration;
+    const chatId=String(state.thread.id),ownerKey=state.ownerInitData,epoch=state.previewEpoch;
     button.disabled=true;
     const original=button.textContent;
     button.textContent='Загружаю защищённую копию…';
@@ -1862,14 +1874,16 @@
       if(!response.ok)throw new Error('Telegram уже не отдаёт вложение и резервная копия недоступна.');
       const blob=await response.blob();
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
-         epoch!==state.threadGeneration||String(state.thread?.id)!==chatId||!button.isConnected)return;
+         epoch!==state.previewEpoch||String(state.thread?.id)!==chatId)return;
       if(!blob.size||blob.size>20*1024*1024)throw new Error('Файл слишком большой для просмотра.');
-      cacheExpandedAttachment(button,id,blob,true);
+      const active=currentAttachmentButton(button,id,true);
+      if(active)cacheExpandedAttachment(active,id,blob,true);
     }catch(error){
       if(ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
-         epoch===state.threadGeneration&&String(state.thread?.id)===chatId&&button.isConnected){
+         epoch===state.previewEpoch&&String(state.thread?.id)===chatId){
+        const active=currentAttachmentButton(button,id,true);
+        if(active){active.textContent=original;active.disabled=false;}
         toast(error?.name==='AbortError'?'Media Vault отвечает слишком долго':error.message);
-        button.textContent=original;button.disabled=false;
       }
     }finally{clearTimeout(timer);}
   }
@@ -1878,7 +1892,7 @@
     if(!state.thread||button.disabled||!tg?.initData)return;
     const id=Number(button.dataset.mirrorLiveFile);
     if(!Number.isSafeInteger(id)||id<=0)return;
-    const chatId=String(state.thread.id),ownerKey=state.ownerInitData,epoch=state.threadGeneration;
+    const chatId=String(state.thread.id),ownerKey=state.ownerInitData,epoch=state.previewEpoch;
     const prev=button.textContent;
     button.disabled=true;button.textContent='Загружаю из Telegram…';
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),27000);
@@ -1892,12 +1906,14 @@
       const blob=await response.blob();
       if(!blob.size||blob.size>4*1024*1024)throw new Error('Вложение слишком большое.');
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
-         epoch!==state.threadGeneration||String(state.thread?.id)!==chatId||!button.isConnected)return;
-      cacheExpandedAttachment(button,id,blob,false);
+         epoch!==state.previewEpoch||String(state.thread?.id)!==chatId)return;
+      const active=currentAttachmentButton(button,id,false);
+      if(active)cacheExpandedAttachment(active,id,blob,false);
     }catch(error){
       if(ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
-         epoch===state.threadGeneration&&String(state.thread?.id)===chatId&&button.isConnected){
-        button.disabled=false;button.textContent=prev;
+         epoch===state.previewEpoch&&String(state.thread?.id)===chatId){
+        const active=currentAttachmentButton(button,id,false);
+        if(active){active.disabled=false;active.textContent=prev;}
         toast(error?.name==='AbortError'?'Telegram не ответил вовремя':error.message);
       }
     }finally{clearTimeout(timer);}
