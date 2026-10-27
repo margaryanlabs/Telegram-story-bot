@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {source:'translated',original:'en',spotlight:'now',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false};
+  const state = {source:'translated',original:'en',spotlight:'now',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false,flow:false,flowIndex:0,flowParagraphs:[]};
   const STORAGE = 'vetogram-books-v1';
   const readJSON = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(STORAGE + ':' + key)); return v ?? fallback; }
@@ -382,12 +382,73 @@
     persist('prefs',prefs);
     if(reflow)reflowReader();
   }
+  // VETO FLOW: highlight only the paragraph being read. No AI network call,
+  // no external tracking, and no untrusted HTML inserted into the page.
+  function setFlow(enabled){
+    state.flow=Boolean(enabled);
+    $('reader').dataset.flow=String(state.flow);
+    $('readerFlowButton').setAttribute('aria-pressed',String(state.flow));
+    $('readerFlowButton').classList.toggle('active',state.flow);
+    $('flowGuide').hidden=!state.flow;
+    state.flowIndex=0;
+    if(state.pages.length)showPage(state.currentPage,false);
+    else updateFlow();
+  }
+  function renderFlowText(textValue){
+    const host=$('readerCopy');
+    host.replaceChildren();
+    state.flowParagraphs=[];
+    if(!state.flow){host.textContent=textValue;return;}
+    const paras=String(textValue||'').split(/\n\s*\n/g).filter(x=>x.trim());
+    for(const part of paras.slice(0,150)){
+      const p=node('p','flow-paragraph',part.trim());
+      p.tabIndex=0;p.setAttribute('role','button');
+      p.setAttribute('aria-label','Фокус на абзаце');
+      const idx=state.flowParagraphs.length;
+      p.addEventListener('click',event=>{event.stopPropagation();setFlowIndex(idx);});
+      p.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setFlowIndex(idx);}});
+      host.append(p);state.flowParagraphs.push(p);
+    }
+    if(!state.flowParagraphs.length){host.textContent=textValue;}
+    state.flowIndex=0;updateFlow();
+  }
+  function updateFlow(){
+    const total=state.flowParagraphs.length;
+    $('flowPosition').textContent=total?String(Math.min(total,state.flowIndex+1))+' / '+total:'—';
+    $('flowPrevious').disabled=!total||(!state.flowIndex&&state.currentPage===0);
+    $('flowNext').disabled=!total||state.flowIndex===total-1&&state.currentPage===state.pages.length-1&&!state.chapters.length;
+    for(let i=0;i<total;i++){
+      const selected=i===state.flowIndex;
+      state.flowParagraphs[i].classList.toggle('active',selected);
+      state.flowParagraphs[i].setAttribute('aria-current',selected?'true':'false');
+    }
+  }
+  function setFlowIndex(index){
+    if(!state.flowParagraphs.length)return;
+    state.flowIndex=Math.max(0,Math.min(state.flowParagraphs.length-1,index));
+    updateFlow();
+    const el=state.flowParagraphs[state.flowIndex];
+    if(el && typeof el.scrollIntoView==='function'){
+      const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({behavior:reduce?'instant':'smooth',block:'center'});
+    }
+  }
+  function stepFlow(dir){
+    if(!state.flow)return;
+    const index=state.flowIndex+dir;
+    if(index>=0&&index<state.flowParagraphs.length){setFlowIndex(index);return;}
+    const nextPage=state.currentPage+dir;
+    if(nextPage>=0&&nextPage<state.pages.length){
+      showPage(nextPage);
+      if(dir<0)setFlowIndex(state.flowParagraphs.length-1);
+    }else flip(dir);
+  }
   function bookmarkToken(){return String(state.activeChapter??'root')+':@'+(state.pageOffsets[state.currentPage]||0);}
   function showPage(page, scroll=true){
     if(!state.current||!state.pages.length)return;
     state.currentPage=Math.min(Math.max(0,page),state.pages.length-1);
     const currentPageText=state.pages[state.currentPage];
-    $('readerCopy').textContent=currentPageText;
+    renderFlowText(currentPageText);
     const paper=$('readerPaper');
     paper.classList.toggle('is-continuation',state.currentPage>0);
     paper.classList.remove('turn-forward','turn-backward');
@@ -479,6 +540,7 @@
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
     ++state.requestBook;
     state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;state.rawText='';state.pageOffsets=[];
+    setFlow(false);
     setFocus(false);
     $('reader').hidden=false;
     try{window.Telegram?.WebApp?.BackButton?.show();}catch{}
@@ -498,7 +560,7 @@
     $('reader').hidden=true;state.current=null;state.pages=[];state.chapters=[];
     try{window.Telegram?.WebApp?.BackButton?.hide();}catch{}
     state.activeChapter=null;state.rawText='';state.pageOffsets=[];
-    setFocus(false);
+    setFlow(false);setFocus(false);
     $('readerSettings').hidden=true;
     updateSavedCount();renderContinueShelf();
   }
@@ -675,6 +737,9 @@
       });
     }
   }
+  $('readerFlowButton').addEventListener('click',()=>setFlow(!state.flow));
+  $('flowPrevious').addEventListener('click',()=>stepFlow(-1));
+  $('flowNext').addEventListener('click',()=>stepFlow(1));
   $('readerFocusButton').addEventListener('click',()=>setFocus(!state.focus));
   $('readerFocusExit').addEventListener('click',()=>setFocus(false));
   $('readerScroll').addEventListener('click',event=>{
@@ -706,6 +771,8 @@
   document.addEventListener('keydown',event=>{
     if($('reader').hidden || !$('bookModal').hidden)return;
     if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;
+    if(state.flow && event.key==='ArrowDown'){event.preventDefault();stepFlow(1);return;}
+    if(state.flow && event.key==='ArrowUp'){event.preventDefault();stepFlow(-1);return;}
     if(event.key==='ArrowRight'){event.preventDefault();flip(1);}
     if(event.key==='ArrowLeft'){event.preventDefault();flip(-1);}
     if(event.key==='Escape'){ if(state.focus)setFocus(false);else closeReader(); }
