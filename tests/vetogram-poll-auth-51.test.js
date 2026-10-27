@@ -12,7 +12,7 @@ const b=source.indexOf('  function setThread(',a);
 assert.ok(a>0&&b>a,'actual owner-safe poll controllers are present');
 const controller=source.slice(a,b);
 
-function fixture(status){
+function fixture(status,{deferred=false}={}){
   const input={value:'Sensitive draft',dataset:{activeChat:'77'}};
   const state={
     ownerInitData:'signed',thread:{id:'77',serverCanSend:true},
@@ -29,6 +29,7 @@ function fixture(status){
     lastRichFailures:new Map(),
   };
   const logs=[];
+  let complete=null;
   const ctx=vm.createContext({
     state,tg:{initData:'signed'},resetOwner:()=>false,
     $:id=>id==='telegramThreadCompose'?input:
@@ -44,14 +45,21 @@ function fixture(status){
     maySyncThread:()=>Boolean(state.connectionProof?.verified),
     scheduleThreadSync:()=>{if(state.connectionProof?.verified)logs.push('schedule')},
     visibleMessageAnchor:()=>null,
-    fetch:async()=>({ok:false,status,json:async()=>({
-      ok:false,error:'Telegram authentication / transport response',
-    })}),
+    fetch:()=>deferred
+      ?new Promise(resolve=>{
+          complete=()=>resolve({ok:false,status,json:async()=>({
+            ok:false,error:'Telegram authentication / transport response',
+          })});
+        })
+      :Promise.resolve({ok:false,status,json:async()=>({
+          ok:false,error:'Telegram authentication / transport response',
+        })}),
     navigator:{onLine:true},AbortController,
     setTimeout:()=>1,clearTimeout(){},
   });
   new vm.Script(controller).runInContext(ctx);
-  return {state,input,logs,run:()=>new vm.Script('pollThread()').runInContext(ctx)};
+  return {state,input,logs,run:()=>new vm.Script('pollThread()').runInContext(ctx),
+    finish:()=>complete?.()};
 }
 
 test('poll rejection 401, 403, 409 clears private content immediately',async()=>{
@@ -85,4 +93,48 @@ test('poll preserves exact signed account/selected chat as a required guard',()=
   assert.match(controller,/ownerKey===String\(tg\?\.initData\|\|''\)/);
   assert.match(controller,/\[401,403,409\]\.includes\(Number\(error\?\.httpStatus\|\|0\)\)/);
   assert.match(controller,/invalidateThreadAuthorization\(\)/);
+});
+
+test('stale 401 after A-B-A chat navigation cannot revoke newly reopened session',async()=>{
+  const f=fixture(401,{deferred:true}),task=f.run();
+  // A new instance of A has the same chat id and owner, but a fresh
+  // generation. The old response must not affect its current state.
+  f.state.thread={id:'88',serverCanSend:true};
+  f.state.threadGeneration++;
+  f.state.syncRunId++;
+  f.state.thread={id:'77',serverCanSend:true};
+  f.finish();await task;
+  assert.equal(f.state.connectionProof.verified,true);
+  assert.equal(f.state.threadAuthRejected,false);
+  assert.equal(f.state.messages[0].text,'Private');
+  assert.equal(f.input.value,'Sensitive draft');
+  assert.ok(!f.logs.includes('revoke-media'));
+  assert.ok(!f.logs.includes('paint'));
+});
+
+test('stale 503 after another history request cannot override connection indicator',async()=>{
+  const f=fixture(503,{deferred:true}),task=f.run();
+  // A same-chat history refresh supersedes this background poll.
+  f.state.threadGeneration++;
+  f.state.syncRunId++;
+  f.finish();await task;
+  assert.equal(f.state.syncFailures,0);
+  assert.equal(f.state.connectionProof.verified,true);
+  assert.ok(!f.logs.includes('schedule'));
+});
+
+test('stale 403 with superseded poll run cannot invalidate same-generation owner',async()=>{
+  const f=fixture(403,{deferred:true}),task=f.run();
+  f.state.syncRunId++;
+  f.finish();await task;
+  assert.equal(f.state.connectionProof.verified,true);
+  assert.equal(f.state.threadAuthRejected,false);
+  assert.equal(f.state.drafts.get('77'),'Sensitive draft');
+});
+
+test('the shipping poll controller fences both failures and successful results',()=>{
+  assert.match(controller,/const isCurrent=runId===state\.syncRunId&&/);
+  assert.match(controller,/generation===state\.threadGeneration&&/);
+  assert.match(controller,/if\(isCurrent&&\[401,403,409\]/);
+  assert.match(controller,/\}else if\(isCurrent\)\{/);
 });
