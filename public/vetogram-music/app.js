@@ -195,32 +195,28 @@ function playFrom(list,id){
  state.queue=tracks;state.queueIndex=pos;
  playTrack(tracks[pos]);
 }
-async function playbackSrc(t){
+function playbackSrc(t){
  if(t.kind==="audius")return API+"/tracks/"+encodeURIComponent(t.providerId||t.id.replace(/^audius:/,""))+"/stream";
  if(t.kind==="local"){
   const file=state.local.find(x=>x.id===t.id);
-  if(!file)return "";
+  if(!file?.blob)return "";
   if(state.objectUrls.has(t.id))return state.objectUrls.get(t.id);
-  let blob=file.blob;
-  if(!blob&&state.db){const rec=await databaseGet(t.id);blob=rec?.blob}
-  if(!blob)return "";
-  const uri=URL.createObjectURL(blob);state.objectUrls.set(t.id,uri);return uri;
+  const uri=URL.createObjectURL(file.blob);state.objectUrls.set(t.id,uri);return uri;
  }
  return "";
 }
 let activation=0;
-async function playTrack(t){
+function playTrack(t){
  if(!t)return;
- state.current=t;const my=++activation;
+ state.current=t;++activation;
  audio.pause();audio.removeAttribute("src");audio.load();
- $("player").classList.remove("hidden");renderPlayer();
- let src="";
- try{src=await playbackSrc(t)}catch{}
- if(my!==activation)return;
+ $("player").classList.remove("hidden");
+ const src=playbackSrc(t);
  if(!src){notice("Аудиофайл недоступен на этом устройстве.");return}
  audio.src=src;audio.load();renderPlayer();
- try{await audio.play();}catch{notice(t.kind==="audius"?"Трек недоступен в этом браузере или регионе. Попробуй другой трек.":"Формат файла не поддерживается устройством.");}
- renderPlayer();
+ // Keep play() directly inside the user click handler: iOS WebView can reject
+ // play requests performed after an awaited IndexedDB or network operation.
+ audio.play().catch(()=>notice(t.kind==="audius"?"Трек недоступен в этом браузере или регионе. Попробуй другой трек.":"Формат файла не поддерживается устройством."));
  updateMediaSession(t);
  if(state.route==="library")renderLibrary();
 }
