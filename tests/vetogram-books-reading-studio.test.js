@@ -78,3 +78,31 @@ test('reader never advertises an unverified Wikisource page as a complete volume
   assert.match(js,/КАРТОЧКА · НЕТ ТЕКСТА/);
   assert.match(js,/ПОЛНЫЙ ТЕКСТ ИСТОЧНИКА/);
 });
+
+test('full-work progress is monotonic across chapter boundaries and saved for resume',()=>{
+  const start=js.indexOf('  function workProgress(');
+  const end=js.indexOf('  function renderContinueShelf(',start);
+  assert.ok(start>=0&&end>start);
+  const fn=new Function(js.slice(start,end)+'return workProgress;')();
+  const chapter1End=fn(0,25,900,1000,true);
+  const chapter2Start=fn(1,25,0,1400,true);
+  const middle=fn(12,25,700,1000,true);
+  const last=fn(24,25,999,1000,true);
+  assert.ok(chapter1End.fraction<chapter2Start.fraction);
+  assert.ok(chapter2Start.fraction<middle.fraction);
+  assert.ok(middle.fraction<last.fraction);
+  assert.equal(middle.approx,true);
+  assert.equal(fn(null,0,500,1000,false).fraction,.5);
+  assert.equal(fn(0,0,500,1000,false).approx,false);
+  assert.match(js,/workFraction:progressValue\.fraction/);
+  assert.match(js,/p\.workFraction\?\?p\.fraction/);
+});
+test('saving Wikisource parts preserves source identity and allows reopening local edition',()=>{
+  assert.match(js,/async function saveWholeEditionOffline\(\)/);
+  assert.match(js,/local\.sourceWikiId=book\.id/);
+  assert.match(js,/local\.sourceWiki=book\.wiki/);
+  assert.match(js,/button\.textContent='ЧИТАТЬ ОФЛАЙН ↗'/);
+  assert.match(js,/await openBook\(local\)/);
+  assert.match(js,/async function prefetchNextChapter\(\)/);
+  assert.match(js,/connectivity\?\.saveData/);
+});
