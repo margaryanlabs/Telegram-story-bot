@@ -2418,7 +2418,12 @@
       renderSendComposer();
       syncLabel('Предпросмотр из памяти · обновляю Telegram…',true);
     }else syncLabel('Подключаюсь к Telegram…',true);
-    await loadMessages({reset:true});
+    // This open is no longer authoritative after A→B→A: both the owner
+    // and the thread ID may match while the first A's history promise finishes.
+    const historyLoad=loadMessages({reset:true});
+    const openedGeneration=state.threadGeneration;
+    await historyLoad;
+    if(openedGeneration!==state.threadGeneration)return;
     const unresolved=state.lastSendFailures.get(String(chat.id));
     const uncertainMedia=state.lastRichFailures.get(String(chat.id));
     if(state.ownerInitData===String(tg?.initData||'')&&
