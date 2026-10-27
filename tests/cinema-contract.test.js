@@ -12,6 +12,7 @@ const html=read('public/cinema.html');
 const css=read('public/cinema.css');
 const script=read('public/cinema.js');
 const catalog=read('public/cinema-catalog.js');
+const provider=read('public/cinema-provider.js');
 
 test('standalone cinema entrypoint and assets exist, no Lovable runtime',()=>{
   assert.match(html,/<html lang="ru">/);
@@ -29,7 +30,7 @@ test('all static ID bindings exist in the Cinema HTML',()=>{
   for(const id of ['cinemaVideo','cinemaQuality','cinemaAudio','cinemaGrid','cinemaDetails','cinemaPlayer'])assert.ok(ids.has(id),id);
 });
 test('standalone Javascript syntax is accepted by Node',()=>{
-  for(const f of ['public/cinema.js','public/cinema-catalog.js']){
+  for(const f of ['public/cinema.js','public/cinema-catalog.js','public/cinema-provider.js']){
     assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',resolve(root,f)],{stdio:'pipe'}),f);
   }
 });
@@ -70,4 +71,16 @@ test('cinema contains honest licensed media handling and no piracy domains',()=>
   assert.match(html,/cinema-provider\.js/);
   assert.match(html,/id="cinemaVideoWrap"/);
   assert.doesNotMatch(script+catalog,/kinogo|hdrezka|baskino|lostfilm|rutor|torrents?/i);
+});
+
+test('official RUTUBE player adapter validates rights metadata and rejects unsafe embeds',()=>{
+  const context={window:{},URL};
+  vm.runInNewContext(provider,context,{filename:'cinema-provider.js'});
+  const adapter=context.window.VetogramCinemaProvider;
+  assert.ok(adapter);
+  assert.equal(adapter.detectType({url:'https://licensed.example/movie/playlist.m3u8'}),'hls');
+  assert.equal(adapter.detectType({type:'iframe',url:'https://rutube.ru/play/embed/xyz'}),'iframe');
+  assert.throws(()=>adapter.assertAuthorized({url:'https://rutube.ru/play/embed/test'}),/не подтверждён/);
+  assert.throws(()=>adapter.assertAuthorized({url:'http://rutube.ru/play/embed/test',licensed:true,license:'ok',credit:'ok'}),/HTTPS/);
+  assert.equal(adapter.assertAuthorized({url:'https://rutube.ru/play/embed/test',licensed:true,license:'ok',credit:'ok'}).licensed,true);
 });
