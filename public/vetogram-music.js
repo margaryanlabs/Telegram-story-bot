@@ -249,6 +249,8 @@ function saveDb(record){if(!state.db)return Promise.reject(Error("No IndexedDB")
 async function loadDb(){
  try{state.db=await openDb();if(!state.db)return;
  const data=await new Promise((resolve,reject)=>{const req=state.db.transaction(STORE,"readonly").objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});
+ const order=jLoad("vetogram-music-local-order-v1",[]);
+ data.sort((a,b)=>{const ai=Array.isArray(order)?order.indexOf(a.id):-1,bi=Array.isArray(order)?order.indexOf(b.id):-1;return (ai<0?9999:ai)-(bi<0?9999:bi)});
  for(const x of data.slice(0,200)){if(!x?.blob||!x.title)continue;
  const url=URL.createObjectURL(x.blob);state.localUrls.push(url);
  state.local.push({id:x.id,title:x.title,artist:x.artist||"Мой файл",source:"local",url,blob:x.blob,artwork:""})}
@@ -261,6 +263,37 @@ function renderLibrary(){
  const liked=state.liked.map(t=>t.source==="local"?(state.local.find(x=>x.id===t.id)||{...t,source:"metadata"}):t);
  paintRows("likedTracks",liked,"liked","Здесь появятся треки, которые тебе понравятся.");
  paintRows("metaTracks",state.metadata.map(x=>({...x,source:"metadata"})),"metadata","Здесь появятся названия импортированных песен.");
+}
+function notifyLibrary(){document.dispatchEvent(new CustomEvent("vetogram:library-change"))}
+function saveLocalOrder(){
+ try{localStorage.setItem("vetogram-music-local-order-v1",JSON.stringify(state.local.map(x=>x.id)))}catch{}
+}
+async function removeLocal(id){
+ const at=state.local.findIndex(x=>x.id===id);
+ if(at<0)return false;
+ const current=state.local[at];
+ if(state.now?.id===id){
+  audio.pause();audio.removeAttribute("src");audio.load();
+  state.now=null;state.queue=[];state.index=-1;
+  $("miniTitle").textContent="Выбери музыку";$("miniArtist").textContent="Vetogram Music";
+  $("studioTitle").textContent="Выбери свою волну";$("studioArtist").textContent="VETOGRAM MUSIC";
+ }
+ if(state.db)await new Promise((resolve,reject)=>{
+  const tx=state.db.transaction(STORE,"readwrite");tx.objectStore(STORE).delete(id);
+  tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);
+ });
+ state.local.splice(at,1);state.queue=state.queue.filter(x=>x.id!==id);
+ state.index=state.queue.findIndex(x=>x.id===state.now?.id);
+ state.liked=state.liked.filter(x=>x.id!==id);
+ state.localUrls=state.localUrls.filter(url=>url!==current.url);
+ URL.revokeObjectURL(current.url);saveLocalOrder();persist();renderLibrary();renderHome();syncPlayer();notifyLibrary();
+ return true;
+}
+function moveLocal(id,delta){
+ const at=state.local.findIndex(x=>x.id===id),to=at+delta;
+ if(at<0||to<0||to>=state.local.length)return false;
+ const item=state.local.splice(at,1)[0];state.local.splice(to,0,item);
+ saveLocalOrder();renderLibrary();renderHome();notifyLibrary();return true;
 }
 function deriveName(name){
  const title=clean(String(name).replace(/\.[^.]+$/,""),120);
@@ -278,7 +311,7 @@ async function addLocalFiles(files){
  // Store files only within the browser's own IndexedDB; never send to a server.
  try{await saveDb({id,title:t.title,artist:t.artist,blob:f})}catch{failed++}
  }
- $("fileInput").value="";renderLibrary();renderHome();
+ $("fileInput").value="";saveLocalOrder();renderLibrary();renderHome();notifyLibrary();
  send("Добавлено: "+count+" аудиофайлов."+(failed?" Некоторые файлы или их сохранение отклонены.":""));
  if(count&&state.page!=="library")showPage("library");
 }
@@ -325,7 +358,7 @@ function parseList(text,name=""){
 }
 function importList(text,name){
  try{const rows=parseList(text,name),before=state.metadata.length;
- state.metadata=unique([...rows,...state.metadata]).slice(0,300);persist();renderLibrary();
+ state.metadata=unique([...rows,...state.metadata]).slice(0,300);persist();renderLibrary();notifyLibrary();
  $("importStatus").textContent="Добавлено "+(state.metadata.length-before)+" новых записей. Это список названий, а не загруженные аудиофайлы.";
  }catch(e){$("importStatus").textContent="Ошибка: "+clean(e.message,180)}
 }
@@ -366,5 +399,8 @@ function makeWaves(){
 makeWaves();renderHome();renderLibrary();loadDb();loadTrending();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&!audio.paused)syncPlayer()});
 window.addEventListener("pagehide",()=>{for(const u of state.localUrls)URL.revokeObjectURL(u);for(const u of demoUrls.values())URL.revokeObjectURL(u)});
-window.VetogramMusic=Object.freeze({showPage,search:runSearch,play:playTrack,state:()=>({page:state.page,now:state.now?.title||null,local:state.local.length,liked:state.liked.length,imported:state.metadata.length})});
+window.VetogramMusic=Object.freeze({showPage,search:runSearch,play:playTrack,
+ now:()=>state.now,queue:()=>state.queue.slice(),local:()=>state.local.slice(),liked:()=>state.liked.slice(),metadata:()=>state.metadata.slice(),
+ importList,removeLocal,moveLocal,notifyLibrary,
+ state:()=>({page:state.page,now:state.now?.title||null,local:state.local.length,liked:state.liked.length,imported:state.metadata.length})});
 })();
