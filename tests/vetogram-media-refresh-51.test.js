@@ -109,3 +109,53 @@ test('media downloads never gate on unrelated thread-history generation',()=>{
   assert.match(source,/const generation=\+\+state\.threadGeneration/);
   assert.match(source,/state\.previewEpoch\+\+;state\.previewActive=0/);
 });
+
+test('inline photo preview survives same-thread history generation replacement',async()=>{
+  const loader=part('  function loadInlinePreviews({requestedId=null}={}){',
+    "  // Telegram's MTProto acceptance");
+  assert.doesNotMatch(loader,/state\.threadGeneration/);
+  let resolveImage=null,stored=0;
+  const state={
+    thread:{id:'99'},ownerInitData:'signed',threadGeneration:8,previewEpoch:3,
+    messages:[{id:42,media:'photo',saved:false,deleted:false}],
+    previewActive:0,previewSeen:new Set(),previewInflight:new Set(),
+    previewRetryCounts:new Map(),previewRetryTimers:new Map(),mediaMimeByUrl:new Map(),
+  };
+  const node={
+    dataset:{mirrorPreview:'42'},querySelector:()=>({textContent:''}),
+    getBoundingClientRect:()=>({top:60,bottom:120}),
+    replaceWith(button){this.replacement=button},
+  };
+  const scroller={
+    getBoundingClientRect:()=>({top:0,bottom:400}),
+    querySelectorAll:()=>node.replacement?[]:[node],
+  };
+  const ctx=vm.createContext({
+    state,tg:{initData:'signed'},$:()=>scroller,
+    photoInViewport:()=>true,
+    photoRequest:()=>new Promise(resolve=>{resolveImage=resolve}),
+    rememberPreview(){stored++},
+    document:{createElement:tag=>({
+      tag,dataset:{},setAttribute(){},appendChild(v){this.image=v},
+    })},
+    URL:{revokeObjectURL(){}},
+    AbortController,URLSearchParams,setTimeout,clearTimeout,
+    navigator:{onLine:true},
+  });
+  new vm.Script(loader+'\nloadInlinePreviews()').runInContext(ctx);
+  assert.equal(typeof resolveImage,'function');
+  state.threadGeneration+=3;
+  resolveImage('blob:photo42');
+  for(let i=0;i<8;i++)await Promise.resolve();
+  assert.equal(stored,1,'photo URL retained after unrelated history load');
+  assert.ok(node.replacement,'new painted photo button is present');
+  assert.equal(node.replacement.dataset.mirrorPhoto,'42');
+});
+
+test('reply source resolution uses one indexed lookup per repaint',()=>{
+  const renderer=part('  function renderMessages({keepScroll=false,anchor=null}={}){',
+    '  function rememberHotThread(');
+  assert.match(renderer,/const messageById=new Map\(state\.messages\.map\(/);
+  assert.match(renderer,/messageById\.get\(Number\(message\.replyTo\)\)/);
+  assert.doesNotMatch(renderer,/state\.messages\.find\(m=>Number\(m\.id\)===Number\(message\.replyTo\)\)/);
+});
