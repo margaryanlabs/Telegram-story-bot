@@ -8,10 +8,11 @@ const KEY="vetogram-personal-mixes-v1",MAX=25,MAX_TRACKS=120;
 const $=id=>document.getElementById(id);
 const el=(tag,klass,text)=>{const n=document.createElement(tag);if(klass)n.className=klass;if(text!==undefined)n.textContent=String(text);return n};
 const cap=(s,max=100)=>String(s??"").replace(/[\u0000-\u001f\u007f]/g," ").trim().slice(0,max);
+const safe=u=>{try{const x=new URL(String(u));return x.protocol==="https:"?x.href:""}catch{return""}};
 const pick=x=>x&&x.id&&x.title?{
  id:cap(x.id,160),title:cap(x.title,120),artist:cap(x.artist,95),
  source:["audius","radio","local","demo","metadata"].includes(x.source)?x.source:"metadata",
- artwork:String(x.artwork||"").startsWith("https://")?x.artwork:""
+ artwork:safe(x.artwork),stream:x.source==="radio"?safe(x.stream):"",homepage:x.source==="radio"?safe(x.homepage):""
 }:null;
 let lists=[];
 try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v))lists=v.slice(0,MAX).filter(p=>p&&typeof p.name==="string"&&Array.isArray(p.tracks)).map(p=>({
@@ -23,6 +24,7 @@ function save(n){try{localStorage.setItem(KEY,JSON.stringify(n));lists=n;return 
 function btn(text,klass,fn){const e=el("button",klass,text);e.type="button";e.onclick=fn;return e}
 function available(t){
  if(t.source==="local")return V.local().find(x=>x.id===t.id)||null;
+ if(t.source==="radio"&&!t.stream)return V.queue().find(x=>x.id===t.id&&x.stream)||null;
  return t.source==="metadata"?null:t;
 }
 function getSources(){
