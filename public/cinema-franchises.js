@@ -23,7 +23,8 @@
  ["Стражи Галактики. Часть 3","Guardians of the Galaxy Vol. 3",2023],
  ["Капитан Марвел 2","The Marvels",2023],["Дэдпул и Росомаха","Deadpool & Wolverine",2024],
  ["Капитан Америка: Новый мир","Captain America: Brave New World",2025],
- ["Громовержцы*","Thunderbolts*",2025],["Фантастическая четвёрка: Первые шаги","The Fantastic Four: First Steps",2025]
+ ["Громовержцы*","Thunderbolts*",2025],["Фантастическая четвёрка: Первые шаги","The Fantastic Four: First Steps",2025],
+ ["Человек-паук: Совершенно новый день","Spider-Man: Brand New Day",2026]
  ];
  const POTTER=[
  ["Гарри Поттер и философский камень","Harry Potter and the Philosopher's Stone",2001],
@@ -67,8 +68,8 @@
   spoken:"Уточняется у сервиса",
   franchise:kind,franchiseName:franchise,franchiseOrder:i+1,
   discoveryOnly:true,sourceCatalog:"franchise-availability",
-  sourcePage:PROVIDERS[kind].url,
-  watchProvider:PROVIDERS[kind].name,
+  sourcePage:original==="Spider-Man: Brand New Day"?"https://www.sonypictures.com/movies/spidermanbrandnewday":PROVIDERS[kind].url,
+  watchProvider:original==="Spider-Man: Brand New Day"?"Sony Pictures · официальный релиз":PROVIDERS[kind].name,
   license:"Справочная карточка. Права на показ не предоставлены.",
   licenseUrl:PROVIDERS[kind].url,
   editions:[],player:null,poster:null
