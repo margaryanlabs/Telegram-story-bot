@@ -205,3 +205,11 @@ Google Books API public queries require a registered application identifier (API
 - A successful user-initiated `Сохранить все доступные части` action now changes to `Читать офлайн`. Selecting it opens the actual IndexedDB-backed combined book; no fake success is shown before the importer commits the data. It still refuses to save partial chapter sets, keeps provenance, and does not claim the source edition is historically bibliographically complete.
 - Optional browser read-aloud no longer stops at an EPUB/Wikisource chapter boundary when a next part exists. Playback only advances after the next part actually loads, and stops at the true end of the available work. Users can stop speech at any moment. Browser voice support remains device-dependent.
 - Pure-layout regression checks test fractional work position across chapter boundaries and older resume state; the read-aloud module has a source contract check. A complete Android/iPhone Telegram WebView hands-on test is still outstanding.
+
+
+### Follow-up: whole-work offline assembly performance and integrity
+
+- The user-initiated whole-edition collector now uses **at most two concurrent workers**, unlike the earlier one-chapter-at-a-time loop. Chapters are persisted in their original ordered indexes regardless of which request finishes first; the complete EPUB-style local work is saved only after all required parts finish.
+- The collector checks ownership/current book before every part and after download, and stops without saving if the reader closes or any chapter is missing, is a translation-index page, or is too short. Download UI reports `CHAPTERS X/Y` and an actual completion fraction, not a fictitious completion banner.
+- Simulated actual function tests verified that four out-of-order chapter responses yield one correctly ordered work, and that a failed third chapter yields **zero** stored offline books.
+- The independent Vercel preview project reached its free daily deployment quota (`402 api-deployments-free-per-day`) for this iteration; the newest commit is in GitHub but is **not yet deployed**, regardless of older working preview URLs. Do not use the previous deployment as evidence of these new changes.
