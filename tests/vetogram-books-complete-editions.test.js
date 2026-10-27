@@ -21,7 +21,7 @@ test('reader first shelf is real complete-source books, not excerpt search resul
     Number.isSafeInteger(id)&&id>0&&title.length>4&&author.length>2&&chars>100000));
   assert.ok(completeEditionBooks.every(b=>
     b.provider==='wikisource'&&b.language==='ru'&&b.curatedWholeText&&b.readable));
-  assert.equal(filterCompleteEditionBooks('Дюма').length,5);
+  assert.equal(filterCompleteEditionBooks('Дюма').length,6);
   assert.equal(filterCompleteEditionBooks('Жюль Верн')[0].id,1012811);
   assert.equal(filterCompleteEditionBooks('несуществующий автор').length,0);
 });
