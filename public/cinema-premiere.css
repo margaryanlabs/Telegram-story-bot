@@ -242,3 +242,10 @@ body.cinema-light{
 .cinema-series-hits-rail .cinema-card-art-title{font-size:clamp(17px,1.7vw,23px);-webkit-line-clamp:3;max-height:4em}
 .cinema-series-playable-rail .cinema-card-art-badge{color:#fff}
 @media(max-width:650px){.cinema-series-intro{padding:26px 22px;border-radius:18px}.cinema-series-intro h2{font-size:35px}.cinema-series-intro p{font-size:12px}.cinema-series-hits-rail .cinema-card{flex-basis:216px;width:216px}.cinema-series-hub{margin-top:20px}.cinema-section-nav nav{gap:18px}}
+
+
+/* Original-publisher series navigation inside Cinema details. */
+.cinema-episode-chooser{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin:20px 0 15px}
+.cinema-episode-chooser label{font-size:10px;font-weight:800;letter-spacing:.15em;color:var(--accent)}
+.cinema-episode-chooser select{display:block;min-height:46px;width:min(460px,100%);border:1px solid var(--line);border-radius:13px;background:var(--panel-2);padding:11px 15px;color:var(--text);font-size:13px}
+.cinema-episode-chooser.hidden{display:none}
