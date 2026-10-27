@@ -7,7 +7,7 @@
   const LIBRARY_KEY="vetogram.cinema.library.v1";
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
-  const state={tab:"home",genre:"Все",query:"",sort:"recent",visible:100,selected:null,playing:null,request:0,
+  const state={tab:"home",genre:"Все",query:"",sort:"recent",visible:100,showUnverified:false,selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
@@ -326,7 +326,7 @@
     }
   }
   function selectedFilms(){
-    let list=films;
+    let list=films.filter(f=>!f.discoveryOnly||state.showUnverified||f.russianAudioStatus==="catalog-listed");
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
     if(state.genre!=="Все")list=list.filter(f=>(f.genres||[]).includes(state.genre)||
       (state.genre==="Фильмы"&&!f.contentType&&Number(f.minutes)>30));
@@ -341,7 +341,7 @@
   function artElement(f,wide){
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
     div.style.setProperty("--film-hue",String(f.hue));
-    const badge=node("span","cinema-card-art-badge");badge.textContent=f.discoveryOnly?"ГДЕ СМОТРЕТЬ":f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":f.player?"СМОТРЕТЬ":"ОТКРЫТЫЙ ФИЛЬМ";div.append(badge);
+    const badge=node("span","cinema-card-art-badge");badge.textContent=f.discoveryOnly?(f.russianAudioStatus==="catalog-listed"?"РУССКАЯ ДОРОЖКА В КАТАЛОГЕ":"ОЗВУЧКА НЕ ПОДТВЕРЖДЕНА"):f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":f.player?"СМОТРЕТЬ":"ОТКРЫТЫЙ ФИЛЬМ";div.append(badge);
     const title=node("span","cinema-card-art-title");title.textContent=f.title;div.append(title);
     const poster=state.posters.get(f.id)||f.poster;
     if(poster){const img=node("img");img.loading="lazy";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{img.remove();state.posters.delete(f.id)};div.prepend(img)}
@@ -352,7 +352,7 @@
     const b=node("button","cinema-card");b.type="button";b.setAttribute("aria-label",f.title+", детали");
     b.append(artElement(f,false));
     const name=node("span","cinema-card-name");name.textContent=f.title;
-    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||"Русский",f.minutes?f.minutes+" мин":null,f.discoveryOnly?"Проверить наличие":f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
+    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||"Русский",f.minutes?f.minutes+" мин":null,f.discoveryOnly?(f.watchAvailability==="unavailable"?"Нет доступа у источника":f.russianAudio?"Русская дорожка указана":"Язык неизвестен"):f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
     b.append(name,meta);
     const p=state.library.progress[f.id];
     if(p&&p.d>0&&p.t/p.d<.96){const bar=node("div","cinema-card-progress"),line=node("i");line.style.width=Math.round(100*p.t/p.d)+"%";bar.append(line);b.append(bar)}
@@ -403,9 +403,10 @@
     setHeroSlide(prior>=0?prior:0);
   }
   function renderFranchise(){
-    const rows=films.filter(f=>f.discoveryOnly&&f.franchise===discovery.franchise);
+    const rows=films.filter(f=>f.discoveryOnly&&f.franchise===discovery.franchise&&
+      (state.showUnverified||f.russianAudioStatus==="catalog-listed"));
     $("cinemaFranchiseRail").replaceChildren(...rows.map(filmCard));
-    text("cinemaFranchiseNote",rows.length+" фильмов · поиск официальных площадок; встроенный просмотр зависит от прав и страны");
+    text("cinemaFranchiseNote",rows.length+" названий · русский звук указан в каталоге только у отмеченных фильмов. Просмотр и региональная доступность не гарантированы.");
     document.querySelectorAll("[data-franchise]").forEach(button=>{
       const yes=button.dataset.franchise===discovery.franchise;
       button.classList.toggle("active",yes);
@@ -546,9 +547,9 @@
     text("cinemaDetailsMeta",[f.original,f.year,f.minutes?f.minutes+" мин":null,...(f.genres||[])].filter(Boolean).join(" · "));
     text("cinemaDetailsSynopsis",f.synopsis);
     text("cinemaDetailsCreator",f.creator);
-    text("cinemaDetailsLanguage",f.discoveryOnly?"Это справочная карточка: русская озвучка и наличие полного фильма зависят от региона и видеосервиса.":f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
-    $("cinemaDetailsWatch").textContent=f.discoveryOnly?"↗ Где смотреть официально":"▶ Смотреть";
-    $("cinemaDetailsSource").textContent=f.discoveryOnly?"Официальная площадка ↗":"Перейти к источнику ↗";
+    text("cinemaDetailsLanguage",f.discoveryOnly?(f.russianAudio?f.russianAudio.note+" Источник: "+f.watchProvider+".":"Русскую дорожку для этого фильма пока не подтвердил ни один проверенный официальный источник."):f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
+    $("cinemaDetailsWatch").textContent=f.discoveryOnly?(f.watchAvailability==="unavailable"?"↗ Проверить статус у сервиса":f.russianAudio?"↗ Проверить просмотр на русском":"↗ Найти легальный просмотр"):"▶ Смотреть";
+    $("cinemaDetailsSource").textContent=f.discoveryOnly?"Страница с языками и доступностью ↗":"Перейти к источнику ↗";
     $("cinemaDetailsSource").href=filmPage(f);
     $("cinemaDetailsLicense").href=f.licenseUrl;
     text("cinemaDetailsLicense",(f.player?"Основание встраивания: ":"Лицензия: ")+f.license+" ↗");
@@ -768,6 +769,10 @@
   $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";state.visible=100;render();fetchCatalog(true)});
   $("cinemaLoadMore").addEventListener("click",()=>fetchCatalog(false));
   $("cinemaStudioMore").addEventListener("click",()=>loadStudio(false));
+  $("cinemaFranchiseAllLanguages").addEventListener("change",event=>{
+    state.showUnverified=Boolean(event.target.checked);state.visible=100;
+    render();renderFranchise();
+  });
   document.querySelectorAll("[data-franchise]").forEach(button=>button.addEventListener("click",()=>{
     discovery.franchise=button.dataset.franchise;renderFranchise();buzz();
   }));
