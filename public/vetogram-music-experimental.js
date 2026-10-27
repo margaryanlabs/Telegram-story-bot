@@ -56,7 +56,7 @@ function normalize(x){
   artwork:"https://i.ytimg.com/vi/"+id+"/hqdefault.jpg",playable:true};
 }
 function chooseAudio(data){
- if(data?.livestream||data?.error||!Array.isArray(data?.audioStreams))return"";
+ if(data?.livestream||data?.liveNow||data?.error||(!Array.isArray(data?.audioStreams)&&!Array.isArray(data?.adaptiveFormats)))return"";
  const audio=byId("audio");
  const streamList=Array.isArray(data.audioStreams)?data.audioStreams:
    Array.isArray(data.adaptiveFormats)?data.adaptiveFormats.map(s=>({
