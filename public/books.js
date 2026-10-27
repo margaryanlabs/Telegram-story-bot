@@ -24,6 +24,7 @@
   if(['en','fr','de','it','es'].includes(rememberedOriginal))state.original=rememberedOriginal;
   let abort=null;
   let googleViewerPromise=null;
+  let offlineEditionToken=0;
   let toastTimer;
   let dbPromise;
   try {
@@ -233,6 +234,85 @@
     if(book?.readable && book?.source==='Project Gutenberg')return {kind:'full',label:'ПОЛНЫЙ ТЕКСТ ИСТОЧНИКА'};
     return {kind:'metadata',label:'ОБЪЁМ НЕ ПОДТВЕРЖДЁН'};
   }
+  function officialWikisourceEpubUrl(book){
+    if(!isWiki(book)||typeof book.title!=='string'||book.title.length>230)return '';
+    const params=new URLSearchParams({
+      format:'epub',lang:book.wiki,page:book.title.replace(/ /g,'_')
+    });
+    return 'https://ws-export.wmcloud.org/?'+params.toString();
+  }
+  function updateWholeEditionControls(book){
+    const container=$('readerDownloadBar');
+    const eligible=isWiki(book)&&!state.isTranslationIndex;
+    container.hidden=!eligible;
+    if(!eligible)return;
+    const count=state.chapters.length;
+    const button=$('readerSaveAllChapters');
+    button.hidden=count>160;
+    button.disabled=false;
+    button.textContent=count?'СОХРАНИТЬ '+count+' ГЛАВ ↧':'СОХРАНИТЬ ТЕКСТ ↧';
+    $('readerDownloadHint').textContent=count
+      ?'Загрузим '+count+' доступных частей подряд. Если глава не найдена, не создадим неполную копию.'
+      :'Сохраним весь загруженный текст на устройстве.';
+    const link=$('readerOfficialEpub');
+    const url=officialWikisourceEpubUrl(book);
+    link.hidden=!url;
+    if(url)link.href=url;
+  }
+  /** Full-work offline pack. User-triggered, per-chapter, bounded, fail closed.
+   * Does not conflate alternative translations with successive chapters.
+   */
+  async function saveWholeEditionOffline(){
+    const book=state.current;
+    if(!isWiki(book)||state.isTranslationIndex)return;
+    const importer=window.VetogramBooksImport;
+    if(!importer?.saveWikisourceEdition){toast('Офлайн-хранилище недоступно');return;}
+    const chapters=state.chapters.length
+      ?state.chapters.map(x=>({title:x.title,label:x.label}))
+      :[{title:book.title,label:'Весь текст'}];
+    if(chapters.length>160){toast('Для этого издания используйте официальный EPUB');return;}
+    const token=++offlineEditionToken;
+    const button=$('readerSaveAllChapters');
+    button.disabled=true;
+    const sourceId=book.id,wiki=book.wiki;
+    const texts=[];
+    try{
+      for(let i=0;i<chapters.length;i++){
+        if(token!==offlineEditionToken||$('reader').hidden)throw new Error('Сборка отменена');
+        button.textContent='ГЛАВА '+(i+1)+' / '+chapters.length;
+        $('readerDownloadHint').textContent='Собираем книгу: '+Math.round(i/chapters.length*100)+'% · не закрывайте читалку';
+        if(!state.chapters.length){
+          if(!state.rawText?.trim())throw new Error('Текст книги не загружен');
+          texts.push(state.rawText);
+          break;
+        }
+        const key=bookKey(book)+':'+i;
+        const cached=await cachedText(key);
+        let value=cached?.text;
+        if(!value){
+          const query=new URLSearchParams({mode:'text',wiki,id:String(sourceId),chapter:String(i)});
+          const response=await fetch('/api/books-wikisource?'+query);
+          const payload=await response.json();
+          if(!response.ok||!payload.ok||!payload.text)throw new Error('Глава '+(i+1)+' недоступна. Офлайн-сборка не создана.');
+          value=payload.text;
+          await cacheText(key,{book:payload.book,text:value,chapters:payload.chapters||[],attribution:payload.attribution||null,isTranslationIndex:false,coverage:payload.coverage||null});
+        }
+        if(value.length<60)throw new Error('Глава '+(i+1)+' слишком короткая; сборка остановлена');
+        texts.push(value);
+      }
+      if(token!==offlineEditionToken||$('reader').hidden)throw new Error('Сборка отменена');
+      const local=await importer.saveWikisourceEdition(book,chapters,texts);
+      saved[bookKey(local)]=local;
+      persist('saved',saved);updateSavedCount();
+      $('readerDownloadHint').textContent='Сохранены все '+chapters.length+' доступных частей · можно читать офлайн';
+      button.textContent='ГОТОВО ✓';
+      toast('Книга сохранена на устройстве — все доступные части');
+    }catch(error){
+      $('readerDownloadHint').textContent=error?.message||'Не удалось загрузить книгу';
+      button.textContent='ПОПРОБОВАТЬ СНОВА';
+      toast(error?.message||'Офлайн-сборка не завершена');
+    }finally{button.disabled=false;}
+  }
   function setVolumeStatus(book,coverage){
     const status=$('readerVolumeStatus');
     if(!status)return;
@@ -265,6 +345,7 @@
     const toc=$('readerTocButton');
     toc.hidden=!state.chapters.length||(!wik&&!local);
     $('readerChapterCount').textContent=state.chapters.length+' частей';
+    updateWholeEditionControls(book);
   }
   function card(book) {
     const article=node('article','book');
@@ -753,8 +834,8 @@
       state.activeChapter=chapter;
       $('readerTitle').textContent=compactTitle(state.current.title);
       $('readerAuthor').textContent=fullName(state.current);
-      $('readerSourceLink').hidden=isLocal(book);
-      if(!isLocal(book))$('readerSourceLink').href=data.attribution?.source||state.current.sourceUrl||'https://www.gutenberg.org/';
+      $('readerSourceLink').hidden=isLocal(book)&&!book.licensedSource;
+      if(!isLocal(book)||book.licensedSource)$('readerSourceLink').href=data.attribution?.source||state.current.sourceUrl||'https://www.gutenberg.org/';
       renderChapters();
       setVolumeStatus(state.current,data.coverage);
       if(state.isTranslationIndex && chapter===null && state.chapters.length) {
@@ -795,10 +876,11 @@
     $('readerAuthor').textContent=fullName(book);
     $('readerSettings').hidden=true;
     $('readerSettingsButton').setAttribute('aria-expanded','false');
-    $('readerSourceLink').hidden=isLocal(book);
-    if(!isLocal(book))$('readerSourceLink').href=book.sourceUrl||'https://www.gutenberg.org/';
+    $('readerSourceLink').hidden=isLocal(book)&&!book.licensedSource;
+    if(!isLocal(book)||book.licensedSource)$('readerSourceLink').href=book.sourceUrl||'https://www.gutenberg.org/';
     $('readerChapters').hidden=true;
     $('readerTocButton').hidden=true;
+    $('readerDownloadBar').hidden=true;
     $('readerVolumeStatus').textContent='Проверяем доступный объём…';
     $('readerVolumeStatus').dataset.kind='unverified';
     applyPrefs();
@@ -807,6 +889,7 @@
     await loadChapter(book,chapter,true);
   }
   function closeReader(){
+    ++offlineEditionToken;
     stopNarration();
     ++state.requestBook;
     $('reader').hidden=true;state.current=null;state.pages=[];state.chapters=[];
@@ -1306,6 +1389,7 @@
     document.querySelector('[data-books-source="local"]')?.click();
     $('importBanner').scrollIntoView({behavior:'smooth',block:'center'});
   });
+  $('readerSaveAllChapters').addEventListener('click',()=>{void saveWholeEditionOffline();});
   $('readerTocButton').addEventListener('click',()=>{
     $('readerSettings').hidden=false;
     $('readerSettingsButton').setAttribute('aria-expanded','true');
