@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="./cinema-premiere.css">
   <script async src="https://telegram.org/js/telegram-web-app.js"></script>
   <script defer src="./cinema-catalog.js"></script>
+  <script defer src="./cinema-franchises.js"></script>
   <script defer src="./cinema-artwork.js"></script>
   <script defer src="./cinema-provider.js"></script>
   <script defer src="./cinema.js"></script>
@@ -58,6 +59,20 @@
       <section id="cinemaGenresSection" class="cinema-section cinema-categories" aria-label="Выбор жанров"><div class="cinema-section-head"><div><span class="cinema-overline">FIND YOUR STORY</span><h2>Какое кино сегодня?</h2></div></div><div id="cinemaGenreTiles" class="cinema-genre-tiles"></div></section>
       <section id="cinemaSeries" class="cinema-section cinema-editorial" aria-label="Сериалы"><div class="cinema-section-head"><div><span class="cinema-overline">SERIES / ORIGINAL STORIES</span><h2>Сериалы, которые затягивают</h2></div></div><div class="cinema-rail cinema-editorial-rail" id="cinemaSeriesRail"></div></section>
       <section id="cinemaAnimations" class="cinema-section cinema-editorial" aria-label="Мультфильмы"><div class="cinema-section-head"><div><span class="cinema-overline">FAMILY / ANIMATION</span><h2>Для всей семьи <span class="cinema-heading-mark">✦</span></h2></div></div><div class="cinema-rail cinema-editorial-rail" id="cinemaAnimationsRail"></div></section>
+      <section id="cinemaFranchises" class="cinema-section cinema-franchises" aria-label="Большие кинофраншизы">
+        <div class="cinema-section-head"><div>
+          <span class="cinema-overline">THE UNIVERSES / FILM GUIDES</span>
+          <h2>Киновселенные <span class="cinema-heading-mark">✦</span></h2>
+          <p>Marvel, Гарри Поттер, Люди Икс и Человек-паук. Фильмы с официальными вариантами просмотра по регионам.</p>
+        </div></div>
+        <div class="cinema-universe-switch" id="cinemaFranchiseTabs" role="group" aria-label="Выбрать киновселенную">
+          <button type="button" class="cinema-universe-tab active" data-franchise="mcu" aria-pressed="true">Marvel · MCU</button>
+          <button type="button" class="cinema-universe-tab" data-franchise="potter" aria-pressed="false">Гарри Поттер</button>
+          <button type="button" class="cinema-universe-tab" data-franchise="legacy" aria-pressed="false">Люди Икс / Spider-Man</button>
+        </div>
+        <p id="cinemaFranchiseNote" class="cinema-franchise-note">Карточки для поиска официального просмотра. Не каждый фильм доступен в нашем встроенном плеере.</p>
+        <div class="cinema-rail cinema-editorial-rail cinema-franchise-rail" id="cinemaFranchiseRail"></div>
+      </section>
       <section id="cinemaRussian" class="cinema-section cinema-russian-section" aria-label="Кино на русском"><div class="cinema-section-head"><div><span class="cinema-overline">ICONIC CLASSICS</span><h2>Кино, к которому возвращаются <span class="cinema-ru-symbol">↗</span></h2><p>Полнометражное кино с русской дорожкой от официальных видеоканалов.</p></div><span class="cinema-rail-label">VETOGRAM SELECT</span></div><div class="cinema-rail cinema-russian-rail" id="cinemaRussianRail"></div></section>
       <section id="cinemaStudios" class="cinema-section cinema-studios" aria-label="Киноархивы киностудий">
         <div class="cinema-section-head">
