@@ -67,7 +67,7 @@ function listCard(item){
  }else if(item.type==="radio"){
   info.append(create("small","v14-disclaimer","Этот формат может не воспроизводиться в Telegram. Открой станцию в её приложении."));
  }
- const open=create("a","v14-source","Источник ↗");
+ const open=create("a","v14-source",item.type==="podcast"?"Открыть Apple Podcasts ↗":"Сайт станции ↗");
  open.href=item.href;open.target="_blank";open.rel="noopener noreferrer";controls.append(open);
  info.append(controls);row.append(info);return row;
 }
@@ -131,7 +131,14 @@ async function run(query){
   draw();
   setStatus(result.length?"Найдено "+result.length+". Доступность и права воспроизведения зависят от источника.":"Ничего не найдено. Попробуй другой запрос.");
  }catch(err){
-  if(inFlight===controller)setStatus(err?.name==="AbortError"?"Время ожидания истекло. Повтори поиск.":"Источник недоступен: "+clean(err?.message,110));
+  if(inFlight===controller){
+   const fallback=selection==="radio"?"https://www.radio-browser.info/":"https://podcasts.apple.com/";
+   const label=selection==="radio"?"Radio Browser":"Apple Podcasts";
+   setStatus((err?.name==="AbortError"?"Время ожидания истекло. ":"Каталог временно недоступен. ")+"Можно открыть "+label+" напрямую.");
+   const target=$("v14Results");target.replaceChildren();
+   const a=create("a","v14-source","Открыть "+label+" ↗");a.href=fallback;a.target="_blank";a.rel="noopener noreferrer";
+   const box=create("div","v14-empty");box.append(a);target.append(box);
+  }
  }finally{
   clearTimeout(timer);
   if(inFlight===controller){inFlight=null;$("v14SearchButton").disabled=false}
