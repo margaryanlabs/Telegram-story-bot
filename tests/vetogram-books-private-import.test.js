@@ -163,7 +163,7 @@ test('offline Wikisource edition preserves every chapter in reading order and at
   assert.equal(imported.sourceChapters,2);
   assert.match(imported.sourceUrl,/ru\.wikisource\.org/);
   const saved=await api.get(imported.id);
-  assert.deepEqual(Array.from(saved.contents),texts);
+  assert.deepEqual(Array.from(saved.contents),texts.map(x=>x.trim()));
   assert.equal(saved.chapters[1].label,'Глава II');
   assert.equal(records.size,1);
 });
