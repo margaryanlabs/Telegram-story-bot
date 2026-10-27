@@ -349,7 +349,9 @@
     const replyTo=state.replyTo?.id||null;
     const voiceSend=action==='send_media' && attachmentOrIndex?.kind==='voice';
     const pending=action==='send_media'?(attachmentOrIndex||state.pendingAttachment):null;
-    const caption=voiceSend?'':String(field?.value||'');
+    // Stickers do not consume the text composer. Capture the submitted
+    // media caption once; text typed while Telegram responds is a new draft.
+    const caption=voiceSend||action==='send_sticker'?'':String(field?.value||'');
     const intent=richSendIntent(action,chatId,pending,caption,replyTo,attachmentOrIndex);
     const prior=state.lastRichFailure;
     const nonce=sameRichIntent(prior?.intent,intent) ? prior.nonce : window.crypto?.randomUUID?.();
@@ -383,11 +385,19 @@
             :request.kind==='photo'?'Фотография':'Документ';
         touchRecentChat(chatId,request.caption||mediaTitle,new Date().toISOString());
         setDeliveryStatus('accepted',chatId,deliveryKind);
-        if(field&&!voiceSend)field.value='';
-        if(!voiceSend)state.drafts.delete(chatId);
-        state.replyTo=null;state.pendingAttachment=null;
-        if($('telegramThreadFileInput'))$('telegramThreadFileInput').value='';
-        if($('telegramThreadAudioInput'))$('telegramThreadAudioInput').value='';
+        // Successful sticker/voice actions never consume an unrelated text
+        // draft. For media captions, clear only exactly the text we sent:
+        // the user may have typed a new draft during the network round trip.
+        if(action==='send_media'&&!voiceSend){
+          if(field&&field.value===caption)field.value='';
+          if(state.drafts.get(chatId)===caption)state.drafts.delete(chatId);
+        }
+        if((state.replyTo?.id||null)===replyTo)state.replyTo=null;
+        if(action==='send_media'&&!voiceSend&&state.pendingAttachment===pending){
+          state.pendingAttachment=null;
+          if($('telegramThreadFileInput'))$('telegramThreadFileInput').value='';
+          if($('telegramThreadAudioInput'))$('telegramThreadAudioInput').value='';
+        }
         if(voiceSend)dropVoiceDraft();
         closeStickerDrawer();
         renderReplyPreview();renderAttachmentChip();
