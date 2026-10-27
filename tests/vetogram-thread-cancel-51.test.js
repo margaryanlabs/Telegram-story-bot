@@ -56,7 +56,7 @@ test('switching chats aborts pending owner-signed fetch immediately, not at 22s 
   assert.equal(controller.signal.aborted,true);
   assert.equal(h.getSignal().aborted,true);
   assert.equal(h.state.threadRequestAbort,null);
-  await assert.rejects(pending,/Telegram отвечает слишком долго/);
+  await assert.rejects(pending,error=>error?.name==='AbortError');
 });
 
 test('cancelling old request never aborts a replacement controller',()=>{
@@ -115,6 +115,9 @@ test('navigation, back, account reset and revocation all cancel the transport',(
   assert.match(back,/cancelThreadRequest\(\);/);
   assert.match(owner,/cancelThreadRequest\(\);/);
   assert.match(invalidate,/cancelThreadRequest\(\);/);
+  assert.match(invalidate,/state\.threadGeneration\+\+/);
+  assert.match(invalidate,/state\.syncRunId\+\+/);
+  assert.match(invalidate,/stopThreadSync\(\)/);
   assert.match(historySource,/request\('thread',[\s\S]*?threadAbort\.signal\)/);
   assert.match(historySource,/if\(state\.threadRequestAbort===threadAbort\)/);
 });
