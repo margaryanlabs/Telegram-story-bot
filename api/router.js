@@ -7,6 +7,7 @@ const endpointLoaders = {
   "automation-run": () => import("./automation-run.js"),
   "automations": () => import("./automations.js"),
   "business-wizard": () => import("./business-wizard.js"),
+  "books": () => import("./books.js"),
   "emoji-studio": () => import("./emoji-studio.js"),
   "health": () => import("./health.js"),
   "miniapp": () => import("./miniapp.js"),
