@@ -66,21 +66,28 @@
   legacy:{url:"https://www.justwatch.com/ru",name:"JustWatch · проверить по стране"}
  };
  function slug(s){return s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
- const bundle=(rows,kind,franchise,hue)=>rows.map(([title,original,year],i)=>({
+ const RU=window.VetogramCinemaRussianAudio;
+ const bundle=(rows,kind,franchise,hue)=>rows.map(([title,original,year],i)=>{
+ const evidence=RU?.lookup?.[RU.key(original,year)]||null;
+ return ({
   id:"licensed-discovery-"+kind+"-"+slug(original)+"-"+year,
   title,original,year,minutes:null,creator:franchise,
   synopsis:"Часть коллекции «"+franchise+"». Доступный сервис и язык озвучки зависят от страны. Это карточка для поиска официального просмотра, не видеопоток.",
   genres:["Фильмы",franchise,kind==="potter"?"Фэнтези":"Фантастика"],
   contentType:"Фильмы",hue,
-  spoken:"Уточняется у сервиса",
+  spoken:evidence?"Русская дорожка указана в каталоге":"Русский язык не подтверждён",
+  russianAudio:evidence,
+  russianAudioStatus:evidence?"catalog-listed":"unknown",
+  watchAvailability:evidence?.availability||"unknown",
   franchise:kind,franchiseName:franchise,franchiseOrder:i+1,
   discoveryOnly:true,sourceCatalog:"franchise-availability",
-  sourcePage:original==="Spider-Man: Brand New Day"?"https://www.sonypictures.com/movies/spidermanbrandnewday":PROVIDERS[kind].url,
-  watchProvider:original==="Spider-Man: Brand New Day"?"Sony Pictures · официальный релиз":PROVIDERS[kind].name,
+  sourcePage:evidence?.url||(original==="Spider-Man: Brand New Day"?"https://www.sonypictures.com/movies/spidermanbrandnewday":PROVIDERS[kind].url),
+  watchProvider:evidence?.provider||(original==="Spider-Man: Brand New Day"?"Sony Pictures · официальный релиз":PROVIDERS[kind].name),
   license:"Справочная карточка. Права на показ не предоставлены.",
   licenseUrl:PROVIDERS[kind].url,
   editions:[],player:null,poster:null
- }));
+ });
+ });
  window.VetogramCinemaFranchises=Object.freeze([
   ...bundle(MCU,"mcu","Marvel · MCU",353),
   ...bundle(POTTER,"potter","Гарри Поттер и волшебный мир",230),
