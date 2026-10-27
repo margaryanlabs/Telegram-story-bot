@@ -105,7 +105,7 @@ async function loadMore(){
   }
   offset+=raw.length;
   complete=raw.length<LIMIT||offset>=MAX_RESULTS;
-  setStatus(items.length+" доступных треков · "+(complete?"Выдано всё.":"Можно загрузить ещё.")+" Нажми ▶ для прослушивания.");
+  setStatus(items.length+" доступных аудиотреков в первой подборке · "+(complete?"Все результаты загружены.":"Можно загрузить ещё.")+" Нажми ▶ для прослушивания.");
   render();
  }catch(err){
   if(active!==controller)return;
@@ -124,6 +124,7 @@ function search(term){
  if(candidate.length<2){setStatus("Введите минимум 2 символа для поиска");return}
  active?.abort();q=candidate;items=[];offset=0;complete=false;busy=false;queryInput.value=q;
  list.replaceChildren();setStatus("Загружаем музыку…");
+ document.dispatchEvent(new CustomEvent("vetogram:catalog-query",{detail:{query:q}}));
  more.hidden=true;loadMore();
 }
 root.querySelectorAll("[data-catalog-group]").forEach(b=>b.onclick=()=>{
