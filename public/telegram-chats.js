@@ -2476,6 +2476,15 @@
         state.drafts.clear();state.draftVersions.clear();
         state.lastSendFailure=null;state.lastSendFailures.clear();
         state.lastRichFailure=null;state.lastRichFailures.clear();
+        state.replyTo=null;state.pendingAttachment=null;
+        const field=$('telegramThreadCompose');
+        if(field){field.value='';if(field.dataset)field.dataset.activeChat='';}
+        for(const id of ['telegramThreadFileInput','telegramThreadAudioInput']){
+          const fileField=$(id);
+          if(fileField)fileField.value='';
+        }
+        renderReplyPreview();renderAttachmentChip();
+        cancelVoiceCapture();dropVoiceDraft();
         revokeMediaUrls();
         renderSendComposer();
       }
