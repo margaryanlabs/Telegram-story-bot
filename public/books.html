@@ -7,10 +7,10 @@
   <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
   <title>VETOGRAM Books — Читать</title>
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/books.css?v=7">
+  <link rel="stylesheet" href="/books.css?v=8">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="/books-import.js?v=1" defer></script>
-  <script src="/books.js?v=7" defer></script>
+  <script src="/books.js?v=8" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -47,6 +47,7 @@
       <button type="button" data-books-source="hy" aria-pressed="false"><b>ՀՅ</b> Հայկական գրադարան</button>
       <button type="button" data-books-source="gutenberg" aria-pressed="false"><b>EN</b> Мировая классика</button>
       <button type="button" data-books-source="spotlight" aria-pressed="false"><b>✦</b> Новинки и хиты · RU</button>
+      <button type="button" data-books-source="genres" aria-pressed="false"><b>✧</b> Читать сейчас · RU</button>
       <button type="button" data-books-source="local" aria-pressed="false"><b>▤</b> Мои файлы · Офлайн</button>
     </div>
     <p id="sourceDescription" class="source-description">Зарубежные произведения в русских переводах · из Русской Викитеки</p>
@@ -57,6 +58,14 @@
       <button type="button" data-original-lang="de" aria-pressed="false">Немецкого</button>
       <button type="button" data-original-lang="it" aria-pressed="false">Итальянского</button>
       <button type="button" data-original-lang="es" aria-pressed="false">Испанского</button>
+    </div>
+    <div class="reading-genres" id="readingGenres" role="group" aria-label="Жанр русской классики" hidden>
+      <button type="button" data-reading-genre="novels" class="active">Романы</button>
+      <button type="button" data-reading-genre="stories">Рассказы</button>
+      <button type="button" data-reading-genre="novellas">Повести</button>
+      <button type="button" data-reading-genre="fantasy">Фантастика</button>
+      <button type="button" data-reading-genre="poems">Стихи</button>
+      <button type="button" data-reading-genre="folktales">Народные сказки</button>
     </div>
     <div class="spotlight-filters" id="spotlightFilters" role="group" aria-label="Подборки современных книг" hidden>
       <button type="button" data-spotlight="now" class="active">В центре внимания</button>
