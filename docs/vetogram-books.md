@@ -196,3 +196,12 @@ Google Books API public queries require a registered application identifier (API
 ### Launch constraints
 - Even with this improvement, not all catalog items are full books and commercial full-text access to contemporary copyrighted Russian translations requires licenses.
 - All UI/logic remains in the Books-only feature branch; isolated Vercel preview project is used so Messenger production and the intentionally ignored build steps of the original `veto` project are preserved.
+
+
+## Reader continuity — Books 5.1 / 27 October 2026
+
+- On the last one/two pages of a chapter, the reader can **prefetch exactly the next readable Wikisource chapter** into existing device cache. Prefetch is disabled when the browser indicates Data Saver or a 2G connection; errors are silent and normal navigation works without it. Unrelated chapters are never mass-fetched.
+- Page progress and the Continue Reading shelf now refer to the **same whole-work location**. Multi-chapter work progress is an estimate based on chapter index and current-chapter text offset, explicitly displayed as `≈`; it is not an exact percentage of total characters. A single full-text edition reports its current text position without the approximation sign.
+- A successful user-initiated `Сохранить все доступные части` action now changes to `Читать офлайн`. Selecting it opens the actual IndexedDB-backed combined book; no fake success is shown before the importer commits the data. It still refuses to save partial chapter sets, keeps provenance, and does not claim the source edition is historically bibliographically complete.
+- Optional browser read-aloud no longer stops at an EPUB/Wikisource chapter boundary when a next part exists. Playback only advances after the next part actually loads, and stops at the true end of the available work. Users can stop speech at any moment. Browser voice support remains device-dependent.
+- Pure-layout regression checks test fractional work position across chapter boundaries and older resume state; the read-aloud module has a source contract check. A complete Android/iPhone Telegram WebView hands-on test is still outstanding.
