@@ -24,7 +24,7 @@ state.mood=saved.mood==="aurora"?"aurora":"ember";
 document.documentElement.dataset.ambient=state.mood;
 const unique=list=>{const s=new Set();return list.filter(x=>{if(!x?.id||s.has(x.id))return false;s.add(x.id);return true;})};
 function showPage(page){
- if(!["home","search","charts","catalog","originals","youtube","archive","mixter","hits","library","radio","import"].includes(page))return;
+ if(!["home","search","charts","catalog","archive","mixter","library","radio","import"].includes(page))return;
  if(state.page!==page){
   // Stop provider playback before hiding its page, never run YouTube in background.
   const previous=document.querySelector('[data-view="'+state.page+'"]');
@@ -34,21 +34,19 @@ function showPage(page){
  state.page=page;
  $(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
  $$("[data-page]").forEach(el=>{el.classList.toggle("active",el.dataset.page===page);if(el.dataset.page===page)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")});
- $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",originals:"ОРИГИНАЛЫ",youtube:"YOUTUBE МУЗЫКА",archive:"БИБЛИОТЕКА",mixter:"CC РЕМИКСЫ",hits:"МИРОВЫЕ ХИТЫ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
+ $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",archive:"БИБЛИОТЕКА",mixter:"ТРЕКИ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
  window.scrollTo({top:0,behavior:"instant"});
  if(page==="library")renderLibrary();
  if(page==="home")renderHome();
- if(page==="radio"&&!state.radios.length)radioSearch("Armenia");
+ if(page==="radio"&&!state.radios.length)radioSearch("Russia");
  if(page==="search")setTimeout(()=>$("searchInput").focus({preventScroll:true}),60);
  if(page==="charts")document.dispatchEvent(new CustomEvent("vetogram:charts-open"));
  if(page==="catalog")document.dispatchEvent(new CustomEvent("vetogram:catalog-open"));
  if(page==="archive")document.dispatchEvent(new CustomEvent("vetogram:archive-open"));
  if(page==="mixter")document.dispatchEvent(new CustomEvent("vetogram:mixter-open"));
- if(page==="hits")document.dispatchEvent(new CustomEvent("vetogram:hits-open"));
- if(page==="youtube")document.dispatchEvent(new CustomEvent("vetogram:youtube-open"));
 }
 $$("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
-$("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>showPage("charts");
+$("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>{showPage("catalog");window.VetogramCatalog?.selectPreset?.("ru")};
 $("themeSwitch").onclick=()=>{state.mood=state.mood==="ember"?"aurora":"ember";document.documentElement.dataset.ambient=state.mood;persist();send(state.mood==="aurora"?"Атмосфера Aurora":"Атмосфера Ember")};
 const songId=x=>String(x?.id||"");
 function favorited(t){return state.liked.some(x=>x.id===songId(t))}
@@ -234,10 +232,10 @@ async function loadTrending(){
  try{const r=await apiJson("https://api.audius.co/v1/tracks/trending?limit=12",abort.signal);
  if(state.activeController!==abort)return;
  state.tracks=unique((Array.isArray(r?.data)?r.data:[]).map(mapAudius).filter(Boolean));renderHome();
- }catch{if(state.activeController===abort){$("homeTracks").replaceChildren(dom("div","empty-state","Audius сейчас не отвечает. Свои треки и тестовое звучание доступны без него."));}}
+ }catch{if(state.activeController===abort){$("homeTracks").replaceChildren(dom("div","empty-state","Музыка сейчас не отвечает. Попробуй поиск или свои файлы."));}}
  finally{clearTimeout(timer)}
 }
-function renderHome(){paintRows("homeTracks",unique([...demoTracks,...state.tracks]),"home","Музыка пока недоступна. Попробуй поиск или добавь свою запись.")}
+function renderHome(){paintRows("homeTracks",unique([...state.local,...state.tracks]),"home","Музыка пока не загрузилась. Попробуй поиск или добавь свою запись.")}
 function renderSearch(){paintRows("searchResults",unique([...state.search,...state.local.filter(t=>{const q=($("searchInput").value||"").toLowerCase();return q&&(t.title+" "+t.artist).toLowerCase().includes(q)})]),"search","Нет результатов. Попробуй другое название.")}
 async function runSearch(raw){
  const query=clean(raw,80).trim();if(query.length<2){$("searchStatus").textContent="Введи минимум два символа";return}
@@ -260,14 +258,15 @@ function mapRadio(x){
   artwork:safe(x.favicon),stream,homepage:safe(x.homepage)||"https://www.radio-browser.info/"};
 }
 const mirrors=["https://de1.api.radio-browser.info","https://nl1.api.radio-browser.info","https://at1.api.radio-browser.info"];
-async function radioSearch(query){
+async function radioSearch(query,autoPlay=false){
  const term=clean(query,70);if(term.length<2)return;
  const ctrl=newAbort("radioController"),timer=setTimeout(()=>ctrl.abort(),13000);
  $("radioStatus").textContent="Ищем станции «"+term+"»…";
  try{let rows=null;
- for(const host of mirrors){try{rows=await apiJson(host+"/json/stations/search?"+new URLSearchParams({name:term,limit:"18",hidebroken:"true",order:"votes",reverse:"true"}),ctrl.signal);if(Array.isArray(rows))break;}catch(e){if(ctrl.signal.aborted)throw e}}
+ for(const host of mirrors){try{rows=await apiJson(host+"/json/stations/search?"+new URLSearchParams({...(/^(?:russia|россия|russian|русская музыка)$/i.test(term)?{countrycode:"RU"}:/^(?:armenia|армения|հայկական)$/i.test(term)?{countrycode:"AM"}:{name:term}),limit:"32",is_https:"true",hidebroken:"true",order:"votes",reverse:"true"}),ctrl.signal);if(Array.isArray(rows))break;}catch(e){if(ctrl.signal.aborted)throw e}}
  if(state.radioController!==ctrl)return;
  state.radios=unique((Array.isArray(rows)?rows:[]).map(mapRadio).filter(Boolean));renderRadio();
+ if(autoPlay&&state.radios.length)playTrack(state.radios[0],state.radios);
  $("radioStatus").textContent="Найдено "+state.radios.length+" станций. Доступность потоков зависит от вещателей.";
  }catch(e){if(state.radioController===ctrl)$("radioStatus").textContent=e?.name==="AbortError"?"Поиск радио превысил время ожидания.":"Радиокаталог временно недоступен."}
  finally{clearTimeout(timer)}
@@ -281,12 +280,17 @@ function renderRadio(){
  const details=dom("div");details.append(dom("b","",t.title),dom("small","",t.artist));
  const actions=dom("div");
  const p=dom("button","radio-action","▶ Слушать");p.type="button";p.onclick=()=>playTrack(t,state.radios);
- const a=dom("a","","Источник ↗");a.href=t.homepage;a.target="_blank";a.rel="noopener noreferrer";
- actions.append(p,a);details.append(actions);row.append(cover,details);box.append(row);
+ actions.append(p);details.append(actions);row.append(cover,details);box.append(row);
  });
 }
 $("radioForm").onsubmit=e=>{e.preventDefault();radioSearch($("radioInput").value)};
-$$("[data-radio]").forEach(b=>b.onclick=()=>{$("radioInput").value=b.dataset.radio;radioSearch(b.dataset.radio)});
+$("[data-radio]").forEach(b=>b.onclick=()=>{$("radioInput").value=b.dataset.radio;radioSearch(b.dataset.radio)});
+$("[data-audio-radio]").forEach(b=>b.addEventListener("click",()=>{
+ showPage("radio");$("radioInput").value=b.dataset.audioRadio;radioSearch(b.dataset.audioRadio,true);
+}));
+$("[data-audio-preset]").forEach(b=>b.addEventListener("click",()=>{
+ showPage("catalog");window.VetogramCatalog?.selectPreset?.(b.dataset.audioPreset);
+}));
 function openDb(){return new Promise((resolve,reject)=>{if(!("indexedDB"in window))return resolve(null);
  const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:"id"})};
  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);req.onblocked=()=>reject(Error("IndexedDB blocked"))})}
