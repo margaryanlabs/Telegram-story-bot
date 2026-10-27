@@ -31,7 +31,21 @@
  ["Avengers: Endgame",2019,"MEGOGO",meg("4512995-mstiteli-final.html"),"unknown"],
  ["Guardians of the Galaxy",2014,"MEGOGO",meg("2861331-strazhi-galaktiki.html"),"unavailable"],
  ["Guardians of the Galaxy Vol. 2",2017,"MEGOGO",meg("2013421-strazhi-galaktiki-chast-2.html"),"unknown"],
- ["Guardians of the Galaxy Vol. 3",2023,"MEGOGO",meg("3945751-strazhi-galaktiki-chast-3.html"),"unknown"]
+ ["Guardians of the Galaxy Vol. 3",2023,"MEGOGO",meg("3945751-strazhi-galaktiki-chast-3.html"),"unknown"],
+ ["Deadpool & Wolverine",2024,"MEGOGO",meg("23915796-dedpul-i-rosomakha.html"),"unknown"],
+ // Other Marvel films: official provider's catalogue names Russian audio.
+ ["X2",2003,"MEGOGO",meg("2114761-lyudi-iks-2.html"),"unknown"],
+ ["X-Men: The Last Stand",2006,"MEGOGO",meg("2114791-lyudi-iks-poslednyaya-bitva.html"),"unknown"],
+ ["X-Men Origins: Wolverine",2009,"MEGOGO",meg("2114021-lyudi-iks-nachalo-rosomakha.html"),"unknown"],
+ ["X-Men: First Class",2011,"MEGOGO",meg("2114781-lyudi-iks-pervyy-klass.html"),"unknown"],
+ ["The Wolverine",2013,"MEGOGO",meg("2115491-rosomakha-bessmertnyy.html"),"unknown"],
+ ["X-Men: Days of Future Past",2014,"MEGOGO",meg("1240891-lyudi-iks-dni-minuvshego-budushchego.html"),"unknown"],
+ ["X-Men: Apocalypse",2016,"MEGOGO",meg("2013291-lyudi-iks-apokalipsis.html"),"unknown"],
+ ["Dark Phoenix",2019,"MEGOGO",meg("2994601-lyudi-iks-temnyy-feniks.html"),"unknown"],
+ ["Deadpool",2016,"MEGOGO",meg("2012581-dedpul.html"),"unavailable"],
+ ["Deadpool 2",2018,"MEGOGO",meg("2410171-dedpul-2.html"),"unknown"],
+ ["Logan",2017,"MEGOGO",meg("2013261-logan.html"),"unknown"],
+ ["Venom: Let There Be Carnage",2021,"MEGOGO",meg("12325825-venom-2.html"),"unknown"]
  ];
  const key=(name,year)=>name+"|"+year;
  const lookup=Object.fromEntries(rows.map(([original,year,provider,url,availability])=>
