@@ -179,7 +179,7 @@
     try{
       let data;
       try {
-        const res=await fetch("/api/cinema/channels?"+new URLSearchParams({
+        const res=await fetch("/api/cinema-channels?"+new URLSearchParams({
           channel:target,page:String(page)
         }),{signal:controller.signal,headers:{Accept:"application/json"}});
         if(!res.ok)throw Error("HTTP "+res.status);
