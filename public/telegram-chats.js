@@ -1280,14 +1280,18 @@
           :'Не удалось проверить Telegram из-за соединения. Нажми ↻ для повтора; повторный вход пока не требуется.');
         return;
       }
-      // Authentication and ownership failures must never leave old chats on screen.
+      // A revoked signed login can be discovered while refreshing the INBOX,
+      // not only while reading a thread. Clear the exact same owner-scoped
+      // messages, drafts, retry nonces, avatars and media in either case.
+      const authRejected=[401,403,409].includes(status);
+      if(authRejected)invalidateThreadAuthorization();
       state.chats=[];state.hasMore=false;state.connectionProof=null;
       state.thread=null;state.messages=[];
       $('telegramThreadView').hidden=true;
       $('telegramChatsView').hidden=false;
       $('telegramMirror')?.classList.remove('thread-mode');
       window.VetoThemeDock?.('inbox');
-      revokeMediaUrls();
+      if(!authRejected)revokeMediaUrls();
       if($('telegramMirrorAccessButton')){
         $('telegramMirrorAccessButton').textContent = 'Подключить ↗';
       }
