@@ -4,7 +4,7 @@
  * We deliberately allowlist upstream hosts, cap payloads, and never accept a remote URL from clients.
  */
 const API = 'https://gutendex.com';
-const MAX_BOOK_BYTES = 4_500_000;
+const MAX_BOOK_BYTES = 3_000_000;
 const MAX_RESULTS = 32;
 const LANGUAGES = new Set(['all', 'en', 'ru', 'fr', 'de', 'es', 'it', 'pt', 'hy']);
 const SOURCE_HOSTS = new Set(['www.gutenberg.org', 'gutenberg.org']);
@@ -79,7 +79,7 @@ function validSource(value) {
     return u.protocol === 'https:' && SOURCE_HOSTS.has(u.hostname) && !u.username && !u.password;
   } catch { return false; }
 }
-async function getSource(url) {
+async function getSource(url, charset = 'utf-8') {
   // Manually follow only trusted Gutenberg redirects (never arbitrary hosts).
   let next = url;
   for (let i = 0; i < 5; i++) {
@@ -114,7 +114,9 @@ async function getSource(url) {
       const bytes = new Uint8Array(total);
       let offset = 0;
       for (const block of blocks) { bytes.set(block, offset); offset += block.length; }
-      let text = new TextDecoder('utf-8', { fatal:false }).decode(bytes);
+      let text;
+      try { text = new TextDecoder(charset, { fatal:false }).decode(bytes); }
+      catch { text = new TextDecoder('utf-8', { fatal:false }).decode(bytes); }
       if (/<html[\s>]/i.test(text.slice(0,1500))) {
         // Gutenberg HTML variant fallback, returned strictly as text (never rendered as HTML).
         text = text.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'')
@@ -146,7 +148,8 @@ async function textForBook(req, res) {
   const htmlKey = Object.keys(formats).find(k => k.startsWith('text/html'));
   const original = formats[textKey] || formats[htmlKey];
   if (!validSource(original)) return send(res, 502, {ok:false,error:'Unsupported original host'});
-  const fullText = await getSource(original);
+  const declaredCharset = /charset=([a-z0-9-]+)/i.exec(textKey || '')?.[1] || 'utf-8';
+  const fullText = await getSource(original, declaredCharset);
   if (fullText.length < 120) return send(res, 502, {ok:false,error:'Full text unavailable'});
   res.setHeader('Cache-Control','public, s-maxage=86400, stale-while-revalidate=604800');
   return send(res, 200, {ok:true,book:meta,text:fullText});
