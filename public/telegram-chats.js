@@ -8,7 +8,8 @@
     thread:null,messages:[],threadLoading:false,threadLoadError:'',
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
-    previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),expandedAttachments:new Map(),expandedBytes:0,
+    previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
+    previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),sendInFlight:false,lastSendFailure:null,
     pendingAttachment:null,replyTo:null,stickers:[],stickerSets:[],stickerPack:null,
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
@@ -1217,7 +1218,15 @@
           'content-type':'application/json','x-telegram-init-data':signed,
         },body:JSON.stringify({action,chatId,messageId}),signal:controller.signal,
       });
-      if(!response.ok)throw new Error('Telegram не отдаёт изображение');
+      if(!response.ok){
+        const error=new Error(response.status===429
+          ?'Telegram временно ограничил загрузку фотографий'
+          :[401,403,409].includes(response.status)
+            ?'Необходимо переподключить Telegram'
+            :'Фотография пока недоступна');
+        error.httpStatus=response.status;
+        throw error;
+      }
       const blob=await response.blob();
       // List pagination increments state.generation and is unrelated to this
       // open chat. Reject only changed owner / changed thread, not a concurrent
@@ -1427,6 +1436,11 @@
     const scroller=$('telegramThreadMessages');
     if(!state.thread||!tg?.initData||!scroller)return;
     const all=[...scroller.querySelectorAll('[data-mirror-preview]')];
+    if(requestedId!==null){
+      const scheduled=state.previewRetryTimers.get(Number(requestedId));
+      if(scheduled!==undefined)clearTimeout(scheduled);
+      state.previewRetryTimers.delete(Number(requestedId));
+    }
     const targets=requestedId!==null
       ?all.filter(el=>String(el.dataset.mirrorPreview)===String(requestedId))
       :all.filter(el=>photoInViewport(el,scroller));
@@ -1476,7 +1490,9 @@
       };
       const request=msg.saved&&msg.mediaAvailable
         ?requestArchived().catch(error=>{
-            const forbidden=[401,403].includes(Number(error?.httpStatus||0));
+            // A 429 is throttling, not an invitation to open another MTProto
+            // connection. Credentials and access errors always fail closed.
+            const forbidden=[401,403,429].includes(Number(error?.httpStatus||0));
             const sameOwner=ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'');
             const sameThread=generation===state.threadGeneration&&
               String(state.thread?.id)===ownerChatId;
@@ -1502,14 +1518,35 @@
           img.alt='Фото из переписки';img.loading='lazy';img.src=href;
           btn.appendChild(img);container.replaceWith(btn);
         }
-      }).catch(()=>{
-        // Do not loop after a network failure. A manual tap explicitly retries.
-        if(generation===state.threadGeneration&&ownerKey===state.ownerInitData){
-          const latest=[...scroller.querySelectorAll('[data-mirror-preview]')]
-            .find(x=>Number(x.dataset.mirrorPreview)===id);
-          const label=latest?.querySelector('small');
-          if(label)label.textContent='Не удалось загрузить · нажми повторно';
-        }
+      }).catch(error=>{
+        if(generation!==state.threadGeneration||ownerKey!==state.ownerInitData||
+           ownerKey!==String(tg?.initData||'')||String(state.thread?.id)!==ownerChatId)return;
+        const latest=[...scroller.querySelectorAll('[data-mirror-preview]')]
+          .find(x=>Number(x.dataset.mirrorPreview)===id);
+        const label=latest?.querySelector('small');
+        const status=Number(error?.httpStatus||0);
+        const retryable=navigator.onLine!==false&&!msg.deleted&&!msg.preservedOnly&&
+          ![400,401,403,404,409,429].includes(status);
+        const attempts=state.previewRetryCounts.get(id)||0;
+        if(retryable&&attempts<1&&latest){
+          state.previewRetryCounts.set(id,attempts+1);
+          if(label)label.textContent='Соединение прервалось · повторю загрузку…';
+          const timer=setTimeout(()=>{
+            state.previewRetryTimers.delete(id);
+            if(previewEpoch!==state.previewEpoch||generation!==state.threadGeneration||
+               ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+               String(state.thread?.id)!==ownerChatId)return;
+            // Skip offscreen retries; a manual tap always remains available.
+            const item=[...scroller.querySelectorAll('[data-mirror-preview]')]
+              .find(x=>Number(x.dataset.mirrorPreview)===id);
+            if(!item||!photoInViewport(item,scroller))return;
+            state.previewSeen.delete(id);
+            loadInlinePreviews({requestedId:id});
+          },4500);
+          state.previewRetryTimers.set(id,timer);
+        }else if(label)label.textContent=status===429
+          ?'Telegram ограничил загрузку · попробуй позже'
+          :'Не удалось загрузить · нажми повторно';
       }).finally(()=>{
         if(previewEpoch!==state.previewEpoch)return;
         state.previewInflight.delete(id);
@@ -1628,6 +1665,8 @@
     state.stickerPreviewUrls.clear();
     state.mediaPreviewUrls.clear();state.mediaMimeByUrl.clear();state.activePhotoId=null;state.previewSeen.clear();state.previewInflight.clear();
     state.previewEpoch++;state.previewActive=0;
+    for(const timer of state.previewRetryTimers.values())clearTimeout(timer);
+    state.previewRetryTimers.clear();state.previewRetryCounts.clear();
     state.expandedAttachments.clear();state.expandedBytes=0;
   }
   function expandedFileButton(id,archive){
@@ -2675,6 +2714,8 @@
     if(retry){
       const id=Number(retry.dataset.mirrorPreview);
       if(Number.isSafeInteger(id)&&id>0&&!state.previewInflight.has(id)){
+        // Explicit owner tap bypasses the automatic retry budget.
+        state.previewRetryCounts.delete(id);
         state.previewSeen.delete(id);loadInlinePreviews({requestedId:id});
       }
       return;
