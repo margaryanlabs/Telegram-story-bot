@@ -2292,14 +2292,20 @@
         ?newItems+' новых · '+two(date.getHours())+':'+two(date.getMinutes())+' · прокрути вниз'
         :'Обновлено '+two(date.getHours())+':'+two(date.getMinutes())+' · без отметки «прочитано»');
     }catch(error){
-      if(String(state.thread?.id)===chatId&&ownerKey===state.ownerInitData&&
-         ownerKey===String(tg?.initData||'')&&[401,403,409].includes(Number(error?.httpStatus||0))){
+      // A → B → A can reuse the same chat ID while the earlier poll is still
+      // pending. Only the exact active request generation may invalidate this
+      // signed user's session or change the visible connection indicator.
+      const isCurrent=runId===state.syncRunId&&
+        generation===state.threadGeneration&&
+        String(state.thread?.id)===chatId&&
+        ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'');
+      if(isCurrent&&[401,403,409].includes(Number(error?.httpStatus||0))){
         invalidateThreadAuthorization();
         state.threadLoadError=String(error.message||'Сессия Telegram недоступна');
         threadNotice(state.threadLoadError);
         syncLabel('Доступ к Telegram не подтверждён · переподключи аккаунт');
         renderMessages();
-      }else if(String(state.thread?.id)===chatId&&ownerKey===state.ownerInitData){
+      }else if(isCurrent){
         state.syncFailures=Math.min(4,state.syncFailures+1);
         syncLabel(error?.name==='AbortError'?'Telegram отвечает медленно — повторю позже'
           :navigator.onLine===false?'Нет сети — обновление приостановлено'
