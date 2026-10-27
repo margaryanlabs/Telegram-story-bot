@@ -54,6 +54,24 @@
         <div class="cinema-source-chip" id="cinemaCount" aria-live="polite">Загружаем каталог…</div>
       </section>
       <section id="cinemaRussian" class="cinema-section cinema-russian-section" aria-label="Кино на русском"><div class="cinema-section-head"><div><span class="cinema-overline">CURATED / RUSSIAN AUDIO</span><h2>Смотреть на русском <span class="cinema-ru-symbol">↗</span></h2><p>Полнометражное кино с русской дорожкой от официальных видеоканалов.</p></div><span class="cinema-rail-label">VETOGRAM SELECT</span></div><div class="cinema-rail cinema-russian-rail" id="cinemaRussianRail"></div></section>
+      <section id="cinemaStudios" class="cinema-section cinema-studios" aria-label="Киноархивы киностудий">
+        <div class="cinema-section-head">
+          <div>
+            <span class="cinema-overline">OFFICIAL STUDIO ARCHIVES / STREAMING</span>
+            <h2>Большое русское кино</h2>
+            <p>Полные фильмы из архивов киностудий. Видео открывается через плеер RUTUBE.</p>
+          </div>
+        </div>
+        <div id="cinemaStudioTabs" class="cinema-studio-tabs" role="group" aria-label="Выбрать киностудию">
+          <button type="button" class="cinema-studio-tab active" data-studio="mosfilm">Мосфильм</button>
+          <button type="button" class="cinema-studio-tab" data-studio="lenfilm">Ленфильм</button>
+          <button type="button" class="cinema-studio-tab" data-studio="gorky">Киностудия Горького</button>
+        </div>
+        <p id="cinemaStudioStatus" class="cinema-studio-status" role="status">Подключаем официальные киноархивы…</p>
+        <div id="cinemaStudioGrid" class="cinema-grid cinema-studio-grid"></div>
+        <button id="cinemaStudioMore" type="button" class="cinema-more hidden">Показать ещё фильмы ↓</button>
+        <a id="cinemaStudioOfficial" class="cinema-studio-link" href="https://rutube.ru/channel/25963146/" target="_blank" rel="noopener noreferrer">Посмотреть официальный канал на RUTUBE ↗</a>
+      </section>
       <section id="cinemaContinue" class="cinema-section hidden"><div class="cinema-section-head"><div><span class="cinema-overline">YOUR STORIES</span><h2>Продолжить просмотр</h2></div></div><div class="cinema-rail" id="cinemaContinueList"></div></section>
       <section class="cinema-section" id="cinemaBrowse">
         <div class="cinema-section-head"><div><span class="cinema-overline" id="cinemaSectionKicker">FILM COLLECTION</span><h2 id="cinemaSectionTitle">Истории, которые остаются</h2><p id="cinemaSectionDescription">Русские полнометражные фильмы и открытая коллекция авторского кино.</p></div></div>
