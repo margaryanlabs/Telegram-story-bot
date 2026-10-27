@@ -24,17 +24,18 @@ state.mood=saved.mood==="aurora"?"aurora":"ember";
 document.documentElement.dataset.ambient=state.mood;
 const unique=list=>{const s=new Set();return list.filter(x=>{if(!x?.id||s.has(x.id))return false;s.add(x.id);return true;})};
 function showPage(page){
- if(!["home","search","charts","catalog","archive","mixter","library","radio","import"].includes(page))return;
+ if(!["home","search","charts","catalog","archive","mixter","library","radio","import","originals","youtube"].includes(page))return;
  if(state.page!==page){
   // Stop provider playback before hiding its page, never run YouTube in background.
   const previous=document.querySelector('[data-view="'+state.page+'"]');
   previous?.querySelectorAll("iframe").forEach(frame=>frame.remove());
   document.dispatchEvent(new CustomEvent("vetogram:page-leave",{detail:{page:state.page}}));
  }
+ if(page==="originals"||page==="youtube")audio.pause();
  state.page=page;
- $$(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
+ $(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
  $$("[data-page]").forEach(el=>{el.classList.toggle("active",el.dataset.page===page);if(el.dataset.page===page)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")});
- $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",archive:"БИБЛИОТЕКА",mixter:"ТРЕКИ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
+ $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",archive:"БИБЛИОТЕКА",mixter:"ТРЕКИ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ",originals:"ОРИГИНАЛЬНЫЕ ХИТЫ",youtube:"YOUTUBE МУЗЫКА"}[page]);
  window.scrollTo({top:0,behavior:"instant"});
  if(page==="library")renderLibrary();
  if(page==="home")renderHome();
@@ -44,6 +45,7 @@ function showPage(page){
  if(page==="catalog")document.dispatchEvent(new CustomEvent("vetogram:catalog-open"));
  if(page==="archive")document.dispatchEvent(new CustomEvent("vetogram:archive-open"));
  if(page==="mixter")document.dispatchEvent(new CustomEvent("vetogram:mixter-open"));
+ if(page==="youtube")document.dispatchEvent(new CustomEvent("vetogram:youtube-open"));
 }
 $$("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
 $("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>{showPage("catalog");window.VetogramCatalog?.selectPreset?.("ru")};
