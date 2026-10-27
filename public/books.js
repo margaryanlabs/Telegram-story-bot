@@ -346,7 +346,8 @@
         if(downloadError)throw downloadError;
       }
       if(!isActive())throw new Error('Сборка отменена');
-      if(texts.some(part=>typeof part!=='string'||part.trim().length<60))
+      if((state.chapters.length>0&&completed!==chapters.length)||
+        Array.from(texts).some(part=>typeof part!=='string'||part.trim().length<60))
         throw new Error('Не все главы загружены. Офлайн-копия не создана.');
       if(token!==offlineEditionToken||$('reader').hidden)throw new Error('Сборка отменена');
       const local=await importer.saveWikisourceEdition(book,chapters,texts);
