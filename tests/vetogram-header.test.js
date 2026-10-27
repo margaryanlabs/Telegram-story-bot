@@ -16,64 +16,35 @@ test('Vetogram keeps the canonical red/silver split-V identity in its real inbox
   assert.doesNotMatch(html, /VETO Telegram|StoryLab|Buy Veta/i);
 });
 
-test('the final stylesheet and accessible controller are wired AFTER existing cosmetics',()=>{
-  assert.match(html, /id="vetogramHeaderToggle"[^>]+aria-controls="vetogramHeaderActions"[^>]+aria-expanded="false"/);
+test('compact CSS/controller are installed after legacy cosmetic scripts',()=>{
   assert.ok(html.indexOf('vetogram-header.css')>html.indexOf('veto-launch-polish.css'));
   assert.ok(html.indexOf('vetogram-header.js')>html.indexOf('veto-launch-polish.js'));
-  assert.match(css, /\.vetogram-header\.is-expanded/);
-  assert.match(css, /position:sticky/);
-  assert.match(css, /@media\(max-width:360px\)/);
-  assert.match(css, /prefers-reduced-motion:reduce/);
+  assert.ok(html.includes('id="vetoMessengerToolsToggle"'));
+  assert.ok(!html.includes('id="vetogramHeaderToggle"'));
+  assert.ok(css.includes('height:54px!important'));
+  assert.ok(css.includes('position:relative!important'));
+  assert.ok(css.includes('--vetogram-top:max('));
+  assert.ok(!js.includes('addEventListener(\'scroll\''));
   assert.doesNotMatch(js,/fetch\(|localStorage|sessionStorage|indexedDB|sendBeacon/);
   assert.doesNotThrow(()=>new Script(js));
 });
 
-test('desktop header expands on load; user tap collapses and expands',()=>{
-  const attrs={};const listeners={};const classes=new Set();const winListeners={};
-  const heading={classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name)}}};
-  const button={
-    setAttribute(name,value){attrs[name]=value},
-    addEventListener(name,handler){listeners[name]=handler},
-    title:''
-  };
-  const body={classList:{contains(name){return name==='veto-chat-active'}}};
-  const doc={
-    querySelector(selector){return selector==='#telegramMirror .vetogram-header'?heading:null},
-    getElementById(id){return id==='vetogramHeaderToggle'?button:null},
-    body
-  };
-  const win={
-    scrollY:0,
-    matchMedia(query){return {matches:false}},
-    requestAnimationFrame(fn){fn();return 1},
-    addEventListener(name,handler){winListeners[name]=handler}
-  };
-  runInNewContext(js,{document:doc,window:win});
-  assert.equal(attrs['aria-expanded'],'true');
-  assert.ok(classes.has('is-expanded'));
-  assert.equal(winListeners.scroll,undefined);
-  win.scrollY=120;
-  assert.equal(attrs['aria-expanded'],'true');
-  listeners.click();
-  assert.equal(attrs['aria-expanded'],'false');
-  listeners.click();
-  assert.equal(attrs['aria-expanded'],'true');
+test('real Mini App receives safe-area flag without opening header accordion',()=>{
+  const seen=[];
+  const title={classList:{remove(name){seen.push(name)}},setAttribute(k,v){seen.push(k+':'+v)}};
+  const body={classList:{add(name){seen.push(name)}}};
+  const document={body,querySelector:()=>title};
+  const window={Telegram:{WebApp:{initData:'verified-data'}}};
+  runInNewContext(js,{document,window});
+  assert.ok(seen.includes('vetogram-in-tg'));
+  assert.ok(seen.includes('is-expanded'));
+  assert.ok(seen.some(x=>x.includes('VETOGRAM — чаты')));
 });
 
-test('phone opens with compact header, and can explicitly expand it',()=>{
-  const attrs={}, listeners={}, classes=new Set();
-  const header={classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name)}}};
-  const toggle={setAttribute(k,v){attrs[k]=v},addEventListener(k,cb){listeners[k]=cb}};
-  const document={
-    querySelector:s=>s==='#telegramMirror .vetogram-header'?header:null,
-    getElementById:id=>id==='vetogramHeaderToggle'?toggle:null,
-    body:{classList:{add(){}}}
-  };
-  const window={matchMedia:q=>({matches:q==='(max-width: 620px)'})};
-  runInNewContext(js,{document,window});
-  assert.equal(attrs['aria-expanded'],'false');
-  assert.equal(classes.has('is-expanded'),false);
-  listeners.click();
-  assert.equal(attrs['aria-expanded'],'true');
-  assert.equal(classes.has('is-expanded'),true);
+test('compact header has no scroll listener or mobile-only expander',()=>{
+  assert.ok(!js.includes('addEventListener(\'scroll\''));
+  assert.ok(!js.includes('toggle.addEventListener'));
+  assert.ok(!html.includes('vetogramHeaderToggle'));
+  assert.ok(css.includes('vetoMessengerToolsToggle'));
+  assert.ok(css.includes('veto-inbox-signature'));
 });

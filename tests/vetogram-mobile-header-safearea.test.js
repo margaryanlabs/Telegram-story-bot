@@ -1,27 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
-const read = path => readFileSync(new URL('../'+path,import.meta.url),'utf8');
-
-test('Telegram Android inbox reserves its own chrome touch-safe area',()=>{
+test('Android Telegram header respects native chrome, measured SDK inset and a safe fallback',()=>{
   const css=read('public/vetogram-header.css');
+  const device=read('public/veto-device-polish.js');
   const script=read('public/vetogram-header.js');
-  assert.match(css,/body\.vetogram-in-tg\.veto-chat-active/);
-  assert.match(css,/--tg-content-safe-area-inset-top/);
-  assert.match(css,/--tg-safe-area-inset-top/);
-  assert.match(css,/padding-top:var\(--vetogram-top\)/);
-  assert.match(script,/Telegram\?\.WebApp\?\.initData/);
-  assert.match(css,/--vetogram-top:max\(var\(--vetogram-sdk-content-top/);
-  assert.doesNotMatch(css,/padding-top:max\(56px/);
+  assert.ok(css.includes('body.vetogram-in-tg'));
+  assert.ok(css.includes('--tg-content-safe-area-inset-top'));
+  assert.ok(css.includes('--tg-safe-area-inset-top'));
+  assert.ok(css.includes('--vetogram-sdk-content-top'));
+  assert.ok(css.includes('--vetogram-sdk-device-top'));
+  assert.ok(css.includes('padding-top:var(--vetogram-top)!important'));
+  assert.ok(css.includes('46px'));
+  assert.ok(script.includes('webApp?.initData'));
+  assert.ok(device.includes('contentSafeAreaChanged'));
+  assert.ok(device.includes('safeAreaChanged'));
+  assert.ok(!css.includes('padding-top:max(56px'));
 });
 
-test('Mobile header starts compact and opens only on user tap',()=>{
+test('mobile header is always compact and gives one-tap access to tools',()=>{
   const html=read('public/studio.html');
+  const css=read('public/vetogram-header.css');
   const js=read('public/vetogram-header.js');
-  assert.match(html,/veto-mirror-heading vetogram-header/);
-  assert.match(html,/id="vetogramHeaderToggle"[^>]*aria-expanded="false"/);
-  assert.match(js,/setExpanded\(!compactOnPhone\);/);
-  assert.doesNotMatch(js,/addEventListener\('scroll'/);
-  assert.match(js,/toggle\.addEventListener\('click'/);
+  assert.ok(html.includes('veto-mirror-heading vetogram-header'));
+  assert.ok(html.includes('veto-telegram-mark.svg'));
+  assert.ok(html.includes('id="vetoMessengerToolsToggle"'));
+  assert.ok(!html.includes('id="vetogramHeaderToggle"'));
+  assert.ok(css.includes('max-height:54px!important'));
+  assert.ok(!js.includes('setExpanded('));
+  assert.ok(!js.includes("addEventListener('scroll'"));
 });

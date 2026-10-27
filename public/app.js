@@ -1027,6 +1027,7 @@
 
   async function refreshViewerSync({ silent = false } = {}) {
     ensureComposerIdentity();
+    const wasConnected=viewerState.session?.connected===true;
     const signedOwner = String(tg?.initData || '');
     if(!signedOwner)return;
     const epoch=viewerOwnerEpoch,intent=++viewerSyncIntent;
@@ -1097,8 +1098,46 @@
       if (!silent && data.config?.configured !== false) showToast(error.message);
     }
     if (!isCurrent())return;
+    // Rebuild the LIVE Telegram inbox after an owner-verified account link.
+    // Prior archive rows may exist, so screen navigation alone does not
+    // re-fetch them. This event is owner-scoped and contains no session data.
+    if(!wasConnected&&viewerState.session?.connected===true && typeof CustomEvent === 'function')
+      window.dispatchEvent(new CustomEvent('vetogram:telegram-session-connected'));
     renderViewers();
     renderHome();
+    renderViewerPendingLoginNotice();
+  }
+
+  // Returning from Telegram's official service chat must not strand the owner
+  // on an unauthorized inbox or cause a second sendCode request.
+  // One offer after a successful personal login; no permission is granted here.
+  let businessOfferOwner = '';
+  function offerBusinessConsentAfterLogin(){
+    const signed=String(tg?.initData||'');
+    const ownerId=String(tg?.initDataUnsafe?.user?.id||'');
+    if(!signed || !ownerId || viewerState.session?.connected!==true ||
+       viewerState.session?.identityMismatch===true || businessOfferOwner===ownerId)return;
+    businessOfferOwner=ownerId;
+    setTimeout(()=>{
+      if(signed!==String(tg?.initData||'') || viewerState.session?.connected!==true ||
+         document.hidden)return;
+      if(typeof window.VetoTelegramOpenUnifiedOnboarding==='function')
+        void window.VetoTelegramOpenUnifiedOnboarding({automatic:true});
+    },220);
+  }
+
+  function renderViewerPendingLoginNotice(){
+    const notice=$('viewerPendingLoginNotice');
+    if(!notice)return;
+    const pending=viewerState.loginPending;
+    const expiry=Date.parse(pending?.expiresAt||'');
+    const active=Boolean(!viewerState.session?.connected &&
+      pending && ['code','password','qr_password'].includes(pending.stage) &&
+      Number.isFinite(expiry) && expiry>Date.now());
+    notice.hidden=!active;
+    if(active)notice.textContent=pending.stage==='code'
+      ?'Telegram запросил код · продолжить вход →'
+      :'Завершить подтверждение Telegram →';
   }
 
   function renderConnection() {
@@ -1946,6 +1985,8 @@
     welcome.hidden = true;
     document.documentElement.classList.remove('veto-welcome-open');
     markVetoWelcomeSeen();
+    // Show the session-confirmed brand only after closing onboarding.
+    if (viewerState.session?.connected===true) window.VetoBrandReveal?.();
     if (openConnection) {
       setTimeout(() => telegramAccountReady() ? profileSheet() : connectionHelpSheet(), 120);
     }
@@ -2396,9 +2437,9 @@
       openSheet(`
         <span class="kicker">Vetogram SECURE ACCOUNT</span>
         <h2>Защищённое подключение временно недоступно</h2>
-        <p>Vetogram не начнёт пользовательскую авторизацию, пока backend и защищённое хранилище не подтверждены.</p>
+        <p>Сейчас не удаётся безопасно завершить подключение. Проверь статус ещё раз — мы не будем запрашивать новый код без твоего действия.</p>
         <div class="sheet-list">
-          <div class="sheet-item"><strong>Realtime watcher</strong><span>Фоновые проверки и последующее подтверждение просмотров уже встроены.</span></div>
+          <div class="sheet-item"><strong>Текущие данные</strong><span>Подключённые функции и сохранённые данные остаются на месте.</span></div>
           <div class="sheet-item"><strong>Приватное подключение</strong><span>Новое подключение создаётся только при подтверждённом защищённом хранении.</span></div>
         </div>
         <div class="sheet-actions">
@@ -2575,6 +2616,7 @@
         </div>
         <div class="auth-help" id="viewerPhoneHint">Выбери страну или введи полный номер с +. Код отправляет Telegram, а не бот Vetogram. Его доставка в приложение или SMS зависит от Telegram.</div>
       </div>
+      <label class="veto-login-legal"><input type="checkbox" id="viewerPhoneLegal" /> <span>Я принимаю <a href="/terms.html" target="_blank" rel="noopener noreferrer">Условия использования</a> и ознакомился с <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">Политикой конфиденциальности</a>. Разрешения Anti-Delete запрашиваются отдельно.</span></label>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-send-code">Получить код</button>
@@ -2641,6 +2683,7 @@
       notify('success');showToast('Telegram успешно подключён');
       await refreshViewerSync({silent:true});await refresh();
       switchScreen('telegram');
+      offerBusinessConsentAfterLogin();
       return;
     }
     if (data.needsPassword===true || data.stage==='password') {
@@ -2648,6 +2691,7 @@
       viewerPasswordSheet();return;
     }
     rememberViewerChallenge(data);
+    renderViewerPendingLoginNotice();
     viewerCodeSheet(data.delivery,data.reused===true);
   }
 
@@ -2873,7 +2917,7 @@
             await refresh();
             await refreshViewerAnalytics({ silent: true });
             switchScreen('telegram');
-            // Business access is a separate, explicit opt-in from Privacy.
+            offerBusinessConsentAfterLogin();
             break;
           }
 
@@ -3086,6 +3130,20 @@
     }
   });
   $('profileButton').addEventListener('click', profileSheet);
+  $('viewerPendingLoginNotice')?.addEventListener('click', async () => {
+    // Reload only signed owner-scoped server state; never request a new code.
+    await refreshViewerSync({silent:true});
+    const pending=viewerState.loginPending;
+    if(pending && Date.parse(pending.expiresAt||'')>Date.now()){
+      if(['password','qr_password'].includes(pending.stage))viewerPasswordSheet();
+      else if(pending.stage==='code')viewerCodeSheet(pending.delivery||'unknown',true);
+      else connectionHelpSheet();
+    }else connectionHelpSheet();
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden && viewerState.loginPending && tg?.initData)
+      void refreshViewerSync({silent:true});
+  });
   $('connectTelegramButton')?.addEventListener('click', async () => {
     // A returning user may have closed Telegram's WebView to copy a login code.
     // Load the server-side pending challenge before showing the onboarding menu.
@@ -3554,6 +3612,8 @@
         if (!/^\+[\d\s()-]{7,24}$/.test(phone)) {
           throw new Error('Введи номер с кодом страны, например +374…');
         }
+        if($('viewerPhoneLegal') && !$('viewerPhoneLegal').checked)
+          throw new Error('Прочитай и прими условия использования для продолжения.');
         const data = await viewerApi('send_code', { phone }, null);
         viewerPendingPhone = phone;
         // The server persisted this challenge. Keep local state in sync so
@@ -3596,7 +3656,7 @@
           await refresh();
           await refreshViewerAnalytics({ silent: true });
           switchScreen('telegram');
-          // No unsolicited Business permission wizard after login.
+          offerBusinessConsentAfterLogin();
         }
       });
       return;
@@ -3616,7 +3676,7 @@
         await refresh();
         await refreshViewerAnalytics({ silent: true });
         switchScreen('telegram');
-        // Optional Business access starts only from Privacy after explicit consent.
+        offerBusinessConsentAfterLogin();
       });
       return;
     }

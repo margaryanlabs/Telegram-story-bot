@@ -9,7 +9,8 @@ function read(path) {
 test('first-run onboarding explains product, functions and two-step activation', () => {
   const html = read('public/studio.html');
 
-  assert.match(html, /<h1 class="v5-welcome-title">VETOGRAM/);
+  assert.match(html, /<h1 class="v5-welcome-title"><span class="v5-welcome-veto">VETO<\/span>/);
+  assert.match(html, /class="veto-brand-reveal-wordmark" aria-label="VETOGRAM"/);
   assert.match(html, /id="vetoWelcomeExplore"/);
   assert.match(html, /id="vetoWelcomeNext"/);
   assert.match(html, /Семь функций/);
