@@ -58,3 +58,23 @@ test('accessibility, focus and reduced motion are preserved',()=>{
   assert.match(html,/data-read-font="modern"/);
   assert.match(html,/data-read-leading="airy"/);
 });
+
+test('VETOGRAM Noir identity and real hero entry controls are wired',()=>{
+  for(const id of ['heroReadNow','heroMyBooks','readerVolumeStatus','readerTocButton',
+    'readerChapterCount','libraryClarity']){
+    assert.ok(html.includes('id="'+id+'"'),id);
+  }
+  assert.match(html,/veto-book-world/);
+  assert.match(css,/VETOGRAM NOIR \/ BOOKS 04/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(js,/heroReadNow'\)\.addEventListener/);
+  assert.match(js,/heroMyBooks'\)\.addEventListener/);
+  assert.match(js,/readerTocButton'\)\.addEventListener/);
+});
+test('reader never advertises an unverified Wikisource page as a complete volume',()=>{
+  assert.match(js,/function setVolumeStatus\(book,coverage\)/);
+  assert.match(js,/полнота не подтверждена/);
+  assert.match(js,/каталог ограничен/);
+  assert.match(js,/КАРТОЧКА · НЕТ ТЕКСТА/);
+  assert.match(js,/ПОЛНЫЙ ТЕКСТ ИСТОЧНИКА/);
+});
