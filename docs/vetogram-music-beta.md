@@ -84,3 +84,16 @@ An affordable/free beta is realistic for personal files and open-license content
 - `tests/vetogram-music-direct.test.js` covers source validation, duplicate and HLS handling, Unicode, UI hook and source syntax. Manual pure-parser checks confirmed two Cyrillic tracks parsed correctly, duplicates removed and unsupported links rejected. Full repository test suite and Android/iOS Telegram playback still outstanding.
 - Public music-only Vercel site: https://vetogram-music-live.vercel.app/ . Vercel confirmed READY and external fetch verified the HTML and direct-import JS/CSS. An HTTPS page and JS presence are not a guarantee any particular external music provider plays successfully.
 - Bot module remains code-only with no Telegram bot token or webhook deployed. No protected VK/Yandex scraping or commercial audio redistribution is included.
+
+
+## V4 music charts and Russian/Armenian discovery (2026-10-27)
+
+- Added dedicated Charts navigation route with mobile and desktop entries plus Home discovery promotion. The existing five pages remain music-only.
+- `public/vetogram-music-charts.js` and CSS implement real Audius `/v1/tracks/trending` rankings with week/month/year/all-time and optional Electronic/Hip-Hop/Pop genre filters. The chart order is the provider's, never invented. Attribution says **Audius Trending**, not VK, Yandex or an official national ranking.
+- Russian and Armenian music discovery use **user-initiated Audius track searches**. Initial Russian queries: `Russian music`, `русская музыка`; Armenian: `Armenian music`, `Հայկական`. User can search any particular singer/title. Searches return candidate recordings from Audius, which may not include a mainstream artist's original master; no false original-song claims.
+- RU/AM live stations use Radio Browser's `/json/stations/bycountrycodeexact/ru|am` endpoint, sorted by provider votes and filtered to `lastcheckok` plus browser-compatible HTTPS non-HLS streams. Station ranking by votes is not a song chart. Each station plays through the existing user-initiated player; actual broadcast accessibility may vary.
+- Cards show returned track artwork, source, artist, optional genre, actual rank for Audius Trending, playback via existing Vetogram Music queue and Telegram sharing. There are no fabricated track records; blank, empty and provider failures get clear messages.
+- The module has per-source cancellation, independent provider failures, 5-minute memory caching and manual refresh. It does not download mass catalogs, bypass DRM or use account secrets.
+- `tests/vetogram-music-charts.test.js` covers rank source, API endpoints, RU/AM code filtering, locked Audius tracks, Cyrillic/Armenian metadata and navigation. Eight converter/routing syntax checks ran in the GitHub-tool JS isolate; **full project suite and live network stream tests have not run**.
+- Sources: https://docs.audius.co/api/ , https://docs.audius.co/sdk/tracks/ , https://docs.radio-browser.info/ . Their published API contracts permit these queries, but the response at any given time and in-Telegram stream behavior require live device verification.
+- Keep free beta on provider-permitted music, users' authorized files, and broadcaster streams, respecting content usage permissions. Not a VK/Yandex pirated catalog or a claim to offer every Russian/Armenian track.
