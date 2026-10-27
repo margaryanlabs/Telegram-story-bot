@@ -72,7 +72,7 @@ async function wikiGet(wiki,params) {
   } finally {clearTimeout(timeout);}
 }
 function sourceUrl(wiki,title) {
-  return 'https://'+WIKIS[wiki]+'/wiki/'+encodeURIComponent(String(title).replace(/ /g,'_'));
+  return 'https://'+WIKIS[wiki]+'/wiki/'+String(title).replace(/ /g,'_').split('/').map(encodeURIComponent).join('/');
 }
 function decodeEntities(html) {
   return String(html).replace(/&#(x[0-9a-f]+|\d+);/gi,(_,raw)=>{
