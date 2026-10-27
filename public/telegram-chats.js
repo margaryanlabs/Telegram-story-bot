@@ -136,10 +136,10 @@
     const available=writable && !state.sendInFlight;
     const access=$('telegramThreadConnectNotice');
     if(access){
-      const disconnected=Boolean(state.thread&&!state.connectionProof?.verified);
+      const disconnected=Boolean(state.thread&&(state.thread.archiveOnly||!state.connectionProof?.verified));
       access.hidden=!disconnected;
       access.querySelector('span').textContent=state.thread?.archiveOnly
-        ?'Сохранённая копия: для новых сообщений подключи свой Telegram.'
+        ?'Это сохранённая копия. Нажми ↻, чтобы проверить доступ к живой переписке.'
         :'Личный Telegram не подтверждён. Подключение требуется для отправки.';
     }
     for(const id of ['telegramThreadAttachButton','telegramThreadAudioButton','telegramThreadStickersButton']){
