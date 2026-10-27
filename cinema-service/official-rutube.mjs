@@ -57,13 +57,25 @@ export function parseVideo(video,channelKey){
 export function parsePage(data,channelKey,page){
   if(!CHANNELS[channelKey])throw Error("Неизвестный официальный канал");
   if(!data||!Array.isArray(data.results))throw Error("Неверный ответ RUTUBE");
-  const movies=data.results.map(v=>parseVideo(v,channelKey)).filter(Boolean);
+  const reasons={missingId:0,wrongPublisher:0,unknownPublisher:0,shortOrLong:0,blocked:0,notFilm:0};
+  const movies=[];
+  for(const v of data.results){
+    const parsed=parseVideo(v,channelKey);
+    if(parsed){movies.push(parsed);continue}
+    if(!VIDEO_ID.test(String(v?.id||"")))reasons.missingId++;
+    else if(!v?.author?.id)reasons.unknownPublisher++;
+    else if(String(v.author.id)!==String(CHANNELS[channelKey].id))reasons.wrongPublisher++;
+    else if(!Number.isFinite(Number(v.duration))||Number(v.duration)<35*60||Number(v.duration)>6*60*60)reasons.shortOrLong++;
+    else if(v.is_paid===true||v.is_private===true||v.is_livestream===true||v.is_live===true||
+        v.is_embeddable===false||v.embed_allowed===false)reasons.blocked++;
+    else reasons.notFilm++;
+  }
   // RUTUBE reports next as a relative URL or has_next boolean. We never follow
   // arbitrary URLs from its JSON; only increment validated numeric page.
   const hasNext=Boolean(data.has_next||data.next);
   const nextPage=hasNext&&page<120?page+1:null;
   return {channel:channelKey,movies,nextPage,received:data.results.length,
-    skipped:data.results.length-movies.length};
+    skipped:data.results.length-movies.length,diagnostics:reasons};
 }
 const cache=new Map();
 const CACHE_MS=10*60*1000;
@@ -74,10 +86,10 @@ export async function fetchChannelPage(channelKey,page=1,{fetchFn=fetch,now=Date
   const cached=cache.get(key);
   if(cached&&cached.exp>time)return cached.value;
   const id=CHANNELS[channelKey].id;
-  const url="https://rutube.ru/api/video/person/"+id+"/?page="+page+"&format=json";
+  const url="https://rutube.ru/api/video/person/"+id+"/?page="+page+"&format=json&origin__type=rtb,rst,ifrm,rspa";
   const response=await fetchFn(url,{
     signal:AbortSignal.timeout(8500),
-    headers:{"Accept":"application/json","User-Agent":"VetogramCinemaMetadata/1.0"}
+    headers:{"Accept":"application/json"}
   });
   if(!response.ok)throw Error("RUTUBE metadata: HTTP "+response.status);
   const parsed=parsePage(await response.json(),channelKey,page);
