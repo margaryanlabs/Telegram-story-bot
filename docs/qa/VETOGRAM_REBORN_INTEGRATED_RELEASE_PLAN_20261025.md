@@ -498,3 +498,22 @@ This stage repairs additional errors in the **existing** Mini App, without a dep
 - **Cache identity:** all 44 linked Mini App assets in `studio.html` now share `20261027-v51-message-recovery`. All changes remain in draft PR #185. No merge, production publish, credential use, Telegram messages, or database writes in this stage.
 
 Still pending: actual Node `npm ci && npm run vercel-build`, real signed two-account Telegram phone E2E, representative large photos, send-ack loss and reconnect tests, and successful Actions runner allocation. Standalone controller harnesses are not a replacement for full CI or a real deployment acceptance.
+
+
+### 2026-10-27 V5.1 Rich Send Integrity — continuation
+
+All changes are on the existing draft PR #185 in `margaryanlabs/Telegram-story-bot`; no production deployment, Telegram send, API-key mutation, or DB write.
+
+**Fixed source-level races**
+- Rich-media send acknowledgement does not delete new text typed during the Telegram/network round trip. It preserves a reply target chosen after sending and any new unsent attachment. Sending a sticker leaves the existing text composer draft intact.
+- A RAM-only `draftVersions` map tracks actual user text edits. On a late media ACK after navigating A→B, only the **unchanged submitted caption** for A is cleared; a newer or even identical retyped draft remains intact. Owner switch clears this map.
+- An uncertain rich-media/sticker acknowledgement is stored in RAM under `lastRichFailures[chatId]` with the original nonce and full intent. A user-initiated retry of the **exact same intent** reuses the nonce even when the failed request finished after changing chats. A changed sticker or recipient gets a fresh nonce. No automatic retry is issued.
+- On reopening a chat with an uncertain text send, the original `replyTo` message ID is restored only if the signed owner's dialog and the unchanged text draft still match. A visible warning reminds the owner to check the native Telegram chat before manually retrying; fresh drafts or other dialogs cannot inherit that reply context.
+- All 44 versioned CSS/JS references in `public/studio.html` now use `20261027-v51-send-integrity` to avoid mixed WebView resources on a future build.
+
+**Independent evidence**
+- Added `tests/vetogram-rich-send-draft-51.test.js` (8 cases) and `tests/vetogram-rich-send-idempotency-51.test.js` (4 cases) to `qa:reborn:offline`. Expanded `tests/vetogram-cross-chat-send-51.test.js` by two additional reply-recovery checks.
+- Parsed the shipping `public/telegram-chats.js` and these three test files in a standalone V8 syntax check (after import normalization). Actual-controller V8 cases confirmed draft preservation, per-chat sticker nonce reuse after lost ACK, and reply context restoration (same text → reply 42; changed draft or different chat → no reply).
+- These are **not** a passing full `npm ci`, Node test suite, real Telegram send, or Telegram WebView E2E. No evidence of actual message delivery/read receipts should be inferred from a local simulation.
+
+**Release blockers:** GitHub Actions runners have repeatedly failed before any step executes (`runner_id=0`, `steps=[]`). Diagnose Actions runner access/billing or validate a trusted checkout through another execution environment. Finish signed Telegram two-account tests, large media and chat-switch tests, full build and mobile visual verification before merge or deployment. Keep PR Draft until then.
