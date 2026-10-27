@@ -81,6 +81,7 @@
   }
   function setSourceInfo(){
     document.body.dataset.booksSource=state.source;
+    renderFeaturedEditions();
     const isGutenberg=state.source==='gutenberg';
     const isComplete=state.source==='complete';
     const isTranslated=state.source==='translated';
@@ -249,6 +250,27 @@
     const bottom=node('span','jacket-footer');
     bottom.append(node('span','','VETOGRAM READING'),node('span','jacket-star','✳'));
     host.append(art,top,title,author,bottom);
+  }
+  function renderFeaturedEditions(){
+    const section=$('featuredEditions'),host=$('featuredEditionGrid');
+    if(!section||!host)return;
+    section.hidden=state.source!=='complete';
+    if(section.hidden)return;
+    host.replaceChildren();
+    const choice=[completeEditionBooks[0],completeEditionBooks[1],completeEditionBooks[6]].filter(Boolean);
+    choice.forEach((book,index)=>{
+      const item=node('button','featured-edition');
+      item.type='button';item.setAttribute('aria-label','Читать '+book.title);
+      const frame=node('div','featured-edition-cover');
+      coverArtwork(frame,book);
+      const detail=node('div','featured-edition-info');
+      detail.append(node('span','featured-overline',String(index+1).padStart(2,'0')+' / ИЗБРАННОЕ'),
+        node('strong','',book.title),node('span','featured-author',fullName(book)),
+        node('span','featured-open','ОТКРЫТЬ КНИГУ ↗'));
+      item.append(frame,detail);
+      item.addEventListener('click',()=>openBook(book));
+      host.append(item);
+    });
   }
   function updateSavedCount(){ $('savedCount').textContent=Object.keys(saved).length; }
   function compactTitle(title){return String(title||'Без названия').slice(0,160);}
