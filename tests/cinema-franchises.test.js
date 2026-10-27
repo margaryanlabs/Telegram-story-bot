@@ -12,9 +12,12 @@ function franchises(){
 }
 test("MCU, Potter and Marvel legacy are complete curated discovery rails",()=>{
  const f=franchises(),counts=Object.fromEntries(["mcu","potter","legacy"].map(kind=>[kind,f.filter(x=>x.franchise===kind).length]));
- assert.deepEqual(counts,{mcu:37,potter:11,legacy:23});
- assert.equal(new Set(f.map(x=>x.id)).size,71);
+ assert.deepEqual(counts,{mcu:38,potter:11,legacy:39});
+ assert.equal(new Set(f.map(x=>x.id)).size,88);
  assert.equal(f.filter(x=>/Гарри Поттер и/.test(x.title)).length,8);
+ assert.ok(f.some(x=>x.original==='Spider-Man: Brand New Day'&&x.year===2026));
+ assert.ok(f.some(x=>x.original==='Blade II'));
+ assert.ok(f.some(x=>x.original==='Kraven the Hunter'));
  assert.ok(f.some(x=>x.original==="Avengers: Endgame"));
  assert.ok(f.some(x=>x.original==="The Fantastic Four: First Steps"));
  assert.ok(f.some(x=>x.original==="Spider-Man: Across the Spider-Verse"));
