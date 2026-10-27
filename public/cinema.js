@@ -151,6 +151,7 @@
         const selected=$("cinemaProviderSelect");
         const oldUrl=state.activePlayerSource?.url;
         const all=approvedSources(f);
+        $("cinemaSourceSwitch").classList.toggle("hidden",all.length<=1);
         selected.replaceChildren(...all.map((src,i)=>new Option(sourceLabel(src),String(i))));
         selected.value=String(Math.max(0,all.findIndex(x=>x.url===oldUrl)));
       }
@@ -208,7 +209,7 @@
     $("cinemaStudioMore").classList.toggle("hidden",studio.nextPage===null);
     $("cinemaStudioMore").disabled=studio.loading;
     text("cinemaStudioStatus",list.length
-      ?list.length+" публикаций в коллекции · оригинальные плееры RUTUBE"
+      ?list.length+" фильмов и серий · просмотр внутри Cinema"
       :studio.loading?"Загружаем каталог…":"Архив временно недоступен. Откройте официальный канал по ссылке ниже.");
   }
   async function loadStudio(reset=false){
@@ -644,13 +645,13 @@
     const current=choices.find(x=>chosenSource&&x.url===chosenSource.url)||chosenSource||choices[0];
     state.activePlayerSource=current||null;
     const providerSelect=$("cinemaProviderSelect");
-    $("cinemaSourceSwitch").classList.toggle("hidden",!f.player);
+    $("cinemaSourceSwitch").classList.toggle("hidden",!f.player||choices.length<=1);
     providerSelect.replaceChildren(...choices.map((src,i)=>new Option(sourceLabel(src),String(i))));
     providerSelect.value=String(Math.max(0,choices.findIndex(src=>src.id===current?.id)));
     providerSelect.onchange=()=>{const next=approvedSources(f)[Number(providerSelect.value)];if(next)play(f,next)};
     text("cinemaProviderHint",choices.length>1?choices.length+" проверенных вариантов":"Видеопоток предоставляется источником");
     $("cinemaPlayer").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
-    text("cinemaPlayerTitle",f.title);text("cinemaPlayerCredit",f.creator+" · "+f.license);
+    text("cinemaPlayerTitle",f.title);text("cinemaPlayerCredit",f.creator+" · условия источника доступны по ссылке");
     $("cinemaPlayerSource").href=filmPage(f);
     $("cinemaOpenSource").href=filmPage(f);
     text("cinemaSubtitleStatus",current?(current.type==="iframe"?"Язык, качество и субтитры переключаются в меню самого видеоплеера.":"Аудиодорожки доступны, если их предоставляет источник."):"Проверяем русские субтитры…");
