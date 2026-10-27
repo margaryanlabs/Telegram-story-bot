@@ -254,11 +254,11 @@
         const handle=await window.VetogramCinemaProvider.attach({
           video,container:$("cinemaVideoWrap"),source:f.player,
           allowedIframeOrigins:["https://rutube.ru"],
+          onReady:()=>{if(token===state.request)setPlayerMessage("")},
           onError:(reason)=>{if(token===state.request)setPlayerMessage(reason)}
         });
         if(token!==state.request){handle.cleanup();return}
         state.embedHandle=handle;
-        setPlayerMessage("");
       }catch(error){
         if(token===state.request)setPlayerMessage("Плеер недоступен: "+(error?.message||"ошибка")+". Откройте оригинал по ссылке ниже.");
       }
@@ -303,9 +303,9 @@
   video.addEventListener("timeupdate",()=>saveProgress(false));
   video.addEventListener("pause",()=>saveProgress(true));
   video.addEventListener("ended",()=>{saveProgress(true);toast("Фильм досмотрен. Выбирай следующую историю.")});
-  video.addEventListener("error",()=>{if(state.playing&&video.currentSrc)setPlayerMessage("Не удалось воспроизвести этот формат. Попробуйте другое качество или откройте оригинал по ссылке.")});
+  video.addEventListener("error",()=>{if(state.playing&&!state.playing.player&&video.currentSrc)setPlayerMessage("Не удалось воспроизвести этот формат. Попробуйте другое качество или откройте оригинал по ссылке.")});
   video.addEventListener("playing",()=>setPlayerMessage(""));
-  video.addEventListener("waiting",()=>{if(!video.paused)setPlayerMessage("Буферизация…")});
+  video.addEventListener("waiting",()=>{if(!state.playing?.player&&!video.paused)setPlayerMessage("Буферизация…")});
   $("cinemaRewind").addEventListener("click",()=>{video.currentTime=Math.max(0,video.currentTime-10)});
   $("cinemaForward").addEventListener("click",()=>{video.currentTime=Math.min(video.duration||Infinity,video.currentTime+10)});
   $("cinemaSpeed").addEventListener("change",e=>{video.playbackRate=Number(e.target.value)||1});
