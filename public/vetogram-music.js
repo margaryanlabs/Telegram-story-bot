@@ -25,8 +25,14 @@ document.documentElement.dataset.ambient=state.mood;
 const unique=list=>{const s=new Set();return list.filter(x=>{if(!x?.id||s.has(x.id))return false;s.add(x.id);return true;})};
 function showPage(page){
  if(!["home","search","charts","catalog","originals","youtube","archive","mixter","hits","library","radio","import"].includes(page))return;
+ if(state.page!==page){
+  // Stop provider playback before hiding its page, never run YouTube in background.
+  const previous=document.querySelector('[data-view="'+state.page+'"]');
+  previous?.querySelectorAll("iframe").forEach(frame=>frame.remove());
+  document.dispatchEvent(new CustomEvent("vetogram:page-leave",{detail:{page:state.page}}));
+ }
  state.page=page;
- $$(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
+ $(".page").forEach(el=>el.classList.toggle("active",el.dataset.view===page));
  $$("[data-page]").forEach(el=>{el.classList.toggle("active",el.dataset.page===page);if(el.dataset.page===page)el.setAttribute("aria-current","page");else el.removeAttribute("aria-current")});
  $("crumbName").textContent=({home:"MUSIC",search:"ПОИСК",charts:"ЧАРТЫ",catalog:"КАТАЛОГ",originals:"ОРИГИНАЛЫ",youtube:"YOUTUBE МУЗЫКА",archive:"БИБЛИОТЕКА",mixter:"CC РЕМИКСЫ",hits:"МИРОВЫЕ ХИТЫ",library:"МОЯ МУЗЫКА",radio:"РАДИО",import:"ДОБАВИТЬ"}[page]);
  window.scrollTo({top:0,behavior:"instant"});
