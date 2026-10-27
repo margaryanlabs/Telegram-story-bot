@@ -16,6 +16,14 @@ const TRANSLATION_CATEGORIES = Object.freeze({
   it:'Переводы с итальянского языка',
   es:'Переводы с испанского языка'
 });
+const READING_GENRES = Object.freeze({
+  novels:'Романы',
+  stories:'Рассказы',
+  novellas:'Повести',
+  fantasy:'Фантастика',
+  poems:'Стихотворения',
+  folktales:'Русские народные сказки'
+});
 const TRANSLATION_PAGE_SIZE = 24;
 const TRANSLATION_SEARCH_SIZE = 24;
 
@@ -161,6 +169,51 @@ export async function translationsCatalog(req,res) {
     nextCursor,books
   });
 }
+/**
+ * Search and browse verified Russian Wikisource literary categories. Category
+ * membership does not imply the page is a complete book, public domain in every
+ * territory, or free of separate translator rights.
+ */
+export async function genresCatalog(req,res){
+  const genre=limited(req.query.genre,24)||'novels';
+  if(!Object.prototype.hasOwnProperty.call(READING_GENRES,genre))
+    return send(res,400,{ok:false,error:'Unknown literature genre'});
+  const q=limited(req.query.q,100);
+  const page=boundedInt(req.query.page??'1',1,300);
+  if(!page)return send(res,400,{ok:false,error:'Invalid page'});
+  const category=READING_GENRES[genre];
+  const title='Категория:'+category;
+  const size=24;
+  let rows=[],count=null,cursor=null;
+  if(q){
+    const result=await wikiGet('ru',{
+      action:'query',list:'search',srsearch:'incategory:"'+category+'" '+q,
+      srnamespace:'0',srlimit:size,sroffset:(page-1)*size,
+      srwhat:'text',srinfo:'totalhits'
+    });
+    rows=Array.isArray(result.query?.search)?result.query.search:[];
+    count=Math.max(0,Number(result.query?.searchinfo?.totalhits)||0);
+  }else{
+    const next=limited(req.query.cursor,260);
+    const params={action:'query',list:'categorymembers',
+      cmtitle:title,cmnamespace:'0',cmtype:'page',cmlimit:size};
+    if(next)params.cmcontinue=next;
+    const result=await wikiGet('ru',params);
+    rows=Array.isArray(result.query?.categorymembers)?result.query.categorymembers:[];
+    cursor=typeof result.continue?.cmcontinue==='string'?
+      result.continue.cmcontinue.slice(0,260):null;
+  }
+  const books=rows.filter(x=>x.ns===0 && Number.isSafeInteger(x.pageid)&&x.pageid>0)
+    .map(row=>({
+      ...bookFromEntry(row,'ru'),genre,
+      source:'Викитека · '+category,sourceCategory:sourceUrl('ru',title),
+      rightsNotice:'Произведения и переводы имеют индивидуальные условия использования. Полный текст может находиться на дочерних страницах.'
+    }));
+  return send(res,200,{ok:true,source:'wikisource',collection:'genres',
+    wiki:'ru',genre,categoryUrl:sourceUrl('ru',title),
+    page,count,nextPage:q&&rows.length===size&&(page*size<count)?page+1:null,
+    nextCursor:cursor,books});
+}
 export async function catalog(req,res,wiki) {
   const q=limited(req.query.q,100) || PREFILL[wiki];
   const page=boundedInt(req.query.page??'1',1,300);
@@ -244,11 +297,12 @@ export async function fullText(req,res,wiki) {
 }
 export default async function handler(req,res){
   if(req.method!=='GET')return send(res,405,{ok:false,error:'Method not allowed'});
-  const wiki=req.query.collection==='translations'?'ru':limited(req.query.wiki,3);
+  const wiki=['translations','genres'].includes(req.query.collection)?'ru':limited(req.query.wiki,3);
   if(!Object.prototype.hasOwnProperty.call(WIKIS,wiki))
     return send(res,400,{ok:false,error:'Unsupported wiki'});
   try {
     if(req.query.collection==='translations')return await translationsCatalog(req,res);
+    if(req.query.collection==='genres')return await genresCatalog(req,res);
     if(req.query.mode==='text')return await fullText(req,res,wiki);
     return await catalog(req,res,wiki);
   }catch(error){
