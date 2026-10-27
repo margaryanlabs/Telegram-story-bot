@@ -211,3 +211,12 @@ body.cinema-light{
 .cinema-franchise-rail .cinema-card-art-title{font-size:clamp(17px,1.7vw,24px);line-height:1.14;max-height:3.5em;-webkit-line-clamp:3}
 .cinema-franchise-rail .cinema-card-art-badge{background:#13151bc4;color:#f0d2aa;border:1px solid rgba(230,201,156,.34)}
 @media(max-width:650px){.cinema-universe-switch{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;margin-top:18px}.cinema-universe-tab{white-space:nowrap;flex:0 0 auto;padding:10px 13px}.cinema-franchise-rail .cinema-card-art-title{font-size:17px}}
+
+
+/* Other approved original channels — directory, not disguised rehosting. */
+.cinema-alternative-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px}
+.cinema-alternative-links a{min-height:95px;padding:18px;border:1px solid var(--line);background:var(--panel);border-radius:15px;color:var(--text);text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;gap:10px;transition:border-color .2s,transform .2s}
+.cinema-alternative-links a:hover{border-color:var(--accent);transform:translateY(-2px)}
+.cinema-alternative-links strong{font-size:14px;line-height:1.4}
+.cinema-alternative-links small{font-size:11px;color:var(--muted)}
+@media(max-width:650px){.cinema-alternative-links{grid-template-columns:1fr;gap:9px}.cinema-alternative-links a{min-height:80px;padding:15px}}
