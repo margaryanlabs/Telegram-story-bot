@@ -52,7 +52,7 @@ Deploy public folder over HTTPS, then use a dedicated Cinema bot/entry via @BotF
 
 ## V2 feature-branch development (27 October 2026; not deployed)
 
-Cinema now includes **15 items: 12 Blender/open films plus 3 full Russian-language Mosfilm channel videos**. These three are referenced through RUTUBE's documented iframe embedding interface, with RUTUBE as the streaming provider and rights holder's channel credited:
+Cinema now includes **18 items: 12 Blender/open films plus 6 Russian-language Mosfilm channel films/episodes**. These three are referenced through RUTUBE's documented iframe embedding interface, with RUTUBE as the streaming provider and rights holder's channel credited:
 
 | Entry | Official video |
 |---|---|
@@ -69,3 +69,8 @@ Official embed format: \`https://rutube.ru/play/embed/VIDEO_ID\` — documented 
 - Public RUTUBE embedding is not a Creative Commons film license and commercial distribution rights may need separate approval.
 - Unit/static DOM tests and a mocked iframe interaction check passed. Actual end-to-end network playback in Telegram on Android and iOS is **not verified**.
 - Four-product repo status is documented in \`docs/VETOGRAM-FOUR-APPS.md\`.
+
+
+## Latest backend implementation — GitHub branch only
+
+\`cinema-service/\` now contains PostgreSQL DDL, rights-reviewed JSON import CLI, read-only Node API, schema validation tests, and a local runbook. The client fetches paginated \`/api/cinema/movies\` if that service is reachable, and otherwise retains the built-in offline seed. No PostgreSQL instance was provisioned, no live backend was deployed and no provider credentials were supplied. Official RUTUBE \`postMessage\` events now allow viewer-local resume. See \`cinema-service/README.md\`.
