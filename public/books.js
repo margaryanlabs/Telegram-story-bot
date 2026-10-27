@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {source:'translated',original:'en',spotlight:'now',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false,flow:false,flowIndex:0,flowParagraphs:[]};
+  const state = {source:'translated',original:'en',spotlight:'now',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false,flow:false,flowIndex:0,flowParagraphs:[],audioToken:0,audioActive:false};
   const STORAGE = 'vetogram-books-v1';
   const readJSON = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(STORAGE + ':' + key)); return v ?? fallback; }
@@ -12,7 +12,7 @@
   const saved = readJSON('saved', {});
   const progress = readJSON('progress', {});
   const quotes = readJSON('quotes', []);
-  const prefs = Object.assign({font:19,theme:'dark',fontFace:'literary',leading:'comfortable',width:'normal'},readJSON('prefs',{}));
+  const prefs = Object.assign({font:19,theme:'dark',fontFace:'literary',leading:'comfortable',width:'normal',speed:1},readJSON('prefs',{}));
   const rememberedSource=readJSON('source','translated');
   if(['translated','ru','hy','gutenberg','spotlight'].includes(rememberedSource))state.source=rememberedSource;
   const rememberedSpotlight=readJSON('spotlight','now');
@@ -377,6 +377,7 @@
   }
   function applyPrefs(reflow=false){
     prefs.font=Math.max(14,Math.min(30,Number(prefs.font)||19));
+    prefs.speed=Math.max(.7,Math.min(1.4,Number(prefs.speed)||1));
     if(!['dark','light','sepia'].includes(prefs.theme))prefs.theme='dark';
     if(!['literary','modern'].includes(prefs.fontFace))prefs.fontFace='literary';
     if(!['compact','comfortable','airy'].includes(prefs.leading))prefs.leading='comfortable';
@@ -396,12 +397,74 @@
         el.setAttribute('aria-pressed',String(active));
       }
     }
+    for(const el of document.querySelectorAll('[data-read-speed]')){
+      const active=Number(el.dataset.readSpeed)===prefs.speed;
+      el.classList.toggle('active',active);
+      el.setAttribute('aria-pressed',String(active));
+    }
     persist('prefs',prefs);
     if(reflow)reflowReader();
+  }
+  // Read-aloud uses the device's Web Speech implementation, when available.
+  // It never sends full text to a VETOGRAM speech server. Device voice
+  // implementations may still involve a manufacturer/network voice service.
+  function stopNarration(){
+    ++state.audioToken;state.audioActive=false;
+    $('readerAudioButton').setAttribute('aria-pressed','false');
+    $('readerAudioButton').textContent='♫';
+    $('readerAudioButton').title='Читать вслух';
+    try{window.speechSynthesis?.cancel();}catch{}
+  }
+  function speakSegment(token){
+    if(token!==state.audioToken||!state.current||!state.pages.length||!state.audioActive)return;
+    const engine=window.speechSynthesis;
+    if(!engine || typeof window.SpeechSynthesisUtterance!=='function') {
+      stopNarration();toast('На этом устройстве нет поддержки чтения вслух');return;
+    }
+    const text=state.flow
+      ?state.flowParagraphs[state.flowIndex]?.textContent||''
+      :state.pages[state.currentPage]||'';
+    if(!text.trim()){stopNarration();return;}
+    try{
+      const phrase=new window.SpeechSynthesisUtterance(text.slice(0,2800));
+      const lang=state.current.language==='hy'?'hy-AM':state.current.language==='ru'?'ru-RU':'en-US';
+      phrase.lang=lang;
+      phrase.rate=Math.max(.7,Math.min(1.4,Number(prefs.speed)||1));
+      const voices=engine.getVoices?.()||[];
+      const preferred=voices.find(v=>v.lang?.toLowerCase()===lang.toLowerCase() && v.localService)
+        ||voices.find(v=>v.lang?.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));
+      if(preferred)phrase.voice=preferred;
+      phrase.onerror=()=>{if(token===state.audioToken){stopNarration();toast('Озвучивание недоступно для этого текста');}};
+      phrase.onend=()=>{
+        if(token!==state.audioToken||!state.audioActive)return;
+        if(state.flow){
+          if(state.flowIndex+1<state.flowParagraphs.length){setFlowIndex(state.flowIndex+1);speakSegment(token);}
+          else if(state.currentPage+1<state.pages.length){showPage(state.currentPage+1);speakSegment(token);}
+          else stopNarration();
+        }else if(state.currentPage+1<state.pages.length){
+          showPage(state.currentPage+1);speakSegment(token);
+        }else stopNarration();
+      };
+      engine.speak(phrase);
+    }catch{stopNarration();toast('Чтение вслух недоступно');}
+  }
+  function toggleNarration(){
+    if(state.audioActive){stopNarration();return;}
+    if(!state.current||!state.pages.length)return;
+    if(!window.speechSynthesis||typeof window.SpeechSynthesisUtterance!=='function'){
+      toast('Голосовое чтение не поддерживается этим браузером');return;
+    }
+    stopNarration();
+    state.audioActive=true;
+    $('readerAudioButton').setAttribute('aria-pressed','true');
+    $('readerAudioButton').textContent='Ⅱ';
+    $('readerAudioButton').title='Остановить чтение вслух';
+    speakSegment(state.audioToken);
   }
   // VETO FLOW: highlight only the paragraph being read. No AI network call,
   // no external tracking, and no untrusted HTML inserted into the page.
   function setFlow(enabled){
+    stopNarration();
     state.flow=Boolean(enabled);
     $('reader').dataset.flow=String(state.flow);
     $('readerFlowButton').setAttribute('aria-pressed',String(state.flow));
@@ -452,6 +515,7 @@
   }
   function stepFlow(dir){
     if(!state.flow)return;
+    if(state.audioActive)stopNarration();
     const index=state.flowIndex+dir;
     if(index>=0&&index<state.flowParagraphs.length){setFlowIndex(index);return;}
     const nextPage=state.currentPage+dir;
@@ -553,6 +617,7 @@
     }
   }
   async function openBook(book){
+    stopNarration();
     if(book?.provider==='googlebooks'){showDiscoverBook(book);return;}
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
     ++state.requestBook;
@@ -573,6 +638,7 @@
     await loadChapter(book,chapter,true);
   }
   function closeReader(){
+    stopNarration();
     ++state.requestBook;
     $('reader').hidden=true;state.current=null;state.pages=[];state.chapters=[];
     try{window.Telegram?.WebApp?.BackButton?.hide();}catch{}
@@ -583,6 +649,7 @@
   }
   function flip(dir){
     if(!state.pages.length || !state.current)return;
+    if(state.audioActive)stopNarration();
     const target=state.currentPage+dir;
     if(target>=0 && target<state.pages.length){
       showPage(target);
@@ -754,6 +821,11 @@
       });
     }
   }
+  $('readerAudioButton').addEventListener('click',toggleNarration);
+  for(const button of document.querySelectorAll('[data-read-speed]'))button.addEventListener('click',()=>{
+    prefs.speed=Number(button.dataset.readSpeed)||1;applyPrefs();
+    if(state.audioActive){stopNarration();toggleNarration();}
+  });
   $('readerFlowButton').addEventListener('click',()=>setFlow(!state.flow));
   $('flowPrevious').addEventListener('click',()=>stepFlow(-1));
   $('flowNext').addEventListener('click',()=>stepFlow(1));
