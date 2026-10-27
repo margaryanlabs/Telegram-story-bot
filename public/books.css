@@ -30,3 +30,5 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background:ra
 .reader-settings #readerChapters select{width:min(68%,320px);min-height:38px;border:1px solid var(--reader-line);border-radius:9px;background:var(--reader-bg);color:var(--reader-color);padding:7px;font-size:12px}
 .reader-settings select option{background:var(--reader-bg);color:var(--reader-color)}
 @media(max-width:640px){.source-tabs{grid-template-columns:1fr 1fr;gap:7px;margin-top:18px}.source-tabs button{min-height:49px;padding:8px 10px;font-size:11px;border-radius:12px}.source-tabs button:nth-child(3){grid-column:1/-1}.source-tabs button b{width:29px;height:29px}.source-description{font-size:10px;margin-bottom:4px}}
+
+.filters[hidden],.topics[hidden]{display:none!important}
