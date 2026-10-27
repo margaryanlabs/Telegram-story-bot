@@ -90,7 +90,13 @@
       }
       return data;
     }catch(err){
-      if(err?.name==='AbortError')throw new Error('Telegram отвечает слишком долго. Попробуй ещё раз.');
+      if(err?.name==='AbortError'){
+        // Explicit navigation/owner cancellation is not a Telegram timeout.
+        // Keep its AbortError identity so stale callbacks do not announce an
+        // outage or schedule unnecessary retries for a hidden conversation.
+        if(externalSignal?.aborted)throw err;
+        throw new Error('Telegram отвечает слишком долго. Попробуй ещё раз.');
+      }
       throw err;
     }finally{
       clearTimeout(timer);
@@ -2218,6 +2224,14 @@
   // Both history refresh and live polling can discover a revoked Telegram
   // login. Fail closed immediately, never keep a stale owner's private UI.
   function invalidateThreadAuthorization(){
+    // Make any pending history/archival/poll callbacks permanently stale
+    // before removing private owner data. They must never repaint a revoked
+    // session as a mere transport outage after this function returns.
+    state.threadGeneration++;
+    state.syncRunId++;
+    state.threadLoading=false;
+    state.syncBusy=false;
+    stopThreadSync();
     cancelThreadRequest();
     state.threadAuthRejected=true;
         // A genuine signed-session/ownership failure must not keep private
@@ -2488,9 +2502,10 @@
       renderMessages({anchor});
       rememberHotThread();
     }catch(error){
-      // Live messages are valid even when Privacy storage is slow or offline.
-      // Don't mislabel lack of stored evidence as restored deletions.
-      if(ownerKey===state.ownerInitData&&
+      // Navigation cancellations are expected: never label them a Privacy
+      // storage outage, even if the peer was reopened with the same chat ID.
+      // Live messages are valid when real Privacy storage is slow or offline.
+      if(error?.name!=='AbortError'&&ownerKey===state.ownerInitData&&
          generation===state.threadGeneration&&String(state.thread?.id)===chatId){
         threadNotice('Защищённый архив пока недоступен. Сообщения Telegram остаются доступными; сохранённые копии появятся после восстановления архива.');
         syncLabel('Telegram подключён · архив ожидает повторной проверки');
