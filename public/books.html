@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0a0b0d">
+  <meta name="theme-color" content="#08090c">
   <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
   <title>VETOGRAM Books — Читать</title>
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/books.css?v=9">
+  <link rel="stylesheet" href="/books.css?v=10">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="/books-import.js?v=1" defer></script>
-  <script src="/books.js?v=9" defer></script>
+  <script src="/books.js?v=10" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -28,19 +28,40 @@
       </div>
       <button type="button" id="continueAction" class="continue-action">Продолжить <span>↗</span></button>
     </section>
-    <section class="hero">
-      <p class="eyebrow"><span class="hero-dot"></span> VETOGRAM / READING UNIVERSE</p>
-      <h1>Мир историй.<br><i>Внутри Telegram.</i></h1>
-      <p>Открой книгу, погрузись в чтение и возвращайся к последней странице — без отдельного приложения.</p>
-      <div class="hero-bottom"><span><strong id="catalogCount">—</strong> <span id="catalogCountLabel">переводных произведений</span></span><span>Без подписки · Открытая классика</span></div>
-      <div class="hero-sculpture" aria-hidden="true">
-        <div class="sculpture-halo"></div><div class="sculpture-book book-back"></div>
-        <div class="sculpture-book book-front"><i>V</i><span>THE ART<br>OF READING</span><b>✦</b></div>
-        <div class="sculpture-reflection"></div>
+    <section class="hero hero-veto" aria-label="VETOGRAM Books — коллекция историй">
+      <div class="veto-hero-noise" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="eyebrow"><span class="hero-dot"></span> VETOGRAM <span class="hero-slash">/</span> BOOKS 04
+        <span class="hero-live-dot">LIVE LIBRARY</span></p>
+        <div class="hero-title-frame">
+          <span class="hero-number" aria-hidden="true">01 / ∞</span>
+          <h1>ЧИТАЙ.<br><span class="hero-outline">ЧУВСТВУЙ.</span><br><i>ИСЧЕЗАЙ В ИСТОРИИ.</i></h1>
+        </div>
+        <p class="hero-lead">Книги становятся пространством. Твой ритм, твои главы, твои мысли. Одна вселенная чтения — внутри VETOGRAM.</p>
+        <div class="hero-actions">
+          <button id="heroReadNow" class="hero-action-main" type="button">НАЧАТЬ ЧИТАТЬ <span aria-hidden="true">↗</span></button>
+          <button id="heroMyBooks" class="hero-action-secondary" type="button">МОЯ БИБЛИОТЕКА <span aria-hidden="true">＋</span></button>
+        </div>
+        <div class="hero-bottom"><span><strong id="catalogCount">—</strong> <span id="catalogCountLabel">произведений</span></span><span>VETO FLOW <b>✳</b> / VETO COMPASS</span></div>
       </div>
-      <div class="hero-orbit" aria-hidden="true"><span>V</span><b>✶</b></div>
+      <div class="veto-book-world" aria-hidden="true">
+        <div class="world-orbit orbit-a"></div><div class="world-orbit orbit-b"></div>
+        <div class="world-floor"></div>
+        <div class="world-book world-book-left"><div class="world-book-face"><small>V / ARCHIVE</small><strong>THE<br>UNKNOWN</strong><em>VOL. / 001</em></div></div>
+        <div class="world-book world-book-right"><div class="world-book-face"><small>V / STORIES</small><strong>NO<br>LIMITS.</strong><em>VOL. / 003</em></div></div>
+        <div class="world-book world-book-main"><div class="world-book-face">
+          <div class="world-book-logo">V<span>╱</span></div>
+          <span>VETOGRAM</span><strong>BOOKS<span class="world-title-point">.</span></strong>
+          <small>EVERY STORY HAS A WORLD</small>
+        </div></div>
+        <div class="world-light-stroke"></div>
+        <span class="world-coordinate world-coordinate-a">45° / VETO</span>
+        <span class="world-coordinate world-coordinate-b">BEYOND WORDS — 2026</span>
+      </div>
+      <div class="hero-side-index" aria-hidden="true"><span>THE / READING EXPERIENCE</span><b>↗</b></div>
     </section>
 
+    <div class="veto-library-kicker" aria-hidden="true"><span>CURATED / OPEN / PRIVATE</span><div></div><span>YOUR NEXT CHAPTER</span></div>
     <div class="source-tabs" role="group" aria-label="Библиотека и язык">
       <button type="button" data-books-source="translated" class="active" aria-pressed="true"><b>🌍</b> Зарубежные · на русском</button>
       <button type="button" data-books-source="ru" aria-pressed="false"><b>РУ</b> Русская библиотека</button>
@@ -122,6 +143,10 @@
       <button type="button" data-topic="history">История</button>
       <button type="button" data-topic="children">Детям</button>
     </div>
+    <div class="library-clarity" id="libraryClarity" role="note">
+      <span class="clarity-icon">i</span>
+      <span><strong>Проверяй объём.</strong> «Книга», «том», «глава» и «карточка без текста» — разные типы. Мы явно показываем доступный материал и не выдаём ознакомительные части за полные издания.</span>
+    </div>
     <section id="catalogGrid" class="book-grid" aria-live="polite"></section>
     <div class="catalog-footer"><p id="catalogStatus" role="status"></p><button id="loadMore" type="button" hidden>Показать ещё ↓</button></div>
     <footer class="book-attribution">
@@ -141,6 +166,7 @@
       <button id="readerSettingsButton" class="reader-settings-button" type="button" aria-label="Настройки чтения" aria-expanded="false">Aa</button>
     </header>
     <div class="reader-progress-track"><div id="progressFill"></div></div>
+    <button id="readerTocButton" class="reader-toc-shortcut" type="button" hidden aria-label="Открыть содержание и выбрать том">СОДЕРЖАНИЕ <span id="readerChapterCount">—</span> <span aria-hidden="true">↗</span></button>
     <div class="reader-trace"><span id="readerProgressLabel">Начало истории</span><span id="readerProgressPercent">0%</span></div>
     <div id="readerSettings" class="reader-settings" hidden>
       <div><span>Размер текста</span><button id="smallerFont" type="button" aria-label="Уменьшить шрифт">A−</button><span id="fontValue">19</span><button id="largerFont" type="button" aria-label="Увеличить шрифт">A+</button></div>
@@ -161,7 +187,7 @@
     </div>
     <div class="reader-scroll" id="readerScroll">
       <div class="reader-paper" id="readerPaper">
-        <div class="reader-book-meta"><div class="reader-line"></div><span id="readerAuthor">АВТОР</span><h2 id="chapterTitle">Глава</h2><p id="pageNumber">Страница 1</p></div>
+        <div class="reader-book-meta"><div class="reader-line"></div><span id="readerAuthor">АВТОР</span><h2 id="chapterTitle">Глава</h2><p id="pageNumber">Страница 1</p><div class="reader-volume-status" id="readerVolumeStatus" role="status">Проверяем объём текста…</div></div>
         <article class="reader-copy" id="readerCopy"></article>
         <div class="reader-page-ornament" aria-hidden="true">✦ &nbsp; VETOGRAM BOOKS &nbsp; ✦</div>
         <div class="end-mark">✦</div>
