@@ -54,3 +54,15 @@
 .ru-empty{color:#baaabd;font-size:12px;text-align:center;padding:28px 15px;line-height:1.65}
 @media(max-width:650px){.ru-home-spotlight{margin:16px 0 23px;padding:18px 13px;border-radius:17px}.ru-chart-hero{padding:22px 17px}.ru-song,.ru-home .ru-song{grid-template-columns:23px 42px minmax(0,1fr) auto;gap:7px;padding:7px}.ru-cover,.ru-home .ru-cover{width:42px;height:42px}.ru-song-info strong{font-size:12px}.ru-song-info span{font-size:10px}.ru-song-info small{font-size:8px}.ru-rank{font-size:11px}.ru-song-actions{flex-direction:column;gap:4px}.ru-song-play{width:33px;height:33px;min-width:33px}.ru-song-link{font-size:9px}.ru-featured-heading h3{font-size:15px}.ru-official-player{padding:10px}.ru-chart-controls{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.ru-song{transition:none}}
+
+/* Official Russian artists: visible YouTube video player only, never ripped audio. */
+.ru-video-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:14px 0 22px}
+.ru-video{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:13px;overflow:hidden;min-width:0}
+.ru-video-image{aspect-ratio:16/9;background:linear-gradient(120deg,#482b4b,#21182e);overflow:hidden}
+.ru-video-image img{display:block;width:100%;height:100%;object-fit:cover}
+.ru-video-detail{padding:13px;display:grid;gap:5px}
+.ru-video-detail strong{color:#fff;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ru-video-detail span{font-size:11px;color:#c0b4cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ru-video-play{margin-top:6px;background:#eec6f6;color:#271529;border:0;border-radius:9px;padding:9px;font-size:11px;font-weight:850;cursor:pointer}
+.ru-video-source{color:#eac6eb;font-size:10px;text-decoration:underline;text-underline-offset:2px;padding-top:4px}
+@media(max-width:650px){.ru-video-list{grid-template-columns:1fr}.ru-video{display:grid;grid-template-columns:120px minmax(0,1fr)}.ru-video-image{aspect-ratio:auto;height:100%;min-height:100px}.ru-video-detail{padding:11px}}
