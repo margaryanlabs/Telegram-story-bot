@@ -4,8 +4,8 @@
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-originals.css">
-<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-originals.js"></script></head>
+<link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-originals.css"><link rel="stylesheet" href="./vetogram-music-archive.css">
+<script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-originals.js"></script><script defer src="./vetogram-music-archive.js"></script></head>
 <body>
 <div class="app" id="app">
 <aside class="sidebar" aria-label="Навигация">
@@ -20,6 +20,7 @@
   <button class="nav-item" data-page="charts" type="button"><span>▤</span> Чарты</button>
   <button class="nav-item" data-page="catalog" type="button"><span>♫</span> Каталог музыки</button>
   <button class="nav-item" data-page="originals" type="button"><span>◈</span> Оригиналы</button>
+  <button class="nav-item" data-page="archive" type="button"><span>♬</span> Открытая библиотека</button>
   <button class="nav-item" data-page="library" type="button"><span>♡</span> Моя музыка</button>
   <button class="nav-item" data-page="radio" type="button"><span>◉</span> Радио</button>
   <button class="nav-item" data-page="import" type="button"><span>⇧</span> Добавить музыку</button>
@@ -136,6 +137,23 @@
   <div class="originals-player-footer"><small>Видео остаётся на YouTube. Никаких загрузок на наш сервер.</small><a id="originalsOpen" target="_blank" rel="noopener noreferrer">Открыть источник ↗</a></div>
  </div>
  <p class="originals-notice">*Полные оригиналы доступны через видимое видео по правилам YouTube; отдельный аудиопоток и фоновое воспроизведение здесь не предоставляются. Некоторые видео недоступны для встраивания или в отдельных регионах. Если плеер заблокирован, открой источник на YouTube. Это небольшая проверенная подборка, не полная библиотека всех хитов. Поиск других песен открывает YouTube и не добавляет их автоматически в каталог VETOGRAM.</p>
+</section>
+<section class="page" data-view="archive" aria-label="Большая библиотека открытой музыки">
+ <div class="archive-hero">
+  <span class="overline">VETOGRAM MUSIC / OPEN LICENSED ARCHIVES</span>
+  <h1>Музыка без <em>границ.</em></h1>
+  <p>Живой каталог независимой музыки с Creative Commons. Здесь находятся настоящие MP3-записи, а не только названия. Файлы воспроизводятся напрямую из Internet Archive; на сервер VETOGRAM ничего не копируется.</p>
+  <div class="archive-summary"><span>♫ LIVE ARCHIVE</span><span>CC0 &amp; CC BY</span><span>РАЗРЕШЁННЫЕ АУДИОЗАПИСИ</span></div>
+ </div>
+ <div class="archive-license-bar" role="group" aria-label="Типы разрешённых лицензий">
+  <button type="button" data-archive-license="cc0" class="active" aria-pressed="true">CC0 · Свободная</button>
+  <button type="button" data-archive-license="by3" aria-pressed="false">CC BY 3.0</button>
+  <button type="button" data-archive-license="by4" aria-pressed="false">CC BY 4.0</button>
+ </div>
+ <p id="archiveStatus" class="archive-status" role="status">Открой библиотеку, чтобы загрузить музыкальные файлы.</p>
+ <div id="archiveList" class="archive-list"></div>
+ <div class="archive-more-wrap"><button id="archiveMore" class="archive-more" type="button" hidden>＋ Загрузить ещё записи</button></div>
+ <p class="archive-notice">Проверяются лицензии CC0 и CC BY на уровне релиза; правильность лицензирования отдельных записей и составных произведений должна подтверждаться правообладателями. При CC BY указывай автора и лицензию. Это не каталог популярных платных хитов. Часть старых файлов может не воспроизводиться в Telegram WebView.</p>
 </section>
 <section class="page" data-view="search">
   <div class="page-title"><span class="overline">DISCOVER / AUDIO ONLY</span><h1>Найди свой <em>звук.</em></h1><p>Поиск открытой музыки Audius и твоих личных треков. Популярные хиты других сервисов требуют разрешённого источника.</p></div>
