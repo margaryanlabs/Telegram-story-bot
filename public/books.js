@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {source:'complete',original:'en',spotlight:'now',readingGenre:'novels',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false,flow:false,flowIndex:0,flowParagraphs:[],audioToken:0,audioActive:false};
+  const state = {source:'complete',original:'en',spotlight:'now',readingGenre:'novels',hotGenre:'all',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark',rawText:'',pageOffsets:[],focus:false,flow:false,flowIndex:0,flowParagraphs:[],audioToken:0,audioActive:false};
   const STORAGE = 'vetogram-books-v1';
   const readJSON = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(STORAGE + ':' + key)); return v ?? fallback; }
@@ -15,7 +15,9 @@
   const readingNotes = readJSON('readingNotes', []);
   const prefs = Object.assign({font:19,theme:'dark',fontFace:'literary',leading:'comfortable',width:'normal',speed:1},readJSON('prefs',{}));
   const rememberedSource=readJSON('source','complete');
-  if(['complete','translated','ru','hy','gutenberg','spotlight','genres','local'].includes(rememberedSource))state.source=rememberedSource;
+  if(['complete','translated','ru','hy','gutenberg','spotlight','genres','local','hot200'].includes(rememberedSource))state.source=rememberedSource;
+  const rememberedHot=readJSON('hotGenre','all');
+  if(['all','romantasy','fantasy','scifi','dystopia','thriller','horror','contemporary','romance','mystery','nonfiction'].includes(rememberedHot))state.hotGenre=rememberedHot;
   const rememberedSpotlight=readJSON('spotlight','now');
   if(['now','new','fantasy','detective','romance','nonfiction','business','youth','classics'].includes(rememberedSpotlight))state.spotlight=rememberedSpotlight;
   const rememberedGenre=readJSON('readingGenre','novels');
@@ -24,6 +26,7 @@
   if(['en','fr','de','it','es'].includes(rememberedOriginal))state.original=rememberedOriginal;
   let abort=null;
   let googleViewerPromise=null;
+  let hotCatalogPromise=null;
   let offlineEditionToken=0;
   let offlineSavedBook=null;
   const pendingChapterPrefetch=new Map();
@@ -60,8 +63,8 @@
   }
   function isWiki(book){return book?.provider==='wikisource' && ['ru','hy'].includes(book.wiki);}
   function isLocal(book){return book?.provider==='local' && Number.isSafeInteger(Number(book.id));}
-  function isCatalogBook(book){return ['googlebooks','openlibrary'].includes(book?.provider);}
-  function bookKey(book){return isLocal(book)?'local-'+book.id:book?.provider==='googlebooks'?'gb-'+String(book.id):book?.provider==='openlibrary'?'ol-'+String(book.id):isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
+  function isCatalogBook(book){return ['googlebooks','openlibrary','editorial'].includes(book?.provider);}
+  function bookKey(book){return isLocal(book)?'local-'+book.id:book?.provider==='googlebooks'?'gb-'+String(book.id):book?.provider==='openlibrary'?'ol-'+String(book.id):book?.provider==='editorial'?'ed-'+String(book.id):isWiki(book)?'ws-'+book.wiki+'-'+book.id:String(book?.id||'');}
   // Curated, real whole-page editions from Russian Wikisource, independently
   // sampled on 27 October 2026. Exact edition licenses remain source-specific.
   const verifiedWholeEditions=[[1007153,"Красное и чёрное","Стендаль",969917],[1012811,"Золотой вулкан","Жюль Верн",614475],[1002630,"Кавалер Красного замка","Александр Дюма",684771],[1002606,"Дама с камелиями","Александр Дюма-сын",316340],[1043860,"Авантюристы","Гюстав Эмар",506690],[1006903,"Жизнь","Ги де Мопассан",410352],[17623,"Белые ночи","Фёдор Достоевский",104437],[1028921,"Алтарь победы","Валерий Брюсов",860994],[1002632,"Тысяча и один призрак","Александр Дюма",265199],[1002620,"Графиня Салисбюри","Александр Дюма",472980],[1002619,"Капитан Поль","Александр Дюма",234915],[1016200,"Авиатор Тихого океана","Эмиль Дриан",526205],[1004780,"Из Парижа в Бразилию","Луи Буссенар",549463],[1004212,"Украденное ожерелье","Фортюне дю Буагобей",435780],[1007015,"Полудевы","Марсель Прево",381579],[1009370,"Агония","Ломбар",639318],[1026179,"Алчущие","Александр Шеллер-Михайлов",711791],[1002637,"Путешествие Дюма по Северной Африке","Александр Дюма",187069]];
@@ -87,6 +90,8 @@
     const isComplete=state.source==='complete';
     const isTranslated=state.source==='translated';
     const isSpotlight=state.source==='spotlight';
+    const isHot=state.source==='hot200';
+    $('hotFilters').hidden=!isHot;
     const isPrivate=state.source==='local';
     const isGenres=state.source==='genres';
     $('readingGenres').hidden=!isGenres;
@@ -97,6 +102,7 @@
     $('languageFilter').hidden=!isGutenberg;
     document.querySelector('.topics').hidden=!isGutenberg;
     const choices={
+      hot200:['200 популярных зарубежных книг с русскоязычными изданиями · редакционный выбор','200 ХИТОВ · НА РУССКОМ','https://books.google.com/'],
       complete:['18 проверенных объёмных изданий · цельный текст доступен в читалке','КНИГИ ЦЕЛИКОМ','https://ru.wikisource.org/wiki/Special:Copyright'],
       genres:['Романы, рассказы, повести, фантастика, стихи и сказки на русском','Читать сейчас','https://ru.wikisource.org/wiki/Special:Copyright'],
       local:['Моя личная библиотека · EPUB, FB2 и TXT без загрузки на сервер','Личные книги',''],
@@ -108,7 +114,8 @@
     };
     const item=choices[state.source]||choices.ru;
     $('sourceDescription').textContent=item[0];
-    $('sourceLegal').textContent=isComplete?'Объёмные тексты Русской Викитеки, проверенные по первоисточнику. Права на переводы могут различаться по странам.'
+    $('sourceLegal').textContent=isHot?'200 зарубежных произведений в редакционной подборке. Это не рейтинг продаж и не 200 бесплатных полных текстов: современные переводы защищены авторским правом.'
+      :isComplete?'Объёмные тексты Русской Викитеки, проверенные по первоисточнику. Права на переводы могут различаться по странам.'
       :isPrivate?'Личные книги находятся только в памяти этого устройства. Добавляйте файлы, которыми имеете право пользоваться.'
       :isGutenberg?'Источник: Project Gutenberg. Статус произведения зависит от законодательства вашей страны и перевода.'
       :isSpotlight?'Новые книги: справочные каталоги Google Books и Open Library. Официальные страницы, без обещания бесплатных полных текстов.'
@@ -116,7 +123,7 @@
       :'Источник: Викитека. Права зависят от произведения, перевода и страны; проверьте условия на странице оригинала.';
     $('sourceLegalLink').hidden=isPrivate;
     if(!isPrivate)$('sourceLegalLink').href=item[2];
-    $('catalogCountLabel').textContent=isComplete?'цельных изданий в подборке':isGenres?'произведений в выборке':isPrivate?'личных книг на этом устройстве':isSpotlight?'русскоязычных изданий в результате':isGutenberg?'книг в каталоге':isTranslated?'переводных произведений':'результатов в подборке';
+    $('catalogCountLabel').textContent=isHot?'книг с русскоязычными изданиями':isComplete?'цельных изданий в подборке':isGenres?'произведений в выборке':isPrivate?'личных книг на этом устройстве':isSpotlight?'русскоязычных изданий в результате':isGutenberg?'книг в каталоге':isTranslated?'переводных произведений':'результатов в подборке';
     $('bookSearch').placeholder=state.source==='hy'?'Գրքի անուն կամ հեղինակ…'
       :isSpotlight?'Найти современную книгу на русском…':isTranslated?'Название зарубежной книги или автор…':'Название книги или автор…';
     for(const button of document.querySelectorAll('[data-original-lang]')){
@@ -131,6 +138,11 @@
     }
     for(const button of document.querySelectorAll('[data-reading-genre]')){
       const selected=state.readingGenre===button.dataset.readingGenre;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    }
+    for(const button of document.querySelectorAll('[data-hot-genre]')){
+      const selected=state.hotGenre===button.dataset.hotGenre;
       button.classList.toggle('active',selected);
       button.setAttribute('aria-pressed',String(selected));
     }
@@ -149,7 +161,7 @@
         }[state.original]||[])
       :['Shakespeare','Austen','Dickens','Wells','Twain'];
     const authorHolder=$('authorDiscovery');
-    authorHolder.hidden=isPrivate;
+    authorHolder.hidden=isPrivate||isHot;
     authorHolder.replaceChildren(node('span','',state.source==='hy'?'Հեղինակներ':isSpotlight?'Искать книги:':'Авторы:'));
     for(const name of authors){
       const b=node('button','',name);b.type='button';b.addEventListener('click',()=>{
@@ -303,10 +315,11 @@
     for(const b of document.querySelectorAll('.topics [data-topic]')){
       b.classList.toggle('active',b.dataset.topic===state.topic);
     }
-    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='complete'?'Книги, которые читаются целиком':state.source==='local'?'Мои книги на устройстве':state.source==='genres'?'Книги для чтения':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
+    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='complete'?'Книги, которые читаются целиком':state.source==='hot200'?'200 КНИГ · ТВОЙ ВЫБОР':state.source==='local'?'Мои книги на устройстве':state.source==='genres'?'Книги для чтения':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
     $('shelfEyebrow').textContent=state.query ? 'SEARCH / RESULTS' : 'DISCOVER / 01';
   }
   function bookExtent(book){
+    if(book?.provider==='editorial')return {kind:'metadata',label:'ХИТ · РУССКОЕ ИЗДАНИЕ'};
     if(isCatalogBook(book))return {kind:'metadata',label:'КАТАЛОГ · ОПИСАНИЕ'};
     if(isLocal(book))return {kind:'local',label:'ЛИЧНЫЙ ФАЙЛ · '+(book.format||'ТЕКСТ').toUpperCase()};
     if(book?.curatedWholeText)return {kind:'full',label:'ЦЕЛЬНЫЙ ТЕКСТ · '+Math.round(book.verifiedChars/1000)+' ТЫС. ЗНАКОВ'};
@@ -492,6 +505,7 @@
     meta.append(node('span','',(book.language||'').toUpperCase()),
       node('span','',isCatalogBook(book)?(book.previewUrl?'Превью ↗':'О книге ↗'):progress[bookKey(book)]?'Продолжить ↗':'Читать ↗'));
     if(book.provider==='openlibrary')main.append(node('span','translation-tag','КАТАЛОГ · RU'));
+    if(book.provider==='editorial')main.append(node('span','translation-tag',book.genreLabel+' · RU'));
     if(book.isTranslation) {
       const label=node('span','translation-tag','РУССКИЙ ПЕРЕВОД');
       main.append(label);
@@ -548,6 +562,31 @@
       grid.append(article);
     }
   }
+  async function loadHotEditorial(){
+    if(!hotCatalogPromise){
+      hotCatalogPromise=fetch('/books-top200.json',{cache:'force-cache'})
+        .then(async response=>{
+          if(!response.ok)throw new Error('Подборка временно недоступна');
+          const data=await response.json();
+          if(data.count!==200||!Array.isArray(data.books)||data.books.length!==200)
+            throw new Error('Подборка книг повреждена');
+          return data.books.filter(book=>book.provider==='editorial' && book.title && book.authors?.length)
+            .map(book=>({
+              ...book,cover:'',
+              sourceUrl:'https://books.google.com/books?q='+encodeURIComponent(book.title+' '+book.authors[0]+' русский перевод')
+            }));
+        }).catch(error=>{hotCatalogPromise=null;throw error;});
+    }
+    const all=await hotCatalogPromise;
+    const term=state.query.toLocaleLowerCase('ru').replace(/ё/g,'е').trim();
+    const matches=all.filter(book=>
+      (state.hotGenre==='all'||book.genre===state.hotGenre) &&
+      (!term||(book.title+' '+book.authors.join(' ')+' '+book.genreLabel)
+        .toLocaleLowerCase('ru').replace(/ё/g,'е').includes(term)));
+    const start=(state.page-1)*24;
+    return {ok:true,books:matches.slice(start,start+24),count:matches.length,
+      nextPage:start+24<matches.length?state.page+1:null,nextCursor:null};
+  }
   async function loadCatalog(reset=true) {
     if(state.loading && !reset)return;
     if(abort)abort.abort();
@@ -573,7 +612,9 @@
     if(state.topic && state.source==='gutenberg')params.set('topic',state.topic);
     try {
       let data;
-      if(state.source==='complete'){
+      if(state.source==='hot200'){
+        data=await loadHotEditorial();
+      }else if(state.source==='complete'){
         const books=filterCompleteEditionBooks(state.query);
         data={ok:true,books,count:books.length,nextPage:null,nextCursor:null};
       }else if(state.source==='local'){
@@ -1439,6 +1480,13 @@
     if(state.readingGenre===button.dataset.readingGenre)return;
     state.readingGenre=button.dataset.readingGenre;
     persist('readingGenre',state.readingGenre);
+    state.query='';$('bookSearch').value='';
+    setSourceInfo();loadCatalog(true);
+  });
+  for(const button of document.querySelectorAll('[data-hot-genre]'))button.addEventListener('click',()=>{
+    if(state.hotGenre===button.dataset.hotGenre)return;
+    state.hotGenre=button.dataset.hotGenre;
+    persist('hotGenre',state.hotGenre);
     state.query='';$('bookSearch').value='';
     setSourceInfo();loadCatalog(true);
   });
