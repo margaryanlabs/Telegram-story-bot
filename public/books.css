@@ -357,3 +357,11 @@ body{background:radial-gradient(ellipse 95% 45% at 48% -5%,#29222a 0%,#121217 60
   border:1px solid #e5b58a;border-radius:9px;color:#f5d1ad;text-decoration:none;
   font:700 12px/1.4 system-ui,sans-serif;background:#362a2c}
 .discover-source-fallback:focus-visible{outline:2px solid #f5d1ad;outline-offset:3px}
+
+.book.book-skeleton{min-height:295px;padding:10px;background:#171820;border:1px solid #f6dfc916;pointer-events:none}
+.skeleton-cover{width:100%;height:210px;border-radius:8px 12px 12px 8px;background:linear-gradient(110deg,#25242c,#44373b 46%,#25242c 70%);
+ background-size:250% 100%;animation:books-skeleton-sweep 1.8s ease-in-out infinite}
+.skeleton-text{height:13px;width:81%;margin-top:15px;border-radius:6px;background:#49404885}
+.skeleton-small{height:9px;width:48%;margin-top:10px}
+@keyframes books-skeleton-sweep{from{background-position:110% 0}to{background-position:-90% 0}}
+@media(prefers-reduced-motion:reduce){.skeleton-cover{animation:none!important}}
