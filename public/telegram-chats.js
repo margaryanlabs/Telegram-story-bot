@@ -2213,7 +2213,9 @@
     state.threadLoading=true;
     if(reset&&!rememberedAnchor)state.messages=[];
     $('telegramThreadOlder').hidden=true;
-    if(reset&&state.messages.length)renderMessages();
+    // Show an actual loading state even for a first open/retry with no cached
+    // messages; otherwise the last inbox teaser or error stays frozen.
+    if(reset&&(!state.messages.length||state.threadLoadError))renderMessages();
     try{
       const ownerKey=state.ownerInitData;
       const fastLive=reset&&state.thread.archiveOnly!==true&&
