@@ -8,6 +8,7 @@ const endpointLoaders = {
   "automations": () => import("./automations.js"),
   "business-wizard": () => import("./business-wizard.js"),
   "books": () => import("./books.js"),
+  "books-discover": () => import("./books-discover.js"),
   "books-wikisource": () => import("./books-wikisource.js"),
   "emoji-studio": () => import("./emoji-studio.js"),
   "health": () => import("./health.js"),
