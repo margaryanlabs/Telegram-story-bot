@@ -16,6 +16,7 @@ test('artwork URL validation accepts only known RUTUBE image domains',()=>{
  assert.equal(api.allowedThumbnail('https://evil.example/x.jpg'),null);
  assert.equal(api.allowedThumbnail('http://pic.rutube.ru/x.jpg'),null);
  assert.equal(api.allowedThumbnail('https://pic.rutube.ru/video/example.jpg'),'https://pic.rutube.ru/video/example.jpg');
+ assert.equal(api.allowedThumbnail('https://pic.rtbcdn.ru/video/film.jpg'),'https://pic.rtbcdn.ru/video/film.jpg');
  assert.equal(api.rutubeVideoId({player:{url:'https://bad.example/play/embed/'+id}}),null);
 });
 test('artwork API is metadata-only, caches lookup and fails closed',async()=>{
