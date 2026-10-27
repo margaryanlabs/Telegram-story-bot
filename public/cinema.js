@@ -1,7 +1,7 @@
 /* VETOGRAM CINEMA V1 — independent Telegram Mini App. Zero pirate sources. */
 (function () {
   "use strict";
-  let films=[...(window.VetogramCinemaCatalog || [])];
+  let films=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFranchises||[])];
   const $=id=>document.getElementById(id);
   const BASE="https://commons.wikimedia.org/w/api.php";
   const LIBRARY_KEY="vetogram.cinema.library.v1";
@@ -13,7 +13,7 @@
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
   const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/"};
-  const discovery={slides:[],index:0,lastKey:"",timer:null,prefetching:false,expanding:false,received:0};
+  const discovery={slides:[],index:0,lastKey:"",timer:null,prefetching:false,expanding:false,received:0,franchise:"mcu"};
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
 
   function loadLibrary(){
@@ -27,7 +27,7 @@
   }
   function saveLibrary(){try{localStorage.setItem(LIBRARY_KEY,JSON.stringify(state.library))}catch(_){/* private storage */}}
   function filmById(id){return films.find(f=>f.id===id)}
-  function filmPage(f){return f.sourcePage || "https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(f.file.replace(/ /g,"_"))}
+  function filmPage(f){return f.sourcePage || (f.file?"https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(f.file.replace(/ /g,"_")):"https://www.justwatch.com/ru")}
   function text(id,value){const el=$(id);if(el)el.textContent=value==null?"":String(value)}
   function node(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e}
   function toast(message){const e=$("cinemaToast");e.textContent=message;e.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove("show"),2600)}
@@ -64,7 +64,7 @@
     $("cinemaHero").classList.toggle("hidden",tab!=="home");
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
     $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
-    for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian"])
+    for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises"])
       $(id).classList.toggle("hidden",tab!=="home");
     if(tab==="home")setHeroSlide(discovery.index);
     render();
@@ -340,18 +340,18 @@
   function artElement(f,wide){
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
     div.style.setProperty("--film-hue",String(f.hue));
-    const badge=node("span","cinema-card-art-badge");badge.textContent=f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":f.player?"СМОТРЕТЬ · RU":"ОТКРЫТЫЙ ФИЛЬМ";div.append(badge);
+    const badge=node("span","cinema-card-art-badge");badge.textContent=f.discoveryOnly?"ГДЕ СМОТРЕТЬ":f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":f.player?"СМОТРЕТЬ":"ОТКРЫТЫЙ ФИЛЬМ";div.append(badge);
     const title=node("span","cinema-card-art-title");title.textContent=f.title;div.append(title);
     const poster=state.posters.get(f.id)||f.poster;
     if(poster){const img=node("img");img.loading="lazy";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{img.remove();state.posters.delete(f.id)};div.prepend(img)}
-    else requestPoster(f);
+    else if(!f.discoveryOnly)requestPoster(f);
     return div;
   }
   function filmCard(f){
     const b=node("button","cinema-card");b.type="button";b.setAttribute("aria-label",f.title+", детали");
     b.append(artElement(f,false));
     const name=node("span","cinema-card-name");name.textContent=f.title;
-    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||"Русский",f.minutes?f.minutes+" мин":null,f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
+    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||"Русский",f.minutes?f.minutes+" мин":null,f.discoveryOnly?"Проверить наличие":f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
     b.append(name,meta);
     const p=state.library.progress[f.id];
     if(p&&p.d>0&&p.t/p.d<.96){const bar=node("div","cinema-card-progress"),line=node("i");line.style.width=Math.round(100*p.t/p.d)+"%";bar.append(line);b.append(bar)}
@@ -401,6 +401,16 @@
     const prior=deck.findIndex(x=>x.id===oldId);
     setHeroSlide(prior>=0?prior:0);
   }
+  function renderFranchise(){
+    const rows=films.filter(f=>f.discoveryOnly&&f.franchise===discovery.franchise);
+    $("cinemaFranchiseRail").replaceChildren(...rows.map(filmCard));
+    text("cinemaFranchiseNote",rows.length+" фильмов · поиск официальных площадок; встроенный просмотр зависит от прав и страны");
+    document.querySelectorAll("[data-franchise]").forEach(button=>{
+      const yes=button.dataset.franchise===discovery.franchise;
+      button.classList.toggle("active",yes);
+      button.setAttribute("aria-pressed",String(yes));
+    });
+  }
   function refreshDiscovery(){
     const home=isHome();
     const recent=films.filter(f=>f.player&&uploadTime(f)>0)
@@ -419,6 +429,8 @@
       if(home&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(filmCard));
     }
     $("cinemaGenresSection").classList.toggle("hidden",!home);
+    $("cinemaFranchises").classList.toggle("hidden",!home);
+    if(home)renderFranchise();
     if(home){
       $("cinemaGenreTiles").replaceChildren(...GENRE_TILES.map(([label,glyph,hue])=>{
         const button=node("button","cinema-genre-tile");
@@ -530,10 +542,12 @@
   function openDetails(f){
     state.selected=f;updateBack();buzz();
     text("cinemaDetailsTitle",f.title);
-    text("cinemaDetailsMeta",f.original+" · "+f.year+" · "+f.minutes+" мин · "+f.genres.join(" / "));
+    text("cinemaDetailsMeta",[f.original,f.year,f.minutes?f.minutes+" мин":null,...(f.genres||[])].filter(Boolean).join(" · "));
     text("cinemaDetailsSynopsis",f.synopsis);
     text("cinemaDetailsCreator",f.creator);
-    text("cinemaDetailsLanguage",f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
+    text("cinemaDetailsLanguage",f.discoveryOnly?"Это справочная карточка: русская озвучка и наличие полного фильма зависят от региона и видеосервиса.":f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
+    $("cinemaDetailsWatch").textContent=f.discoveryOnly?"↗ Где смотреть официально":"▶ Смотреть";
+    $("cinemaDetailsSource").textContent=f.discoveryOnly?"Официальная площадка ↗":"Перейти к источнику ↗";
     $("cinemaDetailsSource").href=filmPage(f);
     $("cinemaDetailsLicense").href=f.licenseUrl;
     text("cinemaDetailsLicense",(f.player?"Основание встраивания: ":"Лицензия: ")+f.license+" ↗");
@@ -541,10 +555,10 @@
     const art=$("cinemaDetailsArt");art.replaceChildren();
     art.style.background="radial-gradient(circle at 65% 30%,hsl("+f.hue+" 50% 45%),transparent 62%),linear-gradient(120deg,#29334f,#31223c)";
     if(state.posters.has(f.id)){const image=node("img");image.alt="Кадр из фильма "+f.title;image.src=state.posters.get(f.id);image.onerror=()=>image.remove();art.prepend(image)}
-    else requestPoster(f);
+    else if(!f.discoveryOnly)requestPoster(f);
     $("cinemaDetails").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
     if(f.player)fetchApprovedSources(f);
-    if(!f.player)getCommons(f).then(src=>{
+    if(!f.player&&!f.discoveryOnly)getCommons(f).then(src=>{
       if(state.selected?.id!==f.id||!src.poster)return;
       const image=node("img");image.alt="Кадр из фильма "+f.title;image.src=src.poster;image.onerror=()=>image.remove();art.prepend(image);
     }).catch(()=>{});
@@ -615,6 +629,13 @@
     finally{clearTimeout(timer)}
   }
   async function play(f, chosenSource){
+    if(f.discoveryOnly){
+      const official=filmPage(f);
+      if(!/^https:\/\//.test(official))return;
+      try{if(tg?.openLink)tg.openLink(official);else window.open(official,"_blank","noopener,noreferrer")}
+      catch(_){toast("Откройте официальный сервис через ссылку в карточке фильма")}
+      return;
+    }
     if(state.playing){try{saveProgress(true)}catch(_){}}
     clearTimeout(providerFeedbackTimer);
     try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;
@@ -746,6 +767,9 @@
   $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";state.visible=100;render();fetchCatalog(true)});
   $("cinemaLoadMore").addEventListener("click",()=>fetchCatalog(false));
   $("cinemaStudioMore").addEventListener("click",()=>loadStudio(false));
+  document.querySelectorAll("[data-franchise]").forEach(button=>button.addEventListener("click",()=>{
+    discovery.franchise=button.dataset.franchise;renderFranchise();buzz();
+  }));
   $("cinemaMoreResults").addEventListener("click",()=>{state.visible=Math.min(1800,state.visible+100);render()});
   $("cinemaMoreStudios").addEventListener("click",loadMoreStudioArchives);
   $("cinemaSort").addEventListener("change",event=>{
