@@ -296,31 +296,58 @@
     const button=$('readerSaveAllChapters');
     button.disabled=true;
     const sourceId=book.id,wiki=book.wiki;
-    const texts=[];
+    const texts=new Array(chapters.length);
+    let completed=0,nextIndex=0,downloadError=null;
+    const isActive=()=>token===offlineEditionToken&&!$('reader').hidden
+      &&state.current&&isWiki(state.current)
+      &&state.current.id===sourceId&&state.current.wiki===wiki;
     try{
-      for(let i=0;i<chapters.length;i++){
-        if(token!==offlineEditionToken||$('reader').hidden)throw new Error('Сборка отменена');
-        button.textContent='ГЛАВА '+(i+1)+' / '+chapters.length;
-        $('readerDownloadHint').textContent='Собираем книгу: '+Math.round(i/chapters.length*100)+'% · не закрывайте читалку';
-        if(!state.chapters.length){
-          if(!state.rawText?.trim())throw new Error('Текст книги не загружен');
-          texts.push(state.rawText);
-          break;
-        }
-        const key=bookKey(book)+':'+i;
-        const cached=await cachedText(key);
-        let value=cached?.text;
-        if(!value){
-          const query=new URLSearchParams({mode:'text',wiki,id:String(sourceId),chapter:String(i)});
-          const response=await fetch('/api/books-wikisource?'+query);
-          const payload=await response.json();
-          if(!response.ok||!payload.ok||!payload.text)throw new Error('Глава '+(i+1)+' недоступна. Офлайн-сборка не создана.');
-          value=payload.text;
-          await cacheText(key,{book:payload.book,text:value,chapters:payload.chapters||[],attribution:payload.attribution||null,isTranslationIndex:false,coverage:payload.coverage||null});
-        }
-        if(value.length<60)throw new Error('Глава '+(i+1)+' слишком короткая; сборка остановлена');
-        texts.push(value);
+      if(!state.chapters.length){
+        if(!state.rawText?.trim())throw new Error('Текст книги не загружен');
+        texts[0]=state.rawText;
+      }else{
+        // Two workers, not a flood of dozens of requests. A failed or cancelled
+        // chapter aborts the entire pack; never persist a partial "full book".
+        const work=async()=>{
+          while(!downloadError){
+            if(!isActive()){downloadError=new Error('Сборка отменена');return;}
+            const i=nextIndex++;
+            if(i>=chapters.length)return;
+            try{
+              const key=bookKey(book)+':'+i;
+              const cached=await cachedText(key);
+              let value=cached?.text;
+              if(!value){
+                const query=new URLSearchParams({mode:'text',wiki,id:String(sourceId),chapter:String(i)});
+                const response=await fetch('/api/books-wikisource?'+query);
+                if(!response.ok)throw new Error('Глава '+(i+1)+' недоступна');
+                const payload=await response.json();
+                if(!payload.ok||!payload.text||payload.isTranslationIndex)
+                  throw new Error('Глава '+(i+1)+' не содержит текста');
+                value=payload.text;
+                if(isActive())await cacheText(key,{
+                  book:payload.book,text:value,chapters:payload.chapters||[],
+                  attribution:payload.attribution||null,isTranslationIndex:false,
+                  coverage:payload.coverage||null
+                });
+              }
+              if(String(value).trim().length<60)
+                throw new Error('Глава '+(i+1)+' слишком короткая; сборка остановлена');
+              if(!isActive())throw new Error('Сборка отменена');
+              texts[i]=value;
+              completed++;
+              button.textContent='ЧАСТИ '+completed+' / '+chapters.length;
+              $('readerDownloadHint').textContent='Собираем книгу: '+
+                Math.round(completed/chapters.length*100)+'% · не закрывайте читалку';
+            }catch(error){downloadError=error;return;}
+          }
+        };
+        await Promise.all([work(),work()]);
+        if(downloadError)throw downloadError;
       }
+      if(!isActive())throw new Error('Сборка отменена');
+      if(texts.some(part=>typeof part!=='string'||part.trim().length<60))
+        throw new Error('Не все главы загружены. Офлайн-копия не создана.');
       if(token!==offlineEditionToken||$('reader').hidden)throw new Error('Сборка отменена');
       const local=await importer.saveWikisourceEdition(book,chapters,texts);
       local.sourceWikiId=book.id;
