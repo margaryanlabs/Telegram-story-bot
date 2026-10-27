@@ -57,11 +57,16 @@ test("Anonymous official music search is license scoped and bounded",()=>{
 });
 test("Real in-app player and license credits survive favorites and shared playlists",()=>{
  assert.ok(html.includes('id="openAudioResults"'));
+ assert.ok(html.includes('id="openAudioSearchResults"'));
+ assert.ok(html.includes('id="openAudioSearchStatus"'));
  assert.ok(html.includes('id="openAudioStatus"'));
  assert.ok(html.includes('id="openAudioMore"'));
  assert.ok(html.includes('src="./vetogram-music-openverse.js"'));
  assert.ok(html.indexOf('vetogram-music.js')<html.indexOf('vetogram-music-openverse.js'));
  assert.ok(catalog.includes("vetogram:catalog-query"));
+ assert.ok(js.includes("vetogram:search-query"));
+ assert.ok(core.includes("vetogram:search-query"));
+ assert.ok(js.includes("resultsContainers()"));
  assert.ok(js.includes("app.play(track,items)"));
  assert.ok(js.includes("app.toggleLike(track)"));
  assert.ok(core.includes('"openverse"'));
