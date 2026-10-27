@@ -213,3 +213,20 @@ Google Books API public queries require a registered application identifier (API
 - The collector checks ownership/current book before every part and after download, and stops without saving if the reader closes or any chapter is missing, is a translation-index page, or is too short. Download UI reports `CHAPTERS X/Y` and an actual completion fraction, not a fictitious completion banner.
 - Simulated actual function tests verified that four out-of-order chapter responses yield one correctly ordered work, and that a failed third chapter yields **zero** stored offline books.
 - The independent Vercel preview project reached its free daily deployment quota (`402 api-deployments-free-per-day`) for this iteration; the newest commit is in GitHub but is **not yet deployed**, regardless of older working preview URLs. Do not use the previous deployment as evidence of these new changes.
+
+
+## Jacket Studio 06 — genuine literary-first visual redesign (28 Oct 2026)
+
+The previous design had poor-quality, repetitive book placeholders (six colors plus symbols) and decorative, fictitious hero titles. Jacket Studio 06 replaces those implementations in the existing actual VETOGRAM Books web app, without changing messenger production.
+
+- Original in-house *editorial interpretation* covers, not forged publisher editions: 14 abstract motif compositions (moon, bloom, fortress, volcano, divide, orbit, prism, echo, waves, horizon, colonnade, compass, steps, dunes), 12 rich restrained palettes, responsive author/title typographic hierarchy, inner frame and simulated cloth spine. Eighteen curated works have thematic manual pairings; unknown titles map deterministically from the Unicode title to a consistent motif/tone.
+- True source covers from permitted catalog data (`book.cover`) have visual priority. No unrelated edition is silently assigned to a Russian translation merely because its English or French version has art. Cover placeholders are generated with local CSS/DOM and never contain counterfeit review scores or unauthorized graphics.
+- Uses VETOGRAM's *actual existing SVG logo* (`/veto-telegram-mark.svg`) in the header. No fake publisher imprint; per-book visual art is explicitly decorative for the reading app.
+- New hero art is three **real clickable works**, opening their available full-source texts, not dummy titles: `Белые ночи`, `Красное и чёрное`, `Золотой вулкан`. Three book cover buttons are built with the same actual cover rendering function as the shelf and are keyboard-focusable.
+- Real editorial recommendations shelf with these available works, tactile horizontal mobile carousel (CSS overflow, native scroll-snap), 2-column responsive library cards under 450px, strong font hierarchy and no heavyweight WebGL / paid image generation dependency.
+- Reader: night mode has lower-contrast chrome, higher-contrast legible literary text, subdued page framing and condensed mobile controls. Paper/Sepia themes stay available.
+- Hero source disclaimer is hidden for the known large-text selection and surfaced only when users enter catalog sources containing potentially separate volumes/chapters. Work/translation provenance and legal limitations remain inspectable.
+- Performance/accessibility: no blocking fonts or remotely generated artwork, cover visuals fully local, motion disabled via `prefers-reduced-motion`, tap targets and focus-visible states, source-cover images lazy loaded.
+- Independent V8 simulated-screen smoke test: all three real hero covers and three recommendation items rendered, 18 curated items in catalog; tapping `Белые ночи` opened a book and paginated the text. Core JS static parsing passed; DOM ID mapping has no missing or duplicated entries. Node regression file `tests/vetogram-books-jacket-studio.test.js` added.
+
+**Release status:** work remains on draft PR #193. New stage deployment requires Vercel API/build quota to be restored, otherwise last published stage preview does not show these changes. Real Android/iOS Telegram WebView screenshots and responsive visual inspection remain outstanding. Do not present old preview as Jacket Studio 06.
