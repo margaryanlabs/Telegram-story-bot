@@ -146,10 +146,10 @@ export async function fullText(req,res,wiki) {
   if(chapterId!==null && chapterId>=chapters.length)return send(res,404,{ok:false,error:'Chapter unavailable'});
   const part=chapterId===null?root:await parsed(wiki,{page:chapters[chapterId].title});
   const text=htmlToReaderText(part.text);
-  if(!text || text.length<60)return send(res,422,{ok:false,error:'На этой странице нет читаемого текста. Попробуйте другую книгу или главу.'});
+  if((!text || text.length<60) && chapters.length===0)return send(res,422,{ok:false,error:'На этой странице нет читаемого текста. Попробуйте другую книгу или главу.'});
   const book=bookFromEntry({pageid:id,title,ns:0},wiki);
   return send(res,200,{
-    ok:true,book,text,chapters,chapter:chapterId,
+    ok:true,book,text:text.length>=60?text:'Выберите главу в настройках чтения.',chapters,chapter:chapterId,
     attribution:{
       title:part.title||title,source:sourceUrl(wiki,part.title||title),revision:Number(part.revid)||null,
       licenseUrl:book.licenseUrl,modified:'Текст адаптирован для читалки, исходное форматирование упрощено.'
