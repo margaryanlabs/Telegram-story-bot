@@ -11,6 +11,8 @@
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
+  const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set()};
+  const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/"};
   const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.version?window.Telegram.WebApp:null;
 
   function loadLibrary(){
@@ -48,6 +50,7 @@
     });
     $("cinemaHero").classList.toggle("hidden",tab!=="home");
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
+    $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
     render();
     if(tab!=="library")fetchCatalog(true);
     if(tab==="search")$("cinemaSearch").focus();
@@ -138,6 +141,94 @@
     }catch(_){/* backend may not be deployed */}
     finally{clearTimeout(timer)}
   }
+  // Live archives from three verified Russian rights-holder channels.
+  // Same-origin backend requests only; no CORS bypass or video proxy.
+  function showStudio(){
+    const list=studio.results.get(studio.selected)||[];
+    const status=$("cinemaStudioStatus");
+    $("cinemaStudioOfficial").href=STUDIO_LINKS[studio.selected];
+    $("cinemaStudioGrid").replaceChildren(...list.slice(-180).map(filmCard));
+    $("cinemaStudioMore").classList.toggle("hidden",studio.nextPage===null);
+    $("cinemaStudioMore").disabled=studio.loading;
+    if(list.length){
+      status.textContent=list.length+" проверенных по длительности публикаций · оригинальные RUTUBE-плееры";
+    }else if(!studio.loading){
+      status.textContent="Архив пока недоступен в Cinema. Открыть официальный канал можно по ссылке ниже.";
+    }
+  }
+  async function loadStudio(reset=false){
+    if(studio.loading&&!reset)return;
+    const target=studio.selected;
+    if(reset){
+      studio.nextPage=1;
+      if(studio.loaded.has(target)){
+        studio.nextPage=null;
+        showStudio();
+        return;
+      }
+    }
+    const page=studio.nextPage;
+    if(page===null)return;
+    const ticket=++studio.ticket;
+    studio.loading=true;
+    const button=$("cinemaStudioMore");
+    button.disabled=true;
+    text("cinemaStudioStatus","Подключаем "+target+" · страница "+page+"…");
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),8500);
+    try{
+      const res=await fetch("/api/cinema/channels?"+new URLSearchParams({
+        channel:target,page:String(page)
+      }),{signal:controller.signal,headers:{Accept:"application/json"}});
+      if(!res.ok)throw Error("HTTP "+res.status);
+      const data=await res.json();
+      if(ticket!==studio.ticket||target!==studio.selected)return;
+      if(!data||data.channel!==target||!Array.isArray(data.movies))throw Error("Неправильная выдача архива");
+      const valid=data.movies.slice(0,100).filter(f=>{
+        try{
+          const url=new URL(f.player?.url||"");
+          return f.sourceCatalog==="rutube-official-channel"&&
+            f.id.startsWith("rutube-"+target+"-")&&
+            f.player?.licensed===true&&f.player?.type==="iframe"&&
+            url.origin==="https://rutube.ru"&&
+            /^\/play\/embed\/[a-f0-9]{32}$/i.test(url.pathname)&&
+            Number(f.minutes)>=35;
+        }catch(_){return false}
+      });
+      const old=studio.results.get(target)||[];
+      const existing=new Set(old.map(x=>x.id));
+      for(const film of valid) {
+        if(existing.has(film.id))continue;
+        existing.add(film.id);
+        old.push(film);
+        if(film.poster&&/^https:\/\//.test(film.poster))state.posters.set(film.id,film.poster);
+        if(!films.some(x=>x.id===film.id))films.push(film);
+      }
+      studio.results.set(target,old);
+      studio.nextPage=Number.isInteger(data.nextPage)&&data.nextPage>page?data.nextPage:null;
+      if(studio.nextPage===null)studio.loaded.add(target);
+      render();showStudio();
+    }catch(_){
+      if(ticket===studio.ticket)text("cinemaStudioStatus",
+        "Не удалось получить каталог канала. Попробуйте снова или откройте официальный RUTUBE.");
+    }finally{
+      clearTimeout(timeout);
+      if(ticket===studio.ticket){studio.loading=false;button.disabled=false}
+    }
+  }
+  function switchStudio(target){
+    if(!Object.hasOwn(STUDIO_LINKS,target))return;
+    studio.ticket++;
+    studio.loading=false;
+    studio.selected=target;
+    studio.nextPage=studio.loaded.has(target)?null:1;
+    document.querySelectorAll("[data-studio]").forEach(button=>{
+      button.classList.toggle("active",button.dataset.studio===target);
+      button.setAttribute("aria-pressed",String(button.dataset.studio===target));
+    });
+    showStudio();
+    if(studio.nextPage!==null)loadStudio(true);
+  }
   function selectedFilms(){
     let list=films;
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
@@ -169,7 +260,7 @@
   }
   function render(){
     const list=selectedFilms();
-    $("cinemaGrid").replaceChildren(...list.map(filmCard));
+    $("cinemaGrid").replaceChildren(...list.slice(0,180).map(filmCard));
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     text("cinemaCount",list.length+" из "+films.length+" фильмов · официальные источники");
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
@@ -471,6 +562,8 @@
   $("cinemaSearch").addEventListener("input",e=>{state.query=e.target.value.slice(0,90);if(state.tab==="library")setTab("search");else if(state.tab==="home"){$("cinemaHero").classList.add("hidden")}render();clearTimeout(catalogDebounce);catalogDebounce=setTimeout(()=>fetchCatalog(true),350)});
   $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";render();fetchCatalog(true)});
   $("cinemaLoadMore").addEventListener("click",()=>fetchCatalog(false));
+  $("cinemaStudioMore").addEventListener("click",()=>loadStudio(false));
+  document.querySelectorAll("[data-studio]").forEach(button=>button.addEventListener("click",()=>switchStudio(button.dataset.studio)));
   document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
   document.addEventListener("keydown",e=>{
     if(e.key==="Escape"){exitOverlay();return}
@@ -491,6 +584,8 @@
     const params=new URLSearchParams(location.search);const film=filmById(params.get(FILM_KEY));if(film)openDetails(film);
   }
   render();
+  showStudio();
+  loadStudio(true);
   fetchCatalog(true);
   // Exposes only safe navigation for a future Vetogram host. No Telegram privileged auth.
   window.VetogramCinema={openFilm:id=>{const f=filmById(id);if(f)openDetails(f)},openTab:setTab};
