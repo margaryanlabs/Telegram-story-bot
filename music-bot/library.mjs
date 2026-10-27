@@ -16,7 +16,7 @@ function normalizeAudio(audio){
     title:trim(audio.title||audio.file_name?.replace(/\.(mp3|m4a)$/i,"")||"Моя музыка",110),
     performer:trim(audio.performer||"Неизвестный исполнитель",95),
     duration:Number.isSafeInteger(audio.duration)?Math.max(0,Math.min(audio.duration,108000)):0,
-    created_at:new Date().toISOString()
+    created_at:typeof audio.created_at==="string"&&/^\d{4}-\d\d-\d\dT/.test(audio.created_at)?audio.created_at:new Date().toISOString()
   };
 }
 export function createMusicStore({directory=process.env.VETOGRAM_MUSIC_STORE_PATH||"./music-bot/data"}={}){
@@ -72,6 +72,15 @@ export function createMusicStore({directory=process.env.VETOGRAM_MUSIC_STORE_PAT
     const data=await list(userId,{offset:index-1,limit:1});
     return data.tracks[0]||null;
   }
+  async function search(userId,term,{limit=20}={}){
+    if(!validId(userId))throw Error("Invalid user ID");
+    const q=trim(term,70).toLocaleLowerCase();
+    if(q.length<2)return[];
+    const all=await serialize(userId,()=>load(userId));
+    return all.map((track,i)=>({...track,index:i+1}))
+      .filter(t=>(t.title+" "+t.performer).toLocaleLowerCase().includes(q))
+      .slice(0,Math.min(30,Math.max(1,limit)));
+  }
   async function remove(userId,index){
     if(!Number.isSafeInteger(index)||index<1||index>MAX_TRACKS)return false;
     return serialize(userId,async()=>{
@@ -80,6 +89,6 @@ export function createMusicStore({directory=process.env.VETOGRAM_MUSIC_STORE_PAT
       rows.splice(index-1,1);await write(userId,rows);return true;
     });
   }
-  return Object.freeze({add,list,get,remove,directory:base});
+  return Object.freeze({add,list,get,remove,search,directory:base});
 }
 export {normalizeAudio};
