@@ -20,6 +20,7 @@
   const rememberedOriginal=readJSON('original','en');
   if(['en','fr','de','it','es'].includes(rememberedOriginal))state.original=rememberedOriginal;
   let abort=null;
+  let googleViewerPromise=null;
   let toastTimer;
   let dbPromise;
   try {
@@ -697,6 +698,53 @@
     const button=node('button','',action);button.type='button';button.addEventListener('click',handler);
     row.append(text,button);host.append(row);
   }
+  function loadLicensedViewer(){
+    if(window.google?.books?.DefaultViewer)return Promise.resolve(window.google.books);
+    if(googleViewerPromise)return googleViewerPromise;
+    googleViewerPromise=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src='https://www.google.com/books/jsapi.js';
+      script.async=true;
+      let done=false;
+      const timeout=setTimeout(()=>finish(new Error('Preview loader timed out')),11000);
+      const finish=error=>{
+        if(done)return;done=true;clearTimeout(timeout);
+        if(error){googleViewerPromise=null;reject(error);}
+        else resolve(window.google.books);
+      };
+      script.onload=()=>{
+        try{
+          if(!window.google?.books)throw Error('Viewer library not available');
+          window.google.books.load({language:'ru'});
+          window.google.books.setOnLoadCallback(()=>finish(null));
+        }catch(error){finish(error);}
+      };
+      script.onerror=()=>finish(new Error('Could not load Google Books preview'));
+      document.head.append(script);
+    });
+    return googleViewerPromise;
+  }
+  async function showLicensedPreview(book){
+    if(!book?.embeddable || !/^[A-Za-z0-9_-]{3,100}$/.test(String(book.id)))return;
+    const host=$('modalContent');
+    const pane=node('section','licensed-preview');
+    const title=node('strong','','Разрешённый фрагмент Google Books');
+    const help=node('p','','Загрузка официального встроенного просмотра. Доступность зависит от страны и издателя.');
+    const canvas=node('div','official-preview-canvas');
+    pane.append(title,help,canvas);
+    host.append(pane);
+    try{
+      const lib=await loadLicensedViewer();
+      if(!$('bookModal').hidden && pane.isConnected){
+        const viewer=new lib.DefaultViewer(canvas);
+        viewer.load('https://books.google.com/books?id='+encodeURIComponent(book.id),
+          ()=>{help.textContent='Встроенный просмотр недоступен в этом регионе или для данного издания. Используйте официальную ссылку выше.';},
+          ()=>{help.textContent='Просмотр предоставлен Google Books. Доступен только разрешённый правообладателем материал.';});
+      }
+    }catch{
+      help.textContent='Встроенный просмотр не поддерживается этим браузером. Откройте официальную ссылку выше.';
+    }
+  }
   function showDiscoverBook(book){
     const host=modal('О книге');
     const panel=node('div','discover-detail');
@@ -723,6 +771,15 @@
       a.href=link;a.target='_blank';a.rel='noopener noreferrer';a.referrerPolicy='no-referrer';
       actions.append(a);
     };
+    if(book.embeddable){
+      const embed=node('button','discover-embed','Читать фрагмент здесь ↗');
+      embed.type='button';
+      embed.addEventListener('click',()=>{
+        embed.disabled=true;
+        void showLicensedPreview(book);
+      });
+      actions.append(embed);
+    }
     addLink(book.access==='official-full-view'?'Официальная полная версия':'Посмотреть фрагмент',book.previewUrl,Boolean(book.previewUrl));
     addLink('Официальная страница книги',book.sourceUrl,!book.previewUrl);
     addLink('Купить у издателя',book.buyUrl);
