@@ -2,6 +2,7 @@
 import http from "node:http";
 import process from "node:process";
 import pg from "pg";
+import {fetchChannelPage,CHANNELS} from "./official-rutube.mjs";
 const port=Number(process.env.PORT||3800);
 if(!process.env.DATABASE_URL)throw Error("DATABASE_URL is required");
 const pool=new pg.Pool({connectionString:process.env.DATABASE_URL,max:5,idleTimeoutMillis:10000,connectionTimeoutMillis:5000});
@@ -34,6 +35,22 @@ const server=http.createServer(async(req,res)=>{
  try {
   if(url.pathname==="/healthz"){
    await pool.query("SELECT 1");respond(res,200,{status:"ok",service:"cinema-catalog"});return;
+  }
+  // Independent metadata feed: live public embeds from approved rights-holder
+  // channels. Does not require a private PostgreSQL row for every studio video.
+  if(url.pathname==="/api/cinema/channels"){
+    const channel=url.searchParams.get("channel")||"mosfilm";
+    const page=Number(url.searchParams.get("page")||"1");
+    if(!Object.hasOwn(CHANNELS,channel)||!Number.isInteger(page)||page<1||page>120){
+      respond(res,400,{error:"invalid channel or page"});return;
+    }
+    const result=await fetchChannelPage(channel,page);
+    respond(res,200,result);return;
+  }
+  if(url.pathname==="/api/cinema/channels/list"){
+    respond(res,200,{channels:Object.entries(CHANNELS).map(([id,c])=>({
+      id,name:c.label,channelUrl:c.channelUrl
+    }))});return;
   }
   if(url.pathname==="/api/cinema/movies"){
    const q=(url.searchParams.get("q")||"").trim().slice(0,80);
