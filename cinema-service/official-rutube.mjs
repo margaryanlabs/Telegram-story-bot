@@ -15,7 +15,7 @@ export const CHANNELS=Object.freeze({
     channelUrl:"https://rutube.ru/channel/48160110/"})
 });
 const VIDEO_ID=/^[a-f0-9]{32}$/i;
-const EXCLUDE=/\b(трейлер|тизер|анонс|подкаст|интервью|пресс[- ]?конференция|съемк[иа]|кастинг|репортаж|фильм о фильме|телереклама|шортс|промо)\b/i;
+const EXCLUDE=/(трейлер|тизер|анонс|подкаст|интервью|пресс[- ]?конференц|съёмк|съемк|кастинг|репортаж|фильм о фильме|реклама|шортс|промо)/i;
 const IMAGE_HOSTS=new Set(["pic.rutube.ru","pic.rutubelist.ru","pic.rtbcdn.su"]);
 const SHORT_TEXT=s=>String(s||"").replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
 export function cleanPoster(raw){
