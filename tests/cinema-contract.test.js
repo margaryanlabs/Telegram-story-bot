@@ -40,7 +40,7 @@ test('catalog contains unique true films with direct Commons filenames and verif
   const ctx={window:{}};
   vm.runInNewContext(catalog,ctx,{filename:'cinema-catalog.js'});
   const f=ctx.window.VetogramCinemaCatalog;
-  assert.ok(Array.isArray(f)&&f.length>=18);
+  assert.ok(Array.isArray(f)&&f.length>=20);
   assert.equal(new Set(f.map(x=>x.id)).size,f.length);
   for(const x of f){
     assert.ok(x.id&&x.title&&x.original&&x.creator);
@@ -85,6 +85,17 @@ test('official RUTUBE player adapter validates rights metadata and rejects unsaf
   assert.throws(()=>adapter.assertAuthorized({url:'https://rutube.ru/play/embed/test'}),/не подтверждён/);
   assert.throws(()=>adapter.assertAuthorized({url:'http://rutube.ru/play/embed/test',licensed:true,license:'ok',credit:'ok'}),/HTTPS/);
   assert.equal(adapter.assertAuthorized({url:'https://rutube.ru/play/embed/test',licensed:true,license:'ok',credit:'ok'}).licensed,true);
+});
+
+test('two verified official Lenfilm films are present in offline seed',()=>{
+ const ctx={window:{}};vm.runInNewContext(catalog,ctx);
+ const films=ctx.window.VetogramCinemaCatalog;
+ for(const id of ['lenfilm-old-hottabych','lenfilm-wedding-malinovka']){
+   const film=films.find(x=>x.id===id);
+   assert.ok(film,'missing '+id);
+   assert.match(film.sourcePage,/^https:\/\/rutube\.ru\/video\/[a-f0-9]{32}\/$/);
+   assert.equal(film.spoken,'Русский');
+ }
 });
 
 test('premium Russian movies shelf and approved source selector stay wired',()=>{
