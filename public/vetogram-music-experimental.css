@@ -1,0 +1,31 @@
+/* Vetogram experimental music – dark premium, mobile-first. */
+.experimental-home,.experimental-search{border:1px solid rgba(255,255,255,.105);background:linear-gradient(120deg,rgba(168,139,205,.13),rgba(23,20,30,.62) 46%,rgba(9,10,15,.84));border-radius:24px;position:relative;overflow:hidden;color:#f8f3fd}
+.experimental-home{padding:clamp(23px,4.8vw,40px);margin:22px 0 27px}
+.experimental-home:before{content:"";position:absolute;pointer-events:none;inset:auto -30px -120px auto;width:220px;height:220px;background:radial-gradient(circle,rgba(219,163,222,.17),transparent 65%)}
+.experimental-home small,.experimental-search small{font-size:10px;color:#e6c6ef;font-weight:800;letter-spacing:.15em}
+.experimental-home h2{font-size:clamp(25px,4vw,42px);line-height:1.1;letter-spacing:-.045em;margin:15px 0 10px}
+.experimental-home h2 em{font-style:normal;color:#f5c7db}
+.experimental-home p,.experimental-search p{max-width:700px;color:#c2b5c8;font-size:13px;line-height:1.7}
+.experimental-shortcuts{display:flex;gap:9px;flex-wrap:wrap;margin-top:21px}
+.experimental-shortcuts button{border:1px solid rgba(245,204,232,.24);background:rgba(255,255,255,.065);color:#fff;padding:10px 15px;border-radius:12px;font:inherit;font-size:13px;font-weight:750;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.experimental-shortcuts button:hover{background:rgba(236,174,224,.16);border-color:#dfbdd8;transform:translateY(-1px)}
+.experimental-search{margin:26px 0;padding:clamp(18px,3vw,28px)}
+.experimental-search-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.experimental-search-head h2{font-size:clamp(20px,3vw,28px);letter-spacing:-.03em;margin:9px 0 0}
+.experimental-search-head>span{color:#f2c6e2;font-size:10px;font-weight:800;letter-spacing:.13em;white-space:nowrap}
+.experimental-status{margin:12px 0;font-size:12px;color:#d4bfcf;min-height:18px}
+.experimental-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:10px}
+.experimental-track{min-width:0;display:flex;align-items:center;gap:11px;padding:9px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.065);border-radius:14px}
+.experimental-cover{width:54px;height:54px;min-width:54px;object-fit:cover;border-radius:9px;background:#24212b}
+.experimental-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.experimental-copy strong{color:#faf4fa;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.experimental-copy small{font-size:11px;color:#b3a6bb;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.experimental-play,.experimental-like{flex-shrink:0;cursor:pointer;border:0;color:#f9e9f4;display:grid;place-items:center;font:inherit}
+.experimental-play{height:35px;width:35px;border-radius:50%;background:linear-gradient(145deg,#b568a9,#7f589c);box-shadow:0 5px 15px rgba(167,99,172,.25)}
+.experimental-like{width:28px;height:30px;background:transparent;font-size:19px}
+.experimental-track button:focus-visible,.experimental-shortcuts button:focus-visible{outline:2px solid #e6bcdc;outline-offset:3px}
+.experimental-info{padding-top:12px;margin-top:14px;border-top:1px solid rgba(255,255,255,.09);color:#b6abbc;font-size:11px}
+.experimental-info summary{cursor:pointer;width:max-content}
+.experimental-info p{font-size:11px;color:#b6abbc}
+@media(max-width:640px){.experimental-home{margin-top:12px;padding:23px 19px}.experimental-shortcuts button{flex:1;min-width:42%;text-align:center}.experimental-search-head>span{font-size:9px}.experimental-search{padding:19px 14px;margin:18px 0}.experimental-track{padding:8px}.experimental-cover{width:47px;height:47px;min-width:47px}}
+@media(prefers-reduced-motion:reduce){.experimental-shortcuts button{transition:none;transform:none}}
