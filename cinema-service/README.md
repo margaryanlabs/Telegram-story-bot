@@ -191,3 +191,14 @@ New regression checks: tests/cinema-franchises.test.js.
 Latest changes are committed in the draft PR, but the public theater preview is an older build due to the Vercel 402 daily deployment limit. Do not claim 88 new franchise cards are live until a READY deployment is checked.
 
 References: https://www.harrypotter.com/features/how-to-stream-harry-potter-wherever-you-are ; https://www.disneyplus.com/browse/page-60f4707d-19bb-4c0c-9390-ab269137be50 ; https://www.mosfilm.ru/about/news/mosfilm-novyy-sayt-k-100-letiyu-kinostudii/ ; https://rutube.ru/info/embed/ ; https://developer.themoviedb.org/docs/faq
+
+
+## Russian audio evidence and provider status — 28 Oct 2026
+
+`public/cinema-russian-audio.js` stores **32 exact, public, official provider title pages** with Russian listed as an audio/translation language: MEGOGO and Okko, all verified against those sites' public descriptions. Breakdown: MCU 10, Wizarding World 10, Marvel legacy 12. No posters/streams from these providers were copied.
+The imported record is not an embed license. Fields keep `audioEvidence=listed-by-provider`, `availability=unknown|unavailable`, `verifiedOn=2026-10-28`. Six exact pages currently reported 'unavailable' during research. Remaining 26 are UNKNOWN for regional playability and may also not work. A URL and Russian language listing MUST NOT be counted as confirmed playback.
+Russian-audio discovery only is the default for the three franchise rails and the combined film catalogue; the explicitly labelled checkbox 'Показать все названия ...' reveals the titles whose audio versions have not been verified. Catalogue cards distinguish provider-listed Russian track from confirmed playback. Unavailable title pages show 'Проверить статус у сервиса', not a fake Play button.
+For the original studio films, we preserve the studio's Russian language metadata from RUTUBE official channels, but the underlying media still needs Telegram/region real playback verification. We never remove required provider attribution or re-stream restricted videos.
+MEGOGO and Okko support rights/restrictions determined by viewer country, not whether their catalogue pages load. In particular, Armenia playback has NOT been verified for these 32 entries. Source pages must be checked in the viewer's country; failing content must not be promoted as playable.
+Additional tests: `tests/cinema-franchises.test.js` validates 32 mapped Russian listings, unavailable labels and all 88 discovery records remain streamless. DO NOT advertise `32 playable`.
+Official reference examples: https://megogo.net/ru/view/2453151-garri-potter-i-filosofskiy-kamen.html ; https://okko.tv/movie/harry-potter-and-the-order-of-the-phoenix/play ; https://megogo.net/ru/view/4512995-mstiteli-final.html ; https://megogo.net/ru/view/2012581-dedpul.html
