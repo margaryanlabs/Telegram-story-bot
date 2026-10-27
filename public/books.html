@@ -9,9 +9,10 @@
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/books.css?v=11">
   <link rel="stylesheet" href="/books-art-direction.css?v=1">
+  <link rel="stylesheet" href="/books-jacket-studio.css?v=1">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="/books-import.js?v=2" defer></script>
-  <script src="/books.js?v=11" defer></script>
+  <script src="/books.js?v=12" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -48,12 +49,12 @@
       <div class="veto-book-world" aria-hidden="true">
         <div class="world-orbit orbit-a"></div><div class="world-orbit orbit-b"></div>
         <div class="world-floor"></div>
-        <div class="world-book world-book-left"><div class="world-book-face"><small>V / ARCHIVE</small><strong>THE<br>UNKNOWN</strong><em>VOL. / 001</em></div></div>
-        <div class="world-book world-book-right"><div class="world-book-face"><small>V / STORIES</small><strong>NO<br>LIMITS.</strong><em>VOL. / 003</em></div></div>
+        <div class="world-book world-book-left"><div class="world-book-face"><small>V / ARCHIVE</small><strong>БЕЛЫЕ<br>НОЧИ</strong><em>Ф. ДОСТОЕВСКИЙ</em></div></div>
+        <div class="world-book world-book-right"><div class="world-book-face"><small>V / STORIES</small><strong>ЗОЛОТОЙ<br>ВУЛКАН</strong><em>ЖЮЛЬ ВЕРН</em></div></div>
         <div class="world-book world-book-main"><div class="world-book-face">
           <div class="world-book-logo"><img src="/veto-telegram-mark.svg" alt=""/></div>
           <span>VETOGRAM</span><strong>BOOKS<span class="world-title-point">.</span></strong>
-          <small>EVERY STORY HAS A WORLD</small>
+          <small>КАЖДАЯ КНИГА — ОТДЕЛЬНЫЙ МИР</small>
         </div></div>
         <div class="world-light-stroke"></div>
         <span class="world-coordinate world-coordinate-a">45° / VETO</span>
@@ -62,6 +63,13 @@
       <div class="hero-side-index" aria-hidden="true"><span>THE / READING EXPERIENCE</span><b>↗</b></div>
     </section>
 
+    <section id="featuredEditions" class="featured-editions" aria-labelledby="featuredTitle">
+      <div class="featured-editions-heading">
+        <div><span class="featured-kicker">VETOGRAM / EDITOR'S ROOM</span><h2 id="featuredTitle">Истории, в которые хочется войти.</h2></div>
+        <span class="featured-counter">001 — 003 <i>✳</i></span>
+      </div>
+      <div id="featuredEditionGrid" class="featured-edition-grid"></div>
+    </section>
     <div class="veto-library-kicker" aria-hidden="true"><span>CURATED / OPEN / PRIVATE</span><div></div><span>YOUR NEXT CHAPTER</span></div>
     <div class="source-tabs" role="group" aria-label="Библиотека и язык">
       <button type="button" data-books-source="complete" class="active" aria-pressed="true"><b>✦</b> ЧИТАТЬ ЦЕЛИКОМ</button>
