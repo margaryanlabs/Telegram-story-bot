@@ -288,7 +288,7 @@
         data=await response.json();
         if(!response.ok)throw new Error(data.error||'Сервис временно недоступен');
       }
-      if(!response.ok||!data.ok)throw new Error(data.error||'Сервис книг временно недоступен');
+      if(!data?.ok)throw new Error(data?.error||'Сервис книг временно недоступен');
       if(request!==state.request)return;
       state.count=data.count;state.nextPage=data.nextPage;state.nextCursor=data.nextCursor||null;
       const seen=new Set(state.books.map(bookKey));
