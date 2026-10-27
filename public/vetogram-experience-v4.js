@@ -48,7 +48,12 @@
   const home = screens('home');
   const resume = home && byId('vg26Resume');
   const activity = home && $('.control-activity', home);
-  if (home && resume && activity) home.insertBefore(resume, activity);
+  // .control-activity can be nested below the home screen: its parent, not
+  // the screen, owns the insertion point. A wrong parent throws NotFoundError
+  // and aborts the rest of the experience controller on Telegram WebView.
+  if (home && resume && activity && home.contains(resume) && home.contains(activity)) {
+    activity.before(resume);
+  }
   const mission = byId('vg27Mission');
   if (mission) mission.setAttribute('aria-label', 'Проверенные статусы Telegram и защиты');
 
