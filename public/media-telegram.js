@@ -46,6 +46,7 @@
       accessible("mediaEpubOverlay") ||
       accessible("readerBackdrop") ||
       accessible("vetoFilmOverlay") ||
+      accessible("v13Studio") ||
       accessible("v11DetailModal") ||
       $("v4Listening")?.classList.contains("open") ||
       Boolean($("v6SourceFlyout") && !$("v6SourceFlyout").classList.contains("hidden"));
@@ -62,6 +63,7 @@
     if(accessible("mediaEpubOverlay"))return $("mediaEpubOverlay").querySelector(".epub-action")?.click();
     if(accessible("readerBackdrop"))return $("closeReader")?.click();
     if(accessible("vetoFilmOverlay"))return $("vetoFilmClose")?.click();
+    if(accessible("v13Studio"))return $("v13Close")?.click();
     if(accessible("v11DetailModal"))return $("v11DetailClose")?.click();
     if($("v4Listening")?.classList.contains("open"))return $("v4ListenClose")?.click();
     if($("v6SourceFlyout") && !$("v6SourceFlyout").classList.contains("hidden"))return $("v6SourceButton")?.click();
