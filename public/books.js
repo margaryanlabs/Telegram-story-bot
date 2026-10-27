@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {source:'translated',original:'en',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,theme:'dark'};
+  const state = {source:'translated',original:'en',cursor:null,nextCursor:null,books:[], page:1, nextPage:null, count:null, query:'', lang:'all', topic:'', loading:false, current:null, pages:[], currentPage:0, request:0, requestBook:0, chapters:[],activeChapter:null,isTranslationIndex:false,theme:'dark'};
   const STORAGE = 'vetogram-books-v1';
   const readJSON = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(STORAGE + ':' + key)); return v ?? fallback; }
@@ -218,7 +218,7 @@
     const db=await database();if(!db)return;
     try{
       const tx=db.transaction('texts','readwrite');
-      tx.objectStore('texts').put({id:String(key),book:data.book,text:data.text,chapters:data.chapters||[],attribution:data.attribution||null,at:Date.now()});
+      tx.objectStore('texts').put({id:String(key),book:data.book,text:data.text,chapters:data.chapters||[],attribution:data.attribution||null,isTranslationIndex:!!data.isTranslationIndex,at:Date.now()});
     }catch{}
   }
   function stripGutenbergFrame(value){
@@ -291,7 +291,9 @@
   function renderChapters(){
     const wrap=$('readerChapters'),select=$('chapterSelect');
     wrap.hidden=!state.chapters.length || !isWiki(state.current);
-    select.replaceChildren(new Option('Начало книги',''));
+    const label=$('readerChapters').querySelector('label');
+    if(label)label.textContent=state.isTranslationIndex?'Перевод / издание':'Содержание';
+    select.replaceChildren(new Option(state.isTranslationIndex?'Выберите перевод…':'Начало книги',''));
     for(let i=0;i<state.chapters.length;i++){
       select.add(new Option(state.chapters[i].label.slice(0,110),String(i)));
     }
@@ -300,7 +302,7 @@
   async function loadChapter(book,chapter=null,resume=false){
     const key=bookKey(book);
     const request=++state.requestBook;
-    state.pages=[];state.activeChapter=chapter;
+    state.pages=[];state.activeChapter=chapter;state.isTranslationIndex=false;
     $('readerCopy').textContent='Загружаем текст…';
     $('readerPageLabel').textContent='…';
     const cacheId=key+':'+(chapter===null?'root':chapter);
@@ -314,17 +316,22 @@
         const response=await fetch(endpoint+'?'+params);
         const result=await response.json();
         if(!response.ok || !result.ok)throw new Error(result.error||'Не удалось открыть полный текст');
-        data={book:result.book,text:result.text,chapters:result.chapters||[],attribution:result.attribution||null};
+        data={book:result.book,text:result.text,chapters:result.chapters||[],attribution:result.attribution||null,isTranslationIndex:result.isTranslationIndex||false};
         await cacheText(cacheId,data);
       }
       if($('reader').hidden || state.requestBook!==request || bookKey(state.current)!==key)return;
       state.current={...book,...(data.book||{})};
       state.chapters=data.chapters||[];
+      state.isTranslationIndex=!!data.isTranslationIndex;
       state.activeChapter=chapter;
       $('readerTitle').textContent=compactTitle(state.current.title);
       $('readerAuthor').textContent=fullName(state.current);
       $('readerSourceLink').href=data.attribution?.source||state.current.sourceUrl||'https://www.gutenberg.org/';
       renderChapters();
+      if(state.isTranslationIndex && chapter===null && state.chapters.length) {
+        $('readerSettings').hidden=false;
+        $('readerSettingsButton').setAttribute('aria-expanded','true');
+      }
       const text=isWiki(book)?data.text:stripGutenbergFrame(data.text);
       state.pages=paginate(text);
       const p=progress[key];
