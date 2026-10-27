@@ -10,7 +10,7 @@
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
-    drafts:new Map(),draftVersions:new Map(),sendInFlight:false,lastSendFailure:null,lastSendFailures:new Map(),
+    drafts:new Map(),draftVersions:new Map(),sendInFlight:false,sendInFlightChatId:null,lastSendFailure:null,lastSendFailures:new Map(),
     pendingAttachment:null,replyTo:null,lastRichFailures:new Map(),stickers:[],stickerSets:[],stickerPack:null,
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
     stickerPreviewUrls:new Map(),recording:null,voiceStarting:false,lastRichFailure:null,
@@ -135,6 +135,8 @@
     if(!form || !field || !button)return;
     const writable=canSendInThread(state.thread);
     const available=writable && !state.sendInFlight;
+    const elsewhereBusy=state.sendInFlight&&state.sendInFlightChatId!==null&&
+      String(state.sendInFlightChatId)!==String(state.thread?.id||'');
     for(const id of ['telegramThreadAttachButton','telegramThreadAudioButton','telegramThreadStickersButton']){
       if($(id))$(id).disabled=!available || Boolean(state.recording||state.voiceStarting);
     }
@@ -161,15 +163,16 @@
       field.dataset.activeChat=chatId;
       field.value=state.drafts.get(chatId)||'';
     }
-    field.placeholder=writable?'Сообщение':state.thread?.archiveOnly
+    field.placeholder=writable?(elsewhereBusy?'Напиши сообщение · отправка в другом чате…':'Сообщение'):state.thread?.archiveOnly
       ?'Архивная копия · отправка недоступна'
       :'Подключи Telegram для отправки';
     field.style.height='auto';
     field.style.height=Math.min(135,Math.max(24,field.scrollHeight))+'px';
     field.maxLength=state.pendingAttachment?'1024':'4096';
     button.disabled=!available || (!field.value.trim()&&!state.pendingAttachment);
-    button.textContent=state.sendInFlight?'◌':'➤';
-    button.title=writable?'Отправить из собственного Telegram':'Отправка здесь недоступна';
+    button.textContent=state.sendInFlight&&!elsewhereBusy?'◌':'➤';
+    button.title=elsewhereBusy?'Дождись подтверждения отправки в другом чате':
+      writable?'Отправить из собственного Telegram':'Отправка здесь недоступна';
     renderVoiceDraft();
   }
 
@@ -188,9 +191,8 @@
       savedRetry.message===message&&(savedRetry.replyTo??null)===replyToId;
     const nonce=retry?savedRetry.nonce:window.crypto?.randomUUID?.();
     if(!nonce){toast('Нужен защищённый HTTPS для отправки сообщений');return;}
-    state.sendInFlight=true;
-    state.lastSendFailures.delete(chatId);
-    if(state.lastSendFailure?.chatId===chatId)state.lastSendFailure=null;
+    state.sendInFlight=true;state.sendInFlightChatId=chatId;
+    // Retain an uncertain nonce through a preflight/network failure.
     setDeliveryStatus('sending',chatId,'text');
     // Immediate input handoff; server delivery is still confirmed asynchronously.
     field.value='';
@@ -264,7 +266,9 @@
       }
       toast(error.message);
     }finally{
-      if(ownerKey===state.ownerInitData){state.sendInFlight=false;renderSendComposer();}
+      if(ownerKey===state.ownerInitData){
+        state.sendInFlight=false;state.sendInFlightChatId=null;renderSendComposer();
+      }
     }
   }
 
@@ -381,9 +385,9 @@
     const prior=state.lastRichFailures.get(chatId);
     const nonce=sameRichIntent(prior?.intent,intent) ? prior.nonce : window.crypto?.randomUUID?.();
     if(!nonce){toast('Нужен защищённый HTTPS');return;}
-    state.lastRichFailure=null;
-    state.lastRichFailures.delete(chatId);
-    state.sendInFlight=true;
+    // Do not lose the previous uncertain nonce before Telegram accepts this
+    // retry: media file reading can fail before the signed request starts.
+    state.sendInFlight=true;state.sendInFlightChatId=chatId;
     const deliveryKind=voiceSend?'voice':action==='send_sticker'?'sticker':'media';
     setDeliveryStatus('sending',chatId,deliveryKind);
     renderSendComposer();
@@ -462,7 +466,9 @@
       }
       // Never automatically retry: server acknowledgement may be lost.
     }finally{
-      if(ownerKey===state.ownerInitData){state.sendInFlight=false;renderSendComposer();}
+      if(ownerKey===state.ownerInitData){
+        state.sendInFlight=false;state.sendInFlightChatId=null;renderSendComposer();
+      }
     }
   }
   // Installed packs are fetched only after explicit user action, read from the
@@ -1700,7 +1706,7 @@
     clearIntelSearch({close:true});
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
     state.connectionProof=null;state.loading=false;state.threadLoading=false;
-    state.sendInFlight=false;state.lastSendFailure=null;state.lastSendFailures.clear();state.lastRichFailure=null;state.lastRichFailures.clear();
+    state.sendInFlight=false;state.sendInFlightChatId=null;state.lastSendFailure=null;state.lastSendFailures.clear();state.lastRichFailure=null;state.lastRichFailures.clear();
     state.drafts.clear();state.draftVersions.clear();state.pendingAttachment=null;state.replyTo=null;
     state.stickers=[];state.stickerSets=[];state.stickerPack=null;
     state.stickerTab='recent';state.stickerQuery='';state.stickerVisible=16;state.stickerEpoch++;
