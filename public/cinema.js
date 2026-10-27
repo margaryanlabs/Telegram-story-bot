@@ -1,7 +1,8 @@
 /* VETOGRAM CINEMA V1 — independent Telegram Mini App. Zero pirate sources. */
 (function () {
   "use strict";
-  let films=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFranchises||[])];
+  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaFranchises||[])];
+  let films=[...new Map(filmInputs.map(f=>[f.id,f])).values()];
   const $=id=>document.getElementById(id);
   const BASE="https://commons.wikimedia.org/w/api.php";
   const LIBRARY_KEY="vetogram.cinema.library.v1";
