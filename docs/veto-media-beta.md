@@ -155,3 +155,12 @@ QA checklist:
 - QA: Independent HTML preview `veto-media-v13-player.html` auto-opens the new studio; `veto-media-preview-v13.html` includes it in the full VETO MEDIA experience. Chromium browser QA at 390x844 and 1440x900 with catalog API mocks confirmed real synthesized WAV advancing playback, pause/resume, next demo track, theme change, volume, 1.25x rate, 15-minute timer, close/reopen and zero page JS exceptions or horizontal overflow. Audio playback came from a generated WAV blob, **not from a live Audius track or actual Telegram WebView**.
 - Node static and synthesized WAV byte-level tests in `tests/veto-media-v13.test.js`. Full repository test suite and production integration tests were NOT run.
 - The sandbox HTML is a working local artifact, NOT a public hosted HTTPS Mini App URL. Do not claim real Telegram deployment, permanent streaming rights or commercial launch readiness. No production VETOGRAM change, merge or deploy.
+
+
+## Public V13 review site (2026-10-27)
+
+- A real HTTPS review page for the already-built V13 player was created as a new independent Vercel Hobby static project `veto-media-v13-live-preview`. Public URL: https://veto-media-v13-live-preview.vercel.app/ .
+- Deployment ID: dpl_65YkGa1zb76hVfas6ZhCY4pDQKFU ; Vercel API confirmed READY. Project ID: prj_sRmxZmWxHue8LL62TjZIMuI4oBKk . Project has SSO, password, and IP protection disabled for public review only.
+- Independent external page fetch confirmed a public 200-equivalent HTML page title 'VETO MEDIA V13 — Launch Lab & Immersive Media' and the media catalog/players. This is a copy of the existing self-contained V13 HTML preview, not a live deployment from the Draft PR #191 branch.
+- The hosted page can play a locally synthesized test audio track on user click, but no real Audius streaming, film rights or Telegram Android/iOS WebView compatibility was certified by the external page fetch. It is not a production release, connected to any user accounts, or linked to VETOGRAM messaging.
+- The account's Vercel plan was reported as Hobby/active at the time of creation; this deploy used no paid plans, database, Railway or Supabase. Preview is a separate project so VETOGRAM production remains untouched.
