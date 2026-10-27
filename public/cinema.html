@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="VETOGRAM CINEMA — независимый кинотеатр Telegram Mini App с открытыми фильмами.">
+  <title>VETOGRAM CINEMA — Мир историй</title>
+  <link rel="icon" href="./veto-telegram-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./cinema.css">
+  <script defer src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script defer src="./cinema-catalog.js"></script>
+  <script defer src="./cinema.js"></script>
+</head>
+<body>
+  <div class="cinema-shell">
+    <header class="cinema-header">
+      <a class="cinema-brand" href="./cinema.html" aria-label="VETOGRAM CINEMA — главная">
+        <img src="./veto-telegram-mark.svg" width="38" height="38" alt="" />
+        <span class="cinema-brand-words"><strong>VETOGRAM <em>CINEMA</em></strong><small>STORIES ON YOUR SCREEN</small></span>
+      </a>
+      <div class="cinema-header-right">
+        <span class="cinema-kicker">VETO UNIVERSE / 003</span>
+        <button class="cinema-icon-btn" type="button" id="cinemaTheme" aria-label="Переключить тему">☼</button>
+      </div>
+    </header>
+    <main>
+      <section class="cinema-hero" id="cinemaHero" aria-label="Главная премьера">
+        <div class="cinema-hero-bg" id="cinemaHeroBackdrop"></div>
+        <div class="cinema-hero-copy">
+          <span class="cinema-eyebrow">✦ VETOGRAM ORIGINAL EXPERIENCE · OPEN CINEMA</span>
+          <h1 id="cinemaHeroTitle">Смотри. <i>Чувствуй.</i><br>Запоминай.</h1>
+          <p id="cinemaHeroDescription">Настоящее кино в Telegram. Начинаем с открытого киноархива и фильмов Blender Foundation.</p>
+          <div class="cinema-hero-actions">
+            <button class="cinema-primary" type="button" id="cinemaHeroWatch">▶ Смотреть фильм</button>
+            <button class="cinema-secondary" type="button" id="cinemaHeroDetails">Подробнее <span>↗</span></button>
+          </div>
+          <div class="cinema-hero-meta" id="cinemaHeroMeta">Подборка открытого кино · Creative Commons</div>
+        </div>
+        <div class="cinema-hero-watermark">CINEMA <span>V</span></div>
+      </section>
+      <div class="cinema-section-nav">
+        <nav id="cinemaTabs" aria-label="Разделы кинотеатра">
+          <button type="button" class="cinema-tab active" data-tab="home" aria-current="page">⌂ Главная</button>
+          <button type="button" class="cinema-tab" data-tab="catalog">◈ Каталог</button>
+          <button type="button" class="cinema-tab" data-tab="search">⌕ Поиск</button>
+          <button type="button" class="cinema-tab" data-tab="library">♡ Моё</button>
+        </nav>
+      </div>
+      <section class="cinema-search-area" id="cinemaSearchArea">
+        <label class="cinema-search"><span>⌕</span><input type="search" id="cinemaSearch" placeholder="Название фильма, жанр, год…" maxlength="90" autocomplete="off" aria-label="Поиск фильмов"><button type="button" id="cinemaClear" aria-label="Очистить">×</button></label>
+        <div class="cinema-source-chip" id="cinemaCount" aria-live="polite">Загружаем каталог…</div>
+      </section>
+      <section id="cinemaContinue" class="cinema-section hidden"><div class="cinema-section-head"><div><span class="cinema-overline">YOUR STORIES</span><h2>Продолжить просмотр</h2></div></div><div class="cinema-rail" id="cinemaContinueList"></div></section>
+      <section class="cinema-section" id="cinemaBrowse">
+        <div class="cinema-section-head"><div><span class="cinema-overline" id="cinemaSectionKicker">HANDPICKED FILMS</span><h2 id="cinemaSectionTitle">Истории, которые остаются</h2><p id="cinemaSectionDescription">Полные короткометражные фильмы с открытыми лицензиями.</p></div></div>
+        <div class="cinema-chips" id="cinemaGenres" role="group" aria-label="Жанры"></div>
+        <div class="cinema-grid" id="cinemaGrid" aria-live="polite"></div>
+        <p class="cinema-empty hidden" id="cinemaEmpty">Фильмы не найдены. Попробуй другой запрос.</p>
+      </section>
+      <section class="cinema-trust"><span>✦ ОТКРЫТАЯ КОЛЛЕКЦИЯ</span><p>Каждый фильм сопровождается ссылками на автора, источник и условия использования. Коммерческие релизы с пиратских ресурсов не подключаются. Озвучка появляется в списке только при наличии разрешённого аудиофайла.</p><a href="https://studio.blender.org/films/" target="_blank" rel="noopener noreferrer">Коллекция Blender Studio ↗</a></section>
+    </main>
+  </div>
+  <nav class="cinema-bottom" aria-label="Мобильная навигация" id="cinemaBottom">
+    <button type="button" class="active" data-tab="home"><span>⌂</span><small>Главная</small></button>
+    <button type="button" data-tab="catalog"><span>◈</span><small>Каталог</small></button>
+    <button type="button" data-tab="search"><span>⌕</span><small>Поиск</small></button>
+    <button type="button" data-tab="library"><span>♡</span><small>Моё</small></button>
+  </nav>
+  <section class="cinema-overlay hidden" id="cinemaDetails" role="dialog" aria-modal="true" aria-label="Информация о фильме">
+    <div class="cinema-sheet">
+      <button class="cinema-close" type="button" id="cinemaDetailsClose" aria-label="Закрыть">×</button>
+      <div class="cinema-sheet-art" id="cinemaDetailsArt"></div>
+      <div class="cinema-sheet-info"><div class="cinema-overline">VETOGRAM CINEMA / OPEN COLLECTION</div><h2 id="cinemaDetailsTitle"></h2><div class="cinema-film-meta" id="cinemaDetailsMeta"></div><p class="cinema-synopsis" id="cinemaDetailsSynopsis"></p>
+        <div class="cinema-sheet-actions"><button type="button" class="cinema-primary" id="cinemaDetailsWatch">▶ Смотреть</button><button type="button" class="cinema-secondary" id="cinemaDetailsFavorite">♡ В избранное</button><button type="button" class="cinema-secondary" id="cinemaDetailsShare">Поделиться ↗</button></div>
+        <div class="cinema-license"><p id="cinemaDetailsCreator"></p><p id="cinemaDetailsLanguage"></p><a id="cinemaDetailsSource" href="#" target="_blank" rel="noopener noreferrer">Оригинальный файл ↗</a><a id="cinemaDetailsLicense" href="#" target="_blank" rel="noopener noreferrer">Лицензия ↗</a></div>
+      </div>
+    </div>
+  </section>
+  <section class="cinema-player-overlay hidden" id="cinemaPlayer" role="dialog" aria-modal="true" aria-label="Видеоплеер">
+    <div class="cinema-player-shell">
+      <header><button type="button" id="cinemaPlayerClose" class="cinema-back">← Назад</button><strong id="cinemaPlayerTitle"></strong><span>VETOGRAM CINEMA</span></header>
+      <div class="cinema-video-wrap"><video id="cinemaVideo" controls playsinline preload="metadata" crossorigin="anonymous" aria-label="Видеофильм"></video><div class="cinema-loading" id="cinemaPlayerMessage" role="status">Загружаем видео…</div></div>
+      <div class="cinema-video-toolbar">
+        <button type="button" id="cinemaRewind">↶ 10 сек.</button><button type="button" id="cinemaForward">10 сек. ↷</button>
+        <label>Скорость <select id="cinemaSpeed" aria-label="Скорость воспроизведения"><option value=".75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+        <label>Звук <select id="cinemaAudio" aria-label="Язык озвучки"><option value="original">Оригинал</option></select></label>
+        <button type="button" id="cinemaPip">Картинка в картинке</button><button type="button" id="cinemaFullscreen">⛶ Экран</button>
+      </div>
+      <div id="cinemaSubtitleStatus" class="cinema-subtitle-status">Русские субтитры появятся автоматически, если доступны в источнике.</div>
+      <p class="cinema-player-source"><span id="cinemaPlayerCredit"></span> <a href="#" target="_blank" rel="noopener noreferrer" id="cinemaPlayerSource">Источник и права ↗</a></p>
+    </div>
+  </section>
+  <div class="cinema-toast" id="cinemaToast" role="status" aria-live="polite"></div>
+</body>
+</html>
