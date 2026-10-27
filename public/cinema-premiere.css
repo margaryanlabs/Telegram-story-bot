@@ -220,3 +220,10 @@ body.cinema-light{
 .cinema-alternative-links strong{font-size:14px;line-height:1.4}
 .cinema-alternative-links small{font-size:11px;color:var(--muted)}
 @media(max-width:650px){.cinema-alternative-links{grid-template-columns:1fr;gap:9px}.cinema-alternative-links a{min-height:80px;padding:15px}}
+
+
+/* Russian dubbing evidence: never conflate catalogue audio with playback rights. */
+.cinema-russian-filter{display:flex;align-items:center;gap:10px;margin-top:15px;font-size:12px;line-height:1.5;color:var(--muted);cursor:pointer}
+.cinema-russian-filter input{accent-color:var(--accent);width:17px;height:17px;flex:0 0 17px}
+.cinema-franchise-rail .cinema-card-art-badge{font-size:8px;letter-spacing:.035em}
+@media(max-width:650px){.cinema-russian-filter{font-size:11px;align-items:flex-start}.cinema-russian-filter input{margin-top:1px}}
