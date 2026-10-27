@@ -54,11 +54,12 @@ test("desktop/mobile TV tab and real series/player/episode UI are wired with no 
  assert.equal(Array.from(h.matchAll(/data-tab="series"/g)).length,2);
  for(const p of ["cinema-series-episodes.js"])
    assert.ok(h.indexOf(p)>0&&h.indexOf(p)<h.indexOf("cinema.js"));
- for(const id of ["cinemaSeriesHub","cinemaSeriesStats","cinemaSeriesPlayableRail","cinemaEpisodeChooser","cinemaEpisodeSelect"])
+ for(const id of ["cinemaSeriesHub","cinemaSeriesStats","cinemaSeriesPlayableRail","cinemaEpisodeChooser","cinemaEpisodeGrid","cinemaSeasonTabs","cinemaSeriesPopularRail"])
    assert.match(h,new RegExp('id="'+id+'"'));
- assert.ok(!h.includes('src="./cinema-popular-series.js"'));
- assert.ok(!h.includes('id="cinemaPopularSeries"'));
- assert.ok(!js.includes("window.VetogramCinemaPopularSeries"));
+ assert.ok(h.includes('src="./cinema-popular-series.js"'));
+ assert.ok(js.includes("window.VetogramCinemaPopularSeries"));
+ assert.match(js,/function renderPopularSeries\(/);
+ assert.match(js,/function renderEpisodeChooser\(/);
  assert.match(js,/if\(state\.tab==="series"\)list=list\.filter\(f=>f\.contentType==="Сериалы"&&f\.player\?\.licensed===true\)/);
  assert.match(js,/function groupedSeries\(/);
  assert.match(js,/function seriesEpisodeNumber\(/);
@@ -78,10 +79,10 @@ test("episode switcher groups Cyrillic 'серия' accurately without creating 
  const group=selectors.groupedSeries();
  assert.ok(group.length<70&&group.length>15);
  const woman=group.find(g=>selectors.seriesShowName(g[0])==="Женщина в беде");
- assert.equal(woman.length,4);
- assert.deepEqual(woman.map(x=>selectors.seriesEpisodeNumber(x)),[1,2,3,4]);
- const woman2=group.find(g=>selectors.seriesShowName(g[0])==="Женщина в беде - 2");
- assert.equal(woman2.length,4);
- const viking=group.find(g=>selectors.seriesShowName(g[0])==="Викинг · сезон 2");
- assert.ok(viking.length>=4);
+ assert.equal(woman.length,8);
+ assert.deepEqual(woman.filter(x=>x.season===1).map(x=>selectors.seriesEpisodeNumber(x)),[1,2,3,4]);
+ assert.deepEqual(woman.filter(x=>x.season===2).map(x=>selectors.seriesEpisodeNumber(x)),[1,2,3,4]);
+ const viking=group.find(g=>selectors.seriesShowName(g[0])==="Викинг");
+ assert.ok(viking.length>=8);
+ assert.deepEqual([...new Set(viking.map(x=>x.season))].sort(),[1,2]);
 });
