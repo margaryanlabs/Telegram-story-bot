@@ -50,7 +50,14 @@
  ["Человек-паук 2","Spider-Man 2",2004],["Человек-паук 3: Враг в отражении","Spider-Man 3",2007],
  ["Новый Человек-паук","The Amazing Spider-Man",2012],["Новый Человек-паук: Высокое напряжение","The Amazing Spider-Man 2",2014],
  ["Человек-паук: Через вселенные","Spider-Man: Into the Spider-Verse",2018],
- ["Человек-паук: Паутина вселенных","Spider-Man: Across the Spider-Verse",2023]
+ ["Человек-паук: Паутина вселенных","Spider-Man: Across the Spider-Verse",2023],
+ ["Блэйд","Blade",1998],["Блэйд 2","Blade II",2002],["Блэйд: Троица","Blade: Trinity",2004],
+ ["Сорвиголова","Daredevil",2003],["Электра","Elektra",2005],
+ ["Призрачный гонщик","Ghost Rider",2007],["Призрачный гонщик 2","Ghost Rider: Spirit of Vengeance",2011],
+ ["Фантастическая четвёрка","Fantastic Four",2005],["Фантастическая четвёрка: Вторжение Серебряного сёрфера","Fantastic Four: Rise of the Silver Surfer",2007],
+ ["Фантастическая четвёрка (2015)","Fantastic Four",2015],["Халк","Hulk",2003],
+ ["Каратель","The Punisher",2004],["Каратель: Территория войны","Punisher: War Zone",2008],
+ ["Морбиус","Morbius",2022],["Мадам Паутина","Madame Web",2024],["Крейвен-охотник","Kraven the Hunter",2024]
  ];
  // These are provider collection pages, NOT direct film links or playable embeds.
  const PROVIDERS={
