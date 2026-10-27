@@ -33,7 +33,7 @@ test('normalizes real Russian metadata and official preview without inventing fu
 test('rejects non-Russian editions and unsupported source domains',()=>{
   assert.equal(normalizeVolume({...book,volumeInfo:{...book.volumeInfo,language:'en'}}),null);
   const bad=normalizeVolume({...book,volumeInfo:{...book.volumeInfo,
-    imageLinks:{thumbnail:'https://bad.example/attack'},infoLink:'https://bad.example/go'}}});
+    imageLinks:{thumbnail:'https://bad.example/attack'},infoLink:'https://bad.example/go'}});
   assert.equal(bad.cover,'');
   assert.match(bad.sourceUrl,/^https:\/\/books\.google\.com/);
 });
