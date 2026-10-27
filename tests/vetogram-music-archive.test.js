@@ -53,3 +53,19 @@ test("VETOGRAM archive integrated without paid database or audio copy",()=>{
  assert.ok(css.includes('@media(max-width:640px)'));
  execFileSync(process.execPath,["--check",fileURLToPath(new URL("vetogram-music-archive.js",root))]);
 });
+
+test("new CC BY-SA releases expand library, but BY-NC-SA stays excluded",()=>{
+ const sample=(licenseurl)=>({metadata:{identifier:"cc-sa",mediatype:"audio",creator:"Artist",licenseurl},
+  files:[{name:"tune.mp3",size:"450000",source:"original",artist:"Artist",title:"Free music"}]});
+ for(const ver of ["2.0","3.0","4.0"]){
+  const licenseurl="http://creativecommons.org/licenses/by-sa/"+ver+"/";
+  const rows=archiveTracks(sample(licenseurl));
+  assert.equal(rows.length,1);
+  assert.equal(rows[0].license,"CC BY-SA "+ver);
+ }
+ assert.equal(archiveTracks(sample("http://creativecommons.org/licenses/by-nc-sa/3.0/")).length,0);
+ assert.equal(new URL(archiveSearchUrl("sa3",1)).searchParams.get("page"),"1");
+ assert.throws(()=>archiveSearchUrl("ncsa",1));
+ assert.match(html,/data-archive-license="sa3"/);
+ assert.match(html,/data-archive-license="sa4"/);
+});
