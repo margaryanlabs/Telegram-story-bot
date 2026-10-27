@@ -106,3 +106,10 @@ test('mobile menu remains a single toolbar row above scrolling messages',()=>{
   assert.match(tail,/\[data-thread-menu-action\]\[hidden\]/);
   assert.match(source,/\$\('telegramThreadActions'\)\?\.removeAttribute\?\.\('open'\)/);
 });
+
+test('V4 legacy fallback cannot move buttons out of the new native menu',()=>{
+  const legacy=read('vetogram-experience-v4.js');
+  assert.match(legacy,/if\(threadBar && !byId\('v4ThreadMore'\) && !byId\('telegramThreadActions'\)\)/);
+  assert.match(legacy,/tools\.append\(button\)/);
+  assert.equal((toolbar.match(/<details /g)||[]).length,1);
+});
