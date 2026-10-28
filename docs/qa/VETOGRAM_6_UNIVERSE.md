@@ -70,3 +70,30 @@ The existing `veto` project on `team_SZnpe4ZwKVtGmPG4l0V8F5aX` was inspected bef
 Additional provider/helper tests: `node --test music-service/tests/*.test.mjs cinema-service/tests/*.test.mjs` — 24 pass, 0 fail. No external service was deployed by those tests.
 
 Remaining release work: reachable preview plus rendered mobile/light/dark/Fold QA; real Telegram auth/chat/Stories regression flow; persistent private music directory on the existing self-hosted process and a real private bot upload → owner library → playback check. This status is a code integration candidate, not a completed production launch.
+
+## Follow-up integration — 28 October 2026, V6 media reconciliation
+
+The original 1,224-pass build above applies to the original integration commit `c1b6faf`, **not** to the amended V6 head. Do not report that earlier full build as newly passed after this follow-up.
+
+### Cinema update (`47ab6e8`)
+- Reconciled 8 newer commits from `feat/vetogram-cinema-standalone-20261027` with the older Cinema source imported by V6. The three-way merge retained V6's embedded media-context script, bridge, owner-scoped library cache, in-app deep link semantics, and music-pause event.
+- Added the actual `cinema-foreign-rutube.js` discovery metadata, supporting UI/filter/stylesheet, test and Cinema service documentation.
+- The 92 third-party RUTUBE entries are marked `externalRutube=true`, `discoveryOnly=true`, and `player=null`. An external listing is not proof of rights, licensed rebroadcast, Russian audio, working playback or regional availability. No streams were ingested into the app.
+
+### Music resilience (`66132bc`)
+- Retained V6's personal Telegram library and player bridge; introduced `clearFailedTrack` for failed native playback, clearing stale metadata, queue, media element and Media Session state.
+- Stale asynchronous playback failures are ignored using the existing playback generation counter. Browser autoplay `NotAllowedError` instructs the user to tap Play again rather than pretending the audio is available.
+- Added `tests/vetogram-music-playback-recovery.test.js`.
+- The unverified Piped/Invidious experimental branch is **not enabled**. These fixes do not manufacture a catalog or resolve provider 403, rights or CORS limitations.
+
+### Verification performed after commits
+- Parsed the shipping Cinema and Music JavaScript and the new external metadata script in a V8 function parser.
+- Exercised the extracted shipping failure-reset controller against mocked audio, player nodes and Media Session: metadata and source cleared, generation invalidated, UI refreshed.
+- Verified 92 unique Cinema entries, all `discoveryOnly` with null player, plus the six new UI controls and preservation of V6 iframe context/bridge hooks.
+- This is **five focused sanity checks**, not a complete `npm run vercel-build` run, real-device Telegram E2E or a licensed-source audit.
+
+### Hosting and release gate
+- Vercel project: existing `veto`, team `team_SZnpe4ZwKVtGmPG4l0V8F5aX`.
+- A V6 preview request for `66132bc` returned HTTP 402 `api-deployments-free-per-day`: more than 100 free deployments in 24 hours, provider `retryAfter=86400`. No READY preview URL exists for this head.
+- No deployment to production, no merge into `main`, no billing action and no alternate Vercel account.
+- **Required before production:** fresh full test suite/build; reachable preview with mobile/Fold/light/dark rendering; real Telegram login, chats, Stories, personal MP3 upload → owner library → playback; persistent private storage if using the self-hosted music library. Confirm external movies and books are discoverable/usable under source and rights constraints.
