@@ -123,3 +123,5 @@
 #vetogram.vetogram-universe .v61-more{width:100%;min-height:45px;margin-top:12px;border:1px solid var(--v6-line);border-radius:12px;background:var(--v6-surface);color:var(--v6-accent);font-size:12px;cursor:pointer}
 #vetogram.vetogram-universe .v61-more:hover{border-color:var(--v6-accent)}
 #vetogram.vetogram-universe .v61-more:focus-visible{outline:2px solid var(--v6-accent);outline-offset:3px}
+
+#vetogram.vetogram-universe .v61-guest-note{margin:0 0 14px;padding:11px 13px;border:1px solid var(--v6-line);border-radius:12px;color:var(--v6-muted);background:var(--v6-surface);font-size:12px;line-height:1.55}

@@ -104,6 +104,7 @@
  const refresh=()=>{
    cachedItems=null; // Re-read only on real data/identity/focus changes.
    const next=getScope();
+   $('v61GuestStorage').hidden=next!=='device';
    if(scope!==next){
      scope=next; search.value=''; filter='all'; searchLimit=35;vaultLimit=50;vault.hidden=true;
      $('v61VaultButton').setAttribute('aria-expanded','false');

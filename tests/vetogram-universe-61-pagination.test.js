@@ -14,7 +14,7 @@ function fixture({denyStorage=false}={}){
  let reads=0;
  const localStorage={getItem(k){reads++;return Object.hasOwn(records,k)?JSON.stringify(records[k]):null},
   setItem(k,v){records[k]=JSON.parse(v)}};
- const nodes=new Map(),listeners={};let owner=7;
+ const nodes=new Map(),listeners={};let owner=7,signed=true;
  const makeNode=tag=>({
   tag,hidden:false,value:'',dataset:{},children:[],textContent:'',style:{},attrs:{},
   classList:{toggle(){},remove(){},add(){}},
@@ -27,7 +27,7 @@ function fixture({denyStorage=false}={}){
  const document={getElementById:$,createElement:makeNode,
   querySelectorAll:selector=>selector.includes('data-v61-filter')?filters:[],
   addEventListener(name,cb){listeners['doc:'+name]=cb}};
- const window={VetogramUniverse:{context(){return {initData:'signed',user:{id:owner}}},open(){}},
+ const window={VetogramUniverse:{context(){return {initData:signed?'signed':'',user:{id:owner}}},open(){}},
   addEventListener(name,cb){listeners[name]=cb}};
  Object.defineProperty(window,'localStorage',{
   get(){if(denyStorage)throw new Error('Storage is blocked');return localStorage}
@@ -35,7 +35,7 @@ function fixture({denyStorage=false}={}){
  vm.runInNewContext(read('vetogram-universe-61-core.js'),{window,URL});
  vm.runInNewContext(read('vetogram-universe-61.js'),{window,document,URL});
  return {$,filters,listeners,getReadCount:()=>reads,
-  put(key,value){records[key]=value},changeOwner(id){owner=id}};
+  put(key,value){records[key]=value},changeOwner(id){owner=id},setSigned(value){signed=value}};
 }
 test('search returns all 120 real records through progressive reveal, with true count',()=>{
  const f=fixture(),search=f.$('v61Search');
@@ -112,4 +112,15 @@ test('recent playback retains original own-file label and author after de-duplic
  assert.equal(list[0].description,'Личный аудиофайл');
  assert.equal(list[0].source,'saved');
  assert.equal(list[0].at,100);
+});
+
+test('guest media warns that browser-local collections are not account isolated',()=>{
+ const f=fixture();
+ assert.equal(f.$('v61GuestStorage').hidden,true);
+ f.setSigned(false);f.listeners['vetogram:identity-change']();
+ assert.equal(f.$('v61GuestStorage').hidden,false);
+ assert.equal(f.$('v61VaultCount').textContent,'0');
+ f.setSigned(true);f.listeners['vetogram:identity-change']();
+ assert.equal(f.$('v61GuestStorage').hidden,true);
+ assert.equal(f.$('v61VaultCount').textContent,'120');
 });
