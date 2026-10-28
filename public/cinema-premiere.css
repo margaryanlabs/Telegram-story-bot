@@ -291,3 +291,15 @@ body.cinema-light{
 .cinema-popular-show-name{z-index:1;max-width:95%;font-size:clamp(23px,2.4vw,33px);font-weight:850;line-height:1.04;letter-spacing:-.05em}
 .cinema-popular-show-info{font-size:11px;color:var(--muted);display:block;line-height:1.6;margin-top:12px}
 @media(max-width:650px){.cinema-popular-show{flex-basis:182px;min-width:182px}}
+
+
+/* Cinema: international Russian-audio discovery. Keep source transparency. */
+.cinema-foreign-shelf{margin-top:38px}
+.cinema-shelf-more{color:var(--accent-soft);font-size:12px;font-weight:750;border:1px solid var(--line);border-radius:100px;padding:12px 17px;background:transparent;white-space:nowrap}
+.cinema-foreign-hub{margin:30px 0 35px;padding:27px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg,rgba(204,156,111,.09),var(--panel))}
+.cinema-foreign-hub h2{font-size:clamp(27px,3.4vw,43px);letter-spacing:-.05em;line-height:1.13;margin:10px 0}
+.cinema-foreign-hub p{color:var(--muted);line-height:1.7;font-size:13px;max-width:770px}
+.cinema-foreign-filter{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text);margin:18px 0 7px}
+.cinema-foreign-filter input{accent-color:var(--accent);width:18px;height:18px}
+.cinema-foreign-shelf .cinema-card-art{aspect-ratio:16/10}
+@media(max-width:650px){.cinema-foreign-hub{padding:19px 15px;border-radius:16px}.cinema-foreign-hub h2{font-size:28px}.cinema-foreign-filter{align-items:flex-start;font-size:11px}}

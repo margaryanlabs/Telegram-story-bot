@@ -15,6 +15,7 @@
   <script defer src="./cinema-russian-audio.js"></script>
   <script defer src="./cinema-franchises.js"></script>
   <script defer src="./cinema-featured-200.js"></script>
+  <script defer src="./cinema-foreign-rutube.js"></script>
   <script defer src="./cinema-series-episodes.js"></script>
   <script defer src="./cinema-popular-series.js"></script>
   <script defer src="./cinema-artwork.js"></script>
@@ -52,6 +53,7 @@
       <div class="cinema-section-nav">
         <nav id="cinemaTabs" aria-label="Разделы кинотеатра">
           <button type="button" class="cinema-tab active" data-tab="home" aria-current="page">⌂ Главная</button>
+          <button type="button" class="cinema-tab" data-tab="foreign">✦ Зарубежное RU</button>
           <button type="button" class="cinema-tab" data-tab="catalog">◈ Фильмы</button>
           <button type="button" class="cinema-tab" data-tab="series">▦ Сериалы</button>
           <button type="button" class="cinema-tab" data-tab="search">⌕ Поиск</button>
@@ -62,6 +64,8 @@
         <label class="cinema-search"><span>⌕</span><input type="search" id="cinemaSearch" placeholder="Найти фильм, сериал, актёра или жанр…" maxlength="90" autocomplete="off" aria-label="Поиск фильмов"><button type="button" id="cinemaClear" aria-label="Очистить">×</button></label>
         <div class="cinema-source-chip" id="cinemaCount" aria-live="polite">Загружаем каталог…</div>
       </section>
+      <section class="cinema-section cinema-foreign-shelf" id="cinemaForeignShelf" aria-label="Зарубежные фильмы из RUTUBE"><div class="cinema-section-head"><div><span class="cinema-overline">WORLD CINEMA / RUSSIAN AUDIO SEARCH</span><h2>Зарубежное на русском ✦</h2><p>Реальные публикации зарубежных фильмов на RUTUBE. Русский дубляж указан не у всех. Оригинальный просмотр откроется на площадке источника.</p></div><button type="button" class="cinema-shelf-more" id="cinemaForeignAll">Смотреть подборку ↗</button></div><div class="cinema-rail cinema-editorial-rail" id="cinemaForeignRail"></div></section>
+      <section class="cinema-section cinema-foreign-hub hidden" id="cinemaForeignHub" aria-label="Зарубежное кино на русском"><span class="cinema-overline">RUTUBE · FOREIGN MOVIES</span><h2>Зарубежные фильмы. Русская озвучка.</h2><p>Здесь собраны настоящие публикации с RUTUBE. Чтобы не выдавать чужие загрузки за разрешённые видеопотоки, мы открываем оригинальный источник. Язык и права конкретной публикации требуют проверки.</p><label class="cinema-foreign-filter"><input id="cinemaForeignIncludeUnverified" type="checkbox"> Показывать также фильмы без заявленного дубляжа</label><div id="cinemaForeignNote" class="cinema-franchise-note" role="status"></div></section>
       <section id="cinemaLatest" class="cinema-section cinema-editorial" aria-label="Недавно добавленные фильмы"><div class="cinema-section-head"><div><span class="cinema-overline">НОВОЕ / ФИЛЬМЫ И СЕРИАЛЫ</span><h2>Только что в коллекции <span class="cinema-heading-mark">✳</span></h2><p>Свежие публикации официальных видеоканалов</p></div><span class="cinema-shelf-label" id="cinemaSyncStatus">Обновляем каталог</span></div><div class="cinema-rail cinema-editorial-rail" id="cinemaLatestRail"></div></section>
       <section id="cinemaGenresSection" class="cinema-section cinema-categories" aria-label="Выбор жанров"><div class="cinema-section-head"><div><span class="cinema-overline">НАЙДИ СВОЮ ИСТОРИЮ</span><h2>Какое кино сегодня?</h2></div></div><div id="cinemaGenreTiles" class="cinema-genre-tiles"></div></section>
       <section id="cinemaSeries" class="cinema-section cinema-editorial" aria-label="Сериалы"><div class="cinema-section-head"><div><span class="cinema-overline">СЕРИАЛЫ / ИСТОРИИ</span><h2>Сериалы, которые затягивают</h2></div></div><div class="cinema-rail cinema-editorial-rail" id="cinemaSeriesRail"></div></section>
@@ -160,7 +164,7 @@
     <button type="button" class="active" data-tab="home"><span>⌂</span><small>Главная</small></button>
     <button type="button" data-tab="catalog"><span>◈</span><small>Фильмы</small></button>
     <button type="button" data-tab="series"><span>▦</span><small>Сериалы</small></button>
-    <button type="button" data-tab="search"><span>⌕</span><small>Поиск</small></button>
+    <button type="button" data-tab="foreign"><span>✦</span><small>Зарубежное</small></button>
     <button type="button" data-tab="library"><span>♡</span><small>Моё</small></button>
   </nav>
   <section class="cinema-overlay hidden" id="cinemaDetails" role="dialog" aria-modal="true" aria-label="Информация о фильме">
