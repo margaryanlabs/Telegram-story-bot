@@ -50,14 +50,22 @@
    const queryFilm=name==='cinema'&&!id?new URLSearchParams(location.search).get('film'):null;
    const safeFilm=queryFilm&&/^[A-Za-z0-9_-]{1,200}$/.test(queryFilm)?queryFilm:'';
    const requested=id||safeFilm||'';
-   const item={element,ready:false,page,entryId:requested,searchQuery:query||'',lastPage:page||'',lastEntryId:requested,lastQuery:query||'',timer:0};frames.set(name,item);
+   const item={element,ready:false,failed:false,errorText:'',page,entryId:requested,searchQuery:query||'',lastPage:page||'',lastEntryId:requested,lastQuery:query||'',timer:0};frames.set(name,item);
    element.src=definition.path+'?universe=1';
    $('v6Frames').append(element);
-   item.timer=setTimeout(()=>{if(!item.ready && activeModule===name)moduleStatus('Раздел не ответил. Можно повторить загрузку или вернуться в чаты.',true);},18000);
-   element.addEventListener('error',()=>{if(activeModule===name)moduleStatus('Раздел не загрузился. Повтори попытку.',true);});
+   item.timer=setTimeout(()=>{
+    if(item.ready)return;
+    item.failed=true;item.errorText='Раздел не ответил. Можно повторить загрузку или вернуться в чаты.';
+    if(activeModule===name)moduleStatus(item.errorText,true);
+   },18000);
+   element.addEventListener('error',()=>{
+    if(item.ready)return;
+    item.failed=true;item.errorText='Раздел не загрузился. Повтори попытку.';
+    if(activeModule===name)moduleStatus(item.errorText,true);
+   });
   }
   const item=frames.get(name);if(page){item.page=page;item.lastPage=page;}if(id){item.entryId=id;item.lastEntryId=id;}if(query){item.searchQuery=query;item.lastQuery=query;}
-  moduleStatus(item.ready?'':'Открываем '+definition.title.toLowerCase()+'…');
+  moduleStatus(item.ready?'':item.failed?item.errorText:'Открываем '+definition.title.toLowerCase()+'…',!item.ready&&item.failed);
   for(const [key,entry]of frames)entry.element.hidden=key!==name;
   if(item.ready && item.page){send(name,{action:'page',page:item.page});item.page=null;}
   if(item.ready && item.searchQuery){send(name,{action:'search-query',query:item.searchQuery.slice(0,100)});item.searchQuery='';}
@@ -119,7 +127,7 @@
   checkIdentity();if(!frames.has(pair[0]))return;
   const [name,item]=pair,message=event.data;
   if(message.type==='ready'){
-   clearTimeout(item.timer);item.ready=true;
+   clearTimeout(item.timer);item.ready=true;item.failed=false;item.errorText='';
    if(activeModule===name)moduleStatus('');
    send(name,{action:'theme',theme:theme()});
    if(item.page){send(name,{action:'page',page:item.page});item.page=null;}
@@ -127,7 +135,11 @@
    if(item.entryId){item.openRequestId=++openRequestSerial;send(name,{action:'open-item',id:item.entryId,requestId:item.openRequestId});item.entryId=null;}
    visibility();
   }
-  if(message.type==='failed'){clearTimeout(item.timer);if(activeModule===name)moduleStatus('Ошибка раздела. Чаты и остальные функции доступны.',true);}
+  if(message.type==='failed'){
+   clearTimeout(item.timer);item.ready=false;item.failed=true;
+   item.errorText='Ошибка раздела. Чаты и остальные функции доступны.';
+   if(activeModule===name)moduleStatus(item.errorText,true);
+  }
   if(message.type==='open-item-status'&&activeModule===name&&Number.isSafeInteger(message.requestId)&&message.requestId===item.openRequestId){
    if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
    else moduleStatus('');
