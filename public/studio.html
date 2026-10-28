@@ -2367,6 +2367,22 @@
     <span id="v6NowStatus" class="v6-sr-only" role="status"></span>
   </aside>
 
+    <section id="v61Player" class="v61-player" role="dialog" aria-modal="true" aria-label="VETO PLAYER" hidden>
+    <div class="v61-player-card">
+      <header class="v61-player-top"><span>VETOGRAM / VETO PLAYER</span><button type="button" id="v61PlayerClose" aria-label="Свернуть плеер">✕</button></header>
+      <div class="v61-player-art" aria-hidden="true"><div class="v61-player-record"><span>V</span></div></div>
+      <div class="v61-player-info"><small>NOW PLAYING</small><h2 id="v61PlayerTitle">Твоя музыка</h2><p id="v61PlayerArtist">VETOGRAM</p></div>
+      <div class="v61-player-seek"><input id="v61PlayerSeek" type="range" min="0" max="1000" value="0" aria-label="Позиция трека"/><span id="v61PlayerClock">0:00</span></div>
+      <div class="v61-player-actions">
+        <button type="button" data-v6-audio="previous" aria-label="Предыдущий трек">⏮</button>
+        <button type="button" data-v6-audio="toggle" id="v61PlayerPlay" aria-label="Воспроизвести">▶</button>
+        <button type="button" data-v6-audio="next" aria-label="Следующий трек">⏭</button>
+      </div>
+      <button type="button" id="v61PlayerMusic" class="v61-player-library">Открыть музыкальную библиотеку ↗</button>
+      <p class="v61-player-hint">Плеер использует текущую очередь Music, не создавая второй аудиопоток.</p>
+    </div>
+  </section>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="/veto-device-polish.js?v=20261028-v60-universe"></script>

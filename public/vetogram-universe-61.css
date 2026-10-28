@@ -91,3 +91,26 @@
 @media(prefers-reduced-motion:reduce){
  #vetogram.vetogram-universe .v61-home *{scroll-behavior:auto!important;animation:none!important;transition:none!important}
 }
+
+/* VETO PLAYER — one overlay controlling the original persistent iframe audio. */
+#vetogram.vetogram-universe .v61-player{position:fixed;inset:0;z-index:210;background:rgba(5,5,10,.97);color:#f4f2f8;display:flex;align-items:center;justify-content:center;overflow:auto;padding:calc(15px + env(safe-area-inset-top)) 18px calc(15px + env(safe-area-inset-bottom))}
+#vetogram.vetogram-universe .v61-player-card{width:min(100%,440px);min-height:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:15px}
+#vetogram.vetogram-universe .v61-player-top{display:flex;align-items:center;justify-content:space-between;width:100%;color:#bfb3d0;font-size:11px;letter-spacing:.13em}
+#vetogram.vetogram-universe .v61-player-top button{width:44px;height:44px;border:1px solid #ffffff20;border-radius:50%;background:#ffffff0b;color:#f4f2f8;cursor:pointer}
+#vetogram.vetogram-universe .v61-player-art{width:min(55vw,238px);aspect-ratio:1;display:grid;place-items:center;flex-shrink:0;filter:drop-shadow(0 18px 25px #0006)}
+#vetogram.vetogram-universe .v61-player-record{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;background:repeating-radial-gradient(circle,#15121e 0 3px,#2b2438 3px 5px,#15121e 6px 9px);box-shadow:0 0 0 1px #b9a2dc33,0 0 65px #9870bf33}
+#vetogram.vetogram-universe .v61-player-record span{display:grid;place-items:center;width:27%;aspect-ratio:1;border-radius:50%;background:#c7afe6;color:#171021;font-weight:800;font-size:30px}
+#vetogram.vetogram-universe .v61-player-info{min-width:0;max-width:100%}
+#vetogram.vetogram-universe .v61-player-info small{font-size:10px;letter-spacing:.15em;color:#c7afe6}
+#vetogram.vetogram-universe .v61-player-info h2{font-size:clamp(23px,6vw,32px)!important;margin:9px 0 3px!important;color:#fff!important;overflow-wrap:anywhere}
+#vetogram.vetogram-universe .v61-player-info p{font-size:13px;color:#c7bfd0;margin:0}
+#vetogram.vetogram-universe .v61-player-seek{display:flex;align-items:center;gap:12px;width:100%}
+#vetogram.vetogram-universe .v61-player-seek input{width:100%;accent-color:#c7afe6}
+#vetogram.vetogram-universe .v61-player-seek span{min-width:37px;color:#c7bfd0;font-size:12px}
+#vetogram.vetogram-universe .v61-player-actions{display:flex;align-items:center;justify-content:center;gap:32px}
+#vetogram.vetogram-universe .v61-player-actions button{background:transparent;color:#fff;border:0;font-size:25px;min-width:50px;min-height:50px;cursor:pointer}
+#vetogram.vetogram-universe #v61PlayerPlay{width:65px;height:65px;border-radius:50%;background:#d4b8ff;color:#171021;font-size:25px}
+#vetogram.vetogram-universe .v61-player-library{min-height:45px;background:#ffffff12;border:1px solid #ffffff26;border-radius:12px;padding:12px 18px;color:#fff;font-size:12px;cursor:pointer}
+#vetogram.vetogram-universe .v61-player-hint{color:#b4aabd;font-size:11px;line-height:1.5;margin:0}
+#vetogram.vetogram-universe .v61-player button:focus-visible,#vetogram.vetogram-universe .v61-player input:focus-visible{outline:2px solid #d4b8ff;outline-offset:3px}
+@media(max-height:620px){#vetogram.vetogram-universe .v61-player-card{gap:9px}#vetogram.vetogram-universe .v61-player-art{width:min(24vh,120px)}}

@@ -25,7 +25,7 @@
   frames.clear();activeModule='';lastAudio=null;
   $('v6NowTitle').textContent='';$('v6NowArtist').textContent='';$('v6NowStatus').textContent='';
   $('v6AccountName').textContent=[context().user?.first_name,context().user?.last_name].filter(Boolean).join(' ')||'Аккаунт, оформление и инструменты.';
-  showHub();chrome();lastTrackId='';
+  showHub();chrome();lastTrackId='';$('v61Player').hidden=true;root.classList.remove('v61-player-open');
   if(typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined')window.dispatchEvent(new CustomEvent('vetogram:identity-change'));
  }
  function checkIdentity(){const current=String(window.Telegram?.WebApp?.initData||'');if(current!==identity){identity=current;destroyMedia();}}
@@ -62,9 +62,14 @@
  document.querySelectorAll('[data-v6-module]').forEach(button=>button.addEventListener('click',()=>openModule(button.dataset.v6Module,button.dataset.v6Page)));
  $('v6Account').onclick=()=>$('profileButton')?.click();
  $('v6Appearance').onclick=()=>$('vetoGlobalThemeToggle')?.click();
- $('v6NowOpen').onclick=()=>openModule('music');
+ const closePlayer=()=>{$('v61Player').hidden=true;root.classList.remove('v61-player-open');};
+ $('v6NowOpen').onclick=()=>{$('v61Player').hidden=false;root.classList.add('v61-player-open');};
+ $('v61PlayerClose').onclick=closePlayer;
+ $('v61PlayerMusic').onclick=()=>{closePlayer();openModule('music');};
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('v61Player').hidden)closePlayer();});
  document.querySelectorAll('[data-v6-audio]').forEach(button=>button.onclick=()=>{checkIdentity();send('music',{action:'audio',command:button.dataset.v6Audio});});
  $('v6NowSeek').onchange=()=>send('music',{action:'seek',value:Number($('v6NowSeek').value)/1000});
+ $('v61PlayerSeek').onchange=()=>send('music',{action:'seek',value:Number($('v61PlayerSeek').value)/1000});
  const format=value=>Number.isFinite(value)?Math.floor(value/60)+':'+String(Math.floor(value%60)).padStart(2,'0'):'0:00';
  window.addEventListener('message',event=>{
   if(event.origin!==location.origin || event.data?.channel!=='vetogram-media')return;
@@ -106,6 +111,13 @@
    $('v6NowTime').textContent=format(data.position);
    $('v6NowStatus').textContent=data.error?'Аудио недоступно':data.waiting?'Загружаем аудио':'';
    $('v6NowPlay').disabled=!!data.error;
+   $('v61PlayerTitle').textContent=data.title.slice(0,150);
+   $('v61PlayerArtist').textContent=String(data.artist||'').slice(0,100);
+   $('v61PlayerPlay').textContent=data.playing?'Ⅱ':'▶';
+   $('v61PlayerPlay').disabled=!!data.error;
+   $('v61PlayerClock').textContent=format(data.position);
+   $('v61PlayerSeek').disabled=!Number.isFinite(data.duration)||data.duration<=0;
+   $('v61PlayerSeek').value=String(data.duration>0?Math.round(data.position/data.duration*1000):0);
    chrome();
   }
   if(name==='cinema' && message.type==='video-playing')send('music',{action:'audio',command:'pause'});
