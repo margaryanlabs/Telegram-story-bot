@@ -8,6 +8,9 @@
   if (root.dataset.v4Experience === 'ready') return;
   root.dataset.v4Experience = 'ready';
   root.classList.add('vetogram-v4');
+  // Telegram's native Close/menu chrome overlays the top of mobile Mini Apps.
+  // Scope extra topbar clearance to an actual signed Telegram WebView only.
+  if (window.Telegram?.WebApp?.initData) root.classList.add('v4-telegram-webview');
   const byId = id => document.getElementById(id);
   const $ = (selector, base = document) => base.querySelector(selector);
   const screens = name => $('[data-screen="' + name + '"]');
@@ -48,7 +51,12 @@
   const home = screens('home');
   const resume = home && byId('vg26Resume');
   const activity = home && $('.control-activity', home);
-  if (home && resume && activity) home.insertBefore(resume, activity);
+  // .control-activity can be nested below the home screen: its parent, not
+  // the screen, owns the insertion point. A wrong parent throws NotFoundError
+  // and aborts the rest of the experience controller on Telegram WebView.
+  if (home && resume && activity && home.contains(resume) && home.contains(activity)) {
+    activity.before(resume);
+  }
   const mission = byId('vg27Mission');
   if (mission) mission.setAttribute('aria-label', 'Проверенные статусы Telegram и защиты');
 
@@ -263,7 +271,10 @@
   // actions into a native keyboard-accessible disclosure without cloning them.
   const threadView=byId('telegramThreadView');
   const threadBar=threadView && $('.veto-mirror-thread-bar',threadView);
-  if(threadBar && !byId('v4ThreadMore')){
+  // The new messenger ships an accessible menu in HTML. Do not create a
+  // second V4 disclosure or move its existing action buttons out of it.
+  // Preserve the V4 fallback only for older pages without native markup.
+  if(threadBar && !byId('v4ThreadMore') && !byId('telegramThreadActions')){
     const menu=document.createElement('details');
     menu.id='v4ThreadMore';
     menu.className='v4-thread-more';

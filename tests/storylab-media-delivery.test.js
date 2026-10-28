@@ -39,7 +39,7 @@ test('UI retains uncertain media nonce but never automatically sends another mes
  const ui=read('public/telegram-chats.js');
  const outgoing=ui.slice(ui.indexOf('async function sendRichOutgoing('),ui.indexOf('async function openStickerDrawer'));
  assert.match(outgoing,/sameRichIntent\(prior\?\.intent,intent\)/);
- assert.match(outgoing,/state\.lastRichFailure=\{intent,nonce\}/);
+ assert.match(outgoing,/state\.lastRichFailures\.set\(chatId,failure\)/);
  assert.match(outgoing,/error\?\.uncertain===true/);
  assert.match(outgoing,/String\(state\.thread\?\.id\)===chatId/);
  assert.match(outgoing,/const current=\(\)=>ownerKey===state\.ownerInitData&&ownerKey===String\(tg\?\.initData\|\|''\)&&/);
@@ -54,8 +54,8 @@ test('sticker picker avoids fetching large dialog windows, media retains safe fa
  const send=read('api/telegram-send.js'),media=read('api/telegram-chat-media.js');
  const checked=send.slice(send.indexOf('await verifyTelegramClientOwner(client,userId);'));
  assert.ok(checked.indexOf("if(action==='recent_stickers')")<checked.indexOf("client.getDialogs({limit:60})"));
- assert.match(media,/const recent=await client\.getDialogs\(\{limit:60\}\)/);
- assert.match(media,/if\(!dialog\)\{[\s\S]*?getDialogs\(\{limit:MAX_DIALOGS\}\)/);
+ assert.match(media,/dialogs=await client\.getDialogs\(\{limit:batch\?120:60\}\)/);
+ assert.match(media,/if\(wanted\.some\(id=>!allowed\.has\(id\)\)\)\{[\s\S]*?getDialogs\(\{limit:MAX_DIALOGS\}\)/);
  assert.match(media,/await verifyTelegramClientOwner\(client,userId\)/);
  assert.match(media,/Cache-Control','private,no-store/);
 });

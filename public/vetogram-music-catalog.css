@@ -1,0 +1,45 @@
+/* Vetogram Music · Infinite Catalog | follows existing Noir design tokens. */
+.catalog-hero{position:relative;overflow:hidden;padding:36px clamp(22px,4vw,48px);border-radius:24px;background:radial-gradient(ellipse at 94% 8%,rgba(187,121,255,.22),transparent 45%),linear-gradient(135deg,#18101f,#100f1b 65%,#0b0b14);border:1px solid rgba(255,255,255,.11);margin-bottom:22px}
+.catalog-hero .overline{letter-spacing:.15em;font-size:11px;color:#c8b7e2}
+.catalog-hero h1{font-size:clamp(32px,5vw,60px);line-height:1.06;letter-spacing:-.055em;margin:14px 0;max-width:690px;color:#fff}
+.catalog-hero h1 em{font-style:normal;background:linear-gradient(100deg,#e5bbfa,#fdc6d9);background-clip:text;-webkit-background-clip:text;color:transparent}
+.catalog-hero p{color:#bdb4c8;max-width:580px;line-height:1.7;font-size:14px}
+.catalog-providers{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:19px;color:#cab6dd;font-size:11px;font-weight:700;letter-spacing:.08em}
+.catalog-providers span{border-radius:999px;border:1px solid rgba(224,191,255,.24);background:rgba(239,194,255,.07);padding:7px 11px}
+.catalog-toolbar{padding:22px;border-radius:20px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
+.catalog-switch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.catalog-switch button,.catalog-pill{font:inherit;color:#e5dfef;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);border-radius:999px;cursor:pointer;transition:background .15s ease,transform .15s ease}
+.catalog-switch button{padding:11px 18px;font-size:12px;font-weight:750}
+.catalog-pill{padding:9px 13px;font-size:12px}
+.catalog-switch button.active,.catalog-pill.active{color:#160f1b;background:#efc6fa;border-color:#efc6fa}
+.catalog-switch button:hover,.catalog-pill:hover{transform:translateY(-1px);border-color:rgba(239,198,250,.6)}
+.catalog-presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.catalog-search{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.catalog-search input{min-width:180px;flex:1;min-height:47px;padding:0 15px;border-radius:12px;border:1px solid rgba(255,255,255,.18);outline:none;background:#11101b;color:#fff;font:inherit}
+.catalog-search input:focus{border-color:#e5a9ee;box-shadow:0 0 0 3px rgba(234,164,246,.12)}
+.catalog-search button,.catalog-more{min-height:47px;padding:0 22px;background:linear-gradient(120deg,#edbdfb,#ffc1d7);color:#1c1021;border:0;border-radius:12px;font:inherit;font-weight:800;cursor:pointer}
+.catalog-search button:hover,.catalog-more:hover{filter:brightness(1.08)}
+.catalog-results-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:28px 0 12px}
+.catalog-results-head h2{font-size:20px;font-weight:800;color:#fff;margin:0}
+.catalog-status{font-size:12px;line-height:1.65;color:#b8a9c7;margin:0 0 15px}
+.catalog-list{display:grid;gap:8px}
+.catalog-track{display:grid;grid-template-columns:30px 58px minmax(0,1fr) 36px 36px 48px;align-items:center;gap:12px;min-width:0;padding:10px 15px;background:rgba(255,255,255,.032);border:1px solid rgba(255,255,255,.065);border-radius:14px;transition:background .15s ease,border-color .15s ease}
+.catalog-track:hover{background:rgba(243,199,255,.075);border-color:rgba(243,199,255,.16)}
+.catalog-index{font-size:12px;color:#8e8699;font-variant-numeric:tabular-nums}
+.catalog-cover{height:58px;width:58px;display:grid;place-items:center;background:linear-gradient(135deg,#51335b,#271e41);font-size:24px;color:#d9a4ee;border-radius:10px;overflow:hidden}
+.catalog-cover img{height:100%;width:100%;object-fit:cover}
+.catalog-details{min-width:0;display:grid;gap:3px}
+.catalog-details strong,.catalog-details span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.catalog-details strong{font-size:13px;color:#f7f0ff;font-weight:750}
+.catalog-details span{font-size:12px;color:#b4aac4}
+.catalog-details small{font-size:9px;color:#9e7faa;letter-spacing:.08em}
+.catalog-play,.catalog-like,.catalog-share{font:inherit;border:0;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.075);color:#eec8fc;height:36px}
+.catalog-play{height:42px;color:#26102a;background:#f0c7f8;font-weight:900}
+.catalog-play:hover,.catalog-like:hover,.catalog-share:hover{filter:brightness(1.2)}
+.catalog-more-wrap{text-align:center;margin:20px auto 35px}
+.catalog-more{min-width:210px}
+.catalog-more[hidden]{display:none}
+.catalog-empty{border:1px dashed rgba(255,255,255,.13);text-align:center;color:#b4a7c0;border-radius:15px;padding:36px 16px}
+.catalog-disclaimer{font-size:11px;color:#9e92aa;line-height:1.65;margin:13px 0 0}
+@media(max-width:650px){.catalog-hero{padding:24px 20px;border-radius:18px}.catalog-toolbar{padding:15px}.catalog-track{grid-template-columns:41px minmax(0,1fr) 30px 36px;gap:9px;padding:9px}.catalog-index,.catalog-share{display:none}.catalog-cover{height:41px;width:41px}.catalog-details strong{font-size:12px}.catalog-details span{font-size:11px}.catalog-play{height:36px}.catalog-results-head{margin-top:20px}.catalog-search button{width:100%}.catalog-search input{min-width:0;width:100%}}
+@media(prefers-reduced-motion:reduce){.catalog-switch button,.catalog-pill,.catalog-track{transition:none;transform:none!important}}

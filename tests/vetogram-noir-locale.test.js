@@ -32,7 +32,7 @@ test('primary screen headings translate in all three languages without editing u
     assert.equal(uiText(key,'hy'),hy);
   }
   assert.match(html,/data-nav="telegram"/);
-  assert.match(html,/data-nav="ai"/);
+  assert.match(html,/data-open-screen="ai"/);
   assert.match(html,/data-nav="privacy"/);
 });
 

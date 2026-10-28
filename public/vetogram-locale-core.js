@@ -1,6 +1,7 @@
 // Russian is authoritative. Missing localized keys fall back to Russian.
 export const UI_LOCALES=Object.freeze(['ru','en','hy']);
 const labels={
+  media:['Медиа','Media','Մեդիա'],profile:['Профиль','Profile','Պրոֆիլ'],
   chats:['Чаты','Chats','Զրույցներ'],home:['Vetogram','Vetogram','Vetogram'],stories:['Истории','Stories','Պատմություններ'],privacy:['Защита','Privacy','Գաղտնիություն'],studio:['Студия','Studio','Ստուդիա'],
   quick:['Быстро','Quick','Արագ'],pro:['Студия Про','Studio Pro','Պրո ստուդիա'],director:['AI-режиссёр','AI Director','AI ռեժիսոր'],
   text:['Текст','Text','Տեքստ'],photo:['Фото','Photo','Լուսանկար'],layers:['Слои','Layers','Շերտեր'],sound:['Звук','Sound','Ձայն'],idea:['Идея / ИИ','Idea / AI','Գաղափար / AI'],link:['Ссылка','Link','Հղում'],project:['Проект','Project','Նախագիծ'],

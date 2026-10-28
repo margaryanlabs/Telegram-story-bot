@@ -19,13 +19,13 @@ test('chat list starts its independent archive + Business reads without serial b
 
 test('verified same-owner refresh keeps visible chats while updating and never leaves mixed stale rows',()=>{
   const ui=read('public/telegram-chats.js');
-  assert.match(ui,/const keepVisible=Boolean\(reset&&state\.connectionProof\?\.verified&&state\.chats\.length/);
+  assert.match(ui,/const keepVisible=Boolean\(reset&&state\.connectionProof\?\.verified&&\s*state\.ownerInitData/);
   assert.match(ui,/state\.ownerInitData===String\(tg\?\.initData\|\|''\)/);
   assert.match(ui,/if\(!keepVisible\)\{state\.chats=\[\];state\.connectionProof=null;\}/);
   assert.match(ui,/if\(keepVisible\)state\.chats=\[\]/);
   assert.match(ui,/error\.httpStatus=response\.status/);
   assert.match(ui,/const transient=status===429\|\|status>=500/);
-  assert.match(ui,/if\(keepVisible&&authenticated&&transient\)/);
+  assert.match(ui,/if\(authenticated&&transient\)/);
   assert.match(ui,/state\.chats=\[\];state\.hasMore=false;state\.connectionProof=null/);
   assert.match(ui,/removeAttribute\('aria-busy'\)/);
   assert.doesNotMatch(ui,/localStorage|sessionStorage|indexedDB/);

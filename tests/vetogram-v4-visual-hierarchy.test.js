@@ -117,7 +117,7 @@ test('AI text and microphone controls use truthful states, not fake activity',()
 });
 test('visual motion respects preference and all four nav items remain present',()=>{
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
-  for(const id of ['telegram','publish','ai','privacy']){
+  for(const id of ['telegram','publish','media','privacy','profile']){
     assert.match(html,new RegExp('data-nav="'+id+'"'));
   }
   assert.match(html,/data-reborn-nav="four"|class="bottom-nav"/);

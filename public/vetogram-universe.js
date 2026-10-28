@@ -1,0 +1,107 @@
+/* VETOGRAM Universe: one route owner, persistent audio, lazy module documents.
+ * Existing Messenger, Privacy, Stories and account controllers stay authoritative. */
+(()=>{
+ 'use strict';
+ const $=id=>document.getElementById(id),root=document.documentElement;
+ root.classList.add('vetogram-universe');
+ const definitions=Object.freeze({music:{title:'Музыка',path:'/music-module.html'},cinema:{title:'Кино',path:'/cinema.html'},books:{title:'Книги',path:'/books.html'}});
+ const frames=new Map();let activeModule='',screen=document.querySelector('.screen.active')?.dataset.screen||'home';
+ let identity=String(window.Telegram?.WebApp?.initData||''),lastAudio=null;
+ const theme=()=>root.dataset.vetoTheme||'graphite';
+ function context(){const api=window.Telegram?.WebApp;return {initData:String(api?.initData||''),user:api?.initDataUnsafe?.user||null,theme:theme()};}
+ // This API is read synchronously by our same-origin module adapter only.
+ window.VetogramUniverse=Object.freeze({context});
+ const send=(name,message)=>frames.get(name)?.element.contentWindow?.postMessage({channel:'vetogram-universe',...message},location.origin);
+ function visibility(){for(const name of frames.keys())send(name,{action:'visible',visible:screen==='media'&&activeModule===name});}
+ function chrome(){
+  const show=!!lastAudio && !(screen==='media'&&activeModule==='music');
+  $('v6MiniPlayer').hidden=!show;
+  root.classList.toggle('v6-has-audio',show);
+  root.classList.toggle('v6-module-open',screen==='media'&&!!activeModule);
+ }
+ function moduleStatus(text,retry=false){$('v6ModuleStatus').textContent=text;$('v6ModuleStatus').hidden=!text;$('v6ModuleRetry').hidden=!retry;}
+ function destroyMedia(){
+  for(const item of frames.values()){clearTimeout(item.timer);item.element.src='about:blank';item.element.remove();}
+  frames.clear();activeModule='';lastAudio=null;
+  $('v6NowTitle').textContent='';$('v6NowArtist').textContent='';$('v6NowStatus').textContent='';
+  $('v6AccountName').textContent=[context().user?.first_name,context().user?.last_name].filter(Boolean).join(' ')||'Аккаунт, оформление и инструменты.';
+  showHub();chrome();
+ }
+ function checkIdentity(){const current=String(window.Telegram?.WebApp?.initData||'');if(current!==identity){identity=current;destroyMedia();}}
+ function showHub(){
+  activeModule='';$('v6MediaHome').hidden=false;$('v6MediaStage').hidden=true;
+  for(const item of frames.values())item.element.hidden=true;
+  moduleStatus('');visibility();chrome();
+ }
+ function openModule(name,page){
+  checkIdentity();const definition=definitions[name];if(!definition)return;
+  window.VetoTelegramNavigate?.('media');activeModule=name;
+  $('v6MediaHome').hidden=true;$('v6MediaStage').hidden=false;$('v6ModuleTitle').textContent=definition.title;
+  document.querySelectorAll('.v6-module-switch [data-v6-module]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.v6Module===name)));
+  if(!frames.has(name)){
+   const element=document.createElement('iframe');element.title='VETOGRAM · '+definition.title;
+   element.className='v6-module-frame';element.allow='autoplay; fullscreen; picture-in-picture';
+   element.setAttribute('referrerpolicy','same-origin');
+   const item={element,ready:false,page,timer:0};frames.set(name,item);
+   const film=new URLSearchParams(location.search).get('film');
+   element.src=definition.path+'?universe=1'+(name==='cinema'&&film&&/^[A-Za-z0-9_-]{1,200}$/.test(film)?'&film='+encodeURIComponent(film):'');
+   $('v6Frames').append(element);
+   item.timer=setTimeout(()=>{if(!item.ready && activeModule===name)moduleStatus('Раздел не ответил. Можно повторить загрузку или вернуться в чаты.',true);},18000);
+   element.addEventListener('error',()=>{if(activeModule===name)moduleStatus('Раздел не загрузился. Повтори попытку.',true);});
+  }
+  const item=frames.get(name);if(page)item.page=page;
+  moduleStatus(item.ready?'':'Открываем '+definition.title.toLowerCase()+'…');
+  for(const [key,entry]of frames)entry.element.hidden=key!==name;
+  if(item.ready && item.page){send(name,{action:'page',page:item.page});item.page=null;}
+  visibility();chrome();
+ }
+ $('v6MediaBack').onclick=showHub;
+ $('v6ModuleRetry').onclick=()=>{const name=activeModule,item=frames.get(name);if(!item)return;clearTimeout(item.timer);item.element.remove();frames.delete(name);if(name==='music')lastAudio=null;openModule(name);};
+ document.querySelectorAll('[data-v6-module]').forEach(button=>button.addEventListener('click',()=>openModule(button.dataset.v6Module,button.dataset.v6Page)));
+ $('v6Account').onclick=()=>$('profileButton')?.click();
+ $('v6Appearance').onclick=()=>$('vetoGlobalThemeToggle')?.click();
+ $('v6NowOpen').onclick=()=>openModule('music');
+ document.querySelectorAll('[data-v6-audio]').forEach(button=>button.onclick=()=>{checkIdentity();send('music',{action:'audio',command:button.dataset.v6Audio});});
+ $('v6NowSeek').onchange=()=>send('music',{action:'seek',value:Number($('v6NowSeek').value)/1000});
+ const format=value=>Number.isFinite(value)?Math.floor(value/60)+':'+String(Math.floor(value%60)).padStart(2,'0'):'0:00';
+ window.addEventListener('message',event=>{
+  if(event.origin!==location.origin || event.data?.channel!=='vetogram-media')return;
+  const pair=[...frames].find(([,item])=>item.element.contentWindow===event.source);if(!pair)return;
+  checkIdentity();if(!frames.has(pair[0]))return;
+  const [name,item]=pair,message=event.data;
+  if(message.type==='ready'){
+   clearTimeout(item.timer);item.ready=true;
+   if(activeModule===name)moduleStatus('');
+   send(name,{action:'theme',theme:theme()});
+   if(item.page){send(name,{action:'page',page:item.page});item.page=null;}
+   visibility();
+  }
+  if(message.type==='failed'){clearTimeout(item.timer);if(activeModule===name)moduleStatus('Ошибка раздела. Чаты и остальные функции доступны.',true);}
+  if(message.type==='navigate' && message.target==='hub')showHub();
+  if(name==='music' && message.type==='audio'){
+   const data=message.state;
+   if(!data || typeof data.title!=='string' || !data.title){lastAudio=null;chrome();return;}
+   lastAudio=data;
+   $('v6NowTitle').textContent=data.title.slice(0,150);$('v6NowArtist').textContent=String(data.artist||'').slice(0,100);
+   $('v6NowPlay').textContent=data.playing?'Ⅱ':'▶';$('v6NowPlay').setAttribute('aria-label',data.playing?'Пауза':'Воспроизвести');
+   $('v6NowSeek').disabled=!Number.isFinite(data.duration)||data.duration<=0;
+   $('v6NowSeek').value=String(data.duration>0?Math.round(data.position/data.duration*1000):0);
+   $('v6NowTime').textContent=format(data.position);
+   $('v6NowStatus').textContent=data.error?'Аудио недоступно':data.waiting?'Загружаем аудио':'';
+   $('v6NowPlay').disabled=!!data.error;
+   chrome();
+  }
+  if(name==='cinema' && message.type==='video-playing')send('music',{action:'audio',command:'pause'});
+ });
+ window.addEventListener('veto:screen-changed',event=>{checkIdentity();screen=event.detail?.screen||'home';visibility();chrome();});
+ new MutationObserver(()=>{for(const name of frames.keys())send(name,{action:'theme',theme:theme()});}).observe(root,{attributes:true,attributeFilter:['data-veto-theme']});
+ // An account switch invalidates every in-flight media document and Blob URL.
+ window.addEventListener('focus',checkIdentity);
+ document.addEventListener('visibilitychange',checkIdentity);
+ setInterval(checkIdentity,1000);
+ const user=context().user;
+ if(user)$('v6AccountName').textContent=[user.first_name,user.last_name].filter(Boolean).join(' ')||'Твой аккаунт Telegram';
+ const requested=new URLSearchParams(location.search).get('screen');
+ if(definitions[requested])openModule(requested);
+ chrome();
+})();

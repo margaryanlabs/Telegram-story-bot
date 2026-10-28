@@ -1,0 +1,42 @@
+/* Applied only inside the integrated module documents; standalone stays usable. */
+html.v6-embedded{--bg:#090a0f;--shell:#090a0f;--surface:#14151d;--surface2:#1b1b24;--panel:#14151d;--panel2:#1b1b24;--panel-2:#1b1b24;--text:#f4f2f8;--muted:#a1a0af;--accent-soft:#e4c0e0;--pink:#d4b8ff;--purple:#b499da;--accent:#c5a3e3;--line:#ffffff16;--stroke:#ffffff16;--nav:0px;--tg-top:0px!important;--tg-bottom:0px!important;background:var(--bg);color-scheme:dark}
+html.v6-embedded body{background:var(--bg)!important;color:var(--text)!important}
+html.v6-embedded :is(.topbar,.cinema-header,.mobile-top,.mobile-header,.mobile-nav,.bottom-nav,.sidebar>.brand,.sidebar>.nav-label,.sidebar-bottom){display:none!important}
+html.v6-embedded .sidebar{position:sticky!important;inset:0!important;z-index:25!important;display:block!important;width:100%!important;padding:6px 12px!important;border:0!important;border-bottom:1px solid var(--stroke)!important;background:var(--bg)!important}
+html.v6-embedded .side-nav{display:flex!important;flex-direction:row!important;overflow:auto!important;gap:4px!important;scrollbar-width:none}
+html.v6-embedded .side-nav .nav-item{width:auto!important;white-space:nowrap!important;padding:9px 11px!important;flex:none!important;min-height:40px!important;gap:6px!important;font-size:11px!important}
+html.v6-embedded .side-nav .nav-item span{font-size:16px!important;width:17px!important}
+html.v6-embedded .main{margin-left:0!important;padding:12px 16px 95px!important}
+html.v6-embedded .player-bar{left:0!important;bottom:0!important;padding-bottom:8px!important;background:var(--surface)!important}
+html.v6-embedded .hero{min-height:220px!important;border-radius:16px!important;box-shadow:none!important}
+html.v6-embedded .hero h1{font-size:clamp(27px,6vw,46px)!important;line-height:1.1!important}
+html.v6-embedded .hero-stage,html.v6-embedded :is(.hero-orb,.floating-note,.grain,.hero-veto .veto-hero-noise){display:none!important}
+html.v6-embedded .hero-inner{padding:25px!important;width:auto!important}
+html.v6-embedded .hero-pills{display:none!important}
+html.v6-embedded .books-main{padding:16px 16px 50px!important}
+html.v6-embedded .hero-veto{min-height:260px!important;display:block!important;background:var(--panel)!important}
+html.v6-embedded .hero-title-frame h1{font-size:38px!important}
+html.v6-embedded .hero-veto :is(.hero-true-library,.hero-side-index){display:none!important}
+html.v6-embedded .hero-veto .hero-content{padding:22px!important;max-width:650px!important}
+html.v6-embedded .cinema-shell{padding-top:14px!important}
+html.v6-embedded .cinema-nav{position:sticky!important;top:0!important;background:var(--bg)!important}
+html.v6-embedded .cinema-hero{min-height:240px!important;border-radius:16px!important}
+html.v6-embedded .cinema-hero h1{font-size:clamp(27px,6vw,44px)!important}
+html.v6-embedded :is(.hero h1,.section-head h2,.native-home h2,.shelf-heading h2){text-shadow:none!important}
+html.v6-embedded[data-universe-theme="slate"]{--bg:#151b24;--surface:#1c2430;--panel:#1c2430}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]){color-scheme:light;--bg:#f5f4f8;--shell:#f5f4f8;--surface:#fff;--surface2:#f0edf5;--panel:#fff;--panel2:#f0edf5;--panel-2:#f0edf5;--text:#201a2c;--muted:#675e76;--pink:#7240a4;--purple:#7240a4;--accent:#7240a4;--line:#17112620;--stroke:#17112620}
+html.v6-embedded[data-universe-theme="linen"]{--bg:#f2eee9;--shell:#f2eee9;--surface:#fffbf6;--panel:#fffbf6}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) body :is(.hero,.native-home,.catalog-hero,.import-panel,.library-hero,.track-row,.audio-home,.playlist-builder,.playlist-panel,.book,.catalog-bar,.search,.reader-top,.reader-bottom,.cinema-card,.cinema-section,.cinema-detail-body,.hero-veto,.continue-shelf,.discover-detail-body){background:var(--surface)!important;color:var(--text)!important;border-color:var(--line)!important}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) body :is(.hero h1,.hero h2,.hero p,.hero-title-frame h1,.hero-lead,.hero-bottom,.native-home h2,.track-info b,.track-info small,.section-head h2,.book h3,.book p,.featured-editions-heading h2,.shelf-heading h2,.hot-heading h2,.library-hero h1,.playlist-builder h2,.catalog-hero h1,.import-panel h3,.cinema-detail-title){color:var(--text)!important;-webkit-text-stroke:0!important}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) body :is(button,input,select,textarea){color:var(--text);border-color:var(--line)}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .side-nav .nav-item{color:var(--muted)!important}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .side-nav .nav-item.active{color:var(--pink)!important;background:#b68bdf19!important}
+.v6-telegram-library{margin:18px 0;padding:20px;border:1px solid var(--stroke);border-radius:17px;background:var(--surface)}
+.v6-telegram-library h3{margin:0 0 7px;font-size:19px;letter-spacing:-.03em}.v6-telegram-library p{font-size:12px;line-height:1.7;color:var(--muted)}
+.v6-telegram-actions{display:flex;gap:8px;flex-wrap:wrap}.v6-telegram-actions button{padding:11px 13px;min-height:44px;background:transparent;color:var(--text);border:1px solid var(--stroke);border-radius:9px;font-size:11px}
+.v6-telegram-track{display:flex;align-items:center;gap:10px;border-top:1px solid var(--stroke);padding:12px 0}.v6-telegram-track .v6-telegram-cover{width:39px;height:39px;border-radius:10px;background:#bba0cf;color:#2b1d37;display:grid;place-items:center;flex:none}.v6-telegram-track>div{min-width:0;flex:1}.v6-telegram-track strong{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v6-telegram-track small{color:var(--muted);font-size:10px}.v6-telegram-track button{min-height:44px;min-width:42px;background:transparent;border:0;color:var(--text);font-size:17px}.v6-telegram-track button:disabled{font-size:10px;max-width:80px}
+@media(max-width:420px){html.v6-embedded .main,html.v6-embedded .books-main{padding-inline:10px!important}html.v6-embedded .hero-buttons{flex-wrap:wrap}html.v6-embedded .hero-inner{padding:19px!important}html.v6-embedded .hero p{font-size:12px!important}html.v6-embedded .hero-title-frame h1{font-size:31px!important}}
+@media(prefers-reduced-motion:reduce){html.v6-embedded *,html.v6-embedded *::before,html.v6-embedded *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+html.v6-embedded #app{--accent:197,163,227}
+.v6-telegram-cover img{width:100%;height:100%;object-fit:cover;border-radius:10px}

@@ -4,6 +4,11 @@
  * No authorization, webhook, or persistence operations happen here.
  */
 const endpointLoaders = {
+  "books": () => import("./books.js"),
+  "books-discover": () => import("./books-discover.js"),
+  "books-wikisource": () => import("./books-wikisource.js"),
+  "cinema-channels": () => import("./cinema-channels.js"),
+  "music-library": () => import("./music-library.js"),
   "automation-run": () => import("./automation-run.js"),
   "automations": () => import("./automations.js"),
   "business-wizard": () => import("./business-wizard.js"),

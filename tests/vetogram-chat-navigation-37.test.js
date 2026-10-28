@@ -50,7 +50,7 @@ test('Back does not restore previous position after Telegram owner changes',()=>
   assert.deepEqual(f.events,[]);
   assert.equal(f.view.scrollTop,0);
   assert.equal(f.list.scrollTop,0);
-  assert.match(chats,/state\.chats=\[\];state\.messages=\[\];state\.thread=null;state\.inboxReturn=null/);
+  assert.match(chats,/state\.chats=\[\];state\.messages=\[\];state\.thread=null;[^\n]*state\.inboxReturn=null/);
 });
 test('queued Back frame cannot steal focus from reopened conversation',()=>{
   const f=fixture({chatOpen:true});

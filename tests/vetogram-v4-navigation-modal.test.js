@@ -39,7 +39,7 @@ function harness(){
   };
   const screens=['telegram','home','ai','story-engine','privacy','viewers','publish']
     .map(id=>{const e=node('screen:'+id);e.dataset.screen=id;e.classList=classes();if(id==='telegram')e.classList.add('active');return e});
-  const tabs=['telegram','privacy','ai','publish'].map(id=>{const e=node('nav:'+id);e.dataset.nav=id;return e});
+  const tabs=['telegram','publish','media','privacy','profile'].map(id=>{const e=node('nav:'+id);e.dataset.nav=id;return e});
   const tg={initData:'signed-A',initDataUnsafe:{user:{id:111}},
     BackButton:{shown:0,hidden:0,show(){this.shown++},hide(){this.hidden++}}
   };
@@ -108,7 +108,7 @@ test('switching screens closes old shared modal exactly once without returning o
   assert.equal(s.events.filter(x=>x==='vetogram:modal-closed').length,1);
   assert.equal(s.events.filter(x=>x==='veto:screen-changed').length,1);
   assert.equal(s.getState().currentScreen,'ai');
-  assert.equal(s.node('nav:ai').classList.contains('active'),true);
+  assert.equal(s.node('nav:profile').classList.contains('active'),true);
 });
 test('same-screen navigation leaves active auth modal open until user closes it',()=>{
   const s=harness();

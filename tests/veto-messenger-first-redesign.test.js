@@ -5,12 +5,12 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const html=read('public/studio.html'),app=read('public/app.js'),
   messenger=read('public/telegram-chats.js'),css=read('public/veto-global-ui.css');
 
-test('Messenger is the first-class default screen with four primary working tabs',()=>{
+test('Messenger is the first-class default screen with five primary working tabs',()=>{
  assert.match(app,/switchScreen\(requestedScreen \|\| 'telegram'\)/);
  assert.match(app,/telegram:'telegram'/);
  const nav=html.slice(html.indexOf('<nav class="bottom-nav"'),html.indexOf('<div class="action-dock"'));
  assert.deepEqual([...nav.matchAll(/data-nav="([^"]+)"/g)].map(m=>m[1]),
-   ['telegram','publish','ai','privacy']);
+   ['telegram','publish','media','privacy','profile']);
  assert.match(nav,/data-nav="telegram"[^>]*aria-label="Чаты"/);
  assert.match(html,/data-screen="viewers"/);
  assert.match(html,/data-screen="relay"/);
@@ -86,8 +86,9 @@ test('Account changes and authorization failures restore chat tabs',()=>{
   const reset=messenger.slice(messenger.indexOf('function resetOwner()'),messenger.indexOf('function revokeMediaUrls()'));
   assert.ok(reset.includes("window.VetoThemeDock?.('inbox');"));
   const authFailure=messenger.slice(messenger.indexOf('// Authentication and ownership failures'),messenger.indexOf('async function photoRequest('));
-  assert.ok(authFailure.includes("window.VetoThemeDock?.('inbox');"));
-  assert.ok(authFailure.includes("classList.remove('thread-mode')"));
+  assert.match(messenger,/function invalidateThreadAuthorization\(\)/);
+  assert.match(messenger,/state\.threadAuthRejected=authRejected/);
+  assert.match(messenger,/Нужно переподключить Telegram/);
 });
 test('The mobile inbox tab bar has legible labels and meaningful tap targets',()=>{
   assert.ok(css.includes('min-height:50px'));

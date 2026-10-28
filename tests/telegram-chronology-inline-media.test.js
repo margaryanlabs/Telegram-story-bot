@@ -51,7 +51,7 @@ test('Avatar/photo download is owner-authenticated, size-capped and read-only',(
   assert.ok(api.includes('validateTelegramMiniApp('));
   assert.ok(api.includes('getViewerSession(userId)'));
   assert.ok(api.includes("String(session.telegram_account_user_id||'')!==userId"));
-  assert.ok(api.includes('dialogs.find(d=>safeId(d?.id)===chatId)'));
+  assert.ok(api.includes('const dialog=allowed.get(chatId)' ));
   assert.ok(api.includes('const AVATAR_LIMIT=180*1024'));
   assert.ok(api.includes('const PHOTO_LIMIT=4*1024*1024'));
   assert.ok(api.includes('downloadProfilePhoto'));
@@ -72,7 +72,7 @@ test('Live mobile UI pins chats and loads bounded inline photo thumbnails',()=>{
   assert.ok(ui.includes("state.filter==='pinned'"));
   assert.ok(ui.includes('function orderedChats(chats)'));
   assert.ok(ui.includes("avatarRequested:new Set()"));
-  assert.ok(ui.includes("photoRequest('avatar',id)"));
+  assert.ok(ui.includes("fetchAvatarBatch(ids,ownerKey)"));
   assert.ok(ui.includes("photoRequest('photo',ownerChatId,id)"));
   assert.ok(ui.includes('function loadInlinePreviews({requestedId=null}={})'));
   assert.ok(ui.includes("scroller.querySelectorAll('[data-mirror-preview]')"));

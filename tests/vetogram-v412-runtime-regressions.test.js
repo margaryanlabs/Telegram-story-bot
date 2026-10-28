@@ -17,9 +17,9 @@ test('previously archived rows reprobe Telegram under verified owner',()=>{
 });
 test('timed-out history displays a recoverable failure not false empty state',()=>{
   const chat=source('public/telegram-chats.js');
-  assert.match(chat,/threadLoadError=String\(error\?\.message/);
-  assert.match(chat,/История пока недоступна/);
-  assert.match(chat,/Нажми ↻ для повторной проверки/);
+  assert.match(chat,/threadLoadError=String\(error\.message/);
+  assert.match(chat,/Не удалось загрузить историю/);
+  assert.match(chat,/data-mirror-retry-thread/);
 });
 test('Story viewer gives a manual retry without faking viewed state',()=>{
   const stories=source('public/telegram-stories.js');
