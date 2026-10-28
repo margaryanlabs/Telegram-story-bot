@@ -182,3 +182,33 @@ test('frame loading failure before ready retains retry on a later visit',()=>{
  assert.equal(f.node('v6ModuleRetry').hidden,false);
  assert.match(f.node('v6ModuleStatus').textContent,/не загрузился/);
 });
+
+test('late timeout from a removed iframe cannot damage a fresh retry',()=>{
+ const f=fixture(),old=f.open('books'),lateTimeout=f.timers.at(-1);
+ f.message(old,{type:'failed'});
+ f.node('v6ModuleRetry').onclick();
+ const fresh=f.node('v6Frames').children.at(-1);
+ assert.notEqual(fresh,old);
+ assert.equal(f.node('v6ModuleRetry').hidden,true);
+ // setTimeout callback may already be queued before clearTimeout is called.
+ lateTimeout();
+ assert.equal(f.node('v6ModuleRetry').hidden,true);
+ assert.match(f.node('v6ModuleStatus').textContent,/Открываем/);
+ f.message(fresh,{type:'ready'});
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+ lateTimeout();
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+});
+test('late iframe error after replacement cannot obscure the replacement',()=>{
+ const f=fixture(),old=f.open('cinema');
+ f.message(old,{type:'failed'});
+ f.node('v6ModuleRetry').onclick();
+ const fresh=f.node('v6Frames').children.at(-1);
+ assert.equal(f.node('v6ModuleRetry').hidden,true);
+ old.onerror(); // Browser can emit a stale resource error after about:blank.
+ assert.equal(f.node('v6ModuleRetry').hidden,true);
+ assert.match(f.node('v6ModuleStatus').textContent,/Открываем/);
+ f.message(fresh,{type:'ready'});
+ old.onerror();
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+});
