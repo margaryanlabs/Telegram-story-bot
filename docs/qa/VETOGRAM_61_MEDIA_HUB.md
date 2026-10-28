@@ -90,3 +90,11 @@ Keep Draft PR #210 unmerged and existing V5 production unchanged until fresh com
 - Targeted V8 test harness after these changes: **43/43 tests and 203 assertions passed** across the six focused suites. The complete Node test suite was **not executed** and no live Telegram/mobile browser QA took place.
 - Expanded static import audit: 4 entry pages (`studio.html`, `music-module.html`, `cinema.html`, `books.html`), **121 local src/href references checked, 0 missing**. Checked both root-relative (`/`) and page-relative (`./`) asset paths against the complete non-truncated repository tree. No duplicate HTML IDs across any individual entry page.
 - **Release gate:** draft PR #210 stays unmerged, production V5 unchanged; wait for a verified READY preview and real user-device/Node testing. No paid deploy triggered.
+
+## 28 October — stale-frame and scoped readiness hardening; build preflight
+- Late timer and `iframe.error` callbacks now ignore a frame when superseded by a retry. Dedicated regressions cover old callbacks firing after `about:blank` and after replacement readiness.
+- The embedded child must acknowledge the **expected owner scope** on `ready`. Before this handshake, audio/library/recent messages are ignored. A wrong owner scope shows a retryable error; it never populates another user's local media UI.
+- The loading panel now has `aria-live` and `aria-busy`, separate loading/error/ready states, a 44px retry target, focus styling and reduced-motion-friendly animation; no second player or separate website.
+- Extended `npm run check` with five V6.1 Music/Cinema/Books/core JS files previously omitted. Added a build-guard regression checking these gates and presence of the offline Universe suite in the repository's actual npm scripts.
+- **Targeted V8 verification:** 48/48 cases and 233 assertions after the latest UI/controller changes; full Node `npm test` and build not yet run. No real phone/Telegram tests claimed.
+- Connected Vercel `vetogram-cinema-preview` deployments are `CANCELED` through Ignored Build Step; no READY preview found. Do not enable paid builds or GitHub Actions without an intentional authorization and quota review. Production V5 unchanged; PR #210 remains a draft.
