@@ -539,10 +539,25 @@ window.addEventListener("pagehide",()=>{for(const u of state.localUrls)URL.revok
 async function openSavedById(id){
  if(typeof id!=="string"||!id||id.length>220)return false;
  await localDbReady; // Restore IndexedDB before declaring a personal MP3 unavailable.
- const candidates=unique([...state.local,...state.liked,...state.streams,...state.tracks,...state.radios,...state.metadata]);
+ const candidates=unique([...state.local,...state.liked,...state.streams,...state.tracks,...state.radios,
+  ...state.metadata,...(state.search||[]),...(state.queue||[]),
+  ...(typeof demoTracks!=='undefined'?demoTracks:[])]);
  const track=candidates.find(x=>x.id===id);
  showPage("library");
- if(!track)return false;
+ if(!track){
+  // A provider track in the recent shelf may expire between visits. If only
+  // the owner's local metadata survived, search again; do not pretend it plays.
+  const recent=typeof jLoad==='function'&&typeof scope==='string'
+    ?jLoad("vetogram-v61-recent:"+scope,[]):[];
+  const entry=Array.isArray(recent)?recent.find(x=>x?.kind==='music'&&x.id===id):null;
+  if(entry?.title){
+   const query=[entry.subtitle,entry.title].filter(Boolean).join(" ");
+   showPage("search");$("searchInput").value=query;runSearch(query);
+   send("Запись не сохранена для прямого запуска. Найди доступный источник в поиске.");
+   return true;
+  }
+  return false;
+ }
  if(track.source==="metadata"){
   showPage("search");const query=[track.artist,track.title].filter(Boolean).join(" ");
   $("searchInput").value=query;runSearch(query);return true;

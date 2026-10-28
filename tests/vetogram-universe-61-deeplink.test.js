@@ -99,3 +99,26 @@ test('music saved-item deep link waits for the local owner library to restore',a
  assert.equal(await pending,true);
  assert.deepEqual(played,['local-1']);
 });
+
+test('music search and demo sources are valid Continue targets, expired provider audio opens search',async()=>{
+ const source=src('vetogram-music.js');
+ const start=source.indexOf('async function openSavedById('),end=source.indexOf('function getLibrary(){',start);
+ assert.ok(start>=0&&end>start);
+ const state={local:[],liked:[],streams:[],tracks:[],radios:[],metadata:[],search:[{id:'audius:one',title:'Live',source:'audius'}],queue:[]};
+ const actions=[],queries=[],messages=[],input={value:''};
+ const handle=vm.runInNewContext(source.slice(start,end)+';openSavedById',{
+  state,localDbReady:Promise.resolve(),demoTracks:[{id:'demo:orbit',title:'Demo',source:'demo'}],
+  scope:'owner-1',jLoad:(_key,def)=>[{kind:'music',id:'audius:expired',title:'Old hit',subtitle:'Artist'}],
+  unique:list=>list.filter((x,i)=>list.findIndex(y=>y.id===x.id)===i),
+  showPage:page=>actions.push(page),playTrack:track=>actions.push('play:'+track.id),
+  runSearch:query=>queries.push(query),$:()=>input,send:msg=>messages.push(msg)
+ });
+ assert.equal(await handle('demo:orbit'),true);
+ assert.equal(await handle('audius:one'),true);
+ assert.ok(actions.includes('play:demo:orbit')&&actions.includes('play:audius:one'));
+ assert.equal(await handle('audius:expired'),true);
+ assert.deepEqual(queries,['Artist Old hit']);
+ assert.ok(actions.includes('search'));
+ assert.equal(await handle('random-unowned'),false);
+ assert.equal(messages.length,1);
+});

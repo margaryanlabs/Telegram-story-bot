@@ -116,8 +116,9 @@
    visibility();
   }
   if(message.type==='failed'){clearTimeout(item.timer);if(activeModule===name)moduleStatus('Ошибка раздела. Чаты и остальные функции доступны.',true);}
-  if(message.type==='open-item-status'&&message.ok===false&&activeModule===name){
-   moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
+  if(message.type==='open-item-status'&&activeModule===name){
+   if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
+   else moduleStatus('');
   }
   if(message.type==='navigate' && message.target==='hub')showHub();
   if(name==='music'&&message.type==='music-library'&&Array.isArray(message.items)&&typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined'){
