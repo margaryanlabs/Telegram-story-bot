@@ -46,9 +46,9 @@ test('saved book resolver only opens an actual entry from personal saved/progres
  assert.equal(handler('javascript:alert(1)'),false);
  assert.deepEqual(opened.map(x=>x.id),[3,47]);
 });
-test('saved music opens an actual playable track, metadata becomes search only',()=>{
+test('saved music opens an actual playable track, metadata becomes search only',async()=>{
  const source=src('vetogram-music.js');
- const start=source.indexOf('function openSavedById('),end=source.indexOf('window.VetogramMusic=Object.freeze(',start);
+ const start=source.indexOf('async function openSavedById('),end=source.indexOf('window.VetogramMusic=Object.freeze(',start);
  assert.ok(start>=0&&end>start);
  const actions=[],queries=[],messages=[],input={value:''};
  const state={local:[],liked:[
@@ -57,14 +57,14 @@ test('saved music opens an actual playable track, metadata becomes search only',
    {id:'local-1',source:'local',title:'Unavailable without file'}
   ],streams:[],tracks:[],radios:[],metadata:[]};
  const handler=vm.runInNewContext(source.slice(start,end)+';openSavedById',{
-   state,unique:list=>list.filter((x,i)=>list.findIndex(y=>y.id===x.id)===i),
+   state,localDbReady:Promise.resolve(),unique:list=>list.filter((x,i)=>list.findIndex(y=>y.id===x.id)===i),
    showPage:page=>actions.push(['page',page]),playTrack:track=>actions.push(['play',track.id]),
    runSearch:query=>queries.push(query),$:()=>input,send:msg=>messages.push(msg)
  });
- assert.equal(handler('stream-1'),true);
- assert.equal(handler('meta-1'),true);
- assert.equal(handler('local-1'),false);
- assert.equal(handler('missing'),false);
+ assert.equal(await handler('stream-1'),true);
+ assert.equal(await handler('meta-1'),true);
+ assert.equal(await handler('local-1'),false);
+ assert.equal(await handler('missing'),false);
  assert.ok(actions.some(x=>x[0]==='play'&&x[1]==='stream-1'));
  assert.deepEqual(queries,['Artist Not playable']);
  assert.ok(!actions.some(x=>x[0]==='play'&&x[1]==='meta-1'));
