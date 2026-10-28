@@ -20,7 +20,7 @@
       items.push({kind:value.kind,id,title,subtitle,
         at:number(value.at,0,4102444800000), progress:number(value.progress,0,1),
         href:value.kind === 'link' ? url(value.href) : '',
-        source:text(value.source,24)});
+        source:text(value.source,24),description:text(value.description,40)});
     };
     const runtimeMusic=read(store,'vetogram-v61-music:'+scope,[]);
     if(Array.isArray(runtimeMusic))runtimeMusic.slice(0,250).forEach(add);

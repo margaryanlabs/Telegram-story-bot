@@ -36,7 +36,7 @@
    const glyph=el('span','v61-item-icon',icon[item.kind]||'◈');
    const body=el('span','v61-item-copy');
    const title=el('strong','',item.title),metadata=el('small','',
-      [kindLabel[item.kind],item.subtitle].filter(Boolean).join(' · '));
+      [kindLabel[item.kind],item.subtitle,item.description].filter(Boolean).join(' · '));
    body.append(title,metadata);button.append(glyph,body,el('span','v61-item-go','↗'));
    if(item.progress>0&&item.progress<.99){
      const track=el('span','v61-item-progress'),line=el('i');

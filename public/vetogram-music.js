@@ -558,7 +558,7 @@ function getLibrary(){
  const selected=new Map();
  for(const item of [...state.liked,...state.streams,...state.local]){
   if(!item||typeof item.id!=='string'||typeof item.title!=='string')continue;
-  const kind=state.local.some(x=>x.id===item.id)?'own audio':item.source==='metadata'?'saved title':'saved track';
+  const kind=state.local.some(x=>x.id===item.id)?'Личный аудиофайл':item.source==='metadata'?'Только название, без аудио':'Сохранённый трек';
   selected.set(item.id,{id:item.id.slice(0,220),title:item.title.slice(0,150),
    subtitle:String(item.artist||'').slice(0,110),source:'saved',description:kind});
  }
