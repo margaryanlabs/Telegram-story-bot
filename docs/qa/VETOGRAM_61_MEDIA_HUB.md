@@ -29,3 +29,13 @@ Keep Draft PR #210 unmerged and existing V5 production unchanged until fresh com
 - Vault counts only saved materials, and account switching resets its expanded state.
 - New permanent regression test file: `tests/vetogram-universe-61-deeplink.test.js`, including the saved-item failure case.
 - Full Node suite still needs a source checkout/CI runner. This environment has no network access to clone GitHub and Vercel preview is blocked by free quota.
+
+## QA continuation — 28 October 2026 (release hardening)
+- Full-screen VETO PLAYER: guarded against opening without a current track; return focus after closing; Escape and wrapping Tab/Shift+Tab controls; automatically closes on cross-screen navigation and source loss. The original Music iframe/audio element remains the sole player.
+- Media retry: preserves the requested page and item ID, clears and removes a failed first-party iframe before recreating it, and clears stale player metadata for a Music retry.
+- Added two cases to `tests/vetogram-universe-navigation.test.js` for retrying the same film/search and null-audio closure.
+- Added `tests/vetogram-universe-61-assets.test.js` (four offline release-surface tests) covering local asset existence, unique document IDs, five existing primary navigation routes, script bootstrap order and one audio controller.
+- Repository tree audit: 627 tracked paths; all 62 distinct CSS/JS/image references scanned across four entry documents are present, and `public/studio.html` contains 664 unique HTML IDs with no duplicates.
+- Focused VM fixture: ten fullscreen keyboard/focus/source-loss checks passed. A second fixture: nine retry/deep-link checks passed. Syntax of the changed shipping JS and test body was checked.
+- **Limitations**: full Node `npm run vercel-build`, all tests, actual browser-rendered visual QA, private MP3 via bot and live Telegram login/chat/Stories were **not run** in this session. GitHub has no Actions workflow run for V6.1 commit `cb6d254` and direct GitHub clone failed due network resolution; these are NOT passing checks. Preview on Vercel is not available under the previously observed HTTP 402 daily free deployment limit.
+- **Release remains blocked** until those real tests pass. Do not merge this draft PR to main or modify active production V5.
