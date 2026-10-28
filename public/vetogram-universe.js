@@ -60,6 +60,7 @@
    },18000);
    element.addEventListener('error',()=>{
     if(item.ready)return;
+    clearTimeout(item.timer); // A concrete load failure must not become a misleading timeout.
     item.failed=true;item.errorText='Раздел не загрузился. Повтори попытку.';
     if(activeModule===name)moduleStatus(item.errorText,true);
    });
