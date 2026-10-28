@@ -43,9 +43,13 @@
    const element=document.createElement('iframe');element.title='VETOGRAM · '+definition.title;
    element.className='v6-module-frame';element.allow='autoplay; fullscreen; picture-in-picture';
    element.setAttribute('referrerpolicy','same-origin');
-   const item={element,ready:false,page,entryId:id,searchQuery:query||'',lastPage:page||'',lastEntryId:id||'',lastQuery:query||'',timer:0};frames.set(name,item);
-   const film=id||new URLSearchParams(location.search).get('film');
-   element.src=definition.path+'?universe=1'+(name==='cinema'&&film&&/^[A-Za-z0-9_-]{1,200}$/.test(film)?'&film='+encodeURIComponent(film):'');
+   // A saved Cinema film is opened exactly once via the validated iframe
+   // channel after readiness. Never duplicate the same deep link in the URL.
+   const queryFilm=name==='cinema'&&!id?new URLSearchParams(location.search).get('film'):null;
+   const safeFilm=queryFilm&&/^[A-Za-z0-9_-]{1,200}$/.test(queryFilm)?queryFilm:'';
+   const requested=id||safeFilm||'';
+   const item={element,ready:false,page,entryId:requested,searchQuery:query||'',lastPage:page||'',lastEntryId:requested,lastQuery:query||'',timer:0};frames.set(name,item);
+   element.src=definition.path+'?universe=1';
    $('v6Frames').append(element);
    item.timer=setTimeout(()=>{if(!item.ready && activeModule===name)moduleStatus('Раздел не ответил. Можно повторить загрузку или вернуться в чаты.',true);},18000);
    element.addEventListener('error',()=>{if(activeModule===name)moduleStatus('Раздел не загрузился. Повтори попытку.',true);});
