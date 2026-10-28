@@ -133,3 +133,17 @@ test('stale asynchronous open failures cannot overwrite a newer item result',()=
  f.message(books,{type:'open-item-status',ok:false,requestId:1});
  assert.equal(f.node('v6ModuleStatus').hidden,true);
 });
+
+test('account ID switch invalidates old frames even before Telegram refreshes initData string',()=>{
+ const f=fixture(),music=f.open('music');
+ f.message(music,{type:'audio',state:{id:'owned',title:'Private audio',artist:'Owner',duration:90,position:1}});
+ assert.equal(f.node('v6MiniPlayer').hidden,false);
+ const signedBefore=f.window.Telegram.WebApp.initData;
+ f.window.Telegram.WebApp.initDataUnsafe.user.id=999;
+ f.window.tick();
+ assert.equal(f.window.Telegram.WebApp.initData,signedBefore);
+ assert.equal(music.removed,true);
+ assert.equal(music.src,'about:blank');
+ assert.equal(f.node('v6MiniPlayer').hidden,true);
+ assert.equal(f.node('v6NowTitle').textContent,'');
+});

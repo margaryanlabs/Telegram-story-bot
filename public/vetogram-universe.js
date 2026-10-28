@@ -6,7 +6,9 @@
  root.classList.add('vetogram-universe');
  const definitions=Object.freeze({music:{title:'Музыка',path:'/music-module.html'},cinema:{title:'Кино',path:'/cinema.html'},books:{title:'Книги',path:'/books.html'}});
  const frames=new Map();let activeModule='',screen=document.querySelector('.screen.active')?.dataset.screen||'home';
- let identity=String(window.Telegram?.WebApp?.initData||''),lastAudio=null,lastTrackId='',openRequestSerial=0;
+ const identityKey=()=>[String(window.Telegram?.WebApp?.initData||''),
+  String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id||'')].join(':');
+ let identity=identityKey(),lastAudio=null,lastTrackId='',openRequestSerial=0;
  const theme=()=>root.dataset.vetoTheme||'graphite';
  function context(){const api=window.Telegram?.WebApp;return {initData:String(api?.initData||''),user:api?.initDataUnsafe?.user||null,theme:theme()};}
  // This API is read synchronously by our same-origin module adapter only.
@@ -28,7 +30,7 @@
   showHub();chrome();lastTrackId='';$('v61Player').hidden=true;root.classList.remove('v61-player-open');
   if(typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined')window.dispatchEvent(new CustomEvent('vetogram:identity-change'));
  }
- function checkIdentity(){const current=String(window.Telegram?.WebApp?.initData||'');if(current!==identity){identity=current;destroyMedia();}}
+ function checkIdentity(){const current=identityKey();if(current!==identity){identity=current;destroyMedia();}}
  function showHub(){
   activeModule='';$('v6MediaHome').hidden=false;$('v6MediaStage').hidden=true;
   for(const item of frames.values())item.element.hidden=true;
