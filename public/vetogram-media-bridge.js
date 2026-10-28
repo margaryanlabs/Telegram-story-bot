@@ -47,6 +47,14 @@
  window.addEventListener('vetogram:cinema-playing',()=>send({type:'video-playing'}));
  document.addEventListener('vetogram:library-change',update);
  document.addEventListener('vetogram:audio-error',update);
+ let libraryTimer=0;
+ function sendCinemaLibrary(){
+  const list=window.VetogramCinema?.getLibrary?.();
+  if(Array.isArray(list))send({type:'library',items:list.slice(0,120)});
+ }
+ document.addEventListener('vetogram:cinema-library-change',()=>{
+  clearTimeout(libraryTimer);libraryTimer=setTimeout(sendCinemaLibrary,400);
+ });
  for(const [eventName,kind] of [['vetogram:cinema-opened','cinema'],['vetogram:book-progress','books']]){
   document.addEventListener(eventName,event=>{
    const item=event.detail;
@@ -56,5 +64,5 @@
   });
  }
  if(window.VetogramModuleError || (audio&&!window.VetogramMusic))send({type:'failed'});
- else{ready=true;send({type:'ready',scope});update();}
+ else{ready=true;send({type:'ready',scope});update();sendCinemaLibrary();}
 })();

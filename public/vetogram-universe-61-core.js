@@ -39,6 +39,8 @@
       Object.entries(bookSaved).slice(0,350).forEach(([key,b]) => {
         if(b && b.title)add({kind:'books',id:key,title:b.title,subtitle:Array.isArray(b.authors)?b.authors.join(', '):'Книга',source:'saved'});
       });
+    const cinemaIndex=read(store,'vetogram-v61-cinema:'+scope,[]);
+    if(Array.isArray(cinemaIndex))cinemaIndex.slice(0,120).forEach(add);
     const cinemaLibrary=read(store,'vetogram.cinema.library.v1:'+scope,{});
     const cinemaProgress=cinemaLibrary && typeof cinemaLibrary==='object' ? cinemaLibrary.progress||{} : {};
     const recent=read(store,'vetogram-v61-recent:'+scope,[]);

@@ -114,3 +114,8 @@
 #vetogram.vetogram-universe .v61-player-hint{color:#b4aabd;font-size:11px;line-height:1.5;margin:0}
 #vetogram.vetogram-universe .v61-player button:focus-visible,#vetogram.vetogram-universe .v61-player input:focus-visible{outline:2px solid #d4b8ff;outline-offset:3px}
 @media(max-height:620px){#vetogram.vetogram-universe .v61-player-card{gap:9px}#vetogram.vetogram-universe .v61-player-art{width:min(24vh,120px)}}
+
+#vetogram.vetogram-universe .v61-vault-row{display:flex;gap:5px;align-items:center;min-width:0}
+#vetogram.vetogram-universe .v61-vault-row>.v61-item{flex:1}
+#vetogram.vetogram-universe .v61-link-remove{flex:none;width:42px;height:47px;border-radius:10px;border:1px solid var(--v6-line);background:var(--v6-bg);color:var(--v6-muted);font-size:23px;cursor:pointer}
+#vetogram.vetogram-universe.v61-player-open body{overflow:hidden!important}

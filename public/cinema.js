@@ -34,7 +34,11 @@
         history:Array.isArray(value.history)?value.history:[]};
     }catch(_){return {...fallback}}
   }
-  function saveLibrary(){try{localStorage.setItem(LIBRARY_KEY,JSON.stringify(state.library))}catch(_){/* private storage */}}
+  function saveLibrary(){
+    try{localStorage.setItem(LIBRARY_KEY,JSON.stringify(state.library))}catch(_){/* private storage */}
+    if(typeof CustomEvent!=='undefined'&&typeof document.dispatchEvent==='function')
+      document.dispatchEvent(new CustomEvent('vetogram:cinema-library-change'));
+  }
   function filmById(id){return films.find(f=>f.id===id)}
   function filmPage(f){return f.sourcePage || (f.file?"https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(f.file.replace(/ /g,"_")):"https://www.justwatch.com/ru")}
   function text(id,value){const el=$(id);if(el)el.textContent=value==null?"":String(value)}
@@ -972,5 +976,15 @@
     },6800);
   }
   // Exposes only safe navigation for a future Vetogram host. No Telegram privileged auth.
-  window.VetogramCinema={openFilm:id=>{const f=filmById(id);if(f)openDetails(f)},openTab:setTab};
+  window.VetogramCinema={
+   openFilm:id=>{const f=filmById(id);if(f)openDetails(f)},
+   openTab:setTab,
+   getLibrary:()=>[...new Set([...(state.library.favorites||[]),...(state.library.history||[]),...Object.keys(state.library.progress||{})])].slice(0,120).flatMap(id=>{
+     const f=filmById(id);if(!f)return[];
+     const p=state.library.progress[id]||{};
+     return[{id:String(id),title:String(f.title||'').slice(0,150),subtitle:String(f.contentType||'Фильм').slice(0,110),
+       at:Number(p.at)||0,progress:p.d?Math.max(0,Math.min(1,p.t/p.d)):0,
+       source:state.library.favorites.includes(id)?'saved':p.d?'progress':'recent'}];
+   })
+  };
 })();

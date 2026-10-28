@@ -66,7 +66,19 @@
    const all=items(),filtered=core.search(all,'',filter).filter(x=>x.source==='liked'||x.source==='saved'||x.source==='progress'||x.kind==='link');
    vaultList.replaceChildren();
    if(!filtered.length)vaultList.append(el('p','v61-empty','Твоя коллекция пока пуста. Добавь музыку, книгу или собственную ссылку.'));
-   else vaultList.append(...filtered.slice(0,50).map(entryButton));
+   else vaultList.append(...filtered.slice(0,50).map(item=>{
+    const itemRow=el('div','v61-vault-row');itemRow.append(entryButton(item));
+    if(item.kind==='link'){
+     const remove=el('button','v61-link-remove','×');remove.type='button';remove.title='Удалить ссылку';remove.setAttribute('aria-label','Удалить ссылку '+item.title);
+     remove.addEventListener('click',()=>{
+      const links=read('links',[]);
+      if(!Array.isArray(links))return;
+      if(store('links',links.filter(x=>x.href!==item.href))){vaultStatus.textContent='Ссылка удалена из локальной коллекции.';refresh();}
+     });
+     itemRow.append(remove);
+    }
+    return itemRow;
+   }));
    $('v61VaultCount').textContent=String(all.length);
  };
  const refresh=()=>{
@@ -88,6 +100,12 @@
    const list=[entry,...(Array.isArray(existing)?existing:[]).filter(x=>x?.kind!==entry.kind||x?.id!==entry.id)].slice(0,25);
    if(store('recent',list)){renderContinue();renderVault();if(search.value.trim())renderResults();}
  }
+ window.addEventListener('vetogram:media-library',event=>{
+   if(getScope()!==scope)refresh();
+   const incoming=event.detail?.items;
+   if(!Array.isArray(incoming))return;
+   if(store('cinema',incoming.slice(0,120))){renderContinue();renderVault();renderResults();}
+ });
  window.addEventListener('vetogram:media-recent',event=>{
    if(getScope()!==scope)refresh();
    remember(event.detail);

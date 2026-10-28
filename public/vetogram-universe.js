@@ -86,6 +86,14 @@
   }
   if(message.type==='failed'){clearTimeout(item.timer);if(activeModule===name)moduleStatus('Ошибка раздела. Чаты и остальные функции доступны.',true);}
   if(message.type==='navigate' && message.target==='hub')showHub();
+  if(name==='cinema'&&message.type==='library'&&Array.isArray(message.items)&&typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined'){
+   const items=message.items.slice(0,120).filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string').map(x=>({
+    kind:'cinema',id:x.id.slice(0,220),title:x.title.slice(0,150),
+    subtitle:String(x.subtitle||'').slice(0,110),at:Number(x.at)||0,progress:Number(x.progress)||0,
+    source:['saved','progress','recent'].includes(x.source)?x.source:'recent'
+   }));
+   window.dispatchEvent(new CustomEvent('vetogram:media-library',{detail:{items}}));
+  }
   if(message.type==='recent' && message.item && message.item.kind===name &&
      typeof message.item.title==='string' && typeof message.item.id==='string' &&
      typeof window.dispatchEvent==='function' && typeof CustomEvent!=='undefined'){
