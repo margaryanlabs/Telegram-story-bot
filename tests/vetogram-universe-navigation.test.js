@@ -90,3 +90,27 @@ test('empty music cannot open full-player and an unavailable source closes it',(
  assert.equal(f.node('v61PlayerTitle').textContent,'Твоя музыка');
  assert.equal(f.node('v6NowTitle').textContent,'');
 });
+
+test('Chats → Music → Cinema → Books → Chats keeps one frame each and routes visibility correctly',()=>{
+ const f=fixture(),music=f.open('music');
+ f.message(music,{type:'ready'});
+ const visible=frame=>frame.contentWindow.messages.filter(x=>x.message.action==='visible').at(-1)?.message.visible;
+ assert.equal(visible(music),true);
+ const cinema=f.open('cinema');f.message(cinema,{type:'ready'});
+ assert.equal(visible(music),false);
+ assert.equal(visible(cinema),true);
+ const books=f.open('books');f.message(books,{type:'ready'});
+ assert.equal(visible(cinema),false);
+ assert.equal(visible(books),true);
+ f.window.VetoTelegramNavigate('telegram');
+ for(const frame of [music,cinema,books])assert.equal(visible(frame),false);
+ assert.equal(f.node('v6Frames').children.length,3);
+ f.window.VetoTelegramNavigate('media');
+ assert.equal(visible(books),true);
+ const before=f.node('v6Frames').children.length;
+ f.open('music');
+ assert.equal(visible(music),true);
+ assert.equal(visible(books),false);
+ assert.equal(f.node('v6Frames').children.length,before);
+ for(const frame of [music,cinema,books])assert.equal(frame.removed,undefined);
+});
