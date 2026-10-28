@@ -136,6 +136,7 @@ test('stale asynchronous open failures cannot overwrite a newer item result',()=
 
 test('account ID switch invalidates old frames even before Telegram refreshes initData string',()=>{
  const f=fixture(),music=f.open('music');
+ f.window.VetoTelegramNavigate('telegram'); // mini-player is intentionally hidden while Music itself is foreground.
  f.message(music,{type:'audio',state:{id:'owned',title:'Private audio',artist:'Owner',duration:90,position:1}});
  assert.equal(f.node('v6MiniPlayer').hidden,false);
  const signedBefore=f.window.Telegram.WebApp.initData;
