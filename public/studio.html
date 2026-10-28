@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="/vetogram-brand-reveal.css?v=20261028-v60-universe" />
     <link rel="stylesheet" href="/vetogram-mobile-clarity.css?v=20261028-v60-universe" />
   <link rel="stylesheet" href="/vetogram-universe.css?v=20261028-v60-universe" />
+  <link rel="stylesheet" href="/vetogram-universe-61.css?v=20261028-v61-media" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -2237,15 +2238,63 @@
     </section>
 
     <section class="screen v6-media" data-screen="media" aria-label="Медиа VETOGRAM">
-      <div id="v6MediaHome">
-        <header class="v6-heading"><span class="v6-eyebrow">VETOGRAM / МЕДИА</span><h1>Твоё время.<br><em>Твои миры.</em></h1><p>Музыка, кино и книги. Всё, к чему хочется вернуться.</p></header>
-        <div class="v6-media-grid">
-          <button type="button" class="v6-world v6-world-music" data-v6-module="music"><span class="v6-world-index">01 / ЗВУК</span><div class="v6-world-art v6-record" aria-hidden="true"><i></i><b>V</b></div><span class="v6-world-copy"><strong>Музыка</strong><small>Твой ритм, любимые треки<br>и личные плейлисты.</small><span>Слушать <b>↗</b></span></span></button>
-          <button type="button" class="v6-world v6-world-cinema" data-v6-module="cinema"><span class="v6-world-index">02 / КАДР</span><div class="v6-world-art v6-film" aria-hidden="true"><i></i><b>▶</b></div><span class="v6-world-copy"><strong>Кино</strong><small>Фильмы и сериалы.<br>Продолжай с того же кадра.</small><span>Смотреть <b>↗</b></span></span></button>
-          <button type="button" class="v6-world v6-world-books" data-v6-module="books"><span class="v6-world-index">03 / СЛОВО</span><div class="v6-world-art v6-book" aria-hidden="true"><i>VETOGRAM<br><b>ЕЩЁ<br>СТРАНИЦУ.</b></i></div><span class="v6-world-copy"><strong>Книги</strong><small>Полные тексты, свои файлы<br>и место для тишины.</small><span>Читать <b>↗</b></span></span></button>
+      <div id="v6MediaHome" class="v61-home">
+        <header class="v61-hero">
+          <div class="v61-hero-top"><span class="v61-overline"><span class="v61-pulse" aria-hidden="true"></span> VETOGRAM · MEDIA UNIVERSE</span><span class="v61-edition">06.1 / ONE APP</span></div>
+          <h1>Всё твоё.<br><em>В одном месте.</em></h1>
+          <p>Музыка, фильмы и книги. Личная коллекция всегда рядом с твоими чатами.</p>
+        </header>
+        <form class="v61-search" id="v61SearchForm" role="search" autocomplete="off" aria-label="Поиск по личной медиатеке">
+          <span class="v61-search-glyph" aria-hidden="true">⌕</span>
+          <input id="v61Search" type="search" inputmode="search" placeholder="Поиск по твоей коллекции" maxlength="100" aria-label="Найти музыку, книги, кино и ссылки"/>
+          <button id="v61SearchClear" type="button" aria-label="Очистить поиск">×</button>
+        </form>
+        <div class="v61-filters" role="group" aria-label="Тип медиаконтента">
+          <button type="button" data-v61-filter="all" aria-pressed="true">Все</button>
+          <button type="button" data-v61-filter="music" aria-pressed="false">♫ Музыка</button>
+          <button type="button" data-v61-filter="cinema" aria-pressed="false">▷ Кино</button>
+          <button type="button" data-v61-filter="books" aria-pressed="false">▤ Книги</button>
+          <button type="button" data-v61-filter="link" aria-pressed="false">↗ Ссылки</button>
         </div>
-        <aside class="v6-personal-note"><span aria-hidden="true">◈</span><div><strong>Твоя личная коллекция</strong><p>Любимые треки, плейлисты и книги. Добавляй свои файлы и собирай личную коллекцию.</p></div><button type="button" data-v6-module="music" data-v6-page="import">Добавить <span>＋</span></button></aside>
-        <p class="v6-availability">Доступность произведений зависит от источника и региона. Записи без доступного воспроизведения обозначаются в разделах.</p>
+        <section id="v61Results" class="v61-shelf" hidden aria-label="Результаты поиска">
+          <div class="v61-section-heading"><h2 id="v61ResultsTitle">Результаты поиска</h2><small>Только личная коллекция</small></div>
+          <div id="v61ResultsList" class="v61-rows"></div>
+          <p class="v61-discovery-note">Каталоги ищутся отдельно: <button type="button" data-v6-module="music" data-v6-page="search">в музыке</button> · <button type="button" data-v6-module="cinema" data-v6-page="search">в кино</button> · <button type="button" data-v6-module="books">в книгах</button></p>
+        </section>
+        <section id="v61Continue" class="v61-shelf" hidden aria-label="Продолжить">
+          <div class="v61-section-heading"><h2>Продолжить</h2><small>Последнее открытое</small></div>
+          <div id="v61ContinueList" class="v61-rows v61-continue-rows"></div>
+        </section>
+        <section class="v61-world-section" aria-label="Медиаразделы">
+          <div class="v61-section-heading"><h2>Три мира. Один VETOGRAM.</h2><small>Выбери пространство</small></div>
+          <div class="v6-media-grid">
+            <button type="button" class="v6-world v6-world-music" data-v6-module="music"><span class="v6-world-index">01 / СЛУШАТЬ</span><div class="v6-world-art v6-record" aria-hidden="true"><i></i><b>V</b></div><span class="v6-world-copy"><strong>Музыка</strong><small>Треки · плейлисты · радио</small><span>Открыть <b>↗</b></span></span></button>
+            <button type="button" class="v6-world v6-world-cinema" data-v6-module="cinema"><span class="v6-world-index">02 / СМОТРЕТЬ</span><div class="v6-world-art v6-film" aria-hidden="true"><i></i><b>▶</b></div><span class="v6-world-copy"><strong>Кино</strong><small>Фильмы · сериалы · избранное</small><span>Открыть <b>↗</b></span></span></button>
+            <button type="button" class="v6-world v6-world-books" data-v6-module="books"><span class="v6-world-index">03 / ЧИТАТЬ</span><div class="v6-world-art v6-book" aria-hidden="true"><i>VETOGRAM<br><b>ЕЩЁ<br>СТРАНИЦУ.</b></i></div><span class="v6-world-copy"><strong>Книги</strong><small>Читалка · закладки · импорт</small><span>Открыть <b>↗</b></span></span></button>
+          </div>
+        </section>
+        <section class="v61-vault-spotlight" aria-label="Личная медиатека">
+          <div class="v61-vault-mark" aria-hidden="true">◈</div>
+          <div class="v61-vault-description"><span class="v61-overline">PRIVATE COLLECTION</span><h2>VETO VAULT</h2>
+            <p>Сохранённые книги, избранная музыка и свои ссылки. Локально, отдельно для каждого подключённого аккаунта.</p></div>
+          <button type="button" id="v61VaultButton" aria-controls="v61VaultPanel" aria-expanded="false">Моя коллекция <span id="v61VaultCount">0</span> <b>↗</b></button>
+        </section>
+        <section id="v61VaultPanel" class="v61-vault-panel" hidden aria-label="Личная коллекция VETO VAULT">
+          <div class="v61-section-heading"><h2>Личная коллекция</h2><button type="button" id="v61VaultClose">Свернуть ×</button></div>
+          <div class="v61-vault-actions">
+            <button type="button" data-v6-module="music" data-v6-page="import">＋ Добавить аудио</button>
+            <button type="button" data-v6-module="books">＋ Импортировать книгу</button>
+          </div>
+          <form id="v61SaveLink" class="v61-link-form">
+            <label for="v61LinkTitle">Название ссылки</label><input id="v61LinkTitle" type="text" maxlength="110" placeholder="Мой фильм или подборка" required/>
+            <label for="v61LinkUrl">Ссылка HTTPS</label><input id="v61LinkUrl" type="url" inputmode="url" placeholder="https://…" required/>
+            <button type="submit">Сохранить ссылку</button>
+          </form>
+          <p id="v61VaultStatus" class="v61-notice" role="status" aria-live="polite"></p>
+          <div id="v61VaultList" class="v61-rows"></div>
+          <p class="v61-notice">VAULT индексирует твои локально сохранённые материалы. Он не копирует переписки или защищённые чужие произведения и пока не синхронизируется между устройствами.</p>
+        </section>
+        <p class="v6-availability">Просмотр и прослушивание зависят от доступности и прав источника. Тексты и файлы открываются только там, где доступ подтверждён.</p>
       </div>
       <div id="v6MediaStage" class="v6-media-stage" hidden>
         <header class="v6-module-bar"><button type="button" id="v6MediaBack" aria-label="В медиатеку">← <span>Медиа</span></button><strong id="v6ModuleTitle">Музыка</strong><div class="v6-module-switch" role="group" aria-label="Разделы медиа"><button type="button" data-v6-module="music" aria-label="Музыка">♫</button><button type="button" data-v6-module="cinema" aria-label="Кино">▷</button><button type="button" data-v6-module="books" aria-label="Книги">▤</button></div></header>
@@ -2348,5 +2397,7 @@
   <script src="/vetogram-reborn-ai.js?v=20261028-v60-universe" defer></script>
   <script type="module" src="/vetogram-locale.js?v=20261028-v60-universe"></script>
   <script src="/vetogram-universe.js?v=20261028-v60-universe" defer></script>
+  <script src="/vetogram-universe-61-core.js?v=20261028-v61-media" defer></script>
+  <script src="/vetogram-universe-61.js?v=20261028-v61-media" defer></script>
 </body>
 </html>

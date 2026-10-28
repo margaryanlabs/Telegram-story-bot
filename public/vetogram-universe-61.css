@@ -1,0 +1,93 @@
+/* VETOGRAM 6.1 — Canvas Noir, editorial media home (scoped to one existing app). */
+#vetogram.vetogram-universe .v61-home{max-width:1120px;margin:0 auto;padding:0 12px 34px}
+#vetogram.vetogram-universe .v61-hero{padding:25px 0 25px;position:relative;isolation:isolate}
+#vetogram.vetogram-universe .v61-hero-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#vetogram.vetogram-universe .v61-overline{font:650 10px/1.4 inherit;letter-spacing:.15em;color:var(--v6-accent)}
+#vetogram.vetogram-universe .v61-pulse{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;background:var(--v6-accent);box-shadow:0 0 0 4px #d4b8ff15}
+#vetogram.vetogram-universe .v61-edition{font:500 10px/1.4 inherit;color:var(--v6-muted);letter-spacing:.12em}
+#vetogram.vetogram-universe .v61-hero h1{font-weight:650!important;letter-spacing:-.065em!important;line-height:1.04!important;font-size:clamp(34px,5vw,60px)!important;color:var(--v6-text)!important;margin:27px 0 12px!important}
+#vetogram.vetogram-universe .v61-hero h1 em{font-style:normal;color:var(--v6-accent)}
+#vetogram.vetogram-universe .v61-hero p{font-size:13px;color:var(--v6-muted);line-height:1.65;max-width:430px;margin:0}
+#vetogram.vetogram-universe .v61-search{display:flex;align-items:center;gap:10px;height:55px;border:1px solid var(--v6-line);border-radius:15px;background:var(--v6-surface);padding:0 13px}
+#vetogram.vetogram-universe .v61-search:focus-within{border-color:var(--v6-accent)}
+#vetogram.vetogram-universe .v61-search-glyph{font-size:25px;color:var(--v6-accent);line-height:1}
+#vetogram.vetogram-universe .v61-search input{display:block;flex:1;min-width:0;border:0!important;outline:0!important;background:transparent!important;color:var(--v6-text)!important;font:inherit!important;font-size:14px!important;box-shadow:none!important;padding:0!important}
+#vetogram.vetogram-universe .v61-search input::placeholder{color:var(--v6-muted)}
+#vetogram.vetogram-universe .v61-search button{height:40px;width:36px;background:transparent;border:0;color:var(--v6-muted);font-size:22px;cursor:pointer}
+#vetogram.vetogram-universe .v61-filters{display:flex;gap:7px;overflow:auto;scrollbar-width:none;padding:14px 1px 12px;margin-bottom:8px}
+#vetogram.vetogram-universe .v61-filters::-webkit-scrollbar{display:none}
+#vetogram.vetogram-universe .v61-filters button{white-space:nowrap;min-height:37px;padding:6px 14px;border:1px solid var(--v6-line);border-radius:999px;background:transparent;color:var(--v6-muted);font-size:12px;cursor:pointer}
+#vetogram.vetogram-universe .v61-filters button[aria-pressed="true"]{background:color-mix(in srgb,var(--v6-accent) 15%,var(--v6-surface));color:var(--v6-text);border-color:color-mix(in srgb,var(--v6-accent) 45%,transparent)}
+#vetogram.vetogram-universe .v61-shelf,#vetogram.vetogram-universe .v61-world-section{margin:23px 0 31px}
+#vetogram.vetogram-universe .v61-section-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:14px}
+#vetogram.vetogram-universe .v61-section-heading h2{font-size:clamp(17px,2.3vw,23px)!important;font-weight:620!important;letter-spacing:-.035em!important;line-height:1.2!important;margin:0!important;color:var(--v6-text)!important}
+#vetogram.vetogram-universe .v61-section-heading small{font-size:11px;color:var(--v6-muted)}
+#vetogram.vetogram-universe .v61-continue-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#vetogram.vetogram-universe .v61-rows{display:grid;gap:9px}
+#vetogram.vetogram-universe .v61-item{display:flex;gap:12px;align-items:center;min-width:0;min-height:69px;width:100%;text-align:left;border:1px solid var(--v6-line);border-radius:15px;padding:10px 14px;background:var(--v6-surface);color:var(--v6-text);cursor:pointer}
+#vetogram.vetogram-universe .v61-item-icon{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:11px;background:color-mix(in srgb,var(--v6-accent) 13%,transparent);color:var(--v6-accent);font-size:22px}
+#vetogram.vetogram-universe .v61-item-copy{display:grid;gap:4px;min-width:0;flex:1}
+#vetogram.vetogram-universe .v61-item-copy strong{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vetogram.vetogram-universe .v61-item-copy small{font-size:11px;color:var(--v6-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vetogram.vetogram-universe .v61-item-go{color:var(--v6-accent);font-size:18px}
+#vetogram.vetogram-universe .v61-item-progress{display:block;width:100%;height:3px;border-radius:3px;background:var(--v6-line);overflow:hidden;margin-top:4px}
+#vetogram.vetogram-universe .v61-item-progress i{display:block;height:100%;background:var(--v6-accent)}
+#vetogram.vetogram-universe .v61-home .v6-media-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#vetogram.vetogram-universe .v61-home .v6-world{min-height:235px;padding:17px;border-radius:19px}
+#vetogram.vetogram-universe .v61-home .v6-world-art{height:91px;margin:8px 0 10px;transform:scale(.69)}
+#vetogram.vetogram-universe .v61-home .v6-world-copy>strong{font-size:23px}
+#vetogram.vetogram-universe .v61-home .v6-world-copy>small{font-size:11px}
+#vetogram.vetogram-universe .v61-home .v6-world-copy>span{padding-top:9px;margin-top:5px}
+#vetogram.vetogram-universe .v61-vault-spotlight{display:flex;align-items:center;gap:18px;border:1px solid color-mix(in srgb,var(--v6-accent) 22%,var(--v6-line));border-radius:21px;padding:22px 23px;background:linear-gradient(110deg,color-mix(in srgb,var(--v6-accent) 9%,var(--v6-surface)),var(--v6-surface))}
+#vetogram.vetogram-universe .v61-vault-mark{display:grid;place-items:center;font-size:36px;width:69px;height:69px;flex:none;border-radius:17px;background:color-mix(in srgb,var(--v6-accent) 14%,transparent);color:var(--v6-accent)}
+#vetogram.vetogram-universe .v61-vault-description{flex:1;min-width:0}
+#vetogram.vetogram-universe .v61-vault-description h2{font-size:24px!important;letter-spacing:-.04em!important;color:var(--v6-text)!important;margin:5px 0!important}
+#vetogram.vetogram-universe .v61-vault-description p{margin:3px 0 0;line-height:1.6;font-size:11px;color:var(--v6-muted)}
+#vetogram.vetogram-universe #v61VaultButton{display:flex;align-items:center;gap:8px;flex:none;border:1px solid var(--v6-line);border-radius:12px;background:var(--v6-bg);color:var(--v6-text);padding:11px 13px;min-height:44px;font-size:12px;cursor:pointer}
+#vetogram.vetogram-universe #v61VaultButton b{color:var(--v6-accent)}
+#vetogram.vetogram-universe #v61VaultCount{color:var(--v6-accent)}
+#vetogram.vetogram-universe .v61-vault-panel{border:1px solid var(--v6-line);border-radius:18px;padding:18px;margin-top:13px;background:var(--v6-surface)}
+#vetogram.vetogram-universe #v61VaultClose{background:transparent;border:0;color:var(--v6-accent);min-height:40px;cursor:pointer}
+#vetogram.vetogram-universe .v61-vault-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+#vetogram.vetogram-universe .v61-vault-actions button{border:1px solid var(--v6-line);color:var(--v6-text);background:var(--v6-bg);border-radius:10px;padding:12px;min-height:43px;cursor:pointer}
+#vetogram.vetogram-universe .v61-link-form{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;align-items:end;margin-bottom:14px}
+#vetogram.vetogram-universe .v61-link-form label{grid-row:1;font-size:11px;color:var(--v6-muted)}
+#vetogram.vetogram-universe .v61-link-form input{grid-row:2;min-width:0;border-radius:9px;border:1px solid var(--v6-line);background:var(--v6-bg);color:var(--v6-text);padding:10px;height:43px;font-size:12px}
+#vetogram.vetogram-universe .v61-link-form button{grid-column:3;grid-row:2;border:0;background:var(--v6-accent);color:#171021;border-radius:9px;padding:11px;min-height:43px;cursor:pointer}
+#vetogram.vetogram-universe .v61-notice,#vetogram.vetogram-universe .v61-empty{font-size:12px;line-height:1.6;color:var(--v6-muted)}
+#vetogram.vetogram-universe .v61-discovery-note{margin:15px 0;font-size:12px;color:var(--v6-muted)}
+#vetogram.vetogram-universe .v61-discovery-note button{border:0;background:transparent;color:var(--v6-accent);text-decoration:underline;padding:5px}
+#vetogram.vetogram-universe .v61-searching .v61-world-section,#vetogram.vetogram-universe .v61-searching .v61-vault-spotlight,#vetogram.vetogram-universe .v61-searching #v61Continue{display:none!important}
+#vetogram.vetogram-universe .v61-home button:focus-visible,#vetogram.vetogram-universe .v61-home input:focus-visible{outline:2px solid var(--v6-accent)!important;outline-offset:3px}
+@media(max-width:720px){
+ #vetogram.vetogram-universe .v61-home{padding:0 7px 25px}
+ #vetogram.vetogram-universe .v61-hero{padding:14px 0 21px}
+ #vetogram.vetogram-universe .v61-hero h1{font-size:39px!important;margin:17px 0 8px!important}
+ #vetogram.vetogram-universe .v61-hero p{font-size:12px}
+ #vetogram.vetogram-universe .v61-home .v6-media-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ #vetogram.vetogram-universe .v61-home .v6-world{display:flex;flex-direction:column;min-height:165px;padding:11px;border-radius:14px}
+ #vetogram.vetogram-universe .v61-home .v6-world-index{font-size:8px}
+ #vetogram.vetogram-universe .v61-home .v6-world-art{height:55px;width:100%;min-height:55px;margin:3px 0;transform:scale(.38);transform-origin:center}
+ #vetogram.vetogram-universe .v61-home .v6-world-copy{display:flex;gap:5px;margin-top:auto;align-self:stretch;min-width:0}
+ #vetogram.vetogram-universe .v61-home .v6-world-copy>strong{font-size:15px;letter-spacing:-.04em}
+ #vetogram.vetogram-universe .v61-home .v6-world-copy>small{display:none}
+ #vetogram.vetogram-universe .v61-home .v6-world-copy>span{font-size:10px;margin-top:3px;padding-top:7px}
+ #vetogram.vetogram-universe .v61-home .v6-world-copy b{font-size:14px}
+ #vetogram.vetogram-universe .v61-continue-rows{grid-template-columns:1fr}
+ #vetogram.vetogram-universe .v61-vault-spotlight{padding:15px;gap:12px;flex-wrap:wrap}
+ #vetogram.vetogram-universe .v61-vault-mark{width:47px;height:47px;font-size:28px}
+ #vetogram.vetogram-universe .v61-vault-description{flex:1;min-width:180px}
+ #vetogram.vetogram-universe #v61VaultButton{width:100%;justify-content:space-between}
+ #vetogram.vetogram-universe .v61-link-form{grid-template-columns:1fr}
+ #vetogram.vetogram-universe .v61-link-form label,#vetogram.vetogram-universe .v61-link-form input,#vetogram.vetogram-universe .v61-link-form button{grid-column:1;grid-row:auto}
+ #vetogram.vetogram-universe .v61-link-form label:nth-of-type(2){margin-top:5px}
+}
+@media(max-width:360px){
+ #vetogram.vetogram-universe .v61-home .v6-world{padding:9px;min-height:155px}
+ #vetogram.vetogram-universe .v61-home .v6-world-copy>strong{font-size:14px}
+ #vetogram.vetogram-universe .v61-hero h1{font-size:34px!important}
+ #vetogram.vetogram-universe .v61-section-heading small{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ #vetogram.vetogram-universe .v61-home *{scroll-behavior:auto!important;animation:none!important;transition:none!important}
+}
