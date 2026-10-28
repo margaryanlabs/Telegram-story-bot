@@ -10,7 +10,7 @@
        vaultList=$('v61VaultList'),vaultStatus=$('v61VaultStatus');
  if(!home||!search||!resultList||!vault)return;
  let scope='';
- let filter='all';
+ let filter='all',searchLimit=35,vaultLimit=50;
  const kindLabel={music:'Музыка',cinema:'Кино',books:'Книги',link:'Ссылка'};
  const icon={music:'♫',cinema:'▷',books:'▤',link:'↗'};
  const getScope=()=>{
@@ -56,23 +56,32 @@
  };
  const items=()=>core.collect(storage(),scope);
  const renderResults=()=>{
-   const term=search.value.trim(),show=!!term,matched=core.search(items(),term,filter).slice(0,35);
+   const term=search.value.trim(),show=!!term,matched=show?core.search(items(),term,filter):[];
    home.classList.toggle('v61-searching',show);
    results.hidden=!show;resultList.replaceChildren();
+   const more=$('v61SearchMore');
+   more.hidden=!show||matched.length<=searchLimit;
+   more.textContent='Показать ещё · '+Math.min(35,Math.max(0,matched.length-searchLimit))+' из '+matched.length;
    if(!show)return;
    $('v61ResultsTitle').textContent='Результаты в личной коллекции · '+matched.length;
    if(!matched.length)resultList.append(el('p','v61-empty','Пока ничего не сохранено с таким названием. Можешь искать в каталогах ниже.'));
-   else resultList.append(...matched.map(entryButton));
+   else resultList.append(...matched.slice(0,searchLimit).map(entryButton));
  };
  const renderContinue=()=>{
    const found=core.latest(items());
    continueSection.hidden=!found.length;continueList.replaceChildren(...found.map(entryButton));
  };
  const renderVault=()=>{
-   const all=items(),filtered=core.search(all,'',filter).filter(x=>x.source==='liked'||x.source==='saved'||x.source==='progress'||x.kind==='link');
+   const saved=items().filter(x=>x.source==='liked'||x.source==='saved'||x.source==='progress'||x.kind==='link');
+   const filtered=core.search(saved,'',filter);
+   $('v61VaultCount').textContent=String(saved.length);
+   const more=$('v61VaultMore');
+   more.hidden=vault.hidden||filtered.length<=vaultLimit;
+   more.textContent='Показать ещё · '+Math.min(50,Math.max(0,filtered.length-vaultLimit))+' из '+filtered.length;
    vaultList.replaceChildren();
+   if(vault.hidden)return;
    if(!filtered.length)vaultList.append(el('p','v61-empty','Твоя коллекция пока пуста. Добавь музыку, книгу или собственную ссылку.'));
-   else vaultList.append(...filtered.slice(0,50).map(item=>{
+   else vaultList.append(...filtered.slice(0,vaultLimit).map(item=>{
     const itemRow=el('div','v61-vault-row');itemRow.append(entryButton(item));
     if(item.kind==='link'){
      const remove=el('button','v61-link-remove','×');remove.type='button';remove.title='Удалить ссылку';remove.setAttribute('aria-label','Удалить ссылку '+item.title);
@@ -85,12 +94,11 @@
     }
     return itemRow;
    }));
-   $('v61VaultCount').textContent=String(filtered.length);
  };
  const refresh=()=>{
    const next=getScope();
    if(scope!==next){
-     scope=next; search.value=''; filter='all'; vault.hidden=true;
+     scope=next; search.value=''; filter='all'; searchLimit=35;vaultLimit=50;vault.hidden=true;
      $('v61VaultButton').setAttribute('aria-expanded','false');
      home.classList.remove('v61-searching');
      document.querySelectorAll('[data-v61-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v61Filter==='all')));
@@ -124,17 +132,20 @@
    remember(event.detail);
  });
  $('v61SearchForm').addEventListener('submit',event=>event.preventDefault());
- search.addEventListener('input',renderResults);
+ search.addEventListener('input',()=>{searchLimit=35;renderResults();});
+ $('v61SearchMore').addEventListener('click',()=>{searchLimit+=35;renderResults();});
+ $('v61VaultMore').addEventListener('click',()=>{vaultLimit+=50;renderVault();});
  $('v61SearchClear').addEventListener('click',()=>{search.value='';renderResults();search.focus()});
  document.querySelectorAll('[data-v61-filter]').forEach(button=>{
    button.addEventListener('click',()=>{
-     filter=button.dataset.v61Filter;
+     filter=button.dataset.v61Filter;searchLimit=35;vaultLimit=50;
      document.querySelectorAll('[data-v61-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
      renderResults();renderVault();
    });
  });
  $('v61VaultButton').addEventListener('click',()=>{
    vault.hidden=!vault.hidden;
+   if(!vault.hidden)vaultLimit=50;
    $('v61VaultButton').setAttribute('aria-expanded',String(!vault.hidden));
    renderVault();
    if(!vault.hidden)vault.scrollIntoView({behavior:'smooth',block:'nearest'});

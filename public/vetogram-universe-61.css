@@ -119,3 +119,7 @@
 #vetogram.vetogram-universe .v61-vault-row>.v61-item{flex:1}
 #vetogram.vetogram-universe .v61-link-remove{flex:none;width:42px;height:47px;border-radius:10px;border:1px solid var(--v6-line);background:var(--v6-bg);color:var(--v6-muted);font-size:23px;cursor:pointer}
 #vetogram.vetogram-universe.v61-player-open body{overflow:hidden!important}
+
+#vetogram.vetogram-universe .v61-more{width:100%;min-height:45px;margin-top:12px;border:1px solid var(--v6-line);border-radius:12px;background:var(--v6-surface);color:var(--v6-accent);font-size:12px;cursor:pointer}
+#vetogram.vetogram-universe .v61-more:hover{border-color:var(--v6-accent)}
+#vetogram.vetogram-universe .v61-more:focus-visible{outline:2px solid var(--v6-accent);outline-offset:3px}
