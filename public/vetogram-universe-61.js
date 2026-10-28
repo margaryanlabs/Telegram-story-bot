@@ -107,6 +107,12 @@
    const list=[entry,...(Array.isArray(existing)?existing:[]).filter(x=>x?.kind!==entry.kind||x?.id!==entry.id)].slice(0,25);
    if(store('recent',list)){renderContinue();renderVault();if(search.value.trim())renderResults();}
  }
+ window.addEventListener('vetogram:music-library',event=>{
+   if(getScope()!==scope)refresh();
+   const incoming=event.detail?.items;
+   if(!Array.isArray(incoming))return;
+   if(store('music',incoming.slice(0,250))){renderContinue();renderVault();renderResults();}
+ });
  window.addEventListener('vetogram:media-library',event=>{
    if(getScope()!==scope)refresh();
    const incoming=event.detail?.items;

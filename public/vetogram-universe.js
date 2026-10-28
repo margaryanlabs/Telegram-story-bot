@@ -120,6 +120,14 @@
    moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
   }
   if(message.type==='navigate' && message.target==='hub')showHub();
+  if(name==='music'&&message.type==='music-library'&&Array.isArray(message.items)&&typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined'){
+   const items=message.items.slice(0,250).filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string').map(x=>({
+    kind:'music',id:x.id.slice(0,220),title:x.title.slice(0,150),
+    subtitle:String(x.subtitle||'').slice(0,110),at:0,progress:0,source:'saved',
+    description:String(x.description||'').slice(0,24)
+   }));
+   window.dispatchEvent(new CustomEvent('vetogram:music-library',{detail:{items}}));
+  }
   if(name==='cinema'&&message.type==='library'&&Array.isArray(message.items)&&typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined'){
    const items=message.items.slice(0,120).filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string').map(x=>({
     kind:'cinema',id:x.id.slice(0,220),title:x.title.slice(0,150),

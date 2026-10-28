@@ -22,6 +22,8 @@
         href:value.kind === 'link' ? url(value.href) : '',
         source:text(value.source,24)});
     };
+    const runtimeMusic=read(store,'vetogram-v61-music:'+scope,[]);
+    if(Array.isArray(runtimeMusic))runtimeMusic.slice(0,250).forEach(add);
     const savedMusic = read(store,'vetogram-music-v1:'+scope,{});
     if (Array.isArray(savedMusic.liked)) savedMusic.liked.slice(0,250).forEach(item => add({
       kind:'music',id:item.id,title:item.title,subtitle:item.artist || 'Музыка',source:'liked'

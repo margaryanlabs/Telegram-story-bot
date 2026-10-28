@@ -349,7 +349,7 @@ async function loadDb(){
  for(const x of data.slice(0,200)){if(!x?.blob||!x.title)continue;
  const url=URL.createObjectURL(x.blob);state.localUrls.push(url);
  state.local.push({id:x.id,title:x.title,artist:x.artist||"Мой файл",source:"local",url,blob:x.blob,artwork:""})}
- renderLibrary();renderHome();
+ renderLibrary();renderHome();notifyLibrary();
  }catch{send("Хранилище файлов недоступно. Можно слушать файлы до закрытия страницы.")}}
 function renderLibrary(){
  $("statLikes").textContent=state.liked.length;$("statLocal").textContent=state.local.length;$("statMeta").textContent=state.metadata.length;
@@ -553,7 +553,17 @@ function openSavedById(id){
  playTrack(track,candidates.filter(x=>x.source!=="metadata"));
  return true;
 }
-window.VetogramMusic=Object.freeze({showPage,search:runSearch,play:playTrack,openSavedById,
+function getLibrary(){
+ const selected=new Map();
+ for(const item of [...state.liked,...state.streams,...state.local]){
+  if(!item||typeof item.id!=='string'||typeof item.title!=='string')continue;
+  const kind=state.local.some(x=>x.id===item.id)?'own audio':item.source==='metadata'?'saved title':'saved track';
+  selected.set(item.id,{id:item.id.slice(0,220),title:item.title.slice(0,150),
+   subtitle:String(item.artist||'').slice(0,110),source:'saved',description:kind});
+ }
+ return [...selected.values()].slice(0,250);
+}
+window.VetogramMusic=Object.freeze({showPage,search:runSearch,play:playTrack,openSavedById,getLibrary,
  generation:()=>playbackGeneration,now:()=>state.now,queue:()=>state.queue.slice(),local:()=>state.local.slice(),liked:()=>state.liked.slice(),metadata:()=>state.metadata.slice(),
  importList,removeLocal,moveLocal,addStreams,removeStream,moveStream,notifyLibrary,streams:()=>state.streams.slice(),toggleLike,
  state:()=>({page:state.page,now:state.now?.title||null,local:state.local.length,liked:state.liked.length,imported:state.metadata.length})});

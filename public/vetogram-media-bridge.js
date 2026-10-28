@@ -55,7 +55,11 @@
  document.getElementById('cinemaDetailsWatch')?.addEventListener('click',()=>send({type:'video-playing'}));
  video?.addEventListener('playing',()=>send({type:'video-playing'}));
  window.addEventListener('vetogram:cinema-playing',()=>send({type:'video-playing'}));
- document.addEventListener('vetogram:library-change',update);
+ function sendMusicLibrary(){
+  const items=window.VetogramMusic?.getLibrary?.();
+  if(Array.isArray(items))send({type:'music-library',items:items.slice(0,250)});
+ }
+ document.addEventListener('vetogram:library-change',()=>{update();sendMusicLibrary();});
  document.addEventListener('vetogram:audio-error',update);
  let libraryTimer=0;
  function sendCinemaLibrary(){
@@ -74,5 +78,5 @@
   });
  }
  if(window.VetogramModuleError || (audio&&!window.VetogramMusic))send({type:'failed'});
- else{ready=true;send({type:'ready',scope});update();sendCinemaLibrary();}
+ else{ready=true;send({type:'ready',scope});update();sendCinemaLibrary();sendMusicLibrary();}
 })();
