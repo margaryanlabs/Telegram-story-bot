@@ -55,3 +55,10 @@ Keep Draft PR #210 unmerged and existing V5 production unchanged until fresh com
 - VAULT rows are constructed lazily only when open; the closed widget still shows the full saved-item total.
 - Added `tests/vetogram-universe-61-pagination.test.js` with three deterministic checks for 120 books, progressive reveal and account-isolated reset. A separate targeted execution of the real V6.1 scripts passed 9 checks.
 - **QA caveat:** full Node test suite, browser-rendered mobile UX, real chat/Stories/auth and the Vercel preview have not been verified; no deployment, money spent or production V5 modifications.
+
+## V6.1 unified personal search → live module catalogs
+- The Media Home personal collection search remains local-only. If no saved record is found, the user can choose Music/Cinema/Books source discovery with the existing query preserved; no additional service, server or API credentials.
+- Parent passes the trimmed query to the exact matching same-origin child iframe via `action:search-query` after readiness; query never appears in the iframe URL, logs or Telegram launch context. It is retained for explicit retry.
+- Music uses the existing `VetogramMusic.search()`; Cinema uses `VetogramCinema.search()` with its real catalog and matching query; Books uses `VetogramBooks.search()` on the currently selected catalog (if private-local mode is selected it switches to the full-book catalog rather than hiding the search box). External discovery is not represented as guaranteed playback.
+- Cross-origin/forged-window messages are ignored; queries shorter than two characters are not sent into search. Added `tests/vetogram-universe-61-cross-search.test.js` (four focused cases). The matching parent query handoff was exercised in a targeted V8 iframe fixture.
+- The full Node suite and real browser/device QA remain open release gates; no Vercel preview or production change is claimed.
