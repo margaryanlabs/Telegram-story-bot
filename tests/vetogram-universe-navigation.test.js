@@ -246,3 +246,21 @@ test('media activity is ignored until owner scope has passed the ready handshake
  assert.equal(f.node('v6MiniPlayer').hidden,false);
  assert.equal(f.node('v6NowTitle').textContent,'My song');
 });
+
+test('accessible loading, error and ready indicators track real module state',()=>{
+ const f=fixture(),music=f.open('music');
+ assert.equal(f.node('v6Frames').attrs['aria-busy'],'true');
+ assert.equal(f.node('v6ModuleStatus').dataset.phase,'loading');
+ f.message(music,{type:'failed'});
+ assert.equal(f.node('v6ModuleStatus').dataset.phase,'failed');
+ assert.equal(f.node('v6Frames').attrs['aria-busy'],'false');
+ assert.equal(f.node('v6ModuleRetry').hidden,false);
+ f.node('v6ModuleRetry').onclick();
+ const fresh=f.node('v6Frames').children.at(-1);
+ assert.equal(f.node('v6ModuleStatus').dataset.phase,'loading');
+ assert.equal(f.node('v6Frames').attrs['aria-busy'],'true');
+ f.message(fresh,{type:'ready'});
+ assert.equal(f.node('v6ModuleStatus').dataset.phase,'ready');
+ assert.equal(f.node('v6Frames').attrs['aria-busy'],'false');
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+});

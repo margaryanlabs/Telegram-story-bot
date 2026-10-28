@@ -25,7 +25,13 @@
   root.classList.toggle('v6-has-audio',show);
   root.classList.toggle('v6-module-open',screen==='media'&&!!activeModule);
  }
- function moduleStatus(text,retry=false){$('v6ModuleStatus').textContent=text;$('v6ModuleStatus').hidden=!text;$('v6ModuleRetry').hidden=!retry;}
+ function moduleStatus(text,retry=false){
+  const status=$('v6ModuleStatus');
+  status.textContent=text;status.hidden=!text;
+  status.dataset.phase=!text?'ready':retry?'failed':'loading';
+  $('v6ModuleRetry').hidden=!retry;
+  $('v6Frames').setAttribute('aria-busy',String(Boolean(text&&!retry)));
+ }
  function destroyMedia(){
   for(const item of frames.values()){clearTimeout(item.timer);item.element.src='about:blank';item.element.remove();}
   frames.clear();activeModule='';lastAudio=null;
