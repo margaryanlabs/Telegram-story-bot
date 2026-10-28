@@ -85,12 +85,13 @@
     }
     return itemRow;
    }));
-   $('v61VaultCount').textContent=String(all.length);
+   $('v61VaultCount').textContent=String(filtered.length);
  };
  const refresh=()=>{
    const next=getScope();
    if(scope!==next){
      scope=next; search.value=''; filter='all'; vault.hidden=true;
+     $('v61VaultButton').setAttribute('aria-expanded','false');
      home.classList.remove('v61-searching');
      document.querySelectorAll('[data-v61-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v61Filter==='all')));
    }

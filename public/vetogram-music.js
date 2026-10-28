@@ -546,6 +546,10 @@ function openSavedById(id){
   showPage("search");const query=[track.artist,track.title].filter(Boolean).join(" ");
   $("searchInput").value=query;runSearch(query);return true;
  }
+ if(track.source==="local"&&!state.local.some(x=>x.id===id&&x.url)){
+  send("Локальный аудиофайл пока недоступен. Открой библиотеку и проверь импорт.");
+  return false;
+ }
  playTrack(track,candidates.filter(x=>x.source!=="metadata"));
  return true;
 }
