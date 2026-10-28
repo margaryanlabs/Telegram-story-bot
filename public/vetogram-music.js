@@ -105,6 +105,18 @@ function paintRows(target,tracks,context,empty){
 const ART_COLORS=[[238,132,166],[153,143,235],[105,186,205],[237,161,118],[176,132,222]];
 function palette(t){let sum=0;for(const c of String(t?.title||t?.id||"Vetogram"))sum=(sum*31+c.charCodeAt(0))>>>0;
  const c=ART_COLORS[sum%ART_COLORS.length];app.style.setProperty("--accent",c.join(","));}
+function clearFailedTrack(label="Выбери песню"){
+ // Clear metadata as well as audio bytes; otherwise the shell can show a stale track.
+ ++playbackGeneration;
+ audio.pause();audio.removeAttribute("src");audio.load();
+ state.now=null;state.queue=[];state.index=-1;state.playRequested=false;
+ $("miniTitle").textContent=label;$("miniArtist").textContent="";
+ $("studioTitle").textContent=label;$("studioArtist").textContent="";
+ $("miniArt").replaceChildren();$("miniArt").textContent="♫";
+ $("studioCover").replaceChildren();$("studioCover").textContent="V";
+ try{if("mediaSession" in navigator){navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState="none"}}catch{}
+ syncPlayer();
+}
 function playTrack(track,collection){
  if(!track)return;const generation=++playbackGeneration;
  if(track.source==="telegram"&&!track.url){audio.pause();window.VetogramTelegramLibrary?.play(track,collection,generation);return;}
@@ -126,7 +138,16 @@ function playTrack(track,collection){
  if(track.source==="radio")$("studioDuration").textContent="LIVE";
  audio.pause();audio.removeAttribute("src");
  // The stream is always a real provider URL or an in-memory, user-owned Blob URL.
- audio.src=src;audio.load();audio.play().catch(()=>send("Поток недоступен или формат не поддерживается. Выбери другой источник."));
+ audio.src=src;audio.load();audio.play().catch(err=>{
+  if(generation!==playbackGeneration)return; // Ignore rejections for a superseded song.
+  state.playRequested=false;
+  if(err?.name==="NotAllowedError"){
+   send("Для включения звука нажми Play в нижнем плеере.");
+   syncPlayer();return;
+  }
+  clearFailedTrack();
+  send("Поток недоступен или формат не поддерживается. Выбери другой источник.");
+ });
  state.playRequested=true;
  try{if("mediaSession"in navigator&&typeof MediaMetadata!=="undefined"){navigator.mediaSession.metadata=new MediaMetadata({title:track.title,artist:track.artist,album:"Vetogram Music",artwork:art?[{src:art,sizes:"512x512"}]:[]})}}catch{}
  syncPlayer();renderHome();renderSearch();renderLibrary();
@@ -183,7 +204,11 @@ function syncPlayer(){
 }
 for(const event of ["play","pause","ended","durationchange","timeupdate","loadedmetadata","waiting","error"])audio.addEventListener(event,()=>{
  if(event==="ended")next(1,true);
- if(event==="error"&&audio.error&&audio.src){state.playRequested=false;send("Источник не отдаёт воспроизводимый поток.");document.dispatchEvent(new CustomEvent("vetogram:audio-error"));}
+ if(event==="error"&&audio.error&&audio.src){
+  clearFailedTrack();
+  send("Источник не отдаёт воспроизводимый поток.");
+  document.dispatchEvent(new CustomEvent("vetogram:audio-error"));
+ }
  syncPlayer();
 });
 audio.volume=.85;
