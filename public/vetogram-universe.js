@@ -11,6 +11,10 @@
  let identity=identityKey(),lastAudio=null,lastTrackId='',openRequestSerial=0;
  const theme=()=>root.dataset.vetoTheme||'graphite';
  function context(){const api=window.Telegram?.WebApp;return {initData:String(api?.initData||''),user:api?.initDataUnsafe?.user||null,theme:theme()};}
+ function ownerScope(){
+  const c=context(),id=String(c.user?.id||'');
+  return c.initData&&/^\d{1,20}$/.test(id)?'owner-'+id:'device';
+ }
  // This API is read synchronously by our same-origin module adapter only.
  window.VetogramUniverse=Object.freeze({context,open:(name,page,id,query)=>openModule(name,page,id,query)});
  const send=(name,message)=>frames.get(name)?.element.contentWindow?.postMessage({channel:'vetogram-universe',...message},location.origin);
@@ -128,6 +132,12 @@
   checkIdentity();if(!frames.has(pair[0]))return;
   const [name,item]=pair,message=event.data;
   if(message.type==='ready'){
+   if(message.scope!==ownerScope()){
+    clearTimeout(item.timer);item.ready=false;item.failed=true;
+    item.errorText='Аккаунт изменился во время загрузки. Повтори открытие раздела.';
+    if(activeModule===name)moduleStatus(item.errorText,true);
+    return; // Never accept a child with the wrong signed-account library.
+   }
    clearTimeout(item.timer);item.ready=true;item.failed=false;item.errorText='';
    if(activeModule===name)moduleStatus('');
    send(name,{action:'theme',theme:theme()});
@@ -141,6 +151,9 @@
    item.errorText='Ошибка раздела. Чаты и остальные функции доступны.';
    if(activeModule===name)moduleStatus(item.errorText,true);
   }
+  // A module cannot send music/history/library before the current owner
+  // handshake succeeds; this also rejects late events from failed loads.
+  if(!item.ready)return;
   if(message.type==='open-item-status'&&activeModule===name&&Number.isSafeInteger(message.requestId)&&message.requestId===item.openRequestId){
    if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
    else moduleStatus('');

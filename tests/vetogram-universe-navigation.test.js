@@ -20,7 +20,11 @@ function fixture(){
   setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){},setInterval:fn=>{window.tick=fn;},MutationObserver:class{constructor(fn){observers.push(fn);}observe(){}}});
  vm.runInContext(source,context);
  function open(name){node('button-'+name).onclick();return node('v6Frames').children.at(-1);}
- function message(frame,data,origin='https://vetogram.test',source=frame.contentWindow){emit('message',{origin,source,data:{channel:'vetogram-media',...data}});}
+ function message(frame,data,origin='https://vetogram.test',source=frame.contentWindow){
+  const id=String(window.Telegram.WebApp.initDataUnsafe.user?.id||'');
+  const scope=window.Telegram.WebApp.initData&&/^\d{1,20}$/.test(id)?'owner-'+id:'device';
+  emit('message',{origin,source,data:{channel:'vetogram-media',...(data.type==='ready'?{scope}:{}),...data}});
+ }
  return {window,root,node,open,message,emit,timers,observers};
 }
 test('media modules load on first action only and music survives return to Chats',()=>{
@@ -32,7 +36,7 @@ test('media modules load on first action only and music survives return to Chats
  assert.doesNotMatch(music.src,/signed-A|initData|user=/);
 });
 test('mini-player follows actual frame state and unrelated messages cannot impersonate audio',()=>{
- const f=fixture(),music=f.open('music');f.emit('veto:screen-changed',{detail:{screen:'telegram'}});
+ const f=fixture(),music=f.open('music');f.message(music,{type:'ready'});f.emit('veto:screen-changed',{detail:{screen:'telegram'}});
  const data={type:'audio',state:{title:'Личный трек',artist:'Автор',playing:true,position:12,duration:100}};
  f.message(music,data,'https://evil.test');assert.equal(f.node('v6MiniPlayer').hidden,true);
  f.message(music,data,'https://vetogram.test',{});assert.equal(f.node('v6MiniPlayer').hidden,true);
@@ -41,6 +45,7 @@ test('mini-player follows actual frame state and unrelated messages cannot imper
 });
 test('owner change destroys every media document and removes private player metadata',()=>{
  const f=fixture(),music=f.open('music');const cinema=f.open('cinema');
+ f.message(music,{type:'ready'});
  f.message(music,{type:'audio',state:{title:'Private',artist:'A',duration:30,position:1}});
  f.window.Telegram.WebApp.initData='signed-B';f.window.Telegram.WebApp.initDataUnsafe.user.id=22;f.window.tick();
  assert.equal(music.removed,true);assert.equal(cinema.removed,true);assert.equal(music.src,'about:blank');assert.equal(f.node('v6MiniPlayer').hidden,true);
@@ -53,7 +58,7 @@ test('module error and retry remain isolated and theme is propagated to existing
  f.root.dataset.vetoTheme='pearl';f.observers[0]();assert.ok(fresh.contentWindow.messages.some(x=>x.message.action==='theme'&&x.message.theme==='pearl'));
 });
 test('cinema playback asks the music module to pause without changing Messenger controllers',()=>{
- const f=fixture(),music=f.open('music'),cinema=f.open('cinema');f.message(cinema,{type:'video-playing'});
+ const f=fixture(),music=f.open('music'),cinema=f.open('cinema');f.message(cinema,{type:'ready'});f.message(cinema,{type:'video-playing'});
  assert.ok(music.contentWindow.messages.some(x=>x.message.action==='audio'&&x.message.command==='pause'));
  assert.equal(typeof f.window.VetoTelegramNavigate,'function');
 });
@@ -136,6 +141,7 @@ test('stale asynchronous open failures cannot overwrite a newer item result',()=
 
 test('account ID switch invalidates old frames even before Telegram refreshes initData string',()=>{
  const f=fixture(),music=f.open('music');
+ f.message(music,{type:'ready'});
  f.window.VetoTelegramNavigate('telegram'); // mini-player is intentionally hidden while Music itself is foreground.
  f.message(music,{type:'audio',state:{id:'owned',title:'Private audio',artist:'Owner',duration:90,position:1}});
  assert.equal(f.node('v6MiniPlayer').hidden,false);
@@ -211,4 +217,32 @@ test('late iframe error after replacement cannot obscure the replacement',()=>{
  f.message(fresh,{type:'ready'});
  old.onerror();
  assert.equal(f.node('v6ModuleStatus').hidden,true);
+});
+
+test('a wrong-owner ready event never activates a stale media module',()=>{
+ const f=fixture(),books=f.open('books');
+ f.message(books,{type:'ready',scope:'owner-999'});
+ assert.equal(f.node('v6ModuleRetry').hidden,false);
+ assert.match(f.node('v6ModuleStatus').textContent,/Аккаунт/);
+ const posted=books.contentWindow.messages.map(x=>x.message.action);
+ assert.ok(!posted.includes('page'));
+ f.node('v6ModuleRetry').onclick();
+ const fresh=f.node('v6Frames').children.at(-1);
+ assert.notEqual(books,fresh);
+ f.message(fresh,{type:'ready'});
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+ assert.equal(f.node('v6ModuleRetry').hidden,true);
+});
+test('media activity is ignored until owner scope has passed the ready handshake',()=>{
+ const f=fixture(),music=f.open('music');
+ f.window.VetoTelegramNavigate('telegram');
+ f.message(music,{type:'audio',state:{id:'private',title:'Do not render',artist:'A'}});
+ assert.equal(f.node('v6MiniPlayer').hidden,true);
+ f.message(music,{type:'ready',scope:'owner-999'});
+ f.message(music,{type:'audio',state:{id:'private',title:'Still rejected',artist:'A'}});
+ assert.equal(f.node('v6MiniPlayer').hidden,true);
+ f.message(music,{type:'ready'});
+ f.message(music,{type:'audio',state:{id:'valid',title:'My song',artist:'B'}});
+ assert.equal(f.node('v6MiniPlayer').hidden,false);
+ assert.equal(f.node('v6NowTitle').textContent,'My song');
 });
