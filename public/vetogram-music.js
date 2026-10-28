@@ -533,11 +533,12 @@ function makeWaves(){
   const bar=dom("i");bar.style.setProperty("--height",(12+(i*37%78))+"%");bar.style.setProperty("--speed",(0.45+(i*7%10)*0.1)+"s");bar.style.animationDelay=("-"+(i%9)*.11)+"s";box.append(bar)
  }}
 }
-makeWaves();renderHome();renderLibrary();loadDb();loadTrending();
+makeWaves();renderHome();renderLibrary();const localDbReady=loadDb();loadTrending();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&!audio.paused)syncPlayer()});
 window.addEventListener("pagehide",()=>{for(const u of state.localUrls)URL.revokeObjectURL(u);for(const u of demoUrls.values())URL.revokeObjectURL(u)});
-function openSavedById(id){
+async function openSavedById(id){
  if(typeof id!=="string"||!id||id.length>220)return false;
+ await localDbReady; // Restore IndexedDB before declaring a personal MP3 unavailable.
  const candidates=unique([...state.local,...state.liked,...state.streams,...state.tracks,...state.radios,...state.metadata]);
  const track=candidates.find(x=>x.id===id);
  showPage("library");

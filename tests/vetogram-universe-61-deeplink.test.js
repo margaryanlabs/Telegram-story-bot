@@ -71,12 +71,31 @@ test('saved music opens an actual playable track, metadata becomes search only',
  assert.ok(messages.length===1);
 });
 
-test('missing saved media sends a truthful failure rather than doing nothing',()=>{
+test('missing saved media sends a truthful failure rather than doing nothing',async()=>{
  const events=new Map(),sent=[],parent={postMessage:x=>sent.push(x)};
  const window={VetogramMediaContext:{embedded:true,scope:'owner-42'},VetogramBooks:{openSavedByKey:()=>false},addEventListener:(name,cb)=>events.set(name,cb)};
  const document={getElementById:()=>null,querySelectorAll:()=>[],addEventListener(){},documentElement:{dataset:{}},body:{classList:{toggle(){}}}};
  vm.runInNewContext(src('vetogram-media-bridge.js'),{window,document,parent,location:{origin:'https://vetogram.test'},setTimeout:()=>1,clearTimeout(){}});
  events.get('message')({source:parent,origin:'https://vetogram.test',data:{channel:'vetogram-universe',action:'open-item',id:'missing-key'}});
+ await Promise.resolve();
  assert.ok(sent.some(x=>x.type==='open-item-status'&&x.ok===false));
  assert.ok(src('vetogram-universe.js').includes("message.type==='open-item-status'"));
+});
+
+test('music saved-item deep link waits for the local owner library to restore',async()=>{
+ let release;const ready=new Promise(resolve=>{release=resolve});
+ const code=src('vetogram-music.js');
+ const start=code.indexOf('async function openSavedById(');
+ const end=code.indexOf('function getLibrary(){',start);
+ assert.ok(start>=0&&end>start);
+ const state={local:[],liked:[],streams:[],tracks:[],radios:[],metadata:[]},played=[];
+ const handler=vm.runInNewContext(code.slice(start,end)+';openSavedById',{
+  state,localDbReady:ready,unique:x=>x,showPage:()=>{},playTrack:track=>played.push(track.id),
+  runSearch:()=>{},$:()=>({value:''}),send:()=>{}
+ });
+ const pending=handler('local-1');
+ state.local.push({id:'local-1',title:'Restored MP3',source:'local',url:'blob:private'});
+ release();
+ assert.equal(await pending,true);
+ assert.deepEqual(played,['local-1']);
 });
