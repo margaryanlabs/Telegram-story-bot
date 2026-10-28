@@ -48,7 +48,7 @@ test('saved book resolver only opens an actual entry from personal saved/progres
 });
 test('saved music opens an actual playable track, metadata becomes search only',async()=>{
  const source=src('vetogram-music.js');
- const start=source.indexOf('async function openSavedById('),end=source.indexOf('window.VetogramMusic=Object.freeze(',start);
+ const start=source.indexOf('let savedOpenEpoch=0;'),end=source.indexOf('window.VetogramMusic=Object.freeze(',start);
  assert.ok(start>=0&&end>start);
  const actions=[],queries=[],messages=[],input={value:''};
  const state={local:[],liked:[
@@ -57,7 +57,7 @@ test('saved music opens an actual playable track, metadata becomes search only',
    {id:'local-1',source:'local',title:'Unavailable without file'}
   ],streams:[],tracks:[],radios:[],metadata:[]};
  const handler=vm.runInNewContext(source.slice(start,end)+';openSavedById',{
-   state,localDbReady:Promise.resolve(),unique:list=>list.filter((x,i)=>list.findIndex(y=>y.id===x.id)===i),
+   state,playbackGeneration:0,localDbReady:Promise.resolve(),unique:list=>list.filter((x,i)=>list.findIndex(y=>y.id===x.id)===i),
    showPage:page=>actions.push(['page',page]),playTrack:track=>actions.push(['play',track.id]),
    runSearch:query=>queries.push(query),$:()=>input,send:msg=>messages.push(msg)
  });
@@ -85,12 +85,12 @@ test('missing saved media sends a truthful failure rather than doing nothing',as
 test('music saved-item deep link waits for the local owner library to restore',async()=>{
  let release;const ready=new Promise(resolve=>{release=resolve});
  const code=src('vetogram-music.js');
- const start=code.indexOf('async function openSavedById(');
+ const start=code.indexOf('let savedOpenEpoch=0;');
  const end=code.indexOf('function getLibrary(){',start);
  assert.ok(start>=0&&end>start);
  const state={local:[],liked:[],streams:[],tracks:[],radios:[],metadata:[]},played=[];
  const handler=vm.runInNewContext(code.slice(start,end)+';openSavedById',{
-  state,localDbReady:ready,unique:x=>x,showPage:()=>{},playTrack:track=>played.push(track.id),
+  state,playbackGeneration:0,localDbReady:ready,unique:x=>x,showPage:()=>{},playTrack:track=>played.push(track.id),
   runSearch:()=>{},$:()=>({value:''}),send:()=>{}
  });
  const pending=handler('local-1');
@@ -102,12 +102,12 @@ test('music saved-item deep link waits for the local owner library to restore',a
 
 test('music search and demo sources are valid Continue targets, expired provider audio opens search',async()=>{
  const source=src('vetogram-music.js');
- const start=source.indexOf('async function openSavedById('),end=source.indexOf('function getLibrary(){',start);
+ const start=source.indexOf('let savedOpenEpoch=0;'),end=source.indexOf('function getLibrary(){',start);
  assert.ok(start>=0&&end>start);
  const state={local:[],liked:[],streams:[],tracks:[],radios:[],metadata:[],search:[{id:'audius:one',title:'Live',source:'audius'}],queue:[]};
  const actions=[],queries=[],messages=[],input={value:''};
  const handle=vm.runInNewContext(source.slice(start,end)+';openSavedById',{
-  state,localDbReady:Promise.resolve(),demoTracks:[{id:'demo:orbit',title:'Demo',source:'demo'}],
+  state,playbackGeneration:0,localDbReady:Promise.resolve(),demoTracks:[{id:'demo:orbit',title:'Demo',source:'demo'}],
   scope:'owner-1',jLoad:(_key,def)=>[{kind:'music',id:'audius:expired',title:'Old hit',subtitle:'Artist'}],
   unique:list=>list.filter((x,i)=>list.findIndex(y=>y.id===x.id)===i),
   showPage:page=>actions.push(page),playTrack:track=>actions.push('play:'+track.id),
@@ -121,4 +121,62 @@ test('music search and demo sources are valid Continue targets, expired provider
  assert.ok(actions.includes('search'));
  assert.equal(await handle('random-unowned'),false);
  assert.equal(messages.length,1);
+});
+
+test('latest saved-Music tap wins if multiple file opens wait for IndexedDB',async()=>{
+ let resume;const ready=new Promise(resolve=>{resume=resolve});
+ const code=src('vetogram-music.js');
+ const start=code.indexOf('let savedOpenEpoch=0;'),end=code.indexOf('function getLibrary(){',start);
+ const played=[],context=vm.createContext({
+  state:{local:[],liked:[],streams:[],tracks:[],radios:[],metadata:[]},
+  localDbReady:ready,playbackGeneration:0,unique:x=>x,showPage:()=>{},
+  playTrack:track=>played.push(track.id),runSearch:()=>{},$:()=>({value:''}),send:()=>{}
+ });
+ const open=vm.runInContext(code.slice(start,end)+';openSavedById',context);
+ const first=open('one'),second=open('two');
+ context.state.local.push(
+  {id:'one',title:'Old track',source:'local',url:'blob:old'},
+  {id:'two',title:'Latest track',source:'local',url:'blob:new'});
+ resume();
+ assert.equal(await first,false);
+ assert.equal(await second,true);
+ assert.deepEqual(played,['two']);
+});
+test('manually starting a new track cancels a pending saved-Music restore',async()=>{
+ let resume;const ready=new Promise(resolve=>{resume=resolve});
+ const code=src('vetogram-music.js');
+ const start=code.indexOf('let savedOpenEpoch=0;'),end=code.indexOf('function getLibrary(){',start);
+ const played=[],context=vm.createContext({
+  state:{local:[],liked:[],streams:[],tracks:[],radios:[],metadata:[]},
+  localDbReady:ready,playbackGeneration:0,unique:x=>x,showPage:()=>{},
+  playTrack:track=>played.push(track.id),runSearch:()=>{},$:()=>({value:''}),send:()=>{}
+ });
+ const open=vm.runInContext(code.slice(start,end)+';openSavedById',context);
+ const pending=open('old');
+ context.state.local.push({id:'old',title:'Past song',source:'local',url:'blob:old'});
+ context.playbackGeneration++;
+ resume();
+ assert.equal(await pending,false);
+ assert.deepEqual(played,[]);
+});
+test('bridge echoes correlation ID on asynchronous open success and failure',async()=>{
+ const events=new Map(),sent=[],parent={postMessage:x=>sent.push(x)};
+ let resolveOld;const oldPending=new Promise(r=>{resolveOld=r});
+ const window={VetogramMediaContext:{embedded:true,scope:'owner-1'},
+  VetogramMusic:{now:()=>null,getLibrary:()=>[],openSavedById:id=>id==='old'?oldPending:Promise.resolve(true)},
+  addEventListener:(k,cb)=>events.set(k,cb)};
+ const document={getElementById:()=>null,querySelectorAll:()=>[],addEventListener(){},documentElement:{dataset:{}},body:{classList:{toggle(){}}}};
+ vm.runInNewContext(src('vetogram-media-bridge.js'),{
+  window,document,parent,location:{origin:'https://vetogram.test'},setTimeout:()=>1,clearTimeout(){}
+ });
+ const receive=(id,requestId)=>events.get('message')({
+  source:parent,origin:'https://vetogram.test',
+  data:{channel:'vetogram-universe',action:'open-item',id,requestId}
+ });
+ receive('old',51);receive('new',52);
+ await Promise.resolve();
+ assert.ok(sent.some(x=>x.type==='open-item-status'&&x.ok&&x.requestId===52));
+ resolveOld(false);
+ await Promise.resolve();
+ assert.ok(sent.some(x=>x.type==='open-item-status'&&!x.ok&&x.requestId===51));
 });

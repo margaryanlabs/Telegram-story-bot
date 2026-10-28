@@ -114,3 +114,22 @@ test('Chats → Music → Cinema → Books → Chats keeps one frame each and ro
  assert.equal(f.node('v6Frames').children.length,before);
  for(const frame of [music,cinema,books])assert.equal(frame.removed,undefined);
 });
+
+test('stale asynchronous open failures cannot overwrite a newer item result',()=>{
+ const f=fixture(),books=f.open('books');
+ f.message(books,{type:'ready'});
+ f.window.VetogramUniverse.open('books',undefined,'old-book');
+ const old=books.contentWindow.messages.filter(x=>x.message.action==='open-item').at(-1)?.message;
+ f.window.VetogramUniverse.open('books',undefined,'new-book');
+ const newer=books.contentWindow.messages.filter(x=>x.message.action==='open-item').at(-1)?.message;
+ assert.ok(old&&newer&&old.requestId<newer.requestId);
+ assert.equal(newer.id,'new-book');
+ f.message(books,{type:'open-item-status',ok:false,requestId:old.requestId});
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+ f.message(books,{type:'open-item-status',ok:false,requestId:newer.requestId});
+ assert.equal(f.node('v6ModuleStatus').hidden,false);
+ f.message(books,{type:'open-item-status',ok:true,requestId:newer.requestId});
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+ f.message(books,{type:'open-item-status',ok:false,requestId:1});
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+});
