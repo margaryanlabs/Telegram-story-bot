@@ -57,3 +57,36 @@ test('cinema playback asks the music module to pause without changing Messenger 
  assert.ok(music.contentWindow.messages.some(x=>x.message.action==='audio'&&x.message.command==='pause'));
  assert.equal(typeof f.window.VetoTelegramNavigate,'function');
 });
+
+test('retry preserves the requested film and media page after a failed iframe',()=>{
+ const f=fixture();f.window.VetogramUniverse.open('cinema','search','film-42');
+ const first=f.node('v6Frames').children.at(-1);
+ assert.match(first.src,/film=film-42/);
+ f.message(first,{type:'ready'});
+ assert.ok(first.contentWindow.messages.some(x=>x.action==='page'&&x.page==='search'));
+ assert.ok(first.contentWindow.messages.some(x=>x.action==='open-item'&&x.id==='film-42'));
+ f.message(first,{type:'failed'});
+ assert.equal(f.node('v6ModuleRetry').hidden,false);
+ f.node('v6ModuleRetry').onclick();
+ assert.equal(first.removed,true);
+ assert.equal(first.src,'about:blank');
+ const second=f.node('v6Frames').children.at(-1);
+ assert.notEqual(first,second);
+ assert.match(second.src,/film=film-42/);
+ f.message(second,{type:'ready'});
+ assert.ok(second.contentWindow.messages.some(x=>x.action==='page'&&x.page==='search'));
+ assert.ok(second.contentWindow.messages.some(x=>x.action==='open-item'&&x.id==='film-42'));
+});
+test('empty music cannot open full-player and an unavailable source closes it',()=>{
+ const f=fixture(),full=f.node('v61Player');
+ full.hidden=true;
+ f.node('v6NowOpen').onclick();assert.equal(full.hidden,true);
+ const music=f.open('music');
+ f.message(music,{type:'ready'});
+ f.message(music,{type:'audio',state:{id:'song',title:'Song',artist:'Artist',position:0,duration:100,playing:true}});
+ f.node('v6NowOpen').onclick();assert.equal(full.hidden,false);
+ f.message(music,{type:'audio',state:null});
+ assert.equal(full.hidden,true);
+ assert.equal(f.node('v61PlayerTitle').textContent,'Твоя музыка');
+ assert.equal(f.node('v6NowTitle').textContent,'');
+});
