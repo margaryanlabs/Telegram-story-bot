@@ -54,12 +54,12 @@
    element.src=definition.path+'?universe=1';
    $('v6Frames').append(element);
    item.timer=setTimeout(()=>{
-    if(item.ready)return;
+    if(frames.get(name)!==item||item.ready)return;
     item.failed=true;item.errorText='Раздел не ответил. Можно повторить загрузку или вернуться в чаты.';
     if(activeModule===name)moduleStatus(item.errorText,true);
    },18000);
    element.addEventListener('error',()=>{
-    if(item.ready)return;
+    if(frames.get(name)!==item||item.ready)return;
     clearTimeout(item.timer); // A concrete load failure must not become a misleading timeout.
     item.failed=true;item.errorText='Раздел не загрузился. Повтори попытку.';
     if(activeModule===name)moduleStatus(item.errorText,true);
