@@ -62,11 +62,33 @@
  document.querySelectorAll('[data-v6-module]').forEach(button=>button.addEventListener('click',()=>openModule(button.dataset.v6Module,button.dataset.v6Page)));
  $('v6Account').onclick=()=>$('profileButton')?.click();
  $('v6Appearance').onclick=()=>$('vetoGlobalThemeToggle')?.click();
- const closePlayer=()=>{$('v61Player').hidden=true;root.classList.remove('v61-player-open');};
- $('v6NowOpen').onclick=()=>{$('v61Player').hidden=false;root.classList.add('v61-player-open');};
+ let playerReturnFocus=null;
+ const closePlayer=()=>{
+  const wasOpen=!$('v61Player').hidden;
+  $('v61Player').hidden=true;root.classList.remove('v61-player-open');
+  if(wasOpen)playerReturnFocus?.focus?.({preventScroll:true});
+  playerReturnFocus=null;
+ };
+ $('v6NowOpen').onclick=()=>{
+  checkIdentity();
+  if(!lastAudio)return; // Never open an empty or stale full-screen player.
+  playerReturnFocus=document.activeElement||$('v6NowOpen');
+  $('v61Player').hidden=false;root.classList.add('v61-player-open');
+  $('v61PlayerClose').focus?.({preventScroll:true});
+ };
  $('v61PlayerClose').onclick=closePlayer;
  $('v61PlayerMusic').onclick=()=>{closePlayer();openModule('music');};
- document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('v61Player').hidden)closePlayer();});
+ document.addEventListener('keydown',event=>{
+  const overlay=$('v61Player');
+  if(overlay.hidden)return;
+  if(event.key==='Escape'){event.preventDefault?.();closePlayer();return;}
+  if(event.key!=='Tab')return;
+  const controls=Array.from(overlay.querySelectorAll?.('button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])')||[]);
+  if(!controls.length){event.preventDefault?.();overlay.focus?.();return;}
+  const first=controls[0],last=controls[controls.length-1],active=document.activeElement;
+  if(event.shiftKey&&(active===first||!overlay.contains?.(active))){event.preventDefault?.();last.focus?.();}
+  else if(!event.shiftKey&&(active===last||!overlay.contains?.(active))){event.preventDefault?.();first.focus?.();}
+ });
  document.querySelectorAll('[data-v6-audio]').forEach(button=>button.onclick=()=>{checkIdentity();send('music',{action:'audio',command:button.dataset.v6Audio});});
  $('v6NowSeek').onchange=()=>send('music',{action:'seek',value:Number($('v6NowSeek').value)/1000});
  $('v61PlayerSeek').onchange=()=>send('music',{action:'seek',value:Number($('v61PlayerSeek').value)/1000});
@@ -131,6 +153,7 @@
    $('v61PlayerTitle').textContent=data.title.slice(0,150);
    $('v61PlayerArtist').textContent=String(data.artist||'').slice(0,100);
    $('v61PlayerPlay').textContent=data.playing?'Ⅱ':'▶';
+   $('v61PlayerPlay').setAttribute('aria-label',data.playing?'Пауза':'Воспроизвести');
    $('v61PlayerPlay').disabled=!!data.error;
    $('v61PlayerClock').textContent=format(data.position);
    $('v61PlayerSeek').disabled=!Number.isFinite(data.duration)||data.duration<=0;
@@ -139,7 +162,11 @@
   }
   if(name==='cinema' && message.type==='video-playing')send('music',{action:'audio',command:'pause'});
  });
- window.addEventListener('veto:screen-changed',event=>{checkIdentity();screen=event.detail?.screen||'home';visibility();chrome();});
+ window.addEventListener('veto:screen-changed',event=>{
+  checkIdentity();const incoming=event.detail?.screen||'home';
+  if(incoming!==screen&&!$('v61Player').hidden)closePlayer();
+  screen=incoming;visibility();chrome();
+ });
  new MutationObserver(()=>{for(const name of frames.keys())send(name,{action:'theme',theme:theme()});}).observe(root,{attributes:true,attributeFilter:['data-veto-theme']});
  // An account switch invalidates every in-flight media document and Blob URL.
  window.addEventListener('focus',checkIdentity);
