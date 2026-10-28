@@ -4,9 +4,9 @@ import test from 'node:test';import assert from 'node:assert/strict';import vm f
 const source=readFileSync(new URL('../public/vetogram-universe.js',import.meta.url),'utf8');
 function fixture(){
  const nodes=new Map(),events=new Map(),timers=[],observers=[];
- const classes=()=>{const set=new Set();return {add:n=>set.add(n),toggle(n,on){on?set.add(n):set.delete(n);},contains:n=>set.has(n)};};
+ const classes=()=>{const set=new Set();return {add:n=>set.add(n),remove:n=>set.delete(n),toggle(n,on){on?set.add(n):set.delete(n);},contains:n=>set.has(n)};};
  function node(id){if(!nodes.has(id))nodes.set(id,{id,dataset:{},hidden:false,classList:classes(),children:[],attrs:{},value:'0',textContent:'',
-  setAttribute(k,v){this.attrs[k]=v;},append(el){this.children.push(el);},addEventListener(k,f){this['on'+k]=f;},remove(){this.removed=true;},
+  setAttribute(k,v){this.attrs[k]=v;},append(el){this.children.push(el);},addEventListener(k,f){this['on'+k]=f;},focus(){},remove(){this.removed=true;},
   click(){this.onclick?.();},contentWindow:{messages:[],postMessage(message,origin){this.messages.push({message,origin});}}});return nodes.get(id);}
  const root={dataset:{vetoTheme:'graphite'},classList:classes()};
  const buttons=['music','cinema','books'].map(name=>{const el=node('button-'+name);el.dataset.v6Module=name;return el;});
@@ -61,10 +61,10 @@ test('cinema playback asks the music module to pause without changing Messenger 
 test('retry preserves the requested film and media page after a failed iframe',()=>{
  const f=fixture();f.window.VetogramUniverse.open('cinema','search','film-42');
  const first=f.node('v6Frames').children.at(-1);
- assert.match(first.src,/film=film-42/);
+ assert.equal(first.src,'/cinema.html?universe=1');
  f.message(first,{type:'ready'});
- assert.ok(first.contentWindow.messages.some(x=>x.action==='page'&&x.page==='search'));
- assert.ok(first.contentWindow.messages.some(x=>x.action==='open-item'&&x.id==='film-42'));
+ assert.ok(first.contentWindow.messages.some(x=>x.message.action='page'&&x.page==='search'));
+ assert.ok(first.contentWindow.messages.some(x=>x.message.action='open-item'&&x.id==='film-42'));
  f.message(first,{type:'failed'});
  assert.equal(f.node('v6ModuleRetry').hidden,false);
  f.node('v6ModuleRetry').onclick();
@@ -72,10 +72,10 @@ test('retry preserves the requested film and media page after a failed iframe',(
  assert.equal(first.src,'about:blank');
  const second=f.node('v6Frames').children.at(-1);
  assert.notEqual(first,second);
- assert.match(second.src,/film=film-42/);
+ assert.equal(second.src,'/cinema.html?universe=1');
  f.message(second,{type:'ready'});
- assert.ok(second.contentWindow.messages.some(x=>x.action==='page'&&x.page==='search'));
- assert.ok(second.contentWindow.messages.some(x=>x.action==='open-item'&&x.id==='film-42'));
+ assert.ok(second.contentWindow.messages.some(x=>x.message.action==='page'&&x.message.page==='search'));
+ assert.ok(second.contentWindow.messages.some(x=>x.message.action==='open-item'&&x.message.id==='film-42'));
 });
 test('empty music cannot open full-player and an unavailable source closes it',()=>{
  const f=fixture(),full=f.node('v61Player');
