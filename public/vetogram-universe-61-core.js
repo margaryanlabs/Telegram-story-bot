@@ -56,7 +56,7 @@
     for (const item of items) {
       const key=item.kind+':'+item.id;
       const prev=lookup.get(key);
-      if(!prev || item.at>prev.at) lookup.set(key,{...prev,...item,source:item.source==='progress'?'progress':prev?.source||item.source});
+      if(!prev || item.at>prev.at) lookup.set(key,{...prev,...item,source:['saved','liked','progress'].includes(prev?.source)?prev.source:item.source});
     }
     return [...lookup.values()].sort((a,b)=>b.at-a.at||a.title.localeCompare(b.title,'ru')).slice(0,400);
   }

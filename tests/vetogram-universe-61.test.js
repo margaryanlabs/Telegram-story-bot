@@ -30,3 +30,12 @@ test('search filters kinds and matches all query tokens without leaking other ty
  assert.equal(core.search(rows,'night song','music').length,1);
  assert.equal(core.search(rows,'night missing','all').length,0);
 });
+
+test('Cinema favorite remains in VAULT after newer recent activity',()=>{
+ const db=store({
+  'vetogram-v61-cinema:owner-7':[{kind:'cinema',id:'f-1',title:'Избранный фильм',source:'saved',at:0}],
+  'vetogram-v61-recent:owner-7':[{kind:'cinema',id:'f-1',title:'Избранный фильм',source:'recent',at:555}]
+ });
+ const [item]=core.collect(db,'owner-7');
+ assert.equal(item.source,'saved');assert.equal(item.at,555);
+});
