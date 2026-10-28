@@ -43,14 +43,14 @@
    const element=document.createElement('iframe');element.title='VETOGRAM · '+definition.title;
    element.className='v6-module-frame';element.allow='autoplay; fullscreen; picture-in-picture';
    element.setAttribute('referrerpolicy','same-origin');
-   const item={element,ready:false,page,entryId:id,timer:0};frames.set(name,item);
+   const item={element,ready:false,page,entryId:id,lastPage:page||'',lastEntryId:id||'',timer:0};frames.set(name,item);
    const film=id||new URLSearchParams(location.search).get('film');
    element.src=definition.path+'?universe=1'+(name==='cinema'&&film&&/^[A-Za-z0-9_-]{1,200}$/.test(film)?'&film='+encodeURIComponent(film):'');
    $('v6Frames').append(element);
    item.timer=setTimeout(()=>{if(!item.ready && activeModule===name)moduleStatus('Раздел не ответил. Можно повторить загрузку или вернуться в чаты.',true);},18000);
    element.addEventListener('error',()=>{if(activeModule===name)moduleStatus('Раздел не загрузился. Повтори попытку.',true);});
   }
-  const item=frames.get(name);if(page)item.page=page;if(id)item.entryId=id;
+  const item=frames.get(name);if(page){item.page=page;item.lastPage=page;}if(id){item.entryId=id;item.lastEntryId=id;}
   moduleStatus(item.ready?'':'Открываем '+definition.title.toLowerCase()+'…');
   for(const [key,entry]of frames)entry.element.hidden=key!==name;
   if(item.ready && item.page){send(name,{action:'page',page:item.page});item.page=null;}
@@ -58,7 +58,16 @@
   visibility();chrome();
  }
  $('v6MediaBack').onclick=showHub;
- $('v6ModuleRetry').onclick=()=>{const name=activeModule,item=frames.get(name);if(!item)return;clearTimeout(item.timer);item.element.remove();frames.delete(name);if(name==='music')lastAudio=null;openModule(name);};
+ $('v6ModuleRetry').onclick=()=>{
+  const name=activeModule,item=frames.get(name);if(!item)return;
+  const page=item.lastPage,id=item.lastEntryId;
+  clearTimeout(item.timer);item.element.src='about:blank';item.element.remove();frames.delete(name);
+  if(name==='music'){
+   lastAudio=null;lastTrackId='';closePlayer();
+   $('v6NowTitle').textContent='';$('v6NowArtist').textContent='';
+  }
+  openModule(name,page,id);
+ };
  document.querySelectorAll('[data-v6-module]').forEach(button=>button.addEventListener('click',()=>openModule(button.dataset.v6Module,button.dataset.v6Page)));
  $('v6Account').onclick=()=>$('profileButton')?.click();
  $('v6Appearance').onclick=()=>$('vetoGlobalThemeToggle')?.click();
@@ -131,7 +140,7 @@
    const data=message.state;
    if(!data || typeof data.title!=='string' || !data.title){
     lastAudio=null;lastTrackId='';
-    $('v61Player').hidden=true;root.classList.remove('v61-player-open');
+    closePlayer();
     $('v61PlayerTitle').textContent='Твоя музыка';$('v61PlayerArtist').textContent='';
     $('v6NowTitle').textContent='';$('v6NowArtist').textContent='';
     chrome();return;
