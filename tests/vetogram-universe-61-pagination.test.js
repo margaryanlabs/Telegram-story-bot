@@ -5,13 +5,14 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const read=x=>readFileSync(new URL('../public/'+x,import.meta.url),'utf8');
 
-function fixture(){
+function fixture({denyStorage=false}={}){
  const records={
   'vetogram-books-v1:owner-7:progress':Object.fromEntries(Array.from({length:120},(_,i)=>[
    'book-'+i,{id:i+1,title:'Книга '+i,at:i+1,workFraction:.2}
   ]))
  };
- const localStorage={getItem:k=>Object.hasOwn(records,k)?JSON.stringify(records[k]):null,
+ let reads=0;
+ const localStorage={getItem(k){reads++;return Object.hasOwn(records,k)?JSON.stringify(records[k]):null},
   setItem(k,v){records[k]=JSON.parse(v)}};
  const nodes=new Map(),listeners={};let owner=7;
  const makeNode=tag=>({
@@ -26,11 +27,15 @@ function fixture(){
  const document={getElementById:$,createElement:makeNode,
   querySelectorAll:selector=>selector.includes('data-v61-filter')?filters:[],
   addEventListener(name,cb){listeners['doc:'+name]=cb}};
- const window={localStorage,VetogramUniverse:{context(){return {initData:'signed',user:{id:owner}}},open(){}},
+ const window={VetogramUniverse:{context(){return {initData:'signed',user:{id:owner}}},open(){}},
   addEventListener(name,cb){listeners[name]=cb}};
+ Object.defineProperty(window,'localStorage',{
+  get(){if(denyStorage)throw new Error('Storage is blocked');return localStorage}
+ });
  vm.runInNewContext(read('vetogram-universe-61-core.js'),{window,URL});
  vm.runInNewContext(read('vetogram-universe-61.js'),{window,document,URL});
- return {$,filters,listeners,changeOwner(id){owner=id}};
+ return {$,filters,listeners,getReadCount:()=>reads,
+  put(key,value){records[key]=value},changeOwner(id){owner=id}};
 }
 test('search returns all 120 real records through progressive reveal, with true count',()=>{
  const f=fixture(),search=f.$('v61Search');
@@ -65,4 +70,28 @@ test('changing signed owner resets pagination and removes old private titles',()
  f.changeOwner(7);f.listeners['vetogram:identity-change']();
  f.$('v61VaultButton').events.click();
  assert.equal(f.$('v61VaultList').children.length,50); // reset, not previous 100
+});
+
+test('search keystrokes reuse indexed metadata; real storage change invalidates it',()=>{
+ const f=fixture(),search=f.$('v61Search'),before=f.getReadCount();
+ search.value='Кни';search.events.input();
+ search.value='Книг';search.events.input();
+ search.value='Книга';search.events.input();
+ assert.equal(f.getReadCount(),before);
+ assert.equal(f.$('v61ResultsTitle').textContent,'Результаты в личной коллекции · 120');
+ f.put('vetogram-v61-links:owner-7',[{
+  kind:'link',id:'https://example.org/private',title:'Новый сайт',href:'https://example.org/private'
+ }]);
+ f.listeners.storage({key:'vetogram-v61-links:owner-7'});
+ assert.equal(f.$('v61VaultCount').textContent,'121');
+ search.value='Новый';search.events.input();
+ assert.equal(f.$('v61ResultsTitle').textContent,'Результаты в личной коллекции · 1');
+});
+test('unavailable browser storage never claims a personal link was saved',()=>{
+ const f=fixture({denyStorage:true});
+ f.$('v61LinkTitle').value='Личный сайт';
+ f.$('v61LinkUrl').value='https://example.org/';
+ f.$('v61SaveLink').events.submit({preventDefault(){}});
+ assert.equal(f.$('v61VaultStatus').textContent,'Не удалось сохранить ссылку на устройстве.');
+ assert.equal(f.$('v61VaultCount').textContent,'0');
 });

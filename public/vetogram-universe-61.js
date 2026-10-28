@@ -9,7 +9,7 @@
        continueSection=$('v61Continue'),vault=$('v61VaultPanel'),
        vaultList=$('v61VaultList'),vaultStatus=$('v61VaultStatus');
  if(!home||!search||!resultList||!vault)return;
- let scope='';
+ let scope='',cachedItems=null;
  let filter='all',searchLimit=35,vaultLimit=50;
  const kindLabel={music:'Музыка',cinema:'Кино',books:'Книги',link:'Ссылка'};
  const icon={music:'♫',cinema:'▷',books:'▤',link:'↗'};
@@ -19,11 +19,17 @@
  };
  const key=suffix=>'vetogram-v61-'+suffix+':'+scope;
  const storage=()=>{
-   try{return window.localStorage;}catch{return {getItem(){return null},setItem(){}};}
+   try{return window.localStorage;}catch{return null;}
  };
  const read=(suffix,fallback)=>core.read(storage(),key(suffix),fallback);
  const store=(suffix,value)=>{
-   try{storage().setItem(key(suffix),JSON.stringify(value));return true;}catch{return false;}
+   try{
+     const target=storage();
+     if(!target)return false; // Never claim success when private storage is blocked.
+     target.setItem(key(suffix),JSON.stringify(value));
+     cachedItems=null;
+     return true;
+   }catch{return false;}
  };
  const el=(tag,className,label)=>{
    const node=document.createElement(tag);
@@ -54,7 +60,7 @@
    });
    return button;
  };
- const items=()=>core.collect(storage(),scope);
+ const items=()=>cachedItems||(cachedItems=core.collect(storage(),scope));
  const renderResults=()=>{
    const term=search.value.trim(),show=!!term,matched=show?core.search(items(),term,filter):[];
    home.classList.toggle('v61-searching',show);
@@ -96,6 +102,7 @@
    }));
  };
  const refresh=()=>{
+   cachedItems=null; // Re-read only on real data/identity/focus changes.
    const next=getScope();
    if(scope!==next){
      scope=next; search.value=''; filter='all'; searchLimit=35;vaultLimit=50;vault.hidden=true;
