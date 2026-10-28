@@ -92,6 +92,16 @@
      subtitle:String(item.subtitle||'').slice(0,110),progress:Number(item.progress)||0}});
   });
  }
- if(window.VetogramModuleError || (audio&&!window.VetogramMusic))send({type:'failed'});
+ // Document and bridge can load while the actual module controller fails.
+ // Never tell the main app that a blank Cinema/Books page is ready.
+ const path=String(location.pathname||'');
+ const required=path.endsWith('/music-module.html')?'music'
+  :path.endsWith('/cinema.html')?'cinema'
+  :path.endsWith('/books.html')?'books':'unknown';
+ const moduleReady=required==='music'?typeof window.VetogramMusic?.showPage==='function'
+  :required==='cinema'?typeof window.VetogramCinema?.openTab==='function'
+  :required==='books'?typeof window.VetogramBooks?.openSavedByKey==='function'
+  :false;
+ if(window.VetogramModuleError||!moduleReady)send({type:'failed'});
  else{ready=true;send({type:'ready',scope});update();sendCinemaLibrary();sendMusicLibrary();}
 })();
