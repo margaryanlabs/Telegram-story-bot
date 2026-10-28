@@ -43,7 +43,13 @@
      line.style.width=Math.round(item.progress*100)+'%';track.append(line);body.append(track);
    }
    button.addEventListener('click',()=>{
-     if(item.kind==='link'){const safe=core.url(item.href);if(safe)window.open(safe,'_blank','noopener,noreferrer');}
+     if(item.kind==='link'){
+      const safe=core.url(item.href);
+      if(safe){
+       if(typeof window.Telegram?.WebApp?.openLink==='function')window.Telegram.WebApp.openLink(safe);
+       else window.open(safe,'_blank','noopener,noreferrer');
+      }
+     }
      else api.open(item.kind,item.kind==='music'?'library':undefined,item.kind==='cinema'?item.id:undefined);
    });
    return button;
