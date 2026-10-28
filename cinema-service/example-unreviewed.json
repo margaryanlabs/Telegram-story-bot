@@ -1,0 +1,25 @@
+[
+  {
+    "id": "mosfilm-afonya",
+    "title_ru": "Афоня",
+    "original_title": "Afonya",
+    "year": 1975,
+    "description": "Советская комедия Георгия Данелии.",
+    "duration_seconds": 5520,
+    "genres": [
+      "Советское кино",
+      "Комедия",
+      "Русский язык"
+    ],
+    "spoken_language": "ru",
+    "rights_holder": "Киноконцерн «Мосфильм»",
+    "attribution": "Киноконцерн «Мосфильм» / RUTUBE",
+    "provider": "RUTUBE",
+    "source_type": "iframe",
+    "playback_url": "https://rutube.ru/play/embed/97251d193ac780c0138596f3aea972c0",
+    "source_page_url": "https://rutube.ru/video/97251d193ac780c0138596f3aea972c0/",
+    "rights_basis": "official_embed",
+    "rights_evidence_url": "https://rutube.ru/info/embed/",
+    "rights_reviewed": false
+  }
+]
