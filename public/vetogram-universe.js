@@ -104,7 +104,13 @@
   }
   if(name==='music' && message.type==='audio'){
    const data=message.state;
-   if(!data || typeof data.title!=='string' || !data.title){lastAudio=null;chrome();return;}
+   if(!data || typeof data.title!=='string' || !data.title){
+    lastAudio=null;lastTrackId='';
+    $('v61Player').hidden=true;root.classList.remove('v61-player-open');
+    $('v61PlayerTitle').textContent='Твоя музыка';$('v61PlayerArtist').textContent='';
+    $('v6NowTitle').textContent='';$('v6NowArtist').textContent='';
+    chrome();return;
+   }
    lastAudio=data;
    if(data.id && data.title && !data.error && data.id!==lastTrackId){
     lastTrackId=String(data.id);
