@@ -148,3 +148,37 @@ test('account ID switch invalidates old frames even before Telegram refreshes in
  assert.equal(f.node('v6MiniPlayer').hidden,true);
  assert.equal(f.node('v6NowTitle').textContent,'');
 });
+
+test('failed Music frame keeps retry visible after navigating away and back',()=>{
+ const f=fixture(),music=f.open('music');
+ f.message(music,{type:'failed'});
+ assert.equal(f.node('v6ModuleRetry').hidden,false);
+ f.open('cinema');
+ f.open('music');
+ assert.equal(f.node('v6ModuleRetry').hidden,false);
+ assert.match(f.node('v6ModuleStatus').textContent,/Ошибка раздела/);
+ f.node('v6ModuleRetry').onclick();
+ const fresh=f.node('v6Frames').children.at(-1);
+ assert.notEqual(fresh,music);
+ assert.equal(music.src,'about:blank');
+ assert.equal(f.node('v6ModuleRetry').hidden,true);
+ f.message(fresh,{type:'ready'});
+ assert.equal(f.node('v6ModuleStatus').hidden,true);
+});
+test('background iframe timeout remains recoverable on next media visit',()=>{
+ const f=fixture(),music=f.open('music'),pending=f.timers.at(-1);
+ assert.equal(typeof pending,'function');
+ f.window.VetoTelegramNavigate('telegram');
+ pending(); // Simulates the real 18-second timer while Chats is foreground.
+ f.open('music');
+ assert.equal(f.node('v6ModuleRetry').hidden,false);
+ assert.match(f.node('v6ModuleStatus').textContent,/не ответил/);
+});
+test('frame loading failure before ready retains retry on a later visit',()=>{
+ const f=fixture(),books=f.open('books');
+ books.onerror();
+ f.window.VetoTelegramNavigate('telegram');
+ f.open('books');
+ assert.equal(f.node('v6ModuleRetry').hidden,false);
+ assert.match(f.node('v6ModuleStatus').textContent,/не загрузился/);
+});
