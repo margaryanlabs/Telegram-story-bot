@@ -341,7 +341,7 @@
   }
   function selectedFilms(){
     let list=films.filter(f=>f.externalRutube||!f.discoveryOnly||state.showUnverified||f.russianAudioStatus==="catalog-listed");
-    if(state.tab==="foreign")list=list.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim));
+    if(state.tab==="foreign")list=list.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim||f.featuredForeign));
     if(state.tab==="series")list=list.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true);
     if(state.tab==="catalog")list=list.filter(f=>f.contentType!=="Сериалы"&&!f.externalRutube);
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
