@@ -51,3 +51,28 @@ test('parent retains search query for first load and retry; it is never embedded
  assert.match(p,/openModule\(name,page,id,query\)/);
  assert.doesNotMatch(p,/encodeURIComponent\(query\)/);
 });
+
+test('Books discovery uses broad Spotlight instead of the 18-item whole-text subset',()=>{
+ const source=read('books.js');
+ const start=source.indexOf('  function search(query){');
+ const end=source.indexOf('  window.VetogramBooks=Object.freeze(',start);
+ assert.ok(start>=0&&end>start);
+ const state={source:'complete',query:''},calls=[],input={value:''};
+ const search=vm.runInNewContext(source.slice(start,end)+';search',{
+  state,persist:(k,v)=>calls.push(['persist',k,v]),
+  $:id=>id==='bookSearch'?input:{focus(){}},
+  setSourceInfo:()=>calls.push(['source-info']),
+  loadCatalog:()=>{calls.push(['catalog',state.source,state.query]);return Promise.resolve()}
+ });
+ assert.equal(search('Гарри Поттер'),true);
+ assert.equal(state.source,'spotlight');
+ assert.equal(state.query,'Гарри Поттер');
+ assert.deepEqual(calls.at(-1),['catalog','spotlight','Гарри Поттер']);
+ state.source='local';
+ assert.equal(search('Анна Каренина'),true);
+ assert.equal(state.source,'spotlight');
+ state.source='ru';
+ assert.equal(search('Достоевский'),true);
+ assert.equal(state.source,'ru');
+ assert.equal(search('А'),false);
+});
