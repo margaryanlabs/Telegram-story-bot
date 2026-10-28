@@ -536,9 +536,13 @@ function makeWaves(){
 makeWaves();renderHome();renderLibrary();const localDbReady=loadDb();loadTrending();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&!audio.paused)syncPlayer()});
 window.addEventListener("pagehide",()=>{for(const u of state.localUrls)URL.revokeObjectURL(u);for(const u of demoUrls.values())URL.revokeObjectURL(u)});
+let savedOpenEpoch=0;
 async function openSavedById(id){
  if(typeof id!=="string"||!id||id.length>220)return false;
+ const epoch=++savedOpenEpoch,playbackAtRequest=playbackGeneration;
  await localDbReady; // Restore IndexedDB before declaring a personal MP3 unavailable.
+ // Last tap wins: no old pending file restoration can replace the current track.
+ if(epoch!==savedOpenEpoch||playbackAtRequest!==playbackGeneration)return false;
  const candidates=unique([...state.local,...state.liked,...state.streams,...state.tracks,...state.radios,
   ...state.metadata,...(state.search||[]),...(state.queue||[]),
   ...(typeof demoTracks!=='undefined'?demoTracks:[])]);

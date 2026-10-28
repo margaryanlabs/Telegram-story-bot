@@ -39,15 +39,16 @@
     else window.VetogramBooks?.search?.(query);
    }
   }
-  if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length<=220){
+  if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length>0&&data.id.length<=220){
+    const requestId=Number.isSafeInteger(data.requestId)&&data.requestId>0?data.requestId:0;
     let opened=false;
     try{
       if(window.VetogramCinema?.openFilm)opened=window.VetogramCinema.openFilm(data.id);
       else if(window.VetogramBooks?.openSavedByKey)opened=window.VetogramBooks.openSavedByKey(data.id);
       else if(window.VetogramMusic?.openSavedById)opened=window.VetogramMusic.openSavedById(data.id);
-      Promise.resolve(opened).then(ok=>send({type:'open-item-status',ok:ok===true}))
-        .catch(()=>send({type:'open-item-status',ok:false}));
-    }catch{send({type:'open-item-status',ok:false});}
+      Promise.resolve(opened).then(ok=>send({type:'open-item-status',ok:ok===true,requestId}))
+        .catch(()=>send({type:'open-item-status',ok:false,requestId}));
+    }catch{send({type:'open-item-status',ok:false,requestId});}
   }
   if(data.action==='visible'&&!data.visible){
    video?.pause();

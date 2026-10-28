@@ -6,7 +6,7 @@
  root.classList.add('vetogram-universe');
  const definitions=Object.freeze({music:{title:'Музыка',path:'/music-module.html'},cinema:{title:'Кино',path:'/cinema.html'},books:{title:'Книги',path:'/books.html'}});
  const frames=new Map();let activeModule='',screen=document.querySelector('.screen.active')?.dataset.screen||'home';
- let identity=String(window.Telegram?.WebApp?.initData||''),lastAudio=null,lastTrackId='';
+ let identity=String(window.Telegram?.WebApp?.initData||''),lastAudio=null,lastTrackId='',openRequestSerial=0;
  const theme=()=>root.dataset.vetoTheme||'graphite';
  function context(){const api=window.Telegram?.WebApp;return {initData:String(api?.initData||''),user:api?.initDataUnsafe?.user||null,theme:theme()};}
  // This API is read synchronously by our same-origin module adapter only.
@@ -59,7 +59,7 @@
   for(const [key,entry]of frames)entry.element.hidden=key!==name;
   if(item.ready && item.page){send(name,{action:'page',page:item.page});item.page=null;}
   if(item.ready && item.searchQuery){send(name,{action:'search-query',query:item.searchQuery.slice(0,100)});item.searchQuery='';}
-  if(item.ready && item.entryId){send(name,{action:'open-item',id:item.entryId});item.entryId=null;}
+  if(item.ready && item.entryId){item.openRequestId=++openRequestSerial;send(name,{action:'open-item',id:item.entryId,requestId:item.openRequestId});item.entryId=null;}
   visibility();chrome();
  }
  $('v6MediaBack').onclick=showHub;
@@ -122,11 +122,11 @@
    send(name,{action:'theme',theme:theme()});
    if(item.page){send(name,{action:'page',page:item.page});item.page=null;}
    if(item.searchQuery){send(name,{action:'search-query',query:item.searchQuery.slice(0,100)});item.searchQuery='';}
-   if(item.entryId){send(name,{action:'open-item',id:item.entryId});item.entryId=null;}
+   if(item.entryId){item.openRequestId=++openRequestSerial;send(name,{action:'open-item',id:item.entryId,requestId:item.openRequestId});item.entryId=null;}
    visibility();
   }
   if(message.type==='failed'){clearTimeout(item.timer);if(activeModule===name)moduleStatus('Ошибка раздела. Чаты и остальные функции доступны.',true);}
-  if(message.type==='open-item-status'&&activeModule===name){
+  if(message.type==='open-item-status'&&activeModule===name&&Number.isSafeInteger(message.requestId)&&message.requestId===item.openRequestId){
    if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
    else moduleStatus('');
   }
