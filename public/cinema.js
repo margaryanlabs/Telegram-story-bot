@@ -683,6 +683,10 @@
   }
   function openDetails(f){
     state.selected=f;updateBack();buzz();
+    document.dispatchEvent(new CustomEvent('vetogram:cinema-opened',{detail:{
+      id:String(f.id),title:f.title,subtitle:f.contentType||'Фильм',
+      progress:state.library.progress[f.id]?.d?state.library.progress[f.id].t/state.library.progress[f.id].d:0
+    }}));
     text("cinemaDetailsTitle",f.title);
     text("cinemaDetailsMeta",[f.original,f.year,f.minutes?f.minutes+" мин":null,...(f.genres||[])].filter(Boolean).join(" · "));
     text("cinemaDetailsSynopsis",f.synopsis);

@@ -39,8 +39,13 @@
       Object.entries(bookSaved).slice(0,350).forEach(([key,b]) => {
         if(b && b.title)add({kind:'books',id:key,title:b.title,subtitle:Array.isArray(b.authors)?b.authors.join(', '):'Книга',source:'saved'});
       });
+    const cinemaLibrary=read(store,'vetogram.cinema.library.v1:'+scope,{});
+    const cinemaProgress=cinemaLibrary && typeof cinemaLibrary==='object' ? cinemaLibrary.progress||{} : {};
     const recent=read(store,'vetogram-v61-recent:'+scope,[]);
-    if(Array.isArray(recent)) recent.slice(0,30).forEach(add);
+    if(Array.isArray(recent)) recent.slice(0,30).forEach(item=>{
+      const p=item?.kind==='cinema'?cinemaProgress?.[item.id]:null;
+      add(p&&p.d?{...item,at:Math.max(Number(p.at)||0,Number(item.at)||0),progress:number(p.t/p.d,0,1)}:item);
+    });
     const ownLinks=read(store,'vetogram-v61-links:'+scope,[]);
     if(Array.isArray(ownLinks))ownLinks.slice(0,75).forEach(link=>{
       if(url(link?.href))add({...link,kind:'link',source:'saved'});

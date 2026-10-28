@@ -10,7 +10,7 @@
   if(!audio)return;
   const track=window.VetogramMusic?.now();
   send({type:'audio',state:track?{title:track.title,artist:track.artist,playing:!audio.paused&&!audio.ended&&!audio.error,
-   duration:Number.isFinite(audio.duration)?audio.duration:0,position:audio.currentTime||0,error:!!audio.error,waiting:audio.readyState<3&&!audio.paused}:null});
+   id:String(track.id||'').slice(0,220),duration:Number.isFinite(audio.duration)?audio.duration:0,position:audio.currentTime||0,error:!!audio.error,waiting:audio.readyState<3&&!audio.paused}:null});
  }
  function applyTheme(value){
   document.documentElement.dataset.universeTheme=['pearl','linen','slate','graphite'].includes(value)?value:'graphite';
@@ -20,7 +20,11 @@
   if(event.source!==parent || event.origin!==location.origin || event.data?.channel!=='vetogram-universe')return;
   const data=event.data;
   if(data.action==='theme')applyTheme(data.theme);
-  if(data.action==='page'&&['library','import','home','search'].includes(data.page))window.VetogramMusic?.showPage(data.page);
+  if(data.action==='page'&&['library','import','home','search'].includes(data.page)){
+   window.VetogramMusic?.showPage(data.page);
+   if(data.page==='search')window.VetogramCinema?.openTab?.('search');
+  }
+  if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length<220)window.VetogramCinema?.openFilm?.(data.id);
   if(data.action==='visible'&&!data.visible){
    video?.pause();
    // Pause official embedded video through the existing controller so hidden
@@ -43,6 +47,14 @@
  window.addEventListener('vetogram:cinema-playing',()=>send({type:'video-playing'}));
  document.addEventListener('vetogram:library-change',update);
  document.addEventListener('vetogram:audio-error',update);
+ for(const [eventName,kind] of [['vetogram:cinema-opened','cinema'],['vetogram:book-progress','books']]){
+  document.addEventListener(eventName,event=>{
+   const item=event.detail;
+   if(!item||typeof item.id!=='string'||typeof item.title!=='string')return;
+   send({type:'recent',item:{kind,id:item.id.slice(0,220),title:item.title.slice(0,150),
+     subtitle:String(item.subtitle||'').slice(0,110),progress:Number(item.progress)||0}});
+  });
+ }
  if(window.VetogramModuleError || (audio&&!window.VetogramMusic))send({type:'failed'});
  else{ready=true;send({type:'ready',scope});update();}
 })();
