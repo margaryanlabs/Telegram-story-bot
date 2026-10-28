@@ -977,7 +977,7 @@
   }
   // Exposes only safe navigation for a future Vetogram host. No Telegram privileged auth.
   window.VetogramCinema={
-   openFilm:id=>{const f=filmById(id);if(f)openDetails(f)},
+   openFilm:id=>{const f=filmById(id);if(!f)return false;openDetails(f);return true},
    openTab:setTab,
    getLibrary:()=>[...new Set([...(state.library.favorites||[]),...(state.library.history||[]),...Object.keys(state.library.progress||{})])].slice(0,120).flatMap(id=>{
      const f=filmById(id);if(!f)return[];

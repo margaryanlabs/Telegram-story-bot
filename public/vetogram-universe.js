@@ -85,6 +85,9 @@
    visibility();
   }
   if(message.type==='failed'){clearTimeout(item.timer);if(activeModule===name)moduleStatus('Ошибка раздела. Чаты и остальные функции доступны.',true);}
+  if(message.type==='open-item-status'&&message.ok===false&&activeModule===name){
+   moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
+  }
   if(message.type==='navigate' && message.target==='hub')showHub();
   if(name==='cinema'&&message.type==='library'&&Array.isArray(message.items)&&typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined'){
    const items=message.items.slice(0,120).filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string').map(x=>({

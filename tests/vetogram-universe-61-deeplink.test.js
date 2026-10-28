@@ -70,3 +70,13 @@ test('saved music opens an actual playable track, metadata becomes search only',
  assert.ok(!actions.some(x=>x[0]==='play'&&x[1]==='meta-1'));
  assert.ok(messages.length===1);
 });
+
+test('missing saved media sends a truthful failure rather than doing nothing',()=>{
+ const events=new Map(),sent=[],parent={postMessage:x=>sent.push(x)};
+ const window={VetogramMediaContext:{embedded:true,scope:'owner-42'},VetogramBooks:{openSavedByKey:()=>false},addEventListener:(name,cb)=>events.set(name,cb)};
+ const document={getElementById:()=>null,querySelectorAll:()=>[],addEventListener(){},documentElement:{dataset:{}},body:{classList:{toggle(){}}}};
+ vm.runInNewContext(src('vetogram-media-bridge.js'),{window,document,parent,location:{origin:'https://vetogram.test'},setTimeout:()=>1,clearTimeout(){}});
+ events.get('message')({source:parent,origin:'https://vetogram.test',data:{channel:'vetogram-universe',action:'open-item',id:'missing-key'}});
+ assert.ok(sent.some(x=>x.type==='open-item-status'&&x.ok===false));
+ assert.ok(src('vetogram-universe.js').includes("message.type==='open-item-status'"));
+});

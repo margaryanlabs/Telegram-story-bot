@@ -22,3 +22,10 @@ Date: 28 October 2026. Feature branch / Draft PR #210, not a production release.
 
 ## Release gate
 Keep Draft PR #210 unmerged and existing V5 production unchanged until fresh complete build, real Telegram E2E, media source and device rendering QA pass.
+
+## Saved-item resume follow-up
+- Saved Books and Music cards pass their actual scoped item ID into the existing reader or Music controller; metadata-only music opens Search and missing local audio is refused.
+- The iframe bridge checks both parent origin and exact source window. Missing saved items now return an explicit failure banner, not a silently broken tap.
+- Vault counts only saved materials, and account switching resets its expanded state.
+- New permanent regression test file: `tests/vetogram-universe-61-deeplink.test.js`, including the saved-item failure case.
+- Full Node suite still needs a source checkout/CI runner. This environment has no network access to clone GitHub and Vercel preview is blocked by free quota.

@@ -28,9 +28,11 @@
    }
   }
   if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length<=220){
-    if(window.VetogramCinema?.openFilm)window.VetogramCinema.openFilm(data.id);
-    else if(window.VetogramBooks?.openSavedByKey)window.VetogramBooks.openSavedByKey(data.id);
-    else if(window.VetogramMusic?.openSavedById)window.VetogramMusic.openSavedById(data.id);
+    let opened=false;
+    if(window.VetogramCinema?.openFilm)opened=window.VetogramCinema.openFilm(data.id)===true;
+    else if(window.VetogramBooks?.openSavedByKey)opened=window.VetogramBooks.openSavedByKey(data.id)===true;
+    else if(window.VetogramMusic?.openSavedById)opened=window.VetogramMusic.openSavedById(data.id)===true;
+    send({type:'open-item-status',ok:opened});
   }
   if(data.action==='visible'&&!data.visible){
    video?.pause();
