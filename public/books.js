@@ -1704,5 +1704,15 @@
     if(Math.abs(dx)>85 && Math.abs(dx)>Math.abs(dy)*2.2)flip(dx<0?1:-1);
     touchStart=null;
   },{passive:true});
+  // A signed same-origin Universe child can reopen only a book already stored for this owner.
+  // Never accept a URL or an arbitrary remote book identifier as a reading grant.
+  function openSavedByKey(key){
+    if(typeof key!=='string'||!key||key.length>220)return false;
+    const book=saved[key]||(progress[key]?bookFromProgress(key,progress[key]):null);
+    if(!book || !book.title || !Number.isSafeInteger(Number(book.id)) || Number(book.id)<1)return false;
+    void openBook(book);
+    return true;
+  }
+  window.VetogramBooks=Object.freeze({openSavedByKey});
   updateSavedCount();applyPrefs();renderContinueShelf();setSourceInfo();loadCatalog(true);
 })();

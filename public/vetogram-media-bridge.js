@@ -27,7 +27,11 @@
     document.getElementById('bookSearch')?.focus?.();
    }
   }
-  if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length<220)window.VetogramCinema?.openFilm?.(data.id);
+  if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length<=220){
+    if(window.VetogramCinema?.openFilm)window.VetogramCinema.openFilm(data.id);
+    else if(window.VetogramBooks?.openSavedByKey)window.VetogramBooks.openSavedByKey(data.id);
+    else if(window.VetogramMusic?.openSavedById)window.VetogramMusic.openSavedById(data.id);
+  }
   if(data.action==='visible'&&!data.visible){
    video?.pause();
    // Pause official embedded video through the existing controller so hidden

@@ -50,7 +50,7 @@
        else window.open(safe,'_blank','noopener,noreferrer');
       }
      }
-     else api.open(item.kind,item.kind==='music'?'library':undefined,item.kind==='cinema'?item.id:undefined);
+     else api.open(item.kind,item.kind==='music'?'library':undefined,item.id);
    });
    return button;
  };
