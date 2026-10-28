@@ -95,3 +95,21 @@ test('unavailable browser storage never claims a personal link was saved',()=>{
  assert.equal(f.$('v61VaultStatus').textContent,'Не удалось сохранить ссылку на устройстве.');
  assert.equal(f.$('v61VaultCount').textContent,'0');
 });
+
+test('recent playback retains original own-file label and author after de-duplication',()=>{
+ const host={};
+ vm.runInNewContext(read('vetogram-universe-61-core.js'),{window:host,URL});
+ const entries={
+  'vetogram-v61-music:owner-7':[
+    {kind:'music',id:'local-abc',title:'My file',subtitle:'Мой исполнитель',description:'Личный аудиофайл',source:'saved'}],
+  'vetogram-v61-recent:owner-7':[
+    {kind:'music',id:'local-abc',title:'My file',subtitle:'',at:100,source:'recent'}]
+ };
+ const local={getItem:k=>entries[k]?JSON.stringify(entries[k]):null};
+ const list=host.VetogramUniverse61Core.collect(local,'owner-7');
+ assert.equal(list.length,1);
+ assert.equal(list[0].subtitle,'Мой исполнитель');
+ assert.equal(list[0].description,'Личный аудиофайл');
+ assert.equal(list[0].source,'saved');
+ assert.equal(list[0].at,100);
+});
