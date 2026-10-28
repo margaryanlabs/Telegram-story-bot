@@ -28,6 +28,17 @@
    }
    if(data.page==='import')window.VetogramBooks?.showImport?.();
   }
+  if(data.action==='search-query'&&typeof data.query==='string'){
+   const query=data.query.trim().slice(0,100);
+   if(query.length>=2){
+    if(window.VetogramMusic?.search){
+     window.VetogramMusic.showPage('search');
+     const input=document.getElementById('searchInput');if(input)input.value=query;
+     void window.VetogramMusic.search(query);
+    }else if(window.VetogramCinema?.search)window.VetogramCinema.search(query);
+    else window.VetogramBooks?.search?.(query);
+   }
+  }
   if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length<=220){
     let opened=false;
     try{

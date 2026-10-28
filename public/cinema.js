@@ -979,6 +979,12 @@
   window.VetogramCinema={
    openFilm:id=>{const f=filmById(id);if(!f)return false;openDetails(f);return true},
    openTab:setTab,
+   search:query=>{
+    const value=String(query||'').trim().slice(0,90);
+    if(value.length<2)return false;
+    state.query=value;$("cinemaSearch").value=value;setTab("search");
+    return true;
+   },
    getLibrary:()=>[...new Set([...(state.library.favorites||[]),...(state.library.history||[]),...Object.keys(state.library.progress||{})])].slice(0,120).flatMap(id=>{
      const f=filmById(id);if(!f)return[];
      const p=state.library.progress[id]||{};

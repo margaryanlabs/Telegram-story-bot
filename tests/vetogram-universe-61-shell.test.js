@@ -21,7 +21,7 @@ test('cross-module activity is authenticated by iframe window and origin before 
  assert.match(cinema,/getLibrary:.*=>/s);
 });
 test('navigation and fullscreen player use the original Music frame rather than second audio',()=>{
- assert.match(parent,/open:\(name,page,id\)=>openModule/);
+ assert.match(parent,/open:\(name,page,id,query\)=>openModule/);
  assert.match(parent,/v61PlayerSeek/);
  assert.match(parent,/v61PlayerMusic/);
  assert.match(hub,/VetogramUniverse61Core/);

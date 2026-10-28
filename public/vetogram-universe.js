@@ -10,7 +10,7 @@
  const theme=()=>root.dataset.vetoTheme||'graphite';
  function context(){const api=window.Telegram?.WebApp;return {initData:String(api?.initData||''),user:api?.initDataUnsafe?.user||null,theme:theme()};}
  // This API is read synchronously by our same-origin module adapter only.
- window.VetogramUniverse=Object.freeze({context,open:(name,page,id)=>openModule(name,page,id)});
+ window.VetogramUniverse=Object.freeze({context,open:(name,page,id,query)=>openModule(name,page,id,query)});
  const send=(name,message)=>frames.get(name)?.element.contentWindow?.postMessage({channel:'vetogram-universe',...message},location.origin);
  function visibility(){for(const name of frames.keys())send(name,{action:'visible',visible:screen==='media'&&activeModule===name});}
  function chrome(){
@@ -34,7 +34,7 @@
   for(const item of frames.values())item.element.hidden=true;
   moduleStatus('');visibility();chrome();
  }
- function openModule(name,page,id){
+ function openModule(name,page,id,query){
   checkIdentity();const definition=definitions[name];if(!definition)return;
   window.VetoTelegramNavigate?.('media');activeModule=name;
   $('v6MediaHome').hidden=true;$('v6MediaStage').hidden=false;$('v6ModuleTitle').textContent=definition.title;
@@ -43,32 +43,37 @@
    const element=document.createElement('iframe');element.title='VETOGRAM · '+definition.title;
    element.className='v6-module-frame';element.allow='autoplay; fullscreen; picture-in-picture';
    element.setAttribute('referrerpolicy','same-origin');
-   const item={element,ready:false,page,entryId:id,lastPage:page||'',lastEntryId:id||'',timer:0};frames.set(name,item);
+   const item={element,ready:false,page,entryId:id,searchQuery:query||'',lastPage:page||'',lastEntryId:id||'',lastQuery:query||'',timer:0};frames.set(name,item);
    const film=id||new URLSearchParams(location.search).get('film');
    element.src=definition.path+'?universe=1'+(name==='cinema'&&film&&/^[A-Za-z0-9_-]{1,200}$/.test(film)?'&film='+encodeURIComponent(film):'');
    $('v6Frames').append(element);
    item.timer=setTimeout(()=>{if(!item.ready && activeModule===name)moduleStatus('Раздел не ответил. Можно повторить загрузку или вернуться в чаты.',true);},18000);
    element.addEventListener('error',()=>{if(activeModule===name)moduleStatus('Раздел не загрузился. Повтори попытку.',true);});
   }
-  const item=frames.get(name);if(page){item.page=page;item.lastPage=page;}if(id){item.entryId=id;item.lastEntryId=id;}
+  const item=frames.get(name);if(page){item.page=page;item.lastPage=page;}if(id){item.entryId=id;item.lastEntryId=id;}if(query){item.searchQuery=query;item.lastQuery=query;}
   moduleStatus(item.ready?'':'Открываем '+definition.title.toLowerCase()+'…');
   for(const [key,entry]of frames)entry.element.hidden=key!==name;
   if(item.ready && item.page){send(name,{action:'page',page:item.page});item.page=null;}
+  if(item.ready && item.searchQuery){send(name,{action:'search-query',query:item.searchQuery.slice(0,100)});item.searchQuery='';}
   if(item.ready && item.entryId){send(name,{action:'open-item',id:item.entryId});item.entryId=null;}
   visibility();chrome();
  }
  $('v6MediaBack').onclick=showHub;
  $('v6ModuleRetry').onclick=()=>{
   const name=activeModule,item=frames.get(name);if(!item)return;
-  const page=item.lastPage,id=item.lastEntryId;
+  const page=item.lastPage,id=item.lastEntryId,query=item.lastQuery;
   clearTimeout(item.timer);item.element.src='about:blank';item.element.remove();frames.delete(name);
   if(name==='music'){
    lastAudio=null;lastTrackId='';closePlayer();
    $('v6NowTitle').textContent='';$('v6NowArtist').textContent='';
   }
-  openModule(name,page,id);
+  openModule(name,page,id,query);
  };
- document.querySelectorAll('[data-v6-module]').forEach(button=>button.addEventListener('click',()=>openModule(button.dataset.v6Module,button.dataset.v6Page)));
+ document.querySelectorAll('[data-v6-module]').forEach(button=>button.addEventListener('click',()=>{
+  const query=button.dataset.v6Page==='search'&&button.closest?.('#v61Results')
+    ?$('v61Search')?.value?.trim()||'':'';
+  openModule(button.dataset.v6Module,button.dataset.v6Page,null,query);
+ }));
  $('v6Account').onclick=()=>$('profileButton')?.click();
  $('v6Appearance').onclick=()=>$('vetoGlobalThemeToggle')?.click();
  let playerReturnFocus=null;
@@ -112,6 +117,7 @@
    if(activeModule===name)moduleStatus('');
    send(name,{action:'theme',theme:theme()});
    if(item.page){send(name,{action:'page',page:item.page});item.page=null;}
+   if(item.searchQuery){send(name,{action:'search-query',query:item.searchQuery.slice(0,100)});item.searchQuery='';}
    if(item.entryId){send(name,{action:'open-item',id:item.entryId});item.entryId=null;}
    visibility();
   }

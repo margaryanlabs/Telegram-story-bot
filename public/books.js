@@ -1729,6 +1729,15 @@
     });
     return true; // Native file chooser requires a second explicit user tap.
   }
-  window.VetogramBooks=Object.freeze({openSavedByKey,showImport});
+  function search(query){
+    const value=String(query||'').trim().slice(0,100);
+    if(value.length<2)return false;
+    if(state.source==='local'){state.source='complete';persist('source',state.source);}
+    state.query=value;$('bookSearch').value=value;
+    setSourceInfo();void loadCatalog(true);
+    $('bookSearch').focus?.();
+    return true;
+  }
+  window.VetogramBooks=Object.freeze({openSavedByKey,showImport,search});
   updateSavedCount();applyPrefs();renderContinueShelf();setSourceInfo();loadCatalog(true);
 })();
