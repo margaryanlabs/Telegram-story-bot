@@ -26,6 +26,7 @@
     window.VetogramCinema?.openTab?.('search');
     document.getElementById('bookSearch')?.focus?.();
    }
+   if(data.page==='import')window.VetogramBooks?.showImport?.();
   }
   if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length<=220){
     let opened=false;

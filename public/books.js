@@ -1713,6 +1713,22 @@
     void openBook(book);
     return true;
   }
-  window.VetogramBooks=Object.freeze({openSavedByKey});
+  function showImport(){
+    if(state.source!=='local'){
+      state.source='local';
+      persist('source',state.source);
+      state.query='';$('bookSearch').value='';
+      setSourceInfo();
+      void loadCatalog(true);
+    }
+    const banner=$('importBanner'),action=$('importButton');
+    banner.hidden=false;
+    window.requestAnimationFrame?.(()=>{
+      banner.scrollIntoView?.({behavior:'smooth',block:'center'});
+      action.focus?.({preventScroll:true});
+    });
+    return true; // Native file chooser requires a second explicit user tap.
+  }
+  window.VetogramBooks=Object.freeze({openSavedByKey,showImport});
   updateSavedCount();applyPrefs();renderContinueShelf();setSourceInfo();loadCatalog(true);
 })();
