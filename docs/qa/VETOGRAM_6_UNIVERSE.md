@@ -60,3 +60,13 @@ A fresh comparison run of the unmodified REBORN head showed pre-existing stale s
 - Thirteen new real-controller/transport fixture tests cover lazy loading, frame reuse across Chat navigation, mini-player state, message origin/source rejection, owner teardown, theme propagation, Cinema/audio arbitration, signed music ownership, webhook authenticity, idempotent intake, opaque identifiers, bounded streaming and private artwork delivery. Those tests are included in the total.
 - Browser attempt to the local QA server was rejected with `net::ERR_CONNECTION_REFUSED` by the remote browser. No rendered screenshot, physical mobile/Fold pass, real bot upload or authenticated Telegram end-to-end claim is made.
 - No production deployment, production merge, billing change, new paid provider, database migration or real Telegram message was performed. Preview deployment status is recorded separately after the hosting API returns.
+
+## Preview outcome
+
+PR: https://github.com/margaryanlabs/Telegram-story-bot/pull/210 (Draft, source verified and mergeable against its V5 base). GitHub branch publication was completed through the connected GitHub API, and the remote tree SHA matched the locally tested tree exactly.
+
+The existing `veto` project on `team_SZnpe4ZwKVtGmPG4l0V8F5aX` was inspected before requesting a feature-branch preview. Vercel rejected deployment with HTTP 402, resource `api-deployments-free-per-day`, more than 100 free deployments in 24 hours, `retryAfter: 86400`. No deployment ID or READY URL was returned. No Vercel CLI is installed. No paid plan, alternative account, production alias, protection setting or billing change was used.
+
+Additional provider/helper tests: `node --test music-service/tests/*.test.mjs cinema-service/tests/*.test.mjs` — 24 pass, 0 fail. No external service was deployed by those tests.
+
+Remaining release work: reachable preview plus rendered mobile/light/dark/Fold QA; real Telegram auth/chat/Stories regression flow; persistent private music directory on the existing self-hosted process and a real private bot upload → owner library → playback check. This status is a code integration candidate, not a completed production launch.
