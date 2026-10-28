@@ -22,7 +22,10 @@
   if(data.action==='theme')applyTheme(data.theme);
   if(data.action==='page'&&['library','import','home','search'].includes(data.page)){
    window.VetogramMusic?.showPage(data.page);
-   if(data.page==='search')window.VetogramCinema?.openTab?.('search');
+   if(data.page==='search'){
+    window.VetogramCinema?.openTab?.('search');
+    document.getElementById('bookSearch')?.focus?.();
+   }
   }
   if(data.action==='open-item'&&typeof data.id==='string'&&data.id.length<220)window.VetogramCinema?.openFilm?.(data.id);
   if(data.action==='visible'&&!data.visible){
