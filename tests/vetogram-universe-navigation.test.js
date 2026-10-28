@@ -63,8 +63,8 @@ test('retry preserves the requested film and media page after a failed iframe',(
  const first=f.node('v6Frames').children.at(-1);
  assert.equal(first.src,'/cinema.html?universe=1');
  f.message(first,{type:'ready'});
- assert.ok(first.contentWindow.messages.some(x=>x.message.action='page'&&x.page==='search'));
- assert.ok(first.contentWindow.messages.some(x=>x.message.action='open-item'&&x.id==='film-42'));
+ assert.ok(first.contentWindow.messages.some(x=>x.message.action==='page'&&x.message.page==='search'));
+ assert.ok(first.contentWindow.messages.some(x=>x.message.action==='open-item'&&x.message.id==='film-42'));
  f.message(first,{type:'failed'});
  assert.equal(f.node('v6ModuleRetry').hidden,false);
  f.node('v6ModuleRetry').onclick();
