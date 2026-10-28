@@ -1732,7 +1732,13 @@
   function search(query){
     const value=String(query||'').trim().slice(0,100);
     if(value.length<2)return false;
-    if(state.source==='local'){state.source='complete';persist('source',state.source);}
+    // Cross-module discovery must not be limited to the 18 verified in-reader
+    // editions, nor hidden inside the local-only imported-file tab.
+    // Spotlight searches the broader external catalog; availability is not
+    // assumed, and its existing UI offers an official fallback on failure.
+    if(state.source==='local'||state.source==='complete'){
+      state.source='spotlight';persist('source',state.source);
+    }
     state.query=value;$('bookSearch').value=value;
     setSourceInfo();void loadCatalog(true);
     $('bookSearch').focus?.();
