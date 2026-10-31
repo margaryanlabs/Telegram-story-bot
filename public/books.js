@@ -76,6 +76,20 @@
     summary:'Большой цельный текст издания, прочитанный из первоисточника.',
     rightsNotice:'Условия использования конкретного издания и перевода смотрите в оригинале.'
   }));
+  // Verified Wikisource edition: 26 actual Russian chapters + dedication.
+  // 1869 Nikolay Kurochkin translation is public domain in Russia. Keep the
+  // exact edition source title for the EPUB export and chapter discovery.
+  completeEditionBooks.unshift({
+    id:559743,title:'Государь',authors:['Никколо Макиавелли'],
+    language:'ru',wiki:'ru',provider:'wikisource',
+    source:'Русская Викитека · перевод Н. С. Курочкина (1869)',
+    sourceUrl:'https://ru.wikisource.org/w/index.php?curid=559743',
+    sourceTitle:'Государь (Макиавелли; Курочкин)/1869 (ВТ)',
+    cover:'',readable:true,curatedWholeText:true,
+    verifiedChapters:27,
+    summary:'Полное издание 1869 года: посвящение и 26 глав о власти, управлении и стратегии.',
+    rightsNotice:'Перевод Н. С. Курочкина, 1869; текст общественного достояния. Проверяйте правовой статус в своей стране.'
+  });
   function filterCompleteEditionBooks(query){
     const value=String(query||'').trim().toLocaleLowerCase('ru');
     return value?completeEditionBooks.filter(b=>
@@ -103,7 +117,7 @@
     document.querySelector('.topics').hidden=!isGutenberg;
     const choices={
       hot200:['200 популярных зарубежных книг с русскоязычными изданиями · редакционный выбор','200 ХИТОВ · НА РУССКОМ','https://books.google.com/'],
-      complete:['18 проверенных объёмных изданий · цельный текст доступен в читалке','КНИГИ ЦЕЛИКОМ','https://ru.wikisource.org/wiki/Special:Copyright'],
+      complete:[String(completeEditionBooks.length)+' проверенных изданий · цельный текст доступен в читалке','КНИГИ ЦЕЛИКОМ','https://ru.wikisource.org/wiki/Special:Copyright'],
       genres:['Романы, рассказы, повести, фантастика, стихи и сказки на русском','Читать сейчас','https://ru.wikisource.org/wiki/Special:Copyright'],
       local:['Моя личная библиотека · EPUB, FB2 и TXT без загрузки на сервер','Личные книги',''],
       spotlight:['Русскоязычные издания · современные книги и официальные страницы','Новые книги на русском','https://books.google.com/'],
@@ -267,7 +281,7 @@
   function renderHeroShowcase(){
     const host=$('heroShowcase');
     if(!host||host.childElementCount)return;
-    const choices=[completeEditionBooks[6],completeEditionBooks[0],completeEditionBooks[1]];
+    const choices=[completeEditionBooks[0],completeEditionBooks[7],completeEditionBooks[1]];
     for(let i=0;i<choices.length;i++){
       const book=choices[i];
       if(!book)continue;
@@ -292,7 +306,7 @@
     section.hidden=state.source!=='complete';
     if(section.hidden)return;
     host.replaceChildren();
-    const choice=[completeEditionBooks[0],completeEditionBooks[1],completeEditionBooks[6]].filter(Boolean);
+    const choice=[completeEditionBooks[0],completeEditionBooks[1],completeEditionBooks[7]].filter(Boolean);
     choice.forEach((book,index)=>{
       const item=node('button','featured-edition');
       item.type='button';item.setAttribute('aria-label','Читать '+book.title);
@@ -322,7 +336,9 @@
     if(book?.provider==='editorial')return {kind:'metadata',label:'ХИТ · РУССКОЕ ИЗДАНИЕ'};
     if(isCatalogBook(book))return {kind:'metadata',label:'КАТАЛОГ · ОПИСАНИЕ'};
     if(isLocal(book))return {kind:'local',label:'ЛИЧНЫЙ ФАЙЛ · '+(book.format||'ТЕКСТ').toUpperCase()};
-    if(book?.curatedWholeText)return {kind:'full',label:'ЦЕЛЬНЫЙ ТЕКСТ · '+Math.round(book.verifiedChars/1000)+' ТЫС. ЗНАКОВ'};
+    if(book?.curatedWholeText)return {kind:'full',label:book.verifiedChapters
+      ?'ПОЛНОЕ ИЗДАНИЕ · '+book.verifiedChapters+' ЧАСТЕЙ'
+      :'ЦЕЛЬНЫЙ ТЕКСТ · '+Math.round(book.verifiedChars/1000)+' ТЫС. ЗНАКОВ'};
     if(isWiki(book))return {kind:'partial',label:book.isTranslation?'РУССКИЙ ПЕРЕВОД':'ПРОИЗВЕДЕНИЕ · ЧИТАТЬ'};
     if(book?.readable && book?.source==='Project Gutenberg')return {kind:'full',label:'ПОЛНЫЙ ТЕКСТ ИСТОЧНИКА'};
     return {kind:'metadata',label:'ОТКРЫТЬ КНИГУ'};
@@ -330,7 +346,7 @@
   function officialWikisourceEpubUrl(book){
     if(!isWiki(book)||typeof book.title!=='string'||book.title.length>230)return '';
     const params=new URLSearchParams({
-      format:'epub',lang:book.wiki,page:book.title.replace(/ /g,'_')
+      format:'epub',lang:book.wiki,page:(book.sourceTitle||book.title).replace(/ /g,'_')
     });
     return 'https://ws-export.wmcloud.org/?'+params.toString();
   }
@@ -456,7 +472,9 @@
       kind='complete';
     }else if(wik){
       if(book.curatedWholeText){
-        message='Цельный текст издания · '+Math.round(book.verifiedChars/1000)+' тыс. символов в источнике';
+        message=book.verifiedChapters
+          ?'Полный состав издания · '+book.verifiedChapters+' частей в Викитеке'
+          :'Цельный текст издания · '+Math.round(book.verifiedChars/1000)+' тыс. символов в источнике';
         kind='complete';
       }
       const count=state.chapters.length;
