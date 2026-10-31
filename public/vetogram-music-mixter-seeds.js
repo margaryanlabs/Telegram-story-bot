@@ -1,4 +1,4 @@
-/* 10 source-verified CC BY ccMixter recordings for CORS fallback. Metadata only. Updated 2026-10-27. */
+/* 11 real ccMixter uploads. CC BY attribution/license retained; original direct source MP3 only, no hosted copies and no DRM bypass. Exclude NC/ND. */
 window.VetogramMixterSeeds=Object.freeze([
   {
     "upload_id": 632,
@@ -173,6 +173,23 @@ window.VetogramMixterSeeds=Object.freeze([
       {
         "download_url": "https://ccmixter.org/content/teru/teru_-_Out_There_Again.mp3",
         "file_rawsize": 2821346,
+        "file_format_info": {
+          "media-type": "audio",
+          "mime_type": "audio/mpeg"
+        }
+      }
+    ]
+  },
+  {
+    "upload_id": 66,
+    "upload_name": "Making Me Nervous (Vocals)",
+    "user_real_name": "brad sucks",
+    "file_page_url": "https://ccmixter.org/files/bradsucks/66",
+    "license_url": "https://creativecommons.org/licenses/by/2.5/",
+    "files": [
+      {
+        "download_url": "https://ccmixter.org/content/bradsucks/bradsucks_-_Making_Me_Nervous_(Vocals).mp3",
+        "file_rawsize": 2327113,
         "file_format_info": {
           "media-type": "audio",
           "mime_type": "audio/mpeg"
