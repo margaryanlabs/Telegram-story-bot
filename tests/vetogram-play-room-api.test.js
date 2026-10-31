@@ -84,3 +84,18 @@ test('room feature remains isolated to the API router and new Play files',()=>{
   assert.match(html,/vetogram-play-room\.js/);
   assert.doesNotMatch(client,/document\.cookie|telegram-chats|localStorage\.setItem\([^)]*initData/);
 });
+
+test('Rematch action is routed only through authenticated, versioned API',()=>{
+  const api=readFileSync(new URL('../api/play-room.js',import.meta.url),'utf8');
+  const client=readFileSync(new URL('../public/vetogram-play-room.js',import.meta.url),'utf8');
+  const migration=readFileSync(new URL('../migrations/vetogram-play/001_ttt_rooms.sql',import.meta.url),'utf8');
+  assert.match(api,/action==='rematch'/);
+  assert.match(api,/store\.rematch\(body\.code,player,body\.version\)/);
+  assert.match(client,/run\('rematch',\{code:room\.code,version:room\.version\}\)/);
+  assert.match(client,/room\.rematchRequested/);
+  assert.match(client,/room\.opponentRequested/);
+  assert.match(client,/room\.round/);
+  for(const field of ['round integer','rematch_x boolean','rematch_o boolean']){
+    assert.ok(migration.includes(field),field);
+  }
+});
