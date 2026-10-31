@@ -227,3 +227,60 @@ body:has(#cinemaPlayer) .cinema-watch-card:focus-visible{
     width:36px;height:36px;
   }
 }
+
+
+/* Licensed audio shelf: real MP3 + attribution in a compact readable library. */
+body:has(#playerBar) .licensed-home-section{
+  margin:24px 0 27px;padding:20px 18px;
+  background:linear-gradient(145deg,#151923,#10151f);
+  border:1px solid rgba(200,187,209,.16);border-radius:20px;
+}
+body:has(#playerBar) .licensed-home-section .section-head{
+  display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;
+}
+body:has(#playerBar) .licensed-home-section .section-head p{
+  color:#a6a9bd;max-width:530px;line-height:1.55;font-size:12px;margin-top:7px;
+}
+body:has(#playerBar) .licensed-home-count{
+  font:600 11px/1.4 inherit;color:#cfc0d1;
+}
+body:has(#playerBar) .licensed-home-tracks{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+body:has(#playerBar) .licensed-home-card{
+  display:flex;align-items:center;gap:11px;min-width:0;
+  background:#1b202c;border:1px solid rgba(200,193,214,.10);
+  padding:11px;border-radius:13px;
+}
+body:has(#playerBar) .licensed-home-art{
+  flex:none;width:43px;height:43px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(140deg,#303345,#282332);color:#d7bacf;
+}
+body:has(#playerBar) .licensed-home-info{
+  flex:1;min-width:0;display:grid;gap:3px;
+}
+body:has(#playerBar) .licensed-home-info strong{
+  font-size:12px;line-height:1.3;color:#f4f0f6;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+body:has(#playerBar) .licensed-home-info small{
+  font-size:11px;color:#b6b0c1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+body:has(#playerBar) .licensed-home-rights{display:flex;flex-wrap:wrap;gap:10px;margin-top:2px}
+body:has(#playerBar) .licensed-home-rights a{
+  font-size:10px;line-height:1.25;color:#c8b7cf;text-decoration:none;
+}
+body:has(#playerBar) .licensed-home-play{
+  flex:none;min-width:41px;height:41px;padding:0;border-radius:50%;
+  background:#d4b2cb;color:#17151d;border:0;font-size:16px;
+  display:grid;place-items:center;box-shadow:none;
+}
+body:has(#playerBar) .licensed-home-play:hover{background:#f2cce0}
+body:has(#playerBar) .licensed-home-more{
+  width:100%;margin-top:13px;padding:13px;border:1px solid #353041;
+  background:#21202d;border-radius:12px;color:#eae0eb;
+}
+@media(max-width:720px){
+  body:has(#playerBar) .licensed-home-section{padding:16px 11px}
+  body:has(#playerBar) .licensed-home-tracks{grid-template-columns:1fr}
+}
