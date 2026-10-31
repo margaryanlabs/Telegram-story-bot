@@ -16,11 +16,11 @@
   // A timeout is not proof of unavailability (the user may not press ▶).
   const failedEmbeds=new Set();
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
-  const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/"};
+  const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/",rossiya1:"https://rutube.ru/channel/24620967/",centralpartnership:"https://rutube.ru/channel/798788/"};
   // The initial 200 feature films appear instantly in their studio tabs.
   // Their RUTUBE API cursor still begins from page 1 and remains authoritative.
   for(const film of [...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaAdditionalOfficial63||[])]){
-    const target=film.id.match(/^rutube-(mosfilm|lenfilm|gorky|starmedia|marsmedia|soyuzmultfilm)-[a-f0-9]{32}$/i)?.[1];
+    const target=film.id.match(/^rutube-(mosfilm|lenfilm|gorky|starmedia|marsmedia|soyuzmultfilm|rossiya1|centralpartnership)-[a-f0-9]{32}$/i)?.[1];
     if(!target||!Object.hasOwn(STUDIO_LINKS,target))continue;
     const rows=studio.results.get(target)||[];
     rows.push(film);studio.results.set(target,rows);
@@ -297,7 +297,7 @@
         if(studio.selected===target)showStudio();
       }catch(_){/* individual studio failures do not block other studios */}
       finally{clearTimeout(timeout)}
-      text("cinemaSyncStatus",films.length+" записей · 6 источников");
+      text("cinemaSyncStatus",films.length+" записей · "+Object.keys(STUDIO_LINKS).length+" официальных источников");
       await new Promise(resolve=>setTimeout(resolve,500));
     }
     discovery.prefetching=false;
