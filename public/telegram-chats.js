@@ -1307,6 +1307,9 @@
     // A previously verified account can have zero chats; an outage must not
     // masquerade as session revocation just because its inbox is empty.
     if(reset){
+      // A contact may add a photo after an earlier owner-verified no-photo result.
+      // Explicit inbox refresh is permission to recheck those peers.
+      state.avatarNoPhoto?.clear();
       state.page=0;state.autoPages=0;state.hasMore=true;
       if(!keepVisible){state.chats=[];state.connectionProof=null;}
       hideNotice();
@@ -2182,7 +2185,7 @@
         :state.threadLoadError
           ?'<div class="veto-mirror-retry-state">'+
               empty('Не удалось загрузить историю',
-                'Соединение с Telegram прервалось. Сохранённая история этого аккаунта не удалена.','↻')+
+                state.threadLoadError||'Соединение с Telegram прервалось. Попробуй ещё раз.','↻')+
               '<button type="button" class="veto-mirror-retry-thread" data-mirror-retry-thread>'+
               '↻ Повторить загрузку</button></div>'
           :empty('Пустой чат','В Telegram нет доступных сообщений');
