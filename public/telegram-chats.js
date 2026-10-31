@@ -4,7 +4,7 @@
   const $=id=>document.getElementById(id);
   const state={
     chats:[],page:0,hasMore:true,loading:false,
-    filter:'all',search:'',generation:0,lastListFetchedAt:0,
+    filter:'all',search:'',generation:0,inboxOverlayEpoch:0,lastListFetchedAt:0,
     thread:null,messages:[],threadLoading:false,threadLoadError:'',threadAuthRejected:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,threadRequestAbort:null,archiveRequestAbort:null,
     connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
@@ -1244,6 +1244,48 @@
     const clear=$('telegramMirrorSearchClear');
     if(clear)clear.hidden=!state.search;
   }
+  // Archive and Business metadata must never delay the first visible Telegram
+  // inbox. Merge the optional owner-scoped overlay after the live list paints.
+  // All responses remain in RAM and may only update the same signed owner.
+  async function hydrateInboxOverlay(ownerKey,overlayEpoch){
+    try{
+      const data=await request('list_overlay');
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+        overlayEpoch!==state.inboxOverlayEpoch||state.connectionProof?.verified!==true)return;
+      const index=new Map(state.chats.map((chat,i)=>[String(chat.id),i]));
+      for(const preserved of data.archivedChats||[]){
+        const id=String(preserved?.id||'');
+        if(!id)continue;
+        const i=index.get(id);
+        if(i===undefined){
+          index.set(id,state.chats.length);
+          state.chats.push(preserved);
+          continue;
+        }
+        const live=state.chats[i];
+        const newer=(Date.parse(preserved.date||'')||0)>(Date.parse(live.date||'')||0);
+        state.chats[i]={...live,savedCopy:true,
+          savedCount:Math.max(Number(live.savedCount||0),Number(preserved.savedCount||0)),
+          deletedCount:Math.max(Number(live.deletedCount||0),Number(preserved.deletedCount||0)),
+          lastDeletedAt:preserved.lastDeletedAt||live.lastDeletedAt||null,
+          ...(newer?{date:preserved.date,preview:preserved.preview,
+            previewFromArchive:true,lastMessageOut:null}:{})};
+      }
+      state.connectionProof={...state.connectionProof,
+        archivedThreads:Number(data.archivedThreads||0),
+        confirmedDeleted:Number(data.confirmedDeleted||0),
+        privacy:data.privacy||null};
+      renderChats();
+    }catch(error){
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+         overlayEpoch!==state.inboxOverlayEpoch)return;
+      if([401,403,409].includes(Number(error?.httpStatus||0))){
+        invalidateThreadAuthorization();return;
+      }
+      // Optional archive failure must not erase valid live conversations.
+      showNotice('Живые чаты доступны. Защищённый архив временно не загрузился; обнови список позже.');
+    }
+  }
   async function loadChats({reset=false}={}){
     resetOwner();
     if(state.loading)return;
@@ -1256,6 +1298,7 @@
     // A previously verified account can have zero chats; an outage must not
     // masquerade as session revocation just because its inbox is empty.
     if(reset){
+      state.inboxOverlayEpoch++;
       state.page=0;state.autoPages=0;state.hasMore=true;
       if(!keepVisible){state.chats=[];state.connectionProof=null;}
       hideNotice();
@@ -1269,7 +1312,7 @@
       $('telegramMirrorRefresh')?.setAttribute('aria-busy','true');
     }else renderChats();
     try{
-      const data=await request('list',{page:state.page});
+      const data=await request('list',{page:state.page,fastInbox:state.page===0});
       if(generation!==state.generation)return;
       // Atomic replacement prevents stale previews, unread badges and
       // vanished chats from leaking into the newly verified server snapshot.
@@ -1293,6 +1336,8 @@
       });
       state.connectionProof=data.connection||null;
       if(data.connection?.verified)state.lastListFetchedAt=Date.now();
+      if(data.archiveDeferred===true&&data.connection?.verified===true)
+        void hydrateInboxOverlay(state.ownerInitData,state.inboxOverlayEpoch);
       // Archive-only rows are additional cards, not remote Telegram pagination.
       state.hasMore=Boolean(data.hasMore)&&state.page<10;
       state.page+=1;
@@ -1771,7 +1816,7 @@
     closePhotoViewer();
     state.ownerInitData=current;
     state.deliveryStage=null;renderDeliveryStatus();
-    state.generation++;state.threadGeneration++;state.voicePermissionGeneration++;
+    state.generation++;state.inboxOverlayEpoch++;state.threadGeneration++;state.voicePermissionGeneration++;
     cancelVoiceCapture();
     stopThreadSync();
     state.syncRunId++; // stale poll completions must not unlock another owner's sync
