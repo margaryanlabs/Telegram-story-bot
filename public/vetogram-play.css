@@ -53,7 +53,7 @@
 .vp-screen .vp-reaction-button[data-state="ready"]{background:#a5d2af;border-color:#d9f1de;color:#143223}
 .vp-screen .vp-reaction-button[data-state="result"]{background:#473342;border-color:#88647f;color:#fff}
 .vp-screen .vp-memory-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
-.vp-screen .vp-memory-card{height:65px;border:1px solid rgba(255,255,255,.13);border-radius:11px;background:#29282f;color:transparent;font-size:29px;cursor:pointer;transition:background .15s}
+.vp-screen .vp-memory-card{height:65px;border:1px solid rgba(255,255,255,.13);border-radius:11px;background:#29282f;color:#9b8a96;font-size:29px;cursor:pointer;transition:background .15s}
 .vp-screen .vp-memory-card[data-revealed="true"],.vp-screen .vp-memory-card[data-matched="true"]{background:#e5cdbf;color:#49363b;border-color:#f4dcc9}
 .vp-screen .vp-memory-card[data-matched="true"]{background:#9ac6af;color:#1d3b30}
 .vp-screen .vp-memory-card:disabled{cursor:default}
