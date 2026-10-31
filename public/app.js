@@ -82,6 +82,8 @@
     livechats: 'telegram',
     voice:'voice',
     voicestudio:'voice',
+    play:'play',
+    games:'play',
     relay: 'relay',
     studio: 'studio',
     creator: 'studio',
