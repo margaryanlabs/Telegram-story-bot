@@ -22,8 +22,17 @@ function fixture({staleSelect=false}={}) {
     get inserted(){return inserted},
   };
 }
-const input={userId:'111',chatId:'222',messageIds:[5]};
+const input={userId:'111',chatId:'222',messageIds:[5],businessConnectionId:'connected-A'};
 
+test('deletion requires the verified Business connection identity',async()=>{
+  const f=fixture();
+  await assert.rejects(
+    neonArchiveOperation('mark_business_messages_deleted',
+      {...input,businessConnectionId:null},f.sql),
+    /BUSINESS_CONNECTION_REQUIRED/
+  );
+  assert.equal(f.inserted,0);
+});
 test('duplicate delete webhook never returns a second notification event',async()=>{
   const f=fixture();
   const first=await neonArchiveOperation('mark_business_messages_deleted',input,f.sql);
@@ -42,7 +51,7 @@ test('stale concurrent SELECT does not emit notifications if UPDATE lost the rac
 
 test('SQL marks only previously undeleted rows, preventing repeated tombstone updates',()=>{
   const src=readFileSync(new URL('../lib/neon-archive-store.js',import.meta.url),'utf8');
-  assert.match(src,/message_id=ANY\(\$3::bigint\[\]\) AND deleted_at IS NULL/);
+  assert.match(src,/message_id=ANY\(\$3::bigint\[\]\) AND business_connection_id=\$4 AND deleted_at IS NULL/);
   assert.match(src,/const newlyDeleted=before\.filter/);
 });
 
