@@ -107,7 +107,7 @@ async function ghostDiagnostics(token, userId) {
   const [settings, storeHealth, deletedData, webhookInfo, durable, menu] = await Promise.all([
     getPrivacySettings(userId),
     viewerStoreHealth().catch(() => null),
-    listDeletedFeed(userId, 1).catch(() => ({ items: [] })),
+    listDeletedFeed(userId, 25).catch(() => ({ items: [] })), 
     tg(token, 'getWebhookInfo').catch(() => null),
     getBusinessConnectionState(userId).catch(() => null),
     tg(token, 'getChatMenuButton', { chat_id: userId }).catch(() => null),
@@ -143,7 +143,11 @@ async function ghostDiagnostics(token, userId) {
   const storageReady = Boolean(storeHealth?.storage === 'ok' && (storeHealth?.directGhostWrites || storeHealth?.postgrestFallback));
   const mediaVaultReady = Boolean(storeHealth?.mediaVault);
   const deleteItems = Array.isArray(deletedData?.items) ? deletedData.items : [];
-  const lastDelete = deleteItems[0] || null;
+  // Do not count an older Business bot's deletion as proof that this
+  // connection captures new events. Only a stored copy attributed to the
+  // actively verified connection can unlock the ready status.
+  const lastDelete = businessLive ? deleteItems.find(item =>
+    String(item.businessConnectionId || '') === String(connectionId)) || null : null;
 
   const checks = {
     webhook: {
