@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,inboxOverlayEpoch:0,lastListFetchedAt:0,
     thread:null,messages:[],threadLoading:false,threadLoadError:'',threadAuthRejected:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,threadRequestAbort:null,archiveRequestAbort:null,
-    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
+    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarMissing:new Set(),avatarRetryTimer:null,avatarBlockedUntil:0,avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),draftVersions:new Map(),sendInFlight:false,sendInFlightChatId:null,lastSendFailure:null,lastSendFailures:new Map(),
@@ -1450,16 +1450,29 @@
         body:JSON.stringify({action:'avatar_batch',chatIds:ids}),
         signal:controller.signal,
       });
-      if(!response.ok)throw new Error('avatar_batch_unavailable');
+      if(!response.ok){const error=new Error('avatar_batch_unavailable');error.httpStatus=response.status;throw error;}
       const body=await response.json();
       if(!body?.ok||!body.avatars||typeof body.avatars!=='object')
         throw new Error('avatar_batch_unavailable');
-      return body.avatars;
+      return body;
     }finally{clearTimeout(timeout);}
   }
   // Owner-scoped active thread takes priority over the inbox viewport.
   // The chat header must not stay at initials just because the inbox is hidden.
   // Archived-only threads never trigger a live Telegram avatar fetch.
+  // One bounded retry wake-up per owner, never a reconnect storm. A missing
+  // profile photo is distinct from a temporary Telegram transport failure.
+  function scheduleAvatarRetry(delayMs=25000){
+    if(state.avatarRetryTimer)return;
+    const ownerKey=state.ownerInitData,epoch=state.avatarEpoch;
+    state.avatarRetryTimer=setTimeout(()=>{
+      state.avatarRetryTimer=null;
+      if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')||
+         epoch!==state.avatarEpoch)return;
+      runAvatarQueue();
+      queueVisibleAvatars();
+    },delayMs);
+  }
   function queueVisibleAvatars(){
     if(!tg?.initData||
       document.querySelector('.screen.active')?.dataset?.screen!=='telegram')return;
@@ -1470,7 +1483,7 @@
     const threadId=threadVisible&&state.connectionProof?.verified===true&&
       state.thread&&!state.thread.archiveOnly?String(state.thread.id):null;
     if(threadId&&!state.avatarUrls.has(threadId)&&
-      !state.avatarRequested.has(threadId)&&(state.avatarRetryAt.get(threadId)||0)<=now){
+      !state.avatarRequested.has(threadId)&&!state.avatarMissing?.has(threadId)&&(state.avatarRetryAt.get(threadId)||0)<=now){
       state.avatarRequested.add(threadId);
       // One visible header before any pending offscreen avatar thumbnails.
       state.avatarQueue.unshift(threadId);
@@ -1478,7 +1491,7 @@
     const visible=inboxVisible?[...document.querySelectorAll('#telegramMirrorList [data-veto-avatar]')]
       .filter(el=>{
         const id=String(el.dataset.vetoAvatar||'');
-        if(!id||state.avatarUrls.has(id)||state.avatarRequested.has(id)||
+        if(!id||state.avatarUrls.has(id)||state.avatarRequested.has(id)||state.avatarMissing?.has(id)||
           (state.avatarRetryAt.get(id)||0)>now||
           el.closest('.veto-mirror-chat.is-cleared'))return false;
         const rect=el.getBoundingClientRect();
@@ -1493,11 +1506,16 @@
   }
   function runAvatarQueue(){
     if(state.avatarActive||!state.avatarQueue.length)return;
+    if(Date.now()<Number(state.avatarBlockedUntil||0)){
+      scheduleAvatarRetry(Math.max(1000,state.avatarBlockedUntil-Date.now()));
+      return;
+    }
     const ids=state.avatarQueue.splice(0,6).filter(id=>!state.avatarUrls.has(id));
     if(!ids.length){runAvatarQueue();return;}
     const epoch=state.avatarEpoch,ownerKey=state.ownerInitData;
     state.avatarActive=1;
-    fetchAvatarBatch(ids,ownerKey).then(avatars=>{
+    fetchAvatarBatch(ids,ownerKey).then(batch=>{
+      const avatars=batch?.avatars||{},missing=new Set(batch?.missing||[]);
       if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData||
          ownerKey!==String(tg?.initData||''))return;
       for(const id of ids){
@@ -1513,7 +1531,12 @@
         }
         if(!href){
           state.avatarRequested.delete(id);
-          state.avatarRetryAt.set(id,Date.now()+90000);
+          if(missing.has(id)){
+            state.avatarMissing?.add(id);
+          }else{
+            state.avatarRetryAt.set(id,Date.now()+25000);
+            scheduleAvatarRetry(25000);
+          }
           continue;
         }
         state.avatarUrls.set(id,href);
@@ -1535,12 +1558,16 @@
           }
         }
       }
-    }).catch(()=>{
+    }).catch(error=>{
       if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData)return;
+      const throttled=Number(error?.httpStatus||0)===429;
+      const delay=throttled?90000:25000;
+      if(throttled)state.avatarBlockedUntil=Date.now()+delay;
       for(const id of ids){
         state.avatarRequested.delete(id);
-        state.avatarRetryAt.set(id,Date.now()+90000);
+        state.avatarRetryAt.set(id,Date.now()+delay);
       }
+      scheduleAvatarRetry(delay);
     }).finally(()=>{
       if(epoch!==state.avatarEpoch)return;
       state.avatarActive=0;
@@ -1866,7 +1893,7 @@
     // thread class must never strand the next Telegram owner without navigation.
     window.VetoThemeDock?.('inbox');
     state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
-    state.avatarRetryAt.clear();state.avatarActive=0;
+    state.avatarRetryAt.clear();state.avatarMissing.clear();clearTimeout(state.avatarRetryTimer);state.avatarRetryTimer=null;state.avatarBlockedUntil=0;state.avatarActive=0;
     state.avatarUrls.forEach(href=>{try{URL.revokeObjectURL(href)}catch{}});
     state.avatarUrls.clear();
     revokeMediaUrls();
@@ -2321,7 +2348,7 @@
         state.connectionProof=null;state.page=0;state.hasMore=false;
         if(state.thread)state.thread.serverCanSend=false;
         state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
-        state.avatarRetryAt.clear();state.avatarActive=0;
+        state.avatarRetryAt.clear();state.avatarMissing.clear();clearTimeout(state.avatarRetryTimer);state.avatarRetryTimer=null;state.avatarBlockedUntil=0;state.avatarActive=0;
         state.avatarUrls.forEach(url=>{try{URL.revokeObjectURL(url)}catch{}});
         state.avatarUrls.clear();
         $('telegramMirrorList')?.replaceChildren?.();
