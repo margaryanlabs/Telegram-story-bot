@@ -14,11 +14,14 @@ CREATE TABLE IF NOT EXISTS public.vetogram_play_ttt_rooms (
     CHECK (status IN ('waiting','active','finished')),
   winner varchar(4) NULL CHECK (winner IN ('X','O','draw')),
   version integer NOT NULL DEFAULT 0 CHECK (version >= 0),
+  round integer NOT NULL DEFAULT 1 CHECK (round BETWEEN 1 AND 10000),
+  rematch_x boolean NOT NULL DEFAULT false,
+  rematch_o boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   expires_at timestamptz NOT NULL DEFAULT (now()+interval '6 hours'),
   CHECK (guest_id IS NULL OR guest_id <> owner_id),
-  CHECK ((status = 'waiting' AND guest_id IS NULL)
+  CHECK ((status = 'waiting' AND guest_id IS NULL AND round=1 AND NOT rematch_x AND NOT rematch_o)
     OR (status IN ('active','finished') AND guest_id IS NOT NULL))
 );
 CREATE INDEX IF NOT EXISTS vetogram_play_ttt_owner_expiry
