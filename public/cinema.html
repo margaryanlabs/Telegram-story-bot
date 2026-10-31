@@ -69,8 +69,8 @@
       <section class="cinema-section cinema-watch-now" id="cinemaWatchNow" aria-label="Смотреть прямо сейчас">
         <div class="cinema-section-head">
           <div><span class="cinema-overline">VETOGRAM CINEMA / ONE PLAY</span>
-            <h2>Нажми ▶ — и смотри</h2>
-            <p>Только публикации из разрешённых встроенных плееров правообладателей. Никаких пустых ссылок вместо кнопки просмотра.</p>
+            <h2>Выбери фильм · нажми ▶</h2>
+            <p>Официальные встроенные плееры. Начало просмотра проверяется по сигналу RUTUBE; недоступные видео скрываются после ошибки.</p>
           </div>
           <span class="cinema-shelf-label" id="cinemaWatchNowCount" aria-live="polite">Проверяем источники</span>
         </div>
@@ -87,6 +87,7 @@
           <h2>Сериалы. Все истории — здесь.</h2>
           <p>Сериалы из официальных видеоархивов с исходными плеерами. Здесь нет карточек, которые ведут к неподключённым подпискам.</p>
           <div id="cinemaSeriesStats" class="cinema-series-stats">Загружаем коллекцию…</div>
+          <div id="cinemaSeriesGenres" class="cinema-series-genres" role="group" aria-label="Жанры сериалов"></div>
         </div>
         <div class="cinema-series-hub-panel">
           <div class="cinema-section-head"><div><span class="cinema-overline">КИНО / ОРИГИНАЛЬНЫЕ ПЛЕЕРЫ</span>
@@ -94,7 +95,7 @@
             <p>Официальные сериальные публикации с исходным встроенным видеоплеером.</p></div></div>
           <div id="cinemaSeriesPlayableRail" class="cinema-rail cinema-editorial-rail cinema-series-playable-rail"></div>
         </div>
-        <div class="cinema-section cinema-series-popular">
+        <div class="cinema-section cinema-series-popular hidden" aria-hidden="true">
           <div class="cinema-section-head"><div><span class="cinema-overline">ПОПУЛЯРНОЕ / МИРОВОЕ КИНО</span><h2>Популярные зарубежные сериалы</h2><p>Русская дорожка указана в каталогах отдельных провайдеров. Встроенного просмотра этих проектов в Cinema пока нет — не показываем ложную кнопку Play.</p></div></div>
           <div id="cinemaSeriesPopularRail" class="cinema-rail cinema-editorial-rail cinema-series-popular-rail"></div>
         </div>
