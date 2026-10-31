@@ -204,7 +204,10 @@ function syncPlayer(){
  $("studioDuration").textContent=live?"LIVE":format(d);
  for(const id of ["miniSeek","studioSeek"]){$(id).disabled=live||!Number.isFinite(d)||d<=0;$(id).value=String(v);}
 }
-for(const event of ["play","pause","ended","durationchange","timeupdate","loadedmetadata","waiting","error"])audio.addEventListener(event,()=>{
+for(const event of ["play","playing","pause","ended","durationchange","timeupdate","loadedmetadata","waiting","error"])audio.addEventListener(event,()=>{
+ if(event==="playing"&&state.now?.id){
+  document.dispatchEvent(new CustomEvent("vetogram:audio-playing",{detail:{trackId:state.now.id}}));
+ }
  if(event==="ended")next(1,true);
  if(event==="error"&&audio.error&&audio.src){
   const trackId=state.now?.id||null;
