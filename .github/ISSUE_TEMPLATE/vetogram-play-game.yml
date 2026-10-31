@@ -1,0 +1,55 @@
+name: "Vetogram Play — propose a game"
+description: "Submit a game for manual consideration. Does not publish your game."
+title: "[Play] "
+body:
+  - type: markdown
+    attributes:
+      value: "This is a manual proposal, not automatic publication. Do not post passwords, Telegram session data, API keys or private user information."
+  - type: input
+    id: title
+    attributes:
+      label: Game name
+      placeholder: "Your game title"
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Public source repository or demo
+      placeholder: "https://github.com/you/game"
+      description: "No code will be executed automatically."
+    validations:
+      required: true
+  - type: textarea
+    id: gameplay
+    attributes:
+      label: Gameplay and audience
+      placeholder: "Describe the game, how a round works, and age suitability."
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Solo/offline
+        - Local multiplayer
+        - Online multiplayer
+    validations:
+      required: true
+  - type: textarea
+    id: permissions
+    attributes:
+      label: Network access, data collection, and permissions
+      description: "List backends, analytics, SDKs, data collected and requested capabilities."
+    validations:
+      required: true
+  - type: checkboxes
+    id: rights
+    attributes:
+      label: Rights and safety
+      options:
+        - label: "I have rights to the supplied code and assets."
+          required: true
+        - label: "I understand that submission does not guarantee inclusion."
+          required: true
