@@ -19,6 +19,13 @@
   const empty = root.querySelector('#vpNoResults');
   const filters = Array.from(root.querySelectorAll('[data-vp-filter]'));
   let activeFilter='all';
+  const FAV_KEY = 'vetogram:play:favorites:v1';
+  const readFavorites = () => {
+    try {
+      const value = JSON.parse(window.localStorage?.getItem(FAV_KEY) || '[]');
+      return new Set(Array.isArray(value) ? value.filter(id => byId.has(id)).slice(0, catalog.length) : []);
+    } catch { return new Set(); }
+  };
   const normalize = str => String(str||'').toLocaleLowerCase().replaceAll('ё','е').trim();
   function matches(item,query) {
     if(!query)return true;
@@ -29,6 +36,7 @@
     if(selected==='offline') return item.kind==='local';
     if(selected==='online') return item.kind==='external';
     if(selected==='cards') return item.genre==='cards';
+    if(selected==='favorites') return readFavorites().has(item.id);
     return false;
   }
   function update() {
@@ -47,7 +55,7 @@
   }
   filters.forEach(button=>button.addEventListener('click',()=>{
     const filter=button.dataset.vpFilter;
-    if(!['all','offline','online','cards'].includes(filter))return;
+    if(!['all','offline','online','cards','favorites'].includes(filter))return;
     activeFilter=filter;
     filters.forEach(item=>{
       const selected=item===button;
@@ -56,6 +64,7 @@
     });
     update();
   }));
+  window.addEventListener?.('vetogram:play-favorites-changed', update);
   search?.addEventListener('input',update);
   update();
 })();
