@@ -86,3 +86,11 @@ See [room setup and QA guide](vetogram-play-online-rooms.md).
 - Play Hub has a gated room UI, manual join with a code, sharing link and a read-only state refresh every four seconds while visible.
 - **No Neon migration was applied and no deployment was performed.** With `VETOGRAM_PLAY_DATABASE_URL` absent, the UI reports the feature unavailable; it does not claim active multiplayer.
 - Unit coverage added for rules, room state transition, fake-Neon optimistic updates, invalid authentication and missing database configuration. Full repository test execution remains a release prerequisite.
+
+## Mutual rematches and fair X/O alternation
+
+- A completed online Tic-Tac-Toe round now offers a `rematch` API action. Server-side state stores `round`, `rematch_x` and `rematch_o`.
+- Exactly **two distinct participant consents** are required before the game board resets. The first vote persists without starting a new round; repeat votes are idempotent. The SQL update is guarded by a room `version` and `status='finished'`.
+- The server switches the X/O assignments on every round, so the starting seat alternates fairly. The new round keeps the original room code and original six-hour expiration.
+- UI shows the current round, current side, a request/accept rematch action and the other participant's vote status. Polling continues on a finished game while it remains visible, so the first player can observe the second player's approval.
+- This is implemented **only in the feature branch**. Database migration is updated but not applied; no live multiplayer was claimed or tested on physical devices. See `docs/vetogram-play-online-rooms.md`.
