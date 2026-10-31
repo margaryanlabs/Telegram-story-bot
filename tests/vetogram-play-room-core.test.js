@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   newRoomCode, validRoomCode, normalizeRoomCode, makeRoom,
-  gameResult, validateGameState, roomView, joinRoom, applyMove,
+  gameResult, validateGameState, roomView, joinRoom, applyMove, requestRematch,
 } from '../lib/vetogram-play-room-core.js';
 
 const FIXED=Date.UTC(2026,9,31,10,0,0);
@@ -94,4 +94,49 @@ test('expired room blocks new join or moves even if code is known',()=>{
   assert.deepEqual(joinRoom(room,GUEST,FIXED+6*3600*1000),{ok:false,error:'expired'});
   const active=joinRoom(room,GUEST,FIXED).room;
   assert.deepEqual(applyMove(active,HOST,0,FIXED+6*3600*1000),{ok:false,error:'expired'});
+});
+
+test('rematch requires BOTH players and next round switches starting side',()=>{
+  let room=joinRoom(makeRoom(HOST,'ABCD2345',FIXED),GUEST,FIXED).room;
+  for(const [user,cell] of [[HOST,0],[GUEST,3],[HOST,1],[GUEST,4],[HOST,2]]){
+    const action=applyMove(room,user,cell,FIXED);
+    assert.equal(action.ok,true,action.error);
+    room=action.room;
+  }
+  const voted=requestRematch(room,HOST,FIXED);
+  assert.equal(voted.ok,true);
+  assert.equal(voted.room.status,'finished','first vote must NOT start a new game');
+  assert.equal(roomView(voted.room,HOST,FIXED).rematchRequested,true);
+  assert.equal(roomView(voted.room,GUEST,FIXED).opponentRequested,true);
+  assert.equal(validateGameState(voted.room),true);
+  assert.equal(requestRematch(voted.room,HOST,FIXED).unchanged,true,'duplicate proposal must be idempotent');
+
+  const next=requestRematch(voted.room,GUEST,FIXED);
+  assert.equal(next.ok,true);
+  assert.equal(next.room.round,2);
+  assert.equal(next.room.status,'active');
+  assert.equal(next.room.board,'.........');
+  assert.equal(next.room.turn,'X');
+  assert.equal(next.room.winner,null);
+  assert.equal(next.room.rematch_x,false);
+  assert.equal(next.room.rematch_o,false);
+  assert.equal(roomView(next.room,HOST,FIXED).seat,'O');
+  assert.equal(roomView(next.room,GUEST,FIXED).seat,'X');
+  assert.equal(applyMove(next.room,HOST,0,FIXED).error,'not_your_turn');
+  const opening=applyMove(next.room,GUEST,4,FIXED);
+  assert.equal(opening.ok,true);
+  assert.equal(opening.room.board,'....X....');
+  assert.equal(validateGameState(opening.room),true);
+});
+test('rematch is unavailable to spectators, before finish and after expiry',()=>{
+  const waiting=makeRoom(HOST,'ABCD2345',FIXED);
+  const active=joinRoom(waiting,GUEST,FIXED).room;
+  assert.equal(requestRematch(active,HOST,FIXED).error,'not_finished');
+  assert.equal(requestRematch(active,'987654321',FIXED).error,'not_found');
+  let room=active;
+  for(const [user,cell] of [[HOST,0],[GUEST,3],[HOST,1],[GUEST,4],[HOST,2]]){
+    room=applyMove(room,user,cell,FIXED).room;
+  }
+  assert.equal(requestRematch(room,HOST,FIXED+6*3600*1000).error,'expired');
+  assert.equal(validateGameState({...room,rematch_x:true,rematch_o:true}),false);
 });
