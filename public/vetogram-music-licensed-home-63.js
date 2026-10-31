@@ -35,7 +35,11 @@ const tracks=rows.map(row=>{
 const unique=[...new Map(tracks.map(x=>[x.id,x])).values()];
 let visible=20;
 const unavailable=new Set();
+let pendingId="",pendingTimer=null;
+const status=document.getElementById("licensedHomeStatus");
+const say=text=>{if(status)status.textContent=text};
 const playable=()=>unique.filter(t=>!unavailable.has(t.id));
+function cancelPending(){clearTimeout(pendingTimer);pendingTimer=null;pendingId=""}
 function card(t){
   const article=make("article","licensed-home-card");
   const art=make("span","licensed-home-art","♫");art.setAttribute("aria-hidden","true");
@@ -48,14 +52,26 @@ function card(t){
   const rights=make("div","licensed-home-rights");rights.append(origin,license);info.append(rights);
   const play=make("button","licensed-home-play","▶");
   play.type="button";play.setAttribute("aria-label","Слушать "+t.title);
-  play.addEventListener("click",()=>V.play(t,playable()));
+  play.addEventListener("click",()=>{
+    cancelPending();pendingId=t.id;
+    say("Проверяем воспроизведение «"+t.title+"»…");
+    V.play(t,playable());
+    const key=t.id;
+    pendingTimer=setTimeout(()=>{
+      if(pendingId!==key)return;
+      cancelPending();
+      unavailable.add(key);
+      say("Источник не подтвердил воспроизведение за 25 секунд. Запись скрыта до перезагрузки.");
+      render();
+    },25000);
+  });
   article.append(art,info,play);return article;
 }
 function render(){
   const live=playable();
   host.replaceChildren(...live.slice(0,visible).map(card));
   if(!live.length)host.append(make("p","licensed-home-empty","В доступной подборке нет работающих потоков. Попробуй позднее."));
-  count.textContent=live.length+" независимых записей · CC BY";
+  count.textContent=live.length+" записей CC BY · источник проверяется при Play";
   more.hidden=visible>=live.length;
 }
 more.addEventListener("click",()=>{visible=Math.min(playable().length,visible+20);render()});
@@ -64,7 +80,16 @@ more.addEventListener("click",()=>{visible=Math.min(playable().length,visible+20
 document.addEventListener("vetogram:audio-error",event=>{
   const id=String(event.detail?.trackId||"");
   if(!id.startsWith("ccmixter:"))return;
-  unavailable.add(id);render();
+  if(pendingId===id)cancelPending();
+  unavailable.add(id);
+  say("Поток не открылся на этом устройстве. Скрыли запись; выбери другую.");
+  render();
+});
+document.addEventListener("vetogram:audio-playing",event=>{
+  const id=String(event.detail?.trackId||"");
+  if(!id||id!==pendingId)return;
+  cancelPending();
+  say("Воспроизведение подтверждено · "+id.replace(/^ccmixter:/,"")+" · CC BY");
 });
 render();
 window.VetogramLicensedHome=Object.freeze({count:()=>unique.length});
