@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261019-brand-v2" />
   <link rel="stylesheet" href="/veto-launch-polish.css?v=20261019-launch-01" />
   <link rel="stylesheet" href="/vetogram-header.css?v=20261021-v1" />
+  <link rel="stylesheet" href="/vetogram-play.css?v=20261031-play-v1" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -1613,6 +1614,78 @@
       </section>
     </section>
 
+    <section class="screen vp-screen" data-screen="play" aria-label="Vetogram Play">
+      <div class="vp-shell">
+        <header class="vp-top">
+          <div class="vp-heading">
+            <img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="26" height="26" />
+            <div><span class="vp-eyebrow">VETOGRAM / ENTERTAINMENT</span><br /><strong>PLAY</strong></div>
+          </div>
+          <span class="vp-count">2 игры внутри</span>
+        </header>
+
+        <section class="vp-hero" aria-labelledby="vpHeroTitle">
+          <div class="vp-hero-copy">
+            <span class="vp-overline">ИГРОВОЕ ПРОСТРАНСТВО</span>
+            <h1 id="vpHeroTitle">Заходи.<br /><em>Поиграем.</em></h1>
+            <p>Короткие партии, знакомые игры и любимые люди. Всё начинается с одного касания.</p>
+            <span class="vp-hero-note">Без регистрации для мини-игр</span>
+          </div>
+          <div class="vp-art" aria-hidden="true">
+            <div class="vp-art-ring"></div>
+            <span class="vp-art-card one">♠</span><span class="vp-art-card two">♥</span>
+          </div>
+        </section>
+
+        <div class="vp-section-head">
+          <div><h2>Наш игровой клуб</h2><p>Большие игры Margaryan Labs.</p></div>
+          <span>01 / КЛУБ</span>
+        </div>
+        <article class="vp-featured" aria-label="Армянский блот BLOTENQ">
+          <div class="vp-blot-art" aria-hidden="true">
+            <span class="vp-blot-suit first">♠</span><strong>ԲԼՈՏ<i>ԵՆՔ?</i></strong><span class="vp-blot-suit last">♥</span>
+          </div>
+          <div class="vp-feature-copy">
+            <span class="vp-flag">НАША ИГРА · ARMENIAN CARD CLUB</span>
+            <h3>BLOTENQ?</h3>
+            <p>Армянский блот: карты, ставки, команды и турниры. Игра разрабатывается в отдельном репозитории, чтобы не затрагивать работу чатов Vetogram.</p>
+            <a class="vp-button" href="https://blot-armenian-digital-club.lovable.app/" target="_blank" rel="noopener noreferrer" aria-label="Открыть BLOTENQ в отдельном приложении">Открыть Blot <span aria-hidden="true">↗</span></a>
+            <small>Пока открывается отдельно · интеграция игрового движка готовится</small>
+          </div>
+        </article>
+
+        <div class="vp-section-head">
+          <div><h2>Быстрые игры</h2><p>Одна минута для себя или короткой паузы.</p></div>
+          <span>02 / АРКАДА</span>
+        </div>
+        <div class="vp-mini-grid" aria-label="Игры без подключения">
+          <article class="vp-mini">
+            <span class="vp-mini-icon" aria-hidden="true">◎</span>
+            <h3>Реакция</h3>
+            <p>Проверь скорость. Дождись сигнала и коснись экрана как можно быстрее.</p>
+            <div id="vpReactionBest" class="vp-mini-stat">Рекорд: ещё нет</div>
+            <button type="button" id="vpReactionButton" class="vp-reaction-button" data-state="idle">Начать проверку реакции</button>
+            <div id="vpReactionInfo" role="status" aria-live="polite" class="vp-mini-stat">Дождись светлого сигнала.</div>
+          </article>
+          <article class="vp-mini">
+            <span class="vp-mini-icon" aria-hidden="true">♣</span>
+            <h3>Четыре пары</h3>
+            <p>Найди совпадения среди восьми карточек. Побеждает внимательность.</p>
+            <div class="vp-memory-actions">
+              <span id="vpMemoryBest" class="vp-mini-stat">Рекорд: ещё нет</span>
+              <button type="button" id="vpMemoryReset" class="vp-button ghost">Заново ↺</button>
+            </div>
+            <div id="vpMemoryGrid" class="vp-memory-grid" role="group" aria-label="Карточки игры на память"></div>
+            <div id="vpMemoryInfo" role="status" aria-live="polite" class="vp-mini-stat">Найди четыре пары.</div>
+          </article>
+        </div>
+        <aside class="vp-roadmap">
+          <span class="vp-roadmap-icon" aria-hidden="true">✧</span>
+          <div><strong>Дальше — игры с друзьями</strong><small>Общие комнаты, приглашения из чата и чемпионаты появятся после проверки безопасной интеграции. Сейчас результаты мини-игр хранятся только на устройстве.</small></div>
+        </aside>
+      </div>
+    </section>
+
     <section class="screen" data-screen="archive">
       <div class="page-head">
         <span class="kicker">История</span>
@@ -1635,6 +1708,7 @@
     <button class="nav-item" data-nav="home" type="button" aria-label="Инструменты Vetogram"><img class="veto-nav-brand-mark" src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="24" height="24" aria-hidden="true" /><small>Vetogram</small></button>
     <button class="nav-item" data-nav="publish" type="button" aria-label="Истории"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg><small>Stories</small></button>
     <button class="nav-item" data-nav="privacy" type="button" aria-label="Приватность"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5.2c0 5 3.2 8.7 8 10.8 4.8-2.1 8-5.8 8-10.8V6z"/><path d="m9 12 2 2 4-4"/></svg><small>Vault</small></button>
+    <button class="nav-item" data-nav="play" type="button" aria-label="Игры"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8H5.5A3.5 3.5 0 0 0 2 11.5v3A3.5 3.5 0 0 0 5.5 18c1.1 0 2-.6 2.8-1.5L10 15h4l1.7 1.5c.8.9 1.7 1.5 2.8 1.5a3.5 3.5 0 0 0 3.5-3.5v-3A3.5 3.5 0 0 0 18.5 8H7Z"/><path d="M6 12h4M8 10v4M16 11.5h.01M19 13.5h.01"/></svg><small>Игры</small></button>
     <button class="nav-item" data-nav="studio" type="button" aria-label="Студия"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/></svg><small>Studio</small></button>
   </nav>
 
@@ -1665,5 +1739,6 @@
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
   <script src="/veto-launch-polish.js?v=20261019-launch-01" defer></script>
   <script src="/vetogram-header.js?v=20261021-v1" defer></script>
+  <script src="/vetogram-play.js?v=20261031-play-v1" defer></script>
 </body>
 </html>
