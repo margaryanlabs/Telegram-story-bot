@@ -183,3 +183,47 @@ body:has(#reader) :is(.book-extent-badge,.translation-tag){
     max-width:min(100%,680px);
   }
 }
+
+
+/* One-tap Cinema shelf uses the same verified source as the original film card. */
+body:has(#cinemaPlayer) .cinema-watch-now{
+  margin-top:18px;
+  padding:18px clamp(14px,3vw,26px)!important;
+  border:1px solid rgba(207,189,204,.14);
+  border-radius:19px;
+  background:linear-gradient(135deg,rgba(201,162,185,.075),rgba(29,29,45,.08));
+}
+body:has(#cinemaPlayer) .cinema-watch-now .cinema-section-head{
+  margin-bottom:15px;
+}
+body:has(#cinemaPlayer) .cinema-watch-rail{
+  overscroll-behavior-x:contain;
+  scroll-padding-inline:8px;
+  scrollbar-width:thin;
+}
+body:has(#cinemaPlayer) .cinema-watch-card .cinema-card-art{
+  position:relative;
+}
+body:has(#cinemaPlayer) .cinema-watch-play{
+  position:absolute;
+  inset:auto 10px 10px auto;
+  width:42px;height:42px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:rgba(14,15,24,.89);
+  border:1px solid rgba(230,218,229,.24);
+  color:#f6eff4;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
+  font-size:15px;
+}
+body:has(#cinemaPlayer) .cinema-watch-card:focus-visible{
+  outline:2px solid #e7b9c9!important;
+}
+@media(max-width:640px){
+  body:has(#cinemaPlayer) .cinema-watch-now{
+    padding:14px 9px!important;margin:12px 0;
+  }
+  body:has(#cinemaPlayer) .cinema-watch-play{
+    width:36px;height:36px;
+  }
+}
