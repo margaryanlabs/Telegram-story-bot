@@ -1,7 +1,7 @@
 /* VETOGRAM CINEMA V1 — independent Telegram Mini App. Zero pirate sources. */
 (function () {
   "use strict";
-  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaSeriesEpisodes||[]),...(window.VetogramCinemaPopularSeries||[]),...(window.VetogramCinemaForeignRutube||[]),...(window.VetogramCinemaFranchises||[])];
+  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaAdditionalOfficial63||[]),...(window.VetogramCinemaSeriesEpisodes||[]),...(window.VetogramCinemaPopularSeries||[]),...(window.VetogramCinemaForeignRutube||[]),...(window.VetogramCinemaFranchises||[])];
   let films=[...new Map(filmInputs.map(f=>[f.id,f])).values()];
   const $=id=>document.getElementById(id);
   const BASE="https://commons.wikimedia.org/w/api.php";
@@ -16,8 +16,8 @@
   const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/"};
   // The initial 200 feature films appear instantly in their studio tabs.
   // Their RUTUBE API cursor still begins from page 1 and remains authoritative.
-  for(const film of (window.VetogramCinemaFeatured200||[])){
-    const target=film.id.match(/^rutube-(mosfilm|lenfilm|gorky|starmedia)-[a-f0-9]{32}$/i)?.[1];
+  for(const film of [...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaAdditionalOfficial63||[])]){
+    const target=film.id.match(/^rutube-(mosfilm|lenfilm|gorky|starmedia|marsmedia|soyuzmultfilm)-[a-f0-9]{32}$/i)?.[1];
     if(!target||!Object.hasOwn(STUDIO_LINKS,target))continue;
     const rows=studio.results.get(target)||[];
     rows.push(film);studio.results.set(target,rows);
@@ -69,6 +69,7 @@
   }
   function setTab(tab){
     if(!["home","foreign","catalog","series","search","library"].includes(tab))return;
+    if(tab==="foreign")tab="catalog"; // no external-only streaming catalog
     buzz();state.tab=tab;state.genre="Все";state.visible=100;if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
     document.querySelectorAll("[data-tab]").forEach(b=>{
       const yes=b.dataset.tab===tab;b.classList.toggle("active",yes);
@@ -81,7 +82,7 @@
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
     $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
     $("cinemaSeriesHub").classList.toggle("hidden",tab!=="series");
-    $("cinemaForeignHub").classList.toggle("hidden",tab!=="foreign");
+    $("cinemaForeignHub").classList.add("hidden");
     for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises","cinemaForeignShelf"])
       $(id).classList.toggle("hidden",tab!=="home");
     if(tab==="home")setHeroSlide(discovery.index);
@@ -346,7 +347,10 @@
     }
   }
   function selectedFilms(){
-    let list=films.filter(f=>f.externalRutube||!f.discoveryOnly||state.showUnverified||f.russianAudioStatus==="catalog-listed");
+    // User requested a playback-only library. External-only discovery and
+    // titles without a validated provider stream stay out of public shelves.
+    let list=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
+      (f.player?.licensed===true||Boolean(f.file)));
     if(state.tab==="foreign")list=list.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim||f.featuredForeign));
     if(state.tab==="series")list=list.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true);
     if(state.tab==="catalog")list=list.filter(f=>f.contentType!=="Сериалы"&&!f.externalRutube);
@@ -410,12 +414,12 @@
     if(!image)requestPoster(f);
   }
   function updateHeroDeck(){
-    const foreign=films.filter(f=>f.externalRutube).slice(0,8);
+    const foreign=[]; // Unlicensed external links must never lead a Play hero.
     const recents=films.filter(f=>f.player&&f.contentType!=="Сериалы"&&Number(f.minutes)>=35)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
     // Lead with films which actually have an in-app player. The foreign
     // discovery cards may only have an external source URL.
-    const all=[...recents,...films.filter(f=>f.player&&Number(f.minutes)>=40),...foreign];
+    const all=[...recents,...films.filter(f=>f.player?.licensed===true&&Number(f.minutes)>=40)];
     const used=new Set(),deck=[];
     for(const film of all) {
       if(used.has(film.id))continue;
@@ -556,7 +560,8 @@
   }
   function refreshDiscovery(){
     const home=isHome();
-    $("cinemaForeignShelf").classList.toggle("hidden",!home);
+    // Hiding discovery-only foreign uploads: no permission to embed them.
+    $("cinemaForeignShelf").classList.add("hidden");
     const external=films.filter(f=>f.externalRutube);
     if(home)$("cinemaForeignRail").replaceChildren(...external.slice(0,20).map(filmCard));
     text("cinemaForeignNote",external.filter(f=>f.audioClaim).length+" публикаций с заявленным дубляжом · "+external.length+" найденных публикаций. Право на их встраивание не установлено.");
@@ -576,8 +581,8 @@
       if(home&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(sectionId==="cinemaSeries"?seriesShowCard:filmCard));
     }
     $("cinemaGenresSection").classList.toggle("hidden",!home);
-    $("cinemaFranchises").classList.toggle("hidden",!home);
-    if(home)renderFranchise();
+    $("cinemaFranchises").classList.add("hidden");
+    // Franchise title metadata is not playable: never render fake Watch cards.
     if(home){
       $("cinemaGenreTiles").replaceChildren(...GENRE_TILES.map(([label,glyph,hue])=>{
         const button=node("button","cinema-genre-tile");
