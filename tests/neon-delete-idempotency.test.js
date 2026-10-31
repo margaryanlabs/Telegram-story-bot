@@ -39,11 +39,11 @@ test('delete webhook cannot update a message captured by another Business connec
     one:async()=>({anti_delete:true,edit_history:true,ghost_inbox:true,retention_days:30}),
     query:async(q,args)=>{
       if(q.includes('SELECT * FROM public.story_pilot_messages')){
-        assert.match(q,/business_connection_id=\\$4/);
+        assert.match(q,/business_connection_id=\$4/);
         assert.equal(args[3],'connected-B');verifiedSelect=true;return [];
       }
       if(q.includes('UPDATE public.story_pilot_messages SET deleted_at')){
-        assert.match(q,/business_connection_id=\\$4/);
+        assert.match(q,/business_connection_id=\$4/);
         assert.equal(args[3],'connected-B');verifiedUpdate=true;return [];
       }
       throw Error('Cross-connection delete unexpectedly created a notification');
