@@ -1,0 +1,204 @@
+/* VETOGRAM 6.2 / Messenger Calm
+ * Chat-only presentation. Do not alter Telegram's native Close/menu chrome,
+ * message transport, authentication, Stories publisher or media modules.
+ * Keep the user's chosen chat themes and accessible contrast.
+ */
+
+/* Remove the ornamental dashboard animation behind fullscreen conversations. */
+html#vetogram.vetogram-noir body.veto-chat-active .veto-stage-fx,
+html#vetogram.vetogram-noir body.veto-chat-active > .ambient{
+  display:none!important;
+}
+html#vetogram.vetogram-noir body.veto-chat-active{
+  background:#0c111b!important;
+}
+
+/* A restrained graphite palette. Other user-selected chat themes remain intact. */
+#vetogram.vetogram-noir #telegramMirror[data-chat-theme="graphite"]{
+  --ct-bg:#0c111b;
+  --ct-panel:#131b29;
+  --ct-elev:#192335;
+  --ct-input:#151d2b;
+  --ct-line:rgba(185,199,224,.12);
+  --ct-chip:#1b2536;
+  --ct-muted:#afbbcd;
+  --ct-faint:#8998ad;
+  --ct-in:#1c2839;
+  --ct-out:#384968;
+  --ct-skeleton:#1d2b3f;
+  --veto-list-bg:#0c111b;
+  --veto-header:#121a28;
+  --veto-story-glow:linear-gradient(135deg,#b77287,#9275ae 57%,#687fae);
+  --veto-row-hover:rgba(153,175,213,.07);
+  --veto-highlight:#e38e88;
+}
+#vetogram.vetogram-noir body.veto-chat-active #telegramMirror[data-chat-theme="graphite"],
+#vetogram.vetogram-noir body.veto-chat-active #telegramMirror[data-chat-theme="graphite"] .veto-mirror-list,
+#vetogram.vetogram-noir body.veto-chat-active #telegramMirror[data-chat-theme="graphite"] .veto-mirror-thread,
+#vetogram.vetogram-noir body.veto-chat-active #telegramMirror[data-chat-theme="graphite"] .veto-mirror-thread-body{
+  background:#0c111b!important;
+  background-image:none!important;
+  box-shadow:none!important;
+}
+
+/* One internal toolbar below Telegram's own unmodifiable window controls. */
+html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+#telegramMirror .veto-mirror-heading.vetogram-header{
+  height:56px!important;max-height:56px!important;min-height:56px!important;
+  padding:6px 12px!important;margin:0!important;
+  gap:8px!important;background:#101827!important;
+  border-bottom:1px solid rgba(172,191,221,.10)!important;
+  overflow:visible!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-inbox-wordmark{
+  font-size:16px!important;letter-spacing:.025em!important;
+  text-shadow:none!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-header-actions .veto-mirror-icon-btn{
+  width:36px!important;height:36px!important;min-width:36px!important;
+  min-height:36px!important;background:rgba(180,199,227,.055)!important;
+  border:1px solid rgba(180,199,227,.11)!important;border-radius:11px!important;
+  box-shadow:none!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-search-wrap{
+  background:#151b26!important;
+  border:1px solid rgba(188,204,227,.10)!important;
+  box-shadow:none!important;border-radius:14px!important;
+  margin-block:10px!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-search-wrap:focus-within{
+  border-color:rgba(224,156,153,.65)!important;
+  box-shadow:0 0 0 2px rgba(224,156,153,.09)!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-chat{
+  min-height:73px!important;padding-block:10px!important;
+  border-bottom:1px solid rgba(183,201,226,.10)!important;
+  transition:background-color 140ms ease!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-chat:is(:hover,:focus-visible){
+  background:rgba(169,186,218,.055)!important;outline-offset:-2px;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-chat-avatar,
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-avatar{
+  overflow:hidden;
+  box-shadow:none!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-avatar-img{
+  display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;
+}
+
+/* Stories are secondary to conversations: thin rings, no neon or stacked cards. */
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch) .veto-story-strip{
+  background:transparent!important;background-image:none!important;
+  border:0!important;border-top:1px solid rgba(185,202,228,.075)!important;
+  border-bottom:1px solid rgba(185,202,228,.075)!important;
+  border-radius:0!important;box-shadow:none!important;
+  padding:8px 12px 10px!important;margin:0!important;
+  overflow:hidden;
+}
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch) .veto-story-strip-heading{
+  min-height:30px!important;gap:6px!important;
+  padding-bottom:5px!important;
+}
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
+.veto-story-strip-heading>strong{
+  font-size:13px!important;letter-spacing:0!important;
+}
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch) .veto-story-person{
+  width:64px!important;max-width:64px!important;gap:5px!important;
+}
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
+.veto-story-ring{
+  width:54px!important;height:54px!important;
+  padding:2px!important;border:0!important;
+  box-shadow:none!important;filter:none!important;
+}
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
+.veto-story-ring.is-mine{
+  background:rgba(168,178,204,.20)!important;
+  border:1px dashed rgba(209,149,150,.65)!important;
+}
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
+.veto-story-face{
+  border:2px solid #111a28!important;
+  box-shadow:none!important;
+}
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
+.veto-story-person small{
+  font-size:11px!important;line-height:1.3!important;
+  color:#a8b7cb!important;overflow:hidden;text-overflow:ellipsis;
+  max-width:64px;white-space:nowrap;
+}
+#vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
+:is(.veto-story-tools-toggle,.veto-story-refresh){
+  min-height:32px!important;height:32px!important;
+  border-radius:10px!important;background:rgba(174,190,216,.07)!important;
+  box-shadow:none!important;
+}
+
+/* The conversation should read like messages, not a decorative dashboard. */
+#vetogram.vetogram-noir #telegramMirror[data-chat-theme="graphite"] .veto-mirror-thread-bar{
+  background:#131c2b!important;background-image:none!important;
+  border-bottom:1px solid rgba(185,201,227,.12)!important;
+  box-shadow:none!important;
+}
+#vetogram.vetogram-noir #telegramMirror[data-chat-theme="graphite"] .veto-mirror-sync-strip{
+  background:#111a28!important;
+  box-shadow:none!important;
+  border-bottom:1px solid rgba(185,201,227,.09)!important;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-person strong{
+  font-size:15px!important;letter-spacing:-.015em;
+}
+#vetogram.vetogram-noir #telegramMirror .veto-mirror-first-preview{
+  width:calc(100% - 30px);margin:20px auto!important;
+  padding:14px!important;border-radius:14px!important;
+  box-shadow:none!important;background:var(--ct-panel)!important;
+}
+#vetogram.vetogram-noir #telegramMirror[data-chat-theme="graphite"]
+.veto-mirror-thread-bottom{
+  background:#121b2b!important;background-image:none!important;
+  border-top:1px solid rgba(185,201,227,.11)!important;
+  box-shadow:none!important;
+}
+#vetogram.vetogram-noir #telegramMirror #vetoVoiceTools:not([open])>summary{
+  min-height:32px!important;max-width:148px!important;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:rgba(167,183,208,.06)!important;
+  border:1px solid rgba(167,183,208,.14)!important;
+  box-shadow:none!important;
+}
+#vetogram.vetogram-noir #telegramMirror #telegramThreadCompose{
+  background:transparent!important;
+}
+@media(max-width:430px){
+  html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .veto-mirror-heading.vetogram-header{
+    padding-inline:10px!important;gap:6px!important;
+  }
+  #vetogram.vetogram-noir #telegramMirror .veto-inbox-signature{
+    width:29px!important;height:29px!important;min-width:29px!important;
+  }
+  #vetogram.vetogram-noir #telegramMirror .veto-inbox-signature img{
+    width:28px!important;height:28px!important;
+  }
+  #vetogram.vetogram-noir #telegramMirror .veto-mirror-header-actions{
+    gap:5px!important;
+  }
+  #vetogram.vetogram-noir #telegramMirror .veto-mirror-header-actions .veto-mirror-icon-btn{
+    width:34px!important;min-width:34px!important;
+    height:34px!important;min-height:34px!important;
+  }
+  #vetogram.vetogram-noir #telegramMirror .veto-mirror-thread-bar{
+    min-height:58px!important;padding:7px 9px!important;
+  }
+  #vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
+  .veto-story-strip{
+    padding-inline:9px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #vetogram.vetogram-noir #telegramMirror .veto-mirror-chat{
+    transition:none!important;
+  }
+}
