@@ -19,8 +19,8 @@
     if(!['solo','local-multiplayer','remote-multiplayer'].includes(mode))throw new Error('Неподдерживаемый режим.');
     let source;
     try { source = new URL(sourceText); } catch { throw new Error('Укажи действительную HTTPS-ссылку.'); }
-    if(source.protocol!=='https:' || !source.hostname || source.username || source.password || source.hash){
-      throw new Error('Нужна публичная HTTPS-ссылка без логина, пароля или фрагмента.');
+    if(source.protocol!=='https:' || !source.hostname || source.username || source.password || source.hash || source.search){
+      throw new Error('Нужна публичная HTTPS-ссылка без параметров, логина, пароля или фрагмента.');
     }
     if(source.hostname==='localhost' || source.hostname.endsWith('.local') || /^127\./.test(source.hostname)){
       throw new Error('Локальные адреса не подходят для заявок.');
