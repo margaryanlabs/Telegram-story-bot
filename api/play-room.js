@@ -14,6 +14,7 @@ const messages={
   invalid_move:'Неверная клетка.',
   occupied:'Эта клетка уже занята.',
   not_active:'Комната ещё не готова или партия завершена.',
+  not_finished:'Предложить реванш можно только после завершения партии.',
   corrupt_state:'Комната требует проверки. Начни новую партию.',
   retry:'Не удалось создать комнату. Повтори попытку.',
 };
@@ -70,6 +71,7 @@ export default async function handler(req,res){
       if(action==='create')result=await store.create(player);
       else if(action==='join')result=await store.join(body.code,player);
       else if(action==='move')result=await store.move(body.code,player,body.cell,body.version);
+      else if(action==='rematch')result=await store.rematch(body.code,player,body.version);
       else return reply(res,400,{ok:false,error:'invalid_action',message:'Неизвестное действие.'});
     }
     if(!result.ok)return reply(res,statusFor(result.error),{ok:false,error:result.error,message:messages[result.error]||'Действие недоступно.'});
