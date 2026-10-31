@@ -1847,6 +1847,19 @@
   window.VetoTelegramNavigate = switchScreen;
   // Messenger and Privacy modules share the same owner-scoped account login.
   // The Business-bot permission is an independent optional archive feature.
+  // After a successful personal login, show the optional, read-only Business
+  // consent wizard in the SAME Mini App. Never silently connect a bot or grant
+  // access, and never act on a different signed Telegram owner.
+  function offerBusinessConsentAfterLogin() {
+    const owner=String(tg?.initData||'');
+    if(!owner)return;
+    setTimeout(() => {
+      if(owner!==String(tg?.initData||''))return;
+      if(typeof window.VetoTelegramOpenUnifiedOnboarding!=='function')return;
+      Promise.resolve(window.VetoTelegramOpenUnifiedOnboarding({automatic:true})).catch(()=>{});
+    },0);
+  }
+
   window.VetoTelegramOpenAccountConnection = async () => {
     ensureComposerIdentity();
     if (!tg?.initData) {
@@ -2789,7 +2802,8 @@
             await refresh();
             await refreshViewerAnalytics({ silent: true });
             switchScreen('telegram');
-            // Business access is a separate, explicit opt-in from Privacy.
+            // Only offer the consent screen; no bot permissions change until approval.
+            offerBusinessConsentAfterLogin();
             break;
           }
 
@@ -3507,7 +3521,8 @@
           await refresh();
           await refreshViewerAnalytics({ silent: true });
           switchScreen('telegram');
-          // No unsolicited Business permission wizard after login.
+          // Optional Business consent appears only if the release gate is enabled.
+          offerBusinessConsentAfterLogin();
         }
       });
       return;
@@ -3527,7 +3542,8 @@
         await refresh();
         await refreshViewerAnalytics({ silent: true });
         switchScreen('telegram');
-        // Optional Business access starts only from Privacy after explicit consent.
+        // The next screen is a separate, explicit Business consent step.
+        offerBusinessConsentAfterLogin();
       });
       return;
     }
