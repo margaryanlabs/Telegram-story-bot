@@ -70,6 +70,7 @@ const endpoint=(query,offset,limit=LIMIT)=>{
  return u.href;
 };
 let items=[],q="",offset=0,busy=false,complete=false,active=null,group="ru",preset="ru";
+const failedStreams=new Set(),confirmedStreams=new Set();
 const status=$("catalogStatus"),list=$("catalogResults"),more=$("catalogMore"),queryInput=$("catalogQuery");
 function textNode(tag,cls,value){const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=String(value);return el}
 function setStatus(s){status.textContent=s}
@@ -94,7 +95,10 @@ function trackCard(track,index){
  const info=textNode("div","catalog-details");
  info.append(textNode("strong","",track.title),textNode("span","",track.artist),textNode("small","",track.duration?Math.floor(track.duration/60)+":"+String(Math.floor(track.duration%60)).padStart(2,"0"):"♫"));
  const play=textNode("button","catalog-play","▶");play.type="button";play.setAttribute("aria-label","Слушать "+track.title);
- play.onclick=()=>V.play(track,items);
+ play.onclick=()=>{
+  setStatus('Проверяем воспроизведение «'+track.title+'»…');
+  V.play(track,items.filter(item=>!failedStreams.has(item.id)));
+ };
  const like=textNode("button","catalog-like","♡");like.type="button";like.title="В избранное";like.setAttribute("aria-label","Добавить в избранное "+track.title);
  like.onclick=()=>{V.toggleLike(track);like.textContent="♥";like.setAttribute("aria-label","Изменить избранное "+track.title)};
  const share=textNode("button","catalog-share","↗");share.type="button";share.title="Отправить в Telegram";
@@ -106,7 +110,9 @@ function trackCard(track,index){
 function render(){
  list.replaceChildren();
  if(!items.length){list.append(textNode("p","catalog-empty",busy?"Ищем музыку…":"Записей по этому запросу пока нет. Попробуй другой запрос."));return}
- const fragment=document.createDocumentFragment();items.forEach((t,i)=>fragment.append(trackCard(t,i)));list.append(fragment);
+ const fragment=document.createDocumentFragment();
+ items.filter(t=>!failedStreams.has(t.id)).forEach((t,i)=>fragment.append(trackCard(t,i)));
+ list.append(fragment);
 }
 async function loadMore(){
  if(busy||complete||!q)return;
@@ -165,6 +171,21 @@ function selectPreset(id){
  group=target.group;preset=target.id;buttons();search(target.q);return true;
 }
 more.onclick=loadMore;
+document.addEventListener("vetogram:audio-error",event=>{
+ const id=String(event.detail?.trackId||"");
+ if(!id.startsWith("audius:"))return;
+ failedStreams.add(id);
+ if(items.some(x=>x.id===id)){
+  setStatus("Источник не воспроизвёл запись — убрали её из каталога на этом устройстве.");
+  render();
+ }
+});
+document.addEventListener("vetogram:audio-playing",event=>{
+ const id=String(event.detail?.trackId||"");
+ if(!id.startsWith("audius:"))return;
+ confirmedStreams.add(id);
+ if(items.some(x=>x.id===id))setStatus("Реальное воспроизведение подтверждено.");
+});
 document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS.find(x=>x.id==="ru").q)}});
 buttons();
 window.VetogramCatalog=Object.freeze({search,selectPreset,loadMore,normalize,endpoint,state:()=>({query:q,count:items.length,offset,complete})});
