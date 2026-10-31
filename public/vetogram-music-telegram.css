@@ -1,0 +1,14 @@
+/* Personal audio handoff to the native Telegram music player. */
+.native-share-telegram{margin:19px 0 23px;padding:22px;border-radius:18px;border:1px solid rgba(250,205,247,.2);background:radial-gradient(ellipse at 95% 0%,rgba(222,145,232,.13),transparent 48%),linear-gradient(125deg,#1b1527,#10121e)}
+.native-share-head{display:grid;gap:6px;margin-bottom:10px}
+.native-share-head span{font-size:10px;font-weight:850;letter-spacing:.13em;color:#efc2ed}
+.native-share-head strong{font-size:20px;letter-spacing:-.025em;color:#fff}
+.native-share-telegram p{font-size:12px;line-height:1.7;color:#c5b6d0;max-width:790px;margin:8px 0 16px}
+.native-share-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px}
+.native-share-controls label{grid-column:1/-1;font-size:11px;font-weight:800;color:#d8bedc}
+.native-share-controls select{min-width:0;min-height:46px;border-radius:11px;background:#12101e;color:#f9eafb;padding:11px 14px;border:1px solid rgba(255,255,255,.16);font:inherit;font-size:12px}
+.native-share-controls button{background:#eecaf9;border-radius:11px;border:0;padding:12px 15px;min-height:46px;font:inherit;font-weight:850;font-size:12px;color:#2a182d;cursor:pointer}
+.native-share-controls button:disabled{opacity:.45;cursor:default}
+.native-share-telegram .native-share-status{margin:13px 0 8px;color:#ead2f0;font-size:11px}
+.native-share-telegram .native-share-foot{margin:6px 0 0;color:#a9a0b3;font-size:10px}
+@media(max-width:650px){.native-share-telegram{padding:17px 13px}.native-share-controls{grid-template-columns:1fr}.native-share-controls button{width:100%}}

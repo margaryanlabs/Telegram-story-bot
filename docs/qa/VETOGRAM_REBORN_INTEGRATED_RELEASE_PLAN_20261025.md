@@ -436,3 +436,154 @@ The originally chosen **first Canvas Noir** direction is retained; the current s
 - Fixed `vercel.json` for `/relay.html`: `Cache-Control: no-store, max-age=0` instead of a 300-second plus stale-while-revalidate HTTP cache. The isolated versioned Service Worker still explicitly caches the four public Relay shell assets for offline fallback, never Telegram chats, API responses, or private messages.
 - Added a dedicated HTTP-cache contract regression to `tests/vetogram-relay-cache-isolation.test.js`; all **12/12 current-source SW tests** passed in an isolated V8 environment. Three legacy Relay source suites also passed **18/18** after updating the obsolete `v1` cache assertions. The 23 changed non-test JS/MJS sources passed limited syntax checks (including valid top-level await handling) but these checks **are not** the full Node build or a browser/WebView E2E.
 - No deployment, merge, AI-provider purchase, Telegram permission action, or database write occurred in this continuation. Still waiting on real production-readiness gates before advising deployment.
+
+
+### 2026-10-27 V5.1 Messenger Reliability — source-backed recovery (continued)
+
+This update addresses the user's actual Android Telegram WebView observations (blank/slow chats, avatars missing, photo retrieval failures, native header overlay and Story template text stacking). It modifies **the existing app**, not a parallel demonstration.
+
+- **DOM:** fixed invalid Home `insertBefore` parent usage in `vetogram-experience-v4.js`; that specific call previously could raise `NotFoundError` and abort UI initialization.
+- **Avatar performance:** removed the lifetime cap of six avatars. Viewport-driven queue batches up to six owner-visible avatar IDs into one authenticated `avatar_batch` request; the server validates signed Mini App ownership, checks available dialogs using the authorized MTProto session, and never accepts untrusted peer access hashes. It converts oversized/non-JPEG profile photos into <=192px, <=180KiB JPEG previews. Browser cache remains in RAM-only blob URLs; old-account URLs are revoked on owner switch. Batches are serialized, limited to six IDs, with 90-second cooldown after individual failures.
+- **Message images:** max incoming Telegram photo download 16MiB with smaller <=4MiB JPEG API previews; an accessible retained image is used where available, but a stalled/failed archive fetch can now fall back to owner-verified live Telegram for a still-existing current message. Confirmed deleted or preserved-only evidence **cannot** fall back, nor can stale owners/threads or 401/403 archive responses. Non-deleted archived-photo queries time out after 2.8s; retained-only archive evidence retains the longer 14s budget.
+- **Thread race:** in-flight photo downloads are no longer rejected when an unrelated inbox list generation increments. Changed owner/thread still fail closed. Warm owner-scoped RAM history now covers six conversations for five minutes, cleared on account switch.
+- **Truthful UX:** disconnected first-load/retry history shows "Не удалось загрузить историю" and a refresh instruction instead of a false "Пустой чат"; initial request shows a loading state rather than a frozen prior inbox preview. Kept the in-thread refresh control and four-tab navigation. Scoped native Telegram header clearance to Telegram WebViews; stopped duplicate Story template titles overlapping the painted preview canvas.
+- **Tests:** added `tests/vetogram-chat-reliability-51.test.js`, `tests/vetogram-chat-media-preview-51.test.js`, `tests/vetogram-chat-avatar-batch-51.test.js`, `tests/vetogram-chat-photo-fallback-51.test.js` to the focus/offline QA command. Actual-source V8 simulations (not full Node) confirmed 14 avatars across four serialized batches, authenticated server fetch only returning owner-visible avatar IDs, invalid batch IDs returning 400, and seven photo fallback authorization/availability branches. Client and media server syntax parsed using limited V8 checks; these DO NOT constitute full suite pass.
+- **Actions evidence:** multiple consecutive runs, including #40504949799, report `failure` after roughly two seconds with `runner_id=0` and `steps=[]`. This is a runner execution/availability blocker, not evidence that tests ran and failed. Missing workflow log blobs prevent definitive billing/runner root-cause identification; verify Actions account billing and runner assignment before re-running paid workflows.
+
+**Still not verified:** signed real Telegram account tests (including two-account switching), first-message timing, WebView Chrome/Android/iOS/Fold visual QA, large user photos and file playback, publication/AI/Business consent, full `npm ci && npm run vercel-build`, production rollback path. Keep PR #185 in Draft. No production deployment, merge, Neon write, permission change or paid provider was performed in this stage.
+
+
+### 2026-10-27 V5.1 Photo & Chat Recovery — continuation
+
+- On failed initial thread history, a **real, tappable, accessible** "↻ Повторить загрузку" control now invokes the existing signed owner-scoped `loadMessages({reset:true})`, rather than leaving an inert error/blank screen. No message send, owner/session mutation, or new permission is triggered.
+- Inline photos now have a **single** delayed retry (4.5 s) for transient failures. Response error statuses are preserved by `photoRequest` to distinguish service outages from 400/401/403/404/409 and Telegram 429 flood throttling, which never retry automatically. Queues remain 2 concurrent previews; auto retry is viewport-only, with one attempt maximum. The owner/thread/epoch are all revalidated before retry; old timers and counters are cleared with owner-scoped media cleanup. A deliberate user tap still permits retry.
+- Added `tests/vetogram-photo-retry-51.test.js` to the focused offline QA script, covering one-shot 503 recovery, no retry on 429 or authorization failure, owner/thread/epoch race protections, cleanup, and mobile retry control. CSS uses a minimum 46px tap target with keyboard focus treatment.
+- Versioned **all 44** HTML-linked CSS/JS assets under a single `20261027-v51-photo-recovery` identity, to avoid carrying old WebView layout/script caches into this draft preview.
+- Independent actual-source V8 harness: **503 → two attempts / preview visible**, **429 → one attempt / no retry**, **401 → one attempt / no retry**. Tested snippets and parsed all five added test sources after ESM import normalization. These are **not** full Node test results or real live Telegram performance measurements.
+- GitHub Actions remains unverified: the last pre-existing run examined had `runner_id=0` and `steps=[]`; investigate runner provision/billing. Keep draft PR #185 unmerged and un-deployed until `npm ci && npm run vercel-build`, live signed two-account test, media accessibility, and mobile visual acceptance succeed.
+
+
+### 2026-10-27 V5.1 crash recovery — sticker drawer
+
+**Confirmed critical source defect:** `public/telegram-chats.js` implemented
+`closeStickerDrawer(){ state.stickerEpoch++; closeStickerDrawer(); }`. This synchronous
+unbounded recursion could abort the JavaScript call stack when closing the drawer,
+switching an owner's account, or completing rich-message sends.
+
+**Fix:** close the existing drawer by setting `hidden=true`, clear its local search
+query, and increment the sticker epoch once to invalidate stale asynchronous
+thumbnail requests. No Telegram messages are read/sent, no credentials stored,
+and no new permissions are granted. Existing open/toggle behavior is preserved.
+
+**Tests:** new `tests/vetogram-sticker-drawer-51.test.js` runs the actual
+controller in an isolated VM to assert non-recursion, consistent visibility,
+query reset, safe operation when DOM nodes are missing, and epoch invalidation.
+Included in `qa:reborn:offline`. Independently ran the actual code excerpt
+twice: epoch 7→8→9, the panel remained hidden, and a detached panel was safe.
+This is not a browser E2E test or full Node test-suite pass.
+
+Updated all 44 `studio.html` versioned asset references to one shared
+`20261027-v51-sticker-stability` cache identity. **PR #185 remains Draft; do not
+deploy or merge while GitHub Actions cannot allocate a runner and production
+acceptance has not been completed.**
+
+
+### 2026-10-27 V5.1 messaging race / inbox outage continuation
+
+This stage repairs additional errors in the **existing** Mini App, without a deploy or Telegram message action.
+
+- **Cross-chat text sending:** a failed/uncertain send is restored as a draft for its ORIGINAL dialog even after the user navigates to a different chat. The other dialog's current compose field stays intact. One nonce is bound to an identical text **and replyTo message ID** and scoped by chat; a different reply target generates a different nonce. An ACK received after switching to another chat must not delete a newer draft of the original chat. Pending reply selections changed during network latency are preserved. The map of uncertain send intents is cleared on Telegram owner change.
+- **Verified inbox availability:** English WebView transport errors (`Failed to fetch`, `NetworkError`, `Load failed`), offline state, 429 and server 5xx no longer automatically erase the same-owner verified inbox or masquerade as session revocation. Even a previously verified account with zero chats keeps its verified state through a temporary refresh outage. Pagination cursor is not reset on transient page-load failure. **401/403/409 remain fail closed**, and unknown credentials are never promoted to verified.
+- **Tests:** new real-controller VM regression files `tests/vetogram-cross-chat-send-51.test.js` and `tests/vetogram-inbox-outage-51.test.js`, both included in `qa:reborn:offline`. Independent V8 scenarios confirmed a failed send in A restores A while B remains untouched, and a deliberate same-reply retry reuses the same nonce. Five actual-source inbox cases (verified transport failure, verified empty-inbox outage, pagination 503, unknown proof, 401 invalid login) produced expected states.
+- **Cache identity:** all 44 linked Mini App assets in `studio.html` now share `20261027-v51-message-recovery`. All changes remain in draft PR #185. No merge, production publish, credential use, Telegram messages, or database writes in this stage.
+
+Still pending: actual Node `npm ci && npm run vercel-build`, real signed two-account Telegram phone E2E, representative large photos, send-ack loss and reconnect tests, and successful Actions runner allocation. Standalone controller harnesses are not a replacement for full CI or a real deployment acceptance.
+
+
+### 2026-10-27 V5.1 Rich Send Integrity — continuation
+
+All changes are on the existing draft PR #185 in `margaryanlabs/Telegram-story-bot`; no production deployment, Telegram send, API-key mutation, or DB write.
+
+**Fixed source-level races**
+- Rich-media send acknowledgement does not delete new text typed during the Telegram/network round trip. It preserves a reply target chosen after sending and any new unsent attachment. Sending a sticker leaves the existing text composer draft intact.
+- A RAM-only `draftVersions` map tracks actual user text edits. On a late media ACK after navigating A→B, only the **unchanged submitted caption** for A is cleared; a newer or even identical retyped draft remains intact. Owner switch clears this map.
+- An uncertain rich-media/sticker acknowledgement is stored in RAM under `lastRichFailures[chatId]` with the original nonce and full intent. A user-initiated retry of the **exact same intent** reuses the nonce even when the failed request finished after changing chats. A changed sticker or recipient gets a fresh nonce. No automatic retry is issued.
+- On reopening a chat with an uncertain text send, the original `replyTo` message ID is restored only if the signed owner's dialog and the unchanged text draft still match. A visible warning reminds the owner to check the native Telegram chat before manually retrying; fresh drafts or other dialogs cannot inherit that reply context.
+- All 44 versioned CSS/JS references in `public/studio.html` now use `20261027-v51-send-integrity` to avoid mixed WebView resources on a future build.
+
+**Independent evidence**
+- Added `tests/vetogram-rich-send-draft-51.test.js` (8 cases) and `tests/vetogram-rich-send-idempotency-51.test.js` (4 cases) to `qa:reborn:offline`. Expanded `tests/vetogram-cross-chat-send-51.test.js` by two additional reply-recovery checks.
+- Parsed the shipping `public/telegram-chats.js` and these three test files in a standalone V8 syntax check (after import normalization). Actual-controller V8 cases confirmed draft preservation, per-chat sticker nonce reuse after lost ACK, and reply context restoration (same text → reply 42; changed draft or different chat → no reply).
+- These are **not** a passing full `npm ci`, Node test suite, real Telegram send, or Telegram WebView E2E. No evidence of actual message delivery/read receipts should be inferred from a local simulation.
+
+**Release blockers:** GitHub Actions runners have repeatedly failed before any step executes (`runner_id=0`, `steps=[]`). Diagnose Actions runner access/billing or validate a trusted checkout through another execution environment. Finish signed Telegram two-account tests, large media and chat-switch tests, full build and mobile visual verification before merge or deployment. Keep PR Draft until then.
+
+
+### 2026-10-27 VETOGRAM 5.1 — Uncertain media on chat reopen
+
+The existing draft PR #185 adds owner-scoped **manual-only** media recovery on returning to a Telegram chat.
+
+- Uncertain file/photo sends previously retained the random-id intent in RAM, but navigation cleared the visible `pendingAttachment`. It was therefore difficult or impossible to perform an **exact** deliberate retry, especially with the original attachment kind or reply target. On an owner-verified chat reopen, `restoreUncertainRichMedia(chat)` now reattaches the original in-memory File **only** when the signed user and chat match, the original caption is unchanged, the File is within the existing 2 MiB limit, and the item is not voice media. The original reply target is also restored only when appropriate. There is **no automatic Telegram send**.
+- `richSendIntent` now includes `kind` and `duration` in equality checks, preventing accidentally reusing a nonce for a different kind or duration. `lastRichFailures` retains at most **4** owner-scoped intents in RAM and is cleared on owner switch; no file is written to persistent browser storage.
+- Confirmed real code defect: the attachment chip used `pendingAttachment.name/size`, although the state stores `{file,kind}`. It now correctly resolves `pendingAttachment.file` and displays the real file name and size instead of `undefined / NaN КБ`.
+- On reopening, the app shows a clear warning that the earlier media/sticker might already have arrived, and asks the user to verify in the native Telegram app **before** tapping Send again. Voice is intentionally excluded from reconstruction as a generic document.
+- Added `tests/vetogram-rich-reopen-51.test.js` to focused offline QA (8 unit cases) and updated 44 WebView asset references to `20261027-v51-rich-recovery`. Independent current-source V8 checks confirmed same-owner unchanged-caption recovery and stable `sameRichIntent`, rejects on changed text, owner mismatch, voice or oversize file, plus accurate 2 KiB attachment chip display. Parsed the current client and three related test sources.
+- No live Telegram session, upload, send, user data or deployment was used. Full `npm ci && npm run vercel-build`, GitHub Actions allocation, two-account WebView QA and real replay/duplicate checks **remain required** before merge or production publish.
+
+
+### 2026-10-27 VETOGRAM 5.1 — Cross-chat send isolation and safe nonce preflight
+
+Changes are in the existing **draft PR #185**; no Telegram send, provider/billing write, deploy, merge or external data mutation.
+
+- One active signed MTProto send remains serialized across the owner WebView. Previously, after starting a send in chat A and opening chat B, B's disabled send control misleadingly showed the same spinner used for A; this looked like a broken chat. A `sendInFlightChatId` now explicitly identifies A. B's composer remains **editable**, preserves its draft, and shows a Russian explanation that a send in another chat is pending; no fake B-specific spinner. Button/tool availability is restored when the owner-scoped send completes. The account-switch reset clears this ID.
+- Removed premature `lastSendFailures.delete(chatId)` and `lastRichFailures.delete(chatId)` operations at request **start**. If an existing uncertain send's deliberate retry cannot even read the local File, the **original nonce survives** and still belongs to the original chat. Success remains the authorization to discard the prior uncertain nonce. A different payload still gets a new nonce through exact intent comparison; owner reset clears all pending state.
+- Added `tests/vetogram-cross-chat-send-lock-51.test.js` to `qa:reborn:offline`, checking cross-chat control states, owner reset and media nonce preservation after failed local file reading.
+- Current-source isolated V8 checks: chat B was editable with its own draft while A's send remained pending; B's send button was disabled without a misleading spinner and became enabled on completion. Simulated media preflight failure retained an earlier uncertain nonce and correctly reset the in-flight state.
+- Versioned all 44 `studio.html` public assets to `20261027-v51-cross-chat-safety` for the next preview build.
+
+**Build evidence limit:** This container's `git ls-remote` still fails with `Could not resolve host: github.com`; `node` and `npm` exist but the full checkout/dependencies are not available, so full Node test execution is **not claimed**. GitHub Actions previously returned failure with `runner_id=0`, `steps=[]`. Production stays unchanged. A real Telegram two-account test, end-to-end send and replay protection, `npm ci` and `npm run vercel-build` remain release gates.
+
+
+### 2026-10-27 VETOGRAM 5.1 — Media Lifetime vs. Thread History Repaint
+
+**Critical real-app bug repaired in Draft PR #185:** the same `state.threadGeneration` counter was being used both to discard old history responses and to validate downloads of photos, preserved media, Telegram files and voice attachments. `loadMessages()` increments this counter on an ordinary refresh of the *same* open chat. Therefore legitimate in-flight photo/file downloads could be discarded as "stale" even though the verified account and chat were unchanged. Photo placeholders could remain stuck because the request was already marked as seen.
+
+**Lifecycle correction:** all photo and attachment download authorization now checks the owner signature, exact chat ID, and `state.previewEpoch` rather than the history-request counter. `previewEpoch` is invalidated and media URLs revoked when the owner changes, the chat closes, or a new chat opens. Ordinary same-chat message refreshes increment `threadGeneration` without cancelling media.
+
+**DOM correction:** history refresh replaces message buttons with new DOM nodes. An in-flight file fetch previously required the *original* button to remain `isConnected`, causing valid media to vanish. `currentAttachmentButton` now locates the current replacement button by its message ID, after owner/chat/media-epoch checks, and safely attaches the file there. Detached/stale buttons from a prior chat can no longer receive media. On fetch failure, only the currently connected same-message control is re-enabled.
+
+**Render performance:** `renderMessages` now constructs a `messageById` Map once per paint for reply previews rather than searching every loaded message for each reply bubble. This removes a potential quadratic message-history lookup cost on long conversations.
+
+**QA evidence:** added `tests/vetogram-media-refresh-51.test.js` (direct VM execution of shipping photo and attachment handlers, plus preview repaint and reply indexing contracts), and repaired the earlier photo-fallback regression harness to use the true media identity epoch. Isolated actual-source V8 scenarios confirmed: photo survives same-chat generation increment; photo fails closed after chat/epoch change; live and Vault attachments survive repaint by finding the new button, and fail closed after chat/epoch change (9/9 scenario evaluations). Client script and affected test sources parsed successfully in standalone V8. These checks DO NOT constitute a full Node test run, deployment, or signed Telegram WebView E2E.
+
+Versioned all 44 JS/CSS references in `public/studio.html` to `20261027-v51-media-lifetime` for the next preview build. Production has NOT changed. Continue blocking merge/release until `npm ci`, `npm run vercel-build`, real Telegram account checks and GitHub runner allocation can be verified.
+
+
+### 2026-10-27 V5.1 — Safe chat refresh and reconnect UX
+
+**Bug found and repaired in existing Draft PR #185.** `loadMessages({reset:true})` discarded the already displayed owner's messages whenever `visibleMessageAnchor()` returned null. This can happen for a hidden/just-opened WebView or after a DOM reflow, even though valid same-owner messages remain in memory. A subsequent MTProto timeout/503 then produced a false empty chat. A same-chat refresh now retains the previous signed-owner snapshot until the server confirms a new response; switching to a *different chat* still explicitly resets state on `openThread`.
+
+**Security-sensitive distinction:** only transient errors preserve the already verified history. Explicit 401/403/409 authorization/ownership/session failures invalidate the displayed message list and owner-scoped history cache, clear inbox rows, avatar URLs, unsent drafts and retry identities, revoke private media blobs, and disable further sends. They now present a distinct "Переподключить Telegram" action using the existing account connection flow, not a misleading endless history refresh. No new Telegram permissions are claimed or auto-granted.
+
+**Isolated evidence, not a production acceptance:** added `tests/vetogram-thread-refresh-51.test.js` to focused offline QA. The shipping `loadMessages` function was evaluated with controlled 503, 401, 403, 409 and successful reply cases: transient refresh kept earlier history and verified state, revoked auth cleared old-owner UI caches and drafts, successful refresh merged the newly returned message, and failed stale generations were guarded. The new test source also asserts distinct retry vs reconnect UI. No user data, account tokens, Telegram messages, DB updates, merge or deploy were used.
+
+All 44 `studio.html` resource references now use `20261027-v51-history-safety`. Full GitHub Actions and build remain blocked on runner allocation, so no claim of full npm tests or real Telegram WebView QA can be made. Keep PR #185 in Draft until live verification and CI succeed.
+
+
+#### Follow-up: visible composer privacy on revoked owner
+The explicit signed-access refusal path additionally clears the currently visible text-composer value and active-chat marker, selected media/audio inputs, reply/attachment previews and voice draft. Clearing only the `drafts` Map had left a private unsent message visible in the DOM's disabled textarea. The new `vetogram-thread-refresh-51.test.js` fixture asserts that a real 401/403/409 scrubs that textarea, while an ordinary 503 preserves it. Independent direct-source V8 scenarios confirmed this behavior. Full Node/browser CI and live Telegram ownership-switch QA are still outstanding; no deploy or merge.
+
+
+### 2026-10-27 V5.1 Active Avatar Priority + Independent Preview Build
+
+**Client behavior:** previously avatar loading was completely skipped while `telegramChatsView` was hidden. Opening a chat before its row entered the inbox viewport could therefore leave initials in the open-chat header indefinitely; even an avatar batch that finished after opening the thread only updated the invisible inbox row. `queueVisibleAvatars` now permits a signed/verified **active thread** thumbnail first even if the inbox is hidden, skips archive-only chats, and updates the header after a batch resolves only when the signed owner and current chat still match. Existing RAM-only cache and account-change revocation remain intact.
+
+**Server behavior:** `avatar_batch` previously downloaded up to six profile thumbnails one-by-one after a Telegram MTProto connection. It now uses a bounded **two-worker** fetch within that *same* authenticated and owner-verified client, never six independent connections. Telegram flood/auth errors still stop the batch and cause an error response; individual missing pictures do not hide all remaining valid avatars.
+
+**QA:** new `tests/vetogram-thread-avatar-51.test.js` (5 cases) was added to `qa:reborn:offline`. Expanded `tests/vetogram-chat-avatar-batch-51.test.js` (2 cases) to cover two-worker maximum and rate-limit fail-closed behavior. Independent V8 checks of shipping source verified normal header population from a hidden inbox, no remote fetch for archive-only thread, no old-owner/header leakage, and a six-item batch reaching peak concurrency **2** without exceeding it. Client/API JS and both test sources pass standalone V8 syntax checks. This is *not* a full Node test pass or a measured production performance improvement.
+
+**CI diagnosis:** `.github/workflows/vetogram-verification.yml` has a normal `ubuntu-latest` job with checkout → setup-node → lock check → npm ci → `vercel-build`. The latest sampled GitHub job failed **before any step ran** with `runner_id=0`, `steps=[]`; its job log endpoint returned 404 BlobNotFound. Changing source code cannot prove/fix external runner allocation, quota or billing settings. No reliable root cause beyond failure-to-assign-runner has been confirmed.
+
+**Vercel:** verified connected project `veto` under `labsmargaryan@gmail.com` (`prj_9JVRlYLCDU4fuZ18F3En06Ih0A69`). Existing **production** deployment is READY at GitHub SHA `910ea37d063d5b906cc01aa581b8329a5ea97d73` on branch `fix/vetogram-v5-login-resume-composer-20261026`, NOT on PR #185's feature base. This is a separate release-branch integration gate: never merge or promote the draft without reconciling the live branch. Requested one **preview-only** Vercel Git deployment of SHA `9f2e3a71424c09d510c66ab4cf55d314a55d4338`, resulting ID `dpl_Ak1ELfc2XEEQFwS4RuRKanevQowe`. It is queued as of the initial checks, and must not be labelled READY or tested until the build passes. No production alias was changed; no additional preview retries should be made until its final result is inspected.
+
+All 44 `studio.html` linked JS/CSS identities updated to `20261027-v51-avatar-priority`. A newer commit than the requested preview (only QA/cache/doc changes) therefore remains unbuilt until Vercel picks up another reviewed commit; do not claim the preview would verify those later changes. Live Telegram OTP, two signed accounts, complete send/media flow, fast scroll and foldable layout remain open acceptance checks.

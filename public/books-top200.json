@@ -1,0 +1,3021 @@
+{
+  "version": "1.0",
+  "kind": "editorial-ru-translations",
+  "isRanked": false,
+  "count": 200,
+  "genres": {
+    "romantasy": "Ромэнтези",
+    "fantasy": "Фэнтези",
+    "scifi": "Научная фантастика",
+    "dystopia": "Антиутопия и YA",
+    "thriller": "Триллеры",
+    "horror": "Хоррор",
+    "contemporary": "Современная проза",
+    "romance": "Романтика",
+    "mystery": "Детективы",
+    "nonfiction": "Нон-фикшн"
+  },
+  "disclaimer": "Редакционная подборка, не статистический рейтинг продаж. Русскоязычные издания могут различаться по переводчику и правообладателю. Для современной книги доступность полного текста в VETOGRAM не гарантируется.",
+  "books": [
+    {
+      "id": "vt-001",
+      "title": "Четвёртое крыло",
+      "authors": [
+        "Ребекка Яррос"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-002",
+      "title": "Железное пламя",
+      "authors": [
+        "Ребекка Яррос"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-003",
+      "title": "Ониксовый шторм",
+      "authors": [
+        "Ребекка Яррос"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-004",
+      "title": "Королевство шипов и роз",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-005",
+      "title": "Королевство гнева и тумана",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-006",
+      "title": "Королевство крыльев и руин",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-007",
+      "title": "Королевство стужи и звездного света",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-008",
+      "title": "Королевство серебряного пламени",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-009",
+      "title": "Стеклянный трон",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-010",
+      "title": "Корона полуночи",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-011",
+      "title": "Наследница огня",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-012",
+      "title": "Королева теней",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-013",
+      "title": "Империя бурь",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-014",
+      "title": "Башня рассвета",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-015",
+      "title": "Королевство пепла",
+      "authors": [
+        "Сара Дж. Маас"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-016",
+      "title": "Шестёрка воронов",
+      "authors": [
+        "Ли Бардуго"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-017",
+      "title": "Продажное королевство",
+      "authors": [
+        "Ли Бардуго"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-018",
+      "title": "Тень и кость",
+      "authors": [
+        "Ли Бардуго"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-019",
+      "title": "Штурм и буря",
+      "authors": [
+        "Ли Бардуго"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-020",
+      "title": "Крах и восход",
+      "authors": [
+        "Ли Бардуго"
+      ],
+      "genre": "romantasy",
+      "genreLabel": "Ромэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-021",
+      "title": "Братство Кольца",
+      "authors": [
+        "Дж. Р. Р. Толкин"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-022",
+      "title": "Две крепости",
+      "authors": [
+        "Дж. Р. Р. Толкин"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-023",
+      "title": "Возвращение короля",
+      "authors": [
+        "Дж. Р. Р. Толкин"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-024",
+      "title": "Хоббит, или Туда и обратно",
+      "authors": [
+        "Дж. Р. Р. Толкин"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-025",
+      "title": "Сильмариллион",
+      "authors": [
+        "Дж. Р. Р. Толкин"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-026",
+      "title": "Гарри Поттер и философский камень",
+      "authors": [
+        "Дж. К. Роулинг"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-027",
+      "title": "Гарри Поттер и Тайная комната",
+      "authors": [
+        "Дж. К. Роулинг"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-028",
+      "title": "Гарри Поттер и узник Азкабана",
+      "authors": [
+        "Дж. К. Роулинг"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-029",
+      "title": "Гарри Поттер и Кубок огня",
+      "authors": [
+        "Дж. К. Роулинг"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-030",
+      "title": "Гарри Поттер и Орден Феникса",
+      "authors": [
+        "Дж. К. Роулинг"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-031",
+      "title": "Гарри Поттер и Принц-полукровка",
+      "authors": [
+        "Дж. К. Роулинг"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-032",
+      "title": "Гарри Поттер и Дары Смерти",
+      "authors": [
+        "Дж. К. Роулинг"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-033",
+      "title": "Американские боги",
+      "authors": [
+        "Нил Гейман"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-034",
+      "title": "Никогде",
+      "authors": [
+        "Нил Гейман"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-035",
+      "title": "Звёздная пыль",
+      "authors": [
+        "Нил Гейман"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-036",
+      "title": "Океан в конце дороги",
+      "authors": [
+        "Нил Гейман"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-037",
+      "title": "Благие знамения",
+      "authors": [
+        "Терри Пратчетт и Нил Гейман"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-038",
+      "title": "Цвет волшебства",
+      "authors": [
+        "Терри Пратчетт"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-039",
+      "title": "Безумная звезда",
+      "authors": [
+        "Терри Пратчетт"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-040",
+      "title": "Мор, ученик Смерти",
+      "authors": [
+        "Терри Пратчетт"
+      ],
+      "genre": "fantasy",
+      "genreLabel": "Фэнтези",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-041",
+      "title": "Дюна",
+      "authors": [
+        "Фрэнк Герберт"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-042",
+      "title": "Мессия Дюны",
+      "authors": [
+        "Фрэнк Герберт"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-043",
+      "title": "Дети Дюны",
+      "authors": [
+        "Фрэнк Герберт"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-044",
+      "title": "Бог-Император Дюны",
+      "authors": [
+        "Фрэнк Герберт"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-045",
+      "title": "Еретики Дюны",
+      "authors": [
+        "Фрэнк Герберт"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-046",
+      "title": "Капитул Дюны",
+      "authors": [
+        "Фрэнк Герберт"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-047",
+      "title": "Марсианин",
+      "authors": [
+        "Энди Вейер"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-048",
+      "title": "Проект «Аве Мария»",
+      "authors": [
+        "Энди Вейер"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-049",
+      "title": "Артемида",
+      "authors": [
+        "Энди Вейер"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-050",
+      "title": "Задача трёх тел",
+      "authors": [
+        "Лю Цысинь"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-051",
+      "title": "Тёмный лес",
+      "authors": [
+        "Лю Цысинь"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-052",
+      "title": "Вечная жизнь Смерти",
+      "authors": [
+        "Лю Цысинь"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-053",
+      "title": "Мечтают ли андроиды об электроовцах?",
+      "authors": [
+        "Филип К. Дик"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-054",
+      "title": "Человек в высоком замке",
+      "authors": [
+        "Филип К. Дик"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-055",
+      "title": "Убик",
+      "authors": [
+        "Филип К. Дик"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-056",
+      "title": "Основание",
+      "authors": [
+        "Айзек Азимов"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-057",
+      "title": "Основание и Империя",
+      "authors": [
+        "Айзек Азимов"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-058",
+      "title": "Второе Основание",
+      "authors": [
+        "Айзек Азимов"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-059",
+      "title": "Я, робот",
+      "authors": [
+        "Айзек Азимов"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-060",
+      "title": "Конец Вечности",
+      "authors": [
+        "Айзек Азимов"
+      ],
+      "genre": "scifi",
+      "genreLabel": "Научная фантастика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-061",
+      "title": "Голодные игры",
+      "authors": [
+        "Сьюзен Коллинз"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-062",
+      "title": "И вспыхнет пламя",
+      "authors": [
+        "Сьюзен Коллинз"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-063",
+      "title": "Сойка-пересмешница",
+      "authors": [
+        "Сьюзен Коллинз"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-064",
+      "title": "Баллада о змеях и певчих птицах",
+      "authors": [
+        "Сьюзен Коллинз"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-065",
+      "title": "Рассвет Жатвы",
+      "authors": [
+        "Сьюзен Коллинз"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-066",
+      "title": "Дивергент",
+      "authors": [
+        "Вероника Рот"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-067",
+      "title": "Инсургент",
+      "authors": [
+        "Вероника Рот"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-068",
+      "title": "Эллигент",
+      "authors": [
+        "Вероника Рот"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-069",
+      "title": "Бегущий в лабиринте",
+      "authors": [
+        "Джеймс Дэшнер"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-070",
+      "title": "Испытание огнём",
+      "authors": [
+        "Джеймс Дэшнер"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-071",
+      "title": "Лекарство от смерти",
+      "authors": [
+        "Джеймс Дэшнер"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-072",
+      "title": "Тотальная угроза",
+      "authors": [
+        "Джеймс Дэшнер"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-073",
+      "title": "Код лихорадки",
+      "authors": [
+        "Джеймс Дэшнер"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-074",
+      "title": "Дающий",
+      "authors": [
+        "Лоис Лоури"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-075",
+      "title": "451° по Фаренгейту",
+      "authors": [
+        "Рэй Брэдбери"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-076",
+      "title": "1984",
+      "authors": [
+        "Джордж Оруэлл"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-077",
+      "title": "О дивный новый мир",
+      "authors": [
+        "Олдос Хаксли"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-078",
+      "title": "Скотный двор",
+      "authors": [
+        "Джордж Оруэлл"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-079",
+      "title": "Заводной апельсин",
+      "authors": [
+        "Энтони Бёрджесс"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-080",
+      "title": "Рассказ Служанки",
+      "authors": [
+        "Маргарет Этвуд"
+      ],
+      "genre": "dystopia",
+      "genreLabel": "Антиутопия и YA",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-081",
+      "title": "Код да Винчи",
+      "authors": [
+        "Дэн Браун"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-082",
+      "title": "Ангелы и демоны",
+      "authors": [
+        "Дэн Браун"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-083",
+      "title": "Инферно",
+      "authors": [
+        "Дэн Браун"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-084",
+      "title": "Утраченный символ",
+      "authors": [
+        "Дэн Браун"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-085",
+      "title": "Происхождение",
+      "authors": [
+        "Дэн Браун"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-086",
+      "title": "Цифровая крепость",
+      "authors": [
+        "Дэн Браун"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-087",
+      "title": "Точка обмана",
+      "authors": [
+        "Дэн Браун"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-088",
+      "title": "Исчезнувшая",
+      "authors": [
+        "Гиллиан Флинн"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-089",
+      "title": "Острые предметы",
+      "authors": [
+        "Гиллиан Флинн"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-090",
+      "title": "Тёмные тайны",
+      "authors": [
+        "Гиллиан Флинн"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-091",
+      "title": "Безмолвный пациент",
+      "authors": [
+        "Алекс Михаэлидес"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-092",
+      "title": "Девы",
+      "authors": [
+        "Алекс Михаэлидес"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-093",
+      "title": "Ярость",
+      "authors": [
+        "Алекс Михаэлидес"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-094",
+      "title": "Девушка в поезде",
+      "authors": [
+        "Пола Хокинс"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-095",
+      "title": "В тихом омуте",
+      "authors": [
+        "Пола Хокинс"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-096",
+      "title": "Медленный огонь",
+      "authors": [
+        "Пола Хокинс"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-097",
+      "title": "Девушка с татуировкой дракона",
+      "authors": [
+        "Стиг Ларссон"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-098",
+      "title": "Девушка, которая играла с огнём",
+      "authors": [
+        "Стиг Ларссон"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-099",
+      "title": "Девушка, которая взрывала воздушные замки",
+      "authors": [
+        "Стиг Ларссон"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-100",
+      "title": "Снеговик",
+      "authors": [
+        "Ю Несбё"
+      ],
+      "genre": "thriller",
+      "genreLabel": "Триллеры",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-101",
+      "title": "Оно",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-102",
+      "title": "Сияние",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-103",
+      "title": "Доктор Сон",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-104",
+      "title": "Кладбище домашних животных",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-105",
+      "title": "Кэрри",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-106",
+      "title": "Мизери",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-107",
+      "title": "Противостояние",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-108",
+      "title": "11/22/63",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-109",
+      "title": "Зелёная миля",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-110",
+      "title": "Под куполом",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-111",
+      "title": "Чужак",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-112",
+      "title": "Институт",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-113",
+      "title": "Туман",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-114",
+      "title": "Жребий Салема",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-115",
+      "title": "Сказка",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-116",
+      "title": "Билли Саммерс",
+      "authors": [
+        "Стивен Кинг"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-117",
+      "title": "Коробка в форме сердца",
+      "authors": [
+        "Джо Хилл"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-118",
+      "title": "Страна Рождества",
+      "authors": [
+        "Джо Хилл"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-119",
+      "title": "Дракула",
+      "authors": [
+        "Брэм Стокер"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-120",
+      "title": "Франкенштейн",
+      "authors": [
+        "Мэри Шелли"
+      ],
+      "genre": "horror",
+      "genreLabel": "Хоррор",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-121",
+      "title": "Вторая жизнь Уве",
+      "authors": [
+        "Фредрик Бакман"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-122",
+      "title": "Медвежий угол",
+      "authors": [
+        "Фредрик Бакман"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-123",
+      "title": "Тревожные люди",
+      "authors": [
+        "Фредрик Бакман"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-124",
+      "title": "Бабушка велела кланяться и передать, что просит прощения",
+      "authors": [
+        "Фредрик Бакман"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-125",
+      "title": "Бегущий за ветром",
+      "authors": [
+        "Халед Хоссейни"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-126",
+      "title": "Тысяча сияющих солнц",
+      "authors": [
+        "Халед Хоссейни"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-127",
+      "title": "И эхо летит по горам",
+      "authors": [
+        "Халед Хоссейни"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-128",
+      "title": "Полночная библиотека",
+      "authors": [
+        "Мэтт Хейг"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-129",
+      "title": "Люди и я",
+      "authors": [
+        "Мэтт Хейг"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-130",
+      "title": "Влюбиться в жизнь",
+      "authors": [
+        "Мэтт Хейг"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-131",
+      "title": "Маленькая жизнь",
+      "authors": [
+        "Ханья Янагихара"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-132",
+      "title": "Тайная история",
+      "authors": [
+        "Донна Тартт"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-133",
+      "title": "Щегол",
+      "authors": [
+        "Донна Тартт"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-134",
+      "title": "Нормальные люди",
+      "authors": [
+        "Салли Руни"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-135",
+      "title": "Разговоры с друзьями",
+      "authors": [
+        "Салли Руни"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-136",
+      "title": "Есть, молиться, любить",
+      "authors": [
+        "Элизабет Гилберт"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-137",
+      "title": "Виноваты звёзды",
+      "authors": [
+        "Джон Грин"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-138",
+      "title": "В поисках Аляски",
+      "authors": [
+        "Джон Грин"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-139",
+      "title": "Бумажные города",
+      "authors": [
+        "Джон Грин"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-140",
+      "title": "Там, где раки поют",
+      "authors": [
+        "Делия Оуэнс"
+      ],
+      "genre": "contemporary",
+      "genreLabel": "Современная проза",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-141",
+      "title": "Всё закончится на нас",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-142",
+      "title": "Всё начинается с нас",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-143",
+      "title": "Верити",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-144",
+      "title": "Без надежды",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-145",
+      "title": "Напоминания о нём",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-146",
+      "title": "9 ноября",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-147",
+      "title": "Может быть, когда-нибудь",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-148",
+      "title": "Сожалею о тебе",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-149",
+      "title": "Признайся",
+      "authors": [
+        "Колин Гувер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-150",
+      "title": "Никогда-никогда",
+      "authors": [
+        "Колин Гувер и Таррин Фишер"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-151",
+      "title": "Дневник памяти",
+      "authors": [
+        "Николас Спаркс"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-152",
+      "title": "Спеши любить",
+      "authors": [
+        "Николас Спаркс"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-153",
+      "title": "Дорогой Джон",
+      "authors": [
+        "Николас Спаркс"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-154",
+      "title": "Тихая гавань",
+      "authors": [
+        "Николас Спаркс"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-155",
+      "title": "Последняя песня",
+      "authors": [
+        "Николас Спаркс"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-156",
+      "title": "До встречи с тобой",
+      "authors": [
+        "Джоджо Мойес"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-157",
+      "title": "После тебя",
+      "authors": [
+        "Джоджо Мойес"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-158",
+      "title": "Всё ещё я",
+      "authors": [
+        "Джоджо Мойес"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-159",
+      "title": "Последнее письмо от твоего любимого",
+      "authors": [
+        "Джоджо Мойес"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-160",
+      "title": "Дарующий звёзды",
+      "authors": [
+        "Джоджо Мойес"
+      ],
+      "genre": "romance",
+      "genreLabel": "Романтика",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-161",
+      "title": "Убийство в «Восточном экспрессе»",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-162",
+      "title": "И никого не стало",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-163",
+      "title": "Убийство Роджера Экройда",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-164",
+      "title": "Смерть на Ниле",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-165",
+      "title": "Убийства по алфавиту",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-166",
+      "title": "Кривой домишко",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-167",
+      "title": "Убийство в доме викария",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-168",
+      "title": "Опасность дома на окраине",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-169",
+      "title": "Пять поросят",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-170",
+      "title": "Бесконечная ночь",
+      "authors": [
+        "Агата Кристи"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-171",
+      "title": "Этюд в багровых тонах",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-172",
+      "title": "Знак четырёх",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-173",
+      "title": "Собака Баскервилей",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-174",
+      "title": "Долина ужаса",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-175",
+      "title": "Приключения Шерлока Холмса",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-176",
+      "title": "Записки о Шерлоке Холмсе",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-177",
+      "title": "Возвращение Шерлока Холмса",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-178",
+      "title": "Его прощальный поклон",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-179",
+      "title": "Архив Шерлока Холмса",
+      "authors": [
+        "Артур Конан Дойл"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-180",
+      "title": "Имя розы",
+      "authors": [
+        "Умберто Эко"
+      ],
+      "genre": "mystery",
+      "genreLabel": "Детективы",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-181",
+      "title": "Атомные привычки",
+      "authors": [
+        "Джеймс Клир"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-182",
+      "title": "Думай медленно… Решай быстро",
+      "authors": [
+        "Даниэль Канеман"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-183",
+      "title": "Психология денег",
+      "authors": [
+        "Морган Хаузел"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-184",
+      "title": "Богатый папа, бедный папа",
+      "authors": [
+        "Роберт Кийосаки"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-185",
+      "title": "Sapiens. Краткая история человечества",
+      "authors": [
+        "Юваль Ной Харари"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-186",
+      "title": "Homo Deus. Краткая история будущего",
+      "authors": [
+        "Юваль Ной Харари"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-187",
+      "title": "21 урок для XXI века",
+      "authors": [
+        "Юваль Ной Харари"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-188",
+      "title": "Тонкое искусство пофигизма",
+      "authors": [
+        "Марк Мэнсон"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-189",
+      "title": "Всё хреново. Книга о надежде",
+      "authors": [
+        "Марк Мэнсон"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-190",
+      "title": "В работу с головой",
+      "authors": [
+        "Кэл Ньюпорт"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-191",
+      "title": "Цифровой минимализм",
+      "authors": [
+        "Кэл Ньюпорт"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-192",
+      "title": "Пять языков любви",
+      "authors": [
+        "Гэри Чепмен"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-193",
+      "title": "Как завоёвывать друзей и оказывать влияние на людей",
+      "authors": [
+        "Дейл Карнеги"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-194",
+      "title": "Как перестать беспокоиться и начать жить",
+      "authors": [
+        "Дейл Карнеги"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-195",
+      "title": "Семь навыков высокоэффективных людей",
+      "authors": [
+        "Стивен Кови"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-196",
+      "title": "Сказать жизни «Да!»",
+      "authors": [
+        "Виктор Франкл"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-197",
+      "title": "Психология влияния",
+      "authors": [
+        "Роберт Чалдини"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-198",
+      "title": "Гибкое сознание",
+      "authors": [
+        "Кэрол Дуэк"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-199",
+      "title": "Тело помнит всё",
+      "authors": [
+        "Бессел ван дер Колк"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    },
+    {
+      "id": "vt-200",
+      "title": "Душа освобождённая",
+      "authors": [
+        "Майкл А. Сингер"
+      ],
+      "genre": "nonfiction",
+      "genreLabel": "Нон-фикшн",
+      "language": "ru",
+      "provider": "editorial",
+      "readable": false,
+      "access": "metadata",
+      "source": "VETOGRAM · редакционная подборка",
+      "rightsNotice": "Популярное произведение с русскоязычными изданиями. Полный текст не предоставляется без разрешения правообладателя."
+    }
+  ]
+}

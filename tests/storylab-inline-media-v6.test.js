@@ -62,10 +62,10 @@ test('saved and live audio is listened to in chat without implicit downloads',()
  assert.match(media,/mime\.startsWith\('audio\/'\)/);
  assert.match(media,/audio\.controls=true;audio\.preload='metadata'/);
  assert.match(media,/state\.mediaPreviewUrls\.set\(key,href\)/);
- assert.match(requests,/cacheExpandedAttachment\(button,id,blob,true\)/);
- assert.match(requests,/cacheExpandedAttachment\(button,id,blob,false\)/);
+ assert.match(requests,/cacheExpandedAttachment\(active,id,blob,true\)/);
+ assert.match(requests,/cacheExpandedAttachment\(active,id,blob,false\)/);
  assert.match(requests,/ownerKey!==String\(tg\?\.initData\|\|''\)/);
- assert.match(requests,/!button\.isConnected/);
+ assert.match(requests,/currentAttachmentButton\(button,id,/);
  assert.match(ui,/Слушать сохранённое аудио/);
  assert.match(ui,/Слушать в переписке/);
  assert.match(ui,/event\.target\.closest\('\[data-mirror-photo\]'\)/);
@@ -79,7 +79,7 @@ test('outgoing UI shows accepted as Telegram-accepted, not delivered/read',()=>{
  assert.match(ui,/setDeliveryStatus\(error\?\.uncertain\?'uncertain':'failed'/);
  assert.match(ui,/setDeliveryStatus\(error\.uncertain\?'uncertain':'failed'/);
  assert.match(ui,/title="Telegram принял отправку, статус прочтения неизвестен"/);
- assert.match(ui,/lastRichFailure=\{intent,nonce\}/);
+ assert.match(ui,/lastRichFailures\.set\(chatId,failure\)/);
  assert.match(html,/id="telegramThreadDeliveryStatus"/);
  assert.match(css,/veto-mirror-delivery-status\[data-state="uncertain"\]/);
  assert.match(css,/veto-mirror-media-reveal audio/);

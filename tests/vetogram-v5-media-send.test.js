@@ -105,7 +105,7 @@ function senderFixture(metadata=async()=>({duration:5,width:640,height:360})){
  const file={size:256,name:'clip.mp4',type:'video/mp4'};
  const state={thread:{id:'456'},ownerInitData:'signed-A',threadGeneration:1,
   pendingAttachment:{file,kind:'video'},replyTo:null,lastRichFailure:null,sendInFlight:false,
-  drafts:new Map(),threadLoading:false};
+  drafts:new Map(),draftVersions:new Map(),lastRichFailures:new Map(),threadLoading:false};
  const field={value:'caption'},calls=[],notices=[];
  let ids=0,attempt=0;
  const sandbox={state,tg:{initData:'signed-A'},window:{crypto:{randomUUID:()=> (++ids===1?nonce:'11111111-1111-1111-1111-111111111111')}},
@@ -138,9 +138,9 @@ test('owner or A→B→A thread generation changes during media parsing cancel b
  const f=senderFixture(()=>new Promise(resolve=>{release=resolve}));
  const pending=f.send('send_media');
  f.state.threadGeneration+=2; // same chat ID and owner after returning to A
- f.state.sendInFlight=true; // belongs to newer state, old finally must not unlock it
+ f.state.sendInFlight=true; // same global send lock; no newer request can start while held
  release({duration:5,width:640,height:360});
  await pending;
  assert.equal(f.calls.length,0);
- assert.equal(f.state.sendInFlight,true);
+ assert.equal(f.state.sendInFlight,false);
 });

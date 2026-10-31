@@ -52,8 +52,8 @@ test('background sync never touches global storage, respects foreground and owne
  const css=read('public/app.css');
  assert.match(ui,/threadCache:new Map\(\)/);
  assert.match(ui,/state\.threadCache\.clear\(\)/);
- assert.match(ui,/while\(state\.threadCache\.size>4\)/);
- assert.match(ui,/Date\.now\(\)-value\.at>90000/);
+ assert.match(ui,/while\(state\.threadCache\.size>6\)/);
+ assert.match(ui,/Date\.now\(\)-value\.at>300000/);
  assert.match(ui,/scheduleThreadSync\(ms=26000\)/);
  assert.match(ui,/!document\.hidden/);
  assert.match(ui,/!state\.thread\.archiveOnly/);

@@ -37,8 +37,8 @@ test('successful personal MTProto link invalidates any older archive-only inbox'
 });
 test('disconnected live chat shows explicit login action, not a spinner or enabled send',()=>{
  const chat=read('public/telegram-chats.js'),html=read('public/studio.html');
- assert.match(chat,/if\(!state\.connectionProof\?\.verified&&!chat\.archiveOnly\)/);
- assert.match(chat,/state\.threadLoadError='Подключи свой Telegram/);
+ assert.match(chat,/const authRejected=\[401,403,409\]/);
+ assert.match(chat,/Нужно переподключить Telegram/);
  assert.match(html,/id="telegramThreadConnectNotice"/);
  assert.match(html,/id="telegramThreadConnectButton"/);
  assert.match(chat,/field\.disabled=!writable/);

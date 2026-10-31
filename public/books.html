@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<script src="/vetogram-media-context.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08090c">
+  <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
+  <title>VETOGRAM Books — Читать</title>
+  <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/books.css?v=14">
+  <link rel="stylesheet" href="/books-art-direction.css?v=1">
+  <link rel="stylesheet" href="/books-jacket-studio.css?v=2">
+
+  <script src="/books-import.js?v=2" defer></script>
+  <script src="/books.js?v=14" defer></script>
+<link rel="stylesheet" href="/vetogram-media-embedded.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/studio.html" class="back-link" aria-label="В Vetogram">←</a>
+    <div class="brand"><span class="brand-symbol"><img src="/veto-telegram-mark.svg" alt=""/></span><div><strong>VETOGRAM <em>BOOKS</em></strong><small>ЛИЧНОЕ ПРОСТРАНСТВО ЧТЕНИЯ</small></div></div>
+    <button class="icon-button" id="openSaved" title="Моя библиотека" aria-label="Моя библиотека">▤</button>
+  </header>
+
+  <main class="books-main" id="booksMain">
+    <section id="continueShelf" class="continue-shelf" hidden aria-label="Продолжить чтение">
+      <div class="continue-art" aria-hidden="true"><img src="/veto-telegram-mark.svg" alt=""/><i></i></div>
+      <div class="continue-info"><span class="eyebrow">ВАША ИСТОРИЯ ПРОДОЛЖАЕТСЯ</span>
+        <h2 id="continueTitle">Продолжить чтение</h2><p id="continueDetails"></p>
+        <div class="continue-track" aria-hidden="true"><div id="continueFill"></div></div>
+      </div>
+      <button type="button" id="continueAction" class="continue-action">Продолжить <span>↗</span></button>
+    </section>
+    <section class="hero hero-veto" aria-label="VETOGRAM Books — коллекция историй">
+      <div class="veto-hero-noise" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="eyebrow"><span class="hero-dot"></span> VETOGRAM <span class="hero-slash">/</span> BOOKS 06
+        <span class="hero-live-dot">БИБЛИОТЕКА</span></p>
+        <div class="hero-title-frame">
+          <span class="hero-number" aria-hidden="true">01 / ∞</span>
+          <h1>НЕ ПРОСТО<br><span class="hero-outline">ЧИТАТЬ.</span><br><i>ПРОЖИВАТЬ.</i></h1>
+        </div>
+        <p class="hero-lead">Мир исчезает на следующей странице. Целые произведения, личная библиотека и читальная комната, в которую хочется возвращаться.</p>
+        <div class="hero-actions">
+          <button id="heroReadNow" class="hero-action-main" type="button">НАЧАТЬ ЧИТАТЬ <span aria-hidden="true">↗</span></button>
+          <button id="heroMyBooks" class="hero-action-secondary" type="button">МОЯ БИБЛИОТЕКА <span aria-hidden="true">＋</span></button>
+        </div>
+        <div class="hero-bottom"><span><strong id="catalogCount">—</strong> <span id="catalogCountLabel">произведений</span></span><span>VETO FLOW <b>✳</b> / VETO COMPASS</span></div>
+      </div>
+      <div class="veto-book-world hero-true-library" id="heroShowcase" aria-label="Три книги из настоящей библиотеки"></div>
+      <div class="hero-side-index" aria-hidden="true"><span>ПОГРУЖЕНИЕ / В ЧТЕНИЕ</span><b>↗</b></div>
+    </section>
+
+    <section id="featuredEditions" class="featured-editions" aria-labelledby="featuredTitle">
+      <div class="featured-editions-heading">
+        <div><span class="featured-kicker">VETOGRAM / ВЫБОР РЕДАКЦИИ</span><h2 id="featuredTitle">Истории, в которые хочется войти.</h2></div>
+        <span class="featured-counter">001 — 003 <i>✳</i></span>
+      </div>
+      <div id="featuredEditionGrid" class="featured-edition-grid"></div>
+    </section>
+    <div class="veto-library-kicker" aria-hidden="true"><span>ИЗБРАННОЕ / ОТКРЫТОЕ / ЛИЧНОЕ</span><div></div><span>ТВОЯ СЛЕДУЮЩАЯ ГЛАВА</span></div>
+    <div class="source-tabs" role="group" aria-label="Библиотека и язык">
+      <button type="button" data-books-source="complete" class="active" aria-pressed="true"><b>✦</b> ЧИТАТЬ ЦЕЛИКОМ</button>
+      <button type="button" data-books-source="hot200" aria-pressed="false"><b>200</b> ХИТЫ · НА РУССКОМ</button>
+      <button type="button" data-books-source="translated" aria-pressed="false"><b>🌍</b> Зарубежные · на русском</button>
+      <button type="button" data-books-source="ru" aria-pressed="false"><b>РУ</b> Русская библиотека</button>
+      <button type="button" data-books-source="hy" aria-pressed="false"><b>ՀՅ</b> Հայկական գրադարան</button>
+      <button type="button" data-books-source="gutenberg" aria-pressed="false"><b>EN</b> Мировая классика</button>
+      <button type="button" data-books-source="spotlight" aria-pressed="false"><b>✦</b> Новинки и хиты · RU</button>
+      <button type="button" data-books-source="genres" aria-pressed="false"><b>✧</b> Читать сейчас · RU</button>
+      <button type="button" data-books-source="local" aria-pressed="false"><b>▤</b> Мои файлы · Офлайн</button>
+    </div>
+    <p id="sourceDescription" class="source-description">Зарубежные произведения в русских переводах · из Русской Викитеки</p>
+    <div class="translation-filters" id="translationFilters" role="group" aria-label="Язык оригинала">
+      <span>Переведено с:</span>
+      <button type="button" data-original-lang="en" class="active" aria-pressed="true">Английского</button>
+      <button type="button" data-original-lang="fr" aria-pressed="false">Французского</button>
+      <button type="button" data-original-lang="de" aria-pressed="false">Немецкого</button>
+      <button type="button" data-original-lang="it" aria-pressed="false">Итальянского</button>
+      <button type="button" data-original-lang="es" aria-pressed="false">Испанского</button>
+    </div>
+    <div class="hot-filters" id="hotFilters" role="group" aria-label="Жанры подборки из 200 зарубежных книг" hidden>
+      <button type="button" data-hot-genre="all" class="active">Все 200</button>
+      <button type="button" data-hot-genre="romantasy">Ромэнтези</button>
+      <button type="button" data-hot-genre="fantasy">Фэнтези</button>
+      <button type="button" data-hot-genre="scifi">Научная фантастика</button>
+      <button type="button" data-hot-genre="dystopia">Антиутопии / YA</button>
+      <button type="button" data-hot-genre="thriller">Триллеры</button>
+      <button type="button" data-hot-genre="horror">Хоррор</button>
+      <button type="button" data-hot-genre="contemporary">Современная проза</button>
+      <button type="button" data-hot-genre="romance">Романтика</button>
+      <button type="button" data-hot-genre="mystery">Детективы</button>
+      <button type="button" data-hot-genre="nonfiction">Нон-фикшн</button>
+    </div>
+    <div class="reading-genres" id="readingGenres" role="group" aria-label="Жанр русской классики" hidden>
+      <button type="button" data-reading-genre="novels" class="active">Романы</button>
+      <button type="button" data-reading-genre="stories">Рассказы</button>
+      <button type="button" data-reading-genre="novellas">Повести</button>
+      <button type="button" data-reading-genre="fantasy">Фантастика</button>
+      <button type="button" data-reading-genre="poems">Стихи</button>
+      <button type="button" data-reading-genre="folktales">Народные сказки</button>
+    </div>
+    <div class="spotlight-filters" id="spotlightFilters" role="group" aria-label="Подборки современных книг" hidden>
+      <button type="button" data-spotlight="now" class="active">В центре внимания</button>
+      <button type="button" data-spotlight="new">Новинки</button>
+      <button type="button" data-spotlight="fantasy">Фантастика</button>
+      <button type="button" data-spotlight="detective">Детективы</button>
+      <button type="button" data-spotlight="romance">Романтика</button>
+      <button type="button" data-spotlight="nonfiction">Психология</button>
+      <button type="button" data-spotlight="business">Бизнес</button>
+      <button type="button" data-spotlight="youth">Молодёжная проза</button>
+      <button type="button" data-spotlight="classics">Мировая классика</button>
+    </div>
+    <section class="import-banner" id="importBanner" aria-label="Моя личная библиотека" hidden>
+      <div class="import-icon" aria-hidden="true"><span>V</span><b>+</b></div>
+      <div class="import-intro">
+        <span class="eyebrow">VETOGRAM / ЛИЧНАЯ БИБЛИОТЕКА</span>
+        <h2>Твои книги. Только твои.</h2>
+        <p>Добавляй EPUB, FB2 или TXT и читай с VETO FLOW, закладками и собственной полкой. Файлы остаются на этом устройстве.</p>
+      </div>
+      <button id="importButton" type="button" class="import-action"><span>＋</span> Добавить книгу</button>
+      <input id="importFile" type="file" accept=".epub,.fb2,.txt,application/epub+zip,text/plain" hidden aria-label="Выберите свою книгу в формате EPUB, FB2 или TXT">
+      <p id="importStatus" role="status" aria-live="polite"></p>
+    </section>
+    <section class="catalog-bar" id="catalogSearch" aria-label="Найти книгу">
+      <form id="searchForm" class="search">
+        <span aria-hidden="true">⌕</span>
+        <input id="bookSearch" type="search" placeholder="Название книги или автор…" aria-label="Поиск книг" autocomplete="off" maxlength="100">
+        <button type="submit">Найти</button>
+      </form>
+      <div class="filters" id="languageFilter" hidden>
+        <label for="langSelect">Язык</label>
+        <select id="langSelect" aria-label="Язык книги">
+          <option value="all">Все языки</option>
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="hy">Հայերեն</option>
+        </select>
+      </div>
+    </section>
+    <div id="authorDiscovery" class="author-discovery" role="group" aria-label="Быстрый поиск авторов"></div>
+    <div class="editorial-heading"><span>✦</span><p>Истории, которые остаются с тобой</p><span>✦</span></div>
+    <div class="shelf-heading">
+      <div><p class="eyebrow" id="shelfEyebrow">ОТКРЫТИЯ / 01</p><h2 id="shelfTitle">Популярные книги</h2></div>
+      <button class="text-button" id="myLibrary">Моя полка <span id="savedCount">0</span> ↗</button>
+    </div>
+    <div class="topics" role="group" aria-label="Жанр">
+      <button class="active" type="button" data-topic="">Все</button>
+      <button type="button" data-topic="fiction">Романы</button>
+      <button type="button" data-topic="science fiction">Фантастика</button>
+      <button type="button" data-topic="mystery">Детективы</button>
+      <button type="button" data-topic="history">История</button>
+      <button type="button" data-topic="children">Детям</button>
+    </div>
+    <div class="library-clarity" id="libraryClarity" role="note" hidden>
+      <span class="clarity-icon"><img src="/veto-telegram-mark.svg" alt=""/></span>
+      <span><strong>КНИГИ, А НЕ ОТРЫВКИ.</strong> Первая полка — реальные объёмные тексты, которые уже открываются целиком в читалке. Другие источники, переводы и современные карточки — в отдельных разделах.</span>
+    </div>
+    <section id="catalogGrid" class="book-grid" aria-live="polite"></section>
+    <div class="catalog-footer"><p id="catalogStatus" role="status"></p><button id="loadMore" type="button" hidden>Показать ещё ↓</button></div>
+    <footer class="book-attribution">
+      <strong>КНИГИ / БИБЛИОТЕКА ИСТОРИЙ</strong>
+      <p id="sourceLegal">Источник: Русская Викитека. Авторские права на русский перевод проверяются отдельно от прав на оригинал.</p>
+      <a id="sourceLegalLink" href="https://ru.wikisource.org/wiki/Special:Copyright" target="_blank" rel="noopener noreferrer">Условия и лицензии источника ↗</a>
+    </footer>
+  </main>
+
+  <section id="reader" class="reader" hidden aria-label="Читалка книги">
+    <header class="reader-top">
+      <button id="readerBack" class="reader-back" type="button" aria-label="Закрыть книгу">← <span>Библиотека</span></button>
+      <div class="reader-identity"><span>СЕЙЧАС ЧИТАЕТЕ</span><strong id="readerTitle">Книга</strong></div>
+      <button id="readerAudioButton" class="reader-audio-button" type="button" aria-label="Читать страницу вслух" aria-pressed="false" title="Чтение вслух">♫</button>
+      <button id="readerFlowButton" class="reader-flow-button" type="button" aria-label="VETO FLOW — фокус по абзацам" aria-pressed="false" title="VETO FLOW">✧ <span>FLOW</span></button>
+      <button id="readerFocusButton" class="reader-focus-button" type="button" aria-label="Режим погружения" aria-pressed="false" title="Скрыть лишнее">◫</button>
+      <button id="readerSettingsButton" class="reader-settings-button" type="button" aria-label="Настройки чтения" aria-expanded="false">Aa</button>
+    </header>
+    <div class="reader-progress-track"><div id="progressFill"></div></div>
+    <button id="readerTocButton" class="reader-toc-shortcut" type="button" hidden aria-label="Открыть содержание и выбрать том">СОДЕРЖАНИЕ <span id="readerChapterCount">—</span> <span aria-hidden="true">↗</span></button>
+    <div class="reader-trace"><span id="readerProgressLabel">Начало истории</span><span id="readerProgressPercent">0%</span></div>
+    <div id="readerSettings" class="reader-settings" hidden>
+      <div><span>Размер текста</span><button id="smallerFont" type="button" aria-label="Уменьшить шрифт">A−</button><span id="fontValue">19</span><button id="largerFont" type="button" aria-label="Увеличить шрифт">A+</button></div>
+      <div><span>Оформление</span><button type="button" data-read-theme="dark">Ночь</button><button type="button" data-read-theme="light">Бумага</button><button type="button" data-read-theme="sepia">Сепия</button></div>
+      <div><span>Шрифт</span><button type="button" data-read-font="literary">Литературный</button><button type="button" data-read-font="modern">Современный</button></div>
+      <div><span>Интервал</span><button type="button" data-read-leading="compact">Плотный</button><button type="button" data-read-leading="comfortable">Комфортный</button><button type="button" data-read-leading="airy">Свободный</button></div>
+      <div><span>Ширина строки</span><button type="button" data-read-width="normal">Удобная</button><button type="button" data-read-width="narrow">Узкая</button></div>
+      <div><span>Чтение вслух</span><button type="button" data-read-speed="0.85">Медленно</button><button type="button" data-read-speed="1">Обычно</button><button type="button" data-read-speed="1.2">Быстрее</button></div>
+      <div class="read-tech-note"><strong>VETO FLOW</strong><span>Выделяет текущий абзац, смягчает фон и помогает удерживать внимание. Работает без отправки текста на сервер.</span></div>
+      <div id="readerChapters" hidden><label for="chapterSelect">Содержание</label><select id="chapterSelect" aria-label="Выберите главу"><option value="">Начало книги</option></select></div>
+    <div class="reader-download-bar" id="readerDownloadBar" hidden>
+      <div class="reader-download-copy"><strong>ВСЕ ГЛАВЫ — ВМЕСТЕ</strong><span id="readerDownloadHint">Сохрани доступные главы на устройстве для чтения без интернета.</span></div>
+      <button id="readerSaveAllChapters" type="button">СОХРАНИТЬ КНИГУ ↧</button>
+      <a id="readerOfficialEpub" href="https://ws-export.wmcloud.org/" target="_blank" rel="noopener noreferrer">EPUB ОТ ВИКИТЕКИ ↗</a>
+    </div>
+      <div class="reader-attribution"><span>Текст адаптирован для читалки</span><a id="readerSourceLink" href="https://www.gutenberg.org/" target="_blank" rel="noopener noreferrer">Оригинал и авторские права ↗</a></div>
+    </div>
+    <div class="flow-guide" id="flowGuide" hidden>
+      <span><b>✧ VETO FLOW</b> · фокус на одном абзаце</span>
+      <div><button id="flowPrevious" type="button" aria-label="Предыдущий абзац">↑</button>
+      <span id="flowPosition">1 / 1</span>
+      <button id="flowNext" type="button" aria-label="Следующий абзац">↓</button></div>
+    </div>
+    <div class="reader-scroll" id="readerScroll">
+      <div class="reader-paper" id="readerPaper">
+        <div class="reader-book-meta"><div class="reader-line"></div><span id="readerAuthor">АВТОР</span><h2 id="chapterTitle">Глава</h2><p id="pageNumber">Страница 1</p><div class="reader-volume-status" id="readerVolumeStatus" role="status">Проверяем объём текста…</div></div>
+        <article class="reader-copy" id="readerCopy"></article>
+        <div class="reader-page-ornament" aria-hidden="true">✦ &nbsp; VETOGRAM BOOKS &nbsp; ✦</div>
+        <div class="end-mark">✦</div>
+      </div>
+    </div>
+    <div class="reader-bottom">
+      <button type="button" id="prevPage" aria-label="Предыдущая страница">←</button>
+      <span id="readerPageLabel" aria-live="polite">1 / 1</span>
+      <button type="button" id="readerCompassButton" title="VETO COMPASS — поиск, карта книги и закладки" aria-label="Поиск и навигация по книге">⌕</button>
+      <button type="button" id="saveQuote" title="Сохранить выделенную цитату" aria-label="Сохранить выделенную цитату">❝</button>
+      <button type="button" id="bookmarkButton" title="Закладка" aria-label="Поставить закладку">♧</button>
+      <button type="button" id="nextPage" aria-label="Следующая страница">→</button>
+    </div>
+    <button id="readerFocusExit" class="reader-focus-exit" type="button" aria-label="Вернуть управление" hidden>✕ Завершить погружение</button>
+  </section>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div id="bookModal" class="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header"><h2 id="modalTitle">Моя библиотека</h2><button id="modalClose" aria-label="Закрыть" type="button">×</button></div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+<script src="/vetogram-media-bridge.js" defer></script>
+</body>
+</html>

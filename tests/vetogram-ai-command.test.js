@@ -71,7 +71,7 @@ test('AI screen wiring and syntax check integrated into project',()=>{
   const navParents=app.match(/const NAV_PARENT\s*=\s*\{([^}]+)\}/)?.[1];
   assert.ok(routeMap && navParents,'real Mini App navigation maps exist');
   assert.match(routeMap,/\bai:\s*'ai'/);
-  assert.match(navParents,/\bai:\s*'ai'/);
+  assert.match(navParents,/\bai:\s*'profile'/);
   assert.match(pkg.scripts.check,/node --check public\/vetogram-ai\.js/);
 });
 

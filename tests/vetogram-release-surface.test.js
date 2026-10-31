@@ -68,7 +68,7 @@ test('UI navigation aliases retain Creator separately from Story Engine',()=>{
   const nav=read('public/vetogram-command-2026.js');
   assert.match(app,/creator:\s*'studio'/);
   assert.match(app,/studio:\s*'story-engine'/);
-  assert.match(html,/data-nav="ai"/);
+  assert.match(html,/data-open-screen="ai"/);
   assert.match(html,/data-vg26-destination="story-engine"/);
   assert.match(html,/data-vg26-destination="creator"/);
   assert.match(nav,/studio\|creator\|story-engine/);

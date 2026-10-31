@@ -9,7 +9,7 @@ test('switching chats does not inherit a previous pending history load or poll',
   const open=ui.slice(ui.indexOf('async function openThread(chat)'),ui.indexOf('async function loadMessages'));
   assert.match(open,/state\.syncRunId\+\+;state\.syncBusy=false/);
   assert.match(open,/state\.threadLoading=false/);
-  assert.ok(open.indexOf('state.threadLoading=false')<open.indexOf('await loadMessages'));
+  assert.ok(open.indexOf('state.threadLoading=false')<open.indexOf('loadMessages({reset:true})'));
   const load=ui.slice(ui.indexOf('async function loadMessages'),ui.indexOf('function back()'));
   assert.match(load,/state\.syncRunId\+\+;state\.syncBusy=false/);
   assert.match(load,/generation!==state\.threadGeneration/);
@@ -24,12 +24,12 @@ test('late private media responses cannot expose previous owners or different co
     ui.slice(ui.indexOf('async function openArchivedFile'),ui.indexOf('async function openLiveAttachment')),
     ui.slice(ui.indexOf('async function openLiveAttachment'),ui.indexOf('function visibleMessageAnchor')),
   ]){
-    assert.match(section,/ownerKey=state\.ownerInitData,epoch=state\.threadGeneration/);
+    assert.match(section,/ownerKey=state\.ownerInitData,epoch=state\.previewEpoch/);
     assert.match(section,/ownerKey!==String\(tg\?\.initData\|\|''\)/);
-    assert.match(section,/epoch!==state\.threadGeneration/);
+    assert.match(section,/epoch!==state\.previewEpoch/);
     assert.match(section,/String\(state\.thread\?\.id\)!==chatId/);
-    assert.match(section,/!button\.isConnected/);
-    assert.ok(section.indexOf('!button.isConnected')<section.indexOf('cacheExpandedAttachment(button,id,blob'));
+    assert.match(section,/currentAttachmentButton\(button,id,/);
+    assert.ok(section.indexOf('const active=currentAttachmentButton(button,id,')<section.indexOf('cacheExpandedAttachment(active,id,blob'));
   }
   assert.match(ui,/state\.syncRunId\+\+;state\.syncBusy=false/);
 });

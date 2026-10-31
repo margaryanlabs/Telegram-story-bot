@@ -5,29 +5,31 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#070A11" />
   <link rel="icon" type="image/svg+xml" href="/veto-telegram-mark.svg?v=20261019-brand-v2" />
-  <title>VETOGRAM — чаты, истории и приватность</title>
+  <title>VETOGRAM — одно приложение, твоя вселенная</title>
   <meta name="description" content="VETOGRAM — личные чаты Telegram, истории, AI, голосовая студия и понятный контроль приватности." />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="/app.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/chat-themes.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/chat-media.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/studio-module.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/relay-module.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/veto-global-ui.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/telegram-stories.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/veto-device-polish.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/veto-launch-polish.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/vetogram-header.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/story-engine.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/vetogram-ai.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/vetogram-2026.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/vetogram-noir.css?v=20261027-v52-mobile-consent" />
-  <link rel="stylesheet" href="/vetogram-brand-reveal.css?v=20261027-v52-mobile-consent" />
-    <link rel="stylesheet" href="/vetogram-mobile-clarity.css?v=20261027-v52-mobile-consent" />
+  <link rel="stylesheet" href="/app.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/chat-themes.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/chat-media.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/studio-module.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/relay-module.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/veto-global-ui.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/telegram-stories.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/veto-device-polish.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/veto-messenger-rebirth.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/veto-launch-polish.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-header.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/story-engine.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-ai.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-2026.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-mission-2026.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-experience-2026.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-finish-2026.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-noir.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-brand-reveal.css?v=20261031-v61-universe" />
+    <link rel="stylesheet" href="/vetogram-mobile-clarity.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-universe.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-universe-61.css?v=20261031-v61-universe" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -125,7 +127,7 @@
           <span class="brand-mark veto-mark" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /><i></i></span>
           <span class="brand-copy">
             <strong>VETOGRAM</strong>
-            <span>Чаты · Истории · Приватность · AI</span>
+            <span>Чаты · Истории · Медиа</span>
           </span>
         </button>
       </div>
@@ -569,12 +571,17 @@
             <button type="button" id="telegramThreadBack" aria-label="Вернуться к чатам" class="veto-mirror-icon-btn veto-mirror-back">←</button>
             <div class="veto-mirror-thread-avatar" id="telegramThreadAvatar">TG</div>
             <div class="veto-mirror-thread-person"><strong id="telegramThreadTitle">Переписка</strong><span id="telegramThreadMeta">Telegram · просмотр</span></div>
-            <a id="telegramThreadOpenNative" class="veto-mirror-icon-btn veto-mirror-native-link" aria-label="Открыть этот чат в Telegram" title="Открыть в Telegram" href="#" target="_blank" rel="noopener noreferrer" hidden>↗</a>
-            <button type="button" class="veto-mirror-icon-btn" data-open-screen="ai" data-ai-mode="reply" aria-label="VETO AI для сообщений" title="VETO AI">✦</button>
-            <button type="button" class="veto-mirror-icon-btn" id="telegramThreadReplyAI" aria-label="Предложить ответ AI на последнее входящее сообщение" title="Ответить с VETO AI">↳</button>
-            <button type="button" class="veto-mirror-icon-btn" id="telegramThreadBriefAI" aria-label="Разобрать последнее входящее сообщение на задачи" title="VETO Second Brain">◈</button>
             <button type="button" id="telegramThreadSearchToggle" class="veto-mirror-icon-btn" aria-label="Поиск по загруженным сообщениям" aria-controls="telegramThreadFind" aria-expanded="false" title="Поиск в переписке">⌕</button>
-            <button type="button" id="telegramThreadRefresh" class="veto-mirror-icon-btn" aria-label="Обновить сообщения">↻</button>
+            <details id="telegramThreadActions" class="veto-mirror-thread-actions">
+              <summary aria-label="Дополнительные действия с чатом" title="Дополнительные действия">⋯</summary>
+              <div class="veto-mirror-thread-actions-menu" role="group" aria-label="Действия с перепиской">
+                <a id="telegramThreadOpenNative" class="veto-mirror-icon-btn veto-mirror-native-link" data-thread-menu-action aria-label="Открыть этот чат в Telegram" href="#" target="_blank" rel="noopener noreferrer" hidden><span aria-hidden="true">↗</span><span>Открыть в Telegram</span></a>
+                <button type="button" class="veto-mirror-icon-btn" data-thread-menu-action data-open-screen="ai" data-ai-mode="reply" aria-label="VETO AI для сообщений"><span aria-hidden="true">✦</span><span>VETO AI</span></button>
+                <button type="button" class="veto-mirror-icon-btn" data-thread-menu-action id="telegramThreadReplyAI" aria-label="Предложить ответ AI на последнее входящее сообщение"><span aria-hidden="true">↳</span><span>Предложить ответ</span></button>
+                <button type="button" class="veto-mirror-icon-btn" data-thread-menu-action id="telegramThreadBriefAI" aria-label="Разобрать последнее входящее сообщение на задачи"><span aria-hidden="true">◈</span><span>Разобрать сообщение</span></button>
+                <button type="button" class="veto-mirror-icon-btn" data-thread-menu-action id="telegramThreadRefresh" aria-label="Обновить сообщения"><span aria-hidden="true">↻</span><span>Обновить переписку</span></button>
+              </div>
+            </details>
           </div>
           <div class="veto-mirror-thread-find" id="telegramThreadFind" role="search" aria-label="Поиск по открытой переписке" hidden>
             <input type="search" id="telegramThreadFindInput" placeholder="Найти в загруженных сообщениях" autocomplete="off" spellcheck="false" maxlength="90" aria-label="Текст для поиска"/>
@@ -2229,13 +2236,97 @@
         <span>После первой публикации здесь появится история, аудитория и время.</span>
       </section>
     </section>
+
+    <section class="screen v6-media" data-screen="media" aria-label="Медиа VETOGRAM">
+      <div id="v6MediaHome" class="v61-home">
+        <header class="v61-hero">
+          <div class="v61-hero-top"><span class="v61-overline"><span class="v61-pulse" aria-hidden="true"></span> VETOGRAM · MEDIA UNIVERSE</span><span class="v61-edition">06.1 / ONE APP</span></div>
+          <h1>Всё твоё.<br><em>В одном месте.</em></h1>
+          <p>Музыка, фильмы и книги. Личная коллекция всегда рядом с твоими чатами.</p>
+        </header>
+        <p id="v61GuestStorage" class="v61-guest-note" hidden>Гостевой режим: коллекция остаётся в этом браузере и может быть видна другим людям на общем устройстве. Открой VETOGRAM через свой Telegram для разделения коллекций.</p>
+        <form class="v61-search" id="v61SearchForm" role="search" autocomplete="off" aria-label="Поиск по личной медиатеке">
+          <span class="v61-search-glyph" aria-hidden="true">⌕</span>
+          <input id="v61Search" type="search" inputmode="search" placeholder="Поиск по твоей коллекции" maxlength="100" aria-label="Найти музыку, книги, кино и ссылки"/>
+          <button id="v61SearchClear" type="button" aria-label="Очистить поиск">×</button>
+        </form>
+        <div class="v61-filters" role="group" aria-label="Тип медиаконтента">
+          <button type="button" data-v61-filter="all" aria-pressed="true">Все</button>
+          <button type="button" data-v61-filter="music" aria-pressed="false">♫ Музыка</button>
+          <button type="button" data-v61-filter="cinema" aria-pressed="false">▷ Кино</button>
+          <button type="button" data-v61-filter="books" aria-pressed="false">▤ Книги</button>
+          <button type="button" data-v61-filter="link" aria-pressed="false">↗ Ссылки</button>
+        </div>
+        <section id="v61Results" class="v61-shelf" hidden aria-label="Результаты поиска">
+          <div class="v61-section-heading"><h2 id="v61ResultsTitle">Результаты поиска</h2><small>Только личная коллекция</small></div>
+          <div id="v61ResultsList" class="v61-rows"></div>
+          <button type="button" id="v61SearchMore" class="v61-more" hidden>Показать ещё результаты</button>
+          <p class="v61-discovery-note">Каталоги ищутся отдельно: <button type="button" data-v6-module="music" data-v6-page="search">в музыке</button> · <button type="button" data-v6-module="cinema" data-v6-page="search">в кино</button> · <button type="button" data-v6-module="books" data-v6-page="search">в книгах</button></p>
+        </section>
+        <section id="v61Continue" class="v61-shelf" hidden aria-label="Продолжить">
+          <div class="v61-section-heading"><h2>Продолжить</h2><small>Последнее открытое</small></div>
+          <div id="v61ContinueList" class="v61-rows v61-continue-rows"></div>
+        </section>
+        <section class="v61-world-section" aria-label="Медиаразделы">
+          <div class="v61-section-heading"><h2>Три мира. Один VETOGRAM.</h2><small>Выбери пространство</small></div>
+          <div class="v6-media-grid">
+            <button type="button" class="v6-world v6-world-music" data-v6-module="music"><span class="v6-world-index">01 / СЛУШАТЬ</span><div class="v6-world-art v6-record" aria-hidden="true"><i></i><b>V</b></div><span class="v6-world-copy"><strong>Музыка</strong><small>Треки · плейлисты · радио</small><span>Открыть <b>↗</b></span></span></button>
+            <button type="button" class="v6-world v6-world-cinema" data-v6-module="cinema"><span class="v6-world-index">02 / СМОТРЕТЬ</span><div class="v6-world-art v6-film" aria-hidden="true"><i></i><b>▶</b></div><span class="v6-world-copy"><strong>Кино</strong><small>Фильмы · сериалы · избранное</small><span>Открыть <b>↗</b></span></span></button>
+            <button type="button" class="v6-world v6-world-books" data-v6-module="books"><span class="v6-world-index">03 / ЧИТАТЬ</span><div class="v6-world-art v6-book" aria-hidden="true"><i>VETOGRAM<br><b>ЕЩЁ<br>СТРАНИЦУ.</b></i></div><span class="v6-world-copy"><strong>Книги</strong><small>Читалка · закладки · импорт</small><span>Открыть <b>↗</b></span></span></button>
+          </div>
+        </section>
+        <section class="v61-vault-spotlight" aria-label="Личная медиатека">
+          <div class="v61-vault-mark" aria-hidden="true">◈</div>
+          <div class="v61-vault-description"><span class="v61-overline">PRIVATE COLLECTION</span><h2>VETO VAULT</h2>
+            <p>Сохранённые книги, избранная музыка и свои ссылки. Локально, отдельно для каждого подключённого аккаунта.</p></div>
+          <button type="button" id="v61VaultButton" aria-controls="v61VaultPanel" aria-expanded="false">Моя коллекция <span id="v61VaultCount">0</span> <b>↗</b></button>
+        </section>
+        <section id="v61VaultPanel" class="v61-vault-panel" hidden aria-label="Личная коллекция VETO VAULT">
+          <div class="v61-section-heading"><h2>Личная коллекция</h2><button type="button" id="v61VaultClose">Свернуть ×</button></div>
+          <div class="v61-vault-actions">
+            <button type="button" data-v6-module="music" data-v6-page="import">＋ Добавить аудио</button>
+            <button type="button" data-v6-module="books" data-v6-page="import">＋ Добавить книгу</button>
+          </div>
+          <form id="v61SaveLink" class="v61-link-form">
+            <label for="v61LinkTitle">Название ссылки</label><input id="v61LinkTitle" type="text" maxlength="110" placeholder="Мой фильм или подборка" required/>
+            <label for="v61LinkUrl">Ссылка HTTPS</label><input id="v61LinkUrl" type="url" inputmode="url" placeholder="https://…" required/>
+            <button type="submit" data-v61-submit="save-link">Сохранить ссылку</button>
+          </form>
+          <p id="v61VaultStatus" class="v61-notice" role="status" aria-live="polite"></p>
+          <div id="v61VaultList" class="v61-rows"></div>
+          <button type="button" id="v61VaultMore" class="v61-more" hidden>Показать ещё сохранённые</button>
+          <p class="v61-notice">VAULT индексирует твои локально сохранённые материалы. Он не копирует переписки или защищённые чужие произведения и пока не синхронизируется между устройствами.</p>
+        </section>
+        <p class="v6-availability">Просмотр и прослушивание зависят от доступности и прав источника. Тексты и файлы открываются только там, где доступ подтверждён.</p>
+      </div>
+      <div id="v6MediaStage" class="v6-media-stage" hidden>
+        <header class="v6-module-bar"><button type="button" id="v6MediaBack" aria-label="В медиатеку">← <span>Медиа</span></button><strong id="v6ModuleTitle">Музыка</strong><div class="v6-module-switch" role="group" aria-label="Разделы медиа"><button type="button" data-v6-module="music" aria-label="Музыка">♫</button><button type="button" data-v6-module="cinema" aria-label="Кино">▷</button><button type="button" data-v6-module="books" aria-label="Книги">▤</button></div></header>
+        <div id="v6ModuleStatus" class="v6-module-status" role="status" aria-live="polite" hidden></div>
+        <button type="button" id="v6ModuleRetry" class="v6-secondary" hidden>Повторить загрузку</button>
+        <div id="v6Frames" class="v6-frames"></div>
+      </div>
+    </section>
+    <section class="screen v6-profile" data-screen="profile" aria-label="Профиль и настройки">
+      <header class="v6-heading"><span class="v6-eyebrow">VETOGRAM / ЛИЧНОЕ</span><h1>Твоё пространство.</h1><p id="v6AccountName">Аккаунт, оформление и инструменты.</p></header>
+      <div class="v6-settings">
+        <button type="button" id="v6Account"><span>◎</span><strong>Мой аккаунт<small>Подключение Telegram и статус сессии</small></strong><b>↗</b></button>
+        <button type="button" id="v6Appearance"><span>◐</span><strong>Оформление<small>Общая тема для всех разделов</small></strong><b>↗</b></button>
+        <button type="button" data-open-screen="ai"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt=""><strong>VETOGRAM AI<small>Ответы, тексты и личные инструменты</small></strong><b>↗</b></button>
+        <button type="button" data-open-screen="voice"><span>♫</span><strong>Голосовая студия<small>Запись и обработка</small></strong><b>↗</b></button>
+        <button type="button" data-open-screen="home"><span>⌘</span><strong>Все инструменты<small>Статистика, Relay и студии</small></strong><b>↗</b></button>
+      </div>
+      <p class="v6-availability">Личные файлы на устройстве разделены по аккаунтам Telegram. Бот получает только отправленные ему файлы.</p>
+    </section>
   </main>
 
-  <nav class="bottom-nav" data-reborn-nav="four" aria-label="Основные разделы">
-    <button class="nav-item active" data-nav="telegram" type="button" aria-label="Чаты" data-ui-label="chats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5c0 4.8-3.9 8.5-8.7 8.5-1.3 0-2.7-.3-3.8-.9L3 20l1.2-4.2C3.4 14.5 3 13 3 11.5 3 6.8 6.9 3 11.5 3S20 6.8 20 11.5Z"/></svg><small data-ui-text="chats">Чаты</small></button>
+  <nav class="bottom-nav" data-reborn-nav="five" aria-label="Основные разделы">
+    <div class="v6-nav-brand" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt=""><strong>VETOGRAM<small>ТВОЯ ВСЕЛЕННАЯ</small></strong></div>
+    <button class="nav-item active" data-nav="telegram" type="button" aria-label="Чаты" data-ui-label="chats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8.5 8.5 0 0 1-12 7.7L3 21l1.5-5A8.5 8.5 0 1 1 20 11.5Z"/></svg><small data-ui-text="chats">Чаты</small></button>
     <button class="nav-item" data-nav="publish" type="button" aria-label="Истории" data-ui-label="stories"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg><small data-ui-text="stories">Истории</small></button>
-    <button class="nav-item veto-reborn-ai-tab" data-nav="ai" type="button" aria-label="VETO AI"><img class="veto-ai-mark" src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="26" height="26" /><small>VETO AI</small></button>
-    <button class="nav-item" data-nav="privacy" type="button" aria-label="Защита" data-ui-label="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5.2c0 5 3.2 8.7 8 10.8 4.8-2.1 8-5.8 8-10.8V6z"/><path d="m9 12 2 2 4-4"/></svg><small data-ui-text="privacy">Защита</small></button>
+    <button class="nav-item" data-nav="media" type="button" aria-label="Медиа" data-ui-label="media"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M17.5 14v7m-3.5-3.5h7"/></svg><small data-ui-text="media">Медиа</small></button>
+    <button class="nav-item" data-nav="privacy" type="button" aria-label="Защита" data-ui-label="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5c0 5 3 8 8 11 5-3 8-6 8-11V6Z"/><path d="m9 12 2 2 4-4"/></svg><small data-ui-text="privacy">Защита</small></button>
+    <button class="nav-item" data-nav="profile" type="button" aria-label="Профиль" data-ui-label="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><small data-ui-text="profile">Профиль</small></button>
+    <span class="v6-nav-foot">Личное. Всегда рядом.</span>
   </nav>
   <dialog class="vg26-command-dialog" id="vg26CommandDialog" aria-labelledby="vg26CommandTitle">
     <div class="vg26-command-head">
@@ -2272,34 +2363,60 @@
     <div id="sheetContent"></div>
   </section>
 
+  <aside class="v6-mini-player" id="v6MiniPlayer" aria-label="Текущая музыка" hidden>
+    <button type="button" id="v6NowOpen" class="v6-mini-info"><span class="v6-mini-disc" aria-hidden="true">♫</span><span><strong id="v6NowTitle"></strong><small id="v6NowArtist"></small></span></button>
+    <button type="button" data-v6-audio="previous" aria-label="Предыдущий трек">⏮</button><button type="button" data-v6-audio="toggle" id="v6NowPlay" aria-label="Воспроизвести">▶</button><button type="button" data-v6-audio="next" aria-label="Следующий трек">⏭</button>
+    <input type="range" id="v6NowSeek" min="0" max="1000" value="0" aria-label="Позиция трека"><span id="v6NowTime">0:00</span>
+    <span id="v6NowStatus" class="v6-sr-only" role="status"></span>
+  </aside>
+
+    <section id="v61Player" class="v61-player" role="dialog" aria-modal="true" aria-label="VETO PLAYER" hidden>
+    <div class="v61-player-card">
+      <header class="v61-player-top"><span>VETOGRAM / VETO PLAYER</span><button type="button" id="v61PlayerClose" aria-label="Свернуть плеер">✕</button></header>
+      <div class="v61-player-art" aria-hidden="true"><div class="v61-player-record"><span>V</span></div></div>
+      <div class="v61-player-info"><small>NOW PLAYING</small><h2 id="v61PlayerTitle">Твоя музыка</h2><p id="v61PlayerArtist">VETOGRAM</p></div>
+      <div class="v61-player-seek"><input id="v61PlayerSeek" type="range" min="0" max="1000" value="0" aria-label="Позиция трека"/><span id="v61PlayerClock">0:00</span></div>
+      <div class="v61-player-actions">
+        <button type="button" data-v6-audio="previous" aria-label="Предыдущий трек">⏮</button>
+        <button type="button" data-v6-audio="toggle" id="v61PlayerPlay" aria-label="Воспроизвести">▶</button>
+        <button type="button" data-v6-audio="next" aria-label="Следующий трек">⏭</button>
+      </div>
+      <button type="button" id="v61PlayerMusic" class="v61-player-library">Открыть музыкальную библиотеку ↗</button>
+      <p class="v61-player-hint">Плеер использует текущую очередь Music, не создавая второй аудиопоток.</p>
+    </div>
+  </section>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/veto-device-polish.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/vetogram-country-picker.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/vetogram-brand-reveal.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/app.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/relay-module.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/privacy.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/chat-theme.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/vetogram-inbox-pulse-core.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/telegram-chats.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/telegram-stories.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/voice-studio.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/studio-module.js?v=20261027-v52-mobile-consent"></script>
-  <script type="module" src="/story-engine.js?v=20261027-v52-mobile-consent"></script>
-  <script type="module" src="/vetogram-ai.js?v=20261027-v52-mobile-consent"></script>
-  <script type="module" src="/vetogram-creative-presets.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/brand-pack.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/veto-launch-polish.js?v=20261027-v52-mobile-consent" defer></script>
-  <script src="/vetogram-header.js?v=20261027-v52-mobile-consent" defer></script>
-  <script src="/vetogram-command-2026.js?v=20261027-v52-mobile-consent" defer></script>
-  <script src="/vetogram-resume-2026.js?v=20261027-v52-mobile-consent" defer></script>
-  <script type="module" src="/vetogram-workflows-2026.js?v=20261027-v52-mobile-consent"></script>
-  <script type="module" src="/vetogram-mission-2026.js?v=20261027-v52-mobile-consent"></script>
-  <script src="/vetogram-noir.js?v=20261027-v52-mobile-consent" defer></script>
-  <script src="/vetogram-experience-v4.js?v=20261027-v52-mobile-consent" defer></script>
-  <script src="/vetogram-chat-experience-v4.js?v=20261027-v52-mobile-consent" defer></script>
-  <script src="/vetogram-reborn-ai.js?v=20261027-v52-mobile-consent" defer></script>
-  <script type="module" src="/vetogram-locale.js?v=20261027-v52-mobile-consent"></script>
+  <script src="/veto-device-polish.js?v=20261031-v61-universe"></script>
+  <script src="/vetogram-country-picker.js?v=20261031-v61-universe"></script>
+  <script src="/vetogram-brand-reveal.js?v=20261031-v61-universe"></script>
+  <script src="/app.js?v=20261031-v61-universe"></script>
+  <script src="/relay-module.js?v=20261031-v61-universe"></script>
+  <script src="/privacy.js?v=20261031-v61-universe"></script>
+  <script src="/chat-theme.js?v=20261031-v61-universe"></script>
+  <script src="/vetogram-inbox-pulse-core.js?v=20261031-v61-universe"></script>
+  <script src="/telegram-chats.js?v=20261031-v61-universe"></script>
+  <script src="/telegram-stories.js?v=20261031-v61-universe"></script>
+  <script src="/voice-studio.js?v=20261031-v61-universe"></script>
+  <script src="/studio-module.js?v=20261031-v61-universe"></script>
+  <script type="module" src="/story-engine.js?v=20261031-v61-universe"></script>
+  <script type="module" src="/vetogram-ai.js?v=20261031-v61-universe"></script>
+  <script type="module" src="/vetogram-creative-presets.js?v=20261031-v61-universe"></script>
+  <script src="/brand-pack.js?v=20261031-v61-universe"></script>
+  <script src="/veto-launch-polish.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-header.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-command-2026.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-resume-2026.js?v=20261031-v61-universe" defer></script>
+  <script type="module" src="/vetogram-workflows-2026.js?v=20261031-v61-universe"></script>
+  <script type="module" src="/vetogram-mission-2026.js?v=20261031-v61-universe"></script>
+  <script src="/vetogram-noir.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-experience-v4.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-chat-experience-v4.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-reborn-ai.js?v=20261031-v61-universe" defer></script>
+  <script type="module" src="/vetogram-locale.js?v=20261031-v61-universe"></script>
+  <script src="/vetogram-universe.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-universe-61-core.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-universe-61.js?v=20261031-v61-universe" defer></script>
 </body>
 </html>

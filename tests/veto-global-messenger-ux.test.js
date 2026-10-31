@@ -27,7 +27,7 @@ test('chat screen opens directly without showing permission manual by default',(
  assert.match(ui,/window\.VetoThemeDock\?\.\('thread'\)/);
  assert.match(ui,/window\.VetoThemeDock\?\.\('inbox'\)/);
  assert.match(ui,/veto-mirror-first-preview/);
- assert.match(ui,/if\(reset&&state\.messages\.length\)renderMessages\(\)/);
+ assert.match(ui,/if\(reset&&\(!state\.messages\.length\|\|state\.threadLoadError\)\)renderMessages\(\)/);
 });
 
 test('sticker previews fetch only signed owner recent static WEBP and revoke local URLs',()=>{

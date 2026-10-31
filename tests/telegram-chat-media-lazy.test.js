@@ -29,8 +29,8 @@ test('expanded attachment snapshots are RAM only, survive markup refresh, and ca
  assert.match(ui,/restoreExpandedAttachments\(\)/);
  assert.match(ui,/state\.expandedAttachments\.clear\(\);state\.expandedBytes=0/);
  assert.match(ui,/function revokeMediaUrls\(\)/);
- assert.match(ui,/cacheExpandedAttachment\(button,id,blob,true\)/);
- assert.match(ui,/cacheExpandedAttachment\(button,id,blob,false\)/);
+ assert.match(ui,/cacheExpandedAttachment\(active,id,blob,true\)/);
+ assert.match(ui,/cacheExpandedAttachment\(active,id,blob,false\)/);
  assert.match(ui,/URL\.revokeObjectURL\(old\.href\)/);
  assert.match(ui,/state\.expandedAttachments\.size>6\|\|state\.expandedBytes>24\*1024\*1024/);
  assert.doesNotMatch(ui,/indexedDB|localStorage|sessionStorage/);
@@ -56,7 +56,7 @@ test('media UI never downloads deleted, uncaptured content by guessing, and keep
  assert.match(ui,/photoRequest\('photo',ownerChatId,id\)/);
  assert.match(api,/validateTelegramMiniApp/);
  assert.match(api,/verifyTelegramClientOwner\(client,userId\)/);
- assert.match(api,/const recent=await client\.getDialogs\(\{limit:60\}\)/);
- assert.match(api,/const dialogs=await client\.getDialogs\(\{limit:MAX_DIALOGS\}\)/);
+ assert.match(api,/dialogs=await client\.getDialogs\(\{limit:batch\?120:60\}\)/);
+ assert.match(api,/dialogs=await client\.getDialogs\(\{limit:MAX_DIALOGS\}\)/);
  assert.doesNotMatch(ui,/TelegramClient\(/);
 });

@@ -1,0 +1,25 @@
+services:
+  vetogram-music-bot:
+    build:
+      context: ..
+      dockerfile: music-bot/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      NODE_ENV: production
+      PORT: "8787"
+      VETOGRAM_MUSIC_BOT_TOKEN: ${VETOGRAM_MUSIC_BOT_TOKEN:?set music bot token}
+      VETOGRAM_MUSIC_WEBHOOK_SECRET: ${VETOGRAM_MUSIC_WEBHOOK_SECRET:?set secret}
+      VETOGRAM_MUSIC_STORE_PATH: /data
+    volumes:
+      - vetogram_music_private_data:/data
+volumes:
+  vetogram_music_private_data:

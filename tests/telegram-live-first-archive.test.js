@@ -46,7 +46,8 @@ function makeArchiveHarness(requestImpl){
    messages:[{id:10,date:'2026-10-18T12:00:00Z',text:'Live',out:false},
              {id:11,date:'2026-10-18T12:01:00Z',text:'Only live'}],
    archiveOffset:0,archiveHasMore:false,liveHasMore:true,threadHasMore:true};
- const env={state,request:requestImpl,
+ const env={state,request:requestImpl,AbortController,
+   tg:{initData:"owner-1"},
    resetOwner:()=>false,visibleMessageAnchor:()=>null,
    renderMessages:()=>{env.renders++},rememberHotThread:()=>{},
    threadNotice:message=>{env.notice=message},renders:0,notice:''};

@@ -1,0 +1,40 @@
+/* Vetogram Collections — restrained, tactile music playlist editing. */
+.vmc-section{margin:28px 0 36px;padding:24px;border:1px solid #ffffff21;border-radius:24px;background:radial-gradient(circle at 97% -8%,#dd749343,transparent 35%),linear-gradient(125deg,#1b2033,#181725 75%);box-shadow:0 20px 65px #0004;color:#fff}
+.vmc-head,.vmc-content-head{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.vmc-head h2{font-size:clamp(23px,3vw,32px);line-height:1.1;letter-spacing:-.06em;margin:10px 0 6px}
+.vmc-head p,.vmc-content-head p{color:#a6afcb;font-size:11px;line-height:1.75;max-width:490px}
+.vmc-kicker{letter-spacing:.18em;font-size:9px;font-weight:900;color:#f3b2b9}
+.vmc-primary,.vmc-secondary,.vmc-danger,.vmc-studio-add{border-radius:10px;padding:11px 14px;min-height:39px;font-size:11px;font-weight:800;white-space:nowrap}
+.vmc-primary{background:linear-gradient(110deg,#ffcaab,#f18db3);color:#201e31;border:0}
+.vmc-secondary{background:#ffffff12;border:1px solid #ffffff2e;color:#f0eaf4}
+.vmc-danger{background:#ed9ca41a;border:1px solid #dd92953a;color:#f0bac0}
+.vmc-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0}
+.vmc-card{position:relative;text-align:left;overflow:hidden;display:flex;flex-direction:column;align-items:start;justify-content:space-between;gap:7px;padding:17px;min-height:125px;border-radius:17px;border:1px solid #ffffff24;background:radial-gradient(circle at 90% 0%,#e67d9b47,transparent 60%),linear-gradient(135deg,#302440,#25314b);color:#fff;transition:transform .2s,border-color .2s}
+.vmc-card:nth-child(3n+2){background:radial-gradient(circle at 80% 10%,#a58fe666,transparent 58%),linear-gradient(125deg,#272642,#2f253b)}
+.vmc-card:nth-child(3n+3){background:radial-gradient(circle at 85% 10%,#79c9da47,transparent 55%),linear-gradient(110deg,#23434d,#30233e)}
+.vmc-card:hover{transform:translateY(-3px)}.vmc-card.active{border-color:#fdb0bc}
+.vmc-card small{color:#f2c6d0;font-weight:750;letter-spacing:.15em;font-size:9px}.vmc-card strong{font-size:18px;letter-spacing:-.05em;line-height:1.15;max-width:90%;z-index:1;overflow-wrap:anywhere}
+.vmc-card span{color:#cabfd6;font-size:10px}.vmc-card i{position:absolute;right:11px;bottom:-22px;font-size:99px;font-style:normal;color:#ffffff15}
+.vmc-empty{border:1px dashed #ffffff26;padding:23px;text-align:center;color:#a9b3cd;font-size:12px;border-radius:13px;grid-column:1/-1;line-height:1.7}
+.vmc-content{margin-top:18px;padding-top:19px;border-top:1px solid #ffffff21}
+.vmc-content-head{margin-bottom:12px}.vmc-content-head h3{font-size:23px;margin:5px 0;letter-spacing:-.05em}
+.vmc-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.vmc-track{display:flex;align-items:center;gap:10px;background:#ffffff08;border:1px solid #ffffff16;padding:12px;border-radius:10px;margin:7px 0}
+.vmc-index{font-size:10px;color:#8996b3;min-width:23px}.vmc-track-info{flex:1;min-width:0}
+.vmc-track-info b,.vmc-track-info small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vmc-track-info b{font-size:12px}.vmc-track-info small{font-size:10px;color:#aeb4ca}
+.vmc-track-controls{display:flex;gap:6px}.vmc-icon{background:#ffffff14;color:#f7e9f4;border:1px solid #ffffff19;border-radius:7px;width:34px;height:34px}
+.vmc-studio-add{color:#f6d6df;border:1px solid #ffffff2d;background:#ffffff11}
+.vmc-home{position:relative;overflow:hidden;padding:23px 28px;border:1px solid #ffc4aa36;border-radius:19px;background:radial-gradient(circle at 90% 0%,#cf709f5a,transparent 39%),linear-gradient(120deg,#322139,#202747);margin:18px 0}
+.vmc-home:after{content:"♫";font-size:170px;position:absolute;right:35px;top:-60px;transform:rotate(-20deg);color:#ffffff0d;pointer-events:none}
+.vmc-home>*{position:relative;z-index:1}.vmc-home strong{display:block;font-size:25px;letter-spacing:-.055em;line-height:1.2;margin:10px 0}
+.vmc-home p{font-size:11px;color:#c3bdd4;margin:0 0 18px;max-width:370px}
+.vmc-overlay{position:fixed;inset:0;z-index:170;background:#050713de;backdrop-filter:blur(14px);display:grid;place-items:center;padding:17px}
+.vmc-dialog{width:min(480px,100%);max-height:min(600px,80dvh);display:flex;flex-direction:column;overflow:hidden;border-radius:20px;border:1px solid #ffffff35;background:linear-gradient(130deg,#28223b,#131927);padding:19px;box-shadow:0 25px 80px #000b}
+.vmc-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.vmc-top h3{font-size:19px;letter-spacing:-.04em}
+.vmc-close{background:#ffffff18;border:1px solid #ffffff28;border-radius:10px;color:#fff;padding:6px 11px;font-size:19px}
+.vmc-options{min-height:60px;overflow:auto;display:grid;gap:6px}.vmc-option{text-align:left;background:#ffffff0b;border:1px solid #ffffff23;border-radius:11px;color:#fff;padding:13px;font-size:12px}
+.vmc-option:hover{border-color:#f3a6b9}.vmc-options p{color:#b7bfd4;font-size:11px}
+@media(max-width:950px){.vmc-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.vmc-head,.vmc-content-head{align-items:start;flex-direction:column}.vmc-actions{justify-content:start}}
+@media(max-width:480px){.vmc-section{padding:16px;border-radius:19px}.vmc-head h2{font-size:25px}.vmc-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.vmc-card{min-height:115px;padding:13px}.vmc-card strong{font-size:15px}.vmc-content-head h3{font-size:20px}.vmc-actions{gap:6px}.vmc-primary,.vmc-secondary,.vmc-danger{padding:9px 11px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.vmc-card{transition:none}}

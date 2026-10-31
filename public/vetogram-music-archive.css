@@ -1,0 +1,35 @@
+/* Vetogram Archive · generous dark editorial collection cards */
+.archive-hero{padding:clamp(24px,4vw,44px);background:radial-gradient(ellipse at 82% 12%,rgba(188,125,224,.23),transparent 43%),linear-gradient(135deg,#1c1426,#11111e 85%);border:1px solid rgba(255,255,255,.09);border-radius:24px;margin-bottom:20px;position:relative;overflow:hidden}
+.archive-hero .overline{font-size:10px;letter-spacing:.18em;color:#d9b8ef}
+.archive-hero h1{font-size:clamp(32px,5vw,58px);line-height:1.1;letter-spacing:-.05em;color:#f9f0ff;margin:14px 0}
+.archive-hero h1 em{background:linear-gradient(110deg,#eac2fd,#f8bdd5);-webkit-background-clip:text;background-clip:text;color:transparent;font-style:normal}
+.archive-hero p{color:#b7a9c9;line-height:1.75;font-size:14px;max-width:670px}
+.archive-summary{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.archive-summary span{color:#e9d4f6;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);border-radius:99px;padding:8px 12px;font-size:10px;letter-spacing:.07em;font-weight:800}
+.archive-license-bar{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0 13px}
+.archive-license-bar button{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.06);color:#dcd0e9;border-radius:12px;padding:10px 13px;cursor:pointer;font:inherit;font-size:12px;font-weight:700}
+.archive-license-bar button.active{background:#f1caf8;color:#26152b;border-color:#f1caf8}
+.archive-license-bar button:hover{border-color:#f1caf8}
+.archive-status{color:#b6a7c1;font-size:12px;line-height:1.7;margin:14px 0}
+.archive-list{display:grid;gap:9px}
+.archive-track{display:grid;grid-template-columns:64px minmax(0,1fr) 38px 48px;align-items:center;gap:13px;padding:11px 14px;border:1px solid rgba(255,255,255,.09);border-radius:15px;background:rgba(255,255,255,.04)}
+.archive-track:hover{background:rgba(220,176,240,.085)}
+.archive-cover{display:block;width:64px;height:64px;object-fit:cover;border-radius:11px;background:linear-gradient(125deg,#47304e,#201e35)}
+.archive-description{min-width:0;display:grid;gap:5px}
+.archive-description strong{color:#fff;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.archive-description small{color:#baaecd;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.archive-license{color:#cca5d7;font-size:10px;font-weight:700;letter-spacing:.055em}
+.archive-links{display:flex;flex-wrap:wrap;gap:12px}
+.archive-links a{font-size:10px;text-decoration:underline;text-underline-offset:2px;color:#bfb0c8}
+.archive-play,.archive-fav{border:0;border-radius:11px;cursor:pointer;height:41px;font:inherit;font-weight:800}
+.archive-play{background:#eec6f7;color:#271327}
+.archive-fav{background:rgba(255,255,255,.075);color:#f0c6f5}
+.archive-play:hover,.archive-fav:hover{filter:brightness(1.1)}
+.archive-more-wrap{margin:22px auto 36px;text-align:center}
+.archive-more{padding:14px 24px;min-width:230px;background:linear-gradient(110deg,#edc5f8,#f9c2d6);border:0;border-radius:12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;color:#201522}
+.archive-more[hidden]{display:none}
+.archive-more:disabled{opacity:.45;cursor:default}
+.archive-notice{font-size:12px;line-height:1.75;color:#a99cb4;padding:12px 0}
+.archive-empty{text-align:center;padding:28px;border:1px dashed rgba(255,255,255,.14);border-radius:14px;color:#ae9dba;font-size:13px}
+@media(max-width:640px){.archive-hero{padding:24px 21px;border-radius:19px}.archive-track{grid-template-columns:48px minmax(0,1fr) 34px 38px;gap:9px;padding:9px}.archive-cover{width:48px;height:48px}.archive-description strong{font-size:12px}.archive-description small{font-size:11px}.archive-license{font-size:9px}.archive-links a{font-size:10px}.archive-play,.archive-fav{height:36px}.archive-summary span{font-size:9px}.archive-license-bar button{flex:1;min-width:90px}}
+@media(prefers-reduced-motion:reduce){.archive-track{transition:none}}

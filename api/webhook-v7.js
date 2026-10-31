@@ -1,3 +1,4 @@
+import { incomingMusic, musicStore } from '../lib/vetogram-music-library.js';
 import crypto from 'node:crypto';
 const CONTROL_BUILD = '20261021-vetogram-identity-v1';
 import sharp from 'sharp';
@@ -954,6 +955,24 @@ export default async function handler(req, res) {
     try { update = JSON.parse(update); } catch {
       res.status(400).json({ ok: false, error: 'Invalid JSON' });
       return;
+    }
+  }
+  // Personal MP3/M4A is handled only AFTER the existing webhook secret check.
+  // Business updates, photos, login and commands retain their original handlers.
+  const music=(update?.message?.audio || update?.message?.document) ? incomingMusic(update) : null;
+  if(music){
+    const store=musicStore();
+    if(!store){
+      await tg(token,'sendMessage',{chat_id:music.owner,text:'Библиотека аудио из Telegram пока не подключена. В VETOGRAM → Медиа → Музыка можно добавить файл с устройства.'});
+      return res.status(200).json({ok:true,music_available:false});
+    }
+    try{
+      await store.add(music.owner,music.audio);
+      await tg(token,'sendMessage',{chat_id:music.owner,text:'Аудио добавлено в твою личную библиотеку. Открой VETOGRAM → Медиа → Музыка → Из Telegram. Отправляй только записи, которые вправе хранить и использовать.'});
+      return res.status(200).json({ok:true,music_saved:true});
+    }catch{
+      res.setHeader('Retry-After','2');
+      return res.status(503).json({ok:false,error:'music_store_unavailable'});
     }
   }
   const origin = originFromRequest(req);

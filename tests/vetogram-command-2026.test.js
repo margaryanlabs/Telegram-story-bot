@@ -138,6 +138,6 @@ test('Creator palette opens the sticker editor, without taking over the Story En
   f.items.find(x=>x.dataset.vg26Destination==='creator').click();
   assert.deepEqual(f.calls,['creator']);
   assert.equal(f.el.vg26CommandDialog.open,false);
-  assert.match(html,/data-nav="ai"/);
+  assert.match(html,/data-open-screen="ai"/);
   assert.match(html,/data-vg26-destination="story-engine"/);
 });

@@ -33,7 +33,7 @@ test('home exposes the complete control layer', () => {
   assert.match(html, /id="homeAutomationsCard"/);
   assert.match(html, />Безопасность</);
   assert.match(html, />Автоматизация</);
-  assert.match(html, /чаты, истории и приватность/);
+  assert.match(html, /одно приложение, твоя вселенная/);
 });
 
 test('legacy technical identifiers stay backward compatible', () => {

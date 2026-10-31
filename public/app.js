@@ -79,6 +79,11 @@
   };
 
   const SCREEN_ALIASES = {
+    media: 'media',
+    profile: 'profile',
+    music: 'media',
+    cinema: 'media',
+    books: 'media',
     home: 'home',
     ai: 'ai',
     vetogramai: 'ai',
@@ -1846,7 +1851,7 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = {home:'telegram',chats:'privacy',telegram:'telegram',voice:'ai',archive:'publish',analytics:'ai',viewers:'publish',relay:'ai',ai:'ai',studio:'publish','story-engine':'publish'};
+  const NAV_PARENT = {home:'profile',profile:'profile',media:'media',chats:'privacy',telegram:'telegram',voice:'profile',archive:'publish',analytics:'profile',viewers:'publish',relay:'profile',ai:'profile',studio:'publish','story-engine':'publish'};
   function switchScreen(name) {
     ensureComposerIdentity();
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';

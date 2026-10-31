@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<script src="/vetogram-media-context.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08090d">
+  <meta name="description" content="VETOGRAM CINEMA — независимый кинотеатр Telegram Mini App с открытыми фильмами.">
+  <title>VETOGRAM CINEMA — Мир историй</title>
+  <link rel="icon" href="./veto-telegram-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./cinema.css">
+  <link rel="stylesheet" href="./cinema-premiere.css">
+
+  <script defer src="./cinema-catalog.js"></script>
+  <script defer src="./cinema-russian-audio.js"></script>
+  <script defer src="./cinema-franchises.js"></script>
+  <script defer src="./cinema-featured-200.js"></script>
+  <script defer src="./cinema-foreign-rutube.js"></script>
+  <script defer src="./cinema-series-episodes.js"></script>
+  <script defer src="./cinema-popular-series.js"></script>
+  <script defer src="./cinema-artwork.js"></script>
+  <script defer src="./cinema-provider.js"></script>
+  <script defer src="./cinema.js"></script>
+<link rel="stylesheet" href="/vetogram-media-embedded.css">
+</head>
+<body>
+  <div class="cinema-shell">
+    <header class="cinema-header">
+      <a class="cinema-brand" href="./cinema.html" aria-label="VETOGRAM CINEMA — главная">
+        <img src="./veto-telegram-mark.svg" width="38" height="38" alt="" />
+        <span class="cinema-brand-words"><strong>VETOGRAM <em>CINEMA</em></strong><small>Кино в деталях</small></span>
+      </a>
+      <div class="cinema-header-right">
+        <span class="cinema-kicker">КИНОТЕКА <i class="cinema-status-dot" aria-hidden="true"></i></span>
+        <button class="cinema-icon-btn" type="button" id="cinemaTheme" aria-label="Переключить тему">☼</button>
+      </div>
+    </header>
+    <main>
+      <section class="cinema-hero" id="cinemaHero" aria-label="Главная премьера">
+        <div class="cinema-hero-bg" id="cinemaHeroBackdrop"></div>
+        <div class="cinema-hero-copy">
+          <span class="cinema-eyebrow" id="cinemaHeroEyebrow">ИЗБРАННОЕ · КОЛЛЕКЦИЯ КИНО</span>
+          <h1 id="cinemaHeroTitle">Каждая история<br><i>заслуживает экрана.</i></h1>
+          <p id="cinemaHeroDescription">Большая коллекция русского кино, сериалов и анимации. Выбирай и смотри через официальные видеоплееры.</p>
+          <div class="cinema-hero-actions">
+            <button class="cinema-primary" type="button" id="cinemaHeroWatch">▶ Смотреть фильм</button>
+            <button class="cinema-secondary" type="button" id="cinemaHeroDetails">Подробнее <span>↗</span></button>
+          </div>
+          <div class="cinema-hero-meta" id="cinemaHeroMeta">РУССКАЯ ОЗВУЧКА · КИНО В TELEGRAM</div>
+        </div>
+        <div class="cinema-hero-footer"><div class="cinema-hero-counter" id="cinemaHeroCounter">01 / 05</div><div class="cinema-hero-dots" id="cinemaHeroDots" role="group" aria-label="Выбор фильма"></div><div class="cinema-hero-controls"><button id="cinemaHeroPrev" type="button" aria-label="Предыдущий фильм">←</button><button id="cinemaHeroNext" type="button" aria-label="Следующий фильм">→</button></div></div>
+      </section>
+      <div class="cinema-section-nav">
+        <nav id="cinemaTabs" aria-label="Разделы кинотеатра">
+          <button type="button" class="cinema-tab active" data-tab="home" aria-current="page">⌂ Главная</button>
+          <button type="button" class="cinema-tab" data-tab="foreign">✦ Зарубежное RU</button>
+          <button type="button" class="cinema-tab" data-tab="catalog">◈ Фильмы</button>
+          <button type="button" class="cinema-tab" data-tab="series">▦ Сериалы</button>
+          <button type="button" class="cinema-tab" data-tab="search">⌕ Поиск</button>
+          <button type="button" class="cinema-tab" data-tab="library">♡ Моё</button>
+        </nav>
+      </div>
+      <section class="cinema-search-area" id="cinemaSearchArea">
+        <label class="cinema-search"><span>⌕</span><input type="search" id="cinemaSearch" placeholder="Найти фильм, сериал, актёра или жанр…" maxlength="90" autocomplete="off" aria-label="Поиск фильмов"><button type="button" id="cinemaClear" aria-label="Очистить">×</button></label>
+        <div class="cinema-source-chip" id="cinemaCount" aria-live="polite">Загружаем каталог…</div>
+      </section>
+      <section class="cinema-section cinema-foreign-shelf" id="cinemaForeignShelf" aria-label="Зарубежные фильмы из RUTUBE"><div class="cinema-section-head"><div><span class="cinema-overline">WORLD CINEMA / RUSSIAN AUDIO SEARCH</span><h2>Зарубежное на русском ✦</h2><p>Реальные публикации зарубежных фильмов на RUTUBE. Русский дубляж указан не у всех. Оригинальный просмотр откроется на площадке источника.</p></div><button type="button" class="cinema-shelf-more" id="cinemaForeignAll">Смотреть подборку ↗</button></div><div class="cinema-rail cinema-editorial-rail" id="cinemaForeignRail"></div></section>
+      <section class="cinema-section cinema-foreign-hub hidden" id="cinemaForeignHub" aria-label="Зарубежное кино на русском"><span class="cinema-overline">RUTUBE · FOREIGN MOVIES</span><h2>Зарубежные фильмы. Русская озвучка.</h2><p>Здесь собраны настоящие публикации с RUTUBE. Чтобы не выдавать чужие загрузки за разрешённые видеопотоки, мы открываем оригинальный источник. Язык и права конкретной публикации требуют проверки.</p><label class="cinema-foreign-filter"><input id="cinemaForeignIncludeUnverified" type="checkbox"> Показывать также фильмы без заявленного дубляжа</label><div id="cinemaForeignNote" class="cinema-franchise-note" role="status"></div></section>
+      <section id="cinemaLatest" class="cinema-section cinema-editorial" aria-label="Недавно добавленные фильмы"><div class="cinema-section-head"><div><span class="cinema-overline">НОВОЕ / ФИЛЬМЫ И СЕРИАЛЫ</span><h2>Только что в коллекции <span class="cinema-heading-mark">✳</span></h2><p>Свежие публикации официальных видеоканалов</p></div><span class="cinema-shelf-label" id="cinemaSyncStatus">Обновляем каталог</span></div><div class="cinema-rail cinema-editorial-rail" id="cinemaLatestRail"></div></section>
+      <section id="cinemaGenresSection" class="cinema-section cinema-categories" aria-label="Выбор жанров"><div class="cinema-section-head"><div><span class="cinema-overline">НАЙДИ СВОЮ ИСТОРИЮ</span><h2>Какое кино сегодня?</h2></div></div><div id="cinemaGenreTiles" class="cinema-genre-tiles"></div></section>
+      <section id="cinemaSeries" class="cinema-section cinema-editorial" aria-label="Сериалы"><div class="cinema-section-head"><div><span class="cinema-overline">СЕРИАЛЫ / ИСТОРИИ</span><h2>Сериалы, которые затягивают</h2></div></div><div class="cinema-rail cinema-editorial-rail" id="cinemaSeriesRail"></div></section>
+      <section id="cinemaSeriesHub" class="cinema-section cinema-series-hub hidden" aria-label="Сериалы на русском — выбор и просмотр">
+        <div class="cinema-series-intro">
+          <span class="cinema-overline">СЕРИАЛЫ / НА РУССКОМ</span>
+          <h2>Сериалы. Все истории — здесь.</h2>
+          <p>Сериалы из официальных видеоархивов с исходными плеерами. Здесь нет карточек, которые ведут к неподключённым подпискам.</p>
+          <div id="cinemaSeriesStats" class="cinema-series-stats">Загружаем коллекцию…</div>
+        </div>
+        <div class="cinema-series-hub-panel">
+          <div class="cinema-section-head"><div><span class="cinema-overline">КИНО / ОРИГИНАЛЬНЫЕ ПЛЕЕРЫ</span>
+            <h2>Смотреть серии</h2>
+            <p>Официальные сериальные публикации с исходным встроенным видеоплеером.</p></div></div>
+          <div id="cinemaSeriesPlayableRail" class="cinema-rail cinema-editorial-rail cinema-series-playable-rail"></div>
+        </div>
+        <div class="cinema-section cinema-series-popular">
+          <div class="cinema-section-head"><div><span class="cinema-overline">ПОПУЛЯРНОЕ / МИРОВОЕ КИНО</span><h2>Популярные зарубежные сериалы</h2><p>Русская дорожка указана в каталогах отдельных провайдеров. Встроенного просмотра этих проектов в Cinema пока нет — не показываем ложную кнопку Play.</p></div></div>
+          <div id="cinemaSeriesPopularRail" class="cinema-rail cinema-editorial-rail cinema-series-popular-rail"></div>
+        </div>
+      </section>
+      <section id="cinemaAnimations" class="cinema-section cinema-editorial" aria-label="Мультфильмы"><div class="cinema-section-head"><div><span class="cinema-overline">ДЛЯ СЕМЬИ / АНИМАЦИЯ</span><h2>Для всей семьи <span class="cinema-heading-mark">✦</span></h2></div></div><div class="cinema-rail cinema-editorial-rail" id="cinemaAnimationsRail"></div></section>
+      <section id="cinemaFranchises" class="cinema-section cinema-franchises" aria-label="Большие кинофраншизы">
+        <div class="cinema-section-head"><div>
+          <span class="cinema-overline">ВСЕЛЕННЫЕ / КИНОГИДЫ</span>
+          <h2>Киновселенные <span class="cinema-heading-mark">✦</span></h2>
+          <p>Marvel, Гарри Поттер, Люди Икс и Человек-паук. Фильмы с официальными вариантами просмотра по регионам.</p>
+        </div></div>
+        <div class="cinema-universe-switch" id="cinemaFranchiseTabs" role="group" aria-label="Выбрать киновселенную">
+          <button type="button" class="cinema-universe-tab active" data-franchise="mcu" aria-pressed="true">Marvel · MCU</button>
+          <button type="button" class="cinema-universe-tab" data-franchise="potter" aria-pressed="false">Гарри Поттер</button>
+          <button type="button" class="cinema-universe-tab" data-franchise="legacy" aria-pressed="false">Люди Икс / Spider-Man</button>
+        </div>
+        <label class="cinema-russian-filter"><input type="checkbox" id="cinemaFranchiseAllLanguages" aria-label="Показать фильмы без подтверждённой русской озвучки"> Показать все названия, включая фильмы без подтверждённой русской дорожки</label>
+        <p id="cinemaFranchiseNote" class="cinema-franchise-note">Карточки для поиска официального просмотра. Не каждый фильм доступен в нашем встроенном плеере.</p>
+        <div class="cinema-rail cinema-editorial-rail cinema-franchise-rail" id="cinemaFranchiseRail"></div>
+      </section>
+      <section id="cinemaRussian" class="cinema-section cinema-russian-section" aria-label="Кино на русском"><div class="cinema-section-head"><div><span class="cinema-overline">ЛЕГЕНДАРНАЯ КЛАССИКА</span><h2>Кино, к которому возвращаются <span class="cinema-ru-symbol">↗</span></h2><p>Полнометражное кино с русской дорожкой от официальных видеоканалов.</p></div><span class="cinema-rail-label">VETOGRAM / ВЫБОР РЕДАКЦИИ</span></div><div class="cinema-rail cinema-russian-rail" id="cinemaRussianRail"></div></section>
+      <section id="cinemaStudios" class="cinema-section cinema-studios" aria-label="Киноархивы киностудий">
+        <div class="cinema-section-head">
+          <div>
+            <span class="cinema-overline">КОЛЛЕКЦИЯ / ОФИЦИАЛЬНЫЕ ИСТОЧНИКИ</span>
+            <h2>От киностудий — на твой экран</h2>
+            <p>Выбери киностудию и продолжай открывать фильмы, серии и мультфильмы.</p>
+          </div>
+        </div>
+        <div id="cinemaStudioTabs" class="cinema-studio-tabs" role="group" aria-label="Выбрать киностудию">
+          <button type="button" class="cinema-studio-tab active" data-studio="mosfilm">Мосфильм</button>
+          <button type="button" class="cinema-studio-tab" data-studio="lenfilm">Ленфильм</button>
+          <button type="button" class="cinema-studio-tab" data-studio="gorky">Киностудия Горького</button>
+          <button type="button" class="cinema-studio-tab" data-studio="starmedia">Star Media</button>
+          <button type="button" class="cinema-studio-tab" data-studio="marsmedia">Марс Медиа</button>
+          <button type="button" class="cinema-studio-tab" data-studio="soyuzmultfilm">Союзмультфильм</button>
+        </div>
+        <p id="cinemaStudioStatus" class="cinema-studio-status" role="status">Подключаем официальные киноархивы…</p>
+        <div id="cinemaStudioGrid" class="cinema-grid cinema-studio-grid"></div>
+        <button id="cinemaStudioMore" type="button" class="cinema-more hidden">Показать ещё фильмы ↓</button>
+        <a id="cinemaStudioOfficial" class="cinema-studio-link" href="https://rutube.ru/channel/25963146/" target="_blank" rel="noopener noreferrer">Открыть оригинальный канал киностудии ↗</a>
+      </section>
+      <section class="cinema-section cinema-alternative-sources" aria-label="Другие официальные киноархивы">
+        <div class="cinema-section-head"><div><span class="cinema-overline">ДРУГИЕ ОФИЦИАЛЬНЫЕ ИСТОЧНИКИ</span><h2>Другие места для просмотра</h2>
+          <p>Дополнительные официальные каналы киностудий. Открываются на площадке владельца; доступность зависит от страны.</p>
+        </div></div>
+        <div class="cinema-alternative-links">
+          <a href="https://www.youtube.com/MosfilmRuOfficial" target="_blank" rel="noopener noreferrer"><strong>Мосфильм · YouTube</strong><small>Фильмы и реставрации в HD/4K ↗</small></a>
+          <a href="https://vk.com/mosfilm_official" target="_blank" rel="noopener noreferrer"><strong>Мосфильм · VK Видео</strong><small>Официальная фильмотека ↗</small></a>
+          <a href="https://www.youtube.com/channel/UCm5U4zqpahzyNXBv5ZT51Jw" target="_blank" rel="noopener noreferrer"><strong>Мосфильм · фильмы с субтитрами</strong><small>Международный YouTube-канал ↗</small></a>
+        </div>
+      </section>
+      <section id="cinemaContinue" class="cinema-section hidden"><div class="cinema-section-head"><div><span class="cinema-overline">ТВОИ ИСТОРИИ</span><h2>Продолжить просмотр</h2></div></div><div class="cinema-rail" id="cinemaContinueList"></div></section>
+      <section class="cinema-section" id="cinemaBrowse">
+        <div class="cinema-section-head"><div><span class="cinema-overline" id="cinemaSectionKicker">200 ФИЛЬМОВ / ОТКРЫВАЙ</span><h2 id="cinemaSectionTitle">200 фильмов уже в Cinema</h2><p id="cinemaSectionDescription">Полнометражные фильмы на русском из официальных видеоархивов — настоящие карточки, кадры и исходные плееры.</p></div></div>
+        <div class="cinema-browse-toolbar">
+          <div class="cinema-chips" id="cinemaGenres" role="group" aria-label="Жанры"></div>
+          <label class="cinema-sort-label" for="cinemaSort">Сортировка
+            <select id="cinemaSort" aria-label="Сортировка каталога">
+              <option value="recent">Недавно добавленные</option>
+              <option value="year">По году выпуска</option>
+              <option value="title">По названию</option>
+            </select>
+          </label>
+        </div>
+        <div class="cinema-grid" id="cinemaGrid" aria-live="polite"></div>
+        <div class="cinema-browse-actions">
+          <button class="cinema-more hidden" id="cinemaMoreResults" type="button">Показать ещё из найденного ↓</button>
+          <button class="cinema-more" id="cinemaMoreStudios" type="button">Загрузить следующую подборку из шести архивов ↓</button>
+          <p id="cinemaArchiveStatus" class="cinema-archive-status" role="status">Доступны следующие страницы архивов. Загружаем по запросу, не расходуя трафик впустую.</p>
+        </div>
+        <button class="cinema-more hidden" id="cinemaLoadMore" type="button">Загрузить ещё из партнёрского каталога ↓</button>
+        <p class="cinema-empty hidden" id="cinemaEmpty">Фильмы не найдены. Попробуй другой запрос.</p>
+      </section>
+      <section class="cinema-trust"><span>✦ ОФИЦИАЛЬНЫЕ ПЛЕЕРЫ</span><p>Смотрим фильмы во встроенном плеере официального канала правообладателя или открытого архива. Видеофайлы на наши серверы не загружаются. Доступность зависит от источника, региона и правил встраивания.</p><a href="https://studio.blender.org/films/" target="_blank" rel="noopener noreferrer">Коллекция Blender Studio ↗</a></section>
+    </main>
+  </div>
+  <nav class="cinema-bottom" aria-label="Мобильная навигация" id="cinemaBottom">
+    <button type="button" class="active" data-tab="home"><span>⌂</span><small>Главная</small></button>
+    <button type="button" data-tab="catalog"><span>◈</span><small>Фильмы</small></button>
+    <button type="button" data-tab="series"><span>▦</span><small>Сериалы</small></button>
+    <button type="button" data-tab="foreign"><span>✦</span><small>Зарубежное</small></button>
+    <button type="button" data-tab="library"><span>♡</span><small>Моё</small></button>
+  </nav>
+  <section class="cinema-overlay hidden" id="cinemaDetails" role="dialog" aria-modal="true" aria-label="Информация о фильме">
+    <div class="cinema-sheet">
+      <button class="cinema-close" type="button" id="cinemaDetailsClose" aria-label="Закрыть">×</button>
+      <div class="cinema-sheet-art" id="cinemaDetailsArt"></div>
+      <div class="cinema-sheet-info"><div class="cinema-overline">VETOGRAM / О ФИЛЬМЕ</div><h2 id="cinemaDetailsTitle"></h2><div class="cinema-film-meta" id="cinemaDetailsMeta"></div><p class="cinema-synopsis" id="cinemaDetailsSynopsis"></p>
+        <div id="cinemaEpisodeChooser" class="cinema-episode-chooser hidden"><div class="cinema-episode-head"><strong>Сезоны и серии</strong><span id="cinemaEpisodeCount">Выбери серию</span></div><div id="cinemaSeasonTabs" class="cinema-season-tabs" role="group" aria-label="Выбрать сезон"></div><div id="cinemaEpisodeGrid" class="cinema-episode-grid"></div></div>
+        <div class="cinema-sheet-actions"><button type="button" class="cinema-primary" id="cinemaDetailsWatch">▶ Смотреть</button><button type="button" class="cinema-secondary" id="cinemaDetailsFavorite">♡ В избранное</button><button type="button" class="cinema-secondary" id="cinemaDetailsShare">Поделиться ↗</button></div>
+        <div class="cinema-license"><p id="cinemaDetailsCreator"></p><p id="cinemaDetailsLanguage"></p><a id="cinemaDetailsSource" href="#" target="_blank" rel="noopener noreferrer">Оригинальный файл ↗</a><a id="cinemaDetailsLicense" href="#" target="_blank" rel="noopener noreferrer">Лицензия ↗</a></div>
+      </div>
+    </div>
+  </section>
+  <section class="cinema-player-overlay hidden" id="cinemaPlayer" role="dialog" aria-modal="true" aria-label="Видеоплеер">
+    <div class="cinema-player-shell">
+      <header><button type="button" id="cinemaPlayerClose" class="cinema-back">← Назад</button><strong id="cinemaPlayerTitle"></strong><span>VETOGRAM CINEMA</span></header>
+      <div class="cinema-source-switch" id="cinemaSourceSwitch"><label for="cinemaProviderSelect">ПЛЕЕР / ОЗВУЧКА</label><select id="cinemaProviderSelect" aria-label="Выбрать доступный видеоплеер или озвучку"><option value="0">Автоматически</option></select><span id="cinemaProviderHint" aria-live="polite">Выберите доступный источник</span></div>
+      <div class="cinema-video-wrap" id="cinemaVideoWrap"><video id="cinemaVideo" controls playsinline preload="metadata" aria-label="Видеофильм"></video><div class="cinema-loading" id="cinemaPlayerMessage" role="status">Загружаем видео…</div></div>
+      <div class="cinema-video-toolbar" id="cinemaVideoToolbar">
+        <button type="button" id="cinemaRewind">↶ 10 сек.</button><button type="button" id="cinemaForward">10 сек. ↷</button>
+        <label>Скорость <select id="cinemaSpeed" aria-label="Скорость воспроизведения"><option value=".75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+        <label>Качество <select id="cinemaQuality" aria-label="Качество видео"><option value="0">Авто</option></select></label>
+        <label>Звук <select id="cinemaAudio" aria-label="Язык озвучки"><option value="original">Оригинал</option></select></label>
+        <button type="button" id="cinemaPip">Картинка в картинке</button><button type="button" id="cinemaFullscreen">⛶ Экран</button>
+      </div>
+      <div id="cinemaSubtitleStatus" class="cinema-subtitle-status">Русские субтитры появятся автоматически, если доступны в источнике.</div>
+      <p class="cinema-player-source"><a href="#" class="cinema-original-source" id="cinemaOpenSource" target="_blank" rel="noopener noreferrer">↗ Открыть видео у источника</a><span id="cinemaPlayerCredit"></span> <a href="#" target="_blank" rel="noopener noreferrer" id="cinemaPlayerSource">Источник и права ↗</a></p>
+    </div>
+  </section>
+  <div class="cinema-toast" id="cinemaToast" role="status" aria-live="polite"></div>
+
+<script src="/vetogram-media-bridge.js" defer></script>
+</body>
+</html>

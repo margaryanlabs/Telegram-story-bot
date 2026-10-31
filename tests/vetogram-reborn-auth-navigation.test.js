@@ -64,15 +64,16 @@ test('server preserves outstanding code challenge and does not imply delivered S
   assert.match(repoApi,/delivery: auth\.delivery/);
 });
 
-test('four real destinations include AI and retain secondary routes',()=>{
+test('five real destinations retain AI as a secondary route',()=>{
   const nav=html.split('<nav class="bottom-nav')[1]?.split('</nav>')[0];
   assert.ok(nav,'bottom navigation missing');
   const tabs=[...nav.matchAll(/class="nav-item(?: [^"]*)?" data-nav="([^"]+)"/g)]
     .map(matches=>matches[1]);
-  assert.deepEqual(tabs,['telegram','publish','ai','privacy']);
+  assert.deepEqual(tabs,['telegram','publish','media','privacy','profile']);
   assert.match(html,/id="vetoNavHome"/);
   assert.match(app,/vetoNavHome'\)\?\.addEventListener/);
-  assert.match(app,/ai:'ai'/);
+  assert.match(app,/ai:'profile'/);
+  assert.match(app,/ai: 'ai'/);
   assert.match(app,/'story-engine':'publish'/);
   assert.match(html,/data-vg26-destination="story-engine"/);
   assert.match(html,/data-vg26-destination="voice"/);
