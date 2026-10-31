@@ -125,3 +125,35 @@
 .vp-screen .vp-developer-links a{font-size:12px;font-weight:800;color:#f1b8a7;text-decoration:underline;text-underline-offset:3px}
 .vp-screen .vp-developer small{display:block;color:#958992;font-size:10px;line-height:1.5}
 @media(max-width:490px){.vp-screen .vp-developer{grid-template-columns:1fr;padding:19px;gap:13px}.vp-screen .vp-developer-orb{width:66px;height:66px;font-size:22px;border-radius:17px}.vp-screen .vp-developer h2{font-size:20px}}
+
+
+/* Play Store curation layer: calm controls that don't dominate the game boards. */
+.vp-screen .vp-store-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.vp-screen .vp-store-actions button{min-height:33px;border-radius:10px;border:1px solid rgba(230,181,169,.23);background:rgba(255,255,255,.055);color:#e8d3cd;font-size:11px;font-weight:750;padding:6px 10px;cursor:pointer}
+.vp-screen .vp-store-actions .vp-store-fav[aria-pressed="true"]{background:rgba(234,167,145,.17);color:#ffddca;border-color:rgba(240,179,152,.45)}
+.vp-screen .vp-store-actions button:focus-visible{outline:2px solid #e6ab98;outline-offset:2px}
+.vp-screen .vp-catalog-status{min-height:0;font-size:11px;line-height:1.45;color:var(--vp-accent,#f6a58a);margin:0}
+.vp-screen .vp-catalog-status:empty{display:none}
+.vp-screen .vp-share-panel{background:var(--surface,#201c22);border:1px solid var(--line,rgba(255,255,255,.13));padding:13px;border-radius:15px;display:grid;gap:7px}
+.vp-screen .vp-share-panel label{font-size:12px;font-weight:800;color:var(--text,#f4ece8)}
+.vp-screen .vp-share-line{display:flex;align-items:center;gap:6px}
+.vp-screen .vp-share-line input{flex:1;min-width:0;background:var(--card,#2a242c);color:var(--text,#f7f2ef);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:11px;padding:10px;font-size:12px}
+.vp-screen .vp-share-line button{flex:none}
+.vp-screen .vp-share-line .vp-share-close{height:37px;width:34px;border-radius:10px;border:1px solid var(--line,rgba(255,255,255,.15));color:var(--text,#fff);background:var(--card,#29242a);font-size:22px}
+.vp-screen .vp-share-panel p{font-size:11px;color:var(--muted,#b9acb3);margin:0;line-height:1.5}
+.vp-screen .vp-incoming-target{outline:2px solid #d89a85;outline-offset:3px}
+.vp-screen .vp-dev-details{margin-top:13px;border-top:1px solid rgba(255,255,255,.12);padding-top:11px}
+.vp-screen .vp-dev-details summary{font-weight:800;color:#f3c0ae;font-size:12px;cursor:pointer;padding:7px 0;list-style-position:inside}
+.vp-screen .vp-dev-details summary:focus-visible{outline:2px solid #f3c0ae;outline-offset:2px}
+.vp-screen .vp-dev-form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:13px}
+.vp-screen .vp-dev-form label{font-size:11px;font-weight:750;color:#e3d1d2;display:grid;gap:5px;min-width:0}
+.vp-screen .vp-dev-form label:nth-child(2),.vp-screen .vp-dev-form label:nth-child(4){grid-column:1/-1}
+.vp-screen .vp-dev-form input,.vp-screen .vp-dev-form textarea,.vp-screen .vp-dev-form select{width:100%;min-width:0;background:#29242c;border:1px solid #4a3e48;border-radius:10px;padding:10px;font:12px system-ui,sans-serif;color:#f6edef;min-height:39px}
+.vp-screen .vp-dev-form textarea{resize:vertical;min-height:88px;line-height:1.45}
+.vp-screen .vp-dev-form :is(input,textarea,select):focus-visible{outline:2px solid #eba999;outline-offset:1px}
+.vp-screen .vp-dev-form button{justify-self:start;grid-column:1/-1}
+.vp-screen .vp-dev-disclaimer{font-size:10px!important;margin-top:12px!important}
+.vp-screen .vp-dev-result{display:inline-flex!important;width:max-content;max-width:100%;padding:10px;margin-top:12px;border-radius:10px;background:#b98076;color:#180f13!important;font-weight:850!important;text-decoration:none!important}
+.vp-screen .vp-dev-result[hidden]{display:none!important}
+.vp-screen .vp-dev-status{margin-top:8px!important;color:#e6c1ae!important;font-size:11px!important}
+@media(max-width:390px){.vp-screen .vp-share-line{flex-wrap:wrap}.vp-screen .vp-share-line input{flex:1 0 100%}.vp-screen .vp-dev-form{grid-template-columns:1fr}.vp-screen .vp-dev-form label{grid-column:1/-1}}
