@@ -8,10 +8,10 @@ const html=read('studio.html');
 const pages=['studio.html','music-module.html','cinema.html','books.html'];
 
 test('every local JS/CSS/image/font referenced by all Universe entry pages exists',()=>{
- const asset=/\b(?:src|href)\s*=\s*["'](\/[A-Za-z0-9/_-]+\.(?:js|css|svg|png|webp|ico|woff2?))(?:\?[^"']*)?["']/gi;
+ const asset=/\b(?:src|href)\s*=\s*["']((?:\/|\.\/)[A-Za-z0-9/_-]+\.(?:js|css|svg|png|webp|ico|woff2?))(?:\?[^"']*)?["']/gi;
  let total=0;
  for(const page of pages){
-  const found=[...read(page).matchAll(asset)].map(x=>x[1]);
+  const found=[...read(page).matchAll(asset)].map(x=>x[1].replace(/^\.\//,'/'));
   assert.ok(found.length>3,'no scanned assets on '+page);
   for(const path of found){
    assert.ok(existsSync(new URL('../public'+path,import.meta.url)),'missing '+path+' referenced by '+page);
