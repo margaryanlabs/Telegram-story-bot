@@ -8,12 +8,15 @@ const start=api.indexOf('async function ghostDiagnostics(token, userId) {');
 const end=api.indexOf('function transientStoreError(',start);
 assert.ok(start>=0&&end>start);
 const diagnosticsCode=api.slice(start,end);
-function fixture({deleted=false,webhook=true,enabled=true,archiveReady=true}={}){
+function fixture({deleted=false,webhook=true,enabled=true,archiveReady=true,connectionOwner='owner-telegram-id',connectionId='owner-business-connection',telegramUnavailable=false}={}){
   const tg=async (_token,method)=>{
     if(method==='getWebhookInfo')
       return webhook?{url:'https://example.com/api/webhook-v8',pending_update_count:0}:{url:''};
-    if(method==='getBusinessConnection')
-      return {is_enabled:enabled,rights:{can_manage_stories:true,can_read_messages:true}};
+    if(method==='getBusinessConnection') {
+      if(telegramUnavailable) throw new Error('Telegram connection verification unavailable');
+      return {id:connectionId,user:{id:connectionOwner},is_enabled:enabled,
+        rights:{can_manage_stories:true,can_read_messages:true}};
+    }
     return null;
   };
   const fn=new Function('getPrivacySettings','viewerStoreHealth','listDeletedFeed','tg',
@@ -61,4 +64,19 @@ test('UI distinguishes configured vs proven, never creates synthetic deletion',(
   assert.match(client,/Self-Test не подделывает Telegram delete event/);
   assert.match(client,/Telegram delete event/);
   assert.doesNotMatch(diagnosticsCode,/createDeleteEvent|synthesizeDelete|fakeDelete/);
+});
+
+test('stale stored connection never counts as verified when live Bot API fails',async()=>{
+  const result=await fixture({deleted:true,telegramUnavailable:true});
+  assert.equal(result.status,'attention');
+  assert.equal(result.checks.business.ok,false);
+  assert.equal(result.business.verifiedNow,false);
+});
+test('Bot API owner or Business ID mismatch cannot certify another account',async()=>{
+  for(const settings of [{connectionOwner:'another-user'},{connectionId:'another-connection'}]){
+    const result=await fixture({deleted:true,...settings});
+    assert.equal(result.status,'attention');
+    assert.equal(result.checks.business.ok,false);
+    assert.equal(result.business.verifiedNow,false);
+  }
 });
