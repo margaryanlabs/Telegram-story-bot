@@ -145,7 +145,9 @@ function playTrack(track,collection){
    send("Для включения звука нажми Play в нижнем плеере.");
    syncPlayer();return;
   }
+  const trackId=state.now?.id||null;
   clearFailedTrack();
+  document.dispatchEvent(new CustomEvent("vetogram:audio-error",{detail:{trackId}}));
   send("Поток недоступен или формат не поддерживается. Выбери другой источник.");
  });
  state.playRequested=true;
@@ -205,9 +207,10 @@ function syncPlayer(){
 for(const event of ["play","pause","ended","durationchange","timeupdate","loadedmetadata","waiting","error"])audio.addEventListener(event,()=>{
  if(event==="ended")next(1,true);
  if(event==="error"&&audio.error&&audio.src){
+  const trackId=state.now?.id||null;
   clearFailedTrack();
   send("Источник не отдаёт воспроизводимый поток.");
-  document.dispatchEvent(new CustomEvent("vetogram:audio-error"));
+  document.dispatchEvent(new CustomEvent("vetogram:audio-error",{detail:{trackId}}));
  }
  syncPlayer();
 });
