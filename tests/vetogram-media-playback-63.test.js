@@ -34,7 +34,9 @@ test('music home mounts real on-demand player buttons and hides failures rather 
   assert.ok(musicHtml.indexOf('vetogram-music-mixter-seeds.js')<musicHtml.indexOf('vetogram-music-licensed-home-63.js'));
   assert.match(musicHome,/V\.play\(t,playable\(\)\)/);
   assert.match(musicHome,/vetogram:audio-error/);
-  assert.match(musicHome,/unavailable\.add\(id\);render\(\)/);
+  assert.match(musicHome,/unavailable\.add\(id\)/);
+  assert.match(musicHome,/vetogram:audio-playing/);
+  assert.match(musicHome,/pendingTimer=setTimeout/);
   assert.match(musicCore,/detail:\{trackId\}/);
   assert.match(musicHome,/licensed-home-license/);
 });
@@ -83,4 +85,25 @@ test('124 validated Wikisource IDs are unique and full readers keep the chapter 
   assert.match(api,/const MAX_CHAPTERS = 600/);
   assert.match(books,/indexedParts/);
   assert.match(books,/verifiedSourceBytes/);
+});
+
+test('Cinema player requires actual RUTUBE playStart or playing, not iframe ready, for success',()=>{
+  const provider=read('public/cinema-provider.js');
+  assert.match(provider,/message\.type === "player:ready"/);
+  assert.match(provider,/onReady\(\)/);
+  assert.match(provider,/message\.type === "player:playStart"/);
+  assert.match(provider,/onEvent\(\{type:"playStarted"\}\)/);
+  assert.match(cinema,/event\.type==="playStarted"/);
+  assert.match(cinema,/failedEmbeds\.add\(f\.id\)/);
+  assert.match(cinema,/failedEmbeds\.has\(f\.id\)/);
+  assert.match(cinema,/Плеер готов\. Нажмите ▶/);
+  assert.match(cinema,/Начало просмотра|начало просмотра|начать фильм|не подтверждено/i);
+});
+test('series genre controls are sourced only from authorized embedded series episodes',()=>{
+  assert.match(cinemaHtml,/id="cinemaSeriesGenres"/);
+  assert.match(cinema,/seriesGenre:"Все"/);
+  assert.match(cinema,/function renderSeriesCollections\(\)/);
+  assert.match(cinema,/const genres=\["Все",\.\.\.new Set\(groups\.flatMap/);
+  assert.match(cinema,/groups\.filter\(g=>/);
+  assert.match(cinema,/groupedSeries\(\)/);
 });
