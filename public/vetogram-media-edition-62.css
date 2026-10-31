@@ -284,3 +284,13 @@ body:has(#playerBar) .licensed-home-more{
   body:has(#playerBar) .licensed-home-section{padding:16px 11px}
   body:has(#playerBar) .licensed-home-tracks{grid-template-columns:1fr}
 }
+
+
+/* Playback-first release: non-licensed film/discovery tabs are not navigable. */
+body:has(#cinemaPlayer) :is([data-tab="foreign"],#cinemaForeignShelf,#cinemaForeignHub,#cinemaFranchises){
+  display:none!important;
+}
+/* Hide dead empty player cards; never make the actor hunt for an external link. */
+body:has(#cinemaPlayer) .cinema-watch-card{
+  position:relative;cursor:pointer;
+}
