@@ -1731,6 +1731,13 @@
             <div class="vp-memory-actions"><span id="vp2048Status" class="vp-mini-stat" role="status" aria-live="polite">Соединяй плитки.</span><button class="vp-button ghost" type="button" id="vp2048Reset">Заново ↺</button></div>
           </article>
         </div>
+        <dialog id="vpGameDialog" class="vp-game-dialog" aria-label="Игровой режим">
+          <header class="vp-game-dialog-header">
+            <span>VETOGRAM / PLAY</span>
+            <button id="vpGameClose" type="button" aria-label="Закрыть игру">Закрыть ×</button>
+          </header>
+          <div id="vpGameMount" class="vp-game-dialog-mount"></div>
+        </dialog>
         <section class="vp-developer" aria-labelledby="vpDevTitle">
           <div class="vp-developer-orb" aria-hidden="true">{ }</div>
           <div>
@@ -1826,5 +1833,6 @@
   <script src="/vetogram-play-arcade.js?v=20261031-play-arcade-v2" defer></script>
   <script src="/vetogram-play-store.js?v=20261031-play-store-v1" defer></script>
   <script src="/vetogram-play-developer.js?v=20261031-play-dev-v1" defer></script>
+  <script src="/vetogram-play-runner.js?v=20261031-play-runner-v1" defer></script>
 </body>
 </html>
