@@ -895,7 +895,10 @@
 
     const { response, data } = await requestJson(`/api/viewer-sync${query}`, options, {
       retry: !action,
-      timeoutMs: 18000,
+      // Code generation includes MTProto connect, an RPC, and encrypted
+      // challenge persistence. Do not abort the browser before the server.
+      // Never automatically retry a SendCode request after a timeout.
+      timeoutMs: action==='send_code' ? 34000 : 18000,
     });
 
     if (epoch!==viewerOwnerEpoch || signedOwner!==String(tg?.initData||''))
