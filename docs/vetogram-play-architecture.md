@@ -75,3 +75,14 @@ Use report/skip controls for provocative party questions and rate-limit anonymou
 - `public/vetogram-play-runner.js`: users launch any of the four local games in a **focused native dialog**, which mounts the existing live DOM node, keeps its handlers/state, and restores the card to its original location after Close/Escape/navigation. External games are **not** embedded by this mechanism.
 - All additional game scripts and tests are part of the branch; full Node test suite and Telegram device QA are still required before merging or publishing.
 - No Neon connection or production schema modification, GitHub main merge, deployment, or real public creator marketplace has occurred.
+
+## Isolated online Tic-Tac-Toe rooms (new, not activated)
+
+See [room setup and QA guide](vetogram-play-online-rooms.md).
+
+- Server state machine, signed room code, guest join, X/O move validation and winner/draw logic.
+- One-room persistence adapter using version-guarded Neon HTTP SQL queries, with a six-hour expiry and server-authoritative board.
+- Dedicated `/api/play-room` handler reuses the existing Telegram Mini App HMAC validator. Access is limited to authenticated participants, not public spectators. The game does not access Telegram chats or Business data.
+- Play Hub has a gated room UI, manual join with a code, sharing link and a read-only state refresh every four seconds while visible.
+- **No Neon migration was applied and no deployment was performed.** With `VETOGRAM_PLAY_DATABASE_URL` absent, the UI reports the feature unavailable; it does not claim active multiplayer.
+- Unit coverage added for rules, room state transition, fake-Neon optimistic updates, invalid authentication and missing database configuration. Full repository test execution remains a release prerequisite.
