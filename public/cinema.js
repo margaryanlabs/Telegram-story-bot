@@ -8,7 +8,7 @@
   const LIBRARY_KEY="vetogram.cinema.library.v1:"+(window.VetogramMediaContext?.scope||"device");
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
-  const state={tab:"home",genre:"Все",query:"",sort:"recent",visible:100,showUnverified:false,foreignIncludeUnverified:false,selected:null,playing:null,request:0,
+  const state={tab:"home",genre:"Все",seriesGenre:"Все",query:"",sort:"recent",visible:100,showUnverified:false,foreignIncludeUnverified:false,selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
@@ -467,7 +467,7 @@
   function groupedSeries(){
     const shows=new Map();
     for(const film of films){
-      if(film.contentType!=="Сериалы"||film.player?.licensed!==true)continue;
+      if(film.contentType!=="Сериалы"||film.player?.licensed!==true||failedEmbeds.has(film.id))continue;
       const name=seriesShowName(film), key=name.toLocaleLowerCase("ru");
       if(!shows.has(key))shows.set(key,[]);
       shows.get(key).push(film);
@@ -553,12 +553,23 @@
     const groups=groupedSeries();
     $("cinemaSeriesHub").classList.toggle("hidden",state.tab!=="series");
     if(state.tab==="series"){
-      renderPopularSeries();
+      // Categories derive exclusively from real playable studio episodes.
+      const genres=["Все",...new Set(groups.flatMap(group=>group.flatMap(f=>f.genres||[])))];
+      if(!genres.includes(state.seriesGenre))state.seriesGenre="Все";
+      const controls=$("cinemaSeriesGenres");
+      if(controls)controls.replaceChildren(...genres.map(genre=>{
+        const button=node("button","cinema-chip"+(state.seriesGenre===genre?" active":""));
+        button.type="button";button.textContent=genre;
+        button.setAttribute("aria-pressed",String(state.seriesGenre===genre));
+        button.addEventListener("click",()=>{state.seriesGenre=genre;renderSeriesCollections()});
+        return button;
+      }));
       const q=state.query.trim().toLocaleLowerCase("ru");
-      const visible=q?groups.filter(g=>seriesShowName(g[0]).toLocaleLowerCase("ru").includes(q)):groups;
+      const visible=groups.filter(g=>(!q||seriesShowName(g[0]).toLocaleLowerCase("ru").includes(q))&&
+        (state.seriesGenre==="Все"||g.some(f=>(f.genres||[]).includes(state.seriesGenre))));
       $("cinemaSeriesPlayableRail").replaceChildren(...visible.slice(0,80).map(seriesShowCard));
       const count=visible.reduce((sum,g)=>sum+g.length,0);
-      text("cinemaSeriesStats",count+" реальных видео · "+groups.length+" сериалов · обложки, сезоны и серии");
+      text("cinemaSeriesStats",count+" оригинальных видеозаписей · "+visible.length+" сериалов · сезон и серия выбираются внутри");
     }
   }
   function refreshDiscovery(){
