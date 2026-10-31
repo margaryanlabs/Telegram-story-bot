@@ -411,7 +411,9 @@
     const foreign=films.filter(f=>f.externalRutube).slice(0,8);
     const recents=films.filter(f=>f.player&&f.contentType!=="Сериалы"&&Number(f.minutes)>=35)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
-    const all=[...foreign,...recents,...films.filter(f=>f.player&&Number(f.minutes)>=40)];
+    // Lead with films which actually have an in-app player. The foreign
+    // discovery cards may only have an external source URL.
+    const all=[...recents,...films.filter(f=>f.player&&Number(f.minutes)>=40),...foreign];
     const used=new Set(),deck=[];
     for(const film of all) {
       if(used.has(film.id))continue;
@@ -591,8 +593,48 @@
     }
     updateHeroDeck();
   }
+  // A truly one-tap shelf. Foreign/discovery-only titles cannot masquerade
+  // as playable films; every entry must have a first-party-approved embed.
+  function renderWatchNow(){
+    const host=$("cinemaWatchNowRail"),section=$("cinemaWatchNow");
+    if(!host||!section)return;
+    const live=films.filter(f=>{
+      if(f.externalRutube||f.discoveryOnly||f.contentType==="Сериалы")return false;
+      if(!f.player||f.player.licensed!==true||f.player.type!=="iframe")return false;
+      try{
+        const url=new URL(f.player.url);
+        return url.origin==="https://rutube.ru"&&
+          /^\/play\/embed\/[a-f0-9]{32}$/i.test(url.pathname)&&
+          Number(f.minutes)>=35;
+      }catch{return false}
+    }).sort((a,b)=>uploadTime(b)-uploadTime(a));
+    section.classList.toggle("hidden",state.tab!=="home"||Boolean(state.query.trim())||!live.length);
+    if(section.classList.contains("hidden"))return;
+    const unique=new Set(),choices=[];
+    for(const movie of live){
+      const normalized=String(movie.title||"").toLocaleLowerCase("ru").replace(/[^а-яёa-z0-9]/g,"").slice(0,90);
+      if(unique.has(normalized))continue;
+      unique.add(normalized);choices.push(movie);
+      if(choices.length===24)break;
+    }
+    text("cinemaWatchNowCount",live.length+" фильмов со встроенным плеером");
+    host.replaceChildren(...choices.map(film=>{
+      const button=filmCard(film);
+      button.classList.add("cinema-watch-card");
+      button.setAttribute("aria-label","Смотреть "+film.title+" во встроенном плеере");
+      const playMark=node("span","cinema-watch-play","▶");
+      playMark.setAttribute("aria-hidden","true");
+      button.querySelector(".cinema-card-art")?.append(playMark);
+      // Replace the normal "details" action only in this dedicated shelf.
+      // Existing catalog cards still open full metadata and sources.
+      const clean=button.cloneNode(true);
+      clean.addEventListener("click",()=>play(film));
+      return clean;
+    }));
+  }
   function render(){
     const list=selectedFilms();
+    renderWatchNow();
     $("cinemaBrowse").classList.toggle("hidden",state.tab==="series");
     $("cinemaGrid").replaceChildren(...list.slice(0,state.visible).map(filmCard));
     $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
