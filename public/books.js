@@ -76,6 +76,71 @@
     summary:'Большой цельный текст издания, прочитанный из первоисточника.',
     rightsNotice:'Условия использования конкретного издания и перевода смотрите в оригинале.'
   }));
+  // Verified Wikisource edition: 26 actual Russian chapters + dedication.
+  // 1869 Nikolay Kurochkin translation is public domain in Russia. Keep the
+  // exact edition source title for the EPUB export and chapter discovery.
+  completeEditionBooks.unshift({
+    id:559743,title:'Государь',authors:['Никколо Макиавелли'],
+    language:'ru',wiki:'ru',provider:'wikisource',
+    source:'Русская Викитека · перевод Н. С. Курочкина (1869)',
+    sourceUrl:'https://ru.wikisource.org/w/index.php?curid=559743',
+    sourceTitle:'Государь (Макиавелли; Курочкин)/1869 (ВТ)',
+    cover:'',readable:true,curatedWholeText:true,
+    verifiedChapters:27,
+    summary:'Полное издание 1869 года: посвящение и 26 глав о власти, управлении и стратегии.',
+    rightsNotice:'Перевод Н. С. Курочкина, 1869; текст общественного достояния. Проверяйте правовой статус в своей стране.'
+  });
+  // Six additional original Russian public-domain classics, resolved to
+  // exact Wikisource main-namespace page IDs on 31 Oct 2026. All have real
+  // nested chapter subpages. The source may also expose alternate editorial
+  // versions: the live table of contents remains authoritative.
+  const russianClassics=[
+    [6074,'Преступление и наказание','Фёдор Достоевский',42],
+    [10009,'Идиот','Фёдор Достоевский',50],
+    [33835,'Братья Карамазовы','Фёдор Достоевский',98],
+    [18810,'Обломов','Иван Гончаров',48],
+    [4459,'Отцы и дети','Иван Тургенев',30],
+    [43986,'Ревизор','Николай Гоголь',7]
+  ];
+  completeEditionBooks.splice(1,0,...russianClassics.map(([id,title,author,parts])=>({
+    id,title,authors:[author],language:'ru',wiki:'ru',provider:'wikisource',
+    source:'Русская Викитека · авторский текст на русском',
+    sourceUrl:'https://ru.wikisource.org/w/index.php?curid='+id,
+    cover:'',readable:true,curatedWholeText:true,
+    verifiedChapters:parts,
+    summary:'Цельное произведение в Викитеке; доступны отдельные главы и оглавление. Число разделов включает варианты редакций, когда они есть.',
+    rightsNotice:'Классическое произведение общественного достояния. Условия конкретной редакции проверяйте у источника.'
+  })));
+  // Full-text public-domain Russian classics. Exact main-namespace page IDs
+  // were checked against Wikimedia API on 31 Oct 2026. Chapter indexes
+  // were enumerated from /subpages (never inferred from a book's popularity).
+  // Large single-page works were checked for substantial source page length;
+  // the live reader fetches the authoritative text, not an excerpt we ship.
+  const moreChapteredClassics=[[13651,"Двойник","Фёдор Достоевский",16],[14125,"Бедные люди","Фёдор Достоевский",20],[14364,"Униженные и оскорблённые","Фёдор Достоевский",46],[25001,"Игрок","Фёдор Достоевский",18],[37958,"Бесы","Фёдор Достоевский",25],[38004,"Записки из подполья","Фёдор Достоевский",22],[38088,"Подросток","Фёдор Достоевский",34],[8238,"Детство","Лев Толстой",32],[8240,"Юность","Лев Толстой",45],[10151,"Анна Каренина","Лев Толстой",240],[10453,"Война и мир","Лев Толстой",365],[65667,"Воскресение","Лев Толстой",129],[111489,"Хаджи-Мурат","Лев Толстой",25],[1904,"Повести Белкина","Александр Пушкин",6],[9164,"Евгений Онегин","Александр Пушкин",45],[37983,"Дубровский","Александр Пушкин",20],[1123408,"Капитанская дочка","Александр Пушкин",34],[8796,"Нос","Николай Гоголь",6],[22782,"Тарас Бульба","Николай Гоголь",15],[30341,"Мёртвые души","Николай Гоголь",17],[22763,"Вечера на хуторе близ Диканьки","Николай Гоголь",4],[34109,"Женитьба","Николай Гоголь",3],[52805,"Чайка","Антон Чехов",5],[53962,"Палата № 6","Антон Чехов",19],[54568,"Вишнёвый сад","Антон Чехов",4],[54964,"Три сестры","Антон Чехов",4],[81165,"Дядя Ваня","Антон Чехов",6],[4582,"Накануне","Иван Тургенев",36],[4855,"Дворянское гнездо","Иван Тургенев",47],[4507,"Рудин","Иван Тургенев",14],[4535,"Первая любовь","Иван Тургенев",23],[4630,"Новь","Иван Тургенев",39],[4691,"Дым","Иван Тургенев",29],[5907,"Вешние воды","Иван Тургенев",46],[9158,"Обыкновенная история","Иван Гончаров",14],[38769,"Обрыв","Иван Гончаров",102],[12455,"Герой нашего времени","Михаил Лермонтов",18],[30430,"Маскарад","Михаил Лермонтов",5],[35569,"История одного города","Михаил Салтыков-Щедрин",16],[35592,"Господа Головлёвы","Михаил Салтыков-Щедрин",39],[36485,"Гранатовый браслет","Александр Куприн",14],[394580,"Олеся","Александр Куприн",16],[398797,"Поединок","Александр Куприн",25],[870089,"Яма","Александр Куприн",55],[54596,"Бесприданница","Александр Островский",7],[422773,"Горе от ума","Александр Грибоедов",14],[16706,"Очарованный странник","Николай Лесков",21],[539061,"Левша","Николай Лесков",4],[783837,"Соборяне","Николай Лесков",106]];
+  const moreSinglePageClassics=[[41557,"Сон смешного человека","Фёдор Достоевский",74618],[8239,"Отрочество","Лев Толстой",267916],[31278,"Смерть Ивана Ильича","Лев Толстой",211007],[43909,"Крейцерова соната","Лев Толстой",276925],[104937,"Отец Сергий","Лев Толстой",152184],[108718,"После бала","Лев Толстой",36551],[104507,"Хозяин и работник","Лев Толстой",161383],[3106,"Пиковая дама","Александр Пушкин",87703],[13647,"Медный всадник","Александр Пушкин",29560],[23283,"Руслан и Людмила","Александр Пушкин",139043],[26584,"Бахчисарайский фонтан","Александр Пушкин",30420],[26590,"Борис Годунов","Александр Пушкин",140105],[11621,"Записки сумасшедшего","Николай Гоголь",74515],[17521,"Полтава","Александр Пушкин",9979],[11162,"Моцарт и Сальери","Александр Пушкин",17720],[26592,"Каменный гость","Александр Пушкин",48496],[47515,"Египетские ночи","Александр Пушкин",47610],[22751,"Невский проспект","Николай Гоголь",131110],[22798,"Вий","Николай Гоголь",136420],[15580,"Портрет","Николай Гоголь",208628],[22780,"Старосветские помещики","Николай Гоголь",84908],[23050,"Ночь перед Рождеством","Николай Гоголь",151845],[24300,"Человек в футляре","Антон Чехов",47485],[57007,"Дама с собачкой","Антон Чехов",61425],[18080,"Крыжовник","Антон Чехов",37714],[30705,"О любви","Антон Чехов",35372],[54129,"Студент","Антон Чехов",14420],[54771,"Дом с мезонином","Антон Чехов",64341],[54849,"Поцелуй","Антон Чехов",66006],[55038,"Степь","Антон Чехов",327560],[55737,"Дуэль","Антон Чехов",359778],[56216,"Чёрный монах","Антон Чехов",112226],[79670,"Моя жизнь","Антон Чехов",317967],[4354,"Ася","Иван Тургенев",158641],[4355,"Бежин луг","Иван Тургенев",71508],[5912,"Дневник лишнего человека","Иван Тургенев",184540],[7592,"Мцыри","Михаил Лермонтов",38524],[11000,"Демон","Михаил Лермонтов",62344],[31419,"Челкаш","Максим Горький",108354],[231256,"Мать","Максим Горький",1013529],[1028577,"В людях","Максим Горький",984580],[1028610,"Мои университеты","Максим Горький",429313],[122449,"Старуха Изергиль","Максим Горький",72625],[162221,"Макар Чудра","Максим Горький",43211],[35584,"Дикий помещик","Михаил Салтыков-Щедрин",27153],[35586,"Премудрый пискарь","Михаил Салтыков-Щедрин",21678],[9572,"Леди Макбет Мценского уезда","Николай Лесков",161493],[604847,"Запечатленный ангел","Николай Лесков",231787],[1034545,"Лес","Александр Островский",316058],[55213,"Снегурочка","Александр Островский",195512]];
+  const fullWorkAddition=[
+    ...moreChapteredClassics.map(([id,title,author,availableParts])=>({
+      id,title,authors:[author],language:'ru',wiki:'ru',provider:'wikisource',
+      source:'Русская Викитека · главы произведения',
+      sourceUrl:'https://ru.wikisource.org/w/index.php?curid='+id,
+      cover:'',readable:true,curatedWholeText:true,indexedParts:availableParts,
+      summary:'Классическое произведение: оглавление и главы из первоисточника. Статус каждой части проверяется при открытии.',
+      rightsNotice:'Произведение общественного достояния; отдельные редакционные версии могут иметь собственные условия.'
+    })),
+    ...moreSinglePageClassics.map(([id,title,author,sourceBytes])=>({
+      id,title,authors:[author],language:'ru',wiki:'ru',provider:'wikisource',
+      source:'Русская Викитека · текст произведения',
+      sourceUrl:'https://ru.wikisource.org/w/index.php?curid='+id,
+      cover:'',readable:true,curatedWholeText:true,verifiedSourceBytes:sourceBytes,
+      summary:'Большой исходный текст произведения из Русской Викитеки. Читается в оригинальной читалке.',
+      rightsNotice:'Классический русский текст общественного достояния; правила редакции смотрите у источника.'
+    }))
+  ];
+  const installedIds=new Set(completeEditionBooks.map(book=>book.id));
+  completeEditionBooks.push(...fullWorkAddition.filter(book=>{
+    if(installedIds.has(book.id))return false;
+    installedIds.add(book.id);return true;
+  }));
   function filterCompleteEditionBooks(query){
     const value=String(query||'').trim().toLocaleLowerCase('ru');
     return value?completeEditionBooks.filter(b=>
@@ -103,7 +168,7 @@
     document.querySelector('.topics').hidden=!isGutenberg;
     const choices={
       hot200:['200 популярных зарубежных книг с русскоязычными изданиями · редакционный выбор','200 ХИТОВ · НА РУССКОМ','https://books.google.com/'],
-      complete:['18 проверенных объёмных изданий · цельный текст доступен в читалке','КНИГИ ЦЕЛИКОМ','https://ru.wikisource.org/wiki/Special:Copyright'],
+      complete:[String(completeEditionBooks.length)+' произведения из Русской Викитеки · читать главы и цельные тексты','КНИГИ ЦЕЛИКОМ','https://ru.wikisource.org/wiki/Special:Copyright'],
       genres:['Романы, рассказы, повести, фантастика, стихи и сказки на русском','Читать сейчас','https://ru.wikisource.org/wiki/Special:Copyright'],
       local:['Моя личная библиотека · EPUB, FB2 и TXT без загрузки на сервер','Личные книги',''],
       spotlight:['Русскоязычные издания · современные книги и официальные страницы','Новые книги на русском','https://books.google.com/'],
@@ -267,7 +332,7 @@
   function renderHeroShowcase(){
     const host=$('heroShowcase');
     if(!host||host.childElementCount)return;
-    const choices=[completeEditionBooks[6],completeEditionBooks[0],completeEditionBooks[1]];
+    const choices=[completeEditionBooks[0],completeEditionBooks[7],completeEditionBooks[1]];
     for(let i=0;i<choices.length;i++){
       const book=choices[i];
       if(!book)continue;
@@ -292,7 +357,7 @@
     section.hidden=state.source!=='complete';
     if(section.hidden)return;
     host.replaceChildren();
-    const choice=[completeEditionBooks[0],completeEditionBooks[1],completeEditionBooks[6]].filter(Boolean);
+    const choice=[completeEditionBooks[0],completeEditionBooks[1],completeEditionBooks[7]].filter(Boolean);
     choice.forEach((book,index)=>{
       const item=node('button','featured-edition');
       item.type='button';item.setAttribute('aria-label','Читать '+book.title);
@@ -315,14 +380,20 @@
     for(const b of document.querySelectorAll('.topics [data-topic]')){
       b.classList.toggle('active',b.dataset.topic===state.topic);
     }
-    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='complete'?'Книги, которые читаются целиком':state.source==='hot200'?'200 КНИГ · ТВОЙ ВЫБОР':state.source==='local'?'Мои книги на устройстве':state.source==='genres'?'Книги для чтения':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
+    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='complete'?'Классика: полные книги и тексты источников':state.source==='hot200'?'200 КНИГ · ТВОЙ ВЫБОР':state.source==='local'?'Мои книги на устройстве':state.source==='genres'?'Книги для чтения':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
     $('shelfEyebrow').textContent=state.query ? 'SEARCH / RESULTS' : 'DISCOVER / 01';
   }
   function bookExtent(book){
     if(book?.provider==='editorial')return {kind:'metadata',label:'ХИТ · РУССКОЕ ИЗДАНИЕ'};
     if(isCatalogBook(book))return {kind:'metadata',label:'КАТАЛОГ · ОПИСАНИЕ'};
     if(isLocal(book))return {kind:'local',label:'ЛИЧНЫЙ ФАЙЛ · '+(book.format||'ТЕКСТ').toUpperCase()};
-    if(book?.curatedWholeText)return {kind:'full',label:'ЦЕЛЬНЫЙ ТЕКСТ · '+Math.round(book.verifiedChars/1000)+' ТЫС. ЗНАКОВ'};
+    if(book?.curatedWholeText){
+      // A chapter index or a long source page is NOT proof of a complete edition.
+      if(book.id===559743)return {kind:'full',label:'ПОЛНОЕ ИЗДАНИЕ · 26 ГЛАВ + ПОСВЯЩЕНИЕ'};
+      if(book.indexedParts||book.verifiedChapters)return {kind:'partial',label:'РЕАЛЬНЫЕ ГЛАВЫ · ПРОВЕРЬ ОГЛАВЛЕНИЕ'};
+      if(book.verifiedSourceBytes)return {kind:'partial',label:'ТЕКСТ ПЕРВОИСТОЧНИКА · ПОЛНОТА УТОЧНЯЕТСЯ'};
+      return {kind:'full',label:'ЦЕЛЬНЫЙ ТЕКСТ · '+Math.round(book.verifiedChars/1000)+' ТЫС. ЗНАКОВ'};
+    }
     if(isWiki(book))return {kind:'partial',label:book.isTranslation?'РУССКИЙ ПЕРЕВОД':'ПРОИЗВЕДЕНИЕ · ЧИТАТЬ'};
     if(book?.readable && book?.source==='Project Gutenberg')return {kind:'full',label:'ПОЛНЫЙ ТЕКСТ ИСТОЧНИКА'};
     return {kind:'metadata',label:'ОТКРЫТЬ КНИГУ'};
@@ -330,7 +401,7 @@
   function officialWikisourceEpubUrl(book){
     if(!isWiki(book)||typeof book.title!=='string'||book.title.length>230)return '';
     const params=new URLSearchParams({
-      format:'epub',lang:book.wiki,page:book.title.replace(/ /g,'_')
+      format:'epub',lang:book.wiki,page:(book.sourceTitle||book.title).replace(/ /g,'_')
     });
     return 'https://ws-export.wmcloud.org/?'+params.toString();
   }
@@ -456,8 +527,12 @@
       kind='complete';
     }else if(wik){
       if(book.curatedWholeText){
-        message='Цельный текст издания · '+Math.round(book.verifiedChars/1000)+' тыс. символов в источнике';
-        kind='complete';
+        message=book.verifiedChapters
+          ?'Полный состав издания · '+book.verifiedChapters+' частей в Викитеке'
+          :book.indexedParts?'Из первоисточника найдено '+book.indexedParts+' разделов; текущую полноту редакции проверяйте в оглавлении'
+          :book.verifiedSourceBytes?'Существенный объём исходного текста; полноту открытого издания проверьте у источника'
+          :'Цельный текст издания · '+Math.round(book.verifiedChars/1000)+' тыс. символов в источнике';
+        kind=book.indexedParts||book.verifiedSourceBytes?'unverified':'complete';
       }
       const count=state.chapters.length;
       const limited=coverage?.limited;
@@ -498,7 +573,7 @@
     }
     const heading=node('div','book-card-label');
     heading.append(node('span','book-card-type',
-      isLocal(book)?'МОЯ КНИГА':book.curatedWholeText?'ЧИТАТЬ ЦЕЛИКОМ':isCatalogBook(book)?'КАТАЛОГ':'ЛИТЕРАТУРА'),
+      isLocal(book)?'МОЯ КНИГА':bookExtent(book).kind==='full'?'ЧИТАТЬ ЦЕЛИКОМ':isCatalogBook(book)?'КАТАЛОГ':'ЧИТАТЬ ТЕКСТ'),
       node('span','book-card-arrow','↗'));
     main.append(cover,heading,node('h3','',compactTitle(book.title)),node('p','',fullName(book)));
     const meta=node('div','book-bottom');

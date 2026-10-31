@@ -1,23 +1,26 @@
 /* VETOGRAM CINEMA V1 — independent Telegram Mini App. Zero pirate sources. */
 (function () {
   "use strict";
-  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaSeriesEpisodes||[]),...(window.VetogramCinemaPopularSeries||[]),...(window.VetogramCinemaForeignRutube||[]),...(window.VetogramCinemaFranchises||[])];
+  const filmInputs=[...(window.VetogramCinemaCatalog || []),...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaAdditionalOfficial63||[]),...(window.VetogramCinemaSeriesEpisodes||[]),...(window.VetogramCinemaPopularSeries||[]),...(window.VetogramCinemaForeignRutube||[]),...(window.VetogramCinemaFranchises||[])];
   let films=[...new Map(filmInputs.map(f=>[f.id,f])).values()];
   const $=id=>document.getElementById(id);
   const BASE="https://commons.wikimedia.org/w/api.php";
   const LIBRARY_KEY="vetogram.cinema.library.v1:"+(window.VetogramMediaContext?.scope||"device");
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
-  const state={tab:"home",genre:"Все",query:"",sort:"recent",visible:100,showUnverified:false,foreignIncludeUnverified:false,selected:null,playing:null,request:0,
+  const state={tab:"home",genre:"Все",seriesGenre:"Все",query:"",sort:"recent",visible:100,showUnverified:false,foreignIncludeUnverified:false,selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
+  // Fail-closed on provider-reported playback errors for this device session.
+  // A timeout is not proof of unavailability (the user may not press ▶).
+  const failedEmbeds=new Set();
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
-  const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/"};
+  const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/",rossiya1:"https://rutube.ru/channel/24620967/",centralpartnership:"https://rutube.ru/channel/798788/"};
   // The initial 200 feature films appear instantly in their studio tabs.
   // Their RUTUBE API cursor still begins from page 1 and remains authoritative.
-  for(const film of (window.VetogramCinemaFeatured200||[])){
-    const target=film.id.match(/^rutube-(mosfilm|lenfilm|gorky|starmedia)-[a-f0-9]{32}$/i)?.[1];
+  for(const film of [...(window.VetogramCinemaFeatured200||[]),...(window.VetogramCinemaAdditionalOfficial63||[])]){
+    const target=film.id.match(/^rutube-(mosfilm|lenfilm|gorky|starmedia|marsmedia|soyuzmultfilm|rossiya1|centralpartnership)-[a-f0-9]{32}$/i)?.[1];
     if(!target||!Object.hasOwn(STUDIO_LINKS,target))continue;
     const rows=studio.results.get(target)||[];
     rows.push(film);studio.results.set(target,rows);
@@ -69,6 +72,7 @@
   }
   function setTab(tab){
     if(!["home","foreign","catalog","series","search","library"].includes(tab))return;
+    if(tab==="foreign")tab="catalog"; // no external-only streaming catalog
     buzz();state.tab=tab;state.genre="Все";state.visible=100;if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
     document.querySelectorAll("[data-tab]").forEach(b=>{
       const yes=b.dataset.tab===tab;b.classList.toggle("active",yes);
@@ -81,7 +85,7 @@
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
     $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
     $("cinemaSeriesHub").classList.toggle("hidden",tab!=="series");
-    $("cinemaForeignHub").classList.toggle("hidden",tab!=="foreign");
+    $("cinemaForeignHub").classList.add("hidden");
     for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises","cinemaForeignShelf"])
       $(id).classList.toggle("hidden",tab!=="home");
     if(tab==="home")setHeroSlide(discovery.index);
@@ -271,18 +275,20 @@
     showStudio();
     if(!studio.firstPages.has(target))loadStudio(true);
   }
-  // Lightweight background ingestion: up to two pages per original publisher,
-  // sequentially paced so a mini-app does not flood the official service.
+  // Lightweight background ingestion: up to three pages per real publisher,
+  // sequentially paced, for a larger *actually sourced* watchable library.
+  // Never manufacture static film titles or video links on provider failure.
   async function warmStudioFeeds(){
     if(discovery.prefetching)return;
     discovery.prefetching=true;
     const targets=Object.keys(STUDIO_LINKS);
     const plan=[...targets.filter(x=>x!=="mosfilm").map(x=>[x,1]),
-      ...targets.map(x=>[x,2])];
+      ...targets.map(x=>[x,2]),
+      ...targets.map(x=>[x,3])];
     for(const [target,page] of plan){
       if(page>1&&!studio.firstPages.has(target))continue;
       if(page===1&&studio.firstPages.has(target))continue;
-      if(page===2&&studio.pages.get(target)!==2)continue;
+      if(page>1&&studio.pages.get(target)!==page)continue;
       const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),11500);
       try{
         const data=await studioPage(target,page,ctrl.signal);
@@ -291,7 +297,7 @@
         if(studio.selected===target)showStudio();
       }catch(_){/* individual studio failures do not block other studios */}
       finally{clearTimeout(timeout)}
-      text("cinemaSyncStatus",films.length+" записей · 6 источников");
+      text("cinemaSyncStatus",films.length+" записей · "+Object.keys(STUDIO_LINKS).length+" официальных источников");
       await new Promise(resolve=>setTimeout(resolve,500));
     }
     discovery.prefetching=false;
@@ -344,7 +350,10 @@
     }
   }
   function selectedFilms(){
-    let list=films.filter(f=>f.externalRutube||!f.discoveryOnly||state.showUnverified||f.russianAudioStatus==="catalog-listed");
+    // User requested a playback-only library. External-only discovery and
+    // titles without a validated provider stream stay out of public shelves.
+    let list=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
+      (f.player?.licensed===true||Boolean(f.file)));
     if(state.tab==="foreign")list=list.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim||f.featuredForeign));
     if(state.tab==="series")list=list.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true);
     if(state.tab==="catalog")list=list.filter(f=>f.contentType!=="Сериалы"&&!f.externalRutube);
@@ -408,10 +417,12 @@
     if(!image)requestPoster(f);
   }
   function updateHeroDeck(){
-    const foreign=films.filter(f=>f.externalRutube).slice(0,8);
+    const foreign=[]; // Unlicensed external links must never lead a Play hero.
     const recents=films.filter(f=>f.player&&f.contentType!=="Сериалы"&&Number(f.minutes)>=35)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
-    const all=[...foreign,...recents,...films.filter(f=>f.player&&Number(f.minutes)>=40)];
+    // Lead with films which actually have an in-app player. The foreign
+    // discovery cards may only have an external source URL.
+    const all=[...recents,...films.filter(f=>f.player?.licensed===true&&Number(f.minutes)>=40)];
     const used=new Set(),deck=[];
     for(const film of all) {
       if(used.has(film.id))continue;
@@ -456,7 +467,7 @@
   function groupedSeries(){
     const shows=new Map();
     for(const film of films){
-      if(film.contentType!=="Сериалы"||film.player?.licensed!==true)continue;
+      if(film.contentType!=="Сериалы"||film.player?.licensed!==true||failedEmbeds.has(film.id))continue;
       const name=seriesShowName(film), key=name.toLocaleLowerCase("ru");
       if(!shows.has(key))shows.set(key,[]);
       shows.get(key).push(film);
@@ -542,17 +553,29 @@
     const groups=groupedSeries();
     $("cinemaSeriesHub").classList.toggle("hidden",state.tab!=="series");
     if(state.tab==="series"){
-      renderPopularSeries();
+      // Categories derive exclusively from real playable studio episodes.
+      const genres=["Все",...new Set(groups.flatMap(group=>group.flatMap(f=>f.genres||[])))];
+      if(!genres.includes(state.seriesGenre))state.seriesGenre="Все";
+      const controls=$("cinemaSeriesGenres");
+      if(controls)controls.replaceChildren(...genres.map(genre=>{
+        const button=node("button","cinema-chip"+(state.seriesGenre===genre?" active":""));
+        button.type="button";button.textContent=genre;
+        button.setAttribute("aria-pressed",String(state.seriesGenre===genre));
+        button.addEventListener("click",()=>{state.seriesGenre=genre;renderSeriesCollections()});
+        return button;
+      }));
       const q=state.query.trim().toLocaleLowerCase("ru");
-      const visible=q?groups.filter(g=>seriesShowName(g[0]).toLocaleLowerCase("ru").includes(q)):groups;
+      const visible=groups.filter(g=>(!q||seriesShowName(g[0]).toLocaleLowerCase("ru").includes(q))&&
+        (state.seriesGenre==="Все"||g.some(f=>(f.genres||[]).includes(state.seriesGenre))));
       $("cinemaSeriesPlayableRail").replaceChildren(...visible.slice(0,80).map(seriesShowCard));
       const count=visible.reduce((sum,g)=>sum+g.length,0);
-      text("cinemaSeriesStats",count+" реальных видео · "+groups.length+" сериалов · обложки, сезоны и серии");
+      text("cinemaSeriesStats",count+" оригинальных видеозаписей · "+visible.length+" сериалов · сезон и серия выбираются внутри");
     }
   }
   function refreshDiscovery(){
     const home=isHome();
-    $("cinemaForeignShelf").classList.toggle("hidden",!home);
+    // Hiding discovery-only foreign uploads: no permission to embed them.
+    $("cinemaForeignShelf").classList.add("hidden");
     const external=films.filter(f=>f.externalRutube);
     if(home)$("cinemaForeignRail").replaceChildren(...external.slice(0,20).map(filmCard));
     text("cinemaForeignNote",external.filter(f=>f.audioClaim).length+" публикаций с заявленным дубляжом · "+external.length+" найденных публикаций. Право на их встраивание не установлено.");
@@ -572,8 +595,8 @@
       if(home&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(sectionId==="cinemaSeries"?seriesShowCard:filmCard));
     }
     $("cinemaGenresSection").classList.toggle("hidden",!home);
-    $("cinemaFranchises").classList.toggle("hidden",!home);
-    if(home)renderFranchise();
+    $("cinemaFranchises").classList.add("hidden");
+    // Franchise title metadata is not playable: never render fake Watch cards.
     if(home){
       $("cinemaGenreTiles").replaceChildren(...GENRE_TILES.map(([label,glyph,hue])=>{
         const button=node("button","cinema-genre-tile");
@@ -591,14 +614,56 @@
     }
     updateHeroDeck();
   }
+  // A truly one-tap shelf. Foreign/discovery-only titles cannot masquerade
+  // as playable films; every entry must have a first-party-approved embed.
+  function renderWatchNow(){
+    const host=$("cinemaWatchNowRail"),section=$("cinemaWatchNow");
+    if(!host||!section)return;
+    const live=films.filter(f=>{
+      if(f.externalRutube||f.discoveryOnly||f.contentType==="Сериалы"||failedEmbeds.has(f.id))return false;
+      if(!f.player||f.player.licensed!==true||f.player.type!=="iframe")return false;
+      try{
+        const url=new URL(f.player.url);
+        return url.origin==="https://rutube.ru"&&
+          /^\/play\/embed\/[a-f0-9]{32}$/i.test(url.pathname)&&
+          Number(f.minutes)>=35;
+      }catch{return false}
+    }).sort((a,b)=>uploadTime(b)-uploadTime(a));
+    section.classList.toggle("hidden",state.tab!=="home"||Boolean(state.query.trim())||!live.length);
+    if(section.classList.contains("hidden"))return;
+    const unique=new Set(),choices=[];
+    for(const movie of live){
+      const normalized=String(movie.title||"").toLocaleLowerCase("ru").replace(/[^а-яёa-z0-9]/g,"").slice(0,90);
+      if(unique.has(normalized))continue;
+      unique.add(normalized);choices.push(movie);
+      if(choices.length===24)break;
+    }
+    text("cinemaWatchNowCount",live.length+" фильмов со встроенным плеером");
+    host.replaceChildren(...choices.map(film=>{
+      const button=filmCard(film);
+      button.classList.add("cinema-watch-card");
+      button.setAttribute("aria-label","Смотреть "+film.title+" во встроенном плеере");
+      const playMark=node("span","cinema-watch-play","▶");
+      playMark.setAttribute("aria-hidden","true");
+      button.querySelector(".cinema-card-art")?.append(playMark);
+      // Replace the normal "details" action only in this dedicated shelf.
+      // Existing catalog cards still open full metadata and sources.
+      const clean=button.cloneNode(true);
+      clean.addEventListener("click",()=>play(film));
+      return clean;
+    }));
+  }
   function render(){
     const list=selectedFilms();
+    renderWatchNow();
     $("cinemaBrowse").classList.toggle("hidden",state.tab==="series");
     $("cinemaGrid").replaceChildren(...list.slice(0,state.visible).map(filmCard));
     $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
     $("cinemaMoreStudios").classList.toggle("hidden",state.tab==="library"||state.tab==="series");
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
-    text("cinemaCount",list.length+" из "+films.length+" записей · официальные источники");
+    const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
+      (f.player?.licensed===true||Boolean(f.file))).length;
+    text("cinemaCount",list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
     const russian=films.filter(f=>f.player&&(f.spoken==="Русский"||f.spoken==="ru"));
     const showRussian=state.tab==="home"&&!state.query.trim()&&russian.length>0;
@@ -828,7 +893,9 @@
       $("cinemaPlayerSource").href=current.sourcePage||filmPage(f);
       $("cinemaOpenSource").href=current.sourcePage||filmPage(f);
       setPlayerMessage("Подключаем "+(current.provider||"видеопровайдера")+"…");
-      if(embedded)providerFeedbackTimer=setTimeout(()=>{if(token===state.request)setPlayerMessage("Не получили подтверждение запуска плеера. Если видео не появилось, используйте ссылку на источник ниже.");},13000);
+      if(embedded)providerFeedbackTimer=setTimeout(()=>{
+        if(token===state.request)setPlayerMessage("Плеер загружен, но начало просмотра не подтверждено. Нажмите ▶ внутри видео. Если возникает ошибка, выберите другой фильм.");
+      },20000);
       try{
         if(!window.VetogramCinemaProvider)throw Error("Модуль видеопровайдера не загрузился");
         const handle=await window.VetogramCinemaProvider.attach({
@@ -838,6 +905,12 @@
           onEvent:(event)=>{
             if(token!==state.request||state.playing?.id!==f.id)return;
             if(event.type==="duration"){state.embedDuration=event.duration;return}
+            if(event.type==="playStarted"||(event.type==="state"&&event.state==="playing")){
+              clearTimeout(providerFeedbackTimer);
+              failedEmbeds.delete(f.id);
+              setPlayerMessage("");
+              return;
+            }
             if(event.type==="ended"){
               delete state.library.progress[f.id];saveLibrary();toast("Фильм досмотрен");render();return
             }
@@ -851,14 +924,26 @@
               }
             }
           },
-          onReady:()=>{clearTimeout(providerFeedbackTimer);if(token===state.request)setPlayerMessage("")},
-          onError:(reason)=>{clearTimeout(providerFeedbackTimer);if(token===state.request)setPlayerMessage(reason)}
+          onReady:()=>{
+            if(token===state.request)setPlayerMessage("Плеер готов. Нажмите ▶, чтобы начать фильм.");
+          },
+          onError:(reason)=>{
+            if(token!==state.request)return;
+            clearTimeout(providerFeedbackTimer);
+            failedEmbeds.add(f.id);
+            setPlayerMessage("Источник не воспроизводит это видео: "+String(reason||"ошибка").slice(0,140)+". Попробуйте другой фильм.");
+            render();
+          }
         });
         if(token!==state.request){handle.cleanup();return}
         state.embedHandle=handle;
       }catch(error){
         clearTimeout(providerFeedbackTimer);
-        if(token===state.request)setPlayerMessage("Плеер недоступен: "+(error?.message||"ошибка")+". Откройте оригинал по ссылке ниже.");
+        if(token===state.request){
+        failedEmbeds.add(f.id);
+        setPlayerMessage("Плеер недоступен: "+(error?.message||"ошибка")+". Выберите другой фильм.");
+        render();
+      }
       }
       return;
     }

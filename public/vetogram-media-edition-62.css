@@ -1,0 +1,296 @@
+/* VETOGRAM 6.2 / MEDIA EDITION — Music · Cinema · Books
+ * One connected visual language across existing independent, embedded modules.
+ * Decorative only: no remote art, no autoplay, no modification to provider/player.
+ */
+:root{
+  --vm62-bg:#0c0e14;--vm62-panel:#151923;--vm62-elev:#1b2130;
+  --vm62-line:rgba(193,202,222,.11);--vm62-text:#f0eef6;
+  --vm62-muted:#a5a9bb;--vm62-accent:#d3afc3;--vm62-coral:#e2a6a0;
+  --vm62-radius:17px;
+}
+body{
+  background:var(--vm62-bg)!important;color:var(--vm62-text);
+  background-image:none!important;
+}
+body::before,body::after{pointer-events:none}
+:where(.hero,.cinema-hero,.hero-veto){
+  overflow:hidden;
+  isolation:isolate;
+  border-color:var(--vm62-line)!important;
+  box-shadow:none!important;
+}
+:where(.topbar,.cinema-header,.reader-top){
+  border-color:var(--vm62-line)!important;
+  box-shadow:none!important;
+}
+:where(.page,.cinema-section,.books-main){
+  min-width:0;
+}
+:where(button,a,input,textarea,select):focus-visible{
+  outline:2px solid var(--vm62-coral)!important;outline-offset:3px!important;
+}
+:where(button,a,input,textarea,select){touch-action:manipulation}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* Music: turn the loud neon dashboard into an editorial listening space. */
+body:has(#playerBar) .app,
+body:has(#playerBar) .main{background:#0c0e14!important}
+body:has(#playerBar) :is(.hero,.catalog-hero,.charts-hero,.archive-hero,.mixter-hero){
+  border:1px solid var(--vm62-line)!important;
+  border-radius:24px!important;
+  background:linear-gradient(128deg,#191927 0%,#11151f 58%,#131a28 100%)!important;
+  box-shadow:none!important;
+}
+body:has(#playerBar) :is(.hero-orb,.charts-hero-glow,.studio-glow,.studio-lines){
+  opacity:.12!important;filter:blur(36px)!important
+}
+body:has(#playerBar) :is(.catalog-track,.chart-track,.track-row,.native-track,.archive-track,.mixter-track){
+  border-color:var(--vm62-line)!important;
+  box-shadow:none!important;
+  transition:background-color 160ms ease,transform 160ms ease!important;
+}
+body:has(#playerBar) :is(.catalog-track,.chart-track,.track-row):is(:hover,:focus-within){
+  background:rgba(202,182,205,.06)!important;
+}
+body:has(#playerBar) :is(.catalog-track,.chart-track,.track-row) button[aria-label^="Слушать"]{
+  box-shadow:none!important;
+}
+body:has(#playerBar) :is(.catalog-switch,.catalog-presets,.native-home,.charts-hero-tags){
+  max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
+}
+body:has(#playerBar) .player-bar{
+  background:rgba(16,19,28,.96)!important;
+  border-top:1px solid rgba(196,202,223,.15)!important;
+  box-shadow:0 -12px 42px rgba(0,0,0,.23)!important;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+body:has(#playerBar) .player-bar .mini-track{
+  min-width:0;
+}
+body:has(#playerBar) .player-bar .mini-track :is(b,span){
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+body:has(#playerBar) .catalog-disclaimer{
+  background:rgba(208,184,201,.045)!important;
+  border-radius:12px;line-height:1.55;
+}
+body:has(#playerBar) .studio{
+  background:linear-gradient(150deg,#10131c,#161823)!important;
+}
+body:has(#playerBar) :is(.sidebar,.mobile-nav){
+  background:#10131b!important;
+  border-color:var(--vm62-line)!important;
+}
+
+/* Cinema: quiet theatrical typography; player remains centre stage. */
+body:has(#cinemaPlayer) :is(.cinema-header,.cinema-bottom){
+  background:rgba(14,16,23,.97)!important;
+  border-color:var(--vm62-line)!important;
+}
+body:has(#cinemaPlayer) .cinema-hero{
+  background:#15151f!important;
+  border:1px solid var(--vm62-line)!important;
+  border-radius:22px!important;
+  box-shadow:none!important;
+}
+body:has(#cinemaPlayer) .cinema-hero-bg{
+  opacity:.42!important;filter:saturate(.67)!important;
+}
+body:has(#cinemaPlayer) .cinema-hero h1{
+  max-width:800px;line-height:1.08!important;
+  letter-spacing:-.045em!important;
+  text-wrap:balance;
+}
+body:has(#cinemaPlayer) :is(.cinema-card,.cinema-studio-card,.cinema-film-card){
+  overflow:hidden;border-radius:17px!important;
+  border-color:var(--vm62-line)!important;
+  box-shadow:none!important;
+}
+body:has(#cinemaPlayer) .cinema-card-art{
+  background:linear-gradient(140deg,#272234,#171c2c)!important;
+  box-shadow:none!important;
+}
+body:has(#cinemaPlayer) .cinema-card-art img{
+  filter:saturate(.81) contrast(1.035);
+  transition:transform 220ms ease,filter 220ms ease!important;
+}
+@media(hover:hover){
+  body:has(#cinemaPlayer) .cinema-card:is(:hover,:focus-visible) img{
+    filter:saturate(.97) contrast(1.035);
+    transform:scale(1.035);
+  }
+}
+body:has(#cinemaPlayer) .cinema-player-shell{
+  background:#0c0e14!important;
+  box-shadow:0 12px 55px rgba(0,0,0,.38)!important;
+}
+body:has(#cinemaPlayer) .cinema-player-shell :is(video,iframe){
+  max-width:100%;background:#000;
+}
+body:has(#cinemaPlayer) :is(.cinema-chip,.cinema-tab,.cinema-studio-tab){
+  box-shadow:none!important;
+}
+
+/* Books: keep the reader neutral, warm and comfortable for long sessions. */
+body:has(#reader) .books-main{
+  background:#0c0e14!important;
+}
+body:has(#reader) .hero-veto{
+  border-radius:22px!important;
+  background:linear-gradient(130deg,#1c1b25,#12141e 70%,#1b1720)!important;
+  box-shadow:none!important;
+}
+body:has(#reader) .veto-hero-noise{
+  opacity:.07!important;
+}
+body:has(#reader) :is(.book,.featured-edition,.hero-show-book){
+  box-shadow:none!important;
+}
+body:has(#reader) .book-cover{
+  filter:saturate(.84);
+}
+body:has(#reader) .book:is(:hover,:focus-within) .book-cover{
+  filter:saturate(1);
+}
+body:has(#reader) .book-main:focus-visible{
+  outline-offset:2px!important;
+}
+body:has(#reader) .reader{
+  box-shadow:none!important;
+}
+body:has(#reader) .reader-top{
+  background:#11151e!important;
+}
+body:has(#reader) :is(.book-extent-badge,.translation-tag){
+  box-shadow:none!important;
+}
+
+/* Fold & compact portrait: preserve reading width and real media controls. */
+@media(max-width:720px){
+  :where(.hero,.cinema-hero,.hero-veto){border-radius:16px!important}
+  body:has(#playerBar) .player-bar{
+    padding-bottom:max(6px,env(safe-area-inset-bottom,0px));
+  }
+  body:has(#playerBar) :is(.catalog-hero,.charts-hero,.archive-hero,.mixter-hero){
+    border-radius:16px!important;
+  }
+  body:has(#cinemaPlayer) .cinema-hero h1{
+    font-size:clamp(27px,7vw,44px)!important;
+  }
+  body:has(#reader) .reader-paper{
+    max-width:min(100%,680px);
+  }
+}
+
+
+/* One-tap Cinema shelf uses the same verified source as the original film card. */
+body:has(#cinemaPlayer) .cinema-watch-now{
+  margin-top:18px;
+  padding:18px clamp(14px,3vw,26px)!important;
+  border:1px solid rgba(207,189,204,.14);
+  border-radius:19px;
+  background:linear-gradient(135deg,rgba(201,162,185,.075),rgba(29,29,45,.08));
+}
+body:has(#cinemaPlayer) .cinema-watch-now .cinema-section-head{
+  margin-bottom:15px;
+}
+body:has(#cinemaPlayer) .cinema-watch-rail{
+  overscroll-behavior-x:contain;
+  scroll-padding-inline:8px;
+  scrollbar-width:thin;
+}
+body:has(#cinemaPlayer) .cinema-watch-card .cinema-card-art{
+  position:relative;
+}
+body:has(#cinemaPlayer) .cinema-watch-play{
+  position:absolute;
+  inset:auto 10px 10px auto;
+  width:42px;height:42px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:rgba(14,15,24,.89);
+  border:1px solid rgba(230,218,229,.24);
+  color:#f6eff4;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
+  font-size:15px;
+}
+body:has(#cinemaPlayer) .cinema-watch-card:focus-visible{
+  outline:2px solid #e7b9c9!important;
+}
+@media(max-width:640px){
+  body:has(#cinemaPlayer) .cinema-watch-now{
+    padding:14px 9px!important;margin:12px 0;
+  }
+  body:has(#cinemaPlayer) .cinema-watch-play{
+    width:36px;height:36px;
+  }
+}
+
+
+/* Licensed audio shelf: real MP3 + attribution in a compact readable library. */
+body:has(#playerBar) .licensed-home-section{
+  margin:24px 0 27px;padding:20px 18px;
+  background:linear-gradient(145deg,#151923,#10151f);
+  border:1px solid rgba(200,187,209,.16);border-radius:20px;
+}
+body:has(#playerBar) .licensed-home-section .section-head{
+  display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;
+}
+body:has(#playerBar) .licensed-home-section .section-head p{
+  color:#a6a9bd;max-width:530px;line-height:1.55;font-size:12px;margin-top:7px;
+}
+body:has(#playerBar) .licensed-home-count{
+  font:600 11px/1.4 inherit;color:#cfc0d1;
+}
+body:has(#playerBar) .licensed-home-tracks{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+body:has(#playerBar) .licensed-home-card{
+  display:flex;align-items:center;gap:11px;min-width:0;
+  background:#1b202c;border:1px solid rgba(200,193,214,.10);
+  padding:11px;border-radius:13px;
+}
+body:has(#playerBar) .licensed-home-art{
+  flex:none;width:43px;height:43px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(140deg,#303345,#282332);color:#d7bacf;
+}
+body:has(#playerBar) .licensed-home-info{
+  flex:1;min-width:0;display:grid;gap:3px;
+}
+body:has(#playerBar) .licensed-home-info strong{
+  font-size:12px;line-height:1.3;color:#f4f0f6;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+body:has(#playerBar) .licensed-home-info small{
+  font-size:11px;color:#b6b0c1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+body:has(#playerBar) .licensed-home-rights{display:flex;flex-wrap:wrap;gap:10px;margin-top:2px}
+body:has(#playerBar) .licensed-home-rights a{
+  font-size:10px;line-height:1.25;color:#c8b7cf;text-decoration:none;
+}
+body:has(#playerBar) .licensed-home-play{
+  flex:none;min-width:41px;height:41px;padding:0;border-radius:50%;
+  background:#d4b2cb;color:#17151d;border:0;font-size:16px;
+  display:grid;place-items:center;box-shadow:none;
+}
+body:has(#playerBar) .licensed-home-play:hover{background:#f2cce0}
+body:has(#playerBar) .licensed-home-more{
+  width:100%;margin-top:13px;padding:13px;border:1px solid #353041;
+  background:#21202d;border-radius:12px;color:#eae0eb;
+}
+@media(max-width:720px){
+  body:has(#playerBar) .licensed-home-section{padding:16px 11px}
+  body:has(#playerBar) .licensed-home-tracks{grid-template-columns:1fr}
+}
+
+
+/* Playback-first release: non-licensed film/discovery tabs are not navigable. */
+body:has(#cinemaPlayer) :is([data-tab="foreign"],#cinemaForeignShelf,#cinemaForeignHub,#cinemaFranchises){
+  display:none!important;
+}
+/* Hide dead empty player cards; never make the actor hunt for an external link. */
+body:has(#cinemaPlayer) .cinema-watch-card{
+  position:relative;cursor:pointer;
+}

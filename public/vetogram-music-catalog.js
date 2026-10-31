@@ -8,7 +8,7 @@ const V=window.VetogramMusic,root=document.querySelector('[data-view="catalog"]'
 if(!V||!root)return;
 const $=id=>document.getElementById(id);
 const API="https://api.audius.co/v1/tracks/search";
-const LIMIT=40,MAX_RESULTS=800;
+const LIMIT=40,MAX_RESULTS=2400;
 const PRESETS=[
  {id:"world",label:"Мировая · Pop",q:"pop",group:"world"},
  {id:"hiphop",label:"Hip-Hop / Rap",q:"hip hop",group:"world"},
@@ -20,16 +20,41 @@ const PRESETS=[
  {id:"jazz",label:"Jazz",q:"jazz",group:"world"},
  {id:"ambient",label:"Chill / Ambient",q:"ambient",group:"world"},
  {id:"classical",label:"Classical",q:"classical",group:"world"},
+ {id:"world-pop",label:"Pop Hits · подборка",q:"pop hits",group:"world"},
+ {id:"world-synth",label:"Synthwave",q:"synthwave",group:"world"},
+ {id:"world-phonk",label:"Phonk",q:"phonk",group:"world"},
+ {id:"world-house",label:"House",q:"house",group:"world"},
+ {id:"world-metal",label:"Metal",q:"metal",group:"world"},
+ {id:"world-lofi",label:"Lo-fi",q:"lofi",group:"world"},
+ {id:"world-latin",label:"Latin Pop",q:"latin pop",group:"world"},
  {id:"ru",label:"Русская музыка",q:"русская музыка",group:"ru"},
  {id:"ru-pop",label:"Русский поп",q:"русский поп",group:"ru"},
  {id:"ru-rap",label:"Русский рэп",q:"русский рэп",group:"ru"},
  {id:"ru-rock",label:"Русский рок",q:"русский рок",group:"ru"},
  {id:"ru-alt",label:"Russian music",q:"Russian music",group:"ru"},
+ {id:"ru-new",label:"Новинки · поиск",q:"русские новинки",group:"ru"},
+ {id:"ru-hiphop",label:"Хип-хоп · RU",q:"russian hip hop",group:"ru"},
+ {id:"ru-rap2",label:"Rap · русские",q:"русский рэп 2026",group:"ru"},
+ {id:"ru-phonk",label:"Русский phonk",q:"russian phonk",group:"ru"},
+ {id:"ru-dance",label:"Танцевальная · RU",q:"русская танцевальная музыка",group:"ru"},
+ {id:"ru-90",label:"Русские 90-е · поиск",q:"russian 90s",group:"ru"},
+ {id:"ru-indie",label:"Русский инди",q:"русский инди",group:"ru"},
+ {id:"ru-punk",label:"Русский панк",q:"russian punk",group:"ru"},
+ {id:"ru-remix",label:"Русские ремиксы",q:"russian remix",group:"ru"},
+ {id:"ru-melodic",label:"Мелодичный рэп",q:"melodic russian rap",group:"ru"},
+ {id:"ru-chanson",label:"Шансон · поиск",q:"русский шансон",group:"ru"},
+ {id:"ru-classic",label:"Русская классика",q:"russian classical",group:"ru"},
+ {id:"ru-miyagi",label:"Поиск · Miyagi",q:"Miyagi",group:"ru"},
+ {id:"ru-kino",label:"Поиск · Кино",q:"Кино",group:"ru"},
+ {id:"ru-zemfira",label:"Поиск · Земфира",q:"Земфира",group:"ru"},
  {id:"am",label:"Հայկական երաժշտություն",q:"հայկական",group:"am"},
  {id:"am-pop",label:"Armenian Pop",q:"Armenian pop",group:"am"},
  {id:"am-rap",label:"Armenian Rap",q:"Armenian rap",group:"am"},
  {id:"am-folk",label:"Armenian Folk",q:"Armenian folk",group:"am"},
- {id:"am-alt",label:"Armenian Music",q:"Armenian music",group:"am"}
+ {id:"am-alt",label:"Armenian Music",q:"Armenian music",group:"am"},
+ {id:"am-dance",label:"Armenian Dance",q:"armenian dance",group:"am"},
+ {id:"am-jazz",label:"Armenian Jazz",q:"armenian jazz",group:"am"},
+ {id:"am-classic",label:"Հայկական դասական",q:"armenian classical",group:"am"}
 ];
 const clean=(x,n=130)=>String(x??"").replace(/[\u0000-\u001f\u007f]/g," ").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,n);
 const https=x=>{try{const u=new URL(String(x));return u.protocol==="https:"&&!u.username&&!u.password?u.href:""}catch{return""}};
@@ -45,6 +70,7 @@ const endpoint=(query,offset,limit=LIMIT)=>{
  return u.href;
 };
 let items=[],q="",offset=0,busy=false,complete=false,active=null,group="ru",preset="ru";
+const failedStreams=new Set(),confirmedStreams=new Set();
 const status=$("catalogStatus"),list=$("catalogResults"),more=$("catalogMore"),queryInput=$("catalogQuery");
 function textNode(tag,cls,value){const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=String(value);return el}
 function setStatus(s){status.textContent=s}
@@ -69,7 +95,10 @@ function trackCard(track,index){
  const info=textNode("div","catalog-details");
  info.append(textNode("strong","",track.title),textNode("span","",track.artist),textNode("small","",track.duration?Math.floor(track.duration/60)+":"+String(Math.floor(track.duration%60)).padStart(2,"0"):"♫"));
  const play=textNode("button","catalog-play","▶");play.type="button";play.setAttribute("aria-label","Слушать "+track.title);
- play.onclick=()=>V.play(track,items);
+ play.onclick=()=>{
+  setStatus('Проверяем воспроизведение «'+track.title+'»…');
+  V.play(track,items.filter(item=>!failedStreams.has(item.id)));
+ };
  const like=textNode("button","catalog-like","♡");like.type="button";like.title="В избранное";like.setAttribute("aria-label","Добавить в избранное "+track.title);
  like.onclick=()=>{V.toggleLike(track);like.textContent="♥";like.setAttribute("aria-label","Изменить избранное "+track.title)};
  const share=textNode("button","catalog-share","↗");share.type="button";share.title="Отправить в Telegram";
@@ -81,7 +110,9 @@ function trackCard(track,index){
 function render(){
  list.replaceChildren();
  if(!items.length){list.append(textNode("p","catalog-empty",busy?"Ищем музыку…":"Записей по этому запросу пока нет. Попробуй другой запрос."));return}
- const fragment=document.createDocumentFragment();items.forEach((t,i)=>fragment.append(trackCard(t,i)));list.append(fragment);
+ const fragment=document.createDocumentFragment();
+ items.filter(t=>!failedStreams.has(t.id)).forEach((t,i)=>fragment.append(trackCard(t,i)));
+ list.append(fragment);
 }
 async function loadMore(){
  if(busy||complete||!q)return;
@@ -105,7 +136,7 @@ async function loadMore(){
   }
   offset+=raw.length;
   complete=raw.length<LIMIT||offset>=MAX_RESULTS;
-  setStatus(items.length+" доступных аудиотреков в первой подборке · "+(complete?"Все результаты загружены.":"Можно загрузить ещё.")+" Нажми ▶ для прослушивания.");
+  setStatus(items.length+" записей по запросу в Audius · "+(complete?"Выдача закончилась.":"Можно загрузить ещё.")+" Воспроизведение зависит от источника.");
   render();
  }catch(err){
   if(active!==controller)return;
@@ -140,6 +171,21 @@ function selectPreset(id){
  group=target.group;preset=target.id;buttons();search(target.q);return true;
 }
 more.onclick=loadMore;
+document.addEventListener("vetogram:audio-error",event=>{
+ const id=String(event.detail?.trackId||"");
+ if(!id.startsWith("audius:"))return;
+ failedStreams.add(id);
+ if(items.some(x=>x.id===id)){
+  setStatus("Источник не воспроизвёл запись — убрали её из каталога на этом устройстве.");
+  render();
+ }
+});
+document.addEventListener("vetogram:audio-playing",event=>{
+ const id=String(event.detail?.trackId||"");
+ if(!id.startsWith("audius:"))return;
+ confirmedStreams.add(id);
+ if(items.some(x=>x.id===id))setStatus("Реальное воспроизведение подтверждено.");
+});
 document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS.find(x=>x.id==="ru").q)}});
 buttons();
 window.VetogramCatalog=Object.freeze({search,selectPreset,loadMore,normalize,endpoint,state:()=>({query:q,count:items.length,offset,complete})});
