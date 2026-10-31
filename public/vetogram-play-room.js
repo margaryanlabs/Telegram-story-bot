@@ -10,6 +10,7 @@
   const labelCode=$('#vpRoomCode'),labelSeat=$('#vpRoomSeat'),board=$('#vpRoomBoard');
   const status=$('#vpRoomStatus'),refreshButton=$('#vpRoomRefresh'),exitButton=$('#vpRoomExit');
   const copyButton=$('#vpRoomCopy');
+  const roundLabel=$('#vpRoomRound'),rematchButton=$('#vpRoomRematch');
   if(!create||!join||!board)return;
   const tg=window.Telegram?.WebApp;
   const STORAGE_KEY='vetogram:play:room-code:v1';
@@ -25,13 +26,14 @@
     join.disabled=busy||!configured||!tg?.initData;
     if(refreshButton)refreshButton.disabled=busy||!room;
     if(copyButton)copyButton.disabled=busy||!room;
+    if(rematchButton)rematchButton.disabled=busy||!room||room.status!=='finished'||room.rematchRequested;
   }
   function remember(code) {try{window.localStorage?.setItem(STORAGE_KEY,code);}catch{}}
   function clearRemembered(){try{window.localStorage?.removeItem(STORAGE_KEY);}catch{}}
   function stopPoll() {if(pollId!==null)window.clearInterval(pollId);pollId=null;}
   function ensurePoll(){
     stopPoll();
-    if(!room||!['waiting','active'].includes(room.status)||!playable()||!tg?.initData)return;
+    if(!room||!['waiting','active','finished'].includes(room.status)||!playable()||!tg?.initData)return;
     pollId=window.setInterval(()=>{
       if(!busy&&room&&playable())void fetchRoom({silent:true});
     },4000);
@@ -67,10 +69,19 @@
     if(!room){board.replaceChildren();setBusy(false);return;}
     labelCode.textContent=room.code;
     labelSeat.textContent=room.seat;
+    if(roundLabel)roundLabel.textContent=String(room.round||1);
+    if(rematchButton) {
+      rematchButton.hidden=room.status!=='finished';
+      rematchButton.textContent=room.rematchRequested?'Ожидаем согласия соперника':room.opponentRequested?'Принять реванш':'Предложить реванш';
+    }
     const outcome=room.winner;
     if(room.status==='waiting')inform('Ожидаем второго игрока. Отправь другу код или ссылку.');
     else if(room.status==='expired')inform('Время комнаты истекло. Создай новую.');
-    else if(room.status==='finished')inform(outcome==='draw'?'Ничья!':outcome===room.seat?'Победа! 🎉':'Победил второй игрок.');
+    else if(room.status==='finished') {
+      const result=outcome==='draw'?'Ничья!':outcome===room.seat?'Победа! 🎉':'Победил второй игрок.';
+      const vote=room.rematchRequested?' Ты предложил реванш — ждём согласия второго игрока.':room.opponentRequested?' Соперник предлагает реванш.':' Можно предложить реванш.';
+      inform(result+vote);
+    }
     else inform(room.turn===room.seat?'Твой ход — выбери клетку.':'Ход соперника — ждём.');
     board.replaceChildren();
     for(let cell=0;cell<9;cell++){
@@ -138,7 +149,7 @@
         room=next;
         render();
       }
-      if(!['waiting','active'].includes(next.status))stopPoll();
+      if(!['waiting','active','finished'].includes(next.status))stopPoll();
     }catch(error){
       const reason=errors[error?.code]||error?.message||'Нет связи с игровой комнатой.';
       if(error?.code==='expired'||error?.code==='not_found')stopPoll();
@@ -151,6 +162,10 @@
     if(current.status!=='active'||current.turn!==current.seat||current.board[cell]!=='.')return;
     await run('move',{code:current.code,version:current.version,cell});
   }
+  rematchButton?.addEventListener('click',()=>{
+    if(!room||busy||room.status!=='finished'||room.rematchRequested)return;
+    void run('rematch',{code:room.code,version:room.version});
+  });
   create.addEventListener('click',()=>{void run('create',{});});
   join.addEventListener('click',()=>{
     const code=normalize(codeInput?.value);
