@@ -1641,11 +1641,22 @@
           <label class="vp-search"><span aria-hidden="true">⌕</span><input type="search" id="vpGameSearch" placeholder="Поиск игр" aria-label="Поиск игр" autocomplete="off" maxlength="80" /></label>
           <div class="vp-filters" role="group" aria-label="Фильтр игр">
             <button type="button" class="vp-filter is-selected" data-vp-filter="all" aria-pressed="true">Все</button>
-            <button type="button" class="vp-filter" data-vp-filter="online" aria-pressed="false">С друзьями</button>
+            <button type="button" class="vp-filter" data-vp-filter="online" aria-pressed="false">Отдельные</button>
             <button type="button" class="vp-filter" data-vp-filter="offline" aria-pressed="false">Без сети</button>
             <button type="button" class="vp-filter" data-vp-filter="cards" aria-pressed="false">Карточные</button>
+            <button type="button" class="vp-filter" data-vp-filter="favorites" aria-pressed="false">★ Избранное</button>
           </div>
           <p class="vp-no-results" id="vpNoResults" role="status" hidden>Пока таких игр нет. Попробуй другой запрос.</p>
+          <div class="vp-share-panel" id="vpSharePanel" hidden aria-label="Поделиться выбранной игрой">
+            <label for="vpShareUrl">Ссылка на игру</label>
+            <div class="vp-share-line">
+              <input type="text" id="vpShareUrl" readonly aria-label="Ссылка на игру Vetogram" />
+              <button type="button" class="vp-button" id="vpCopyShare">Копировать</button>
+              <button type="button" class="vp-share-close" id="vpCloseShare" aria-label="Закрыть ссылку">×</button>
+            </div>
+            <p id="vpShareNotice" role="status">Ссылка готова.</p>
+          </div>
+          <p class="vp-catalog-status" id="vpStoreStatus" role="status" aria-live="polite"></p>
         </div>
         <div class="vp-section-head">
           <div><h2>Наш игровой клуб</h2><p>Большие игры Margaryan Labs.</p></div>
@@ -1731,6 +1742,23 @@
               <a href="https://github.com/margaryanlabs/Telegram-story-bot/issues/new?title=%5BPlay%5D%20%D0%9C%D0%BE%D1%8F%20%D0%B8%D0%B3%D1%80%D0%B0" target="_blank" rel="noopener noreferrer">Предложить игру ↗</a>
             </div>
             <small>Приём предложений через GitHub; автоматической публикации пока нет.</small>
+            <details class="vp-dev-details">
+              <summary>Подготовить заявку на свою игру</summary>
+              <form id="vpDeveloperForm" class="vp-dev-form" autocomplete="off">
+                <label>Название игры<input id="vpDeveloperName" name="game-name" maxlength="70" minlength="2" required placeholder="Как называется игра" /></label>
+                <label>Ссылка на код или демо<input id="vpDeveloperRepo" name="game-repo" type="url" maxlength="250" required placeholder="https://github.com/..." /></label>
+                <label>Режим<select id="vpDeveloperMode" name="game-mode">
+                  <option value="solo">Одиночная</option>
+                  <option value="local-multiplayer">На одном устройстве</option>
+                  <option value="remote-multiplayer">Сетевая игра</option>
+                </select></label>
+                <label>Описание<textarea id="vpDeveloperPitch" name="game-pitch" minlength="15" maxlength="400" rows="3" required placeholder="Как играть, для кого, откуда ассеты и какие данные собираются"></textarea></label>
+                <button class="vp-button" type="submit">Подготовить ссылку для отправки</button>
+              </form>
+              <p class="vp-dev-disclaimer">Никакие заявки не отправляются автоматически. Сначала проверь текст, затем открой GitHub и отправь его самостоятельно. Не указывай пароли или приватные данные.</p>
+              <a id="vpDeveloperDraftLink" class="vp-dev-result" href="#" target="_blank" rel="noopener noreferrer" hidden>Открыть подготовленную заявку в GitHub ↗</a>
+              <p id="vpDeveloperStatus" class="vp-dev-status" role="status" aria-live="polite"></p>
+            </details>
           </div>
         </section>
         <aside class="vp-roadmap">
@@ -1796,5 +1824,7 @@
   <script src="/vetogram-play-registry.js?v=20261031-play-catalog-v2" defer></script>
   <script src="/vetogram-play.js?v=20261031-play-v1" defer></script>
   <script src="/vetogram-play-arcade.js?v=20261031-play-arcade-v2" defer></script>
+  <script src="/vetogram-play-store.js?v=20261031-play-store-v1" defer></script>
+  <script src="/vetogram-play-developer.js?v=20261031-play-dev-v1" defer></script>
 </body>
 </html>
