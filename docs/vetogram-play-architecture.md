@@ -54,3 +54,14 @@ Use report/skip controls for provocative party questions and rate-limit anonymou
 - Standalone source games are verified, permission boundaries reviewed, error/back-navigation behavior tested.
 - Nothing is described as native-in-app until an actual bundle has been integrated and verified.
 - No production release or deploy until explicit approval.
+
+## Next code-only milestone: expanded curated catalog
+
+- Search/filter UI now covers **six verified entries**: BLOTENQ? and WHO? (external first-party applications), Reaction, Four Pairs, Tic-Tac-Toe vs local minimax bot, and 2048 (all four built-in/offline logic). These are not six embedded multiplayer games.
+- New native games live in `public/vetogram-play-arcade.js`, intentionally separate from the existing Play module.
+- `public/vetogram-play-registry.js` is an **allowlisted client catalog**, not a remotely downloaded plug-in store. Filter metadata is static until code review.
+- `docs/vetogram-play-developers.md`, `examples/vetogram-play-starter/`, `lib/vetogram-play-manifest.js`, `scripts/validate-vetogram-game.mjs` and a draft GitHub issue template establish manual contribution rules. A valid manifest alone **never** installs a game or grants permissions.
+- Mini-game scores remain in local storage, not linked to Telegram accounts and not competitive verified achievements.
+- Future third-party games must run in an isolated sandbox or approved external origin, with user-approved events and server-side validation. No automatic community game code execution.
+
+**Current release gate is still closed:** only feature branch edits, no production deploy, no Neon database changes and no merge.
