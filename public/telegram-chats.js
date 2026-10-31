@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,lastListFetchedAt:0,pendingLoginRefresh:false,
     thread:null,messages:[],threadLoading:false,threadLoadError:'',threadAuthRejected:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,threadRequestAbort:null,archiveRequestAbort:null,
-    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarActive:0,avatarEpoch:0,
+    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarNoPhoto:new Set(),avatarRetryCounts:new Map(),avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),draftVersions:new Map(),sendInFlight:false,sendInFlightChatId:null,lastSendFailure:null,lastSendFailures:new Map(),
@@ -1307,6 +1307,9 @@
     // A previously verified account can have zero chats; an outage must not
     // masquerade as session revocation just because its inbox is empty.
     if(reset){
+      // A contact may add a photo after an earlier owner-verified no-photo result.
+      // Explicit inbox refresh is permission to recheck those peers.
+      state.avatarNoPhoto?.clear();
       state.page=0;state.autoPages=0;state.hasMore=true;
       if(!keepVisible){state.chats=[];state.connectionProof=null;}
       hideNotice();
@@ -1465,8 +1468,29 @@
       const body=await response.json();
       if(!body?.ok||!body.avatars||typeof body.avatars!=='object')
         throw new Error('avatar_batch_unavailable');
-      return body.avatars;
+      return {avatars:body.avatars,noPhoto:Array.isArray(body.noPhoto)?body.noPhoto:[]};
     }finally{clearTimeout(timeout);}
+  }
+  // Retry transient profile-image failures without a scroll or reopening a chat.
+  // A pending retry is owner- and epoch-bound; no timers survive account changes.
+  let avatarRetryTimer=null;
+  function scheduleAvatarRetry(){
+    clearTimeout(avatarRetryTimer);avatarRetryTimer=null;
+    const next=[...state.avatarRetryAt.values()].filter(at=>at>Date.now()).sort((a,b)=>a-b)[0];
+    if(!next)return;
+    const owner=state.ownerInitData,epoch=state.avatarEpoch;
+    avatarRetryTimer=setTimeout(()=>{
+      avatarRetryTimer=null;
+      if(owner!==state.ownerInitData||epoch!==state.avatarEpoch||
+         owner!==String(tg?.initData||''))return;
+      queueVisibleAvatars();
+    },Math.max(500,next-Date.now()+20));
+  }
+  function deferAvatarRetry(id){
+    const attempts=Math.min(4,Number(state.avatarRetryCounts?.get(id)||0)+1);
+    state.avatarRetryCounts?.set(id,attempts);
+    state.avatarRequested.delete(id);
+    state.avatarRetryAt.set(id,Date.now()+Math.min(120000,20000*2**(attempts-1)));
   }
   // Owner-scoped active thread takes priority over the inbox viewport.
   // The chat header must not stay at initials just because the inbox is hidden.
@@ -1481,7 +1505,8 @@
     const threadId=threadVisible&&state.connectionProof?.verified===true&&
       state.thread&&!state.thread.archiveOnly?String(state.thread.id):null;
     if(threadId&&!state.avatarUrls.has(threadId)&&
-      !state.avatarRequested.has(threadId)&&(state.avatarRetryAt.get(threadId)||0)<=now){
+      !state.avatarRequested.has(threadId)&&!state.avatarNoPhoto?.has(threadId)&&
+       (state.avatarRetryAt.get(threadId)||0)<=now){
       state.avatarRequested.add(threadId);
       // One visible header before any pending offscreen avatar thumbnails.
       state.avatarQueue.unshift(threadId);
@@ -1490,6 +1515,7 @@
       .filter(el=>{
         const id=String(el.dataset.vetoAvatar||'');
         if(!id||state.avatarUrls.has(id)||state.avatarRequested.has(id)||
+           state.avatarNoPhoto?.has(id)||
           (state.avatarRetryAt.get(id)||0)>now||
           el.closest('.veto-mirror-chat.is-cleared'))return false;
         const rect=el.getBoundingClientRect();
@@ -1508,10 +1534,17 @@
     if(!ids.length){runAvatarQueue();return;}
     const epoch=state.avatarEpoch,ownerKey=state.ownerInitData;
     state.avatarActive=1;
-    fetchAvatarBatch(ids,ownerKey).then(avatars=>{
+    fetchAvatarBatch(ids,ownerKey).then(({avatars,noPhoto})=>{
       if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData||
          ownerKey!==String(tg?.initData||''))return;
       for(const id of ids){
+        if(noPhoto.includes(id)){
+          state.avatarNoPhoto?.add(id);
+          state.avatarRequested.delete(id);
+          state.avatarRetryAt.delete(id);
+          state.avatarRetryCounts?.delete(id);
+          continue;
+        }
         const base64=avatars[id];
         let href=null;
         if(typeof base64==='string'&&base64.length>0&&base64.length<=256000){
@@ -1523,11 +1556,12 @@
           }catch{/* Bad media: skip this avatar, keep other images. */}
         }
         if(!href){
-          state.avatarRequested.delete(id);
-          state.avatarRetryAt.set(id,Date.now()+90000);
+          deferAvatarRetry(id);
           continue;
         }
         state.avatarUrls.set(id,href);
+        state.avatarRetryAt.delete(id);
+        state.avatarRetryCounts?.delete(id);
         for(const el of document.querySelectorAll('#telegramMirrorList [data-veto-avatar]')){
           if(el.dataset.vetoAvatar!==id)continue;
           const img=document.createElement('img');
@@ -1549,12 +1583,12 @@
     }).catch(()=>{
       if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData)return;
       for(const id of ids){
-        state.avatarRequested.delete(id);
-        state.avatarRetryAt.set(id,Date.now()+90000);
+        deferAvatarRetry(id);
       }
     }).finally(()=>{
       if(epoch!==state.avatarEpoch)return;
       state.avatarActive=0;
+      scheduleAvatarRetry();
       queueVisibleAvatars();
       runAvatarQueue();
     });
@@ -1877,7 +1911,8 @@
     // thread class must never strand the next Telegram owner without navigation.
     window.VetoThemeDock?.('inbox');
     state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
-    state.avatarRetryAt.clear();state.avatarActive=0;
+    state.avatarRetryAt.clear();state.avatarNoPhoto?.clear();state.avatarRetryCounts?.clear();
+    clearTimeout(avatarRetryTimer);avatarRetryTimer=null;state.avatarActive=0;
     state.avatarUrls.forEach(href=>{try{URL.revokeObjectURL(href)}catch{}});
     state.avatarUrls.clear();
     revokeMediaUrls();
@@ -2150,7 +2185,7 @@
         :state.threadLoadError
           ?'<div class="veto-mirror-retry-state">'+
               empty('Не удалось загрузить историю',
-                'Соединение с Telegram прервалось. Сохранённая история этого аккаунта не удалена.','↻')+
+                state.threadLoadError||'Соединение с Telegram прервалось. Попробуй ещё раз.','↻')+
               '<button type="button" class="veto-mirror-retry-thread" data-mirror-retry-thread>'+
               '↻ Повторить загрузку</button></div>'
           :empty('Пустой чат','В Telegram нет доступных сообщений');
@@ -2332,7 +2367,8 @@
         state.connectionProof=null;state.page=0;state.hasMore=false;
         if(state.thread)state.thread.serverCanSend=false;
         state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
-        state.avatarRetryAt.clear();state.avatarActive=0;
+        state.avatarRetryAt.clear();state.avatarNoPhoto?.clear();state.avatarRetryCounts?.clear();
+    clearTimeout(avatarRetryTimer);avatarRetryTimer=null;state.avatarActive=0;
         state.avatarUrls.forEach(url=>{try{URL.revokeObjectURL(url)}catch{}});
         state.avatarUrls.clear();
         $('telegramMirrorList')?.replaceChildren?.();
@@ -2473,10 +2509,8 @@
       else link.removeAttribute('href');
     }
     // Immediate owner-verified inbox snapshot; not misrepresented as history.
-    const teaser=state.connectionProof?.verified&&!chat.archiveOnly&&chat.preview
-      ?'<div class="veto-mirror-first-preview" role="status"><span>ПОСЛЕДНЕЕ ИЗ СПИСКА</span><p>'+
-        safe(String(chat.preview).slice(0,200))+'</p><small>Открываю историю из Telegram…</small></div>'
-      :empty('Открываю переписку','Получаю последние сообщения из Telegram…');
+    const teaser=empty('Загружаю переписку',
+      'Получаю сообщения из твоего Telegram…');
     const threadBox=$('telegramThreadMessages');
     // Public DOM markers describe the currently verified UI owner/thread,
     // without exposing Telegram signed initData, session or private messages.
@@ -2667,7 +2701,12 @@
         $('telegramThreadMeta').textContent=(labels[data.chat.type]||'чат')+
           (state.thread.savedCopy?' · сохранённая история Vetogram':' · Telegram');
       }
-      state.threadLoading=false;state.threadLoadError='';state.threadAuthRejected=false;
+      state.threadLoading=false;
+      // HTTP 200 can still report a failed Telegram/archive read with zero
+      // messages. Do not label that state as an empty conversation.
+      state.threadLoadError=data.warning&&!state.messages.length
+        ?String(data.warning):'';
+      state.threadAuthRejected=false;
       renderMessages({keepScroll:!reset,anchor:rememberedAnchor});
       rememberHotThread();
       renderSendComposer();

@@ -132,7 +132,7 @@ export default async function handler(req,res){
         allowed=new Map(dialogs.map(d=>[safeId(d?.id),d]));
       }
       if(batch){
-        const avatars={};
+        const avatars={},noPhoto=[];
         let cursor=0,fatal=null;
         // Up to two concurrent thumbnails within ONE owner-verified MTProto
         // connection. The earlier serial loop could exceed the WebView's 24s
@@ -141,7 +141,8 @@ export default async function handler(req,res){
         const worker=async()=>{
           while(cursor<ids.length&&!fatal){
             const id=ids[cursor++],dialog=allowed.get(id);
-            if(!dialog?.entity?.photo)continue;
+            if(!dialog)continue; // Never reveal peer membership outside verified dialogs.
+            if(!dialog.entity?.photo){noPhoto.push(id);continue;}
             try{
               const bytes=await prepareAvatar(await getAvatar(client,dialog));
               if(bytes&&!fatal)avatars[id]=bytes.toString('base64');
@@ -157,7 +158,7 @@ export default async function handler(req,res){
         };
         await Promise.all([worker(),worker()]);
         if(fatal)throw fatal;
-        return {avatars};
+        return {avatars,noPhoto};
       }
       const dialog=allowed.get(chatId);
       if(!dialog)return null;
