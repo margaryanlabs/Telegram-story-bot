@@ -36,7 +36,7 @@
     if(selected==='offline') return item.kind==='local';
     if(selected==='online') return item.kind==='external';
     if(selected==='cards') return item.genre==='cards';
-    if(selected==='favorites') return readFavorites().has(item.id);
+    if(selected==='favorites') return (window.VetogramPlayFavorites || readFavorites()).has(item.id);
     return false;
   }
   function update() {
