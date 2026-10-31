@@ -1621,7 +1621,7 @@
             <img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="26" height="26" />
             <div><span class="vp-eyebrow">VETOGRAM / ENTERTAINMENT</span><br /><strong>PLAY</strong></div>
           </div>
-          <span class="vp-count">2 игры внутри</span>
+          <span class="vp-count" id="vpCatalogCount">4 мини-игры · 2 клуба</span>
         </header>
 
         <section class="vp-hero" aria-labelledby="vpHeroTitle">
@@ -1637,11 +1637,21 @@
           </div>
         </section>
 
+        <div class="vp-catalog-tools" aria-label="Поиск по игровому каталогу">
+          <label class="vp-search"><span aria-hidden="true">⌕</span><input type="search" id="vpGameSearch" placeholder="Поиск игр" aria-label="Поиск игр" autocomplete="off" maxlength="80" /></label>
+          <div class="vp-filters" role="group" aria-label="Фильтр игр">
+            <button type="button" class="vp-filter is-selected" data-vp-filter="all" aria-pressed="true">Все</button>
+            <button type="button" class="vp-filter" data-vp-filter="online" aria-pressed="false">С друзьями</button>
+            <button type="button" class="vp-filter" data-vp-filter="offline" aria-pressed="false">Без сети</button>
+            <button type="button" class="vp-filter" data-vp-filter="cards" aria-pressed="false">Карточные</button>
+          </div>
+          <p class="vp-no-results" id="vpNoResults" role="status" hidden>Пока таких игр нет. Попробуй другой запрос.</p>
+        </div>
         <div class="vp-section-head">
           <div><h2>Наш игровой клуб</h2><p>Большие игры Margaryan Labs.</p></div>
           <span>01 / КЛУБ</span>
         </div>
-        <article class="vp-featured" aria-label="Армянский блот BLOTENQ">
+        <article class="vp-featured" data-vp-game="blotenq" aria-label="Армянский блот BLOTENQ">
           <div class="vp-blot-art" aria-hidden="true">
             <span class="vp-blot-suit first">♠</span><strong>ԲԼՈՏ<i>ԵՆՔ?</i></strong><span class="vp-blot-suit last">♥</span>
           </div>
@@ -1653,7 +1663,7 @@
             <small>Пока открывается отдельно · интеграция игрового движка готовится</small>
           </div>
         </article>
-        <article class="vp-who" aria-label="WHO? Group DNA — социальная игра">
+        <article class="vp-who" data-vp-game="who" aria-label="WHO? Group DNA — социальная игра">
           <div class="vp-who-mark" aria-hidden="true">WHO<span>?</span></div>
           <div class="vp-who-copy">
             <span class="vp-flag">НАША ИГРА · СОЦИАЛЬНЫЙ РЕЖИМ</span>
@@ -1668,7 +1678,7 @@
           <span>02 / АРКАДА</span>
         </div>
         <div class="vp-mini-grid" aria-label="Игры без подключения">
-          <article class="vp-mini">
+          <article class="vp-mini" data-vp-game="reaction">
             <span class="vp-mini-icon" aria-hidden="true">◎</span>
             <h3>Реакция</h3>
             <p>Проверь скорость. Дождись сигнала и коснись экрана как можно быстрее.</p>
@@ -1676,7 +1686,7 @@
             <button type="button" id="vpReactionButton" class="vp-reaction-button" data-state="idle">Начать проверку реакции</button>
             <div id="vpReactionInfo" role="status" aria-live="polite" class="vp-mini-stat">Дождись светлого сигнала.</div>
           </article>
-          <article class="vp-mini">
+          <article class="vp-mini" data-vp-game="pairs">
             <span class="vp-mini-icon" aria-hidden="true">♣</span>
             <h3>Четыре пары</h3>
             <p>Найди совпадения среди восьми карточек. Побеждает внимательность.</p>
@@ -1687,7 +1697,42 @@
             <div id="vpMemoryGrid" class="vp-memory-grid" role="group" aria-label="Карточки игры на память"></div>
             <div id="vpMemoryInfo" role="status" aria-live="polite" class="vp-mini-stat">Найди четыре пары.</div>
           </article>
+          <article class="vp-mini" data-vp-game="tic">
+            <span class="vp-mini-icon" aria-hidden="true">✕</span>
+            <h3>Крестики-нолики</h3>
+            <p>Сыграй против умного бота. Ты — X, бот — O.</p>
+            <span id="vpTttWins" class="vp-mini-stat">Побед на устройстве: 0</span>
+            <div id="vpTttGrid" class="vp-ttt-grid" role="group" aria-label="Поле крестиков-ноликов"></div>
+            <div class="vp-memory-actions"><span id="vpTttStatus" class="vp-mini-stat" role="status" aria-live="polite">Твой ход.</span><button class="vp-button ghost" type="button" id="vpTttReset">Заново ↺</button></div>
+          </article>
+          <article class="vp-mini" data-vp-game="2048">
+            <span class="vp-mini-icon" aria-hidden="true">▦</span>
+            <h3>2048</h3>
+            <p>Соединяй плитки с одинаковыми числами. Проведи по полю или используй стрелки.</p>
+            <div class="vp-memory-actions"><span id="vp2048Score" class="vp-mini-stat">Очки: 0</span><span id="vp2048Best" class="vp-mini-stat">Рекорд: 0</span></div>
+            <div id="vp2048Grid" class="vp-2048-grid" role="group" aria-label="Игровое поле 2048"></div>
+            <div class="vp-2048-controls" role="group" aria-label="Направление движения 2048">
+              <button data-vp-2048="left" type="button" aria-label="Двигать плитки влево">←</button>
+              <button data-vp-2048="up" type="button" aria-label="Двигать плитки вверх">↑</button>
+              <button data-vp-2048="down" type="button" aria-label="Двигать плитки вниз">↓</button>
+              <button data-vp-2048="right" type="button" aria-label="Двигать плитки вправо">→</button>
+            </div>
+            <div class="vp-memory-actions"><span id="vp2048Status" class="vp-mini-stat" role="status" aria-live="polite">Соединяй плитки.</span><button class="vp-button ghost" type="button" id="vp2048Reset">Заново ↺</button></div>
+          </article>
         </div>
+        <section class="vp-developer" aria-labelledby="vpDevTitle">
+          <div class="vp-developer-orb" aria-hidden="true">{ }</div>
+          <div>
+            <span class="vp-flag">VETOGRAM PLAY · ДЛЯ РАЗРАБОТЧИКОВ</span>
+            <h2 id="vpDevTitle">Создай свою игру для Vetogram</h2>
+            <p>Скоро здесь смогут появляться игры независимых разработчиков. Мы готовим открытый формат игры, проверку безопасности и ручной отбор перед публикацией.</p>
+            <div class="vp-developer-links">
+              <a href="https://github.com/margaryanlabs/Telegram-story-bot/blob/feat/vetogram-play-hub-20261031/docs/vetogram-play-developers.md" target="_blank" rel="noopener noreferrer">Документация ↗</a>
+              <a href="https://github.com/margaryanlabs/Telegram-story-bot/issues/new?title=%5BPlay%5D%20%D0%9C%D0%BE%D1%8F%20%D0%B8%D0%B3%D1%80%D0%B0" target="_blank" rel="noopener noreferrer">Предложить игру ↗</a>
+            </div>
+            <small>Приём предложений через GitHub; автоматической публикации пока нет.</small>
+          </div>
+        </section>
         <aside class="vp-roadmap">
           <span class="vp-roadmap-icon" aria-hidden="true">✧</span>
           <div><strong>Дальше — игры с друзьями</strong><small>Общие комнаты, приглашения из чата и чемпионаты появятся после проверки безопасной интеграции. Сейчас результаты мини-игр хранятся только на устройстве.</small></div>
@@ -1748,6 +1793,8 @@
   <script src="/brand-pack.js?v=20261007-veto-telegram-v2"></script>
   <script src="/veto-launch-polish.js?v=20261019-launch-01" defer></script>
   <script src="/vetogram-header.js?v=20261021-v1" defer></script>
+  <script src="/vetogram-play-registry.js?v=20261031-play-catalog-v2" defer></script>
   <script src="/vetogram-play.js?v=20261031-play-v1" defer></script>
+  <script src="/vetogram-play-arcade.js?v=20261031-play-arcade-v2" defer></script>
 </body>
 </html>
