@@ -67,3 +67,28 @@ Date: 31 October 2026. GitHub-only work. **No deployment, merge, payment, storag
 ### Truthfulness gate for product launch
 
 Do not advertise arbitrary contemporary Marvel/Harry Potter/US films or famous chart songs as playable without an actual authorized player and rights holder's permission. No song or video is extracted from YouTube/VK/Yandex without authorization. A direct source URL that returns an audio/video error must be marked unavailable, not silently replaced. The user explicitly requested "if not playable, don't add"; no dummy catalogue rows or fake Play buttons may be introduced.
+
+
+## VETOGRAM 6.4 — Playback confidence and catalogue scale (31 October 2026)
+
+- **No absolute provider guarantee:** source-owned streaming can fail after metadata success, including regional blocks, copyright removals, WebView codec errors, timeouts, Internet outages and platform changes. Playback confirmation is an individual user-device event, not an API lookup or the presence of an iframe.
+- **Cinema provider:** `public/cinema-provider.js` uses origin + exact iframe-window checks and verifies reported video IDs in either RUTUBE's `videoId` or `video_id` notation; emits `playStarted` only for RUTUBE's published `player:playStart` event. `player:ready` and `player:init` only mean the iframe loaded, **not** that video started.
+- **Cinema UI:** `public/cinema.js` keeps the connecting message until actual `playStart` or `player:changeState playing`. RUTUBE `player:error` marks the item unavailable and removes it from the one-tap shelf for the browser session. A 20-second watchdog reports **no confirmation** without falsely classifying a user who has not pressed ▶ as a dead video.
+- **Cinema series:** only series with source-approved videos remain. Added a real genre filter backed by actual episode metadata (never a fake series count). Non-playable contemporary series editorial cards stay hidden. Publishers expanded from 6 to 8 to include `rossiya1` (RUTUBE channel 24620967; official VGTRK Russia 1) and `centralpartnership` (channel 798788; studio/distributor). Each video still requires the matching channel author's ID, full duration, no private/paid/embeddability ban, a valid RUTUBE ID and licensed native iframe; empty/denied feeds do not synthesize results.
+- **Music:** the core audio element sends `vetogram:audio-playing` on the browser's native `playing` event (different from an `audio.play()` call). The curated ccMixter shelf confirms successful audio or removes a failing/25-second-unconfirmed MP3 in the current session; the Audius catalog also suppresses explicitly failed tracks, while original streams remain on their licensed providers. A search result is not labeled a guaranteed stream.
+- **Books:** the first 18 full-volume sources and the explicitly chapter-checked 1869 Machiavelli edition retain confident edition labels; for other Wikisource works, an index of chapters/large source page is labeled *source text, completeness to verify* rather than automatically *complete work*. Real chapter data is fetched upon opening. Older offline packs/EPUB export and user-owned files remain intact.
+- **Testing:** added `tests/vetogram-media-confidence-64.test.js` exercising iframe origin/window/id isolation and RUTUBE started-vs-ready, provider source constraints, series genre controls, native audio playing/failure behavior. Revalidated 22 source/syntax/content/linkage checks in isolation and repaired stale expected unique title count (124). Full Node suite/build and real owner-device E2E remain **unrun**; current PR is **NOT production verified**.
+
+### Verified upstream references
+
+- RUTUBE embed/events: https://rutube.ru/info/embed/ (official `player:playStart`, `player:error`, `player:ready` and playing state)
+- Official RUTUBE Russia 1 channel: https://rutube.ru/channel/24620967/
+- RUTUBE Central Partnership publisher: https://rutube.ru/channel/798788/
+- Audius public API and streaming: https://api.audius.co/v1
+- ccMixter public API / artist-owned CC media: https://ccmixter.org/about
+- Russian public-domain books: https://ru.wikisource.org/
+- Do not automatically onboard the Jamendo API for commercial Vetogram without permission: https://devportal.jamendo.com/api_terms_of_use
+
+### Release block / one combined future deployment
+
+Keep PR #212 as **draft** atop #210. No deployment/promotion was run. Before inviting users or promising Play reliability, verify *actual film playback started events*, MP3 started events and book chapter availability on Android, iPhone, Fold and relevant regions, with explicit rights review for modern movies and songs; merge independently developed Messenger #211 and Games in a later release branch. If a user explicitly requests a sale/purchase flow later, review payment handling and content licenses first. No paid subscription sales were added to this media change.
