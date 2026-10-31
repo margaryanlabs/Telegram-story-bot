@@ -1851,10 +1851,10 @@
   // consent wizard in the SAME Mini App. Never silently connect a bot or grant
   // access, and never act on a different signed Telegram owner.
   function offerBusinessConsentAfterLogin() {
-    const owner=String(tg?.initData||'');
+    const owner=String(tg?.initData||''),ownerEpoch=viewerOwnerEpoch;
     if(!owner)return;
     setTimeout(() => {
-      if(owner!==String(tg?.initData||''))return;
+      if(owner!==String(tg?.initData||'') || ownerEpoch!==viewerOwnerEpoch)return;
       if(typeof window.VetoTelegramOpenUnifiedOnboarding!=='function')return;
       Promise.resolve(window.VetoTelegramOpenUnifiedOnboarding({automatic:true})).catch(()=>{});
     },0);
