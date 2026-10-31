@@ -157,3 +157,25 @@
 .vp-screen .vp-dev-result[hidden]{display:none!important}
 .vp-screen .vp-dev-status{margin-top:8px!important;color:#e6c1ae!important;font-size:11px!important}
 @media(max-width:390px){.vp-screen .vp-share-line{flex-wrap:wrap}.vp-screen .vp-share-line input{flex:1 0 100%}.vp-screen .vp-dev-form{grid-template-columns:1fr}.vp-screen .vp-dev-form label{grid-column:1/-1}}
+
+
+/* Immersive game runner: only local games are mounted; external games remain outbound links. */
+.vp-screen .vp-mini[data-vp-game]:not(.vp-game-in-dialog)>:not(.vp-mini-icon):not(h3):not(p):not(.vp-store-actions):not(.vp-open-game){display:none!important}
+.vp-screen .vp-mini:not(.vp-game-in-dialog){min-height:194px}
+.vp-screen .vp-mini .vp-open-game{display:inline-flex;align-items:center;justify-content:center;min-height:39px;width:100%;margin-top:auto;border-radius:12px;border:1px solid rgba(240,177,160,.45);background:#e8ad9a;color:#27191d;font-size:12px;font-weight:900;cursor:pointer}
+.vp-screen .vp-mini .vp-open-game:focus-visible{outline:2px solid #e8ad9a;outline-offset:3px}
+.vp-screen .vp-mini.vp-game-in-dialog>.vp-open-game{display:none}
+.vp-screen .vp-game-dialog{position:fixed;inset:0;width:min(calc(100% - 20px),520px);max-width:520px;max-height:calc(100dvh - 28px);overflow-y:auto;border:1px solid #4c3d44;border-radius:24px;padding:14px;background:#121116;color:#f2e9e6;box-shadow:0 24px 90px rgba(0,0,0,.6);overscroll-behavior:contain}
+.vp-screen .vp-game-dialog:not([open]){display:none}
+.vp-screen .vp-game-dialog::backdrop{background:rgba(3,3,6,.88);backdrop-filter:blur(7px)}
+.vp-screen .vp-game-dialog-header{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:12px}
+.vp-screen .vp-game-dialog-header span{font-size:10px;font-weight:900;letter-spacing:.16em;color:#e2b1a7}
+.vp-screen .vp-game-dialog-header button{border:1px solid rgba(255,255,255,.16);border-radius:12px;min-height:38px;padding:9px 13px;background:#262029;color:#fff;font-size:12px;font-weight:800;cursor:pointer}
+.vp-screen .vp-game-dialog-header button:focus-visible{outline:2px solid #e4a492;outline-offset:2px}
+.vp-screen .vp-game-dialog-mount{min-width:0}
+.vp-screen .vp-game-dialog .vp-mini{min-height:0;border:0;background:#1d1a21;padding:18px;border-radius:18px}
+.vp-screen .vp-game-dialog .vp-store-actions{margin:8px 0}
+.vp-screen .vp-game-dialog .vp-2048-grid{width:min(100%,340px)}
+.vp-screen .vp-game-dialog .vp-ttt-grid{max-width:310px}
+@media(max-width:390px){.vp-screen .vp-game-dialog{width:calc(100% - 10px);max-height:calc(100dvh - 10px);border-radius:15px;padding:9px}.vp-screen .vp-game-dialog .vp-mini{padding:12px}}
+@media(prefers-reduced-motion:reduce){.vp-screen .vp-game-dialog::backdrop{backdrop-filter:none}}
