@@ -15,7 +15,7 @@
     context:null,stream:null,source:null,nodes:null,oscillator:null,
     recorder:null,chunks:[],recordedBlob:null,recordedUrl:null,
     preset:'clean',morph:75,active:false,recording:false,micStarting:false,micEpoch:0,
-    startedAt:0,raf:0,monitor:false,
+    recordingEpoch:0,sessionOwner:'',startedAt:0,raf:0,monitor:false,
   };
   const extFor=mime=>mime.includes('mp4')?'m4a':mime.includes('ogg')?'ogg':'webm';
   const toast=message=>{
@@ -60,6 +60,18 @@
     smooth(n.feedback.gain,Math.min(.32,profile.echo*k*.65));
     smooth(n.output.gain,.9);
   }
+  function paintIdleSpectrum(){
+    const canvas=$('voiceSpectrum'),ctx=canvas?.getContext('2d');
+    if(!ctx)return;
+    const w=canvas.width,h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#090d13';ctx.fillRect(0,0,w,h);
+    // Static resting baseline, never fabricated motion when mic is off.
+    ctx.fillStyle='rgba(186,210,237,.24)';
+    const stride=w/90;
+    for(let i=0;i<90;i++)ctx.fillRect(i*stride+2,h*.51-1,
+      Math.max(2,stride-3),2);
+  }
   function draw(){
     const canvas=$('voiceSpectrum');
     if(!canvas)return;
@@ -75,14 +87,15 @@
     for(let i=0;i<90;i++){
       const value=hasAudio
         ?Math.abs((bins[Math.floor(i*bins.length/90)]||128)-128)/128
-        :Math.abs(Math.sin((i*2.15)+(Date.now()/2500)))*.085;
+        :0;
       const height=5+Math.max(.06,value)*h*.68;
       const edge=Math.abs(i-44.5)/44.5;
       const alpha=.32+.55*(1-edge);
       ctx.fillStyle='rgba(186,210,237,'+alpha.toFixed(2)+')';
       ctx.fillRect(i*stride+2,center-height/2,Math.max(2,stride-3),height);
     }
-    state.raf=requestAnimationFrame(draw);
+    if(state.active)state.raf=requestAnimationFrame(draw);
+    else state.raf=0;
   }
   function stopMonitor(){
     if(!state.nodes||!state.context)return;
@@ -92,6 +105,9 @@
   }
   function stopMic(){
     state.micEpoch++;
+    // Invalidate callbacks from every previous recorder before calling stop().
+    // A late onstop must not reveal a voice blob after leaving the screen.
+    state.recordingEpoch++;
     state.micStarting=false;
     if(state.recording){try{state.recorder?.stop()}catch{};state.recording=false;}
     stopMonitor();
@@ -101,7 +117,11 @@
     if(state.context){state.context.close().catch(()=>{});}
     state.context=null;state.stream=null;state.nodes=null;state.oscillator=null;
     state.recorder=null;state.source=null;state.active=false;
+    // Manual disconnect keeps a finished recording available for download;
+    // leaving the screen or switching owners revokes it separately.
+    if(!state.recordedBlob)state.sessionOwner='';
     cancelAnimationFrame(state.raf);state.raf=0;
+    paintIdleSpectrum();
     updateButtons();
   }
   async function startMic(){
@@ -110,10 +130,13 @@
       return;
     }
     const epoch=++state.micEpoch;
+    const requestedOwner=String(window.Telegram?.WebApp?.initData||'');
+    state.sessionOwner=requestedOwner;
     state.micStarting=true;
     updateButtons();
     toast('Запрашиваю разрешение на микрофон…');
     const isCurrent=()=>epoch===state.micEpoch&&!document.hidden&&
+      requestedOwner===String(window.Telegram?.WebApp?.initData||'')&&
       document.querySelector('.screen.active')?.dataset?.screen==='voice';
     let stream=null,context=null;
     try{
@@ -181,12 +204,14 @@
   function releaseRecording(){
     if(state.recordedUrl)URL.revokeObjectURL(state.recordedUrl);
     state.recordedUrl=null;state.recordedBlob=null;
+    if(!state.active&&!state.micStarting)state.sessionOwner='';
     $('voicePlayer').removeAttribute('src');
     $('voiceResult').hidden=true;
     updateButtons();
   }
   function startRecording(){
-    if(!state.active||state.recording||!state.nodes)return;
+    if(!state.active||state.recording||!state.nodes||
+       state.sessionOwner!==String(window.Telegram?.WebApp?.initData||''))return;
     releaseRecording();
     const options=['audio/webm;codecs=opus','audio/mp4','audio/webm','audio/ogg;codecs=opus']
       .find(type=>window.MediaRecorder.isTypeSupported?.(type));
@@ -194,9 +219,20 @@
     try{recorder=new MediaRecorder(state.nodes.destination.stream,options?{mimeType:options}:{});
     }catch{toast('Формат записи не поддерживается на этом телефоне');return;}
     const chunks=[];const started=Date.now();
-    recorder.ondataavailable=event=>{if(event.data?.size)chunks.push(event.data);};
-    recorder.onerror=()=>toast('Ошибка записи. Перезапусти микрофон и повтори.');
+    const recordingEpoch=++state.recordingEpoch;
+    const sessionOwner=state.sessionOwner;
+    const validRecording=()=>recordingEpoch===state.recordingEpoch &&
+      state.recorder===recorder &&
+      sessionOwner===String(window.Telegram?.WebApp?.initData||'');
+    recorder.ondataavailable=event=>{
+      if(validRecording()&&event.data?.size)chunks.push(event.data);
+    };
+    recorder.onerror=()=>{
+      if(validRecording())toast('Ошибка записи. Перезапусти микрофон и повтори.');
+    };
     recorder.onstop=()=>{
+      // stopRecording() completes normally; stopMic()/screen exit invalidates.
+      if(!validRecording())return;
       const blob=new Blob(chunks,{type:recorder.mimeType||options||'audio/webm'});
       state.recorder=null;state.recording=false;
       if(blob.size){
@@ -209,8 +245,13 @@
       }else toast('Запись пустая. Повтори с включённым микрофоном.');
       updateButtons();
     };
+    try{recorder.start(250);}
+    catch{
+      state.recordingEpoch++;
+      toast('Не удалось начать запись на этом устройстве. Попробуй другой формат.');
+      updateButtons();return;
+    }
     state.recorder=recorder;state.recording=true;state.startedAt=Date.now();
-    recorder.start(250);
     toast('Идёт запись голоса с выбранным эффектом. Она остаётся только на этом устройстве.');
     updateButtons();
   }
@@ -269,21 +310,37 @@
       toast('Мониторинг звука включён. Используй наушники, иначе будет эхо.');
     }else{stopMonitor();toast('Мониторинг выключен. Запись обработанного голоса доступна.');}
   });
-  window.addEventListener('veto:screen-changed',event=>{
-    if(event.detail?.screen!=='voice'&&(state.active||state.micStarting)){
+  function endPrivateVoiceSession(reason){
+    if(state.active||state.micStarting){
       stopMic();
-      toast('Микрофон выключен при выходе из Voice Studio.');
+      toast(reason);
     }
+    releaseRecording();
+  }
+  function checkVoiceOwner(){
+    const signed=String(window.Telegram?.WebApp?.initData||'');
+    if((state.active||state.micStarting||state.recordedBlob) &&
+       signed!==state.sessionOwner){
+      endPrivateVoiceSession('Аккаунт Telegram изменился. Голосовая сессия закрыта.');
+    }
+  }
+  window.addEventListener('veto:screen-changed',event=>{
+    if(event.detail?.screen!=='voice')
+      endPrivateVoiceSession('Микрофон выключен при выходе из Voice Studio.');
+    else checkVoiceOwner();
   });
   document.addEventListener('visibilitychange',()=>{
-    if(document.hidden&&(state.active||state.micStarting)){
-      stopMic();
-      toast('Микрофон выключен при сворачивании Vetogram.');
-    }
+    if(document.hidden)
+      endPrivateVoiceSession('Микрофон выключен при сворачивании Vetogram.');
+    else checkVoiceOwner();
   });
+  window.addEventListener('focus',checkVoiceOwner);
+  window.addEventListener('pageshow',checkVoiceOwner);
   window.addEventListener('pagehide',()=>{
-    stopMic();releaseRecording();cancelAnimationFrame(state.raf);state.raf=0;
+    endPrivateVoiceSession('Микрофон выключен при закрытии Vetogram.');
+    cancelAnimationFrame(state.raf);state.raf=0;
   });
   updateButtons();
+  paintIdleSpectrum();
   if(!audioSupported)toast('Микрофон и запись в этом WebView не поддерживаются. Нужна актуальная версия Telegram.');
 })();

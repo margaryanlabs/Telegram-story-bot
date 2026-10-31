@@ -26,10 +26,14 @@ function updateHistoryButtons(){
   if($('seRedo'))$('seRedo').disabled=!history.canRedo;
 }
 function recordEdit(id){
+  // Consecutive keystrokes share one undo checkpoint, but each keystroke
+  // still invalidates any IndexedDB save snapshot currently in flight.
   if(historyGroup!==id){checkpoint();historyGroup=id;}
+  state.revision++;
 }
 function checkpoint(){
   if(editorIdentity()!==state.owner)return;
+  state.revision++;
   history.checkpoint(state.draft,state.owner);
   queueMicrotask(updateHistoryButtons);
 }
@@ -62,22 +66,32 @@ async function transact(mode,fn){
   return new Promise((resolve,reject)=>{
     const tx=state.db.transaction('drafts',mode);
     const st=tx.objectStore('drafts');
+    let result;
     const request=fn(st);
-    request.onsuccess=()=>resolve(request.result);
+    // A successful put() request is NOT yet a committed IndexedDB
+    // transaction. The entire transaction can still abort afterwards.
+    request.onsuccess=()=>{result=request.result;};
     request.onerror=()=>reject(request.error||Error('Local draft operation failed'));
+    tx.oncomplete=()=>resolve(result);
+    tx.onerror=()=>reject(tx.error||Error('Local draft transaction failed'));
     tx.onabort=()=>reject(tx.error||Error('Local storage transaction aborted'));
   });
 }
 const storageKey=d=>d.ownerId+':'+d.id;
 async function saveDraft(){
   requireOwner();
+  const reference=state.draft,revision=state.revision;
   const d=normalizeDraft({...state.draft,updatedAt:Date.now()},state.owner);
   if(d.imageDataUrl.length>12000000)throw Error('Изображение слишком большое для черновика');
   await transact('readwrite',st=>st.put({key:storageKey(d),ownerId:d.ownerId,draft:d}));
-  // IndexedDB is async: a changed Telegram identity must never restore an old
-  // owner's image or draft on the newly active screen.
+  // IndexedDB is async: a changed owner, draft or edits after the button
+  // press may never be overwritten with an older saved snapshot.
   if(state.owner!==d.ownerId || owner()!==d.ownerId || state.draft?.id!==d.id)return;
-  state.draft=d;notify('Черновик сохранён только на этом устройстве');
+  const hasNewEdits=state.draft!==reference || state.revision!==revision;
+  if(!hasNewEdits)state.draft.updatedAt=d.updatedAt;
+  notify(hasNewEdits
+    ?'Версия на момент нажатия сохранена. Есть более новые правки — нажми «Сохранить» ещё раз.'
+    :'Черновик сохранён только на этом устройстве');
   await listDrafts();
 }
 async function listDrafts(){
@@ -340,7 +354,11 @@ function loadImageForDraft(){
     }
     state.image=i;state.imageSrc=url;paint(canvas);
   };
-  i.onerror=()=>notify('Не удалось загрузить изображение',true);
+  i.onerror=()=>{
+    if(state.owner!==sourceOwner || owner()!==sourceOwner ||
+       state.draft?.id!==sourceId || state.draft?.imageDataUrl!==url)return;
+    notify('Не удалось загрузить изображение',true);
+  };
   i.src=url;
 }
 function discardAiUndo(){
@@ -378,6 +396,7 @@ function undoAiStorySuggestion(){
   return true;
 }
 function applyDraft(d,preserveHistory=false){
+  state.revision++;
   if(!preserveHistory){soundtrack?.clear();history.reset(state.owner||'0',d.id);historyGroup='';}
   $('sePreviewDialog')?.close?.();
   discardAiUndo();
@@ -414,28 +433,45 @@ async function exportToPublisher(){
   try{
     if(state.draft.imageDataUrl && state.imageSrc!==state.draft.imageDataUrl)throw Error('Дождись загрузки фотографии перед экспортом');
     const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
-    const exportOwner=state.owner,exportDraftId=state.draft.id;
+    const exportOwner=state.owner,exportDraftId=state.draft.id,exportRevision=state.revision;
     const blob=await new Promise(resolve=>out.toBlob(resolve,'image/jpeg',.88));
     if(owner()!==exportOwner || state.owner!==exportOwner ||
-       state.draft?.id!==exportDraftId)throw Error('Аккаунт или черновик изменился. Повтори экспорт.');
+       state.draft?.id!==exportDraftId || state.revision!==exportRevision)
+      throw Error('Аккаунт или Story изменились во время экспорта. Повтори экспорт.');
     if(!blob||blob.size>10*1024*1024)throw Error('Экспорт не удался: превышен лимит изображения');
-    const input=$('storyFileInput');
-    if(!input||typeof DataTransfer!=='function')throw Error('Telegram не поддерживает прямую передачу файла. Используй экспорт JPEG.');
     const file=new File([blob],'vetogram-story.jpg',{type:'image/jpeg'});
-    const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;
     const attachPortal=$('sePortalAttachStory').checked && Boolean(state.draft.portal);
-    // No URL is sent unless the owner explicitly selected the checkbox.
+    // The Editor never publishes: a second *unchecked* Portal consent
+    // appears in the Publisher even after a user opted in here.
     const portalLink=attachPortal?makePublicPortalUrl(state.draft.portal,window.location.origin):null;
-    input.dispatchEvent(new Event('change',{bubbles:true}));
-    window.VetoTelegramPortalHandoff=portalLink?{
-      url:portalLink,ownerId:exportOwner,draftId:exportDraftId
-    }:null;
-    window.dispatchEvent(new CustomEvent('veto:portal-handoff'));
-
-    $('storyCaption').value=state.draft.caption||'';
-    $('storyCaption').dispatchEvent(new Event('input',{bubbles:true}));
-    window.VetoTelegramNavigate?.('publish');
-    notify('Изображение передано в публикацию. Проверь аудиторию и подтверди отправку.');
+    const stillCurrent=()=>owner()===exportOwner && state.owner===exportOwner &&
+      state.draft?.id===exportDraftId && state.revision===exportRevision;
+    if(typeof window.VetoTelegramStageStory==='function'){
+      const accepted=await window.VetoTelegramStageStory({
+        file,caption:state.draft.caption||'',portalLink,
+        ownerId:exportOwner,draftId:exportDraftId,stillCurrent
+      });
+      if(!accepted || !stillCurrent())
+        throw Error('Story изменилась во время подготовки. Повтори передачу.');
+    }else{
+      // Keep a legacy bridge for older cached app.js, but never rely on
+      // DataTransfer in new iOS WebViews where the API can be unavailable.
+      const input=$('storyFileInput');
+      if(!input||typeof DataTransfer!=='function')
+        throw Error('Передача недоступна в этом Telegram WebView. Повтори после обновления приложения.');
+      const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;
+      input.dispatchEvent(new Event('change',{bubbles:true}));
+      window.VetoTelegramPortalHandoff=portalLink?{
+        url:portalLink,ownerId:exportOwner,draftId:exportDraftId
+      }:null;
+      window.dispatchEvent(new CustomEvent('veto:portal-handoff'));
+      $('storyCaption').value=state.draft.caption||'';
+      $('storyCaption').dispatchEvent(new Event('input',{bubbles:true}));
+    }
+    if(!stillCurrent())throw Error('Story изменилась во время передачи. Повтори экспорт.');
+    if(!window.VetoTelegramNavigate?.('publish'))
+      throw Error('Раздел публикации недоступен. Story не отправлена.');
+    notify('Кадр готов к проверке. Выбери аудиторию и отдельно подтверди публикацию.');
   }catch(error){notify(error.message,true)}
   finally{state.busy=false;$('sePublish').disabled=false}
 }
@@ -443,10 +479,11 @@ async function downloadJpg(){
   if(!state.draft)return;
   if(state.draft.imageDataUrl && state.imageSrc!==state.draft.imageDataUrl)throw Error('Дождись загрузки фотографии перед экспортом');
     const out=document.createElement('canvas');out.width=1080;out.height=1920;paint(out);
-  const exportOwner=state.owner,exportDraftId=state.draft.id;
+  const exportOwner=state.owner,exportDraftId=state.draft.id,exportRevision=state.revision;
   const blob=await new Promise(resolve=>out.toBlob(resolve,'image/jpeg',.88));
   if(owner()!==exportOwner || state.owner!==exportOwner ||
-     state.draft?.id!==exportDraftId)throw Error('Аккаунт или черновик изменился. Повтори экспорт.');
+     state.draft?.id!==exportDraftId || state.revision!==exportRevision)
+    throw Error('Аккаунт или Story изменились во время экспорта. Повтори экспорт.');
   if(!blob)throw Error('Экспорт недоступен');
   const url=URL.createObjectURL(blob);
   try{const a=document.createElement('a');a.download='vetogram-story.jpg';a.href=url;a.click();}
@@ -456,9 +493,13 @@ async function downloadJpg(){
 // No async task may cross accounts. Media, Portal, audience and publish state stay untouched.
 async function applyAiStorySuggestion(requested){
   const requestedOwner=String(requested?.ownerId||'');
-  if(!requestedOwner||owner()!==requestedOwner)return false;
+  const requestedSigned=String(requested?.signed||'');
+  if(!requestedOwner||!requestedSigned||
+     requestedSigned!==String(tg?.initData||'')||
+     owner()!==requestedOwner)return false;
   await init();
-  if(owner()!==requestedOwner||state.owner!==requestedOwner||!state.draft)return false;
+  if(requestedSigned!==String(tg?.initData||'') ||
+     owner()!==requestedOwner||state.owner!==requestedOwner||!state.draft)return false;
   const incoming=requested.story;
   if(!incoming||typeof incoming!=='object')return false;
   const title=trimText(incoming.title,90),subtitle=trimText(incoming.subtitle,180);
@@ -476,7 +517,8 @@ async function applyAiStorySuggestion(requested){
     }catch{return false;}
   }
   const draftId=state.draft.id;
-  if(owner()!==requestedOwner||state.draft.id!==draftId)return false;
+  if(owner()!==requestedOwner||String(tg?.initData||'')!==requestedSigned||
+     state.draft.id!==draftId)return false;
   const portalIncluded=requested.replacePortal===true;
   checkpoint();
   const before={
@@ -674,8 +716,12 @@ function setup(){
       return;
     }
     pendingHeadingTap=null;
-    checkpoint();
-    state.selectedLayer=hit.id;state.dragLayer={owner:state.owner,draftId:state.draft.id,pointerId:event.pointerId};
+    // Merely tapping a layer opens its inspector; don't create an undo entry
+    // or move the layer for natural finger jitter.
+    state.selectedLayer=hit.id;state.dragLayer={
+      owner:state.owner,draftId:state.draft.id,pointerId:event.pointerId,
+      startX:event.clientX,startY:event.clientY,started:false
+    };
     canvas.setPointerCapture?.(event.pointerId);event.preventDefault();
     $('seLayerText').value=hit.text;$('seLayerStyle').value=hit.style;
     renderLayers();
@@ -696,7 +742,13 @@ function setup(){
       state.dragLayer=null;return;
     }
     const layer=state.draft.layers?.find(item=>item.id===state.selectedLayer);
-    if(!layer)return;
+    if(!layer||activePhotoGesture)return;
+    if(!drag.started){
+      if(Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY)<12)return;
+      // Exactly one history checkpoint for a real drag, never for selection.
+      historyGroup='';checkpoint();drag.started=true;
+      if(pendingTextTap?.pointerId===event.pointerId)pendingTextTap.moved=true;
+    }
     const p=pointerRatio(event);layer.x=p.x;layer.y=p.y;
     paint(canvas);event.preventDefault();
   });

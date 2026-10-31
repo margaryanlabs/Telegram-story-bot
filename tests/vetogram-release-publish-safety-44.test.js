@@ -23,12 +23,13 @@ function fixture(response){
   const tg={initData:'signed-owner'};
   const data={activity:[],history:[],lastStory:'884',ready:true};
   const fn=new Function('tg','state','requestJson','render','setAvatar',
+    'ensureComposerIdentity','viewerOwnerEpoch',
     appApi+';return api')(
       tg,data,async(url,options,policy)=>{
         attempts++;
         assert.equal(url,'/api/miniapp');
         return response({options,policy,attempts});
-      },()=>{},()=>{}
+      },()=>{},()=>{},()=>{},0
     );
   return {fn,tg,attempts:()=>attempts};
 }
@@ -76,6 +77,8 @@ function publishFixture(answer){
     'renderPublish','haptic','api','resetComposer','notify','showToast','audienceLabel',
     'escapeHtml','openSheet','connectionHelpSheet','refreshViewerSync','refreshViewerAnalytics',
     "let composerBusy=false,composerDataUrl='data:image/jpeg;base64,photo',composerOwner='signed-owner',composerNonce='nonce',selectedViewerStory=null;"+
+    "let composerPortalHandoff=null,composerGeneration=0,viewerOwnerEpoch=0;"+
+    'function ensureComposerIdentity(){};'+
     appPublish+';return publishComposerStory')(
     tg,state,{session:{connected:false}},id=>fields[id],()=>true,
     ()=>{},()=>{},async()=>answer,()=>{clears++},()=>{},()=>{},x=>x,
@@ -144,8 +147,22 @@ test('backend returns explicit owner mismatch or unverifiable session, not fabri
   assert.match(mtprotoOwner,/status: 503/);
 });
 test('release uses latest static client assets and keeps security contracts on screen',()=>{
-  assert.match(html,/\/app\.js\?v=20261025-noir-1/);
-  assert.match(html,/\/privacy\.js\?v=20261025-noir-3/);
+  // Versions change during V4 releases; insist on unique cache-busted real
+  // imports instead of pinning obsolete query strings from an old build.
+  for(const asset of ['app.js','privacy.js']){
+    const imports=[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*><\/script>/g)]
+      .map(match=>match[1])
+      .filter(src=>src.startsWith('/'+asset+'?v='));
+    assert.equal(imports.length,1,'missing or duplicate versioned '+asset);
+    assert.match(imports[0],/\?v=[A-Za-z0-9-]+$/);
+  }
   assert.match(ui,/Проверь свои Stories в Telegram перед новой попыткой/);
   assert.match(privacy,/Подключено · ждём тест удаления/);
+});
+
+test('successful Story screen does not promise unverified automatic viewers',()=>{
+  const handoff=section(ui,'  async function publishComposerStory() {','  function relativeTime(');
+  assert.doesNotMatch(handoff,/подхватит просмотры автоматически/);
+  assert.match(handoff,/покажет только подтверждённые просмотры после обновления/);
+  assert.match(handoff,/viewerState\.session\?\.connected/);
 });

@@ -10,7 +10,7 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   const tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
   const root=$('vtaiRoot');
   if(!root)return;
-  const state={identity:null,requestEpoch:0,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false,reminderSchedulingConfigured:null};
+  const state={identity:null,requestEpoch:0,aiAvailability:null,aiAvailabilityCheckedAt:0,aiAvailabilityIntent:0,generateIntent:0,generateAbort:null,mode:'chat',history:[],last:null,dialogs:[],busy:false,sendIntent:null,approvals:[],memory:[],selectedNotes:new Set(),reviewedApprovalId:null,suggestedChatId:null,negotiationPolicy:null,negotiationDraft:null,negotiationGrant:null,memoryRevision:null,memoryBusy:false,agentPaused:null,agentBusy:false,chatNextPage:0,chatHasMore:false,actionDraft:null,actionRecipientConfirmed:null,brief:null,focusHidden:new Set(),tasks:[],taskFilter:'open',taskCloudRevision:null,taskCloudBusy:false,reminders:[],reminderBusy:false,reminderSchedulingConfigured:null};
   const owner=()=>tg?.initData?String(tg?.initDataUnsafe?.user?.id||''):'';
   const signed=()=>String(tg?.initData||'');
   function notice(message,error=false){
@@ -35,6 +35,11 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   function reset(){
     // Invalidate every in-flight owner-bound request, even after A→B→A.
     state.requestEpoch+=1;
+    state.generateIntent++;
+    state.aiAvailability=null;state.aiAvailabilityCheckedAt=0;
+    state.aiAvailabilityIntent++;
+    state.generateAbort?.abort();
+    state.generateAbort=null;
     state.history=[];state.last=null;state.dialogs=[];state.identity=null;state.sendIntent=null;
     state.actionDraft=null;state.actionRecipientConfirmed=null;state.brief=null;state.focusHidden.clear();
     state.tasks=[];state.taskFilter='open';state.taskCloudRevision=null;state.taskCloudBusy=false;
@@ -88,6 +93,13 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   function setMode(mode){
     if(!['chat','translate','reply','story','campaign','negotiator','action','brief'].includes(mode))return;
     if(state.mode!==mode){
+      // Switching AI modes cancels the prior active generation. A → B → A
+      // must not accept an old A response just because the name matches.
+      const wasGenerating=Boolean(state.generateAbort);
+      state.generateIntent++;
+      state.generateAbort?.abort();
+      state.generateAbort=null;
+      if(wasGenerating)setBusy(false);
       // A draft approved for one mode is never reusable in another mode.
       state.history=[];$('vtaiThread').replaceChildren();
       state.last=null;state.reviewedApprovalId=null;state.sendIntent=null;
@@ -106,17 +118,31 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       b.setAttribute('aria-pressed',String(b.dataset.vtaiMode===mode));
     });
     $('vtaiLanguage').hidden=mode!=='translate';
-    $('vtaiText').placeholder={
-      chat:'Спроси AI или попроси подготовить сообщение…',
-      translate:'Вставь текст для перевода…',
-      reply:'Опиши ситуацию или вставь сообщение, на которое нужен ответ…',
-      action:'Например: напиши Артуру, что созвонимся завтра в 15:00…',
-      brief:'Вставь конкретное сообщение или фрагмент переписки для поиска задач и сроков…',
-      story:'О чём создать Story? Для кого, какой стиль и предложение?',
-      campaign:'Что продаём или анонсируем? Кто покупатель и какое действие нужно?',
-      negotiator:'Вставь сообщение клиента, на которое нужно подготовить ответ…'
-    }[mode];
-    $('vtaiCreate').textContent=mode==='brief'?'Разобрать договорённости':mode==='action'?'Подготовить действие':mode==='negotiator'?'Подготовить ответ на переговоры':mode==='campaign'?'Создать Story + Portal':mode==='story'?'Создать текст для Stories':'Спросить VETO AI';
+    // UI language affects presentation only; mode, drafts, approvals and
+    // request generations are not changed by repainting the selected mode.
+    const tr=(key,ru)=>typeof window!=='undefined'
+      ?(window.VetogramI18n?.t?.(key,ru)||ru):ru;
+    const prompts={
+      chat:['aiPromptChat','Спроси AI или попроси подготовить сообщение…'],
+      translate:['aiPromptTranslate','Вставь текст для перевода…'],
+      reply:['aiPromptReply','Опиши ситуацию или вставь сообщение, на которое нужен ответ…'],
+      action:['aiPromptAction','Например: напиши Артуру, что созвонимся завтра в 15:00…'],
+      brief:['aiPromptBrief','Вставь конкретное сообщение или фрагмент переписки для поиска задач и сроков…'],
+      story:['aiPromptStory','О чём создать Story? Для кого, какой стиль и предложение?'],
+      campaign:['aiPromptCampaign','Что продаём или анонсируем? Кто покупатель и какое действие нужно?'],
+      negotiator:['aiPromptNegotiator','Вставь сообщение клиента, на которое нужно подготовить ответ…']
+    };
+    const actions={
+      brief:['aiCreateBrief','Разобрать договорённости'],
+      action:['aiCreateAction','Подготовить действие'],
+      negotiator:['aiCreateNegotiator','Подготовить ответ на переговоры'],
+      campaign:['aiCreateCampaign','Создать Story + Portal'],
+      story:['aiCreateStory','Создать текст для Stories'],
+    };
+    const [placeholderKey,placeholderRu]=prompts[mode];
+    const [actionKey,actionRu]=actions[mode]||['aiCreateAsk','Спросить VETO AI'];
+    $('vtaiText').placeholder=tr(placeholderKey,placeholderRu);
+    $('vtaiCreate').textContent=tr(actionKey,actionRu);
   }
   function actionRecipientReady(chatId){
     return state.mode!=='action'||(actionDraftValid(state.actionDraft)&&
@@ -599,16 +625,63 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
   function setBusy(value){
     state.busy=value;
     window.dispatchEvent(new CustomEvent('vetogram:ai-busy',{detail:{busy:value===true}}));
-    $('vtaiCreate').disabled=value;$('vtaiLoadChats').disabled=value;
+    $('vtaiCreate').disabled=value||state.aiAvailability===false;
+    $('vtaiLoadChats').disabled=value;
     $('vtaiSend').disabled=value||!canSendDraft();
   }
-  async function request(url,body,consent=false){
+  // A no-prompt GET verifies only configuration, not successful inference.
+  // No AI credits, history, notes, chat IDs or consent flag are sent here.
+  async function checkAiAvailability(){
+    if(!safeIdentity())return;
+    // Cached checks should still repaint on RU/EN/HY switching, without
+    // repeating the signed HTTP request or touching user chat content.
+    const tr=(key,ru)=>window.VetogramI18n?.t?.(key,ru)||ru;
+    const paintAiAvailability=()=>{
+      const description=state.aiAvailability===false
+        ?tr('aiProviderDisabled','Генерация AI пока не подключена. Чаты и черновики доступны, но модель не вызывается.')
+        :state.aiAvailability===true
+          ?tr('aiProviderConfigured','AI-провайдер настроен. Работа модели проверится после твоего согласия на запрос. Действуют лимиты бюджета.')
+          :tr('aiProviderUnknown','Статус AI пока не подтверждён. Проверка не передала никаких сообщений или данных модели.');
+      $('vtaiQuota').textContent=description;
+      $('vtaiCreate').disabled=state.busy||state.aiAvailability===false;
+    };
+    if(state.aiAvailability!==null&&Date.now()-state.aiAvailabilityCheckedAt<60000){
+      paintAiAvailability();
+      return;
+    }
+    const scope=ownerRequestScope();
+    const intent=++state.aiAvailabilityIntent;
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),8000);
+    try{
+      const response=await fetch('/api/vetogram-ai',{
+        method:'GET',
+        headers:{'x-telegram-init-data':scope.identity},
+        cache:'no-store',signal:controller.signal
+      });
+      const data=await response.json().catch(()=>({}));
+      if(!isOwnerRequestCurrent(scope)||intent!==state.aiAvailabilityIntent)return;
+      state.aiAvailability=response.ok?data.configured===true:null;
+      state.aiAvailabilityCheckedAt=Date.now();
+      paintAiAvailability();
+    }catch{
+      if(isOwnerRequestCurrent(scope)&&intent===state.aiAvailabilityIntent){
+        state.aiAvailability=null;
+        state.aiAvailabilityCheckedAt=0;
+        $('vtaiQuota').textContent=tr('aiProviderCheckFailed','Не удалось проверить AI-провайдера. Повтори попытку после восстановления соединения.');
+      }
+    }finally{clearTimeout(timeout)}
+  }
+  async function request(url,body,consent=false,externalSignal=null){
     // Bind *every* HTTP call to its original signed owner and reset epoch.
     // This also protects consumers added later that forget their own fence.
     const requestScope=ownerRequestScope();
     const requestOwner=requestScope.identity,requestOwnerId=requestScope.ownerId;
     if(!isOwnerRequestCurrent(requestScope))throw Error('Нужно открыть VETOGRAM внутри Telegram.');
     const abort=new AbortController();
+    const onExternalAbort=()=>abort.abort();
+    if(externalSignal?.aborted)abort.abort();
+    else externalSignal?.addEventListener('abort',onExternalAbort,{once:true});
     const timeout=setTimeout(()=>abort.abort(),21000);
     try{
       const result=await fetch(url,{method:'POST',
@@ -632,10 +705,14 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         throw Error('Старый запрос отменён после обновления Telegram-сеанса.');
       if(!result.ok||!json.ok)throw Error(json.error||'Сервис недоступен');
       return json;
-    }finally{clearTimeout(timeout)}
+    }finally{
+      clearTimeout(timeout);
+      externalSignal?.removeEventListener('abort',onExternalAbort);
+    }
   }
   async function generate(){
     if(state.busy||!safeIdentity())return;
+    if(state.aiAvailability===false)return notice(window.VetogramI18n?.t?.('aiProviderMustEnable','Генерация AI не подключена. Провайдер нужно включить в настройках сервера.')||'Генерация AI не подключена. Провайдер нужно включить в настройках сервера.',true);
     if(!$('vtaiConsent').checked)return notice('Разреши передачу введённого текста AI-провайдеру',true);
     const original=$('vtaiText').value.trim();
     if(original.length<2||original.length>3000)return notice('Введите от 2 до 3000 символов',true);
@@ -673,6 +750,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     // One-shot consent: notes cannot silently leak into the next request.
     $('vtaiIncludeMemory').checked=false;
     const scope=ownerRequestScope();
+    const intent=++state.generateIntent;
+    const generationAbort=new AbortController();
+    state.generateAbort=generationAbort;
     setBusy(true);$('vtaiReview').hidden=true;$('vtaiStoryReview').hidden=true;
     notice('Проверяю AI и дневной лимит. Telegram-сообщения не отправляются.');
     try{
@@ -684,8 +764,8 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
           action:'issue',chatId:negotiationPolicy.chatId,currency:negotiationPolicy.currency,
           askingPrice:$('vtaiNegAsking').value,minPrice:$('vtaiNegFloor').value,
           maxDiscountPct:negotiationPolicy.discountPct,minutes:$('vtaiNegMinutes').value
-        },'grant');
-        if(!isOwnerRequestCurrent(scope))return;
+        },'grant',generationAbort.signal);
+        if(!isOwnerRequestCurrent(scope)||intent!==state.generateIntent)return;
         grant=issued.grant;
         if(!grant?.active||grant.chatId!==negotiationPolicy.chatId)
           throw Error('Сервер не подтвердил ограниченное разрешение.');
@@ -694,9 +774,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
       }
       const answer=await request('/api/vetogram-ai',
         {mode,prompt,history:mode==='chat'?oldHistory:[],notes:approvedNotes,
-          ...(grant?{grantId:grant.grantId,chatId:grant.chatId}:{})},true);
-      if(!isOwnerRequestCurrent(scope))return;
-      if(state.mode!==mode)return notice('Режим изменился. Ответ не применён.',true);
+          ...(grant?{grantId:grant.grantId,chatId:grant.chatId}:{})},true,generationAbort.signal);
+      if(!isOwnerRequestCurrent(scope)||intent!==state.generateIntent)return;
+      if(state.mode!==mode)return;
       if(Number.isInteger(Number(answer?.quota?.remainingRequests)))$('vtaiQuota').textContent='Осталось AI-запросов на сегодня (UTC): '+Number(answer.quota.remainingRequests)+'.';
       addBubble(original,'user');addBubble(answer.text,'assistant');
       if(mode==='chat')state.history=[...oldHistory,{role:'user',text:prompt},{role:'assistant',text:answer.text}].slice(-6);
@@ -761,11 +841,16 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
         $('vtaiSend').disabled=!state.dialogs.length;
         notice('Текст подготовлен. Ничего не отправлено.');
       }
-    }catch(error){if(isOwnerRequestCurrent(scope))
-      notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);}
-    finally{if(isOwnerRequestCurrent(scope)){
-      setBusy(false);$('vtaiSend').disabled=!canSendDraft();
-    }}
+    }catch(error){
+      if(isOwnerRequestCurrent(scope)&&intent===state.generateIntent)
+        notice(error.name==='AbortError'?'AI не ответил вовремя':error.message,true);
+    }
+    finally{
+      if(isOwnerRequestCurrent(scope)&&intent===state.generateIntent){
+        state.generateAbort=null;
+        setBusy(false);$('vtaiSend').disabled=!canSendDraft();
+      }
+    }
   }
   // Telegram returns only 24 dialogs in the initial page. Other existing
   // conversations stay accessible by explicit "more" or target lookup.
@@ -971,7 +1056,9 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     if(!isOwnerRequestCurrent(scope))return;
     if(typeof window.VetoTelegramApplyAiStory!=='function')return notice('Story Engine ещё не готов. Повтори действие.',true);
     try{
-      const applied=await window.VetoTelegramApplyAiStory({ownerId:requestedOwner,story,replacePortal,portal});
+      const applied=await window.VetoTelegramApplyAiStory({
+        ownerId:requestedOwner,signed:scope.identity,story,replacePortal,portal
+      });
       if(!isOwnerRequestCurrent(scope))return;
       if(!applied)return notice('Не удалось применить текст. Попробуй снова.',true);
       notice('Тексты добавлены в Story Engine. Проверь кадр и сохрани черновик.');
@@ -1390,8 +1477,13 @@ import {ownerScopeMatches,oldRequestCanReset} from './vetogram-owner-scope-core.
     state.suggestedChatId=String(detail.chatId);
     notice('Сообщение вставлено только в черновик. Проверь текст и разрешения перед AI-запросом.');
   });
+  window.addEventListener('vetogram:locale-changed',()=>{
+    // Repaint the SAME mode. No history, draft, permission or request is cleared.
+    setMode(state.mode);
+    if(state.identity&&state.aiAvailability!==null)void checkAiAvailability();
+  });
   window.addEventListener('veto:screen-changed',e=>{
-    if(e?.detail?.screen==='ai')safeIdentity();
+    if(e?.detail?.screen==='ai')void checkAiAvailability();
     else if(state.busy===false)$('vtaiNotice').hidden=true;
   });
   window.addEventListener('pageshow',()=>{if(state.identity&&state.identity!==signed())reset()});

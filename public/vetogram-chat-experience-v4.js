@@ -7,7 +7,12 @@
   if (!host || document.getElementById('v4MessageActions')) return;
   const $ = id => document.getElementById(id);
   const tg = window.Telegram?.WebApp;
-  let selectedBubble = null, selectedInitData = '';
+  let selectedBubble = null, selectedInitData = '', selectedThreadKey = '';
+  const activePointers = new Set();
+  const threadKey = () => [
+    host.dataset.mirrorOwnerId||'',host.dataset.mirrorThreadId||'',
+    host.dataset.mirrorThreadGeneration||''
+  ].join(':');
   let activePress = null, activeSwipe = null;
   const menu = document.createElement('dialog');
   menu.id = 'v4MessageActions';
@@ -56,23 +61,36 @@
     selectedBubble?.classList.remove('v4-message-selected');
     selectedBubble=null;
     selectedInitData='';
+    selectedThreadKey='';
     excerpt.textContent='';
     feedback.textContent='';
   }
-  menu.addEventListener('close',clearSelection);
+  // Native dialog close events can arrive after a new selection was opened.
+  // Do not clear the newly selected bubble if that newer dialog is open.
+  menu.addEventListener('close',()=>{if(!menu.open)clearSelection();});
   function dismiss(){ if(menu.open)menu.close(); else clearSelection(); }
   close.addEventListener('click',dismiss);
   menu.addEventListener('click',event=>{if(event.target===menu)dismiss();});
-  window.addEventListener('veto:screen-changed',dismiss);
-  window.addEventListener('pagehide',dismiss);
+  window.addEventListener('veto:screen-changed',()=>{
+    cancelGestures();dismiss();
+  });
+  window.addEventListener('pagehide',()=>{
+    cancelGestures();dismiss();
+  });
   function clearIfOwnerChanged(){
-    if(menu.open && (!tg?.initData || tg.initData!==selectedInitData))dismiss();
+    const stale=menu.open && (!visibleOwner() || !selectedBubble?.isConnected ||
+      tg?.initData!==selectedInitData || threadKey()!==selectedThreadKey);
+    if(stale)dismiss();
+    if(!visibleOwner())cancelGestures();
   }
   window.addEventListener('focus',clearIfOwnerChanged);
   document.addEventListener('visibilitychange',clearIfOwnerChanged);
 
   function visibleOwner(){
-    return Boolean(tg?.initData && /^\d{1,20}$/.test(String(tg.initDataUnsafe?.user?.id||'')) &&
+    const id=String(tg?.initDataUnsafe?.user?.id||'');
+    return Boolean(tg?.initData && /^\d{1,20}$/.test(id) &&
+      host.dataset.mirrorOwnerId===id &&
+      host.dataset.mirrorThreadId && host.dataset.mirrorThreadGeneration &&
       document.querySelector('[data-screen="telegram"].active') &&
       $('telegramThreadView')?.hidden===false);
   }
@@ -83,9 +101,13 @@
   }
   function openFor(bubble){
     if(!visibleOwner() || !bubble?.isConnected || !host.contains(bubble))return false;
+    // Opening a native <dialog> can retarget the finger's eventual pointerup:
+    // clear pointer tracking immediately, not just after the host receives it.
+    cancelGestures();
     dismiss();
     selectedBubble=bubble;
     selectedInitData=tg.initData;
+    selectedThreadKey=threadKey();
     const text=messageText(bubble);
     excerpt.textContent=text?text.slice(0,160):'Медиа или сохранённое сообщение';
     buttons.reply.disabled=!bubble.querySelector('[data-mirror-reply]');
@@ -104,7 +126,8 @@
   }
   async function applyAction(action){
     if(!selectedBubble?.isConnected || !host.contains(selectedBubble) ||
-        !visibleOwner() || tg.initData!==selectedInitData){
+        !visibleOwner() || tg.initData!==selectedInitData ||
+        threadKey()!==selectedThreadKey){
       dismiss();return;
     }
     const bubble=selectedBubble;
@@ -168,40 +191,83 @@
     if(activePress?.timer)clearTimeout(activePress.timer);
     activePress=null;
   }
+  function cancelSwipe(){
+    if(activeSwipe?.bubble){
+      activeSwipe.bubble.classList.remove('v4-swiping-reply');
+      activeSwipe.bubble.style.removeProperty('--v4-swipe-reply-x');
+    }
+    activeSwipe=null;
+  }
+  function cancelGestures(){
+    cancelPress();cancelSwipe();activePointers.clear();
+  }
   host.addEventListener('pointerdown',event=>{
-    cancelPress();
+    cancelPress();cancelSwipe();
     if(event.pointerType==='mouse' && event.button!==0)return;
+    activePointers.add(event.pointerId);
+    // A two-finger scroll/pinch must never become a swipe-to-reply.
+    if(activePointers.size>1){cancelSwipe();return;}
     const bubble=findBubble(event);
     if(!bubble||!visibleOwner())return;
+    const signed=String(tg?.initData||''), boundThread=threadKey();
     activePress={bubble,pointerId:event.pointerId,x:event.clientX,y:event.clientY,
-      timer:setTimeout(()=>{activePress=null;activeSwipe=null;openFor(bubble);},480)};
+      timer:setTimeout(()=>{
+        activePress=null;cancelSwipe();
+        if(activePointers.size===1 && signed===String(tg?.initData||'') &&
+          boundThread===threadKey() && visibleOwner() && bubble.isConnected)
+          openFor(bubble);
+      },480)};
     if(event.pointerType==='touch' || event.pointerType==='pen'){
       activeSwipe={bubble,pointerId:event.pointerId,x:event.clientX,y:event.clientY,
-        signed:String(tg?.initData||'')};
+        signed,threadKey:boundThread};
     }
   });
   host.addEventListener('pointermove',event=>{
+    if(activeSwipe?.pointerId===event.pointerId){
+      const dx=event.clientX-activeSwipe.x,dy=event.clientY-activeSwipe.y;
+      if(Math.abs(dy)>18 || dx < -14 ||
+         activeSwipe.signed!==String(tg?.initData||'') ||
+         activeSwipe.threadKey!==threadKey() || !visibleOwner()){
+        cancelSwipe();
+      }else if(dx>14 && activePointers.size===1){
+        // Direct touch feedback from the actual bubble, with no saved data,
+        // network call or trigger before a completed deliberate gesture.
+        activeSwipe.bubble.classList.add('v4-swiping-reply');
+        activeSwipe.bubble.style.setProperty('--v4-swipe-reply-x',
+          Math.min(42,Math.round(dx*.45))+'px');
+      }else{
+        activeSwipe.bubble.classList.remove('v4-swiping-reply');
+        activeSwipe.bubble.style.removeProperty('--v4-swipe-reply-x');
+      }
+    }
     if(!activePress||activePress.pointerId!==event.pointerId)return;
     if(Math.hypot(event.clientX-activePress.x,event.clientY-activePress.y)>12)cancelPress();
   },{passive:true});
   host.addEventListener('pointerup',event=>{
     const gesture=activeSwipe;
+    const singlePointer=activePointers.size===1 && activePointers.has(event.pointerId);
+    activePointers.delete(event.pointerId);
     const dx=gesture?event.clientX-gesture.x:0;
     const dy=gesture?event.clientY-gesture.y:0;
-    if(gesture && gesture.pointerId===event.pointerId &&
+    if(singlePointer && gesture && gesture.pointerId===event.pointerId &&
         dx>72 && Math.abs(dy)<40 && Math.abs(dx)>2*Math.abs(dy) &&
         gesture.signed && gesture.signed===String(tg?.initData||'') &&
+        gesture.threadKey===threadKey() &&
         visibleOwner() && gesture.bubble.isConnected && host.contains(gesture.bubble)){
       // A right swipe means "reply", never "send". The existing composer
       // decides whether this message and owner may actually be replied to.
       gesture.bubble.querySelector('[data-mirror-reply]')?.click();
       try{tg?.HapticFeedback?.selectionChanged?.();}catch{}
     }
-    activeSwipe=null;cancelPress();
+    cancelSwipe();cancelPress();
   },{passive:true});
-  for(const event of ['pointercancel','pointerleave','scroll']){
-    host.addEventListener(event,()=>{cancelPress();activeSwipe=null;},{passive:true});
+  for(const event of ['pointercancel','pointerleave']){
+    host.addEventListener(event,eventData=>{
+      activePointers.delete(eventData.pointerId);
+      cancelPress();cancelSwipe();
+    },{passive:true});
   }
+  host.addEventListener('scroll',()=>{cancelPress();cancelSwipe();},{passive:true});
   host.addEventListener('contextmenu',event=>{
     const bubble=findBubble(event);
     if(!bubble||!visibleOwner())return;
@@ -225,8 +291,24 @@
       bubble.setAttribute('aria-keyshortcuts','Shift+F10 ContextMenu');
       bubble.title='Долгое нажатие — действия; свайп вправо — ответ';
     }
-    if(menu.open && selectedBubble && !selectedBubble.isConnected)dismiss();
+    if(menu.open && selectedBubble &&
+      (!selectedBubble.isConnected || !visibleOwner() ||
+        tg?.initData!==selectedInitData || threadKey()!==selectedThreadKey))dismiss();
   }
-  new MutationObserver(prepareMessages).observe(host,{childList:true,subtree:true});
+  // Changing between threads can update only host dataset attributes, and
+  // pressing Back only hides the thread. A childList-only observer misses both.
+  const monitor=new MutationObserver(()=>{
+    prepareMessages();
+    clearIfOwnerChanged();
+  });
+  monitor.observe(host,{
+    childList:true,subtree:true,attributes:true,
+    attributeFilter:['data-mirror-owner-id','data-mirror-thread-id',
+      'data-mirror-thread-generation']
+  });
+  const threadView=$('telegramThreadView');
+  if(threadView)monitor.observe(threadView,{
+    attributes:true,attributeFilter:['hidden']
+  });
   prepareMessages();
 })();

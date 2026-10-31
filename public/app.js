@@ -5,7 +5,14 @@
   const qs = new URLSearchParams(location.search);
 
   const CODE_AUDIENCE = { s:'standard', a:'all', c:'contacts', f:'close', u:'selected' };
-  const DRAFT_CAPTION_KEY = 'story-pilot:draft-caption';
+  // The old unscoped caption key could expose a previous Telegram user's
+  // unpublished text after switching accounts in the same WebView.
+  const DRAFT_CAPTION_KEY = 'story-pilot:draft-caption'; // legacy purge only
+  const captionDraftStorageKey=()=>{
+    const id=String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id||'');
+    return window.Telegram?.WebApp?.initData && /^\d{1,20}$/.test(id)
+      ? DRAFT_CAPTION_KEY+':owner:'+id : '';
+  };
   const VETO_WELCOME_KEY = 'veto-telegram:welcome:v1';
 
   function decodeHistory(value) {
@@ -110,6 +117,35 @@
   let composerBusy = false;
   let composerGeneration = 0;
   let composerOwner = '';
+  let composerSignedIdentity=String(tg?.initData||'');
+  let viewerOwnerEpoch=0;
+  let viewerSyncIntent=0;
+  let viewerAnalyticsIntent=0;
+  let composerPendingFileName = '';
+  let composerPortalHandoff = null;
+  let composerFromStudio=false;
+  // A public Portal link is not part of the caption: Telegram's Story link
+  // area exists only for Business Bot API + standard audience.
+  function syncComposerPortal(){
+    const panel=$('storyPortalHandoff'),consent=$('storyPortalConfirm');
+    if(!panel||!consent)return;
+    const current=Boolean(composerPortalHandoff &&
+      composerPortalHandoff.generation===composerGeneration &&
+      composerPortalHandoff.signed===String(tg?.initData||''));
+    panel.hidden=!current;
+    if(!current)consent.checked=false;
+    if(current){
+      let host='Portal';
+      try{host=new URL(composerPortalHandoff.url).host;}catch{}
+      $('storyPortalLinkHost').textContent=
+        'Публичная ссылка · '+host+' · требуется отдельное подтверждение';
+    }
+  }
+  function clearComposerPortal(){
+    composerPortalHandoff=null;
+    if($('storyPortalConfirm'))$('storyPortalConfirm').checked=false;
+    syncComposerPortal();
+  }
   let viewerState = {
     configured: null,
     backgroundReady: false,
@@ -308,7 +344,10 @@
     composerDataUrl = '';
     composerNonce = '';
     composerOwner = '';
+    composerPendingFileName = '';
     composerBusy = false;
+    composerFromStudio=false;
+    clearComposerPortal();
     if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl = '';
     $('storyFileInput').value = '';
@@ -316,7 +355,10 @@
     if (!keepCaption) {
       $('storyCaption').value = '';
       $('captionCounter').textContent = '0 / 2048';
-      try { sessionStorage.removeItem(DRAFT_CAPTION_KEY); } catch {}
+      try {
+        const key=captionDraftStorageKey();
+        if(key)sessionStorage.removeItem(key);
+      } catch {}
     }
 
     $('mediaPreview').hidden = true;
@@ -324,12 +366,76 @@
     renderPublish();
   }
 
-  async function prepareComposerFile(file) {
-    if (!file || state.processing) return;
+  function ensureComposerIdentity(){
+    const current=String(tg?.initData||'');
+    if(current===composerSignedIdentity)return false;
+    composerSignedIdentity=current;
+    // Invalidate every owner-bound read, even if another A session is opened
+    // after A → B → A. Never retain another owner's viewers/automation.
+    viewerOwnerEpoch++;
+    viewerSyncIntent++;
+    viewerAnalyticsIntent++;
+    viewerRegisteredKey='';
+    viewerSearchQuery='';
+    selectedViewerStory=null;
+    viewerPendingPhone='';
+    viewerAuthBusy=false;
+    viewerQrAbortController?.abort();
+    viewerQrAbortController=null;
+    // The sheet is shared with Privacy, account connection and MFA.
+    // Never leave the previous owner's private dialog visible or restore
+    // keyboard focus to its old, now-detached input element.
+    if(!$('sheet')?.hidden)closeSheet({restoreFocus:false});
+    viewerState={
+      configured:null,backgroundReady:false,newConnectionsReady:null,
+      secureSessionCrypto:null,cipherVersion:null,storageStatus:null,
+      session:null,loginPending:null,story:null,viewers:[],analytics:null,
+      degraded:false,error:null
+    };
+    automationState={loaded:false,rules:{},jobs:[],busy:false,error:null};
+    state={
+      ...state,connection:'unknown',ready:false,audience:'standard',
+      selected:[],excluded:[],protect:false,lastStory:null,history:[],
+      activity:[],analytics:null,processing:false,
+      accountConnection:{connected:false,account:null},
+      businessPermissions:{connected:false,stories:false,messages:false},
+      viewerSync:{available:false,requiresUserSession:true}
+    };
+    // Read only the incoming owner's caption. Purge shared legacy storage.
+    const key=captionDraftStorageKey();
+    let ownCaption='';
+    try{
+      sessionStorage.removeItem(DRAFT_CAPTION_KEY);
+      if(key)ownCaption=sessionStorage.getItem(key)||'';
+    }catch{}
+    resetComposer({keepCaption:true});
+    $('storyCaption').value=ownCaption.slice(0,2048);
+    $('captionCounter').textContent=$('storyCaption').value.length+' / 2048';
+    renderViewers();
+    renderAnalytics();
+    renderHome();
+    renderConnection();
+    if(current)showToast('Telegram-аккаунт изменился. Архив, зрители и предыдущая сессия очищены.');
+    return true;
+  }
+  async function prepareComposerFile(file,{stillCurrent=null}={}) {
+    if (!file || state.processing) return false;
     const generation = ++composerGeneration;
     const signedOwner = String(tg?.initData || '');
+    // Replacing the photo must never retain an earlier prepared Portal,
+    // nonce, image or preview (even while compression is still running).
+    clearComposerPortal();
+    composerFromStudio=false;
+    composerPendingFileName=String(file.name||'');
+    composerFile=null;composerDataUrl='';composerOwner='';composerNonce='';
+    if(composerPreviewUrl)URL.revokeObjectURL(composerPreviewUrl);
+    composerPreviewUrl='';
+    $('mediaPreviewImage').removeAttribute('src');
+    $('mediaPreview').hidden=true;
+    $('pickStoryMedia').hidden=false;
     const isCurrent = () => generation === composerGeneration &&
-      signedOwner === String(tg?.initData || '');
+      signedOwner === String(tg?.initData || '') &&
+      (!stillCurrent || stillCurrent()===true);
 
     composerBusy = true;
     $('composerState').textContent = 'Подготавливаю…';
@@ -338,9 +444,10 @@
 
     try {
       const prepared = await compressStoryImage(file);
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       composerFile = file;
       composerOwner = signedOwner;
+      syncComposerPortal();
       composerDataUrl = prepared.dataUrl;
       composerNonce = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       if (composerPreviewUrl) URL.revokeObjectURL(composerPreviewUrl);
@@ -352,11 +459,13 @@
       $('mediaPreview').hidden = false;
       $('pickStoryMedia').hidden = true;
       notify('success');
+      return true;
     } catch (error) {
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       resetComposer({ keepCaption: true });
       notify('error');
       showToast(error.message);
+      return false;
     } finally {
       if (generation === composerGeneration) {
         if (signedOwner !== String(tg?.initData || '')) {
@@ -370,9 +479,64 @@
     }
   }
 
+  // Direct Story Engine → Publisher bridge. No DataTransfer requirement
+  // (missing on some native iOS WebViews), no simulated transfer success.
+  // The caller's revision fence runs after every await of image compression.
+  window.VetoTelegramStageStory=async ({
+    file,caption='',portalLink=null,ownerId='',draftId='',stillCurrent=null
+  }={})=>{
+    const signed=String(tg?.initData||'');
+    const currentId=String(tg?.initDataUnsafe?.user?.id||'');
+    if(!signed || !/^\d{1,20}$/.test(currentId) ||
+       String(ownerId)!==currentId || typeof stillCurrent!=='function')
+      throw Error('Telegram-аккаунт изменился. Передача отменена.');
+    if(!file || file.type!=='image/jpeg' || file.size>10*1024*1024)
+      throw Error('Story Engine передал неподдерживаемый JPEG.');
+    // Validate the public link BEFORE staging any private media, so an
+    // oversized Portal never leaves a half-imported publisher attachment.
+    let validatedPortal=null;
+    if(portalLink){
+      try{
+        const url=new URL(String(portalLink));
+        if(String(portalLink).length>1900 ||
+           url.origin!==window.location.origin || url.pathname!=='/portal.html' ||
+           url.search || url.username || url.password ||
+           !/^#p=[A-Za-z0-9_-]{1,5000}$/.test(url.hash))throw Error('invalid');
+        validatedPortal=url.toString();
+      }catch{
+        throw Error('Portal-ссылка недействительна или слишком длинная (до 1900 символов). Уменьши описание Portal.');
+      }
+    }
+    const ready=await prepareComposerFile(file,{stillCurrent});
+    if(!ready || signed!==String(tg?.initData||'') || !stillCurrent())
+      return false;
+    if(validatedPortal){
+      composerPortalHandoff={url:validatedPortal,signed,
+        generation:composerGeneration,draftId:String(draftId||'')};
+    }
+    syncComposerPortal(); // publisher consent is unchecked by default
+    composerFromStudio=true;
+    $('mediaFileName').textContent='VETOGRAM · STORY 9:16';
+    $('mediaFileMeta').textContent='Кадр подготовлен · отправка отдельно';
+    renderPublish();
+    $('storyCaption').value=String(caption||'').slice(0,800);
+    $('storyCaption').dispatchEvent(new Event('input',{bubbles:true}));
+    return true;
+  };
+
   async function publishComposerStory() {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const publishEpoch=viewerOwnerEpoch;
+    const isPublishOwner=()=>publishEpoch===viewerOwnerEpoch &&
+      signedOwner===String(tg?.initData||'');
     if (composerBusy || state.processing) return;
+    if(composerPortalHandoff &&
+       composerPortalHandoff.signed!==signedOwner){
+      resetComposer();
+      showToast('Telegram-аккаунт изменился. Подготовь историю заново.');
+      return;
+    }
     if (!telegramAccountReady()) {
       try { await api('check'); } catch {}
       if (!telegramAccountReady()) {
@@ -380,7 +544,7 @@
         return;
       }
     }
-    if (signedOwner !== String(tg?.initData || '')) return;
+    if (!isPublishOwner())return;
     if (composerDataUrl && composerOwner !== signedOwner) {
       resetComposer();
       showToast('Telegram-аккаунт изменился. Выбери фото заново.');
@@ -390,6 +554,22 @@
       $('storyFileInput').click();
       return;
     }
+    const attachPortal=Boolean(composerPortalHandoff &&
+      composerPortalHandoff.generation===composerGeneration &&
+      composerPortalHandoff.signed===signedOwner &&
+      $('storyPortalConfirm')?.checked);
+    if(attachPortal && state.audience!=='standard'){
+      showToast('Portal доступен только для стандартной аудитории Telegram Business. Измени аудиторию или отключи ссылку.');
+      return;
+    }
+    if(attachPortal && state.businessPermissions?.stories!==true){
+      showToast('Для кликабельного Portal требуется разрешение Stories в Telegram Business. Отключи ссылку или настрой Business.');
+      return;
+    }
+    // Separate confirmation for a publicly clickable Telegram link area.
+    if(attachPortal && !window.confirm(
+      'Прикрепить публичную ссылку Portal к истории? Её содержимое увидят все, у кого есть ссылка. Это действие не отменяется удалением черновика.'
+    ))return;
 
     if (state.audience === 'selected' && !state.selected?.length) {
       showToast('Добавь людей для режима «Выбранные»');
@@ -401,8 +581,10 @@
       return;
     }
 
+    if(!isPublishOwner())return;
     composerBusy = true;
     state.processing = true;
+    const publishingGeneration=composerGeneration;
     renderPublish();
     haptic('medium');
 
@@ -411,13 +593,21 @@
         imageBase64: composerDataUrl,
         caption: $('storyCaption').value || '',
         nonce: composerNonce || (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
+        ...(attachPortal?{portalLink:composerPortalHandoff.url}:{}),
       });
+      // Never apply a Telegram response to another WebView owner or another
+      // attachment. Do not retry when the remote result might be uncertain.
+      if(!isPublishOwner()||publishingGeneration!==composerGeneration)return;
 
       const publishedStoryId = String(result.storyId || '');
       if (result.published !== true || !/^[1-9]\d*$/.test(publishedStoryId)) {
         const error = new Error('Telegram не подтвердил ID новой Story. Проверь свои Stories перед повторной публикацией.');
         error.uncertain = true;
         throw error;
+      }
+      if(attachPortal && result.portalAreaAttached!==true){
+        // Story may be live already: NEVER auto-retry to attach a missing link.
+        showToast('Story опубликована, но прикрепление Portal не подтверждено. Проверь историю в Telegram.');
       }
       selectedViewerStory = publishedStoryId;
       const publishedAudience = audienceLabel(result.verifiedAudience || state.audience);
@@ -429,13 +619,18 @@
 
       if (viewerState.session?.connected) {
         await refreshViewerSync({ silent:true });
+        if(!isPublishOwner())return;
         await refreshViewerAnalytics({ silent:true });
       }
+      if(!isPublishOwner())return;
 
       openSheet(`
         <span class="kicker">Опубликовано</span>
         <h2>Story #${escapeHtml(publishedStoryId)} уже в Telegram</h2>
-        <p>Аудитория: ${escapeHtml(publishedAudience)} · Аналитика аудитории ${viewerState.session?.connected ? 'подхватит просмотры автоматически' : 'можно подключить позже'}.</p>
+        <p>Аудитория: ${escapeHtml(publishedAudience)} · Аналитика аудитории ${viewerState.session?.connected ? 'покажет только подтверждённые просмотры после обновления' : 'можно подключить позже'}.</p>
+        ${attachPortal ? `<p>${result.portalAreaAttached===true
+          ?'Кликабельный Portal подтверждён Telegram Bot API.'
+          :'Portal не подтверждён. Проверь Story в Telegram, не отправляй повторно.'}</p>` : ''}
         <div class="sheet-list">
           <div class="sheet-item"><strong>Публикация</strong><span>Готово · ${escapeHtml(result.transport || 'Telegram')}</span></div>
           <div class="sheet-item"><strong>Защита</strong><span>${state.protect ? 'Включена' : 'Выключена'}</span></div>
@@ -449,14 +644,17 @@
         </div>
       `);
     } catch (error) {
+      if(!isPublishOwner())return;
       state.processing = false;
       notify('error');
       showToast(error.message);
       throw error;
     } finally {
-      composerBusy = false;
-      state.processing = false;
-      renderPublish();
+      if(isPublishOwner()){
+        composerBusy = false;
+        state.processing = false;
+        renderPublish();
+      }
     }
   }
 
@@ -592,7 +790,11 @@
   }
 
   async function api(action = null, payload = {}) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const epoch=viewerOwnerEpoch;
+    const isCurrent=()=>epoch===viewerOwnerEpoch &&
+      signedOwner===String(tg?.initData||'');
     if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
@@ -613,7 +815,7 @@
         timeoutMs: action === 'publish_story' ? 45000 : 15000,
       }));
     } catch (error) {
-      if (signedOwner !== String(tg?.initData || ''))
+      if (!isCurrent())
         throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
       if (action === 'publish_story') {
         const uncertain = new Error('Связь прервалась: публикация могла пройти. Проверь свои Stories в Telegram перед новой попыткой.');
@@ -623,7 +825,7 @@
       throw error;
     }
 
-    if (signedOwner !== String(tg?.initData || ''))
+    if (!isCurrent())
       throw new Error('Telegram-аккаунт изменился. Ответ старой сессии не применён.');
     if (!response.ok || !data.ok) {
       const message = data.error || 'Не удалось обновить Vetogram';
@@ -672,11 +874,16 @@
     return data;
   }
 
-  async function viewerApi(action = null, payload = {}, storyId = selectedViewerStory) {
+  async function viewerApi(action = null, payload = {}, storyId = undefined) {
+    // Default arguments are evaluated before the function body. Resolve
+    // selectedViewerStory AFTER owner reset, not in the parameter list.
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const epoch=viewerOwnerEpoch;
     if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
-    const query = storyId ? `?storyId=${encodeURIComponent(storyId)}` : '';
+    const scopedStoryId=storyId===undefined?selectedViewerStory:storyId;
+    const query = scopedStoryId ? `?storyId=${encodeURIComponent(scopedStoryId)}` : '';
     const options = {
       method: action ? 'POST' : 'GET',
       headers: {
@@ -688,10 +895,13 @@
 
     const { response, data } = await requestJson(`/api/viewer-sync${query}`, options, {
       retry: !action,
-      timeoutMs: 18000,
+      // Code generation includes MTProto connect, an RPC, and encrypted
+      // challenge persistence. Do not abort the browser before the server.
+      // Never automatically retry a SendCode request after a timeout.
+      timeoutMs: action==='send_code' ? 34000 : 18000,
     });
 
-    if (signedOwner !== String(tg?.initData || ''))
+    if (epoch!==viewerOwnerEpoch || signedOwner!==String(tg?.initData||''))
       throw new Error('Telegram-аккаунт изменился. Старые данные просмотров не применены.');
     if (!response.ok || !data.ok) {
       const error = new Error(data.error || 'Аналитика аудитории временно недоступен');
@@ -702,7 +912,9 @@
   }
 
   async function automationsApi(action = null, payload = {}) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const epoch=viewerOwnerEpoch;
     if (!signedOwner) throw new Error('Открой Vetogram внутри Telegram');
 
     const options = {
@@ -718,7 +930,7 @@
       retry: !action || action === 'refresh',
       timeoutMs: 12000,
     });
-    if (signedOwner !== String(tg?.initData || ''))
+    if (epoch!==viewerOwnerEpoch || signedOwner!==String(tg?.initData||''))
       throw new Error('Telegram-аккаунт изменился. Старые Automation данные не применены.');
     if (!response.ok || !data.ok) throw new Error(data.error || 'Automation Center временно недоступен');
     return data;
@@ -787,7 +999,11 @@
   }
 
   async function refreshViewerAnalytics({ silent = true } = {}) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    const epoch=viewerOwnerEpoch,intent=++viewerAnalyticsIntent;
+    const isCurrent=()=>epoch===viewerOwnerEpoch &&
+      intent===viewerAnalyticsIntent && signedOwner===String(tg?.initData||'');
     if (!signedOwner || !viewerState.session?.connected) {
       viewerState.analytics = null;
       renderAnalytics();
@@ -802,31 +1018,36 @@
           'content-type':'application/json',
         },
       }, { retry:true, timeoutMs:18000 });
-      if (signedOwner !== String(tg?.initData || '')) return;
+      if (!isCurrent())return;
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось загрузить Viewer Analytics');
       viewerState.analytics = data.analytics || null;
     } catch (error) {
-      if (signedOwner !== String(tg?.initData || '')) return;
+      if (!isCurrent())return;
       if (!silent) showToast(error.message);
     }
-    if (signedOwner === String(tg?.initData || '')) renderAnalytics();
+    if (isCurrent())renderAnalytics();
   }
 
   async function refreshViewerSync({ silent = false } = {}) {
+    ensureComposerIdentity();
     const signedOwner = String(tg?.initData || '');
+    if(!signedOwner)return;
+    const epoch=viewerOwnerEpoch,intent=++viewerSyncIntent;
+    const isCurrent=()=>epoch===viewerOwnerEpoch &&
+      intent===viewerSyncIntent && signedOwner===String(tg?.initData||'');
     try {
       let data = await viewerApi();
-      if (signedOwner !== String(tg?.initData || '')) return;
+      if (!isCurrent())return;
 
       const history = activeStoryHistory().filter(item => Number(item.ts || 0) > 0);
       const historyKey = history.map(item => `${item.id}:${item.ts}:${item.deleted ? 1 : 0}`).join('|');
 
       if (data.session?.connected && historyKey && historyKey !== viewerRegisteredKey) {
         await viewerApi('register_stories', { stories: history }, null);
-        if (signedOwner !== String(tg?.initData || '')) return;
+        if (!isCurrent())return;
         viewerRegisteredKey = historyKey;
         data = await viewerApi();
-        if (signedOwner !== String(tg?.initData || '')) return;
+        if (!isCurrent())return;
       }
 
       if (data.degraded) {
@@ -859,7 +1080,7 @@
         };
       }
     } catch (error) {
-      if (signedOwner !== String(tg?.initData || '')) return;
+      if (!isCurrent())return;
       const data = error.viewerData || {};
       viewerState = {
         ...viewerState,
@@ -878,7 +1099,7 @@
       };
       if (!silent && data.config?.configured !== false) showToast(error.message);
     }
-    if (signedOwner !== String(tg?.initData || '')) return;
+    if (!isCurrent())return;
     renderViewers();
     renderHome();
   }
@@ -928,6 +1149,10 @@
   }
 
   function renderPublish() {
+    ensureComposerIdentity();
+    const sourceBadge=$('storySourceStatus');
+    if(sourceBadge)sourceBadge.hidden=!(composerFromStudio && composerDataUrl &&
+      composerOwner===String(tg?.initData||''));
     const latest = activeStoryHistory()[0] || null;
     $('metricAudience').textContent = audienceLabel(state.audience);
     $('metricLast').textContent = latest ? relativeTime(latest.ts) : '—';
@@ -959,7 +1184,7 @@
       composerState.textContent = state.processing ? 'Публикую…' : 'Подготавливаю…';
       composerState.className = 'composer-state busy';
     } else if (composerDataUrl) {
-      composerState.textContent = 'Готово';
+      composerState.textContent = composerFromStudio ? 'Кадр · 9:16' : 'Готово';
       composerState.className = 'composer-state ready';
     } else {
       composerState.textContent = 'Не выбрано';
@@ -996,13 +1221,14 @@
   }
 
   function renderViewers() {
+    const viewerUi=(key,ru)=>window.VetogramI18n?.t?.(key,ru)||ru;
     const item = preferredStory();
 
     if (item) {
       selectedViewerStory = item.id;
       $('viewerStoryTitle').textContent = `Story #${item.id} · ${audienceLabel(item.audience)}`;
     } else {
-      $('viewerStoryTitle').textContent = 'Нет опубликованных Stories';
+      $('viewerStoryTitle').textContent = viewerUi('viewerNoStories','Нет опубликованных Stories');
     }
 
     const story = viewerState.story && String(viewerState.story.story_id) === String(selectedViewerStory)
@@ -1024,32 +1250,32 @@
     const quickPrimary = $('quickPrimaryButton');
     const testAlertButton = $('testAlertButton');
 
-    quickTelegram.textContent = state.ready ? 'Готово' : 'Нужно подключить';
+    quickTelegram.textContent = state.ready ? viewerUi('viewerReady',"Готово") : viewerUi('viewerNeedConnect',"Нужно подключить");
     quickViewer.textContent = connected
-      ? 'Готово'
+      ? viewerUi('viewerReady',"Готово")
       : viewerState.newConnectionsReady === false
-        ? 'Security setup'
-        : 'Нужно подключить';
-    quickStory.textContent = hasStory ? `#${item.id}` : 'Нужно опубликовать';
+        ? viewerUi('viewerSecuritySetup',"Нужно настроить защиту")
+        : viewerUi('viewerNeedConnect',"Нужно подключить");
+    quickStory.textContent = hasStory ? `#${item.id}` : viewerUi('viewerNeedPublish',"Нужно опубликовать");
 
     $('quickTelegramStep').classList.toggle('done', Boolean(state.ready));
     $('quickViewerStep').classList.toggle('done', connected);
     $('quickStoryStep').classList.toggle('done', hasStory);
 
     const completed = [Boolean(state.ready), connected, hasStory].filter(Boolean).length;
-    quickBadge.textContent = completed === 3 ? '3/3 · READY' : `${completed}/3`;
+    quickBadge.textContent = completed === 3 ? viewerUi('viewerFullReady','3/3 · ГОТОВО') : `${completed}/3`;
     quickBadge.classList.toggle('ready', completed === 3);
 
     if (!state.ready) {
-      quickPrimary.textContent = 'Проверить Telegram';
+      quickPrimary.textContent = viewerUi('viewerCheckTelegram',"Проверить Telegram");
     } else if (!connected && viewerState.newConnectionsReady === false) {
-      quickPrimary.textContent = 'Проверить Security';
+      quickPrimary.textContent = viewerUi('viewerCheckSecurity',"Проверить Security");
     } else if (!connected) {
-      quickPrimary.textContent = 'Подключить аналитику';
+      quickPrimary.textContent = viewerUi('viewerConnectAnalytics',"Подключить аналитику");
     } else if (!hasStory) {
-      quickPrimary.textContent = 'Опубликовать Story';
+      quickPrimary.textContent = viewerUi('viewerPublishStory',"Опубликовать Story");
     } else {
-      quickPrimary.textContent = 'Обновить данные';
+      quickPrimary.textContent = viewerUi('viewerRefreshData',"Обновить данные");
     }
 
     testAlertButton.disabled = !connected;
@@ -1057,48 +1283,51 @@
     syncState.className = 'viewer-sync-state';
     if (viewerState.degraded) {
       $('viewerSyncTitle').textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Сервер хранения VETOGRAM недоступен.' : 'Аналитика аудитории восстанавливает соединение.';
-      $('viewerSyncText').textContent = viewerState.error || 'Сохранённый Telegram-аккаунт не отключён. Требуется восстановить сервер.';
-      syncState.textContent = 'Хранилище недоступно · сессию не удаляем';
+        ? viewerUi('viewerStorageDownTitle',"Сервер хранения VETOGRAM недоступен.") : viewerUi('viewerRecoveringTitle',"Аналитика аудитории восстанавливает соединение.");
+      $('viewerSyncText').textContent = viewerState.error || viewerUi('viewerSessionPreserved',"Сохранённый Telegram-аккаунт не отключён. Требуется восстановить сервер.");
+      syncState.textContent = viewerUi('viewerStorageSessionKept',"Хранилище недоступно · сессию не удаляем");
       syncState.classList.add('warn');
-      syncButton.textContent = connected ? 'Управление Аналитика аудитории' : 'Обновить';
+      syncButton.textContent = connected ? viewerUi('viewerManageAnalytics',"Управление Аналитика аудитории") : 'Обновить';
     } else if (viewerState.configured === false) {
-      $('viewerSyncTitle').textContent = 'Аналитика аудитории backend почти готов.';
-      $('viewerSyncText').textContent = 'Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.';
-      syncState.textContent = 'Нужно завершить серверную настройку Аналитика аудитории';
+      $('viewerSyncTitle').textContent = viewerUi('viewerBackendTitle',"Аналитика аудитории backend почти готов.");
+      $('viewerSyncText').textContent = viewerUi('viewerBackendInfo',"Watcher и авторизация уже установлены. Для фоновых уведомлений нужно отдельное защищённое серверное хранилище.");
+      syncState.textContent = viewerUi('viewerBackendBadge',"Нужно завершить серверную настройку Аналитика аудитории");
       syncState.classList.add('warn');
-      syncButton.textContent = 'Что осталось подключить';
+      syncButton.textContent = viewerUi('viewerRemaining',"Что осталось подключить");
     } else if (connected) {
       const account = viewerState.session?.account || {};
-      $('viewerSyncTitle').textContent = 'Аналитика аудитории активен.';
-      $('viewerSyncText').textContent = 'Fast Alerts работают автоматически: новый просмотр замечается в фоне, затем Vetogram подтверждает доступную личность.';
+      $('viewerSyncTitle').textContent = viewerUi('viewerLinkedTitle',"Аналитика аудитории подключена.");
+      $('viewerSyncText').textContent = viewerState.backgroundReady
+        ? viewerUi('viewerBackgroundConfiguredInfo','Фоновые проверки настроены, но фактическая доставка уведомлений ещё не подтверждена. Проверь тестовым событием.')
+        : viewerUi('viewerBackgroundPendingInfo',"Аккаунт подключён, но фоновые проверки пока не подтверждены. Обновляй данные вручную или настрой безопасный cron.");
       const alertsOn = viewerState.session?.preferences?.notifyEnabled !== false;
-      syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? 'фоновые проверки включены' : 'фоновый cron требует настройки'} · уведомления ${alertsOn ? 'вкл' : 'выкл'}`;
-      syncState.classList.add(viewerState.backgroundReady ? 'ready' : 'warn');
-      syncButton.textContent = 'Управление Аналитика аудитории';
-    } else if (viewerState.session?.status === 'reauth_required') {
-      $('viewerSyncTitle').textContent = 'Нужно переподключить Аналитика аудитории.';
-      $('viewerSyncText').textContent = viewerState.session?.lastError || 'Telegram-сессия больше не авторизована.';
-      syncState.textContent = viewerState.newConnectionsReady === false
-        ? 'Повторное подключение временно закрыто Security'
-        : 'Требуется повторная авторизация';
+      syncState.textContent = `${account.username ? '@' + account.username : account.firstName || 'Telegram account'} · ${viewerState.backgroundReady ? viewerUi('viewerBgConfiguredBadge','фоновые проверки настроены · доставка не подтверждена') : viewerUi('viewerBgPendingBadge','фоновый cron требует настройки')} · ${viewerUi('viewerAlerts','уведомления')} ${alertsOn ? viewerUi('viewerEnabled','вкл') : viewerUi('viewerDisabled','выкл')}`;
+      // A configured background scheduler does not prove a delivered alert.
       syncState.classList.add('warn');
-      syncButton.textContent = 'Переподключить';
+      syncButton.textContent = viewerUi('viewerManageAnalytics',"Управление Аналитика аудитории");
+    } else if (viewerState.session?.status === 'reauth_required') {
+      $('viewerSyncTitle').textContent = viewerUi('viewerReauthTitle',"Нужно переподключить Аналитика аудитории.");
+      $('viewerSyncText').textContent = viewerState.session?.lastError || viewerUi('viewerSessionExpired',"Telegram-сессия больше не авторизована.");
+      syncState.textContent = viewerState.newConnectionsReady === false
+        ? viewerUi('viewerReauthBlocked',"Повторное подключение временно закрыто Security")
+        : viewerUi('viewerReauthRequired',"Требуется повторная авторизация");
+      syncState.classList.add('warn');
+      syncButton.textContent = viewerUi('viewerReconnect',"Переподключить");
     } else if (viewerState.newConnectionsReady === false) {
       $('viewerSyncTitle').textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Хранилище VETOGRAM временно недоступно.' : 'Аналитика аудитории защищён.';
+        ? viewerUi('viewerStorageTemporaryTitle',"Хранилище VETOGRAM временно недоступно.") : viewerUi('viewerProtectedTitle',"Аналитика аудитории защищён.");
       $('viewerSyncText').textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Это проблема сервера, а не подтверждение выхода из Telegram. Не удаляй сессию и не отправляй код повторно.'
-        : 'Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.';
+        ? viewerUi('viewerStorageRetryInfo',"Это проблема сервера, а не подтверждение выхода из Telegram. Не удаляй сессию и не отправляй код повторно.")
+        : viewerUi('viewerGuardInfo',"Новая приватная Telegram-сессия не будет создана, пока серверное хранилище ключей не подтверждено.");
       syncState.textContent = viewerState.storageStatus === 'unavailable'
-        ? 'Сервер хранения · недоступен' : 'Защищённая сессия storage · setup required';
+        ? viewerUi('viewerStorageBadge',"Сервер хранения · недоступен") : viewerUi('viewerGuardBadge',"Защищённая сессия storage · setup required");
       syncState.classList.add('warn');
-      syncButton.textContent = 'Проверить Security';
+      syncButton.textContent = viewerUi('viewerCheckSecurity',"Проверить Security");
     } else {
-      $('viewerSyncTitle').textContent = 'Подключи аналитику зрителей.';
-      $('viewerSyncText').textContent = 'Для Аналитика аудитории используется отдельное защищённое подключение Telegram только к данным твоих собственных Stories. Код входа и 2FA не сохраняются.';
-      syncState.textContent = viewerState.configured === null ? 'Проверяю состояние…' : 'Не подключено';
-      syncButton.textContent = 'Подключить аналитику';
+      $('viewerSyncTitle').textContent = viewerUi('viewerStartTitle',"Подключи аналитику зрителей.");
+      $('viewerSyncText').textContent = viewerUi('viewerStartInfo',"Для Аналитика аудитории используется отдельное защищённое подключение Telegram только к данным твоих собственных Stories. Код входа и 2FA не сохраняются.");
+      syncState.textContent = viewerState.configured === null ? viewerUi('viewerChecking',"Проверяю состояние…") : viewerUi('viewerDisconnected',"Не подключено");
+      syncButton.textContent = viewerUi('viewerConnectAnalytics',"Подключить аналитику");
     }
 
     const query = viewerSearchQuery.trim().toLowerCase();
@@ -1109,28 +1338,28 @@
         .some(value => String(value).toLowerCase().includes(query));
     });
 
-    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} подтверждено` : 'Аналитика аудитории';
+    $('viewerListBadge').textContent = connected ? `${viewerState.viewers?.length || 0} ${viewerUi('viewerListConfirmed','подтверждено')}` : viewerUi('viewerListLabel','Аналитика аудитории');
 
     if (!connected) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Подключи Аналитика аудитории, чтобы видеть подтверждённых зрителей и историю взаимодействий.</div>';
+      $('viewerList').innerHTML = `<div class="viewer-empty">${viewerUi('viewerEmptyConnect','Подключи Аналитика аудитории, чтобы видеть подтверждённых зрителей и историю взаимодействий.')}</div>`;
       return;
     }
 
     if (!selectedViewerStory) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Сначала опубликуй Story через Vetogram.</div>';
+      $('viewerList').innerHTML = `<div class="viewer-empty">${viewerUi('viewerEmptyPublish','Сначала опубликуй Story через Vetogram.')}</div>`;
       return;
     }
 
     if (!viewers.length) {
-      $('viewerList').innerHTML = '<div class="viewer-empty">Подтверждённых зрителей пока нет. Новый просмотр сначала проходит окно приватности Telegram.</div>';
+      $('viewerList').innerHTML = `<div class="viewer-empty">${viewerUi('viewerEmptyUnverified','Подтверждённых зрителей пока нет. Новый просмотр сначала проходит окно приватности Telegram.')}</div>`;
       return;
     }
 
     $('viewerList').innerHTML = viewers.map(viewer => {
       const name = viewer.display_name || (viewer.username ? '@' + viewer.username : 'Telegram user');
-      const username = viewer.username ? '@' + viewer.username : 'без username';
+      const username = viewer.username ? '@' + viewer.username : viewerUi('viewerNoUsername','без username');
       const viewedAt = viewer.viewed_at
-        ? new Date(viewer.viewed_at).toLocaleString('ru-RU', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' })
+        ? new Date(viewer.viewed_at).toLocaleString((window.VetogramI18n?.getLocale?.()==='hy' ? 'hy-AM' : window.VetogramI18n?.getLocale?.()==='en' ? 'en-US' : 'ru-RU'), { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' })
         : '—';
       const initials = String(viewer.display_name || viewer.username || 'TG').trim().slice(0, 2).toUpperCase();
       const reaction = viewer.reaction_json?.value ? ` · ${viewer.reaction_json.value}` : '';
@@ -1139,11 +1368,11 @@
           <div class="viewer-avatar">${escapeHtml(initials)}</div>
           <div class="viewer-copy">
             <strong>${escapeHtml(name)}</strong>
-            <span>${escapeHtml(username)}${viewer.is_contact ? ' · контакт' : ''}</span>
+            <span>${escapeHtml(username)}${viewer.is_contact ? ' · '+viewerUi('viewerContact','контакт') : ''}</span>
           </div>
           <div class="viewer-side">
             <strong>${escapeHtml(viewedAt)}</strong>
-            <span>confirmed${escapeHtml(reaction)}</span>
+            <span>${viewerUi('viewerVerified','confirmed')}${escapeHtml(reaction)}</span>
           </div>
         </div>`;
     }).join('');
@@ -1581,8 +1810,9 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = { chats:'privacy', telegram:'telegram', voice:'home', archive:'publish', analytics:'home', viewers:'home', relay:'home', ai:'home', 'story-engine':'studio' };
+  const NAV_PARENT = {home:'telegram',chats:'privacy',telegram:'telegram',voice:'ai',archive:'publish',analytics:'ai',viewers:'publish',relay:'ai',ai:'ai',studio:'publish','story-engine':'publish'};
   function switchScreen(name) {
+    ensureComposerIdentity();
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
     if (composerOwner && composerOwner !== String(tg?.initData || '')) resetComposer();
     const activeScreen = [...document.querySelectorAll('.screen')].find(screen => screen.dataset.screen === target);
@@ -1590,6 +1820,9 @@
       showToast('Раздел временно недоступен');
       return false;
     }
+    // Navigation must not leave a previous account, conversation or
+    // authorization sheet floating over a different active screen.
+    if(target!==currentScreen && !$('sheet')?.hidden)closeSheet({restoreFocus:false});
     currentScreen = target;
     document.querySelectorAll('.screen').forEach(screen => {
       const active = screen === activeScreen;
@@ -1617,37 +1850,72 @@
   window.VetoTelegramNavigate = switchScreen;
   // Messenger and Privacy modules share the same owner-scoped account login.
   // The Business-bot permission is an independent optional archive feature.
+  // After a successful personal login, show the optional, read-only Business
+  // consent wizard in the SAME Mini App. Never silently connect a bot or grant
+  // access, and never act on a different signed Telegram owner.
+  function offerBusinessConsentAfterLogin() {
+    const owner=String(tg?.initData||''),ownerEpoch=viewerOwnerEpoch;
+    if(!owner)return;
+    setTimeout(() => {
+      if(owner!==String(tg?.initData||'') || ownerEpoch!==viewerOwnerEpoch)return;
+      if(typeof window.VetoTelegramOpenUnifiedOnboarding!=='function')return;
+      Promise.resolve(window.VetoTelegramOpenUnifiedOnboarding({automatic:true})).catch(()=>{});
+    },0);
+  }
+
   window.VetoTelegramOpenAccountConnection = async () => {
+    ensureComposerIdentity();
     if (!tg?.initData) {
       showToast('Открой Vetogram внутри своего Telegram');
       return;
     }
+    const signed=String(tg.initData),epoch=viewerOwnerEpoch;
     await refreshViewerSync({ silent:true });
+    if(epoch!==viewerOwnerEpoch||signed!==String(tg?.initData||''))return;
     if (viewerState.session?.connected === true && viewerState.session?.identityMismatch !== true) {
-      const opened = await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
-      if (!opened) profileSheet();
+      // A signed personal account login is separate from optional Business
+      // access. Never launch permission changes when a user taps "My account".
+      profileSheet();
     } else {
       connectionHelpSheet();
     }
   };
 
 
+  let sheetReturnFocus = null;
   function openSheet(html) {
+    // Store focus once for a modal flow. Subsequent steps (phone -> code ->
+    // 2FA) replace the sheet contents without losing the return target.
+    if ($('sheet').hidden) sheetReturnFocus = document.activeElement;
     $('sheetContent').innerHTML = html;
     $('sheetBackdrop').hidden = false;
     $('sheet').hidden = false;
+    document.documentElement.classList.add('veto-sheet-open');
+    document.body.classList.add('veto-sheet-open');
+    $('sheet').focus({preventScroll:true});
     try { tg?.BackButton?.show(); } catch {}
   }
 
-  function closeSheet() {
+  function closeSheet({restoreFocus=true}={}) {
     if (viewerQrAbortController) {
       viewerQrAbortController.abort();
       viewerQrAbortController = null;
     }
     $('sheetBackdrop').hidden = true;
     $('sheet').hidden = true;
+    document.documentElement.classList.remove('veto-sheet-open');
+    document.body.classList.remove('veto-sheet-open');
+    const returnTo=sheetReturnFocus;
+    sheetReturnFocus=null;
+    if (restoreFocus && returnTo?.isConnected && typeof returnTo.focus==='function')
+      returnTo.focus({preventScroll:true});
     try { tg?.BackButton?.hide(); } catch {}
+    window.dispatchEvent(new CustomEvent('vetogram:modal-closed'));
   }
+
+  // One modal coordinator shared by account onboarding and the Privacy
+  // module. Both control the same #sheet/#sheetBackdrop elements.
+  window.VetoTelegramModal = Object.freeze({open:openSheet,close:closeSheet});
 
   let vetoWelcomeStep = 0;
 
@@ -1833,7 +2101,7 @@
 
   function securityCenterSheet() {
     const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
-    const businessConnected = state.businessPermissions?.connected === true || state.connection === 'needs_permission';
+    const businessConnected = state.businessPermissions?.connected === true;
     const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
     const session = viewerState.session;
     const cryptoVersion = session?.cryptoVersion || viewerState.cipherVersion || null;
@@ -2022,7 +2290,8 @@
 
   function profileSheet() {
     const accountConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
-    const businessConnected = state.businessPermissions?.connected === true || state.connection === 'needs_permission';
+    const businessConnected = state.businessPermissions?.connected === true;
+    const businessNeedsPermission = !businessConnected && state.connection === 'needs_permission';
     const businessStories = state.businessPermissions?.stories === true;
     const privacyPermission = state.readPermission === true || state.businessPermissions?.messages === true;
     const storiesReady = telegramAccountReady();
@@ -2034,10 +2303,10 @@
       <div class="sheet-list connection-center-list">
         <div class="sheet-item"><strong>Vetogram открыт внутри Telegram</strong><span>${tg?.initData ? '✓ Да' : '○ Открой Mini App из Telegram'}</span></div>
         <div class="sheet-item"><strong>Основное подключение аккаунта</strong><span>${accountConnected ? '✓ ' + escapeHtml(account.username ? '@' + account.username : account.firstName || 'Telegram подключён') : '○ Не подключено · номер + код или QR'}</span></div>
-        <div class="sheet-item"><strong>Публикация Stories</strong><span>${storiesReady ? '✓ Готово' : '○ Станет доступно после подключения Telegram'}</span></div>
-        <div class="sheet-item"><strong>Дополнительная Privacy</strong><span>${privacyPermission ? '✓ Доступ к выбранным Business‑чатам включён' : '○ Не включена · это нормально, функция необязательная'}</span></div>
+        <div class="sheet-item"><strong>Публикация Stories</strong><span>${storiesReady ? '✓ Личная сессия подключена · право публикации проверяется при попытке' : '○ Сначала подключи Telegram. Возможность публикации зависит от разрешений и ограничений Telegram'}</span></div>
+        <div class="sheet-item"><strong>Дополнительная Privacy</strong><span>${businessConnected && privacyPermission ? '○ Разрешение Business обнаружено · получение сообщений и удалений ещё нужно проверить' : businessNeedsPermission ? '○ Business требует отдельного согласия' : '○ Не включена · это нормально, функция необязательная'}</span></div>
         <div class="sheet-item"><strong>Защита сессии</strong><span>${viewerState.secureSessionCrypto ? '✓ Сессия хранится в зашифрованном виде' : accountConnected ? '⚠ Нужна повторная проверка защиты' : '○ Появится после подключения'}</span></div>
-        ${businessConnected ? `<div class="sheet-item"><strong>Telegram Business</strong><span>✓ Подключён${businessStories ? ' · может управлять Stories' : ''}</span></div>` : ''}
+        ${businessConnected ? `<div class="sheet-item"><strong>Telegram Business</strong><span>✓ Подключение обнаружено${businessStories ? ' · право Stories присутствует' : ''}; доставка событий отдельно не проверена</span></div>` : ''}
       </div>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="account-connect">${accountConnected ? 'Управлять подключением' : 'Подключить Telegram'}</button>
@@ -2107,8 +2376,8 @@
 
       <div class="connection-what-next">
         <strong>Что будет после подключения?</strong>
-        <div><span>✓</span><p><b>Stories</b><small>сможешь публиковать Story из Vetogram</small></p></div>
-        <div><span>✓</span><p><b>Просмотры</b><small>станет доступна аналитика твоих Stories</small></p></div>
+        <div><span>○</span><p><b>Stories</b><small>редактор доступен, публикация зависит от возможностей и разрешений Telegram</small></p></div>
+        <div><span>○</span><p><b>Просмотры</b><small>покажем только те данные о просмотрах, которые фактически вернёт Telegram</small></p></div>
         <div><span>✓</span><p><b>Privacy — отдельно</b><small>доступ к сообщениям не включается автоматически</small></p></div>
       </div>
 
@@ -2122,22 +2391,22 @@
 
   function businessConnectionHelpSheet() {
     openSheet(`
-      <span class="kicker">НЕОБЯЗАТЕЛЬНО · PRIVACY</span>
-      <h2>Подключи архив личных чатов</h2>
-      <p>Если тебе нужны только Stories и аналитика просмотров — этот шаг можно вообще пропустить. Живые чаты открываются через личное подключение Telegram. А для автоматического Anti-Delete нужен отдельный доступ к выбранным перепискам — подключение Business-бота в настройках Telegram. Premium не требуется.</p>
+      <span class="kicker">VETOGRAM · BUSINESS</span>
+      <h2>Anti-Delete подключается в Vetogram</h2>
+      <p>Сначала авторизуй свой Telegram через номер или QR. Для Anti-Delete разреши только нужные личные чаты и подтверди доступ отдельно от Stories.</p>
       <div class="sheet-list">
-        <div class="sheet-item"><strong>1 · Открой настройки Telegram</strong><span>Settings → Telegram Business / Business → Chatbots / Chat Automation.</span></div>
-        <div class="sheet-item"><strong>2 · Добавь Vetogram</strong><span>Технический username сейчас @Vetotg_bot. Выбери только те чаты, для которых хочешь Privacy‑функции.</span></div>
-        <div class="sheet-item"><strong>3 · Выбери личные чаты</strong><span>Включи «Только выбранные чаты» и права для сообщений; остальные разрешения не нужны для архива. Секретные чаты не поддерживаются.</span></div>
-        <div class="sheet-item"><strong>4 · Проверь готовность</strong><span>Вернись в Privacy Center и нажми «Проверить подключение». Архив сохраняет только доступные новые события после разрешения.</span></div>
+        <div class="sheet-item"><strong>Основной аккаунт</strong><span>Живые чаты, Story Studio и AI без Telegram Business-бота.</span></div>
+        <div class="sheet-item"><strong>Дополнительная защита</strong><span>Бот может получать новые события из выбранных тобой личных чатов после разрешения. Старые удаления не восстановятся.</span></div>
+        <div class="sheet-item"><strong>Без лишнего доступа</strong><span>Нет автоматического разрешения на все личные чаты или управления Stories. Отзыв Business-подключения доступен отдельно.</span></div>
       </div>
       <div class="sheet-actions">
-        <button class="accent" data-sheet-action="go-ghost">Открыть настройку чатов</button>
-        <button data-sheet-action="account-connect">Подключить обычный аккаунт</button>
+        <button class="accent" data-sheet-action="go-ghost">Открыть настройку Anti-Delete</button>
+        <button data-sheet-action="account-connect">Подключить основной аккаунт</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
     `);
   }
+
   function viewerSetupSheet() {
     if (viewerState.configured === false) {
       openSheet(`
@@ -2237,6 +2506,27 @@
     if (slot) {
       slot.textContent = message;
       slot.hidden = false;
+      // 409 means an existing *server-side* Telegram challenge is still
+      // active. Never turn it into an automatic second SendCode request.
+      const pending = error?.viewerData?.loginPending;
+      if (pending && ['code','password','qr_password'].includes(pending.stage)
+          && Date.parse(pending.expiresAt||'') > Date.now()) {
+        viewerState.loginPending={stage:pending.stage,expiresAt:pending.expiresAt};
+        $('viewerAuthRecovery')?.remove();
+        const controls=document.createElement('div');
+        controls.id='viewerAuthRecovery';
+        controls.className='sheet-actions viewer-auth-recovery';
+        const resume=document.createElement('button');
+        resume.type='button';
+        resume.dataset.sheetAction='viewer-resume-login';
+        resume.textContent='Продолжить начатый вход';
+        const cancel=document.createElement('button');
+        cancel.type='button';
+        cancel.dataset.sheetAction='viewer-cancel-login';
+        cancel.textContent='Отменить запрос и сменить номер';
+        controls.append(resume,cancel);
+        slot.insertAdjacentElement('afterend',controls);
+      }
     } else {
       showToast(message);
     }
@@ -2244,7 +2534,12 @@
   }
 
   async function runViewerAuthAction(button, task) {
+    ensureComposerIdentity();
     if (viewerAuthBusy) return;
+    const ownerEpoch=viewerOwnerEpoch;
+    const signed=String(tg?.initData||'');
+    const isCurrent=()=>ownerEpoch===viewerOwnerEpoch &&
+      signed===String(tg?.initData||'');
     viewerAuthBusy = true;
     const previous = button?.textContent || '';
     if (button) {
@@ -2254,10 +2549,11 @@
     try {
       await task();
     } catch (error) {
-      showViewerAuthError(error);
+      if(isCurrent() && !$('sheet')?.hidden)showViewerAuthError(error);
     } finally {
+      if(!isCurrent())return;
       viewerAuthBusy = false;
-      if (button?.isConnected) {
+      if (button?.isConnected && !$('sheet')?.hidden) {
         button.disabled = false;
         button.textContent = previous;
       }
@@ -2273,9 +2569,22 @@
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerPhone">Номер Telegram</label>
-          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 / +374 / +971…" value="${escapeHtml(viewerPendingPhone)}" />
+          <button type="button" class="veto-country-trigger" id="viewerCountryTrigger"
+            aria-expanded="false" aria-haspopup="dialog" aria-controls="viewerCountryPicker">🌐 Выбрать страну</button>
+          <div class="veto-country-picker" id="viewerCountryPicker" role="dialog"
+            aria-label="Выбрать страну для номера Telegram" hidden>
+            <label for="viewerCountrySearch">Поиск по стране или коду</label>
+            <input id="viewerCountrySearch" type="search" autocomplete="off"
+              placeholder="Армения, Россия, +971…" aria-label="Поиск страны" />
+            <div id="viewerCountryOptions" class="veto-country-options" role="listbox"
+              aria-label="Страны и телефонные коды"></div>
+            <p>Страны с общим кодом, например +7, можно выбрать вручную. Отправку кода выполняет Telegram.</p>
+          </div>
+          <input id="viewerPhone" type="tel" inputmode="tel" autocomplete="tel"
+            aria-describedby="viewerPhoneHint" placeholder="+374 99 123 456"
+            value="${escapeHtml(viewerPendingPhone)}" />
         </div>
-        <div class="auth-help">Международный формат, начиная с +. Проверь официальный чат «Telegram» с синей галочкой во всех своих активных устройствах. SMS может не прийти — способ доставки выбирает Telegram.</div>
+        <div class="auth-help" id="viewerPhoneHint">Выбери страну или введи полный номер с +. Код отправляет Telegram, а не бот Vetogram. Его доставка в приложение или SMS зависит от Telegram.</div>
       </div>
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
@@ -2284,6 +2593,7 @@
         <button data-sheet-action="viewer-back-setup">Назад</button>
       </div>
     `);
+    window.VetogramCountryPicker?.mount();
   }
 
   function viewerEmailSheet() {
@@ -2294,17 +2604,18 @@
       <div class="sheet-actions"><button class="accent" data-sheet-action="viewer-send-email">Согласен, получить email-код</button><button data-sheet-action="viewer-start-qr">Использовать QR</button><button data-sheet-action="close">Позже</button></div>`);
   }
 
-  let viewerCodeDelivery='telegram_app';
+  let viewerCodeDelivery='unknown';
   function viewerCodeSheet(delivery, reused = false) {
     if (delivery === 'email_setup') { viewerEmailSheet(); return; }
-    viewerCodeDelivery=delivery || viewerCodeDelivery;
+    // Missing delivery metadata is not evidence of Telegram-app delivery.
+    viewerCodeDelivery=delivery || 'unknown';
     delivery=viewerCodeDelivery;
     const emailCode = delivery === 'email_code' || delivery === 'email_setup_code';
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ TELEGRAM</span>
       <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="active">2 · Код</span><span>3 · 2FA, если нужно</span></div>
       <h2>${emailCode?'Введи код из email':'Теперь введи код из Telegram'}</h2>
-      <p>${emailCode ? 'Telegram отправил код на email для входа. Введи его здесь; код не сохраняется.' : reused ? 'Сохранили предыдущий запрос: новый код не отправляли.' : delivery === 'telegram_app' ? 'Telegram выбрал доставку в приложение.' : 'Telegram выбрал доступный способ доставки.'}${emailCode?'':' Ищи код в официальном чате «Telegram» с синей галочкой на любом своём устройстве, а не в боте Vetogram. SMS может не прийти. Возвращайся сюда без нового запроса.'}</p>
+      <p>${emailCode ? 'Telegram указал email как способ подтверждения. Введи код, если он пришёл; Vetogram не сохраняет код.' : reused ? 'Предыдущий запрос ещё действует: новый код не отправлялся.' : delivery === 'telegram_app' ? 'Telegram принял запрос и указал доставку кода в приложение. Получение кода на устройстве не подтверждено.' : 'Запрос принят Telegram; способ доставки выбирает сам Telegram. Фактическое получение кода ещё не подтверждено.'}${emailCode?'':' Проверь официальный чат «Telegram» на своих авторизованных устройствах. Не запрашивай повторно без необходимости.'}</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="viewerCode">Код</label>
@@ -2494,7 +2805,8 @@
             await refresh();
             await refreshViewerAnalytics({ silent: true });
             switchScreen('telegram');
-            await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
+            // Only offer the consent screen; no bot permissions change until approval.
+            offerBusinessConsentAfterLogin();
             break;
           }
 
@@ -2542,14 +2854,17 @@
   }
 
   async function setAudience(mode) {
+    ensureComposerIdentity();
+    const epoch=viewerOwnerEpoch;
     const previous = state.audience;
     state.audience = mode;
     render();
     haptic();
     try {
       await api('audience', { value:mode });
-      showToast('Аудитория сохранена');
+      if(epoch===viewerOwnerEpoch)showToast('Аудитория сохранена');
     } catch (error) {
+      if(epoch!==viewerOwnerEpoch)return;
       state.audience = previous;
       render();
       showToast(error.message);
@@ -2558,14 +2873,17 @@
   }
 
   async function setProtect(value) {
+    ensureComposerIdentity();
+    const epoch=viewerOwnerEpoch;
     const previous = state.protect;
     state.protect = value;
     render();
     haptic();
     try {
       await api('protect', { value });
-      showToast(value ? 'Защита включена' : 'Защита выключена');
+      if(epoch===viewerOwnerEpoch)showToast(value ? 'Защита включена' : 'Защита выключена');
     } catch (error) {
+      if(epoch!==viewerOwnerEpoch)return;
       state.protect = previous;
       render();
       showToast(error.message);
@@ -2590,6 +2908,7 @@
   }
 
   document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => switchScreen(button.dataset.nav)));
+  $('vetoNavHome')?.addEventListener('click',()=>switchScreen('home'));
 
   document.querySelectorAll('[data-open-screen]').forEach(button => {
     button.addEventListener('click', () => switchScreen(button.dataset.openScreen));
@@ -2868,6 +3187,34 @@
     `);
   });
   $('sheetBackdrop').addEventListener('click', closeSheet);
+  document.addEventListener('keydown',event=>{
+    const sheet=$('sheet');
+    if(sheet?.hidden || document.querySelector('dialog[open]'))return;
+    if(event.key==='Tab'){
+      // A real aria-modal must not allow Tab to move into another user's
+      // chats behind a visible authentication / archive sheet.
+      const focusable=[...sheet.querySelectorAll(
+        'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
+      )].filter(el=>el.getClientRects().length &&
+        getComputedStyle(el).visibility!=='hidden');
+      if(!focusable.length){event.preventDefault();sheet.focus();return;}
+      const first=focusable[0],last=focusable[focusable.length-1];
+      const inside=sheet.contains(document.activeElement);
+      if(event.shiftKey && (!inside||document.activeElement===first)){
+        event.preventDefault();last.focus();return;
+      }
+      if(!event.shiftKey && (!inside||document.activeElement===last)){
+        event.preventDefault();first.focus();
+      }
+      return;
+    }
+    if(event.key!=='Escape')return;
+    // The country list has its own Escape action. Close that list first,
+    // never dismiss the entire authorization flow on the same key press.
+    if ($('viewerCountryPicker')?.hidden===false)return;
+    event.preventDefault();
+    closeSheet();
+  });
 
   $('sheet').addEventListener('input', event => {
     const kind = event.target?.dataset?.peopleInput;
@@ -3026,7 +3373,7 @@
       const pending = viewerState.loginPending;
       if (pending && Date.parse(pending.expiresAt || '') > Date.now()) {
         if (['password', 'qr_password'].includes(pending.stage)) viewerPasswordSheet();
-        else viewerCodeSheet(pending.delivery || 'telegram_app');
+        else viewerCodeSheet(pending.delivery || 'unknown');
       } else {
         await refreshViewerSync({ silent: true });
         connectionHelpSheet();
@@ -3134,6 +3481,12 @@
         }
         const data = await viewerApi('send_code', { phone }, null);
         viewerPendingPhone = phone;
+        // The server persisted this challenge. Keep local state in sync so
+        // returning from the sheet offers "Resume code", not another send.
+        viewerState.loginPending = {
+          stage:'code', delivery:data.delivery || 'unknown',
+          expiresAt:data.expiresAt || null,
+        };
         viewerCodeSheet(data.delivery, data.reused === true);
       });
       return;
@@ -3152,12 +3505,17 @@
         if (!/^\d{3,8}$/.test(code)) throw new Error('Проверь код из Telegram');
         const data = await viewerApi('verify_code', { code }, null);
         if ($('viewerCode')) $('viewerCode').value='';
-        if (data.nextCode) { viewerCodeSheet(data.delivery); }
-        else if (data.needsPassword) {
+        if (data.nextCode) {
+          viewerState.loginPending = { ...(viewerState.loginPending||{}),
+            stage:'code', delivery:data.delivery||'unknown' };
+          viewerCodeSheet(data.delivery);
+        } else if (data.needsPassword) {
+          viewerState.loginPending = { ...(viewerState.loginPending||{}), stage:'password' };
           viewerPasswordSheet();
         } else {
           closeSheet();
           viewerPendingPhone = '';
+          viewerState.loginPending = null;
           notify('success');
           showToast('Telegram успешно подключён');
           await refreshViewerSync({ silent: true });
@@ -3166,7 +3524,8 @@
           await refresh();
           await refreshViewerAnalytics({ silent: true });
           switchScreen('telegram');
-          await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
+          // Optional Business consent appears only if the release gate is enabled.
+          offerBusinessConsentAfterLogin();
         }
       });
       return;
@@ -3179,13 +3538,15 @@
         if ($('viewerPassword')) $('viewerPassword').value='';
         closeSheet();
         viewerPendingPhone = '';
+        viewerState.loginPending = null;
         notify('success');
         showToast('Telegram успешно подключён');
         await refreshViewerSync({ silent: true });
         await refresh();
         await refreshViewerAnalytics({ silent: true });
         switchScreen('telegram');
-        await window.VetoTelegramOpenUnifiedOnboarding?.({automatic:true});
+        // The next screen is a separate, explicit Business consent step.
+        offerBusinessConsentAfterLogin();
       });
       return;
     }
@@ -3289,12 +3650,41 @@
   $('storyFileInput').addEventListener('change', event => {
     prepareComposerFile(event.target.files?.[0] || null);
   });
+  // Story Engine emits this only after the real file input change. Bind the
+  // opt-in link to that exact pending JPEG generation and signed user.
+  window.addEventListener('veto:portal-handoff',()=>{
+    const candidate=window.VetoTelegramPortalHandoff;
+    window.VetoTelegramPortalHandoff=null;
+    clearComposerPortal();
+    const signed=String(tg?.initData||'');
+    const user=String(tg?.initDataUnsafe?.user?.id||'');
+    if(state.processing || !signed||!/^\d{1,20}$/.test(user)||
+       !candidate||String(candidate.ownerId)!==user ||
+       !composerPendingFileName||composerPendingFileName!=='vetogram-story.jpg')return;
+    try{
+      const url=new URL(String(candidate.url||''));
+      if(String(candidate.url||'').length>1900 ||
+         url.origin!==window.location.origin || url.pathname!=='/portal.html' ||
+         url.search || url.username || url.password ||
+         !/^#p=[A-Za-z0-9_-]{1,5000}$/.test(url.hash))return;
+      composerPortalHandoff={
+        url:url.toString(),signed,generation:composerGeneration,
+        draftId:String(candidate.draftId||'')
+      };
+      syncComposerPortal();
+    }catch{
+      // Invalid/foreign links cannot be silently added to a Story.
+    }
+  });
 
   $('removeStoryMedia').addEventListener('click', () => resetComposer({ keepCaption: true }));
 
   $('storyCaption').addEventListener('input', event => {
     $('captionCounter').textContent = `${event.target.value.length} / 2048`;
-    try { sessionStorage.setItem(DRAFT_CAPTION_KEY, event.target.value || ''); } catch {}
+    try {
+      const key=captionDraftStorageKey();
+      if(key)sessionStorage.setItem(key,event.target.value||'');
+    } catch {}
   });
 
   $('mainButton').addEventListener('click', async () => {
@@ -3302,6 +3692,8 @@
       await publishComposerStory();
     } catch {}
   });
+  window.addEventListener('focus',ensureComposerIdentity);
+  window.addEventListener('pageshow',ensureComposerIdentity);
 
   try {
     tg?.ready();
@@ -3314,7 +3706,9 @@
   } catch {}
 
   try {
-    const draftCaption = sessionStorage.getItem(DRAFT_CAPTION_KEY) || '';
+    sessionStorage.removeItem(DRAFT_CAPTION_KEY);
+    const key=captionDraftStorageKey();
+    const draftCaption=key?(sessionStorage.getItem(key)||''):'';
     if (draftCaption) {
       $('storyCaption').value = draftCaption.slice(0, 2048);
       $('captionCounter').textContent = `${$('storyCaption').value.length} / 2048`;
@@ -3344,6 +3738,13 @@
   });
 
   renderNetworkStatus();
+
+  // Redraw only local presentation after a language change; no refetch, OTP,
+  // Telegram permissions, AI calls or user-data modifications.
+  window.addEventListener('vetogram:locale-changed', () => {
+    renderViewers();
+    renderHome();
+  });
 
   // Pointer spotlight is purely decorative. Do not recalculate two large
   // gradients on every mobile scroll/touch, or when reduced motion is requested.

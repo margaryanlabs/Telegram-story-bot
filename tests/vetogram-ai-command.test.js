@@ -66,8 +66,12 @@ test('AI UI requires reviewed send, and Story Engine is review-only',()=>{
 });
 test('AI screen wiring and syntax check integrated into project',()=>{
   const app=read('public/app.js'),pkg=JSON.parse(read('package.json'));
-  assert.match(app,/ai: 'ai'/);
-  assert.match(app,/ai:'home'/);
+  // Validate both authoritative maps, not spacing in unrelated JS text.
+  const routeMap=app.match(/const SCREEN_ALIASES\s*=\s*\{([\s\S]*?)\};/)?.[1];
+  const navParents=app.match(/const NAV_PARENT\s*=\s*\{([^}]+)\}/)?.[1];
+  assert.ok(routeMap && navParents,'real Mini App navigation maps exist');
+  assert.match(routeMap,/\bai:\s*'ai'/);
+  assert.match(navParents,/\bai:\s*'ai'/);
   assert.match(pkg.scripts.check,/node --check public\/vetogram-ai\.js/);
 });
 
