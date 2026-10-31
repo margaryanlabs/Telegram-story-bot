@@ -90,6 +90,27 @@
     summary:'Полное издание 1869 года: посвящение и 26 глав о власти, управлении и стратегии.',
     rightsNotice:'Перевод Н. С. Курочкина, 1869; текст общественного достояния. Проверяйте правовой статус в своей стране.'
   });
+  // Six additional original Russian public-domain classics, resolved to
+  // exact Wikisource main-namespace page IDs on 31 Oct 2026. All have real
+  // nested chapter subpages. The source may also expose alternate editorial
+  // versions: the live table of contents remains authoritative.
+  const russianClassics=[
+    [6074,'Преступление и наказание','Фёдор Достоевский',42],
+    [10009,'Идиот','Фёдор Достоевский',50],
+    [33835,'Братья Карамазовы','Фёдор Достоевский',98],
+    [18810,'Обломов','Иван Гончаров',48],
+    [4459,'Отцы и дети','Иван Тургенев',30],
+    [43986,'Ревизор','Николай Гоголь',7]
+  ];
+  completeEditionBooks.splice(1,0,...russianClassics.map(([id,title,author,parts])=>({
+    id,title,authors:[author],language:'ru',wiki:'ru',provider:'wikisource',
+    source:'Русская Викитека · авторский текст на русском',
+    sourceUrl:'https://ru.wikisource.org/w/index.php?curid='+id,
+    cover:'',readable:true,curatedWholeText:true,
+    verifiedChapters:parts,
+    summary:'Цельное произведение в Викитеке; доступны отдельные главы и оглавление. Число разделов включает варианты редакций, когда они есть.',
+    rightsNotice:'Классическое произведение общественного достояния. Условия конкретной редакции проверяйте у источника.'
+  })));
   function filterCompleteEditionBooks(query){
     const value=String(query||'').trim().toLocaleLowerCase('ru');
     return value?completeEditionBooks.filter(b=>
