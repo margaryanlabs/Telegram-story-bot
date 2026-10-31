@@ -271,18 +271,20 @@
     showStudio();
     if(!studio.firstPages.has(target))loadStudio(true);
   }
-  // Lightweight background ingestion: up to two pages per original publisher,
-  // sequentially paced so a mini-app does not flood the official service.
+  // Lightweight background ingestion: up to three pages per real publisher,
+  // sequentially paced, for a larger *actually sourced* watchable library.
+  // Never manufacture static film titles or video links on provider failure.
   async function warmStudioFeeds(){
     if(discovery.prefetching)return;
     discovery.prefetching=true;
     const targets=Object.keys(STUDIO_LINKS);
     const plan=[...targets.filter(x=>x!=="mosfilm").map(x=>[x,1]),
-      ...targets.map(x=>[x,2])];
+      ...targets.map(x=>[x,2]),
+      ...targets.map(x=>[x,3])];
     for(const [target,page] of plan){
       if(page>1&&!studio.firstPages.has(target))continue;
       if(page===1&&studio.firstPages.has(target))continue;
-      if(page===2&&studio.pages.get(target)!==2)continue;
+      if(page>1&&studio.pages.get(target)!==page)continue;
       const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),11500);
       try{
         const data=await studioPage(target,page,ctrl.signal);
