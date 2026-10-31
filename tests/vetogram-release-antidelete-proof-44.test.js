@@ -24,7 +24,7 @@ function fixture({deleted=false,webhook=true,enabled=true,archiveReady=true,conn
       async()=>({antiDelete:enabled,ghostFocus:true,notifyDeletes:true}),
       async()=>({storage:'ok',directGhostWrites:archiveReady,mediaVault:true}),
       async()=>({items:deleted?[{deletedAt:'2026-10-25T00:00:00Z',
-        chatTitle:'Согласившийся тестовый контакт',mediaArchiveStatus:'archived'}]:[]}),
+        chatTitle:'Согласившийся тестовый контакт',mediaArchiveStatus:'archived',businessConnectionId:'owner-business-connection'}]:[]}),
       tg,async()=>({businessConnectionId:'owner-business-connection',isEnabled:enabled}),
       ()=>null
     );
@@ -79,4 +79,29 @@ test('Bot API owner or Business ID mismatch cannot certify another account',asyn
     assert.equal(result.checks.business.ok,false);
     assert.equal(result.business.verifiedNow,false);
   }
+});
+
+test('old archive copies never prove a newly connected Business bot',async()=>{
+  const apiCopy=diagnosticsCode.replace(
+    "businessConnectionId:'owner-business-connection'",
+    "businessConnectionId:'different-business-connection'"
+  );
+  // The current live connection is verified, but its newest archive items
+  // must belong to the exact verified ID, not a previous bot.
+  const evaluator=new Function('getPrivacySettings','viewerStoreHealth','listDeletedFeed','tg',
+    'getBusinessConnectionState','connectionIdFromMenu',apiCopy+';return ghostDiagnostics')(
+      async()=>({antiDelete:true,ghostFocus:true,notifyDeletes:true}),
+      async()=>({storage:'ok',directGhostWrites:true,mediaVault:true}),
+      async()=>({items:[{deletedAt:'2026-10-30T00:00:00Z',
+        chatTitle:'Старый чат',businessConnectionId:'previous-connection'}]}),
+      async(_token,method)=>method==='getWebhookInfo'
+        ? {url:'https://example.com/api/webhook-v8',pending_update_count:0}
+        : method==='getBusinessConnection'
+          ? {id:'owner-business-connection',user:{id:'owner-telegram-id'},is_enabled:true,rights:{}}
+          : null,
+      async()=>({businessConnectionId:'owner-business-connection',isEnabled:true}),()=>null
+    );
+  const result=await evaluator('bot-token','owner-telegram-id');
+  assert.equal(result.status,'configured');
+  assert.equal(result.liveDeleteProof.captured,false);
 });
