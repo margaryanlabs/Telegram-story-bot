@@ -21,7 +21,7 @@ function fakeNeon() {
     if(statement.startsWith('INSERT INTO')) {
       const [code,owner_id,board,turn,status,created_at,expires_at]=values;
       if(rows.has(code))return [];
-      const row={code,owner_id,guest_id:null,board,turn,status,winner:null,version:0,created_at,expires_at};
+      const row={code,owner_id,guest_id:null,board,turn,status,winner:null,version:0,round:1,rematch_x:false,rematch_o:false,created_at,expires_at};
       rows.set(code,row);
       return [{...row}];
     }
@@ -30,6 +30,13 @@ function fakeNeon() {
       const row=rows.get(code);
       if(!row||row.guest_id||row.status!=='waiting'||row.owner_id===notOwner||row.version!==version)return [];
       row.guest_id=guestId;row.status='active';row.version+=1;
+      return [{...row}];
+    }
+    if(statement.startsWith('UPDATE vetogram_play_ttt_rooms')&&statement.includes('SET board=')&&statement.includes('round=')) {
+      const [board,turn,status,winner,round,rematch_x,rematch_o,code,version]=values;
+      const row=rows.get(code);
+      if(!row||row.status!=='finished'||row.version!==version)return [];
+      Object.assign(row,{board,turn,status,winner,round,rematch_x,rematch_o,version:row.version+1});
       return [{...row}];
     }
     if(statement.startsWith('UPDATE vetogram_play_ttt_rooms')&&statement.includes('SET board=')) {
@@ -87,4 +94,33 @@ test('Neon store caps active room creation and never guesses a room code',async(
   }});
   for(let i=0;i<5;i++)assert.equal((await store.create(HOST)).ok,true);
   assert.equal((await store.create(HOST)).error,'too_many_rooms');
+});
+
+test('Neon-backed rematch waits for both players, CAS protects stale votes',async()=>{
+  const fake=fakeNeon(),store=playRoomStore(fake.sql,{now:()=>FIXED,codeGenerator:()=>CODE});
+  await store.create(HOST);
+  const joined=await store.join(CODE,GUEST);
+  let current=joined.room;
+  for(const [player,cell] of [[HOST,0],[GUEST,3],[HOST,1],[GUEST,4],[HOST,2]]){
+    const step=await store.move(CODE,player,cell,current.version);
+    assert.equal(step.ok,true,step.error);
+    current=step.room;
+  }
+  assert.equal(current.status,'finished');
+  const offered=await store.rematch(CODE,HOST,current.version);
+  assert.equal(offered.ok,true);
+  assert.equal(offered.room.status,'finished');
+  assert.equal(offered.room.rematchRequested,true);
+  assert.equal((await store.rematch(CODE,GUEST,current.version)).error,'conflict');
+  const agreed=await store.rematch(CODE,GUEST,offered.room.version);
+  assert.equal(agreed.ok,true);
+  assert.equal(agreed.room.round,2);
+  assert.equal(agreed.room.status,'active');
+  assert.equal(agreed.room.seat,'X');
+  const owner=await store.view(CODE,HOST);
+  assert.equal(owner.room.seat,'O');
+  assert.equal((await store.move(CODE,HOST,0,agreed.room.version)).error,'not_your_turn');
+  const next=await store.move(CODE,GUEST,0,agreed.room.version);
+  assert.equal(next.ok,true);
+  assert.equal(next.room.board,'X........');
 });
