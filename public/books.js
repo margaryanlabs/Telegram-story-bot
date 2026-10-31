@@ -380,18 +380,20 @@
     for(const b of document.querySelectorAll('.topics [data-topic]')){
       b.classList.toggle('active',b.dataset.topic===state.topic);
     }
-    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='complete'?'Книги, которые читаются целиком':state.source==='hot200'?'200 КНИГ · ТВОЙ ВЫБОР':state.source==='local'?'Мои книги на устройстве':state.source==='genres'?'Книги для чтения':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
+    $('shelfTitle').textContent=state.query?'Результаты поиска':state.source==='complete'?'Классика: полные книги и тексты источников':state.source==='hot200'?'200 КНИГ · ТВОЙ ВЫБОР':state.source==='local'?'Мои книги на устройстве':state.source==='genres'?'Книги для чтения':state.source==='spotlight'?'Новинки и книги на слуху':state.source==='translated'?'Зарубежные книги на русском':state.source==='ru'?'Русская классика':state.source==='hy'?'Հայ գրականություն':state.topic?'По вашему выбору':'Популярные книги';
     $('shelfEyebrow').textContent=state.query ? 'SEARCH / RESULTS' : 'DISCOVER / 01';
   }
   function bookExtent(book){
     if(book?.provider==='editorial')return {kind:'metadata',label:'ХИТ · РУССКОЕ ИЗДАНИЕ'};
     if(isCatalogBook(book))return {kind:'metadata',label:'КАТАЛОГ · ОПИСАНИЕ'};
     if(isLocal(book))return {kind:'local',label:'ЛИЧНЫЙ ФАЙЛ · '+(book.format||'ТЕКСТ').toUpperCase()};
-    if(book?.curatedWholeText)return {kind:'full',label:book.verifiedChapters
-      ?'ПОЛНОЕ ИЗДАНИЕ · '+book.verifiedChapters+' ЧАСТЕЙ'
-      :book.indexedParts?'ГЛАВЫ В ВИКИТЕКЕ · '+book.indexedParts
-      :book.verifiedSourceBytes?'ТЕКСТ ПЕРВОИСТОЧНИКА'
-      :'ЦЕЛЬНЫЙ ТЕКСТ · '+Math.round(book.verifiedChars/1000)+' ТЫС. ЗНАКОВ'};
+    if(book?.curatedWholeText){
+      // A chapter index or a long source page is NOT proof of a complete edition.
+      if(book.id===559743)return {kind:'full',label:'ПОЛНОЕ ИЗДАНИЕ · 26 ГЛАВ + ПОСВЯЩЕНИЕ'};
+      if(book.indexedParts||book.verifiedChapters)return {kind:'partial',label:'РЕАЛЬНЫЕ ГЛАВЫ · ПРОВЕРЬ ОГЛАВЛЕНИЕ'};
+      if(book.verifiedSourceBytes)return {kind:'partial',label:'ТЕКСТ ПЕРВОИСТОЧНИКА · ПОЛНОТА УТОЧНЯЕТСЯ'};
+      return {kind:'full',label:'ЦЕЛЬНЫЙ ТЕКСТ · '+Math.round(book.verifiedChars/1000)+' ТЫС. ЗНАКОВ'};
+    }
     if(isWiki(book))return {kind:'partial',label:book.isTranslation?'РУССКИЙ ПЕРЕВОД':'ПРОИЗВЕДЕНИЕ · ЧИТАТЬ'};
     if(book?.readable && book?.source==='Project Gutenberg')return {kind:'full',label:'ПОЛНЫЙ ТЕКСТ ИСТОЧНИКА'};
     return {kind:'metadata',label:'ОТКРЫТЬ КНИГУ'};
@@ -571,7 +573,7 @@
     }
     const heading=node('div','book-card-label');
     heading.append(node('span','book-card-type',
-      isLocal(book)?'МОЯ КНИГА':book.curatedWholeText?'ЧИТАТЬ ЦЕЛИКОМ':isCatalogBook(book)?'КАТАЛОГ':'ЛИТЕРАТУРА'),
+      isLocal(book)?'МОЯ КНИГА':bookExtent(book).kind==='full'?'ЧИТАТЬ ЦЕЛИКОМ':isCatalogBook(book)?'КАТАЛОГ':'ЧИТАТЬ ТЕКСТ'),
       node('span','book-card-arrow','↗'));
     main.append(cover,heading,node('h3','',compactTitle(book.title)),node('p','',fullName(book)));
     const meta=node('div','book-bottom');
