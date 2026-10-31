@@ -66,7 +66,7 @@ test('whole-book shelf contains 124 unique Wikisource original source works, inc
   const data=new Function(books.slice(start,end)+'\nreturn {completeEditionBooks,filterCompleteEditionBooks};')();
   const list=data.completeEditionBooks;
   assert.equal(list.length,124);
-  assert.equal(new Set(list.map(b=>b.id)).size,25);
+  assert.equal(new Set(list.map(b=>b.id)).size,124);
   for(const b of list){
     assert.equal(b.provider,'wikisource');
     assert.equal(b.wiki,'ru');
