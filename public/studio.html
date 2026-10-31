@@ -1738,6 +1738,35 @@
           </header>
           <div id="vpGameMount" class="vp-game-dialog-mount"></div>
         </dialog>
+        <section class="vp-room-zone" aria-labelledby="vpRoomTitle">
+          <div class="vp-room-header">
+            <span class="vp-flag">НОВЫЙ РЕЖИМ · СЕТЕВЫЕ КОМНАТЫ</span>
+            <h2 id="vpRoomTitle">Крестики-нолики вдвоём</h2>
+            <p>Создай комнату и поделись кодом. Игрок X начинает, O ходит вторым. Ходы проверяет сервер.</p>
+          </div>
+          <div id="vpRoomAvailability" class="vp-room-availability" role="status" aria-live="polite">Проверяем доступность игрового сервера…</div>
+          <div class="vp-room-actions">
+            <button class="vp-button" id="vpRoomCreate" type="button" disabled>Создать комнату</button>
+            <label class="vp-room-code-label" for="vpRoomCodeInput">Код комнаты
+              <input type="text" id="vpRoomCodeInput" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Например: 8AB7LM2Z" />
+            </label>
+            <button class="vp-button ghost" id="vpRoomJoin" type="button" disabled>Войти по коду</button>
+          </div>
+          <div id="vpRoomSession" class="vp-room-session" hidden>
+            <div class="vp-room-meta">
+              <div><span>КОД КОМНАТЫ</span><strong id="vpRoomCode">—</strong></div>
+              <div><span>ТВОЯ СТОРОНА</span><strong id="vpRoomSeat">—</strong></div>
+              <button type="button" id="vpRoomCopy" class="vp-button ghost">Поделиться кодом ↗</button>
+            </div>
+            <p class="vp-room-status" id="vpRoomStatus" role="status" aria-live="polite">Ожидание партии…</p>
+            <div id="vpRoomBoard" class="vp-room-board" role="group" aria-label="Сетевая партия крестиков-ноликов"></div>
+            <div class="vp-room-footer">
+              <button type="button" class="vp-button ghost" id="vpRoomRefresh">Обновить</button>
+              <button type="button" class="vp-button ghost" id="vpRoomExit">Выйти из просмотра</button>
+            </div>
+            <p class="vp-room-disclaimer">Комнаты действуют 6 часов. Закрытие экрана не сдаёт партию. Доступ к перепискам и контактам для игры не нужен.</p>
+          </div>
+        </section>
         <section class="vp-developer" aria-labelledby="vpDevTitle">
           <div class="vp-developer-orb" aria-hidden="true">{ }</div>
           <div>
@@ -1834,5 +1863,6 @@
   <script src="/vetogram-play-store.js?v=20261031-play-store-v1" defer></script>
   <script src="/vetogram-play-developer.js?v=20261031-play-dev-v1" defer></script>
   <script src="/vetogram-play-runner.js?v=20261031-play-runner-v1" defer></script>
+  <script src="/vetogram-play-room.js?v=20261031-play-rooms-v1" defer></script>
 </body>
 </html>
