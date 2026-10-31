@@ -168,7 +168,7 @@
     document.querySelector('.topics').hidden=!isGutenberg;
     const choices={
       hot200:['200 популярных зарубежных книг с русскоязычными изданиями · редакционный выбор','200 ХИТОВ · НА РУССКОМ','https://books.google.com/'],
-      complete:[String(completeEditionBooks.length)+' проверенных изданий · цельный текст доступен в читалке','КНИГИ ЦЕЛИКОМ','https://ru.wikisource.org/wiki/Special:Copyright'],
+      complete:[String(completeEditionBooks.length)+' произведения из Русской Викитеки · читать главы и цельные тексты','КНИГИ ЦЕЛИКОМ','https://ru.wikisource.org/wiki/Special:Copyright'],
       genres:['Романы, рассказы, повести, фантастика, стихи и сказки на русском','Читать сейчас','https://ru.wikisource.org/wiki/Special:Copyright'],
       local:['Моя личная библиотека · EPUB, FB2 и TXT без загрузки на сервер','Личные книги',''],
       spotlight:['Русскоязычные издания · современные книги и официальные страницы','Новые книги на русском','https://books.google.com/'],
