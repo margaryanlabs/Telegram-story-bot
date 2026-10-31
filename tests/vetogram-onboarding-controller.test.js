@@ -65,6 +65,23 @@ test('first Business connection offers all chats by default but requires explici
   assert.equal(connection.snapshotToken,'fixture-snapshot');
   assert.equal(f.requests.filter(r=>r.body.action==='connect').length,1);
 });
+test('one-screen all-private consent connects without manually selecting chats',async()=>{
+  const f=fixture();await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true});
+  assert.match(f.content.innerHTML,/value="all-private" checked/);
+  assert.equal(f.action.disabled,true,'permission and feature consent must start unchecked');
+  f.inputs.businessWizardConsent.checked=true;
+  f.inputs.businessWizardAntiDelete.checked=true;await f.change();
+  assert.equal(f.action.disabled,false);
+  await f.apply();
+  const requests=f.requests.filter(r=>r.body.action==='connect');
+  assert.equal(requests.length,1);
+  assert.equal(requests[0].body.scope,'all-private');
+  assert.equal(requests[0].body.scopeConsent,true);
+  assert.equal(requests[0].body.antiDeleteConsent,true);
+  assert.equal(requests[0].body.storiesConsent,false);
+  assert.deepEqual(Array.from(requests[0].body.chatIds),[]);
+  assert.match(f.content.innerHTML,/data-business-diagnostics="1"/);
+});
 test('first user may request Anti-Delete without granting Story management',async()=>{
   const f=fixture();await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true});
   f.inputs.businessWizardConsent.checked=true;
