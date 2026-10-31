@@ -82,14 +82,10 @@ test('Bot API owner or Business ID mismatch cannot certify another account',asyn
 });
 
 test('old archive copies never prove a newly connected Business bot',async()=>{
-  const apiCopy=diagnosticsCode.replace(
-    "businessConnectionId:'owner-business-connection'",
-    "businessConnectionId:'different-business-connection'"
-  );
   // The current live connection is verified, but its newest archive items
   // must belong to the exact verified ID, not a previous bot.
   const evaluator=new Function('getPrivacySettings','viewerStoreHealth','listDeletedFeed','tg',
-    'getBusinessConnectionState','connectionIdFromMenu',apiCopy+';return ghostDiagnostics')(
+    'getBusinessConnectionState','connectionIdFromMenu',diagnosticsCode+';return ghostDiagnostics')(
       async()=>({antiDelete:true,ghostFocus:true,notifyDeletes:true}),
       async()=>({storage:'ok',directGhostWrites:true,mediaVault:true}),
       async()=>({items:[{deletedAt:'2026-10-30T00:00:00Z',
