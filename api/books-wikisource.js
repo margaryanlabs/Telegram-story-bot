@@ -8,7 +8,7 @@ const AGENT = 'VetogramBooks/1.2 (https://vtrg-telegram.vercel.app/books.html)';
 const MAX_BYTES = 2_600_000;
 const PAGE_SIZE = 20;
 const PREFILL = Object.freeze({ru:'Пушкин',hy:'Թումանյան'});
-const MAX_CHAPTERS = 320;
+const MAX_CHAPTERS = 600;
 const TRANSLATION_CATEGORIES = Object.freeze({
   en:'Переводы с английского языка',
   fr:'Переводы с французского языка',
