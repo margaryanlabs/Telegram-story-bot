@@ -277,7 +277,36 @@ export async function structuralChapters(wiki,title,rootLinks,allowEditions=fals
     && Number.isSafeInteger(row.pageid)&&row.pageid>0).map(row=>row.title);
   const leaves=candidates.filter(p=>!candidates.some(other=>other!==p&&other.startsWith(p+'/')));
   const collator=new Intl.Collator(wiki==='ru'?'ru':'hy',{numeric:true,sensitivity:'base'});
-  const chapters=[...new Set(leaves)].sort((a,b)=>collator.compare(a,b))
+  // Wikisource lists Roman-numbered chapters lexically by title (I, II, IX,
+  // V, X). That breaks reading order and corrupts whole-book EPUB packing.
+  // Compare Roman chapter/part/volume segments numerically, preserving
+  // ordinary locale-aware sorting for every other work.
+  const romanValue=value=>{
+    const roman=String(value||'').toUpperCase();
+    if(!/^(?=[IVXLCDM]+$)M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/.test(roman))return null;
+    const n={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};
+    let total=0;
+    for(let i=0;i<roman.length;i++)total+=(n[roman[i]]<n[roman[i+1]]?-1:1)*n[roman[i]];
+    return total;
+  };
+  const ordered=(a,b)=>{
+    const left=String(a).slice(prefix.length).split('/');
+    const right=String(b).slice(prefix.length).split('/');
+    for(let i=0;i<Math.min(left.length,right.length);i++){
+      if(left[i]===right[i])continue;
+      if(/^Посвящени[ея]$/i.test(left[i]))return -1;
+      if(/^Посвящени[ея]$/i.test(right[i]))return 1;
+      const l=left[i].match(/^(Глава|Часть|Том)\s+([IVXLCDM]+)$/i);
+      const r=right[i].match(/^(Глава|Часть|Том)\s+([IVXLCDM]+)$/i);
+      if(l&&r&&l[1].toLowerCase()===r[1].toLowerCase()){
+        const ln=romanValue(l[2]),rn=romanValue(r[2]);
+        if(ln!==null&&rn!==null&&ln!==rn)return ln-rn;
+      }
+      return collator.compare(left[i],right[i]);
+    }
+    return left.length-right.length;
+  };
+  const chapters=[...new Set(leaves)].sort(ordered)
     .slice(0,MAX_CHAPTERS)
     .map(item=>({title:item,label:item.slice(prefix.length).replace(/_/g,' ').slice(0,120)}));
   return {
