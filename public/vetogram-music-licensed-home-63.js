@@ -34,6 +34,8 @@ const tracks=rows.map(row=>{
 }).filter(Boolean);
 const unique=[...new Map(tracks.map(x=>[x.id,x])).values()];
 let visible=20;
+const unavailable=new Set();
+const playable=()=>unique.filter(t=>!unavailable.has(t.id));
 function card(t){
   const article=make("article","licensed-home-card");
   const art=make("span","licensed-home-art","♫");art.setAttribute("aria-hidden","true");
@@ -46,16 +48,24 @@ function card(t){
   const rights=make("div","licensed-home-rights");rights.append(origin,license);info.append(rights);
   const play=make("button","licensed-home-play","▶");
   play.type="button";play.setAttribute("aria-label","Слушать "+t.title);
-  play.addEventListener("click",()=>V.play(t,unique));
+  play.addEventListener("click",()=>V.play(t,playable()));
   article.append(art,info,play);return article;
 }
 function render(){
-  host.replaceChildren(...unique.slice(0,visible).map(card));
-  if(!unique.length)host.append(make("p","licensed-home-empty","Пока нет подтверждённых доступных музыкальных файлов."));
-  count.textContent=unique.length+" независимых записей · CC BY";
-  more.hidden=visible>=unique.length;
+  const live=playable();
+  host.replaceChildren(...live.slice(0,visible).map(card));
+  if(!live.length)host.append(make("p","licensed-home-empty","В доступной подборке нет работающих потоков. Попробуй позднее."));
+  count.textContent=live.length+" независимых записей · CC BY";
+  more.hidden=visible>=live.length;
 }
-more.addEventListener("click",()=>{visible=Math.min(unique.length,visible+20);render()});
+more.addEventListener("click",()=>{visible=Math.min(playable().length,visible+20);render()});
+// On a real HTMLAudioElement stream failure, remove the broken Play card
+// only for the current device session. Never invent alternate audio copies.
+document.addEventListener("vetogram:audio-error",event=>{
+  const id=String(event.detail?.trackId||"");
+  if(!id.startsWith("ccmixter:"))return;
+  unavailable.add(id);render();
+});
 render();
 window.VetogramLicensedHome=Object.freeze({count:()=>unique.length});
 })();
