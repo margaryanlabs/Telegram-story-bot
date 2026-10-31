@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const ui = readFileSync(new URL('../public/privacy.js', import.meta.url), 'utf8');
 const api = readFileSync(new URL('../api/business-wizard.js', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
 const start = ui.indexOf('function renderBusinessWizardPicker(result)');
 const end = ui.indexOf('async function openBusinessWizard()', start);
 assert.ok(start >= 0 && end > start, 'Business wizard renderer must exist');
@@ -30,4 +31,15 @@ test('release flag and server write readiness still guard Telegram Business writ
   assert.match(api, /!unifiedOnboardingEnabled\(\)/);
   assert.match(api, /readiness\?\.ready!==true/);
   assert.match(api, /withBusinessWriteLock\(ownerId/);
+});
+
+test('personal login handoff covers phone OTP, 2FA and QR without silently granting Business access', () => {
+  assert.match(app, /function offerBusinessConsentAfterLogin\(\)/);
+  assert.equal((app.match(/offerBusinessConsentAfterLogin\(\);/g)||[]).length,3);
+  assert.match(app, /owner!==String\(tg\?\.initData\|\|''\)/);
+  assert.match(app, /VetoTelegramOpenUnifiedOnboarding\(\{automatic:true\}\)/);
+  assert.match(ui, /if \(result\.enabled === false\) return false/);
+  // The follow-up is read-only until explicit selection and fresh consent.
+  assert.match(api, /action === 'prepare'/);
+  assert.match(api, /body\.consent !== true/);
 });
