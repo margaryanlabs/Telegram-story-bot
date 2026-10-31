@@ -31,7 +31,7 @@
   function stopPoll() {if(pollId!==null)window.clearInterval(pollId);pollId=null;}
   function ensurePoll(){
     stopPoll();
-    if(!room||!playable()||!tg?.initData)return;
+    if(!room||!['waiting','active'].includes(room.status)||!playable()||!tg?.initData)return;
     pollId=window.setInterval(()=>{
       if(!busy&&room&&playable())void fetchRoom({silent:true});
     },4000);
@@ -133,10 +133,12 @@
     try {
       const next=await request('view',{code:original});
       if(room?.code!==original)return;
-      if(!room||room.version!==next.version||room.status!==next.status) {
+      if(!room||Number(next.version)<Number(room.version))return;
+      if(room.version!==next.version||room.status!==next.status) {
         room=next;
         render();
       }
+      if(!['waiting','active'].includes(next.status))stopPoll();
     }catch(error){
       const reason=errors[error?.code]||error?.message||'Нет связи с игровой комнатой.';
       if(error?.code==='expired'||error?.code==='not_found')stopPoll();
