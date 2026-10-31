@@ -6,7 +6,7 @@ const source=readFileSync(new URL('../public/privacy.js',import.meta.url),'utf8'
 function fixture(enabled=true,existing=false,archiveWriteFails=false) {
   const requests=[],listeners={},inputs={};
   const action={disabled:true,textContent:''},picker={hidden:false};
-  let scope=existing?'preserve':'selected-private',selected=[];
+  let scope=existing?'preserve':'all-private',selected=[];
   for(const id of ['businessWizardConsent','businessWizardAntiDelete','businessWizardStories']) inputs[id]={checked:false};
   const content={innerHTML:''},backdrop={hidden:true};
   const sheet={hidden:true,addEventListener(name,fn){listeners[name]=fn},
@@ -41,16 +41,18 @@ test('automatic handoff does not show the new wizard when production capability 
   const f=fixture(false);assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),false);
   assert.equal(f.sheet.hidden,true);assert.equal(f.content.innerHTML,'');assert.equal(f.requests.length,1);
 });
-test('first Business connection requires separately chosen peers and capabilities',async()=>{
+test('first Business connection offers all chats by default but requires explicit capability consent',async()=>{
   const f=fixture();assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),true);
   assert.match(f.content.innerHTML,/id="businessWizardStories"/);
   assert.match(f.content.innerHTML,/id="businessWizardAntiDelete"/);
   assert.match(f.content.innerHTML,/не включаются автоматически/);
-  assert.doesNotMatch(f.content.innerHTML,/value="all-private" checked/);
+  assert.match(f.content.innerHTML,/value="all-private" checked/);
   f.inputs.businessWizardConsent.checked=true;await f.change();
   assert.equal(f.action.disabled,true,'scope consent alone cannot enable any capability');
   f.inputs.businessWizardStories.checked=true;await f.change();
-  assert.equal(f.action.disabled,true,'no selected private chat');
+  assert.equal(f.action.disabled,false,'all-private scope works after separate capability and scope consent');
+  f.select('selected-private',[]);await f.change();
+  assert.equal(f.action.disabled,true,'switching to selected mode requires a selected chat');
   f.select('selected-private',['101']);await f.change();
   assert.equal(f.action.disabled,false);
   await f.apply();
