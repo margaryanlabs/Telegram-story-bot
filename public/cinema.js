@@ -12,6 +12,9 @@
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
+  // Fail-closed on provider-reported playback errors for this device session.
+  // A timeout is not proof of unavailability (the user may not press ▶).
+  const failedEmbeds=new Set();
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
   const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/"};
   // The initial 200 feature films appear instantly in their studio tabs.
@@ -606,7 +609,7 @@
     const host=$("cinemaWatchNowRail"),section=$("cinemaWatchNow");
     if(!host||!section)return;
     const live=films.filter(f=>{
-      if(f.externalRutube||f.discoveryOnly||f.contentType==="Сериалы")return false;
+      if(f.externalRutube||f.discoveryOnly||f.contentType==="Сериалы"||failedEmbeds.has(f.id))return false;
       if(!f.player||f.player.licensed!==true||f.player.type!=="iframe")return false;
       try{
         const url=new URL(f.player.url);
@@ -879,7 +882,9 @@
       $("cinemaPlayerSource").href=current.sourcePage||filmPage(f);
       $("cinemaOpenSource").href=current.sourcePage||filmPage(f);
       setPlayerMessage("Подключаем "+(current.provider||"видеопровайдера")+"…");
-      if(embedded)providerFeedbackTimer=setTimeout(()=>{if(token===state.request)setPlayerMessage("Не получили подтверждение запуска плеера. Если видео не появилось, используйте ссылку на источник ниже.");},13000);
+      if(embedded)providerFeedbackTimer=setTimeout(()=>{
+        if(token===state.request)setPlayerMessage("Плеер загружен, но начало просмотра не подтверждено. Нажмите ▶ внутри видео. Если возникает ошибка, выберите другой фильм.");
+      },20000);
       try{
         if(!window.VetogramCinemaProvider)throw Error("Модуль видеопровайдера не загрузился");
         const handle=await window.VetogramCinemaProvider.attach({
@@ -889,6 +894,12 @@
           onEvent:(event)=>{
             if(token!==state.request||state.playing?.id!==f.id)return;
             if(event.type==="duration"){state.embedDuration=event.duration;return}
+            if(event.type==="playStarted"||(event.type==="state"&&event.state==="playing")){
+              clearTimeout(providerFeedbackTimer);
+              failedEmbeds.delete(f.id);
+              setPlayerMessage("");
+              return;
+            }
             if(event.type==="ended"){
               delete state.library.progress[f.id];saveLibrary();toast("Фильм досмотрен");render();return
             }
@@ -902,14 +913,26 @@
               }
             }
           },
-          onReady:()=>{clearTimeout(providerFeedbackTimer);if(token===state.request)setPlayerMessage("")},
-          onError:(reason)=>{clearTimeout(providerFeedbackTimer);if(token===state.request)setPlayerMessage(reason)}
+          onReady:()=>{
+            if(token===state.request)setPlayerMessage("Плеер готов. Нажмите ▶, чтобы начать фильм.");
+          },
+          onError:(reason)=>{
+            if(token!==state.request)return;
+            clearTimeout(providerFeedbackTimer);
+            failedEmbeds.add(f.id);
+            setPlayerMessage("Источник не воспроизводит это видео: "+String(reason||"ошибка").slice(0,140)+". Попробуйте другой фильм.");
+            render();
+          }
         });
         if(token!==state.request){handle.cleanup();return}
         state.embedHandle=handle;
       }catch(error){
         clearTimeout(providerFeedbackTimer);
-        if(token===state.request)setPlayerMessage("Плеер недоступен: "+(error?.message||"ошибка")+". Откройте оригинал по ссылке ниже.");
+        if(token===state.request){
+        failedEmbeds.add(f.id);
+        setPlayerMessage("Плеер недоступен: "+(error?.message||"ошибка")+". Выберите другой фильм.");
+        render();
+      }
       }
       return;
     }
