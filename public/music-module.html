@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css"><link rel="stylesheet" href="./vetogram-music-openverse.css">
-<script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script><link rel="stylesheet" href="/vetogram-media-embedded.css"><link rel="stylesheet" href="/vetogram-media-edition-62.css?v=20261031-media62">
+<script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-licensed-home-63.js"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script><link rel="stylesheet" href="/vetogram-media-embedded.css"><link rel="stylesheet" href="/vetogram-media-edition-62.css?v=20261031-media62">
 </head>
 <body>
 <div class="app" id="app">
@@ -75,6 +75,14 @@
    <button type="button" data-mood="hip-hop" class="mood-card mood-focus"><small>03 / НАСТРОЕНИЕ</small><strong>На своей волне</strong><span>Хип-хоп и ритм ↗</span><b>◉</b></button>
   </div>
   <div class="charts-home-entry"><div><small>ПОПУЛЯРНАЯ МУЗЫКА</small><strong>Треки для прослушивания</strong><p>Настоящие записи в нашем плеере — без видео.</p></div><button type="button" data-page="charts">Слушать ↗</button></div>
+  <section class="licensed-home-section" id="licensedHomeSection" aria-labelledby="licensedHomeTitle">
+  <div class="section-head"><div><span class="overline">VETOGRAM / НАСТОЯЩИЙ ЗВУК</span>
+  <h2 id="licensedHomeTitle">Нажми ▶ — музыка играет</h2>
+  <p>Полные аудиозаписи независимых исполнителей. Автор и лицензия указаны у каждого трека.</p></div>
+  <span class="licensed-home-count" id="licensedHomeCount" aria-live="polite">Загружаем записи…</span></div>
+  <div id="licensedHomeTracks" class="licensed-home-tracks" aria-live="polite"></div>
+  <button id="licensedHomeMore" type="button" class="licensed-home-more" hidden>Показать ещё 20 треков ↓</button>
+</section>
   <div class="section-head"><div><span class="overline">ОТКРЫВАЙ НОВОЕ</span><h2>Доступная музыка</h2></div><button class="text-action" type="button" data-page="catalog">Больше музыки ↗</button></div>
   <div id="homeTracks" class="track-list"><div class="skeleton-card">Загружаем доступную музыку…</div></div>
   <div class="social-invite"><div><small>ДЕЛИСЬ МУЗЫКОЙ</small><h3>Хорошая музыка — для друзей.</h3><p>Отправляй треки и плейлисты прямо в Telegram. Твои личные аудиофайлы остаются приватными, пока ты сам их не отправишь.</p></div><button type="button" id="shareInvite">↗ Пригласить в Vetogram Music</button></div>
