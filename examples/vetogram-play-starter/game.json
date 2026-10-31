@@ -1,0 +1,17 @@
+{
+  "schema": "vetogram.play/v1",
+  "id": "tap-sprint",
+  "name": "Tap Sprint",
+  "description": "Маленькая демонстрационная игра на скорость нажатий за десять секунд.",
+  "version": "0.1.0",
+  "author": "Margaryan Labs",
+  "license": "MIT",
+  "category": "arcade",
+  "entry": "index.html",
+  "languages": [
+    "ru",
+    "en"
+  ],
+  "mode": "solo",
+  "capabilities": []
+}
