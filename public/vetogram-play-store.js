@@ -20,6 +20,7 @@
     const saved=JSON.parse(window.localStorage?.getItem(storageKey) || '[]');
     if (Array.isArray(saved)) favorites=new Set(saved.filter(id=>byId.has(id)));
   } catch {}
+  window.VetogramPlayFavorites = favorites;
   const message = value => { if (status) status.textContent=value; };
   const notify = () => {
     try {
