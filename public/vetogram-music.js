@@ -321,7 +321,13 @@ const RUSSIAN_RADIO=Object.freeze([
  {key:"rusradio",title:"Русское Радио",stream:"https://rusradio.hostingradio.ru/rusradio96.aacp"},
  {key:"russianmix",title:"Radio Record Russian Mix",stream:"https://radiorecord.hostingradio.ru/rus96.aacp"},
  {key:"dfm",title:"DFM Russian Dance",stream:"https://dfm-dfmrusdance.hostingradio.ru/dfmrusdance96.aacp"},
- {key:"maximum",title:"Радио Maximum",stream:"https://maximum.hostingradio.ru/maximum128.mp3"}
+ {key:"maximum",title:"Радио Maximum",stream:"https://maximum.hostingradio.ru/maximum128.mp3"},
+ {key:"russianhits",title:"Record · Русские хиты",stream:"https://radiorecord.hostingradio.ru/russianhits96.aacp"},
+ {key:"retro90",title:"Record · Дискотека 90-х",stream:"https://radiorecord.hostingradio.ru/sd9096.aacp"},
+ {key:"record2000",title:"Record · Хиты 2000-х",stream:"https://radiorecord.hostingradio.ru/200096.aacp"},
+ {key:"recordmain",title:"Radio Record · Main",stream:"https://radiorecord.hostingradio.ru/rr_main96.aacp"},
+ {key:"bigworld",title:"Record · Big Hits",stream:"https://radiorecord.hostingradio.ru/bighits96.aacp"},
+ {key:"recordrock",title:"Record · Rock",stream:"https://radiorecord.hostingradio.ru/rock96.aacp"}
 ]);
 document.querySelectorAll("[data-audio-station]").forEach(button=>button.addEventListener("click",()=>{
  const target=RUSSIAN_RADIO.find(x=>x.key===button.dataset.audioStation);
