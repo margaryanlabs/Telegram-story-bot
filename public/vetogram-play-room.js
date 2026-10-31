@@ -138,9 +138,10 @@
         render();
       }
     }catch(error){
-      if(!silent)inform(errors[error?.code]||error?.message||'Нет связи с игровой комнатой.');
+      const reason=errors[error?.code]||error?.message||'Нет связи с игровой комнатой.';
       if(error?.code==='expired'||error?.code==='not_found')stopPoll();
-    }finally{if(!silent){busy=false;render();}}
+      if(!silent){busy=false;render();inform(reason);}
+    }finally{if(!silent&&busy){busy=false;render();}}
   }
   async function move(cell){
     if(!room||busy||!Number.isInteger(cell)||cell<0||cell>8)return;
