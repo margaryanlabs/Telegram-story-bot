@@ -330,13 +330,13 @@ function settingsText(settings, live = null) {
 function connectText(settings, live = null) {
   if (settings.bc && live !== false) {
     return '✓ Telegram Business-бот подключён.\n\n'
-      + '↶ Anti-Delete: разреши боту выбранные личные переписки в Telegram → Настройки → Telegram для бизнеса → Чат-боты. Для проверки отправь из такого чата НОВОЕ сообщение и посмотри в Vetogram Inbox.\n\n'
+      + '↶ Anti-Delete: открой Vetogram Mini App → Privacy → «Подключить», выбери личные чаты и подтверди. Проверь новое сообщение и его удаление через диагностику.\n\n'
       + '💬 Живые чаты в Vetogram открываются отдельно через свой номер + код или QR.\n\n'
       + (settings.canStories ? '📸 Stories: управление тоже разрешено.' : '📸 Разрешение на Stories необязательно для архива.');
   }
 
   return '💬 ЖИВЫЕ ЧАТЫ\nОткрой Mini App → «Мои чаты» → номер + код Telegram или QR. Business для этого не нужен.\n\n'
-    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @Vetotg_bot → выбери личные чаты.\n\n'
+    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → Privacy → «Подключить» и подтверди доступ к личным чатам. Ручные настройки Telegram — только резерв.\n\n'
     + 'Можно пользоваться только одним способом или обоими. Не отправляй коды боту.';
 }
 
@@ -1205,7 +1205,7 @@ export default async function handler(req, res) {
       } else if (action === 'view:live-chats') {
         await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой Vetogram Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
       } else if (action === 'view:archive-guide') {
-        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Vetotg_bot и выбери личные переписки. Затем Vetogram Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
+        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Vetogram Mini App → Privacy → «Подключить» и подтверди доступ к личным чатам. Ручные настройки Telegram — только резерв. Архивируются лишь полученные после подключения сообщения.', messageId);
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);
