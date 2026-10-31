@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Tap Sprint · Vetogram Play SDK starter</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#0d0d10;color:#f2e9e6;font:16px system-ui,sans-serif;padding:20px}
+    main{width:min(100%,440px);background:#1b181f;border:1px solid #3e343e;padding:28px;border-radius:26px;text-align:center}
+    small{font-size:11px;font-weight:800;letter-spacing:.15em;color:#d5a9a0}h1{font-size:40px;letter-spacing:-.07em;margin:12px 0}
+    p{line-height:1.5;color:#b9aeb3}button{min-height:65px;display:block;width:100%;background:#eeb29f;color:#281b21;border:0;border-radius:17px;font:800 19px system-ui;touch-action:manipulation;cursor:pointer}
+    button:disabled{opacity:.6}button:focus-visible{outline:3px solid white;outline-offset:3px}.counter{font-size:90px;line-height:1.4;font-weight:900;font-variant-numeric:tabular-nums}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <main>
+    <small>VETOGRAM PLAY / DEVELOPER EXAMPLE</small>
+    <h1>Tap Sprint</h1>
+    <p>За десять секунд нажми как можно больше раз. Никаких входов, сетевых запросов и разрешений.</p>
+    <div class="counter" id="score" aria-live="off">0</div>
+    <p id="status" role="status" aria-live="polite">Нажми «Старт»</p>
+    <button id="tap" type="button">Старт</button>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const button=document.getElementById('tap'),score=document.getElementById('score'),status=document.getElementById('status');
+      let startedAt=0,count=0,running=false,timer=0;
+      function stop(){
+        running=false;clearInterval(timer);timer=0;
+        button.textContent='Сыграть ещё раз';status.textContent='Результат: '+count+' нажатий за 10 секунд';
+      }
+      button.addEventListener('click',()=>{
+        if(!running){
+          count=0;score.textContent='0';running=true;startedAt=performance.now();
+          button.textContent='ЖМИ!';status.textContent='У тебя 10 секунд';
+          timer=setInterval(()=>{const left=Math.max(0,Math.ceil((10000-(performance.now()-startedAt))/1000));status.textContent='Осталось '+left+' с';if(left===0)stop()},100);
+          return;
+        }
+        if(performance.now()-startedAt>=10000){stop();return}
+        count++;score.textContent=String(count);
+      });
+      document.addEventListener('visibilitychange',()=>{if(document.hidden&&running){stop();status.textContent='Раунд остановлен при переходе из игры'}});
+    })();
+  </script>
+</body>
+</html>
