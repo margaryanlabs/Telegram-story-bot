@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.vetogram_play_ttt_rooms (
   code varchar(8) PRIMARY KEY
     CHECK (code ~ '^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$'),
   owner_id varchar(20) NOT NULL CHECK (owner_id ~ '^[0-9]{1,20}$'),
-  guest_id varchar(20) UNIQUE NULL
+  guest_id varchar(20) NULL
     CHECK (guest_id ~ '^[0-9]{1,20}$'),
   board char(9) NOT NULL DEFAULT '.........'
     CHECK (board ~ '^[XO.]{9}$'),
