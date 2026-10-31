@@ -23,6 +23,11 @@ test('BLOTENQ uses its own documented origin and honest standalone state', () =>
   assert.match(html, /Пока открывается отдельно/);
   assert.match(html, /rel="noopener noreferrer"/);
 });
+test('WHO? is linked as the separate Group DNA game without pretending native embedding', () => {
+  assert.match(html, /WHO\? \/ Group DNA/);
+  assert.match(html, /id-preview--7643d21a-8d1e-459e-8136-11eded1ed4ae\.lovable\.app/);
+  assert.match(html, /Открыть предпросмотр WHO\?/);
+});
 test('Play bundle does not read messages, Telegram tokens or call remote endpoints', () => {
   assert.doesNotMatch(play, /\bfetch\s*\(|XMLHttpRequest|initData|telegram-chats|sessionStorage|sendMessage|postMessage/);
 });
