@@ -647,7 +647,9 @@
     $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
     $("cinemaMoreStudios").classList.toggle("hidden",state.tab==="library"||state.tab==="series");
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
-    text("cinemaCount",list.length+" из "+films.length+" записей · официальные источники");
+    const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
+      (f.player?.licensed===true||Boolean(f.file))).length;
+    text("cinemaCount",list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
     const russian=films.filter(f=>f.player&&(f.spoken==="Русский"||f.spoken==="ru"));
     const showRussian=state.tab==="home"&&!state.query.trim()&&russian.length>0;
