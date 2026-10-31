@@ -174,9 +174,10 @@ test('bridge echoes correlation ID on asynchronous open success and failure',asy
   data:{channel:'vetogram-universe',action:'open-item',id,requestId}
  });
  receive('old',51);receive('new',52);
- await Promise.resolve();
+ // Cross-realm Promise adoption (Node vm) completes on later microtasks.
+ await new Promise(resolve=>setImmediate(resolve));
  assert.ok(sent.some(x=>x.type==='open-item-status'&&x.ok&&x.requestId===52));
  resolveOld(false);
- await Promise.resolve();
+ await new Promise(resolve=>setImmediate(resolve));
  assert.ok(sent.some(x=>x.type==='open-item-status'&&!x.ok&&x.requestId===51));
 });
