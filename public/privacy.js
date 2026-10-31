@@ -1467,8 +1467,8 @@
       <fieldset class="veto-business-scope-options">
         <legend>Какие личные переписки разрешены боту?</legend>
         ${existing ? '<label><input type="radio" name="vetoBusinessScope" value="preserve" checked><span><b>Сохранить текущий охват и исключения</b><small>Не расширяет доступ и сохраняет действующие права.</small></span></label>' : ''}
-        ${[['all-private','Все существующие и будущие','Контакты и не-контакты'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
-          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='selected-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
+        ${[['all-private','Все существующие и будущие','Быстрый старт: все личные чаты, включая новые. Только после твоего согласия.'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
+          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='all-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
       </fieldset>
       <div class="veto-consent-chat-list" role="group" aria-label="Личные чаты и исключения">
         ${chats.map(chat=>`<div class="veto-consent-chat"><span class="veto-consent-chat-copy"><strong>${escapeHtml(chat.title)}</strong></span>
