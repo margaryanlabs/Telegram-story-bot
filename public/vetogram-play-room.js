@@ -106,6 +106,8 @@
   async function run(action,payload,onSuccess) {
     if(busy)return;
     busy=true;setBusy(true);
+    let failure='';
+    let retryAfterConflict=false;
     try {
       const next=await request(action,payload);
       room=next;
@@ -115,9 +117,14 @@
       ensurePoll();
       onSuccess?.(room);
     }catch(error){
-      if(error?.code==='conflict'&&room){await fetchRoom({silent:true});}
-      else inform(errors[error?.code]||error?.message||'Не удалось выполнить действие.');
-    }finally{busy=false;render();}
+      retryAfterConflict=error?.code==='conflict'&&Boolean(room);
+      failure=errors[error?.code]||error?.message||'Не удалось выполнить действие.';
+    }finally{
+      busy=false;
+      render();
+      if(failure)inform(failure);
+      if(retryAfterConflict)void fetchRoom({silent:true});
+    }
   }
   async function fetchRoom({silent=false}={}){
     if(!room||busy)return;
