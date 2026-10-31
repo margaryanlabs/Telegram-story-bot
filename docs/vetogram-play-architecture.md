@@ -65,3 +65,13 @@ Use report/skip controls for provocative party questions and rate-limit anonymou
 - Future third-party games must run in an isolated sandbox or approved external origin, with user-approved events and server-side validation. No automatic community game code execution.
 
 **Current release gate is still closed:** only feature branch edits, no production deploy, no Neon database changes and no merge.
+
+## Play Store discovery & creator intake (code-only)
+
+- `public/vetogram-play-store.js`: every approved catalog card receives **Favorites** and **Share** controls. Favorites are stored only in this browser's localStorage; if storage is unavailable they work for the current page only. No Telegram account linking.
+- Catalog sharing happens **only after a click**. `https://<Vetogram host>/?screen=play&game=<approved-id>` is generated from a fixed allowlist. Existing URL query parameters, including credentials, are **never copied** into share links. Native share is attempted when supported, otherwise clipboard/manual copy; no messages are sent automatically.
+- These are **game-discovery links**, not real multiplayer room invitation tokens. An invited person must still explicitly choose to open a game.
+- The creator draft form in `public/vetogram-play-developer.js` validates input and prepares a GitHub issue URL; it **does not submit**, save, or upload the game. The developer must click the link and complete submission on GitHub. Public HTTPS source URLs with query strings, fragments or user credentials are refused to reduce inadvertent secret disclosure.
+- `public/vetogram-play-runner.js`: users launch any of the four local games in a **focused native dialog**, which mounts the existing live DOM node, keeps its handlers/state, and restores the card to its original location after Close/Escape/navigation. External games are **not** embedded by this mechanism.
+- All additional game scripts and tests are part of the branch; full Node test suite and Telegram device QA are still required before merging or publishing.
+- No Neon connection or production schema modification, GitHub main merge, deployment, or real public creator marketplace has occurred.
