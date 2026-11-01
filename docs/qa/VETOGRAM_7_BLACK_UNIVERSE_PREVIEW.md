@@ -111,3 +111,18 @@ Found and corrected source-level defects in the **existing** Telegram chat and s
 **Direct execution, bounded to an isolated JavaScript harness:** the actual extracted avatar queue functions passed **8/8** mock scenarios; extracted story avatar sync passed **4/4** scenarios. Main browser controllers `telegram-chats.js`, `telegram-stories.js`, `vetogram-universe.js` and `vetogram-media-bridge.js` parsed successfully as JavaScript scripts. These are **not** actual `node --test` runs, Telegram account tests, network probes or verified avatar downloads. Unit tests stored in GitHub remain to be run under Node.
 
 No real user credentials, chats or photos were retrieved. PR remains draft, unmerged and undeployed. Full test suite, genuine Android WebView and end-to-end Telegram avatar rendering remain release gates.
+
+## Live Chats sync lifecycle — 2026-11-01
+
+Source audit found that the existing Messenger already used generation checks to protect stale history and an abortable history fetch, but **the ongoing `/api/telegram-chat-updates` poll was not actually aborted** on navigating away. Its periodic timer was stopped, while the signed in-flight network operation could continue until the 18.5-second timeout. A WebView exit could also leave the "Checking new messages" spinner after cancellation.
+
+Fixes in `public/telegram-chats.js`:
+
+- Track the current active poll's `AbortController` as `state.syncAbort`. New `cancelActivePoll()` invalidates the run ID **before** aborting transport, resets `syncBusy`, and clears the stale checking indicator. The controller's `finally` clears `syncAbort` only when it still owns that slot.
+- Call cancellation on chat switch, Back, beginning a full history refresh, owner change, authorization rejection, leaving the Chats screen, a hidden tab, going offline and `pagehide`.
+- Check `runId===state.syncRunId` and `maySyncThread()` on success *before* merging updates. A transport that ignores AbortSignal cannot render late data or schedule a new poll after the screen is hidden.
+- **Normal active polling still works** and continues on the existing 26-second interval when current, verified and visible. Messages are not cleared by navigation or a transient network failure. The feature does not circumvent Telegram's authentication or session requirements.
+
+Regression test file added: `tests/vetogram-live-poll-cancellation-7.test.js`, five offline Node VM tests (abort on hide, late network success after cancel, A→B switch, current message merge, lifecycle hooks). Updated source/contract test with poll cancellation invariants.
+
+**Verification achieved in current execution:** 21/21 source/contract tests passed in isolated JavaScript harness; 8/8 relevant browser scripts parsed; four runtime simulations of the actual extracted poll/cancel source all passed. This **does not** mean the repository's full Node test suite ran, or that real Telegram login/messages/live WebView were exercised. GitHub Actions/Vercel build success and manual Android/iOS QA remain necessary. No production merge or deployment.
