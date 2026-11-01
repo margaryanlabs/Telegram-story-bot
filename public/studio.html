@@ -2380,6 +2380,32 @@
             <span class="v72-play-rim">PRESS PLAY · V / 07</span>
           </div>
         </section>
+        <section class="v74-local-panel" id="vpLocalStats" aria-label="Личные игровые результаты на этом устройстве">
+          <div class="v74-local-head">
+            <div><span class="v74-overline">PLAY / YOUR RECORDS</span><h2>Твои рекорды<span>.</span></h2></div>
+            <span class="v74-local-hint">Только на этом устройстве · нажми на игру</span>
+          </div>
+          <div class="v74-score-rail" role="group" aria-label="Шесть локальных игровых рекордов">
+            <button type="button" class="v74-score" data-v74-launch="reaction" aria-label="Играть в Реакцию">
+              <span class="v74-score-symbol">◎</span><span class="v74-score-name">Реакция</span><strong id="v74ScoreReaction">—</strong><small>ЛУЧШИЕ МС</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="pairs" aria-label="Играть в Четыре пары">
+              <span class="v74-score-symbol">♣</span><span class="v74-score-name">Четыре пары</span><strong id="v74ScorePairs">—</strong><small>МЕНЬШЕ ХОДОВ</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="tic" aria-label="Играть в Крестики-нолики">
+              <span class="v74-score-symbol">✕</span><span class="v74-score-name">Крестики-нолики</span><strong id="v74ScoreTic">0</strong><small>ПОБЕДЫ</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="2048" aria-label="Играть в 2048">
+              <span class="v74-score-symbol">▦</span><span class="v74-score-name">2048</span><strong id="v74Score2048">0</strong><small>ОЧКИ</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="mines" aria-label="Играть в Сапёр">
+              <span class="v74-score-symbol">⚑</span><span class="v74-score-name">Сапёр</span><strong id="v74ScoreMines">0</strong><small>ПОБЕДЫ</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="snake" aria-label="Играть в Змейку">
+              <span class="v74-score-symbol">◉</span><span class="v74-score-name">Змейка</span><strong id="v74ScoreSnake">0</strong><small>ОЧКИ</small>
+            </button>
+          </div>
+        </section>
         <div class="vp-catalog-tools" aria-label="Поиск по игровому каталогу">
           <label class="vp-search"><span aria-hidden="true">⌕</span><input type="search" id="vpGameSearch" placeholder="Поиск игр" aria-label="Поиск игр" autocomplete="off" maxlength="80" /></label>
           <div class="vp-filters" role="group" aria-label="Фильтр игр">
@@ -2724,6 +2750,7 @@
   <script src="/vetogram-play-developer.js?v=20261101-rebuild04" defer></script>
   <script src="/vetogram-play-runner.js?v=20261101-rebuild04" defer></script>
   <script src="/vetogram-play-plus.js?v=20261101-rebuild04" defer></script>
+  <script src="/vetogram-play-records.js?v=20261101-rebuild04" defer></script>
   <script src="/vetogram-play-room.js?v=20261101-rebuild04" defer></script>
   <script src="/vetogram-play-stats.js?v=20261101-rebuild04" defer></script>
 </body>
