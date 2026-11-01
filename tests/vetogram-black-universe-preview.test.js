@@ -62,7 +62,7 @@ test('reader offers a retry action without destroying its place',()=>{
   const html=read('public/books.html');
   const script=read('public/books.js');
   assert.match(html,/id="readerRetry"/);
-  assert.match(script,/fetchReaderResponse\(endpoint\+'\?'\+params\)/);
+  assert.match(script,/fetchReaderResponse\(endpoint\+'\?'\+params,readerController\.signal\)/);
   assert.match(script,/readerRetry'\)\.addEventListener/);
   assert.match(script,/loadChapter\(state\.current,state\.activeChapter,true\)/);
 });
