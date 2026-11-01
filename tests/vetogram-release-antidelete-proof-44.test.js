@@ -13,7 +13,7 @@ function fixture({deleted=false,webhook=true,enabled=true,archiveReady=true}={})
     if(method==='getWebhookInfo')
       return webhook?{url:'https://example.com/api/webhook-v8',pending_update_count:0}:{url:''};
     if(method==='getBusinessConnection')
-      return {is_enabled:enabled,rights:{can_manage_stories:true,can_read_messages:true}};
+      return {id:'owner-business-connection',user:{id:'owner-telegram-id'},is_enabled:enabled,rights:{can_manage_stories:true,can_read_messages:true}};
     return null;
   };
   const fn=new Function('getPrivacySettings','viewerStoreHealth','listDeletedFeed','tg',
@@ -21,7 +21,7 @@ function fixture({deleted=false,webhook=true,enabled=true,archiveReady=true}={})
       async()=>({antiDelete:enabled,ghostFocus:true,notifyDeletes:true}),
       async()=>({storage:'ok',directGhostWrites:archiveReady,mediaVault:true}),
       async()=>({items:deleted?[{deletedAt:'2026-10-25T00:00:00Z',
-        chatTitle:'Согласившийся тестовый контакт',mediaArchiveStatus:'archived'}]:[]}),
+        chatTitle:'Согласившийся тестовый контакт',mediaArchiveStatus:'archived',businessConnectionId:'owner-business-connection'}]:[]}),
       tg,async()=>({businessConnectionId:'owner-business-connection',isEnabled:enabled}),
       ()=>null
     );

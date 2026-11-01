@@ -1472,8 +1472,8 @@
       <fieldset class="veto-business-scope-options">
         <legend>Какие чаты защищать?</legend>
         ${existing ? '<label><input type="radio" name="vetoBusinessScope" value="preserve" checked><span><b>Сохранить текущий охват и исключения</b><small>Не расширяет доступ и сохраняет действующие права.</small></span></label>' : ''}
-        ${[['all-private','Все существующие и будущие','Контакты и не-контакты'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
-          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='selected-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
+        ${[['all-private','Все существующие и будущие','Быстрый старт: все личные чаты, включая новые. Только после согласия.'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
+          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='all-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
       </fieldset>
       <div class="veto-consent-chat-list" role="group" aria-label="Личные чаты и исключения">
         ${chats.map(chat=>`<div class="veto-consent-chat"><span class="veto-consent-chat-copy"><strong>${escapeHtml(chat.title)}</strong></span>
@@ -1591,7 +1591,7 @@
         ${archiveIncomplete?'<p>Сервер ещё не подтвердил архивирование. Сообщения могут не сохраняться. Перепроверить подключение и настройки, не выполняя повторную запись без проверки.</p>':''}
         <p>Если Telegram только что выдал разрешение, получение событий может начаться не сразу. Защита считается проверенной после настоящего тестового удаления сообщения.</p>
         <div class="veto-consent-boundary"><strong>Работоспособность ещё нужно проверить</strong><p>С согласившимся тестовым собеседником: новое сообщение → сохранение → изменение → удаление → сохранённая копия и уведомление. Публикацию Stories проверь отдельно, в том числе без Premium.</p></div>
-        <div class="sheet-actions"><button data-business-retry="1">Проверить статус</button><button class="accent" data-business-close="1">${archiveIncomplete?'Закрыть':'Готово'}</button></div>`);
+        <div class="sheet-actions"><button data-business-retry="1">Проверить статус</button><button class="accent" data-business-diagnostics="1">Проверить реальное удаление →</button><button data-business-close="1">${archiveIncomplete?'Закрыть':'Готово'}</button></div>`);
     } catch (error) {
       openSheet(`<span class="kicker">VETOGRAM · ПРОВЕРКА</span><h2>Требуется повторная проверка</h2><p>${escapeHtml(error.message)}</p>
         <p>Не повторяем запись: Telegram мог принять запрос до таймаута.</p><div class="sheet-actions"><button data-business-retry="1">Проверить статус</button><button data-business-close="1">Закрыть</button></div>`);
@@ -2309,7 +2309,7 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
-    const button = event.target.closest('[data-business-apply],[data-business-close],[data-business-retry],[data-business-manual],[data-business-account],[data-business-backup],[data-business-revoke],[data-business-revoke-stories],[data-business-confirm-revoke]');
+    const button = event.target.closest('[data-business-apply],[data-business-close],[data-business-retry],[data-business-manual],[data-business-account],[data-business-backup],[data-business-revoke],[data-business-revoke-stories],[data-business-confirm-revoke],[data-business-diagnostics]');
     if (button) {
       if (button.hasAttribute('data-business-confirm-revoke')) await revokeBusiness(button);
       else if (button.hasAttribute('data-business-revoke')) confirmBusinessRevoke(false);
@@ -2317,6 +2317,7 @@
       else if (button.hasAttribute('data-business-apply')) await applyBusinessWizard(button);
       else if (button.hasAttribute('data-business-close')) closeSheet();
       else if (button.hasAttribute('data-business-retry')) await openBusinessWizard();
+      else if (button.hasAttribute('data-business-diagnostics')) await runGhostDiagnostics();
       else if (button.hasAttribute('data-business-manual')) privacyBusinessGuideSheet();
       else if (button.hasAttribute('data-business-account')) {
         closeSheet();

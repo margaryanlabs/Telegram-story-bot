@@ -84,6 +84,9 @@
     music: 'media',
     cinema: 'media',
     books: 'media',
+    play:'play',
+    games:'play',
+    игры: 'play',
     home: 'home',
     ai: 'ai',
     vetogramai: 'ai',
@@ -900,7 +903,9 @@
 
     const { response, data } = await requestJson(`/api/viewer-sync${query}`, options, {
       retry: !action,
-      timeoutMs: 18000,
+      // Telegram OTP can require a bounded MTProto round trip and an encrypted challenge write.
+      // The send_code request is never automatically retried after an uncertain timeout.
+      timeoutMs: action==='send_code' ? 34000 : 18000,
     });
 
     if (epoch!==viewerOwnerEpoch || signedOwner!==String(tg?.initData||''))
@@ -1851,7 +1856,7 @@
   }
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = {home:'profile',profile:'profile',media:'media',chats:'privacy',telegram:'telegram',voice:'profile',archive:'publish',analytics:'profile',viewers:'publish',relay:'profile',ai:'profile',studio:'publish','story-engine':'publish'};
+  const NAV_PARENT = {home:'profile',profile:'profile',media:'media',play:'media',chats:'privacy',telegram:'telegram',voice:'profile',archive:'publish',analytics:'profile',viewers:'publish',relay:'profile',ai:'profile',studio:'publish','story-engine':'publish'};
   function switchScreen(name) {
     ensureComposerIdentity();
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';

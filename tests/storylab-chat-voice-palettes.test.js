@@ -63,7 +63,7 @@ test('a Telegram identity change clears owner state and stale send acknowledgeme
   assert.match(js,/ownerInitData:String\(tg\?\.initData\|\|''\)/);
   assert.match(js,/function resetOwner\(\)/);
   assert.match(js,/state\.drafts\.clear\(\)/);
-  assert.match(js,/state\.generation\+\+;state\.threadGeneration\+\+/);
+  assert.match(js,/state\.generation\+\+;state\.inboxOverlayEpoch\+\+;state\.threadGeneration\+\+/);
   assert.match(js,/if\(generation!==state\.generation\)return/);
   assert.match(js,/if\(generation!==state\.threadGeneration\)return/);
   assert.match(js,/ownerKey!==state\.ownerInitData/);

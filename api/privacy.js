@@ -107,7 +107,7 @@ async function ghostDiagnostics(token, userId) {
   const [settings, storeHealth, deletedData, webhookInfo, durable, menu] = await Promise.all([
     getPrivacySettings(userId),
     viewerStoreHealth().catch(() => null),
-    listDeletedFeed(userId, 1).catch(() => ({ items: [] })),
+    listDeletedFeed(userId, 25).catch(() => ({ items: [] })), 
     tg(token, 'getWebhookInfo').catch(() => null),
     getBusinessConnectionState(userId).catch(() => null),
     tg(token, 'getChatMenuButton', { chat_id: userId }).catch(() => null),
@@ -126,15 +126,16 @@ async function ghostDiagnostics(token, userId) {
     }
   }
 
-  const businessLive = liveConnection
-    ? Boolean(liveConnection?.is_enabled)
-    : Boolean(durable?.isEnabled);
-  const canReadMessages = liveConnection
-    ? Boolean(liveConnection?.rights?.can_read_messages)
-    : Boolean(durable?.canReadMessages);
-  const canManageStories = liveConnection
-    ? Boolean(liveConnection?.rights?.can_manage_stories)
-    : Boolean(durable?.canManageStories);
+  // A previously saved connection is NOT proof that Telegram still permits
+  // access. Fail closed if Bot API is unavailable or verifies another owner.
+  const connectionVerified = Boolean(
+    connectionId && liveConnection
+    && String(liveConnection.id || '') === String(connectionId)
+    && String(liveConnection.user?.id || '') === String(userId)
+  );
+  const businessLive = connectionVerified && liveConnection.is_enabled === true;
+  const canReadMessages = connectionVerified && liveConnection.rights?.can_read_messages === true;
+  const canManageStories = connectionVerified && liveConnection.rights?.can_manage_stories === true;
 
   const webhookUrl = String(webhookInfo?.url || '');
   const webhookReady = Boolean(webhookUrl && /\/api\/webhook-v8(?:$|\?)/.test(webhookUrl));
@@ -142,7 +143,11 @@ async function ghostDiagnostics(token, userId) {
   const storageReady = Boolean(storeHealth?.storage === 'ok' && (storeHealth?.directGhostWrites || storeHealth?.postgrestFallback));
   const mediaVaultReady = Boolean(storeHealth?.mediaVault);
   const deleteItems = Array.isArray(deletedData?.items) ? deletedData.items : [];
-  const lastDelete = deleteItems[0] || null;
+  // Do not count an older Business bot's deletion as proof that this
+  // connection captures new events. Only a stored copy attributed to the
+  // actively verified connection can unlock the ready status.
+  const lastDelete = businessLive ? deleteItems.find(item =>
+    String(item.businessConnectionId || '') === String(connectionId)) || null : null;
 
   const checks = {
     webhook: {
@@ -156,8 +161,10 @@ async function ghostDiagnostics(token, userId) {
       ok: businessLive,
       label: 'Business connection',
       detail: businessLive
-        ? verificationError ? 'Stored connection · live verification deferred' : 'Verified with Telegram'
-        : 'Needs Telegram Business connection',
+        ? 'Verified live with Telegram for this account'
+        : connectionId
+          ? 'Live Telegram verification unavailable, disabled, or owner mismatch'
+          : 'Needs Telegram Business connection',
     },
     messagePermission: {
       // BusinessBotRights.can_read_messages grants MARK-AS-READ, not delivery.
@@ -212,7 +219,7 @@ async function ghostDiagnostics(token, userId) {
     checks,
     business: {
       connectionPresent: Boolean(connectionId),
-      verifiedNow: Boolean(liveConnection),
+      verifiedNow: connectionVerified,
       canManageStories,
       canReadMessages,
       verificationError,

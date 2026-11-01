@@ -23,10 +23,10 @@ test('only initial, non-archived, owner-verified-request thread may defer archiv
 
 test('server never disables saved-only fallback and keeps archive reads owner-scoped',()=>{
  const api=read('api/telegram-chats.js');
- assert.match(api,/\['list','thread','thread_archive'\]/);
+ assert.match(api,/\['list','list_overlay','thread','thread_archive'\]/);
  assert.match(api,/const owner=validateTelegramMiniApp/);
  assert.match(api,/if\(action==='thread_archive'\)/);
- const section=api.slice(api.indexOf("if(action==='thread_archive')"),api.indexOf("const permissionStatePromise"));
+ const section=api.slice(api.indexOf("if(action==='thread_archive')"),api.indexOf("let permissionStatePromise"));
  assert.match(section,/archivedMessages\(userId,chatId,archiveOffset\)/);
  assert.doesNotMatch(section,/getDialogs|withBackupClient|client\.getMessages/);
  assert.match(api,/if\(!chat&&fastLive\)\{/);

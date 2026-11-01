@@ -132,7 +132,7 @@ export default async function handler(req,res){
         allowed=new Map(dialogs.map(d=>[safeId(d?.id),d]));
       }
       if(batch){
-        const avatars={};
+        const avatars={},missing=[],failed=[];
         let cursor=0,fatal=null;
         // Up to two concurrent thumbnails within ONE owner-verified MTProto
         // connection. The earlier serial loop could exceed the WebView's 24s
@@ -141,23 +141,25 @@ export default async function handler(req,res){
         const worker=async()=>{
           while(cursor<ids.length&&!fatal){
             const id=ids[cursor++],dialog=allowed.get(id);
-            if(!dialog?.entity?.photo)continue;
+            if(!dialog?.entity?.photo){missing.push(id);continue;}
             try{
               const bytes=await prepareAvatar(await getAvatar(client,dialog));
               if(bytes&&!fatal)avatars[id]=bytes.toString('base64');
+              else if(!fatal)failed.push(id);
             }catch(error){
               const msg=String(error?.errorMessage||error?.message||'');
               if(/FLOOD_WAIT|AUTH_KEY|SESSION_REVOKED|429/i.test(msg)){
                 fatal=error;
                 break;
               }
-              // One missing or corrupt profile image must not hide the others.
+              // A single image failure must not hide the remaining avatars.
+              failed.push(id);
             }
           }
         };
         await Promise.all([worker(),worker()]);
         if(fatal)throw fatal;
-        return {avatars};
+        return {avatars,missing,failed};
       }
       const dialog=allowed.get(chatId);
       if(!dialog)return null;
@@ -176,7 +178,8 @@ export default async function handler(req,res){
       }
       return null;
     });
-    if(batch)return res.status(200).json({ok:true,avatars:result?.avatars||{}});
+    if(batch)return res.status(200).json({ok:true,avatars:result?.avatars||{},
+      missing:result?.missing||[],failed:result?.failed||[]});
     if(!result)return deny(res,404,'Вложение недоступно или превышает лимит 4 МБ');
     res.setHeader('Content-Type',result.mime);
     res.setHeader('Content-Disposition',action==='attachment'?'attachment; filename="storylab-attachment.bin"':'inline');
