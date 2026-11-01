@@ -86,11 +86,12 @@ function buttons(){
   const selected=b.dataset.catalogGroup===group;b.classList.toggle("active",selected);b.setAttribute("aria-pressed",String(selected));
  }
 }
+const failedCoverUrls=new Set();
 function trackCard(track,index){
  const row=textNode("article","catalog-track");
- const cover=textNode("div","catalog-cover","♫");
- if(track.artwork){
-  const img=textNode("img");img.src=track.artwork;img.loading="lazy";img.alt="";img.onerror=()=>img.remove();cover.append(img);
+ const cover=textNode("div","catalog-cover",Array.from(track.title||"V")[0]?.toLocaleUpperCase()||"V");
+ if(track.artwork&&!failedCoverUrls.has(track.artwork)){
+  const img=textNode("img");img.src=track.artwork;img.loading="lazy";img.alt="";img.onerror=()=>{failedCoverUrls.add(track.artwork);img.remove()};cover.append(img);
  }
  const info=textNode("div","catalog-details");
  info.append(textNode("strong","",track.title),textNode("span","",track.artist),textNode("small","",track.duration?Math.floor(track.duration/60)+":"+String(Math.floor(track.duration%60)).padStart(2,"0"):"♫"));
