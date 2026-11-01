@@ -21,8 +21,8 @@ test('the real integrated shell ships V7.2 media and arcade and preserves module
   assert.match(shell,/id="v6MediaStage"/);
   assert.match(shell,/id="v6MediaBack"/);
 });
-test('four ready mini games retain their original live node IDs and dialog focus mode',()=>{
-  const games=[['reaction','vpReactionButton'],['pairs','vpMemoryGrid'],['tic','vpTttGrid'],['2048','vp2048Grid']];
+test('six ready mini games retain their original live node IDs and dialog focus mode',()=>{
+  const games=[['reaction','vpReactionButton'],['pairs','vpMemoryGrid'],['tic','vpTttGrid'],['2048','vp2048Grid'],['mines','vpMinesGrid'],['snake','vpSnakeGrid']];
   for(const [game,id] of games){
     assert.match(shell,new RegExp('data-vp-game="'+game+'"'));
     assert.match(shell,new RegExp('id="'+id+'"'));
