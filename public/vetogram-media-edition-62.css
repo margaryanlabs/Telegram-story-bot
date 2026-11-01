@@ -286,8 +286,9 @@ body:has(#playerBar) .licensed-home-more{
 }
 
 
-/* Playback-first release: non-licensed film/discovery tabs are not navigable. */
-body:has(#cinemaPlayer) :is([data-tab="foreign"],#cinemaForeignShelf,#cinemaForeignHub,#cinemaFranchises){
+/* Playback-first home hides non-playable promotions; the separate foreign
+ * discovery catalog stays visible with a truthful rights/availability label. */
+body:has(#cinemaPlayer) :is(#cinemaForeignShelf,#cinemaFranchises){
   display:none!important;
 }
 /* Hide dead empty player cards; never make the actor hunt for an external link. */
