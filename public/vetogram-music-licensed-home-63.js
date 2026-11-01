@@ -59,6 +59,9 @@ function card(t){
     const key=t.id;
     pendingTimer=setTimeout(()=>{
       if(pendingId!==key)return;
+      // Another view may have changed the global player without touching
+      // this shelf. A stale timer must never quarantine the previous song.
+      if(V.now?.()?.id!==key){cancelPending();return;}
       cancelPending();
       unavailable.add(key);
       say("Источник не подтвердил воспроизведение за 25 секунд. Запись скрыта до перезагрузки.");
@@ -77,6 +80,10 @@ function render(){
 more.addEventListener("click",()=>{visible=Math.min(playable().length,visible+20);render()});
 // On a real HTMLAudioElement stream failure, remove the broken Play card
 // only for the current device session. Never invent alternate audio copies.
+document.addEventListener("vetogram:audio-selected",event=>{
+  const id=String(event.detail?.trackId||"");
+  if(pendingId&&id&&pendingId!==id)cancelPending();
+});
 document.addEventListener("vetogram:audio-error",event=>{
   const id=String(event.detail?.trackId||"");
   if(!id.startsWith("ccmixter:"))return;
