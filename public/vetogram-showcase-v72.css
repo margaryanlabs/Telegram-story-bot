@@ -329,3 +329,63 @@ body:has(#reader) .book-mode-explainer{background:#172019!important;border-color
  body:has(#reader) .hero-veto{min-height:360px!important;border-radius:15px!important}
  body:has(#reader) .hero-veto h1{font-size:44px!important}
 }
+
+/* V7.3 playable arcade: both gallery art and full game use the SAME native DOM nodes. */
+#vetogram .vp-screen .vp-mini[data-vp-game]:not(.vp-game-in-dialog) > .vp-game-art{display:grid!important}
+#vetogram .vp-screen .vp-mini[data-vp-game]:not(.vp-game-in-dialog) > :is(.v73-game-actions,.v73-mines-grid,.v73-snake-grid,.v73-snake-directions){display:none!important}
+#vetogram .vp-screen .vp-mini[data-vp-game="mines"]:not(.vp-game-in-dialog)::before{background:radial-gradient(ellipse 72% 65% at 53% 28%,#857d496a,transparent 80%)}
+#vetogram .vp-screen .vp-mini[data-vp-game="snake"]:not(.vp-game-in-dialog)::before{background:radial-gradient(ellipse 72% 65% at 53% 28%,#377d6575,transparent 80%)}
+#vetogram .vp-screen .v73-art-grid{display:grid;gap:5px;position:relative;z-index:2;filter:drop-shadow(0 13px 22px #0009);transform:rotate(-9deg)}
+#vetogram .vp-screen .v73-mines-art-grid{grid-template-columns:repeat(3,37px)}
+#vetogram .vp-screen .v73-mines-art-grid span{display:grid;place-items:center;width:37px;height:37px;border-radius:7px;background:#7a785e;border:1px solid #ffffff45;color:#f9f4d8;font-size:17px;font-weight:850}
+#vetogram .vp-screen .v73-mines-art-grid span:nth-child(2),#vetogram .vp-screen .v73-mines-art-grid span:nth-child(9){background:#454740;color:#ff9f8e}
+#vetogram .vp-screen .v73-mines-art-grid span:nth-child(5){background:#d8bb73;color:#503e25}
+#vetogram .vp-screen .v73-snake-art-grid{grid-template-columns:repeat(4,33px);gap:4px;transform:rotate(9deg)}
+#vetogram .vp-screen .v73-snake-art-grid span{width:33px;height:33px;border-radius:6px;background:#24372f;border:1px solid #ffffff10}
+#vetogram .vp-screen .v73-snake-art-grid .body{background:#82bba2}
+#vetogram .vp-screen .v73-snake-art-grid .head{background:#d1f3bb}
+#vetogram .vp-screen .v73-snake-art-grid .food{background:#ec8b73;border-radius:50%;transform:scale(.75)}
+#vetogram .vp-screen .v73-new-game .vp-store-actions{position:relative;z-index:3}
+#vetogram .vp-screen .vp-game-dialog .v73-game-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:10px 0}
+#vetogram .vp-screen .vp-game-dialog .v73-game-actions button{min-height:42px;flex:1 1 120px;padding:8px 11px;font-size:11px;border:1px solid #ffffff30;border-radius:10px;background:#29302e;color:#ecf8ee;cursor:pointer}
+#vetogram .vp-screen .vp-game-dialog .v73-game-actions #vpSnakeToggle{background:#d0eddf;color:#10231e;font-weight:800}
+#vetogram .vp-screen .vp-game-dialog .v73-game-metrics{display:flex;justify-content:space-between;padding:8px 0}
+#vetogram .vp-screen .vp-game-dialog .v73-mines-grid{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;
+ width:min(100%,340px);margin:10px auto 15px;
+}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell{
+ display:grid;place-items:center;aspect-ratio:1;min-width:0;
+ border-radius:7px;border:1px solid #ffffff24;
+ background:#383b40;color:#e8efee;font:bold 17px/1 system-ui;
+ cursor:pointer;touch-action:manipulation;box-shadow:inset 0 -3px #0003;
+}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell.is-open{background:#1e2529;border-color:#ffffff14;box-shadow:none;cursor:default}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell.is-flagged{color:#f3c579;background:#4b4030}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell.is-mine{background:#a54a46;color:#fff}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell[data-count="1"]{color:#9ac4f8}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell[data-count="2"]{color:#a1eab5}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell[data-count="3"]{color:#f4ba9d}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell[data-count="4"]{color:#f4a8dd}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell:focus-visible{outline:2px solid #f2e0a1;outline-offset:2px}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-grid{
+ display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;
+ width:min(100%,320px);aspect-ratio:1;padding:8px;margin:12px auto;
+ border:1px solid #ffffff25;border-radius:13px;background:#14221e;
+ touch-action:pan-x pan-y;overflow:hidden;
+}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-cell{aspect-ratio:1;min-width:0;border-radius:3px;background:#24372f}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-cell.is-body{background:#79b89b}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-cell.is-head{background:#d2f8c2;border-radius:6px;box-shadow:0 0 7px #d2f8c250}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-cell.is-food{background:#ef8d73;border-radius:50%;transform:scale(.73);box-shadow:0 0 9px #ef8d7370}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-directions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px auto;max-width:320px}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-directions button{height:44px;border-radius:9px;background:#253c34;border:1px solid #ffffff2b;color:#e0f4e4;font-size:19px;font-weight:750;touch-action:manipulation}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-directions button:active{background:#577d67}
+#vetogram .vp-screen .vp-game-dialog .v73-new-game > .vp-mini-stat{display:block;color:#bfc4c6;font-size:11px;line-height:1.5;margin-top:4px}
+#vetogram .vp-screen .vp-game-dialog .v73-new-game .vp-game-art{display:none!important}
+#vetogram .vp-screen .vp-game-dialog .v73-new-game .vp-mini-icon{display:none!important}
+@media(max-width:390px){
+ #vetogram .vp-screen .vp-game-dialog .v73-mines-grid{gap:4px}
+ #vetogram .vp-screen .vp-game-dialog .v73-mine-cell{font-size:14px;border-radius:5px}
+ #vetogram .vp-screen .vp-game-dialog .v73-snake-grid{gap:1.5px;padding:6px}
+}
