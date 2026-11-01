@@ -28,7 +28,8 @@ CREATE INDEX IF NOT EXISTS vetogram_play_ttt_owner_expiry
   ON public.vetogram_play_ttt_rooms(owner_id,expires_at DESC);
 CREATE INDEX IF NOT EXISTS vetogram_play_ttt_expiry
   ON public.vetogram_play_ttt_rooms(expires_at);
--- Recommended maintenance from a trusted scheduled job:
--- DELETE FROM public.vetogram_play_ttt_rooms WHERE expires_at < now() - interval '7 days';
+-- Retention warning: migration 002 references completed rounds by room_code.
+-- DO NOT delete expired rooms once verified results exist; design an audited
+-- archival policy that preserves historical results and their source reference.
 -- Do not grant client-side PUBLIC/anon read/write access. All actions use
 -- signed Telegram identity verified by the server handler.
