@@ -183,3 +183,31 @@ body:has(#reader) .reader-retry[hidden]{display:none!important}
 body:has(#reader) .reader-retry:focus-visible{
   outline:2px solid var(--vet-pink);outline-offset:3px;
 }
+
+/* Distinct fallback album art is text-based, not a fake artist photograph. */
+body:has(#playerBar) :is(.track-cover,.catalog-cover){
+  display:grid;place-items:center;
+  overflow:hidden;isolation:isolate;
+  border-radius:12px;
+  background:linear-gradient(145deg,#322532 4%,#19151e 55%,#131317)!important;
+  color:#f2d4de;
+  font-size:clamp(17px,2.2vw,27px);
+  font-weight:800;
+  letter-spacing:-.05em;
+}
+body:has(#playerBar) .track-row:nth-of-type(4n+2) .track-cover,
+body:has(#playerBar) .catalog-track:nth-of-type(4n+2) .catalog-cover{
+  background:linear-gradient(145deg,#203642,#151b29 60%,#101014)!important;
+}
+body:has(#playerBar) .track-row:nth-of-type(4n+3) .track-cover,
+body:has(#playerBar) .catalog-track:nth-of-type(4n+3) .catalog-cover{
+  background:linear-gradient(145deg,#403323,#241b19 60%,#121014)!important;
+}
+body:has(#playerBar) .track-row:nth-of-type(4n+4) .track-cover,
+body:has(#playerBar) .catalog-track:nth-of-type(4n+4) .catalog-cover{
+  background:linear-gradient(145deg,#302949,#201729 60%,#101014)!important;
+}
+body:has(#playerBar) :is(.track-cover,.catalog-cover) img{
+  width:100%;height:100%;object-fit:cover;
+  border-radius:inherit;
+}
