@@ -18,6 +18,9 @@
   const failedEmbeds=new Set();
   // Prevent repeated downloads of broken posters when a shelf is rerendered.
   const failedPosterUrls=new Set();
+  const posterQueue=[];
+  let posterActive=0;
+  const MAX_POSTER_REQUESTS=3;
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
   const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/",rossiya1:"https://rutube.ru/channel/24620967/",centralpartnership:"https://rutube.ru/channel/798788/"};
   // The initial 200 feature films appear instantly in their studio tabs.
@@ -409,7 +412,7 @@
     return cleaned||original;
   }
   function filmCard(f){
-    const b=node("button","cinema-card");b.type="button";b.setAttribute("aria-label",displayFilmTitle(f)+", детали");
+    const b=node("button","cinema-card");b.type="button";b.dataset.filmId=String(f.id);b.setAttribute("aria-label",displayFilmTitle(f)+", детали");
     b.append(artElement(f,false));
     const name=node("span","cinema-card-name");name.textContent=displayFilmTitle(f);
     const meta=node("small","cinema-card-meta");meta.textContent=[f.year||"Русский",f.minutes?f.minutes+" мин":null,f.externalRutube?(f.audioClaim?"Дубляж заявлен":"Проверь озвучку"):f.discoveryOnly?(f.watchAvailability==="unavailable"?"Нет доступа у источника":f.russianAudio?"Русская дорожка указана":"Язык неизвестен"):f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
@@ -730,7 +733,7 @@
   function requestPoster(f){
     if(state.posters.has(f.id)||state.posterLookups.has(f.id))return;
     state.posterLookups.add(f.id);
-    const req=()=>Promise.resolve()
+    posterQueue.push(()=>Promise.resolve()
       .then(()=>f.player
         ?(window.VetogramCinemaArtwork?.load(f)||null)
         :getCommons(f).then(result=>result.poster))
@@ -738,7 +741,7 @@
         if(!poster||failedPosterUrls.has(poster))return;
         state.posters.set(f.id,poster);
         document.querySelectorAll(".cinema-card").forEach(card=>{
-          if(card.querySelector(".cinema-card-name")?.textContent!==f.title)return;
+          if(card.dataset.filmId!==String(f.id))return;
           const art=card.querySelector(".cinema-card-art");
           if(art&&!art.querySelector("img")){
             const img=node("img");img.loading="lazy";img.alt="Кадр: "+f.title;
@@ -754,9 +757,19 @@
         }
         if(f.id===discovery.slides[discovery.index]?.id)
           $("cinemaHeroBackdrop").style.backgroundImage='url("'+poster.replace(/"/g,"%22")+'")';
-      }).catch(()=>{});
-    if(window.requestIdleCallback)requestIdleCallback(req,{timeout:2300});
-    else setTimeout(req,200);
+      }).catch(()=>{}));
+    pumpPosterQueue();
+  }
+  function pumpPosterQueue(){
+    // A bounded queue prevents hundreds of concurrent thumbnail lookups.
+    while(posterActive<MAX_POSTER_REQUESTS&&posterQueue.length){
+      const task=posterQueue.shift();
+      posterActive++;
+      Promise.resolve().then(task).catch(()=>{}).finally(()=>{
+        posterActive--;
+        pumpPosterQueue();
+      });
+    }
   }
   async function getCommons(f){
     if(state.sources.has(f.id))return state.sources.get(f.id);
