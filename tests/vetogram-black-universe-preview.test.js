@@ -55,7 +55,7 @@ test('Black Universe is wired into the four primary entry points',()=>{
   const css=read('public/vetogram-black-universe.css');
   assert.match(css,/--vet-black:#000/);
   assert.match(css,/body:not\(\.veto-chat-thread\)/);
-  assert.match(css,/reader\[data-theme="light"\]/);
+  assert.match(css,/reader:not\(\[data-theme="light"\]\)/);
 });
 
 test('reader offers a retry action without destroying its place',()=>{
