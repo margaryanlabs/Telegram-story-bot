@@ -199,6 +199,11 @@
     const isTranslated=state.source==='translated';
     const isSpotlight=state.source==='spotlight';
     const isHot=state.source==='hot200';
+    const info=$('bookModeStatus');
+    if(info)info.textContent=['hot200','spotlight'].includes(state.source)
+      ? 'Это каталог описаний и официальных ссылок, а не библиотека бесплатных полных текстов.'
+      :state.source==='local'?'Твои EPUB, FB2 и TXT остаются на этом устройстве.'
+      : 'Нажми на произведение, чтобы читать. Полнота издания уточняется в карточке и оглавлении.';
     $('hotFilters').hidden=!isHot;
     const isPrivate=state.source==='local';
     const isGenres=state.source==='genres';
@@ -210,11 +215,11 @@
     $('languageFilter').hidden=!isGutenberg;
     document.querySelector('.topics').hidden=!isGutenberg;
     const choices={
-      hot200:['200 популярных зарубежных книг с русскоязычными изданиями · редакционный выбор','200 ХИТОВ · НА РУССКОМ','https://books.google.com/'],
+      hot200:['200 популярных зарубежных книг с русскоязычными изданиями · справочный каталог, без полных текстов','200 КНИГ · КАТАЛОГ','https://books.google.com/'],
       complete:[String(completeEditionBooks.length)+' произведения из Русской Викитеки · читать главы и цельные тексты','КНИГИ ЦЕЛИКОМ','https://ru.wikisource.org/wiki/Special:Copyright'],
       genres:['Романы, рассказы, повести, фантастика, стихи и сказки на русском','Читать сейчас','https://ru.wikisource.org/wiki/Special:Copyright'],
       local:['Моя личная библиотека · EPUB, FB2 и TXT без загрузки на сервер','Личные книги',''],
-      spotlight:['Русскоязычные издания · современные книги и официальные страницы','Новые книги на русском','https://books.google.com/'],
+      spotlight:['Русскоязычные издания · описания и официальные страницы, не полные тексты','НОВИНКИ · КАТАЛОГ','https://books.google.com/'],
       translated:['Зарубежные писатели · русские переводы из Викитеки','Зарубежная классика на русском','https://ru.wikisource.org/wiki/Special:Copyright'],
       ru:['Русская Викитека · классическая литература и исторические тексты','Русская классика','https://ru.wikisource.org/wiki/Special:Copyright'],
       hy:['Հայերեն Վիքիդարան · հայկական գրականություն и тексты на армянском','Հայ գրականություն','https://hy.wikisource.org/wiki/Special:Copyright'],
