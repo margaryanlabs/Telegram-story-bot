@@ -133,3 +133,25 @@ test('saved book deep link reports success only after actual pages are prepared'
  assert.match(books,/return openBook\(book\); \/\/ Only acknowledge success after text pages have loaded/);
  assert.match(bridge,/Promise\.resolve\(opened\)\.then\(ok=>send\(\{type:'open-item-status',ok:ok===true/);
 });
+
+test('foreign discovery remains external-only even if metadata changes later',()=>{
+ const cinema=read('public/cinema.js');
+ assert.match(cinema,/async function play\(f, chosenSource\)\{\s*\/\/ External movie discovery/);
+ assert.match(cinema,/if\(f\.externalRutube\|\|f\.discoveryOnly\)\{/);
+});
+
+test('new cinema searches cancel old requests and do not reset latest loading UI',()=>{
+ const cinema=read('public/cinema.js');
+ assert.match(cinema,/catalogController\?\.abort\(\)/);
+ assert.match(cinema,/catalogController=timeout/);
+ assert.match(cinema,/if\(ticket===catalogTicket\)\{button\.disabled=false/);
+ assert.match(cinema,/if\(offset===null\|\|\["library","series","foreign"\]\.includes\(state\.tab\)\)return/);
+ assert.match(cinema,/clearTimeout\(catalogDebounce\)/);
+});
+
+test('Universe identity fallback does not wake a hidden browser every second',()=>{
+ const universe=read('public/vetogram-universe.js');
+ assert.match(universe,/setInterval\(\(\)=>\{if\(!document\.hidden\)checkIdentity\(\);\},10000\)/);
+ assert.match(universe,/window\.addEventListener\('focus',checkIdentity\)/);
+ assert.match(universe,/document\.addEventListener\('visibilitychange',checkIdentity\)/);
+});
