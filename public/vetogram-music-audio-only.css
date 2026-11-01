@@ -1,6 +1,6 @@
 /* VETOGRAM Music — audio-only and true one-tap playback, no provider video cards. */
 .audio-home{margin-top:20px;margin-bottom:15px}
-.audio-home-panel{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-radius:20px;padding:26px 24px;margin:16px 0 25px;border:1px solid rgba(241,194,242,.20);background:radial-gradient(ellipse at 95% 20%,rgba(229,135,231,.2),transparent 50%),linear-gradient(135deg,#26182b,#12111f)}
+.audio-home-panel{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-radius:16px;padding:17px 18px;margin:12px 0 18px;border:1px solid #ffffff20;background:#111114}
 .audio-home-panel>div:first-child{min-width:230px;flex:1}
 .audio-panel-eyebrow{letter-spacing:.13em;font-size:10px;font-weight:800;color:#f4c9ee}
 .audio-home-panel h2{color:#fff;font-size:clamp(24px,3.5vw,37px);letter-spacing:-.04em;margin:10px 0}
