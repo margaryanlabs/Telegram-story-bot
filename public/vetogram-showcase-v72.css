@@ -372,7 +372,7 @@ body:has(#reader) .book-mode-explainer{background:#172019!important;border-color
  display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;
  width:min(100%,320px);aspect-ratio:1;padding:8px;margin:12px auto;
  border:1px solid #ffffff25;border-radius:13px;background:#14221e;
- touch-action:pan-x pan-y;overflow:hidden;
+ touch-action:none;overflow:hidden;
 }
 #vetogram .vp-screen .vp-game-dialog .v73-snake-cell{aspect-ratio:1;min-width:0;border-radius:3px;background:#24372f}
 #vetogram .vp-screen .vp-game-dialog .v73-snake-cell.is-body{background:#79b89b}
