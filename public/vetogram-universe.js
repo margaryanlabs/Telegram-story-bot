@@ -222,7 +222,9 @@
    $('v61PlayerSeek').value=String(data.duration>0?Math.round(data.position/data.duration*1000):0);
    chrome();
   }
-  if(name==='cinema' && message.type==='video-playing')send('music',{action:'audio',command:'pause'});
+  // Delayed iframe events from an already-hidden film must never silence music.
+  if(name==='cinema'&&message.type==='video-playing'&&screen==='media'&&activeModule==='cinema')
+    send('music',{action:'audio',command:'pause'});
  });
  window.addEventListener('veto:screen-changed',event=>{
   checkIdentity();const incoming=event.detail?.screen||'home';
