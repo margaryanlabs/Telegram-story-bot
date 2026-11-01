@@ -403,7 +403,7 @@
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
     div.style.setProperty("--film-hue",String(f.hue));
     div.dataset.filmId=String(f.id);
-    const badge=node("span","cinema-card-art-badge");badge.textContent=f.externalRutube?(f.audioClaim?"ЗАЯВЛЕН ДУБЛЯЖ":"ОЗВУЧКА НЕ ПРОВЕРЕНА"):f.discoveryOnly?(f.russianAudioStatus==="catalog-listed"?"РУССКАЯ ДОРОЖКА В КАТАЛОГЕ":"ОЗВУЧКА НЕ ПОДТВЕРЖДЕНА"):f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":f.player?"СМОТРЕТЬ":"ОТКРЫТЫЙ ФИЛЬМ";div.append(badge);
+    const badge=node("span","cinema-card-art-badge");badge.textContent=f.externalRutube?(f.audioClaim?"ЗАЯВЛЕН ДУБЛЯЖ":"ОЗВУЧКА НЕ ПРОВЕРЕНА"):f.discoveryOnly?(f.russianAudioStatus==="catalog-listed"?"РУССКАЯ ДОРОЖКА В КАТАЛОГЕ":"ОЗВУЧКА НЕ ПОДТВЕРЖДЕНА"):f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":(f.player?.licensed===true||Boolean(f.file))?"В ПЛЕЕРЕ":"ОПИСАНИЕ";div.append(badge);
     const title=node("span","cinema-card-art-title");title.textContent=displayFilmTitle(f);div.append(title);
     const poster=[state.posters.get(f.id),f.poster].find(url=>url&&!failedPosterUrls.has(url));
     if(poster){const img=node("img");img.loading="lazy";img.decoding="async";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{failedPosterUrls.add(poster);img.remove();if(state.posters.get(f.id)===poster)state.posters.delete(f.id)};div.prepend(img)}
@@ -425,7 +425,7 @@
     const b=node("button","cinema-card");b.type="button";b.dataset.filmId=String(f.id);b.setAttribute("aria-label",displayFilmTitle(f)+", детали");
     b.append(artElement(f,false));
     const name=node("span","cinema-card-name");name.textContent=displayFilmTitle(f);
-    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||"Русский",f.minutes?f.minutes+" мин":null,f.externalRutube?(f.audioClaim?"Дубляж заявлен":"Проверь озвучку"):f.discoveryOnly?(f.watchAvailability==="unavailable"?"Нет доступа у источника":f.russianAudio?"Русская дорожка указана":"Язык неизвестен"):f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
+    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||null,f.minutes?f.minutes+" мин":null,f.externalRutube?(f.audioClaim?"Дубляж заявлен":"Проверь озвучку"):f.discoveryOnly?(f.watchAvailability==="unavailable"?"Нет доступа у источника":f.russianAudio?"Русская дорожка указана":"Язык неизвестен"):f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
     b.append(name,meta);
     const p=state.library.progress[f.id];
     if(p&&p.d>0&&p.t/p.d<.96){const bar=node("div","cinema-card-progress"),line=node("i");line.style.width=Math.round(100*p.t/p.d)+"%";bar.append(line);b.append(bar)}
@@ -448,7 +448,7 @@
     text("cinemaHeroEyebrow",f.externalRutube?"ЗАРУБЕЖНОЕ · НАЙДЕНО НА RUTUBE":f.publishedAt?"ДОБАВЛЕНО В КИНОТЕКУ · "+(f.creator||"КИНО"): "ИЗБРАННОЕ · "+(f.creator||"КИНО"));
     text("cinemaHeroTitle",displayFilmTitle(f).length>85?displayFilmTitle(f).slice(0,82)+"…":displayFilmTitle(f));
     text("cinemaHeroDescription",f.synopsis?.slice(0,195)||"Смотрите историю в официальном видеоплеере.");
-    text("cinemaHeroMeta",f.externalRutube?[f.year,f.minutes?f.minutes+" МИН":null,f.audioClaim?"ДУБЛЯЖ ЗАЯВЛЕН":"ОЗВУЧКА НЕ ПРОВЕРЕНА"].filter(Boolean).join(" · "):[f.year||"Кино",f.minutes?f.minutes+" МИН":null,f.contentType||f.genres?.[0],"РУССКАЯ ДОРОЖКА"].filter(Boolean).join(" · "));
+    text("cinemaHeroMeta",f.externalRutube?[f.year,f.minutes?f.minutes+" МИН":null,f.audioClaim?"ДУБЛЯЖ ЗАЯВЛЕН":"ОЗВУЧКА НЕ ПРОВЕРЕНА"].filter(Boolean).join(" · "):[f.year||"Кино",f.minutes?f.minutes+" МИН":null,f.contentType||f.genres?.[0],f.russianAudio===true?"РУССКАЯ ДОРОЖКА ЗАЯВЛЕНА":"ЯЗЫК У ИСТОЧНИКА"].filter(Boolean).join(" · "));
     text("cinemaHeroWatch",f.externalRutube?"↗ Открыть видео":"▶ Смотреть фильм");
     text("cinemaHeroCounter",String(discovery.index+1).padStart(2,"0")+" / "+String(length).padStart(2,"0"));
     $("cinemaHeroDots").replaceChildren(...discovery.slides.map((film,i)=>{
