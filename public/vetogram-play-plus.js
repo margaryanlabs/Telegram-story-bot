@@ -188,7 +188,12 @@
    },{passive:true});
  }
  document.addEventListener('keydown',e=>{
-   if(phase!=='running')return;
+   // Arrow keys belong to Snake only while its real dialog is open.
+   // Preserve page scrolling and keyboard entry elsewhere in Vetogram.
+   if(phase!=='running'||document.hidden ||
+      !snakeGrid?.closest?.('.vp-game-in-dialog'))return;
+   const target=e.target;
+   if(target?.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(target?.tagName))return;
    const map={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'};
    const dir=map[e.key];if(!dir)return;
    e.preventDefault?.();snakeMove(dir);
