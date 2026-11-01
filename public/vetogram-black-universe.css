@@ -211,3 +211,73 @@ body:has(#playerBar) :is(.track-cover,.catalog-cover) img{
   width:100%;height:100%;object-fit:cover;
   border-radius:inherit;
 }
+
+/* Final editorial polish: strong covers, less noise, legible metadata. */
+body:has(#cinemaPlayer) .cinema-card-art{
+  overflow:hidden;
+  aspect-ratio:2/3;
+  background:linear-gradient(155deg,#28202b 0%,#16131c 56%,#101012)!important;
+  border-radius:12px;
+  isolation:isolate;
+}
+body:has(#cinemaPlayer) .cinema-card-art-badge{
+  max-width:calc(100% - 14px);
+  padding:5px 8px;
+  font-size:9px;
+  letter-spacing:.07em;
+  line-height:1.2;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(12,12,14,.80)!important;
+  color:#f5eaf0!important;
+}
+body:has(#cinemaPlayer) .cinema-card-name{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  line-height:1.35;
+}
+body:has(#cinemaPlayer) .cinema-card-meta{
+  line-height:1.35;
+  color:var(--vet-muted)!important;
+}
+body:has(#cinemaPlayer) .cinema-hero-bg{
+  filter:saturate(.82);
+}
+body:has(#cinemaPlayer) .cinema-primary{
+  background:var(--vet-pink)!important;
+  color:#171015!important;
+}
+body:has(#reader) .book-card-label,
+body:has(#reader) .book-bottom{color:var(--vet-muted)}
+body:has(#reader) .book h3{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  line-height:1.35;
+}
+body:has(#reader) .book-cover{
+  overflow:hidden;
+  aspect-ratio:2/3;
+}
+body:has(#playerBar) .player-bar button{
+  min-width:38px;
+  min-height:38px;
+}
+@media (max-width:600px){
+  body:has(#cinemaPlayer) .cinema-rail{
+    scroll-padding-left:16px;
+    -webkit-overflow-scrolling:touch;
+  }
+  body:has(#reader) .book-grid{
+    column-gap:12px;row-gap:18px;
+  }
+  body:has(#playerBar) .player-bar{
+    bottom:max(8px,env(safe-area-inset-bottom));
+    min-width:0;
+  }
+  html#vetogram.vetogram-noir .bottom-nav .nav-item{
+    min-height:46px;
+  }
+}
