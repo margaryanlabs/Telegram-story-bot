@@ -866,7 +866,8 @@
     finally{clearTimeout(timer)}
   }
   async function play(f, chosenSource){
-    if(f.discoveryOnly){
+    // External movie discovery is never an embed grant, regardless of metadata.
+    if(f.externalRutube||f.discoveryOnly){
       const official=filmPage(f);
       if(!/^https:\/\//.test(official))return;
       try{if(tg?.openLink)tg.openLink(official);else window.open(official,"_blank","noopener,noreferrer")}
