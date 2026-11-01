@@ -82,3 +82,18 @@ This pass addressed issues verified in the existing source, without replacing th
 - GitHub Actions has no PR-triggered workflow run returned for the current branch commit. Vercel still shows `build-rate-limit` failure for the preview context. This is not proof of a source-code build failure.
 
 Production remains untouched, no merge and no preview/Render/Vercel deployment. Device QA and full Node CI are still required before marking this PR ready.
+
+## Media Library restore and honest playback status — 2026-11-01
+
+Verified cross-module correctness defects and fixes:
+
+- **Metadata-only music:** `VetogramMusic.openSavedById()` previously resolved `true` even when the only available action was searching for an external recording by title. The module now resolves the discriminated status `"search"`. The iframe bridge publishes `open-item-status.status` as `opened`, `search`, or `unavailable`, and the host displays a non-playback explanation instead of false success. Existing true/false opening semantics for Books/Cinema are retained.
+- **Blocked personal audio storage:** IndexedDB `open()` can remain pending forever in some restricted WebViews. `openDb()` now bounds the open attempt to 6 seconds, handles blocked and error events, cleans up the watchdog, and closes an abandoned DB handle on late success. The `loadDb` `getAll()` query also has a 6-second timeout so a saved-music deep-link request can complete or return a useful error. The module continues with its public catalog if local storage is unavailable.
+- **Security boundary:** only parent-origin `postMessage` commands are handled. A message from a wrong origin/source does not open saved content.
+
+Validation performed against exact current source via isolated JavaScript execution, **not a full Node test run**:
+- 20/20 source/contract assertions passed.
+- Executed the actual production IndexedDB open function with fake database events: 5/5 scenarios passed (no IndexedDB, successful open, timeout, late-success cleanup, blocked open).
+- Exercised the production iframe bridge against a mocked parent: metadata-only song returned `ok:false,status:"search"`, accepted stream returned `ok:true,status:"opened"`, wrong-origin command was ignored; outgoing events stayed same-origin.
+- Six browser JavaScript modules passed syntax parsing. Added `tests/vetogram-music-storage-lifecycle.test.js` (5 Node VM tests) and three media bridge behavior tests, alongside source assertions.
+- No live device/storage/backend or real licensed audio URL has been verified. PR remains draft, Vercel build-rate-limit persists, no production deployment.
