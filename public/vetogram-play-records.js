@@ -43,6 +43,14 @@
     if(!valid.has(button.dataset.v74Launch))return;
     button.addEventListener('click',()=>openGame(button.dataset.v74Launch));
   });
+  // Surprise only chooses from the explicitly installed, playable local games.
+  // It never routes to upcoming titles or remote games.
+  root.querySelector('#v75SurpriseMe')?.addEventListener('click',()=>{
+    const choices=definitions.map(item=>item.id);
+    if(!choices.length)return;
+    const index=Math.floor(Math.random()*choices.length);
+    openGame(choices[Math.min(index,choices.length-1)]);
+  });
   window.addEventListener?.('vetogram:game-close',refresh);
   window.addEventListener?.('veto:screen-changed',event=>{
     if(event?.detail?.screen==='play')refresh();
