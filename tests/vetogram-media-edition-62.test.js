@@ -84,7 +84,7 @@ test('whole-book shelf contains 141 unique Wikisource original source works, inc
 test('four additional popular Russian works keep real Wikisource IDs and non-guaranteed edition coverage',()=>{
   const first=books.indexOf('  const verifiedWholeEditions=');
   const last=books.indexOf('  function setSourceInfo(){',first);
-  const works=new Function(books.slice(first,last)+'\\nreturn completeEditionBooks;')();
+  const works=new Function(books.slice(first,last)+'\nreturn completeEditionBooks;')();
   const byId=new Map(works.map(b=>[b.id,b]));
   for(const [id,title,parts] of [
     [1121477,'Алые паруса',18],
