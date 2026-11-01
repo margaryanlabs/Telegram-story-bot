@@ -25,3 +25,19 @@
 ## Important limitations
 
 This is a source change, **not a production deployment**. Connecting book/cinema APIs in the public preview still depends on hosting outbound connectivity (Wikisource, Gutenberg, RUTUBE). It cannot guarantee third-party availability. Live playback of foreign-dubbed films and copyrighted popular music is not added without authorized sources, and the private media library remains disabled in the public preview.
+
+## Follow-up: cover resiliency and visual polish (2026-11-01)
+
+- Movie poster URLs that have produced a browser image error are stored in an ephemeral failure set. The next card render uses an existing source-backed alternative or retains an editorial text background instead of endlessly re-requesting the same broken URL.
+- Book cover failures are remembered for the session. All source-less books retain the existing individually generated `jacketProfile` motifs and tones; removed the Black theme rule that flattened them to an identical gradient.
+- Music track, radio and catalog cards now use an initial-letter fallback and skip repeatedly failed artwork URLs. These are explicitly editorial placeholders, not fake official album covers.
+- Cinema cards use consistent 2:3 artwork, quieter labels and metadata; book lists and mobile player have responsive spacing. Existing audio/film rights logic is unchanged.
+- Expanded test definitions in `tests/vetogram-black-universe-preview.test.js` to 10 cases.
+- **Verification in this ChatGPT session:** parsed `public/books.js`, `public/cinema.js`, `public/vetogram-music.js` and `public/vetogram-music-catalog.js` with a JavaScript parser without executing application code. Replayed all 10 test callbacks in an isolated JavaScript verification harness with mock response and URL interfaces: **10/10 pass**. This is **not** a Node `npm test` run or an end-to-end browser test; the real production and streaming environment remain unverified.
+- The GitHub commit status for `5961055941597b4f9a437e5ab4510f9cda36acb7` reports Vercel preview **failure** at an upgrade/build-rate-limit URL. This is an infrastructure/plan constraint, not evidence that the source code compiled or failed. Do not claim a working live preview.
+
+## Next release gates
+
+- Execute full Node targeted test suite and inspect any Node-specific failures.
+- Browser walkthrough on Android Telegram, iPhone and Fold: book opening, failed cover fallback, real movie/playStart, licensed music playing, bottom-nav and back behaviour.
+- Review foreign-film metadata and rights/translation before offering one-tap playback. No deployment from this draft PR.
