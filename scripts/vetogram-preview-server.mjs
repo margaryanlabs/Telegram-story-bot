@@ -1,4 +1,5 @@
-/* VETOGRAM visual review only. No Telegram auth, Business or database is served.
+/* VETOGRAM visual review with an allowlisted READ-ONLY public media API.
+ * No Telegram auth, Business or database is served.
  * Standalone free-host static preview; never use for authenticated production.
  */
 import http from 'node:http';
@@ -6,6 +7,7 @@ import {createReadStream} from 'node:fs';
 import {stat} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {handlePreviewMediaApi} from './vetogram-preview-public-api.mjs';
 
 const root=resolve(fileURLToPath(new URL('../public/',import.meta.url)));
 const mimetypes=Object.freeze({
@@ -25,8 +27,9 @@ const server=http.createServer(async(req,res)=>{
  let pathname;
  try{pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);}
  catch{return fail(res,400,{error:'bad_path'});}
- if(pathname.startsWith('/api/'))return fail(res,503,{error:'preview_only',
-  message:'В публичном превью Telegram API, Business и база данных намеренно отключены.'});
+ if(pathname.startsWith('/api/')) {
+  return handlePreviewMediaApi(req,res,new URL(req.url,'http://localhost'));
+ }
  if(pathname==='/')pathname='/studio.html';
  if(!/^\/[A-Za-z0-9/_-]+(?:\.[A-Za-z0-9_-]+)*$/.test(pathname)||
     pathname.split('/').some(p=>p.startsWith('.'))){
