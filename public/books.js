@@ -1918,6 +1918,7 @@
     $('bookSearch').focus?.();
     return true;
   }
-  window.VetogramBooks=Object.freeze({openSavedByKey,showImport,search});
+  window.VetogramBooks=Object.freeze({openSavedByKey,showImport,search,
+    pauseBackgroundWork:cancelChapterPrefetch});
   updateSavedCount();applyPrefs();renderContinueShelf();setSourceInfo();loadCatalog(true);
 })();
