@@ -364,12 +364,12 @@
     art.append(node('span','jacket-shape jacket-shape-one'),
       node('span','jacket-shape jacket-shape-two'),node('span','jacket-shape jacket-shape-three'));
     const top=node('span','jacket-strap');
-    top.append(node('span','jacket-folio','V / BOOKS'),node('span','jacket-edition','ДИЗАЙН ЧИТАЛКИ'));
+    top.append(node('span','jacket-folio','VETOGRAM'),node('span','jacket-edition','КНИГА'));
     const title=node('strong','jacket-title',name);
     title.dataset.length=name.length>48?'long':name.length>27?'medium':'short';
     const author=node('span','jacket-author',fullName(book));
     const bottom=node('span','jacket-footer');
-    bottom.append(node('span','','VETOGRAM READING'),node('span','jacket-star','✳'));
+    bottom.append(node('span','','ЧИТАТЬ КНИГУ'),node('span','jacket-star','✳'));
     host.append(art,top,title,author,bottom);
   }
   function renderHeroShowcase(){
