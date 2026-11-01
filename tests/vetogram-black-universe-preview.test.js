@@ -201,3 +201,13 @@ test('live message polling is aborted when leaving Chats or signing out',()=>{
  assert.match(chats,/window\.addEventListener\('offline',[\s\S]*?stopThreadSync\(\);cancelActivePoll\(\)/);
  assert.match(chats,/window\.addEventListener\('pagehide',[\s\S]*?stopThreadSync\(\);cancelActivePoll\(\)/);
 });
+
+test('media host shows a single player and never treats saved-metadata notices as loading',()=>{
+ const host=read('public/vetogram-universe.js');
+ const embedded=read('public/vetogram-media-embedded.css');
+ assert.match(host,/const show=!!lastAudio;/);
+ assert.match(embedded,/html\.v6-embedded \.player-bar\{display:none!important\}/);
+ assert.match(host,/const phase=!text\?'ready':retry\?'failed':notice\?'notice':'loading'/);
+ assert.match(host,/String\(phase==='loading'\)/);
+ assert.match(host,/message\.status==='search'\)moduleStatus\([^\n]*false,true\)/);
+});
