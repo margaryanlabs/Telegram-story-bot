@@ -102,3 +102,18 @@ test('memory game has eight playable cards and supports reset', () => {
   assert.equal(grid.children.length,8);
   assert.ok(grid.children.every(card=>card.dataset.revealed==='false'));
 });
+
+test('Reaction cancels its timer when game modal closes or screen is hidden',()=>{
+ const ui=harness(),button=ui.selectors.get('#vpReactionButton');
+ button.click();
+ assert.equal(button.dataset.state,'waiting');
+ assert.equal(ui.pending(),1);
+ ui.handlers.get('window:vetogram:game-close')({detail:{game:'reaction'}});
+ assert.equal(button.dataset.state,'idle');
+ assert.equal(ui.pending(),0);
+ button.click();
+ assert.equal(ui.pending(),1);
+ ui.handlers.get('window:veto:screen-changed')({detail:{screen:'media'}});
+ assert.equal(ui.pending(),0);
+ assert.equal(button.dataset.state,'idle');
+});
