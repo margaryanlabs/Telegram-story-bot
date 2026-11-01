@@ -24,6 +24,34 @@
 
 .hero h1 em{margin-left:.075em}
 
+
+/* SIGNAL ATLAS / IMMERSIVE ENGINE V4.1 — cinematic, subtle and mobile-safe */
+.constellation-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2;opacity:.76;transition:opacity .35s ease}
+.constellation-layer.is-off{opacity:0}
+.constellation-link{stroke:#86c7ff;stroke-width:1.2;fill:none;stroke-linecap:round;stroke-dasharray:2 9;filter:drop-shadow(0 0 4px #759affaa);animation:atlas-drift 7s linear infinite}
+.constellation-link.is-active{stroke:#e2beff;stroke-width:1.9;filter:drop-shadow(0 0 7px #ba9cff)}
+@keyframes atlas-drift{to{stroke-dashoffset:-110}}
+.energy-sweep{position:absolute;pointer-events:none;z-index:1;border-radius:50%;transform:translate(-50%,-50%);border:1px solid rgba(113,146,255,.095);background:conic-gradient(from 45deg,transparent 0deg,transparent 320deg,rgba(96,190,255,.025) 332deg,rgba(125,127,255,.11) 354deg,transparent 360deg);box-shadow:0 0 65px #655aff10,inset 0 0 45px #8665ff0b;animation:scanner-spin 15s linear infinite}
+.energy-sweep:before,.energy-sweep:after{content:"";position:absolute;inset:13%;border:1px dashed rgba(136,171,255,.09);border-radius:50%}
+.energy-sweep:after{inset:38%;border:1px solid rgba(183,166,255,.12)}
+@keyframes scanner-spin{to{rotate:360deg}}
+.signal-reticle{position:absolute;z-index:5;pointer-events:none;width:106px;height:106px;transform:translate(-50%,-50%);border-radius:50%;transition:opacity .24s}
+.reticle-ring{position:absolute;inset:8px;border:1px solid rgba(168,196,255,.54);border-radius:50%;box-shadow:0 0 12px rgba(117,173,255,.2),inset 0 0 10px rgba(127,142,255,.12);animation:reticle-breathe 3.5s ease-in-out infinite}
+.reticle-ring:before,.reticle-ring:after{content:"";position:absolute;width:16px;height:1px;background:#d5e9ffbb;top:50%;left:-16px}
+.reticle-ring:after{left:auto;right:-16px}
+.reticle-cross{position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(192,171,255,.2);animation:reticle-spin 23s linear infinite}
+.reticle-caption{position:absolute;top:-28px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:8px;letter-spacing:.16em;color:#c1d1ff;text-shadow:0 0 7px #4750be}
+@keyframes reticle-breathe{50%{transform:scale(1.14);opacity:.48}}
+@keyframes reticle-spin{to{rotate:360deg}}
+.birth-comet{position:absolute;z-index:8;pointer-events:none;display:none;width:36px;height:36px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#fff 0 9%,#c7f2ff 13%,#91b7ff 26%,#917aff7a 43%,transparent 75%);filter:drop-shadow(0 0 26px #a7a6ff) drop-shadow(0 0 55px #5f89ff)}
+.birth-comet:after{content:"";position:absolute;top:48%;right:50%;width:140px;height:3px;transform-origin:right center;transform:rotate(-11deg);background:linear-gradient(90deg,transparent,#7f9aff44,#c9efff);filter:blur(3px)}
+.world-controls button.atlas-button{font-size:11px;letter-spacing:.12em;min-width:65px}
+.world-controls button.atlas-button[aria-pressed="true"]{background:linear-gradient(135deg,#292a63,#19365a);color:#d2eaff;text-shadow:0 0 14px #8fa8ff}
+.signal-hint{position:absolute;right:clamp(22px,4.5vw,86px);top:162px;z-index:4;font-size:9px;letter-spacing:.15em;color:#a6aed1;text-align:right;pointer-events:none;opacity:.8}
+.signal-hint strong{color:#c3dfff;font-weight:500}
+@media(max-width:820px){.signal-hint{display:none}.signal-reticle{width:70px;height:70px}.reticle-ring{inset:6px}.reticle-caption{font-size:7px;top:-22px}.world-controls button.atlas-button{min-width:49px;font-size:9px}}
+@media(prefers-reduced-motion:reduce){.constellation-link,.energy-sweep,.reticle-ring,.reticle-cross{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -33,8 +61,12 @@
     <canvas id="fallback" aria-hidden="true"></canvas>
     <div class="scene-shading" aria-hidden="true"></div>
     <div class="scene-grid" aria-hidden="true"></div>
+    <div id="energySweep" class="energy-sweep" aria-hidden="true"></div>
+    <svg id="constellationLayer" class="constellation-layer" aria-hidden="true"></svg>
     <div id="markers" class="markers" aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE LIVING MEMORY ENGINE<span class="fine-line"></span>V.04 / VETO</div>
+    <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
+    <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE LIVING MEMORY ENGINE<span class="fine-line"></span>V.04.1 / VETO</div>
   </div>
   <header class="header">
     <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>BY VETO INTELLIGENCE · CONCEPT</small></span></a>
@@ -50,12 +82,13 @@
       <div class="micro-note"><span class="micro-icon">✧</span> Публичная история начинается с личного решения. Сейчас работает локальная демоверсия.</div>
     </section>
     <div class="coordinate top"><span>MEMORY FIELD / ACTIVE</span><b id="fpsDisplay">WEBGL EXPERIENCE</b></div>
+    <div id="signalHint" class="signal-hint">SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div></div>
     <aside class="selected-card" id="selectedCard" aria-label="Выбранная история">
       <div class="card-line"><span class="signal"><span class="signal-pulse"></span> SIGNAL DISCOVERED</span><span id="selectedNum">EXAMPLE / 001</span></div>
       <p id="selectedQuote">«Мой лучший трейд — тот, который я не открыл.»</p>
       <div class="selected-bottom"><span id="selectedBy">@NORTHSTAR <i>•</i> CRYPTO</span><button id="openSelected" type="button">READ MEMORY <span>↗</span></button></div>
     </aside>
-    <div class="world-controls" aria-label="Управление сферой"><button id="minusZoom" aria-label="Отдалить" type="button">−</button><button id="plusZoom" aria-label="Приблизить" type="button">＋</button><button id="autoRotate" aria-label="Остановить вращение" aria-pressed="true" type="button">Ⅱ</button><button id="resetCamera" aria-label="Восстановить вид" type="button">↺</button></div>
+    <div class="world-controls" aria-label="Управление сферой"><button id="minusZoom" aria-label="Отдалить" type="button">−</button><button id="plusZoom" aria-label="Приблизить" type="button">＋</button><button id="autoRotate" aria-label="Остановить вращение" aria-pressed="true" type="button">Ⅱ</button><button id="resetCamera" aria-label="Восстановить вид" type="button">↺</button><button id="toggleAtlas" class="atlas-button" aria-label="Показать или скрыть тематические созвездия" aria-pressed="true" type="button">ATLAS</button></div>
     <div class="scene-footer"><span><span class="live-dot"></span> LOCAL DEMO / NO REAL MEMBERS</span><span class="scene-instruction">DRAG TO ORBIT&nbsp;&nbsp; / &nbsp;&nbsp;SCROLL TO DIVE&nbsp;&nbsp; / &nbsp;&nbsp;TAP A SIGNAL</span><button class="soundless" id="modeButton" type="button">◉ QUALITY: <b id="qualityLabel">AUTO</b></button></div>
   </main>
   <div id="scrim" class="scrim" hidden></div>
@@ -108,16 +141,18 @@
   let pts=0, lines=0, w=1,h=1,dpr=1, resW=1,resH=1, cameraY=.22, cameraX=-.16, targetY=.22,targetX=-.16, zoom=1,targetZoom=1;
   let spinning=!reduceMotion, quality='auto', dragging=false, moved=0, downX=0,downY=0,lastX=0,lastY=0,birth=null, shock=null, lastTime=0;
   let sceneParticles=[], sceneLines=[], markerEls=[];
+  let atlasEnabled=true, atlasPairs=[], atlasElements=[], flightFinish=0;
+  const SVG_NS='http://www.w3.org/2000/svg';
   const twoPi=Math.PI*2;
   function targetCenter(){return {x:w*(w<800?.50:.652),y:h*(w<800?.565:.51),radius:Math.min(w,h)*(w<800?.425:.405)};}
   function rotate(p){const cy=Math.cos(cameraY),sy=Math.sin(cameraY),cx=Math.cos(cameraX),sx=Math.sin(cameraX);const x=cy*p[0]+sy*p[2],z=-sy*p[0]+cy*p[2],y=cx*p[1]-sx*z;return [x,y,sx*p[1]+cx*z]}
   function project(p){const t=rotate(p),c=targetCenter(),per=2.7/(3.1-t[2]*.7),s=c.radius*per*zoom;return {x:c.x+t[0]*s,y:c.y-t[1]*s,z:t[2],s}}
-  const pVertex=`precision highp float;attribute vec3 aPos;attribute float aColor;attribute float aKind;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;uniform float uTime;uniform float uDpr;varying float vColor;varying float vDepth;varying float vKind;vec3 rotate3(vec3 p){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*p.x+sy*p.z,p.y,-sy*p.x+cy*p.z);return vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);}void main(){vec3 p=rotate3(aPos);float per=2.7/(3.1-p.z*.7);vec2 pixel=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(pixel/uRes*2.0-1.0,0.,1.);vColor=aColor;vDepth=p.z;vKind=aKind;float twinkle=0.86+.14*sin(uTime*.0007+aColor*71.);gl_PointSize=clamp((aKind>2.0?11.5:(1.65+aKind*3.8))*per*uDpr*twinkle,1.0,32.0);}`;
+  const pVertex=`precision highp float;attribute vec3 aPos;attribute float aColor;attribute float aKind;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;uniform float uTime;uniform float uDpr;varying float vColor;varying float vDepth;varying float vKind;vec3 rotate3(vec3 p){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*p.x+sy*p.z,p.y,-sy*p.x+cy*p.z);return vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);}void main(){vec3 source=aPos; if(aKind<2.0){float t=uTime*.00013;float wave=sin(t*2.1+aPos.y*19.0+aPos.x*11.0)*.012+cos(t*1.7+aPos.z*17.0)*.008;source+=normalize(aPos+vec3(.00001))*wave;}vec3 p=rotate3(source);float per=2.7/(3.1-p.z*.7);vec2 pixel=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(pixel/uRes*2.0-1.0,0.,1.);vColor=aColor;vDepth=p.z;vKind=aKind;float twinkle=0.86+.14*sin(uTime*.0007+aColor*71.);gl_PointSize=clamp((aKind>2.0?11.5:(1.65+aKind*3.8))*per*uDpr*twinkle,1.0,32.0);}`;
   const pFragment=`precision mediump float;varying float vColor;varying float vDepth;varying float vKind;void main(){vec2 uv=gl_PointCoord*2.-1.;float r=length(uv);if(r>1.)discard;vec3 violet=vec3(.52,.39,1.);vec3 cyan=vec3(.34,.84,1.);vec3 silver=vec3(.77,.81,1.);vec3 gold=vec3(1.,.79,.52);vec3 col=mix(violet,cyan,smoothstep(.15,.85,vColor));col=mix(col,silver,smoothstep(.86,1.,vColor)*.8);if(vKind>2.)col=vec3(.95,.86,1.);if(vKind>3.)col=gold;float core=exp(-r*r*(vKind>2.?10.:9.));float glow=exp(-r*r*2.5)*.3;float depth=.40+clamp(vDepth*.38,0.,.5);float alpha=(core+glow)*(vKind>2.? .97:depth);gl_FragColor=vec4(col,alpha);}`;
   const lVertex=`precision highp float;attribute vec3 aPos;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;varying float vDepth;void main(){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*aPos.x+sy*aPos.z,aPos.y,-sy*aPos.x+cy*aPos.z);vec3 p=vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);float per=2.7/(3.1-p.z*.7);vec2 px=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(px/uRes*2.-1.,0.,1.);vDepth=p.z;}`;
   const lFragment=`precision mediump float;varying float vDepth;void main(){float a=.035+.08*clamp((vDepth+1.)*.5,0.,1.);gl_FragColor=vec4(.52,.67,1.,a);}`;
   const plasmaVertex=`attribute vec2 aXY;varying vec2 vUv;void main(){vUv=aXY*.5+.5;gl_Position=vec4(aXY,0.,1.);}`;
-  const plasmaFragment=`precision mediump float;varying vec2 vUv;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uTime;uniform float uZoom;uniform float uShock;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float s=0.;float a=.5;for(int i=0;i<4;i++){s+=a*noise(p);p=p*2.04+vec2(2.1,8.4);a*=.52;}return s;}void main(){vec2 px=vUv*uRes;vec2 p=(px-uCenter)/(uRadius*uZoom);float r=length(p);if(r>2.35)discard;float t=uTime*.00013;float ang=atan(p.y,p.x);float fog=exp(-r*r*2.5);float edge=exp(-((r-.85)/.20)*((r-.85)/.20));float rim=exp(-((r-.96)/.055)*((r-.96)/.055));float core=exp(-r*r*13.);float swirl=fbm(p*3.2+vec2(t*2.3,-t*.8));float filaments=pow(sin(ang*14.+r*24.-t*7.+swirl*9.)*.5+.5,7.)*exp(-((r-.73)/.28)*((r-.73)/.28));float arcs=pow(sin(ang*33.+r*30.+t*4.+swirl*5.)*.5+.5,12.)*exp(-((r-.85)/.18)*((r-.85)/.18));float ring=exp(-((r-1.08)/.16)*((r-1.08)/.16));float shock=exp(-((r-uShock)/.025)*((r-uShock)/.025))*(1.-smoothstep(1.15,1.55,uShock));vec3 col=vec3(.15,.12,.36)*fog*.4;col+=vec3(.31,.14,.70)*edge*.27;col+=vec3(.22,.51,.95)*rim*.19;col+=vec3(.14,.32,.81)*filaments*.36;col+=vec3(.40,.27,.89)*arcs*.32;col+=vec3(.15,.18,.42)*ring*.13;col+=vec3(.40,.31,.92)*core*.37;col+=vec3(.15,.67,.95)*shock*.40;float a=clamp((fog*.10+edge*.20+rim*.38+filaments*.30+arcs*.25+core*.5+shock*.50)*(1.-smoothstep(1.6,2.35,r)),0.,.9);gl_FragColor=vec4(col,a);}`;
+  const plasmaFragment=`precision mediump float;varying vec2 vUv;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uTime;uniform float uZoom;uniform float uShock;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float s=0.;float a=.5;for(int i=0;i<4;i++){s+=a*noise(p);p=p*2.04+vec2(2.1,8.4);a*=.52;}return s;}void main(){vec2 px=vUv*uRes;vec2 p=(px-uCenter)/(uRadius*uZoom);float r=length(p);if(r>2.35)discard;float t=uTime*.00013;float ang=atan(p.y,p.x);float fog=exp(-r*r*2.5);float edge=exp(-((r-.85)/.20)*((r-.85)/.20));float rim=exp(-((r-.96)/.055)*((r-.96)/.055));float core=exp(-r*r*13.);float swirl=fbm(p*3.2+vec2(t*2.3,-t*.8));float filaments=pow(sin(ang*14.+r*24.-t*7.+swirl*9.)*.5+.5,7.)*exp(-((r-.73)/.28)*((r-.73)/.28));float arcs=pow(sin(ang*33.+r*30.+t*4.+swirl*5.)*.5+.5,12.)*exp(-((r-.85)/.18)*((r-.85)/.18));float ring=exp(-((r-1.08)/.16)*((r-1.08)/.16));float shock=exp(-((r-uShock)/.025)*((r-uShock)/.025))*(1.-smoothstep(1.15,1.55,uShock));float scanner=pow(max(0.,cos(ang-t*3.7)),40.)*exp(-pow((r-.83)/.34,2.))* .42;vec3 col=vec3(.15,.12,.36)*fog*.4;col+=vec3(.31,.14,.70)*edge*.27;col+=vec3(.22,.51,.95)*rim*.19;col+=vec3(.14,.32,.81)*filaments*.36;col+=vec3(.40,.27,.89)*arcs*.32;col+=vec3(.15,.18,.42)*ring*.13;col+=vec3(.40,.31,.92)*core*.37;col+=vec3(.15,.67,.95)*shock*.40;col+=vec3(.21,.69,.98)*scanner*.36;float a=clamp((fog*.10+edge*.20+rim*.38+filaments*.30+arcs*.25+core*.5+shock*.50+scanner*.16)*(1.-smoothstep(1.6,2.35,r)),0.,.9);gl_FragColor=vec4(col,a);}`;
   const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){const prog=gl.createProgram(),vsh=precision(gl.VERTEX_SHADER,v),fsh=precision(gl.FRAGMENT_SHADER,f);gl.attachShader(prog,vsh);gl.attachShader(prog,fsh);gl.linkProgram(prog);gl.deleteShader(vsh);gl.deleteShader(fsh);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));return prog}
   function generateParticles(){
@@ -153,6 +188,56 @@
       bufferLines=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bufferLines);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(sceneLines),gl.STATIC_DRAW);
       pts=sceneParticles.length/5;lines=sceneLines.length/3;
     }
+  }
+  function buildAtlas(){
+    // Visual demo clusters connect only stories with the same lesson category; not social relationships.
+    atlasPairs=[];const seen=new Set();
+    stories.forEach((a,i)=>{
+      let best=-1,d=Infinity;
+      stories.forEach((b,j)=>{
+        if(i===j||a.category!==b.category)return;
+        const k=Math.hypot(a.p[0]-b.p[0],a.p[1]-b.p[1],a.p[2]-b.p[2]);
+        if(k<d){d=k;best=j}
+      });
+      if(best>=0){const key=[i,best].sort((x,y)=>x-y).join('-');if(!seen.has(key)){seen.add(key);atlasPairs.push([i,best])}}
+    });
+    const svg=$('constellationLayer');svg.replaceChildren();atlasElements=[];
+    for(const pair of atlasPairs){
+      const line=document.createElementNS(SVG_NS,'line');line.setAttribute('class','constellation-link');
+      line.setAttribute('opacity','0');line.setAttribute('stroke-dashoffset','0');
+      svg.append(line);atlasElements.push(line);
+    }
+  }
+  function updateAtlas(){
+    const c=targetCenter(),sweep=$('energySweep');
+    sweep.style.left=c.x+'px';sweep.style.top=c.y+'px';
+    const diameter=c.radius*zoom*2.38;sweep.style.width=diameter+'px';sweep.style.height=diameter+'px';
+    const reticle=$('signalReticle'),p=project(stories[selected].p);
+    reticle.style.left=p.x+'px';reticle.style.top=p.y+'px';
+    reticle.style.opacity=p.z>-.12?'1':'0';
+    $('reticleCaption').textContent='SIGNAL LOCK / '+(stories[selected].local?'YOU':String(stories[selected].id).padStart(3,'0'));
+    if(!atlasEnabled)return;
+    $('constellationLayer').setAttribute('viewBox','0 0 '+w+' '+h);
+    for(let i=0;i<atlasPairs.length;i++){
+      const [a,b]=atlasPairs[i],pa=project(stories[a].p),pb=project(stories[b].p),line=atlasElements[i];
+      const visible=pa.z>-.23&&pb.z>-.23;
+      line.setAttribute('x1',pa.x.toFixed(1));line.setAttribute('y1',pa.y.toFixed(1));
+      line.setAttribute('x2',pb.x.toFixed(1));line.setAttribute('y2',pb.y.toFixed(1));
+      line.setAttribute('opacity',visible?((a===selected||b===selected)?.78:.22):0);
+      line.classList.toggle('is-active',a===selected||b===selected);
+    }
+  }
+  function updateBirthComet(t){
+    const comet=$('birthComet');
+    if(!birth){comet.style.display='none';return}
+    if(reduceMotion){comet.style.display='none';return}
+    const elapsed=t-birth.started,ratio=clamp(elapsed/1800,0,1),ease=ratio*ratio*(3-2*ratio);
+    const c=targetCenter(),p=project(stories[selected].p);
+    const startX=c.x,startY=c.y,arc=90*(1-ratio)*Math.sin(Math.PI*ratio);
+    comet.style.display=ratio<1?'block':'none';
+    comet.style.left=(startX+(p.x-startX)*ease)+'px';
+    comet.style.top=(startY+(p.y-startY)*ease-arc)+'px';
+    comet.style.opacity=String(clamp(Math.sin(Math.PI*ratio)*2,0,1));
   }
   function initGL(){
     gl=canvas.getContext('webgl',{alpha:true,antialias:false,depth:false,premultipliedAlpha:false,preserveDrawingBuffer:false,powerPreference:'high-performance'});
@@ -236,10 +321,11 @@
       ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,twoPi);ctx.stroke();}
     ctx.restore();
   }
-  function resize(){w=Math.max(window.innerWidth,1);h=Math.max(window.innerHeight,1);dpr=Math.min(window.devicePixelRatio||1,quality==='low'?1:1.7);resW=Math.round(w*dpr);resH=Math.round(h*dpr);canvas.width=resW;canvas.height=resH;fallbackCanvas.width=resW;fallbackCanvas.height=resH;if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);generateParticles();updateMarkers()}
-  function makeMarkers(){const el=$('markers');el.replaceChildren();markerEls=[];stories.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='star-marker';b.title='Открыть историю '+s.alias;b.setAttribute('aria-label','История '+s.alias);b.addEventListener('click',e=>{e.stopPropagation();focus(i,true)});el.append(b);markerEls.push(b)})}
+  function resize(){w=Math.max(window.innerWidth,1);h=Math.max(window.innerHeight,1);dpr=Math.min(window.devicePixelRatio||1,quality==='low'?1:1.7);resW=Math.round(w*dpr);resH=Math.round(h*dpr);canvas.width=resW;canvas.height=resH;fallbackCanvas.width=resW;fallbackCanvas.height=resH;if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);generateParticles();updateMarkers();updateAtlas()}
+  function makeMarkers(){buildAtlas();const el=$('markers');el.replaceChildren();markerEls=[];stories.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='star-marker';b.title='Открыть историю '+s.alias;b.setAttribute('aria-label','История '+s.alias);b.addEventListener('click',e=>{e.stopPropagation();focus(i,true)});el.append(b);markerEls.push(b)})}
   function updateMarkers(){for(let i=0;i<markerEls.length;i++){const p=project(stories[i].p),m=markerEls[i];m.style.left=p.x+'px';m.style.top=p.y+'px';m.style.opacity=p.z>-.08?'1':'0';m.style.pointerEvents=p.z>-.08?'auto':'none';m.classList.toggle('is-selected',i===selected)}}
   function animate(t){const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:.067;
+    if(flightFinish&&t>flightFinish){flightFinish=0;targetZoom=1.13}
     if(spinning&&!dragging&&!birth)targetY+=dt*.000055;
     cameraY+=(targetY-cameraY)*ease;cameraX+=(targetX-cameraX)*ease;zoom+=(targetZoom-zoom)*ease;
     if(shock){shock.radius+=dt*.00075;if(shock.radius>1.45)shock=null}
@@ -247,10 +333,11 @@
     if(gl){try{webGLRender(t)}catch(e){console.warn('Switching to Canvas fallback',e);gl=null;init2D();resize()}}
     if(!gl)canvasRender(t);
     if(!reduceMotion||Math.abs(targetY-cameraY)>.001||Math.abs(targetX-cameraX)>.001||birth||shock)updateMarkers();
+    updateAtlas();updateBirthComet(t);
     window.requestAnimationFrame(animate)
   }
   function unwrappedY(y){const period=twoPi;return y+Math.round((targetY-y)/period)*period}
-  function focus(i,open){selected=(i+stories.length)%stories.length;const s=stories[selected],p=s.p;targetY=unwrappedY(Math.atan2(-p[0],p[2]));targetX=clamp(Math.atan2(p[1],Math.hypot(p[0],p[2])),-.9,.9);targetZoom=1.13;spinning=false;$('autoRotate').textContent='▶';$('autoRotate').setAttribute('aria-pressed','false');shock={radius:.07};updateCard();updateMarkers();if(open)showStory(s)}
+  function focus(i,open){selected=(i+stories.length)%stories.length;const s=stories[selected],p=s.p;targetY=unwrappedY(Math.atan2(-p[0],p[2]));targetX=clamp(Math.atan2(p[1],Math.hypot(p[0],p[2])),-.9,.9);targetZoom=reduceMotion?1.13:1.28;flightFinish=reduceMotion?0:performance.now()+1100;spinning=false;$('autoRotate').textContent='▶';$('autoRotate').setAttribute('aria-pressed','false');shock={radius:.07};updateCard();updateMarkers();if(open)showStory(s)}
   function updateCard(){const s=stories[selected];$('selectedNum').textContent=s.local?'LOCAL DEMO / NOT PUBLISHED':'FICTIONAL EXAMPLE / '+String(s.id).padStart(3,'0');$('selectedQuote').textContent='«'+s.quote.replace(/[«»]/g,'')+'»';$('selectedBy').textContent='@'+s.alias+' · '+s.market}
   function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timeout);showToast.timeout=setTimeout(()=>t.classList.remove('show'),3200)}
   const escapeHtml=t=>String(t).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
@@ -280,7 +367,7 @@
   function drawArchive(){const q=$('archiveSearch').value.trim().toLowerCase();const results=stories.filter(s=>(activeFilter==='All'||s.category===activeFilter)&&[s.alias,s.market,s.category,s.quote,s.story].some(v=>String(v||'').toLowerCase().includes(q)));const grid=$('archiveGrid');grid.replaceChildren();for(const s of results){const b=document.createElement('button');b.className='archive-card';const top=document.createElement('b');top.textContent='@'+s.alias+' / '+s.market+' / '+(s.local?'LOCAL DEMO':'FICTIONAL EXAMPLE');const quote=document.createElement('span');quote.textContent='“'+s.quote+'”';b.append(top,quote);b.onclick=()=>{focus(stories.indexOf(s));showStory(s)};grid.append(b)}if(!results.length){const p=document.createElement('p');p.textContent='Историй не найдено.';grid.append(p)}}
   function setQuality(){quality=quality==='auto'?'low':quality==='low'?'high':'auto';$('qualityLabel').textContent=quality.toUpperCase();resize();showToast('Качество: '+quality)}
   function setSpin(b){spinning=b;$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
-  function reset(){targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
+  function reset(){flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
   function connectControls(){
     $('headerCreate').onclick=$('heroCreate').onclick=showCreate;
     $('heroExplore').onclick=()=>{focus((selected+1)%stories.length)};
@@ -289,6 +376,7 @@
     $('openSelected').onclick=()=>showStory(stories[selected]);$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
     $('plusZoom').onclick=()=>targetZoom=clamp(targetZoom+.13,.68,1.6);$('minusZoom').onclick=()=>targetZoom=clamp(targetZoom-.13,.68,1.6);
     $('autoRotate').onclick=()=>setSpin(!spinning);$('resetCamera').onclick=reset;$('modeButton').onclick=setQuality;
+    $('toggleAtlas').onclick=()=>{atlasEnabled=!atlasEnabled;$('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));$('constellationLayer').classList.toggle('is-off',!atlasEnabled);$('signalHint').innerHTML=atlasEnabled?'SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div>':'SIGNAL ATLAS <strong>OFFLINE</strong>';showToast(atlasEnabled?'Тематические созвездия включены':'Созвездия скрыты')};
     $('birthContinue').onclick=()=>{$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true');showLegacy()};
     $('gl').addEventListener('pointerdown',pointerDown);$('fallback').addEventListener('pointerdown',pointerDown);
     window.addEventListener('pointermove',pointerMove);window.addEventListener('pointerup',pointerUp);window.addEventListener('pointercancel',()=>dragging=false);
