@@ -13,7 +13,7 @@ html.v6-embedded .hero h1{font-size:clamp(27px,6vw,46px)!important;line-height:1
 html.v6-embedded .hero-stage,html.v6-embedded :is(.hero-orb,.floating-note,.grain,.hero-veto .veto-hero-noise){display:none!important}
 html.v6-embedded .hero-inner{padding:25px!important;width:auto!important}
 html.v6-embedded .hero-pills{display:none!important}
-html.v6-embedded .books-main{padding:16px 16px 50px!important}
+html.v6-embedded .books-main{padding:16px 16px calc(115px + env(safe-area-inset-bottom,0px))!important}
 html.v6-embedded .hero-veto{min-height:260px!important;display:block!important;background:var(--panel)!important}
 html.v6-embedded .hero-title-frame h1{font-size:38px!important}
 html.v6-embedded .hero-veto :is(.hero-true-library,.hero-side-index){display:none!important}
