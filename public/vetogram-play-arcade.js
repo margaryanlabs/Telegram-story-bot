@@ -194,7 +194,11 @@
     movePuzzle(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));
   },{passive:true});
   document.addEventListener('keydown',event=>{
-    if(!root.classList?.contains('active'))return;
+    // The Play screen can have several games, but only the focused 2048
+    // dialog may own arrow keys. Otherwise Snake, inputs and page scrolling
+    // must not silently change the 2048 board.
+    if(!root.classList?.contains('active') ||
+       !puzzleGrid?.closest?.('.vp-game-in-dialog'))return;
     const target=event.target;
     if(target?.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(target?.tagName))return;
     const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
