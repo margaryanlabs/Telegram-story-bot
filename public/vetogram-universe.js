@@ -20,7 +20,9 @@
  const send=(name,message)=>frames.get(name)?.element.contentWindow?.postMessage({channel:'vetogram-universe',...message},location.origin);
  function visibility(){for(const name of frames.keys())send(name,{action:'visible',visible:screen==='media'&&activeModule===name});}
  function chrome(){
-  const show=!!lastAudio && !(screen==='media'&&activeModule==='music');
+  // A single, persistent host player controls Music in every Vetogram screen.
+  // In embedded Music the child mini bar is hidden, not the host controller.
+  const show=!!lastAudio;
   $('v6MiniPlayer').hidden=!show;
   root.classList.toggle('v6-has-audio',show);
   root.classList.toggle('v6-module-open',screen==='media'&&!!activeModule);
