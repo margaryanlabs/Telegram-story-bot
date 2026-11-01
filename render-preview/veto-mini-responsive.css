@@ -1,0 +1,162 @@
+/* Telegram-only interaction layer — responsive Mini App, not original /command-web.
+ * Obsidian + restrained copper; no artificial market/engine status from CSS. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-main{
+  min-width:0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button{
+  -webkit-tap-highlight-color:transparent;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button:focus-visible{
+  outline:2px solid #eec0b0;outline-offset:-3px;
+}
+@media (max-width:699px){
+  /* The mobile keyboard owns the lower viewport; no nav bar covering the AI composer. */
+  .vc-mini[data-veto-surface="TELEGRAM"][data-keyboard-open="true"] .vc-nav{
+    display:none;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"][data-keyboard-open="true"] .vc-header{
+    position:relative;min-height:58px;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"][data-keyboard-open="true"] .vc-main{
+    padding-bottom:calc(20px + env(safe-area-inset-bottom));
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"][data-keyboard-open="true"] .vc-ai-form{
+    position:sticky;bottom:max(8px,env(safe-area-inset-bottom));
+    z-index:12;box-shadow:0 -10px 28px rgba(0,0,0,.34);
+  }
+}
+/* Fold unfolded / tablet / desktop: switch to a persistent compact navigation rail,
+ * leave full screen-width and touch-friendly space for Chart and Eye. */
+@media (min-width:700px){
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-frame{
+    width:min(100%,1080px);padding-left:98px;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-header{
+    padding-inline:clamp(18px,3vw,32px);
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-main{
+    padding:25px clamp(18px,3vw,34px) 52px;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav{
+    position:fixed;top:0;bottom:0;
+    left:max(0px,calc((100vw - 1080px)/2));transform:none;
+    width:98px;height:100vh;height:100dvh;max-height:100dvh;
+    display:flex;flex-direction:column;align-items:stretch;
+    justify-content:center;gap:7px;
+    padding:calc(12px + env(safe-area-inset-top)) 8px calc(12px + env(safe-area-inset-bottom));
+    border:0;border-right:1px solid rgba(255,255,255,.09);border-radius:0;
+    background:rgba(13,14,19,.98);box-shadow:9px 0 30px rgba(0,0,0,.16);
+    overflow-y:auto;overscroll-behavior:contain;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button{
+    min-height:67px;flex:0 0 auto;padding:7px 4px;gap:4px;
+    border-radius:13px;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav__icon{
+    width:39px;height:36px;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button>span:last-child{
+    font-size:10px;line-height:1.25;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button.active:before{
+    inset:25% auto 25% 0;width:2px;height:auto;border-radius:0 3px 3px 0;
+  }
+}
+@media (min-width:700px) and (max-height:550px){
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav{
+    justify-content:flex-start;
+  }
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button{min-height:56px}
+}
+@media (prefers-reduced-motion:reduce){
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button{transition:none}
+}
+
+/* Opt-in Chart crosshair mode: one clear toggle, no loss of ordinary scrolling.
+ * These controls show observed candles only; never infer a live trading quote. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspect-actions{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;margin-top:12px;min-width:0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspect-actions button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-width:0;min-height:44px;padding:10px 9px;
+  border-radius:11px;border:1px solid rgba(255,255,255,.12);
+  background:#282831;color:#dcd8de;
+  font-size:11px;line-height:1.3;font-weight:720;
+  overflow-wrap:anywhere;text-align:center;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspect-actions .vc-chart__scrub-toggle[aria-pressed="true"]{
+  color:#ffe3d7;background:rgba(214,139,122,.17);
+  border-color:rgba(238,178,160,.48);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspect-actions button:disabled{
+  opacity:.45;cursor:not-allowed;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspect-actions button:focus-visible{
+  outline:2px solid #f5baa5;outline-offset:2px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspect-hint{
+  font-size:11px;line-height:1.5;color:#aaa6b0;
+  margin:9px 0 0;
+}
+@media(max-width:355px){
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspect-actions{
+    grid-template-columns:1fr;
+  }
+}
+/* Reduce layer cost on constrained Telegram WebViews. Never hide source
+ * disclaimers or accessible selection states. */
+@media(prefers-reduced-motion:reduce){
+  .vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspect-actions button{
+    transition:none;
+  }
+}
+
+/* Context-aware, nonpersistent Source AI reset. No account or chat history. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-session-tools{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;min-width:0;
+  padding:10px 0 3px;border-top:1px solid rgba(255,255,255,.065);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-session-tools>span{
+  color:#99939f;font-size:10px;line-height:1.5;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-session-tools button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:44px;padding:9px 12px;border-radius:11px;
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.13);
+  color:#e5c7bc;font-size:11px;font-weight:730;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-session-tools button:focus-visible{
+  outline:2px solid #f5baa5;outline-offset:2px;
+}
+
+/* Telegram notebook first, concise execution notice second. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card--compact{
+ min-height:0;padding:17px 15px;gap:9px;
+ border-radius:15px;background:#17191f;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card--compact:before{display:none}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card--compact .vc-agent-shield{
+ width:46px;height:46px;border-radius:14px;margin:0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card--compact h3{
+ font-size:21px;letter-spacing:.07em;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card--compact .vc-agent-stats{
+ margin-top:4px;justify-content:center;
+}
+
+/* Evidence truth in VETO AI — no green "online" indicator for absent sources. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-source-state{
+ display:flex;align-items:center;gap:9px;padding:10px 12px;
+ border-radius:12px;border:1px solid rgba(255,255,255,.1);
+ background:#202027;color:#c7babe;font-size:11px;line-height:1.5;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-source-state svg{
+ flex:0 0 auto;color:#e0ab99;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-source-state span{
+ min-width:0;overflow-wrap:anywhere;
+}
