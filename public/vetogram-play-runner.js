@@ -25,8 +25,16 @@
   }
   function close() {
     if(!active)return;
-    if(dialog.open && typeof dialog.close==='function') dialog.close();
-    else {dialog.hidden=true;dialog.removeAttribute?.('open');recover();}
+    // Native <dialog> dispatches "close" asynchronously in some WebViews.
+    // Restore the game immediately so a second tap or screen switch cannot
+    // leave a detached card or a running local game behind.
+    try {
+      if(dialog.open && typeof dialog.close==='function')dialog.close();
+      else {dialog.hidden=true;dialog.removeAttribute?.('open');}
+    } catch {
+      dialog.hidden=true;dialog.removeAttribute?.('open');
+    }
+    recover(); // safe if the browser already dispatched "close" synchronously
   }
   function open(card,button) {
     if(active)close();
