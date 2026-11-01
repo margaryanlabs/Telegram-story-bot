@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="/vetogram-messenger-calm.css?v=20261101-rebuild04" />
   <link rel="stylesheet" href="/vetogram-universe-calm.css?v=20261101-rebuild04" />
   <link rel="stylesheet" href="/vetogram-black-universe.css?v=20261101-rebuild04" />
+  <link rel="stylesheet" href="/vetogram-showcase-v72.css?v=20261101-rebuild04" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -2244,10 +2245,23 @@
 
     <section class="screen v6-media" data-screen="media" aria-label="Медиа VETOGRAM">
       <div id="v6MediaHome" class="v61-home">
-        <header class="v61-hero">
-          <div class="v61-hero-top"><span class="v61-overline"><span class="v61-pulse" aria-hidden="true"></span> VETOGRAM · MEDIA UNIVERSE</span><span class="v61-edition">VETOGRAM / ONE APP</span></div>
-          <h1>Всё твоё.<br><em>В одном месте.</em></h1>
-          <p>Музыка, кино, книги и игры. Личная вселенная всегда рядом с твоими чатами.</p>
+        <header class="v61-hero v72-media-hero">
+          <div class="v72-hero-copy">
+            <div class="v72-kicker"><span class="v72-kicker-dot" aria-hidden="true"></span> VETOGRAM <span class="v72-kicker-sep">/</span> MEDIA</div>
+            <div class="v72-media-eyebrow">ВСЁ, ЧТО ТЫ ЛЮБИШЬ — ВНУТРИ</div>
+            <h1>Твоя<br><em>вселенная</em><span class="v72-h1-dot">.</span></h1>
+            <p>Открывай музыку, кино, книги и игры. Не выходя из Vetogram.</p>
+            <div class="v72-hero-actions">
+              <button type="button" class="v72-hero-primary" data-v6-module="music"><span aria-hidden="true">▶</span> Слушать музыку</button>
+              <button type="button" class="v72-hero-link" data-v6-module="cinema">Смотреть кино <span aria-hidden="true">↗</span></button>
+            </div>
+          </div>
+          <div class="v72-hero-visual" aria-hidden="true">
+            <div class="v72-orbit v72-orbit-a"></div><div class="v72-orbit v72-orbit-b"></div>
+            <div class="v72-vinyl"><div class="v72-vinyl-lines"></div><div class="v72-vinyl-center"><span>V</span></div></div>
+            <div class="v72-visual-caption"><span class="v72-equalizer"><i></i><i></i><i></i><i></i><i></i></span><span>YOUR UNIVERSE / 07</span></div>
+          </div>
+          <span class="v72-hero-index" aria-hidden="true">001 — 004</span>
         </header>
         <p id="v61GuestStorage" class="v61-guest-note" hidden>Гостевой просмотр · коллекция хранится в этом браузере. Для личного пространства открой через Telegram.</p>
         <form class="v61-search" id="v61SearchForm" role="search" autocomplete="off" aria-label="Поиск по личной медиатеке">
@@ -2272,14 +2286,34 @@
           <div class="v61-section-heading"><h2>Продолжить</h2><small>Последнее открытое</small></div>
           <div id="v61ContinueList" class="v61-rows v61-continue-rows"></div>
         </section>
-        <section class="v61-world-section" aria-label="Медиаразделы">
-          <div class="v61-section-heading"><h2>Открыть в Vetogram</h2><small>Всё в одном приложении</small></div>
-          <div class="v6-media-grid">
-            <button type="button" class="v6-world v6-world-music" data-v6-module="music"><span class="v6-world-index">01 / СЛУШАТЬ</span><div class="v6-world-art v6-record" aria-hidden="true"><i></i><b>V</b></div><span class="v6-world-copy"><strong>Музыка</strong><small>Треки · плейлисты · радио</small><span>Открыть <b>↗</b></span></span></button>
-            <button type="button" class="v6-world v6-world-cinema" data-v6-module="cinema"><span class="v6-world-index">02 / СМОТРЕТЬ</span><div class="v6-world-art v6-film" aria-hidden="true"><i></i><b>▶</b></div><span class="v6-world-copy"><strong>Кино</strong><small>Фильмы · сериалы · избранное</small><span>Открыть <b>↗</b></span></span></button>
-            <button type="button" class="v6-world v6-world-books" data-v6-module="books"><span class="v6-world-index">03 / ЧИТАТЬ</span><div class="v6-world-art v6-book" aria-hidden="true"><i>VETOGRAM<br><b>ЕЩЁ<br>СТРАНИЦУ.</b></i></div><span class="v6-world-copy"><strong>Книги</strong><small>Читалка · закладки · импорт</small><span>Открыть <b>↗</b></span></span></button>
-            <button type="button" class="v6-world v6-world-play" data-open-screen="play"><span class="v6-world-index">04 / ИГРАТЬ</span><div class="v6-world-art v6-games" aria-hidden="true"><i>♠</i><b>✦</b><i>♥</i></div><span class="v6-world-copy"><strong>Игры</strong><small>Реакция · пары · 2048 · турниры</small><span>Открыть <b>↗</b></span></span></button>
+        <section class="v61-world-section v72-media-discovery" aria-label="Медиаразделы">
+          <div class="v61-section-heading v72-section-title">
+            <div><span class="v72-caption">ОТКРОЙ СВОЁ</span><h2>Что сегодня?</h2></div>
+            <small>4 пространства · единый Vetogram</small>
           </div>
+          <div class="v6-media-grid v72-media-grid">
+            <button type="button" class="v6-world v6-world-music v72-media-card" data-v6-module="music">
+              <span class="v72-card-top"><span class="v72-card-number">01 / AUDIO</span><span class="v72-card-arrow" aria-hidden="true">↗</span></span>
+              <div class="v72-card-art v72-art-music" aria-hidden="true"><div class="v72-record-art"><div class="v72-record-label">V</div></div><span class="v72-music-note">♪</span></div>
+              <span class="v72-card-footer"><span><strong>Музыка</strong><small>Треки, плейлисты, радио</small></span><span class="v72-card-cta">СЛУШАТЬ</span></span>
+            </button>
+            <button type="button" class="v6-world v6-world-cinema v72-media-card" data-v6-module="cinema">
+              <span class="v72-card-top"><span class="v72-card-number">02 / SCREEN</span><span class="v72-card-arrow" aria-hidden="true">↗</span></span>
+              <div class="v72-card-art v72-art-cinema" aria-hidden="true"><div class="v72-film-frame"><span class="v72-film-sun"></span><span class="v72-film-ridge one"></span><span class="v72-film-ridge two"></span><span class="v72-film-play">▶</span></div><span class="v72-frame-mark">V / CINEMA</span></div>
+              <span class="v72-card-footer"><span><strong>Кино</strong><small>Фильмы, сериалы, избранное</small></span><span class="v72-card-cta">СМОТРЕТЬ</span></span>
+            </button>
+            <button type="button" class="v6-world v6-world-books v72-media-card" data-v6-module="books">
+              <span class="v72-card-top"><span class="v72-card-number">03 / LIBRARY</span><span class="v72-card-arrow" aria-hidden="true">↗</span></span>
+              <div class="v72-card-art v72-art-books" aria-hidden="true"><div class="v72-book-cover"><small>VETOGRAM LIBRARY</small><span>THE<br>OTHER<br>SIDE</span><i></i></div><div class="v72-book-cover-secondary"></div></div>
+              <span class="v72-card-footer"><span><strong>Книги</strong><small>Читалка, закладки, импорт</small></span><span class="v72-card-cta">ЧИТАТЬ</span></span>
+            </button>
+            <button type="button" class="v6-world v6-world-play v72-media-card" data-open-screen="play">
+              <span class="v72-card-top"><span class="v72-card-number">04 / PLAY</span><span class="v72-card-arrow" aria-hidden="true">↗</span></span>
+              <div class="v72-card-art v72-art-games" aria-hidden="true"><span class="v72-game-tile tile-a">2</span><span class="v72-game-tile tile-b">4</span><span class="v72-game-tile tile-c">8</span><span class="v72-game-tile tile-d">16</span></div>
+              <span class="v72-card-footer"><span><strong>Игры</strong><small>4 игры доступны без сети</small></span><span class="v72-card-cta">ИГРАТЬ</span></span>
+            </button>
+          </div>
+          <div class="v72-discovery-note"><span class="v72-live-dot" aria-hidden="true"></span> Все разделы открываются внутри приложения. Воспроизведение зависит от доступности контента.</div>
         </section>
         <section class="v61-vault-spotlight" aria-label="Личная медиатека">
           <div class="v61-vault-mark" aria-hidden="true">◈</div>
@@ -2330,22 +2364,22 @@
             <img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="26" height="26" />
             <div><span class="vp-eyebrow">VETOGRAM / ENTERTAINMENT</span><br /><strong>PLAY</strong></div>
           </div>
-          <span class="vp-count" id="vpCatalogCount">4 мини-игры · 2 в разработке</span>
+          <span class="vp-count" id="vpCatalogCount">4 доступны · 2 скоро</span>
         </header>
 
-        <section class="vp-hero" aria-labelledby="vpHeroTitle">
+        <section class="vp-hero v72-play-hero" aria-labelledby="vpHeroTitle">
           <div class="vp-hero-copy">
-            <span class="vp-overline">ИГРОВОЕ ПРОСТРАНСТВО</span>
-            <h1 id="vpHeroTitle">Заходи.<br /><em>Поиграем.</em></h1>
-            <p>Короткие партии, знакомые игры и любимые люди. Всё начинается с одного касания.</p>
-            <span class="vp-hero-note">Без регистрации для мини-игр</span>
+            <span class="vp-overline">VETOGRAM ARCADE / SEASON 01</span>
+            <h1 id="vpHeroTitle">Играй.<br /><em>Здесь и сейчас.</em></h1>
+            <p>Четыре готовые мини-игры, личные рекорды и партии без регистрации. Выбери игру ниже — запуск прямо в Vetogram.</p>
+            <div class="v72-play-hero-stats"><span><b>04</b> ИГРАТЬ СЕЙЧАС</span><span><b>02</b> В РАЗРАБОТКЕ</span></div>
+            <a class="v72-play-jump" href="#vpQuickGames" aria-label="Перейти к доступным играм">Выбрать игру <span>↓</span></a>
           </div>
-          <div class="vp-art" aria-hidden="true">
-            <div class="vp-art-ring"></div>
-            <span class="vp-art-card one">♠</span><span class="vp-art-card two">♥</span>
+          <div class="v72-play-hero-art" aria-hidden="true">
+            <div class="v72-play-figure"><span class="v72-play-screen"><i>2</i><i>4</i><i>8</i><i>16</i></span><span class="v72-play-glow"></span></div>
+            <span class="v72-play-rim">PRESS PLAY · V / 07</span>
           </div>
         </section>
-
         <div class="vp-catalog-tools" aria-label="Поиск по игровому каталогу">
           <label class="vp-search"><span aria-hidden="true">⌕</span><input type="search" id="vpGameSearch" placeholder="Поиск игр" aria-label="Поиск игр" autocomplete="off" maxlength="80" /></label>
           <div class="vp-filters" role="group" aria-label="Фильтр игр">
@@ -2368,7 +2402,7 @@
           <p class="vp-catalog-status" id="vpStoreStatus" role="status" aria-live="polite"></p>
         </div>
         <div class="vp-section-head">
-          <div><h2>Наш игровой клуб</h2><p>Большие игры Margaryan Labs.</p></div>
+          <div><h2>Скоро в клубе</h2><p>Будущие сетевые игры — честно показываем статус.</p></div>
           <span>01 / КЛУБ</span>
         </div>
         <article class="vp-featured" data-vp-game="blotenq" aria-label="Армянский блот BLOTENQ">
@@ -2394,10 +2428,10 @@
         </article>
 
         <div class="vp-section-head">
-          <div><h2>Быстрые игры</h2><p>Одна минута для себя или короткой паузы.</p></div>
+          <div><h2>Выбери игру</h2><p>Играй внутри приложения — не переходя на сторонние сайты.</p></div>
           <span>02 / АРКАДА</span>
         </div>
-        <div class="vp-mini-grid" aria-label="Игры без подключения">
+        <div class="vp-mini-grid v72-arcade-grid" id="vpQuickGames" aria-label="Игры без подключения">
           <article class="vp-mini" data-vp-game="reaction">
             <div class="vp-game-art vp-game-art-reaction" aria-hidden="true"><svg viewBox="0 0 160 88" fill="none"><circle cx="80" cy="44" r="31" stroke="#ECA2BB" stroke-opacity=".34"/><circle cx="80" cy="44" r="22" stroke="#ECA2BB" stroke-opacity=".65"/><circle cx="80" cy="44" r="8" fill="#F4BED2"/><path d="M80 0v14M80 74v14M36 44h13M111 44h13" stroke="#F4BED2" stroke-width="2" stroke-linecap="round"/></svg></div>
             <span class="vp-mini-icon" aria-hidden="true">◎</span>
