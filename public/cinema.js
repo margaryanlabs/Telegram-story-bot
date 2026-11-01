@@ -76,8 +76,11 @@
   function setTab(tab){
     if(!["home","foreign","catalog","series","search","library"].includes(tab))return;
     buzz();state.tab=tab;state.genre="Все";state.visible=100;if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
+    clearTimeout(catalogDebounce);
     if(["foreign","series","library"].includes(tab)){
       ++catalogTicket;catalogController?.abort();catalogController=null;
+      $("cinemaLoadMore").disabled=false;
+      $("cinemaLoadMore").textContent="Загрузить ещё фильмы ↓";
     }
     document.querySelectorAll("[data-tab]").forEach(b=>{
       const yes=b.dataset.tab===tab;b.classList.toggle("active",yes);
@@ -102,7 +105,7 @@
   // Backend is optional until the VPS is deployed. Initial curated films remain usable.
   async function fetchCatalog(reset=true) {
     const offset=reset?0:catalogNextOffset;
-    if(offset===null||state.tab==="library")return;
+    if(offset===null||["library","series","foreign"].includes(state.tab))return;
     const ticket=++catalogTicket;
     catalogController?.abort();
     const query=state.query.trim();
