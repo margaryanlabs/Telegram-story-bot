@@ -89,3 +89,17 @@ test('Snake prevents immediate reversal and pauses when backgrounded',()=>{
  assert.equal(g.intervals.size,0);
  assert.match(g.nodes.get('#vpSnakeStatus').textContent,/Пауза/);
 });
+
+test('Snake keyboard never steals arrows from page, inputs or 2048',()=>{
+ const g=makeGame(),grid=g.nodes.get('#vpSnakeGrid'),toggle=g.nodes.get('#vpSnakeToggle');
+ toggle.click();
+ const key=(tagName)=>{let prevented=0;g.docEvents.keydown({key:'ArrowUp',target:{tagName},preventDefault(){prevented++;}});return prevented;};
+ assert.equal(key('BODY'),0,'Snake is not allowed to capture keys outside its dialog');
+ grid.closest=selector=>selector==='.vp-game-in-dialog'?{}:null;
+ assert.equal(key('INPUT'),0,'search field retains keyboard arrows');
+ assert.equal(key('BODY'),1,'Snake captures arrows when its own modal is open');
+ grid.closest=()=>null;
+ assert.equal(key('BODY'),0,'keyboard is released on close');
+ g.winEvents['vetogram:game-close']({detail:{game:'snake'}});
+ assert.equal(g.intervals.size,0);
+});
