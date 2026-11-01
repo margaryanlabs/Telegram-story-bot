@@ -12,11 +12,11 @@ const end=source.indexOf('  function showPage(page, scroll=true){',start);
 assert.ok(cancel&&start>=0&&end>start,'Reader prefetch code must exist');
 const prefetch=source.slice(start,end);
 
-function harness({fetch,cachedText=async()=>null,cacheText=async()=>{}}={}){
+function harness({fetch,cachedText=async()=>null,cacheText=async()=>{},connection={}}={}){
  const book={id:42,provider:'wikisource',wiki:'ru',title:'Book'};
  const state={current:book,chapters:[{label:'A'},{label:'B'}],activeChapter:0,isTranslationIndex:false,requestBook:1};
  const reader={hidden:false};
- const context={state,navigator:{connection:{}},AbortController,URLSearchParams,setTimeout,clearTimeout,
+ const context={state,navigator:{connection},AbortController,URLSearchParams,setTimeout,clearTimeout,
   $:id=>id==='reader'?reader:null,
   isWiki:b=>b?.provider==='wikisource',
   bookKey:b=>b?.id==null?'':String(b.id),
@@ -78,15 +78,12 @@ test('prefetch preserves source coverage and caches valid next chapter',async()=
  assert.equal(h.pendingChapterPrefetch.size,0);
 });
 
-test('Data Saver prevents prefetch entirely',async()=>{
- let called=false;
- const h=harness({fetch:async()=>{called=true;}});
- h.state.current.provider='wikisource';
- h.state.chapters=[{label:'A'},{label:'B'}];
- h.state.activeChapter=0;
- // The harness references the same connection object as stateful navigator.
- // Set using a new VM invocation to check the early-exit contract separately.
- assert.match(prefetch,/connectivity\?\.saveData/);
- assert.match(prefetch,/\/2g\/i\.test\(connectivity\?\.effectiveType/);
- assert.equal(called,false);
+test('Data Saver and slow connections prevent speculative downloads',async()=>{
+ let calls=0;
+ for(const connection of [{saveData:true},{effectiveType:'2g'}]){
+  const h=harness({connection,fetch:async()=>{calls++;throw new Error('not expected');}});
+  await h.prefetchNextChapter();
+  assert.equal(h.pendingChapterPrefetch.size,0);
+ }
+ assert.equal(calls,0);
 });
