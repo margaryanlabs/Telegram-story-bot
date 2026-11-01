@@ -50,3 +50,15 @@ The Vercel preview build runs the offline static/release and preview gates. A RE
 
 ### Honest build status
 Preview Vercel `READY` at `02e5744a` proves the earlier six-game build. Subsequent V7.4 commits need a new build and mobile visual pass. New preview creation may be blocked by Vercel `api-deployments-free-per-day` 402, which is not a code or CI success/failure result.
+
+## V7.5 — Catalog search + first-screen navigation + surprise play
+
+- On mobile, the four real Media module cards appear **immediately after the hero** instead of being buried below the private-library search and Continue sections.
+- The media dashboard now differentiates **external catalog discovery** from searching the owner's local VAULT. Search is entered once and routed to the existing same-origin owner-checked Music/Cinema/Books modules. It **does not** invent local results, persist user queries, copy chats or fetch unauthorized provider data.
+- Short query rejection (one visible character), explicit empty-query catalog browse, allowlisted destinations and no-provider fallback are covered by `tests/vetogram-media-discovery-v75.test.js`.
+- Arcade has an **Удиви меня** action that uses the original native game runner to open one of the six ready offline games only — not online rooms or unfinished BLOTENQ?/WHO?.
+- New CSS in `public/vetogram-discovery-v75.css` is screen-scoped, keyboard-focus visible, responsive to 390px/760px and reduced-motion aware.
+- `npm run qa:preview:offline` now includes the V7.5 discovery and V7.2 structural tests. `npm run check` syntax-checks the new Media/Game scripts.
+
+### Deployment warning
+The latest V7.5 code is **not** at the preceding READY V7.4 URL. The explicit Vercel deployment endpoint returned HTTP 402 `api-deployments-free-per-day` after 100+ daily builds. A previous automatic deployment (first HTML-only change) correctly failed the release surface check because newly referenced assets had not yet been committed. Both assets have since been committed; **do not claim a clean V7.5 build until new deployment logs actually confirm it**.
