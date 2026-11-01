@@ -16,5 +16,7 @@ test('release check syntax-parses every VETOGRAM 6.1 controller',()=>{
 test('offline Universe suite is included in npm scripts and production gate',()=>{
  assert.match(manifest.scripts['qa:universe'],/node --test tests\/vetogram-universe\*\.test\.js/);
  assert.match(manifest.scripts['vercel-build'],/npm run check/);
- assert.match(manifest.scripts['vercel-build'],/npm test/);
+ assert.match(manifest.scripts['vercel-build'],/qa:preview:offline/);
+ assert.match(manifest.scripts['ci:release:offline'],/npm test/);
+ assert.match(manifest.scripts.test,/node --test/);
 });
