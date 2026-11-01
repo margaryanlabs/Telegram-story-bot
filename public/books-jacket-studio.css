@@ -52,8 +52,8 @@
 .jacket-folio {font:850 1em/1.2 system-ui,sans-serif!important;letter-spacing:.2em}
 .jacket-edition {text-align:right;font:650 .83em/1.1 system-ui,sans-serif!important;letter-spacing:.08em;opacity:.77}
 .jacket-title {position:relative;z-index:4;display:block!important;margin:auto 9% 0!important;max-width:85%!important;
- font:850 clamp(18px,2.12vw,32px)/1.02 "Arial Narrow",Impact,"Arial Black",system-ui,sans-serif!important;
- text-transform:uppercase;letter-spacing:-.052em!important;color:var(--cl)!important;
+ font:700 clamp(18px,2.12vw,31px)/1.12 Georgia,"Times New Roman",serif!important;
+ text-transform:none;letter-spacing:-.028em!important;color:var(--cl)!important;
  text-align:left!important;text-wrap:balance;overflow-wrap:anywhere;max-height:5.1em;overflow:hidden;text-shadow:0 3px 22px #0007}
 .jacket-title[data-length="medium"]{font-size:clamp(16px,1.83vw,26px)!important;line-height:1.06!important}
 .jacket-title[data-length="long"]{font-size:clamp(14px,1.5vw,21px)!important;line-height:1.08!important;max-height:7.6em}
@@ -332,3 +332,7 @@
 @media(prefers-reduced-motion:reduce){
  .reader[data-theme="dark"] .reader-bottom button,.reader[data-theme="dark"] .reader-top button,
  .reader[data-theme="dark"] .flow-paragraph{transition:none!important}}
+
+/* Reduce decorative motif dominance when the catalog has no approved original cover. */
+.book-cover.editorial-cover:not(.has-source-art) .jacket-visual{opacity:.18;filter:saturate(.5)}
+.book-cover.editorial-cover:not(.has-source-art) .jacket-title{text-shadow:0 2px 14px #0006}
