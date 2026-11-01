@@ -1,0 +1,61 @@
+/* VETOGRAM ONE UNIVERSE — Calm Background.
+ * Layer above the inherited Media/Play visual system. Dark modes only.
+ * Do not animate behind live conversations or overwrite user-selected
+ * chat wallpaper / light theme palettes.
+ */
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]){
+  --v6-bg:#0c111b;
+  --v6-surface:#131b28;
+  --v6-line:rgba(185,199,224,.11);
+  --v6-text:#ecf0f7;
+  --v6-muted:#a8b4c6;
+  --v6-accent:#d8a1a6;
+  --noir-bg:#0c111b;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]),
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]) body{
+  background-color:#0c111b!important;
+  background-image:linear-gradient(180deg,#0c111b 0%,#0d1320 65%,#0c111b 100%)!important;
+}
+html#vetogram.vetogram-universe .veto-stage-fx,
+html#vetogram.vetogram-universe .veto-stage-fx *,
+html#vetogram.vetogram-universe body > .ambient,
+html#vetogram.vetogram-universe .veto-grid-fx,
+html#vetogram.vetogram-universe .veto-spotlight{
+  display:none!important;
+  animation:none!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+  .v6-world{
+  background:#131b28!important;
+  background-image:none!important;
+  border-color:rgba(185,199,224,.11)!important;
+  box-shadow:none!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+  .v6-world:hover{
+  background-color:#182334!important;
+  border-color:rgba(211,162,169,.24)!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+  .v6-world-art{
+  filter:saturate(.68);
+  opacity:.85;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+  .v6-world-play .v6-world-art.v6-games{
+  background:radial-gradient(ellipse at 45% 50%,rgba(130,95,158,.13),transparent 72%)!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+  :is(.veto-story-ring,.v5-story-ring,.veto-story-face){
+  box-shadow:none!important;
+  filter:none!important;
+}
+/* Keep the conversation's explicitly selected wallpaper and chat themes
+ * intact. The Messenger Calm layer handles the default graphite chat. */
+@media(prefers-reduced-motion:reduce){
+  html#vetogram.vetogram-universe .v6-world,
+  html#vetogram.vetogram-universe .v6-world-art{
+    animation:none!important;transition:none!important;transform:none!important;
+  }
+}
