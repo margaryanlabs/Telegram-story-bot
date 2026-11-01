@@ -69,6 +69,7 @@ test('opening another section aborts pending poll transport immediately',async()
  assert.equal(f.state.syncBusy,false);
  await pending;
  assert.equal(f.scheduled.length,0,'cancelled poll must not reschedule itself');
+ assert.ok(f.labels.some(x=>x.includes('Обновление приостановлено')),'cancellation clears the busy status');
 });
 
 test('stale response arriving after hide cannot repaint messages or schedule a poll',async()=>{
@@ -112,5 +113,6 @@ test('chat switching, Back, hidden WebView, offline and owner reset all cancel l
   /function back\(\)[\s\S]*?stopThreadSync\(\);cancelActivePoll\(\)/,
   /if\(document\.hidden\)\{stopThreadSync\(\);cancelActivePoll\(\);\}/,
   /window\.addEventListener\('offline',[\s\S]*?stopThreadSync\(\);cancelActivePoll\(\)/,
+  /window\.addEventListener\('pagehide',[\s\S]*?stopThreadSync\(\);cancelActivePoll\(\)/,
  ])assert.match(source,pattern);
 });
