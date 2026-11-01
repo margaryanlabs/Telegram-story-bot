@@ -73,3 +73,30 @@ test('avatar frontend cooldown respects owner changes and avoids a reconnect sto
   assert.match(ui,/clearTimeout\(state\.avatarRetryTimer\)/);
   assert.match(ui,/epoch!==state\.avatarEpoch/);
 });
+
+test('avatar retry is rearmed when Telegram FLOOD_WAIT outlasts a previous shorter timer',()=>{
+  const begin=ui.indexOf('  function scheduleAvatarRetry(');
+  const end=ui.indexOf('  function queueVisibleAvatars(){',begin);
+  assert.ok(begin>0&&end>begin);
+  let clock=0,nextId=0,draws=0;
+  const timers=new Map();
+  const state={
+    avatarRetryTimer:null,ownerInitData:'signed',avatarEpoch:1,
+    avatarRetryAt:new Map([['42',90000]]),avatarBlockedUntil:90000,
+  };
+  const ctx=vm.createContext({
+    state,tg:{initData:'signed'},Date:{now:()=>clock},
+    setTimeout:(fn,delay)=>{
+      const id=++nextId;timers.set(id,{fn,at:clock+delay});return id;
+    },
+    runAvatarQueue:()=>{},queueVisibleAvatars:()=>{draws++;},
+  });
+  new vm.Script(ui.slice(begin,end)+'\nscheduleAvatarRetry(25000)').runInContext(ctx);
+  while(timers.size&&clock<100000){
+    const [id,timer]=[...timers.entries()].sort((a,b)=>a[1].at-b[1].at)[0];
+    timers.delete(id);clock=timer.at;timer.fn();
+  }
+  assert.ok(clock>=90000,'retry wakes again after the longer Telegram cooldown');
+  assert.equal(draws,2);
+  assert.equal(timers.size,0);
+});
