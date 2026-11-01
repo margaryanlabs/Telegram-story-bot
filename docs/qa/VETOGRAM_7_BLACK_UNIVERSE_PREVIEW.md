@@ -157,3 +157,22 @@ Regression test file added: `tests/vetogram-live-poll-cancellation-7.test.js`, f
 3. True designed/copyright-cleared movie posters and book cover assets for those entries where source art is unavailable; synthetic fallback art is intentionally honest.
 4. Reconcile the many inherited CSS stylesheets into a smaller tokenized hierarchy; this pass **fixes visible conflicts but does not claim the underlying CSS debt is retired**.
 5. Execute full native Node CI and end-to-end login / message / anti-delete workflows before merge.
+
+## Catalog reliability and quieter content presentation — 2026-11-01
+
+The real Android screenshots exposed another class of problems: movie thumbnails and music art weren't a reliable, useful part of the content grid, and the Books UI mixed read-in-app works with metadata-only bestseller listings.
+
+### Changes in working draft branch
+- **Cinema poster identity:** `requestPoster()` previously matched original `f.title` against a shortened human-facing card name. The match broke when titles were normalized, so valid poster fetches weren't attached to their existing cards. Movie cards now carry stable `data-film-id`, and delayed thumbnail updates match the ID instead of display text. Metadata and source attribution remain intact.
+- **Cinema mobile bandwidth:** poster requests are now lazy until a card comes within 240px of the viewport (via `IntersectionObserver` when supported), with at most **3 concurrent** upstream requests and a 5-minute cooldown after an unsuccessful lookup. Failed image URLs stay in a failure set; repeated renders cannot issue unlimited requests.
+- **Books honesty:** the 200 modern bestseller records are metadata, not readable books. Source tabs now explicitly distinguish `Каталог · без полного текста` and `Новинки · каталог`. A live explanation above tabs changes with the selected book source and differentiates opened books / personal local files / external descriptions. Existing reader and source rights handling remain unchanged.
+- **Music artwork:** ccMixter rows use small deterministic, original typographic artwork based on the actual track ID/title instead of the same emoji note. This is labelled editorial fallback and is not represented as authentic publisher/artist artwork. Removed remaining oversized note from playlist home and flattened six old purple-blue playlist gradients into neutral brand surfaces.
+- **Phone cache:** updated the `cinema.js`, `books.js`, `books-art-direction.css`, `vetogram-music-licensed-home-63.js`, `vetogram-music-collections.css` and `vetogram-media-edition-62.css` asset version query strings to `20261101-rebuild02`.
+
+### Checks and limitations
+- 7/7 new isolated tests of the real poster queue implementation and code contracts passed, including stable ID injection, bounded concurrency, retry cooldown, lazy observers, honest books labels and music art styles (`tests/vetogram-catalog-reliability-7.test.js`).
+- 21/21 previously committed source/preview tests still passed after changes, and six relevant browser JS files passed syntax parsing.
+- Full native `node --test`, real WebView screenshots and live region-specific video/audio playback remain unverified. A real browser at the review URL could not be run from the code sandbox because external DNS is blocked. **Do not infer actual mobile layout success from isolated tests**.
+- Public preview only. No production auth, chat data, merger, or database changes.
+
+Next gates: real Android browser viewport screenshots of the Books shelf, Music playlist, Cinema cards and the player; verified live source availability; consolidate legacy CSS under a smaller design-token system.
