@@ -131,8 +131,14 @@ body:has(#reader) :is(.book,.featured-edition,.hero-show-book){
   background-color:var(--vet-panel)!important;
   border-color:var(--vet-border)!important;
 }
-body:has(#reader) .book-cover:not(:has(img)){
-  background:linear-gradient(145deg,#30202b 0%,#191821 50%,#111015 100%)!important;
+/* Keep distinct in-house book-jacket artwork, rather than replacing every
+ * book with the same dark gradient. Original publisher covers are not invented. */
+body:has(#reader) .book-cover.placeholder{
+  filter:saturate(.88) contrast(1.05);
+  border-color:var(--vet-border)!important;
+}
+body:has(#reader) .book-cover.source-art{
+  filter:none;
 }
 body:has(#reader) .reader:not([data-theme="light"]):not([data-theme="sepia"]){
   --reader-bg:#0d0d10;
