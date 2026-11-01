@@ -12,6 +12,7 @@
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
+  let catalogController=null; // One active catalog request per app.
   // Fail-closed on provider-reported playback errors for this device session.
   // A timeout is not proof of unavailability (the user may not press ▶).
   const failedEmbeds=new Set();
@@ -75,6 +76,9 @@
   function setTab(tab){
     if(!["home","foreign","catalog","series","search","library"].includes(tab))return;
     buzz();state.tab=tab;state.genre="Все";state.visible=100;if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
+    if(["foreign","series","library"].includes(tab)){
+      ++catalogTicket;catalogController?.abort();catalogController=null;
+    }
     document.querySelectorAll("[data-tab]").forEach(b=>{
       const yes=b.dataset.tab===tab;b.classList.toggle("active",yes);
       if(b.classList.contains("cinema-tab")){if(yes)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")}
@@ -100,10 +104,13 @@
     const offset=reset?0:catalogNextOffset;
     if(offset===null||state.tab==="library")return;
     const ticket=++catalogTicket;
+    catalogController?.abort();
     const query=state.query.trim();
     const genre=state.genre==="Все"?"":state.genre;
     const params=new URLSearchParams({limit:"80",offset:String(offset),q:query,genre});
-    const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),4500);
+    const timeout=new AbortController();
+    catalogController=timeout;
+    const timer=setTimeout(()=>timeout.abort(),4500);
     const button=$("cinemaLoadMore");
     button.disabled=true;
     if(!reset)button.textContent="Загружаем…";
@@ -130,7 +137,9 @@
       if(ticket===catalogTicket&&reset)catalogNextOffset=null;
       // Do not interrupt the initial offline/curated catalogue.
     }finally{
-      clearTimeout(timer);button.disabled=false;button.textContent="Загрузить ещё фильмы ↓";
+      clearTimeout(timer);
+      if(catalogController===timeout)catalogController=null;
+      if(ticket===catalogTicket){button.disabled=false;button.textContent="Загрузить ещё фильмы ↓";}
     }
   }
 
