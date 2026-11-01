@@ -62,7 +62,7 @@ test('2048 begins with two tiles, merges same numbers and keeps record',()=>{
 });
 test('catalog registry includes every visible game and filters',()=>{
   const count=node(),search=node(),empty=node();
-  const cards=['blotenq','who','reaction','pairs','tic','2048'].map(id=>{const c=node();c.dataset.vpGame=id;c.hidden=false;return c;});
+  const cards=['blotenq','who','reaction','pairs','tic','2048','mines','snake'].map(id=>{const c=node();c.dataset.vpGame=id;c.hidden=false;return c;});
   const buttons=['all','online','offline','cards'].map(id=>{const c=node();c.dataset.vpFilter=id;c.classList={toggle(){}};return c;});
   const root={
     querySelector(s){return {'#vpCatalogCount':count,'#vpGameSearch':search,'#vpNoResults':empty}[s]??null;},
@@ -71,10 +71,10 @@ test('catalog registry includes every visible game and filters',()=>{
   const window={};
   const document={querySelector:s=>s==='.screen[data-screen="play"]'?root:null};
   runInNewContext(registry,{document,window,Map,Set,Object,String,Array});
-  assert.equal(window.VetogramPlayCatalog.length,6);
+  assert.equal(window.VetogramPlayCatalog.length,8);
   assert.ok(cards.every(c=>!c.hidden));
   buttons[2].click();
-  assert.equal(cards.filter(c=>!c.hidden).length,4);
+  assert.equal(cards.filter(c=>!c.hidden).length,6);
   search.value='2048';
   search.events.input();
   assert.equal(cards.filter(c=>!c.hidden).length,1);
