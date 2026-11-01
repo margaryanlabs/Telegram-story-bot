@@ -903,7 +903,9 @@
 
     const { response, data } = await requestJson(`/api/viewer-sync${query}`, options, {
       retry: !action,
-      timeoutMs: 18000,
+      // Telegram OTP can require a bounded MTProto round trip and an encrypted challenge write.
+      // The send_code request is never automatically retried after an uncertain timeout.
+      timeoutMs: action==='send_code' ? 34000 : 18000,
     });
 
     if (epoch!==viewerOwnerEpoch || signedOwner!==String(tg?.initData||''))
