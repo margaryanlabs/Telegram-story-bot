@@ -97,3 +97,17 @@ Validation performed against exact current source via isolated JavaScript execut
 - Exercised the production iframe bridge against a mocked parent: metadata-only song returned `ok:false,status:"search"`, accepted stream returned `ok:true,status:"opened"`, wrong-origin command was ignored; outgoing events stayed same-origin.
 - Six browser JavaScript modules passed syntax parsing. Added `tests/vetogram-music-storage-lifecycle.test.js` (5 Node VM tests) and three media bridge behavior tests, alongside source assertions.
 - No live device/storage/backend or real licensed audio URL has been verified. PR remains draft, Vercel build-rate-limit persists, no production deployment.
+
+## Chats & Stories — avatar lifecycle, return navigation, identity guard (2026-11-01)
+
+Found and corrected source-level defects in the **existing** Telegram chat and story controllers:
+
+1. `public/telegram-chats.js`: the visible avatar queue previously re-ran on list paint and scroll, but could remain empty after a user returned from another Vetogram section to a **previously populated inbox**. The `veto:screen-changed` and `visibilitychange` handlers now explicitly invoke the existing `queueVisibleAvatars()` while retaining owner/thread and in-memory thumbnail state.
+2. The avatar queue no longer starts any new `/api/telegram-chat-media` requests while the WebView is hidden or another Vetogram screen is active. Pending work stays queued until a visible Chats screen can resume it. This is an optimization, **not** a claim that existing in-flight network requests are cancelled.
+3. Both enqueue and dispatch now require the current Telegram launch data to match `state.ownerInitData` **and** a previously verified connection proof. Thus neither an unverified session nor a changed signed account can initiate a new batch request from stale chat state. Backend owner verification remains authoritative.
+4. `public/telegram-stories.js`: the avatar map used string chat IDs but compared them directly to a `userId` which can be numeric. Normalizing `String(person.userId)` permits owner-matching story avatars; broken or revoked image blobs fall back to contact initials. A different chat ID cannot be used to supply another person's story thumbnail.
+5. Extended `tests/vetogram-thread-avatar-51.test.js` with hidden tab, screen return, document focus, unverified session and wrong-account regression cases. Added `tests/vetogram-story-contact-avatar-7.test.js` with four executable Node VM cases: numeric/string ID, wrong contact, missing image and image error fallback. The prior avatar test fixture now marks known missing images instead of leaving a 25-second retry timer alive.
+
+**Direct execution, bounded to an isolated JavaScript harness:** the actual extracted avatar queue functions passed **8/8** mock scenarios; extracted story avatar sync passed **4/4** scenarios. Main browser controllers `telegram-chats.js`, `telegram-stories.js`, `vetogram-universe.js` and `vetogram-media-bridge.js` parsed successfully as JavaScript scripts. These are **not** actual `node --test` runs, Telegram account tests, network probes or verified avatar downloads. Unit tests stored in GitHub remain to be run under Node.
+
+No real user credentials, chats or photos were retrieved. PR remains draft, unmerged and undeployed. Full test suite, genuine Android WebView and end-to-end Telegram avatar rendering remain release gates.
