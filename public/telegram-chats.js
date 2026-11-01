@@ -1471,6 +1471,13 @@
          epoch!==state.avatarEpoch)return;
       runAvatarQueue();
       queueVisibleAvatars();
+      // A previous short retry may fire before a later FLOOD_WAIT cooldown.
+      // Without rescheduling here the avatar could stay blank until a scroll.
+      const next=[...state.avatarRetryAt.values(),state.avatarBlockedUntil]
+        .filter(until=>Number(until)>Date.now());
+      if(next.length) scheduleAvatarRetry(
+        Math.max(1000,Math.min(...next)-Date.now()+100)
+      );
     },delayMs);
   }
   function queueVisibleAvatars(){
@@ -1560,7 +1567,14 @@
       }
     }).catch(error=>{
       if(epoch!==state.avatarEpoch||ownerKey!==state.ownerInitData)return;
-      const throttled=Number(error?.httpStatus||0)===429;
+      const status=Number(error?.httpStatus||0);
+      if([401,403,409].includes(status)){
+        // An avatar endpoint can be the first to detect a revoked session.
+        // Do not keep retrying a private request after authorization fails.
+        invalidateThreadAuthorization();
+        return;
+      }
+      const throttled=status===429;
       const delay=throttled?90000:25000;
       if(throttled)state.avatarBlockedUntil=Date.now()+delay;
       for(const id of ids){
