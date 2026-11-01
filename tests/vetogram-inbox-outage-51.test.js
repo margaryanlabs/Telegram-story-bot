@@ -19,13 +19,14 @@ const controller=source.slice(begin,end)+
 function fixture({proof=true,count=1,page=0,reset=true,status=0,
     errorMessage='Failed to fetch',online=true}={}){
   const chats=Array.from({length:count},(_,i)=>({id:String(i+1),title:'Контакт '+i}));
-  const state={chats,page,hasMore:true,loading:false,generation:0,
+  const state={chats,page,hasMore:true,loading:false,generation:0,inboxOverlayEpoch:0,
     autoPages:0,connectionProof:proof?{verified:true,username:'owner'}:null,
     ownerInitData:'signed',lastListFetchedAt:1,messages:[{id:5}],thread:{id:'1'},
     threadGeneration:5,syncRunId:1,syncBusy:false,threadLoading:false,
     threadRequestAbort:null,archiveRequestAbort:null,
     threadAuthRejected:false,threadCache:new Map([['1',{messages:[{id:5}]}]]),
     avatarEpoch:1,avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),
+    avatarMissing:new Set(),avatarRetryTimer:null,avatarBlockedUntil:0,
     avatarActive:0,avatarUrls:new Map([['1','blob:owner-avatar']]),
     drafts:new Map([['1','Private draft']]),draftVersions:new Map(),
     lastSendFailure:null,lastSendFailures:new Map(),lastRichFailure:null,
@@ -58,6 +59,7 @@ function fixture({proof=true,count=1,page=0,reset=true,status=0,
     renderReplyPreview(){},renderAttachmentChip(){},
     cancelVoiceCapture(){},dropVoiceDraft(){},renderSendComposer(){},
     URL:{revokeObjectURL:()=>{avatarRevoked++}},
+    clearTimeout:()=>{},
     window:{VetoThemeDock:()=>{}},
   });
   new vm.Script(controller).runInContext(context);
