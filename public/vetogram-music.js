@@ -8,6 +8,8 @@ const audio=$("audio"),app=$("app"),MAX_FILE=30*1048576,MAX_BATCH=120*1048576;
 const scope=window.VetogramMediaContext?.scope||"device";
 const key="vetogram-music-v1:"+scope,DB_NAME="vetogram-music-private-v1:"+scope,STORE="tracks";
 let playbackGeneration=0;
+const failedArtworkUrls=new Set();
+const coverLetter=track=>Array.from(clean(track?.title||"V",40))[0]?.toLocaleUpperCase()||"V";
 const moods={chill:"chill",electronic:"electronic","hip-hop":"hip hop"};
 const state={page:"home",tracks:[],search:[],radios:[],local:[],liked:[],metadata:[],streams:[],queue:[],index:-1,now:null,shuffle:false,repeat:"all",mood:"ember",source:"",playRequested:false,localUrls:[],activeController:null,radioController:null,sleepDeadline:0,sleepTimer:null,db:null};
 const dom=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e};
@@ -60,8 +62,8 @@ function toggleLike(track){if(!track)return;const pos=state.liked.findIndex(x=>x
 function row(track,index,context){
  const e=dom("article","track-row"+(state.now?.id===track.id?" active":""));
  const no=dom("span","track-number",String(index+1).padStart(2,"0"));
- const cover=dom("div","track-cover","♫"),url=safe(track.artwork);
- if(url){const img=dom("img");img.src=url;img.alt="";img.loading="lazy";img.addEventListener("error",()=>img.remove());cover.append(img)}
+ const cover=dom("div","track-cover",coverLetter(track)),url=safe(track.artwork);
+ if(url&&!failedArtworkUrls.has(url)){const img=dom("img");img.src=url;img.alt="";img.loading="lazy";img.addEventListener("error",()=>{failedArtworkUrls.add(url);img.remove()});cover.append(img)}
  const main=dom("div","track-info");main.append(dom("b","",track.title||"Без названия"),dom("small","",track.artist||"Неизвестный исполнитель"));
  const tag=dom("span","source-tag",track.source==="local"?"МОЙ ФАЙЛ":track.source==="stream"?"ПО ССЫЛКЕ":track.source==="demo"?"ОРИГИНАЛЬНОЕ ДЕМО":track.source==="radio"?"LIVE RADIO":track.source==="archive"?"ARCHIVE · CC":track.source==="ccmixter"?"CCMIXTER · CC":track.source==="openverse"?"♫ · CC":track.source==="metadata"?"ТОЛЬКО СПИСОК":"AUDIUS");
  const like=dom("button","track-btn like",favorited(track)?"♥":"♡");
@@ -135,10 +137,10 @@ function playTrack(track,collection){
    {detail:{trackId:String(track.id||"")}}));
  $("miniTitle").textContent=track.title;$("miniArtist").textContent=track.artist;
  $("studioTitle").textContent=track.title;$("studioArtist").textContent=track.artist;
- const art=safe(track.artwork),mini=$("miniArt"),cover=$("studioCover");
+ const art=safe(track.artwork),mini=$("miniArt"),cover=$("studioCover"),letter=coverLetter(track);
  mini.replaceChildren();cover.replaceChildren();
- if(art){for(const el of [mini,cover]){const img=dom("img");img.src=art;img.alt="";img.addEventListener("error",()=>{img.remove();el.textContent="V"});el.append(img)}}
- else {mini.textContent="♫";cover.textContent="V"}
+ if(art&&!failedArtworkUrls.has(art)){for(const el of [mini,cover]){const img=dom("img");img.src=art;img.alt="";img.addEventListener("error",()=>{failedArtworkUrls.add(art);img.remove();el.textContent=letter});el.append(img)}}
+ else {mini.textContent=letter;cover.textContent=letter}
  if(track.source==="radio")$("studioDuration").textContent="LIVE";
  audio.pause();audio.removeAttribute("src");
  // The stream is always a real provider URL or an in-memory, user-owned Blob URL.
@@ -316,7 +318,7 @@ function renderRadio(){
  if(!state.radios.length){box.append(dom("div","empty-state","По этому запросу станций нет."));return}
  state.radios.forEach(t=>{
  const row=dom("div","radio-card");const cover=dom("div","track-cover","◉");
- if(t.artwork){const img=dom("img");img.src=t.artwork;img.alt="";img.onerror=()=>img.remove();cover.append(img)}
+ if(t.artwork&&!failedArtworkUrls.has(t.artwork)){const img=dom("img");img.src=t.artwork;img.alt="";img.onerror=()=>{failedArtworkUrls.add(t.artwork);img.remove()};cover.append(img)}
  const details=dom("div");details.append(dom("b","",t.title),dom("small","",t.artist));
  const actions=dom("div");
  const p=dom("button","radio-action","▶ Слушать");p.type="button";p.onclick=()=>playTrack(t,state.radios);
