@@ -201,3 +201,13 @@ body[data-books-source="local"] .library-clarity{display:none!important}
 body[data-books-source="complete"] .book-extent-badge[data-kind="full"]{
   border-color:#e4e7f25e;background:#ffffff12;color:#f4f5fa;letter-spacing:.08em
 }
+
+/* Model label: clarify metadata-only discovery and keep compact on phones. */
+.book-mode-explainer{
+  margin:18px 0 9px;padding:11px 14px;color:#c6bfc5;
+  background:#101013;border:1px solid #ffffff19;border-radius:11px;
+  font:500 12px/1.5 Inter,system-ui,sans-serif;
+}
+@media(max-width:600px){
+ .book-mode-explainer{margin:11px 0 9px;padding:10px 11px;font-size:11px}
+}
