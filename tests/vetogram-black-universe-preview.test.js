@@ -50,7 +50,7 @@ test('preview server imports public API adapter and retains deny by default',()=
 test('Black Universe is wired into the four primary entry points',()=>{
   for(const name of ['studio','music-module','cinema','books']){
     const source=read('public/'+name+'.html');
-    assert.match(source,/vetogram-black-universe\.css\?v=20261101-rebuild03/,name);
+    assert.match(source,/vetogram-black-universe\.css\?v=20261101-rebuild04/,name);
   }
   const css=read('public/vetogram-black-universe.css');
   assert.match(css,/--vet-black:#000/);
