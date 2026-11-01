@@ -1769,6 +1769,38 @@
             <p class="vp-room-disclaimer">Комнаты действуют 6 часов. Закрытие экрана не сдаёт партию. Доступ к перепискам и контактам для игры не нужен.</p>
           </div>
         </section>
+        <section class="vp-stats-zone" aria-labelledby="vpStatsHeading">
+          <div class="vp-stats-head">
+            <div><span class="vp-flag">VETOGRAM PLAY / ПРОФИЛЬ</span>
+              <h2 id="vpStatsHeading">Твои игровые результаты</h2>
+              <p>Только подтверждённые сервером раунды. Локальные рекорды не влияют на рейтинг.</p>
+            </div>
+            <button type="button" id="vpStatsRefresh" class="vp-button ghost" disabled>Обновить</button>
+          </div>
+          <div class="vp-stats-state" id="vpStatsState" role="status" aria-live="polite">Данные появятся после подключения игрового сервера.</div>
+          <div id="vpStatsContent" hidden>
+            <div class="vp-profile-row">
+              <div class="vp-profile-mark" aria-hidden="true">VP</div>
+              <div><span>ТВОЙ ПСЕВДОНИМ</span><strong id="vpProfileAlias">—</strong></div>
+              <label class="vp-privacy-switch"><input id="vpLeaderboardConsent" type="checkbox" /> Показывать меня в рейтинге</label>
+            </div>
+            <div class="vp-metrics" role="group" aria-label="Статистика онлайн-игр">
+              <div><strong id="vpStatGames">0</strong><span>Партий</span></div>
+              <div><strong id="vpStatWins">0</strong><span>Побед</span></div>
+              <div><strong id="vpStatDraws">0</strong><span>Ничьих</span></div>
+              <div><strong id="vpStatPoints">0</strong><span>Очков</span></div>
+            </div>
+            <h3>История матчей</h3>
+            <div id="vpMatchHistory" class="vp-history-list"></div>
+          </div>
+          <div class="vp-stats-leaderhead">
+            <div><h3>Рейтинг игроков</h3><p>Только добровольно открытые профили, минимум 3 завершённых раунда.</p></div>
+            <button type="button" id="vpLeadersRefresh" class="vp-button ghost" disabled>Показать</button>
+          </div>
+          <div id="vpLeadersState" class="vp-stats-state" role="status" aria-live="polite"></div>
+          <div id="vpLeaderboard" class="vp-leaderboard-list" aria-label="Игровой рейтинг"></div>
+          <p class="vp-room-disclaimer">Имя и Telegram ID не публикуются. Видимость рейтинга можно отключить. При выключении профиль не выводится в общей таблице.</p>
+        </section>
         <section class="vp-developer" aria-labelledby="vpDevTitle">
           <div class="vp-developer-orb" aria-hidden="true">{ }</div>
           <div>
@@ -1866,5 +1898,6 @@
   <script src="/vetogram-play-developer.js?v=20261031-play-dev-v1" defer></script>
   <script src="/vetogram-play-runner.js?v=20261031-play-runner-v1" defer></script>
   <script src="/vetogram-play-room.js?v=20261031-play-rooms-v1" defer></script>
+  <script src="/vetogram-play-stats.js?v=20261101-play-stats-v1" defer></script>
 </body>
 </html>
