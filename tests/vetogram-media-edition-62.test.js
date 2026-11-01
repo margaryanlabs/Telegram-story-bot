@@ -51,7 +51,7 @@ test('Cinema displays a real one-click official embed shelf, excluding external-
   assert.match(cinemaHtml,/id="cinemaWatchNow"/);
   assert.match(cinemaHtml,/id="cinemaWatchNowRail"/);
   assert.match(cinema,/function renderWatchNow\(/);
-  assert.match(cinema,/if\(f\.externalRutube\|\|f\.discoveryOnly\|\|f\.contentType==="Сериалы"\)return false/);
+  assert.match(cinema,/if\(f\.externalRutube\|\|f\.discoveryOnly\|\|f\.contentType==="Сериалы"\|\|failedEmbeds\.has\(f\.id\)\)return false/);
   assert.match(cinema,/f\.player\.licensed!==true/);
   assert.match(cinema,/url\.origin==="https:\/\/rutube\.ru"/);
   assert.match(cinema,/clean\.addEventListener\("click",\(\)=>play\(film\)\)/);
