@@ -1132,10 +1132,32 @@
     }
     select.value=state.activeChapter===null?'':String(state.activeChapter);
   }
+  // External book sources can fail temporarily. One bounded retry only.
+  async function fetchReaderResponse(url){
+    for(let attempt=0;attempt<2;attempt++){
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),18000);
+      try{
+        const response=await fetch(url,{signal:controller.signal});
+        if(attempt===0 && [429,502,503,504].includes(response.status)){
+          await new Promise(resolve=>setTimeout(resolve,500));
+          continue;
+        }
+        return response;
+      }catch(error){
+        if(attempt===1)throw error;
+        await new Promise(resolve=>setTimeout(resolve,500));
+      }finally{
+        clearTimeout(timer);
+      }
+    }
+    throw new Error('Сервис чтения временно недоступен');
+  }
   async function loadChapter(book,chapter=null,resume=false){
     const key=bookKey(book);
     const request=++state.requestBook;
     state.pages=[];state.activeChapter=chapter;state.isTranslationIndex=false;
+    $('readerRetry').hidden=true;
     $('readerCopy').textContent='Загружаем текст…';
     $('readerPageLabel').textContent='…';
     const cacheId=key+':'+(chapter===null?'root':chapter);
@@ -1155,7 +1177,7 @@
           if(isWiki(book))params.set('wiki',book.wiki);
           if(chapter!==null && isWiki(book))params.set('chapter',String(chapter));
           const endpoint=isWiki(book)?'/api/books-wikisource':'/api/books';
-          const response=await fetch(endpoint+'?'+params);
+          const response=await fetchReaderResponse(endpoint+'?'+params);
           const result=await response.json();
           if(!response.ok||!result.ok)throw new Error(result.error||'Не удалось открыть полный текст');
           data={book:result.book,text:result.text,chapters:result.chapters||[],attribution:result.attribution||null,isTranslationIndex:result.isTranslationIndex||false,coverage:result.coverage||null};
@@ -1191,7 +1213,8 @@
       showPage(position);
     }catch(e){
       if(!$('reader').hidden && state.requestBook===request){
-        $('readerCopy').textContent='Не удалось открыть текст. Вернитесь к книгам и попробуйте другой результат.';
+        $('readerCopy').textContent='Не удалось загрузить текст книги. Можно повторить попытку — закладки и прогресс сохранятся.';
+        $('readerRetry').hidden=false;
         $('readerPageLabel').textContent='—';
         toast(e.message||'Сервис чтения недоступен');
       }
@@ -1708,6 +1731,10 @@
   $('modalClose').addEventListener('click',()=>$('bookModal').hidden=true);
   $('bookModal').addEventListener('click',event=>{if(event.target===$('bookModal'))$('bookModal').hidden=true;});
   $('readerBack').addEventListener('click',closeReader);
+  $('readerRetry').addEventListener('click',()=>{
+    if(!state.current)return;
+    void loadChapter(state.current,state.activeChapter,true);
+  });
   $('readerSettingsButton').addEventListener('click',()=>{
     $('readerSettings').hidden=!$('readerSettings').hidden;
     $('readerSettingsButton').setAttribute('aria-expanded',String(!$('readerSettings').hidden));
