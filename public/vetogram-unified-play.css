@@ -21,3 +21,21 @@
 @media(prefers-reduced-motion:reduce){
  .v6-media .v6-world-play .v6-games>*{transition:none!important;transform:none!important}
 }
+
+/* Six navigable destinations: Chats, Stories, Games, Media, Privacy, Profile. */
+#vetogram.vetogram-universe .bottom-nav[data-reborn-nav="five"]{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+}
+#vetogram.vetogram-universe .bottom-nav[data-reborn-nav="five"] .nav-item{
+  min-width:0!important;
+}
+@media(min-width:1100px){
+ #vetogram.vetogram-universe .bottom-nav[data-reborn-nav="five"]{
+  grid-template-columns:1fr!important;
+  grid-template-rows:90px repeat(6,52px) 1fr!important;
+ }
+}
+@media(max-width:370px){
+ #vetogram.vetogram-universe .bottom-nav[data-reborn-nav="five"] .nav-item small{font-size:8px!important}
+ #vetogram.vetogram-universe .bottom-nav[data-reborn-nav="five"] .nav-item svg{width:19px!important;height:19px!important}
+}
