@@ -38,7 +38,7 @@ function setup(pathname='/cinema.html'){
  const ctx={window,document,location,parent,setTimeout(){return 1;},clearTimeout(){}};
  vm.runInNewContext(code,ctx,{filename:'vetogram-media-bridge.js',timeout:1000});
  const count=()=>messages.filter(m=>m.value.type==='video-playing').length;
- return {window,video,watch,audio,parent,messages,count,location,
+ return {window,document,video,watch,audio,parent,messages,count,location,
   get videoPauses(){return videoPauses;},
   get audioPauses(){return audioPauses;},
   get playerCloses(){return playerCloses;},
@@ -99,4 +99,42 @@ test('hiding Books cancels background prefetch but retains the active reader',()
  media.window.fire('message',{source:media.parent,origin:media.location.origin,
   data:{channel:'vetogram-universe',action:'visible',visible:false}});
  assert.equal(media.backgroundPauses,1);
+});
+
+test('metadata-only saved music returns search status, never false playback success',async()=>{
+ const media=setup('/music-module.html');
+ media.window.VetogramCinema=null;
+ media.window.VetogramBooks=null;
+ media.window.VetogramMusic.openSavedById=()=>Promise.resolve('search');
+ media.window.fire('message',{source:media.parent,origin:media.location.origin,
+  data:{channel:'vetogram-universe',action:'open-item',id:'metadata:123',requestId:11}});
+ await new Promise(resolve=>setImmediate(resolve));
+ const reply=media.messages.find(m=>m.value.type==='open-item-status'&&m.value.requestId===11);
+ assert.equal(reply?.value.ok,false);
+ assert.equal(reply?.value.status,'search');
+});
+
+test('saved audio stream item returns opened only after the module accepted it',async()=>{
+ const media=setup('/music-module.html');
+ media.window.VetogramCinema=null;
+ media.window.VetogramBooks=null;
+ media.window.VetogramMusic.openSavedById=()=>Promise.resolve(true);
+ media.window.fire('message',{source:media.parent,origin:media.location.origin,
+  data:{channel:'vetogram-universe',action:'open-item',id:'local:123',requestId:14}});
+ await new Promise(resolve=>setImmediate(resolve));
+ const reply=media.messages.find(m=>m.value.type==='open-item-status'&&m.value.requestId===14);
+ assert.equal(reply?.value.ok,true);
+ assert.equal(reply?.value.status,'opened');
+});
+
+test('cross-origin and wrong-parent commands are ignored',async()=>{
+ const media=setup('/music-module.html');
+ let calls=0;
+ media.window.VetogramMusic.openSavedById=()=>{calls++;return true;};
+ const command={channel:'vetogram-universe',action:'open-item',id:'track1',requestId:9};
+ media.window.fire('message',{source:media.parent,origin:'https://attacker.test',data:command});
+ media.window.fire('message',{source:{},origin:media.location.origin,data:command});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(calls,0);
+ assert.equal(media.messages.filter(m=>m.value.type==='open-item-status').length,0);
 });
