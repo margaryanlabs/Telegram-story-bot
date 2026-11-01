@@ -41,3 +41,14 @@ This is a source change, **not a production deployment**. Connecting book/cinema
 - Execute full Node targeted test suite and inspect any Node-specific failures.
 - Browser walkthrough on Android Telegram, iPhone and Fold: book opening, failed cover fallback, real movie/playStart, licensed music playing, bottom-nav and back behaviour.
 - Review foreign-film metadata and rights/translation before offering one-tap playback. No deployment from this draft PR.
+
+## Continued media correctness pass — 1 November 2026
+
+**Verified source defects corrected:**
+1. `public/cinema.js` used to emit `vetogram:cinema-playing` as soon as a movie player was opened, before any actual playback. `public/vetogram-media-bridge.js` also emitted `video-playing` on the Watch button click. This stopped an active music track even when an iframe refused playback. Both eager signals are removed. The host receives a pause request only after native HTML5 `playing` or a validated RUTUBE `playStarted` / `state playing` callback. Duplicate playback-start signals from the same iframe attempt are suppressed.
+2. The Books reader's previous two-attempt remote request had no cancellation when switching books, chapters or closing the reader. A request-specific AbortController now aborts abandoned fetches. The retry path checks the outer cancellation signal and never retries a deliberately abandoned book request. Existing reader identity and request-generation guards still prevent stale responses from replacing the current text.
+3. Deep-linked saved books previously replied `open-item-status ok:true` before any pages loaded. `openSavedByKey` now returns the `openBook` promise, which resolves only when `loadChapter` has paginated the text successfully. A failed/unavailable source returns false instead of a misleading success.
+
+**Current regression coverage:** 13 targeted cases defined; 13/13 passed in the chat's isolated JavaScript source/contract runner with mock URL and response objects. Syntax parsing passed for Books, Cinema, media bridge, Music and Music Catalog. This is **not** a real Node test runner, hosted API probe, Telegram device QA, or verified media stream.
+
+**Still release-blocking:** actual Android/iOS Telegram scenarios, Node full test run, authorized media-source availability, access/rights audit, Vercel build-rate-limit. No production merge or deployment.
