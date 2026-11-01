@@ -17,18 +17,29 @@ function eventTarget(){
 
 function setup(pathname='/cinema.html'){
  const window=eventTarget(), document=eventTarget();
- const video=eventTarget(),watch=eventTarget();
+ const video=eventTarget(),watch=eventTarget(),audio=eventTarget();
+ let videoPauses=0,audioPauses=0,playerCloses=0;
+ video.pause=()=>{videoPauses++;};audio.pause=()=>{audioPauses++;};
+ audio.paused=false;audio.ended=false;audio.error=null;audio.readyState=4;
+ audio.currentTime=0;audio.duration=120;
  const messages=[];
  const parent={postMessage(value,origin){messages.push({value,origin});}};
  const location={origin:'https://vetogram.test',pathname};
  window.VetogramMediaContext={embedded:true,scope:'device'};
  window.VetogramCinema={openTab(){}};
- document.getElementById=id=>id==='cinemaVideo'?video:id==='cinemaDetailsWatch'?watch:null;
+ window.VetogramMusic={showPage(){},now(){return null;}};
+ const close={click(){playerCloses++;}};
+ const player={classList:{contains(name){return false;}}};
+ document.getElementById=id=>id==='cinemaVideo'?video:id==='cinemaDetailsWatch'?watch:
+  id==='audio'?audio:id==='cinemaPlayerClose'?close:id==='cinemaPlayer'?player:null;
  document.querySelectorAll=()=>[];
  const ctx={window,document,location,parent,setTimeout(){return 1;},clearTimeout(){}};
  vm.runInNewContext(code,ctx,{filename:'vetogram-media-bridge.js',timeout:1000});
  const count=()=>messages.filter(m=>m.value.type==='video-playing').length;
- return {window,video,watch,messages,count,location};
+ return {window,video,watch,audio,parent,messages,count,location,
+  get videoPauses(){return videoPauses;},
+  get audioPauses(){return audioPauses;},
+  get playerCloses(){return playerCloses;}};
 }
 
 test('clicking Watch never falsely tells parent playback started',()=>{
@@ -61,4 +72,20 @@ test('rejected iframe playback does not dispatch a phantom start event',()=>{
  media.video.fire('waiting');
  media.watch.fire('click');
  assert.equal(media.count(),0);
+});
+
+test('hiding Cinema after navigating to Chats pauses native video and closes the embedded player',()=>{
+ const media=setup('/cinema.html');
+ media.window.fire('message',{source:media.parent,origin:media.location.origin,
+  data:{channel:'vetogram-universe',action:'visible',visible:false}});
+ assert.equal(media.videoPauses,1);
+ assert.equal(media.playerCloses,1);
+});
+
+test('hiding Music in the host does not forcibly pause user audio',()=>{
+ const media=setup('/music-module.html');
+ assert.ok(media.messages.some(message=>message.value.type==='ready'));
+ media.window.fire('message',{source:media.parent,origin:media.location.origin,
+  data:{channel:'vetogram-universe',action:'visible',visible:false}});
+ assert.equal(media.audioPauses,0);
 });
