@@ -1568,6 +1568,9 @@
     runAvatarQueue();
   }
   function runAvatarQueue(){
+    // An off-screen inbox must not keep opening signed Telegram sessions.
+    // Pending IDs stay queued and are resumed on screen return / focus.
+    if(document.hidden||document.querySelector('.screen.active')?.dataset?.screen!=='telegram')return;
     if(state.avatarActive||!state.avatarQueue.length)return;
     if(Date.now()<Number(state.avatarBlockedUntil||0)){
       scheduleAvatarRetry(Math.max(1000,state.avatarBlockedUntil-Date.now()));
@@ -3404,6 +3407,8 @@
       clearIntelSearch({close:true});
       cancelVoiceCapture();stopThreadSync();
     }else{
+      // Repaint missing thumbnails even when the inbox was already loaded.
+      queueVisibleAvatars();
       if(state.thread)scheduleThreadSync(3500);
       else if(state.chats.length===0&&!state.loading)loadChats({reset:true});
     }
@@ -3412,7 +3417,10 @@
   window.addEventListener('pageshow',resetOwner);
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)stopThreadSync();
-    else if(!resetOwner()&&state.thread)scheduleThreadSync(2800);
+    else if(!resetOwner()){
+      queueVisibleAvatars();
+      if(state.thread)scheduleThreadSync(2800);
+    }
   });
   window.addEventListener('online',()=>{if(state.thread)scheduleThreadSync(1800)});
   window.addEventListener('offline',()=>{
