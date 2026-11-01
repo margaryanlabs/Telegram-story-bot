@@ -353,11 +353,13 @@
     // User requested a playback-only library. External-only discovery and
     // titles without a validated provider stream stay out of public shelves.
     let list=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
-      (f.player?.licensed===true||Boolean(f.file)));
+      !failedEmbeds.has(f.id)&&(f.player?.licensed===true||Boolean(f.file)));
     if(state.tab==="foreign")list=list.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim||f.featuredForeign));
     if(state.tab==="series")list=list.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true);
     if(state.tab==="catalog")list=list.filter(f=>f.contentType!=="Сериалы"&&!f.externalRutube);
-    if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id));
+    if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id)&&
+      !f.externalRutube&&!f.discoveryOnly&&!failedEmbeds.has(f.id)&&
+      (f.player?.licensed===true||Boolean(f.file)));
     if(state.genre!=="Все")list=list.filter(f=>(f.genres||[]).includes(state.genre)||
       (state.genre==="Фильмы"&&!f.contentType&&Number(f.minutes)>30));
     const q=state.query.trim().toLocaleLowerCase("ru-RU");
@@ -863,7 +865,7 @@
     state.playing=f;setHistory(f);updateBack();buzz();
     window.dispatchEvent(new CustomEvent('vetogram:cinema-playing'));
     const choices=approvedSources(f);
-    const current=choices.find(x=>chosenSource&&x.url===chosenSource.url)||chosenSource||choices[0];
+    const current=choices.find(x=>chosenSource&&x.url===chosenSource.url)||choices[0];
     state.activePlayerSource=current||null;
     const providerSelect=$("cinemaProviderSelect");
     $("cinemaSourceSwitch").classList.toggle("hidden",!f.player||choices.length<=1);
@@ -885,6 +887,7 @@
     const token=++state.request;
     if(current){
       state.embedDuration=0;state.embedLastSave=0;
+      let playbackConfirmed=false;
       const embedded=current.type==="iframe";
       $("cinemaVideoToolbar").classList.toggle("hidden",embedded);
       $("cinemaPlayerMessage").classList.toggle("is-provider",embedded);
@@ -894,7 +897,8 @@
       $("cinemaOpenSource").href=current.sourcePage||filmPage(f);
       setPlayerMessage("Подключаем "+(current.provider||"видеопровайдера")+"…");
       if(embedded)providerFeedbackTimer=setTimeout(()=>{
-        if(token===state.request)setPlayerMessage("Плеер загружен, но начало просмотра не подтверждено. Нажмите ▶ внутри видео. Если возникает ошибка, выберите другой фильм.");
+        if(token===state.request&&!playbackConfirmed)
+          setPlayerMessage("Начало просмотра пока не подтверждено. Нажмите ▶ внутри видео; при ошибке попробуйте другую запись.");
       },20000);
       try{
         if(!window.VetogramCinemaProvider)throw Error("Модуль видеопровайдера не загрузился");
@@ -906,6 +910,7 @@
             if(token!==state.request||state.playing?.id!==f.id)return;
             if(event.type==="duration"){state.embedDuration=event.duration;return}
             if(event.type==="playStarted"||(event.type==="state"&&event.state==="playing")){
+              playbackConfirmed=true;
               clearTimeout(providerFeedbackTimer);
               failedEmbeds.delete(f.id);
               setPlayerMessage("");
@@ -925,7 +930,8 @@
             }
           },
           onReady:()=>{
-            if(token===state.request)setPlayerMessage("Плеер готов. Нажмите ▶, чтобы начать фильм.");
+            if(token===state.request&&!playbackConfirmed)
+              setPlayerMessage("Плеер готов. Нажмите ▶, чтобы начать фильм.");
           },
           onError:(reason)=>{
             if(token!==state.request)return;
