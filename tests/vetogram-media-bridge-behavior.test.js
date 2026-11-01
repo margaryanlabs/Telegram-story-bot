@@ -17,6 +17,7 @@ function eventTarget(){
 
 function setup(pathname='/cinema.html'){
  const window=eventTarget(), document=eventTarget();
+ let backgroundPauses=0;
  const video=eventTarget(),watch=eventTarget(),audio=eventTarget();
  let videoPauses=0,audioPauses=0,playerCloses=0;
  video.pause=()=>{videoPauses++;};audio.pause=()=>{audioPauses++;};
@@ -28,6 +29,7 @@ function setup(pathname='/cinema.html'){
  window.VetogramMediaContext={embedded:true,scope:'device'};
  window.VetogramCinema={openTab(){}};
  window.VetogramMusic={showPage(){},now(){return null;}};
+ window.VetogramBooks={openSavedByKey(){return true;},pauseBackgroundWork(){backgroundPauses++;}};
  const close={click(){playerCloses++;}};
  const player={classList:{contains(name){return false;}}};
  document.getElementById=id=>id==='cinemaVideo'?video:id==='cinemaDetailsWatch'?watch:
@@ -39,7 +41,8 @@ function setup(pathname='/cinema.html'){
  return {window,video,watch,audio,parent,messages,count,location,
   get videoPauses(){return videoPauses;},
   get audioPauses(){return audioPauses;},
-  get playerCloses(){return playerCloses;}};
+  get playerCloses(){return playerCloses;},
+  get backgroundPauses(){return backgroundPauses;}};
 }
 
 test('clicking Watch never falsely tells parent playback started',()=>{
@@ -88,4 +91,12 @@ test('hiding Music in the host does not forcibly pause user audio',()=>{
  media.window.fire('message',{source:media.parent,origin:media.location.origin,
   data:{channel:'vetogram-universe',action:'visible',visible:false}});
  assert.equal(media.audioPauses,0);
+});
+
+test('hiding Books cancels background prefetch but retains the active reader',()=>{
+ const media=setup('/books.html');
+ assert.ok(media.messages.some(message=>message.value.type==='ready'));
+ media.window.fire('message',{source:media.parent,origin:media.location.origin,
+  data:{channel:'vetogram-universe',action:'visible',visible:false}});
+ assert.equal(media.backgroundPauses,1);
 });
