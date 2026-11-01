@@ -10,6 +10,7 @@ function fixture(){
  const keys=['Reaction','Pairs','Tic','2048','Mines','Snake'];
  const elements=Object.fromEntries(keys.map(key=>['#v74Score'+key,{textContent:''}]));
  const saved=new Map(),calls=[],events={};
+ const surprise={events:{},addEventListener(k,fn){this.events[k]=fn;},click(){this.events.click?.();}};
  const search={value:'old game'},all={click(){calls.push('reset-filter')}};
  const buttons=['reaction','pairs','tic','2048','mines','snake'].map(id=>({
    dataset:{v74Launch:id},events:{},addEventListener(k,fn){this.events[k]=fn;},
@@ -19,7 +20,7 @@ function fixture(){
    querySelector(sel){return sel==='.vp-open-game'?{click(){calls.push(b.dataset.v74Launch);}}:null;}
  }));
  const root={
-   querySelector(selector){return elements[selector]||(selector==='#vpGameSearch'?search:selector==='[data-vp-filter="all"]'?all:null);},
+   querySelector(selector){return elements[selector]||(selector==='#vpGameSearch'?search:selector==='[data-vp-filter="all"]'?all:selector==='#v75SurpriseMe'?surprise:null);},
    querySelectorAll(selector){return selector==='[data-v74-launch]'?buttons:selector==='.vp-mini[data-vp-game]'?cards:[];}
  };
  const window={
@@ -28,7 +29,7 @@ function fixture(){
  };
  const document={querySelector:sel=>sel==='.screen[data-screen="play"]'?root:null};
  runInNewContext(js,{document,window,Math,Number,Set,Array,String,Object});
- return {elements,saved,calls,search,buttons,events,cards};
+ return {elements,saved,calls,search,buttons,events,cards,surprise};
 }
 test('all 6 stats refer only to original local scores with safe empty values',()=>{
  const x=fixture();
@@ -62,4 +63,13 @@ test('all links and game stat tiles are data-local and accessible',()=>{
  assert.match(html,/Только на этом устройстве/);
  assert.match(css,/:not\(\.vp-game-art\)/,'game art must be visible in the catalog');
  assert.doesNotMatch(js,/\bfetch\s*\(|XMLHttpRequest|initData|telegram-chats|sessionStorage|sendMessage|postMessage|document\.cookie/);
+});
+
+test('surprise selects only a built-in local game via the original game runner',()=>{
+ const x=fixture();
+ x.surprise.click();
+ assert.equal(x.calls[0],'reset-filter');
+ assert.ok(['reaction','pairs','tic','2048','mines','snake'].includes(x.calls[1]));
+ assert.equal(x.calls.length,2);
+ assert.match(html,/id="v75SurpriseMe"/);
 });
