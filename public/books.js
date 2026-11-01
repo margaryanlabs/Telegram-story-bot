@@ -30,6 +30,7 @@
   let offlineEditionToken=0;
   let offlineSavedBook=null;
   const pendingChapterPrefetch=new Map();
+  let activeReaderFetch=null; // Abort abandoned book/chapter requests on navigation.
   // Avoid downloading the same failed cover after every grid redraw.
   const failedCoverUrls=new Set();
   let toastTimer;
@@ -1135,11 +1136,15 @@
     select.value=state.activeChapter===null?'':String(state.activeChapter);
   }
   // External book sources can fail temporarily. One bounded retry only.
-  async function fetchReaderResponse(url){
+  async function fetchReaderResponse(url,requestSignal){
     for(let attempt=0;attempt<2;attempt++){
+      if(requestSignal?.aborted)throw new DOMException('Reader changed','AbortError');
       const controller=new AbortController();
-      const timer=setTimeout(()=>controller.abort(),18000);
+      const abort=()=>controller.abort();
+      requestSignal?.addEventListener('abort',abort,{once:true});
+      const timer=setTimeout(abort,18000);
       try{
+        if(requestSignal?.aborted)throw new DOMException('Reader changed','AbortError');
         const response=await fetch(url,{signal:controller.signal});
         if(attempt===0 && [429,502,503,504].includes(response.status)){
           await new Promise(resolve=>setTimeout(resolve,500));
@@ -1147,15 +1152,20 @@
         }
         return response;
       }catch(error){
+        if(requestSignal?.aborted)throw error; // Never retry an abandoned reader.
         if(attempt===1)throw error;
         await new Promise(resolve=>setTimeout(resolve,500));
       }finally{
         clearTimeout(timer);
+        requestSignal?.removeEventListener('abort',abort);
       }
     }
     throw new Error('Сервис чтения временно недоступен');
   }
   async function loadChapter(book,chapter=null,resume=false){
+    activeReaderFetch?.abort();
+    const readerController=new AbortController();
+    activeReaderFetch=readerController;
     const key=bookKey(book);
     const request=++state.requestBook;
     state.pages=[];state.activeChapter=chapter;state.isTranslationIndex=false;
@@ -1179,7 +1189,7 @@
           if(isWiki(book))params.set('wiki',book.wiki);
           if(chapter!==null && isWiki(book))params.set('chapter',String(chapter));
           const endpoint=isWiki(book)?'/api/books-wikisource':'/api/books';
-          const response=await fetchReaderResponse(endpoint+'?'+params);
+          const response=await fetchReaderResponse(endpoint+'?'+params,readerController.signal);
           const result=await response.json();
           if(!response.ok||!result.ok)throw new Error(result.error||'Не удалось открыть полный текст');
           data={book:result.book,text:result.text,chapters:result.chapters||[],attribution:result.attribution||null,isTranslationIndex:result.isTranslationIndex||false,coverage:result.coverage||null};
@@ -1220,12 +1230,15 @@
         $('readerPageLabel').textContent='—';
         toast(e.message||'Сервис чтения недоступен');
       }
+    }finally{
+      if(activeReaderFetch===readerController)activeReaderFetch=null;
     }
   }
   async function openBook(book){
     stopNarration();
     if(isCatalogBook(book)){showDiscoverBook(book);return;}
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
+    activeReaderFetch?.abort();
     ++state.requestBook;
     state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;state.rawText='';state.pageOffsets=[];
     setFlow(false);
@@ -1251,6 +1264,8 @@
   function closeReader(){
     ++offlineEditionToken;
     stopNarration();
+    activeReaderFetch?.abort();
+    activeReaderFetch=null;
     ++state.requestBook;
     $('reader').hidden=true;state.current=null;state.pages=[];state.chapters=[];
     try{window.Telegram?.WebApp?.BackButton?.hide();}catch{}
