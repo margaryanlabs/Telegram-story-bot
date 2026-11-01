@@ -120,7 +120,7 @@ test('abandoned book chapter requests abort instead of retrying or overwriting c
   assert.match(books,/if\(requestSignal\?\.aborted\)throw error/);
   assert.match(books,/fetchReaderResponse\(endpoint\+'\?'\+params,readerController\.signal\)/);
   assert.match(books,/if\(\$\('reader'\)\.hidden \|\| state\.requestBook!==request/);
-  assert.match(books,/activeReaderFetch\?\.abort\(\);\s*activeReaderFetch=null;\s*\+\+state\.requestBook/);
+  assert.match(books,/activeReaderFetch\?\.abort\(\);\s*activeReaderFetch=null;\s*cancelChapterPrefetch\(\);\s*\+\+state\.requestBook/);
   assert.match(books,/finally\{\s*if\(activeReaderFetch===readerController\)activeReaderFetch=null/);
 });
 
