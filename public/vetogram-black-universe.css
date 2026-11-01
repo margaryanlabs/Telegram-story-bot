@@ -288,11 +288,6 @@ body:has(#playerBar) .player-bar button{
     bottom:max(8px,env(safe-area-inset-bottom));
     min-width:0;
   }
-  /* Nested music uses its own viewport. Lift its controls above host navigation. */
-  html.v6-embedded body:has(#playerBar) .player-bar{
-    bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;
-    z-index:35;
-  }
   html#vetogram.vetogram-noir .bottom-nav .nav-item{
     min-height:46px;
   }
