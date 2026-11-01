@@ -131,7 +131,7 @@ test('saved book deep link reports success only after actual pages are prepared'
  assert.match(books,/return await loadChapter\(book,0,resume\)/);
  assert.match(books,/return state\.pages\.length>0 && state\.requestBook===request/);
  assert.match(books,/return openBook\(book\); \/\/ Only acknowledge success after text pages have loaded/);
- assert.match(bridge,/Promise\.resolve\(opened\)\.then\(ok=>send\(\{type:'open-item-status',ok:ok===true/);
+ assert.match(bridge,/Promise\.resolve\(opened\)\.then\(result=>send\(\{type:'open-item-status'/);
 });
 
 test('foreign discovery remains external-only even if metadata changes later',()=>{
@@ -177,4 +177,15 @@ test('book prefetch is bounded, cancelled on navigation, and suppressed while hi
 test('late film starts from a hidden Cinema iframe cannot pause Music',()=>{
  const host=read('public/vetogram-universe.js');
  assert.match(host,/name==='cinema'&&message\.type==='video-playing'&&screen==='media'&&activeModule==='cinema'/);
+});
+
+test('saved music metadata is not misreported as a playable audio stream',()=>{
+ const music=read('public/vetogram-music.js');
+ const bridge=read('public/vetogram-media-bridge.js');
+ const host=read('public/vetogram-universe.js');
+ assert.match(music,/return "search"; \/\/ The player has NOT started/);
+ assert.match(music,/runSearch\(query\);return "search"/);
+ assert.match(bridge,/status:result==='search'\?'search'/);
+ assert.match(host,/message\.status==='search'/);
+ assert.match(host,/воспроизведение пока не началось/);
 });
