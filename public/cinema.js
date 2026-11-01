@@ -72,7 +72,6 @@
   }
   function setTab(tab){
     if(!["home","foreign","catalog","series","search","library"].includes(tab))return;
-    if(tab==="foreign")tab="catalog"; // no external-only streaming catalog
     buzz();state.tab=tab;state.genre="Все";state.visible=100;if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
     document.querySelectorAll("[data-tab]").forEach(b=>{
       const yes=b.dataset.tab===tab;b.classList.toggle("active",yes);
@@ -85,7 +84,7 @@
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
     $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
     $("cinemaSeriesHub").classList.toggle("hidden",tab!=="series");
-    $("cinemaForeignHub").classList.add("hidden");
+    $("cinemaForeignHub").classList.toggle("hidden",tab!=="foreign");
     for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises","cinemaForeignShelf"])
       $(id).classList.toggle("hidden",tab!=="home");
     if(tab==="home")setHeroSlide(discovery.index);
@@ -353,9 +352,12 @@
   function selectedFilms(){
     // User requested a playback-only library. External-only discovery and
     // titles without a validated provider stream stay out of public shelves.
-    let list=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
-      !failedEmbeds.has(f.id)&&(f.player?.licensed===true||Boolean(f.file)));
-    if(state.tab==="foreign")list=list.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim||f.featuredForeign));
+    // Discovery-only records have a separate, clearly labelled foreign catalog.
+    // They are never passed into the in-app video player.
+    let list=state.tab==="foreign"
+      ? films.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim))
+      : films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
+        !failedEmbeds.has(f.id)&&(f.player?.licensed===true||Boolean(f.file)));
     if(state.tab==="series")list=list.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true);
     if(state.tab==="catalog")list=list.filter(f=>f.contentType!=="Сериалы"&&!f.externalRutube);
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id)&&
@@ -666,12 +668,12 @@
     $("cinemaBrowse").classList.toggle("hidden",state.tab==="series");
     $("cinemaGrid").replaceChildren(...list.slice(0,state.visible).map(filmCard));
     $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
-    $("cinemaMoreStudios").classList.toggle("hidden",state.tab==="library"||state.tab==="series");
+    $("cinemaMoreStudios").classList.toggle("hidden",state.tab==="library"||state.tab==="series"||state.tab==="foreign");
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
       (f.player?.licensed===true||Boolean(f.file))).length;
-    text("cinemaCount",list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
-    $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
+    text("cinemaCount",state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
+    $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library"||state.tab==="foreign");
     const russian=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&(f.spoken==="Русский"||f.spoken==="ru"));
     const showRussian=state.tab==="home"&&!state.query.trim()&&russian.length>0;
@@ -685,7 +687,7 @@
     }));
     let title=state.genre==="Все"?"Вся коллекция":state.genre,subtitle="Фильмы, сериалы и мультфильмы из официальных видеоканалов. Новые записи появляются в каталоге.";
     if(state.tab==="catalog")title="Каталог фильмов";
-    if(state.tab==="foreign"){title="Зарубежное с русским дубляжом";subtitle="Найденные на RUTUBE публикации. Озвучка указана загрузчиком; исходное видео открывается на RUTUBE.";}
+    if(state.tab==="foreign"){title="Зарубежное · каталог источников";subtitle="Дубляж указан загрузчиком и не проверен. Встроенное воспроизведение откроем только для разрешённых источников.";}
     if(state.tab==="series"){title="Серии для просмотра";subtitle="Публикации официальных каналов со встроенными плеерами. Доступность конкретного видео зависит от источника и региона.";}
     if(state.tab==="search")title="Результаты поиска";
     if(state.tab==="library"){title="Моё избранное";subtitle="Сохраняется на этом устройстве."}
