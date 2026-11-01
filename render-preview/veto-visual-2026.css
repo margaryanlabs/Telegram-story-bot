@@ -1,0 +1,832 @@
+/* VETO / SIGNAL NOIR — 2026 visual system.
+   Presentation only. No data, source status or trading permission is inferred here.
+   Keep contrast, mobile accessibility and entry-level Android WebViews in mind. */
+
+/* 00 — Foundation: restrained obsidian, copper accents and editorial typography */
+.vc-mini[data-veto-surface="TELEGRAM"]{
+ --vc-bg:#090a0e;--vc-surface:#17181e;--vc-surface-2:#1e2027;
+ --vc-text:#f5f1ef;--vc-muted:#9c9ba7;--vc-border:rgba(255,246,243,.105);
+ --vc-red:#e78f80;
+ background:radial-gradient(ellipse 570px 410px at 67% -90px,rgba(152,71,72,.105),transparent 73%),
+ linear-gradient(180deg,#090a0f 0%,#0c0c11 44%,#08090c 100%);
+ letter-spacing:-.008em;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-frame{width:min(100%,800px)}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-main{
+ gap:21px;padding:20px clamp(15px,3.4vw,30px) calc(127px + env(safe-area-inset-bottom));
+}
+.vc-mini[data-veto-surface="TELEGRAM"] button,
+.vc-mini[data-veto-surface="TELEGRAM"] select{
+ -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] :is(button,a,input,select):focus-visible{
+ outline:2px solid #f3b9a9;outline-offset:3px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] :is(.vc-card,.vc-original-eye,.vc-chart,.vc-pocket-live,.vc-engine){
+ min-width:0;
+}
+
+/* 01 — Slim immersive masthead */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-header{
+ min-height:68px;gap:9px;padding:10px clamp(16px,3.5vw,30px);
+ background:rgba(11,12,17,.96);
+ border-bottom:1px solid rgba(255,235,227,.075);
+ box-shadow:0 11px 30px rgba(0,0,0,.12);
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-mark{
+ width:40px;height:40px;position:relative;overflow:hidden;border-radius:12px;
+ background:radial-gradient(circle at 28% 18%,rgba(255,168,149,.24),transparent 50%),
+ linear-gradient(142deg,#40232a,#17151b 72%);
+ border:1px solid rgba(245,160,145,.22);
+ color:#f0a093;box-shadow:inset 0 1px rgba(255,255,255,.095);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-mark:after{
+ content:"";position:absolute;inset:6px;border:1px solid rgba(255,200,185,.13);
+ border-radius:7px;pointer-events:none;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-logo{gap:10px}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-logo strong{
+ font-size:17px;letter-spacing:.13em;font-weight:820;color:#f9f4f1;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-logo small{
+ margin-top:5px;letter-spacing:.15em;color:#96929b;font-size:8px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-header-right{gap:8px;min-width:0}
+.vc-header-mode{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+ padding:7px 9px;border-radius:100px;font-size:8px;font-weight:760;letter-spacing:.065em;
+ border:1px solid rgba(224,159,145,.12);background:rgba(255,155,133,.035);color:#bfaaa8;
+}
+.vc-header-mode>span{width:5px;height:5px;border-radius:50%;background:#a98c86}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-channel{
+ font-size:9px;border-color:rgba(255,255,255,.07);color:#a69fa6;
+ background:rgba(255,255,255,.025);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-header-right>button{
+ border-radius:12px;width:39px;height:39px;
+ background:#1a1b22;color:#d4c7c5;border-color:rgba(255,255,255,.11);
+}
+
+/* 02 — Home art direction: a technical instrument, not decorative hype */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home{gap:25px}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero{
+ padding:24px clamp(19px,4vw,31px) 21px;border-radius:25px;min-height:440px;
+ border:1px solid rgba(227,150,140,.16);
+ background:radial-gradient(ellipse 280px 240px at 88% 21%,rgba(133,55,67,.14),transparent 85%),
+ linear-gradient(143deg,#211b22 0%,#16171d 41%,#111217 100%);
+ box-shadow:0 26px 66px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.045);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero:after{
+ content:"";position:absolute;pointer-events:none;inset:0;z-index:-1;opacity:.11;
+ background:repeating-linear-gradient(0deg,transparent 0 35px,rgba(213,152,146,.16) 36px),
+ repeating-linear-gradient(90deg,transparent 0 35px,rgba(213,152,146,.16) 36px);
+ mask-image:linear-gradient(90deg,transparent 22%,#000 100%);
+}
+.vc-home-orbit{position:absolute;pointer-events:none;z-index:0;top:38px;right:-72px;
+ width:310px;height:310px;opacity:.62;
+}
+.vc-home-orbit__ring{position:absolute;border-radius:50%;border:1px solid rgba(241,153,140,.22);
+ transform:rotate(-26deg)}
+.vc-home-orbit__ring--outer{inset:10px;border-style:dashed;opacity:.72}
+.vc-home-orbit__ring--inner{inset:56px;border-color:rgba(244,160,150,.3);
+ box-shadow:0 0 0 16px rgba(255,255,255,.006),0 0 0 42px rgba(255,255,255,.008)}
+.vc-home-orbit__ring--inner:before,.vc-home-orbit__ring--outer:before{
+ content:"";position:absolute;top:50%;left:-2px;width:4px;height:4px;background:#e9a093;
+ border-radius:50%;box-shadow:0 0 0 5px rgba(234,151,135,.1);
+}
+.vc-home-orbit__center{position:absolute;inset:103px;display:grid;place-items:center;
+ border-radius:50%;border:1px solid rgba(255,168,150,.19);
+ background:radial-gradient(circle at 30% 27%,#39252e,#201b23 66%,#11141b);
+ box-shadow:0 12px 32px rgba(0,0,0,.45),0 0 32px rgba(176,91,90,.1)}
+.vc-home-orbit__center span{font-weight:800;color:#e2a49b;font-size:39px;letter-spacing:-.08em;
+ text-shadow:0 1px 16px rgba(255,163,148,.14)}
+.vc-home-orbit__star{position:absolute;width:5px;height:5px;border-radius:50%;background:#d6b0a8}
+.vc-home-orbit__star--a{top:46px;left:132px}.vc-home-orbit__star--b{right:54px;bottom:58px;opacity:.6}
+.vc-home-orbit__crosshair{position:absolute;top:30%;left:16px;font-size:15px;color:#8d7479}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero>:not(.vc-home-orbit){position:relative;z-index:1}
+.vc-home-brand-line{display:inline-flex;align-items:center;gap:7px}
+.vc-home-brand-dot{display:inline-block;width:6px;height:6px;background:#dda08f;border-radius:50%}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-eyebrow{font-size:9px;letter-spacing:.12em;gap:7px}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-preview{
+ font-size:8px;color:#d1b6af;border-radius:100px;padding:7px 9px;
+ border-color:rgba(255,156,135,.14);background:rgba(154,95,83,.065);
+}
+.vc-home-edition{position:relative;z-index:1;display:flex;align-items:center;gap:9px;
+ margin-top:55px;letter-spacing:.09em;text-transform:uppercase;font-size:9px;
+ font-weight:760;color:#c9a59f;
+}
+.vc-home-edition span{color:#817c87}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero h1{
+ position:relative;z-index:1;font-size:clamp(34px,8.7vw,56px);
+ line-height:1.075;letter-spacing:-.058em;margin:13px 0 17px;
+ font-weight:720;max-width:485px;color:#fcf6f2;
+}
+.vc-home-hairline{width:68px;height:2px;background:linear-gradient(90deg,#f0a18d,transparent);
+ margin:0 0 19px;border-radius:5px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero p{
+ max-width:390px;font-size:12px;line-height:1.85;color:#bcb3b8;margin-bottom:25px;
+}
+.vc-home-hero__actions-label{display:flex;justify-content:space-between;gap:10px;align-items:center;
+ margin-bottom:9px;font-size:9px;font-weight:760;letter-spacing:.1em;color:#cdb3ae;
+}
+.vc-home-hero__actions-label span:last-child{color:#777681;font-weight:620;white-space:nowrap}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature{
+ position:relative;overflow:hidden;border:1px solid rgba(255,163,137,.28);
+ border-radius:17px;min-height:96px;padding:16px;
+ background:linear-gradient(110deg,#593235 0%,#35272e 62%,#25242e 100%);
+ box-shadow:inset 0 1px rgba(255,236,222,.065);
+ transition:border-color .2s ease,transform .2s ease,background .2s ease;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature:before{
+ content:"";position:absolute;pointer-events:none;right:-28px;top:-28px;
+ width:138px;height:138px;border-radius:50%;border:1px solid rgba(255,209,195,.13);
+ box-shadow:0 0 0 25px rgba(255,192,174,.018),0 0 0 50px rgba(255,192,174,.014);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature-icon{
+ width:51px;flex:0 0 51px;height:51px;position:relative;
+ background:rgba(18,16,23,.4);border:1px solid rgba(255,185,168,.24);
+ border-radius:14px;color:#ffc1ae;z-index:1;
+}
+.vc-home-feature-grid{position:absolute;inset:6px;z-index:0;pointer-events:none;opacity:.22;
+ background:linear-gradient(0deg,transparent 49%,#c8a6a0 50%,transparent 51%),
+ linear-gradient(90deg,transparent 49%,#c8a6a0 50%,transparent 51%)}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature-icon svg{position:relative;z-index:1}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature-copy strong{font-size:15px;font-weight:760}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature-copy small{font-size:9px;color:#f2b4a3}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature-copy em{font-size:10px;color:#d0b8b8}
+.vc-feature-index{margin-left:9px;opacity:.6}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-live-entry{
+ background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.1);
+ border-radius:15px;min-height:70px;
+ transition:background .18s,border-color .18s;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-live-entry:hover{
+ background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.19);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-live-entry__icon{
+ border-radius:12px;background:#27252c;color:#e8afa0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero-foot{border-top:1px solid rgba(255,255,255,.065);
+ padding-top:14px;margin-top:19px;justify-content:space-between}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-section-title span{font-size:17px;font-weight:750}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-section-title i{
+ font-style:normal;font-size:10px;color:#df9a89;letter-spacing:.06em;margin-right:6px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module{
+ position:relative;overflow:hidden;border-radius:18px;min-height:184px;
+ padding:17px 16px;background:linear-gradient(146deg,#202129,#15161d 83%);
+ border-color:rgba(255,255,255,.105);
+ transition:transform .18s,border-color .18s,background .18s;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module:before{
+ content:"";position:absolute;top:-70px;right:-63px;width:175px;height:175px;border-radius:50%;
+ background:radial-gradient(circle,rgba(187,98,92,.115),transparent 67%);pointer-events:none;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module--eye:before{
+ background:radial-gradient(circle,rgba(116,128,158,.135),transparent 65%);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module-icon{
+ width:46px;height:46px;border:1px solid rgba(255,172,152,.15);border-radius:13px;
+ background:rgba(233,153,132,.075);color:#eab7aa;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module--eye .vc-home-module-icon{
+ background:rgba(153,167,195,.065);color:#c9c9dc;border-color:rgba(165,177,196,.15);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module strong{font-size:14px;font-weight:770;letter-spacing:.04em}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module small{font-size:11px;line-height:1.6;color:#aeadb7}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module-open{
+ color:#e9b09f;margin-top:2px;font-size:10px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-agent{
+ min-height:83px;padding:15px 16px;border-radius:17px;background:#191a20;
+ border-color:rgba(255,255,255,.105);
+ transition:background .18s,border-color .18s;
+}
+.vc-home-agent__index{font-size:8px;letter-spacing:.06em;color:#91818b;font-weight:700;margin-left:5px}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-status{
+ border-radius:17px;padding:16px;background:#17181e;border-color:rgba(255,255,255,.085);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-status b{font-size:12px;line-height:1.45}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-status p{font-size:10px;line-height:1.8}
+@media (hover:hover){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature:hover,
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module:hover{
+  transform:translateY(-2px);border-color:rgba(247,174,157,.33);
+ }
+}
+
+/* 03 — Universal interior treatment */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-section-heading{margin:3px 0 4px}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-eyebrow{
+ font-weight:800;letter-spacing:.17em;color:#d9a095;font-size:9px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-section-heading h2{
+ margin:10px 0;font-size:clamp(29px,7.3vw,43px);line-height:1.08;
+ letter-spacing:-.052em;color:#f7f3f2;font-weight:750;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-section-heading p{
+ max-width:590px;font-size:12px;line-height:1.8;color:#aba7b1;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-card{
+ border-radius:20px;padding:19px;border-color:rgba(255,255,255,.09);
+ background:linear-gradient(150deg,#1c1d25,#13151b);
+ box-shadow:inset 0 1px rgba(255,255,255,.035);
+}
+.vc-workspace-intro{display:flex;gap:10px;align-items:center;min-width:0;
+ margin:0 0 1px;padding:0 1px 14px;border-bottom:1px solid rgba(255,255,255,.07);
+}
+.vc-workspace-intro__kicker{color:#c89287;letter-spacing:.14em;font-size:9px;font-weight:760}
+.vc-workspace-intro__name{color:#d7d2d7;font-weight:740;font-size:11px;letter-spacing:.045em;min-width:0;flex:1}
+.vc-workspace-intro__lock{display:flex;align-items:center;gap:5px;color:#85848f;
+ font-size:9px;white-space:nowrap}
+
+/* 04 — Calm loading and focus; no simulated market movement */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-stage-loading{
+ min-height:232px;padding:28px;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:13px;border-radius:20px;
+ background:linear-gradient(145deg,#1b1c23,#101218);
+ border:1px solid rgba(255,255,255,.075);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-stage-loading__ring{
+ width:35px;height:35px;border:2px solid rgba(230,165,151,.16);
+ border-top-color:#e8a797;border-radius:50%;animation:vc-noir-ring .9s linear infinite;
+}
+@keyframes vc-noir-ring{to{transform:rotate(1turn)}}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-stage-loading b{font-size:14px;color:#f2ecea}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-stage-loading small{font-size:10px;color:#8e8993}
+.vc-mini[data-veto-surface="TELEGRAM"] :is(.vc-workspace-failed,.vc-chart__empty,.vc-pocket-live__unavailable){
+ border-radius:19px;min-width:0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-failed{
+ background:linear-gradient(130deg,#261e23,#18191f);
+ border:1px solid rgba(244,177,154,.2);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-failed button{
+ background:#dca18e;color:#201319;border-radius:12px;
+}
+
+/* 05 — LIVE: editorial hierarchy and honest empty-data state */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-pocket-live__header{
+ border-radius:21px;padding:25px 21px;
+ border:1px solid rgba(232,149,138,.15);
+ background:radial-gradient(ellipse at 95% 7%,rgba(145,72,75,.15),transparent 65%),
+ linear-gradient(139deg,#252026,#17191f);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-pocket-live__header h1{
+ font-size:clamp(33px,8vw,47px);letter-spacing:-.06em;line-height:1.05;font-weight:720;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-pocket-live__quote{
+ border-radius:19px;padding:22px;background:linear-gradient(140deg,#1f2027,#16181e);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-pocket-live__price strong{
+ font-size:clamp(36px,9.4vw,53px);font-weight:720;letter-spacing:-.065em;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-pocket-live__readouts>div{
+ background:#191b21;border-radius:14px;padding:15px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-pocket-live__chart{
+ background:#e29e8b;color:#201417;border-radius:14px;
+ font-size:12px;font-weight:800;letter-spacing:.005em;
+ box-shadow:inset 0 1px rgba(255,255,255,.28);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-pocket-live__unavailable{
+ background:#18191f;border-style:solid;border-color:rgba(255,255,255,.07);
+}
+
+/* 06 — Charts: polished data cockpit without rewriting SVG evidence */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__hero{
+ border-color:rgba(237,150,133,.18);
+ background:radial-gradient(ellipse at 95% 4%,rgba(182,79,77,.12),transparent 59%),
+ linear-gradient(140deg,#211b22,#15171d);
+ border-radius:21px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__hero h1{
+ font-size:clamp(31px,8vw,46px);letter-spacing:-.052em;font-weight:720;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__market,
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__interval,
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__tools,
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__metrics{
+ border-radius:16px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__viewport{
+ border-radius:17px;scrollbar-color:rgba(255,180,155,.23) transparent;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__questions{
+ border-radius:19px;padding:19px;
+ background:linear-gradient(130deg,#201d26,#16181f);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__answer{
+ background:rgba(234,163,141,.045);border-left-color:#dba18c;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__question-options button{
+ transition:border-color .18s,background .18s;min-height:42px;
+}
+@media(hover:hover){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__question-options button:hover{
+  background:#3c2d33;border-color:rgba(241,172,152,.35);
+ }
+}
+
+/* 07 — VETO Eye and public evidence sheets */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-original-eye{
+ border:1px solid rgba(255,255,255,.09);border-radius:20px;
+ background:#10151d;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-original-eye .veto-world-eye__head{
+ background:linear-gradient(135deg,#1a222a,#141a22);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-original-eye .veto-world-eye__canvas-wrap{
+ border-radius:15px;overflow:hidden;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-original-eye :is(button,[role="button"]){
+ touch-action:manipulation;
+}
+
+/* 08 — AI dialogue */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-card{
+ position:relative;gap:15px;padding:21px;border-radius:21px;
+ background:linear-gradient(148deg,#1f1d25,#15171d 66%);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-avatar{
+ width:47px;height:47px;border-radius:15px;
+ background:radial-gradient(circle at 30% 20%,#5c353a,#271f27);
+ border:1px solid rgba(239,160,147,.22);color:#f0a696;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-message{
+ max-width:min(94%,620px);padding:15px 16px;border-radius:5px 17px 17px 17px;
+ background:#282730;border:1px solid rgba(255,255,255,.06);
+ font-size:12px;line-height:1.75;color:#e1dce0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-message b{
+ display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:.12em;color:#e6a99b;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-user{
+ padding:14px 17px;border-radius:17px 17px 4px 17px;
+ background:rgba(183,95,91,.14);border-color:rgba(239,156,137,.18);
+ line-height:1.7;overflow-wrap:anywhere;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-suggestions{gap:8px;margin:7px 0 3px}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-suggestions button{
+ border-radius:100px;min-height:39px;padding:10px 13px;
+ background:#24242c;border:1px solid rgba(255,255,255,.1);
+ font-size:10px;line-height:1.4;max-width:100%;white-space:normal;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-form{
+ min-height:59px;border-radius:16px;border-color:rgba(255,255,255,.16);
+ padding:9px 10px 9px 16px;background:#111319;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-form:focus-within{
+ border-color:rgba(237,168,149,.56);box-shadow:0 0 0 3px rgba(234,162,142,.07);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-form input{font-size:13px}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-form button{
+ width:40px;height:40px;flex:0 0 40px;border-radius:12px;
+ background:#e3a28f;color:#211315;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-recheck{
+ border-radius:12px;padding:11px 14px;
+}
+
+/* 09 — Agent: explicit locked-state design */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card{
+ position:relative;isolation:isolate;overflow:hidden;gap:14px;
+ padding:34px 24px 31px;background:radial-gradient(circle at 50% -30%,rgba(177,84,84,.13),transparent 55%),#191a20;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card:before{
+ content:"";position:absolute;width:220px;height:220px;top:-133px;left:50%;
+ transform:translateX(-50%);border-radius:50%;border:1px solid rgba(231,151,129,.16);
+ box-shadow:0 0 0 29px rgba(231,151,129,.018),0 0 0 62px rgba(231,151,129,.011);
+ pointer-events:none;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-shield{
+ position:relative;z-index:1;width:86px;height:86px;border-radius:26px;
+ background:linear-gradient(145deg,#493035,#241f28);
+ border:1px solid rgba(239,163,144,.25);color:#e8a492;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card h3{
+ font-size:clamp(34px,9vw,48px);letter-spacing:.085em;font-weight:760;color:#f0a695;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-stats span{
+ min-height:35px;border-radius:100px;border:1px solid rgba(255,255,255,.09);
+ background:#25232a;padding:9px 12px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-agent-card p{font-size:12px;line-height:1.8}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-under-note{
+ border-radius:14px;font-size:11px;line-height:1.7;
+}
+
+/* 10 — Signature navigation: six equally weighted focus targets */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav{
+ width:min(100%,800px);z-index:35;gap:2px;
+ border:1px solid rgba(255,255,255,.085);border-bottom:0;
+ border-radius:19px 19px 0 0;
+ padding:8px max(7px,env(safe-area-inset-right))
+ calc(9px + env(safe-area-inset-bottom))
+ max(7px,env(safe-area-inset-left));
+ background:rgba(17,17,23,.975);box-shadow:0 -12px 32px rgba(0,0,0,.27);
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button{
+ min-height:56px;padding:3px 0;border-radius:12px;gap:4px;position:relative;
+ transition:color .16s,background .16s;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav__icon{
+ width:36px;height:32px;display:grid;place-items:center;border-radius:11px;
+ color:inherit;background:transparent;transition:background .2s,color .2s;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button.active{
+ color:#f3af9b;background:rgba(235,158,142,.06);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button.active .vc-nav__icon{
+ background:rgba(233,154,139,.125);color:#f7b19f;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button.active:before{
+ content:"";position:absolute;top:2px;left:42%;right:42%;height:2px;
+ border-radius:0 0 3px 3px;background:#eba28e;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button>span:last-child{
+ font-size:clamp(9px,2.5vw,11px);font-weight:690;line-height:1.22;
+}
+
+/* 11 — Motion budget, foldable phones, reduced visual noise */
+@media (min-width:640px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero{padding:30px 32px 27px;min-height:455px}
+ .vc-home-orbit{right:0;top:25px;width:330px;height:330px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-grid{gap:13px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module{min-height:198px;padding:21px}
+}
+@media (max-width:410px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-header-mode{font-size:7px;padding:6px 7px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero{padding:21px 17px 18px;min-height:auto}
+ .vc-home-orbit{right:-131px;top:55px;opacity:.38}
+ .vc-home-edition{margin-top:43px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero h1{font-size:clamp(33px,9.1vw,40px);max-width:310px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature{padding:13px;gap:9px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module{padding:13px;min-height:188px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module strong{font-size:12px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module small{font-size:10px}
+}
+@media (max-width:355px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-header-mode{display:none}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-logo small{letter-spacing:.06em;font-size:7px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-preview{font-size:7px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-grid{gap:8px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module{padding:12px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav__icon{width:31px;height:31px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-nav button>span:last-child{font-size:8px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-intro{gap:7px}
+}
+@media (prefers-reduced-motion:reduce){
+ .vc-mini[data-veto-surface="TELEGRAM"] *,
+ .vc-mini[data-veto-surface="TELEGRAM"] *:before,
+ .vc-mini[data-veto-surface="TELEGRAM"] *:after{
+  animation:none!important;transition:none!important;scroll-behavior:auto!important;
+ }
+}
+
+/* 12 — Precise candle inspector: actual selected OHLCV, never invented ticks. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector{
+ min-width:0;margin:3px 0 0;background:linear-gradient(140deg,#20212a,#171921);
+ border-top:1px solid rgba(255,255,255,.09);padding:13px 15px 15px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-head{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-head>div:first-child{
+ min-width:0;display:grid;gap:5px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-head strong{
+ font-size:11px;color:#e9e4e6;font-weight:760;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-head small{
+ font-size:9px;color:#aba2a9;line-height:1.4;overflow-wrap:anywhere;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-nav{
+ flex:0 0 auto;display:flex;gap:7px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-nav button{
+ height:37px;width:37px;display:grid;place-items:center;border-radius:10px;
+ border:1px solid rgba(255,255,255,.13);background:#2c2b35;color:#f3b3a2;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-nav button:disabled{opacity:.4}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-values{
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-top:13px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-values span{
+ display:flex;flex-direction:column;gap:5px;min-width:0;padding:9px 7px;
+ border-radius:8px;background:rgba(255,255,255,.035);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-values small{
+ font-size:8px;letter-spacing:.065em;color:#9d969f;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-values b{
+ font-size:clamp(9px,2.5vw,12px);color:#f0e6e5;overflow-wrap:anywhere;
+ font-variant-numeric:tabular-nums;
+}
+@media(max-width:410px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-values{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+}
+
+/* Keep candle inspector stationary while the 960-unit SVG scrolls sideways. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__interactive{
+ min-width:0;display:flex;flex-direction:column;overflow:hidden;
+ border-radius:18px;border:1px solid rgba(255,255,255,.1);
+ background:#15161c;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__interactive .vc-chart__viewport{
+ border:0;border-radius:0;width:100%;min-width:0;flex:none;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__interactive .vc-chart__inspector{
+ border-top:1px solid rgba(255,255,255,.09);margin:0;
+}
+/* Input focus alone must never hide navigation: a connected keyboard or
+   unfolded Fold does not occlude the viewport. The Telegram-only visual
+   viewport gate in veto-command-mini.tsx controls the mobile dock instead. */
+
+/* 13 — iOS Telegram focus behavior and minimum primary control targets. */
+.vc-mini[data-veto-surface="TELEGRAM"] :is(.vc-ai-form input,.vc-chart__question-form input){
+ font-size:16px;line-height:1.25;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] :is(.vc-pocket-live__controls select,.vc-chart__market select){
+ font-size:16px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__interval button,
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__tools button,
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__history button{
+ min-height:44px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__inspector-nav button{
+ min-height:44px;height:44px;width:44px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-chart__market>button{
+ min-height:44px;flex-basis:44px;
+}
+
+/* 14 — Navigation is a real stack, not an exit trap. Native Telegram BackButton
+   mirrors this control, with a normal accessible fallback in mobile browsers. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-intro__back{
+ flex:0 0 44px;display:grid;place-items:center;width:44px;height:44px;
+ margin:-4px 0 -4px -5px;background:rgba(232,158,140,.075);
+ border:1px solid rgba(236,159,137,.14);border-radius:13px;
+ color:#ebae9d;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-intro__back:active{
+ background:rgba(232,158,140,.18);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-intro__kicker{
+ flex:0 0 auto;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-intro__name{
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+@media(max-width:355px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-intro__back{
+  flex-basis:40px;width:40px;height:44px;
+ }
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-workspace-intro__lock{
+  font-size:8px;
+ }
+}
+
+/* 15 — In-house VETO V glyph; crisp vector, no brand asset or image CDN. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-mark__monogram{
+ width:26px;height:26px;display:block;filter:drop-shadow(0 1px 5px rgba(247,146,129,.16));
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-mark:after{
+ inset:5px;border-color:rgba(255,212,195,.1);
+}
+
+/* 16 — Actual VETO brand mark from /public/veto-mark.svg.
+   The icon is shared with the main Decision Command, not a mock V glyph. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-mark{
+  background:#0b0c0f;border-color:#2a2c33;box-shadow:none;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-mark:after{content:none}
+.vc-mark__asset{display:block;width:100%;height:100%;object-fit:contain;flex-shrink:0}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-orbit__brand{
+  width:calc(100% - 11px);height:calc(100% - 11px);object-fit:contain;
+  border-radius:17px;filter:drop-shadow(0 8px 13px rgba(0,0,0,.3));
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module--agent{
+  background:linear-gradient(146deg,#1d1b22,#14171c 90%);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module--agent .vc-home-module-icon{
+  color:#c8b2c8;background:rgba(161,137,164,.075);
+  border-color:rgba(196,173,197,.16);
+}
+
+/* 17 — VETO ATLAS: meaningful evidence-first command center.
+   These are presentation refinements only; no inferred live state. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home{
+ gap:18px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero{
+ min-height:435px;padding:24px clamp(20px,4vw,31px) 21px;
+ background:
+  radial-gradient(ellipse 350px 300px at 94% 10%,rgba(117,62,66,.19),transparent 77%),
+  linear-gradient(140deg,#232026,#16171d 53%,#101216);
+ border-color:rgba(239,169,153,.19);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-orbit{
+ right:-45px;top:22px;opacity:.47;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-orbit__center{
+ border-radius:22px;background:#0b0c0f;inset:101px;
+ transform:rotate(-8deg);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-orbit__brand{
+ border-radius:15px;transform:rotate(8deg);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-edition{
+ margin-top:62px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero h1{
+ white-space:pre-line;font-size:clamp(37px,8.9vw,60px);
+ letter-spacing:-.073em;line-height:1.045;
+ max-width:470px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero p{
+ font-size:12px;line-height:1.78;max-width:445px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature{
+ border-radius:15px;min-height:86px;
+ background:linear-gradient(105deg,#573532,#2f252b 70%,#25232b);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-feature:hover{
+ border-color:rgba(255,201,179,.56);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-live-entry{
+ min-height:65px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal{
+ padding:20px;border-radius:21px;
+ background:linear-gradient(140deg,#1d1d24,#111319);
+ border:1px solid rgba(255,243,236,.105);
+ box-shadow:inset 0 1px rgba(255,255,255,.045);
+ display:flex;flex-direction:column;gap:17px;min-width:0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__header{
+ display:flex;justify-content:space-between;gap:9px;align-items:center;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__eyebrow{
+ display:flex;align-items:center;gap:8px;
+ color:#dfa89c;font-size:10px;font-weight:810;letter-spacing:.13em;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__mode{
+ color:#8e8b96;letter-spacing:.08em;font-size:8px;font-weight:720;text-align:right;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__body{
+ display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+ gap:15px;align-items:start;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__primary strong{
+ display:block;font-size:21px;letter-spacing:-.05em;color:#eee7e2;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__primary p{
+ color:#a9a6ae;line-height:1.7;font-size:11px;margin:9px 0 0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health{
+ display:grid;gap:7px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health>div{
+ display:flex;align-items:center;gap:7px;min-width:0;
+ border:1px solid rgba(255,255,255,.065);border-radius:10px;
+ background:rgba(255,255,255,.017);padding:10px 9px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__dot{
+ height:6px;width:6px;flex:0 0 6px;background:#bd9f98;border-radius:50%;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health span:nth-child(2){
+ color:#b8b5c1;font-size:9px;letter-spacing:.04em;min-width:0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health b{
+ color:#d2a89f;font-size:8px;font-weight:770;white-space:nowrap;margin-left:auto;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__open{
+ border:1px solid rgba(250,178,156,.28);border-radius:12px;
+ display:flex;align-items:center;justify-content:space-between;gap:8px;
+ width:100%;min-height:46px;padding:12px 14px;text-align:left;
+ background:rgba(248,153,126,.055);color:#e9b8a6;
+ font-size:11px;font-weight:750;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__open:hover{
+ background:rgba(248,153,126,.14);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-section-title{
+ margin-bottom:11px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-module{
+ min-height:165px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-home-status{
+ display:flex;align-items:flex-start;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] [hidden]{
+ display:none!important;
+}
+@media(min-width:700px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:15px;
+ }
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero{grid-column:span 3;min-height:515px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal{grid-column:span 2;justify-content:space-between}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__body{
+  grid-template-columns:1fr;
+ }
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-section,
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-status{grid-column:span 5}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:520px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__body{
+  grid-template-columns:1fr;
+ }
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health{
+  grid-template-columns:1fr 1fr;
+ }
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health>div{
+  flex-wrap:wrap;
+ }
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health b{width:100%;margin:0 0 0 13px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-orbit{right:-97px;opacity:.33}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-edition{margin-top:51px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-hero h1{font-size:clamp(35px,9.3vw,43px)}
+}
+@media(max-width:355px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal{padding:16px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__mode{font-size:7px}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health{grid-template-columns:1fr}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-terminal__health b{width:auto;margin-left:auto}
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-home-orbit{right:-121px}
+}
+
+/* 18 — Evidence-aware AI: candle research and original Core are distinct sources. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence{
+ display:flex;flex-direction:column;gap:11px;padding:17px;
+ border:1px solid rgba(142,215,189,.23);border-radius:16px;
+ background:linear-gradient(145deg,rgba(64,112,101,.10),rgba(18,24,27,.55));
+ margin:14px 0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence__source{
+ color:#a8d5c4;font-size:10px;letter-spacing:.08em;font-weight:760;
+ display:flex;align-items:center;gap:9px;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence>strong{
+ font-size:18px;font-weight:770;letter-spacing:-.03em;color:#f1f4f0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence>small{
+ font-size:10px;color:#9ca9a6;font-variant-numeric:tabular-nums;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence>p{
+ margin:0;color:#c7d2ce;line-height:1.7;font-size:11px;
+ overflow-wrap:anywhere;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence__caution{
+ padding-top:10px;border-top:1px solid rgba(142,215,189,.14);
+ color:#9fb9ad;font-size:10px;line-height:1.65;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-expired{
+ background:rgba(224,152,123,.07);border:1px solid rgba(224,152,123,.22);
+ border-radius:12px;padding:11px 13px;color:#efc2b4;font-size:11px;line-height:1.6;
+}
+
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-expired__refresh{
+ display:flex;align-items:center;justify-content:space-between;gap:9px;
+ margin-top:12px;min-height:44px;padding:10px 12px;
+ border-radius:11px;border:1px solid rgba(244,173,153,.32);
+ color:#ffd1bd;background:rgba(244,173,153,.075);
+ font-size:11px;font-weight:760;width:100%;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-expired__refresh:focus-visible{
+ outline:2px solid #f8b6a5;outline-offset:2px;
+}
+
+/* 19 — Research questions are actionable, scoped to the same source snapshot. */
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence__questions{
+ display:flex;flex-wrap:wrap;gap:8px;margin:3px 0 0;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence__questions button{
+ padding:9px 12px;min-height:44px;border:1px solid rgba(173,217,194,.22);
+ border-radius:11px;background:rgba(131,199,174,.055);color:#b6d7c8;
+ font-size:11px;line-height:1.35;font-weight:720;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence__questions button:hover{
+ background:rgba(131,199,174,.15);
+}
+.vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence__core{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ width:100%;min-height:44px;padding:10px 12px;border-radius:11px;
+ background:rgba(255,255,255,.026);border:1px solid rgba(255,255,255,.13);
+ font-size:11px;text-align:left;color:#c6c6cd;
+}
+.vc-mini[data-veto-surface="TELEGRAM"] :is(
+ .vc-ai-chart-evidence__core,.vc-ai-chart-evidence__questions button):focus-visible{
+ outline:2px solid #b1e0c9;outline-offset:2px;
+}
+@media(max-width:355px){
+ .vc-mini[data-veto-surface="TELEGRAM"] .vc-ai-chart-evidence__questions button{flex:1 1 46%}
+}
