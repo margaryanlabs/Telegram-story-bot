@@ -121,12 +121,17 @@
     for (const button of bar.querySelectorAll('[data-veto-story-person]')) {
       const index = Number(button.dataset.vetoStoryPerson);
       const face = button.querySelector('.veto-story-face');
-      const src = known.get(state.contacts[index]?.userId);
+      // Dataset IDs are strings; Telegram story userId may be numeric.
+      const person=state.contacts[index];
+      const src = person ? known.get(String(person.userId)) : null;
       if (!face || !src || face.querySelector('img')?.src === src) continue;
       const image = document.createElement('img');
       image.src = src;
       image.alt = '';
       image.className = 'veto-story-contact-photo';
+      image.addEventListener('error',()=>{
+        if(face.contains(image))face.textContent=initials(person.name);
+      },{once:true});
       face.replaceChildren(image);
     }
   }
