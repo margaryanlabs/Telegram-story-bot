@@ -10,7 +10,7 @@
   --vet-border:rgba(255,255,255,.10);
   --vet-ink:#f6f4f6;
   --vet-muted:#aaa5b0;
-  --vet-pink:#e9a7ba;
+  --vet-pink:#ef75a0;
 }
 /* Main shell: never force black over explicitly chosen light shell themes. */
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]){
@@ -276,6 +276,11 @@ body:has(#playerBar) .player-bar button{
   body:has(#playerBar) .player-bar{
     bottom:max(8px,env(safe-area-inset-bottom));
     min-width:0;
+  }
+  /* Nested music uses its own viewport. Lift its controls above host navigation. */
+  html.v6-embedded body:has(#playerBar) .player-bar{
+    bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;
+    z-index:35;
   }
   html#vetogram.vetogram-noir .bottom-nav .nav-item{
     min-height:46px;
