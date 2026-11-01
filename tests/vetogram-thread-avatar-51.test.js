@@ -13,7 +13,8 @@ const b=source.indexOf('  function rememberPreview(',a);
 assert.ok(a>0&&b>a,'test production avatar queue, not a duplicate controller');
 const snippet=source.slice(a,b);
 
-async function fixture({archiveOnly=false,changeOwner=false,changeThread=false}={}){
+async function fixture({archiveOnly=false,changeOwner=false,changeThread=false,initialScreen='telegram',initiallyHidden=false}={}){
+  let visibleScreen=initialScreen,documentHidden=initiallyHidden;
   let calls=0,requested=[],finish=null;
   const header={img:null,replaceChildren(node){this.img=node}};
   const state={
@@ -28,7 +29,8 @@ async function fixture({archiveOnly=false,changeOwner=false,changeThread=false}=
   const ctx=vm.createContext({
     state,tg:{initData:'signed'},$:id=>nodes[id]||null,
     document:{
-      querySelector:()=>({dataset:{screen:'telegram'}}),
+      get hidden(){return documentHidden;},
+      querySelector:()=>({dataset:{screen:visibleScreen}}),
       querySelectorAll:()=>[],createElement:tag=>({tag}),
     },
     window:{innerHeight:800,addEventListener(){}},
@@ -56,7 +58,14 @@ async function fixture({archiveOnly=false,changeOwner=false,changeThread=false}=
     finish();
   }
   for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));
-  return {calls,requested,header,state};
+  return {calls,requested,header,state,
+    async resume(){
+      visibleScreen='telegram';documentHidden=false;
+      new vm.Script('queueVisibleAvatars()').runInContext(ctx);
+      if(finish)finish();
+      for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));
+      return {calls,requested,header,state};
+    }};
 }
 
 test('open chat portrait loads even when entire inbox list is hidden',async()=>{
@@ -91,4 +100,25 @@ test('screen-level queue explicitly prioritizes owner verified active thread',()
   assert.match(snippet,/const threadId=threadVisible&&state\.connectionProof\?\.verified===true/);
   assert.match(snippet,/state\.avatarQueue\.unshift\(threadId\)/);
   assert.match(source,/setThread\(chat\);\s*\/\/ The owner may open a chat/);
+});
+
+test('hidden media screen defers signed avatar requests until the user returns to Chats',async()=>{
+  const f=await fixture({initialScreen:'media'});
+  assert.equal(f.calls,0,'no photo connection for a hidden inbox');
+  const resumed=await f.resume();
+  assert.equal(resumed.calls,1,'visible active thread must resume avatar lookup');
+  assert.equal(resumed.header.img.src,'blob:signed-avatar');
+});
+
+test('document visibility prevents background avatar fetches, then resumes after focus',async()=>{
+  const f=await fixture({initiallyHidden:true});
+  assert.equal(f.calls,0);
+  const resumed=await f.resume();
+  assert.equal(resumed.calls,1);
+});
+
+test('screen-change and visibility handlers requeue missing owner avatars',()=>{
+  assert.match(source,/else\{\s*\/\/ Repaint missing thumbnails even when the inbox was already loaded\.\s*queueVisibleAvatars\(\)/);
+  assert.match(source,/else if\(!resetOwner\(\)\)\{\s*queueVisibleAvatars\(\)/);
+  assert.match(snippet,/if\(document\.hidden\|\|document\.querySelector\('\.screen\.active'\)\?\.dataset\?\.screen!=='telegram'\)return/);
 });
