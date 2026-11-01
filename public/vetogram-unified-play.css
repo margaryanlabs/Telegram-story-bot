@@ -1,0 +1,23 @@
+/* The Play tile is a fourth world in the existing VETOGRAM 6.2 Media hub.
+   Play itself retains the audited standalone responsive game stylesheet. */
+.v6-media .v6-world-play{--v6-accent:#c89cff;position:relative;overflow:hidden}
+.v6-media .v6-world-play .v6-world-index{color:#d5b6ff}
+.v6-media .v6-world-play .v6-world-art.v6-games{
+  display:flex;align-items:center;justify-content:center;gap:clamp(8px,3vw,20px);
+  min-height:120px;background:radial-gradient(ellipse at 45% 48%,rgba(153,87,255,.32),transparent 68%);
+  color:#eee4ff;font-size:clamp(2rem,5vw,3.8rem);
+}
+.v6-media .v6-world-play .v6-games>*{font-style:normal;filter:drop-shadow(0 3px 14px rgba(166,92,255,.4))}
+.v6-media .v6-world-play .v6-games b{font-size:.75em;transform:translateY(-8px)}
+.v6-media .v6-world-play:hover .v6-games i:first-child{transform:translateY(-6px) rotate(-8deg);transition:transform .25s ease}
+.v6-media .v6-world-play:hover .v6-games i:last-child{transform:translateY(5px) rotate(9deg);transition:transform .25s ease}
+.vp-screen{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));overscroll-behavior:contain}
+.vp-screen .vp-shell{width:100%;max-width:1100px;margin-inline:auto}
+.vp-screen[hidden]{display:none!important}
+@media(max-width:640px){
+ .v6-media .v6-world-play .v6-world-art.v6-games{min-height:92px}
+ .vp-screen .vp-shell{padding-inline:clamp(12px,4vw,20px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .v6-media .v6-world-play .v6-games>*{transition:none!important;transform:none!important}
+}
