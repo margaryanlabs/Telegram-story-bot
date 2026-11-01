@@ -52,3 +52,14 @@ This is a source change, **not a production deployment**. Connecting book/cinema
 **Current regression coverage:** 13 targeted cases defined; 13/13 passed in the chat's isolated JavaScript source/contract runner with mock URL and response objects. Syntax parsing passed for Books, Cinema, media bridge, Music and Music Catalog. This is **not** a real Node test runner, hosted API probe, Telegram device QA, or verified media stream.
 
 **Still release-blocking:** actual Android/iOS Telegram scenarios, Node full test run, authorized media-source availability, access/rights audit, Vercel build-rate-limit. No production merge or deployment.
+
+## Screen lifecycle, network and playback continuation — 1 November 2026
+
+- Enforced fail-closed playback: `cinema.js::play` treats both `externalRutube` and `discoveryOnly` flags as external-site-only. A metadata change cannot silently turn a third-party movie upload into an in-app licensed iframe.
+- Aborted superseded `/api/cinema/movies` requests using a single catalog AbortController. Switching tabs cancels in-flight fetches, invalidates old response tickets, clears search debounce and leaves the load-more button unlocked. Library/Series/Foreign tabs do not issue an irrelevant catalog request. This avoids stale UI updates and unnecessary bandwidth on mobile.
+- Reduced idle foreground identity polling from 1 second to 10 seconds in the media host; immediate checks on opening a module, receiving a message, focus and visibility are still in place. Background WebViews do not run the periodic check.
+- Added behavioral tests `tests/vetogram-media-bridge-behavior.test.js`: Watch click, native play, provider-confirmed play, error/waiting, hidden Cinema closes, and hidden Music keeps audio playing. No browser-specific external provider is claimed verified.
+- Source/contract test file now covers 16 cases, and six additional VM-based behavioral cases are authored. In an isolated code runner, 16/16 source checks passed and a six-step direct media-bridge event simulation passed (including closing hidden Cinema and keeping audio during Music view switches). Six browser JavaScript modules parsed successfully.
+- The real local Node test suite was **not** run: the repository cannot be cloned in the active runtime (github.com DNS unavailable) and the connector does not provide a command runner. These isolated checks are not an E2E test or build confirmation.
+
+Required release gates remain unchanged: real Node CI, Android Telegram and iOS WebView, licensed playback, source coverage, account switch tests, and preview deployment once infrastructure is available.
