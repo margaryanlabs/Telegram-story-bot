@@ -10,6 +10,8 @@
     Object.freeze({id:'pairs', name:'Четыре пары', genre:'cards', kind:'local', tags:['память','карты','пары','memory']}),
     Object.freeze({id:'tic', name:'Крестики-нолики', genre:'strategy', kind:'local', tags:['х','о','крестики','бот','tic-tac-toe']}),
     Object.freeze({id:'2048', name:'2048', genre:'puzzle', kind:'local', tags:['числа','логика','головоломка','2048']}),
+    Object.freeze({id:'mines', name:'Сапёр', genre:'puzzle', kind:'local', tags:['мины','логика','флажки','minesweeper','сапер']}),
+    Object.freeze({id:'snake', name:'Змейка', genre:'arcade', kind:'local', tags:['змейка','snake','аркада','скорость','яблоко']}),
   ]);
   window.VetogramPlayCatalog = catalog;
   const elements = Array.from(root.querySelectorAll('[data-vp-game]'));
