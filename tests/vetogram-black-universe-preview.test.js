@@ -189,3 +189,14 @@ test('saved music metadata is not misreported as a playable audio stream',()=>{
  assert.match(host,/message\.status==='search'/);
  assert.match(host,/воспроизведение пока не началось/);
 });
+
+test('live message polling is aborted when leaving Chats or signing out',()=>{
+ const chats=read('public/telegram-chats.js');
+ assert.match(chats,/syncAbort:null/);
+ assert.match(chats,/function cancelActivePoll\(\)\{/);
+ assert.match(chats,/state\.syncAbort=controller/);
+ assert.match(chats,/if\(runId!==state\.syncRunId\|\|!maySyncThread\(\)/);
+ assert.match(chats,/if\(state\.syncAbort===controller\)state\.syncAbort=null/);
+ assert.match(chats,/if\(document\.hidden\)\{stopThreadSync\(\);cancelActivePoll\(\);\}/);
+ assert.match(chats,/window\.addEventListener\('offline',[\s\S]*?stopThreadSync\(\);cancelActivePoll\(\)/);
+});
