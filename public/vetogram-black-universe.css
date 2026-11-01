@@ -1,0 +1,161 @@
+/* VETOGRAM 7 / BLACK UNIVERSE
+ * One calm visual system shared by Messenger, Media, Cinema, Books and Music.
+ * Loaded LAST; respects the explicitly selected light/sepia reading modes
+ * and the user's custom chat wallpaper.
+ */
+:root{
+  --vet-black:#000;
+  --vet-panel:#101012;
+  --vet-panel-raised:#18181c;
+  --vet-border:rgba(255,255,255,.10);
+  --vet-ink:#f6f4f6;
+  --vet-muted:#aaa5b0;
+  --vet-pink:#e9a7ba;
+}
+/* Main shell: never force black over explicitly chosen light shell themes. */
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]){
+  color-scheme:dark;
+  --v6-bg:#000;
+  --v6-surface:#101012;
+  --v6-line:var(--vet-border);
+  --v6-text:var(--vet-ink);
+  --v6-muted:var(--vet-muted);
+  --v6-accent:var(--vet-pink);
+  --noir-bg:#000;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]),
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]) body{
+  background:#000!important;
+  background-image:none!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ :is(.v61-home,.v6-media-stage,.v6-profile,.v61-vault,.vp-arcade,.v6-media,.v6-world-section){
+  background-color:#000!important;
+  background-image:none!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ :is(.v61-hero,.v61-vault-spotlight,.v6-world,.v6-profile-card,.vp-card,.v61-player-sheet){
+  border-color:var(--vet-border)!important;
+  box-shadow:none!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ :is(.v61-vault-spotlight,.v6-world,.v6-profile-card,.vp-card){
+  background:var(--vet-panel)!important;
+  background-image:none!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .v61-hero{
+  background:radial-gradient(ellipse 80% 110% at 110% -10%,rgba(233,167,186,.10),transparent 65%),#000!important;
+  color:var(--vet-ink);
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .bottom-nav{
+  background:rgba(7,7,9,.96)!important;
+  border-color:var(--vet-border)!important;
+  -webkit-backdrop-filter:blur(24px);
+  backdrop-filter:blur(24px);
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .nav-item.active{
+  color:var(--vet-pink)!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .v6-module-bar{
+  background:#000!important;
+  border-bottom:1px solid var(--vet-border)!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .v6-world:hover{
+  background:var(--vet-panel-raised)!important;
+  border-color:rgba(233,167,186,.34)!important;
+}
+html#vetogram.vetogram-universe:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .v61-player-sheet{
+  background:#101012!important;
+}
+
+/* Embedded media: the base surfaces are true black, visual interest is in real art. */
+html:has(body #cinemaPlayer),
+html:has(body #reader),
+html:has(body #playerBar){color-scheme:dark}
+body:has(#cinemaPlayer),
+body:has(#reader),
+body:has(#playerBar){
+  background:#000!important;
+  background-image:none!important;
+}
+body:has(#cinemaPlayer) :is(.cinema-header,.cinema-bottom,.cinema-section-nav){
+  background:rgba(8,8,10,.97)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#cinemaPlayer) .cinema-hero{
+  background:#101012!important;
+  border:1px solid var(--vet-border)!important;
+  box-shadow:none!important;
+}
+body:has(#cinemaPlayer) :is(.cinema-card,.cinema-studio-card,.cinema-watch-card){
+  background:var(--vet-panel)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#cinemaPlayer) .cinema-card-art:has(img) .cinema-card-art-title{
+  /* Keep the clean poster visible; the accessible title stays below it. */
+  display:none!important;
+}
+body:has(#cinemaPlayer) .cinema-card-art img{
+  width:100%;height:100%;object-fit:cover;
+}
+body:has(#cinemaPlayer) .cinema-player-shell{
+  background:#000!important;
+}
+body:has(#playerBar) :is(.app,.main,.sidebar,.mobile-nav){
+  background:#000!important;
+  background-image:none!important;
+}
+body:has(#playerBar) :is(.topbar,.player-bar){
+  background:rgba(12,12,14,.97)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#playerBar) :is(.hero,.catalog-hero,.charts-hero,.archive-hero,.mixter-hero){
+  background:linear-gradient(160deg,#19151b,#101012 62%,#0c0b0e)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#playerBar) :is(.catalog-track,.chart-track,.track-row,.native-track,.archive-track,.mixter-track){
+  background:var(--vet-panel)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#reader) :is(.books-main,.topbar){
+  background-color:#000!important;
+  background-image:none!important;
+}
+body:has(#reader) :is(.book,.featured-edition,.hero-show-book){
+  background-color:var(--vet-panel)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#reader) .book-cover:not(:has(img)){
+  background:linear-gradient(145deg,#30202b 0%,#191821 50%,#111015 100%)!important;
+}
+body:has(#reader) .reader:not([data-theme="light"]):not([data-theme="sepia"]){
+  --reader-bg:#0d0d10;
+  --reader-color:#f1eaf0;
+  --reader-line:rgba(255,255,255,.11);
+  --reader-muted:#b3aeb6;
+}
+body:has(#reader) .reader:not([data-theme="light"]):not([data-theme="sepia"])
+ :is(.reader-top,.reader-bottom,.reader-paper){
+  background-color:var(--reader-bg)!important;
+}
+
+/* Accessibility and calm performance on older mobile devices. */
+:is(.nav-item,.v6-world,.cinema-card,.book-main,.catalog-track):focus-visible{
+  outline:2px solid var(--vet-pink)!important;
+  outline-offset:3px;
+}
+@media (max-width:600px){
+  body:has(#cinemaPlayer) .cinema-card-art img{transform:none}
+  body:has(#playerBar) .player-bar{backdrop-filter:blur(18px)}
+}
+@media (prefers-reduced-motion:reduce){
+  :is(.v6-world,.cinema-card,.cinema-card-art img,.book-cover,.catalog-track){
+    animation:none!important;transition:none!important;
+  }
+}
