@@ -10,12 +10,12 @@ html#vetogram.vetogram-noir body.veto-chat-active > .ambient{
   display:none!important;
 }
 html#vetogram.vetogram-noir body.veto-chat-active{
-  background:#0c111b!important;
+  background:#000000!important;
 }
 
 /* A restrained graphite palette. Other user-selected chat themes remain intact. */
 #vetogram.vetogram-noir #telegramMirror[data-chat-theme="graphite"]{
-  --ct-bg:#0c111b;
+  --ct-bg:#000000;
   --ct-panel:#131b29;
   --ct-elev:#192335;
   --ct-input:#151d2b;
@@ -26,7 +26,7 @@ html#vetogram.vetogram-noir body.veto-chat-active{
   --ct-in:#1c2839;
   --ct-out:#384968;
   --ct-skeleton:#1d2b3f;
-  --veto-list-bg:#0c111b;
+  --veto-list-bg:#000000;
   --veto-header:#121a28;
   --veto-story-glow:linear-gradient(135deg,#b77287,#9275ae 57%,#687fae);
   --veto-row-hover:rgba(153,175,213,.07);
@@ -36,7 +36,7 @@ html#vetogram.vetogram-noir body.veto-chat-active{
 #vetogram.vetogram-noir body.veto-chat-active #telegramMirror[data-chat-theme="graphite"] .veto-mirror-list,
 #vetogram.vetogram-noir body.veto-chat-active #telegramMirror[data-chat-theme="graphite"] .veto-mirror-thread,
 #vetogram.vetogram-noir body.veto-chat-active #telegramMirror[data-chat-theme="graphite"] .veto-mirror-thread-body{
-  background:#0c111b!important;
+  background:#000000!important;
   background-image:none!important;
   box-shadow:none!important;
 }
@@ -46,7 +46,7 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
 #telegramMirror .veto-mirror-heading.vetogram-header{
   height:56px!important;max-height:56px!important;min-height:56px!important;
   padding:6px 12px!important;margin:0!important;
-  gap:8px!important;background:#101827!important;
+  gap:8px!important;background:#0e0e11!important;
   border-bottom:1px solid rgba(172,191,221,.10)!important;
   overflow:visible!important;
 }
@@ -61,7 +61,7 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
   box-shadow:none!important;
 }
 #vetogram.vetogram-noir #telegramMirror .veto-mirror-search-wrap{
-  background:#151b26!important;
+  background:#101013!important;
   border:1px solid rgba(188,204,227,.10)!important;
   box-shadow:none!important;border-radius:14px!important;
   margin-block:10px!important;
@@ -120,7 +120,7 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
 }
 #vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
 .veto-story-face{
-  border:2px solid #111a28!important;
+  border:2px solid #0c0c0f!important;
   box-shadow:none!important;
 }
 #vetogram.vetogram-noir :is(#telegramMirror,#v5StoriesWatch)
@@ -138,12 +138,12 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
 
 /* The conversation should read like messages, not a decorative dashboard. */
 #vetogram.vetogram-noir #telegramMirror[data-chat-theme="graphite"] .veto-mirror-thread-bar{
-  background:#131c2b!important;background-image:none!important;
+  background:#101013!important;background-image:none!important;
   border-bottom:1px solid rgba(185,201,227,.12)!important;
   box-shadow:none!important;
 }
 #vetogram.vetogram-noir #telegramMirror[data-chat-theme="graphite"] .veto-mirror-sync-strip{
-  background:#111a28!important;
+  background:#0c0c0f!important;
   box-shadow:none!important;
   border-bottom:1px solid rgba(185,201,227,.09)!important;
 }
@@ -157,7 +157,7 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
 }
 #vetogram.vetogram-noir #telegramMirror[data-chat-theme="graphite"]
 .veto-mirror-thread-bottom{
-  background:#121b2b!important;background-image:none!important;
+  background:#131316!important;background-image:none!important;
   border-top:1px solid rgba(185,201,227,.11)!important;
   box-shadow:none!important;
 }
