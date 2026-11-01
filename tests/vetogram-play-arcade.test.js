@@ -97,3 +97,16 @@ test('arcade does not access Telegram identity or network APIs',()=>{
   assert.doesNotMatch(js,/\bfetch\s*\(|XMLHttpRequest|initData|telegram-chats|sendMessage|postMessage|document\.cookie/);
   assert.match(html,/docs\/vetogram-play-developers\.md/);
 });
+
+test('keyboard arrows never hijack page or Snake; only the open 2048 dialog owns keys',()=>{
+  const ui=setup(),grid=ui.elements.get('#vp2048Grid');
+  const handler=ui.keyboard.keydown;
+  assert.equal(typeof handler,'function');
+  const key=(tagName)=>{let prevented=0;handler({key:'ArrowRight',target:{tagName},preventDefault(){prevented++;}});return prevented;};
+  assert.equal(key('BODY'),0,'closed 2048 must not steal page scrolling');
+  grid.closest=selector=>selector==='.vp-game-in-dialog'?{}:null;
+  assert.equal(key('INPUT'),0,'typing in search must not move 2048');
+  assert.equal(key('BODY'),1,'active 2048 owns only its dialog arrow input');
+  grid.closest=()=>null;
+  assert.equal(key('BODY'),0,'after closing modal, keyboard is released');
+});
