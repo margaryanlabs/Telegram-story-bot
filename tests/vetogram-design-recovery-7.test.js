@@ -23,14 +23,16 @@ test('one obsidian background replaces the second blue messenger',()=>{
   assert.match(brand,/--vet-black:#000/);
 });
 
-test('music is compact and keeps controls above the host navigation',()=>{
+test('music uses a single persistent host controller without duplicate embedded bar',()=>{
   const native=read('vetogram-music-native.css');
   const radio=read('vetogram-music-audio-only.css');
-  const dark=read('vetogram-black-universe.css');
+  const embed=read('vetogram-media-embedded.css');
+  const host=read('vetogram-universe.js');
   assert.match(native,/\.native-home\{[^}]+background:#0f0f12/);
   assert.match(radio,/\.audio-home-panel\{[^}]+background:#111114/);
-  assert.match(dark,/html\.v6-embedded body:has\(#playerBar\) \.player-bar\{/);
-  assert.match(dark,/bottom:calc\(72px \+ env\(safe-area-inset-bottom,0px\)\)!important/);
+  assert.match(embed,/html\.v6-embedded \.player-bar\{display:none!important\}/);
+  assert.match(host,/const show=!!lastAudio;/);
+  assert.doesNotMatch(read('vetogram-black-universe.css'),/Nested music uses its own viewport/);
 });
 
 test('media navigation has four balanced desktop cards and two columns on phones',()=>{
