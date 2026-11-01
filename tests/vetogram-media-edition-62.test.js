@@ -33,7 +33,7 @@ test('Russian/world/Armenian music uses original Audius search and paginated dis
   for(const id of ['ru-miyagi','ru-zemfira','ru-rap2','ru-remix','ru-phonk','world-lofi','world-metal','am-jazz'])
     assert.ok(catalog.includes('id:"'+id+'"'),'missing '+id);
   assert.match(catalog,/const API="https:\/\/api\.audius\.co\/v1\/tracks\/search"/);
-  assert.match(catalog,/V\.play\(track,items\)/);
+  assert.match(catalog,/V\.play\(track,items\.filter\(item=>!failedStreams\.has\(item\.id\)\)\)/);
   assert.match(musicHtml,/data-catalog-group="ru"/);
 });
 
