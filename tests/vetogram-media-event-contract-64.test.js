@@ -90,13 +90,13 @@ test('Music: selection event cancels old song check, real playing and error rema
   assert.match(shelf,/if\(pendingId&&id&&pendingId!==id\)cancelPending\(\)/);
   assert.match(shelf,/if\(V\.now\?\.\(\)\?\.id!==key\)/);
 });
-test('137 Russian Wikisource IDs remain unique and new public-domain roots are original text pages',()=>{
+test('141 Russian Wikisource IDs remain unique and new public-domain roots are original text pages',()=>{
   const books=read('public/books.js');
   const first=books.indexOf('  const verifiedWholeEditions=');
   const last=books.indexOf('  function setSourceInfo(){',first);
   const catalog=new Function(books.slice(first,last)+'\nreturn completeEditionBooks;')();
-  assert.equal(catalog.length,137);
-  assert.equal(new Set(catalog.map(x=>x.id)).size,137);
+  assert.equal(catalog.length,141);
+  assert.equal(new Set(catalog.map(x=>x.id)).size,141);
   const newIds=[17924,345607,1028302,4334,36596,355620,26704,24770,40478,4390,4448,17983,17199];
   for(const id of newIds){
     const book=catalog.find(x=>x.id===id);
