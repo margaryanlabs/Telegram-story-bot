@@ -61,6 +61,7 @@
 #vetogram.vetogram-universe .v6-module-status{display:flex;align-items:center;gap:13px;padding:15px 17px;margin:10px 12px 0;border:1px solid var(--v6-line);border-radius:14px;color:var(--v6-muted);font-size:12px;line-height:1.6;background:var(--v6-surface)}
 #vetogram.vetogram-universe .v6-module-status[data-phase="loading"]::before{content:"";display:block;flex:none;width:16px;height:16px;border:2px solid var(--v6-line);border-top-color:var(--v6-accent);border-radius:50%;animation:v6-loading-wheel .95s linear infinite}
 #vetogram.vetogram-universe .v6-module-status[data-phase="failed"]{border-color:color-mix(in srgb,var(--v6-accent) 45%,var(--v6-line));color:var(--v6-text)}
+#vetogram.vetogram-universe .v6-module-status[data-phase="notice"]{border-color:var(--v6-line);color:var(--v6-muted);background:var(--v6-surface)}
 #vetogram.vetogram-universe .v6-module-status[data-phase="failed"]::before{content:"!";display:grid;place-items:center;flex:none;width:20px;height:20px;border:1px solid var(--v6-accent);border-radius:50%;font-size:12px;font-weight:750;color:var(--v6-accent)}
 #vetogram.vetogram-universe .v6-secondary{display:block;min-height:44px;margin:10px 12px;padding:10px 18px;border:1px solid var(--v6-accent);border-radius:12px;background:var(--v6-surface);color:var(--v6-text);font-size:13px;font-weight:600;cursor:pointer}
 #vetogram.vetogram-universe .v6-secondary:hover{background:color-mix(in srgb,var(--v6-accent) 13%,var(--v6-surface))}
