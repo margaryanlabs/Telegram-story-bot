@@ -1196,7 +1196,7 @@
           await cacheText(cacheId,data);
         }
       }
-      if($('reader').hidden || state.requestBook!==request || bookKey(state.current)!==key)return;
+      if($('reader').hidden || state.requestBook!==request || bookKey(state.current)!==key)return false;
       state.current={...book,...(data.book||{})};
       state.chapters=data.chapters||[];
       state.isTranslationIndex=!!data.isTranslationIndex;
@@ -1214,8 +1214,7 @@
       const text=isWiki(book)||isLocal(book)?data.text:stripGutenbergFrame(data.text);
       if(isWiki(book)&&chapter===null&&!state.isTranslationIndex&&state.chapters.length>0
         && String(text||'').trim().length<1100){
-        await loadChapter(book,0,resume);
-        return;
+        return await loadChapter(book,0,resume);
       }
       state.pages=paginate(text);
       const p=progress[key];
@@ -1223,6 +1222,7 @@
         ? Number.isFinite(Number(p.offset))?nearestPage(Math.max(0,Number(p.offset))):Math.max(0,Number(p.page)||0)
         :0;
       showPage(position);
+      return state.pages.length>0 && state.requestBook===request && !$('reader').hidden;
     }catch(e){
       if(!$('reader').hidden && state.requestBook===request){
         $('readerCopy').textContent='Не удалось загрузить текст книги. Можно повторить попытку — закладки и прогресс сохранятся.';
@@ -1230,6 +1230,7 @@
         $('readerPageLabel').textContent='—';
         toast(e.message||'Сервис чтения недоступен');
       }
+      return false;
     }finally{
       if(activeReaderFetch===readerController)activeReaderFetch=null;
     }
@@ -1259,7 +1260,7 @@
     applyPrefs();
     const old=progress[bookKey(book)];
     const chapter=(isWiki(book)||isLocal(book))&&Number.isInteger(old?.chapter)&&old.chapter>=0?old.chapter:isLocal(book)&&book.format==='epub'?0:null;
-    await loadChapter(book,chapter,true);
+    return await loadChapter(book,chapter,true);
   }
   function closeReader(){
     ++offlineEditionToken;
@@ -1865,8 +1866,7 @@
     if(typeof key!=='string'||!key||key.length>220)return false;
     const book=saved[key]||(progress[key]?bookFromProgress(key,progress[key]):null);
     if(!book || !book.title || !Number.isSafeInteger(Number(book.id)) || Number(book.id)<1)return false;
-    void openBook(book);
-    return true;
+    return openBook(book); // Only acknowledge success after text pages have loaded.
   }
   function showImport(){
     if(state.source!=='local'){
