@@ -59,14 +59,14 @@ test('Cinema displays a real one-click official embed shelf, excluding external-
   assert.match(cinemaHtml,/src="\.\/cinema-featured-200\.js"/);
 });
 
-test('whole-book shelf contains 137 unique Wikisource original source works, including the historical Prince',()=>{
+test('whole-book shelf contains 141 unique Wikisource original source works, including the historical Prince',()=>{
   const start=books.indexOf('  const verifiedWholeEditions=');
   const end=books.indexOf('  function setSourceInfo(){',start);
   assert.ok(start>0&&end>start);
   const data=new Function(books.slice(start,end)+'\nreturn {completeEditionBooks,filterCompleteEditionBooks};')();
   const list=data.completeEditionBooks;
-  assert.equal(list.length,137);
-  assert.equal(new Set(list.map(b=>b.id)).size,137);
+  assert.equal(list.length,141);
+  assert.equal(new Set(list.map(b=>b.id)).size,141);
   for(const b of list){
     assert.equal(b.provider,'wikisource');
     assert.equal(b.wiki,'ru');
