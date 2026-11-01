@@ -199,4 +199,5 @@ test('live message polling is aborted when leaving Chats or signing out',()=>{
  assert.match(chats,/if\(state\.syncAbort===controller\)state\.syncAbort=null/);
  assert.match(chats,/if\(document\.hidden\)\{stopThreadSync\(\);cancelActivePoll\(\);\}/);
  assert.match(chats,/window\.addEventListener\('offline',[\s\S]*?stopThreadSync\(\);cancelActivePoll\(\)/);
+ assert.match(chats,/window\.addEventListener\('pagehide',[\s\S]*?stopThreadSync\(\);cancelActivePoll\(\)/);
 });
