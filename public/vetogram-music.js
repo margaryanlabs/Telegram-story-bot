@@ -576,13 +576,13 @@ async function openSavedById(id){
    const query=[entry.subtitle,entry.title].filter(Boolean).join(" ");
    showPage("search");$("searchInput").value=query;runSearch(query);
    send("Запись не сохранена для прямого запуска. Найди доступный источник в поиске.");
-   return true;
+   return "search"; // The player has NOT started; a discovery screen was opened.
   }
   return false;
  }
  if(track.source==="metadata"){
   showPage("search");const query=[track.artist,track.title].filter(Boolean).join(" ");
-  $("searchInput").value=query;runSearch(query);return true;
+  $("searchInput").value=query;runSearch(query);return "search";
  }
  if(track.source==="local"&&!state.local.some(x=>x.id===id&&x.url)){
   send("Локальный аудиофайл пока недоступен. Открой библиотеку и проверь импорт.");
