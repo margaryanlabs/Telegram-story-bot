@@ -129,6 +129,10 @@ function playTrack(track,collection){
  state.queue=unique(collection?.length?collection:[track]).filter(x=>x.source!=="metadata");
  state.index=Math.max(0,state.queue.findIndex(x=>x.id===track.id));
  state.now=track;palette(track);
+ // Companion shelves can cancel stale pending checks when the listener
+ // switches between licensed MP3, radio, uploads, and other audio sources.
+ document.dispatchEvent(new CustomEvent("vetogram:audio-selected",
+   {detail:{trackId:String(track.id||"")}}));
  $("miniTitle").textContent=track.title;$("miniArtist").textContent=track.artist;
  $("studioTitle").textContent=track.title;$("studioArtist").textContent=track.artist;
  const art=safe(track.artwork),mini=$("miniArt"),cover=$("studioCover");
