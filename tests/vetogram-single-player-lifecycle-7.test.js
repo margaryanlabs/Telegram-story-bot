@@ -52,7 +52,7 @@ test('no empty player or artificial content offset when nothing is playing',()=>
 
 test('embedded Music hides only child player chrome, standalone retains its controls',()=>{
  assert.match(embedded,/html\.v6-embedded \.player-bar\{display:none!important\}/);
- assert.doesNotMatch(embedded,/(?:^|[\s,])\.player-bar\{display:none!important\}/m);
+ assert.doesNotMatch(embedded,/^\.player-bar\{display:none!important\}/m);
  assert.match(read('music-module.html'),/id="miniPlay"/);
  assert.match(bridge,/data\.command==='toggle'\)document\.getElementById\('miniPlay'\)\?\.click\(\)/);
  assert.match(bridge,/data\.command==='previous'\)document\.getElementById\('miniPrev'\)\?\.click\(\)/);
