@@ -14,6 +14,8 @@
   function recover() {
     if(!active)return;
     const {card,parent,next}=active;
+    const game=card.dataset?.vpGame;
+    if(game&&typeof CustomEvent!=='undefined')window.dispatchEvent?.(new CustomEvent('vetogram:game-close',{detail:{game}}));
     if(parent?.insertBefore)parent.insertBefore(card,next?.parentNode===parent?next:null);
     card.classList.remove('vp-game-in-dialog');
     active=null;
@@ -40,6 +42,7 @@
       else dialog.setAttribute('open','');
       document.body?.classList?.add('vp-game-running');
       closeButton.focus?.();
+      if(typeof CustomEvent!=='undefined')window.dispatchEvent?.(new CustomEvent('vetogram:game-open',{detail:{game:card.dataset?.vpGame}}));
     }catch{
       // Dialog unsupported or blocked: restore the game without corrupting the hub.
       dialog.hidden=true;
