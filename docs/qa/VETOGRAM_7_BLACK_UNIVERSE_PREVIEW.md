@@ -190,3 +190,23 @@ Next gates: real Android browser viewport screenshots of the Books shelf, Music 
 Validation: **6/6** new isolated source-contract checks passed, and Cinema JS parsed successfully; tests committed as `tests/vetogram-mobile-ui-regression-7.test.js`. These are *source contracts, not pixel-perfect WebView screenshots*. Full native Node test suite and Android live viewport verification remain required.
 
 This remains draft PR only. User accounts, message databases, production domains and auth endpoints are untouched.
+
+## Unified player and truthful status lifecycle — 2026-11-01 (rebuild04)
+
+The current integrated Music iframe and Vetogram host both previously rendered their **own** bottom mini-player. The host suppressed itself when Music was the active section and the child bar moved inside its viewport, causing a jump in controls/navigation when switching screens.
+
+Source-level changes:
+- `vetogram-universe.js::chrome()` now displays the **one host-owned player** whenever `lastAudio` is available, including while Music is the active module, and preserves the same player in Chats/Cinema/Books.
+- `vetogram-media-embedded.css` hides *only* the child module's `.player-bar` when `html.v6-embedded`; standalone `/music-module.html` retains its native controls. Existing `postMessage` handlers still forward seek/toggle/previous/next commands to the real audio element.
+- Removed now-obsolete 72px raised child-bar override and 130px of unnecessary body padding. Host reserves one 62px music bar above the main mobile nav through existing `--v6-player`.
+- Saved metadata-only tracks and unavailable deep links previously called `moduleStatus(text,false)`, erroneously showing a loading spinner forever and `aria-busy=true`. Added explicit `notice` state, no spinner and `aria-busy=false`, distinct from genuine module loading and retryable iframe failures. Notices clear normally on successful open/module switch.
+- Cache-busted the host `vetogram-universe.js` and `vetogram-universe.css` (previously using old 20261031 version) plus the child `vetogram-media-bridge.js` and common CSS across all four entrypoints to **20261101-rebuild04**. This avoids Android retaining mismatched JS/CSS.
+
+Verification, carefully scoped:
+- `tests/vetogram-single-player-lifecycle-7.test.js`: 5/5 individual runtime/style checks passed using isolated JS function execution.
+- `tests/vetogram-module-status-7.test.js`: 6/6 state-machine checks passed (loading, notice, missing item, failure/retry, clearing, CSS spinner).
+- `tests/vetogram-design-recovery-7.test.js`: 7/7 source/design checks passed after adapting obsolete two-player expectations.
+- `tests/vetogram-black-universe-preview.test.js`: 22/22 preview/permission/source checks passed after all four entrypoint asset versions were aligned.
+- The above checks were **isolated JavaScript runners**, not full native Node CI or real browser screenshot QA. JS syntax for host/media/Books/Cinema/Music/Chats parsed successfully. Real Android/iOS WebView interaction, background audio and media rights/availability remain release gates.
+
+Review service is separate, production unchanged. Do not merge draft PR before live QA.
