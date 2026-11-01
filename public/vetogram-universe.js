@@ -27,12 +27,14 @@
   root.classList.toggle('v6-has-audio',show);
   root.classList.toggle('v6-module-open',screen==='media'&&!!activeModule);
  }
- function moduleStatus(text,retry=false){
+ function moduleStatus(text,retry=false,notice=false){
   const status=$('v6ModuleStatus');
   status.textContent=text;status.hidden=!text;
-  status.dataset.phase=!text?'ready':retry?'failed':'loading';
+  const phase=!text?'ready':retry?'failed':notice?'notice':'loading';
+  status.dataset.phase=phase;
   $('v6ModuleRetry').hidden=!retry;
-  $('v6Frames').setAttribute('aria-busy',String(Boolean(text&&!retry)));
+  // A static search/unavailable notice is not an in-flight module request.
+  $('v6Frames').setAttribute('aria-busy',String(phase==='loading'));
  }
  function destroyMedia(){
   for(const item of frames.values()){clearTimeout(item.timer);item.element.src='about:blank';item.element.remove();}
@@ -163,8 +165,8 @@
   // handshake succeeds; this also rejects late events from failed loads.
   if(!item.ready)return;
   if(message.type==='open-item-status'&&activeModule===name&&Number.isSafeInteger(message.requestId)&&message.requestId===item.openRequestId){
-   if(message.status==='search')moduleStatus('Для этой песни сохранено только название. Открыт поиск доступной записи — воспроизведение пока не началось.',false);
-   else if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
+   if(message.status==='search')moduleStatus('Для этой песни сохранено только название. Открыт поиск доступной записи — воспроизведение пока не началось.',false,true);
+   else if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false,true);
    else moduleStatus('');
   }
   if(message.type==='navigate' && message.target==='hub')showHub();
