@@ -40,3 +40,20 @@ Using TWO consented test Telegram accounts on Android and iOS/desktop where rele
 ## Release decision
 
 **Blocked:** full Node/build tests, on-device UI QA, and the two-account live Business event capture have not been performed in this coding session. The production feature flag and deployed configuration were not changed. The next step after code review is an explicitly authorized staging release and live tests, not claiming completion based on static tests.
+
+## 2026-11-01 — Messenger and OTP stabilization checks
+
+**Implemented in this PR; not deployed.**
+- Phone-code MTProto connect/sendCode and disconnect have bounded deadlines. The browser waits longer for the owner-scoped operation, and no ambiguous phone-code send is retried automatically.
+- Verified live inbox now paints first; private Archive/Business metadata is a separate owner-scoped overlay. Without a verified live session, archived-only chats remain accessible. A mismatched session fails closed.
+- Avatar batches distinguish a truly missing profile image from a transient download error. Retries are bounded, respect FLOOD_WAIT pauses, and automatically wake again after a longer cooldown. A 401/403/409 clears authorization rather than retrying.
+- Added `tests/vetogram-fast-inbox-owner-20261101.test.js` and `tests/vetogram-chat-transport-reliability-20261101.test.js`; updated the outage fixture for new avatar state fields.
+
+**Observed targeted isolated runtime scenarios (in code review):**
+- Owner-verified first inbox HTTP 200, one MTProto connection, no Privacy/archive read on first response; separate overlay returned archived chat.
+- No active session: preserved archive-only chat still returned; no MTProto connection.
+- Avatar batch: 1 valid photo, 1 missing profile, 1 temporary download failure classified separately.
+- FLOOD_WAIT retry: first 25-second wake-up correctly rearmed a second wake-up after a 90-second cooldown.
+- Frontend syntax of the modified app and messenger scripts parsed successfully.
+
+**Unverified release blockers:** No GitHub Actions run exists for the current PR head as inspected on 2026-11-01. The complete repository was not available in the local execution environment, so full `npm test`, `npm run qa:reborn:offline`, and `npm run vercel-build` remain **not run**. Live Telegram OTP delivery, avatar fetching, Anti-Delete events, device performance, and production environment readiness are **not confirmed**. Keep the feature flag off and do not deploy without owner authorization.
