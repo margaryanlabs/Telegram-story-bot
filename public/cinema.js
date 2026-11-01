@@ -15,6 +15,8 @@
   // Fail-closed on provider-reported playback errors for this device session.
   // A timeout is not proof of unavailability (the user may not press ▶).
   const failedEmbeds=new Set();
+  // Prevent repeated downloads of broken posters when a shelf is rerendered.
+  const failedPosterUrls=new Set();
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
   const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/",rossiya1:"https://rutube.ru/channel/24620967/",centralpartnership:"https://rutube.ru/channel/798788/"};
   // The initial 200 feature films appear instantly in their studio tabs.
@@ -378,8 +380,8 @@
     div.style.setProperty("--film-hue",String(f.hue));
     const badge=node("span","cinema-card-art-badge");badge.textContent=f.externalRutube?(f.audioClaim?"ЗАЯВЛЕН ДУБЛЯЖ":"ОЗВУЧКА НЕ ПРОВЕРЕНА"):f.discoveryOnly?(f.russianAudioStatus==="catalog-listed"?"РУССКАЯ ДОРОЖКА В КАТАЛОГЕ":"ОЗВУЧКА НЕ ПОДТВЕРЖДЕНА"):f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":f.player?"СМОТРЕТЬ":"ОТКРЫТЫЙ ФИЛЬМ";div.append(badge);
     const title=node("span","cinema-card-art-title");title.textContent=f.title;div.append(title);
-    const poster=state.posters.get(f.id)||f.poster;
-    if(poster){const img=node("img");img.loading="lazy";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{img.remove();state.posters.delete(f.id)};div.prepend(img)}
+    const poster=[state.posters.get(f.id),f.poster].find(url=>url&&!failedPosterUrls.has(url));
+    if(poster){const img=node("img");img.loading="lazy";img.decoding="async";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{failedPosterUrls.add(poster);img.remove();if(state.posters.get(f.id)===poster)state.posters.delete(f.id)};div.prepend(img)}
     else if(!f.discoveryOnly)requestPoster(f);
     return div;
   }
@@ -710,21 +712,21 @@
         ?(window.VetogramCinemaArtwork?.load(f)||null)
         :getCommons(f).then(result=>result.poster))
       .then(poster=>{
-        if(!poster)return;
+        if(!poster||failedPosterUrls.has(poster))return;
         state.posters.set(f.id,poster);
         document.querySelectorAll(".cinema-card").forEach(card=>{
           if(card.querySelector(".cinema-card-name")?.textContent!==f.title)return;
           const art=card.querySelector(".cinema-card-art");
           if(art&&!art.querySelector("img")){
             const img=node("img");img.loading="lazy";img.alt="Кадр: "+f.title;
-            img.src=poster;img.onerror=()=>img.remove();art.prepend(img);
+            img.src=poster;img.onerror=()=>{failedPosterUrls.add(poster);if(state.posters.get(f.id)===poster)state.posters.delete(f.id);img.remove()};art.prepend(img);
           }
         });
         if(state.selected?.id===f.id){
           const art=$("cinemaDetailsArt");
           if(!art.querySelector("img")){
             const img=node("img");img.alt="Кадр из фильма "+f.title;img.src=poster;
-            img.onerror=()=>img.remove();art.prepend(img);
+            img.onerror=()=>{failedPosterUrls.add(poster);if(state.posters.get(f.id)===poster)state.posters.delete(f.id);img.remove()};art.prepend(img);
           }
         }
         if(f.id===discovery.slides[discovery.index]?.id)
