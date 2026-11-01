@@ -22,7 +22,7 @@ This is a genuinely server-authoritative **two-player online Tic-Tac-Toe**, not 
 ## Setting up the **isolated development** database later
 
 1. Provision a *new development branch/database* in Neon; do not connect the current Messenger's active database.
-2. Manually review and execute `migrations/vetogram-play/001_ttt_rooms.sql` on a **fresh, empty** development database using a Neon SQL editor or authorized migration tooling. The unapplied migration now includes `round`, `rematch_x`, `rematch_o`. Do not assume it upgrades an existing table: `CREATE TABLE IF NOT EXISTS` will not add these columns. If any previous version has been applied, a separately reviewed `ALTER TABLE` migration is required.
+2. Manually review and execute `migrations/vetogram-play/001_ttt_rooms.sql` **followed by `migrations/vetogram-play/002_profiles_verified_results.sql`** on a **fresh, empty** development database using a Neon SQL editor or authorized migration tooling. The unapplied migration now includes `round`, `rematch_x`, `rematch_o`. Do not assume it upgrades an existing table: `CREATE TABLE IF NOT EXISTS` will not add these columns. If any previous version has been applied, a separately reviewed `ALTER TABLE` migration is required.
 3. Set the server-only environment variable `VETOGRAM_PLAY_DATABASE_URL=postgresql://...` in the development deployment. Do not set it in a client-side `VITE_*` or `NEXT_PUBLIC_*` env. Never commit a live connection URL.
 4. Ensure the **existing** `TELEGRAM_BOT_TOKEN` matches the Mini App's bot. Clients use fresh signed Telegram `initData`; no user password, Telegram OTP, or Business permissions are read.
 5. Install the dependency `@neondatabase/serverless` from package.json and run `npm run check && npm test`.
@@ -47,9 +47,9 @@ All writes use bound SQL parameters and compare-and-swap `version` to reject con
 
 - Basic owner room-count check is not a distributed abuse limiter; add an authenticated edge rate limiter and server-side quota before opening to the public.
 - A room link conveys only a code, not authorization to view or play as a third account. The second Telegram account must explicitly join.
-- There is currently no surrender, spectator mode, tournament leaderboard, account-linked ratings, or matchmaking. Rematches require both players' consent and stay within the original six-hour expiry.
+- There is no surrender, spectator mode, player matchmaking or tournament bracket. Personal verified match history and a separate opt-in leaderboard are now **implemented in code only**; see [verified stats](vetogram-play-verified-stats.md). Neither is live without the separate game database and migration 002. Rematches require both players' consent and remain within the original six-hour expiry.
 - No confirmation that SQL migration and driver run against a live Neon deployment: all work is offline code and logic checks.
-- A detached/expired room is left stored until explicit cleanup (see migration maintenance note).
+- Expired rooms must be retained or archived in a reference-preserving manner once migration 002 records immutable results. Do not run the earlier simple DELETE cleanup: match results now reference source rooms by foreign key.
 - For external game publishers, preserve source isolation and manual review; never inject untrusted scripts into Vetogram's messenger origin.
 
 ## Why this architecture
@@ -58,3 +58,10 @@ All writes use bound SQL parameters and compare-and-swap `version` to reject con
 - The version field ensures two nearly simultaneous moves cannot both win the same turn.
 - No cross-origin iframes or Telegram chat/message APIs are involved in gameplay.
 - Standalone big games (BLOTENQ, WHO) may later receive a similar authenticated room adapter while retaining separate repositories.
+
+## Verified results and leaderboard extension
+
+- Finished moves update the authoritative room and insert a uniquely keyed result row **atomically** using one PostgreSQL CTE statement; a client-submitted win or score is never accepted.
+- `GET /api/play-stats?view=mine` returns private profile, all-time win/loss/draw totals and the most recent 20 verified results, without opponent identities or room codes.
+- `GET /api/play-stats?view=leaders` returns only voluntarily public random aliases with 3+ verified rounds; `POST /api/play-stats` can turn visibility on/off.
+- New backend and frontend code requires migration 002; it is NOT active in a real database. See [privacy, score and rollout documentation](vetogram-play-verified-stats.md).
