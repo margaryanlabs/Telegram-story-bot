@@ -42,7 +42,13 @@ const playable=()=>unique.filter(t=>!unavailable.has(t.id));
 function cancelPending(){clearTimeout(pendingTimer);pendingTimer=null;pendingId=""}
 function card(t){
   const article=make("article","licensed-home-card");
-  const art=make("span","licensed-home-art","♫");art.setAttribute("aria-hidden","true");
+  // Branded editorial art is an honest fallback, not the artist's album cover.
+  const art=make("span","licensed-home-art licensed-home-art-designed");
+  art.setAttribute("aria-hidden","true");
+  const initial=Array.from(t.title||"V")[0]?.toLocaleUpperCase()||"V";
+  art.append(make("span","licensed-home-initial",initial));
+  const tone=Array.from(t.id).reduce((n,ch)=>(n*31+ch.charCodeAt(0))%360,0);
+  art.style.setProperty("--art-hue",String((tone+320)%360));
   const info=make("div","licensed-home-info");
   info.append(make("strong","",t.title),make("small","",t.artist));
   const origin=make("a","licensed-home-source","Автор ↗");origin.href=t.permalink;
