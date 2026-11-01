@@ -2310,7 +2310,7 @@
             <button type="button" class="v6-world v6-world-play v72-media-card" data-open-screen="play">
               <span class="v72-card-top"><span class="v72-card-number">04 / PLAY</span><span class="v72-card-arrow" aria-hidden="true">↗</span></span>
               <div class="v72-card-art v72-art-games" aria-hidden="true"><span class="v72-game-tile tile-a">2</span><span class="v72-game-tile tile-b">4</span><span class="v72-game-tile tile-c">8</span><span class="v72-game-tile tile-d">16</span></div>
-              <span class="v72-card-footer"><span><strong>Игры</strong><small>4 игры доступны без сети</small></span><span class="v72-card-cta">ИГРАТЬ</span></span>
+              <span class="v72-card-footer"><span><strong>Игры</strong><small>6 игр доступны без сети</small></span><span class="v72-card-cta">ИГРАТЬ</span></span>
             </button>
           </div>
           <div class="v72-discovery-note"><span class="v72-live-dot" aria-hidden="true"></span> Все разделы открываются внутри приложения. Воспроизведение зависит от доступности контента.</div>
@@ -2364,15 +2364,15 @@
             <img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="26" height="26" />
             <div><span class="vp-eyebrow">VETOGRAM / ENTERTAINMENT</span><br /><strong>PLAY</strong></div>
           </div>
-          <span class="vp-count" id="vpCatalogCount">4 доступны · 2 скоро</span>
+          <span class="vp-count" id="vpCatalogCount">6 доступны · 2 скоро</span>
         </header>
 
         <section class="vp-hero v72-play-hero" aria-labelledby="vpHeroTitle">
           <div class="vp-hero-copy">
             <span class="vp-overline">VETOGRAM ARCADE / SEASON 01</span>
             <h1 id="vpHeroTitle">Играй.<br /><em>Здесь и сейчас.</em></h1>
-            <p>Четыре готовые мини-игры, личные рекорды и партии без регистрации. Выбери игру ниже — запуск прямо в Vetogram.</p>
-            <div class="v72-play-hero-stats"><span><b>04</b> ИГРАТЬ СЕЙЧАС</span><span><b>02</b> В РАЗРАБОТКЕ</span></div>
+            <p>Шесть готовых мини-игр, личные рекорды и партии без регистрации. Выбери игру ниже — запуск прямо в Vetogram.</p>
+            <div class="v72-play-hero-stats"><span><b>06</b> ИГРАТЬ СЕЙЧАС</span><span><b>02</b> В РАЗРАБОТКЕ</span></div>
             <a class="v72-play-jump" href="#vpQuickGames" aria-label="Перейти к доступным играм">Выбрать игру <span>↓</span></a>
           </div>
           <div class="v72-play-hero-art" aria-hidden="true">
@@ -2476,6 +2476,36 @@
               <button data-vp-2048="right" type="button" aria-label="Двигать плитки вправо">→</button>
             </div>
             <div class="vp-memory-actions"><span id="vp2048Status" class="vp-mini-stat" role="status" aria-live="polite">Соединяй плитки.</span><button class="vp-button ghost" type="button" id="vp2048Reset">Заново ↺</button></div>
+          </article>
+
+          <article class="vp-mini v73-new-game" data-vp-game="mines" aria-label="Сапёр — логическая игра без сети">
+            <div class="vp-game-art v73-mines-art" aria-hidden="true"><div class="v73-art-grid v73-mines-art-grid"><span>1</span><span>◆</span><span>2</span><span>1</span><span>⚑</span><span>3</span><span>2</span><span>1</span><span>◆</span></div></div>
+            <span class="vp-mini-icon" aria-hidden="true">⚑</span>
+            <h3>Сапёр</h3>
+            <p>Открой безопасные клетки, найди шесть мин и победи без ошибок.</p>
+            <div class="vp-memory-actions v73-game-metrics"><span class="vp-mini-stat" id="vpMinesWins">Побед: 0</span><span class="vp-mini-stat" id="vpMinesRemaining">Мины: 6</span></div>
+            <div class="v73-game-actions">
+              <button type="button" class="vp-button ghost" id="vpMinesMode" aria-pressed="false">Режим: открывать</button>
+              <button type="button" class="vp-button ghost" id="vpMinesReset">Новая игра ↺</button>
+            </div>
+            <div id="vpMinesGrid" class="v73-mines-grid" role="group" aria-label="Поле Сапёра шесть на шесть"></div>
+            <div id="vpMinesStatus" class="vp-mini-stat" role="status" aria-live="polite">Первый ход всегда безопасный.</div>
+          </article>
+          <article class="vp-mini v73-new-game" data-vp-game="snake" aria-label="Змейка — аркадная игра без сети">
+            <div class="vp-game-art v73-snake-art" aria-hidden="true"><div class="v73-art-grid v73-snake-art-grid"><span></span><span></span><span></span><span></span><span class="body"></span><span class="body"></span><span class="head"></span><span></span><span></span><span></span><span class="food"></span><span></span></div></div>
+            <span class="vp-mini-icon" aria-hidden="true">◉</span>
+            <h3>Змейка</h3>
+            <p>Собирай очки, управляй стрелками или свайпами и побей свой рекорд.</p>
+            <div class="vp-memory-actions v73-game-metrics"><span class="vp-mini-stat" id="vpSnakeScore">Очки: 0</span><span class="vp-mini-stat" id="vpSnakeBest">Рекорд: 0</span></div>
+            <div class="v73-game-actions"><button type="button" id="vpSnakeToggle" class="vp-button">Начать игру</button><button type="button" id="vpSnakeReset" class="vp-button ghost">Заново ↺</button></div>
+            <div id="vpSnakeGrid" class="v73-snake-grid" role="img" aria-label="Поле Змейки двенадцать на двенадцать"></div>
+            <div class="v73-snake-directions" role="group" aria-label="Направление движения Змейки">
+              <button type="button" data-vp-snake="left" aria-label="Змейка влево">←</button>
+              <button type="button" data-vp-snake="up" aria-label="Змейка вверх">↑</button>
+              <button type="button" data-vp-snake="down" aria-label="Змейка вниз">↓</button>
+              <button type="button" data-vp-snake="right" aria-label="Змейка вправо">→</button>
+            </div>
+            <div class="vp-mini-stat" id="vpSnakeStatus" role="status" aria-live="polite">Нажми «Начать игру».</div>
           </article>
         </div>
         <dialog id="vpGameDialog" class="vp-game-dialog" aria-label="Игровой режим">
