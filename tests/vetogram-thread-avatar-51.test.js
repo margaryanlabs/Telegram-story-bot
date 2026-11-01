@@ -13,12 +13,12 @@ const b=source.indexOf('  function rememberPreview(',a);
 assert.ok(a>0&&b>a,'test production avatar queue, not a duplicate controller');
 const snippet=source.slice(a,b);
 
-async function fixture({archiveOnly=false,changeOwner=false,changeThread=false,initialScreen='telegram',initiallyHidden=false}={}){
+async function fixture({archiveOnly=false,changeOwner=false,changeThread=false,initialScreen='telegram',initiallyHidden=false,telegramSigned='signed',verified=true}={}){
   let visibleScreen=initialScreen,documentHidden=initiallyHidden;
   let calls=0,requested=[],finish=null;
   const header={img:null,replaceChildren(node){this.img=node}};
   const state={
-    thread:{id:'55',archiveOnly},connectionProof:{verified:true},
+    thread:{id:'55',archiveOnly},connectionProof:{verified},
     ownerInitData:'signed',avatarEpoch:1,avatarQueue:[],avatarRequested:new Set(),
     avatarRetryAt:new Map(),avatarUrls:new Map(),avatarActive:0,
   };
@@ -27,7 +27,7 @@ async function fixture({archiveOnly=false,changeOwner=false,changeThread=false,i
     telegramThreadAvatar:header,
   };
   const ctx=vm.createContext({
-    state,tg:{initData:'signed'},$:id=>nodes[id]||null,
+    state,tg:{initData:telegramSigned},$:id=>nodes[id]||null,
     document:{
       get hidden(){return documentHidden;},
       querySelector:()=>({dataset:{screen:visibleScreen}}),
@@ -120,5 +120,18 @@ test('document visibility prevents background avatar fetches, then resumes after
 test('screen-change and visibility handlers requeue missing owner avatars',()=>{
   assert.match(source,/else\{\s*\/\/ Repaint missing thumbnails even when the inbox was already loaded\.\s*queueVisibleAvatars\(\)/);
   assert.match(source,/else if\(!resetOwner\(\)\)\{\s*queueVisibleAvatars\(\)/);
-  assert.match(snippet,/if\(document\.hidden\|\|document\.querySelector\('\.screen\.active'\)\?\.dataset\?\.screen!=='telegram'\)return/);
+  assert.match(snippet,/state\.ownerInitData!==String\(tg\.initData\)/);
+  assert.match(snippet,/state\.connectionProof\?\.verified!==true\|\|document\.hidden/);
+});
+
+test('unverified session never fetches signed Telegram avatars',async()=>{
+  const f=await fixture({verified:false});
+  assert.equal(f.calls,0);
+  assert.equal(f.header.img,null);
+});
+
+test('account switch blocks avatar requests before old owner state can be reset',async()=>{
+  const f=await fixture({telegramSigned:'other-owner'});
+  assert.equal(f.calls,0);
+  assert.equal(f.header.img,null);
 });
