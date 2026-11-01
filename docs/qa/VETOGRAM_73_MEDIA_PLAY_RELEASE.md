@@ -62,3 +62,14 @@ Preview Vercel `READY` at `02e5744a` proves the earlier six-game build. Subseque
 
 ### Deployment warning
 The latest V7.5 code is **not** at the preceding READY V7.4 URL. The explicit Vercel deployment endpoint returned HTTP 402 `api-deployments-free-per-day` after 100+ daily builds. A previous automatic deployment (first HTML-only change) correctly failed the release surface check because newly referenced assets had not yet been committed. Both assets have since been committed; **do not claim a clean V7.5 build until new deployment logs actually confirm it**.
+
+## V7.6 — Game input and background-timer safety
+
+- **2048** handles keyboard arrows only when its own `.vp-game-in-dialog` is open. Otherwise arrows remain available to the page, accessible forms and the Snake game.
+- **Snake** handles keyboard arrows only while actively running in its own open modal. Typing in INPUT/TEXTAREA/SELECT and scrolling in other app screens is not hijacked.
+- **Reaction** cancels outstanding reaction delay when its modal closes; no score can appear afterward from that pending timer.
+- **Four Pairs** cancels a pending mismatch flip when its modal closes, the app backgrounds or Play navigation exits. Already resolved matches are preserved unless a mismatch animation is interrupted.
+- Added scoped keyboard and countdown regression tests in `tests/vetogram-play-arcade.test.js`, `tests/vetogram-play-plus.test.js`, and `tests/vetogram-play.test.js`.
+- All changes are limited to the review branch. **Full browser and Vercel acceptance of this head is still required before marking ready.**
+
+Manual test on Android: open Snake then tap directional arrows and close; open 2048 and press arrows; return to Media and scroll; open a search input while the Play screen is underneath; run Reaction then close during countdown; play Four Pairs with an unmatched pair then switch screens.
