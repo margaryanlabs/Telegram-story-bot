@@ -159,6 +159,24 @@
     if(installedIds.has(book.id))return false;
     installedIds.add(book.id);return true;
   }));
+  // Four further Russian Wikisource works with real page IDs and subpage
+  // indices checked against Wikimedia API on 1 Nov 2026. These are SOURCE
+  // collections, not an assertion that every variant is one complete edition.
+  const newSourceWorks=[
+    [1121477,'Алые паруса','Александр Грин',18],
+    [423065,'Слепой музыкант','Владимир Короленко',31],
+    [129409,'Кому на Руси жить хорошо','Николай Некрасов',65],
+    [384203,'Русские женщины','Николай Некрасов',2]
+  ];
+  completeEditionBooks.push(...newSourceWorks.filter(([id])=>!installedIds.has(id))
+    .map(([id,title,author,indexedParts])=>({
+      id,title,authors:[author],language:'ru',wiki:'ru',provider:'wikisource',
+      source:'Русская Викитека · авторские произведения и редакции',
+      sourceUrl:'https://ru.wikisource.org/w/index.php?curid='+id,
+      cover:'',readable:true,curatedWholeText:true,indexedParts,
+      summary:'Исходное произведение с разделами и вариантами издания. Доступный текст проверяется при открытии; полнота конкретной редакции не подтверждена.',
+      rightsNotice:'Исходное классическое произведение в общественном достоянии; правовой статус отдельных редакций проверяйте у источника.'
+    })));
   function filterCompleteEditionBooks(query){
     const value=String(query||'').trim().toLocaleLowerCase('ru');
     return value?completeEditionBooks.filter(b=>
