@@ -23,7 +23,7 @@ function element(dataset = {}) {
   };
 }
 function playground() {
-  const ids=['blotenq','who','reaction','pairs','tic','2048'];
+  const ids=['blotenq','who','reaction','pairs','tic','2048','mines','snake'];
   const cards=ids.map(id=>element({vpGame:id}));
   const filters=['all','online','offline','cards','favorites'].map(id=>element({vpFilter:id}));
   const search=element(),count=element(),empty=element();
@@ -55,9 +55,9 @@ function playground() {
   return {win,doc,root,stored,cards,filters,search,count,empty,panel,shareInput,copy,status,copied};
 }
 
-test('Play Store shows six curated games and attaches local favorite/share controls',()=>{
+test('Play Store shows eight curated games and attaches local favorite/share controls',()=>{
   const p=playground();
-  assert.equal(p.win.VetogramPlayCatalog.length,6);
+  assert.equal(p.win.VetogramPlayCatalog.length,8);
   assert.ok(p.cards.every(c=>c.children.length===1));
   assert.ok(p.cards.every(c=>c.children[0].children.length===2));
   assert.match(html,/data-vp-filter="favorites"/);
