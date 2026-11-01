@@ -176,3 +176,17 @@ The real Android screenshots exposed another class of problems: movie thumbnails
 - Public preview only. No production auth, chat data, merger, or database changes.
 
 Next gates: real Android browser viewport screenshots of the Books shelf, Music playlist, Cinema cards and the player; verified live source availability; consolidate legacy CSS under a smaller design-token system.
+
+## Mobile consistency and honest movie labels — 2026-11-01 (rebuild03)
+
+- Fixed the real CSS specificity conflict in `books-jacket-studio.css`: at 450–600 px a `3-column !important` grid could override the intended two-column book cards. Current breakpoints use **2 columns through 600 px**, then 3 columns from 601–699 px; neutral background and visible card boundary instead of completely transparent book tiles.
+- Embedded book document reserves `115px + safe-area` bottom scrolling space above host navigation, so the final row and shelf controls remain reachable.
+- Increased miniature world illustrations in the 2×2 mobile Media hub (55→78 px, image scale 0.38→0.60). No fake art source or copyrighted poster has been added.
+- Strengthened readable editorial title inside genuinely posterless Cinema cards, keeping titles unobstructed/hidden only over actual poster images. Made the fallback poster background black/neutral, without pretending there is an official theatrical poster.
+- Corrected Cinema source messaging: no blanket "Русский" label when release year unknown, no unqualified "Смотреть" for mere player objects, no unconditional Russian-audio claim for the hero.
+- Removed 19 redundant repeated patch comments from Books styles; made each correction in an existing stylesheet rather than creating a new high-specificity CSS file.
+- Updated source URL cache revision to `20261101-rebuild03` in Studio, Books, Music, Cinema entry points; synchronized preview contract test expectation.
+
+Validation: **6/6** new isolated source-contract checks passed, and Cinema JS parsed successfully; tests committed as `tests/vetogram-mobile-ui-regression-7.test.js`. These are *source contracts, not pixel-perfect WebView screenshots*. Full native Node test suite and Android live viewport verification remain required.
+
+This remains draft PR only. User accounts, message databases, production domains and auth endpoints are untouched.
