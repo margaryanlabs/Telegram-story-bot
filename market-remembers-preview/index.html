@@ -52,6 +52,27 @@
 @media(max-width:820px){.signal-hint{display:none}.signal-reticle{width:70px;height:70px}.reticle-ring{inset:6px}.reticle-caption{font-size:7px;top:-22px}.world-controls button.atlas-button{min-width:49px;font-size:9px}}
 @media(prefers-reduced-motion:reduce){.constellation-link,.energy-sweep,.reticle-ring,.reticle-cross{animation:none!important}}
 
+
+/* V4.2 / Mobile navigation, next-signal navigation, careful performance refinements */
+.selected-actions{display:flex;align-items:center;gap:16px;flex:none}
+.selected-actions button{border:0;background:none;color:#c3b1ff;font-size:10px;letter-spacing:.09em;white-space:nowrap;padding:6px 0;cursor:pointer}
+.selected-actions button:hover{color:#fff}
+.selected-actions button:first-child{color:#88cde9}
+.selected-actions button:first-child:hover{color:#c3f0ff}
+.mobile-nav{display:none}
+@media(max-width:820px){
+  .mobile-nav{display:flex;position:absolute;z-index:16;top:75px;left:16px;right:16px;align-items:center;gap:5px;padding:4px;background:rgba(11,16,31,.77);border:1px solid rgba(169,170,244,.2);backdrop-filter:blur(12px);border-radius:7px}
+  .mobile-nav button{min-width:0;flex:1;cursor:pointer;white-space:nowrap;border:0;background:transparent;border-radius:5px;color:#9eaed0;font-size:9px;letter-spacing:.04em;padding:10px 3px}
+  .mobile-nav button.is-on,.mobile-nav button:hover{background:rgba(119,110,239,.2);color:#e4e6ff}
+  .hero{top:154px}
+}
+@media(max-width:460px){
+  .hero{top:150px}
+  .selected-actions{gap:10px}
+  .selected-actions button{font-size:9px}
+  .selected-bottom>span{font-size:8px;letter-spacing:0}
+  .selected-card{bottom:100px}
+}
 </style>
 </head>
 <body>
@@ -66,13 +87,14 @@
     <div id="markers" class="markers" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
     <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE LIVING MEMORY ENGINE<span class="fine-line"></span>V.04.1 / VETO</div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE LIVING MEMORY ENGINE<span class="fine-line"></span>V.04.2 / VETO</div>
   </div>
   <header class="header">
     <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>BY VETO INTELLIGENCE · CONCEPT</small></span></a>
     <nav class="header-nav" aria-label="Навигация"><button data-open="universe" class="nav-link is-on" type="button">THE UNIVERSE</button><button data-open="archive" class="nav-link" type="button">THE ARCHIVE</button><button data-open="legacy" class="nav-link" type="button">MY LEGACY</button></nav>
     <button class="header-cta" id="headerCreate" type="button"><span class="status-pip"></span> LEAVE YOUR MARK <span aria-hidden="true">↗</span></button>
   </header>
+  <nav class="mobile-nav" aria-label="Мобильная навигация"><button data-open="universe" class="is-on" type="button">✧ ВСЕЛЕННАЯ</button><button data-open="archive" type="button">◈ АРХИВ</button><button data-open="legacy" type="button">✦ МОЙ СЛЕД</button></nav>
   <main>
     <section class="hero" id="hero" aria-label="Вступление">
       <div class="hero-kicker"><span class="line"></span> NOT FINANCIAL ADVICE. HUMAN EXPERIENCE.</div>
@@ -86,10 +108,10 @@
     <aside class="selected-card" id="selectedCard" aria-label="Выбранная история">
       <div class="card-line"><span class="signal"><span class="signal-pulse"></span> SIGNAL DISCOVERED</span><span id="selectedNum">EXAMPLE / 001</span></div>
       <p id="selectedQuote">«Мой лучший трейд — тот, который я не открыл.»</p>
-      <div class="selected-bottom"><span id="selectedBy">@NORTHSTAR <i>•</i> CRYPTO</span><button id="openSelected" type="button">READ MEMORY <span>↗</span></button></div>
+      <div class="selected-bottom"><span id="selectedBy">@NORTHSTAR <i>•</i> CRYPTO</span><div class="selected-actions"><button id="nextSignal" type="button" aria-label="Следующая звезда">NEXT ✧</button><button id="openSelected" type="button">READ MEMORY <span>↗</span></button></div></div>
     </aside>
     <div class="world-controls" aria-label="Управление сферой"><button id="minusZoom" aria-label="Отдалить" type="button">−</button><button id="plusZoom" aria-label="Приблизить" type="button">＋</button><button id="autoRotate" aria-label="Остановить вращение" aria-pressed="true" type="button">Ⅱ</button><button id="resetCamera" aria-label="Восстановить вид" type="button">↺</button><button id="toggleAtlas" class="atlas-button" aria-label="Показать или скрыть тематические созвездия" aria-pressed="true" type="button">ATLAS</button></div>
-    <div class="scene-footer"><span><span class="live-dot"></span> LOCAL DEMO / NO REAL MEMBERS</span><span class="scene-instruction">DRAG TO ORBIT&nbsp;&nbsp; / &nbsp;&nbsp;SCROLL TO DIVE&nbsp;&nbsp; / &nbsp;&nbsp;TAP A SIGNAL</span><button class="soundless" id="modeButton" type="button">◉ QUALITY: <b id="qualityLabel">AUTO</b></button></div>
+    <div class="scene-footer"><span><span class="live-dot"></span> LOCAL DEMO / NO REAL MEMBERS</span><span class="scene-instruction">DRAG TO ORBIT&nbsp;&nbsp; / &nbsp;&nbsp;PINCH TO ZOOM&nbsp;&nbsp; / &nbsp;&nbsp;TAP A SIGNAL</span><button class="soundless" id="modeButton" type="button">◉ QUALITY: <b id="qualityLabel">AUTO</b></button></div>
   </main>
   <div id="scrim" class="scrim" hidden></div>
   <aside class="drawer" id="drawer" aria-label="Панель" aria-modal="true" role="dialog" hidden>
@@ -141,18 +163,19 @@
   let pts=0, lines=0, w=1,h=1,dpr=1, resW=1,resH=1, cameraY=.22, cameraX=-.16, targetY=.22,targetX=-.16, zoom=1,targetZoom=1;
   let spinning=!reduceMotion, quality='auto', dragging=false, moved=0, downX=0,downY=0,lastX=0,lastY=0,birth=null, shock=null, lastTime=0;
   let sceneParticles=[], sceneLines=[], markerEls=[];
+  const pointers=new Map();let pinchDistance=0;
   let atlasEnabled=true, atlasPairs=[], atlasElements=[], flightFinish=0;
   const SVG_NS='http://www.w3.org/2000/svg';
   const twoPi=Math.PI*2;
   function targetCenter(){return {x:w*(w<800?.50:.652),y:h*(w<800?.565:.51),radius:Math.min(w,h)*(w<800?.425:.405)};}
   function rotate(p){const cy=Math.cos(cameraY),sy=Math.sin(cameraY),cx=Math.cos(cameraX),sx=Math.sin(cameraX);const x=cy*p[0]+sy*p[2],z=-sy*p[0]+cy*p[2],y=cx*p[1]-sx*z;return [x,y,sx*p[1]+cx*z]}
   function project(p){const t=rotate(p),c=targetCenter(),per=2.7/(3.1-t[2]*.7),s=c.radius*per*zoom;return {x:c.x+t[0]*s,y:c.y-t[1]*s,z:t[2],s}}
-  const pVertex=`precision highp float;attribute vec3 aPos;attribute float aColor;attribute float aKind;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;uniform float uTime;uniform float uDpr;varying float vColor;varying float vDepth;varying float vKind;vec3 rotate3(vec3 p){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*p.x+sy*p.z,p.y,-sy*p.x+cy*p.z);return vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);}void main(){vec3 source=aPos; if(aKind<2.0){float t=uTime*.00013;float wave=sin(t*2.1+aPos.y*19.0+aPos.x*11.0)*.012+cos(t*1.7+aPos.z*17.0)*.008;source+=normalize(aPos+vec3(.00001))*wave;}vec3 p=rotate3(source);float per=2.7/(3.1-p.z*.7);vec2 pixel=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(pixel/uRes*2.0-1.0,0.,1.);vColor=aColor;vDepth=p.z;vKind=aKind;float twinkle=0.86+.14*sin(uTime*.0007+aColor*71.);gl_PointSize=clamp((aKind>2.0?11.5:(1.65+aKind*3.8))*per*uDpr*twinkle,1.0,32.0);}`;
+  const pVertex=`precision highp float;attribute vec3 aPos;attribute float aColor;attribute float aKind;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;uniform float uTime;uniform float uDpr;varying float vColor;varying float vDepth;varying float vKind;vec3 rotate3(vec3 p){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*p.x+sy*p.z,p.y,-sy*p.x+cy*p.z);return vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);}void main(){vec3 source=aPos; if(aKind<2.0){float t=uTime*.00013;float wave=sin(t*2.1+aPos.y*19.0+aPos.x*11.0)*.012+cos(t*1.7+aPos.z*17.0)*.008;source+=normalize(aPos+vec3(.00001))*wave;}vec3 p=rotate3(source);float per=2.7/(3.1-p.z*.7);vec2 pixel=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(pixel.x/uRes.x*2.0-1.0,1.0-pixel.y/uRes.y*2.0,0.,1.);vColor=aColor;vDepth=p.z;vKind=aKind;float twinkle=0.86+.14*sin(uTime*.0007+aColor*71.);gl_PointSize=clamp((aKind>2.0?11.5:(1.65+aKind*3.8))*per*uDpr*twinkle,1.0,32.0);}`;
   const pFragment=`precision mediump float;varying float vColor;varying float vDepth;varying float vKind;void main(){vec2 uv=gl_PointCoord*2.-1.;float r=length(uv);if(r>1.)discard;vec3 violet=vec3(.52,.39,1.);vec3 cyan=vec3(.34,.84,1.);vec3 silver=vec3(.77,.81,1.);vec3 gold=vec3(1.,.79,.52);vec3 col=mix(violet,cyan,smoothstep(.15,.85,vColor));col=mix(col,silver,smoothstep(.86,1.,vColor)*.8);if(vKind>2.)col=vec3(.95,.86,1.);if(vKind>3.)col=gold;float core=exp(-r*r*(vKind>2.?10.:9.));float glow=exp(-r*r*2.5)*.3;float depth=.40+clamp(vDepth*.38,0.,.5);float alpha=(core+glow)*(vKind>2.? .97:depth);gl_FragColor=vec4(col,alpha);}`;
-  const lVertex=`precision highp float;attribute vec3 aPos;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;varying float vDepth;void main(){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*aPos.x+sy*aPos.z,aPos.y,-sy*aPos.x+cy*aPos.z);vec3 p=vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);float per=2.7/(3.1-p.z*.7);vec2 px=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(px/uRes*2.-1.,0.,1.);vDepth=p.z;}`;
+  const lVertex=`precision highp float;attribute vec3 aPos;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;varying float vDepth;void main(){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*aPos.x+sy*aPos.z,aPos.y,-sy*aPos.x+cy*aPos.z);vec3 p=vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);float per=2.7/(3.1-p.z*.7);vec2 px=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(px.x/uRes.x*2.-1.,1.-px.y/uRes.y*2.,0.,1.);vDepth=p.z;}`;
   const lFragment=`precision mediump float;varying float vDepth;void main(){float a=.035+.08*clamp((vDepth+1.)*.5,0.,1.);gl_FragColor=vec4(.52,.67,1.,a);}`;
   const plasmaVertex=`attribute vec2 aXY;varying vec2 vUv;void main(){vUv=aXY*.5+.5;gl_Position=vec4(aXY,0.,1.);}`;
-  const plasmaFragment=`precision mediump float;varying vec2 vUv;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uTime;uniform float uZoom;uniform float uShock;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float s=0.;float a=.5;for(int i=0;i<4;i++){s+=a*noise(p);p=p*2.04+vec2(2.1,8.4);a*=.52;}return s;}void main(){vec2 px=vUv*uRes;vec2 p=(px-uCenter)/(uRadius*uZoom);float r=length(p);if(r>2.35)discard;float t=uTime*.00013;float ang=atan(p.y,p.x);float fog=exp(-r*r*2.5);float edge=exp(-((r-.85)/.20)*((r-.85)/.20));float rim=exp(-((r-.96)/.055)*((r-.96)/.055));float core=exp(-r*r*13.);float swirl=fbm(p*3.2+vec2(t*2.3,-t*.8));float filaments=pow(sin(ang*14.+r*24.-t*7.+swirl*9.)*.5+.5,7.)*exp(-((r-.73)/.28)*((r-.73)/.28));float arcs=pow(sin(ang*33.+r*30.+t*4.+swirl*5.)*.5+.5,12.)*exp(-((r-.85)/.18)*((r-.85)/.18));float ring=exp(-((r-1.08)/.16)*((r-1.08)/.16));float shock=exp(-((r-uShock)/.025)*((r-uShock)/.025))*(1.-smoothstep(1.15,1.55,uShock));float scanner=pow(max(0.,cos(ang-t*3.7)),40.)*exp(-pow((r-.83)/.34,2.))* .42;vec3 col=vec3(.15,.12,.36)*fog*.4;col+=vec3(.31,.14,.70)*edge*.27;col+=vec3(.22,.51,.95)*rim*.19;col+=vec3(.14,.32,.81)*filaments*.36;col+=vec3(.40,.27,.89)*arcs*.32;col+=vec3(.15,.18,.42)*ring*.13;col+=vec3(.40,.31,.92)*core*.37;col+=vec3(.15,.67,.95)*shock*.40;col+=vec3(.21,.69,.98)*scanner*.36;float a=clamp((fog*.10+edge*.20+rim*.38+filaments*.30+arcs*.25+core*.5+shock*.50+scanner*.16)*(1.-smoothstep(1.6,2.35,r)),0.,.9);gl_FragColor=vec4(col,a);}`;
+  const plasmaFragment=`precision mediump float;varying vec2 vUv;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uTime;uniform float uZoom;uniform float uShock;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}float fbm(vec2 p){float s=0.;float a=.5;for(int i=0;i<4;i++){s+=a*noise(p);p=p*2.04+vec2(2.1,8.4);a*=.52;}return s;}void main(){vec2 px=vec2(vUv.x,1.-vUv.y)*uRes;vec2 p=(px-uCenter)/(uRadius*uZoom);float r=length(p);if(r>2.35)discard;float t=uTime*.00013;float ang=atan(p.y,p.x);float fog=exp(-r*r*2.5);float edge=exp(-((r-.85)/.20)*((r-.85)/.20));float rim=exp(-((r-.96)/.055)*((r-.96)/.055));float core=exp(-r*r*13.);float swirl=fbm(p*3.2+vec2(t*2.3,-t*.8));float filaments=pow(sin(ang*14.+r*24.-t*7.+swirl*9.)*.5+.5,7.)*exp(-((r-.73)/.28)*((r-.73)/.28));float arcs=pow(sin(ang*33.+r*30.+t*4.+swirl*5.)*.5+.5,12.)*exp(-((r-.85)/.18)*((r-.85)/.18));float ring=exp(-((r-1.08)/.16)*((r-1.08)/.16));float shock=exp(-((r-uShock)/.025)*((r-uShock)/.025))*(1.-smoothstep(1.15,1.55,uShock));float scanner=pow(max(0.,cos(ang-t*3.7)),40.)*exp(-pow((r-.83)/.34,2.))* .42;vec3 col=vec3(.15,.12,.36)*fog*.4;col+=vec3(.31,.14,.70)*edge*.27;col+=vec3(.22,.51,.95)*rim*.19;col+=vec3(.14,.32,.81)*filaments*.36;col+=vec3(.40,.27,.89)*arcs*.32;col+=vec3(.15,.18,.42)*ring*.13;col+=vec3(.40,.31,.92)*core*.37;col+=vec3(.15,.67,.95)*shock*.40;col+=vec3(.21,.69,.98)*scanner*.36;float a=clamp((fog*.10+edge*.20+rim*.38+filaments*.30+arcs*.25+core*.5+shock*.50+scanner*.16)*(1.-smoothstep(1.6,2.35,r)),0.,.9);gl_FragColor=vec4(col,a);}`;
   const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){const prog=gl.createProgram(),vsh=precision(gl.VERTEX_SHADER,v),fsh=precision(gl.FRAGMENT_SHADER,f);gl.attachShader(prog,vsh);gl.attachShader(prog,fsh);gl.linkProgram(prog);gl.deleteShader(vsh);gl.deleteShader(fsh);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));return prog}
   function generateParticles(){
@@ -247,7 +270,7 @@
     programPlasma.quad=quad;
     gl.disable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
     canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK';});
-    canvas.addEventListener('webglcontextrestored',()=>{try{initGL();ctx=null;resize()}catch{init2D()}});
+    canvas.addEventListener('webglcontextrestored',()=>{try{initGL();ctx=null;canvas.style.display='block';fallbackCanvas.style.display='none';resize()}catch{init2D()}});
   }
   function init2D(){ctx=fallbackCanvas.getContext('2d');fallbackCanvas.style.display='block';canvas.style.display='none';}
   function passUniforms(p,t){const c=targetCenter();const obj={uRes:[resW,resH],uCenter:[c.x*dpr,c.y*dpr],uRadius:c.radius*dpr,uRotY:cameraY,uRotX:cameraX,uZoom:zoom,uTime:t,uDpr:dpr,uShock:shock?shock.radius:10};for(const [name,val] of Object.entries(obj)){const loc=gl.getUniformLocation(p,name);if(loc===null)continue;if(Array.isArray(val))gl.uniform2f(loc,...val);else gl.uniform1f(loc,val)}}
@@ -338,11 +361,11 @@
   }
   function unwrappedY(y){const period=twoPi;return y+Math.round((targetY-y)/period)*period}
   function focus(i,open){selected=(i+stories.length)%stories.length;const s=stories[selected],p=s.p;targetY=unwrappedY(Math.atan2(-p[0],p[2]));targetX=clamp(Math.atan2(p[1],Math.hypot(p[0],p[2])),-.9,.9);targetZoom=reduceMotion?1.13:1.28;flightFinish=reduceMotion?0:performance.now()+1100;spinning=false;$('autoRotate').textContent='▶';$('autoRotate').setAttribute('aria-pressed','false');shock={radius:.07};updateCard();updateMarkers();if(open)showStory(s)}
-  function updateCard(){const s=stories[selected];$('selectedNum').textContent=s.local?'LOCAL DEMO / NOT PUBLISHED':'FICTIONAL EXAMPLE / '+String(s.id).padStart(3,'0');$('selectedQuote').textContent='«'+s.quote.replace(/[«»]/g,'')+'»';$('selectedBy').textContent='@'+s.alias+' · '+s.market}
+  function updateCard(){const s=stories[selected];$('selectedNum').textContent=s.local?'LOCAL DEMO / NOT PUBLISHED':'FICTIONAL EXAMPLE / '+String(s.id).padStart(3,'0');$('selectedQuote').textContent='«'+s.quote.replace(/[«»]/g,'')+'»';$('selectedBy').textContent='@'+s.alias+' · '+s.market+' · '+s.category}
   function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timeout);showToast.timeout=setTimeout(()=>t.classList.remove('show'),3200)}
   const escapeHtml=t=>String(t).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
   function setDrawer(tag,html){$('drawerTag').textContent=tag;$('drawerContents').innerHTML=html;$('scrim').hidden=false;$('drawer').hidden=false;document.body.classList.add('drawer-open');$('closeDrawer').focus()}
-  function closeDrawer(){ $('scrim').hidden=true;$('drawer').hidden=true;document.body.classList.remove('drawer-open')}
+  function closeDrawer(){ $('scrim').hidden=true;$('drawer').hidden=true;document.body.classList.remove('drawer-open');document.querySelectorAll('[data-open]').forEach(b=>b.classList.toggle('is-on',b.dataset.open==='universe'))}
   function showStory(s){setDrawer('MEMORY RECORD / '+(s.local?'LOCAL DEMO':'FICTIONAL EXAMPLE'),`<div class="drawer-kicker">${escapeHtml(s.category)} / ${escapeHtml(s.market)} / @${escapeHtml(s.alias)}</div><h2>EVERY STAR<br><em>IS A STORY.</em></h2><p class="detail-quote">“${escapeHtml(s.quote)}”</p><div class="detail-row"><span class="tag">${escapeHtml(s.market)}</span><span class="tag">${escapeHtml(s.category)}</span><span class="tag">${s.local?'LOCAL ONLY':'FICTIONAL SAMPLE'}</span></div><div class="detail-panel"><div class="drawer-kicker">THE LESSON</div><p>${escapeHtml(s.story||s.quote)}</p></div><div class="detail-panel"><div class="drawer-kicker">THE ONE RULE</div><p>${escapeHtml(s.rule||'Не записано')}</p></div><p class="caution">${s.local?'Локальная запись в этом браузере. Не опубликована.':'Вымышленная история для визуальной демонстрации.'}</p><div class="drawer-actions"><button class="btn btn-outline" id="otherMemory">ДРУГАЯ ИСТОРИЯ ↗</button><button class="btn btn-outline" id="copyMemory">СКОПИРОВАТЬ ТЕКСТ</button></div>`);$('otherMemory').onclick=()=>{const next=(selected+1)%stories.length;focus(next);showStory(stories[next])};$('copyMemory').onclick=()=>{const text=`THE MARKET REMEMBERS · @${s.alias}\n“${s.quote}”\n${s.rule}\n${s.local?'Local demo / not published':'Fictional example'}`;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>showToast('Текст скопирован')).catch(()=>showToast('Копирование недоступно'));else showToast('Буфер обмена недоступен')}}
   function showCreate(){setDrawer('BE PART OF THE MEMORY',`<div class="drawer-kicker">YOUR SIGNAL STARTS HERE</div><h2>LEAVE<br><em>YOUR MARK.</em></h2><p>Чему рынок научил тебя так, что ты никогда этого не забудешь? Запиши урок, выбери одно правило — и зажги свою звезду.</p><form id="createForm"><label class="field-label" for="alias">Твой псевдоним</label><input class="field-input" id="alias" name="alias" placeholder="Например, NIGHT OWL" maxlength="32" minlength="2" required><div class="field-grid"><div><label class="field-label" for="market">Рынок</label><select class="field-select" id="market" name="market"><option>CRYPTO</option><option>FOREX</option><option>STOCKS</option><option>FUTURES</option><option>OTHER</option></select></div><div><label class="field-label" for="category">Урок</label><select class="field-select" id="category" name="category">${categories.map(x=>`<option>${x}</option>`).join('')}</select></div></div><label class="field-label" for="quote">Самая важная мысль</label><textarea id="quote" name="quote" class="field-textarea" minlength="12" maxlength="280" required placeholder="Мой главный урок..."></textarea><label class="field-label" for="rule">Правило, которое ты будешь соблюдать 30 дней</label><textarea id="rule" name="rule" class="field-textarea" minlength="8" maxlength="180" required placeholder="Больше никогда не..."></textarea><label class="field-label" for="capsule">Послание себе через 30 дней · необязательно</label><textarea id="capsule" name="capsule" class="field-textarea" maxlength="500" placeholder="Когда ты откроешь это, вспомни..."></textarea><div class="preview-panel"><small>MEMORY PREVIEW / PERSONAL STAR</small><h3 id="aliasPreview">@YOUR NAME</h3><p id="quotePreview">Твоя мысль станет светящейся звездой.</p></div><p class="caution">Это локальная демоверсия: никакой серверной регистрации, оплаты или постоянного Founder ID. Данные хранятся в этом браузере, капсула не зашифрована.</p><div class="drawer-actions"><button type="submit" class="btn btn-primary">IGNITE MY STAR ✦</button></div></form>`);const form=$('createForm');form.addEventListener('input',()=>{$('aliasPreview').textContent='@'+($('alias').value.trim().slice(0,32)||'YOUR NAME').toUpperCase();$('quotePreview').textContent=$('quote').value.trim()||'Твоя мысль станет светящейся звездой.'});form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const data=new FormData(form);addStory(data)})}
   function addStory(data){const p=norm([rand()*2-1,rand()*2-1,rand()*2-1]);const alias=safeString(data.get('alias'),32).trim().toUpperCase(),quote=safeString(data.get('quote'),280).trim(),rule=safeString(data.get('rule'),180).trim();if(alias.length<2||quote.length<12||rule.length<8)return;
@@ -362,8 +385,8 @@
     $('shareLegacy').onclick=()=>{const text=`THE MARKET REMEMBERS · @${s.alias}\n“${s.quote}”\nМоё правило: ${s.rule}\nЛокальная демоверсия, не опубликовано.`;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>showToast('Текст скопирован')).catch(()=>showToast('Копирование недоступно'));else showToast('Копирование недоступно')};
     $('deleteLegacy').onclick=()=>{if(!confirm('Удалить все локальные истории и 30-дневные отметки? Отменить нельзя.'))return;try{localStorage.removeItem(KEY);localStorage.removeItem(CHECK_KEY);window.location.reload()}catch{showToast('Очистка хранилища запрещена')}};
   }
-  let activeFilter='All';
-  function showArchive(){setDrawer('THE HUMAN ATLAS / STORIES',`<div class="drawer-kicker">WHAT THE MARKET TAUGHT US</div><h2>THE<br><em>ARCHIVE.</em></h2><p>Здесь пока только вымышленные истории и твои локальные записи. В будущем звёзды будут соответствовать реальным участникам, давшим согласие на публикацию.</p><input class="field-input" id="archiveSearch" placeholder="Поиск по истории, псевдониму, рынку..." aria-label="Поиск"><div class="archive-filter" id="archiveFilters" style="margin-top:15px"></div><div class="archive-grid" id="archiveGrid"></div>`);const filter=$('archiveFilters');for(const name of ['All',...categories]){const b=document.createElement('button');b.textContent=name;b.className=name===activeFilter?'is-on':'';b.onclick=()=>{activeFilter=name;showArchive()};filter.append(b)};$('archiveSearch').oninput=drawArchive;drawArchive()}
+  let activeFilter='All',archiveQuery='';
+  function showArchive(){setDrawer('THE HUMAN ATLAS / STORIES',`<div class="drawer-kicker">WHAT THE MARKET TAUGHT US</div><h2>THE<br><em>ARCHIVE.</em></h2><p>Здесь пока только вымышленные истории и твои локальные записи. В будущем звёзды будут соответствовать реальным участникам, давшим согласие на публикацию.</p><input class="field-input" id="archiveSearch" placeholder="Поиск по истории, псевдониму, рынку..." aria-label="Поиск"><div class="archive-filter" id="archiveFilters" style="margin-top:15px"></div><div class="archive-grid" id="archiveGrid"></div>`);$('archiveSearch').value=archiveQuery;const filter=$('archiveFilters');for(const name of ['All',...categories]){const b=document.createElement('button');b.textContent=name;b.className=name===activeFilter?'is-on':'';b.onclick=()=>{activeFilter=name;showArchive()};filter.append(b)};$('archiveSearch').oninput=()=>{archiveQuery=$('archiveSearch').value;drawArchive()};drawArchive()}
   function drawArchive(){const q=$('archiveSearch').value.trim().toLowerCase();const results=stories.filter(s=>(activeFilter==='All'||s.category===activeFilter)&&[s.alias,s.market,s.category,s.quote,s.story].some(v=>String(v||'').toLowerCase().includes(q)));const grid=$('archiveGrid');grid.replaceChildren();for(const s of results){const b=document.createElement('button');b.className='archive-card';const top=document.createElement('b');top.textContent='@'+s.alias+' / '+s.market+' / '+(s.local?'LOCAL DEMO':'FICTIONAL EXAMPLE');const quote=document.createElement('span');quote.textContent='“'+s.quote+'”';b.append(top,quote);b.onclick=()=>{focus(stories.indexOf(s));showStory(s)};grid.append(b)}if(!results.length){const p=document.createElement('p');p.textContent='Историй не найдено.';grid.append(p)}}
   function setQuality(){quality=quality==='auto'?'low':quality==='low'?'high':'auto';$('qualityLabel').textContent=quality.toUpperCase();resize();showToast('Качество: '+quality)}
   function setSpin(b){spinning=b;$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
@@ -372,21 +395,55 @@
     $('headerCreate').onclick=$('heroCreate').onclick=showCreate;
     $('heroExplore').onclick=()=>{focus((selected+1)%stories.length)};
     $('brandHome').onclick=e=>{e.preventDefault();closeDrawer();reset()};
-    document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{if(b.dataset.open==='universe'){closeDrawer();reset()}else if(b.dataset.open==='archive')showArchive();else showLegacy()});
-    $('openSelected').onclick=()=>showStory(stories[selected]);$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
+    document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-open]').forEach(x=>x.classList.toggle('is-on',x.dataset.open===b.dataset.open));if(b.dataset.open==='universe'){closeDrawer();reset()}else if(b.dataset.open==='archive')showArchive();else showLegacy()});
+    $('openSelected').onclick=()=>showStory(stories[selected]);$('nextSignal').onclick=()=>{focus((selected+1)%stories.length);showToast('Следующая история / '+stories[selected].category)};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
     $('plusZoom').onclick=()=>targetZoom=clamp(targetZoom+.13,.68,1.6);$('minusZoom').onclick=()=>targetZoom=clamp(targetZoom-.13,.68,1.6);
     $('autoRotate').onclick=()=>setSpin(!spinning);$('resetCamera').onclick=reset;$('modeButton').onclick=setQuality;
     $('toggleAtlas').onclick=()=>{atlasEnabled=!atlasEnabled;$('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));$('constellationLayer').classList.toggle('is-off',!atlasEnabled);$('signalHint').innerHTML=atlasEnabled?'SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div>':'SIGNAL ATLAS <strong>OFFLINE</strong>';showToast(atlasEnabled?'Тематические созвездия включены':'Созвездия скрыты')};
     $('birthContinue').onclick=()=>{$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true');showLegacy()};
     $('gl').addEventListener('pointerdown',pointerDown);$('fallback').addEventListener('pointerdown',pointerDown);
-    window.addEventListener('pointermove',pointerMove);window.addEventListener('pointerup',pointerUp);window.addEventListener('pointercancel',()=>dragging=false);
+    window.addEventListener('pointermove',pointerMove);window.addEventListener('pointerup',pointerUp);window.addEventListener('pointercancel',e=>pointerUp(e));
     $('scene').addEventListener('wheel',e=>{if(e.target.closest('button'))return;e.preventDefault();targetZoom=clamp(targetZoom-e.deltaY*.0007,.68,1.6)},{passive:false});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('birthOverlay').hidden){$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true')}else closeDrawer()}if(e.key==='ArrowRight'&&$('drawer').hidden)focus((selected+1)%stories.length);if(e.key==='ArrowLeft'&&$('drawer').hidden)focus((selected-1+stories.length)%stories.length)});
     window.addEventListener('resize',resize,{passive:true});
   }
-  function pointerDown(e){if(e.button!==0)return;dragging=true;downX=lastX=e.clientX;downY=lastY=e.clientY;moved=0;setSpin(false);try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}}
-  function pointerMove(e){if(!dragging)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);targetY+=dx*.005;targetX=clamp(targetX+dy*.005,-1.25,1.25)}
-  function pointerUp(e){if(!dragging)return;dragging=false;if(Math.abs(downX-e.clientX)+Math.abs(downY-e.clientY)<7){let best=-1,minDist=26;stories.forEach((s,i)=>{const p=project(s.p);if(p.z<-.08)return;const d=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(d<minDist){best=i;minDist=d}});if(best>=0)focus(best,true)}}
+  function pointerDown(e){
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    dragging=true;setSpin(false);
+    if(pointers.size===1){downX=lastX=e.clientX;downY=lastY=e.clientY;moved=0;pinchDistance=0}
+    else{moved=999;pinchDistance=0}
+    try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}
+  }
+  function pointerMove(e){
+    if(!pointers.has(e.pointerId))return;
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pointers.size>=2){
+      const [a,b]=[...pointers.values()];
+      const distance=Math.hypot(a.x-b.x,a.y-b.y);
+      if(pinchDistance>0)targetZoom=clamp(targetZoom*distance/pinchDistance,.68,1.6);
+      pinchDistance=distance;moved=999;return;
+    }
+    const dx=e.clientX-lastX,dy=e.clientY-lastY;
+    lastX=e.clientX;lastY=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+    targetY+=dx*.005;targetX=clamp(targetX+dy*.005,-1.25,1.25);
+  }
+  function pointerUp(e){
+    if(!pointers.has(e.pointerId))return;
+    const wasSingle=pointers.size===1;
+    pointers.delete(e.pointerId);
+    if(pointers.size){
+      const remaining=pointers.values().next().value;
+      lastX=remaining.x;lastY=remaining.y;moved=999;pinchDistance=0;
+      return;
+    }
+    dragging=false;pinchDistance=0;
+    if(wasSingle && moved<7 && Math.hypot(downX-e.clientX,downY-e.clientY)<7){
+      let best=-1,minDist=26;
+      stories.forEach((s,i)=>{const p=project(s.p);if(p.z<-.08)return;const d=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(d<minDist){best=i;minDist=d}});
+      if(best>=0)focus(best,true);
+    }
+  }
   function boot(){makeMarkers();try{initGL();$('fpsDisplay').textContent='GPU / WEBGL SHADERS'}catch(e){console.warn('WebGL unavailable, enabling Canvas fallback:',e);gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'}resize();updateCard();connectControls();window.requestAnimationFrame(animate)}
   boot();
 })();
