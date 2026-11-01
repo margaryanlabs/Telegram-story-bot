@@ -123,3 +123,13 @@ test('abandoned book chapter requests abort instead of retrying or overwriting c
   assert.match(books,/activeReaderFetch\?\.abort\(\);\s*activeReaderFetch=null;\s*\+\+state\.requestBook/);
   assert.match(books,/finally\{\s*if\(activeReaderFetch===readerController\)activeReaderFetch=null/);
 });
+
+test('saved book deep link reports success only after actual pages are prepared',()=>{
+ const books=read('public/books.js');
+ const bridge=read('public/vetogram-media-bridge.js');
+ assert.match(books,/return await loadChapter\(book,chapter,true\)/);
+ assert.match(books,/return await loadChapter\(book,0,resume\)/);
+ assert.match(books,/return state\.pages\.length>0 && state\.requestBook===request/);
+ assert.match(books,/return openBook\(book\); \/\/ Only acknowledge success after text pages have loaded/);
+ assert.match(bridge,/Promise\.resolve\(opened\)\.then\(ok=>send\(\{type:'open-item-status',ok:ok===true/);
+});
