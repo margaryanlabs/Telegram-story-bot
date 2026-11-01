@@ -30,6 +30,8 @@
   let offlineEditionToken=0;
   let offlineSavedBook=null;
   const pendingChapterPrefetch=new Map();
+  // Avoid downloading the same failed cover after every grid redraw.
+  const failedCoverUrls=new Set();
   let toastTimer;
   let dbPromise;
   try {
@@ -599,11 +601,11 @@
     const cover=node('div','book-cover');
     coverArtwork(cover,book);
     const imageUrl=safeCover(book.cover);
-    if(imageUrl){
+    if(imageUrl&&!failedCoverUrls.has(imageUrl)){
       const img=node('img','source-edition-cover');
       img.src=imageUrl;img.alt='Изображение обложки из каталога источника';
       img.loading='lazy';img.decoding='async';
-      img.onerror=()=>img.remove();
+      img.onerror=()=>{failedCoverUrls.add(imageUrl);cover.classList.remove('has-source-art');img.remove();};
       img.onload=()=>cover.classList.add('has-source-art');
       cover.append(img);
     }
