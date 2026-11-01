@@ -155,3 +155,26 @@ test('Universe identity fallback does not wake a hidden browser every second',()
  assert.match(universe,/window\.addEventListener\('focus',checkIdentity\)/);
  assert.match(universe,/document\.addEventListener\('visibilitychange',checkIdentity\)/);
 });
+
+test('book cache preserves completeness metadata and rejects empty text',()=>{
+ const books=read('public/books.js');
+ assert.match(books,/coverage:data\.coverage\|\|null,at:Date\.now\(\)/);
+ assert.match(books,/if\(typeof data\.text!=='string'\|\|!data\.text\.trim\(\)\)throw new Error/);
+ assert.match(books,/if\(typeof data\?\.text!=='string'\|\|!data\.text\.trim\(\)\)throw new Error/);
+});
+
+test('book prefetch is bounded, cancelled on navigation, and suppressed while hidden',()=>{
+ const books=read('public/books.js');
+ const bridge=read('public/vetogram-media-bridge.js');
+ assert.match(books,/function cancelChapterPrefetch\(\)/);
+ assert.match(books,/pendingChapterPrefetch\.values\(\)/);
+ assert.match(books,/setTimeout\(\(\)=>controller\.abort\(\),12000\)/);
+ assert.match(books,/pendingChapterPrefetch\.get\(cacheId\)===task/);
+ assert.match(books,/pauseBackgroundWork:cancelChapterPrefetch/);
+ assert.match(bridge,/window\.VetogramBooks\?\.pauseBackgroundWork\?\.\(\)/);
+});
+
+test('late film starts from a hidden Cinema iframe cannot pause Music',()=>{
+ const host=read('public/vetogram-universe.js');
+ assert.match(host,/name==='cinema'&&message\.type==='video-playing'&&screen==='media'&&activeModule==='cinema'/);
+});
