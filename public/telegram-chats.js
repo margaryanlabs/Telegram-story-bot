@@ -15,7 +15,7 @@
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
     stickerPreviewUrls:new Map(),recording:null,voiceStarting:false,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
-    threadCache:new Map(),syncTimer:null,syncBusy:false,syncFailures:0,lastSyncedAt:null,syncRunId:0,
+    threadCache:new Map(),syncTimer:null,syncBusy:false,syncAbort:null,syncFailures:0,lastSyncedAt:null,syncRunId:0,
     threadSearch:'',threadSearchIndex:0,deliveryStage:null,inboxReturn:null,activePhotoId:null,
     intelResults:[],intelTimeline:[],intelQuery:'',intelEpoch:0,intelBusy:false,
     intelNextPage:null,intelIncludeVault:false,intelCoverage:null,intelFocus:null,
@@ -1921,7 +1921,7 @@
     state.deliveryStage=null;renderDeliveryStatus();
     state.generation++;state.inboxOverlayEpoch++;state.threadGeneration++;state.voicePermissionGeneration++;
     cancelVoiceCapture();
-    stopThreadSync();
+    stopThreadSync();cancelActivePoll();
     state.syncRunId++; // stale poll completions must not unlock another owner's sync
     state.threadCache.clear();
     state.syncFailures=0;state.syncBusy=false;
@@ -2352,6 +2352,15 @@
     if(state.syncTimer!==null)clearTimeout(state.syncTimer);
     state.syncTimer=null;
   }
+  function cancelActivePoll(){
+    // A hidden, replaced or signed-out thread must release its live request.
+    // Fencing the run ID first also rejects an already-resolved stale response.
+    state.syncRunId++;
+    const controller=state.syncAbort;
+    state.syncAbort=null;
+    state.syncBusy=false;
+    controller?.abort();
+  }
   function syncLabel(value,busy=false){
     const el=$('telegramThreadSyncStatus'),dot=$('telegramThreadSyncDot');
     if(el)el.textContent=value;
@@ -2415,7 +2424,7 @@
     state.syncRunId++;
     state.threadLoading=false;
     state.syncBusy=false;
-    stopThreadSync();
+    stopThreadSync();cancelActivePoll();
     cancelThreadRequest();
     state.threadAuthRejected=true;
         // A genuine signed-session/ownership failure must not keep private
@@ -2459,6 +2468,7 @@
     state.syncBusy=true;
     syncLabel('Проверяю новые сообщения…',true);
     const controller=new AbortController();
+    state.syncAbort=controller;
     const timeout=setTimeout(()=>controller.abort(),18500);
     try{
       const response=await fetch('/api/telegram-chat-updates',{
@@ -2473,7 +2483,8 @@
         issue.httpStatus=response.status;
         throw issue;
       }
-      if(generation!==state.threadGeneration||ownerKey!==state.ownerInitData||
+      if(runId!==state.syncRunId||!maySyncThread()||
+        generation!==state.threadGeneration||ownerKey!==state.ownerInitData||
         ownerKey!==String(tg?.initData||'')||String(state.thread?.id)!==chatId)return;
       const current=new Map(state.messages.map(m=>[String(m.id),m]));
       const box=$('telegramThreadMessages');
@@ -2535,6 +2546,7 @@
       }
     }finally{
       clearTimeout(timeout);
+      if(state.syncAbort===controller)state.syncAbort=null;
       if(runId===state.syncRunId&&generation===state.threadGeneration&&
          String(state.thread?.id)===chatId&&ownerKey===state.ownerInitData){
         state.syncBusy=false;
@@ -2602,7 +2614,7 @@
     revokeMediaUrls();
     haptic();
     cancelVoiceCapture();
-    stopThreadSync();
+    stopThreadSync();cancelActivePoll();
     state.syncRunId++;state.syncBusy=false;
     // Older thread fetches may still be running: don't let their loading flag
     // block this newly selected dialog for the rest of the session.
@@ -2704,7 +2716,7 @@
     const chatId=String(state.thread.id);
     const rememberedAnchor=state.messages.length?visibleMessageAnchor():null;
     const generation=++state.threadGeneration;
-    state.syncRunId++;state.syncBusy=false; // current history load supersedes any old poll
+    cancelActivePoll(); // current history load supersedes any old poll
     cancelThreadRequest();
     const threadAbort=new AbortController();
     state.threadRequestAbort=threadAbort;
@@ -2792,7 +2804,7 @@
     $('telegramThreadActions')?.removeAttribute?.('open');
     cancelThreadRequest();
     rememberHotThread();
-    stopThreadSync();
+    stopThreadSync();cancelActivePoll();
     state.syncRunId++;state.syncBusy=false;
     state.threadGeneration++;
     closeThreadSearch();
@@ -3408,7 +3420,7 @@
       closeVetoMessengerTools();
       if($('vetoMessengerIntelArea'))$('vetoMessengerIntelArea').hidden=true;
       clearIntelSearch({close:true});
-      cancelVoiceCapture();stopThreadSync();
+      cancelVoiceCapture();stopThreadSync();cancelActivePoll();
     }else{
       // Repaint missing thumbnails even when the inbox was already loaded.
       queueVisibleAvatars();
@@ -3419,7 +3431,7 @@
   window.addEventListener('focus',resetOwner);
   window.addEventListener('pageshow',resetOwner);
   document.addEventListener('visibilitychange',()=>{
-    if(document.hidden)stopThreadSync();
+    if(document.hidden){stopThreadSync();cancelActivePoll();}
     else if(!resetOwner()){
       queueVisibleAvatars();
       if(state.thread)scheduleThreadSync(2800);
@@ -3427,7 +3439,7 @@
   });
   window.addEventListener('online',()=>{if(state.thread)scheduleThreadSync(1800)});
   window.addEventListener('offline',()=>{
-    stopThreadSync();syncLabel('Нет сети · сообщения сохранены на этом экране');
+    stopThreadSync();cancelActivePoll();syncLabel('Нет сети · сообщения сохранены на этом экране');
   });
   // Opening a deep-linked screen may precede the first screen-change event.
   if(document.querySelector('.screen.active')?.dataset?.screen==='telegram')
