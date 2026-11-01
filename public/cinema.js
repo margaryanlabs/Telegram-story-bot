@@ -225,7 +225,8 @@
     return res.json();
   }
   function showStudio(){
-    const list=studio.results.get(studio.selected)||[];
+    const list=(studio.results.get(studio.selected)||[]).filter(f=>
+      !failedEmbeds.has(f.id)&&f.player?.licensed===true);
     $("cinemaStudioOfficial").href=STUDIO_LINKS[studio.selected];
     $("cinemaStudioGrid").replaceChildren(...list.slice(-180).map(filmCard));
     $("cinemaStudioMore").classList.toggle("hidden",studio.nextPage===null);
@@ -420,11 +421,13 @@
   }
   function updateHeroDeck(){
     const foreign=[]; // Unlicensed external links must never lead a Play hero.
-    const recents=films.filter(f=>f.player&&f.contentType!=="Сериалы"&&Number(f.minutes)>=35)
+    const recents=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
+      !f.discoveryOnly&&!f.externalRutube&&f.contentType!=="Сериалы"&&Number(f.minutes)>=35)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
     // Lead with films which actually have an in-app player. The foreign
     // discovery cards may only have an external source URL.
-    const all=[...recents,...films.filter(f=>f.player?.licensed===true&&Number(f.minutes)>=40)];
+    const all=[...recents,...films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
+      !f.discoveryOnly&&!f.externalRutube&&Number(f.minutes)>=40)];
     const used=new Set(),deck=[];
     for(const film of all) {
       if(used.has(film.id))continue;
@@ -582,10 +585,12 @@
     if(home)$("cinemaForeignRail").replaceChildren(...external.slice(0,20).map(filmCard));
     text("cinemaForeignNote",external.filter(f=>f.audioClaim).length+" публикаций с заявленным дубляжом · "+external.length+" найденных публикаций. Право на их встраивание не установлено.");
     renderSeriesCollections();
-    const recent=films.filter(f=>f.player&&uploadTime(f)>0)
+    const recent=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
+      !f.discoveryOnly&&!f.externalRutube&&uploadTime(f)>0)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
     const series=groupedSeries();
-    const cartoons=films.filter(f=>f.contentType==="Мультфильмы")
+    const cartoons=films.filter(f=>f.contentType==="Мультфильмы"&&
+      f.player?.licensed===true&&!failedEmbeds.has(f.id)&&!f.discoveryOnly)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
     const shelves=[
       ["cinemaLatest","cinemaLatestRail",recent],
@@ -667,7 +672,8 @@
       (f.player?.licensed===true||Boolean(f.file))).length;
     text("cinemaCount",list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
-    const russian=films.filter(f=>f.player&&(f.spoken==="Русский"||f.spoken==="ru"));
+    const russian=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
+      !f.discoveryOnly&&!f.externalRutube&&(f.spoken==="Русский"||f.spoken==="ru"));
     const showRussian=state.tab==="home"&&!state.query.trim()&&russian.length>0;
     $("cinemaRussian").classList.toggle("hidden",!showRussian);
     if(showRussian)$("cinemaRussianRail").replaceChildren(...russian.slice(0,15).map(filmCard));
@@ -684,7 +690,11 @@
     if(state.tab==="search")title="Результаты поиска";
     if(state.tab==="library"){title="Моё избранное";subtitle="Сохраняется на этом устройстве."}
     text("cinemaSectionTitle",title);text("cinemaSectionDescription",subtitle);
-    const progressIds=Object.keys(state.library.progress).filter(id=>filmById(id)).sort((a,b)=>(state.library.progress[b]?.at||0)-(state.library.progress[a]?.at||0));
+    const progressIds=Object.keys(state.library.progress).filter(id=>{
+      const film=filmById(id);
+      return film&&!film.discoveryOnly&&!film.externalRutube&&!failedEmbeds.has(id)&&
+        (film.player?.licensed===true||Boolean(film.file));
+    }).sort((a,b)=>(state.library.progress[b]?.at||0)-(state.library.progress[a]?.at||0));
     const show=progressIds.length>0&&(state.tab==="home"||state.tab==="library");
     $("cinemaContinue").classList.toggle("hidden",!show);
     if(show)$("cinemaContinueList").replaceChildren(...progressIds.slice(0,10).map(id=>filmCard(filmById(id))));
@@ -939,6 +949,7 @@
             failedEmbeds.add(f.id);
             setPlayerMessage("Источник не воспроизводит это видео: "+String(reason||"ошибка").slice(0,140)+". Попробуйте другой фильм.");
             render();
+            showStudio();
           }
         });
         if(token!==state.request){handle.cleanup();return}
