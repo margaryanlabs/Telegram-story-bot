@@ -877,7 +877,7 @@
     clearTimeout(providerFeedbackTimer);
     try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;
     state.playing=f;setHistory(f);updateBack();buzz();
-    window.dispatchEvent(new CustomEvent('vetogram:cinema-playing'));
+    // Opening a player does not prove video started. Keep music playing until confirmed.
     const choices=approvedSources(f);
     const current=choices.find(x=>chosenSource&&x.url===chosenSource.url)||choices[0];
     state.activePlayerSource=current||null;
@@ -924,6 +924,7 @@
             if(token!==state.request||state.playing?.id!==f.id)return;
             if(event.type==="duration"){state.embedDuration=event.duration;return}
             if(event.type==="playStarted"||(event.type==="state"&&event.state==="playing")){
+              if(!playbackConfirmed)window.dispatchEvent(new CustomEvent("vetogram:cinema-playing"));
               playbackConfirmed=true;
               clearTimeout(providerFeedbackTimer);
               failedEmbeds.delete(f.id);
