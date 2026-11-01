@@ -26,7 +26,7 @@
 .vmc-track-controls{display:flex;gap:6px}.vmc-icon{background:#ffffff14;color:#f7e9f4;border:1px solid #ffffff19;border-radius:7px;width:34px;height:34px}
 .vmc-studio-add{color:#f6d6df;border:1px solid #ffffff2d;background:#ffffff11}
 .vmc-home{position:relative;overflow:hidden;padding:23px 28px;border:1px solid #ffc4aa36;border-radius:19px;background:#151316;margin:18px 0}
-.vmc-home:after{content:"♫";font-size:170px;position:absolute;right:35px;top:-60px;transform:rotate(-20deg);color:#ffffff0d;pointer-events:none}
+.vmc-home:after{content:"";display:none}
 .vmc-home>*{position:relative;z-index:1}.vmc-home strong{display:block;font-size:25px;letter-spacing:-.055em;line-height:1.2;margin:10px 0}
 .vmc-home p{font-size:11px;color:#c3bdd4;margin:0 0 18px;max-width:370px}
 .vmc-overlay{position:fixed;inset:0;z-index:170;background:#050713de;backdrop-filter:blur(14px);display:grid;place-items:center;padding:17px}
