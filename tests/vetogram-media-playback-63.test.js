@@ -76,13 +76,13 @@ test('film app includes extra original studio sources but hides unlicensed disco
   assert.match(css,/\[data-tab="foreign"\]/);
   assert.match(cinema,/if\(tab==="foreign"\)tab="catalog"/);
 });
-test('137 validated Wikisource IDs are unique and full readers keep the chapter cap above 365',()=>{
+test('141 validated Wikisource IDs are unique and full readers keep the chapter cap above 365',()=>{
   const start=books.indexOf('  const verifiedWholeEditions=');
   const end=books.indexOf('  function setSourceInfo(){',start);
   assert.ok(start>0&&end>start);
   const inventory=new Function(books.slice(start,end)+'\nreturn completeEditionBooks;')();
-  assert.equal(inventory.length,137);
-  assert.equal(new Set(inventory.map(b=>b.id)).size,137);
+  assert.equal(inventory.length,141);
+  assert.equal(new Set(inventory.map(b=>b.id)).size,141);
   assert.ok(inventory.every(b=>b.provider==='wikisource'&&b.wiki==='ru'&&b.readable));
   assert.match(api,/const MAX_CHAPTERS = 600/);
   assert.match(books,/indexedParts/);
