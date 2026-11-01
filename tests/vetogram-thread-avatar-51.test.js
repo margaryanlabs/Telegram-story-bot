@@ -20,7 +20,7 @@ async function fixture({archiveOnly=false,changeOwner=false,changeThread=false,i
   const state={
     thread:{id:'55',archiveOnly},connectionProof:{verified},
     ownerInitData:'signed',avatarEpoch:1,avatarQueue:[],avatarRequested:new Set(),
-    avatarRetryAt:new Map(),avatarUrls:new Map(),avatarActive:0,
+    avatarRetryAt:new Map(),avatarUrls:new Map(),avatarMissing:new Set(),avatarActive:0,
   };
   const nodes={
     telegramChatsView:{hidden:true},telegramThreadView:{hidden:false},
@@ -40,7 +40,7 @@ async function fixture({archiveOnly=false,changeOwner=false,changeThread=false,i
       const payload=JSON.parse(options.body);
       assert.equal(payload.action,'avatar_batch');
       requested=payload.chatIds;
-      if(payload.chatIds.includes("99"))return {ok:true,json:async()=>({ok:true,avatars:{}})};
+      if(payload.chatIds.includes("99"))return {ok:true,json:async()=>({ok:true,avatars:{},missing:["99"]})};
       return new Promise(resolve=>{finish=()=>resolve({
         ok:true,json:async()=>({ok:true,avatars:{'55':Buffer.from([255,216,255,217]).toString('base64')}}),
       })});
