@@ -216,9 +216,20 @@ body:has(#playerBar) :is(.track-cover,.catalog-cover) img{
 body:has(#cinemaPlayer) .cinema-card-art{
   overflow:hidden;
   aspect-ratio:2/3;
-  background:linear-gradient(155deg,#28202b 0%,#16131c 56%,#101012)!important;
+  background:linear-gradient(150deg,#171316 0%,#111114 62%,#0b0b0d)!important;
   border-radius:12px;
   isolation:isolate;
+}
+/* Only missing-poster cards show editorial title in place of artwork.
+   Real poster cards deliberately keep their image unobstructed. */
+body:has(#cinemaPlayer) .cinema-card-art:not(:has(img)) .cinema-card-art-title{
+  display:-webkit-box!important;
+  position:absolute;z-index:2;left:11px;right:11px;bottom:14px;
+  font:750 clamp(18px,2.6vw,27px)/1.12 system-ui,sans-serif;
+  letter-spacing:-.035em;color:#fff3f7;
+  text-shadow:0 2px 15px #0009;
+  -webkit-box-orient:vertical;-webkit-line-clamp:4;
+  overflow:hidden;overflow-wrap:anywhere;
 }
 body:has(#cinemaPlayer) .cinema-card-art-badge{
   max-width:calc(100% - 14px);
