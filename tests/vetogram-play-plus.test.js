@@ -39,7 +39,7 @@ function makeGame(){
    setInterval:(fn)=>{const id=next++;intervals.set(id,fn);return id;},
    clearInterval:id=>intervals.delete(id),
  });
- return {nodes,local,arrows,intervals,winEvents,docEvents,
+ return {nodes,local,arrows,intervals,winEvents,docEvents,document,
     step(){for(const fn of [...intervals.values()])fn();}
  };
 }
@@ -84,6 +84,8 @@ test('Snake prevents immediate reversal and pauses when backgrounded',()=>{
  g.arrows.find(x=>x.dataset.vpSnake==='left').click();
  g.step();
  assert.equal(g.nodes.get('#vpSnakeGrid').children[79].className.includes('is-head'),true);
+ g.document.hidden=true;
  g.docEvents.visibilitychange();
- assert.equal(g.intervals.size,1);
+ assert.equal(g.intervals.size,0);
+ assert.match(g.nodes.get('#vpSnakeStatus').textContent,/Пауза/);
 });
