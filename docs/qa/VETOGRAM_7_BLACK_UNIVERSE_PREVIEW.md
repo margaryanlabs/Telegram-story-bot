@@ -126,3 +126,34 @@ Fixes in `public/telegram-chats.js`:
 Regression test file added: `tests/vetogram-live-poll-cancellation-7.test.js`, five offline Node VM tests (abort on hide, late network success after cancel, A→B switch, current message merge, lifecycle hooks). Updated source/contract test with poll cancellation invariants.
 
 **Verification achieved in current execution:** 21/21 source/contract tests passed in isolated JavaScript harness; 8/8 relevant browser scripts parsed; four runtime simulations of the actual extracted poll/cancel source all passed. This **does not** mean the repository's full Node test suite ran, or that real Telegram login/messages/live WebView were exercised. GitHub Actions/Vercel build success and manual Android/iOS QA remain necessary. No production merge or deployment.
+
+## Product-design rescue pass — after mobile user screenshots (1 November 2026)
+
+**Source of truth:** four actual Android screenshots showed a blue Chats screen while Media was black/purple; very tall featured book with stretched left column, tiny lower book cover, cramped badges and huge empty area; tall purple music promotional panel; media cards with small generic symbols; an embedded mini-player obscured by the main bottom bar.
+
+### Changes made in the *same integrated branch* (no replacement site)
+
+- Removed **19 special selectors** from `books-art-direction.css` that forced the first book in the full-text catalog to span two columns/rows and place the jacket in a narrow mixed grid. All books now use the same responsive 2-column phone grid. Source licensed covers still win where available.
+- Standardized Messenger's default graphite palette from blue (`#0c111b`) to actual black. Unified embedded module variables with black `#000` / neutral `#101013` surfaces and VETO rose accents. User-chosen light/sepia reader themes and chat wallpapers remain available.
+- Removed giant purple `native-home` and `audio-home-panel` gradients, reduced padding, and raised the embedded Music player by 72px plus safe-area to avoid the host navigation bar on phones. The document reserves extra scroll padding below.
+- Fixed four media destinations into **4 across on desktop, 2 across on mobile**, removing the orphan fourth tile. Media header no longer claims “06.1” or wastes space explaining the concept.
+- Removed **two direct Lovable links** from BLOTENQ and WHO? cards. Both are explicitly labelled *coming soon* rather than pretending a game is integrated. The game registry now calls these `upcoming` rather than `external` and advertises four playable local minigames plus two in development. Four local games now have distinct, offline original SVG illustration assets embedded in the HTML.
+- For Books with no official art, made typographic fallback jackets quieter (Georgia title, no giant uppercase Impact / toy-like branding and motifs); no attempt to pass synthetic artwork off as a real publisher jacket. Original source images remain primary and are never overwritten.
+- Cinema uses `year` as default sort and hero deck first priority, so older uploads no longer automatically lead just because somebody uploaded them yesterday. Trim uploader SEO text in *displayed* titles only; the raw source names and legal attributions remain unchanged. Do not falsely claim external franchise metadata is watchable.
+- Explicit cache-busting revision `20261101-rebuild01` on the four HTML entrypoints prevents phones from loading old CSS/JS against changed page markup.
+
+### Isolated validation
+
+- **7/7** new source-contract checks in `tests/vetogram-design-recovery-7.test.js` passed in an isolated JS runner.
+- **21/21** previously existing preview/source contract checks still passed with versioned links updated.
+- Six modified JavaScript modules parsed successfully, plus Book/Cinema/Play scripts in the new-check pass.
+- No automated screenshot diff, browser rendering, live Telegram account test, movie stream availability check or native `node --test` run has yet been completed. The current draft PR is not production-ready.
+- A separate Render review service is the visual-validation destination; production has not been changed.
+
+### Remaining critical issues before a public launch
+
+1. Verify Android and iPhone WebViews visually at narrow and large widths, with bottom navigation and virtual keyboard.
+2. Confirm actual book text, playback and linked media capabilities, distinguishing discovery metadata from playable media. Licensing still limits popular foreign films.
+3. True designed/copyright-cleared movie posters and book cover assets for those entries where source art is unavailable; synthetic fallback art is intentionally honest.
+4. Reconcile the many inherited CSS stylesheets into a smaller tokenized hierarchy; this pass **fixes visible conflicts but does not claim the underlying CSS debt is retired**.
+5. Execute full native Node CI and end-to-end login / message / anti-delete workflows before merge.
