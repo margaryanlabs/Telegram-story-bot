@@ -233,7 +233,9 @@
  // An account switch invalidates every in-flight media document and Blob URL.
  window.addEventListener('focus',checkIdentity);
  document.addEventListener('visibilitychange',checkIdentity);
- setInterval(checkIdentity,1000);
+ // Identity is checked immediately on open, messages, focus and visibility.
+ // A ten-second foreground fallback avoids waking an idle WebView every second.
+ setInterval(()=>{if(!document.hidden)checkIdentity();},10000);
  const user=context().user;
  if(user)$('v6AccountName').textContent=[user.first_name,user.last_name].filter(Boolean).join(' ')||'Твой аккаунт Telegram';
  const requested=new URLSearchParams(location.search).get('screen');
