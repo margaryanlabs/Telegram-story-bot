@@ -1537,7 +1537,8 @@
     },delayMs);
   }
   function queueVisibleAvatars(){
-    if(!tg?.initData||
+    if(!tg?.initData||state.ownerInitData!==String(tg.initData)||
+      state.connectionProof?.verified!==true||document.hidden||
       document.querySelector('.screen.active')?.dataset?.screen!=='telegram')return;
     const inboxVisible=$('telegramChatsView')?.hidden===false;
     const threadVisible=$('telegramThreadView')?.hidden===false;
@@ -1570,7 +1571,9 @@
   function runAvatarQueue(){
     // An off-screen inbox must not keep opening signed Telegram sessions.
     // Pending IDs stay queued and are resumed on screen return / focus.
-    if(document.hidden||document.querySelector('.screen.active')?.dataset?.screen!=='telegram')return;
+    if(!tg?.initData||state.ownerInitData!==String(tg.initData)||
+      state.connectionProof?.verified!==true||document.hidden||
+      document.querySelector('.screen.active')?.dataset?.screen!=='telegram')return;
     if(state.avatarActive||!state.avatarQueue.length)return;
     if(Date.now()<Number(state.avatarBlockedUntil||0)){
       scheduleAvatarRetry(Math.max(1000,state.avatarBlockedUntil-Date.now()));
