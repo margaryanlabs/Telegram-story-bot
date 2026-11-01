@@ -256,3 +256,76 @@
  #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) .vp-open-game{font-size:11px}
 }
 @media(prefers-reduced-motion:reduce){#vetogram .v72-media-card,#vetogram .v72-hero-primary,#vetogram .v72-hero-link{transition:none!important}}
+
+/* The three real media modules use this same visual language. Preserve native controls and source disclosures. */
+body:has(#cinemaPlayer) .cinema-shell{max-width:1370px;margin-inline:auto}
+body:has(#cinemaPlayer) .cinema-header{background:#090a0d!important;border-bottom:1px solid #ffffff1c!important;min-height:64px!important}
+body:has(#cinemaPlayer) .cinema-brand-words strong{font-weight:800;letter-spacing:-.04em}
+body:has(#cinemaPlayer) .cinema-hero{
+ min-height:clamp(360px,46vw,520px)!important;border-radius:22px!important;
+ position:relative;overflow:hidden;border:1px solid #ffffff26!important;
+ background:#14171a!important;margin-top:14px!important;
+}
+body:has(#cinemaPlayer) .cinema-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0a0b0efa 0%,#0a0b0ecc 36%,transparent 87%);pointer-events:none}
+body:has(#cinemaPlayer) .cinema-hero-copy{position:relative;z-index:2;max-width:660px!important}
+body:has(#cinemaPlayer) .cinema-hero h1{font-size:clamp(35px,5vw,65px)!important;letter-spacing:-.065em!important;font-weight:780!important;line-height:1.03!important}
+body:has(#cinemaPlayer) .cinema-hero h1 i{font-style:normal!important;color:#d1c6ae!important}
+body:has(#cinemaPlayer) .cinema-hero-copy p{color:#c6c4c5!important;line-height:1.6}
+body:has(#cinemaPlayer) .cinema-primary{background:#f6f4f1!important;color:#121214!important;border-radius:10px!important;font-weight:800!important}
+body:has(#cinemaPlayer) .cinema-secondary{background:#ffffff15!important;color:#fff!important;border:1px solid #ffffff31!important;border-radius:10px!important}
+body:has(#cinemaPlayer) .cinema-hero-footer{z-index:3!important}
+body:has(#cinemaPlayer) .cinema-section-nav{background:#090a0d!important;border-bottom:1px solid #ffffff16!important}
+body:has(#cinemaPlayer) .cinema-section-head h2{font-size:clamp(24px,3vw,36px)!important;letter-spacing:-.06em!important}
+body:has(#cinemaPlayer) :is(.cinema-card,.cinema-studio-card,.cinema-watch-card){background:#141419!important;border-radius:15px!important;border:1px solid #ffffff1d!important;box-shadow:none!important}
+body:has(#cinemaPlayer) :is(.cinema-card-art,.cinema-watch-art){border-radius:11px!important;overflow:hidden!important}
+body:has(#cinemaPlayer) .cinema-card-art img{width:100%!important;height:100%!important;object-fit:cover!important}
+body:has(#cinemaPlayer) .cinema-card-art:has(img) .cinema-card-art-title{display:none!important}
+body:has(#cinemaPlayer) .cinema-search input{background:#14151a!important;border-color:#ffffff25!important;color:#fff!important}
+body:has(#playerBar) .app{background:#000!important}
+body:has(#playerBar) .sidebar{border-right:1px solid #ffffff16!important;background:#0b0b0e!important}
+body:has(#playerBar) .topbar{border-bottom:1px solid #ffffff17!important;background:#0a0a0c!important}
+body:has(#playerBar) .hero#hero{
+ min-height:355px!important;position:relative!important;overflow:hidden!important;
+ background:linear-gradient(110deg,#1b1827,#12121b 61%,#0b0b12)!important;
+ border:1px solid #ffffff22!important;border-radius:23px!important;
+ box-shadow:none!important;
+}
+body:has(#playerBar) #hero .hero-inner{position:relative;z-index:2}
+body:has(#playerBar) #hero h1{font-size:clamp(40px,5vw,70px)!important;letter-spacing:-.078em!important;line-height:1.03!important;color:#fff!important}
+body:has(#playerBar) #hero h1 em{font-style:normal!important;color:#d7c5e8!important}
+body:has(#playerBar) #hero p{color:#bfbac6!important}
+body:has(#playerBar) .primary-btn{background:#f5f3f8!important;color:#19131e!important;border:0!important;border-radius:11px!important}
+body:has(#playerBar) .glass-btn{border:1px solid #ffffff2d!important;border-radius:11px!important}
+body:has(#playerBar) .vinyl-large{filter:drop-shadow(0 25px 30px #000a)}
+body:has(#playerBar) .native-home-option{border:1px solid #ffffff18!important;background:#17171c!important;border-radius:16px!important;box-shadow:none!important}
+body:has(#playerBar) .native-home-option:hover{border-color:#ffffff49!important}
+body:has(#playerBar) .player-bar{background:#111116!important;border-top:1px solid #ffffff2b!important}
+body:has(#reader) .books-main{max-width:1320px;margin-inline:auto}
+body:has(#reader) .topbar{background:#090b0b!important;border-bottom:1px solid #ffffff1a!important}
+body:has(#reader) .hero-veto{
+ position:relative;min-height:390px!important;overflow:hidden!important;
+ background:linear-gradient(119deg,#1b2924,#131c19 55%,#0c1112)!important;
+ border:1px solid #ffffff22!important;border-radius:22px!important;
+ box-shadow:none!important;
+}
+body:has(#reader) .hero-veto::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 83% 49%,#8ca6922b,transparent 78%);pointer-events:none}
+body:has(#reader) .hero-veto h1{font-size:clamp(42px,6vw,77px)!important;line-height:1!important;letter-spacing:-.075em!important;color:#f3f7ef!important}
+body:has(#reader) .hero-veto h1 i{font-style:normal!important;color:#b9cfc0!important}
+body:has(#reader) .hero-veto .hero-lead{line-height:1.65!important;color:#afbcb5!important}
+body:has(#reader) .hero-action-main{background:#e3ebe0!important;color:#17231e!important;border-radius:11px!important}
+body:has(#reader) .hero-action-secondary{border:1px solid #ffffff2c!important;border-radius:11px!important}
+body:has(#reader) .featured-editions-heading h2{font-size:clamp(24px,3vw,35px)!important;letter-spacing:-.055em}
+body:has(#reader) :is(.book-card,.featured-edition,.featured-edition-card){border-radius:14px!important;box-shadow:none!important}
+body:has(#reader) :is(.book-cover,.book-card-cover,.featured-edition-cover) img{width:100%;height:100%;object-fit:cover}
+body:has(#reader) .source-tabs{gap:7px!important}
+body:has(#reader) .source-tabs button{border-radius:9px!important}
+body:has(#reader) .book-mode-explainer{background:#172019!important;border-color:#ffffff1b!important;border-radius:11px!important}
+@media(max-width:600px){
+ body:has(#cinemaPlayer) .cinema-hero{min-height:350px!important;border-radius:15px!important}
+ body:has(#cinemaPlayer) .cinema-hero::after{background:linear-gradient(0deg,#0c0c0ef7,#0c0c0e8c 72%,transparent)}
+ body:has(#cinemaPlayer) .cinema-hero h1{font-size:36px!important}
+ body:has(#playerBar) #hero{min-height:315px!important;border-radius:15px!important}
+ body:has(#playerBar) #hero h1{font-size:42px!important}
+ body:has(#reader) .hero-veto{min-height:360px!important;border-radius:15px!important}
+ body:has(#reader) .hero-veto h1{font-size:44px!important}
+}
