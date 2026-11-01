@@ -1,0 +1,101 @@
+/* VETOGRAM 7.5 / True Media Discovery + Arcade action design.
+ * App-native, no external artwork or imitation media catalogs.
+ */
+#vetogram .screen[data-screen="media"] .v75-discovery{
+  --v75-ink:#f7f8f6;
+  position:relative;isolation:isolate;overflow:hidden;
+  margin:21px 0 31px;display:grid;grid-template-columns:minmax(0,42%) minmax(0,58%);
+  gap:clamp(21px,4vw,52px);padding:clamp(22px,3.1vw,40px);
+  border-radius:22px;border:1px solid rgba(255,255,255,.14);
+  background:radial-gradient(ellipse 58% 90% at 100% 50%,rgba(102,155,157,.16),transparent 75%),
+    linear-gradient(123deg,#13191d 0%,#151a1f 53%,#101315 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055);
+}
+#vetogram .screen[data-screen="media"] .v75-discovery::after{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:repeating-linear-gradient(110deg,transparent 0 27px,rgba(255,255,255,.019) 27px 28px);
+  mask-image:linear-gradient(90deg,transparent,black 100%);
+}
+#vetogram .v75-discovery-intro{min-width:0;align-self:center}
+#vetogram .v75-section-number{display:flex;align-items:center;gap:9px;color:#c8d5d2;font:760 9px/1.4 system-ui;letter-spacing:.2em}
+#vetogram .v75-section-number b{font-weight:600;opacity:.4}
+#vetogram .v75-section-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#c0eadd;box-shadow:0 0 13px rgba(192,234,221,.5)}
+#vetogram .screen[data-screen="media"] .v75-discovery h2{
+ font:730 clamp(28px,3vw,42px)/1.09 system-ui;color:#f8faf9;
+ letter-spacing:-.064em;margin:19px 0 12px;
+}
+#vetogram .screen[data-screen="media"] .v75-discovery h2 em{font-weight:540;font-style:normal;color:#b7d8d1}
+#vetogram .screen[data-screen="media"] .v75-discovery-intro p{font-size:12px;line-height:1.7;color:#a3b1b5;margin:0;max-width:350px}
+#vetogram .v75-discovery-search{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:21px;border-radius:16px;border:1px solid rgba(255,255,255,.11);background:rgba(2,7,9,.33)}
+#vetogram .v75-discovery-search label{font:740 9px/1.2 system-ui;letter-spacing:.16em;color:#c1cbc9}
+#vetogram .v75-explore-input-wrap{
+ min-height:57px;display:flex;gap:13px;align-items:center;min-width:0;
+ padding:0 17px;background:#0b1014;border-radius:12px;border:1px solid rgba(219,245,239,.25);
+ transition:border-color .2s,box-shadow .2s;
+}
+#vetogram .v75-explore-input-wrap:focus-within{border-color:#c6f0e0;box-shadow:0 0 0 3px rgba(201,245,223,.10)}
+#vetogram .v75-explore-input-wrap>span{color:#ceeae1;font-size:21px}
+#vetogram .v75-explore-input-wrap input{
+ border:0!important;background:transparent!important;color:#f5f7f6!important;
+ width:100%;min-width:0;min-height:54px;box-shadow:none!important;
+ font:600 12px/1.3 system-ui!important;letter-spacing:0;outline:none!important;
+}
+#vetogram .v75-explore-input-wrap input::placeholder{color:#778a8a!important;font-weight:480}
+#vetogram .v75-explore-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#vetogram .v75-explore-button{
+ display:flex;justify-content:center;gap:8px;align-items:center;min-width:0;
+ min-height:49px;padding:10px 8px;border-radius:10px;background:#1e2a2d;
+ border:1px solid rgba(210,237,229,.20);color:#f0f8f4;
+ font:760 11px/1 system-ui;cursor:pointer;transition:background .2s,transform .2s;
+}
+#vetogram .v75-explore-button:hover{background:#294348;border-color:#badcd4}
+#vetogram .v75-explore-button:active{transform:scale(.975)}
+#vetogram .v75-explore-button:focus-visible{outline:2px solid #d0f6e5;outline-offset:2px}
+#vetogram .v75-explore-button:first-child{background:#d6eee4;color:#112b29;border-color:transparent}
+#vetogram .v75-explore-button:first-child:hover{background:#f2fff7}
+#vetogram .v75-action-glyph{font-size:17px}
+#vetogram .v75-explore-button b{font-size:15px;font-weight:600}
+#vetogram .v75-explore-hint{
+ font-size:10px;line-height:1.55;color:#a6b3b2;max-width:550px;margin:1px 0 0;
+ min-height:24px;letter-spacing:0;
+}
+#vetogram .v75-local-search-heading{
+ display:flex;flex-wrap:wrap;gap:10px 17px;align-items:baseline;
+ margin:32px 0 13px 2px;
+}
+#vetogram .v75-local-kicker{flex-basis:100%;font:760 9px/1.4 system-ui;letter-spacing:.19em;color:#9396a0}
+#vetogram .v75-local-search-heading strong{font:740 22px/1.2 system-ui;letter-spacing:-.047em;color:#f5f4f4}
+#vetogram .v75-local-search-heading small{font-size:10px;color:#8e9099}
+#vetogram .screen[data-screen="media"] .v75-local-search-heading + .v61-search{margin-top:0!important}
+#vetogram .screen[data-screen="play"] .v75-arcade-hero-cta{
+ display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0 0;position:relative;z-index:4;
+}
+#vetogram .screen[data-screen="play"] .v75-arcade-hero-cta .v72-play-jump{margin-top:0}
+#vetogram .screen[data-screen="play"] .v75-surprise{
+ display:inline-flex;align-items:center;gap:10px;min-height:43px;
+ padding:11px 16px;border:1px solid rgba(220,245,242,.38);border-radius:10px;
+ background:rgba(4,19,20,.35);color:#e2f7f1;cursor:pointer;
+ font:770 12px/1 system-ui;transition:transform .18s,background .18s;
+}
+#vetogram .screen[data-screen="play"] .v75-surprise:hover{background:rgba(104,162,154,.18)}
+#vetogram .screen[data-screen="play"] .v75-surprise:active{transform:scale(.97)}
+#vetogram .screen[data-screen="play"] .v75-surprise:focus-visible{outline:2px solid #dbfff4;outline-offset:2px}
+#vetogram .screen[data-screen="play"] .v75-surprise span{color:#c6e7cb;font-size:17px}
+@media(max-width:760px){
+ #vetogram .screen[data-screen="media"] .v75-discovery{grid-template-columns:1fr;padding:24px 19px;gap:18px;margin-top:14px;border-radius:18px}
+ #vetogram .screen[data-screen="media"] .v75-discovery h2{font-size:clamp(27px,7vw,38px);margin:10px 0}
+ #vetogram .v75-discovery-search{padding:13px 12px;border-radius:12px}
+ #vetogram .v75-explore-input-wrap{min-height:49px}
+ #vetogram .v75-explore-input-wrap input{min-height:48px}
+ #vetogram .v75-local-search-heading{margin-top:22px}
+}
+@media(max-width:390px){
+ #vetogram .v75-explore-button{min-height:46px;font-size:10px;gap:4px;padding:8px 4px}
+ #vetogram .v75-action-glyph{font-size:14px}
+ #vetogram .v75-explore-button b{display:none}
+ #vetogram .v75-discovery-search{gap:9px}
+ #vetogram .screen[data-screen="play"] .v75-surprise{padding:10px 11px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ #vetogram .v75-explore-button,#vetogram .v75-explore-input-wrap,#vetogram .v75-surprise{transition:none!important}
+}
