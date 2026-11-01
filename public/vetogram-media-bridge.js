@@ -46,8 +46,9 @@
       if(window.VetogramCinema?.openFilm)opened=window.VetogramCinema.openFilm(data.id);
       else if(window.VetogramBooks?.openSavedByKey)opened=window.VetogramBooks.openSavedByKey(data.id);
       else if(window.VetogramMusic?.openSavedById)opened=window.VetogramMusic.openSavedById(data.id);
-      Promise.resolve(opened).then(ok=>send({type:'open-item-status',ok:ok===true,requestId}))
-        .catch(()=>send({type:'open-item-status',ok:false,requestId}));
+      Promise.resolve(opened).then(result=>send({type:'open-item-status',
+        ok:result===true,status:result==='search'?'search':result===true?'opened':'unavailable',requestId}))
+        .catch(()=>send({type:'open-item-status',ok:false,status:'unavailable',requestId}));
     }catch{send({type:'open-item-status',ok:false,requestId});}
   }
   if(data.action==='visible'&&!data.visible){
