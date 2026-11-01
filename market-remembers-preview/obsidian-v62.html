@@ -1184,6 +1184,11 @@ void main(){
     }
   }
   function boot(){
+    // Mobile launch prioritizes silhouette. The user can opt in to category
+    // connectors by pressing ATLAS; desktop keeps the existing default.
+    atlasEnabled=window.innerWidth>820;
+    $('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));
+    $('constellationLayer').classList.toggle('is-off',!atlasEnabled);
     makeMarkers();updateLensControls();
     try{initGL();$('fpsDisplay').textContent='GPU / WEBGL SHADERS'}
     catch(e){console.warn('WebGL unavailable, enabling Canvas fallback:',e);gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'}
