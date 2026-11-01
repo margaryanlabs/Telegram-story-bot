@@ -63,3 +63,22 @@ This is a source change, **not a production deployment**. Connecting book/cinema
 - The real local Node test suite was **not** run: the repository cannot be cloned in the active runtime (github.com DNS unavailable) and the connector does not provide a command runner. These isolated checks are not an E2E test or build confirmation.
 
 Required release gates remain unchanged: real Node CI, Android Telegram and iOS WebView, licensed playback, source coverage, account switch tests, and preview deployment once infrastructure is available.
+
+## Reader consistency and hidden-frame guards — 2026-11-01, additional pass
+
+This pass addressed issues verified in the existing source, without replacing the working modules:
+
+- **Offline book attribution:** `cacheText()` now stores source `coverage` along with `text`, `chapters` and attribution in the per-device IndexedDB cache. The next read no longer loses the source's limited/unverified completeness warning.
+- **No false success for missing chapters:** empty or non-string upstream text is rejected instead of treating the reader's placeholder page as a successful book; users receive the existing retry action.
+- **Bounded background work:** `prefetchNextChapter()` now has an explicit 12-second abort, honors network Data Saver and 2G restrictions, and rejects cached writes after a reader close/chapter switch/book switch. `cancelChapterPrefetch()` runs on every chapter change, book open and close.
+- **Navigation guard:** when a user switches away from Books, the iframe cancels only the optional prefetch through `pauseBackgroundWork`; the current chapter, page and progress remain intact.
+- **Audio guard:** the host ignores delayed `video-playing` notifications after the Cinema iframe has been hidden or the user has switched out of the media screen. Only the active Cinema section can pause Music.
+
+**Verification in the chat:**
+- 19/19 source/contract checks passed in the isolated JavaScript harness.
+- A dedicated behavioral harness exercised the **actual source of** `cancelChapterPrefetch` and `prefetchNextChapter` with mock networking and signals: 4/4 passed (abort, book switch, coverage save and Data Saver).
+- Six changed browser JavaScript modules passed JavaScript syntax parsing.
+- Added four Node VM test definitions in `tests/vetogram-book-prefetch-behavior.test.js` and one hidden-reader lifecycle test in the media bridge suite. These Node tests have **not yet been executed using `node --test`**; browser/WebView functionality and upstream APIs remain unverified.
+- GitHub Actions has no PR-triggered workflow run returned for the current branch commit. Vercel still shows `build-rate-limit` failure for the preview context. This is not proof of a source-code build failure.
+
+Production remains untouched, no merge and no preview/Render/Vercel deployment. Device QA and full Node CI are still required before marking this PR ready.
