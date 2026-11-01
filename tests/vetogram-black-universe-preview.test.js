@@ -103,3 +103,23 @@ test('music artworks have distinct fallback initials instead of broken images',(
   assert.match(catalog,/const failedCoverUrls=new Set\(\)/);
   assert.match(catalog,/failedCoverUrls\.add\(track\.artwork\)/);
 });
+
+test('audio pauses only for confirmed film playback, never on click or player mount',()=>{
+  const cinema=read('public/cinema.js');
+  const bridge=read('public/vetogram-media-bridge.js');
+  assert.doesNotMatch(cinema,/state\.playing=f;setHistory\(f\);updateBack\(\);buzz\(\);\s*window\.dispatchEvent\(new CustomEvent\(['"]vetogram:cinema-playing/);
+  assert.match(cinema,/if\(!playbackConfirmed\)window\.dispatchEvent\(new CustomEvent\("vetogram:cinema-playing"\)\)/);
+  assert.match(bridge,/video\?\.addEventListener\('playing'/);
+  assert.match(bridge,/window\.addEventListener\('vetogram:cinema-playing'/);
+  assert.doesNotMatch(bridge,/cinemaDetailsWatch'\)\?\.addEventListener\('click'.*video-playing/);
+});
+
+test('abandoned book chapter requests abort instead of retrying or overwriting current reader',()=>{
+  const books=read('public/books.js');
+  assert.match(books,/let activeReaderFetch=null/);
+  assert.match(books,/if\(requestSignal\?\.aborted\)throw error/);
+  assert.match(books,/fetchReaderResponse\(endpoint\+'\?'\+params,readerController\.signal\)/);
+  assert.match(books,/if\(\$\('reader'\)\.hidden \|\| state\.requestBook!==request/);
+  assert.match(books,/activeReaderFetch\?\.abort\(\);\s*activeReaderFetch=null;\s*\+\+state\.requestBook/);
+  assert.match(books,/finally\{\s*if\(activeReaderFetch===readerController\)activeReaderFetch=null/);
+});
