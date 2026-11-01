@@ -154,13 +154,21 @@
     displayMemory();
   }
   memoryReset?.addEventListener('click', () => { haptic('light'); resetMemory(); });
+  function stopBackgroundTimers() {
+    if (reactionState === 'waiting' || reactionState === 'ready') reactionCancel();
+    // A pending mismatched pair is a transient view, not saved progress.
+    // Reset it so delayed callbacks cannot mutate an already closed game.
+    if (memoryTimeout !== null) resetMemory();
+  }
+  window.addEventListener('vetogram:game-close', event => {
+    if (event?.detail?.game === 'reaction' && (reactionState === 'waiting' || reactionState === 'ready')) reactionCancel();
+    if (event?.detail?.game === 'pairs' && memoryTimeout !== null) resetMemory();
+  });
   window.addEventListener('veto:screen-changed', event => {
-    if (event?.detail?.screen !== 'play') {
-      if (reactionState === 'waiting' || reactionState === 'ready') reactionCancel();
-    }
+    if (event?.detail?.screen !== 'play') stopBackgroundTimers();
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && (reactionState === 'waiting' || reactionState === 'ready')) reactionCancel();
+    if (document.hidden) stopBackgroundTimers();
   });
   reactionCancel();
   resetMemory();
