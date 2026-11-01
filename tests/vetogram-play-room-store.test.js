@@ -7,6 +7,7 @@ const HOST='123456789',GUEST='456789123',CODE='ABCD2345';
 
 function fakeNeon() {
   const rows=new Map();
+  const results=new Map();
   const statements=[];
   const sql=async (parts,...values)=>{
     const statement=parts.join('$?').replace(/\s+/g,' ').trim();
@@ -32,6 +33,22 @@ function fakeNeon() {
       row.guest_id=guestId;row.status='active';row.version+=1;
       return [{...row}];
     }
+    if(statement.startsWith('WITH advanced AS (')) {
+      const [board,turn,status,winner,code,version]=values;
+      const row=rows.get(code);
+      if(!row||row.version!==version||row.status!=='active')return [];
+      Object.assign(row,{board,turn,status,winner,version:row.version+1});
+      if(status==='finished'){
+        const key=code+':'+row.round;
+        if(!results.has(key))results.set(key,{
+          room_code:code,round:row.round,
+          x_player_id:row.round%2===1?row.owner_id:row.guest_id,
+          o_player_id:row.round%2===1?row.guest_id:row.owner_id,
+          winner,final_board:board,
+        });
+      }
+      return [{...row}];
+    }
     if(statement.startsWith('UPDATE vetogram_play_ttt_rooms')&&statement.includes('SET board=')&&statement.includes('round=')) {
       const [board,turn,status,winner,round,rematch_x,rematch_o,code,version]=values;
       const row=rows.get(code);
@@ -48,7 +65,7 @@ function fakeNeon() {
     }
     throw new Error('Unexpected SQL: '+statement);
   };
-  return {sql,rows,statements};
+  return {sql,rows,results,statements};
 }
 
 test('Neon adapter creates owner-scoped room, prevents spectator reads',async()=>{
@@ -123,4 +140,39 @@ test('Neon-backed rematch waits for both players, CAS protects stale votes',asyn
   const next=await store.move(CODE,GUEST,0,agreed.room.version);
   assert.equal(next.ok,true);
   assert.equal(next.room.board,'X........');
+  assert.equal(fake.results.size,1,'only the completed first round is stored');
+  const settled=[...fake.results.values()][0];
+  assert.equal(settled.x_player_id,HOST);
+  assert.equal(settled.o_player_id,GUEST);
+  assert.equal(settled.winner,'X');
+});
+
+test('Verified ledger inserts only after a finished round and rotates attribution on rematch',async()=>{
+  const fake=fakeNeon();
+  const store=playRoomStore(fake.sql,{now:()=>FIXED,codeGenerator:()=>CODE});
+  await store.create(HOST);
+  let state=(await store.join(CODE,GUEST)).room;
+  assert.equal(fake.results.size,0);
+  for(const [id,cell] of [[HOST,0],[GUEST,3],[HOST,1],[GUEST,4]]){
+    state=(await store.move(CODE,id,cell,state.version)).room;
+    assert.equal(fake.results.size,0);
+  }
+  state=(await store.move(CODE,HOST,2,state.version)).room;
+  assert.equal(fake.results.size,1);
+  assert.equal(fake.results.get(CODE+':1').winner,'X');
+  assert.equal((await store.move(CODE,HOST,5,state.version)).error,'not_active');
+  assert.equal(fake.results.size,1,'duplicate terminal move does not create a duplicate score');
+  state=(await store.rematch(CODE,HOST,state.version)).room;
+  state=(await store.rematch(CODE,GUEST,state.version)).room;
+  for(const [id,cell] of [[GUEST,0],[HOST,3],[GUEST,1],[HOST,4],[GUEST,2]]){
+    const r=await store.move(CODE,id,cell,state.version);
+    assert.equal(r.ok,true,r.error);
+    state=r.room;
+  }
+  assert.equal(fake.results.size,2);
+  const second=fake.results.get(CODE+':2');
+  assert.equal(second.x_player_id,GUEST);
+  assert.equal(second.o_player_id,HOST);
+  assert.equal(second.winner,'X');
+  assert.equal(fake.results.get(CODE+':1').x_player_id,HOST);
 });
