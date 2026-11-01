@@ -221,7 +221,7 @@
     <div id="markers" class="markers" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
     <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE LIVING CORE<span class="fine-line"></span>V.05.0 / VETO</div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE LIVING CORE<span class="fine-line"></span>V.05.1 / VETO</div>
   </div>
   <header class="header">
     <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>BY VETO INTELLIGENCE · CONCEPT</small></span></a>
@@ -318,6 +318,9 @@
   let pts=0, lines=0, w=1,h=1,dpr=1, resW=1,resH=1, cameraY=.22, cameraX=-.16, targetY=.22,targetX=-.16, zoom=1,targetZoom=1;
   let spinning=!reduceMotion, quality='auto', dragging=false, moved=0, downX=0,downY=0,lastX=0,lastY=0,birth=null, shock=null, lastTime=0;
   let inertiaY=0,inertiaX=0;
+  let autoEco=false,perfStarted=0,perfFrames=0,perfElapsed=0,perfMeasured=false,frameScheduled=false;
+  let contextHandlersInstalled=false;
+  const uniformCache=new WeakMap();
   let sceneParticles=[], sceneLines=[], markerEls=[];
   const lensMatches=s=>lens==='All'||s.category===lens;
   function firstVisibleSignal(){return stories.findIndex(lensMatches)}
@@ -456,6 +459,8 @@ void main(){
  float shock=exp(-pow((sphereR-uShock)/.032,2.))*(1.-smoothstep(1.18,1.62,uShock));
  float focusDist=length((px-uFocus2)/(uRadius*uZoom));
  float focusAura=exp(-pow(focusDist/.20,2.))*uFocusIntensity*(.75+.25*sin(t*15.));
+ float signalWave=exp(-pow((focusDist-uShock*.41)/.027,2.))*
+   (1.-smoothstep(.55,1.35,uShock))*uFocusIntensity;
  vec3 col=vec3(0.);
  col+=vec3(.09,.12,.28)*outer*.56;
  col+=vec3(.21,.12,.64)*body*.19*shade;
@@ -469,16 +474,17 @@ void main(){
  col+=vec3(.32,.48,.89)*ripples*.17;
  col+=vec3(.26,.69,1.)*scanner*.19;
  col+=vec3(.39,.71,1.)*focusAura*.31;
+ col+=vec3(.70,.83,1.)*signalWave*.55;
  col+=vec3(.25,.69,1.)*shock*.44;
  float alpha=clamp(
-   (.09*outer+.17*body+.36*rim+.13*inner+.49*core+.38*fine+.26*veins+.22*spiral+.11*ripples+.23*focusAura+.42*shock)
+   (.09*outer+.17*body+.36*rim+.13*inner+.49*core+.38*fine+.26*veins+.22*spiral+.11*ripples+.23*focusAura+.38*signalWave+.42*shock)
    *(1.-smoothstep(1.72,2.17,r)),0.,.86);
  gl_FragColor=vec4(col,alpha);
 }`;
     const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){const prog=gl.createProgram(),vsh=precision(gl.VERTEX_SHADER,v),fsh=precision(gl.FRAGMENT_SHADER,f);gl.attachShader(prog,vsh);gl.attachShader(prog,fsh);gl.linkProgram(prog);gl.deleteShader(vsh);gl.deleteShader(fsh);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));return prog}
   function generateParticles(){
-    let count=quality==='low'?3500:quality==='high'?(w<800?9500:18000):(w<800?5800:12500);
+    let count=(quality==='low'||(quality==='auto'&&autoEco))?3500:quality==='high'?(w<800?9500:18000):(w<800?5800:12500);
     const r=seeded(271828+count);sceneParticles=[];
     for(let i=0;i<count;i++){
       const y=1-2*(i+.5)/count,phi=i*2.399963229728653;const xz=Math.sqrt(Math.max(0,1-y*y));
@@ -491,8 +497,8 @@ void main(){
       sceneParticles.push(rad*Math.cos(theta),z*rr,rad*Math.sin(theta),r(),.12+r()*.6);
     }
     // Procedural luminous streamlines: internal art geometry, not social relationships.
-    const strands=quality==='low'?4:6;
-    const segments=quality==='low'?130:(w<820?190:245);
+    const strands=(quality==='low'||autoEco)?4:6;
+    const segments=(quality==='low'||autoEco)?130:(w<820?190:245);
     for(let strand=0;strand<strands;strand++){
       const phase=strand*twoPi/strands,frequency=2.25+strand*.17;
       for(let j=0;j<segments;j++){
@@ -504,7 +510,7 @@ void main(){
       }
     }
     // Independent inner shell adds genuine camera parallax.
-    const innerCount=quality==='low'?380:(w<820?650:1000);
+    const innerCount=(quality==='low'||autoEco)?380:(w<820?650:1000);
     for(let j=0;j<innerCount;j++){
       const u=(j+.5)/innerCount,yy=1-2*u,phi=j*2.399963229728653;
       const spread=Math.sqrt(Math.max(0,1-yy*yy)),rr=.48+.28*r();
@@ -588,8 +594,11 @@ void main(){
     const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
     programPlasma.quad=quad;
     gl.disable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
-    canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK';});
-    canvas.addEventListener('webglcontextrestored',()=>{try{initGL();ctx=null;canvas.style.display='block';fallbackCanvas.style.display='none';resize()}catch{init2D()}});
+    if(!contextHandlersInstalled){
+      contextHandlersInstalled=true;
+      canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'});
+      canvas.addEventListener('webglcontextrestored',()=>{try{initGL();ctx=null;canvas.style.display='block';fallbackCanvas.style.display='none';resize()}catch{init2D()}});
+    }
   }
   function init2D(){ctx=fallbackCanvas.getContext('2d');fallbackCanvas.style.display='block';canvas.style.display='none';}
   function passUniforms(p,t){
@@ -597,10 +606,13 @@ void main(){
     const obj={uRes:[resW,resH],uCenter:[c.x*dpr,c.y*dpr],uRadius:c.radius*dpr,
       uRotY:cameraY,uRotX:cameraX,uZoom:zoom,uTime:reduceMotion?0:t,uDpr:dpr,
       uShock:shock?shock.radius:10,uFocus:s.p,uFocus2:[point.x*dpr,point.y*dpr],
-      uFocusIntensity:point.z>-.12?1:0,uQuality:(quality==='low'||(quality==='auto'&&w<820))?0:1};
+      uFocusIntensity:point.z>-.12?1:0,uQuality:(quality==='low'||(quality==='auto'&&(w<820||autoEco)))?0:1};
+    let locations=uniformCache.get(p);
+    if(!locations){locations=new Map();uniformCache.set(p,locations)}
     for(const [name,val] of Object.entries(obj)){
-      const loc=gl.getUniformLocation(p,name);if(loc===null)continue;
-      if(Array.isArray(val)){if(val.length===3)gl.uniform3f(loc,...val);else gl.uniform2f(loc,...val);}
+      if(!locations.has(name))locations.set(name,gl.getUniformLocation(p,name));
+      const loc=locations.get(name);if(loc===null)continue;
+      if(Array.isArray(val)){if(val.length===3)gl.uniform3f(loc,...val);else gl.uniform2f(loc,...val)}
       else gl.uniform1f(loc,val);
     }
   }
@@ -709,10 +721,32 @@ void main(){
       ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,twoPi);ctx.stroke();}
     ctx.restore();
   }
-  function resize(){w=Math.max(window.innerWidth,1);h=Math.max(window.innerHeight,1);dpr=Math.min(window.devicePixelRatio||1,quality==='low'?1:quality==='high'?1.8:(w<820?1.35:1.55));resW=Math.round(w*dpr);resH=Math.round(h*dpr);canvas.width=resW;canvas.height=resH;fallbackCanvas.width=resW;fallbackCanvas.height=resH;if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);generateParticles();updateMarkers();updateAtlas()}
+  function resize(){w=Math.max(window.innerWidth,1);h=Math.max(window.innerHeight,1);dpr=Math.min(window.devicePixelRatio||1,(quality==='low'||(quality==='auto'&&autoEco))?1:quality==='high'?1.8:(w<820?1.35:1.55));resW=Math.round(w*dpr);resH=Math.round(h*dpr);canvas.width=resW;canvas.height=resH;fallbackCanvas.width=resW;fallbackCanvas.height=resH;if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);generateParticles();updateMarkers();updateAtlas()}
   function makeMarkers(){buildAtlas();const el=$('markers');el.replaceChildren();markerEls=[];stories.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='star-marker';b.title='Открыть историю '+s.alias;b.setAttribute('aria-label','История '+s.alias);b.addEventListener('click',e=>{e.stopPropagation();focus(i,true)});el.append(b);markerEls.push(b)})}
   function updateMarkers(){for(let i=0;i<markerEls.length;i++){const p=project(stories[i].p),m=markerEls[i],v=p.z>-.08&&lensMatches(stories[i]);m.style.left=p.x+'px';m.style.top=p.y+'px';m.style.opacity=v?'1':'0';m.style.pointerEvents=v?'auto':'none';m.classList.toggle('is-selected',i===selected);m.setAttribute('aria-hidden',String(!v))}}
-  function animate(t){const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:.067;
+  function queueFrame(){
+    if(!frameScheduled&&!document.hidden){frameScheduled=true;window.requestAnimationFrame(animate)}
+  }
+  function sampleGraphics(t,dt){
+    if(quality!=='auto'||perfMeasured||!gl||document.hidden)return;
+    if(!perfStarted){perfStarted=t;return}
+    const elapsed=t-perfStarted;
+    // Warm up first; skip the expensive load/compilation and tab-reentry frames.
+    if(elapsed>2100&&elapsed<8900){perfFrames++;perfElapsed+=dt}
+    if(elapsed>=9000){
+      perfMeasured=true;
+      const fps=perfElapsed>0?perfFrames*1000/perfElapsed:60;
+      if(perfFrames>=45&&fps<33){
+        autoEco=true;$('qualityLabel').textContent='AUTO ECO';
+        $('fpsDisplay').textContent='GPU / ADAPTIVE ECO';
+        resize();
+      }
+    }
+  }
+  function animate(t){
+    frameScheduled=false;
+    if(document.hidden)return;
+    const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:.067;
     if(flightFinish&&t>flightFinish){flightFinish=0;targetZoom=1.13}
     if(spinning&&!dragging&&!birth)targetY+=dt*.000055;
     // A damped continuation of the last touch: physical, not perpetual spinning.
@@ -731,7 +765,7 @@ void main(){
     if(!gl)canvasRender(t);
     if(!reduceMotion||Math.abs(targetY-cameraY)>.001||Math.abs(targetX-cameraX)>.001||birth||shock)updateMarkers();
     updateAtlas();updateBirthComet(t);updateDivePosition();
-    window.requestAnimationFrame(animate)
+    sampleGraphics(t,dt);queueFrame()
   }
   function unwrappedY(y){const period=twoPi;return y+Math.round((targetY-y)/period)*period}
   function focus(i,open){if(open){beginDive(i);return}inertiaY=0;inertiaX=0;selected=(i+stories.length)%stories.length;const s=stories[selected],p=s.p;if(!lensMatches(s))setLens('All',false);targetY=unwrappedY(Math.atan2(-p[0],p[2]));targetX=clamp(Math.atan2(p[1],Math.hypot(p[0],p[2])),-.9,.9);targetZoom=reduceMotion?1.13:1.28;flightFinish=reduceMotion?0:performance.now()+1100;spinning=false;$('autoRotate').textContent='▶';$('autoRotate').setAttribute('aria-pressed','false');shock={radius:.07};updateCard();updateMarkers();if(open)showStory(s)}
@@ -812,7 +846,12 @@ void main(){
     else{targetZoom=1;setSpin(!reduceMotion)}
     updateMarkers();updateAtlas();
   }
-  function setQuality(){quality=quality==='auto'?'low':quality==='low'?'high':'auto';$('qualityLabel').textContent=quality.toUpperCase();resize();showToast('Качество: '+quality)}
+  function setQuality(){
+    quality=quality==='auto'?'low':quality==='low'?'high':'auto';
+    autoEco=false;perfStarted=0;perfFrames=0;perfElapsed=0;perfMeasured=false;
+    $('qualityLabel').textContent=quality.toUpperCase();
+    resize();showToast('Качество: '+quality);
+  }
   function setSpin(b){spinning=b;if(b){inertiaY=0;inertiaX=0}$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
   function reset(){cancelDive();inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
   function connectControls(){
@@ -831,8 +870,19 @@ void main(){
     $('gl').addEventListener('pointerdown',pointerDown);$('fallback').addEventListener('pointerdown',pointerDown);
     window.addEventListener('pointermove',pointerMove);window.addEventListener('pointerup',pointerUp);window.addEventListener('pointercancel',e=>pointerUp(e));
     $('scene').addEventListener('wheel',e=>{if(e.target.closest('button'))return;e.preventDefault();targetZoom=clamp(targetZoom-e.deltaY*.0007,.68,1.6)},{passive:false});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true')}else closeDrawer()}if(e.key==='ArrowRight'&&$('drawer').hidden)focus((selected+1)%stories.length);if(e.key==='ArrowLeft'&&$('drawer').hidden)focus((selected-1+stories.length)%stories.length)});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true')}else closeDrawer()}if(!$('drawer').hidden||!$('birthOverlay').hidden||diveIndex!==-1)return;
+    const el=document.activeElement;
+    if(el&&el.matches('input,textarea,select,[contenteditable="true"]'))return;
+    if(e.key==='ArrowRight'){e.preventDefault();focus(nextVisibleSignal(selected,1))}
+    if(e.key==='ArrowLeft'){e.preventDefault();focus(nextVisibleSignal(selected,-1))}});
     window.addEventListener('resize',resize,{passive:true});
+    document.addEventListener('visibilitychange',()=>{
+      if(!document.hidden){
+        lastTime=0;perfStarted=0;perfFrames=0;perfElapsed=0;
+        // No new shader resources, just resume a previously suspended animation.
+        queueFrame();
+      }
+    });
   }
   function pointerDown(e){
     inertiaY=0;inertiaX=0;
@@ -874,7 +924,12 @@ void main(){
       if(best>=0)focus(best,true);
     }
   }
-  function boot(){makeMarkers();updateLensControls();try{initGL();$('fpsDisplay').textContent='GPU / WEBGL SHADERS'}catch(e){console.warn('WebGL unavailable, enabling Canvas fallback:',e);gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'}resize();updateCard();connectControls();window.requestAnimationFrame(animate)}
+  function boot(){
+    makeMarkers();updateLensControls();
+    try{initGL();$('fpsDisplay').textContent='GPU / WEBGL SHADERS'}
+    catch(e){console.warn('WebGL unavailable, enabling Canvas fallback:',e);gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'}
+    resize();updateCard();connectControls();queueFrame();
+  }
   boot();
 })();
 
