@@ -30,6 +30,8 @@
     <link rel="stylesheet" href="/vetogram-mobile-clarity.css?v=20261031-v61-universe" />
   <link rel="stylesheet" href="/vetogram-universe.css?v=20261031-v61-universe" />
   <link rel="stylesheet" href="/vetogram-universe-61.css?v=20261031-v61-universe" />
+  <link rel="stylesheet" href="/vetogram-play.css?v=20261101-universe-play" />
+  <link rel="stylesheet" href="/vetogram-unified-play.css?v=20261101-universe-play" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -2242,7 +2244,7 @@
         <header class="v61-hero">
           <div class="v61-hero-top"><span class="v61-overline"><span class="v61-pulse" aria-hidden="true"></span> VETOGRAM · MEDIA UNIVERSE</span><span class="v61-edition">06.1 / ONE APP</span></div>
           <h1>Всё твоё.<br><em>В одном месте.</em></h1>
-          <p>Музыка, фильмы и книги. Личная коллекция всегда рядом с твоими чатами.</p>
+          <p>Музыка, кино, книги и игры. Личная вселенная всегда рядом с твоими чатами.</p>
         </header>
         <p id="v61GuestStorage" class="v61-guest-note" hidden>Гостевой режим: коллекция остаётся в этом браузере и может быть видна другим людям на общем устройстве. Открой VETOGRAM через свой Telegram для разделения коллекций.</p>
         <form class="v61-search" id="v61SearchForm" role="search" autocomplete="off" aria-label="Поиск по личной медиатеке">
@@ -2268,11 +2270,12 @@
           <div id="v61ContinueList" class="v61-rows v61-continue-rows"></div>
         </section>
         <section class="v61-world-section" aria-label="Медиаразделы">
-          <div class="v61-section-heading"><h2>Три мира. Один VETOGRAM.</h2><small>Выбери пространство</small></div>
+          <div class="v61-section-heading"><h2>Четыре мира. Один VETOGRAM.</h2><small>Выбери пространство</small></div>
           <div class="v6-media-grid">
             <button type="button" class="v6-world v6-world-music" data-v6-module="music"><span class="v6-world-index">01 / СЛУШАТЬ</span><div class="v6-world-art v6-record" aria-hidden="true"><i></i><b>V</b></div><span class="v6-world-copy"><strong>Музыка</strong><small>Треки · плейлисты · радио</small><span>Открыть <b>↗</b></span></span></button>
             <button type="button" class="v6-world v6-world-cinema" data-v6-module="cinema"><span class="v6-world-index">02 / СМОТРЕТЬ</span><div class="v6-world-art v6-film" aria-hidden="true"><i></i><b>▶</b></div><span class="v6-world-copy"><strong>Кино</strong><small>Фильмы · сериалы · избранное</small><span>Открыть <b>↗</b></span></span></button>
             <button type="button" class="v6-world v6-world-books" data-v6-module="books"><span class="v6-world-index">03 / ЧИТАТЬ</span><div class="v6-world-art v6-book" aria-hidden="true"><i>VETOGRAM<br><b>ЕЩЁ<br>СТРАНИЦУ.</b></i></div><span class="v6-world-copy"><strong>Книги</strong><small>Читалка · закладки · импорт</small><span>Открыть <b>↗</b></span></span></button>
+            <button type="button" class="v6-world v6-world-play" data-open-screen="play"><span class="v6-world-index">04 / ИГРАТЬ</span><div class="v6-world-art v6-games" aria-hidden="true"><i>♠</i><b>✦</b><i>♥</i></div><span class="v6-world-copy"><strong>Игры</strong><small>Реакция · пары · 2048 · турниры</small><span>Открыть <b>↗</b></span></span></button>
           </div>
         </section>
         <section class="v61-vault-spotlight" aria-label="Личная медиатека">
@@ -2317,6 +2320,230 @@
       </div>
       <p class="v6-availability">Личные файлы на устройстве разделены по аккаунтам Telegram. Бот получает только отправленные ему файлы.</p>
     </section>
+<section class="screen vp-screen" data-screen="play" aria-label="Vetogram Play">
+      <div class="vp-shell">
+        <header class="vp-top">
+          <div class="vp-heading">
+            <img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="26" height="26" />
+            <div><span class="vp-eyebrow">VETOGRAM / ENTERTAINMENT</span><br /><strong>PLAY</strong></div>
+          </div>
+          <span class="vp-count" id="vpCatalogCount">4 мини-игры · 2 клуба</span>
+        </header>
+
+        <section class="vp-hero" aria-labelledby="vpHeroTitle">
+          <div class="vp-hero-copy">
+            <span class="vp-overline">ИГРОВОЕ ПРОСТРАНСТВО</span>
+            <h1 id="vpHeroTitle">Заходи.<br /><em>Поиграем.</em></h1>
+            <p>Короткие партии, знакомые игры и любимые люди. Всё начинается с одного касания.</p>
+            <span class="vp-hero-note">Без регистрации для мини-игр</span>
+          </div>
+          <div class="vp-art" aria-hidden="true">
+            <div class="vp-art-ring"></div>
+            <span class="vp-art-card one">♠</span><span class="vp-art-card two">♥</span>
+          </div>
+        </section>
+
+        <div class="vp-catalog-tools" aria-label="Поиск по игровому каталогу">
+          <label class="vp-search"><span aria-hidden="true">⌕</span><input type="search" id="vpGameSearch" placeholder="Поиск игр" aria-label="Поиск игр" autocomplete="off" maxlength="80" /></label>
+          <div class="vp-filters" role="group" aria-label="Фильтр игр">
+            <button type="button" class="vp-filter is-selected" data-vp-filter="all" aria-pressed="true">Все</button>
+            <button type="button" class="vp-filter" data-vp-filter="online" aria-pressed="false">Отдельные</button>
+            <button type="button" class="vp-filter" data-vp-filter="offline" aria-pressed="false">Без сети</button>
+            <button type="button" class="vp-filter" data-vp-filter="cards" aria-pressed="false">Карточные</button>
+            <button type="button" class="vp-filter" data-vp-filter="favorites" aria-pressed="false">★ Избранное</button>
+          </div>
+          <p class="vp-no-results" id="vpNoResults" role="status" hidden>Пока таких игр нет. Попробуй другой запрос.</p>
+          <div class="vp-share-panel" id="vpSharePanel" hidden aria-label="Поделиться выбранной игрой">
+            <label for="vpShareUrl">Ссылка на игру</label>
+            <div class="vp-share-line">
+              <input type="text" id="vpShareUrl" readonly aria-label="Ссылка на игру Vetogram" />
+              <button type="button" class="vp-button" id="vpCopyShare">Копировать</button>
+              <button type="button" class="vp-share-close" id="vpCloseShare" aria-label="Закрыть ссылку">×</button>
+            </div>
+            <p id="vpShareNotice" role="status">Ссылка готова.</p>
+          </div>
+          <p class="vp-catalog-status" id="vpStoreStatus" role="status" aria-live="polite"></p>
+        </div>
+        <div class="vp-section-head">
+          <div><h2>Наш игровой клуб</h2><p>Большие игры Margaryan Labs.</p></div>
+          <span>01 / КЛУБ</span>
+        </div>
+        <article class="vp-featured" data-vp-game="blotenq" aria-label="Армянский блот BLOTENQ">
+          <div class="vp-blot-art" aria-hidden="true">
+            <span class="vp-blot-suit first">♠</span><strong>ԲԼՈՏ<i>ԵՆՔ?</i></strong><span class="vp-blot-suit last">♥</span>
+          </div>
+          <div class="vp-feature-copy">
+            <span class="vp-flag">НАША ИГРА · ARMENIAN CARD CLUB</span>
+            <h3>BLOTENQ?</h3>
+            <p>Армянский блот: карты, ставки, команды и турниры. Игра разрабатывается в отдельном репозитории, чтобы не затрагивать работу чатов Vetogram.</p>
+            <a class="vp-button" href="https://blot-armenian-digital-club.lovable.app/" target="_blank" rel="noopener noreferrer" aria-label="Открыть BLOTENQ в отдельном приложении">Открыть Blot <span aria-hidden="true">↗</span></a>
+            <small>Пока открывается отдельно · интеграция игрового движка готовится</small>
+          </div>
+        </article>
+        <article class="vp-who" data-vp-game="who" aria-label="WHO? Group DNA — социальная игра">
+          <div class="vp-who-mark" aria-hidden="true">WHO<span>?</span></div>
+          <div class="vp-who-copy">
+            <span class="vp-flag">НАША ИГРА · СОЦИАЛЬНЫЙ РЕЖИМ</span>
+            <h3>WHO? / Group DNA</h3>
+            <p>Собери друзей в комнату, голосуй анонимно и узнай, что они думают друг о друге.</p>
+            <a href="https://id-preview--7643d21a-8d1e-459e-8136-11eded1ed4ae.lovable.app" target="_blank" rel="noopener noreferrer" aria-label="Открыть предпросмотр WHO? в отдельном приложении">Открыть игру <span aria-hidden="true">↗</span></a>
+          </div>
+        </article>
+
+        <div class="vp-section-head">
+          <div><h2>Быстрые игры</h2><p>Одна минута для себя или короткой паузы.</p></div>
+          <span>02 / АРКАДА</span>
+        </div>
+        <div class="vp-mini-grid" aria-label="Игры без подключения">
+          <article class="vp-mini" data-vp-game="reaction">
+            <span class="vp-mini-icon" aria-hidden="true">◎</span>
+            <h3>Реакция</h3>
+            <p>Проверь скорость. Дождись сигнала и коснись экрана как можно быстрее.</p>
+            <div id="vpReactionBest" class="vp-mini-stat">Рекорд: ещё нет</div>
+            <button type="button" id="vpReactionButton" class="vp-reaction-button" data-state="idle">Начать проверку реакции</button>
+            <div id="vpReactionInfo" role="status" aria-live="polite" class="vp-mini-stat">Дождись светлого сигнала.</div>
+          </article>
+          <article class="vp-mini" data-vp-game="pairs">
+            <span class="vp-mini-icon" aria-hidden="true">♣</span>
+            <h3>Четыре пары</h3>
+            <p>Найди совпадения среди восьми карточек. Побеждает внимательность.</p>
+            <div class="vp-memory-actions">
+              <span id="vpMemoryBest" class="vp-mini-stat">Рекорд: ещё нет</span>
+              <button type="button" id="vpMemoryReset" class="vp-button ghost">Заново ↺</button>
+            </div>
+            <div id="vpMemoryGrid" class="vp-memory-grid" role="group" aria-label="Карточки игры на память"></div>
+            <div id="vpMemoryInfo" role="status" aria-live="polite" class="vp-mini-stat">Найди четыре пары.</div>
+          </article>
+          <article class="vp-mini" data-vp-game="tic">
+            <span class="vp-mini-icon" aria-hidden="true">✕</span>
+            <h3>Крестики-нолики</h3>
+            <p>Сыграй против умного бота. Ты — X, бот — O.</p>
+            <span id="vpTttWins" class="vp-mini-stat">Побед на устройстве: 0</span>
+            <div id="vpTttGrid" class="vp-ttt-grid" role="group" aria-label="Поле крестиков-ноликов"></div>
+            <div class="vp-memory-actions"><span id="vpTttStatus" class="vp-mini-stat" role="status" aria-live="polite">Твой ход.</span><button class="vp-button ghost" type="button" id="vpTttReset">Заново ↺</button></div>
+          </article>
+          <article class="vp-mini" data-vp-game="2048">
+            <span class="vp-mini-icon" aria-hidden="true">▦</span>
+            <h3>2048</h3>
+            <p>Соединяй плитки с одинаковыми числами. Проведи по полю или используй стрелки.</p>
+            <div class="vp-memory-actions"><span id="vp2048Score" class="vp-mini-stat">Очки: 0</span><span id="vp2048Best" class="vp-mini-stat">Рекорд: 0</span></div>
+            <div id="vp2048Grid" class="vp-2048-grid" role="group" aria-label="Игровое поле 2048"></div>
+            <div class="vp-2048-controls" role="group" aria-label="Направление движения 2048">
+              <button data-vp-2048="left" type="button" aria-label="Двигать плитки влево">←</button>
+              <button data-vp-2048="up" type="button" aria-label="Двигать плитки вверх">↑</button>
+              <button data-vp-2048="down" type="button" aria-label="Двигать плитки вниз">↓</button>
+              <button data-vp-2048="right" type="button" aria-label="Двигать плитки вправо">→</button>
+            </div>
+            <div class="vp-memory-actions"><span id="vp2048Status" class="vp-mini-stat" role="status" aria-live="polite">Соединяй плитки.</span><button class="vp-button ghost" type="button" id="vp2048Reset">Заново ↺</button></div>
+          </article>
+        </div>
+        <dialog id="vpGameDialog" class="vp-game-dialog" aria-label="Игровой режим">
+          <header class="vp-game-dialog-header">
+            <span>VETOGRAM / PLAY</span>
+            <button id="vpGameClose" type="button" aria-label="Закрыть игру">Закрыть ×</button>
+          </header>
+          <div id="vpGameMount" class="vp-game-dialog-mount"></div>
+        </dialog>
+        <section class="vp-room-zone" aria-labelledby="vpRoomTitle">
+          <div class="vp-room-header">
+            <span class="vp-flag">НОВЫЙ РЕЖИМ · СЕТЕВЫЕ КОМНАТЫ</span>
+            <h2 id="vpRoomTitle">Крестики-нолики вдвоём</h2>
+            <p>Создай комнату и поделись кодом. Игрок X начинает, O ходит вторым. Ходы проверяет сервер.</p>
+          </div>
+          <div id="vpRoomAvailability" class="vp-room-availability" role="status" aria-live="polite">Проверяем доступность игрового сервера…</div>
+          <div class="vp-room-actions">
+            <button class="vp-button" id="vpRoomCreate" type="button" disabled>Создать комнату</button>
+            <label class="vp-room-code-label" for="vpRoomCodeInput">Код комнаты
+              <input type="text" id="vpRoomCodeInput" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Например: 8AB7LM2Z" />
+            </label>
+            <button class="vp-button ghost" id="vpRoomJoin" type="button" disabled>Войти по коду</button>
+          </div>
+          <div id="vpRoomSession" class="vp-room-session" hidden>
+            <div class="vp-room-meta">
+              <div><span>КОД КОМНАТЫ</span><strong id="vpRoomCode">—</strong></div>
+              <div><span>ТВОЯ СТОРОНА</span><strong id="vpRoomSeat">—</strong></div>
+              <div><span>РАУНД</span><strong id="vpRoomRound">1</strong></div>
+              <button type="button" id="vpRoomCopy" class="vp-button ghost">Поделиться кодом ↗</button>
+            </div>
+            <p class="vp-room-status" id="vpRoomStatus" role="status" aria-live="polite">Ожидание партии…</p>
+            <div id="vpRoomBoard" class="vp-room-board" role="group" aria-label="Сетевая партия крестиков-ноликов"></div>
+            <div class="vp-room-footer">
+              <button type="button" class="vp-button" id="vpRoomRematch" hidden>Предложить реванш</button>
+              <button type="button" class="vp-button ghost" id="vpRoomRefresh">Обновить</button>
+              <button type="button" class="vp-button ghost" id="vpRoomExit">Выйти из просмотра</button>
+            </div>
+            <p class="vp-room-disclaimer">Комнаты действуют 6 часов. Закрытие экрана не сдаёт партию. Доступ к перепискам и контактам для игры не нужен.</p>
+          </div>
+        </section>
+        <section class="vp-stats-zone" aria-labelledby="vpStatsHeading">
+          <div class="vp-stats-head">
+            <div><span class="vp-flag">VETOGRAM PLAY / ПРОФИЛЬ</span>
+              <h2 id="vpStatsHeading">Твои игровые результаты</h2>
+              <p>Только подтверждённые сервером раунды. Локальные рекорды не влияют на рейтинг.</p>
+            </div>
+            <button type="button" id="vpStatsRefresh" class="vp-button ghost" disabled>Обновить</button>
+          </div>
+          <div class="vp-stats-state" id="vpStatsState" role="status" aria-live="polite">Данные появятся после подключения игрового сервера.</div>
+          <div id="vpStatsContent" hidden>
+            <div class="vp-profile-row">
+              <div class="vp-profile-mark" aria-hidden="true">VP</div>
+              <div><span>ТВОЙ ПСЕВДОНИМ</span><strong id="vpProfileAlias">—</strong></div>
+              <label class="vp-privacy-switch"><input id="vpLeaderboardConsent" type="checkbox" /> Показывать меня в рейтинге</label>
+            </div>
+            <div class="vp-metrics" role="group" aria-label="Статистика онлайн-игр">
+              <div><strong id="vpStatGames">0</strong><span>Партий</span></div>
+              <div><strong id="vpStatWins">0</strong><span>Побед</span></div>
+              <div><strong id="vpStatDraws">0</strong><span>Ничьих</span></div>
+              <div><strong id="vpStatPoints">0</strong><span>Очков</span></div>
+            </div>
+            <h3>История матчей</h3>
+            <div id="vpMatchHistory" class="vp-history-list"></div>
+          </div>
+          <div class="vp-stats-leaderhead">
+            <div><h3>Рейтинг игроков</h3><p>Только добровольно открытые профили, минимум 3 завершённых раунда.</p></div>
+            <button type="button" id="vpLeadersRefresh" class="vp-button ghost" disabled>Показать</button>
+          </div>
+          <div id="vpLeadersState" class="vp-stats-state" role="status" aria-live="polite"></div>
+          <div id="vpLeaderboard" class="vp-leaderboard-list" aria-label="Игровой рейтинг"></div>
+          <p class="vp-room-disclaimer">Имя и Telegram ID не публикуются. Видимость рейтинга можно отключить. При выключении профиль не выводится в общей таблице.</p>
+        </section>
+        <section class="vp-developer" aria-labelledby="vpDevTitle">
+          <div class="vp-developer-orb" aria-hidden="true">{ }</div>
+          <div>
+            <span class="vp-flag">VETOGRAM PLAY · ДЛЯ РАЗРАБОТЧИКОВ</span>
+            <h2 id="vpDevTitle">Создай свою игру для Vetogram</h2>
+            <p>Скоро здесь смогут появляться игры независимых разработчиков. Мы готовим открытый формат игры, проверку безопасности и ручной отбор перед публикацией.</p>
+            <div class="vp-developer-links">
+              <a href="https://github.com/margaryanlabs/Telegram-story-bot/blob/feat/vetogram-play-hub-20261031/docs/vetogram-play-developers.md" target="_blank" rel="noopener noreferrer">Документация ↗</a>
+              <a href="https://github.com/margaryanlabs/Telegram-story-bot/issues/new?title=%5BPlay%5D%20%D0%9C%D0%BE%D1%8F%20%D0%B8%D0%B3%D1%80%D0%B0" target="_blank" rel="noopener noreferrer">Предложить игру ↗</a>
+            </div>
+            <small>Приём предложений через GitHub; автоматической публикации пока нет.</small>
+            <details class="vp-dev-details">
+              <summary>Подготовить заявку на свою игру</summary>
+              <form id="vpDeveloperForm" class="vp-dev-form" autocomplete="off">
+                <label>Название игры<input id="vpDeveloperName" name="game-name" maxlength="70" minlength="2" required placeholder="Как называется игра" /></label>
+                <label>Ссылка на код или демо<input id="vpDeveloperRepo" name="game-repo" type="url" maxlength="250" required placeholder="https://github.com/..." /></label>
+                <label>Режим<select id="vpDeveloperMode" name="game-mode">
+                  <option value="solo">Одиночная</option>
+                  <option value="local-multiplayer">На одном устройстве</option>
+                  <option value="remote-multiplayer">Сетевая игра</option>
+                </select></label>
+                <label>Описание<textarea id="vpDeveloperPitch" name="game-pitch" minlength="15" maxlength="400" rows="3" required placeholder="Как играть, для кого, откуда ассеты и какие данные собираются"></textarea></label>
+                <button class="vp-button" type="submit">Подготовить ссылку для отправки</button>
+              </form>
+              <p class="vp-dev-disclaimer">Никакие заявки не отправляются автоматически. Сначала проверь текст, затем открой GitHub и отправь его самостоятельно. Не указывай пароли или приватные данные.</p>
+              <a id="vpDeveloperDraftLink" class="vp-dev-result" href="#" target="_blank" rel="noopener noreferrer" hidden>Открыть подготовленную заявку в GitHub ↗</a>
+              <p id="vpDeveloperStatus" class="vp-dev-status" role="status" aria-live="polite"></p>
+            </details>
+          </div>
+        </section>
+        <aside class="vp-roadmap">
+          <span class="vp-roadmap-icon" aria-hidden="true">✧</span>
+          <div><strong>Дальше — игры с друзьями</strong><small>Общие комнаты, приглашения из чата и чемпионаты появятся после проверки безопасной интеграции. Сейчас результаты мини-игр хранятся только на устройстве.</small></div>
+        </aside>
+      </div>
+    </section>
+
   </main>
 
   <nav class="bottom-nav" data-reborn-nav="five" aria-label="Основные разделы">
@@ -2418,5 +2645,13 @@
   <script src="/vetogram-universe.js?v=20261031-v61-universe" defer></script>
   <script src="/vetogram-universe-61-core.js?v=20261031-v61-universe" defer></script>
   <script src="/vetogram-universe-61.js?v=20261031-v61-universe" defer></script>
+  <script src="/vetogram-play-registry.js?v=20261101-universe-play" defer></script>
+  <script src="/vetogram-play.js?v=20261101-universe-play" defer></script>
+  <script src="/vetogram-play-arcade.js?v=20261101-universe-play" defer></script>
+  <script src="/vetogram-play-store.js?v=20261101-universe-play" defer></script>
+  <script src="/vetogram-play-developer.js?v=20261101-universe-play" defer></script>
+  <script src="/vetogram-play-runner.js?v=20261101-universe-play" defer></script>
+  <script src="/vetogram-play-room.js?v=20261101-universe-play" defer></script>
+  <script src="/vetogram-play-stats.js?v=20261101-universe-play" defer></script>
 </body>
 </html>
