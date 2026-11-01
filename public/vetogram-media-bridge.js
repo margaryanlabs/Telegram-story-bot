@@ -67,7 +67,7 @@
  });
  document.querySelectorAll('a[href="/"],a[href="/studio.html"],a.back-link').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();send({type:'navigate',target:'hub'});}));
  for(const event of ['playing','pause','ended','timeupdate','loadedmetadata','waiting','error','emptied'])audio?.addEventListener(event,update);
- document.getElementById('cinemaDetailsWatch')?.addEventListener('click',()=>send({type:'video-playing'}));
+ // Only native video 'playing' or validated provider start may pause music.
  video?.addEventListener('playing',()=>send({type:'video-playing'}));
  window.addEventListener('vetogram:cinema-playing',()=>send({type:'video-playing'}));
  function sendMusicLibrary(){
