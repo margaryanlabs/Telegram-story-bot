@@ -30,6 +30,10 @@
   let offlineEditionToken=0;
   let offlineSavedBook=null;
   const pendingChapterPrefetch=new Map();
+  function cancelChapterPrefetch(){
+    for(const task of pendingChapterPrefetch.values())task.controller.abort();
+    pendingChapterPrefetch.clear();
+  }
   let activeReaderFetch=null; // Abort abandoned book/chapter requests on navigation.
   // Avoid downloading the same failed cover after every grid redraw.
   const failedCoverUrls=new Set();
@@ -805,7 +809,7 @@
     const db=await database();if(!db)return;
     try{
       const tx=db.transaction('texts','readwrite');
-      tx.objectStore('texts').put({id:String(key),book:data.book,text:data.text,chapters:data.chapters||[],attribution:data.attribution||null,isTranslationIndex:!!data.isTranslationIndex,at:Date.now()});
+      tx.objectStore('texts').put({id:String(key),book:data.book,text:data.text,chapters:data.chapters||[],attribution:data.attribution||null,isTranslationIndex:!!data.isTranslationIndex,coverage:data.coverage||null,at:Date.now()});
     }catch{}
   }
   function stripGutenbergFrame(value){
@@ -1052,26 +1056,36 @@
   // data-saver connections; no duplicate requests and no UI-facing failures.
   async function prefetchNextChapter(){
     const book=state.current;
-    if(!isWiki(book)||state.isTranslationIndex||!state.chapters.length)return;
+    if($('reader').hidden||!isWiki(book)||state.isTranslationIndex||!state.chapters.length)return;
     const connectivity=navigator.connection;
     if(connectivity?.saveData||/2g/i.test(connectivity?.effectiveType||''))return;
     const chapter=Number.isInteger(state.activeChapter)?state.activeChapter+1:0;
     if(chapter<0||chapter>=state.chapters.length)return;
     const cacheId=bookKey(book)+':'+chapter;
     if(pendingChapterPrefetch.has(cacheId))return;
-    const request=(async()=>{
+    const controller=new AbortController();
+    const generation=state.requestBook;
+    const task={controller};
+    pendingChapterPrefetch.set(cacheId,task);
+    const timer=setTimeout(()=>controller.abort(),12000);
+    try{
       const cached=await cachedText(cacheId);
-      if(cached?.text)return;
+      if(cached?.text||controller.signal.aborted)return;
       const params=new URLSearchParams({mode:'text',wiki:book.wiki,id:String(book.id),chapter:String(chapter)});
-      const response=await fetch('/api/books-wikisource?'+params);
+      const response=await fetch('/api/books-wikisource?'+params,{signal:controller.signal});
       if(!response.ok)return;
       const payload=await response.json();
       if(!payload.ok||!payload.text||payload.isTranslationIndex)return;
+      // Do not repopulate the wrong shelf after closing or switching books.
+      if(controller.signal.aborted||$('reader').hidden||
+        state.requestBook!==generation||bookKey(state.current)!==bookKey(book))return;
       await cacheText(cacheId,{book:payload.book,text:payload.text,chapters:payload.chapters||[],
         attribution:payload.attribution||null,isTranslationIndex:false,coverage:payload.coverage||null});
-    })().catch(()=>{}).finally(()=>pendingChapterPrefetch.delete(cacheId));
-    pendingChapterPrefetch.set(cacheId,request);
-    await request;
+    }catch(_){/* Invisible prefetch failure; the reader fetch has its own retry button. */}
+    finally{
+      clearTimeout(timer);
+      if(pendingChapterPrefetch.get(cacheId)===task)pendingChapterPrefetch.delete(cacheId);
+    }
   }
   function showPage(page, scroll=true){
     if(!state.current||!state.pages.length)return;
@@ -1163,6 +1177,7 @@
     throw new Error('Сервис чтения временно недоступен');
   }
   async function loadChapter(book,chapter=null,resume=false){
+    cancelChapterPrefetch();
     activeReaderFetch?.abort();
     const readerController=new AbortController();
     activeReaderFetch=readerController;
@@ -1193,10 +1208,12 @@
           const result=await response.json();
           if(!response.ok||!result.ok)throw new Error(result.error||'Не удалось открыть полный текст');
           data={book:result.book,text:result.text,chapters:result.chapters||[],attribution:result.attribution||null,isTranslationIndex:result.isTranslationIndex||false,coverage:result.coverage||null};
-          await cacheText(cacheId,data);
+          if(typeof data.text!=='string'||!data.text.trim())throw new Error('Источник вернул пустую главу. Попробуйте другую часть или повторите загрузку.');
+          if(!readerController.signal.aborted)await cacheText(cacheId,data);
         }
       }
       if($('reader').hidden || state.requestBook!==request || bookKey(state.current)!==key)return false;
+      if(typeof data?.text!=='string'||!data.text.trim())throw new Error('Текст этой главы отсутствует у источника.');
       state.current={...book,...(data.book||{})};
       state.chapters=data.chapters||[];
       state.isTranslationIndex=!!data.isTranslationIndex;
@@ -1240,6 +1257,7 @@
     if(isCatalogBook(book)){showDiscoverBook(book);return;}
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
     activeReaderFetch?.abort();
+    cancelChapterPrefetch();
     ++state.requestBook;
     state.current=book;state.pages=[];state.chapters=[];state.activeChapter=null;state.rawText='';state.pageOffsets=[];
     setFlow(false);
@@ -1267,6 +1285,7 @@
     stopNarration();
     activeReaderFetch?.abort();
     activeReaderFetch=null;
+    cancelChapterPrefetch();
     ++state.requestBook;
     $('reader').hidden=true;state.current=null;state.pages=[];state.chapters=[];
     try{window.Telegram?.WebApp?.BackButton?.hide();}catch{}
