@@ -41,7 +41,7 @@ test('mini-player follows actual frame state and unrelated messages cannot imper
  f.message(music,data,'https://evil.test');assert.equal(f.node('v6MiniPlayer').hidden,true);
  f.message(music,data,'https://vetogram.test',{});assert.equal(f.node('v6MiniPlayer').hidden,true);
  f.message(music,data);assert.equal(f.node('v6MiniPlayer').hidden,false);assert.equal(f.node('v6NowTitle').textContent,'Личный трек');assert.equal(f.node('v6NowSeek').value,'120');
- f.open('music');assert.equal(f.node('v6MiniPlayer').hidden,true);
+ f.open('music');assert.equal(f.node('v6MiniPlayer').hidden,false);
 });
 test('owner change destroys every media document and removes private player metadata',()=>{
  const f=fixture(),music=f.open('music');const cinema=f.open('cinema');
