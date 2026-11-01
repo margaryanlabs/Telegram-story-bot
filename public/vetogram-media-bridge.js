@@ -51,6 +51,8 @@
     }catch{send({type:'open-item-status',ok:false,requestId});}
   }
   if(data.action==='visible'&&!data.visible){
+   // Hidden reader keeps its page/position, but cancels speculative chapter fetches.
+   window.VetogramBooks?.pauseBackgroundWork?.();
    video?.pause();
    // Pause official embedded video through the existing controller so hidden
    // frames cannot keep a film playing behind Chats. Reading state is retained.
