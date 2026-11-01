@@ -16,6 +16,7 @@ const endpointLoaders = {
   "privacy-media": () => import("./privacy-media.js"),
   "privacy": () => import("./privacy.js"),
   "play-room": () => import("./play-room.js"),
+  "play-stats": () => import("./play-stats.js"),
   "relay-bootstrap": () => import("./relay-bootstrap.js"),
   "relay": () => import("./relay.js"),
   "setup": () => import("./setup.js"),
