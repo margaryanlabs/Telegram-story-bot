@@ -159,3 +159,21 @@ body:has(#reader) .reader:not([data-theme="light"]):not([data-theme="sepia"])
     animation:none!important;transition:none!important;
   }
 }
+
+/* The reading error action is visible without leaving the current chapter. */
+body:has(#reader) .reader-retry{
+  display:block;
+  margin:22px auto 8px;
+  border-radius:14px;
+  border:1px solid rgba(233,167,186,.42);
+  background:rgba(233,167,186,.11);
+  color:inherit;
+  padding:13px 20px;
+  font:650 14px/1.3 system-ui,sans-serif;
+  min-height:44px;
+  cursor:pointer;
+}
+body:has(#reader) .reader-retry[hidden]{display:none!important}
+body:has(#reader) .reader-retry:focus-visible{
+  outline:2px solid var(--vet-pink);outline-offset:3px;
+}
