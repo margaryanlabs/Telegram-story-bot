@@ -36,6 +36,7 @@
   <link rel="stylesheet" href="/vetogram-universe-calm.css?v=20261101-rebuild04" />
   <link rel="stylesheet" href="/vetogram-black-universe.css?v=20261101-rebuild04" />
   <link rel="stylesheet" href="/vetogram-showcase-v72.css?v=20261101-rebuild04" />
+  <link rel="stylesheet" href="/vetogram-discovery-v75.css?v=20261101-rebuild04" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -2264,6 +2265,24 @@
           <span class="v72-hero-index" aria-hidden="true">001 — 004</span>
         </header>
         <p id="v61GuestStorage" class="v61-guest-note" hidden>Гостевой просмотр · коллекция хранится в этом браузере. Для личного пространства открой через Telegram.</p>
+        <section class="v75-discovery" aria-labelledby="v75DiscoverTitle">
+          <div class="v75-discovery-intro">
+            <div class="v75-section-number"><span class="v75-section-dot" aria-hidden="true"></span> DISCOVERY ENGINE <b> / 01</b></div>
+            <h2 id="v75DiscoverTitle">Найди свою<br><em>следующую историю.</em></h2>
+            <p>Один запрос — выбираешь, где искать. Откроется настоящий каталог музыки, кино или книг.</p>
+          </div>
+          <form id="v75ExploreForm" class="v75-discovery-search" role="search" autocomplete="off" aria-label="Поиск в медиакаталогах">
+            <label for="v75ExploreQuery">ЧТО ХОЧЕШЬ НАЙТИ?</label>
+            <div class="v75-explore-input-wrap"><span aria-hidden="true">⌕</span><input type="search" id="v75ExploreQuery" maxlength="90" enterkeyhint="search" placeholder="Артист, фильм, книга, название…" aria-describedby="v75ExploreHelp" /></div>
+            <div class="v75-explore-actions">
+              <button type="submit" data-v75-target="music" class="v75-explore-button"><span class="v75-action-glyph" aria-hidden="true">♫</span><span>Музыка</span><b aria-hidden="true">↗</b></button>
+              <button type="submit" data-v75-target="cinema" class="v75-explore-button"><span class="v75-action-glyph" aria-hidden="true">▷</span><span>Кино</span><b aria-hidden="true">↗</b></button>
+              <button type="submit" data-v75-target="books" class="v75-explore-button"><span class="v75-action-glyph" aria-hidden="true">▤</span><span>Книги</span><b aria-hidden="true">↗</b></button>
+            </div>
+            <p id="v75ExploreHelp" class="v75-explore-hint" role="status" aria-live="polite">Каталоги открываются внутри Vetogram. Доступность воспроизведения и текстов зависит от источников.</p>
+          </form>
+        </section>
+        <div class="v75-local-search-heading"><span class="v75-local-kicker">YOUR PRIVATE LIBRARY / 02</span><strong>Поиск по сохранённому</strong><small>Только твоя локальная коллекция</small></div>
         <form class="v61-search" id="v61SearchForm" role="search" autocomplete="off" aria-label="Поиск по личной медиатеке">
           <span class="v61-search-glyph" aria-hidden="true">⌕</span>
           <input id="v61Search" type="search" inputmode="search" placeholder="Поиск по твоей коллекции" maxlength="100" aria-label="Найти музыку, книги, кино и ссылки"/>
@@ -2373,7 +2392,7 @@
             <h1 id="vpHeroTitle">Играй.<br /><em>Здесь и сейчас.</em></h1>
             <p>Шесть готовых мини-игр, личные рекорды и партии без регистрации. Выбери игру ниже — запуск прямо в Vetogram.</p>
             <div class="v72-play-hero-stats"><span><b>06</b> ИГРАТЬ СЕЙЧАС</span><span><b>02</b> В РАЗРАБОТКЕ</span></div>
-            <a class="v72-play-jump" href="#vpQuickGames" aria-label="Перейти к доступным играм">Выбрать игру <span>↓</span></a>
+            <div class="v75-arcade-hero-cta"><a class="v72-play-jump" href="#vpQuickGames" aria-label="Перейти к доступным играм">Выбрать игру <span>↓</span></a><button type="button" id="v75SurpriseMe" class="v75-surprise" aria-label="Запустить случайную доступную игру"><span aria-hidden="true">✦</span> Удиви меня</button></div>
           </div>
           <div class="v72-play-hero-art" aria-hidden="true">
             <div class="v72-play-figure"><span class="v72-play-screen"><i>2</i><i>4</i><i>8</i><i>16</i></span><span class="v72-play-glow"></span></div>
@@ -2741,6 +2760,7 @@
   <script src="/vetogram-reborn-ai.js?v=20261101-rebuild04" defer></script>
   <script type="module" src="/vetogram-locale.js?v=20261101-rebuild04"></script>
   <script src="/vetogram-universe.js?v=20261101-rebuild04" defer></script>
+  <script src="/vetogram-media-discovery-v75.js?v=20261101-rebuild04" defer></script>
   <script src="/vetogram-universe-61-core.js?v=20261101-rebuild04" defer></script>
   <script src="/vetogram-universe-61.js?v=20261101-rebuild04" defer></script>
   <script src="/vetogram-play-registry.js?v=20261101-rebuild04" defer></script>
