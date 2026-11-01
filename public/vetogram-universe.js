@@ -161,7 +161,8 @@
   // handshake succeeds; this also rejects late events from failed loads.
   if(!item.ready)return;
   if(message.type==='open-item-status'&&activeModule===name&&Number.isSafeInteger(message.requestId)&&message.requestId===item.openRequestId){
-   if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
+   if(message.status==='search')moduleStatus('Для этой песни сохранено только название. Открыт поиск доступной записи — воспроизведение пока не началось.',false);
+   else if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
    else moduleStatus('');
   }
   if(message.type==='navigate' && message.target==='hub')showHub();
