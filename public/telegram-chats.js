@@ -2352,15 +2352,6 @@
     if(state.syncTimer!==null)clearTimeout(state.syncTimer);
     state.syncTimer=null;
   }
-  function cancelActivePoll(){
-    // A hidden, replaced or signed-out thread must release its live request.
-    // Fencing the run ID first also rejects an already-resolved stale response.
-    state.syncRunId++;
-    const controller=state.syncAbort;
-    state.syncAbort=null;
-    state.syncBusy=false;
-    controller?.abort();
-  }
   function syncLabel(value,busy=false){
     const el=$('telegramThreadSyncStatus'),dot=$('telegramThreadSyncDot');
     if(el)el.textContent=value;
@@ -2412,6 +2403,15 @@
     state.threadRequestAbort=null;
     state.archiveRequestAbort=null;
     for(const controller of active)controller?.abort();
+  }
+  function cancelActivePoll(){
+    // A hidden, replaced or signed-out thread must release its live request.
+    // Fencing the run ID first also rejects an already-resolved stale response.
+    state.syncRunId++;
+    const controller=state.syncAbort;
+    state.syncAbort=null;
+    state.syncBusy=false;
+    controller?.abort();
   }
   // Both history refresh and live polling can discover a revoked Telegram
   // login. Fail closed immediately, never keep a stale owner's private UI.
