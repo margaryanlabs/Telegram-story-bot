@@ -81,6 +81,25 @@ test('whole-book shelf contains 141 unique Wikisource original source works, inc
   assert.match(booksHtml,/id="readerOfficialEpub"/);
 });
 
+test('four additional popular Russian works keep real Wikisource IDs and non-guaranteed edition coverage',()=>{
+  const first=books.indexOf('  const verifiedWholeEditions=');
+  const last=books.indexOf('  function setSourceInfo(){',first);
+  const works=new Function(books.slice(first,last)+'\\nreturn completeEditionBooks;')();
+  const byId=new Map(works.map(b=>[b.id,b]));
+  for(const [id,title,parts] of [
+    [1121477,'Алые паруса',18],
+    [423065,'Слепой музыкант',31],
+    [129409,'Кому на Руси жить хорошо',65],
+    [384203,'Русские женщины',2]
+  ]){
+    const book=byId.get(id);
+    assert.ok(book,'missing Wikisource page '+id);
+    assert.equal(book.title,title);
+    assert.equal(book.indexedParts,parts);
+    assert.equal(book.sourceUrl,'https://ru.wikisource.org/w/index.php?curid='+id);
+    assert.match(book.summary,/не подтверждена/);
+  }
+});
 test('Roman numbered Wikisource chapters and dedication preserve historical reading order',()=>{
   const prefix='Государь (Макиавелли; Курочкин)/1869 (ВТ)/';
   const first=wikiApi.indexOf("  const collator=new Intl.Collator(wiki==='ru'?");
