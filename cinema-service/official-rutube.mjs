@@ -18,7 +18,12 @@ export const CHANNELS=Object.freeze({
   marsmedia:Object.freeze({id:29207414,label:"Марс Медиа",hue:44,
     channelUrl:"https://rutube.ru/channel/29207414/"}),
   soyuzmultfilm:Object.freeze({id:12056,label:"Союзмультфильм",hue:198,
-    channelUrl:"https://rutube.ru/u/soyuzmultfilm/"})
+    channelUrl:"https://rutube.ru/u/soyuzmultfilm/"}),
+  // Public rights-holder channels; titles must still pass full-runtime and embed checks.
+  rossiya1:Object.freeze({id:24620967,label:"Россия 1 · ВГТРК",hue:211,
+    channelUrl:"https://rutube.ru/channel/24620967/"}),
+  centralpartnership:Object.freeze({id:798788,label:"Централ Партнершип",hue:34,
+    channelUrl:"https://rutube.ru/channel/798788/"})
 });
 const VIDEO_ID=/^[a-f0-9]{32}$/i;
 const EXCLUDE=/(трейлер|тизер|анонс|подкаст|интервью|пресс[- ]?конференц|съёмк|съемк|кастинг|репортаж|фильм о фильме|реклама|шортс|промо)/i;

@@ -15,6 +15,7 @@
   <script defer src="./cinema-russian-audio.js"></script>
   <script defer src="./cinema-franchises.js"></script>
   <script defer src="./cinema-featured-200.js"></script>
+  <script defer src="./cinema-additional-official-63.js"></script>
   <script defer src="./cinema-foreign-rutube.js"></script>
   <script defer src="./cinema-series-episodes.js"></script>
   <script defer src="./cinema-popular-series.js"></script>
@@ -22,6 +23,7 @@
   <script defer src="./cinema-provider.js"></script>
   <script defer src="./cinema.js"></script>
 <link rel="stylesheet" href="/vetogram-media-embedded.css">
+  <link rel="stylesheet" href="/vetogram-media-edition-62.css?v=20261031-media62">
 </head>
 <body>
   <div class="cinema-shell">
@@ -64,6 +66,16 @@
         <label class="cinema-search"><span>⌕</span><input type="search" id="cinemaSearch" placeholder="Найти фильм, сериал, актёра или жанр…" maxlength="90" autocomplete="off" aria-label="Поиск фильмов"><button type="button" id="cinemaClear" aria-label="Очистить">×</button></label>
         <div class="cinema-source-chip" id="cinemaCount" aria-live="polite">Загружаем каталог…</div>
       </section>
+      <section class="cinema-section cinema-watch-now" id="cinemaWatchNow" aria-label="Смотреть прямо сейчас">
+        <div class="cinema-section-head">
+          <div><span class="cinema-overline">VETOGRAM CINEMA / ONE PLAY</span>
+            <h2>Выбери фильм · нажми ▶</h2>
+            <p>Официальные встроенные плееры. Начало просмотра проверяется по сигналу RUTUBE; недоступные видео скрываются после ошибки.</p>
+          </div>
+          <span class="cinema-shelf-label" id="cinemaWatchNowCount" aria-live="polite">Проверяем источники</span>
+        </div>
+        <div class="cinema-rail cinema-editorial-rail cinema-watch-rail" id="cinemaWatchNowRail"></div>
+      </section>
       <section class="cinema-section cinema-foreign-shelf" id="cinemaForeignShelf" aria-label="Зарубежные фильмы из RUTUBE"><div class="cinema-section-head"><div><span class="cinema-overline">WORLD CINEMA / RUSSIAN AUDIO SEARCH</span><h2>Зарубежное на русском ✦</h2><p>Реальные публикации зарубежных фильмов на RUTUBE. Русский дубляж указан не у всех. Оригинальный просмотр откроется на площадке источника.</p></div><button type="button" class="cinema-shelf-more" id="cinemaForeignAll">Смотреть подборку ↗</button></div><div class="cinema-rail cinema-editorial-rail" id="cinemaForeignRail"></div></section>
       <section class="cinema-section cinema-foreign-hub hidden" id="cinemaForeignHub" aria-label="Зарубежное кино на русском"><span class="cinema-overline">RUTUBE · FOREIGN MOVIES</span><h2>Зарубежные фильмы. Русская озвучка.</h2><p>Здесь собраны настоящие публикации с RUTUBE. Чтобы не выдавать чужие загрузки за разрешённые видеопотоки, мы открываем оригинальный источник. Язык и права конкретной публикации требуют проверки.</p><label class="cinema-foreign-filter"><input id="cinemaForeignIncludeUnverified" type="checkbox"> Показывать также фильмы без заявленного дубляжа</label><div id="cinemaForeignNote" class="cinema-franchise-note" role="status"></div></section>
       <section id="cinemaLatest" class="cinema-section cinema-editorial" aria-label="Недавно добавленные фильмы"><div class="cinema-section-head"><div><span class="cinema-overline">НОВОЕ / ФИЛЬМЫ И СЕРИАЛЫ</span><h2>Только что в коллекции <span class="cinema-heading-mark">✳</span></h2><p>Свежие публикации официальных видеоканалов</p></div><span class="cinema-shelf-label" id="cinemaSyncStatus">Обновляем каталог</span></div><div class="cinema-rail cinema-editorial-rail" id="cinemaLatestRail"></div></section>
@@ -75,6 +87,7 @@
           <h2>Сериалы. Все истории — здесь.</h2>
           <p>Сериалы из официальных видеоархивов с исходными плеерами. Здесь нет карточек, которые ведут к неподключённым подпискам.</p>
           <div id="cinemaSeriesStats" class="cinema-series-stats">Загружаем коллекцию…</div>
+          <div id="cinemaSeriesGenres" class="cinema-series-genres" role="group" aria-label="Жанры сериалов"></div>
         </div>
         <div class="cinema-series-hub-panel">
           <div class="cinema-section-head"><div><span class="cinema-overline">КИНО / ОРИГИНАЛЬНЫЕ ПЛЕЕРЫ</span>
@@ -82,7 +95,7 @@
             <p>Официальные сериальные публикации с исходным встроенным видеоплеером.</p></div></div>
           <div id="cinemaSeriesPlayableRail" class="cinema-rail cinema-editorial-rail cinema-series-playable-rail"></div>
         </div>
-        <div class="cinema-section cinema-series-popular">
+        <div class="cinema-section cinema-series-popular hidden" aria-hidden="true">
           <div class="cinema-section-head"><div><span class="cinema-overline">ПОПУЛЯРНОЕ / МИРОВОЕ КИНО</span><h2>Популярные зарубежные сериалы</h2><p>Русская дорожка указана в каталогах отдельных провайдеров. Встроенного просмотра этих проектов в Cinema пока нет — не показываем ложную кнопку Play.</p></div></div>
           <div id="cinemaSeriesPopularRail" class="cinema-rail cinema-editorial-rail cinema-series-popular-rail"></div>
         </div>
@@ -119,6 +132,8 @@
           <button type="button" class="cinema-studio-tab" data-studio="starmedia">Star Media</button>
           <button type="button" class="cinema-studio-tab" data-studio="marsmedia">Марс Медиа</button>
           <button type="button" class="cinema-studio-tab" data-studio="soyuzmultfilm">Союзмультфильм</button>
+          <button type="button" class="cinema-studio-tab" data-studio="rossiya1">Россия 1 · ВГТРК</button>
+          <button type="button" class="cinema-studio-tab" data-studio="centralpartnership">Централ Партнершип</button>
         </div>
         <p id="cinemaStudioStatus" class="cinema-studio-status" role="status">Подключаем официальные киноархивы…</p>
         <div id="cinemaStudioGrid" class="cinema-grid cinema-studio-grid"></div>

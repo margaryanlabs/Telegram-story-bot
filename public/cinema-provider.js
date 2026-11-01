@@ -75,7 +75,10 @@
         } catch (_) { return }
         if (!message || typeof message !== "object" || typeof message.type !== "string") return;
         const data = message.data && typeof message.data === "object" ? message.data : {};
-        if (data.videoId && iframeId && data.videoId !== iframeId) return;
+        // RUTUBE's first playback event uses snake_case video_id, while
+        // ready uses videoId. Ignore messages about another video in the frame.
+        const reportedId=String(data.videoId||data.video_id||"");
+        if (reportedId && iframeId && reportedId.toLowerCase() !== iframeId.toLowerCase()) return;
         if (message.type === "player:ready" || message.type === "player:init") {
           onReady();
           if (!seekApplied && Number.isFinite(resumeAt) && resumeAt > 5) {
@@ -91,6 +94,9 @@
           onEvent({type:"time",time:Math.max(0,Number(data.time)),duration});
         }
         if (message.type === "player:playComplete") onEvent({type:"ended"});
+        // A loaded iframe is not proof that a film actually plays.
+        // RUTUBE documents playStart and changeState.playing independently.
+        if (message.type === "player:playStart") onEvent({type:"playStarted"});
         if (message.type === "player:changeState") onEvent({type:"state",state:String(data.state||"")});
         if (message.type === "player:error") onError("RUTUBE: "+String(data.text||"Ошибка воспроизведения").slice(0,180));
       }
