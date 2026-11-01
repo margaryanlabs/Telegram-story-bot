@@ -2412,6 +2412,7 @@
     state.syncAbort=null;
     state.syncBusy=false;
     controller?.abort();
+    if(controller)syncLabel('Обновление приостановлено · переписка сохранена');
   }
   // Both history refresh and live polling can discover a revoked Telegram
   // login. Fail closed immediately, never keep a stale owner's private UI.
@@ -3440,6 +3441,9 @@
   window.addEventListener('online',()=>{if(state.thread)scheduleThreadSync(1800)});
   window.addEventListener('offline',()=>{
     stopThreadSync();cancelActivePoll();syncLabel('Нет сети · сообщения сохранены на этом экране');
+  });
+  window.addEventListener('pagehide',()=>{
+    stopThreadSync();cancelActivePoll();
   });
   // Opening a deep-linked screen may precede the first screen-change event.
   if(document.querySelector('.screen.active')?.dataset?.screen==='telegram')
