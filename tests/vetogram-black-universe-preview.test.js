@@ -66,3 +66,13 @@ test('reader offers a retry action without destroying its place',()=>{
   assert.match(script,/readerRetry'\)\.addEventListener/);
   assert.match(script,/loadChapter\(state\.current,state\.activeChapter,true\)/);
 });
+
+test('foreign film discovery tab is reachable but never included as a licensed player',()=>{
+  const cinema=read('public/cinema.js');
+  const mediaCss=read('public/vetogram-media-edition-62.css');
+  assert.doesNotMatch(cinema,/if\(tab==="foreign"\)tab="catalog"/);
+  assert.match(cinema,/let list=state\.tab==="foreign"/);
+  assert.match(cinema,/films\.filter\(f=>f\.externalRutube/);
+  assert.match(cinema,/Дубляж указан загрузчиком и не проверен/);
+  assert.doesNotMatch(mediaCss,/:is\(\[data-tab="foreign"\]/);
+});
