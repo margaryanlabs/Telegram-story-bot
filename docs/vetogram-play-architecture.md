@@ -94,3 +94,13 @@ See [room setup and QA guide](vetogram-play-online-rooms.md).
 - The server switches the X/O assignments on every round, so the starting seat alternates fairly. The new round keeps the original room code and original six-hour expiration.
 - UI shows the current round, current side, a request/accept rematch action and the other participant's vote status. Polling continues on a finished game while it remains visible, so the first player can observe the second player's approval.
 - This is implemented **only in the feature branch**. Database migration is updated but not applied; no live multiplayer was claimed or tested on physical devices. See `docs/vetogram-play-online-rooms.md`.
+
+## Verified personal profiles and opt-in public standings — code-only
+
+- An atomic PostgreSQL data-modifying CTE records **one verified result per room and round**, only when a server-authorized move finishes a game. Unique result key makes retries idempotent; no local scores or client-supplied victories count.
+- `lib/vetogram-play-stats.js` provides pseudonymous profiles, server-aggregated history/totals and an opt-in leaderboard. Private Telegram IDs and opponent identifiers stay out of API responses. Visibility defaults to **false**, requires explicit user action, and can be revoked.
+- Ranking points: win 3, draw 1, loss 0; at least 3 verified rounds for public listing. Maximum 20 listed profiles.
+- `api/play-stats.js` verifies Telegram Mini App HMAC for every profile, ranking or consent operation. `public/vetogram-play-stats.js` renders actual responses only and explicitly displays unavailable state while the development database is absent.
+- `migrations/vetogram-play/002_profiles_verified_results.sql` is prepared but **not executed**. Apply manually after the rooms migration to an isolated database. Existing main, production deploy and Neon data remain unchanged.
+- Unit and simulated frontend tests exist; full `npm test`, real Neon integration tests and Android/iOS QA remain outstanding.
+- Full technical handoff: [Verified stats rollout](vetogram-play-verified-stats.md).
