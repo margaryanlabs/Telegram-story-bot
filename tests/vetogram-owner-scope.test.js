@@ -69,8 +69,15 @@ test('AI Memory, AI generation and manual Telegram send never mutate a switched 
     const part=js.slice(start,end);
     assert.match(part,/const scope=ownerRequestScope\(\)/,name);
     assert.match(part,/if\(!isOwnerRequestCurrent\(scope\)\)return/,name);
-    assert.match(part,/catch\(error\)\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
-    assert.match(part,/finally\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
+    if(name==='async function generate()'){
+      assert.match(part,/if\(isOwnerRequestCurrent\(scope\)\&\&intent===state\.generateIntent\)/,
+        'AI errors are fenced by owner AND request intent');
+      assert.match(part,/if\(!isOwnerRequestCurrent\(scope\)\|\|intent!==state\.generateIntent\)return;/,
+        'AI generation ignores stale owner or superseded request');
+    }else{
+      assert.match(part,/catch\(error\)\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
+      assert.match(part,/finally\{if\(isOwnerRequestCurrent\(scope\)\)/,name);
+    }
   }
   assert.match(js,/oldRequestCanReset\(state\.identity,requestOwner\)\)reset\(\)/);
   assert.match(js,/state\.requestEpoch===requestScope\.epoch/);
@@ -87,7 +94,7 @@ test('Second Brain and AI Action consume a response only after the AI provider r
   assert.ok(answer>grant,'Provider request must follow explicit Negotiator grant');
   assert.ok(brief>answer,'Second Brain cannot use answer before provider response');
   assert.ok(action>answer,'AI Action cannot use answer before provider response');
-  assert.match(body,/if\(!isOwnerRequestCurrent\(scope\)\)return;\n      if\(state\.mode!==mode\)/);
+  assert.match(body,/if\(!isOwnerRequestCurrent\(scope\)\|\|intent!==state\.generateIntent\)return;\n      if\(state\.mode!==mode\)/);
 });
 test('manual send ignores a stale network result before modifying draft or state',()=>{
   const js=read('public/vetogram-ai.js');

@@ -231,7 +231,7 @@ export default async function handler(req,res){
   try{body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};}
   catch{return respond(res,400,{error:'Некорректный запрос'});}
   const action=String(body.action||'list');
-  if(!['list','thread','thread_archive'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
+  if(!['list','list_overlay','thread','thread_archive'].includes(action))return respond(res,400,{error:'Неизвестная операция'});
   const userId=String(owner.id);
   const page=Number(body.page??0);
   const chatId=String(body.chatId||'');
@@ -247,7 +247,26 @@ export default async function handler(req,res){
   // history is on screen. It is only allowed on the initial, owner-scoped page.
   // If MTProto cannot locate the peer, fall back to archived copies below.
   const fastLive=shouldFetchLiveFirst(action,body,cursor,archiveOffset);
+  const fastInbox=action==='list'&&page===0&&body.fastInbox===true;
   try{
+    // A fast inbox response is useful only with a verified Telegram session.
+    // This read-only overlay is fetched separately and never opens MTProto.
+    if(action==='list_overlay'){
+      const [history, settings, business]=await Promise.all([
+        archiveThreads(userId),
+        getPrivacySettings(userId).catch(()=>null),
+        getBusinessConnectionState(userId).catch(()=>null),
+      ]);
+      if(history.unavailable)return respond(res,503,{
+        error:'Защищённый архив временно недоступен. Живые чаты не затронуты.',
+        archiveUnavailable:true,
+      });
+      return respond(res,200,{
+        archivedChats:history.map(archivedDialog),archivedThreads:history.length,
+        confirmedDeleted:history.reduce((n,row)=>n+Math.max(0,Number(row.deletedCount||0)),0),
+        privacy:privacyReadiness(settings,business,history),source:'owner-private-archive',
+      });
+    }
     // Archive-only reads never connect to Telegram/MTProto. They are always
     // owner-scoped by the signed Mini App user id, with no public media links.
     if(action==='thread_archive'){
@@ -267,8 +286,8 @@ export default async function handler(req,res){
     // MTProto connection. Archive retrieval and Telegram are independent
     // owner-scoped services, so the previous Promise.all created a needless
     // serial wait: STORE → Telegram → messages.
-    let historyPromise=fastLive?Promise.resolve([]):archiveThreads(userId);
-    const permissionStatePromise=action==='list'
+    let historyPromise=(fastLive||fastInbox)?Promise.resolve([]):archiveThreads(userId);
+    let permissionStatePromise=action==='list'&&!fastInbox
       ? Promise.all([getPrivacySettings(userId).catch(()=>null),
           getBusinessConnectionState(userId).catch(()=>null)])
           .then(([settings,business])=>({settings,business}))
@@ -303,6 +322,15 @@ export default async function handler(req,res){
           warning=errorMessage(error).error;
         }
       }else warning='Подключи свой Telegram для живых чатов. Ранее сохранённые копии VETO доступны отдельно.';
+      // No live account means no fast-inbox shortcut: never hide archive-only
+      // conversations when authorization is missing or Telegram is down.
+      if(fastInbox&&!live.account?.verified){
+        historyPromise=archiveThreads(userId);
+        permissionStatePromise=Promise.all([
+          getPrivacySettings(userId).catch(()=>null),
+          getBusinessConnectionState(userId).catch(()=>null),
+        ]).then(([settings,business])=>({settings,business}));
+      }
       // Both requests were already running while MTProto connected.
       const [history,permissionState]=await Promise.all([historyPromise,permissionStatePromise]);
       if(history.unavailable){
@@ -324,6 +352,7 @@ export default async function handler(req,res){
       return respond(res,200,{
         chats:orderChatRows(chats).map(chat=>({...chat,inbox:inboxSignals(chat)})),page,hasMore:Boolean(live.hasMore),limit:MAX_DIALOGS,
         updatedAt:new Date().toISOString(),warning,
+        archiveDeferred:Boolean(fastInbox&&live.account?.verified),
         archivedThreads:history.length,scope:'owner-cloud-chats',isCopy:false,
         connection:{verified:Boolean(live.account?.verified),
           source:live.account?.verified?'telegram-live':'owner-scoped-veto-archive',

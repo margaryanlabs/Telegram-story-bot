@@ -22,7 +22,40 @@ function fixture({staleSelect=false}={}) {
     get inserted(){return inserted},
   };
 }
-const input={userId:'111',chatId:'222',messageIds:[5]};
+const input={userId:'111',chatId:'222',messageIds:[5],businessConnectionId:'connected-A'};
+
+test('deletion requires the verified Business connection identity',async()=>{
+  const f=fixture();
+  await assert.rejects(
+    neonArchiveOperation('mark_business_messages_deleted',
+      {...input,businessConnectionId:null},f.sql),
+    /BUSINESS_CONNECTION_REQUIRED/
+  );
+  assert.equal(f.inserted,0);
+});
+test('delete webhook cannot update a message captured by another Business connection',async()=>{
+  let verifiedSelect=false,verifiedUpdate=false;
+  const sql={owner,chat,
+    one:async()=>({anti_delete:true,edit_history:true,ghost_inbox:true,retention_days:30}),
+    query:async(q,args)=>{
+      if(q.includes('SELECT * FROM public.story_pilot_messages')){
+        assert.match(q,/business_connection_id=\$4/);
+        assert.equal(args[3],'connected-B');verifiedSelect=true;return [];
+      }
+      if(q.includes('UPDATE public.story_pilot_messages SET deleted_at')){
+        assert.match(q,/business_connection_id=\$4/);
+        assert.equal(args[3],'connected-B');verifiedUpdate=true;return [];
+      }
+      throw Error('Cross-connection delete unexpectedly created a notification');
+    },
+  };
+  const response=await neonArchiveOperation('mark_business_messages_deleted',
+    {...input,businessConnectionId:'connected-B'},sql);
+  assert.equal(response.affected,0);
+  assert.deepEqual(response.events,[]);
+  assert.equal(verifiedSelect,true);
+  assert.equal(verifiedUpdate,true);
+});
 
 test('duplicate delete webhook never returns a second notification event',async()=>{
   const f=fixture();
@@ -42,7 +75,7 @@ test('stale concurrent SELECT does not emit notifications if UPDATE lost the rac
 
 test('SQL marks only previously undeleted rows, preventing repeated tombstone updates',()=>{
   const src=readFileSync(new URL('../lib/neon-archive-store.js',import.meta.url),'utf8');
-  assert.match(src,/message_id=ANY\(\$3::bigint\[\]\) AND deleted_at IS NULL/);
+  assert.match(src,/message_id=ANY\(\$3::bigint\[\]\) AND business_connection_id=\$4 AND deleted_at IS NULL/);
   assert.match(src,/const newlyDeleted=before\.filter/);
 });
 

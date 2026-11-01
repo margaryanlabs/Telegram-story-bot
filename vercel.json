@@ -4,12 +4,30 @@
     {
       "source": "/portal.html",
       "headers": [
-        {"key": "Cache-Control", "value": "no-store, max-age=0"},
-        {"key": "Referrer-Policy", "value": "no-referrer"},
-        {"key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive"},
-        {"key": "X-Content-Type-Options", "value": "nosniff"},
-        {"key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()"},
-        {"key": "Content-Security-Policy", "value": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"}
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+        }
       ]
     },
     {
@@ -34,7 +52,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=300, stale-while-revalidate=86400"
+          "value": "no-store, max-age=0"
         },
         {
           "key": "Referrer-Policy",

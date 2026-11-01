@@ -330,13 +330,13 @@ function settingsText(settings, live = null) {
 function connectText(settings, live = null) {
   if (settings.bc && live !== false) {
     return '✓ Telegram Business-бот подключён.\n\n'
-      + '↶ Anti-Delete: разреши боту выбранные личные переписки в Telegram → Настройки → Telegram для бизнеса → Чат-боты. Для проверки отправь из такого чата НОВОЕ сообщение и посмотри в Vetogram Inbox.\n\n'
+      + '↶ Anti-Delete: открой Vetogram Mini App → Privacy → «Подключить», выбери личные чаты и подтверди. Проверь новое сообщение и его удаление через диагностику.\n\n'
       + '💬 Живые чаты в Vetogram открываются отдельно через свой номер + код или QR.\n\n'
       + (settings.canStories ? '📸 Stories: управление тоже разрешено.' : '📸 Разрешение на Stories необязательно для архива.');
   }
 
   return '💬 ЖИВЫЕ ЧАТЫ\nОткрой Mini App → «Мои чаты» → номер + код Telegram или QR. Business для этого не нужен.\n\n'
-    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → «Anti-Delete» или Telegram → Настройки → Telegram для бизнеса → Чат-боты → добавь @Vetotg_bot → выбери личные чаты.\n\n'
+    + '↶ АВТОСОХРАНЕНИЕ И ANTI-DELETE\nОткрой Mini App → Privacy → «Подключить» и подтверди доступ к личным чатам. Ручные настройки Telegram — только резерв.\n\n'
     + 'Можно пользоваться только одним способом или обоими. Не отправляй коды боту.';
 }
 
@@ -1090,8 +1090,11 @@ export default async function handler(req, res) {
         if (
           result?.retained
           && result?.settings?.notifyDeletes !== false
-          && Array.isArray(deleted?.message_ids)
-          && deleted.message_ids.length
+          // A replayed webhook has no newly tombstoned messages. Never
+          // notify again merely because the original update listed IDs.
+          // Missing uncaptured messages are not proof of a stored copy.
+          && Array.isArray(result?.events)
+          && result.events.length > 0
         ) {
           result.alertSent = await sendGhostDeleteAlert(
             token,
@@ -1124,7 +1127,10 @@ export default async function handler(req, res) {
       res.status(200).json({
         ok: true,
         privacy_delete_captured: Boolean(result?.affected),
-        retained: Boolean(result?.retained),
+        // "retained" describes THIS update, not merely the user's
+        // Anti-Delete preference. A replay has no newly archived deletion.
+        retained: Boolean(result?.retained && Number(result?.affected || 0)>0),
+        retention_enabled: Boolean(result?.retained),
         affected: Number(result?.affected || 0),
         alert_sent: Boolean(result?.alertSent),
         media_recovery_attempted: Array.isArray(result?.mediaRecoveryResults) ? result.mediaRecoveryResults.length : 0,
@@ -1199,7 +1205,7 @@ export default async function handler(req, res) {
       } else if (action === 'view:live-chats') {
         await showPanel(token, chatId, origin, settings, '💬 Мои чаты\\n\\nОткрой Vetogram Mini App → «Мои чаты» → подключи свой Telegram через номер + код либо QR. Business не нужен.', messageId);
       } else if (action === 'view:archive-guide') {
-        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Telegram → Настройки → Telegram для бизнеса → Чат-боты. Добавь @Vetotg_bot и выбери личные переписки. Затем Vetogram Mini App → Privacy → «Проверить подключение». Архивирует только новые полученные сообщения.', messageId);
+        await showPanel(token, chatId, origin, settings, '↶ Anti-Delete\\n\\nОткрой Vetogram Mini App → Privacy → «Подключить» и подтверди доступ к личным чатам. Ручные настройки Telegram — только резерв. Архивируются лишь полученные после подключения сообщения.', messageId);
       } else if (action === 'view:connect') {
         const refreshed = await refreshConnection(token, chatId, origin, settings);
         await showPanel(token, chatId, origin, refreshed.settings, connectText(refreshed.settings, refreshed.live), messageId);

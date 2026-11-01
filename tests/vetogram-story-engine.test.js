@@ -68,7 +68,7 @@ test('the real VETOGRAM Mini App integrates a new screen but keeps the legacy St
   assert.match(html,/type="module" src="\/story-engine\.js/);
   assert.match(html,/id="storyFileInput"/);
   assert.match(app,/'story-engine':'story-engine'/);
-  assert.match(app,/'story-engine':'studio'/);
+  assert.match(app,/'story-engine':'publish'/);
   assert.match(ui,/window\.VetoTelegramNavigate\?\.\('publish'\)/);
   assert.match(ui,/new DataTransfer\(\)/);
   assert.match(ui,/input\.dispatchEvent\(new Event\('change'/);

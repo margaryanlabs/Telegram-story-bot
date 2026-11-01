@@ -11,6 +11,8 @@
   const allowedInitialFilters = new Set(['smart','action','watch','all','deleted','edited','media']);
 
   const privacyState = {
+    ownerInitData: String(tg?.initData||''),
+    ownerEpoch: 0,
     loading: false,
     settings: {
       antiDelete: false,
@@ -34,6 +36,8 @@
     diagnostics: null,
     diagnosticsLoading: false,
     activeThread: null,
+    archiveThreadEpoch: 0,
+    refreshInFlight: false,
     query: '',
     filter: allowedInitialFilters.has(ghostDeepLink.filter) ? ghostDeepLink.filter : 'all',
     deepLinkHandled: false,
@@ -101,6 +105,61 @@
     try { tg?.HapticFeedback?.impactOccurred(type); } catch {}
   }
 
+  // Reset owner-scoped UI state before the next paint. Nothing from a prior
+  // signed Telegram account may remain in the Vault, Smart Inbox or sheets.
+  function resetPrivacyOwner() {
+    const current=String(tg?.initData||'');
+    if(current===privacyState.ownerInitData)return false;
+    privacyState.backup.stopRequested=true;
+    allBackup.stop=true;
+    allBackup.running=false;allBackup.index=0;allBackup.total=0;allBackup.queued=0;
+    allBackup.longRetention=false;
+    closeSheet();
+    privacyState.ownerInitData=current;
+    privacyState.ownerEpoch++;
+    privacyState.loading=false;privacyState.degraded=false;
+    privacyState.settings={
+      antiDelete:false,editHistory:false,ghostInbox:false,ghostFocus:true,
+      notifyDeletes:true,notifyEdits:true,retentionDays:30
+    };
+    privacyState.threads=[];privacyState.smartSummary=null;privacyState.smartBrief=null;
+    privacyState.deletedFeed=[];privacyState.deletedFeedLoaded=false;
+    privacyState.deletedFeedLoading=false;privacyState.deletedFeedHasMore=false;
+    privacyState.diagnostics=null;privacyState.diagnosticsLoading=false;
+    privacyState.activeThread=null;privacyState.loadingOlderThread=false;
+    privacyState.archiveThreadEpoch++;
+    privacyState.refreshInFlight=false;
+    privacyState.query='';privacyState.filter='all';
+    privacyState.deepLinkHandled=true; // Never replay previous owner's deep link.
+    privacyState.lastTotalMessages=0;privacyState.lastRefreshAt=null;
+    privacyState.connection={
+      loaded:false,live:false,ready:false,state:'unknown',readMessages:false,error:false
+    };
+    privacyState.backup={
+      chats:[],jobs:[],selected:null,offsetId:0,totalSaved:0,totalRead:0,
+      totalMedia:0,running:false,stopRequested:false,auto:false,notifyCompletion:true
+    };
+    businessWizardSnapshot=null;businessWizardSignedOwner='';
+    if($('privacySearch'))$('privacySearch').value='';
+    if($('privacyThreads'))$('privacyThreads').replaceChildren();
+    if($('privacyDeletedMore'))$('privacyDeletedMore').hidden=true;
+    return true;
+  }
+  function ownerLease(){
+    resetPrivacyOwner();
+    if(!privacyState.ownerInitData)throw new Error('Открой Vetogram внутри Telegram');
+    return {signed:privacyState.ownerInitData,epoch:privacyState.ownerEpoch};
+  }
+  function assertOwner(lease){
+    if(lease.signed!==String(tg?.initData||'') ||
+       lease.epoch!==privacyState.ownerEpoch){
+      resetPrivacyOwner();
+      const error=new Error('Telegram-аккаунт изменился. Повтори действие.');
+      error.code='VETO_PRIVACY_OWNER_CHANGED';
+      throw error;
+    }
+  }
+
   function privacyScreenActive() {
     const screen = document.querySelector('.screen.active')?.dataset?.screen;
     return screen === 'privacy' || screen === 'chats';
@@ -115,7 +174,9 @@
   }
 
   async function loadTelegramConnection({ silent = true } = {}) {
+    resetPrivacyOwner();
     if (!tg?.initData || navigator.onLine === false) return privacyState.connection;
+    const lease=ownerLease();
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
@@ -123,12 +184,13 @@
       const response = await fetch('/api/miniapp', {
         method: 'GET',
         headers: {
-          'x-telegram-init-data': tg.initData,
+          'x-telegram-init-data': lease.signed,
           'content-type': 'application/json',
         },
         signal: controller.signal,
       });
       const data = await response.json().catch(() => ({}));
+      assertOwner(lease);
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось проверить Telegram');
 
       privacyState.connection = {
@@ -142,6 +204,10 @@
       render();
       return privacyState.connection;
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED' ||
+          lease.epoch!==privacyState.ownerEpoch){
+        resetPrivacyOwner();return privacyState.connection;
+      }
       privacyState.connection = {
         ...privacyState.connection,
         loaded: true,
@@ -156,7 +222,7 @@
   }
 
   async function request(action = null, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const lease=ownerLease();
 
     const retryable = !action || action === 'list_messages' || action === 'versions';
     const attempts = retryable ? 2 : 1;
@@ -164,6 +230,7 @@
 
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       if (attempt) await new Promise(resolve => setTimeout(resolve, 550));
+      assertOwner(lease); // Never retry an old owner's request as a new owner.
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 16000);
@@ -171,13 +238,14 @@
         const response = await fetch('/api/privacy', {
           method: action ? 'POST' : 'GET',
           headers: {
-            'x-telegram-init-data': tg.initData,
+            'x-telegram-init-data': lease.signed,
             'content-type': 'application/json',
           },
           body: action ? JSON.stringify({ action, ...payload }) : undefined,
           signal: controller.signal,
         });
         const data = await response.json().catch(() => ({}));
+        assertOwner(lease);
         if (response.ok && data.ok) return data;
 
         const error = new Error(data.error || 'Vetogram Inbox временно недоступен');
@@ -185,6 +253,7 @@
         lastError = error;
         if (!retryable || ![502,503,504].includes(response.status) || attempt === attempts - 1) throw error;
       } catch (error) {
+        assertOwner(lease); // Also reject stale network failures/abort callbacks.
         const normalized = error?.name === 'AbortError'
           ? new Error('Vetogram Inbox отвечает слишком долго')
           : error;
@@ -414,7 +483,7 @@
       ? 'Telegram подтвердил связь с ботом. Чтобы проверить реальную доставку, отправь новое сообщение из выбранного личного чата и найди его в Vetogram Inbox.'
       : connectionLive
         ? 'Связь с Telegram временно не подтверждена. Проверь подключение повторно.'
-        : 'Один раз разреши Vetogram получать сообщения из выбранных личных чатов. Настройки — в самом Telegram, без передачи пароля и кода боту.';
+        : 'Выбери нужные личные чаты прямо в Vetogram и отдельно включи Anti-Delete. Ручная настройка нужна только как запасной вариант.';
     if (state) state.textContent = isPending ? 'Проверяю' : failed ? 'Проверить связь' : verified ? 'Бот подключён ✓' : 'Один раз';
     if (steps) steps.hidden = verified;
     if (verify) {
@@ -424,6 +493,7 @@
   }
 
   function render() {
+    resetPrivacyOwner();
     const settings = privacyState.settings || {};
     const enabled = anyEnabled(settings);
     const complete = fullyEnabled(settings);
@@ -530,17 +600,23 @@
     }
 
     const totals = threadTotals();
+    const archiveReady=Boolean(privacyState.lastRefreshAt && !privacyState.degraded &&
+      privacyState.ownerInitData && privacyState.ownerInitData===String(tg?.initData||''));
     const summary = privacyState.smartSummary || {
       action: privacyState.threads.filter(thread => thread.smartState === 'action').length,
       watch: privacyState.threads.filter(thread => thread.smartState === 'watch').length,
       archive: privacyState.threads.filter(thread => thread.smartState === 'archive').length,
       likelyNeedsReply: privacyState.threads.filter(thread => thread.actionLikely).length,
     };
-    if ($('smartInboxAction')) $('smartInboxAction').textContent = String(summary.action || 0);
-    if ($('smartInboxWatch')) $('smartInboxWatch').textContent = String(summary.watch || 0);
-    if ($('smartInboxAll')) $('smartInboxAll').textContent = String(privacyState.threads.length);
+    if ($('smartInboxAction')) $('smartInboxAction').textContent = archiveReady ? String(summary.action || 0) : '—';
+    if ($('smartInboxWatch')) $('smartInboxWatch').textContent = archiveReady ? String(summary.watch || 0) : '—';
+    if ($('smartInboxAll')) $('smartInboxAll').textContent = archiveReady ? String(privacyState.threads.length) : '—';
 
-    const brief = privacyState.smartBrief || {
+    const brief = !archiveReady ? {
+      status:'pending',title:'Проверяем архив Telegram',
+      detail:'Результаты появятся после успешной загрузки данных этого аккаунта.',
+      primaryChatId:'',primaryAction:'archive',reasons:[]
+    } : privacyState.smartBrief || {
       status: summary.action > 0 ? 'action' : summary.watch > 0 ? 'watch' : 'clear',
       title: summary.action > 0
         ? `${summary.action} диалог(а) требуют внимания`
@@ -555,7 +631,8 @@
     const briefCard = $('smartBriefCard');
     if (briefCard) {
       briefCard.classList.remove('action','watch','clear');
-      briefCard.classList.add(['action','watch','clear'].includes(String(brief.status)) ? String(brief.status) : 'clear');
+      if (['action','watch','clear'].includes(String(brief.status)))
+        briefCard.classList.add(String(brief.status));
     }
     if ($('smartBriefTitle')) $('smartBriefTitle').textContent = brief.title || 'Vetogram Brief';
     if ($('smartBriefDetail')) $('smartBriefDetail').textContent = brief.detail || '';
@@ -564,7 +641,7 @@
         ? 'ACTION'
         : brief.status === 'watch'
           ? 'WATCH'
-          : 'CLEAR';
+          : brief.status === 'pending' ? 'ПРОВЕРЯЮ' : 'CLEAR';
     }
     if ($('smartBriefReasons')) {
       const reasons = Array.isArray(brief.reasons) ? brief.reasons : [];
@@ -590,7 +667,26 @@
       privacyStatVault: totals.vault,
     };
     for (const [id, value] of Object.entries(statMap)) {
-      if ($(id)) $(id).textContent = String(value);
+      if ($(id)) $(id).textContent = archiveReady ? String(value) : '—';
+    }
+    const evidence=$('privacyEvidenceStatus');
+    if(evidence){
+      const verifiedAt=archiveReady ? new Date(privacyState.lastRefreshAt) : null;
+      const clock=verifiedAt && Number.isFinite(verifiedAt.getTime())
+        ? verifiedAt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})
+        : '';
+      evidence.textContent=!tg?.initData
+        ? 'Открой Vetogram в Telegram, чтобы проверить архив'
+        : navigator.onLine===false
+          ? 'Нет сети · данные архива не подтверждены'
+          : privacyState.degraded
+            ? 'Нет подтверждения архива · обнови данные'
+            : privacyState.loading && !archiveReady
+              ? 'Проверяю архив этого аккаунта…'
+              : archiveReady
+                ? 'Архив проверен · '+clock+' · только полученные события'
+                : 'Архив ещё не проверен';
+      evidence.dataset.verified=String(archiveReady);
     }
 
     if ($('privacyRetentionLabel')) {
@@ -779,13 +875,18 @@
   }
 
   async function refresh({ silent = false, background = false } = {}) {
-    if (!tg?.initData || privacyState.loading || navigator.onLine === false) return;
+    resetPrivacyOwner();
+    if (!tg?.initData || privacyState.refreshInFlight ||
+        navigator.onLine === false) return;
+    const lease=ownerLease();
+    privacyState.refreshInFlight=true;
     privacyState.loading = !background;
     if (!background) render();
 
     const before = privacyState.lastTotalMessages || threadTotals().messages;
     try {
       const data = await request();
+      assertOwner(lease);
       privacyState.degraded = Boolean(data.degraded);
       if (data.settings) {
         privacyState.settings = { ...privacyState.settings, ...data.settings };
@@ -807,9 +908,17 @@
         haptic('soft');
       }
     } catch (error) {
-      privacyState.degraded = true;
-      if (!silent) toast(error.message);
+      if(error?.code!=='VETO_PRIVACY_OWNER_CHANGED' &&
+         lease.epoch===privacyState.ownerEpoch){
+        privacyState.degraded = true;
+        if (!silent) toast(error.message);
+      }
     } finally {
+      if(lease.epoch!==privacyState.ownerEpoch ||
+         lease.signed!==String(tg?.initData||'')){
+        resetPrivacyOwner();
+      }else{
+      privacyState.refreshInFlight=false;
       privacyState.loading = false;
       render();
       if (privacyState.filter === 'deleted') {
@@ -817,6 +926,7 @@
       }
       if (!privacyState.deepLinkHandled && ghostDeepLink.chatId) {
         setTimeout(() => maybeOpenGhostDeepLink(), 60);
+      }
       }
     }
   }
@@ -838,6 +948,7 @@
       if (!quiet) toast('Архив Vetogram настройки сохранены');
       return true;
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return false;
       privacyState.settings = previous;
       render();
       toast(error.message);
@@ -870,6 +981,10 @@
   }
 
   function openSheet(html) {
+    if (window.VetoTelegramModal?.open) {
+      window.VetoTelegramModal.open(html);
+      return;
+    }
     const content = $('sheetContent');
     const backdrop = $('sheetBackdrop');
     const sheet = $('sheet');
@@ -877,17 +992,38 @@
     content.innerHTML = html;
     backdrop.hidden = false;
     sheet.hidden = false;
+    document.body?.classList?.add('veto-sheet-open');
+    document.documentElement?.classList?.add('veto-sheet-open');
     try { tg?.BackButton?.show(); } catch {}
   }
 
   function closeSheet() {
+    privacyState.archiveThreadEpoch++;
+    privacyState.activeThread=null;
+    privacyState.loadingOlderThread=false;
     // Telegram BackButton must not allow an unobserved backup loop to continue.
     privacyState.backup.stopRequested = true;
     revokeMediaUrl();
-    if ($('sheetBackdrop')) $('sheetBackdrop').hidden = true;
-    if ($('sheet')) $('sheet').hidden = true;
-    try { tg?.BackButton?.hide(); } catch {}
+    if (window.VetoTelegramModal?.close) {
+      window.VetoTelegramModal.close();
+    } else {
+      if ($('sheetBackdrop')) $('sheetBackdrop').hidden = true;
+      if ($('sheet')) $('sheet').hidden = true;
+      document.body?.classList?.remove('veto-sheet-open');
+      document.documentElement?.classList?.remove('veto-sheet-open');
+      try { tg?.BackButton?.hide(); } catch {}
+    }
   }
+
+  // The Mini App BackButton and backdrop are owned by the shared dialog
+  // controller. Closing from either route must still terminate Privacy work.
+  window.addEventListener('vetogram:modal-closed',()=>{
+    privacyState.backup.stopRequested=true;
+    privacyState.archiveThreadEpoch++;
+    privacyState.activeThread=null;
+    privacyState.loadingOlderThread=false;
+    revokeMediaUrl();
+  });
 
   function revokeMediaUrl() {
     if (privacyState.mediaObjectUrl) {
@@ -1059,7 +1195,8 @@
         <div><span class="kicker">${mode === 'focus' ? 'Vetogram FOCUS' : 'Vetogram Inbox'}</span><h2>${escapeHtml(thread.title || 'Telegram chat')}</h2></div>
         <div class="privacy-sheet-head-actions">
           <button class="mini-chip" type="button" data-privacy-close="1">← Список</button>
-          <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}">↻</button>
+          <button class="mini-chip" type="button" data-privacy-thread-refresh="${escapeHtml(thread.chatId)}"
+            aria-label="Обновить сообщения архива" title="Обновить сообщения архива">↻</button>
         </div>
       </div>
       <p>Архивная копия. Vetogram не вызывает readBusinessMessage при просмотре этого экрана.</p>
@@ -1090,20 +1227,30 @@
   }
 
   async function openThread(chatId, { silent = false, mode = 'all', focusMessageId = null } = {}) {
+    const lease=ownerLease();
+    // A newer chat selection or explicit sheet close supersedes this response.
+    const intent=++privacyState.archiveThreadEpoch;
+    privacyState.loadingOlderThread=false;
     const thread = privacyState.threads.find(item => String(item.chatId) === String(chatId))
       || { chatId, title: 'Telegram chat' };
     try {
       const data = await request('list_messages', { chatId, limit: 150, offset: 0 });
-      const items = data.messages || [];
+      assertOwner(lease);
+      if(intent!==privacyState.archiveThreadEpoch)return false;
+      const items = Array.isArray(data.messages) ? data.messages : [];
       renderThreadSheet(thread, items, { mode, focusMessageId, hasMore:data.hasMore === true, offset:items.length });
+      return true;
     } catch (error) {
-      if (!silent) toast(error.message);
+      if(error?.code!=='VETO_PRIVACY_OWNER_CHANGED' &&
+         intent===privacyState.archiveThreadEpoch && !silent)toast(error.message);
+      return false;
     }
   }
 
   async function loadOlderThread() {
     const active = privacyState.activeThread;
     if (!active || !active.hasMore || privacyState.loadingOlderThread) return;
+    const lease=ownerLease(),intent=privacyState.archiveThreadEpoch;
     privacyState.loadingOlderThread = true;
     const button = $('sheet')?.querySelector('[data-privacy-thread-more]');
     if (button) { button.disabled = true; button.textContent = 'Загружаю…'; }
@@ -1111,6 +1258,9 @@
       const data = await request('list_messages', {
         chatId:active.thread.chatId, limit:150, offset:active.offset || 0,
       });
+      assertOwner(lease);
+      if(intent!==privacyState.archiveThreadEpoch ||
+         privacyState.activeThread!==active)return;
       const older = Array.isArray(data.messages) ? data.messages : [];
       const ids = new Set(active.messages.map(x => String(x.message_id)));
       const additions = older.filter(x => !ids.has(String(x.message_id)));
@@ -1124,9 +1274,15 @@
       const sheet = $('sheet');
       if (sheet) sheet.scrollTop = 0;
     } catch (error) {
-      toast(error.message);
-      if (button) { button.disabled = false; button.textContent = 'Повторить загрузку'; }
-    } finally { privacyState.loadingOlderThread = false; }
+      if(error?.code!=='VETO_PRIVACY_OWNER_CHANGED' &&
+         intent===privacyState.archiveThreadEpoch &&
+         privacyState.activeThread===active){
+        toast(error.message);
+        if (button) { button.disabled = false; button.textContent = 'Повторить загрузку'; }
+      }
+    } finally {
+      if(intent===privacyState.archiveThreadEpoch)privacyState.loadingOlderThread=false;
+    }
   }
 
   async function maybeOpenGhostDeepLink() {
@@ -1137,19 +1293,28 @@
       : ghostDeepLink.mode === 'focus'
         ? 'focus'
         : 'all';
-    await openThread(ghostDeepLink.chatId, {
+    const opened=await openThread(ghostDeepLink.chatId, {
       silent: false,
       mode,
       focusMessageId: ghostDeepLink.messageId,
     });
-    if (ghostDeepLink.mode === 'edit' && ghostDeepLink.messageId) {
-      setTimeout(() => openVersions(ghostDeepLink.chatId, ghostDeepLink.messageId), 220);
+    if (opened && ghostDeepLink.mode === 'edit' && ghostDeepLink.messageId) {
+      const intent=privacyState.archiveThreadEpoch;
+      setTimeout(() => {
+        if(intent===privacyState.archiveThreadEpoch &&
+           String(privacyState.activeThread?.thread?.chatId)===ghostDeepLink.chatId)
+          void openVersions(ghostDeepLink.chatId, ghostDeepLink.messageId);
+      },220);
     }
   }
 
   async function openVersions(chatId, messageId) {
+    const lease=ownerLease(),intent=privacyState.archiveThreadEpoch;
     try {
       const data = await request('versions', { chatId, messageId });
+      assertOwner(lease);
+      if(intent!==privacyState.archiveThreadEpoch ||
+         String(privacyState.activeThread?.thread?.chatId)!==String(chatId))return;
       const versions = data.versions || [];
       const body = versions.map((item, index) => `
         <div class="privacy-version">
@@ -1169,11 +1334,13 @@
         </div>
       `);
     } catch (error) {
-      toast(error.message);
+      if(error?.code!=='VETO_PRIVACY_OWNER_CHANGED' &&
+         intent===privacyState.archiveThreadEpoch)toast(error.message);
     }
   }
 
   async function loadMedia(chatId, messageId, mediaType, fileName = '') {
+    const lease=ownerLease(),intent=privacyState.archiveThreadEpoch;
     const button = document.querySelector(`[data-privacy-media="${CSS.escape(String(messageId))}"][data-privacy-chat-id="${CSS.escape(String(chatId))}"]`);
     const original = button?.innerHTML;
     if (button) {
@@ -1184,14 +1351,18 @@
     try {
       const query = new URLSearchParams({ chatId:String(chatId), messageId:String(messageId) });
       const response = await fetch(`/api/privacy-media?${query}`, {
-        headers: { 'x-telegram-init-data': tg?.initData || '' },
+        headers: { 'x-telegram-init-data': lease.signed },
       });
+      assertOwner(lease);
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'Не удалось открыть медиа');
       }
 
       const blob = await response.blob();
+      assertOwner(lease);
+      if(intent!==privacyState.archiveThreadEpoch ||
+         String(privacyState.activeThread?.thread?.chatId)!==String(chatId))return;
       revokeMediaUrl();
       privacyState.mediaObjectUrl = URL.createObjectURL(blob);
       const url = privacyState.mediaObjectUrl;
@@ -1225,6 +1396,8 @@
         </div>
       `);
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED' ||
+         intent!==privacyState.archiveThreadEpoch)return;
       toast(error.message);
       if (button) {
         button.disabled = false;
@@ -1235,16 +1408,18 @@
 
 
   async function businessWizardRequest(action, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram из Telegram, чтобы подтвердить аккаунт');
+    const lease=ownerLease();
+    const signedOwner=lease.signed;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 27000);
     try {
       const response = await fetch('/api/business-wizard', {
         method:'POST',
-        headers:{ 'content-type':'application/json','x-telegram-init-data':tg.initData },
+        headers:{ 'content-type':'application/json','x-telegram-init-data':signedOwner },
         body:JSON.stringify({action,...payload}),signal:controller.signal,
       });
       const result = await response.json().catch(() => ({}));
+      assertOwner(lease);
       if (!response.ok || !result.ok) {
         const err = new Error(result.error || 'Не удалось проверить подключение');
         err.needsSession = Boolean(result.needsSession);
@@ -1258,12 +1433,14 @@
   }
 
   let businessWizardSnapshot = null;
+  let businessWizardSignedOwner = '';
   function renderBusinessWizardPicker(result) {
+    businessWizardSignedOwner=String(tg?.initData||'');
     businessWizardSnapshot = result;
     if (result.state === 'other_bot') {
       openSheet(`<span class="kicker">VETOGRAM · ПОДКЛЮЧЕНИЕ</span><h2>Подключён другой Business-бот</h2>
         <p>Vetogram не заменит его. Сохрани текущее подключение или отключи другого бота самостоятельно в Telegram.</p>
-        <div class="sheet-actions"><button data-business-manual="1">Ручной способ</button><button data-business-close="1">Закрыть</button></div>`);
+        <div class="sheet-actions"><button data-business-close="1">Закрыть</button></div>`);
       return;
     }
     const existing = result.state === 'storylab';
@@ -1284,13 +1461,13 @@
         ${existing?`<p>Текущий охват: ${recipients.excludeSelected?'все, кроме: ':''}${escapeHtml(currentScope)}; выбранных: ${Number(recipients.selectedCount||0)}, исключений: ${Number(recipients.excludeUsers?.length||0)}.</p><p>Сохранённые права: ${escapeHtml(currentRights)}.</p>`:''}
         <p>${result.rights?.manageStories ? '✓ Управление Stories разрешено' : '○ Управление Stories требует согласия'}</p>
         <p>Ghost View доступен через существующую сессию. Live-проверка в этом мастере не выполнена.</p>
-        <p>Anti-Delete: ${d.antiDelete ? 'включён' : 'не подтверждён'} · тестовое удаление: не проверено.</p>
+        <p>Anti-Delete: ${d.antiDelete ? 'настройка сохранена; получение удалений ещё не проверено' : 'не настроен'}.</p>
         <p>Серверное подключение: ${escapeHtml(d.botApi || 'не проверено')}</p>
       </div>
       <fieldset class="veto-business-scope-options">
         <legend>Какие личные переписки разрешены боту?</legend>
         ${existing ? '<label><input type="radio" name="vetoBusinessScope" value="preserve" checked><span><b>Сохранить текущий охват и исключения</b><small>Не расширяет доступ и сохраняет действующие права.</small></span></label>' : ''}
-        ${[['all-private','Все существующие и будущие','Контакты и не-контакты'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
+        ${[['all-private','Все существующие и будущие','Быстрый старт: все личные чаты, включая новые. Только после твоего согласия.'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
           <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='all-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
       </fieldset>
       <div class="veto-consent-chat-list" role="group" aria-label="Личные чаты и исключения">
@@ -1298,14 +1475,14 @@
           <label><input type="checkbox" data-business-selected value="${escapeHtml(chat.chatId)}"> Выбрать</label>
           <label><input type="checkbox" data-business-excluded value="${escapeHtml(chat.chatId)}"> Исключить</label></div>`).join('') || '<p>Нет доступных диалогов для выбора. Широкие режимы доступны после явного согласия.</p>'}
       </div>
-      ${existing ? '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span>Я подтверждаю выбранный охват личных чатов. Существующие права сохранятся; новые права выдаются только по отдельному согласию.</span></label>' : '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span><b>Включить VETOGRAM полностью.</b> Я разрешаю подключить @Vetotg_bot к выбранному охвату личных переписок (по умолчанию ко всем нынешним и будущим), получать и сохранять новые сообщения, правки и удаления, уведомлять меня, а также публиковать, изменять и удалять мои Stories от моего имени. Не включает группы и секретные чаты. Все разрешения можно позже отозвать.</span></label>'}
-      ${existing ? `
-      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardAntiDelete"><span>Дополнительно включить Anti-Delete, Edit History и Inbox: сохранять новые сообщения, изменения и удаления.</span></label>
-      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardStories" ${result.rights?.manageStories?'disabled':''}><span>${result.rights?.manageStories?'Управление Stories уже разрешено и будет сохранено.':'Дополнительно разрешить управление Stories: публикацию, изменение и удаление от моего имени.'}</span></label>` : '<div class="veto-consent-boundary"><strong>Что активируется после подтверждения</strong><p>✓ Anti-Delete · Edit History · уведомления · управление Stories. Ghost View работает через отдельную авторизованную сессию. Для Stories сохраняется существующий Business-способ публикации; Telegram может ограничивать доступность отдельных действий.</p><p>Разрешения выдаются только после установки галочки и нажатия «Подтвердить». Никаких ручных переключателей в Telegram Business.</p></div>'}
+      ${existing ? '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span>Я подтверждаю выбранный охват личных чатов. Существующие права сохранятся; новые права выдаются только по отдельному согласию.</span></label>' : '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span><b>Выдать выбранный Business-доступ.</b> Я разрешаю подключить @Vetotg_bot только к явно выбранному охвату личных чатов. Anti-Delete и Stories включаются по отдельным согласиям ниже. Не включает группы и секретные чаты. Все разрешения можно позже отозвать.</span></label>'}
+      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardAntiDelete"><span><b>Anti-Delete:</b> разрешить сохранять новые сообщения, изменения и удаления в доступных чатах.</span></label>
+      <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardStories" ${result.rights?.manageStories?'disabled':''}><span>${result.rights?.manageStories?'Stories уже разрешены; текущий доступ сохранится.':'Отдельно разрешить публикацию, изменение и удаление Stories от моего имени.'}</span></label>
+      <p class="veto-business-choices-hint">Ни Anti-Delete, ни Stories не включаются автоматически. Можно выбрать одну возможность или обе.</p>
       <div class="veto-consent-boundary"><p>Без права отвечать, удалять сообщения, отмечать прочитанным, менять профиль, управлять подарками и средствами — при новом подключении. При существующем подключении сохраняются права, перечисленные выше.</p></div>
       <p id="businessWizardCount" aria-live="polite"></p>
       <div class="sheet-actions"><button class="accent" data-business-apply="1" disabled>Подтвердить разрешения</button>
-        <button data-business-manual="1">Ручной способ</button><button data-business-close="1">Позже</button>
+        <button data-business-close="1">Позже</button>
         ${existing?'<button data-business-revoke="1">Отозвать Business-доступ…</button>':''}
         ${result.rights?.manageStories?'<button data-business-revoke-stories="1">Отозвать только Stories…</button>':''}
       </div>`);
@@ -1316,16 +1493,16 @@
     openSheet('<span class="kicker">Vetogram PRIVACY</span><h2>Проверяю твой Telegram…</h2><p>Ищем только личные диалоги. Никакие сообщения пока не копируем и разрешения не меняем.</p>');
     try {
       const result = await businessWizardRequest('prepare');
-      if (result.enabled === false) { privacyBusinessGuideSheet(); return; }
+      if (result.enabled === false) { businessUnavailableSheet(); return; }
       renderBusinessWizardPicker(result);
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       openSheet(`
         <span class="kicker">Vetogram · ПОДКЛЮЧЕНИЕ</span><h2>Нужно подключить свой Telegram</h2>
         <p>${escapeHtml(error.message)}</p>
         <p>Чтобы выбрать разрешённые чаты прямо в Vetogram, сначала авторизуй собственную сессию через номер + код или QR. Код вводится только в интерфейсе входа.</p>
         <div class="sheet-actions">
           ${error.needsSession ? '<button class="accent" data-business-account="1">Подключить мой Telegram →</button>' : '<button class="accent" data-business-retry="1">Повторить проверку →</button>'}
-          <button data-business-manual="1">Подключить вручную</button>
           <button data-business-close="1">Закрыть</button>
         </div>
       `);
@@ -1343,27 +1520,44 @@
   };
 
   function updateBusinessWizardConsent() {
+    if (businessWizardSignedOwner && String(tg?.initData||'')!==businessWizardSignedOwner) {
+      businessWizardSnapshot=null;
+      closeSheet();return;
+    }
     const scope = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value;
-    const selected = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked') || [])];
-    const excluded = [...($('sheet')?.querySelectorAll('[data-business-excluded]:checked') || [])];
+
     const picker = $('sheet')?.querySelector('.veto-consent-chat-list');
     if (picker) picker.hidden = scope === 'preserve';
-    for (const el of $('sheet')?.querySelectorAll('[data-business-selected]') || []) el.disabled = scope !== 'selected-private';
+    for (const el of $('sheet')?.querySelectorAll('[data-business-selected]') || []) {
+      el.disabled = scope !== 'selected-private';
+      if (el.disabled) el.checked = false;
+    }
+    for (const el of $('sheet')?.querySelectorAll('[data-business-excluded]') || []) {
+      // Exclusions only make sense with a broad recipient scope. The selected
+      // list already defines its own exact boundary; 'preserve' is immutable.
+      el.disabled = scope === 'selected-private' || scope === 'preserve';
+      if (el.disabled) el.checked = false;
+    }
+    const effectiveSelected = [...($('sheet')?.querySelectorAll('[data-business-selected]:checked')||[])];
+    const effectiveExcluded = [...($('sheet')?.querySelectorAll('[data-business-excluded]:checked')||[])];
     const fresh = businessWizardSnapshot?.state === 'none';
     // On an existing connection changing recipients is independent of requesting
     // new capabilities. Preserve Story rights and archive settings unless opted in.
     const existingScopeChange = businessWizardSnapshot?.state === 'storylab' && scope !== 'preserve';
-    const featureConsent = fresh || existingScopeChange || $('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true;
+    const featureConsent = (fresh && ($('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true)) || existingScopeChange || $('businessWizardAntiDelete')?.checked === true || $('businessWizardStories')?.checked === true;
     const valid = $('businessWizardConsent')?.checked === true && scope &&
-      (scope !== 'selected-private' || (selected.length > 0 && selected.length <= 12)) && excluded.length <= 12 &&
-      !selected.some(el=>scope==='selected-private' && excluded.some(ex=>ex.value===el.value)) && featureConsent;
+      (scope !== 'selected-private' || (effectiveSelected.length > 0 && effectiveSelected.length <= 12)) && effectiveExcluded.length <= 12 &&
+      !effectiveSelected.some(el=>scope==='selected-private' && effectiveExcluded.some(ex=>ex.value===el.value)) && featureConsent;
     const count = $('businessWizardCount');
-    if (count) count.textContent = scope==='preserve'?'Сохраним текущие чаты, исключения и права.':`Выбрано: ${scope==='selected-private'?selected.length:'по охвату'} · исключений: ${excluded.length}/12`;
+    if (count) count.textContent = scope==='preserve'?'Сохраним текущие чаты, исключения и права.':`Выбрано: ${scope==='selected-private'?effectiveSelected.length:'по охвату'} · исключений: ${effectiveExcluded.length}/12`;
     const button = $('sheet')?.querySelector('[data-business-apply]');
     if (button) button.disabled = !valid;
   }
 
   async function applyBusinessWizard(button) {
+    if (!businessWizardSnapshot || String(tg?.initData||'')!==businessWizardSignedOwner) {
+      closeSheet();toast('Аккаунт Telegram изменился. Перепроверь разрешения.');return;
+    }
     updateBusinessWizardConsent();
     if (button.disabled) return;
     const scope = $('sheet')?.querySelector('input[name="vetoBusinessScope"]:checked')?.value;
@@ -1373,8 +1567,8 @@
         snapshotToken:businessWizardSnapshot?.snapshotToken,scope,scopeConsent:$('businessWizardConsent')?.checked===true,
         chatIds:scope==='selected-private'?[...$('sheet').querySelectorAll('[data-business-selected]:checked')].map(el=>el.value):[],
         excludeChatIds:scope==='preserve'?[]:[...$('sheet').querySelectorAll('[data-business-excluded]:checked')].map(el=>el.value),
-        antiDeleteConsent:$('businessWizardAntiDelete')?.checked===true || (businessWizardSnapshot?.state==='none' && $('businessWizardConsent')?.checked===true),
-        storiesConsent:$('businessWizardStories')?.checked===true || (businessWizardSnapshot?.state==='none' && $('businessWizardConsent')?.checked===true),
+        antiDeleteConsent:$('businessWizardAntiDelete')?.checked===true,
+        storiesConsent:$('businessWizardStories')?.checked===true,
         consent:true,approval:'CONNECT_SELECTED_PRIVATE_CHATS',
       });
       await Promise.allSettled([loadTelegramConnection({silent:true}),refresh({silent:true})]);
@@ -1387,10 +1581,10 @@
         ${archiveIncomplete?'<p>Сервер ещё не подтвердил архивирование. Сообщения могут не сохраняться. Перепроверить подключение и настройки, не выполняя повторную запись без проверки.</p>':''}
         <p>Bot API: ${escapeHtml(result.delivery?.botApi || 'не проверено')}. Новому Business Connection ID может потребоваться доставка webhook. Не объявляем Anti-Delete работающим до тестового удаления сообщения.</p>
         <div class="veto-consent-boundary"><strong>Работоспособность ещё нужно проверить</strong><p>С согласившимся тестовым собеседником: новое сообщение → сохранение → изменение → удаление → сохранённая копия и уведомление. Публикацию Stories проверь отдельно, в том числе без Premium.</p></div>
-        <div class="sheet-actions"><button data-business-retry="1">Проверить статус</button>${archiveIncomplete?'':'<button class="accent" data-business-close="1">Готово</button>'}<button data-business-close="1">Закрыть</button></div>`);
+        <div class="sheet-actions"><button data-business-retry="1">Проверить статус</button><button class="accent" data-business-diagnostics="1">Проверить реальное удаление →</button><button data-business-close="1">${archiveIncomplete?'Закрыть':'Готово'}</button></div>`);
     } catch (error) {
       openSheet(`<span class="kicker">VETOGRAM · ПРОВЕРКА</span><h2>Требуется повторная проверка</h2><p>${escapeHtml(error.message)}</p>
-        <p>Не повторяем запись: Telegram мог принять запрос до таймаута.</p><div class="sheet-actions"><button data-business-retry="1">Проверить статус</button><button data-business-manual="1">Ручной способ</button><button data-business-close="1">Закрыть</button></div>`);
+        <p>Не повторяем запись: Telegram мог принять запрос до таймаута.</p><div class="sheet-actions"><button data-business-retry="1">Проверить статус</button><button data-business-close="1">Закрыть</button></div>`);
     }
   }
 
@@ -1414,42 +1608,59 @@
   }
 
   function privacyBusinessGuideSheet() {
-    const linked = Boolean(privacyState.connection.live);
     openSheet(`
-      <span class="kicker">Vetogram · ЛИЧНЫЕ ПЕРЕПИСКИ</span>
-      <h2>${linked ? 'Осталось проверить разрешения' : 'Один шаг — и переписки под защитой'}</h2>
-      <p>Для автоматического Anti-Delete нужно один раз подключить Vetogram как Business-бота. Никаких дополнительных паролей и кодов: разрешения выдаются непосредственно в Telegram.</p>
-      <div class="veto-business-sheet-steps">
-        <div><b>01</b><section><strong>Telegram → Настройки → Telegram для бизнеса</strong><span>Выбери «Чат-боты» / «Автоматизация чатов». Название зависит от версии Telegram.</span></section></div>
-        <div><b>02</b><section><strong>Добавить бота</strong><span>Введи @Vetotg_bot. Telegram разрешает только одного подключённого Business-бота.</span></section><button type="button" data-privacy-copy-bot="1">Копировать</button></div>
-        <div><b>03</b><section><strong>Выбрать личные чаты</strong><span>Предпочтительно «Только выбранные чаты». Для архива не нужны права отвечать, удалять сообщения или отмечать их прочитанными.</span></section></div>
-        <div><b>04</b><section><strong>Вернись в Vetogram</strong><span>Нажми «Проверить». Если подключение не подтверждено, проверь список разрешённых чатов и права.</span></section></div>
-      </div>
-      <p class="privacy-archive-limit">Без Premium. Это не передаёт Vetogram старую переписку и не открывает секретные чаты. Vetogram сохраняет только разрешённые новые события, которые Telegram доставил после подключения, — удалённое ранее восстановить нельзя.</p>
+      <span class="kicker">VETOGRAM · ANTI-DELETE</span>
+      <h2>Подключение прямо в Vetogram</h2>
+      <p>После входа в твой Telegram можно выбрать личные чаты и подтвердить доступ здесь. Защита не включается сама: согласие на Anti-Delete и Stories выдаётся отдельно.</p>
+      <div class="veto-consent-boundary"><strong>Что будет после разрешения</strong>
+        <p>Новые сообщения, правки и удаления из разрешённых чатов смогут попадать в архив после подтверждения доставки событий. Старые удалённые сообщения не восстановятся.</p></div>
       <div class="sheet-actions">
-        <button class="accent" data-privacy-recheck-access="1">✓ Проверить подключение</button>
-        <button data-privacy-close="1">Вернуться к чатам</button>
+        <button class="accent" data-business-retry="1">Настроить в Vetogram →</button>
+        <button data-business-close="1">Позже</button>
       </div>
-    `);
+      <details class="veto-business-manual-fallback"><summary>Если автоматический способ недоступен</summary>
+        <p>Резервный вариант нужен только если Telegram или сервер отклоняют автоматическое подключение. Premium не требуется, но Telegram разрешает только одного Business-бота.</p>
+        <ol>
+          <li>Telegram → Настройки → Telegram для бизнеса → Чат-боты.</li>
+          <li>Добавь @Vetotg_bot и выбери только нужные личные чаты.</li>
+          <li>Вернись сюда и проверь подключение. Согласия Anti-Delete и Stories остаются отдельными.</li>
+        </ol>
+        <button type="button" data-privacy-copy-bot="1">Скопировать @Vetotg_bot</button>
+      </details>`);
+  }
+
+  function businessUnavailableSheet() {
+    openSheet(`
+      <span class="kicker">VETOGRAM · ПРОВЕРКА ПОДКЛЮЧЕНИЯ</span>
+      <h2>Автоматическое подключение ещё не включено</h2>
+      <p>Мы готовим проверенный вход без ручной настройки Telegram Business. Пока серверная защита и доставка событий не подтверждены, Vetogram не изменяет твои разрешения.</p>
+      <p>Обычные чаты, Stories и AI доступны через отдельный вход в Telegram, без Business-бота.</p>
+      <div class="sheet-actions"><button data-business-close="1">Понятно</button></div>
+      <details class="veto-business-manual-fallback"><summary>Резервная ручная настройка</summary>
+        <p>Если нужно подключить Business раньше выпуска автоматической версии, это можно сделать в Telegram → Настройки → Telegram для бизнеса → Чат-боты. Бот: @Vetotg_bot. Выбирай только разрешённые личные чаты.</p>
+        <button type="button" data-privacy-copy-bot="1">Скопировать имя бота</button>
+      </details>`);
   }
 
   async function mediaRecoveryApi(action) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const lease=ownerLease();
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),45000);
     try {
       const response=await fetch('/api/privacy-media-recover',{
         method:'POST',headers:{
-          'x-telegram-init-data':tg.initData,
+          'x-telegram-init-data':lease.signed,
           'content-type':'application/json',
         },
         body:JSON.stringify({action,confirm:action==='recover'}),
         signal:controller.signal,
       });
       const data=await response.json().catch(()=>({}));
+      assertOwner(lease);
       if(!response.ok||!data.ok)throw new Error(data.error||'Media Vault недоступен');
       return data;
     }catch(error){
+      assertOwner(lease);
       if(error?.name==='AbortError')throw new Error('Telegram отвечает слишком долго. Попробуй ещё раз.');
       throw error;
     }finally{clearTimeout(timeout);}
@@ -1476,6 +1687,7 @@
         </div>
       `);
     } catch (error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       openSheet(`
         <span class="kicker">Vetogram MEDIA VAULT</span><h2>Не удалось проверить</h2>
         <p>${escapeHtml(error.message)}</p>
@@ -1501,28 +1713,31 @@
       `);
       if(data.recovered>0){toast('Media Vault сохранил '+data.recovered+' файлов');await refresh({silent:true});}
     } catch(error){
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       toast(error.message);
       if(button){button.disabled=false;button.textContent='Повторить попытку';}
     }
   }
 
   async function backupApi(action, payload = {}) {
-    if (!tg?.initData) throw new Error('Открой Vetogram внутри Telegram');
+    const lease=ownerLease();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000);
     try {
       const response = await fetch('/api/privacy-backup', {
         method:'POST', headers:{
-          'x-telegram-init-data':tg.initData,
+          'x-telegram-init-data':lease.signed,
           'content-type':'application/json',
         },
         body:JSON.stringify({ action,...payload }),
         signal:controller.signal,
       });
       const data = await response.json().catch(() => ({}));
+      assertOwner(lease);
       if (!response.ok || !data.ok) throw new Error(data.error || 'Не удалось сохранить переписку');
       return data;
     } catch (error) {
+      assertOwner(lease);
       if (error?.name === 'AbortError') throw new Error('Telegram отвечает слишком долго. Повтори попытку.');
       throw error;
     } finally { clearTimeout(timeout); }
@@ -1604,6 +1819,7 @@
         </div>
       `);
     } catch(error) {
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       openSheet(`
         <span class="kicker">Vetogram · HISTORY</span><h2>Нужно подключение Telegram</h2>
         <p>${escapeHtml(error.message)}</p>
@@ -1616,6 +1832,7 @@
   }
   async function runAllBackupQueue() {
     if (allBackup.running || allBackup.index>=allBackup.total) return;
+    const lease=ownerLease();
     allBackup.running=true;allBackup.stop=false;
     renderAllBackupProgress();
     let error='';
@@ -1628,6 +1845,7 @@
           offset:allBackup.index,mediaEnabled:false,
           retentionConsent:allBackup.longRetention,
         });
+        assertOwner(lease);
         const oldIndex=allBackup.index;
         allBackup.index=Number(data.nextOffset||oldIndex);
         saveAllBackupIndex();
@@ -1640,8 +1858,12 @@
         if (title) title.textContent=allBackup.index+' / '+allBackup.total;
         if (body) body.textContent='личных чатов добавлено в очередь';
         if(data.warning){error=data.warning;break;}
-      } catch(e){error=e.message;break;}
+      } catch(e){
+        if(e?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
+        error=e.message;break;
+      }
     }
+    if(lease.epoch!==privacyState.ownerEpoch){resetPrivacyOwner();return;}
     allBackup.running=false;
     renderAllBackupProgress({error});
   }
@@ -1799,6 +2021,7 @@
   }
 
   async function runBackupPage(button, offsetId = 0) {
+    const lease=ownerLease();
     const backup = privacyState.backup;
     const chat = backup.selected;
     if (backup.running || !chat) return;
@@ -1815,6 +2038,7 @@
           notifyCompletion:backup.notifyCompletion,
           includeMedia:backup.mediaEnabled === true,
         });
+        assertOwner(lease);
         pages += 1;
         backup.totalSaved += Number(data.saved || 0);
         backup.totalMedia += Number(data.mediaSaved || 0);
@@ -1847,6 +2071,7 @@
       await refresh({silent:true});
     } catch (error) {
       backup.running = false;
+      if(error?.code==='VETO_PRIVACY_OWNER_CHANGED')return;
       renderBackupProgress({error:error.message});
       toast(error.message);
     } finally {
@@ -1881,6 +2106,18 @@
     }, 12000);
   }
 
+  $('privacyEvidenceRefresh')?.addEventListener('click', async event => {
+    const button=event.currentTarget;
+    if(button.disabled)return;
+    button.disabled=true;button.setAttribute('aria-busy','true');
+    try {
+      await Promise.allSettled([
+        refresh({silent:false}),loadTelegramConnection({silent:true})
+      ]);
+    } finally {
+      button.disabled=false;button.removeAttribute('aria-busy');
+    }
+  });
   $('privacyDiagnosticsButton')?.addEventListener('click', () => runGhostDiagnostics());
   $('privacyVaultCheckButton')?.addEventListener('click', openVaultMediaRecovery);
   $('privacyBackupGuideButton')?.addEventListener('click', privacyBusinessGuideSheet);
@@ -1994,6 +2231,7 @@
 
   function onVetoScreenChanged(event) {
     const screen = event?.detail?.screen;
+    resetPrivacyOwner();
     if (screen !== 'privacy' && screen !== 'chats') return;
     refresh({ silent:true });
     loadTelegramConnection({ silent:true });
@@ -2061,7 +2299,7 @@
   });
 
   $('sheet')?.addEventListener('click', async event => {
-    const button = event.target.closest('[data-business-apply],[data-business-close],[data-business-retry],[data-business-manual],[data-business-account],[data-business-backup],[data-business-revoke],[data-business-revoke-stories],[data-business-confirm-revoke]');
+    const button = event.target.closest('[data-business-apply],[data-business-close],[data-business-retry],[data-business-manual],[data-business-account],[data-business-backup],[data-business-revoke],[data-business-revoke-stories],[data-business-confirm-revoke],[data-business-diagnostics]');
     if (button) {
       if (button.hasAttribute('data-business-confirm-revoke')) await revokeBusiness(button);
       else if (button.hasAttribute('data-business-revoke')) confirmBusinessRevoke(false);
@@ -2069,6 +2307,7 @@
       else if (button.hasAttribute('data-business-apply')) await applyBusinessWizard(button);
       else if (button.hasAttribute('data-business-close')) closeSheet();
       else if (button.hasAttribute('data-business-retry')) await openBusinessWizard();
+      else if (button.hasAttribute('data-business-diagnostics')) await runGhostDiagnostics();
       else if (button.hasAttribute('data-business-manual')) privacyBusinessGuideSheet();
       else if (button.hasAttribute('data-business-account')) {
         closeSheet();

@@ -5,12 +5,12 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const html=read('public/studio.html'),app=read('public/app.js'),
   messenger=read('public/telegram-chats.js'),css=read('public/veto-global-ui.css');
 
-test('Messenger is the first-class default screen with exactly five working tabs',()=>{
+test('Messenger is the first-class default screen with four primary working tabs',()=>{
  assert.match(app,/switchScreen\(requestedScreen \|\| 'telegram'\)/);
  assert.match(app,/telegram:'telegram'/);
  const nav=html.slice(html.indexOf('<nav class="bottom-nav"'),html.indexOf('<div class="action-dock"'));
  assert.deepEqual([...nav.matchAll(/data-nav="([^"]+)"/g)].map(m=>m[1]),
-   ['telegram','home','publish','privacy','studio']);
+   ['telegram','publish','ai','privacy']);
  assert.match(nav,/data-nav="telegram"[^>]*aria-label="Чаты"/);
  assert.match(html,/data-screen="viewers"/);
  assert.match(html,/data-screen="relay"/);

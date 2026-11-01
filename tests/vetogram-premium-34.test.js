@@ -47,7 +47,7 @@ test('desktop retains expanded header with the same manual disclosure',()=>{
 });
 
 test('real flagship screen keeps navigation/permissions, no fake success state',()=>{
-  for(const nav of ['telegram','home','publish','privacy','studio'])
+  for(const nav of ['telegram','publish','ai','privacy'])
     assert.match(html,new RegExp('data-nav="'+nav+'"'));
   for(const id of ['vg27MissionAccount','vg27MissionPrivacy','vg27MissionStories',
     'telegramThreadCompose','telegramThreadSend','seTemplates','vtaiRoot'])

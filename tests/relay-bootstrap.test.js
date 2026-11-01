@@ -33,9 +33,12 @@ test('Emergency Relay caches shell and multiple routes for fallback', () => {
   assert.match(client, /current\.tgUrl \|\| current\.connectUrl/);
   assert.match(client, /serviceWorker\.register/);
 
-  assert.match(worker, /veto-relay-shell-v1/);
+  assert.match(worker, /veto-relay-shell-v411-20261026/);
   assert.match(worker, /\/relay\.html/);
-  assert.match(worker, /url\.pathname\.startsWith\('\/api\/'\)/);
+  assert.match(worker, /RELAY_PATHS\.has\(url\.pathname\)/);
+  assert.doesNotMatch(worker, /url\.pathname\.startsWith\('\/api\/'\)/);
+  assert.doesNotMatch(worker, /ignoreSearch\s*:\s*true/);
+  assert.match(worker, /typeof caches !== 'undefined'/);
 });
 
 test('Mini App exposes emergency fallback and avoids promising voice calls', () => {

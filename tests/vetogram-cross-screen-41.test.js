@@ -11,13 +11,13 @@ const screenNames=[...html.matchAll(/<section[^>]*class="[^"]*\bscreen\b[^"]*"[^
   .map(m=>m[1]);
 const IDs=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
 
-test('the same Mini App contains exactly 13 real named screens and 5 main tabs',()=>{
+test('the same Mini App contains 13 screens and four primary tabs',()=>{
   const expected=['home','telegram','voice','publish','viewers','analytics','privacy',
     'chats','ai','story-engine','studio','relay','archive'];
   assert.deepEqual(screenNames,expected);
   assert.equal(new Set(screenNames).size,13);
   const nav=[...html.matchAll(/\bdata-nav="([^"]+)"/g)].map(m=>m[1]);
-  assert.deepEqual(nav,['telegram','home','publish','privacy','studio']);
+  assert.deepEqual(nav,['telegram','publish','ai','privacy']);
 });
 
 test('screen buttons resolve to real screens or explicit existing aliases',()=>{

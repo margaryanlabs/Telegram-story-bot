@@ -8,6 +8,9 @@
   if (root.dataset.v4Experience === 'ready') return;
   root.dataset.v4Experience = 'ready';
   root.classList.add('vetogram-v4');
+  // Telegram's native Close/menu chrome overlays the top of mobile Mini Apps.
+  // Scope extra topbar clearance to an actual signed Telegram WebView only.
+  if (window.Telegram?.WebApp?.initData) root.classList.add('v4-telegram-webview');
   const byId = id => document.getElementById(id);
   const $ = (selector, base = document) => base.querySelector(selector);
   const screens = name => $('[data-screen="' + name + '"]');
@@ -48,7 +51,12 @@
   const home = screens('home');
   const resume = home && byId('vg26Resume');
   const activity = home && $('.control-activity', home);
-  if (home && resume && activity) home.insertBefore(resume, activity);
+  // .control-activity can be nested below the home screen: its parent, not
+  // the screen, owns the insertion point. A wrong parent throws NotFoundError
+  // and aborts the rest of the experience controller on Telegram WebView.
+  if (home && resume && activity && home.contains(resume) && home.contains(activity)) {
+    activity.before(resume);
+  }
   const mission = byId('vg27Mission');
   if (mission) mission.setAttribute('aria-label', 'Проверенные статусы Telegram и защиты');
 
@@ -69,8 +77,8 @@
 
   // Privacy: one explicit setup route, not an instructional wall on every visit.
   const privacySetup = progressive({scope:'privacy', selector:'#privacyBusinessOnboarding',
-    title:'Настроить Anti-Delete', description:'Подключение бота и выбор разрешённых чатов',
-    className:'v4-privacy-setup'});
+    title:'Подключить Anti-Delete', description:'Выбор личных чатов прямо в Vetogram',
+    className:'v4-privacy-setup', open:true});
   if (privacySetup) {
     byId('privacyEnableAllButton')?.addEventListener('click', () => { privacySetup.open = true; });
   }
@@ -82,6 +90,28 @@
   progressive({scope:'privacy', selector:'.ghost-backup-panel',
     title:'Резервная копия переписок', description:'Дополнительное сохранение истории',
     className:'v4-privacy-backup'});
+
+  // V4.1 Vault: real archived evidence comes before setup marketing.
+  // Move the *original* statistics and filter actions; existing handlers,
+  // owner-scoped data and IDs remain authoritative. Never clone private data.
+  const vaultScreen = screens('privacy');
+  const vaultHero = vaultScreen && $('.ghost-command-card', vaultScreen);
+  const vaultStats = vaultScreen && $('.ghost-health-grid', vaultScreen);
+  const vaultEvidence = vaultScreen && byId('privacyEvidenceBar');
+  const vaultActions = vaultScreen && $('.ghost-quick-grid', vaultScreen);
+  if (vaultHero && vaultStats && vaultActions) {
+    vaultStats.classList.add('v4-vault-overview');
+    vaultActions.classList.add('v4-vault-actions');
+    vaultHero.after(vaultStats);
+    // Ground the next action in a real last-success timestamp, not a
+    // misleading fixed 'Protected' status or an illustration.
+    if (vaultEvidence) {
+      vaultStats.after(vaultEvidence);
+      vaultEvidence.after(vaultActions);
+    } else {
+      vaultStats.after(vaultActions);
+    }
+  }
 
   // Story publication: the media picker and audience are primary; fine controls stay available.
   progressive({scope:'publish', selector:'#privacyBlock',
@@ -116,6 +146,30 @@
     title:'О приватности записи', description:'Что происходит со звуком',
     className:'v4-voice-info'});
 
+  // Voice Studio: indicators must reflect the real recorder, not a decorative
+  // equalizer saying "processing" when the microphone has never been enabled.
+  // The existing recorder owns the classes: live, recording, is-requesting-mic.
+  function voiceCaptureState(node) {
+    if (node?.classList?.contains('recording')) return ['recording','● ИДЁТ ЗАПИСЬ'];
+    if (node?.classList?.contains('live')) return ['live','● МИКРОФОН ВКЛЮЧЁН'];
+    if (node?.classList?.contains('is-requesting-mic')) return ['requesting','◌ ЗАПРОС ДОСТУПА'];
+    return ['off','◌ МИКРОФОН ВЫКЛЮЧЕН'];
+  }
+  const voiceMicState = byId('voiceMicState');
+  const voiceMonitorCard = voiceMicState?.closest('.veto-voice-monitor-card');
+  const voiceSignal = voiceMonitorCard && $('.veto-voice-signal', voiceMonitorCard);
+  if (voiceMicState && voiceMonitorCard && voiceSignal) {
+    const syncVoiceSignal = () => {
+      const [state, label] = voiceCaptureState(voiceMicState);
+      voiceMonitorCard.dataset.captureState = state;
+      if (voiceSignal.textContent !== label) voiceSignal.textContent = label;
+    };
+    new MutationObserver(syncVoiceSignal).observe(voiceMicState,{
+      attributes:true,attributeFilter:['class'],childList:true,characterData:true,subtree:true
+    });
+    syncVoiceSignal();
+  }
+
   // AI: direct dialogue is primary; advanced task and approval consoles are optional.
   const ai = screens('ai');
   const aiRoot = ai && $('#vtaiRoot', ai);
@@ -128,17 +182,45 @@
         const extra = document.createElement('details');
         extra.className = 'v4-ai-modes-extra';
         const summary = document.createElement('summary');
-        summary.textContent = 'Другие режимы';
+        const ui=(key,ru)=>typeof window==='undefined' ? ru :
+          (window.VetogramI18n?.t?.(key,ru)||ru);
+        summary.textContent = ui('aiOtherModes','Другие режимы');
         const actions = document.createElement('div');
         actions.className = 'v4-ai-mode-actions';
         extra.append(summary, actions);
         modeRail.append(extra);
         secondaryModes.forEach(button => actions.append(button));
+        // A secondary mode must remain identifiable when the extra-mode
+        // disclosure is closed. The text is the *actual pressed mode*, never
+        // a fabricated AI state. Allow users to close the list manually.
+        const defaultSummary = () => ui('aiOtherModes','Другие режимы');
+        let lastSelected = '';
         const syncSelected = () => {
-          if (secondaryModes.some(button => button.getAttribute('aria-pressed') === 'true'))
-            extra.open = true;
+          const selected = secondaryModes.find(button =>
+            button.getAttribute('aria-pressed') === 'true');
+          const mode = selected?.dataset.vtaiMode || '';
+          const name = selected?.textContent?.replace(/^[^\p{L}\p{N}]+/u,'').trim() || '';
+          summary.textContent = mode ? ui('aiModePrefix','Режим: ') + name : defaultSummary();
+          summary.setAttribute('aria-label',mode
+            ? ui('aiModeAriaPrefix','Текущий режим: ') + name + ui('aiModeAriaSuffix','. Открыть список режимов')
+            : ui('aiOtherModesAria','Показать остальные режимы VETO AI'));
+          extra.dataset.selectedMode = mode;
+          if(mode!==lastSelected){
+            extra.open=Boolean(mode);
+            lastSelected=mode;
+          }
         };
         modeRail.addEventListener('click', () => queueMicrotask(syncSelected));
+        const modeObserver=new MutationObserver(syncSelected);
+        secondaryModes.forEach(button=>modeObserver.observe(button,{
+          attributes:true,attributeFilter:['aria-pressed']
+        }));
+        // Mutations of primary modes are not required here: the AI
+        // controller updates the secondary aria-pressed flags on each switch.
+        // A language change updates real mode buttons without changing
+        // their aria-pressed attributes, so explicitly refresh the summary.
+        if(typeof window!=='undefined')
+          window.addEventListener('vetogram:locale-changed',syncSelected);
         syncSelected();
       }
     }
@@ -189,7 +271,10 @@
   // actions into a native keyboard-accessible disclosure without cloning them.
   const threadView=byId('telegramThreadView');
   const threadBar=threadView && $('.veto-mirror-thread-bar',threadView);
-  if(threadBar && !byId('v4ThreadMore')){
+  // The new messenger ships an accessible menu in HTML. Do not create a
+  // second V4 disclosure or move its existing action buttons out of it.
+  // Preserve the V4 fallback only for older pages without native markup.
+  if(threadBar && !byId('v4ThreadMore') && !byId('telegramThreadActions')){
     const menu=document.createElement('details');
     menu.id='v4ThreadMore';
     menu.className='v4-thread-more';
@@ -227,7 +312,9 @@
       if(menu.open && !menu.contains(event.target))menu.open=false;
     },{passive:true});
     document.addEventListener('keydown',event=>{
-      if(event.key==='Escape' && menu.open){
+      if(event.key==='Escape' && menu.open &&
+         byId('sheet')?.hidden!==false &&
+         !document.querySelector('dialog[open]')){
         event.preventDefault();menu.open=false;summary.focus();
       }
     });
@@ -256,7 +343,11 @@
     if (tools) { tools.setAttribute('aria-expanded','false'); tools.hidden = true; }
     const closeInspector = byId('v4InspectorClose');
     if (closeInspector) closeInspector.hidden = true;
-    if (lastFocus?.isConnected) lastFocus.focus({preventScroll:true});
+    // A screen transition has already hidden the editor; returning focus
+    // to an element within a hidden screen strands keyboard users.
+    if(engine.classList.contains('active') && lastFocus?.isConnected)
+      lastFocus.focus({preventScroll:true});
+    lastFocus=null;
     announce('Обычный режим редактора');
   };
   if (stage && canvasActions && controls) {
@@ -339,7 +430,9 @@
       }
     });
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && focusActive) {
+      if (event.key === 'Escape' && focusActive &&
+          byId('sheet')?.hidden!==false &&
+          !document.querySelector('dialog[open]')) {
         event.preventDefault();
         if (engine.classList.contains('v4-studio-tools-open')) closeTools();
         else exitFocus();

@@ -20,9 +20,9 @@ test('VETO uses its real original split-V silhouette (not fabricated V-star)',()
   assert.match(html,/class="veto-inbox-wordmark" aria-label="VETOGRAM"><span>VETO<\/span><i>GRAM/);
 });
 
-test('One consistent mark appears in welcome, command center, inbox, tab and favicon',()=>{
+test('One consistent mark appears in welcome, command center, inbox, topbar and favicon',()=>{
   assert.match(html,/<link rel="icon" type="image\/svg\+xml" href="\/veto-telegram-mark\.svg\?v=20261019-brand-v2"/);
-  assert.match(html,/class="veto-nav-brand-mark" src="\/veto-telegram-mark\.svg\?v=20261019-brand-v2"/);
+  assert.match(html,/class="brand-mark veto-mark" aria-hidden="true"><img src="\/veto-telegram-mark\.svg\?v=20261019-brand-v2"/);
   assert.match(html,/class="veto-welcome-brand"><img src="\/veto-telegram-mark\.svg\?v=20261019-brand-v2"/);
   assert.match(html,/class="veto-intro-orbit"><img src="\/veto-telegram-mark\.svg\?v=20261019-brand-v2"/);
   assert.match(html,/class="veto-logo-halo"><img src="\/veto-telegram-mark\.svg\?v=20261019-brand-v2"/);

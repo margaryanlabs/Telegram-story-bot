@@ -8,12 +8,15 @@ const start=api.indexOf('async function ghostDiagnostics(token, userId) {');
 const end=api.indexOf('function transientStoreError(',start);
 assert.ok(start>=0&&end>start);
 const diagnosticsCode=api.slice(start,end);
-function fixture({deleted=false,webhook=true,enabled=true,archiveReady=true}={}){
+function fixture({deleted=false,webhook=true,enabled=true,archiveReady=true,connectionOwner='owner-telegram-id',connectionId='owner-business-connection',telegramUnavailable=false}={}){
   const tg=async (_token,method)=>{
     if(method==='getWebhookInfo')
       return webhook?{url:'https://example.com/api/webhook-v8',pending_update_count:0}:{url:''};
-    if(method==='getBusinessConnection')
-      return {is_enabled:enabled,rights:{can_manage_stories:true,can_read_messages:true}};
+    if(method==='getBusinessConnection') {
+      if(telegramUnavailable) throw new Error('Telegram connection verification unavailable');
+      return {id:connectionId,user:{id:connectionOwner},is_enabled:enabled,
+        rights:{can_manage_stories:true,can_read_messages:true}};
+    }
     return null;
   };
   const fn=new Function('getPrivacySettings','viewerStoreHealth','listDeletedFeed','tg',
@@ -21,7 +24,7 @@ function fixture({deleted=false,webhook=true,enabled=true,archiveReady=true}={})
       async()=>({antiDelete:enabled,ghostFocus:true,notifyDeletes:true}),
       async()=>({storage:'ok',directGhostWrites:archiveReady,mediaVault:true}),
       async()=>({items:deleted?[{deletedAt:'2026-10-25T00:00:00Z',
-        chatTitle:'Согласившийся тестовый контакт',mediaArchiveStatus:'archived'}]:[]}),
+        chatTitle:'Согласившийся тестовый контакт',mediaArchiveStatus:'archived',businessConnectionId:'owner-business-connection'}]:[]}),
       tg,async()=>({businessConnectionId:'owner-business-connection',isEnabled:enabled}),
       ()=>null
     );
@@ -61,4 +64,40 @@ test('UI distinguishes configured vs proven, never creates synthetic deletion',(
   assert.match(client,/Self-Test не подделывает Telegram delete event/);
   assert.match(client,/Telegram delete event/);
   assert.doesNotMatch(diagnosticsCode,/createDeleteEvent|synthesizeDelete|fakeDelete/);
+});
+
+test('stale stored connection never counts as verified when live Bot API fails',async()=>{
+  const result=await fixture({deleted:true,telegramUnavailable:true});
+  assert.equal(result.status,'attention');
+  assert.equal(result.checks.business.ok,false);
+  assert.equal(result.business.verifiedNow,false);
+});
+test('Bot API owner or Business ID mismatch cannot certify another account',async()=>{
+  for(const settings of [{connectionOwner:'another-user'},{connectionId:'another-connection'}]){
+    const result=await fixture({deleted:true,...settings});
+    assert.equal(result.status,'attention');
+    assert.equal(result.checks.business.ok,false);
+    assert.equal(result.business.verifiedNow,false);
+  }
+});
+
+test('old archive copies never prove a newly connected Business bot',async()=>{
+  // The current live connection is verified, but its newest archive items
+  // must belong to the exact verified ID, not a previous bot.
+  const evaluator=new Function('getPrivacySettings','viewerStoreHealth','listDeletedFeed','tg',
+    'getBusinessConnectionState','connectionIdFromMenu',diagnosticsCode+';return ghostDiagnostics')(
+      async()=>({antiDelete:true,ghostFocus:true,notifyDeletes:true}),
+      async()=>({storage:'ok',directGhostWrites:true,mediaVault:true}),
+      async()=>({items:[{deletedAt:'2026-10-30T00:00:00Z',
+        chatTitle:'Старый чат',businessConnectionId:'previous-connection'}]}),
+      async(_token,method)=>method==='getWebhookInfo'
+        ? {url:'https://example.com/api/webhook-v8',pending_update_count:0}
+        : method==='getBusinessConnection'
+          ? {id:'owner-business-connection',user:{id:'owner-telegram-id'},is_enabled:true,rights:{}}
+          : null,
+      async()=>({businessConnectionId:'owner-business-connection',isEnabled:true}),()=>null
+    );
+  const result=await evaluator('bot-token','owner-telegram-id');
+  assert.equal(result.status,'configured');
+  assert.equal(result.liveDeleteProof.captured,false);
 });
