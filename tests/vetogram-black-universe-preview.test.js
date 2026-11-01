@@ -76,3 +76,30 @@ test('foreign film discovery tab is reachable but never included as a licensed p
   assert.match(cinema,/Дубляж указан загрузчиком и не проверен/);
   assert.doesNotMatch(mediaCss,/:is\(\[data-tab="foreign"\]/);
 });
+
+test('movie posters fail over to visible editorial artwork without refetch loop',()=>{
+  const cinema=read('public/cinema.js');
+  assert.match(cinema,/const failedPosterUrls=new Set\(\)/);
+  assert.match(cinema,/failedPosterUrls\.add\(poster\)/);
+  assert.match(cinema,/\.find\(url=>url&&!failedPosterUrls\.has\(url\)\)/);
+});
+
+test('book jackets retain individual tones and missing sources are remembered',()=>{
+  const books=read('public/books.js');
+  const css=read('public/vetogram-black-universe.css');
+  assert.match(books,/const failedCoverUrls=new Set\(\)/);
+  assert.match(books,/failedCoverUrls\.add\(imageUrl\)/);
+  assert.match(books,/jacketProfile\(book\)/);
+  assert.doesNotMatch(css,/book-cover:not\(:has\(img\)\)\s*\{\s*background/);
+  assert.match(css,/\.book-cover\.placeholder/);
+});
+
+test('music artworks have distinct fallback initials instead of broken images',()=>{
+  const music=read('public/vetogram-music.js');
+  const catalog=read('public/vetogram-music-catalog.js');
+  assert.match(music,/coverLetter=track/);
+  assert.match(music,/const failedArtworkUrls=new Set\(\)/);
+  assert.match(music,/failedArtworkUrls\.add\(url\)/);
+  assert.match(catalog,/const failedCoverUrls=new Set\(\)/);
+  assert.match(catalog,/failedCoverUrls\.add\(track\.artwork\)/);
+});
