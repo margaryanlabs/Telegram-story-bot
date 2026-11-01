@@ -75,8 +75,9 @@ test('Favorites persist only catalog ids and react to Favorites filter',()=>{
 test('Sharing is explicit and produces only an allowlisted catalog deep link',async()=>{
   const p=playground();
   p.cards[2].children[0].children[1].click();
-  await Promise.resolve();
-  await Promise.resolve();
+  // Clipboard promise + share-game status update can cross multiple microtask
+  // turns on Node 24. The product behavior is event-driven, not synchronous.
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(p.copied.length,1);
   const url=new URL(p.copied[0]);
   assert.equal(url.origin,'https://vetogram.example');
