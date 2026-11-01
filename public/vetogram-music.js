@@ -353,15 +353,38 @@ document.querySelectorAll("[data-audio-radio]").forEach(b=>b.addEventListener("c
 document.querySelectorAll("[data-audio-preset]").forEach(b=>b.addEventListener("click",()=>{
  showPage("catalog");window.VetogramCatalog?.selectPreset?.(b.dataset.audioPreset);
 }));
-function openDb(){return new Promise((resolve,reject)=>{if(!("indexedDB"in window))return resolve(null);
- const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:"id"})};
- req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);req.onblocked=()=>reject(Error("IndexedDB blocked"))})}
+function openDb(){return new Promise((resolve,reject)=>{
+ if(!("indexedDB"in window))return resolve(null);
+ let settled=false;
+ const done=(error,db)=>{
+  if(settled){try{db?.close?.()}catch{}return}
+  settled=true;clearTimeout(timer);
+  if(error)reject(error);else resolve(db);
+ };
+ const timer=setTimeout(()=>done(Error("IndexedDB open timed out")),6000);
+ try{
+  const req=indexedDB.open(DB_NAME,1);
+  req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:"id"})};
+  req.onsuccess=()=>done(null,req.result);
+  req.onerror=()=>done(req.error||Error("IndexedDB unavailable"));
+  req.onblocked=()=>done(Error("IndexedDB blocked"));
+ }catch(error){done(error)}
+})}
 function saveDb(record){if(!state.db)return Promise.reject(Error("No IndexedDB"));
  return new Promise((resolve,reject)=>{const tx=state.db.transaction(STORE,"readwrite");
  tx.objectStore(STORE).put(record);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)})}
 async function loadDb(){
  try{state.db=await openDb();if(!state.db)return;
- const data=await new Promise((resolve,reject)=>{const req=state.db.transaction(STORE,"readonly").objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});
+ const data=await new Promise((resolve,reject)=>{
+  let settled=false;
+  const done=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);if(error)reject(error);else resolve(value)};
+  const timer=setTimeout(()=>done(Error("IndexedDB read timed out")),6000);
+  try{
+   const req=state.db.transaction(STORE,"readonly").objectStore(STORE).getAll();
+   req.onsuccess=()=>done(null,req.result);
+   req.onerror=()=>done(req.error||Error("IndexedDB read failed"));
+  }catch(error){done(error)}
+ });
  const order=jLoad("vetogram-music-local-order-v1:"+scope,[]);
  data.sort((a,b)=>{const ai=Array.isArray(order)?order.indexOf(a.id):-1,bi=Array.isArray(order)?order.indexOf(b.id):-1;return (ai<0?9999:ai)-(bi<0?9999:bi)});
  for(const x of data.slice(0,200)){if(!x?.blob||!x.title)continue;
