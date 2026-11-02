@@ -358,7 +358,7 @@ body:has(#reader) .book-mode-explainer{background:#172019!important;border-color
  display:grid;place-items:center;aspect-ratio:1;min-width:0;
  border-radius:7px;border:1px solid #ffffff24;
  background:#383b40;color:#e8efee;font:bold 17px/1 system-ui;
- cursor:pointer;touch-action:manipulation;box-shadow:inset 0 -3px #0003;
+ cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;box-shadow:inset 0 -3px #0003;
 }
 #vetogram .vp-screen .vp-game-dialog .v73-mine-cell.is-open{background:#1e2529;border-color:#ffffff14;box-shadow:none;cursor:default}
 #vetogram .vp-screen .vp-game-dialog .v73-mine-cell.is-flagged{color:#f3c579;background:#4b4030}
