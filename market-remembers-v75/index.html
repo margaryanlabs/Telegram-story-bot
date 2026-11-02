@@ -638,6 +638,85 @@ backdrop-filter:blur(12px);pointer-events:auto}
  .journey-status,.memory-path-chooser button{animation:none!important;transition:none!important}
 }
 
+
+
+/* VETO HUMAN LEGACY / 7.5.1 — complete narrative paths without changing V7.4 */
+.journey-reader{
+  display:flex;flex-direction:column;gap:13px;
+  margin:16px 0 clamp(21px,3.2vw,37px);
+  padding:16px clamp(15px,2.8vw,27px) 14px;
+  background:linear-gradient(114deg,rgba(15,31,42,.84),rgba(10,19,33,.8));
+  border:1px solid rgba(127,186,203,.38);border-radius:5px;
+  box-shadow:inset 0 1px 0 rgba(200,238,247,.06),0 18px 55px rgba(0,0,0,.16);
+}
+.journey-reader-heading{display:flex;flex-wrap:wrap;justify-content:space-between;gap:9px;align-items:center}
+.journey-reader-heading span{font-size:9px;letter-spacing:.2em;color:#93c8d7}
+.journey-reader-heading strong{font-size:10px;letter-spacing:.07em;color:#ddeef2}
+.journey-reader-chapters{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.journey-reader-chapters button{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  min-height:44px;padding:7px 12px;border:1px solid rgba(131,168,190,.33);
+  background:rgba(10,24,36,.8);border-radius:3px;color:#9ab4c8;cursor:pointer
+}
+.journey-reader-chapters button:hover,.journey-reader-chapters button:focus-visible{
+  border-color:#8acee0;background:rgba(61,120,147,.22);color:#f3faff
+}
+.journey-reader-chapters button.is-current,.journey-reader-chapters button[aria-current="step"]{
+  background:linear-gradient(140deg,rgba(64,121,148,.48),rgba(37,63,99,.35));
+  border-color:rgba(164,218,229,.78);color:#e6faff
+}
+.journey-reader-chapters button[disabled]{cursor:default}
+.journey-reader-chapters button span{font-size:14px}
+.journey-reader-chapters button small{font-size:10px;font-variant-numeric:tabular-nums;letter-spacing:.12em}
+.journey-reader>p{margin:0;color:#94a8b5;font-size:11px;line-height:1.65}
+.memory-navigation button:disabled{opacity:.35;cursor:not-allowed}
+.drawer.journey-finished{
+  position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:100dvh;
+  overflow-y:auto;padding:calc(20px + env(safe-area-inset-top,0px)) clamp(18px,5vw,65px) calc(42px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(ellipse at 48% 5%,#17313c 0%,#0b1723 43%,#05090f 94%);
+  border:0;overscroll-behavior:contain
+}
+.drawer.journey-finished .drawer-head{max-width:760px;margin:0 auto 18px}
+.journey-complete{max-width:760px;margin:0 auto;padding:20px 0 55px}
+.journey-complete-symbol{display:block;font-size:53px;color:#a8dfed;text-shadow:0 0 65px rgba(96,176,206,.5);margin:5px 0 18px}
+.journey-complete h2{font:400 clamp(44px,7vw,86px)/1.05 Georgia,serif;letter-spacing:-.06em;color:#f1f5f7;margin:15px 0 22px}
+.journey-complete h2 em{color:#aedce8;font-style:italic}
+.journey-complete>p{max-width:630px;color:#b5c6cd;font-size:14px;line-height:1.8}
+.journey-saved-counter{
+  display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+  border-block:1px solid rgba(145,184,200,.27);padding:22px 0;margin:26px 0 10px
+}
+.journey-saved-counter strong{font:500 34px/1 Georgia,serif;color:#d9f6fc;font-variant-numeric:tabular-nums}
+.journey-saved-counter span{color:#aabdc7;font-size:12px}
+.journey-complete-list{list-style:none;padding:0;margin:0 0 31px}
+.journey-complete-list li{display:flex;gap:20px;border-bottom:1px solid rgba(135,177,195,.18);padding:22px 0}
+.journey-complete-list li>span{color:#85b8c7;font-size:12px;font-variant-numeric:tabular-nums;letter-spacing:.1em}
+.journey-complete-list li>div{flex:1;min-width:0}
+.journey-complete-list li strong{color:#e2f1f4;letter-spacing:.09em;font-size:11px}
+.journey-complete-list li p{margin:10px 0 8px;color:#ecf0ee;font:italic clamp(19px,3.3vw,26px)/1.4 Georgia,serif;overflow-wrap:anywhere}
+.journey-complete-list li small{color:#91adbc;letter-spacing:.09em;font-size:9px}
+.journey-complete-buttons{display:flex;flex-wrap:wrap;gap:12px}
+.journey-complete-buttons button{min-height:47px}
+.journey-complete .journey-privacy{margin-top:21px;font-size:11px;color:#8197a4}
+@media(max-width:820px){
+  .journey-reader{gap:11px;padding:13px 12px}
+  .journey-reader-heading{align-items:flex-start;flex-direction:column}
+  .journey-reader-heading span{font-size:8px}
+  .journey-reader-heading strong{font-size:9px}
+  .journey-reader-chapters{gap:5px}
+  .journey-reader-chapters button{min-height:42px;padding:5px}
+  .journey-reader-chapters button small{font-size:9px}
+  .journey-reader>p{font-size:10px}
+  .journey-complete{padding:10px 0 45px}
+  .journey-complete h2{font-size:clamp(42px,11vw,60px)}
+  .journey-complete>p{font-size:12px}
+  .journey-complete-list li{padding:19px 0;gap:13px}
+  .journey-complete-buttons .btn{width:100%;justify-content:center}
+}
+@media(prefers-reduced-motion:reduce){
+  .journey-reader-chapters button,.journey-complete-buttons button{transition:none!important;animation:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -843,8 +922,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
     if(indices.some(i=>i<0)||new Set(indices).size!==indices.length){showToast('Маршрут сейчас недоступен');return}
     endMemoryJourney();
     setLens('All',false);closeLensPanel();
-    guidedJourney={label:path.label,indices,step:0};
-    focus(indices[0],false);syncJourneyStatus();
+    guidedJourney={name,label:path.label,indices,step:0};
+    syncJourneyStatus();beginDive(indices[0]);
     showToast('Маршрут памяти · 1 из '+indices.length+' · '+path.label);
   }
   function memoryRouteNext(direction=1){
@@ -852,11 +931,75 @@ backdrop-filter:blur(12px);pointer-events:auto}
     const next=guidedJourney.step+direction;
     if(next<0){showToast('Это первая звезда маршрута');return selected}
     if(next>=guidedJourney.indices.length){
-      endMemoryJourney(true);
-      return nextVisibleSignal(selected,direction);
+      showToast('Последняя глава маршрута. Заверши путь, чтобы увидеть все уроки.');
+      return selected;
     }
     guidedJourney.step=next;syncJourneyStatus();
     return guidedJourney.indices[next];
+  }
+
+  // Editorial chapters are demo stories, not real social links or performance claims.
+  function renderJourneyReader(){
+    if(!guidedJourney)return;
+    const {indices,step,label}=guidedJourney;
+    const top=$('drawerContents').querySelector('.memory-topline');
+    if(!top)return;
+    const ribbon=document.createElement('section');
+    ribbon.className='journey-reader';ribbon.setAttribute('aria-label','Главы маршрута');
+    const chapters=indices.map((idx,i)=>'<button type="button" data-journey-step="'+i+'"'+
+      (i===step?' aria-current="step" disabled':'')+
+      ' aria-label="Глава '+(i+1)+': '+escapeHtml(stories[idx].alias)+'">'+
+      '<span aria-hidden="true">✦</span><small>'+String(i+1).padStart(2,'0')+'</small></button>').join('');
+    ribbon.innerHTML='<div class="journey-reader-heading"><span>MEMORY PATH / '+(step+1)+' OF '+indices.length+
+      '</span><strong>'+escapeHtml(label)+'</strong></div><div class="journey-reader-chapters">'+chapters+
+      '</div><p>Редакционный маршрут: четыре вымышленные истории, четыре урока.</p>';
+    top.insertAdjacentElement('afterend',ribbon);
+    ribbon.querySelectorAll('[data-journey-step]').forEach(btn=>btn.onclick=()=>{
+      const next=indices[Number(btn.dataset.journeyStep)];
+      if(next!==selected)beginDive(next);
+    });
+    const previous=$('previousMemory'),next=$('otherMemory');
+    if(previous){previous.disabled=step===0;previous.setAttribute('aria-label','Предыдущая глава маршрута')}
+    if(next){next.textContent=step===indices.length-1?'Завершить маршрут ✦':'Следующая глава ↗';
+      next.setAttribute('aria-label',step===indices.length-1?'Завершить маршрут':'Следующая глава маршрута')}
+  }
+  function finishJourneyReader(){
+    if(!guidedJourney)return;
+    const journey=guidedJourney,chapters=journey.indices.map((idx,i)=>{
+      const s=stories[idx];
+      return '<li><span>'+String(i+1).padStart(2,'0')+'</span><div><strong>@'+escapeHtml(s.alias)+'</strong>'+
+        '<p>«'+escapeHtml(s.quote.replace(/[«»]/g,''))+'»</p>'+
+        '<small>'+escapeHtml(s.category)+(isSavedLesson(s)?' · УРОК СОХРАНЁН':' · ДЕМО-ИСТОРИЯ')+'</small></div></li>';
+    }).join('');
+    const saved=journey.indices.filter(i=>isSavedLesson(stories[i])).length;
+    endMemoryJourney();
+    setDrawer('MEMORY PATH / COMPLETED','<article class="journey-complete">'+
+      '<span class="journey-complete-symbol">✧</span><div class="drawer-kicker">JOURNEY COMPLETE / HUMAN EXPERIENCES</div>'+
+      '<h2>Четыре звезды.<br><em>Четыре урока.</em></h2>'+
+      '<p>Ты прошёл маршрут «'+escapeHtml(journey.label)+'». Эти истории — вымышленные примеры, не реальные биографии.</p>'+
+      '<div class="journey-saved-counter"><strong>'+saved+' / '+journey.indices.length+'</strong><span>уроков сохранено в этом браузере</span></div>'+
+      '<ol class="journey-complete-list">'+chapters+'</ol>'+
+      '<div class="journey-complete-buttons"><button class="btn btn-primary" id="journeyRestart" type="button">ПОВТОРИТЬ МАРШРУТ ↗</button>'+
+      '<button class="btn btn-outline" id="journeyOther" type="button">ДРУГИЕ МАРШРУТЫ</button></div>'+
+      '<p class="journey-privacy">Это локальная демонстрация. Данные не публикуются и не синхронизируются.</p></article>');
+    $('drawer').classList.add('journey-finished');$('drawer').scrollTop=0;
+    $('journeyRestart').onclick=()=>{closeDrawer();startMemoryJourney(journey.name)};
+    $('journeyOther').onclick=()=>{closeDrawer();$('lensPanel').hidden=false;
+      $('lensToggle').setAttribute('aria-expanded','true');updateLensControls()};
+  }
+  function goJourneyReader(direction){
+    if(guidedJourney&&direction>0&&guidedJourney.step===guidedJourney.indices.length-1){
+      finishJourneyReader();return;
+    }
+    const index=memoryRouteNext(direction);
+    if(index!==selected)beginDive(index);
+  }
+  function advanceJourneyFromGlobe(){
+    if(guidedJourney&&guidedJourney.step===guidedJourney.indices.length-1){
+      finishJourneyReader();return;
+    }
+    const index=memoryRouteNext(1);
+    if(index!==selected)focus(index,false);
   }
   let immersive=false;
   let diveTimer=null,diveIndex=-1,diveSequence=0;
@@ -1425,7 +1568,7 @@ void main(){
   }
   function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timeout);showToast.timeout=setTimeout(()=>t.classList.remove('show'),3200)}
   const escapeHtml=t=>String(t).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-  function setDrawer(tag,html){if(diveIndex!==-1)cancelDive();$('drawer').classList.remove('memory-detail','human-detail','legend-detail');$('drawerTag').textContent=tag;$('drawerContents').innerHTML=html;$('scrim').hidden=false;$('drawer').hidden=false;document.body.classList.add('drawer-open');$('closeDrawer').focus()}
+  function setDrawer(tag,html){if(diveIndex!==-1)cancelDive();$('drawer').classList.remove('memory-detail','human-detail','legend-detail','journey-finished');$('drawerTag').textContent=tag;$('drawerContents').innerHTML=html;$('scrim').hidden=false;$('drawer').hidden=false;document.body.classList.add('drawer-open');$('closeDrawer').focus()}
   function closeDrawer(){if(diveIndex!==-1)cancelDive(); $('scrim').hidden=true;$('drawer').hidden=true;document.body.classList.remove('drawer-open');document.querySelectorAll('[data-open]').forEach(b=>b.classList.toggle('is-on',b.dataset.open==='universe'))}
   const LEGEND_PORTRAITS={
     'Warren Buffett':{url:'https://commons.wikimedia.org/wiki/Special:FilePath/Warren_Buffett_in_2010_(cropped).jpg?width=350',credit:'Белый дом США / Wikimedia Commons · Public Domain',file:'https://commons.wikimedia.org/wiki/File:Warren_Buffett_in_2010_(cropped).jpg'},
@@ -1460,10 +1603,10 @@ void main(){
       '<button id="copyMemory" type="button" aria-label="Копировать">⧉</button></nav>'+
       '<button id="memoryBack" class="memory-back" type="button">← Назад к вселенной</button></article>';
     setDrawer('LEGEND / VERIFIED SOURCE',content);
-    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;
+    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();
     if(photo)$('legendPortrait').addEventListener('error',e=>{e.currentTarget.hidden=true});
-    $('otherMemory').onclick=()=>beginDive(memoryRouteNext(1));
-    $('previousMemory').onclick=()=>beginDive(memoryRouteNext(-1));
+    $('otherMemory').onclick=()=>goJourneyReader(1);
+    $('previousMemory').onclick=()=>goJourneyReader(-1);
     $('memoryBack').onclick=closeDrawer;
     bindLessonBookmark(s);
     $('copyMemory').onclick=()=>{
@@ -1527,9 +1670,9 @@ void main(){
       '</article>';
     setDrawer('HUMAN STORY / '+(local?'LOCAL':'FICTIONAL'),content);
     $('drawer').classList.add('memory-detail','human-detail');
-    $('drawer').scrollTop=0;
-    $('otherMemory').onclick=()=>beginDive(memoryRouteNext(1));
-    $('previousMemory').onclick=()=>beginDive(memoryRouteNext(-1));
+    $('drawer').scrollTop=0;renderJourneyReader();
+    $('otherMemory').onclick=()=>goJourneyReader(1);
+    $('previousMemory').onclick=()=>goJourneyReader(-1);
     $('memoryBack').onclick=closeDrawer;
     bindLessonBookmark(s);
     if(local)$('downloadStarDetail').onclick=()=>downloadLegacyCard(s);
@@ -1657,11 +1800,11 @@ void main(){
     };
     document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{endMemoryJourney();setLens(b.dataset.lens,true);closeLensPanel()});
     document.querySelectorAll('[data-memory-path]').forEach(b=>b.onclick=()=>startMemoryJourney(b.dataset.memoryPath));
-    $('journeyExit').onclick=()=>endMemoryJourney();
+    $('journeyExit').onclick=()=>{endMemoryJourney();if(!$('drawer').hidden&&$('drawer').classList.contains('human-detail'))showStory(stories[selected])};
     $('brandHome').onclick=e=>{e.preventDefault();closeDrawer();reset()};$('cancelDive').onclick=()=>finishDive(diveSequence);
     document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-open]').forEach(x=>x.classList.toggle('is-on',x.dataset.open===b.dataset.open));if(b.dataset.open==='universe'){closeDrawer();reset()}else if(b.dataset.open==='archive')showArchive();else showLegacy()});
     $('openSelected').onclick=$('dockOpen').onclick=()=>beginDive(selected);
-    $('nextSignal').onclick=$('dockNext').onclick=()=>{focus(memoryRouteNext(1));showToast(guidedJourney?'Маршрут · '+(guidedJourney.step+1)+' / '+guidedJourney.indices.length:'Следующая история / '+stories[selected].category)};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
+    $('nextSignal').onclick=$('dockNext').onclick=()=>{if(guidedJourney)advanceJourneyFromGlobe();else{focus(nextVisibleSignal(selected,1));showToast('Следующая история / '+stories[selected].category)}};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
     $('plusZoom').onclick=()=>targetZoom=clamp(targetZoom+.13,.68,1.6);$('minusZoom').onclick=()=>targetZoom=clamp(targetZoom-.13,.68,1.6);
     $('autoRotate').onclick=()=>setSpin(!spinning);$('resetCamera').onclick=reset;$('modeButton').onclick=setQuality;
     $('toggleAtlas').onclick=()=>{atlasEnabled=!atlasEnabled;$('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));$('constellationLayer').classList.toggle('is-off',!atlasEnabled);$('signalHint').innerHTML=atlasEnabled?'SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div>':'SIGNAL ATLAS <strong>OFFLINE</strong>';showToast(atlasEnabled?'Тематические созвездия включены':'Созвездия скрыты')};
@@ -1672,8 +1815,8 @@ void main(){
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true')}else closeDrawer()}if(!$('drawer').hidden||!$('birthOverlay').hidden||diveIndex!==-1)return;
     const el=document.activeElement;
     if(el&&el.matches('input,textarea,select,[contenteditable="true"]'))return;
-    if(e.key==='ArrowRight'){e.preventDefault();focus(memoryRouteNext(1))}
-    if(e.key==='ArrowLeft'){e.preventDefault();focus(memoryRouteNext(-1))}});
+    if(e.key==='ArrowRight'){e.preventDefault();if(guidedJourney)advanceJourneyFromGlobe();else focus(nextVisibleSignal(selected,1))}
+    if(e.key==='ArrowLeft'){e.preventDefault();const index=memoryRouteNext(-1);if(index!==selected)focus(index,false)}});
     window.addEventListener('resize',resize,{passive:true});
     document.addEventListener('visibilitychange',()=>{
       if(!document.hidden){
