@@ -39,6 +39,8 @@ test('three real module documents contain complete navigation and the shared res
  }
  for(const mode of ['cinema','music','books'])assert.match(css,new RegExp('v78-'+mode+'-portal'));
  assert.match(css,/max-width:600px/);
+ assert.match(css,/grid-template-columns:repeat\\(4,minmax\\(0,1fr\\)\\)/);
+ assert.match(css,/grid-template-columns:repeat\\(2,minmax\\(0,1fr\\)\\)/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.equal(css.split('{').length,css.split('}').length,'unbalanced CSS braces');
 });
