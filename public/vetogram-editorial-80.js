@@ -5,6 +5,17 @@
  */
 (() => {
  'use strict';
+ // The parent Media home is also part of the ONE APP redesign.
+ // Move only the real saved Continue shelf; the existing owner-aware module
+ // navigation, search and local vault controllers remain untouched.
+ const home=document.getElementById('v6MediaHome');
+ if(home){
+   document.body?.classList?.add('vetogram-editorial-home');
+   const saved=document.getElementById('v61Continue');
+   const categories=home.querySelector('.v61-world-section');
+   if(saved&&categories)home.insertBefore(saved,categories);
+   return;
+ }
  const mode=document.getElementById('v78MediaHub')?.dataset?.v78Module;
  if(!['cinema','music','books'].includes(mode))return;
  const $=id=>document.getElementById(id);
