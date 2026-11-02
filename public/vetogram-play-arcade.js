@@ -88,11 +88,13 @@
   const puzzleBest = $('#vp2048Best');
   const puzzleStatus = $('#vp2048Status');
   const puzzleReset = $('#vp2048Reset');
+  const puzzleUndo = $('#vp2048Undo');
   const PUZZLE_BEST = 'vetogram:play:2048-best:v1';
   let board = Array(16).fill(0);
   let points = 0;
   let finished = false;
   let achieved2048 = false;
+  let previousMove = null;
   function spawn() {
     const empty=board.map((v,i)=>v?null:i).filter(v=>v!==null);
     if (!empty.length) return;
@@ -151,17 +153,20 @@
     });
     if(puzzleScore)puzzleScore.textContent='Очки: '+points;
     if(puzzleBest)puzzleBest.textContent='Рекорд: '+Math.max(points,read(PUZZLE_BEST));
+    if(puzzleUndo)puzzleUndo.disabled=!previousMove;
   }
   function movePuzzle(dir) {
     if(finished || !['up','down','left','right'].includes(dir))return false;
     let moved=false,earned=0;
     const copy=board.slice();
+    const beforeMove={board:copy,points,finished,achieved2048};
     for (const line of linesFor(dir)){
       const {result,earned:gain}=collapse(line.map(i=>board[i]));
       earned+=gain;
       result.forEach((v,j)=>{if(v!==copy[line[j]])moved=true;board[line[j]]=v;});
     }
     if(!moved)return false;
+    previousMove=beforeMove;
     points+=earned;
     if(points>read(PUZZLE_BEST))save(PUZZLE_BEST,points);
     if(!achieved2048&&board.some(v=>v>=2048)) {
@@ -173,14 +178,24 @@
     else if(!achieved2048&&puzzleStatus)puzzleStatus.textContent='Соединяй одинаковые плитки.';
     displayPuzzle();haptic();return true;
   }
+  function undoPuzzle() {
+    if(!previousMove)return false;
+    const state=previousMove;
+    previousMove=null;
+    board=state.board.slice();points=state.points;
+    finished=state.finished;achieved2048=state.achieved2048;
+    if(puzzleStatus)puzzleStatus.textContent='Последний ход отменён. Личный рекорд сохраняется.';
+    displayPuzzle();haptic();return true;
+  }
   function resetPuzzle() {
-    board=Array(16).fill(0);points=0;finished=false;achieved2048=false;
+    board=Array(16).fill(0);points=0;finished=false;achieved2048=false;previousMove=null;
     spawn();spawn();
     if(puzzleStatus)puzzleStatus.textContent='Соединяй одинаковые плитки.';
     displayPuzzle();
   }
   root.querySelectorAll?.('[data-vp-2048]')?.forEach(btn => btn.addEventListener('click',()=>movePuzzle(btn.dataset.vp2048)));
   puzzleReset?.addEventListener('click',()=>{haptic();resetPuzzle();});
+  puzzleUndo?.addEventListener('click',undoPuzzle);
   let touch=null;
   puzzleGrid?.addEventListener('touchstart',event=>{
     if(event.touches?.length!==1)return;
