@@ -9,7 +9,9 @@ function setup(){
  const actions=['covers','list'].map(x=>({
    dataset:{v83View:x},
    attrs:{},
-   toggled:null,
+   toggled:null,handlers:{},
+   addEventListener(k,fn){this.handlers[k]=fn},
+   click(){this.handlers.click?.()},
    setAttribute(k,v){this.attrs[k]=v},
    classList:{toggle(k,v){this.owner.toggled=v;}}
  }));
