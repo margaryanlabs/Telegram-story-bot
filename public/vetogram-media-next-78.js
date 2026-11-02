@@ -110,6 +110,24 @@
  });
  // Watch history is generated solely from the original Cinema player's
  // recorded progress. Never display catalog-only items as unfinished videos.
+ // The Reading Room mirrors the existing reader's saved shelf. The
+ // originals in Books remain the only writer of page, chapter and progress.
+ if(module==='books'){
+   const panel=$('v710ReadingSummary'),title=$('v710ReadingTitle');
+   const position=$('v710ReadingPosition');
+   const updateReading=()=>{
+     const shelf=$('continueShelf');
+     const visible=!!shelf&&!shelf.hidden&&!!$('continueTitle')?.textContent?.trim();
+     if(panel)panel.hidden=!visible;
+     if(!visible)return;
+     if(title)title.textContent=$('continueTitle').textContent;
+     if(position)position.textContent=$('continueDetails')?.textContent||'Сохранённое место в книге';
+   };
+   document.addEventListener('vetogram:book-progress',updateReading);
+   $('readerBack')?.addEventListener('click',updateReading);
+   window.addEventListener?.('focus',updateReading);
+   updateReading();
+ }
  if(module==='cinema'){
    const shelf=$('v710CinemaResume'),items=$('v710CinemaResumeItems');
    const updateHistory=()=>{
