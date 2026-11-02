@@ -6,6 +6,30 @@
  root.classList.add('vetogram-universe');
  const definitions=Object.freeze({music:{title:'Музыка',path:'/music-module.html'},cinema:{title:'Кино',path:'/cinema.html'},books:{title:'Книги',path:'/books.html'}});
  const frames=new Map();let activeModule='',screen=document.querySelector('.screen.active')?.dataset.screen||'home';
+ // Reuse cached module frames when navigating back; never serialize visited
+ // titles, Telegram credentials, audio sources or reader text to browser history.
+ const mediaTrail=[];
+ function updateMediaBack(){
+  const button=$('v6MediaBack');
+  const destination=mediaTrail.length>1?definitions[mediaTrail[mediaTrail.length-2]]?.title:'Медиа';
+  const title=destination||'Медиа';
+  const label=button?.querySelector?.('span');
+  if(label)label.textContent=title;
+  button?.setAttribute?.('aria-label','Назад: '+title);
+ }
+ function recordMediaVisit(name){
+  if(mediaTrail[mediaTrail.length-1]!==name)mediaTrail.push(name);
+  if(mediaTrail.length>12)mediaTrail.shift();
+  updateMediaBack();
+ }
+ function backInMedia(){
+  if(mediaTrail.length<=1){showHub();return;}
+  mediaTrail.pop();
+  const previous=mediaTrail[mediaTrail.length-1];
+  if(!previous||!Object.prototype.hasOwnProperty.call(definitions,previous)){showHub();return;}
+  // Do not record a new visit: the next Back action must step backward.
+  openModule(previous,null,null,null,false);
+ }
  const identityKey=()=>[String(window.Telegram?.WebApp?.initData||''),
   String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id||'')].join(':');
  let identity=identityKey(),lastAudio=null,lastTrackId='',openRequestSerial=0;
@@ -46,12 +70,15 @@
  }
  function checkIdentity(){const current=identityKey();if(current!==identity){identity=current;destroyMedia();}}
  function showHub(){
+  mediaTrail.length=0;updateMediaBack();
   activeModule='';$('v6MediaHome').hidden=false;$('v6MediaStage').hidden=true;
   for(const item of frames.values())item.element.hidden=true;
   moduleStatus('');visibility();chrome();
  }
- function openModule(name,page,id,query){
+ function openModule(name,page,id,query,recordHistory=true){
   checkIdentity();const definition=definitions[name];if(!definition)return;
+  if(recordHistory)recordMediaVisit(name);
+  else updateMediaBack();
   window.VetoTelegramNavigate?.('media');activeModule=name;
   $('v6MediaHome').hidden=true;$('v6MediaStage').hidden=false;$('v6ModuleTitle').textContent=definition.title;
   document.querySelectorAll('.v6-module-switch [data-v6-module]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.v6Module===name)));
@@ -87,7 +114,7 @@
   if(item.ready && item.entryId){item.openRequestId=++openRequestSerial;send(name,{action:'open-item',id:item.entryId,requestId:item.openRequestId});item.entryId=null;}
   visibility();chrome();
  }
- $('v6MediaBack').onclick=showHub;
+ $('v6MediaBack').onclick=backInMedia;
  $('v6ModuleRetry').onclick=()=>{
   const name=activeModule,item=frames.get(name);if(!item)return;
   const page=item.lastPage,id=item.lastEntryId,query=item.lastQuery;
