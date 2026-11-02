@@ -843,7 +843,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     if(indices.some(i=>i<0)||new Set(indices).size!==indices.length){showToast('Маршрут сейчас недоступен');return}
     endMemoryJourney();
     setLens('All',false);closeLensPanel();
-    guidedJourney={label:path.label,indices,step:0};
+    guidedJourney={name,label:path.label,indices,step:0};
     syncJourneyStatus();beginDive(indices[0]);
     showToast('Маршрут памяти · 1 из '+indices.length+' · '+path.label);
   }
@@ -1721,7 +1721,7 @@ void main(){
     };
     document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{endMemoryJourney();setLens(b.dataset.lens,true);closeLensPanel()});
     document.querySelectorAll('[data-memory-path]').forEach(b=>b.onclick=()=>startMemoryJourney(b.dataset.memoryPath));
-    $('journeyExit').onclick=()=>endMemoryJourney();
+    $('journeyExit').onclick=()=>{endMemoryJourney();if(!$('drawer').hidden&&$('drawer').classList.contains('human-detail'))showStory(stories[selected])};
     $('brandHome').onclick=e=>{e.preventDefault();closeDrawer();reset()};$('cancelDive').onclick=()=>finishDive(diveSequence);
     document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-open]').forEach(x=>x.classList.toggle('is-on',x.dataset.open===b.dataset.open));if(b.dataset.open==='universe'){closeDrawer();reset()}else if(b.dataset.open==='archive')showArchive();else showLegacy()});
     $('openSelected').onclick=$('dockOpen').onclick=()=>beginDive(selected);
