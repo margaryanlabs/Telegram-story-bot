@@ -12,7 +12,11 @@ function node(id=''){
     setAttribute(k,v){this.attrs[k]=v;},
     focus(){this.focused=true;},
     scrollIntoView(){this.scrolled=true;},
-    click(){this.calls++;this.events.click?.();}
+    click(){this.calls++;this.events.click?.();},
+    appendChild(child){this.children??=[];this.children.push(child);},
+    append(...children){this.children??=[];this.children.push(...children);},
+    insertBefore(child){this.inserted=child;},
+    replaceChildren(){this.children=[];}
   };
 }
 function make(which){
@@ -24,7 +28,7 @@ function make(which){
   const elements=new Map(ids.map(x=>[x,node(x)]));elements.set('v78MediaHub',root);
   elements.get('v78NowToggle').disabled=true;
   const chosen=node();
-  const document={getElementById:k=>elements.get(k)??null,querySelector:q=>q==='[data-books-source="complete"]'?chosen:null,addEventListener(){}};
+  const document={getElementById:k=>elements.get(k)??null,querySelector:q=>q==='[data-books-source="complete"]'?chosen:null,addEventListener(){},createElement:()=>node()};
   const window={};
   runInNewContext(src,{document,window,Set,String,Number,Array});
   return {root,buttons,document,window,elements,chosen,act:name=>buttons.find(b=>b.dataset.v78Action===name).click()};
@@ -109,7 +113,8 @@ test('Books continue opens a real saved page, or falls back to catalog when abse
  ui.act('import');assert.equal(ui.imported,true);
 });
 test('Shared module has no fabricated remote sources or Telegram chat access',()=>{
- assert.doesNotMatch(src,/\bfetch\s*\(|XMLHttpRequest|document\.cookie|initData|telegram-chats|sendMessage|postMessage|eval\s*\(/);
+ assert.doesNotMatch(src,/\bfetch\s*\(|XMLHttpRequest|document\.cookie|initData|telegram-chats|sendMessage|eval\s*\(/);
+ assert.match(src,/window\.parent\.postMessage\(/);assert.match(src,/window\.location\.origin/);
  assert.match(src,/VetogramCinema/);assert.match(src,/VetogramMusic/);assert.match(src,/VetogramBooks/);
 });
 
@@ -126,7 +131,8 @@ test('embedded module switcher navigates only to allowlisted same-origin Vetogra
    const el=makeButton();
    if(tag==='nav')el.appendChild=child=>navButtons.push(child);
    return el;
-  }
+  },
+  addEventListener(){}
  };
  let inserted=null;
  hub.querySelectorAll=()=>[];
@@ -153,7 +159,15 @@ test('standalone Cinema, Music and Books never post navigation to the parent',()
  hub.querySelectorAll=()=>[];
  let called=false;
  const window={parent:{postMessage:()=>{called=true;}},VetogramMediaContext:{embedded:false}};
- const document={getElementById:id=>id==='v78MediaHub'?hub:id==='v78MediaStatus'?node(id):null,addEventListener(){}};
+ const links=[];
+ hub.insertBefore=nav=>{nav.inserted=true;};
+ const document={getElementById:id=>id==='v78MediaHub'?hub:id==='v78MediaStatus'?node(id):null,addEventListener(){},
+  createElement:tag=>{const n=node();if(tag==='nav')n.appendChild=link=>links.push(link);return n;}};
  runInNewContext(src,{document,window,Set,String,Number,Array});
  assert.equal(called,false);
+ assert.equal(links.length,4,'standalone modules offer real media routes');
+ assert.deepEqual(links.map(x=>x.href),['/cinema.html','/music-module.html','/books.html','/studio.html?screen=media']);
+ links[0].click();links[2].click();links[3].click();
+ assert.equal(called,false,'standalone links do not send parent messages');
+ assert.equal(links[1].attrs['aria-current'],'page');
 });
