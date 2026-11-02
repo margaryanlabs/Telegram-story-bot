@@ -8,6 +8,36 @@
  const module=root.dataset.v78Module;
  if(!['cinema','music','books'].includes(module))return;
  const status=$('v78MediaStatus');
+ const context=window.VetogramMediaContext;
+ if(context?.embedded && window.parent!==window){
+   // In a full Vetogram session users should not need to return through
+   // several nested screens to change media type. The host verifies origin,
+   // live iframe identity, owner scope and destination allowlist.
+   const nav=document.createElement('nav');
+   nav.className='v79-media-switcher';
+   nav.setAttribute('aria-label','Переключение разделов Vetogram');
+   const sections=[
+     ['cinema','Кино'],['music','Музыка'],['books','Книги'],['hub','Все медиа']
+   ];
+   for(const [name,label] of sections){
+     const button=document.createElement('button');
+     button.type='button';
+     button.className='v79-switch'+(name===module?' is-current':'');
+     button.textContent=label;
+     if(name===module)button.setAttribute('aria-current','page');
+     button.addEventListener('click',()=>{
+       if(name===module)return;
+       window.parent.postMessage({
+         channel:'vetogram-media',
+         type:'navigate',target:name==='hub'?'hub':'module',
+         ...(name==='hub'?{}:{module:name})
+       },window.location.origin);
+     });
+     nav.appendChild(button);
+   }
+   root.insertBefore(nav,root.firstChild);
+ }
+
  const say=message=>{if(status)status.textContent=message;};
  const focusSearch=id=>{
    const field=$(id);
