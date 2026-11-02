@@ -80,3 +80,14 @@ The 8.0-8.3 editorials moved only selected Book controls above a secondary actio
 **Evidence:** `tests/vetogram-editorial-84-contiguity.test.js` executes the real editor script against realistic original element order, checks both Cinema and Books final DOM order and verifies that all original nodes survive. The three target tests passed in a JS harness. QA gate now includes this file. Mobile presentation scoped to actual `#cinemaGrid`/Book filter controls. The four HTML files use `20261102-media84` asset versions so updated Android WebView caches do not mask the fix.
 
 **Still needed:** full `npm run qa:preview:offline`, Render exact HEAD LIVE check, mobile screenshot/tap QA, source-provider streams and reader/import verification before promoting draft PR #214.
+
+## V8.5 — Continuous navigation through the real Media modules
+
+- **Back trail in the parent shell:** the existing `#v6MediaBack` button now returns to the previous *visited module* (Music/Cinema/Books) before returning to the Media home. The button's accessible destination updates to `Назад: Музыка`, `Назад: Кино`, or `Назад: Медиа`. No fake browser entries or hidden redirects.
+- Frames remain cached on Back, preserving the original modules' internal page, track queue, reading context and scroll positions (while video pauses through the existing hidden-frame protection). The shell navigation history is memory-only and capped at 12 entries; no viewed titles, files or private Telegram credentials are persisted.
+- **Same navigation everywhere:** the existing `v79-media-switcher` now shows the four real destinations in standalone Cinema/Music/Books pages as well. In the integrated Telegram shell, same-origin allowlisted and owner-verified postMessage navigation switches cached frames. Standalone preview uses native local links, not an iframe or second fake player.
+- History resets on explicit `Все медиа` and on Telegram-account identity changes, so a subsequent login cannot restore another owner's module.
+- Extended `tests/vetogram-universe-navigation.test.js` with Back traversal, trusted/invalid child transitions, identity isolation. Updated `tests/vetogram-media-next-78.test.js` to exercise standalone/embedded nav, correct per-module actions, multiple audio event listeners, source-safe parent messages, CSS selectors and accessible states. Targeted JavaScript executions: **21/21 shell navigation cases and 9/9 Media hub cases pass**.
+- Version-bumped the parent shell script and all three module shared Media CSS/JS to `20261102-media85` for mobile WebView cache freshness. The whole `qa:preview:offline` and real Android WebView / actual media playback still require a verified release run.
+
+**Production:** no merge and no changes to the main Vetogram. Review branch only.
