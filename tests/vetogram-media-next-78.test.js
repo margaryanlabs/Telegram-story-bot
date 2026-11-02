@@ -112,3 +112,48 @@ test('Shared module has no fabricated remote sources or Telegram chat access',()
  assert.doesNotMatch(src,/\bfetch\s*\(|XMLHttpRequest|document\.cookie|initData|telegram-chats|sendMessage|postMessage|eval\s*\(/);
  assert.match(src,/VetogramCinema/);assert.match(src,/VetogramMusic/);assert.match(src,/VetogramBooks/);
 });
+
+test('embedded module switcher navigates only to allowlisted same-origin Vetogram targets',()=>{
+ const hub=node('v78MediaHub');hub.dataset.v78Module='cinema';
+ const navButtons=[];
+ const makeButton=()=>{
+  const n=node();n.setAttribute=function(k,v){this.attrs[k]=v;};
+  return n;
+ };
+ const document={
+  getElementById:id=>id==='v78MediaHub'?hub:id==='v78MediaStatus'?node(id):null,
+  createElement:tag=>{
+   const el=makeButton();
+   if(tag==='nav')el.appendChild=child=>navButtons.push(child);
+   return el;
+  }
+ };
+ let inserted=null;
+ hub.querySelectorAll=()=>[];
+ hub.insertBefore=(child)=>{inserted=child;};
+ const sent=[];
+ const parent={postMessage:(msg,origin)=>sent.push({msg,origin})};
+ const window={parent,location:{origin:'https://vetogram.example'},VetogramMediaContext:{embedded:true}};
+ runInNewContext(src,{document,window,Set,String,Number,Array});
+ assert.ok(inserted,'navigation is added in the integrated context');
+ assert.equal(navButtons.length,4);
+ assert.equal(navButtons[0].attrs['aria-current'],'page');
+ navButtons[0].click();
+ assert.equal(sent.length,0,'active module must not reload itself');
+ navButtons[1].click();
+ navButtons[2].click();
+ navButtons[3].click();
+ assert.deepEqual(sent.map(x=>x.msg.module),['music','books',undefined]);
+ assert.deepEqual(sent.map(x=>x.msg.target),['module','module','hub']);
+ assert.ok(sent.every(x=>x.origin==='https://vetogram.example'));
+ assert.match(css,/\.v79-media-switcher/);
+});
+test('standalone Cinema, Music and Books never post navigation to the parent',()=>{
+ const hub=node('v78MediaHub');hub.dataset.v78Module='music';
+ hub.querySelectorAll=()=>[];
+ let called=false;
+ const window={parent:{postMessage:()=>{called=true;}},VetogramMediaContext:{embedded:false}};
+ const document={getElementById:id=>id==='v78MediaHub'?hub:id==='v78MediaStatus'?node(id):null,addEventListener(){}};
+ runInNewContext(src,{document,window,Set,String,Number,Array});
+ assert.equal(called,false);
+});
