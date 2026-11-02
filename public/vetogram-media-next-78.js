@@ -184,20 +184,29 @@
      if(nowTitle)nowTitle.textContent=track?.title||'Выбери доступную запись';
      if(nowArtist)nowArtist.textContent=track?.artist||'Плеер внутри Vetogram';
      const total=Number(audio?.duration),position=Number(audio?.currentTime);
-     const hasDuration=playable&&Number.isFinite(total)&&total>0;
+     const live=playable&&(track?.source==='radio'||total===Infinity);
+     const hasDuration=playable&&!live&&Number.isFinite(total)&&total>0;
      if(progress){
        progress.value=hasDuration?Math.max(0,Math.min(100,100*(Number.isFinite(position)?position:0)/total)):0;
-       progress.setAttribute('aria-valuetext',hasDuration
-         ?clock(position)+' из '+clock(total):'Пока нет трека с известной длительностью');
+       progress.setAttribute('aria-valuetext',live?'Прямой эфир · фиксированной длительности нет':
+         hasDuration?clock(position)+' из '+clock(total):'Пока нет трека с известной длительностью');
      }
-     if(elapsed)elapsed.textContent=hasDuration?clock(position):'0:00';
-     if(duration)duration.textContent=hasDuration?clock(total):'0:00';
+     if(elapsed)elapsed.textContent=live?'LIVE':hasDuration?clock(position):'0:00';
+     if(duration)duration.textContent=live?'●':hasDuration?clock(total):'0:00';
      if(toggle){toggle.disabled=!playable;toggle.textContent=!audio?.paused&&playable?'Ⅱ':'▶';toggle.setAttribute('aria-label',!audio?.paused&&playable?'Приостановить музыку':'Воспроизвести музыку');}
    };
    for(const event of ['play','playing','pause','ended','loadedmetadata','error','emptied','timeupdate','durationchange'])audio?.addEventListener(event,update);
+   let sourceError=false;
    document.addEventListener('vetogram:audio-error',()=>{
+     sourceError=true;
      say('Источник не отдал воспроизводимый звук. Выбери другую запись или свой файл.');
      update();
+   });
+   audio?.addEventListener('playing',()=>{
+     if(sourceError){
+       sourceError=false;
+       say('Звук воспроизводится в основном аудиоплеере.');
+     }
    });
    document.addEventListener('vetogram:audio-playing',update);
    document.addEventListener('vetogram:library-change',update);
