@@ -9,6 +9,8 @@
 <script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-licensed-home-63.js?v=20261101-rebuild02"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script><link rel="stylesheet" href="/vetogram-media-embedded.css?v=20261101-rebuild04"><link rel="stylesheet" href="/vetogram-media-edition-62.css?v=20261101-rebuild02">
   <link rel="stylesheet" href="/vetogram-black-universe.css?v=20261101-rebuild04" />
   <link rel="stylesheet" href="/vetogram-showcase-v72.css?v=20261101-rebuild04" />
+  <link rel="stylesheet" href="/vetogram-media-next-78.css?v=20261101-rebuild04" />
+<script src="/vetogram-media-next-78.js?v=20261101-rebuild04" defer></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -46,7 +48,18 @@
    <div class="hero-pills"><span><b>♫</b> ТОЛЬКО АУДИО</span><span><b>◉</b> ОДИН PLAY</span><span><b>✧</b> БЕЗ ВИДЕО</span></div></div>
    <div class="hero-stage" aria-hidden="true"><div class="vinyl-large"><div class="vinyl-ring"></div><div class="vinyl-label"><span>V</span><small>VETOGRAM<br>MUSIC</small></div></div><div class="floating-note note-one">♫</div><div class="floating-note note-two">♪</div><div class="hero-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="hero-card">СЕЙЧАС ИГРАЕТ<span>ТВОЙ РИТМ</span><b>∞</b></div></div>
   </div>
-  <section class="native-home audio-home" aria-labelledby="native-home-title">
+  <section class="v78-portal v78-music-portal" id="v78MediaHub" data-v78-module="music" aria-labelledby="v78MusicTitle">
+   <header class="v78-portal-heading"><div><span class="v78-kicker">VETOGRAM / SOUND COMMAND</span><h2 id="v78MusicTitle">Слушай. Сохраняй. Возвращайся.</h2><p>Один настоящий аудиоплеер, твои файлы, открытые записи и радио. Без подмены музыки видеороликами.</p></div><span class="v78-portal-mark" aria-hidden="true">V/M</span></header>
+   <div class="v78-action-grid">
+    <button class="v78-action" data-v78-action="search" type="button"><span class="v78-action-symbol" aria-hidden="true">⌕</span><span class="v78-action-body"><strong>Найти музыку</strong><small>Поиск доступных аудиозаписей</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
+    <button class="v78-action" data-v78-action="library" type="button"><span class="v78-action-symbol" aria-hidden="true">♡</span><span class="v78-action-body"><strong>Моя музыка</strong><small>Любимое и свои файлы</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
+    <button class="v78-action" data-v78-action="radio" type="button"><span class="v78-action-symbol" aria-hidden="true">◉</span><span class="v78-action-body"><strong>Радио</strong><small>Станции и живой эфир</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
+    <button class="v78-action" data-v78-action="import" type="button"><span class="v78-action-symbol" aria-hidden="true">＋</span><span class="v78-action-body"><strong>Добавить музыку</strong><small>Разрешённые треки и MP3</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
+   </div>
+   <div class="v78-now" aria-live="polite"><span class="v78-now-art" aria-hidden="true">♫</span><span class="v78-now-info"><strong id="v78NowTitle">Выбери доступную запись</strong><small id="v78NowArtist">Плеер внутри Vetogram</small></span><button type="button" id="v78NowToggle" class="v78-now-toggle" aria-label="Воспроизвести музыку" disabled>▶</button></div>
+   <p class="v78-status" role="status" aria-live="polite"><span class="v78-status-dot" aria-hidden="true"></span><span id="v78MediaStatus">Источники могут быть ограничены по региону. Личные файлы остаются на устройстве.</span></p>
+  </section>
+ <section class="native-home audio-home" aria-labelledby="native-home-title">
  <div class="native-home-topline">VETOGRAM MUSIC</div>
  <h2 id="native-home-title">Нажал Play. <em>И слушаешь.</em></h2>
  <p>Доступные аудиозаписи без видео, ссылок на другие плееры и лишних экранов.</p>
