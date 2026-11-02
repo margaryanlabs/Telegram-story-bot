@@ -138,3 +138,31 @@ test('live radio shows LIVE instead of inventing a duration, and clears recovere
  audio.handlers.playing();
  assert.match(ui.nodes.get('v78MediaStatus').textContent,/воспроизводится/);
 });
+
+test('Cinema Continue shelf refreshes on real library changes without reloading the page',()=>{
+ const ui=create('cinema'),shelf=ui.nodes.get('v710CinemaResume'),items=ui.nodes.get('v710CinemaResumeItems');
+ let library=[];
+ ui.window.VetogramCinema={getLibrary:()=>library,openFilm:()=>true};
+ assert.equal(shelf.hidden,true);
+ library=[{id:'new-watch',title:'Saved progress',progress:.47,at:101}];
+ ui.documentEvents['vetogram:cinema-library-change']();
+ assert.equal(shelf.hidden,false);
+ assert.equal(items.children.length,1);
+ assert.match(items.children[0].children[1].textContent,/47%/);
+ library=[];
+ ui.documentEvents['vetogram:cinema-library-change']();
+ assert.equal(shelf.hidden,true);
+ assert.equal(items.children.length,0);
+});
+test('reader page turn refreshes genuine Continue shelf before notifying the media ribbon',()=>{
+ const source=readFileSync(new URL('../public/books.js',import.meta.url),'utf8');
+ const begin=source.indexOf('  function showPage(page, scroll=true){');
+ const end=source.indexOf('  function renderChapters()',begin);
+ assert.ok(begin>=0 && end>begin);
+ const segment=source.slice(begin,end);
+ const persist=segment.indexOf("persist('progress',progress);");
+ const render=segment.indexOf('renderContinueShelf();',persist);
+ const notify=segment.indexOf("new CustomEvent('vetogram:book-progress'",persist);
+ assert.ok(persist>=0 && render>persist && notify>render,
+   'a page change must refresh the visible Continue shelf before its notification fires');
+});
