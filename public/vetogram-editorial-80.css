@@ -263,3 +263,62 @@ body.vetogram-editorial-cinema .cinema-genre-tile small{position:relative;z-inde
 body.vetogram-editorial-cinema .cinema-genre-tile strong{position:relative;z-index:2;font:800 clamp(17px,2.1vw,25px)/1.15 system-ui!important;letter-spacing:-.045em!important;color:#fafafa!important;text-shadow:0 2px 14px #000b}
 body.vetogram-editorial-cinema .cinema-genre-tile:hover{border-color:#e1d2b2a8!important}
 @media(max-width:620px){body.vetogram-editorial-cinema .cinema-genre-tile{min-height:109px!important;padding:11px!important}body.vetogram-editorial-cinema .cinema-genre-tile strong{font-size:18px!important}}
+
+/* V8.1 mobile first-fold cleanup: reveal actual content within the first
+ * screen instead of repeating full-height ornamental welcome panels. */
+@media(max-width:620px){
+ body.vetogram-editorial-cinema .cinema-hero{
+   min-height:230px!important;max-height:325px!important;
+   margin:7px 0 11px!important;
+ }
+ body.vetogram-editorial-cinema .cinema-hero-copy{padding:17px 18px!important}
+ body.vetogram-editorial-cinema .cinema-hero h1{
+   font-size:clamp(27px,8vw,36px)!important;line-height:1.02!important;
+   max-width:400px;
+ }
+ body.vetogram-editorial-cinema .cinema-hero-copy p{
+   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+   overflow:hidden;font-size:11px!important;line-height:1.45!important;
+ }
+ body.vetogram-editorial-cinema .cinema-hero-actions{gap:7px!important}
+ body.vetogram-editorial-cinema .cinema-hero-actions button{min-height:38px!important;padding:8px 12px!important;font-size:11px!important}
+ body.vetogram-editorial-cinema .cinema-hero-meta{display:none!important}
+ body.vetogram-editorial-cinema .cinema-section-nav{
+   position:sticky!important;top:0!important;z-index:34!important;
+ }
+ body.vetogram-editorial-cinema #cinemaBrowse{scroll-margin-top:82px}
+ body.vetogram-editorial-cinema #cinemaGenresSection{scroll-margin-top:82px}
+ body.vetogram-editorial-cinema .cinema-search-area{margin-bottom:10px!important}
+ body.vetogram-editorial-music .hero#hero{
+   min-height:178px!important;max-height:230px!important;
+   margin:8px 0 12px!important;border-radius:13px!important;
+ }
+ body.vetogram-editorial-music .hero#hero .hero-inner{padding:19px!important}
+ body.vetogram-editorial-music .hero#hero h1{font-size:clamp(26px,7vw,33px)!important}
+ body.vetogram-editorial-music .hero#hero p{
+   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+   overflow:hidden;font-size:11px!important;
+ }
+ body.vetogram-editorial-music .hero#hero .hero-buttons{gap:7px!important;margin-top:13px!important}
+ body.vetogram-editorial-music .hero#hero .hero-buttons button{min-height:39px!important;padding:9px 13px!important;font-size:11px!important}
+ body.vetogram-editorial-music .licensed-home-section .section-head{margin-bottom:9px!important}
+ body.vetogram-editorial-music .licensed-home-section .section-head h2{font-size:22px!important}
+ body.vetogram-editorial-music #licensedHomeTracks .track-row{min-width:0}
+ body.vetogram-editorial-books .hero-veto{
+   min-height:209px!important;max-height:282px!important;margin:7px 0 12px!important;
+ }
+ body.vetogram-editorial-books .hero-veto .hero-content{padding:17px 18px!important}
+ body.vetogram-editorial-books .hero-veto h1{
+   font-size:clamp(28px,8vw,37px)!important;line-height:1.03!important;
+ }
+ body.vetogram-editorial-books .hero-veto .hero-lead{
+   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+   overflow:hidden;font-size:11px!important;line-height:1.4!important;
+ }
+ body.vetogram-editorial-books .hero-veto .hero-actions{margin-top:12px!important;gap:7px!important}
+ body.vetogram-editorial-books .hero-veto .hero-actions button{min-height:37px!important;padding:8px 12px!important;font-size:10px!important}
+ body.vetogram-editorial-books .featured-editions-heading h2{font-size:23px!important}
+ body.vetogram-editorial-books .source-tabs{scroll-margin-top:65px}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-hero{min-height:184px!important;max-height:235px!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-hero h1{font-size:clamp(30px,8vw,38px)!important}
+}
