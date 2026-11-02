@@ -54,8 +54,8 @@ function make(name){
 }
 test('all three existing media entrypoints load editorial 8.0 after legacy styles and scripts',()=>{
  for(const html of pages){
-   assert.match(html,/vetogram-editorial-80\.css\?v=20261101-rebuild04/);
-   assert.match(html,/vetogram-editorial-80\.js\?v=20261101-rebuild04/);
+   assert.match(html,/vetogram-editorial-80\.css\?v=20261102-media83/);
+   assert.match(html,/vetogram-editorial-80\.js\?v=20261102-media83/);
    assert.ok(html.indexOf('vetogram-media-next-78.css')<html.indexOf('vetogram-editorial-80.css'));
    assert.ok(html.indexOf('vetogram-media-next-78.js')<html.indexOf('vetogram-editorial-80.js'));
  }
@@ -83,8 +83,8 @@ test('Books promotes existing real covers and verified source filters while pres
 
 test('the integrated Media home also uses the same editorial design and returns saved Continue before discovery',()=>{
  const studio=file('studio.html');
- assert.match(studio,/vetogram-editorial-80\.css\?v=20261101-rebuild04/);
- assert.match(studio,/vetogram-editorial-80\.js\?v=20261101-rebuild04/);
+ assert.match(studio,/vetogram-editorial-80\.css\?v=20261102-media83/);
+ assert.match(studio,/vetogram-editorial-80\.js\?v=20261102-media83/);
  assert.match(css,/body\.vetogram-editorial-home/);
  const order=[];
  const discovery={id:'discovery'};
