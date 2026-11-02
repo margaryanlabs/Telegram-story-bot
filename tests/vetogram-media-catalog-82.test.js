@@ -13,6 +13,7 @@ function element(id=''){
   id,parentNode:null,children:[],dataset:{},events:{},
   classList:{added:[],add(x){this.added.push(x);}},
   addEventListener(name,fn){this.events[name]=fn;},
+  querySelector(){return null;},
   click(){this.events.click?.();},
   setAttribute(key,val){this[key]=val;},
   insertBefore(item,anchor){
