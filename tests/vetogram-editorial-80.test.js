@@ -107,3 +107,13 @@ test('Style is responsive, artwork is source-backed and no fake media or privile
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(js,/\bfetch\s*\(|XMLHttpRequest|window\.open|document\.cookie|localStorage|postMessage|innerHTML|Telegram/);
 });
+
+test('cinema genre categories display only actual existing catalog posters, never fabricated visual assets',()=>{
+ const controller=file('cinema.js');
+ assert.match(controller,/const representative=films\.find\(f=>matchesGenre\(f\)/);
+ assert.match(controller,/const img=node\("img","v80-genre-image"\)/);
+ assert.match(controller,/state\.posters\.get\(representative\.id\),representative\.poster/);
+ assert.match(controller,/!failedPosterUrls\.has\(url\)/);
+ assert.match(css,/\.cinema-genre-tile \.v80-genre-image/);
+ assert.doesNotMatch(js,/https:\/\/|https:\\\/\\\//);
+});
