@@ -19,7 +19,7 @@ function node() {
   };
 }
 function setup() {
-  const ids=['#vpTttGrid','#vpTttStatus','#vpTttWins','#vpTttReset','#vp2048Grid','#vp2048Score','#vp2048Best','#vp2048Status','#vp2048Reset'];
+  const ids=['#vpTttGrid','#vpTttStatus','#vpTttWins','#vpTttReset','#vp2048Grid','#vp2048Score','#vp2048Best','#vp2048Status','#vp2048Reset','#vp2048Undo'];
   const elements=new Map(ids.map(id=>[id,node()]));
   const arrows=['left','right','up','down'].map(d=>{const el=node();el.dataset.vp2048=d;return el;});
   const root={
@@ -109,4 +109,26 @@ test('keyboard arrows never hijack page or Snake; only the open 2048 dialog owns
   assert.equal(key('BODY'),1,'active 2048 owns only its dialog arrow input');
   grid.closest=()=>null;
   assert.equal(key('BODY'),0,'after closing modal, keyboard is released');
+});
+
+test('2048 undo restores the exact previous board and score without deleting a record',()=>{
+  const ui=setup(),grid=ui.elements.get('#vp2048Grid'),undo=ui.elements.get('#vp2048Undo');
+  const snapshot=()=>grid.children.map(cell=>cell.textContent).join('|');
+  assert.equal(undo.disabled,true,'undo must start disabled');
+  const initial=snapshot();
+  const controls=['left','up','right','down'];
+  for(const dir of controls){
+    ui.arrows.find(a=>a.dataset.vp2048===dir).click();
+    if(!undo.disabled)break;
+  }
+  assert.equal(undo.disabled,false,'one legal move must enable undo');
+  assert.notEqual(snapshot(),initial,'the first successful move must change the board');
+  const savedHigh=Number(ui.storage.get('vetogram:play:2048-best:v1')||0);
+  undo.click();
+  assert.equal(snapshot(),initial,'undo must restore exact board, not generate a new random tile');
+  assert.equal(ui.elements.get('#vp2048Score').textContent,'Очки: 0');
+  assert.equal(undo.disabled,true,'only a single level of undo is offered');
+  assert.ok(Number(ui.storage.get('vetogram:play:2048-best:v1')||0)>=savedHigh);
+  ui.elements.get('#vp2048Reset').click();
+  assert.equal(undo.disabled,true);
 });
