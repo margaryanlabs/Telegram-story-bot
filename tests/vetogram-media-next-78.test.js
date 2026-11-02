@@ -38,8 +38,8 @@ test('three real module documents contain complete navigation and the shared res
   assert.match(html,/id="v78MediaHub"/,page);
   assert.equal((html.match(/id="v78MediaHub"/g)||[]).length,1);
   for(const name of page==='music-module'?['search','library']:['continue','library'])assert.match(html,new RegExp('data-v78-action="'+name+'"'),page);
-  assert.match(html,/vetogram-media-next-78\.css\?v=20261101-rebuild04/);
-  assert.match(html,/vetogram-media-next-78\.js\?v=20261101-rebuild04/);
+  assert.match(html,/vetogram-media-next-78\.css\?v=20261102-media85/);
+  assert.match(html,/vetogram-media-next-78\.js\?v=20261102-media85/);
  }
  for(const mode of ['cinema','music','books'])assert.match(css,new RegExp('v78-'+mode+'-portal'));
  assert.match(css,/max-width:600px/);
