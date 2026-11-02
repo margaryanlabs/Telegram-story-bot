@@ -1,0 +1,171 @@
+/* VETOGRAM 8.0 — EDITORIAL MEDIA SYSTEM
+   Unified neutral canvas, one accent per module and authentic artwork.
+   Visually removes redundant marketing without removing working controls.
+*/
+html:has(body.vetogram-editorial-80){scroll-behavior:smooth}
+body.vetogram-editorial-80{--v80-bg:#08090c;--v80-surface:#14161b;--v80-border:#ffffff16;--v80-type:#f6f7fa;--v80-muted:#9da3ad;background:var(--v80-bg)!important;color:var(--v80-type)}
+body.vetogram-editorial-cinema{--v80-accent:#e5d3ae}
+body.vetogram-editorial-music{--v80-accent:#dfcdf5}
+body.vetogram-editorial-books{--v80-accent:#c4dbc2}
+body.vetogram-editorial-80 :is(button,a):focus-visible{outline:2px solid var(--v80-accent)!important;outline-offset:3px!important}
+body.vetogram-editorial-80 :is(.v78-portal,.cinema-section,.featured-editions,.licensed-home-section){scroll-margin-top:100px}
+/* All media: one compact action utility bar, not a second giant hero. */
+body.vetogram-editorial-80 .v78-portal{
+  border:0!important;border-top:1px solid var(--v80-border)!important;
+  border-bottom:1px solid var(--v80-border)!important;
+  background:transparent!important;border-radius:0!important;box-shadow:none!important;
+  padding:19px 0 17px!important;margin:22px auto 26px!important;
+}
+body.vetogram-editorial-80 .v78-portal::before{display:none!important}
+body.vetogram-editorial-80 .v78-portal-heading{margin:0 0 14px!important;gap:14px}
+body.vetogram-editorial-80 .v78-portal-heading h2{font-size:clamp(18px,2.2vw,25px)!important;letter-spacing:-.045em!important;margin:4px 0 3px!important}
+body.vetogram-editorial-80 .v78-portal-heading p{font-size:11px!important;line-height:1.5!important}
+body.vetogram-editorial-80 .v78-portal-mark{display:none!important}
+body.vetogram-editorial-80 .v78-action-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:9px!important}
+body.vetogram-editorial-80 .v78-action{min-height:69px!important;padding:12px!important;border-radius:12px!important;background:var(--v80-surface)!important;border:1px solid var(--v80-border)!important;gap:9px!important}
+body.vetogram-editorial-80 .v78-action:hover{border-color:var(--v80-accent)!important;background:#202228!important}
+body.vetogram-editorial-80 .v78-action-symbol{width:32px!important;height:32px!important;flex-basis:32px!important;font-size:17px!important;background:#ffffff09!important;border-radius:8px!important}
+body.vetogram-editorial-80 .v78-action-body strong{font-size:12px!important}
+body.vetogram-editorial-80 .v78-action-body small{font-size:9px!important;line-height:1.35!important}
+body.vetogram-editorial-80 .v78-action-arrow{font-size:13px!important}
+body.vetogram-editorial-80 .v78-status{margin:11px 0 0!important;min-height:auto!important;font-size:10px!important}
+body.vetogram-editorial-80 .v710-resume{margin-top:15px!important}
+/* CINEMA — real genre chips, poster-first rails, controlled hero proportions. */
+body.vetogram-editorial-cinema .cinema-shell{max-width:1420px;margin:auto;padding:0 clamp(12px,2.6vw,36px)}
+body.vetogram-editorial-cinema .cinema-header{min-height:61px!important;max-width:100%;background:#08090cf5!important}
+body.vetogram-editorial-cinema .cinema-hero{
+ min-height:clamp(300px,39vw,480px)!important;margin:12px 0 17px!important;
+ border-radius:20px!important;border:1px solid var(--v80-border)!important;
+}
+body.vetogram-editorial-cinema .cinema-hero-copy{padding:clamp(20px,3vw,42px)!important;max-width:610px!important}
+body.vetogram-editorial-cinema .cinema-hero h1{font-size:clamp(32px,5vw,59px)!important;line-height:1.04!important}
+body.vetogram-editorial-cinema .cinema-hero-copy p{font-size:clamp(12px,1.3vw,15px)!important;max-width:450px}
+body.vetogram-editorial-cinema .cinema-hero-meta{font-size:10px!important;letter-spacing:.08em!important}
+body.vetogram-editorial-cinema .cinema-section-nav{
+ position:sticky!important;top:0!important;z-index:32!important;
+ border:1px solid var(--v80-border)!important;border-radius:13px!important;
+ background:#0c0e12ef!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+ margin:0 0 12px!important;padding:4px!important;max-width:100%;
+}
+body.vetogram-editorial-cinema #cinemaTabs{display:flex;gap:4px;width:100%;overflow-x:auto;scrollbar-width:none!important;scroll-snap-type:x proximity}
+body.vetogram-editorial-cinema #cinemaTabs::-webkit-scrollbar{display:none}
+body.vetogram-editorial-cinema #cinemaTabs .cinema-tab{
+ border:0!important;background:transparent!important;border-radius:9px!important;min-height:42px!important;
+ white-space:nowrap;font:690 12px/1.1 system-ui!important;color:#adb4be!important;padding:10px 15px!important;
+}
+body.vetogram-editorial-cinema #cinemaTabs .cinema-tab.active,
+body.vetogram-editorial-cinema #cinemaTabs .cinema-tab[aria-current="page"]{background:#24262d!important;color:#fff!important}
+body.vetogram-editorial-cinema .cinema-search-area{margin:0 0 16px!important;border-radius:13px!important;padding:4px!important}
+body.vetogram-editorial-cinema .cinema-search{border-radius:11px!important;background:#17191e!important;border:1px solid #ffffff20!important;min-height:48px}
+body.vetogram-editorial-cinema .cinema-search input{min-height:43px!important}
+body.vetogram-editorial-cinema .cinema-section{margin-top:22px!important;margin-bottom:24px!important}
+body.vetogram-editorial-cinema .cinema-section-head{gap:12px;margin-bottom:14px!important}
+body.vetogram-editorial-cinema .cinema-section-head h2{font:740 clamp(21px,2.8vw,33px)/1.12 system-ui!important;letter-spacing:-.046em!important;color:#f6f7f9!important}
+body.vetogram-editorial-cinema .cinema-section-head p{font-size:11px!important;line-height:1.5!important;max-width:710px}
+body.vetogram-editorial-cinema .cinema-rail{gap:12px!important;scrollbar-width:thin}
+body.vetogram-editorial-cinema .cinema-card{
+ flex:0 0 clamp(142px,15vw,201px)!important;width:clamp(142px,15vw,201px)!important;
+ padding:0!important;border-radius:13px!important;overflow:hidden;background:#121419!important;
+ border:1px solid #ffffff17!important;
+}
+body.vetogram-editorial-cinema .cinema-card-art{width:100%;aspect-ratio:2 / 3!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;border-radius:0!important;position:relative}
+body.vetogram-editorial-cinema .cinema-card-art>img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center top}
+body.vetogram-editorial-cinema .cinema-card-art-badge{font-size:8px!important;max-width:95%;z-index:3}
+body.vetogram-editorial-cinema .cinema-card-art:has(img) .cinema-card-art-title{display:none!important}
+body.vetogram-editorial-cinema .cinema-card-name{display:block;padding:10px 11px 0;font:740 12px/1.35 system-ui!important;letter-spacing:-.018em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.vetogram-editorial-cinema .cinema-card-meta{display:block;padding:4px 11px 11px;font-size:10px!important;color:#a2abb6!important;line-height:1.4}
+body.vetogram-editorial-cinema .cinema-card-progress{margin:0 11px 11px!important}
+body.vetogram-editorial-cinema .cinema-genre-tiles{gap:10px!important}
+body.vetogram-editorial-cinema .cinema-categories{padding:0!important}
+body.vetogram-editorial-cinema .v78-portal{max-width:100%!important}
+/* MUSIC — real licensed source-backed tracks are FIRST, old vinyl set is quiet. */
+body.vetogram-editorial-music .app{background:#08090d!important}
+body.vetogram-editorial-music .main{background:#08090d!important}
+body.vetogram-editorial-music .hero#hero{
+  min-height:215px!important;max-height:285px!important;overflow:hidden!important;margin:10px 0 20px!important;
+  background:linear-gradient(112deg,#24212d,#171821 66%,#12151d)!important;border-radius:18px!important;
+}
+body.vetogram-editorial-music .hero#hero h1{font:760 clamp(28px,4vw,48px)/1.05 system-ui!important;letter-spacing:-.06em!important}
+body.vetogram-editorial-music .hero#hero p{font-size:12px!important;line-height:1.55!important;max-width:440px}
+body.vetogram-editorial-music .hero#hero .hero-stage{display:none!important}
+body.vetogram-editorial-music .hero#hero .hero-pills{display:none!important}
+body.vetogram-editorial-music .licensed-home-section{
+ background:transparent!important;margin:12px 0 24px!important;padding:0!important;border:0!important;
+}
+body.vetogram-editorial-music .licensed-home-section .section-head h2{font-size:clamp(23px,3vw,32px)!important;letter-spacing:-.04em!important}
+body.vetogram-editorial-music #licensedHomeTracks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:9px}
+body.vetogram-editorial-music #licensedHomeTracks .track-row{margin:0!important;border-radius:12px!important}
+body.vetogram-editorial-music .v78-portal{max-width:100%!important}
+body.vetogram-editorial-music .v78-portal-heading{display:none!important}
+body.vetogram-editorial-music .v78-portal .v78-action{min-height:56px!important}
+body.vetogram-editorial-music .v78-now{margin-top:14px!important;background:#15141b!important;border:1px solid #ffffff1e!important}
+body.vetogram-editorial-music .native-home{margin-top:20px!important}
+body.vetogram-editorial-music .native-home>h2{font-size:24px!important}
+body.vetogram-editorial-music .native-home .native-home-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+body.vetogram-editorial-music .mood-grid{gap:9px!important}
+body.vetogram-editorial-music .mood-card{min-height:134px!important;border-radius:13px!important;background-image:none!important}
+body.vetogram-editorial-music .track-row{border:1px solid #ffffff15!important;background:#15151b!important;min-height:57px!important}
+body.vetogram-editorial-music .track-row .track-cover img{object-fit:cover!important}
+body.vetogram-editorial-music .sidebar{background:#0a0a0e!important}
+/* BOOKS — real covers and readable collections instead of duplicate promo. */
+body.vetogram-editorial-books .books-main{max-width:1330px!important;margin-inline:auto!important}
+body.vetogram-editorial-books .hero-veto{
+ min-height:280px!important;max-height:370px!important;margin:11px 0 23px!important;
+ border:1px solid #ffffff18!important;border-radius:18px!important;background:linear-gradient(112deg,#18251e,#13191a)!important;
+}
+body.vetogram-editorial-books .hero-veto .hero-content{padding:clamp(22px,3vw,44px)!important}
+body.vetogram-editorial-books .hero-veto h1{font:750 clamp(30px,5.2vw,63px)/1.03 system-ui!important;letter-spacing:-.06em!important}
+body.vetogram-editorial-books .hero-veto .hero-lead{font-size:12px!important;max-width:430px}
+body.vetogram-editorial-books .featured-editions{margin:14px 0 22px!important}
+body.vetogram-editorial-books .featured-editions-heading h2{font-size:clamp(22px,3vw,33px)!important}
+body.vetogram-editorial-books .featured-edition-grid{gap:10px!important}
+body.vetogram-editorial-books .featured-edition{border-radius:13px!important;padding:10px!important;min-width:0}
+body.vetogram-editorial-books .featured-edition-cover{border-radius:7px!important;overflow:hidden}
+body.vetogram-editorial-books :is(.featured-edition-cover,.book-cover)>img{width:100%!important;height:100%!important;object-fit:cover!important}
+body.vetogram-editorial-books .source-tabs{display:flex;gap:7px!important;overflow-x:auto;scrollbar-width:thin;overscroll-behavior-inline:contain;max-width:100%;padding:0 0 9px!important;margin:10px 0 12px!important}
+body.vetogram-editorial-books .source-tabs button{flex:0 0 auto!important;min-height:43px!important;white-space:nowrap;border:1px solid #ffffff22!important;border-radius:10px!important;font-size:11px!important}
+body.vetogram-editorial-books .source-tabs button.active{border-color:#c8ddc7aa!important;background:#263328!important;color:#eff7ec!important}
+body.vetogram-editorial-books .v78-portal{max-width:100%!important}
+body.vetogram-editorial-books .v78-portal-heading{display:none!important}
+body.vetogram-editorial-books .v78-portal .v78-action{min-height:56px!important}
+body.vetogram-editorial-books .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:14px!important}
+body.vetogram-editorial-books .book-card{background:#141819!important;border:1px solid #ffffff18!important;border-radius:13px!important}
+body.vetogram-editorial-books .reader{background:#0c0e10!important}
+/* Shared device behavior */
+@media(max-width:980px){
+ body.vetogram-editorial-80 .v78-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.vetogram-editorial-music .native-home .native-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.vetogram-editorial-books .featured-edition-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:620px){
+ body.vetogram-editorial-80 .v78-portal{padding:13px 0 12px!important;margin:17px 0 20px!important}
+ body.vetogram-editorial-80 .v78-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+ body.vetogram-editorial-80 .v78-action{min-height:56px!important;padding:10px 8px!important}
+ body.vetogram-editorial-80 .v78-action-symbol{width:28px!important;height:28px!important;flex-basis:28px!important}
+ body.vetogram-editorial-80 .v78-action-arrow{display:none!important}
+ body.vetogram-editorial-80 .v78-action-body strong{font-size:11px!important}
+ body.vetogram-editorial-80 .v78-action-body small{font-size:9px!important}
+ body.vetogram-editorial-cinema .cinema-shell{padding:0 11px!important}
+ body.vetogram-editorial-cinema .cinema-hero{min-height:340px!important;max-height:430px!important;margin:8px 0 12px!important;border-radius:13px!important}
+ body.vetogram-editorial-cinema .cinema-hero h1{font-size:clamp(30px,9vw,43px)!important}
+ body.vetogram-editorial-cinema #cinemaTabs .cinema-tab{font-size:11px!important;padding:9px 12px!important;min-height:41px!important}
+ body.vetogram-editorial-cinema .cinema-card{flex-basis:143px!important;width:143px!important}
+ body.vetogram-editorial-cinema .cinema-section{margin-top:18px!important;margin-bottom:20px!important}
+ body.vetogram-editorial-cinema .cinema-section-head h2{font-size:22px!important}
+ body.vetogram-editorial-music .hero#hero{min-height:235px!important;max-height:340px!important}
+ body.vetogram-editorial-music .hero#hero h1{font-size:35px!important}
+ body.vetogram-editorial-music #licensedHomeTracks{grid-template-columns:1fr}
+ body.vetogram-editorial-music .native-home .native-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.vetogram-editorial-books .hero-veto{min-height:290px!important;max-height:430px!important}
+ body.vetogram-editorial-books .hero-veto h1{font-size:clamp(30px,9vw,44px)!important}
+ body.vetogram-editorial-books .featured-edition-grid{display:flex!important;overflow-x:auto;scroll-snap-type:x proximity;gap:9px!important;scrollbar-width:thin;padding-bottom:12px}
+ body.vetogram-editorial-books .featured-edition{flex:0 0 min(72vw,220px)!important;scroll-snap-align:start}
+ body.vetogram-editorial-books .book-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+}
+@media(max-width:360px){
+ body.vetogram-editorial-80 .v78-action-grid{grid-template-columns:1fr 1fr!important}
+ body.vetogram-editorial-80 .v78-action{gap:6px!important}
+ body.vetogram-editorial-80 .v78-action-symbol{display:none!important}
+ body.vetogram-editorial-books .book-grid{gap:8px!important}
+}
+@media(prefers-reduced-motion:reduce){html:has(body.vetogram-editorial-80){scroll-behavior:auto!important}}
