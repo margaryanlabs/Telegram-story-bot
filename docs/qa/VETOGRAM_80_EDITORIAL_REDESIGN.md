@@ -59,3 +59,12 @@ Regression: `tests/vetogram-editorial-80.test.js` checks module-specific mobile 
 **Books:** the existing `catalogSearch` form is moved before the original `featuredEditions` section; existing source availability tabs and genre `.topics` are moved above secondary action UI. Those same DOM nodes keep their original event listeners. Responsive styles provide scrollable 42px+ touch targets and focus states, without replacing book text, shelf persistence or data sources.
 
 **QA:** `tests/vetogram-media-catalog-82.test.js` is part of `qa:preview:offline`; four targeted JS execution/simulation checks passed (real preset IDs, single-search routing, unloaded fallback, and Books node/order preservation). These checks do not prove third-party provider availability or visual Android testing. Production remains unchanged.
+
+## V8.3 — Real-audio cover gallery and cache correctness
+
+- Native Music catalog has a new **Обложки / Список** switch. Obложки is the starting view; cards use 1:1 images already provided in the normalized Audius track metadata, not fake covers. The original alphabetical/track list remains available immediately. Both views keep the **same** original nodes and user actions (Play, favorite, share).
+- Gallery adapts from five columns on wide desktop to two on phones. Original source/availability and error states are unchanged; failed artwork reverts to an honest text fallback.
+- The new controller only alters the existing `#catalogResults.dataset.viewMode` and `aria-pressed` state; it does not instantiate a second player or send extra requests when toggling.
+- New `tests/vetogram-media-cover-grid-83.test.js` covers real image/source, default cover mode, list switch, invalid mode, and responsive/artwork constraints. Four targeted JS/test simulations passed and it is included in `qa:preview:offline`.
+- **Android cache fix:** the editorial CSS/JS URLs in all four native documents are bumped to `20261102-media83`; Music catalog CSS and JS get the same version. This avoids presenting an older cached release as the latest one after preview publication.
+- Remaining validation: matching Render LIVE deployment, Android Telegram touch QA, real artwork fetching from Audius, licensed music playback, video and books reader.
