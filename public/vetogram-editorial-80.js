@@ -43,6 +43,27 @@
    // Actual permitted audio tracks take visual priority over ornamental
    // repeat heroes. Keep existing Audius/radio/user-owned logic unchanged.
    moveBefore(tracks,portal);
+   // These are existing, real Audius catalog preset IDs, not synthetic genres
+   // or fake tracks. Reuse the catalog's original search/provider controller.
+   const allowed=new Set(['ru','am','world','ru-rap','electronic','jazz','world-lofi']);
+   const genreBar=$('v82MusicGenres');
+   const message=$('v82GenresStatus');
+   genreBar?.querySelectorAll('[data-v82-preset]').forEach(button=>{
+     button.addEventListener('click',()=>{
+       const id=button.dataset.v82Preset;
+       if(!allowed.has(id))return;
+       const music=window.VetogramMusic;
+       const catalog=window.VetogramCatalog;
+       if(typeof music?.showPage!=='function'||typeof catalog?.selectPreset!=='function'){
+         if(message){message.hidden=false;message.textContent='Каталог ещё загружается. Повтори попытку.';}
+         return;
+       }
+       music.showPage('catalog');
+       if(catalog.selectPreset(id)===false&&message){
+         message.hidden=false;message.textContent='Подборка сейчас недоступна.';
+       }
+     });
+   });
    const home=document.querySelector('.page[data-view="home"]');
    const prefs=home?.querySelector('.native-home');
    if(prefs)prefs.classList.add('v80-secondary-discovery');
@@ -55,6 +76,13 @@
    const tabs=document.querySelector('.books-main .source-tabs');
    moveBefore(featured,portal);
    moveBefore(tabs,portal);
+   // Keep original topic buttons and their native filtering listeners.
+   const topics=document.querySelector('.books-main .topics');
+   moveBefore(topics,portal);
+   // This is the original search form, not a duplicate input. Place it at
+   // the beginning so readers can reach real titles/authors immediately.
+   const search=$('catalogSearch');
+   moveBefore(search,featured);
    tabs?.setAttribute('aria-label','Фильтры книжного каталога по доступности и языку');
  }
  // Native route: screen titles do not get fake counts or a premature READY.
