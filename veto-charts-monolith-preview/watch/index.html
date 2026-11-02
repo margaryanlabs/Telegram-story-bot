@@ -273,6 +273,7 @@ header{height:50px;padding:0 12px}.wrap{padding:0 7px 20px}
 <button type="button" data-prompt="Что если пробой?">Сценарии</button>
 <button type="button" data-prompt="История рынка">Time Machine</button>
 <button type="button" data-prompt="Что изменилось?">Что изменилось?</button>
+<button type="button" data-prompt="Следи за уровнем">Следи за уровнем</button>
 </div>
 <div class="v3-dialog" id="v3-dialog" aria-live="polite"><p class="v3-empty">Спроси о текущем BTC, ETH или SOL. VETO объяснит структуру и выделит выбранные уровни непосредственно на графике.</p></div>
 <form class="v3-compose" id="v3-compose"><input id="v3-input" maxlength="350" autocomplete="off" aria-label="Вопрос о текущем графике" placeholder="Спроси VETO о графике…"/><button type="submit">↗</button></form>
@@ -382,6 +383,12 @@ function v3EvidenceResponse(q){
    head:(kind==="support"?"Поддержка ":"Сопротивление ")+format(lvl.price),
    lines:["Подтверждённых локальных экстремумов: "+lvl.touches+".","Первая точка: "+fmtTime(lvl.first)+".","Последняя точка: "+fmtTime(lvl.last)+".","Линия выделена на графике. Это наблюдение, не торговый приказ."],ctx,action:lvl
  }:{head:"Недостаточно подтверждений",lines:["На доступной истории подходящий уровень не найден. VETO не рисует его произвольно."],ctx,action:null};
+ if(/следи|отслеж|наблюд|watch|monitor|alert|уведом/.test(lower)){
+  v3Switch("scenarios");
+  return {head:"Scenario Watch открыт",lines:[
+   "Выбери уровень и одно или два закрытия подряд. Создание наблюдения требует твоего нажатия.",
+   "Проверка только по новым закрытым свечам при открытой странице. Фоновых уведомлений нет."],ctx,action:null};
+ }
  if(/изменил|изменени|измени|сравн|разниц|delta|what changed|compare/.test(lower)){
   v3Switch("delta");
   return {head:"Decision Delta открыт",lines:[
