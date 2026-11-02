@@ -728,12 +728,13 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <div class="scene-grid" aria-hidden="true"></div><div class="lens-halo" id="lensHalo" aria-hidden="true"></div>
     <div id="energySweep" class="energy-sweep" aria-hidden="true"></div>
     <svg id="constellationLayer" class="constellation-layer is-off" aria-hidden="true"></svg>
-    <div id="markers" class="markers" aria-hidden="true"></div>
+    <div id="markers" class="markers" aria-label="Звёзды с историями"></div>
+    <div id="starFocusLabel" class="star-focus-label" aria-hidden="true" hidden><span class="star-focus-glyph">✦</span><span class="star-focus-copy"><strong id="starFocusAlias">@NORTHSTAR</strong><small id="starFocusType">PATIENCE / CRYPTO</small></span></div>
     <svg id="travelTrail" class="travel-trail" aria-hidden="true"><path id="travelPath"></path><circle id="travelDot" r="3"></circle></svg>
     <div id="touchWave" class="touch-wave" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
     <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE TRUE 3D CORE<span class="fine-line"></span>V.07.5 / MEMORY PATHS</div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE TRUE 3D CORE<span class="fine-line"></span>V.07.5.2 / STELLAR UX</div>
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
@@ -1447,21 +1448,43 @@ void main(){
     ctx.restore();
   }
   function resize(){w=Math.max(window.innerWidth,1);h=Math.max(window.innerHeight,1);dpr=Math.min(window.devicePixelRatio||1,(quality==='low'||(quality==='auto'&&autoEco))?1:quality==='high'?1.8:(w<820?1.35:1.55));resW=Math.round(w*dpr);resH=Math.round(h*dpr);canvas.width=resW;canvas.height=resH;fallbackCanvas.width=resW;fallbackCanvas.height=resH;if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);if(gl)buildCoreMesh();generateParticles();updateMarkers();updateAtlas()}
+  let focusLabelActive=false;
   function makeMarkers(){buildAtlas();const el=$('markers');el.replaceChildren();markerEls=[];stories.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='star-marker'+(s.type==='legend'?' is-legend-star':s.type==='editorial'?' is-editorial-star':'');b.title='Открыть '+(s.type==='legend'?'цитату ':'историю ')+s.alias;b.setAttribute('aria-label','История '+s.alias);b.addEventListener('click',e=>{e.stopPropagation();focus(i,true)});el.append(b);markerEls.push(b)})}
   function updateMarkers(){
-    const options=[];
-    for(let i=0;i<stories.length;i++){
-      const p=project(stories[i].p),s=stories[i];
-      if(p.z>-.08&&lensMatches(s))
-        options.push({i,score:(selected===i?100:0)+(s.type==='legend'?14:s.type==='editorial'?4:0)+p.z*3});
+    // Rank the front-side stars and reject crowded screen positions. Keep the
+    // chosen star first and retain navigation for hidden ones through the dock.
+    const front=[];
+    const locations=stories.map((story,i)=>{
+      const point=project(story.p);
+      if(point.z>-.08&&lensMatches(story)&&point.x>18&&point.x<w-18&&point.y>18&&point.y<h-18){
+        front.push({i,x:point.x,y:point.y,score:(selected===i?100:0)+(story.type==='legend'?14:story.type==='editorial'?4:0)+point.z*3});
+      }
+      return point;
+    });
+    front.sort((a,b)=>b.score-a.score);
+    const mobile=w<820,limit=mobile?8:15,spacing=mobile?43:28,visible=new Set(),placed=[];
+    for(const star of front){
+      if(placed.length>=limit)break;
+      if(placed.some(p=>Math.hypot(star.x-p.x,star.y-p.y)<spacing))continue;
+      placed.push(star);visible.add(star.i);
     }
-    options.sort((a,b)=>b.score-a.score);
-    const visible=new Set(options.slice(0,w<820?10:17).map(x=>x.i));
     for(let i=0;i<markerEls.length;i++){
-      const p=project(stories[i].p),m=markerEls[i],v=visible.has(i);
+      const m=markerEls[i],p=locations[i],v=visible.has(i);
       m.style.left=p.x+'px';m.style.top=p.y+'px';
       m.style.opacity=v?'1':'0';m.style.pointerEvents=v?'auto':'none';
-      m.classList.toggle('is-selected',i===selected);m.setAttribute('aria-hidden',String(!v));
+      if(m.tabIndex!==(v?0:-1))m.tabIndex=v?0:-1;
+      if(m.getAttribute('aria-hidden')!==String(!v))m.setAttribute('aria-hidden',String(!v));
+      m.classList.toggle('is-selected',i===selected);
+    }
+    const label=$('starFocusLabel');
+    if(label){
+      const p=locations[selected],show=focusLabelActive&&visible.has(selected)
+        &&$('drawer').hidden&&$('memoryDive').hidden&&$('birthOverlay').hidden;
+      label.hidden=!show;
+      if(show){
+        label.style.left=clamp(p.x,92,w-92)+'px';
+        label.style.top=clamp(p.y,115,h-116)+'px';
+      }
     }
   }
   function queueFrame(){
@@ -1486,7 +1509,7 @@ void main(){
   function animate(t){
     frameScheduled=false;
     if(document.hidden)return;
-    const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:.067;
+    const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:1-Math.exp(-dt/245);
     if(flightFinish&&t>flightFinish){flightFinish=0;targetZoom=1.13}
     if(spinning&&!dragging&&!birth)targetY+=dt*.000055;
     // A damped continuation of the last touch: physical, not perpetual spinning.
@@ -1512,7 +1535,7 @@ void main(){
     if(open){beginDive(i);return}
     const next=(i+stories.length)%stories.length;
     if(!reduceMotion&&next!==selected){travelFrom=selected;travelTo=next;travelStarted=performance.now()}
-    inertiaY=0;inertiaX=0;selected=next;
+    focusLabelActive=true;inertiaY=0;inertiaX=0;selected=next;
     if(guidedJourney){
       const step=guidedJourney.indices.indexOf(next);
       if(step<0)endMemoryJourney();else{guidedJourney.step=step;syncJourneyStatus()}
@@ -1520,6 +1543,8 @@ void main(){
     const s=stories[selected],p=s.p;if(!lensMatches(s))setLens('All',false);targetY=unwrappedY(Math.atan2(-p[0],p[2]));targetX=clamp(Math.atan2(p[1],Math.hypot(p[0],p[2])),-.9,.9);targetZoom=reduceMotion?1.13:1.28;flightFinish=reduceMotion?0:performance.now()+1100;spinning=false;$('autoRotate').textContent='▶';$('autoRotate').setAttribute('aria-pressed','false');shock={radius:.07};updateCard();updateMarkers();if(open)showStory(s)}
   function updateCard(){
     const s=stories[selected];
+    $('starFocusAlias').textContent=(s.type==='legend'?'★ ':'@')+s.alias;
+    $('starFocusType').textContent=s.category.toUpperCase()+' / '+s.market;
     $('selectedNum').textContent=s.type==='legend'?'★ LEGEND / SOURCE VERIFIED':s.type==='editorial'?'✦ ORIGINAL / EDITORIAL':s.local?'LOCAL DEMO / NOT PUBLISHED':'FICTIONAL EXAMPLE / '+String(s.id).padStart(3,'0');
     $('selectedQuote').textContent='«'+s.quote.replace(/[«»]/g,'')+'»';
     $('selectedBy').textContent=(s.type==='legend'?'★ ':'@')+s.alias+' · '+s.market+' · '+s.category;
@@ -1785,7 +1810,7 @@ void main(){
     resize();showToast('Качество: '+quality);
   }
   function setSpin(b){spinning=b;if(b){inertiaY=0;inertiaX=0}$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
-  function reset(){endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
+  function reset(){focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
   function connectControls(){
     $('headerCreate').onclick=$('heroCreate').onclick=showCreate;
     $('heroExplore').onclick=()=>setImmersive(true);$('focusMode').onclick=()=>setImmersive(!immersive);
