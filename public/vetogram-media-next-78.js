@@ -1,0 +1,102 @@
+/* VETOGRAM 7.8 — actual actions in existing Cinema, Music and Books.
+ * Never creates a second player, searches messages or fabricates titles.
+ */
+(() => {
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const root=$('v78MediaHub');if(!root)return;
+ const module=root.dataset.v78Module;
+ if(!['cinema','music','books'].includes(module))return;
+ const status=$('v78MediaStatus');
+ const say=message=>{if(status)status.textContent=message;};
+ const focusSearch=id=>{
+   const field=$(id);
+   if(!field)return;
+   field.focus?.({preventScroll:true});
+   field.scrollIntoView?.({behavior:'smooth',block:'center'});
+ };
+ function movie(action){
+   const api=window.VetogramCinema;
+   if(!api?.openTab){say('Кинотеатр ещё загружается. Повтори действие.');return;}
+   if(action==='search'){api.openTab('search');focusSearch('cinemaSearch');say('Поиск по настоящему каталогу; возможность просмотра зависит от источника.');}
+   if(action==='series'){api.openTab('series');say('Сериалы и доступные эпизоды. Проверяй источники на карточке.');}
+   if(action==='library'){api.openTab('library');say('Избранное и сохранённые просмотры этого устройства.');}
+   if(action==='continue'){
+     const records=typeof api.getLibrary==='function'?api.getLibrary():[];
+     const item=Array.isArray(records)?records.filter(x=>x?.source==='progress'&&x.progress>0&&x.progress<1)
+       .sort((a,b)=>(Number(b.at)||0)-(Number(a.at)||0))[0]:null;
+     if(item&&api.openFilm?.(item.id)!==false){
+       say('Открыты сведения о «'+String(item.title||'фильме').slice(0,80)+'». Нажми «Смотреть» для продолжения.');
+     }else{
+       api.openTab('catalog');say('Незавершённых просмотров пока нет. Выбери фильм из каталога.');
+     }
+   }
+ }
+ function music(action){
+   const api=window.VetogramMusic;
+   if(!api?.showPage){say('Музыкальный раздел ещё загружается. Повтори действие.');return;}
+   const destinations={search:['search','Ищи доступные аудиозаписи и свои треки.'],library:['library','Здесь личные файлы, сохранённые треки и избранное.'],
+     radio:['radio','Выбирай доступную радиостанцию в каталоге.'],import:['import','Добавляй только собственные или разрешённые записи.']};
+   const item=destinations[action];
+   if(item){api.showPage(item[0]);say(item[1]);if(action==='search')focusSearch('searchInput');}
+ }
+ function book(action){
+   const api=window.VetogramBooks;
+   if(action==='continue'){
+     if(!$('continueShelf')?.hidden&&$('continueAction')){
+       $('continueAction').click();
+       say('Восстанавливаем последнюю сохранённую страницу.');
+     }else{
+       $('heroReadNow')?.click();
+       say('Нет сохранённой страницы. Выбери книгу с доступным полным текстом.');
+     }
+   }
+   if(action==='library'){$('myLibrary')?.click();say('Открывается личная книжная полка.');}
+   if(action==='discover'){
+     const button=document.querySelector('[data-books-source="complete"]');
+     button?.click();focusSearch('bookSearch');
+     say('Выбраны издания для чтения. Полнота текста указана на карточке.');
+   }
+   if(action==='import'){
+     if(typeof api?.showImport==='function'){api.showImport();say('Добавь свой EPUB, FB2 или TXT — файлы остаются на устройстве.');}
+     else say('Импорт книг ещё загружается. Повтори действие.');
+   }
+ }
+ const actions={
+   cinema:new Set(['continue','series','search','library']),
+   music:new Set(['search','library','radio','import']),
+   books:new Set(['continue','library','discover','import'])
+ };
+ root.querySelectorAll('[data-v78-action]').forEach(button=>{
+   button.addEventListener('click',()=>{
+     const action=button.dataset.v78Action;
+     if(!actions[module]?.has(action))return;
+     try {
+       if(module==='cinema')movie(action);
+       if(module==='music')music(action);
+       if(module==='books')book(action);
+     }catch{say('Действие не открылось. Можно повторить, не теряя данные.');}
+   });
+ });
+ if(module==='music'){
+   const audio=$('audio'),nowTitle=$('v78NowTitle'),nowArtist=$('v78NowArtist'),toggle=$('v78NowToggle');
+   const update=()=>{
+     const track=window.VetogramMusic?.now?.();
+     const playable=!!track&&!!audio?.src;
+     if(nowTitle)nowTitle.textContent=track?.title||'Выбери доступную запись';
+     if(nowArtist)nowArtist.textContent=track?.artist||'Плеер внутри Vetogram';
+     if(toggle){toggle.disabled=!playable;toggle.textContent=!audio?.paused&&playable?'Ⅱ':'▶';toggle.setAttribute('aria-label',!audio?.paused&&playable?'Приостановить музыку':'Воспроизвести музыку');}
+   };
+   for(const event of ['play','playing','pause','ended','loadedmetadata','error','emptied'])audio?.addEventListener(event,update);
+   document.addEventListener('vetogram:audio-playing',update);
+   document.addEventListener('vetogram:library-change',update);
+   toggle?.addEventListener('click',()=>{
+     if(toggle.disabled)return;
+     // Delegate to the existing player so queue, Media Session and sleep timer
+     // stay owned by the original audio controller.
+     $('miniPlay')?.click();
+     update();
+   });
+   update();
+ }
+})();
