@@ -649,6 +649,24 @@
         const button=node("button","cinema-genre-tile");
         button.type="button";button.style.setProperty("--tile-hue",String(hue));
         button.dataset.glyph=glyph;
+        // Show authentic artwork from an existing catalog film when one is
+        // available. Never invent a poster or fetch unrelated stock imagery.
+        const matchesGenre=f=>label==="Сериалы"?f.contentType==="Сериалы":
+          label==="Мультфильмы"?f.contentType==="Мультфильмы":
+          label==="Фильмы"?f.contentType!=="Сериалы"&&f.contentType!=="Мультфильмы":
+          Array.isArray(f.genres)&&f.genres.includes(label);
+        const representative=films.find(f=>matchesGenre(f)&&
+          [state.posters.get(f.id),f.poster].some(url=>typeof url==='string'&&/^https:\/\//i.test(url)));
+        if(representative){
+          const src=[state.posters.get(representative.id),representative.poster]
+            .find(url=>typeof url==='string'&&/^https:\/\//i.test(url)&&!failedPosterUrls.has(url));
+          if(src){
+            const img=node("img","v80-genre-image");
+            img.loading="lazy";img.decoding="async";img.alt="";
+            img.src=src;img.onerror=()=>{failedPosterUrls.add(src);img.remove()};
+            button.append(img);
+          }
+        }
         const small=node("small");small.textContent="ОТКРЫТЬ";
         const strong=node("strong");strong.textContent=label;
         button.append(small,strong);
