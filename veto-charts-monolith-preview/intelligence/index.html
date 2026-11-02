@@ -102,6 +102,18 @@ header{height:50px;padding:0 12px}.wrap{padding:0 7px 20px}
 .v3-no-data{color:#999396;font-size:11px;line-height:1.6;padding:25px 17px}
 @media(max-width:1040px){.v3-nav button{font-size:12px}.v3-quick-questions{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.v3-nav button{font-size:10px;min-height:46px}.v3-quick-questions button{min-height:46px;padding:9px}.v3-dialog{max-height:330px}}
+
+.v3-top-actions{display:flex;gap:9px;align-items:center}
+.v3-ask-chart{padding:8px 11px;min-height:32px;background:#32201d;border:1px solid #9b5749;border-radius:5px;color:#ffb7a6;font-size:10px;font-weight:740;white-space:nowrap}
+.v3-ask-chart:hover{background:#4a2923}
+.v3-close{display:none}.v3-mask[hidden]{display:none}
+@media(max-width:1100px){
+.v3-mask:not([hidden]){display:block;position:fixed;inset:0;background:#010204b9;backdrop-filter:blur(4px);z-index:52}
+#rail.v3-drawer-active{position:fixed!important;left:12px;right:12px;bottom:9px;top:auto;width:auto;max-height:min(78vh,800px);overflow:auto;z-index:53;border:1px solid #75463d;border-radius:12px 12px 8px 8px;box-shadow:0 0 85px #000c}
+#rail.v3-drawer-active .v3-close{display:grid;place-items:center;position:sticky;top:0;margin-left:auto;width:37px;height:29px;background:#221a1a;border:0;color:#fff;font-size:19px;z-index:5}
+#rail.v3-drawer-active .v3-nav{position:sticky;top:29px;z-index:5}
+}
+@media(max-width:650px){.v3-ask-chart{font-size:10px;padding:6px 8px}.v3-top-actions{gap:6px}}
 </style>
 </head>
 <body>
@@ -119,12 +131,13 @@ header{height:50px;padding:0 12px}.wrap{padding:0 7px 20px}
 <div class="status"><div><i id="statusdot"></i><strong id="statuslabel">Подключаем биржу…</strong> <em>/</em> <span id="stamp">Загружаем подтверждённые свечи</span></div><div id="meta">RESEARCH / NOT TRADE ADVICE</div></div>
 <div class="product">
 <div class="chartcol">
-<div class="plotbar"><div><div class="mini">VETO / STRUCTURE ANALYSIS</div><h1>Рынок. Без лишнего.</h1></div><div class="mobile-chart-tools"><button id="layersToggle" type="button" aria-controls="layersSection" aria-expanded="false">☷ Слои</button><div class="zoom" id="zoom"></div></div></div>
+<div class="plotbar"><div><div class="mini">VETO / STRUCTURE ANALYSIS</div><h1>Рынок. Без лишнего.</h1></div><div class="mobile-chart-tools"><button id="layersToggle" type="button" aria-controls="layersSection" aria-expanded="false">☷ Слои</button><div class="v3-top-actions"><button id="v3-ask-chart" type="button" class="v3-ask-chart">✦ Спросить VETO</button><div class="zoom" id="zoom"></div></div></div></div>
 <div class="layers" id="layersSection"><span>СЛОИ</span><div id="layers" style="display:flex;gap:7px;flex-wrap:wrap"></div></div><div class="mobile-readout" aria-live="polite"><span class="readout-icon">◈</span><div><strong id="mobileReadoutTitle">VETO / РЫНОЧНАЯ СТРУКТУРА</strong><p id="mobileReadoutText">Получаем проверенные свечи…</p></div></div>
 <div class="plot" id="plot"><div class="plot-empty"><b>Загружаем рыночную структуру</b><span>График отобразится после получения биржевых свечей.</span></div></div>
 <div class="time"><div class="timename"><span class="clock">◴</span><div><strong>TIME MACHINE</strong><small id="timehelp">Пересчёт структуры без будущих свечей</small></div></div><div class="controls"><button id="toggleReplay">◀ В прошлое</button><button id="stepBack" hidden>◀</button><input type="range" id="replay" hidden min="59" max="239" value="180" aria-label="Исторический курсор"><button id="stepNext" hidden>▶</button></div></div>
 </div>
-<aside class="rail" id="rail">
+<div id="v3-mask" class="v3-mask" hidden></div><aside class="rail" id="rail">
+<button class="v3-close" id="v3-close" type="button" aria-label="Закрыть чат">×</button>
 <div class="v3-nav" role="tablist" aria-label="VETO Intelligence">
 <button type="button" role="tab" data-v3="insights" aria-selected="true">Обзор</button>
 <button type="button" role="tab" data-v3="chat" aria-selected="false">Спросить VETO</button>
@@ -295,6 +308,19 @@ $("v3-save").onclick=()=>{
  const item={id:"veto-"+Date.now(),localOnly:true,symbol:state.symbol,tf:state.tf,price:v.last,closedAt:fmtTime(v.bars.at(-1).closeTime),savedAt:new Date().toISOString(),direction:v.dir,supports:v.supports?.map(x=>x.price)||[],resistances:v.resistances?.map(x=>x.price)||[]};
  try{localStorage.setItem(V3KEY,JSON.stringify([item,...v3ReadMemory()].slice(0,12)));v3RenderMemory();}catch{alert("Локальное хранилище недоступно");}
 };
+function v3CloseDrawer(){
+ $("rail").classList.remove("v3-drawer-active");
+ $("v3-mask").hidden=true;
+}
+$("v3-ask-chart").onclick=()=>{
+ v3Switch("chat");
+ if(window.matchMedia("(max-width:1100px)").matches){
+  $("rail").classList.add("v3-drawer-active");$("v3-mask").hidden=false;
+ }else $("rail").scrollIntoView({behavior:"smooth",block:"start"});
+};
+$("v3-close").onclick=v3CloseDrawer;
+$("v3-mask").onclick=v3CloseDrawer;
+document.addEventListener("keydown",event=>{if(event.key==="Escape")v3CloseDrawer();});
 load();
 </script>
 </body></html>
