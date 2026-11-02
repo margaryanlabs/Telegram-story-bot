@@ -1,4 +1,4 @@
-# Market Remembers — VETO Universe 7.5.2 (isolated review)
+# Market Remembers — VETO Universe 7.5.3 (isolated review)
 
 **Reference:** V7.4 Human Legacy at `market-remembers-preview/human-legacy-v74.html`. The original document, source branch, and Render URL must remain unchanged.
 
@@ -25,6 +25,16 @@ This refinement keeps the exact V7.4 sphere, palettes, visual hierarchy, stories
 - Camera easing now depends on elapsed frame duration, making the same interaction feel similar across differing device refresh rates.
 - Refined selected card, control focus states and mobile dock; no content or user-data migration.
 
+## V7.5.3 — cinematic core runtime refinement
+
+No 3D globe engine, visual style, Memory Path, My Legacy, user-data key or V7.4 original is replaced. The upgrade focuses on **perceived smoothness and mobile resilience**:
+
+- **Pause invisible 3D rendering:** when the drawer/reader or birth overlay covers the scene, the animation loop parks without recreating WebGL resources. Closing the drawer resumes the existing renderer with a reset frame-time accumulator. This reduces needless GPU work while reading.
+- **Use the actual CSS 100dvh viewport:** the stage's rendered bounding box, rather than an occasionally stale mobile layout viewport, drives projection and canvas sizing.
+- **Batch resize signals:** coalesce successive browser-toolbar/rotation resize events into one animation frame and skip expensive mesh/particle rebuilds when dimensions and pixel ratio are unchanged.
+- **Cancellation-safe gestures:** `pointercancel` and lost pointer capture never count as taps; non-primary mouse presses no longer trigger visual effects or cancel a story dive.
+- **Subtle ambient lighting:** carefully controlled background gradient, no added shader dependency or dramatic theme change. The same VETO globe and character are preserved.
+
 ## Boundaries
 
 No accounts, global stories, payments, backend or public user-data sync are introduced. The original localStorage keys are intentionally preserved within the V7.5 origin. Because V7.4 and V7.5 are on separate domains, their local storage is separate; no migration occurs.
@@ -35,4 +45,4 @@ All three paths are fiction-based editorial navigation. The three local V7.5 rea
 
 Run `node --test market-remembers-v75/tests/*.test.mjs` at repository root.
 
-Tests assert preserved WebGL/legacy code, legacy/privacy copy, semantic UI anchors, full inline JS parsing, realistic isolated route transitions, selected-star collision priority, mobile marker limits, keyboard visibility, and stable frame-duration easing. They **do not** replace end-to-end browser/GPU/mobile visual verification.
+Tests assert preserved WebGL/legacy code, legacy/privacy copy, semantic UI anchors, full inline JS parsing, realistic isolated route transitions, selected-star collision priority, mobile marker limits, keyboard visibility, frame-duration easing, covered-scene RAF parking, scene-relative resize coalescing and cancelled-touch handling. They **do not** replace end-to-end browser/GPU/mobile visual verification.

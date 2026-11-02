@@ -9,7 +9,7 @@ const css=current.split('<style>')[1]?.split('</style>')[0];
 
 test('V7.5.1 preserves V7.4 visual engine, local storage and fictional disclosures',()=>{
   assert.ok(original.includes('V.07.4 / HUMAN LEGACY'));
-  assert.match(current,/V\.07\.5(?:\.\d+)? \/ (?:STELLAR UX|MEMORY PATHS)/);
+  assert.match(current,/V\.07\.5(?:\.\d+)? \/ (?:CINEMATIC CORE|STELLAR UX|MEMORY PATHS)/);
   assert.ok(current.includes('function generateParticles'));
   assert.ok(current.includes('function initGL'));
   assert.ok(current.includes('function showLegacy'));
