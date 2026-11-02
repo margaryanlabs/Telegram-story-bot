@@ -117,3 +117,14 @@ test('cinema genre categories display only actual existing catalog posters, neve
  assert.match(css,/\.cinema-genre-tile \.v80-genre-image/);
  assert.doesNotMatch(js,/https:\/\/|https:\\\/\\\//);
 });
+
+test('mobile first fold prioritizes real catalog after compact header for every module',()=>{
+ const styles=css.slice(css.indexOf('/* V8.1 mobile first-fold cleanup'));
+ assert.ok(styles.length>2000);
+ for(const selector of ['.cinema-hero','.hero#hero','.hero-veto','.v72-media-hero']){
+   assert.match(styles,new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+ }
+ for(const value of ['min-height:230px','min-height:178px','min-height:209px','min-height:184px'])
+   assert.ok(styles.includes(value),'missing mobile masthead limit '+value);
+ assert.match(styles,/scroll-margin-top:82px/);
+});
