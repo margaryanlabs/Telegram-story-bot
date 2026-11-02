@@ -8,13 +8,13 @@ const music=readFileSync(new URL('../public/music-module.html',import.meta.url),
 const books=readFileSync(new URL('../public/books.html',import.meta.url),'utf8');
 function el(){
  return {textContent:'',hidden:false,src:'',paused:true,value:0,max:100,
-   attrs:{},style:{},children:[],handlers:{},dataset:{},disabled:false,
+   attrs:{},style:{},children:[],handlers:{},dataset:{},disabled:false,calls:0,
    setAttribute(k,v){this.attrs[k]=v;},
    addEventListener(k,fn){this.handlers[k]=fn;},
    append(...values){this.children.push(...values);},
    appendChild(value){this.children.push(value);},
    replaceChildren(...values){this.children=values;},
-   click(){this.handlers.click?.();},
+   click(){this.calls++;this.handlers.click?.();},
    focus(){this.focused=true;},
    scrollIntoView(){}
  };
@@ -118,7 +118,7 @@ test('books reading summary mirrors real Continue shelf only when a saved book e
  assert.equal(ui.nodes.get('v710ReadingTitle').textContent,'A real book');
  assert.equal(ui.nodes.get('v710ReadingPosition').textContent,'Часть 4 · 8 стр.');
  ui.click('continue');
- assert.equal(ui.nodes.get('continueAction').textContent,'');
+ assert.equal(ui.nodes.get('continueAction').calls,1);
  shelf.hidden=true;
  ui.nodes.get('readerBack').click();
  assert.equal(panel.hidden,true);
