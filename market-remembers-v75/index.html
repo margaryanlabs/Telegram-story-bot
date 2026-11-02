@@ -585,6 +585,59 @@ animation:memory-fade-in .26s ease both}
  border:1px solid #83b7bd80;background:#142832;color:#bde7ea;font-size:12px;letter-spacing:.02em}
 .save-lesson-btn[aria-pressed="true"]{border-color:#b6d9caad;background:#1c393c;color:#e2f1e9}
 @media(max-width:820px){.save-lesson-btn{font-size:12px;min-height:45px}}
+
+/* VETO UNIVERSE V7.5 — surgical improvements on the original V7.4 visual foundation */
+.version-compare{border:1px solid rgba(145,166,206,.26);background:rgba(4,9,17,.75);border-radius:4px;padding:7px 9px}
+.obsidian .selected-card{border-color:rgba(126,178,196,.34);box-shadow:0 22px 76px rgba(0,0,0,.65),0 0 34px rgba(97,154,180,.045)}
+.obsidian .selected-card .card-line{border-bottom:1px solid rgba(135,170,187,.15);padding-bottom:11px}
+.obsidian .selected-card p{line-height:1.4;letter-spacing:-.025em}
+.obsidian .world-controls{border-color:rgba(136,165,185,.34);box-shadow:0 12px 35px rgba(0,0,0,.28)}
+.obsidian .lens-panel{border-color:rgba(132,176,195,.48);box-shadow:0 26px 88px rgba(0,0,0,.77),0 0 42px rgba(74,114,171,.08);
+max-height:min(76dvh,740px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#426879 transparent}
+.obsidian .lens-panel:focus-within{border-color:rgba(148,204,218,.65)}
+.memory-path-chooser{margin:14px 0 16px;padding:13px 11px 11px;border:1px solid rgba(126,159,183,.29);background:linear-gradient(145deg,rgba(8,24,34,.82),rgba(9,17,29,.68));border-radius:6px}
+.memory-path-kicker{color:#98c5d5;font-size:9px;letter-spacing:.14em;font-weight:650;margin:0 0 10px}
+.memory-path-chooser button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+padding:10px 10px;border:1px solid transparent;border-top-color:rgba(137,167,189,.16);background:transparent;color:#e8f3f6;text-align:left;border-radius:2px}
+.memory-path-chooser button:hover,.memory-path-chooser button:focus-visible{background:rgba(75,135,161,.16);border-color:rgba(132,185,202,.34)}
+.memory-path-chooser button span{display:flex;flex-direction:column;gap:4px}
+.memory-path-chooser button b{font-size:11px;font-weight:620;letter-spacing:.02em}
+.memory-path-chooser button small{font-size:9px;color:#9fb1be;letter-spacing:.02em}
+.memory-path-chooser button em{font-size:10px;font-style:normal;letter-spacing:.12em;color:#c2e6ed;white-space:nowrap}
+.journey-status{position:absolute;z-index:12;bottom:55px;left:50%;transform:translateX(-50%);
+display:flex;align-items:center;gap:11px;width:max-content;max-width:min(440px,calc(100vw - 28px));
+padding:10px 11px 10px 13px;border:1px solid rgba(149,202,218,.43);border-radius:4px;
+background:linear-gradient(115deg,rgba(8,19,29,.96),rgba(14,28,42,.96));box-shadow:0 14px 42px rgba(0,0,0,.6);
+backdrop-filter:blur(12px);pointer-events:auto}
+.journey-status[hidden]{display:none!important}
+.journey-status-star{color:#b9edfa;font-size:18px;text-shadow:0 0 15px rgba(125,205,227,.5)}
+.journey-status>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.journey-status-eyebrow{font-size:8px;color:#87bbc9;letter-spacing:.18em;white-space:nowrap}
+.journey-status strong{color:#f0f8fa;font-size:10px;font-weight:650;letter-spacing:.07em;line-height:1.35;overflow-wrap:anywhere}
+.journey-status button{margin-left:4px;width:30px;height:30px;flex:none;border:1px solid rgba(138,180,199,.24);border-radius:3px;background:rgba(21,41,55,.67);color:#d1e6ec;font-size:20px}
+.journey-status button:hover{background:rgba(70,116,138,.28)}
+.obsidian .star-marker.is-selected{box-shadow:0 0 15px #d9f6ff,0 0 35px #7dcceb,0 0 70px rgba(132,116,244,.48)}
+@media(max-width:820px){
+ .obsidian .lens-panel{max-height:min(66dvh,570px);bottom:90px}
+ .journey-status{bottom:168px;left:auto;right:14px;transform:none;max-width:calc(100vw - 28px);padding:8px 10px}
+ .journey-status strong{font-size:9px}
+ .journey-status-eyebrow{font-size:7px}
+}
+@media(max-width:820px) and (max-height:620px){
+ .journey-status{bottom:142px}
+ .obsidian .lens-panel{max-height:52dvh;bottom:80px}
+}
+@media(max-width:460px){
+ .memory-path-chooser{margin:11px 0}
+ .memory-path-chooser button{padding:9px 5px}
+ .memory-path-chooser button small{font-size:8px}
+ .journey-status{right:12px}
+ .obsidian .lens-panel{padding:13px}
+}
+@media(prefers-reduced-motion:reduce){
+ .journey-status,.memory-path-chooser button{animation:none!important;transition:none!important}
+}
+
 </style>
 </head>
 <body>
