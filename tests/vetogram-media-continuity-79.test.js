@@ -1,0 +1,82 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+const file=name=>readFileSync(new URL('../public/'+name,import.meta.url),'utf8');
+const universe=file('vetogram-universe.js');
+const bridge=file('vetogram-media-bridge.js');
+const cinema=file('cinema.js');
+const music=file('vetogram-music.js');
+const media=file('vetogram-media-next-78.js');
+const css=file('vetogram-media-next-78.css');
+test('media navigation is owner-verified, active-frame-only and module allowlisted',()=>{
+ assert.match(universe,/event\.origin!==location\.origin/);
+ assert.match(universe,/item\.element\.contentWindow===event\.source/);
+ assert.match(universe,/message\.scope!==ownerScope\(\)/);
+ assert.match(universe,/if\(!item\.ready\)return/);
+ assert.match(universe,/message\.type==='navigate' && activeModule===name/);
+ assert.match(universe,/Object\.prototype\.hasOwnProperty\.call\(definitions,message\.module\)/);
+ assert.match(media,/context\?\.embedded && window\.parent!==window/);
+ assert.match(media,/target:name==='hub'\?'hub':'module'/);
+ assert.match(media,/window\.location\.origin/);
+ assert.doesNotMatch(media,/location\.href\s*=|window\.open\(/);
+ assert.match(css,/html\.v6-embedded \.v79-media-switcher/);
+});
+test('hidden cinema frame pauses video, and native progress is saved at browser exit',()=>{
+ assert.match(bridge,/data\.action==='visible'&&!data\.visible/);
+ assert.match(bridge,/video\?\.pause\(\)/);
+ assert.match(bridge,/cinemaPlayerClose/);
+ assert.match(cinema,/video\.addEventListener\("pause",\(\)=>saveProgress\(true\)\)/);
+ assert.match(cinema,/window\.addEventListener\('pagehide',\(\)=>saveProgress\(true\)\)/);
+ assert.match(cinema,/if\(document\.hidden\)saveProgress\(true\)/);
+ assert.match(cinema,/Number\.isFinite\(video\.duration\)/);
+});
+test('music preference settings are scoped, validated and exclude personal recordings',()=>{
+ const begin=music.indexOf('// Account-scoped device preferences');
+ const end=music.indexOf('$("sleepSelect").onchange=',begin);
+ assert.ok(begin>=0 && end>begin);
+ const controlScript=music.slice(begin,end);
+ const initialStart=music.indexOf('audio.volume=.85;',end);
+ const initialEnd=music.indexOf('try{if("mediaSession"',initialStart);
+ assert.ok(initialStart>0 && initialEnd>initialStart);
+ const restoreScript=music.slice(initialStart,initialEnd);
+ const storage=new Map(),inputs=new Map([
+  ['volumeInput',{value:'85'}],['speedSelect',{value:'1'}]
+ ]);
+ const audio={volume:0,playbackRate:1};
+ const localStorage={getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)};
+ const ctx={audio,localStorage,key:'vetogram-music-v1:owner-7',$:id=>inputs.get(id),JSON,Math,Number,String};
+ runInNewContext(controlScript+'\n'+restoreScript,ctx);
+ assert.equal(audio.volume,.85);
+ inputs.get('volumeInput').oninput({target:{value:'42'}});
+ inputs.get('speedSelect').onchange({target:{value:'1.25'}});
+ let pref=JSON.parse(storage.get('vetogram-music-v1:owner-7:player-controls:v1'));
+ assert.deepEqual(pref,{volume:42,rate:1.25});
+ assert.equal(Object.keys(pref).length,2);
+ const other={audio:{volume:0,playbackRate:1},localStorage:{getItem:()=>null},key:'vetogram-music-v1:owner-8',$:id=>({value:null}),JSON,Math,Number,String};
+ runInNewContext(controlScript+'\n'+restoreScript,other);
+ assert.equal(other.audio.volume,.85,'different account has no inherited volume');
+ const reload={audio:{volume:0,playbackRate:1},localStorage,key:'vetogram-music-v1:owner-7',$:id=>inputs.get(id),JSON,Math,Number,String};
+ runInNewContext(controlScript+'\n'+restoreScript,reload);
+ assert.equal(reload.audio.volume,.42);
+ assert.equal(reload.audio.playbackRate,1.25);
+ assert.equal(inputs.get('volumeInput').value,'42');
+ assert.equal(inputs.get('speedSelect').value,'1.25');
+});
+test('a corrupted preference never interrupts audio startup or selects unsafe speed',()=>{
+ const saved=new Map([['vetogram-music-v1:device:player-controls:v1','{bad-json']]);
+ const start=music.indexOf('// Account-scoped device preferences');
+ const end=music.indexOf('$("sleepSelect").onchange=',start);
+ const rest=music.indexOf('audio.volume=.85;',end);
+ const restEnd=music.indexOf('try{if("mediaSession"',rest);
+ const run=(value)=>{
+  saved.set('vetogram-music-v1:device:player-controls:v1',value);
+  const a={volume:0,playbackRate:1};
+  const ctx={audio:a,localStorage:{getItem:k=>saved.get(k)||null,setItem:()=>{}},key:'vetogram-music-v1:device',$:()=>({value:null}),JSON,Math,Number,String};
+  assert.doesNotThrow(()=>runInNewContext(music.slice(start,end)+'\n'+music.slice(rest,restEnd),ctx));
+  return a;
+ };
+ assert.equal(run('{broken').volume,.85);
+ const bad=run(JSON.stringify({volume:999,rate:900}));
+ assert.equal(bad.volume,.85);assert.equal(bad.playbackRate,1);
+});
