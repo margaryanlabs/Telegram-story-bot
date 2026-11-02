@@ -247,7 +247,7 @@ b.forEach((c,j)=>{let i=offset+j,volY=V2-c.volume/mv*(V2-V1),color=c.close>=c.op
 return s+'</svg>';}
 function storyList(v){const stories=[{id:"r",head:"01 / STRUCTURE",title:v.dir==="UP"?"Восходящая структура":v.dir==="DOWN"?"Нисходящая структура":"Неопределённая структура",body:v.dir==="UP"?"EMA20 выше EMA50, движение за 20 свечей положительное. Это описание, не прогноз.":v.dir==="DOWN"?"EMA20 ниже EMA50, движение за 20 свечей отрицательное. Не торговый сигнал.":"Тренд и импульс не дают согласованного подтверждения."}];for(const [kind,label,index] of [["resistance","Сопротивление","02"],["support","Поддержка","03"]]){const level=v.levels.find(l=>l.kind===kind);if(level)stories.push({id:kind,head:index+" / PRICE STRUCTURE",title:label+" "+format(level.price),body:"Алгоритм подтвердил "+level.touches+" локальных экстремумов. Нажми, чтобы увидеть источник линии.",level})}stories.push({id:"vol",head:"04 / CONTEXT",title:"Импульс и волатильность",body:"RSI 14: "+format(v.rsi)+" · ATR 14: "+format(v.atr)+". Статистика не является вероятностью выигрыша."});$("storycount").textContent=String(stories.length).padStart(2,"0");$("stories").innerHTML=stories.map((s,i)=>'<button class="story'+(s.level&&state.level===s.level.kind+":"+s.level.price?" selected":"")+'" data-story="'+i+'"><small>'+escapeHTML(s.head)+'</small><strong>'+escapeHTML(s.title)+'</strong><p>'+escapeHTML(s.body)+'</p><span>'+(s.level?"ПОКАЗАТЬ НА ГРАФИКЕ":"ОБЪЯСНЕНИЕ ИЗ ДАННЫХ")+' ›</span></button>').join("");$("stories").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{const s=stories[+b.dataset.story];if(s.level){state.level=s.level.kind+":"+s.level.price;render();}else{state.level=null;render();}}));}
 function inspector(v){const old=$("inspector");if(old)old.remove();if(!state.level)return;const l=v.levels.find(x=>x.kind+":"+x.price===state.level);if(!l)return;const html='<div class="inspector" id="inspector"><button class="close" id="closeInspector" aria-label="Закрыть">×</button><div class="mini">'+(l.kind==="support"?"WHY THIS SUPPORT":"WHY THIS RESISTANCE")+'</div><h3>'+format(l.price)+'</h3><p>Уровень вычислен из подтверждённых локальных экстремумов, без произвольного размещения AI.</p><dl><dt>Подтверждено точек: </dt><dd>'+l.touches+'</dd><dt>Первая: </dt><dd>'+fmtTime(l.first)+'</dd><dt>Последняя: </dt><dd>'+fmtTime(l.last)+'</dd></dl></div>';$("plot").insertAdjacentHTML("beforeend",html);$("closeInspector").onclick=()=>{state.level=null;render();};}
-function render(){buttons($("markets"),SYMS,s=>s===state.symbol,s=>{state.symbol=s;load();});buttons($("timeframes"),TF,s=>s===state.tf,s=>{state.tf=s;load();});buttons($("zoom"),matchMedia("(max-width:650px)").matches?["34","58","90"]:["90","140","240"],s=>+s===state.window,s=>{state.window=+s;render();});buttons($("layers"),LAYER,s=>state.layer.has(s),s=>{state.layer.has(s)?state.layer.delete(s):state.layer.add(s);render();});
+function render(){buttons($("markets"),SYMS,s=>s===state.symbol,s=>{state.symbol=s;load();});buttons($("timeframes"),TF,s=>s===state.tf,s=>{state.tf=s;load();if(v3Tab==="radar")void v4ScanRadar(true);});buttons($("zoom"),matchMedia("(max-width:650px)").matches?["34","58","90"]:["90","140","240"],s=>+s===state.window,s=>{state.window=+s;render();});buttons($("layers"),LAYER,s=>state.layer.has(s),s=>{state.layer.has(s)?state.layer.delete(s):state.layer.add(s);render();});
 $("period").textContent=state.tf.toUpperCase();$("replay").hidden=state.cursor===null;$("stepBack").hidden=state.cursor===null;$("stepNext").hidden=state.cursor===null;$("toggleReplay").textContent=state.cursor===null?"◀ В прошлое":"↪ К текущему";$("replay").max=Math.max(59,state.rows.length-1);$("replay").value=state.cursor??Math.max(59,state.rows.length-1);
 const v=analyze(),ok=v.status==="READY";$("copy").disabled=!ok;$("export").disabled=!ok;
 if(state.source==="connecting"){setStatus("Загрузка источника","other");$("stamp").textContent="Hyperliquid OHLCV";}else if(state.source==="error"){setStatus("Источник недоступен","other");$("stamp").textContent="Проверь подключение или обнови";}else if(state.source==="sample"){setStatus("ДЕМОНСТРАЦИЯ · синтетика","other");$("stamp").innerHTML='<span class="sample">НЕ РЫНОЧНЫЕ ДАННЫЕ</span>';}else if(ok){setStatus(state.cursor===null?"Биржевые свечи проверены":"Исторический срез","ready");$("stamp").textContent=(state.cursor!==null?"Срез на ":"Последняя свеча: ")+fmtTime(v.bars.at(-1).closeTime);}else{setStatus("Недостаточно проверенной истории","other");$("stamp").textContent="Нельзя сформировать анализ";}
@@ -367,8 +367,20 @@ document.addEventListener("keydown",event=>{if(event.key==="Escape")v3CloseDrawe
 let v4RadarCache=null;
 let v4Request=0;
 const v4RadarSymbols=["BTC","ETH","SOL"];
+function v4Normalize(raw,fetchedAt,tf){
+ const span=DUR[tf];
+ const valid=raw.filter(c=>c&&Number.isFinite(c.openTime)&&Number.isFinite(c.closeTime)
+   &&c.closeTime<=fetchedAt&&c.openTime<c.closeTime&&c.openTime>=fetchedAt-span*501
+   &&[c.open,c.high,c.low,c.close].every(n=>Number.isFinite(n)&&n>0)
+   &&Number.isFinite(c.volume)&&c.volume>=0
+   &&c.low<=Math.min(c.open,c.close)&&c.high>=Math.max(c.open,c.close)&&c.low<=c.high);
+ const sorted=[...new Map(valid.map(c=>[c.openTime,c])).values()].sort((a,b)=>a.openTime-b.openTime);
+ let start=sorted.length-1;
+ while(start>0&&sorted[start].openTime-sorted[start-1].openTime===span)start--;
+ return sorted.slice(Math.max(start,0)).slice(-240);
+}
 function v4Summarize(symbol,raw,fetchedAt,tf){
- const rows=normalBars(raw,fetchedAt);
+ const rows=v4Normalize(raw,fetchedAt,tf);
  if(rows.length<60)return {symbol,status:"INSUFFICIENT"};
  const candle=rows.at(-1);
  if(fetchedAt-candle.closeTime>DUR[tf]*2+90000)return {symbol,status:"STALE"};
@@ -423,7 +435,7 @@ async function v4ScanRadar(force=false){
   const rows=raw.map(r=>({openTime:number(r.t),closeTime:number(r.T),open:number(r.o),high:number(r.h),low:number(r.l),close:number(r.c),volume:number(r.v)}));
   return v4Summarize(symbol,rows,now,tf);
  }));
- if(id!==v4Request)return;
+ if(id!==v4Request||tf!==state.tf)return;
  v4RadarCache={interval:tf,at:Date.now(),items:results.map((x,i)=>x.status==="fulfilled"?x.value:{symbol:v4RadarSymbols[i],status:"SOURCE_ERROR"})};
  $("v4-radar-refresh").disabled=false;
  v4RenderRadar();
