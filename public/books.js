@@ -1134,6 +1134,9 @@
       cover:state.current.cover,language:state.current.language,sourceUrl:state.current.sourceUrl
     };
     persist('progress',progress);
+    // Update the genuine Continue shelf before broadcasting a page change.
+    // The shared Vetogram ribbon mirrors this DOM and must never show a stale chapter.
+    renderContinueShelf();
     if(typeof CustomEvent!=='undefined'&&typeof document.dispatchEvent==='function')document.dispatchEvent(new CustomEvent('vetogram:book-progress',{detail:{
       id:String(key),title:String(state.current.title||''),subtitle:Array.isArray(state.current.authors)?state.current.authors.join(', '):'Книга',
       progress:progressValue.fraction
