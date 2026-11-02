@@ -21,7 +21,7 @@
 .v78-portal-heading h2{font:760 clamp(24px,3vw,37px)/1.1 system-ui;letter-spacing:-.057em;color:#fff;margin:0 0 9px}
 .v78-portal-heading p{font:450 12px/1.65 system-ui;color:#abaeba;max-width:620px;margin:0}
 .v78-portal-mark{flex-shrink:0;color:var(--v78-accent);font:700 clamp(27px,4vw,49px)/1 system-ui;opacity:.55;letter-spacing:-.09em}
-.v78-action-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:0}
+.v78-action-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;min-width:0}
 .v78-action{
  display:flex;align-items:center;gap:10px;min-width:0;padding:16px;
  border:1px solid rgba(255,255,255,.16);border-radius:15px;
@@ -52,7 +52,7 @@
 .v78-music-portal{margin-left:0;margin-right:0;max-width:1360px}
 #reader:not([hidden]) ~ .v78-portal{display:none}
 @media(max-width:860px){
- .v78-action-grid{grid-template-columns:1fr;gap:8px}
+ .v78-action-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
  .v78-action{padding:13px 14px}
  .v78-portal-heading h2{font-size:26px}
  .v78-portal-mark{font-size:34px}
