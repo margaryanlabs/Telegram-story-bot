@@ -18,7 +18,7 @@ function node() {
     click(){if(!this.disabled)this.events.click?.();},
   };
 }
-function setup() {
+function setup(initial=[]) {
   const ids=['#vpTttGrid','#vpTttStatus','#vpTttWins','#vpTttReset','#vp2048Grid','#vp2048Score','#vp2048Best','#vp2048Status','#vp2048Reset','#vp2048Undo'];
   const elements=new Map(ids.map(id=>[id,node()]));
   const arrows=['left','right','up','down'].map(d=>{const el=node();el.dataset.vp2048=d;return el;});
@@ -28,7 +28,7 @@ function setup() {
     querySelectorAll:s=>s==='[data-vp-2048]'?arrows:[],
   };
   const keyboard={};
-  const storage=new Map();
+  const storage=new Map(initial);
   const document={
     querySelector:s=>s==='.screen[data-screen="play"]'?root:null,
     createElement:node,
@@ -131,4 +131,43 @@ test('2048 undo restores the exact previous board and score without deleting a r
   assert.ok(Number(ui.storage.get('vetogram:play:2048-best:v1')||0)>=savedHigh);
   ui.elements.get('#vp2048Reset').click();
   assert.equal(undo.disabled,true);
+});
+
+test('2048 session survives reload without restoring an old undo button',()=>{
+ const first=setup(),board=first.elements.get('#vp2048Grid'),undo=first.elements.get('#vp2048Undo');
+ const moves=['left','right','up','down'];
+ for(const dir of moves){
+   first.arrows.find(a=>a.dataset.vp2048===dir).click();
+   if(!undo.disabled)break;
+ }
+ assert.equal(undo.disabled,false,'at least one first move should be legal');
+ const previous=board.children.map(c=>c.textContent).join('|');
+ const score=first.elements.get('#vp2048Score').textContent;
+ const saved=first.storage.get('vetogram:play:2048-session:v1');
+ assert.ok(saved?.includes('"board"'));
+ const resumed=setup([...first.storage]);
+ assert.equal(resumed.elements.get('#vp2048Grid').children.map(c=>c.textContent).join('|'),previous);
+ assert.equal(resumed.elements.get('#vp2048Score').textContent,score);
+ assert.equal(resumed.elements.get('#vp2048Undo').disabled,true,'undo stack is not persisted across reloads');
+ assert.match(resumed.elements.get('#vp2048Status').textContent,/восстановлена/);
+ resumed.elements.get('#vp2048Reset').click();
+ const fresh=JSON.parse(resumed.storage.get('vetogram:play:2048-session:v1'));
+ assert.equal(fresh.points,0);
+ assert.equal(fresh.board.filter(Boolean).length,2);
+});
+test('2048 ignores malformed local session and starts a safe clean board',()=>{
+ const candidates=[
+   '{broken json',
+   JSON.stringify({board:['<script>'],points:-1,finished:false,achieved2048:false}),
+   JSON.stringify({board:Array(16).fill(99999),points:4,finished:false,achieved2048:false}),
+   JSON.stringify({board:Array(16).fill(0),points:0,finished:false,achieved2048:false}),
+ ];
+ for(const value of candidates){
+   const ui=setup([['vetogram:play:2048-session:v1',value]]);
+   const tiles=ui.elements.get('#vp2048Grid').children;
+   assert.equal(tiles.length,16);
+   assert.equal(tiles.filter(cell=>['2','4'].includes(cell.textContent)).length,2);
+   assert.equal(ui.elements.get('#vp2048Score').textContent,'Очки: 0');
+   assert.equal(ui.elements.get('#vp2048Undo').disabled,true);
+ }
 });
