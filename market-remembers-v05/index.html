@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090a0d" />
+  <meta name="description" content="THE MARKET REMEMBERS — архив человеческих историй о трейдинге. Оставь свой след на живой сфере рынка." />
+  <title>THE MARKET REMEMBERS — Leave your mark</title>
+  <link rel="stylesheet" href="./styles.css" />
+<link rel="stylesheet" href="./studio.css" />
+  
+</head>
+<body>
+  <a class="skip-link" href="#stories">Перейти к историям</a>
+  <div class="ambient ambient-a" aria-hidden="true"></div><div class="ambient ambient-b" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="The Market Remembers — главная">
+        <span class="brand-emblem" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-name">THE MARKET<br><strong>REMEMBERS</strong></span>
+      </a>
+      <nav class="main-nav" aria-label="Главная навигация">
+        <a href="#stories">Истории</a><a href="#my-legacy">Мой след</a><a href="#manifesto">Манифест</a>
+      </nav>
+      <button id="joinTop" class="nav-cta">Оставить след <span aria-hidden="true">↗</span></button>
+    </header>
+
+    <main>
+      <section class="hero" id="home" aria-labelledby="heroTitle">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="signal-dot"></span> THE LIVING ARCHIVE OF TRADERS <span class="eyebrow-line"></span> EST. 2026</div>
+          <h1 id="heroTitle">The market<br>never <span class="title-italic">forgets.</span><br><span class="muted-line">Neither should we.</span></h1>
+          <p class="intro">За каждой сделкой — человек. За каждой ошибкой — урок. Здесь истории трейдеров становятся звёздами — и остаются, чтобы другие могли найти в них свой ориентир.</p>
+          <div class="hero-actions">
+            <button class="primary-button" id="joinHero">Оставить свой след <span class="button-arrow">↗</span></button>
+            <button class="ghost-button" id="exploreButton"><span class="play-icon">◈</span> Исследовать сферу</button>
+          </div>
+          <div class="hero-footnote"><span class="little-stars" aria-hidden="true">✧</span><span>Исследуй истории, сохрани свой урок.<br><b>Сейчас это честная демонстрация концепции.</b></span></div>
+        </div>
+        <div class="universe-panel" id="universePanel">
+          <div class="universe-topline"><span><span class="live-indicator"></span> LIVING ARCHIVE / DEMO</span><span>12 FICTIONAL STORIES / DEMO</span></div>
+          <div class="globe-stage" id="globeStage" aria-label="Интерактивная трёхмерная сфера трейдерских историй. Тяните для вращения, прокручивайте для масштаба, нажимайте на выделенные точки, чтобы открыть историю.">
+            <div class="nebula halo-1" aria-hidden="true"></div><div class="nebula halo-2" aria-hidden="true"></div>
+            <div class="orbit orbit-one" aria-hidden="true"></div><div class="orbit orbit-two" aria-hidden="true"></div>
+            <canvas id="globeCanvas" aria-hidden="true"></canvas>
+            <button id="focusPin" class="focus-pin" type="button" aria-label="Открыть выделенную историю"><span class="focus-pin-orbit" aria-hidden="true"></span><span class="focus-pin-core"></span></button>
+            <div id="focusLegend" class="focus-legend" aria-hidden="true"><span class="focus-legend-kicker">CURRENT MEMORY</span><strong id="focusLegendName">@NORTHSTAR</strong><span id="focusLegendCategory">PATIENCE · DEMO</span></div>
+            <div class="globe-center-label" aria-hidden="true"><span class="crosshair">✧</span><span>EVERY STORY<br>IS A STAR</span></div>
+            <div class="coord coord-top">ARCHIVE / 001<br>HUMAN STORIES</div>
+            <div class="coord coord-bottom">HUMAN EXPERIENCE<br>EVERY DECISION LEAVES A TRACE</div>
+          </div>
+          <div class="universe-bottomline"><span>↔ Исследуй &nbsp; · &nbsp; ◉ Выбирай звёзды &nbsp; · &nbsp; ✦ Читай истории</span><div class="globe-tools"><div class="star-navigation" role="group" aria-label="Навигация по историям на сфере"><button id="previousStar" type="button" title="Предыдущая звезда" aria-label="Предыдущая звезда">←</button><span id="starPosition" class="star-position" role="status" aria-live="polite" aria-atomic="true">01 / 12</span><button id="nextStar" type="button" title="Следующая звезда" aria-label="Следующая звезда">→</button></div><button id="resetView" title="Сбросить ракурс" aria-label="Сбросить ракурс">⟳</button><button id="toggleSpin" aria-pressed="true" title="Остановить вращение" aria-label="Остановить вращение">Ⅱ</button></div></div>
+          <div class="story-float" id="storyFloat" role="button" tabindex="0" aria-label="Открыть текущую историю">
+            <span class="story-float-indicator">✦</span>
+            <span class="story-float-text"><small id="floatId">FICTIONAL STORY / #000001</small><b id="floatQuote">«Трейдинг научил меня ждать»</b><small id="floatAuthor">@northstar · CRYPTO</small></span>
+            <span class="story-float-arrow">↗</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="metric-strip" aria-label="Основные принципы проекта">
+        <div><span class="metric-icon" aria-hidden="true">I</span><span><strong>ONE HUMAN</strong><small>За каждой точкой — человек</small></span></div>
+        <div><span class="metric-icon" aria-hidden="true">II</span><span><strong>ONE LESSON</strong><small>Урок, который не забыть</small></span></div>
+        <div><span class="metric-icon" aria-hidden="true">III</span><span><strong>ONE LEGACY</strong><small>След, который останется</small></span></div>
+      </div>
+
+
+      <section class="stories-section" id="stories">
+        <div class="section-heading"><div><div class="section-kicker">002 / STORIES THAT STAY</div><h2>Every scar has <em>a story.</em></h2><p>Не успешность. Не доходность. Не размер депозита. Только настоящие уроки.</p></div><button id="randomStory" class="outlined-button">Случайная история ↗</button></div>
+        <div class="story-search"><label for="storySearch">НАЙТИ ИСТОРИЮ</label><input id="storySearch" type="search" placeholder="Имя, мысль, рынок, ошибка…" autocomplete="off"/><span id="searchCount" role="status" aria-live="polite">12 демо-историй</span></div><div class="filter-bar" id="filters" role="group" aria-label="Фильтр историй"><button class="filter active" data-filter="all" aria-pressed="true">Все истории</button><button class="filter" data-filter="Risk" aria-pressed="false">Риск</button><button class="filter" data-filter="Discipline" aria-pressed="false">Дисциплина</button><button class="filter" data-filter="FOMO" aria-pressed="false">FOMO</button><button class="filter" data-filter="Patience" aria-pressed="false">Терпение</button></div>
+        <div class="stories-grid" id="storyCards"></div><button id="loadMoreStories" class="outlined-button load-more-stories" type="button" hidden>Показать ещё истории ↓</button>
+        <p class="demo-notice">✳ Показанные истории — вымышленные примеры для демонстрации. Истории, которые вы добавите, хранятся только в вашем браузере.</p>
+      </section>
+
+
+      <section class="legacy-section" id="my-legacy" aria-labelledby="legacyTitle">
+        <div class="section-heading legacy-head"><div><div class="section-kicker">003 / YOUR LIVING LEGACY</div><h2 id="legacyTitle">Make it <em>mean something.</em></h2><p>Вместо обещания заработать — одно правило, которое действительно можно соблюдать.</p></div><span class="legacy-privacy-chip">◌ PRIVATE · LOCAL DEMO</span></div>
+        <div class="legacy-shell">
+          <div id="legacyEmpty" class="legacy-empty"><span class="legacy-ornament">✧</span><div class="section-kicker">START YOUR JOURNEY</div><h3>За каждой звездой — решение.</h3><p>Оставь свой урок, запиши одно правило и зафиксируй послание себе. Через 30 дней посмотри, что изменилось.</p><button id="createLegacy" class="primary-button" type="button">Создать личный след <span>↗</span></button></div>
+          <div id="legacyActive" class="legacy-active" hidden>
+            <div class="legacy-identity"><div class="legacy-profile-head"><span class="legacy-ornament">✦</span><span class="legacy-local-tag">PRIVATE PREVIEW / NOT A GLOBAL FOUNDER ID</span></div><div id="legacyId" class="legacy-id"></div><h3 id="legacyAlias"></h3><p id="legacyQuote" class="legacy-quote"></p><div id="legacyTags" class="legacy-tags"></div><div class="legacy-actions"><button id="legacyShare" class="outlined-button" type="button">Скопировать историю ↗</button><button id="legacyExport" class="outlined-button" type="button">Экспорт JSON ↓</button></div></div>
+            <div class="legacy-challenge"><div class="legacy-column-head"><span class="section-kicker">THE ONE RULE CHALLENGE</span><span id="legacyCounter">0 / 30</span></div><h3 id="legacyRule"></h3><p class="legacy-hint">Отмечай реальное соблюдение правила. День без сделок тоже может быть успехом.</p><div class="legacy-checkin"><button type="button" id="legacyKept">✓ Соблюдал</button><button type="button" id="legacyMissed">Не получилось</button></div><div id="legacyToday" class="legacy-today" role="status" aria-live="polite"></div><div id="legacyDays" class="legacy-days" aria-label="Тридцать дней"></div><div class="capsule-panel"><span class="section-kicker">TIME CAPSULE / DAY 30</span><p id="legacyCapsule"></p><button id="legacyCapsuleOpen" class="outlined-button" type="button" hidden>Открыть послание ✧</button></div><button id="legacyDelete" class="legacy-delete" type="button">Удалить мои локальные данные</button></div>
+          </div>
+        </div><p class="demo-notice">Приватная браузерная демонстрация. Нет реальной регистрации, переводов, донатов и глобальных Founder ID. Капсула защищена только интерфейсом и не является секретным хранилищем.</p>
+      </section>
+
+      <section class="founder-path" aria-labelledby="founderPathTitle"><div class="section-kicker">THE FOUNDING VISION / NOT YET FOR SALE</div><h2 id="founderPathTitle">A mark that lasts.<br><em>A reason to come back.</em></h2><div class="path-grid"><article><span>01 / REMEMBER</span><h3>Оставить след</h3><p>Не доходность и не скриншот — важнейший урок и личный символ в общей вселенной.</p></article><article><span>02 / GROW</span><h3>Проверить себя</h3><p>30 дней личной дисциплины и капсула будущему себе. Без обещаний финансового результата.</p></article><article><span>03 / SUPPORT</span><h3>Поддержать архив</h3><p>Будущая добровольная Founder-программа за $10. Только после запуска безопасной регистрации и оплаты.</p></article></div><div class="founder-note">✳ Сейчас это визуальная концепция. Счётчик участников, биллинг и постоянные места не подключены.</div></section>
+      <section id="manifesto" class="manifesto"><span class="section-kicker">004 / WHY WE EXIST</span><div class="manifesto-body"><h2>You can't change<br>your last trade.<br><em>But your lesson can change someone's next decision.</em></h2><div class="manifesto-aside"><p>Мы создаём не рейтинг лучших трейдеров. Мы создаём память о людях, которые ошибались, учились и продолжали идти.</p><button class="primary-button" id="joinBottom">Стать частью истории <span class="button-arrow">↗</span></button></div></div></section>
+    </main>
+    <footer><span>✧ THE MARKET REMEMBERS</span><span>Built for humans. Not financial advice.</span><span>CONCEPT / 2026</span></footer>
+  </div>
+
+  <dialog id="storyDialog" class="app-dialog story-reader" aria-labelledby="detailTitle">
+  <div class="modal-head">
+    <div><span class="section-kicker">THE ARCHIVE / HUMAN STORIES · DEMO</span><h2 id="detailTitle">История трейдера</h2></div>
+    <button class="close-button" data-close="storyDialog" aria-label="Закрыть">×</button>
+  </div>
+  <div class="detail-meta" id="detailMeta"></div>
+  <div class="detail-body">
+    <span class="detail-overline">THE MOMENT THAT STAYED</span>
+    <blockquote id="detailQuote"></blockquote>
+    <div class="detail-rule"></div>
+    <span class="detail-overline">WHAT THE MARKET TAUGHT ME</span>
+    <p id="detailLesson"></p>
+  </div>
+  <div class="detail-navigation" role="group" aria-label="Листать истории">
+    <button class="outlined-button" id="detailPrev" type="button">← Предыдущая</button>
+    <span id="detailPosition" class="detail-position" role="status" aria-live="polite" aria-atomic="true">01 / 12</span>
+    <button class="outlined-button" id="detailNext" type="button">Следующая →</button>
+  </div>
+  <button id="detailViewStar" class="detail-view-star" type="button">Найти эту звезду на сфере <span aria-hidden="true">↗</span></button>
+</dialog>
+
+  <dialog id="joinDialog" class="app-dialog"><div class="modal-head"><div><span class="section-kicker">BECOME PART OF THE ARCHIVE</span><h2>Оставь свой след.</h2></div><button class="close-button" data-close="joinDialog" aria-label="Закрыть">×</button></div><p class="form-intro">Расскажи, чему тебя научил рынок. Это демонстрация: история сохранится только на этом устройстве и не будет опубликована в интернете.</p><form id="storyForm"><label>Твоё имя или псевдоним<input name="alias" maxlength="32" required placeholder="Например, Night Owl" autocomplete="nickname" /></label><label>Рынок<select name="market"><option value="CRYPTO">Crypto</option><option value="STOCKS">Stocks</option><option value="FOREX">Forex</option><option value="OTHER">Other</option></select></label><label>Категория<select name="category"><option value="Risk">Управление риском</option><option value="Discipline">Дисциплина</option><option value="FOMO">FOMO</option><option value="Patience">Терпение</option></select></label><label>Какой урок ты никогда не забудешь?<textarea name="lesson" maxlength="260" minlength="12" rows="4" required placeholder="Моё главное правило теперь — ..."></textarea></label><label>Твоё личное правило на 30 дней<textarea name="rule" maxlength="140" minlength="8" rows="2" required placeholder="Например: не увеличивать риск после убытка"></textarea></label><label>Тайное послание себе через 30 дней<textarea name="capsule" maxlength="360" rows="3" placeholder="Что ты хочешь помнить через месяц? (необязательно)"></textarea></label><div class="join-preview"><span>ПРЕДПРОСМОТР ТВОЕЙ ЗВЕЗДЫ</span><b id="previewAlias">@YOUR NAME</b><p id="previewLesson">Твоя история появится здесь, пока ты пишешь…</p></div><div class="privacy-note">◎ Без аккаунта, серверов, платежей и публикации. Данные остаются в localStorage этого браузера.</div><button class="primary-button submit-button" type="submit">Создать мою звезду <span class="button-arrow">✦</span></button></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="./app.js" defer></script>
+<script src="./studio.js" defer></script>
+</body>
+</html>
