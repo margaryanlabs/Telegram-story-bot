@@ -51,3 +51,11 @@ These are interaction-pattern references, not copied layouts, assets, branding o
 Applied narrower max-height/min-height limits to existing Cinema, Music, Books and shared Media mastheads (620px breakpoint). The pages now bring genuine category/poster/audio/cover sections into view sooner instead of reproducing full-height welcome pages. The original artwork, genre/source controls and playback/reader nodes remain in their owning modules.
 
 Regression: `tests/vetogram-editorial-80.test.js` checks module-specific mobile mastheads and sticky-cinema catalog offset. This only validates source/style contracts; no Android screenshots or real swipe/tap automation were available because the connected browser automation wallet is out of funds. Final QA still requires visually checking 360px and 390px breakpoints.
+
+## V8.2 — native filters visible immediately
+
+**Music:** added a compact scrollable genre selector in the existing home screen with seven **actual** preset IDs from `vetogram-music-catalog.js`: `ru`, `am`, `world`, `ru-rap`, `electronic`, `jazz`, `world-lofi`. Selection calls the original `VetogramCatalog.selectPreset` before `VetogramMusic.showPage('catalog')`, avoiding the initial default RU query and duplicate request. If either module is unloaded, the status reports it without falsely claiming the search worked. No new/unauthorized music is added.
+
+**Books:** the existing `catalogSearch` form is moved before the original `featuredEditions` section; existing source availability tabs and genre `.topics` are moved above secondary action UI. Those same DOM nodes keep their original event listeners. Responsive styles provide scrollable 42px+ touch targets and focus states, without replacing book text, shelf persistence or data sources.
+
+**QA:** `tests/vetogram-media-catalog-82.test.js` is part of `qa:preview:offline`; four targeted JS execution/simulation checks passed (real preset IDs, single-search routing, unloaded fallback, and Books node/order preservation). These checks do not prove third-party provider availability or visual Android testing. Production remains unchanged.
