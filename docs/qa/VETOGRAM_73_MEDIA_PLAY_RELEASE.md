@@ -73,3 +73,22 @@ The latest V7.5 code is **not** at the preceding READY V7.4 URL. The explicit Ve
 - All changes are limited to the review branch. **Full browser and Vercel acceptance of this head is still required before marking ready.**
 
 Manual test on Android: open Snake then tap directional arrows and close; open 2048 and press arrows; return to Media and scroll; open a search input while the Play screen is underneath; run Reaction then close during countdown; play Four Pairs with an unmatched pair then switch screens.
+
+## V7.7 — richer local games & persistent progress
+
+- **2048:** one-step undo restores board, score and game-over status without reducing the historical best. Undo is disabled until a legal move, and cannot be reused indefinitely.
+- **2048:** current session (`board[16]`, score and two game flags only) is saved on device on legal moves, resets and undo. After reload a strictly validated local state resumes; invalid or corrupted JSON, unsafe tile numbers and impossible scores are discarded. The undo history itself is deliberately not saved.
+- **Mines:** touch or pen long-press (~440 ms) places a flag without selecting mode; synthetic click after the hold is suppressed. Desktop right-click remains supported.
+- **Mines:** opened numbered cells support standard Minesweeper chord interaction when adjacent flag count matches. Wrongly flagged neighbors can still cause a loss. Chording is disabled in flag mode.
+- **Mines:** stale touch timers are cancelled on reset, dialog close and app backgrounding. Mobile buttons disable text selection for more reliable hold gestures. Existing reveal and flag mode remain available.
+- Updated game help copy to describe persistence, undo, long press and number actions.
+- New cases in `tests/vetogram-play-arcade.test.js` and `tests/vetogram-play-plus.test.js`: undo board equivalence, single-step behavior, reload resume, corrupt storage recovery, touch hold, synthetic tap suppression, canceled gesture, chord without flags and pending timer cleanup.
+
+### Manual acceptance for V7.7
+1. Play 2048, make a legal move, undo, then reload. Verify restored current state and no stale undo history.
+2. Corrupt only the `vetogram:play:2048-session:v1` **test fixture** (not a real user profile), reload and verify a safe new board.
+3. On Android, long-press a closed Mines cell: exactly one flag. Tap quickly: open the cell. Move finger off button: no delayed flag.
+4. Tap an opened numbered cell before flagging: no reveal and descriptive status. Mark exactly its adjacent mine count and tap again: neighbors reveal, including a potential loss if flags were incorrect.
+5. Close the Mines dialog during a hold and navigate between Music/Play screens. No delayed flag or hidden timer should run.
+
+The preview build status must be verified at the **current Git SHA**; READY on an earlier commit is not proof for this new code.
