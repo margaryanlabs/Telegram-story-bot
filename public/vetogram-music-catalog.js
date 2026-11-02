@@ -72,6 +72,24 @@ const endpoint=(query,offset,limit=LIMIT)=>{
 let items=[],q="",offset=0,busy=false,complete=false,active=null,group="ru",preset="ru";
 const failedStreams=new Set(),confirmedStreams=new Set();
 const status=$("catalogStatus"),list=$("catalogResults"),more=$("catalogMore"),queryInput=$("catalogQuery");
+// Only the catalog presentation changes: track ids, playback and source
+// validation remain owned by the existing Audius controller.
+const layout=$("v83CatalogLayout");
+let displayMode="covers";
+function setCatalogMode(mode){
+ if(mode!=="covers"&&mode!=="list")return false;
+ displayMode=mode;list.dataset.viewMode=mode;
+ layout?.querySelectorAll("[data-v83-view]").forEach(button=>{
+   const selected=button.dataset.v83View===mode;
+   button.classList.toggle("active",selected);
+   button.setAttribute("aria-pressed",String(selected));
+ });
+ return true;
+}
+layout?.querySelectorAll("[data-v83-view]").forEach(button=>{
+ button.addEventListener("click",()=>setCatalogMode(button.dataset.v83View));
+});
+setCatalogMode("covers");
 function textNode(tag,cls,value){const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=String(value);return el}
 function setStatus(s){status.textContent=s}
 function buttons(){
@@ -189,5 +207,5 @@ document.addEventListener("vetogram:audio-playing",event=>{
 });
 document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS.find(x=>x.id==="ru").q)}});
 buttons();
-window.VetogramCatalog=Object.freeze({search,selectPreset,loadMore,normalize,endpoint,state:()=>({query:q,count:items.length,offset,complete})});
+window.VetogramCatalog=Object.freeze({search,selectPreset,loadMore,normalize,endpoint,setCatalogMode,state:()=>({query:q,count:items.length,offset,complete,displayMode})});
 })();
