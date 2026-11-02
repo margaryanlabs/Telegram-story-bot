@@ -69,3 +69,44 @@
  .v78-now{padding:10px}
 }
 @media(prefers-reduced-motion:reduce){.v78-action{transition:none!important}}
+
+/* Native catalogs and players: finish each actual module, not just its hero. */
+body:has(#cinemaHero) #cinemaTabs{display:flex;gap:6px;align-items:center;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;scroll-snap-type:x proximity;max-width:100%}
+body:has(#cinemaHero) #cinemaTabs .cinema-tab{flex-shrink:0;scroll-snap-align:start;min-height:43px;border-radius:10px}
+body:has(#cinemaHero) #cinemaTabs .cinema-tab.active{background:#ffffff22;border-color:#ffffff33;color:#fff}
+body:has(#cinemaHero) .cinema-card{border-radius:14px!important;overflow:hidden;border:1px solid #ffffff18!important;background:#131316!important;box-shadow:none!important}
+body:has(#cinemaHero) .cinema-card:hover{border-color:#cbb28d94!important}
+body:has(#cinemaHero) .cinema-card:focus-visible{outline:2px solid #ebdbb7;outline-offset:3px}
+body:has(#cinemaHero) .cinema-card-name{line-height:1.3;letter-spacing:-.025em}
+body:has(#cinemaHero) .cinema-card-progress{border-radius:20px;overflow:hidden}
+body:has(#cinemaHero) .cinema-card-progress i{background:#e6ca96}
+body:has(#cinemaHero) #cinemaSearch{background:transparent!important;color:#f8f5f3!important;min-width:0}
+body:has(#cinemaHero) #cinemaSearch:focus-visible{outline:0}
+body:has(#cinemaHero) .cinema-player-shell{border-radius:16px;overflow:hidden}
+body:has(#cinemaHero) .cinema-video-wrap{background:#050607}
+body:has(#cinemaHero) #cinemaPlayerMessage{line-height:1.5}
+body:has(#playerBar) .track-row{background:#16151a!important;border:1px solid #ffffff16!important;border-radius:13px!important;margin-bottom:6px!important;box-shadow:none!important}
+body:has(#playerBar) .track-row.active{border-color:#c4b2de99!important;background:#221e2b!important}
+body:has(#playerBar) .track-row:focus-within{border-color:#d7c0ed}
+body:has(#playerBar) .track-row .track-cover{border-radius:10px;overflow:hidden;flex-shrink:0}
+body:has(#playerBar) .track-row .track-cover img{width:100%;height:100%;object-fit:cover}
+body:has(#playerBar) .track-row .track-info{min-width:0}
+body:has(#playerBar) .track-row .track-info b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body:has(#playerBar) .track-row .track-btn:focus-visible{outline:2px solid #e6d5f3;outline-offset:2px}
+body:has(#playerBar) .player-bar{border-top:1px solid #ffffff2a!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+body:has(#reader) .book-card{border-radius:15px!important;border:1px solid #ffffff17!important;box-shadow:none!important}
+body:has(#reader) .book-card:hover{border-color:#bacfb7a3!important}
+body:has(#reader) .book-card:focus-within{outline:2px solid #bed5b6;outline-offset:2px}
+body:has(#reader) .book-extent-badge{border-radius:8px}
+body:has(#reader) #readerCopy{overflow-wrap:break-word;hyphens:auto}
+body:has(#reader) #readerPageLabel{font-variant-numeric:tabular-nums;min-width:48px;text-align:center}
+body:has(#reader) .reader-bottom button{min-width:39px;min-height:39px;touch-action:manipulation}
+body:has(#reader) .reader-bottom button:focus-visible{outline:2px solid #bdd7bd;outline-offset:2px}
+@media(max-width:520px){
+ body:has(#cinemaHero) .cinema-section-nav{max-width:100%;overflow:hidden}
+ body:has(#cinemaHero) #cinemaTabs .cinema-tab{font-size:11px;padding-inline:12px}
+ body:has(#playerBar) .track-row{padding:8px!important;gap:7px!important}
+ body:has(#playerBar) .track-row .source-tag{font-size:8px}
+ body:has(#reader) .reader-bottom{gap:4px!important}
+ body:has(#reader) .reader-bottom button{min-width:36px}
+}
