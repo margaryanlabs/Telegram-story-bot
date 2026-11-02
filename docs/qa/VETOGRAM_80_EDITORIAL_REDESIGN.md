@@ -45,3 +45,9 @@ These are interaction-pattern references, not copied layouts, assets, branding o
 4. Play a music track; use native playback and then switch modules; confirm persistent mini-player and no duplicate audio.
 5. Open a complete book and turn a page; save and resume, local import, native back button.
 6. Test owner/account scope, Telegram session and error/loading state in production-like environment; do not promote preview without this.
+
+## V8.1 compact mobile first-fold pass
+
+Applied narrower max-height/min-height limits to existing Cinema, Music, Books and shared Media mastheads (620px breakpoint). The pages now bring genuine category/poster/audio/cover sections into view sooner instead of reproducing full-height welcome pages. The original artwork, genre/source controls and playback/reader nodes remain in their owning modules.
+
+Regression: `tests/vetogram-editorial-80.test.js` checks module-specific mobile mastheads and sticky-cinema catalog offset. This only validates source/style contracts; no Android screenshots or real swipe/tap automation were available because the connected browser automation wallet is out of funds. Final QA still requires visually checking 360px and 390px breakpoints.
