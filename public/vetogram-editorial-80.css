@@ -254,3 +254,12 @@ body.vetogram-editorial-home .screen[data-screen="media"] .v61-continue-rows{gap
  body.vetogram-editorial-home .screen[data-screen="media"] .v75-discovery{padding:12px!important}
  body.vetogram-editorial-home .screen[data-screen="media"] .v75-explore-button{font-size:11px!important}
 }
+
+/* Real poster-backed genre categories, with a truthful text-only fallback. */
+body.vetogram-editorial-cinema .cinema-genre-tile{position:relative;isolation:isolate;overflow:hidden!important;min-height:140px!important;border-radius:14px!important;background:#1b1e26!important;text-align:left;padding:15px!important;display:flex;flex-direction:column;justify-content:flex-end}
+body.vetogram-editorial-cinema .cinema-genre-tile::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,#090b0ff2 0%,#10121792 55%,#171a234d 100%);pointer-events:none}
+body.vetogram-editorial-cinema .cinema-genre-tile .v80-genre-image{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:center 30%;filter:saturate(.85)}
+body.vetogram-editorial-cinema .cinema-genre-tile small{position:relative;z-index:2;font:720 9px/1.2 system-ui!important;letter-spacing:.16em;color:#c5cad1!important}
+body.vetogram-editorial-cinema .cinema-genre-tile strong{position:relative;z-index:2;font:800 clamp(17px,2.1vw,25px)/1.15 system-ui!important;letter-spacing:-.045em!important;color:#fafafa!important;text-shadow:0 2px 14px #000b}
+body.vetogram-editorial-cinema .cinema-genre-tile:hover{border-color:#e1d2b2a8!important}
+@media(max-width:620px){body.vetogram-editorial-cinema .cinema-genre-tile{min-height:109px!important;padding:11px!important}body.vetogram-editorial-cinema .cinema-genre-tile strong{font-size:18px!important}}
