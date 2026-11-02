@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050608">
+<title>VETO Charts / Monolith — Design Review</title>
+<style>
+:root{color-scheme:dark;--bg:#050608;--panel:#090a0d;--panel2:#101115;--line:#25262a;--type:#f2f0ed;--mute:#8d8d91;--coral:#ff553d;--positive:#9cbbb1}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--type);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #ff9986;outline-offset:2px}button:disabled{opacity:.4;cursor:default}a{color:inherit;text-decoration:none}
+header{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 27px;background:#08090b;border-bottom:1px solid var(--line);gap:18px}
+.brand{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:750;letter-spacing:.15em}.brand svg{width:35px;height:35px}.brand span{font-size:15px;font-weight:450;letter-spacing:.01em;color:#ada8a8;padding-left:11px;border-left:1px solid #3a383b}
+.edition{letter-spacing:.22em;color:#77777a;font-size:9px;font-weight:750}.access{padding:10px 14px;border:1px solid #6d4a43;border-radius:5px;font-size:11px;color:#efbbb0}
+.wrap{max-width:1900px;margin:auto;padding:0 22px 35px}
+.top{min-height:103px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:15px 3px}
+.mini{font-size:9px;letter-spacing:.19em;font-weight:750;color:#828287}.mini .accent{color:var(--coral)}
+.market{display:flex;align-items:center;gap:25px;margin-top:12px}.markets{display:flex;align-items:center;gap:5px}
+.markets button,.tf button,.zoom button{border:0;background:transparent;color:#858588}
+.markets button{height:37px;padding:0 9px;font-size:14px;font-weight:750;border-bottom:1px solid transparent}
+.markets button.active{border-bottom-color:var(--coral);color:#f3f2f2}.price{font-size:28px;letter-spacing:-.045em;font-weight:640;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:10px;white-space:nowrap}.percent{font-size:12px;letter-spacing:0;font-weight:650;color:#9fcab8}.percent.negative{color:#ed9b91}
+.tools{display:flex;align-items:center;gap:8px}.tf,.zoom{display:flex;border:1px solid var(--line);border-radius:5px;padding:4px;gap:3px}.tf button{height:36px;min-width:43px;font-size:11px;font-weight:700}.tf button.active{background:var(--coral);color:#1a0c0a;border-radius:3px}.square{display:grid;place-items:center;width:43px;height:43px;border:1px solid var(--line);background:#0d0e12;border-radius:5px;color:#b6b4b3}.square:hover,.markets button:hover,.tf button:not(.active):hover{background:#20191a}
+.status{min-height:47px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:10px;color:#929297;padding:7px 4px}.status strong{font-weight:660;color:#d5d1ce}.status i{display:inline-block;width:7px;height:7px;background:#b3a38a;border-radius:50%;margin-right:9px}.status i.ready{background:#93c3ad}.status em{font-style:normal;color:#555}
+.product{margin-top:10px;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,23%);border:1px solid #25272b;background:#090a0c}
+.chartcol{min-width:0}.plotbar{padding:20px 21px 13px;display:flex;align-items:end;justify-content:space-between;gap:15px}.plotbar h1{font-size:clamp(23px,2.35vw,34px);letter-spacing:-.055em;font-weight:560;margin:8px 0 0}.plotbar .mini{font-size:9px}.zoom button{height:26px;min-width:37px;border-radius:3px;font-size:10px}.zoom button.active{background:#3b2926;color:#ffb6ab}
+.layers{display:flex;align-items:center;gap:8px;padding:9px 21px 14px;border-bottom:1px solid #1e1e21;flex-wrap:wrap}.layers>span{font-size:9px;letter-spacing:.18em;color:#797a7d;margin-right:8px}.layers button{height:29px;border:1px solid #303034;border-radius:4px;background:transparent;color:#949398;font-size:10px;padding:0 10px}.layers button.active{border-color:#754c46;background:#3b242225;color:#ffb7a9}.layers button.active:before{content:"✓";margin-right:6px}
+.plot{position:relative;background:#080a0c;min-height:430px;overflow:hidden}.plot svg{display:block;width:100%;height:auto;min-width:780px}.plot-scroll{overflow-x:auto;scrollbar-color:#444 #101115;scrollbar-width:thin}.plot svg .level{cursor:pointer}.plot svg .level:hover{filter:brightness(1.4)}
+.plot-empty{min-height:450px;display:grid;place-content:center;gap:14px;text-align:center;color:#aaa;padding:30px}.plot-empty b{font-size:16px;font-weight:540}.plot-empty span{font-size:12px;max-width:340px;line-height:1.6}
+.hint{display:none;position:absolute;top:15px;left:15px;pointer-events:none;z-index:3;padding:9px 12px;border:1px solid #65514d;background:#171618f0;color:#efddda;border-radius:5px;font:11px/1.5 ui-monospace,monospace;max-width:calc(100% - 30px)}.hint.visible{display:block}
+.inspector{position:absolute;z-index:4;top:40px;left:38px;width:min(370px,calc(100% - 76px));padding:17px 19px;background:#171719f7;border:1px solid #a45b4e;box-shadow:0 18px 55px #000b;border-radius:7px}
+.inspector .mini{color:#ff9986}.inspector .close{float:right;border:0;background:none;color:#c5c0be;font-size:18px}.inspector h3{font-size:26px;letter-spacing:-.04em;font-weight:570;margin:14px 0}.inspector p{font-size:12px;line-height:1.75;color:#b7aeae}.inspector dl{border-top:1px solid #444;margin-top:13px;padding-top:11px;font-size:11px;line-height:1.9}.inspector dt{display:inline;color:#909092}.inspector dd{display:inline;margin:0;color:#ece6e4}.inspector dd:after{content:"";display:block}
+.time{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:15px 21px;border-top:1px solid #292b2e;background:#101013}
+.timename{display:flex;align-items:center;gap:13px}.clock{font-size:20px;color:var(--coral)}.timename strong{display:block;font-size:10px;letter-spacing:.15em}.timename small{display:block;margin-top:5px;color:#88888a;font-size:10px}
+.controls{display:flex;align-items:center;gap:10px}.controls button{border:1px solid #654b47;background:#271b1b;color:#f2b5a9;border-radius:4px;min-height:35px;padding:0 12px;font-size:10px;font-weight:690}.controls button:hover{background:#402323}.controls input{width:120px;accent-color:var(--coral)}
+.rail{min-width:0;border-left:1px solid #2c2c30;background:#0c0d10;display:flex;flex-direction:column}.railhead{display:flex;align-items:center;justify-content:space-between;padding:25px 19px 0}.railhead h2{font-size:21px;letter-spacing:-.05em;margin:10px 0 0;font-weight:560}.railhead b{font-size:24px;color:var(--coral);font-weight:430}.railintro{margin:0;padding:13px 19px 18px;font-size:11px;line-height:1.75;color:#8c8b8e;border-bottom:1px solid #29292d}.stories{flex:1}.story{display:block;width:100%;padding:18px 19px;border:0;border-bottom:1px solid #2a2a2e;background:transparent;color:#eee;text-align:left}.story:hover{background:#1a181a}.story.selected{background:#261918;border-left:2px solid var(--coral);padding-left:17px}.story small{display:block;color:#c0786f;font-size:9px;letter-spacing:.16em;font-weight:800}.story strong{display:block;margin-top:11px;font-size:15px;line-height:1.36;font-weight:600}.story p{font-size:11px;line-height:1.75;color:#989598;margin:8px 0 11px}.story span{color:#c9877e;font-weight:760;font-size:9px;letter-spacing:.08em}.railfoot{padding:18px 19px;border-top:1px solid #2e2c30;background:#101014;margin-top:auto}.railfoot strong{font-size:9px;letter-spacing:.11em;color:#e0aaa0}.railfoot p{font-size:10px;line-height:1.65;color:#858387}
+.bottom{margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr;border:1px solid #27272b;background:#0c0e10}.fact{padding:19px 22px;min-width:0}.fact+.fact{border-left:1px solid #28282c}.fact>small{font-size:9px;letter-spacing:.16em;color:#a0857e;font-weight:750}.fact>strong{display:block;font-size:30px;letter-spacing:-.06em;font-weight:540;margin:8px 0 0}.fact>p{font-size:10px;color:#848387;margin:6px 0 0;line-height:1.5}.export{display:flex;gap:7px;margin-top:10px}.export button{background:#231c1c;border:1px solid #65463f;color:#eac0b5;border-radius:4px;padding:8px 10px;font-size:10px}.export button:disabled{opacity:.38}.footnote{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:17px 0;color:#777376;font-size:10px;line-height:1.6}.footnote span:first-child{color:#bb867c}
+.sample{background:#2c1e1a;color:#ffc5a8;border:1px solid #855643;border-radius:3px;padding:2px 6px;margin-left:8px;font-size:9px;font-weight:780;letter-spacing:.08em}
+@media(min-width:1640px){.product{grid-template-columns:minmax(0,1fr) minmax(340px,20%)}}
+@media(max-width:1040px){.product{grid-template-columns:1fr}.rail{border-left:0;border-top:1px solid #292b2e}.stories{display:grid;grid-template-columns:1fr 1fr}.bottom{grid-template-columns:repeat(2,1fr)}.bottom .fact:nth-child(3){border-left:0;border-top:1px solid #28282c}.bottom .fact:nth-child(4){border-top:1px solid #28282c}}
+@media(max-width:650px){header{height:60px;padding:0 13px}.brand{gap:7px;font-size:15px}.brand svg{width:31px}.brand span{font-size:12px;padding-left:8px}.edition{display:none}.access{font-size:9px;padding:8px}.wrap{padding:0 8px 26px}.top{gap:10px;padding:12px 3px}.market{width:100%;justify-content:space-between;gap:8px}.markets button{padding:0 7px;font-size:12px}.price{font-size:21px}.tools{width:100%;justify-content:space-between}.tf{flex:1;justify-content:space-between}.tf button{min-width:0;flex:1}.square{width:39px;height:39px}.status{font-size:9px}.plotbar{padding:16px 12px 13px}.plotbar h1{font-size:24px}.layers{padding:10px;gap:5px}.layers>span{display:none}.layers button{flex:1;padding:0 5px;min-width:60px}.plot{min-height:340px}.plot svg{min-width:850px}.plot-empty{min-height:340px}.time{padding:13px;display:block}.controls{margin-top:13px}.controls input{width:95px}.stories{grid-template-columns:1fr}.story{padding:15px}.fact{padding:16px 13px}.fact strong{font-size:27px}.railhead{padding:19px 14px 0}.railintro{padding:12px 14px}.inspector{left:8px;width:calc(100% - 16px)}}
+
+.mobile-chart-tools{display:flex;align-items:center;gap:9px}
+#layersToggle{display:none;background:#211817;color:#ffb5a8;border:1px solid #5b3b37;border-radius:4px;padding:8px 10px;font-size:11px}
+.mobile-readout{display:none}
+@media(max-width:650px){
+header{height:50px;padding:0 12px}.wrap{padding:0 7px 20px}
+.top{padding:8px 3px 9px;min-height:0;gap:4px}.top .mini{display:none}.market{margin:0;gap:6px}
+.markets button{height:32px;font-size:13px;min-width:35px;padding:0 4px}.price{font-size:23px}
+.tools{margin:3px 0 0;gap:6px}.tf{padding:2px;flex:1}
+.tf button{height:28px;font-size:11px}.square{height:32px;width:37px}
+.status{min-height:27px;font-size:9px;padding:7px 3px}.status #meta{display:none}
+.status #stamp{display:none}.product{margin-top:4px;border:0}
+.plotbar{padding:7px 8px;min-height:40px;justify-content:flex-end;gap:8px}.plotbar>div:first-child{display:none}
+#layersToggle{display:block}.zoom{padding:2px}.zoom button{height:27px;min-width:33px;font-size:10px}
+.layers{display:none;padding:8px 8px 9px;gap:4px}.layers.mobile-open{display:flex}
+.layers button{height:31px;font-size:10px}
+.mobile-readout{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#151214;border-top:1px solid #322324;border-bottom:1px solid #3c2827;min-height:56px}
+.readout-icon{color:#ff8f80;font-size:17px}.mobile-readout div{flex:1;min-width:0}
+.mobile-readout strong{display:block;font-size:10px;letter-spacing:.045em;color:#f0d7d0;line-height:1.4}
+.mobile-readout p{font-size:10px;color:#a8a0a0;margin:3px 0 0;line-height:1.45}
+.plot{min-height:0}.plot svg{min-width:0;width:100%;max-height:none}.plot-scroll{overflow:hidden}.plot-empty{min-height:450px}
+.inspector{top:auto;bottom:12px;left:9px;width:calc(100% - 18px);max-height:82%;overflow:auto;border-radius:9px}
+.inspector h3{font-size:23px;margin:9px 0}.inspector p{margin:8px 0;font-size:11px}
+.hint{top:8px;left:8px;font-size:10px;line-height:1.5}
+.time{padding:9px 11px}.timename strong{font-size:9px}.timename small{font-size:9px}
+.controls{margin-top:8px}.railhead{padding:15px 14px 0}.railhead h2{font-size:18px}
+.railintro{padding:8px 14px 10px}.story{padding:12px 14px}.story p{line-height:1.6}
+.bottom{margin-top:8px}.fact{padding:13px 11px}.fact>strong{font-size:22px}
+}
+
+/* Intelligence navigation and contextual evidence assistant; existing chart layout stays intact */
+.v3-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:#111115;border-bottom:1px solid #303034}
+.v3-nav button{border:0;border-bottom:2px solid transparent;background:transparent;color:#999497;min-height:46px;padding:6px 2px;font-size:10px;font-weight:750;white-space:nowrap}
+.v3-nav button[aria-selected="true"]{background:#2b1d1a;color:#ffd0c4;border-bottom-color:#ff553d}
+.v3-nav button:hover:not([aria-selected="true"]){background:#212023;color:#ece5e3}
+.v3-pane[hidden]{display:none!important}
+.v3-chat-intro,.v3-panel-head{padding:22px 18px 17px;border-bottom:1px solid #303034}
+.v3-chat-intro h2,.v3-panel-head h2{margin:9px 0 9px;font-size:21px;font-weight:600;letter-spacing:-.04em}
+.v3-chat-intro p,.v3-panel-head p{font-size:11px;line-height:1.7;color:#a6a1a3;margin:8px 0 0}
+.v3-quick-questions{display:grid;gap:6px;padding:13px}
+.v3-quick-questions button{padding:10px 12px;border:1px solid #4a3837;border-radius:5px;background:#19171a;text-align:left;color:#e2c8c4;font-size:11px}
+.v3-quick-questions button:hover{background:#31211f;border-color:#cc776b}
+.v3-dialog{min-height:100px;max-height:400px;overflow-y:auto;display:grid;align-content:start;gap:12px;padding:12px;border-top:1px solid #242427}
+.v3-empty{color:#979395;font-size:11px;line-height:1.7}
+.v3-question{margin-left:16px;padding:11px 12px;border-radius:8px 8px 2px 8px;border:1px solid #5c3b34;background:#30211f;color:#ffe5de;font-size:11px;line-height:1.6}
+.v3-answer{padding:12px;border-radius:8px 8px 8px 2px;border:1px solid #363638;background:#17191d;color:#e4e0de}
+.v3-answer strong{display:block;margin-bottom:9px;font-size:12px}
+.v3-answer p{font-size:11px;line-height:1.75;margin:6px 0;color:#b9b1b0}
+.v3-answer small{display:block;border-top:1px solid #39363a;margin-top:11px;padding-top:9px;font-size:9px;color:#a18c87;line-height:1.5}
+.v3-compose{display:flex;align-items:center;gap:7px;padding:12px;border-top:1px solid #333136}
+.v3-compose input{min-width:0;flex:1;height:44px;background:#1b1b20;color:#f3e9e8;border:1px solid #514441;border-radius:6px;padding:0 12px;font-size:11px}
+.v3-compose button{height:43px;width:43px;background:#ff553d;color:#180f0c;border:0;border-radius:5px;font-size:21px}
+.v3-scenario{margin:13px;border-radius:7px;border:1px solid #443838;background:#191619;padding:15px}
+.v3-scenario>div{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#e9b4a7;font-size:11px;font-weight:710}
+.v3-scenario strong{font:650 16px ui-monospace,monospace;color:#f7e7e2}
+.v3-scenario p{margin:12px 0;font-size:11px;line-height:1.7;color:#aaa3a3}
+.v3-scenario button{border:0;background:none;color:#ffa897;font-size:10px;font-weight:750;padding:0}
+.v3-rail-note{margin:12px;color:#b5a6a2;background:#251e1e;padding:11px;border:1px solid #463a39;border-radius:6px;font-size:10px;line-height:1.7}
+.v3-save{margin-top:14px;min-height:38px;border:1px solid #a15549;border-radius:5px;background:#3a2622;color:#ffcfbf;padding:0 13px;font-size:11px;font-weight:750}
+.v3-saved{display:flex;gap:8px;align-items:flex-start;justify-content:space-between;padding:14px 15px;border-bottom:1px solid #313035}
+.v3-saved strong{display:block;font-size:16px;margin:6px 0}
+.v3-saved small{display:block;font-size:10px;color:#999396;line-height:1.6}
+.v3-saved button{border:0;background:none;color:#c49a91;font-size:17px}
+.v3-no-data{color:#999396;font-size:11px;line-height:1.6;padding:25px 17px}
+@media(max-width:1040px){.v3-nav button{font-size:12px}.v3-quick-questions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.v3-nav button{font-size:10px;min-height:46px}.v3-quick-questions button{min-height:46px;padding:9px}.v3-dialog{max-height:330px}}
+
+.v3-top-actions{display:flex;gap:9px;align-items:center}
+.v3-ask-chart{padding:8px 11px;min-height:32px;background:#32201d;border:1px solid #9b5749;border-radius:5px;color:#ffb7a6;font-size:10px;font-weight:740;white-space:nowrap}
+.v3-ask-chart:hover{background:#4a2923}
+.v3-close{display:none}.v3-mask[hidden]{display:none}
+@media(max-width:1100px){
+.v3-mask:not([hidden]){display:block;position:fixed;inset:0;background:#010204b9;backdrop-filter:blur(4px);z-index:52}
+#rail.v3-drawer-active{position:fixed!important;left:12px;right:12px;bottom:9px;top:auto;width:auto;max-height:min(78vh,800px);overflow:auto;z-index:53;border:1px solid #75463d;border-radius:12px 12px 8px 8px;box-shadow:0 0 85px #000c}
+#rail.v3-drawer-active .v3-close{display:grid;place-items:center;position:sticky;top:0;margin-left:auto;width:37px;height:29px;background:#221a1a;border:0;color:#fff;font-size:19px;z-index:5}
+#rail.v3-drawer-active .v3-nav{position:sticky;top:29px;z-index:5}
+}
+@media(max-width:650px){.v3-ask-chart{font-size:10px;padding:6px 8px}.v3-top-actions{gap:6px}}
+
+.v3-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+.v3-nav button{font-size:9px;padding:6px 2px;letter-spacing:-.02em}
+.v4-radar-head{padding:20px 17px 16px;border-bottom:1px solid #383033;background:#151315}
+.v4-radar-head h2{margin:8px 0;font-weight:590;letter-spacing:-.045em;font-size:21px}
+.v4-radar-head p{margin:7px 0 0;color:#a89d9b;font-size:11px;line-height:1.7}
+.v4-radar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:16px}
+.v4-radar-toolbar span{color:#bbaba6;font-size:9px;letter-spacing:.04em}
+.v4-radar-toolbar button{padding:8px;border:1px solid #6c4640;background:#332321;color:#ffb7a8;border-radius:4px;font-size:10px;cursor:pointer}
+.v4-radar-toolbar button:disabled{opacity:.4}
+.v4-radar-content{display:grid}
+.v4-radar-item{display:block;width:100%;border:0;border-bottom:1px solid #383238;border-left:2px solid transparent;background:#121115;color:#ece6e4;padding:17px 15px;text-align:left;cursor:pointer}
+.v4-radar-item.current{border-left-color:#ff553d;background:#241918}
+.v4-radar-item:hover:not(:disabled){background:#241b19}
+.v4-radar-item:disabled{opacity:.72;cursor:not-allowed}
+.v4-radar-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.v4-radar-top strong{font-size:15px;color:#f4e9e7}
+.v4-radar-top small{color:#b5aaa9;font-size:10px}
+.v4-radar-top em{font-style:normal;color:#e7a59b;margin-left:8px;font-size:9px}
+.v4-radar-price{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.v4-radar-price strong{font-size:21px;font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.v4-radar-price span{font-size:11px;color:#9ec9b4}
+.v4-radar-price span.down{color:#ef998d}
+.v4-radar-facts{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;color:#aaa3a4;font-size:10px}
+.v4-radar-facts b{color:#ead1ca;font-weight:620;font-family:ui-monospace,monospace;font-size:10px}
+.v4-radar-stamp{display:flex;justify-content:space-between;gap:10px;margin-top:11px;color:#847d7f;font-size:9px}
+.v4-radar-stamp span:last-child{color:#f3aa9a}
+.v4-radar-missing{display:flex;gap:8px;align-items:center;color:#dbb2a5;font-size:11px;margin-top:15px}
+.v4-radar-note{border-top:1px solid #3b3232;background:#1d191a;padding:15px 17px;color:#b6a49d;font-size:10px;line-height:1.7}
+@media(max-width:1100px){.v3-nav button{font-size:11px}}
+@media(max-width:650px){.v3-nav button{font-size:10px}.v4-radar-item{padding:15px 14px}}
+
+/* VETO Decision Delta V5 / no modification to approved Monolith chart geometry */
+.v3-nav{grid-template-columns:repeat(6,minmax(0,1fr))}
+.v3-nav button{font-size:9px;white-space:normal;line-height:1.25}
+.v5-delta-head{padding:20px 17px 16px;background:#171315;border-bottom:1px solid #473638}
+.v5-delta-head h2{font-size:21px;font-weight:620;letter-spacing:-.04em;margin:9px 0}
+.v5-delta-head p{color:#aea1a1;font-size:11px;line-height:1.7}
+.v5-delta-options{display:flex;gap:5px;margin-top:15px}
+.v5-delta-options button{flex:1;border:1px solid #61403b;border-radius:5px;min-height:34px;background:#241b1a;color:#c7a7a2;font-size:10px;cursor:pointer}
+.v5-delta-options button[aria-pressed=true]{background:#4a2b24;border-color:#d07864;color:#ffe2da}
+.v5-delta-content{display:grid;gap:0}
+.v5-times{display:grid;grid-template-columns:1fr 30px 1fr;gap:8px;align-items:center;padding:17px 14px;border-bottom:1px solid #373139}
+.v5-times>div{display:grid;gap:6px}
+.v5-times>div:last-child{text-align:right}
+.v5-times>span{text-align:center;color:#f2a596}
+.v5-times small{font-size:9px;letter-spacing:.1em;color:#ce968a}
+.v5-times strong{font-size:10px;color:#f7e6e2;font-weight:700}
+.v5-times em{font-size:10px;color:#b4a8a7;font-style:normal}
+.v5-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid #3b3033}
+.v5-stats>div{padding:16px 5px;text-align:center}
+.v5-stats>div+div{border-left:1px solid #3b3033}
+.v5-stats small{display:block;font-size:9px;color:#b7a4a1}
+.v5-stats strong{display:block;margin-top:9px;font:700 15px ui-monospace,monospace;color:#f4c6ba}
+.v5-structure{display:grid;gap:7px;padding:16px;border-bottom:1px solid #3b3033}
+.v5-structure small{font-size:9px;color:#c99488;letter-spacing:.08em}
+.v5-structure strong{font-size:12px;color:#efe5e4}
+.v5-events-head{display:flex;justify-content:space-between;gap:10px;padding:17px 16px 8px}
+.v5-events-head strong{font-size:10px;color:#eac0b6;letter-spacing:.1em}
+.v5-events-head span{color:#ff9e8e}
+.v5-event{display:grid;gap:8px;padding:13px 16px;border-bottom:1px solid #353138}
+.v5-event-top{display:flex;justify-content:space-between;gap:10px}
+.v5-event-top small{color:#ab9c9c;font-size:10px}
+.v5-tag{border:1px solid #714942;border-radius:4px;background:#2c1d1b;color:#f2b4a6;padding:4px 6px;font-size:9px}
+.v5-tag.not-detected{color:#bab6b8;border-color:#545057;background:#211f23}
+.v5-tag.updated{color:#d5c1bf;border-color:#655758}
+.v5-event strong{font:650 13px ui-monospace,monospace;color:#f3e5e0}
+.v5-event small{font-size:10px;color:#a99d9c}
+.v5-event button{justify-self:start;border:0;background:transparent;color:#ffae9d;padding:4px 0;font-size:10px;cursor:pointer}
+.v5-footnote{padding:17px;background:#1e1819;border-top:1px solid #493732;color:#b5a6a5;font-size:10px;line-height:1.75}
+@media(max-width:650px){.v3-nav button{font-size:9px;min-height:44px;padding:6px 1px}}
+
+.v6-watch{border-top:1px solid #423234;background:#121114}
+.v6-head{padding:20px 16px 13px}
+.v6-head h3{margin:8px 0 9px;font-size:17px;color:#f0e2df}
+.v6-head p{font-size:11px;color:#b0a1a0;line-height:1.75}
+.v6-form{display:grid;gap:11px;padding:0 16px 18px;border-bottom:1px solid #41383a}
+.v6-form label{display:grid;gap:6px;color:#d7b3aa;font-size:10px}
+.v6-form select{width:100%;min-height:38px;background:#1d1b1f;border:1px solid #56403d;border-radius:5px;color:#f0e0dc;padding:0 10px;font-size:11px}
+.v6-form>button{height:41px;background:#442822;border:1px solid #b96c59;color:#ffcebf;border-radius:5px;font-size:11px;font-weight:700}
+.v6-form>button:disabled{opacity:.4}
+.v6-warning{font-size:10px;color:#e5a48f;line-height:1.6;margin:0;min-height:0}
+.v6-label{display:flex;justify-content:space-between;align-items:center;padding:16px;color:#d3aaa1;font-size:10px;font-weight:700}
+.v6-label strong{color:#ffb0a1}
+.v6-empty{color:#999096;font-size:11px;line-height:1.65;padding:5px 16px 22px}
+.v6-item{margin:0 13px 11px;padding:14px;border:1px solid #5d4540;border-radius:7px;background:#1a181b;display:grid;gap:9px}
+.v6-item-top{display:flex;align-items:center;justify-content:space-between}
+.v6-item-top span{padding:5px 7px;border:1px solid #74483e;border-radius:4px;color:#ffc0b0;font-size:9px;letter-spacing:.06em}
+.v6-item-top span.confirmed{border-color:#4b7867;color:#b9dbc8;background:#1c2925}
+.v6-item-top span.data-gap{border-color:#8e5a43;color:#f4b5a1;background:#2a1a17}
+.v6-item-top button{background:none;border:0;color:#d0a6a1;font-size:18px}
+.v6-item>strong{font:700 19px ui-monospace,monospace;color:#f2e4df}
+.v6-item>p{font-size:10px;color:#aba3a4;line-height:1.6;margin:0}
+.v6-item small{font-size:9px;color:#92898e;line-height:1.65}
+.v6-item small.verified{color:#c4d7c9}
+.v6-item button.v6-show{background:transparent;border:0;color:#ffb5a2;font-size:10px;padding:4px 0;text-align:left}
+.v6-notice{border-top:1px solid #4f4141;color:#b3a5a5;padding:17px;font-size:10px;line-height:1.7;background:#1b1719}
+@media(max-width:650px){.v6-form{grid-template-columns:1fr 1fr}.v6-form>button,.v6-form>.v6-warning{grid-column:1/-1}}
+
+/* Monolith premium analysis refresh — scope exclusively to right intelligence column. */
+#rail .v3-nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:11px 12px;background:#0d0e11}
+#rail .v3-nav button{min-height:40px;background:#18181c;border:1px solid #333035;border-radius:6px;font-size:10px;font-weight:680;white-space:normal;line-height:1.2;color:#bcb2b1}
+#rail .v3-nav button[aria-selected=true]{background:#40251f;border-color:#e27b67;color:#ffe7df}
+#rail .railhead{padding:20px 17px 0}
+#rail .railhead h2{letter-spacing:-.045em;font-weight:620;font-size:22px}
+#rail .story{padding:17px}.v7-insight-structure{background:#121316;border-bottom:1px solid #3f3234}
+.v7-head{padding:19px 17px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.v7-head>div{display:grid;gap:7px}.v7-head .mini{color:#bf8a7f}
+.v7-head h3{margin:0;font-size:19px;font-weight:600;letter-spacing:-.04em}
+.v7-head>span{font:700 21px ui-monospace,monospace;color:#f3a28e}
+.v7-state{margin:0 16px 13px;background:#1c1c21;border:1px solid #494044;border-radius:6px;padding:11px;display:flex;align-items:center;justify-content:space-between;gap:7px}
+.v7-state small{color:#aba5a7;font-size:10px}.v7-state strong{color:#ffc0b1;font-size:11px}
+.v7-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 16px 16px}
+.v7-metrics>div{padding:10px;background:#19191d;border:1px solid #39353a;border-radius:5px;display:grid;gap:7px}
+.v7-metrics small{color:#a19da1;font-size:9px}.v7-metrics strong{font:650 17px ui-monospace,monospace}
+.v7-sub{display:flex;align-items:center;justify-content:space-between;padding:13px 17px;color:#c09b93;font-size:9px;letter-spacing:.12em;font-weight:800;border-top:1px solid #343134}
+.v7-sub button{border:0;background:none;color:#ffae9b;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:0}
+.v7-line-card{display:grid;gap:10px;text-align:left;width:calc(100% - 30px);margin:0 15px 8px;padding:12px;background:#1b1b20;border:1px solid #474044;border-radius:7px;color:#eee4e1;cursor:pointer}
+.v7-line-card:hover{border-color:#bd7161;background:#2a1c1d}
+.v7-line-card strong{font-size:12px}.v7-line-card small{font-size:10px;color:#a6a0a3}
+.v7-line-card em{font-style:normal;color:#c3dbc9;font-size:10px}
+.v7-line-card em.broken{color:#edb49f}
+.v7-event{display:flex;gap:10px;align-items:center;padding:11px 17px;border-top:1px solid #343039}
+.v7-event>b{color:#edab9c;font-size:18px}.v7-event b.up{color:#a8d1bd}
+.v7-event>div{display:grid;gap:5px}.v7-event strong{font-size:10px;color:#f0e2de}
+.v7-event small{font-size:10px;color:#a49c9f}
+.v7-explain{padding:15px 17px;background:#1c1819;border-top:1px solid #4a3837;color:#b9a5a1;font-size:10px;line-height:1.7}
+.v7-no-data{padding:14px 17px;font-size:11px;color:#aba1a0;line-height:1.6}
+.v7-trendline-graphic{cursor:pointer}
+.v7-line-popup{position:absolute;left:16px;top:32px;z-index:7;width:min(355px,calc(100% - 32px));background:#18171bf5;border:1px solid #c57866;border-radius:8px;box-shadow:0 20px 55px #000d;padding:15px;color:#f1e3e0;backdrop-filter:blur(10px)}
+.v7-line-popup h3{font-size:16px;margin:8px 0}.v7-line-popup p{font-size:11px;color:#b9b2b2;line-height:1.7}
+.v7-line-popup small{font-size:10px;line-height:1.7;color:#dfb9ae;display:block}
+.v7-line-popup button{float:right;border:0;background:none;color:#f6c1b7;font-size:18px}
+@media(max-width:650px){#rail .v3-nav{grid-template-columns:repeat(3,minmax(0,1fr))}#rail .v3-nav button{font-size:11px}.v7-line-popup{left:8px;top:8px;width:calc(100% - 16px)}}
+</style>
+</head>
+<body>
+<header>
+<a class="brand" href="#" aria-label="VETO Charts"><svg viewBox="0 0 40 40" role="img" aria-label="Фирменный знак VETO"><rect x="1" y="1" width="38" height="38" rx="11" fill="#0b0c0f" stroke="#2a2c33"/><path d="M8.5 11.5 19.7 29 15 29 6.8 16.1Z" fill="#f5f6f8"/><path d="M31.5 11.5 20.3 29H25l8.2-12.9Z" fill="#ff553d"/><path d="M18.25 22.3h3.5" stroke="#050608" stroke-width="1.4" stroke-linecap="round"/></svg>VETO <span>CHARTS</span></a>
+<div class="edition">01 / MARKET INTELLIGENCE &nbsp;·&nbsp; MONOLITH PREVIEW</div>
+<a class="access" href="https://github.com/margaryanlabs/decision-command/pull/694" target="_blank" rel="noopener">ОТКРЫТЬ КОД ↗</a>
+</header>
+<div class="wrap">
+<section class="top">
+<div><div class="mini">ИНСТРУМЕНТ <span class="accent">—</span> HYPERLIQUID</div>
+<div class="market"><div class="markets" id="markets"></div><div class="price"><span id="price">—</span><span class="percent" id="change"></span></div></div></div>
+<div class="tools"><div class="tf" id="timeframes"></div><button id="reload" class="square" aria-label="Обновить данные">↻</button><button id="focus" class="square" aria-label="Режим фокуса">⛶</button></div>
+</section>
+<div class="status"><div><i id="statusdot"></i><strong id="statuslabel">Подключаем биржу…</strong> <em>/</em> <span id="stamp">Загружаем подтверждённые свечи</span></div><div id="meta">RESEARCH / NOT TRADE ADVICE</div></div>
+<div class="product">
+<div class="chartcol">
+<div class="plotbar"><div><div class="mini">VETO / STRUCTURE ANALYSIS</div><h1>Рынок. Без лишнего.</h1></div><div class="mobile-chart-tools"><button id="layersToggle" type="button" aria-controls="layersSection" aria-expanded="false">☷ Слои</button><div class="v3-top-actions"><button id="v3-ask-chart" type="button" class="v3-ask-chart">✦ Спросить VETO</button><div class="zoom" id="zoom"></div></div></div></div>
+<div class="layers" id="layersSection"><span>СЛОИ</span><div id="layers" style="display:flex;gap:7px;flex-wrap:wrap"></div></div><div class="mobile-readout" aria-live="polite"><span class="readout-icon">◈</span><div><strong id="mobileReadoutTitle">VETO / РЫНОЧНАЯ СТРУКТУРА</strong><p id="mobileReadoutText">Получаем проверенные свечи…</p></div></div>
+<div class="plot" id="plot"><div class="plot-empty"><b>Загружаем рыночную структуру</b><span>График отобразится после получения биржевых свечей.</span></div></div>
+<div class="time"><div class="timename"><span class="clock">◴</span><div><strong>TIME MACHINE</strong><small id="timehelp">Пересчёт структуры без будущих свечей</small></div></div><div class="controls"><button id="toggleReplay">◀ В прошлое</button><button id="stepBack" hidden>◀</button><input type="range" id="replay" hidden min="59" max="239" value="180" aria-label="Исторический курсор"><button id="stepNext" hidden>▶</button></div></div>
+</div>
+<div id="v3-mask" class="v3-mask" hidden></div><aside class="rail" id="rail">
+<button class="v3-close" id="v3-close" type="button" aria-label="Закрыть чат">×</button>
+<div class="v3-nav" role="tablist" aria-label="VETO Intelligence">
+<button type="button" role="tab" data-v3="insights" aria-selected="true">Обзор</button>
+<button type="button" role="tab" data-v3="radar" aria-selected="false">Радар</button>
+<button type="button" role="tab" data-v3="delta" aria-selected="false">Изменения</button>
+<button type="button" role="tab" data-v3="chat" aria-selected="false">Спросить VETO</button>
+<button type="button" role="tab" data-v3="scenarios" aria-selected="false">Сценарии</button>
+<button type="button" role="tab" data-v3="memory" aria-selected="false">Память</button>
+</div>
+<section class="v3-pane" id="v3-insights"><div id="v7-structure" class="v7-insight-structure"></div><div class="railhead"><div><div class="mini">VETO / OBSERVATION STREAM</div><h2>Что важно сейчас</h2></div><b id="storycount">00</b></div><p class="railintro">Здесь только наблюдения из доступных на выбранный момент закрытых свечей. Никаких выдуманных вероятностей.</p><div class="stories" id="stories"></div></section>
+<section class="v3-pane" id="v3-radar" hidden>
+<div class="v4-radar-head"><div class="mini">VETO / MARKET RADAR · HYPERLIQUID</div><h2>Рынки под наблюдением</h2>
+<p>Три рынка, одна аналитическая логика. Ближайшие к подтверждённым уровням показаны первыми.</p>
+<div class="v4-radar-toolbar"><span id="v4-radar-info">BTC · ETH · SOL · закрытые свечи</span><button type="button" id="v4-radar-refresh">↻ Обновить</button></div>
+</div>
+<div class="v4-radar-content" id="v4-radar-list"><p class="v3-no-data">Выбери вкладку, чтобы сканировать реальные рыночные свечи.</p></div>
+<div class="v4-radar-note">Близость к уровню означает расстояние не более 1 ATR. Это не BUY/SELL, не рейтинг возможностей и не вероятность успеха.</div>
+</section>
+<section class="v3-pane" id="v3-delta" hidden>
+<div class="v5-delta-head"><div class="mini">VETO / DECISION DELTA · TIME-POINT REPLAY</div>
+<h2>Что изменилось?</h2><p>Два анализа, реконструированные по доступным на тот момент закрытым свечам. Не журнал сохранённых прогнозов.</p>
+<div class="v5-delta-options" id="v5-offsets"><button type="button" data-offset="12">12 свечей</button>
+<button type="button" data-offset="24" aria-pressed="true">24 свечи</button>
+<button type="button" data-offset="48">48 свечей</button></div></div>
+<div id="v5-delta-content" class="v5-delta-content"><div class="v3-no-data">Выбери два временных среза для сравнения.</div></div>
+<div class="v5-footnote">Исчезновение уровня не доказывает его пробой. Он может исчезнуть из-за изменения рыночной структуры или правил группировки. Реконструкция ≠ доказанный прогноз.</div>
+</section>
+<section class="v3-pane" id="v3-chat" hidden>
+<div class="v3-chat-intro"><div class="mini">VETO / EVIDENCE ASSISTANT</div><h2>Спроси о графике</h2>
+<p>Контекстные ответы из проверенных свечей и команды к графику. Это пока не свободная языковая модель.</p></div>
+<div class="v3-quick-questions" id="v3-prompts">
+<button type="button" data-prompt="Почему здесь поддержка?">Почему поддержка?</button>
+<button type="button" data-prompt="Покажи сопротивление">Сопротивление</button>
+<button type="button" data-prompt="Что отменит сценарий?">Что отменит сценарий?</button>
+<button type="button" data-prompt="Покажи Fibonacci">Fibonacci</button>
+<button type="button" data-prompt="Что если пробой?">Сценарии</button>
+<button type="button" data-prompt="История рынка">Time Machine</button>
+<button type="button" data-prompt="Что изменилось?">Что изменилось?</button>
+<button type="button" data-prompt="Следи за уровнем">Следи за уровнем</button>
+</div>
+<div class="v3-dialog" id="v3-dialog" aria-live="polite"><p class="v3-empty">Спроси о текущем BTC, ETH или SOL. VETO объяснит структуру и выделит выбранные уровни непосредственно на графике.</p></div>
+<form class="v3-compose" id="v3-compose"><input id="v3-input" maxlength="350" autocomplete="off" aria-label="Вопрос о текущем графике" placeholder="Спроси VETO о графике…"/><button type="submit">↗</button></form>
+</section>
+<section class="v3-pane" id="v3-scenarios" hidden><div class="v3-panel-head"><div class="mini">VETO / CONDITIONAL MAP</div><h2>Сценарии</h2><p>Условия изменения структуры, не сигналы BUY/SELL.</p></div><div id="v3-scenario-content"></div>
+<div class="v6-watch" id="v6-watch">
+<div class="v6-head"><div class="mini">VETO / SCENARIO WATCH</div><h3>Наблюдать за уровнем</h3>
+<p>Условие срабатывает только на новых закрытых свечах после создания. Отслеживание работает при открытой странице.</p></div>
+<div class="v6-form"><label>Подтверждённый уровень<select id="v6-level"></select></label>
+<label>Подтверждение<select id="v6-confirm"><option value="1">1 закрытая свеча</option><option value="2" selected>2 закрытия подряд</option></select></label>
+<button type="button" id="v6-create">＋ Создать наблюдение</button><p id="v6-warning" class="v6-warning" aria-live="polite"></p></div>
+<div class="v6-label"><span>Локальные наблюдения</span><strong id="v6-count">0</strong></div>
+<div id="v6-list"></div>
+<div class="v6-notice">Проверка работает только при открытой странице и наличии свежих данных. Никаких фоновых уведомлений, автоматических сделок, серверной гарантии доставки или выдуманной вероятности успеха.</div>
+</div>
+</section>
+<section class="v3-pane" id="v3-memory" hidden><div class="v3-panel-head"><div class="mini">VETO / LOCAL SNAPSHOTS</div><h2>Память наблюдений</h2><p>Снимки сохраняются только в этом браузере. Это не серверный журнал прогнозов.</p>
+<button type="button" id="v3-save" class="v3-save">＋ Сохранить наблюдение</button></div><div id="v3-saved-list"></div></section>
+<div class="railfoot"><strong>NO HINDSIGHT · NO FABRICATED CONFIDENCE</strong><p>Технический анализ — исследование, не разрешение на торговлю.</p></div></aside>
+</div>
+<div class="bottom"><div class="fact"><small>01 / EVIDENCE</small><strong id="barcount">—</strong><p>Проверенных закрытых свечей</p></div><div class="fact"><small>02 / COMPUTED LEVELS</small><strong id="levelcount">—</strong><p>Поддержки и сопротивления</p></div><div class="fact"><small>03 / DATA PERIOD</small><strong id="period">—</strong><p>Текущий таймфрейм</p></div><div class="fact"><small>04 / AUDIT TRACE</small><div class="export"><button id="copy" disabled>Скопировать</button><button id="export" disabled>Снимок JSON ↓</button></div><p>Экспорт локальный, не подписанный серверный прогноз.</p></div></div>
+<div class="footnote"><span>VETO CHARTS · MONOLITH / DESIGN REVIEW</span><span>Данные: Hyperliquid при доступности. Демонстрационный режим помечен отдельно. Платёжная система Charts не подключена.</span></div>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const TF=["5m","15m","1h","4h","1d"],SYMS=["BTC","ETH","SOL"],DUR={"5m":300000,"15m":900000,"1h":3600000,"4h":14400000,"1d":86400000},LAYER=["levels","ema","fibonacci","pivots","trendlines","structure"];
+const state={symbol:"BTC",tf:"4h",layer:new Set(["levels"]),window:matchMedia("(max-width:650px)").matches?58:140,rows:[],source:"connecting",fetched:0,cursor:null,level:null,focused:false,details:null,showLayers:false,lineId:null};
+const format=n=>Number.isFinite(n)?new Intl.NumberFormat("en-US",{maximumFractionDigits:n<10?4:n<100?3:2}).format(n):"—";
+const fmtTime=n=>n?new Date(n).toLocaleString("ru-RU",{timeZone:"UTC",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})+" UTC":"—";
+const number=n=>Number.isFinite(+n)?+n:NaN;
+function buttons(container,items,chosen,onSelect){container.innerHTML=items.map(v=>'<button type="button" class="'+(chosen(v)?"active":"")+'" data-value="'+v+'">'+v+'</button>').join("");container.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>onSelect(b.dataset.value)));}
+function setStatus(label,kind){$("statuslabel").textContent=label;$("statusdot").className=kind==="ready"?"ready":"";}
+function sampleRows(){const anchor=Date.UTC(2026,9,1),span=DUR[state.tf],n=240;let last=100+(state.symbol==="BTC"?40:state.symbol==="ETH"?20:0);return Array.from({length:n},(_,i)=>{const drift=0.12+0.35*Math.sin(i*.10),move=1.2*Math.sin(i*.57)+.65*Math.sin(i*.17)+drift;const open=last;last=Math.max(20,last+move);return {openTime:anchor+i*span,closeTime:anchor+(i+1)*span-1,open,close:last,high:Math.max(open,last)+.6+Math.abs(Math.sin(i*.22)),low:Math.min(open,last)-.6-Math.abs(Math.cos(i*.31)),volume:200+80*Math.abs(Math.sin(i*.11))};});}
+function normalBars(rows,asOf){const valid=rows.filter(c=>c&&Number.isFinite(c.openTime)&&Number.isFinite(c.closeTime)&&c.closeTime<=asOf&&c.openTime<asOf&&[c.open,c.high,c.low,c.close].every(v=>Number.isFinite(v)&&v>0)&&Number.isFinite(c.volume)&&c.volume>=0&&c.low<=Math.min(c.open,c.close)&&c.high>=Math.max(c.open,c.close));const unique=new Map(valid.map(c=>[c.openTime,c]));const sorted=[...unique.values()].sort((a,b)=>a.openTime-b.openTime);let start=sorted.length-1;while(start>0&&sorted[start].openTime-sorted[start-1].openTime===DUR[state.tf])start--;return sorted.slice(Math.max(0,start)).slice(-240);}
+function ema(bars,n){let sum=0,last=0;return bars.map((c,i)=>{if(i<n-1){sum+=c.close;return null}if(i===n-1){last=(sum+c.close)/n;return last}last=last+(2/(n+1))*(c.close-last);return last})}
+function rsi(bars,n=14){if(bars.length<=n)return null;let up=0,down=0;for(let i=1;i<=n;i++){let d=bars[i].close-bars[i-1].close;up+=Math.max(d,0);down+=Math.max(0,-d)}up/=n;down/=n;for(let i=n+1;i<bars.length;i++){let d=bars[i].close-bars[i-1].close;up=(up*(n-1)+Math.max(d,0))/n;down=(down*(n-1)+Math.max(0,-d))/n}return down===0?(up===0?50:100):100-100/(1+up/down)}
+function atr(bars,n=14){if(bars.length<n+1)return null;let sum=0;for(let i=bars.length-n;i<bars.length;i++){const c=bars[i],prev=bars[i-1];sum+=Math.max(c.high-c.low,Math.abs(c.high-prev.close),Math.abs(c.low-prev.close))}return sum/n}
+function pivots(bars,kind){let result=[];for(let i=3;i<bars.length-3;i++){const x=kind==="support"?bars[i].low:bars[i].high;let valid=true;for(let j=i-3;j<=i+3;j++){if(i===j)continue;const other=kind==="support"?bars[j].low:bars[j].high;if(kind==="support"?other<=x:other>=x){valid=false;break}}if(valid)result.push({index:i,price:x,time:bars[i].closeTime})}return result}
+function grouped(pivots,kind,last,tolerance){let groups=[];for(const p of pivots){if(kind==="support"?p.price>=last:p.price<=last)continue;let group=groups.find(g=>Math.abs(g.sum/g.items.length-p.price)<=tolerance);if(group){group.sum+=p.price;group.items.push(p)}else groups.push({sum:p.price,items:[p]})}return groups.map(g=>({kind,price:g.sum/g.items.length,touches:g.items.length,first:Math.min(...g.items.map(p=>p.time)),last:Math.max(...g.items.map(p=>p.time)),pivots:g.items})).sort((a,b)=>Math.abs(a.price-last)-Math.abs(b.price-last)||b.touches-a.touches).slice(0,4)}
+function analyze(){const rowsAll=state.cursor===null?state.rows:state.rows.slice(0,state.cursor+1);const cutoff=state.cursor===null?state.fetched:(rowsAll.at(-1)?.closeTime??0)+1;const bars=normalBars(rowsAll,cutoff);if(bars.length<60)return {status:"INSUFFICIENT",bars,levels:[]};const last=bars.at(-1).close,e20=ema(bars,20),e50=ema(bars,50),a=atr(bars),r=rsi(bars),ref=bars[Math.max(0,bars.length-21)].close;const delta=(last-ref)/ref*100,fast=e20.at(-1),slow=e50.at(-1),floor=Math.max(.2,(a/last)*40);const dir=fast>slow&&delta>floor?"UP":fast<slow&&delta<(-floor)?"DOWN":"RANGE";const tol=Math.max(last*.003,a*.6);const supports=grouped(pivots(bars,"support"),"support",last,tol),resistances=grouped(pivots(bars,"resistance"),"resistance",last,tol);const back=bars.slice(-90),hi=back.reduce((acc,c)=>c.high>acc.high?c:acc),lo=back.reduce((acc,c)=>c.low<acc.low?c:acc);const rising=lo.openTime<hi.openTime;const start=rising?lo.low:hi.high,end=rising?hi.high:lo.low;const fib=[.236,.382,.5,.618,.786].map(q=>({ratio:q,price:end+(start-end)*q}));return {status:state.cursor===null&&state.source==="real"&&state.fetched-bars.at(-1).closeTime>DUR[state.tf]*2+90000?"STALE":"READY",bars,levels:[...supports,...resistances],supports,resistances,rsi:r,atr:a,dir,e20,e50,fib,delta,last};}
+function escapeHTML(text){return String(text).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function svgChart(v){
+const b=v.bars.slice(-state.window),offset=v.bars.length-b.length,mobile=matchMedia("(max-width:650px)").matches,W=mobile?520:1440,L=mobile?16:45,R=mobile?407:1300,T=mobile?27:40,B=mobile?452:556,V1=mobile?488:615,V2=mobile?531:660,H=mobile?573:710;
+let mn=Math.min(...b.map(c=>c.low)),mx=Math.max(...b.map(c=>c.high));const spread=Math.max((mx-mn)*1.2,mx*.004),middle=(mx+mn)/2;mn=middle-spread/2;mx=middle+spread/2;
+const x=i=>L+(i-offset+.5)*(R-L)/b.length,y=p=>T+(mx-p)/(mx-mn)*(B-T),bw=Math.max(2.6,Math.min(12,(R-L)/b.length*.59)),mv=Math.max(...b.map(c=>c.volume),1);
+const safe=n=>Number.isFinite(n)?n.toFixed(2):"0";
+let s='<svg id="svgchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="График VETO Charts с уровнями, свечами и объёмом"><defs><clipPath id="clip"><rect x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'"/></clipPath></defs>';
+for(let i=0;i<6;i++){let p=mx-i*(mx-mn)/5;s+='<line x1="'+L+'" x2="'+R+'" y1="'+safe(y(p))+'" y2="'+safe(y(p))+'" stroke="#a4a5a8" opacity=".09" stroke-dasharray="3 9"/><text x="'+(R+9)+'" y="'+safe(y(p)+4)+'" fill="#99989b" font-family="monospace" font-size="'+(mobile?15:13)+'">'+format(p)+'</text>'}
+for(let j=0;j<(mobile?4:9);j++){let i=offset+Math.floor(j*(b.length-1)/(mobile?3:8)),c=v.bars[i];s+='<line x1="'+safe(x(i))+'" x2="'+safe(x(i))+'" y1="'+T+'" y2="'+V2+'" stroke="#b3b5bb" opacity=".05"/><text x="'+safe(x(i))+'" y="'+(H-9)+'" text-anchor="middle" font-size="'+(mobile?15:11)+'" fill="#999396">'+new Date(c.openTime).toLocaleDateString("ru-RU",{timeZone:"UTC",day:"numeric",month:"short"})+'</text>'}
+s+='<g clip-path="url(#clip)">';
+if(state.layer.has("fibonacci"))for(const f of v.fib){let yy=y(f.price);if(yy<T||yy>B)continue;s+='<line x1="'+L+'" x2="'+R+'" y1="'+safe(yy)+'" y2="'+safe(yy)+'" stroke="#ab958d" opacity=".30" stroke-dasharray="4 9"/><text x="49" y="'+safe(yy-4)+'" fill="#9f918e" font-size="11">FIB '+(f.ratio*100).toFixed(1)+'</text>'}
+if(state.layer.has("ema"))for(const [values,col] of [[v.e20,"#c9c4c0"],[v.e50,"#a7827b"]]){let d="";for(let j=offset;j<v.bars.length;j++){if(values[j]==null)continue;d+=(d?" L":"M")+safe(x(j))+" "+safe(y(values[j]));}s+='<path d="'+d+'" fill="none" stroke="'+col+'" opacity=".78" stroke-width="1.5"/>'}
+b.forEach((c,j)=>{let i=j+offset,up=c.close>=c.open,color=up?"#dedddd":"#e17361",y1=y(Math.max(c.open,c.close)),y2=y(Math.min(c.open,c.close));s+='<line x1="'+safe(x(i))+'" x2="'+safe(x(i))+'" y1="'+safe(y(c.high))+'" y2="'+safe(y(c.low))+'" stroke="'+color+'" stroke-width="1.1" opacity=".9"/><rect x="'+safe(x(i)-bw/2)+'" y="'+safe(y1)+'" width="'+safe(bw)+'" height="'+safe(Math.max(2,y2-y1))+'" rx=".5" fill="'+color+'"/>'});
+if(state.layer.has("pivots"))for(const kind of ["support","resistance"])for(const p of pivots(v.bars,kind).slice(-28)){if(p.index<offset)continue;s+='<circle cx="'+safe(x(p.index))+'" cy="'+safe(y(p.price))+'" r="3" fill="#151114" stroke="#ef9385"/>'}
+s+='</g>';
+if(state.layer.has("trendlines")||state.layer.has("structure")){
+ const structure=v7Analyze(v);
+ if(state.layer.has("trendlines")){
+  for(const [i,line] of structure.lines.entries()){
+   const col=line.side==="support"?"#a7cdbc":"#f38b76",a=line.anchors[0];
+   s+='<g clip-path="url(#clip)" class="v7-trendline-graphic" data-v7-line="'+i+'" role="button" tabindex="0" aria-label="Объяснить трендовую линию '+line.side+'">'+
+     '<line x1="'+safe(x(a.index))+'" y1="'+safe(y(a.price))+'" x2="'+safe(x(line.endIndex))+'" y2="'+safe(y(line.endPrice))+'" stroke="transparent" stroke-width="24"/>'+
+     '<line x1="'+safe(x(a.index))+'" y1="'+safe(y(a.price))+'" x2="'+safe(x(line.endIndex))+'" y2="'+safe(y(line.endPrice))+'" stroke="'+col+'" opacity=".8" stroke-width="2"'+(line.status==="BROKEN"?' stroke-dasharray="6 5"':'')+'/>'+
+     line.anchors.map(p=>'<circle cx="'+safe(x(p.index))+'" cy="'+safe(y(p.price))+'" r="4" fill="#15171a" stroke="'+col+'" stroke-width="2"/>').join("")+'</g>';
+  }
+ }
+ if(state.layer.has("structure")){
+  for(const event of structure.events.slice(-5)){
+   if(event.index<offset)continue;
+   const color=event.direction==="UP"?"#a7cdbc":"#f38b76";
+   s+='<g clip-path="url(#clip)" pointer-events="none"><circle cx="'+safe(x(event.index))+'" cy="'+safe(y(event.close))+'" r="5" fill="#0d0e12" stroke="'+color+'" stroke-width="1.7"/>'+
+     '<text x="'+safe(x(event.index)+7)+'" y="'+safe(y(event.close)-11)+'" fill="'+color+'" font-weight="700" font-size="'+(mobile?13:11)+'">'+(event.shift?"SHIFT?":"BOS")+'</text></g>';
+  }
+ }
+}
+if(state.layer.has("levels"))v.levels.forEach((level,i)=>{let yy=y(level.price);if(yy<T+16||yy>B-16)return;const selected=state.level===level.kind+":"+level.price,col=level.kind==="resistance"?"#ff866f":"#aeb7b4",title=level.kind==="resistance"?"RESISTANCE":"SUPPORT",labelX=mobile?R-139:level.kind==="resistance"?1025:958,boxW=mobile?138:level.kind==="resistance"?263:222,labelText=mobile?(level.kind==="resistance"?"R ":"S ")+format(level.price):title+" · "+format(level.price);s+='<g class="level" tabindex="0" role="button" aria-label="'+title+' '+format(level.price)+'" data-level="'+i+'"><line x1="'+L+'" x2="'+R+'" y1="'+safe(yy)+'" y2="'+safe(yy)+'" stroke="transparent" stroke-width="24"/><line x1="'+L+'" x2="'+R+'" y1="'+safe(yy)+'" y2="'+safe(yy)+'" stroke="'+col+'" stroke-width="'+(selected?2:1)+'" stroke-opacity="'+(selected?1:.6)+'"'+(level.touches<2?' stroke-dasharray="4 8"':'')+'/><rect x="'+labelX+'" y="'+safe(yy-(mobile?17:20))+'" width="'+boxW+'" height="'+(mobile?34:40)+'" rx="6" fill="'+(selected?"#3b2320":"#15171a")+'" stroke="'+col+'" stroke-opacity=".65"/><circle cx="'+(labelX+17)+'" cy="'+safe(yy)+'" r="3.5" fill="'+col+'"/><text x="'+(labelX+28)+'" y="'+safe(yy+4)+'" fill="'+col+'" font-size="'+(mobile?15:11)+'" font-family="monospace">'+labelText+'</text></g>'});
+let last=b.at(-1).close;const lastY=y(last);s+='<line x1="'+L+'" x2="'+R+'" y1="'+safe(lastY)+'" y2="'+safe(lastY)+'" stroke="#eee" opacity=".23" stroke-dasharray="4 7"/><rect x="'+(R+3)+'" y="'+safe(lastY-(mobile?15:16))+'" width="'+(W-R-8)+'" height="'+(mobile?30:32)+'" rx="4" fill="#f5f1ed"/><text x="'+(R+(W-R-5)/2)+'" y="'+safe(lastY+5)+'" font-size="'+(mobile?15:14)+'" font-family="monospace" text-anchor="middle" fill="#111">'+format(last)+'</text>';
+s+='<line x1="'+L+'" x2="'+R+'" y1="'+(V1-13)+'" y2="'+(V1-13)+'" stroke="#ddd" opacity=".1"/><text x="'+L+'" y="'+(V1-2)+'" font-size="'+(mobile?12:10)+'" letter-spacing="2" fill="#777">VOLUME / OBSERVED</text>';
+b.forEach((c,j)=>{let i=offset+j,volY=V2-c.volume/mv*(V2-V1),color=c.close>=c.open?"#7e8987":"#bb6a62";s+='<rect x="'+safe(x(i)-bw/2)+'" y="'+safe(volY)+'" width="'+safe(bw)+'" height="'+safe(V2-volY)+'" fill="'+color+'" opacity=".5"/>'});
+return s+'</svg>';}
+function storyList(v){const stories=[{id:"r",head:"01 / STRUCTURE",title:v.dir==="UP"?"Восходящая структура":v.dir==="DOWN"?"Нисходящая структура":"Неопределённая структура",body:v.dir==="UP"?"EMA20 выше EMA50, движение за 20 свечей положительное. Это описание, не прогноз.":v.dir==="DOWN"?"EMA20 ниже EMA50, движение за 20 свечей отрицательное. Не торговый сигнал.":"Тренд и импульс не дают согласованного подтверждения."}];for(const [kind,label,index] of [["resistance","Сопротивление","02"],["support","Поддержка","03"]]){const level=v.levels.find(l=>l.kind===kind);if(level)stories.push({id:kind,head:index+" / PRICE STRUCTURE",title:label+" "+format(level.price),body:"Алгоритм подтвердил "+level.touches+" локальных экстремумов. Нажми, чтобы увидеть источник линии.",level})}stories.push({id:"vol",head:"04 / CONTEXT",title:"Импульс и волатильность",body:"RSI 14: "+format(v.rsi)+" · ATR 14: "+format(v.atr)+". Статистика не является вероятностью выигрыша."});$("storycount").textContent=String(stories.length).padStart(2,"0");$("stories").innerHTML=stories.map((s,i)=>'<button class="story'+(s.level&&state.level===s.level.kind+":"+s.level.price?" selected":"")+'" data-story="'+i+'"><small>'+escapeHTML(s.head)+'</small><strong>'+escapeHTML(s.title)+'</strong><p>'+escapeHTML(s.body)+'</p><span>'+(s.level?"ПОКАЗАТЬ НА ГРАФИКЕ":"ОБЪЯСНЕНИЕ ИЗ ДАННЫХ")+' ›</span></button>').join("");$("stories").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{const s=stories[+b.dataset.story];if(s.level){state.level=s.level.kind+":"+s.level.price;render();}else{state.level=null;render();}}));}
+function inspector(v){const old=$("inspector");if(old)old.remove();if(!state.level)return;const l=v.levels.find(x=>x.kind+":"+x.price===state.level);if(!l)return;const html='<div class="inspector" id="inspector"><button class="close" id="closeInspector" aria-label="Закрыть">×</button><div class="mini">'+(l.kind==="support"?"WHY THIS SUPPORT":"WHY THIS RESISTANCE")+'</div><h3>'+format(l.price)+'</h3><p>Уровень вычислен из подтверждённых локальных экстремумов, без произвольного размещения AI.</p><dl><dt>Подтверждено точек: </dt><dd>'+l.touches+'</dd><dt>Первая: </dt><dd>'+fmtTime(l.first)+'</dd><dt>Последняя: </dt><dd>'+fmtTime(l.last)+'</dd></dl></div>';$("plot").insertAdjacentHTML("beforeend",html);$("closeInspector").onclick=()=>{state.level=null;render();};}
+function render(){buttons($("markets"),SYMS,s=>s===state.symbol,s=>{state.symbol=s;load();});buttons($("timeframes"),TF,s=>s===state.tf,s=>{state.tf=s;load();if(v3Tab==="radar")void v4ScanRadar(true);if(v3Tab==="delta")v5RenderDelta();});buttons($("zoom"),matchMedia("(max-width:650px)").matches?["34","58","90"]:["90","140","240"],s=>+s===state.window,s=>{state.window=+s;render();});buttons($("layers"),LAYER,s=>state.layer.has(s),s=>{state.layer.has(s)?state.layer.delete(s):state.layer.add(s);render();});
+$("period").textContent=state.tf.toUpperCase();$("replay").hidden=state.cursor===null;$("stepBack").hidden=state.cursor===null;$("stepNext").hidden=state.cursor===null;$("toggleReplay").textContent=state.cursor===null?"◀ В прошлое":"↪ К текущему";$("replay").max=Math.max(59,state.rows.length-1);$("replay").value=state.cursor??Math.max(59,state.rows.length-1);
+const v=analyze(),ok=v.status==="READY";$("copy").disabled=!ok;$("export").disabled=!ok;
+if(state.source==="connecting"){setStatus("Загрузка источника","other");$("stamp").textContent="Hyperliquid OHLCV";}else if(state.source==="error"){setStatus("Источник недоступен","other");$("stamp").textContent="Проверь подключение или обнови";}else if(state.source==="sample"){setStatus("ДЕМОНСТРАЦИЯ · синтетика","other");$("stamp").innerHTML='<span class="sample">НЕ РЫНОЧНЫЕ ДАННЫЕ</span>';}else if(ok){setStatus(state.cursor===null?"Биржевые свечи проверены":"Исторический срез","ready");$("stamp").textContent=(state.cursor!==null?"Срез на ":"Последняя свеча: ")+fmtTime(v.bars.at(-1).closeTime);}else{setStatus("Недостаточно проверенной истории","other");$("stamp").textContent="Нельзя сформировать анализ";}
+$("barcount").textContent=ok?v.bars.length:"—";$("levelcount").textContent=ok?v.levels.length:"—";
+$("price").textContent=ok?format(v.last):"—";$("change").textContent=ok?(v.delta>=0?"+":"")+v.delta.toFixed(2)+"%":"";$("change").className="percent"+(ok&&v.delta<0?" negative":"");
+$("meta").textContent=ok?(v.dir==="UP"?"Восходящий уклон":v.dir==="DOWN"?"Нисходящий уклон":"Диапазон")+" · RSI "+format(v.rsi)+" · ATR "+format(v.atr):"RESEARCH / NOT TRADE ADVICE";
+$("layersSection").classList.toggle("mobile-open",state.showLayers);$("layersToggle").setAttribute("aria-expanded",String(state.showLayers));
+$("mobileReadoutTitle").textContent=ok?(v.dir==="UP"?"ВОСХОДЯЩАЯ СТРУКТУРА":v.dir==="DOWN"?"НИСХОДЯЩАЯ СТРУКТУРА":"ДИАПАЗОН / НЕОПРЕДЕЛЁННОСТЬ"):"VETO / ИСТОЧНИК ДАННЫХ";
+$("mobileReadoutText").textContent=ok?(v.levels.length+" уровня · "+(v.dir==="UP"?"EMA указывают на восходящий уклон":v.dir==="DOWN"?"EMA указывают на нисходящий уклон":"Согласованного направления нет")+". Нажмите на уровень для объяснения."):(state.source==="connecting"?"Загружаем свечи…":state.source==="error"?"Источник недоступен. Деморежим можно включить ниже.":"Нужны полные закрытые свечи.");
+if(ok){$("plot").innerHTML='<div class="plot-scroll">'+svgChart(v)+'</div><div class="hint" id="hint"></div>';
+$("svgchart").querySelectorAll(".level").forEach(el=>{const level=v.levels[+el.dataset.level];const handler=()=>{state.level=state.level===level.kind+":"+level.price?null:level.kind+":"+level.price;render();};el.onclick=handler;el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();handler();}};});
+$("svgchart").querySelectorAll(".v7-trendline-graphic").forEach(el=>{
+ const line=v7Analyze(v).lines[+el.dataset.v7Line];
+ const choose=()=>{state.lineId=line.id;state.level=null;render()};
+ el.onclick=choose;
+ el.onkeydown=event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();choose();}};
+});
+const svg=$("svgchart");svg.onpointermove=e=>{const rect=svg.getBoundingClientRect(),mobile=matchMedia("(max-width:650px)").matches,px=(e.clientX-rect.left)/rect.width*(mobile?520:1440),L=mobile?16:45,R=mobile?407:1300,index=Math.floor((px-L)/(R-L)*Math.min(state.window,v.bars.length))+Math.max(0,v.bars.length-state.window);if(index<0||index>=v.bars.length)return;const c=v.bars[index],hint=$("hint");hint.textContent=fmtTime(c.closeTime)+"  O "+format(c.open)+"  H "+format(c.high)+"  L "+format(c.low)+"  C "+format(c.close);hint.classList.add("visible")};svg.onpointerleave=()=>{$("hint")?.classList.remove("visible")};inspector(v);storyList(v);v7RenderStructure(v);v7RenderLineInspector(v);}
+else{$("plot").innerHTML='<div class="plot-empty"><b>Нет достаточных рыночных данных</b><span>График строится только из свечей доступного источника. Для визуального просмотра при ошибке API можно включить честно обозначенный демонстрационный режим.</span><button id="sample" style="padding:12px;background:#32211d;border:1px solid #a95e4b;color:#ffd5cb;border-radius:5px">Открыть демонстрационный график</button></div>';$("stories").innerHTML='<div class="story"><strong>Ожидаем надёжный источник</strong><p>Неподтверждённые свечи не выдаются за живой рынок.</p></div>';$("storycount").textContent="00";$("sample").onclick=()=>{state.rows=sampleRows();state.source="sample";state.fetched=state.rows.at(-1).closeTime+1;state.cursor=null;render();if(v3Tab==="delta")v5RenderDelta();};}}
+async function load(){state.cursor=null;state.level=null;state.source="connecting";state.rows=[];state.fetched=0;render();const symbol=state.symbol,tf=state.tf,request=Math.random();load.active=request;try{const endTime=Date.now(),res=await fetch("https://api.hyperliquid.xyz/info",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"candleSnapshot",req:{coin:symbol,interval:tf,startTime:endTime-DUR[tf]*240,endTime}})});if(!res.ok)throw Error("HTTP "+res.status);const raw=await res.json();if(!Array.isArray(raw))throw Error("INVALID_RESPONSE");const rows=raw.map(r=>({openTime:number(r.t),closeTime:number(r.T),open:number(r.o),high:number(r.h),low:number(r.l),close:number(r.c),volume:number(r.v)}));if(load.active!==request)return;state.rows=rows;state.fetched=endTime;state.source="real";render();v6Update();if(v3Tab==="scenarios"){v3RenderScenarios();v6Render();}if(v3Tab==="delta")v5RenderDelta();}catch(e){if(load.active!==request)return;state.source="error";state.fetched=0;render();}}
+function evidence(){const a=analyze();return {schema:"veto-charts-monolith-design-review",origin:state.source==="real"?"Hyperliquid":"SYNTHETIC_DESIGN_SAMPLE",notTradeAdvice:true,asOf:state.cursor===null?state.fetched:state.rows[state.cursor]?.closeTime,market:state.symbol,timeframe:state.tf,status:a.status,levels:a.levels,direction:a.dir,ohlcv:a.bars};}
+$("layersToggle").onclick=()=>{state.showLayers=!state.showLayers;$("layersSection").classList.toggle("mobile-open",state.showLayers);$("layersToggle").setAttribute("aria-expanded",String(state.showLayers));};$("reload").onclick=load;$("focus").onclick=()=>{state.focused=!state.focused;$("rail").hidden=state.focused;document.querySelector(".product").style.gridTemplateColumns=state.focused?"1fr":"";};$("toggleReplay").onclick=()=>{if(state.rows.length<65)return;state.cursor=state.cursor===null?Math.max(59,Math.floor(state.rows.length*.7)):null;state.level=null;render();};$("replay").oninput=e=>{state.cursor=+e.target.value;state.level=null;render();};$("stepBack").onclick=()=>{state.cursor=Math.max(59,(state.cursor??state.rows.length-1)-1);state.level=null;render();};$("stepNext").onclick=()=>{state.cursor=Math.min(state.rows.length-1,(state.cursor??state.rows.length-1)+1);state.level=null;render();};$("export").onclick=()=>{const blob=new Blob([JSON.stringify(evidence(),null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="veto-charts-"+state.symbol.toLowerCase()+"-evidence.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)};$("copy").onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(evidence(),null,2));$("copy").textContent="Скопировано ✓"}catch{$("copy").textContent="Ошибка копирования";}};
+/* Contextual VETO evidence actions — no LLM backend, no forecast fabrication. */
+const V3KEY="veto-charts-observations-v1";
+let v3Tab="insights";
+let v3Messages=[];
+function v3Switch(tab){
+ v3Tab=tab;
+ for(const t of ["insights","radar","delta","chat","scenarios","memory"]){
+  $("v3-"+t).hidden=t!==tab;
+  document.querySelector('[data-v3="'+t+'"]').setAttribute("aria-selected",String(t===tab));
+ }
+ if(tab==="insights")v7RenderStructure(analyze());
+ if(tab==="scenarios"){v3RenderScenarios();v6Render();}
+ if(tab==="radar")v4ScanRadar();
+ if(tab==="delta")v5RenderDelta();
+ if(tab==="memory")v3RenderMemory();
+}
+document.querySelectorAll("[data-v3]").forEach(btn=>btn.addEventListener("click",()=>v3Switch(btn.dataset.v3)));
+function v3EvidenceResponse(q){
+ const v=analyze(),origin=state.source==="sample"?"ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ":"HYPERLIQUID";
+ const ctx=state.symbol+" · "+state.tf.toUpperCase()+" · "+(v.bars?.at(-1)?fmtTime(v.bars.at(-1).closeTime):"нет свечей")+" · "+origin;
+ if(v.status!=="READY"||state.source==="error"||state.source==="connecting"){
+  return {head:"Данные не подтверждены",lines:["Нужны проверенные закрытые свечи. VETO не создаёт прогнозы и уровни при отсутствии источника."],ctx,action:null};
+ }
+ const lower=q.toLowerCase();
+ const support=v.levels.find(x=>x.kind==="support");
+ const resistance=v.levels.find(x=>x.kind==="resistance");
+ const level=(kind,lvl)=>lvl?{
+   head:(kind==="support"?"Поддержка ":"Сопротивление ")+format(lvl.price),
+   lines:["Подтверждённых локальных экстремумов: "+lvl.touches+".","Первая точка: "+fmtTime(lvl.first)+".","Последняя точка: "+fmtTime(lvl.last)+".","Линия выделена на графике. Это наблюдение, не торговый приказ."],ctx,action:lvl
+ }:{head:"Недостаточно подтверждений",lines:["На доступной истории подходящий уровень не найден. VETO не рисует его произвольно."],ctx,action:null};
+ if(/следи|отслеж|наблюд|watch|monitor|alert|уведом/.test(lower)){
+  v3Switch("scenarios");
+  return {head:"Scenario Watch открыт",lines:[
+   "Выбери уровень и одно или два закрытия подряд. Создание наблюдения требует твоего нажатия.",
+   "Проверка только по новым закрытым свечам при открытой странице. Фоновых уведомлений нет."],ctx,action:null};
+ }
+ if(/изменил|изменени|измени|сравн|разниц|delta|what changed|compare/.test(lower)){
+  v3Switch("delta");
+  return {head:"Decision Delta открыт",lines:[
+   "Сравниваем два исторических среза только по доступным закрытым свечам.",
+   "Это реконструкция наблюдений, а не сохранённый публичный прогноз."],ctx,action:null};
+ }
+ if(/фиб|fibo|коррекци/.test(lower)){state.layer.add("fibonacci");render();return {head:"Слой Fibonacci включён",lines:["Значения рассчитаны от наблюдаемого движения свечей. Ни один из уровней не является обещанной целью."],ctx,action:null}}
+ if(/поддержк|support/.test(lower))return level("support",support);
+ if(/сопротивлен|resistance/.test(lower))return level("resistance",resistance);
+ if(/истори|прошл|раньше|replay|time machine/.test(lower)){
+  if(state.rows.length>=65){state.cursor=Math.max(59,Math.floor(state.rows.length*.72));state.level=null;render();}
+  return {head:"Исторический просмотр",lines:["Пересчитываем структуру только на доступных в тот момент свечах.","Это replay, а не сохранённый серверный прогноз."],ctx,action:null};
+ }
+ if(/сценар|пробо|что если|отмен|инвалид|риск|ошиб/.test(lower)){
+  v3Switch("scenarios");
+  return {head:"Условные границы рынка",lines:[
+   resistance?"Сопротивление: "+format(resistance.price)+". Закрепление выше потребует нового подтверждения.":"Подтверждённого сопротивления нет.",
+   support?"Поддержка: "+format(support.price)+". Нарушение потребует повторного расчёта.":"Подтверждённой поддержки нет.",
+   "Сценарии не содержат вероятностей, TP/SL или инвестиционной рекомендации."],ctx,action:null};
+ }
+ if(/структур|тренд|режим|ema|rsi|почему|направлен|trend/.test(lower))
+  return {head:"Наблюдаемая рыночная структура",lines:[
+    v.dir==="UP"?"EMA и 20-свечной импульс показывают восходящий уклон.":v.dir==="DOWN"?"EMA и 20-свечной импульс показывают нисходящий уклон.":"Согласованного направления нет.",
+    "RSI14 "+format(v.rsi)+" · ATR14 "+format(v.atr)+".","Это характеристика выбранного периода, не прогноз прибыли."],ctx,action:null};
+ return {head:"Что я могу показать",lines:[
+   "Спроси о поддержке, сопротивлении, структуре, рисках или сценариях.",
+   "Команды «Покажи Fibonacci» и «История рынка» изменяют настоящий график.",
+   "VETO Evidence Assistant — проверяемый ассистент на правилах. Свободная LLM пока не подключена."],ctx,action:null};
+}
+function v3Ask(raw){
+ const q=String(raw||"").trim().slice(0,350);
+ if(!q)return;
+ const answer=v3EvidenceResponse(q);
+ v3Messages.push({q,answer});
+ v3Messages=v3Messages.slice(-8);
+ const d=$("v3-dialog");d.innerHTML=v3Messages.map(({q,answer})=>'<div><div class="v3-question">'+escapeHTML(q)+'</div><div class="v3-answer"><strong>'+escapeHTML(answer.head)+'</strong>'+answer.lines.map(line=>'<p>'+escapeHTML(line)+'</p>').join("")+'<small>'+escapeHTML(answer.ctx)+'</small></div></div>').join("");
+ d.scrollTop=d.scrollHeight;
+ if(answer.action){state.layer.add("levels");state.level=answer.action.kind+":"+answer.action.price;render();}
+ $("v3-input").value="";
+}
+$("v3-compose").addEventListener("submit",event=>{event.preventDefault();v3Ask($("v3-input").value)});
+document.querySelectorAll("[data-prompt]").forEach(btn=>btn.addEventListener("click",()=>v3Ask(btn.dataset.prompt)));
+function v3RenderScenarios(){
+ const v=analyze(),container=$("v3-scenario-content");
+ if(v.status!=="READY"){container.innerHTML='<div class="v3-no-data">Сначала необходимы полноценные закрытые свечи.</div>';return}
+ const resistance=v.levels.find(x=>x.kind==="resistance"),support=v.levels.find(x=>x.kind==="support");
+ const cards=[{name:"Потенциальный пробой вверх",lvl:resistance,description:"Если свеча закроется выше уровня, потребуется подтверждение и повторный расчёт структуры. Не автоматическая покупка."},
+ {name:"Потенциальный пробой вниз",lvl:support,description:"Если свеча закроется ниже уровня, потребуется подтверждение нарушения поддержки. Не автоматическая продажа."}];
+ container.innerHTML=cards.map((c,i)=>'<div class="v3-scenario"><div><span>'+(i===0?"↗ ":"↘ ")+escapeHTML(c.name)+'</span><strong>'+format(c.lvl?.price)+'</strong></div><p>'+escapeHTML(c.lvl?c.description:"Подтверждённый уровень отсутствует; сценарий не сформирован.")+'</p>'+(c.lvl?'<button type="button" data-scenario="'+i+'">ПОКАЗАТЬ НА ГРАФИКЕ ↗</button>':"")+'</div>').join("")+
+ '<div class="v3-rail-note">Сценарии условные. Проверка исходов и вероятностная калибровка появятся только с отдельным журналом результатов.</div>';
+ container.querySelectorAll("[data-scenario]").forEach(b=>b.onclick=()=>{const lvl=cards[+b.dataset.scenario].lvl;if(!lvl)return;state.level=lvl.kind+":"+lvl.price;state.layer.add("levels");render();});
+}
+function v3ReadMemory(){try{const data=JSON.parse(localStorage.getItem(V3KEY)||"[]");return Array.isArray(data)?data.filter(x=>x&&x.localOnly===true&&typeof x.id==="string").slice(0,12):[]}catch{return []}}
+function v3RenderMemory(){
+ const data=v3ReadMemory();$("v3-save").disabled=!(state.source==="real"&&analyze().status==="READY");
+ $("v3-saved-list").innerHTML=data.length?data.map(x=>'<div class="v3-saved"><div><div class="mini">'+escapeHTML(x.symbol)+" · "+escapeHTML(x.tf)+'</div><strong>'+format(x.price)+'</strong><small>Свеча: '+escapeHTML(x.closedAt)+'<br>Сохранено: '+escapeHTML(x.savedAt)+'<br>'+escapeHTML(x.direction)+'</small></div><button type="button" data-remove="'+escapeHTML(x.id)+'" aria-label="Удалить">×</button></div>').join(""):'<div class="v3-no-data">Сохранённых наблюдений пока нет.</div>';
+ $("v3-saved-list").querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{try{localStorage.setItem(V3KEY,JSON.stringify(v3ReadMemory().filter(x=>x.id!==b.dataset.remove)));v3RenderMemory();}catch{alert("Локальное хранилище недоступно");}});
+}
+$("v3-save").onclick=()=>{
+ const v=analyze();if(v.status!=="READY"||state.source!=="real")return;
+ const item={id:"veto-"+Date.now(),localOnly:true,symbol:state.symbol,tf:state.tf,price:v.last,closedAt:fmtTime(v.bars.at(-1).closeTime),savedAt:new Date().toISOString(),direction:v.dir,supports:v.supports?.map(x=>x.price)||[],resistances:v.resistances?.map(x=>x.price)||[]};
+ try{localStorage.setItem(V3KEY,JSON.stringify([item,...v3ReadMemory()].slice(0,12)));v3RenderMemory();}catch{alert("Локальное хранилище недоступно");}
+};
+function v3CloseDrawer(){
+ $("rail").classList.remove("v3-drawer-active");
+ $("v3-mask").hidden=true;
+}
+$("v3-ask-chart").onclick=()=>{
+ v3Switch("chat");
+ if(window.matchMedia("(max-width:1100px)").matches){
+  $("rail").classList.add("v3-drawer-active");$("v3-mask").hidden=false;
+ }else $("rail").scrollIntoView({behavior:"smooth",block:"start"});
+};
+$("v3-close").onclick=v3CloseDrawer;
+$("v3-mask").onclick=v3CloseDrawer;
+document.addEventListener("keydown",event=>{if(event.key==="Escape")v3CloseDrawer();});
+
+/* VETO Market Radar — real Hyperliquid closed bars only, no synthetic fallback. */
+let v4RadarCache=null;
+let v4Request=0;
+const v4RadarSymbols=["BTC","ETH","SOL"];
+function v4Normalize(raw,fetchedAt,tf){
+ const span=DUR[tf];
+ const valid=raw.filter(c=>c&&Number.isFinite(c.openTime)&&Number.isFinite(c.closeTime)
+   &&c.closeTime<=fetchedAt&&c.openTime<c.closeTime&&c.openTime>=fetchedAt-span*501
+   &&[c.open,c.high,c.low,c.close].every(n=>Number.isFinite(n)&&n>0)
+   &&Number.isFinite(c.volume)&&c.volume>=0
+   &&c.low<=Math.min(c.open,c.close)&&c.high>=Math.max(c.open,c.close)&&c.low<=c.high);
+ const sorted=[...new Map(valid.map(c=>[c.openTime,c])).values()].sort((a,b)=>a.openTime-b.openTime);
+ let start=sorted.length-1;
+ while(start>0&&sorted[start].openTime-sorted[start-1].openTime===span)start--;
+ return sorted.slice(Math.max(start,0)).slice(-240);
+}
+function v4Summarize(symbol,raw,fetchedAt,tf){
+ const rows=v4Normalize(raw,fetchedAt,tf);
+ if(rows.length<60)return {symbol,status:"INSUFFICIENT"};
+ const candle=rows.at(-1);
+ if(fetchedAt-candle.closeTime>DUR[tf]*2+90000)return {symbol,status:"STALE"};
+ const price=candle.close, e20=ema(rows,20).at(-1),e50=ema(rows,50).at(-1),a=atr(rows),r=rsi(rows);
+ const anchor=rows[Math.max(0,rows.length-21)].close;
+ const change=(price-anchor)/anchor*100;
+ const threshold=Math.max(.2,(a/price)*40);
+ const direction=e20>e50&&change>threshold?"UP":e20<e50&&change<(-threshold)?"DOWN":"RANGE";
+ const tol=Math.max(price*.003,a*.6);
+ const levels=[...grouped(pivots(rows,"support"),"support",price,tol),...grouped(pivots(rows,"resistance"),"resistance",price,tol)];
+ const closest=levels.sort((x,y)=>Math.abs(x.price-price)-Math.abs(y.price-price))[0]??null;
+ const distanceAtr=closest&&a>0?Math.abs(closest.price-price)/a:null;
+ return {symbol,status:"READY",price,change,dir:direction,atr:a,rsi:r,closest,distanceAtr,closedAt:candle.closeTime,near:distanceAtr!=null&&distanceAtr<=1};
+}
+function v4RenderRadar(){
+ const container=$("v4-radar-list");if(!container)return;
+ const snap=v4RadarCache;
+ if(!snap){container.innerHTML='<div class="v3-no-data">Нажми «Радар», чтобы проверить три рынка.</div>';return}
+ const entries=[...snap.items].sort((a,b)=>{
+  const rank=x=>x.status!=="READY"?2:x.near?0:1;
+  const d=rank(a)-rank(b);return d||((a.distanceAtr??Infinity)-(b.distanceAtr??Infinity))||a.symbol.localeCompare(b.symbol);
+ });
+ const verified=entries.filter(x=>x.status==="READY").length,near=entries.filter(x=>x.near).length;
+ $("v4-radar-info").textContent=verified+" / 3 проверено · "+near+" в пределах 1 ATR · "+snap.interval.toUpperCase();
+ container.innerHTML=entries.map(x=>'<button type="button" class="v4-radar-item'+(state.symbol===x.symbol?" current":"")+'" data-v4-symbol="'+x.symbol+'"'+(x.status!=="READY"?" disabled":"")+'>'+
+ '<div class="v4-radar-top"><strong>'+x.symbol+' / USD'+(state.symbol===x.symbol?'<em>ОТКРЫТ</em>':"")+'</strong><small>'+(x.dir==="UP"?"Восходящая":x.dir==="DOWN"?"Нисходящая":x.dir==="RANGE"?"Диапазон":x.status==="SOURCE_ERROR"?"Ошибка источника":x.status==="STALE"?"Данные устарели":"Нет полной истории")+'</small></div>'+
+ (x.status==="READY"?'<div class="v4-radar-price"><strong>'+format(x.price)+'</strong><span class="'+(x.change<0?"down":"")+'">'+(x.change>=0?"+":"")+x.change.toFixed(2)+'%</span></div>'+
+ '<div class="v4-radar-facts"><span>'+(x.closest?(x.closest.kind==="support"?"Поддержка":"Сопротивление"):"Уровень не подтверждён")+'</span><b>'+format(x.closest?.price)+'</b></div>'+
+ '<div class="v4-radar-facts"><span>'+(x.near?"≤1 ATR от уровня":"Расстояние до уровня")+'</span><b>'+(x.distanceAtr!=null?x.distanceAtr.toFixed(2)+" ATR":"—")+'</b></div>'+
+ '<div class="v4-radar-stamp"><span>'+fmtTime(x.closedAt)+'</span><span>ОТКРЫТЬ ГРАФИК ↗</span></div>':
+ '<div class="v4-radar-missing">◌ &nbsp; '+(x.status==="SOURCE_ERROR"?"Источник недоступен":x.status==="STALE"?"Свечи устарели":"История недостаточна")+'</div>')+'</button>').join("");
+ container.querySelectorAll("[data-v4-symbol]").forEach(button=>button.onclick=()=>{
+  const symbol=button.dataset.v4Symbol;if(button.disabled||!v4RadarSymbols.includes(symbol))return;
+  state.symbol=symbol;state.cursor=null;state.level=null;
+  v3CloseDrawer();load();
+  document.querySelector(".chartcol")?.scrollIntoView({block:"start",behavior:"smooth"});
+ });
+}
+async function v4ScanRadar(force=false){
+ const tf=state.tf;
+ if(!force&&v4RadarCache&&v4RadarCache.interval===tf&&Date.now()-v4RadarCache.at<90000){
+  v4RenderRadar();return;
+ }
+ const id=++v4Request;
+ $("v4-radar-refresh").disabled=true;
+ $("v4-radar-list").innerHTML='<div class="v3-no-data">Проверяем BTC, ETH и SOL на '+tf.toUpperCase()+'… <br>Используем только данные Hyperliquid.</div>';
+ const results=await Promise.allSettled(v4RadarSymbols.map(async symbol=>{
+  const now=Date.now(),response=await fetch("https://api.hyperliquid.xyz/info",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({type:"candleSnapshot",req:{coin:symbol,interval:tf,startTime:now-DUR[tf]*240,endTime:now}})});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  const raw=await response.json();if(!Array.isArray(raw))throw Error("bad candles");
+  const rows=raw.map(r=>({openTime:number(r.t),closeTime:number(r.T),open:number(r.o),high:number(r.h),low:number(r.l),close:number(r.c),volume:number(r.v)}));
+  return v4Summarize(symbol,rows,now,tf);
+ }));
+ if(id!==v4Request||tf!==state.tf)return;
+ v4RadarCache={interval:tf,at:Date.now(),items:results.map((x,i)=>x.status==="fulfilled"?x.value:{symbol:v4RadarSymbols[i],status:"SOURCE_ERROR"})};
+ $("v4-radar-refresh").disabled=false;
+ v4RenderRadar();
+}
+$("v4-radar-refresh").onclick=()=>v4ScanRadar(true);
+setInterval(()=>{if(v3Tab==="radar"&&document.visibilityState==="visible")v4ScanRadar(true)},120000);
+
+/* VETO Decision Delta: point-in-time reconstruction, NOT a saved forecast ledger. */
+let v5Offset=24;
+function v5Snapshot(rows,tf,asOf){
+ const valid=v4Normalize(rows,asOf,tf);
+ if(valid.length<60)return null;
+ const last=valid.at(-1),price=last.close,e20=ema(valid,20).at(-1),e50=ema(valid,50).at(-1);
+ const a=atr(valid),r=rsi(valid),ref=valid[Math.max(0,valid.length-21)].close;
+ const move20=(price-ref)/ref*100,threshold=Math.max(.2,(a/price)*40);
+ const direction=e20>e50&&move20>threshold?"UP":e20<e50&&move20<(-threshold)?"DOWN":"RANGE";
+ const tol=Math.max(price*.003,a*.6);
+ const supports=grouped(pivots(valid,"support"),"support",price,tol);
+ const resistances=grouped(pivots(valid,"resistance"),"resistance",price,tol);
+ return {time:last.closeTime,price,atr:a,rsi:r,direction,supports,resistances,bars:valid.length,
+  levels:[...supports,...resistances]};
+}
+function v5Changes(before,after){
+ const a=before.levels,b=after.levels,tol=Math.max(before.price*.003,before.atr*.6),pairs=[];
+ a.forEach((old,i)=>b.forEach((cur,j)=>{
+  const diff=Math.abs(old.price-cur.price);
+  if(old.kind===cur.kind&&diff<=tol)pairs.push({i,j,diff});
+ }));
+ pairs.sort((x,y)=>x.diff-y.diff||x.i-y.i||x.j-y.j);
+ const takenA=new Set(),takenB=new Set(),events=[];
+ for(const match of pairs){
+  if(takenA.has(match.i)||takenB.has(match.j))continue;
+  const old=a[match.i],cur=b[match.j];takenA.add(match.i);takenB.add(match.j);
+  if(Math.abs(old.price-cur.price)>Math.max(old.price*.0001,.000001)||old.touches!==cur.touches||old.last!==cur.last)
+   events.push({type:"UPDATED",before:old,after:cur});
+ }
+ a.forEach((old,i)=>{if(!takenA.has(i))events.push({type:"NO_LONGER_DETECTED",before:old,after:null})});
+ b.forEach((cur,i)=>{if(!takenB.has(i))events.push({type:"ADDED",before:null,after:cur})});
+ return events;
+}
+function v5RenderDelta(){
+ const el=$("v5-delta-content");if(!el)return;
+ document.querySelectorAll("[data-offset]").forEach(btn=>btn.setAttribute("aria-pressed",String(+btn.dataset.offset===v5Offset)));
+ const sourceRows=state.cursor===null?state.rows:state.rows.slice(0,state.cursor+1);
+ $("v5-delta-head-source")?.remove();
+ if(state.source==="sample")$("v5-delta-content").insertAdjacentHTML("beforebegin",'<div id="v5-delta-head-source" class="v5-footnote">ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ — результаты сравнения только для проверки интерфейса.</div>');
+ const currentAt=state.cursor===null?state.fetched:(sourceRows.at(-1)?.closeTime??0)+1;
+ if(!sourceRows.length||!currentAt||state.source==="error"||state.source==="connecting"){
+  el.innerHTML='<div class="v3-no-data">Источник не загружен. Нельзя сравнивать состояния рынка без подтверждённых свечей.</div>';return;
+ }
+ const valid=v4Normalize(sourceRows,currentAt,state.tf);
+ if(valid.length<v5Offset+60 || state.source==="real"&&currentAt-valid.at(-1).closeTime>DUR[state.tf]*2+90000){
+  el.innerHTML='<div class="v3-no-data">Недостаточно свежих закрытых свечей для двух независимых срезов. Выбери меньший интервал или обнови рынок.</div>';return;
+ }
+ const historical=valid.slice(0,-v5Offset);
+ const earlier=v5Snapshot(historical,state.tf,historical.at(-1).closeTime+1),latest=v5Snapshot(valid,state.tf,valid.at(-1).closeTime+1);
+ if(!earlier||!latest){el.innerHTML='<div class="v3-no-data">Не удалось подтвердить оба рыночных состояния.</div>';return}
+ const pc=(latest.price-earlier.price)/earlier.price*100;
+ const rp=latest.rsi-earlier.rsi;
+ const ap=(latest.atr-earlier.atr)/earlier.atr*100;
+ const sign=(n,suffix="")=>(n>0?"+":"")+n.toFixed(2)+suffix;
+ const name=d=>d==="UP"?"Восходящая":d==="DOWN"?"Нисходящая":"Диапазон";
+ const events=v5Changes(earlier,latest);
+ el.innerHTML='<div class="v5-times"><div><small>BEFORE</small><strong>'+fmtTime(earlier.time)+'</strong><em>'+name(earlier.direction)+' · '+format(earlier.price)+'</em></div><span>⇄</span><div><small>AFTER</small><strong>'+fmtTime(latest.time)+'</strong><em>'+name(latest.direction)+' · '+format(latest.price)+'</em></div></div>'+
+ '<div class="v5-stats"><div><small>Цена</small><strong>'+sign(pc,"%")+'</strong></div><div><small>RSI 14</small><strong>'+sign(rp," pt")+'</strong></div><div><small>ATR 14</small><strong>'+sign(ap,"%")+'</strong></div></div>'+
+ '<div class="v5-structure"><small>ИЗМЕНЕНИЕ СТРУКТУРЫ</small><strong>'+name(earlier.direction)+" → "+name(latest.direction)+'</strong></div>'+
+ '<div class="v5-events-head"><strong>ИЗМЕНЕНИЯ УРОВНЕЙ</strong><span>'+events.length+'</span></div>'+
+ (events.length===0?'<div class="v3-no-data">По заданным правилам сопоставления изменений уровней не найдено.</div>':
+  events.slice(0,12).map((x,i)=>{
+   const lvl=x.after??x.before,label=x.type==="ADDED"?"Выявлен":x.type==="UPDATED"?"Пересчитан":"Больше не определяется";
+   return '<div class="v5-event"><div class="v5-event-top"><span class="v5-tag '+(x.type==="NO_LONGER_DETECTED"?"not-detected":x.type==="UPDATED"?"updated":"")+'">'+label+'</span><small>'+(lvl.kind==="support"?"Поддержка":"Сопротивление")+'</small></div><strong>'+format(x.before?.price)+" → "+format(x.after?.price)+'</strong>'+(x.type==="UPDATED"?'<small>Касаний: '+x.before.touches+" → "+x.after.touches+'</small>':"")+(x.after?'<button type="button" data-v5-event="'+i+'">ПОКАЗАТЬ ЛИНИЮ НА ГРАФИКЕ ↗</button>':"")+'</div>'
+  }).join(""))+(events.length>12?'<div class="v3-no-data">Отображено 12 из '+events.length+' изменений.</div>':"");
+ el.querySelectorAll("[data-v5-event]").forEach(b=>b.onclick=()=>{
+  const level=events[+b.dataset.v5Event]?.after;
+  if(!level)return;
+  state.layer.add("levels");state.level=level.kind+":"+level.price;
+  render();v3CloseDrawer();
+  document.querySelector(".chartcol")?.scrollIntoView({block:"start",behavior:"smooth"});
+ });
+}
+document.querySelectorAll("[data-offset]").forEach(btn=>btn.addEventListener("click",()=>{v5Offset=+btn.dataset.offset;v5RenderDelta();}));
+
+/* Scenario Watch V6 — local, forward-only validation of closed exchange bars. */
+const V6KEY="veto-charts-scenario-watches-v1";
+function v6Read(){
+ try{
+  const parsed=JSON.parse(localStorage.getItem(V6KEY)||"[]");
+  return Array.isArray(parsed)?parsed.filter(w=>w&&w.source==="LOCAL_ONLY"&&
+   typeof w.id==="string"&&["BTC","ETH","SOL"].includes(w.symbol)&&DUR[w.tf]&&
+   (w.kind==="support"||w.kind==="resistance")&&Number.isFinite(w.threshold)&&w.threshold>0&&
+   (w.required===1||w.required===2)&&Number.isFinite(w.anchor)&&
+   Number.isFinite(w.lastChecked)&&w.lastChecked>=w.anchor&&
+   ["WATCHING","CONFIRMED","DATA_GAP"].includes(w.status)&&
+   Number.isInteger(w.streak)&&w.streak>=0&&
+   Array.isArray(w.confirming)&&w.confirming.length<=2&&
+   (w.confirmedAt===null||Number.isFinite(w.confirmedAt))
+  ).slice(0,10):[];
+ }catch{return []}
+}
+function v6Write(items){
+ try{localStorage.setItem(V6KEY,JSON.stringify(items.slice(0,10)));return true}
+ catch{return false}
+}
+let v6Selected=null;
+function v6Render(){
+ const analysis=analyze();
+ const live=state.source==="real"&&state.cursor===null&&analysis.status==="READY";
+ const options=live?analysis.levels.slice(0,8):[];
+ const key=l=>l.kind+":"+l.price;
+ const pick=options.find(l=>key(l)===v6Selected)||options[0]||null;
+ $("v6-level").innerHTML=options.length?options.map(l=>'<option value="'+key(l)+'">'+(l.kind==="support"?"Поддержка ":"Сопротивление ")+format(l.price)+'</option>').join(""):'<option value="">Нет подтверждённых уровней</option>';
+ if(pick){$("v6-level").value=key(pick);v6Selected=key(pick)}
+ $("v6-create").disabled=!live||!pick||v6Read().length>=10;
+ $("v6-warning").textContent=state.source==="sample"?"Демонстрационные свечи: создать наблюдение нельзя.":
+  state.cursor!==null?"В Time Machine запрещено создавать и подтверждать новые сценарии.":
+  !live?"Требуется свежая непрерывная история закрытых биржевых свечей.":"";
+ const items=v6Read().filter(x=>x.symbol===state.symbol&&x.tf===state.tf);
+ $("v6-count").textContent=String(items.length);
+ $("v6-list").innerHTML=items.length?items.map(w=>{
+  const type=w.status==="CONFIRMED"?"УСЛОВИЕ ВЫПОЛНЕНО":w.status==="DATA_GAP"?"ПРОПУСК СВЕЧИ":"НАБЛЮДЕНИЕ";
+  const matching=options.find(l=>l.kind===w.kind&&Math.abs(l.price-w.threshold)<.000001);
+  return '<div class="v6-item"><div class="v6-item-top"><span class="'+(w.status==="DATA_GAP"?"data-gap":w.status.toLowerCase())+'">'+type+'</span><button data-v6-remove="'+escapeHTML(w.id)+'" aria-label="Удалить наблюдение">×</button></div>'+
+   '<strong>'+(w.kind==="support"?"Ниже ":"Выше ")+format(w.threshold)+'</strong>'+
+   '<p>Необходимо закрытий подряд: '+w.required+' · подтверждено '+w.streak+' / '+w.required+'</p>'+
+   '<small>Создано после свечи: '+fmtTime(w.anchor)+'</small>'+
+   (w.status==="CONFIRMED"?'<small class="verified">Подтверждено закрытием: '+fmtTime(w.confirmedAt)+'</small>':
+   w.status==="DATA_GAP"?'<p>Был пропуск в истории. Создай новое наблюдение для проверки новой серии.</p>':"")+
+   (matching?'<button class="v6-show" data-v6-show="'+escapeHTML(w.id)+'">ПОКАЗАТЬ УРОВЕНЬ ↗</button>':"")+
+   '</div>';
+ }).join(""):'<div class="v6-empty">Пока нет наблюдений для '+state.symbol+' · '+state.tf.toUpperCase()+'.</div>';
+ $("v6-list").querySelectorAll("[data-v6-remove]").forEach(b=>b.onclick=()=>{
+  if(v6Write(v6Read().filter(w=>w.id!==b.dataset.v6Remove)))v6Render();
+ });
+ $("v6-list").querySelectorAll("[data-v6-show]").forEach(b=>b.onclick=()=>{
+  const w=items.find(x=>x.id===b.dataset.v6Show);
+  if(!w)return;
+  state.level=w.kind+":"+w.threshold;state.layer.add("levels");render();v3CloseDrawer();
+  document.querySelector(".chartcol")?.scrollIntoView({block:"start",behavior:"smooth"});
+ });
+}
+function v6Update(){
+ if(state.source!=="real"||state.cursor!==null)return;
+ const analysis=analyze();if(analysis.status!=="READY")return;
+ const watches=v6Read(),span=DUR[state.tf];let changed=false;
+ const next=watches.map(w=>{
+  if(w.status!=="WATCHING"||w.symbol!==state.symbol||w.tf!==state.tf)return w;
+  const updates=analysis.bars.filter(b=>b.closeTime>w.lastChecked&&b.closeTime>w.anchor)
+   .sort((a,b)=>a.closeTime-b.closeTime);
+  let current=w;
+  for(const bar of updates){
+   if(bar.closeTime<=current.lastChecked)continue;
+   if(bar.closeTime-current.lastChecked!==span){
+    current={...current,status:"DATA_GAP",streak:0,confirming:[]};changed=true;break;
+   }
+   const pass=w.kind==="resistance"?bar.close>w.threshold:bar.close<w.threshold;
+   current={...current,lastChecked:bar.closeTime,
+    streak:pass?current.streak+1:0,
+    confirming:pass?[...current.confirming,bar.closeTime].slice(-w.required):[]};
+   changed=true;
+   if(current.streak>=w.required){
+    current={...current,status:"CONFIRMED",confirmedAt:bar.closeTime};break;
+   }
+  }
+  return current;
+ });
+ if(changed)v6Write(next);
+}
+$("v6-level").onchange=e=>{v6Selected=e.target.value;};
+$("v6-create").onclick=()=>{
+ const a=analyze();if(state.source!=="real"||state.cursor!==null||a.status!=="READY"||!a.bars.length)return;
+ const options=a.levels,chosen=options.find(l=>l.kind+":"+l.price===$("v6-level").value);
+ if(!chosen)return;
+ const current=v6Read();if(current.length>=10)return;
+ const anchor=a.bars.at(-1).closeTime,now=Date.now(),required=Number($("v6-confirm").value);
+ if(anchor>now||![1,2].includes(required))return;
+ const entry={id:state.symbol+"-"+state.tf+"-"+now,source:"LOCAL_ONLY",symbol:state.symbol,
+  tf:state.tf,kind:chosen.kind,threshold:chosen.price,required,anchor,lastChecked:anchor,
+  streak:0,confirming:[],status:"WATCHING",confirmedAt:null,createdAt:now};
+ if(v6Write([entry,...current]))v6Render();
+ else $("v6-warning").textContent="Локальное хранилище недоступно.";
+};
+
+/* Explainable structure from confirmed pivots; no projected trade signals. */
+function v7Analyze(v){
+ if(v.status!=="READY"||v.bars.length<65)return {swings:[],lines:[],events:[],state:"UNAVAILABLE"};
+ const highs=pivots(v.bars,"resistance"),lows=pivots(v.bars,"support");
+ const tolerance=Math.max(v.atr*.12,v.last*.00005),swings=[];
+ for(const [kind,pts] of [["high",highs],["low",lows]]){
+  let prev=null;
+  for(const p of pts){
+   const label=prev==null?(kind==="high"?"EH":"EL"):
+    Math.abs(prev.price-p.price)<=tolerance?(kind==="high"?"EH":"EL"):
+    kind==="high"?(p.price>prev.price?"HH":"LH"):(p.price>prev.price?"HL":"LL");
+   swings.push({...p,kind,label,confirmedAt:p.index+3});prev=p;
+  }
+ }
+ swings.sort((a,b)=>a.index-b.index);
+ const lines=[];
+ for(const [side,pts] of [["support",lows],["resistance",highs]]){
+  if(pts.length<2)continue;
+  const a=pts.at(-2),b=pts.at(-1),span=b.index-a.index;
+  if(span<5)continue;
+  const slope=(b.price-a.price)/span;
+  if(!Number.isFinite(slope)||Math.abs(slope)>v.atr*.7)continue;
+  const projection=i=>a.price+slope*(i-a.index);
+  let consecutive=0,brokenAt=null;
+  for(let i=b.index+4;i<v.bars.length;i++){
+   const c=v.bars[i].close,lv=projection(i),breach=side==="support"?c<lv-v.atr*.12:c>lv+v.atr*.12;
+   consecutive=breach?consecutive+1:0;
+   if(consecutive>=2){brokenAt=i;break}
+  }
+  const endIndex=brokenAt??v.bars.length-1;
+  lines.push({id:side+":"+a.index+":"+b.index,side,anchors:[a,b],
+   slope,status:brokenAt==null?"ACTIVE":"BROKEN",brokenAt,endIndex,endPrice:projection(endIndex),
+   touches:pts.filter(p=>p.index>=a.index&&Math.abs(p.price-projection(p.index))<=v.atr*.35).length});
+ }
+ const events=[],already=new Set();let lastBreak=null;
+ for(let i=7;i<v.bars.length;i++){
+  const hi=[...highs].reverse().find(p=>p.index+3<i),lo=[...lows].reverse().find(p=>p.index+3<i);
+  for(const [direction,pivot] of [["UP",hi],["DOWN",lo]]){
+   if(!pivot||already.has(direction+":"+pivot.index))continue;
+   const prev=v.bars[i-1].close,cur=v.bars[i].close;
+   const crossed=direction==="UP"?prev<=pivot.price+tolerance&&cur>pivot.price+tolerance:
+     prev>=pivot.price-tolerance&&cur<pivot.price-tolerance;
+   if(!crossed)continue;
+   already.add(direction+":"+pivot.index);
+   events.push({direction,index:i,time:v.bars[i].closeTime,close:cur,pivot,shift:lastBreak!==null&&lastBreak!==direction});
+   lastBreak=direction;
+  }
+ }
+ const high=[...swings].reverse().find(p=>p.kind==="high"),low=[...swings].reverse().find(p=>p.kind==="low");
+ return {swings:swings.slice(-28),lines,events:events.slice(-12),
+  state:[high?.label,low?.label].filter(Boolean).join(" / ")||"UNAVAILABLE"};
+}
+function v7RenderStructure(v){
+ const el=$("v7-structure");if(!el)return;
+ if(!v||v.status!=="READY"||state.source==="error"||state.source==="connecting"){
+  el.innerHTML='<div class="v7-head"><div><span class="mini">STRUCTURE / EXPLAINED</span><h3>Карта структуры</h3></div></div><p class="v7-no-data">Данные не подтверждены. Линии и BOS не показываются.</p>';return;
+ }
+ const data=v7Analyze(v);
+ el.innerHTML='<div class="v7-head"><div><span class="mini">STRUCTURE / EXPLAINED</span><h3>Карта структуры</h3></div><span>'+data.swings.length+'</span></div>'+
+ '<div class="v7-state"><small>Последние подтверждённые swing-точки</small><strong>'+data.state+'</strong></div>'+
+ '<div class="v7-metrics"><div><small>Трендовые</small><strong>'+data.lines.length+'</strong></div><div><small>BOS / Shift</small><strong>'+data.events.length+'</strong></div><div><small>Экстремумы</small><strong>'+data.swings.length+'</strong></div></div>'+
+ '<div class="v7-sub"><span>ТРЕНДОВЫЕ ЛИНИИ</span><button type="button" id="v7-toggle-lines">'+(state.layer.has("trendlines")?"СКРЫТЬ":"ПОКАЗАТЬ")+' ↗</button></div>'+
+ (data.lines.length?data.lines.map((line,i)=>'<button class="v7-line-card" data-v7-card="'+i+'"><strong>'+(line.side==="support"?"Подтверждённая линия опоры":"Подтверждённая линия сопротивления")+'</strong><span>'+format(line.anchors[0].price)+" → "+format(line.anchors[1].price)+'</span><small>Касаний: '+line.touches+' · <em class="'+(line.status==="BROKEN"?"broken":"")+'">'+(line.status==="BROKEN"?"НАРУШЕНА":"ДЕЙСТВУЕТ")+'</em></small><small>ПОЧЕМУ ЭТИ ТОЧКИ? ↗</small></button>').join(""):
+  '<p class="v7-no-data">Нет подходящих пар подтверждённых экстремумов. Линии не выдумываем.</p>')+
+ '<div class="v7-sub"><span>СОБЫТИЯ СТРУКТУРЫ</span><button type="button" id="v7-toggle-events">'+(state.layer.has("structure")?"СКРЫТЬ":"ПОКАЗАТЬ")+' ↗</button></div>'+
+ (data.events.length?data.events.slice(-3).reverse().map(ev=>'<div class="v7-event"><b class="'+(ev.direction==="UP"?"up":"")+'">'+(ev.direction==="UP"?"↗":"↘")+'</b><div><strong>'+(ev.shift?"SHIFT? ":"BOS ")+ev.direction+'</strong><small>Закрытие '+format(ev.close)+' · уровень '+format(ev.pivot.price)+'</small></div></div>').join(""):
+  '<p class="v7-no-data">Подтверждённых сломов структуры пока нет.</p>')+
+ '<div class="v7-explain">Линии используют только подтверждённые swing-точки. BOS — закрытие за swing-уровнем; Shift — лишь возможная смена направления, не обещанный разворот. Прогноз вероятности не рассчитывается.</div>';
+ $("v7-toggle-lines").onclick=()=>{state.layer.has("trendlines")?state.layer.delete("trendlines"):state.layer.add("trendlines");render()};
+ $("v7-toggle-events").onclick=()=>{state.layer.has("structure")?state.layer.delete("structure"):state.layer.add("structure");render()};
+ el.querySelectorAll("[data-v7-card]").forEach(b=>b.onclick=()=>{
+  const line=data.lines[+b.dataset.v7Card];state.lineId=line.id;
+  state.layer.add("trendlines");state.level=null;
+  render();v3CloseDrawer();document.querySelector(".chartcol")?.scrollIntoView({block:"start",behavior:"smooth"});
+ });
+}
+function v7RenderLineInspector(v){
+ $("v7-line-popup")?.remove();
+ if(!state.lineId)return;
+ const line=v7Analyze(v).lines.find(l=>l.id===state.lineId);
+ if(!line)return;
+ const el=$("plot");
+ el.insertAdjacentHTML("beforeend",'<section class="v7-line-popup" id="v7-line-popup"><button type="button" id="v7-close-line" aria-label="Закрыть">×</button><div class="mini">WHY THIS TRENDLINE?</div><h3>'+(line.side==="support"?"Линия опоры":"Линия сопротивления")+'</h3>'+
+  '<p>Линия проходит через два подтверждённых swing-экстремума. Продолжение — только геометрическая проекция, не прогноз цены.</p>'+
+  '<small>Опора A: '+format(line.anchors[0].price)+' · свеча #'+line.anchors[0].index+'</small>'+
+  '<small>Опора B: '+format(line.anchors[1].price)+' · свеча #'+line.anchors[1].index+'</small>'+
+  '<small>Касаний: '+line.touches+' · наклон '+line.slope.toFixed(4)+' за свечу</small>'+
+  '<small>Состояние: '+(line.status==="BROKEN"?"Нарушена после двух последовательных закрытий за линией":"Действует")+'</small></section>');
+ $("v7-close-line").onclick=()=>{state.lineId=null;render()};
+}
+load();
+</script>
+</body></html>
