@@ -58,10 +58,13 @@
          if(message){message.hidden=false;message.textContent='Каталог ещё загружается. Повтори попытку.';}
          return;
        }
-       music.showPage('catalog');
-       if(catalog.selectPreset(id)===false&&message){
-         message.hidden=false;message.textContent='Подборка сейчас недоступна.';
+       // Set the real preset first: the catalog's native "open" event
+       // otherwise launches its default RU query before the selected genre.
+       if(catalog.selectPreset(id)===false){
+         if(message){message.hidden=false;message.textContent='Подборка сейчас недоступна.';}
+         return;
        }
+       music.showPage('catalog');
      });
    });
    const home=document.querySelector('.page[data-view="home"]');
