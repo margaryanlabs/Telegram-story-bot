@@ -124,3 +124,17 @@ The preview build status must be verified at the **current Git SHA**; READY on a
 - GitHub's Vercel check is currently **failure due to build-rate-limit**, pointing to a Vercel upgrade/rate-limit page, rather than a completed current-head build.
 - Do **not** claim the V7.8 test suite passed or that there is a working V7.8 URL until a READY deployment with matching commit SHA and runtime smoke check exist.
 - Validate on Android WebView: Cinema resume/search/library; Music real permitted audio, next/prev, import and player states; Books real full-text, search, EPUB/FB2/TXT import, bookmarks, reading progress and controls.
+
+## V7.9 — in-app media continuity / source-preserving UX
+
+- **Three-media handoff:** An accessible in-frame switcher in existing Cinema, Music, Books allows one-tap changes between real modules and the shared Media hub. No extra sites, copied players or URL-based privilege handoff. The navigation is emitted only from a trusted embedded module.
+- **Host security:** `vetogram-universe.js` accepts child-initiated navigation only if the sender is the current active, already-ready iframe, the same-origin and owner-scope handshake succeeded, and the requested module is an own property of the allowlisted module definition. Inactive or spoofed child tabs cannot trigger switches.
+- **Playback lifecycle:** Existing host `visibility()` remains authoritative. When Cinema is hidden, its embedded video is paused / closed through the real controller; Music maintains its original single persistent audio player under the host chrome; Books pauses speculative chapter prefetch without discarding the open page.
+- **Cinema native progress:** `cinema.js` persists actual native-video watch progress on `visibilitychange` (hidden) and `pagehide`; direct progress remains tied to observable HTML5 video duration/time only. Third-party iframe position is not fabricated.
+- **Music native settings:** `vetogram-music.js` saves only player volume (0–100) and allowed speed (.75, 1, 1.25, 1.5, 2) to scoped device storage; validates these preferences on restore. No audio bytes, query text, Telegram sessions, links, lyrics or secret tokens. No autoplay after reload; sleep timer remains session-only.
+- **Books:** existing page/chapter and progress saves occur inside `showPage()`. The V7.9 handoff deliberately preserves this tested behavior; no new book fetches, fictional full-text content, or reader replacements.
+- Source tests: `tests/vetogram-media-next-78.test.js` (switcher), `tests/vetogram-media-continuity-79.test.js` (trusted iframe handoff, audio prefs, native film progress), wired into `qa:preview:offline`.
+
+### Release condition (latest head)
+- Vercel GitHub status is currently **failure: build-rate-limit**, not a passed current-head test run. An older READY URL does **not** contain these source changes.
+- No merge or production promotion. Preview deploy, automated tests and Android/iOS WebView end-to-end playback/reader checks are still required before claiming V7.9 shipped.
