@@ -51,7 +51,7 @@ test('selected star wins crowded mobile marker positions, hidden stars are not k
   const visible=markerEls.filter(m=>m.tabIndex===0);
   assert.equal(visible.length,1,'crowded stars collapse into one marker');
   assert.equal(markerEls[selected].tabIndex,0,'selected marker wins');
-  assert.equal(markerEls[selected].selected,true);
+  assert.equal(markerEls[selected].classList.selected,true);
   assert.equal(nodes.starFocusLabel.hidden,false,'focus label displayed');
   for(const [i,m] of markerEls.entries()){
     if(i!==selected){assert.equal(m.tabIndex,-1);assert.equal(m.attrs['aria-hidden'],'true');}
