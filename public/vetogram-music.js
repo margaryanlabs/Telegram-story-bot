@@ -179,8 +179,24 @@ $("repeatButton").onclick=()=>{state.repeat=state.repeat==="all"?"one":state.rep
 $("miniLike").onclick=()=>toggleLike(state.now);$("studioLike").onclick=()=>toggleLike(state.now);
 function scrub(value){const d=audio.duration;if(Number.isFinite(d)&&d>0)audio.currentTime=Math.min(d,Math.max(0,Number(value)/1000*d))}
 $("miniSeek").oninput=e=>scrub(e.target.value);$("studioSeek").oninput=e=>scrub(e.target.value);
-$("volumeInput").oninput=e=>{audio.volume=Number(e.target.value)/100};
-$("speedSelect").onchange=e=>{audio.playbackRate=Number(e.target.value)};
+// Account-scoped device preferences: no audio bytes, identifiers or secrets
+// are persisted. The sleep timer remains transient by design.
+const PLAYER_PREFS_KEY=key+':player-controls:v1';
+function savePlayerControls(){
+ try{localStorage.setItem(PLAYER_PREFS_KEY,JSON.stringify({
+  volume:Math.round(audio.volume*100),rate:audio.playbackRate
+ }));}catch{}
+}
+$("volumeInput").oninput=e=>{
+ const value=Number(e.target.value);
+ if(Number.isFinite(value))audio.volume=Math.min(1,Math.max(0,value/100));
+ savePlayerControls();
+};
+$("speedSelect").onchange=e=>{
+ const value=Number(e.target.value);
+ if([.75,1,1.25,1.5,2].includes(value))audio.playbackRate=value;
+ savePlayerControls();
+};
 $("sleepSelect").onchange=e=>{if(state.sleepTimer)clearInterval(state.sleepTimer);const n=Number(e.target.value);
  state.sleepDeadline=n?Date.now()+n*60000:0;state.sleepTimer=n?setInterval(()=>{if(Date.now()>=state.sleepDeadline){audio.pause();clearInterval(state.sleepTimer);state.sleepTimer=null;$("sleepSelect").value="0";send("Таймер сна остановил музыку")}},1000):null};
 function syncPlayer(){
@@ -224,6 +240,19 @@ for(const event of ["play","playing","pause","ended","durationchange","timeupdat
  syncPlayer();
 });
 audio.volume=.85;
+try{
+ const prefs=JSON.parse(localStorage.getItem(PLAYER_PREFS_KEY)||'null');
+ if(prefs&&typeof prefs==='object'){
+  const volume=Number(prefs.volume),rate=Number(prefs.rate);
+  if(Number.isFinite(volume)&&volume>=0&&volume<=100){
+   audio.volume=volume/100;$("volumeInput").value=String(Math.round(volume));
+  }
+  if([.75,1,1.25,1.5,2].includes(rate)){
+   audio.playbackRate=rate;$("speedSelect").value=String(rate);
+  }
+ }
+}catch{} // Corrupt preferences or private mode must not block music.
+
 try{if("mediaSession"in navigator){for(const [key,fn] of Object.entries({
  play:()=>audio.play().catch(()=>{}),pause:()=>audio.pause(),
  previoustrack:()=>next(-1),nexttrack:()=>next(1),
