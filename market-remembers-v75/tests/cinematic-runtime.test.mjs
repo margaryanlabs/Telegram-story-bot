@@ -30,7 +30,7 @@ test('scene pauses frame scheduling during reading and resumes afterwards',()=>{
   const ui={drawer:{hidden:true},birthOverlay:{hidden:true}};
   const frames=[];let markerRefreshes=0;
   const engine=Function('$','document','window','updateMarkers',
-    'let frameScheduled=false,lastTime=30;'+source+
+    'let frameScheduled=false,lastTime=30;function animate(){};'+source+
     'return {queueFrame,resumeScene,reset:()=>{frameScheduled=false},time:()=>lastTime};'
   )(id=>ui[id],{hidden:false},{requestAnimationFrame:fn=>frames.push(fn)},()=>{markerRefreshes++});
   engine.queueFrame();engine.queueFrame();
