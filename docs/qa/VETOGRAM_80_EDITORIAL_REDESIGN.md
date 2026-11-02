@@ -91,3 +91,13 @@ The 8.0-8.3 editorials moved only selected Book controls above a secondary actio
 - Version-bumped the parent shell script and all three module shared Media CSS/JS to `20261102-media85` for mobile WebView cache freshness. The whole `qa:preview:offline` and real Android WebView / actual media playback still require a verified release run.
 
 **Production:** no merge and no changes to the main Vetogram. Review branch only.
+
+## V8.5 — Real Media navigation continuity
+
+The integrated Media Back button now walks a capped in-memory navigation trail (up to 12 visited modules), returning to the previous cached Cinema / Music / Books iframe rather than always returning to Media Home. The former direct-to-hub behavior still applies when the trail is empty. The host frame cache remains owner-scoped and is destroyed on Telegram account identity change. No history content, private book text, media urls, user identity or Telegram launch credentials is persisted.
+
+Standalone direct Render URLs for Cinema / Music / Books also expose a fixed, same-origin four-way navigation row to Cinema, Music, Books and Media Home. In the integrated shell, the same links instead send verified same-origin module-navigation messages to the trusted current host; inactive frames cannot change routes. The standalone controls work as regular local links and do not require JavaScript parent messaging.
+
+Adjusted `tests/vetogram-media-next-78.test.js` to model the actual module-specific action set and multiple native audio event listeners. Current targeted JavaScript execution: 21/21 shell navigation cases and 9/9 media hub cases passed. These are not real Telegram Android playback or gesture acceptance results.
+
+All affected Media assets use `20261102-media85` to invalidate old Android WebView copies. Full CI gate, release browser screenshots and live provider/player QA remain pending.
