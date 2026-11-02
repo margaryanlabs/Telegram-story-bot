@@ -44,7 +44,7 @@
      button.dataset.count=String(c.revealed&&!c.mine?c.count:0);
      button.textContent=c.revealed?(c.mine?'✹':c.count?String(c.count):''):c.flagged?'⚑':'';
      button.setAttribute('aria-label','Клетка '+(i+1)+(c.flagged?' — флаг':c.revealed?(c.mine?' — мина':c.count?' — '+c.count+' рядом':' — пуста'):' — закрыта'));
-     button.disabled=minesFinished||c.revealed;
+     button.disabled=minesFinished||(c.revealed&&c.count===0);
    });
    if(minesRemaining)minesRemaining.textContent='Мины: '+Math.max(0,MINES_TOTAL-flags);
    if(minesWins)minesWins.textContent='Побед: '+safeRead(MINES_WINS_KEY);
@@ -85,6 +85,23 @@
    else minesStatus.textContent='Открывай клетки. Ноль раскрывает соседей.';
    paintMines();
  }
+ // Traditional Minesweeper chord: tap an opened numbered cell once its
+ // neighboring flag count matches the number. Incorrect flags can still
+ // expose a mine; no invisible hints or information are revealed.
+ function chordMines(id){
+   const cell=cells[id];
+   if(minesFinished||!cell?.revealed||!cell.count)return;
+   const neighbors=around(id);
+   const marked=neighbors.filter(n=>cells[n].flagged).length;
+   if(marked!==cell.count){
+     minesStatus.textContent='Для раскрытия соседей отметь '+cell.count+' мин вокруг числа.';
+     return;
+   }
+   for(const next of neighbors){
+     if(minesFinished)break;
+     if(!cells[next].revealed&&!cells[next].flagged)mineAction(next);
+   }
+ }
  function resetMines(){
    cells=Array.from({length:MINES_COUNT},()=>({mine:false,revealed:false,flagged:false,count:0}));
    minesStarted=false;minesFinished=false;flags=0;flagMode=false;
@@ -93,12 +110,32 @@
      for(let i=0;i<MINES_COUNT;i++){
        const button=document.createElement('button');
        button.type='button';button.className='v73-mine-cell';
-       button.addEventListener('click',()=>mineAction(i));
-       button.addEventListener('contextmenu',e=>{e.preventDefault?.();mineAction(i,true);});
+       let longPress=null,ignoreClick=false;
+       const clearHold=()=>{if(longPress!==null){clearTimeout(longPress);longPress=null;}};
+       button.addEventListener('pointerdown',e=>{
+         if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
+         ignoreClick=false;
+         clearHold();
+         longPress=setTimeout(()=>{
+           longPress=null;ignoreClick=true;
+           if(!cells[i]?.revealed&&!minesFinished)mineAction(i,true);
+         },440);
+       });
+       for(const event of ['pointerup','pointercancel','pointerleave'])button.addEventListener(event,clearHold);
+       button.addEventListener('click',()=>{
+         if(ignoreClick){ignoreClick=false;return;}
+         if(cells[i]?.revealed)chordMines(i);
+         else mineAction(i);
+       });
+       button.addEventListener('contextmenu',e=>{
+         e.preventDefault?.();clearHold();
+         if(ignoreClick)return;
+         if(!cells[i]?.revealed&&!minesFinished){ignoreClick=true;mineAction(i,true);}
+       });
        minesGrid.appendChild(button);
      }
    }
-   if(minesStatus)minesStatus.textContent='Первый ход всегда безопасный. Переключи режим для флажков.';
+   if(minesStatus)minesStatus.textContent='Первый ход безопасный. Удерживай клетку для флажка или нажми открытое число для раскрытия соседей.';
    paintMines();
  }
  minesMode?.addEventListener('click',()=>{if(minesFinished)return;flagMode=!flagMode;paintMines();});
