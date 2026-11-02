@@ -80,6 +80,27 @@ test('Books promotes existing real covers and verified source filters while pres
  assert.match(css,/\.book-grid/);
  assert.match(css,/\.source-tabs/);
 });
+
+test('the integrated Media home also uses the same editorial design and returns saved Continue before discovery',()=>{
+ const studio=file('studio.html');
+ assert.match(studio,/vetogram-editorial-80\.css\?v=20261101-rebuild04/);
+ assert.match(studio,/vetogram-editorial-80\.js\?v=20261101-rebuild04/);
+ assert.match(css,/body\.vetogram-editorial-home/);
+ const order=[];
+ const discovery={id:'discovery'};
+ const saved={id:'saved'};
+ const home={
+  querySelector:q=>q==='.v61-world-section'?discovery:null,
+  insertBefore(node,anchor){order.push(node.id+' before '+anchor.id);}
+ };
+ const body={classList:{added:[],add(k){this.added.push(k);}}};
+ const document={
+  getElementById:id=>id==='v6MediaHome'?home:id==='v61Continue'?saved:null,body
+ };
+ runInNewContext(js,{document});
+ assert.deepEqual(order,['saved before discovery']);
+ assert.ok(body.classList.added.includes('vetogram-editorial-home'));
+});
 test('Style is responsive, artwork is source-backed and no fake media or privileged content is created',()=>{
  assert.equal(css.split('{').length,css.split('}').length);
  for(const width of ['980','620','360'])assert.match(css,new RegExp('max-width:'+width+'px'));
