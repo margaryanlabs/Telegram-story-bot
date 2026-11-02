@@ -79,13 +79,25 @@
    const tabs=document.querySelector('.books-main .source-tabs');
    moveBefore(featured,portal);
    moveBefore(tabs,portal);
-   // Keep original topic buttons and their native filtering listeners.
-   const topics=document.querySelector('.books-main .topics');
-   moveBefore(topics,portal);
-   // This is the original search form, not a duplicate input. Place it at
-   // the beginning so readers can reach real titles/authors immediately.
+   // This is the native search form. Place it before the complete-edition
+   // shelf; leave native events, source ownership and page selection intact.
    const search=$('catalogSearch');
    moveBefore(search,featured);
+   // Keep filter controls, their explanations and their results together.
+   // Earlier builds displaced only source tabs and genre buttons, leaving
+   // their dynamic subfilters below a detached promo panel.
+   const sourceInfo=$('sourceDescription');
+   const sourceFilters=['translationFilters','hotFilters','readingGenres','spotlightFilters'];
+   const importBanner=$('importBanner');
+   const authors=$('authorDiscovery');
+   const shelfTitle=document.querySelector('.books-main .shelf-heading');
+   const topics=document.querySelector('.books-main .topics');
+   const clarity=$('libraryClarity');
+   const grid=$('catalogGrid'),footer=document.querySelector('.books-main .catalog-footer');
+   for(const item of [sourceInfo,...sourceFilters.map($),importBanner,authors,
+     shelfTitle,topics,clarity,grid,footer])moveBefore(item,portal);
+   // With all controls and results adjacent, the compact action hub is an
+   // optional footer rather than an interruption in book discovery.
    tabs?.setAttribute('aria-label','Фильтры книжного каталога по доступности и языку');
  }
  // Native route: screen titles do not get fake counts or a premature READY.
