@@ -166,6 +166,7 @@
    const video=$('cinemaVideo');
    for(const event of ['pause','ended','error'])video?.addEventListener(event,updateHistory);
    document.addEventListener('vetogram:cinema-opened',updateHistory);
+   document.addEventListener('vetogram:cinema-library-change',updateHistory);
    document.addEventListener('visibilitychange',()=>{
      if(!document.hidden)updateHistory();
    });
