@@ -1057,6 +1057,13 @@
     setPlayerMessage("");
     video.play().catch(()=>{/* browser may require user interaction; native play button remains */});
   });
+  // A standalone tab may be closed without a final pause event. Persist
+  // only the real HTMLVideoElement's watch position; licensed third-party
+  // iframes with unobservable playback must not invent a resume timestamp.
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)saveProgress(true);
+  });
+  window.addEventListener('pagehide',()=>saveProgress(true));
   video.addEventListener("timeupdate",()=>saveProgress(false));
   video.addEventListener("pause",()=>saveProgress(true));
   video.addEventListener("ended",()=>{saveProgress(true);toast("Фильм досмотрен. Выбирай следующую историю.")});
