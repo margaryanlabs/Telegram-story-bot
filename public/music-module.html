@@ -177,7 +177,16 @@
   </form>
   <p class="catalog-disclaimer">В каталоге есть независимые записи. Если известный оригинал недоступен, мы не подменяем его видео или коротким превью.</p>
  </div>
- <div class="catalog-results-head"><h2>Доступные композиции</h2><button type="button" class="text-action" data-page="radio">◉ Радио ↗</button></div>
+ <div class="catalog-results-head v83-catalog-head">
+   <div><h2>Доступные композиции</h2><p class="v83-catalog-subtitle">Реальные записи и обложки из источника. Прослушивание проверяется плеером.</p></div>
+   <div class="v83-catalog-head-actions">
+     <div class="v83-catalog-layout" id="v83CatalogLayout" role="group" aria-label="Вид музыкального каталога">
+       <button type="button" data-v83-view="covers" aria-pressed="true">▦ Обложки</button>
+       <button type="button" data-v83-view="list" aria-pressed="false">☷ Список</button>
+     </div>
+     <button type="button" class="text-action" data-page="radio">◉ Радио ↗</button>
+   </div>
+ </div>
  <p id="catalogStatus" class="catalog-status" role="status">Выбери жанр или открой каталог для загрузки треков.</p>
  <div id="catalogResults" class="catalog-list" aria-live="polite"></div>
  <div class="catalog-more-wrap"><button type="button" id="catalogMore" class="catalog-more" hidden>＋ Показать ещё музыку</button></div>
