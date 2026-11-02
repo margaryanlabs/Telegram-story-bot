@@ -110,3 +110,25 @@ body:has(#reader) .reader-bottom button:focus-visible{outline:2px solid #bdd7bd;
  body:has(#reader) .reader-bottom{gap:4px!important}
  body:has(#reader) .reader-bottom button{min-width:36px}
 }
+
+/* V7.9 — switching between real module frames without a full page reload.
+ * Host owns the switch and checks iframe identity before acting. */
+html.v6-embedded .v79-media-switcher{
+ display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;scrollbar-width:thin;
+ margin:0 0 21px;padding:0 0 10px;border-bottom:1px solid rgba(255,255,255,.11);
+ overscroll-behavior-inline:contain;
+}
+html.v6-embedded .v79-switch{
+ flex:1 0 auto;min-width:max-content;min-height:39px;
+ display:inline-flex;align-items:center;justify-content:center;padding:10px 15px;
+ color:#b8bdc6;background:#ffffff08;border:1px solid #ffffff15;
+ border-radius:10px;font:690 11px/1.2 system-ui;cursor:pointer;
+ transition:background .16s,border-color .16s;
+}
+html.v6-embedded .v79-switch:hover{background:#ffffff18;border-color:#ffffff44;color:#fff}
+html.v6-embedded .v79-switch.is-current{background:#f2f3f1;border-color:#f2f3f1;color:#121416;cursor:default}
+html.v6-embedded .v79-switch:focus-visible{outline:2px solid #e1e6e5;outline-offset:2px}
+@media(max-width:620px){
+ html.v6-embedded .v79-media-switcher{margin-bottom:14px;gap:5px}
+ html.v6-embedded .v79-switch{padding:9px 12px;font-size:10px}
+}
