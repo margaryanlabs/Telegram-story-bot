@@ -33,7 +33,10 @@
    const nav=main?.querySelector('.cinema-section-nav');
    const search=$('cinemaSearchArea'),watch=$('cinemaWatchNow');
    const genres=$('cinemaGenresSection'),latest=$('cinemaLatest');
-   for(const item of [nav,search,watch,genres,latest])
+   // Browse shows the actual film grid, full genre chips and loading states:
+   // it must not be separated from search by the secondary action panel.
+   const browse=$('cinemaBrowse');
+   for(const item of [nav,search,watch,genres,latest,browse])
      moveBefore(item,portal);
    // All six source-backed genre tiles are rendered by the native controller.
    if(search)search.setAttribute('aria-label','Поиск по фильмам, сериалам и жанрам');
