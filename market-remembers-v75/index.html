@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070d">
 <meta name="description" content="THE MARKET REMEMBERS — a living universe of traders. VETO visual experience. Interactive demo.">
-<title>THE MARKET REMEMBERS — HUMAN LEGACY V7.4 / VETO</title>
+<title>THE MARKET REMEMBERS — HUMAN LEGACY V7.5 / VETO</title>
 <style>
 :root{--bg:#05070d;--ink:#f1f4ff;--violet:#9879ff;--cyan:#7fe6ff;--muted:#909bb3;--line:rgba(193,204,248,.15);--panel:rgba(11,15,27,.86);--gold:#f9d7ac;color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{background:var(--bg);color:var(--ink);overflow:hidden}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #bda9ff;outline-offset:3px}button[disabled]{opacity:.45;cursor:not-allowed}a{text-decoration:none;color:inherit}[hidden]{display:none!important}
@@ -601,9 +601,9 @@ animation:memory-fade-in .26s ease both}
     <div id="touchWave" class="touch-wave" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
     <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE TRUE 3D CORE<span class="fine-line"></span>V.07.4 / HUMAN LEGACY</div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE TRUE 3D CORE<span class="fine-line"></span>V.07.5 / MEMORY PATHS</div>
   </div>
-  <a class="version-compare" href="./legend-constellations-v73.html" aria-label="Сравнить с предыдущей V7.3">↔ V7.3</a>
+  <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
     <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>BY VETO INTELLIGENCE · CONCEPT</small></span></a>
     <nav class="header-nav" aria-label="Навигация"><button data-open="universe" class="nav-link is-on" type="button">THE UNIVERSE</button><button data-open="archive" class="nav-link" type="button">THE ARCHIVE</button><button data-open="legacy" class="nav-link" type="button">MY LEGACY</button></nav>
@@ -627,11 +627,22 @@ animation:memory-fade-in .26s ease both}
       <div class="selected-bottom"><span id="selectedBy">@NORTHSTAR <i>•</i> CRYPTO</span><div class="selected-actions"><button id="nextSignal" type="button" aria-label="Следующая звезда">NEXT ✧</button><button id="openSelected" type="button">READ MEMORY <span>↗</span></button></div></div>
     </aside>
     <div class="signal-dock" id="signalDock" aria-label="Выбранная история"><div class="dock-copy"><span id="dockAlias">SIGNAL 001 / PATIENCE</span><strong id="dockQuote">Мой лучший трейд — тот, который я не открыл.</strong></div><button id="dockNext" type="button" aria-label="Следующая звезда">✧</button><button id="dockOpen" type="button" aria-label="Открыть выбранную историю">↗</button></div>
+    <div class="journey-status" id="journeyStatus" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <span class="journey-status-star" aria-hidden="true">✦</span>
+      <div><span class="journey-status-eyebrow">MEMORY PATH / МАРШРУТ</span><strong id="journeyProgress">01 / 04</strong></div>
+      <button id="journeyExit" type="button" aria-label="Завершить маршрут памяти">×</button>
+    </div>
     <div class="world-controls" aria-label="Управление сферой"><button id="minusZoom" aria-label="Отдалить" type="button">−</button><button id="plusZoom" aria-label="Приблизить" type="button">＋</button><button id="autoRotate" aria-label="Остановить вращение" aria-pressed="true" type="button">Ⅱ</button><button id="resetCamera" aria-label="Восстановить вид" type="button">↺</button><button id="toggleAtlas" class="atlas-button" aria-label="Показать или скрыть тематические созвездия" aria-pressed="false" type="button">ATLAS</button><button id="focusMode" class="focus-button" aria-label="Включить режим погружения" aria-pressed="false" type="button">◉ FOCUS</button><button id="lensToggle" class="lens-toggle" type="button" aria-expanded="false" aria-controls="lensPanel" aria-label="Выбрать тематическое созвездие">◈ LENS</button></div>
     <section class="lens-panel" id="lensPanel" hidden aria-label="Тематические созвездия">
       <div class="lens-eyebrow">SIGNAL LENS / MEMORY MAP <button id="lensClose" type="button" aria-label="Закрыть фильтры">×</button></div>
       <h3 id="lensTitle">Выбери созвездие</h3><p id="lensDescription">Истории одной темы.</p>
-      <button id="featuredStar" type="button" class="featured-star-button">✦ ЗВЕЗДА ДНЯ <span>ОТКРЫТЬ ↗</span></button><div class="lens-options">
+      <button id="featuredStar" type="button" class="featured-star-button">✦ ЗВЕЗДА ДНЯ <span>ОТКРЫТЬ ↗</span></button>
+      <div class="memory-path-chooser" role="group" aria-label="Маршруты памяти">
+        <div class="memory-path-kicker">MEMORY PATHS / ИССЛЕДОВАТЬ ГЛУБЖЕ</div>
+        <button type="button" data-memory-path="risk"><span><b>От потери к контролю</b><small>Риск → дисциплина → терпение</small></span><em>04 ✦</em></button>
+        <button type="button" data-memory-path="fomo"><span><b>Победить FOMO</b><small>Страх → сравнение → осознанность</small></span><em>04 ✦</em></button>
+        <button type="button" data-memory-path="patience"><span><b>Научиться ждать</b><small>План → выдержка → решение</small></span><em>04 ✦</em></button>
+      </div><div class="lens-options">
         <button type="button" data-lens="All">✦ Все сигналы <span data-lens-count="All"></span></button>
         <button type="button" data-lens="Risk">◈ Risk <span data-lens-count="Risk"></span></button>
         <button type="button" data-lens="Discipline">✧ Discipline <span data-lens-count="Discipline"></span></button>
