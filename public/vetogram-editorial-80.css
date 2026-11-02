@@ -191,3 +191,66 @@ body.vetogram-editorial-cinema .cinema-card:active{transform:scale(.985)!importa
  body.vetogram-editorial-music .native-home .mood-card:last-child{grid-column:span 2;min-height:85px!important}
  body.vetogram-editorial-cinema .cinema-card-art:not(:has(img)) .cinema-card-art-title{font-size:17px!important}
 }
+
+/* VETOGRAM 8.0 HOME — condensed Media browsing without ornamental fake cover art. */
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-hero{
+ display:flex!important;min-height:230px!important;max-height:290px!important;
+ border:1px solid #ffffff1b!important;border-radius:18px!important;padding:clamp(22px,4vw,40px)!important;
+ background:linear-gradient(128deg,#191d24,#101318 65%,#101118)!important;margin-bottom:20px!important;
+ box-shadow:none!important;
+}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-hero-visual{display:none!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-hero-copy{max-width:780px!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-hero h1{font-size:clamp(32px,5.4vw,63px)!important;line-height:1.03!important;letter-spacing:-.065em!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-hero p{max-width:550px!important;font-size:13px!important;line-height:1.5!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-hero-actions{gap:9px!important;margin-top:17px!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-hero-primary,
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-hero-link{min-height:43px!important;border-radius:10px!important;font-size:12px!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-hero-index{display:none!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-discovery{margin-top:11px!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-section-title h2{font-size:clamp(22px,3vw,31px)!important;letter-spacing:-.05em!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-card{
+ min-width:0!important;min-height:166px!important;height:auto!important;
+ padding:15px!important;border-radius:14px!important;border:1px solid #ffffff1d!important;
+ background:linear-gradient(145deg,#1c1e23,#101217)!important;box-shadow:none!important;
+ display:flex!important;flex-direction:column!important;justify-content:space-between!important;
+}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-card:hover{border-color:#ffffff7a!important;background:linear-gradient(145deg,#292b32,#161a20)!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-art{display:none!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-number{font-size:10px!important;letter-spacing:.1em!important;color:#aeb5c3!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-top{margin:0!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-footer{display:flex!important;align-items:flex-end!important;gap:8px!important;margin:0!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-footer strong{font-size:clamp(18px,2.2vw,28px)!important;font-weight:770!important;letter-spacing:-.04em!important;color:#f6f6f8!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-footer small{font-size:10px!important;color:#a0a5b0!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-cta{display:none!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v6-world-music{border-top:2px solid #c4a5e5!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v6-world-cinema{border-top:2px solid #d8bd90!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v6-world-books{border-top:2px solid #acceb1!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v6-world-play{border-top:2px solid #94c7d4!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v75-discovery{
+ display:block!important;margin-top:23px!important;padding:19px!important;border-radius:15px!important;
+ background:#12151a!important;border:1px solid #ffffff1b!important;
+}
+body.vetogram-editorial-home .screen[data-screen="media"] .v75-discovery-intro{display:none!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v75-discovery-search{padding:0!important;border:0!important;background:transparent!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v75-explore-actions{gap:7px!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v75-explore-button{min-height:43px!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v61-vault-spotlight{border-radius:14px!important;box-shadow:none!important;background:#14171c!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v61-vault-mark{display:none!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v61-vault-description h2{font-size:19px!important}
+body.vetogram-editorial-home .screen[data-screen="media"] .v61-continue-rows{gap:10px}
+@media(max-width:990px){
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-card{min-height:150px!important}
+}
+@media(max-width:550px){
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-hero{min-height:230px!important;max-height:340px!important;padding:21px 18px!important;border-radius:13px!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-hero h1{font-size:clamp(32px,9vw,47px)!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-media-card{min-height:125px!important;padding:12px!important;border-radius:12px!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-footer strong{font-size:21px!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-card-footer small{font-size:9px!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v72-section-title small{display:none!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v75-discovery{padding:12px!important}
+ body.vetogram-editorial-home .screen[data-screen="media"] .v75-explore-button{font-size:11px!important}
+}
