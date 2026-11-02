@@ -169,7 +169,16 @@
    else if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false,true);
    else moduleStatus('');
   }
-  if(message.type==='navigate' && message.target==='hub')showHub();
+  // Only the currently visible, owner-verified media frame may navigate.
+  // Allowlisted module IDs are not URLs; no child can inject a destination.
+  if(message.type==='navigate' && activeModule===name){
+   if(message.target==='hub')showHub();
+   else if(message.target==='module' &&
+     typeof message.module==='string' &&
+     Object.prototype.hasOwnProperty.call(definitions,message.module)){
+     openModule(message.module);
+   }
+  }
   if(name==='music'&&message.type==='music-library'&&Array.isArray(message.items)&&typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined'){
    const items=message.items.slice(0,250).filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string').map(x=>({
     kind:'music',id:x.id.slice(0,220),title:x.title.slice(0,150),
