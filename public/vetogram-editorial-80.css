@@ -360,3 +360,76 @@ body.vetogram-editorial-books .books-main>.topics button:focus-visible{outline:2
  body.vetogram-editorial-books .books-main>.topics button{min-height:39px;padding:8px 12px!important}
 }
 @media(prefers-reduced-motion:reduce){body.vetogram-editorial-music .v82-genres-scroll button{transition:none!important}}
+
+/* VETOGRAM 8.3 — Real Audius artwork: authentic 1:1 cover gallery,
+ * original fast list retained. Never substitutes synthetic track metadata. */
+body.vetogram-editorial-music .v83-catalog-head{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin:24px 0 13px}
+body.vetogram-editorial-music .v83-catalog-head h2{font:760 clamp(22px,3vw,31px)/1.12 system-ui;letter-spacing:-.048em;margin:0 0 4px}
+body.vetogram-editorial-music .v83-catalog-subtitle{margin:0;font:450 11px/1.5 system-ui;color:#9ca2ae;max-width:500px}
+body.vetogram-editorial-music .v83-catalog-head-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+body.vetogram-editorial-music .v83-catalog-layout{display:flex;gap:3px;padding:4px;border-radius:11px;background:#15161d;border:1px solid #ffffff23}
+body.vetogram-editorial-music .v83-catalog-layout button{border:0;border-radius:8px;background:transparent;color:#abb0ba;min-height:36px;min-width:93px;padding:9px 12px;font:710 11px/1.1 system-ui;cursor:pointer}
+body.vetogram-editorial-music .v83-catalog-layout button.active,
+body.vetogram-editorial-music .v83-catalog-layout button[aria-pressed="true"]{background:#e3d7f1;color:#211a2a}
+body.vetogram-editorial-music .v83-catalog-layout button:focus-visible{outline:2px solid #f0defa;outline-offset:2px}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"]{
+ display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:13px!important;align-items:stretch
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-track{
+ display:grid!important;grid-template-areas:"art art art" "info info info" "like share play";
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:auto minmax(55px,1fr) auto;
+ gap:9px!important;min-width:0!important;max-width:100%!important;padding:10px!important;
+ background:#15151a!important;border:1px solid #ffffff19!important;
+ border-radius:15px!important;align-content:start;box-shadow:none!important;
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-track:hover{background:#1d1c25!important;border-color:#d8c7e078!important}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-cover{
+ grid-area:art!important;position:relative;display:grid;place-items:center;
+ width:100%!important;height:auto!important;aspect-ratio:1/1!important;
+ max-height:none!important;overflow:hidden!important;border-radius:10px!important;
+ font-size:clamp(32px,5vw,56px)!important;color:#e7d8f7!important;background:#282032!important;
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-cover img{
+ position:absolute;inset:0;width:100%!important;height:100%!important;
+ object-fit:cover!important;object-position:center!important;
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-details{
+ grid-area:info!important;display:flex!important;flex-direction:column;gap:4px!important;
+ align-items:flex-start;min-width:0!important;padding:0 1px!important;
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-details strong{
+ font-size:clamp(11px,1.1vw,13px)!important;line-height:1.35!important;max-width:100%;white-space:normal!important;
+ display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden!important;
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-details span{
+ font-size:10px!important;color:#a9a6b3!important;max-width:100%!important;
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-details small{
+ font:650 9px/1.3 system-ui!important;letter-spacing:.03em!important;color:#a9a3b9!important;
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-index{display:none!important}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-like{grid-area:like!important}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-share{grid-area:share!important;display:block!important}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-play{grid-area:play!important}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] :is(.catalog-like,.catalog-share,.catalog-play){
+ min-width:0!important;min-height:39px!important;height:auto!important;
+ border-radius:9px!important;padding:8px!important;font-size:15px!important;
+}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-play{background:#e3d4f3!important;color:#1b1420!important}
+body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-empty{grid-column:1/-1}
+body.vetogram-editorial-music .catalog-list[data-view-mode="list"]{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:7px}
+@media(max-width:1280px){body.vetogram-editorial-music .catalog-list[data-view-mode="covers"]{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:950px){body.vetogram-editorial-music .catalog-list[data-view-mode="covers"]{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:620px){
+ body.vetogram-editorial-music .catalog-list[data-view-mode="covers"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+ body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-track{padding:8px!important;gap:6px!important;border-radius:12px!important}
+ body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-cover{border-radius:8px!important;font-size:34px!important}
+ body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-details{min-height:58px}
+ body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] .catalog-details strong{font-size:11px!important}
+ body.vetogram-editorial-music .catalog-list[data-view-mode="covers"] :is(.catalog-like,.catalog-share,.catalog-play){min-height:37px!important;padding:5px!important}
+ body.vetogram-editorial-music .v83-catalog-head{gap:12px}
+ body.vetogram-editorial-music .v83-catalog-head-actions{width:100%;justify-content:space-between}
+ body.vetogram-editorial-music .v83-catalog-layout{flex:1 1 auto}
+ body.vetogram-editorial-music .v83-catalog-layout button{flex:1 1 auto;min-width:0;min-height:39px}
+}
+@media(prefers-reduced-motion:reduce){body.vetogram-editorial-music .v83-catalog-layout button{transition:none!important}}
