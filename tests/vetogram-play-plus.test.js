@@ -28,11 +28,11 @@ function makeGame(){
    hidden:false,
    querySelector:sel=>sel==='.screen[data-screen="play"]'?root:null,
    createElement:element,
-   addEventListener:(name,handler)=>{docEvents[name]=handler;}
+   addEventListener:(name,handler)=>{const prev=docEvents[name];docEvents[name]=prev?(e=>{prev(e);handler(e);}):handler;}
  };
  const window={
    localStorage:{getItem:k=>local.get(k)??null,setItem:(k,v)=>local.set(k,v)},
-   addEventListener:(name,handler)=>{winEvents[name]=handler;}
+   addEventListener:(name,handler)=>{const prev=winEvents[name];winEvents[name]=prev?(e=>{prev(e);handler(e);}):handler;}
  };
  runInNewContext(code,{
    document,window,Math,Set,Array,Number,String,
@@ -134,4 +134,30 @@ test('touch tap and cancelled hold never place a Mines flag',()=>{
  btn.click();
  assert.notEqual(btn.textContent,'⚑');
  assert.equal(g.nodes.get('#vpMinesRemaining').textContent,'Мины: 6');
+});
+
+test('Mines hold timer cannot leak into reset, close or background state',()=>{
+ const g=makeGame();
+ let btn=g.nodes.get('#vpMinesGrid').children[12];
+ btn.events.pointerdown({pointerType:'touch'});
+ assert.equal(g.timeouts.size,1);
+ g.nodes.get('#vpMinesReset').click();
+ assert.equal(g.timeouts.size,0,'reset must cancel hold timers of removed grid buttons');
+ btn=g.nodes.get('#vpMinesGrid').children[12];
+ btn.events.pointerdown({pointerType:'touch'});
+ g.winEvents['vetogram:game-close']({detail:{game:'mines'}});
+ assert.equal(g.timeouts.size,0,'closing Mines must cancel pending touch actions');
+ btn.events.pointerdown({pointerType:'touch'});
+ g.document.hidden=true;g.docEvents.visibilitychange();
+ assert.equal(g.timeouts.size,0,'backgrounding the app must cancel pending touch actions');
+});
+test('tapping revealed numbered Mines tile never opens neighbors without enough flags',()=>{
+ const g=makeGame(),grid=g.nodes.get('#vpMinesGrid');
+ grid.children[0].click();
+ const numbered=grid.children.find(x=>x.className.includes('is-open')&&Number(x.dataset.count)>0);
+ assert.ok(numbered,'a mine boundary should expose at least one numbered cell');
+ const remaining=g.nodes.get('#vpMinesRemaining').textContent;
+ numbered.click();
+ assert.match(g.nodes.get('#vpMinesStatus').textContent,/Для раскрытия соседей отметь/);
+ assert.equal(g.nodes.get('#vpMinesRemaining').textContent,remaining);
 });
