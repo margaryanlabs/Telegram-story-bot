@@ -89,7 +89,7 @@
    // Keep filter controls, their explanations and their results together.
    // Earlier builds displaced only source tabs and genre buttons, leaving
    // their dynamic subfilters below a detached promo panel.
-   const sourceInfo=$('sourceDescription');
+   const modeInfo=$('bookModeStatus'),sourceInfo=$('sourceDescription');
    const sourceFilters=['translationFilters','hotFilters','readingGenres','spotlightFilters'];
    const importBanner=$('importBanner');
    const authors=$('authorDiscovery');
@@ -97,7 +97,7 @@
    const topics=document.querySelector('.books-main .topics');
    const clarity=$('libraryClarity');
    const grid=$('catalogGrid'),footer=document.querySelector('.books-main .catalog-footer');
-   for(const item of [sourceInfo,...sourceFilters.map($),importBanner,authors,
+   for(const item of [modeInfo,sourceInfo,...sourceFilters.map($),importBanner,authors,
      shelfTitle,topics,clarity,grid,footer])moveBefore(item,portal);
    // With all controls and results adjacent, the compact action hub is an
    // optional footer rather than an interruption in book discovery.
