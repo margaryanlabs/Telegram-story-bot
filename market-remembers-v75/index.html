@@ -844,7 +844,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     endMemoryJourney();
     setLens('All',false);closeLensPanel();
     guidedJourney={label:path.label,indices,step:0};
-    focus(indices[0],false);syncJourneyStatus();
+    syncJourneyStatus();beginDive(indices[0]);
     showToast('Маршрут памяти · 1 из '+indices.length+' · '+path.label);
   }
   function memoryRouteNext(direction=1){
@@ -852,11 +852,75 @@ backdrop-filter:blur(12px);pointer-events:auto}
     const next=guidedJourney.step+direction;
     if(next<0){showToast('Это первая звезда маршрута');return selected}
     if(next>=guidedJourney.indices.length){
-      endMemoryJourney(true);
-      return nextVisibleSignal(selected,direction);
+      showToast('Последняя глава маршрута. Заверши путь, чтобы увидеть все уроки.');
+      return selected;
     }
     guidedJourney.step=next;syncJourneyStatus();
     return guidedJourney.indices[next];
+  }
+
+  // Editorial chapters are demo stories, not real social links or performance claims.
+  function renderJourneyReader(){
+    if(!guidedJourney)return;
+    const {indices,step,label}=guidedJourney;
+    const top=$('drawerContents').querySelector('.memory-topline');
+    if(!top)return;
+    const ribbon=document.createElement('section');
+    ribbon.className='journey-reader';ribbon.setAttribute('aria-label','Главы маршрута');
+    const chapters=indices.map((idx,i)=>'<button type="button" data-journey-step="'+i+'"'+
+      (i===step?' aria-current="step" disabled':'')+
+      ' aria-label="Глава '+(i+1)+': '+escapeHtml(stories[idx].alias)+'">'+
+      '<span aria-hidden="true">✦</span><small>'+String(i+1).padStart(2,'0')+'</small></button>').join('');
+    ribbon.innerHTML='<div class="journey-reader-heading"><span>MEMORY PATH / '+(step+1)+' OF '+indices.length+
+      '</span><strong>'+escapeHtml(label)+'</strong></div><div class="journey-reader-chapters">'+chapters+
+      '</div><p>Редакционный маршрут: четыре вымышленные истории, четыре урока.</p>';
+    top.insertAdjacentElement('afterend',ribbon);
+    ribbon.querySelectorAll('[data-journey-step]').forEach(btn=>btn.onclick=()=>{
+      const next=indices[Number(btn.dataset.journeyStep)];
+      if(next!==selected)beginDive(next);
+    });
+    const previous=$('previousMemory'),next=$('otherMemory');
+    if(previous){previous.disabled=step===0;previous.setAttribute('aria-label','Предыдущая глава маршрута')}
+    if(next){next.textContent=step===indices.length-1?'Завершить маршрут ✦':'Следующая глава ↗';
+      next.setAttribute('aria-label',step===indices.length-1?'Завершить маршрут':'Следующая глава маршрута')}
+  }
+  function finishJourneyReader(){
+    if(!guidedJourney)return;
+    const journey=guidedJourney,chapters=journey.indices.map((idx,i)=>{
+      const s=stories[idx];
+      return '<li><span>'+String(i+1).padStart(2,'0')+'</span><div><strong>@'+escapeHtml(s.alias)+'</strong>'+
+        '<p>«'+escapeHtml(s.quote.replace(/[«»]/g,''))+'»</p>'+
+        '<small>'+escapeHtml(s.category)+(isSavedLesson(s)?' · УРОК СОХРАНЁН':' · ДЕМО-ИСТОРИЯ')+'</small></div></li>';
+    }).join('');
+    const saved=journey.indices.filter(i=>isSavedLesson(stories[i])).length;
+    endMemoryJourney();
+    setDrawer('MEMORY PATH / COMPLETED','<article class="journey-complete">'+
+      '<span class="journey-complete-symbol">✧</span><div class="drawer-kicker">JOURNEY COMPLETE / HUMAN EXPERIENCES</div>'+
+      '<h2>Четыре звезды.<br><em>Четыре урока.</em></h2>'+
+      '<p>Ты прошёл маршрут «'+escapeHtml(journey.label)+'». Эти истории — вымышленные примеры, не реальные биографии.</p>'+
+      '<div class="journey-saved-counter"><strong>'+saved+' / '+journey.indices.length+'</strong><span>уроков сохранено в этом браузере</span></div>'+
+      '<ol class="journey-complete-list">'+chapters+'</ol>'+
+      '<div class="journey-complete-buttons"><button class="btn btn-primary" id="journeyRestart" type="button">ПОВТОРИТЬ МАРШРУТ ↗</button>'+
+      '<button class="btn btn-outline" id="journeyOther" type="button">ДРУГИЕ МАРШРУТЫ</button></div>'+
+      '<p class="journey-privacy">Это локальная демонстрация. Данные не публикуются и не синхронизируются.</p></article>');
+    $('drawer').classList.add('journey-finished');$('drawer').scrollTop=0;
+    $('journeyRestart').onclick=()=>{closeDrawer();startMemoryJourney(journey.name)};
+    $('journeyOther').onclick=()=>{closeDrawer();$('lensPanel').hidden=false;
+      $('lensToggle').setAttribute('aria-expanded','true');updateLensControls()};
+  }
+  function goJourneyReader(direction){
+    if(guidedJourney&&direction>0&&guidedJourney.step===guidedJourney.indices.length-1){
+      finishJourneyReader();return;
+    }
+    const index=memoryRouteNext(direction);
+    if(index!==selected)beginDive(index);
+  }
+  function advanceJourneyFromGlobe(){
+    if(guidedJourney&&guidedJourney.step===guidedJourney.indices.length-1){
+      finishJourneyReader();return;
+    }
+    const index=memoryRouteNext(1);
+    if(index!==selected)focus(index,false);
   }
   let immersive=false;
   let diveTimer=null,diveIndex=-1,diveSequence=0;
@@ -1425,7 +1489,7 @@ void main(){
   }
   function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timeout);showToast.timeout=setTimeout(()=>t.classList.remove('show'),3200)}
   const escapeHtml=t=>String(t).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-  function setDrawer(tag,html){if(diveIndex!==-1)cancelDive();$('drawer').classList.remove('memory-detail','human-detail','legend-detail');$('drawerTag').textContent=tag;$('drawerContents').innerHTML=html;$('scrim').hidden=false;$('drawer').hidden=false;document.body.classList.add('drawer-open');$('closeDrawer').focus()}
+  function setDrawer(tag,html){if(diveIndex!==-1)cancelDive();$('drawer').classList.remove('memory-detail','human-detail','legend-detail','journey-finished');$('drawerTag').textContent=tag;$('drawerContents').innerHTML=html;$('scrim').hidden=false;$('drawer').hidden=false;document.body.classList.add('drawer-open');$('closeDrawer').focus()}
   function closeDrawer(){if(diveIndex!==-1)cancelDive(); $('scrim').hidden=true;$('drawer').hidden=true;document.body.classList.remove('drawer-open');document.querySelectorAll('[data-open]').forEach(b=>b.classList.toggle('is-on',b.dataset.open==='universe'))}
   const LEGEND_PORTRAITS={
     'Warren Buffett':{url:'https://commons.wikimedia.org/wiki/Special:FilePath/Warren_Buffett_in_2010_(cropped).jpg?width=350',credit:'Белый дом США / Wikimedia Commons · Public Domain',file:'https://commons.wikimedia.org/wiki/File:Warren_Buffett_in_2010_(cropped).jpg'},
@@ -1460,10 +1524,10 @@ void main(){
       '<button id="copyMemory" type="button" aria-label="Копировать">⧉</button></nav>'+
       '<button id="memoryBack" class="memory-back" type="button">← Назад к вселенной</button></article>';
     setDrawer('LEGEND / VERIFIED SOURCE',content);
-    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;
+    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();
     if(photo)$('legendPortrait').addEventListener('error',e=>{e.currentTarget.hidden=true});
-    $('otherMemory').onclick=()=>beginDive(memoryRouteNext(1));
-    $('previousMemory').onclick=()=>beginDive(memoryRouteNext(-1));
+    $('otherMemory').onclick=()=>goJourneyReader(1);
+    $('previousMemory').onclick=()=>goJourneyReader(-1);
     $('memoryBack').onclick=closeDrawer;
     bindLessonBookmark(s);
     $('copyMemory').onclick=()=>{
@@ -1527,9 +1591,9 @@ void main(){
       '</article>';
     setDrawer('HUMAN STORY / '+(local?'LOCAL':'FICTIONAL'),content);
     $('drawer').classList.add('memory-detail','human-detail');
-    $('drawer').scrollTop=0;
-    $('otherMemory').onclick=()=>beginDive(memoryRouteNext(1));
-    $('previousMemory').onclick=()=>beginDive(memoryRouteNext(-1));
+    $('drawer').scrollTop=0;renderJourneyReader();
+    $('otherMemory').onclick=()=>goJourneyReader(1);
+    $('previousMemory').onclick=()=>goJourneyReader(-1);
     $('memoryBack').onclick=closeDrawer;
     bindLessonBookmark(s);
     if(local)$('downloadStarDetail').onclick=()=>downloadLegacyCard(s);
@@ -1661,7 +1725,7 @@ void main(){
     $('brandHome').onclick=e=>{e.preventDefault();closeDrawer();reset()};$('cancelDive').onclick=()=>finishDive(diveSequence);
     document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-open]').forEach(x=>x.classList.toggle('is-on',x.dataset.open===b.dataset.open));if(b.dataset.open==='universe'){closeDrawer();reset()}else if(b.dataset.open==='archive')showArchive();else showLegacy()});
     $('openSelected').onclick=$('dockOpen').onclick=()=>beginDive(selected);
-    $('nextSignal').onclick=$('dockNext').onclick=()=>{focus(memoryRouteNext(1));showToast(guidedJourney?'Маршрут · '+(guidedJourney.step+1)+' / '+guidedJourney.indices.length:'Следующая история / '+stories[selected].category)};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
+    $('nextSignal').onclick=$('dockNext').onclick=()=>{if(guidedJourney)advanceJourneyFromGlobe();else{focus(nextVisibleSignal(selected,1));showToast('Следующая история / '+stories[selected].category)}};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
     $('plusZoom').onclick=()=>targetZoom=clamp(targetZoom+.13,.68,1.6);$('minusZoom').onclick=()=>targetZoom=clamp(targetZoom-.13,.68,1.6);
     $('autoRotate').onclick=()=>setSpin(!spinning);$('resetCamera').onclick=reset;$('modeButton').onclick=setQuality;
     $('toggleAtlas').onclick=()=>{atlasEnabled=!atlasEnabled;$('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));$('constellationLayer').classList.toggle('is-off',!atlasEnabled);$('signalHint').innerHTML=atlasEnabled?'SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div>':'SIGNAL ATLAS <strong>OFFLINE</strong>';showToast(atlasEnabled?'Тематические созвездия включены':'Созвездия скрыты')};
@@ -1672,8 +1736,8 @@ void main(){
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true')}else closeDrawer()}if(!$('drawer').hidden||!$('birthOverlay').hidden||diveIndex!==-1)return;
     const el=document.activeElement;
     if(el&&el.matches('input,textarea,select,[contenteditable="true"]'))return;
-    if(e.key==='ArrowRight'){e.preventDefault();focus(memoryRouteNext(1))}
-    if(e.key==='ArrowLeft'){e.preventDefault();focus(memoryRouteNext(-1))}});
+    if(e.key==='ArrowRight'){e.preventDefault();if(guidedJourney)advanceJourneyFromGlobe();else focus(nextVisibleSignal(selected,1))}
+    if(e.key==='ArrowLeft'){e.preventDefault();const index=memoryRouteNext(-1);if(index!==selected)focus(index,false)}});
     window.addEventListener('resize',resize,{passive:true});
     document.addEventListener('visibilitychange',()=>{
       if(!document.hidden){
