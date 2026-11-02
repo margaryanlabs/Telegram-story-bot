@@ -256,6 +256,12 @@ header{height:50px;padding:0 12px}.wrap{padding:0 7px 20px}
 .v3-quick-questions{grid-template-columns:repeat(2,minmax(0,1fr))}
 .v3-quick-questions button{min-height:45px}
 @media(max-width:650px){.v3-quick-questions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.v8-scenario-structure{display:grid;gap:9px;margin:13px;padding:14px 13px;border:1px solid #6a4640;background:#211a1b;border-radius:7px}
+.v8-scenario-structure>.mini{color:#cb8f81}.v8-scenario-structure>strong{color:#f5dbd2;font:700 13px ui-monospace,monospace}
+.v8-scenario-structure>p{color:#bcb0b0;font-size:11px;line-height:1.7;margin:0}
+.v8-scenario-structure>button{justify-self:start;border:0;background:none;color:#ffab96;font-weight:700;font-size:10px;padding:6px 0;cursor:pointer}
+.v8-scenario-structure>button:disabled{opacity:.4}
 </style>
 </head>
 <body>
@@ -543,10 +549,18 @@ function v3RenderScenarios(){
  const v=analyze(),container=$("v3-scenario-content");
  if(v.status!=="READY"){container.innerHTML='<div class="v3-no-data">Сначала необходимы полноценные закрытые свечи.</div>';return}
  const resistance=v.levels.find(x=>x.kind==="resistance"),support=v.levels.find(x=>x.kind==="support");
+ const evidence=v7Analyze(v),lastEvent=evidence.events.at(-1);
+ const latestEvidence='<div class="v8-scenario-structure"><div class="mini">VETO / STRUCTURE EVIDENCE</div><strong>'+
+   escapeHTML(evidence.state)+'</strong><p>'+
+   escapeHTML(lastEvent?("Последнее событие: "+(lastEvent.shift?"SHIFT? ":"BOS ")+lastEvent.direction+
+   " · "+fmtTime(lastEvent.time)+" · закрытие "+format(lastEvent.close)):
+   "Подтверждённых закрытием событий BOS / Shift нет.")+
+   '</p><button type="button" id="v8-scenario-bos"'+(!lastEvent?' disabled':'')+'>ПОКАЗАТЬ BOS НА ГРАФИКЕ ↗</button></div>';
  const cards=[{name:"Потенциальный пробой вверх",lvl:resistance,description:"Если свеча закроется выше уровня, потребуется подтверждение и повторный расчёт структуры. Не автоматическая покупка."},
  {name:"Потенциальный пробой вниз",lvl:support,description:"Если свеча закроется ниже уровня, потребуется подтверждение нарушения поддержки. Не автоматическая продажа."}];
- container.innerHTML=cards.map((c,i)=>'<div class="v3-scenario"><div><span>'+(i===0?"↗ ":"↘ ")+escapeHTML(c.name)+'</span><strong>'+format(c.lvl?.price)+'</strong></div><p>'+escapeHTML(c.lvl?c.description:"Подтверждённый уровень отсутствует; сценарий не сформирован.")+'</p>'+(c.lvl?'<button type="button" data-scenario="'+i+'">ПОКАЗАТЬ НА ГРАФИКЕ ↗</button>':"")+'</div>').join("")+
+ container.innerHTML=latestEvidence+cards.map((c,i)=>'<div class="v3-scenario"><div><span>'+(i===0?"↗ ":"↘ ")+escapeHTML(c.name)+'</span><strong>'+format(c.lvl?.price)+'</strong></div><p>'+escapeHTML(c.lvl?c.description:"Подтверждённый уровень отсутствует; сценарий не сформирован.")+'</p>'+(c.lvl?'<button type="button" data-scenario="'+i+'">ПОКАЗАТЬ НА ГРАФИКЕ ↗</button>':"")+'</div>').join("")+
  '<div class="v3-rail-note">Сценарии условные. Проверка исходов и вероятностная калибровка появятся только с отдельным журналом результатов.</div>';
+ $("v8-scenario-bos").onclick=()=>{state.layer.add("structure");render();v3CloseDrawer();};
  container.querySelectorAll("[data-scenario]").forEach(b=>b.onclick=()=>{const lvl=cards[+b.dataset.scenario].lvl;if(!lvl)return;state.level=lvl.kind+":"+lvl.price;state.layer.add("levels");render();});
 }
 function v3ReadMemory(){try{const data=JSON.parse(localStorage.getItem(V3KEY)||"[]");return Array.isArray(data)?data.filter(x=>x&&x.localOnly===true&&typeof x.id==="string").slice(0,12):[]}catch{return []}}
