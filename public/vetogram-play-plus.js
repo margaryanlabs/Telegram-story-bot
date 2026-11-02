@@ -113,8 +113,10 @@
        let longPress=null,ignoreClick=false;
        const clearHold=()=>{if(longPress!==null){clearTimeout(longPress);longPress=null;}};
        button.addEventListener('pointerdown',e=>{
-         if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
+         // Start every new interaction with a fresh tap state. Right-click
+         // never suppresses the next ordinary left-click.
          ignoreClick=false;
+         if(e.pointerType!=='touch'&&e.pointerType!=='pen')return;
          clearHold();
          longPress=setTimeout(()=>{
            longPress=null;ignoreClick=true;
