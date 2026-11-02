@@ -763,6 +763,48 @@ animation:memory-fade-in .26s ease both}
     generateParticles();updateMarkers();updateAtlas();
     if(moveCamera){const first=firstVisibleSignal();if(first>=0)focus(first,false)}
   }
+
+  // V7.5 guided Memory Paths — journeys across existing fictional/editorial demo stars.
+  // Paths are editorial learning sequences, NOT connections between real people.
+  const MEMORY_PATHS={
+    risk:{label:'ОТ ПОТЕРИ К КОНТРОЛЮ',aliases:['MIRA','EMBER','ATLAS','NORTHSTAR']},
+    fomo:{label:'ПОБЕДИТЬ FOMO',aliases:['SOLACE','NOVA','MIRA','HORIZON']},
+    patience:{label:'НАУЧИТЬСЯ ЖДАТЬ',aliases:['QUARTZ','ATLAS','HORIZON','NORTHSTAR']}
+  };
+  let guidedJourney=null;
+  function syncJourneyStatus(){
+    const panel=$('journeyStatus');
+    if(!guidedJourney){panel.hidden=true;return}
+    const {indices,step,label}=guidedJourney;
+    $('journeyProgress').textContent=String(step+1).padStart(2,'0')+' / '+String(indices.length).padStart(2,'0')+' · '+label;
+    panel.hidden=false;
+  }
+  function endMemoryJourney(completed=false){
+    if(!guidedJourney)return;
+    guidedJourney=null;syncJourneyStatus();
+    if(completed)showToast('Маршрут завершён. Сохраняй уроки, к которым захочешь вернуться.');
+  }
+  function startMemoryJourney(name){
+    const path=MEMORY_PATHS[name];if(!path)return;
+    const indices=path.aliases.map(alias=>stories.findIndex(s=>s.alias===alias&&!s.local));
+    if(indices.some(i=>i<0)||new Set(indices).size!==indices.length){showToast('Маршрут сейчас недоступен');return}
+    endMemoryJourney();
+    setLens('All',false);closeLensPanel();
+    guidedJourney={label:path.label,indices,step:0};
+    focus(indices[0],false);syncJourneyStatus();
+    showToast('Маршрут памяти · 1 из '+indices.length+' · '+path.label);
+  }
+  function memoryRouteNext(direction=1){
+    if(!guidedJourney)return nextVisibleSignal(selected,direction);
+    const next=guidedJourney.step+direction;
+    if(next<0){showToast('Это первая звезда маршрута');return selected}
+    if(next>=guidedJourney.indices.length){
+      endMemoryJourney(true);
+      return nextVisibleSignal(selected,direction);
+    }
+    guidedJourney.step=next;syncJourneyStatus();
+    return guidedJourney.indices[next];
+  }
   let immersive=false;
   let diveTimer=null,diveIndex=-1,diveSequence=0;
   const pointers=new Map();let pinchDistance=0;
@@ -1274,7 +1316,12 @@ void main(){
     if(open){beginDive(i);return}
     const next=(i+stories.length)%stories.length;
     if(!reduceMotion&&next!==selected){travelFrom=selected;travelTo=next;travelStarted=performance.now()}
-    inertiaY=0;inertiaX=0;selected=next;const s=stories[selected],p=s.p;if(!lensMatches(s))setLens('All',false);targetY=unwrappedY(Math.atan2(-p[0],p[2]));targetX=clamp(Math.atan2(p[1],Math.hypot(p[0],p[2])),-.9,.9);targetZoom=reduceMotion?1.13:1.28;flightFinish=reduceMotion?0:performance.now()+1100;spinning=false;$('autoRotate').textContent='▶';$('autoRotate').setAttribute('aria-pressed','false');shock={radius:.07};updateCard();updateMarkers();if(open)showStory(s)}
+    inertiaY=0;inertiaX=0;selected=next;
+    if(guidedJourney){
+      const step=guidedJourney.indices.indexOf(next);
+      if(step<0)endMemoryJourney();else{guidedJourney.step=step;syncJourneyStatus()}
+    }
+    const s=stories[selected],p=s.p;if(!lensMatches(s))setLens('All',false);targetY=unwrappedY(Math.atan2(-p[0],p[2]));targetX=clamp(Math.atan2(p[1],Math.hypot(p[0],p[2])),-.9,.9);targetZoom=reduceMotion?1.13:1.28;flightFinish=reduceMotion?0:performance.now()+1100;spinning=false;$('autoRotate').textContent='▶';$('autoRotate').setAttribute('aria-pressed','false');shock={radius:.07};updateCard();updateMarkers();if(open)showStory(s)}
   function updateCard(){
     const s=stories[selected];
     $('selectedNum').textContent=s.type==='legend'?'★ LEGEND / SOURCE VERIFIED':s.type==='editorial'?'✦ ORIGINAL / EDITORIAL':s.local?'LOCAL DEMO / NOT PUBLISHED':'FICTIONAL EXAMPLE / '+String(s.id).padStart(3,'0');
@@ -1362,8 +1409,8 @@ void main(){
     setDrawer('LEGEND / VERIFIED SOURCE',content);
     $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;
     if(photo)$('legendPortrait').addEventListener('error',e=>{e.currentTarget.hidden=true});
-    $('otherMemory').onclick=()=>beginDive(nextVisibleSignal(selected,1));
-    $('previousMemory').onclick=()=>beginDive(nextVisibleSignal(selected,-1));
+    $('otherMemory').onclick=()=>beginDive(memoryRouteNext(1));
+    $('previousMemory').onclick=()=>beginDive(memoryRouteNext(-1));
     $('memoryBack').onclick=closeDrawer;
     bindLessonBookmark(s);
     $('copyMemory').onclick=()=>{
@@ -1428,8 +1475,8 @@ void main(){
     setDrawer('HUMAN STORY / '+(local?'LOCAL':'FICTIONAL'),content);
     $('drawer').classList.add('memory-detail','human-detail');
     $('drawer').scrollTop=0;
-    $('otherMemory').onclick=()=>beginDive(nextVisibleSignal(selected,1));
-    $('previousMemory').onclick=()=>beginDive(nextVisibleSignal(selected,-1));
+    $('otherMemory').onclick=()=>beginDive(memoryRouteNext(1));
+    $('previousMemory').onclick=()=>beginDive(memoryRouteNext(-1));
     $('memoryBack').onclick=closeDrawer;
     bindLessonBookmark(s);
     if(local)$('downloadStarDetail').onclick=()=>downloadLegacyCard(s);
@@ -1542,7 +1589,7 @@ void main(){
     resize();showToast('Качество: '+quality);
   }
   function setSpin(b){spinning=b;if(b){inertiaY=0;inertiaX=0}$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
-  function reset(){cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
+  function reset(){endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
   function connectControls(){
     $('headerCreate').onclick=$('heroCreate').onclick=showCreate;
     $('heroExplore').onclick=()=>setImmersive(true);$('focusMode').onclick=()=>setImmersive(!immersive);
@@ -1555,11 +1602,13 @@ void main(){
       setLens('All',false);closeLensPanel();focus(idx,false);
       showToast('Звезда дня / '+stories[idx].alias);
     };
-    document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{setLens(b.dataset.lens,true);closeLensPanel()});
+    document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{endMemoryJourney();setLens(b.dataset.lens,true);closeLensPanel()});
+    document.querySelectorAll('[data-memory-path]').forEach(b=>b.onclick=()=>startMemoryJourney(b.dataset.memoryPath));
+    $('journeyExit').onclick=()=>endMemoryJourney();
     $('brandHome').onclick=e=>{e.preventDefault();closeDrawer();reset()};$('cancelDive').onclick=()=>finishDive(diveSequence);
     document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-open]').forEach(x=>x.classList.toggle('is-on',x.dataset.open===b.dataset.open));if(b.dataset.open==='universe'){closeDrawer();reset()}else if(b.dataset.open==='archive')showArchive();else showLegacy()});
     $('openSelected').onclick=$('dockOpen').onclick=()=>beginDive(selected);
-    $('nextSignal').onclick=$('dockNext').onclick=()=>{focus(nextVisibleSignal(selected,1));showToast('Следующая история / '+stories[selected].category)};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
+    $('nextSignal').onclick=$('dockNext').onclick=()=>{focus(memoryRouteNext(1));showToast(guidedJourney?'Маршрут · '+(guidedJourney.step+1)+' / '+guidedJourney.indices.length:'Следующая история / '+stories[selected].category)};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
     $('plusZoom').onclick=()=>targetZoom=clamp(targetZoom+.13,.68,1.6);$('minusZoom').onclick=()=>targetZoom=clamp(targetZoom-.13,.68,1.6);
     $('autoRotate').onclick=()=>setSpin(!spinning);$('resetCamera').onclick=reset;$('modeButton').onclick=setQuality;
     $('toggleAtlas').onclick=()=>{atlasEnabled=!atlasEnabled;$('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));$('constellationLayer').classList.toggle('is-off',!atlasEnabled);$('signalHint').innerHTML=atlasEnabled?'SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div>':'SIGNAL ATLAS <strong>OFFLINE</strong>';showToast(atlasEnabled?'Тематические созвездия включены':'Созвездия скрыты')};
@@ -1570,8 +1619,8 @@ void main(){
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true')}else closeDrawer()}if(!$('drawer').hidden||!$('birthOverlay').hidden||diveIndex!==-1)return;
     const el=document.activeElement;
     if(el&&el.matches('input,textarea,select,[contenteditable="true"]'))return;
-    if(e.key==='ArrowRight'){e.preventDefault();focus(nextVisibleSignal(selected,1))}
-    if(e.key==='ArrowLeft'){e.preventDefault();focus(nextVisibleSignal(selected,-1))}});
+    if(e.key==='ArrowRight'){e.preventDefault();focus(memoryRouteNext(1))}
+    if(e.key==='ArrowLeft'){e.preventDefault();focus(memoryRouteNext(-1))}});
     window.addEventListener('resize',resize,{passive:true});
     document.addEventListener('visibilitychange',()=>{
       if(!document.hidden){
