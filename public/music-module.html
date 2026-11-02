@@ -57,6 +57,11 @@
     <button class="v78-action" data-v78-action="import" type="button"><span class="v78-action-symbol" aria-hidden="true">＋</span><span class="v78-action-body"><strong>Добавить музыку</strong><small>Разрешённые треки и MP3</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
    </div>
    <div class="v78-now" aria-live="polite"><span class="v78-now-art" aria-hidden="true">♫</span><span class="v78-now-info"><strong id="v78NowTitle">Выбери доступную запись</strong><small id="v78NowArtist">Плеер внутри Vetogram</small></span><button type="button" id="v78NowToggle" class="v78-now-toggle" aria-label="Воспроизвести музыку" disabled>▶</button></div>
+   <div class="v710-audio-progress" aria-label="Прогресс текущего трека">
+     <span id="v710AudioElapsed">0:00</span>
+     <progress id="v710AudioProgress" value="0" max="100" aria-label="Прогресс воспроизведения" aria-valuetext="Пока нет трека"></progress>
+     <span id="v710AudioDuration">0:00</span>
+   </div>
    <p class="v78-status" role="status" aria-live="polite"><span class="v78-status-dot" aria-hidden="true"></span><span id="v78MediaStatus">Источники могут быть ограничены по региону. Личные файлы остаются на устройстве.</span></p>
   </section>
  <section class="native-home audio-home" aria-labelledby="native-home-title">
