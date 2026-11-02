@@ -245,6 +245,7 @@ header{height:50px;padding:0 12px}.wrap{padding:0 7px 20px}
 <button type="button" data-prompt="Покажи Fibonacci">Fibonacci</button>
 <button type="button" data-prompt="Что если пробой?">Сценарии</button>
 <button type="button" data-prompt="История рынка">Time Machine</button>
+<button type="button" data-prompt="Что изменилось?">Что изменилось?</button>
 </div>
 <div class="v3-dialog" id="v3-dialog" aria-live="polite"><p class="v3-empty">Спроси о текущем BTC, ETH или SOL. VETO объяснит структуру и выделит выбранные уровни непосредственно на графике.</p></div>
 <form class="v3-compose" id="v3-compose"><input id="v3-input" maxlength="350" autocomplete="off" aria-label="Вопрос о текущем графике" placeholder="Спроси VETO о графике…"/><button type="submit">↗</button></form>
@@ -343,6 +344,12 @@ function v3EvidenceResponse(q){
    head:(kind==="support"?"Поддержка ":"Сопротивление ")+format(lvl.price),
    lines:["Подтверждённых локальных экстремумов: "+lvl.touches+".","Первая точка: "+fmtTime(lvl.first)+".","Последняя точка: "+fmtTime(lvl.last)+".","Линия выделена на графике. Это наблюдение, не торговый приказ."],ctx,action:lvl
  }:{head:"Недостаточно подтверждений",lines:["На доступной истории подходящий уровень не найден. VETO не рисует его произвольно."],ctx,action:null};
+ if(/изменил|изменени|измени|сравн|разниц|delta|what changed|compare/.test(lower)){
+  v3Switch("delta");
+  return {head:"Decision Delta открыт",lines:[
+   "Сравниваем два исторических среза только по доступным закрытым свечам.",
+   "Это реконструкция наблюдений, а не сохранённый публичный прогноз."],ctx,action:null};
+ }
  if(/фиб|fibo|коррекци/.test(lower)){state.layer.add("fibonacci");render();return {head:"Слой Fibonacci включён",lines:["Значения рассчитаны от наблюдаемого движения свечей. Ни один из уровней не является обещанной целью."],ctx,action:null}}
  if(/поддержк|support/.test(lower))return level("support",support);
  if(/сопротивлен|resistance/.test(lower))return level("resistance",resistance);
