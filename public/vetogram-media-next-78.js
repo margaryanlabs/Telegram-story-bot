@@ -108,16 +108,79 @@
      }catch{say('Действие не открылось. Можно повторить, не теряя данные.');}
    });
  });
+ // Watch history is generated solely from the original Cinema player's
+ // recorded progress. Never display catalog-only items as unfinished videos.
+ if(module==='cinema'){
+   const shelf=$('v710CinemaResume'),items=$('v710CinemaResumeItems');
+   const updateHistory=()=>{
+     if(!shelf||!items||typeof document.createElement!=='function')return;
+     const api=window.VetogramCinema;
+     let data=[];
+     try{data=typeof api?.getLibrary==='function'?api.getLibrary():[];}catch{}
+     const rows=Array.isArray(data)?data.filter(item=>
+       item&&typeof item.id==='string'&&typeof item.title==='string'&&
+       Number.isFinite(Number(item.progress))&&Number(item.progress)>0.01&&
+       Number(item.progress)<.96
+     ).sort((a,b)=>(Number(b.at)||0)-(Number(a.at)||0)).slice(0,3):[];
+     items.replaceChildren();
+     shelf.hidden=rows.length===0;
+     for(const entry of rows){
+       const button=document.createElement('button');
+       button.type='button';button.className='v710-resume-card';
+       const title=document.createElement('strong');
+       title.textContent=entry.title.slice(0,90);
+       const subtitle=document.createElement('small');
+       subtitle.textContent='Просмотрено '+Math.round(Number(entry.progress)*100)+'% · Продолжить';
+       const bar=document.createElement('span');
+       bar.className='v710-resume-track';
+       const fill=document.createElement('i');
+       fill.style.width=Math.round(Number(entry.progress)*100)+'%';
+       bar.appendChild(fill);button.append(title,subtitle,bar);
+       button.setAttribute('aria-label','Продолжить «'+entry.title.slice(0,75)+'»');
+       button.addEventListener('click',()=>{
+         if(typeof api?.openFilm==='function'&&api.openFilm(entry.id)===true)
+           say('Открыты сведения о фильме. Продолжить можно в доступном видеоплеере.');
+         else say('Этот фильм сейчас недоступен. Можно выбрать другой в каталоге.');
+       });
+       items.appendChild(button);
+     }
+   };
+   const video=$('cinemaVideo');
+   for(const event of ['pause','ended','error'])video?.addEventListener(event,updateHistory);
+   document.addEventListener('vetogram:cinema-opened',updateHistory);
+   document.addEventListener('visibilitychange',()=>{
+     if(!document.hidden)updateHistory();
+   });
+   updateHistory();
+ }
  if(module==='music'){
    const audio=$('audio'),nowTitle=$('v78NowTitle'),nowArtist=$('v78NowArtist'),toggle=$('v78NowToggle');
+   const progress=$('v710AudioProgress'),elapsed=$('v710AudioElapsed'),duration=$('v710AudioDuration');
+   const clock=value=>{
+     const whole=Math.max(0,Math.floor(Number(value)||0));
+     return Math.floor(whole/60)+':'+String(whole%60).padStart(2,'0');
+   };
    const update=()=>{
      const track=window.VetogramMusic?.now?.();
      const playable=!!track&&!!audio?.src;
      if(nowTitle)nowTitle.textContent=track?.title||'Выбери доступную запись';
      if(nowArtist)nowArtist.textContent=track?.artist||'Плеер внутри Vetogram';
+     const total=Number(audio?.duration),position=Number(audio?.currentTime);
+     const hasDuration=playable&&Number.isFinite(total)&&total>0;
+     if(progress){
+       progress.value=hasDuration?Math.max(0,Math.min(100,100*(Number.isFinite(position)?position:0)/total)):0;
+       progress.setAttribute('aria-valuetext',hasDuration
+         ?clock(position)+' из '+clock(total):'Пока нет трека с известной длительностью');
+     }
+     if(elapsed)elapsed.textContent=hasDuration?clock(position):'0:00';
+     if(duration)duration.textContent=hasDuration?clock(total):'0:00';
      if(toggle){toggle.disabled=!playable;toggle.textContent=!audio?.paused&&playable?'Ⅱ':'▶';toggle.setAttribute('aria-label',!audio?.paused&&playable?'Приостановить музыку':'Воспроизвести музыку');}
    };
-   for(const event of ['play','playing','pause','ended','loadedmetadata','error','emptied'])audio?.addEventListener(event,update);
+   for(const event of ['play','playing','pause','ended','loadedmetadata','error','emptied','timeupdate','durationchange'])audio?.addEventListener(event,update);
+   document.addEventListener('vetogram:audio-error',()=>{
+     say('Источник не отдал воспроизводимый звук. Выбери другую запись или свой файл.');
+     update();
+   });
    document.addEventListener('vetogram:audio-playing',update);
    document.addEventListener('vetogram:library-change',update);
    toggle?.addEventListener('click',()=>{
