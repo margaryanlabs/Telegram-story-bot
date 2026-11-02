@@ -25,7 +25,7 @@
      const records=typeof api.getLibrary==='function'?api.getLibrary():[];
      const item=Array.isArray(records)?records.filter(x=>Number(x?.progress)>0&&Number(x.progress)<1)
        .sort((a,b)=>(Number(b.at)||0)-(Number(a.at)||0))[0]:null;
-     if(item&&api.openFilm?.(item.id)!==false){
+     if(item&&typeof api.openFilm==='function'&&api.openFilm(item.id)===true){
        say('Открыты сведения о «'+String(item.title||'фильме').slice(0,80)+'». Нажми «Смотреть» для продолжения.');
      }else{
        api.openTab('catalog');say('Незавершённых просмотров пока нет. Выбери фильм из каталога.');
