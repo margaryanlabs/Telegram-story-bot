@@ -9,34 +9,39 @@
  if(!['cinema','music','books'].includes(module))return;
  const status=$('v78MediaStatus');
  const context=window.VetogramMediaContext;
- if(context?.embedded && window.parent!==window){
-   // In a full Vetogram session users should not need to return through
-   // several nested screens to change media type. The host verifies origin,
-   // live iframe identity, owner scope and destination allowlist.
-   const nav=document.createElement('nav');
-   nav.className='v79-media-switcher';
-   nav.setAttribute('aria-label','Переключение разделов Vetogram');
-   const sections=[
-     ['cinema','Кино'],['music','Музыка'],['books','Книги'],['hub','Все медиа']
-   ];
-   for(const [name,label] of sections){
-     const button=document.createElement('button');
-     button.type='button';
-     button.className='v79-switch'+(name===module?' is-current':'');
-     button.textContent=label;
-     if(name===module)button.setAttribute('aria-current','page');
-     button.addEventListener('click',()=>{
-       if(name===module)return;
-       window.parent.postMessage({
-         channel:'vetogram-media',
-         type:'navigate',target:name==='hub'?'hub':'module',
-         ...(name==='hub'?{}:{module:name})
-       },window.location.origin);
-     });
-     nav.appendChild(button);
-   }
-   root.insertBefore(nav,root.firstChild);
+ // The same four routes work in the standalone Render preview and in the
+ // integrated Telegram shell. Native links are restricted to fixed local
+ // HTML destinations; embedded taps preserve cached frames via the host.
+ const embedded=context?.embedded && window.parent!==window;
+ const routes=Object.freeze({
+   cinema:'/cinema.html',music:'/music-module.html',books:'/books.html',
+   hub:'/studio.html?screen=media'
+ });
+ const nav=document.createElement('nav');
+ nav.className='v79-media-switcher';
+ nav.setAttribute('aria-label','Разделы Vetogram');
+ const sections=[
+   ['cinema','Кино'],['music','Музыка'],['books','Книги'],['hub','Все медиа']
+ ];
+ for(const [name,label] of sections){
+   const link=document.createElement('a');
+   link.href=routes[name];
+   link.className='v79-switch'+(name===module?' is-current':'');
+   link.textContent=label;
+   if(name===module)link.setAttribute('aria-current','page');
+   link.addEventListener('click',event=>{
+     if(name===module){event?.preventDefault?.();return;}
+     if(!embedded)return; // Same-origin standalone navigation stays native.
+     event?.preventDefault?.();
+     window.parent.postMessage({
+       channel:'vetogram-media',
+       type:'navigate',target:name==='hub'?'hub':'module',
+       ...(name==='hub'?{}:{module:name})
+     },window.location.origin);
+   });
+   nav.appendChild(link);
  }
+ root.insertBefore(nav,root.firstChild);
 
  const say=message=>{if(status)status.textContent=message;};
  const focusSearch=id=>{
