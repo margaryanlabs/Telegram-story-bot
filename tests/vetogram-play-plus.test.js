@@ -19,7 +19,7 @@ function makeGame(){
  const ids=['vpMinesGrid','vpMinesStatus','vpMinesMode','vpMinesReset','vpMinesRemaining','vpMinesWins','vpSnakeGrid','vpSnakeStatus','vpSnakeScore','vpSnakeBest','vpSnakeToggle','vpSnakeReset'];
  const nodes=new Map(ids.map(id=>['#'+id,element()]));
  const arrows=['left','right','up','down'].map(dir=>{const n=element();n.dataset.vpSnake=dir;return n;});
- const local=new Map(),winEvents={},docEvents={},intervals=new Map();let next=1;
+ const local=new Map(),winEvents={},docEvents={},intervals=new Map(),timeouts=new Map();let next=1;
  const root={
    querySelector:id=>nodes.get(id)||null,
    querySelectorAll:id=>id==='[data-vp-snake]'?arrows:[],
@@ -38,9 +38,12 @@ function makeGame(){
    document,window,Math,Set,Array,Number,String,
    setInterval:(fn)=>{const id=next++;intervals.set(id,fn);return id;},
    clearInterval:id=>intervals.delete(id),
+   setTimeout:fn=>{const id=next++;timeouts.set(id,fn);return id;},
+   clearTimeout:id=>timeouts.delete(id),
  });
- return {nodes,local,arrows,intervals,winEvents,docEvents,document,
-    step(){for(const fn of [...intervals.values()])fn();}
+ return {nodes,local,arrows,intervals,timeouts,winEvents,docEvents,document,
+    step(){for(const fn of [...intervals.values()])fn();},
+    flushHolds(){for(const [id,fn] of [...timeouts]){timeouts.delete(id);fn();}}
  };
 }
 test('all six local games have a real launch surface and offline game contract',()=>{
@@ -102,4 +105,33 @@ test('Snake keyboard never steals arrows from page, inputs or 2048',()=>{
  assert.equal(key('BODY'),0,'keyboard is released on close');
  g.winEvents['vetogram:game-close']({detail:{game:'snake'}});
  assert.equal(g.intervals.size,0);
+});
+
+test('touch long press marks one Mines flag without opening or double-toggling',()=>{
+ const g=makeGame(),btn=g.nodes.get('#vpMinesGrid').children[20];
+ btn.events.pointerdown({pointerType:'touch'});
+ assert.equal(g.timeouts.size,1);
+ g.flushHolds();
+ assert.equal(btn.textContent,'⚑');
+ assert.equal(btn.className.includes('is-open'),false);
+ btn.events.pointerup({});
+ btn.click(); // WebView synthesizes a click after pointerup; must be ignored.
+ assert.equal(btn.textContent,'⚑','the synthetic click must not remove the flag');
+ assert.equal(g.nodes.get('#vpMinesRemaining').textContent,'Мины: 5');
+ btn.events.pointerdown({pointerType:'touch'});
+ btn.events.pointerup({});
+ btn.click(); // flagged cells remain safe in reveal mode
+ assert.equal(btn.textContent,'⚑');
+ g.nodes.get('#vpMinesMode').click();
+ btn.click(); // explicit flag mode can remove the mark
+ assert.equal(btn.textContent,'');
+});
+test('touch tap and cancelled hold never place a Mines flag',()=>{
+ const g=makeGame(),btn=g.nodes.get('#vpMinesGrid').children[10];
+ btn.events.pointerdown({pointerType:'touch'});
+ btn.events.pointercancel({});
+ assert.equal(g.timeouts.size,0);
+ btn.click();
+ assert.notEqual(btn.textContent,'⚑');
+ assert.equal(g.nodes.get('#vpMinesRemaining').textContent,'Мины: 6');
 });
