@@ -92,3 +92,35 @@ Manual test on Android: open Snake then tap directional arrows and close; open 2
 5. Close the Mines dialog during a hold and navigate between Music/Play screens. No delayed flag or hidden timer should run.
 
 The preview build status must be verified at the **current Git SHA**; READY on an earlier commit is not proof for this new code.
+
+## V7.8 — Cinema, Music & Books native product pass
+
+### Cinema, existing `public/cinema.html` and `public/cinema.js`
+- A real action hub with *Continue*, *Series*, *Search*, *My collection*; it calls the original `VetogramCinema.openTab/openFilm/getLibrary` instead of creating alternative pages.
+- A favorite with valid unfinished watch progress is eligible for Continue; an absent / completed history falls back honestly to browsing rather than opening arbitrary content.
+- Source availability and licensing remain truthful. Existing player / licensed provider logic, metadata and history remain authoritative.
+- Original Cinema tabs are horizontally scrollable on narrow phones; real film cards get a consistent visual treatment, readable metadata and focus outlines.
+
+### Music, existing `public/music-module.html` and `public/vetogram-music.js`
+- A one-tap hub for real search, personal music library, radio and adding permitted tracks. Uses the existing module's actions.
+- Compact **Now Playing** UI reads the existing native audio and `VetogramMusic.now()`. It invokes the original `miniPlay` controller; it does not create a second audio source, silently autoplay demo media, upload recordings or persist private searches.
+- Track rows, cover handling, active playback, keyboard focus and compact player contrast redesigned without changing licensed source contracts.
+- Sleep timer, queue and Media Session remain owned by the existing music controller.
+
+### Books, existing `public/books.html` and `public/books.js`
+- **Continue** invokes the genuine progress action when available. Without a saved page, it goes to reading discovery and reports the absence of progress.
+- Direct native actions for readable editions, personal saved shelf and local EPUB/FB2/TXT import.
+- Keeps existing distinction between readable full-text editions and metadata-only catalog. No fictional book text or claims of rights.
+- Reader controls, progress page labels, book-card focus and text wrapping updated for small touch devices. Original reader pagination, VETO FLOW, annotations, source attribution and owner scope remain intact.
+
+### Shared implementation
+- `public/vetogram-media-next-78.css` — four-column desktop action rail, 2-column tablets, single-column phones; distinct Cinema/Music/Books accent palettes.
+- `public/vetogram-media-next-78.js` — strictly allowlisted actions for the three existing modules; no privileged Telegram, chat, external fetch or duplicate players.
+- `tests/vetogram-media-next-78.test.js` — module-specific navigation, absent history fallback, native playback delegation, saved reading and import, DOM markers, responsive styles and no forbidden API access.
+- `package.json` preview QA gate includes this test; syntax check includes the shared script.
+
+### Current release gate
+- Source changes are committed to draft PR #214, not merged to production.
+- GitHub's Vercel check is currently **failure due to build-rate-limit**, pointing to a Vercel upgrade/rate-limit page, rather than a completed current-head build.
+- Do **not** claim the V7.8 test suite passed or that there is a working V7.8 URL until a READY deployment with matching commit SHA and runtime smoke check exist.
+- Validate on Android WebView: Cinema resume/search/library; Music real permitted audio, next/prev, import and player states; Books real full-text, search, EPUB/FB2/TXT import, bookmarks, reading progress and controls.
