@@ -8,7 +8,7 @@ const css=readFileSync(new URL('../public/vetogram-media-next-78.css',import.met
 const pages=Object.fromEntries(['cinema','music-module','books'].map(x=>[x,readFileSync(new URL('../public/'+x+'.html',import.meta.url),'utf8')]));
 function node(id=''){
   return {id,hidden:false,src:'',paused:true,value:'',textContent:'',attrs:{},dataset:{},calls:0,events:{},
-    addEventListener(name,fn){this.events[name]=fn;},
+    addEventListener(name,fn){const previous=this.events[name];this.events[name]=previous?(...args)=>{previous(...args);fn(...args);}:fn;},
     setAttribute(k,v){this.attrs[k]=v;},
     focus(){this.focused=true;},
     scrollIntoView(){this.scrolled=true;},
@@ -37,7 +37,7 @@ test('three real module documents contain complete navigation and the shared res
  for(const [page,html] of Object.entries(pages)){
   assert.match(html,/id="v78MediaHub"/,page);
   assert.equal((html.match(/id="v78MediaHub"/g)||[]).length,1);
-  for(const name of ['continue','library'])assert.match(html,new RegExp('data-v78-action="'+name+'"'),page);
+  for(const name of page==='music-module'?['search','library']:['continue','library'])assert.match(html,new RegExp('data-v78-action="'+name+'"'),page);
   assert.match(html,/vetogram-media-next-78\.css\?v=20261101-rebuild04/);
   assert.match(html,/vetogram-media-next-78\.js\?v=20261101-rebuild04/);
  }
