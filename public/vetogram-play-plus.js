@@ -13,6 +13,8 @@
  const minesGrid=$('#vpMinesGrid'),minesStatus=$('#vpMinesStatus'),minesMode=$('#vpMinesMode');
  const minesReset=$('#vpMinesReset'),minesRemaining=$('#vpMinesRemaining'),minesWins=$('#vpMinesWins');
  let cells=[],minesStarted=false,minesFinished=false,flags=0,flagMode=false;
+ let cancelHolds=[];
+ const clearAllHolds=()=>{for(const stop of cancelHolds)stop();};
  const around=(id,size=MINES_SIZE)=>{
    const x=id%size,y=Math.floor(id/size),result=[];
    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
@@ -90,7 +92,7 @@
  // expose a mine; no invisible hints or information are revealed.
  function chordMines(id){
    const cell=cells[id];
-   if(minesFinished||!cell?.revealed||!cell.count)return;
+   if(minesFinished||flagMode||!cell?.revealed||!cell.count)return;
    const neighbors=around(id);
    const marked=neighbors.filter(n=>cells[n].flagged).length;
    if(marked!==cell.count){
@@ -103,6 +105,7 @@
    }
  }
  function resetMines(){
+   clearAllHolds();cancelHolds=[];
    cells=Array.from({length:MINES_COUNT},()=>({mine:false,revealed:false,flagged:false,count:0}));
    minesStarted=false;minesFinished=false;flags=0;flagMode=false;
    if(minesGrid){
@@ -112,6 +115,7 @@
        button.type='button';button.className='v73-mine-cell';
        let longPress=null,ignoreClick=false;
        const clearHold=()=>{if(longPress!==null){clearTimeout(longPress);longPress=null;}};
+       cancelHolds.push(clearHold);
        button.addEventListener('pointerdown',e=>{
          // Start every new interaction with a fresh tap state. Right-click
          // never suppresses the next ordinary left-click.
@@ -142,6 +146,8 @@
  }
  minesMode?.addEventListener('click',()=>{if(minesFinished)return;flagMode=!flagMode;paintMines();});
  minesReset?.addEventListener('click',()=>{resetMines();haptic();});
+ window.addEventListener?.('vetogram:game-close',event=>{if(event?.detail?.game==='mines')clearAllHolds();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)clearAllHolds();});
  if(minesGrid&&minesStatus)resetMines();
  // SNAKE: model never advances unless the player explicitly starts it.
  const S=12,CELL_COUNT=S*S,SNAKE_BEST_KEY='vetogram:play:snake-best:v1';
