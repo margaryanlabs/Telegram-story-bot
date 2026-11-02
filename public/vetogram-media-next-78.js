@@ -23,7 +23,7 @@
    if(action==='library'){api.openTab('library');say('Избранное и сохранённые просмотры этого устройства.');}
    if(action==='continue'){
      const records=typeof api.getLibrary==='function'?api.getLibrary():[];
-     const item=Array.isArray(records)?records.filter(x=>x?.source==='progress'&&x.progress>0&&x.progress<1)
+     const item=Array.isArray(records)?records.filter(x=>Number(x?.progress)>0&&Number(x.progress)<1)
        .sort((a,b)=>(Number(b.at)||0)-(Number(a.at)||0))[0]:null;
      if(item&&api.openFilm?.(item.id)!==false){
        say('Открыты сведения о «'+String(item.title||'фильме').slice(0,80)+'». Нажми «Смотреть» для продолжения.');
