@@ -53,7 +53,7 @@ test('music exposes seven genuine native catalog presets, without creating fake 
  runInNewContext(source,{document,window});
  buttons.find(b=>b.dataset.v82Preset==='am').click();
  buttons.find(b=>b.dataset.v82Preset==='world-lofi').click();
- assert.deepEqual(calls,['page:catalog','preset:am','page:catalog','preset:world-lofi']);
+ assert.deepEqual(calls,['preset:am','page:catalog','preset:world-lofi','page:catalog']);
  assert.equal(originalTracks.parentNode,main);
  assert.match(css,/\.v82-genres-scroll/);
 });
