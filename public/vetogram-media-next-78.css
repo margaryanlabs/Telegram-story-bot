@@ -132,3 +132,26 @@ html.v6-embedded .v79-switch:focus-visible{outline:2px solid #e1e6e5;outline-off
  html.v6-embedded .v79-media-switcher{margin-bottom:14px;gap:5px}
  html.v6-embedded .v79-switch{padding:9px 12px;font-size:10px}
 }
+
+/* VETOGRAM 7.10: real native-media continuity, no fabricated thumbnails. */
+.v710-resume{margin-top:22px;padding:19px;border:1px solid #ffffff19;border-radius:15px;background:#080b0b60}
+.v710-resume[hidden]{display:none!important}
+.v710-resume-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.v710-resume-heading span{font:800 10px/1.4 system-ui;letter-spacing:.17em;color:#ead8b9}
+.v710-resume-heading small{font:480 10px/1.4 system-ui;color:#9faba9}
+.v710-resume-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.v710-resume-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0;padding:16px 15px;border:1px solid #ffffff21;border-radius:12px;text-align:left;background:#ffffff0c;color:#fff;cursor:pointer;transition:background .18s,border-color .18s}
+.v710-resume-card:hover{background:#ffffff18;border-color:#ead1a17d}
+.v710-resume-card:focus-visible{outline:2px solid #f6ddb2;outline-offset:2px}
+.v710-resume-card strong{font:730 14px/1.3 system-ui;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v710-resume-card small{font:510 10px/1.4 system-ui;color:#cabfae}
+.v710-resume-track{display:block;width:100%;height:4px;border-radius:99px;overflow:hidden;background:#ffffff20;margin-top:auto}
+.v710-resume-track i{display:block;height:100%;background:#ddc497;border-radius:99px}
+.v710-audio-progress{display:flex;align-items:center;gap:11px;margin:11px 2px 0;color:#b9b0be;font:650 10px/1.2 system-ui;font-variant-numeric:tabular-nums}
+.v710-audio-progress span{flex:0 0 33px}
+.v710-audio-progress progress{flex:1 1 auto;min-width:0;height:5px;border:0;border-radius:99px;overflow:hidden;appearance:none;-webkit-appearance:none;background:#ffffff28}
+.v710-audio-progress progress::-webkit-progress-bar{background:#ffffff28;border-radius:99px}
+.v710-audio-progress progress::-webkit-progress-value{background:#d9c1ed;border-radius:99px}
+.v710-audio-progress progress::-moz-progress-bar{background:#d9c1ed;border-radius:99px}
+@media(max-width:760px){.v710-resume-items{grid-template-columns:1fr}.v710-resume-card{padding:13px 14px}.v710-resume-card strong{font-size:12px}.v710-resume{padding:13px}}
+@media(prefers-reduced-motion:reduce){.v710-resume-card{transition:none!important}}
