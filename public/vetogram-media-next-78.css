@@ -155,3 +155,15 @@ html.v6-embedded .v79-switch:focus-visible{outline:2px solid #e1e6e5;outline-off
 .v710-audio-progress progress::-moz-progress-bar{background:#d9c1ed;border-radius:99px}
 @media(max-width:760px){.v710-resume-items{grid-template-columns:1fr}.v710-resume-card{padding:13px 14px}.v710-resume-card strong{font-size:12px}.v710-resume{padding:13px}}
 @media(prefers-reduced-motion:reduce){.v710-resume-card{transition:none!important}}
+
+/* Reader continuity comes from the real Books progress shelf, not metadata. */
+.v710-reading-summary[hidden]{display:none!important}
+.v710-reading-summary{margin-top:16px;padding:14px 17px;border-radius:14px;border:1px solid rgba(211,239,207,.24);background:rgba(20,38,29,.45);display:flex;align-items:center;gap:14px;min-width:0}
+.v710-reading-bookmark{width:43px;height:49px;display:grid;place-items:center;flex-shrink:0;border:1px solid #d6f1d133;background:#c7e0c81a;color:#bde0ba;border-radius:9px;font-size:24px}
+.v710-reading-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.v710-reading-copy small{font:750 9px/1.2 system-ui;letter-spacing:.17em;color:#a4c5a2}
+.v710-reading-copy strong{font:730 14px/1.4 system-ui;color:#f5faf3;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.v710-reading-copy span{font:520 11px/1.4 system-ui;color:#a8baaa}
+.v710-reading-return{flex-shrink:0;padding:12px 15px;min-height:43px;color:#193021;background:#d7ebd0;border:1px solid #e6f5df;border-radius:10px;font:750 11px/1.3 system-ui;cursor:pointer}
+.v710-reading-return:focus-visible{outline:2px solid #eaf8e6;outline-offset:3px}
+@media(max-width:550px){.v710-reading-summary{padding:12px;gap:9px}.v710-reading-bookmark{width:34px;height:39px;font-size:19px}.v710-reading-copy strong{font-size:12px}.v710-reading-return{padding:10px;font-size:10px}}
