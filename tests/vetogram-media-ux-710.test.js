@@ -123,3 +123,18 @@ test('books reading summary mirrors real Continue shelf only when a saved book e
  ui.nodes.get('readerBack').click();
  assert.equal(panel.hidden,true);
 });
+
+test('live radio shows LIVE instead of inventing a duration, and clears recovered errors',()=>{
+ const ui=create('music'),audio=ui.nodes.get('audio');
+ audio.src='https://example.org/permitted-radio';
+ audio.duration=Infinity;audio.currentTime=0;audio.paused=false;
+ ui.window.VetogramMusic={now:()=>({title:'Radio',artist:'Live',source:'radio'})};
+ audio.handlers.timeupdate();
+ assert.equal(ui.nodes.get('v710AudioElapsed').textContent,'LIVE');
+ assert.equal(ui.nodes.get('v710AudioProgress').value,0);
+ assert.match(ui.nodes.get('v710AudioProgress').attrs['aria-valuetext'],/Прямой эфир/);
+ ui.documentEvents['vetogram:audio-error']();
+ assert.match(ui.nodes.get('v78MediaStatus').textContent,/Источник не отдал/);
+ audio.handlers.playing();
+ assert.match(ui.nodes.get('v78MediaStatus').textContent,/воспроизводится/);
+});
