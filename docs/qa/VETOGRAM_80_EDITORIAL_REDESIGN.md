@@ -68,3 +68,15 @@ Regression: `tests/vetogram-editorial-80.test.js` checks module-specific mobile 
 - New `tests/vetogram-media-cover-grid-83.test.js` covers real image/source, default cover mode, list switch, invalid mode, and responsive/artwork constraints. Four targeted JS/test simulations passed and it is included in `qa:preview:offline`.
 - **Android cache fix:** the editorial CSS/JS URLs in all four native documents are bumped to `20261102-media83`; Music catalog CSS and JS get the same version. This avoids presenting an older cached release as the latest one after preview publication.
 - Remaining validation: matching Render LIVE deployment, Android Telegram touch QA, real artwork fetching from Audius, licensed music playback, video and books reader.
+
+## V8.4 — Fix actual catalog fragmentation
+
+The 8.0-8.3 editorials moved only selected Book controls above a secondary action hub, separating them from related source/translation filter panels, the main shelf heading, book results and source legal footer. Cinema likewise left the actual all-film browse/grid below the secondary panel. This did not match the promised content-first information architecture.
+
+**Cinema:** preserve the original `#cinemaBrowse` with source-backed film cards, genre `#cinemaGenres`, sort `#cinemaSort`, pagination, and empty/unavailable states, but place the entire **existing** section right after the real movie rails and before the secondary shortcut hub. Responsive desktop and mobile grid and touch/keyboard genre controls are scoped to the real elements.
+
+**Books:** move all *existing DOM nodes* together before the shortcut hub: original search, readable edition covers, library/source tabs, actual full-text/metadata explanation, source description, translation/hot/classic/spotlight filters, personal import banner, author discovery, shelf heading, genre chips, legal availability explanation, dynamic `#catalogGrid` and pagination/source attribution footer. This keeps all native filter handlers, imported files, rights notices and the original reader; no alternate search or content datasets.
+
+**Evidence:** `tests/vetogram-editorial-84-contiguity.test.js` executes the real editor script against realistic original element order, checks both Cinema and Books final DOM order and verifies that all original nodes survive. The three target tests passed in a JS harness. QA gate now includes this file. Mobile presentation scoped to actual `#cinemaGrid`/Book filter controls. The four HTML files use `20261102-media84` asset versions so updated Android WebView caches do not mask the fix.
+
+**Still needed:** full `npm run qa:preview:offline`, Render exact HEAD LIVE check, mobile screenshot/tap QA, source-provider streams and reader/import verification before promoting draft PR #214.
