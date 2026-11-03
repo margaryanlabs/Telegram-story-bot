@@ -1810,6 +1810,16 @@ backdrop-filter:blur(12px);pointer-events:auto}
  .app.obsidian .world-controls{height:39px}
  .app.obsidian .world-controls button{height:39px;min-height:39px}
 }
+/* V9.3 / Pause the CSS passage clock together with the JS flight clock. */
+.memory-dive[data-suspended="true"]::before,
+.memory-dive[data-suspended="true"] .memory-dive-lock,
+.memory-dive[data-suspended="true"] .memory-dive-lock::before,
+.memory-dive[data-suspended="true"] .memory-dive-lock::after,
+.memory-dive[data-suspended="true"] .v9-spark-field i,
+.memory-dive[data-suspended="true"] .memory-dive-progress span,
+.memory-dive[data-suspended="true"] .memory-dive-info{
+ animation-play-state:paused!important;
+}
 </style>
 </head>
 <body>
@@ -3016,6 +3026,7 @@ void main(){
     if(diveTimer!==null){clearTimeout(diveTimer);diveTimer=null}
     const active=diveIndex!==-1;
     v93PassagePausedAt=0;
+    $('memoryDive').dataset.suspended='false';
     const skipWasFocused=active&&document.activeElement===$('cancelDive');
     v9State={phase:'idle',started:0,index:-1,token:0,energy:0};
     if(active){
@@ -3033,12 +3044,14 @@ void main(){
   function v93SuspendPassage(){
     if(diveIndex===-1||v93PassagePausedAt)return;
     v93PassagePausedAt=performance.now();
+    $('memoryDive').dataset.suspended='true';
     if(diveTimer!==null){clearTimeout(diveTimer);diveTimer=null}
   }
   function v93ResumePassage(){
     if(!v93PassagePausedAt)return;
     const elapsedPause=Math.max(0,performance.now()-v93PassagePausedAt);
     v93PassagePausedAt=0;
+    $('memoryDive').dataset.suspended='false';
     if(diveIndex===-1)return;
     v9State.started+=elapsedPause;
     const remaining=Math.max(0,1350-(performance.now()-v9State.started));
@@ -3069,6 +3082,7 @@ void main(){
     targetZoom=1.25;
     overlay.hidden=false;overlay.setAttribute('aria-hidden','false');
     overlay.dataset.phase='lock';
+    overlay.dataset.suspended='false';
     // The flare must begin at the actual star, not the CSS fallback center.
     updateDivePosition();
     const category=stories[index].type==='legend'?'Legends':stories[index].category;
