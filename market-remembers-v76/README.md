@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V7.6.2 Memory Museum (isolated preview)
+# THE MARKET REMEMBERS — V7.6.3 Memory Museum (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -51,3 +51,22 @@ This verifies inline JS parsing, required DOM controls and enhanced IDs, preserv
 4. At 390px viewport ensure the return highlight appears behind the mobile signal dock.
 5. With reduced motion enabled, return happens instantly without halo animation.
 6. Escape closes reader and restores keyboard focus to a useful, visible control.
+
+## V7.6.3 — responsive mobile composition
+- Replaced a fixed percentage mobile globe projection with a stage measured **once per resize** from actual hero and signal-dock rectangles. Particle loops do not read DOM bounds.
+- Landscape mobile uses a right-side theatre layout, leaving a left narrative/control column.
+- Portrait mobile sizes the same original WebGL globe to the available vertical space, including short-height phones and foldables; desktop keeps its exact previous camera geometry.
+- Mobile navigation and signal dock have warmer editorial contrast, touch-friendly controls, two-line quotes, and safe-area-aware bottom spacing.
+- Front-side star controls respect the content-safe vertical band on portrait devices.
+- No personal-data migration, shader rewrite, backend or publication of fictional demo stories.
+
+### Layout acceptance cases
+- 390 × 844: normal phone, hero / sphere / dock clearly separated.
+- 390 × 620 and 320 × 568: sphere scales down without covering the hero or dock.
+- 768 × 1024: foldable portrait with large but constrained sphere.
+- 760 × 420: landscape theatre: story left, sphere right, controls left.
+- 1280 × 720: unchanged desktop target center and radius.
+- Focus mode keeps its immersive full-size sphere and original gestures.
+
+### Verification
+The source-level and isolated mock-interaction suite contains 21 cases and passed with JavaScript execution. These are not screenshot tests or a substitute for real-device WebGL/Canvas fallback QA. The GitHub-hosted workflow has been unable to allocate a runner on this account; it is separate from the local checks.
