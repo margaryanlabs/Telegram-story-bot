@@ -2193,7 +2193,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   let inertiaY=0,inertiaX=0;
   let interactionEnergy=0,interactionPulse=0,interactionPoint=[0,0];
   let travelStarted=0,travelFrom=-1,travelTo=-1;
-  let autoEco=false,perfStarted=0,perfFrames=0,perfElapsed=0,perfMeasured=false,frameScheduled=false;
+  let autoEco=false,perfStarted=0,perfFrames=0,perfElapsed=0,perfMeasured=false,frameScheduled=false,animationFrameHandle=null;
   let contextHandlersInstalled=false;
   const uniformCache=new WeakMap();
   let sceneParticles=[], sceneLines=[], markerEls=[];
@@ -2358,9 +2358,23 @@ backdrop-filter:blur(12px);pointer-events:auto}
     const order=['big','small','max'];
     v81SetScale(order[(order.indexOf(v81SizeMode)+1)%order.length]);
   }
+  // V9.4: use real free space between hero and dock when there is enough.
+  // On very short screens preserve the approved ECLIPSE framing rather than
+  // shrinking the sphere to an unreadable speck.
+  function v9PortraitFrame(width,height,heroBottom,dockTop,nominalRadius){
+    const short=height<650;
+    const top=Math.max(130,Math.min(height-20,heroBottom+12));
+    const bottom=Math.min(height-66,Math.max(0,dockTop-12));
+    const room=bottom-top;
+    const fitted=room>nominalRadius*1.58;
+    const radius=fitted?Math.min(nominalRadius,Math.max(width*.23,(room-16)*.5)):nominalRadius;
+    const y=fitted?Math.max(top+radius,Math.min(bottom-radius,(top+bottom)*.5)):
+      height*(short?.59:.575);
+    return {x:width*.585,y,radius,top:Math.max(0,top),bottom:Math.min(height,bottom),
+      mode:'portrait',fitted};
+  }
   function v763MeasureStage(){
-    // ECLIPSE restores the original V7.4 cinematic framing. The universe is
-    // large enough to explore, but must remain a luminous orb, not a dark wall.
+    // ECLIPSE remains the visual baseline: real WebGL sphere, never CSS rings.
     if(w>=820||immersive){v763MobileStage=null;return}
     if(w>h&&h<650){
       v763MobileStage={x:w*.715,y:h*.485,radius:Math.min(w,h)*.36,
@@ -2368,12 +2382,10 @@ backdrop-filter:blur(12px);pointer-events:auto}
       return;
     }
     const short=h<650,rect=stage.getBoundingClientRect();
-    const top=Math.max(130,$('hero').getBoundingClientRect().bottom-rect.top+12);
-    const bottom=Math.min(h-66,$('signalDock').getBoundingClientRect().top-rect.top-12);
-    // The original framing is intentional: no artificially huge atmosphere ring.
-    v763MobileStage={x:w*.585,y:h*(short?.59:.575),
-      radius:Math.min(w,h)*(short?.36:.397),
-      top:Math.max(0,top-12),bottom:Math.min(h,bottom+12),mode:'portrait'};
+    const nominalRadius=Math.min(w,h)*(short?.36:.397);
+    v763MobileStage=v9PortraitFrame(w,h,
+      $('hero').getBoundingClientRect().bottom-rect.top,
+      $('signalDock').getBoundingClientRect().top-rect.top,nominalRadius);
   }
   function targetCenter(){
     const scale=v81ScaleCurrent;
@@ -2879,7 +2891,11 @@ void main(){
     }
     const label=$('starFocusLabel');
     if(label){
-      const p=locations[selected],show=focusLabelActive&&visible.has(selected)
+      const p=locations[selected];
+      const band=v763MobileStage&&!immersive&&v763MobileStage.mode==='portrait'?v763MobileStage:null;
+      // A floating alias must not cover the hero; the dock still identifies the star.
+      const labelRoom=!band||(p.y-band.top>=84&&band.bottom-p.y>=16);
+      const show=focusLabelActive&&visible.has(selected)&&labelRoom
         &&$('drawer').hidden&&$('lensPanel').hidden&&$('memoryDive').hidden&&$('birthOverlay').hidden;
       label.hidden=!show;
       if(show){
@@ -2893,7 +2909,7 @@ void main(){
   function sceneIsCovered(){return !$('drawer').hidden||!$('birthOverlay').hidden}
   function queueFrame(){
     if(!frameScheduled&&!document.hidden&&!sceneIsCovered()){
-      frameScheduled=true;window.requestAnimationFrame(animate)
+      frameScheduled=true;animationFrameHandle=window.requestAnimationFrame(animate)
     }
   }
   function resumeScene(){
@@ -2924,7 +2940,7 @@ void main(){
     }
   }
   function animate(t){
-    frameScheduled=false;
+    frameScheduled=false;animationFrameHandle=null;
     if(document.hidden)return;
     const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:1-Math.exp(-dt/245);
     if(flightFinish&&t>flightFinish){flightFinish=0;targetZoom=1.13}
@@ -3880,7 +3896,12 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
     if(e.key==='ArrowLeft'){e.preventDefault();const index=memoryRouteNext(-1);if(index!==selected)focus(index,false)}});
     window.addEventListener('resize',scheduleResize,{passive:true});
     document.addEventListener('visibilitychange',()=>{
-      if(document.hidden){v93SuspendPassage();return}
+      if(document.hidden){
+        v93SuspendPassage();
+        if(animationFrameHandle!==null){window.cancelAnimationFrame(animationFrameHandle)}
+        animationFrameHandle=null;frameScheduled=false;
+        return;
+      }
       perfStarted=0;perfFrames=0;perfElapsed=0;
       v93ResumePassage();
       // Resume an existing context; don't rebuild shaders unnecessarily.
