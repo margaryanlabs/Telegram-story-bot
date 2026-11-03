@@ -1955,35 +1955,31 @@ void main(){
 }`;
   const pFragment=`precision mediump float;
 varying float vColor;varying float vDepth;varying float vKind;varying float vSelected;
-uniform float uTime;
+uniform float uTime;uniform float uPulse;
 void main(){
- vec2 p=gl_PointCoord*2.0-1.0;
+ vec2 p=gl_PointCoord*2.-1.;
  float d=length(p);
- if(d>1.0||vKind< -1.0||vDepth<-.035)discard;
- vec3 graphite=vec3(.22,.31,.45);
- vec3 steel=vec3(.38,.57,.68);
- vec3 ice=vec3(.71,.88,.93);
- vec3 rareViolet=vec3(.57,.46,.81);
- vec3 col=mix(graphite,steel,smoothstep(.12,.82,vColor));
- col=mix(col,ice,smoothstep(.91,1.0,vColor)*.46);
- if(vKind>2.0){
-   if(vColor<.22)col=vec3(.52,.88,.94);
-   else if(vColor<.5)col=vec3(.67,.74,.89);
-   else if(vColor<.76)col=rareViolet;
-   else col=vec3(.92,.81,.63);
+ if(d>1.||vKind< -1.||vDepth<-.035)discard;
+ vec3 ink=vec3(.26,.37,.46),steel=vec3(.41,.64,.72);
+ vec3 pearl=vec3(.78,.92,.97),orchid=vec3(.60,.51,.80);
+ vec3 col=mix(ink,steel,smoothstep(.12,.85,vColor));
+ col=mix(col,pearl,smoothstep(.88,1.,vColor)*.44);
+ if(vKind>2.){
+   if(vColor<.22)col=vec3(.56,.85,.91);
+   else if(vColor<.5)col=vec3(.70,.78,.91);
+   else if(vColor<.76)col=orchid;
+   else col=vec3(.95,.84,.67);
  }
- if(vKind>4.0)col=vec3(.93,.83,.65);
- float core=exp(-d*d*(vSelected>.5?20.:vKind>2.0?13.:7.));
- float halo=exp(-d*d*(vSelected>.5?3.7:3.2))*(vSelected>.5?.48:.12);
- float front=smoothstep(-.57,.9,vDepth);
- float depth=mix(.014,.24,front);
- float alpha=(core+halo)*(vKind>2.0?.83:depth);
- float twinkle=.93+.07*sin(uTime*.0025+vColor*37.0);
- alpha=clamp(alpha*twinkle*(1.0+vSelected*.20),0.0,1.0);
- if(vSelected>.5)col=mix(col,vec3(1.0),.57);
+ if(vKind>4.)col=vec3(.94,.85,.69);
+ float core=exp(-d*d*(vSelected>.5?18.:vKind>2.?14.:9.));
+ float halo=exp(-d*d*(vSelected>.5?4.4:4.6))*(vSelected>.5?.44:.09);
+ float depth=mix(.026,.32,smoothstep(-.55,.91,vDepth));
+ float alpha=(core+halo)*(vKind>2.?.88:depth);
+ float twinkle=.94+.06*sin(uTime*.0022+vColor*37.);
+ alpha=clamp(alpha*twinkle*(1.+vSelected*(.28+uPulse*.60)),0.,1.);
+ if(vSelected>.5)col=mix(col,vec3(1.),.53+uPulse*.22);
  gl_FragColor=vec4(col,alpha);
-}`;
-  const lVertex=`precision highp float;attribute vec3 aPos;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;varying float vDepth;void main(){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*aPos.x+sy*aPos.z,aPos.y,-sy*aPos.x+cy*aPos.z);vec3 p=vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);float per=2.7/(3.1-p.z*.7);vec2 px=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(px.x/uRes.x*2.-1.,1.-px.y/uRes.y*2.,-p.z*.48,1.);vDepth=p.z;}`;
+}`; const lVertex=`precision highp float;attribute vec3 aPos;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;varying float vDepth;void main(){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*aPos.x+sy*aPos.z,aPos.y,-sy*aPos.x+cy*aPos.z);vec3 p=vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);float per=2.7/(3.1-p.z*.7);vec2 px=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(px.x/uRes.x*2.-1.,1.-px.y/uRes.y*2.,-p.z*.48,1.);vDepth=p.z;}`;
   const lFragment=`precision mediump float;varying float vDepth;void main(){float a=.006+.018*smoothstep(-.6,.9,vDepth);gl_FragColor=vec4(.44,.63,.76,a);}`;
   // WebGL 1.0 true triangulated sphere: normal-based light with real depth.
   const coreVertex=`precision highp float;
