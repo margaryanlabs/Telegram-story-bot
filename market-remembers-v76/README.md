@@ -297,3 +297,27 @@ R4 completes the interactive narrative arc: **select a star → experience its s
 - The Playwright browser tests are provided for execution but **have not been run in a real Chromium/WebGL browser here**. The external metered browser wallet was insufficient. Device screenshot/graphics/keyboard QA is still an acceptance gate. This is a draft review candidate, not production approval.
 - Comparison original ECLIPSE: https://market-remembers-eclipse-v82.onrender.com/ 
 - Isolated V9 review: https://market-remembers-starlight-v9.onrender.com/
+
+## V9 Release QA — opt-in Android device diagnostics (implemented)
+
+We are now in **stabilization**, not adding visual decoration, and the user's screenshot of V8.0 remains the primary warning against blind changes.
+
+### On-device check
+- Normal public preview remains **unchanged**: https://market-remembers-starlight-v9.onrender.com/
+- Optional diagnostic version: https://market-remembers-starlight-v9.onrender.com/?qa=1
+- A collapsible **QA / DEVICE** panel shows renderer (WEBGL1/CANVAS2D/unavailable), actual viewport and GPU buffer sizes, device pixel ratio, sampled animation-frame FPS, graphics quality/ECO, reduced-motion status, current navigation state, and counts of WebGL context losses or fallback events.
+- Copying the QA panel is a **direct local clipboard action**. No server call, new localStorage writes, tracking script, screenshot upload or personal story ID/text ever enters the report. A screenshot can also show the panel; users should avoid including personal story contents in screenshots.
+- The panel is entirely absent visually unless the exact URL query parameter `qa=1` is set. It uses existing code/DOM and adds no rendering work to the regular production view.
+- Frame sampling uses `requestAnimationFrame` timestamps, not fake performance claims. Under the reader the GPU rendering is intentionally parked, so the displayed FPS is the **last active sample**, not a live measurement from a hidden scene.
+
+### Genuine defect fixed
+- The last V9 R4 birth particles were configured for up to 1870ms animation plus 650ms delay (2520ms total) but the confirmation opened at 2450ms. Reduced the animation to 1750ms, allowing even the last particle to finish before confirmation (~2400ms total). No new graphics layer.
+- Added 10 focused source/mock-UI tests in `tests/v9-qa-hud.test.mjs`, plus two opt-in QA Playwright browser scenarios.
+
+### Verification state
+- **126/126 isolated source, syntax, mock DOM, navigation, privacy and timing checks passed**.
+- A headless Chromium 144 browser was run locally with a mobile viewport and can render ordinary DOM. In this environment it **cannot initialize WebGL**, and the live Render URL is unreachable from the local container; therefore this does not constitute a rendered screenshot/real Android GPU verification of the full application.
+- The external metered browser automation provider is unavailable because of insufficient wallet balance. No charge is needed for the site or this QA mode.
+- Final release gate: open `?qa=1` on a real Android browser, verify the renderer and frame-rate, then test one passage, one reader return, one locally saved star birth, archive re-entry, and page reload. Capture visual evidence at 320×568 and 390×844 before merging the draft PR. Preserve ECLIPSE V8.2 and V7.4/8.0 comparison baselines.
+
+**No automatic deployment or production merge is enabled.**
