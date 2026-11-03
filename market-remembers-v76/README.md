@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V7.9 Living Stories / Memory Museum (isolated preview)
+# THE MARKET REMEMBERS — V8.0 RC Living Stories / Memory Museum (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -136,3 +136,30 @@ The source-level and isolated mock-interaction suite contains 21 cases and passe
 
 ### Verification
 53/53 syntax/source/mocked interaction tests passed, including 10 new archive tests in `tests/archive-v79.test.mjs`. Real-device browser visual/GPU QA and GitHub-hosted CI remain to be completed.
+
+## V8.0 Release Candidate — stability and keyboard recovery
+
+**Status:** Isolated review candidate, not production/GA. Continues the existing V7.4–V7.9 universe with no renderer rewrite.
+
+### Real release blocker addressed
+- The mobile browser viewport may change when the archive search field opens the software keyboard. Previously the global resize listener could regenerate the globe's WebGL/Canvas buffers **under the fully covering archive/reader**.
+- `v8NeedsSceneResize()` computes if the stage size or device-pixel ratio actually changed.
+- `scheduleResize()` now records covered-stage resize changes without regenerating geometry while the reader or birth overlay is covering the scene.
+- `resumeScene()` performs at most **one** resize on return to the uncovered universe, and avoids any 3D work while a modal is still visible. If the mobile keyboard returned to the original viewport height, the unnecessary rebuild is skipped entirely.
+- Explicit quality changes still call `resize()` directly and preserve user intent.
+- Browser visibility regain respects the covered-state guard.
+- Final focus outlines and ≥44px mobile reader/section navigation controls preserve readable, keyboard-friendly editorial interfaces.
+- Memory Core caption updated to V8.0 RC, without claiming real 3D when Canvas fallback is running.
+- Existing V7.9 archive search, private localStorage records, V7.8 thematic trails, all sourced legends and original GPU/Canvas fallback remain intact.
+
+### Required final QA before merging
+1. On Android Chrome and Telegram WebView, open Archive, focus search, type several queries and hide/show keyboard. No sphere-buffer rebuild should occur under the panel; archive search remains responsive.
+2. While the keyboard is open, close the archive. Sphere and star markers should fit the restored viewport without a displaced selected-star label.
+3. Rotate the device landscape/portrait while an archive/reader is open. Close it and confirm correct recalculation.
+4. Repeat the same checks with WebGL disabled: Canvas2D fallback must render the actual sphere.
+5. Test immersive focus mode, selected-star return, 4-step Memory Paths, next/previous memories and V7.8 breadcrumb return.
+6. Confirm that V7.4 and V7.5 Render URLs still show their originals, and that neither site nor production changed.
+7. Visually review on 320×568, 390×844, 768×1024, 760×420 and wide desktop, with normal and reduced-motion settings.
+
+### Verification state
+61/61 isolated JavaScript syntax, source and mocked-behavior tests passed, including eight new viewport/release tests in `tests/release-v80.test.mjs`. Native GitHub-hosted runner allocation and real-device/browser screenshot QA have **not** been confirmed. Draft PR must not be merged until that work is finished.
