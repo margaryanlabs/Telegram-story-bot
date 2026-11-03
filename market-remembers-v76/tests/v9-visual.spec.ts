@@ -258,3 +258,36 @@ test('V9.1: corrupt backup is rejected without replacing current memories',async
  await expect(page.locator('#drawer')).toContainText('SAFE STAR');
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('veto-market-remembers-demo-v4')||'[]'))).toHaveLength(1);
 });
+
+
+test('V9.3 mobile touch targets and first-frame star passage anchor',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ for(const id of ['#dockOpen','#dockNext','#globeScale','#toggleAtlas','#focusMode','#lensToggle']){
+   const target=page.locator(id);
+   await expect(target).toBeVisible();
+   const rect=await target.boundingBox();
+   expect(rect?.height||0,id+' must remain easy to tap').toBeGreaterThanOrEqual(40);
+ }
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('#memoryDive')).toBeVisible();
+ const anchor=await page.locator('#memoryDive').evaluate(el=>({
+   x:el.style.getPropertyValue('--dx'),y:el.style.getPropertyValue('--dy')
+ }));
+ expect(anchor.x).toMatch(/^\\d+(?:\\.\\d+)?%$/);
+ expect(anchor.y).toMatch(/^\\d+(?:\\.\\d+)?%$/);
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#memoryDive')).toBeHidden();
+ await expect(page.locator('#drawer')).toBeHidden();
+});
+test('V9.3 narrow mobile preserves readable controls at 320×568',async({page})=>{
+ await page.setViewportSize({width:320,height:568});
+ await page.goto('/');
+ await expect(page.locator('#globeScale')).toBeVisible();
+ await expect(page.locator('#dockOpen')).toBeVisible();
+ const size=await page.locator('#globeScale').boundingBox();
+ expect(size?.height||0).toBeGreaterThanOrEqual(39);
+ const width=await page.locator('body').evaluate(el=>el.scrollWidth);
+ expect(width).toBeLessThanOrEqual(321);
+ await page.screenshot({path:'test-results/v93-mobile-320x568.png',animations:'disabled'});
+});
