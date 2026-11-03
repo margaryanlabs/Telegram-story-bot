@@ -342,3 +342,19 @@ This pass responds to a real data-preservation problem, not a visual effect requ
 - **138/138** isolated JavaScript parsing, source, geometry, DOM/mock-interaction and storage-regression checks passed, including 12 new checks in `tests/v9-backup.test.mjs`.
 - Two new Playwright scenarios in `tests/v9-visual.spec.ts` cover import to an empty archive and rejection of a corrupt file, but **have not been executed in a real WebGL-capable mobile browser**.
 - Keep PR #220 in Draft. No changes to ECLIPSE V8.2, original V7.4/8.0 previews or production.
+
+
+## V9.2 — Archive integrity and multi-star navigation (2026-11-03)
+
+Changes on the **same isolated V9 STARLIGHT Draft PR**; frozen V7.4, V8.0, V8.2 and Vetogram production remain unchanged.
+
+- **MY LEGACY navigation:** when the browser contains multiple personal stars, a compact labeled selector switches the active star, including its own rule, capsule and 30-day discipline tracker. Each option renders the local alias/ID safely.
+- **Fresh writes across tabs:** new personal stars are appended to the latest localStorage snapshot, not the page-load copy; a stale tab refuses to resurrect deleted records. Malformed, duplicate or invalid-position records fail closed rather than being silently overwritten.
+- **Fresh JSON export:** retrieves the current persisted personal stories and check-ins, with an explicit error if the data is malformed.
+- **Safer JSON restore:** merges against the current browser archive rather than the stale `saved` array, prefers the latest local check-in on conflicts, preserves stars created in another tab, and reloads the page when check-ins changed even if no new star IDs were imported.
+- **Vector safety:** restore rejects finite coordinates whose combined magnitude overflows to infinity.
+- Added `tests/v9-archive-integrity.test.mjs` (9 focused regression cases), and aligned existing V9 backup/birth fixtures with fresh-storage semantics.
+
+**Verification:** Main inline JavaScript parsed successfully, and 8/8 targeted source-level function/behavior checks were executed successfully in an isolated JavaScript harness. This is **not** equivalent to running the full Node test suite or Chromium/Android visual QA. GitHub Actions runner was not assigned steps in the latest observed failed run, so CI success must not be claimed. Keep PR #220 Draft until runner-level tests and real Android GPU/visual review are completed.
+
+Review URL (manual Render deploy, autoDeploy OFF): https://market-remembers-starlight-v9.onrender.com/
