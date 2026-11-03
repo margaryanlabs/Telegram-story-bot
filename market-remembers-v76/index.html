@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070d">
 <meta name="description" content="THE MARKET REMEMBERS — a living universe of traders. VETO visual experience. Interactive demo.">
-<title>THE MARKET REMEMBERS — LIVING STORIES V8.0 RC2 — BIG GLOBE / VETO</title>
+<title>THE MARKET REMEMBERS — ECLIPSE V8.2 / VETO</title>
 <style>
 :root{--bg:#05070d;--ink:#f1f4ff;--violet:#9879ff;--cyan:#7fe6ff;--muted:#909bb3;--line:rgba(193,204,248,.15);--panel:rgba(11,15,27,.86);--gold:#f9d7ac;color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{background:var(--bg);color:var(--ink);overflow:hidden}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #bda9ff;outline-offset:3px}button[disabled]{opacity:.45;cursor:not-allowed}a{text-decoration:none;color:inherit}[hidden]{display:none!important}
@@ -1385,6 +1385,103 @@ backdrop-filter:blur(12px);pointer-events:auto}
  .v81-globe-aura::before,.v81-globe-aura::after{animation:none!important;transition:none!important}
 }
 
+
+/* V8.2 — ECLIPSE / visual restoration from V7.4. REMOVE the V8.0 decorative
+   rings: the orb itself, its depth and its selected star should carry the light. */
+.obsidian .v81-globe-aura,
+.obsidian .energy-sweep{display:none!important}
+.obsidian .lens-halo{opacity:.025!important}
+.obsidian .scene-grid{opacity:.012!important}
+.obsidian .scene-shading{
+ background:
+ radial-gradient(ellipse at 60% 58%,transparent 21%,rgba(2,5,9,.12) 62%,rgba(2,4,8,.66) 98%),
+ linear-gradient(90deg,rgba(2,5,9,.28),transparent 70%);
+}
+.obsidian .hero h1 em{
+ color:#bfe2e5;
+ background:linear-gradient(110deg,#a2cbd5 5%,#e3d0df 56%,#b7c9e0 100%);
+ -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.obsidian .selected-card{
+ border-color:#c4b0c439;
+ background:linear-gradient(146deg,#1e1d2be6,#0c1522ef 88%);
+ box-shadow:0 15px 46px #0007,0 0 20px #8b8ac518;
+ backdrop-filter:blur(15px);
+}
+.obsidian .star-marker.is-selected{
+ border-color:#f0f6ff!important;
+ box-shadow:0 0 8px #e4f4ff,0 0 21px #92c7d8ba,0 0 40px #ac8bd168!important;
+}
+.obsidian .signal-reticle{opacity:.45!important}
+.obsidian .globe-caption{opacity:.22;letter-spacing:.24em;font-size:8px}
+.obsidian .world-controls{background:#101622dc;border-color:#b8a2b234;box-shadow:0 8px 24px #0008}
+.obsidian .world-controls button.globe-size-button{
+ background:#272436c9;color:#e3d7e8;border-left:1px solid #c2abb025;
+}
+.obsidian .world-controls button.globe-size-button[data-mode="max"]{
+ background:#46364ebc;color:#f9e6ed;
+}
+@media(max-width:820px){
+ .obsidian .mobile-nav{top:66px;left:14px;right:14px;min-height:38px;padding:2px;
+  border:1px solid #a7a8bc26;border-radius:12px;
+  background:linear-gradient(115deg,#181925c9,#0a101bdf);box-shadow:none;}
+ .obsidian .mobile-nav button{min-height:33px;font-size:9px;letter-spacing:.045em;color:#b3b5c4;border-radius:9px}
+ .obsidian .mobile-nav button.is-on{background:#55415b75;color:#f0e6ef}
+ .app.obsidian .hero{top:118px;left:20px;width:calc(100% - 40px);
+  max-width:410px;z-index:9}
+ .obsidian .hero h1{font-size:clamp(29px,8vw,38px);line-height:1.08;
+  margin:10px 0 13px;letter-spacing:-.069em;max-width:100%}
+ .obsidian .hero p{display:block;max-width:325px;font-size:11px;line-height:1.5;
+  margin:0 0 15px;color:#afb8c5}
+ .obsidian .hero p strong{color:#ebebe9}
+ .obsidian .hero-actions .btn-primary{min-height:40px;padding:10px 15px;
+  font-size:9px;letter-spacing:.085em;border-radius:8px;
+  background:linear-gradient(110deg,#d6e1e9,#a9c5d9 65%,#adabc8);
+  color:#111a23;box-shadow:none}
+ .obsidian .hero::before{inset:-18px -20px -30px -15px;
+  background:radial-gradient(ellipse 95% 88% at 17% 23%,
+    #040810ed 0%,#040810c0 32%,#05091065 63%,transparent 93%)}
+ .obsidian .signal-dock{
+   left:13px;right:13px;max-width:none;width:auto;
+   bottom:calc(97px + env(safe-area-inset-bottom,0px));
+   border:1px solid #b7a3b245;border-radius:12px;min-height:58px;
+   padding:10px 11px 10px 14px;
+   background:linear-gradient(110deg,#211d2de9,#0a1321ee 85%);
+   box-shadow:0 12px 34px #0009;backdrop-filter:blur(12px)}
+ .obsidian .dock-copy strong{font-size:12px;line-height:1.18}
+ .obsidian .dock-copy span{color:#d0afc3;font-size:8px;letter-spacing:.075em}
+ .obsidian .world-controls{
+   bottom:calc(50px + env(safe-area-inset-bottom,0px));left:13px;
+   border:1px solid #a5a9bd35;border-radius:10px;overflow:hidden;
+   background:linear-gradient(120deg,#171824d9,#0c1320de)}
+ .obsidian .scene-footer{height:calc(39px + env(safe-area-inset-bottom,0px));
+   background:#040810d9;border-top:1px solid #c0b7bd1a}
+ .obsidian .globe-caption{display:none}
+ .obsidian .scene-shading{
+   background:radial-gradient(ellipse at 57% 56%,transparent 20%,
+   rgba(3,5,11,.08) 57%,rgba(3,5,11,.65) 98%),
+   linear-gradient(90deg,rgba(3,6,13,.20),transparent 75%)}
+}
+@media(max-width:819px) and (max-height:650px) and (orientation:portrait){
+ .app.obsidian .hero{top:111px}
+ .obsidian .hero h1{font-size:clamp(27px,7.5vw,33px);line-height:1.04;margin:8px 0 10px}
+ .obsidian .hero p{display:none}
+ .obsidian .hero-actions .btn-primary{min-height:37px}
+ .obsidian .signal-dock{bottom:calc(82px + env(safe-area-inset-bottom,0px));min-height:53px}
+ .obsidian .world-controls{bottom:calc(39px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:819px) and (orientation:landscape) and (max-height:650px){
+ .app.obsidian .hero{top:105px;left:16px;width:min(41vw,330px);max-width:min(41vw,330px)}
+ .obsidian .hero h1{font-size:clamp(25px,4.25vw,34px);line-height:1.04}
+ .obsidian .hero p{display:none}
+ .obsidian .signal-dock{width:min(40vw,325px);max-width:min(40vw,325px);right:auto}
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .selected-card,.obsidian .signal-dock,.obsidian .star-marker{
+ transition:none!important;animation:none!important
+ }
+}
+
 </style>
 </head>
 <body>
@@ -1403,7 +1500,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <div id="touchWave" class="touch-wave" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
     <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V8.0 / BIG GLOBE</div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V8.2 / ECLIPSE</div>
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
@@ -1794,29 +1891,31 @@ backdrop-filter:blur(12px);pointer-events:auto}
     v81SetScale(order[(order.indexOf(v81SizeMode)+1)%order.length]);
   }
   function v763MeasureStage(){
+    // ECLIPSE restores the original V7.4 cinematic framing. The universe is
+    // large enough to explore, but must remain a luminous orb, not a dark wall.
     if(w>=820||immersive){v763MobileStage=null;return}
     if(w>h&&h<650){
-      v763MobileStage={x:w*.72,y:h*.49,radius:Math.min(w*.285,h*.425),
+      v763MobileStage={x:w*.715,y:h*.485,radius:Math.min(w,h)*.36,
         top:0,bottom:h,mode:'landscape'};
       return;
     }
-    const rect=stage.getBoundingClientRect();
-    const top=Math.max(140,$('hero').getBoundingClientRect().bottom-rect.top+16);
-    const bottom=Math.min(h-72,$('signalDock').getBoundingClientRect().top-rect.top-16);
-    // Soft overlap behind the editorial hero/dock is intentional, not a layout bug.
-    const radius=Math.max(65,Math.min(w*.455,h*.405));
-    const cy=bottom>top?(top+bottom)*.5:h*.54;
-    v763MobileStage={x:w*.52,y:clamp(cy,radius*.86,h-radius*.78),radius,
-      top:Math.max(0,top-10),bottom:Math.min(h,bottom+10),mode:'portrait'};
+    const short=h<650,rect=stage.getBoundingClientRect();
+    const top=Math.max(130,$('hero').getBoundingClientRect().bottom-rect.top+12);
+    const bottom=Math.min(h-66,$('signalDock').getBoundingClientRect().top-rect.top-12);
+    // The original framing is intentional: no artificially huge atmosphere ring.
+    v763MobileStage={x:w*.585,y:h*(short?.59:.575),
+      radius:Math.min(w,h)*(short?.36:.397),
+      top:Math.max(0,top-12),bottom:Math.min(h,bottom+12),mode:'portrait'};
   }
   function targetCenter(){
     const scale=v81ScaleCurrent;
     if(immersive)return {x:w*.5,y:h*(w<820?.54:.52),
-      radius:Math.min(w,h)*(w<820?.55:.53)*scale};
-    if(v763MobileStage&&w<820)return {x:v763MobileStage.x,
-      y:v763MobileStage.y,radius:v763MobileStage.radius*scale};
-    const radius=Math.min(h*.46,w*.345)*scale;
-    return {x:clamp(w*.66,radius+12,w-radius-12),y:h*.52,radius};
+      radius:Math.min(w,h)*(w<820?.49:.46)*scale};
+    if(v763MobileStage&&w<820)return {
+      x:v763MobileStage.x,y:v763MobileStage.y,radius:v763MobileStage.radius*scale
+    };
+    const radius=Math.min(w,h)*.39*scale;
+    return {x:clamp(w*.672,radius+12,w-radius-12),y:h*.52,radius};
   }
   function rotate(p){const cy=Math.cos(cameraY),sy=Math.sin(cameraY),cx=Math.cos(cameraX),sx=Math.sin(cameraX);const x=cy*p[0]+sy*p[2],z=-sy*p[0]+cy*p[2],y=cx*p[1]-sx*z;return [x,y,sx*p[1]+cx*z]}
   function project(p){const t=rotate(p),c=targetCenter(),per=2.7/(3.1-t[2]*.7),s=c.radius*per*zoom;return {x:c.x+t[0]*s,y:c.y-t[1]*s,z:t[2],s}}
