@@ -29,7 +29,7 @@ test('selected story fragment and reader are connected',()=>{
 test('archive provenance and demo data safeguards remain',()=>{
   assert.match(html,/archive-card-foot/);
   assert.match(html,/FICTIONAL/);
-  assert.match(html,/LOCAL · PRIVATE/);
+  assert.match(html,/PRIVATE · ONLY THIS DEVICE/);
   assert.match(html,/не опубликована/);
   assert.match(html,/localStorage/);
 });
