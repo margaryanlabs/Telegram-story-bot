@@ -141,3 +141,39 @@ test('thread UI is integrated into both verified and fictional readers and old s
   assert.match(html,/id="fallback"/);
   assert.match(html,/veto-market-remembers-demo-v4/);
 });
+
+function openDrawerTest(tag){
+  const record={cleared:false,focus:0};
+  const elements={
+    drawer:{
+      hidden:false,scrollTop:0,classList:{remove(){}},
+      style:{setProperty(){}},setAttribute(){},contains:()=>false
+    },
+    drawerTag:{textContent:''},drawerContents:{innerHTML:''},
+    scrim:{hidden:true},closeDrawer:{focus(){record.focus++}},
+    travelTrail:{classList:{remove(key){if(key==='is-thread')record.cleared=true}}}
+  };
+  const env=ctx({
+    $:id=>elements[id],diveIndex:-1,v76FocusReturn:null,
+    v762CancelReturn(){},
+    v78ThreadContext:{from:0,to:1,relation:'Общая тема'},
+    document:{activeElement:null,body:{classList:{add(){}}}}
+  });
+  make('setDrawer',env)(tag,'<p>test content</p>');
+  return {env,record,elements};
+}
+test('opening archive from a story clears ephemeral thread and highlighted route',()=>{
+  const {env,record,elements}=openDrawerTest('THE HUMAN ATLAS / STORIES');
+  assert.equal(env.v78ThreadContext,null);
+  assert.equal(record.cleared,true);
+  assert.equal(elements.drawerContents.innerHTML,'<p>test content</p>');
+});
+test('changing to a legitimate story reader retains an in-progress thread',()=>{
+  const {env,record}=openDrawerTest('HUMAN STORY / FICTIONAL');
+  assert.equal(env.v78ThreadContext.to,1);
+  assert.equal(record.cleared,false);
+});
+test('verified legend reader also retains the in-progress thread',()=>{
+  const {env}=openDrawerTest('LEGEND / VERIFIED SOURCE');
+  assert.equal(env.v78ThreadContext.to,1);
+});
