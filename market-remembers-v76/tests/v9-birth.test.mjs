@@ -19,7 +19,7 @@ function extract(name){
 }
 const fn=(name,ctx={})=>runInNewContext('('+extract(name)+')',ctx);
 const seed=fn('v94SeedFromId');
-const xorshift=fn('seeded');
+const xorshift=initial=>{let value=initial;return ()=>{value^=value<<13;value^=value>>>17;value^=value<<5;return (value>>>0)/4294967296}};
 const norm=x=>{const magnitude=Math.hypot(...x)||1;return x.map(v=>v/magnitude)};
 const pos=fn('v94PositionFromId',{seeded:xorshift,v94SeedFromId:seed,twoPi:Math.PI*2,norm});
 test('same private ID reconstructs exactly the same normalized 3D position',()=>{
