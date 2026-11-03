@@ -1664,6 +1664,106 @@ backdrop-filter:blur(12px);pointer-events:auto}
  }
 }
 
+
+/* V9 R4 / BIRTH OF YOUR STAR: 24–48 finite CSS points gather at the real
+   projected local star. No heavy shader pass or giant decorative rings. */
+.v94-birth-field{
+ position:absolute;left:50%;top:50%;z-index:12;width:1px;height:1px;
+ pointer-events:none;overflow:visible;
+}
+.v94-birth-field i{
+ position:absolute;left:0;top:0;width:var(--radius,2px);height:var(--radius,2px);
+ border-radius:50%;
+ background:color-mix(in srgb,var(--v94-color,#b7dce5) 75%,#fff);
+ box-shadow:0 0 8px color-mix(in srgb,var(--v94-color,#b7dce5) 65%,transparent);
+ transform:translate(var(--from-x),var(--from-y)) scale(.68);
+ opacity:0;will-change:transform,opacity;
+}
+.v94-birth-field.is-forming i{
+ animation:v94Gather 1.87s cubic-bezier(.19,.66,.21,1) var(--delay,0ms) both;
+}
+@keyframes v94Gather{
+ 0%{opacity:0;transform:translate(var(--from-x),var(--from-y)) scale(.4)}
+ 24%{opacity:var(--alpha,.65)}
+ 72%{opacity:var(--alpha,.65)}
+ 96%{opacity:.92;transform:translate(0,0) scale(1.25)}
+ 100%{opacity:0;transform:translate(0,0) scale(.25)}
+}
+.obsidian .birth-comet{
+ width:20px;height:20px;
+ background:radial-gradient(circle,#fffaf0 0 14%,#b9dce7 22%,#a8a3d17c 41%,transparent 75%);
+ filter:drop-shadow(0 0 12px #aecad8bd);
+}
+.obsidian .birth-comet:after{width:66px;height:1px;opacity:.48;filter:blur(1px)}
+.obsidian .birth-overlay{
+ gap:13px;padding:calc(55px + env(safe-area-inset-top,0px)) 20px
+ calc(40px + env(safe-area-inset-bottom,0px));
+ background:radial-gradient(ellipse 68% 38% at 50% 37%,#233143e6,#0b1320f5 65%,#050810fc);
+ box-shadow:inset 0 0 140px #0006;
+}
+.v94-birth-eyebrow{font-size:9px;letter-spacing:.19em;color:#c8b6cc;font-weight:600}
+.v94-birth-core{
+ position:relative;display:grid;place-items:center;
+ width:130px;height:130px;margin:10px 0 7px;
+ background:radial-gradient(circle,#abcbd926 0,#819eb018 31%,transparent 63%);
+}
+.v94-birth-core:before,.v94-birth-core:after{
+ content:"";position:absolute;left:50%;top:50%;width:1px;height:80px;
+ transform:translate(-50%,-50%);
+ background:linear-gradient(transparent,#f4f4f1a8,transparent);
+ opacity:.57;pointer-events:none
+}
+.v94-birth-core:after{width:80px;height:1px}
+.obsidian .birth-glyph{
+ font:400 49px/1 Georgia,serif;color:#f5f2f2;
+ text-shadow:0 0 16px #d4e7ee,0 0 32px #92bacaaa;
+ animation:v94CoreAppear .85s cubic-bezier(.16,.78,.15,1) both
+}
+@keyframes v94CoreAppear{
+ from{opacity:.15;transform:scale(.52);filter:blur(4px)}
+ 75%{opacity:1;transform:scale(1.14);filter:blur(0)}
+ to{opacity:1;transform:scale(1)}
+}
+.obsidian .birth-small{letter-spacing:.18em;color:#bcd5d8;font-size:10px}
+.obsidian .birth-name{font:italic 400 clamp(35px,9vw,67px)/1.09 Georgia,serif;
+ letter-spacing:-.055em;color:#f8f1ea;max-width:100%;overflow-wrap:anywhere;
+ text-shadow:0 7px 27px #0008}
+.obsidian .birth-sub{
+ font:italic 400 clamp(17px,4.5vw,23px)/1.45 Georgia,serif;
+ color:#dfc9d7;max-width:460px;text-wrap:balance
+}
+.obsidian .birth-privacy{max-width:360px;color:#9bb1bd;font-size:11px;line-height:1.75}
+.v94-birth-actions{display:flex;flex-wrap:wrap;justify-content:center;
+ gap:11px;max-width:470px;margin-top:15px;width:100%}
+.obsidian .v94-birth-actions button{
+ margin:0;min-height:46px;padding:13px 17px;border-radius:9px;
+ font-size:10px;font-weight:700;letter-spacing:.08em;cursor:pointer;
+ transition:border-color .2s ease,background .2s ease
+}
+.obsidian #birthContinue{border:1px solid #d0c8d4;color:#1b2430;
+ background:linear-gradient(120deg,#e0e7e7,#c3d6e4)}
+.obsidian #birthViewArchive{border:1px solid #879cabb0;color:#c8dae3;background:#121e2ce6}
+.obsidian .v94-birth-actions button:focus-visible{outline:2px solid #fff0e6;outline-offset:4px}
+@media(max-width:820px){
+ .v94-birth-core{width:110px;height:110px;margin:4px 0 2px}
+ .obsidian .birth-glyph{font-size:42px}
+ .obsidian .birth-overlay{gap:10px;padding:calc(30px + env(safe-area-inset-top,0px)) 18px
+ calc(24px + env(safe-area-inset-bottom,0px))}
+ .v94-birth-actions{flex-direction:column;max-width:320px;margin-top:8px;gap:9px}
+ .obsidian .v94-birth-actions button{width:100%;min-height:48px}
+}
+@media(max-height:650px){
+ .v94-birth-core{width:80px;height:80px;margin:0}
+ .obsidian .birth-glyph{font-size:34px}
+ .obsidian .birth-overlay{gap:7px;overflow-y:auto}
+ .obsidian .birth-sub{font-size:17px}
+ .obsidian .birth-name{font-size:clamp(29px,7vw,40px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .v94-birth-field i,.obsidian .birth-glyph,
+ .obsidian .v94-birth-actions button{animation:none!important;transition:none!important;will-change:auto!important}
+}
+
 </style>
 </head>
 <body>
