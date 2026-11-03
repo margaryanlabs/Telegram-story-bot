@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — STARLIGHT V9 / R1+R2+R3 (isolated preview)
+# THE MARKET REMEMBERS — STARLIGHT V9 / R1+R2+R3+R4 (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -268,3 +268,32 @@ The signature STAR PASSAGE no longer cuts into an unrelated-looking dialog. The 
 - Frozen V7.4: https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&release=7c893384
 
 **Please do not merge PR #220 until actual mobile visual/GPU review.**
+
+## V9 R4 — Your Star / personal memory birth (implemented)
+
+R4 completes the interactive narrative arc: **select a star → experience its story → write your own lesson → see your star form → find that actual persisted star in the universe**.
+
+### What shipped in code
+- Added `v94SeedFromId`, `v94NewLocalId` and `v94PositionFromId`: a unique local ID (native browser `crypto.randomUUID`, with legacy fallback) maps deterministically to one sphere position, which is saved with the story. Existing saved stars keep their original `p`.
+- All private history still uses the **existing browser-only localStorage key** `veto-market-remembers-demo-v4`. No network upload, account, server-side sharing or personal social graph.
+- `v94StoreLocal` now **must succeed before** the record is pushed into the live scene and birth animation begins. If localStorage is blocked or full, the form stays open, no birth is claimed and the user receives an error.
+- The original 3D star enters the same existing scene/markers/particle catalogue; `v94PrepareBirthField` builds a deterministic one-shot **48-point (24 in LOW/ECO) CSS coalescence** at the new star's actual camera projection, updated by `v94UpdateBirthField`.
+- The original small comet remains part of the journey. No second WebGL render pass, bulky full-screen CSS rings, new animation library or backend.
+- On completion, a quieter local-only birth dialogue explains that browser storage can be cleared. **“НАЙТИ МОЮ ЗВЕЗДУ”** dismisses the dialogue and returns the user to that selected star on the real globe; **“МОЙ ЛОКАЛЬНЫЙ АРХИВ”** opens the existing personal archive.
+- ESC dismisses the birth dialogue to the same star rather than leaving a paused renderer; reduced-motion users get the complete saved experience without animation.
+- Creation no longer needlessly calls `generateParticles()` twice after changing the lens, helping Android performance.
+- First entry and return preserve the existing sourced-vs-fictional provenance, categorical star color, chapter navigation and selected-star return behavior.
+
+### Acceptance cases
+1. Submit a private memory with explicit consent, see particles gather at one selected star, see the *local-only* birth confirmation, then press **“НАЙТИ МОЮ ЗВЕЗДУ”**.
+2. Refresh the page: open Archive → Mine → the new star; its ID, 3D position and exact story must match.
+3. Temporarily deny localStorage writes: the form must stay visible, the memory catalogue must remain unchanged, and no success state may appear.
+4. Select LOW graphics: use at most 24 birth particles; reduced-motion mode: no birth particles or 2.45-second wait.
+5. Open other stories after creation: prior V9 Star Passage, R3 observatory and existing historical attributions must remain correct.
+6. Android 320×568 and 390×844: no dialogue overflow; both completion actions retain 44px+ tap targets and safe-area padding.
+
+### Verification and limits
+- **116/116 isolated JS source, mock DOM/behavior, privacy, persistence and projection tests passed**, including 18 tests in `tests/v9-birth.test.mjs` and an expanded browser script `tests/v9-visual.spec.ts`.
+- The Playwright browser tests are provided for execution but **have not been run in a real Chromium/WebGL browser here**. The external metered browser wallet was insufficient. Device screenshot/graphics/keyboard QA is still an acceptance gate. This is a draft review candidate, not production approval.
+- Comparison original ECLIPSE: https://market-remembers-eclipse-v82.onrender.com/ 
+- Isolated V9 review: https://market-remembers-starlight-v9.onrender.com/
