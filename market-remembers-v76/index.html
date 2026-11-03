@@ -1820,6 +1820,32 @@ backdrop-filter:blur(12px);pointer-events:auto}
 .memory-dive[data-suspended="true"] .memory-dive-info{
  animation-play-state:paused!important;
 }
+
+/* V9.5 — polish only the existing Observatory. No globe overlays or UI rebuild. */
+.obsidian .drawer.memory-detail .memory-title{
+ overflow-wrap:anywhere;hyphens:auto;text-wrap:pretty;
+}
+.obsidian .drawer.memory-detail .human-lesson p{
+ font-size:clamp(15px,1.45vw,17px);line-height:1.86;
+ overflow-wrap:anywhere;text-wrap:pretty;
+}
+.obsidian .drawer.memory-detail .human-rule p{
+ font-size:clamp(18px,2.1vw,22px);line-height:1.62;
+ overflow-wrap:anywhere;
+}
+.obsidian .drawer.memory-detail .v93-observatory-alias{
+ max-width:100%;overflow-wrap:anywhere;
+}
+@media(max-width:390px){
+ .obsidian .drawer.memory-detail .v93-observatory{
+   grid-template-columns:80px minmax(0,1fr);column-gap:9px;
+ }
+ .obsidian .drawer.memory-detail .v93-observatory-details{min-width:0}
+ .obsidian .drawer.memory-detail .v93-observatory-kind{overflow-wrap:anywhere}
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .drawer.memory-detail .reader-progress-fill{transition:none!important}
+}
 </style>
 </head>
 <body>
@@ -2135,7 +2161,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
       btn.setAttribute('aria-current',i===0?'step':'false');
       btn.onclick=()=>{
         const targetY=step.getBoundingClientRect().top-v76Reader.getBoundingClientRect().top+v76Reader.scrollTop-30;
-        v76Reader.scrollTo({top:Math.max(0,targetY),behavior:reduceMotion?'instant':'smooth'});
+        v76Reader.scrollTo({top:Math.max(0,targetY),behavior:reduceMotion?'auto':'smooth'});
         btn.focus({preventScroll:true});
       };
       nav.append(btn);
@@ -2494,6 +2520,8 @@ float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
 void main(){
  vec3 N=normalize(vN),L=normalize(vec3(-.53,.70,1.12)),H=normalize(L+vec3(0.,0.,1.));
  float light=max(dot(N,L),0.),fill=smoothstep(-.52,.78,dot(N,L));
+ // A restrained reflected highlight makes the existing mesh legible in graphite.
+ float bounce=pow(max(dot(N,normalize(vec3(.48,-.27,.83))),0.),4.);
  float rim=pow(1.-clamp(N.z,0.,1.),3.7);
  float spec=pow(max(dot(N,H),0.),48.);
  float contour=sin(vObject.y*24.+vObject.z*15.+sin(vObject.x*18.)*2.3);
@@ -2504,6 +2532,7 @@ void main(){
  material+=vec3(.045,.086,.105)*filament*.62;
  material+=vec3(.025,.059,.075)*rim*.65;
  material+=vec3(.34,.50,.54)*spec*.25;
+ material+=vec3(.025,.037,.042)*bounce*.26;
  material+=vec3(grain)*(.16+.64*fill);
  material+=vec3(.008,.018,.026)*(life-.5)*uMotion*.18;
  float spot=pow(max(dot(normalize(vObject),normalize(uFocus)),0.),26.);
@@ -2742,6 +2771,11 @@ void main(){
     passUniforms(programPoints,t);gl.drawArrays(gl.POINTS,0,pts);
     gl.depthMask(true);gl.disable(gl.DEPTH_TEST);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
   }
+  // Canvas has no GPU depth buffer: do not leak back-facing story stars.
+  function v95FrontStoryProjection(p){
+    return !!p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&Number.isFinite(p.z)&&
+      p.z>-.08&&p.x>=0&&p.x<=w&&p.y>=0&&p.y<=h;
+  }
   function canvasRender(t){
     if(!ctx)return;
     ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
@@ -2804,7 +2838,7 @@ void main(){
       }
       ctx.strokeStyle=ring%2===0?'rgba(125,192,206,.11)':'rgba(98,163,183,.09)';ctx.lineWidth=ring===0?.85:.55;ctx.stroke();
     }
-    // Two distinct shells of particle light; farside is still faintly visible through the plasma.
+    // GPU/Canvas parity: core occludes back-side story stars. Interior dust remains subtle.
     const step=quality==='low'?6:(w<820?3:3);
     for(let i=0;i<sceneParticles.length-5;i+=5*step){
       const a=sceneParticles[i],b=sceneParticles[i+1],z=sceneParticles[i+2];
@@ -2826,7 +2860,7 @@ void main(){
       ctx.lineWidth=.45;ctx.strokeStyle=band%2?'rgba(106,171,181,.14)':'rgba(105,170,182,.12)';ctx.stroke();
     }
     stories.forEach((s,i)=>{
-      const p=project(s.p);if(p.z<-.4||!lensMatches(s))return;const active=i===selected;
+      const p=project(s.p);if(!v95FrontStoryProjection(p)||!lensMatches(s))return;const active=i===selected;
       const radius=active?26:16;const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,radius);
       glow.addColorStop(0,'rgba(255,255,255,.96)');glow.addColorStop(.16,active?'rgba(169,221,255,.88)':'rgba(137,197,212,.65)');
       glow.addColorStop(.54,'rgba(93,157,173,.24)');glow.addColorStop(1,'rgba(0,0,0,0)');
