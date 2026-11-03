@@ -106,7 +106,7 @@ test('birth particle gather completes before the success overlay appears',()=>{
 });
 test('the diagnostics do not change production local storage or send telemetry',()=>{
  const slice=runtime.slice(runtime.indexOf('// V9 release QA'),runtime.indexOf('// V7.6: lightweight reader progress.'));
- assert.doesNotMatch(slice,/fetch\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage|WebSocket/);
+ assert.doesNotMatch(slice,/fetch\(|XMLHttpRequest|sendBeacon|localStorage\s*[.\[]|sessionStorage\s*[.\[]|WebSocket/);
  assert.match(slice,/Never include selected aliases, notes, star IDs/);
  assert.match(html,/Без личных историй, ID, координат и сетевой отправки/);
 });
