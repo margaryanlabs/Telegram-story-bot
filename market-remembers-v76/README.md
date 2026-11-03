@@ -409,3 +409,23 @@ This is another **incremental change on the existing STARLIGHT branch** and Draf
 - Keep PR #220 Draft and autoDeploy OFF until physical Android/GPU/Canvas and browser regression QA is completed. Frozen V7.4, V8.0, V8.2 previews and Vetogram production are untouched.
 
 Manual Render review link: https://market-remembers-starlight-v9.onrender.com/
+
+
+## V9.6 — One star, one continuous reader journey (2026-11-04)
+
+STARLIGHT continues in **the existing isolated branch** and Draft PR #220. The native WebGL/Canvas globe, ECLIPSE visual silhouette, real stories and local-only archive remain unchanged; no replacement demo, extra 3D scene, customer telemetry or production merge.
+
+### Product work
+- **Reliable focus on arrival:** the 1.35-second STAR PASSAGE now hands off directly into Observatory without focusing the underlying dock in between. An active hidden `SKIP` button is never saved as the reader's keyboard return target.
+- **Return to the same star:** reader close restores focus to a connected/visible origin (selected marker when appropriate, otherwise the mobile dock, desktop open control, or FOCUS control). Removed archive cards, hidden overlay controls and unusable elements are rejected; scene-star return pulse remains controlled by explicit `skipReturn === true` only for internal transitions.
+- **Explicit click handlers:** scrim, X close and story-back handlers call `closeDrawer()` without forwarding native events as navigation flags. The earlier implementation already protected against this with a strict comparison; this change makes the contract explicit.
+- **Visual continuity:** only the *actual passage-to-reader* route applies a 7px/520ms eased arrival to the existing Observatory content, disabled for `prefers-reduced-motion`. No atmosphere halo, GPU pass or new HTML scene. Mobile chosen-star alias is announced politely to assistive technology.
+- **Escape/cancellation:** still cancels the selected passage, restores the active globe controller, and never opens an obsolete story. Thread and journey selection semantics remain intact.
+
+### Verification and deployment boundaries
+- New `tests/v96-continuity.test.mjs`: **12/12 targeted isolated shared-state tests passed**, including completion, stale token, Escape, hidden SKIP, removed archive card, FOCUS, reader close, synthetic click event and explicit internal skip.
+- Five prior test files (`v9-starlight`, `v95-material-reader`, `mobile-layout`, `v9-qa-hud`, `eclipse-visual`) ran in the same isolated V8 test harness: **51/51 passed**.
+- Added Playwright scenarios for passage→reader→same star at 390×844, Escape cancellation, scrim return at 1440×900 and reduced-motion entry. These **remain unexecuted in a real browser/Android GPU**. Isolated JavaScript mock success is not a substitute for full Node.js, Playwright, physical device or visual sign-off.
+- Production/main and frozen V7.4/V8.0/V8.2 Render services untouched. Keep PR #220 Draft; keep preview `autoDeploy=no`.
+
+Preview: https://market-remembers-starlight-v9.onrender.com/ ; device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1
