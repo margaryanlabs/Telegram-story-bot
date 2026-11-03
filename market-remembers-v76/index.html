@@ -1846,6 +1846,21 @@ backdrop-filter:blur(12px);pointer-events:auto}
 @media(prefers-reduced-motion:reduce){
  .obsidian .drawer.memory-detail .reader-progress-fill{transition:none!important}
 }
+
+/* V9.6 — a minimal passage-to-reader continuity on the existing Observatory.
+   No additional sphere rendering, fixed overlays or decorative halo layers. */
+.obsidian .drawer.v96-reader-arrival.memory-detail .memory-experience{
+ animation:v96ReaderLand .52s cubic-bezier(.2,.75,.28,1) both;
+}
+@keyframes v96ReaderLand{
+ from{opacity:.88;transform:translateY(7px)}
+ to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .drawer.v96-reader-arrival.memory-detail .memory-experience{
+  animation:none!important;transform:none!important
+ }
+}
 </style>
 </head>
 <body>
@@ -1889,7 +1904,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
       <p id="selectedQuote">«Мой лучший трейд — тот, который я не открыл.»</p>
       <div class="selected-bottom"><span id="selectedBy">@NORTHSTAR <i>•</i> CRYPTO</span><div class="selected-actions"><button id="nextSignal" type="button" aria-label="Следующая звезда">NEXT ✧</button><button id="openSelected" type="button">READ MEMORY <span>↗</span></button></div></div>
     </aside>
-    <div class="signal-dock" id="signalDock" aria-label="Выбранная история"><div class="dock-copy"><span id="dockAlias">SIGNAL 001 / PATIENCE</span><strong id="dockQuote">Мой лучший трейд — тот, который я не открыл.</strong></div><button id="dockNext" type="button" aria-label="Следующая звезда">✧</button><button id="dockOpen" type="button" aria-label="Открыть выбранную историю">↗</button></div>
+    <div class="signal-dock" id="signalDock" aria-label="Выбранная история"><div class="dock-copy"><span id="dockAlias" aria-live="polite" aria-atomic="true">SIGNAL 001 / PATIENCE</span><strong id="dockQuote">Мой лучший трейд — тот, который я не открыл.</strong></div><button id="dockNext" type="button" aria-label="Следующая звезда">✧</button><button id="dockOpen" type="button" aria-label="Открыть выбранную историю">↗</button></div>
     <div class="journey-status" id="journeyStatus" role="status" aria-live="polite" aria-atomic="true" hidden>
       <span class="journey-status-star" aria-hidden="true">✦</span>
       <div><span class="journey-status-eyebrow">MEMORY PATH / МАРШРУТ</span><strong id="journeyProgress">01 / 04</strong></div>
@@ -2035,7 +2050,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   };
   v76Reader.addEventListener('scroll',v76UpdateReader,{passive:true});
   // Keep keyboard interaction inside the visible dialog; restore focus on close.
-  let v76FocusReturn=null, v76CardReady=false;
+  let v76FocusReturn=null, v76CardReady=false, v96ReaderArrival=false;
   let v762ReturnTimer=null;
   function v762CancelReturn(){
     if(v762ReturnTimer!==null){clearTimeout(v762ReturnTimer);v762ReturnTimer=null}
@@ -3122,7 +3137,10 @@ void main(){
     const index=diveIndex,story=stories[index];
     // Directly transfer focus from the passage to the reader.
     cancelDive(true);targetZoom=1.23;
-    if(story)showStory(story);
+    if(story){
+      v96ReaderArrival=true;
+      try{showStory(story)}finally{v96ReaderArrival=false}
+    }
   }
   function beginDive(i){
     if(!stories.length)return;
@@ -3167,6 +3185,7 @@ void main(){
   function v96ReaderReturnTarget(active){
     const fallback=immersive?$('focusMode'):(w<820?$('dockOpen'):$('openSelected'));
     if(!active||active===$('cancelDive')||!active.isConnected||
+       typeof active.focus!=='function'||
        active.closest?.('[hidden]')||
        active.getAttribute?.('aria-hidden')==='true')return fallback;
     return active;
@@ -3179,7 +3198,8 @@ void main(){
     v762CancelReturn();
     const open=$('drawer');
     if(open.hidden&&!open.contains(document.activeElement))v76FocusReturn=v96ReaderReturnTarget(document.activeElement);
-    open.classList.remove('memory-detail','human-detail','legend-detail','journey-finished','archive-detail');
+    open.classList.remove('memory-detail','human-detail','legend-detail','journey-finished','archive-detail','v96-reader-arrival');
+    if(v96ReaderArrival)open.classList.add('v96-reader-arrival');
     open.scrollTop=0;
     open.style.setProperty('--reader-progress','0%');
     $('drawerTag').textContent=tag;open.setAttribute('aria-label',tag);
@@ -3193,6 +3213,7 @@ void main(){
     const wasOpen=!$('drawer').hidden;
     const wasReader=wasOpen&&$('drawer').classList.contains('memory-detail');
     $('scrim').hidden=true;$('drawer').hidden=true;
+    $('drawer').classList.remove('v96-reader-arrival');
     document.body.classList.remove('drawer-open');
     document.querySelectorAll('[data-open]').forEach(b=>b.classList.toggle('is-on',b.dataset.open==='universe'));
     resumeScene();
