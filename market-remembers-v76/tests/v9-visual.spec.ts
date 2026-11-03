@@ -291,3 +291,40 @@ test('V9.3 narrow mobile preserves readable controls at 320×568',async({page})=
  expect(width).toBeLessThanOrEqual(321);
  await page.screenshot({path:'test-results/v93-mobile-320x568.png',animations:'disabled'});
 });
+
+
+test('V9.4 mobile measured orbital framing is inspectable without private data',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/?qa=1');
+ const status=page.locator('#qaStatus');
+ await expect(status).toContainText('Orb center:');
+ await expect(status).toContainText('Portrait safe band:');
+ const report=await status.innerText();
+ const frame=report.match(/Orb center: (\\d+) × (\\d+) \\| Radius: (\\d+)/);
+ expect(frame).not.toBeNull();
+ if(frame){
+   const [,x,y,r]=frame.map(Number);
+   expect(x-r).toBeGreaterThanOrEqual(-1);
+   expect(x+r).toBeLessThanOrEqual(391);
+   expect(y-r).toBeGreaterThanOrEqual(-1);
+   expect(y+r).toBeLessThanOrEqual(845);
+ }
+ const band=report.match(/Portrait safe band: (\\d+)–(\\d+) \\(MEASURED\\)/);
+ if(band&&frame){
+   const y=Number(frame[2]),r=Number(frame[3]);
+   expect(y-r).toBeGreaterThanOrEqual(Number(band[1])-2);
+   expect(y+r).toBeLessThanOrEqual(Number(band[2])+2);
+ }
+ await page.screenshot({path:'test-results/v94-portrait-framing-390x844.png',animations:'disabled'});
+});
+test('V9.4 narrow phone keeps the ECLIPSE sphere legible',async({page})=>{
+ await page.setViewportSize({width:320,height:568});
+ await page.goto('/?qa=1');
+ const report=await page.locator('#qaStatus').innerText();
+ const radius=report.match(/Radius: (\\d+)/);
+ expect(radius).not.toBeNull();
+ expect(Number(radius?.[1]||0)).toBeGreaterThanOrEqual(100);
+ await expect(page.locator('#dockOpen')).toBeVisible();
+ await expect(page.locator('#globeScale')).toBeVisible();
+ await page.screenshot({path:'test-results/v94-narrow-320x568.png',animations:'disabled'});
+});
