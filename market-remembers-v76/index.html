@@ -2144,7 +2144,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   LEGEND_ENTRIES.forEach((entry,i)=>stories.push({id:stories.length+1,alias:entry.name,market:entry.market,category:entry.category,quote:entry.quote,story:entry.story,rule:entry.rule,p:fibonacci((i*7+8)%37,37),local:false,type:'legend',legend:entry}));
   function getJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(key)||'null');return value===null?fallback:value}catch{return fallback}}
   function safeString(x,len){return typeof x==='string'?x.slice(0,len):''}
-  function safeStored(){const a=getJson(KEY,[]);if(!Array.isArray(a))return [];return a.filter(v=>v&&v.local===true&&typeof v.id==='string'&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&typeof v.alias==='string'&&typeof v.quote==='string').slice(-40).map(v=>({...v,alias:safeString(v.alias,32),quote:safeString(v.quote,280),story:safeString(v.story,1200),rule:safeString(v.rule,180),capsule:safeString(v.capsule,500),p:norm(v.p)}))}
+  function safeStored(){const a=getJson(KEY,[]);if(!Array.isArray(a))return [];return a.filter(v=>v&&v.local===true&&typeof v.id==='string'&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&typeof v.alias==='string'&&typeof v.quote==='string').map(v=>({...v,alias:safeString(v.alias,32),quote:safeString(v.quote,280),story:safeString(v.story,1200),rule:safeString(v.rule,180),capsule:safeString(v.capsule,500),p:norm(v.p)}))}
   const saved=safeStored(); stories.push(...saved);
   // Saved lessons are private bookmarks, not public reactions or popularity votes.
   const BOOK_KEY='veto-market-remembers-private-bookmarks-v74';
@@ -3405,8 +3405,8 @@ function v94PositionFromId(id){
   return norm([rad*Math.cos(theta),y,rad*Math.sin(theta)]);
 }
 function v94StoreLocal(story){
-  const next=[...saved,story].slice(-40);
-  // A failed write is not a successful birth. Keep the form open for an export/retry.
+  const next=[...saved,story];
+  // Never evict an older memory silently. Storage quota failure leaves existing data untouched.
   try{localStorage.setItem(KEY,JSON.stringify(next));return true}
   catch{return false}
 }
