@@ -1793,6 +1793,23 @@ backdrop-filter:blur(12px);pointer-events:auto}
 @media(max-width:820px){.v9-qa-panel{bottom:calc(38px + env(safe-area-inset-bottom,0px));max-height:70dvh;overflow-y:auto}}
 @media(prefers-reduced-motion:reduce){.v9-qa-panel *{transition:none!important;animation:none!important}}
 
+
+/* V9.3 / MOBILE TOUCH PASS: preserve the ECLIPSE globe silhouette and palette.
+   Increase real tap targets without adding rings, panels or extra effects. */
+@media (max-width:819px) and (orientation:portrait){
+ .app.obsidian .mobile-nav button{min-height:40px}
+ .app.obsidian .signal-dock button{min-width:44px;min-height:44px}
+ .app.obsidian .world-controls{height:42px}
+ .app.obsidian .world-controls button{height:42px;min-height:42px}
+ .app.obsidian .world-controls button.globe-size-button{min-width:57px}
+ .app.obsidian .world-controls button.atlas-button,
+ .app.obsidian .world-controls button.focus-button,
+ .app.obsidian .world-controls button.lens-toggle{min-width:59px}
+}
+@media(max-width:819px) and (max-height:650px) and (orientation:portrait){
+ .app.obsidian .world-controls{height:39px}
+ .app.obsidian .world-controls button{height:39px;min-height:39px}
+}
 </style>
 </head>
 <body>
@@ -2302,7 +2319,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
     if(index!==selected)focus(index,false);
   }
   let immersive=false;
-  let diveTimer=null,diveIndex=-1,diveSequence=0;
+  let diveTimer=null,diveIndex=-1,diveSequence=0,v93PassagePausedAt=0;
+  let v93LastMarkerFrame=0;
   let v9State={phase:'idle',started:0,index:-1,token:0,energy:0};
   const pointers=new Map();let pinchDistance=0;
   let atlasEnabled=false, atlasPairs=[], atlasElements=[], flightFinish=0;
@@ -2918,7 +2936,13 @@ void main(){
     if(birth&&t-birth.started>2450)v94FinishBirth();
     if(gl){try{webGLRender(t)}catch(e){qaState.errorCount++;console.warn('Switching to Canvas fallback',e);gl=null;init2D();resize()}}
     if(!gl)canvasRender(t);
-    if(!reduceMotion||sizeMoving||Math.abs(targetY-cameraY)>.001||Math.abs(targetX-cameraX)>.001||birth||shock)updateMarkers();
+    // On mobile, the WebGL sphere keeps its native frame rate while
+    // expensive HTML star-marker placement is limited to ~30 Hz.
+    const markerActive=!reduceMotion||sizeMoving||Math.abs(targetY-cameraY)>.001||
+      Math.abs(targetX-cameraX)>.001||birth||shock;
+    if(markerActive&&(w>=820||t-v93LastMarkerFrame>=30)){
+      v93LastMarkerFrame=t;updateMarkers();
+    }
     updateAtlas();updateBirthComet(t);v94UpdateBirthField();updateDivePosition();updateTravel(t);updateTouchLight(dt);
     sampleGraphics(t,dt);qaFrame(t);queueFrame()
   }
@@ -2991,6 +3015,7 @@ void main(){
     diveSequence++;
     if(diveTimer!==null){clearTimeout(diveTimer);diveTimer=null}
     const active=diveIndex!==-1;
+    v93PassagePausedAt=0;
     const skipWasFocused=active&&document.activeElement===$('cancelDive');
     v9State={phase:'idle',started:0,index:-1,token:0,energy:0};
     if(active){
@@ -3005,8 +3030,23 @@ void main(){
       if(fallback)fallback.focus({preventScroll:true});
     }
   }
+  function v93SuspendPassage(){
+    if(diveIndex===-1||v93PassagePausedAt)return;
+    v93PassagePausedAt=performance.now();
+    if(diveTimer!==null){clearTimeout(diveTimer);diveTimer=null}
+  }
+  function v93ResumePassage(){
+    if(!v93PassagePausedAt)return;
+    const elapsedPause=Math.max(0,performance.now()-v93PassagePausedAt);
+    v93PassagePausedAt=0;
+    if(diveIndex===-1)return;
+    v9State.started+=elapsedPause;
+    const remaining=Math.max(0,1350-(performance.now()-v9State.started));
+    diveTimer=setTimeout(()=>finishDive(v9State.token),remaining);
+  }
   function finishDive(token){
     if(token!==diveSequence||diveIndex===-1)return;
+    if(document.hidden){v93SuspendPassage();return}
     const index=diveIndex,story=stories[index];
     cancelDive();targetZoom=1.23;
     if(story)showStory(story);
@@ -3029,6 +3069,8 @@ void main(){
     targetZoom=1.25;
     overlay.hidden=false;overlay.setAttribute('aria-hidden','false');
     overlay.dataset.phase='lock';
+    // The flare must begin at the actual star, not the CSS fallback center.
+    updateDivePosition();
     const category=stories[index].type==='legend'?'Legends':stories[index].category;
     overlay.style.setProperty('--memory-accent',lensColors[category]||'#b49ac9');
     $('diveName').textContent=(stories[index].type==='legend'?'★ ':'@')+stories[index].alias;
@@ -3824,11 +3866,11 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
     if(e.key==='ArrowLeft'){e.preventDefault();const index=memoryRouteNext(-1);if(index!==selected)focus(index,false)}});
     window.addEventListener('resize',scheduleResize,{passive:true});
     document.addEventListener('visibilitychange',()=>{
-      if(!document.hidden){
-        perfStarted=0;perfFrames=0;perfElapsed=0;
-        // Resume an existing context; don't rebuild shaders unnecessarily.
-        resumeScene();
-      }
+      if(document.hidden){v93SuspendPassage();return}
+      perfStarted=0;perfFrames=0;perfElapsed=0;
+      v93ResumePassage();
+      // Resume an existing context; don't rebuild shaders unnecessarily.
+      resumeScene();
     });
   }
   function pointerDown(e){
