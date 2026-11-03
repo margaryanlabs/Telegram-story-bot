@@ -171,6 +171,7 @@ test('background browser suspends flight without opening a story',()=>{
  ctx.document.hidden=true;
  ctx.v93SuspendPassage();
  assert.equal(ctx.v93PassagePausedAt,100);
+ assert.equal(ctx.$('memoryDive').dataset.suspended,'true');
  assert.equal(ctx.diveTimer,null);
  assert.equal(ctx.cleared,true);
  ctx.finishDive(ctx.diveSequence);
@@ -185,6 +186,7 @@ test('returning after a long background interval resumes with the same token and
  ctx.performance.now=()=>5100;
  ctx.document.hidden=false;ctx.v93ResumePassage();
  assert.equal(ctx.v93PassagePausedAt,0);
+ assert.equal(ctx.$('memoryDive').dataset.suspended,'false');
  assert.equal(ctx.v9State.started,5100);
  assert.equal(ctx.pending.ms,1350);
  assert.equal(ctx.v9State.token,token);
@@ -199,6 +201,7 @@ test('cancelling a backgrounded transition clears its suspension state',()=>{
  ctx.performance.now=()=>5100;ctx.document.hidden=false;
  ctx.v93ResumePassage();
  assert.equal(ctx.v93PassagePausedAt,0);
+ assert.equal(ctx.$('memoryDive').dataset.suspended,'false');
  assert.equal(ctx.diveIndex,-1);
  assert.equal(ctx.opened,undefined);
 });
@@ -207,4 +210,9 @@ test('mobile marker placements are throttled without throttling WebGL renderer',
  assert.match(source,/t-v93LastMarkerFrame>=30/);
  assert.match(source,/webGLRender\(t\)/);
  assert.match(source,/v93LastMarkerFrame=t;updateMarkers\(\)/);
+});
+
+test('visual passage CSS pauses its running animations with the JavaScript clock',()=>{
+ assert.match(html,/\.memory-dive\[data-suspended="true"\] \.memory-dive-progress span/);
+ assert.match(html,/animation-play-state:paused!important/);
 });
