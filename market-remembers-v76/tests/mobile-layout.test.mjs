@@ -60,7 +60,7 @@ test('focus mode remains full immersive mobile sphere',()=>{
   assert.equal(p.radius,390*.49);
 });
 test('mobile layout is measured during resize and immersion toggle',()=>{
-  assert.match(script,/fallbackCanvas\.height=resH;v763MeasureStage\(\)/);
+  assert.match(script,/fallbackCanvas\.height=resH;v8ViewportPending=false;v763MeasureStage\(\)/);
   assert.match(script,/else\{targetZoom=1;setSpin\(!reduceMotion\)\}\s*v763MeasureStage\(\);updateMarkers/);
 });
 test('original story reader, accessibility and data boundaries preserved',()=>{
