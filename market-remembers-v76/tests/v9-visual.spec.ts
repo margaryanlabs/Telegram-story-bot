@@ -177,3 +177,34 @@ test('R4: reduced motion still saves the star and opens the success dialog',asyn
  await expect(page.locator('#birthOverlay')).toBeHidden();
  await expect(page.locator('#dockAlias')).toContainText('STILL STAR');
 });
+
+test('V9 release QA is hidden in normal visits and opt-in on-device',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await expect(page.locator('#qaPanel')).toBeHidden();
+ await page.goto('/?qa=1');
+ await expect(page.locator('#qaPanel')).toBeVisible();
+ await expect(page.locator('#qaStatus')).toContainText('Renderer:');
+ await expect(page.locator('#qaStatus')).toContainText('Viewport: 390 × 844');
+ await expect(page.locator('#qaStatus')).toContainText('Graphics:');
+ await page.screenshot({path:'test-results/v9-device-qa-390x844.png',animations:'disabled'});
+ await page.locator('#qaPanel summary').click();
+ await expect(page.locator('#qaPanel')).toBeVisible();
+});
+test('V9 device QA does not leak private story text to its local status snapshot',async({page})=>{
+ await page.addInitScript(()=>{
+  localStorage.setItem('veto-market-remembers-demo-v4',JSON.stringify([{
+   local:true,id:'local-safe-check',alias:'TOP SECRET NAME',
+   quote:'PRIVATE TEXT MUST NOT DISPLAY IN QA',
+   story:'PRIVATE STORY MUST NOT DISPLAY IN QA',
+   rule:'KEEP LOCAL',p:[0,0,1],market:'CRYPTO',category:'Risk',
+   type:'local',createdAt:new Date().toISOString()
+  }]));
+ });
+ await page.goto('/?qa=1');
+ const report=await page.locator('#qaStatus').innerText();
+ expect(report).not.toContain('TOP SECRET NAME');
+ expect(report).not.toContain('PRIVATE TEXT');
+ expect(report).not.toContain('PRIVATE STORY');
+ expect(report).not.toContain('local-safe-check');
+});
