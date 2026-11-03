@@ -1306,6 +1306,85 @@ backdrop-filter:blur(12px);pointer-events:auto}
   animation:none!important;transition:none!important;scroll-behavior:auto!important
  }
 }
+
+/* V8.0 RC2 — Big Globe / premium breathing light. All effects CSS-only, GPU stays unchanged. */
+.v81-globe-aura{
+ position:absolute;left:52%;top:53%;width:440px;height:440px;z-index:1;
+ pointer-events:none;border-radius:50%;transform:translate(-50%,-50%);
+ opacity:.7;mix-blend-mode:screen;
+ background:radial-gradient(circle at 49% 48%,transparent 0 32%,
+ color-mix(in srgb,var(--v81-tint,#b49ac9) 8%,transparent) 48%,
+ color-mix(in srgb,var(--v81-tint,#b49ac9) 15%,transparent) 63%,
+ color-mix(in srgb,var(--v81-tint,#b49ac9) 6%,transparent) 74%,transparent 88%);
+}
+.v81-globe-aura::before{
+ content:"";position:absolute;inset:13%;border-radius:50%;
+ border:1px solid color-mix(in srgb,var(--v81-tint,#b49ac9) 30%,transparent);
+ box-shadow:0 0 16px color-mix(in srgb,var(--v81-tint,#b49ac9) 17%,transparent),
+  0 0 64px color-mix(in srgb,var(--v81-tint,#b49ac9) 11%,transparent),
+  inset 0 0 31px color-mix(in srgb,var(--v81-tint,#b49ac9) 7%,transparent);
+ animation:v81Breathe 8.4s ease-in-out infinite;
+}
+.v81-globe-aura::after{
+ content:"";position:absolute;inset:6%;border-radius:50%;
+ background:conic-gradient(from 0deg,transparent 0 31%,
+ color-mix(in srgb,var(--v81-tint,#b49ac9) 25%,transparent) 36%,
+ transparent 42% 73%,
+ color-mix(in srgb,var(--v81-tint,#b49ac9) 17%,transparent) 79%,transparent 86%);
+ -webkit-mask-image:radial-gradient(circle,transparent 56%,#000 63%,transparent 69%);
+ mask-image:radial-gradient(circle,transparent 56%,#000 63%,transparent 69%);
+ opacity:.66;animation:v81HaloOrbit 29s linear infinite;
+}
+@keyframes v81Breathe{0%,100%{opacity:.68;transform:scale(.965)}50%{opacity:1;transform:scale(1.042)}}
+@keyframes v81HaloOrbit{to{transform:rotate(360deg)}}
+.obsidian .scene-shading{
+ background:radial-gradient(ellipse at 53% 52%,transparent 12%,rgba(3,5,11,.16) 56%,#03050bcf 96%),
+ linear-gradient(90deg,#03050c6b,transparent 58%);
+}
+.obsidian .lens-halo{opacity:.16}
+.obsidian .energy-sweep{opacity:.17}
+.obsidian .star-marker.is-selected{
+ border-color:#f7e1e1;
+ box-shadow:0 0 12px #fff6,0 0 32px color-mix(in srgb,var(--v81-tint,#b49ac9) 66%,transparent),
+  0 0 54px color-mix(in srgb,var(--v81-tint,#b49ac9) 26%,transparent);
+}
+.obsidian .world-controls button.globe-size-button{
+ width:auto;min-width:72px;padding:0 10px;color:#edd5e3;font-size:9px;
+ letter-spacing:.05em;font-weight:700;background:linear-gradient(125deg,#3c2d43a8,#1b2336a9);
+}
+.obsidian .world-controls button.globe-size-button[data-mode="max"]{
+ background:linear-gradient(125deg,#55405cd9,#3b2b46af);color:#ffebdf;
+}
+.obsidian .world-controls button.globe-size-button[data-mode="small"]{
+ background:transparent;color:#afa8b7;
+}
+.obsidian .selected-card{background:linear-gradient(145deg,#2a2230e9,#101723ed 76%);}
+.obsidian .signal-dock{background:linear-gradient(110deg,#231c2be8,#0c1420f4);}
+.v81-globe-aura.is-eco::after{animation:none;opacity:.18}
+.v81-globe-aura.is-eco::before{animation:none;opacity:.6}
+@media(max-width:819px){
+ .v81-globe-aura{opacity:.62}
+ .v81-globe-aura::after{opacity:.34;animation-duration:45s}
+ .obsidian .world-controls{max-width:calc(100vw - 28px)}
+ .obsidian .world-controls button.globe-size-button{min-width:62px;padding:0 8px;font-size:8px}
+ .obsidian .app .hero{z-index:9}
+ .obsidian .hero::before{background:radial-gradient(ellipse 86% 77% at 21% 33%,
+  #03060ef4 0%,#050811dc 34%,#05081171 61%,transparent 100%)}
+ .obsidian .signal-dock{border-color:#d7b1bd62}
+}
+@media(max-width:819px) and (orientation:landscape) and (max-height:650px){
+ .obsidian .world-controls button.globe-size-button{min-width:49px;padding:0 6px;font-size:7px}
+}
+@media(max-width:360px){
+ .obsidian .world-controls button.globe-size-button{min-width:49px;padding:0 5px;font-size:7px}
+ .obsidian .world-controls button.atlas-button,
+ .obsidian .world-controls button.focus-button,
+ .obsidian .world-controls button.lens-toggle{min-width:51px;padding:0 6px;font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){
+ .v81-globe-aura::before,.v81-globe-aura::after{animation:none!important;transition:none!important}
+}
+
 </style>
 </head>
 <body>
