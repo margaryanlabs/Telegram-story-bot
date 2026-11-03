@@ -208,3 +208,53 @@ test('V9 device QA does not leak private story text to its local status snapshot
  expect(report).not.toContain('PRIVATE STORY');
  expect(report).not.toContain('local-safe-check');
 });
+
+test('V9.1: private JSON backup restores a star into an empty mobile archive',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('.mobile-nav [data-open="legacy"]').click();
+ await expect(page.locator('#importLegacy')).toBeVisible();
+ const backup={
+  demo:true,localOnly:true,stories:[{
+   id:'local-recovery-test-123',local:true,type:'local',alias:'BACKUP STAR',
+   quote:'A long private lesson that belongs to this person alone.',
+   story:'I kept my notes in a browser.',rule:'Always keep a separate backup',
+   capsule:'Remember the experience',market:'CRYPTO',category:'Risk',
+   createdAt:'2026-11-01T12:00:00.000Z',p:[0.3,0.4,0.87]
+  }],checkins:{'local-recovery-test-123':{'2026-11-01':'kept'}}
+ };
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#legacyBackupFile').setInputFiles({
+   name:'local-backup.json',mimeType:'application/json',
+   buffer:Buffer.from(JSON.stringify(backup))
+ });
+ await expect(page.locator('#drawer')).toBeHidden({timeout:6000});
+ await page.locator('.mobile-nav [data-open="legacy"]').click();
+ await expect(page.locator('#drawer')).toContainText('BACKUP STAR');
+ const restored=await page.evaluate(()=>JSON.parse(localStorage.getItem('veto-market-remembers-demo-v4')||'[]'));
+ expect(restored).toHaveLength(1);
+ expect(restored[0].id).toBe('local-recovery-test-123');
+ await page.reload();
+ await page.locator('.mobile-nav [data-open="archive"]').click();
+ await expect(page.locator('#archiveGrid')).toContainText('BACKUP STAR');
+});
+test('V9.1: corrupt backup is rejected without replacing current memories',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  localStorage.setItem('veto-market-remembers-demo-v4',JSON.stringify([{
+   id:'local-safe-test-001',local:true,type:'local',alias:'SAFE STAR',
+   quote:'A private experience that must never disappear.',
+   story:'Still here',rule:'Keep safe copies',capsule:'',
+   market:'CRYPTO',category:'Risk',createdAt:'2026-11-01T12:00:00.000Z',p:[0,0,1]
+  }]));
+ });
+ await page.goto('/');
+ await page.locator('.mobile-nav [data-open="legacy"]').click();
+ await page.locator('#legacyBackupFile').setInputFiles({
+   name:'invalid-backup.json',mimeType:'application/json',
+   buffer:Buffer.from('{"localOnly":true,"stories":[{"id":"bad"}]}')
+ });
+ await expect(page.locator('#toast')).toContainText('поврежд');
+ await expect(page.locator('#drawer')).toContainText('SAFE STAR');
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('veto-market-remembers-demo-v4')||'[]'))).toHaveLength(1);
+});
