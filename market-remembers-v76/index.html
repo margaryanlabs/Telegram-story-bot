@@ -1680,7 +1680,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
  opacity:0;will-change:transform,opacity;
 }
 .v94-birth-field.is-forming i{
- animation:v94Gather 1.87s cubic-bezier(.19,.66,.21,1) var(--delay,0ms) both;
+ animation:v94Gather 1.75s cubic-bezier(.19,.66,.21,1) var(--delay,0ms) both;
 }
 @keyframes v94Gather{
  0%{opacity:0;transform:translate(var(--from-x),var(--from-y)) scale(.4)}
@@ -1763,6 +1763,35 @@ backdrop-filter:blur(12px);pointer-events:auto}
  .v94-birth-field i,.obsidian .birth-glyph,
  .obsidian .v94-birth-actions button{animation:none!important;transition:none!important;will-change:auto!important}
 }
+
+
+/* Opt-in, local-only visual QA HUD — never enabled in normal product view. */
+.v9-qa-panel{
+ position:fixed;bottom:calc(48px + env(safe-area-inset-bottom,0px));left:11px;
+ z-index:80;width:min(284px,calc(100vw - 22px));border-radius:10px;
+ border:1px solid #9cbec4a3;background:#08121cf0;
+ color:#e2e9ee;box-shadow:0 10px 32px #0009;
+ font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.v9-qa-panel>summary{
+ padding:11px 13px;cursor:pointer;user-select:none;color:#c5e3e4;
+ font-size:11px;font-weight:700;letter-spacing:.08em;
+}
+.v9-qa-details{padding:2px 13px 12px;border-top:1px solid #aac6c13b}
+.v9-qa-details pre{
+ margin:8px 0 11px;color:#dbe2ed;font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;
+ overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.v9-qa-details button{
+ display:block;width:100%;min-height:42px;border-radius:6px;
+ border:1px solid #acd5d9a6;background:#1b3440;color:#e7f8f8;
+ cursor:pointer;font-size:10px;letter-spacing:.04em;
+}
+.v9-qa-details small{display:block;margin-top:9px;color:#a4b6c3;
+ font:10px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}
+.v9-qa-panel:focus-within{border-color:#d6efef}
+@media(max-width:820px){.v9-qa-panel{bottom:calc(38px + env(safe-area-inset-bottom,0px));max-height:70dvh;overflow-y:auto}}
+@media(prefers-reduced-motion:reduce){.v9-qa-panel *{transition:none!important;animation:none!important}}
 
 </style>
 </head>
@@ -1848,7 +1877,15 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <div id="drawerContents"></div>
   </aside>
   <div class="birth-overlay" id="birthOverlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="birthName" aria-describedby="birthPrivacy"><span class="v94-birth-eyebrow">VETO / YOUR STAR · LOCAL MEMORY</span><div class="v94-birth-core" aria-hidden="true"><div class="birth-glyph">✦</div></div><div class="birth-small">ТВОЯ ЗВЕЗДА РОДИЛАСЬ</div><div class="birth-name" id="birthName">@TRADER</div><div class="birth-sub">Теперь у твоего урока есть место во вселенной.</div><p class="birth-privacy" id="birthPrivacy">Запись сохранена только в этом браузере. Она не опубликована. Очистка данных браузера может удалить её.</p><div class="v94-birth-actions"><button id="birthContinue" type="button">↗ НАЙТИ МОЮ ЗВЕЗДУ</button><button id="birthViewArchive" type="button">МОЙ ЛОКАЛЬНЫЙ АРХИВ</button></div></div>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <details id="qaPanel" class="v9-qa-panel" hidden>
+ <summary>◈ QA / DEVICE</summary>
+ <div class="v9-qa-details">
+   <pre id="qaStatus" aria-live="off">Collecting local diagnostics…</pre>
+   <button id="qaCopy" type="button">СКОПИРОВАТЬ ДИАГНОСТИКУ</button>
+   <small>Без личных историй, ID, координат и сетевой отправки.</small>
+ </div>
+</details>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 </div>
 <script>
 /* THE MARKET REMEMBERS / VETO LIVING MEMORY ENGINE v4
@@ -1861,6 +1898,63 @@ backdrop-filter:blur(12px);pointer-events:auto}
   const $ = id => document.getElementById(id);
   const canvas = $('gl'), fallbackCanvas = $('fallback'), stage = $('scene');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // V9 release QA is opt-in (?qa=1). Entirely local, with no telemetry or story data.
+  const qaEnabled=new URLSearchParams(window.location.search).get('qa')==='1';
+  const qaState={frames:0,period:0,fps:0,previousTime:0,
+    fallbackCount:0,webglLossCount:0,errorCount:0};
+  function qaSnapshot(){
+    // Never include selected aliases, notes, star IDs, URL queries or localStorage.
+    return [
+      'V9 STARLIGHT / DEVICE QA',
+      'Renderer: '+(gl?'WEBGL1':ctx?'CANVAS2D':'UNAVAILABLE'),
+      'Viewport: '+Math.round(w)+' × '+Math.round(h),
+      'DPR: '+dpr.toFixed(2)+' | Buffer: '+resW+' × '+resH,
+      'FPS (last active second): '+(qaState.fps||'—'),
+      'Graphics: '+quality.toUpperCase()+(autoEco?' / ECO':''),
+      'Reduced motion: '+(reduceMotion?'YES':'NO'),
+      'Mode: '+(immersive?'FOCUS':'UNIVERSE'),
+      'State: '+(birth?'STAR BIRTH':!$('birthOverlay').hidden?'BIRTH COMPLETE':
+        diveIndex!==-1?'STAR PASSAGE':!$('drawer').hidden?'READER / ARCHIVE':'EXPLORE'),
+      'WebGL losses: '+qaState.webglLossCount+
+        ' | Canvas fallbacks: '+qaState.fallbackCount+
+        ' | Render errors: '+qaState.errorCount
+    ].join('\n');
+  }
+  function qaPaint(){
+    if(!qaEnabled)return;
+    $('qaStatus').textContent=qaSnapshot();
+  }
+  function qaFrame(t){
+    if(!qaEnabled)return;
+    if(!qaState.previousTime){qaState.previousTime=t;return}
+    const elapsed=t-qaState.previousTime;
+    qaState.previousTime=t;
+    if(elapsed>0&&elapsed<300){
+      qaState.period+=elapsed;qaState.frames++;
+    }
+    if(qaState.period>=1000){
+      qaState.fps=Math.round(qaState.frames*1000/qaState.period);
+      qaState.frames=0;qaState.period=0;
+      qaPaint();
+    }
+  }
+  function qaInit(){
+    if(!qaEnabled)return;
+    const details=$('qaPanel');
+    details.hidden=false;details.open=true;
+    $('qaCopy').onclick=()=>{
+      if(!navigator.clipboard?.writeText){
+        showToast('Копирование недоступно — можно сделать скриншот QA-панели.');
+        return;
+      }
+      navigator.clipboard.writeText(qaSnapshot()).then(
+        ()=>showToast('Диагностика скопирована — без личных данных'),
+        ()=>showToast('Не удалось скопировать: сделай скриншот QA-панели')
+      );
+    };
+    qaPaint();
+  }
+
   // V7.6: lightweight reader progress. No dependency on WebGL or personal data.
   const v76Reader=document.getElementById('drawer');
   const v76UpdateReader=()=>{
@@ -2547,11 +2641,11 @@ void main(){
     buildCoreMesh();
     if(!contextHandlersInstalled){
       contextHandlersInstalled=true;
-      canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'});
+      canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();qaState.webglLossCount++;gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'});
       canvas.addEventListener('webglcontextrestored',()=>{try{initGL();ctx=null;canvas.style.display='block';fallbackCanvas.style.display='none';resize()}catch{init2D()}});
     }
   }
-  function init2D(){ctx=fallbackCanvas.getContext('2d');fallbackCanvas.style.display='block';canvas.style.display='none';}
+  function init2D(){qaState.fallbackCount++;ctx=fallbackCanvas.getContext('2d');fallbackCanvas.style.display='block';canvas.style.display='none';}
   function passUniforms(p,t){
     const c=targetCenter(),s=stories[selected],point=project(s.p);
     const obj={uRes:[resW,resH],uCenter:[c.x*dpr,c.y*dpr],uRadius:c.radius*dpr,
@@ -2822,11 +2916,11 @@ void main(){
     v81ScaleCurrent+=(v81ScaleTarget-v81ScaleCurrent)*(reduceMotion?1:1-Math.exp(-dt/440));
     if(shock){shock.radius+=dt*.00075;if(shock.radius>1.45)shock=null}
     if(birth&&t-birth.started>2450)v94FinishBirth();
-    if(gl){try{webGLRender(t)}catch(e){console.warn('Switching to Canvas fallback',e);gl=null;init2D();resize()}}
+    if(gl){try{webGLRender(t)}catch(e){qaState.errorCount++;console.warn('Switching to Canvas fallback',e);gl=null;init2D();resize()}}
     if(!gl)canvasRender(t);
     if(!reduceMotion||sizeMoving||Math.abs(targetY-cameraY)>.001||Math.abs(targetX-cameraX)>.001||birth||shock)updateMarkers();
     updateAtlas();updateBirthComet(t);v94UpdateBirthField();updateDivePosition();updateTravel(t);updateTouchLight(dt);
-    sampleGraphics(t,dt);queueFrame()
+    sampleGraphics(t,dt);qaFrame(t);queueFrame()
   }
   function unwrappedY(y){const period=twoPi;return y+Math.round((targetY-y)/period)*period}
   function focus(i,open){
@@ -3672,7 +3766,7 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
     makeMarkers();updateLensControls();
     try{initGL();$('fpsDisplay').textContent='GPU / TRUE 3D MESH'}
     catch(e){console.warn('WebGL unavailable, enabling Canvas fallback:',e);gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'}
-    resize();updateCard();connectControls();queueFrame();
+    resize();updateCard();connectControls();qaInit();queueFrame();
   }
   boot();
 })();
