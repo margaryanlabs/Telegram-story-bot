@@ -60,7 +60,7 @@ test('reduced motion goes straight to a real memory',async({page})=>{
 test('archive search keyboard does not remesh a covered sphere',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('[data-open="archive"]').first().click();
+ await page.locator('.mobile-nav [data-open="archive"]').click();
  await expect(page.locator('#archiveSearch')).toBeVisible();
  await page.locator('#archiveSearch').fill('Risk');
  await expect(page.locator('#archiveResultStatus')).toContainText('ИЗ');
