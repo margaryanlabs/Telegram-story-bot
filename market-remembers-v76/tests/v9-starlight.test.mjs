@@ -43,7 +43,7 @@ function sceneContext(){
   selected:0,w:390,h:844,reduceMotion:false,
   v9State:{phase:'idle',started:0,index:-1,token:0,energy:0},
   diveIndex:-1,diveSequence:0,diveTimer:null,targetZoom:1,flightFinish:0,
-  v78ThreadContext:null,document:{activeElement:null,hidden:false},
+  v78ThreadContext:null,lensColors:{Risk:'#aabbcc',Patience:'#ccbbaa'},document:{activeElement:null,hidden:false},
   performance:{now:()=>100},
   $:key=>controls[key],
   clamp:(x,min,max)=>Math.min(max,Math.max(min,x)),
