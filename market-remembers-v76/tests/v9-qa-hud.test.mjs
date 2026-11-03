@@ -29,6 +29,8 @@ function fixture(enabled=true){
  const ctx={qaEnabled:enabled,qaState,w:390,h:844,dpr:1.35,resW:527,resH:1139,
    gl:{},ctx:null,quality:'auto',autoEco:false,reduceMotion:false,immersive:false,
    birth:null,diveIndex:-1,
+   v763MobileStage:{mode:'portrait',top:300,bottom:700,fitted:true},
+   targetCenter:()=>({x:228.15,y:510,radius:154.8}),
    $:id=>controls[id],
    navigator:{clipboard:{writeText:text=>{clipboard.push(text);return {then(ok){ok()}}}}},
    showToast:s=>messages.push(s)};
@@ -52,6 +54,8 @@ test('QA panel displays live mode and remains local-only',()=>{
  assert.match(f.controls.qaStatus.textContent,/WEBGL1/);
  assert.match(f.controls.qaStatus.textContent,/390 × 844/);
  assert.match(f.controls.qaStatus.textContent,/DPR: 1.35/);
+ assert.match(f.controls.qaStatus.textContent,/Orb center: 228 × 510 \| Radius: 155/);
+ assert.match(f.controls.qaStatus.textContent,/Portrait safe band: 300–700 \(MEASURED\)/);
  assert.match(f.controls.qaStatus.textContent,/AUTO/);
 });
 test('renderer fallback and quality eco are visible but never reveal story content',()=>{
@@ -108,7 +112,7 @@ test('the diagnostics do not change production local storage or send telemetry',
  const slice=runtime.slice(runtime.indexOf('// V9 release QA'),runtime.indexOf('// V7.6: lightweight reader progress.')).replace(/\/\/[^\n]*/g,'');
  assert.doesNotMatch(slice,/fetch\(|XMLHttpRequest|sendBeacon|localStorage\s*[.\[]|sessionStorage\s*[.\[]|WebSocket/);
  assert.match(runtime,/Never include selected aliases, notes, star IDs/);
- assert.match(html,/Без личных историй, ID, координат и сетевой отправки/);
+ assert.match(html,/Без личных историй, ID звёзд, личных 3D-координат и сетевой отправки/);
 });
 test('normal page keeps existing source readers, sphere and production privacy',()=>{
  assert.match(runtime,/function webGLRender\(t\)/);
