@@ -1556,8 +1556,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
   </main>
   <div class="memory-dive" id="memoryDive" hidden aria-hidden="true">
     <button class="memory-dive-close" id="cancelDive" type="button" aria-label="Пропустить анимацию">SKIP ↗</button>
-    <div class="memory-dive-lock"></div>
-    <div class="memory-dive-info"><div class="memory-dive-eyebrow">VETO / DECODING HUMAN MEMORY</div><div class="memory-dive-name" id="diveName">@SIGNAL</div><div class="v78-dive-route" id="v78DiveRoute" hidden aria-hidden="true"><span id="v78RouteFrom"></span><span class="v78-route-symbol">✦ ── ✧</span><span id="v78RouteTo"></span><small id="v78RouteRelation"></small></div><div class="memory-dive-progress"><span></span></div></div>
+    <div class="memory-dive-lock"></div><div class="v9-spark-field" id="v9SparkField" aria-hidden="true"></div>
+    <div class="memory-dive-info"><div class="memory-dive-eyebrow">VETO / STAR PASSAGE</div><div class="v9-passage-status" id="v9PassageStatus" role="status" aria-live="polite">ЗВЕЗДА НАЙДЕНА</div><div class="memory-dive-name" id="diveName">@SIGNAL</div><div class="v78-dive-route" id="v78DiveRoute" hidden aria-hidden="true"><span id="v78RouteFrom"></span><span class="v78-route-symbol">✦ ── ✧</span><span id="v78RouteTo"></span><small id="v78RouteRelation"></small></div><div class="memory-dive-progress"><span></span></div></div>
   </div>
   <div id="scrim" class="scrim" hidden></div>
   <aside class="drawer" id="drawer" aria-label="Панель" aria-modal="true" role="dialog" hidden>
@@ -2462,6 +2462,7 @@ void main(){
     const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:1-Math.exp(-dt/245);
     if(flightFinish&&t>flightFinish){flightFinish=0;targetZoom=1.13}
     if(spinning&&!dragging&&!birth)targetY+=dt*.000055;
+    v9Tick(t);
     // A damped continuation of the last touch: physical, not perpetual spinning.
     if(!dragging&&!spinning&&!birth&&diveIndex===-1&&!flightFinish){
       const scale=dt/16.667;
@@ -2508,43 +2509,81 @@ void main(){
     $('scene').style.setProperty('--v81-tint',tint);
     v76AnimateFragment();
   }
+  // V9 / Star Passage. Single cancellable transition state owns the camera, light and reader hand-off.
+  function v9PhaseFor(elapsed){
+    if(elapsed<220)return 'lock';
+    if(elapsed<1000)return 'flight';
+    return 'reveal';
+  }
+  function v9Tick(t){
+    if(diveIndex<0||v9State.phase==='idle')return;
+    const elapsed=Math.max(0,t-v9State.started);
+    const phase=v9PhaseFor(elapsed);
+    if(phase!==v9State.phase){
+      v9State.phase=phase;
+      $('memoryDive').dataset.phase=phase;
+      $('v9PassageStatus').textContent=phase==='lock'?'ЗВЕЗДА НАЙДЕНА':
+        phase==='flight'?'ПРИБЛИЖАЕМСЯ К ВОСПОМИНАНИЮ':'ОТКРЫВАЕМ ИСТОРИЮ';
+    }
+    const u=clamp(elapsed/1350,0,1);
+    v9State.energy=Math.sin(Math.PI*u)*.95;
+    if(phase==='lock')targetZoom=1.25;
+    else if(phase==='flight'){
+      const p=clamp((elapsed-220)/780,0,1);
+      const eased=p*p*(3-2*p);
+      targetZoom=1.25+eased*.40;
+    }else targetZoom=1.65;
+  }
   function cancelDive(){
     diveSequence++;
     if(diveTimer!==null){clearTimeout(diveTimer);diveTimer=null}
-    if(diveIndex!==-1){
-      diveIndex=-1;$('memoryDive').hidden=true;$('memoryDive').setAttribute('aria-hidden','true');
+    const active=diveIndex!==-1;
+    const skipWasFocused=active&&document.activeElement===$('cancelDive');
+    v9State={phase:'idle',started:0,index:-1,token:0,energy:0};
+    if(active){
+      diveIndex=-1;
+      $('memoryDive').hidden=true;
+      $('memoryDive').setAttribute('aria-hidden','true');
+      $('memoryDive').dataset.phase='idle';
       flightFinish=0;targetZoom=1.13;
+    }
+    if(skipWasFocused){
+      const fallback=w<820?$('dockOpen'):$('openSelected');
+      if(fallback)fallback.focus({preventScroll:true});
     }
   }
   function finishDive(token){
     if(token!==diveSequence||diveIndex===-1)return;
-    const story=stories[diveIndex];
-    cancelDive();targetZoom=1.27;
-    showStory(story);
+    const index=diveIndex,story=stories[index];
+    cancelDive();targetZoom=1.23;
+    if(story)showStory(story);
   }
   function beginDive(i){
-    const v78Target=(i+stories.length)%stories.length;
-    if(v78ThreadContext&&v78ThreadContext.to!==v78Target)v78ThreadContext=null;
+    if(!stories.length)return;
+    const index=(i+stories.length)%stories.length;
+    if(v78ThreadContext&&v78ThreadContext.to!==index)v78ThreadContext=null;
     cancelDive();
-    if(!lensMatches(stories[(i+stories.length)%stories.length]))setLens('All',false);
+    if(!lensMatches(stories[index]))setLens('All',false);
     closeLensPanel();
     if(!$('drawer').hidden)closeDrawer(true);
-    const index=(i+stories.length)%stories.length;
     focus(index,false);
     v78UpdateDiveRoute(index);
     if(reduceMotion){showStory(stories[index]);return}
     diveIndex=index;
-    flightFinish=0;targetZoom=2.15;
-    const overlay=$('memoryDive');
+    flightFinish=0;
+    const overlay=$('memoryDive'),token=++diveSequence;
+    v9State={phase:'lock',started:performance.now(),index,token,energy:0};
+    targetZoom=1.25;
     overlay.hidden=false;overlay.setAttribute('aria-hidden','false');
+    overlay.dataset.phase='lock';
     const category=stories[index].type==='legend'?'Legends':stories[index].category;
     overlay.style.setProperty('--memory-accent',lensColors[category]||'#b49ac9');
     $('diveName').textContent=(stories[index].type==='legend'?'★ ':'@')+stories[index].alias;
-    const token=++diveSequence;
-    overlay.querySelector('.memory-dive-progress span').style.animation='none';
-    void overlay.offsetWidth;
-    overlay.querySelector('.memory-dive-progress span').style.animation='';
-    diveTimer=setTimeout(()=>finishDive(token),1150);
+    $('v9PassageStatus').textContent='ЗВЕЗДА НАЙДЕНА';
+    const progress=overlay.querySelector('.memory-dive-progress span');
+    progress.style.animation='none';void overlay.offsetWidth;progress.style.animation='';
+    $('cancelDive').focus({preventScroll:true});
+    diveTimer=setTimeout(()=>finishDive(token),1350);
   }
   function updateDivePosition(){
     if(diveIndex<0)return;
