@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {runInNewContext} from 'node:vm';
 
 const html=readFileSync(fileURLToPath(new URL('../index.html',import.meta.url)),'utf8');
-const runtime=html.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+const runtime=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(runtime,'Market Remembers inline runtime must exist');
 
 function source(name){
