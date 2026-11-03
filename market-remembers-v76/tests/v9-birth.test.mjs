@@ -36,7 +36,7 @@ test('source has no personal story upload or remote post in new birth code',()=>
  const a=script.indexOf('function v94SeedFromId(');
  const b=script.indexOf('function loadChecks()',a);
  const own=script.slice(a,b);
- assert.match(own,/localStorage\.setItem\(KEY,JSON\.stringify\(next\)\)/);
+ assert.match(own,/localStorage\.setItem\(KEY,JSON\.stringify\(\[\.\.\.previous,story\]\)\)/);
  assert.doesNotMatch(own,/fetch\(|XMLHttpRequest|navigator\.sendBeacon|FormData\(.*\).*fetch/i);
  assert.match(own,/createdAt:new Date\(\)\.toISOString\(\)/);
 });
