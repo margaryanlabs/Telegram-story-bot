@@ -2232,13 +2232,12 @@ void main(){
   }
   function resumeScene(){
     lastTime=0;
-    // Mobile browser-keyboard changes while a panel was open are applied once here.
-    // Keep the 3D buffers untouched until the covering interface closes.
-    if(!sceneIsCovered()){
-      const changed=v8NeedsSceneResize();
-      v8ViewportPending=false;
-      if(changed){resize();queueFrame();return}
-    }
+    // No GPU/Canvas work while a reader, archive or birth overlay covers the scene.
+    if(sceneIsCovered())return;
+    // Apply mobile keyboard/browser-chrome changes once when returning to the scene.
+    const changed=v8NeedsSceneResize();
+    v8ViewportPending=false;
+    if(changed){resize();queueFrame();return}
     updateMarkers();
     queueFrame();
   }
