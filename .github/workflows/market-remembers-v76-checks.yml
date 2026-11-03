@@ -1,0 +1,29 @@
+name: Market Remembers V7.6 Preview Checks
+
+on:
+  push:
+    branches:
+      - feature/market-remembers-memory-museum-v76-20261103
+    paths:
+      - 'market-remembers-v76/**'
+      - '.github/workflows/market-remembers-v76-checks.yml'
+  pull_request:
+    paths:
+      - 'market-remembers-v76/**'
+      - '.github/workflows/market-remembers-v76-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-preview-smoke:
+    name: Memory Museum static smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run isolated HTML and JavaScript checks
+        run: node --test market-remembers-v76/tests/*.test.mjs
