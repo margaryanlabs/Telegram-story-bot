@@ -2366,7 +2366,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     const top=Math.max(130,Math.min(height-20,heroBottom+12));
     const bottom=Math.min(height-66,Math.max(0,dockTop-12));
     const room=bottom-top;
-    const fitted=room>nominalRadius*1.58;
+    const fitted=room>nominalRadius*1.85;
     const radius=fitted?Math.min(nominalRadius,Math.max(width*.23,(room-16)*.5)):nominalRadius;
     const y=fitted?Math.max(top+radius,Math.min(bottom-radius,(top+bottom)*.5)):
       height*(short?.59:.575);
