@@ -274,8 +274,8 @@ test('V9.3 mobile touch targets and first-frame star passage anchor',async({page
  const anchor=await page.locator('#memoryDive').evaluate(el=>({
    x:el.style.getPropertyValue('--dx'),y:el.style.getPropertyValue('--dy')
  }));
- expect(anchor.x).toMatch(/^\\d+(?:\\.\\d+)?%$/);
- expect(anchor.y).toMatch(/^\\d+(?:\\.\\d+)?%$/);
+ expect(anchor.x).toMatch(/^\d+(?:\.\d+)?%$/);
+ expect(anchor.y).toMatch(/^\d+(?:\.\d+)?%$/);
  await page.keyboard.press('Escape');
  await expect(page.locator('#memoryDive')).toBeHidden();
  await expect(page.locator('#drawer')).toBeHidden();
