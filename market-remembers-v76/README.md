@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V7.7 Living Stories / Memory Museum (isolated preview)
+# THE MARKET REMEMBERS — V7.8 Living Stories / Memory Museum (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -90,3 +90,25 @@ The source-level and isolated mock-interaction suite contains 21 cases and passe
 
 ### Automated checks
 30 source-level + mocked DOM/camera tests passed via JS evaluation, including 9 new `living-stories.test.mjs` checks. These are not equivalent to mobile screenshots, a real WebGL test or a hosted CI run.
+
+## V7.8 — Reversible editorial star trails
+- Following a thematic recommendation carries a *temporary*, in-memory origin/destination and reason for the connection.
+- The existing SVG travel line is restyled warmly during these hops; no additional WebGL draw pass or shader dependency.
+- The memory-dive scene names both stars and the editorial reason for the link. The destination reading room shows a lightweight breadcrumb with one-tap return to the prior story.
+- A back action clears the breadcrumb instead of creating endless loops.
+- Hops into guided Memory Paths are disallowed; each route continues with its established four chapters.
+- Navigating to Archive, My Legacy, or the creation form clears the temporary thread; leaving the reader clears it too. **Nothing is written to storage, sent to an API, published, or treated as a real relationship between people**.
+- Private local aliases are shown as "МОЯ ЛОКАЛЬНАЯ ЗВЕЗДА" in the route context rather than exposing their name.
+- Reduced-motion mode skips cinematic transitions as before; transition context is still accessible in the reading room.
+
+### V7.8 acceptance cases
+1. Open a fictional story and select a thematic recommendation. The dive scene should show the original and destination star and the reason.
+2. Open the destination: confirm a breadcrumb explains the path and its return button opens the previous story.
+3. From a destination, select another thematic recommendation: the breadcrumb should show the immediately preceding story only.
+4. Go to Archive or create a personal story: prior thematic breadcrumb must not persist.
+5. Use a 4-part Memory Path: normal chapters remain intact; thematic hops must not override it.
+6. On a 320–390px phone, the new breadcrumb remains readable and the close/back controls stay accessible.
+7. Reduced motion: no extra star-trail animation, and breadcrumbs/return controls still work.
+
+### Test status
+43/43 source-level, syntax and mock-interaction checks passed in the connected JavaScript test harness, including new `tests/thread-route.test.mjs`. This is not browser screenshot, physical-device, GPU or GitHub-hosted CI confirmation.
