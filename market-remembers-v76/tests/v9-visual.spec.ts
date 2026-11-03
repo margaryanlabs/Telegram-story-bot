@@ -375,3 +375,51 @@ test('V9.5 Observatory reader handles long local text at 320px without horizonta
  expect(rect?.height||0).toBeGreaterThanOrEqual(44);
  await page.screenshot({path:'test-results/v95-legacy-reader-320x568.png',animations:'disabled'});
 });
+
+
+test('V9.6 reader return preserves chosen star and restores accessible focus',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#dockNext').click();
+ const chosen=await page.locator('#dockAlias').innerText();
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('#memoryDive')).toBeVisible();
+ await page.locator('#cancelDive').click();
+ await expect(page.locator('#drawer')).toBeVisible();
+ await expect(page.locator('#drawer')).toHaveClass(/v96-reader-arrival/);
+ await expect(page.locator('#drawer')).toHaveClass(/memory-detail/);
+ await page.locator('#closeDrawer').click();
+ await expect(page.locator('#drawer')).toBeHidden();
+ await expect(page.locator('#dockAlias')).toHaveText(chosen);
+ expect(await page.evaluate(()=>document.activeElement?.id)).toBe('dockOpen');
+});
+test('V9.6 Escape cancels the passage without opening reader or losing focus',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('#memoryDive')).toBeVisible();
+ await page.keyboard.press('Escape');
+ await expect(page.locator('#memoryDive')).toBeHidden();
+ await expect(page.locator('#drawer')).toBeHidden();
+ expect(await page.evaluate(()=>document.activeElement?.id)).toBe('dockOpen');
+});
+test('V9.6 scrim click closes story and returns focus to globe controls',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/');
+ await page.locator('#openSelected').click();
+ await page.locator('#cancelDive').click();
+ await expect(page.locator('#drawer')).toBeVisible();
+ await page.locator('#scrim').evaluate(el=>(el as HTMLElement).click());
+ await expect(page.locator('#drawer')).toBeHidden();
+ expect(await page.evaluate(()=>document.activeElement?.id)).toBe('openSelected');
+});
+test('V9.6 reduced motion reader has no landing transform',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('#drawer')).toBeVisible();
+ await expect(page.locator('#memoryDive')).toBeHidden();
+ const animation=await page.locator('.memory-experience').evaluate(el=>getComputedStyle(el).animationName);
+ expect(animation).toBe('none');
+});
