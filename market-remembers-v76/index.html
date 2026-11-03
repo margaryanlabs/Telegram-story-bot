@@ -1681,7 +1681,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <svg id="travelTrail" class="travel-trail" aria-hidden="true"><path id="travelPath"></path><circle id="travelDot" r="3"></circle></svg>
     <div id="touchWave" class="touch-wave" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
-    <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
+    <div id="birthComet" class="birth-comet" aria-hidden="true"></div><div class="v94-birth-field" id="v94BirthField" hidden aria-hidden="true"></div>
     <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V8.2 / ECLIPSE</div>
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
@@ -1747,7 +1747,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <div class="drawer-head"><span class="drawer-tag" id="drawerTag">FIELD RECORD / 001</span><button class="drawer-close" id="closeDrawer" aria-label="Закрыть" type="button">×</button></div>
     <div id="drawerContents"></div>
   </aside>
-  <div class="birth-overlay" id="birthOverlay" hidden aria-hidden="true"><div class="birth-glyph">✦</div><div class="birth-small">ТВОЯ ЗВЕЗДА СОХРАНЕНА</div><div class="birth-name" id="birthName">@TRADER</div><div class="birth-sub">ТВОЯ ИСТОРИЯ ИМЕЕТ ЗНАЧЕНИЕ.</div><p class="birth-privacy">Пока только на этом устройстве. Это не публичная публикация.</p><button id="birthContinue" type="button">ПОСМОТРЕТЬ МОЮ ЗВЕЗДУ ↗</button></div>
+  <div class="birth-overlay" id="birthOverlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="birthName" aria-describedby="birthPrivacy"><span class="v94-birth-eyebrow">VETO / YOUR STAR · LOCAL MEMORY</span><div class="v94-birth-core" aria-hidden="true"><div class="birth-glyph">✦</div></div><div class="birth-small">ТВОЯ ЗВЕЗДА РОДИЛАСЬ</div><div class="birth-name" id="birthName">@TRADER</div><div class="birth-sub">Теперь у твоего урока есть место во вселенной.</div><p class="birth-privacy" id="birthPrivacy">Запись сохранена только в этом браузере. Она не опубликована. Очистка данных браузера может удалить её.</p><div class="v94-birth-actions"><button id="birthContinue" type="button">↗ НАЙТИ МОЮ ЗВЕЗДУ</button><button id="birthViewArchive" type="button">МОЙ ЛОКАЛЬНЫЙ АРХИВ</button></div></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </div>
 <script>
@@ -2721,11 +2721,11 @@ void main(){
     const sizeMoving=Math.abs(v81ScaleTarget-v81ScaleCurrent)>.001;
     v81ScaleCurrent+=(v81ScaleTarget-v81ScaleCurrent)*(reduceMotion?1:1-Math.exp(-dt/440));
     if(shock){shock.radius+=dt*.00075;if(shock.radius>1.45)shock=null}
-    if(birth&&t-birth.started>2450){birth=null;$('birthOverlay').hidden=false;$('birthOverlay').setAttribute('aria-hidden','false');$('birthContinue').focus()}
+    if(birth&&t-birth.started>2450)v94FinishBirth();
     if(gl){try{webGLRender(t)}catch(e){console.warn('Switching to Canvas fallback',e);gl=null;init2D();resize()}}
     if(!gl)canvasRender(t);
     if(!reduceMotion||sizeMoving||Math.abs(targetY-cameraY)>.001||Math.abs(targetX-cameraX)>.001||birth||shock)updateMarkers();
-    updateAtlas();updateBirthComet(t);updateDivePosition();updateTravel(t);updateTouchLight(dt);
+    updateAtlas();updateBirthComet(t);v94UpdateBirthField();updateDivePosition();updateTravel(t);updateTouchLight(dt);
     sampleGraphics(t,dt);queueFrame()
   }
   function unwrappedY(y){const period=twoPi;return y+Math.round((targetY-y)/period)*period}
@@ -3190,9 +3190,115 @@ void main(){
       showToast('Карточка PNG готова');
     },'image/png');
   }
-  function addStory(data){const p=norm([rand()*2-1,rand()*2-1,rand()*2-1]);const alias=safeString(data.get('alias'),32).trim().toUpperCase(),quote=safeString(data.get('quote'),280).trim(),rule=safeString(data.get('rule'),180).trim();if(alias.length<2||quote.length<12||rule.length<8)return;
-    const s={id:'local-'+Date.now().toString(36)+'-'+Math.floor(rand()*1e6).toString(36),alias,market:safeString(data.get('market'),16),category:safeString(data.get('category'),20),quote,story:safeString(data.get('story'),1200).trim()||quote,rule,capsule:safeString(data.get('capsule'),500).trim(),type:'local',createdAt:new Date().toISOString(),p,local:true};stories.push(s);saved.push(s);try{localStorage.setItem(KEY,JSON.stringify(saved.slice(-40)))}catch{showToast('Браузер не разрешил сохранить запись.')}closeDrawer();setLens('All',false);makeMarkers();generateParticles();focus(stories.length-1);birth={started:performance.now()};$('birthName').textContent='@'+alias;showToast('Рождение новой звезды ✦');}
-  function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}
+  // V9 R4 — stable, private identity for a personal star. No server, tracking, or public IDs.
+function v94SeedFromId(id){
+  let hash=2166136261;
+  for(const ch of String(id)){
+    hash^=ch.charCodeAt(0);
+    hash=Math.imul(hash,16777619);
+  }
+  return hash>>>0;
+}
+function v94PositionFromId(id){
+  const r=seeded(v94SeedFromId(id));
+  const y=r()*1.68-.84,theta=r()*twoPi,rad=Math.sqrt(1-y*y);
+  return norm([rad*Math.cos(theta),y,rad*Math.sin(theta)]);
+}
+function v94StoreLocal(story){
+  const next=[...saved,story].slice(-40);
+  // A failed write is not a successful birth. Keep the form open for an export/retry.
+  try{localStorage.setItem(KEY,JSON.stringify(next));return true}
+  catch{return false}
+}
+function v94PrepareBirthField(story){
+  const field=$('v94BirthField');
+  field.replaceChildren();
+  const low=quality==='low'||autoEco||reduceMotion;
+  const count=reduceMotion?0:low?24:48;
+  const rng=seeded(v94SeedFromId(story.id)^0x9e3779b9);
+  const fragment=document.createDocumentFragment();
+  for(let i=0;i<count;i++){
+    const spark=document.createElement('i');
+    const theta=rng()*twoPi;
+    const distance=48+rng()*Math.min(w,h)*.34;
+    spark.style.setProperty('--from-x',(Math.cos(theta)*distance).toFixed(1)+'px');
+    spark.style.setProperty('--from-y',(Math.sin(theta)*distance).toFixed(1)+'px');
+    spark.style.setProperty('--delay',Math.floor(rng()*650)+'ms');
+    spark.style.setProperty('--radius',(1+rng()*1.7).toFixed(2)+'px');
+    spark.style.setProperty('--alpha',(.35+rng()*.6).toFixed(2));
+    fragment.append(spark);
+  }
+  field.append(fragment);
+  field.style.setProperty('--v94-color',lensColors[story.category]||'#b7dce5');
+  field.hidden=reduceMotion;
+  field.classList.remove('is-forming');
+  if(!reduceMotion){void field.offsetWidth;field.classList.add('is-forming')}
+}
+function v94UpdateBirthField(){
+  const field=$('v94BirthField');
+  if(!birth||field.hidden)return;
+  const story=stories[selected];
+  if(!story)return;
+  const p=project(story.p);
+  field.style.left=p.x+'px';
+  field.style.top=p.y+'px';
+}
+function v94FinishBirth(){
+  const story=stories[selected];
+  birth=null;
+  $('birthComet').style.display='none';
+  const field=$('v94BirthField');
+  field.hidden=true;field.classList.remove('is-forming');
+  if(!story||!story.local){resumeScene();return}
+  const overlay=$('birthOverlay');
+  overlay.hidden=false;
+  overlay.setAttribute('aria-hidden','false');
+  $('birthContinue').focus({preventScroll:true});
+}
+function v94ReturnToStar(){
+  const overlay=$('birthOverlay');
+  overlay.hidden=true;overlay.setAttribute('aria-hidden','true');
+  $('v94BirthField').hidden=true;
+  document.querySelectorAll('[data-open]').forEach(button=>{
+    button.classList.toggle('is-on',button.dataset.open==='universe');
+  });
+  v762RestoreStar();
+  resumeScene();
+}
+function v94ShowOwnArchive(){
+  const overlay=$('birthOverlay');
+  overlay.hidden=true;overlay.setAttribute('aria-hidden','true');
+  $('v94BirthField').hidden=true;
+  showLegacy();
+}
+function addStory(data){
+  const alias=safeString(data.get('alias'),32).trim().toUpperCase();
+  const quote=safeString(data.get('quote'),280).trim();
+  const rule=safeString(data.get('rule'),180).trim();
+  if(alias.length<2||quote.length<12||rule.length<8)return false;
+  const id='local-'+Date.now().toString(36)+'-'+Math.floor(rand()*1e6).toString(36);
+  const record={
+    id,alias,market:safeString(data.get('market'),16),
+    category:safeString(data.get('category'),20),quote,
+    story:safeString(data.get('story'),1200).trim()||quote,rule,
+    capsule:safeString(data.get('capsule'),500).trim(),type:'local',
+    createdAt:new Date().toISOString(),p:v94PositionFromId(id),local:true
+  };
+  if(!v94StoreLocal(record)){
+    showToast('Не удалось сохранить звезду. Проверь настройки браузера и повтори попытку.');
+    return false;
+  }
+  stories.push(record);saved.push(record);
+  closeDrawer(true);setLens('All',false);makeMarkers();generateParticles();
+  focus(stories.length-1,false);
+  $('birthName').textContent='@'+alias;
+  birth={started:performance.now(),id};
+  v94PrepareBirthField(record);
+  if(reduceMotion)v94FinishBirth();
+  else{resumeScene();showToast('Новая звезда формируется ✦')}
+  return true;
+}
+function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}
   const checkins=loadChecks();
   const dateKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
   function daysAgo(start){const a=new Date(start),b=new Date();return Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/86400000)}
@@ -3382,13 +3488,13 @@ void main(){
     $('plusZoom').onclick=()=>targetZoom=clamp(targetZoom+.13,.68,1.6);$('minusZoom').onclick=()=>targetZoom=clamp(targetZoom-.13,.68,1.6);
     $('autoRotate').onclick=()=>setSpin(!spinning);$('resetCamera').onclick=reset;$('modeButton').onclick=setQuality;
     $('toggleAtlas').onclick=()=>{atlasEnabled=!atlasEnabled;$('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));$('constellationLayer').classList.toggle('is-off',!atlasEnabled);$('signalHint').innerHTML=atlasEnabled?'SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div>':'SIGNAL ATLAS <strong>OFFLINE</strong>';showToast(atlasEnabled?'Тематические созвездия включены':'Созвездия скрыты')};
-    $('birthContinue').onclick=()=>{$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true');showLegacy()};
+    $('birthContinue').onclick=v94ReturnToStar;$('birthViewArchive').onclick=v94ShowOwnArchive;
     $('gl').addEventListener('pointerdown',pointerDown);$('fallback').addEventListener('pointerdown',pointerDown);
     window.addEventListener('pointermove',pointerMove);window.addEventListener('pointerup',pointerUp);window.addEventListener('pointercancel',e=>pointerUp(e,true));
     $('gl').addEventListener('lostpointercapture',e=>pointerUp(e,true));
     $('fallback').addEventListener('lostpointercapture',e=>pointerUp(e,true));
     $('scene').addEventListener('wheel',e=>{if(e.target.closest('button'))return;e.preventDefault();targetZoom=clamp(targetZoom-e.deltaY*.0007,.68,1.6)},{passive:false});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true')}else closeDrawer()}if(!$('drawer').hidden||!$('birthOverlay').hidden||diveIndex!==-1)return;
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){v94ReturnToStar()}else closeDrawer()}if(!$('drawer').hidden||!$('birthOverlay').hidden||diveIndex!==-1)return;
     const el=document.activeElement;
     if(el&&el.matches('input,textarea,select,[contenteditable="true"]'))return;
     if(e.key==='ArrowRight'){e.preventDefault();if(guidedJourney)advanceJourneyFromGlobe();else focus(nextVisibleSignal(selected,1))}
