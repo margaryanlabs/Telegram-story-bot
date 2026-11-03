@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070d">
 <meta name="description" content="THE MARKET REMEMBERS — a living universe of traders. VETO visual experience. Interactive demo.">
-<title>THE MARKET REMEMBERS — MEMORY MUSEUM V7.6.3 / VETO</title>
+<title>THE MARKET REMEMBERS — LIVING STORIES V7.7 / VETO</title>
 <style>
 :root{--bg:#05070d;--ink:#f1f4ff;--violet:#9879ff;--cyan:#7fe6ff;--muted:#909bb3;--line:rgba(193,204,248,.15);--panel:rgba(11,15,27,.86);--gold:#f9d7ac;color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{background:var(--bg);color:var(--ink);overflow:hidden}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #bda9ff;outline-offset:3px}button[disabled]{opacity:.45;cursor:not-allowed}a{text-decoration:none;color:inherit}[hidden]{display:none!important}
@@ -1095,6 +1095,52 @@ backdrop-filter:blur(12px);pointer-events:auto}
  .obsidian .mobile-nav button,.obsidian .signal-dock,.obsidian .world-controls{transition:none!important;animation:none!important}
 }
 
+
+/* V7.7 / Living Stories — semantic links, not real-world social connections. */
+.obsidian .v77-threads{margin:43px 0 30px;padding-top:23px;border-top:1px solid #d6b6ae2e}
+.v77-threads-intro{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.v77-threads-intro>span{color:#cba8af;font-size:9px;font-weight:650;letter-spacing:.19em}
+.obsidian .v77-threads-intro h3{
+ margin:0;color:#f1e5e0;font:italic 400 clamp(24px,2.5vw,32px)/1.22 Georgia,serif;
+ letter-spacing:-.04em;text-wrap:balance}
+.v77-thread-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.obsidian .v77-thread{
+ --thread-color:#cda3b6;position:relative;overflow:hidden;isolation:isolate;
+ min-width:0;min-height:188px;display:flex;flex-direction:column;
+ align-items:stretch;text-align:left;gap:10px;padding:18px 17px 15px;
+ border:1px solid #cab8c13b;border-radius:13px;
+ background:linear-gradient(147deg,#28232edc,#141b28ea);
+ cursor:pointer;color:#ecdfdf;transition:border-color .2s ease,background .2s ease,transform .2s ease}
+.obsidian .v77-thread[data-mood="risk"]{--thread-color:#a3c8d4}
+.obsidian .v77-thread[data-mood="discipline"]{--thread-color:#b5a6da}
+.obsidian .v77-thread[data-mood="patience"]{--thread-color:#dfb795}
+.obsidian .v77-thread[data-mood="fomo"]{--thread-color:#e0a8c9}
+.obsidian .v77-thread:before{content:"";height:2px;position:absolute;left:0;right:0;top:0;
+ background:linear-gradient(90deg,transparent,var(--thread-color),transparent)}
+.obsidian .v77-thread:hover,.obsidian .v77-thread:focus-visible{border-color:var(--thread-color);
+ background:linear-gradient(145deg,#322b39,#1c2330);transform:translateY(-2px);outline-offset:3px}
+.v77-thread-eyebrow{color:var(--thread-color);font-size:9px;letter-spacing:.15em;line-height:1.4}
+.obsidian .v77-thread-quote{font:italic 400 18px/1.36 Georgia,serif;
+ letter-spacing:-.025em;color:#f5ece6;display:-webkit-box;-webkit-line-clamp:3;
+ -webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.v77-thread-meta{font-size:9px;color:#b6abbc;line-height:1.55;letter-spacing:.04em}
+.v77-thread-foot{display:flex;justify-content:space-between;align-items:center;gap:9px;
+ margin-top:auto;padding-top:11px;border-top:1px solid #e9d9d21a}
+.v77-thread-foot small{font-size:8px;color:#9997a8;letter-spacing:.04em;line-height:1.5}
+.v77-thread-foot i{font-style:normal;color:var(--thread-color);font-size:20px}
+.obsidian .v77-thread-disclaimer{margin:13px 0 0;font-size:10px;line-height:1.65;color:#aaa5b2}
+@media(max-width:820px){
+ .obsidian .v77-threads{margin:30px 0 25px;padding-top:18px}
+ .v77-thread-grid{grid-template-columns:1fr;gap:9px}
+ .obsidian .v77-thread{min-height:134px;padding:15px}
+ .obsidian .v77-thread-quote{font-size:17px;-webkit-line-clamp:2}
+ .v77-thread-meta{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .v77-thread{animation:none!important;transition:none!important}
+ .obsidian .v77-thread:hover{transform:none}
+}
+
 </style>
 </head>
 <body>
@@ -2154,6 +2200,78 @@ void main(){
     const focusTarget=returnTo&&returnTo.isConnected&&typeof returnTo.focus==='function'?returnTo:fallback;
     if(wasOpen&&focusTarget)focusTarget.focus({preventScroll:true});
   }
+  // V7.7 / Living Stories: links are thematic/editorial, NEVER evidence of real-world relationships.
+  // Stable, deterministic choices. User-supplied local stories are neither recommended nor published.
+  function v77RelatedRecords(source,collection=stories){
+    if(!source||!Array.isArray(collection))return [];
+    const subjects=['Risk','Discipline','FOMO','Patience'];
+    const complement={Risk:'Discipline',Discipline:'Patience',FOMO:'Discipline',Patience:'Risk'};
+    const pool=collection.map((story,index)=>({story,index}))
+      .filter(({story})=>story&&story!==source&&!story.local&&
+         ['fictional','editorial','legend'].includes(story.type)&&subjects.includes(story.category));
+    const chosen=[],used=new Set();
+    const score=({story,index})=>
+      (story.market===source.market?4:0)+(story.type==='editorial'?3:story.type==='legend'?2:1)
+      +(typeof story.quote==='string'&&story.quote.length>15?1:0)-index*.0001;
+    const take=(test,relation)=>{
+      const available=pool.filter(item=>!used.has(item.index)&&test(item.story)).sort((a,b)=>score(b)-score(a));
+      const next=available[0];
+      if(next){used.add(next.index);chosen.push({...next,relation})}
+    };
+    if(subjects.includes(source.category)){
+      take(story=>story.category===source.category,'Общая тема');
+      take(story=>story.category===complement[source.category],'Следующий урок');
+    }
+    take(story=>story.type==='editorial'&&story.category!==source.category,'Редакционный взгляд');
+    for(const item of pool.sort((a,b)=>score(b)-score(a))){
+      if(chosen.length>=3)break;
+      if(!used.has(item.index)){used.add(item.index);chosen.push({...item,relation:'Другой опыт'})}
+    }
+    return chosen;
+  }
+  function v77MountThreads(source){
+    // Guided four-part paths retain their original sequence and controls.
+    if(guidedJourney)return;
+    const article=$('drawerContents').querySelector('.memory-experience');
+    const navigation=article?.querySelector('.memory-navigation');
+    if(!navigation)return;
+    const related=v77RelatedRecords(source);
+    if(!related.length)return;
+    const section=document.createElement('section');
+    section.className='v77-threads';
+    section.setAttribute('aria-label','Тематически связанные истории');
+    const intro=document.createElement('div');intro.className='v77-threads-intro';
+    const eyebrow=document.createElement('span');eyebrow.textContent='LIVING STORIES / THEMATIC THREADS';
+    const heading=document.createElement('h3');heading.textContent='У каждой звезды есть продолжение.';
+    intro.append(eyebrow,heading);
+    const grid=document.createElement('div');grid.className='v77-thread-grid';
+    related.forEach(({story,index,relation},order)=>{
+      const button=document.createElement('button');
+      button.type='button';button.className='v77-thread';
+      button.dataset.mood=String(story.category).toLowerCase();
+      button.dataset.threadIndex=String(index);
+      const kind=story.type==='legend'?'ИСТОЧНИК · ЦИТАТА':
+        story.type==='editorial'?'РЕДАКЦИОННЫЙ ВЫМЫШЛЕННЫЙ ПРИМЕР':'ВЫМЫШЛЕННАЯ ИСТОРИЯ';
+      const eyebrow=document.createElement('span');eyebrow.className='v77-thread-eyebrow';
+      eyebrow.textContent='0'+(order+1)+' / '+relation.toUpperCase();
+      const title=document.createElement('strong');title.className='v77-thread-quote';
+      title.textContent='«'+String(story.quote||'').replace(/[«»]/g,'')+'»';
+      const meta=document.createElement('span');meta.className='v77-thread-meta';
+      meta.textContent=story.alias+' · '+story.category+' / '+story.market;
+      const foot=document.createElement('span');foot.className='v77-thread-foot';
+      const provenance=document.createElement('small');provenance.textContent=kind;
+      const arrow=document.createElement('i');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');
+      foot.append(provenance,arrow);
+      button.append(eyebrow,title,meta,foot);
+      button.setAttribute('aria-label','Открыть тематическую историю '+story.alias+': '+String(story.quote||'').slice(0,100));
+      button.onclick=()=>beginDive(index);
+      grid.append(button);
+    });
+    const note=document.createElement('p');note.className='v77-thread-disclaimer';
+    note.textContent='Связи построены по темам и редакционным категориям. Это не реальные отношения между людьми и не персональная рекомендация.';
+    section.append(intro,grid,note);
+    navigation.insertAdjacentElement('beforebegin',section);
+  }
   const LEGEND_PORTRAITS={
     'Warren Buffett':{url:'https://commons.wikimedia.org/wiki/Special:FilePath/Warren_Buffett_in_2010_(cropped).jpg?width=350',credit:'Белый дом США / Wikimedia Commons · Public Domain',file:'https://commons.wikimedia.org/wiki/File:Warren_Buffett_in_2010_(cropped).jpg'},
     'Benjamin Graham':{url:'https://commons.wikimedia.org/wiki/Special:FilePath/Benjamin_Graham_(1894-1976)_portrait_on_23_March_1950.jpg?width=350',credit:'Архивный портрет 1950 / Wikimedia Commons · Public Domain (US)',file:'https://commons.wikimedia.org/wiki/File:Benjamin_Graham_(1894-1976)_portrait_on_23_March_1950.jpg'},
@@ -2187,7 +2305,7 @@ void main(){
       '<button id="copyMemory" type="button" aria-label="Копировать">⧉</button></nav>'+
       '<button id="memoryBack" class="memory-back" type="button">← Назад к вселенной</button></article>';
     setDrawer('LEGEND / VERIFIED SOURCE',content);
-    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(true);
+    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(true);v77MountThreads(s);
     if(photo)$('legendPortrait').addEventListener('error',e=>{e.currentTarget.hidden=true});
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
@@ -2254,7 +2372,7 @@ void main(){
       '</article>';
     setDrawer('HUMAN STORY / '+(local?'LOCAL':'FICTIONAL'),content);
     $('drawer').classList.add('memory-detail','human-detail');
-    $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);
+    $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);v77MountThreads(s);
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
     $('memoryBack').onclick=closeDrawer;
