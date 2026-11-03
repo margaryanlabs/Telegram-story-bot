@@ -133,7 +133,7 @@ test('guided reading and unrelated stories never show a stale breadcrumb',()=>{
   assert.equal(calls,0);
 });
 test('thread UI is integrated into both verified and fictional readers and old scene remains',()=>{
-  assert.match(script,/v78MountBreadcrumb\(s\);v77MountThreads\(s\)/);
+  assert.match(script,/v78MountBreadcrumb\(s\);v93MountReaderScene\(s\);v77MountThreads\(s\)/);
   assert.match(script,/v78UpdateDiveRoute\(index\)/);
   assert.match(script,/v78ThreadContext=null/);
   assert.match(html,/id="travelTrail"/);
