@@ -42,19 +42,21 @@ function sceneContext(){
            {alias:'B',category:'Patience',p:[1,0,0],type:'fictional'}],
   selected:0,w:390,h:844,reduceMotion:false,
   v9State:{phase:'idle',started:0,index:-1,token:0,energy:0},
-  diveIndex:-1,diveSequence:0,diveTimer:null,targetZoom:1,flightFinish:0,
+  diveIndex:-1,diveSequence:0,diveTimer:null,v93PassagePausedAt:0,targetZoom:1,flightFinish:0,
   v78ThreadContext:null,lensColors:{Risk:'#aabbcc',Patience:'#ccbbaa'},document:{activeElement:null,hidden:false},
   performance:{now:()=>100},
   $:key=>controls[key],
   clamp:(x,min,max)=>Math.min(max,Math.max(min,x)),
   lensMatches:()=>true,setLens(){},closeLensPanel(){},
-  focus(index){this.selected=index},v78UpdateDiveRoute(){},
+  focus(index){this.selected=index},v78UpdateDiveRoute(){},updateDivePosition(){this.anchored=true},
   setTimeout(fn,ms){this.pending={fn,ms};return 23},
   clearTimeout(){this.cleared=true},
   showStory(story){this.opened=story.alias},
   closeDrawer(){},...{}
  };
  controls.drawer={hidden:true};
+ ctx.v93SuspendPassage=run('v93SuspendPassage',ctx);
+ ctx.v93ResumePassage=run('v93ResumePassage',ctx);
  ctx.cancelDive=run('cancelDive',ctx);
  ctx.finishDive=run('finishDive',ctx);
  ctx.beginDive=run('beginDive',ctx);
@@ -72,6 +74,7 @@ test('selected star launches a real cancellable flight with the correct alias',(
  assert.equal(overlay.hidden,false);
  assert.equal(overlay.attrs['aria-hidden'],'false');
  assert.equal(ctx.pending.ms,1350);
+ assert.equal(ctx.anchored,true);
  assert.equal(skip.focused,true);
  assert.equal(ctx.$('diveName').textContent,'@B');
 });
@@ -159,4 +162,49 @@ test('shader energy is sent only into existing programs, not separate full-scree
  assert.match(html,/class="memory-dive"/);
  assert.match(html,/\.memory-dive::after\{display:none!important\}/);
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
+});
+
+
+test('background browser suspends flight without opening a story',()=>{
+ const {ctx}=sceneContext();
+ ctx.beginDive(0);
+ ctx.document.hidden=true;
+ ctx.v93SuspendPassage();
+ assert.equal(ctx.v93PassagePausedAt,100);
+ assert.equal(ctx.diveTimer,null);
+ assert.equal(ctx.cleared,true);
+ ctx.finishDive(ctx.diveSequence);
+ assert.equal(ctx.opened,undefined);
+ assert.equal(ctx.diveIndex,0);
+});
+test('returning after a long background interval resumes with the same token and flight',()=>{
+ const {ctx}=sceneContext();
+ ctx.beginDive(1);
+ const token=ctx.diveSequence;
+ ctx.document.hidden=true;ctx.v93SuspendPassage();
+ ctx.performance.now=()=>5100;
+ ctx.document.hidden=false;ctx.v93ResumePassage();
+ assert.equal(ctx.v93PassagePausedAt,0);
+ assert.equal(ctx.v9State.started,5100);
+ assert.equal(ctx.pending.ms,1350);
+ assert.equal(ctx.v9State.token,token);
+ ctx.finishDive(token);
+ assert.equal(ctx.opened,'B');
+});
+test('cancelling a backgrounded transition clears its suspension state',()=>{
+ const {ctx}=sceneContext();
+ ctx.beginDive(0);
+ ctx.document.hidden=true;ctx.v93SuspendPassage();
+ ctx.cancelDive();
+ ctx.performance.now=()=>5100;ctx.document.hidden=false;
+ ctx.v93ResumePassage();
+ assert.equal(ctx.v93PassagePausedAt,0);
+ assert.equal(ctx.diveIndex,-1);
+ assert.equal(ctx.opened,undefined);
+});
+test('mobile marker placements are throttled without throttling WebGL renderer',()=>{
+ const source=js.slice(js.indexOf('function animate('),js.indexOf('function unwrappedY('));
+ assert.match(source,/t-v93LastMarkerFrame>=30/);
+ assert.match(source,/webGLRender\(t\)/);
+ assert.match(source,/v93LastMarkerFrame=t;updateMarkers\(\)/);
 });
