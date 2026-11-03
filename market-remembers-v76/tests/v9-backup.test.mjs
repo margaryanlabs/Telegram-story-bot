@@ -36,7 +36,7 @@ const throwsWith=(cb,pattern)=>{
  assert.match(String(err.message||err),pattern);
 };
 test('archive exports remain compatible with the existing JSON format',()=>{
- assert.match(script,/JSON\.stringify\(\{demo:true,localOnly:true,stories:saved,checkins\}/);
+ assert.match(script,/JSON\.stringify\(\{demo:true,localOnly:true,stories:exportStories,checkins:exportChecks\}/);
  const b=normalizer(payload([record('local-a123')]));
  assert.equal(b.stories.length,1);
  assert.equal(b.stories[0].id,'local-a123');
@@ -83,6 +83,7 @@ function storeFixture(existing=[record('local-existing')],failOn=null){
  };
  const checkins={'local-existing':{'2026-11-01':'missed'}};
  const context={saved:existing,checkins,KEY:key,CHECK_KEY:checkKey,localStorage:storage};
+ context.v96ReadStoredRecords=run('v96ReadStoredRecords',context);
  return {state,storage,context,commit:run('v95ImportBackupData',context)};
 }
 test('merge adds new star without deleting older stars or duplicating existing IDs',()=>{
