@@ -365,7 +365,7 @@ Review URL (manual Render deploy, autoDeploy OFF): https://market-remembers-star
 The same V9 STARLIGHT project continues on isolated Draft PR #220 with ECLIPSE V8.2 as visual baseline. The original V7.4, V8.0, V8.2 and Telegram/Vetogram production code and Render sites remain unchanged.
 
 ### Behavior improvements
-- **Suspended passage:** hide the browser mid-flight and the 1.35-second STAR PASSAGE pauses instead of silently opening the reader while backgrounded. Returning to the page restores the paused elapsed-time clock and schedules the remaining passage on the **same selection token**. ESC/cancel invalidates it.
+- **Suspended passage:** hide the browser mid-flight and the 1.35-second STAR PASSAGE pauses instead of silently opening the reader while backgrounded. The CSS star flare/progress animations are paused in sync with the JS flight clock. Returning to the page restores the paused elapsed-time clock and schedules the remaining passage on the **same selection token**. ESC/cancel invalidates it.
 - **Correct first frame:** the transition CSS position is now projected synchronously from the **actual selected star** when the overlay first appears, avoiding a flash at a generic fallback center.
 - **Lower mobile DOM cost:** HTML star-marker projection/placement runs at about 30 Hz on mobile during animation, while WebGL/Canvas retains its own normal frame cadence. Direct pointer/selection/resize marker updates remain immediate.
 - **Larger touch targets:** mobile dock buttons are at least 44px, top navigation at least 40px, and portrait scene controls 42px (39px in short portrait screens). No additional large halos or rings; preserve ECLIPSE original visual identity.
