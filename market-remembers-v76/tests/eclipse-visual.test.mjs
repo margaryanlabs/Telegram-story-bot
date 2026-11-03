@@ -57,7 +57,8 @@ test('new mobile headline has calmer hierarchy while retaining original call to 
 test('three globe size modes survive the restored original camera proportions',()=>{
   assert.match(script,/function v81CycleScale\(\)/);
   assert.match(html,/id="globeScale"/);
-  assert.match(script,/radius:Math\.min\(w,h\)\*\(short\?\.36:\.397\)/);
+  assert.match(script,/nominalRadius=Math\.min\(w,h\)\*\(short\?\.36:\.397\)/);
+  assert.match(script,/function v9PortraitFrame\(/);
   const fn=runInNewContext('('+functionSource('v81ScaleFactor')+')');
   assert.equal(fn('small'),.73);
   assert.equal(fn('big'),1);
