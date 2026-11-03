@@ -45,15 +45,15 @@ test('local storage failure is a failure, never a fake success',()=>{
  const f=fn('v94StoreLocal',{saved:[],KEY:'private-records',localStorage});
  assert.equal(f({id:'local-failed'}),false);
 });
-test('successful write is bounded to the most recent forty private records',()=>{
+test('adding the forty-first record never silently deletes the oldest star',()=>{
  const writes=[];
  const localStorage={setItem:(key,value)=>writes.push({key,records:JSON.parse(value)})};
  const saved=Array.from({length:40},(_,i)=>({id:'local-'+i}));
  const ok=fn('v94StoreLocal',{saved,KEY:'private-records',localStorage});
  assert.equal(ok({id:'local-last'}),true);
  assert.equal(writes[0].key,'private-records');
- assert.equal(writes[0].records.length,40);
- assert.equal(writes[0].records[0].id,'local-1');
+ assert.equal(writes[0].records.length,41);
+ assert.equal(writes[0].records[0].id,'local-0');
  assert.equal(writes[0].records.at(-1).id,'local-last');
 });
 function element(tag){
