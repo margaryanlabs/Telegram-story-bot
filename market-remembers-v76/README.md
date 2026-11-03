@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — STARLIGHT V9 / R1+R2 (isolated preview)
+# THE MARKET REMEMBERS — STARLIGHT V9 / R1+R2+R3 (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -241,3 +241,30 @@ This is a **distinct GitHub branch and distinct Render static service**, created
 ### Explicit non-goals in this milestone
 - No backend, private story uploading, public social connections, new library migration or Render overwrite.
 - R3 contextual reader refactoring and R4 personal star creation animation remain on the master plan, not claimed as complete.
+
+## V9 R3 — Connected Observatory Reader (implemented)
+
+The signature STAR PASSAGE no longer cuts into an unrelated-looking dialog. The destination story opens with a compact **observatory of the same selected star** inside the existing reader.
+
+### Real implementation
+- `v93ReaderInfo(record)` resolves the actual record's index, category, current star alias and factual provenance from the existing catalogue (and source metadata for legends); it never creates a replacement story or another person's fictional relationship.
+- `v93MountReaderScene(record)` adds one calm telescope-like star field at the top of the reader using the **same source object's `p` coordinates** for its featured star. Seven tiny backdrop pinpoints are purely ornamental; they do not represent other users or real connections.
+- Explicit provenance labels distinguish source-backed quotations from sourced document *titles*, editorial fictional narratives, fictional examples and browser-local private entries.
+- The reader's intro includes a single immediate **“К ЭТОЙ ЗВЕЗДЕ”** control; this calls existing `closeDrawer`, restoring the real selected star with the pre-existing return pulse.
+- The observatory inherits the actual category/legend accent, and the reading status follows existing `v76UpdateReader`: context → personal rule or editorial conclusion.
+- On mobile the reader intro is limited to a compact ~132px block, with a genuine ≥44px return touch target. Fictional example silhouette is hidden to prevent duplicate visual hierarchy, but **real historical legend images and their credit links remain intact**.
+- Quote reveal uses one restrained, reduced-motion-aware animation; no giant visual ring, separate fake artwork, backend request or extra GPU pass.
+- All navigation through themed recommendations and four-step Memory Paths remains operative.
+
+### Regression & visual review
+- **98/98 isolated JS source, mocked DOM/camera and interaction tests passed**, including ten new cases in `tests/v9-reader.test.mjs` (real catalogue identity, source distinction, private data, keyboard action, and continuity).
+- Added three additional Playwright browser scenarios to `tests/v9-visual.spec.ts`: mobile entry/return screenshot, narrow 320px viewport, and reduced-motion observatory.
+- Playwright scenarios have **not yet been executed** on this hosted branch and physical Android WebGL screenshot QA remains pending. The remote metered browser has an insufficient wallet balance; this does not block static Render deployment.
+- This milestone intentionally excludes R4 star-birth redesign, which remains a separate testable release step.
+
+### Compare
+- Updated STARLIGHT V9: https://market-remembers-starlight-v9.onrender.com/
+- Frozen ECLIPSE V8.2: https://market-remembers-eclipse-v82.onrender.com/
+- Frozen V7.4: https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&release=7c893384
+
+**Please do not merge PR #220 until actual mobile visual/GPU review.**
