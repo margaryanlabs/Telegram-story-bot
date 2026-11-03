@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V7.8 Living Stories / Memory Museum (isolated preview)
+# THE MARKET REMEMBERS — V7.9 Living Stories / Memory Museum (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -112,3 +112,27 @@ The source-level and isolated mock-interaction suite contains 21 cases and passe
 
 ### Test status
 43/43 source-level, syntax and mock-interaction checks passed in the connected JavaScript test harness, including new `tests/thread-route.test.mjs`. This is not browser screenshot, physical-device, GPU or GitHub-hosted CI confirmation.
+
+## V7.9 — Museum Archive editorial consolidation
+- Replaced the old generic card archive with a single coherent, wider editorial reading collection, stronger typography, consistent graphite/ivory/violet visual language, spacious panels, and comfortable mobile one-column records.
+- The archive header now derives **live totals** from the actual current catalogue: all records, sourced legends, browser-local/private recordings. No fixed “30 stories” claim.
+- The search supports aliases, market, category, quotes, full-story text, remembered rule and source metadata. Search input and clear button preserve keyboard focus.
+- Filter interactions no longer call `showArchive()` and do not recreate the drawer, reset the scroll position, or steal keyboard focus. Each filter exposes `aria-pressed` and the count of matches is announced with `aria-live`.
+- The archive distinguishes verified citations from verified document headings, editorial fiction, fictional demo characters, and private local recordings.
+- New illustrated empty state provides a one-tap, accessible reset to all stories and restores input focus.
+- On narrow phones, filters form a horizontally scrollable chip line with touch-sized controls; record cards stack vertically.
+- Subtle universe caption updated from the historical “V7.5.3 TRUE 3D CORE” to “V7.9 MEMORY CORE”, which remains truthful in the Canvas fallback.
+- No shader rebuild, new API, production merge, storage schema change or actual public publishing.
+
+### V7.9 acceptance
+1. Archive opens with actual totals (including any browser-local records) and the matching-results counter.
+2. Select Risk, then Legends, while scrolled down. Input stays focused, scroll position remains, and no archive shell recreation occurs.
+3. Search by alias, market, quote, remembered rule, and legend source. Clear search; previous filter persists.
+4. “Mine” contains only this device’s records; “Saved” contains only bookmarks; verified quotes remain distinct from fictional examples.
+5. Empty results show a quiet explanatory state, and reset returns to All with focus on the search field.
+6. At 320px–390px, the filter line scrolls horizontally and archive records remain in one readable column.
+7. Open a record; original star dive, reader chapters, breadcrumbs and universe return must keep working.
+8. Test with WebGL unavailable: Canvas fallback shows a neutral “MEMORY CORE” caption instead of claiming to render true 3D.
+
+### Verification
+53/53 syntax/source/mocked interaction tests passed, including 10 new archive tests in `tests/archive-v79.test.mjs`. Real-device browser visual/GPU QA and GitHub-hosted CI remain to be completed.
