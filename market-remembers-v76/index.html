@@ -2949,7 +2949,8 @@ void main(){
   }
   function animate(t){
     frameScheduled=false;animationFrameHandle=null;
-    if(document.hidden)return;
+    // A pending frame can fire just after a reader covers the scene.
+    if(document.hidden||sceneIsCovered())return;
     const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:1-Math.exp(-dt/245);
     if(flightFinish&&t>flightFinish){flightFinish=0;targetZoom=1.13}
     if(spinning&&!dragging&&!birth)targetY+=dt*.000055;
