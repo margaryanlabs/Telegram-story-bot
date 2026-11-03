@@ -54,3 +54,19 @@ test('cinematic fragment animation respects reduced-motion preferences',()=>{
   assert.match(html,/if\(reduceMotion\)return/);
   assert.match(html,/--memory-accent/);
 });
+
+test('closing a reader returns to selected star, except when changing stories',()=>{
+  assert.match(html,/id="returnPulse"/);
+  assert.match(html,/function v762RestoreStar\(\)/);
+  assert.match(html,/focusLabelActive=true/);
+  assert.match(html,/if\(wasReader&&skipReturn!==true\)v762RestoreStar\(\)/);
+  assert.match(html,/if\(!\$\('drawer'\)\.hidden\)closeDrawer\(true\)/);
+  assert.match(html,/const fallback=w<820\?\$\('dockOpen'\):\$\('openSelected'\)/);
+});
+test('return effects are disposable and accessible',()=>{
+  assert.match(html,/function v762CancelReturn\(\)/);
+  assert.match(html,/v762ReturnTimer=setTimeout\(v762CancelReturn,1150\)/);
+  assert.match(html,/if\(reduceMotion\)return/);
+  assert.match(html,/\.return-pulse/);
+  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
+});
