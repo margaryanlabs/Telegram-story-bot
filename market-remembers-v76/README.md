@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V7.6 Memory Museum (isolated preview)
+# THE MARKET REMEMBERS — V7.6.1 Memory Museum (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -20,3 +20,20 @@ This is the **next additive experience layer** built on the exact V7.5.3 code. I
 `node --test market-remembers-v76/tests/*.test.mjs`
 
 This verifies inline JS parsing, required DOM controls and enhanced IDs, preservation of the original localStorage key, original WebGL engine, provenance labels, reduced-motion and mobile fallback conditions. Real-device GPU, touch and pixel-level quality still require manual QA.
+
+## V7.6.1 — Memory choreography and accessible reading
+- The selected story fragment transitions subtly when choosing a different star. Animations are omitted when the operating system requests reduced motion.
+- Each story or verified legend gets a two-step reading navigator with direct jumps to its experience/context and lesson/editorial conclusion.
+- The rail updates active chapters and read progress as the user scrolls.
+- Changing story category changes only the memory-dive glow, not the particle sphere shader.
+- Tab and Shift+Tab stay inside the active reader dialog, and the prior trigger regains focus on close.
+- A lighter desktop reader scrim reveals the existing frozen globe rather than replacing it. Mobile keeps a fully immersive reader.
+
+### Manual acceptance checklist (pending visual/real-device verification)
+1. Desktop: open any fictional memory; visually inspect the globe behind the reader and both chapter buttons.
+2. Desktop: Tab through all controls; Shift+Tab should cycle to the last control and Escape should close.
+3. Mobile: open via star and bottom dock; chapter buttons and close control must remain usable.
+4. Change to an official legend and confirm source attribution and both chapter labels.
+5. Enable reduced motion: no fragment transition or motion-based navigation.
+6. Check LENS, guided Memory Paths and My Legacy are unaffected.
+7. Verify private local story provenance; do not suggest that a demo entry has been published globally.
