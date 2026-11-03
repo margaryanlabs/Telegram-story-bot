@@ -358,3 +358,20 @@ Changes on the **same isolated V9 STARLIGHT Draft PR**; frozen V7.4, V8.0, V8.2 
 **Verification:** Main inline JavaScript parsed successfully, and 8/8 targeted source-level function/behavior checks were executed successfully in an isolated JavaScript harness. This is **not** equivalent to running the full Node test suite or Chromium/Android visual QA. GitHub Actions runner was not assigned steps in the latest observed failed run, so CI success must not be claimed. Keep PR #220 Draft until runner-level tests and real Android GPU/visual review are completed.
 
 Review URL (manual Render deploy, autoDeploy OFF): https://market-remembers-starlight-v9.onrender.com/
+
+
+## V9.3 — Suspended passage, real-star anchoring, mobile touch/paint budget (2026-11-04)
+
+The same V9 STARLIGHT project continues on isolated Draft PR #220 with ECLIPSE V8.2 as visual baseline. The original V7.4, V8.0, V8.2 and Telegram/Vetogram production code and Render sites remain unchanged.
+
+### Behavior improvements
+- **Suspended passage:** hide the browser mid-flight and the 1.35-second STAR PASSAGE pauses instead of silently opening the reader while backgrounded. Returning to the page restores the paused elapsed-time clock and schedules the remaining passage on the **same selection token**. ESC/cancel invalidates it.
+- **Correct first frame:** the transition CSS position is now projected synchronously from the **actual selected star** when the overlay first appears, avoiding a flash at a generic fallback center.
+- **Lower mobile DOM cost:** HTML star-marker projection/placement runs at about 30 Hz on mobile during animation, while WebGL/Canvas retains its own normal frame cadence. Direct pointer/selection/resize marker updates remain immediate.
+- **Larger touch targets:** mobile dock buttons are at least 44px, top navigation at least 40px, and portrait scene controls 42px (39px in short portrait screens). No additional large halos or rings; preserve ECLIPSE original visual identity.
+
+### QA and release boundaries
+- 4/4 targeted simulated **shared-state** STAR PASSAGE tests passed: correct selected identity and first-frame anchor; no background reader opening; resumption with same token and remaining time; cancelled passage stays cancelled.
+- Full inline application JS passed a syntax parse; new V9.3 mock tests were added to `v9-starlight.test.mjs` and browser scenarios added to `v9-visual.spec.ts` for passage anchor and narrow/mobile tap geometry.
+- **Not yet verified:** full Node suite, on-device Chrome/Telegram GPU frame time, actual phone screenshots or Playwright browser runs. GitHub Actions still needs an available runner. Keep draft PR; do not merge to production.
+- Static preview uses the existing isolated https://market-remembers-starlight-v9.onrender.com/ Render service with autoDeploy OFF; manual deployment required after code changes.
