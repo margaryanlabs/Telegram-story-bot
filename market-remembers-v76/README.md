@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V7.6.3 Memory Museum (isolated preview)
+# THE MARKET REMEMBERS — V7.7 Living Stories / Memory Museum (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -70,3 +70,23 @@ This verifies inline JS parsing, required DOM controls and enhanced IDs, preserv
 
 ### Verification
 The source-level and isolated mock-interaction suite contains 21 cases and passed with JavaScript execution. These are not screenshot tests or a substitute for real-device WebGL/Canvas fallback QA. The GitHub-hosted workflow has been unable to allocate a runner on this account; it is separate from the local checks.
+
+## V7.7 — Living Stories: editorial thematic threads
+- Adds a *three-way* continuation block after each non-guided story reader: the same theme, a complementary discipline, and a distinct editorial viewpoint. Targets use the existing indexed star catalogue and original `beginDive(index)` animation.
+- The selection is deterministic (same catalogue yields identical ordering); it never recommends the source record or duplicates.
+- Private, user-saved local records are **never eligible targets**. A user's private story may recommend existing public-domain/fictional *demo content* but its text is never sent to an external service.
+- The provenance for each target is explicit: sourced legend vs fictional example vs editorial fictional narrative.
+- Four-step guided `MEMORY PATHS` do not display thematic continuation panels, protecting their chapter order.
+- Reader navigation, star return animation, source citations, story data model and existing archive layout remain unchanged.
+- This does not add a social graph, publish user content, invent personal relationships, or introduce backend/API calls.
+
+### Acceptance cases
+1. Open a fictional story, scroll to the end and see three theme-based continuation records.
+2. Click a continuation: close the reader and fly to the chosen existing star, not a new generated star.
+3. Open a sourced financial legend: source attribution and disclaimer must remain visible, followed by thematic suggestions.
+4. Start a guided four-star Memory Path: the thematic section should be absent and the correct next chapter remains in control.
+5. Open a privately saved local story: suggestions must contain only existing demo/editorial/verified records, never another local story.
+6. Mobile: cards stack in one column and remain keyboard/touch accessible; reduced motion disables hover/transition motion.
+
+### Automated checks
+30 source-level + mocked DOM/camera tests passed via JS evaluation, including 9 new `living-stories.test.mjs` checks. These are not equivalent to mobile screenshots, a real WebGL test or a hosted CI run.
