@@ -1367,7 +1367,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
  .v81-globe-aura::after{opacity:.34;animation-duration:45s}
  .obsidian .world-controls{max-width:calc(100vw - 28px)}
  .obsidian .world-controls button.globe-size-button{min-width:62px;padding:0 8px;font-size:8px}
- .obsidian .app .hero{z-index:9}
+ .obsidian .hero{z-index:9}
  .obsidian .hero::before{background:radial-gradient(ellipse 86% 77% at 21% 33%,
   #03060ef4 0%,#050811dc 34%,#05081171 61%,transparent 100%)}
  .obsidian .signal-dock{border-color:#d7b1bd62}
@@ -1815,7 +1815,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
       radius:Math.min(w,h)*(w<820?.55:.53)*scale};
     if(v763MobileStage&&w<820)return {x:v763MobileStage.x,
       y:v763MobileStage.y,radius:v763MobileStage.radius*scale};
-    return {x:w*.66,y:h*.52,radius:Math.min(h*.46,w*.345)*scale};
+    const radius=Math.min(h*.46,w*.345)*scale;
+    return {x:clamp(w*.66,radius+12,w-radius-12),y:h*.52,radius};
   }
   function rotate(p){const cy=Math.cos(cameraY),sy=Math.sin(cameraY),cx=Math.cos(cameraX),sx=Math.sin(cameraX);const x=cy*p[0]+sy*p[2],z=-sy*p[0]+cy*p[2],y=cx*p[1]-sx*z;return [x,y,sx*p[1]+cx*z]}
   function project(p){const t=rotate(p),c=targetCenter(),per=2.7/(3.1-t[2]*.7),s=c.radius*per*zoom;return {x:c.x+t[0]*s,y:c.y-t[1]*s,z:t[2],s}}
