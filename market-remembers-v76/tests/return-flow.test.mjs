@@ -87,6 +87,7 @@ function restoreCase(reduced){
     focusLabelActive:false,inertiaX:1,inertiaY:1,spinning:true,flightFinish:12,
     cameraY:0,cameraX:0,targetY:0,targetX:0,targetZoom:2,zoom:2,w:390,h:700,
     v762ReturnTimer:null,
+    v762CancelReturn(){},
     unwrappedY:x=>x,clamp:(x,a,b)=>Math.min(b,Math.max(a,x)),
     project:()=>{record.point++;return {x:180,y:300,z:.75}},
     updateMarkers(){record.markers++},
