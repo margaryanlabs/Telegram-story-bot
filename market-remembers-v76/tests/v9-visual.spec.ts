@@ -67,3 +67,40 @@ test('archive search keyboard does not remesh a covered sphere',async({page})=>{
  await page.locator('#closeDrawer').click();
  await expect(page.locator('#scene')).toBeVisible();
 });
+
+test('observatory reader preserves the selected star through entry and return',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('#drawer')).toBeVisible();
+ await expect(page.locator('.v93-observatory')).toBeVisible();
+ await expect(page.locator('.v93-observatory-alias')).toContainText('NORTHSTAR');
+ await expect(page.locator('.v93-observatory-kind')).toContainText('ВЫМЫШЛЕННАЯ');
+ await expect(page.locator('.v93-reader-stage')).toContainText('КОНТЕКСТ');
+ await expect(page.locator('.v93-back-to-star')).toHaveAttribute('aria-label',/выбранной звезде/);
+ await page.screenshot({path:'test-results/v9-memory-observatory-mobile.png',animations:'disabled'});
+ await page.locator('.v93-back-to-star').click();
+ await expect(page.locator('#drawer')).toBeHidden();
+ await expect(page.locator('#dockAlias')).toContainText('NORTHSTAR');
+});
+test('reading room remains usable at narrow 320px viewport',async({page})=>{
+ await page.setViewportSize({width:320,height:568});
+ await page.goto('/');
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('.v93-observatory')).toBeVisible();
+ const bodyWidth=await page.locator('body').evaluate(el=>el.scrollWidth);
+ expect(bodyWidth).toBeLessThanOrEqual(321);
+ const back=page.locator('.v93-back-to-star');
+ await expect(back).toBeVisible();
+ const rect=await back.boundingBox();
+ expect(rect?.height||0).toBeGreaterThanOrEqual(44);
+});
+test('reduced motion opens readable observatory instantly',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('#drawer')).toBeVisible();
+ await expect(page.locator('.v93-observatory')).toBeVisible();
+ await expect(page.locator('#memoryDive')).toBeHidden();
+});
