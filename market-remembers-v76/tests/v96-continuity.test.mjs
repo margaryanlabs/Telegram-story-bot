@@ -105,3 +105,40 @@ test('passage arrival is subtle and respects reduced motion',()=>{
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)\{\s*\.obsidian \.drawer\.v96-reader-arrival/);
  assert.match(html,/id="dockAlias" aria-live="polite" aria-atomic="true"/);
 });
+
+
+function readerCloseFixture(){
+ const e=controls();
+ e.drawer={hidden:false,classList:{contains:k=>k==='memory-detail',remove(){} }};
+ e.scrim={hidden:false};
+ e.travelTrail={classList:{remove(){}}};
+ const c={w:390,immersive:false,diveIndex:-1,v76FocusReturn:e.dockOpen,
+  v78ThreadContext:{from:0,to:1},selected:1,
+  document:{body:{classList:{remove(){}}},querySelectorAll:()=>[]},
+  $:k=>e[k],
+  resumeScene(){this.resumes=(this.resumes||0)+1},
+  v762RestoreStar(){this.restores=(this.restores||0)+1}};
+ c.v96ReaderReturnTarget=run('v96ReaderReturnTarget',c);
+ c.closeDrawer=run('closeDrawer',c);
+ return {c,e};
+}
+test('reader close normally restores the selected star and keyboard focus',()=>{
+ const {c,e}=readerCloseFixture();
+ c.closeDrawer();
+ assert.equal(c.selected,1);
+ assert.equal(c.restores,1);
+ assert.equal(c.resumes,1);
+ assert.equal(e.dockOpen.focused,1);
+ assert.equal(e.drawer.hidden,true);
+});
+test('a native click event is not mistaken for the internal skip-return boolean',()=>{
+ const {c}=readerCloseFixture();
+ c.closeDrawer({type:'click'});
+ assert.equal(c.restores,1);
+});
+test('internal transitions can close reader without the return pulse',()=>{
+ const {c}=readerCloseFixture();
+ c.closeDrawer(true);
+ assert.equal(c.restores,undefined);
+ assert.equal(c.resumes,1);
+});
