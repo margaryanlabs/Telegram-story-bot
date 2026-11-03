@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V8.0 RC2 / BIG GLOBE / Living Stories (isolated preview)
+# THE MARKET REMEMBERS — ECLIPSE V8.2 / visual recovery (separate Render preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -188,3 +188,28 @@ This pass directly restores the user's preferred **big universe at first opening
 
 ### RC2 QA
 70/70 source, syntax, camera-geometry and mocked UI checks passed, including `tests/big-globe-v80.test.mjs` and updated responsive geometry checks. **Actual browser screenshots, Android WebView performance and production merge are not yet validated.** The original V7.4 and V7.5 sites must remain untouched; preview is isolated.
+
+## ECLIPSE V8.2 — visual recovery experiment (DO NOT replace V8.0 preview)
+
+This is a **distinct GitHub branch and distinct Render static service**, created because the user reported a serious visual regression in the preceding Big Globe release. The previous V8.0 RC2, V7.4 and V7.5 remain available as exact comparison baselines.
+
+### Root-cause analysis
+- The 3D core WebGL fragment shader is byte-for-byte the same in the original V7.4 and V8.0.
+- V8.0 enlarged the mobile sphere up to 45.5% of the viewport width and added a CSS aura 3.1x the sphere radius, while re-enabling lens halo and energy sweep. Those produced a dominant dark disc and wide hazy rings, obscuring the attractive point cloud.
+- Some later mobile rules accidentally used `.obsidian .app .hero` even though the HTML root is `<div class="app obsidian">`. Those rules could not match and silently failed to recompose the hero.
+
+### ECLIPSE art direction
+- Restore near-V7.4 sphere framing: 39.7% of screen width on ordinary portrait, 36% on short portrait, 36% of height on landscape; FOCUS uses the original approximately 49% mobile viewport width.
+- Disable the `v81-globe-aura` and `energy-sweep` graphics layers, reduce lens halo to 2.5% and grid to 1.2%; remove the giant ring without touching real GPU stars.
+- Restore the softer original V7.4 scene shading. Keep the core shader **unchanged** and the actual shader sphere/Canvas fallback untouched.
+- Correct mobile CSS specificity to `.app.obsidian .hero`, tighten typography/navigation and add editorial contrast while retaining the site's original language and logo.
+- Lighten the lower dock into calmer glass, preserve the functional BIG/SMALL/MAX, FOCUS, ATLAS and LENS controls and all V7.9/8.0 archival and memory features.
+- No new backend, localStorage schema change, public sharing, shader pass, network dependency, or production modifications.
+
+### A/B URLs
+- Original V7.4 (preserved): https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&release=7c893384
+- Previous V8.0 RC2 (preserved): https://market-remembers-memory-v76.onrender.com/
+- New alternative ECLIPSE V8.2: https://market-remembers-eclipse-v82.onrender.com/
+
+### Quality gate
+78/78 source, mocked-interaction, geometry and source-comparison checks passed, including 8 new `tests/eclipse-visual.test.mjs` tests verifying WebGL shader identity, decorative ring removal and actually matching CSS selectors. No claim of physical-device screenshot/GPU performance testing. User's Android screenshot of V8.0 was used as the visual regression case.
