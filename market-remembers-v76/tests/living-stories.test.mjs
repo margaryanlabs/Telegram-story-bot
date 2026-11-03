@@ -99,8 +99,8 @@ test('guided paths keep their fixed order without thematic interruptions',()=>{
   assert.equal(mount(true).inserted,undefined);
 });
 test('readers for fictional stories and verified legends both mount thematic links',()=>{
-  assert.match(runtime,/v76EnhanceReader\(true\);v77MountThreads\(s\)/);
-  assert.match(runtime,/v76EnhanceReader\(false\);v77MountThreads\(s\)/);
+  assert.match(runtime,/v76EnhanceReader\(true\);v78MountBreadcrumb\(s\);v77MountThreads\(s\)/);
+  assert.match(runtime,/v76EnhanceReader\(false\);v78MountBreadcrumb\(s\);v77MountThreads\(s\)/);
   assert.match(html,/v77-thread-disclaimer/);
   assert.match(html,/Смысловая связь|Связи построены по темам/);
 });
