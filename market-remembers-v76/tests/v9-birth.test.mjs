@@ -156,6 +156,7 @@ test('create form exits early on blocked storage without mutating memory catalog
   safeString:(v,max)=>String(v||'').slice(0,max),
   rand:()=>.246,Date,stories,saved,
   v94PositionFromId:pos,
+  v94NewLocalId:()=> 'local-blocked',
   v94StoreLocal:()=>false,
   showToast:message=>notices.push(message),
   closeDrawer(){navigations++}
@@ -184,4 +185,74 @@ test('existing WebGL and Canvas engines remain intact; quiet render and accessib
  assert.match(html,/@keyframes v94Gather/);
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)[\s\S]*?\.v94-birth-field i/);
  assert.match(html,/aria-modal="true"/);
+});
+
+test('unique browser-native identifier is preferred and older WebView fallback is safe',()=>{
+ const native=fn('v94NewLocalId',{crypto:{randomUUID:()=> 'abc-123'}});
+ assert.equal(native(),'local-abc-123');
+ const legacy=fn('v94NewLocalId',{
+  Date:{now:()=>1730000000000},
+  Math:{...Math,random:()=>.257}
+ });
+ assert.match(legacy(),/^local-[a-z0-9]+-[a-z0-9]+$/);
+});
+test('complete creation commits first then enters real sphere birth at selected index',()=>{
+ const stories=[],saved=[],calls=[],els={birthName:{textContent:''}};
+ const input={get:key=>({
+  alias:'PERSONAL STAR',market:'STOCKS',category:'Risk',
+  quote:'A valid personal experience',story:'A real private experience',
+  rule:'Only act with a defined risk limit',capsule:'Stay consistent'
+ })[key]};
+ const env={
+  safeString:(v,max)=>String(v||'').slice(0,max),
+  stories,saved,Date,
+  v94NewLocalId:()=> 'local-stable-uuid',
+  v94PositionFromId:pos,
+  v94StoreLocal:r=>{calls.push('save');assert.equal(r.id,'local-stable-uuid');return true},
+  closeDrawer(){calls.push('close')},
+  setLens(){calls.push('lens')},makeMarkers(){calls.push('markers')},
+  generateParticles(){calls.push('particles')},
+  focus(index){calls.push('focus');this.selected=index},
+  performance:{now:()=>200},
+  $:id=>els[id],
+  v94PrepareBirthField:r=>calls.push('birth:'+r.id),
+  resumeScene(){calls.push('resume')},
+  showToast(){},
+  reduceMotion:false,
+  birth:null
+ };
+ const create=fn('addStory',env);
+ const result=create(input);
+ assert.equal(result,true);
+ assert.equal(stories.length,1);
+ assert.equal(saved.length,1);
+ assert.equal(stories[0],saved[0]);
+ assert.equal(stories[0].local,true);
+ assert.deepEqual(Array.from(stories[0].p),Array.from(pos('local-stable-uuid')));
+ assert.equal(env.selected,0);
+ assert.equal(env.birth.id,stories[0].id);
+ assert.equal(els.birthName.textContent,'@PERSONAL STAR');
+ assert.equal(calls[0],'save');
+ assert.ok(calls.indexOf('save')<calls.indexOf('close'));
+ assert.ok(calls.includes('birth:local-stable-uuid'));
+ assert.ok(calls.includes('resume'));
+});
+test('saved JSON rehydrates the exact same star after a simulated reload',()=>{
+ const story={id:'local-preserved',alias:'ME',quote:'A persisted thought from a trader',
+  story:'I learned to slow down',rule:'Always follow the plan',capsule:'Private',
+  local:true,type:'local',category:'Risk',market:'CRYPTO',p:pos('local-preserved')};
+ const savedJson=JSON.stringify([story]);
+ const norm=x=>{const d=Math.hypot(...x)||1;return x.map(v=>v/d)};
+ const context={
+  KEY:'private-stories',
+  getJson:()=>JSON.parse(savedJson),
+  safeString:(v,length)=>String(v||'').slice(0,length),
+  norm
+ };
+ const restored=fn('safeStored',context)();
+ assert.equal(restored.length,1);
+ assert.equal(restored[0].id,'local-preserved');
+ assert.equal(restored[0].alias,'ME');
+ assert.deepEqual(Array.from(restored[0].p),Array.from(story.p));
+ assert.equal(restored[0].local,true);
 });
