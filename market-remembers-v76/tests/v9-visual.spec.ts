@@ -104,3 +104,76 @@ test('reduced motion opens readable observatory instantly',async({page})=>{
  await expect(page.locator('.v93-observatory')).toBeVisible();
  await expect(page.locator('#memoryDive')).toBeHidden();
 });
+
+test('R4: born star gathers, persists locally, and can be reopened after reload',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#heroCreate').click();
+ await expect(page.locator('#createForm')).toBeVisible();
+ await page.locator('#alias').fill('MY V9 STAR');
+ await page.locator('#market').selectOption('CRYPTO');
+ await page.locator('#category').selectOption('Risk');
+ await page.locator('#quote').fill('I learned that preservation is more important than prediction.');
+ await page.locator('#story').fill('I wrote the rule before entering the trade.');
+ await page.locator('#rule').fill('Never risk money that I cannot afford to lose.');
+ await page.locator('#localConsent').check();
+ await page.locator('#createForm button[type="submit"]').click();
+ await expect(page.locator('#birthOverlay')).toBeVisible({timeout:9000});
+ await expect(page.locator('#birthName')).toContainText('@MY V9 STAR');
+ await page.screenshot({path:'test-results/v9-r4-star-birth-mobile.png',animations:'disabled'});
+ const local=await page.evaluate(()=>{
+  const records=JSON.parse(localStorage.getItem('veto-market-remembers-demo-v4')||'[]');
+  return records.at(-1)||null;
+ });
+ expect(local).not.toBeNull();
+ expect(local.alias).toBe('MY V9 STAR');
+ expect(local.local).toBe(true);
+ expect(local.id).toMatch(/^local-/);
+ expect(local.p).toHaveLength(3);
+ await page.locator('#birthContinue').click();
+ await expect(page.locator('#birthOverlay')).toBeHidden();
+ await expect(page.locator('#dockAlias')).toContainText('MY V9 STAR');
+ await page.reload();
+ await page.locator('.mobile-nav [data-open="archive"]').click();
+ await page.locator('#archiveFilters button[data-archive-filter="Mine"]').click();
+ await expect(page.locator('.archive-grid')).toContainText('MY V9 STAR');
+ await page.locator('.archive-grid button').filter({hasText:'MY V9 STAR'}).click();
+ await expect(page.locator('#drawer')).toBeVisible({timeout:6000});
+ await expect(page.locator('.v93-observatory-alias')).toContainText('MY V9 STAR');
+});
+test('R4: storage denial does not falsely show a successful birth',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+  const original=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(key,value){
+    if(key==='veto-market-remembers-demo-v4')throw new DOMException('Blocked','QuotaExceededError');
+    return original.call(this,key,value);
+  };
+ });
+ await page.goto('/');
+ await page.locator('#heroCreate').click();
+ await page.locator('#alias').fill('PRIVATE TEST');
+ await page.locator('#quote').fill('This record must remain unsaved if storage is blocked.');
+ await page.locator('#rule').fill('Only report a successful birth after a successful write.');
+ await page.locator('#localConsent').check();
+ await page.locator('#createForm button[type="submit"]').click();
+ await expect(page.locator('#createForm')).toBeVisible();
+ await expect(page.locator('#birthOverlay')).toBeHidden();
+ await expect(page.locator('#toast')).toContainText('Не удалось сохранить');
+});
+test('R4: reduced motion still saves the star and opens the success dialog',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.setViewportSize({width:320,height:568});
+ await page.goto('/');
+ await page.locator('#heroCreate').click();
+ await page.locator('#alias').fill('STILL STAR');
+ await page.locator('#quote').fill('Every decision needs a clearly articulated risk.');
+ await page.locator('#rule').fill('Write the rule before I take a position.');
+ await page.locator('#localConsent').check();
+ await page.locator('#createForm button[type="submit"]').click();
+ await expect(page.locator('#birthOverlay')).toBeVisible();
+ await expect(page.locator('#v94BirthField')).toBeHidden();
+ await page.locator('#birthContinue').click();
+ await expect(page.locator('#birthOverlay')).toBeHidden();
+ await expect(page.locator('#dockAlias')).toContainText('STILL STAR');
+});
