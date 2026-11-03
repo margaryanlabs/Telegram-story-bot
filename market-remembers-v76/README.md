@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V8.0 RC Living Stories / Memory Museum (isolated preview)
+# THE MARKET REMEMBERS — V8.0 RC2 / BIG GLOBE / Living Stories (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -163,3 +163,28 @@ The source-level and isolated mock-interaction suite contains 21 cases and passe
 
 ### Verification state
 61/61 isolated JavaScript syntax, source and mocked-behavior tests passed, including eight new viewport/release tests in `tests/release-v80.test.mjs`. Native GitHub-hosted runner allocation and real-device/browser screenshot QA have **not** been confirmed. Draft PR must not be merged until that work is finished.
+
+## V8.0 RC2 — BIG GLOBE / premium atmospheric lighting
+
+This pass directly restores the user's preferred **big universe at first opening**, without replacing the original WebGL renderer or memory reader.
+
+- **BIG by default**, on every page load. The chosen scale is transient and intentionally never saved to localStorage.
+- New globe control in the original `world-controls` row: `◉ BIG → ◌ SMALL → ✦ MAX → ◉ BIG`, with screen-reader labels, on-screen announcements, and a gentle ease between radii.
+- Portrait mobile radii now follow the viewport width instead of being capped by half the free height between the hero and story dock. Deliberate soft overlap is masked by the editorial gradients, not a reason to shrink the globe.
+- Landscaped Android phones keep the right-side theatre composition with a larger sphere. Foldables and desktop now receive larger cinematic proportions while desktop bounds are clamped to the viewport.
+- Immersive FOCUS is **larger still** and supports the same three size settings. Previous pinch-to-zoom, rotating star selection and mouse-wheel zoom are preserved.
+- A lightweight, CSS-only globe aura is driven by the original camera projection from `updateAtlas()` — no extra WebGL meshes or draw calls.
+- The halo breathes slowly with a soft outer ring and subtle orbit arc. Colors follow the **selected memory category**, including source-backed legends and editorial lessons, rather than cycling arbitrary colors.
+- Reduced-motion users get a still aura and an immediate size change. The graphics LOW / adaptive ECO path disables the decorative halo orbit.
+- Verified legends, privacy boundaries, local data keys, Memory Paths, thematic links, archive, desktop renderer and Canvas fallback remain intact.
+
+### Geometry samples (BIG mode before manual zoom)
+- 390×844: sphere radius ~177 px, previously ~158 px.
+- 390×620: sphere radius ~177 px, previously ~100 px (old free-gap cap).
+- 320×568: sphere radius ~146 px, previously ~70–90 px.
+- 768×1024: sphere radius ~349 px.
+- 760×420 landscape: sphere radius ~179 px.
+- 1280×720 desktop: sphere radius ~331 px, previously ~281 px.
+
+### RC2 QA
+70/70 source, syntax, camera-geometry and mocked UI checks passed, including `tests/big-globe-v80.test.mjs` and updated responsive geometry checks. **Actual browser screenshots, Android WebView performance and production merge are not yet validated.** The original V7.4 and V7.5 sites must remain untouched; preview is isolated.
