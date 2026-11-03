@@ -192,7 +192,7 @@ test('unique browser-native identifier is preferred and older WebView fallback i
  assert.equal(native(),'local-abc-123');
  const legacy=fn('v94NewLocalId',{
   Date:{now:()=>1730000000000},
-  Math:{...Math,random:()=>.257}
+  Math:Object.assign(Object.create(Math),{random:()=>.257})
  });
  assert.match(legacy(),/^local-[a-z0-9]+-[a-z0-9]+$/);
 });
