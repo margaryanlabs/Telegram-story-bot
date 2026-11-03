@@ -3471,6 +3471,101 @@ function v94ShowOwnArchive(){
   $('v94BirthField').hidden=true;
   showLegacy();
 }
+
+  // V9.1 local-only archive restore. Export uses the existing exportLegacy JSON shape.
+  function v95NormalizeBackup(raw){
+    if(!raw||raw.localOnly!==true||!Array.isArray(raw.stories))
+      throw Error('Файл не является резервной копией Market Remembers.');
+    if(raw.stories.length>5000)throw Error('В файле слишком много записей.');
+    const records=[],unique=new Set(),marks=Object.create(null);
+    for(const item of raw.stories){
+      if(!item||item.local!==true||typeof item.id!=='string'||
+         !/^local-[a-zA-Z0-9_-]{3,128}$/.test(item.id)||
+         unique.has(item.id)||typeof item.alias!=='string'||
+         typeof item.quote!=='string'||!Array.isArray(item.p)||
+         item.p.length!==3||!item.p.every(v=>typeof v==='number'&&Number.isFinite(v))||
+         Math.hypot(...item.p)<.01)
+        throw Error('Резервная копия содержит повреждённую звезду.');
+      unique.add(item.id);
+      const entry={
+        id:item.id,local:true,type:'local',alias:safeString(item.alias,32),
+        quote:safeString(item.quote,280),story:safeString(item.story,1200),
+        rule:safeString(item.rule,180),capsule:safeString(item.capsule,500),
+        market:safeString(item.market,16),
+        category:categories.includes(item.category)?item.category:'Risk',
+        createdAt:item.createdAt,p:norm(item.p)
+      };
+      if(entry.alias.trim().length<2||entry.quote.trim().length<12||
+         typeof entry.createdAt!=='string'||!Number.isFinite(Date.parse(entry.createdAt)))
+        throw Error('В резервной копии есть неполная история.');
+      records.push(entry);
+      const history=raw.checkins&&Object.prototype.hasOwnProperty.call(raw.checkins,item.id)?
+        raw.checkins[item.id]:null;
+      if(history&&typeof history==='object'&&!Array.isArray(history)){
+        const safe=Object.create(null);
+        for(const [day,status] of Object.entries(history)){
+          if(/^\d{4}-\d{2}-\d{2}$/.test(day)&&(status==='kept'||status==='missed'))safe[day]=status;
+        }
+        marks[item.id]=safe;
+      }
+    }
+    return {stories:records,checkins:marks};
+  }
+  function v95ImportBackupData(data){
+    const existing=new Set(saved.map(item=>item.id));
+    const added=data.stories.filter(item=>!existing.has(item.id));
+    const merged=[...saved,...added];
+    const mergedChecks=Object.assign(Object.create(null),checkins);
+    for(const [id,mark] of Object.entries(data.checkins)){
+      const current=Object.prototype.hasOwnProperty.call(checkins,id)?checkins[id]:null;
+      mergedChecks[id]={...mark,...(current&&typeof current==='object'?current:{})};
+    }
+    const previous=localStorage.getItem(KEY),previousMarks=localStorage.getItem(CHECK_KEY);
+    let firstWrite=false;
+    try{
+      localStorage.setItem(KEY,JSON.stringify(merged));
+      firstWrite=true;
+      localStorage.setItem(CHECK_KEY,JSON.stringify(mergedChecks));
+    }catch{
+      let rollbackOk=true;
+      if(firstWrite){
+        try{
+          if(previous===null)localStorage.removeItem(KEY);
+          else localStorage.setItem(KEY,previous);
+        }catch{rollbackOk=false}
+      }
+      try{
+        if(previousMarks===null)localStorage.removeItem(CHECK_KEY);
+        else localStorage.setItem(CHECK_KEY,previousMarks);
+      }catch{rollbackOk=false}
+      throw Error(rollbackOk?'Импорт отменён: не удалось сохранить записи.':
+        'Сбой хранилища при импорте. Не закрывай страницу — сохрани резервную копию.');
+    }
+    return {added:added.length,alreadyPresent:data.stories.length-added.length};
+  }
+  function v95BindBackupImport(){
+    const button=$('importLegacy'),input=$('legacyBackupFile');
+    if(!button||!input)return;
+    button.onclick=()=>input.click();
+    input.onchange=async()=>{
+      const file=input.files?.[0];
+      input.value='';
+      if(!file)return;
+      if(file.size>5*1024*1024){showToast('Файл слишком большой: максимум 5 МБ.');return}
+      button.disabled=true;
+      try{
+        const backup=v95NormalizeBackup(JSON.parse(await file.text()));
+        if(!backup.stories.length){showToast('В копии нет личных звёзд.');return}
+        if(!confirm('Импортировать '+backup.stories.length+
+           ' личных звёзд? Твои существующие истории сохранятся. Страница перезагрузится.'))return;
+        const result=v95ImportBackupData(backup);
+        if(result.added===0){showToast('Все звёзды из копии уже сохранены.');return}
+        window.location.reload();
+      }catch(error){
+        showToast(error instanceof Error?error.message:'Не удалось восстановить резервную копию.');
+      }finally{button.disabled=false}
+    };
+  }
 function addStory(data){
   const alias=safeString(data.get('alias'),32).trim().toUpperCase();
   const quote=safeString(data.get('quote'),280).trim();
@@ -3502,14 +3597,15 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
   const checkins=loadChecks();
   const dateKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
   function daysAgo(start){const a=new Date(start),b=new Date();return Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/86400000)}
-  function showLegacy(){const s=saved.at(-1);if(!s){setDrawer('MY LEGACY / LOCAL DEMO',`<div class="drawer-kicker">YOUR PERSONAL CONSTELLATION</div><h2>YOUR STAR<br><em>AWAITS.</em></h2><p>Создай собственную звезду, чтобы увидеть здесь личную историю, торговое правило, 30-дневный прогресс и капсулу времени.</p><div class="drawer-actions"><button id="createFromLegacy" class="btn btn-primary">СОЗДАТЬ МОЙ СЛЕД ↗</button></div>`);$('createFromLegacy').onclick=showCreate;return}
+  function showLegacy(){const s=saved.at(-1);if(!s){setDrawer('MY LEGACY / LOCAL DEMO',`<div class="drawer-kicker">YOUR PERSONAL CONSTELLATION</div><h2>YOUR STAR<br><em>AWAITS.</em></h2><p>Создай собственную звезду, чтобы увидеть здесь личную историю, торговое правило, 30-дневный прогресс и капсулу времени.</p><div class="drawer-actions"><button id="createFromLegacy" class="btn btn-primary">СОЗДАТЬ МОЙ СЛЕД ↗</button></div><div class="drawer-actions"><button id="importLegacy" type="button" class="btn btn-outline">↑ ВОССТАНОВИТЬ JSON</button><input id="legacyBackupFile" type="file" accept=".json,application/json" hidden></div><p class="caution">Копия остаётся на устройстве. Файл никуда не загружается.</p>`);$('createFromLegacy').onclick=showCreate;v95BindBackupImport();return}
     const checks=checkins[s.id]||{},start=new Date(s.createdAt||Date.now());const dayIndex=daysAgo(start);const today=dateKey(new Date());const completed=Object.values(checks).filter(v=>v==='kept').length;const notMet=Object.values(checks).filter(v=>v==='missed').length;const unlockAt=new Date(start.getTime()+30*86400000),ready=new Date()>=unlockAt;
-    setDrawer('MY LEGACY / LOCAL DEMO',`<div class="drawer-kicker">THIS IS YOUR LOCAL STORY · NOT A FOUNDER ID</div><h2>MY<br><em>LEGACY.</em></h2><div class="preview-panel"><small>PERSONAL STAR · ONLY THIS BROWSER</small><h3>@${escapeHtml(s.alias)}</h3><p>“${escapeHtml(s.quote)}”</p></div><div class="status-box"><span>MARKET</span><strong>${escapeHtml(s.market)}</strong></div><div class="legacy-personal-story"><small>✦ МОЙ МОМЕНТ</small><p>${escapeHtml(s.story||s.quote)}</p></div><div class="status-box"><span>DISCIPLINE</span><strong>${completed} KEPT · ${notMet} MISSED</strong></div><div class="drawer-kicker" style="margin-top:27px">THE ONE RULE / 30-DAY CHALLENGE</div><p>${escapeHtml(s.rule)}</p><div class="timeline" id="timeline"></div><div class="drawer-actions"><button id="markKept" class="btn btn-outline">✓ СОБЛЮДАЛ</button><button id="markMissed" class="btn btn-outline">✕ НЕ ПОЛУЧИЛОСЬ</button></div><p class="caution" id="checkHint">${dayIndex>=30?'30-дневный период закончился':dayIndex<0?'Проверь дату устройства':`День ${dayIndex+1} из 30. Отметки сохраняются локально.`}</p><div class="detail-panel"><div class="drawer-kicker">TIME CAPSULE / 30 DAYS</div><p id="capsuleBody">${!s.capsule?'Капсула не создана.':ready?'Послание готово к открытию.':'Послание откроется '+unlockAt.toLocaleDateString('ru-RU')}</p>${s.capsule&&ready?'<button class="btn btn-outline" id="unlockCapsule">ОТКРЫТЬ КАПСУЛУ</button>':''}</div><div class="drawer-actions"><button id="downloadStarCard" class="btn btn-primary">↓ СОХРАНИТЬ КАРТОЧКУ PNG</button><button id="exportLegacy" class="btn btn-outline">↓ ЭКСПОРТ JSON</button><button id="shareLegacy" class="btn btn-outline">↗ СКОПИРОВАТЬ ТЕКСТ</button></div><button id="deleteLegacy" class="delete-link">Удалить мои локальные записи и отметки</button>`);
+    setDrawer('MY LEGACY / LOCAL DEMO',`<div class="drawer-kicker">THIS IS YOUR LOCAL STORY · NOT A FOUNDER ID</div><h2>MY<br><em>LEGACY.</em></h2><div class="preview-panel"><small>PERSONAL STAR · ONLY THIS BROWSER</small><h3>@${escapeHtml(s.alias)}</h3><p>“${escapeHtml(s.quote)}”</p></div><div class="status-box"><span>MARKET</span><strong>${escapeHtml(s.market)}</strong></div><div class="legacy-personal-story"><small>✦ МОЙ МОМЕНТ</small><p>${escapeHtml(s.story||s.quote)}</p></div><div class="status-box"><span>DISCIPLINE</span><strong>${completed} KEPT · ${notMet} MISSED</strong></div><div class="drawer-kicker" style="margin-top:27px">THE ONE RULE / 30-DAY CHALLENGE</div><p>${escapeHtml(s.rule)}</p><div class="timeline" id="timeline"></div><div class="drawer-actions"><button id="markKept" class="btn btn-outline">✓ СОБЛЮДАЛ</button><button id="markMissed" class="btn btn-outline">✕ НЕ ПОЛУЧИЛОСЬ</button></div><p class="caution" id="checkHint">${dayIndex>=30?'30-дневный период закончился':dayIndex<0?'Проверь дату устройства':`День ${dayIndex+1} из 30. Отметки сохраняются локально.`}</p><div class="detail-panel"><div class="drawer-kicker">TIME CAPSULE / 30 DAYS</div><p id="capsuleBody">${!s.capsule?'Капсула не создана.':ready?'Послание готово к открытию.':'Послание откроется '+unlockAt.toLocaleDateString('ru-RU')}</p>${s.capsule&&ready?'<button class="btn btn-outline" id="unlockCapsule">ОТКРЫТЬ КАПСУЛУ</button>':''}</div><div class="drawer-actions"><button id="downloadStarCard" class="btn btn-primary">↓ СОХРАНИТЬ КАРТОЧКУ PNG</button><button id="exportLegacy" class="btn btn-outline">↓ ЭКСПОРТ JSON</button><button id="importLegacy" type="button" class="btn btn-outline">↑ ВОССТАНОВИТЬ JSON</button><input id="legacyBackupFile" type="file" accept=".json,application/json" hidden><button id="shareLegacy" class="btn btn-outline">↗ СКОПИРОВАТЬ ТЕКСТ</button></div><button id="deleteLegacy" class="delete-link">Удалить мои локальные записи и отметки</button>`);
     const grid=$('timeline');for(let i=0;i<30;i++){const date=new Date(start);date.setDate(start.getDate()+i);const status=checks[dateKey(date)];const cell=document.createElement('span');cell.className='day'+(status==='kept'?' kept':status==='missed'?' missed':'')+(i===dayIndex?' is-today':'');cell.title='День '+(i+1);cell.textContent=status==='kept'?'✓':status==='missed'?'×':String(i+1);grid.append(cell)}
     $('markKept').disabled=$('markMissed').disabled=dayIndex<0||dayIndex>=30;
     for(const [id,status] of [['markKept','kept'],['markMissed','missed']])$(id).onclick=()=>{if(dayIndex<0||dayIndex>=30)return;(checkins[s.id] ||= {})[today]=status;try{localStorage.setItem(CHECK_KEY,JSON.stringify(checkins));showLegacy()}catch{showToast('Не удалось сохранить отметку')}};
     if($('unlockCapsule'))$('unlockCapsule').onclick=()=>{$('capsuleBody').textContent=s.capsule;$('unlockCapsule').remove()};
     $('downloadStarCard').onclick=()=>downloadLegacyCard(s);
+    v95BindBackupImport();
     $('exportLegacy').onclick=()=>{const blob=new Blob([JSON.stringify({demo:true,localOnly:true,stories:saved,checkins},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='market-remembers-local-export.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000)};
     $('shareLegacy').onclick=()=>{const text=`THE MARKET REMEMBERS · @${s.alias}\n“${s.quote}”\nМоё правило: ${s.rule}\nЛокальная демоверсия, не опубликовано.`;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>showToast('Текст скопирован')).catch(()=>showToast('Копирование недоступно'));else showToast('Копирование недоступно')};
     $('deleteLegacy').onclick=()=>{if(!confirm('Удалить все локальные истории и 30-дневные отметки? Отменить нельзя.'))return;try{localStorage.removeItem(KEY);localStorage.removeItem(CHECK_KEY);window.location.reload()}catch{showToast('Очистка хранилища запрещена')}};
