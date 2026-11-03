@@ -3404,11 +3404,30 @@ function v94PositionFromId(id){
   const y=r()*1.68-.84,theta=r()*twoPi,rad=Math.sqrt(1-y*y);
   return norm([rad*Math.cos(theta),y,rad*Math.sin(theta)]);
 }
+// V9.2: always read the current archive, not a stale page-load copy.
+function v96ReadStoredRecords(){
+  const raw=localStorage.getItem(KEY);
+  const records=raw===null?[]:JSON.parse(raw);
+  if(!Array.isArray(records))throw Error('Локальный архив повреждён.');
+  const seen=new Set();
+  for(const item of records){
+    if(!item||item.local!==true||typeof item.id!=='string'||seen.has(item.id)||
+       !Array.isArray(item.p)||item.p.length!==3||
+       !item.p.every(Number.isFinite)||!Number.isFinite(Math.hypot(...item.p))||
+       Math.hypot(...item.p)<.01||typeof item.alias!=='string'||
+       typeof item.quote!=='string')
+      throw Error('Есть повреждённая запись в локальном архиве; ничего не перезаписано.');
+    seen.add(item.id);
+  }
+  return records;
+}
 function v94StoreLocal(story){
-  const next=[...saved,story];
-  // Never evict an older memory silently. Storage quota failure leaves existing data untouched.
-  try{localStorage.setItem(KEY,JSON.stringify(next));return true}
-  catch{return false}
+  try{
+    const previous=v96ReadStoredRecords();
+    if(previous.length<saved.length||previous.some(item=>item.id===story.id))return false;
+    localStorage.setItem(KEY,JSON.stringify([...previous,story]));
+    return true;
+  }catch{return false}
 }
 function v94PrepareBirthField(story){
   const field=$('v94BirthField');
@@ -3484,7 +3503,7 @@ function v94ShowOwnArchive(){
          unique.has(item.id)||typeof item.alias!=='string'||
          typeof item.quote!=='string'||!Array.isArray(item.p)||
          item.p.length!==3||!item.p.every(v=>typeof v==='number'&&Number.isFinite(v))||
-         Math.hypot(...item.p)<.01)
+         (!Number.isFinite(Math.hypot(...item.p))||Math.hypot(...item.p)<.01))
         throw Error('Резервная копия содержит повреждённую звезду.');
       unique.add(item.id);
       const entry={
@@ -3512,23 +3531,31 @@ function v94ShowOwnArchive(){
     return {stories:records,checkins:marks};
   }
   function v95ImportBackupData(data){
-    const existing=new Set(saved.map(item=>item.id));
+    const current=v96ReadStoredRecords();
+    if(current.length<saved.length)
+      throw Error('Архив изменён в другой вкладке. Обнови страницу перед импортом.');
+    const existing=new Set(current.map(item=>item.id));
     const added=data.stories.filter(item=>!existing.has(item.id));
-    const merged=[...saved,...added];
-    const mergedChecks=Object.assign(Object.create(null),checkins);
-    for(const [id,mark] of Object.entries(data.checkins)){
-      const current=Object.prototype.hasOwnProperty.call(checkins,id)?checkins[id]:null;
-      mergedChecks[id]={...mark,...(current&&typeof current==='object'?current:{})};
-    }
+    const merged=[...current,...added];
     const previous=localStorage.getItem(KEY);
+    const previousChecks=localStorage.getItem(CHECK_KEY);
+    let liveChecks={};
+    try{liveChecks=previousChecks===null?{}:JSON.parse(previousChecks)}
+    catch{throw Error('Повреждены отметки дисциплины. Ничего не перезаписано.')}
+    if(!liveChecks||typeof liveChecks!=='object'||Array.isArray(liveChecks))
+      throw Error('Повреждены отметки дисциплины. Ничего не перезаписано.');
+    const mergedChecks=Object.assign(Object.create(null),liveChecks);
+    for(const [id,mark] of Object.entries(data.checkins)){
+      const latest=Object.prototype.hasOwnProperty.call(liveChecks,id)?liveChecks[id]:null;
+      mergedChecks[id]={...mark,...(latest&&typeof latest==='object'&&!Array.isArray(latest)?latest:{})};
+    }
+    const updatedChecks=JSON.stringify(mergedChecks)!==JSON.stringify(liveChecks);
     let firstWrite=false;
     try{
       localStorage.setItem(KEY,JSON.stringify(merged));
       firstWrite=true;
       localStorage.setItem(CHECK_KEY,JSON.stringify(mergedChecks));
     }catch{
-      // setItem is atomic per key. If CHECK_KEY throws, it still has its old value.
-      // Only KEY can need restoration after a successful first write.
       let rollbackOk=true;
       if(firstWrite){
         try{
@@ -3539,7 +3566,7 @@ function v94ShowOwnArchive(){
       throw Error(rollbackOk?'Импорт отменён: не удалось сохранить записи.':
         'Сбой хранилища при импорте. Не закрывай страницу — сохрани резервную копию.');
     }
-    return {added:added.length,alreadyPresent:data.stories.length-added.length};
+    return {added:added.length,alreadyPresent:data.stories.length-added.length,updatedChecks};
   }
   function v95BindBackupImport(){
     const button=$('importLegacy'),input=$('legacyBackupFile');
@@ -3557,7 +3584,7 @@ function v94ShowOwnArchive(){
         if(!confirm('Импортировать '+backup.stories.length+
            ' личных звёзд? Твои существующие истории сохранятся. Страница перезагрузится.'))return;
         const result=v95ImportBackupData(backup);
-        if(result.added===0){showToast('Все звёзды из копии уже сохранены.');return}
+        if(result.added===0&&!result.updatedChecks){showToast('Все звёзды из копии уже сохранены.');return}
         window.location.reload();
       }catch(error){
         showToast(error instanceof Error?error.message:'Не удалось восстановить резервную копию.');
