@@ -3520,13 +3520,15 @@ function v94ShowOwnArchive(){
       const current=Object.prototype.hasOwnProperty.call(checkins,id)?checkins[id]:null;
       mergedChecks[id]={...mark,...(current&&typeof current==='object'?current:{})};
     }
-    const previous=localStorage.getItem(KEY),previousMarks=localStorage.getItem(CHECK_KEY);
+    const previous=localStorage.getItem(KEY);
     let firstWrite=false;
     try{
       localStorage.setItem(KEY,JSON.stringify(merged));
       firstWrite=true;
       localStorage.setItem(CHECK_KEY,JSON.stringify(mergedChecks));
     }catch{
+      // setItem is atomic per key. If CHECK_KEY throws, it still has its old value.
+      // Only KEY can need restoration after a successful first write.
       let rollbackOk=true;
       if(firstWrite){
         try{
@@ -3534,10 +3536,6 @@ function v94ShowOwnArchive(){
           else localStorage.setItem(KEY,previous);
         }catch{rollbackOk=false}
       }
-      try{
-        if(previousMarks===null)localStorage.removeItem(CHECK_KEY);
-        else localStorage.setItem(CHECK_KEY,previousMarks);
-      }catch{rollbackOk=false}
       throw Error(rollbackOk?'Импорт отменён: не удалось сохранить записи.':
         'Сбой хранилища при импорте. Не закрывай страницу — сохрани резервную копию.');
     }
