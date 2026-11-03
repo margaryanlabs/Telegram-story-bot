@@ -3080,7 +3080,7 @@ void main(){
       targetZoom=1.25+eased*.40;
     }else targetZoom=1.65;
   }
-  function cancelDive(){
+  function cancelDive(suppressFocus=false){
     diveSequence++;
     if(diveTimer!==null){clearTimeout(diveTimer);diveTimer=null}
     const active=diveIndex!==-1;
@@ -3095,8 +3095,8 @@ void main(){
       $('memoryDive').dataset.phase='idle';
       flightFinish=0;targetZoom=1.13;
     }
-    if(skipWasFocused){
-      const fallback=w<820?$('dockOpen'):$('openSelected');
+    if(skipWasFocused&&!suppressFocus){
+      const fallback=immersive?$('focusMode'):(w<820?$('dockOpen'):$('openSelected'));
       if(fallback)fallback.focus({preventScroll:true});
     }
   }
@@ -3120,7 +3120,8 @@ void main(){
     if(token!==diveSequence||diveIndex===-1)return;
     if(document.hidden){v93SuspendPassage();return}
     const index=diveIndex,story=stories[index];
-    cancelDive();targetZoom=1.23;
+    // Directly transfer focus from the passage to the reader.
+    cancelDive(true);targetZoom=1.23;
     if(story)showStory(story);
   }
   function beginDive(i){
@@ -3162,6 +3163,14 @@ void main(){
   }
   function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timeout);showToast.timeout=setTimeout(()=>t.classList.remove('show'),3200)}
   const escapeHtml=t=>String(t).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  // Avoid restoring keyboard focus into an invisible overlay or removed archive card.
+  function v96ReaderReturnTarget(active){
+    const fallback=immersive?$('focusMode'):(w<820?$('dockOpen'):$('openSelected'));
+    if(!active||active===$('cancelDive')||!active.isConnected||
+       active.closest?.('[hidden]')||
+       active.getAttribute?.('aria-hidden')==='true')return fallback;
+    return active;
+  }
   function setDrawer(tag,html){
     if(!String(tag).startsWith('HUMAN STORY /')&&tag!=='LEGEND / VERIFIED SOURCE'){
       v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');
@@ -3169,7 +3178,7 @@ void main(){
     if(diveIndex!==-1)cancelDive();
     v762CancelReturn();
     const open=$('drawer');
-    if(open.hidden&&!open.contains(document.activeElement))v76FocusReturn=document.activeElement;
+    if(open.hidden&&!open.contains(document.activeElement))v76FocusReturn=v96ReaderReturnTarget(document.activeElement);
     open.classList.remove('memory-detail','human-detail','legend-detail','journey-finished','archive-detail');
     open.scrollTop=0;
     open.style.setProperty('--reader-progress','0%');
@@ -3189,8 +3198,7 @@ void main(){
     resumeScene();
     if(wasReader&&skipReturn!==true){v762RestoreStar();v78ThreadContext=null;$('travelTrail').classList.remove('is-thread')}
     const returnTo=v76FocusReturn;v76FocusReturn=null;
-    const fallback=w<820?$('dockOpen'):$('openSelected');
-    const focusTarget=returnTo&&returnTo.isConnected&&typeof returnTo.focus==='function'?returnTo:fallback;
+    const focusTarget=v96ReaderReturnTarget(returnTo);
     if(wasOpen&&focusTarget)focusTarget.focus({preventScroll:true});
   }
   // V7.7 / Living Stories: links are thematic/editorial, NEVER evidence of real-world relationships.
@@ -3359,7 +3367,7 @@ void main(){
     if(photo)$('legendPortrait').addEventListener('error',e=>{e.currentTarget.hidden=true});
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
-    $('memoryBack').onclick=closeDrawer;
+    $('memoryBack').onclick=()=>closeDrawer();
     bindLessonBookmark(s);
     $('copyMemory').onclick=()=>{
       const value=s.alias+': '+s.quote+'\nOriginal: '+d.original+'\nSource: '+d.url;
@@ -3425,7 +3433,7 @@ void main(){
     $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);v78MountBreadcrumb(s);v93MountReaderScene(s);v77MountThreads(s);
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
-    $('memoryBack').onclick=closeDrawer;
+    $('memoryBack').onclick=()=>closeDrawer();
     bindLessonBookmark(s);
     if(local)$('downloadStarDetail').onclick=()=>downloadLegacyCard(s);
     $('copyMemory').onclick=()=>{
@@ -3922,7 +3930,9 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
     $('brandHome').onclick=e=>{e.preventDefault();closeDrawer(true);reset()};$('cancelDive').onclick=()=>finishDive(diveSequence);
     document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-open]').forEach(x=>x.classList.toggle('is-on',x.dataset.open===b.dataset.open));if(b.dataset.open==='universe'){closeDrawer();reset()}else if(b.dataset.open==='archive')showArchive();else showLegacy()});
     $('openSelected').onclick=$('dockOpen').onclick=()=>beginDive(selected);
-    $('nextSignal').onclick=$('dockNext').onclick=()=>{if(guidedJourney)advanceJourneyFromGlobe();else{focus(nextVisibleSignal(selected,1));showToast('Следующая история / '+stories[selected].category)}};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
+    $('nextSignal').onclick=$('dockNext').onclick=()=>{if(guidedJourney)advanceJourneyFromGlobe();else{focus(nextVisibleSignal(selected,1));showToast('Следующая история / '+stories[selected].category)}};
+    // The click event is not a request to skip the return animation.
+    $('closeDrawer').onclick=$('scrim').onclick=()=>closeDrawer();
     $('plusZoom').onclick=()=>targetZoom=clamp(targetZoom+.13,.68,1.6);$('minusZoom').onclick=()=>targetZoom=clamp(targetZoom-.13,.68,1.6);
     $('autoRotate').onclick=()=>setSpin(!spinning);$('resetCamera').onclick=reset;$('modeButton').onclick=setQuality;
     $('toggleAtlas').onclick=()=>{atlasEnabled=!atlasEnabled;$('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));$('constellationLayer').classList.toggle('is-off',!atlasEnabled);$('signalHint').innerHTML=atlasEnabled?'SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div>':'SIGNAL ATLAS <strong>OFFLINE</strong>';showToast(atlasEnabled?'Тематические созвездия включены':'Созвездия скрыты')};
