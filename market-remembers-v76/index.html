@@ -2208,6 +2208,9 @@ void main(){
   function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timeout);showToast.timeout=setTimeout(()=>t.classList.remove('show'),3200)}
   const escapeHtml=t=>String(t).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
   function setDrawer(tag,html){
+    if(!String(tag).startsWith('HUMAN STORY /')&&tag!=='LEGEND / VERIFIED SOURCE'){
+      v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');
+    }
     if(diveIndex!==-1)cancelDive();
     v762CancelReturn();
     const open=$('drawer');
