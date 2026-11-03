@@ -375,3 +375,20 @@ The same V9 STARLIGHT project continues on isolated Draft PR #220 with ECLIPSE V
 - Full inline application JS passed a syntax parse; new V9.3 mock tests were added to `v9-starlight.test.mjs` and browser scenarios added to `v9-visual.spec.ts` for passage anchor and narrow/mobile tap geometry.
 - **Not yet verified:** full Node suite, on-device Chrome/Telegram GPU frame time, actual phone screenshots or Playwright browser runs. GitHub Actions still needs an available runner. Keep draft PR; do not merge to production.
 - Static preview uses the existing isolated https://market-remembers-starlight-v9.onrender.com/ Render service with autoDeploy OFF; manual deployment required after code changes.
+
+
+## V9.4 — Viewport-aware mobile composition and foreground render recovery (2026-11-04)
+
+**Same isolated STARLIGHT / PR #220.** This is a refinement of the existing WebGL1 sphere, Canvas fallback, ECLIPSE palette and real content. No replacement mockups, new GPU pass, CSS orbital rings, paid features, private upload, production merge or modification of frozen V7.4/V8.0/V8.2 sites.
+
+### Code changes
+- **Measured portrait framing:** `v9PortraitFrame(width,height,heroBottom,dockTop,nominalRadius)` uses the actual available band between the hero and signal dock only when it exceeds 1.85 × the baseline sphere radius. With room, it centers and fits the original sphere to avoid headline/card overlap. On crowded short screens, it preserves the approved ECLIPSE camera size/position rather than collapsing the globe into a tiny dot. Landscape, desktop, and FOCUS geometry remain untouched.
+- **Floating selected-star label:** hides the auxiliary alias chip if it would intrude into the hero; the dock remains visible and fully operable.
+- **Background and reader recovery:** track the pending requestAnimationFrame handle; cancel it on tab hide, schedule a clean frame on return, and skip rendering if the reader or personal star dialog covered the scene before the frame executes. V9.3 STAR PASSAGE pause/resume remains unchanged.
+- **Opt-in device QA:** `?qa=1` now reports the **orb's screen center/radius** and portrait safe band (MEASURED or ECLIPSE fallback), enabling review of actual Android layout dimensions. These are screen geometry, **not personal-story star coordinates**. No personal aliases, text, IDs, backup files or telemetry are included.
+
+### Regression and release gates
+- Updated `tests/mobile-layout.test.mjs` and `tests/eclipse-visual.test.mjs` for dynamic portrait framing; added layout, label, RAF tests; extended QA HUD mock assertions and Playwright screenshots at 390×844 and 320×568.
+- 10/10 focused scene syntax/geometry checks passed for tall/short portrait, landscape, tablet, desktop, FOCUS, focus-label exclusion and RAF scheduling. A further 11/11 final source/QA tests passed, including a simulated opt-in QA output. These are **local JavaScript source-level and simulated checks, not the full Node suite, a real Chromium screenshot, or a physical Android GPU run**.
+- GitHub Actions remained unavailable on earlier observed runs. PR remains **Draft**. Physical Android WebGL/Canvas visual and interaction approval, accessible zoom, touch behavior and narrow-screen screenshot review are still required before any merge.
+- Review preview: https://market-remembers-starlight-v9.onrender.com/ ; device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1 (Render autoDeploy OFF, manual publish).
