@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — V7.6.1 Memory Museum (isolated preview)
+# THE MARKET REMEMBERS — V7.6.2 Memory Museum (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -37,3 +37,17 @@ This verifies inline JS parsing, required DOM controls and enhanced IDs, preserv
 5. Enable reduced motion: no fragment transition or motion-based navigation.
 6. Check LENS, guided Memory Paths and My Legacy are unaffected.
 7. Verify private local story provenance; do not suggest that a demo entry has been published globally.
+
+## V7.6.2 — return to the selected star
+- Closing a story reader aligns the camera to the *same* selected star, reveals its label, and performs a one-time restrained halo pulse.
+- The pulse is suppressed for reduced-motion users and when moving directly into the next story/guide chapter. The animation cannot interrupt the existing story dive.
+- Mobile uses the original compact signal dock for the return highlight. Reader close restores keyboard focus, falling back to the mobile dock or desktop memory CTA when the original archive item was replaced.
+- No changes to shaders, underlying story content, localStorage format, V7.4, V7.5, or production deployments.
+
+### V7.6.2 acceptance
+1. Open memory; close via X and verify selected star is centered and gently pulsed.
+2. Navigate to next memory: no spurious return pulse before the next dive.
+3. Use the guided four-step Memory Path; each chapter stays in route order.
+4. At 390px viewport ensure the return highlight appears behind the mobile signal dock.
+5. With reduced motion enabled, return happens instantly without halo animation.
+6. Escape closes reader and restores keyboard focus to a useful, visible control.
