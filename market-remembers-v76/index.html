@@ -1864,6 +1864,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   }
   let immersive=false;
   let diveTimer=null,diveIndex=-1,diveSequence=0;
+  let v9State={phase:'idle',started:0,index:-1,token:0,energy:0};
   const pointers=new Map();let pinchDistance=0;
   let atlasEnabled=false, atlasPairs=[], atlasElements=[], flightFinish=0;
   const SVG_NS='http://www.w3.org/2000/svg';
@@ -2005,30 +2006,27 @@ void main(){
 }`;
   const coreFragment=`precision mediump float;
 varying vec3 vN;varying vec3 vObject;
-uniform float uTime;uniform float uMotion;
+uniform float uTime;uniform float uMotion;uniform float uPulse;uniform vec3 uFocus;
 float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
 void main(){
- vec3 N=normalize(vN),L=normalize(vec3(-.62,.74,1.06));
- vec3 H=normalize(L+vec3(0.,0.,1.));
- float incident=max(dot(N,L),0.);
- float terminator=smoothstep(.03,.74,incident);
- float ndv=max(N.z,0.);
- float rim=pow(1.-ndv,3.3);
- float spec=pow(max(dot(N,H),0.),58.);
- float band=sin(vObject.y*41.+vObject.z*24.+sin(vObject.x*16.)*2.1);
- float strat=pow(.5+.5*band,17.)*.085;
- float grain=(hash(floor(vObject*145.))-.5)*.020;
- float wave=.5+.5*sin(vObject.x*13.+vObject.y*15.+uTime*.00013);
- vec3 graphite=vec3(.013,.027,.036);
- vec3 ice=vec3(.107,.173,.197);
- vec3 material=graphite+ice*(.27+.72*terminator);
- material+=vec3(.020,.055,.066)*(strat+grain)*(.25+.75*terminator);
- material+=vec3(.041,.090,.103)*rim*(.30+.70*terminator);
- material+=vec3(.27,.48,.53)*spec*.22;
- material+=vec3(.010,.024,.033)*(wave-.5)*uMotion*.12;
- gl_FragColor=vec4(clamp(material,0.,1.),1.0);
-}`;
-  const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
+ vec3 N=normalize(vN),L=normalize(vec3(-.53,.70,1.12)),H=normalize(L+vec3(0.,0.,1.));
+ float light=max(dot(N,L),0.),fill=smoothstep(-.52,.78,dot(N,L));
+ float rim=pow(1.-clamp(N.z,0.,1.),3.7);
+ float spec=pow(max(dot(N,H),0.),48.);
+ float contour=sin(vObject.y*24.+vObject.z*15.+sin(vObject.x*18.)*2.3);
+ float filament=pow(.5+.5*contour,25.)*(.35+.65*light);
+ float grain=(hash(floor(vObject*168.))-.5)*.014;
+ float life=.5+.5*sin(vObject.x*13.+vObject.y*17.+uTime*.00012);
+ vec3 material=vec3(.017,.032,.045)+vec3(.115,.185,.209)*(.25+.75*fill);
+ material+=vec3(.045,.086,.105)*filament*.62;
+ material+=vec3(.025,.059,.075)*rim*.65;
+ material+=vec3(.34,.50,.54)*spec*.25;
+ material+=vec3(grain)*(.16+.64*fill);
+ material+=vec3(.008,.018,.026)*(life-.5)*uMotion*.18;
+ float spot=pow(max(dot(normalize(vObject),normalize(uFocus)),0.),26.);
+ material+=vec3(.13,.19,.22)*spot*uPulse*.67;
+ gl_FragColor=vec4(clamp(material,0.,1.),1.);
+}`; const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){const prog=gl.createProgram(),vsh=precision(gl.VERTEX_SHADER,v),fsh=precision(gl.FRAGMENT_SHADER,f);gl.attachShader(prog,vsh);gl.attachShader(prog,fsh);gl.linkProgram(prog);gl.deleteShader(vsh);gl.deleteShader(fsh);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));return prog}
   function generateParticles(){
     let count=(quality==='low'||(quality==='auto'&&autoEco))?(w<820?1200:2000):quality==='high'?(w<820?4800:9900):(w<820?1950:5900);
@@ -2219,7 +2217,7 @@ void main(){
       uRotY:cameraY,uRotX:cameraX,uZoom:zoom,uTime:reduceMotion?0:t,uDpr:dpr,
       uShock:shock?shock.radius:10,uFocus:s.p,uFocus2:[point.x*dpr,point.y*dpr],
       uFocusIntensity:point.z>-.12?1:0,
-      uMotion:reduceMotion?0:interactionEnergy,uTouch2:[interactionPoint[0]*dpr,interactionPoint[1]*dpr],
+      uMotion:reduceMotion?0:interactionEnergy,uPulse:reduceMotion?0:v9State.energy,uTouch2:[interactionPoint[0]*dpr,interactionPoint[1]*dpr],
       uTouchPulse:reduceMotion?0:interactionPulse,uQuality:(quality==='low'||(quality==='auto'&&(w<820||autoEco)))?0:1};
     let locations=uniformCache.get(p);
     if(!locations){locations=new Map();uniformCache.set(p,locations)}
