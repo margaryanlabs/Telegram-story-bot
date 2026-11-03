@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — STARLIGHT V9 / R1+R2+R3+R4 (isolated preview)
+# THE MARKET REMEMBERS — STARLIGHT V9.1 / R1–R4 + local archive protection (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -321,3 +321,24 @@ We are now in **stabilization**, not adding visual decoration, and the user's sc
 - Final release gate: open `?qa=1` on a real Android browser, verify the renderer and frame-rate, then test one passage, one reader return, one locally saved star birth, archive re-entry, and page reload. Capture visual evidence at 320×568 and 390×844 before merging the draft PR. Preserve ECLIPSE V8.2 and V7.4/8.0 comparison baselines.
 
 **No automatic deployment or production merge is enabled.**
+
+## V9.1 — Personal archive preservation / no silent memory deletion
+
+This pass responds to a real data-preservation problem, not a visual effect request. The former `v94StoreLocal()` **silently truncated personal stories at 40** and `safeStored()` also hid earlier entries. Those slices have been removed. A failed browser storage write still leaves the existing stored archive untouched; quota limits may prevent new stories, but old ones are not intentionally evicted.
+
+### New: export + restore, entirely offline and local
+- Existing `MY LEGACY → ЭКСПОРТ JSON` continues exporting all personal stories and local 30-day check-ins.
+- **ВОССТАНОВИТЬ JSON** now appears in both empty and populated MY LEGACY screens. Users can take a backup file to a new browser or device and import it. No file upload, account, server, telemetry, or publication.
+- `v95NormalizeBackup` checks that the source is an actual local-only backup, validates IDs, positions and record fields, rejects duplicate/corrupted entries, ignores unknown/unsafe check-in statuses, and bounds file import to 5 MB.
+- `v95ImportBackupData` merges on stable star IDs: previous stories never overwrite or disappear; known entries are not duplicated; locally newer discipline marks win on conflict.
+- If the first localStorage write succeeded but writing the second key fails, import attempts to roll back the original archive. Failure is disclosed, never silently presented as success.
+- The import asks for explicit confirmation and reloads the same page only after a successful merge. Previously exported JSON files using `{demo:true,localOnly:true,stories,checkins}` remain compatible.
+- Import test scenarios include empty-browser restoration, corrupted-file rejection, 41+ stars, duplicate-ID handling, conflict precedence and storage failure recovery.
+
+### Important limits
+- This protects **future** saves; already-evicted records from prior releases can only be recovered from an earlier JSON export, if one exists.
+- The backup file contains private stories, so users must store it securely. There is no end-to-end sync or cloud storage.
+- Browser or device clearing deletes local storage unless an independent copy exists.
+- **138/138** isolated JavaScript parsing, source, geometry, DOM/mock-interaction and storage-regression checks passed, including 12 new checks in `tests/v9-backup.test.mjs`.
+- Two new Playwright scenarios in `tests/v9-visual.spec.ts` cover import to an empty archive and rejection of a corrupt file, but **have not been executed in a real WebGL-capable mobile browser**.
+- Keep PR #220 in Draft. No changes to ECLIPSE V8.2, original V7.4/8.0 previews or production.
