@@ -39,3 +39,18 @@ test('mobile and reduced motion accommodations remain',()=>{
   assert.match(html,/pointercancel/);
   assert.match(html,/touch-action/);
 });
+
+test('reader chapter navigation and user focus recovery',()=>{
+  assert.match(html,/function v76EnhanceReader\(legend\)/);
+  assert.match(html,/data\.readerStep/);
+  assert.match(html,/museum-chapter-nav/);
+  assert.match(html,/v76Reader\.scrollTo/);
+  assert.match(html,/v76FocusReturn/);
+  assert.match(html,/e\.key!=='Tab'/);
+});
+test('cinematic fragment animation respects reduced-motion preferences',()=>{
+  assert.match(html,/function v76AnimateFragment\(/);
+  assert.match(html,/fragment-changing/);
+  assert.match(html,/if\(reduceMotion\)return/);
+  assert.match(html,/--memory-accent/);
+});
