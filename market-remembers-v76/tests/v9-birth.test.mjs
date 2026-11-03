@@ -42,14 +42,14 @@ test('source has no personal story upload or remote post in new birth code',()=>
 });
 test('local storage failure is a failure, never a fake success',()=>{
  const localStorage={setItem(){throw new Error('QuotaExceededError')}};
- const f=fn('v94StoreLocal',{saved:[],KEY:'private-records',localStorage});
+ const f=fn('v94StoreLocal',{saved:[],KEY:'private-records',localStorage,v96ReadStoredRecords:()=>[]});
  assert.equal(f({id:'local-failed'}),false);
 });
 test('adding the forty-first record never silently deletes the oldest star',()=>{
  const writes=[];
  const localStorage={setItem:(key,value)=>writes.push({key,records:JSON.parse(value)})};
  const saved=Array.from({length:40},(_,i)=>({id:'local-'+i}));
- const ok=fn('v94StoreLocal',{saved,KEY:'private-records',localStorage});
+ const ok=fn('v94StoreLocal',{saved,KEY:'private-records',localStorage,v96ReadStoredRecords:()=>saved});
  assert.equal(ok({id:'local-last'}),true);
  assert.equal(writes[0].key,'private-records');
  assert.equal(writes[0].records.length,41);
