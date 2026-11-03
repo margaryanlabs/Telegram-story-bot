@@ -1665,6 +1665,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
       const threshold=v76Reader.getBoundingClientRect().top+Math.min(220,v76Reader.clientHeight*.32);
       const active=steps[1].getBoundingClientRect().top<=threshold?1:0;
       buttons.forEach((button,i)=>{button.classList.toggle('is-current',i===active);button.setAttribute('aria-current',i===active?'step':'false')});
+      const sceneStage=v76Reader.querySelector('.v93-reader-stage');
+      if(sceneStage)sceneStage.textContent=active?'02 / ПРАВИЛО':'01 / КОНТЕКСТ';
     }
   };
   v76Reader.addEventListener('scroll',v76UpdateReader,{passive:true});
@@ -1715,6 +1717,67 @@ backdrop-filter:blur(12px);pointer-events:auto}
     card.classList.add('fragment-changing');
   }
   // A quiet two-step table of contents within each reading room.
+  // V9 R3 / One story, one actual star, one continuous reading room.
+  // Uses the existing catalogue and CSS-only optics; never invents social connections.
+  function v93ReaderInfo(record){
+    const index=stories.indexOf(record);
+    const kind=record.local?'ЛИЧНАЯ · НА ЭТОМ УСТРОЙСТВЕ':
+      record.type==='legend'?(record.legend?.quoteKind==='memo-title'?
+        'ПОДТВЕРЖДЁННЫЙ ИСТОЧНИК · ЗАГОЛОВОК':'ПОДТВЕРЖДЁННЫЙ ИСТОЧНИК · ЦИТАТА'):
+      record.type==='editorial'?'РЕДАКЦИОННАЯ ВЫМЫШЛЕННАЯ ИСТОРИЯ':'ВЫМЫШЛЕННАЯ ИСТОРИЯ';
+    const category=record.type==='legend'?'Legends':
+      record.type==='editorial'?'Lessons':record.category;
+    return {index,kind,category,color:lensColors[category]||'#aec5d6',
+      number:index>=0?String(index+1).padStart(3,'0'):'LOCAL',
+      alias:record.local?'@'+String(record.alias||'МОЯ ЗВЕЗДА'):
+        (record.type==='legend'?'★ ':'@')+String(record.alias||'ЗВЕЗДА')};
+  }
+  function v93MountReaderScene(record){
+    const article=$('drawerContents').querySelector('.memory-experience');
+    const top=article?.querySelector('.memory-topline');
+    if(!article||!top||!record)return;
+    const info=v93ReaderInfo(record);
+    const section=document.createElement('section');
+    section.className='v93-observatory';
+    section.setAttribute('aria-label','Выбранная звезда и возвращение во вселенную');
+    section.style.setProperty('--v93-accent',info.color);
+    const motif=document.createElement('div');motif.className='v93-observatory-motif';
+    motif.setAttribute('aria-hidden','true');
+    const point=record.p||[0,0,1],offsetX=clamp(50+point[0]*17,32,68);
+    const offsetY=clamp(49-point[1]*16,34,64);
+    motif.style.setProperty('--v93-x',offsetX.toFixed(1)+'%');
+    motif.style.setProperty('--v93-y',offsetY.toFixed(1)+'%');
+    // Background pinpoints are ornamental, NOT other people or linked users.
+    for(let i=0;i<7;i++){
+      const light=document.createElement('i');
+      light.style.setProperty('--x',(12+(i*23+info.index*7+100)%76)+'%');
+      light.style.setProperty('--y',(13+(i*31+info.index*11+100)%74)+'%');
+      motif.append(light);
+    }
+    const focus=document.createElement('span');focus.className='v93-observatory-star';
+    motif.append(focus);
+    const details=document.createElement('div');details.className='v93-observatory-details';
+    const kicker=document.createElement('span');kicker.className='v93-observatory-kicker';
+    kicker.textContent='VETO / ЗВЕЗДА В АРХИВЕ · '+info.number;
+    const name=document.createElement('strong');name.className='v93-observatory-alias';
+    name.textContent=info.alias;
+    const provenance=document.createElement('small');provenance.className='v93-observatory-kind';
+    provenance.textContent=info.kind;
+    const footer=document.createElement('div');footer.className='v93-observatory-footer';
+    const stage=document.createElement('span');stage.className='v93-reader-stage';
+    stage.textContent='01 / КОНТЕКСТ';
+    const back=document.createElement('button');back.type='button';
+    back.className='v93-back-to-star';
+    back.textContent='← К ЭТОЙ ЗВЕЗДЕ';
+    back.setAttribute('aria-label','Вернуться к выбранной звезде');
+    back.onclick=()=>closeDrawer();
+    footer.append(stage,back);
+    details.append(kicker,name,provenance,footer);
+    section.append(motif,details);
+    top.insertAdjacentElement('afterend',section);
+    article.classList.add('v93-memory-reveal');
+    $('drawer').style.setProperty('--v93-reader-accent',info.color);
+  }
   function v76EnhanceReader(legend){
     const article=$('drawerContents').querySelector('.memory-experience');
     if(!article)return;
@@ -2874,7 +2937,7 @@ void main(){
       '<button id="copyMemory" type="button" aria-label="Копировать">⧉</button></nav>'+
       '<button id="memoryBack" class="memory-back" type="button">← Назад к вселенной</button></article>';
     setDrawer('LEGEND / VERIFIED SOURCE',content);
-    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(true);v78MountBreadcrumb(s);v77MountThreads(s);
+    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(true);v78MountBreadcrumb(s);v93MountReaderScene(s);v77MountThreads(s);
     if(photo)$('legendPortrait').addEventListener('error',e=>{e.currentTarget.hidden=true});
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
@@ -2941,7 +3004,7 @@ void main(){
       '</article>';
     setDrawer('HUMAN STORY / '+(local?'LOCAL':'FICTIONAL'),content);
     $('drawer').classList.add('memory-detail','human-detail');
-    $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);v78MountBreadcrumb(s);v77MountThreads(s);
+    $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);v78MountBreadcrumb(s);v93MountReaderScene(s);v77MountThreads(s);
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
     $('memoryBack').onclick=closeDrawer;
