@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070d">
 <meta name="description" content="THE MARKET REMEMBERS — a living universe of traders. VETO visual experience. Interactive demo.">
-<title>THE MARKET REMEMBERS — LIVING STORIES V7.7 / VETO</title>
+<title>THE MARKET REMEMBERS — LIVING STORIES V7.8 / VETO</title>
 <style>
 :root{--bg:#05070d;--ink:#f1f4ff;--violet:#9879ff;--cyan:#7fe6ff;--muted:#909bb3;--line:rgba(193,204,248,.15);--panel:rgba(11,15,27,.86);--gold:#f9d7ac;color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{background:var(--bg);color:var(--ink);overflow:hidden}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #bda9ff;outline-offset:3px}button[disabled]{opacity:.45;cursor:not-allowed}a{text-decoration:none;color:inherit}[hidden]{display:none!important}
@@ -1141,6 +1141,38 @@ backdrop-filter:blur(12px);pointer-events:auto}
  .obsidian .v77-thread:hover{transform:none}
 }
 
+
+/* V7.8 / Thematic trails use existing SVG and renderer; no new WebGL passes. */
+.travel-trail.is-thread path{stroke:#e4bba5;stroke-width:1.8;stroke-dasharray:4 7;filter:drop-shadow(0 0 7px #cda2ba99)}
+.travel-trail.is-thread circle{fill:#f9ece0;stroke:#d7b9c5;filter:drop-shadow(0 0 13px #dca9b6b0)}
+.v78-dive-route{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;max-width:480px;
+ margin:-8px auto 19px;gap:7px 12px;color:#dcc5cc;font-size:10px;font-weight:600;letter-spacing:.075em}
+.v78-dive-route[hidden]{display:none!important}
+.v78-route-symbol{color:#ddaeb7;font-family:Georgia,serif;white-space:nowrap}
+.v78-dive-route small{display:block;flex-basis:100%;font-size:9px;color:#ae9faa;font-weight:500;letter-spacing:.16em}
+.v78-thread-breadcrumb{display:flex;flex-direction:column;align-items:flex-start;gap:11px;margin:13px 0 28px;
+ padding:15px 17px;border:1px solid #c5a7af50;border-radius:12px;
+ background:linear-gradient(130deg,#352a36cc,#161b27df);box-shadow:inset 0 1px #f2dac417}
+.v78-breadcrumb-caption{color:#e0b9a7;font-size:9px;letter-spacing:.14em;line-height:1.5}
+.v78-breadcrumb-chain{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+ font-family:Georgia,serif;font-size:15px;color:#c8b7c2;overflow-wrap:anywhere}
+.v78-breadcrumb-chain strong{color:#f5e4de;font-weight:500}
+.v78-breadcrumb-arrow{color:#d8afb8;white-space:nowrap;font-size:12px}
+.v78-breadcrumb-back{border:1px solid #d7b3bc60;background:#332935bb;color:#f5e3e1;
+ min-height:42px;border-radius:30px;padding:11px 16px;cursor:pointer;
+ font-size:10px;letter-spacing:.07em;transition:border-color .2s ease,background .2s ease}
+.v78-breadcrumb-back:hover,.v78-breadcrumb-back:focus-visible{background:#594054cc;border-color:#e7c5d0;outline-offset:3px}
+.v78-breadcrumb-disclaimer{color:#a39ba7;font-size:9px;line-height:1.6}
+@media(max-width:820px){
+ .v78-thread-breadcrumb{gap:10px;padding:14px;margin:8px 0 23px}
+ .v78-breadcrumb-chain{font-size:13px;gap:7px}
+ .v78-dive-route{font-size:9px;gap:6px 9px;max-width:330px}
+ .v78-breadcrumb-back{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+ .travel-trail.is-thread path,.v78-breadcrumb-back{animation:none!important;transition:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -1216,7 +1248,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   <div class="memory-dive" id="memoryDive" hidden aria-hidden="true">
     <button class="memory-dive-close" id="cancelDive" type="button" aria-label="Пропустить анимацию">SKIP ↗</button>
     <div class="memory-dive-lock"></div>
-    <div class="memory-dive-info"><div class="memory-dive-eyebrow">VETO / DECODING HUMAN MEMORY</div><div class="memory-dive-name" id="diveName">@SIGNAL</div><div class="memory-dive-progress"><span></span></div></div>
+    <div class="memory-dive-info"><div class="memory-dive-eyebrow">VETO / DECODING HUMAN MEMORY</div><div class="memory-dive-name" id="diveName">@SIGNAL</div><div class="v78-dive-route" id="v78DiveRoute" hidden aria-hidden="true"><span id="v78RouteFrom"></span><span class="v78-route-symbol">✦ ── ✧</span><span id="v78RouteTo"></span><small id="v78RouteRelation"></small></div><div class="memory-dive-progress"><span></span></div></div>
   </div>
   <div id="scrim" class="scrim" hidden></div>
   <aside class="drawer" id="drawer" aria-label="Панель" aria-modal="true" role="dialog" hidden>
@@ -2143,12 +2175,15 @@ void main(){
     showStory(story);
   }
   function beginDive(i){
+    const v78Target=(i+stories.length)%stories.length;
+    if(v78ThreadContext&&v78ThreadContext.to!==v78Target)v78ThreadContext=null;
     cancelDive();
     if(!lensMatches(stories[(i+stories.length)%stories.length]))setLens('All',false);
     closeLensPanel();
     if(!$('drawer').hidden)closeDrawer(true);
     const index=(i+stories.length)%stories.length;
     focus(index,false);
+    v78UpdateDiveRoute(index);
     if(reduceMotion){showStory(stories[index]);return}
     diveIndex=index;
     flightFinish=0;targetZoom=2.15;
@@ -2194,7 +2229,7 @@ void main(){
     document.body.classList.remove('drawer-open');
     document.querySelectorAll('[data-open]').forEach(b=>b.classList.toggle('is-on',b.dataset.open==='universe'));
     resumeScene();
-    if(wasReader&&skipReturn!==true)v762RestoreStar();
+    if(wasReader&&skipReturn!==true){v762RestoreStar();v78ThreadContext=null;$('travelTrail').classList.remove('is-thread')}
     const returnTo=v76FocusReturn;v76FocusReturn=null;
     const fallback=w<820?$('dockOpen'):$('openSelected');
     const focusTarget=returnTo&&returnTo.isConnected&&typeof returnTo.focus==='function'?returnTo:fallback;
@@ -2264,13 +2299,70 @@ void main(){
       foot.append(provenance,arrow);
       button.append(eyebrow,title,meta,foot);
       button.setAttribute('aria-label','Открыть тематическую историю '+story.alias+': '+String(story.quote||'').slice(0,100));
-      button.onclick=()=>beginDive(index);
+      button.onclick=()=>v78FollowThread(index,relation);
       grid.append(button);
     });
     const note=document.createElement('p');note.className='v77-thread-disclaimer';
     note.textContent='Связи построены по темам и редакционным категориям. Это не реальные отношения между людьми и не персональная рекомендация.';
     section.append(intro,grid,note);
     navigation.insertAdjacentElement('beforebegin',section);
+  }
+  // V7.8: temporary one-hop editorial context, never saved or published.
+  let v78ThreadContext=null;
+  function v78ThreadLabel(record){
+    if(!record)return 'НЕИЗВЕСТНО';
+    return record.local?'МОЯ ЛОКАЛЬНАЯ ЗВЕЗДА':
+      (record.type==='legend'?'★ ':'@')+String(record.alias||'ЗВЕЗДА');
+  }
+  function v78FollowThread(index,relation){
+    if(guidedJourney)return;
+    const target=stories[index],source=stories[selected];
+    if(!target||!source||target.local||index===selected||
+       !['fictional','editorial','legend'].includes(target.type))return;
+    v78ThreadContext={from:selected,to:index,relation:String(relation||'Другая история').slice(0,60)};
+    beginDive(index);
+  }
+  function v78BackToOrigin(){
+    const route=v78ThreadContext;
+    if(!route||!stories[route.from])return;
+    v78ThreadContext=null;
+    $('travelTrail').classList.remove('is-thread');
+    beginDive(route.from);
+  }
+  function v78UpdateDiveRoute(index){
+    const panel=$('v78DiveRoute');
+    const route=v78ThreadContext&&v78ThreadContext.to===index?v78ThreadContext:null;
+    panel.hidden=!route;
+    $('travelTrail').classList.toggle('is-thread',!!route);
+    if(!route)return;
+    $('v78RouteFrom').textContent=v78ThreadLabel(stories[route.from]);
+    $('v78RouteTo').textContent=v78ThreadLabel(stories[route.to]);
+    $('v78RouteRelation').textContent=route.relation.toUpperCase()+' / EDITORIAL THREAD';
+  }
+  function v78MountBreadcrumb(source){
+    const route=v78ThreadContext;
+    if(!route||guidedJourney||route.to!==stories.indexOf(source))return;
+    const start=stories[route.from],article=$('drawerContents').querySelector('.memory-experience');
+    const header=article?.querySelector('.memory-topline');
+    if(!start||!header)return;
+    const nav=document.createElement('nav');nav.className='v78-thread-breadcrumb';
+    nav.setAttribute('aria-label','Переход между тематическими историями');
+    const above=document.createElement('span');above.className='v78-breadcrumb-caption';
+    above.textContent='ПУТЬ ПО ВСЕЛЕННОЙ / '+route.relation.toUpperCase();
+    const chain=document.createElement('div');chain.className='v78-breadcrumb-chain';
+    const from=document.createElement('span');from.textContent=v78ThreadLabel(start);
+    const arrow=document.createElement('span');arrow.textContent='✦ ─── ↗';
+    arrow.setAttribute('aria-hidden','true');arrow.className='v78-breadcrumb-arrow';
+    const to=document.createElement('strong');to.textContent=v78ThreadLabel(source);
+    chain.append(from,arrow,to);
+    const back=document.createElement('button');back.type='button';back.className='v78-breadcrumb-back';
+    back.textContent='← К исходной истории';
+    back.setAttribute('aria-label','Вернуться к предыдущей истории '+v78ThreadLabel(start));
+    back.onclick=v78BackToOrigin;
+    const note=document.createElement('small');note.className='v78-breadcrumb-disclaimer';
+    note.textContent='Тематическая связь, не реальная связь между людьми.';
+    nav.append(above,chain,back,note);
+    header.insertAdjacentElement('afterend',nav);
   }
   const LEGEND_PORTRAITS={
     'Warren Buffett':{url:'https://commons.wikimedia.org/wiki/Special:FilePath/Warren_Buffett_in_2010_(cropped).jpg?width=350',credit:'Белый дом США / Wikimedia Commons · Public Domain',file:'https://commons.wikimedia.org/wiki/File:Warren_Buffett_in_2010_(cropped).jpg'},
@@ -2305,7 +2397,7 @@ void main(){
       '<button id="copyMemory" type="button" aria-label="Копировать">⧉</button></nav>'+
       '<button id="memoryBack" class="memory-back" type="button">← Назад к вселенной</button></article>';
     setDrawer('LEGEND / VERIFIED SOURCE',content);
-    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(true);v77MountThreads(s);
+    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(true);v78MountBreadcrumb(s);v77MountThreads(s);
     if(photo)$('legendPortrait').addEventListener('error',e=>{e.currentTarget.hidden=true});
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
@@ -2372,7 +2464,7 @@ void main(){
       '</article>';
     setDrawer('HUMAN STORY / '+(local?'LOCAL':'FICTIONAL'),content);
     $('drawer').classList.add('memory-detail','human-detail');
-    $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);v77MountThreads(s);
+    $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);v78MountBreadcrumb(s);v77MountThreads(s);
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
     $('memoryBack').onclick=closeDrawer;
@@ -2492,7 +2584,7 @@ void main(){
     resize();showToast('Качество: '+quality);
   }
   function setSpin(b){spinning=b;if(b){inertiaY=0;inertiaX=0}$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
-  function reset(){focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
+  function reset(){v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
   function connectControls(){
     $('headerCreate').onclick=$('heroCreate').onclick=showCreate;
     $('heroExplore').onclick=()=>setImmersive(true);$('focusMode').onclick=()=>setImmersive(!immersive);
