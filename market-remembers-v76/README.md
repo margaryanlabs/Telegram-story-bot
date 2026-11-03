@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — ECLIPSE V8.2 / visual recovery (separate Render preview)
+# THE MARKET REMEMBERS — STARLIGHT V9 / R1+R2 (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -213,3 +213,31 @@ This is a **distinct GitHub branch and distinct Render static service**, created
 
 ### Quality gate
 78/78 source, mocked-interaction, geometry and source-comparison checks passed, including 8 new `tests/eclipse-visual.test.mjs` tests verifying WebGL shader identity, decorative ring removal and actually matching CSS selectors. No claim of physical-device screenshot/GPU performance testing. User's Android screenshot of V8.0 was used as the visual regression case.
+
+## STARLIGHT V9 — implementation milestone (R1 + R2)
+
+**This is real code, not a design brief.** The untouched ECLIPSE V8.2 remains the safety fallback.
+
+### R1: native WebGL light & dimensional stars (implemented)
+- Refined original `coreFragment` material within the **existing WebGL1 shader pipeline**, increasing directional fill and surface contours without a giant CSS halo, extra draw pass, imported game engine, or replacement image.
+- Refined `pFragment` to preserve crisp near/far stars, selected-star brightness, rare violet/amber variation and subtle point falloff.
+- Added `uPulse` uniform to the existing `passUniforms` function and focused illumination on the actual selected star position (`uFocus`), rather than an unrelated decorative ring.
+- Kept actual sphere mesh + occlusion, original `generateParticles`, category/verified/source data and Canvas2D fallback intact.
+
+### R2: STAR PASSAGE (implemented)
+- `v9PhaseFor` and `v9Tick` now synchronize **lock (0-220ms), flight (220-1000ms), reveal (1000-1350ms)**, zoom and GLSL star energy inside the existing `animate()` render loop.
+- `beginDive` / `finishDive` / `cancelDive` form a cancellable one-token story transition; rapid taps never open the previous story.
+- Choosing a real indexed star opens that exact story after the transition. SKIP opens it directly; ESC cancels and returns to the existing universe; reduced-motion opens it instantly.
+- A fixed, once-created group of 14 lightweight CSS spark points appears around the **actual projected star location**, not across the whole screen. No full-screen ring shader, runtime asset download, or extra GPU draw pass.
+- The original archive, editorial connections, verified quote provenance, browser-local privacy and star return remain intact.
+
+### Current QA
+- 88/88 mock/source/geometry JS regression checks passed, including 10 new `tests/v9-starlight.test.mjs` state/reader/skip cases.
+- Added `v9-playwright.config.ts` + `tests/v9-visual.spec.ts` for real Chromium screenshots at 320×568, 390×844, 760×420, 768×1024, 1440×900 and interaction smoke checks.
+- To run screenshots from repository root with Playwright installed:
+  `npx playwright test --config=market-remembers-v76/v9-playwright.config.ts`.
+- **Important:** Chromium/WebGL 1 could not initialize a GPU context in the current local headless container (tested), and the remote browser automation wallet lacks credit. Therefore real Android/WebGL shader compilation, graphics performance and full-browser screenshot execution are **not yet verified**; do not merge to production without those checks.
+
+### Explicit non-goals in this milestone
+- No backend, private story uploading, public social connections, new library migration or Render overwrite.
+- R3 contextual reader refactoring and R4 personal star creation animation remain on the master plan, not claimed as complete.
