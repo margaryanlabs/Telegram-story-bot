@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070d">
 <meta name="description" content="THE MARKET REMEMBERS — a living universe of traders. VETO visual experience. Interactive demo.">
-<title>THE MARKET REMEMBERS — LIVING STORIES V8.0 RC / VETO</title>
+<title>THE MARKET REMEMBERS — LIVING STORIES V8.0 RC2 — BIG GLOBE / VETO</title>
 <style>
 :root{--bg:#05070d;--ink:#f1f4ff;--violet:#9879ff;--cyan:#7fe6ff;--muted:#909bb3;--line:rgba(193,204,248,.15);--panel:rgba(11,15,27,.86);--gold:#f9d7ac;color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{background:var(--bg);color:var(--ink);overflow:hidden}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #bda9ff;outline-offset:3px}button[disabled]{opacity:.45;cursor:not-allowed}a{text-decoration:none;color:inherit}[hidden]{display:none!important}
@@ -1313,7 +1313,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   <div class="scene" id="scene" aria-label="Интерактивная сфера, состоящая из светящихся звёзд и трейдерских историй">
     <canvas id="gl" aria-hidden="true"></canvas>
     <canvas id="fallback" aria-hidden="true"></canvas>
-    <div class="scene-shading" aria-hidden="true"></div>
+    <div class="v81-globe-aura" id="v81Aura" aria-hidden="true"></div><div class="scene-shading" aria-hidden="true"></div>
     <div class="scene-grid" aria-hidden="true"></div><div class="lens-halo" id="lensHalo" aria-hidden="true"></div>
     <div id="energySweep" class="energy-sweep" aria-hidden="true"></div>
     <svg id="constellationLayer" class="constellation-layer is-off" aria-hidden="true"></svg>
@@ -1324,7 +1324,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <div id="touchWave" class="touch-wave" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
     <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V8.0 / LIVING STORIES</div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V8.0 / BIG GLOBE</div>
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
@@ -1355,7 +1355,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
       <div><span class="journey-status-eyebrow">MEMORY PATH / МАРШРУТ</span><strong id="journeyProgress">01 / 04</strong></div>
       <button id="journeyExit" type="button" aria-label="Завершить маршрут памяти">×</button>
     </div>
-    <div class="world-controls" aria-label="Управление сферой"><button id="minusZoom" aria-label="Отдалить" type="button">−</button><button id="plusZoom" aria-label="Приблизить" type="button">＋</button><button id="autoRotate" aria-label="Остановить вращение" aria-pressed="true" type="button">Ⅱ</button><button id="resetCamera" aria-label="Восстановить вид" type="button">↺</button><button id="toggleAtlas" class="atlas-button" aria-label="Показать или скрыть тематические созвездия" aria-pressed="false" type="button">ATLAS</button><button id="focusMode" class="focus-button" aria-label="Включить режим погружения" aria-pressed="false" type="button">◉ FOCUS</button><button id="lensToggle" class="lens-toggle" type="button" aria-expanded="false" aria-controls="lensPanel" aria-label="Выбрать тематическое созвездие">◈ LENS</button></div>
+    <div class="world-controls" aria-label="Управление сферой"><button id="minusZoom" aria-label="Отдалить" type="button">−</button><button id="plusZoom" aria-label="Приблизить" type="button">＋</button><button id="autoRotate" aria-label="Остановить вращение" aria-pressed="true" type="button">Ⅱ</button><button id="resetCamera" aria-label="Восстановить вид" type="button">↺</button><button id="globeScale" class="globe-size-button" aria-label="Размер сферы: большой. Нажмите, чтобы уменьшить" title="Переключить масштаб сферы" type="button">◉ BIG</button><button id="toggleAtlas" class="atlas-button" aria-label="Показать или скрыть тематические созвездия" aria-pressed="false" type="button">ATLAS</button><button id="focusMode" class="focus-button" aria-label="Включить режим погружения" aria-pressed="false" type="button">◉ FOCUS</button><button id="lensToggle" class="lens-toggle" type="button" aria-expanded="false" aria-controls="lensPanel" aria-label="Выбрать тематическое созвездие">◈ LENS</button></div>
     <section class="lens-panel" id="lensPanel" hidden aria-label="Тематические созвездия">
       <div class="lens-eyebrow">SIGNAL LENS / MEMORY MAP <button id="lensClose" type="button" aria-label="Закрыть фильтры">×</button></div>
       <h3 id="lensTitle">Выбери созвездие</h3><p id="lensDescription">Истории одной темы.</p>
@@ -1695,25 +1695,48 @@ backdrop-filter:blur(12px);pointer-events:auto}
   
   // V7.6.3: measure available space on resize, never in particle render loops.
   let v763MobileStage=null;
+  // Big at every opening: the user's size choice is transient, not stored.
+  let v81SizeMode='big',v81ScaleCurrent=1,v81ScaleTarget=1;
+  function v81ScaleFactor(mode){return mode==='small'?.73:mode==='max'?1.15:1}
+  function v81SetScale(mode,announce=true){
+    if(!['big','small','max'].includes(mode))return;
+    v81SizeMode=mode;v81ScaleTarget=v81ScaleFactor(mode);
+    if(reduceMotion)v81ScaleCurrent=v81ScaleTarget;
+    const b=$('globeScale'),labels={big:'◉ BIG',small:'◌ SMALL',max:'✦ MAX'};
+    const desc={big:'большой',small:'уменьшенный',max:'максимальный'};
+    b.textContent=labels[mode];
+    b.setAttribute('aria-label','Размер сферы: '+desc[mode]+'. Нажмите, чтобы переключить масштаб');
+    b.dataset.mode=mode;
+    if(reduceMotion){updateMarkers();updateAtlas()}
+    if(announce)showToast('Масштаб вселенной: '+desc[mode]);
+  }
+  function v81CycleScale(){
+    const order=['big','small','max'];
+    v81SetScale(order[(order.indexOf(v81SizeMode)+1)%order.length]);
+  }
   function v763MeasureStage(){
     if(w>=820||immersive){v763MobileStage=null;return}
     if(w>h&&h<650){
-      v763MobileStage={x:w*.715,y:h*.485,radius:Math.min(w*.255,h*.325),top:0,bottom:h,mode:'landscape'};
+      v763MobileStage={x:w*.72,y:h*.49,radius:Math.min(w*.285,h*.425),
+        top:0,bottom:h,mode:'landscape'};
       return;
     }
     const rect=stage.getBoundingClientRect();
     const top=Math.max(140,$('hero').getBoundingClientRect().bottom-rect.top+16);
     const bottom=Math.min(h-72,$('signalDock').getBoundingClientRect().top-rect.top-16);
-    const usable=Math.max(110,bottom-top);
-    const radius=Math.max(48,Math.min(w*.405,h*.345,usable*.5-9));
+    // Soft overlap behind the editorial hero/dock is intentional, not a layout bug.
+    const radius=Math.max(65,Math.min(w*.455,h*.405));
     const cy=bottom>top?(top+bottom)*.5:h*.54;
-    v763MobileStage={x:w*.555,y:clamp(cy,radius+12,h-radius-64),radius,
+    v763MobileStage={x:w*.52,y:clamp(cy,radius*.86,h-radius*.78),radius,
       top:Math.max(0,top-10),bottom:Math.min(h,bottom+10),mode:'portrait'};
   }
   function targetCenter(){
-    if(immersive)return {x:w*.5,y:h*(w<820?.54:.52),radius:Math.min(w,h)*(w<820?.49:.46)};
-    if(v763MobileStage&&w<820)return {x:v763MobileStage.x,y:v763MobileStage.y,radius:v763MobileStage.radius};
-    return {x:w*.672,y:h*.52,radius:Math.min(w,h)*.39};
+    const scale=v81ScaleCurrent;
+    if(immersive)return {x:w*.5,y:h*(w<820?.54:.52),
+      radius:Math.min(w,h)*(w<820?.55:.53)*scale};
+    if(v763MobileStage&&w<820)return {x:v763MobileStage.x,
+      y:v763MobileStage.y,radius:v763MobileStage.radius*scale};
+    return {x:w*.66,y:h*.52,radius:Math.min(h*.46,w*.345)*scale};
   }
   function rotate(p){const cy=Math.cos(cameraY),sy=Math.sin(cameraY),cx=Math.cos(cameraX),sx=Math.sin(cameraX);const x=cy*p[0]+sy*p[2],z=-sy*p[0]+cy*p[2],y=cx*p[1]-sx*z;return [x,y,sx*p[1]+cx*z]}
   function project(p){const t=rotate(p),c=targetCenter(),per=2.7/(3.1-t[2]*.7),s=c.radius*per*zoom;return {x:c.x+t[0]*s,y:c.y-t[1]*s,z:t[2],s}}
@@ -1903,6 +1926,9 @@ void main(){
     const c=targetCenter(),sweep=$('energySweep');
     sweep.style.left=c.x+'px';sweep.style.top=c.y+'px';
     const diameter=c.radius*zoom*2.38;sweep.style.width=diameter+'px';sweep.style.height=diameter+'px';
+    const aura=$('v81Aura'),auraSize=c.radius*zoom*3.1;
+    aura.style.left=c.x+'px';aura.style.top=c.y+'px';
+    aura.style.width=auraSize+'px';aura.style.height=auraSize+'px';
     const reticle=$('signalReticle'),p=project(stories[selected].p);
     reticle.style.left=p.x+'px';reticle.style.top=p.y+'px';
     reticle.style.opacity=p.z>-.12?'1':'0';
@@ -2182,7 +2208,7 @@ void main(){
       if(changed){resize();queueFrame()}
     });
   }
-  function resize(){const dimensions=sceneSize();w=dimensions.width;h=dimensions.height;dpr=Math.min(window.devicePixelRatio||1,(quality==='low'||(quality==='auto'&&autoEco))?1:quality==='high'?1.8:(w<820?1.35:1.55));resW=Math.round(w*dpr);resH=Math.round(h*dpr);canvas.width=resW;canvas.height=resH;fallbackCanvas.width=resW;fallbackCanvas.height=resH;v8ViewportPending=false;v763MeasureStage();if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);if(gl)buildCoreMesh();generateParticles();updateMarkers();updateAtlas()}
+  function resize(){const dimensions=sceneSize();w=dimensions.width;h=dimensions.height;dpr=Math.min(window.devicePixelRatio||1,(quality==='low'||(quality==='auto'&&autoEco))?1:quality==='high'?1.8:(w<820?1.35:1.55));resW=Math.round(w*dpr);resH=Math.round(h*dpr);canvas.width=resW;canvas.height=resH;fallbackCanvas.width=resW;fallbackCanvas.height=resH;v8ViewportPending=false;$('v81Aura').classList.toggle('is-eco',quality==='low'||autoEco);v763MeasureStage();if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);if(gl)buildCoreMesh();generateParticles();updateMarkers();updateAtlas()}
   let focusLabelActive=false;
   function makeMarkers(){buildAtlas();const el=$('markers');el.replaceChildren();markerEls=[];stories.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='star-marker'+(s.type==='legend'?' is-legend-star':s.type==='editorial'?' is-editorial-star':'');b.title='Открыть '+(s.type==='legend'?'цитату ':'историю ')+s.alias;b.setAttribute('aria-label','История '+s.alias);b.addEventListener('click',e=>{e.stopPropagation();focus(i,true)});el.append(b);markerEls.push(b)})}
   function updateMarkers(){
@@ -2273,11 +2299,13 @@ void main(){
       if(Math.abs(inertiaX)<.00008)inertiaX=0;
     }
     cameraY+=(targetY-cameraY)*ease;cameraX+=(targetX-cameraX)*ease;zoom+=(targetZoom-zoom)*ease;
+    const sizeMoving=Math.abs(v81ScaleTarget-v81ScaleCurrent)>.001;
+    v81ScaleCurrent+=(v81ScaleTarget-v81ScaleCurrent)*(reduceMotion?1:1-Math.exp(-dt/440));
     if(shock){shock.radius+=dt*.00075;if(shock.radius>1.45)shock=null}
     if(birth&&t-birth.started>2450){birth=null;$('birthOverlay').hidden=false;$('birthOverlay').setAttribute('aria-hidden','false');$('birthContinue').focus()}
     if(gl){try{webGLRender(t)}catch(e){console.warn('Switching to Canvas fallback',e);gl=null;init2D();resize()}}
     if(!gl)canvasRender(t);
-    if(!reduceMotion||Math.abs(targetY-cameraY)>.001||Math.abs(targetX-cameraX)>.001||birth||shock)updateMarkers();
+    if(!reduceMotion||sizeMoving||Math.abs(targetY-cameraY)>.001||Math.abs(targetX-cameraX)>.001||birth||shock)updateMarkers();
     updateAtlas();updateBirthComet(t);updateDivePosition();updateTravel(t);updateTouchLight(dt);
     sampleGraphics(t,dt);queueFrame()
   }
@@ -2303,6 +2331,8 @@ void main(){
     $('selectedBy').textContent=(s.type==='legend'?'★ ':'@')+s.alias+' · '+s.market+' · '+s.category;
     $('dockAlias').textContent=(s.type==='legend'?'★ LEGEND / ':s.type==='editorial'?'✦ ORIGINAL / ':'@')+s.alias+' / '+s.category.toUpperCase();
     $('dockQuote').textContent=s.quote.replace(/[«»]/g,'');
+    const tint=lensColors[s.type==='legend'?'Legends':s.type==='editorial'?'Lessons':s.category]||'#b49ac9';
+    $('scene').style.setProperty('--v81-tint',tint);
     v76AnimateFragment();
   }
   function cancelDive(){
@@ -2858,10 +2888,10 @@ void main(){
     resize();showToast('Качество: '+quality);
   }
   function setSpin(b){spinning=b;if(b){inertiaY=0;inertiaX=0}$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
-  function reset(){v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
+  function reset(){v81SetScale('big',false);v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
   function connectControls(){
     $('headerCreate').onclick=$('heroCreate').onclick=showCreate;
-    $('heroExplore').onclick=()=>setImmersive(true);$('focusMode').onclick=()=>setImmersive(!immersive);
+    $('heroExplore').onclick=()=>setImmersive(true);$('focusMode').onclick=()=>setImmersive(!immersive);$('globeScale').onclick=v81CycleScale;
     $('lensToggle').onclick=()=>{const el=$('lensPanel');el.hidden=!el.hidden;$('lensToggle').setAttribute('aria-expanded',String(!el.hidden));if(!el.hidden)updateLensControls()};
     $('lensClose').onclick=closeLensPanel;
     $('featuredStar').onclick=()=>{
