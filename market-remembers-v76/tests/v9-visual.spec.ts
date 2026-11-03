@@ -328,3 +328,50 @@ test('V9.4 narrow phone keeps the ECLIPSE sphere legible',async({page})=>{
  await expect(page.locator('#globeScale')).toBeVisible();
  await page.screenshot({path:'test-results/v94-narrow-320x568.png',animations:'disabled'});
 });
+
+
+test('V9.5 Canvas fallback hides GPU and keeps the Observatory reader usable',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>{
+   const original=HTMLCanvasElement.prototype.getContext;
+   HTMLCanvasElement.prototype.getContext=function(type,...args){
+     if(type==='webgl')return null;
+     return original.call(this,type,...args);
+   };
+ });
+ await page.goto('/?qa=1');
+ await expect(page.locator('#fallback')).toBeVisible();
+ await expect(page.locator('#gl')).toBeHidden();
+ await expect(page.locator('#qaStatus')).toContainText('Renderer: CANVAS2D');
+ await page.screenshot({path:'test-results/v95-canvas-fallback-390x844.png',animations:'disabled'});
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('.v93-observatory')).toBeVisible();
+ await expect(page.locator('.v93-back-to-star')).toBeVisible();
+ await expect(page.locator('#drawer')).toContainText('NORTHSTAR');
+ await page.locator('.v93-back-to-star').click();
+ await expect(page.locator('#drawer')).toBeHidden();
+});
+test('V9.5 Observatory reader handles long local text at 320px without horizontal scroll',async({page})=>{
+ await page.setViewportSize({width:320,height:568});
+ await page.addInitScript(()=>{
+   localStorage.setItem('veto-market-remembers-demo-v4',JSON.stringify([{
+     id:'local-v95-long',local:true,type:'local',alias:'MY PRIVATE STAR / '+ 'A'.repeat(100),
+     quote:'Очень длинная мысль о дисциплине и рынках '.repeat(12),
+     story:'НепрерывныйТекстБезПробелов'.repeat(30),
+     rule:'Продолжительное правило '.repeat(12),capsule:'',
+     p:[0,0,1],market:'CRYPTO',category:'Risk',
+     createdAt:'2026-11-01T12:00:00.000Z'
+   }]));
+ });
+ await page.goto('/');
+ await page.locator('.mobile-nav [data-open="archive"]').click();
+ await page.locator('#archiveFilters button[data-archive-filter="Mine"]').click();
+ await page.locator('#archiveGrid button').filter({hasText:'MY PRIVATE STAR'}).first().click();
+ await expect(page.locator('.v93-observatory')).toBeVisible();
+ const scrollWidth=await page.locator('body').evaluate(el=>el.scrollWidth);
+ expect(scrollWidth).toBeLessThanOrEqual(321);
+ const back=page.locator('.v93-back-to-star');
+ const rect=await back.boundingBox();
+ expect(rect?.height||0).toBeGreaterThanOrEqual(44);
+ await page.screenshot({path:'test-results/v95-legacy-reader-320x568.png',animations:'disabled'});
+});
