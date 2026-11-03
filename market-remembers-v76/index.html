@@ -2250,7 +2250,7 @@ void main(){
       button.type='button';button.className='v77-thread';
       button.dataset.mood=String(story.category).toLowerCase();
       button.dataset.threadIndex=String(index);
-      const kind=story.type==='legend'?'ИСТОЧНИК · ЦИТАТА':
+      const kind=story.type==='legend'?(story.legend?.quoteKind==='memo-title'?'ИСТОЧНИК · ЗАГОЛОВОК':'ИСТОЧНИК · ЦИТАТА'):
         story.type==='editorial'?'РЕДАКЦИОННЫЙ ВЫМЫШЛЕННЫЙ ПРИМЕР':'ВЫМЫШЛЕННАЯ ИСТОРИЯ';
       const eyebrow=document.createElement('span');eyebrow.className='v77-thread-eyebrow';
       eyebrow.textContent='0'+(order+1)+' / '+relation.toUpperCase();
