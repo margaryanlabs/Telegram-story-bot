@@ -392,3 +392,20 @@ The same V9 STARLIGHT project continues on isolated Draft PR #220 with ECLIPSE V
 - 10/10 focused scene syntax/geometry checks passed for tall/short portrait, landscape, tablet, desktop, FOCUS, focus-label exclusion and RAF scheduling. A further 11/11 final source/QA tests passed, including a simulated opt-in QA output. These are **local JavaScript source-level and simulated checks, not the full Node suite, a real Chromium screenshot, or a physical Android GPU run**.
 - GitHub Actions remained unavailable on earlier observed runs. PR remains **Draft**. Physical Android WebGL/Canvas visual and interaction approval, accessible zoom, touch behavior and narrow-screen screenshot review are still required before any merge.
 - Review preview: https://market-remembers-starlight-v9.onrender.com/ ; device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1 (Render autoDeploy OFF, manual publish).
+
+
+## V9.5 — Luminous mesh, Canvas depth parity and Observatory readability (2026-11-04)
+
+This is another **incremental change on the existing STARLIGHT branch** and Draft PR #220. The existing VETO WebGL1 triangulated sphere, ECLIPSE V8.2 stage composition, category signal colors, original story archive, history and local-only storage remain intact. No replacement hero illustration, pseudo-globe, new Canvas layers, giant rings, dependencies or external server were introduced.
+
+### Existing universe, improved
+- **WebGL1:** a subtle second directional bounce-light term in the *existing* core fragment shader (`coreFragment`). The original surface texture, main illumination, mesh/depth draw order, view, star categories and shader architecture are unchanged. This is a material adjustment, not a new GPU pass. Visual appearance still requires real WebGL hardware QA.
+- **Canvas2D fallback:** a new `v95FrontStoryProjection` rejects named stars that project onto the back hemisphere, offscreen positions or invalid values. The fallback no longer visibly leaks a story star through the opaque graphite sphere. It retains `lensMatches` and selected story targeting.
+- **Observatory reader:** narrow-screen grid adjustments and readable long text, aliases, rules and local notes using `overflow-wrap`, typography and tighter layout within existing components. Reduced-motion chapter navigation now uses standard `scrollTo({behavior:'auto'})`, while other readers retain smooth transitions. No personal data flows beyond the device.
+
+### Tests and release gates
+- Added `tests/v95-material-reader.test.mjs` with seven targeted shader, Canvas visibility, backface rejection, private archive and Observatory markup assertions. **7/7 tests passed in an isolated JavaScript execution harness**, using source extracted from the current GitHub file. This is not the full Node test suite.
+- Added Playwright scenarios for forced WebGL → Canvas fallback at 390×844, reader return, and a long local story at 320×568. The scenarios **have not been executed in a real Android/WebGL browser** and their screenshot appearance is not verified.
+- Keep PR #220 Draft and autoDeploy OFF until physical Android/GPU/Canvas and browser regression QA is completed. Frozen V7.4, V8.0, V8.2 previews and Vetogram production are untouched.
+
+Manual Render review link: https://market-remembers-starlight-v9.onrender.com/
