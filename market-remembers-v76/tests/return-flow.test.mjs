@@ -31,10 +31,12 @@ function closeCase(arg,hasReturnFocus=true,mobile=true){
   const els={
     drawer,scrim:{hidden:false},
     dockOpen:{focus(){record.dockFocus++}},
-    openSelected:{focus(){record.desktopFocus++}}
+    openSelected:{focus(){record.desktopFocus++}},
+    travelTrail:{classList:classList()}
   };
   const context={
     $:id=>els[id],w:mobile?390:1200,diveIndex:-1,
+    v78ThreadContext:{from:0,to:1,relation:'Общая тема'},
     v76FocusReturn:hasReturnFocus?{isConnected:true,focus(){record.restored++}}:null,
     document:{body:{classList:{remove(){}}},querySelectorAll:()=>[]},
     resumeScene(){record.scene++},
