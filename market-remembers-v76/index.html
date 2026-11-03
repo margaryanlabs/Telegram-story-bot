@@ -1782,7 +1782,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <div id="touchWave" class="touch-wave" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
     <div id="birthComet" class="birth-comet" aria-hidden="true"></div><div class="v94-birth-field" id="v94BirthField" hidden aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V8.2 / ECLIPSE</div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V9 / LIVING UNIVERSE</div>
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
@@ -3299,6 +3299,12 @@ function v94SeedFromId(id){
   }
   return hash>>>0;
 }
+function v94NewLocalId(){
+  // Browser-generated stable identity; legacy fallback supports older WebViews.
+  if(typeof crypto!=='undefined'&&typeof crypto.randomUUID==='function')
+    return 'local-'+crypto.randomUUID();
+  return 'local-'+Date.now().toString(36)+'-'+Math.floor(Math.random()*1e12).toString(36);
+}
 function v94PositionFromId(id){
   const r=seeded(v94SeedFromId(id));
   const y=r()*1.68-.84,theta=r()*twoPi,rad=Math.sqrt(1-y*y);
@@ -3376,7 +3382,7 @@ function addStory(data){
   const quote=safeString(data.get('quote'),280).trim();
   const rule=safeString(data.get('rule'),180).trim();
   if(alias.length<2||quote.length<12||rule.length<8)return false;
-  const id='local-'+Date.now().toString(36)+'-'+Math.floor(rand()*1e6).toString(36);
+  const id=v94NewLocalId();
   const record={
     id,alias,market:safeString(data.get('market'),16),
     category:safeString(data.get('category'),20),quote,
