@@ -64,7 +64,7 @@ test('stale browser with a cleared archive refuses to resurrect deleted history'
 test('damaged, duplicate or non-finite local coordinates are never overwritten',()=>{
   for(const damaged of [
     [story('local-duplicate'),story('local-duplicate')],
-    [{...story('local-bad'),p:[1e308,1e308,0]}],
+    [{...story('local-bad'),p:[1.7e308,1.7e308,0]}],
     [{...story('local-bad'),quote:42}],
     [{...story('local-bad'),local:false}]
   ]){
@@ -114,6 +114,6 @@ test('backup refuses extreme coordinates which overflow into non-finite radius',
     categories:['Risk']
   });
   rejects(()=>normalize({
-    localOnly:true,stories:[{...story('local-bad'),p:[1e308,1e308,1e308]}]
+    localOnly:true,stories:[{...story('local-bad'),p:[1.7e308,1.7e308,1.7e308]}]
   }),'повреждённую');
 });
