@@ -1931,10 +1931,18 @@ backdrop-filter:blur(12px);pointer-events:auto}
     fallbackCount:0,webglLossCount:0,errorCount:0};
   function qaSnapshot(){
     // Never include selected aliases, notes, star IDs, URL queries or localStorage.
+    const orb=targetCenter();
+    const safeBand=v763MobileStage&&v763MobileStage.mode==='portrait'?
+      Math.round(v763MobileStage.top)+'–'+Math.round(v763MobileStage.bottom)+
+        (v763MobileStage.fitted?' (MEASURED)':' (ECLIPSE)'):
+      'NOT APPLICABLE';
     return [
       'V9 STARLIGHT / DEVICE QA',
       'Renderer: '+(gl?'WEBGL1':ctx?'CANVAS2D':'UNAVAILABLE'),
       'Viewport: '+Math.round(w)+' × '+Math.round(h),
+      'Orb center: '+Math.round(orb.x)+' × '+Math.round(orb.y)+
+        ' | Radius: '+Math.round(orb.radius),
+      'Portrait safe band: '+safeBand,
       'DPR: '+dpr.toFixed(2)+' | Buffer: '+resW+' × '+resH,
       'FPS (last active second): '+(qaState.fps||'—'),
       'Graphics: '+quality.toUpperCase()+(autoEco?' / ECO':''),
