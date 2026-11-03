@@ -42,7 +42,7 @@ test('mobile and reduced motion accommodations remain',()=>{
 
 test('reader chapter navigation and user focus recovery',()=>{
   assert.match(html,/function v76EnhanceReader\(legend\)/);
-  assert.match(html,/data\.readerStep/);
+  assert.match(html,/\.dataset\.readerStep/);
   assert.match(html,/museum-chapter-nav/);
   assert.match(html,/v76Reader\.scrollTo/);
   assert.match(html,/v76FocusReturn/);
