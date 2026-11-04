@@ -3261,8 +3261,8 @@ void main(){
     $('diveName').textContent=(stories[index].type==='legend'?'★ ':'@')+stories[index].alias;
     // Preview existing, user-supplied or clearly marked demo text; never invent biography.
     const source=stories[index];
-    const category=window.MarketV10?.data?.themes?.[source.category]||String(source.category||'Опыт');
-    $('v114PassageKind').textContent=(source.local?'ЛИЧНАЯ ЗАПИСЬ · ТОЛЬКО В ЭТОМ БРАУЗЕРЕ':source.type==='legend'?'ИСТОЧНИК · ИСТОРИЧЕСКАЯ ЦИТАТА':'ВЫМЫШЛЕННАЯ ИСТОРИЯ')+' / '+category;
+    const themeLabel=window.MarketV10?.data?.themes?.[source.category]||String(source.category||'Опыт');
+    $('v114PassageKind').textContent=(source.local?'ЛИЧНАЯ ЗАПИСЬ · ТОЛЬКО В ЭТОМ БРАУЗЕРЕ':source.type==='legend'?'ИСТОЧНИК · ИСТОРИЧЕСКАЯ ЦИТАТА':'ВЫМЫШЛЕННАЯ ИСТОРИЯ')+' / '+themeLabel;
     $('v114PassageQuote').textContent='«'+String(source.quote||'').replace(/[«»]/g,'').slice(0,155)+'»';
     $('v9PassageStatus').textContent='ЗВЕЗДА НАЙДЕНА';
     const progress=overlay.querySelector('.memory-dive-progress span');
