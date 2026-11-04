@@ -287,3 +287,73 @@
  #app.obsidian .v12-memory-hero{animation:none!important}
  #app.obsidian .scene-shading::after{animation:none!important}
 }
+
+/* Historical source: preserve image license, quote, original and citation. */
+#app.obsidian .v12-memory-hero.v12-legend-hero{
+  gap:12px;min-height:0;align-items:stretch;padding-top:32px;padding-bottom:35px;
+}
+#app.obsidian .v12-legend-hero .legend-profile{
+  position:relative;z-index:1;
+  display:flex;gap:18px;align-items:center;justify-content:center;
+  padding:18px 0 10px;margin:10px 0 0;text-align:left;
+  border:0;background:transparent;
+}
+#app.obsidian .v12-legend-hero .legend-portrait-box{
+  flex:none;width:100px;height:100px;min-width:100px;
+  border-radius:50%;border:1px solid #c8a9906f;
+  box-shadow:0 0 30px #9dd8e52c;
+  overflow:hidden;
+}
+#app.obsidian .v12-legend-hero .legend-portrait-box img{
+  object-fit:cover;width:100%;height:100%;border-radius:50%;
+}
+#app.obsidian .v12-legend-hero .human-profile-text{
+  display:grid;gap:7px;min-width:0;text-align:left;
+}
+#app.obsidian .v12-legend-hero .human-profile-name{
+  font:italic 400 clamp(27px,4vw,42px)/1.15 var(--font-literary);
+  color:var(--warm-ivory);
+}
+#app.obsidian .v12-legend-hero .human-profile-role{
+  font:400 11px/1.6 var(--font-interface);color:#b4c9d1;
+}
+#app.obsidian .v12-legend-hero .legend-credit{
+  position:relative;z-index:1;max-width:100%;
+  text-align:center;margin:2px 0 9px;
+  font:400 10px/1.6 var(--font-interface);
+}
+#app.obsidian .v12-legend-hero .legend-credit a{
+  color:#b4d8e1;text-decoration:underline;text-underline-offset:3px;
+}
+#app.obsidian .v12-legend-hero .human-story-label{
+  position:relative;z-index:1;
+  color:var(--memory-gold);font:600 10px/1.5 var(--font-interface);
+  letter-spacing:.08em;text-align:center;margin:6px 0;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-legend-hero .memory-title{
+  position:relative;z-index:1;
+  font:italic 400 clamp(26px,3.5vw,39px)/1.38 var(--font-literary);
+  letter-spacing:-.025em;color:var(--warm-ivory);
+  text-align:center;margin:8px 0;
+}
+#app.obsidian .v12-legend-hero .legend-original{
+  position:relative;z-index:1;
+  font:italic 400 clamp(15px,1.9vw,19px)/1.6 var(--font-literary);
+  max-width:620px;margin:4px auto 0;
+  color:#afc8cf;text-align:center;
+}
+#app.obsidian .v12-legend-hero .legend-original small{
+  display:block;font:600 9px/1.6 var(--font-interface);
+  letter-spacing:.14em;color:#c8a990;margin-bottom:5px;
+}
+@media(max-width:819px){
+ #app.obsidian .v12-legend-hero .legend-profile{
+  justify-content:flex-start;gap:12px;padding:13px 0 5px;
+ }
+ #app.obsidian .v12-legend-hero .legend-portrait-box{
+  width:72px;height:72px;min-width:72px;
+ }
+ #app.obsidian .v12-legend-hero .human-profile-name{font-size:26px}
+ #app.obsidian .v12-legend-hero .human-profile-role{font-size:10px}
+ #app.obsidian .drawer.memory-detail.v10-reader .v12-legend-hero .memory-title{font-size:26px}
+}
