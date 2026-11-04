@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05070d">
 <meta name="description" content="THE MARKET REMEMBERS — a living universe of traders. VETO visual experience. Interactive demo.">
-<title>THE MARKET REMEMBERS — ECLIPSE V8.2 / VETO</title>
+<title>THE MARKET REMEMBERS — STARLIGHT V9 / VETO</title>
 <style>
 :root{--bg:#05070d;--ink:#f1f4ff;--violet:#9879ff;--cyan:#7fe6ff;--muted:#909bb3;--line:rgba(193,204,248,.15);--panel:rgba(11,15,27,.86);--gold:#f9d7ac;color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{background:var(--bg);color:var(--ink);overflow:hidden}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #bda9ff;outline-offset:3px}button[disabled]{opacity:.45;cursor:not-allowed}a{text-decoration:none;color:inherit}[hidden]{display:none!important}
@@ -1482,6 +1482,413 @@ backdrop-filter:blur(12px);pointer-events:auto}
  }
 }
 
+
+/* V9 STAR PASSAGE — a local light event on the real selected story star.
+   No full-screen circular texture, pseudo-galaxy or extra WebGL draw pass. */
+.memory-dive::before{
+ background:radial-gradient(circle at var(--dx) var(--dy),transparent 0 5%,
+ rgba(6,9,18,.17) 26%,rgba(2,5,12,.52) 69%,rgba(2,5,12,.75) 100%);
+ animation:v9Nightfall .75s ease-out both;
+}
+.memory-dive::after{display:none!important}
+@keyframes v9Nightfall{from{opacity:0}to{opacity:1}}
+.memory-dive-lock{
+ width:14px;height:14px;z-index:3;
+ border:1px solid #f8f4ed;
+ background:radial-gradient(circle,#fff 0 12%,#eaf5f7 35%,transparent 82%);
+ box-shadow:0 0 10px #fff,0 0 28px var(--memory-accent),0 0 55px var(--memory-accent);
+ animation:v9StarBreath .9s ease-in-out both;
+}
+.memory-dive-lock::before{
+ content:"";position:absolute;inset:-26px;opacity:.85;border:0;
+ background:conic-gradient(from 0deg,
+ transparent 0 21%,#fff8 24%,transparent 27% 46%,#fff9 49%,
+ transparent 52% 71%,#fffa 74%,transparent 77% 96%,#fff8 99%);
+ -webkit-mask-image:radial-gradient(circle,transparent 0 21%,#000 25%,transparent 65%);
+ mask-image:radial-gradient(circle,transparent 0 21%,#000 25%,transparent 65%);
+ border-radius:50%;animation:v9Glint 1s ease-out both;
+}
+.memory-dive-lock::after{
+ content:"";position:absolute;inset:-10px;border:1px solid var(--memory-accent);
+ border-radius:50%;opacity:.5;animation:v9Ripple 1s ease-out both;
+}
+@keyframes v9StarBreath{0%{opacity:.3;scale:.65}55%{opacity:1;scale:1.35}100%{opacity:.75;scale:1}}
+@keyframes v9Glint{0%{opacity:0;transform:scale(.6) rotate(-10deg)}30%{opacity:1}100%{opacity:0;transform:scale(1.4) rotate(19deg)}}
+@keyframes v9Ripple{0%{opacity:0;transform:scale(.35)}50%{opacity:.65}100%{opacity:0;transform:scale(2.5)}}
+.v9-spark-field{position:absolute;left:var(--dx);top:var(--dy);z-index:2;
+ width:1px;height:1px;pointer-events:none}
+.v9-spark-field i{position:absolute;left:0;top:0;width:2px;height:3px;
+ border-radius:50%;opacity:0;
+ background:#f2f8ff;box-shadow:0 0 9px var(--memory-accent);
+ transform:rotate(var(--angle)) translateY(0) scale(.25)}
+.memory-dive[data-phase="flight"] .v9-spark-field i{
+ animation:v9SparkFly .75s cubic-bezier(.18,.7,.25,1) var(--delay) both
+}
+@keyframes v9SparkFly{
+ 0%{opacity:0;transform:rotate(var(--angle)) translateY(0) scale(.35)}
+ 18%{opacity:.85}
+ 75%{opacity:.45}
+ 100%{opacity:0;transform:rotate(var(--angle)) translateY(var(--travel)) scale(.18)}
+}
+.memory-dive-info{bottom:clamp(85px,15vh,160px)}
+.memory-dive-eyebrow{color:#aaa6b7;letter-spacing:.20em;font-size:9px}
+.v9-passage-status{font-size:9px;letter-spacing:.17em;color:#e3c6d4;
+ margin-top:12px;line-height:1.4}
+.memory-dive-name{font:italic 400 clamp(30px,5vw,56px)/1.05 Georgia,serif;
+ color:#f9f1ea;text-shadow:0 0 18px #d9c8df40;margin:12px 0 20px}
+.memory-dive .memory-dive-progress{width:min(260px,73%);background:#a0b8c133}
+.memory-dive .memory-dive-progress span{animation-duration:1.35s;background:
+ linear-gradient(90deg,transparent,var(--memory-accent),#f6e5d8)}
+.memory-dive-close{border-radius:8px;background:#151723de;
+ border-color:#cbbac76b;color:#f4e9e6;min-height:44px;padding:10px 16px}
+.memory-dive-close:focus-visible{outline:2px solid #f9e8e1;outline-offset:3px}
+@media(max-width:820px){
+ .memory-dive-info{bottom:clamp(115px,17vh,170px)}
+ .v9-passage-status{font-size:8px}
+ .memory-dive-lock{width:12px;height:12px}
+ .memory-dive-close{top:124px;right:15px}
+}
+@media(prefers-reduced-motion:reduce){
+ .memory-dive::before,.memory-dive-lock,.memory-dive-lock::before,
+ .memory-dive-lock::after,.v9-spark-field i,.memory-dive-progress span{
+ animation:none!important;transition:none!important
+ }
+}
+
+
+/* V9 R3 / OBSERVATORY READER. The star survives the transition into its story. */
+.obsidian .drawer.memory-detail{--v93-reader-accent:#b6c8d8}
+.obsidian .drawer.memory-detail .v93-observatory{
+ position:relative;isolation:isolate;display:grid;grid-template-columns:138px minmax(0,1fr);
+ gap:17px;align-items:stretch;min-height:151px;margin:7px 0 25px;
+ padding:12px;border:1px solid color-mix(in srgb,var(--v93-reader-accent) 37%,transparent);
+ border-radius:13px;overflow:hidden;
+ background:linear-gradient(116deg,#151f2be6,#171922f2 60%,#121724f2);
+ box-shadow:0 12px 45px #0005,inset 0 1px #d8d9da12
+}
+.obsidian .drawer.memory-detail .v93-observatory:before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:radial-gradient(ellipse at 15% 55%,
+ color-mix(in srgb,var(--v93-reader-accent) 8%,transparent) 0,
+ transparent 48%);
+}
+.v93-observatory-motif{
+ position:relative;min-height:126px;width:100%;overflow:hidden;border-radius:9px;
+ background:radial-gradient(ellipse at var(--v93-x,50%) var(--v93-y,50%),
+ color-mix(in srgb,var(--v93-reader-accent) 13%,transparent),transparent 47%),
+ linear-gradient(135deg,#182430,#080d16 85%);
+ border:1px solid color-mix(in srgb,var(--v93-reader-accent) 24%,transparent);
+}
+.v93-observatory-motif i{
+ position:absolute;left:var(--x);top:var(--y);width:2px;height:2px;
+ border-radius:50%;background:#c2d6e1;opacity:.45;box-shadow:0 0 5px #b5d6e599;
+}
+.v93-observatory-star{
+ position:absolute;left:var(--v93-x);top:var(--v93-y);
+ width:8px;height:8px;border-radius:50%;transform:translate(-50%,-50%);
+ background:#fff8ed;box-shadow:0 0 0 2px #b2dcde59,0 0 14px #f1f6ff,
+ 0 0 27px var(--v93-reader-accent),0 0 44px color-mix(in srgb,var(--v93-reader-accent) 50%,transparent);
+ animation:v93StarWake 1.05s cubic-bezier(.24,.65,.22,1) both;
+}
+.v93-observatory-star:before,.v93-observatory-star:after{
+ content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+ background:linear-gradient(90deg,transparent,#f4e8da7e,transparent);pointer-events:none;
+}
+.v93-observatory-star:before{width:42px;height:1px}
+.v93-observatory-star:after{width:1px;height:42px;
+ background:linear-gradient(0deg,transparent,#f4e8da7e,transparent)}
+@keyframes v93StarWake{
+ 0%{opacity:.1;transform:translate(-50%,-50%) scale(.35);filter:blur(5px)}
+ 54%{opacity:1;transform:translate(-50%,-50%) scale(1.45);filter:blur(0)}
+ 100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+.v93-observatory-details{min-width:0;display:flex;flex-direction:column;justify-content:center;
+ align-items:flex-start;gap:8px;padding:7px 3px 4px 0}
+.v93-observatory-kicker{font-size:9px;line-height:1.5;letter-spacing:.15em;color:#ceb6bd}
+.obsidian .v93-observatory-alias{font:italic 400 clamp(19px,2.5vw,27px)/1.17 Georgia,serif;
+ color:#f1e8e6;overflow-wrap:anywhere;letter-spacing:-.028em}
+.v93-observatory-kind{color:#b5afbf;font-size:9px;letter-spacing:.04em;line-height:1.6}
+.v93-observatory-footer{display:flex;gap:10px;justify-content:space-between;align-items:center;
+ flex-wrap:wrap;width:100%;margin-top:auto;padding-top:8px;border-top:1px solid #c6b5c22b}
+.v93-reader-stage{color:var(--v93-reader-accent);font-size:9px;letter-spacing:.07em}
+.v93-back-to-star{background:#272535ba;border:1px solid #cbb6c04b;color:#e9d8de;
+ border-radius:50px;min-height:39px;padding:8px 12px;cursor:pointer;
+ font-size:9px;letter-spacing:.07em;transition:background .2s ease,border-color .2s ease}
+.v93-back-to-star:hover,.v93-back-to-star:focus-visible{
+ background:#403346;border-color:var(--v93-reader-accent);outline-offset:3px}
+.obsidian .drawer.memory-detail .human-memory:not(.legend-memory) .human-profile{
+ min-height:0;padding:12px 15px;margin-bottom:22px;border-radius:10px;
+ background:linear-gradient(110deg,#14212bd0,#0b1520e8);
+ border-color:#a3b5c12a;
+}
+.obsidian .drawer.memory-detail .human-memory:not(.legend-memory) .human-portrait{
+ display:none;
+}
+.obsidian .drawer.memory-detail .human-memory:not(.legend-memory) .human-profile-text{
+ min-width:0;align-self:center;
+}
+.obsidian .drawer.memory-detail .human-memory:not(.legend-memory) .human-profile-name{
+ font-size:17px;
+}
+.obsidian .drawer.memory-detail .v93-memory-reveal .memory-title{
+ animation:v93QuoteRise .65s cubic-bezier(.2,.77,.22,1) both;
+}
+@keyframes v93QuoteRise{
+ from{opacity:.55;transform:translateY(9px);filter:blur(2px)}
+ to{opacity:1;transform:translateY(0);filter:blur(0)}
+}
+@media(max-width:820px){
+ .obsidian .drawer.memory-detail .v93-observatory{
+  grid-template-columns:98px minmax(0,1fr);gap:11px;min-height:132px;
+  padding:9px;margin:3px 0 19px;
+ }
+ .v93-observatory-motif{min-height:111px}
+ .v93-observatory-details{gap:5px;padding:3px 2px 2px 0}
+ .v93-observatory-kicker{font-size:8px;letter-spacing:.07em}
+ .obsidian .v93-observatory-alias{font-size:19px}
+ .v93-observatory-kind{font-size:8px;line-height:1.5}
+ .v93-observatory-footer{gap:5px;margin-top:auto;padding-top:6px}
+ .v93-back-to-star{min-height:44px;padding:9px 11px;font-size:8px}
+ .v93-reader-stage{font-size:8px}
+}
+@media(max-width:360px){
+ .obsidian .drawer.memory-detail .v93-observatory{grid-template-columns:79px minmax(0,1fr);gap:8px}
+ .v93-observatory-motif{min-height:116px}
+ .obsidian .v93-observatory-alias{font-size:17px}
+ .v93-observatory-kicker{font-size:7px}
+}
+@media(prefers-reduced-motion:reduce){
+ .v93-observatory-star,
+ .obsidian .drawer.memory-detail .v93-memory-reveal .memory-title{
+  animation:none!important;transition:none!important;filter:none!important
+ }
+}
+
+
+/* V9 R4 / BIRTH OF YOUR STAR: 24–48 finite CSS points gather at the real
+   projected local star. No heavy shader pass or giant decorative rings. */
+.v94-birth-field{
+ position:absolute;left:50%;top:50%;z-index:12;width:1px;height:1px;
+ pointer-events:none;overflow:visible;
+}
+.v94-birth-field i{
+ position:absolute;left:0;top:0;width:var(--radius,2px);height:var(--radius,2px);
+ border-radius:50%;
+ background:color-mix(in srgb,var(--v94-color,#b7dce5) 75%,#fff);
+ box-shadow:0 0 8px color-mix(in srgb,var(--v94-color,#b7dce5) 65%,transparent);
+ transform:translate(var(--from-x),var(--from-y)) scale(.68);
+ opacity:0;will-change:transform,opacity;
+}
+.v94-birth-field.is-forming i{
+ animation:v94Gather 1.75s cubic-bezier(.19,.66,.21,1) var(--delay,0ms) both;
+}
+@keyframes v94Gather{
+ 0%{opacity:0;transform:translate(var(--from-x),var(--from-y)) scale(.4)}
+ 24%{opacity:var(--alpha,.65)}
+ 72%{opacity:var(--alpha,.65)}
+ 96%{opacity:.92;transform:translate(0,0) scale(1.25)}
+ 100%{opacity:0;transform:translate(0,0) scale(.25)}
+}
+.obsidian .birth-comet{
+ width:20px;height:20px;
+ background:radial-gradient(circle,#fffaf0 0 14%,#b9dce7 22%,#a8a3d17c 41%,transparent 75%);
+ filter:drop-shadow(0 0 12px #aecad8bd);
+}
+.obsidian .birth-comet:after{width:66px;height:1px;opacity:.48;filter:blur(1px)}
+.obsidian .birth-overlay{
+ gap:13px;padding:calc(55px + env(safe-area-inset-top,0px)) 20px
+ calc(40px + env(safe-area-inset-bottom,0px));
+ background:radial-gradient(ellipse 68% 38% at 50% 37%,#233143e6,#0b1320f5 65%,#050810fc);
+ box-shadow:inset 0 0 140px #0006;
+}
+.v94-birth-eyebrow{font-size:9px;letter-spacing:.19em;color:#c8b6cc;font-weight:600}
+.v94-birth-core{
+ position:relative;display:grid;place-items:center;
+ width:130px;height:130px;margin:10px 0 7px;
+ background:radial-gradient(circle,#abcbd926 0,#819eb018 31%,transparent 63%);
+}
+.v94-birth-core:before,.v94-birth-core:after{
+ content:"";position:absolute;left:50%;top:50%;width:1px;height:80px;
+ transform:translate(-50%,-50%);
+ background:linear-gradient(transparent,#f4f4f1a8,transparent);
+ opacity:.57;pointer-events:none
+}
+.v94-birth-core:after{width:80px;height:1px}
+.obsidian .birth-glyph{
+ font:400 49px/1 Georgia,serif;color:#f5f2f2;
+ text-shadow:0 0 16px #d4e7ee,0 0 32px #92bacaaa;
+ animation:v94CoreAppear .85s cubic-bezier(.16,.78,.15,1) both
+}
+@keyframes v94CoreAppear{
+ from{opacity:.15;transform:scale(.52);filter:blur(4px)}
+ 75%{opacity:1;transform:scale(1.14);filter:blur(0)}
+ to{opacity:1;transform:scale(1)}
+}
+.obsidian .birth-small{letter-spacing:.18em;color:#bcd5d8;font-size:10px}
+.obsidian .birth-name{font:italic 400 clamp(35px,9vw,67px)/1.09 Georgia,serif;
+ letter-spacing:-.055em;color:#f8f1ea;max-width:100%;overflow-wrap:anywhere;
+ text-shadow:0 7px 27px #0008}
+.obsidian .birth-sub{
+ font:italic 400 clamp(17px,4.5vw,23px)/1.45 Georgia,serif;
+ color:#dfc9d7;max-width:460px;text-wrap:balance
+}
+.obsidian .birth-privacy{max-width:360px;color:#9bb1bd;font-size:11px;line-height:1.75}
+.v94-birth-actions{display:flex;flex-wrap:wrap;justify-content:center;
+ gap:11px;max-width:470px;margin-top:15px;width:100%}
+.obsidian .v94-birth-actions button{
+ margin:0;min-height:46px;padding:13px 17px;border-radius:9px;
+ font-size:10px;font-weight:700;letter-spacing:.08em;cursor:pointer;
+ transition:border-color .2s ease,background .2s ease
+}
+.obsidian #birthContinue{border:1px solid #d0c8d4;color:#1b2430;
+ background:linear-gradient(120deg,#e0e7e7,#c3d6e4)}
+.obsidian #birthViewArchive{border:1px solid #879cabb0;color:#c8dae3;background:#121e2ce6}
+.obsidian .v94-birth-actions button:focus-visible{outline:2px solid #fff0e6;outline-offset:4px}
+@media(max-width:820px){
+ .v94-birth-core{width:110px;height:110px;margin:4px 0 2px}
+ .obsidian .birth-glyph{font-size:42px}
+ .obsidian .birth-overlay{gap:10px;padding:calc(30px + env(safe-area-inset-top,0px)) 18px
+ calc(24px + env(safe-area-inset-bottom,0px))}
+ .v94-birth-actions{flex-direction:column;max-width:320px;margin-top:8px;gap:9px}
+ .obsidian .v94-birth-actions button{width:100%;min-height:48px}
+}
+@media(max-height:650px){
+ .v94-birth-core{width:80px;height:80px;margin:0}
+ .obsidian .birth-glyph{font-size:34px}
+ .obsidian .birth-overlay{gap:7px;overflow-y:auto}
+ .obsidian .birth-sub{font-size:17px}
+ .obsidian .birth-name{font-size:clamp(29px,7vw,40px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .v94-birth-field i,.obsidian .birth-glyph,
+ .obsidian .v94-birth-actions button{animation:none!important;transition:none!important;will-change:auto!important}
+}
+
+
+/* Opt-in, local-only visual QA HUD — never enabled in normal product view. */
+.v9-qa-panel{
+ position:fixed;bottom:calc(48px + env(safe-area-inset-bottom,0px));left:11px;
+ z-index:80;width:min(284px,calc(100vw - 22px));border-radius:10px;
+ border:1px solid #9cbec4a3;background:#08121cf0;
+ color:#e2e9ee;box-shadow:0 10px 32px #0009;
+ font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.v9-qa-panel>summary{
+ padding:11px 13px;cursor:pointer;user-select:none;color:#c5e3e4;
+ font-size:11px;font-weight:700;letter-spacing:.08em;
+}
+.v9-qa-details{padding:2px 13px 12px;border-top:1px solid #aac6c13b}
+.v9-qa-details pre{
+ margin:8px 0 11px;color:#dbe2ed;font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;
+ overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.v9-qa-details button{
+ display:block;width:100%;min-height:42px;border-radius:6px;
+ border:1px solid #acd5d9a6;background:#1b3440;color:#e7f8f8;
+ cursor:pointer;font-size:10px;letter-spacing:.04em;
+}
+.v9-qa-details small{display:block;margin-top:9px;color:#a4b6c3;
+ font:10px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}
+.v9-qa-panel:focus-within{border-color:#d6efef}
+@media(max-width:820px){.v9-qa-panel{bottom:calc(38px + env(safe-area-inset-bottom,0px));max-height:70dvh;overflow-y:auto}}
+@media(prefers-reduced-motion:reduce){.v9-qa-panel *{transition:none!important;animation:none!important}}
+
+
+/* V9.3 / MOBILE TOUCH PASS: preserve the ECLIPSE globe silhouette and palette.
+   Increase real tap targets without adding rings, panels or extra effects. */
+@media (max-width:819px) and (orientation:portrait){
+ .app.obsidian .mobile-nav button{min-height:40px}
+ .app.obsidian .signal-dock button{min-width:44px;min-height:44px}
+ .app.obsidian .world-controls{height:42px}
+ .app.obsidian .world-controls button{height:42px;min-height:42px}
+ .app.obsidian .world-controls button.globe-size-button{min-width:57px}
+ .app.obsidian .world-controls button.atlas-button,
+ .app.obsidian .world-controls button.focus-button,
+ .app.obsidian .world-controls button.lens-toggle{min-width:59px}
+}
+@media(max-width:819px) and (max-height:650px) and (orientation:portrait){
+ .app.obsidian .world-controls{height:39px}
+ .app.obsidian .world-controls button{height:39px;min-height:39px}
+}
+/* V9.3 / Pause the CSS passage clock together with the JS flight clock. */
+.memory-dive[data-suspended="true"]::before,
+.memory-dive[data-suspended="true"] .memory-dive-lock,
+.memory-dive[data-suspended="true"] .memory-dive-lock::before,
+.memory-dive[data-suspended="true"] .memory-dive-lock::after,
+.memory-dive[data-suspended="true"] .v9-spark-field i,
+.memory-dive[data-suspended="true"] .memory-dive-progress span,
+.memory-dive[data-suspended="true"] .memory-dive-info{
+ animation-play-state:paused!important;
+}
+
+/* V9.5 — polish only the existing Observatory. No globe overlays or UI rebuild. */
+.obsidian .drawer.memory-detail .memory-title{
+ overflow-wrap:anywhere;hyphens:auto;text-wrap:pretty;
+}
+.obsidian .drawer.memory-detail .human-lesson p{
+ font-size:clamp(15px,1.45vw,17px);line-height:1.86;
+ overflow-wrap:anywhere;text-wrap:pretty;
+}
+.obsidian .drawer.memory-detail .human-rule p{
+ font-size:clamp(18px,2.1vw,22px);line-height:1.62;
+ overflow-wrap:anywhere;
+}
+.obsidian .drawer.memory-detail .v93-observatory-alias{
+ max-width:100%;overflow-wrap:anywhere;
+}
+@media(max-width:390px){
+ .obsidian .drawer.memory-detail .v93-observatory{
+   grid-template-columns:80px minmax(0,1fr);column-gap:9px;
+ }
+ .obsidian .drawer.memory-detail .v93-observatory-details{min-width:0}
+ .obsidian .drawer.memory-detail .v93-observatory-kind{overflow-wrap:anywhere}
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .drawer.memory-detail .reader-progress-fill{transition:none!important}
+}
+
+/* V9.6 — a minimal passage-to-reader continuity on the existing Observatory.
+   No additional sphere rendering, fixed overlays or decorative halo layers. */
+.obsidian .drawer.v96-reader-arrival.memory-detail .memory-experience{
+ animation:v96ReaderLand .52s cubic-bezier(.2,.75,.28,1) both;
+}
+@keyframes v96ReaderLand{
+ from{opacity:.88;transform:translateY(7px)}
+ to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .drawer.v96-reader-arrival.memory-detail .memory-experience{
+  animation:none!important;transform:none!important
+ }
+}
+
+/* V9.7 / Direct star contact: tiny local glimmer, never an orbital halo. */
+.obsidian .star-marker.is-armed{
+ box-shadow:0 0 10px #fff,0 0 23px #bce7f7,0 0 37px #87bfd48c;
+ border-color:#f5f7ff;
+}
+.obsidian .star-marker.is-armed::before{
+ content:"";position:absolute;inset:-5px;pointer-events:none;
+ border-radius:50%;border:1px solid #d7e6f7ae;
+ animation:v97StarContact .42s ease-out both;
+}
+@keyframes v97StarContact{
+ from{opacity:.9;transform:scale(.68)}
+ to{opacity:.12;transform:scale(1.25)}
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .star-marker.is-armed::before{animation:none!important}
+}
+
+/* V9.8 / Selected-star radiance comes from the existing 3D star, not CSS rings.
+   Keep the ECLIPSE camera and silhouette fully intact. */
+.obsidian .star-marker.is-selected:focus-visible{
+ outline:2px solid #ecfaff;outline-offset:7px;
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .star-marker.is-selected{animation:none!important}
+ .obsidian .star-marker.is-selected::after{animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -1499,8 +1906,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <svg id="travelTrail" class="travel-trail" aria-hidden="true"><path id="travelPath"></path><circle id="travelDot" r="3"></circle></svg>
     <div id="touchWave" class="touch-wave" aria-hidden="true"></div>
     <div id="signalReticle" class="signal-reticle" aria-hidden="true"><span class="reticle-ring"></span><span class="reticle-cross"></span><span id="reticleCaption" class="reticle-caption">SIGNAL LOCK / 001</span></div>
-    <div id="birthComet" class="birth-comet" aria-hidden="true"></div>
-    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V8.2 / ECLIPSE</div>
+    <div id="birthComet" class="birth-comet" aria-hidden="true"></div><div class="v94-birth-field" id="v94BirthField" hidden aria-hidden="true"></div>
+    <div class="globe-caption" aria-hidden="true"><span class="fine-line"></span>THE MEMORY CORE<span class="fine-line"></span>V9 / LIVING UNIVERSE</div>
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
@@ -1525,7 +1932,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
       <p id="selectedQuote">«Мой лучший трейд — тот, который я не открыл.»</p>
       <div class="selected-bottom"><span id="selectedBy">@NORTHSTAR <i>•</i> CRYPTO</span><div class="selected-actions"><button id="nextSignal" type="button" aria-label="Следующая звезда">NEXT ✧</button><button id="openSelected" type="button">READ MEMORY <span>↗</span></button></div></div>
     </aside>
-    <div class="signal-dock" id="signalDock" aria-label="Выбранная история"><div class="dock-copy"><span id="dockAlias">SIGNAL 001 / PATIENCE</span><strong id="dockQuote">Мой лучший трейд — тот, который я не открыл.</strong></div><button id="dockNext" type="button" aria-label="Следующая звезда">✧</button><button id="dockOpen" type="button" aria-label="Открыть выбранную историю">↗</button></div>
+    <div class="signal-dock" id="signalDock" aria-label="Выбранная история"><div class="dock-copy"><span id="dockAlias" aria-live="polite" aria-atomic="true">SIGNAL 001 / PATIENCE</span><strong id="dockQuote">Мой лучший трейд — тот, который я не открыл.</strong></div><button id="dockNext" type="button" aria-label="Следующая звезда">✧</button><button id="dockOpen" type="button" aria-label="Открыть выбранную историю">↗</button></div>
     <div class="journey-status" id="journeyStatus" role="status" aria-live="polite" aria-atomic="true" hidden>
       <span class="journey-status-star" aria-hidden="true">✦</span>
       <div><span class="journey-status-eyebrow">MEMORY PATH / МАРШРУТ</span><strong id="journeyProgress">01 / 04</strong></div>
@@ -1556,8 +1963,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
   </main>
   <div class="memory-dive" id="memoryDive" hidden aria-hidden="true">
     <button class="memory-dive-close" id="cancelDive" type="button" aria-label="Пропустить анимацию">SKIP ↗</button>
-    <div class="memory-dive-lock"></div>
-    <div class="memory-dive-info"><div class="memory-dive-eyebrow">VETO / DECODING HUMAN MEMORY</div><div class="memory-dive-name" id="diveName">@SIGNAL</div><div class="v78-dive-route" id="v78DiveRoute" hidden aria-hidden="true"><span id="v78RouteFrom"></span><span class="v78-route-symbol">✦ ── ✧</span><span id="v78RouteTo"></span><small id="v78RouteRelation"></small></div><div class="memory-dive-progress"><span></span></div></div>
+    <div class="memory-dive-lock"></div><div class="v9-spark-field" id="v9SparkField" aria-hidden="true"></div>
+    <div class="memory-dive-info"><div class="memory-dive-eyebrow">VETO / STAR PASSAGE</div><div class="v9-passage-status" id="v9PassageStatus" role="status" aria-live="polite">ЗВЕЗДА НАЙДЕНА</div><div class="memory-dive-name" id="diveName">@SIGNAL</div><div class="v78-dive-route" id="v78DiveRoute" hidden aria-hidden="true"><span id="v78RouteFrom"></span><span class="v78-route-symbol">✦ ── ✧</span><span id="v78RouteTo"></span><small id="v78RouteRelation"></small></div><div class="memory-dive-progress"><span></span></div></div>
   </div>
   <div id="scrim" class="scrim" hidden></div>
   <aside class="drawer" id="drawer" aria-label="Панель" aria-modal="true" role="dialog" hidden>
@@ -1565,8 +1972,16 @@ backdrop-filter:blur(12px);pointer-events:auto}
     <div class="drawer-head"><span class="drawer-tag" id="drawerTag">FIELD RECORD / 001</span><button class="drawer-close" id="closeDrawer" aria-label="Закрыть" type="button">×</button></div>
     <div id="drawerContents"></div>
   </aside>
-  <div class="birth-overlay" id="birthOverlay" hidden aria-hidden="true"><div class="birth-glyph">✦</div><div class="birth-small">ТВОЯ ЗВЕЗДА СОХРАНЕНА</div><div class="birth-name" id="birthName">@TRADER</div><div class="birth-sub">ТВОЯ ИСТОРИЯ ИМЕЕТ ЗНАЧЕНИЕ.</div><p class="birth-privacy">Пока только на этом устройстве. Это не публичная публикация.</p><button id="birthContinue" type="button">ПОСМОТРЕТЬ МОЮ ЗВЕЗДУ ↗</button></div>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div class="birth-overlay" id="birthOverlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="birthName" aria-describedby="birthPrivacy"><span class="v94-birth-eyebrow">VETO / YOUR STAR · LOCAL MEMORY</span><div class="v94-birth-core" aria-hidden="true"><div class="birth-glyph">✦</div></div><div class="birth-small">ТВОЯ ЗВЕЗДА РОДИЛАСЬ</div><div class="birth-name" id="birthName">@TRADER</div><div class="birth-sub">Теперь у твоего урока есть место во вселенной.</div><p class="birth-privacy" id="birthPrivacy">Запись сохранена только в этом браузере. Она не опубликована. Очистка данных браузера может удалить её.</p><div class="v94-birth-actions"><button id="birthContinue" type="button">↗ НАЙТИ МОЮ ЗВЕЗДУ</button><button id="birthViewArchive" type="button">МОЙ ЛОКАЛЬНЫЙ АРХИВ</button></div></div>
+  <details id="qaPanel" class="v9-qa-panel" hidden>
+ <summary>◈ QA / DEVICE</summary>
+ <div class="v9-qa-details">
+   <pre id="qaStatus" aria-live="off">Collecting local diagnostics…</pre>
+   <button id="qaCopy" type="button">СКОПИРОВАТЬ ДИАГНОСТИКУ</button>
+   <small>Без личных историй, ID звёзд, личных 3D-координат и сетевой отправки.</small>
+ </div>
+</details>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 </div>
 <script>
 /* THE MARKET REMEMBERS / VETO LIVING MEMORY ENGINE v4
@@ -1579,6 +1994,71 @@ backdrop-filter:blur(12px);pointer-events:auto}
   const $ = id => document.getElementById(id);
   const canvas = $('gl'), fallbackCanvas = $('fallback'), stage = $('scene');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // V9 release QA is opt-in (?qa=1). Entirely local, with no telemetry or story data.
+  const qaEnabled=new URLSearchParams(window.location.search).get('qa')==='1';
+  const qaState={frames:0,period:0,fps:0,previousTime:0,
+    fallbackCount:0,webglLossCount:0,errorCount:0};
+  function qaSnapshot(){
+    // Never include selected aliases, notes, star IDs, URL queries or localStorage.
+    const orb=targetCenter();
+    const safeBand=v763MobileStage&&v763MobileStage.mode==='portrait'?
+      Math.round(v763MobileStage.top)+'–'+Math.round(v763MobileStage.bottom)+
+        (v763MobileStage.fitted?' (MEASURED)':' (ECLIPSE)'):
+      'NOT APPLICABLE';
+    return [
+      'V9 STARLIGHT / DEVICE QA',
+      'Renderer: '+(gl?'WEBGL1':ctx?'CANVAS2D':'UNAVAILABLE'),
+      'Viewport: '+Math.round(w)+' × '+Math.round(h),
+      'Orb center: '+Math.round(orb.x)+' × '+Math.round(orb.y)+
+        ' | Radius: '+Math.round(orb.radius),
+      'Portrait safe band: '+safeBand,
+      'DPR: '+dpr.toFixed(2)+' | Buffer: '+resW+' × '+resH,
+      'FPS (last active second): '+(qaState.fps||'—'),
+      'Graphics: '+quality.toUpperCase()+(autoEco?' / ECO':''),
+      'Reduced motion: '+(reduceMotion?'YES':'NO'),
+      'Mode: '+(immersive?'FOCUS':'UNIVERSE'),
+      'State: '+(birth?'STAR BIRTH':!$('birthOverlay').hidden?'BIRTH COMPLETE':
+        diveIndex!==-1?'STAR PASSAGE':!$('drawer').hidden?'READER / ARCHIVE':'EXPLORE'),
+      'WebGL losses: '+qaState.webglLossCount+
+        ' | Canvas fallbacks: '+qaState.fallbackCount+
+        ' | Render errors: '+qaState.errorCount
+    ].join('\n');
+  }
+  function qaPaint(){
+    if(!qaEnabled)return;
+    $('qaStatus').textContent=qaSnapshot();
+  }
+  function qaFrame(t){
+    if(!qaEnabled)return;
+    if(!qaState.previousTime){qaState.previousTime=t;return}
+    const elapsed=t-qaState.previousTime;
+    qaState.previousTime=t;
+    if(elapsed>0&&elapsed<300){
+      qaState.period+=elapsed;qaState.frames++;
+    }
+    if(qaState.period>=1000){
+      qaState.fps=Math.round(qaState.frames*1000/qaState.period);
+      qaState.frames=0;qaState.period=0;
+      qaPaint();
+    }
+  }
+  function qaInit(){
+    if(!qaEnabled)return;
+    const details=$('qaPanel');
+    details.hidden=false;details.open=true;
+    $('qaCopy').onclick=()=>{
+      if(!navigator.clipboard?.writeText){
+        showToast('Копирование недоступно — можно сделать скриншот QA-панели.');
+        return;
+      }
+      navigator.clipboard.writeText(qaSnapshot()).then(
+        ()=>showToast('Диагностика скопирована — без личных данных'),
+        ()=>showToast('Не удалось скопировать: сделай скриншот QA-панели')
+      );
+    };
+    qaPaint();
+  }
+
   // V7.6: lightweight reader progress. No dependency on WebGL or personal data.
   const v76Reader=document.getElementById('drawer');
   const v76UpdateReader=()=>{
@@ -1592,11 +2072,13 @@ backdrop-filter:blur(12px);pointer-events:auto}
       const threshold=v76Reader.getBoundingClientRect().top+Math.min(220,v76Reader.clientHeight*.32);
       const active=steps[1].getBoundingClientRect().top<=threshold?1:0;
       buttons.forEach((button,i)=>{button.classList.toggle('is-current',i===active);button.setAttribute('aria-current',i===active?'step':'false')});
+      const sceneStage=v76Reader.querySelector('.v93-reader-stage');
+      if(sceneStage)sceneStage.textContent=active?(v76Reader.classList.contains('legend-detail')?'02 / ВЫВОД РЕДАКЦИИ':'02 / ПРАВИЛО'):'01 / КОНТЕКСТ';
     }
   };
   v76Reader.addEventListener('scroll',v76UpdateReader,{passive:true});
   // Keep keyboard interaction inside the visible dialog; restore focus on close.
-  let v76FocusReturn=null, v76CardReady=false;
+  let v76FocusReturn=null, v76CardReady=false, v96ReaderArrival=false;
   let v762ReturnTimer=null;
   function v762CancelReturn(){
     if(v762ReturnTimer!==null){clearTimeout(v762ReturnTimer);v762ReturnTimer=null}
@@ -1642,6 +2124,67 @@ backdrop-filter:blur(12px);pointer-events:auto}
     card.classList.add('fragment-changing');
   }
   // A quiet two-step table of contents within each reading room.
+  // V9 R3 / One story, one actual star, one continuous reading room.
+  // Uses the existing catalogue and CSS-only optics; never invents social connections.
+  function v93ReaderInfo(record){
+    const index=stories.indexOf(record);
+    const kind=record.local?'ЛИЧНАЯ · НА ЭТОМ УСТРОЙСТВЕ':
+      record.type==='legend'?(record.legend?.quoteKind==='memo-title'?
+        'ПОДТВЕРЖДЁННЫЙ ИСТОЧНИК · ЗАГОЛОВОК':'ПОДТВЕРЖДЁННЫЙ ИСТОЧНИК · ЦИТАТА'):
+      record.type==='editorial'?'РЕДАКЦИОННАЯ ВЫМЫШЛЕННАЯ ИСТОРИЯ':'ВЫМЫШЛЕННАЯ ИСТОРИЯ';
+    const category=record.type==='legend'?'Legends':
+      record.type==='editorial'?'Lessons':record.category;
+    return {index,kind,category,color:lensColors[category]||'#aec5d6',
+      number:index>=0?String(index+1).padStart(3,'0'):'LOCAL',
+      alias:record.local?'@'+String(record.alias||'МОЯ ЗВЕЗДА'):
+        (record.type==='legend'?'★ ':'@')+String(record.alias||'ЗВЕЗДА')};
+  }
+  function v93MountReaderScene(record){
+    const article=$('drawerContents').querySelector('.memory-experience');
+    const top=article?.querySelector('.memory-topline');
+    if(!article||!top||!record)return;
+    const info=v93ReaderInfo(record);
+    const section=document.createElement('section');
+    section.className='v93-observatory';
+    section.setAttribute('aria-label','Выбранная звезда и возвращение во вселенную');
+    section.style.setProperty('--v93-accent',info.color);
+    const motif=document.createElement('div');motif.className='v93-observatory-motif';
+    motif.setAttribute('aria-hidden','true');
+    const point=record.p||[0,0,1],offsetX=clamp(50+point[0]*17,32,68);
+    const offsetY=clamp(49-point[1]*16,34,64);
+    motif.style.setProperty('--v93-x',offsetX.toFixed(1)+'%');
+    motif.style.setProperty('--v93-y',offsetY.toFixed(1)+'%');
+    // Background pinpoints are ornamental, NOT other people or linked users.
+    for(let i=0;i<7;i++){
+      const light=document.createElement('i');
+      light.style.setProperty('--x',(12+(i*23+info.index*7+100)%76)+'%');
+      light.style.setProperty('--y',(13+(i*31+info.index*11+100)%74)+'%');
+      motif.append(light);
+    }
+    const focus=document.createElement('span');focus.className='v93-observatory-star';
+    motif.append(focus);
+    const details=document.createElement('div');details.className='v93-observatory-details';
+    const kicker=document.createElement('span');kicker.className='v93-observatory-kicker';
+    kicker.textContent='VETO / ЗВЕЗДА В АРХИВЕ · '+info.number;
+    const name=document.createElement('strong');name.className='v93-observatory-alias';
+    name.textContent=info.alias;
+    const provenance=document.createElement('small');provenance.className='v93-observatory-kind';
+    provenance.textContent=info.kind;
+    const footer=document.createElement('div');footer.className='v93-observatory-footer';
+    const stage=document.createElement('span');stage.className='v93-reader-stage';
+    stage.textContent='01 / КОНТЕКСТ';
+    const back=document.createElement('button');back.type='button';
+    back.className='v93-back-to-star';
+    back.textContent='← К ЭТОЙ ЗВЕЗДЕ';
+    back.setAttribute('aria-label','Вернуться к выбранной звезде');
+    back.onclick=()=>closeDrawer();
+    footer.append(stage,back);
+    details.append(kicker,name,provenance,footer);
+    section.append(motif,details);
+    top.insertAdjacentElement('afterend',section);
+    article.classList.add('v93-memory-reveal');
+    $('drawer').style.setProperty('--v93-reader-accent',info.color);
+  }
   function v76EnhanceReader(legend){
     const article=$('drawerContents').querySelector('.memory-experience');
     if(!article)return;
@@ -1661,7 +2204,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
       btn.setAttribute('aria-current',i===0?'step':'false');
       btn.onclick=()=>{
         const targetY=step.getBoundingClientRect().top-v76Reader.getBoundingClientRect().top+v76Reader.scrollTop-30;
-        v76Reader.scrollTo({top:Math.max(0,targetY),behavior:reduceMotion?'instant':'smooth'});
+        v76Reader.scrollTo({top:Math.max(0,targetY),behavior:reduceMotion?'auto':'smooth'});
         btn.focus({preventScroll:true});
       };
       nav.append(btn);
@@ -1705,7 +2248,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   LEGEND_ENTRIES.forEach((entry,i)=>stories.push({id:stories.length+1,alias:entry.name,market:entry.market,category:entry.category,quote:entry.quote,story:entry.story,rule:entry.rule,p:fibonacci((i*7+8)%37,37),local:false,type:'legend',legend:entry}));
   function getJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(key)||'null');return value===null?fallback:value}catch{return fallback}}
   function safeString(x,len){return typeof x==='string'?x.slice(0,len):''}
-  function safeStored(){const a=getJson(KEY,[]);if(!Array.isArray(a))return [];return a.filter(v=>v&&v.local===true&&typeof v.id==='string'&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&typeof v.alias==='string'&&typeof v.quote==='string').slice(-40).map(v=>({...v,alias:safeString(v.alias,32),quote:safeString(v.quote,280),story:safeString(v.story,1200),rule:safeString(v.rule,180),capsule:safeString(v.capsule,500),p:norm(v.p)}))}
+  function safeStored(){const a=getJson(KEY,[]);if(!Array.isArray(a))return [];return a.filter(v=>v&&v.local===true&&typeof v.id==='string'&&Array.isArray(v.p)&&v.p.length===3&&v.p.every(Number.isFinite)&&typeof v.alias==='string'&&typeof v.quote==='string').map(v=>({...v,alias:safeString(v.alias,32),quote:safeString(v.quote,280),story:safeString(v.story,1200),rule:safeString(v.rule,180),capsule:safeString(v.capsule,500),p:norm(v.p)}))}
   const saved=safeStored(); stories.push(...saved);
   // Saved lessons are private bookmarks, not public reactions or popularity votes.
   const BOOK_KEY='veto-market-remembers-private-bookmarks-v74';
@@ -1727,7 +2270,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   let inertiaY=0,inertiaX=0;
   let interactionEnergy=0,interactionPulse=0,interactionPoint=[0,0];
   let travelStarted=0,travelFrom=-1,travelTo=-1;
-  let autoEco=false,perfStarted=0,perfFrames=0,perfElapsed=0,perfMeasured=false,frameScheduled=false;
+  let autoEco=false,perfStarted=0,perfFrames=0,perfElapsed=0,perfMeasured=false,frameScheduled=false,animationFrameHandle=null;
   let contextHandlersInstalled=false;
   const uniformCache=new WeakMap();
   let sceneParticles=[], sceneLines=[], markerEls=[];
@@ -1863,8 +2406,10 @@ backdrop-filter:blur(12px);pointer-events:auto}
     if(index!==selected)focus(index,false);
   }
   let immersive=false;
-  let diveTimer=null,diveIndex=-1,diveSequence=0;
-  const pointers=new Map();let pinchDistance=0;
+  let diveTimer=null,diveIndex=-1,diveSequence=0,v93PassagePausedAt=0;
+  let v93LastMarkerFrame=0;
+  let v9State={phase:'idle',started:0,index:-1,token:0,energy:0};
+  const pointers=new Map();let pinchDistance=0,v97ArmedStar=-1;
   let atlasEnabled=false, atlasPairs=[], atlasElements=[], flightFinish=0;
   const SVG_NS='http://www.w3.org/2000/svg';
   const twoPi=Math.PI*2;
@@ -1890,9 +2435,23 @@ backdrop-filter:blur(12px);pointer-events:auto}
     const order=['big','small','max'];
     v81SetScale(order[(order.indexOf(v81SizeMode)+1)%order.length]);
   }
+  // V9.4: use real free space between hero and dock when there is enough.
+  // On very short screens preserve the approved ECLIPSE framing rather than
+  // shrinking the sphere to an unreadable speck.
+  function v9PortraitFrame(width,height,heroBottom,dockTop,nominalRadius){
+    const short=height<650;
+    const top=Math.max(130,Math.min(height-20,heroBottom+12));
+    const bottom=Math.min(height-66,Math.max(0,dockTop-12));
+    const room=bottom-top;
+    const fitted=room>nominalRadius*1.85;
+    const radius=fitted?Math.min(nominalRadius,Math.max(width*.23,(room-16)*.5)):nominalRadius;
+    const y=fitted?Math.max(top+radius,Math.min(bottom-radius,(top+bottom)*.5)):
+      height*(short?.59:.575);
+    return {x:width*.585,y,radius,top:Math.max(0,top),bottom:Math.min(height,bottom),
+      mode:'portrait',fitted};
+  }
   function v763MeasureStage(){
-    // ECLIPSE restores the original V7.4 cinematic framing. The universe is
-    // large enough to explore, but must remain a luminous orb, not a dark wall.
+    // ECLIPSE remains the visual baseline: real WebGL sphere, never CSS rings.
     if(w>=820||immersive){v763MobileStage=null;return}
     if(w>h&&h<650){
       v763MobileStage={x:w*.715,y:h*.485,radius:Math.min(w,h)*.36,
@@ -1900,12 +2459,10 @@ backdrop-filter:blur(12px);pointer-events:auto}
       return;
     }
     const short=h<650,rect=stage.getBoundingClientRect();
-    const top=Math.max(130,$('hero').getBoundingClientRect().bottom-rect.top+12);
-    const bottom=Math.min(h-66,$('signalDock').getBoundingClientRect().top-rect.top-12);
-    // The original framing is intentional: no artificially huge atmosphere ring.
-    v763MobileStage={x:w*.585,y:h*(short?.59:.575),
-      radius:Math.min(w,h)*(short?.36:.397),
-      top:Math.max(0,top-12),bottom:Math.min(h,bottom+12),mode:'portrait'};
+    const nominalRadius=Math.min(w,h)*(short?.36:.397);
+    v763MobileStage=v9PortraitFrame(w,h,
+      $('hero').getBoundingClientRect().bottom-rect.top,
+      $('signalDock').getBoundingClientRect().top-rect.top,nominalRadius);
   }
   function targetCenter(){
     const scale=v81ScaleCurrent;
@@ -1923,7 +2480,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
 attribute vec3 aPos;attribute float aColor;attribute float aKind;
 uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;
 uniform float uRotY;uniform float uRotX;uniform float uZoom;uniform float uTime;uniform float uDpr;
-uniform vec3 uFocus;uniform float uMotion;
+uniform vec3 uFocus;uniform float uMotion;uniform float uPulse;
 varying float vColor;varying float vDepth;varying float vKind;varying float vSelected;
 vec3 rotate3(vec3 p){
  float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);
@@ -1950,39 +2507,35 @@ void main(){
  vSelected=(1.0-step(.0005,length(aPos-uFocus)))*step(2.1,aKind);
  float twinkle=.88+.12*sin(uTime*.0007+aColor*71.);
  float sz=aKind>2.0?12.0:(aKind>1.0?2.7:(.95+aKind*1.9));
- gl_PointSize=clamp(sz*per*uDpr*twinkle*(1.0+vSelected*2.0),1.0,56.0);
+ gl_PointSize=clamp(sz*per*uDpr*twinkle*(1.0+vSelected*(2.0+uPulse*.32)),1.0,56.0);
 }`;
   const pFragment=`precision mediump float;
 varying float vColor;varying float vDepth;varying float vKind;varying float vSelected;
-uniform float uTime;
+uniform float uTime;uniform float uPulse;
 void main(){
- vec2 p=gl_PointCoord*2.0-1.0;
+ vec2 p=gl_PointCoord*2.-1.;
  float d=length(p);
- if(d>1.0||vKind< -1.0||vDepth<-.035)discard;
- vec3 graphite=vec3(.22,.31,.45);
- vec3 steel=vec3(.38,.57,.68);
- vec3 ice=vec3(.71,.88,.93);
- vec3 rareViolet=vec3(.57,.46,.81);
- vec3 col=mix(graphite,steel,smoothstep(.12,.82,vColor));
- col=mix(col,ice,smoothstep(.91,1.0,vColor)*.46);
- if(vKind>2.0){
-   if(vColor<.22)col=vec3(.52,.88,.94);
-   else if(vColor<.5)col=vec3(.67,.74,.89);
-   else if(vColor<.76)col=rareViolet;
-   else col=vec3(.92,.81,.63);
+ if(d>1.||vKind< -1.||vDepth<-.035)discard;
+ vec3 ink=vec3(.26,.37,.46),steel=vec3(.41,.64,.72);
+ vec3 pearl=vec3(.78,.92,.97),orchid=vec3(.60,.51,.80);
+ vec3 col=mix(ink,steel,smoothstep(.12,.85,vColor));
+ col=mix(col,pearl,smoothstep(.88,1.,vColor)*.44);
+ if(vKind>2.){
+   if(vColor<.22)col=vec3(.56,.85,.91);
+   else if(vColor<.5)col=vec3(.70,.78,.91);
+   else if(vColor<.76)col=orchid;
+   else col=vec3(.95,.84,.67);
  }
- if(vKind>4.0)col=vec3(.93,.83,.65);
- float core=exp(-d*d*(vSelected>.5?20.:vKind>2.0?13.:7.));
- float halo=exp(-d*d*(vSelected>.5?3.7:3.2))*(vSelected>.5?.48:.12);
- float front=smoothstep(-.57,.9,vDepth);
- float depth=mix(.014,.24,front);
- float alpha=(core+halo)*(vKind>2.0?.83:depth);
- float twinkle=.93+.07*sin(uTime*.0025+vColor*37.0);
- alpha=clamp(alpha*twinkle*(1.0+vSelected*.20),0.0,1.0);
- if(vSelected>.5)col=mix(col,vec3(1.0),.57);
+ if(vKind>4.)col=vec3(.94,.85,.69);
+ float core=exp(-d*d*(vSelected>.5?18.:vKind>2.?14.:9.));
+ float halo=exp(-d*d*(vSelected>.5?4.4:4.6))*(vSelected>.5?.44:.09);
+ float depth=mix(.026,.32,smoothstep(-.55,.91,vDepth));
+ float alpha=(core+halo)*(vKind>2.?.88:depth);
+ float twinkle=.94+.06*sin(uTime*.0022+vColor*37.);
+ alpha=clamp(alpha*twinkle*(1.+vSelected*(.28+uPulse*.60)),0.,1.);
+ if(vSelected>.5)col=mix(col,vec3(1.),.53+uPulse*.22);
  gl_FragColor=vec4(col,alpha);
-}`;
-  const lVertex=`precision highp float;attribute vec3 aPos;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;varying float vDepth;void main(){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*aPos.x+sy*aPos.z,aPos.y,-sy*aPos.x+cy*aPos.z);vec3 p=vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);float per=2.7/(3.1-p.z*.7);vec2 px=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(px.x/uRes.x*2.-1.,1.-px.y/uRes.y*2.,-p.z*.48,1.);vDepth=p.z;}`;
+}`; const lVertex=`precision highp float;attribute vec3 aPos;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;varying float vDepth;void main(){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*aPos.x+sy*aPos.z,aPos.y,-sy*aPos.x+cy*aPos.z);vec3 p=vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);float per=2.7/(3.1-p.z*.7);vec2 px=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(px.x/uRes.x*2.-1.,1.-px.y/uRes.y*2.,-p.z*.48,1.);vDepth=p.z;}`;
   const lFragment=`precision mediump float;varying float vDepth;void main(){float a=.006+.018*smoothstep(-.6,.9,vDepth);gl_FragColor=vec4(.44,.63,.76,a);}`;
   // WebGL 1.0 true triangulated sphere: normal-based light with real depth.
   const coreVertex=`precision highp float;
@@ -2005,30 +2558,30 @@ void main(){
 }`;
   const coreFragment=`precision mediump float;
 varying vec3 vN;varying vec3 vObject;
-uniform float uTime;uniform float uMotion;
+uniform float uTime;uniform float uMotion;uniform float uPulse;uniform vec3 uFocus;
 float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
 void main(){
- vec3 N=normalize(vN),L=normalize(vec3(-.62,.74,1.06));
- vec3 H=normalize(L+vec3(0.,0.,1.));
- float incident=max(dot(N,L),0.);
- float terminator=smoothstep(.03,.74,incident);
- float ndv=max(N.z,0.);
- float rim=pow(1.-ndv,3.3);
- float spec=pow(max(dot(N,H),0.),58.);
- float band=sin(vObject.y*41.+vObject.z*24.+sin(vObject.x*16.)*2.1);
- float strat=pow(.5+.5*band,17.)*.085;
- float grain=(hash(floor(vObject*145.))-.5)*.020;
- float wave=.5+.5*sin(vObject.x*13.+vObject.y*15.+uTime*.00013);
- vec3 graphite=vec3(.013,.027,.036);
- vec3 ice=vec3(.107,.173,.197);
- vec3 material=graphite+ice*(.27+.72*terminator);
- material+=vec3(.020,.055,.066)*(strat+grain)*(.25+.75*terminator);
- material+=vec3(.041,.090,.103)*rim*(.30+.70*terminator);
- material+=vec3(.27,.48,.53)*spec*.22;
- material+=vec3(.010,.024,.033)*(wave-.5)*uMotion*.12;
- gl_FragColor=vec4(clamp(material,0.,1.),1.0);
-}`;
-  const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
+ vec3 N=normalize(vN),L=normalize(vec3(-.53,.70,1.12)),H=normalize(L+vec3(0.,0.,1.));
+ float light=max(dot(N,L),0.),fill=smoothstep(-.52,.78,dot(N,L));
+ // A restrained reflected highlight makes the existing mesh legible in graphite.
+ float bounce=pow(max(dot(N,normalize(vec3(.48,-.27,.83))),0.),4.);
+ float rim=pow(1.-clamp(N.z,0.,1.),3.7);
+ float spec=pow(max(dot(N,H),0.),48.);
+ float contour=sin(vObject.y*24.+vObject.z*15.+sin(vObject.x*18.)*2.3);
+ float filament=pow(.5+.5*contour,25.)*(.35+.65*light);
+ float grain=(hash(floor(vObject*168.))-.5)*.014;
+ float life=.5+.5*sin(vObject.x*13.+vObject.y*17.+uTime*.00012);
+ vec3 material=vec3(.017,.032,.045)+vec3(.115,.185,.209)*(.25+.75*fill);
+ material+=vec3(.045,.086,.105)*filament*.62;
+ material+=vec3(.025,.059,.075)*rim*.65;
+ material+=vec3(.34,.50,.54)*spec*.25;
+ material+=vec3(.025,.037,.042)*bounce*.26;
+ material+=vec3(grain)*(.16+.64*fill);
+ material+=vec3(.008,.018,.026)*(life-.5)*uMotion*.18;
+ float spot=pow(max(dot(normalize(vObject),normalize(uFocus)),0.),26.);
+ material+=vec3(.13,.19,.22)*spot*uPulse*.67;
+ gl_FragColor=vec4(clamp(material,0.,1.),1.);
+}`; const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){const prog=gl.createProgram(),vsh=precision(gl.VERTEX_SHADER,v),fsh=precision(gl.FRAGMENT_SHADER,f);gl.attachShader(prog,vsh);gl.attachShader(prog,fsh);gl.linkProgram(prog);gl.deleteShader(vsh);gl.deleteShader(fsh);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));return prog}
   function generateParticles(){
     let count=(quality==='low'||(quality==='auto'&&autoEco))?(w<820?1200:2000):quality==='high'?(w<820?4800:9900):(w<820?1950:5900);
@@ -2208,18 +2761,18 @@ void main(){
     buildCoreMesh();
     if(!contextHandlersInstalled){
       contextHandlersInstalled=true;
-      canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'});
+      canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();qaState.webglLossCount++;gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'});
       canvas.addEventListener('webglcontextrestored',()=>{try{initGL();ctx=null;canvas.style.display='block';fallbackCanvas.style.display='none';resize()}catch{init2D()}});
     }
   }
-  function init2D(){ctx=fallbackCanvas.getContext('2d');fallbackCanvas.style.display='block';canvas.style.display='none';}
+  function init2D(){qaState.fallbackCount++;ctx=fallbackCanvas.getContext('2d');fallbackCanvas.style.display='block';canvas.style.display='none';}
   function passUniforms(p,t){
     const c=targetCenter(),s=stories[selected],point=project(s.p);
     const obj={uRes:[resW,resH],uCenter:[c.x*dpr,c.y*dpr],uRadius:c.radius*dpr,
       uRotY:cameraY,uRotX:cameraX,uZoom:zoom,uTime:reduceMotion?0:t,uDpr:dpr,
       uShock:shock?shock.radius:10,uFocus:s.p,uFocus2:[point.x*dpr,point.y*dpr],
       uFocusIntensity:point.z>-.12?1:0,
-      uMotion:reduceMotion?0:interactionEnergy,uTouch2:[interactionPoint[0]*dpr,interactionPoint[1]*dpr],
+      uMotion:reduceMotion?0:interactionEnergy,uPulse:reduceMotion?0:v9State.energy,uTouch2:[interactionPoint[0]*dpr,interactionPoint[1]*dpr],
       uTouchPulse:reduceMotion?0:interactionPulse,uQuality:(quality==='low'||(quality==='auto'&&(w<820||autoEco)))?0:1};
     let locations=uniformCache.get(p);
     if(!locations){locations=new Map();uniformCache.set(p,locations)}
@@ -2260,6 +2813,11 @@ void main(){
     }
     passUniforms(programPoints,t);gl.drawArrays(gl.POINTS,0,pts);
     gl.depthMask(true);gl.disable(gl.DEPTH_TEST);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  }
+  // Canvas has no GPU depth buffer: do not leak back-facing story stars.
+  function v95FrontStoryProjection(p){
+    return !!p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&Number.isFinite(p.z)&&
+      p.z>-.08&&p.x>=0&&p.x<=w&&p.y>=0&&p.y<=h;
   }
   function canvasRender(t){
     if(!ctx)return;
@@ -2323,7 +2881,7 @@ void main(){
       }
       ctx.strokeStyle=ring%2===0?'rgba(125,192,206,.11)':'rgba(98,163,183,.09)';ctx.lineWidth=ring===0?.85:.55;ctx.stroke();
     }
-    // Two distinct shells of particle light; farside is still faintly visible through the plasma.
+    // GPU/Canvas parity: core occludes back-side story stars. Interior dust remains subtle.
     const step=quality==='low'?6:(w<820?3:3);
     for(let i=0;i<sceneParticles.length-5;i+=5*step){
       const a=sceneParticles[i],b=sceneParticles[i+1],z=sceneParticles[i+2];
@@ -2345,8 +2903,8 @@ void main(){
       ctx.lineWidth=.45;ctx.strokeStyle=band%2?'rgba(106,171,181,.14)':'rgba(105,170,182,.12)';ctx.stroke();
     }
     stories.forEach((s,i)=>{
-      const p=project(s.p);if(p.z<-.4||!lensMatches(s))return;const active=i===selected;
-      const radius=active?26:16;const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,radius);
+      const p=project(s.p);if(!v95FrontStoryProjection(p)||!lensMatches(s))return;const active=i===selected;
+      const radius=active?26+Math.min(4,v9State.energy*4):16;const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,radius);
       glow.addColorStop(0,'rgba(255,255,255,.96)');glow.addColorStop(.16,active?'rgba(169,221,255,.88)':'rgba(137,197,212,.65)');
       glow.addColorStop(.54,'rgba(93,157,173,.24)');glow.addColorStop(1,'rgba(0,0,0,0)');
       ctx.fillStyle=glow;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,twoPi);ctx.fill();
@@ -2418,7 +2976,11 @@ void main(){
     }
     const label=$('starFocusLabel');
     if(label){
-      const p=locations[selected],show=focusLabelActive&&visible.has(selected)
+      const p=locations[selected];
+      const band=v763MobileStage&&!immersive&&v763MobileStage.mode==='portrait'?v763MobileStage:null;
+      // A floating alias must not cover the hero; the dock still identifies the star.
+      const labelRoom=!band||(p.y-band.top>=84&&band.bottom-p.y>=16);
+      const show=focusLabelActive&&visible.has(selected)&&labelRoom
         &&$('drawer').hidden&&$('lensPanel').hidden&&$('memoryDive').hidden&&$('birthOverlay').hidden;
       label.hidden=!show;
       if(show){
@@ -2432,7 +2994,7 @@ void main(){
   function sceneIsCovered(){return !$('drawer').hidden||!$('birthOverlay').hidden}
   function queueFrame(){
     if(!frameScheduled&&!document.hidden&&!sceneIsCovered()){
-      frameScheduled=true;window.requestAnimationFrame(animate)
+      frameScheduled=true;animationFrameHandle=window.requestAnimationFrame(animate)
     }
   }
   function resumeScene(){
@@ -2463,11 +3025,13 @@ void main(){
     }
   }
   function animate(t){
-    frameScheduled=false;
-    if(document.hidden)return;
+    frameScheduled=false;animationFrameHandle=null;
+    // A pending frame can fire just after a reader covers the scene.
+    if(document.hidden||sceneIsCovered())return;
     const dt=clamp(t-lastTime,0,50)||16;lastTime=t;const ease=reduceMotion?1:1-Math.exp(-dt/245);
     if(flightFinish&&t>flightFinish){flightFinish=0;targetZoom=1.13}
     if(spinning&&!dragging&&!birth)targetY+=dt*.000055;
+    v9Tick(t);
     // A damped continuation of the last touch: physical, not perpetual spinning.
     if(!dragging&&!spinning&&!birth&&diveIndex===-1&&!flightFinish){
       const scale=dt/16.667;
@@ -2481,12 +3045,18 @@ void main(){
     const sizeMoving=Math.abs(v81ScaleTarget-v81ScaleCurrent)>.001;
     v81ScaleCurrent+=(v81ScaleTarget-v81ScaleCurrent)*(reduceMotion?1:1-Math.exp(-dt/440));
     if(shock){shock.radius+=dt*.00075;if(shock.radius>1.45)shock=null}
-    if(birth&&t-birth.started>2450){birth=null;$('birthOverlay').hidden=false;$('birthOverlay').setAttribute('aria-hidden','false');$('birthContinue').focus()}
-    if(gl){try{webGLRender(t)}catch(e){console.warn('Switching to Canvas fallback',e);gl=null;init2D();resize()}}
+    if(birth&&t-birth.started>2450)v94FinishBirth();
+    if(gl){try{webGLRender(t)}catch(e){qaState.errorCount++;console.warn('Switching to Canvas fallback',e);gl=null;init2D();resize()}}
     if(!gl)canvasRender(t);
-    if(!reduceMotion||sizeMoving||Math.abs(targetY-cameraY)>.001||Math.abs(targetX-cameraX)>.001||birth||shock)updateMarkers();
-    updateAtlas();updateBirthComet(t);updateDivePosition();updateTravel(t);updateTouchLight(dt);
-    sampleGraphics(t,dt);queueFrame()
+    // On mobile, the WebGL sphere keeps its native frame rate while
+    // expensive HTML star-marker placement is limited to ~30 Hz.
+    const markerActive=!reduceMotion||sizeMoving||Math.abs(targetY-cameraY)>.001||
+      Math.abs(targetX-cameraX)>.001||birth||shock;
+    if(markerActive&&(w>=820||t-v93LastMarkerFrame>=30)){
+      v93LastMarkerFrame=t;updateMarkers();
+    }
+    updateAtlas();updateBirthComet(t);v94UpdateBirthField();updateDivePosition();updateTravel(t);updateTouchLight(dt);
+    sampleGraphics(t,dt);qaFrame(t);queueFrame()
   }
   function unwrappedY(y){const period=twoPi;return y+Math.round((targetY-y)/period)*period}
   function focus(i,open){
@@ -2514,43 +3084,128 @@ void main(){
     $('scene').style.setProperty('--v81-tint',tint);
     v76AnimateFragment();
   }
-  function cancelDive(){
+  // V9 / Star Passage. Single cancellable transition state owns the camera, light and reader hand-off.
+  function v9PrepareSparkField(){
+    const field=$('v9SparkField');
+    if(field.children.length)return;
+    const fragment=document.createDocumentFragment();
+    for(let i=0;i<14;i++){
+      const spark=document.createElement('i');
+      spark.style.setProperty('--angle',(i*360/14).toFixed(3)+'deg');
+      spark.style.setProperty('--travel',-(42+(i%4)*12)+'px');
+      spark.style.setProperty('--delay',((i%5)*31)+'ms');
+      spark.setAttribute('aria-hidden','true');
+      fragment.append(spark);
+    }
+    field.append(fragment);
+  }
+  function v9PhaseFor(elapsed){
+    if(elapsed<220)return 'lock';
+    if(elapsed<1000)return 'flight';
+    return 'reveal';
+  }
+  // V9.8: smooth acceleration and deceleration inside the existing flight.
+  // Do not modify the 1.35s timeline, star identity, or camera orientation.
+  function v98FlightEase(progress){
+    const t=Math.max(0,Math.min(1,Number.isFinite(progress)?progress:0));
+    return t*t*t*(t*(t*6-15)+10);
+  }
+  function v98FlightZoom(elapsed){
+    if(elapsed<220)return 1.25;
+    if(elapsed>=1000)return 1.65;
+    return 1.25+.40*v98FlightEase((elapsed-220)/780);
+  }
+  function v9Tick(t){
+    if(diveIndex<0||v9State.phase==='idle')return;
+    const elapsed=Math.max(0,t-v9State.started);
+    const phase=v9PhaseFor(elapsed);
+    if(phase!==v9State.phase){
+      v9State.phase=phase;
+      $('memoryDive').dataset.phase=phase;
+      $('v9PassageStatus').textContent=phase==='lock'?'ЗВЕЗДА НАЙДЕНА':
+        phase==='flight'?'ПРИБЛИЖАЕМСЯ К ВОСПОМИНАНИЮ':'ОТКРЫВАЕМ ИСТОРИЮ';
+    }
+    const u=clamp(elapsed/1350,0,1);
+    v9State.energy=Math.sin(Math.PI*u)*.95;
+    targetZoom=v98FlightZoom(elapsed);
+  }
+  function cancelDive(suppressFocus=false){
     diveSequence++;
     if(diveTimer!==null){clearTimeout(diveTimer);diveTimer=null}
-    if(diveIndex!==-1){
-      diveIndex=-1;$('memoryDive').hidden=true;$('memoryDive').setAttribute('aria-hidden','true');
+    const active=diveIndex!==-1;
+    v93PassagePausedAt=0;
+    $('memoryDive').dataset.suspended='false';
+    const skipWasFocused=active&&document.activeElement===$('cancelDive');
+    v9State={phase:'idle',started:0,index:-1,token:0,energy:0};
+    if(active){
+      diveIndex=-1;
+      $('memoryDive').hidden=true;
+      $('memoryDive').setAttribute('aria-hidden','true');
+      $('memoryDive').dataset.phase='idle';
       flightFinish=0;targetZoom=1.13;
     }
+    if(skipWasFocused&&!suppressFocus){
+      const fallback=immersive?$('focusMode'):(w<820?$('dockOpen'):$('openSelected'));
+      if(fallback)fallback.focus({preventScroll:true});
+    }
+  }
+  function v93SuspendPassage(){
+    if(diveIndex===-1||v93PassagePausedAt)return;
+    v93PassagePausedAt=performance.now();
+    $('memoryDive').dataset.suspended='true';
+    if(diveTimer!==null){clearTimeout(diveTimer);diveTimer=null}
+  }
+  function v93ResumePassage(){
+    if(!v93PassagePausedAt)return;
+    const elapsedPause=Math.max(0,performance.now()-v93PassagePausedAt);
+    v93PassagePausedAt=0;
+    $('memoryDive').dataset.suspended='false';
+    if(diveIndex===-1)return;
+    v9State.started+=elapsedPause;
+    const remaining=Math.max(0,1350-(performance.now()-v9State.started));
+    diveTimer=setTimeout(()=>finishDive(v9State.token),remaining);
   }
   function finishDive(token){
     if(token!==diveSequence||diveIndex===-1)return;
-    const story=stories[diveIndex];
-    cancelDive();targetZoom=1.27;
-    showStory(story);
+    if(document.hidden){v93SuspendPassage();return}
+    const index=diveIndex,story=stories[index];
+    // Directly transfer focus from the passage to the reader.
+    cancelDive(true);targetZoom=1.23;
+    if(story){
+      v96ReaderArrival=true;
+      try{showStory(story)}finally{v96ReaderArrival=false}
+    }
   }
   function beginDive(i){
-    const v78Target=(i+stories.length)%stories.length;
-    if(v78ThreadContext&&v78ThreadContext.to!==v78Target)v78ThreadContext=null;
+    v97ClearArmedStar();
+    if(!stories.length)return;
+    const index=(i+stories.length)%stories.length;
+    if(v78ThreadContext&&v78ThreadContext.to!==index)v78ThreadContext=null;
     cancelDive();
-    if(!lensMatches(stories[(i+stories.length)%stories.length]))setLens('All',false);
+    if(!lensMatches(stories[index]))setLens('All',false);
     closeLensPanel();
     if(!$('drawer').hidden)closeDrawer(true);
-    const index=(i+stories.length)%stories.length;
     focus(index,false);
     v78UpdateDiveRoute(index);
     if(reduceMotion){showStory(stories[index]);return}
     diveIndex=index;
-    flightFinish=0;targetZoom=2.15;
-    const overlay=$('memoryDive');
+    flightFinish=0;
+    const overlay=$('memoryDive'),token=++diveSequence;
+    v9State={phase:'lock',started:performance.now(),index,token,energy:0};
+    targetZoom=1.25;
     overlay.hidden=false;overlay.setAttribute('aria-hidden','false');
+    overlay.dataset.phase='lock';
+    overlay.dataset.suspended='false';
+    // The flare must begin at the actual star, not the CSS fallback center.
+    updateDivePosition();
     const category=stories[index].type==='legend'?'Legends':stories[index].category;
     overlay.style.setProperty('--memory-accent',lensColors[category]||'#b49ac9');
     $('diveName').textContent=(stories[index].type==='legend'?'★ ':'@')+stories[index].alias;
-    const token=++diveSequence;
-    overlay.querySelector('.memory-dive-progress span').style.animation='none';
-    void overlay.offsetWidth;
-    overlay.querySelector('.memory-dive-progress span').style.animation='';
-    diveTimer=setTimeout(()=>finishDive(token),1150);
+    $('v9PassageStatus').textContent='ЗВЕЗДА НАЙДЕНА';
+    const progress=overlay.querySelector('.memory-dive-progress span');
+    progress.style.animation='none';void overlay.offsetWidth;progress.style.animation='';
+    $('cancelDive').focus({preventScroll:true});
+    diveTimer=setTimeout(()=>finishDive(token),1350);
   }
   function updateDivePosition(){
     if(diveIndex<0)return;
@@ -2561,6 +3216,15 @@ void main(){
   }
   function showToast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timeout);showToast.timeout=setTimeout(()=>t.classList.remove('show'),3200)}
   const escapeHtml=t=>String(t).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  // Avoid restoring keyboard focus into an invisible overlay or removed archive card.
+  function v96ReaderReturnTarget(active){
+    const fallback=immersive?$('focusMode'):(w<820?$('dockOpen'):$('openSelected'));
+    if(!active||active===$('cancelDive')||!active.isConnected||
+       typeof active.focus!=='function'||
+       active.closest?.('[hidden]')||
+       active.getAttribute?.('aria-hidden')==='true')return fallback;
+    return active;
+  }
   function setDrawer(tag,html){
     if(!String(tag).startsWith('HUMAN STORY /')&&tag!=='LEGEND / VERIFIED SOURCE'){
       v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');
@@ -2568,8 +3232,9 @@ void main(){
     if(diveIndex!==-1)cancelDive();
     v762CancelReturn();
     const open=$('drawer');
-    if(open.hidden&&!open.contains(document.activeElement))v76FocusReturn=document.activeElement;
-    open.classList.remove('memory-detail','human-detail','legend-detail','journey-finished','archive-detail');
+    if(open.hidden&&!open.contains(document.activeElement))v76FocusReturn=v96ReaderReturnTarget(document.activeElement);
+    open.classList.remove('memory-detail','human-detail','legend-detail','journey-finished','archive-detail','v96-reader-arrival');
+    if(v96ReaderArrival)open.classList.add('v96-reader-arrival');
     open.scrollTop=0;
     open.style.setProperty('--reader-progress','0%');
     $('drawerTag').textContent=tag;open.setAttribute('aria-label',tag);
@@ -2583,13 +3248,13 @@ void main(){
     const wasOpen=!$('drawer').hidden;
     const wasReader=wasOpen&&$('drawer').classList.contains('memory-detail');
     $('scrim').hidden=true;$('drawer').hidden=true;
+    $('drawer').classList.remove('v96-reader-arrival');
     document.body.classList.remove('drawer-open');
     document.querySelectorAll('[data-open]').forEach(b=>b.classList.toggle('is-on',b.dataset.open==='universe'));
     resumeScene();
     if(wasReader&&skipReturn!==true){v762RestoreStar();v78ThreadContext=null;$('travelTrail').classList.remove('is-thread')}
     const returnTo=v76FocusReturn;v76FocusReturn=null;
-    const fallback=w<820?$('dockOpen'):$('openSelected');
-    const focusTarget=returnTo&&returnTo.isConnected&&typeof returnTo.focus==='function'?returnTo:fallback;
+    const focusTarget=v96ReaderReturnTarget(returnTo);
     if(wasOpen&&focusTarget)focusTarget.focus({preventScroll:true});
   }
   // V7.7 / Living Stories: links are thematic/editorial, NEVER evidence of real-world relationships.
@@ -2754,11 +3419,11 @@ void main(){
       '<button id="copyMemory" type="button" aria-label="Копировать">⧉</button></nav>'+
       '<button id="memoryBack" class="memory-back" type="button">← Назад к вселенной</button></article>';
     setDrawer('LEGEND / VERIFIED SOURCE',content);
-    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(true);v78MountBreadcrumb(s);v77MountThreads(s);
+    $('drawer').classList.add('memory-detail','human-detail','legend-detail');$('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(true);v78MountBreadcrumb(s);v93MountReaderScene(s);v77MountThreads(s);
     if(photo)$('legendPortrait').addEventListener('error',e=>{e.currentTarget.hidden=true});
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
-    $('memoryBack').onclick=closeDrawer;
+    $('memoryBack').onclick=()=>closeDrawer();
     bindLessonBookmark(s);
     $('copyMemory').onclick=()=>{
       const value=s.alias+': '+s.quote+'\nOriginal: '+d.original+'\nSource: '+d.url;
@@ -2821,10 +3486,10 @@ void main(){
       '</article>';
     setDrawer('HUMAN STORY / '+(local?'LOCAL':'FICTIONAL'),content);
     $('drawer').classList.add('memory-detail','human-detail');
-    $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);v78MountBreadcrumb(s);v77MountThreads(s);
+    $('drawer').scrollTop=0;renderJourneyReader();v76EnhanceReader(false);v78MountBreadcrumb(s);v93MountReaderScene(s);v77MountThreads(s);
     $('otherMemory').onclick=()=>goJourneyReader(1);
     $('previousMemory').onclick=()=>goJourneyReader(-1);
-    $('memoryBack').onclick=closeDrawer;
+    $('memoryBack').onclick=()=>closeDrawer();
     bindLessonBookmark(s);
     if(local)$('downloadStarDetail').onclick=()=>downloadLegacyCard(s);
     $('copyMemory').onclick=()=>{
@@ -2833,7 +3498,7 @@ void main(){
       else showToast('Буфер обмена недоступен');
     };
   }
-  function showCreate(){setDrawer('BE PART OF THE MEMORY',`<div class="drawer-kicker">YOUR SIGNAL STARTS HERE</div><h2>LEAVE<br><em>YOUR MARK.</em></h2><p>Чему рынок научил тебя так, что ты никогда этого не забудешь? Запиши урок, выбери одно правило — и зажги свою звезду.</p><form id="createForm"><div class="legacy-form-note"><strong>Одна история может изменить чьё-то решение.</strong><span>Сначала сохраним её только на твоём устройстве. Никто другой пока не увидит её без твоего собственного действия.</span></div><label class="field-label" for="alias">Твой псевдоним</label><input class="field-input" id="alias" name="alias" placeholder="Например, NIGHT OWL" maxlength="32" minlength="2" required><div class="field-grid"><div><label class="field-label" for="market">Рынок</label><select class="field-select" id="market" name="market"><option>CRYPTO</option><option>FOREX</option><option>STOCKS</option><option>FUTURES</option><option>OTHER</option></select></div><div><label class="field-label" for="category">Урок</label><select class="field-select" id="category" name="category">${categories.map(x=>`<option>${x}</option>`).join('')}</select></div></div><label class="field-label" for="quote">Что бы ты сказал себе до того решения?</label><textarea id="quote" name="quote" class="field-textarea" minlength="12" maxlength="280" required placeholder="Если бы я мог вернуться назад, я бы сказал себе..."></textarea><label class="field-label" for="story">Что произошло и что ты почувствовал? · необязательно</label><textarea id="story" name="story" class="field-textarea legacy-story-textarea" maxlength="1200" placeholder="Опиши момент, своё решение и то, что изменилось после. Без имён и личных данных других людей."></textarea><label class="field-label" for="rule">Правило, которое ты будешь соблюдать 30 дней</label><textarea id="rule" name="rule" class="field-textarea" minlength="8" maxlength="180" required placeholder="Больше никогда не..."></textarea><label class="field-label" for="capsule">Послание себе через 30 дней · необязательно</label><textarea id="capsule" name="capsule" class="field-textarea" maxlength="500" placeholder="Когда ты откроешь это, вспомни..."></textarea><div class="preview-panel legacy-live-preview"><small>✦ ПРЕДПРОСМОТР ЛИЧНОЙ ЗВЕЗДЫ</small><div class="legacy-preview-star" aria-hidden="true">✧</div><h3 id="aliasPreview">@YOUR NAME</h3><blockquote id="quotePreview">«Твоя мысль станет светящейся звездой.»</blockquote><p id="storyPreview">История, которую стоит помнить.</p></div><p class="caution">Это локальная демоверсия: никакой серверной регистрации, оплаты или постоянного Founder ID. Данные хранятся в этом браузере, капсула не зашифрована.</p><label class="legacy-consent"><input type="checkbox" id="localConsent" required><span>Понимаю: это локальная запись на этом устройстве, без публикации на сервере. Я не указываю чужие конфиденциальные данные.</span></label><div class="drawer-actions"><button type="submit" class="btn btn-primary">✦ СОХРАНИТЬ МОЮ ЗВЕЗДУ</button></div></form>`);const form=$('createForm');form.addEventListener('input',()=>{$('aliasPreview').textContent='@'+($('alias').value.trim().slice(0,32)||'YOUR NAME').toUpperCase();$('quotePreview').textContent='«'+($('quote').value.trim().replace(/[«»]/g,'')||'Твоя мысль станет светящейся звездой.')+'»';$('storyPreview').textContent=$('story').value.trim()||'История, которую стоит помнить.'});form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const data=new FormData(form);addStory(data)})}
+  function showCreate(){setDrawer('BE PART OF THE MEMORY',`<div class="drawer-kicker">YOUR SIGNAL STARTS HERE</div><h2>LEAVE<br><em>YOUR MARK.</em></h2><p>Чему рынок научил тебя так, что ты никогда этого не забудешь? Запиши урок, выбери одно правило — и зажги свою звезду.</p><form id="createForm"><div class="legacy-form-note"><strong>Одна история может изменить чьё-то решение.</strong><span>Сначала сохраним её только на твоём устройстве. Никто другой пока не увидит её без твоего собственного действия.</span></div><label class="field-label" for="alias">Твой псевдоним</label><input class="field-input" id="alias" name="alias" placeholder="Например, NIGHT OWL" maxlength="32" minlength="2" required><div class="field-grid"><div><label class="field-label" for="market">Рынок</label><select class="field-select" id="market" name="market"><option>CRYPTO</option><option>FOREX</option><option>STOCKS</option><option>FUTURES</option><option>OTHER</option></select></div><div><label class="field-label" for="category">Урок</label><select class="field-select" id="category" name="category">${categories.map(x=>`<option>${x}</option>`).join('')}</select></div></div><label class="field-label" for="quote">Что бы ты сказал себе до того решения?</label><textarea id="quote" name="quote" class="field-textarea" minlength="12" maxlength="280" required placeholder="Если бы я мог вернуться назад, я бы сказал себе..."></textarea><label class="field-label" for="story">Что произошло и что ты почувствовал? · необязательно</label><textarea id="story" name="story" class="field-textarea legacy-story-textarea" maxlength="1200" placeholder="Опиши момент, своё решение и то, что изменилось после. Без имён и личных данных других людей."></textarea><label class="field-label" for="rule">Правило, которое ты будешь соблюдать 30 дней</label><textarea id="rule" name="rule" class="field-textarea" minlength="8" maxlength="180" required placeholder="Больше никогда не..."></textarea><label class="field-label" for="capsule">Послание себе через 30 дней · необязательно</label><textarea id="capsule" name="capsule" class="field-textarea" maxlength="500" placeholder="Когда ты откроешь это, вспомни..."></textarea><div class="preview-panel legacy-live-preview"><small>✦ ПРЕДПРОСМОТР ЛИЧНОЙ ЗВЕЗДЫ</small><div class="legacy-preview-star" aria-hidden="true">✧</div><h3 id="aliasPreview">@YOUR NAME</h3><blockquote id="quotePreview">«Твоя мысль станет светящейся звездой.»</blockquote><p id="storyPreview">История, которую стоит помнить.</p></div><p class="caution">Это локальная демоверсия: никакой серверной регистрации, оплаты или постоянного Founder ID. Данные хранятся в этом браузере, капсула не зашифрована.</p><label class="legacy-consent"><input type="checkbox" id="localConsent" required><span>Понимаю: это локальная запись на этом устройстве, без публикации на сервере. Я не указываю чужие конфиденциальные данные.</span></label><div class="drawer-actions"><button type="submit" class="btn btn-primary">✦ ЗАЖЕЧЬ МОЮ ЗВЕЗДУ</button></div></form>`);const form=$('createForm');form.addEventListener('input',()=>{$('aliasPreview').textContent='@'+($('alias').value.trim().slice(0,32)||'YOUR NAME').toUpperCase();$('quotePreview').textContent='«'+($('quote').value.trim().replace(/[«»]/g,'')||'Твоя мысль станет светящейся звездой.')+'»';$('storyPreview').textContent=$('story').value.trim()||'История, которую стоит помнить.'});form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const data=new FormData(form);addStory(data)})}
   // V7.4: save an image of a private story without a server, tracking or uploads.
   // The PNG is a personal export, not a URL or proof of a public publication.
   function downloadLegacyCard(s){
@@ -2898,21 +3563,256 @@ void main(){
       showToast('Карточка PNG готова');
     },'image/png');
   }
-  function addStory(data){const p=norm([rand()*2-1,rand()*2-1,rand()*2-1]);const alias=safeString(data.get('alias'),32).trim().toUpperCase(),quote=safeString(data.get('quote'),280).trim(),rule=safeString(data.get('rule'),180).trim();if(alias.length<2||quote.length<12||rule.length<8)return;
-    const s={id:'local-'+Date.now().toString(36)+'-'+Math.floor(rand()*1e6).toString(36),alias,market:safeString(data.get('market'),16),category:safeString(data.get('category'),20),quote,story:safeString(data.get('story'),1200).trim()||quote,rule,capsule:safeString(data.get('capsule'),500).trim(),type:'local',createdAt:new Date().toISOString(),p,local:true};stories.push(s);saved.push(s);try{localStorage.setItem(KEY,JSON.stringify(saved.slice(-40)))}catch{showToast('Браузер не разрешил сохранить запись.')}closeDrawer();setLens('All',false);makeMarkers();generateParticles();focus(stories.length-1);birth={started:performance.now()};$('birthName').textContent='@'+alias;showToast('Рождение новой звезды ✦');}
-  function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}
+  // V9 R4 — stable, private identity for a personal star. No server, tracking, or public IDs.
+function v94SeedFromId(id){
+  let hash=2166136261;
+  for(const ch of String(id)){
+    hash^=ch.charCodeAt(0);
+    hash=Math.imul(hash,16777619);
+  }
+  return hash>>>0;
+}
+function v94NewLocalId(){
+  // Browser-generated stable identity; legacy fallback supports older WebViews.
+  if(typeof crypto!=='undefined'&&typeof crypto.randomUUID==='function')
+    return 'local-'+crypto.randomUUID();
+  return 'local-'+Date.now().toString(36)+'-'+Math.floor(Math.random()*1e12).toString(36);
+}
+function v94PositionFromId(id){
+  const r=seeded(v94SeedFromId(id));
+  const y=r()*1.68-.84,theta=r()*twoPi,rad=Math.sqrt(1-y*y);
+  return norm([rad*Math.cos(theta),y,rad*Math.sin(theta)]);
+}
+// V9.2: always read the current archive, not a stale page-load copy.
+function v96ReadStoredRecords(){
+  const raw=localStorage.getItem(KEY);
+  const records=raw===null?[]:JSON.parse(raw);
+  if(!Array.isArray(records))throw Error('Локальный архив повреждён.');
+  const seen=new Set();
+  for(const item of records){
+    if(!item||item.local!==true||typeof item.id!=='string'||seen.has(item.id)||
+       !Array.isArray(item.p)||item.p.length!==3||
+       !item.p.every(Number.isFinite)||!Number.isFinite(Math.hypot(...item.p))||
+       Math.hypot(...item.p)<.01||typeof item.alias!=='string'||
+       typeof item.quote!=='string')
+      throw Error('Есть повреждённая запись в локальном архиве; ничего не перезаписано.');
+    seen.add(item.id);
+  }
+  return records;
+}
+function v94StoreLocal(story){
+  try{
+    const previous=v96ReadStoredRecords();
+    if(previous.length<saved.length||previous.some(item=>item.id===story.id))return false;
+    localStorage.setItem(KEY,JSON.stringify([...previous,story]));
+    return true;
+  }catch{return false}
+}
+function v94PrepareBirthField(story){
+  const field=$('v94BirthField');
+  field.replaceChildren();
+  const low=quality==='low'||autoEco||reduceMotion;
+  const count=reduceMotion?0:low?24:48;
+  const rng=seeded(v94SeedFromId(story.id)^0x9e3779b9);
+  const fragment=document.createDocumentFragment();
+  for(let i=0;i<count;i++){
+    const spark=document.createElement('i');
+    const theta=rng()*twoPi;
+    const distance=48+rng()*Math.min(w,h)*.34;
+    spark.style.setProperty('--from-x',(Math.cos(theta)*distance).toFixed(1)+'px');
+    spark.style.setProperty('--from-y',(Math.sin(theta)*distance).toFixed(1)+'px');
+    spark.style.setProperty('--delay',Math.floor(rng()*650)+'ms');
+    spark.style.setProperty('--radius',(1+rng()*1.7).toFixed(2)+'px');
+    spark.style.setProperty('--alpha',(.35+rng()*.6).toFixed(2));
+    fragment.append(spark);
+  }
+  field.append(fragment);
+  field.style.setProperty('--v94-color',lensColors[story.category]||'#b7dce5');
+  field.hidden=reduceMotion;
+  field.classList.remove('is-forming');
+  if(!reduceMotion){void field.offsetWidth;field.classList.add('is-forming')}
+}
+function v94UpdateBirthField(){
+  const field=$('v94BirthField');
+  if(!birth||field.hidden)return;
+  const story=stories[selected];
+  if(!story)return;
+  const p=project(story.p);
+  field.style.left=p.x+'px';
+  field.style.top=p.y+'px';
+}
+function v94FinishBirth(){
+  const story=stories[selected];
+  birth=null;
+  $('birthComet').style.display='none';
+  const field=$('v94BirthField');
+  field.hidden=true;field.classList.remove('is-forming');
+  if(!story||!story.local){resumeScene();return}
+  const overlay=$('birthOverlay');
+  overlay.hidden=false;
+  overlay.setAttribute('aria-hidden','false');
+  $('birthContinue').focus({preventScroll:true});
+}
+function v94ReturnToStar(){
+  const overlay=$('birthOverlay');
+  overlay.hidden=true;overlay.setAttribute('aria-hidden','true');
+  $('v94BirthField').hidden=true;
+  document.querySelectorAll('[data-open]').forEach(button=>{
+    button.classList.toggle('is-on',button.dataset.open==='universe');
+  });
+  v762RestoreStar();
+  resumeScene();
+}
+function v94ShowOwnArchive(){
+  const overlay=$('birthOverlay');
+  overlay.hidden=true;overlay.setAttribute('aria-hidden','true');
+  $('v94BirthField').hidden=true;
+  showLegacy();
+}
+
+  // V9.1 local-only archive restore. Export uses the existing exportLegacy JSON shape.
+  function v95NormalizeBackup(raw){
+    if(!raw||raw.localOnly!==true||!Array.isArray(raw.stories))
+      throw Error('Файл не является резервной копией Market Remembers.');
+    if(raw.stories.length>5000)throw Error('В файле слишком много записей.');
+    const records=[],unique=new Set(),marks=Object.create(null);
+    for(const item of raw.stories){
+      if(!item||item.local!==true||typeof item.id!=='string'||
+         !/^local-[a-zA-Z0-9_-]{3,128}$/.test(item.id)||
+         unique.has(item.id)||typeof item.alias!=='string'||
+         typeof item.quote!=='string'||!Array.isArray(item.p)||
+         item.p.length!==3||!item.p.every(v=>typeof v==='number'&&Number.isFinite(v))||
+         (!Number.isFinite(Math.hypot(...item.p))||Math.hypot(...item.p)<.01))
+        throw Error('Резервная копия содержит повреждённую звезду.');
+      unique.add(item.id);
+      const entry={
+        id:item.id,local:true,type:'local',alias:safeString(item.alias,32),
+        quote:safeString(item.quote,280),story:safeString(item.story,1200),
+        rule:safeString(item.rule,180),capsule:safeString(item.capsule,500),
+        market:safeString(item.market,16),
+        category:categories.includes(item.category)?item.category:'Risk',
+        createdAt:item.createdAt,p:norm(item.p)
+      };
+      if(entry.alias.trim().length<2||entry.quote.trim().length<12||
+         typeof entry.createdAt!=='string'||!Number.isFinite(Date.parse(entry.createdAt)))
+        throw Error('В резервной копии есть неполная история.');
+      records.push(entry);
+      const history=raw.checkins&&Object.prototype.hasOwnProperty.call(raw.checkins,item.id)?
+        raw.checkins[item.id]:null;
+      if(history&&typeof history==='object'&&!Array.isArray(history)){
+        const safe=Object.create(null);
+        for(const [day,status] of Object.entries(history)){
+          if(/^\d{4}-\d{2}-\d{2}$/.test(day)&&(status==='kept'||status==='missed'))safe[day]=status;
+        }
+        marks[item.id]=safe;
+      }
+    }
+    return {stories:records,checkins:marks};
+  }
+  function v95ImportBackupData(data){
+    const current=v96ReadStoredRecords();
+    if(current.length<saved.length)
+      throw Error('Архив изменён в другой вкладке. Обнови страницу перед импортом.');
+    const existing=new Set(current.map(item=>item.id));
+    const added=data.stories.filter(item=>!existing.has(item.id));
+    const merged=[...current,...added];
+    const previous=localStorage.getItem(KEY);
+    const previousChecks=localStorage.getItem(CHECK_KEY);
+    let liveChecks={};
+    try{liveChecks=previousChecks===null?{}:JSON.parse(previousChecks)}
+    catch{throw Error('Повреждены отметки дисциплины. Ничего не перезаписано.')}
+    if(!liveChecks||typeof liveChecks!=='object'||Array.isArray(liveChecks))
+      throw Error('Повреждены отметки дисциплины. Ничего не перезаписано.');
+    const mergedChecks=Object.assign(Object.create(null),liveChecks);
+    for(const [id,mark] of Object.entries(data.checkins)){
+      const latest=Object.prototype.hasOwnProperty.call(liveChecks,id)?liveChecks[id]:null;
+      mergedChecks[id]={...mark,...(latest&&typeof latest==='object'&&!Array.isArray(latest)?latest:{})};
+    }
+    const updatedChecks=JSON.stringify(mergedChecks)!==JSON.stringify(liveChecks);
+    let firstWrite=false;
+    try{
+      localStorage.setItem(KEY,JSON.stringify(merged));
+      firstWrite=true;
+      localStorage.setItem(CHECK_KEY,JSON.stringify(mergedChecks));
+    }catch{
+      let rollbackOk=true;
+      if(firstWrite){
+        try{
+          if(previous===null)localStorage.removeItem(KEY);
+          else localStorage.setItem(KEY,previous);
+        }catch{rollbackOk=false}
+      }
+      throw Error(rollbackOk?'Импорт отменён: не удалось сохранить записи.':
+        'Сбой хранилища при импорте. Не закрывай страницу — сохрани резервную копию.');
+    }
+    return {added:added.length,alreadyPresent:data.stories.length-added.length,updatedChecks};
+  }
+  function v95BindBackupImport(){
+    const button=$('importLegacy'),input=$('legacyBackupFile');
+    if(!button||!input)return;
+    button.onclick=()=>input.click();
+    input.onchange=async()=>{
+      const file=input.files?.[0];
+      input.value='';
+      if(!file)return;
+      if(file.size>5*1024*1024){showToast('Файл слишком большой: максимум 5 МБ.');return}
+      button.disabled=true;
+      try{
+        const backup=v95NormalizeBackup(JSON.parse(await file.text()));
+        if(!backup.stories.length){showToast('В копии нет личных звёзд.');return}
+        if(!confirm('Импортировать '+backup.stories.length+
+           ' личных звёзд? Твои существующие истории сохранятся. Страница перезагрузится.'))return;
+        const result=v95ImportBackupData(backup);
+        if(result.added===0&&!result.updatedChecks){showToast('Все звёзды из копии уже сохранены.');return}
+        window.location.reload();
+      }catch(error){
+        showToast(error instanceof Error?error.message:'Не удалось восстановить резервную копию.');
+      }finally{button.disabled=false}
+    };
+  }
+function addStory(data){
+  const alias=safeString(data.get('alias'),32).trim().toUpperCase();
+  const quote=safeString(data.get('quote'),280).trim();
+  const rule=safeString(data.get('rule'),180).trim();
+  if(alias.length<2||quote.length<12||rule.length<8)return false;
+  const id=v94NewLocalId();
+  const record={
+    id,alias,market:safeString(data.get('market'),16),
+    category:safeString(data.get('category'),20),quote,
+    story:safeString(data.get('story'),1200).trim()||quote,rule,
+    capsule:safeString(data.get('capsule'),500).trim(),type:'local',
+    createdAt:new Date().toISOString(),p:v94PositionFromId(id),local:true
+  };
+  if(!v94StoreLocal(record)){
+    showToast('Не удалось сохранить звезду. Проверь настройки браузера и повтори попытку.');
+    return false;
+  }
+  stories.push(record);saved.push(record);
+  closeDrawer(true);setLens('All',false);makeMarkers();
+  focus(stories.length-1,false);
+  $('birthName').textContent='@'+alias;
+  birth={started:performance.now(),id};
+  v94PrepareBirthField(record);
+  if(reduceMotion)v94FinishBirth();
+  else{resumeScene();showToast('Новая звезда формируется ✦')}
+  return true;
+}
+function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}
   const checkins=loadChecks();
   const dateKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
   function daysAgo(start){const a=new Date(start),b=new Date();return Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/86400000)}
-  function showLegacy(){const s=saved.at(-1);if(!s){setDrawer('MY LEGACY / LOCAL DEMO',`<div class="drawer-kicker">YOUR PERSONAL CONSTELLATION</div><h2>YOUR STAR<br><em>AWAITS.</em></h2><p>Создай собственную звезду, чтобы увидеть здесь личную историю, торговое правило, 30-дневный прогресс и капсулу времени.</p><div class="drawer-actions"><button id="createFromLegacy" class="btn btn-primary">СОЗДАТЬ МОЙ СЛЕД ↗</button></div>`);$('createFromLegacy').onclick=showCreate;return}
+  let legacyActiveId=null;
+  function showLegacy(){const s=saved.find(item=>item.id===legacyActiveId)||saved.at(-1);if(!s){setDrawer('MY LEGACY / LOCAL DEMO',`<div class="drawer-kicker">YOUR PERSONAL CONSTELLATION</div><h2>YOUR STAR<br><em>AWAITS.</em></h2><p>Создай собственную звезду, чтобы увидеть здесь личную историю, торговое правило, 30-дневный прогресс и капсулу времени.</p><div class="drawer-actions"><button id="createFromLegacy" class="btn btn-primary">СОЗДАТЬ МОЙ СЛЕД ↗</button></div><div class="drawer-actions"><button id="importLegacy" type="button" class="btn btn-outline">↑ ВОССТАНОВИТЬ JSON</button><input id="legacyBackupFile" type="file" accept=".json,application/json" hidden></div><p class="caution">Копия остаётся на устройстве. Файл никуда не загружается.</p>`);$('createFromLegacy').onclick=showCreate;v95BindBackupImport();return}
     const checks=checkins[s.id]||{},start=new Date(s.createdAt||Date.now());const dayIndex=daysAgo(start);const today=dateKey(new Date());const completed=Object.values(checks).filter(v=>v==='kept').length;const notMet=Object.values(checks).filter(v=>v==='missed').length;const unlockAt=new Date(start.getTime()+30*86400000),ready=new Date()>=unlockAt;
-    setDrawer('MY LEGACY / LOCAL DEMO',`<div class="drawer-kicker">THIS IS YOUR LOCAL STORY · NOT A FOUNDER ID</div><h2>MY<br><em>LEGACY.</em></h2><div class="preview-panel"><small>PERSONAL STAR · ONLY THIS BROWSER</small><h3>@${escapeHtml(s.alias)}</h3><p>“${escapeHtml(s.quote)}”</p></div><div class="status-box"><span>MARKET</span><strong>${escapeHtml(s.market)}</strong></div><div class="legacy-personal-story"><small>✦ МОЙ МОМЕНТ</small><p>${escapeHtml(s.story||s.quote)}</p></div><div class="status-box"><span>DISCIPLINE</span><strong>${completed} KEPT · ${notMet} MISSED</strong></div><div class="drawer-kicker" style="margin-top:27px">THE ONE RULE / 30-DAY CHALLENGE</div><p>${escapeHtml(s.rule)}</p><div class="timeline" id="timeline"></div><div class="drawer-actions"><button id="markKept" class="btn btn-outline">✓ СОБЛЮДАЛ</button><button id="markMissed" class="btn btn-outline">✕ НЕ ПОЛУЧИЛОСЬ</button></div><p class="caution" id="checkHint">${dayIndex>=30?'30-дневный период закончился':dayIndex<0?'Проверь дату устройства':`День ${dayIndex+1} из 30. Отметки сохраняются локально.`}</p><div class="detail-panel"><div class="drawer-kicker">TIME CAPSULE / 30 DAYS</div><p id="capsuleBody">${!s.capsule?'Капсула не создана.':ready?'Послание готово к открытию.':'Послание откроется '+unlockAt.toLocaleDateString('ru-RU')}</p>${s.capsule&&ready?'<button class="btn btn-outline" id="unlockCapsule">ОТКРЫТЬ КАПСУЛУ</button>':''}</div><div class="drawer-actions"><button id="downloadStarCard" class="btn btn-primary">↓ СОХРАНИТЬ КАРТОЧКУ PNG</button><button id="exportLegacy" class="btn btn-outline">↓ ЭКСПОРТ JSON</button><button id="shareLegacy" class="btn btn-outline">↗ СКОПИРОВАТЬ ТЕКСТ</button></div><button id="deleteLegacy" class="delete-link">Удалить мои локальные записи и отметки</button>`);
+    setDrawer('MY LEGACY / LOCAL DEMO',`<div class="drawer-kicker">THIS IS YOUR LOCAL STORY · NOT A FOUNDER ID</div><h2>MY<br><em>LEGACY.</em></h2>${saved.length>1?`<div class="legacy-star-switch"><label class="field-label" for="legacyStarSelect">МОИ ЗВЁЗДЫ · ${saved.length}</label><select id="legacyStarSelect" class="field-select" aria-label="Выбери личную звезду">${saved.map(item=>`<option value="${escapeHtml(item.id)}"${item.id===s.id?' selected':''}>@${escapeHtml(item.alias)}</option>`).join('')}</select></div>`:''}<div class="preview-panel"><small>PERSONAL STAR · ONLY THIS BROWSER</small><h3>@${escapeHtml(s.alias)}</h3><p>“${escapeHtml(s.quote)}”</p></div><div class="status-box"><span>MARKET</span><strong>${escapeHtml(s.market)}</strong></div><div class="legacy-personal-story"><small>✦ МОЙ МОМЕНТ</small><p>${escapeHtml(s.story||s.quote)}</p></div><div class="status-box"><span>DISCIPLINE</span><strong>${completed} KEPT · ${notMet} MISSED</strong></div><div class="drawer-kicker" style="margin-top:27px">THE ONE RULE / 30-DAY CHALLENGE</div><p>${escapeHtml(s.rule)}</p><div class="timeline" id="timeline"></div><div class="drawer-actions"><button id="markKept" class="btn btn-outline">✓ СОБЛЮДАЛ</button><button id="markMissed" class="btn btn-outline">✕ НЕ ПОЛУЧИЛОСЬ</button></div><p class="caution" id="checkHint">${dayIndex>=30?'30-дневный период закончился':dayIndex<0?'Проверь дату устройства':`День ${dayIndex+1} из 30. Отметки сохраняются локально.`}</p><div class="detail-panel"><div class="drawer-kicker">TIME CAPSULE / 30 DAYS</div><p id="capsuleBody">${!s.capsule?'Капсула не создана.':ready?'Послание готово к открытию.':'Послание откроется '+unlockAt.toLocaleDateString('ru-RU')}</p>${s.capsule&&ready?'<button class="btn btn-outline" id="unlockCapsule">ОТКРЫТЬ КАПСУЛУ</button>':''}</div><div class="drawer-actions"><button id="downloadStarCard" class="btn btn-primary">↓ СОХРАНИТЬ КАРТОЧКУ PNG</button><button id="exportLegacy" class="btn btn-outline">↓ ЭКСПОРТ JSON</button><button id="importLegacy" type="button" class="btn btn-outline">↑ ВОССТАНОВИТЬ JSON</button><input id="legacyBackupFile" type="file" accept=".json,application/json" hidden><button id="shareLegacy" class="btn btn-outline">↗ СКОПИРОВАТЬ ТЕКСТ</button></div><button id="deleteLegacy" class="delete-link">Удалить мои локальные записи и отметки</button>`);
+    const starPicker=$('legacyStarSelect');if(starPicker)starPicker.onchange=()=>{legacyActiveId=starPicker.value;showLegacy()};
     const grid=$('timeline');for(let i=0;i<30;i++){const date=new Date(start);date.setDate(start.getDate()+i);const status=checks[dateKey(date)];const cell=document.createElement('span');cell.className='day'+(status==='kept'?' kept':status==='missed'?' missed':'')+(i===dayIndex?' is-today':'');cell.title='День '+(i+1);cell.textContent=status==='kept'?'✓':status==='missed'?'×':String(i+1);grid.append(cell)}
     $('markKept').disabled=$('markMissed').disabled=dayIndex<0||dayIndex>=30;
     for(const [id,status] of [['markKept','kept'],['markMissed','missed']])$(id).onclick=()=>{if(dayIndex<0||dayIndex>=30)return;(checkins[s.id] ||= {})[today]=status;try{localStorage.setItem(CHECK_KEY,JSON.stringify(checkins));showLegacy()}catch{showToast('Не удалось сохранить отметку')}};
     if($('unlockCapsule'))$('unlockCapsule').onclick=()=>{$('capsuleBody').textContent=s.capsule;$('unlockCapsule').remove()};
     $('downloadStarCard').onclick=()=>downloadLegacyCard(s);
-    $('exportLegacy').onclick=()=>{const blob=new Blob([JSON.stringify({demo:true,localOnly:true,stories:saved,checkins},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='market-remembers-local-export.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000)};
+    v95BindBackupImport();
+    $('exportLegacy').onclick=()=>{try{const exportStories=v96ReadStoredRecords();const currentMarks=localStorage.getItem(CHECK_KEY);const exportChecks=currentMarks===null?{}:JSON.parse(currentMarks);if(!exportChecks||typeof exportChecks!=='object'||Array.isArray(exportChecks))throw Error('bad checkins');const blob=new Blob([JSON.stringify({demo:true,localOnly:true,stories:exportStories,checkins:exportChecks},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='market-remembers-local-export.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000)}catch{showToast('Не удалось экспортировать архив. Локальные записи не изменены.')}};
     $('shareLegacy').onclick=()=>{const text=`THE MARKET REMEMBERS · @${s.alias}\n“${s.quote}”\nМоё правило: ${s.rule}\nЛокальная демоверсия, не опубликовано.`;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>showToast('Текст скопирован')).catch(()=>showToast('Копирование недоступно'));else showToast('Копирование недоступно')};
     $('deleteLegacy').onclick=()=>{if(!confirm('Удалить все локальные истории и 30-дневные отметки? Отменить нельзя.'))return;try{localStorage.removeItem(KEY);localStorage.removeItem(CHECK_KEY);window.location.reload()}catch{showToast('Очистка хранилища запрещена')}};
   }
@@ -3067,7 +3967,7 @@ void main(){
     resize();showToast('Качество: '+quality);
   }
   function setSpin(b){spinning=b;if(b){inertiaY=0;inertiaX=0}$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
-  function reset(){v81SetScale('big',false);v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
+  function reset(){v97ClearArmedStar();v81SetScale('big',false);v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
   function connectControls(){
     $('headerCreate').onclick=$('heroCreate').onclick=showCreate;
     $('heroExplore').onclick=()=>setImmersive(true);$('focusMode').onclick=()=>setImmersive(!immersive);$('globeScale').onclick=v81CycleScale;
@@ -3086,41 +3986,79 @@ void main(){
     $('brandHome').onclick=e=>{e.preventDefault();closeDrawer(true);reset()};$('cancelDive').onclick=()=>finishDive(diveSequence);
     document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-open]').forEach(x=>x.classList.toggle('is-on',x.dataset.open===b.dataset.open));if(b.dataset.open==='universe'){closeDrawer();reset()}else if(b.dataset.open==='archive')showArchive();else showLegacy()});
     $('openSelected').onclick=$('dockOpen').onclick=()=>beginDive(selected);
-    $('nextSignal').onclick=$('dockNext').onclick=()=>{if(guidedJourney)advanceJourneyFromGlobe();else{focus(nextVisibleSignal(selected,1));showToast('Следующая история / '+stories[selected].category)}};$('closeDrawer').onclick=$('scrim').onclick=closeDrawer;
+    $('nextSignal').onclick=$('dockNext').onclick=()=>{if(guidedJourney)advanceJourneyFromGlobe();else{focus(nextVisibleSignal(selected,1));showToast('Следующая история / '+stories[selected].category)}};
+    // The click event is not a request to skip the return animation.
+    $('closeDrawer').onclick=$('scrim').onclick=()=>closeDrawer();
     $('plusZoom').onclick=()=>targetZoom=clamp(targetZoom+.13,.68,1.6);$('minusZoom').onclick=()=>targetZoom=clamp(targetZoom-.13,.68,1.6);
     $('autoRotate').onclick=()=>setSpin(!spinning);$('resetCamera').onclick=reset;$('modeButton').onclick=setQuality;
     $('toggleAtlas').onclick=()=>{atlasEnabled=!atlasEnabled;$('toggleAtlas').setAttribute('aria-pressed',String(atlasEnabled));$('constellationLayer').classList.toggle('is-off',!atlasEnabled);$('signalHint').innerHTML=atlasEnabled?'SIGNAL ATLAS <strong>ONLINE</strong><div style="margin-top:8px">THEMATIC CONNECTIONS / DEMO</div>':'SIGNAL ATLAS <strong>OFFLINE</strong>';showToast(atlasEnabled?'Тематические созвездия включены':'Созвездия скрыты')};
-    $('birthContinue').onclick=()=>{$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true');showLegacy()};
+    $('birthContinue').onclick=v94ReturnToStar;$('birthViewArchive').onclick=v94ShowOwnArchive;
     $('gl').addEventListener('pointerdown',pointerDown);$('fallback').addEventListener('pointerdown',pointerDown);
     window.addEventListener('pointermove',pointerMove);window.addEventListener('pointerup',pointerUp);window.addEventListener('pointercancel',e=>pointerUp(e,true));
     $('gl').addEventListener('lostpointercapture',e=>pointerUp(e,true));
     $('fallback').addEventListener('lostpointercapture',e=>pointerUp(e,true));
     $('scene').addEventListener('wheel',e=>{if(e.target.closest('button'))return;e.preventDefault();targetZoom=clamp(targetZoom-e.deltaY*.0007,.68,1.6)},{passive:false});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){$('birthOverlay').hidden=true;$('birthOverlay').setAttribute('aria-hidden','true')}else closeDrawer()}if(!$('drawer').hidden||!$('birthOverlay').hidden||diveIndex!==-1)return;
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lensPanel').hidden){closeLensPanel();return}if(diveIndex!==-1){cancelDive();return}if(!$('birthOverlay').hidden){v94ReturnToStar()}else closeDrawer()}if(!$('drawer').hidden||!$('birthOverlay').hidden||diveIndex!==-1)return;
     const el=document.activeElement;
     if(el&&el.matches('input,textarea,select,[contenteditable="true"]'))return;
     if(e.key==='ArrowRight'){e.preventDefault();if(guidedJourney)advanceJourneyFromGlobe();else focus(nextVisibleSignal(selected,1))}
     if(e.key==='ArrowLeft'){e.preventDefault();const index=memoryRouteNext(-1);if(index!==selected)focus(index,false)}});
     window.addEventListener('resize',scheduleResize,{passive:true});
     document.addEventListener('visibilitychange',()=>{
-      if(!document.hidden){
-        perfStarted=0;perfFrames=0;perfElapsed=0;
-        // Resume an existing context; don't rebuild shaders unnecessarily.
-        resumeScene();
+      if(document.hidden){
+        v93SuspendPassage();
+        if(animationFrameHandle!==null){window.cancelAnimationFrame(animationFrameHandle)}
+        animationFrameHandle=null;frameScheduled=false;
+        return;
       }
+      perfStarted=0;perfFrames=0;perfElapsed=0;
+      v93ResumePassage();
+      // Resume an existing context; don't rebuild shaders unnecessarily.
+      resumeScene();
     });
+  }
+  // V9.7: pointer coordinates live in the scene, not the page viewport.
+  function v97StagePoint(clientX,clientY){
+    const box=stage.getBoundingClientRect();
+    return {x:clientX-box.left,y:clientY-box.top};
+  }
+  // The visual star and the tappable star must be the same: hidden/crowded
+  // markers, back-facing records and clipped portrait controls never open.
+  function v97PickStarAt(x,y,pointerType='mouse'){
+    const radius=pointerType==='touch'?34:pointerType==='pen'?29:25;
+    let best=-1,distance=radius;
+    for(let i=0;i<stories.length;i++){
+      const marker=markerEls[i],story=stories[i];
+      if(!marker||!story||marker.getAttribute('aria-hidden')!=='false'||
+         !lensMatches(story))continue;
+      const point=project(story.p);
+      if(point.z<=-.08||point.x<18||point.x>w-18||
+         point.y<18||point.y>h-18)continue;
+      const d=Math.hypot(x-point.x,y-point.y);
+      if(d<distance){distance=d;best=i}
+    }
+    return best;
+  }
+  function v97ClearArmedStar(){
+    if(v97ArmedStar>=0)markerEls[v97ArmedStar]?.classList.remove('is-armed');
+    v97ArmedStar=-1;
   }
   function pointerDown(e){
     if(e.pointerType==='mouse'&&e.button!==0)return;
-    interactionPoint=[e.clientX,e.clientY];
+    const scenePoint=v97StagePoint(e.clientX,e.clientY);
+    interactionPoint=[scenePoint.x,scenePoint.y];
     interactionPulse=reduceMotion?0:.94;
     interactionEnergy=reduceMotion?0:Math.max(interactionEnergy,.26);
     inertiaY=0;inertiaX=0;
     if(diveIndex!==-1)cancelDive();
     pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     dragging=true;setSpin(false);
-    if(pointers.size===1){downX=lastX=e.clientX;downY=lastY=e.clientY;moved=0;pinchDistance=0}
-    else{moved=999;pinchDistance=0}
+    v97ClearArmedStar();
+    if(pointers.size===1){
+      downX=lastX=e.clientX;downY=lastY=e.clientY;moved=0;pinchDistance=0;
+      v97ArmedStar=v97PickStarAt(scenePoint.x,scenePoint.y,e.pointerType);
+      if(v97ArmedStar>=0&&!reduceMotion)markerEls[v97ArmedStar].classList.add('is-armed');
+    }else{moved=999;pinchDistance=0}
     try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}
   }
   function pointerMove(e){
@@ -3131,34 +4069,42 @@ void main(){
       const distance=Math.hypot(a.x-b.x,a.y-b.y);
       if(pinchDistance>0)targetZoom=clamp(targetZoom*distance/pinchDistance,.68,1.6);
       pinchDistance=distance;moved=999;inertiaY=0;inertiaX=0;
-      interactionPoint=[(a.x+b.x)*.5,(a.y+b.y)*.5];
+      const p=v97StagePoint((a.x+b.x)*.5,(a.y+b.y)*.5);
+      interactionPoint=[p.x,p.y];
+      v97ClearArmedStar();
       if(!reduceMotion)interactionEnergy=clamp(Math.max(interactionEnergy,.57),0,1);
       return;
     }
     const dx=e.clientX-lastX,dy=e.clientY-lastY;
     lastX=e.clientX;lastY=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
-    interactionPoint=[e.clientX,e.clientY];
+    const p=v97StagePoint(e.clientX,e.clientY);
+    interactionPoint=[p.x,p.y];
+    if(moved>10)v97ClearArmedStar();
     if(!reduceMotion)interactionEnergy=clamp(interactionEnergy+Math.hypot(dx,dy)*.012,0,1);
     targetY+=dx*.005;targetX=clamp(targetX+dy*.005,-1.25,1.25);
     inertiaY=clamp(dx*.003,-.07,.07);inertiaX=clamp(dy*.002,-.05,.05);
   }
   function pointerUp(e,cancelled=false){
     if(!pointers.has(e.pointerId))return;
-    const wasSingle=pointers.size===1;
+    const wasSingle=pointers.size===1,armed=v97ArmedStar;
     pointers.delete(e.pointerId);
+    v97ClearArmedStar();
     if(pointers.size){
       const remaining=pointers.values().next().value;
       lastX=remaining.x;lastY=remaining.y;moved=999;pinchDistance=0;
       return;
     }
     dragging=false;pinchDistance=0;
-    if(!cancelled&&wasSingle&&moved<7&&Math.hypot(downX-e.clientX,downY-e.clientY)<7){
-      let best=-1,minDist=26;
-      stories.forEach((s,i)=>{const p=project(s.p);if(p.z<-.08||!lensMatches(s))return;const d=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(d<minDist){best=i;minDist=d}});
-      if(best>=0)focus(best,true);
+    if(cancelled){inertiaY=0;inertiaX=0;return}
+    const threshold=e.pointerType==='touch'?12:7;
+    if(wasSingle&&moved<threshold&&Math.hypot(downX-e.clientX,downY-e.clientY)<threshold){
+      const p=v97StagePoint(e.clientX,e.clientY);
+      const hit=v97PickStarAt(p.x,p.y,e.pointerType);
+      if(hit>=0&&hit===armed){inertiaY=0;inertiaX=0;focus(hit,true)}
     }
   }
   function boot(){
+    v9PrepareSparkField();
     // Mobile launch prioritizes silhouette. The user can opt in to category
     // connectors by pressing ATLAS; desktop keeps the existing default.
     atlasEnabled=window.innerWidth>820;
@@ -3167,7 +4113,7 @@ void main(){
     makeMarkers();updateLensControls();
     try{initGL();$('fpsDisplay').textContent='GPU / TRUE 3D MESH'}
     catch(e){console.warn('WebGL unavailable, enabling Canvas fallback:',e);gl=null;init2D();$('fpsDisplay').textContent='CANVAS FALLBACK'}
-    resize();updateCard();connectControls();queueFrame();
+    resize();updateCard();connectControls();qaInit();queueFrame();
   }
   boot();
 })();

@@ -1,4 +1,4 @@
-# THE MARKET REMEMBERS — ECLIPSE V8.2 / visual recovery (separate Render preview)
+# THE MARKET REMEMBERS — STARLIGHT V9.1 / R1–R4 + local archive protection (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
@@ -213,3 +213,261 @@ This is a **distinct GitHub branch and distinct Render static service**, created
 
 ### Quality gate
 78/78 source, mocked-interaction, geometry and source-comparison checks passed, including 8 new `tests/eclipse-visual.test.mjs` tests verifying WebGL shader identity, decorative ring removal and actually matching CSS selectors. No claim of physical-device screenshot/GPU performance testing. User's Android screenshot of V8.0 was used as the visual regression case.
+
+## STARLIGHT V9 — implementation milestone (R1 + R2)
+
+**This is real code, not a design brief.** The untouched ECLIPSE V8.2 remains the safety fallback.
+
+### R1: native WebGL light & dimensional stars (implemented)
+- Refined original `coreFragment` material within the **existing WebGL1 shader pipeline**, increasing directional fill and surface contours without a giant CSS halo, extra draw pass, imported game engine, or replacement image.
+- Refined `pFragment` to preserve crisp near/far stars, selected-star brightness, rare violet/amber variation and subtle point falloff.
+- Added `uPulse` uniform to the existing `passUniforms` function and focused illumination on the actual selected star position (`uFocus`), rather than an unrelated decorative ring.
+- Kept actual sphere mesh + occlusion, original `generateParticles`, category/verified/source data and Canvas2D fallback intact.
+
+### R2: STAR PASSAGE (implemented)
+- `v9PhaseFor` and `v9Tick` now synchronize **lock (0-220ms), flight (220-1000ms), reveal (1000-1350ms)**, zoom and GLSL star energy inside the existing `animate()` render loop.
+- `beginDive` / `finishDive` / `cancelDive` form a cancellable one-token story transition; rapid taps never open the previous story.
+- Choosing a real indexed star opens that exact story after the transition. SKIP opens it directly; ESC cancels and returns to the existing universe; reduced-motion opens it instantly.
+- A fixed, once-created group of 14 lightweight CSS spark points appears around the **actual projected star location**, not across the whole screen. No full-screen ring shader, runtime asset download, or extra GPU draw pass.
+- The original archive, editorial connections, verified quote provenance, browser-local privacy and star return remain intact.
+
+### Current QA
+- 88/88 mock/source/geometry JS regression checks passed, including 10 new `tests/v9-starlight.test.mjs` state/reader/skip cases.
+- Added `v9-playwright.config.ts` + `tests/v9-visual.spec.ts` for real Chromium screenshots at 320×568, 390×844, 760×420, 768×1024, 1440×900 and interaction smoke checks.
+- To run screenshots from repository root with Playwright installed:
+  `npx playwright test --config=market-remembers-v76/v9-playwright.config.ts`.
+- **Important:** Chromium/WebGL 1 could not initialize a GPU context in the current local headless container (tested), and the remote browser automation wallet lacks credit. Therefore real Android/WebGL shader compilation, graphics performance and full-browser screenshot execution are **not yet verified**; do not merge to production without those checks.
+
+### Explicit non-goals in this milestone
+- No backend, private story uploading, public social connections, new library migration or Render overwrite.
+- R3 contextual reader refactoring and R4 personal star creation animation remain on the master plan, not claimed as complete.
+
+## V9 R3 — Connected Observatory Reader (implemented)
+
+The signature STAR PASSAGE no longer cuts into an unrelated-looking dialog. The destination story opens with a compact **observatory of the same selected star** inside the existing reader.
+
+### Real implementation
+- `v93ReaderInfo(record)` resolves the actual record's index, category, current star alias and factual provenance from the existing catalogue (and source metadata for legends); it never creates a replacement story or another person's fictional relationship.
+- `v93MountReaderScene(record)` adds one calm telescope-like star field at the top of the reader using the **same source object's `p` coordinates** for its featured star. Seven tiny backdrop pinpoints are purely ornamental; they do not represent other users or real connections.
+- Explicit provenance labels distinguish source-backed quotations from sourced document *titles*, editorial fictional narratives, fictional examples and browser-local private entries.
+- The reader's intro includes a single immediate **“К ЭТОЙ ЗВЕЗДЕ”** control; this calls existing `closeDrawer`, restoring the real selected star with the pre-existing return pulse.
+- The observatory inherits the actual category/legend accent, and the reading status follows existing `v76UpdateReader`: context → personal rule or editorial conclusion.
+- On mobile the reader intro is limited to a compact ~132px block, with a genuine ≥44px return touch target. Fictional example silhouette is hidden to prevent duplicate visual hierarchy, but **real historical legend images and their credit links remain intact**.
+- Quote reveal uses one restrained, reduced-motion-aware animation; no giant visual ring, separate fake artwork, backend request or extra GPU pass.
+- All navigation through themed recommendations and four-step Memory Paths remains operative.
+
+### Regression & visual review
+- **98/98 isolated JS source, mocked DOM/camera and interaction tests passed**, including ten new cases in `tests/v9-reader.test.mjs` (real catalogue identity, source distinction, private data, keyboard action, and continuity).
+- Added three additional Playwright browser scenarios to `tests/v9-visual.spec.ts`: mobile entry/return screenshot, narrow 320px viewport, and reduced-motion observatory.
+- Playwright scenarios have **not yet been executed** on this hosted branch and physical Android WebGL screenshot QA remains pending. The remote metered browser has an insufficient wallet balance; this does not block static Render deployment.
+- This milestone intentionally excludes R4 star-birth redesign, which remains a separate testable release step.
+
+### Compare
+- Updated STARLIGHT V9: https://market-remembers-starlight-v9.onrender.com/
+- Frozen ECLIPSE V8.2: https://market-remembers-eclipse-v82.onrender.com/
+- Frozen V7.4: https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&release=7c893384
+
+**Please do not merge PR #220 until actual mobile visual/GPU review.**
+
+## V9 R4 — Your Star / personal memory birth (implemented)
+
+R4 completes the interactive narrative arc: **select a star → experience its story → write your own lesson → see your star form → find that actual persisted star in the universe**.
+
+### What shipped in code
+- Added `v94SeedFromId`, `v94NewLocalId` and `v94PositionFromId`: a unique local ID (native browser `crypto.randomUUID`, with legacy fallback) maps deterministically to one sphere position, which is saved with the story. Existing saved stars keep their original `p`.
+- All private history still uses the **existing browser-only localStorage key** `veto-market-remembers-demo-v4`. No network upload, account, server-side sharing or personal social graph.
+- `v94StoreLocal` now **must succeed before** the record is pushed into the live scene and birth animation begins. If localStorage is blocked or full, the form stays open, no birth is claimed and the user receives an error.
+- The original 3D star enters the same existing scene/markers/particle catalogue; `v94PrepareBirthField` builds a deterministic one-shot **48-point (24 in LOW/ECO) CSS coalescence** at the new star's actual camera projection, updated by `v94UpdateBirthField`.
+- The original small comet remains part of the journey. No second WebGL render pass, bulky full-screen CSS rings, new animation library or backend.
+- On completion, a quieter local-only birth dialogue explains that browser storage can be cleared. **“НАЙТИ МОЮ ЗВЕЗДУ”** dismisses the dialogue and returns the user to that selected star on the real globe; **“МОЙ ЛОКАЛЬНЫЙ АРХИВ”** opens the existing personal archive.
+- ESC dismisses the birth dialogue to the same star rather than leaving a paused renderer; reduced-motion users get the complete saved experience without animation.
+- Creation no longer needlessly calls `generateParticles()` twice after changing the lens, helping Android performance.
+- First entry and return preserve the existing sourced-vs-fictional provenance, categorical star color, chapter navigation and selected-star return behavior.
+
+### Acceptance cases
+1. Submit a private memory with explicit consent, see particles gather at one selected star, see the *local-only* birth confirmation, then press **“НАЙТИ МОЮ ЗВЕЗДУ”**.
+2. Refresh the page: open Archive → Mine → the new star; its ID, 3D position and exact story must match.
+3. Temporarily deny localStorage writes: the form must stay visible, the memory catalogue must remain unchanged, and no success state may appear.
+4. Select LOW graphics: use at most 24 birth particles; reduced-motion mode: no birth particles or 2.45-second wait.
+5. Open other stories after creation: prior V9 Star Passage, R3 observatory and existing historical attributions must remain correct.
+6. Android 320×568 and 390×844: no dialogue overflow; both completion actions retain 44px+ tap targets and safe-area padding.
+
+### Verification and limits
+- **116/116 isolated JS source, mock DOM/behavior, privacy, persistence and projection tests passed**, including 18 tests in `tests/v9-birth.test.mjs` and an expanded browser script `tests/v9-visual.spec.ts`.
+- The Playwright browser tests are provided for execution but **have not been run in a real Chromium/WebGL browser here**. The external metered browser wallet was insufficient. Device screenshot/graphics/keyboard QA is still an acceptance gate. This is a draft review candidate, not production approval.
+- Comparison original ECLIPSE: https://market-remembers-eclipse-v82.onrender.com/ 
+- Isolated V9 review: https://market-remembers-starlight-v9.onrender.com/
+
+## V9 Release QA — opt-in Android device diagnostics (implemented)
+
+We are now in **stabilization**, not adding visual decoration, and the user's screenshot of V8.0 remains the primary warning against blind changes.
+
+### On-device check
+- Normal public preview remains **unchanged**: https://market-remembers-starlight-v9.onrender.com/
+- Optional diagnostic version: https://market-remembers-starlight-v9.onrender.com/?qa=1
+- A collapsible **QA / DEVICE** panel shows renderer (WEBGL1/CANVAS2D/unavailable), actual viewport and GPU buffer sizes, device pixel ratio, sampled animation-frame FPS, graphics quality/ECO, reduced-motion status, current navigation state, and counts of WebGL context losses or fallback events.
+- Copying the QA panel is a **direct local clipboard action**. No server call, new localStorage writes, tracking script, screenshot upload or personal story ID/text ever enters the report. A screenshot can also show the panel; users should avoid including personal story contents in screenshots.
+- The panel is entirely absent visually unless the exact URL query parameter `qa=1` is set. It uses existing code/DOM and adds no rendering work to the regular production view.
+- Frame sampling uses `requestAnimationFrame` timestamps, not fake performance claims. Under the reader the GPU rendering is intentionally parked, so the displayed FPS is the **last active sample**, not a live measurement from a hidden scene.
+
+### Genuine defect fixed
+- The last V9 R4 birth particles were configured for up to 1870ms animation plus 650ms delay (2520ms total) but the confirmation opened at 2450ms. Reduced the animation to 1750ms, allowing even the last particle to finish before confirmation (~2400ms total). No new graphics layer.
+- Added 10 focused source/mock-UI tests in `tests/v9-qa-hud.test.mjs`, plus two opt-in QA Playwright browser scenarios.
+
+### Verification state
+- **126/126 isolated source, syntax, mock DOM, navigation, privacy and timing checks passed**.
+- A headless Chromium 144 browser was run locally with a mobile viewport and can render ordinary DOM. In this environment it **cannot initialize WebGL**, and the live Render URL is unreachable from the local container; therefore this does not constitute a rendered screenshot/real Android GPU verification of the full application.
+- The external metered browser automation provider is unavailable because of insufficient wallet balance. No charge is needed for the site or this QA mode.
+- Final release gate: open `?qa=1` on a real Android browser, verify the renderer and frame-rate, then test one passage, one reader return, one locally saved star birth, archive re-entry, and page reload. Capture visual evidence at 320×568 and 390×844 before merging the draft PR. Preserve ECLIPSE V8.2 and V7.4/8.0 comparison baselines.
+
+**No automatic deployment or production merge is enabled.**
+
+## V9.1 — Personal archive preservation / no silent memory deletion
+
+This pass responds to a real data-preservation problem, not a visual effect request. The former `v94StoreLocal()` **silently truncated personal stories at 40** and `safeStored()` also hid earlier entries. Those slices have been removed. A failed browser storage write still leaves the existing stored archive untouched; quota limits may prevent new stories, but old ones are not intentionally evicted.
+
+### New: export + restore, entirely offline and local
+- Existing `MY LEGACY → ЭКСПОРТ JSON` continues exporting all personal stories and local 30-day check-ins.
+- **ВОССТАНОВИТЬ JSON** now appears in both empty and populated MY LEGACY screens. Users can take a backup file to a new browser or device and import it. No file upload, account, server, telemetry, or publication.
+- `v95NormalizeBackup` checks that the source is an actual local-only backup, validates IDs, positions and record fields, rejects duplicate/corrupted entries, ignores unknown/unsafe check-in statuses, and bounds file import to 5 MB.
+- `v95ImportBackupData` merges on stable star IDs: previous stories never overwrite or disappear; known entries are not duplicated; locally newer discipline marks win on conflict.
+- If the first localStorage write succeeded but writing the second key fails, import attempts to roll back the original archive. Failure is disclosed, never silently presented as success.
+- The import asks for explicit confirmation and reloads the same page only after a successful merge. Previously exported JSON files using `{demo:true,localOnly:true,stories,checkins}` remain compatible.
+- Import test scenarios include empty-browser restoration, corrupted-file rejection, 41+ stars, duplicate-ID handling, conflict precedence and storage failure recovery.
+
+### Important limits
+- This protects **future** saves; already-evicted records from prior releases can only be recovered from an earlier JSON export, if one exists.
+- The backup file contains private stories, so users must store it securely. There is no end-to-end sync or cloud storage.
+- Browser or device clearing deletes local storage unless an independent copy exists.
+- **138/138** isolated JavaScript parsing, source, geometry, DOM/mock-interaction and storage-regression checks passed, including 12 new checks in `tests/v9-backup.test.mjs`.
+- Two new Playwright scenarios in `tests/v9-visual.spec.ts` cover import to an empty archive and rejection of a corrupt file, but **have not been executed in a real WebGL-capable mobile browser**.
+- Keep PR #220 in Draft. No changes to ECLIPSE V8.2, original V7.4/8.0 previews or production.
+
+
+## V9.2 — Archive integrity and multi-star navigation (2026-11-03)
+
+Changes on the **same isolated V9 STARLIGHT Draft PR**; frozen V7.4, V8.0, V8.2 and Vetogram production remain unchanged.
+
+- **MY LEGACY navigation:** when the browser contains multiple personal stars, a compact labeled selector switches the active star, including its own rule, capsule and 30-day discipline tracker. Each option renders the local alias/ID safely.
+- **Fresh writes across tabs:** new personal stars are appended to the latest localStorage snapshot, not the page-load copy; a stale tab refuses to resurrect deleted records. Malformed, duplicate or invalid-position records fail closed rather than being silently overwritten.
+- **Fresh JSON export:** retrieves the current persisted personal stories and check-ins, with an explicit error if the data is malformed.
+- **Safer JSON restore:** merges against the current browser archive rather than the stale `saved` array, prefers the latest local check-in on conflicts, preserves stars created in another tab, and reloads the page when check-ins changed even if no new star IDs were imported.
+- **Vector safety:** restore rejects finite coordinates whose combined magnitude overflows to infinity.
+- Added `tests/v9-archive-integrity.test.mjs` (9 focused regression cases), and aligned existing V9 backup/birth fixtures with fresh-storage semantics.
+
+**Verification:** Main inline JavaScript parsed successfully, and 8/8 targeted source-level function/behavior checks were executed successfully in an isolated JavaScript harness. This is **not** equivalent to running the full Node test suite or Chromium/Android visual QA. GitHub Actions runner was not assigned steps in the latest observed failed run, so CI success must not be claimed. Keep PR #220 Draft until runner-level tests and real Android GPU/visual review are completed.
+
+Review URL (manual Render deploy, autoDeploy OFF): https://market-remembers-starlight-v9.onrender.com/
+
+
+## V9.3 — Suspended passage, real-star anchoring, mobile touch/paint budget (2026-11-04)
+
+The same V9 STARLIGHT project continues on isolated Draft PR #220 with ECLIPSE V8.2 as visual baseline. The original V7.4, V8.0, V8.2 and Telegram/Vetogram production code and Render sites remain unchanged.
+
+### Behavior improvements
+- **Suspended passage:** hide the browser mid-flight and the 1.35-second STAR PASSAGE pauses instead of silently opening the reader while backgrounded. The CSS star flare/progress animations are paused in sync with the JS flight clock. Returning to the page restores the paused elapsed-time clock and schedules the remaining passage on the **same selection token**. ESC/cancel invalidates it.
+- **Correct first frame:** the transition CSS position is now projected synchronously from the **actual selected star** when the overlay first appears, avoiding a flash at a generic fallback center.
+- **Lower mobile DOM cost:** HTML star-marker projection/placement runs at about 30 Hz on mobile during animation, while WebGL/Canvas retains its own normal frame cadence. Direct pointer/selection/resize marker updates remain immediate.
+- **Larger touch targets:** mobile dock buttons are at least 44px, top navigation at least 40px, and portrait scene controls 42px (39px in short portrait screens). No additional large halos or rings; preserve ECLIPSE original visual identity.
+
+### QA and release boundaries
+- 4/4 targeted simulated **shared-state** STAR PASSAGE tests passed: correct selected identity and first-frame anchor; no background reader opening; resumption with same token and remaining time; cancelled passage stays cancelled.
+- Full inline application JS passed a syntax parse; new V9.3 mock tests were added to `v9-starlight.test.mjs` and browser scenarios added to `v9-visual.spec.ts` for passage anchor and narrow/mobile tap geometry.
+- **Not yet verified:** full Node suite, on-device Chrome/Telegram GPU frame time, actual phone screenshots or Playwright browser runs. GitHub Actions still needs an available runner. Keep draft PR; do not merge to production.
+- Static preview uses the existing isolated https://market-remembers-starlight-v9.onrender.com/ Render service with autoDeploy OFF; manual deployment required after code changes.
+
+
+## V9.4 — Viewport-aware mobile composition and foreground render recovery (2026-11-04)
+
+**Same isolated STARLIGHT / PR #220.** This is a refinement of the existing WebGL1 sphere, Canvas fallback, ECLIPSE palette and real content. No replacement mockups, new GPU pass, CSS orbital rings, paid features, private upload, production merge or modification of frozen V7.4/V8.0/V8.2 sites.
+
+### Code changes
+- **Measured portrait framing:** `v9PortraitFrame(width,height,heroBottom,dockTop,nominalRadius)` uses the actual available band between the hero and signal dock only when it exceeds 1.85 × the baseline sphere radius. With room, it centers and fits the original sphere to avoid headline/card overlap. On crowded short screens, it preserves the approved ECLIPSE camera size/position rather than collapsing the globe into a tiny dot. Landscape, desktop, and FOCUS geometry remain untouched.
+- **Floating selected-star label:** hides the auxiliary alias chip if it would intrude into the hero; the dock remains visible and fully operable.
+- **Background and reader recovery:** track the pending requestAnimationFrame handle; cancel it on tab hide, schedule a clean frame on return, and skip rendering if the reader or personal star dialog covered the scene before the frame executes. V9.3 STAR PASSAGE pause/resume remains unchanged.
+- **Opt-in device QA:** `?qa=1` now reports the **orb's screen center/radius** and portrait safe band (MEASURED or ECLIPSE fallback), enabling review of actual Android layout dimensions. These are screen geometry, **not personal-story star coordinates**. No personal aliases, text, IDs, backup files or telemetry are included.
+
+### Regression and release gates
+- Updated `tests/mobile-layout.test.mjs` and `tests/eclipse-visual.test.mjs` for dynamic portrait framing; added layout, label, RAF tests; extended QA HUD mock assertions and Playwright screenshots at 390×844 and 320×568.
+- 10/10 focused scene syntax/geometry checks passed for tall/short portrait, landscape, tablet, desktop, FOCUS, focus-label exclusion and RAF scheduling. A further 11/11 final source/QA tests passed, including a simulated opt-in QA output. These are **local JavaScript source-level and simulated checks, not the full Node suite, a real Chromium screenshot, or a physical Android GPU run**.
+- GitHub Actions remained unavailable on earlier observed runs. PR remains **Draft**. Physical Android WebGL/Canvas visual and interaction approval, accessible zoom, touch behavior and narrow-screen screenshot review are still required before any merge.
+- Review preview: https://market-remembers-starlight-v9.onrender.com/ ; device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1 (Render autoDeploy OFF, manual publish).
+
+
+## V9.5 — Luminous mesh, Canvas depth parity and Observatory readability (2026-11-04)
+
+This is another **incremental change on the existing STARLIGHT branch** and Draft PR #220. The existing VETO WebGL1 triangulated sphere, ECLIPSE V8.2 stage composition, category signal colors, original story archive, history and local-only storage remain intact. No replacement hero illustration, pseudo-globe, new Canvas layers, giant rings, dependencies or external server were introduced.
+
+### Existing universe, improved
+- **WebGL1:** a subtle second directional bounce-light term in the *existing* core fragment shader (`coreFragment`). The original surface texture, main illumination, mesh/depth draw order, view, star categories and shader architecture are unchanged. This is a material adjustment, not a new GPU pass. Visual appearance still requires real WebGL hardware QA.
+- **Canvas2D fallback:** a new `v95FrontStoryProjection` rejects named stars that project onto the back hemisphere, offscreen positions or invalid values. The fallback no longer visibly leaks a story star through the opaque graphite sphere. It retains `lensMatches` and selected story targeting.
+- **Observatory reader:** narrow-screen grid adjustments and readable long text, aliases, rules and local notes using `overflow-wrap`, typography and tighter layout within existing components. Reduced-motion chapter navigation now uses standard `scrollTo({behavior:'auto'})`, while other readers retain smooth transitions. No personal data flows beyond the device.
+
+### Tests and release gates
+- Added `tests/v95-material-reader.test.mjs` with seven targeted shader, Canvas visibility, backface rejection, private archive and Observatory markup assertions. **7/7 tests passed in an isolated JavaScript execution harness**, using source extracted from the current GitHub file. This is not the full Node test suite.
+- Added Playwright scenarios for forced WebGL → Canvas fallback at 390×844, reader return, and a long local story at 320×568. The scenarios **have not been executed in a real Android/WebGL browser** and their screenshot appearance is not verified.
+- Keep PR #220 Draft and autoDeploy OFF until physical Android/GPU/Canvas and browser regression QA is completed. Frozen V7.4, V8.0, V8.2 previews and Vetogram production are untouched.
+
+Manual Render review link: https://market-remembers-starlight-v9.onrender.com/
+
+
+## V9.6 — One star, one continuous reader journey (2026-11-04)
+
+STARLIGHT continues in **the existing isolated branch** and Draft PR #220. The native WebGL/Canvas globe, ECLIPSE visual silhouette, real stories and local-only archive remain unchanged; no replacement demo, extra 3D scene, customer telemetry or production merge.
+
+### Product work
+- **Reliable focus on arrival:** the 1.35-second STAR PASSAGE now hands off directly into Observatory without focusing the underlying dock in between. An active hidden `SKIP` button is never saved as the reader's keyboard return target.
+- **Return to the same star:** reader close restores focus to a connected/visible origin (selected marker when appropriate, otherwise the mobile dock, desktop open control, or FOCUS control). Removed archive cards, hidden overlay controls and unusable elements are rejected; scene-star return pulse remains controlled by explicit `skipReturn === true` only for internal transitions.
+- **Explicit click handlers:** scrim, X close and story-back handlers call `closeDrawer()` without forwarding native events as navigation flags. The earlier implementation already protected against this with a strict comparison; this change makes the contract explicit.
+- **Visual continuity:** only the *actual passage-to-reader* route applies a 7px/520ms eased arrival to the existing Observatory content, disabled for `prefers-reduced-motion`. No atmosphere halo, GPU pass or new HTML scene. Mobile chosen-star alias is announced politely to assistive technology.
+- **Escape/cancellation:** still cancels the selected passage, restores the active globe controller, and never opens an obsolete story. Thread and journey selection semantics remain intact.
+
+### Verification and deployment boundaries
+- New `tests/v96-continuity.test.mjs`: **12/12 targeted isolated shared-state tests passed**, including completion, stale token, Escape, hidden SKIP, removed archive card, FOCUS, reader close, synthetic click event and explicit internal skip.
+- Five prior test files (`v9-starlight`, `v95-material-reader`, `mobile-layout`, `v9-qa-hud`, `eclipse-visual`) ran in the same isolated V8 test harness: **51/51 passed**.
+- Added Playwright scenarios for passage→reader→same star at 390×844, Escape cancellation, scrim return at 1440×900 and reduced-motion entry. These **remain unexecuted in a real browser/Android GPU**. Isolated JavaScript mock success is not a substitute for full Node.js, Playwright, physical device or visual sign-off.
+- Production/main and frozen V7.4/V8.0/V8.2 Render services untouched. Keep PR #220 Draft; keep preview `autoDeploy=no`.
+
+Preview: https://market-remembers-starlight-v9.onrender.com/ ; device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1
+
+
+## V9.7 — Direct star contact, visible-only touch hit testing and safe gestures (2026-11-04)
+
+Continue the **same existing STARLIGHT globe** in isolated Draft PR #220. Preserve the approved V7.4/V8.2 ECLIPSE graphite/pearl color and real WebGL1 shader, the Canvas fallback, all existing personal-story privacy boundaries and user navigation. This does not add a GPU pass, change 3D geometry, or create another demo.
+
+### What changed
+- **Accurate scene-relative touch light:** `v97StagePoint(clientX,clientY)` subtracts the stage bounding rectangle before projecting touch light to CSS and GPU screen coordinates.
+- **Visibility-grounded star picking:** `v97PickStarAt(x,y,pointerType)` only accepts existing visible DOM markers (`aria-hidden=false`), records allowed by the active category lens, and front-facing in-bounds projected star positions. Star taps no longer trigger records that appear hidden, crowded, filtered or behind the sphere.
+- **Touch-friendly target:** a 34px projected radius for touch, 29px for pen and 25px for mouse permits direct contact beside the tiny visual star without enlarging the original 14px on-screen marker.
+- **Gesture intent:** a tap must begin and end on the **same visible star**, with a 12px touch tolerance and 7px mouse/pen tolerance. Dragging, changing the pinch scale, cancellation and stale contact all clear the armed star and prevent accidental story openings. Pointer cancellation also removes residual rotational inertia.
+- **Minimal visual affordance:** an existing star marker gets a small, short CSS glimmer on direct contact; reduced-motion removes the animation. No added atmosphere ring or standalone fake 3D effect. STAR PASSAGE / Observatory / return-to-star flow is unchanged.
+
+### Verification
+- New `tests/v97-tactile-stars.test.mjs` contains **9/9 passing** isolated tests for scene-local mapping, touch radius, invisible/backside records, lens restrictions, single star activation, drag, pinch, cancel and small accessible glimmer.
+- Added `v9-visual.spec.ts` Playwright cases for near-marker touch and two-pointer cancellation.
+- Updated the original `v9-starlight.test.mjs` fixture to include the new star-contact cleanup method when simulating a passage.
+- Combined isolated JavaScript suite completed **72/72 passing** across V9.7, V9.6, V9.5, mobile, QA, baseline shader and ECLIPSE source checks. This is a V8/JavaScript isolated mock harness, **not full Node**, real Playwright execution, real WebGL output inspection or an Android/Telegram device run.
+- Keep PR Draft and the separate Render static site `autoDeploy=no`. Production, frozen V7.4, V8.0 and V8.2 sites were not modified.
+
+Review: https://market-remembers-starlight-v9.onrender.com/
+Device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1
+
+
+## V9.8 — Native selected-star radiance and quintic cinematic approach (2026-11-04)
+
+STARLIGHT refinement in the **same isolated Draft PR #220**: no replacement universe, additional GL pass, new art direction, CSS orbital rings, production merge or changes to frozen V7.4/V8.0/V8.2 static previews.
+
+### Implemented
+- `v98FlightEase(progress)`: bounded, monotonic quintic smoothstep with flattened acceleration/deceleration near endpoints; `v98FlightZoom(elapsed)` preserves the original 220ms LOCK, 780ms FLIGHT (to 1000ms), 350ms REVEAL and **1350ms total**. Camera orientation, story target, cancel/skip and resume handling are unchanged. The old phase and token contracts are preserved.
+- The real selected 3D point gets a restrained transient size/radiance boost from the existing `uPulse` uniform inside `pVertex` (also used in `pFragment`). No extra GPU draw call, external 3D layer or full-screen filter.
+- Canvas2D selected-story glow radius tracks the same `v9State.energy` pulse (maximum +4px) and remains front-face culled. No extra star instances.
+- Focus-visible outline for selected stars and static CSS state when `prefers-reduced-motion: reduce`; reduced-motion readers continue to open directly, bypassing the flight.
+
+### Tests / QA limitations
+- New `tests/v98-cinematic-flight.test.mjs`: **8/8 isolated tests passed** for bounded/monotonic easing, continuity, phase timing, vertex/fragment pulse, Canvas parity, preserved mesh and reduced motion.
+- The earlier V9.0 passage fixture now provides the V9.8 easing helpers. Eight test files in total: **80/80 isolated JavaScript tests passed** with no failures. This is a source/shared-state V8 harness, **not the full Node test runner**.
+- Added real Playwright specifications for a selected-star anchored 390×844 flight, return to the same star and reduced motion at 320×568. Those specs have **not yet been run in Chromium or on an Android phone**. Deploying static HTML by itself is not proof of working GPU visuals.
+- Keep PR #220 Draft. Render autoDeploy OFF. Production and previous previews untouched.
+
+Manual Render preview: https://market-remembers-starlight-v9.onrender.com/
+Device QA overlay: https://market-remembers-starlight-v9.onrender.com/?qa=1

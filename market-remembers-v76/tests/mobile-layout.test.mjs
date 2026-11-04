@@ -26,6 +26,7 @@ function layout(width,height,heroBottom,dockTop,immersive=false,scale=1){
                         :{getBoundingClientRect:()=>({top:dockTop})},
     clamp:(x,a,b)=>Math.min(b,Math.max(a,x))
   };
+  ctx.v9PortraitFrame=runInNewContext('('+extract('v9PortraitFrame')+')');
   const measure=runInNewContext('('+extract('v763MeasureStage')+')',ctx);
   const center=runInNewContext('('+extract('targetCenter')+')',ctx);
   measure();return {position:center(),stage:ctx.v763MobileStage};
@@ -83,4 +84,34 @@ test('original story reader, accessibility and data boundaries preserved',()=>{
   assert.match(html,/id="fallback"/);
   assert.match(html,/id="gl"/);
   assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
+});
+
+
+test('V9.4 portrait frame uses unobstructed mobile space when it is genuinely available',()=>{
+  const {position:p,stage}=layout(390,844,360,680);
+  assert.equal(stage.mode,'portrait');
+  assert.equal(stage.fitted,true);
+  assert.ok(p.y>844*.575,'should center inside actual hero-dock band');
+  assert.ok(p.y-p.radius>=stage.top,'orb overlaps heading despite room');
+  assert.ok(p.y+p.radius<=stage.bottom,'orb overlaps dock despite room');
+  assert.ok(p.radius>=135,'sphere shrunk too far on standard phone');
+});
+test('V9.4 compact viewport retains the ECLIPSE sphere rather than collapsing to a tiny dot',()=>{
+  const {position:p,stage}=layout(320,568,238,430);
+  assert.equal(stage.fitted,false);
+  assert.ok(p.radius>=110);
+  assert.ok(Math.abs(p.y-568*.59)<.01);
+});
+test('V9.4 star labels are suppressed near hero while the selected dock remains usable',()=>{
+  const code=extract('updateMarkers');
+  assert.match(code,/p\.y-band\.top>=84/);
+  assert.match(code,/band\.bottom-p\.y>=16/);
+  assert.match(code,/focusLabelActive&&visible\.has\(selected\)&&labelRoom/);
+});
+test('V9.4 tracks RAF handles to resume foreground rendering after browser suspension',()=>{
+  const schedule=extract('queueFrame');
+  assert.match(schedule,/animationFrameHandle=window\.requestAnimationFrame\(animate\)/);
+  assert.match(extract('animate'),/frameScheduled=false;animationFrameHandle=null/);
+  assert.match(script,/window\.cancelAnimationFrame\(animationFrameHandle\)/);
+  assert.match(script,/animationFrameHandle=null;frameScheduled=false;/);
 });

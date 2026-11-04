@@ -94,7 +94,7 @@ test('pending covered-scene resize is deferred until scene resumes',()=>{
   assert.equal(ctx.v8ViewportPending,false);
 });
 test('safety-critical engine, archive and thematic routes preserved',()=>{
-  assert.match(html,/ECLIPSE V8\.2 \/ VETO/);
+  assert.match(html,/STARLIGHT V9 \/ VETO/);
   assert.match(runtime,/webglcontextlost/);
   assert.match(runtime,/webglcontextrestored/);
   assert.match(runtime,/function init2D\(\)/);
