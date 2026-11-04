@@ -129,6 +129,25 @@ window.MarketV10.reader = (() => {
       container.after(ending);
       const provenance=article.querySelector('.memory-disclaimer');
       if(provenance)provenance.textContent=window.MarketV10.data.provenance(record)+(record.local?'. Публичная публикация не выполнялась.':'. Не биография реального человека.');
+    }else{
+      // Historical source cards use the same premium narrative entrance,
+      // without changing their credited portraits, original quotation, or links.
+      const profile=article.querySelector('.legend-profile');
+      const originalTitle=article.querySelector('#memoryTitle');
+      if(profile&&originalTitle){
+        const legendHero=document.createElement('section');
+        legendHero.className='v12-memory-hero v12-legend-hero';
+        legendHero.setAttribute('aria-label','Исторический источник: '+String(record.alias||''));
+        const legendKicker=document.createElement('span');legendKicker.className='v12-memory-kicker';
+        legendKicker.textContent='FINANCIAL LEGENDS / ПРОВЕРЯЕМЫЙ ИСТОЧНИК';
+        legendHero.append(legendKicker,profile);
+        for(const selector of ['.legend-credit','.human-story-label','#memoryTitle','.legend-original']){
+          const element=article.querySelector(selector);
+          if(element)legendHero.append(element);
+        }
+        const topline=article.querySelector('.memory-topline');
+        if(topline)topline.after(legendHero);else article.prepend(legendHero);
+      }
     }
     const link=document.createElement('button');link.type='button';link.className='v10-permalink';
     link.textContent=record.local?'Скопировать ссылку · только для этого браузера':'Скопировать ссылку на звезду ↗';
