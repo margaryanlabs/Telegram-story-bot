@@ -47,12 +47,21 @@ window.MarketV10.navigation = (api) => {
       api.active(route.view);
     } finally {replay=false;api.modal();}
   }
+  // Origin must come from this history entry, never from the current
+  // reader theme, selected star or a previous page's stale UI state.
+  function previousView() {
+    const prior=history.state?.tmrV10?history.state?.prior:null;
+    if(typeof prior!=='string'||!prior.startsWith('#'))return null;
+    const path=prior.slice(1).split('?')[0];
+    if(path.startsWith('story/'))return 'story';
+    return views.has(path)?path:null;
+  }
   function dismiss() {
     if(replay||read().view==='universe')return;
     if(history.state?.tmrV10&&history.state?.prior)history.back();
     else {visit('universe',{},true);api.active('universe');}
   }
-  return {read,visit,dismiss,get replay(){return replay;},start(){
+  return {read,visit,dismiss,previousView,get replay(){return replay;},start(){
     if(!location.hash)history.replaceState({tmrV10:true,prior:null},'','#universe');
     window.addEventListener('popstate',apply);window.addEventListener('hashchange',()=>{if(!replay)apply();});
     apply();
