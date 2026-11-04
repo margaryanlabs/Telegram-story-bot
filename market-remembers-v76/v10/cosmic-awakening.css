@@ -39,6 +39,7 @@
  #app.obsidian .signal-dock #dockOpen{background:#b4dbe6}
  #app.obsidian .world-controls{bottom:calc(44px + env(safe-area-inset-bottom,0px));left:14px;right:14px;gap:7px}
  #app.obsidian .world-controls button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:51px;padding:5px 3px!important;border-radius:12px!important;font-size:9px;line-height:1.2;letter-spacing:0;gap:2px;background:#0e1b29e8!important;border-color:#a9d8e632!important}
+ #app.obsidian .world-controls button:nth-child(-n+4){display:none!important}
  #app.obsidian .world-controls button[aria-pressed="true"]{border-color:#a9d8e67a!important;background:#142735!important}
  #app.obsidian #globeScale::before{content:"✧";font-size:18px;line-height:1;color:#a9d8e6}
  #app.obsidian #toggleAtlas::before{content:"⌁";font-size:20px;line-height:1;color:#a9d8e6}
