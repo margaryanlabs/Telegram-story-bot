@@ -13,6 +13,6 @@ const test=base.extend({context:async({context},use)=>{
    await route.fulfill({response});
   });
  }
- try{await use(context);}finally{await api?.dispose();}
+ try{await use(context);}finally{if(api){await context.unrouteAll({behavior:'wait'});await api.dispose();}}
 }});
 module.exports={test,expect};

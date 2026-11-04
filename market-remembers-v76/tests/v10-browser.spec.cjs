@@ -70,7 +70,7 @@ test('private creation, stable link, reload, JSON export and deletion',async({pa
  expect(saved).toHaveLength(1);expect(saved[0].id).toMatch(/^local-/);expect(saved[0].chapters.decision).toContain('снизить риск');
  await page.locator('#birthContinue').click();await page.goto('/#story/'+saved[0].id);await expect(page.locator('[data-chapter=decision]')).toContainText('снизить риск');await page.reload();await expect(page.locator('[data-chapter=consequences]')).toContainText('Спокойствие');
  await page.goto('/#legacy');const download=page.waitForEvent('download');await page.locator('#exportLegacy').click();expect((await download).suggestedFilename()).toMatch(/json$/);
- page.once('dialog',dialog=>dialog.accept());await page.locator('#deleteLegacy').click();expect(await page.evaluate(()=>localStorage.getItem('veto-market-remembers-demo-v4'))).toBeNull();
+ page.once('dialog',dialog=>dialog.accept());await page.locator('#deleteLegacy').click();await expect(page.locator('#createFromLegacy')).toBeVisible();expect(await page.evaluate(()=>localStorage.getItem('veto-market-remembers-demo-v4'))).toBeNull();
 });
 test('failed storage never creates star or reports success',async({page})=>{
  await reduced(page);await page.setViewportSize({width:390,height:844});await open(page);await compose(page);

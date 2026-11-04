@@ -1,0 +1,36 @@
+2026-11-04 — Node: 199 individual cases across 20 files, 0 failed. Isolated lint/build passed.
+
+Chromium local acceptance
+  ✓   1 [chromium] › tests/v10-browser.spec.cjs:15:25 › composition 320×568 (2.5s)
+  ✓   2 [chromium] › tests/v10-browser.spec.cjs:15:25 › composition 390×844 (2.4s)
+  ✓   3 [chromium] › tests/v10-browser.spec.cjs:15:25 › composition 760×420 (5.2s)
+  ✓   4 [chromium] › tests/v10-browser.spec.cjs:15:25 › composition 768×1024 (4.8s)
+  ✓   5 [chromium] › tests/v10-browser.spec.cjs:15:25 › composition 1440×900 (7.2s)
+  ✓   6 [chromium] › tests/v10-browser.spec.cjs:25:1 › native WebGL compiles and sphere survives context loss (7.0s)
+  ✓   7 [chromium] › tests/v10-browser.spec.cjs:30:1 › fallback without WebGL keeps reader usable (2.3s)
+  ✓   8 [chromium] › tests/v10-browser.spec.cjs:35:1 › flight is skippable and omitted on repeat visits (3.3s)
+  ✓   9 [chromium] › tests/v10-browser.spec.cjs:41:1 › Escape cancels passage and Back restores universe (2.8s)
+  ✓  10 [chromium] › tests/v10-browser.spec.cjs:46:1 › chapters, constellation and keyboard modal (2.5s)
+  ✓  11 [chromium] › tests/v10-browser.spec.cjs:55:1 › archive filter URL, search, sorting, locate and history (2.1s)
+  ✓  12 [chromium] › tests/v10-browser.spec.cjs:61:1 › all 30 stars have stable deep links and sourced legends keep attribution (5.7s)
+  ✓  13 [chromium] › tests/v10-browser.spec.cjs:67:1 › private creation, stable link, reload, JSON export and deletion (6.7s)
+  ✓  14 [chromium] › tests/v10-browser.spec.cjs:75:1 › failed storage never creates star or reports success (3.3s)
+  ✓  15 [chromium] › tests/v10-browser.spec.cjs:80:1 › reduced motion parks idle and covered rendering (4.2s)
+  ✓  16 [chromium] › tests/v10-browser.spec.cjs:84:1 › Android touch, bounded DPR and CPU-throttled responsiveness (24.4s)
+  ✓  17 [chromium] › tests/v10-browser.spec.cjs:101:1 › structured chapters survive backup normalization and archive searches consequences (4.7s)
+  17 passed (1.5m)
+
+WebKit mobile acceptance
+  ✓  1 [webkit-mobile] › tests/v10-webkit.spec.cjs:2:1 › WebKit small phone, tablet and landscape composition (10.5s)
+  ✓  2 [webkit-mobile] › tests/v10-webkit.spec.cjs:11:1 › WebKit four chapters, scroll, keyboard trap and return (10.0s)
+  ✓  3 [webkit-mobile] › tests/v10-webkit.spec.cjs:18:1 › WebKit archive URL restores search and locates the same star (7.7s)
+  ✓  4 [webkit-mobile] › tests/v10-webkit.spec.cjs:24:1 › WebKit private story is saved only after review and survives reload (11.0s)
+  4 passed (40.2s)
+
+Deployed preview acceptance
+  ✓  1 [chromium] › tests/v10-browser.spec.cjs:35:1 › flight is skippable and omitted on repeat visits (8.2s)
+  ✓  2 [chromium] › tests/v10-browser.spec.cjs:55:1 › archive filter URL, search, sorting, locate and history (6.0s)
+  ✓  3 [chromium] › tests/v10-browser.spec.cjs:61:1 › all 30 stars have stable deep links and sourced legends keep attribution (11.9s)
+  ✓  4 [chromium] › tests/v10-browser.spec.cjs:67:1 › private creation, stable link, reload, JSON export and deletion (10.4s)
+  ✓  5 [chromium] › tests/v10-browser.spec.cjs:75:1 › failed storage never creates star or reports success (3.9s)
+  5 passed (43.1s)

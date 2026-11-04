@@ -1,4 +1,26 @@
-# THE MARKET REMEMBERS — STARLIGHT V9.1 / R1–R4 + local archive protection (isolated preview)
+# THE MARKET REMEMBERS V10 — THE LIVING UNIVERSE
+
+Isolated review: https://market-remembers-living-universe-v10.onrender.com
+
+Pull request: https://github.com/margaryanlabs/Telegram-story-bot/pull/221
+
+V10 evolves the actual live V9.8 code. The original native renderer, stable star catalogue, source-based legends, guided routes and private archive remain. New modules add an Obsidian Observatory visual system, layered stars, four narrative chapters, thematic constellations, reversible URL navigation, archive sorting and reviewed local contribution.
+
+Public publication is unavailable. Personal records stay in the current browser; local links do not publish or transfer a story. Use JSON export/import to move private records from the V9 origin into this separate preview. Existing short accounts retain their original text and explicitly disclose missing chapter data.
+
+- [Audit and preservation](docs/V10-AUDIT.md)
+- [Module architecture and data contract](docs/V10-ARCHITECTURE.md)
+- [Verification, evidence and remaining limits](docs/V10-QA.md)
+
+Run `npm ci --ignore-scripts`, `npm run lint`, `npm run build`, `npm test`, `npm run test:browser` and `npm run test:webkit` from this directory. Install Playwright Chromium/WebKit first, or use an existing Chromium with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`.
+
+The V7.4/V9 publications are unchanged. No production merge/deployment has been performed. Preview auto-deployment is off.
+
+---
+
+## Preserved development history
+
+### THE MARKET REMEMBERS — STARLIGHT V9.1 / R1–R4 + local archive protection (isolated preview)
 
 This is the **next additive experience layer** built on the exact V7.5.3 code. It does not replace V7.4, the V7.5 engine, WebGL shader, star positions, stories, Memory Paths, or local browser storage formats.
 
