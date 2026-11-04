@@ -8,7 +8,7 @@ await cp(new URL('../v10/',import.meta.url),new URL('v10/',output),{recursive:tr
 // Public metadata describes deployment composition, not operational health.
 const release={
   project:'The Market Remembers',
-  version:'12.0.0-rc.3',
+  version:'12.0.0-rc.4',
   stage:'review-preview',
   builtAt:new Date().toISOString(),
   deployment:'static',
@@ -20,4 +20,4 @@ const release={
            'memory-archive','memory-trails','navigation']
 };
 await writeFile(new URL('release.json',output),JSON.stringify(release,null,2)+'\n');
-console.log('V12 RC3 build: standalone static preview and release.json generated. Production untouched.');
+console.log('V12 RC4 build: standalone static preview and release.json generated. Production untouched.');
