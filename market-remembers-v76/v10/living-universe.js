@@ -2,7 +2,7 @@ window.MarketV10 = window.MarketV10 || {};
 window.MarketV10.install = function(api) {
   const V=window.MarketV10;
   const $=id=>document.getElementById(id);
-  let router,travelling=false;
+  let router,travelling=false,archiveReturn=null;
   const clear=()=>{$('drawer').classList.remove('v10-reader','v10-archive','v10-legacy');};
   function modal() {
     const covered=!$('drawer').hidden||!$('birthOverlay').hidden||!$('memoryDive').hidden;
@@ -54,8 +54,20 @@ window.MarketV10.install = function(api) {
       modal();
     },
     showArchive() {
+      const returning=router.replay&&archiveReturn?.hash===location.hash;
       clear();router.visit('archive',{...api.getArchive(),sort:V.archive.getSort()});
       api.base.showArchive();modal();
+      if(returning){
+        const drawer=$('drawer');
+        // The original archive DOM is fully rebuilt after a history return.
+        // Restore the previous reading position, bounded by new results.
+        const max=Math.max(0,drawer.scrollHeight-drawer.clientHeight);
+        drawer.scrollTop=Math.max(0,Math.min(archiveReturn.top,max));
+        const card=[...$('archiveGrid').querySelectorAll('button[data-story-id]')]
+          .find(el=>el.dataset.storyId===archiveReturn.storyId);
+        card?.focus({preventScroll:true});
+        archiveReturn=null;
+      }else if(!router.replay)archiveReturn=null;
     },
     drawArchive() {
       api.base.drawArchive();V.archive.mount(shared);V.trails.mountArchive(shared);shared.syncArchive();
@@ -66,6 +78,15 @@ window.MarketV10.install = function(api) {
       if(!api.stories.length)return;
       const safeIndex=((index%api.stories.length)+api.stories.length)%api.stories.length;
       const record=api.stories[safeIndex];
+      // Save the exact scroll/focus origin before leaving the filtered archive.
+      // This remains in-memory only and is never persisted or shared.
+      if(router.read().view==='archive'&&!$('drawer').hidden){
+        archiveReturn={
+          hash:location.hash,
+          top:Math.max(0,$('drawer').scrollTop),
+          storyId:String(record.id)
+        };
+      }
       router.visit('story',{id:String(record.id)});travelling=true;
       try {
         if(V.motion.skip(record)) {
