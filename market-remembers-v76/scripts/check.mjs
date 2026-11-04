@@ -16,10 +16,11 @@ for(const match of html.matchAll(/(?:src|href)="(v10\/[^"?#]+)"/g)){
 const shell=html.slice(0,html.indexOf('<script'));
 const ids=[...shell.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
 if(ids.length!==new Set(ids).size)throw Error('Duplicate ID in static shell');
-if(!html.includes('THE MARKET REMEMBERS V11 — COSMIC AWAKENING'))throw Error('V11 title is missing');
+if(!html.includes('THE MARKET REMEMBERS V11.7 — EXPLAINABLE CONSTELLATIONS'))throw Error('V11.7 title is missing');
 if(!html.includes('v10/cosmic-awakening.css'))throw Error('V11 visual layer is missing');
 if(!html.includes('float planeA=abs(dot(vObject'))throw Error('Native V11 orbital shader is missing');
 if(!html.includes('v10/star-passage-v11.css')||!html.includes('id="v114PassageQuote"'))throw Error('V11.4 passage scene or narrative cue is missing');
 if(!html.includes('v10/memory-atlas-v11.css')||!html.includes('archiveSelect:(filter,query)=>v79SelectArchive'))throw Error('V11.5 archive atlas or canonical search binding is missing');
 if(!html.includes('v10/memory-trails-v11.css')||!html.includes('v10/memory-trails.js'))throw Error('V11.6 memory trails assets missing');
-console.log('V11.6 lint: original engine, reader, canonical atlas, privacy-first trails, local assets and IDs valid.');
+if(!html.includes('v10/explainable-constellations-v11.css'))throw Error('V11.7 evidence map stylesheet is missing');
+console.log('V11.7 lint: original engine, source-grounded links, archive, private trails and assets valid.');
