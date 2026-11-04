@@ -62,6 +62,8 @@ function sceneContext(){
  ctx.finishDive=run('finishDive',ctx);
  ctx.beginDive=run('beginDive',ctx);
  ctx.v9PhaseFor=run('v9PhaseFor',ctx);
+ ctx.v98FlightEase=run('v98FlightEase',ctx);
+ ctx.v98FlightZoom=run('v98FlightZoom',ctx);
  ctx.v9Tick=run('v9Tick',ctx);
  return {ctx,controls,overlay,skip};
 }
