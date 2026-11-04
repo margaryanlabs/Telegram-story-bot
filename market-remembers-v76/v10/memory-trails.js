@@ -138,8 +138,13 @@ window.MarketV10.trails = (() => {
     const note=node('p','v116-trail-note',
       'Сохранение происходит только после нажатия. В браузере хранятся ID редакционных звёзд, не личные истории. Сохранённые маршруты доступны в Архиве на этом же адресе.');
     panel.append(summary,caption,list,actions,note);
+    // In V12, the story artifact must be the first narrative element. Trails
+    // follow the artifact rather than obscuring it on every story open.
+    const artifact=article.querySelector('.v12-memory-hero');
     const topline=article.querySelector('.memory-topline');
-    if(topline)topline.after(panel);else article.prepend(panel);
+    if(artifact)artifact.after(panel);
+    else if(topline)topline.after(panel);
+    else article.prepend(panel);
   }
   function renderArchive(api,force=false){
     const index=document.querySelector('.v79-archive-index');
