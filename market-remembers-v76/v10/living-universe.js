@@ -46,8 +46,12 @@ window.MarketV10.install = function(api) {
   const wrappers={
     showStory(record) {
       clear();api.base.showStory(record);
+      // Set the real route before mounting the enhanced reader: the back
+      // control reads the prior hash to choose Archive / previous star / sky.
+      // Deep-link replays are guarded by navigation.replay.
+      router.visit('story',{id:String(record.id)});
       V.reader.mount(record,shared);V.trails.onStory(record,shared);V.motion.seen(record);
-      router.visit('story',{id:String(record.id)});modal();
+      modal();
     },
     showArchive() {
       clear();router.visit('archive',{...api.getArchive(),sort:V.archive.getSort()});
