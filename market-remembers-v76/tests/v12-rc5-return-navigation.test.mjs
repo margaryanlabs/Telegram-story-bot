@@ -102,6 +102,15 @@ test('Reader controls and V12 wrapper route according to the actual origin',()=>
   assert.match(reader,/prior==='story'\?'← К предыдущей звезде'/);
   assert.match(reader,/actions\.append\(returnButton\)/);
 });
+test('Wrapped story entry establishes navigation before return-label rendering',()=>{
+  const start=bridge.indexOf('showStory(record) {');
+  const end=bridge.indexOf('showArchive() {',start);
+  assert.ok(start>=0&&end>start,'story wrapper exists');
+  const block=bridge.slice(start,end);
+  const route=block.indexOf("router.visit('story',{id:String(record.id)})");
+  const mount=block.indexOf('V.reader.mount(record,shared)');
+  assert.ok(route>=0&&mount>route,'route is set before reader decides return caption');
+});
 test('Navigation changes no private stories or storage protocols',()=>{
   assert.doesNotMatch(navigation,/localStorage|sessionStorage|fetch\(|XMLHttpRequest|sendBeacon/);
   assert.doesNotMatch(bridge,/history\.go\(-\d+\)|location\.assign/);
