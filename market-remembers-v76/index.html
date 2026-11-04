@@ -1923,12 +1923,13 @@ backdrop-filter:blur(12px);pointer-events:auto}
   <nav class="mobile-nav" aria-label="Мобильная навигация"><button data-open="universe" class="is-on" type="button">✧ ВСЕЛЕННАЯ</button><button data-open="archive" type="button">◈ АРХИВ</button><button data-open="legacy" type="button">✦ МОЙ СЛЕД</button></nav>
   <main>
     <section class="hero" id="hero" aria-label="Вступление">
-      <div class="hero-kicker"><span class="line"></span> COSMIC AWAKENING / REFINED ORBITS № 11.1</div>
+      <div class="hero-kicker"><span class="line"></span> COSMIC AWAKENING / DISCOVERY № 11.2</div>
       <h1>THE MARKET<br><em>REMEMBERS.</em></h1>
       <p><span>За каждым графиком — человек.</span><span>За каждой ошибкой — урок.</span><strong>Оставь свою звезду в памяти рынка.</strong></p>
       <div class="hero-actions"><button id="heroCreate" class="btn btn-primary" type="button">ОСТАВИТЬ СВОЙ СЛЕД <span>↗</span></button><button id="heroExplore" class="btn btn-outline" type="button"><span class="play-dot">◈</span> ИССЛЕДОВАТЬ ВСЕЛЕННУЮ</button></div>
       <div class="micro-note"><span class="micro-icon">✧</span> Публичная история начинается с личного решения. Сейчас работает локальная демоверсия.</div>
     </section>
+    <p class="v112-onboarding" id="universeGuide" aria-hidden="true">✦ Коснись звезды — открой её историю</p>
     <div class="coordinate top"><span>MEMORY FIELD / ACTIVE</span><b id="fpsDisplay">WEBGL EXPERIENCE</b></div>
     <div id="focusCaption" class="focus-caption" aria-live="polite"><span>◉ VETO / IMMERSIVE MODE</span><strong>Открой звезду. Исследуй её историю.</strong><small>Поверни сферу · коснись сигнала · нажми «Обзор» для выхода</small></div>
     <div id="signalHint" class="signal-hint">SIGNAL ATLAS <strong>OFFLINE</strong></div>
@@ -2543,7 +2544,7 @@ void main(){
  if(vKind>4.)col=vec3(.94,.85,.69);
  float core=exp(-d*d*(vSelected>.5?18.:vKind>2.?14.:9.));
  float halo=exp(-d*d*(vSelected>.5?4.4:4.6))*(vSelected>.5?.44:.15);
- float depth=mix(.065,.48,smoothstep(-.55,.91,vDepth));
+ float depth=mix(.09,.57,smoothstep(-.55,.91,vDepth));
  float alpha=(core+halo)*(vKind>2.?.88:depth);
  float twinkle=.94+.06*sin(uTime*2.2+vColor*37.);
  alpha=clamp(alpha*twinkle*(1.+vSelected*(.28+uPulse*.60)),0.,1.);
@@ -3020,6 +3021,8 @@ void main(){
       if(m.getAttribute('aria-hidden')!==String(!v))m.setAttribute('aria-hidden',String(!v));
       m.classList.toggle('is-selected',i===selected);
     }
+    const guide=$('universeGuide');
+    if(guide)guide.hidden=focusLabelActive||immersive||!$('drawer').hidden||!$('memoryDive').hidden;
     const label=$('starFocusLabel');
     if(label){
       const p=locations[selected];
