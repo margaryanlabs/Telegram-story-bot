@@ -464,3 +464,36 @@ test('V9.7 pinch and pointer cancellation do not start an obsolete story',async(
  await expect(page.locator('#drawer')).toBeHidden();
  await expect(page.locator('#dockOpen')).toBeVisible();
 });
+
+
+test('V9.8 star approach stays attached to the selected real star',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/?qa=1');
+ await page.locator('#dockNext').click();
+ const selected=await page.locator('#dockAlias').innerText();
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('#memoryDive')).toBeVisible();
+ await expect(page.locator('#memoryDive')).toHaveAttribute('data-phase',/lock|flight|reveal/);
+ const anchor=await page.locator('#memoryDive').evaluate(el=>({
+   x:(el as HTMLElement).style.getPropertyValue('--dx'),
+   y:(el as HTMLElement).style.getPropertyValue('--dy')
+ }));
+ expect(anchor.x).toMatch(/^\d+(?:\.\d+)?%$/);
+ expect(anchor.y).toMatch(/^\d+(?:\.\d+)?%$/);
+ await page.screenshot({path:'test-results/v98-cinematic-star-390x844.png',animations:'disabled'});
+ await page.locator('#cancelDive').click();
+ await expect(page.locator('#drawer')).toBeVisible();
+ await expect(page.locator('#dockAlias')).toHaveText(selected);
+ await page.locator('.v93-back-to-star').click();
+ await expect(page.locator('#drawer')).toBeHidden();
+});
+test('V9.8 reduced motion retains direct story access without cinematic zoom',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.setViewportSize({width:320,height:568});
+ await page.goto('/');
+ await page.locator('#dockOpen').click();
+ await expect(page.locator('#memoryDive')).toBeHidden();
+ await expect(page.locator('#drawer')).toBeVisible();
+ await expect(page.locator('.v93-observatory')).toBeVisible();
+ await expect(page.locator('.star-marker.is-selected')).toHaveCSS('animation-name','none');
+});
