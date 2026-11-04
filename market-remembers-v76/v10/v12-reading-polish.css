@@ -1,0 +1,98 @@
+/* The Market Remembers V12 RC3 — Reading polish, no new mock scene.
+   Requires a successfully mounted V12 artifact; older readers retain their
+   original observatory / return-to-star functionality as a fallback. */
+#app.obsidian .memory-experience.v12-artifact-active .v93-observatory {
+  display:none!important;
+}
+#app.obsidian .memory-experience.v12-artifact-active .v12-start-reading {
+  position:relative;z-index:2;
+  display:inline-flex;justify-content:center;align-items:center;
+  width:max-content;max-width:100%;min-height:46px;
+  margin:20px auto 0;padding:12px 21px;
+  border:1px solid #d7eaf0a1;border-radius:11px;
+  background:linear-gradient(108deg,#cae7ec,#a9d5e2);
+  color:#0a1b27;box-shadow:0 7px 30px #a5d7e626;
+  font:700 11px/1.35 var(--font-interface);
+  letter-spacing:.02em;cursor:pointer;
+  transition:background .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+#app.obsidian .memory-experience.v12-artifact-active .v12-start-reading:hover{
+  background:#e1f2f4;box-shadow:0 9px 30px #c0e9f34d;transform:translateY(-1px);
+}
+#app.obsidian .memory-experience.v12-artifact-active .v12-start-reading:focus-visible {
+  outline:2px solid #fbefe0!important;outline-offset:3px!important;
+}
+#app.obsidian .memory-experience.v12-artifact-active .v116-trail {
+  margin-top:15px;margin-bottom:17px;
+  background:linear-gradient(110deg,#102332c5,#0c1824c5);
+}
+#app.obsidian .memory-experience.v12-artifact-active .v116-trail:not([open]) {
+  border-color:#a9d8e62a;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v10-chapter-nav button:focus-visible{
+  outline:2px solid #cfe9f2!important;outline-offset:-2px!important;
+}
+#app.obsidian .memory-experience.v12-artifact-active .v113-next-chapter{
+  min-height:48px;
+}
+@media(max-width:819px) {
+  /* The old oversized identity card and fixed 320px minimum wasted the
+     entire first phone viewport. Use natural content height instead. */
+  #app.obsidian .memory-experience.v12-artifact-active .v12-memory-hero {
+    min-height:0;padding:21px 15px 23px;border-radius:16px;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v12-memory-sigil{
+    width:62px;height:62px;margin:14px auto 13px;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v12-memory-sigil>span{
+    font-size:26px;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v12-memory-hero::after {
+    top:91px;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v12-memory-caption{
+    font-size:9px;letter-spacing:.09em;
+  }
+  #app.obsidian .drawer.memory-detail.v10-reader
+  .memory-experience.v12-artifact-active .v12-memory-hero .memory-title{
+    font-size:clamp(30px,8.5vw,39px);margin:7px 0 11px;
+  }
+  #app.obsidian .drawer.memory-detail.v10-reader
+  .memory-experience.v12-artifact-active .v12-memory-hero .v10-story-abstract{
+    font-size:clamp(19px,5.2vw,23px);
+    line-height:1.38;margin:0 auto 12px;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v12-memory-hero .v113-story-overview{
+    padding:9px 0 0;gap:5px;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v12-start-reading {
+    width:100%;margin-top:16px;min-height:48px;
+  }
+  #app.obsidian .drawer.memory-detail.v10-reader .v113-chapter-progress{
+    margin-top:15px;
+  }
+  #app.obsidian .drawer.memory-detail.v10-reader .v10-chapter-nav{
+    top:55px;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v116-trail{
+    margin:12px 0 15px;
+  }
+  #app.obsidian .v12-legend-hero .legend-profile{gap:11px}
+}
+@media(max-width:370px){
+  #app.obsidian .drawer.memory-detail.v10-reader
+  .memory-experience.v12-artifact-active .v12-memory-hero .memory-title {
+    font-size:30px;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v12-memory-sigil{
+    width:57px;height:57px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  #app.obsidian .memory-experience.v12-artifact-active .v12-start-reading{
+    transition:none!important;
+  }
+  #app.obsidian .memory-experience.v12-artifact-active .v12-start-reading:hover{
+    transform:none!important;
+  }
+}
