@@ -3259,11 +3259,16 @@ void main(){
     const category=stories[index].type==='legend'?'Legends':stories[index].category;
     overlay.style.setProperty('--memory-accent',lensColors[category]||'#b49ac9');
     $('diveName').textContent=(stories[index].type==='legend'?'★ ':'@')+stories[index].alias;
-    // Preview existing, user-supplied or clearly marked demo text; never invent biography.
-    const source=stories[index];
-    const themeLabel=window.MarketV10?.data?.themes?.[source.category]||String(source.category||'Опыт');
-    $('v114PassageKind').textContent=(source.local?'ЛИЧНАЯ ЗАПИСЬ · ТОЛЬКО В ЭТОМ БРАУЗЕРЕ':source.type==='legend'?'ИСТОЧНИК · ИСТОРИЧЕСКАЯ ЦИТАТА':'ВЫМЫШЛЕННАЯ ИСТОРИЯ')+' / '+themeLabel;
-    $('v114PassageQuote').textContent='«'+String(source.quote||'').replace(/[«»]/g,'').slice(0,155)+'»';
+    // Progressive enhancement: old engine/testing shells need only existing nodes.
+    const previewKind=$('v114PassageKind'),previewQuote=$('v114PassageQuote');
+    if(previewKind&&previewQuote){
+      // Preview existing, user-supplied or clearly marked demo text; never invent biography.
+      const source=stories[index];
+      const themes=typeof window==='undefined'?null:window.MarketV10?.data?.themes;
+      const themeLabel=themes?.[source.category]||String(source.category||'Опыт');
+      previewKind.textContent=(source.local?'ЛИЧНАЯ ЗАПИСЬ · ТОЛЬКО В ЭТОМ БРАУЗЕРЕ':source.type==='legend'?'ИСТОЧНИК · ИСТОРИЧЕСКАЯ ЦИТАТА':'ВЫМЫШЛЕННАЯ ИСТОРИЯ')+' / '+themeLabel;
+      previewQuote.textContent='«'+String(source.quote||'').replace(/[«»]/g,'').slice(0,155)+'»';
+    }
     $('v9PassageStatus').textContent='ЗВЕЗДА НАЙДЕНА';
     const progress=overlay.querySelector('.memory-dive-progress span');
     progress.style.animation='none';void overlay.offsetWidth;progress.style.animation='';
