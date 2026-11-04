@@ -137,10 +137,12 @@ window.MarketV10.trails = (() => {
     const topline=article.querySelector('.memory-topline');
     if(topline)topline.after(panel);else article.prepend(panel);
   }
-  function renderArchive(api){
+  function renderArchive(api,force=false){
     const index=document.querySelector('.v79-archive-index');
     if(!index)return;
-    document.getElementById('v116SavedRoutes')?.remove();
+    const existing=document.getElementById('v116SavedRoutes');
+    if(existing&&!force)return; // Preserve archive scroll and input focus on every filter redraw.
+    existing?.remove();
     const panel=node('section','v116-saved-routes');
     panel.id='v116SavedRoutes';
     panel.setAttribute('aria-label','Маршруты, сохранённые на этом устройстве');
@@ -170,7 +172,7 @@ window.MarketV10.trails = (() => {
       remove.type='button';
       remove.setAttribute('aria-label','Удалить сохранённый маршрут '+(i+1));
       remove.onclick=()=>{
-        if(model.remove(route.id)){renderArchive(api);api.toast('Сохранённый маршрут удалён из браузера.');}
+        if(model.remove(route.id)){renderArchive(api,true);api.toast('Сохранённый маршрут удалён из браузера.');}
         else api.toast('Не удалось удалить маршрут из хранилища браузера.');
       };
       item.append(h,list,remove);panel.append(item);
