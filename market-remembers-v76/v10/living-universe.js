@@ -78,15 +78,17 @@ window.MarketV10.install = function(api) {
       const wasOpen=!$('drawer').hidden;
       const wasStory=router.read().view==='story';
       const starId=router.read().id;
-      const target=api.returnTarget();api.base.closeDrawer(skipReturn);modal();
+      const previous=wasStory?router.previousView():null;
+      const returnToContent=skipReturn!==true&&
+        (previous==='archive'||previous==='story');
+      const target=api.returnTarget();
+      // A return to Archive/story must not launch the legacy camera-to-globe
+      // animation behind the newly opened reader or search results.
+      api.base.closeDrawer(returnToContent?true:skipReturn);modal();
       if(wasOpen&&skipReturn!==true&&!travelling){
-        target?.focus({preventScroll:true});
+        if(!returnToContent)target?.focus({preventScroll:true});
         if(wasStory){
-          // Returning from Archive/related stories must restore the actual
-          // previous route (including search query and filters), not force
-          // a new Universe destination. Direct links still return to space.
-          const previous=router.previousView();
-          if(previous==='archive'||previous==='story')router.dismiss();
+          if(returnToContent)router.dismiss();
           else router.visit('universe',{star:starId},true);
         }else router.dismiss();
       }
