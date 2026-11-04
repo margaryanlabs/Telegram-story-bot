@@ -1894,6 +1894,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
 <link rel="stylesheet" href="v10/design-tokens.css">
 <link rel="stylesheet" href="v10/living-universe.css">
 <link rel="stylesheet" href="v10/cosmic-awakening.css">
+<link rel="stylesheet" href="v10/star-passage-v11.css">
 </head>
 <body>
 <div class="app obsidian" id="app">
@@ -1916,14 +1917,14 @@ backdrop-filter:blur(12px);pointer-events:auto}
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
-    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>HUMAN STORIES · V11.3 PREVIEW</small></span></a>
+    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>STAR PASSAGE · V11.4 PREVIEW</small></span></a>
     <nav class="header-nav" aria-label="Навигация"><button data-open="universe" class="nav-link is-on" type="button">ВСЕЛЕННАЯ</button><button data-open="archive" class="nav-link" type="button">АРХИВ</button><button data-open="legacy" class="nav-link" type="button">МОЙ СЛЕД</button></nav>
     <button class="header-cta" id="headerCreate" type="button"><span class="status-pip"></span> ОСТАВИТЬ СВОЙ СЛЕД <span aria-hidden="true">↗</span></button>
   </header>
   <nav class="mobile-nav" aria-label="Мобильная навигация"><button data-open="universe" class="is-on" type="button">✧ ВСЕЛЕННАЯ</button><button data-open="archive" type="button">◈ АРХИВ</button><button data-open="legacy" type="button">✦ МОЙ СЛЕД</button></nav>
   <main>
     <section class="hero" id="hero" aria-label="Вступление">
-      <div class="hero-kicker"><span class="line"></span> HUMAN STORIES / OBSERVATORY № 11.3</div>
+      <div class="hero-kicker"><span class="line"></span> STAR PASSAGE / OBSERVATORY № 11.4</div>
       <h1>THE MARKET<br><em>REMEMBERS.</em></h1>
       <p><span>За каждым графиком — человек.</span><span>За каждой ошибкой — урок.</span><strong>Оставь свою звезду в памяти рынка.</strong></p>
       <div class="hero-actions"><button id="heroCreate" class="btn btn-primary" type="button">ОСТАВИТЬ СВОЙ СЛЕД <span>↗</span></button><button id="heroExplore" class="btn btn-outline" type="button"><span class="play-dot">◈</span> ИССЛЕДОВАТЬ ВСЕЛЕННУЮ</button></div>
@@ -1969,8 +1970,13 @@ backdrop-filter:blur(12px);pointer-events:auto}
   </main>
   <div class="memory-dive" id="memoryDive" hidden aria-hidden="true">
     <button class="memory-dive-close" id="cancelDive" type="button" aria-label="Пропустить анимацию">SKIP ↗</button>
-    <div class="memory-dive-lock"></div><div class="v9-spark-field" id="v9SparkField" aria-hidden="true"></div>
-    <div class="memory-dive-info"><div class="memory-dive-eyebrow">VETO / STAR PASSAGE</div><div class="v9-passage-status" id="v9PassageStatus" role="status" aria-live="polite">ЗВЕЗДА НАЙДЕНА</div><div class="memory-dive-name" id="diveName">@SIGNAL</div><div class="v78-dive-route" id="v78DiveRoute" hidden aria-hidden="true"><span id="v78RouteFrom"></span><span class="v78-route-symbol">✦ ── ✧</span><span id="v78RouteTo"></span><small id="v78RouteRelation"></small></div><div class="memory-dive-progress"><span></span></div></div>
+    <div class="memory-dive-lock"></div>
+    <div class="v114-star-gate" aria-hidden="true"><span class="v114-gate-core"></span><span class="v114-gate-orbit"></span><span class="v114-gate-orbit v114-gate-orbit-b"></span></div>
+    <div class="v9-spark-field" id="v9SparkField" aria-hidden="true"></div>
+    <div class="memory-dive-info"><div class="memory-dive-eyebrow">VETO / STAR PASSAGE</div><div class="v9-passage-status" id="v9PassageStatus" role="status" aria-live="polite">ЗВЕЗДА НАЙДЕНА</div><div class="memory-dive-name" id="diveName">@SIGNAL</div>
+      <div class="v114-passage-kind" id="v114PassageKind"></div>
+      <p class="v114-passage-quote" id="v114PassageQuote"></p>
+      <div class="v78-dive-route" id="v78DiveRoute" hidden aria-hidden="true"><span id="v78RouteFrom"></span><span class="v78-route-symbol">✦ ── ✧</span><span id="v78RouteTo"></span><small id="v78RouteRelation"></small></div><div class="memory-dive-progress"><span></span></div></div>
   </div>
   <div id="scrim" class="scrim" hidden></div>
   <aside class="drawer" id="drawer" aria-label="Панель" aria-modal="true" role="dialog" hidden>
@@ -3253,6 +3259,16 @@ void main(){
     const category=stories[index].type==='legend'?'Legends':stories[index].category;
     overlay.style.setProperty('--memory-accent',lensColors[category]||'#b49ac9');
     $('diveName').textContent=(stories[index].type==='legend'?'★ ':'@')+stories[index].alias;
+    // Progressive enhancement: old engine/testing shells need only existing nodes.
+    const previewKind=$('v114PassageKind'),previewQuote=$('v114PassageQuote');
+    if(previewKind&&previewQuote){
+      // Preview existing, user-supplied or clearly marked demo text; never invent biography.
+      const source=stories[index];
+      const themes=typeof window==='undefined'?null:window.MarketV10?.data?.themes;
+      const themeLabel=themes?.[source.category]||String(source.category||'Опыт');
+      previewKind.textContent=(source.local?'ЛИЧНАЯ ЗАПИСЬ · ТОЛЬКО В ЭТОМ БРАУЗЕРЕ':source.type==='legend'?'ИСТОЧНИК · ИСТОРИЧЕСКАЯ ЦИТАТА':'ВЫМЫШЛЕННАЯ ИСТОРИЯ')+' / '+themeLabel;
+      previewQuote.textContent='«'+String(source.quote||'').replace(/[«»]/g,'').slice(0,155)+'»';
+    }
     $('v9PassageStatus').textContent='ЗВЕЗДА НАЙДЕНА';
     const progress=overlay.querySelector('.memory-dive-progress span');
     progress.style.animation='none';void overlay.offsetWidth;progress.style.animation='';
