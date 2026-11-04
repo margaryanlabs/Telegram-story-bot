@@ -451,3 +451,23 @@ Continue the **same existing STARLIGHT globe** in isolated Draft PR #220. Preser
 
 Review: https://market-remembers-starlight-v9.onrender.com/
 Device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1
+
+
+## V9.8 — Native selected-star radiance and quintic cinematic approach (2026-11-04)
+
+STARLIGHT refinement in the **same isolated Draft PR #220**: no replacement universe, additional GL pass, new art direction, CSS orbital rings, production merge or changes to frozen V7.4/V8.0/V8.2 static previews.
+
+### Implemented
+- `v98FlightEase(progress)`: bounded, monotonic quintic smoothstep with flattened acceleration/deceleration near endpoints; `v98FlightZoom(elapsed)` preserves the original 220ms LOCK, 780ms FLIGHT (to 1000ms), 350ms REVEAL and **1350ms total**. Camera orientation, story target, cancel/skip and resume handling are unchanged. The old phase and token contracts are preserved.
+- The real selected 3D point gets a restrained transient size/radiance boost from the existing `uPulse` uniform inside `pVertex` (also used in `pFragment`). No extra GPU draw call, external 3D layer or full-screen filter.
+- Canvas2D selected-story glow radius tracks the same `v9State.energy` pulse (maximum +4px) and remains front-face culled. No extra star instances.
+- Focus-visible outline for selected stars and static CSS state when `prefers-reduced-motion: reduce`; reduced-motion readers continue to open directly, bypassing the flight.
+
+### Tests / QA limitations
+- New `tests/v98-cinematic-flight.test.mjs`: **8/8 isolated tests passed** for bounded/monotonic easing, continuity, phase timing, vertex/fragment pulse, Canvas parity, preserved mesh and reduced motion.
+- The earlier V9.0 passage fixture now provides the V9.8 easing helpers. Eight test files in total: **80/80 isolated JavaScript tests passed** with no failures. This is a source/shared-state V8 harness, **not the full Node test runner**.
+- Added real Playwright specifications for a selected-star anchored 390×844 flight, return to the same star and reduced motion at 320×568. Those specs have **not yet been run in Chromium or on an Android phone**. Deploying static HTML by itself is not proof of working GPU visuals.
+- Keep PR #220 Draft. Render autoDeploy OFF. Production and previous previews untouched.
+
+Manual Render preview: https://market-remembers-starlight-v9.onrender.com/
+Device QA overlay: https://market-remembers-starlight-v9.onrender.com/?qa=1
