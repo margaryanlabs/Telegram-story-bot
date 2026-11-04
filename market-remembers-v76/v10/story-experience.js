@@ -103,7 +103,7 @@ window.MarketV10.reader = (() => {
       const endingNote=document.createElement('p');endingNote.textContent='Другие записи связаны общими темами и уроками, а не личными знакомствами.';
       ending.append(endingTag,endingTitle,endingNote);
       const related=api.related(record);
-      if(related.length&&related[0].story){
+      if(!api.guided()&&related.length&&related[0].story){
         const linked=related[0];
         const nextStory=document.createElement('button');nextStory.className='v113-related-action';nextStory.type='button';
         nextStory.textContent='Открыть связанную звезду · @'+linked.story.alias+' ↗';
