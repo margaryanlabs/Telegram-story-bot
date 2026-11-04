@@ -51,7 +51,7 @@ function setup(){
 
 test('V11.7 loads the explainable constellation layer on top of the existing reader',()=>{
   assert.doesNotThrow(()=>new Script(source));
-  assert.match(html,/EXPLAINABLE CONSTELLATIONS \/ OBSERVATORY № 11\.7/);
+  assert.match(html,/(?:EXPLAINABLE CONSTELLATIONS \/ OBSERVATORY № 11\.7|THE LIVING UNIVERSE \/ V12 RELEASE CANDIDATE)/);
   assert.match(html,/v10\/explainable-constellations-v11\.css/);
   assert.match(html,/v10\/memory-trails\.js/);
   assert.match(css,/@media\(max-width:819px\)/);
