@@ -17,6 +17,7 @@ window.MarketV10.trails = (() => {
   function createModel(storage){
     let visited=[];
     let saved=[];
+    let sequence=0;
     try{
       const parsed=JSON.parse(storage?.getItem(KEY)||'null');
       if(parsed?.version===1&&Array.isArray(parsed.routes)){
@@ -63,7 +64,7 @@ window.MarketV10.trails = (() => {
           return {ok:false,reason:'Маршрут с личной записью нельзя сохранять в этом режиме.'};
         if(saved.some(route=>route.ids.join('|')===visited.join('|')))
           return {ok:true,duplicate:true};
-        const route={id:String(Date.now())+'-'+String(saved.length+1),ids:visited.slice()};
+        const route={id:String(Date.now())+'-'+String(++sequence),ids:visited.slice()};
         const next=[route,...saved].slice(0,MAX_ROUTES);
         return persist(next)?{ok:true,duplicate:false}:
           {ok:false,reason:'Сохранение в браузере недоступно.'};
