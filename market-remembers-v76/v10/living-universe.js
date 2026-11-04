@@ -17,6 +17,7 @@ window.MarketV10.install = function(api) {
   }
   const shared={...api,modal,active,
     story:record=>wrappers.showStory(record),archive:()=>wrappers.showArchive(),
+    previousView:()=>router?.previousView()||null,
     legacy:()=>wrappers.showLegacy(),create:()=>wrappers.showCreate(),
     close:skip=>api.base.closeDrawer(skip),cancel:()=>api.base.cancelDive(true),
     focus:index=>{api.lensAll();api.focus(index,false);},
@@ -76,7 +77,14 @@ window.MarketV10.install = function(api) {
       const target=api.returnTarget();api.base.closeDrawer(skipReturn);modal();
       if(wasOpen&&skipReturn!==true&&!travelling){
         target?.focus({preventScroll:true});
-        if(wasStory)router.visit('universe',{star:starId},true);else router.dismiss();
+        if(wasStory){
+          // Returning from Archive/related stories must restore the actual
+          // previous route (including search query and filters), not force
+          // a new Universe destination. Direct links still return to space.
+          const previous=router.previousView();
+          if(previous==='archive'||previous==='story')router.dismiss();
+          else router.visit('universe',{star:starId},true);
+        }else router.dismiss();
       }
     }
   };
