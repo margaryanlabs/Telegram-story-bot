@@ -423,3 +423,44 @@ test('V9.6 reduced motion reader has no landing transform',async({page})=>{
  const animation=await page.locator('.memory-experience').evaluate(el=>getComputedStyle(el).animationName);
  expect(animation).toBe('none');
 });
+
+
+test('V9.7 canvas touch locks a visible star without needing a 14px marker hit',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ const marker=page.locator('.star-marker[aria-hidden="false"]').first();
+ await expect(marker).toBeVisible();
+ const rect=await marker.boundingBox();
+ expect(rect).not.toBeNull();
+ if(!rect)return;
+ const x=rect.x+rect.width/2+20,y=rect.y+rect.height/2;
+ await page.locator('#gl').evaluate((canvas,args)=>{
+   const down=new PointerEvent('pointerdown',{pointerId:42,pointerType:'touch',
+     clientX:args.x,clientY:args.y,bubbles:true,isPrimary:true});
+   canvas.dispatchEvent(down);
+   window.dispatchEvent(new PointerEvent('pointerup',{pointerId:42,pointerType:'touch',
+     clientX:args.x,clientY:args.y,bubbles:true,isPrimary:true}));
+ },{x,y});
+ await expect(page.locator('#memoryDive')).toBeVisible();
+ await page.locator('#cancelDive').click();
+ await expect(page.locator('#drawer')).toBeVisible();
+ await expect(page.locator('.v93-observatory')).toBeVisible();
+});
+test('V9.7 pinch and pointer cancellation do not start an obsolete story',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('#gl').evaluate(canvas=>{
+   const base={pointerType:'touch',bubbles:true,isPrimary:true};
+   const act=(name,id,x,y,target)=>{
+     target.dispatchEvent(new PointerEvent(name,{...base,pointerId:id,clientX:x,clientY:y}));
+   };
+   act('pointerdown',71,180,380,canvas);
+   act('pointerdown',72,220,380,canvas);
+   act('pointermove',72,255,380,window);
+   act('pointerup',71,180,380,window);
+   act('pointercancel',72,255,380,window);
+ });
+ await expect(page.locator('#memoryDive')).toBeHidden();
+ await expect(page.locator('#drawer')).toBeHidden();
+ await expect(page.locator('#dockOpen')).toBeVisible();
+});
