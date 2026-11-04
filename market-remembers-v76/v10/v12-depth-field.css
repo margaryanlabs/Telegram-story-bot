@@ -1,0 +1,97 @@
+/* THE MARKET REMEMBERS V12 RC4 — DEPTH FIELD
+ * A deliberately quiet, static optical layer BETWEEN the original sky
+ * canvas and native WebGL/Canvas globe. Zero timers, canvases, observers,
+ * user-data dependencies, or pointer hit targets.
+ */
+#app.obsidian .v124-depth-field{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;
+  background:
+    radial-gradient(ellipse 39% 42% at 67% 56%,
+      rgba(66,139,157,.16) 0%,
+      rgba(52,102,119,.09) 39%,
+      rgba(37,71,91,.035) 63%,transparent 100%),
+    radial-gradient(ellipse 26% 31% at 36% 74%,
+      rgba(178,149,129,.052) 0%,rgba(102,99,125,.03) 53%,transparent 100%),
+    radial-gradient(ellipse 54% 38% at 74% 24%,
+      rgba(89,117,148,.047),transparent 81%);
+  opacity:.9;
+  contain:paint;
+}
+#app.obsidian .v124-depth-field::before{
+  content:"";position:absolute;inset:-9% -14%;pointer-events:none;
+  background:
+    radial-gradient(ellipse 44% 38% at 64% 61%,
+      transparent 56%,rgba(145,204,220,.035) 63%,
+      rgba(145,204,220,.018) 70%,transparent 82%),
+    radial-gradient(ellipse 33% 44% at 61% 57%,
+      transparent 65%,rgba(201,174,142,.025) 69%,transparent 77%);
+  transform:rotate(-13deg);
+  opacity:.86;
+}
+#app.obsidian .v124-depth-field::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(circle at 12% 32%,rgba(207,230,235,.32) 0 .7px,transparent 1.7px),
+    radial-gradient(circle at 79% 23%,rgba(198,173,153,.24) 0 .6px,transparent 1.8px),
+    radial-gradient(circle at 92% 68%,rgba(178,215,228,.30) 0 .6px,transparent 1.6px);
+  background-size:263px 241px,397px 337px,431px 311px;
+  opacity:.46;
+  -webkit-mask-image:radial-gradient(ellipse 77% 72% at 70% 56%,#000 20%,transparent 97%);
+  mask-image:radial-gradient(ellipse 77% 72% at 70% 56%,#000 20%,transparent 97%);
+}
+/* Keep actual star buttons brighter than passive scenery; focus must not
+   depend on hover, which is absent on most phones. */
+#app.obsidian .markers .star-marker:focus-visible{
+  outline:2px solid #e5f7fd!important;
+  outline-offset:6px!important;
+  box-shadow:0 0 17px #d4f3fadd,0 0 42px #8fc8dc9c!important;
+}
+#app.obsidian .markers .star-marker.is-selected{
+  border-color:#eff9f9;
+  box-shadow:
+    0 0 0 2px rgba(176,221,228,.16),
+    0 0 15px rgba(231,249,250,.78),
+    0 0 35px rgba(137,198,214,.53),
+    0 0 60px rgba(198,169,144,.13)!important;
+}
+#app.obsidian .scene-shading{
+  background:
+    radial-gradient(ellipse 56% 56% at 64% 53%,
+      transparent 18%,rgba(3,7,15,.05) 54%,
+      rgba(3,7,15,.60) 100%),
+    linear-gradient(100deg,rgba(4,8,17,.46),transparent 47%,rgba(3,7,14,.19) 96%);
+}
+/* The user primarily opens this on a tall Android viewport. The nebulosity
+   sits behind the globe and is dimmer behind the left-aligned hero text. */
+@media(max-width:819px){
+  #app.obsidian .v124-depth-field{
+    background:
+      radial-gradient(ellipse 49% 39% at 64% 63%,
+        rgba(75,139,154,.16),rgba(48,88,109,.08) 42%,transparent 100%),
+      radial-gradient(ellipse 27% 29% at 22% 79%,
+        rgba(172,150,138,.038),transparent 100%);
+    opacity:.78;
+  }
+  #app.obsidian .v124-depth-field::before{
+    transform:rotate(-7deg);
+    opacity:.5;
+  }
+  #app.obsidian .v124-depth-field::after{opacity:.28}
+  #app.obsidian .scene-shading{
+    background:
+      radial-gradient(ellipse 59% 57% at 62% 57%,
+        transparent 19%,rgba(3,6,13,.10) 69%,rgba(2,5,12,.62) 100%),
+      linear-gradient(90deg,rgba(4,7,14,.35),transparent 72%);
+  }
+}
+@media(max-width:819px) and (max-height:650px){
+  #app.obsidian .v124-depth-field::before,
+  #app.obsidian .v124-depth-field::after{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  #app.obsidian .v124-depth-field,
+  #app.obsidian .v124-depth-field::before,
+  #app.obsidian .v124-depth-field::after{
+    animation:none!important;transition:none!important;
+  }
+}
