@@ -49,6 +49,7 @@ function sceneContext(){
   clamp:(x,min,max)=>Math.min(max,Math.max(min,x)),
   lensMatches:()=>true,setLens(){},closeLensPanel(){},
   focus(index){this.selected=index},v78UpdateDiveRoute(){},updateDivePosition(){this.anchored=true},
+  v97ClearArmedStar(){},
   setTimeout(fn,ms){this.pending={fn,ms};return 23},
   clearTimeout(){this.cleared=true},
   showStory(story){this.opened=story.alias},
