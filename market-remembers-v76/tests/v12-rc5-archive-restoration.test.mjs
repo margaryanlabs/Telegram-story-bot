@@ -11,7 +11,7 @@ function harness(options={}){
   const original={id:'alpha',alias:'ALPHA'};
   const card={
     dataset:{storyId:'alpha'},
-    focus(opts){calls.push({action:'focus',options:opts})}
+    focus(opts){calls.push({action:'focus',preventScroll:opts?.preventScroll===true})}
   };
   const drawer={
     hidden:false,
@@ -95,9 +95,7 @@ test('Returning to an archive story restores precise drawer scroll and focus',()
   app.backToArchive();
   assert.equal(app.drawer.scrollTop,420);
   assert.equal(app.location.hash,'#archive?theme=Risk&q=BTC');
-  assert.deepEqual(app.calls.filter(call=>call.action==='focus').map(call=>call.options),[
-    {preventScroll:true}
-  ]);
+  assert.deepEqual(app.calls.filter(call=>call.action==='focus').map(call=>call.preventScroll),[true]);
   assert.ok(app.calls.some(call=>call.action==='query'&&call.selector==='button[data-story-id]'));
 });
 
