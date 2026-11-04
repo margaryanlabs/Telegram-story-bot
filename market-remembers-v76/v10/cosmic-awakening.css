@@ -74,3 +74,22 @@
 @media(prefers-reduced-motion:reduce){
  #app.obsidian .star-marker,#app.obsidian .signal-dock{transition:none!important}
 }
+
+/* V11.2 — the star itself is the selection reticle. Remove the obsolete
+ * floating SIGNAL LOCK HUD without changing marker hit-testing or routes. */
+#app.obsidian .signal-reticle{display:none!important}
+#app.obsidian .v112-onboarding{display:none}
+@media(max-width:819px) and (orientation:portrait){
+ #app.obsidian .v112-onboarding{
+  position:absolute;z-index:5;left:18px;top:clamp(275px,37vh,355px);
+  width:max-content;max-width:calc(100% - 36px);display:flex;align-items:center;
+  padding:8px 11px;border-radius:9px;background:#0b1925cf;
+  border:1px solid #a9d8e634;color:#bdd9e4;
+  font:500 10px/1.4 var(--font-interface);letter-spacing:.018em;
+  pointer-events:none;box-shadow:0 6px 20px #03091035
+ }
+ #app.obsidian .v112-onboarding[hidden]{display:none!important}
+}
+@media(max-width:819px) and (max-height:650px) and (orientation:portrait){
+ #app.obsidian .v112-onboarding{top:clamp(230px,35vh,285px);font-size:9px}
+}
