@@ -42,6 +42,8 @@ function closeCase(arg,hasReturnFocus=true,mobile=true){
     resumeScene(){record.scene++},
     v762RestoreStar(){record.pulse++}
   };
+  context.immersive=false;
+  context.v96ReaderReturnTarget=runInNewContext('('+extract('v96ReaderReturnTarget')+')',context);
   const close=runInNewContext('('+extract('closeDrawer')+')',context);
   close(arg);
   assert.equal(drawer.hidden,true);

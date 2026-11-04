@@ -60,9 +60,9 @@ test('V9.8 zoom is smooth at phase boundaries and increases during flight',()=>{
 test('real selected-star GPU point is illuminated by existing passage energy',()=>{
  const vertex=js.slice(js.indexOf('const pVertex='),js.indexOf('const pFragment='));
  const fragment=js.slice(js.indexOf('const pFragment='),js.indexOf('const lVertex='));
- assert.match(vertex,/uniform float uPulse/);
+ assert.match(vertex,/uniform mediump float uPulse/);
  assert.match(vertex,/vSelected\*\(2\.0\+uPulse\*\.32\)/);
- assert.match(fragment,/uniform float uPulse/);
+ assert.match(fragment,/uniform mediump float uPulse/);
  assert.match(fragment,/vSelected\*\(\.28\+uPulse\*\.60\)/);
  assert.match(js,/uPulse:reduceMotion\?0:v9State\.energy/);
 });

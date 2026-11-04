@@ -55,6 +55,7 @@ function sceneContext(){
   showStory(story){this.opened=story.alias},
   closeDrawer(){},...{}
  };
+ for(const [key,value] of Object.entries(ctx))if(typeof value==='function')ctx[key]=value.bind(ctx);
  controls.drawer={hidden:true};
  ctx.v93SuspendPassage=run('v93SuspendPassage',ctx);
  ctx.v93ResumePassage=run('v93ResumePassage',ctx);
@@ -158,7 +159,7 @@ test('spark field uses a fixed tiny DOM batch, with no per-frame creation',()=>{
 });
 test('shader energy is sent only into existing programs, not separate full-screen visuals',()=>{
  assert.match(js,/uPulse:reduceMotion\?0:v9State\.energy/);
- assert.match(js,/uniform float uPulse/);
+ assert.match(js,/uniform mediump float uPulse/);
  assert.match(js,/gl\.drawElements\(gl\.TRIANGLES/);
  assert.match(js,/function canvasRender\(t\)/);
  assert.match(html,/id="v9SparkField"/);

@@ -32,7 +32,7 @@ test('V9 shader evolves while preserving the original native WebGL program archi
     return t.slice(begin,finish);
   };
   assert.notEqual(shader(html),shader(original));
-  assert.match(shader(html),/uniform float uPulse/);
+  assert.match(shader(html),/uniform mediump float uPulse/);
   assert.match(shader(html),/gl_FragColor/);
   assert.match(script,/function webGLRender\(t\)/);
   assert.match(script,/gl\.drawElements\(gl\.TRIANGLES/);

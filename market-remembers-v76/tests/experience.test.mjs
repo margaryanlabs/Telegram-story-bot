@@ -61,7 +61,7 @@ test('closing a reader returns to selected star, except when changing stories',(
   assert.match(html,/focusLabelActive=true/);
   assert.match(html,/if\(wasReader&&skipReturn!==true\)\{v762RestoreStar\(\);v78ThreadContext=null/);
   assert.match(html,/if\(!\$\('drawer'\)\.hidden\)closeDrawer\(true\)/);
-  assert.match(html,/const fallback=w<820\?\$\('dockOpen'\):\$\('openSelected'\)/);
+  assert.match(html,/const fallback=immersive\?\$\('focusMode'\):\(w<820\?\$\('dockOpen'\):\$\('openSelected'\)\)/);
 });
 test('return effects are disposable and accessible',()=>{
   assert.match(html,/function v762CancelReturn\(\)/);

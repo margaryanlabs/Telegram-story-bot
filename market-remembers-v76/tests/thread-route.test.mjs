@@ -154,7 +154,7 @@ function openDrawerTest(tag){
     travelTrail:{classList:{remove(key){if(key==='is-thread')record.cleared=true}}}
   };
   const env=ctx({
-    $:id=>elements[id],diveIndex:-1,v76FocusReturn:null,
+    $:id=>elements[id],diveIndex:-1,v76FocusReturn:null,v96ReaderArrival:false,
     v762CancelReturn(){},
     v78ThreadContext:{from:0,to:1,relation:'Общая тема'},
     document:{activeElement:null,body:{classList:{add(){}}}}
