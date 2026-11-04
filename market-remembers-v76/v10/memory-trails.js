@@ -53,8 +53,8 @@ window.MarketV10.trails = (() => {
         const catalog=idsOf(stories);
         return saved.map(route=>({
           id:route.id,
-          records:route.ids.map(id=>catalog.get(id)).filter(shareable)
-        })).filter(route=>route.records.length>=2);
+          records:route.ids.map(id=>catalog.get(id))
+        })).filter(route=>route.records.length>=2&&route.records.every(shareable));
       },
       save(stories){
         const catalog=idsOf(stories);
@@ -89,9 +89,12 @@ window.MarketV10.trails = (() => {
   function renderStory(record,api){
     const article=$('drawer')?.querySelector('.memory-experience');
     if(!article)return;
-    article.querySelector('.v116-trail')?.remove();
+    const previous=article.querySelector('.v116-trail');
+    const wasOpen=!!previous?.open;
+    previous?.remove();
     const records=model.viewed(api.stories);
     const panel=node('details','v116-trail');
+    panel.open=wasOpen;
     const summary=node('summary','v116-trail-summary','✦ МАРШРУТ ИССЛЕДОВАНИЯ · '+records.length+' / '+MAX_STEPS);
     const caption=node('p','v116-trail-caption',
       'Истории, которые ты открыл в этом сеансе. Это личный порядок просмотра, а не связь между людьми.');

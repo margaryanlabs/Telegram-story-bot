@@ -9,7 +9,7 @@ const css=await readFile(new URL('../v10/memory-atlas-v11.css',import.meta.url),
 const runtime=html.match(/<script>([\s\S]*?)<\/script>/)?.[1]||'';
 
 test('V11.5 is an additive version on the original, tested archive',()=>{
-  assert.match(html,/(?:MEMORY ATLAS \/ OBSERVATORY № 11\.5|MEMORY TRAILS \/ OBSERVATORY № 11\.6|EXPLAINABLE CONSTELLATIONS \/ OBSERVATORY № 11\.7)/);
+  assert.match(html,/(?:MEMORY ATLAS \/ OBSERVATORY № 11\.5|MEMORY TRAILS \/ OBSERVATORY № 11\.6|EXPLAINABLE CONSTELLATIONS \/ OBSERVATORY № 11\.7|THE LIVING UNIVERSE \/ V12 RELEASE CANDIDATE)/);
   assert.match(html,/v10\/memory-atlas-v11\.css/);
   assert.match(html,/v10\/star-passage-v11\.css/);
   assert.match(html,/v10\/memory-archive\.js/);
