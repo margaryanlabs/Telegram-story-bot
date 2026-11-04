@@ -1879,6 +1879,16 @@ backdrop-filter:blur(12px);pointer-events:auto}
 @media(prefers-reduced-motion:reduce){
  .obsidian .star-marker.is-armed::before{animation:none!important}
 }
+
+/* V9.8 / Selected-star radiance comes from the existing 3D star, not CSS rings.
+   Keep the ECLIPSE camera and silhouette fully intact. */
+.obsidian .star-marker.is-selected:focus-visible{
+ outline:2px solid #ecfaff;outline-offset:7px;
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .star-marker.is-selected{animation:none!important}
+ .obsidian .star-marker.is-selected::after{animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -2470,7 +2480,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
 attribute vec3 aPos;attribute float aColor;attribute float aKind;
 uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;
 uniform float uRotY;uniform float uRotX;uniform float uZoom;uniform float uTime;uniform float uDpr;
-uniform vec3 uFocus;uniform float uMotion;
+uniform vec3 uFocus;uniform float uMotion;uniform float uPulse;
 varying float vColor;varying float vDepth;varying float vKind;varying float vSelected;
 vec3 rotate3(vec3 p){
  float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);
@@ -2497,7 +2507,7 @@ void main(){
  vSelected=(1.0-step(.0005,length(aPos-uFocus)))*step(2.1,aKind);
  float twinkle=.88+.12*sin(uTime*.0007+aColor*71.);
  float sz=aKind>2.0?12.0:(aKind>1.0?2.7:(.95+aKind*1.9));
- gl_PointSize=clamp(sz*per*uDpr*twinkle*(1.0+vSelected*2.0),1.0,56.0);
+ gl_PointSize=clamp(sz*per*uDpr*twinkle*(1.0+vSelected*(2.0+uPulse*.32)),1.0,56.0);
 }`;
   const pFragment=`precision mediump float;
 varying float vColor;varying float vDepth;varying float vKind;varying float vSelected;
@@ -2894,7 +2904,7 @@ void main(){
     }
     stories.forEach((s,i)=>{
       const p=project(s.p);if(!v95FrontStoryProjection(p)||!lensMatches(s))return;const active=i===selected;
-      const radius=active?26:16;const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,radius);
+      const radius=active?26+Math.min(4,v9State.energy*4):16;const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,radius);
       glow.addColorStop(0,'rgba(255,255,255,.96)');glow.addColorStop(.16,active?'rgba(169,221,255,.88)':'rgba(137,197,212,.65)');
       glow.addColorStop(.54,'rgba(93,157,173,.24)');glow.addColorStop(1,'rgba(0,0,0,0)');
       ctx.fillStyle=glow;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,twoPi);ctx.fill();
@@ -3094,6 +3104,17 @@ void main(){
     if(elapsed<1000)return 'flight';
     return 'reveal';
   }
+  // V9.8: smooth acceleration and deceleration inside the existing flight.
+  // Do not modify the 1.35s timeline, star identity, or camera orientation.
+  function v98FlightEase(progress){
+    const t=Math.max(0,Math.min(1,Number.isFinite(progress)?progress:0));
+    return t*t*t*(t*(t*6-15)+10);
+  }
+  function v98FlightZoom(elapsed){
+    if(elapsed<220)return 1.25;
+    if(elapsed>=1000)return 1.65;
+    return 1.25+.40*v98FlightEase((elapsed-220)/780);
+  }
   function v9Tick(t){
     if(diveIndex<0||v9State.phase==='idle')return;
     const elapsed=Math.max(0,t-v9State.started);
@@ -3106,12 +3127,7 @@ void main(){
     }
     const u=clamp(elapsed/1350,0,1);
     v9State.energy=Math.sin(Math.PI*u)*.95;
-    if(phase==='lock')targetZoom=1.25;
-    else if(phase==='flight'){
-      const p=clamp((elapsed-220)/780,0,1);
-      const eased=p*p*(3-2*p);
-      targetZoom=1.25+eased*.40;
-    }else targetZoom=1.65;
+    targetZoom=v98FlightZoom(elapsed);
   }
   function cancelDive(suppressFocus=false){
     diveSequence++;
