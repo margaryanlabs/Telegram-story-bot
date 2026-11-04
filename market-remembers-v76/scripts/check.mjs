@@ -38,8 +38,9 @@ for(const name of moduleOrder){
   previous=at;
 }
 const packageData=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
-if(packageData.version!=='12.0.0-rc.1')throw Error('V12 release metadata is out of sync');
+if(packageData.version!=='12.0.0-rc.2')throw Error('V12 release metadata is out of sync');
 for(const name of ['cosmic-awakening.css','star-passage-v11.css','memory-atlas-v11.css','memory-trails-v11.css','explainable-constellations-v11.css']){
   if(!html.includes('<link rel="stylesheet" href="v10/'+name+'">'))throw Error('Missing release stylesheet '+name);
 }
-console.log('V12 RC lint: cumulative engine, ordered modules, all visual layers, local-only data and shell IDs valid.');
+if(!html.includes('v10/v12-cinematic.css'))throw Error('V12 RC2 cinematic layer missing');
+console.log('V12 RC2 lint: cumulative engine, ordered modules, all visual layers, local-only data and shell IDs valid.');

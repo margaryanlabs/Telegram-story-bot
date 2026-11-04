@@ -1898,6 +1898,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
 <link rel="stylesheet" href="v10/memory-atlas-v11.css">
 <link rel="stylesheet" href="v10/memory-trails-v11.css">
 <link rel="stylesheet" href="v10/explainable-constellations-v11.css">
+<link rel="stylesheet" href="v10/v12-cinematic.css">
 </head>
 <body>
 <div class="app obsidian" id="app">
@@ -1920,7 +1921,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
-    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>V12 RELEASE CANDIDATE · PRIVATE PREVIEW</small></span></a>
+    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>CINEMATIC MEMORY · V12 RC2</small></span></a>
     <nav class="header-nav" aria-label="Навигация"><button data-open="universe" class="nav-link is-on" type="button">ВСЕЛЕННАЯ</button><button data-open="archive" class="nav-link" type="button">АРХИВ</button><button data-open="legacy" class="nav-link" type="button">МОЙ СЛЕД</button></nav>
     <button class="header-cta" id="headerCreate" type="button"><span class="status-pip"></span> ОСТАВИТЬ СВОЙ СЛЕД <span aria-hidden="true">↗</span></button>
   </header>
@@ -2601,8 +2602,13 @@ void main(){
  float life=.5+.5*sin(vObject.x*13.+vObject.y*17.+uTime*.12);
  vec3 material=vec3(.021,.040,.051)+vec3(.036,.068,.082)*(.19+.81*fill);
  material+=vec3(.059,.111,.132)*haze*(.3+.7*light);
+ // V12: low-frequency light inside the true sphere mesh adds depth without
+ // additional particles, post-processing, or false connection geometry.
+ float memoryVeil=.5+.5*sin(vObject.y*9.7+sin(vObject.x*5.3)*1.7+vObject.z*4.1);
+ float memoryBands=pow(memoryVeil,6.)*(.14+.86*light);
+ material+=vec3(.031,.081,.095)*memoryBands*.32;
  material+=vec3(.045,.086,.105)*filament*.045;
- material+=vec3(.095,.182,.218)*rim*.83;
+ material+=vec3(.095,.182,.218)*rim*.95;
  material+=vec3(.22,.36,.40)*spec*.1;
  material+=vec3(.025,.037,.042)*bounce*.26;
  material+=vec3(grain)*(.08+.32*fill);
@@ -2875,7 +2881,7 @@ void main(){
     // Canvas fallback is opaque graphite, matching the GPU material.
     const stone=ctx.createRadialGradient(c.x-r*.24,c.y-r*.25,r*.04,c.x,c.y,r);
     stone.addColorStop(0,'rgba(40,71,85,1)');
-    stone.addColorStop(.35,'rgba(24,45,57,1)');
+    stone.addColorStop(.35,'rgba(29,52,64,1)');
     stone.addColorStop(.73,'rgba(11,25,35,1)');
     stone.addColorStop(.96,'rgba(3,9,15,1)');
     stone.addColorStop(1,'rgba(3,9,15,.8)');
