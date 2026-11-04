@@ -41,6 +41,7 @@ function scene(){
   stories:[{alias:'FIRST'},{alias:'SECOND'}],
   $:key=>e[key],clearTimeout(){this.cleared=true},
   showStory(story){this.opened=story.alias;this.arrivalDuringOpen=this.v96ReaderArrival}};
+ for(const [key,value] of Object.entries(c))if(typeof value==='function')c[key]=value.bind(c);
  c.cancelDive=run('cancelDive',c);
  c.finishDive=run('finishDive',c);
  return {c,e};
@@ -118,6 +119,7 @@ function readerCloseFixture(){
   $:k=>e[k],
   resumeScene(){this.resumes=(this.resumes||0)+1},
   v762RestoreStar(){this.restores=(this.restores||0)+1}};
+ for(const [key,value] of Object.entries(c))if(typeof value==='function')c[key]=value.bind(c);
  c.v96ReaderReturnTarget=run('v96ReaderReturnTarget',c);
  c.closeDrawer=run('closeDrawer',c);
  return {c,e};

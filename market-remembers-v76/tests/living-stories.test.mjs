@@ -31,7 +31,7 @@ const select=runInNewContext('('+extract('v77RelatedRecords')+')',{stories:sampl
 test('related threads contain original theme, complementary lesson and editorial perspective',()=>{
   const rows=select(sample[1],sample);
   assert.equal(rows.length,3);
-  assert.deepEqual(rows.map(r=>r.relation),['Общая тема','Следующий урок','Редакционный взгляд']);
+  assert.deepEqual(Array.from(rows,r=>r.relation),['Общая тема','Следующий урок','Редакционный взгляд']);
   assert.equal(rows[0].story.alias,'RISK EDIT');
   assert.equal(rows[1].story.alias,'DISCIPLINE');
   assert.equal(rows[2].story.alias,'FOMO');

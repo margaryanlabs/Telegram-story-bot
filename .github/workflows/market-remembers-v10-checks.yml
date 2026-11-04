@@ -1,0 +1,37 @@
+name: Market Remembers V10 review
+on:
+  pull_request:
+    paths:
+      - 'market-remembers-v76/**'
+      - '.github/workflows/market-remembers-v10-checks.yml'
+  push:
+    branches:
+      - feature/market-remembers-v10-living-universe-20261104
+    paths:
+      - 'market-remembers-v76/**'
+      - '.github/workflows/market-remembers-v10-checks.yml'
+permissions:
+  contents: read
+jobs:
+  living-universe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: market-remembers-v76
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: market-remembers-v76/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run lint && npm run build && npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v10-browser-evidence
+          path: market-remembers-v76/test-results/

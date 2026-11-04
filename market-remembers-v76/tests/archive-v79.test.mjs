@@ -104,6 +104,7 @@ function archiveRender(filter='All',query='',preset=catalogue){
     isSavedLesson:row=>saved.has(row.id),beginDive:i=>clicks.push(i),
     v79ChangeArchiveFilter(next){this.filter=next}
   };
+  env.v79ChangeArchiveFilter=env.v79ChangeArchiveFilter.bind(env);
   make('drawArchive',env)();
   return {grid,input,clear,status,clicks,env};
 }

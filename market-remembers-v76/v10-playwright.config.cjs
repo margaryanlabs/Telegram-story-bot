@@ -1,0 +1,11 @@
+const {defineConfig}=require('@playwright/test');
+module.exports=defineConfig({
+ testDir:'./tests',testMatch:'v10-browser.spec.cjs',timeout:30000,
+ expect:{timeout:9000},workers:1,retries:0,
+ reporter:[['list'],['json',{outputFile:'test-results/v10-results.json'}]],
+ use:{baseURL:process.env.V10_BASE_URL||'http://127.0.0.1:4173',screenshot:'only-on-failure',trace:'retain-on-failure',
+  launchOptions:{...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE}:{}),args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']}
+ },
+ projects:[{name:'chromium',use:{browserName:'chromium'}}],
+ webServer:process.env.V10_BASE_URL?undefined:{command:'python3 -m http.server 4173 --bind 127.0.0.1 --directory .',url:'http://127.0.0.1:4173/',reuseExistingServer:!process.env.CI}
+});

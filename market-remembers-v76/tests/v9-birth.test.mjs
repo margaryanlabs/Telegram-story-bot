@@ -221,6 +221,7 @@ test('complete creation commits first then enters real sphere birth at selected 
   reduceMotion:false,
   birth:null
  };
+ for(const [key,value] of Object.entries(env))if(typeof value==='function')env[key]=value.bind(env);
  const create=fn('addStory',env);
  const result=create(input);
  assert.equal(result,true);

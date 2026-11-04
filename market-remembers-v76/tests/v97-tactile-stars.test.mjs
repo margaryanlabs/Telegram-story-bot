@@ -48,6 +48,7 @@ function fixture(){
    setSpin(value){this.spinning=value},
    focus(index,open){this.opened={index,open}}
  };
+ for(const [key,value] of Object.entries(c))if(typeof value==='function')c[key]=value.bind(c);
  for(const name of ['v97StagePoint','v97PickStarAt','v97ClearArmedStar',
                      'pointerDown','pointerMove','pointerUp']){
    c[name]=run(name,c);
