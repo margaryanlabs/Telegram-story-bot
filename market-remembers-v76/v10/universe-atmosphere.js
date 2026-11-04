@@ -11,7 +11,20 @@ window.MarketV10.atmosphere = (() => {
       width=w;height=h;canvas.width=Math.round(w*.8);canvas.height=Math.round(h*.8);
       let seed=1052026;
       const rand=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296;};
-      points=Array.from({length:count},(_,i)=>({x:rand(),y:rand(),layer:i%3,r:.45+rand()*.8,phase:rand()*6.28}));
+      // RC4: gentle anisotropic distant dust lane, seeded and stable per size.
+      // Most points remain scattered; only one in six follows a faint
+      // diagonal corridor, so the scene never resembles a painted galaxy.
+      points=Array.from({length:count},(_,i)=>{
+        const x=rand(),uniformY=rand(),layer=i%3,drift=rand();
+        const inLane=i%6===0&&!low;
+        const bandY=.75-x*.46+(uniformY-.5)*.34;
+        return {
+          x,y:inLane?Math.max(.025,Math.min(.975,bandY)):uniformY,
+          layer,r:.45+rand()*.8,phase:rand()*6.28,
+          tint:i%13===0?'warm':'ice',halo:i%19===0&&layer===2&&!low,
+          drift
+        };
+      });
       last=-Infinity;
     }
     // 15Hz on mobile/ECO, 24Hz desktop. No extra RAF, timer or DOM layout reads.
@@ -42,7 +55,12 @@ window.MarketV10.atmosphere = (() => {
       const y=((p.y*h+cameraX*depth*11)%h+h)%h;
       const flicker=reduced?1:.89+.11*Math.sin(time*.0004+p.phase);
       const alpha=(.19+depth*.3)*flicker;
-      context.fillStyle=p.layer===2?'rgba(200,169,144,'+alpha+')':'rgba(169,216,230,'+alpha+')';
+      // A few soft halos make distant signals less uniform, never interactive.
+      if(p.halo){
+        context.fillStyle='rgba(144,204,223,'+Math.min(.15,alpha*.22).toFixed(4)+')';
+        context.beginPath();context.arc(x,y,Math.max(1.1,p.r*depth*3.4),0,Math.PI*2);context.fill();
+      }
+      context.fillStyle=p.tint==='warm'?'rgba(200,169,144,'+alpha+')':'rgba(169,216,230,'+alpha+')';
       context.beginPath();context.arc(x,y,p.r*depth,0,Math.PI*2);context.fill();
     }
   }
