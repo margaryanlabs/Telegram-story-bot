@@ -429,3 +429,25 @@ STARLIGHT continues in **the existing isolated branch** and Draft PR #220. The n
 - Production/main and frozen V7.4/V8.0/V8.2 Render services untouched. Keep PR #220 Draft; keep preview `autoDeploy=no`.
 
 Preview: https://market-remembers-starlight-v9.onrender.com/ ; device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1
+
+
+## V9.7 — Direct star contact, visible-only touch hit testing and safe gestures (2026-11-04)
+
+Continue the **same existing STARLIGHT globe** in isolated Draft PR #220. Preserve the approved V7.4/V8.2 ECLIPSE graphite/pearl color and real WebGL1 shader, the Canvas fallback, all existing personal-story privacy boundaries and user navigation. This does not add a GPU pass, change 3D geometry, or create another demo.
+
+### What changed
+- **Accurate scene-relative touch light:** `v97StagePoint(clientX,clientY)` subtracts the stage bounding rectangle before projecting touch light to CSS and GPU screen coordinates.
+- **Visibility-grounded star picking:** `v97PickStarAt(x,y,pointerType)` only accepts existing visible DOM markers (`aria-hidden=false`), records allowed by the active category lens, and front-facing in-bounds projected star positions. Star taps no longer trigger records that appear hidden, crowded, filtered or behind the sphere.
+- **Touch-friendly target:** a 34px projected radius for touch, 29px for pen and 25px for mouse permits direct contact beside the tiny visual star without enlarging the original 14px on-screen marker.
+- **Gesture intent:** a tap must begin and end on the **same visible star**, with a 12px touch tolerance and 7px mouse/pen tolerance. Dragging, changing the pinch scale, cancellation and stale contact all clear the armed star and prevent accidental story openings. Pointer cancellation also removes residual rotational inertia.
+- **Minimal visual affordance:** an existing star marker gets a small, short CSS glimmer on direct contact; reduced-motion removes the animation. No added atmosphere ring or standalone fake 3D effect. STAR PASSAGE / Observatory / return-to-star flow is unchanged.
+
+### Verification
+- New `tests/v97-tactile-stars.test.mjs` contains **9/9 passing** isolated tests for scene-local mapping, touch radius, invisible/backside records, lens restrictions, single star activation, drag, pinch, cancel and small accessible glimmer.
+- Added `v9-visual.spec.ts` Playwright cases for near-marker touch and two-pointer cancellation.
+- Updated the original `v9-starlight.test.mjs` fixture to include the new star-contact cleanup method when simulating a passage.
+- Combined isolated JavaScript suite completed **72/72 passing** across V9.7, V9.6, V9.5, mobile, QA, baseline shader and ECLIPSE source checks. This is a V8/JavaScript isolated mock harness, **not full Node**, real Playwright execution, real WebGL output inspection or an Android/Telegram device run.
+- Keep PR Draft and the separate Render static site `autoDeploy=no`. Production, frozen V7.4, V8.0 and V8.2 sites were not modified.
+
+Review: https://market-remembers-starlight-v9.onrender.com/
+Device diagnostics: https://market-remembers-starlight-v9.onrender.com/?qa=1
