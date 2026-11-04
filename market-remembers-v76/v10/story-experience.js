@@ -108,6 +108,15 @@ window.MarketV10.reader = (() => {
       const starLabel=document.createElement('span');starLabel.className='v12-memory-caption';
       starLabel.textContent='ЗВЕЗДА · '+category.toUpperCase();
       hero.append(heroEyebrow,halo,starLabel,title,abstract,overview);
+      const firstChapter=sections[0];
+      if(firstChapter){
+        const start=document.createElement('button');
+        start.type='button';start.className='v12-start-reading';
+        start.textContent='Читать историю ↓';
+        start.setAttribute('aria-controls',firstChapter.id);
+        start.onclick=()=>jumpToChapter(0);
+        hero.append(start);
+      }
       const anchor=article.querySelector('.memory-topline');
       if(anchor)anchor.after(hero);else article.prepend(hero);
       hero.after(progress,nav,container);
@@ -146,9 +155,27 @@ window.MarketV10.reader = (() => {
           if(element)legendHero.append(element);
         }
         const topline=article.querySelector('.memory-topline');
+        const contextSection=article.querySelector('.memory-section');
+        if(contextSection){
+          contextSection.id='v12-legend-context';
+          contextSection.tabIndex=-1;
+          const read=document.createElement('button');read.type='button';
+          read.className='v12-start-reading';read.textContent='Читать источник ↓';
+          read.setAttribute('aria-controls',contextSection.id);
+          read.onclick=()=>{
+            const panel=document.getElementById('drawer');
+            const sticky=panel.querySelector('.drawer-head')?.offsetHeight||55;
+            const offset=contextSection.getBoundingClientRect().top-panel.getBoundingClientRect().top+
+                         panel.scrollTop-sticky-12;
+            panel.scrollTo({top:Math.max(0,offset),behavior:window.MarketV10.motion.reduced?'instant':'smooth'});
+            contextSection.focus({preventScroll:true});
+          };
+          legendHero.append(read);
+        }
         if(topline)topline.after(legendHero);else article.prepend(legendHero);
       }
     }
+    article.classList.toggle('v12-artifact-active',!!article.querySelector('.v12-memory-hero'));
     const link=document.createElement('button');link.type='button';link.className='v10-permalink';
     link.textContent=record.local?'Скопировать ссылку · только для этого браузера':'Скопировать ссылку на звезду ↗';
     link.onclick=async()=>{
