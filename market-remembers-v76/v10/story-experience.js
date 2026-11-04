@@ -95,7 +95,22 @@ window.MarketV10.reader = (() => {
         button.onclick=()=>jumpToChapter(i);
         buttons.push(button);nav.append(button);
       });
-      abstract.after(overview,progress,nav,container);
+      // V12: a real memory artifact instead of a flat heading followed by UI labels.
+      // Reuse original title/quote/metadata elements to preserve their identifiers,
+      // source text and reader integrations without duplicate content.
+      const hero=document.createElement('section');hero.className='v12-memory-hero';
+      hero.setAttribute('aria-label','История звезды '+String(record.alias||''));
+      const halo=document.createElement('div');halo.className='v12-memory-sigil';
+      halo.setAttribute('aria-hidden','true');
+      const symbol=document.createElement('span');symbol.textContent='✦';halo.append(symbol);
+      const heroEyebrow=document.createElement('span');heroEyebrow.className='v12-memory-kicker';
+      heroEyebrow.textContent='THE MARKET REMEMBERS / ЖИВАЯ ПАМЯТЬ';
+      const starLabel=document.createElement('span');starLabel.className='v12-memory-caption';
+      starLabel.textContent='ЗВЕЗДА · '+category.toUpperCase();
+      hero.append(heroEyebrow,halo,starLabel,title,abstract,overview);
+      const anchor=article.querySelector('.memory-topline');
+      if(anchor)anchor.after(hero);else article.prepend(hero);
+      hero.after(progress,nav,container);
       const ending=document.createElement('section');ending.className='v113-story-ending';
       const endingTag=document.createElement('span');endingTag.className='v10-eyebrow';
       endingTag.textContent='BEYOND THIS MEMORY / ТЕМАТИЧЕСКОЕ ПРОДОЛЖЕНИЕ';
@@ -121,8 +136,21 @@ window.MarketV10.reader = (() => {
       try {await navigator.clipboard.writeText(window.MarketV10.data.permalink(record));api.toast(record.local?'Ссылка открывается только там, где сохранена личная запись.':'Ссылка на звезду скопирована.');}
       catch {api.toast('Копирование недоступно. Ссылка на эту звезду находится в адресной строке.');}
     };
-    document.getElementById('saveLesson')?.after(link);
-    if(record.local){const privacy=document.createElement('p');privacy.className='v10-quiet';privacy.textContent='Стабильный ID: '+record.id+'. Ссылка не переносит историю на другое устройство; для переноса используй экспорт JSON.';link.after(privacy);}
+    // Reuse already wired action buttons: their behavior remains unchanged.
+    const actions=document.createElement('div');actions.className='v12-story-actions';
+    actions.setAttribute('role','group');actions.setAttribute('aria-label','Действия с историей');
+    const saveButton=document.getElementById('saveLesson');
+    if(saveButton)actions.append(saveButton);
+    actions.append(link);
+    const returnButton=document.getElementById('memoryBack');
+    if(returnButton){returnButton.textContent='← Во вселенную';actions.append(returnButton);}
+    const ending=article.querySelector('.v113-story-ending');
+    if(ending)ending.after(actions);else article.append(actions);
+    if(record.local){
+      const privacy=document.createElement('p');privacy.className='v10-quiet v12-private-note';
+      privacy.textContent='Стабильный ID: '+record.id+'. Ссылка не переносит историю на другое устройство; для переноса используй экспорт JSON.';
+      actions.after(privacy);
+    }
     window.MarketV10.constellations.mount(record,api);
     update();
   }
