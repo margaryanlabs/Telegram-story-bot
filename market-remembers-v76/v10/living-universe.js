@@ -67,8 +67,13 @@ window.MarketV10.install = function(api) {
     },
     closeDrawer(skipReturn=false) {
       const wasOpen=!$('drawer').hidden;
+      const wasStory=router.read().view==='story';
+      const starId=router.read().id;
       const target=api.returnTarget();api.base.closeDrawer(skipReturn);modal();
-      if(wasOpen&&skipReturn!==true&&!travelling){target?.focus({preventScroll:true});router.dismiss();}
+      if(wasOpen&&skipReturn!==true&&!travelling){
+        target?.focus({preventScroll:true});
+        if(wasStory)router.visit('universe',{star:starId},true);else router.dismiss();
+      }
     }
   };
   router=V.navigation(shared);

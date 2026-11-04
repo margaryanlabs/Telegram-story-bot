@@ -1,4 +1,4 @@
-const {test,expect}=require('@playwright/test');
+const {test,expect}=require('./browser-fixtures.cjs');
 const sizes=[{width:320,height:568},{width:390,height:844},{width:760,height:420},{width:768,height:1024},{width:1440,height:900}];
 async function open(page,path='/'){await page.goto(path);await expect(page.locator('#scene')).toBeVisible();}
 async function reduced(page){await page.emulateMedia({reducedMotion:'reduce'});}
@@ -35,7 +35,7 @@ test('fallback without WebGL keeps reader usable',async({page})=>{
 test('flight is skippable and omitted on repeat visits',async({page})=>{
  await page.setViewportSize({width:390,height:844});await open(page);await page.locator('#dockOpen').click();await expect(page.locator('#memoryDive')).toBeVisible();
  await page.locator('#cancelDive').click();await expect(page.locator('#memoryTitle')).toHaveText('@NORTHSTAR');await expect(page).toHaveURL(/#story\/1$/);
- await page.locator('#closeDrawer').click();await expect(page).toHaveURL(/#universe$/);await page.locator('#dockOpen').click();
+ await page.locator('#closeDrawer').click();await expect(page).toHaveURL(/#universe\?star=1$/);await page.locator('#dockOpen').click();
  await expect(page.locator('#drawer')).toBeVisible();await expect(page.locator('#memoryDive')).toBeHidden();
 });
 test('Escape cancels passage and Back restores universe',async({page})=>{
@@ -49,7 +49,8 @@ test('chapters, constellation and keyboard modal',async({page})=>{
  await expect(page.locator('.v10-constellation-star')).toHaveCount(3);await page.locator('.v10-constellation-list summary').click();await expect(page.locator('.v10-constellation-list li')).toHaveCount(3);
  await page.locator('.v10-constellation-list li button').first().click();await expect(page.locator('#memoryTitle')).not.toHaveText('@NORTHSTAR');await expect(page.locator('.v78-thread-breadcrumb')).toBeVisible();
  for(let i=0;i<15;i++){await page.keyboard.press('Tab');expect(await page.locator('#drawer').evaluate(el=>el.contains(document.activeElement))).toBe(true);}
- await page.locator('.v93-back-to-star').click();await expect(page.locator('#scene')).toBeVisible();
+ const alias=await page.locator('.v93-observatory-alias').innerText();
+ await page.locator('.v93-back-to-star').click();await expect(page.locator('#drawer')).toBeHidden();await expect(page.locator('#dockAlias')).toContainText(alias.replace(/^[@★]\s*/,''));
 });
 test('archive filter URL, search, sorting, locate and history',async({page})=>{
  await reduced(page);await page.setViewportSize({width:390,height:844});await open(page);await page.locator('.mobile-nav [data-open=archive]').click();
