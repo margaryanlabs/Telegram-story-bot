@@ -1923,7 +1923,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   <nav class="mobile-nav" aria-label="Мобильная навигация"><button data-open="universe" class="is-on" type="button">✧ ВСЕЛЕННАЯ</button><button data-open="archive" type="button">◈ АРХИВ</button><button data-open="legacy" type="button">✦ МОЙ СЛЕД</button></nav>
   <main>
     <section class="hero" id="hero" aria-label="Вступление">
-      <div class="hero-kicker"><span class="line"></span> COSMIC AWAKENING / OBSERVATORY № 11</div>
+      <div class="hero-kicker"><span class="line"></span> COSMIC AWAKENING / REFINED ORBITS № 11.1</div>
       <h1>THE MARKET<br><em>REMEMBERS.</em></h1>
       <p><span>За каждым графиком — человек.</span><span>За каждой ошибкой — урок.</span><strong>Оставь свою звезду в памяти рынка.</strong></p>
       <div class="hero-actions"><button id="heroCreate" class="btn btn-primary" type="button">ОСТАВИТЬ СВОЙ СЛЕД <span>↗</span></button><button id="heroExplore" class="btn btn-outline" type="button"><span class="play-dot">◈</span> ИССЛЕДОВАТЬ ВСЕЛЕННУЮ</button></div>
@@ -2460,7 +2460,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
     const fitted=room>nominalRadius*1.85;
     const radius=fitted?Math.min(nominalRadius,Math.max(width*.23,(room-16)*.5)):nominalRadius;
     const y=fitted?Math.max(top+radius,Math.min(bottom-radius,(top+bottom)*.5)):
-      height*(short?.59:.575);
+      height*(short?.56:.552);
     return {x:width*.585,y,radius,top:Math.max(0,top),bottom:Math.min(height,bottom),
       mode:'portrait',fitted};
   }
@@ -2473,7 +2473,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
       return;
     }
     const short=h<650,rect=stage.getBoundingClientRect();
-    const nominalRadius=Math.min(w,h)*(short?.36:.397);
+    const nominalRadius=Math.min(w,h)*(short?.325:.347);
     v763MobileStage=v9PortraitFrame(w,h,
       $('hero').getBoundingClientRect().bottom-rect.top,
       $('signalDock').getBoundingClientRect().top-rect.top,nominalRadius);
@@ -2602,13 +2602,13 @@ void main(){
  // Decorative orbital geometry; these strokes do not imply invented human connections.
  float planeA=abs(dot(vObject,normalize(vec3(.22,.87,.42))));
  float planeB=abs(dot(vObject,normalize(vec3(.79,-.21,.58))));
- float traceA=1.-smoothstep(.005,.018,planeA);
- float traceB=1.-smoothstep(.005,.015,planeB);
- float glowA=1.-smoothstep(.013,.062,planeA);
- float glowB=1.-smoothstep(.010,.046,planeB);
+ float traceA=1.-smoothstep(.0015,.008,planeA);
+ float traceB=1.-smoothstep(.0015,.007,planeB);
+ float glowA=1.-smoothstep(.007,.034,planeA);
+ float glowB=1.-smoothstep(.006,.029,planeB);
  float visibleFace=smoothstep(-.12,.52,N.z);
- material+=visibleFace*(vec3(.15,.35,.41)*traceA*.23+vec3(.36,.29,.23)*traceB*.14);
- material+=visibleFace*(vec3(.055,.13,.17)*glowA*.43+vec3(.09,.065,.05)*glowB*.27);
+ material+=visibleFace*(vec3(.15,.35,.41)*traceA*.21+vec3(.36,.29,.23)*traceB*.13);
+ material+=visibleFace*(vec3(.055,.13,.17)*glowA*.24+vec3(.09,.065,.05)*glowB*.16);
  gl_FragColor=vec4(clamp(material,0.,1.),1.);
 }`; const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){
