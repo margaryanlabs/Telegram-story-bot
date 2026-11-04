@@ -31,11 +31,11 @@ function layout(width,height,heroBottom,dockTop,immersive=false,scale=1){
   const center=runInNewContext('('+extract('targetCenter')+')',ctx);
   measure();return {position:center(),stage:ctx.v763MobileStage};
 }
-test('portrait ECLIPSE sphere matches the original cinematic proportions',()=>{
+test('portrait V11.1 sphere stays large but reveals more of the lower silhouette',()=>{
   for(const [w,h,hero,dock] of [[390,844,280,681],[390,620,238,484],[320,568,238,430],[768,1024,280,864]]){
     const {position:p,stage}=layout(w,h,hero,dock);
     assert.equal(stage.mode,'portrait');
-    assert.ok(p.radius>=w*(h<650?.35:.395)-1,'original balanced radius not restored');
+    assert.ok(p.radius>=w*(h<650?.32:.34)-1,'refined sphere became too small');
     assert.ok(p.x-p.radius>=0&&p.x+p.radius<=w,'sphere clips horizontally in BIG mode');
     assert.ok(p.y-p.radius>=0&&p.y+p.radius<=h,'sphere clips vertically in BIG mode');
     assert.ok(p.y>hero*.85&&p.y<dock+25,'sphere lacks visual center between UI regions');
@@ -43,7 +43,7 @@ test('portrait ECLIPSE sphere matches the original cinematic proportions',()=>{
 });
 test('short phone sphere remains readable but does not become a giant dark disk',()=>{
   const {position:p,stage}=layout(390,620,238,484);
-  assert.ok(p.radius>130&&p.radius<150);
+  assert.ok(p.radius>120&&p.radius<134);
   assert.ok(p.radius<(stage.bottom-stage.top)*.7,'sphere swallows short-screen editorial context');
 });
 test('landscape mobile globe fills the right-hand theatre, with no clipping',()=>{
@@ -99,8 +99,8 @@ test('V9.4 portrait frame uses unobstructed mobile space when it is genuinely av
 test('V9.4 compact viewport retains the ECLIPSE sphere rather than collapsing to a tiny dot',()=>{
   const {position:p,stage}=layout(320,568,238,430);
   assert.equal(stage.fitted,false);
-  assert.ok(p.radius>=110);
-  assert.ok(Math.abs(p.y-568*.59)<.01);
+  assert.ok(p.radius>=100);
+  assert.ok(Math.abs(p.y-568*.56)<.01);
 });
 test('V9.4 star labels are suppressed near hero while the selected dock remains usable',()=>{
   const code=extract('updateMarkers');
