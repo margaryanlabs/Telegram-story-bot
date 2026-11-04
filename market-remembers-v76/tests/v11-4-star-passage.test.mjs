@@ -9,7 +9,7 @@ const runtime=html.match(/<script>([\s\S]*?)<\/script>/)?.[1]||'';
 const fragment=(name,until)=>runtime.slice(runtime.indexOf(name),runtime.indexOf(until,runtime.indexOf(name)));
 
 test('Star Passage V11.4 loads as a separate versioned layer without replacing V11.3',()=>{
-  assert.match(html,/STAR PASSAGE \/ OBSERVATORY № 11\.4/);
+  assert.match(html,/(?:STAR PASSAGE \/ OBSERVATORY № 11\.4|MEMORY ATLAS \/ OBSERVATORY № 11\.5)/);
   assert.match(html,/v10\/cosmic-awakening\.css/);
   assert.match(html,/v10\/star-passage-v11\.css/);
   assert.doesNotThrow(()=>new Script(runtime));

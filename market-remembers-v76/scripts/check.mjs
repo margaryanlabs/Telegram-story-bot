@@ -20,4 +20,5 @@ if(!html.includes('THE MARKET REMEMBERS V11 — COSMIC AWAKENING'))throw Error('
 if(!html.includes('v10/cosmic-awakening.css'))throw Error('V11 visual layer is missing');
 if(!html.includes('float planeA=abs(dot(vObject'))throw Error('Native V11 orbital shader is missing');
 if(!html.includes('v10/star-passage-v11.css')||!html.includes('id="v114PassageQuote"'))throw Error('V11.4 passage scene or narrative cue is missing');
-console.log('V11.4 lint: original engine, passage cues, V10 modules, local assets and unique shell IDs valid.');
+if(!html.includes('v10/memory-atlas-v11.css')||!html.includes('archiveSelect:(filter,query)=>v79SelectArchive'))throw Error('V11.5 archive atlas or canonical search binding is missing');
+console.log('V11.5 lint: original engine, story passage, canonical archive atlas, local assets and shell IDs valid.');

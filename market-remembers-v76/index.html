@@ -1895,6 +1895,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
 <link rel="stylesheet" href="v10/living-universe.css">
 <link rel="stylesheet" href="v10/cosmic-awakening.css">
 <link rel="stylesheet" href="v10/star-passage-v11.css">
+<link rel="stylesheet" href="v10/memory-atlas-v11.css">
 </head>
 <body>
 <div class="app obsidian" id="app">
@@ -1917,14 +1918,14 @@ backdrop-filter:blur(12px);pointer-events:auto}
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
-    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>STAR PASSAGE · V11.4 PREVIEW</small></span></a>
+    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>MEMORY ATLAS · V11.5 PREVIEW</small></span></a>
     <nav class="header-nav" aria-label="Навигация"><button data-open="universe" class="nav-link is-on" type="button">ВСЕЛЕННАЯ</button><button data-open="archive" class="nav-link" type="button">АРХИВ</button><button data-open="legacy" class="nav-link" type="button">МОЙ СЛЕД</button></nav>
     <button class="header-cta" id="headerCreate" type="button"><span class="status-pip"></span> ОСТАВИТЬ СВОЙ СЛЕД <span aria-hidden="true">↗</span></button>
   </header>
   <nav class="mobile-nav" aria-label="Мобильная навигация"><button data-open="universe" class="is-on" type="button">✧ ВСЕЛЕННАЯ</button><button data-open="archive" type="button">◈ АРХИВ</button><button data-open="legacy" type="button">✦ МОЙ СЛЕД</button></nav>
   <main>
     <section class="hero" id="hero" aria-label="Вступление">
-      <div class="hero-kicker"><span class="line"></span> STAR PASSAGE / OBSERVATORY № 11.4</div>
+      <div class="hero-kicker"><span class="line"></span> MEMORY ATLAS / OBSERVATORY № 11.5</div>
       <h1>THE MARKET<br><em>REMEMBERS.</em></h1>
       <p><span>За каждым графиком — человек.</span><span>За каждой ошибкой — урок.</span><strong>Оставь свою звезду в памяти рынка.</strong></p>
       <div class="hero-actions"><button id="heroCreate" class="btn btn-primary" type="button">ОСТАВИТЬ СВОЙ СЛЕД <span>↗</span></button><button id="heroExplore" class="btn btn-outline" type="button"><span class="play-dot">◈</span> ИССЛЕДОВАТЬ ВСЕЛЕННУЮ</button></div>
@@ -4197,6 +4198,7 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
       related:v77RelatedRecords,follow:v78FollowThread,scale:()=>v81SizeMode,
       returnTarget:()=>v96ReaderReturnTarget(v76FocusReturn),
       getArchive:()=>({theme:activeFilter,q:archiveQuery}),
+      archiveSelect:(filter,query)=>v79SelectArchive(stories,filter,query,isSavedLesson),
       setArchive:(filter,query)=>{activeFilter=Object.hasOwn(v79ArchiveFilterNames,filter)?filter:'All';archiveQuery=query;},
       base:{showStory,showArchive,showLegacy,showCreate,closeDrawer,beginDive,cancelDive,drawArchive}
     });
