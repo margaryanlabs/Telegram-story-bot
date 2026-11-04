@@ -27,6 +27,10 @@ window.MarketV10.install = function(api) {
     syncArchive(sort=V.archive.getSort()) {
       if(router?.read().view==='archive')router.visit('archive',{...api.getArchive(),sort},true);
     },
+    travel(record) {
+      const index=api.stories.findIndex(item=>String(item.id)===String(record?.id));
+      if(index>=0)wrappers.beginDive(index);
+    },
     locate(record) {
       api.base.closeDrawer(true);modal();api.lensAll();api.focus(api.stories.indexOf(record),false);
       api.restoreStar();router.visit('universe',{star:String(record.id)});
@@ -41,7 +45,7 @@ window.MarketV10.install = function(api) {
   const wrappers={
     showStory(record) {
       clear();api.base.showStory(record);
-      V.reader.mount(record,shared);V.motion.seen(record);
+      V.reader.mount(record,shared);V.trails.onStory(record,shared);V.motion.seen(record);
       router.visit('story',{id:String(record.id)});modal();
     },
     showArchive() {
@@ -49,7 +53,7 @@ window.MarketV10.install = function(api) {
       api.base.showArchive();modal();
     },
     drawArchive() {
-      api.base.drawArchive();V.archive.mount(shared);shared.syncArchive();
+      api.base.drawArchive();V.archive.mount(shared);V.trails.mountArchive(shared);shared.syncArchive();
     },
     showLegacy() {clear();api.base.showLegacy();router.visit('legacy');modal();},
     showCreate() {clear();V.legacy.mount(shared);router.visit('create');modal();},
