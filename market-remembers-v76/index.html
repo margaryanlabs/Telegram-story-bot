@@ -1861,6 +1861,24 @@ backdrop-filter:blur(12px);pointer-events:auto}
   animation:none!important;transform:none!important
  }
 }
+
+/* V9.7 / Direct star contact: tiny local glimmer, never an orbital halo. */
+.obsidian .star-marker.is-armed{
+ box-shadow:0 0 10px #fff,0 0 23px #bce7f7,0 0 37px #87bfd48c;
+ border-color:#f5f7ff;
+}
+.obsidian .star-marker.is-armed::before{
+ content:"";position:absolute;inset:-5px;pointer-events:none;
+ border-radius:50%;border:1px solid #d7e6f7ae;
+ animation:v97StarContact .42s ease-out both;
+}
+@keyframes v97StarContact{
+ from{opacity:.9;transform:scale(.68)}
+ to{opacity:.12;transform:scale(1.25)}
+}
+@media(prefers-reduced-motion:reduce){
+ .obsidian .star-marker.is-armed::before{animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -2381,7 +2399,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   let diveTimer=null,diveIndex=-1,diveSequence=0,v93PassagePausedAt=0;
   let v93LastMarkerFrame=0;
   let v9State={phase:'idle',started:0,index:-1,token:0,energy:0};
-  const pointers=new Map();let pinchDistance=0;
+  const pointers=new Map();let pinchDistance=0,v97ArmedStar=-1;
   let atlasEnabled=false, atlasPairs=[], atlasElements=[], flightFinish=0;
   const SVG_NS='http://www.w3.org/2000/svg';
   const twoPi=Math.PI*2;
@@ -3143,6 +3161,7 @@ void main(){
     }
   }
   function beginDive(i){
+    v97ClearArmedStar();
     if(!stories.length)return;
     const index=(i+stories.length)%stories.length;
     if(v78ThreadContext&&v78ThreadContext.to!==index)v78ThreadContext=null;
@@ -3932,7 +3951,7 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
     resize();showToast('Качество: '+quality);
   }
   function setSpin(b){spinning=b;if(b){inertiaY=0;inertiaX=0}$('autoRotate').textContent=b?'Ⅱ':'▶';$('autoRotate').setAttribute('aria-pressed',String(b));$('autoRotate').setAttribute('aria-label',b?'Остановить вращение':'Возобновить вращение')}
-  function reset(){v81SetScale('big',false);v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
+  function reset(){v97ClearArmedStar();v81SetScale('big',false);v78ThreadContext=null;$('travelTrail').classList.remove('is-thread');focusLabelActive=false;endMemoryJourney();cancelDive();travelFrom=-1;travelTo=-1;travelStarted=0;interactionEnergy=0;interactionPulse=0;inertiaY=0;inertiaX=0;if(immersive)setImmersive(false);flightFinish=0;targetY=.22;targetX=-.16;targetZoom=1;setSpin(!reduceMotion);shock={radius:.07}}
   function connectControls(){
     $('headerCreate').onclick=$('heroCreate').onclick=showCreate;
     $('heroExplore').onclick=()=>setImmersive(true);$('focusMode').onclick=()=>setImmersive(!immersive);$('globeScale').onclick=v81CycleScale;
@@ -3982,17 +4001,48 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
       resumeScene();
     });
   }
+  // V9.7: pointer coordinates live in the scene, not the page viewport.
+  function v97StagePoint(clientX,clientY){
+    const box=stage.getBoundingClientRect();
+    return {x:clientX-box.left,y:clientY-box.top};
+  }
+  // The visual star and the tappable star must be the same: hidden/crowded
+  // markers, back-facing records and clipped portrait controls never open.
+  function v97PickStarAt(x,y,pointerType='mouse'){
+    const radius=pointerType==='touch'?34:pointerType==='pen'?29:25;
+    let best=-1,distance=radius;
+    for(let i=0;i<stories.length;i++){
+      const marker=markerEls[i],story=stories[i];
+      if(!marker||!story||marker.getAttribute('aria-hidden')!=='false'||
+         !lensMatches(story))continue;
+      const point=project(story.p);
+      if(point.z<=-.08||point.x<18||point.x>w-18||
+         point.y<18||point.y>h-18)continue;
+      const d=Math.hypot(x-point.x,y-point.y);
+      if(d<distance){distance=d;best=i}
+    }
+    return best;
+  }
+  function v97ClearArmedStar(){
+    if(v97ArmedStar>=0)markerEls[v97ArmedStar]?.classList.remove('is-armed');
+    v97ArmedStar=-1;
+  }
   function pointerDown(e){
     if(e.pointerType==='mouse'&&e.button!==0)return;
-    interactionPoint=[e.clientX,e.clientY];
+    const scenePoint=v97StagePoint(e.clientX,e.clientY);
+    interactionPoint=[scenePoint.x,scenePoint.y];
     interactionPulse=reduceMotion?0:.94;
     interactionEnergy=reduceMotion?0:Math.max(interactionEnergy,.26);
     inertiaY=0;inertiaX=0;
     if(diveIndex!==-1)cancelDive();
     pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     dragging=true;setSpin(false);
-    if(pointers.size===1){downX=lastX=e.clientX;downY=lastY=e.clientY;moved=0;pinchDistance=0}
-    else{moved=999;pinchDistance=0}
+    v97ClearArmedStar();
+    if(pointers.size===1){
+      downX=lastX=e.clientX;downY=lastY=e.clientY;moved=0;pinchDistance=0;
+      v97ArmedStar=v97PickStarAt(scenePoint.x,scenePoint.y,e.pointerType);
+      if(v97ArmedStar>=0&&!reduceMotion)markerEls[v97ArmedStar].classList.add('is-armed');
+    }else{moved=999;pinchDistance=0}
     try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}
   }
   function pointerMove(e){
@@ -4003,31 +4053,38 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
       const distance=Math.hypot(a.x-b.x,a.y-b.y);
       if(pinchDistance>0)targetZoom=clamp(targetZoom*distance/pinchDistance,.68,1.6);
       pinchDistance=distance;moved=999;inertiaY=0;inertiaX=0;
-      interactionPoint=[(a.x+b.x)*.5,(a.y+b.y)*.5];
+      const p=v97StagePoint((a.x+b.x)*.5,(a.y+b.y)*.5);
+      interactionPoint=[p.x,p.y];
+      v97ClearArmedStar();
       if(!reduceMotion)interactionEnergy=clamp(Math.max(interactionEnergy,.57),0,1);
       return;
     }
     const dx=e.clientX-lastX,dy=e.clientY-lastY;
     lastX=e.clientX;lastY=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
-    interactionPoint=[e.clientX,e.clientY];
+    const p=v97StagePoint(e.clientX,e.clientY);
+    interactionPoint=[p.x,p.y];
+    if(moved>10)v97ClearArmedStar();
     if(!reduceMotion)interactionEnergy=clamp(interactionEnergy+Math.hypot(dx,dy)*.012,0,1);
     targetY+=dx*.005;targetX=clamp(targetX+dy*.005,-1.25,1.25);
     inertiaY=clamp(dx*.003,-.07,.07);inertiaX=clamp(dy*.002,-.05,.05);
   }
   function pointerUp(e,cancelled=false){
     if(!pointers.has(e.pointerId))return;
-    const wasSingle=pointers.size===1;
+    const wasSingle=pointers.size===1,armed=v97ArmedStar;
     pointers.delete(e.pointerId);
+    v97ClearArmedStar();
     if(pointers.size){
       const remaining=pointers.values().next().value;
       lastX=remaining.x;lastY=remaining.y;moved=999;pinchDistance=0;
       return;
     }
     dragging=false;pinchDistance=0;
-    if(!cancelled&&wasSingle&&moved<7&&Math.hypot(downX-e.clientX,downY-e.clientY)<7){
-      let best=-1,minDist=26;
-      stories.forEach((s,i)=>{const p=project(s.p);if(p.z<-.08||!lensMatches(s))return;const d=Math.hypot(e.clientX-p.x,e.clientY-p.y);if(d<minDist){best=i;minDist=d}});
-      if(best>=0)focus(best,true);
+    if(cancelled){inertiaY=0;inertiaX=0;return}
+    const threshold=e.pointerType==='touch'?12:7;
+    if(wasSingle&&moved<threshold&&Math.hypot(downX-e.clientX,downY-e.clientY)<threshold){
+      const p=v97StagePoint(e.clientX,e.clientY);
+      const hit=v97PickStarAt(p.x,p.y,e.pointerType);
+      if(hit>=0&&hit===armed){inertiaY=0;inertiaX=0;focus(hit,true)}
     }
   }
   function boot(){
