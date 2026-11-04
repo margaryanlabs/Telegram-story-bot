@@ -18,6 +18,24 @@ window.MarketV10.atmosphere = (() => {
     if(time-last < (low||w<820 ? 66 : 42))return;
     last=time;draws++;
     context.setTransform(.8,0,0,.8,0,0);context.clearRect(0,0,w,h);
+    // A bounded, camera-responsive distant haze behind the actual 3D globe.
+    // 2 gradients max, drawn in the existing 15/24 Hz background pass.
+    // No new canvas, extra RAF loop, GPU material, or interactive hit layer.
+    const breath=reduced?1:.91+.09*Math.sin(time*.00023);
+    const cx=w*.70+cameraY*4,cy=h*.49+cameraX*3;
+    const radius=Math.max(w,h)*.66;
+    const nebula=context.createRadialGradient(cx,cy,radius*.04,cx,cy,radius);
+    nebula.addColorStop(0,'rgba(66,129,150,'+(.081*breath).toFixed(4)+')');
+    nebula.addColorStop(.42,'rgba(39,93,115,'+(.055*breath).toFixed(4)+')');
+    nebula.addColorStop(1,'rgba(10,24,38,0)');
+    context.fillStyle=nebula;context.fillRect(0,0,w,h);
+    if(!low){
+      const glow=context.createRadialGradient(w*.15,h*.78,0,w*.15,h*.78,Math.max(w,h)*.47);
+      glow.addColorStop(0,'rgba(141,128,141,.043)');
+      glow.addColorStop(.58,'rgba(85,103,123,.019)');
+      glow.addColorStop(1,'rgba(22,37,52,0)');
+      context.fillStyle=glow;context.fillRect(0,0,w,h);
+    }
     for(const p of points) {
       const depth=(p.layer+1)*.32;
       const x=((p.x*w+cameraY*depth*13)%w+w)%w;
