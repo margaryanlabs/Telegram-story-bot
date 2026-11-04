@@ -13,7 +13,7 @@ test('V11 remains a distinct preview; V10 shell is not replaced',()=>{
 test('Native WebGL orbital light, not a fake centered CSS globe',()=>{
   assert.match(html,/float planeA=abs\(dot\(vObject/);
   assert.match(html,/visibleFace\*\(vec3/);
-  assert.match(html,/float depth=mix\(\.065,\.48/);
+  assert.match(html,/float depth=mix\(\.09,\.57/);
   assert.doesNotMatch(css,/\.scene\s*::(?:before|after)\s*\{/);
 });
 test('Canvas fallback receives equivalent orbital visual treatment',()=>{
