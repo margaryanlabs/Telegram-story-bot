@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080d16">
 <meta name="description" content="THE MARKET REMEMBERS — THE LIVING UNIVERSE. Интерактивный архив решений и человеческого опыта. Fictional примеры и личные записи на устройстве.">
-<title>THE MARKET REMEMBERS V10 — THE LIVING UNIVERSE</title>
+<title>THE MARKET REMEMBERS V11 — COSMIC AWAKENING</title>
 <style>
 :root{--bg:#05070d;--ink:#f1f4ff;--violet:#9879ff;--cyan:#7fe6ff;--muted:#909bb3;--line:rgba(193,204,248,.15);--panel:rgba(11,15,27,.86);--gold:#f9d7ac;color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0}body{background:var(--bg);color:var(--ink);overflow:hidden}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #bda9ff;outline-offset:3px}button[disabled]{opacity:.45;cursor:not-allowed}a{text-decoration:none;color:inherit}[hidden]{display:none!important}
@@ -1893,6 +1893,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 rx=%2720%27 fill=%27%23080d16%27/%3E%3Ctext x=%2720%27 y=%2729%27 text-anchor=%27middle%27 font-size=%2730%27 fill=%27%23a9d8e6%27%3E✧%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="v10/design-tokens.css">
 <link rel="stylesheet" href="v10/living-universe.css">
+<link rel="stylesheet" href="v10/cosmic-awakening.css">
 </head>
 <body>
 <div class="app obsidian" id="app">
@@ -1915,14 +1916,14 @@ backdrop-filter:blur(12px);pointer-events:auto}
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
-    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>THE LIVING UNIVERSE · V10 PREVIEW</small></span></a>
+    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>COSMIC AWAKENING · V11 PREVIEW</small></span></a>
     <nav class="header-nav" aria-label="Навигация"><button data-open="universe" class="nav-link is-on" type="button">ВСЕЛЕННАЯ</button><button data-open="archive" class="nav-link" type="button">АРХИВ</button><button data-open="legacy" class="nav-link" type="button">МОЙ СЛЕД</button></nav>
     <button class="header-cta" id="headerCreate" type="button"><span class="status-pip"></span> ОСТАВИТЬ СВОЙ СЛЕД <span aria-hidden="true">↗</span></button>
   </header>
   <nav class="mobile-nav" aria-label="Мобильная навигация"><button data-open="universe" class="is-on" type="button">✧ ВСЕЛЕННАЯ</button><button data-open="archive" type="button">◈ АРХИВ</button><button data-open="legacy" type="button">✦ МОЙ СЛЕД</button></nav>
   <main>
     <section class="hero" id="hero" aria-label="Вступление">
-      <div class="hero-kicker"><span class="line"></span> THE LIVING UNIVERSE / OBSERVATORY № 10</div>
+      <div class="hero-kicker"><span class="line"></span> COSMIC AWAKENING / OBSERVATORY № 11</div>
       <h1>THE MARKET<br><em>REMEMBERS.</em></h1>
       <p><span>За каждым графиком — человек.</span><span>За каждой ошибкой — урок.</span><strong>Оставь свою звезду в памяти рынка.</strong></p>
       <div class="hero-actions"><button id="heroCreate" class="btn btn-primary" type="button">ОСТАВИТЬ СВОЙ СЛЕД <span>↗</span></button><button id="heroExplore" class="btn btn-outline" type="button"><span class="play-dot">◈</span> ИССЛЕДОВАТЬ ВСЕЛЕННУЮ</button></div>
@@ -2519,7 +2520,7 @@ void main(){
  vColor=aColor;vDepth=p.z;vKind=aKind;
  vSelected=(1.0-step(.0005,length(aPos-uFocus)))*step(2.1,aKind);
  float twinkle=.88+.12*sin(uTime*.7+aColor*71.);
- float sz=aKind>2.0?12.0:(aKind>1.0?2.7:(.95+aKind*1.9));
+ float sz=aKind>2.0?12.0:(aKind>1.0?2.95:(1.23+aKind*2.0));
  gl_PointSize=clamp(sz*per*uDpr*twinkle*(1.0+vSelected*(2.0+uPulse*.32)),1.0,56.0);
 }`;
   const pFragment=`precision mediump float;
@@ -2541,15 +2542,15 @@ void main(){
  }
  if(vKind>4.)col=vec3(.94,.85,.69);
  float core=exp(-d*d*(vSelected>.5?18.:vKind>2.?14.:9.));
- float halo=exp(-d*d*(vSelected>.5?4.4:4.6))*(vSelected>.5?.44:.09);
- float depth=mix(.026,.32,smoothstep(-.55,.91,vDepth));
+ float halo=exp(-d*d*(vSelected>.5?4.4:4.6))*(vSelected>.5?.44:.15);
+ float depth=mix(.065,.48,smoothstep(-.55,.91,vDepth));
  float alpha=(core+halo)*(vKind>2.?.88:depth);
  float twinkle=.94+.06*sin(uTime*2.2+vColor*37.);
  alpha=clamp(alpha*twinkle*(1.+vSelected*(.28+uPulse*.60)),0.,1.);
  if(vSelected>.5)col=mix(col,vec3(1.),.53+uPulse*.22);
  gl_FragColor=vec4(col,alpha);
 }`; const lVertex=`precision highp float;attribute vec3 aPos;uniform vec2 uRes;uniform vec2 uCenter;uniform float uRadius;uniform float uRotY;uniform float uRotX;uniform float uZoom;varying mediump float vDepth;void main(){float cy=cos(uRotY),sy=sin(uRotY),cx=cos(uRotX),sx=sin(uRotX);vec3 q=vec3(cy*aPos.x+sy*aPos.z,aPos.y,-sy*aPos.x+cy*aPos.z);vec3 p=vec3(q.x,cx*q.y-sx*q.z,sx*q.y+cx*q.z);float per=2.7/(3.1-p.z*.7);vec2 px=uCenter+vec2(p.x,-p.y)*uRadius*per*uZoom;gl_Position=vec4(px.x/uRes.x*2.-1.,1.-px.y/uRes.y*2.,-p.z*.48,1.);vDepth=p.z;}`;
-  const lFragment=`precision mediump float;varying mediump float vDepth;void main(){float a=.006+.018*smoothstep(-.6,.9,vDepth);gl_FragColor=vec4(.44,.63,.76,a);}`;
+  const lFragment=`precision mediump float;varying mediump float vDepth;void main(){float a=.020+.065*smoothstep(-.6,.9,vDepth);gl_FragColor=vec4(.44,.63,.76,a);}`;
   // WebGL 1.0 true triangulated sphere: normal-based light with real depth.
   const coreVertex=`precision highp float;
 attribute vec3 aPos;attribute vec3 aNormal;
@@ -2587,16 +2588,27 @@ void main(){
  float filament=pow(.5+.5*contour,25.)*(.35+.65*light);
  float grain=(hash(floor(vObject*168.))-.5)*.014;
  float life=.5+.5*sin(vObject.x*13.+vObject.y*17.+uTime*.12);
- vec3 material=vec3(.009,.017,.027)+vec3(.024,.043,.055)*(.15+.85*fill);
- material+=vec3(.034,.061,.077)*haze*(.3+.7*light);
+ vec3 material=vec3(.021,.040,.051)+vec3(.036,.068,.082)*(.19+.81*fill);
+ material+=vec3(.059,.111,.132)*haze*(.3+.7*light);
  material+=vec3(.045,.086,.105)*filament*.045;
- material+=vec3(.075,.145,.18)*rim*.7;
+ material+=vec3(.095,.182,.218)*rim*.83;
  material+=vec3(.22,.36,.40)*spec*.1;
  material+=vec3(.025,.037,.042)*bounce*.26;
  material+=vec3(grain)*(.08+.32*fill);
  material+=vec3(.008,.018,.026)*(life-.5)*uMotion*.18;
  float spot=pow(max(dot(normalize(vObject),normalize(uFocus)),0.),26.);
  material+=vec3(.13,.19,.22)*spot*uPulse*.67;
+ // V11: two genuine surface-space great-circle guides, lit only on the visible face.
+ // Decorative orbital geometry; these strokes do not imply invented human connections.
+ float planeA=abs(dot(vObject,normalize(vec3(.22,.87,.42))));
+ float planeB=abs(dot(vObject,normalize(vec3(.79,-.21,.58))));
+ float traceA=1.-smoothstep(.005,.018,planeA);
+ float traceB=1.-smoothstep(.005,.015,planeB);
+ float glowA=1.-smoothstep(.013,.062,planeA);
+ float glowB=1.-smoothstep(.010,.046,planeB);
+ float visibleFace=smoothstep(-.12,.52,N.z);
+ material+=visibleFace*(vec3(.15,.35,.41)*traceA*.23+vec3(.36,.29,.23)*traceB*.14);
+ material+=visibleFace*(vec3(.055,.13,.17)*glowA*.43+vec3(.09,.065,.05)*glowB*.27);
  gl_FragColor=vec4(clamp(material,0.,1.),1.);
 }`; const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){
@@ -2851,12 +2863,20 @@ void main(){
     const c=targetCenter(),r=c.radius*zoom;
     // Canvas fallback is opaque graphite, matching the GPU material.
     const stone=ctx.createRadialGradient(c.x-r*.24,c.y-r*.25,r*.04,c.x,c.y,r);
-    stone.addColorStop(0,'rgba(29,50,61,1)');
-    stone.addColorStop(.35,'rgba(15,30,39,1)');
-    stone.addColorStop(.73,'rgba(6,14,22,1)');
+    stone.addColorStop(0,'rgba(40,71,85,1)');
+    stone.addColorStop(.35,'rgba(24,45,57,1)');
+    stone.addColorStop(.73,'rgba(11,25,35,1)');
     stone.addColorStop(.96,'rgba(3,9,15,1)');
     stone.addColorStop(1,'rgba(3,9,15,.8)');
     ctx.save();ctx.fillStyle=stone;ctx.beginPath();ctx.arc(c.x,c.y,r,0,twoPi);ctx.fill();ctx.restore();
+    // Canvas2D counterpart to the globe's physical emissive orbital lines.
+    ctx.save();ctx.beginPath();ctx.arc(c.x,c.y,r,0,twoPi);ctx.clip();
+    ctx.lineWidth=Math.max(.8,r*.003);
+    ctx.strokeStyle='rgba(161,221,231,.24)';
+    ctx.beginPath();ctx.ellipse(c.x,c.y,r*.96,r*.41,-.40,0,twoPi);ctx.stroke();
+    ctx.strokeStyle='rgba(204,172,143,.15)';
+    ctx.beginPath();ctx.ellipse(c.x,c.y,r*.47,r*.94,.30,0,twoPi);ctx.stroke();
+    ctx.restore();
     ctx.save();ctx.globalCompositeOperation='screen';
     // Volumetric-looking glowing ball and articulated plasma, built only with Canvas2D primitives.
     const aura=ctx.createRadialGradient(c.x,c.y,r*.10,c.x,c.y,r*1.52);
