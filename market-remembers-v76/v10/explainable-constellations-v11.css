@@ -1,0 +1,172 @@
+/* MARKET REMEMBERS V11.7 / EXPLAINABLE CONSTELLATIONS
+   Compact visual map + accessible evidence panel for every editorial link.
+   The displayed lines are taxonomy navigation, not real relationships.
+*/
+#app.obsidian .v117-constellation{
+  max-width:720px;margin:38px auto 18px;
+  padding:24px 0;border-top:1px solid #c8a99055;
+}
+#app.obsidian .v117-constellation h3{
+  font:italic 400 clamp(28px,3.2vw,38px)/1.25 var(--font-literary);
+  letter-spacing:-.025em;color:var(--warm-ivory);margin:12px 0;
+}
+#app.obsidian .v117-constellation>.v10-quiet{
+  font:400 12px/1.7 var(--font-interface);
+  color:#a5bac7;max-width:520px;
+}
+#app.obsidian .v117-constellation-map{
+  position:relative;height:292px;margin:18px 0 16px;
+  border:1px solid #a9d8e628;border-radius:16px;
+  background:radial-gradient(ellipse at 50% 27%,#548fa923,transparent 67%),
+    linear-gradient(135deg,#101f2ba8,#0a1520d5);overflow:hidden;
+}
+#app.obsidian .v117-constellation-map::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,#cde5f180 0 1px,transparent 1.3px);
+  background-size:47px 49px;opacity:.22;
+}
+#app.obsidian .v117-constellation-map svg path{
+  stroke:#8bbaca7a;stroke-width:1.2;stroke-dasharray:4 5;
+  transition:stroke .22s,stroke-width .22s,stroke-opacity .22s;
+}
+#app.obsidian .v117-constellation-map svg path.is-active{
+  stroke:#d5b996;stroke-width:2;stroke-dasharray:none;
+  filter:drop-shadow(0 0 4px #c8a99060);
+}
+#app.obsidian .v117-constellation-map .v117-origin{
+  top:9%;max-width:200px;color:#d6b98f;
+}
+#app.obsidian .v117-origin span{font-size:31px}
+#app.obsidian .v117-origin strong{
+  font:500 12px/1.3 var(--font-interface);color:#eadcc8;
+}
+#app.obsidian .v117-origin small{
+  font:500 9px/1.3 var(--font-interface);
+  letter-spacing:.13em;color:#91a8b9;
+}
+#app.obsidian .v117-constellation-map .v117-star{
+  display:flex;flex-direction:column;gap:3px;
+  transform:translate(-50%,-28%);
+  min-height:78px;min-width:105px;max-width:155px;
+  border:1px solid transparent;border-radius:12px;
+  padding:6px 8px;background:#10233173;
+  color:#c9e6ef;
+  transition:background .2s,border-color .2s;
+}
+#app.obsidian .v117-constellation-map .v117-star .v10-node-glyph{
+  width:38px;height:38px;font-size:22px;
+  text-shadow:0 0 17px #8bdbefb3;
+}
+#app.obsidian .v117-constellation-map .v117-star.is-highlighted{
+  border-color:#c8a99091;
+  background:#2a3444b8;color:#f6e8d8;
+}
+#app.obsidian .v117-constellation-map .v117-star.is-highlighted .v10-node-glyph{
+  color:#dfc4a1;text-shadow:0 0 19px #c8a990a6;
+}
+#app.obsidian .v117-constellation-map .v117-star:hover{
+  background:#1c3948af;border-color:#a9d8e69b;
+}
+#app.obsidian .v117-constellation-map .v117-star:focus-visible{
+  outline:2px solid #a9d8e6;outline-offset:3px;
+}
+#app.obsidian .v117-constellation-map .v117-star strong{
+  font:500 11px/1.25 var(--font-interface);max-width:135px;
+  overflow-wrap:anywhere;text-align:center;
+}
+#app.obsidian .v117-constellation-map .v117-star small{
+  font:400 9px/1.3 var(--font-interface);color:#9db4c1;
+}
+#app.obsidian .v117-evidence{
+  border-left:2px solid #c8a990a1;padding:14px 20px;
+  background:linear-gradient(100deg,#c8a99012,transparent);
+  min-height:132px;
+}
+#app.obsidian .v117-evidence-eyebrow{
+  font:600 9px/1.4 var(--font-interface);
+  color:#c8a990;letter-spacing:.13em;
+}
+#app.obsidian .v117-evidence-title{
+  font:italic 400 clamp(20px,2.8vw,27px)/1.3 var(--font-literary);
+  color:#f0e4d6;margin:9px 0;
+}
+#app.obsidian .v117-evidence-body{
+  font:400 12px/1.75 var(--font-interface);
+  color:#cedde2;margin:0 0 7px;
+}
+#app.obsidian .v117-evidence-kind{
+  font:500 10px/1.6 var(--font-interface);
+  color:#8ebac8;margin:0;
+}
+#app.obsidian .v117-related-rows{margin:16px 0 10px}
+#app.obsidian .v117-link-row{
+  display:flex;gap:9px;align-items:center;flex-wrap:wrap;
+  padding:12px 0;border-top:1px solid #a9d8e62a;
+}
+#app.obsidian .v117-link-description{
+  display:grid;gap:5px;flex:1 1 190px;min-width:0;
+}
+#app.obsidian .v117-link-description strong{
+  color:#e9dbca;font:500 12px/1.45 var(--font-interface);
+}
+#app.obsidian .v117-link-description span{
+  color:#98adbc;font:400 11px/1.45 var(--font-interface);
+  overflow-wrap:anywhere;
+}
+#app.obsidian .v117-related-rows button{
+  flex:0 0 auto;min-height:44px;
+  padding:10px 13px;border-radius:9px;
+  font:500 11px/1.4 var(--font-interface);
+}
+#app.obsidian .v117-related-rows .v117-inspect{
+  color:#c7e4ed;border:1px solid #a9d8e647;background:transparent;
+}
+#app.obsidian .v117-related-rows .v117-inspect[aria-pressed="true"]{
+  color:#e9d5bd;border-color:#c8a9907a;background:#c8a99016;
+}
+#app.obsidian .v117-related-rows .v117-follow{
+  color:#102431;background:#b9dce6;border:1px solid #b9dce6;
+}
+#app.obsidian .v117-related-rows button:hover{filter:brightness(1.13)}
+#app.obsidian .v117-related-rows button:focus-visible{
+  outline:2px solid #d5eaf0;outline-offset:2px;
+}
+#app.obsidian .v117-text-list{
+  margin:12px 0 0;padding-top:10px;border-top:1px solid #a9d8e62a;
+}
+#app.obsidian .v117-text-list li small{line-height:1.7}
+@media(max-width:819px){
+ #app.obsidian .v117-constellation{margin:24px 0 0;padding-top:16px}
+ #app.obsidian .v117-constellation h3{font-size:27px}
+ #app.obsidian .v117-constellation>.v10-quiet{font-size:11px;line-height:1.6}
+ #app.obsidian .v117-constellation-map{height:256px;margin:13px 0;border-radius:12px}
+ #app.obsidian .v117-constellation-map .v117-star{
+   min-width:78px;max-width:106px;min-height:74px;padding:7px 4px;
+ }
+ #app.obsidian .v117-constellation-map .v117-star strong{
+   font-size:10px;max-width:104px;
+ }
+ #app.obsidian .v117-constellation-map .v117-star small{font-size:9px}
+ #app.obsidian .v117-constellation-map .v117-star .v10-node-glyph{
+   width:33px;height:32px;font-size:20px;
+ }
+ #app.obsidian .v117-origin strong{font-size:11px}
+ #app.obsidian .v117-evidence{padding:12px 15px;min-height:125px}
+ #app.obsidian .v117-evidence-title{font-size:22px}
+ #app.obsidian .v117-evidence-body{font-size:11px}
+ #app.obsidian .v117-link-row{gap:6px;padding:10px 0}
+ #app.obsidian .v117-link-description{flex-basis:100%;margin-bottom:2px}
+ #app.obsidian .v117-related-rows button{flex:1 1 125px}
+}
+@media(max-width:370px){
+ #app.obsidian .v117-constellation-map{height:244px}
+ #app.obsidian .v117-constellation-map .v117-star{
+  min-width:72px;max-width:94px;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ #app.obsidian .v117-constellation-map svg path,
+ #app.obsidian .v117-constellation-map .v117-star{
+  transition:none!important
+ }
+}
