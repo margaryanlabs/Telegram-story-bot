@@ -58,3 +58,12 @@ test('Accessible responsive memory reader and quiet layered background preserve 
   assert.match(reader,/actions\.setAttribute\('role','group'\)/);
   assert.match(reader,/window\.MarketV10\.motion\.reduced/);
 });
+
+test('Verified historical quotations receive the same artifact treatment without losing source credits',()=>{
+  assert.match(reader,/if\(profile&&originalTitle\)/);
+  assert.match(reader,/legendHero\.className='v12-memory-hero v12-legend-hero'/);
+  assert.match(reader,/\.legend-credit','.human-story-label','#memoryTitle','.legend-original'/);
+  assert.match(css,/v12-legend-hero \.legend-portrait-box/);
+  assert.match(css,/v12-legend-hero \.legend-original/);
+  assert.match(reader,/Исторический источник:/);
+});
