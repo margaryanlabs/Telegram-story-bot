@@ -16,5 +16,7 @@ for(const match of html.matchAll(/(?:src|href)="(v10\/[^"?#]+)"/g)){
 const shell=html.slice(0,html.indexOf('<script'));
 const ids=[...shell.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
 if(ids.length!==new Set(ids).size)throw Error('Duplicate ID in static shell');
-if(!html.includes('THE MARKET REMEMBERS V10 — THE LIVING UNIVERSE'))throw Error('V10 title is missing');
-console.log('V10 lint: inline engine, 9 modules, local asset references and shell IDs valid.');
+if(!html.includes('THE MARKET REMEMBERS V11 — COSMIC AWAKENING'))throw Error('V11 title is missing');
+if(!html.includes('v10/cosmic-awakening.css'))throw Error('V11 visual layer is missing');
+if(!html.includes('float planeA=abs(dot(vObject'))throw Error('Native V11 orbital shader is missing');
+console.log('V11 lint: original engine, V10 modules, V11 visual layer, local assets and shell IDs valid.');
