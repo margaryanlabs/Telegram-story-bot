@@ -96,7 +96,10 @@ test('Direct shared story links do not invent a previous archive or story',()=>{
 });
 test('Reader controls and V12 wrapper route according to the actual origin',()=>{
   assert.match(bridge,/previousView:\(\)=>router\?\.previousView\(\)\|\|null/);
-  assert.match(bridge,/if\(previous==='archive'\|\|previous==='story'\)router\.dismiss\(\)/);
+  assert.match(bridge,/previous==='archive'\|\|previous==='story'/);
+  assert.match(bridge,/if\(returnToContent\)router\.dismiss\(\)/);
+  assert.match(bridge,/api\.base\.closeDrawer\(returnToContent\?true:skipReturn\)/);
+  assert.match(bridge,/if\(!returnToContent\)target\?\.focus/);
   assert.match(bridge,/else router\.visit\('universe',\{star:starId\},true\)/);
   assert.match(reader,/prior==='archive'\?'← К результатам архива'/);
   assert.match(reader,/prior==='story'\?'← К предыдущей звезде'/);
