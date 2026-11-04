@@ -5,4 +5,4 @@ await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
 await cp(new URL('../index.html',import.meta.url),new URL('index.html',output));
 await cp(new URL('../v10/',import.meta.url),new URL('v10/',output),{recursive:true});
-console.log('V10 build: dist/ contains only site HTML and V10 assets. No backend source, tests or private data.');
+console.log('V11 build: static HTML, original V10 modules and V11 visual layer. No backend or private data.');
