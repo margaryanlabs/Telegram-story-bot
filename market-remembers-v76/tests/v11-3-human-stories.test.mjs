@@ -12,7 +12,7 @@ test('V11.3 reader parses and keeps original V10 interface',()=>{
   assert.doesNotThrow(()=>new Script(script));
   assert.match(script,/window\.MarketV10\.reader/);
   assert.match(script,/return \{init,mount\}/);
-  assert.match(html,/(?:HUMAN STORIES \/ OBSERVATORY № 11\.3|STAR PASSAGE \/ OBSERVATORY № 11\.4)/);
+  assert.match(html,/(?:HUMAN STORIES \/ OBSERVATORY № 11\.3|STAR PASSAGE \/ OBSERVATORY № 11\.4|MEMORY ATLAS \/ OBSERVATORY № 11\.5)/);
 });
 test('Reader provides four chapters, progress and working navigation',()=>{
   assert.match(script,/v113-chapter-progress/);
