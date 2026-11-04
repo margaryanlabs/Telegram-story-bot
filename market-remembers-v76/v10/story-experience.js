@@ -189,7 +189,12 @@ window.MarketV10.reader = (() => {
     if(saveButton)actions.append(saveButton);
     actions.append(link);
     const returnButton=document.getElementById('memoryBack');
-    if(returnButton){returnButton.textContent='← Во вселенную';actions.append(returnButton);}
+    if(returnButton){
+      const prior=api.previousView?.();
+      returnButton.textContent=prior==='archive'?'← К результатам архива':
+        prior==='story'?'← К предыдущей звезде':'← Во вселенную';
+      actions.append(returnButton);
+    }
     const ending=article.querySelector('.v113-story-ending');
     if(ending)ending.after(actions);else article.append(actions);
     if(record.local){

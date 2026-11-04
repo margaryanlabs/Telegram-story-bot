@@ -2,7 +2,7 @@ window.MarketV10 = window.MarketV10 || {};
 window.MarketV10.install = function(api) {
   const V=window.MarketV10;
   const $=id=>document.getElementById(id);
-  let router,travelling=false;
+  let router,travelling=false,archiveReturn=null;
   const clear=()=>{$('drawer').classList.remove('v10-reader','v10-archive','v10-legacy');};
   function modal() {
     const covered=!$('drawer').hidden||!$('birthOverlay').hidden||!$('memoryDive').hidden;
@@ -17,6 +17,7 @@ window.MarketV10.install = function(api) {
   }
   const shared={...api,modal,active,
     story:record=>wrappers.showStory(record),archive:()=>wrappers.showArchive(),
+    previousView:()=>router?.previousView()||null,
     legacy:()=>wrappers.showLegacy(),create:()=>wrappers.showCreate(),
     close:skip=>api.base.closeDrawer(skip),cancel:()=>api.base.cancelDive(true),
     focus:index=>{api.lensAll();api.focus(index,false);},
@@ -45,12 +46,28 @@ window.MarketV10.install = function(api) {
   const wrappers={
     showStory(record) {
       clear();api.base.showStory(record);
+      // Set the real route before mounting the enhanced reader: the back
+      // control reads the prior hash to choose Archive / previous star / sky.
+      // Deep-link replays are guarded by navigation.replay.
+      router.visit('story',{id:String(record.id)});
       V.reader.mount(record,shared);V.trails.onStory(record,shared);V.motion.seen(record);
-      router.visit('story',{id:String(record.id)});modal();
+      modal();
     },
     showArchive() {
+      const returning=router.replay&&archiveReturn?.hash===location.hash;
       clear();router.visit('archive',{...api.getArchive(),sort:V.archive.getSort()});
       api.base.showArchive();modal();
+      if(returning){
+        const drawer=$('drawer');
+        // The original archive DOM is fully rebuilt after a history return.
+        // Restore the previous reading position, bounded by new results.
+        const max=Math.max(0,drawer.scrollHeight-drawer.clientHeight);
+        drawer.scrollTop=Math.max(0,Math.min(archiveReturn.top,max));
+        const card=[...$('archiveGrid').querySelectorAll('button[data-story-id]')]
+          .find(el=>el.dataset.storyId===archiveReturn.storyId);
+        card?.focus({preventScroll:true});
+        archiveReturn=null;
+      }else if(!router.replay)archiveReturn=null;
     },
     drawArchive() {
       api.base.drawArchive();V.archive.mount(shared);V.trails.mountArchive(shared);shared.syncArchive();
@@ -61,6 +78,15 @@ window.MarketV10.install = function(api) {
       if(!api.stories.length)return;
       const safeIndex=((index%api.stories.length)+api.stories.length)%api.stories.length;
       const record=api.stories[safeIndex];
+      // Save the exact scroll/focus origin before leaving the filtered archive.
+      // This remains in-memory only and is never persisted or shared.
+      if(router.read().view==='archive'&&!$('drawer').hidden){
+        archiveReturn={
+          hash:location.hash,
+          top:Math.max(0,$('drawer').scrollTop),
+          storyId:String(record.id)
+        };
+      }
       router.visit('story',{id:String(record.id)});travelling=true;
       try {
         if(V.motion.skip(record)) {
@@ -73,10 +99,19 @@ window.MarketV10.install = function(api) {
       const wasOpen=!$('drawer').hidden;
       const wasStory=router.read().view==='story';
       const starId=router.read().id;
-      const target=api.returnTarget();api.base.closeDrawer(skipReturn);modal();
+      const previous=wasStory?router.previousView():null;
+      const returnToContent=skipReturn!==true&&
+        (previous==='archive'||previous==='story');
+      const target=api.returnTarget();
+      // A return to Archive/story must not launch the legacy camera-to-globe
+      // animation behind the newly opened reader or search results.
+      api.base.closeDrawer(returnToContent?true:skipReturn);modal();
       if(wasOpen&&skipReturn!==true&&!travelling){
-        target?.focus({preventScroll:true});
-        if(wasStory)router.visit('universe',{star:starId},true);else router.dismiss();
+        if(!returnToContent)target?.focus({preventScroll:true});
+        if(wasStory){
+          if(returnToContent)router.dismiss();
+          else router.visit('universe',{star:starId},true);
+        }else router.dismiss();
       }
     }
   };
