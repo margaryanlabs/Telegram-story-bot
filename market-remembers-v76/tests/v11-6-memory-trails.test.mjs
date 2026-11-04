@@ -29,7 +29,7 @@ const ids=records=>Array.from(records,record=>String(record.id));
 
 test('V11.6 adds memory trails only after V11.5 without replacing scene or reader',()=>{
   assert.doesNotThrow(()=>new Script(source));
-  assert.match(html,/MEMORY TRAILS \/ OBSERVATORY № 11\.6/);
+  assert.match(html,/(?:MEMORY TRAILS \/ OBSERVATORY № 11\.6|EXPLAINABLE CONSTELLATIONS \/ OBSERVATORY № 11\.7)/);
   assert.match(html,/v10\/memory-trails-v11\.css/);
   assert.match(html,/v10\/memory-trails\.js/);
   assert.match(html,/v10\/memory-atlas-v11\.css/);

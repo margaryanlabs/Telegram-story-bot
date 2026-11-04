@@ -5,7 +5,7 @@ const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
 const css=await readFile(new URL('../v10/cosmic-awakening.css',import.meta.url),'utf8');
 
 test('V11 remains a distinct preview; V10 shell is not replaced',()=>{
-  assert.match(html,/<title>THE MARKET REMEMBERS V11 — COSMIC AWAKENING<\/title>/);
+  assert.match(html,/<title>THE MARKET REMEMBERS V11(?: — COSMIC AWAKENING|\.7 — EXPLAINABLE CONSTELLATIONS)<\/title>/);
   assert.match(html,/v10\/cosmic-awakening\.css/);
   assert.match(html,/id="scene"/);
   assert.match(html,/id="signalDock"/);

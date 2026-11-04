@@ -94,7 +94,7 @@ test('pending covered-scene resize is deferred until scene resumes',()=>{
   assert.equal(ctx.v8ViewportPending,false);
 });
 test('safety-critical engine, archive and thematic routes preserved',()=>{
-  assert.match(html,/THE MARKET REMEMBERS V(?:10 — THE LIVING UNIVERSE|11 — COSMIC AWAKENING)/);
+  assert.match(html,/THE MARKET REMEMBERS V(?:10 — THE LIVING UNIVERSE|11 — COSMIC AWAKENING|11\.7 — EXPLAINABLE CONSTELLATIONS)/);
   assert.match(runtime,/webglcontextlost/);
   assert.match(runtime,/webglcontextrestored/);
   assert.match(runtime,/function init2D\(\)/);
