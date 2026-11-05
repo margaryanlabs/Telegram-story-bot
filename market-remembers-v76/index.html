@@ -2481,8 +2481,12 @@ backdrop-filter:blur(12px);pointer-events:auto}
     const room=bottom-top;
     const fitted=room>nominalRadius*1.85;
     const radius=fitted?Math.min(nominalRadius,Math.max(width*.23,(room-16)*.5)):nominalRadius;
+    // The planet remains entirely above the fixed memory dock on
+    // portrait phones, while the outer halo may extend into the gap.
+    const idealY=height*(short?.540:.525);
+    const safeY=bottom-radius-14;
     const y=fitted?Math.max(top+radius,Math.min(bottom-radius,(top+bottom)*.5)):
-      height*(short?.56:.552);
+      Math.max(height*.40,Math.min(idealY,safeY));
     return {x:width*.585,y,radius,top:Math.max(0,top),bottom:Math.min(height,bottom),
       mode:'portrait',fitted};
   }
@@ -2718,33 +2722,38 @@ void main(){
    vec3 samplePoint=vObject+volumeRay*volumeChord*stepT;
    float billow=nebulaNoise3(samplePoint*3.65+vec3(3.1,.8,2.4));
    float longWave=nebulaNoise3(samplePoint*2.2+vec3(4.5,1.7,7.8));
-   float cloudMass=smoothstep(.45,.68,billow*.72+longWave*.28);
-   float cloudHighlight=smoothstep(.58,.74,billow*.70+longWave*.30);
+   float cloudMass=smoothstep(.40,.70,billow*.72+longWave*.28);
+   float cloudHighlight=smoothstep(.61,.80,billow*.70+longWave*.30);
    float goldDirection=pow(max(dot(normalize(samplePoint+vec3(.001)),
                           normalize(vec3(.55,.32,.72))),0.),3.5);
-   float goldScattering=goldDirection*smoothstep(.47,.67,longWave);
-   float absorption=.11+.35*cloudMass;
-   float fineRidge=0.0;
+   float goldScattering=goldDirection*smoothstep(.55,.78,longWave);
+   float absorption=.15+.52*cloudMass;
+   // Fine turbulence adds subtle body, never neon contour loops.
+   float cloudGrain=0.0;
    if(uQuality>.5){
-     float highWave=nebulaNoise3(samplePoint*8.2+vec3(4.,6.,1.));
-     fineRidge=(1.0-smoothstep(.018,.087,abs(highWave-.49)))*cloudMass;
+     float highWave=nebulaNoise3(samplePoint*5.2+vec3(4.,6.,1.));
+     cloudGrain=smoothstep(.61,.82,highWave)*cloudMass;
    }
-   vec3 scattering=vec3(.014,.082,.145)*cloudMass+
-                   vec3(.067,.26,.36)*cloudHighlight+
-                   vec3(.22,.48,.58)*fineRidge*cloudHighlight*.23+
-                   vec3(.58,.29,.105)*goldScattering*cloudMass*.85;
-   accumulatedNebula+=transmittance*scattering*(.85+(1.-stepT)*.4);
-   transmittance*=1.0-absorption*.42;
+   vec3 scattering=vec3(.019,.063,.108)*cloudMass+
+                   vec3(.075,.173,.214)*cloudHighlight+
+                   vec3(.025,.080,.095)*cloudGrain*.25+
+                   vec3(.28,.155,.075)*goldScattering*cloudMass*.42;
+   accumulatedNebula+=transmittance*scattering*(.86+(1.-stepT)*.18);
+   transmittance*=1.0-absorption*.66;
  }
  // Retain the original active-star highlight / orbits, but subordinate
  // the old uniform line pattern to layered, absorbed gas.
- material=mix(material,vec3(.016,.030,.045)+accumulatedNebula*.93,.82);
+ // Keep a dense dark planetary core; legacy trigonometric ribbons no
+ // longer tint the final pixel. Front cloud absorption provides depth.
+ material=vec3(.009,.020,.031)+
+          vec3(.020,.043,.060)*(.20+.80*light)+
+          accumulatedNebula*.78;
  // Warm pockets are NOT a full-face filter; color is bound to the mesh.
  float sunrise=pow(max(dot(N,normalize(vec3(.55,.41,.73))),0.),11.);
  float ember=pow(max(dot(normalize(vObject),
                         normalize(vec3(.28,-.38,.88))),0.),13.);
- material+=vec3(.39,.229,.113)*sunrise*bank*.82;
- material+=vec3(.24,.139,.080)*ember*(.3+.7*cloudDepth)*.65;
+ material+=vec3(.27,.145,.075)*sunrise*bank*.40;
+ material+=vec3(.16,.087,.046)*ember*(.3+.7*cloudDepth)*.35;
  // A clean, luminous atmospheric edge separates globe from its nebula sky.
  float atmosphere=pow(1.-clamp(N.z,0.,1.),6.2);
  float easternGlow=pow(max(dot(N,normalize(vec3(.82,.28,.78))),0.),4.);
@@ -2755,7 +2764,7 @@ void main(){
                             normalize(vec3(.48,-.15,.85))),0.),7.);
  float goldFlow=pow(max(1.-abs(sin(vObject.y*12.6-
                         vObject.x*4.3+vObject.z*5.4+bent)),0.),4.5);
- material+=vec3(.49,.264,.109)*goldZone*goldFlow*(.32+.68*bank)*1.13;
+ material+=vec3(.30,.160,.078)*goldZone*goldFlow*(.32+.68*bank)*.48;
  if(uQuality>.5){
    // Stars are points in the memory field, not extra WebGL particles.
    vec3 speckCoords=vObject*46.;
@@ -2786,8 +2795,8 @@ void main(){
  float glowA=1.-smoothstep(.007,.034,planeA);
  float glowB=1.-smoothstep(.006,.029,planeB);
  float visibleFace=smoothstep(-.12,.52,N.z);
- material+=visibleFace*(vec3(.19,.38,.43)*traceA*.18+vec3(.40,.30,.19)*traceB*.16);
- material+=visibleFace*(vec3(.08,.17,.20)*glowA*.12+vec3(.14,.09,.055)*glowB*.10);
+ material+=visibleFace*(vec3(.19,.38,.43)*traceA*.12+vec3(.40,.30,.19)*traceB*.11);
+ material+=visibleFace*(vec3(.08,.17,.20)*glowA*.055+vec3(.14,.09,.055)*glowB*.045);
  gl_FragColor=vec4(clamp(material,0.,1.),1.);
 }`; const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){
