@@ -177,6 +177,7 @@
       EVENTS.forEach(other => {
         if(other.id === selected.id || !other.themes.some(t=>selected.themes.includes(t))) return;
         const from = positions[selected.id], to = positions[other.id];
+        if (!from.visible || !to.visible) return;
         const d = 'M ' + from.x + ' ' + from.y + ' Q ' + ((from.x+to.x)/2) + ' ' +
           (Math.min(from.y,to.y)-50) + ' ' + to.x + ' ' + to.y;
         const path = document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -184,6 +185,7 @@
         lines.append(path);
       });
     }
+    window.MarketSignalDirector?.position(positions[state.activeEvent],rect,panel.getBoundingClientRect(),panelExpanded);
   }
   function renderBeacons() {
     layer.querySelectorAll('[data-mh-beacon]').forEach(node=>node.remove());
