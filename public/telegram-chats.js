@@ -1223,6 +1223,10 @@
     const ready=state.connectionProof?.verified===true;
     $('telegramMirror')?.classList.toggle('veto-messenger-ready',ready);
     if($('vetoMessengerConnectCta'))$('vetoMessengerConnectCta').hidden=ready;
+    // A successful logout can happen without a fresh inbox API request.
+    // Never leave the previous green "LIVE" label on a revoked account.
+    if($('telegramMirrorAccessButton'))
+      $('telegramMirrorAccessButton').textContent=ready?'LIVE ✓':'Подключить ↗';
     renderPrivacyDiagnostics();
     $('telegramMirrorCount').textContent=String(state.chats.length);
     renderInboxPulse();
