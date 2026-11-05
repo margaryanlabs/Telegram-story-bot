@@ -17,7 +17,7 @@ test('V18 EVENT CORE uses actual PEOPLE 3D mesh and shaders with different color
  expect(['webgl1','canvas2d']).toContain(result.renderer);
  expect(result.volume).toBe(true);
  expect(result.glslStars).toBe(true);
- expect(result.years).toEqual(['1907','1987','2008','2020']);
+ expect(result.years).toEqual(['1907','1929','1987','1998','2008','2010','2020','2023']);
  result.positions.forEach(p=>expect(p).toHaveLength(2));
  await expect(page.locator('#mhV16Optics')).toBeHidden();
  await expect(page.locator('#gl')).toBeHidden();
@@ -30,7 +30,7 @@ test('V18 selecting dates changes focus while preserving PEOPLE and sourced fina
  await page.locator('#mhHistoryPanel .mh-panel-grip').click();
  await page.locator('#mhHistoryPanel [data-mh-event="1987"]').first().click();
  await expect(page.locator('#mhHistoryPanel')).toContainText('Чёрный понедельник');
- await expect(page.locator('#mhHistoryPanel .mh-v16-research-card')).toHaveCount(3);
+ await expect(page.locator('#mhHistoryPanel .mh-v16-research-card')).toHaveCount(5);
  const selected=await page.evaluate(()=>window.MarketHistoryModes.activeEvent);
  expect(selected).toBe('1987');
  await page.locator('#mhBackToPeople').click();
