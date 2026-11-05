@@ -30,7 +30,7 @@ function stage(){
 }
 
 test('RC4 optical background is strictly between original sky and true 3D globe',()=>{
-  assert.equal(JSON.parse(pkg).version,'12.0.0-rc.5');
+  assert.equal(JSON.parse(pkg).version,'12.0.0-rc.6');
   assert.match(html,/v10\/v12-depth-field\.css/);
   assert.equal((html.match(/class="v124-depth-field"/g)||[]).length,1);
   const skyPos=html.indexOf('id="memorySky"'),depthPos=html.indexOf('class="v124-depth-field"');
