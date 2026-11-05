@@ -169,3 +169,27 @@
 1. Re-read PR HEAD and this checkpoint; run node --test tests/vetogram-v9-gif-studio.test.js plus earlier V9 Media/Cinema/Music/Books/Games tests and offline preview QA in a proper checkout or available CI executor. Fix real failures before preview.
 2. Test Studio on 360px Android Telegram WebView: local PNG/JPG/WEBP upload, 3 motion effects, GIF download/preview, owner switch, sticker vs emoji HTTPS pack opening, Pearl/Linen, reduced-motion, failure states. In-app Telegram download may need a supported browser handoff.
 3. Continue with Story Engine templates/real story publish failure UX or Chats/Telegram auth regression (no OTP logging or Business consent bypass). Deploy only to isolated Render service srv-dbjhvdmtlv9c73d9f3t0 after successful build/tests and verify LIVE SHA plus exact HTML/CSS/JS.
+
+
+## 2026-11-06 02:04–02:17 Asia/Tbilisi — overnight iteration 7 (STORY ENGINE / PUBLISH SAFETY)
+
+**PR:** draft #242, branch `feature/vetogram-v9-monochrome-nav-20261105`. **Verified starting PR HEAD:** `4840e8f3081a02730bc68dd96f0cb9d549ea58c7`. **Verified code HEAD before checkpoint:** `9fe53899e240b11836fb79089a0d48be35d0ad87`. Base `backup/vetogram-rb12-render-preview-before-v9-20261105` unchanged; production/main/backups untouched.
+
+### Real commits
+- `9cdcf5a1`: `public/app.js` now **fails closed after an uncertain Telegram Story POST** (timeout/network, 5xx, 409 processing, or no Telegram-confirmed ID). It remembers `composerPublishUncertain` for the current media attachment, blocks the second send, retains original attachment/nonce, displays an explicit status, and prevents old owner or replaced-media responses from poisoning a new draft. A deliberate new-photo action is the only unlock; no automatic retry.
+- `e540d920`: `studio.html` adds a visible inline `role=alert` recovery panel with human instructions and a deliberate new-photo button. Loads a dedicated V9 Story stylesheet and busts `app.js` cache on Android/WebView.
+- `12ef18f8`, `b05c1f06`: `public/vetogram-v9-story-engine.css` polishes real Story Engine controls to monochrome black/white (not a new mock screen), enlarged 2-column mobile template previews, focus targets, reduced-motion and Pearl/Linen. **Creative Story templates themselves remain user-selectable and may use color**. Fixed invalid font shorthand before checkpoint.
+- `5445e6ad`: new `tests/vetogram-v9-story-engine.test.js`, 7 source/VM regression cases including *executed* uncertain catch, stale owner/generation, deliberate unlock and safe UI contracts.
+- `681bccb2`: register new Story test in `qa:preview:offline` release gate without removing other checks.
+- `9fe53899`: existing V9 monochrome-nav test had an obsolete all-assets V9.02 cache expectation (contradicted by earlier Games/GIF/Studio commits). Replaced it with a **strict explicit per-path allowlist** for 11 updated assets, retaining base V9.02 checks for all 70 unchanged links, plus duplicate path and missing updated asset assertions. No test gate disabled.
+
+### Verification evidence
+- Freshly fetched GitHub `app.js`, `studio.html`, Story CSS and the new test file; executed **7/7 actual test bodies in a V8 adapter**, including an actual isolated execution of the extracted real publish failure catch with ambiguous/definite/stale-owner/stale-generation outcomes: PASS. The complete `app.js` parses as classic JavaScript; new CSS braces balanced; new HTML IDs unique.
+- Freshly fetched all sources used by existing `tests/vetogram-v9-monochrome-nav.test.js`; executed its **9/9 actual test bodies in a V8 adapter**: PASS, including the new strict asset-cache allowlist. Total 16/16 isolated source/VM checks. **This is not native `node --test` or a browser run**.
+- Actual repository checkout unavailable in this run (container GitHub DNS resolution failed), so full native Node suite, `npm run qa:preview:offline`, browser screenshots, real Story publication/Telegram owner login, and Android WebView interaction are **NOT VERIFIED**. No SMS/OTP or Telegram Business consent actions performed.
+- GitHub combined status on `9fe53899`-preceding code HEAD: 3 Vercel contexts `failure` pointing to `build-rate-limit` upgrade page (quota, not proof of compile failure); no GitHub Actions PR runs returned. No Render deployment; last confirmed LIVE review remains old V9.02 `8a47b709dac5a63f46c598dc2d7556ad4ccb90af` and **does not contain this Story fix**.
+
+### First next step
+1. Re-read current PR HEAD and this checkpoint. In a real checkout run `node --test tests/vetogram-v9-story-engine.test.js tests/vetogram-story-publisher-handoff.test.js tests/vetogram-v9-monochrome-nav.test.js` plus `npm run qa:preview:offline` and build. Fix failures, never bypass release gates.
+2. On a real Android Telegram test account, stage an image, test uncertain response after a controlled mock 5xx/timeout without sending a real Story, ensure duplicate CTA disabled and manual new-photo recovery. Test Story Engine template previews, light theme, 360px, upload/export and owner switch; separately verify real publication only with user-authorized test account.
+3. Then progress to Chat/Telegram auth reliability and Business consent regression; do not claim SMS or Business success without real authorized evidence. Only deploy to isolated Render `srv-dbjhvdmtlv9c73d9f3t0` after full gates and verify LIVE commit and exact HTML/CSS/JS.
