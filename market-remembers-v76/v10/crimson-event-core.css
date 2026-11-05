@@ -1,0 +1,128 @@
+/* MARKET REMEMBERS V14 / CRIMSON WORLD
+ * Two full visual universes, one product. PEOPLE rendering remains unchanged.
+ * EVENT CORE is not a CSS filter over the old globe: it has its own shader.
+ */
+#app .mh-planet-surface[hidden],#app .mh-crimson-cosmos[hidden],#app .mh-event-header[hidden]{display:none!important}
+#app .mh-crimson-cosmos{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;
+ background:radial-gradient(ellipse 59% 68% at 55% 49%,#380e1a50 0%,#13071079 44%,#040507 80%),linear-gradient(120deg,#040509,#0b070c 58%,#060609);}
+#app .mh-crimson-cosmos:before{content:"";position:absolute;inset:0;opacity:.55;background-image:
+ radial-gradient(1px 1px at 8% 13%,#d8b8c3bb 88%,transparent),
+ radial-gradient(1.2px 1.2px at 26% 73%,#e7bbc4 90%,transparent),
+ radial-gradient(1px 1px at 40% 25%,#e7e0e5b8 90%,transparent),
+ radial-gradient(1.6px 1.6px at 77% 21%,#e0a0ae 90%,transparent),
+ radial-gradient(1.3px 1.3px at 91% 59%,#fff1f1d2 90%,transparent),
+ radial-gradient(1px 1px at 69% 83%,#f09aa0a8 90%,transparent);
+ background-size:240px 260px,375px 315px,290px 400px,410px 295px,340px 365px,470px 460px}
+#app .mh-crimson-nebula{position:absolute;inset:-15%;background:
+ radial-gradient(ellipse 33% 20% at 77% 16%,#75142d38,transparent 75%),
+ radial-gradient(ellipse 31% 24% at 13% 91%,#3c112b46,transparent 82%),
+ radial-gradient(ellipse 33% 16% at 63% 73%,#90182d13,transparent 85%);filter:blur(42px)}
+#app .mh-crimson-aureole{position:absolute;left:var(--mh-core-x,58%);top:var(--mh-core-y,50%);
+ width:calc(var(--mh-core-radius,250px) + var(--mh-core-radius,250px) + 100px);
+ height:calc(var(--mh-core-radius,250px) + var(--mh-core-radius,250px) + 100px);
+ transform:translate(-50%,-50%);border-radius:50%;
+ background:radial-gradient(circle,transparent 49%,#d52d5321 63%,transparent 74%);filter:blur(17px)}
+#app .mh-crimson-orbit{position:absolute;left:var(--mh-core-x,58%);top:var(--mh-core-y,50%);
+ width:calc(var(--mh-core-radius,250px) + var(--mh-core-radius,250px) + 78px);
+ height:calc(var(--mh-core-radius,250px) + var(--mh-core-radius,250px) + 78px);
+ border:1px solid #ae5e7555;border-radius:50%;transform:translate(-50%,-50%) rotate(-28deg) rotateX(73deg);opacity:.54}
+#app .mh-crimson-orbit-two{transform:translate(-50%,-50%) rotate(54deg) rotateX(79deg);border-color:#dfaaa84a;opacity:.35}
+#app .mh-crimson-vignette{position:absolute;inset:0;pointer-events:none;background:
+ linear-gradient(90deg,#03050ad9 0%,transparent 33%,transparent 72%,#03050a6b 100%),
+ linear-gradient(0deg,#020408a8 0%,transparent 20%,transparent 76%,#03040875 100%)}
+#app .mh-planet-surface{position:absolute;inset:0;z-index:8;touch-action:none;cursor:grab;pointer-events:auto;user-select:none}
+#app .mh-planet-surface:active{cursor:grabbing}
+#app .mh-planet-surface canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+#app .mh-planet-surface canvas[hidden]{display:none!important}
+#app .mh-event-header{position:absolute;z-index:32;left:0;right:0;top:0;height:77px;padding:0 clamp(20px,4.5vw,86px);display:flex;align-items:center;justify-content:space-between;gap:20px;
+ border-bottom:1px solid #c17c8a32;background:linear-gradient(180deg,#05060bf0,#08080ebc 85%,#08080e00);color:#f6edf0}
+#app .mh-event-brand{display:flex;align-items:center;gap:12px}
+#app .mh-event-sigil{width:43px;height:43px;border-radius:11px;border:1px solid #ed536983;display:flex;align-items:center;justify-content:center;font-size:26px;color:#ff627b;
+ background:radial-gradient(circle at 35% 24%,#6a23378a,#170d16c6);box-shadow:0 0 25px #eb365626}
+#app .mh-event-brand strong{display:block;font:650 12px/1.3 Inter,system-ui,sans-serif;letter-spacing:.14em}
+#app .mh-event-brand em{font-style:normal;color:#f48f9f}
+#app .mh-event-brand small{display:block;margin-top:4px;color:#a48e9a;font:650 8px/1.3 Inter,system-ui,sans-serif;letter-spacing:.19em}
+#app .mh-event-header button{border:1px solid #8c555f91;border-radius:8px;min-height:39px;padding:9px 13px;background:#170e17ce;color:#f1d6da;letter-spacing:.09em;font:700 10px/1.1 Inter,system-ui,sans-serif;cursor:pointer}
+#app .mh-event-header button:hover{border-color:#ec7082;color:#fff}
+#app .mh-world-veil{position:absolute;inset:0;z-index:90;background:#050408;opacity:0;pointer-events:none}
+#app.mh-world-shift .mh-world-veil{animation:mh-world-passage .65s ease-in-out both}
+@keyframes mh-world-passage{0%{opacity:0}38%{opacity:.92}100%{opacity:0}}
+#app[data-mh-mode="events"],#app[data-mh-mode="connections"]{--bg:#050507;--ink:#f6eef0;--violet:#e34d6b;--cyan:#d4afb7;--gold:#efadb0;--line:#bd607050;color:#f6eef0}
+#app[data-mh-mode="events"] .header,#app[data-mh-mode="connections"] .header,
+#app[data-mh-mode="events"] .mobile-nav,#app[data-mh-mode="connections"] .mobile-nav,
+#app[data-mh-mode="events"] .version-compare,#app[data-mh-mode="connections"] .version-compare,
+#app[data-mh-mode="events"] .world-controls,#app[data-mh-mode="connections"] .world-controls,
+#app[data-mh-mode="events"] .scene-footer,#app[data-mh-mode="connections"] .scene-footer,
+#app[data-mh-mode="events"] .scene-grid,#app[data-mh-mode="connections"] .scene-grid,
+#app[data-mh-mode="events"] .scene-shading,#app[data-mh-mode="connections"] .scene-shading,
+#app[data-mh-mode="events"] #gl,#app[data-mh-mode="connections"] #gl,
+#app[data-mh-mode="events"] #fallback,#app[data-mh-mode="connections"] #fallback,
+#app[data-mh-mode="events"] #memorySky,#app[data-mh-mode="connections"] #memorySky,
+#app[data-mh-mode="events"] #v81Aura,#app[data-mh-mode="connections"] #v81Aura,
+#app[data-mh-mode="events"] .v124-depth-field,#app[data-mh-mode="connections"] .v124-depth-field,
+#app[data-mh-mode="events"] .v127-space-field,#app[data-mh-mode="connections"] .v127-space-field,
+#app[data-mh-mode="events"] .lens-halo,#app[data-mh-mode="connections"] .lens-halo,
+#app[data-mh-mode="events"] .energy-sweep,#app[data-mh-mode="connections"] .energy-sweep,
+#app[data-mh-mode="events"] .globe-caption,#app[data-mh-mode="connections"] .globe-caption,
+#app[data-mh-mode="events"] .signal-hint,#app[data-mh-mode="connections"] .signal-hint,
+#app[data-mh-mode="events"] #travelTrail,#app[data-mh-mode="connections"] #travelTrail,
+#app[data-mh-mode="events"] #signalReticle,#app[data-mh-mode="connections"] #signalReticle,
+#app[data-mh-mode="events"] #starFocusLabel,#app[data-mh-mode="connections"] #starFocusLabel,
+#app[data-mh-mode="events"] #focusCaption,#app[data-mh-mode="connections"] #focusCaption{display:none!important}
+#app[data-mh-mode="events"] .mh-mode-switch,#app[data-mh-mode="connections"] .mh-mode-switch{top:94px;right:clamp(22px,4.5vw,86px);left:auto;bottom:auto;transform:none;border-color:#c4647656;background:#120e16ed}
+#app[data-mh-mode="events"] .mh-mode-switch button.is-active,#app[data-mh-mode="connections"] .mh-mode-switch button.is-active{background:linear-gradient(120deg,#a72d44,#542230);box-shadow:inset 0 0 0 1px #ff879653}
+#app[data-mh-mode="events"] .mh-mode-switch button:hover,#app[data-mh-mode="connections"] .mh-mode-switch button:hover{background:#522635}
+#app[data-mh-mode="events"] .mh-event-layer,#app[data-mh-mode="connections"] .mh-event-layer{z-index:13}
+#app[data-mh-mode="events"] .mh-event-layer .mh-beacon,#app[data-mh-mode="connections"] .mh-event-layer .mh-beacon{
+ background:linear-gradient(125deg,#411824ed,#100d14f5);border:1px solid #ef7a8d94;box-shadow:0 0 16px #df315a4b;color:#fff0f1;min-width:53px;
+ font-size:10px}
+#app[data-mh-mode="events"] .mh-beacon.is-active,#app[data-mh-mode="connections"] .mh-beacon.is-active{border-color:#ffc4c5;box-shadow:0 0 0 5px #f13c5b32,0 0 30px #f951758a}
+#app[data-mh-mode="connections"] .mh-thematic-lines path{stroke:#fb7b95;stroke-opacity:.68;stroke-width:1.4;filter:drop-shadow(0 0 6px #ed476e75)}
+#app[data-mh-mode="events"] .mh-intro,#app[data-mh-mode="connections"] .mh-intro{top:clamp(200px,26vh,280px);width:min(410px,30vw)}
+#app[data-mh-mode="events"] .mh-intro .mh-overline,#app[data-mh-mode="connections"] .mh-intro .mh-overline{color:#e78294}
+#app[data-mh-mode="events"] .mh-intro h1,#app[data-mh-mode="connections"] .mh-intro h1{font:570 clamp(41px,4.4vw,76px)/1.0 Inter,system-ui,sans-serif;letter-spacing:-.075em;color:#f6f1f0;text-shadow:0 0 55px #d72d4a30}
+#app[data-mh-mode="events"] .mh-intro p,#app[data-mh-mode="connections"] .mh-intro p{color:#beb3bc;font-size:13px}
+#app[data-mh-mode="events"] .mh-history-panel,#app[data-mh-mode="connections"] .mh-history-panel{
+ right:clamp(22px,4.5vw,86px);bottom:75px;width:min(382px,29vw);max-height:min(66vh,640px);
+ border:1px solid #b6647573;border-radius:14px;background:linear-gradient(155deg,#2a1621e8,#0a0a12f7 77%);
+ box-shadow:0 21px 85px #000d,0 0 42px #e02a4a13;scrollbar-color:#973e59 #100e15}
+#app .mh-core-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:16px 0 12px;padding:3px;background:#110c13;border-radius:8px;border:1px solid #bd708045}
+#app .mh-core-tabs button{min-height:35px;border:0;border-radius:6px;color:#bdaeb8;background:transparent;font:700 10px Inter,system-ui,sans-serif;letter-spacing:.13em;cursor:pointer}
+#app .mh-core-tabs button.is-active{color:#fff;background:linear-gradient(110deg,#a82b47,#541e32);box-shadow:inset 0 0 0 1px #f1abb744}
+#app[data-mh-mode="events"] .mh-panel-top,#app[data-mh-mode="connections"] .mh-panel-top{color:#eda3b1}
+#app[data-mh-mode="events"] .mh-panel-body h2,#app[data-mh-mode="connections"] .mh-panel-body h2{color:#fff4f2}
+#app[data-mh-mode="events"] .mh-timeline button.is-active,#app[data-mh-mode="connections"] .mh-timeline button.is-active{border-color:#f27e94;background:#782b415e}
+#app[data-mh-mode="events"] .mh-mechanism small,#app[data-mh-mode="connections"] .mh-mechanism small,#app[data-mh-mode="events"] .mh-takeaway small,#app[data-mh-mode="connections"] .mh-takeaway small{color:#ff9faf}
+#app[data-mh-mode="events"] .mh-panel-actions button,#app[data-mh-mode="connections"] .mh-panel-actions button{background:linear-gradient(110deg,#aa3048,#6c2035);border-color:#ed7889}
+@media(max-width:819px){
+ #app .mh-event-header{height:62px;padding:0 13px}
+ #app .mh-event-sigil{width:33px;height:33px;font-size:22px}
+ #app .mh-event-brand{gap:7px}
+ #app .mh-event-brand strong{font-size:9px;letter-spacing:.055em}
+ #app .mh-event-brand small{font-size:6px;letter-spacing:.10em}
+ #app .mh-event-header button{min-height:34px;padding:7px;font-size:9px}
+ #app .mh-event-header button span{display:none}
+ #app[data-mh-mode="events"] .mh-mode-switch,#app[data-mh-mode="connections"] .mh-mode-switch{
+  top:70px;left:50%;right:auto;transform:translateX(-50%);bottom:auto;padding:3px;z-index:33}
+ #app[data-mh-mode="events"] .mh-intro,#app[data-mh-mode="connections"] .mh-intro{
+  top:134px;left:18px;right:18px;max-width:350px;width:auto;z-index:11}
+ #app[data-mh-mode="events"] .mh-intro h1,#app[data-mh-mode="connections"] .mh-intro h1{font-size:clamp(29px,7vw,38px);margin:8px 0}
+ #app[data-mh-mode="events"] .mh-intro p,#app[data-mh-mode="connections"] .mh-intro p{font-size:10px;max-width:280px;line-height:1.4}
+ #app[data-mh-mode="events"] .mh-history-panel,#app[data-mh-mode="connections"] .mh-history-panel{
+  left:13px;right:13px;bottom:calc(17px + env(safe-area-inset-bottom,0px));width:auto;max-height:36vh;
+  padding:12px 13px;border-radius:13px}
+ #app .mh-core-tabs{margin:9px 0}
+ #app .mh-core-tabs button{min-height:30px;font-size:9px}
+ #app .mh-crimson-vignette{background:linear-gradient(0deg,#03040baf,transparent 25%,transparent 75%,#03040a9c)}
+}
+@media(max-width:819px) and (max-height:690px){
+ #app[data-mh-mode="events"] .mh-intro,#app[data-mh-mode="connections"] .mh-intro{top:113px}
+ #app[data-mh-mode="events"] .mh-intro p,#app[data-mh-mode="connections"] .mh-intro p{display:none}
+ #app[data-mh-mode="events"] .mh-history-panel,#app[data-mh-mode="connections"] .mh-history-panel{max-height:33vh}
+}
+@media(max-width:819px) and (orientation:landscape) and (max-height:650px){
+ #app[data-mh-mode="events"] .mh-mode-switch,#app[data-mh-mode="connections"] .mh-mode-switch{top:74px;left:24px;right:auto;transform:none}
+ #app[data-mh-mode="events"] .mh-intro,#app[data-mh-mode="connections"] .mh-intro{top:138px;max-width:35vw}
+ #app[data-mh-mode="events"] .mh-history-panel,#app[data-mh-mode="connections"] .mh-history-panel{left:auto;right:13px;top:116px;bottom:8px;max-height:none;width:min(315px,42vw)}
+}
+@media(prefers-reduced-motion:reduce){#app .mh-world-veil,#app .mh-event-header,#app .mh-planet-surface{animation:none!important;transition:none!important}}
