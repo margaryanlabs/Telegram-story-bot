@@ -380,7 +380,12 @@
     // titles without a validated provider stream stay out of public shelves.
     // Discovery-only records have a separate, clearly labelled foreign catalog.
     // They are never passed into the in-app video player.
-    let list=state.tab==="foreign"
+    const worldHome=state.tab==="home"&&!state.query.trim();
+    let list=worldHome
+      ? films.filter(f=>(f.externalRutube&&f.featuredForeign)||
+        (f.seriesPopular&&f.seriesGroup==="global")||
+        (f.player?.licensed===true&&!f.discoveryOnly&&!f.externalRutube&&(f.genres||[]).includes("Зарубежное")))
+      : state.tab==="foreign"
       ? films.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim))
       : films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
         !failedEmbeds.has(f.id)&&(f.player?.licensed===true||Boolean(f.file)));
@@ -393,6 +398,7 @@
       (state.genre==="Фильмы"&&!f.contentType&&Number(f.minutes)>30));
     const q=state.query.trim().toLocaleLowerCase("ru-RU");
     if(q)list=list.filter(f=>(f.title+" "+(f.original||"")+" "+(f.year||"")+" "+(f.creator||"")+" "+(f.genres||[]).join(" ")).toLocaleLowerCase("ru-RU").includes(q));
+    if(worldHome)return [...list].sort((a,b)=>worldPriority(a)-worldPriority(b)||((Number(b.year)||0)-(Number(a.year)||0)));
     if(state.sort==="year")
       return [...list].sort((a,b)=>(Number(b.year)||0)-(Number(a.year)||0)||(uploadTime(b)-uploadTime(a)));
     if(state.sort==="title")
@@ -752,7 +758,7 @@
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
       (f.player?.licensed===true||Boolean(f.file))).length;
-    text("cinemaCount",state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
+    text("cinemaCount",state.tab==="home"&&!state.query.trim()?list.length+" зарубежных фильмов и сериалов · доступность зависит от источника":state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library"||state.tab==="foreign");
     const russian=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&(f.spoken==="Русский"||f.spoken==="ru"));
@@ -766,6 +772,7 @@
       b.addEventListener("click",()=>{state.genre=g;state.visible=100;buzz();render();if(state.tab!=="library")fetchCatalog(true)});return b;
     }));
     let title=state.genre==="Все"?"Вся коллекция":state.genre,subtitle="Фильмы, сериалы и мультфильмы из официальных видеоканалов. Новые записи появляются в каталоге.";
+    if(state.tab==="home"&&!state.query.trim()){title="Мировое кино и сериалы";subtitle="Популярные зарубежные истории. Карточки с источником не означают право на просмотр внутри Vetogram.";}
     if(state.tab==="catalog")title="Каталог фильмов";
     if(state.tab==="foreign"){title="Зарубежное · каталог источников";subtitle="Дубляж указан загрузчиком и не проверен. Встроенное воспроизведение откроем только для разрешённых источников.";}
     if(state.tab==="series"){title="Серии для просмотра";subtitle="Публикации официальных каналов со встроенными плеерами. Доступность конкретного видео зависит от источника и региона.";}
