@@ -1,0 +1,98 @@
+/* VETOGRAM REBORN / RB1 — restrained core shell, 2026-11-05.
+ * Applies only to the existing studio shell. Does NOT restyle Telegram
+ * conversations, user-selected light/linen themes, reader or media iframes.
+ * A final cascade layer while legacy styles are audited, not a new theme engine.
+ */
+:root {
+  --vgr-bg: #080b11;
+  --vgr-surface: #111722;
+  --vgr-surface-2: #171f2c;
+  --vgr-line: rgba(204, 215, 233, .12);
+  --vgr-ink: #f0f3f9;
+  --vgr-muted: #adb9ca;
+  --vgr-accent: #b9c9f0;
+  --vgr-radius: 18px;
+  --vgr-focus: #c5d2f6;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]) {
+  --vet-panel: var(--vgr-surface);
+  --vet-panel-raised: var(--vgr-surface-2);
+  --vet-border: var(--vgr-line);
+  --vet-ink: var(--vgr-ink);
+  --vet-muted: var(--vgr-muted);
+}
+/* No redesign is allowed to replace a chosen chat wallpaper. */
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+body:not(.veto-chat-active):not(.veto-chat-thread) {
+  background: var(--vgr-bg) !important;
+  background-image: none !important;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] .veto-command-home {
+  max-width: 920px;
+  margin-inline: auto;
+  border-radius: var(--vgr-radius);
+  text-wrap: pretty;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] .veto-command-home h1 {
+  letter-spacing: -.045em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] :is(
+  .vg27-mission, .vg33-tools-panel, .vg26-resume
+) {
+  max-width: 920px;
+  margin-inline: auto;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] :is(
+  .veto-command-home, .vg27-mission, .vg33-tools-panel, .vg26-resume
+) {
+  box-shadow: none !important;
+}
+/* Four true destinations rather than squeezing Games and Profile into the
+ * primary action rail. Both remain reachable by Media and the header. */
+#vetogram .bottom-nav[data-reborn-nav="four"] {
+  gap: 0;
+}
+#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+  min-width: 0;
+  min-height: 48px;
+  flex: 1 1 25%;
+  touch-action: manipulation;
+}
+#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item small {
+  white-space: nowrap;
+}
+#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item:focus-visible,
+#vetogram .screen[data-screen="home"] button:focus-visible {
+  outline: 2px solid var(--vgr-focus) !important;
+  outline-offset: -2px;
+}
+@media (max-width: 600px) {
+  #vetogram .bottom-nav[data-reborn-nav="four"] {
+    display: grid !important;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    align-items: stretch;
+    padding-left: max(8px,env(safe-area-inset-left));
+    padding-right: max(8px,env(safe-area-inset-right));
+  }
+  #vetogram .bottom-nav[data-reborn-nav="four"] :is(.v6-nav-brand,.v6-nav-foot) {
+    display: none !important;
+  }
+  #vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 52px;
+  }
+  #vetogram .screen[data-screen="home"] .veto-command-home {
+    margin-inline: 10px;
+  }
+  #vetogram .screen[data-screen="home"] .veto-command-home h1 {
+    font-size: clamp(27px, 9vw, 41px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+    transition: none !important;
+  }
+}
