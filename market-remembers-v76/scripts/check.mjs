@@ -47,5 +47,17 @@ if(!html.includes('v10/v12-reading-polish.css'))throw Error('V12 RC3 reader poli
 if(!html.includes('v10/v12-depth-field.css')||!html.includes('class="v124-depth-field"'))throw Error('V12 RC4 native sphere depth layer missing');
 if(!html.includes('v10/v12-universe-cinema.css'))throw Error('V12 RC6 cinematic universe layer missing');
 if(!html.includes('v10/v12-universe-depth-v2.css')||!html.includes('class="v127-space-field"'))throw Error('V12 cosmic depth field v2 is missing');
+const cosmicDepth=await readFile(path.join(root,'v10','v12-universe-depth-v2.css'),'utf8');
+const spiralArt=await readFile(path.join(root,'v10','v12-cinematic-galaxy.svg'),'utf8');
+if(!cosmicDepth.includes('url("v12-cinematic-galaxy.svg")')||
+   !spiralArt.startsWith('<svg ')||
+   !spiralArt.includes('id="galaxyCore"')||
+   !spiralArt.trimEnd().endsWith('</svg>'))
+  throw Error('V12 real structured galaxy background is missing or incomplete');
+if(!html.includes('float volumeChord=')||
+   !html.includes('vec3 accumulatedNebula=')||
+   !html.includes('transmittance*='))
+  throw Error('V12 true volumetric shader pass is missing');
+
 if(!html.includes('float nebulaNoise3(vec3 p)')||!html.includes('float goldZone='))throw Error('V12 high depth nebula globe material missing');
 console.log('V12 RC6 lint: cumulative engine, ordered modules, all visual layers, local-only data and shell IDs valid.');
