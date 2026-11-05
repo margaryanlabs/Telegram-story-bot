@@ -30,7 +30,7 @@ test('V19 reader displays only documented chapters and discloses missing context
 
 test('V19 event selection stays compact until explicit dossier request',()=>{
   assert.match(modes,/function selectEvent\(id\)/);
-  assert.match(modes,/panelExpanded = false;\s*renderPanel\(\);\s*renderBeacons\(\)/);
+  assert.match(modes,/panelExpanded = false;\s*renderPanel\(\);\s*panel\.scrollTop=0;\s*renderBeacons\(\)/);
   assert.match(modes,/mh-v19-preview/);
   assert.match(modes,/mh-v19-context/);
   assert.match(modes,/mh-v19-neighbors/);
