@@ -113,17 +113,18 @@ function render2D(){
  ctx.strokeStyle='rgba(173,158,183,.46)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
 }
 function project(pair){
+ // Inverse of the shader's yaw/pitch: archive beacons must be glued
+ // to the actual rotating 3D material, never float over a decorative disc.
  const {x,y,r}=planet,px=pair[0],py=pair[1],pz=Math.sqrt(Math.max(0,1-px*px-py*py));
  const cy=Math.cos(yaw),sy=Math.sin(yaw),cx=Math.cos(pitch),sx=Math.sin(pitch);
- const rx=cy*px+sy*pz,rz=-sy*px+cy*pz;
- const ry=cx*py-sx*rz,front=sx*py+cx*rz;
- return {x:x+rx*r,y:y-ry*r,visible:front>-.02};
+ const qz=sx*py+cx*pz,ny=cx*py-sx*pz;
+ const nx=cy*px+sy*qz,nz=-sy*px+cy*qz;
+ return {x:x+nx*r,y:y-ny*r,visible:nz>0.035,depth:nz};
 }
 function focus(pair){
  const px=pair[0],py=pair[1],pz=Math.sqrt(Math.max(.01,1-px*px-py*py));
- targetYaw=-Math.atan2(px,pz);
- const rz=-Math.sin(targetYaw)*px+Math.cos(targetYaw)*pz;
- targetPitch=Math.atan2(py,rz);
+ targetYaw=-Math.atan2(px,Math.hypot(py,pz));
+ targetPitch=Math.atan2(py,pz);
  focusUntil=performance.now()+2800;pulseAt=performance.now();request();
 }
 function tick(t){
