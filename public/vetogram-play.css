@@ -160,7 +160,8 @@
 
 
 /* Immersive game runner: only local games are mounted; external games remain outbound links. */
-.vp-screen .vp-mini[data-vp-game]:not(.vp-game-in-dialog)>:not(.vp-game-art):not(.vp-mini-icon):not(h3):not(p):not(.vp-store-actions):not(.vp-open-game){display:none!important}
+/* In V9 focused mode, the real inline game controls must stay visible. */
+.vp-screen:not(.v9-arcade-active) .vp-mini[data-vp-game]:not(.vp-game-in-dialog)>:not(.vp-game-art):not(.vp-mini-icon):not(h3):not(p):not(.vp-store-actions):not(.vp-open-game){display:none!important}
 .vp-screen .vp-mini:not(.vp-game-in-dialog){min-height:194px}
 .vp-screen .vp-mini .vp-open-game{display:inline-flex;align-items:center;justify-content:center;min-height:39px;width:100%;margin-top:auto;border-radius:12px;border:1px solid rgba(240,177,160,.45);background:#e8ad9a;color:#27191d;font-size:12px;font-weight:900;cursor:pointer}
 .vp-screen .vp-mini .vp-open-game:focus-visible{outline:2px solid #e8ad9a;outline-offset:3px}
