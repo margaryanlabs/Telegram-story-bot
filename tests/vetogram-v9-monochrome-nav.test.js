@@ -40,9 +40,9 @@ test('cinema music books are real modules, local games are not a media catalog t
 test('a unified cache release prevents stale Android/WebView CSS and JS',()=>{
   const values=[...html.matchAll(/<(?:script|link)\b[^>]*\b(?:src|href)=["']\/[^"']+\.(?:js|css)\?v=([^"'&#]+)["']/g)].map(x=>x[1]);
   assert.ok(values.length>=60);
-  assert.deepEqual([...new Set(values)],['20261105-v9-01']);
+  assert.deepEqual([...new Set(values)],['20261105-v9-02']);
   for(const file of ['music-module.html','cinema.html','books.html'])
-    assert.match(read(file),/\/vetogram-reborn-modules\.css\?v=20261105-v9-01/);
+    assert.match(read(file),/\/vetogram-reborn-modules\.css\?v=20261105-v9-02/);
 });
 
 test('monochrome source token system does not reintroduce the blue presentation',()=>{
