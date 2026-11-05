@@ -21,7 +21,7 @@
 /* A genuine background landmark: a faint spiral-galaxy optical disc.
    Multiple falloffs convey light/structure but preserve text contrast. */
 #app.obsidian .v127-galaxy{
-  width:61%;height:34%;right:-14%;top:18%;
+  width:56%;height:31%;right:-8%;top:15%;
   transform:rotate(-27deg);
   border-radius:50%;
   background:
@@ -38,7 +38,7 @@
       transparent 43%,rgba(59,120,180,.11) 63%,transparent 99%);
   -webkit-mask-image:radial-gradient(ellipse,#000 22%,#0009 43%,transparent 82%);
   mask-image:radial-gradient(ellipse,#000 22%,#0009 43%,transparent 82%);
-  opacity:.91;
+  opacity:.97;
 }
 #app.obsidian .v127-galaxy::before{
   content:"";position:absolute;inset:4% 0%;border-radius:50%;
@@ -145,16 +145,16 @@
       radial-gradient(ellipse 53% 24% at 5% 84%,rgba(116,64,156,.11),transparent 95%);
   }
   #app.obsidian .v127-galaxy{
-    width:83%;height:33%;right:-28%;top:19%;
-    opacity:.81;
+    width:78%;height:29%;right:-16%;top:13%;
+    opacity:.95;
   }
   #app.obsidian .v127-nebula-river{
     width:118%;height:43%;left:16%;top:20%;
-    opacity:.68;
+    opacity:.61;
   }
   #app.obsidian .v127-nebula-crown{
     width:115%;height:38%;left:-30%;bottom:-4%;
-    opacity:.70;
+    opacity:.75;
   }
   #app.obsidian .scene-shading{
     background:
