@@ -1,6 +1,6 @@
 const {test,expect}=require('./browser-fixtures.cjs');
 
-test('V19 PEOPLE presents concise real source material rather than four invented chapters',async({page})=>{
+test('V19 PEOPLE presents concise supplied source material rather than four invented chapters',async({page})=>{
  await page.setViewportSize({width:390,height:844});
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.goto('/#story/1');
@@ -74,8 +74,32 @@ test('V19.1 event dossier grip preserves keyboard focus and can be collapsed',as
  await page.keyboard.press('Enter');
  await expect(panel).not.toHaveClass(/is-expanded/);
  await expect(grip).toBeFocused();
+ await page.keyboard.press('Enter');
+ await expect(panel).toHaveClass(/is-expanded/);
+ await page.keyboard.press('Escape');
+ await expect(panel).not.toHaveClass(/is-expanded/);
+ await expect(grip).toBeFocused();
  await panel.locator('.mh-timeline [data-mh-event="1907"]').focus();
  await page.keyboard.press('ArrowRight');
  await expect(page).toHaveURL(/event=1987/);
  await expect(panel.locator('.mh-timeline [data-mh-event="1987"]')).toBeFocused();
+});
+
+test('V19.2 EVENT globe exposes a live reset button without discarding selected date',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.goto('/?mm=events&event=2008#universe');
+ const button=page.locator('#mhResetEventView');
+ await expect(button).toBeVisible();
+ await expect(button).toHaveAttribute('aria-label','Вернуть исторические метки на глобус');
+ const original=await page.evaluate(()=>{
+  const item=window.MarketHistoryModes.events.find(event=>event.id==='2008');
+  return window.MarketEventPlanet.project(item.p).depth;
+ });
+ await button.click();
+ await expect(page.locator('#mhHistoryPanel')).toContainText('Банкротство Lehman Brothers');
+ await expect.poll(async()=>page.evaluate(()=>{
+  const item=window.MarketHistoryModes.events.find(event=>event.id==='2008');
+  return window.MarketEventPlanet.project(item.p).depth;
+ })).toBeGreaterThan(Math.max(.90,original-.1));
 });
