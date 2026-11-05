@@ -103,7 +103,7 @@
     else if(tab==="foreign")$("cinemaSearch").placeholder="Найти зарубежный фильм с русской озвучкой…";
     else $("cinemaSearch").placeholder="Найти фильм, сериал, актёра или жанр…";
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
-    $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
+    $("cinemaStudios").classList.toggle("hidden",tab!=="catalog");
     $("cinemaSeriesHub").classList.toggle("hidden",tab!=="series");
     $("cinemaForeignHub").classList.toggle("hidden",tab!=="foreign");
     for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises","cinemaForeignShelf","cinemaWorldSeries"])
@@ -754,7 +754,7 @@
     $("cinemaBrowse").classList.toggle("hidden",state.tab==="series");
     $("cinemaGrid").replaceChildren(...list.slice(0,state.visible).map(filmCard));
     $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
-    $("cinemaMoreStudios").classList.toggle("hidden",state.tab==="library"||state.tab==="series"||state.tab==="foreign");
+    $("cinemaMoreStudios").classList.toggle("hidden",state.tab!=="catalog");
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
       (f.player?.licensed===true||Boolean(f.file))).length;
