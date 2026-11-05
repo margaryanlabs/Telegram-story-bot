@@ -135,7 +135,7 @@ test('all original profile destinations and login paths remain in place',()=>{
     assert.ok(html.includes('id="'+id+'"'),id);
   }
   for(const route of ['ai','voice','home'])assert.ok(html.includes('data-open-screen="'+route+'"'));
-  for(const text of ['viewer-use-phone','viewer-use-qr','viewer-verify-code',
+  for(const text of ['viewer-use-phone','viewer-start-qr','viewer-verify-code',
     'viewer-verify-password','viewer-resume-login','viewer-send-email']){
     assert.ok(app.includes(text),text);
   }
