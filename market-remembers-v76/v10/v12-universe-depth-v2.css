@@ -174,3 +174,29 @@
     animation:none!important;transition:none!important;
   }
 }
+/* V3: a self-hosted, deterministic SVG spiral and fractal nebula replaces
+   the flat CSS galaxy silhouette. This is rasterized once by the browser,
+   stays behind the existing WebGL canvas and does not receive touches. */
+#app.obsidian .v127-space-field{
+  background-image:
+    url("v12-cinematic-galaxy.svg"),
+    radial-gradient(ellipse 55% 37% at 78% 54%,rgba(30,75,117,.13),transparent 88%);
+  background-repeat:no-repeat,no-repeat;
+  background-position:65% center,center;
+  background-size:cover,cover;
+}
+/* Avoid two superimposed spiral centres and the older purple blur overlay. */
+#app.obsidian .v127-galaxy{
+  opacity:.10!important;
+}
+#app.obsidian .v127-nebula-river{opacity:.27!important}
+#app.obsidian .v127-nebula-crown{opacity:.35!important}
+@media(max-width:819px){
+  #app.obsidian .v127-space-field{
+    background-position:66% center,center;
+    background-size:cover,cover;
+  }
+  #app.obsidian .v127-galaxy{opacity:.08!important}
+  #app.obsidian .v127-nebula-river{opacity:.17!important}
+  #app.obsidian .v127-nebula-crown{opacity:.23!important}
+}
