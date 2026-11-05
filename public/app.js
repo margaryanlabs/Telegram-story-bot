@@ -1884,6 +1884,31 @@
     renderHome();
   }
 
+  // RB7: Telegram's native Back button belongs to the active navigation
+  // state, not permanently to the account modal. A visible chat and a visible
+  // modal can overlap: the modal always closes first.
+  function nativeBackTarget(){
+    if(!$('sheet')?.hidden)return 'sheet';
+    if(currentScreen==='telegram'&&$('telegramThreadView')?.hidden===false)
+      return 'thread';
+    if(!['home','telegram','publish','media','privacy'].includes(currentScreen))
+      return 'secondary';
+    return null;
+  }
+  function syncNativeBackButton(){
+    try{
+      if(nativeBackTarget())tg?.BackButton?.show();
+      else tg?.BackButton?.hide();
+    }catch{}
+  }
+  function handleNativeBackButton(){
+    const target=nativeBackTarget();
+    if(target==='sheet'){closeSheet();return;}
+    if(target==='thread'){window.VetoTelegramChatBack?.();return;}
+    if(target==='secondary')switchScreen('telegram');
+  }
+  window.addEventListener('vetogram:chat-view-changed',syncNativeBackButton);
+
   // Pages without a bottom-tab button still belong to an existing tab.
   const NAV_PARENT = {home:'profile',profile:'profile',media:'media',play:'media',chats:'privacy',telegram:'telegram',voice:'profile',archive:'publish',analytics:'profile',viewers:'publish',relay:'profile',ai:'profile',studio:'publish','story-engine':'publish'};
   function switchScreen(name) {
@@ -1918,6 +1943,7 @@
     // The Privacy module is loaded separately and must refresh whether a
     // screen is opened through a bottom tab, a home shortcut or a feature sheet.
     window.dispatchEvent(new CustomEvent('veto:screen-changed', { detail: { screen: target } }));
+    syncNativeBackButton();
     return true;
   }
   // Other modules can open secondary pages (Chats, Relay) without depending on
@@ -1955,7 +1981,7 @@
     document.documentElement.classList.add('veto-sheet-open');
     document.body.classList.add('veto-sheet-open');
     $('sheet').focus({preventScroll:true});
-    try { tg?.BackButton?.show(); } catch {}
+    syncNativeBackButton();
   }
 
   function closeSheet({restoreFocus=true}={}) {
@@ -1971,7 +1997,7 @@
     sheetReturnFocus=null;
     if (restoreFocus && returnTo?.isConnected && typeof returnTo.focus==='function')
       returnTo.focus({preventScroll:true});
-    try { tg?.BackButton?.hide(); } catch {}
+    syncNativeBackButton();
     window.dispatchEvent(new CustomEvent('vetogram:modal-closed'));
   }
 
@@ -3918,7 +3944,8 @@
     tg?.setBackgroundColor?.('#000000');
     tg?.setBottomBarColor?.('#030303');
     tg?.disableVerticalSwipes?.();
-    tg?.BackButton?.onClick(closeSheet);
+    tg?.BackButton?.onClick(handleNativeBackButton);
+    syncNativeBackButton();
   } catch {}
 
   try {
