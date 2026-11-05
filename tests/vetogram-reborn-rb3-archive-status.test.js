@@ -19,6 +19,8 @@ function fixture({archiveAvailable=true,ownerMatches=true}={}){
   const visited=[];
   const context=vm.createContext({
     BOT:'fake-test-token',
+    ACTIVE_DIALOG_SCAN:70,
+    ACTIVE_LATEST_MESSAGES:28,
     id:v=>String(v?.toString?.()||v||''),
     reply:(res,status,data)=>res.status(status).json({ok:status<400,...data}),
     validateTelegramMiniApp:()=>({id:123}),
