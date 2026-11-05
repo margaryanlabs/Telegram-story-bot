@@ -513,7 +513,7 @@
     const verifiedForeign=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&
       (f.genres||[]).includes("Зарубежное"));
-    const all=[...verifiedForeign,...world,...worldSeries];
+    const all=[...world,...worldSeries,...verifiedForeign];
     const used=new Set(),deck=[];
     for(const film of all){
       const key=String(f.original||f.title||f.id).toLocaleLowerCase("ru");
