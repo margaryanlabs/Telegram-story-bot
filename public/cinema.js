@@ -383,7 +383,7 @@
     // They are never passed into the in-app video player.
     const worldHome=state.tab==="home"&&!state.query.trim();
     let list=worldHome
-      ? films.filter(f=>(f.externalRutube&&f.featuredForeign)||
+      ? films.filter(f=>(isWorldSpotlight(f))||
         (f.seriesPopular&&f.seriesGroup==="global")||
         (f.player?.licensed===true&&!f.discoveryOnly&&!f.externalRutube&&(f.genres||[]).includes("Зарубежное")))
       : state.tab==="foreign"
@@ -470,15 +470,37 @@
   }
   // V9: lead with globally known non-Russian films and series from the
   // already sourced discovery catalog. This does NOT grant streaming rights.
+  // Explicit editorial curation: recognisable foreign titles on Home,
+  // not the entire unverified RUTUBE feed. Metadata never grants playback.
+  const V9_WORLD_SPOTLIGHT=Object.freeze([
+    "rutube-foreign-32257e72dcaa84e923d963f0312dac3d",
+    "rutube-foreign-9fc5a978eac757289f02ac7297abc723",
+    "rutube-foreign-63a01e97f8a311c37ea482bdcfc54ca4",
+    "rutube-foreign-3e74288e50b89b28f2e7302b4605556d",
+    "rutube-foreign-69f6d0d92cfa82e609ee5fc4906d8ed0",
+    "rutube-foreign-ef554e95494f715e14ed6a1dcfa487bd",
+    "rutube-foreign-bef521bfb6509e2c42af295b39f2d3b2",
+    "rutube-foreign-7e943b4c4fc73c70d48a770e2f02e740",
+    "rutube-foreign-2a51feb5e9406bcf2a5fdf2d4c460407",
+    "rutube-foreign-434660bdbfbfc938e80c33bbfeb5d59e",
+    "rutube-foreign-dc98d9aa982767bfa278834f60d47630",
+    "rutube-foreign-288ea6608b8e97980b57f852e82612b8",
+    "rutube-foreign-91dbbdd492e35537c17875dd1850839d"
+  ]);
+  const V9_WORLD_SPOTLIGHT_SET=new Set(V9_WORLD_SPOTLIGHT);
+  const isWorldSpotlight=f=>Boolean(f.externalRutube&&
+    (f.featuredForeign||V9_WORLD_SPOTLIGHT_SET.has(f.id)));
   const V9_WORLD_PRIORITY=["iron man","harry potter","avengers: endgame","game of thrones",
     "wednesday","squid game","house of the dragon","the dark knight","inception"];
   function worldPriority(f){
+    const curated=V9_WORLD_SPOTLIGHT.indexOf(f.id);
+    if(curated>=0)return curated;
     const key=String(f.original||f.title||"").toLocaleLowerCase("en");
     const rank=V9_WORLD_PRIORITY.findIndex(name=>key.includes(name));
-    return rank<0?100:rank;
+    return rank<0?100:rank+V9_WORLD_SPOTLIGHT.length;
   }
   function updateHeroDeck(){
-    const world=films.filter(f=>f.externalRutube&&f.featuredForeign&&
+    const world=films.filter(f=>isWorldSpotlight(f)&&
       typeof f.poster==="string"&&/^https:\/\//.test(f.poster))
       .sort((a,b)=>worldPriority(a)-worldPriority(b)||((Number(b.year)||0)-(Number(a.year)||0)));
     const worldSeries=films.filter(f=>f.seriesPopular&&f.seriesGroup==="global"&&
@@ -642,7 +664,7 @@
   function refreshDiscovery(){
     const home=isHome();
     // Discovery cards are browse-only; missing rights never become a Play button.
-    const external=films.filter(f=>f.externalRutube&&f.featuredForeign)
+    const external=films.filter(f=>isWorldSpotlight(f))
       .sort((a,b)=>worldPriority(a)-worldPriority(b));
     $("cinemaForeignShelf").classList.toggle("hidden",!home||external.length===0);
     if(home)$("cinemaForeignRail").replaceChildren(...external.slice(0,20).map(filmCard));
