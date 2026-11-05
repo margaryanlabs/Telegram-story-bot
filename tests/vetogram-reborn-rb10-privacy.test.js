@@ -113,7 +113,7 @@ test('Retention and destructive archive purge keep explicit controls',()=>{
   assert.match(p,/Уменьшение срока может удалить старые копии/);
   assert.match(a,/id="privacyClearButton"/);
   assert.match(a,/Удалить сохранённый архив навсегда/);
-  assert.match(css,/[data-screen="chats"] #privacyClearButton/);
+  assert.ok(css.includes('.screen[data-screen="chats"] #privacyClearButton'));
   assert.match(css,/border:1px solid rgba\(232,148,154,.45\)/);
   assert.doesNotMatch(css,/#privacyClearButton\s*\{[^}]*display\s*:\s*none/);
 });
