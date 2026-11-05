@@ -1,0 +1,169 @@
+/* MARKET REMEMBERS / V16 Cosmic Finish
+   This is the owner-approved V16 Precision Polish, NOT V17.
+   Stop flicker. Use depth, optically coherent lighting and touch-driven signals.
+*/
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-cosmos,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-cosmos {
+  background:
+    radial-gradient(ellipse 47% 45% at 57% 48%,rgba(64,80,126,.18),transparent 84%),
+    radial-gradient(ellipse 40% 30% at 77% 19%,rgba(90,54,109,.18),transparent 85%),
+    radial-gradient(ellipse 42% 29% at 11% 82%,rgba(35,65,111,.13),transparent 80%),
+    linear-gradient(142deg,#070913 0%,#0b0d1a 51%,#050710 100%);
+}
+/* Replace repeated wallpaper-like dots with a rendered deterministic star field. */
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-cosmos:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-cosmos:before {
+  opacity:.19;
+}
+#app .mh-deep-space{
+  position:absolute;inset:0;z-index:0;width:100%;height:100%;
+  pointer-events:none;opacity:.86;transform:scale(1.035);transform-origin:50% 50%;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-nebula,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-nebula{
+  opacity:.44;filter:blur(35px);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-aureole,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-aureole{
+  opacity:.70;filter:blur(17px);
+  background:radial-gradient(circle,
+    transparent 50%,rgba(161,184,220,.15) 61%,
+    rgba(138,105,151,.075) 73%,transparent 83%);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-halo,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-halo{
+  background:radial-gradient(circle,transparent 55%,rgba(159,194,233,.12) 69%,transparent 79%);
+  opacity:.90;filter:blur(12px);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-ring-a,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-ring-a{
+  border-color:rgba(204,219,239,.31);opacity:.50;
+  box-shadow:0 0 14px rgba(147,158,191,.08);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-ring-b,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-ring-b{
+  border-color:rgba(201,139,164,.27);opacity:.28;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-tick-arc,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-tick-arc{opacity:.41}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-scan,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-scan{
+  background:linear-gradient(105deg,transparent 24%,rgba(202,216,234,.05) 49%,transparent 60%);
+  opacity:.26;
+}
+/* Soft silver star-light on the physical orb. Red only indicates a selected shock. */
+#app.mh-v16[data-mh-mode="events"] .mh-beacon:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon:before{
+  border-color:#d9d9ecbd;
+  background:radial-gradient(circle at 35% 28%,#fff 0 11%,#dedeee 24%,#a7aec8 43%,#56516c 68%,transparent 83%);
+  box-shadow:0 0 0 3px rgba(190,194,228,.16),0 0 13px rgba(200,201,237,.34);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active:before{
+  background:radial-gradient(circle,#fff 0 14%,#ffe2ed 29%,#c97f9d 53%,transparent 80%);
+  box-shadow:0 0 0 4px rgba(206,139,168,.28),0 0 24px rgba(228,165,197,.49);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon-year{
+  color:#d0d5e4;background:linear-gradient(110deg,rgba(25,29,45,.91),rgba(13,17,29,.93));
+  border-color:rgba(158,162,192,.47);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active .mh-beacon-year{
+  color:#fff2f6;background:linear-gradient(120deg,#684059,#2d2840);
+  border-color:rgba(225,163,186,.71);
+}
+/* Keep an optional short bend near the selected probe, no line to the dock. */
+#app.mh-v16 .mh-v16-tether{pointer-events:none;transition:opacity .16s}
+#app.mh-v16 .mh-v16-tether path{
+  stroke-dasharray:none;stroke-width:1.3;
+  filter:drop-shadow(0 0 5px rgba(199,154,190,.45));
+}
+#app.mh-v16 .mh-v16-tether circle{
+  fill:#ffebf5;filter:drop-shadow(0 0 5px rgba(222,185,216,.59));
+}
+/* The burst is a one-off orbital signal on click. No perpetual flashing. */
+#app .mh-event-burst{
+  position:absolute;z-index:18;display:none;width:14px;height:14px;
+  transform:translate(-50%,-50%);pointer-events:none;opacity:0;isolation:isolate;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-event-burst,
+#app.mh-v16[data-mh-mode="connections"] .mh-event-burst{display:block}
+#app .mh-event-burst-ring{
+  position:absolute;left:50%;top:50%;width:20px;height:20px;
+  border:1.4px solid rgba(233,217,234,.75);border-radius:50%;
+  box-shadow:0 0 12px rgba(209,160,201,.32);
+  transform:translate(-50%,-50%) scale(.55);opacity:0;
+}
+#app .mh-event-burst-ring-second{border-color:rgba(208,143,177,.58)}
+#app .mh-event-burst-flare{
+  position:absolute;left:50%;top:50%;width:34px;height:34px;
+  transform:translate(-50%,-50%) scale(.4);border-radius:50%;opacity:0;
+  background:radial-gradient(circle,rgba(255,247,250,.48),rgba(224,164,193,.14) 41%,transparent 69%);
+  filter:blur(3px);
+}
+@media(prefers-reduced-motion:no-preference){
+  #app .mh-event-burst.is-live .mh-event-burst-ring{
+    animation:mhV16SignalRing .82s cubic-bezier(.18,.58,.31,1) both;
+  }
+  #app .mh-event-burst.is-live .mh-event-burst-ring-second{
+    animation-delay:.11s;
+  }
+  #app .mh-event-burst.is-live .mh-event-burst-flare{
+    animation:mhV16SignalGlint .5s ease-out both;
+  }
+  /* Parallax is a slow compositor transform of an already drawn canvas.
+     Zero recurring 2D redraws; protects mobile WebGL frame budget. */
+  #app.mh-v16[data-mh-mode="events"] .mh-deep-space,
+  #app.mh-v16[data-mh-mode="connections"] .mh-deep-space{
+    animation:mhV16SkyDrift 75s ease-in-out infinite alternate;
+  }
+}
+@keyframes mhV16SignalRing{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}
+  23%{opacity:.76}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(3.7)}
+}
+@keyframes mhV16SignalGlint{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  30%{opacity:.57}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}
+}
+@keyframes mhV16SkyDrift{
+  0%{transform:translate3d(-.65%,-.25%,0) scale(1.04)}
+  100%{transform:translate3d(.65%,.25%,0) scale(1.04)}
+}
+/* Disable continuous cosmetic chatter. Constrain dynamics to user intent. */
+#app.mh-v16 .mh-beacon.is-active .mh-beacon-ring{
+  animation:none!important;
+  opacity:.62;
+}
+#app.mh-v16[data-mh-mode="connections"] .mh-thematic-lines path{
+  animation:none!important;
+  stroke:rgba(195,172,200,.62);
+  stroke-opacity:.40;stroke-dasharray:3 10;
+}
+/* Preserve the original People world and V16 research arrangement. */
+#app.mh-v16 .mh-history-panel{
+  box-shadow:0 22px 66px rgba(0,0,0,.62),inset 0 1px 0 rgba(230,224,245,.09),0 0 26px rgba(131,106,161,.055);
+}
+#app.mh-v16 .mh-v16-research-card{
+  box-shadow:inset 0 1px 0 rgba(236,234,247,.09),0 10px 23px rgba(0,0,0,.13);
+}
+#app.mh-v16 .mh-core-tabs button:focus-visible,
+#app.mh-v16 .mh-panel-grip:focus-visible,
+#app.mh-v16 .mh-beacon:focus-visible{
+  outline:2px solid #e7c3d8;outline-offset:3px;
+}
+@media(max-width:819px){
+  #app.mh-v16[data-mh-mode="events"] .mh-deep-space,
+  #app.mh-v16[data-mh-mode="connections"] .mh-deep-space{opacity:.7}
+  #app .mh-event-burst-ring{border-width:1.2px}
+  #app.mh-v16[data-mh-mode="events"] .mh-crimson-nebula,
+  #app.mh-v16[data-mh-mode="connections"] .mh-crimson-nebula{filter:blur(27px);opacity:.36}
+}
+@media(prefers-reduced-motion:reduce){
+  #app .mh-deep-space,#app .mh-event-burst *{
+    animation:none!important;transition:none!important;
+  }
+}
