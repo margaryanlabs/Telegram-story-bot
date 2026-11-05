@@ -1,0 +1,45 @@
+/* Vetogram V9 · browser-local GIF Maker, monochrome editorial studio. */
+.screen[data-screen="creator"] .v9-gif-maker{
+  margin:20px 0 24px;padding:clamp(18px,3vw,30px);border:1px solid #363636;
+  border-radius:23px;background:#090909;color:#f6f6f6;box-shadow:none;
+}
+.v9-gif-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+.v9-gif-eyebrow{font-size:10px;letter-spacing:.2em;color:#aaa;font-weight:750}
+.v9-gif-header h2{font-size:clamp(25px,4vw,39px);letter-spacing:-.055em;line-height:1.1;margin:8px 0 10px;color:#fff}
+.v9-gif-header p{font-size:13px;line-height:1.65;color:#aaa;max-width:610px;margin:0}
+.v9-gif-format{font-size:11px;letter-spacing:.12em;font-weight:800;color:#eee;border:1px solid #494949;border-radius:100px;padding:9px 13px;white-space:nowrap}
+.v9-gif-body{display:grid;grid-template-columns:minmax(0,256px) minmax(0,1fr);gap:clamp(16px,4vw,36px);align-items:center}
+.v9-gif-preview{width:min(100%,256px);aspect-ratio:1;background:#111;border:1px solid #3b3b3b;border-radius:16px;overflow:hidden;box-shadow:0 18px 45px #0008}
+.v9-gif-preview canvas{width:100%;height:100%;display:block}
+.v9-gif-controls{display:grid;gap:13px;min-width:0}
+.v9-gif-control-label{font-size:11px;font-weight:750;letter-spacing:.09em;color:#bcbcbc;text-transform:uppercase}
+.v9-gif-controls input[type="text"]{box-sizing:border-box;width:100%;min-height:45px;padding:10px 13px;background:#151515;color:#fff;border:1px solid #494949;border-radius:11px;font:inherit;font-size:14px}
+.v9-gif-controls input:focus-visible,.v9-gif-maker button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.v9-gif-effects,.v9-gif-actions{display:flex;gap:8px;flex-wrap:wrap}
+.v9-gif-maker button{cursor:pointer;font:inherit;border:1px solid #4b4b4b;border-radius:11px;min-height:44px;padding:10px 15px;background:#191919;color:#f2f2f2;font-size:13px;font-weight:700;transition:background .2s ease,transform .2s ease}
+.v9-gif-maker button:hover:not(:disabled){background:#333}
+.v9-gif-maker button:active:not(:disabled){transform:scale(.98)}
+.v9-gif-maker button[aria-pressed="true"],.v9-gif-maker .v9-gif-primary:not(:disabled){background:#f6f6f6;color:#111;border-color:#f6f6f6}
+.v9-gif-maker button:disabled{opacity:.38;cursor:not-allowed}
+.v9-gif-status{min-height:20px;font-size:12px;color:#aaa;line-height:1.6;margin:0}
+.v9-gif-note{font-size:11px;line-height:1.6;color:#888;margin:0;border-top:1px solid #303030;padding-top:12px}
+@media(max-width:650px){
+  .v9-gif-header{display:block}.v9-gif-format{display:inline-block;margin-top:12px}
+  .v9-gif-body{grid-template-columns:1fr}.v9-gif-preview{margin-inline:auto}
+  .v9-gif-actions button{flex:1 1 145px}.v9-gif-maker{border-radius:17px}
+}
+@media(prefers-reduced-motion:reduce){.v9-gif-maker button{transition:none!important}.v9-gif-maker button:active{transform:none!important}}
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] .v9-gif-maker{
+  background:#f7f7f7;color:#111;border-color:#d0d0d0;
+}
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-header h2{color:#111}
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-header p,
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-control-label,
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-status{color:#444}
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-maker button{
+  background:#fff;color:#111;border-color:#bbb;
+}
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-maker button[aria-pressed="true"],
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-maker .v9-gif-primary:not(:disabled){background:#111;color:#fff}
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-controls input[type="text"]{background:#fff;color:#111;border-color:#bbb}
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-format{color:#222;border-color:#bbb}
