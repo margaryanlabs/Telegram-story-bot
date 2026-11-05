@@ -1984,7 +1984,8 @@
     if($('telegramThreadView'))$('telegramThreadView').hidden=true;
     if($('telegramChatsView'))$('telegramChatsView').hidden=false;
     $('telegramMirror')?.classList.remove('thread-mode');
-    // Restore the five-tab inbox after an identity switch; a stale fullscreen
+    notifyThreadViewChanged();
+    // Restore the primary inbox after an identity switch; a stale fullscreen
     // thread class must never strand the next Telegram owner without navigation.
     window.VetoThemeDock?.('inbox');
     state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
@@ -2608,6 +2609,11 @@
     }
   }
 
+  // No personal payload: this signal only re-evaluates the native Back
+  // button after the chat view is shown, hidden or the owner is revoked.
+  function notifyThreadViewChanged(){
+    window.dispatchEvent(new CustomEvent('vetogram:chat-view-changed'));
+  }
   function setThread(chat){
     $('telegramChatsView')?.classList.remove('vg37-return');
     $('telegramChatsView').hidden=true;
@@ -2647,6 +2653,7 @@
     const shell=$('telegramMirror');
     shell?.classList.add('thread-mode');
     window.VetoThemeDock?.('thread');
+    notifyThreadViewChanged();
     window.scrollTo({top:0,behavior:'instant'});
   }
   async function openThread(chat){
@@ -2876,6 +2883,7 @@
     $('telegramChatsView')?.classList.add('vg37-return');
     $('telegramMirror')?.classList.remove('thread-mode');
     window.VetoThemeDock?.('inbox');
+    notifyThreadViewChanged();
     revokeMediaUrls();
     renderSendComposer();
     renderChats();
@@ -3471,9 +3479,12 @@
     if($('telegramChatsView'))$('telegramChatsView').hidden=false;
     $('telegramMirror')?.classList.remove('thread-mode');
     window.VetoThemeDock?.('inbox');
+    notifyThreadViewChanged();
     renderChats();
     showNotice('Личный Telegram отключён. Переписки скрыты. Подключи аккаунт снова.');
   });
+  // A single owner-aware path for the on-screen ← and Telegram native Back.
+  window.VetoTelegramChatBack=back;
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
   $('telegramThreadSyncNow')?.addEventListener('click',()=>{
