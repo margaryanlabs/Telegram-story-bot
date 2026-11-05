@@ -2,7 +2,7 @@
 import {encodeGif} from './vetogram-v9-gif-core.js';
 (() => {
   'use strict';
-  const root=document.querySelector('.screen[data-screen="creator"]');
+  const root=document.querySelector('.screen[data-screen="studio"]');
   const $=id=>root?.querySelector('#'+id);
   const canvas=$('v9GifCanvas');
   if(!root||!canvas)return;
