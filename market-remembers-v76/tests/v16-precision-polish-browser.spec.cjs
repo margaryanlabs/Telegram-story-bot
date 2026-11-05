@@ -30,7 +30,7 @@ test('V16 polish uses a compact financial dock and modular full research on Andr
   await expect(panel.locator('.mh-panel-grip')).toBeVisible();
   await panel.locator('.mh-panel-grip').click();
   await expect(panel).toHaveClass(/is-expanded/);
-  await expect(panel.locator('.mh-v16-research-card')).toHaveCount(3);
+  await expect(panel.locator('.mh-v16-research-card')).toHaveCount(5);
   const layout=await panel.evaluate(node=>({
     height:node.getBoundingClientRect().height,viewport:window.innerHeight,
     overflow:getComputedStyle(node).overflowY
