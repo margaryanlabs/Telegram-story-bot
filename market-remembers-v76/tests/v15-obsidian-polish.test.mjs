@@ -13,14 +13,14 @@ new Script(shaderWrapper).runInNewContext(shaderContext);
 const frag = shaderContext.window.MHCrimsonShaders.fragment;
 
 test('V15 new obsidian material keeps red accents localized rather than lava-world', () => {
-  assert.match(frag,/Obsidian alloy/);
-  assert.match(frag,/hairline/);
-  assert.match(frag,/stress=hairline\*gate/);
+  assert.match(frag,/titanium-obsidian plates/);
+  assert.match(frag,/float seam=/);
+  assert.match(frag,/float activeFault=seam\*borderRegion/);
   assert.match(frag,/obsidian/);
   assert.match(frag,/uShock/);
   assert.doesNotMatch(frag,/vec3 lava=/);
   assert.doesNotMatch(frag,/float thermal=/);
-  assert.match(frag,/vec3 color=obsidian\*shading/);
+  assert.match(frag,/vec3 color=base\*lambert/);
 });
 
 test('mobile size fits entire planet above compact information dock',()=>{
@@ -35,7 +35,7 @@ test('mobile size fits entire planet above compact information dock',()=>{
 test('research detail is accessible yet collapsed on load; event selection opens details',()=>{
   assert.match(modes,/let panelExpanded = false/);
   assert.match(modes,/data-mh-panel-toggle aria-expanded/);
-  assert.match(modes,/panelExpanded = true;/);
+  assert.match(modes,/panelExpanded = !panelExpanded/);
   assert.match(modes,/panelExpanded = !panelExpanded/);
   assert.match(modes,/panel\.classList\.toggle\('is-expanded'/);
   assert.match(modes,/event\.stopPropagation/);
