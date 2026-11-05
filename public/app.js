@@ -1035,6 +1035,13 @@
     if (isCurrent())renderAnalytics();
   }
 
+  function notifyTelegramSessionDisconnected(){
+    // Do not include an owner ID, auth challenge, phone, messages or session.
+    // The inbox listens to this local event and clears its volatile state.
+    if(typeof CustomEvent==='function')
+      window.dispatchEvent(new CustomEvent('vetogram:telegram-session-disconnected'));
+  }
+
   async function refreshViewerSync({ silent = false } = {}) {
     ensureComposerIdentity();
     const wasConnected=viewerState.session?.connected===true;
@@ -1113,6 +1120,11 @@
     // re-fetch them. This event is owner-scoped and contains no session data.
     if(!wasConnected&&viewerState.session?.connected===true && typeof CustomEvent === 'function')
       window.dispatchEvent(new CustomEvent('vetogram:telegram-session-connected'));
+    // Distinguish an authoritative signed response from a transient storage
+    // outage: clearing cached private inbox data is required only when the
+    // server confirms the once-linked session has truly disappeared.
+    if(wasConnected&&viewerState.session?.connected!==true&&viewerState.degraded===false)
+      notifyTelegramSessionDisconnected();
     renderViewers();
     renderHome();
     renderViewerPendingLoginNotice();
@@ -3711,6 +3723,7 @@
           degraded: false,
           error: null,
         };
+        notifyTelegramSessionDisconnected();
         render();
         showToast('Приватная session отозвана');
         await api().catch(() => {});
@@ -3737,6 +3750,7 @@
           degraded: false,
           error: null,
         };
+        notifyTelegramSessionDisconnected();
         renderViewers();
         await refresh().catch(() => {});
         showToast('Telegram Account отключён');
