@@ -1144,6 +1144,7 @@
       notifyTelegramSessionDisconnected();
     renderViewers();
     renderHome();
+    renderRebornProfileStatus();
     renderViewerPendingLoginNotice();
   }
 
@@ -1179,7 +1180,62 @@
       :'Завершить подтверждение Telegram →';
   }
 
+  // RB11 Account Center: a signed Mini App owner, a personal MTProto
+  // session and Telegram Business are three distinct proofs. Never infer one
+  // from another or show a connected state after owner mismatch/degradation.
+  function renderRebornProfileStatus(){
+    const mini=Boolean(tg?.initData);
+    const personal=viewerState.session?.connected===true &&
+      viewerState.session?.identityMismatch!==true && viewerState.degraded!==true;
+    const mismatch=viewerState.session?.identityMismatch===true;
+    const degraded=viewerState.degraded===true;
+    const business=state.businessPermissions?.connected===true;
+    const needsBusiness=state.connection==='needs_permission';
+    const pending=viewerState.loginPending;
+    const expiry=Date.parse(pending?.expiresAt||'');
+    const hasPending=Boolean(!personal && pending &&
+      ['code','password','qr_password'].includes(pending.stage) &&
+      Number.isFinite(expiry) && expiry>Date.now());
+    const update=(rootId,labelId,status,label)=>{
+      const root=$(rootId),text=$(labelId);
+      if(root)root.dataset.state=status;
+      if(text)text.textContent=label;
+    };
+    update('v11MiniAppProof','v11MiniAppState',
+      mini?'ready':'warn',mini?'Открыт через Telegram':'Открой внутри Telegram');
+    const status=!mini?'warn':mismatch?'warn':degraded?'warn':
+      personal?'ready':hasPending?'pending':'neutral';
+    const name=!mini?'Mini App недоступен':mismatch?'Аккаунт не совпадает':
+      degraded?'Связь временно не подтверждена':
+      personal?'Личная сессия подключена':
+      hasPending?'Вход ожидает подтверждения':'Личная сессия не подключена';
+    update('v11PersonalProof','v11SessionState',status,name);
+    update('v11BusinessProof','v11BusinessState',
+      business?'pending':needsBusiness?'warn':'neutral',
+      business?'Business-бот обнаружен · доставка не проверена':
+      needsBusiness?'Нужно отдельное разрешение':'Не подключён · необязательно');
+    const note=$('v11AccountNote');
+    if(note)note.textContent=!mini
+      ?'Открой Vetogram внутри Telegram, чтобы проверить владельца аккаунта.'
+      :mismatch
+        ?'Сессия другого владельца не открывает твои чаты. Проверь подключение.'
+        :degraded
+          ?'Сервер сейчас не подтвердил доступ. Не запрашивай новый код без необходимости.'
+          :personal
+            ?'Личная сессия подтверждена. Для архивирования через Business нужно отдельное согласие и тест события.'
+            :hasPending
+              ?'Продолжи существующий вход по коду или паролю 2FA. Повторный запрос кода не нужен.'
+              :'Вход в Mini App не подключает личные чаты автоматически. Используй номер + код или QR.';
+    const action=$('v11ProfileConnect');
+    if(action){
+      action.textContent=personal?'Проверить и управлять аккаунтом ↗':
+        hasPending?'Продолжить подключение ↗':'Подключить личный Telegram ↗';
+      action.disabled=false;
+    }
+  }
+
   function renderConnection() {
+    renderRebornProfileStatus();
     const personalConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
     const ready = state.connection === 'ready' || state.ready === true || personalConnected;
     const permission = !ready && state.connection === 'needs_permission';
@@ -1955,6 +2011,10 @@
     haptic();
     window.scrollTo({ top:0, behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth' });
     if (target === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
+    if (target === 'profile') {
+      renderRebornProfileStatus();
+      if(tg?.initData)void refreshViewerSync({silent:true});
+    }
     if (target === 'analytics' && tg?.initData) refreshViewerAnalytics({ silent: true });
     // The Privacy module is loaded separately and must refresh whether a
     // screen is opened through a bottom tab, a home shortcut or a feature sheet.
@@ -3161,6 +3221,10 @@
     button.addEventListener('click', () => switchScreen(button.dataset.openScreen));
   });
   $('vetoHomeConnectPrimary')?.addEventListener('click', () => {
+    void window.VetoTelegramOpenAccountConnection?.();
+  });
+  $('v11ProfileConnect')?.addEventListener('click', () => {
+    // Reuse the one owner-fenced auth pathway: no duplicate OTP or QR logic.
     void window.VetoTelegramOpenAccountConnection?.();
   });
   $('homeActivityList')?.addEventListener('click', event => {
