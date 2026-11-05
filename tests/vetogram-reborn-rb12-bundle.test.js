@@ -56,7 +56,7 @@ test('source CSS is safe for same-directory concatenation and cache versioning',
     assert.doesNotMatch(src,/@import\s/i);
     assert.doesNotMatch(src,/@charset\s/i);
   }
-  assert.match(html,/vetogram-reborn-ui\.css\?v=20261105-v9-01/);
+  assert.match(html,/vetogram-reborn-ui\.css\?v=20261105-v9-02/);
   assert.ok(foundation.length>1500);
 });
 
@@ -110,7 +110,7 @@ test('light themes and accessibility states survive bundled cascade',()=>{
 test('Media and Book iframe documents retain their independent styling',()=>{
   for(const name of ['music-module.html','cinema.html','books.html']){
     const page=read(name);
-    assert.ok(page.includes('/vetogram-reborn-modules.css?v=20261105-v9-01'),name);
+    assert.ok(page.includes('/vetogram-reborn-modules.css?v=20261105-v9-02'),name);
   }
   assert.match(bundle,/\.screen\[data-screen="media"\]/);
   assert.match(bundle,/\.screen\[data-screen="profile"\]/);
