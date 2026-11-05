@@ -46,7 +46,7 @@ function setup(){
 }
 
 test('V12 RC3 provides one clear story entry point and preserves trusted controls',()=>{
-  assert.equal(JSON.parse(pkg).version,'12.0.0-rc.5');
+  assert.equal(JSON.parse(pkg).version,'12.0.0-rc.6');
   assert.match(html,/v10\/v12-reading-polish\.css/);
   assert.ok(html.indexOf('v10/v12-reading-polish.css')>html.indexOf('v10/v12-cinematic.css'));
   assert.match(reader,/start\.textContent='Читать историю ↓'/);
