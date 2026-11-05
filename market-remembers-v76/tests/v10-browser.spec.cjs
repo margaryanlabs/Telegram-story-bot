@@ -62,7 +62,7 @@ test('archive filter URL, search, sorting, locate and history',async({page})=>{
 test('all 30 stars have stable deep links and sourced legends keep attribution',async({page})=>{
  await reduced(page);await open(page,'/#archive');const ids=await page.locator('[data-story-id]').evaluateAll(els=>els.map(el=>el.dataset.storyId));expect(new Set(ids).size).toBe(30);
  for(const id of ids){await page.goto('/#story/'+encodeURIComponent(id));await expect(page.locator('.memory-experience')).toBeVisible();
-  if(await page.locator('#drawer').evaluate(el=>el.classList.contains('legend-detail')))await expect(page.locator('.legend-source a')).toHaveAttribute('href',/^https:/);else await expect(page.locator('.v10-chapter')).toHaveCount(2);
+  if(await page.locator('#drawer').evaluate(el=>el.classList.contains('legend-detail')))await expect(page.locator('.legend-source a')).toHaveAttribute('href',/^https:/);else await expect(page.locator('.v10-chapter')).toHaveCount([13,14,15,20].includes(Number(id))?4:2);
  }
 });
 test('private creation, stable link, reload, JSON export and deletion',async({page})=>{
