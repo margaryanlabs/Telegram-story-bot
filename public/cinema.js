@@ -383,10 +383,11 @@
     // They are never passed into the in-app video player.
     const worldBrowse=state.tab==="home";
     const worldHome=worldBrowse&&!state.query.trim();
-    let list=worldBrowse
-      ? films.filter(f=>(isWorldSpotlight(f))||
+    let list=worldBrowse||state.tab==="search"
+      ? films.filter(f=>((worldHome?isWorldSpotlight(f):f.externalRutube))||
         (f.seriesPopular&&f.seriesGroup==="global")||
-        (f.player?.licensed===true&&!f.discoveryOnly&&!f.externalRutube&&(f.genres||[]).includes("Зарубежное")))
+        (f.player?.licensed===true&&!f.discoveryOnly&&!f.externalRutube&&
+          (state.tab==="search"||(f.genres||[]).includes("Зарубежное"))))
       : state.tab==="foreign"
       ? films.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim))
       : films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
