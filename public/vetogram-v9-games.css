@@ -199,3 +199,12 @@ html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active #vpQuic
 html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active #vpQuickGames .vp-mini:not(.vp-game-in-dialog) > :is(.vp-memory-grid,.vp-ttt-grid,.vp-2048-grid,.v73-mines-grid,.v73-snake-grid){
   display:grid !important;
 }
+
+/* Focused game controls must remain legible in Pearl/Linen, not white on white. */
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"].v9-arcade-active #vpQuickGames .vp-mini{
+  background:#f7f7f7 !important;background-image:none !important;
+  border-color:#d5d5d5 !important;color:#181818 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"].v9-arcade-active #vpQuickGames .vp-mini :is(h3,p,.vp-mini-stat,.vp-memory-actions){
+  color:#202020 !important;
+}
