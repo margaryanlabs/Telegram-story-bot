@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     botToken,
   );
   if (!user) {
-    jsonError(res, 401, 'Открой Telegram Control внутри Telegram');
+    jsonError(res, 401, 'Открой Vetogram внутри Telegram');
     return;
   }
 
@@ -141,6 +141,10 @@ export default async function handler(req, res) {
 
       send({
         type: 'password_required',
+        // No secrets: the client can display the resumable challenge state
+        // without guessing the 2FA expiry or requesting a second QR code.
+        stage:'qr_password',
+        expiresAt:new Date(now.getTime() + AUTH_TTL_MS).toISOString(),
         hint: result.passwordHint || '',
       });
       res.end();
