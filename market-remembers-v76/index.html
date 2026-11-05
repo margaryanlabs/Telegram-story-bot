@@ -2697,6 +2697,21 @@ void main(){
  float easternGlow=pow(max(dot(N,normalize(vec3(.82,.28,.78))),0.),4.);
  material+=vec3(.065,.211,.274)*atmosphere*1.12;
  material+=vec3(.40,.25,.125)*atmosphere*easternGlow*.95;
+ // Rare liquid-gold filament near the sunrise; cyan remains the core hue.
+ float goldZone=pow(max(dot(normalize(vObject),
+                            normalize(vec3(.48,-.15,.85))),0.),7.);
+ float goldFlow=pow(max(1.-abs(sin(vObject.y*12.6-
+                        vObject.x*4.3+vObject.z*5.4+bent)),0.),4.5);
+ material+=vec3(.49,.264,.109)*goldZone*goldFlow*(.32+.68*bank)*1.13;
+ if(uQuality>.5){
+   // Stars are points in the memory field, not extra WebGL particles.
+   vec3 speckCoords=vObject*46.;
+   vec3 speckLocal=fract(speckCoords)-.5;
+   float speckSeed=hash(floor(speckCoords));
+   float stellarDust=step(.976,speckSeed)*
+       pow(max(1.-length(speckLocal)*2.35,0.),4.0);
+   material+=vec3(.50,.76,.88)*stellarDust*.78;
+ }
  // Optical depth: cool edge is continuous; warm glint is localized to
  // the illuminated rim (not a white halo covering the entire UI).
  float limb=pow(1.-clamp(N.z,0.,1.),5.6);
