@@ -305,24 +305,74 @@
     const index=Math.max(0,Math.min(parts-1,Number.isInteger(chapter)?chapter:0));
     return {fraction:Math.max(0,Math.min(1,(index+fraction)/parts)),approx:true};
   }
+  // V9 Reading Room: only actual per-owner reading progress, never catalog-only
+  // metadata. The same existing openBook/reader remains the only reader.
+  function readingHistory(){
+    return Object.entries(progress).map(([key,item])=>{
+      if(!item||!item.title||!Number.isFinite(Number(item.at))||Number(item.at)<=0)return null;
+      const book=bookFromProgress(key,item);
+      if(!book||isCatalogBook(book)||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return null;
+      return {key,book,item};
+    }).filter(Boolean).sort((a,b)=>Number(b.item.at)-Number(a.item.at)).slice(0,4);
+  }
+  function readingPosition(item){
+    const chapter=Number.isInteger(item.chapter)&&item.chapter>=0?'Часть '+(item.chapter+1)+' · ':'';
+    const page=Math.max(0,Math.min(999999,Number(item.page)||0))+1;
+    const fraction=Number(item.workFraction??item.fraction);
+    const percent=Number.isFinite(fraction)?Math.round(Math.max(0,Math.min(1,fraction))*100):0;
+    // Multi-chapter percentage is estimated by chapter index, not text length.
+    return {label:chapter+'стр. '+page+' · '+(item.chapter!==null&&Number.isInteger(item.chapter)?'≈ ':'')+percent+'%',percent};
+  }
+  function readingCover(host,book){
+    host.replaceChildren();
+    const jacket=node('div','book-cover v9-reading-jacket');
+    coverArtwork(jacket,book);
+    const imageUrl=safeCover(book.cover);
+    if(imageUrl&&!failedCoverUrls.has(imageUrl)){
+      const image=node('img','source-edition-cover');
+      image.alt='Обложка из каталога источника';
+      image.loading='lazy';image.decoding='async';image.src=imageUrl;
+      image.onerror=()=>{failedCoverUrls.add(imageUrl);image.remove();jacket.classList.remove('has-source-art')};
+      image.onload=()=>jacket.classList.add('has-source-art');
+      jacket.append(image);
+    }
+    host.append(jacket);
+  }
   function renderContinueShelf(){
-    const shelf=$('continueShelf');
-    const latest=Object.entries(progress)
-      .filter(([key,item])=>item && item.title && Number.isFinite(Number(item.at)))
-      .sort((a,b)=>(b[1].at||0)-(a[1].at||0))[0];
-    if(!latest){shelf.hidden=true;return;}
-    const [key,p]=latest;
-    const book=bookFromProgress(key,p);
-    if(!book){shelf.hidden=true;return;}
+    const shelf=$('continueShelf'),history=$('v9ReadingHistory');
+    const entries=readingHistory();
+    if(!entries.length){
+      shelf.hidden=true;
+      if(history){history.hidden=true;history.replaceChildren();}
+      return;
+    }
+    const {book,item}=entries[0];
     shelf.hidden=false;
     $('continueTitle').textContent=compactTitle(book.title);
-    const name=(book.authors||[]).join(', ');
-    const position=p.chapter!==null && Number.isInteger(p.chapter)
-      ?'Часть '+(p.chapter+1)+' · '+(Math.max(0,Number(p.page)||0)+1)+' стр.'
-      :'Страница '+(Math.max(0,Number(p.page)||0)+1);
-    $('continueDetails').textContent=(name?name+' · ':'')+position;
-    $('continueFill').style.width=Math.round(Math.max(0,Math.min(1,Number(p.workFraction??p.fraction)||0))*100)+'%';
+    const author=(Array.isArray(book.authors)?book.authors:[]).join(', ');
+    const position=readingPosition(item);
+    $('continueDetails').textContent=(author?author+' · ':'')+position.label;
+    $('continueFill').style.width=position.percent+'%';
+    $('continueAction').setAttribute('aria-label','Продолжить чтение: '+compactTitle(book.title));
     $('continueAction').onclick=()=>openBook(book);
+    readingCover(shelf.querySelector('.continue-art'),book);
+    if(!history)return;
+    history.replaceChildren();
+    const others=entries.slice(1);
+    history.hidden=others.length===0;
+    for(const {book:nextBook,item:nextItem} of others){
+      const button=node('button','v9-reading-item');
+      button.type='button';
+      button.setAttribute('aria-label','Продолжить «'+compactTitle(nextBook.title)+'»');
+      const cover=node('span','v9-reading-mini-art');
+      readingCover(cover,nextBook);
+      const info=node('span','v9-reading-mini-copy');
+      info.append(node('strong','',compactTitle(nextBook.title)),
+        node('small','',readingPosition(nextItem).label));
+      button.append(cover,info,node('span','v9-reading-arrow','↗'));
+      button.addEventListener('click',()=>openBook(nextBook));
+      history.append(button);
+    }
   }
   function setFocus(enabled){
     const value=Boolean(enabled);
