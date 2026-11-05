@@ -43,6 +43,11 @@
     if (state.url) URL.revokeObjectURL(state.url);
     state.url = null;
   }
+  // Presentation-only bridge to the single Telegram native Back controller.
+  // No story URL, contact ID or owner data travels in this event.
+  function notifyStoryViewChanged(){
+    window.dispatchEvent(new CustomEvent('vetogram:story-view-changed'));
+  }
   function closeViewer() {
     state.epoch++;
     hideMedia();
@@ -51,10 +56,14 @@
     viewer.hidden = true;
     viewer.replaceChildren();
     document.body.classList.remove('veto-stories-open');
+    notifyStoryViewChanged();
     const previous = state.priorFocus;
     state.priorFocus = null;
     if (previous?.isConnected) previous.focus({preventScroll:true});
   }
+  // Exactly the same cleanup path as the visible × button: stops playback,
+  // revokes private blob media and restores the previous focus target.
+  window.VetoTelegramStoryBack=closeViewer;
   function resetOwner() {
     const current = String(tg?.initData || '');
     if (current === state.owner) return false;
@@ -70,7 +79,7 @@
   async function call(action,payload={},wantMedia=false) {
     resetOwner();
     const owner = String(tg?.initData || '');
-    if (!owner) throw new Error('Открой VETO через Telegram и подключи личный аккаунт.');
+    if (!owner) throw new Error('Открой Vetogram через Telegram и подключи личный аккаунт.');
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(),35000);
     try {
@@ -262,6 +271,7 @@
     if (!contact || !story) return;
     viewer.hidden = false;
     document.body.classList.add('veto-stories-open');
+    notifyStoryViewChanged();
     viewer.innerHTML =
       '<div class="veto-story-stage">'+
       '<div class="veto-story-progress">'+stories.map((_,i)=>
