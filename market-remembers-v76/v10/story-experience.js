@@ -13,7 +13,7 @@ window.MarketV10.reader = (() => {
       const bar=progress.querySelector('.v113-progress-fill');
       const label=progress.querySelector('.v113-progress-label');
       if(bar)bar.style.width=((current+1)/sections.length*100).toFixed(1)+'%';
-      if(label)label.textContent='ГЛАВА '+String(current+1).padStart(2,'0')+' / '+String(sections.length).padStart(2,'0')+' · '+(chapterLabels[current]||'История');
+      if(label)label.textContent='ЧАСТЬ '+String(current+1).padStart(2,'0')+' / '+String(sections.length).padStart(2,'0')+' · '+(chapterLabels[current]||'История');
       progress.setAttribute('aria-valuenow',String(current+1));
     }
     const stage=drawer.querySelector('.v93-reader-stage');
@@ -61,7 +61,10 @@ window.MarketV10.reader = (() => {
       });
       const missingChapters=allChapters.filter(chapter=>chapter.missing);
       const category=window.MarketV10.data.themes[record.category]||String(record.category||'Опыт');
-      context.textContent=[category,String(record.market||'').trim()].filter(Boolean).join(' · ')+' · '+availableChapters.length+' из 4 этапов описаны. Отсутствующие детали не выдуманы.';
+      const coverage=missingChapters.length
+        ?('Краткая запись: '+availableChapters.length+' из 4 этапов описаны. Отсутствующие детали не выдуманы.')
+        :'Полная история · все 4 этапа описаны.';
+      context.textContent=[category,String(record.market||'').trim(),coverage].filter(Boolean).join(' · ');
       overview.append(tag,context);
       progress=document.createElement('div');progress.className='v113-chapter-progress';
       progress.setAttribute('role','progressbar');progress.setAttribute('aria-label','Прогресс чтения по главам');
