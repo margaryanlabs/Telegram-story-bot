@@ -2610,9 +2610,37 @@ void main(){
  float memoryVeil=.5+.5*sin(vObject.y*9.7+sin(vObject.x*5.3)*1.7+vObject.z*4.1);
  float memoryBands=pow(memoryVeil,6.)*(.14+.86*light);
  material+=vec3(.031,.081,.095)*memoryBands*.32;
- material+=vec3(.045,.086,.105)*filament*.045;
- material+=vec3(.095,.182,.218)*rim*.95;
- material+=vec3(.22,.36,.40)*spec*.1;
+ // CINEMATIC UNIVERSE: multi-scale, object-space plasma CLOUDS on the
+ // existing triangulated globe. All colors are bounded; no textures/passes.
+ // This is a visual memory field, not a map of real interpersonal ties.
+ float undulation=sin(vObject.y*7.8+vObject.x*4.6+sin(vObject.z*6.3)*1.35);
+ float nebulaNoise=.5+.5*sin(vObject.x*7.6-vObject.z*4.8+undulation*.9)
+                          *sin(vObject.y*8.3+vObject.z*6.2);
+ float nebulaBody=smoothstep(.37,.82,nebulaNoise);
+ float river=abs(sin(vObject.y*6.8+vObject.x*5.9+
+                     sin(vObject.z*5.1)*1.45));
+ float brightVein=pow(1.-river,5.)*(.20+.80*nebulaBody);
+ float flank=.5+.5*sin(vObject.z*10.3+vObject.x*6.2-
+                        sin(vObject.y*8.4)*.85);
+ float microCloud=smoothstep(.52,.91,flank)*nebulaBody;
+ float illumination=.28+.72*light;
+ material+=vec3(.055,.126,.155)*nebulaBody*(.38+.62*fill);
+ material+=vec3(.065,.192,.230)*microCloud*illumination*.69;
+ material+=vec3(.145,.340,.395)*brightVein*illumination*.86;
+ float amberKnot=pow(max(dot(normalize(vObject),
+                             normalize(vec3(.26,.28,.92))),0.),18.);
+ float cyanKnot=pow(max(dot(normalize(vObject),
+                            normalize(vec3(-.40,-.12,.91))),0.),16.);
+ material+=vec3(.29,.191,.099)*amberKnot*nebulaBody*.79;
+ material+=vec3(.120,.255,.310)*cyanKnot*brightVein*.74;
+ material+=vec3(.045,.086,.105)*filament*.085;
+ // Optical depth: cool edge is continuous; warm glint is localized to
+ // the illuminated rim (not a white halo covering the entire UI).
+ float limb=pow(1.-clamp(N.z,0.,1.),5.6);
+ float warmLimb=pow(max(dot(N,normalize(vec3(.46,.59,.77))),0.),3.0)*limb;
+ material+=vec3(.100,.245,.285)*rim*.91+vec3(.070,.193,.230)*limb*.89;
+ material+=vec3(.235,.158,.098)*warmLimb*.63;
+ material+=vec3(.22,.36,.40)*spec*.13;
  material+=vec3(.025,.037,.042)*bounce*.26;
  material+=vec3(grain)*(.08+.32*fill);
  material+=vec3(.008,.018,.026)*(life-.5)*uMotion*.18;
@@ -2627,8 +2655,8 @@ void main(){
  float glowA=1.-smoothstep(.007,.034,planeA);
  float glowB=1.-smoothstep(.006,.029,planeB);
  float visibleFace=smoothstep(-.12,.52,N.z);
- material+=visibleFace*(vec3(.15,.35,.41)*traceA*.21+vec3(.36,.29,.23)*traceB*.13);
- material+=visibleFace*(vec3(.055,.13,.17)*glowA*.24+vec3(.09,.065,.05)*glowB*.16);
+ material+=visibleFace*(vec3(.19,.38,.43)*traceA*.41+vec3(.40,.30,.19)*traceB*.35);
+ material+=visibleFace*(vec3(.08,.17,.20)*glowA*.38+vec3(.14,.09,.055)*glowB*.29);
  gl_FragColor=vec4(clamp(material,0.,1.),1.);
 }`; const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){
@@ -2887,8 +2915,30 @@ void main(){
     stone.addColorStop(.35,'rgba(29,52,64,1)');
     stone.addColorStop(.73,'rgba(11,25,35,1)');
     stone.addColorStop(.96,'rgba(3,9,15,1)');
-    stone.addColorStop(1,'rgba(3,9,15,.8)');
+    stone.addColorStop(1,'rgba(3,9,15,1)');
     ctx.save();ctx.fillStyle=stone;ctx.beginPath();ctx.arc(c.x,c.y,r,0,twoPi);ctx.fill();ctx.restore();
+    // Canvas fallback parity: two embedded nebula light-fields, clipped to
+    // the actual sphere. No bitmap, network dependency or extra frame loop.
+    ctx.save();ctx.beginPath();ctx.arc(c.x,c.y,r,0,twoPi);ctx.clip();
+    ctx.globalCompositeOperation='screen';
+    const cloudRibbon=ctx.createLinearGradient(c.x-r*.78,c.y+r*.74,
+                                                 c.x+r*.78,c.y-r*.62);
+    cloudRibbon.addColorStop(0,'rgba(21,83,107,0)');
+    cloudRibbon.addColorStop(.26,'rgba(33,113,148,.12)');
+    cloudRibbon.addColorStop(.47,'rgba(72,194,212,.29)');
+    cloudRibbon.addColorStop(.56,'rgba(104,197,210,.21)');
+    cloudRibbon.addColorStop(.72,'rgba(41,117,146,.09)');
+    cloudRibbon.addColorStop(1,'rgba(11,48,75,0)');
+    ctx.fillStyle=cloudRibbon;ctx.fillRect(c.x-r,c.y-r,r*2,r*2);
+    if(quality!=='low'&&!autoEco){
+      const warmCloud=ctx.createRadialGradient(c.x+r*.33,c.y-r*.35,0,
+                                               c.x+r*.33,c.y-r*.35,r*.65);
+      warmCloud.addColorStop(0,'rgba(240,191,127,.31)');
+      warmCloud.addColorStop(.25,'rgba(184,154,124,.15)');
+      warmCloud.addColorStop(1,'rgba(115,82,80,0)');
+      ctx.fillStyle=warmCloud;ctx.fillRect(c.x-r,c.y-r,r*2,r*2);
+    }
+    ctx.restore();
     // Canvas2D counterpart to the globe's physical emissive orbital lines.
     ctx.save();ctx.beginPath();ctx.arc(c.x,c.y,r,0,twoPi);ctx.clip();
     ctx.lineWidth=Math.max(.8,r*.003);
