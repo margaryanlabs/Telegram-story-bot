@@ -10,7 +10,7 @@ const shader=read('v10/crimson-shaders.js');
 const engine=read('v10/crimson-event-core.js');
 const css=read('v10/crimson-event-core.css');
 
-test('CRIMSON is a second rendering world, not a filter over People',()=>{
+test('legacy CRIMSON renderer remains archived and parseable for rollback',()=>{
  assert.match(engine,/getContext\('webgl'/);
  assert.match(shader,/uniform float uYaw/);
  assert.match(shader,/uniform float uEmphasis/);
@@ -47,16 +47,16 @@ test('People stories, archive, controls and memory persistence remain in place',
  assert.doesNotMatch(modes,/localStorage\.setItem/);
 });
 
-test('crimson runtime dependencies are loaded in safe sequence after original V12',()=>{
+test('PEOPLE-mirror runtime dependencies load after the untouched original world',()=>{
  const list=[
  'v10/market-history-modes.css','v10/crimson-event-core.css',
  'window.MarketV10?.start()','v10/market-history-modes.js',
- 'v10/crimson-shaders.js','v10/crimson-event-core.js'
+ 'v10/people-mirror-shaders.js','v10/people-mirror-planet.js'
  ];
  for(const name of list)assert.ok(html.includes(name),name);
  assert.ok(html.indexOf('window.MarketV10?.start()')<html.indexOf('src="v10/market-history-modes.js"'));
- assert.ok(html.indexOf('src="v10/market-history-modes.js"')<html.indexOf('src="v10/crimson-event-core.js"'));
- assert.ok(html.indexOf('src="v10/crimson-shaders.js"')<html.indexOf('src="v10/crimson-event-core.js"'));
+ assert.ok(html.indexOf('src="v10/market-history-modes.js"')<html.indexOf('src="v10/people-mirror-planet.js"'));
+ assert.ok(html.indexOf('src="v10/people-mirror-shaders.js"')<html.indexOf('src="v10/people-mirror-planet.js"'));
  for(const [name,code] of [['original People',people],['V13 modes',modes],['crimson shader wrapper',shader],['V14 world',engine]])assert.doesNotThrow(()=>new Script(code,{filename:name}));
 });
 

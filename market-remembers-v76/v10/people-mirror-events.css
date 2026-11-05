@@ -1,0 +1,156 @@
+/* V18 — PEOPLE MIRROR / EVENT DATES
+   The original V12 PEOPLE planet is not styled or modified.
+   EVENT CORE uses a direct copy of PEOPLE's mesh, 3D volume and star shaders,
+   with a restrained berry/violet/pearl palette and four financial dates.
+*/
+#app.mh-v16[data-mh-mode="events"],#app.mh-v16[data-mh-mode="connections"]{
+  --ink:#f8f0f8;--violet:#bd82b6;--cyan:#d7bedf;--gold:#e8bdc9;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-cosmos,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-cosmos{
+ background:
+  radial-gradient(ellipse 55% 55% at 54% 48%,#49345748 0%,#18132943 52%,transparent 82%),
+  radial-gradient(ellipse 49% 36% at 78% 26%,#5e2e5440,transparent 83%),
+  linear-gradient(138deg,#060911 0%,#080b19 50%,#050710 100%);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-cosmos:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-cosmos:before{
+ opacity:.45;
+ background-image:
+   radial-gradient(1px 1px at 8% 13%,#eadff6b0 88%,transparent),
+   radial-gradient(1.2px 1.2px at 26% 73%,#ddb8e6b0 90%,transparent),
+   radial-gradient(1px 1px at 40% 25%,#f2eafabb 90%,transparent),
+   radial-gradient(1.6px 1.6px at 77% 21%,#d4b3dfa0 90%,transparent),
+   radial-gradient(1.3px 1.3px at 91% 59%,#fff7ffe0 90%,transparent),
+   radial-gradient(1px 1px at 69% 83%,#a9b8eeb4 90%,transparent);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-nebula,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-nebula{
+ opacity:.65;
+ background:
+  radial-gradient(ellipse 35% 23% at 72% 14%,rgba(141,78,138,.22),transparent 78%),
+  radial-gradient(ellipse 35% 24% at 13% 89%,rgba(87,72,157,.15),transparent 83%),
+  radial-gradient(ellipse 38% 22% at 58% 66%,rgba(107,92,170,.10),transparent 85%);
+ filter:blur(38px);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-aureole,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-aureole{
+ opacity:.63;filter:blur(16px);
+ background:radial-gradient(circle,transparent 49%,rgba(191,170,220,.13) 65%,transparent 77%);
+}
+/* The *duplicated mesh*, not an overlay, owns visual depth and orbit geometry. */
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-orbit,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-orbit,
+#app.mh-v16[data-mh-mode="events"] .mh-v16-optics,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-optics,
+#app.mh-v16[data-mh-mode="events"] .mh-v16-hud,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-hud,
+#app.mh-v16[data-mh-mode="events"] .mh-v16-signal-readout,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-signal-readout,
+#app.mh-v16[data-mh-mode="events"] #mhV16Tether,
+#app.mh-v16[data-mh-mode="connections"] #mhV16Tether{
+ display:none!important;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-event-header,
+#app.mh-v16[data-mh-mode="connections"] .mh-event-header{
+ border-bottom:1px solid #b79ec148;
+ background:linear-gradient(180deg,#070913f4,#0a0a19b7 83%,transparent);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-event-sigil,
+#app.mh-v16[data-mh-mode="connections"] .mh-event-sigil{
+ color:#e9d3f1;border-color:#9c7ab5a0;
+ background:linear-gradient(138deg,#382b4d,#151426);
+ box-shadow:0 0 17px #8c73c33c;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-event-brand em,
+#app.mh-v16[data-mh-mode="connections"] .mh-event-brand em{color:#dfb2d5}
+#app.mh-v16[data-mh-mode="events"] .mh-event-brand small,
+#app.mh-v16[data-mh-mode="connections"] .mh-event-brand small{color:#aaa0c3}
+#app.mh-v16[data-mh-mode="events"] .mh-mode-switch,
+#app.mh-v16[data-mh-mode="connections"] .mh-mode-switch{
+ background:#151426e8;border-color:#a28fb769;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-mode-switch button.is-active,
+#app.mh-v16[data-mh-mode="connections"] .mh-mode-switch button.is-active{
+ background:linear-gradient(115deg,#74405f,#443251);
+ box-shadow:inset 0 0 0 1px #d6b3d183;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-planet-surface,
+#app.mh-v16[data-mh-mode="connections"] .mh-planet-surface{
+ cursor:grab;touch-action:none;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-planet-surface:active,
+#app.mh-v16[data-mh-mode="connections"] .mh-planet-surface:active{cursor:grabbing}
+/* Exactly the human-star concept, with a date replacing each story alias. */
+#app.mh-v16[data-mh-mode="events"] .mh-beacon,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon{
+ width:44px;height:44px;min-width:44px;min-height:44px;
+ background:none!important;border:0!important;box-shadow:none!important;
+ transform:translate(-50%,-50%);overflow:visible;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon:before{
+ content:"";position:absolute;left:50%;top:50%;width:13px;height:13px;
+ transform:translate(-50%,-50%);border:1px solid #f9eaffd1;border-radius:50%;
+ background:radial-gradient(circle,#fff 0 14%,#e3cee7 30%,#9c79b7 58%,transparent 82%);
+ box-shadow:0 0 0 4px #a283be36,0 0 17px #b88dca89;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active:before{
+ width:16px;height:16px;border-color:#fff;
+ background:radial-gradient(circle,#fff 0 20%,#ffdcf4 38%,#c97ea9 58%,transparent 82%);
+ box-shadow:0 0 0 5px #c37da962,0 0 25px #c89ddbd5;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon-ring,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon-ring{
+ inset:6px;border:1px solid #c4addb6c;opacity:.6;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon-year{
+ position:absolute;left:33px;top:10px;width:auto;height:auto;min-width:0;padding:5px 7px;
+ border:1px solid #aa8caf87;border-radius:7px;
+ background:linear-gradient(110deg,#21192fef,#101422e3);
+ color:#eee1f3;font:700 10px/1 Inter,system-ui,sans-serif;letter-spacing:.09em;
+ white-space:nowrap;box-shadow:0 6px 18px #0009;text-shadow:none;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active .mh-beacon-year{
+ border-color:#e0b2d5;background:linear-gradient(100deg,#714263ee,#282137ee);
+ color:#fff5fc;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-beacon="2020"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-beacon="2020"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-beacon="1987"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-beacon="1987"] .mh-beacon-year{
+ left:auto;right:32px;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon:focus-visible,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon:focus-visible{
+ outline:2px solid #f4d3ed;outline-offset:3px;border-radius:50%;
+}
+#app.mh-v16[data-mh-mode="connections"] .mh-thematic-lines path{
+ stroke:#c1a1d4;stroke-opacity:.30;stroke-width:1;stroke-dasharray:3 10;filter:none;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-history-panel,
+#app.mh-v16[data-mh-mode="connections"] .mh-history-panel{
+ border:1px solid #b4a4bd60;background:linear-gradient(150deg,#1a192cf5,#111220f7);
+ box-shadow:0 20px 56px #000b,inset 0 1px 0 #f5dffc12;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-core-tabs button.is-active,
+#app.mh-v16[data-mh-mode="connections"] .mh-core-tabs button.is-active{
+ background:linear-gradient(110deg,#794363,#4e355a);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-intro,
+#app.mh-v16[data-mh-mode="connections"] .mh-intro{display:none!important}
+@media(max-width:819px){
+ #app.mh-v16[data-mh-mode="events"] .mh-history-panel,
+ #app.mh-v16[data-mh-mode="connections"] .mh-history-panel{bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+ #app.mh-v16[data-mh-mode="events"] .mh-beacon-year,
+ #app.mh-v16[data-mh-mode="connections"] .mh-beacon-year{font-size:9px;padding:4px 6px}
+ #app.mh-v16[data-mh-mode="events"] .mh-crimson-nebula,
+ #app.mh-v16[data-mh-mode="connections"] .mh-crimson-nebula{filter:blur(27px)}
+}
+@media(prefers-reduced-motion:reduce){
+ #app.mh-v16[data-mh-mode="events"] .mh-beacon-ring,
+ #app.mh-v16[data-mh-mode="connections"] .mh-beacon-ring{animation:none!important}
+}
