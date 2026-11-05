@@ -6,6 +6,7 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const reader=read('v10/story-experience.js');
 const modes=read('v10/market-history-modes.js');
 const globe=read('v10/people-mirror-planet.js');
+const living=read('v10/living-universe.js');
 const css=read('v10/v19-story-and-worlds.css');
 const html=read('index.html');
 const source=read('v10/memory-data.js');
@@ -62,4 +63,19 @@ test('V19 styles are last, visible and reduced-motion compliant',()=>{
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(html,/diveTimer=setTimeout\(\(\)=>finishDive\(token\),1100\)/);
   assert.match(html,/const remaining=Math\.max\(0,1100-/);
+});
+
+test('V19.1 thematic PEOPLE → EVENT route keeps source and history separate',()=>{
+  assert.match(reader,/v19-history-bridge/);
+  assert.match(reader,/api\.toEvent\(parallel\.id\)/);
+  assert.match(reader,/не свидетельство участия героя/);
+  assert.match(reader,/Исходная история/);
+  assert.match(reader,/Практическое правило/);
+  assert.match(living,/toEvent\(year\)/);
+  assert.match(living,/router\.visit\('universe'\)/);
+  assert.match(living,/modes\.setMode\('events',true,/);
+  assert.match(modes,/history\[operation\]/);
+  assert.match(modes,/addEventListener\('popstate',/);
+  assert.match(modes,/panel\.querySelector\('\.mh-panel-grip'\)\?\.focus/);
+  new Script(living);
 });
