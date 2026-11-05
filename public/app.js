@@ -1036,6 +1036,10 @@
   }
 
   function notifyTelegramSessionDisconnected(){
+    // Personal MTProto connection is separate from Business Story permissions.
+    // Clear the local personal-account badge immediately: a subsequent
+    // /api/miniapp refresh must not be required to hide "Account connected".
+    state.accountConnection={connected:false,account:null};
     // Do not include an owner ID, auth challenge, phone, messages or session.
     // The inbox listens to this local event and clears its volatile state.
     if(typeof CustomEvent==='function')
