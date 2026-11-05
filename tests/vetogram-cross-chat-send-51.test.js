@@ -13,7 +13,7 @@ assert.ok(begin>0&&finish>begin,'test the shipping send controller');
 const senderSource=code.slice(begin,finish);
 function fixture(){
   const state={
-    thread:{id:'A'},ownerInitData:'signed',pendingAttachment:null,
+    thread:{id:'A'},ownerInitData:'signed',sessionEpoch:0,pendingAttachment:null,
     sendInFlight:false,replyTo:{id:42},lastSendFailure:null,
     lastSendFailures:new Map(),drafts:new Map(),messages:[],
   };
@@ -97,6 +97,39 @@ test('late acknowledgement cannot delete a newer original-chat draft',async()=>{
   f.accept();await first;
   assert.equal(f.state.drafts.get('A'),'Свежий черновик в A');
   assert.equal(f.field.value,'Текст B');
+});
+
+test('late text ACK after same-owner logout cannot revive a revoked session',async()=>{
+  const f=fixture(),pending=f.send();
+  f.state.sessionEpoch++;
+  f.state.messages=[];
+  f.state.drafts.clear();
+  f.state.lastSendFailures.clear();
+  f.state.sendInFlight=true;
+  f.state.sendInFlightChatId='new-session';
+  f.accept();
+  await pending;
+  assert.equal(f.state.messages.length,0);
+  assert.equal(f.state.lastSendFailures.size,0);
+  assert.equal(f.state.sendInFlight,true,'old finally cannot unlock newer session send');
+  assert.equal(f.state.sendInFlightChatId,'new-session');
+});
+
+test('late uncertain text failure after logout cannot restore old owner draft or nonce',async()=>{
+  const f=fixture(),pending=f.send();
+  f.state.sessionEpoch++;
+  f.state.messages=[];
+  f.state.drafts.clear();
+  f.state.lastSendFailures.clear();
+  f.state.sendInFlight=true;
+  f.state.sendInFlightChatId='new-session';
+  f.reject();
+  await pending;
+  assert.equal(f.state.drafts.size,0);
+  assert.equal(f.state.lastSendFailures.size,0);
+  assert.equal(f.state.lastSendFailure,null);
+  assert.equal(f.state.sendInFlight,true);
+  assert.equal(f.state.sendInFlightChatId,'new-session');
 });
 
 test('text editing and Telegram owner switch clear owner-bound retry state',()=>{
