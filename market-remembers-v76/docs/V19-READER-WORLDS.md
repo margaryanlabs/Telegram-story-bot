@@ -39,3 +39,12 @@ Date: 2026-11-05
 - Public consented story publishing/moderation/account infrastructure.
 - A larger, researched historical catalogue beyond four events.
 - Physical Android and real-user quality validation.
+
+## V19.1–V19.2 continuation (5 November 2026)
+- The PEOPLE chapter reader now identifies a single unstructured summary as «Исходная история» and a supplied rule as «Практическое правило», rather than implying all examples are sourced pre-trade/decision/consequence accounts.
+- Fictional PEOPLE examples offer one clearly marked **thematic analogy** to a dated EVENT CORE record; the route closes the reader and navigates to the universe before opening the referenced date. This is not a claim that anyone participated in the crisis. Personal/local entries do not get public-history relationships.
+- Switching PEOPLE ↔ EVENT CORE pushes a browser history entry; selecting years updates the current entry. A popstate handler restores the world and selected year on browser/Android Back without creating a duplicate entry.
+- Expand/collapse of the EVENT dossier resets panel scroll and restores keyboard focus. Escape collapses an expanded dossier, and the dated timeline supports left/right arrows.
+- EVENT now supports two-pointer pinch zoom, a reachable header «Вернуть метки» camera reset, and cleanup of pointer state when leaving the world. This avoids trapping a visitor on the empty hemisphere after intentional rotation.
+- V19-specific static tests and browser regression specifications cover these flows. Targeted static/source assertions and JavaScript parsing were evaluated successfully, but the full Node/Playwright suite and physical Android GPU validation remain **unexecuted** in this workspace.
+- Preview constraints remain: Render workspace reached the Hobby 25-service limit; Vercel branches tied to the shared Telegram-story-bot repo may trigger unrelated preview projects. No separate MARKET V19 public URL has been asserted or verified.
