@@ -57,7 +57,7 @@ function initGL(){
 function size(){
  const rect=stage.getBoundingClientRect();
  const nw=Math.max(1,Math.round(rect.width)),nh=Math.max(1,Math.round(rect.height));
- const ndpr=Math.min(window.devicePixelRatio||1,nw<820?1.2:1.5);
+ const ndpr=Math.min(window.devicePixelRatio||1,nw<820?1:1.35);
  if(nw===w&&nh===h&&ndpr===dpr)return;
  w=nw;h=nh;dpr=ndpr;
  for(const c of [canvas,fallback]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
@@ -124,6 +124,8 @@ function tick(t){
  frame=0;
  if(!active||document.hidden)return;
  size();place();
+ const minInterval=w<820?33:22;
+ if(last&&!reduced&&t-last<minInterval){request();return;}
  const dt=last?Math.min(60,t-last):16;last=t;
  if(!reduced&&t>focusUntil&&!pointer)targetYaw+=dt*.000058;
  const a=reduced?1:1-Math.exp(-dt/230);
