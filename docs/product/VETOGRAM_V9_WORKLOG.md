@@ -116,3 +116,31 @@
 1. Read latest HEAD and this checkpoint, run actual `node --test tests/vetogram-v9-books-reading.test.js` plus existing V9 Media/Cinema/Music tests and `npm run qa:preview:offline` when a repository checkout or CI executor is available. Fix failures without disabling gates.
 2. Test real Books reader on mobile: reopen 2–4 actual books, ensure progress/approximation and cover fallback survive reload and account switch, verify Pearl/Linen contrast, original covers, EPUB/FB2/TXT import, and public-domain text availability.
 3. Then proceed to a **Games** catalog/launch UX slice (six existing real offline games, never invent network games), or fix any higher-severity Books reader issue discovered in verification. Only publish to isolated Render after successful build/tests and verify LIVE SHA plus exact HTML/CSS/JS.
+
+
+## 2026-11-05 23:58–00:03 Asia/Tbilisi — overnight iteration 5 (GAMES WORLD)
+
+**PR/branch:** draft #242, `feature/vetogram-v9-monochrome-nav-20261105`. **Starting HEAD:** `c75851f97b7f1ec308991ae209f5392d5f9128d3` (verified from PR metadata and latest checkpoint). **Code HEAD before this checkpoint:** `a8d2ae67be7c17246075b7a4e40c00f10c3fda60`. Main/production and backups untouched.
+
+### Real code and test commits
+- `977594cb`: corrected `vetogram-play.css` old preview-only selector so V9 focused inline games are no longer stripped of real controls.
+- `8298fb2c`: `studio.html` Games launcher now has six distinct self-contained **original vector cover illustrations** (Reaction/Pairs/Tic-Tac-Toe/2048/Mines/Snake), a true recent-game resume panel, explicit **BLOTENQ?/WHO? still unavailable** labels and an opt-in "Предложить свою игру" entry. Retains existing game DOM/engine, no third-party imagery.
+- `e2806194`: `vetogram-play.js` reuses six real controllers and adds safe allowlisted last-game memory, Telegram-owner-scoped only when signed initData exists (otherwise device scope), one-tap reopen, keyboard-focus return, close/timer notifications, screen-switch cleanup and opt-in navigation to the **existing** developer proposal form. No automatic submissions or new backend.
+- `a83f2727`: new `public/vetogram-v9-games.css` after prior V9 CSS, premium black/white catalog, 3/2-column responsive six-game cards, focused single-game board, no blue gradient, light Pearl/Linen and reduced-motion.
+- `cbe6c9b9`: new `tests/vetogram-v9-games.test.js` with nine Node-native regression cases.
+- `d0c8e8d1`, `945127b5`: fix 2048 and Snake arrow keyboard ownership for **focused V9 inline game OR existing native dialog**. Preserve input field, page scrolling and other game isolation.
+- `b31789f5`, `f06d04cc`: add actual keyboard regression cases to existing `tests/vetogram-play-arcade.test.js` and `tests/vetogram-play-plus.test.js`.
+- `ec22210b`: bust Android/WebView cache for changed Play, Arcade and Plus scripts and base Play CSS.
+- `c7fc8a79`, `32302974`: discovered second V7 showcase CSS that hid focused boards even after first fix; explicitly restore correct grid/flex/block layouts for all six real games, guard in tests.
+- `2b36b179`, `a8d2ae67`: fix light theme focused board text/background contrast and test it.
+
+### Verified facts and release blockers
+- Freshly re-read GitHub code and ran **9/9 isolated V8 executions of the exact V9 Games test bodies**, including six launcher click/back flows, owner-scope isolation, denied storage, developer CTA, screen leave and accessibility/style checks. Ran **4/4 isolated V8 keyboard tests** (existing 2048 and Snake dialog keyboard tests plus new inline focus tests). Total **13/13 PASS** in V8 adapters, not native Node.
+- Parsed all three changed game controller scripts in V8: PASS. Six unique vector cover DOM nodes and all existing six real game cards present. No duplicate HTML IDs. New stylesheet braces balanced and no negative depth. Re-read after the last code change and reran the 9 V9 tests: PASS.
+- **NOT VERIFIED:** native `node --test`, full `npm test`, `npm run qa:preview:offline`, browser screenshots, Android Telegram/WebView, actual user gesture/playthrough, original developer form submission handoff. Do not describe these as passing.
+- GitHub combined status for code HEAD has three Vercel **failure** contexts with target `build-rate-limit` (account quota, not proof of code compile failure). Do not disable gates to bypass. No new Render preview deployment. Last confirmed LIVE review remains older V9.02 commit `8a47b709dac5a63f46c598dc2d7556ad4ccb90af` and is **not** this Games code.
+
+### First next step
+1. Read current PR HEAD and this checkpoint; run native `node --test tests/vetogram-v9-games.test.js tests/vetogram-play-arcade.test.js tests/vetogram-play-plus.test.js` plus existing V9 Media/Cinema/Music/Books tests and offline preview QA in a proper checkout/CI environment; fix failures.
+2. Inspect six game cards and full controls on actual 360px Android Telegram, Pearl/Linen, 2048 keyboard/swipes, Snake timer pause on background, Mines long press, Reaction timer and memory mismatch reset; ensure Game proposal form visible and manual only.
+3. Then move to Studio/Stories GIF and sticker-pack export with official Telegram handoff and no fake auto-install. Only isolated Render after successful build/test gates and exact LIVE SHA + HTML/CSS/JS confirmation.
