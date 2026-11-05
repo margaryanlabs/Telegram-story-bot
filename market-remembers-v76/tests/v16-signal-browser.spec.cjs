@@ -28,7 +28,7 @@ test('V16 signal nodes are touch-sized and attached to Event Core sphere',async(
  expect(box.height).toBeGreaterThanOrEqual(40);
  await node.click();
  await expect(page.locator('#mhHistoryPanel')).toHaveClass(/is-expanded/);
- await expect(page.locator('#mhHistoryPanel .mh-v16-research-card')).toHaveCount(3);
+ await expect(page.locator('#mhHistoryPanel .mh-v16-research-card')).toHaveCount(5);
  const shaders=await page.evaluate(()=>window.MHPeopleMirrorShaders);
  expect(shaders.coreFragment).toContain('nebulaNoise3');
  expect(shaders.pVertex).toContain('gl_PointSize');
