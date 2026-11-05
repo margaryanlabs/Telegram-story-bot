@@ -5,9 +5,10 @@ import {Script,runInNewContext} from 'node:vm';
 
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
-const [html,sky,css,pkg]=await Promise.all([
+const [html,sky,css,depth,pkg]=await Promise.all([
   read('index.html'),read('v10/universe-atmosphere.js'),
-  read('v10/v12-universe-cinema.css'),read('package.json')
+  read('v10/v12-universe-cinema.css'),
+  read('v10/v12-universe-depth-v2.css'),read('package.json')
 ]);
 const fragment=html.match(/const coreFragment=`([\s\S]*?)`;/)?.[1]||'';
 
@@ -18,12 +19,19 @@ test('V12 RC6 ships the real cinematic globe, not a disconnected illustration',(
   assert.match(html,/CINEMATIC UNIVERSE · V12 RC6/);
   assert.match(html,/gl\.drawElements\(gl\.TRIANGLES,coreIndexCount/);
   assert.match(html,/const coreVertex=`precision highp float/);
-  assert.match(html,/const coreFragment=`precision mediump float/);
+  assert.match(html,/const coreFragment=`#ifdef GL_FRAGMENT_PRECISION_HIGH/);
+  assert.match(fragment,/precision highp float;/);
+  assert.match(fragment,/#else\nprecision mediump float;/);
   assert.doesNotThrow(()=>new Script(html.match(/<script>([\s\S]*?)<\/script>/)?.[1]||''));
 });
 
 test('WebGL memory globe has more dimensional depth, cyan plasma and warm edge',()=>{
   assert.match(fragment,/float nebulaNoise=/);
+  assert.match(fragment,/float nebulaNoise3\(vec3 p\)/);
+  assert.match(fragment,/float cloudDepth=nebulaNoise3\(/);
+  assert.match(fragment,/float shadowCavity=/);
+  assert.match(fragment,/float goldZone=/);
+  assert.match(fragment,/float stellarDust=/);
   assert.match(fragment,/float brightVein=/);
   assert.match(fragment,/float limb=pow\(1\.-clamp\(N\.z/);
   assert.match(fragment,/vec3\(\.235,\.158,\.098\)\*warmLimb/);
@@ -37,6 +45,8 @@ test('WebGL memory globe has more dimensional depth, cyan plasma and warm edge',
 test('Android automatic/ECO material retains primary depth but skips secondary detail',()=>{
   assert.match(fragment,/uniform mediump float uQuality/);
   assert.match(fragment,/if\(uQuality>\.5\)\{/);
+  assert.match(fragment,/float cloudDetail=nebulaNoise3/);
+  assert.match(fragment,/float speckSeed=hash\(floor\(speckCoords\)\)/);
   assert.ok(fragment.indexOf('material+=vec3(.145,.340,.395)*brightVein')<
             fragment.indexOf('if(uQuality>.5)'));
   assert.ok(fragment.indexOf('float microCloud=')>
@@ -57,7 +67,15 @@ test('Canvas fallback shows real clipped sphere with nebula and quality guard',(
 test('Static background stays behind original sphere and cannot intercept taps',()=>{
   const skyIndex=html.indexOf('id="memorySky"');
   const opticalIndex=html.indexOf('class="v124-depth-field"');
+  const planetBackgroundIndex=html.indexOf('class="v127-space-field"');
   const globeIndex=html.indexOf('id="gl"');
+  assert.ok(opticalIndex<planetBackgroundIndex&&planetBackgroundIndex<globeIndex);
+  assert.equal(html.split('v10/v12-universe-depth-v2.css').length-1,1);
+  assert.match(depth,/\.v127-galaxy\{/);
+  assert.match(depth,/\.v127-nebula-river\{/);
+  assert.match(depth,/\.v127-nebula-crown\{/);
+  assert.match(depth,/pointer-events:none/);
+  assert.match(depth,/@media\(prefers-reduced-motion:reduce\)/);
   assert.ok(skyIndex>=0&&skyIndex<opticalIndex&&opticalIndex<globeIndex);
   assert.match(css,/#app\.obsidian \.v124-depth-field\{/);
   assert.match(css,/pointer-events:none/);
