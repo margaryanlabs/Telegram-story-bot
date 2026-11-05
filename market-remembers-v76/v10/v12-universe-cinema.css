@@ -110,18 +110,18 @@
 #app.obsidian .v81-globe-aura .v126-orbit-guide::before{
   left:6%;right:6%;top:29%;bottom:29%;
   transform:rotate(-18deg);
-  border:1px solid rgba(144,218,231,.24);
-  border-top-color:rgba(165,222,236,.12);
-  border-bottom-color:rgba(154,227,239,.38);
-  box-shadow:0 1px 11px rgba(104,200,226,.09);
+  border:1px solid rgba(144,218,231,.15);
+  border-top-color:rgba(165,222,236,.07);
+  border-bottom-color:rgba(154,227,239,.25);
+  box-shadow:0 1px 11px rgba(104,200,226,.045);
 }
 #app.obsidian .v81-globe-aura .v126-orbit-guide::after{
   left:20%;right:20%;top:13%;bottom:13%;
   transform:rotate(39deg);
-  border:1px solid rgba(218,184,150,.11);
+  border:1px solid rgba(218,184,150,.07);
   border-top-color:transparent;
-  border-bottom-color:rgba(219,181,139,.32);
-  border-left-color:rgba(170,195,205,.10);
+  border-bottom-color:rgba(219,181,139,.21);
+  border-left-color:rgba(170,195,205,.06);
 }
 #app.obsidian .v81-globe-aura.is-eco .v126-orbit-guide::after{
   display:none;
