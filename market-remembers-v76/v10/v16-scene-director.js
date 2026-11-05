@@ -99,6 +99,7 @@
    if(w<1||h<1)return;
    const x=point.x,y=point.y;
    burst.style.left=x+'px';burst.style.top=y+'px';
+   burst.style.opacity='1';
    const live=!expanded&&performance.now()<signalUntil;
    tether.style.opacity=live?'.67':'0';
    if(!live)return;
