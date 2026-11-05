@@ -227,3 +227,26 @@
 @media(prefers-reduced-motion:reduce){
   #app .v19-history-bridge button{transition:none;transform:none}
 }
+
+/* EVENT: the restoring-centre control makes an empty manually rotated
+   hemisphere recoverable without forcing the entire sphere to auto-spin. */
+#app .mh-header-actions{display:flex;align-items:center;gap:9px;flex:none}
+#app .mh-header-actions #mhResetEventView{
+  border-color:rgba(192,165,220,.52);
+  background:rgba(28,24,43,.83);color:#ead7ed;
+  min-width:46px;
+}
+#app .mh-header-actions #mhResetEventView:hover{
+  border-color:#e5c5e4;background:#3b304b;color:#fff;
+}
+#app .mh-header-actions button:focus-visible{outline:2px solid #f4e2f7;outline-offset:3px}
+@media(max-width:819px){
+  #app .mh-header-actions{gap:6px}
+  #app .mh-header-actions button{
+    width:42px;min-width:42px;height:42px;min-height:42px;
+    padding:0!important;display:grid;place-items:center;
+    font-size:21px!important;
+  }
+  #app .mh-event-header .mh-event-brand{min-width:0;flex:1}
+  #app .mh-event-header .mh-event-brand strong{overflow-wrap:normal}
+}
