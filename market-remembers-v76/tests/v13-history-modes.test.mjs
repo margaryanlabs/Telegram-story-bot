@@ -16,7 +16,7 @@ test('history modes are loaded after original world, without removing the People
 });
 
 test('the selected historical events carry explicit dates and primary institutional sources', () => {
-  for (const year of ["'1907'","'1987'","'2008'","'2020'"]) assert.ok(js.includes('id: ' + year),year);
+  for (const year of ['1907','1929','1987','1998','2008','2010','2020','2023']) assert.ok(js.includes('"id": "' + year + '"'),year);
   for (const url of ['federalreservehistory.org/essays/panic-of-1907','federalreservehistory.org/essays/stock-market-crash-of-1987','fdic.gov/history/2000-2009','libertystreeteconomics.newyorkfed.org/2020/05/treasury-market-liquidity'])
     assert.ok(js.includes(url),url);
   assert.match(js,/NOT geographic coordinates/);
