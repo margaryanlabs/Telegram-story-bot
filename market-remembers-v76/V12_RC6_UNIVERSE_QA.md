@@ -167,3 +167,36 @@ real Android FPS or comparison of the complete CSS background with
 the finished application. A GitHack pinned-commit live link is for
 user review only; it is not a substitute for a proper production
 preview or full regression suite.
+
+
+## Mobile visual review — screenshot follow-up, 5 Nov 2026
+
+The Samsung Android review of RC6 revealed a giant black glass-like
+sphere with too many intersecting cyan/gold ribbons and part of its
+lower edge covered by the memory dock. Purple background glow remained
+too diffuse.
+
+Addressed **in the same PR #236, not in production**:
+
+- V12 fragment material: cut repeated sine-ribbon contribution,
+  reduce both decorative great-circle strokes, introduce illuminated
+  irregular gaseous banks and more readable darker rifts using existing
+  3D noise (no new shader pass or remote texture).
+- Existing mobile `v9PortraitFrame`: reduce standard phone
+  nominal radius from .347 to .306 of the smaller viewport dimension
+  (.325 to .296 for short portrait), preserving original star projection,
+  clicking, zoom, and 3D rotation. Goal: less overlap with the dock.
+- `v12-universe-depth-v2.css`: move distant galaxy into the
+  upper-right phone viewport; tone down the broad violet river to
+  reduce color wash.
+- `v12-universe-cinema.css`: soften decorative CSS orbital ellipses
+  so they do not compete with active star buttons.
+- `tests/v12-rc6-universe-cinema.test.mjs`: add invariants for
+  organic clouds, softened great-circle guides and mobile radius.
+
+Targeted source/behavior checks pass 6/6 in an isolated JS harness;
+application inline script parses; scene stacking order remains correct.
+**Still needed:** full Node suite, GLSL compile on final code revision,
+actual phone visual check, WebGL/Canvas fallback integration and FPS QA.
+
+Do not represent the previous pinned preview as this new revision.
