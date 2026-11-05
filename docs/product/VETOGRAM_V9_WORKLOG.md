@@ -92,3 +92,27 @@
 1. Re-read latest PR HEAD and this log. Run actual `node --test tests/vetogram-v9-music-world.test.js` and `tests/vetogram-v9-media-hub.test.js` plus `npm run qa:preview:offline` when an authenticated checkout/CI executor is available; fix failures, do not bypass gates.
 2. Browser/Android review of the new Music hero in Graphite/Pearl, real Audius source availability, 360px scroll, one-tap native player and no duplicate audio.
 3. Then complete a tested **Books** slice: premium real licensed/public-domain covers and reader progress/typography without fabricating full texts; alternatively finish Cinema official-source detail cards if higher-priority regressions surface. Only publish to isolated Render after release gates, and verify live SHA/assets.
+
+
+## 2026-11-05 23:00 Asia/Tbilisi — overnight iteration 4 (BOOKS READING ROOM)
+
+**PR/branch:** draft #242, `feature/vetogram-v9-monochrome-nav-20261105`. **Starting HEAD:** `8f7030e3d2da5188d783ee6ac85404cc9907eda0` (verified via `fetch_pr` and recent GitHub commit list). **Code HEAD before this checkpoint:** `2b60d5739becf844b0b3f6e612d564be50cb1014`. Main/production unchanged.
+
+### Actual commits / changed files
+- `c6cebf28`: `public/books.js` — real, owner-scoped Reading Room. The existing Continue shelf now selects up to four real previously read books from stored progress (most recent first), rejects invalid IDs and catalog-only metadata, displays current chapter/page and clearly marks approximate multi-chapter percentage, shows source-authentic cover when an existing allowlisted HTTPS URL is available and an original typographic jacket otherwise. A one-tap resume button and up to three additional recent-book buttons reuse **existing `openBook` and reader**, not a second reader.
+- `a24a4516`: `public/books.html` — adds the real, initially hidden Reading History rail inside the existing Continue shelf; mounts a new late-loading V9 stylesheet.
+- `b0c1f47f`: `public/vetogram-v9-books-reading.css` — high-contrast graphite/white Reading Room, mono editorial jackets (genuine source images retain original color), 740px/420px responsive cards, accessible keyboard focus, reduced-motion and Pearl/Linen light-theme variants. The reader's existing light/sepia controls and text source rights logic remain intact.
+- `1db24a67`: `tests/vetogram-v9-books-reading.test.js` — eight Node-native tests for mount order, real progress sorting/filtering, approximate percentages, resume click, cover safety, owner-local progress, accessibility and syntax/CSS balance.
+- `60d0f46c`: optimized `renderContinueShelf` so page turns refresh percent/text without repeatedly re-creating cover image DOM or reloading mini cards.
+- `1f324d61`: regression test for cached jacket DOM on repeated page flips.
+- `2b60d573`: bumped `books.js` cache query to `20261105-v9-books-01` so future isolated preview doesn't keep V9.02 JavaScript in the WebView cache.
+
+### Checks / release gate
+- Re-fetched **actual GitHub** `books.html`, `books.js`, V9 CSS and the new Node test source after code writes. Evaluated the exact eight test bodies with a V8 adapter for `node:test`/`assert`/`vm`, including live extracted `readingHistory`, `readingPosition`, and `renderContinueShelf` functions against simulated progress and DOM. **8/8 PASS**. Existing `books.js` syntax parses. CSS braces balanced.
+- This isolated V8 harness is **NOT a real `node --test` run**. `npm test`, full build, `qa:preview:offline`, screenshots, actual book content fetch in Armenia/Georgia, Android Telegram/WebView, light/sepia reader interactions, EPUB importer and reader page transitions are **NOT VERIFIED**. Existing user files, progress and sessions were not touched.
+- **No Render deployment**. Isolated preview service `srv-dbjhvdmtlv9c73d9f3t0` last verified LIVE at **V9.02** commit `8a47b709dac5a63f46c598dc2d7556ad4ccb90af` (not this Books code). Deployment remains blocked by full Node/build/preview QA release gates; never describe that old preview as current.
+
+### First next step
+1. Read latest HEAD and this checkpoint, run actual `node --test tests/vetogram-v9-books-reading.test.js` plus existing V9 Media/Cinema/Music tests and `npm run qa:preview:offline` when a repository checkout or CI executor is available. Fix failures without disabling gates.
+2. Test real Books reader on mobile: reopen 2–4 actual books, ensure progress/approximation and cover fallback survive reload and account switch, verify Pearl/Linen contrast, original covers, EPUB/FB2/TXT import, and public-domain text availability.
+3. Then proceed to a **Games** catalog/launch UX slice (six existing real offline games, never invent network games), or fix any higher-severity Books reader issue discovered in verification. Only publish to isolated Render after successful build/tests and verify LIVE SHA plus exact HTML/CSS/JS.
