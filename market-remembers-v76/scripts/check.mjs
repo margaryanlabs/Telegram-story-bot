@@ -38,11 +38,12 @@ for(const name of moduleOrder){
   previous=at;
 }
 const packageData=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
-if(packageData.version!=='12.0.0-rc.5')throw Error('V12 release metadata is out of sync');
+if(packageData.version!=='12.0.0-rc.6')throw Error('V12 release metadata is out of sync');
 for(const name of ['cosmic-awakening.css','star-passage-v11.css','memory-atlas-v11.css','memory-trails-v11.css','explainable-constellations-v11.css']){
   if(!html.includes('<link rel="stylesheet" href="v10/'+name+'">'))throw Error('Missing release stylesheet '+name);
 }
 if(!html.includes('v10/v12-cinematic.css'))throw Error('V12 RC2 cinematic layer missing');
 if(!html.includes('v10/v12-reading-polish.css'))throw Error('V12 RC3 reader polish stylesheet missing');
 if(!html.includes('v10/v12-depth-field.css')||!html.includes('class="v124-depth-field"'))throw Error('V12 RC4 native sphere depth layer missing');
-console.log('V12 RC5 lint: cumulative engine, ordered modules, all visual layers, local-only data and shell IDs valid.');
+if(!html.includes('v10/v12-universe-cinema.css'))throw Error('V12 RC6 cinematic universe layer missing');
+console.log('V12 RC6 lint: cumulative engine, ordered modules, all visual layers, local-only data and shell IDs valid.');
