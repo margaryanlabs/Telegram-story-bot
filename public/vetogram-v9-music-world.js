@@ -78,7 +78,7 @@
        const details=node('span','v9-world-track-details');
        details.append(node('strong','',item.title),node('small','',item.artist));
        button.append(picture,details,node('span','v9-world-track-arrow','↗'));
-       button.onclick=()=>choose(i);
+       button.onclick=()=>{choose(i);playCurrent()};
        fragment.append(button);
      });
      cards.append(fragment);
@@ -90,7 +90,8 @@
    render();
  }
  function refresh(){
-   const incoming=Array.isArray(V.trending())?V.trending():[];
+   const available=V.trending();
+   const incoming=Array.isArray(available)?available:[];
    const unique=new Set();
    tracks=incoming.filter(t=>{
      if(!valid(t)||failed.has(t.id)||unique.has(t.id))return false;
