@@ -2796,9 +2796,10 @@
   }
 
   function viewerPasswordSheet(hint = '') {
+    const fromQr=viewerState.loginPending?.stage==='qr_password';
     openSheet(`
       <span class="kicker">ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА TELEGRAM</span>
-      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="done">✓ Код</span><span class="active">3 · 2FA</span></div>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ ${fromQr?'QR':'Номер'}</span><span class="done">✓ ${fromQr?'Подтверждение':'Код'}</span><span class="active">3 · 2FA</span></div>
       <h2>У тебя включён 2FA‑пароль</h2>
       <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Vetogram.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
@@ -2810,7 +2811,7 @@
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-password">Подключить</button>
-        <button data-sheet-action="close">Отмена</button>
+        <button data-sheet-action="close">Закрыть (вход сохранится)</button>
       </div>
     `);
   }
@@ -3701,7 +3702,12 @@
           rememberViewerChallenge(data);
           viewerCodeSheet(data.delivery);
         } else if (data.needsPassword) {
-          viewerState.loginPending = { ...(viewerState.loginPending||{}), stage:'password' };
+          viewerState.loginPending = {
+            ...(viewerState.loginPending||{}),
+            stage:'password',
+            expiresAt:data.expiresAt||viewerState.loginPending?.expiresAt||null,
+          };
+          renderViewerPendingLoginNotice();
           viewerPasswordSheet();
         } else {
           closeSheet();
