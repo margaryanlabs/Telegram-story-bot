@@ -91,12 +91,15 @@
   scene.append(layer);
   main.append(switcher, intro, panel);
 
-  function updateUrl() {
+  function updateUrl(method = 'replace') {
     try {
       const url = new URL(window.location.href);
       if (state.mode === 'people') { url.searchParams.delete('mm'); url.searchParams.delete('event'); }
       else { url.searchParams.set('mm', state.mode); url.searchParams.set('event', state.activeEvent); }
-      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+      // World changes are navigable with Android/system Back; individual year
+      // focus updates avoid flooding the history stack with every star tap.
+      const operation=method==='push'?'pushState':'replaceState';
+      history[operation](history.state, '', url.pathname + url.search + url.hash);
     } catch (_) { /* URL state is optional; content remains usable. */ }
   }
   function timeline() {
@@ -247,7 +250,7 @@
       renderBeacons();
     }
     window.MarketEventPlanet?.setActive(mode !== 'people');
-    if (update) updateUrl();
+    if (update) updateUrl(oldMode!==mode?'push':'replace');
   }
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
@@ -259,6 +262,7 @@
     // The visitor explicitly expands "Подробнее" when ready to read.
     panelExpanded = false;
     renderPanel();
+    panel.scrollTop=0;
     renderBeacons();
     // Re-rendering the panel replaces buttons: retain focus for keyboard users.
     if(fromTimeline){
@@ -304,7 +308,13 @@
   app.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
-    if(target.closest('[data-mh-panel-toggle]')) { panelExpanded = !panelExpanded; renderPanel(); return; }
+    if(target.closest('[data-mh-panel-toggle]')) {
+      panelExpanded=!panelExpanded;
+      renderPanel();panel.scrollTop=0;
+      panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
+      window.requestAnimationFrame(measure);
+      return;
+    }
     const modeBtn = target.closest('[data-mh-mode]');
     if (modeBtn) { setMode(modeBtn.dataset.mhMode); return; }
     const beacon = target.closest('[data-mh-beacon]');
@@ -324,6 +334,20 @@
     }).observe(drawer,{attributes:true,attributeFilter:['hidden']});
   }
   window.addEventListener('resize',()=>window.requestAnimationFrame(measure),{passive:true});
+  // The browser Back button restores the world selected in the URL.
+  // Do not run an extra transition or write another history entry on replay.
+  window.addEventListener('popstate',()=>{
+    const parameters=new URLSearchParams(window.location.search);
+    const requestedMode=parameters.get('mm');
+    const nextMode=['events','connections'].includes(requestedMode)?requestedMode:'people';
+    const nextId=parameters.get('event');
+    if(EVENT_BY_ID[nextId])state.activeEvent=nextId;
+    if(nextMode!==state.mode)setMode(nextMode,false);
+    else if(nextMode!=='people'){
+      panelExpanded=false;renderPanel();panel.scrollTop=0;renderBeacons();
+      window.MarketEventPlanet?.focus(EVENT_BY_ID[state.activeEvent].p);
+    }
+  });
   const controls = document.getElementById('worldControls');
   controls?.addEventListener('click',()=>window.setTimeout(measure,140));
   const requested = new URLSearchParams(window.location.search);
