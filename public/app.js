@@ -1036,6 +1036,16 @@
   }
 
   function notifyTelegramSessionDisconnected(){
+    // A confirmed logout is a fresh privacy boundary EVEN IF Telegram Mini
+    // App initData stays identical. Fence every pending owner-scoped request:
+    // pre-logout Viewer Sync, Mini App state, analytics and OTP callbacks
+    // cannot resurrect the previous authenticated session after this point.
+    viewerOwnerEpoch++;
+    viewerSyncIntent++;
+    viewerAnalyticsIntent++;
+    viewerAuthBusy=false;
+    viewerQrAbortController?.abort();
+    viewerQrAbortController=null;
     // Personal MTProto connection is separate from Business Story permissions.
     // Clear the local personal-account badge immediately: a subsequent
     // /api/miniapp refresh must not be required to hide "Account connected".
@@ -1044,6 +1054,9 @@
     // The inbox listens to this local event and clears its volatile state.
     if(typeof CustomEvent==='function')
       window.dispatchEvent(new CustomEvent('vetogram:telegram-session-disconnected'));
+    renderHome();
+    renderConnection();
+    renderViewerPendingLoginNotice();
   }
 
   async function refreshViewerSync({ silent = false } = {}) {
