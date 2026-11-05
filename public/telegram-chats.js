@@ -2531,9 +2531,17 @@
       state.syncFailures=0;
       state.lastSyncedAt=Date.now();
       const date=new Date(state.lastSyncedAt);
-      syncLabel(newItems&&!atBottom
-        ?newItems+' новых · '+two(date.getHours())+':'+two(date.getMinutes())+' · прокрути вниз'
-        :'Обновлено '+two(date.getHours())+':'+two(date.getMinutes())+' · без отметки «прочитано»');
+      if(data.archiveAvailable===false){
+        // Live Telegram can be healthy while optional Privacy storage fails.
+        // A missing saved snapshot is UNKNOWN, not an empty verified archive.
+        syncLabel(newItems&&!atBottom
+          ?newItems+' новых · архив Vetogram недоступен · прокрути вниз'
+          :'Telegram обновлён · архив Vetogram временно недоступен');
+      }else{
+        syncLabel(newItems&&!atBottom
+          ?newItems+' новых · '+two(date.getHours())+':'+two(date.getMinutes())+' · прокрути вниз'
+          :'Обновлено '+two(date.getHours())+':'+two(date.getMinutes())+' · без отметки «прочитано»');
+      }
     }catch(error){
       // A → B → A can reuse the same chat ID while the earlier poll is still
       // pending. Only the exact active request generation may invalidate this
