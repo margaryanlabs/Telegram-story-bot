@@ -101,9 +101,9 @@ test('local metadata decoder never uploads and revokes private blob URLs on succ
  }
 });
 
-function senderFixture(metadata=async()=>({duration:5,width:640,height:360})){
+function senderFixture(metadata=async()=>({duration:5,width:640,height:360}),transport=null){
  const file={size:256,name:'clip.mp4',type:'video/mp4'};
- const state={thread:{id:'456'},ownerInitData:'signed-A',threadGeneration:1,
+ const state={thread:{id:'456'},ownerInitData:'signed-A',sessionEpoch:0,threadGeneration:1,
   pendingAttachment:{file,kind:'video'},replyTo:null,lastRichFailure:null,sendInFlight:false,
   drafts:new Map(),draftVersions:new Map(),lastRichFailures:new Map(),threadLoading:false};
  const field={value:'caption'},calls=[],notices=[];
@@ -111,7 +111,7 @@ function senderFixture(metadata=async()=>({duration:5,width:640,height:360})){
  const sandbox={state,tg:{initData:'signed-A'},window:{crypto:{randomUUID:()=> (++ids===1?nonce:'11111111-1111-1111-1111-111111111111')}},
   $:id=>id==='telegramThreadCompose'?field:null,
   canSendInThread:()=>true,readFileAsBase64:async()=>mp4,localMediaMetadata:metadata,
-  richRequest:async(action,payload)=>{calls.push({action,payload});if(attempt++===0)throw Object.assign(new Error('uncertain'),{uncertain:true})},
+  richRequest:async(action,payload)=>{calls.push({action,payload});if(transport)return transport(action,payload);if(attempt++===0)throw Object.assign(new Error('uncertain'),{uncertain:true})},
   setDeliveryStatus(){},renderSendComposer(){},touchRecentChat(){},closeStickerDrawer(){},
   renderReplyPreview(){},renderAttachmentChip(){},loadMessages(){},setTimeout(){},
   threadNotice:text=>notices.push(text),toast(){},Date,Error,String,Number,
@@ -143,4 +143,26 @@ test('owner or A→B→A thread generation changes during media parsing cancel b
  await pending;
  assert.equal(f.calls.length,0);
  assert.equal(f.state.sendInFlight,false);
+});
+
+test('delayed rich send ACK after same-owner logout cannot revive media, drafts or send lock',async()=>{
+ let resolveAck;
+ const f=senderFixture(undefined,()=>new Promise(resolve=>{resolveAck=resolve}));
+ const pending=f.send('send_media');
+ // Allow async metadata and base64 read to reach the mocked transport.
+ for(let i=0;i<8&&!resolveAck;i++)await Promise.resolve();
+ assert.equal(typeof resolveAck,'function','send reached original transport');
+ f.state.sessionEpoch++;
+ f.state.pendingAttachment=null;
+ f.state.drafts.clear();
+ f.state.lastRichFailures.clear();
+ f.state.sendInFlight=true;
+ f.state.sendInFlightChatId='new-session';
+ resolveAck({sent:true});
+ await pending;
+ assert.equal(f.calls.length,1);
+ assert.equal(f.state.lastRichFailures.size,0);
+ assert.equal(f.state.pendingAttachment,null);
+ assert.equal(f.state.sendInFlight,true,'old finally cannot unlock new send');
+ assert.equal(f.state.sendInFlightChatId,'new-session');
 });
