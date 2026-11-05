@@ -27,7 +27,18 @@ The QR login controller previously used one async \`fetch\` and a readable strea
 
 A QR stream ending without a terminal \`connected\`, \`password_required\`, \`expired\` or \`error\` event now produces an explicit retryable error. Explicit \`expired\`/\`error\` messages are not overwritten with a generic stream error.
 
-### 4. Navigation regression test drift
+### 4. Phone-code-to-2FA expiry and honest modal state
+
+The server previously saved a **fresh** ten-minute challenge when phone code verification advanced to 2FA, but omitted that new deadline from its success response. The UI kept the older code deadline and could prematurely hide the option to resume 2FA.
+
+- \`api/viewer-sync.js\` now returns the **same non-secret \`expiresAt\`** written to the durable 2FA challenge.
+- \`public/app.js\` preserves this deadline after \`verify_code\`, updates the pending-login notice and clarifies **QR** versus **номер + код** steps in the password sheet.
+- Closing the password sheet now says \`Закрыть (вход сохранится)\`, accurately describing that it does not revoke the pending server challenge.
+- \`tests/vetogram-reborn-rb5-phone-2fa.test.js\` adds an isolated server 2FA branch fixture, client login transition fixture and modal copy/route checks.
+
+**Isolated in-memory verification:** Executed the actual extracted QR controller in V8 with fake streams for six scenarios (6/6 passed), plus the actual extracted phone server 2FA transition and password UI for five checks (5/5 passed). These are **not** the full Node regression suite or a real Telegram/WebView test.
+
+### 5. Navigation regression test drift
 
 \`tests/vetogram-reborn-auth-navigation.test.js\` still asserted **five** bottom navigation destinations, conflicting with RB1’s agreed four-tab configuration. It now expects \`telegram, publish, media, privacy\` while explicitly ensuring Profile remains reachable from the header/account sheet and AI remains a secondary route.
 
