@@ -2715,6 +2715,7 @@
     }
     if (data.needsPassword===true || data.stage==='password') {
       viewerState.loginPending={stage:'password',expiresAt:data.expiresAt||null};
+      renderViewerPendingLoginNotice();
       viewerPasswordSheet();return;
     }
     rememberViewerChallenge(data);
