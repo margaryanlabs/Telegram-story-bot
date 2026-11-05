@@ -137,6 +137,7 @@
   function renderPanel() {
     const event = EVENT_BY_ID[state.activeEvent];
     panel.classList.toggle('is-expanded',panelExpanded);
+    app.classList.toggle('mh-v17-research-open',panelExpanded && state.mode!=='people');
     window.MarketSignalDirector?.setEvent(event);
     panel.innerHTML = '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
       '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
@@ -215,7 +216,8 @@
     const oldMode = state.mode;
     state.mode = mode;
     if (mode === 'people') panelExpanded = false;
-    else if (oldMode !== 'people' && oldMode !== mode) panelExpanded = true;
+    // A submode switch changes the research layer without unexpectedly
+    // covering the observatory with a full-screen sheet.
     app.dataset.mhMode = mode;
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
       const active = mode === 'people' ? btn.dataset.mhMode === 'people' : btn.dataset.mhMode === 'events';
@@ -240,7 +242,8 @@
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
     state.activeEvent = id;
-    panelExpanded = true;
+    // Scene first: picking an event moves the globe and updates the compact
+    // dock. Detailed research is deliberately opened by the visitor.
     renderPanel();
     renderBeacons();
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
@@ -302,6 +305,8 @@
     version: '13.0.0',
     get mode() { return state.mode; },
     get activeEvent() { return state.activeEvent; },
+    get selectedPoint() { return [...EVENT_BY_ID[state.activeEvent].p]; },
+    get expanded() { return panelExpanded; },
     get events() { return EVENTS.map(({id,year,date,name,themes,url})=>({id,year,date,name,themes:[...themes],url})); },
     setMode, selectEvent, measure
   });
