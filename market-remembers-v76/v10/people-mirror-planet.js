@@ -31,6 +31,11 @@ let uniformCache=new WeakMap(),dragged=false,contextLost=false;
 const activeMode=()=>['events','connections'].includes(app.dataset.mhMode);
 const events=()=>window.MarketHistoryModes?.events||[];
 const point3=p=>[p[0],p[1],Math.sqrt(Math.max(0,1-p[0]*p[0]-p[1]*p[1]))];
+const fallbackDust=Array.from({length:360},(_,i)=>{
+ const y=1-2*(i+.5)/360,angle=i*2.399963229728653;
+ const radius=Math.sqrt(Math.max(0,1-y*y));
+ return [radius*Math.cos(angle),y,radius*Math.sin(angle)];
+});
 function seeded(seed){let v=seed>>>0;return ()=>{v^=v<<13;v^=v>>>17;v^=v<<5;return(v>>>0)/4294967296;};}
 function precision(type,text){
  const s=gl.createShader(type);gl.shaderSource(s,text);gl.compileShader(s);
@@ -184,22 +189,48 @@ function webGLRender(t){
 }
 function canvasRender(){
  if(!ctx)return;
- const {x,y,r}=planet;ctx.clearRect(0,0,w,h);
- const stone=ctx.createRadialGradient(x-r*.24,y-r*.25,r*.04,x,y,r);
- stone.addColorStop(0,'#4f3855');stone.addColorStop(.40,'#261d39');stone.addColorStop(.76,'#101424');stone.addColorStop(1,'#060811');
- ctx.save();ctx.fillStyle=stone;ctx.beginPath();ctx.arc(x,y,r,0,twoPi);ctx.fill();ctx.clip();
- const gas=ctx.createLinearGradient(x-r*.6,y+r*.7,x+r*.6,y-r*.75);
- gas.addColorStop(0,'rgba(105,62,133,0)');gas.addColorStop(.45,'rgba(192,113,168,.12)');
- gas.addColorStop(.65,'rgba(175,143,207,.15)');gas.addColorStop(1,'rgba(101,64,119,0)');
- ctx.fillStyle=gas;ctx.fillRect(x-r,y-r,r*2,r*2);
- const rnd=seeded(271828);
- for(let i=0;i<390;i++){
-  const a=rnd()*twoPi,rr=Math.sqrt(rnd())*r*.96,px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;
-  ctx.fillStyle=i%4?'rgba(199,181,225,.25)':'rgba(231,164,196,.38)';
-  ctx.beginPath();ctx.arc(px,py,i%9===0?1:.6,0,twoPi);ctx.fill();
+ const {x,y}=planet,r=planet.r*zoom;
+ ctx.clearRect(0,0,w,h);
+ // A true projected front hemisphere replaces the old stationary 2D dust disc.
+ // The same yaw/pitch used for historical beacons now moves the visual stars.
+ const stone=ctx.createRadialGradient(x-r*.26,y-r*.32,r*.02,x,y,r);
+ stone.addColorStop(0,'#594761');
+ stone.addColorStop(.33,'#312b46');
+ stone.addColorStop(.69,'#171c34');
+ stone.addColorStop(1,'#060811');
+ ctx.save();
+ ctx.beginPath();ctx.arc(x,y,r,0,twoPi);ctx.clip();
+ ctx.fillStyle=stone;ctx.fillRect(x-r,y-r,r*2,r*2);
+ const sheen=ctx.createLinearGradient(x-r*.87,y-r*.72,x+r*.64,y+r*.8);
+ sheen.addColorStop(0,'rgba(227,187,235,.18)');
+ sheen.addColorStop(.48,'rgba(127,104,180,.025)');
+ sheen.addColorStop(1,'rgba(15,19,37,.19)');
+ ctx.fillStyle=sheen;ctx.fillRect(x-r,y-r,r*2,r*2);
+ for(let i=0;i<fallbackDust.length;i++){
+  const p=rotate(fallbackDust[i]);
+  if(p[2]<=.04)continue; // Never render stars through the back of the globe.
+  const xx=x+p[0]*r*.94,yy=y-p[1]*r*.94;
+  if((xx-x)*(xx-x)+(yy-y)*(yy-y)>r*r*.94)continue;
+  const size=i%21===0?1.2:.5+p[2]*.43;
+  const alpha=(.14+p[2]*.42)*(i%19===0?1.35:1);
+  ctx.globalAlpha=clamp(alpha,.1,.86);
+  ctx.fillStyle=i%9===0?'#e8c6df':'#cfc2ed';
+  ctx.beginPath();ctx.arc(xx,yy,size,0,twoPi);ctx.fill();
  }
+ ctx.globalAlpha=1;
+ // A light-catching latitude arc follows the physical orientation.
+ ctx.strokeStyle='rgba(198,170,222,.16)';ctx.lineWidth=.8;
+ ctx.save();ctx.translate(x,y);ctx.rotate(yaw*.18);ctx.scale(1,.34);
+ ctx.beginPath();ctx.arc(0,0,r*.79,0,twoPi);ctx.stroke();ctx.restore();
  ctx.restore();
- ctx.strokeStyle='rgba(171,148,207,.38)';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(x,y,r,0,twoPi);ctx.stroke();
+ ctx.beginPath();ctx.arc(x,y,r,0,twoPi);
+ ctx.strokeStyle='rgba(209,189,229,.44)';ctx.lineWidth=1.15;ctx.stroke();
+ const rim=ctx.createRadialGradient(x-r*.27,y-r*.35,r*.6,x,y,r*1.08);
+ rim.addColorStop(0,'rgba(169,124,199,0)');
+ rim.addColorStop(.87,'rgba(169,124,199,0)');
+ rim.addColorStop(1,'rgba(195,171,223,.18)');
+ ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,twoPi);ctx.clip();
+ ctx.fillStyle=rim;ctx.fillRect(x-r,y-r,2*r,2*r);ctx.restore();
 }
 function rotate(pair){
  const [px,py,pz]=point3(pair),cy=Math.cos(yaw),sy=Math.sin(yaw),cx=Math.cos(pitch),sx=Math.sin(pitch);
