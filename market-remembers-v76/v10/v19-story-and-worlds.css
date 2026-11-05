@@ -17,6 +17,8 @@
 }
 #app[data-mh-mode="people"] .signal-dock #dockQuote{color:#f4f2ed}
 
+/* A single 1.1s passage now aligns the optical progress with the reader handoff. */
+#app .memory-dive .memory-dive-progress span{animation-duration:1.1s}
 /* PEOPLE: the selected narrative takes priority over diagnostics and controls. */
 #app.obsidian .drawer.memory-detail.v10-reader{
   background:
