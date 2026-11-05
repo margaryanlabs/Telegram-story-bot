@@ -28,6 +28,8 @@ test('event and connection modes restore People and route to the existing Lens t
   assert.match(js,/function openPeopleTheme/);
   assert.match(js,/data-lens/);
   assert.match(js,/aria-pressed/);
+  assert.match(js,/Prevent symbolic event beacons/);
+  assert.match(js,/event\.stopPropagation\(\)/);
   assert.match(js,/history\.replaceState/);
   assert.match(js,/window\.MarketHistoryModes/);
 });
