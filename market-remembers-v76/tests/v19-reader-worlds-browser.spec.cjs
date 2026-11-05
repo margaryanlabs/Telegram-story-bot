@@ -41,3 +41,41 @@ test('V19 EVENT globe selects a year without opening the large information dossi
  await expect(page.locator('#gl')).toBeVisible();
  await expect(page.locator('#mhPlanetSurface')).toBeHidden();
 });
+
+test('V19.1 research bridge opens dated event and Back restores PEOPLE on Android',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.goto('/#story/13'); // QUARTZ: explicitly fictional and fully authored.
+ const reader=page.locator('#drawer');
+ await expect(reader.locator('.v10-chapter')).toHaveCount(4);
+ const parallel=reader.locator('.v19-history-bridge');
+ await expect(parallel).toContainText('1987');
+ await expect(parallel).toContainText('тематическая аналогия');
+ await parallel.locator('button').click();
+ await expect(page.locator('#mhHistoryPanel')).toBeVisible();
+ await expect(page.locator('#mhHistoryPanel')).toContainText('Чёрный понедельник');
+ await expect(page).toHaveURL(/mm=events/);
+ await expect(reader).toBeHidden();
+ await page.goBack();
+ await expect(page.locator('#app')).toHaveAttribute('data-mh-mode','people');
+ await expect(page).not.toHaveURL(/mm=events/);
+});
+
+test('V19.1 event dossier grip preserves keyboard focus and can be collapsed',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.goto('/?mm=events#universe');
+ const panel=page.locator('#mhHistoryPanel');
+ const grip=panel.locator('.mh-panel-grip');
+ await grip.focus();
+ await page.keyboard.press('Enter');
+ await expect(panel).toHaveClass(/is-expanded/);
+ await expect(grip).toBeFocused();
+ await page.keyboard.press('Enter');
+ await expect(panel).not.toHaveClass(/is-expanded/);
+ await expect(grip).toBeFocused();
+ await panel.locator('.mh-timeline [data-mh-event="1907"]').focus();
+ await page.keyboard.press('ArrowRight');
+ await expect(page).toHaveURL(/event=1987/);
+ await expect(panel.locator('.mh-timeline [data-mh-event="1987"]')).toBeFocused();
+});
