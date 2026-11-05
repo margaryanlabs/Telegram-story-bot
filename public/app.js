@@ -1951,6 +1951,7 @@
     if($('v61Player')?.hidden===false)return 'media-player';
     if(currentScreen==='telegram'&&$('telegramThreadView')?.hidden===false)
       return 'thread';
+    if(currentScreen==='play'&&window.VetogramV9GameIsOpen?.())return 'game';
     if(!['home','telegram','publish','media','play','privacy'].includes(currentScreen))
       return 'secondary';
     return null;
@@ -1971,9 +1972,11 @@
     if(target==='story'){window.VetoTelegramStoryBack?.();return;}
     if(target==='media-player'){window.VetoTelegramMediaBack?.();return;}
     if(target==='thread'){window.VetoTelegramChatBack?.();return;}
+    if(target==='game'){window.VetogramV9GameBack?.();return;}
     if(target==='secondary')switchScreen('telegram');
   }
   for(const name of [
+    'vetogram:game-view-changed',
     'vetogram:chat-view-changed',
     'vetogram:story-view-changed',
     'vetogram:media-player-view-changed',
