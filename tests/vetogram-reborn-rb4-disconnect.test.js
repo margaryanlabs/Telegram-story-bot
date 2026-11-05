@@ -165,6 +165,23 @@ test('server-confirmed disconnect paths emit exactly one local invalidation even
   }
 });
 
+test('personal Account badge resets without silently removing separate Business rights',()=>{
+  const helper=slice(app,'  function notifyTelegramSessionDisconnected(){',
+    '  async function refreshViewerSync(');
+  const state={accountConnection:{connected:true,account:{username:'old'}},
+    businessPermissions:{connected:true,stories:true,messages:false}};
+  const emitted=[];
+  vm.runInNewContext(helper+'\nnotifyTelegramSessionDisconnected();',{
+    state,CustomEvent:class {constructor(type){this.type=type;}},
+    window:{dispatchEvent:event=>emitted.push(event.type)},
+  });
+  assert.equal(state.accountConnection.connected,false);
+  assert.equal(state.accountConnection.account,null);
+  assert.equal(state.businessPermissions.connected,true);
+  assert.equal(state.businessPermissions.stories,true);
+  assert.deepEqual(emitted,['vetogram:telegram-session-disconnected']);
+});
+
 test('temporary viewer storage errors do not trigger a disconnect event',()=>{
   const sync=slice(app,'  async function refreshViewerSync(',
     '  // Returning from Telegram');
