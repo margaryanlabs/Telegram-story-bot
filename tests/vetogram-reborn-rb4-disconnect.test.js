@@ -137,8 +137,9 @@ test('send ACK/error/finally are session-fenced after logout even if initData un
 test('signed-in inbox does not pretend that a revoked session is merely loading',()=>{
   assert.match(chat,/state\.sessionDisconnected=true;/);
   assert.match(chat,/state\.connectionProof=data\.connection\|\|null;\s*state\.sessionDisconnected=false;/);
-  assert.match(chat,/state\.sessionDisconnected\? '○ Личный Telegram отключён/);
+  assert.match(chat,/state\.sessionDisconnected\s*\?\s*'○ Личный Telegram отключён/);
   assert.match(chat,/empty\('Telegram отключён','Для просмотра своих переписок подключи Telegram заново\.'/);
+  assert.match(chat,/\$\('telegramMirrorAccessButton'\)\.textContent=ready\?'LIVE ✓':'Подключить ↗'/);
   const link=slice(chat,
     "  window.addEventListener('vetogram:telegram-session-connected',()=>{",
     "  window.addEventListener('vetogram:telegram-session-disconnected',()=>{");
