@@ -338,11 +338,13 @@
     }
     host.append(jacket);
   }
+  let readingCoverKey=null,readingHistoryKey=null;
   function renderContinueShelf(){
     const shelf=$('continueShelf'),history=$('v9ReadingHistory');
     const entries=readingHistory();
     if(!entries.length){
       shelf.hidden=true;
+      readingCoverKey=null;readingHistoryKey=null;
       if(history){history.hidden=true;history.replaceChildren();}
       return;
     }
@@ -355,11 +357,17 @@
     $('continueFill').style.width=position.percent+'%';
     $('continueAction').setAttribute('aria-label','Продолжить чтение: '+compactTitle(book.title));
     $('continueAction').onclick=()=>openBook(book);
-    readingCover(shelf.querySelector('.continue-art'),book);
+    if(readingCoverKey!==entries[0].key){
+      readingCover(shelf.querySelector('.continue-art'),book);
+      readingCoverKey=entries[0].key;
+    }
     if(!history)return;
-    history.replaceChildren();
     const others=entries.slice(1);
     history.hidden=others.length===0;
+    const signature=others.map(row=>row.key).join('|');
+    if(readingHistoryKey===signature)return; // Page flips update text/percent, not artwork DOM.
+    readingHistoryKey=signature;
+    history.replaceChildren();
     for(const {book:nextBook,item:nextItem} of others){
       const button=node('button','v9-reading-item');
       button.type='button';
