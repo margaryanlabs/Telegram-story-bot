@@ -184,6 +184,9 @@
   background-repeat:no-repeat,no-repeat;
   background-position:65% center,center;
   background-size:cover,cover;
+  /* Header and tab navigation must never sit under the spiral core. */
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.24) 12%,#000 32%);
+  mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.24) 12%,#000 32%);
 }
 /* Avoid two superimposed spiral centres and the older purple blur overlay. */
 #app.obsidian .v127-galaxy{
