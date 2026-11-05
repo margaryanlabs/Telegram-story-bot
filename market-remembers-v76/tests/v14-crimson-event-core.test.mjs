@@ -14,7 +14,7 @@ test('CRIMSON is a second rendering world, not a filter over People',()=>{
  assert.match(engine,/getContext\('webgl'/);
  assert.match(shader,/uniform float uYaw/);
  assert.match(shader,/uniform float uEmphasis/);
- assert.match(shader,/float fbm\(vec3 p\)/);
+ assert.match(shader,/float field\(vec3 p\)/);
  assert.match(engine,/getContext\('2d'\)/);
  assert.match(engine,/mhPlanetSurface/);
  assert.match(css,/#app .mh-crimson-cosmos/);
