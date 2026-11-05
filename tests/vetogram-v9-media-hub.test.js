@@ -96,3 +96,37 @@ test('responsive media art honors reduced motion and both light themes',()=>{
  assert.match(css,/v9-media-source-cover/);
  assert.match(ui,/image\.referrerPolicy='no-referrer'/);
 });
+
+test('actual module transition updates resume and uses the existing router',()=>{
+ const store=storage(),events=new Map(),opened=[];
+ let owner=ownerA,observer=null,click=null;
+ const art={prepend(){}};
+ const cards=['music','cinema','books'].map(name=>({
+  dataset:{v6Module:name},classList:{remove(){},add(){}},
+  querySelector(selector){return selector==='.v72-card-art'?art:null}
+ }));
+ const home={hidden:false,querySelectorAll(){return cards}};
+ const stage={hidden:true},title={textContent:''};
+ const resume={hidden:true},label={textContent:''};
+ const button={dataset:{},setAttribute(){},addEventListener(name,fn){if(name==='click')click=fn}};
+ const nodes={v6MediaHome:home,v6MediaStage:stage,v6ModuleTitle:title,
+  v9MediaResume:resume,v9MediaResumeOpen:button,v9MediaResumeLabel:label,
+  v61Continue:{hidden:true}};
+ const universe={context:()=>owner,open:name=>opened.push(name)};
+ const mockWindow={VetogramV9MediaHubCore:core,VetogramUniverse:universe,
+  localStorage:store,addEventListener:(name,fn)=>events.set(name,fn)};
+ const mockDocument={getElementById:id=>nodes[id]||null};
+ class Observer{constructor(callback){observer=callback}observe(){}}
+ runInNewContext(ui,{window:mockWindow,document:mockDocument,MutationObserver:Observer,setTimeout:fn=>fn()});
+ assert.equal(resume.hidden,true);
+ home.hidden=true;stage.hidden=false;title.textContent='Кино';observer();
+ assert.equal(core.read(store,ownerA),'cinema');
+ home.hidden=false;stage.hidden=true;observer();
+ assert.equal(resume.hidden,false);
+ assert.equal(label.textContent,'Кино');
+ click();
+ assert.deepEqual(opened,['cinema']);
+ owner=ownerB;events.get('vetogram:identity-change')();
+ assert.equal(resume.hidden,true);
+ assert.equal(core.read(store,ownerB),'');
+});
