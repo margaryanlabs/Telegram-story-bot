@@ -2347,6 +2347,7 @@
         <button class="accent" data-sheet-action="account-connect">${accountConnected ? 'Управлять подключением' : 'Подключить Telegram'}</button>
         <button data-sheet-action="business-help">${businessConnected ? 'Проверить дополнительную Privacy' : 'Что такое Privacy‑доступ?'}</button>
         <button data-sheet-action="privacy-promise">Как хранятся данные</button>
+        <button data-sheet-action="open-profile">Открыть профиль и настройки</button>
         <button data-sheet-action="open-security">Расширенные настройки безопасности</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -3389,6 +3390,11 @@
     const action = actionTarget?.dataset?.sheetAction;
     const storyId = actionTarget?.dataset?.viewerStory;
     if (action === 'close') closeSheet();
+    if (action === 'open-profile') {
+      closeSheet();
+      switchScreen('profile');
+      return;
+    }
     if (action === 'check') {
       closeSheet();
       await refresh();
