@@ -57,6 +57,15 @@
   if (home && resume && activity && home.contains(resume) && home.contains(activity)) {
     activity.before(resume);
   }
+  // RB2: keep the real status panel on the first screen, but move secondary
+  // history below deliberate disclosures. Original nodes/IDs and their live
+  // controllers remain mounted: no cloned account state or fake activity.
+  progressive({scope:'home', selector:'#vg26Resume',
+    title:'Вернуться к работе', description:'Ранее открытые инструменты',
+    className:'v4-home-recent'});
+  progressive({scope:'home', selector:'.control-activity',
+    title:'История событий', description:'Фактическая активность после подключения',
+    className:'v4-home-activity'});
   const mission = byId('vg27Mission');
   if (mission) mission.setAttribute('aria-label', 'Проверенные статусы Telegram и защиты');
 
