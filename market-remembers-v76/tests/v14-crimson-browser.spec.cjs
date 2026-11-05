@@ -17,6 +17,7 @@ test('V14 Event Core is a second rendered planet, not the People universe',async
 
 test('V14 inner tabs change finance research without leaving the crimson world',async({page})=>{
  await page.goto('/?mm=events');
+ await page.locator('#mhHistoryPanel .mh-panel-grip').click();
  await page.locator('#mhHistoryPanel [data-mh-mode="connections"]').click();
  await expect(page.locator('#mhHistoryPanel [data-mh-mode="connections"]')).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('#mhPlanetSurface')).toBeVisible();
@@ -57,6 +58,7 @@ test('V14 Canvas2D fallback renders and remains interactive when WebGL is absent
    return [...ctx.getImageData(midX,midY,1,1).data];
  });
  expect(p[3]).toBeGreaterThan(100);
+ await page.locator('#mhHistoryPanel .mh-panel-grip').click();
  await page.locator('#mhHistoryPanel [data-mh-event="1907"]').first().click();
  await expect(page.locator('#mhHistoryPanel')).toContainText('Паника 1907 года');
 });
