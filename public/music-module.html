@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="ru"><head>
 <script src="/vetogram-media-context.js?v=20261105-v9-02"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#090914"><meta name="description" content="Vetogram Music: русский рейтинг, собственный аудиоплеер для разрешённых записей, личные файлы и оригинальные видео.">
+<meta name="theme-color" content="#050505"><meta name="description" content="Vetogram Music: русский рейтинг, собственный аудиоплеер для разрешённых записей, личные файлы и оригинальные видео.">
 <title>Vetogram Music — Твой ритм. Твоя музыка.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./vetogram-music.css"><link rel="stylesheet" href="./vetogram-music-social.css"><link rel="stylesheet" href="./vetogram-music-direct.css"><link rel="stylesheet" href="./vetogram-music-collections.css?v=20261105-v9-02"><link rel="stylesheet" href="./vetogram-music-charts.css"><link rel="stylesheet" href="./vetogram-music-catalog.css?v=20261105-v9-02"><link rel="stylesheet" href="./vetogram-music-archive.css"><link rel="stylesheet" href="./vetogram-music-mixter.css"><link rel="stylesheet" href="./vetogram-music-native.css?v=20261105-v9-02"><link rel="stylesheet" href="./vetogram-music-telegram.css"><link rel="stylesheet" href="./vetogram-music-audio-only.css?v=20261105-v9-02"><link rel="stylesheet" href="./vetogram-music-openverse.css">
-<script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js?v=20261105-v9-02"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-licensed-home-63.js?v=20261105-v9-02"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script><link rel="stylesheet" href="/vetogram-media-embedded.css?v=20261105-v9-02"><link rel="stylesheet" href="/vetogram-media-edition-62.css?v=20261105-v9-02">
+<script defer src="./vetogram-music.js"></script><script defer src="./vetogram-music-social.js"></script><script defer src="./vetogram-music-direct.js"></script><script defer src="./vetogram-music-collections.js"></script><script defer src="./vetogram-music-charts.js"></script><script defer src="./vetogram-music-catalog.js?v=20261105-v9-02"></script><script defer src="./vetogram-music-archive.js"></script><script defer src="./vetogram-music-mixter-seeds.js"></script><script defer src="./vetogram-music-licensed-home-63.js?v=20261105-v9-02"></script><script defer src="./vetogram-music-mixter.js"></script><script defer src="./vetogram-music-telegram.js"></script><script defer src="./vetogram-music-openverse.js"></script>
+<script defer src="./vetogram-v9-music-world.js?v=20261105-v9-world-01"></script><link rel="stylesheet" href="/vetogram-media-embedded.css?v=20261105-v9-02"><link rel="stylesheet" href="/vetogram-media-edition-62.css?v=20261105-v9-02">
   <link rel="stylesheet" href="/vetogram-black-universe.css?v=20261105-v9-02" />
   <link rel="stylesheet" href="/vetogram-showcase-v72.css?v=20261105-v9-02" />
   <link rel="stylesheet" href="/vetogram-media-next-78.css?v=20261105-v9-02" />
@@ -14,6 +15,7 @@
 <script src="/vetogram-media-next-78.js?v=20261105-v9-02" defer></script>
   <script src="/vetogram-editorial-80.js?v=20261105-v9-02" defer></script>
   <link rel="stylesheet" href="/vetogram-reborn-modules.css?v=20261105-v9-02" />
+<link rel="stylesheet" href="/vetogram-v9-music-world.css?v=20261105-v9-world-01" />
 </head>
 <body>
 <div class="app" id="app">
@@ -43,7 +45,36 @@
  </header>
  <div id="globalToast" class="toast" role="status" aria-live="polite"></div>
  <section class="page active" data-view="home">
-  <div class="hero" id="hero"><div class="grain"></div><div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div>
+  <section class="v9-world" id="v9MusicWorld" hidden aria-labelledby="v9WorldHeading" aria-busy="true">
+  <header class="v9-world-top"><div>
+    <span class="v9-world-kicker">VETOGRAM / WORLD SOUND / LIVE DISCOVERY</span>
+    <h1 id="v9WorldHeading">Музыка <em>без границ.</em></h1>
+    <p>Реальные независимые релизы из Audius Trending. Это не мировой хит-парад и не копии популярных песен. Слушай доступные записи в нашем плеере.</p>
+  </div><button type="button" id="v9WorldCatalog">Исследовать жанры ↗</button></header>
+  <div class="v9-world-layout">
+    <div class="v9-world-featured" aria-label="Выбранный трек">
+      <div class="v9-world-cover" id="v9WorldArt" aria-hidden="true"><span class="v9-world-fallback">♫</span></div>
+      <div class="v9-world-feature-info"><small>AUDIUS / МУЗЫКА НЕДЕЛИ</small>
+        <h2 id="v9WorldTitle">Загружаем музыку…</h2><p id="v9WorldArtist">Аудиозаписи от авторов</p>
+        <div class="v9-world-controls">
+          <button class="v9-world-play" id="v9WorldPlay" type="button" disabled>▶ Слушать</button>
+          <button id="v9WorldLike" type="button" disabled aria-label="В избранное">♡</button>
+        </div>
+        <div class="v9-world-nav">
+          <button id="v9WorldPrev" type="button" aria-label="Предыдущий трек" disabled>‹</button>
+          <button id="v9WorldNext" type="button" aria-label="Следующий трек" disabled>›</button>
+          <span id="v9WorldIndex" aria-label="Номер выбранного трека">00 / 00</span>
+        </div>
+      </div>
+    </div>
+    <div class="v9-world-collection">
+      <div class="v9-world-head"><strong>Сейчас открывают</strong><button id="v9WorldRetry" type="button">↻ Обновить</button></div>
+      <div class="v9-world-track-grid" id="v9WorldTracks" aria-label="Настоящие аудиозаписи Audius"></div>
+    </div>
+  </div>
+  <p class="v9-world-status" id="v9WorldStatus" role="status" aria-live="polite">Загружаем записи Audius…</p>
+</section>
+ <div class="hero" id="hero"><div class="grain"></div><div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div>
    <div class="hero-inner"><span class="eyebrow"><i></i> ТВОЁ ПРОСТРАНСТВО ЗВУКА</span>
    <h1>Твоя музыка.<br><em>Один Play.</em></h1>
    <p>Музыка должна играть здесь. Выбирай доступные треки, нажимай Play и слушай.</p>
@@ -54,11 +85,11 @@
   <nav class="v82-music-genres" id="v82MusicGenres" aria-label="Быстрые музыкальные подборки">
    <div class="v82-genres-heading"><strong>Открой свой звук</strong><span>Реальный поиск по доступному аудиокаталогу</span></div>
    <div class="v82-genres-scroll">
+     <button type="button" data-v82-preset="world" aria-label="Найти мировую поп-музыку">Мировая</button>
+     <button type="button" data-v82-preset="electronic" aria-label="Найти электронную музыку">Electronic</button>
      <button type="button" data-v82-preset="ru" aria-label="Найти русскую музыку">Русская музыка</button>
      <button type="button" data-v82-preset="am" aria-label="Найти армянскую музыку">Հայկական</button>
-     <button type="button" data-v82-preset="world" aria-label="Найти мировую поп-музыку">Мировая</button>
      <button type="button" data-v82-preset="ru-rap" aria-label="Найти русский рэп">Русский рэп</button>
-     <button type="button" data-v82-preset="electronic" aria-label="Найти электронную музыку">Electronic</button>
      <button type="button" data-v82-preset="jazz" aria-label="Найти джаз">Jazz</button>
      <button type="button" data-v82-preset="world-lofi" aria-label="Найти lo-fi">Lo-fi</button>
    </div>
@@ -85,8 +116,8 @@
  <h2 id="native-home-title">Нажал Play. <em>И слушаешь.</em></h2>
  <p>Доступные аудиозаписи без видео, ссылок на другие плееры и лишних экранов.</p>
  <div class="native-home-grid">
-  <button data-audio-preset="ru" type="button" class="native-home-option"><span>♫</span><strong>Русская музыка</strong><small>Выбрать треки</small></button>
-  <button data-audio-preset="ru-rap" type="button" class="native-home-option"><span>◈</span><strong>Русский рэп</strong><small>Треки и исполнители</small></button>
+  <button data-audio-preset="world" type="button" class="native-home-option"><span>♫</span><strong>Мировая музыка</strong><small>Открыть жанры</small></button>
+  <button data-audio-preset="ru" type="button" class="native-home-option"><span>◈</span><strong>Русская музыка</strong><small>Найти записи</small></button>
   <button data-audio-preset="am" type="button" class="native-home-option"><span>✧</span><strong>Հայկական</strong><small>Армянская музыка</small></button>
   <button data-page="library" type="button" class="native-home-option"><span>♡</span><strong>Моя музыка</strong><small>Личные файлы</small></button>
  </div>
@@ -167,13 +198,13 @@
  </div>
  <div class="catalog-toolbar">
   <div class="catalog-switch" role="group" aria-label="Направление музыки">
-   <button type="button" data-catalog-group="world" aria-pressed="false">Мировая</button>
-   <button type="button" data-catalog-group="ru" class="active" aria-pressed="true">Русская музыка</button>
+   <button type="button" data-catalog-group="world" class="active" aria-pressed="true">Мировая</button>
+   <button type="button" data-catalog-group="ru" aria-pressed="false">Русская музыка</button>
    <button type="button" data-catalog-group="am" aria-pressed="false">Հայկական / Армянская</button>
   </div>
   <div id="catalogPresets" class="catalog-presets" aria-label="Жанры и поисковые подборки"></div>
   <form id="catalogForm" class="catalog-search">
-   <input id="catalogQuery" type="search" autocomplete="off" maxlength="80" value="русская музыка" placeholder="Исполнитель или название песни" aria-label="Поиск доступной музыки">
+   <input id="catalogQuery" type="search" autocomplete="off" maxlength="80" value="pop" placeholder="Исполнитель или название песни" aria-label="Поиск доступной музыки">
    <button type="submit">⌕ Найти музыку</button>
   </form>
   <p class="catalog-disclaimer">В каталоге есть независимые записи. Если известный оригинал недоступен, мы не подменяем его видео или коротким превью.</p>
