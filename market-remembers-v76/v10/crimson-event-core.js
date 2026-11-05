@@ -26,7 +26,7 @@ const shouldBeActive=()=>['events','connections'].includes(app.dataset.mhMode);
 let gl=null,program=null,buffer=null,attributes=null,uniforms=null,ctx=null,active=false,frame=0,last=0,lastMeasure=0;
 let w=0,h=0,dpr=1,planet={x:0,y:0,r:130};
 let yaw=.035,pitch=.06,targetYaw=.035,targetPitch=.06,zoom=1,focusUntil=0;
-let pointer=null,transitionTimer=0;
+let pointer=null,transitionTimer=0,pulseAt=-9999;
 
 function compile(type,source){
  const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);
@@ -45,7 +45,7 @@ function initGL(){
    buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
    attributes=gl.getAttribLocation(program,'aPosition');
-   uniforms=Object.fromEntries(['uResolution','uCenter','uRadius','uYaw','uPitch','uTime','uEmphasis'].map(k=>[k,gl.getUniformLocation(program,k)]));
+   uniforms=Object.fromEntries(['uResolution','uCenter','uRadius','uYaw','uPitch','uTime','uEmphasis','uShock'].map(k=>[k,gl.getUniformLocation(program,k)]));
    gl.clearColor(0,0,0,0);
    canvas.hidden=false;fallback.hidden=true;ctx=null;
  }catch(error){
@@ -82,6 +82,7 @@ function renderGL(t){
  gl.uniform1f(uniforms.uYaw,yaw);gl.uniform1f(uniforms.uPitch,pitch);
  gl.uniform1f(uniforms.uTime,reduced?0:t);
  gl.uniform1f(uniforms.uEmphasis,app.dataset.mhMode==='connections'?1:0);
+ gl.uniform1f(uniforms.uShock,clamp((t-pulseAt)/950,0,2));
  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 }
 function render2D(){
@@ -118,7 +119,7 @@ function focus(pair){
  targetYaw=-Math.atan2(px,pz);
  const rz=-Math.sin(targetYaw)*px+Math.cos(targetYaw)*pz;
  targetPitch=Math.atan2(py,rz);
- focusUntil=performance.now()+2800;request();
+ focusUntil=performance.now()+2800;pulseAt=performance.now();request();
 }
 function tick(t){
  frame=0;
@@ -144,7 +145,7 @@ function setActive(value){
    last=0;
    window.MarketPeopleResume?.();
  }else{
-   size();place();last=0;request();
+   size();place();last=0;pulseAt=performance.now();request();
  }
  if(was!==active){
    app.classList.remove('mh-world-shift');void app.offsetWidth;app.classList.add('mh-world-shift');
