@@ -133,9 +133,12 @@
       ).join('') + '</div>' +
       '<a class="mh-source" href="' + escape(event.url) + '" target="_blank" rel="noopener noreferrer">Проверить событие: ' + escape(event.source) + ' ↗</a>';
   }
+  let panelExpanded = false;
   function renderPanel() {
     const event = EVENT_BY_ID[state.activeEvent];
-    panel.innerHTML = '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
+    panel.classList.toggle('is-expanded',panelExpanded);
+    panel.innerHTML = '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
+      '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
       timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
       '<p class="mh-disclaimer">Исторические факты снабжены источниками. Символические связи — тематические, не доказательство причинности и не свидетельства реальных трейдеров.</p>';
@@ -197,7 +200,10 @@
   }
   function setMode(mode, update = true) {
     if (!['people','events','connections'].includes(mode)) return;
+    const oldMode = state.mode;
     state.mode = mode;
+    if (mode === 'people') panelExpanded = false;
+    else if (oldMode !== 'people' && oldMode !== mode) panelExpanded = true;
     app.dataset.mhMode = mode;
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
       const active = mode === 'people' ? btn.dataset.mhMode === 'people' : btn.dataset.mhMode === 'events';
@@ -222,6 +228,7 @@
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
     state.activeEvent = id;
+    panelExpanded = true;
     renderPanel();
     renderBeacons();
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
@@ -251,6 +258,7 @@
   app.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+    if(target.closest('[data-mh-panel-toggle]')) { panelExpanded = !panelExpanded; renderPanel(); return; }
     const modeBtn = target.closest('[data-mh-mode]');
     if (modeBtn) { setMode(modeBtn.dataset.mhMode); return; }
     const beacon = target.closest('[data-mh-beacon]');
