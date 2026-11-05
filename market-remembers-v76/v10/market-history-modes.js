@@ -252,7 +252,7 @@
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
     const origin=document.activeElement;
-    const fromTimeline=!!origin?.closest?.('.mh-timeline [data-mh-event]');
+    const fromTimeline=!!origin?.closest?.('.mh-timeline [data-mh-event],.mh-v19-neighbors [data-mh-event]');
     const fromBeacon=!!origin?.closest?.('[data-mh-beacon]');
     state.activeEvent = id;
     // Selecting a year must not immediately cover the sphere with a dossier.
