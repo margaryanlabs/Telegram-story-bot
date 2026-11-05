@@ -72,3 +72,52 @@ test('Business and account ownership still require explicit consent and exact ow
   assert.match(qr,/requireOwnTelegramAccount\(userId, result\.user\)/);
   assert.match(login,/requireOwnTelegramAccount\(userId, result\.user\)/);
 });
+
+test('QR FLOOD_WAIT disables retry until its server-provided countdown expires',()=>{
+  const app=read('public/app.js');
+  const start=app.indexOf('  function updateViewerQr(event) {');
+  const end=app.indexOf('  async function startViewerQrLogin()',start);
+  assert.ok(start>=0&&end>start);
+  const source=app.slice(start,end);
+  const elements=new Map([
+    ['sheet',{hidden:false}],['viewerQrStatus',{textContent:''}],
+    ['viewerQrMeta',{textContent:''}],
+    ['viewerQrOpenButton',{disabled:false,textContent:'',dataset:{qrUri:'secret'}}],
+  ]);
+  let now=1000,interval=null;
+  const fakeDate={now:()=>now};
+  const factory=new Function('$','tg','setInterval','clearInterval','Date','haptic',
+    'let viewerQrRetryTimer=null;let viewerOwnerEpoch=1;'+source+'return updateViewerQr;');
+  const update=factory(id=>elements.get(id),{initData:'signed-owner'},
+    fn=>{interval=fn;return 1;},()=>{},fakeDate,()=>{});
+  update({type:'error',error:'Подожди',retryAfterSeconds:3});
+  const button=elements.get('viewerQrOpenButton');
+  assert.equal(button.disabled,true);
+  assert.match(button.textContent,/Повтор через 3 с/);
+  assert.equal(button.dataset.qrUri,undefined);
+  now+=3000;interval();
+  assert.equal(button.disabled,false);
+  assert.equal(button.textContent,'Повторить QR');
+});
+
+test('QR cooldown cannot re-enable an old owner button after a Telegram account switch',()=>{
+  const app=read('public/app.js');
+  const start=app.indexOf('  function updateViewerQr(event) {');
+  const end=app.indexOf('  async function startViewerQrLogin()',start);
+  const source=app.slice(start,end);
+  const tg={initData:'owner-A'};
+  const elements=new Map([
+    ['sheet',{hidden:false}],['viewerQrStatus',{}],
+    ['viewerQrMeta',{}],['viewerQrOpenButton',{disabled:false,dataset:{}}],
+  ]);
+  let now=1000,interval=null;
+  const update=new Function('$','tg','setInterval','clearInterval','Date','haptic',
+    'let viewerQrRetryTimer=null;let viewerOwnerEpoch=1;'+source+'return updateViewerQr;')(
+    id=>elements.get(id),tg,fn=>{interval=fn;return 1;},()=>{}, {now:()=>now},()=>{});
+  update({type:'error',retryAfterSeconds:3});
+  const button=elements.get('viewerQrOpenButton');
+  assert.equal(button.disabled,true);
+  tg.initData='owner-B';now+=5000;interval();
+  assert.equal(button.disabled,true,'old account cooldown must not touch new owner UI');
+  assert.match(app,/clearInterval\(viewerQrRetryTimer\);viewerQrRetryTimer=null;/);
+});
