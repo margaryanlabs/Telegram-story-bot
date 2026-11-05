@@ -1231,7 +1231,7 @@
       <div class="page-head privacy-page-head">
         <span class="kicker">VETOGRAM · ПРИВАТНОСТЬ</span>
         <h1 data-ui-text="privacyCenterHead">Центр приватности</h1>
-        <p>Удалённые сообщения, история изменений, умные входящие и медиаархив — с отдельными переключателями, прозрачным статусом доступа и понятным хранением данных.</p>
+        <p>Проверяй доступ Telegram, управляй сохранёнными копиями и выбирай срок хранения. Защита новых событий требует отдельного согласия.</p>
       </div>
 
       <section class="ghost-command-card">
@@ -1336,7 +1336,9 @@
         <b>›</b>
       </button>
 
-      <section class="ghost-quick-grid" aria-label="Ghost быстрые действия">
+      <details class="rb10-advanced-tools" id="privacyAdvancedTools">
+        <summary><span class="rb10-tools-heading"><strong>Другие инструменты</strong><small>Удаления, медиаархив, студия и истории</small></span><span class="rb10-tools-chevron" aria-hidden="true">⌄</span></summary>
+      <section class="ghost-quick-grid" aria-label="Дополнительные инструменты защиты">
         <button type="button" data-ghost-jump="deleted"><span>↶</span><strong>Удалённые</strong><small>Сразу к сохранённым удалениям</small></button>
         <button type="button" data-ghost-jump="edited"><span>≋</span><strong>Изменённые</strong><small>История правок по чатам</small></button>
         <button type="button" data-ghost-jump="media"><span>▣</span><strong>Медиаархив</strong><small>Сохранённые вложения</small></button>
@@ -1344,6 +1346,7 @@
         <button type="button" data-open-screen="creator"><span>✦</span><strong>Студия стикеров</strong><small>Бренд-наборы · анимация</small></button>
         <button type="button" data-open-screen="publish"><span>＋</span><strong>Истории</strong><small>Публикация и точная аудитория</small></button>
       </section>
+      </details>
 
       <section class="ghost-access-strip" id="privacyAccessStrip">
         <div class="ghost-access-icon" id="privacyAccessIcon">◌</div>
