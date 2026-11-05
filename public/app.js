@@ -1889,6 +1889,10 @@
   // modal can overlap: the modal always closes first.
   function nativeBackTarget(){
     if(!$('sheet')?.hidden)return 'sheet';
+    if($('v4MessageActions')?.open===true)return 'message-actions';
+    if($('telegramThreadPhotoDialog')?.open===true)return 'photo';
+    if($('vetoContactStoryViewer')?.hidden===false)return 'story';
+    if($('v61Player')?.hidden===false)return 'media-player';
     if(currentScreen==='telegram'&&$('telegramThreadView')?.hidden===false)
       return 'thread';
     if(!['home','telegram','publish','media','privacy'].includes(currentScreen))
@@ -1904,10 +1908,22 @@
   function handleNativeBackButton(){
     const target=nativeBackTarget();
     if(target==='sheet'){closeSheet();return;}
+    if(target==='message-actions'){
+      $('v4MessageActions')?.close?.();return;
+    }
+    if(target==='photo'){window.VetoTelegramPhotoBack?.();return;}
+    if(target==='story'){window.VetoTelegramStoryBack?.();return;}
+    if(target==='media-player'){window.VetoTelegramMediaBack?.();return;}
     if(target==='thread'){window.VetoTelegramChatBack?.();return;}
     if(target==='secondary')switchScreen('telegram');
   }
-  window.addEventListener('vetogram:chat-view-changed',syncNativeBackButton);
+  for(const name of [
+    'vetogram:chat-view-changed',
+    'vetogram:story-view-changed',
+    'vetogram:media-player-view-changed',
+    'vetogram:photo-view-changed',
+    'vetogram:message-actions-view-changed'
+  ])window.addEventListener(name,syncNativeBackButton);
 
   // Pages without a bottom-tab button still belong to an existing tab.
   const NAV_PARENT = {home:'profile',profile:'profile',media:'media',play:'media',chats:'privacy',telegram:'telegram',voice:'profile',archive:'publish',analytics:'profile',viewers:'publish',relay:'profile',ai:'profile',studio:'publish','story-engine':'publish'};
