@@ -26,7 +26,7 @@ const source=window.MHPeopleMirrorShaders;
 const twoPi=Math.PI*2;
 let gl=null,ctx=null,programCore=null,programPoints=null,programLines=null,rendererInitialized=false;
 let vertexBuffer=null,indexBuffer=null,particleBuffer=null,lineBuffer=null,indexCount=0,pointCount=0,lineCount=0;
-let w=1,h=1,dpr=1,planet={x:0,y:0,r:160},active=false,frame=0,last=0,lastMeasure=0,zoom=1;
+let w=1,h=1,dpr=1,planet={x:0,y:0,r:160},active=false,frame=0,idleTimer=0,last=0,lastMeasure=0,zoom=1;
 let yaw=0,pitch=.04,targetYaw=0,targetPitch=.04,focusUntil=0,selected=[-.14,.11,.984],pulseUntil=0,pointer=null;
 let uniformCache=new WeakMap(),dragged=false,contextLost=false;
 const activePointers=new Map();let pinchDistance=0;
@@ -255,13 +255,18 @@ function resetView(){
 }
 function tick(t){
  frame=0;if(!active||document.hidden)return;
- size();place();
  const elapsed=last?t-last:16;
- const moving=!!pointer||t<focusUntil||t<pulseUntil||
+ const moving=!!pointer||activePointers.size>0||t<focusUntil||t<pulseUntil||
    Math.abs(yaw-targetYaw)>.003||Math.abs(pitch-targetPitch)>.003;
- // Readable movement stays responsive; the static historical globe uses a
- // much lower drawing cadence instead of wasting mobile GPU cycles at 30fps.
- if(last&&!reduce&&elapsed<(moving?33:82)){request();return;}
+ // Inactive input: sleep between frames instead of scheduling 60 RAF
+ // callbacks that each reject drawing. Interactions wake us immediately.
+ const budget=moving?33:82;
+ if(last&&!reduce&&elapsed<budget){
+   if(moving)scheduleNext(budget-elapsed);
+   else scheduleIdle(budget-elapsed);
+   return;
+ }
+ size();place();
  const dt=last?Math.min(82,elapsed):16;last=t;
  // PEOPLE-style celestial object, not an endlessly rotating showcase:
  // all four source events occupy one archive-facing hemisphere, so idle
@@ -272,13 +277,29 @@ function tick(t){
  yaw+=(targetYaw-yaw)*ease;pitch+=(targetPitch-pitch)*ease;
  try{if(gl)webGLRender(t);else canvasRender();}catch(e){failToCanvas(e);canvasRender();}
  if(t-lastMeasure>66){window.MarketHistoryModes?.measure();lastMeasure=t;}
- if(!reduce)request();
+ if(!reduce){
+   if(moving)scheduleNext(33);
+   else scheduleIdle(82);
+ }
 }
-function request(){if(active&&!frame&&!document.hidden)frame=requestAnimationFrame(tick);}
+function scheduleIdle(ms=82){
+ if(!active||document.hidden||idleTimer)return;
+ idleTimer=window.setTimeout(()=>{idleTimer=0;request();},Math.max(8,Math.ceil(ms)));
+}
+function scheduleNext(ms=33){
+ if(!active||document.hidden||idleTimer)return;
+ idleTimer=window.setTimeout(()=>{idleTimer=0;request();},Math.max(8,Math.ceil(ms)));
+}
+function request(){
+ if(!active||document.hidden)return;
+ if(idleTimer){window.clearTimeout(idleTimer);idleTimer=0;}
+ if(!frame)frame=requestAnimationFrame(tick);
+}
 function setActive(next){
  active=!!next;header.hidden=!active;wrapper.hidden=!active;cosmos.hidden=!active;
  if(!active){
   activePointers.clear();pinchDistance=0;pointer=null;
+  if(idleTimer)window.clearTimeout(idleTimer);idleTimer=0;
   if(frame)cancelAnimationFrame(frame);frame=0;last=0;
   window.MarketPeopleResume?.();
  }else{
@@ -335,7 +356,12 @@ wrapper.addEventListener('wheel',e=>{
 mainCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;failToCanvas('context lost');if(active)request();});
 mainCanvas.addEventListener('webglcontextrestored',()=>{contextLost=false;initGL();size();if(active)request();});
 window.addEventListener('resize',()=>{size();place();if(active)request();},{passive:true});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&frame){cancelAnimationFrame(frame);frame=0;}else if(active)request();});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){
+   if(frame)cancelAnimationFrame(frame);frame=0;
+   if(idleTimer)window.clearTimeout(idleTimer);idleTimer=0;
+ }else if(active)request();
+});
 size();place();
 window.MarketEventPlanet=Object.freeze({
  setActive,project,focus,resetView,
