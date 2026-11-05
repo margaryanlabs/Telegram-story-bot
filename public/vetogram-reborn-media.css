@@ -999,3 +999,23 @@ html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen
     transition:none !important;transform:none !important;
   }
 }
+
+
+/* V9 content-first screen: categories are actions; the old duplicate CTA is not. */
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero .v72-hero-actions{
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-section-number{
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v72-media-card:focus-visible{
+  outline:2px solid currentColor !important;outline-offset:3px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-mini :is(input,button):focus-visible{
+  outline:2px solid #efefef !important;outline-offset:2px !important;
+}
+@media(prefers-reduced-motion:reduce){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero::before{
+    animation:none !important;filter:none !important;
+  }
+}
