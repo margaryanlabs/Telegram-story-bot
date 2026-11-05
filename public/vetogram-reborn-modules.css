@@ -508,3 +508,124 @@ html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="li
   background:#111 !important;background-image:none !important;
   border-color:rgba(255,255,255,.13) !important;box-shadow:none !important;
 }
+
+
+/* V9 WORLD CINEMA — source-bound editorial home. No fabricated streams. */
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"]) .cinema-shell{
+  background:#050505 !important;color:#f5f5f5 !important;
+}
+.cinema-shell #cinemaHero{
+  min-height:clamp(390px,53vw,580px) !important;
+  background:#090909 !important;background-image:none !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:none !important;
+  border-radius:23px !important;
+}
+.cinema-shell #cinemaHero .cinema-hero-bg{
+  opacity:.94 !important;background-size:cover !important;
+  background-position:center 39% !important;
+}
+.cinema-shell #cinemaHero::before{
+  background:linear-gradient(89deg,rgba(0,0,0,.95) 0%,rgba(0,0,0,.72) 43%,rgba(0,0,0,.20) 90%),
+    linear-gradient(0deg,rgba(0,0,0,.78),transparent 54%) !important;
+}
+.cinema-shell #cinemaHero .cinema-hero-copy{
+  padding:clamp(24px,5vw,57px) clamp(22px,5.5vw,66px) 78px !important;
+  max-width:750px !important;
+}
+.cinema-shell #cinemaHero h1{
+  font-size:clamp(39px,6.5vw,78px) !important;
+  line-height:1.02 !important;letter-spacing:-.055em !important;
+  font-weight:800 !important;
+}
+.cinema-shell #cinemaHero .cinema-hero-actions button{
+  min-height:44px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries){
+  margin:29px 0 !important;
+  background:transparent !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head{
+  display:flex !important;
+  align-items:end !important;justify-content:space-between !important;
+  gap:14px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head h2{
+  font-size:clamp(23px,4.6vw,34px) !important;
+  font-weight:780 !important;letter-spacing:-.04em !important;
+  line-height:1.14 !important;color:#f7f7f7 !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head p{
+  font-size:12px !important;line-height:1.5 !important;
+  color:#9a9a9a !important;max-width:580px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-rail{
+  display:flex !important;overflow-x:auto !important;
+  scroll-snap-type:x mandatory !important;
+  gap:12px !important;scrollbar-width:none;
+  padding:14px 2px 16px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-rail .cinema-card{
+  flex:0 0 clamp(195px,24vw,282px) !important;
+  width:clamp(195px,24vw,282px) !important;
+  min-width:0 !important;
+  scroll-snap-align:start !important;
+  border:0 !important;background:transparent !important;
+  border-radius:15px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-art{
+  aspect-ratio:16/10 !important;
+  border-radius:14px !important;
+  background:#181818 !important;background-image:none !important;
+  box-shadow:none !important;
+  border:1px solid #323232 !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-art img{
+  object-fit:cover !important;
+  width:100% !important;height:100% !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-name{
+  font-size:15px !important;line-height:1.24 !important;
+  font-weight:760 !important;letter-spacing:-.02em !important;
+  padding:10px 0 2px !important;color:#ededed !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-meta{
+  font-size:11px !important;color:#9d9d9d !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-art-badge{
+  background:rgba(0,0,0,.72) !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  color:#eee !important;
+}
+@media(max-width:600px){
+  .cinema-shell #cinemaHero{
+    min-height:410px !important;
+    margin:9px 0 18px !important;border-radius:15px !important;
+  }
+  .cinema-shell #cinemaHero .cinema-hero-copy{
+    padding:26px 20px 70px !important;
+  }
+  .cinema-shell #cinemaHero h1{font-size:clamp(34px,9vw,48px) !important}
+  .cinema-shell #cinemaHero p{font-size:12px !important;line-height:1.5 !important}
+  .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-rail .cinema-card{
+    flex-basis:225px !important;width:225px !important;
+  }
+  .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head p{
+    font-size:11px !important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .cinema-shell #cinemaHero .cinema-hero-bg{
+    transition:none !important;transform:none !important;
+  }
+  .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-art{
+    transition:none !important;transform:none !important;
+  }
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .cinema-shell #cinemaHero{
+  background:#222 !important;color:#fff !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head h2,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-name{
+  color:#171717 !important;
+}
