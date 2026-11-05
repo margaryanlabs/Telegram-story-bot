@@ -247,3 +247,26 @@
   #app.mh-v16 .mh-beacon-ring,
   #app.mh-v16 .mh-history-panel .mh-panel-body{animation:none!important;transition:none!important}
 }
+
+
+/* V16 portal still uses its original cinematic sequence; only its optics
+   receive a warmer silver glint, so timing and the two-world logic are safe. */
+#app .mh-v16-portal-iris{
+  box-shadow:0 0 76px rgba(159,108,160,.24),0 0 19px rgba(213,212,235,.28),
+   inset 0 0 45px rgba(179,143,188,.24);
+  border-color:rgba(231,223,236,.69);
+}
+#app .mh-v16-portal-convergence span{
+  background:linear-gradient(90deg,transparent 0%,rgba(164,170,211,.14) 37%,
+   rgba(249,240,248,.70) 50%,rgba(172,100,140,.24) 67%,transparent 100%);
+}
+#app .mh-v16-portal-copy strong{letter-spacing:-.046em;text-shadow:0 0 36px rgba(212,178,212,.24)}
+@media(prefers-reduced-motion:no-preference){
+  #app.mh-v16[data-mh-mode="connections"] .mh-thematic-lines path{
+    animation:mhV16pSignalFlow 19s linear infinite;
+  }
+}
+@keyframes mhV16pSignalFlow{to{stroke-dashoffset:-88}}
+@media(prefers-reduced-motion:reduce){
+  #app.mh-v16 .mh-thematic-lines path{animation:none!important}
+}
