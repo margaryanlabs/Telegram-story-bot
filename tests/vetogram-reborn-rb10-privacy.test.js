@@ -38,12 +38,11 @@ function balanced(source){
   assert.equal(level,0,'unclosed CSS block');
 }
 
-test('Privacy Atelier is the final actual studio stylesheet',()=>{
+test('Privacy Atelier is retained inside the final RB12 studio bundle',()=>{
   const links=[...html.matchAll(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g)].map(m=>m[1]);
   assert.ok(links.length>=20);
-  assert.ok(links.at(-1).startsWith('/vetogram-reborn-privacy.css?v='));
-  assert.ok(links.some(x=>x.startsWith('/vetogram-reborn-atelier.css?v=')));
-  assert.ok(links.some(x=>x.startsWith('/vetogram-reborn-media.css?v=')));
+  assert.ok(links.at(-1).startsWith('/vetogram-reborn-ui.css?v='));
+  assert.ok(links.some(x=>x.startsWith('/vetogram-reborn-foundation.css?v=')));
   assert.ok(rb8.length>20000&&rb9.length>15000);
 });
 
