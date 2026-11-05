@@ -227,6 +227,19 @@
     const button = document.querySelector('#lensPanel [data-lens="' + theme + '"]');
     button?.click();
   }
+  // Prevent symbolic event beacons from also triggering the original globe's
+  // pointer-to-story reader. Keep drag/zoom controls unchanged elsewhere.
+  for (const type of ['pointerdown', 'pointerup', 'pointercancel']) {
+    layer.addEventListener(type, event => {
+      if (event.target instanceof Element && event.target.closest('[data-mh-beacon]')) event.stopPropagation();
+    });
+  }
+  layer.addEventListener('click', event => {
+    const beacon = event.target instanceof Element ? event.target.closest('[data-mh-beacon]') : null;
+    if (!beacon) return;
+    event.stopPropagation();
+    selectEvent(beacon.dataset.mhBeacon);
+  });
   app.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
