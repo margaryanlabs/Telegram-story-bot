@@ -106,7 +106,7 @@
     $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
     $("cinemaSeriesHub").classList.toggle("hidden",tab!=="series");
     $("cinemaForeignHub").classList.toggle("hidden",tab!=="foreign");
-    for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises","cinemaForeignShelf"])
+    for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises","cinemaForeignShelf","cinemaWorldSeries"])
       $(id).classList.toggle("hidden",tab!=="home");
     if(tab==="home")setHeroSlide(discovery.index);
     render();
@@ -449,7 +449,9 @@
     text("cinemaHeroTitle",displayFilmTitle(f).length>85?displayFilmTitle(f).slice(0,82)+"…":displayFilmTitle(f));
     text("cinemaHeroDescription",f.synopsis?.slice(0,195)||"Смотрите историю в официальном видеоплеере.");
     text("cinemaHeroMeta",f.externalRutube?[f.year,f.minutes?f.minutes+" МИН":null,f.audioClaim?"ДУБЛЯЖ ЗАЯВЛЕН":"ОЗВУЧКА НЕ ПРОВЕРЕНА"].filter(Boolean).join(" · "):[f.year||"Кино",f.minutes?f.minutes+" МИН":null,f.contentType||f.genres?.[0],f.russianAudio===true?"РУССКАЯ ДОРОЖКА ЗАЯВЛЕНА":"ЯЗЫК У ИСТОЧНИКА"].filter(Boolean).join(" · "));
-    text("cinemaHeroWatch",f.externalRutube?"↗ Открыть видео":"▶ Смотреть фильм");
+    const licensedHere=Boolean(f.player?.licensed===true&&!f.discoveryOnly&&!f.externalRutube&&!failedEmbeds.has(f.id));
+    text("cinemaHeroWatch",licensedHere?"▶ Смотреть":"Подробнее и источники");
+    $("cinemaHeroWatch").setAttribute("aria-label",licensedHere?"Смотреть "+f.title:"Информация и источники: "+f.title);
     text("cinemaHeroCounter",String(discovery.index+1).padStart(2,"0")+" / "+String(length).padStart(2,"0"));
     $("cinemaHeroDots").replaceChildren(...discovery.slides.map((film,i)=>{
       const b=node("button","cinema-hero-dot");b.type="button";
@@ -459,25 +461,42 @@
     }));
     if(!image)requestPoster(f);
   }
+  // V9: lead with globally known non-Russian films and series from the
+  // already sourced discovery catalog. This does NOT grant streaming rights.
+  const V9_WORLD_PRIORITY=["iron man","harry potter","avengers: endgame","game of thrones",
+    "wednesday","squid game","house of the dragon","the dark knight","inception"];
+  function worldPriority(f){
+    const key=String(f.original||f.title||"").toLocaleLowerCase("en");
+    const rank=V9_WORLD_PRIORITY.findIndex(name=>key.includes(name));
+    return rank<0?100:rank;
+  }
   function updateHeroDeck(){
-    const foreign=[]; // Unlicensed external links must never lead a Play hero.
-    const recents=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
-      !f.discoveryOnly&&!f.externalRutube&&f.contentType!=="Сериалы"&&Number(f.minutes)>=35)
-      .sort((a,b)=>(Number(b.year)||0)-(Number(a.year)||0)||uploadTime(b)-uploadTime(a));
-    // Lead with films which actually have an in-app player. The foreign
-    // discovery cards may only have an external source URL.
-    const all=[...recents,...films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
-      !f.discoveryOnly&&!f.externalRutube&&Number(f.minutes)>=40)];
+    const world=films.filter(f=>f.externalRutube&&f.featuredForeign&&
+      typeof f.poster==="string"&&/^https:\/\//.test(f.poster))
+      .sort((a,b)=>worldPriority(a)-worldPriority(b)||((Number(b.year)||0)-(Number(a.year)||0)));
+    const worldSeries=films.filter(f=>f.seriesPopular&&f.seriesGroup==="global"&&
+      typeof f.poster==="string"&&/^https:\/\//.test(f.poster))
+      .sort((a,b)=>worldPriority(a)-worldPriority(b));
+    // Only licensed, rights-verified foreign streams qualify for play here.
+    const verifiedForeign=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
+      !f.discoveryOnly&&!f.externalRutube&&
+      (f.genres||[]).includes("Зарубежное"));
+    const all=[...verifiedForeign,...world,...worldSeries];
     const used=new Set(),deck=[];
-    for(const film of all) {
-      if(used.has(film.id))continue;
-      used.add(film.id);deck.push(film);
+    for(const film of all){
+      const key=String(f.original||f.title||f.id).toLocaleLowerCase("ru");
+      if(used.has(key))continue;
+      used.add(key);deck.push(film);
       if(deck.length===6)break;
     }
+    // Zero Hollywood footage/posters is a valid state, not permission to
+    // silently fill the primary hero with Russian catalog content.
+    const oldId=discovery.slides[discovery.index]?.id;
     const key=deck.map(x=>x.id).join("|");
     if(key===discovery.lastKey)return;
-    const oldId=discovery.slides[discovery.index]?.id;
     discovery.lastKey=key;discovery.slides=deck;
+    if(!deck.length){$("cinemaHero").classList.add("hidden");return;}
+    $("cinemaHero").classList.toggle("hidden",!isHome());
     const prior=deck.findIndex(x=>x.id===oldId);
     setHeroSlide(prior>=0?prior:0);
   }
@@ -619,12 +638,17 @@
   }
   function refreshDiscovery(){
     const home=isHome();
-    // Hiding discovery-only foreign uploads: no permission to embed them.
-    $("cinemaForeignShelf").classList.add("hidden");
-    const external=films.filter(f=>f.externalRutube);
+    // Discovery cards are browse-only; missing rights never become a Play button.
+    const external=films.filter(f=>f.externalRutube&&f.featuredForeign)
+      .sort((a,b)=>worldPriority(a)-worldPriority(b));
+    $("cinemaForeignShelf").classList.toggle("hidden",!home||external.length===0);
     if(home)$("cinemaForeignRail").replaceChildren(...external.slice(0,20).map(filmCard));
+    const globalSeries=films.filter(f=>f.seriesPopular&&f.seriesGroup==="global").sort((a,b)=>worldPriority(a)-worldPriority(b));
+    $("cinemaWorldSeries").classList.toggle("hidden",!home||globalSeries.length===0);
+    if(home)$("cinemaWorldSeriesRail").replaceChildren(...globalSeries.slice(0,20).map(filmCard));
     text("cinemaForeignNote",external.filter(f=>f.audioClaim).length+" публикаций с заявленным дубляжом · "+external.length+" найденных публикаций. Право на их встраивание не установлено.");
     renderSeriesCollections();
+    const catalog=state.tab==="catalog"&&!state.query.trim();
     const recent=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&uploadTime(f)>0)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
@@ -638,10 +662,10 @@
       ["cinemaAnimations","cinemaAnimationsRail",cartoons]
     ];
     for(const [sectionId,railId,rows] of shelves){
-      $(sectionId).classList.toggle("hidden",!home||rows.length===0);
-      if(home&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(sectionId==="cinemaSeries"?seriesShowCard:filmCard));
+      $(sectionId).classList.toggle("hidden",!catalog||rows.length===0);
+      if(catalog&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(sectionId==="cinemaSeries"?seriesShowCard:filmCard));
     }
-    $("cinemaGenresSection").classList.toggle("hidden",!home);
+    $("cinemaGenresSection").classList.toggle("hidden",!catalog);
     $("cinemaFranchises").classList.add("hidden");
     // Franchise title metadata is not playable: never render fake Watch cards.
     if(home){
@@ -694,7 +718,7 @@
           Number(f.minutes)>=35;
       }catch{return false}
     }).sort((a,b)=>uploadTime(b)-uploadTime(a));
-    section.classList.toggle("hidden",state.tab!=="home"||Boolean(state.query.trim())||!live.length);
+    section.classList.toggle("hidden",state.tab!=="catalog"||Boolean(state.query.trim())||!live.length);
     if(section.classList.contains("hidden"))return;
     const unique=new Set(),choices=[];
     for(const movie of live){
@@ -732,7 +756,7 @@
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library"||state.tab==="foreign");
     const russian=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&(f.spoken==="Русский"||f.spoken==="ru"));
-    const showRussian=state.tab==="home"&&!state.query.trim()&&russian.length>0;
+    const showRussian=state.tab==="catalog"&&!state.query.trim()&&russian.length>0;
     $("cinemaRussian").classList.toggle("hidden",!showRussian);
     if(showRussian)$("cinemaRussianRail").replaceChildren(...russian.slice(0,15).map(filmCard));
     const genres=["Все",...new Set(["Фильмы","Сериалы","Мультфильмы",...films.flatMap(f=>f.genres||[])])];
@@ -1099,7 +1123,7 @@
   $("cinemaDetailsWatch").addEventListener("click",()=>{if(state.selected)play(state.selected)});
   $("cinemaDetailsFavorite").addEventListener("click",()=>{if(state.selected)toggleFavorite(state.selected)});
   $("cinemaDetailsShare").addEventListener("click",()=>{if(state.selected)shareFilm(state.selected)});
-  $("cinemaHeroWatch").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(f)play(f)});
+  $("cinemaHeroWatch").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(!f)return;if(f.discoveryOnly||f.externalRutube)openDetails(f);else play(f)});
   $("cinemaHeroDetails").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(f)openDetails(f)});
   $("cinemaHeroPrev").addEventListener("click",()=>setHeroSlide(discovery.index-1));
   $("cinemaHeroNext").addEventListener("click",()=>setHeroSlide(discovery.index+1));
