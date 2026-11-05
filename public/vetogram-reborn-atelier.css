@@ -929,3 +929,82 @@ html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav
     outline: 2px solid Highlight !important;
   }
 }
+
+
+/* -------- Theme continuity: publication must respect bright appearance ----- */
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-stories-head,
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-stories-head {
+  background: linear-gradient(122deg,#fff,#e9f0fa) !important;
+  border-color: rgba(47,80,121,.2) !important;
+  box-shadow: 0 13px 29px rgba(50,77,110,.08) !important;
+}
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-stories-head h1,
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-stories-head h1 {
+  color: #263b59 !important;
+}
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-stories-head p,
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-stories-head p {
+  color: #526782 !important;
+}
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-story-switch,
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-story-switch,
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .hero-card,
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .hero-card {
+  background: linear-gradient(130deg,#fff,#f0f5fb) !important;
+  border-color: rgba(43,80,122,.17) !important;
+}
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-story-switch>button[aria-current="page"],
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-story-switch>button[aria-current="page"] {
+  background: rgba(69,112,184,.11) !important;
+  color: #294973 !important;
+  border-color: rgba(69,112,184,.25) !important;
+}
+
+/* The same discoverable contact-stories presentation in the "Смотреть"
+   section, when its native content has been mounted there. */
+html#vetogram.vetogram-noir .screen[data-screen="publish"] #v5StoriesWatch .veto-story-strip {
+  border: 1px solid rgba(163,190,231,.19) !important;
+  border-radius: 19px !important;
+  padding: 14px 12px !important;
+  background: linear-gradient(130deg,rgba(132,171,230,.12),rgba(132,171,230,.02)) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="publish"] #v5StoriesWatch .veto-story-ring {
+  background: linear-gradient(145deg,#d3e3ff,#93b8ec 54%,#526bad) !important;
+  box-shadow: 0 0 0 1px rgba(151,189,240,.16),0 4px 12px rgba(0,0,0,.15);
+}
+html#vetogram.vetogram-noir .screen[data-screen="publish"] #v5StoriesWatch .veto-story-person.is-viewed .veto-story-ring {
+  background: rgba(152,171,201,.32) !important;
+  box-shadow: none;
+}
+/* Respect clear visible focus across touchscreen and external-keyboard paths. */
+html#vetogram.vetogram-noir #telegramMirror
+:is(.veto-story-person,.veto-story-tools-toggle,.veto-story-refresh,.veto-mirror-icon-btn):focus-visible,
+html#vetogram.vetogram-noir .screen[data-screen="publish"]
+:is(.v5-story-switch button,.v4-story-entry button):focus-visible {
+  outline: 2px solid var(--v8-focus,#bed7ff) !important;
+  outline-offset: 3px !important;
+}
+html#vetogram.vetogram-noir #telegramMirror .veto-story-person:focus-visible .veto-story-ring {
+  box-shadow: 0 0 0 3px var(--v8-accent-soft,rgba(143,179,239,.19)) !important;
+}
+@media (prefers-contrast: more) {
+  html#vetogram.vetogram-noir #telegramMirror {
+    --v8-line: rgba(208,225,251,.43);
+    --v8-sub: #d1ddf0;
+    --v8-dim: #becce2;
+  }
+  html#vetogram.vetogram-noir[data-veto-theme="pearl"] #telegramMirror,
+  html#vetogram.vetogram-noir[data-veto-theme="linen"] #telegramMirror {
+    --v8-line: rgba(39,67,102,.48);
+    --v8-sub: #334863;
+    --v8-dim: #405775;
+  }
+}
+@media (pointer: coarse) {
+  /* Blurring a full-width bottom dock is costly in embedded WebViews.
+     Keep the high-contrast material without a continuous GPU backdrop. */
+  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
