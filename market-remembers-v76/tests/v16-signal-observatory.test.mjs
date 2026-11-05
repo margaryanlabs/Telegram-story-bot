@@ -59,7 +59,7 @@ test('V16 assets load after V12, V14, V15 and do not remove People',()=>{
  for(const f of ['v10/v15-obsidian-polish.css','v10/v16-experience.css','v10/v16-scene-director.js'])
    assert.ok(html.includes(f),f);
  assert.ok(html.indexOf('v10/v16-experience.css')>html.indexOf('v10/v15-obsidian-polish.css'));
- assert.ok(html.indexOf('src="v10/v16-scene-director.js"')>html.indexOf('src="v10/crimson-event-core.js"'));
+ assert.ok(html.indexOf('src="v10/v16-scene-director.js"')>html.indexOf('src="v10/people-mirror-planet.js"'));
  for(const [name,code] of [['People',people],['modes',modes],['crimson-core',core],['director',director]])
    assert.doesNotThrow(()=>new Script(code,{filename:name}));
  assert.match(html,/window\.MarketPeopleResume=resumeScene/);
