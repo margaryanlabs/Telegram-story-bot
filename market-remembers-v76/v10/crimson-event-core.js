@@ -100,19 +100,19 @@ function render2D(){
  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,r*1.25,0,Math.PI*2);ctx.fill();
  ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
  const base=ctx.createRadialGradient(x-r*.39,y-r*.37,r*.13,x,y,r*1.13);
- base.addColorStop(0,'#4a4553');base.addColorStop(.43,'#1a1b26');base.addColorStop(1,'#070911');
+ base.addColorStop(0,'#8090ad');base.addColorStop(.42,'#2c3a51');base.addColorStop(1,'#0a0e17');
  ctx.fillStyle=base;ctx.fillRect(x-r,y-r,r*2,r*2);
  for(let i=0;i<28;i++){
    const theta=i*2.399963+yaw*.53,rad=r*Math.sqrt((i+.5)/29);
    const sx=x+Math.cos(theta)*rad,sy=y+Math.sin(theta)*rad,len=r*(.09+(i%4)*.014);
    ctx.beginPath();ctx.moveTo(sx,sy);ctx.bezierCurveTo(sx+len*.1,sy-len*.52,sx-len*.3,sy-len*.8,sx-len*.55,sy-len);
-   ctx.strokeStyle=i%4===0?'rgba(225,104,138,.38)':'rgba(155,112,132,.12)';
+   ctx.strokeStyle=i%5===0?'rgba(225,141,171,.45)':'rgba(178,199,227,.20)';
    ctx.lineWidth=i%4===0?1.7:.8;ctx.stroke();
  }
  const shade=ctx.createLinearGradient(x-r,y-r,x+r,y+r);
- shade.addColorStop(0,'rgba(211,218,230,.11)');shade.addColorStop(.55,'rgba(0,0,0,0)');shade.addColorStop(1,'rgba(0,0,0,.78)');
+ shade.addColorStop(0,'rgba(230,237,252,.21)');shade.addColorStop(.55,'rgba(0,0,0,0)');shade.addColorStop(1,'rgba(0,0,0,.78)');
  ctx.fillStyle=shade;ctx.fillRect(x-r,y-r,r*2,r*2);ctx.restore();
- ctx.strokeStyle='rgba(173,158,183,.46)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+ ctx.strokeStyle='rgba(183,202,236,.62)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
 }
 function project(pair){
  // Inverse of the shader's yaw/pitch: archive beacons must be glued
