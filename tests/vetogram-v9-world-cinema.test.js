@@ -109,3 +109,11 @@ test('series without licensed artwork receive honest, accessible typographic cov
   assert.match(style,/Source-only global series get an intentional monochrome typographic cover/);
   assert.match(style,/cinemaSeriesPopularRail/);
 });
+
+test('search in cinema home and search tab includes foreign metadata and restores hero on clear',()=>{
+  assert.match(js,/const worldBrowse=state\.tab==="home"/);
+  assert.match(js,/let list=worldBrowse\|\|state\.tab==="search"/);
+  assert.match(js,/worldHome\?isWorldSpotlight\(f\):f\.externalRutube/);
+  assert.match(js,/if\(key===discovery\.lastKey\)\{\$\("cinemaHero"\)\.classList\.toggle\("hidden",!isHome\(\)\|\|!deck\.length\);return;\}/);
+  assert.match(js,/Поиск по мировому кино/);
+});
