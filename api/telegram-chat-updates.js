@@ -33,7 +33,7 @@ export default async function handler(req,res){
   if(req.method!=='POST')return reply(res,405,{error:'POST required'});
   if(!BOT)return reply(res,503,{error:'Telegram не настроен'});
   const owner=validateTelegramMiniApp(String(req.headers['x-telegram-init-data']||''),BOT);
-  if(!owner?.id)return reply(res,401,{error:'Открой VETO внутри своего Telegram'});
+  if(!owner?.id)return reply(res,401,{error:'Открой Vetogram внутри своего Telegram'});
   let body={};
   try{body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};}
   catch{return reply(res,400,{error:'Некорректный запрос'});}
