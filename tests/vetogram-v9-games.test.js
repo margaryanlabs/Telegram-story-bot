@@ -146,6 +146,8 @@ test('responsive, reduced-motion and light themes preserve accessible controls',
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/data-veto-theme="pearl"/);
   assert.match(css,/data-veto-theme="linen"/);
+  assert.match(css,/Focused game controls must remain legible in Pearl\/Linen/);
+  assert.match(css,/\.v9-arcade-active #vpQuickGames \.vp-mini :is\(h3,p,\.vp-mini-stat/);
   assert.match(css,/:focus-visible/);
   assert.match(html,/vetogram-v9-games\.css\?v=20261105-v9-games-01/);
   assert.match(html,/vetogram-play\.js\?v=20261105-v9-games-01/);
