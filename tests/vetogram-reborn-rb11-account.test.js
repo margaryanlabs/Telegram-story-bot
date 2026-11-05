@@ -143,8 +143,8 @@ test('all original profile destinations and login paths remain in place',()=>{
 
 test('new presentation remains scoped and respects light themes and QR visibility',()=>{
   const links=[...html.matchAll(/<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"/g)].map(m=>m[1]);
-  assert.ok(links.at(-1).startsWith('/vetogram-reborn-account.css?v='));
-  assert.ok(links.some(x=>x.includes('vetogram-reborn-privacy.css')));
+  assert.ok(links.at(-1).startsWith('/vetogram-reborn-ui.css?v='));
+  assert.ok(links.some(x=>x.includes('vetogram-reborn-foundation.css')));
   assert.ok(media.length>16000&&privacy.length>20000);
   assert.match(css,/data-veto-theme="pearl"/);
   assert.match(css,/data-veto-theme="linen"/);
