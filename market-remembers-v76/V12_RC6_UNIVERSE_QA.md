@@ -100,3 +100,38 @@ preview deployment is quota-blocked (HTTP 402).
 
 Do not call this production-ready or claim that the new world is already
 live based on the previous RC4 preview link.
+
+
+## Offscreen real OpenGL ES 2.0 GPU/CPU raster validation (5 Nov 2026)
+
+The actual RC6 `coreVertex` and `coreFragment` strings were extracted
+from the existing isolated shader harness, submitted to a Mesa surfaceless
+EGL OpenGL ES 2.0 context, compiled with the driver's actual
+`glCompileShader` and linked with `glLinkProgram`:
+
+| Stage | Result |
+|---|---|
+| EGL initialization | 1.5 |
+| Vertex compile | PASS (empty info log) |
+| Fragment compile | PASS (empty info log) |
+| Program link | PASS (empty info log) |
+| Low/ECO raster (600×600) | PASS, glGetError = 0 |
+| High raster (600×600) | PASS, glGetError = 0 |
+| Depth occlusion | PASS with 24-bit pbuffer depth |
+
+The first offscreen test without an EGL depth attachment drew back faces
+over the front and created artificial horizontal seams. Requesting an
+EGL 24-bit depth attachment removed them, as expected. The real browser
+scene's `getContext('webgl',{depth:true})` and `DEPTH_TEST` path
+were already present; no production-shader geometry change was necessary.
+
+Two 600×600 offscreen snapshots (ECO/HIGH) were captured for manual review
+during this development session. These images are **isolated shader renders
+of the actual sphere material**, not screenshots of the fully assembled
+website; they exclude background nebula, HTML overlays, real markers,
+camera gestures and phone-specific performance.
+
+**What remains open:** real Android WebGL rendering, browser-driven
+Playwright tests, actual full-app screenshots and public RC6 preview
+delivery. Do not merge into production or claim full device acceptance
+from the EGL test alone.
