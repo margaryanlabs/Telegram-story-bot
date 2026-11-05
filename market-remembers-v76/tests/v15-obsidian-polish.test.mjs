@@ -13,14 +13,14 @@ new Script(shaderWrapper).runInNewContext(shaderContext);
 const frag = shaderContext.window.MHCrimsonShaders.fragment;
 
 test('V15 new obsidian material keeps red accents localized rather than lava-world', () => {
-  assert.match(frag,/V15 OBSIDIAN CORE/);
-  assert.match(frag,/thinSeam/);
-  assert.match(frag,/stressRegion/);
-  assert.match(frag,/graphite/);
+  assert.match(frag,/OBSIDIAN SIGNAL/);
+  assert.match(frag,/hairline/);
+  assert.match(frag,/stress=hairline\*gate/);
+  assert.match(frag,/obsidian/);
   assert.match(frag,/uShock/);
   assert.doesNotMatch(frag,/vec3 lava=/);
   assert.doesNotMatch(frag,/float thermal=/);
-  assert.match(frag,/vec3 color=graphite/);
+  assert.match(frag,/vec3 color=obsidian\*shading/);
 });
 
 test('mobile size fits entire planet above compact information dock',()=>{
