@@ -57,9 +57,26 @@ test('Android automatic/ECO material retains primary depth but skips secondary d
             fragment.indexOf('if(uQuality>.5)'));
   assert.ok(fragment.indexOf('float microCloud=')>
             fragment.indexOf('if(uQuality>.5)'));
-  assert.match(html,/uQuality:\(quality==='low'\|\|\(quality==='auto'&&\(w<820\|\|autoEco\)\)\)\?0:1/);
+  assert.match(html,/uQuality:cinematicDetail\(\)/);
+  assert.match(html,/const cores=Number\(navigator\.hardwareConcurrency\)\|\|2/);
+  assert.match(html,/const memory=Number\(navigator\.deviceMemory\)\|\|4/);
 });
 
+test('AUTO adapts actual cinematic detail to phone capability and FPS fallback',()=>{
+  const start=html.indexOf('  function cinematicDetail(){');
+  const end=html.indexOf('  function passUniforms(p,t){',start);
+  assert.ok(start>0&&end>start);
+  const invoke=new Function('quality','autoEco','w','navigator',
+    html.slice(start,end)+'return cinematicDetail();');
+  assert.equal(invoke('auto',false,390,{hardwareConcurrency:8,deviceMemory:8}),1);
+  assert.equal(invoke('auto',false,390,{hardwareConcurrency:4,deviceMemory:4}),0);
+  assert.equal(invoke('auto',true,390,{hardwareConcurrency:8,deviceMemory:8}),0);
+  assert.equal(invoke('low',false,390,{hardwareConcurrency:8,deviceMemory:8}),0);
+  assert.equal(invoke('high',false,390,{hardwareConcurrency:4,deviceMemory:4}),1);
+  assert.equal(invoke('auto',false,1280,{hardwareConcurrency:2,deviceMemory:2}),1);
+  assert.match(html,/if\(perfFrames>=45&&fps<33\)/);
+  assert.match(html,/autoEco=true/);
+});
 test('Cinematic volume integrates depth from the real inverse camera ray at 3/6 samples',()=>{
   assert.match(fragment,/uniform float uRotX;uniform float uRotY;/);
   assert.match(fragment,/vec3 volumeRay=normalize\(vec3\(sin\(uRotY\)\*cos\(uRotX\)/);
