@@ -121,3 +121,20 @@ test('QR cooldown cannot re-enable an old owner button after a Telegram account 
   assert.equal(button.disabled,true,'old account cooldown must not touch new owner UI');
   assert.match(app,/clearInterval\(viewerQrRetryTimer\);viewerQrRetryTimer=null;/);
 });
+
+test('QR connection never reports success or offers Business until owner session is verified',()=>{
+  const app=read('public/app.js');
+  const start=app.indexOf("          if (event.type === 'connected') {");
+  const end=app.indexOf("          if (event.type === 'password_required')",start);
+  assert.ok(start>=0&&end>start);
+  const connected=app.slice(start,end);
+  const verify=connected.indexOf("await refreshViewerSync({ silent: true })");
+  const guard=connected.indexOf("viewerState.session?.connected!==true");
+  const success=connected.indexOf("showToast('Telegram успешно подключён через QR')");
+  const business=connected.indexOf('offerBusinessConsentAfterLogin()');
+  assert.ok(verify>=0&&guard>verify&&success>guard&&business>success);
+  assert.match(connected,/viewerState\.session\?\.identityMismatch===true/);
+  assert.match(connected,/viewerState\.degraded===true/);
+  assert.match(connected,/if\(!sameOwner\(\)\)return/);
+  assert.match(connected,/не запрашивай новый QR сразу/);
+});
