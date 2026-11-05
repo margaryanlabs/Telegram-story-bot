@@ -302,7 +302,7 @@
     version: '13.0.0',
     get mode() { return state.mode; },
     get activeEvent() { return state.activeEvent; },
-    get events() { return EVENTS.map(({id,year,date,name,themes,url})=>({id,year,date,name,themes:[...themes],url})); },
+    get events() { return EVENTS.map(({id,year,date,name,themes,url,p})=>({id,year,date,name,themes:[...themes],url,p:[...p]})); },
     setMode, selectEvent, measure
   });
 })();
