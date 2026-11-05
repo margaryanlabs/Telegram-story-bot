@@ -219,7 +219,11 @@ function tick(t){
  size();place();
  const dt=last?Math.min(60,t-last):16;
  if(last&&!reduce&&dt<30){request();return;}last=t;
- if(!reduce&&!pointer&&t>focusUntil)targetYaw+=dt*.000052;
+ // PEOPLE-style celestial object, not an endlessly rotating showcase:
+ // all four source events occupy one archive-facing hemisphere, so idle
+ // auto-spin would move every date behind the planet and leave it empty.
+ // Keep the chosen date in view; orbit only on deliberate pointer movement.
+ // A different date calls focus() and smoothly recenters the actual mesh.
  const ease=reduce?1:1-Math.exp(-dt/245);
  yaw+=(targetYaw-yaw)*ease;pitch+=(targetPitch-pitch)*ease;
  try{if(gl)webGLRender(t);else canvasRender();}catch(e){failToCanvas(e);canvasRender();}
