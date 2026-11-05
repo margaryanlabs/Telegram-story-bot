@@ -12,6 +12,13 @@ import {encodeGif} from './vetogram-v9-gif-core.js';
   const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)');
   const effects=new Set(['pulse','float','spin']);
   const SIZE=256,FRAMES=12,MAX_SOURCE=5*1024*1024;
+  const owner=()=>{
+    const tg=window.Telegram?.WebApp;
+    const id=String(tg?.initDataUnsafe?.user?.id||'');
+    return tg?.initData&&/^\d{1,20}$/.test(id)?id:'device';
+  };
+  const initialOwner=owner();
+  let assetOwner=initialOwner;
   let image=null,effect='pulse',caption='',busy=false,token=0,frameRequest=0,visible=false;
   const setStatus=message=>{status.textContent=message;};
   function draw(progress=0){
@@ -58,17 +65,25 @@ import {encodeGif} from './vetogram-v9-gif-core.js';
     stopPreview();draw(0);
     if(visible&&!document.hidden&&!reduced?.matches&&!busy)frameRequest=requestAnimationFrame(animate);
   }
+  function resetIfOwnerChanged(){
+    if(assetOwner===owner())return false;
+    token++;assetOwner=owner();image=null;caption='';
+    if($('v9GifCaption'))$('v9GifCaption').value='';
+    exportButton.disabled=true;
+    setStatus('Telegram-аккаунт изменился. Загрузи собственное изображение заново.');
+    syncPreview();return true;
+  }
   function applyImage(img){
-    image=img;exportButton.disabled=false;
+    assetOwner=owner();image=img;exportButton.disabled=false;
     setStatus('Готово. Анимация создаётся локально; GIF не отправляется на сервер.');
     syncPreview();
   }
   function loadUrl(src){
-    const request=++token;
+    const request=++token,requestOwner=owner();
     return new Promise((resolve,reject)=>{
       const img=new Image();
       img.onload=()=>{
-        if(request!==token)return resolve(false);
+        if(request!==token||requestOwner!==owner())return resolve(false);
         if(!img.naturalWidth||!img.naturalHeight||img.naturalWidth>4096||img.naturalHeight>4096)
           return reject(new Error('Изображение должно быть не больше 4096×4096.'));
         applyImage(img);resolve(true);
@@ -85,7 +100,7 @@ import {encodeGif} from './vetogram-v9-gif-core.js';
     try{await loadUrl(url);}finally{URL.revokeObjectURL(url);}
   }
   async function exportGif(){
-    if(busy||!image)return;
+    if(resetIfOwnerChanged()||busy||!image)return;
     busy=true;exportButton.disabled=true;stopPreview();
     setStatus('Создаю GIF · 12 кадров · 256×256…');
     try{
@@ -95,6 +110,7 @@ import {encodeGif} from './vetogram-v9-gif-core.js';
         frames.push(new Uint8Array(ctx.getImageData(0,0,SIZE,SIZE).data));
       }
       await new Promise(resolve=>setTimeout(resolve,0));
+      if(assetOwner!==owner())throw new Error('Telegram-аккаунт изменился. Загрузи файл заново.');
       const bytes=encodeGif({width:SIZE,height:SIZE,frames,delayCs:10,loop:0});
       if(bytes.length>8*1024*1024)throw new Error('GIF слишком большой. Попробуй другое изображение.');
       const url=URL.createObjectURL(new Blob([bytes],{type:'image/gif'}));
@@ -113,6 +129,7 @@ import {encodeGif} from './vetogram-v9-gif-core.js';
   });
   $('v9GifUpload')?.addEventListener('click',()=>input?.click());
   $('v9GifUseStudio')?.addEventListener('click',async()=>{
+    if(resetIfOwnerChanged()||owner()!==initialOwner){setStatus('После смены аккаунта загрузи изображение заново.');return;}
     const src=document.getElementById('studioAssetImage')?.src||'';
     if(!src.startsWith('data:image/')||src.length>8_000_000){
       setStatus('Сначала загрузи PNG/JPG/WEBP в Студию стикеров выше.');return;
@@ -135,7 +152,7 @@ import {encodeGif} from './vetogram-v9-gif-core.js';
   });
   exportButton?.addEventListener('click',exportGif);
   reduced?.addEventListener?.('change',syncPreview);
-  document.addEventListener('visibilitychange',syncPreview);
+  document.addEventListener('visibilitychange',()=>{if(!resetIfOwnerChanged())syncPreview();});
   window.addEventListener('pagehide',stopPreview);
   if(typeof IntersectionObserver==='function'){
     const observer=new IntersectionObserver(entries=>{
