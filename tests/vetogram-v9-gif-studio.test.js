@@ -82,3 +82,12 @@ test('Sticker and emoji pack handoff uses official HTTPS Telegram links, never a
   assert.match(html,/studio-module\.js\?v=20261106-v9-studio-01/);
   assert.match(html,/brand-pack\.js\?v=20261106-v9-studio-01/);
 });
+
+test('Local GIF owner boundary resets stale image and rejects in-flight export after account switch',()=>{
+  const js=read('vetogram-v9-gif-maker.js');
+  assert.match(js,/function resetIfOwnerChanged\(\)/);
+  assert.match(js,/token\+\+;assetOwner=owner\(\);image=null/);
+  assert.match(js,/requestOwner!==owner\(\)/);
+  assert.match(js,/if\(assetOwner!==owner\(\)\)throw new Error/);
+  assert.match(js,/owner\(\)!==initialOwner/);
+});
