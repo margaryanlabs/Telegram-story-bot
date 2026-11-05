@@ -67,8 +67,12 @@ function size(){
 function place(){
  const mobile=w<820;
  // Deliberate mobile composition: preserve a full planet silhouette ABOVE the research dock.
- const x=w*(mobile?.525:.56),y=h*(mobile?.445:.515);
- const r=Math.min(w,h)*(mobile?.255:.335)*zoom;
+ const reservedTop=h<540?78:115;
+ const reservedBottom=h<540?115:136;
+ const clearHeight=Math.max(144,h-reservedTop-reservedBottom);
+ const x=w*(mobile?.525:.56);
+ const y=mobile?reservedTop+clearHeight*.50:h*.515;
+ const r=(mobile?Math.min(w*.395,clearHeight*.50,h*.29):Math.min(w,h)*.335)*zoom;
  planet={x,y,r};
  app.style.setProperty('--mh-core-x',x+'px');
  app.style.setProperty('--mh-core-y',y+'px');
