@@ -23,7 +23,7 @@ const veil=document.createElement('div');veil.id='mhWorldVeil';veil.className='m
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const source=window.MHPeopleMirrorShaders;
 const twoPi=Math.PI*2;
-let gl=null,ctx=null,programCore=null,programPoints=null,programLines=null;
+let gl=null,ctx=null,programCore=null,programPoints=null,programLines=null,rendererInitialized=false;
 let vertexBuffer=null,indexBuffer=null,particleBuffer=null,lineBuffer=null,indexCount=0,pointCount=0,lineCount=0;
 let w=1,h=1,dpr=1,planet={x:0,y:0,r:160},active=false,frame=0,last=0,lastMeasure=0,zoom=1;
 let yaw=0,pitch=.04,targetYaw=0,targetPitch=.04,focusUntil=0,selected=[-.14,.11,.984],pulseUntil=0,pointer=null;
@@ -217,8 +217,13 @@ function focus(pair){
 function tick(t){
  frame=0;if(!active||document.hidden)return;
  size();place();
- const dt=last?Math.min(60,t-last):16;
- if(last&&!reduce&&dt<30){request();return;}last=t;
+ const elapsed=last?t-last:16;
+ const moving=!!pointer||t<focusUntil||t<pulseUntil||
+   Math.abs(yaw-targetYaw)>.003||Math.abs(pitch-targetPitch)>.003;
+ // Readable movement stays responsive; the static historical globe uses a
+ // much lower drawing cadence instead of wasting mobile GPU cycles at 30fps.
+ if(last&&!reduce&&elapsed<(moving?33:82)){request();return;}
+ const dt=last?Math.min(82,elapsed):16;last=t;
  // PEOPLE-style celestial object, not an endlessly rotating showcase:
  // all four source events occupy one archive-facing hemisphere, so idle
  // auto-spin would move every date behind the planet and leave it empty.
@@ -238,6 +243,8 @@ function setActive(next){
   window.MarketPeopleResume?.();
  }else{
   size();place();last=0;
+  // Do not allocate a second WebGL context until EVENT CORE is actually opened.
+  if(!rendererInitialized){rendererInitialized=true;initGL();}
   const cur=events().find(e=>e.id===window.MarketHistoryModes?.activeEvent);
   if(cur)focus(cur.p);
   request();
@@ -266,7 +273,7 @@ mainCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLos
 mainCanvas.addEventListener('webglcontextrestored',()=>{contextLost=false;initGL();size();if(active)request();});
 window.addEventListener('resize',()=>{size();place();if(active)request();},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&frame){cancelAnimationFrame(frame);frame=0;}else if(active)request();});
-size();initGL();size();place();
+size();place();
 window.MarketEventPlanet=Object.freeze({
  setActive,project,focus,
  get active(){return active;},
