@@ -60,7 +60,7 @@ test('V16 screenshots: People, Event Core, dossier, Connections in portrait and 
   await page.goto('/?mm=events');
   await expect(page.locator('#mhPlanetSurface')).toBeVisible();
   await page.screenshot({path:'test-results/v16-event-'+viewport.width+'x'+viewport.height+'.png',animations:'disabled'});
-  await page.locator('#mhHistoryPanel .mh-panel-grip').click();
+  if(viewport.width<820) await page.locator('#mhHistoryPanel .mh-panel-grip').click();
   await page.screenshot({path:'test-results/v16-dossier-'+viewport.width+'x'+viewport.height+'.png',animations:'disabled'});
   await page.goto('/?mm=connections');
   await page.screenshot({path:'test-results/v16-connections-'+viewport.width+'x'+viewport.height+'.png',animations:'disabled'});
