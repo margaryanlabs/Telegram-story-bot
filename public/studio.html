@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="/vetogram-reborn-ui.css?v=20261105-v9-02" />
   <link rel="stylesheet" href="/vetogram-v9-media-hub.css?v=20261105-v9-02" />
   <link rel="stylesheet" href="/vetogram-v9-games.css?v=20261105-v9-games-01" />
+  <link rel="stylesheet" href="/vetogram-v9-gif-maker.css?v=20261106-v9-gif-01" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -2139,6 +2140,43 @@
         </div>
       </section>
 
+      <section class="v9-gif-maker" aria-labelledby="v9GifHeading">
+        <header class="v9-gif-header">
+          <div>
+            <span class="v9-gif-eyebrow">VETOGRAM / MOTION LAB</span>
+            <h2 id="v9GifHeading">GIF Studio.</h2>
+            <p>Преврати собственную фотографию, рисунок или логотип в короткую анимированную GIF. Без загрузки файлов на сервер и без платного AI.</p>
+          </div>
+          <span class="v9-gif-format">GIF89a · 256×256</span>
+        </header>
+        <div class="v9-gif-body">
+          <div class="v9-gif-preview">
+            <canvas id="v9GifCanvas" width="256" height="256" role="img" aria-label="Предпросмотр анимации GIF"></canvas>
+          </div>
+          <div class="v9-gif-controls">
+            <div class="v9-gif-actions">
+              <button id="v9GifUpload" type="button">↑ Загрузить изображение</button>
+              <button id="v9GifUseStudio" type="button">Использовать материал выше</button>
+              <input id="v9GifInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+            </div>
+            <label for="v9GifCaption" class="v9-gif-control-label">Надпись · до 24 символов</label>
+            <input id="v9GifCaption" type="text" maxlength="24" placeholder="Например: VETOGRAM" autocomplete="off" />
+            <span class="v9-gif-control-label" id="v9GifEffectLabel">Эффект</span>
+            <div class="v9-gif-effects" role="group" aria-labelledby="v9GifEffectLabel">
+              <button type="button" data-v9-gif-effect="pulse" aria-pressed="true">Пульс</button>
+              <button type="button" data-v9-gif-effect="float" aria-pressed="false">Парение</button>
+              <button type="button" data-v9-gif-effect="spin" aria-pressed="false">Поворот</button>
+            </div>
+            <div class="v9-gif-actions">
+              <button class="v9-gif-primary" id="v9GifExport" type="button" disabled>↓ Скачать GIF</button>
+              <button id="v9GifToStickers" type="button">К Telegram-стикерам ↗</button>
+            </div>
+            <p class="v9-gif-status" id="v9GifStatus" role="status" aria-live="polite">Загрузи собственное изображение, чтобы создать GIF.</p>
+            <p class="v9-gif-note">GIF — файл для сообщений и публикаций. Telegram-пакеты стикеров используют WEBP/WEBM: их создаёт отдельная Студия выше, только по твоему нажатию. GIF не устанавливается в Telegram автоматически.</p>
+          </div>
+        </div>
+      </section>
+
       <section class="studio-truth">
         <article><strong>Изображения с ИИ</strong><span>Для генерации изображений нужен подключённый ИИ-провайдер. Собственный логотип можно загрузить без ИИ.</span></article>
         <article><strong>Анимация</strong><span>Бренд-набор умеет локально собирать видео WEBM прямо в Telegram WebView; если WebView не поддерживает кодирование видео, static набор остаётся полностью рабочим.</span></article>
@@ -2808,6 +2846,7 @@
   <script type="module" src="/vetogram-ai.js?v=20261105-v9-02"></script>
   <script type="module" src="/vetogram-creative-presets.js?v=20261105-v9-02"></script>
   <script src="/brand-pack.js?v=20261105-v9-02"></script>
+  <script type="module" src="/vetogram-v9-gif-maker.js?v=20261106-v9-gif-01"></script>
   <script src="/veto-launch-polish.js?v=20261105-v9-02" defer></script>
   <script src="/vetogram-header.js?v=20261105-v9-02" defer></script>
   <script src="/vetogram-command-2026.js?v=20261105-v9-02" defer></script>
