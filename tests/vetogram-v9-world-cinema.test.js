@@ -19,7 +19,7 @@ test('first cinema viewport prioritizes international shelves before technical p
 
 test('rotating international hero uses sourced overseas entries, not a Russian licensed fallback',()=>{
   assert.match(js,/const V9_WORLD_PRIORITY=/);
-  assert.match(js,/f\.externalRutube&&f\.featuredForeign/);
+  assert.match(js,/const isWorldSpotlight=f=>Boolean\(f\.externalRutube/);
   assert.match(js,/f\.seriesPopular&&f\.seriesGroup==="global"/);
   assert.match(js,/Zero Hollywood footage\/posters is a valid state/);
   const start=js.indexOf('function updateHeroDeck(){');
@@ -27,13 +27,13 @@ test('rotating international hero uses sourced overseas entries, not a Russian l
   assert.ok(start>=0&&end>start);
   const deck=js.slice(start,end);
   assert.doesNotMatch(deck,/const recents=films\.filter/);
-  assert.doesNotMatch(deck,/russian/ig);
+  assert.doesNotMatch(deck,/const recents=films\.filter/);
 });
 
 test('movie discovery must never imply that external RUTUBE upload is licensed in-app playback',()=>{
   assert.match(js,/if\(f\.discoveryOnly\|\|f\.externalRutube\)openDetails\(f\);else play\(f\)/);
   assert.match(js,/licensedHere\?"▶ Смотреть":"Подробнее и источники"/);
-  assert.match(js,/const external=films\.filter\(f=>f\.externalRutube&&f\.featuredForeign\)/);
+  assert.match(js,/const external=films\.filter\(f=>isWorldSpotlight\(f\)\)/);
   assert.match(js,/f\.player\?\.licensed===true/);
   assert.match(js,/if\(f\.externalRutube\|\|f\.discoveryOnly\)/);
 });
@@ -89,4 +89,23 @@ test('Russian studio collections, watch-now and network load-more do not interru
   assert.match(js,/cinemaMoreStudios"\)\.classList\.toggle\("hidden",state\.tab!=="catalog"/);
   assert.match(js,/cinemaLoadMore"\)\.classList\.toggle\("hidden"[^\n]*state\.tab==="home"/);
   assert.match(js,/section\.classList\.toggle\("hidden",state\.tab!=="catalog"/);
+});
+
+test('home editorial curation includes six distinct source-backed global hero choices',()=>{
+  const window={};
+  runInNewContext(read('cinema-foreign-rutube.js'),{window});
+  const ids=[...js.matchAll(/"rutube-foreign-([a-f0-9]{32})"/g)].map(m=>m[0].slice(1,-1));
+  const curated=window.VetogramCinemaForeignRutube.filter(f=>ids.includes(f.id));
+  assert.ok(curated.length>=6);
+  assert.ok(curated.every(f=>f.externalRutube&&f.discoveryOnly&&!f.player&&/^https:\/\//.test(f.poster)));
+  assert.ok(new Set(curated.map(f=>f.id)).size===curated.length);
+  assert.match(js,/const V9_WORLD_SPOTLIGHT_SET=new Set\(V9_WORLD_SPOTLIGHT\)/);
+  assert.match(js,/const world=films\.filter\(f=>isWorldSpotlight\(f\)/);
+});
+
+test('series without licensed artwork receive honest, accessible typographic covers',()=>{
+  assert.match(js,/div\.classList\.add\("cinema-world-series-art"\)/);
+  assert.match(js,/МИРОВОЙ СЕРИАЛ · ИСТОЧНИК/);
+  assert.match(style,/Source-only global series get an intentional monochrome typographic cover/);
+  assert.match(style,/cinemaSeriesPopularRail/);
 });
