@@ -111,13 +111,24 @@
       '</span><small>Истории этой темы ↗</small></button>').join('') + '</div>';
   }
   function eventMarkup(event) {
+    const sourceIndex=EVENTS.findIndex(item=>item.id===event.id);
+    const before=EVENTS[(sourceIndex-1+EVENTS.length)%EVENTS.length];
+    const after=EVENTS[(sourceIndex+1)%EVENTS.length];
     const steps=event.mechanism.split('→').map((part,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
     return '<div class="mh-v16-record">' +
+      '<div class="mh-v19-context"><span>АРХИВ ФИНАНСОВОЙ ИСТОРИИ / '+escape(event.year)+'</span>'+
+      '<strong>'+escape(event.short)+'</strong>'+
+      '<p>'+escape(event.detail)+'</p>'+
+      '<small>Документированное событие · позиция метки на сфере символическая</small></div>' +
       '<div class="mh-v16-record-meta"><span>◈ VERIFIED CHRONICLE</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
       '<section class="mh-v16-research-card mh-v16-context"><div class="mh-v16-card-icon">01</div><div><h3>ЧТО ПРОИЗОШЛО</h3><p>'+escape(event.detail)+'</p></div></section>' +
       '<section class="mh-v16-research-card mh-v16-transmission"><div class="mh-v16-card-icon">02</div><div><h3>МЕХАНИЗМ ШОКА</h3><ol class="mh-v16-steps">'+steps+'</ol></div></section>' +
       '<section class="mh-v16-research-card mh-v16-lesson"><div class="mh-v16-card-icon">03</div><div><h3>УРОК ДЛЯ ТРЕЙДЕРА</h3><p>'+escape(event.lesson)+'</p></div></section>' +
+      '<div class="mh-v19-neighbors" role="group" aria-label="Другие исторические события">'+
+      '<button type="button" data-mh-event="'+before.id+'" aria-label="Предыдущее событие: '+escape(before.name)+'">← '+escape(before.year)+'</button>'+
+      '<span>ИССЛЕДОВАТЬ ДРУГОЙ ГОД</span>'+
+      '<button type="button" data-mh-event="'+after.id+'" aria-label="Следующее событие: '+escape(after.name)+'">'+escape(after.year)+' →</button></div>' +
       '<div class="mh-v16-card-footer"><button type="button" data-mh-go-connections>ИССЛЕДОВАТЬ СВЯЗИ <span aria-hidden="true">↗</span></button>' +
       '<a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ПЕРВОИСТОЧНИК · '+escape(event.source)+' ↗</a></div></div>';
   }
@@ -139,6 +150,7 @@
     panel.classList.toggle('is-expanded',panelExpanded);
     window.MarketSignalDirector?.setEvent(event);
     panel.innerHTML = '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
+      '<p class="mh-v19-preview" aria-label="Краткий контекст">'+escape(event.short)+' · '+escape(event.mechanism)+'</p>' +
       '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
       timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
@@ -240,7 +252,9 @@
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
     state.activeEvent = id;
-    panelExpanded = true;
+    // Selecting a year must not immediately cover the sphere with a dossier.
+    // The visitor explicitly expands "Подробнее" when ready to read.
+    panelExpanded = false;
     renderPanel();
     renderBeacons();
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
