@@ -52,7 +52,8 @@ html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-for
   border:1px solid #303030 !important;box-shadow:none !important;
   color:#f5f5f5;
 }
-.screen[data-screen="creator"] :is(.studio-badge i,.studio-status-line.busy::before){
+.screen[data-screen="creator"] .studio-badge i,
+.screen[data-screen="creator"] .studio-status-line.busy::before{
   background:#ededed !important;box-shadow:none !important;
 }
 .screen[data-screen="creator"] :is(.studio-segment button.active,.studio-style-row button.active,.brand-pack-segment button.active,.brand-pack-motion button.active){
