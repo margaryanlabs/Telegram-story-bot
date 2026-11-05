@@ -23,6 +23,7 @@ function setup(initial=[]) {
   const elements=new Map(ids.map(id=>[id,node()]));
   const arrows=['left','right','up','down'].map(d=>{const el=node();el.dataset.vp2048=d;return el;});
   const root={
+    dataset:{},
     classList:{contains:()=>true},
     querySelector:s=>elements.get(s)||null,
     querySelectorAll:s=>s==='[data-vp-2048]'?arrows:[],
@@ -36,7 +37,7 @@ function setup(initial=[]) {
   };
   const window={localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)}};
   runInNewContext(js,{document,window,Math,Set});
-  return {elements,arrows,keyboard,storage};
+  return {elements,arrows,keyboard,storage,root};
 }
 test('Tic Tac Toe starts correctly, bot replies, reset clears board',()=>{
   const ui=setup(), grid=ui.elements.get('#vpTttGrid');
@@ -109,6 +110,17 @@ test('keyboard arrows never hijack page or Snake; only the open 2048 dialog owns
   assert.equal(key('BODY'),1,'active 2048 owns only its dialog arrow input');
   grid.closest=()=>null;
   assert.equal(key('BODY'),0,'after closing modal, keyboard is released');
+});
+
+test('V9 inline 2048 captures arrows only when selected, without a modal',()=>{
+  const ui=setup(),grid=ui.elements.get('#vp2048Grid');
+  grid.closest=()=>null;
+  const key=()=>{let count=0;ui.keyboard.keydown({key:'ArrowLeft',target:{tagName:'BODY'},preventDefault(){count++;}});return count;};
+  assert.equal(key(),0);
+  ui.root.dataset.v9ActiveGame='2048';
+  assert.equal(key(),1);
+  ui.root.dataset.v9ActiveGame='snake';
+  assert.equal(key(),0);
 });
 
 test('2048 undo restores the exact previous board and score without deleting a record',()=>{
