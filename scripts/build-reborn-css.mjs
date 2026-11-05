@@ -22,6 +22,16 @@ html#vetogram.vetogram-noir [hidden]:not([hidden="until-found"]) {
   display: none !important;
 }
 
+/* Sensitive controls also need an ID-specific guard: historical
+   selectors may carry multiple IDs and would otherwise outrank the
+   document-wide [hidden] rule despite being earlier in cascade order. */
+html#vetogram.vetogram-noir #telegramMirror #telegramThreadOpenNative[hidden],
+html#vetogram.vetogram-noir #sheet #viewerQrImage[hidden],
+html#vetogram.vetogram-noir #sheet #viewerCountryPicker[hidden],
+html#vetogram.vetogram-noir #telegramMirror #viewerPendingLoginNotice[hidden] {
+  display: none !important;
+}
+
 /* Mobile chat header keeps finger-sized controls even with legacy 39px
    overrides. Redundant Archive and Home header actions are already hidden
    by the actual RB8 mobile layout, preserving room on 320px displays. */
