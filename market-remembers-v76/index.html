@@ -2589,6 +2589,7 @@ void main(){
   const coreFragment=`precision mediump float;
 varying mediump vec3 vN;varying mediump vec3 vObject;
 uniform mediump float uTime;uniform float uMotion;uniform mediump float uPulse;uniform vec3 uFocus;
+uniform mediump float uQuality;
 float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
 void main(){
  vec3 N=normalize(vN),L=normalize(vec3(-.53,.70,1.12)),H=normalize(L+vec3(0.,0.,1.));
@@ -2621,19 +2622,23 @@ void main(){
  float river=abs(sin(vObject.y*6.8+vObject.x*5.9+
                      sin(vObject.z*5.1)*1.45));
  float brightVein=pow(1.-river,5.)*(.20+.80*nebulaBody);
- float flank=.5+.5*sin(vObject.z*10.3+vObject.x*6.2-
-                        sin(vObject.y*8.4)*.85);
- float microCloud=smoothstep(.52,.91,flank)*nebulaBody;
  float illumination=.28+.72*light;
  material+=vec3(.055,.126,.155)*nebulaBody*(.38+.62*fill);
- material+=vec3(.065,.192,.230)*microCloud*illumination*.69;
- material+=vec3(.145,.340,.395)*brightVein*illumination*.86;
- float amberKnot=pow(max(dot(normalize(vObject),
-                             normalize(vec3(.26,.28,.92))),0.),18.);
- float cyanKnot=pow(max(dot(normalize(vObject),
-                            normalize(vec3(-.40,-.12,.91))),0.),16.);
- material+=vec3(.29,.191,.099)*amberKnot*nebulaBody*.79;
- material+=vec3(.120,.255,.310)*cyanKnot*brightVein*.74;
+ material+=vec3(.145,.340,.395)*brightVein*illumination*.92;
+ // Auto/ECO on Android keeps the core cyan filaments, sharp rim and warm
+ // sunlight but skips secondary knots and fine turbulence for frame budget.
+ if(uQuality>.5){
+   float flank=.5+.5*sin(vObject.z*10.3+vObject.x*6.2-
+                          sin(vObject.y*8.4)*.85);
+   float microCloud=smoothstep(.52,.91,flank)*nebulaBody;
+   float amberKnot=pow(max(dot(normalize(vObject),
+                                normalize(vec3(.26,.28,.92))),0.),18.);
+   float cyanKnot=pow(max(dot(normalize(vObject),
+                               normalize(vec3(-.40,-.12,.91))),0.),16.);
+   material+=vec3(.065,.192,.230)*microCloud*illumination*.69;
+   material+=vec3(.29,.191,.099)*amberKnot*nebulaBody*.79;
+   material+=vec3(.120,.255,.310)*cyanKnot*brightVein*.74;
+ }
  material+=vec3(.045,.086,.105)*filament*.085;
  // Optical depth: cool edge is continuous; warm glint is localized to
  // the illuminated rim (not a white halo covering the entire UI).
