@@ -54,4 +54,8 @@ The previous Profile view was only a basic five-button list, and account flows h
 - [ ] Confirm destructive archival purge still requires explicit typed confirmation on a disposable test account.
 - [ ] Merge only after real QA; PR remains Draft.
 
+## Exact staging attempt after RB11
+
+A new GitHub-source deployment was attempted for the **review branch SHA `f9f7ec06a05f7d5ab7b9209d1099f35e2cddd66f`**, targeting Vercel project `veto` under `labsmargaryan@gmail.com`. It was a **preview** request (API default; never production). Vercel returned **HTTP 402** with `api-deployments-free-per-day` (over 100 API deployments/day), `retryAfter: 86400`. A first attempt with explicit `target:preview` returned HTTP 400 because this API only permits production, staging or a custom environment when that optional parameter is supplied. Neither created a deployment. The existing Render workspace reports **25 services**, at the prior Hobby service cap. No RB11 staging URL exists.
+
 No live credentials, accounts, chat messages, user data or production services were modified.
