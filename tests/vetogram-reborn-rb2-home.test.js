@@ -53,6 +53,8 @@ test('RB2 main nav has four equal tracks on desktop and mobile without deleting 
   assert.match(studio,/data-screen="play"/);
   assert.match(studio,/data-screen="profile"/);
   assert.match(studio,/id="profileButton"/);
+  assert.match(app,/data-sheet-action="open-profile"/);
+  assert.match(app,/if \(action === 'open-profile'\) \{\s*closeSheet\(\);\s*switchScreen\('profile'\);/);
 });
 
 test('RB2 respects chosen chat backgrounds and optional light themes',()=>{
