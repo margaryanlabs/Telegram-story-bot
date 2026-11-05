@@ -67,7 +67,13 @@
   }
   // Native dialog close events can arrive after a new selection was opened.
   // Do not clear the newly selected bubble if that newer dialog is open.
-  menu.addEventListener('close',()=>{if(!menu.open)clearSelection();});
+  function notifyMessageActionsChanged(){
+    window.dispatchEvent(new CustomEvent('vetogram:message-actions-view-changed'));
+  }
+  menu.addEventListener('close',()=>{
+    if(!menu.open)clearSelection();
+    notifyMessageActionsChanged();
+  });
   function dismiss(){ if(menu.open)menu.close(); else clearSelection(); }
   close.addEventListener('click',dismiss);
   menu.addEventListener('click',event=>{if(event.target===menu)dismiss();});
@@ -120,6 +126,7 @@
     bubble.classList.add('v4-message-selected');
     if(typeof menu.showModal==='function')menu.showModal();
     else {dismiss();return false;}
+    notifyMessageActionsChanged();
     (buttons.reply.disabled?buttons.copy.disabled?buttons.archive:buttons.copy:buttons.reply).focus();
     try{tg?.HapticFeedback?.impactOccurred?.('light');}catch{}
     return true;
