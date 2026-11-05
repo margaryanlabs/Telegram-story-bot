@@ -56,8 +56,8 @@
   const THEME_NAMES = Object.freeze({ Risk: 'Управление риском', Discipline: 'Дисциплина', FOMO: 'Страх упустить', Patience: 'Терпение' });
   const TITLES = Object.freeze({
     people: { title: '', subtitle: '' },
-    events: { title: 'THE MARKET HAS A MEMORY.', subtitle: 'Реальные события, даты и источники. Каждая точка — урок финансовой истории.' },
-    connections: { title: 'EVERY EVENT LEAVES A TRACE.', subtitle: 'Связи между эпохами и темами человеческих решений. Не причинная модель.' }
+    events: { title: 'EVENT CORE.', subtitle: 'Кризисы. Системные шоки. Решения, изменившие рынки. Исследуй финансовую историю.' },
+    connections: { title: 'THE FAULT LINES.', subtitle: 'Повторяющиеся механизмы рыночных кризисов. Тематические связи, а не доказательства причинности.' }
   });
   const state = { mode: 'people', activeEvent: '2008' };
   const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
