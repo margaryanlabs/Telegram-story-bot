@@ -784,6 +784,43 @@ html#vetogram.vetogram-noir .screen[data-screen="privacy"]
 }
 
 
+/* Severity is owned by privacy.js: ready/warn are emitted only from
+   actual settings, confirmed Business connection and degraded archive state.
+   A neutral "Проверяю" never receives the green treatment. */
+html#vetogram.vetogram-noir .screen[data-screen="privacy"] .ghost-command-copy .status-pill.ready{
+  color:#9be0c8 !important;
+  border-color:rgba(112,216,183,.42) !important;
+  background:rgba(50,137,110,.15) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="privacy"] .ghost-command-copy .status-pill.warn:not(.ready){
+  color:#f1c39a !important;
+  border-color:rgba(230,177,121,.38) !important;
+  background:rgba(166,112,57,.14) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="privacy"] .veto-business-journey.ready .veto-business-state{
+  color:#a9e7cc !important;
+  background:rgba(60,143,109,.14) !important;
+  border-color:rgba(112,216,183,.33) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="privacy"] .ghost-access-strip.ready {
+  border-color:rgba(112,216,183,.31) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="privacy"] .ghost-enable-all:disabled {
+  opacity:.72 !important;
+  cursor:default !important;
+  box-shadow:none !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="privacy"] .ghost-command-copy .status-pill.ready,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="privacy"] .veto-business-journey.ready .veto-business-state {
+  color:#17664d !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="privacy"] .ghost-command-copy .status-pill.warn:not(.ready){
+  color:#8d551d !important;
+}
+
 /* RB10B — the archived Smart Inbox is the same privacy journey, not a
    second unrelated app. Its data, priority ranking and read status remain
    supplied by the unchanged real Telegram archive controller. */
