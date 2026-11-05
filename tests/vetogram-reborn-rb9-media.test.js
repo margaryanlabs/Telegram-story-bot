@@ -28,12 +28,12 @@ function balanced(css){
   assert.equal(depth,0,'unclosed CSS scope');
 }
 
-test('real host loads RB8 then RB9 stylesheet in strict cascade order',()=>{
-  const at=html.indexOf('/vetogram-reborn-atelier.css?v=');
-  const rb9=html.indexOf('/vetogram-reborn-media.css?v=');
-  assert.ok(at>0&&rb9>at);
-  assert.ok(html.indexOf('</head>')>rb9);
-  assert.equal((html.match(/vetogram-reborn-media\.css/g)||[]).length,1);
+test('real host loads one bundled RB8–RB11 stylesheet after foundation',()=>{
+  const foundation=html.indexOf('/vetogram-reborn-foundation.css?v=');
+  const bundle=html.indexOf('/vetogram-reborn-ui.css?v=');
+  assert.ok(foundation>0&&bundle>foundation);
+  assert.ok(html.indexOf('</head>')>bundle);
+  assert.equal((html.match(/vetogram-reborn-ui\.css/g)||[]).length,1);
 });
 
 test('four real Media destinations remain wired to existing buttons',()=>{
