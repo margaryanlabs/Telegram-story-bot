@@ -629,3 +629,52 @@ html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
 html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-name{
   color:#171717 !important;
 }
+
+/* Source-only global series get an intentional monochrome typographic cover.
+   This is not a fabricated official poster or a promise of streaming. */
+.cinema-shell .cinema-world-series-art{
+  position:relative !important;
+  background:
+    repeating-linear-gradient(140deg,rgba(255,255,255,.026) 0 1px,transparent 1px 19px),
+    radial-gradient(ellipse at 80% 0%,#383838,#101010 66%) !important;
+  border:1px solid #3a3a3a !important;
+}
+.cinema-shell .cinema-world-series-art::before{
+  content:"V / SERIES" !important;
+  position:absolute !important;top:46% !important;right:13px !important;
+  left:auto !important;width:auto !important;height:auto !important;
+  font-size:clamp(25px,4vw,50px) !important;
+  font-weight:900 !important;letter-spacing:-.08em !important;
+  color:rgba(255,255,255,.065) !important;
+  background:none !important;transform:translateY(-50%) rotate(-8deg) !important;
+  pointer-events:none !important;
+}
+.cinema-shell .cinema-world-series-art .cinema-card-art-title{
+  z-index:4 !important;
+  left:15px !important;right:14px !important;bottom:17px !important;
+  font-size:clamp(21px,2.6vw,29px) !important;
+  font-weight:820 !important;letter-spacing:-.045em !important;
+  line-height:1.04 !important;-webkit-line-clamp:3 !important;
+  text-shadow:0 3px 20px #000 !important;
+}
+.cinema-shell .cinema-world-series-art .cinema-card-art-badge{
+  font-size:9px !important;letter-spacing:.09em !important;
+  max-width:calc(100% - 22px) !important;
+}
+.cinema-shell #cinemaSeriesPopularRail{
+  display:flex !important;overflow-x:auto !important;
+  gap:13px !important;scroll-snap-type:x proximity !important;
+}
+.cinema-shell #cinemaSeriesPopularRail .cinema-card{
+  flex:0 0 clamp(200px,25vw,270px) !important;
+  width:clamp(200px,25vw,270px) !important;
+  scroll-snap-align:start !important;
+}
+.cinema-shell #cinemaSeriesPopularRail .cinema-card-art{
+  aspect-ratio:16/10 !important;
+}
+@media(prefers-reduced-motion:reduce){
+  .cinema-shell .cinema-world-series-art::before{
+    transition:none !important;
+  }
+}
