@@ -2430,80 +2430,7 @@
             <span class="v72-play-rim">PRESS PLAY · V / 07</span>
           </div>
         </section>
-        <section class="v74-local-panel" id="vpLocalStats" aria-label="Личные игровые результаты на этом устройстве">
-          <div class="v74-local-head">
-            <div><span class="v74-overline">PLAY / YOUR RECORDS</span><h2>Твои рекорды<span>.</span></h2></div>
-            <span class="v74-local-hint">Только на этом устройстве · нажми на игру</span>
-          </div>
-          <div class="v74-score-rail" role="group" aria-label="Шесть локальных игровых рекордов">
-            <button type="button" class="v74-score" data-v74-launch="reaction" aria-label="Играть в Реакцию">
-              <span class="v74-score-symbol">◎</span><span class="v74-score-name">Реакция</span><strong id="v74ScoreReaction">—</strong><small>ЛУЧШИЕ МС</small>
-            </button>
-            <button type="button" class="v74-score" data-v74-launch="pairs" aria-label="Играть в Четыре пары">
-              <span class="v74-score-symbol">♣</span><span class="v74-score-name">Четыре пары</span><strong id="v74ScorePairs">—</strong><small>МЕНЬШЕ ХОДОВ</small>
-            </button>
-            <button type="button" class="v74-score" data-v74-launch="tic" aria-label="Играть в Крестики-нолики">
-              <span class="v74-score-symbol">✕</span><span class="v74-score-name">Крестики-нолики</span><strong id="v74ScoreTic">0</strong><small>ПОБЕДЫ</small>
-            </button>
-            <button type="button" class="v74-score" data-v74-launch="2048" aria-label="Играть в 2048">
-              <span class="v74-score-symbol">▦</span><span class="v74-score-name">2048</span><strong id="v74Score2048">0</strong><small>ОЧКИ</small>
-            </button>
-            <button type="button" class="v74-score" data-v74-launch="mines" aria-label="Играть в Сапёр">
-              <span class="v74-score-symbol">⚑</span><span class="v74-score-name">Сапёр</span><strong id="v74ScoreMines">0</strong><small>ПОБЕДЫ</small>
-            </button>
-            <button type="button" class="v74-score" data-v74-launch="snake" aria-label="Играть в Змейку">
-              <span class="v74-score-symbol">◉</span><span class="v74-score-name">Змейка</span><strong id="v74ScoreSnake">0</strong><small>ОЧКИ</small>
-            </button>
-          </div>
-        </section>
-        <div class="vp-catalog-tools" aria-label="Поиск по игровому каталогу">
-          <label class="vp-search"><span aria-hidden="true">⌕</span><input type="search" id="vpGameSearch" placeholder="Поиск игр" aria-label="Поиск игр" autocomplete="off" maxlength="80" /></label>
-          <div class="vp-filters" role="group" aria-label="Фильтр игр">
-            <button type="button" class="vp-filter is-selected" data-vp-filter="all" aria-pressed="true">Все</button>
-            <button type="button" class="vp-filter" data-vp-filter="online" aria-pressed="false">В разработке</button>
-            <button type="button" class="vp-filter" data-vp-filter="offline" aria-pressed="false">Без сети</button>
-            <button type="button" class="vp-filter" data-vp-filter="cards" aria-pressed="false">Карточные</button>
-            <button type="button" class="vp-filter" data-vp-filter="favorites" aria-pressed="false">★ Избранное</button>
-          </div>
-          <p class="vp-no-results" id="vpNoResults" role="status" hidden>Пока таких игр нет. Попробуй другой запрос.</p>
-          <div class="vp-share-panel" id="vpSharePanel" hidden aria-label="Поделиться выбранной игрой">
-            <label for="vpShareUrl">Ссылка на игру</label>
-            <div class="vp-share-line">
-              <input type="text" id="vpShareUrl" readonly aria-label="Ссылка на игру Vetogram" />
-              <button type="button" class="vp-button" id="vpCopyShare">Копировать</button>
-              <button type="button" class="vp-share-close" id="vpCloseShare" aria-label="Закрыть ссылку">×</button>
-            </div>
-            <p id="vpShareNotice" role="status">Ссылка готова.</p>
-          </div>
-          <p class="vp-catalog-status" id="vpStoreStatus" role="status" aria-live="polite"></p>
-        </div>
-        <div class="vp-section-head">
-          <div><h2>Скоро в клубе</h2><p>Будущие сетевые игры — честно показываем статус.</p></div>
-          <span>01 / КЛУБ</span>
-        </div>
-        <article class="vp-featured" data-vp-game="blotenq" aria-label="Армянский блот BLOTENQ">
-          <div class="vp-blot-art" aria-hidden="true">
-            <span class="vp-blot-suit first">♠</span><strong>ԲԼՈՏ<i>ԵՆՔ?</i></strong><span class="vp-blot-suit last">♥</span>
-          </div>
-          <div class="vp-feature-copy">
-            <span class="vp-flag">НАША ИГРА · ARMENIAN CARD CLUB</span>
-            <h3>BLOTENQ?</h3>
-            <p>Армянский блот: карты, ставки, команды и турниры. Игра разрабатывается в отдельном репозитории, чтобы не затрагивать работу чатов Vetogram.</p>
-            <span class="vp-button vp-button-soon" role="status" aria-label="BLOTENQ: встроенная версия в разработке">Скоро внутри Vetogram</span>
-            <small>Игровой движок пока не подключён · кнопки запуска нет</small>
-          </div>
-        </article>
-        <article class="vp-who" data-vp-game="who" aria-label="WHO? Group DNA — социальная игра">
-          <div class="vp-who-mark" aria-hidden="true">WHO<span>?</span></div>
-          <div class="vp-who-copy">
-            <span class="vp-flag">НАША ИГРА · СОЦИАЛЬНЫЙ РЕЖИМ</span>
-            <h3>WHO? / Group DNA</h3>
-            <p>Собери друзей в комнату, голосуй анонимно и узнай, что они думают друг о друге.</p>
-            <span class="vp-button vp-button-soon" role="status" aria-label="WHO? — встроенная версия в разработке">В разработке для Vetogram</span>
-          </div>
-        </article>
-
-        <div class="vp-section-head">
+<div class="vp-section-head">
           <div><h2>Выбери игру</h2><p>Играй внутри приложения — не переходя на сторонние сайты.</p></div>
           <span>02 / АРКАДА</span>
         </div>
@@ -2584,6 +2511,81 @@
             <div class="vp-mini-stat" id="vpSnakeStatus" role="status" aria-live="polite">Нажми «Начать игру».</div>
           </article>
         </div>
+
+        <section class="v74-local-panel" id="vpLocalStats" aria-label="Личные игровые результаты на этом устройстве">
+          <div class="v74-local-head">
+            <div><span class="v74-overline">PLAY / YOUR RECORDS</span><h2>Твои рекорды<span>.</span></h2></div>
+            <span class="v74-local-hint">Только на этом устройстве · нажми на игру</span>
+          </div>
+          <div class="v74-score-rail" role="group" aria-label="Шесть локальных игровых рекордов">
+            <button type="button" class="v74-score" data-v74-launch="reaction" aria-label="Играть в Реакцию">
+              <span class="v74-score-symbol">◎</span><span class="v74-score-name">Реакция</span><strong id="v74ScoreReaction">—</strong><small>ЛУЧШИЕ МС</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="pairs" aria-label="Играть в Четыре пары">
+              <span class="v74-score-symbol">♣</span><span class="v74-score-name">Четыре пары</span><strong id="v74ScorePairs">—</strong><small>МЕНЬШЕ ХОДОВ</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="tic" aria-label="Играть в Крестики-нолики">
+              <span class="v74-score-symbol">✕</span><span class="v74-score-name">Крестики-нолики</span><strong id="v74ScoreTic">0</strong><small>ПОБЕДЫ</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="2048" aria-label="Играть в 2048">
+              <span class="v74-score-symbol">▦</span><span class="v74-score-name">2048</span><strong id="v74Score2048">0</strong><small>ОЧКИ</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="mines" aria-label="Играть в Сапёр">
+              <span class="v74-score-symbol">⚑</span><span class="v74-score-name">Сапёр</span><strong id="v74ScoreMines">0</strong><small>ПОБЕДЫ</small>
+            </button>
+            <button type="button" class="v74-score" data-v74-launch="snake" aria-label="Играть в Змейку">
+              <span class="v74-score-symbol">◉</span><span class="v74-score-name">Змейка</span><strong id="v74ScoreSnake">0</strong><small>ОЧКИ</small>
+            </button>
+          </div>
+        </section>
+        <div class="vp-catalog-tools" aria-label="Поиск по игровому каталогу">
+          <label class="vp-search"><span aria-hidden="true">⌕</span><input type="search" id="vpGameSearch" placeholder="Поиск игр" aria-label="Поиск игр" autocomplete="off" maxlength="80" /></label>
+          <div class="vp-filters" role="group" aria-label="Фильтр игр">
+            <button type="button" class="vp-filter is-selected" data-vp-filter="all" aria-pressed="true">Все</button>
+            <button type="button" class="vp-filter" data-vp-filter="online" aria-pressed="false">В разработке</button>
+            <button type="button" class="vp-filter" data-vp-filter="offline" aria-pressed="false">Без сети</button>
+            <button type="button" class="vp-filter" data-vp-filter="cards" aria-pressed="false">Карточные</button>
+            <button type="button" class="vp-filter" data-vp-filter="favorites" aria-pressed="false">★ Избранное</button>
+          </div>
+          <p class="vp-no-results" id="vpNoResults" role="status" hidden>Пока таких игр нет. Попробуй другой запрос.</p>
+          <div class="vp-share-panel" id="vpSharePanel" hidden aria-label="Поделиться выбранной игрой">
+            <label for="vpShareUrl">Ссылка на игру</label>
+            <div class="vp-share-line">
+              <input type="text" id="vpShareUrl" readonly aria-label="Ссылка на игру Vetogram" />
+              <button type="button" class="vp-button" id="vpCopyShare">Копировать</button>
+              <button type="button" class="vp-share-close" id="vpCloseShare" aria-label="Закрыть ссылку">×</button>
+            </div>
+            <p id="vpShareNotice" role="status">Ссылка готова.</p>
+          </div>
+          <p class="vp-catalog-status" id="vpStoreStatus" role="status" aria-live="polite"></p>
+        </div>
+        <div class="vp-section-head">
+          <div><h2>Скоро в клубе</h2><p>Будущие сетевые игры — честно показываем статус.</p></div>
+          <span>01 / КЛУБ</span>
+        </div>
+        <article class="vp-featured" data-vp-game="blotenq" aria-label="Армянский блот BLOTENQ">
+          <div class="vp-blot-art" aria-hidden="true">
+            <span class="vp-blot-suit first">♠</span><strong>ԲԼՈՏ<i>ԵՆՔ?</i></strong><span class="vp-blot-suit last">♥</span>
+          </div>
+          <div class="vp-feature-copy">
+            <span class="vp-flag">НАША ИГРА · ARMENIAN CARD CLUB</span>
+            <h3>BLOTENQ?</h3>
+            <p>Армянский блот: карты, ставки, команды и турниры. Игра разрабатывается в отдельном репозитории, чтобы не затрагивать работу чатов Vetogram.</p>
+            <span class="vp-button vp-button-soon" role="status" aria-label="BLOTENQ: встроенная версия в разработке">Скоро внутри Vetogram</span>
+            <small>Игровой движок пока не подключён · кнопки запуска нет</small>
+          </div>
+        </article>
+        <article class="vp-who" data-vp-game="who" aria-label="WHO? Group DNA — социальная игра">
+          <div class="vp-who-mark" aria-hidden="true">WHO<span>?</span></div>
+          <div class="vp-who-copy">
+            <span class="vp-flag">НАША ИГРА · СОЦИАЛЬНЫЙ РЕЖИМ</span>
+            <h3>WHO? / Group DNA</h3>
+            <p>Собери друзей в комнату, голосуй анонимно и узнай, что они думают друг о друге.</p>
+            <span class="vp-button vp-button-soon" role="status" aria-label="WHO? — встроенная версия в разработке">В разработке для Vetogram</span>
+          </div>
+        </article>
+
+        
         <dialog id="vpGameDialog" class="vp-game-dialog" aria-label="Игровой режим">
           <header class="vp-game-dialog-header">
             <span>VETOGRAM / PLAY</span>
