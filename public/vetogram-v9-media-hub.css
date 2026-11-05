@@ -127,3 +127,21 @@ html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen
     transition:none !important;animation:none !important;transform:none !important;
   }
 }
+
+/* The new cards also honor the owner's true white theme. */
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v72-media-grid .v72-media-card{
+  background:#f5f5f5 !important;border-color:#d6d6d6 !important;
+  color:#151515 !important;box-shadow:0 12px 26px rgba(0,0,0,.07) !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v72-media-grid .v72-card-art{
+  background:#e2e2e2 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v72-media-grid .v72-card-footer strong{
+  color:#171717 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v72-media-grid :is(.v72-card-number,.v72-card-footer small,.v72-card-arrow){
+  color:#424242 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v72-media-grid .v72-card-cta{
+  background:#e4e4e4 !important;color:#202020 !important;border-color:#c6c6c6 !important;
+}
