@@ -50,7 +50,7 @@ function showPage(page){
  if(page==="mixter")document.dispatchEvent(new CustomEvent("vetogram:mixter-open"));
 }
 $$("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
-$("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>{showPage("catalog");window.VetogramCatalog?.selectPreset?.("ru")};
+$("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>{showPage("catalog");window.VetogramCatalog?.selectPreset?.("world")};
 $("themeSwitch").onclick=()=>{state.mood=state.mood==="ember"?"aurora":"ember";document.documentElement.dataset.ambient=state.mood;persist();send(state.mood==="aurora"?"Атмосфера Aurora":"Атмосфера Ember")};
 const songId=x=>String(x?.id||"");
 function favorited(t){return state.liked.some(x=>x.id===songId(t))}
@@ -302,7 +302,9 @@ async function loadTrending(){
  try{const r=await apiJson("https://api.audius.co/v1/tracks/trending?limit=12",abort.signal);
  if(state.activeController!==abort)return;
  state.tracks=unique((Array.isArray(r?.data)?r.data:[]).map(mapAudius).filter(Boolean));renderHome();
- }catch{if(state.activeController===abort){$("homeTracks").replaceChildren(dom("div","empty-state","Музыка сейчас не отвечает. Попробуй поиск или свои файлы."));}}
+ document.dispatchEvent(new CustomEvent("vetogram:music-trending",{detail:{status:"ready",count:state.tracks.length}}));
+ }catch{if(state.activeController===abort){$("homeTracks").replaceChildren(dom("div","empty-state","Музыка сейчас не отвечает. Попробуй поиск или свои файлы."));
+ document.dispatchEvent(new CustomEvent("vetogram:music-trending",{detail:{status:"error",count:0}}));}}
  finally{clearTimeout(timer)}
 }
 function renderHome(){paintRows("homeTracks",unique([...state.local,...state.tracks]),"home","Музыка пока не загрузилась. Попробуй поиск или добавь свою запись.")}
@@ -654,6 +656,7 @@ function getLibrary(){
  return [...selected.values()].slice(0,250);
 }
 window.VetogramMusic=Object.freeze({showPage,search:runSearch,play:playTrack,openSavedById,getLibrary,
+ trending:()=>state.tracks.slice(),refreshTrending:loadTrending,
  generation:()=>playbackGeneration,now:()=>state.now,queue:()=>state.queue.slice(),local:()=>state.local.slice(),liked:()=>state.liked.slice(),metadata:()=>state.metadata.slice(),
  importList,removeLocal,moveLocal,addStreams,removeStream,moveStream,notifyLibrary,streams:()=>state.streams.slice(),toggleLike,
  state:()=>({page:state.page,now:state.now?.title||null,local:state.local.length,liked:state.liked.length,imported:state.metadata.length})});
