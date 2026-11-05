@@ -387,3 +387,77 @@
     transform:none !important;
   }
 }
+
+
+/* Real parent-app appearance is supplied by vetogram-media-context.js.
+   Preserve Pearl/Linen inside the iframe rather than forcing the new dark
+   catalog material over the explicit light-theme selection. */
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+:is(#app.app,.cinema-shell,.books-main) {
+  --vm9-ink:#243852;
+  --vm9-muted:#4d627e;
+  --vm9-dim:#60748d;
+  --vm9-line:rgba(43,79,125,.19);
+  --vm9-accent:#375f95;
+  --vm9-bg:#f7f8fb;
+  --vm9-panel:#fff;
+  --vm9-raised:#edf2f9;
+  --vm9-shadow:0 12px 30px rgba(34,60,96,.07);
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+#app.app :is(.sidebar,.topbar,.mood-card,.track,.track-row,.song-row,.licensed-track,.v78-action) {
+  color:var(--vm9-ink) !important;
+  background:var(--vm9-panel) !important;
+  border-color:var(--vm9-line) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+#app.app .sidebar .nav-item.active{
+  color:var(--vm9-accent) !important;
+  background:rgba(65,110,173,.12) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+#app.app .hero,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell .cinema-hero,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main .hero.hero-veto{
+  background:linear-gradient(115deg,#fff,#edf3fb) !important;
+  border-color:var(--vm9-line) !important;
+  color:var(--vm9-ink) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+#app.app .hero :is(h1,h2,p),
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell .cinema-hero :is(h1,p),
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main .hero.hero-veto :is(h1,.hero-lead){
+  color:var(--vm9-ink) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell :is(.cinema-card,.cinema-search,.cinema-tab),
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main :is(.book,.search,.continue-shelf) {
+  background:var(--vm9-panel) !important;
+  border-color:var(--vm9-line) !important;
+  color:var(--vm9-ink) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell .cinema-tab.active{
+  color:var(--vm9-accent) !important;
+  background:rgba(81,125,180,.12) !important;
+  border-color:rgba(51,95,149,.28) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main .hero.hero-veto h1 i{
+  color:#416d9f !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main .hero.hero-veto .hero-action-secondary,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell .cinema-secondary{
+  color:var(--vm9-ink) !important;
+  background:var(--vm9-raised) !important;
+  border-color:var(--vm9-line) !important;
+}
+/* The chapter reader's own [data-theme=light/sepia] and its personalization
+   UI are intentionally excluded from all of these selectors. */
