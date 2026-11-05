@@ -72,7 +72,7 @@
    if(!item)return;
    const year=document.getElementById('mhV16SignalYear'),name=document.getElementById('mhV16SignalName');
    if(year)year.textContent=item.year;
-   if(name)name.textContent=item.short;
+   if(name)name.textContent=item.short||item.name||'FINANCIAL EVENT';
  }
  function position(point,sceneRect,panelRect,expanded){
    const mode=app.dataset.mhMode;
