@@ -87,7 +87,7 @@ html#vetogram.vetogram-noir .v9-story-uncertain p{
 html#vetogram.vetogram-noir .v9-story-uncertain button{
   min-height:44px;max-width:100%;padding:10px 14px;
   background:#f4f4f4;color:#080808;border:1px solid #f4f4f4;
-  border-radius:10px;font:700 12px/1.4 inherit;cursor:pointer;
+  border-radius:10px;font-size:12px;font-weight:700;line-height:1.4;font-family:inherit;cursor:pointer;
 }
 html#vetogram.vetogram-noir .v9-story-uncertain button:focus-visible{
   outline:2px solid #fff;outline-offset:3px;
