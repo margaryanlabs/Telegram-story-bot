@@ -65,3 +65,18 @@ test('Maker controls are responsive, keyboard-visible, monochrome and reduced-mo
   assert.doesNotMatch(css,/#(?:7b66ff|5369ff|4f46e5)/i);
   assert.match(read('vetogram-v9-gif-maker.js'),/reduced\?\.matches/);
 });
+
+test('Sticker and emoji pack handoff uses official HTTPS Telegram links, never a wrong emoji-only scheme',()=>{
+  for(const name of ['studio-module.js','brand-pack.js']){
+    const source=read(name);
+    assert.match(source,/function openTelegramPack\(link\)/);
+    assert.match(source,/add\(\?:emoji\|stickers\)/);
+    assert.match(source,/tg\.openTelegramLink\(safe\)/);
+    assert.match(source,/window\.open\(safe,'_blank','noopener,noreferrer'\)/);
+    assert.doesNotMatch(source,/tg:\/\/addemoji\?set=/);
+  }
+  const html=read('studio.html');
+  assert.match(html,/id="studioOpenDirectButton" type="button">Открыть в Telegram/);
+  assert.match(html,/studio-module\.js\?v=20261106-v9-studio-01/);
+  assert.match(html,/brand-pack\.js\?v=20261106-v9-studio-01/);
+});
