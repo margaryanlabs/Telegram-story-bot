@@ -46,3 +46,25 @@
 ### First next step (overnight iteration 2)
 - Inspect Media home `v6MediaHome` actual markup, transitions and three Cinema/Music/Books routes, implement a completed real MEDIA HUB slice with tests, and check cinema source labels.
 - If Node test execution becomes available, run `node --test tests/vetogram-v9-world-cinema.test.js` and `npm run qa:preview:offline`, repair regressions, then review-only deploy via the existing isolated Render service with LIVE SHA/HTML/CSS/JS verification. Do not use the old live URL as proof of new changes.
+
+## 2026-11-05 21:00 Asia/Tbilisi — overnight iteration 2 (MEDIA HUB)
+
+**PR / branch**: #242, feature/vetogram-v9-monochrome-nav-20261105. **Verified code HEAD before checkpoint:** `6295c142e171ad3229ac7a69891aed0f46a06f24` (GitHub compare against that exact commit returned identical). Main/production/credentials/sessions untouched.
+
+### Completed in actual GitHub commits
+- `a3bddf91`: new `public/vetogram-v9-media-hub-core.js`. A dependency-free strict enum of three real categories (Music/Cinema/Books), last-opened category stored as **only the category name**, owner-scoped by signed Telegram initData + numeric ID or guest device scope. Storage exceptions fail closed. Optional cover art comes exclusively from already-saved, real music liked/book saved metadata and trusted HTTPS artwork hosts.
+- `35776b1d`, `1cc674c2`: new `public/vetogram-v9-media-hub.js`. Watches **actual** existing Universe module transitions via stage/title observer, rather than creating a second iframe/router. Offers last-category Continue when no real saved-item Continue shelf exists, calls `VetogramUniverse.open`, updates on identity/focus and suppresses repeated failed artwork requests. Music's persistent audio controller and all Telegram flows remain owned by their original modules.
+- `90daf04e`, `c41ca97e`: new standalone `public/vetogram-v9-media-hub.css`, after the generated CSS bundle. Real 3-column media grid (previous layout allocated 4 columns for 3 cards), mobile 2-column + wide book tile and narrow 1-column, accessible focus/reduced motion, high-contrast black and white/pearl themes, decorative art falls back safely if real saved covers fail.
+- `8307c81f`: wired new HTML/CSS/JS into `public/studio.html` without editing old bundle or changing any existing module route; added an initially hidden, accessible last-section resume pill; corrected fake 4-category index to 3.
+- `28e243b5`, `6295c142`: 9 new Node-native tests in `tests/vetogram-v9-media-hub.test.js` for route contract, cache identity, scoped storage, denied storage, artwork allowlist, real saved artwork, existing router preservation, CSS accessibility and simulated module open/back/identity switch.
+
+### Verification actually performed
+- Fetched fresh GitHub sources after writes. New core and UI parse in V8. Executed **7/7 isolated V8 core checks** for parse, scope isolation, enum validation, denied storage, HTTPS artwork host restrictions, real liked/book art. Executed **one simulated DOM navigation**: module title changes to Cinema -> category saved -> return to Hub -> Continue button calls existing Universe.open('cinema') -> owner switch hides previous owner's resume: PASS.
+- Static checks: exact three card routes, correct new script load order, responsive 3/2/1 CSS, CSS brace balance, light/reduced-motion selectors: PASS. This is **not** a complete browser screenshot or Node suite run.
+- `node --version` available locally, but authenticated GitHub repository checkout is **not available** in this runtime (container git ls-remote cannot resolve github.com). Thus `node --test tests/vetogram-v9-media-hub.test.js`, `npm test`, `npm run qa:preview:offline`, production build and Android WebView visual/interaction QA are **not yet verified**. Do not mark release ready or deploy the preview.
+- No new Render deployment; last confirmed isolated preview was V9.02 at `8a47b709dac5a63f46c598dc2d7556ad4ccb90af`, older than this branch. Existing source artwork is optional and depends on real saved music/book entries; no fabricated album/poster covers were inserted.
+
+### First next step
+1. Re-read PR HEAD and this checkpoint; inspect full Media Hub in a real browser when possible, especially iPhone/Android 360px, light theme and owner switch.
+2. Run actual Node tests and `qa:preview:offline` in a checkout or available CI, fix any failures. Only after successful gates consider isolated Render service `srv-dbjhvdmtlv9c73d9f3t0` with LIVE commit/HTML/CSS/JS verification.
+3. Next complete slice: Cinema detail/source cards or Music world-catalog hero using licensed metadata, not pirated media. Preserve no-fake-play rights gate.
