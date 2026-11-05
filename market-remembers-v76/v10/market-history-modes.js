@@ -219,6 +219,7 @@
     // A submode switch changes the research layer without unexpectedly
     // covering the observatory with a full-screen sheet.
     app.dataset.mhMode = mode;
+    app.classList.toggle('mh-v17-research-open',panelExpanded && mode !== 'people');
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
       const active = mode === 'people' ? btn.dataset.mhMode === 'people' : btn.dataset.mhMode === 'events';
       btn.classList.toggle('is-active',active);
