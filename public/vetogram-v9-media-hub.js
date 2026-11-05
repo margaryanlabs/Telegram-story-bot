@@ -19,6 +19,7 @@
    const current=title.textContent?.trim();
    return Object.keys(core.names).find(name=>core.names[name]===current)||'';
  };
+ const failedArtwork=new Set();
  let lastScope='';
  function refreshArtwork(){
    const current=context(),storage=store(),scope=core.scope(current);
@@ -30,12 +31,14 @@
        delete card.dataset.v9CoverUrl;
      }
      lastScope=scope;
+     failedArtwork.clear();
    }
    for(const card of cards){
      const name=card.dataset.v6Module;
      const art=card.querySelector('.v72-card-art');
      if(!art||!['music','books'].includes(name))continue;
-     const source=core.latestArt(storage,current,name);
+     const candidate=core.latestArt(storage,current,name);
+     const source=failedArtwork.has(candidate)?'':candidate;
      if(card.dataset.v9CoverUrl===source)continue;
      card.querySelector('.v9-media-source-cover')?.remove();
      card.classList.remove('v9-has-source-cover');
@@ -54,6 +57,7 @@
          card.classList.remove('v9-has-source-cover');
          card.dataset.v9CoverUrl=''; // Keep the original typographic fallback.
        }
+       failedArtwork.add(source);
        image.remove();
      },{once:true});
      image.src=source;
