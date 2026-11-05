@@ -4,12 +4,12 @@ test('V18.1 all four year probes face the camera and selected star is visible',a
   await page.setViewportSize({width:390,height:844});
   await page.goto('/?mm=events#universe');
   await expect(page.locator('#mhPlanetSurface')).toBeVisible();
-  await expect(page.locator('#mhEventLayer [data-mh-beacon]')).toHaveCount(4);
+  await expect(page.locator('#mhEventLayer [data-mh-beacon]')).toHaveCount(8);
   for(const id of ['1907','1987','2008','2020'])
     await expect(page.locator('#mhEventLayer [data-mh-beacon="'+id+'"]')).toHaveAttribute('aria-hidden','false',{timeout:6000});
   await expect(page.locator('#mhHistoryPanel')).not.toHaveClass(/is-expanded/);
   await expect(page.locator('#mhHistoryPanel > .mh-timeline')).toBeVisible();
-  await expect(page.locator('#mhHistoryPanel > .mh-timeline button')).toHaveCount(4);
+  await expect(page.locator('#mhHistoryPanel > .mh-timeline button')).toHaveCount(8);
 });
 
 test('V18.1 date selection restores focused visibility after deliberate orbit',async({page})=>{
