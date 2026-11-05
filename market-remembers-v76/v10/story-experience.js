@@ -53,7 +53,12 @@ window.MarketV10.reader = (() => {
       tag.textContent=window.MarketV10.data.provenance(record);
       const context=document.createElement('p');context.className='v113-story-context';
       const allChapters=window.MarketV10.data.chapters(record);
-      const availableChapters=allChapters.filter(chapter=>!chapter.missing);
+      const availableChapters=allChapters.filter(chapter=>!chapter.missing).map(chapter=>{
+        if(chapter.legacy)return {...chapter,label:'Исходная история',english:'Original account'};
+        if(chapter.key==='remains'&&!record.chapters?.remains)
+          return {...chapter,label:'Практическое правило',english:'Practical lesson'};
+        return chapter;
+      });
       const missingChapters=allChapters.filter(chapter=>chapter.missing);
       const category=window.MarketV10.data.themes[record.category]||String(record.category||'Опыт');
       context.textContent=[category,String(record.market||'').trim()].filter(Boolean).join(' · ')+' · '+availableChapters.length+' из 4 этапов описаны. Отсутствующие детали не выдуманы.';
@@ -206,6 +211,27 @@ window.MarketV10.reader = (() => {
     }
     const ending=article.querySelector('.v113-story-ending');
     if(ending)ending.after(actions);else article.append(actions);
+    // A PEOPLE story can lead into a genuine historical parallel without
+    // presenting an invented character as a participant in that event.
+    const parallelYear={Risk:'2008',Discipline:'1987',FOMO:'2020',Patience:'1907'}[record.category];
+    const parallel=window.MarketHistoryModes?.events.find(event=>event.id===parallelYear);
+    if(!record.local && record.type!=='legend' && parallel && typeof api.toEvent==='function'){
+      const bridge=document.createElement('section');bridge.className='v19-history-bridge';
+      bridge.setAttribute('aria-label','Историческая параллель');
+      const kicker=document.createElement('span');kicker.className='v19-bridge-kicker';
+      kicker.textContent='PEOPLE × EVENT CORE / ИСТОРИЧЕСКАЯ ПАРАЛЛЕЛЬ';
+      const year=document.createElement('strong');year.className='v19-bridge-year';
+      year.textContent=parallel.year;
+      const head=document.createElement('h3');head.textContent=parallel.name;
+      const note=document.createElement('p');
+      note.textContent='Похожая тема риска или поведения рынка. Это тематическая аналогия, а не свидетельство участия героя в историческом событии.';
+      const action=document.createElement('button');action.type='button';
+      action.textContent='Исследовать событие →';
+      action.setAttribute('aria-label','Перейти в EVENT CORE: '+parallel.name);
+      action.onclick=()=>api.toEvent(parallel.id);
+      bridge.append(kicker,year,head,note,action);
+      actions.before(bridge);
+    }
     if(record.local){
       const privacy=document.createElement('p');privacy.className='v10-quiet v12-private-note';
       privacy.textContent='Стабильный ID: '+record.id+'. Ссылка не переносит историю на другое устройство; для переноса используй экспорт JSON.';
