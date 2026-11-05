@@ -10,6 +10,7 @@ const read=path=>readFileSync(new URL('../public/'+path,import.meta.url),'utf8')
 const html=read('studio.html');
 const css=read('vetogram-reborn-privacy.css');
 const shell=read('app.js');
+const controller=read('privacy.js');
 const rb8=read('vetogram-reborn-atelier.css');
 const rb9=read('vetogram-reborn-media.css');
 
@@ -171,4 +172,25 @@ test('Design retains genuine archive warnings and does not relabel screen as liv
   assert.match(p,/Статус в сети/);
   assert.match(a,/Сохраняются только новые доступные сообщения/);
   assert.doesNotMatch(css,/content\s*:\s*["'](?:online|live|synced|verified|connected)/i);
+});
+
+
+test('Visual warning/success colors derive only from genuine controller readiness',()=>{
+  assert.ok(controller.includes("pill?.classList.toggle('ready', operational)"));
+  assert.ok(controller.includes("pill?.classList.toggle('warn', (!complete && !privacyState.loading) || privacyState.degraded)"));
+  assert.ok(controller.includes("const operational = complete && connectionLive && !privacyState.connection.error && !privacyState.degraded"));
+  assert.ok(css.includes('.status-pill.ready'));
+  assert.ok(css.includes('.status-pill.warn:not(.ready)'));
+  assert.ok(css.includes('.ghost-enable-all:disabled'));
+  assert.match(controller,/privacyState\.connection\.loaded/);
+});
+
+test('Permanent delete retains a typed explicit confirmation, not a one-click action',()=>{
+  assert.ok(controller.includes("async function clearArchive()"));
+  assert.ok(controller.includes('id="privacyConfirmDelete"'));
+  assert.ok(controller.includes('data-privacy-confirm-clear="1" disabled'));
+  assert.ok(controller.includes("Оставить копии"));
+  assert.ok(controller.includes("УДАЛИТЬ"));
+  assert.ok(controller.includes("tg.showConfirm")||controller.includes("window.confirm"));
+  assert.ok(css.includes('.screen[data-screen="chats"] #privacyClearButton'));
 });
