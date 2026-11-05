@@ -25,12 +25,12 @@ for(const size of sizes)test('composition '+size.width+'×'+size.height,async({p
 test('native WebGL compiles and sphere survives context loss',async({page})=>{
  await open(page,'/?qa=1');await expect(page.locator('#qaStatus')).toContainText('WEBGL1');await expect(page.locator('#qaStatus')).toContainText('Render errors: 0');
  await page.locator('#gl').evaluate(canvas=>canvas.getContext('webgl').getExtension('WEBGL_lose_context').loseContext());await expect(page.locator('#fallback')).toBeVisible();
- await page.locator('#qaPanel').evaluate(el=>el.hidden=true);await page.locator('#openSelected').click();await expect(page.locator('.v10-chapter')).toHaveCount(4);
+ await page.locator('#qaPanel').evaluate(el=>el.hidden=true);await page.locator('#openSelected').click();await expect(page.locator('.v10-chapter')).toHaveCount(2);
 });
 test('fallback without WebGL keeps reader usable',async({page})=>{
  await page.addInitScript(()=>{const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/.test(type)?null:get.call(this,type,...args);};});
  await reduced(page);await page.setViewportSize({width:390,height:844});await open(page);await expect(page.locator('#fallback')).toBeVisible();
- await page.locator('#dockOpen').click();await expect(page.locator('.v10-chapter')).toHaveCount(4);await page.locator('#closeDrawer').click();await expect(page.locator('#drawer')).toBeHidden();
+ await page.locator('#dockOpen').click();await expect(page.locator('.v10-chapter')).toHaveCount(2);await page.locator('#closeDrawer').click();await expect(page.locator('#drawer')).toBeHidden();
 });
 test('flight is skippable and omitted on repeat visits',async({page})=>{
  await page.setViewportSize({width:390,height:844});await open(page);await page.locator('#dockOpen').click();await expect(page.locator('#memoryDive')).toBeVisible();
@@ -44,8 +44,9 @@ test('Escape cancels passage and Back restores universe',async({page})=>{
  await reduced(page);await page.reload();await page.locator('#dockOpen').click();await page.goBack();await expect(page.locator('#drawer')).toBeHidden();await expect(page.locator('#dockAlias')).toContainText('NORTHSTAR');
 });
 test('chapters, constellation and keyboard modal',async({page})=>{
- await reduced(page);await page.setViewportSize({width:390,height:844});await open(page,'/#story/1');await expect(page.locator('.v10-chapter')).toHaveCount(4);
- await expect(page.locator('[data-chapter=decision]')).toContainText('не описан');await page.locator('[data-v10-chapter="3"]').click();await expect(page.locator('[data-v10-chapter="3"]')).toHaveAttribute('aria-current','step');
+ await reduced(page);await page.setViewportSize({width:390,height:844});await open(page,'/#story/1');await expect(page.locator('.v10-chapter')).toHaveCount(2);
+ await expect(page.locator('.v19-source-coverage')).toBeVisible();
+ await expect(page.locator('[data-chapter=decision]')).toHaveCount(0);await page.locator('[data-v10-chapter="1"]').click();await expect(page.locator('[data-v10-chapter="1"]')).toHaveAttribute('aria-current','step');
  await expect(page.locator('.v10-constellation-star')).toHaveCount(3);await page.locator('.v10-constellation-list summary').click();await expect(page.locator('.v10-constellation-list li')).toHaveCount(3);
  await page.locator('.v10-constellation-list li button').first().click();await expect(page.locator('#memoryTitle')).not.toHaveText('@NORTHSTAR');await expect(page.locator('.v78-thread-breadcrumb')).toBeVisible();
  for(let i=0;i<15;i++){await page.keyboard.press('Tab');expect(await page.locator('#drawer').evaluate(el=>el.contains(document.activeElement))).toBe(true);}
@@ -61,7 +62,7 @@ test('archive filter URL, search, sorting, locate and history',async({page})=>{
 test('all 30 stars have stable deep links and sourced legends keep attribution',async({page})=>{
  await reduced(page);await open(page,'/#archive');const ids=await page.locator('[data-story-id]').evaluateAll(els=>els.map(el=>el.dataset.storyId));expect(new Set(ids).size).toBe(30);
  for(const id of ids){await page.goto('/#story/'+encodeURIComponent(id));await expect(page.locator('.memory-experience')).toBeVisible();
-  if(await page.locator('#drawer').evaluate(el=>el.classList.contains('legend-detail')))await expect(page.locator('.legend-source a')).toHaveAttribute('href',/^https:/);else await expect(page.locator('.v10-chapter')).toHaveCount(4);
+  if(await page.locator('#drawer').evaluate(el=>el.classList.contains('legend-detail')))await expect(page.locator('.legend-source a')).toHaveAttribute('href',/^https:/);else await expect(page.locator('.v10-chapter')).toHaveCount(2);
  }
 });
 test('private creation, stable link, reload, JSON export and deletion',async({page})=>{
