@@ -16,9 +16,10 @@ const cosmos=document.createElement('div');cosmos.id='mhCrimsonCosmos';cosmos.cl
 cosmos.innerHTML='<div class="mh-crimson-nebula"></div><div class="mh-crimson-aureole"></div><span class="mh-crimson-orbit mh-crimson-orbit-one"></span><span class="mh-crimson-orbit mh-crimson-orbit-two"></span><div class="mh-crimson-vignette"></div>';
 stage.append(cosmos,wrapper);
 const header=document.createElement('header');header.id='mhEventHeader';header.className='mh-event-header';header.hidden=true;
-header.innerHTML='<div class="mh-event-brand"><span class="mh-event-sigil" aria-hidden="true">✦</span><div><strong>THE MARKET <em>REMEMBERS</em></strong><small>FINANCIAL HISTORY · EVENT UNIVERSE</small></div></div><button type="button" id="mhBackToPeople">↖ <span>PEOPLE UNIVERSE</span></button>';
+header.innerHTML='<div class="mh-event-brand"><span class="mh-event-sigil" aria-hidden="true">✦</span><div><strong>THE MARKET <em>REMEMBERS</em></strong><small>FINANCIAL HISTORY · EVENT UNIVERSE</small></div></div><nav class="mh-header-actions" aria-label="Управление миром событий"><button type="button" id="mhResetEventView" aria-label="Вернуть исторические метки на глобус" title="Вернуть исторические метки">⟳ <span>ЦЕНТР</span></button><button type="button" id="mhBackToPeople">↖ <span>PEOPLE UNIVERSE</span></button></nav>';
 app.append(header);
 $('mhBackToPeople').addEventListener('click',()=>window.MarketHistoryModes?.setMode('people'));
+$('mhResetEventView').addEventListener('click',()=>resetView());
 const veil=document.createElement('div');veil.id='mhWorldVeil';veil.className='mh-world-veil';veil.setAttribute('aria-hidden','true');app.append(veil);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const source=window.MHPeopleMirrorShaders;
@@ -28,6 +29,7 @@ let vertexBuffer=null,indexBuffer=null,particleBuffer=null,lineBuffer=null,index
 let w=1,h=1,dpr=1,planet={x:0,y:0,r:160},active=false,frame=0,last=0,lastMeasure=0,zoom=1;
 let yaw=0,pitch=.04,targetYaw=0,targetPitch=.04,focusUntil=0,selected=[-.14,.11,.984],pulseUntil=0,pointer=null;
 let uniformCache=new WeakMap(),dragged=false,contextLost=false;
+const activePointers=new Map();let pinchDistance=0;
 const activeMode=()=>['events','connections'].includes(app.dataset.mhMode);
 const events=()=>window.MarketHistoryModes?.events||[];
 const point3=p=>[p[0],p[1],Math.sqrt(Math.max(0,1-p[0]*p[0]-p[1]*p[1]))];
@@ -245,6 +247,12 @@ function focus(pair){
  const p=point3(pair);targetYaw=-Math.atan2(p[0],p[2]);targetPitch=Math.atan2(p[1],Math.hypot(p[0],p[2]));
  focusUntil=performance.now()+3500;pulseUntil=performance.now()+650;request();
 }
+function resetView(){
+ zoom=1;
+ const current=events().find(item=>item.id===window.MarketHistoryModes?.activeEvent);
+ if(current)focus(current.p);
+ else {targetYaw=0;targetPitch=.04;request();}
+}
 function tick(t){
  frame=0;if(!active||document.hidden)return;
  size();place();
@@ -283,18 +291,41 @@ function setActive(next){
 }
 wrapper.addEventListener('pointerdown',e=>{
  if(!active||e.button>0)return;
- e.stopPropagation();e.preventDefault();pointer={id:e.pointerId,x:e.clientX,y:e.clientY};
+ e.stopPropagation();e.preventDefault();
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(activePointers.size===1)pointer={id:e.pointerId,x:e.clientX,y:e.clientY};
+ else {pointer=null;pinchDistance=0;}
  wrapper.setPointerCapture?.(e.pointerId);
 });
 wrapper.addEventListener('pointermove',e=>{
- if(!pointer||e.pointerId!==pointer.id)return;
+ if(!activePointers.has(e.pointerId))return;
  e.stopPropagation();e.preventDefault();
- const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;pointer.x=e.clientX;pointer.y=e.clientY;
+ const previous=activePointers.get(e.pointerId);
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(activePointers.size>=2){
+  const [a,b]=[...activePointers.values()];
+  const distance=Math.hypot(a.x-b.x,a.y-b.y);
+  if(pinchDistance>0)zoom=clamp(zoom+(distance-pinchDistance)*.0016,.82,1.30);
+  pinchDistance=distance;focusUntil=performance.now()+1000;request();
+  return;
+ }
+ if(!pointer||pointer.id!==e.pointerId){
+  pointer={id:e.pointerId,x:e.clientX,y:e.clientY};
+  return;
+ }
+ const dx=e.clientX-previous.x,dy=e.clientY-previous.y;
  targetYaw+=dx*.006;targetPitch=clamp(targetPitch+dy*.0045,-1.1,1.1);
- focusUntil=performance.now()+3000;if(reduce)request();
+ focusUntil=performance.now()+3000;if(reduce)request();else request();
 });
 for(const type of ['pointerup','pointercancel','lostpointercapture'])wrapper.addEventListener(type,e=>{
- if(!pointer||pointer.id!==e.pointerId)return;pointer=null;
+ if(!activePointers.has(e.pointerId))return;
+ activePointers.delete(e.pointerId);
+ pinchDistance=0;pointer=null;
+ if(activePointers.size===1){
+  const [id,point]=activePointers.entries().next().value;
+  pointer={id,x:point.x,y:point.y};
+ }
+ request();
 });
 wrapper.addEventListener('wheel',e=>{
  if(!active)return;e.stopPropagation();e.preventDefault();
@@ -306,7 +337,7 @@ window.addEventListener('resize',()=>{size();place();if(active)request();},{pass
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&frame){cancelAnimationFrame(frame);frame=0;}else if(active)request();});
 size();place();
 window.MarketEventPlanet=Object.freeze({
- setActive,project,focus,
+ setActive,project,focus,resetView,
  get active(){return active;},
  get renderer(){return gl?'webgl1':ctx?'canvas2d':'unavailable';},
  get copiedPeopleRenderer(){return true;}
