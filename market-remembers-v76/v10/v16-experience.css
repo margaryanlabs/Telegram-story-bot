@@ -242,3 +242,56 @@
  #app .mh-v16-portal{display:none!important}
  #app .mh-v16-optics,#app .mh-v16-portal-convergence{animation:none!important}
 }
+
+
+/* Touch ergonomics: minimum 40px invisible hit zone; visually only a 14px node. */
+#app.mh-v16[data-mh-mode="events"] .mh-beacon,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon{
+ width:40px;height:40px;min-width:40px;min-height:40px;background:none;border:0;box-shadow:none;border-radius:50%;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon:before{
+ content:"";position:absolute;left:50%;top:50%;width:14px;height:14px;transform:translate(-50%,-50%);
+ border:1px solid #c8d0df9e;border-radius:50%;
+ background:radial-gradient(circle,#fff 0 10%,#c6c9e3 16%,#9b749a 44%,#3b3049 70%,transparent 83%);
+ box-shadow:0 0 0 4px #9ea3bd26,0 0 19px #b8a1c27f;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active:before{
+ width:16px;height:16px;border-color:#fff0f3;
+ background:radial-gradient(circle,#fff 0 18%,#ffb5cb 33%,#dc5b7e 60%,transparent 82%);
+ box-shadow:0 0 0 6px #d8789a3a,0 0 29px #ee83a5bb;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon-ring,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon-ring{
+ position:absolute;inset:7px;border:1px solid #b3afc64a;box-shadow:none;border-radius:50%;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon-year{
+ top:7px;left:32px;pointer-events:none;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-beacon="2020"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-beacon="2020"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-beacon="1987"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-beacon="1987"] .mh-beacon-year{
+ left:auto;right:32px;border-left:none;border-right:1px solid #b38da76b;border-radius:5px 0 0 5px;
+}
+#app.mh-v16 .mh-beacon:focus-visible{
+ outline:2px solid #ffe3ed;outline-offset:2px;
+}
+@media(max-width:819px){
+ #app.mh-v16[data-mh-mode="events"] .mh-beacon,
+ #app.mh-v16[data-mh-mode="connections"] .mh-beacon{
+  width:44px;height:44px;min-width:44px;min-height:44px;
+ }
+ #app.mh-v16[data-mh-mode="events"] .mh-beacon-year,
+ #app.mh-v16[data-mh-mode="connections"] .mh-beacon-year{
+  left:31px;top:10px;
+ }
+ #app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-beacon="2020"] .mh-beacon-year,
+ #app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-beacon="2020"] .mh-beacon-year,
+ #app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-beacon="1987"] .mh-beacon-year,
+ #app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-beacon="1987"] .mh-beacon-year{
+  right:31px;left:auto;
+ }
+}
