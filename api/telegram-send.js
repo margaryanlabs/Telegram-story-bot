@@ -40,7 +40,7 @@ export default async function handler(req,res) {
   if(req.method!=='POST')return respond(res,405,{error:'Method not allowed'});
   if(!BOT)return respond(res,503,{error:'Telegram не настроен'});
   const owner=validateTelegramMiniApp(String(req.headers['x-telegram-init-data']||''),BOT);
-  if(!owner?.id)return respond(res,401,{error:'Открой StoryLab в собственном Telegram'});
+  if(!owner?.id)return respond(res,401,{error:'Открой Vetogram внутри своего Telegram'});
   let body={};
   try { body=typeof req.body==='string' ? JSON.parse(req.body) : req.body||{}; }
   catch { return respond(res,400,{error:'Неверный запрос'}); }
