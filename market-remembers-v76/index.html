@@ -3417,7 +3417,7 @@ void main(){
     return 'reveal';
   }
   // V9.8: smooth acceleration and deceleration inside the existing flight.
-  // Do not modify the 1.35s timeline, star identity, or camera orientation.
+  // Keep original star identity and camera orientation. V19 shortens passage to 1.1s while preserving the 1s zoom.
   function v98FlightEase(progress){
     const t=Math.max(0,Math.min(1,Number.isFinite(progress)?progress:0));
     return t*t*t*(t*(t*6-15)+10);
