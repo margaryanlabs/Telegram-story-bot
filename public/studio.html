@@ -171,20 +171,20 @@
 
     <section class="screen active control-home" data-screen="home">
       <section class="veto-command-home" aria-label="Vetogram Command Hub">
-        <div class="veto-command-home-top"><span>VETOGRAM / ЛИЧНЫЙ ЦЕНТР</span><i aria-hidden="true"></i><strong>Чаты · Истории · ИИ</strong></div>
+        <div class="veto-command-home-top"><span>VETOGRAM / ТВОЙ TELEGRAM</span><i aria-hidden="true"></i><strong>Чаты · Истории · Контроль</strong></div>
         <div class="vg33-hero-sigil" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="140" height="140" /></div>
-        <h1>VETOGRAM<br><em>Твоё пространство.</em></h1>
-        <p>Переписка, приватность, истории и ИИ — в одном ритме, без лишних экранов.</p>
+        <h1>Твои чаты.<br><em>Твой контроль.</em></h1>
+        <p>Переписки и истории — на первом месте. Дополнительный доступ для Anti-Delete включается отдельно, только по твоему выбору.</p>
         <div class="veto-command-home-actions">
-          <button type="button" class="veto-command-home-primary" id="vetoHomeChatsPrimary" data-open-screen="telegram"><span>▤</span><strong>Открыть мои чаты</strong><b>↗</b></button>
-          <button type="button" class="veto-command-home-connect" id="vetoHomeConnectPrimary"><span>⌁</span><strong>Подключение Telegram</strong><b>→</b></button>
+          <button type="button" class="veto-command-home-primary" id="vetoHomeChatsPrimary" data-open-screen="telegram"><span>▤</span><strong>Перейти к чатам</strong><b>↗</b></button>
+          <button type="button" class="veto-command-home-connect" id="vetoHomeConnectPrimary"><span>⌁</span><strong>Подключить Telegram</strong><b>→</b></button>
         </div>
 
       </section>
       <section class="vg27-mission" id="vg27Mission" aria-label="Состояние и быстрый старт Vetogram">
         <div class="vg27-mission-heading">
           <div>
-            <span class="vg27-eyebrow"><span class="vg27-pulse-dot" aria-hidden="true"></span> ПОДКЛЮЧЕНИЕ</span>
+            <span class="vg27-eyebrow"><span class="vg27-pulse-dot" aria-hidden="true"></span> СОСТОЯНИЕ ДОСТУПОВ</span>
             <h2 id="vg27MissionTitle">Проверяем подключение</h2>
             <p id="vg27MissionDetail">Без автоматических подключений и скрытых действий.</p>
           </div>
@@ -208,14 +208,14 @@
           </button>
         </div>
         <div class="vg27-mission-bottom">
-          <span><span aria-hidden="true">◈</span> Разрешения не означают, что сообщения уже восстановлены или история опубликована.</span>
+          <span><span aria-hidden="true">◈</span> Anti-Delete работает только для новых доступных событий после отдельной настройки Telegram Business. Ранее удалённые сообщения не восстановятся.</span>
           <button type="button" id="vg27MissionAction">Подключить Telegram →</button>
         </div>
       </section>
       <section class="vg33-tools-panel" aria-label="Возможности Vetogram">
-        <div class="vgx-tools-heading vg33-tools-heading"><strong>Твои инструменты</strong><span>Открой нужное в одно касание</span></div>
+        <div class="vgx-tools-heading vg33-tools-heading"><strong>Дополнительные возможности</strong><span>Открывай по необходимости</span></div>
         <div class="veto-command-home-grid" aria-label="Инструменты Vetogram">
-          <button type="button" data-open-screen="privacy"><span>↶</span><strong>Anti-Delete</strong><small>Удалённые и изменённые сообщения</small></button>
+          <button type="button" data-open-screen="privacy"><span>↶</span><strong>Anti-Delete</strong><small>Сохранение новых разрешённых событий</small></button>
           <button type="button" data-open-screen="viewers"><span>◉</span><strong>Просмотры историй</strong><small>Аудитория и активность</small></button>
           <button type="button" data-open-screen="story-engine"><span>✧</span><strong>Студия историй</strong><small>Шаблоны, ссылки и ремикс</small></button>
           <button type="button" data-open-screen="ai"><span>✦</span><strong>VETO AI</strong><small>Ответы, перевод и идеи</small></button>
@@ -254,8 +254,8 @@
       </section>
       <section class="control-activity">
         <div class="block-head compact">
-          <div><span class="kicker">СОБЫТИЯ</span><h2 data-ui-text="recentActivity">Последняя активность</h2></div>
-          <span class="tiny-note">live</span>
+          <div><span class="kicker">СОБЫТИЯ</span><h2 data-ui-text="recentActivity">История активности</h2></div>
+          <span class="tiny-note">После подключения</span>
         </div>
         <div class="control-activity-list" id="homeActivityList">
           <div class="control-activity-row activity-loading">
