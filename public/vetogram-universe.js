@@ -133,17 +133,24 @@
  $('v6Account').onclick=()=>$('profileButton')?.click();
  $('v6Appearance').onclick=()=>$('vetoGlobalThemeToggle')?.click();
  let playerReturnFocus=null;
+ const notifyPlayerViewChanged=()=>window.dispatchEvent(
+  new CustomEvent('vetogram:media-player-view-changed'));
  const closePlayer=()=>{
   const wasOpen=!$('v61Player').hidden;
   $('v61Player').hidden=true;root.classList.remove('v61-player-open');
   if(wasOpen)playerReturnFocus?.focus?.({preventScroll:true});
   playerReturnFocus=null;
+  if(wasOpen)notifyPlayerViewChanged();
  };
+ // The native Telegram Back closes only the full-screen player UI.
+ // Persistent audio continues exactly as it does for the visible × control.
+ window.VetoTelegramMediaBack=closePlayer;
  $('v6NowOpen').onclick=()=>{
   checkIdentity();
   if(!lastAudio)return; // Never open an empty or stale full-screen player.
   playerReturnFocus=document.activeElement||$('v6NowOpen');
   $('v61Player').hidden=false;root.classList.add('v61-player-open');
+  notifyPlayerViewChanged();
   $('v61PlayerClose').focus?.({preventScroll:true});
  };
  $('v61PlayerClose').onclick=closePlayer;
