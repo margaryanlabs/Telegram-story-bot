@@ -39,7 +39,7 @@ test('movie discovery must never imply that external RUTUBE upload is licensed i
 });
 
 test('Russian official archive shelves move to the catalog, world stays on home',()=>{
-  assert.match(js,/const worldHome=state\.tab==="home"/);
+  assert.match(js,/const worldHome=worldBrowse&&!state\.query\.trim\(\)/);
   assert.match(js,/if\(worldHome\)return \[\.\.\.list\]\.sort/);
   assert.match(js,/const catalog=state\.tab==="catalog"&&!state\.query\.trim\(\)/);
   assert.match(js,/const showRussian=state\.tab==="catalog"/);
