@@ -181,3 +181,49 @@
    scroll-behavior:auto!important;animation:none!important;transition:none!important;
  }
 }
+
+/* One explicit, source-conscious exit from a fictional human lesson into
+   researched financial history. This is not a personal participation claim. */
+#app .v19-history-bridge{
+  position:relative;display:grid;gap:10px;
+  padding:clamp(19px,3.5vw,27px);margin:24px 0 12px;
+  border:1px solid rgba(205,177,218,.30);border-radius:18px;
+  background:
+    radial-gradient(circle at 92% 18%,rgba(151,105,164,.19),transparent 43%),
+    linear-gradient(130deg,rgba(31,29,48,.95),rgba(12,18,31,.98));
+  box-shadow:inset 0 1px rgba(255,255,255,.055);
+}
+#app .v19-history-bridge .v19-bridge-kicker{
+  font:750 9px/1.5 Inter,system-ui,sans-serif;
+  letter-spacing:.13em;color:#d9b8d7;
+}
+#app .v19-history-bridge .v19-bridge-year{
+  font:500 clamp(44px,7vw,68px)/.95 Georgia,serif;
+  letter-spacing:-.055em;color:#f6e7f2;margin:6px 0 2px;
+}
+#app .v19-history-bridge h3{
+  font:500 clamp(21px,2.6vw,27px)/1.2 Georgia,serif;
+  color:#f8f0f2;margin:0;text-wrap:balance;
+}
+#app .v19-history-bridge p{
+  font:400 12px/1.65 Inter,system-ui,sans-serif;
+  color:#bfc3d0;max-width:57ch;margin:0;
+}
+#app .v19-history-bridge button{
+  margin-top:8px;display:flex;align-items:center;justify-content:center;
+  min-height:48px;width:100%;border-radius:11px;
+  border:1px solid rgba(209,167,207,.68);
+  background:linear-gradient(110deg,rgba(116,73,119,.61),rgba(54,44,77,.88));
+  color:#fff1f8;font:700 11px/1.4 Inter,system-ui,sans-serif;
+  cursor:pointer;transition:background .2s,transform .2s;
+}
+#app .v19-history-bridge button:hover{background:#704e79;transform:translateY(-1px)}
+#app .v19-history-bridge button:focus-visible{outline:2px solid #f9dce7;outline-offset:3px}
+@media(max-width:819px){
+  #app .v19-history-bridge{margin:18px 0 11px;padding:18px 17px;border-radius:15px}
+  #app .v19-history-bridge .v19-bridge-year{font-size:45px}
+}
+/* Restore standard focus and animation semantics in accessible reduced motion. */
+@media(prefers-reduced-motion:reduce){
+  #app .v19-history-bridge button{transition:none;transform:none}
+}
