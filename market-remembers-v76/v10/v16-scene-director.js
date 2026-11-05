@@ -41,6 +41,21 @@
  tether.setAttribute('aria-hidden','true');
  tether.innerHTML='<defs><linearGradient id="mhV16TetherLine" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0" stop-color="#F2CDD6" stop-opacity=".78"/><stop offset=".6" stop-color="#C87991" stop-opacity=".45"/><stop offset="1" stop-color="#DDB9CE" stop-opacity=".12"/></linearGradient></defs><path id="mhV16TetherPath"/><circle id="mhV16TetherPulse" r="2.5"/>';
  scene.append(tether);
+ const burst=document.createElement('div');
+ burst.id='mhEventBurst';burst.className='mh-event-burst';
+ burst.setAttribute('aria-hidden','true');
+ burst.innerHTML='<i class="mh-event-burst-ring"></i><i class="mh-event-burst-ring mh-event-burst-ring-second"></i><i class="mh-event-burst-flare"></i>';
+ scene.append(burst);
+ let signalUntil=0,signalTimeout=0;
+ function triggerEvent(){
+   if(reduced)return;
+   signalUntil=performance.now()+820;
+   burst.classList.remove('is-live');
+   void burst.offsetWidth;
+   burst.classList.add('is-live');
+   clearTimeout(signalTimeout);
+   signalTimeout=window.setTimeout(()=>{burst.classList.remove('is-live');},850);
+ }
  let busy=false,token=0;
  function run(from,to,commit){
    if(typeof commit!=='function')return;
@@ -75,22 +90,28 @@
    if(name)name.textContent=item.short||item.name||'FINANCIAL EVENT';
  }
  function position(point,sceneRect,panelRect,expanded){
-   const mode=app.dataset.mhMode;
-   if(mode==='people'||!point||!point.visible||!panelRect){
-     tether.style.opacity='0';return;
+   // A short opt-in optical response, never a line across the entire screen.
+   // Existing selected point is tracked by the planet's 3D projection.
+   if(app.dataset.mhMode==='people'||!point||!point.visible){
+     tether.style.opacity='0';burst.style.opacity='0';return;
    }
    const w=sceneRect.width,h=sceneRect.height;
    if(w<1||h<1)return;
-   tether.style.opacity=expanded?'0':'.76';
-   tether.setAttribute('viewBox','0 0 '+w+' '+h);
    const x=point.x,y=point.y;
+   burst.style.left=x+'px';burst.style.top=y+'px';
+   const live=!expanded&&performance.now()<signalUntil;
+   tether.style.opacity=live?'.67':'0';
+   if(!live)return;
+   tether.setAttribute('viewBox','0 0 '+w+' '+h);
    const mobile=w<820;
-   const endX=mobile?Math.max(25,Math.min(w-25,Math.round(x))):panelRect.left-sceneRect.left+10;
-   const endY=mobile?panelRect.top-sceneRect.top+2:
-     Math.max(130,Math.min(h-140,Math.round(panelRect.top-sceneRect.top+45)));
-   if(mobile&&endY-y<48){tether.style.opacity='0';return;}
-   const midX=mobile?(x+endX)*.5:(x+endX)*.5+16;
-   const midY=mobile?(y+endY)*.5:endY-24;
+   const targetX=panelRect?panelRect.left-sceneRect.left+(mobile?panelRect.width*.5:6):x;
+   const targetY=panelRect?panelRect.top-sceneRect.top:y+100;
+   const theta=Math.atan2(targetY-y,targetX-x);
+   const length=mobile?64:86;
+   const endX=x+Math.cos(theta)*length,endY=y+Math.sin(theta)*length;
+   const side=mobile?13:21;
+   const midX=x+Math.cos(theta)*length*.53-Math.sin(theta)*side;
+   const midY=y+Math.sin(theta)*length*.53+Math.cos(theta)*side;
    document.getElementById('mhV16TetherPath').setAttribute('d',
      'M '+x.toFixed(1)+' '+y.toFixed(1)+' Q '+midX.toFixed(1)+' '+midY.toFixed(1)+' '+endX.toFixed(1)+' '+endY.toFixed(1));
    document.getElementById('mhV16TetherPulse').setAttribute('cx',x);
@@ -103,5 +124,5 @@
  }
  app.classList.add('mh-v16');
  window.MarketWorldTransition=Object.freeze({run,get busy(){return busy;}});
- window.MarketSignalDirector=Object.freeze({setEvent,position});
+ window.MarketSignalDirector=Object.freeze({setEvent,position,triggerEvent});
 })();
