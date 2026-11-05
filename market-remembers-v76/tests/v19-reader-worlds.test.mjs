@@ -52,6 +52,10 @@ test('V19 second world conserves GPU when idle and does not allocate on PEOPLE e
   assert.match(globe,/function resetView\(\)/);
   assert.match(globe,/mhResetEventView/);
   assert.match(globe,/activePointers\.clear\(\)/);
+  assert.match(globe,/function scheduleIdle\(ms=82\)/);
+  assert.match(globe,/if\(!active\)return;\s*size\(\);place\(\);request\(\);/);
+  assert.match(globe,/if\(!active\)\{rendererInitialized=false;return;\}/);
+  assert.match(globe,/if\(idleTimer\)window\.clearTimeout\(idleTimer\)/);
   assert.match(globe,/const fallbackDust=Array\.from/);
   assert.match(globe,/const p=rotate\(fallbackDust\[i\]\)/);
   assert.match(globe,/if\(p\[2\]<=\.04\)continue/);
