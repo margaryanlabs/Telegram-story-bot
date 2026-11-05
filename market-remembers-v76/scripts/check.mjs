@@ -46,4 +46,6 @@ if(!html.includes('v10/v12-cinematic.css'))throw Error('V12 RC2 cinematic layer 
 if(!html.includes('v10/v12-reading-polish.css'))throw Error('V12 RC3 reader polish stylesheet missing');
 if(!html.includes('v10/v12-depth-field.css')||!html.includes('class="v124-depth-field"'))throw Error('V12 RC4 native sphere depth layer missing');
 if(!html.includes('v10/v12-universe-cinema.css'))throw Error('V12 RC6 cinematic universe layer missing');
+if(!html.includes('v10/v12-universe-depth-v2.css')||!html.includes('class="v127-space-field"'))throw Error('V12 cosmic depth field v2 is missing');
+if(!html.includes('float nebulaNoise3(vec3 p)')||!html.includes('float goldZone='))throw Error('V12 high depth nebula globe material missing');
 console.log('V12 RC6 lint: cumulative engine, ordered modules, all visual layers, local-only data and shell IDs valid.');
