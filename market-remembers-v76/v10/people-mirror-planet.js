@@ -276,7 +276,9 @@ function tick(t){
  const ease=reduce?1:1-Math.exp(-dt/245);
  yaw+=(targetYaw-yaw)*ease;pitch+=(targetPitch-pitch)*ease;
  try{if(gl)webGLRender(t);else canvasRender();}catch(e){failToCanvas(e);canvasRender();}
- if(t-lastMeasure>66){window.MarketHistoryModes?.measure();lastMeasure=t;}
+ // Reduced-motion users get one frame per gesture. Projected date controls
+ // must move on that same frame instead of waiting for an animation tick.
+ if(reduce||t-lastMeasure>66){window.MarketHistoryModes?.measure();lastMeasure=t;}
  if(!reduce){
    if(moving)scheduleNext(33);
    else scheduleIdle(82);
@@ -315,8 +317,14 @@ wrapper.addEventListener('pointerdown',e=>{
  if(!active||e.button>0)return;
  e.stopPropagation();e.preventDefault();
  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(activePointers.size===1)pointer={id:e.pointerId,x:e.clientX,y:e.clientY};
- else {pointer=null;pinchDistance=0;}
+ if(activePointers.size===1){pointer={id:e.pointerId,x:e.clientX,y:e.clientY};pinchDistance=0;}
+ else {
+  pointer=null;
+  // Initialize a baseline on the second finger down. The first pinch
+  // movement must zoom rather than being silently discarded.
+  const [a,b]=[...activePointers.values()];
+  pinchDistance=Math.hypot(a.x-b.x,a.y-b.y);
+ }
  wrapper.setPointerCapture?.(e.pointerId);
 });
 wrapper.addEventListener('pointermove',e=>{
