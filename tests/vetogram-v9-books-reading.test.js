@@ -68,7 +68,7 @@ test('rendering real progress creates working resume controls for all visible en
     readingPosition:item=>({label:'стр. '+(item.page+1),percent:25}),
     compactTitle:x=>x,openBook:book=>opened.push(book.id),
     node:(tag,klass,label)=>Object.assign(el(),{tag,klass,textContent:label})};
-  runInNewContext(renderSource+'this.render=renderContinueShelf;',ctx);
+  runInNewContext('let readingCoverKey=null,readingHistoryKey=null;'+renderSource+'this.render=renderContinueShelf;',ctx);
   ctx.render();
   assert.equal(shelf.hidden,false);
   assert.equal(els.continueTitle.textContent,'Book A');
@@ -77,6 +77,8 @@ test('rendering real progress creates working resume controls for all visible en
   assert.equal(history.children.length,1);
   action.onclick();history.children[0].click();
   assert.deepEqual(opened,[1,2]);
+  const firstMini=history.children[0];ctx.render();
+  assert.equal(history.children[0],firstMini,'page flip must not rebuild cover DOM');
   ctx.readingHistory=()=>[];ctx.render();
   assert.equal(shelf.hidden,true);
   assert.equal(history.hidden,true);
