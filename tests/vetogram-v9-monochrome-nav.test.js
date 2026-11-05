@@ -31,7 +31,7 @@ test('Games is an actual independent route, not swallowed by Media',()=>{
 test('cinema music books are real modules, local games are not a media catalog tile',()=>{
   for(const module of ['music','cinema','books'])
     assert.match(html,new RegExp('data-v6-module="'+module+'"'));
-  assert.match(html,/class="v6-world v6-world-play v72-media-card" data-open-screen="play" hidden/);
+  assert.doesNotMatch(html,/class="v6-world v6-world-play v72-media-card"/);
   assert.match(html,/data-screen="media"/);
   assert.match(html,/id="v6MediaStage"/);
   assert.match(html,/id="v61Player"/);
@@ -59,4 +59,30 @@ test('No Telegram auth, ownership, music playback or protected sheet is replaced
     assert.ok(html.includes('id="'+id+'"'),id);
   assert.match(app,/viewerOwnerEpoch/);
   assert.match(html,/vetogram-reborn-ui\.css/);
+});
+
+
+test('six local playable games are visible in launcher before progress and future roadmap',()=>{
+  const launchButtons=[...html.matchAll(/data-v9-launch="(reaction|pairs|tic|2048|mines|snake)"/g)].map(x=>x[1]);
+  assert.deepEqual(launchButtons,['reaction','pairs','tic','2048','mines','snake']);
+  assert.ok(html.indexOf('id="v9ArcadeLauncher"')<html.indexOf('id="vpLocalStats"'));
+  assert.ok(html.indexOf('id="vpQuickGames"')<html.indexOf('id="vpLocalStats"'));
+  const games=read('vetogram-play.js');
+  assert.match(games,/window\.VetogramV9GameBack/);
+  assert.match(games,/window\.VetogramV9GameIsOpen/);
+  assert.match(app,/vetogram:game-view-changed/);
+  assert.match(app,/window\.VetogramV9GameBack\?\.\(\)/);
+});
+test('personal library search is a disclosure and media modules have one direct entry per category',()=>{
+  assert.match(html,/<details class="v9-saved-search" id="v9SavedSearch">/);
+  const world=html.slice(html.indexOf('class="v6-media-grid'),html.indexOf('class="v72-discovery-note'));
+  for(const name of ['music','cinema','books'])
+    assert.match(world,new RegExp('data-v6-module="'+name+'"'));
+  assert.doesNotMatch(world,/data-open-screen="play"/);
+});
+test('embedded media accepts theme synchronization from verified same-origin parent only',()=>{
+  const ctx=read('vetogram-media-context.js');
+  assert.match(ctx,/event\.origin!==location\.origin\|\|event\.source!==parent/);
+  assert.match(ctx,/dataset\.universeTheme=next/);
+  assert.match(modules,/EMBEDDED APPEARANCE SYNC/);
 });
