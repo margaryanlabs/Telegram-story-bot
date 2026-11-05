@@ -39,7 +39,7 @@ test('WebGL memory globe has more dimensional depth, cyan plasma and warm edge',
   assert.match(fragment,/vec3\(\.145,\.340,\.395\)\*brightVein/);
   assert.match(fragment,/float traceA=/);
   assert.match(fragment,/float traceB=/);
-  assert.match(fragment,/visibleFace\*\(vec3\(\.19,\.38,\.43\)\*traceA\*\.18/);
+  assert.match(fragment,/visibleFace\*\(vec3\(\.19,\.38,\.43\)\*traceA\*\.12/);
   assert.match(fragment,/float gaseousBank=/);
   assert.match(fragment,/float darkRift=/);
   assert.match(fragment,/float cloudRidge=/);
@@ -86,17 +86,34 @@ test('Cinematic volume integrates depth from the real inverse camera ray at 3/6 
   assert.match(fragment,/samplePoint=vObject\+volumeRay\*volumeChord\*stepT/);
   assert.match(fragment,/float cloudMass=smoothstep/);
   assert.match(fragment,/accumulatedNebula\+=transmittance\*scattering/);
-  assert.match(fragment,/transmittance\*=1\.0-absorption\*\.42/);
-  assert.match(fragment,/material=mix\(material,vec3\(\.016,\.030,\.045\)\+accumulatedNebula\*\.93,\.82\)/);
+  assert.match(fragment,/transmittance\*=1\.0-absorption\*\.66/);
+  assert.match(fragment,/material=vec3\(\.009,\.020,\.031\)\+/);
+});
+test('V12 V4 avoids cyan noodle contours and reserves globe room above the dock',()=>{
+  assert.doesNotMatch(fragment,/fineRidge|silverRidge/);
+  assert.match(fragment,/float cloudGrain=/);
+  assert.match(fragment,/float absorption=\.15\+\.52\*cloudMass/);
+  assert.match(fragment,/vec3\(\.019,\.063,\.108\)\*cloudMass/);
+  const from=html.indexOf('  function v9PortraitFrame(');
+  const to=html.indexOf('  function v763MeasureStage()',from);
+  assert.ok(from>0&&to>from);
+  const fn=new Function(html.slice(from,to)+'return v9PortraitFrame;')();
+  const typical=fn(390,880,225,700,119);
+  assert.ok(typical.y+typical.radius<=typical.bottom-7,
+    'default phone globe must clear dock top');
+  const short=fn(390,640,220,580,115);
+  assert.ok(short.y+short.radius<=short.bottom-7,
+    'short portrait globe should also clear dock top');
 });
 test('Self-hosted galaxy SVG is static, structured, text-safe and network-free',()=>{
   assert.ok(galaxy.trimStart().startsWith('<svg '));
   assert.ok(galaxy.trimEnd().endsWith('</svg>'));
   assert.match(galaxy,/id="galaxyCore"/);
   assert.match(galaxy,/feTurbulence type="fractalNoise"/);
-  assert.match(galaxy,/translate\(955 345\) rotate\(-25\)/);
+  assert.match(galaxy,/translate\(955 470\) rotate\(-25\)/);
   assert.match(depth,/url\("v12-cinematic-galaxy\.svg"\)/);
   assert.match(depth,/pointer-events:none/);
+  assert.match(depth,/mask-image:linear-gradient\(to bottom,transparent/);
   assert.doesNotMatch(galaxy,/<script|<foreignObject|<image|(?:href|src)="https?:\/\//i);
 });
 test('Canvas fallback shows real clipped sphere with nebula and quality guard',()=>{
