@@ -32,10 +32,10 @@ test('mobile size fits entire planet above compact information dock',()=>{
   assert.match(polish,/\.mh-intro\{/);
 });
 
-test('research detail is accessible yet collapsed on load; event selection opens details',()=>{
+test('research detail is accessible yet collapsed on load; event selection remains scene-first',()=>{
   assert.match(modes,/let panelExpanded = false/);
   assert.match(modes,/data-mh-panel-toggle aria-expanded/);
-  assert.match(modes,/panelExpanded = true;/);
+  assert.doesNotMatch(modes.slice(modes.indexOf('function selectEvent(id)'),modes.indexOf('function openPeopleTheme')), /panelExpanded = true/);
   assert.match(modes,/panelExpanded = !panelExpanded/);
   assert.match(modes,/panel\.classList\.toggle\('is-expanded'/);
   assert.match(modes,/event\.stopPropagation/);
