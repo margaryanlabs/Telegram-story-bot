@@ -278,6 +278,7 @@ function request(){if(active&&!frame&&!document.hidden)frame=requestAnimationFra
 function setActive(next){
  active=!!next;header.hidden=!active;wrapper.hidden=!active;cosmos.hidden=!active;
  if(!active){
+  activePointers.clear();pinchDistance=0;pointer=null;
   if(frame)cancelAnimationFrame(frame);frame=0;last=0;
   window.MarketPeopleResume?.();
  }else{
@@ -315,7 +316,7 @@ wrapper.addEventListener('pointermove',e=>{
  }
  const dx=e.clientX-previous.x,dy=e.clientY-previous.y;
  targetYaw+=dx*.006;targetPitch=clamp(targetPitch+dy*.0045,-1.1,1.1);
- focusUntil=performance.now()+3000;if(reduce)request();else request();
+ focusUntil=performance.now()+3000;request();
 });
 for(const type of ['pointerup','pointercancel','lostpointercapture'])wrapper.addEventListener(type,e=>{
  if(!activePointers.has(e.pointerId))return;
