@@ -2495,7 +2495,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
       return;
     }
     const short=h<650,rect=stage.getBoundingClientRect();
-    const nominalRadius=Math.min(w,h)*(short?.325:.347);
+    // Preserve the entire planet above the memory dock on tall Android screens.
+    const nominalRadius=Math.min(w,h)*(short?.296:.306);
     v763MobileStage=v9PortraitFrame(w,h,
       $('hero').getBoundingClientRect().bottom-rect.top,
       $('signalDock').getBoundingClientRect().top-rect.top,nominalRadius);
@@ -2647,7 +2648,7 @@ void main(){
  float brightVein=pow(1.-river,5.)*(.20+.80*nebulaBody);
  float illumination=.28+.72*light;
  material+=vec3(.055,.126,.155)*nebulaBody*(.38+.62*fill);
- material+=vec3(.145,.340,.395)*brightVein*illumination*.92;
+ material+=vec3(.145,.340,.395)*brightVein*illumination*.23;
  // Auto/ECO on Android keeps the core cyan filaments, sharp rim and warm
  // sunlight but skips secondary knots and fine turbulence for frame budget.
  if(uQuality>.5){
@@ -2666,8 +2667,8 @@ void main(){
  // Living nebula V2: real multi-scale pockets of darkness and luminous
  // plasma rivers. Avoid perfectly spaced, transparent glass-like bands.
  float cloudDepth=nebulaNoise3(vObject*3.7+vec3(2.4,.7,1.9));
- float shadowCavity=1.-smoothstep(.27,.67,cloudDepth);
- material*=1.-shadowCavity*.54;
+ float shadowCavity=1.-smoothstep(.25,.66,cloudDepth);
+ material*=1.-shadowCavity*.33;
  float terrain=cloudDepth;
  if(uQuality>.5){
    float cloudDetail=nebulaNoise3(vObject*9.3+vec3(6.1,1.7,2.5));
@@ -2683,9 +2684,23 @@ void main(){
  float secondary=pow(max(1.-abs(sin(vObject.x*13.1-
                         vObject.y*5.9+vObject.z*3.8+bent)),0.),6.5);
  float veil=bank*(.43+.57*light);
- material+=vec3(.038,.171,.223)*diffuseCurrent*veil;
- material+=vec3(.141,.395,.475)*brightCurrent*veil*1.15;
- material+=vec3(.062,.212,.263)*secondary*veil*.75;
+ material+=vec3(.038,.171,.223)*diffuseCurrent*veil*.48;
+ material+=vec3(.141,.395,.475)*brightCurrent*veil*.31;
+ material+=vec3(.062,.212,.263)*secondary*veil*.17;
+ // Break the criss-cross lines into irregular illuminated cloud banks.
+ // Reuse existing 3D noise (one call on ECO, two calls on HIGH) rather
+ // than introducing a separate framebuffer or a per-frame noise texture.
+ float gaseousBank=smoothstep(.26,.65,cloudDepth)*(.55+.45*terrain);
+ float darkRift=1.-smoothstep(.20,.52,cloudDepth);
+ material+=vec3(.055,.165,.232)*gaseousBank*(.35+.65*fill);
+ material+=vec3(.098,.264,.325)*pow(max(gaseousBank,0.),2.)*(.20+.80*light);
+ material*=1.-darkRift*.12;
+ // Tiny high-end highlights attach to bright cloud seams, not
+ // uniform glowing parallels around the entire sphere.
+ if(uQuality>.5){
+   float cloudRidge=1.-smoothstep(.01,.10,abs(cloudDepth-.49));
+   material+=vec3(.06,.31,.36)*cloudRidge*terrain*.25;
+ }
  // Warm pockets are NOT a full-face filter; color is bound to the mesh.
  float sunrise=pow(max(dot(N,normalize(vec3(.55,.41,.73))),0.),11.);
  float ember=pow(max(dot(normalize(vObject),
@@ -2733,8 +2748,8 @@ void main(){
  float glowA=1.-smoothstep(.007,.034,planeA);
  float glowB=1.-smoothstep(.006,.029,planeB);
  float visibleFace=smoothstep(-.12,.52,N.z);
- material+=visibleFace*(vec3(.19,.38,.43)*traceA*.41+vec3(.40,.30,.19)*traceB*.35);
- material+=visibleFace*(vec3(.08,.17,.20)*glowA*.38+vec3(.14,.09,.055)*glowB*.29);
+ material+=visibleFace*(vec3(.19,.38,.43)*traceA*.18+vec3(.40,.30,.19)*traceB*.16);
+ material+=visibleFace*(vec3(.08,.17,.20)*glowA*.12+vec3(.14,.09,.055)*glowB*.10);
  gl_FragColor=vec4(clamp(material,0.,1.),1.);
 }`; const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){
