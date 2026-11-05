@@ -424,8 +424,12 @@
   });
   window.addEventListener('veto:screen-changed',event=>{
     resetOwner();
-    if (['telegram','publish'].includes(event.detail?.screen))void loadStories();
-    else closeViewer({restoreFocus:false});
+    const destination=event.detail?.screen;
+    // Story viewer belongs to the Chats screen. Moving into the Stories
+    // publishing tab must dismiss the old full-screen viewer first.
+    if(destination!=='telegram'&&!viewer.hidden)
+      closeViewer({restoreFocus:false});
+    if(['telegram','publish'].includes(destination))void loadStories();
   });
   window.addEventListener('pageshow',resetOwner);
   document.addEventListener('visibilitychange',()=>{
