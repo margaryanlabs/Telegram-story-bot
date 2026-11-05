@@ -432,7 +432,7 @@ export default async function handler(req, res) {
 
   const user = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''), botToken);
   if (!user) {
-    res.status(401).json({ ok: false, error: 'Open VETO Telegram inside Telegram' });
+    res.status(401).json({ ok: false, error: 'Открой Vetogram внутри Telegram' });
     return;
   }
 
@@ -442,7 +442,7 @@ export default async function handler(req, res) {
   if (!config.configured) {
     res.status(503).json({
       ok: false,
-      error: 'Deep Intelligence backend is not configured yet',
+      error: 'Сервис авторизации Vetogram временно не настроен',
       config,
     });
     return;
