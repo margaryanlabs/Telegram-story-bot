@@ -170,3 +170,33 @@ html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
 html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .page[data-view="catalog"] .catalog-cover{
   background:#dedede!important;color:#333!important;
 }
+
+/* Black/white throughout existing Music sections, not just the new hero.
+   Keep original functional modules, sources and audio controls untouched. */
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="home"] :is(.native-home,.audio-home-panel,.charts-home-entry,.licensed-home-section,.social-invite,.feature-strip){
+  background:#101010!important;background-image:none!important;border-color:#353535!important;
+  box-shadow:none!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="home"] :is(.native-home-option,.audio-oneplay,.audio-more-stations,.licensed-home-card){
+  background:#191919!important;background-image:none!important;border-color:#3a3a3a!important;
+  color:#f0f0f0!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="home"] :is(.native-home h2 em,.audio-home-panel h2 em,.charts-home-entry strong){
+  background:none!important;color:#e5e5e5!important;-webkit-text-fill-color:#e5e5e5!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="charts"] :is(.charts-hero,.charts-block,.charts-regions,.charts-stations){
+  background:#101010!important;background-image:none!important;border-color:#383838!important;
+  box-shadow:none!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="charts"] :is(.charts-hero-copy h1 em,.charts-head h2 em){
+  background:none!important;color:#d5d5d5!important;-webkit-text-fill-color:#d5d5d5!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="charts"] :is(.charts-filters button.active,.charts-genres button.active,.chart-radio-play){
+  background:#f2f2f2!important;color:#101010!important;border-color:#f2f2f2!important;
+}
