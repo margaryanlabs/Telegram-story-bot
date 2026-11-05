@@ -1901,15 +1901,22 @@ backdrop-filter:blur(12px);pointer-events:auto}
 <link rel="stylesheet" href="v10/v12-cinematic.css">
 <link rel="stylesheet" href="v10/v12-reading-polish.css">
 <link rel="stylesheet" href="v10/v12-depth-field.css">
+<link rel="stylesheet" href="v10/v12-universe-cinema.css">
+<link rel="stylesheet" href="v10/v12-universe-depth-v2.css">
 </head>
 <body>
 <div class="app obsidian" id="app">
   <div class="scene" id="scene" aria-label="Интерактивная сфера, состоящая из светящихся звёзд и трейдерских историй">
     <canvas id="memorySky" aria-hidden="true"></canvas>
     <div class="v124-depth-field" aria-hidden="true"></div>
+    <div class="v127-space-field" aria-hidden="true">
+      <span class="v127-galaxy"></span>
+      <span class="v127-nebula-river"></span>
+      <span class="v127-nebula-crown"></span>
+    </div>
     <canvas id="gl" aria-hidden="true"></canvas>
     <canvas id="fallback" aria-hidden="true"></canvas>
-    <div class="v81-globe-aura" id="v81Aura" aria-hidden="true"></div><div class="scene-shading" aria-hidden="true"></div>
+    <div class="v81-globe-aura" id="v81Aura" aria-hidden="true"><span class="v126-orbit-guide" aria-hidden="true"></span></div><div class="scene-shading" aria-hidden="true"></div>
     <div class="scene-grid" aria-hidden="true"></div><div class="lens-halo" id="lensHalo" aria-hidden="true"></div>
     <div id="energySweep" class="energy-sweep" aria-hidden="true"></div>
     <svg id="constellationLayer" class="constellation-layer is-off" aria-hidden="true"></svg>
@@ -1924,7 +1931,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
   </div>
   <a class="version-compare" href="https://market-remembers-veto-universe.onrender.com/human-legacy-v74.html?v=7.4&amp;release=7c893384" target="_blank" rel="noopener noreferrer" aria-label="Открыть оригинальную V7.4 для сравнения">↔ V7.4</a>
   <header class="header">
-    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>STABLE NAVIGATION · V12 RC5</small></span></a>
+    <a class="brand" href="#" aria-label="THE MARKET REMEMBERS — главная" id="brandHome"><span class="brand-symbol"><i></i><i></i><i></i></span><span class="brand-copy">THE MARKET <strong>REMEMBERS</strong><small>CINEMATIC UNIVERSE · V12 RC6 · V4</small></span></a>
     <nav class="header-nav" aria-label="Навигация"><button data-open="universe" class="nav-link is-on" type="button">ВСЕЛЕННАЯ</button><button data-open="archive" class="nav-link" type="button">АРХИВ</button><button data-open="legacy" class="nav-link" type="button">МОЙ СЛЕД</button></nav>
     <button class="header-cta" id="headerCreate" type="button"><span class="status-pip"></span> ОСТАВИТЬ СВОЙ СЛЕД <span aria-hidden="true">↗</span></button>
   </header>
@@ -2474,8 +2481,12 @@ backdrop-filter:blur(12px);pointer-events:auto}
     const room=bottom-top;
     const fitted=room>nominalRadius*1.85;
     const radius=fitted?Math.min(nominalRadius,Math.max(width*.23,(room-16)*.5)):nominalRadius;
+    // The planet remains entirely above the fixed memory dock on
+    // portrait phones, while the outer halo may extend into the gap.
+    const idealY=height*(short?.540:.525);
+    const safeY=bottom-radius-14;
     const y=fitted?Math.max(top+radius,Math.min(bottom-radius,(top+bottom)*.5)):
-      height*(short?.56:.552);
+      Math.max(height*.40,Math.min(idealY,safeY));
     return {x:width*.585,y,radius,top:Math.max(0,top),bottom:Math.min(height,bottom),
       mode:'portrait',fitted};
   }
@@ -2488,7 +2499,8 @@ backdrop-filter:blur(12px);pointer-events:auto}
       return;
     }
     const short=h<650,rect=stage.getBoundingClientRect();
-    const nominalRadius=Math.min(w,h)*(short?.325:.347);
+    // Preserve the entire planet above the memory dock on tall Android screens.
+    const nominalRadius=Math.min(w,h)*(short?.296:.306);
     v763MobileStage=v9PortraitFrame(w,h,
       $('hero').getBoundingClientRect().bottom-rect.top,
       $('signalDock').getBoundingClientRect().top-rect.top,nominalRadius);
@@ -2585,10 +2597,29 @@ void main(){
  vec2 pixel=uCenter+vec2(q.x,-q.y)*uRadius*per*uZoom;
  gl_Position=vec4(pixel.x/uRes.x*2.0-1.0,1.0-pixel.y/uRes.y*2.0,-q.z*.48,1.);
 }`;
-  const coreFragment=`precision mediump float;
+  const coreFragment=`#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
 varying mediump vec3 vN;varying mediump vec3 vObject;
 uniform mediump float uTime;uniform float uMotion;uniform mediump float uPulse;uniform vec3 uFocus;
+uniform mediump float uQuality;
+uniform float uRotX;uniform float uRotY;
 float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
+// Stable 3D value noise avoids a painted-on sin-wave texture. Object-space
+// coordinates follow the physical rotation of the existing 3D sphere.
+float nebulaNoise3(vec3 p){
+ vec3 i=floor(p),f=fract(p);
+ f=f*f*(3.0-2.0*f);
+ float z0=mix(
+  mix(hash(i),hash(i+vec3(1.,0.,0.)),f.x),
+  mix(hash(i+vec3(0.,1.,0.)),hash(i+vec3(1.,1.,0.)),f.x),f.y);
+ float z1=mix(
+  mix(hash(i+vec3(0.,0.,1.)),hash(i+vec3(1.,0.,1.)),f.x),
+  mix(hash(i+vec3(0.,1.,1.)),hash(i+vec3(1.,1.,1.)),f.x),f.y);
+ return mix(z0,z1,f.z);
+}
 void main(){
  vec3 N=normalize(vN),L=normalize(vec3(-.53,.70,1.12)),H=normalize(L+vec3(0.,0.,1.));
  float light=max(dot(N,L),0.),fill=smoothstep(-.52,.78,dot(N,L));
@@ -2610,9 +2641,146 @@ void main(){
  float memoryVeil=.5+.5*sin(vObject.y*9.7+sin(vObject.x*5.3)*1.7+vObject.z*4.1);
  float memoryBands=pow(memoryVeil,6.)*(.14+.86*light);
  material+=vec3(.031,.081,.095)*memoryBands*.32;
- material+=vec3(.045,.086,.105)*filament*.045;
- material+=vec3(.095,.182,.218)*rim*.95;
- material+=vec3(.22,.36,.40)*spec*.1;
+ // CINEMATIC UNIVERSE: multi-scale, object-space plasma CLOUDS on the
+ // existing triangulated globe. All colors are bounded; no textures/passes.
+ // This is a visual memory field, not a map of real interpersonal ties.
+ float undulation=sin(vObject.y*7.8+vObject.x*4.6+sin(vObject.z*6.3)*1.35);
+ float nebulaNoise=.5+.5*sin(vObject.x*7.6-vObject.z*4.8+undulation*.9)
+                          *sin(vObject.y*8.3+vObject.z*6.2);
+ float nebulaBody=smoothstep(.37,.82,nebulaNoise);
+ float river=abs(sin(vObject.y*6.8+vObject.x*5.9+
+                     sin(vObject.z*5.1)*1.45));
+ float brightVein=pow(1.-river,5.)*(.20+.80*nebulaBody);
+ float illumination=.28+.72*light;
+ material+=vec3(.055,.126,.155)*nebulaBody*(.38+.62*fill);
+ material+=vec3(.145,.340,.395)*brightVein*illumination*.23;
+ // Auto/ECO on Android keeps the core cyan filaments, sharp rim and warm
+ // sunlight but skips secondary knots and fine turbulence for frame budget.
+ if(uQuality>.5){
+   float flank=.5+.5*sin(vObject.z*10.3+vObject.x*6.2-
+                          sin(vObject.y*8.4)*.85);
+   float microCloud=smoothstep(.52,.91,flank)*nebulaBody;
+   float amberKnot=pow(max(dot(normalize(vObject),
+                                normalize(vec3(.26,.28,.92))),0.),18.);
+   float cyanKnot=pow(max(dot(normalize(vObject),
+                               normalize(vec3(-.40,-.12,.91))),0.),16.);
+   material+=vec3(.065,.192,.230)*microCloud*illumination*.69;
+   material+=vec3(.29,.191,.099)*amberKnot*nebulaBody*.79;
+   material+=vec3(.120,.255,.310)*cyanKnot*brightVein*.74;
+ }
+ material+=vec3(.045,.086,.105)*filament*.085;
+ // Living nebula V2: real multi-scale pockets of darkness and luminous
+ // plasma rivers. Avoid perfectly spaced, transparent glass-like bands.
+ float cloudDepth=nebulaNoise3(vObject*3.7+vec3(2.4,.7,1.9));
+ float shadowCavity=1.-smoothstep(.25,.66,cloudDepth);
+ material*=1.-shadowCavity*.33;
+ float terrain=cloudDepth;
+ if(uQuality>.5){
+   float cloudDetail=nebulaNoise3(vObject*9.3+vec3(6.1,1.7,2.5));
+   terrain=mix(terrain,cloudDetail,.32);
+ }
+ float bank=smoothstep(.32,.69,terrain);
+ float bent=(cloudDepth-.5)*3.2;
+ float sweepLine=vObject.y*8.7+vObject.x*5.1+
+                sin(vObject.z*5.7)*1.7+bent;
+ float stream=1.-abs(sin(sweepLine));
+ float brightCurrent=pow(max(stream,0.),5.6);
+ float diffuseCurrent=pow(max(stream,0.),1.9);
+ float secondary=pow(max(1.-abs(sin(vObject.x*13.1-
+                        vObject.y*5.9+vObject.z*3.8+bent)),0.),6.5);
+ float veil=bank*(.43+.57*light);
+ material+=vec3(.038,.171,.223)*diffuseCurrent*veil*.48;
+ material+=vec3(.141,.395,.475)*brightCurrent*veil*.31;
+ material+=vec3(.062,.212,.263)*secondary*veil*.17;
+ // Break the criss-cross lines into irregular illuminated cloud banks.
+ // Reuse existing 3D noise (one call on ECO, two calls on HIGH) rather
+ // than introducing a separate framebuffer or a per-frame noise texture.
+ float gaseousBank=smoothstep(.26,.65,cloudDepth)*(.55+.45*terrain);
+ float darkRift=1.-smoothstep(.20,.52,cloudDepth);
+ material+=vec3(.055,.165,.232)*gaseousBank*(.35+.65*fill);
+ material+=vec3(.098,.264,.325)*pow(max(gaseousBank,0.),2.)*(.20+.80*light);
+ material*=1.-darkRift*.12;
+ // Tiny high-end highlights attach to bright cloud seams, not
+ // uniform glowing parallels around the entire sphere.
+ if(uQuality>.5){
+   float cloudRidge=1.-smoothstep(.01,.10,abs(cloudDepth-.49));
+   material+=vec3(.06,.31,.36)*cloudRidge*terrain*.25;
+ }
+ // CINEMATIC VOLUME V3: view-direction ray integrates actual 3D cloud
+ // layers through the sphere, instead of painting glowing contour lines
+ // over a flat surface. The ray is the inverse of our original X/Y camera
+ // rotation, so density stays in world-object coordinates during spin.
+ vec3 volumeRay=normalize(vec3(sin(uRotY)*cos(uRotX),
+                         -sin(uRotX),-cos(uRotY)*cos(uRotX)));
+ float volumeChord=2.0*max(0.0,N.z);
+ float volumePasses=uQuality>.5?6.0:3.0;
+ float transmittance=1.0;
+ vec3 accumulatedNebula=vec3(0.0);
+ for(int layerIdx=0;layerIdx<6;layerIdx++){
+   if(uQuality<.5 && layerIdx>=3)break;
+   float stepT=(float(layerIdx)+.5)/volumePasses;
+   vec3 samplePoint=vObject+volumeRay*volumeChord*stepT;
+   float billow=nebulaNoise3(samplePoint*3.65+vec3(3.1,.8,2.4));
+   float longWave=nebulaNoise3(samplePoint*2.2+vec3(4.5,1.7,7.8));
+   float cloudMass=smoothstep(.40,.70,billow*.72+longWave*.28);
+   float cloudHighlight=smoothstep(.61,.80,billow*.70+longWave*.30);
+   float goldDirection=pow(max(dot(normalize(samplePoint+vec3(.001)),
+                          normalize(vec3(.55,.32,.72))),0.),3.5);
+   float goldScattering=goldDirection*smoothstep(.55,.78,longWave);
+   float absorption=.15+.52*cloudMass;
+   // Fine turbulence adds subtle body, never neon contour loops.
+   float cloudGrain=0.0;
+   if(uQuality>.5){
+     float highWave=nebulaNoise3(samplePoint*5.2+vec3(4.,6.,1.));
+     cloudGrain=smoothstep(.61,.82,highWave)*cloudMass;
+   }
+   vec3 scattering=vec3(.019,.063,.108)*cloudMass+
+                   vec3(.075,.173,.214)*cloudHighlight+
+                   vec3(.025,.080,.095)*cloudGrain*.25+
+                   vec3(.28,.155,.075)*goldScattering*cloudMass*.42;
+   accumulatedNebula+=transmittance*scattering*(.86+(1.-stepT)*.18);
+   transmittance*=1.0-absorption*.66;
+ }
+ // Retain the original active-star highlight / orbits, but subordinate
+ // the old uniform line pattern to layered, absorbed gas.
+ // Keep a dense dark planetary core; legacy trigonometric ribbons no
+ // longer tint the final pixel. Front cloud absorption provides depth.
+ material=vec3(.009,.020,.031)+
+          vec3(.020,.043,.060)*(.20+.80*light)+
+          accumulatedNebula*.78;
+ // Warm pockets are NOT a full-face filter; color is bound to the mesh.
+ float sunrise=pow(max(dot(N,normalize(vec3(.55,.41,.73))),0.),11.);
+ float ember=pow(max(dot(normalize(vObject),
+                        normalize(vec3(.28,-.38,.88))),0.),13.);
+ material+=vec3(.27,.145,.075)*sunrise*bank*.40;
+ material+=vec3(.16,.087,.046)*ember*(.3+.7*cloudDepth)*.35;
+ // A clean, luminous atmospheric edge separates globe from its nebula sky.
+ float atmosphere=pow(1.-clamp(N.z,0.,1.),6.2);
+ float easternGlow=pow(max(dot(N,normalize(vec3(.82,.28,.78))),0.),4.);
+ material+=vec3(.065,.211,.274)*atmosphere*1.12;
+ material+=vec3(.40,.25,.125)*atmosphere*easternGlow*.95;
+ // Rare liquid-gold filament near the sunrise; cyan remains the core hue.
+ float goldZone=pow(max(dot(normalize(vObject),
+                            normalize(vec3(.48,-.15,.85))),0.),7.);
+ float goldFlow=pow(max(1.-abs(sin(vObject.y*12.6-
+                        vObject.x*4.3+vObject.z*5.4+bent)),0.),4.5);
+ material+=vec3(.30,.160,.078)*goldZone*goldFlow*(.32+.68*bank)*.48;
+ if(uQuality>.5){
+   // Stars are points in the memory field, not extra WebGL particles.
+   vec3 speckCoords=vObject*46.;
+   vec3 speckLocal=fract(speckCoords)-.5;
+   float speckSeed=hash(floor(speckCoords));
+   float stellarDust=step(.976,speckSeed)*
+       pow(max(1.-length(speckLocal)*2.35,0.),4.0);
+   material+=vec3(.50,.76,.88)*stellarDust*.78;
+ }
+ // Optical depth: cool edge is continuous; warm glint is localized to
+ // the illuminated rim (not a white halo covering the entire UI).
+ float limb=pow(1.-clamp(N.z,0.,1.),5.6);
+ float warmLimb=pow(max(dot(N,normalize(vec3(.46,.59,.77))),0.),3.0)*limb;
+ material+=vec3(.100,.245,.285)*rim*.91+vec3(.070,.193,.230)*limb*.89;
+ material+=vec3(.235,.158,.098)*warmLimb*.63;
+ material+=vec3(.22,.36,.40)*spec*.13;
  material+=vec3(.025,.037,.042)*bounce*.26;
  material+=vec3(grain)*(.08+.32*fill);
  material+=vec3(.008,.018,.026)*(life-.5)*uMotion*.18;
@@ -2627,8 +2795,8 @@ void main(){
  float glowA=1.-smoothstep(.007,.034,planeA);
  float glowB=1.-smoothstep(.006,.029,planeB);
  float visibleFace=smoothstep(-.12,.52,N.z);
- material+=visibleFace*(vec3(.15,.35,.41)*traceA*.21+vec3(.36,.29,.23)*traceB*.13);
- material+=visibleFace*(vec3(.055,.13,.17)*glowA*.24+vec3(.09,.065,.05)*glowB*.16);
+ material+=visibleFace*(vec3(.19,.38,.43)*traceA*.12+vec3(.40,.30,.19)*traceB*.11);
+ material+=visibleFace*(vec3(.08,.17,.20)*glowA*.055+vec3(.14,.09,.055)*glowB*.045);
  gl_FragColor=vec4(clamp(material,0.,1.),1.);
 }`; const precision=(shaderType,src)=>{const s=gl.createShader(shaderType);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const e=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(e)}return s};
   function createProgram(v,f){
@@ -2824,6 +2992,17 @@ void main(){
     }
   }
   function init2D(){qaState.fallbackCount++;ctx=fallbackCanvas.getContext('2d');fallbackCanvas.style.display='block';canvas.style.display='none';}
+  // AUTO is no longer hardcoded to the weakest look on every phone.
+  // Capable Android devices get the full cinematic volume while the
+  // existing real-FPS watchdog still switches to ECO if frames drop.
+  function cinematicDetail(){
+    if(quality==='high')return 1;
+    if(quality==='low'||autoEco)return 0;
+    if(w>=820)return 1;
+    const cores=Number(navigator.hardwareConcurrency)||2;
+    const memory=Number(navigator.deviceMemory)||4;
+    return cores>=6&&memory>=4?1:0;
+  }
   function passUniforms(p,t){
     const c=targetCenter(),s=stories[selected],point=project(s.p);
     const obj={uRes:[resW,resH],uCenter:[c.x*dpr,c.y*dpr],uRadius:c.radius*dpr,
@@ -2831,7 +3010,7 @@ void main(){
       uShock:shock?shock.radius:10,uFocus:s.p,uFocus2:[point.x*dpr,point.y*dpr],
       uFocusIntensity:point.z>-.12?1:0,
       uMotion:reduceMotion?0:interactionEnergy,uPulse:reduceMotion?0:v9State.energy,uTouch2:[interactionPoint[0]*dpr,interactionPoint[1]*dpr],
-      uTouchPulse:reduceMotion?0:interactionPulse,uQuality:(quality==='low'||(quality==='auto'&&(w<820||autoEco)))?0:1};
+      uTouchPulse:reduceMotion?0:interactionPulse,uQuality:cinematicDetail()};
     let locations=uniformCache.get(p);
     if(!locations){locations=new Map();uniformCache.set(p,locations)}
     for(const [name,val] of Object.entries(obj)){
@@ -2887,8 +3066,30 @@ void main(){
     stone.addColorStop(.35,'rgba(29,52,64,1)');
     stone.addColorStop(.73,'rgba(11,25,35,1)');
     stone.addColorStop(.96,'rgba(3,9,15,1)');
-    stone.addColorStop(1,'rgba(3,9,15,.8)');
+    stone.addColorStop(1,'rgba(3,9,15,1)');
     ctx.save();ctx.fillStyle=stone;ctx.beginPath();ctx.arc(c.x,c.y,r,0,twoPi);ctx.fill();ctx.restore();
+    // Canvas fallback parity: two embedded nebula light-fields, clipped to
+    // the actual sphere. No bitmap, network dependency or extra frame loop.
+    ctx.save();ctx.beginPath();ctx.arc(c.x,c.y,r,0,twoPi);ctx.clip();
+    ctx.globalCompositeOperation='screen';
+    const cloudRibbon=ctx.createLinearGradient(c.x-r*.78,c.y+r*.74,
+                                                 c.x+r*.78,c.y-r*.62);
+    cloudRibbon.addColorStop(0,'rgba(21,83,107,0)');
+    cloudRibbon.addColorStop(.26,'rgba(33,113,148,.12)');
+    cloudRibbon.addColorStop(.47,'rgba(72,194,212,.29)');
+    cloudRibbon.addColorStop(.56,'rgba(104,197,210,.21)');
+    cloudRibbon.addColorStop(.72,'rgba(41,117,146,.09)');
+    cloudRibbon.addColorStop(1,'rgba(11,48,75,0)');
+    ctx.fillStyle=cloudRibbon;ctx.fillRect(c.x-r,c.y-r,r*2,r*2);
+    if(quality!=='low'&&!autoEco){
+      const warmCloud=ctx.createRadialGradient(c.x+r*.33,c.y-r*.35,0,
+                                               c.x+r*.33,c.y-r*.35,r*.65);
+      warmCloud.addColorStop(0,'rgba(240,191,127,.31)');
+      warmCloud.addColorStop(.25,'rgba(184,154,124,.15)');
+      warmCloud.addColorStop(1,'rgba(115,82,80,0)');
+      ctx.fillStyle=warmCloud;ctx.fillRect(c.x-r,c.y-r,r*2,r*2);
+    }
+    ctx.restore();
     // Canvas2D counterpart to the globe's physical emissive orbital lines.
     ctx.save();ctx.beginPath();ctx.arc(c.x,c.y,r,0,twoPi);ctx.clip();
     ctx.lineWidth=Math.max(.8,r*.003);

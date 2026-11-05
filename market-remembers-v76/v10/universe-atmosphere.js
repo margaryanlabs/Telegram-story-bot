@@ -38,14 +38,14 @@ window.MarketV10.atmosphere = (() => {
     const cx=w*.70+cameraY*4,cy=h*.49+cameraX*3;
     const radius=Math.max(w,h)*.66;
     const nebula=context.createRadialGradient(cx,cy,radius*.04,cx,cy,radius);
-    nebula.addColorStop(0,'rgba(66,129,150,'+(.081*breath).toFixed(4)+')');
-    nebula.addColorStop(.42,'rgba(39,93,115,'+(.055*breath).toFixed(4)+')');
+    nebula.addColorStop(0,'rgba(66,129,150,'+(.123*breath).toFixed(4)+')');
+    nebula.addColorStop(.42,'rgba(39,93,115,'+(.080*breath).toFixed(4)+')');
     nebula.addColorStop(1,'rgba(10,24,38,0)');
     context.fillStyle=nebula;context.fillRect(0,0,w,h);
     if(!low){
       const glow=context.createRadialGradient(w*.15,h*.78,0,w*.15,h*.78,Math.max(w,h)*.47);
-      glow.addColorStop(0,'rgba(141,128,141,.043)');
-      glow.addColorStop(.58,'rgba(85,103,123,.019)');
+      glow.addColorStop(0,'rgba(153,116,167,.064)');
+      glow.addColorStop(.58,'rgba(103,115,146,.028)');
       glow.addColorStop(1,'rgba(22,37,52,0)');
       context.fillStyle=glow;context.fillRect(0,0,w,h);
     }

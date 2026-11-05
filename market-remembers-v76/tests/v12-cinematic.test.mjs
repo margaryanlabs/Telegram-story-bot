@@ -11,7 +11,7 @@ const [html,reader,css,sky,pkg]=await Promise.all([
 ]);
 
 test('V12 RC2 cinematic layer follows all existing design layers and renders a real star hero',()=>{
-  assert.equal(JSON.parse(pkg).version,'12.0.0-rc.5');
+  assert.equal(JSON.parse(pkg).version,'12.0.0-rc.6');
   assert.match(html,/v10\/v12-cinematic\.css/);
   assert.ok(html.indexOf('v10/v12-cinematic.css')>html.indexOf('v10/explainable-constellations-v11.css'));
   assert.match(reader,/const hero=document\.createElement\('section'\);hero\.className='v12-memory-hero'/);
