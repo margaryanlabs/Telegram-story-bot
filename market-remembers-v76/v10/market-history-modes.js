@@ -309,7 +309,7 @@
   function timeline() {
     return '<div class="mh-timeline" role="group" aria-label="Выбрать историческое событие">' +
       EVENTS.map(e => '<button type="button" data-mh-event="' + e.id + '" class="' + (e.id === state.activeEvent ? 'is-active' : '') +
-      '" aria-pressed="' + (e.id === state.activeEvent) + '"><b>' + e.year + '</b><small>' + escape(e.short) + '</small></button>').join('') +
+      '" aria-pressed="' + (e.id === state.activeEvent) + '" aria-label="' + escape(e.year + ': ' + e.name) + '"><b>' + e.year + '</b><small>' + escape(e.short) + '</small></button>').join('') +
       '</div>';
   }
   function themeButtons(event) {
@@ -319,17 +319,21 @@
   }
   function eventMarkup(event) {
     const steps=event.mechanism.split('→').map((part,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
-    return '<div class="mh-v16-record">' +
-      '<div class="mh-v16-record-meta"><span>◈ VERIFIED CHRONICLE</span><time>'+escape(event.date)+'</time></div>' +
+    const chapters=event.chapters.map((item,i)=>'<div class="mh-chronicle-step"><span>'+String(i+1).padStart(2,'0')+'</span><p>'+escape(item)+'</p></div>').join('');
+    return '<div class="mh-v16-record mh-chronicle-dossier">' +
+      '<div class="mh-v16-record-meta"><span>◈ HISTORICAL RECORD</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
+      '<div class="mh-chronicle-impact"><div><small>MARKET SIGNAL / HISTORICAL</small><strong>'+escape(event.metric)+'</strong><span>'+escape(event.metricLabel)+'</span></div><em>'+escape(event.scope)+'</em></div>' +
       '<section class="mh-v16-research-card mh-v16-context"><div class="mh-v16-card-icon">01</div><div><h3>ЧТО ПРОИЗОШЛО</h3><p>'+escape(event.detail)+'</p></div></section>' +
-      '<section class="mh-v16-research-card mh-v16-transmission"><div class="mh-v16-card-icon">02</div><div><h3>МЕХАНИЗМ ШОКА</h3><ol class="mh-v16-steps">'+steps+'</ol></div></section>' +
-      '<section class="mh-v16-research-card mh-v16-lesson"><div class="mh-v16-card-icon">03</div><div><h3>УРОК ДЛЯ ТРЕЙДЕРА</h3><p>'+escape(event.lesson)+'</p></div></section>' +
-      '<div class="mh-v16-card-footer"><button type="button" data-mh-go-connections>ИССЛЕДОВАТЬ СВЯЗИ <span aria-hidden="true">↗</span></button>' +
-      '<a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ПЕРВОИСТОЧНИК · '+escape(event.source)+' ↗</a></div></div>';
+      '<section class="mh-v16-research-card mh-chronicle-story"><div class="mh-v16-card-icon">02</div><div><h3>ХРОНОЛОГИЯ ШОКА</h3><div class="mh-chronicle-steps">'+chapters+'</div></div></section>' +
+      '<section class="mh-v16-research-card mh-v16-transmission"><div class="mh-v16-card-icon">03</div><div><h3>МЕХАНИЗМ ЗАРАЖЕНИЯ</h3><ol class="mh-v16-steps">'+steps+'</ol></div></section>' +
+      '<section class="mh-v16-research-card mh-chronicle-impact-text"><div class="mh-v16-card-icon">04</div><div><h3>РЕАКЦИЯ РЫНКОВ</h3><p>'+escape(event.impact)+'</p></div></section>' +
+      '<section class="mh-v16-research-card mh-v16-lesson"><div class="mh-v16-card-icon">05</div><div><h3>УРОК ДЛЯ ТРЕЙДЕРА</h3><p>'+escape(event.lesson)+'</p></div></section>' +
+      '<div class="mh-v16-card-footer"><button type="button" data-mh-go-connections>ИССЛЕДОВАТЬ ПАРАЛЛЕЛИ <span aria-hidden="true">↗</span></button>' +
+      '<a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ИСТОЧНИК · '+escape(event.source)+' ↗</a></div></div>';
   }
   function connectionMarkup(event) {
-    const related=EVENTS.filter(e=>e.id!==event.id&&e.themes.some(t=>event.themes.includes(t)));
+    const related=EVENTS.filter(e=>e.id!==event.id&&e.themes.some(t=>event.themes.includes(t))).sort((a,b)=>b.themes.filter(t=>event.themes.includes(t)).length-a.themes.filter(t=>event.themes.includes(t)).length).slice(0,4);
     return '<div class="mh-v16-record mh-v16-connection-record">' +
       '<div class="mh-v16-record-meta"><span>◈ THEMATIC INTELLIGENCE</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
@@ -346,10 +350,15 @@
     panel.classList.toggle('is-expanded',panelExpanded);
     window.MarketSignalDirector?.setEvent(event);
     panel.innerHTML = '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
-      '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
+      '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>'+String(EVENTS.length).padStart(2,'0')+' / SOURCED EVENTS</span></div>' +
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
-      timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
+      timeline() + '<div class="mh-event-peek"><strong>'+escape(event.metric)+'</strong><span>'+escape(event.metricLabel)+'</span><small>'+escape(event.scope)+'</small></div>' +
+      '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
       '<p class="mh-disclaimer">Исторические факты снабжены источниками. Символические связи — тематические, не доказательство причинности и не свидетельства реальных трейдеров.</p>';
+    const rail=panel.querySelector('.mh-timeline'),current=rail?.querySelector('.is-active');
+    if(rail&&current&&!panelExpanded){
+      rail.scrollLeft=Math.max(0,current.offsetLeft-rail.offsetLeft-rail.clientWidth/2+current.offsetWidth/2);
+    }
   }
   function measure() {
     if (state.mode === 'people') return;
@@ -381,8 +390,7 @@
     lines.innerHTML = '';
     if (state.mode === 'connections') {
       const selected = EVENT_BY_ID[state.activeEvent];
-      EVENTS.forEach(other => {
-        if(other.id === selected.id || !other.themes.some(t=>selected.themes.includes(t))) return;
+      EVENTS.filter(other=>other.id!==selected.id&&other.themes.some(t=>selected.themes.includes(t))).slice(0,4).forEach(other => {
         const from = positions[selected.id], to = positions[other.id];
         if (!from.visible || !to.visible) return;
         const d = 'M ' + from.x + ' ' + from.y + ' Q ' + ((from.x+to.x)/2) + ' ' +
@@ -399,7 +407,7 @@
     EVENTS.forEach(event => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'mh-beacon' + (event.id === state.activeEvent ? ' is-active' : '');
+      button.className = 'mh-beacon' + (event.featured ? ' is-featured' : ' is-archive') + (event.id === state.activeEvent ? ' is-active' : '');
       button.dataset.mhBeacon = event.id;
       button.setAttribute('aria-label',event.year + ': ' + event.name + '. Выбрать историческое событие');
       button.setAttribute('aria-pressed',String(event.id === state.activeEvent));
@@ -422,7 +430,7 @@
     const oldMode = state.mode;
     state.mode = mode;
     if (mode === 'people') panelExpanded = false;
-    else if (oldMode !== 'people' && oldMode !== mode) panelExpanded = true;
+    // Keep the current panel state when switching Events / Connections.
     app.dataset.mhMode = mode;
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
       const active = mode === 'people' ? btn.dataset.mhMode === 'people' : btn.dataset.mhMode === 'events';
@@ -447,7 +455,7 @@
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
     state.activeEvent = id;
-    panelExpanded = true;
+    // Scene-first: choosing a year focuses its archive star; dossier is optional.
     renderPanel();
     renderBeacons();
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
@@ -509,7 +517,7 @@
     version: '13.0.0',
     get mode() { return state.mode; },
     get activeEvent() { return state.activeEvent; },
-    get events() { return EVENTS.map(({id,year,date,name,themes,url,p})=>({id,year,date,name,themes:[...themes],url,p:[...p]})); },
+    get events() { return EVENTS.map(({id,year,date,name,themes,url,p,featured})=>({id,year,date,name,themes:[...themes],url,p:[...p],featured})); },
     setMode, selectEvent, measure
   });
 })();
