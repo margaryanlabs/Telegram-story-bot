@@ -136,7 +136,7 @@ test('server-confirmed disconnect paths emit exactly one local invalidation even
   const helper=slice(app,'  function notifyTelegramSessionDisconnected(){',
     '  async function refreshViewerSync(');
   assert.match(helper,/new CustomEvent\('vetogram:telegram-session-disconnected'\)/);
-  assert.doesNotMatch(helper,/initDataUnsafe|phone|session_ciphertext|message/);
+  assert.doesNotMatch(helper,/event\.detail|detail:|JSON\.stringify|initDataUnsafe|session_ciphertext|phoneNumber/);
   const sync=slice(app,'  async function refreshViewerSync(',
     '  // Returning from Telegram');
   assert.match(sync,/wasConnected&&viewerState\.session\?\.connected!==true&&viewerState\.degraded===false/);
