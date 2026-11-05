@@ -108,12 +108,12 @@ test('All user-owned Anti-Delete and Privacy switches stay interactive',()=>{
 });
 
 test('Retention and destructive archive purge keep explicit controls',()=>{
-  const p=privacy();
+  const p=privacy(),a=archived();
   for(const days of ['7','30','90','365','3650'])assert.ok(p.includes('data-retention="'+days+'"'));
   assert.match(p,/Уменьшение срока может удалить старые копии/);
-  assert.match(p,/id="privacyClearButton"/);
-  assert.match(p,/Удалить сохранённый архив навсегда/);
-  assert.match(css,/#privacyClearButton/);
+  assert.match(a,/id="privacyClearButton"/);
+  assert.match(a,/Удалить сохранённый архив навсегда/);
+  assert.match(css,/[data-screen="chats"] #privacyClearButton/);
   assert.match(css,/border:1px solid rgba\(232,148,154,.45\)/);
   assert.doesNotMatch(css,/#privacyClearButton\s*\{[^}]*display\s*:\s*none/);
 });
@@ -169,6 +169,6 @@ test('Design retains genuine archive warnings and does not relabel screen as liv
   assert.match(a,/Сохранённые чаты/);
   assert.match(p,/Отметки о прочтении/);
   assert.match(p,/Статус в сети/);
-  assert.match(p,/Сохраняются только новые доступные сообщения/);
+  assert.match(a,/Сохраняются только новые доступные сообщения/);
   assert.doesNotMatch(css,/content\s*:\s*["'](?:online|live|synced|verified|connected)/i);
 });
