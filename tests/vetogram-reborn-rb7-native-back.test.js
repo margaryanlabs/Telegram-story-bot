@@ -10,31 +10,45 @@ import {readFileSync} from 'node:fs';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const app=read('public/app.js');
 const chats=read('public/telegram-chats.js');
+const stories=read('public/telegram-stories.js');
+const media=read('public/vetogram-universe.js');
+const messageActions=read('public/vetogram-chat-experience-v4.js');
 const begin=app.indexOf('  function nativeBackTarget(){');
 const end=app.indexOf('  // Pages without a bottom-tab button',begin);
 assert.ok(begin>0&&end>begin,'native Back handler is present');
 const source=app.slice(begin,end);
 
-function fixture({screen='telegram',sheetOpen=false,threadOpen=false}={}){
+function fixture({screen='telegram',sheetOpen=false,threadOpen=false,
+    storyOpen=false,playerOpen=false,photoOpen=false,actionsOpen=false}={}){
   const calls=[],listeners=new Map();
-  const sheet={hidden:!sheetOpen},thread={hidden:!threadOpen};
+  const sheet={hidden:!sheetOpen},thread={hidden:!threadOpen},
+    story={hidden:!storyOpen},player={hidden:!playerOpen},
+    photo={open:photoOpen},actions={open:actionsOpen};
+  const emit=type=>listeners.get(type)?.();
+  actions.close=()=>{actions.open=false;calls.push('close-actions');emit('vetogram:message-actions-view-changed')};
   const tg={BackButton:{
     show:()=>calls.push('show'),
     hide:()=>calls.push('hide'),
   }};
   const context=vm.createContext({
     tg,currentScreen:screen,
-    $:id=>id==='sheet'?sheet:id==='telegramThreadView'?thread:null,
+    $:id=>({
+      sheet,telegramThreadView:thread,vetoContactStoryViewer:story,
+      v61Player:player,telegramThreadPhotoDialog:photo,v4MessageActions:actions,
+    })[id]||null,
     window:{
       addEventListener:(type,fn)=>listeners.set(type,fn),
-      VetoTelegramChatBack:()=>{calls.push('chat-back');thread.hidden=true;listeners.get('vetogram:chat-view-changed')?.();},
+      VetoTelegramChatBack:()=>{calls.push('chat-back');thread.hidden=true;emit('vetogram:chat-view-changed')},
+      VetoTelegramStoryBack:()=>{calls.push('story-back');story.hidden=true;emit('vetogram:story-view-changed')},
+      VetoTelegramMediaBack:()=>{calls.push('media-back');player.hidden=true;emit('vetogram:media-player-view-changed')},
+      VetoTelegramPhotoBack:()=>{calls.push('photo-back');photo.open=false;emit('vetogram:photo-view-changed')},
     },
-    closeSheet:()=>{calls.push('close-sheet');sheet.hidden=true;listeners.get('vetogram:chat-view-changed')?.();},
-    switchScreen:target=>{calls.push('screen:'+target);context.currentScreen=target;listeners.get('vetogram:chat-view-changed')?.();},
+    closeSheet:()=>{calls.push('close-sheet');sheet.hidden=true;emit('vetogram:chat-view-changed')},
+    switchScreen:target=>{calls.push('screen:'+target);context.currentScreen=target;emit('vetogram:chat-view-changed')},
   });
   vm.runInContext(source,context,{timeout:1000});
   return {
-    calls,sheet,thread,context,
+    calls,sheet,thread,story,player,photo,actions,context,
     target:()=>vm.runInContext('nativeBackTarget()',context),
     sync:()=>vm.runInContext('syncNativeBackButton()',context),
     back:()=>vm.runInContext('handleNativeBackButton()',context),
@@ -79,11 +93,58 @@ test('secondary workspaces return to Chats instead of stale Profile or AI routes
   }
 });
 
+test('a contact Story viewer closes before returning from the underlying chat',()=>{
+  const f=fixture({threadOpen:true,storyOpen:true});
+  assert.equal(f.target(),'story');
+  f.sync();f.back();
+  assert.equal(f.story.hidden,true);
+  assert.equal(f.thread.hidden,false);
+  assert.deepEqual(f.calls,['show','story-back','show']);
+  assert.equal(f.target(),'thread');
+});
+
+test('full-screen Media player closes without navigating or changing audio',()=>{
+  const f=fixture({screen:'media',playerOpen:true});
+  assert.equal(f.target(),'media-player');
+  f.sync();f.back();
+  assert.equal(f.player.hidden,true);
+  assert.deepEqual(f.calls,['show','media-back','hide']);
+  assert.equal(f.target(),null);
+});
+
+test('photo and contextual action dialogs are higher priority than a conversation',()=>{
+  const f=fixture({threadOpen:true,photoOpen:true,actionsOpen:true});
+  assert.equal(f.target(),'message-actions');
+  f.sync();f.back();
+  assert.equal(f.actions.open,false);
+  assert.equal(f.target(),'photo');
+  f.back();
+  assert.equal(f.photo.open,false);
+  assert.equal(f.target(),'thread');
+  f.back();
+  assert.equal(f.thread.hidden,true);
+  assert.equal(f.target(),null);
+});
+
+test('story, photo and Media modules notify Back state without sharing personal payload',()=>{
+  assert.match(stories,/window\.VetoTelegramStoryBack=closeViewer/);
+  assert.match(stories,/new CustomEvent\('vetogram:story-view-changed'\)/);
+  assert.match(stories,/notifyStoryViewChanged\(\)/);
+  assert.match(media,/window\.VetoTelegramMediaBack=closePlayer/);
+  assert.match(media,/new CustomEvent\('vetogram:media-player-view-changed'\)/);
+  assert.match(chats,/window\.VetoTelegramPhotoBack=closePhotoViewer/);
+  assert.match(chats,/new CustomEvent\('vetogram:photo-view-changed'\)/);
+  assert.match(messageActions,/new CustomEvent\('vetogram:message-actions-view-changed'\)/);
+  assert.match(messageActions,/notifyMessageActionsChanged\(\)/);
+});
+
 test('native Back never opens another account, sends a code or mutates Telegram API',()=>{
   assert.doesNotMatch(source,/viewerApi\(|send_code|loginPending|window\.location/);
   assert.match(app,/BackButton\?\.onClick\(handleNativeBackButton\)/);
   assert.doesNotMatch(app,/BackButton\?\.onClick\(closeSheet\)/);
-  assert.match(app,/window\.addEventListener\('vetogram:chat-view-changed',syncNativeBackButton\)/);
+  assert.match(app,/'vetogram:chat-view-changed'/);
+  assert.match(app,/'vetogram:story-view-changed'/);
+  assert.match(app,/'vetogram:media-player-view-changed'/);
 });
 
 test('all real conversation exit paths refresh the native Back state',()=>{
