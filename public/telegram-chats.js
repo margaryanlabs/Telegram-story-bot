@@ -7,7 +7,7 @@
     filter:'all',search:'',generation:0,inboxOverlayEpoch:0,lastListFetchedAt:0,pendingLoginRefresh:false,
     thread:null,messages:[],threadLoading:false,threadLoadError:'',threadAuthRejected:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,threadRequestAbort:null,archiveRequestAbort:null,
-    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarMissing:new Set(),avatarRetryTimer:null,avatarBlockedUntil:0,avatarActive:0,avatarEpoch:0,
+    connectionProof:null,sessionDisconnected:false,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarMissing:new Set(),avatarRetryTimer:null,avatarBlockedUntil:0,avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
     drafts:new Map(),draftVersions:new Map(),sessionEpoch:0,sendInFlight:false,sendInFlightChatId:null,lastSendFailure:null,lastSendFailures:new Map(),
@@ -1237,7 +1237,8 @@
     const drawerStatus=$('telegramMirrorAccessDrawerStatus');
     if (drawerStatus) drawerStatus.textContent=state.connectionProof?.verified
       ? 'Telegram подключён · ↶ архив отдельно'
-      : 'Нужно подключить Telegram';
+      : state.sessionDisconnected ? 'Telegram отключён · подключи аккаунт снова'
+        : 'Нужно подключить Telegram';
     // Keep setup discoverable when login isn't verified, out of the way for
     // an already linked user reading chats on a small mobile screen.
     if (drawer && !drawer.dataset.userToggled) drawer.open=false; // on-demand setup, not the messenger's first screen
@@ -1247,16 +1248,20 @@
       proof.classList.toggle('archive-only',Boolean(p)&&!p.verified);
       proof.textContent=p?.verified
         ?'✓ Подтверждён Telegram '+(p.username?'@'+p.username:p.accountName||'владельца')+' · чаты только этого аккаунта'
-        :p ? '◈ Только собственный архив Vetogram · живой аккаунт не подтверждён' : '◌ Проверяю личный Telegram · чужие чаты не показываются';
+        :state.sessionDisconnected ? '○ Личный Telegram отключён · переписки скрыты'
+          :p ? '◈ Только собственный архив Vetogram · живой аккаунт не подтверждён'
+            : '◌ Проверяю личный Telegram · чужие чаты не показываются';
     }
     $('telegramMirrorUpdated').textContent=state.chats.length
       ?String(state.chats.length)+' чатов загружено · по запросу':'Обновление по запросу';
     if(!items.length){
       list.innerHTML=state.loading
         ?empty('Подключаюсь к Telegram','Загружаю настоящие чаты…','↻')
-        :state.search||state.filter!=='all'
-          ?empty('Ничего не найдено','Попробуй другой запрос или выбери «Все»','⌕')
-          :empty('Чаты пока не загружены','Нажми обновить, чтобы увидеть свои переписки');
+        :state.sessionDisconnected
+          ?empty('Telegram отключён','Для просмотра своих переписок подключи Telegram заново.')
+          :state.search||state.filter!=='all'
+            ?empty('Ничего не найдено','Попробуй другой запрос или выбери «Все»','⌕')
+            :empty('Чаты пока не загружены','Нажми обновить, чтобы увидеть свои переписки');
     }else{
       list.innerHTML=items.map(chat=>{
         const unread=Math.max(0,Number(chat.unreadCount||0));
@@ -1391,6 +1396,7 @@
         }
       });
       state.connectionProof=data.connection||null;
+      state.sessionDisconnected=false;
       if(data.connection?.verified)state.lastListFetchedAt=Date.now();
       if(data.archiveDeferred===true&&data.connection?.verified===true)
         void hydrateInboxOverlay(state.ownerInitData,state.inboxOverlayEpoch);
@@ -1936,7 +1942,7 @@
     closeVetoMessengerTools();
     clearIntelSearch({close:true});
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
-    state.connectionProof=null;state.loading=false;state.threadLoading=false;
+    state.connectionProof=null;state.sessionDisconnected=false;state.loading=false;state.threadLoading=false;
     state.sendInFlight=false;state.sendInFlightChatId=null;state.lastSendFailure=null;state.lastSendFailures.clear();state.lastRichFailure=null;state.lastRichFailures.clear();
     state.drafts.clear();state.draftVersions.clear();state.pendingAttachment=null;state.replyTo=null;
     state.stickers=[];state.stickerSets=[];state.stickerPack=null;
@@ -2451,6 +2457,7 @@
     stopThreadSync();cancelActivePoll();
     cancelThreadRequest();
     state.threadAuthRejected=true;
+    state.sessionDisconnected=true;
         // A genuine signed-session/ownership failure must not keep private
         // messages and previously downloaded media available in the UI.
         state.messages=[];state.chats=[];state.threadCache.clear();
@@ -3440,6 +3447,7 @@
   });
   window.addEventListener('vetogram:telegram-session-connected',()=>{
     if(resetOwner())return;
+    state.sessionDisconnected=false;
     // Archive cards from before login must be replaced with actual MTProto
     // dialogs after verification, even if the inbox is already nonempty.
     if(state.thread)back();
