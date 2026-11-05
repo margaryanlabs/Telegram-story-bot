@@ -95,6 +95,37 @@
   opacity:.58;
   animation-duration:48s;
 }
+/* Orbital guides are physically anchored to the existing scene's aura,
+   whose position/diameter already follow the 3D globe every render update.
+   They are optical, NOT links between people, and never receive input. */
+#app.obsidian .v81-globe-aura .v126-orbit-guide{
+  position:absolute;inset:0;pointer-events:none;
+  contain:paint;
+}
+#app.obsidian .v81-globe-aura .v126-orbit-guide::before,
+#app.obsidian .v81-globe-aura .v126-orbit-guide::after{
+  content:"";position:absolute;pointer-events:none;
+  border-radius:50%;
+}
+#app.obsidian .v81-globe-aura .v126-orbit-guide::before{
+  left:6%;right:6%;top:29%;bottom:29%;
+  transform:rotate(-18deg);
+  border:1px solid rgba(144,218,231,.24);
+  border-top-color:rgba(165,222,236,.12);
+  border-bottom-color:rgba(154,227,239,.38);
+  box-shadow:0 1px 11px rgba(104,200,226,.09);
+}
+#app.obsidian .v81-globe-aura .v126-orbit-guide::after{
+  left:20%;right:20%;top:13%;bottom:13%;
+  transform:rotate(39deg);
+  border:1px solid rgba(218,184,150,.11);
+  border-top-color:transparent;
+  border-bottom-color:rgba(219,181,139,.32);
+  border-left-color:rgba(170,195,205,.10);
+}
+#app.obsidian .v81-globe-aura.is-eco .v126-orbit-guide::after{
+  display:none;
+}
 /* Actual story stars remain clearly interactive above decoration. */
 #app.obsidian .markers .star-marker{
   border-color:rgba(207,244,248,.83);
