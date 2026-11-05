@@ -13,7 +13,7 @@ new Script(shaderWrapper).runInNewContext(shaderContext);
 const frag = shaderContext.window.MHCrimsonShaders.fragment;
 
 test('V15 new obsidian material keeps red accents localized rather than lava-world', () => {
-  assert.match(frag,/OBSIDIAN SIGNAL/);
+  assert.match(frag,/Obsidian alloy/);
   assert.match(frag,/hairline/);
   assert.match(frag,/stress=hairline\*gate/);
   assert.match(frag,/obsidian/);
