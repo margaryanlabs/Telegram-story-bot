@@ -135,3 +135,35 @@ camera gestures and phone-specific performance.
 Playwright tests, actual full-app screenshots and public RC6 preview
 delivery. Do not merge into production or claim full device acceptance
 from the EGL test alone.
+
+
+## Visual refinement II — nebula depth and actual GPU verification
+
+Implemented on the **same RC6 review branch / PR #236**, not a new
+application or deployment:
+
+- `index.html`: a coherent 3D value-noise field (`nebulaNoise3`),
+  physically rotating dark cloud cavities, narrow cyan plasma rivers,
+  warm-gold surface filaments, delicate high-quality stellar dust,
+  a sharp solar atmosphere and a highp-when-available / mediump-fallback
+  fragment precision declaration.
+- `v10/v12-universe-depth-v2.css`: new non-interactive background
+  galaxy, diagonal violet/blue nebula river and warm lower-left
+  counternebula with phone-specific, reduced-motion overrides.
+- `index.html`: new `v127-space-field` sits **strictly between**
+  `v124-depth-field` and the real `#gl` canvas.
+- `tests/v12-rc6-universe-cinema.test.mjs` and
+  `scripts/check.mjs`: enforce the shader, background layer,
+  transparent pointer behavior and cumulative release identity.
+
+**Verified offscreen by actual Mesa EGL OpenGL ES 2.0 rasterization:**
+both ECO and HIGH compiled, linked, and produced 600×600 framebuffers
+with `glGetError() == 0`. The high mode has stronger plasma highlights
+and rare stellar dust. Full inline application JS parsed, and all six
+updated targeted RC6 tests passed in a faithful assertion harness.
+
+**Not yet proven:** full mobile Chromium/WebGL end-to-end QA,
+real Android FPS or comparison of the complete CSS background with
+the finished application. A GitHack pinned-commit live link is for
+user review only; it is not a substitute for a proper production
+preview or full regression suite.
