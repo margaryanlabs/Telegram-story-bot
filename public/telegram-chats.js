@@ -2360,7 +2360,18 @@
   function scheduleThreadSync(ms=26000){
     stopThreadSync();
     if(!maySyncThread())return;
-    state.syncTimer=setTimeout(()=>{void pollThread();},ms);
+    state.syncTimer=setTimeout(()=>{
+      // A failed first/history refresh must recover the real owner-verified
+      // thread before incremental polling. Poll only returns a small recent
+      // window; it cannot restore historical pagination or canSend rights.
+      // The same visibility/online guard also stops retries in background.
+      if(!maySyncThread())return;
+      if(state.threadLoadError){
+        if(!state.threadLoading)void loadMessages({reset:true});
+        return;
+      }
+      void pollThread();
+    },ms);
   }
   function rememberHotThread(){
     if(!state.thread||!state.messages.length)return;
