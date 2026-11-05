@@ -116,6 +116,7 @@
   let viewerSearchQuery = '';
   let viewerRegisteredKey = '';
   let viewerQrAbortController = null;
+  let viewerQrRetryTimer = null;
   let viewerAuthBusy = false;
   let viewerPendingPhone = '';
   let composerFile = null;
@@ -394,6 +395,7 @@
     viewerAuthBusy=false;
     viewerQrAbortController?.abort();
     viewerQrAbortController=null;
+    clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;
     // The sheet is shared with Privacy, account connection and MFA.
     // Never leave the previous owner's private dialog visible or restore
     // keyboard focus to its old, now-detached input element.
@@ -2983,6 +2985,7 @@
   }
 
   function viewerQrSheet() {
+    clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ ЧЕРЕЗ QR</span>
       <h2>Отсканируй QR со второго экрана</h2>
@@ -3006,6 +3009,7 @@
 
   function updateViewerQr(event) {
     if (!event || $('sheet')?.hidden) return;
+    clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;
     const image = $('viewerQrImage');
     const loader = $('viewerQrLoader');
     const status = $('viewerQrStatus');
@@ -3044,10 +3048,35 @@
       if (status) status.textContent = 'Не удалось подключить';
       if (meta) meta.textContent = event.error || 'Повтори попытку.';
       if (openButton) {
-        openButton.disabled = false;
         openButton.textContent = 'Повторить';
         openButton.dataset.sheetAction = 'viewer-start-qr';
         delete openButton.dataset.qrUri;
+        const retrySeconds=Number(event.retryAfterSeconds);
+        const wait=Number.isSafeInteger(retrySeconds)&&retrySeconds>0&&retrySeconds<=86400
+          ? retrySeconds : 0;
+        if(wait) {
+          // Respect Telegram FLOOD_WAIT even when the NDJSON stream ends.
+          // Never enable a second QR request until the server cooldown ends.
+          const until=Date.now()+wait*1000;
+          const signed=String(tg?.initData||''),epoch=viewerOwnerEpoch;
+          const tick=()=>{
+            if($('sheet')?.hidden || $('viewerQrOpenButton')!==openButton ||
+               signed!==String(tg?.initData||'') || epoch!==viewerOwnerEpoch) {
+              clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;return;
+            }
+            const left=Math.max(0,Math.ceil((until-Date.now())/1000));
+            openButton.disabled=left>0;
+            openButton.textContent=left>0?`Повтор через ${left} с`:'Повторить QR';
+            if(!left) {
+              clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;
+              if(meta) meta.textContent='Ограничение Telegram завершилось. Можно создать новый QR.';
+            }
+          };
+          tick();
+          viewerQrRetryTimer=setInterval(tick,1000);
+        } else {
+          openButton.disabled=false;
+        }
       }
     }
   }
