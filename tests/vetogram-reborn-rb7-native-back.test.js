@@ -162,3 +162,56 @@ test('all real conversation exit paths refresh the native Back state',()=>{
   assert.match(revoke,/notifyThreadViewChanged\(\)/);
   assert.match(chats,/window\.VetoTelegramChatBack=back/);
 });
+
+
+test('story viewer restores focus only for a still-active, same-screen user close',()=>{
+  const start=stories.indexOf('  function notifyStoryViewChanged(){');
+  const end=stories.indexOf('  function resetOwner() {',start);
+  assert.ok(start>0&&end>start);
+  const src=stories.slice(start,end);
+  function run({restore=true,active=true,background=false}={}){
+    const calls=[];
+    const previous={
+      isConnected:true,
+      closest:()=>({classList:{contains:name=>name==='active'&&active}}),
+      focus:()=>calls.push('focus'),
+    };
+    const state={epoch:2,mediaBusy:true,activePeer:1,activeStory:2,priorFocus:previous};
+    const viewer={hidden:false,replaceChildren:()=>calls.push('clear')};
+    const context=vm.createContext({
+      state,viewer,hideMedia:()=>calls.push('stop-media'),
+      window:{dispatchEvent:ev=>calls.push(ev.type)},
+      document:{hidden:background,body:{classList:{remove:()=>calls.push('close-css')}}},
+      CustomEvent:class {constructor(type){this.type=type;}},
+    });
+    vm.runInContext(src,context,{timeout:1000});
+    vm.runInContext(restore?'closeViewer()':'closeViewer({restoreFocus:false})',context);
+    return {calls,state,viewer};
+  }
+  const user=run();
+  assert.equal(user.calls.includes('focus'),true);
+  assert.equal(user.viewer.hidden,true);
+  assert.equal(user.state.priorFocus,null);
+  assert.equal(user.calls.includes('vetogram:story-view-changed'),true);
+  for(const options of [
+    {restore:false,active:true},{restore:true,active:false},
+    {restore:true,active:true,background:true},
+  ]){
+    const f=run(options);
+    assert.equal(f.calls.includes('focus'),false,JSON.stringify(options));
+    assert.equal(f.calls.includes('stop-media'),true);
+    assert.equal(f.calls.includes('vetogram:story-view-changed'),true);
+  }
+});
+
+test('switching from Chats to publishing Stories always dismisses contact Story overlay',()=>{
+  const handler=stories.slice(
+    stories.indexOf("  window.addEventListener('veto:screen-changed'"),
+    stories.indexOf("  window.addEventListener('pageshow'",stories.indexOf("  window.addEventListener('veto:screen-changed'")),
+  );
+  assert.match(handler,/destination!=='telegram'&&!viewer\.hidden/);
+  assert.match(handler,/closeViewer\(\{restoreFocus:false\}\)/);
+  assert.match(handler,/\['telegram','publish'\]\.includes\(destination\)/);
+  assert.match(stories,/if \(document\.hidden\) \{[\s\S]*?closeViewer\(\{restoreFocus:false\}\)/);
+  assert.match(stories,/closeViewer\(\{restoreFocus:false\}\);\s*state\.owner = current/);
+});
