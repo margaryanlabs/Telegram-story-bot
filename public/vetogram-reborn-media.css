@@ -785,3 +785,217 @@ html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.vp-card,.vp-game-ca
   }
   @keyframes v9MediaGlow{from{transform:translateX(-8%);opacity:.34}to{transform:translateX(7%);opacity:.75}}
 }
+
+
+/* V9 / ARCADE CATALOG V2 — CSS follows the real six local games. */
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-shell{
+  width:min(100%,880px);margin-inline:auto;padding:6px clamp(12px,3vw,26px) 110px !important;
+  background:#050505 !important;min-height:100dvh;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-top{
+  margin:0 0 8px !important;padding:12px 3px !important;
+  background:transparent !important;border:0 !important;box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-hero{
+  display:block !important;min-height:0 !important;
+  padding:13px 3px 16px !important;margin:0 !important;
+  border:0 !important;border-radius:0 !important;
+  background:#050505 !important;background-image:none !important;
+  box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-hero-copy{
+  max-width:none !important;padding:0 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-hero h1{
+  font-size:clamp(30px,6vw,44px) !important;line-height:1.04 !important;
+  color:#f7f7f7 !important;letter-spacing:-.05em !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-hero h1 em{
+  color:inherit !important;font-style:normal !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.v72-play-hero-art,.v72-play-hero-stats,.v75-arcade-hero-cta){
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launcher{
+  margin:3px 0 22px;padding:0 2px;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-heading{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:0 0 13px;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-kicker{
+  font-size:10px;font-weight:700;letter-spacing:.14em;color:#a9a9a9;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-heading h2{
+  font-size:clamp(22px,5vw,30px);letter-spacing:-.04em;color:#f6f6f6;margin:7px 0 4px;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-heading p{
+  font-size:12px;line-height:1.45;color:#aaa;margin:0;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-count{
+  flex:none;color:#bcbcbc;font-size:10px;font-weight:800;letter-spacing:.1em;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch{
+  min-width:0;min-height:145px;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:flex-end;gap:4px;text-align:left;
+  padding:16px;border-radius:17px;
+  border:1px solid #272727;background:linear-gradient(150deg,#1d1d1d,#101010);
+  color:#f5f5f5;cursor:pointer;
+  transition:transform .18s ease,background-color .18s ease,border-color .18s ease;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch:hover{
+  border-color:#666;transform:translateY(-2px);
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch:active{
+  transform:scale(.985);
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch:focus-visible,
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-back:focus-visible{
+  outline:2px solid #eee;outline-offset:3px;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-symbol{
+  align-self:flex-start;margin:0 0 auto;
+  font-family:system-ui,sans-serif;font-weight:450;font-size:36px;line-height:1;
+  color:#dcdcdc;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch strong{
+  display:block;font-size:clamp(13px,2.5vw,18px);line-height:1.13;font-weight:750;
+  letter-spacing:-.025em;overflow-wrap:anywhere;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch small{
+  color:#aaa;font-size:11px;line-height:1.3;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-back:not([hidden]){
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #343434;background:#161616;color:#f0f0f0;
+  border-radius:12px;padding:12px 17px;font-size:13px;min-height:45px;
+  font-weight:680;margin:2px 0 10px;cursor:pointer;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-enhanced .v9-game-section-head{
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-enhanced:not(.v9-arcade-active) #vpQuickGames{
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active .v9-arcade-launch-grid{
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active #vpQuickGames{
+  display:block !important;max-width:700px;margin:0 auto 24px;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active #vpQuickGames .vp-mini{
+  margin:0 !important;padding:20px !important;width:100% !important;
+  background:#151515 !important;background-image:none !important;
+  border:1px solid #303030 !important;box-shadow:none !important;
+  border-radius:18px !important;color:#f1f1f1 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] #vpQuickGames .vp-mini[hidden]{
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-game-art,
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-game-art-pairs,
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-game-art-tic,
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-game-art-2048{
+  background:#202020 !important;background-image:none !important;
+  border-color:#363636 !important;box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-game-art svg{
+  filter:grayscale(1) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.vp-featured,.vp-who,.vp-developer,.vp-roadmap,.vp-stats-zone,.vp-room-zone){
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-section-head:has(+ .vp-featured){
+  display:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v74-local-panel{
+  border:1px solid #272727 !important;background:#111 !important;
+  box-shadow:none !important;margin-top:10px !important;
+}
+
+/* V9: saved personal collection is one optional disclosure, not a second hero. */
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-saved-search{
+  border:1px solid #292929;border-radius:14px;padding:0 14px;margin:18px 0 12px;
+  background:#111;color:#efefef;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-saved-search > summary{
+  list-style:none;cursor:pointer;padding:15px 0;display:flex;align-items:center;
+  justify-content:space-between;gap:8px;min-height:46px;font-size:13px;font-weight:720;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-saved-search > summary::-webkit-details-marker{display:none}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-saved-search > summary span{
+  color:#999;font-size:10px;font-weight:500;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-saved-search[open] > summary{border-bottom:1px solid #262626;}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-saved-search :is(.v75-local-search-heading,.v61-search,.v61-filters){margin-block:13px !important;}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery{
+  background:#111 !important;background-image:none !important;
+  box-shadow:none !important;border:1px solid #292929 !important;
+  border-radius:16px !important;padding:18px 16px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery-intro h2{
+  font-size:clamp(20px,4.5vw,29px) !important;color:#f5f5f5 !important;
+  line-height:1.15 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery-intro h2 em{
+  font-style:normal !important;color:inherit !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery-intro > p{
+  font-size:12px !important;line-height:1.5 !important;color:#aaa !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] :is(.v72-hero-visual,.v72-media-card,.v75-discovery) {
+  backdrop-filter:none !important;
+}
+
+/* Light theme is genuinely white, not an inverted blue-black layer. */
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] #v6MediaHome,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .vp-shell{
+  background:#fff !important;color:#151515 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v72-media-hero,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .vp-hero{
+  background:#fff !important;background-image:none !important;color:#151515 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v72-media-hero h1,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .vp-hero h1,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .v9-arcade-heading h2{
+  color:#171717 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] :is(.v72-media-card,.v75-discovery,.v9-saved-search),
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] :is(.v9-arcade-launch,.vp-mini,.v74-local-panel){
+  background:#f4f4f4 !important;background-image:none !important;
+  border-color:#dedede !important;color:#161616 !important;box-shadow:none !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .v9-arcade-launch :is(strong,.v9-arcade-symbol){
+  color:#171717 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .v9-arcade-launch small,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .v9-arcade-heading p,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v75-discovery-intro > p{
+  color:#555 !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .v9-arcade-back:not([hidden]){
+  background:#f5f5f5 !important;color:#171717 !important;border-color:#ccc !important;
+}
+@media(max-width:600px){
+  html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch{
+    padding:14px;min-height:139px;border-radius:15px;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active #vpQuickGames .vp-mini{
+    padding:13px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery{
+    padding:16px 13px !important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch{
+    transition:none !important;transform:none !important;
+  }
+}
