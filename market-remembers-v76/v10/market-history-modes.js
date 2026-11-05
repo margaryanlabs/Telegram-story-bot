@@ -240,11 +240,13 @@
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
     state.activeEvent = id;
-    panelExpanded = true;
+    // Picking a probe updates the compact event dock; research expands only
+    // when the visitor explicitly opens it. If already expanded, keep it open.
     renderPanel();
     renderBeacons();
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
     window.MarketSignalDirector?.setEvent(EVENT_BY_ID[id]);
+    window.MarketSignalDirector?.triggerEvent();
     updateUrl();
   }
   function openPeopleTheme(theme) {

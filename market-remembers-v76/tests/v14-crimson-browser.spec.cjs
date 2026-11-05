@@ -57,6 +57,7 @@ test('V14 Canvas2D fallback renders and remains interactive when WebGL is absent
    return [...ctx.getImageData(midX,midY,1,1).data];
  });
  expect(p[3]).toBeGreaterThan(100);
+ await page.locator('#mhHistoryPanel .mh-panel-grip').click();
  await page.locator('#mhHistoryPanel [data-mh-event="1907"]').first().click();
  await expect(page.locator('#mhHistoryPanel')).toContainText('Паника 1907 года');
 });
