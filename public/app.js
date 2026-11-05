@@ -2715,15 +2715,40 @@
     };
   }
 
+  async function finishVerifiedViewerLogin({analytics=false}={}){
+    // Verify the *current* owner/session after the password or code API
+    // succeeds. A logout or signed account change can occur while these
+    // network reads are pending; never navigate using an obsolete result.
+    const ownerEpoch=viewerOwnerEpoch,signed=String(tg?.initData||'');
+    const current=()=>ownerEpoch===viewerOwnerEpoch&&
+      signed===String(tg?.initData||'');
+    closeSheet();
+    viewerPendingPhone='';viewerState.loginPending=null;
+    await refreshViewerSync({silent:true});
+    if(!current())return false;
+    await refresh();
+    if(!current())return false;
+    if(analytics){
+      await refreshViewerAnalytics({silent:true});
+      if(!current())return false;
+    }
+    if(viewerState.session?.connected!==true ||
+       viewerState.session?.identityMismatch===true ||
+       viewerState.degraded===true){
+      showToast('Telegram принял вход, но статус сессии ещё не подтверждён. Обнови подключение; новый код пока не запрашивай.');
+      return false;
+    }
+    markVetoWelcomeSeen();
+    notify('success');
+    showToast('Telegram успешно подключён');
+    switchScreen('telegram');
+    offerBusinessConsentAfterLogin();
+    return true;
+  }
+
   async function renderViewerLoginResult(data) {
     if (data.stage==='connected') {
-      closeSheet();
-      viewerPendingPhone='';viewerState.loginPending=null;
-      markVetoWelcomeSeen();
-      notify('success');showToast('Telegram успешно подключён');
-      await refreshViewerSync({silent:true});await refresh();
-      switchScreen('telegram');
-      offerBusinessConsentAfterLogin();
+      await finishVerifiedViewerLogin();
       return;
     }
     if (data.needsPassword===true || data.stage==='password') {
@@ -3724,18 +3749,7 @@
           renderViewerPendingLoginNotice();
           viewerPasswordSheet();
         } else {
-          closeSheet();
-          viewerPendingPhone = '';
-          viewerState.loginPending = null;
-          notify('success');
-          showToast('Telegram успешно подключён');
-          await refreshViewerSync({ silent: true });
-          // Refresh the account/Stories state too; a connected session does not
-          // immediately appear otherwise for users without Telegram Business.
-          await refresh();
-          await refreshViewerAnalytics({ silent: true });
-          switchScreen('telegram');
-          offerBusinessConsentAfterLogin();
+          await finishVerifiedViewerLogin({analytics:true});
         }
       });
       return;
@@ -3746,16 +3760,7 @@
         if (!password) throw new Error('Введи пароль двухэтапной проверки Telegram');
         await viewerApi('verify_password', { password }, null);
         if ($('viewerPassword')) $('viewerPassword').value='';
-        closeSheet();
-        viewerPendingPhone = '';
-        viewerState.loginPending = null;
-        notify('success');
-        showToast('Telegram успешно подключён');
-        await refreshViewerSync({ silent: true });
-        await refresh();
-        await refreshViewerAnalytics({ silent: true });
-        switchScreen('telegram');
-        offerBusinessConsentAfterLogin();
+        await finishVerifiedViewerLogin({analytics:true});
       });
       return;
     }
