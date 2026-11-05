@@ -2586,11 +2586,28 @@ void main(){
  vec2 pixel=uCenter+vec2(q.x,-q.y)*uRadius*per*uZoom;
  gl_Position=vec4(pixel.x/uRes.x*2.0-1.0,1.0-pixel.y/uRes.y*2.0,-q.z*.48,1.);
 }`;
-  const coreFragment=`precision mediump float;
+  const coreFragment=`#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
 varying mediump vec3 vN;varying mediump vec3 vObject;
 uniform mediump float uTime;uniform float uMotion;uniform mediump float uPulse;uniform vec3 uFocus;
 uniform mediump float uQuality;
 float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
+// Stable 3D value noise avoids a painted-on sin-wave texture. Object-space
+// coordinates follow the physical rotation of the existing 3D sphere.
+float nebulaNoise3(vec3 p){
+ vec3 i=floor(p),f=fract(p);
+ f=f*f*(3.0-2.0*f);
+ float z0=mix(
+  mix(hash(i),hash(i+vec3(1.,0.,0.)),f.x),
+  mix(hash(i+vec3(0.,1.,0.)),hash(i+vec3(1.,1.,0.)),f.x),f.y);
+ float z1=mix(
+  mix(hash(i+vec3(0.,0.,1.)),hash(i+vec3(1.,0.,1.)),f.x),
+  mix(hash(i+vec3(0.,1.,1.)),hash(i+vec3(1.,1.,1.)),f.x),f.y);
+ return mix(z0,z1,f.z);
+}
 void main(){
  vec3 N=normalize(vN),L=normalize(vec3(-.53,.70,1.12)),H=normalize(L+vec3(0.,0.,1.));
  float light=max(dot(N,L),0.),fill=smoothstep(-.52,.78,dot(N,L));
@@ -2640,6 +2657,40 @@ void main(){
    material+=vec3(.120,.255,.310)*cyanKnot*brightVein*.74;
  }
  material+=vec3(.045,.086,.105)*filament*.085;
+ // Living nebula V2: real multi-scale pockets of darkness and luminous
+ // plasma rivers. Avoid perfectly spaced, transparent glass-like bands.
+ float cloudDepth=nebulaNoise3(vObject*3.7+vec3(2.4,.7,1.9));
+ float shadowCavity=1.-smoothstep(.27,.67,cloudDepth);
+ material*=1.-shadowCavity*.54;
+ float terrain=cloudDepth;
+ if(uQuality>.5){
+   float cloudDetail=nebulaNoise3(vObject*9.3+vec3(6.1,1.7,2.5));
+   terrain=mix(terrain,cloudDetail,.32);
+ }
+ float bank=smoothstep(.32,.69,terrain);
+ float bent=(cloudDepth-.5)*3.2;
+ float sweepLine=vObject.y*8.7+vObject.x*5.1+
+                sin(vObject.z*5.7)*1.7+bent;
+ float stream=1.-abs(sin(sweepLine));
+ float brightCurrent=pow(max(stream,0.),5.6);
+ float diffuseCurrent=pow(max(stream,0.),1.9);
+ float secondary=pow(max(1.-abs(sin(vObject.x*13.1-
+                        vObject.y*5.9+vObject.z*3.8+bent)),0.),6.5);
+ float veil=bank*(.43+.57*light);
+ material+=vec3(.038,.171,.223)*diffuseCurrent*veil;
+ material+=vec3(.141,.395,.475)*brightCurrent*veil*1.15;
+ material+=vec3(.062,.212,.263)*secondary*veil*.75;
+ // Warm pockets are NOT a full-face filter; color is bound to the mesh.
+ float sunrise=pow(max(dot(N,normalize(vec3(.55,.41,.73))),0.),11.);
+ float ember=pow(max(dot(normalize(vObject),
+                        normalize(vec3(.28,-.38,.88))),0.),13.);
+ material+=vec3(.39,.229,.113)*sunrise*bank*.82;
+ material+=vec3(.24,.139,.080)*ember*(.3+.7*cloudDepth)*.65;
+ // A clean, luminous atmospheric edge separates globe from its nebula sky.
+ float atmosphere=pow(1.-clamp(N.z,0.,1.),6.2);
+ float easternGlow=pow(max(dot(N,normalize(vec3(.82,.28,.78))),0.),4.);
+ material+=vec3(.065,.211,.274)*atmosphere*1.12;
+ material+=vec3(.40,.25,.125)*atmosphere*easternGlow*.95;
  // Optical depth: cool edge is continuous; warm glint is localized to
  // the illuminated rim (not a white halo covering the entire UI).
  float limb=pow(1.-clamp(N.z,0.,1.),5.6);
