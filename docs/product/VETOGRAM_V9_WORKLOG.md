@@ -193,3 +193,28 @@
 1. Re-read current PR HEAD and this checkpoint. In a real checkout run `node --test tests/vetogram-v9-story-engine.test.js tests/vetogram-story-publisher-handoff.test.js tests/vetogram-v9-monochrome-nav.test.js` plus `npm run qa:preview:offline` and build. Fix failures, never bypass release gates.
 2. On a real Android Telegram test account, stage an image, test uncertain response after a controlled mock 5xx/timeout without sending a real Story, ensure duplicate CTA disabled and manual new-photo recovery. Test Story Engine template previews, light theme, 360px, upload/export and owner switch; separately verify real publication only with user-authorized test account.
 3. Then progress to Chat/Telegram auth reliability and Business consent regression; do not claim SMS or Business success without real authorized evidence. Only deploy to isolated Render `srv-dbjhvdmtlv9c73d9f3t0` after full gates and verify LIVE commit and exact HTML/CSS/JS.
+
+
+## 2026-11-06 02:57–03:25 Asia/Tbilisi — overnight iteration 8 (AUTH / QR / OTP / CONSENT)
+
+**PR:** draft #242, `feature/vetogram-v9-monochrome-nav-20261105`. **Starting PR HEAD:** `d5101de53d6a285d0a7db8791191ace5e4f7825b` (freshly read before edits). **Code HEAD before checkpoint:** `e29e2c32add06da1347bbfdf28e17a0b783e0735`. Production, main and rollback branches untouched.
+
+### Changes committed to actual GitHub
+- `06dddec3`, `53a302b7`: `lib/telegram-auth-feedback.js` now exports a safe QR stream failure classifier. Abort/expiry, flood wait and temporary failure become structured messages with no upstream RPC traces, auth tokens or phone numbers. An uncertain phone-code delivery is classified with **180-second wait** and explicit instruction to check official Telegram before requesting again.
+- `621fdd53`: `api/viewer-qr.js` emits only classified NDJSON error events and no longer logs raw MTProto exception messages, including audit-event failure paths. No user credentials accessed.
+- `dcedf605`, `7af0876f`: `api/viewer-sync.js` handles unknown outcomes of **both send_code and resend_code**: defer Neon owner-scoped lease for at least 180 seconds and fail closed with `AUTH_DELIVERY_UNCERTAIN`. Retain existing Telegram API_ID/API_HASH configuration errors and flood-wait messages; never auto-resend a code.
+- `43fe9c25`: `public/app.js` QR error screen respects server FLOOD_WAIT, disables Retry and shows a second-by-second countdown; timer is cancelled/owner-fenced on Telegram account changes or when the sheet closes.
+- `285e8216`: QR `connected` stream no longer displays success or offers optional Business before **refreshing and verifying the persisted owner-bound session**; mismatch/degraded state displays a truthful recovery message.
+- `9dd9184f`, `9fe8d31f`, `e29e2c32`: new `tests/vetogram-v9-telegram-auth-reliability.test.js` with **10 native Node test definitions**, including executed QR cooldown timer/owner-switch behavior, safe RPC redaction, uncertain code send/resend source contracts, Business explicit consent, and QR success order.
+- `fe5e1f45`: registered new auth tests in existing `qa:preview:offline` gate. No gate disabled.
+
+### Verification and remaining release gates
+- Fresh GitHub source reads after edits; executed **10/10 actual test bodies** in isolated V8 with source text and test assertions, including QR timer progression and owner-switch isolation: PASS. Syntax parsed for `api/viewer-qr.js`, `api/viewer-sync.js`, `public/app.js`, `api/business-wizard.js`, `lib/telegram-auth-feedback.js`; `package.json` parsed and new test confirmed in release gate. These are **not native Node test runs**.
+- Attempted local read-only Git checkout: `git ls-remote` failed DNS resolving github.com. Therefore **full `npm test`, `npm run check`, `npm run qa:preview:offline`, actual Android Telegram/WebView, SMS/OTP arrival, QR/2FA with authorized test account, Business opt-in and real chat send remain UNVERIFIED**.
+- GitHub combined CI status at code HEAD `9fe8d31f`: 3 Vercel failures with target `build-rate-limit` (quota, not a code failure); no GitHub Actions PR runs. No preview deploy. Last confirmed LIVE review is older V9.02 SHA `8a47b709dac5a63f46c598dc2d7556ad4ccb90af` and does **not** include these fixes.
+- Safety: no raw OTP/2FA entered, logged or requested; no automatic Business grant, no production DB, user sessions, payments or main branch changed.
+
+### First next step
+1. Re-read PR HEAD and checkpoint; execute native `node --test tests/vetogram-v9-telegram-auth-reliability.test.js tests/telegram-connect-navigation.test.js tests/telegram-login-resume.test.js tests/telegram-second-user-onboarding.test.js tests/telegram-business-wizard.test.js` plus `npm run check`, `npm run qa:preview:offline` and `npm run vercel-build` in an actual checkout; fix any failures.
+2. Test QR and phone code with a **user-authorized test Telegram account**, check actual SMS/app delivery without reading or logging OTP, validate FLOOD_WAIT, session re-entry, 2FA and explicit Business consent. Check chat composer/send/scroll on Android WebView; no false claims.
+3. If all build/test gates pass, deploy ONLY isolated Render service `srv-dbjhvdmtlv9c73d9f3t0`, then verify LIVE SHA and exact HTML/CSS/JS. Otherwise leave existing preview and production untouched.
