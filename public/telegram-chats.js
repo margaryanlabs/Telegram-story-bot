@@ -1453,6 +1453,7 @@
       $('telegramChatsView').hidden=false;
       $('telegramMirror')?.classList.remove('thread-mode');
       window.VetoThemeDock?.('inbox');
+      notifyThreadViewChanged();
       if(!authRejected)revokeMediaUrls();
       if($('telegramMirrorAccessButton')){
         $('telegramMirrorAccessButton').textContent = 'Подключить ↗';
