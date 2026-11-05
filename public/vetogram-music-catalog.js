@@ -69,7 +69,7 @@ const endpoint=(query,offset,limit=LIMIT)=>{
  u.searchParams.set("query",query);u.searchParams.set("limit",String(limit));u.searchParams.set("offset",String(offset));
  return u.href;
 };
-let items=[],q="",offset=0,busy=false,complete=false,active=null,group="ru",preset="ru";
+let items=[],q="",offset=0,busy=false,complete=false,active=null,group="world",preset="world";
 const failedStreams=new Set(),confirmedStreams=new Set();
 const status=$("catalogStatus"),list=$("catalogResults"),more=$("catalogMore"),queryInput=$("catalogQuery");
 // Only the catalog presentation changes: track ids, playback and source
@@ -205,7 +205,7 @@ document.addEventListener("vetogram:audio-playing",event=>{
  confirmedStreams.add(id);
  if(items.some(x=>x.id===id))setStatus("Реальное воспроизведение подтверждено.");
 });
-document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS.find(x=>x.id==="ru").q)}});
+document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS.find(x=>x.id==="world").q)}});
 buttons();
 window.VetogramCatalog=Object.freeze({search,selectPreset,loadMore,normalize,endpoint,setCatalogMode,state:()=>({query:q,count:items.length,offset,complete,displayMode})});
 })();
