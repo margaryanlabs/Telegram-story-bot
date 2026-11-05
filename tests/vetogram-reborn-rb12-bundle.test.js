@@ -11,6 +11,7 @@ import {fileURLToPath} from 'node:url';
 const file=path=>new URL('../public/'+path,import.meta.url);
 const read=path=>readFileSync(file(path),'utf8');
 const html=read('studio.html');
+const app=read('app.js');
 const bundle=read('vetogram-reborn-ui.css');
 const foundation=read('vetogram-reborn-foundation.css');
 const noir=read('vetogram-noir.css');
@@ -63,7 +64,7 @@ test('semantic hidden guard prevents accidental display of private controls',()=
   assert.match(bundle,/\[hidden\]:not\(\[hidden="until-found"\]\)/);
   for(const id of ['telegramThreadOpenNative','viewerQrImage',
     'viewerCountryPicker','viewerPendingLoginNotice']){
-    assert.ok(html.includes('id="'+id+'"'),id);
+    assert.ok((html+app).includes('id="'+id+'"'),id);
     assert.ok(bundle.includes('#'+id+'[hidden]'),'no specific guard: '+id);
   }
   assert.match(bundle,/display:\s*none\s*!important/);
