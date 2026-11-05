@@ -3143,15 +3143,26 @@
           if (event.type === 'connected') {
             finished = true;
             viewerQrAbortController = null;
-            closeSheet();
-            notify('success');
-            showToast('Telegram подключён через QR');
+            // A streamed MTProto success is not proof that the current
+            // signed Mini App owner can read the persisted viewer session.
+            // Recheck the exact owner before claiming success or offering
+            // optional Telegram Business consent.
             await refreshViewerSync({ silent: true });
             if(!sameOwner())return;
             await refresh();
             if(!sameOwner())return;
-            await refreshViewerAnalytics({ silent: true });
+            if(viewerState.session?.connected!==true ||
+               viewerState.session?.identityMismatch===true ||
+               viewerState.degraded===true){
+              closeSheet();
+              showToast('Telegram принял QR, но Vetogram ещё не подтвердил сессию. Обнови подключение; не запрашивай новый QR сразу.');
+              return;
+            }
+            await refreshViewerAnalytics({ silent: true }).catch(()=>{});
             if(!sameOwner())return;
+            closeSheet();
+            notify('success');
+            showToast('Telegram успешно подключён через QR');
             switchScreen('telegram');
             offerBusinessConsentAfterLogin();
             break;
