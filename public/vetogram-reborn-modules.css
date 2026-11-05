@@ -1,0 +1,389 @@
+/* VETOGRAM REBORN RB9 / EMBEDDED MEDIA ATELIER
+ * Shared visual hierarchy for the real Music, Cinema and Books documents.
+ * The iframe router, licenses, artwork URLs and media controllers are owned
+ * by their existing modules; this file contains presentation only.
+ */
+
+/* Shared accessibility and motion contract. Scope to module roots. */
+#app.app, .cinema-shell, .books-main {
+  --vm9-ink:#f0f5ff;
+  --vm9-muted:#aebed4;
+  --vm9-dim:#8799b0;
+  --vm9-line:rgba(178,203,238,.17);
+  --vm9-accent:#c3d8fa;
+  --vm9-bg:#0b101b;
+  --vm9-panel:#121c2c;
+  --vm9-raised:#1b2a3f;
+  --vm9-shadow:0 16px 42px rgba(1,8,19,.19);
+  --vm9-ease:cubic-bezier(.22,.75,.24,1);
+}
+:is(#app.app,.cinema-shell,.books-main) :is(button,a,input,select):focus-visible{
+  outline:2px solid var(--vm9-accent) !important;
+  outline-offset:3px !important;
+}
+:is(#app.app,.cinema-shell,.books-main) :is(button,a){
+  -webkit-tap-highlight-color:transparent;
+}
+:is(#app.app,.cinema-shell,.books-main) :is(h1,h2,h3,strong){
+  text-wrap:pretty;
+}
+/* Music — sound-first editorial cards, actual track metadata and covers. */
+#app.app .main {
+  color:var(--vm9-ink);
+}
+#app.app .sidebar{
+  background:linear-gradient(155deg,#111a2a,#0b111e) !important;
+  border-right:1px solid var(--vm9-line) !important;
+}
+#app.app .sidebar :is(.brand,.nav-item){
+  border-radius:12px !important;
+}
+#app.app .sidebar .nav-item.active{
+  color:#eef5ff !important;
+  background:rgba(159,191,240,.13) !important;
+  border-color:var(--vm9-line) !important;
+}
+#app.app .topbar{
+  border-bottom:1px solid var(--vm9-line) !important;
+  background:rgba(12,19,32,.96) !important;
+}
+#app.app .page-title h1{
+  color:var(--vm9-ink) !important;
+  letter-spacing:-.055em !important;
+  font-weight:800 !important;
+  line-height:1.06 !important;
+  font-size:clamp(32px,5.6vw,58px) !important;
+}
+#app.app .page-title p{
+  color:var(--vm9-muted) !important;
+  max-width:65ch !important;
+  line-height:1.6 !important;
+}
+#app.app .hero{
+  border:1px solid var(--vm9-line) !important;
+  border-radius:25px !important;
+  background:
+    radial-gradient(ellipse 65% 95% at 93% 25%,rgba(122,165,236,.20),transparent 74%),
+    linear-gradient(115deg,#151e30,#1d2740 66%,#182033) !important;
+  box-shadow:var(--vm9-shadow) !important;
+}
+#app.app .hero :is(h1,h2){
+  color:#f2f7ff !important;
+  letter-spacing:-.06em !important;
+}
+#app.app .hero p{
+  color:#c0cee1 !important;
+  line-height:1.62 !important;
+}
+#app.app .section-head h2{
+  color:var(--vm9-ink) !important;
+  letter-spacing:-.042em !important;
+  font-weight:770 !important;
+}
+#app.app :is(.track-list,.mood-grid,.catalog-results,.licensed-home-tracks){
+  min-width:0;
+}
+#app.app :is(.mood-card,.track,.track-row,.song-row,.licensed-track,.v78-action){
+  border-color:var(--vm9-line) !important;
+  background:var(--vm9-panel) !important;
+  box-shadow:none !important;
+}
+#app.app :is(.track,.track-row,.song-row,.licensed-track){
+  min-height:58px;
+}
+#app.app :is(.track,.track-row,.song-row,.licensed-track) :is(strong,b){
+  color:var(--vm9-ink);
+}
+#app.app :is(.track,.track-row,.song-row,.licensed-track) :is(small,.artist){
+  color:var(--vm9-muted);
+}
+#app.app :is(.track img,.track-row img,.licensed-track img,.cover img,.album-art img){
+  object-fit:cover;
+  border-radius:11px;
+}
+#app.app :is(.big-search,.search-pill,#quickSearch,#searchInput,#catalogQuery){
+  border-color:var(--vm9-line) !important;
+  border-radius:13px !important;
+  color:var(--vm9-ink) !important;
+}
+#app.app :is(.big-search,.search-pill):focus-within{
+  border-color:var(--vm9-accent) !important;
+  box-shadow:0 0 0 3px rgba(156,196,252,.12) !important;
+}
+#app.app :is(.primary-btn,.v78-now-toggle):not(:disabled){
+  background:#d0e2fc !important;
+  color:#13263e !important;
+  border-color:#d0e2fc !important;
+}
+#app.app :is(.section-head,.page-title,.v78-portal-heading) small {
+  color:var(--vm9-muted);
+}
+/* Cinema — posters must remain the real catalog artwork, never placeholder
+   cards painted as a licensed film that is unavailable. */
+.cinema-shell{
+  color:var(--vm9-ink);
+}
+.cinema-shell .cinema-header{
+  background:rgba(11,17,29,.94) !important;
+  border-color:var(--vm9-line) !important;
+}
+.cinema-shell .cinema-brand-words strong{
+  color:var(--vm9-ink) !important;
+  letter-spacing:-.025em !important;
+}
+.cinema-shell .cinema-hero {
+  min-height:clamp(310px,42vw,490px);
+  border:1px solid var(--vm9-line) !important;
+  border-radius:25px !important;
+  overflow:hidden;
+  box-shadow:var(--vm9-shadow) !important;
+  background:
+    radial-gradient(ellipse at 80% 20%,rgba(134,168,221,.18),transparent 65%),
+    linear-gradient(115deg,#111a28,#1a2639) !important;
+}
+.cinema-shell .cinema-hero-bg{
+  /* Existing dynamic real artwork still paints here. */
+  opacity:.82;
+}
+.cinema-shell .cinema-hero-copy{
+  position:relative;
+  z-index:2;
+}
+.cinema-shell .cinema-hero h1{
+  font-size:clamp(35px,5.6vw,66px) !important;
+  letter-spacing:-.055em !important;
+  line-height:1.06 !important;
+  font-weight:780 !important;
+  color:#f5f8ff !important;
+}
+.cinema-shell .cinema-hero p{
+  color:#c1cee0 !important;
+  line-height:1.63 !important;
+}
+.cinema-shell .cinema-primary:not(:disabled){
+  color:#15263d !important;
+  background:#dbe9ff !important;
+  border-color:#dbe9ff !important;
+  border-radius:12px !important;
+  min-height:45px !important;
+}
+.cinema-shell .cinema-secondary{
+  border:1px solid rgba(190,216,251,.22) !important;
+  background:rgba(177,200,238,.08) !important;
+  color:#edf5ff !important;
+  border-radius:12px !important;
+  min-height:45px !important;
+}
+.cinema-shell .cinema-section{
+  margin-block:20px 30px !important;
+}
+.cinema-shell .cinema-section-head h2{
+  font-size:clamp(21px,3vw,30px) !important;
+  letter-spacing:-.045em !important;
+  color:var(--vm9-ink) !important;
+  font-weight:780 !important;
+}
+.cinema-shell .cinema-section-head :is(p,small){
+  color:var(--vm9-muted) !important;
+}
+.cinema-shell .cinema-rail{
+  scroll-snap-type:x proximity;
+  scroll-padding:8px;
+  gap:12px !important;
+}
+.cinema-shell .cinema-card{
+  border:1px solid var(--vm9-line) !important;
+  border-radius:15px !important;
+  overflow:hidden;
+  background:var(--vm9-panel) !important;
+  box-shadow:none !important;
+  min-width:0;
+  transition:transform 180ms var(--vm9-ease),border-color 180ms var(--vm9-ease);
+}
+.cinema-shell .cinema-card-art{
+  overflow:hidden;
+  background:#1b2840;
+}
+.cinema-shell .cinema-card-art img{
+  max-width:100%;
+  object-fit:cover;
+  /* Never hide external-provider artwork error states. */
+  filter:none !important;
+}
+.cinema-shell .cinema-card-name{
+  font-size:13px !important;
+  font-weight:700 !important;
+  line-height:1.42 !important;
+  color:var(--vm9-ink) !important;
+}
+.cinema-shell :is(#cinemaSearch,.cinema-search){
+  background:var(--vm9-panel) !important;
+  border-color:var(--vm9-line) !important;
+  color:var(--vm9-ink) !important;
+}
+.cinema-shell .cinema-tab{
+  min-height:43px !important;
+  border-radius:12px !important;
+  border-color:var(--vm9-line) !important;
+  color:var(--vm9-muted) !important;
+  white-space:nowrap;
+}
+.cinema-shell .cinema-tab.active{
+  color:#f0f6ff !important;
+  border-color:rgba(188,214,251,.32) !important;
+  background:rgba(162,192,241,.15) !important;
+}
+/* Keep player, quality labels, provider metadata and actual error messages. */
+.cinema-shell :is(.cinema-player-shell,.cinema-details){
+  border:1px solid var(--vm9-line) !important;
+  border-radius:17px !important;
+}
+.cinema-shell :is(.cinema-empty,.cinema-message){
+  color:var(--vm9-muted) !important;
+}
+/* Books — calm literary presentation. Reader typography, page width,
+   text background, bookmarks, saved location and full text are the reader's
+   own adjustable settings and MUST NOT be reset here. */
+.books-main .hero.hero-veto{
+  min-height:320px !important;
+  padding:clamp(25px,5vw,54px) !important;
+  border:1px solid var(--vm9-line) !important;
+  border-radius:24px !important;
+  background:
+    radial-gradient(ellipse 65% 95% at 84% 15%,rgba(140,185,224,.15),transparent 72%),
+    linear-gradient(110deg,#152136,#1a2839) !important;
+  box-shadow:var(--vm9-shadow) !important;
+}
+.books-main .hero.hero-veto h1{
+  color:#f2f6ff !important;
+  font-size:clamp(34px,6.5vw,67px) !important;
+  line-height:1.05 !important;
+  letter-spacing:-.056em !important;
+}
+.books-main .hero.hero-veto h1 i{
+  color:#c3daf5 !important;
+}
+.books-main .hero.hero-veto .hero-lead{
+  color:#c1d0e2 !important;
+  line-height:1.66 !important;
+  font-size:13px !important;
+}
+.books-main .hero.hero-veto :is(.hero-action-main,.hero-action-secondary){
+  min-height:45px !important;
+  border-radius:12px !important;
+  font-weight:720 !important;
+}
+.books-main .hero.hero-veto .hero-action-main{
+  background:#d3e7fa !important;
+  color:#13283d !important;
+  border-color:#d3e7fa !important;
+}
+.books-main .hero.hero-veto .hero-action-secondary{
+  background:rgba(191,211,241,.10) !important;
+  border:1px solid rgba(187,211,242,.22) !important;
+  color:#f2f6ff !important;
+}
+.books-main .continue-shelf{
+  border:1px solid var(--vm9-line) !important;
+  border-radius:19px !important;
+  background:var(--vm9-panel) !important;
+}
+.books-main .continue-info h2{
+  font-size:clamp(19px,3vw,28px) !important;
+  letter-spacing:-.03em !important;
+  color:var(--vm9-ink) !important;
+}
+.books-main :is(.catalog-bar,.book-grid,.source-tabs){
+  min-width:0;
+}
+.books-main .search{
+  min-height:47px !important;
+  background:var(--vm9-panel) !important;
+  border:1px solid var(--vm9-line) !important;
+  border-radius:13px !important;
+  color:var(--vm9-ink) !important;
+}
+.books-main .search:focus-within{
+  border-color:var(--vm9-accent) !important;
+  box-shadow:0 0 0 3px rgba(164,199,250,.12) !important;
+}
+.books-main .book{
+  min-width:0;
+  border-radius:14px !important;
+  border:1px solid var(--vm9-line) !important;
+  overflow:hidden;
+  background:var(--vm9-panel) !important;
+  box-shadow:none !important;
+  transition:border-color 180ms var(--vm9-ease),transform 180ms var(--vm9-ease);
+}
+.books-main .book :is(img,.book-cover){
+  object-fit:cover;
+  max-width:100%;
+}
+.books-main .book :is(h3,strong){
+  color:var(--vm9-ink) !important;
+  line-height:1.35;
+}
+.books-main .book :is(p,small){
+  color:var(--vm9-muted) !important;
+  line-height:1.45;
+}
+.books-main #catalogStatus{
+  color:var(--vm9-muted) !important;
+}
+.books-main :is(#loadMore,#heroMyBooks){
+  min-height:44px;
+}
+.books-main :is(.featured-editions,.featured-edition-grid){
+  min-width:0;
+}
+/* Restore the active theme of the reader itself. Do not style #reader,
+   .reader-paper, .reader-copy, fonts or progress controls here. */
+@media(hover:hover) and (pointer:fine){
+  .cinema-shell .cinema-card:hover,
+  .books-main .book:hover{
+    transform:translateY(-2px);
+    border-color:rgba(191,218,251,.36) !important;
+  }
+}
+@media(max-width:650px){
+  #app.app .page-title h1{font-size:clamp(30px,7.7vw,43px) !important}
+  #app.app .hero{border-radius:19px !important;min-height:270px !important}
+  .cinema-shell .cinema-hero{
+    border-radius:19px !important;
+    min-height:340px !important;
+  }
+  .cinema-shell .cinema-hero h1{
+    font-size:clamp(30px,8vw,45px) !important;
+  }
+  .cinema-shell .cinema-card{border-radius:13px !important}
+  .books-main .hero.hero-veto{
+    border-radius:19px !important;
+    padding:25px 18px !important;
+    min-height:280px !important;
+  }
+  .books-main .hero.hero-veto h1{
+    font-size:clamp(30px,7.8vw,45px) !important;
+  }
+  .books-main .book{border-radius:12px !important}
+  .v78-action-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media(max-width:370px){
+  .v78-action-grid{grid-template-columns:1fr !important}
+  .cinema-shell .cinema-hero h1{font-size:29px !important}
+}
+@media(prefers-reduced-motion:reduce){
+  :is(#app.app,.cinema-shell,.books-main) :is(.cinema-card,.book,.hero,.track,.track-row){
+    animation:none !important;
+    transition:none !important;
+    transform:none !important;
+  }
+}
+@media(pointer:coarse){
+  .cinema-shell .cinema-card:hover,
+  .books-main .book:hover{
+    transform:none !important;
+  }
+}
