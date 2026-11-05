@@ -39,6 +39,8 @@ test('GIF can encode twelve 256px frames within a bounded output',()=>{
 });
 test('Creator screen mounts real offline GIF controls and module once',()=>{
   const html=read('studio.html');
+  assert.match(html,/<section class="screen" data-screen="studio">/);
+  assert.match(read('vetogram-v9-gif-maker.js'),/data-screen="studio"/);
   for(const id of ['v9GifCanvas','v9GifInput','v9GifUpload','v9GifExport','v9GifStatus','v9GifCaption','v9GifToStickers']){
     assert.equal((html.match(new RegExp('id="'+id+'"','g'))||[]).length,1,id);
   }
