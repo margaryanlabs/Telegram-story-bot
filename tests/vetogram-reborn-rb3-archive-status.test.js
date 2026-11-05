@@ -15,7 +15,7 @@ assert.ok(normalizerStart>0&&handlerStart>normalizerStart&&normalizerEnd>normali
 const runnable=api.slice(normalizerStart,normalizerEnd).replace(/^export /,'')+
   '\n'+api.slice(handlerStart).replace(/^export default /,'');
 
-function fixture({archiveAvailable=true,ownerMatches=true}={}){
+function fixture({archiveAvailable=true,archiveMalformed=false,ownerMatches=true}={}){
   const visited=[];
   const context=vm.createContext({
     BOT:'fake-test-token',
@@ -34,6 +34,7 @@ function fixture({archiveAvailable=true,ownerMatches=true}={}){
     listPrivacyMessages:async()=>{
       visited.push('archive');
       if(!archiveAvailable)throw Error('Privacy store unavailable');
+      if(archiveMalformed)return {message_count:0};
       return {messages:[{
         message_id:10, sent_at:'2026-11-05T00:10:00Z',
         text_content:'Archived message', direction:'incoming',
@@ -83,6 +84,14 @@ test('when archive is available, server reports verified archive coverage',async
   assert.equal(f.response.body.archiveAvailable,true);
   assert.deepEqual(f.response.body.messages.map(m=>m.id),[11,10]);
   assert.equal(f.response.body.messages[1].saved,true);
+});
+
+test('malformed archive response is not reported as verified empty coverage',async()=>{
+  const f=fixture({archiveMalformed:true});
+  await f.run();
+  assert.equal(f.response.statusCode,200);
+  assert.equal(f.response.body.archiveAvailable,false);
+  assert.deepEqual(f.response.body.messages.map(m=>m.id),[11]);
 });
 
 test('polling never opens someone else’s Telegram session',async()=>{
