@@ -931,6 +931,24 @@ html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav
 }
 
 
+/* The inbox already has four bottom-tab destinations. On phones its
+   decorative Home exit and duplicate Archive icon consume valuable room;
+   their destinations remain available through the real navigation/tools. */
+@media(max-width:699px) {
+  html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .veto-messenger-exit,
+  html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .veto-mirror-header-actions #telegramMirrorArchiveLink {
+    display: none !important;
+  }
+}
+@media(max-width:360px) {
+  html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
+  #telegramMirror .veto-inbox-signature {
+    display: none !important;
+  }
+}
+
 /* -------- Theme continuity: publication must respect bright appearance ----- */
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-stories-head,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-stories-head {
