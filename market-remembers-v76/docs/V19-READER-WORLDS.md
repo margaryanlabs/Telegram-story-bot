@@ -19,7 +19,7 @@ Date: 2026-11-05
 2. Compact teaser uses the existing event name and sourced event mechanism. The expanded record has an introductory context block, documented what-happened/mechanism/lesson cards and previous/next year buttons.
 3. Clicking a different year collapses the dossier and refocuses the real 3D point. The four 1907/1987/2008/2020 years and existing sources are unchanged.
 4. Timeline supports Left/Right keyboard navigation; re-rendering restores keyboard focus to the newly selected year or beacon.
-5. The second WebGL context initializes only on first EVENT entry; active movement is capped around 30fps, quiet animation is about 12fps; hidden EVENT stops drawing as before. Canvas2D fallback is retained.
+5. The second WebGL context initializes only on first EVENT entry; active movement is capped around 30fps, quiet animation is about 12fps; hidden EVENT stops drawing as before. Canvas2D fallback now projects deterministic front-hemisphere stellar points with the same yaw/pitch as the beacon coordinates, instead of displaying a stationary flat-dot texture.
 6. The original V18 mirrored PEOPLE sphere geometry and shader structure are preserved. No third globe, new unaudited historical facts, or false causal relationships.
 
 ## Verification performed
