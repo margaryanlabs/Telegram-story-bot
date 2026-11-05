@@ -1725,6 +1725,9 @@
     if(next<0||next>=ids.length)return;
     openPhotoViewer(ids[next]);
   }
+  function notifyPhotoViewChanged(){
+    window.dispatchEvent(new CustomEvent('vetogram:photo-view-changed'));
+  }
   function closePhotoViewer(){
     state.activePhotoId=null;
     const dialog=$('telegramThreadPhotoDialog');
@@ -1734,7 +1737,9 @@
     if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
     if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
     refreshPhotoNavigation();
+    notifyPhotoViewChanged();
   }
+  window.VetoTelegramPhotoBack=closePhotoViewer;
   function openPhotoViewer(messageId){
     if(resetOwner()||!state.thread||state.ownerInitData!==String(tg?.initData||''))return;
     const href=state.mediaPreviewUrls.get(String(messageId));
@@ -1752,6 +1757,7 @@
       if(typeof dialog.showModal==='function')dialog.showModal();
       else dialog.setAttribute('open','');
     }
+    notifyPhotoViewChanged();
   }
   function inlineImage(message){
     if(message?.media!=='photo')return '';
@@ -3457,6 +3463,7 @@
     state.activePhotoId=null;refreshPhotoNavigation();
     if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
     if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
+    notifyPhotoViewChanged();
   });
   $('telegramThreadConnectButton')?.addEventListener('click',()=>{
     window.VetoTelegramOpenAccountConnection?.();
