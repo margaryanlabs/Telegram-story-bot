@@ -1,0 +1,129 @@
+/* Vetogram V9 / Media Hub: three genuine routes and owner-scoped continuity.
+ * Layered after the generated RB12 bundle; do not alter player/chat CSS. */
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:clamp(10px,1.6vw,18px) !important;
+  align-items:stretch !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v72-media-card{
+  width:100% !important;min-width:0 !important;
+  min-height:clamp(315px,33vw,390px) !important;
+  border-radius:20px !important;
+  padding:clamp(14px,2vw,21px) !important;
+  background:#151515 !important;
+  background-image:none !important;
+  border:1px solid #363636 !important;
+  box-shadow:0 14px 30px rgba(0,0,0,.15) !important;
+  overflow:hidden !important;
+  isolation:isolate;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v72-media-card:where(:hover,:focus-visible){
+  border-color:#a0a0a0 !important;
+  box-shadow:0 20px 48px rgba(0,0,0,.25) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card .v72-card-art{
+  inset:50px 10px 85px !important;
+  border-radius:14px !important;
+  background:#202020 !important;
+  background-image:none !important;
+  overflow:hidden !important;
+  filter:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-art .v9-media-source-cover{
+  display:block !important;
+  position:absolute !important;inset:0 !important;
+  width:100% !important;height:100% !important;
+  object-fit:cover !important;object-position:center !important;
+  z-index:5 !important;
+  filter:grayscale(.45) contrast(1.04) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card.v9-has-source-cover .v72-card-art::after{
+  content:"";position:absolute;inset:0;z-index:6;pointer-events:none;
+  background:linear-gradient(0deg,rgba(0,0,0,.45),transparent 70%);
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card .v72-card-top,
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card .v72-card-footer{
+  position:relative;z-index:7;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card .v72-card-footer strong{
+  font-size:clamp(22px,2.9vw,33px) !important;
+  color:#f8f8f8 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card .v72-card-cta{
+  color:#ededed !important;background:#252525 !important;
+  border:1px solid #4a4a4a !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-media-resume:not([hidden]){
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;min-height:70px;
+  margin:17px 0 9px;padding:13px clamp(14px,2.6vw,24px);
+  border:1px solid #303030;border-radius:16px;
+  background:#121212;color:#f3f3f3;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-media-resume-copy{
+  display:flex;flex-direction:column;gap:5px;min-width:0;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-media-resume-copy small{
+  font-size:10px;letter-spacing:.11em;font-weight:760;color:#a4a4a4;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-media-resume-copy strong{
+  font-size:16px;font-weight:770;letter-spacing:-.02em;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-media-resume-open{
+  min-height:43px;min-width:128px;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:9px 15px;border-radius:12px;
+  background:#ececec;color:#161616;border:1px solid #ececec;
+  font-size:12px;font-weight:780;cursor:pointer;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-media-resume-open:focus-visible{
+  outline:2px solid #fff;outline-offset:3px;
+}
+@media(max-width:760px){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v72-media-card{
+    min-height:285px !important;padding:13px !important;border-radius:16px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v6-world-books{
+    grid-column:1 / -1 !important;min-height:205px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v6-world-books .v72-card-art{
+    inset:35px 30% 58px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v72-media-card .v72-card-footer strong{
+    font-size:clamp(20px,4vw,27px) !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v72-card-cta{
+    display:none !important;
+  }
+}
+@media(max-width:360px){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid{
+    grid-template-columns:1fr !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v6-world-books{
+    grid-column:auto !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid .v72-media-card{
+    min-height:230px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v9-media-resume-open{
+    min-width:105px;padding-inline:10px;
+  }
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v9-media-resume{
+  background:#f6f6f6;color:#161616;border-color:#dedede;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v9-media-resume-copy small{color:#666;}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="media"] .v9-media-resume-open{
+  background:#191919;color:#f5f5f5;border-color:#191919;
+}
+@media(prefers-reduced-motion:reduce){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card,
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card .v72-card-art{
+    transition:none !important;animation:none !important;transform:none !important;
+  }
+}
