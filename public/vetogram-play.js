@@ -173,4 +173,50 @@
   reactionCancel();
   resetMemory();
   refreshScores();
+
+  // V9 Arcade: progressive enhancement over the SIX real, existing game
+  // controllers. No game logic, account data, persistence or remote APIs change.
+  const v9Launcher=$('#v9ArcadeLauncher');
+  const v9Back=$('#v9ArcadeBack');
+  const v9Grid=$('#vpQuickGames');
+  const v9Games=[...root.querySelectorAll('#vpQuickGames > .vp-mini[data-vp-game]')];
+  const v9Allowed=new Set(['reaction','pairs','tic','2048','mines','snake']);
+  let v9Active='';
+  const v9Notify=()=>window.dispatchEvent(new CustomEvent('vetogram:game-view-changed'));
+  const v9Catalog=({scroll=false}={})=>{
+    if(v9Active)window.dispatchEvent(new CustomEvent('vetogram:game-close',{detail:{game:v9Active}}));
+    v9Active='';
+    v9Games.forEach(item=>{item.hidden=false;});
+    root.classList.remove('v9-arcade-active');
+    delete root.dataset.v9ActiveGame;
+    if(v9Back)v9Back.hidden=true;
+    v9Notify();
+    if(scroll) v9Launcher?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  };
+  const v9Open=name=>{
+    if(!v9Allowed.has(name)||!v9Grid||!v9Games.some(item=>item.dataset.vpGame===name))return false;
+    if(v9Active&&v9Active!==name)window.dispatchEvent(new CustomEvent('vetogram:game-close',{detail:{game:v9Active}}));
+    v9Active=name;
+    v9Games.forEach(item=>{item.hidden=item.dataset.vpGame!==name;});
+    root.classList.add('v9-arcade-active');
+    root.dataset.v9ActiveGame=name;
+    if(v9Back)v9Back.hidden=false;
+    v9Notify();
+    v9Grid.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    return true;
+  };
+  // Keep old game UI fully operational if this new launcher is unavailable.
+  if(v9Launcher&&v9Grid&&v9Back&&v9Games.length===6){
+    v9Launcher.querySelectorAll('[data-v9-launch]').forEach(button=>{
+      button.addEventListener('click',()=>{if(v9Open(button.dataset.v9Launch))haptic('light');});
+    });
+    v9Back.addEventListener('click',()=>v9Catalog({scroll:true}));
+    root.classList.add('v9-arcade-enhanced');
+    v9Launcher.hidden=false;
+    window.VetogramV9GameIsOpen=()=>!!v9Active;
+    window.VetogramV9GameBack=()=>{if(!v9Active)return false;v9Catalog({scroll:true});return true;};
+    window.addEventListener('veto:screen-changed',event=>{
+      if(event?.detail?.screen!=='play'&&v9Active)v9Catalog();
+    });
+  }
 })();
