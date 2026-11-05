@@ -48,7 +48,7 @@
   function notifyStoryViewChanged(){
     window.dispatchEvent(new CustomEvent('vetogram:story-view-changed'));
   }
-  function closeViewer() {
+  function closeViewer({restoreFocus=true}={}) {
     state.epoch++;
     hideMedia();
     state.mediaBusy = false;
@@ -59,7 +59,12 @@
     notifyStoryViewChanged();
     const previous = state.priorFocus;
     state.priorFocus = null;
-    if (previous?.isConnected) previous.focus({preventScroll:true});
+    // On a screen switch, owner reset or backgrounding, focus must never
+    // jump into a hidden previous chat or reactivate its on-screen keyboard.
+    const focusScreen=previous?.closest?.('.screen');
+    if(restoreFocus && !document.hidden && previous?.isConnected &&
+      (!focusScreen || focusScreen.classList.contains('active')))
+      previous.focus({preventScroll:true});
   }
   // Exactly the same cleanup path as the visible × button: stops playback,
   // revokes private blob media and restores the previous focus target.
@@ -67,7 +72,7 @@
   function resetOwner() {
     const current = String(tg?.initData || '');
     if (current === state.owner) return false;
-    closeViewer();
+    closeViewer({restoreFocus:false});
     state.owner = current;state.contacts = [];state.viewMode = null;
     state.loadedAt = 0;state.partial = false;state.lastError = null;
     // Personal contact preferences are volatile: never save Telegram identities on device.
@@ -420,13 +425,13 @@
   window.addEventListener('veto:screen-changed',event=>{
     resetOwner();
     if (['telegram','publish'].includes(event.detail?.screen))void loadStories();
-    else closeViewer();
+    else closeViewer({restoreFocus:false});
   });
   window.addEventListener('pageshow',resetOwner);
   document.addEventListener('visibilitychange',()=>{
     if (document.hidden) {
       // Never leave private media playing in the background.
-      closeViewer();
+      closeViewer({restoreFocus:false});
     } else resetOwner();
   });
   if (typeof MutationObserver !== 'undefined' && $('telegramMirrorList')) {
