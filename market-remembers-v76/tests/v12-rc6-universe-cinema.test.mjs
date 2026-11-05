@@ -38,7 +38,12 @@ test('WebGL memory globe has more dimensional depth, cyan plasma and warm edge',
   assert.match(fragment,/vec3\(\.145,\.340,\.395\)\*brightVein/);
   assert.match(fragment,/float traceA=/);
   assert.match(fragment,/float traceB=/);
-  assert.match(fragment,/visibleFace\*\(vec3\(\.19,\.38,\.43\)/);
+  assert.match(fragment,/visibleFace\*\(vec3\(\.19,\.38,\.43\)\*traceA\*\.18/);
+  assert.match(fragment,/float gaseousBank=/);
+  assert.match(fragment,/float darkRift=/);
+  assert.match(fragment,/float cloudRidge=/);
+  assert.match(fragment,/vec3\(\.141,\.395,\.475\)\*brightCurrent\*veil\*\.31/);
+  assert.match(html,/const nominalRadius=Math\.min\(w,h\)\*\(short\?\.296:\.306\)/);
   assert.match(fragment,/gl_FragColor=vec4\(clamp\(material,0\.,1\.\),1\.\)/);
 });
 
