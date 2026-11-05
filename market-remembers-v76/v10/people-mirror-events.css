@@ -154,3 +154,44 @@
  #app.mh-v16[data-mh-mode="events"] .mh-beacon-ring,
  #app.mh-v16[data-mh-mode="connections"] .mh-beacon-ring{animation:none!important}
 }
+
+
+/* V18.1 / guarantee navigation even if the visitor deliberately rotates
+   all historical points behind the sphere. Compact rail mirrors PEOPLE
+   story selection and keeps the sphere unobstructed. */
+@media(max-width:819px){
+ #app.mh-v16[data-mh-mode="events"] .mh-history-panel:not(.is-expanded) > .mh-timeline,
+ #app.mh-v16[data-mh-mode="connections"] .mh-history-panel:not(.is-expanded) > .mh-timeline {
+   display:grid!important;
+   grid-template-columns:repeat(4,minmax(0,1fr));
+   gap:5px;margin:6px 0 0;
+ }
+ #app.mh-v16[data-mh-mode="events"] .mh-history-panel:not(.is-expanded) > .mh-timeline button,
+ #app.mh-v16[data-mh-mode="connections"] .mh-history-panel:not(.is-expanded) > .mh-timeline button {
+   min-width:0;min-height:33px;padding:6px 3px;
+   display:flex;justify-content:center;align-items:center;
+   text-align:center;border-radius:9px;
+   border:1px solid rgba(154,146,191,.42);
+   background:linear-gradient(135deg,rgba(31,30,50,.88),rgba(15,17,30,.96));
+   color:#d5cce4;
+ }
+ #app.mh-v16[data-mh-mode="events"] .mh-history-panel:not(.is-expanded) > .mh-timeline button.is-active,
+ #app.mh-v16[data-mh-mode="connections"] .mh-history-panel:not(.is-expanded) > .mh-timeline button.is-active {
+   background:linear-gradient(120deg,#754560,#393049);
+   border-color:rgba(230,184,218,.80);
+   box-shadow:inset 0 1px 0 rgba(246,224,240,.15),0 0 11px rgba(192,113,167,.12);
+   color:#fff;
+ }
+ #app.mh-v16[data-mh-mode="events"] .mh-history-panel:not(.is-expanded) > .mh-timeline button b,
+ #app.mh-v16[data-mh-mode="connections"] .mh-history-panel:not(.is-expanded) > .mh-timeline button b {
+   font:700 11px/1.2 Inter,system-ui,sans-serif;letter-spacing:.04em;
+ }
+ #app.mh-v16[data-mh-mode="events"] .mh-history-panel:not(.is-expanded) > .mh-timeline button small,
+ #app.mh-v16[data-mh-mode="connections"] .mh-history-panel:not(.is-expanded) > .mh-timeline button small {
+   display:none!important;
+ }
+ #app.mh-v16[data-mh-mode="events"] .mh-history-panel:not(.is-expanded),
+ #app.mh-v16[data-mh-mode="connections"] .mh-history-panel:not(.is-expanded){
+   padding-bottom:12px;
+ }
+}
