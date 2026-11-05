@@ -2983,6 +2983,17 @@ void main(){
     }
   }
   function init2D(){qaState.fallbackCount++;ctx=fallbackCanvas.getContext('2d');fallbackCanvas.style.display='block';canvas.style.display='none';}
+  // AUTO is no longer hardcoded to the weakest look on every phone.
+  // Capable Android devices get the full cinematic volume while the
+  // existing real-FPS watchdog still switches to ECO if frames drop.
+  function cinematicDetail(){
+    if(quality==='high')return 1;
+    if(quality==='low'||autoEco)return 0;
+    if(w>=820)return 1;
+    const cores=Number(navigator.hardwareConcurrency)||2;
+    const memory=Number(navigator.deviceMemory)||4;
+    return cores>=6&&memory>=4?1:0;
+  }
   function passUniforms(p,t){
     const c=targetCenter(),s=stories[selected],point=project(s.p);
     const obj={uRes:[resW,resH],uCenter:[c.x*dpr,c.y*dpr],uRadius:c.radius*dpr,
@@ -2990,7 +3001,7 @@ void main(){
       uShock:shock?shock.radius:10,uFocus:s.p,uFocus2:[point.x*dpr,point.y*dpr],
       uFocusIntensity:point.z>-.12?1:0,
       uMotion:reduceMotion?0:interactionEnergy,uPulse:reduceMotion?0:v9State.energy,uTouch2:[interactionPoint[0]*dpr,interactionPoint[1]*dpr],
-      uTouchPulse:reduceMotion?0:interactionPulse,uQuality:(quality==='low'||(quality==='auto'&&(w<820||autoEco)))?0:1};
+      uTouchPulse:reduceMotion?0:interactionPulse,uQuality:cinematicDetail()};
     let locations=uniformCache.get(p);
     if(!locations){locations=new Map();uniformCache.set(p,locations)}
     for(const [name,val] of Object.entries(obj)){
