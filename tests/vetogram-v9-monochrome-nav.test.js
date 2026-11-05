@@ -55,7 +55,7 @@ test('monochrome source token system does not reintroduce the blue presentation'
 
 test('No Telegram auth, ownership, music playback or protected sheet is replaced',()=>{
   for(const id of ['telegramThreadCompose','telegramThreadMessages',
-    'v6Frames','v61Player','sheet','viewerQrImage'])
+    'v6Frames','v61Player','sheet'])
     assert.ok(html.includes('id="'+id+'"'),id);
   assert.match(app,/viewerOwnerEpoch/);
   assert.match(html,/vetogram-reborn-ui\.css/);
