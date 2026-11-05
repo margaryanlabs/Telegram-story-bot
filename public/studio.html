@@ -43,6 +43,7 @@
   <link rel="stylesheet" href="/vetogram-v9-media-hub.css?v=20261105-v9-02" />
   <link rel="stylesheet" href="/vetogram-v9-games.css?v=20261105-v9-games-01" />
   <link rel="stylesheet" href="/vetogram-v9-gif-maker.css?v=20261106-v9-gif-01" />
+  <link rel="stylesheet" href="/vetogram-v9-story-engine.css?v=20261106-v9-story-01" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -840,6 +841,14 @@
           </div>
           <button class="media-remove" id="removeStoryMedia" type="button" aria-label="Удалить выбранное фото">×</button>
         </div>
+        <aside class="v9-story-uncertain" id="storyPublishUncertain" role="alert" hidden>
+          <span class="v9-story-uncertain-icon" aria-hidden="true">!</span>
+          <div class="v9-story-uncertain-copy">
+            <strong>Статус публикации неизвестен</strong>
+            <p>Ответ Telegram не получен или не подтверждён. История могла опубликоваться. Проверь «Мои истории» в Telegram перед новой отправкой. Повтор этой фотографии заблокирован, чтобы не создать дубль.</p>
+            <button type="button" id="storyUncertainNewDraft">Я проверил(а) · выбрать новое фото ↗</button>
+          </div>
+        </aside>
         <div class="v4-publish-from-studio" id="storySourceStatus" hidden role="status">
           <span aria-hidden="true">✓</span>
           <div><strong>Кадр из Студии историй</strong>
@@ -2833,7 +2842,7 @@
   <script src="/veto-device-polish.js?v=20261105-v9-02"></script>
   <script src="/vetogram-country-picker.js?v=20261105-v9-02"></script>
   <script src="/vetogram-brand-reveal.js?v=20261105-v9-02"></script>
-  <script src="/app.js?v=20261105-v9-02"></script>
+  <script src="/app.js?v=20261106-v9-story-01"></script>
   <script src="/relay-module.js?v=20261105-v9-02"></script>
   <script src="/privacy.js?v=20261105-v9-02"></script>
   <script src="/chat-theme.js?v=20261105-v9-02"></script>
