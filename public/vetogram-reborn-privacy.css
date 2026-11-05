@@ -650,7 +650,7 @@ html#vetogram.vetogram-noir .screen[data-screen="privacy"] .privacy-truth-card e
 }
 /* A destructive, permanently deleting operation must never be obscured or
    styled as a harmless navigation/link. Original confirmation stays intact. */
-html#vetogram.vetogram-noir .screen[data-screen="privacy"] #privacyClearButton{
+html#vetogram.vetogram-noir .screen[data-screen="chats"] #privacyClearButton{
   display:block;
   min-height:46px !important;
   width:100%;
@@ -663,8 +663,8 @@ html#vetogram.vetogram-noir .screen[data-screen="privacy"] #privacyClearButton{
   font-weight:740 !important;
   box-shadow:none !important;
 }
-html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="privacy"] #privacyClearButton,
-html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="privacy"] #privacyClearButton{
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="chats"] #privacyClearButton,
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="chats"] #privacyClearButton{
   color:#9d3445 !important;
   background:rgba(191,44,69,.06) !important;
   border-color:rgba(174,58,77,.35) !important;
@@ -778,7 +778,7 @@ html#vetogram.vetogram-noir .screen[data-screen="privacy"]
   }
 }
 @media(forced-colors:active){
-  html#vetogram.vetogram-noir .screen[data-screen="privacy"] #privacyClearButton{
+  html#vetogram.vetogram-noir .screen[data-screen="chats"] #privacyClearButton{
     border:2px solid ButtonText !important;
   }
 }
