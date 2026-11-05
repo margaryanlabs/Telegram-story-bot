@@ -90,23 +90,23 @@ function render2D(){
  if(!ctx)return;
  const {x,y,r}=planet;ctx.clearRect(0,0,w,h);
  const glow=ctx.createRadialGradient(x,y,r*.72,x,y,r*1.25);
- glow.addColorStop(0,'rgba(70,8,22,0)');glow.addColorStop(.7,'rgba(190,34,62,.28)');glow.addColorStop(1,'rgba(190,34,62,0)');
+ glow.addColorStop(0,'rgba(70,8,22,0)');glow.addColorStop(.7,'rgba(129,61,87,.16)');glow.addColorStop(1,'rgba(190,34,62,0)');
  ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,r*1.25,0,Math.PI*2);ctx.fill();
  ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
  const base=ctx.createRadialGradient(x-r*.39,y-r*.37,r*.13,x,y,r*1.13);
- base.addColorStop(0,'#5c2532');base.addColorStop(.43,'#24101a');base.addColorStop(1,'#05060b');
+ base.addColorStop(0,'#4a4553');base.addColorStop(.43,'#1a1b26');base.addColorStop(1,'#070911');
  ctx.fillStyle=base;ctx.fillRect(x-r,y-r,r*2,r*2);
  for(let i=0;i<28;i++){
    const theta=i*2.399963+yaw*.53,rad=r*Math.sqrt((i+.5)/29);
    const sx=x+Math.cos(theta)*rad,sy=y+Math.sin(theta)*rad,len=r*(.09+(i%4)*.014);
    ctx.beginPath();ctx.moveTo(sx,sy);ctx.bezierCurveTo(sx+len*.1,sy-len*.52,sx-len*.3,sy-len*.8,sx-len*.55,sy-len);
-   ctx.strokeStyle=i%4===0?'rgba(252,89,107,.51)':'rgba(186,41,69,.18)';
+   ctx.strokeStyle=i%4===0?'rgba(225,104,138,.38)':'rgba(155,112,132,.12)';
    ctx.lineWidth=i%4===0?1.7:.8;ctx.stroke();
  }
  const shade=ctx.createLinearGradient(x-r,y-r,x+r,y+r);
- shade.addColorStop(0,'rgba(245,115,138,.14)');shade.addColorStop(.55,'rgba(0,0,0,0)');shade.addColorStop(1,'rgba(0,0,0,.78)');
+ shade.addColorStop(0,'rgba(211,218,230,.11)');shade.addColorStop(.55,'rgba(0,0,0,0)');shade.addColorStop(1,'rgba(0,0,0,.78)');
  ctx.fillStyle=shade;ctx.fillRect(x-r,y-r,r*2,r*2);ctx.restore();
- ctx.strokeStyle='rgba(232,64,95,.44)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+ ctx.strokeStyle='rgba(173,158,183,.46)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
 }
 function project(pair){
  const {x,y,r}=planet,px=pair[0],py=pair[1],pz=Math.sqrt(Math.max(0,1-px*px-py*py));
