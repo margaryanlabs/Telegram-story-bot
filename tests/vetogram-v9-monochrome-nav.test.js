@@ -38,9 +38,30 @@ test('cinema music books are real modules, local games are not a media catalog t
 });
 
 test('a unified cache release prevents stale Android/WebView CSS and JS',()=>{
-  const values=[...html.matchAll(/<(?:script|link)\b[^>]*\b(?:src|href)=["']\/[^"']+\.(?:js|css)\?v=([^"'&#]+)["']/g)].map(x=>x[1]);
-  assert.ok(values.length>=60);
-  assert.deepEqual([...new Set(values)],['20261105-v9-02']);
+  const assets=[...html.matchAll(/<(?:script|link)\b[^>]*\b(?:src|href)=["'](\/[^"']+\.(?:js|css))\?v=([^"'&#]+)["']/g)]
+    .map(([,path,version])=>({path,version}));
+  assert.ok(assets.length>=70);
+  // Explicit per-slice cache bumps are necessary after code changes. Guard
+  // against stale V9.02 for modified assets, duplicate path mounts and
+  // accidental release-key drift for unchanged files.
+  const updated=new Map([
+    ...['/vetogram-play.css','/vetogram-v9-games.css','/vetogram-play.js',
+      '/vetogram-play-arcade.js','/vetogram-play-plus.js']
+      .map(path=>[path,'20261105-v9-games-01']),
+    ...['/vetogram-v9-gif-maker.css','/vetogram-v9-gif-maker.js']
+      .map(path=>[path,'20261106-v9-gif-01']),
+    ...['/studio-module.js','/brand-pack.js']
+      .map(path=>[path,'20261106-v9-studio-01']),
+    ...['/app.js','/vetogram-v9-story-engine.css']
+      .map(path=>[path,'20261106-v9-story-01'])
+  ]);
+  assert.equal(new Set(assets.map(asset=>asset.path)).size,assets.length,
+    'No JS/CSS path may be mounted twice with conflicting cache keys');
+  for(const asset of assets)
+    assert.equal(asset.version,updated.get(asset.path)||'20261105-v9-02',
+      'Incorrect cache key: '+asset.path);
+  for(const path of updated.keys())
+    assert.ok(assets.some(asset=>asset.path===path),'Missing updated asset '+path);
   for(const file of ['music-module.html','cinema.html','books.html'])
     assert.match(read(file),/\/vetogram-reborn-modules\.css\?v=20261105-v9-02/);
 });
