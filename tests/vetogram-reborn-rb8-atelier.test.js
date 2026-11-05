@@ -23,7 +23,7 @@ test('Atelier is preserved as the first module inside the final RB12 bundle',()=
   assert.ok(links.length>=20,'the existing layered stylesheets still exist');
   assert.ok(links.at(-1).startsWith('/vetogram-reborn-ui.css?v='));
   assert.ok(links.some(x=>x.startsWith('/vetogram-reborn-foundation.css?v=')));
-  assert.ok(html.includes('data-reborn-nav="four"'));
+  assert.ok(html.includes('data-reborn-nav="five"'));
 });
 
 test('CSS has balanced blocks and no missing or fabricated module selectors',()=>{
@@ -69,8 +69,8 @@ test('design does not force a replacement on owner-selected chat wallpaper',()=>
 test('both white and linen theme branches remain present and readable',()=>{
   assert.match(css,/data-veto-theme="pearl"/);
   assert.match(css,/data-veto-theme="linen"/);
-  assert.match(css,/color:\s*#203047/);
-  assert.match(css,/color:\s*#263b59\s*!important/);
+  assert.match(css,/color:\s*#2e2e2e/);
+  assert.match(css,/color:\s*#393939\s*!important/);
   assert.match(css,/\.veto-mirror-bubble\.outgoing/);
 });
 
