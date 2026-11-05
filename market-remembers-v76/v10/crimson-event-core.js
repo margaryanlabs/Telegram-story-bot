@@ -25,7 +25,8 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const shouldBeActive=()=>['events','connections'].includes(app.dataset.mhMode);
 let gl=null,program=null,buffer=null,attributes=null,uniforms=null,ctx=null,active=false,frame=0,last=0,lastMeasure=0;
 let w=0,h=0,dpr=1,planet={x:0,y:0,r:130};
-let yaw=.035,pitch=.06,targetYaw=.035,targetPitch=.06,zoom=1,focusUntil=0;
+let yaw=.035,pitch=.06,targetYaw=.035,targetPitch=.06,anchorYaw=.035,zoom=1,focusUntil=0;
+let selectedPos=[-.14,.11,Math.sqrt(1-.14*.14-.11*.11)];
 let pointer=null,transitionTimer=0,pulseAt=-9999;
 
 function compile(type,source){
@@ -45,7 +46,7 @@ function initGL(){
    buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
    attributes=gl.getAttribLocation(program,'aPosition');
-   uniforms=Object.fromEntries(['uResolution','uCenter','uRadius','uYaw','uPitch','uTime','uEmphasis','uShock'].map(k=>[k,gl.getUniformLocation(program,k)]));
+   uniforms=Object.fromEntries(['uResolution','uCenter','uRadius','uYaw','uPitch','uTime','uEmphasis','uShock','uActivePos'].map(k=>[k,gl.getUniformLocation(program,k)]));
    gl.clearColor(0,0,0,0);
    canvas.hidden=false;fallback.hidden=true;ctx=null;
  }catch(error){
@@ -88,6 +89,7 @@ function renderGL(t){
  gl.uniform1f(uniforms.uTime,reduced?0:t);
  gl.uniform1f(uniforms.uEmphasis,app.dataset.mhMode==='connections'?1:0);
  gl.uniform1f(uniforms.uShock,clamp((t-pulseAt)/950,0,2));
+ gl.uniform3f(uniforms.uActivePos,selectedPos[0],selectedPos[1],selectedPos[2]);
  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 }
 function render2D(){
@@ -124,7 +126,9 @@ function project(pair){
 function focus(pair){
  const px=pair[0],py=pair[1],pz=Math.sqrt(Math.max(.01,1-px*px-py*py));
  targetYaw=-Math.atan2(px,Math.hypot(py,pz));
+ anchorYaw=targetYaw;
  targetPitch=Math.atan2(py,pz);
+ selectedPos=[px,py,pz];
  focusUntil=performance.now()+2800;pulseAt=performance.now();request();
 }
 function tick(t){
@@ -134,7 +138,9 @@ function tick(t){
  const minInterval=w<820?33:22;
  if(last&&!reduced&&t-last<minInterval){request();return;}
  const dt=last?Math.min(60,t-last):16;last=t;
- if(!reduced&&t>focusUntil&&!pointer)targetYaw+=dt*.000058;
+ // Slow optical breathing around the focused event, not an endless spin
+ // that hides the selected marker behind the sphere.
+ if(!reduced&&t>focusUntil&&!pointer)targetYaw=anchorYaw+Math.sin(t*.00022)*.042;
  const a=reduced?1:1-Math.exp(-dt/230);
  yaw+=(targetYaw-yaw)*a;pitch+=(targetPitch-pitch)*a;
  try{if(gl)renderGL(t);else render2D();}
@@ -151,7 +157,10 @@ function setActive(value){
    last=0;
    window.MarketPeopleResume?.();
  }else{
-   size();place();last=0;pulseAt=performance.now();request();
+   size();place();last=0;pulseAt=performance.now();
+   const current=window.MarketHistoryModes?.selectedPoint;
+   if(current)focus(current);
+   request();
  }
  if(was!==active){
    app.classList.remove('mh-world-shift');void app.offsetWidth;app.classList.add('mh-world-shift');
@@ -174,7 +183,7 @@ wrapper.addEventListener('pointermove',event=>{
 });
 for(const type of ['pointerup','pointercancel'])wrapper.addEventListener(type,event=>{
  if(!pointer||pointer.id!==event.pointerId)return;
- event.stopPropagation();pointer=null;
+ event.stopPropagation();pointer=null;anchorYaw=targetYaw;
 });
 wrapper.addEventListener('wheel',event=>{
  if(!active)return;
@@ -191,6 +200,6 @@ canvas.addEventListener('webglcontextrestored',()=>{initGL();if(active)request()
 window.addEventListener('resize',()=>{size();place();if(active)request();},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&frame){cancelAnimationFrame(frame);frame=0;}else if(active)request();});
 initGL();size();place();
-window.MarketEventPlanet=Object.freeze({setActive,project,focus,get active(){return active;},get renderer(){return gl?'webgl1':ctx?'canvas2d':'unavailable';}});
+window.MarketEventPlanet=Object.freeze({setActive,project,focus,get selectedPos(){return [...selectedPos];},get active(){return active;},get renderer(){return gl?'webgl1':ctx?'canvas2d':'unavailable';}});
 setActive(shouldBeActive());
 })();
