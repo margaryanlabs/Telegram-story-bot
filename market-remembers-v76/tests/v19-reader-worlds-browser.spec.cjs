@@ -103,3 +103,42 @@ test('V19.2 EVENT globe exposes a live reset button without discarding selected 
   return window.MarketEventPlanet.project(item.p).depth;
  })).toBeGreaterThan(Math.max(.90,original-.1));
 });
+
+test('V19.3 EVENT supports two-finger zoom and recovers the selected year',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.goto('/?mm=events&event=2008#universe');
+ const projected=await page.evaluate(()=>{
+  const wrapper=document.getElementById('mhPlanetSurface');
+  const eventRecords=window.MarketHistoryModes.events;
+  const first=eventRecords.find(e=>e.id==='1907').p;
+  const second=eventRecords.find(e=>e.id==='2020').p;
+  const scale=()=>{
+   const a=window.MarketEventPlanet.project(first);
+   const b=window.MarketEventPlanet.project(second);
+   return Math.hypot(a.x-b.x,a.y-b.y);
+  };
+  const before=scale();
+  const originalCapture=wrapper.setPointerCapture;
+  // Synthetic mouse/touch sequence is deterministic; browser capture itself
+  // requires a live hardware pointer and is not the subject of this test.
+  wrapper.setPointerCapture=()=>{};
+  const emit=(type,id,x,y)=>wrapper.dispatchEvent(new PointerEvent(type,{
+   bubbles:true,cancelable:true,pointerId:id,pointerType:'touch',
+   button:0,buttons:type==='pointerup'?0:1,clientX:x,clientY:y
+  }));
+  try{
+   emit('pointerdown',1,165,290);
+   emit('pointerdown',2,220,290);
+   emit('pointermove',2,310,290);
+   const after=scale();
+   emit('pointerup',2,310,290);
+   emit('pointerup',1,165,290);
+   return{before,after};
+  }finally{wrapper.setPointerCapture=originalCapture;}
+ });
+ expect(projected.after).toBeGreaterThan(projected.before*1.06);
+ await page.locator('#mhResetEventView').click();
+ await expect(page).toHaveURL(/event=2008/);
+ await expect(page.locator('#mhHistoryPanel')).toContainText('Банкротство Lehman Brothers');
+});
