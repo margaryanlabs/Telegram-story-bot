@@ -475,3 +475,36 @@ html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
   border-color:rgba(255,255,255,.11) !important;
   box-shadow:none !important;
 }
+
+
+/* V9 / EMBEDDED APPEARANCE SYNC.
+ * iframe HTML has data-universe-theme owned by vetogram-media-context.js.
+ * Do not touch actual reader.paper theme, poster art or stream sources.
+ */
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"]),
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"]) body,
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"]) :is(#app.app,.cinema-shell,.books-main) {
+  background-color:#050505 !important;color:#f4f4f4 !important;
+  color-scheme:dark;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]),
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) body,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) :is(#app.app,.cinema-shell,.books-main) {
+  background-color:#fff !important;color:#151515 !important;color-scheme:light;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) :is(#app.app,.cinema-shell,.books-main){
+  --vm9-ink:#141414;--vm9-muted:#666;--vm9-dim:#777;
+  --vm9-line:rgba(0,0,0,.14);--vm9-accent:#222;
+  --vm9-bg:#fff;--vm9-panel:#f5f5f5;--vm9-raised:#ececec;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+:is(#app.app .sidebar,#app.app .topbar,#app.app .hero,.cinema-shell .cinema-header,.cinema-shell .cinema-hero,.books-main .topbar,.books-main .books-hero){
+  background:#f4f4f4 !important;background-image:none !important;
+  border-color:rgba(0,0,0,.12) !important;color:#1c1c1c !important;
+  box-shadow:none !important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+:is(#app.app .sidebar,#app.app .topbar,#app.app .hero,.cinema-shell .cinema-header,.cinema-shell .cinema-hero,.books-main .topbar,.books-main .books-hero){
+  background:#111 !important;background-image:none !important;
+  border-color:rgba(255,255,255,.13) !important;box-shadow:none !important;
+}
