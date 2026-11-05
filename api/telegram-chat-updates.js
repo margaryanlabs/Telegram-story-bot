@@ -54,7 +54,10 @@ export default async function handler(req,res){
     // Archive evidence is a separate owner-scoped read. The archive is NOT
     // inferred from the live snapshot, and never fabricated on store outages.
     const archive=listPrivacyMessages(userId,chatId,ACTIVE_LATEST_MESSAGES,0)
-      .then(result=>({available:true,messages:normalizePolledArchive(result?.messages)}))
+      .then(result=>({
+        available:Array.isArray(result?.messages),
+        messages:normalizePolledArchive(result?.messages),
+      }))
       // Store failure is UNKNOWN coverage, not proof that no messages were
       // archived. Keep live Telegram working but expose the real limitation.
       .catch(()=>({available:false,messages:[]}));
