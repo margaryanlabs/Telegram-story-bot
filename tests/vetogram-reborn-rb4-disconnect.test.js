@@ -136,7 +136,7 @@ test('send ACK/error/finally are session-fenced after logout even if initData un
 
 test('signed-in inbox does not pretend that a revoked session is merely loading',()=>{
   assert.match(chat,/state\.sessionDisconnected=true;/);
-  assert.match(chat,/state\.connectionProof=data\.connection\|\|null;\s*state\.sessionDisconnected=false;/);
+  assert.match(chat,/if\(data\.connection\?\.verified===true\)state\.sessionDisconnected=false;/);
   assert.match(chat,/state\.sessionDisconnected\s*\?\s*'○ Личный Telegram отключён/);
   assert.match(chat,/empty\('Telegram отключён','Для просмотра своих переписок подключи Telegram заново\.'/);
   assert.match(chat,/\$\('telegramMirrorAccessButton'\)\.textContent=ready\?'LIVE ✓':'Подключить ↗'/);
@@ -170,16 +170,30 @@ test('personal Account badge resets without silently removing separate Business 
     '  async function refreshViewerSync(');
   const state={accountConnection:{connected:true,account:{username:'old'}},
     businessPermissions:{connected:true,stories:true,messages:false}};
-  const emitted=[];
-  vm.runInNewContext(helper+'\nnotifyTelegramSessionDisconnected();',{
-    state,CustomEvent:class {constructor(type){this.type=type;}},
+  const emitted=[],renders=[];
+  const qr={aborted:false,abort(){this.aborted=true;}};
+  const context={
+    state,viewerOwnerEpoch:5,viewerSyncIntent:3,viewerAnalyticsIntent:2,
+    viewerAuthBusy:true,viewerQrAbortController:qr,
+    CustomEvent:class {constructor(type){this.type=type;}},
     window:{dispatchEvent:event=>emitted.push(event.type)},
-  });
+    renderHome:()=>renders.push('home'),
+    renderConnection:()=>renders.push('connection'),
+    renderViewerPendingLoginNotice:()=>renders.push('pending'),
+  };
+  vm.runInNewContext(helper+'\nnotifyTelegramSessionDisconnected();',context);
   assert.equal(state.accountConnection.connected,false);
   assert.equal(state.accountConnection.account,null);
   assert.equal(state.businessPermissions.connected,true);
   assert.equal(state.businessPermissions.stories,true);
   assert.deepEqual(emitted,['vetogram:telegram-session-disconnected']);
+  assert.equal(context.viewerOwnerEpoch,6,'same-owner session boundary invalidates pre-logout reads');
+  assert.equal(context.viewerSyncIntent,4);
+  assert.equal(context.viewerAnalyticsIntent,3);
+  assert.equal(context.viewerAuthBusy,false);
+  assert.equal(context.viewerQrAbortController,null);
+  assert.equal(qr.aborted,true);
+  assert.deepEqual(renders,['home','connection','pending']);
 });
 
 test('temporary viewer storage errors do not trigger a disconnect event',()=>{
