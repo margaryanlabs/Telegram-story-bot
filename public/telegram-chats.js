@@ -1400,7 +1400,10 @@
         }
       });
       state.connectionProof=data.connection||null;
-      state.sessionDisconnected=false;
+      // An archive-only snapshot or an unverified reply is NOT a fresh
+      // personal Telegram session. Keep the explicit logout state until the
+      // server has verified the owner of an actual connected account.
+      if(data.connection?.verified===true)state.sessionDisconnected=false;
       if(data.connection?.verified)state.lastListFetchedAt=Date.now();
       if(data.archiveDeferred===true&&data.connection?.verified===true)
         void hydrateInboxOverlay(state.ownerInitData,state.inboxOverlayEpoch);
