@@ -1,5 +1,5 @@
 /* Vetogram V9 · browser-local GIF Maker, monochrome editorial studio. */
-.screen[data-screen="creator"] .v9-gif-maker{
+.screen[data-screen="studio"] .v9-gif-maker{
   margin:20px 0 24px;padding:clamp(18px,3vw,30px);border:1px solid #363636;
   border-radius:23px;background:#090909;color:#f6f6f6;box-shadow:none;
 }
@@ -29,7 +29,7 @@
   .v9-gif-actions button{flex:1 1 145px}.v9-gif-maker{border-radius:17px}
 }
 @media(prefers-reduced-motion:reduce){.v9-gif-maker button{transition:none!important}.v9-gif-maker button:active{transform:none!important}}
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] .v9-gif-maker{
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] .v9-gif-maker{
   background:#f7f7f7;color:#111;border-color:#d0d0d0;
 }
 html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-header h2{color:#111}
@@ -47,63 +47,63 @@ html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-gif-for
 
 /* V9 Studio coherence: remove legacy violet/cyan gradients without changing
    the existing sticker, emoji, motion or Telegram API controllers. */
-.screen[data-screen="creator"] :is(.studio-hero,.brand-pack-card,.studio-panel){
+.screen[data-screen="studio"] :is(.studio-hero,.brand-pack-card,.studio-panel){
   background:#101010 !important;background-image:none !important;
   border:1px solid #303030 !important;box-shadow:none !important;
   color:#f5f5f5;
 }
-.screen[data-screen="creator"] .studio-badge i,
-.screen[data-screen="creator"] .studio-status-line.busy::before{
+.screen[data-screen="studio"] .studio-badge i,
+.screen[data-screen="studio"] .studio-status-line.busy::before{
   background:#ededed !important;box-shadow:none !important;
 }
-.screen[data-screen="creator"] :is(.studio-segment button.active,.studio-style-row button.active,.brand-pack-segment button.active,.brand-pack-motion button.active){
+.screen[data-screen="studio"] :is(.studio-segment button.active,.studio-style-row button.active,.brand-pack-segment button.active,.brand-pack-motion button.active){
   background:#ededed !important;color:#111 !important;border-color:#ededed !important;
 }
-.screen[data-screen="creator"] .studio-button:not(.secondary):not(:disabled){
+.screen[data-screen="studio"] .studio-button:not(.secondary):not(:disabled){
   background:#f1f1f1 !important;color:#111 !important;box-shadow:none !important;
 }
-.screen[data-screen="creator"] .studio-button.secondary{
+.screen[data-screen="studio"] .studio-button.secondary{
   background:#202020 !important;color:#f4f4f4 !important;border:1px solid #484848 !important;
 }
-.screen[data-screen="creator"] :is(.studio-asset-stage,.brand-pack-empty,.brand-asset-media){
+.screen[data-screen="studio"] :is(.studio-asset-stage,.brand-pack-empty,.brand-asset-media){
   background:#181818 !important;background-image:none !important;border-color:#444 !important;
 }
-.screen[data-screen="creator"] :is(.studio-textarea,.studio-input){
+.screen[data-screen="studio"] :is(.studio-textarea,.studio-input){
   background:#171717 !important;color:#f5f5f5 !important;border-color:#444 !important;
 }
-.screen[data-screen="creator"] :is(.studio-textarea,.studio-input):focus{
+.screen[data-screen="studio"] :is(.studio-textarea,.studio-input):focus{
   border-color:#f5f5f5 !important;box-shadow:0 0 0 2px #ffffff2e !important;
 }
-.screen[data-screen="creator"] :is(.studio-badge,.studio-map article strong,.studio-asset-empty strong,.brand-pack-head h2,.brand-pack-empty strong){
+.screen[data-screen="studio"] :is(.studio-badge,.studio-map article strong,.studio-asset-empty strong,.brand-pack-head h2,.brand-pack-empty strong){
   color:#f5f5f5 !important;
 }
-.screen[data-screen="creator"] :is(.studio-helper,.studio-capabilities span,.studio-map article span,.studio-status-line,.brand-pack-head p,.brand-pack-control>span){
+.screen[data-screen="studio"] :is(.studio-helper,.studio-capabilities span,.studio-map article span,.studio-status-line,.brand-pack-head p,.brand-pack-control>span){
   color:#b1b1b1 !important;
 }
-.screen[data-screen="creator"] .brand-pack-accent input[type="color"]{
+.screen[data-screen="studio"] .brand-pack-accent input[type="color"]{
   background:#161616 !important;border-color:#555 !important;
 }
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] :is(.studio-hero,.brand-pack-card,.studio-panel){
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] :is(.studio-hero,.brand-pack-card,.studio-panel){
   background:#fafafa !important;border-color:#d4d4d4 !important;color:#111 !important;
 }
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] :is(.studio-hero h2,.studio-panel h2,.brand-pack-head h2,.studio-map article strong,.brand-pack-empty strong,.studio-asset-empty strong){
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] :is(.studio-hero h2,.studio-panel h2,.brand-pack-head h2,.studio-map article strong,.brand-pack-empty strong,.studio-asset-empty strong){
   color:#171717 !important;
 }
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] :is(.studio-asset-stage,.brand-pack-empty,.brand-asset-media){
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] :is(.studio-asset-stage,.brand-pack-empty,.brand-asset-media){
   background:#eaeaea !important;border-color:#c7c7c7 !important;
 }
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] :is(.studio-textarea,.studio-input){
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] :is(.studio-textarea,.studio-input){
   background:#fff !important;color:#111 !important;border-color:#bfbfbf !important;
 }
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] .studio-button.secondary{
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] .studio-button.secondary{
   background:#e8e8e8 !important;color:#111 !important;border-color:#bfbfbf !important;
 }
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] .studio-button:not(.secondary):not(:disabled){
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] .studio-button:not(.secondary):not(:disabled){
   background:#111 !important;color:#fff !important;
 }
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] :is(.studio-segment button.active,.studio-style-row button.active,.brand-pack-segment button.active,.brand-pack-motion button.active){
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] :is(.studio-segment button.active,.studio-style-row button.active,.brand-pack-segment button.active,.brand-pack-motion button.active){
   background:#111 !important;color:#fff !important;border-color:#111 !important;
 }
-html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="creator"] :is(.studio-helper,.studio-capabilities span,.studio-map article span,.studio-status-line,.brand-pack-head p,.brand-pack-control>span){
+html:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .screen[data-screen="studio"] :is(.studio-helper,.studio-capabilities span,.studio-map article span,.studio-status-line,.brand-pack-head p,.brand-pack-control>span){
   color:#555 !important;
 }
