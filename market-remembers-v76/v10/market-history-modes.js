@@ -56,8 +56,8 @@
   const THEME_NAMES = Object.freeze({ Risk: 'Управление риском', Discipline: 'Дисциплина', FOMO: 'Страх упустить', Patience: 'Терпение' });
   const TITLES = Object.freeze({
     people: { title: '', subtitle: '' },
-    events: { title: 'THE MARKET HAS A MEMORY.', subtitle: 'Реальные события, даты и источники. Каждая точка — урок финансовой истории.' },
-    connections: { title: 'EVERY EVENT LEAVES A TRACE.', subtitle: 'Связи между эпохами и темами человеческих решений. Не причинная модель.' }
+    events: { title: 'EVENT CORE.', subtitle: 'Кризисы. Системные шоки. Решения, изменившие рынки. Исследуй финансовую историю.' },
+    connections: { title: 'THE FAULT LINES.', subtitle: 'Повторяющиеся механизмы рыночных кризисов. Тематические связи, а не доказательства причинности.' }
   });
   const state = { mode: 'people', activeEvent: '2008' };
   const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -67,8 +67,7 @@
   switcher.className = 'mh-mode-switch';
   switcher.setAttribute('aria-label', 'Режимы вселенной Market Remembers');
   switcher.innerHTML = '<button type="button" data-mh-mode="people" aria-pressed="true">✦ <span>ЛЮДИ</span></button>' +
-    '<button type="button" data-mh-mode="events" aria-pressed="false">◈ <span>СОБЫТИЯ</span></button>' +
-    '<button type="button" data-mh-mode="connections" aria-pressed="false">⌁ <span>СВЯЗИ</span></button>';
+    '<button type="button" data-mh-mode="events" aria-pressed="false">◈ <span>EVENT CORE</span></button>';
   const intro = document.createElement('section');
   intro.className = 'mh-intro';
   intro.id = 'mhIntro';
@@ -136,7 +135,8 @@
   }
   function renderPanel() {
     const event = EVENT_BY_ID[state.activeEvent];
-    panel.innerHTML = '<div class="mh-panel-top"><span>◈ MARKET MEMORY ATLAS</span><span>04 / VERIFIED EVENTS</span></div>' +
+    panel.innerHTML = '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
+      '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
       timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
       '<p class="mh-disclaimer">Исторические факты снабжены источниками. Символические связи — тематические, не доказательство причинности и не свидетельства реальных трейдеров.</p>';
   }
@@ -152,12 +152,18 @@
     const r = plausible ? Math.min(a.width,a.height) * .36 : Math.min(w,h) * (w < 820 ? .29 : .37);
     const positions = {};
     EVENTS.forEach(event => {
-      positions[event.id] = {x: Math.max(18,Math.min(w-18,cx + event.p[0] * r)),y: Math.max(96,Math.min(h-85,cy + event.p[1] * r))};
+      const pos = window.MarketEventPlanet?.project(event.p);
+      positions[event.id] = pos || {x: Math.max(18,Math.min(w-18,cx + event.p[0] * r)),y: Math.max(96,Math.min(h-85,cy + event.p[1] * r)),visible:true};
     });
     layer.querySelectorAll('[data-mh-beacon]').forEach(button => {
       const pos = positions[button.dataset.mhBeacon];
       button.style.left = pos.x + 'px';
       button.style.top = pos.y + 'px';
+      const visible = pos.visible !== false;
+      button.style.opacity = visible ? '1' : '0';
+      button.style.pointerEvents = visible ? 'auto' : 'none';
+      button.tabIndex = visible ? 0 : -1;
+      button.setAttribute('aria-hidden',String(!visible));
     });
     lines.setAttribute('viewBox', '0 0 ' + Math.max(1,w) + ' ' + Math.max(1,h));
     lines.setAttribute('preserveAspectRatio', 'none');
@@ -194,7 +200,7 @@
     state.mode = mode;
     app.dataset.mhMode = mode;
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
-      const active = btn.dataset.mhMode === mode;
+      const active = mode === 'people' ? btn.dataset.mhMode === 'people' : btn.dataset.mhMode === 'events';
       btn.classList.toggle('is-active',active);
       btn.setAttribute('aria-pressed',String(active));
     });
@@ -210,6 +216,7 @@
       renderPanel();
       renderBeacons();
     }
+    window.MarketEventPlanet?.setActive(mode !== 'people');
     if (update) updateUrl();
   }
   function selectEvent(id) {
@@ -217,6 +224,7 @@
     state.activeEvent = id;
     renderPanel();
     renderBeacons();
+    window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
     updateUrl();
   }
   function openPeopleTheme(theme) {
@@ -273,6 +281,6 @@
     get mode() { return state.mode; },
     get activeEvent() { return state.activeEvent; },
     get events() { return EVENTS.map(({id,year,date,name,themes,url})=>({id,year,date,name,themes:[...themes],url})); },
-    setMode, selectEvent
+    setMode, selectEvent, measure
   });
 })();

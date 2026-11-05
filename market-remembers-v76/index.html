@@ -1904,6 +1904,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
 <link rel="stylesheet" href="v10/v12-universe-cinema.css">
 <link rel="stylesheet" href="v10/v12-universe-depth-v2.css">
 <link rel="stylesheet" href="v10/market-history-modes.css">
+<link rel="stylesheet" href="v10/crimson-event-core.css">
 </head>
 <body>
 <div class="app obsidian" id="app">
@@ -3261,7 +3262,7 @@ void main(){
   }
   // Reading, forms and the birth overlay cover the entire scene. Park WebGL
   // while those surfaces are open; their CSS/UI keeps working independently.
-  function sceneIsCovered(){return !$('drawer').hidden||!$('birthOverlay').hidden}
+  function sceneIsCovered(){return !$('drawer').hidden||!$('birthOverlay').hidden||['events','connections'].includes(document.getElementById('app')?.dataset.mhMode)}
   function queueFrame(){
     if(!frameScheduled&&!document.hidden&&!sceneIsCovered()){
       frameScheduled=true;animationFrameHandle=window.requestAnimationFrame(animate)
@@ -4420,6 +4421,8 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
     showLegacy=adapted.showLegacy;showCreate=adapted.showCreate;
     closeDrawer=adapted.closeDrawer;beginDive=adapted.beginDive;drawArchive=adapted.drawArchive;
   }
+  // The second world parks the original renderer while Event Core is active.
+  window.MarketPeopleResume=resumeScene;
   boot();
   window.MarketV10?.start();
 
@@ -4427,5 +4430,7 @@ function loadChecks(){const x=getJson(CHECK_KEY,{});return x&&typeof x==='object
 
 </script>
 <script src="v10/market-history-modes.js"></script>
+<script src="v10/crimson-shaders.js"></script>
+<script src="v10/crimson-event-core.js"></script>
 </body>
 </html>
