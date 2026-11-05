@@ -55,7 +55,7 @@ test('Motion remains low-intensity and respects reduced-motion preferences',()=>
 
 test('Original event data, selection, archive links and scripts remain usable',()=>{
   for(const name of ['1907','1987','2008','2020'])
-    assert.ok(modes.includes("id: '"+name+"'"),name);
+    assert.ok(modes.includes('"id": "'+name+'"'),name);
   assert.match(modes,/MarketEventPlanet\?\.focus/);
   assert.match(modes,/MarketSignalDirector\?\.position/);
   assert.match(modes,/data-mh-panel-toggle/);
