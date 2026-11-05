@@ -174,49 +174,110 @@
   resetMemory();
   refreshScores();
 
-  // V9 Arcade: progressive enhancement over the SIX real, existing game
-  // controllers. No game logic, account data, persistence or remote APIs change.
+  // V9 Games: one premium catalog, six existing native controllers.
+  // No new game engine, untrusted iframe, account request or network call.
   const v9Launcher=$('#v9ArcadeLauncher');
   const v9Back=$('#v9ArcadeBack');
   const v9Grid=$('#vpQuickGames');
+  const v9Resume=$('#v9ArcadeResume');
+  const v9ResumeLabel=$('#v9ArcadeResumeLabel');
+  const v9ResumeButton=$('#v9ArcadeResumeButton');
+  const v9Create=$('#v9GameCreate');
   const v9Games=[...root.querySelectorAll('#vpQuickGames > .vp-mini[data-vp-game]')];
-  const v9Allowed=new Set(['reaction','pairs','tic','2048','mines','snake']);
-  let v9Active='';
-  const v9Notify=()=>window.dispatchEvent(new CustomEvent('vetogram:game-view-changed'));
-  const v9Catalog=({scroll=false}={})=>{
+  const v9Names={reaction:'Реакция',pairs:'Четыре пары',tic:'Крестики-нолики','2048':'2048',mines:'Сапёр',snake:'Змейка'};
+  const v9Allowed=new Set(Object.keys(v9Names));
+  const v9Scope=()=>{
+    try{
+      const web=window.Telegram?.WebApp;
+      const id=String(web?.initDataUnsafe?.user?.id||'');
+      return web?.initData&&/^\d{1,20}$/.test(id)?'owner-'+id:'device';
+    }catch{return 'device';}
+  };
+  const v9Key=()=> 'vetogram:play:last-game:v9:'+v9Scope();
+  const v9Read=()=>{
+    try{
+      const value=window.localStorage?.getItem(v9Key())||'';
+      return v9Allowed.has(value)?value:'';
+    }catch{return '';}
+  };
+  const v9Save=name=>{
+    try{window.localStorage?.setItem(v9Key(),name);}catch{}
+  };
+  const v9Motion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';
+  const v9Scroll=element=>element?.scrollIntoView?.({block:'start',behavior:v9Motion()});
+  const v9Notify=()=>{try{window.dispatchEvent(new CustomEvent('vetogram:game-view-changed'));}catch{}};
+  let v9Active='',v9LastLaunchButton=null;
+  const v9RefreshResume=()=>{
+    const last=v9Read();
+    if(v9Resume)v9Resume.hidden=!last;
+    if(v9ResumeLabel)v9ResumeLabel.textContent=last?v9Names[last]:'Последняя игра';
+    if(v9ResumeButton){
+      v9ResumeButton.disabled=!last;
+      v9ResumeButton.setAttribute('aria-label',last?'Продолжить: '+v9Names[last]:'Нет последней игры');
+    }
+  };
+  const v9Catalog=({scroll=false,focus=false}={})=>{
     if(v9Active)window.dispatchEvent(new CustomEvent('vetogram:game-close',{detail:{game:v9Active}}));
     v9Active='';
     v9Games.forEach(item=>{item.hidden=false;});
     root.classList.remove('v9-arcade-active');
     delete root.dataset.v9ActiveGame;
     if(v9Back)v9Back.hidden=true;
+    v9RefreshResume();
     v9Notify();
-    if(scroll) v9Launcher?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    if(scroll)v9Scroll(v9Launcher);
+    if(focus)v9LastLaunchButton?.focus?.();
   };
-  const v9Open=name=>{
+  const v9Open=(name,sourceButton)=>{
     if(!v9Allowed.has(name)||!v9Grid||!v9Games.some(item=>item.dataset.vpGame===name))return false;
     if(v9Active&&v9Active!==name)window.dispatchEvent(new CustomEvent('vetogram:game-close',{detail:{game:v9Active}}));
     v9Active=name;
+    if(sourceButton)v9LastLaunchButton=sourceButton;
     v9Games.forEach(item=>{item.hidden=item.dataset.vpGame!==name;});
     root.classList.add('v9-arcade-active');
     root.dataset.v9ActiveGame=name;
     if(v9Back)v9Back.hidden=false;
+    v9Save(name);
+    v9RefreshResume();
     v9Notify();
-    v9Grid.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    v9Scroll(v9Grid);
+    v9Back?.focus?.({preventScroll:true});
     return true;
   };
-  // Keep old game UI fully operational if this new launcher is unavailable.
+  // The launcher is progressive enhancement; original games remain if absent.
   if(v9Launcher&&v9Grid&&v9Back&&v9Games.length===6){
-    v9Launcher.querySelectorAll('[data-v9-launch]').forEach(button=>{
-      button.addEventListener('click',()=>{if(v9Open(button.dataset.v9Launch))haptic('light');});
-    });
-    v9Back.addEventListener('click',()=>v9Catalog({scroll:true}));
-    root.classList.add('v9-arcade-enhanced');
-    v9Launcher.hidden=false;
-    window.VetogramV9GameIsOpen=()=>!!v9Active;
-    window.VetogramV9GameBack=()=>{if(!v9Active)return false;v9Catalog({scroll:true});return true;};
-    window.addEventListener('veto:screen-changed',event=>{
-      if(event?.detail?.screen!=='play'&&v9Active)v9Catalog();
-    });
+    const buttons=[...v9Launcher.querySelectorAll('[data-v9-launch]')];
+    if(buttons.length===6&&buttons.every(b=>v9Allowed.has(b.dataset.v9Launch))){
+      buttons.forEach(button=>button.addEventListener('click',()=>{
+        if(v9Open(button.dataset.v9Launch,button))haptic('light');
+      }));
+      v9Back.addEventListener('click',()=>v9Catalog({scroll:true,focus:true}));
+      v9ResumeButton?.addEventListener('click',()=>{
+        const last=v9Read();
+        const launch=buttons.find(b=>b.dataset.v9Launch===last);
+        if(last&&v9Open(last,launch))haptic('light');
+      });
+      v9Create?.addEventListener('click',()=>{
+        const developer=root.querySelector('.vp-developer');
+        const details=developer?.querySelector('.vp-dev-details');
+        if(!developer||!details)return;
+        details.open=true;
+        v9Scroll(developer);
+        details.querySelector('summary')?.focus?.({preventScroll:true});
+      });
+      root.classList.add('v9-arcade-enhanced');
+      v9Launcher.hidden=false;
+      v9RefreshResume();
+      window.VetogramV9GameIsOpen=()=>!!v9Active;
+      window.VetogramV9GameBack=()=>{
+        if(!v9Active)return false;
+        v9Catalog({scroll:true,focus:true});
+        return true;
+      };
+      window.addEventListener('veto:screen-changed',event=>{
+        if(event?.detail?.screen!=='play'&&v9Active)v9Catalog();
+        if(event?.detail?.screen==='play')v9RefreshResume();
+      });
+    }
   }
 })();
