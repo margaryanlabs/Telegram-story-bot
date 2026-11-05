@@ -123,6 +123,9 @@
   let composerPreviewUrl = '';
   let composerNonce = '';
   let composerBusy = false;
+  // A lost publish response may mean Telegram already posted the Story.
+  // Keep this attachment blocked until the owner explicitly starts a new one.
+  let composerPublishUncertain = false;
   let composerGeneration = 0;
   let composerOwner = '';
   let composerSignedIdentity=String(tg?.initData||'');
@@ -351,6 +354,7 @@
     composerFile = null;
     composerDataUrl = '';
     composerNonce = '';
+    composerPublishUncertain = false;
     composerOwner = '';
     composerPendingFileName = '';
     composerBusy = false;
@@ -436,6 +440,7 @@
     composerFromStudio=false;
     composerPendingFileName=String(file.name||'');
     composerFile=null;composerDataUrl='';composerOwner='';composerNonce='';
+    composerPublishUncertain=false;
     if(composerPreviewUrl)URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl='';
     $('mediaPreviewImage').removeAttribute('src');
@@ -539,6 +544,10 @@
     const isPublishOwner=()=>publishEpoch===viewerOwnerEpoch &&
       signedOwner===String(tg?.initData||'');
     if (composerBusy || state.processing) return;
+    if(composerPublishUncertain){
+      showToast('Статус Story не подтверждён. Сначала проверь истории в Telegram; новую публикацию начни с нового фото.');
+      return;
+    }
     if(composerPortalHandoff &&
        composerPortalHandoff.signed!==signedOwner){
       resetComposer();
@@ -652,8 +661,13 @@
         </div>
       `);
     } catch (error) {
-      if(!isPublishOwner())return;
+      if(!isPublishOwner()||publishingGeneration!==composerGeneration)return;
       state.processing = false;
+      if(error?.uncertain===true){
+        // Never offer a second publish of the same attachment/nonce after
+        // timeout, 5xx, 409 processing or a missing Telegram Story ID.
+        composerPublishUncertain=true;
+      }
       notify('error');
       showToast(error.message);
       throw error;
@@ -1314,6 +1328,9 @@
     if (composerBusy || state.processing) {
       composerState.textContent = state.processing ? 'Публикую…' : 'Подготавливаю…';
       composerState.className = 'composer-state busy';
+    } else if (composerPublishUncertain) {
+      composerState.textContent = 'Статус не подтверждён';
+      composerState.className = 'composer-state warn';
     } else if (composerDataUrl) {
       composerState.textContent = composerFromStudio ? 'Кадр · 9:16' : 'Готово';
       composerState.className = 'composer-state ready';
@@ -1333,10 +1350,15 @@
     $('deleteStory').disabled = !state.lastStory || !state.ready;
     const mainLabel = $('mainButton').querySelector('b');
     const mainIcon = $('mainButton').querySelector('span');
-    $('mainButton').disabled = Boolean(composerBusy || state.processing);
+    const uncertainNotice=$('storyPublishUncertain');
+    if(uncertainNotice)uncertainNotice.hidden=!composerPublishUncertain;
+    $('mainButton').disabled = Boolean(composerBusy || state.processing || composerPublishUncertain);
     $('mainButton').setAttribute('aria-busy', state.processing || composerBusy ? 'true' : 'false');
 
-    if (!state.ready) {
+    if (composerPublishUncertain) {
+      mainIcon.textContent = '!';
+      mainLabel.textContent = 'Проверь Stories в Telegram';
+    } else if (!state.ready) {
       mainIcon.textContent = '↻';
       mainLabel.textContent = 'Проверить подключение';
     } else if (composerBusy || state.processing) {
@@ -4003,6 +4025,11 @@
   });
 
   $('removeStoryMedia').addEventListener('click', () => resetComposer({ keepCaption: true }));
+  $('storyUncertainNewDraft')?.addEventListener('click',()=>{
+    // A new file selection is an explicit action, not an automatic retry.
+    resetComposer({keepCaption:true});
+    $('storyFileInput').click();
+  });
 
   $('storyCaption').addEventListener('input', event => {
     $('captionCounter').textContent = `${event.target.value.length} / 2048`;
