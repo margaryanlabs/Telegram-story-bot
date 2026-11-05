@@ -27,6 +27,8 @@ test('V16 signal nodes are touch-sized and attached to Event Core sphere',async(
  expect(box.width).toBeGreaterThanOrEqual(40);
  expect(box.height).toBeGreaterThanOrEqual(40);
  await node.click();
+ await expect(page.locator('#mhHistoryPanel')).not.toHaveClass(/is-expanded/);
+ await page.locator('#mhHistoryPanel .mh-panel-grip').click();
  await expect(page.locator('#mhHistoryPanel')).toHaveClass(/is-expanded/);
  await expect(page.locator('#mhHistoryPanel .mh-v16-research-card')).toHaveCount(3);
  const shader=await page.evaluate(()=>window.MHCrimsonShaders?.fragment||'');
