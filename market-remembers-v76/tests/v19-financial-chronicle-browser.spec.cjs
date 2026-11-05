@@ -9,7 +9,7 @@ test('V19 eight sourced events appear in one uncluttered PEOPLE-style globe',asy
   await expect(page.locator('#mhEventLayer .mh-beacon.is-archive')).toHaveCount(4);
   const panel=page.locator('#mhHistoryPanel');
   await expect(panel).not.toHaveClass(/is-expanded/);
-  await expect(panel.locator('> .mh-timeline button')).toHaveCount(8);
+  await expect(panel.locator(':scope > .mh-timeline button')).toHaveCount(8);
   await expect(panel.locator('.mh-event-peek')).toContainText('15 SEP');
   expect(await page.evaluate(()=>window.MarketHistoryModes?.events.length)).toBe(8);
 });
