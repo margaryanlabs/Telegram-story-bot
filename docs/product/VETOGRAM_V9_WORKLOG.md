@@ -144,3 +144,28 @@
 1. Read current PR HEAD and this checkpoint; run native `node --test tests/vetogram-v9-games.test.js tests/vetogram-play-arcade.test.js tests/vetogram-play-plus.test.js` plus existing V9 Media/Cinema/Music/Books tests and offline preview QA in a proper checkout/CI environment; fix failures.
 2. Inspect six game cards and full controls on actual 360px Android Telegram, Pearl/Linen, 2048 keyboard/swipes, Snake timer pause on background, Mines long press, Reaction timer and memory mismatch reset; ensure Game proposal form visible and manual only.
 3. Then move to Studio/Stories GIF and sticker-pack export with official Telegram handoff and no fake auto-install. Only isolated Render after successful build/test gates and exact LIVE SHA + HTML/CSS/JS confirmation.
+
+
+## 2026-11-06 00:59–01:05 Asia/Tbilisi — overnight iteration 6 (STUDIO / REAL GIF89a)
+
+**PR/branch:** draft #242, feature/vetogram-v9-monochrome-nav-20261105. **Starting HEAD:** 949a04e2b29ac23e34aa7a2dcd221e63d1f64828 (read via PR metadata). **Code HEAD before this checkpoint:** 076b3a27ff13c99a1f8568b4849ab49c36ab71d2. Production/main/backups untouched.
+
+### Real changes and commits
+- c5a01516: new public/vetogram-v9-gif-core.js, dependency-free GIF89a encoder with actual 256-color palette, LZW image data, 12-frame animation and Netscape infinite-loop extension; bounded inputs and safe alpha compositing. Not an MP4/WebM falsely renamed .gif.
+- cd17f94c: new public/vetogram-v9-gif-maker.js, local user-image PNG/JPG/WEBP upload (5 MB / 4096px bounds), 3 motion presets, caption, 256×256 animated canvas preview, actual GIF Blob export, safe download/revoke, no fetch/upload, reduced-motion preview, explicit rights/format notes. Can reuse image from existing sticker Studio.
+- 6f9ce37a, a5ef903f, 36841ff4, fc60fb96: new public/vetogram-v9-gif-maker.css with black/white workbench, responsive mobile layout, focus visibility, reduced motion, Pearl/Linen; neutralizes legacy violet/cyan Studio panels while preserving their controllers. Fixed pseudo-element selector.
+- 658193dd, 52298133: mounted GIF section in existing public/studio.html, real module/CSS cache keys and honest Telegram handoff wording.
+- 423b4f64, 6e30ad8e, f5eb8d5d, 076b3a27: added nine native Node test cases for real GIF output, input bounds, local-only network contract, mounted DOM, accessibility, Telegram handoff and owner-switch race.
+- f91334f5, 7e90dbf4: fixed existing sticker/emoji pack opening in studio-module.js and brand-pack.js: official validated HTTPS t.me/addstickers or t.me/addemoji links, Telegram WebApp openTelegramLink or safe browser fallback. Removed wrong hardcoded tg://addemoji path for sticker packs. No automatic publication or installation.
+- fc41a1fe: caught and fixed a real route bug before release: sticker screen is data-screen="studio" (not creator); GIF JS now mounts on the correct screen. 9e5e3e07: local GIF owner-switch fence, pending image load and export rejection if Telegram signed owner changes.
+
+### Evidence / release gate
+- Actual native Node ran four GIF core tests on a local source mirror: 4/4 PASS (signature/loop, invalid dimensions, alpha, 12×256px export). Pillow decoded the generated GIF, all 12 frames and loop metadata correctly. This is a test of the GIF encoder logic, not of the full repo checkout.
+- Fresh GitHub fetch after writes: HTML unique GIF IDs, real data-screen="studio" route, correct CSS/JS module mount, safe Telegram handoff, source JS syntax for core/maker/studio/brand, CSS brace balance, local-only no-network GIF code and a 64px 3-frame GIF binary in isolated V8: PASS. Nine Node-native tests authored in the branch; full repo Node test file not executed in an authenticated checkout.
+- No Render preview deploy: npm test, full build, npm run qa:preview:offline, actual Android Telegram WebView, download behavior in WebView, Telegram sticker API publishing and real pack installation NOT VERIFIED. Latest known LIVE isolated review remains older V9.02 SHA 8a47b709dac5a63f46c598dc2d7556ad4ccb90af. No claim that this GIF UI is live.
+- GitHub combined status on code HEAD: three Vercel failure contexts with build-rate-limit target (quota, not a verified compilation failure). No gates disabled or production changed.
+
+### First next step
+1. Re-read PR HEAD and this checkpoint; run node --test tests/vetogram-v9-gif-studio.test.js plus earlier V9 Media/Cinema/Music/Books/Games tests and offline preview QA in a proper checkout or available CI executor. Fix real failures before preview.
+2. Test Studio on 360px Android Telegram WebView: local PNG/JPG/WEBP upload, 3 motion effects, GIF download/preview, owner switch, sticker vs emoji HTTPS pack opening, Pearl/Linen, reduced-motion, failure states. In-app Telegram download may need a supported browser handoff.
+3. Continue with Story Engine templates/real story publish failure UX or Chats/Telegram auth regression (no OTP logging or Business consent bypass). Deploy only to isolated Render service srv-dbjhvdmtlv9c73d9f3t0 after successful build/tests and verify LIVE SHA plus exact HTML/CSS/JS.
