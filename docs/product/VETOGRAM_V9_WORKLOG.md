@@ -24,3 +24,25 @@
 - Vetogram V9 — ночная разработка; task ID 6aeca2bff1f08191b0eb29cae009c063.
 - Asia/Tbilisi 2026-11-05 20:00 through 2026-11-06 09:00, fourteen hourly scheduled runs. Runs are independent; this is not a continuous background process.
 - No user intervention expected for safe code/test actions. Telegram SMS/2FA and Business permissions are not testable without a test account and explicit authorization; do not simulate success.
+
+
+## 2026-11-05 20:00 Asia/Tbilisi — overnight iteration 1
+
+**Starting branch HEAD:** d4a37e6475a99931d0bac516de56f96fbe5b1b33 (confirmed via GitHub compare). **End-of-code HEAD before this checkpoint:** 24aceecc8585840d299966d0c529cb43592e3bce. 12 new code/test commits on branch (GitHub compare: ahead_by=12, behind_by=0); draft PR #242 still not merged.
+
+### Code completed
+- Wired previously dead global-series collection: series tab now renders the real 16 global series metadata entries with click-through to official service detail pages; kept licensed original episode rail separate. Series source-only cards have intentional grayscale typographic artwork rather than pretending that an unlicensed poster or in-app video exists.
+- Corrected foreign filter defaults: all 92 previously sourced overseas RUTUBE metadata entries remain discoverable, including entries with **unverified** dubbing; 3 had the existing featured flag. No player was granted to these third-party uploads.
+- Added **13 explicitly curated recognizable foreign titles** (all IDs found in existing dataset, HTTPS thumbnails, metadata-only) for the main cinema home. Rotating hero selects up to 6 from the curated international spotlight before other catalog imports; first screen no longer accidentally selects the entire long-tail feed.
+- Fixed navigation/regression: the 'All series' button now leads to global series cards rather than only Russian episodes; searching from Home and Search tab includes world metadata instead of silently falling back to Russian-only licensed films; clearing search restores the rotating hero even if its slide IDs have not changed. Removed irrelevant network load-more buttons on Home and Series, moved studio archive controls to Catalog.
+- Updated Cinema source-rights labels and homepage copy. Kept native provider gates and original player code intact.
+
+### Evidence / validation
+- Fetched latest GitHub files after writes; parsed public/cinema.js, public/cinema-foreign-rutube.js and public/cinema-popular-series.js in isolated V8 with no syntax errors.
+- Executed the 12 assertions in tests/vetogram-v9-world-cinema.test.js using an isolated V8 harness that loads the exact GitHub source strings and evaluates the real catalog arrays: **12/12 PASS** after correcting a stale assertion. Verified foreign dataset has 92 entries, 3 preexisting featured entries, 13 curated spotlight IDs, and global series dataset has 16 source-only entries. No unlicensed film gained an embedded player.
+- This is NOT equivalent to running Node's complete test suite or Android end-to-end tests. Full `npm test`, `npm run qa:preview:offline`, build, actual film stream availability, artwork load in region, and Android Telegram/WebView remain **unverified** because this automation runtime lacks a working authenticated local repo/Node checkout and Vercel statuses are failing with build-rate-limit.
+- Render preview service `srv-dbjhvdmtlv9c73d9f3t0` exists, autoDeploy off, latest LIVE deploy still **8a47b709dac5a63f46c598dc2d7556ad4ccb90af** (V9.02, 2026-11-05 15:28 UTC), not the newer Cinema code. No new Render deploy triggered: release gate requires successful build/tests and SHA-bound verification. Production/main and Telegram sessions unchanged.
+
+### First next step (overnight iteration 2)
+- Inspect Media home `v6MediaHome` actual markup, transitions and three Cinema/Music/Books routes, implement a completed real MEDIA HUB slice with tests, and check cinema source labels.
+- If Node test execution becomes available, run `node --test tests/vetogram-v9-world-cinema.test.js` and `npm run qa:preview:offline`, repair regressions, then review-only deploy via the existing isolated Render service with LIVE SHA/HTML/CSS/JS verification. Do not use the old live URL as proof of new changes.
