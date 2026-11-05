@@ -16,10 +16,10 @@ new Script(shaderWrapper).runInNewContext(box);
 const shader=box.window.MHCrimsonShaders.fragment;
 
 test('V16 signal material: brighter structural body, silver optics and sparse red faults',()=>{
- for(const part of ['vec3 obsidian','float relief','float stress=hairline*gate','vec3(.34,.44,.57)*fresnel','uShock','gl_FragColor'])assert.ok(shader.includes(part),part);
+ for(const part of ['float metalPlate','vec3 base=','float activeFault=seam*borderRegion','vec3(.45,.58,.72)*fresnel','uShock','gl_FragColor'])assert.ok(shader.includes(part),part);
  assert.doesNotMatch(shader,/vec3 lava=/);
  assert.doesNotMatch(shader,/float thermal=/);
- assert.match(shader,/float field\(vec3 p\)/);
+ assert.match(shader,/float layered\(vec3 p\)/);
  assert.match(shader,/float sweep=/);
  assert.ok(shader.length>2500);
 });
