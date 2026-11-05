@@ -5,10 +5,11 @@ import {Script,runInNewContext} from 'node:vm';
 
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
-const [html,sky,css,depth,pkg]=await Promise.all([
+const [html,sky,css,depth,galaxy,pkg]=await Promise.all([
   read('index.html'),read('v10/universe-atmosphere.js'),
   read('v10/v12-universe-cinema.css'),
-  read('v10/v12-universe-depth-v2.css'),read('package.json')
+  read('v10/v12-universe-depth-v2.css'),
+  read('v10/v12-cinematic-galaxy.svg'),read('package.json')
 ]);
 const fragment=html.match(/const coreFragment=`([\s\S]*?)`;/)?.[1]||'';
 
@@ -59,6 +60,28 @@ test('Android automatic/ECO material retains primary depth but skips secondary d
   assert.match(html,/uQuality:\(quality==='low'\|\|\(quality==='auto'&&\(w<820\|\|autoEco\)\)\)\?0:1/);
 });
 
+test('Cinematic volume integrates depth from the real inverse camera ray at 3/6 samples',()=>{
+  assert.match(fragment,/uniform float uRotX;uniform float uRotY;/);
+  assert.match(fragment,/vec3 volumeRay=normalize\(vec3\(sin\(uRotY\)\*cos\(uRotX\)/);
+  assert.match(fragment,/float volumeChord=2\.0\*max\(0\.0,N\.z\)/);
+  assert.match(fragment,/float volumePasses=uQuality>\.5\?6\.0:3\.0/);
+  assert.match(fragment,/if\(uQuality<\.5 && layerIdx>=3\)break/);
+  assert.match(fragment,/samplePoint=vObject\+volumeRay\*volumeChord\*stepT/);
+  assert.match(fragment,/float cloudMass=smoothstep/);
+  assert.match(fragment,/accumulatedNebula\+=transmittance\*scattering/);
+  assert.match(fragment,/transmittance\*=1\.0-absorption\*\.42/);
+  assert.match(fragment,/material=mix\(material,vec3\(\.016,\.030,\.045\)\+accumulatedNebula\*\.93,\.82\)/);
+});
+test('Self-hosted galaxy SVG is static, structured, text-safe and network-free',()=>{
+  assert.ok(galaxy.trimStart().startsWith('<svg '));
+  assert.ok(galaxy.trimEnd().endsWith('</svg>'));
+  assert.match(galaxy,/id="galaxyCore"/);
+  assert.match(galaxy,/feTurbulence type="fractalNoise"/);
+  assert.match(galaxy,/translate\(955 345\) rotate\(-25\)/);
+  assert.match(depth,/url\("v12-cinematic-galaxy\.svg"\)/);
+  assert.match(depth,/pointer-events:none/);
+  assert.doesNotMatch(galaxy,/<script|<foreignObject|<image|https?:\/\//i);
+});
 test('Canvas fallback shows real clipped sphere with nebula and quality guard',()=>{
   assert.match(html,/ctx\.arc\(c\.x,c\.y,r,0,twoPi\);ctx\.clip\(\)/);
   assert.match(html,/const cloudRibbon=ctx\.createLinearGradient/);
