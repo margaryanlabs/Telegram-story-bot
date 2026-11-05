@@ -24,7 +24,7 @@ function harness(){
   }
  };
  const api=runInNewContext(
-  'let active=true,frame=0,idleTimer=0;\n'+source+
+  'let active=true,frame=0,idleTimer=0;const tick=()=>{};\n'+source+
   '\n({scheduleIdle,scheduleNext,request,disable:()=>{active=false},state:()=>({active,frame,idleTimer})})',ctx
  );
  return {api,timers,raf,ctx,get clears(){return clears}};
