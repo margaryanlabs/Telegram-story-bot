@@ -187,3 +187,15 @@ html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen
 html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] :is(#v9ArcadeResumeButton,#v9GameCreate){
   background:#171717 !important;color:#fff !important;border-color:#171717 !important;
 }
+
+/* V7 card-preview CSS also hid native controls; V9 focus must restore them.
+   Keep the actual 2048/Memory/Mines/Snake layouts, not merely their covers. */
+html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active #vpQuickGames .vp-mini:not(.vp-game-in-dialog) > :is(.vp-mini-stat,.vp-reaction-button){
+  display:block !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active #vpQuickGames .vp-mini:not(.vp-game-in-dialog) > :is(.vp-memory-actions,.v73-game-actions,.v73-snake-directions,.vp-2048-controls){
+  display:flex !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active #vpQuickGames .vp-mini:not(.vp-game-in-dialog) > :is(.vp-memory-grid,.vp-ttt-grid,.vp-2048-grid,.v73-mines-grid,.v73-snake-grid){
+  display:grid !important;
+}
