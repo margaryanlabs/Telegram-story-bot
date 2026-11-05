@@ -200,3 +200,35 @@ application inline script parses; scene stacking order remains correct.
 actual phone visual check, WebGL/Canvas fallback integration and FPS QA.
 
 Do not represent the previous pinned preview as this new revision.
+
+
+## Android screenshot critique — cinematic V4 corrections
+
+The first on-device V3 review showed a serious design regression:
+multiple bright cyan closed loops made the volume look like jelly/
+electric noodles; the galaxy appeared behind the `МОЙ СЛЕД` tab;
+and the lower part of the planet was hidden behind the memory dock.
+
+**V4 corrective commit (same PR):**
+- Removed fine high-mode iso-contour (`fineRidge`) and substituted
+  broad, attenuated cloudy light with a small natural noise grain.
+- Raised volumetric absorption to `.66` and fully replaced old
+  ribbon-based material contribution with a dark planetary base
+  plus accumulated depth. The actual ray-marching and 3/6 quality
+  variants remain functional.
+- Softened two remaining symbolic great-circle outlines and
+  localized warm lights to avoid the "glowing grid" effect.
+- Updated `v9PortraitFrame()` to respect the memory dock using
+  the computed `bottom - radius - 14` constraint for default
+  portrait scenes, without touching Immersive or changing story data.
+- Moved the self-hosted spiral galaxy down 125 SVG units and faded
+  its upper background to protect navigation labels.
+
+**Validation:** all 10 targeted structural and behavior regression
+checks passed in an isolated JavaScript harness, including default
+and shorter portrait framing calculations. Inline runtime JS parsed.
+**Not yet confirmed:** full browser GLSL compile on this exact V4
+shader, live Samsung visuals/FPS, and full Node/Playwright suite.
+
+The preview should be inspected at a pinned V4 commit hash; the
+previous V3 GitHack link does not automatically point to V4.
