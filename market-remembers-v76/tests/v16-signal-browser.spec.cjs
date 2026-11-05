@@ -9,7 +9,7 @@ test('V16 world passage is cinematic, changes whole scene and returns intact Peo
  await expect(page.locator('#mhPlanetSurface')).toBeVisible({timeout:5000});
  await expect(page.locator('#mhV16Portal')).toBeHidden({timeout:6000});
  await expect(page.locator('#mhV16HUD')).toBeVisible();
- await expect(page.locator('#mhV16Optics')).toBeVisible();
+ await expect(page.locator('#mhV16Optics')).toBeHidden(); // Mirror's own star/mesh structure replaces overlay optics
  await expect(page.locator('#gl')).toBeHidden();
  await page.locator('#mhBackToPeople').click();
  await expect(page.locator('#mhV16Portal')).toBeVisible();
@@ -29,8 +29,9 @@ test('V16 signal nodes are touch-sized and attached to Event Core sphere',async(
  await node.click();
  await expect(page.locator('#mhHistoryPanel')).toHaveClass(/is-expanded/);
  await expect(page.locator('#mhHistoryPanel .mh-v16-research-card')).toHaveCount(3);
- const shader=await page.evaluate(()=>window.MHCrimsonShaders?.fragment||'');
- expect(shader).toContain('vec3 obsidian');
+ const shaders=await page.evaluate(()=>window.MHPeopleMirrorShaders);
+ expect(shaders.coreFragment).toContain('nebulaNoise3');
+ expect(shaders.pVertex).toContain('gl_PointSize');
 });
 
 test('V16 event dossier has separate sourced blocks and connections',async({page})=>{
