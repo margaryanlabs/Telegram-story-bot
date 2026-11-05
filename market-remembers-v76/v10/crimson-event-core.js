@@ -72,8 +72,18 @@ function place(){
  const reservedBottom=h<540?115:136;
  const clearHeight=Math.max(144,h-reservedTop-reservedBottom);
  const x=w*(mobile?.525:.56);
- const y=mobile?reservedTop+clearHeight*.50:h*.515;
- const r=(mobile?Math.min(w*.395,clearHeight*.50,h*.29):Math.min(w,h)*.335)*zoom;
+ let y=mobile?reservedTop+clearHeight*.50:h*.515;
+ let r=(mobile?Math.min(w*.395,clearHeight*.50,h*.29):Math.min(w,h)*.335)*zoom;
+ // Actual compact dock measurements are more trustworthy than guessed phone
+ // heights, especially inside Android in-app browsers with different chrome.
+ if(mobile){
+   const dock=document.getElementById('mhHistoryPanel');
+   if(dock && !dock.hidden && !dock.classList.contains('is-expanded')){
+     const top=dock.getBoundingClientRect().top-stage.getBoundingClientRect().top;
+     const overflow=y+r-(top-18);
+     if(overflow>0){y-=overflow*.68;r=Math.max(48,r-overflow*.32);}
+   }
+ }
  planet={x,y,r};
  app.style.setProperty('--mh-core-x',x+'px');
  app.style.setProperty('--mh-core-y',y+'px');
