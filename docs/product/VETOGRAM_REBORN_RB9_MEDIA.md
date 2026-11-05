@@ -42,7 +42,7 @@ The current 8.5 review service is only a static design review; it cannot validat
 - Checked new stylesheet brace balance and loading order for all four pages.
 - Verified that actual three iframe paths match the original router and that the new CSS does **not** target the book reader text, font or progress selectors.
 
-**Not executed:** full `node --test`, browser computed-style/overflow/screenshot QA, physical Telegram WebView, real media playback, actual content availability or real account authentication. No RB9 preview deployment has been confirmed yet.
+**Not executed:** full `node --test`, browser computed-style/overflow/screenshot QA, physical Telegram WebView, real media playback, actual content availability or real account authentication. An isolated RB9 preview was attempted on Vercel under the existing `veto` project's **non-production Git branch**; the API rejected it with **HTTP 402 `api-deployments-free-per-day` (over 100 per day)**. Render still lists **25/25 services**, preventing a new isolated static site. No deployment or URL was created; nothing published or overwritten.
 
 ## Next release gates
 
