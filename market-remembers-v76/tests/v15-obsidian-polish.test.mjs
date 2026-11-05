@@ -24,8 +24,8 @@ test('V15 new obsidian material keeps red accents localized rather than lava-wor
 });
 
 test('mobile size fits entire planet above compact information dock',()=>{
-  assert.match(engine,/mobile\?\.255:\.335/);
-  assert.match(engine,/mobile\?\.445:\.515/);
+  assert.match(engine,/Math\.min\(w\*\.395,clearHeight\*\.50,h\*\.29\)/);
+  assert.match(engine,/reservedTop\+clearHeight\*\.50/);
   assert.match(polish,/\.mh-history-panel:not\(\.is-expanded\)/);
   assert.match(polish,/\.mh-panel-grip/);
   assert.match(polish,/max-height:min\(64dvh,525px\)/);
