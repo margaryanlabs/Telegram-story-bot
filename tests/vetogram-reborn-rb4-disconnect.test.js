@@ -38,6 +38,7 @@ function fixture({changedOwner=false}={}){
   const state={
     ownerInitData:'signed',thread:{id:'55',serverCanSend:true},
     threadGeneration:4,syncRunId:8,sessionEpoch:5,generation:3,
+    sessionDisconnected:false,
     inboxOverlayEpoch:3,pendingLoginRefresh:true,loading:true,
     inboxReturn:{ownerKey:'signed'},lastListFetchedAt:250,
     threadLoading:true,syncBusy:true,sendInFlight:true,sendInFlightChatId:'55',
@@ -84,6 +85,7 @@ test('confirmed logout clears volatile inbox, drafts, owner proof and visible DO
   const before={generation:f.state.generation,sessionEpoch:f.state.sessionEpoch};
   f.run();
   assert.equal(f.state.connectionProof,null);
+  assert.equal(f.state.sessionDisconnected,true);
   assert.equal(f.state.thread,null);
   assert.equal(f.state.threadLoading,false);
   assert.equal(f.state.sendInFlight,false);
@@ -130,6 +132,17 @@ test('send ACK/error/finally are session-fenced after logout even if initData un
   assert.match(chat,/state\.ownerInitData=current;\s*state\.sessionEpoch\+\+/);
   assert.match(invalidate,/state\.sessionEpoch\+\+/);
   assert.match(invalidate,/state\.generation\+\+;state\.inboxOverlayEpoch\+\+/);
+});
+
+test('signed-in inbox does not pretend that a revoked session is merely loading',()=>{
+  assert.match(chat,/state\.sessionDisconnected=true;/);
+  assert.match(chat,/state\.connectionProof=data\.connection\|\|null;\s*state\.sessionDisconnected=false;/);
+  assert.match(chat,/state\.sessionDisconnected\? '○ Личный Telegram отключён/);
+  assert.match(chat,/empty\('Telegram отключён','Для просмотра своих переписок подключи Telegram заново\.'/);
+  const link=slice(chat,
+    "  window.addEventListener('vetogram:telegram-session-connected',()=>{",
+    "  window.addEventListener('vetogram:telegram-session-disconnected',()=>{");
+  assert.match(link,/state\.sessionDisconnected=false;/);
 });
 
 test('server-confirmed disconnect paths emit exactly one local invalidation event',()=>{
