@@ -37,7 +37,7 @@ test('Four event-year controls are available without expanding the dossier on a 
   assert.match(css,/min-height:33px/);
 });
 test('People renderer and four historical source records are unchanged',()=>{
-  for(const year of ['1907','1987','2008','2020'])assert.ok(modes.includes("id: '"+year+"'"));
+  for(const year of ['1907','1987','2008','2020'])assert.ok(modes.includes('"id": "'+year+'"'),year);
   assert.match(planet,/window\.MarketPeopleResume\?\.\(\)/);
   assert.doesNotMatch(planet,/localStorage|sessionStorage|fetch\(/);
   assert.match(css,/#app\.mh-v16\[data-mh-mode="events"\]/);
