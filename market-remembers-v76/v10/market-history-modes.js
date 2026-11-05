@@ -292,6 +292,14 @@
     });
   }
   panel.addEventListener('keydown', event => {
+    // Escape closes the research document without navigating away from the world.
+    if(event.key==='Escape'&&panelExpanded){
+      event.preventDefault();event.stopPropagation();
+      panelExpanded=false;renderPanel();panel.scrollTop=0;
+      panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
+      window.requestAnimationFrame(measure);
+      return;
+    }
     const dateButton=event.target instanceof Element?event.target.closest('.mh-timeline [data-mh-event]'):null;
     if(!dateButton||!['ArrowLeft','ArrowRight'].includes(event.key))return;
     event.preventDefault();
