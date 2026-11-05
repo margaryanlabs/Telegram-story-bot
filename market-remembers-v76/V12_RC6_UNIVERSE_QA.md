@@ -47,6 +47,8 @@ Run inside `market-remembers-v76/`:
 ```sh
 node --test tests/*.test.mjs
 node scripts/build.mjs
+# Requires Playwright browsers and a working software/hardware WebGL context:
+npm run test:browser
 ```
 
 These are required in CI before any merge. Further acceptance:
@@ -79,3 +81,22 @@ select an explicitly authorized alternative deployment destination.
 - Inline original runtime JS parsed, shader braces balanced and WebGL
   core/fallback code paths present.
 - Full Node test suite and actual Android GPU visual QA **not yet confirmed**.
+
+## Browser-specific RC6 checks
+
+`tests/v12-rc6-browser.spec.cjs` is now part of the Chromium Playwright
+suite. It checks real WebGL shader compile results, native globe visibility,
+Canvas2D fallback, optical-overlay pointer transparency, orbit scaling,
+story-star clicks, and writes mobile/desktop scene screenshots for review.
+The screenshots are test artifacts and must be visually reviewed; their
+existence alone is not acceptance.
+
+**Current check distinction (5 Nov):** 6/6 targeted JS checks and 8/8
+static integration checks passed. The local container's Chromium does not
+provide a functioning WebGL context, so actual WebGL compile/render and
+physical Android FPS have **not been proven** here. GitHub Actions runs have
+failure status but their job log downloads are returning 404, and Vercel
+preview deployment is quota-blocked (HTTP 402).
+
+Do not call this production-ready or claim that the new world is already
+live based on the previous RC4 preview link.
