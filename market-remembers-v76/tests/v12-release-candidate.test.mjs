@@ -14,7 +14,7 @@ const pkg=JSON.parse(pkgText);
 test('V12 is one cumulative release candidate, not another disconnected scene',()=>{
   assert.match(html,/<title>THE MARKET REMEMBERS V12 — RELEASE CANDIDATE<\/title>/);
   assert.match(html,/(?:THE LIVING UNIVERSE \/ V12 RELEASE CANDIDATE|THE LIVING UNIVERSE \/ CINEMATIC RC2)/);
-  assert.equal(pkg.version,'12.0.0-rc.5');
+  assert.equal(pkg.version,'12.0.0-rc.6');
   assert.match(html,/локальная демоверсия/);
   assert.match(bridge,/V\.reader\.mount\(record,shared\)/);
   assert.match(bridge,/V\.trails\.onStory\(record,shared\)/);
@@ -45,7 +45,7 @@ test('All cumulative modules are loaded once and in dependency order',()=>{
 
 test('Release metadata explicitly discloses non-production, local-only publishing',()=>{
   assert.match(build,/release\.json/);
-  assert.match(build,/version:'12\.0\.0-rc\.5'/);
+  assert.match(build,/version:'12\.0\.0-rc\.6'/);
   assert.match(build,/production:false/);
   assert.match(build,/publishing:'local-browser-only'/);
   assert.match(build,/savedRoutes:'opt-in, browser-only'/);
