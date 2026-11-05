@@ -1909,6 +1909,7 @@ backdrop-filter:blur(12px);pointer-events:auto}
 <link rel="stylesheet" href="v10/v16-experience.css">
 <link rel="stylesheet" href="v10/v16-precision-polish.css">
 <link rel="stylesheet" href="v10/people-mirror-events.css">
+<link rel="stylesheet" href="v10/v19-story-and-worlds.css">
 </head>
 <body>
 <div class="app obsidian" id="app">
@@ -3403,7 +3404,7 @@ void main(){
       $('v9PassageStatus').textContent=phase==='lock'?'ЗВЕЗДА НАЙДЕНА':
         phase==='flight'?'ПРИБЛИЖАЕМСЯ К ВОСПОМИНАНИЮ':'ОТКРЫВАЕМ ИСТОРИЮ';
     }
-    const u=clamp(elapsed/1350,0,1);
+    const u=clamp(elapsed/1100,0,1);
     v9State.energy=Math.sin(Math.PI*u)*.95;
     targetZoom=v98FlightZoom(elapsed);
   }
@@ -3440,7 +3441,7 @@ void main(){
     $('memoryDive').dataset.suspended='false';
     if(diveIndex===-1)return;
     v9State.started+=elapsedPause;
-    const remaining=Math.max(0,1350-(performance.now()-v9State.started));
+    const remaining=Math.max(0,1100-(performance.now()-v9State.started));
     diveTimer=setTimeout(()=>finishDive(v9State.token),remaining);
   }
   function finishDive(token){
@@ -3493,7 +3494,7 @@ void main(){
     const progress=overlay.querySelector('.memory-dive-progress span');
     progress.style.animation='none';void overlay.offsetWidth;progress.style.animation='';
     $('cancelDive').focus({preventScroll:true});
-    diveTimer=setTimeout(()=>finishDive(token),1350);
+    diveTimer=setTimeout(()=>finishDive(token),1100);
   }
   function updateDivePosition(){
     if(diveIndex<0)return;
