@@ -63,6 +63,10 @@ test('Static background stays behind original sphere and cannot intercept taps',
   assert.match(css,/pointer-events:none/);
   assert.match(css,/#app\.obsidian \.scene-shading\{/);
   assert.match(css,/#app\.obsidian \.v81-globe-aura::after\{/);
+  assert.match(html,/class="v126-orbit-guide" aria-hidden="true"/);
+  assert.match(css,/\.v126-orbit-guide::before/);
+  assert.match(css,/\.v126-orbit-guide::after/);
+  assert.match(css,/\.v81-globe-aura\.is-eco \.v126-orbit-guide::after/);
   assert.match(css,/\.star-marker\.is-selected/);
   assert.match(css,/@media\(max-width:819px\)/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
