@@ -50,12 +50,12 @@
         <div class="cinema-hero-copy">
           <span class="cinema-eyebrow" id="cinemaHeroEyebrow">ИЗБРАННОЕ · КОЛЛЕКЦИЯ КИНО</span>
           <h1 id="cinemaHeroTitle">Каждая история<br><i>заслуживает экрана.</i></h1>
-          <p id="cinemaHeroDescription">Большая коллекция русского кино, сериалов и анимации. Выбирай и смотри через официальные видеоплееры.</p>
+          <p id="cinemaHeroDescription">Мировые премьеры, знаковые фильмы и сериалы. Проверяй доступные источники просмотра.</p>
           <div class="cinema-hero-actions">
-            <button class="cinema-primary" type="button" id="cinemaHeroWatch">▶ Смотреть фильм</button>
+            <button class="cinema-primary" type="button" id="cinemaHeroWatch">Подробнее и источники</button>
             <button class="cinema-secondary" type="button" id="cinemaHeroDetails">Подробнее <span>↗</span></button>
           </div>
-          <div class="cinema-hero-meta" id="cinemaHeroMeta">РУССКАЯ ОЗВУЧКА · КИНО В TELEGRAM</div>
+          <div class="cinema-hero-meta" id="cinemaHeroMeta">WORLD CINEMA · ОФИЦИАЛЬНЫЕ ИСТОЧНИКИ</div>
         </div>
         <div class="cinema-hero-footer"><div class="cinema-hero-counter" id="cinemaHeroCounter">01 / 05</div><div class="cinema-hero-dots" id="cinemaHeroDots" role="group" aria-label="Выбор фильма"></div><div class="cinema-hero-controls"><button id="cinemaHeroPrev" type="button" aria-label="Предыдущий фильм">←</button><button id="cinemaHeroNext" type="button" aria-label="Следующий фильм">→</button></div></div>
       </section>
@@ -76,7 +76,7 @@
       <div class="cinema-section-nav">
         <nav id="cinemaTabs" aria-label="Разделы кинотеатра">
           <button type="button" class="cinema-tab active" data-tab="home" aria-current="page">⌂ Главная</button>
-          <button type="button" class="cinema-tab" data-tab="foreign">✦ Зарубежное RU</button>
+          <button type="button" class="cinema-tab" data-tab="foreign">✦ Мировое кино</button>
           <button type="button" class="cinema-tab" data-tab="catalog">◈ Фильмы</button>
           <button type="button" class="cinema-tab" data-tab="series">▦ Сериалы</button>
           <button type="button" class="cinema-tab" data-tab="search">⌕ Поиск</button>
@@ -90,14 +90,19 @@
       <section class="cinema-section cinema-watch-now" id="cinemaWatchNow" aria-label="Смотреть прямо сейчас">
         <div class="cinema-section-head">
           <div><span class="cinema-overline">VETOGRAM CINEMA / ONE PLAY</span>
-            <h2>Выбери фильм · нажми ▶</h2>
+            <h2>Доступно во встроенном плеере</h2>
             <p>Официальные встроенные плееры. Начало просмотра проверяется по сигналу RUTUBE; недоступные видео скрываются после ошибки.</p>
           </div>
           <span class="cinema-shelf-label" id="cinemaWatchNowCount" aria-live="polite">Проверяем источники</span>
         </div>
         <div class="cinema-rail cinema-editorial-rail cinema-watch-rail" id="cinemaWatchNowRail"></div>
       </section>
-      <section class="cinema-section cinema-foreign-shelf" id="cinemaForeignShelf" aria-label="Зарубежные фильмы из RUTUBE"><div class="cinema-section-head"><div><span class="cinema-overline">WORLD CINEMA / RUSSIAN AUDIO SEARCH</span><h2>Зарубежное на русском ✦</h2><p>Реальные публикации зарубежных фильмов на RUTUBE. Русский дубляж указан не у всех. Оригинальный просмотр откроется на площадке источника.</p></div><button type="button" class="cinema-shelf-more" id="cinemaForeignAll">Смотреть подборку ↗</button></div><div class="cinema-rail cinema-editorial-rail" id="cinemaForeignRail"></div></section>
+      <section class="cinema-section cinema-foreign-shelf" id="cinemaForeignShelf" aria-label="Зарубежные фильмы из RUTUBE"><div class="cinema-section-head"><div><span class="cinema-overline">WORLD CINEMA / RUSSIAN AUDIO SEARCH</span><h2>Мировое кино ✦</h2><p>Популярные зарубежные фильмы с постерами и информацией об источниках. Некоторые публикации RUTUBE размещены сторонними каналами; права на встроенный просмотр не подтверждены.</p></div><button type="button" class="cinema-shelf-more" id="cinemaForeignAll">Смотреть подборку ↗</button></div><div class="cinema-rail cinema-editorial-rail" id="cinemaForeignRail"></div></section>
+      <section class="cinema-section cinema-world-series hidden" id="cinemaWorldSeries" aria-label="Популярные зарубежные сериалы">
+        <div class="cinema-section-head"><div><span class="cinema-overline">WORLD SERIES / ОБЗОР</span><h2>Сериалы, которые знают во всём мире</h2><p>Популярные зарубежные сериалы. Просмотр — на официальных сервисах при наличии подписки и доступа в регионе.</p></div><button type="button" class="cinema-shelf-more" data-tab="series">Все сериалы ↗</button></div>
+        <div class="cinema-rail cinema-editorial-rail" id="cinemaWorldSeriesRail"></div>
+      </section>
+
       <section class="cinema-section cinema-foreign-hub hidden" id="cinemaForeignHub" aria-label="Зарубежное кино на русском"><span class="cinema-overline">RUTUBE · FOREIGN MOVIES</span><h2>Зарубежные фильмы. Русская озвучка.</h2><p>Здесь собраны настоящие публикации с RUTUBE. Чтобы не выдавать чужие загрузки за разрешённые видеопотоки, мы открываем оригинальный источник. Язык и права конкретной публикации требуют проверки.</p><label class="cinema-foreign-filter"><input id="cinemaForeignIncludeUnverified" type="checkbox"> Показывать также фильмы без заявленного дубляжа</label><div id="cinemaForeignNote" class="cinema-franchise-note" role="status"></div></section>
       <section id="cinemaLatest" class="cinema-section cinema-editorial" aria-label="Недавно добавленные фильмы"><div class="cinema-section-head"><div><span class="cinema-overline">НОВОЕ / ФИЛЬМЫ И СЕРИАЛЫ</span><h2>Только что в коллекции <span class="cinema-heading-mark">✳</span></h2><p>Свежие публикации официальных видеоканалов</p></div><span class="cinema-shelf-label" id="cinemaSyncStatus">Обновляем каталог</span></div><div class="cinema-rail cinema-editorial-rail" id="cinemaLatestRail"></div></section>
       <section id="cinemaGenresSection" class="cinema-section cinema-categories" aria-label="Выбор жанров"><div class="cinema-section-head"><div><span class="cinema-overline">НАЙДИ СВОЮ ИСТОРИЮ</span><h2>Какое кино сегодня?</h2></div></div><div id="cinemaGenreTiles" class="cinema-genre-tiles"></div></section>
