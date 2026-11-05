@@ -51,7 +51,7 @@ test('EVENT CORE uses cloned People engine, not any earlier red-planet renderer'
 });
 
 test('Only dates and financial details replace original personal stories',()=>{
-  for(const date of ['1907','1987','2008','2020'])assert.match(modes,new RegExp("id: '"+date+"'"));
+  for(const date of ['1907','1929','1987','1998','2008','2010','2020','2023'])assert.ok(modes.includes('"id": "'+date+'"'),date);
   assert.match(modes,/p:\[\.\.\.p\]/);
   assert.match(modes,/MarketEventPlanet\?\.project/);
   assert.match(modes,/MarketEventPlanet\?\.focus/);
