@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="/vetogram-reborn-atelier.css?v=20261105-rb8-01" />
   <link rel="stylesheet" href="/vetogram-reborn-media.css?v=20261105-rb9-01" />
   <link rel="stylesheet" href="/vetogram-reborn-privacy.css?v=20261105-rb10-01" />
+  <link rel="stylesheet" href="/vetogram-reborn-account.css?v=20261105-rb11-01" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -2376,6 +2377,32 @@
     </section>
     <section class="screen v6-profile" data-screen="profile" aria-label="Профиль и настройки">
       <header class="v6-heading"><span class="v6-eyebrow">VETOGRAM / ЛИЧНОЕ</span><h1>Твоё пространство.</h1><p id="v6AccountName">Аккаунт, оформление и инструменты.</p></header>
+      <section class="rb11-account-overview" aria-labelledby="rb11AccountHeading">
+        <div class="rb11-account-overview-top">
+          <span class="rb11-account-emblem" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /></span>
+          <div class="rb11-account-intro">
+            <span class="rb11-eyebrow">ТВОЙ TELEGRAM · СОСТОЯНИЕ ДОСТУПОВ</span>
+            <h2 id="rb11AccountHeading">Управление подключением</h2>
+            <p>Личная сессия, Telegram Business и вход через Mini App — разные уровни доступа.</p>
+          </div>
+        </div>
+        <div class="rb11-account-proof-grid" aria-label="Текущий статус подключений">
+          <div class="rb11-proof-row" id="v11MiniAppProof" data-state="checking">
+            <span class="rb11-proof-icon" aria-hidden="true">◈</span>
+            <span class="rb11-proof-copy"><strong>Вход в Mini App</strong><small id="v11MiniAppState" role="status">Проверяем</small></span>
+          </div>
+          <div class="rb11-proof-row" id="v11PersonalProof" data-state="checking">
+            <span class="rb11-proof-icon" aria-hidden="true">⌁</span>
+            <span class="rb11-proof-copy"><strong>Личная Telegram-сессия</strong><small id="v11SessionState" role="status">Проверяем</small></span>
+          </div>
+          <div class="rb11-proof-row" id="v11BusinessProof" data-state="checking">
+            <span class="rb11-proof-icon" aria-hidden="true">◎</span>
+            <span class="rb11-proof-copy"><strong>Telegram Business</strong><small id="v11BusinessState" role="status">Проверяем</small></span>
+          </div>
+        </div>
+        <p class="rb11-account-caveat" id="v11AccountNote">Статус личного входа уточняется. Права Business не включаются автоматически.</p>
+        <button type="button" class="rb11-account-primary" id="v11ProfileConnect">Проверить подключение <span aria-hidden="true">↗</span></button>
+      </section>
       <div class="v6-settings">
         <button type="button" id="v6Account"><span>◎</span><strong>Мой аккаунт<small>Подключение Telegram и статус сессии</small></strong><b>↗</b></button>
         <button type="button" id="v6Appearance"><span>◐</span><strong>Оформление<small>Общая тема для всех разделов</small></strong><b>↗</b></button>
