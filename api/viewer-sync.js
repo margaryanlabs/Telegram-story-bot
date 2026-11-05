@@ -859,14 +859,19 @@ export default async function handler(req, res) {
       }
       if (result.needsPassword) {
         const next = await sealJson({ ...auth, session: result.session }, `auth:${userId}`);
+        const passwordExpiresAt=new Date(Date.now() + AUTH_TTL_MS).toISOString();
         await saveAuthChallenge({
           telegram_user_id: userId,
           challenge_ciphertext: next,
           stage: 'password',
           created_at: challenge.created_at,
-          expires_at: new Date(Date.now() + AUTH_TTL_MS).toISOString(),
+          expires_at: passwordExpiresAt,
         });
-        res.status(200).json({ ok: true, stage: 'password', needsPassword: true });
+        // The 2FA challenge has a fresh TTL. Returning it lets a user close
+        // the sheet and resume without requesting another Telegram code.
+        res.status(200).json({
+          ok: true,stage:'password',needsPassword:true,expiresAt:passwordExpiresAt,
+        });
         return;
       }
 
