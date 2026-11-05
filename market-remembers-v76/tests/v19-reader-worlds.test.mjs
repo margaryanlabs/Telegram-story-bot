@@ -43,6 +43,11 @@ test('V19 event selection stays compact until explicit dossier request',()=>{
 test('V19 second world conserves GPU when idle and does not allocate on PEOPLE entry',()=>{
   assert.match(globe,/rendererInitialized=true;initGL\(\)/);
   assert.match(globe,/moving\?33:82/);
+  assert.match(globe,/const activePointers=new Map\(\)/);
+  assert.match(globe,/pinchDistance/);
+  assert.match(globe,/function resetView\(\)/);
+  assert.match(globe,/mhResetEventView/);
+  assert.match(globe,/activePointers\.clear\(\)/);
   assert.match(globe,/const fallbackDust=Array\.from/);
   assert.match(globe,/const p=rotate\(fallbackDust\[i\]\)/);
   assert.match(globe,/if\(p\[2\]<=\.04\)continue/);
