@@ -21,6 +21,7 @@ function makeGame(){
  const arrows=['left','right','up','down'].map(dir=>{const n=element();n.dataset.vpSnake=dir;return n;});
  const local=new Map(),winEvents={},docEvents={},intervals=new Map(),timeouts=new Map();let next=1;
  const root={
+   dataset:{},classList:{contains:()=>true},
    querySelector:id=>nodes.get(id)||null,
    querySelectorAll:id=>id==='[data-vp-snake]'?arrows:[],
  };
@@ -41,7 +42,7 @@ function makeGame(){
    setTimeout:fn=>{const id=next++;timeouts.set(id,fn);return id;},
    clearTimeout:id=>timeouts.delete(id),
  });
- return {nodes,local,arrows,intervals,timeouts,winEvents,docEvents,document,
+ return {nodes,local,arrows,intervals,timeouts,winEvents,docEvents,document,root,
     step(){for(const fn of [...intervals.values()])fn();},
     flushHolds(){for(const [id,fn] of [...timeouts]){timeouts.delete(id);fn();}}
  };
@@ -105,6 +106,18 @@ test('Snake keyboard never steals arrows from page, inputs or 2048',()=>{
  assert.equal(key('BODY'),0,'keyboard is released on close');
  g.winEvents['vetogram:game-close']({detail:{game:'snake'}});
  assert.equal(g.intervals.size,0);
+});
+
+test('V9 inline Snake accepts arrows only when focused and running',()=>{
+ const g=makeGame(),grid=g.nodes.get('#vpSnakeGrid');
+ g.nodes.get('#vpSnakeToggle').click();
+ grid.closest=()=>null;
+ const key=()=>{let n=0;g.docEvents.keydown({key:'ArrowUp',target:{tagName:'BODY'},preventDefault(){n++;}});return n;};
+ assert.equal(key(),0);
+ g.root.dataset.v9ActiveGame='snake';
+ assert.equal(key(),1);
+ g.root.dataset.v9ActiveGame='2048';
+ assert.equal(key(),0);
 });
 
 test('touch long press marks one Mines flag without opening or double-toggling',()=>{
