@@ -1035,6 +1035,30 @@
     if (isCurrent())renderAnalytics();
   }
 
+  function notifyTelegramSessionDisconnected(){
+    // A confirmed logout is a fresh privacy boundary EVEN IF Telegram Mini
+    // App initData stays identical. Fence every pending owner-scoped request:
+    // pre-logout Viewer Sync, Mini App state, analytics and OTP callbacks
+    // cannot resurrect the previous authenticated session after this point.
+    viewerOwnerEpoch++;
+    viewerSyncIntent++;
+    viewerAnalyticsIntent++;
+    viewerAuthBusy=false;
+    viewerQrAbortController?.abort();
+    viewerQrAbortController=null;
+    // Personal MTProto connection is separate from Business Story permissions.
+    // Clear the local personal-account badge immediately: a subsequent
+    // /api/miniapp refresh must not be required to hide "Account connected".
+    state.accountConnection={connected:false,account:null};
+    // Do not include an owner ID, auth challenge, phone, messages or session.
+    // The inbox listens to this local event and clears its volatile state.
+    if(typeof CustomEvent==='function')
+      window.dispatchEvent(new CustomEvent('vetogram:telegram-session-disconnected'));
+    renderHome();
+    renderConnection();
+    renderViewerPendingLoginNotice();
+  }
+
   async function refreshViewerSync({ silent = false } = {}) {
     ensureComposerIdentity();
     const wasConnected=viewerState.session?.connected===true;
@@ -1113,8 +1137,14 @@
     // re-fetch them. This event is owner-scoped and contains no session data.
     if(!wasConnected&&viewerState.session?.connected===true && typeof CustomEvent === 'function')
       window.dispatchEvent(new CustomEvent('vetogram:telegram-session-connected'));
+    // Distinguish an authoritative signed response from a transient storage
+    // outage: clearing cached private inbox data is required only when the
+    // server confirms the once-linked session has truly disappeared.
+    if(wasConnected&&viewerState.session?.connected!==true&&viewerState.degraded===false)
+      notifyTelegramSessionDisconnected();
     renderViewers();
     renderHome();
+    renderRebornProfileStatus();
     renderViewerPendingLoginNotice();
   }
 
@@ -1150,7 +1180,62 @@
       :'Завершить подтверждение Telegram →';
   }
 
+  // RB11 Account Center: a signed Mini App owner, a personal MTProto
+  // session and Telegram Business are three distinct proofs. Never infer one
+  // from another or show a connected state after owner mismatch/degradation.
+  function renderRebornProfileStatus(){
+    const mini=Boolean(tg?.initData);
+    const personal=viewerState.session?.connected===true &&
+      viewerState.session?.identityMismatch!==true && viewerState.degraded!==true;
+    const mismatch=viewerState.session?.identityMismatch===true;
+    const degraded=viewerState.degraded===true;
+    const business=state.businessPermissions?.connected===true;
+    const needsBusiness=state.connection==='needs_permission';
+    const pending=viewerState.loginPending;
+    const expiry=Date.parse(pending?.expiresAt||'');
+    const hasPending=Boolean(!personal && pending &&
+      ['code','password','qr_password'].includes(pending.stage) &&
+      Number.isFinite(expiry) && expiry>Date.now());
+    const update=(rootId,labelId,status,label)=>{
+      const root=$(rootId),text=$(labelId);
+      if(root)root.dataset.state=status;
+      if(text)text.textContent=label;
+    };
+    update('v11MiniAppProof','v11MiniAppState',
+      mini?'ready':'warn',mini?'Открыт через Telegram':'Открой внутри Telegram');
+    const status=!mini?'warn':mismatch?'warn':degraded?'warn':
+      personal?'ready':hasPending?'pending':'neutral';
+    const name=!mini?'Mini App недоступен':mismatch?'Аккаунт не совпадает':
+      degraded?'Связь временно не подтверждена':
+      personal?'Личная сессия подключена':
+      hasPending?'Вход ожидает подтверждения':'Личная сессия не подключена';
+    update('v11PersonalProof','v11SessionState',status,name);
+    update('v11BusinessProof','v11BusinessState',
+      business?'pending':needsBusiness?'warn':'neutral',
+      business?'Business-бот обнаружен · доставка не проверена':
+      needsBusiness?'Нужно отдельное разрешение':'Не подключён · необязательно');
+    const note=$('v11AccountNote');
+    if(note)note.textContent=!mini
+      ?'Открой Vetogram внутри Telegram, чтобы проверить владельца аккаунта.'
+      :mismatch
+        ?'Сессия другого владельца не открывает твои чаты. Проверь подключение.'
+        :degraded
+          ?'Сервер сейчас не подтвердил доступ. Не запрашивай новый код без необходимости.'
+          :personal
+            ?'Личная сессия подтверждена. Для архивирования через Business нужно отдельное согласие и тест события.'
+            :hasPending
+              ?'Продолжи существующий вход по коду или паролю 2FA. Повторный запрос кода не нужен.'
+              :'Вход в Mini App не подключает личные чаты автоматически. Используй номер + код или QR.';
+    const action=$('v11ProfileConnect');
+    if(action){
+      action.textContent=personal?'Проверить и управлять аккаунтом ↗':
+        hasPending?'Продолжить подключение ↗':'Подключить личный Telegram ↗';
+      action.disabled=false;
+    }
+  }
+
   function renderConnection() {
+    renderRebornProfileStatus();
     const personalConnected = viewerState.session?.connected === true || state.accountConnection?.connected === true;
     const ready = state.connection === 'ready' || state.ready === true || personalConnected;
     const permission = !ready && state.connection === 'needs_permission';
@@ -1855,6 +1940,47 @@
     renderHome();
   }
 
+  // RB7: Telegram's native Back button belongs to the active navigation
+  // state, not permanently to the account modal. A visible chat and a visible
+  // modal can overlap: the modal always closes first.
+  function nativeBackTarget(){
+    if(!$('sheet')?.hidden)return 'sheet';
+    if($('v4MessageActions')?.open===true)return 'message-actions';
+    if($('telegramThreadPhotoDialog')?.open===true)return 'photo';
+    if($('vetoContactStoryViewer')?.hidden===false)return 'story';
+    if($('v61Player')?.hidden===false)return 'media-player';
+    if(currentScreen==='telegram'&&$('telegramThreadView')?.hidden===false)
+      return 'thread';
+    if(!['home','telegram','publish','media','privacy'].includes(currentScreen))
+      return 'secondary';
+    return null;
+  }
+  function syncNativeBackButton(){
+    try{
+      if(nativeBackTarget())tg?.BackButton?.show();
+      else tg?.BackButton?.hide();
+    }catch{}
+  }
+  function handleNativeBackButton(){
+    const target=nativeBackTarget();
+    if(target==='sheet'){closeSheet();return;}
+    if(target==='message-actions'){
+      $('v4MessageActions')?.close?.();return;
+    }
+    if(target==='photo'){window.VetoTelegramPhotoBack?.();return;}
+    if(target==='story'){window.VetoTelegramStoryBack?.();return;}
+    if(target==='media-player'){window.VetoTelegramMediaBack?.();return;}
+    if(target==='thread'){window.VetoTelegramChatBack?.();return;}
+    if(target==='secondary')switchScreen('telegram');
+  }
+  for(const name of [
+    'vetogram:chat-view-changed',
+    'vetogram:story-view-changed',
+    'vetogram:media-player-view-changed',
+    'vetogram:photo-view-changed',
+    'vetogram:message-actions-view-changed'
+  ])window.addEventListener(name,syncNativeBackButton);
+
   // Pages without a bottom-tab button still belong to an existing tab.
   const NAV_PARENT = {home:'profile',profile:'profile',media:'media',play:'media',chats:'privacy',telegram:'telegram',voice:'profile',archive:'publish',analytics:'profile',viewers:'publish',relay:'profile',ai:'profile',studio:'publish','story-engine':'publish'};
   function switchScreen(name) {
@@ -1885,10 +2011,15 @@
     haptic();
     window.scrollTo({ top:0, behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth' });
     if (target === 'viewers' && tg?.initData) refreshViewerSync({ silent: true });
+    if (target === 'profile') {
+      renderRebornProfileStatus();
+      if(tg?.initData)void refreshViewerSync({silent:true});
+    }
     if (target === 'analytics' && tg?.initData) refreshViewerAnalytics({ silent: true });
     // The Privacy module is loaded separately and must refresh whether a
     // screen is opened through a bottom tab, a home shortcut or a feature sheet.
     window.dispatchEvent(new CustomEvent('veto:screen-changed', { detail: { screen: target } }));
+    syncNativeBackButton();
     return true;
   }
   // Other modules can open secondary pages (Chats, Relay) without depending on
@@ -1926,7 +2057,7 @@
     document.documentElement.classList.add('veto-sheet-open');
     document.body.classList.add('veto-sheet-open');
     $('sheet').focus({preventScroll:true});
-    try { tg?.BackButton?.show(); } catch {}
+    syncNativeBackButton();
   }
 
   function closeSheet({restoreFocus=true}={}) {
@@ -1942,7 +2073,7 @@
     sheetReturnFocus=null;
     if (restoreFocus && returnTo?.isConnected && typeof returnTo.focus==='function')
       returnTo.focus({preventScroll:true});
-    try { tg?.BackButton?.hide(); } catch {}
+    syncNativeBackButton();
     window.dispatchEvent(new CustomEvent('vetogram:modal-closed'));
   }
 
@@ -2347,6 +2478,7 @@
         <button class="accent" data-sheet-action="account-connect">${accountConnected ? 'Управлять подключением' : 'Подключить Telegram'}</button>
         <button data-sheet-action="business-help">${businessConnected ? 'Проверить дополнительную Privacy' : 'Что такое Privacy‑доступ?'}</button>
         <button data-sheet-action="privacy-promise">Как хранятся данные</button>
+        <button data-sheet-action="open-profile">Открыть профиль и настройки</button>
         <button data-sheet-action="open-security">Расширенные настройки безопасности</button>
         <button data-sheet-action="close">Закрыть</button>
       </div>
@@ -2685,19 +2817,45 @@
     };
   }
 
+  async function finishVerifiedViewerLogin({analytics=false}={}){
+    // Verify the *current* owner/session after the password or code API
+    // succeeds. A logout or signed account change can occur while these
+    // network reads are pending; never navigate using an obsolete result.
+    const ownerEpoch=viewerOwnerEpoch,signed=String(tg?.initData||'');
+    const current=()=>ownerEpoch===viewerOwnerEpoch&&
+      signed===String(tg?.initData||'');
+    closeSheet();
+    viewerPendingPhone='';viewerState.loginPending=null;
+    await refreshViewerSync({silent:true});
+    if(!current())return false;
+    await refresh();
+    if(!current())return false;
+    if(analytics){
+      await refreshViewerAnalytics({silent:true});
+      if(!current())return false;
+    }
+    if(viewerState.session?.connected!==true ||
+       viewerState.session?.identityMismatch===true ||
+       viewerState.degraded===true){
+      showToast('Telegram принял вход, но статус сессии ещё не подтверждён. Обнови подключение; новый код пока не запрашивай.');
+      return false;
+    }
+    markVetoWelcomeSeen();
+    notify('success');
+    showToast('Telegram успешно подключён');
+    switchScreen('telegram');
+    offerBusinessConsentAfterLogin();
+    return true;
+  }
+
   async function renderViewerLoginResult(data) {
     if (data.stage==='connected') {
-      closeSheet();
-      viewerPendingPhone='';viewerState.loginPending=null;
-      markVetoWelcomeSeen();
-      notify('success');showToast('Telegram успешно подключён');
-      await refreshViewerSync({silent:true});await refresh();
-      switchScreen('telegram');
-      offerBusinessConsentAfterLogin();
+      await finishVerifiedViewerLogin();
       return;
     }
     if (data.needsPassword===true || data.stage==='password') {
       viewerState.loginPending={stage:'password',expiresAt:data.expiresAt||null};
+      renderViewerPendingLoginNotice();
       viewerPasswordSheet();return;
     }
     rememberViewerChallenge(data);
@@ -2779,9 +2937,10 @@
   }
 
   function viewerPasswordSheet(hint = '') {
+    const fromQr=viewerState.loginPending?.stage==='qr_password';
     openSheet(`
       <span class="kicker">ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА TELEGRAM</span>
-      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ Номер</span><span class="done">✓ Код</span><span class="active">3 · 2FA</span></div>
+      <div class="veto-login-stage" aria-label="Этап подключения"><span class="done">✓ ${fromQr?'QR':'Номер'}</span><span class="done">✓ ${fromQr?'Подтверждение':'Код'}</span><span class="active">3 · 2FA</span></div>
       <h2>У тебя включён 2FA‑пароль</h2>
       <p>Пароль передаётся Telegram только для завершения входа и не сохраняется Vetogram.${hint ? ` Подсказка: ${escapeHtml(hint)}` : ''}</p>
       <div class="auth-form">
@@ -2793,7 +2952,7 @@
       <p class="auth-error" id="viewerAuthError" role="alert" hidden></p>
       <div class="sheet-actions">
         <button class="accent" data-sheet-action="viewer-verify-password">Подключить</button>
-        <button data-sheet-action="close">Отмена</button>
+        <button data-sheet-action="close">Закрыть (вход сохранится)</button>
       </div>
     `);
   }
@@ -2881,19 +3040,27 @@
     if (viewerQrAbortController) viewerQrAbortController.abort();
     viewerQrAbortController = new AbortController();
     const controller = viewerQrAbortController;
+    // QR authorization may outlive its modal or the signed Mini App owner.
+    // Only this request may update the visible sheet or navigate after success.
+    const signedOwner=String(tg.initData),ownerEpoch=viewerOwnerEpoch;
+    const sameOwner=()=>ownerEpoch===viewerOwnerEpoch&&
+      signedOwner===String(tg?.initData||'');
+    const isCurrent=()=>sameOwner()&&!controller.signal.aborted&&
+      viewerQrAbortController===controller&&!$('sheet')?.hidden;
     viewerQrSheet();
 
     try {
       const response = await fetch('/api/viewer-qr', {
         method: 'POST',
         headers: {
-          'x-telegram-init-data': tg.initData,
+          'x-telegram-init-data': signedOwner,
           'content-type': 'application/json',
         },
         body: '{}',
         signal: controller.signal,
       });
 
+      if(!isCurrent())return;
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'QR-подключение временно недоступно');
@@ -2907,12 +3074,14 @@
 
       while (!finished) {
         const { value, done } = await reader.read();
+        if(!isCurrent())return;
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
         for (const line of lines) {
+          if(!isCurrent())return;
           if (!line.trim()) continue;
           let event;
           try { event = JSON.parse(line); } catch { continue; }
@@ -2924,8 +3093,11 @@
             notify('success');
             showToast('Telegram подключён через QR');
             await refreshViewerSync({ silent: true });
+            if(!sameOwner())return;
             await refresh();
+            if(!sameOwner())return;
             await refreshViewerAnalytics({ silent: true });
+            if(!sameOwner())return;
             switchScreen('telegram');
             offerBusinessConsentAfterLogin();
             break;
@@ -2934,15 +3106,29 @@
           if (event.type === 'password_required') {
             finished = true;
             viewerQrAbortController = null;
+            // Server has persisted the QR + 2FA challenge. Keep only
+            // non-secret expiry metadata so closing this modal allows Resume.
+            viewerState.loginPending={
+              stage:'qr_password',
+              expiresAt:event.expiresAt || null,
+            };
+            renderViewerPendingLoginNotice();
             viewerPasswordSheet(event.hint || '');
             break;
           }
 
           updateViewerQr(event);
+          if(event.type==='error'||event.type==='expired'){
+            finished=true;
+            break;
+          }
         }
       }
+      if(!finished&&isCurrent())
+        updateViewerQr({type:'error',
+          error:'QR-соединение завершилось без подтверждения. Создай новый QR.'});
     } catch (error) {
-      if (controller.signal.aborted) return;
+      if(!isCurrent())return;
       updateViewerQr({ type:'error', error:error.message });
     } finally {
       if (viewerQrAbortController === controller) viewerQrAbortController = null;
@@ -3035,6 +3221,10 @@
     button.addEventListener('click', () => switchScreen(button.dataset.openScreen));
   });
   $('vetoHomeConnectPrimary')?.addEventListener('click', () => {
+    void window.VetoTelegramOpenAccountConnection?.();
+  });
+  $('v11ProfileConnect')?.addEventListener('click', () => {
+    // Reuse the one owner-fenced auth pathway: no duplicate OTP or QR logic.
     void window.VetoTelegramOpenAccountConnection?.();
   });
   $('homeActivityList')?.addEventListener('click', event => {
@@ -3389,6 +3579,11 @@
     const action = actionTarget?.dataset?.sheetAction;
     const storyId = actionTarget?.dataset?.viewerStory;
     if (action === 'close') closeSheet();
+    if (action === 'open-profile') {
+      closeSheet();
+      switchScreen('profile');
+      return;
+    }
     if (action === 'check') {
       closeSheet();
       await refresh();
@@ -3652,21 +3847,15 @@
           rememberViewerChallenge(data);
           viewerCodeSheet(data.delivery);
         } else if (data.needsPassword) {
-          viewerState.loginPending = { ...(viewerState.loginPending||{}), stage:'password' };
+          viewerState.loginPending = {
+            ...(viewerState.loginPending||{}),
+            stage:'password',
+            expiresAt:data.expiresAt||viewerState.loginPending?.expiresAt||null,
+          };
+          renderViewerPendingLoginNotice();
           viewerPasswordSheet();
         } else {
-          closeSheet();
-          viewerPendingPhone = '';
-          viewerState.loginPending = null;
-          notify('success');
-          showToast('Telegram успешно подключён');
-          await refreshViewerSync({ silent: true });
-          // Refresh the account/Stories state too; a connected session does not
-          // immediately appear otherwise for users without Telegram Business.
-          await refresh();
-          await refreshViewerAnalytics({ silent: true });
-          switchScreen('telegram');
-          offerBusinessConsentAfterLogin();
+          await finishVerifiedViewerLogin({analytics:true});
         }
       });
       return;
@@ -3677,16 +3866,7 @@
         if (!password) throw new Error('Введи пароль двухэтапной проверки Telegram');
         await viewerApi('verify_password', { password }, null);
         if ($('viewerPassword')) $('viewerPassword').value='';
-        closeSheet();
-        viewerPendingPhone = '';
-        viewerState.loginPending = null;
-        notify('success');
-        showToast('Telegram успешно подключён');
-        await refreshViewerSync({ silent: true });
-        await refresh();
-        await refreshViewerAnalytics({ silent: true });
-        switchScreen('telegram');
-        offerBusinessConsentAfterLogin();
+        await finishVerifiedViewerLogin({analytics:true});
       });
       return;
     }
@@ -3705,6 +3885,7 @@
           degraded: false,
           error: null,
         };
+        notifyTelegramSessionDisconnected();
         render();
         showToast('Приватная session отозвана');
         await api().catch(() => {});
@@ -3731,6 +3912,7 @@
           degraded: false,
           error: null,
         };
+        notifyTelegramSessionDisconnected();
         renderViewers();
         await refresh().catch(() => {});
         showToast('Telegram Account отключён');
@@ -3842,7 +4024,8 @@
     tg?.setBackgroundColor?.('#000000');
     tg?.setBottomBarColor?.('#030303');
     tg?.disableVerticalSwipes?.();
-    tg?.BackButton?.onClick(closeSheet);
+    tg?.BackButton?.onClick(handleNativeBackButton);
+    syncNativeBackButton();
   } catch {}
 
   try {

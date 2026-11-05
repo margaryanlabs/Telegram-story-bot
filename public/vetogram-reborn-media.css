@@ -1,0 +1,684 @@
+/* VETOGRAM REBORN RB9 — MEDIA ATELIER
+   Source-bound aesthetic layer for the real Media Hub and Play screens.
+   No fake covers, no synthesized catalog metrics, no new media transport.
+   The existing iframe module API and persistent music controller remain intact.
+*/
+html#vetogram.vetogram-noir .screen[data-screen="media"],
+html#vetogram.vetogram-noir .screen[data-screen="play"] {
+  --ma-ink:#f1f5fd;
+  --ma-muted:#aab9d0;
+  --ma-faint:#879ab2;
+  --ma-line:rgba(169,194,233,.16);
+  --ma-accent:#b9d2ff;
+  --ma-canvas:#090e18;
+  --ma-panel:#111a2a;
+  --ma-raised:#1a2840;
+  --ma-ease:cubic-bezier(.22,.78,.24,1);
+  --ma-shadow:0 19px 45px rgba(2,8,19,.21);
+  color:var(--ma-ink);
+}
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="media"],
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="media"],
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="play"],
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="play"]{
+  --ma-ink:#1e324f;
+  --ma-muted:#506782;
+  --ma-faint:#647a94;
+  --ma-line:rgba(44,82,133,.19);
+  --ma-accent:#3b689e;
+  --ma-canvas:#f5f7fa;
+  --ma-panel:#fff;
+  --ma-raised:#edf3fa;
+  --ma-shadow:0 14px 36px rgba(31,55,91,.09);
+}
+/* Media home: one content-first hierarchy instead of competing dashboards. */
+html#vetogram.vetogram-noir .screen[data-screen="media"] #v6MediaHome{
+  width:min(100%,1180px);
+  margin:0 auto;
+  min-width:0;
+  padding:5px clamp(4px,2vw,20px) 80px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero{
+  position:relative;
+  min-height:345px !important;
+  border:1px solid rgba(173,205,253,.24) !important;
+  border-radius:26px !important;
+  padding:clamp(23px,4vw,50px) !important;
+  background:
+    radial-gradient(ellipse 65% 100% at 83% 20%,rgba(110,163,244,.22),transparent 72%),
+    linear-gradient(112deg,#121d30 0%,#131e31 59%,#192439 100%) !important;
+  box-shadow:var(--ma-shadow),inset 0 1px rgba(255,255,255,.07) !important;
+  overflow:hidden;
+  isolation:isolate;
+  display:grid !important;
+  grid-template-columns:minmax(0,1.13fr) minmax(160px,.87fr) !important;
+  align-items:center;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero::before{
+  content:"";
+  position:absolute;inset:1px;
+  border-radius:inherit;
+  background:linear-gradient(130deg,rgba(255,255,255,.06),transparent 30%);
+  pointer-events:none;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-hero-copy{
+  min-width:0;
+  position:relative;
+  z-index:2;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] :is(.v72-kicker,.v72-media-eyebrow){
+  color:#b3c7e6 !important;
+  font-size:10px !important;
+  font-weight:730;
+  letter-spacing:.12em;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-eyebrow{
+  margin:25px 0 13px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero h1{
+  font-size:clamp(44px,6.8vw,76px) !important;
+  letter-spacing:-.065em !important;
+  font-weight:780 !important;
+  line-height:1 !important;
+  color:#f1f6ff !important;
+  margin:0 0 15px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero h1 em{
+  color:#b9d2fa !important;
+  font-weight:610 !important;
+  font-style:normal !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero p{
+  color:#b9c9df !important;
+  font-size:13px !important;
+  line-height:1.65 !important;
+  max-width:45ch !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-hero-actions{
+  display:flex;
+  flex-flow:row wrap;
+  gap:10px !important;
+  margin-top:24px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] :is(.v72-hero-primary,.v72-hero-link){
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  min-height:46px !important;
+  border-radius:13px !important;
+  padding:10px 16px !important;
+  font-size:12px !important;
+  font-weight:750 !important;
+  letter-spacing:0 !important;
+  text-decoration:none;
+  transition:transform 180ms var(--ma-ease),background-color 180ms var(--ma-ease);
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-hero-primary{
+  background:#d7e6fd !important;
+  color:#15253b !important;
+  border:1px solid #d7e6fd !important;
+  box-shadow:0 8px 22px rgba(59,109,185,.13) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-hero-link{
+  background:rgba(192,215,247,.07) !important;
+  color:#edf4ff !important;
+  border:1px solid rgba(192,215,247,.24) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-hero-visual{
+  position:relative !important;
+  align-self:stretch;
+  justify-self:center;
+  width:min(100%,370px);
+  min-height:230px;
+  pointer-events:none;
+  opacity:.83;
+  filter:saturate(.71);
+  z-index:1;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-vinyl {
+  box-shadow:0 16px 42px rgba(0,5,13,.24);
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-hero-index{
+  color:#8c9eba !important;
+  font-variant-numeric:tabular-nums;
+}
+/* Four real destinations. Keep the artwork abstract only on the hub,
+   not as replacement covers in the genuine module catalogs. */
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-world-section{
+  margin:26px 0 24px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-section-heading{
+  min-width:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:14px;
+  margin-bottom:13px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-section-heading h2{
+  font-size:clamp(23px,3.6vw,34px) !important;
+  letter-spacing:-.045em !important;
+  font-weight:790 !important;
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-section-heading small{
+  color:var(--ma-faint) !important;
+  font-size:11px !important;
+  line-height:1.4 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:12px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card{
+  isolation:isolate;
+  display:flex !important;
+  flex-direction:column;
+  justify-content:space-between;
+  min-width:0;
+  min-height:304px !important;
+  padding:17px !important;
+  border:1px solid var(--ma-line) !important;
+  border-radius:21px !important;
+  color:var(--ma-ink) !important;
+  background:var(--ma-panel) !important;
+  box-shadow:inset 0 1px rgba(255,255,255,.04),0 9px 22px rgba(0,0,0,.10) !important;
+  overflow:hidden;
+  transition:transform 200ms var(--ma-ease),border-color 200ms var(--ma-ease),
+             box-shadow 200ms var(--ma-ease);
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card::before{
+  opacity:1;
+  z-index:-1;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-world-music::before{
+  background:radial-gradient(ellipse 80% 75% at 54% 32%,rgba(128,154,229,.28),transparent 80%),
+             linear-gradient(140deg,#1a2438,#121a2b) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-world-cinema::before{
+  background:radial-gradient(ellipse 80% 75% at 55% 30%,rgba(187,152,131,.20),transparent 80%),
+             linear-gradient(140deg,#25242b,#151b29) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-world-books::before{
+  background:radial-gradient(ellipse 80% 75% at 52% 28%,rgba(141,191,178,.20),transparent 80%),
+             linear-gradient(140deg,#1a2b2c,#141e28) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-world-play::before{
+  background:radial-gradient(ellipse 80% 75% at 50% 30%,rgba(120,174,217,.24),transparent 80%),
+             linear-gradient(140deg,#17273a,#131c2b) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-top .v72-card-number{
+  color:#b3c2da !important;
+  font-size:9px !important;
+  letter-spacing:.12em !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-arrow{
+  display:grid !important;place-items:center;
+  width:34px !important;height:34px !important;
+  border:1px solid rgba(206,225,253,.23) !important;
+  border-radius:12px !important;
+  color:#e6eefc !important;
+  background:rgba(203,218,247,.07) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-art{
+  position:absolute;
+  inset:46px 10px 76px !important;
+  width:auto !important;
+  overflow:hidden;
+  filter:saturate(.70);
+  opacity:.95;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-footer{
+  display:flex !important;
+  justify-content:space-between;
+  align-items:end !important;
+  gap:8px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-footer strong{
+  display:block;
+  color:#eef4ff !important;
+  font-size:clamp(22px,2.5vw,31px) !important;
+  font-weight:780 !important;
+  line-height:1.05 !important;
+  letter-spacing:-.045em !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-footer small{
+  display:block;
+  margin-top:8px !important;
+  color:#b9c6da !important;
+  font-size:11px !important;
+  line-height:1.4 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-cta{
+  display:inline-flex !important;
+  flex:0 0 auto;
+  min-height:30px;
+  align-items:center;
+  padding:7px 9px !important;
+  border:1px solid rgba(202,221,247,.21) !important;
+  background:rgba(206,221,248,.07);
+  border-radius:9px !important;
+  color:#d1def4 !important;
+  font-size:8px !important;
+  letter-spacing:.055em !important;
+}
+@media(hover:hover) and (pointer:fine){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card:hover{
+    transform:translateY(-3px);
+    border-color:rgba(182,212,254,.37) !important;
+    box-shadow:0 17px 35px rgba(0,0,0,.18) !important;
+  }
+}
+/* Search belongs to one catalog at a time; do not pretend a local
+   saved-library search returns whole-internet full films or books. */
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery{
+  border:1px solid var(--ma-line) !important;
+  border-radius:23px !important;
+  background:linear-gradient(130deg,var(--ma-panel),var(--ma-raised)) !important;
+  box-shadow:none !important;
+  padding:clamp(20px,3vw,32px) !important;
+  margin:26px 0 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery-intro{
+  min-width:0;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery h2{
+  font-size:clamp(25px,4vw,40px) !important;
+  line-height:1.08 !important;
+  font-weight:770 !important;
+  letter-spacing:-.055em !important;
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery h2 em{
+  color:var(--ma-accent) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery p{
+  color:var(--ma-muted) !important;
+  line-height:1.6;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery-search{
+  min-width:0;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-explore-input-wrap{
+  min-height:55px !important;
+  border:1px solid var(--ma-line) !important;
+  border-radius:15px !important;
+  background:var(--ma-canvas) !important;
+  box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-explore-input-wrap:focus-within{
+  border-color:var(--ma-accent) !important;
+  box-shadow:0 0 0 3px rgba(153,190,242,.12) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] #v75ExploreQuery{
+  color:var(--ma-ink) !important;
+  background:transparent !important;
+  font-size:16px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-explore-actions{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:9px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-explore-button{
+  min-height:48px !important;
+  border:1px solid var(--ma-line) !important;
+  border-radius:12px !important;
+  background:var(--ma-raised) !important;
+  color:var(--ma-ink) !important;
+  box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-explore-button .v75-action-glyph{
+  color:var(--ma-accent) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-search{
+  min-height:55px !important;
+  border-radius:14px !important;
+  background:var(--ma-panel) !important;
+  border:1px solid var(--ma-line) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] #v61Search{
+  color:var(--ma-ink) !important;
+  font-size:16px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-filters button{
+  background:var(--ma-panel) !important;
+  border:1px solid var(--ma-line) !important;
+  color:var(--ma-muted) !important;
+  border-radius:999px !important;
+  min-height:39px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-filters button[aria-pressed="true"]{
+  background:var(--ma-raised) !important;
+  border-color:var(--ma-accent) !important;
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] :is(.v61-item,.v61-vault-panel,.v61-vault-spotlight){
+  border:1px solid var(--ma-line) !important;
+  border-radius:17px !important;
+  background:var(--ma-panel) !important;
+  color:var(--ma-ink) !important;
+  box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-item{
+  min-height:76px !important;
+  padding:13px 14px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-item-icon{
+  border-radius:13px !important;
+  background:var(--ma-raised) !important;
+  color:var(--ma-accent) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-item-copy strong{
+  font-size:14px !important;
+  line-height:1.35;
+  font-weight:750;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-item-copy small{
+  font-size:12px !important;
+  color:var(--ma-muted) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-vault-spotlight{
+  padding:clamp(18px,3vw,27px) !important;
+  margin-top:20px;
+  background:linear-gradient(115deg,var(--ma-panel),var(--ma-raised)) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-vault-description h2{
+  font-size:clamp(22px,3vw,30px) !important;
+  font-weight:800 !important;
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] #v61VaultButton{
+  min-height:47px !important;
+  border-radius:12px !important;
+  background:var(--ma-raised) !important;
+  border:1px solid var(--ma-line) !important;
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-vault-panel{
+  padding:clamp(14px,3vw,22px) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-link-form :is(input,button){
+  min-height:45px !important;
+  border-radius:11px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-availability{
+  color:var(--ma-faint) !important;
+  line-height:1.6 !important;
+}
+/* Module header and spinner belong to the real iframe router. */
+html#vetogram.vetogram-noir .screen[data-screen="media"] #v6MediaStage{
+  margin:auto;
+  min-width:0;
+  width:min(100%,1180px);
+  padding:0 clamp(0px,2vw,20px) 65px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-module-bar{
+  display:flex !important;
+  align-items:center;
+  gap:10px !important;
+  min-height:67px !important;
+  padding:10px 15px !important;
+  margin-bottom:12px !important;
+  border:1px solid var(--ma-line) !important;
+  border-radius:18px !important;
+  background:var(--ma-panel) !important;
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] #v6MediaBack{
+  flex:0 0 auto;
+  min-height:43px !important;
+  border-radius:11px !important;
+  border:1px solid var(--ma-line) !important;
+  background:var(--ma-raised) !important;
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] #v6ModuleTitle{
+  min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:16px !important;
+  font-weight:760 !important;
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-module-switch button{
+  min-width:42px !important;
+  min-height:42px !important;
+  border-radius:11px !important;
+  color:var(--ma-muted) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-module-switch button[aria-pressed="true"]{
+  background:var(--ma-raised) !important;
+  color:var(--ma-accent) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="media"] #v6ModuleStatus{
+  border:1px solid var(--ma-line) !important;
+  border-radius:13px !important;
+  color:var(--ma-muted) !important;
+  background:var(--ma-panel) !important;
+}
+/* Player: UI skin only. Playback remains owned by the original
+   persistent audio controller and iframe postMessage bridge. */
+html#vetogram.vetogram-universe .v61-player{
+  background:radial-gradient(ellipse 70% 55% at 50% 30%,#223550,#090e18 85%) !important;
+}
+html#vetogram.vetogram-universe .v61-player-card{
+  width:min(100%,460px) !important;
+  gap:18px !important;
+}
+html#vetogram.vetogram-universe .v61-player-top{
+  color:#aabdd6 !important;
+}
+html#vetogram.vetogram-universe .v61-player-record{
+  background:repeating-radial-gradient(circle,#111c2c 0 3px,#243856 3px 5px,#111c2c 6px 9px) !important;
+  box-shadow:0 0 0 1px rgba(172,202,250,.23),0 0 74px rgba(86,139,215,.17) !important;
+}
+html#vetogram.vetogram-universe .v61-player-record span{
+  color:#172941 !important;
+  background:#c8dcfa !important;
+}
+html#vetogram.vetogram-universe .v61-player-info h2{
+  color:#f4f8ff !important;
+  letter-spacing:-.045em !important;
+}
+html#vetogram.vetogram-universe .v61-player-info p{
+  color:#bacbe1 !important;
+}
+html#vetogram.vetogram-universe .v61-player-info small{
+  color:#bdcee8 !important;
+}
+html#vetogram.vetogram-universe .v61-player-seek input{
+  accent-color:#b5d0fa !important;
+}
+html#vetogram.vetogram-universe #v61PlayerPlay{
+  background:#d7e7ff !important;
+  color:#183152 !important;
+  border-radius:50% !important;
+}
+html#vetogram.vetogram-universe .v61-player-library{
+  border:1px solid rgba(191,215,250,.22) !important;
+  background:rgba(192,215,251,.10) !important;
+  color:#edf4ff !important;
+}
+/* Play is a real interactive module. This only changes its wrapper,
+   score cards and accessible action surfaces. The six game engines stay. */
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-shell{
+  width:min(100%,1120px);
+  max-width:1120px;
+  padding:15px clamp(4px,2vw,20px) 80px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v72-play-hero{
+  border:1px solid var(--ma-line) !important;
+  background:linear-gradient(115deg,#13243a,#172839 67%,#1d2b3c) !important;
+  border-radius:24px !important;
+  box-shadow:var(--ma-shadow) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v72-play-hero h1{
+  color:#f0f6ff !important;
+  font-weight:810 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v72-play-hero h1 em{
+  color:#c4def6 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .vp-hero p{
+  color:#b4cadf !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.vp-count,.v74-score,.vp-card,.vp-featured){
+  border:1px solid var(--ma-line) !important;
+  border-radius:16px !important;
+  background:var(--ma-panel) !important;
+  color:var(--ma-ink) !important;
+  box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.vp-section-head h2,.v74-local-head h2,.vp-card strong){
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.vp-section-head p,.vp-count,.v74-local-hint){
+  color:var(--ma-muted) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.vp-card,.v74-score,.v72-play-jump,#v75SurpriseMe){
+  min-height:45px;
+  transition:border-color 180ms var(--ma-ease),transform 180ms var(--ma-ease);
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v72-play-jump{
+  background:#d9e9fa !important;
+  color:#1b3047 !important;
+  border-radius:12px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.vp-card,.v74-score):focus-visible{
+  outline:2px solid var(--ma-accent) !important;
+  outline-offset:2px !important;
+}
+/* Light shell: avoid carrying a dark promo hero into a white app theme. */
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="media"] .v72-media-hero,
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="play"] .v72-play-hero{
+  background:linear-gradient(120deg,#fff,#e9f1fc) !important;
+  border-color:var(--ma-line) !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="media"] .v72-media-hero :is(h1,p,.v72-kicker,.v72-media-eyebrow),
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="play"] .v72-play-hero :is(h1,p){
+  color:var(--ma-ink) !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="media"] .v72-media-hero h1 em{
+  color:#416caa !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="media"] .v72-hero-link{
+  color:var(--ma-ink) !important;
+  background:#edf3fb !important;
+  border-color:var(--ma-line) !important;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="media"] .v72-media-card::before{
+  opacity:.96;
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="play"] .v72-play-hero h1 em{
+  color:#365d88 !important;
+}
+@media(max-width:850px){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero{
+    grid-template-columns:1fr !important;
+    min-height:300px !important;
+    padding:28px 25px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-hero-visual{
+    position:absolute !important;
+    width:250px;min-height:220px;
+    right:-40px;top:20px;
+    opacity:.28;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card{
+    min-height:264px !important;
+    border-radius:18px !important;
+    padding:13px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-footer strong{
+    font-size:23px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-cta{
+    display:none !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-discovery{
+    padding:19px 15px !important;
+  }
+}
+@media(max-width:430px){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero{
+    min-height:290px !important;
+    border-radius:19px !important;
+    padding:23px 18px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-hero h1{
+    font-size:clamp(43px,10vw,52px) !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-hero-actions{
+    gap:7px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] :is(.v72-hero-primary,.v72-hero-link){
+    min-height:43px !important;
+    padding:9px 12px !important;
+    font-size:11px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card{
+    min-height:226px !important;
+    padding:12px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-art{
+    inset:37px 3px 53px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-footer strong{
+    font-size:21px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-footer small{
+    font-size:10px !important;
+    line-height:1.3 !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-explore-actions{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:5px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v75-explore-button{
+    min-width:0;
+    padding:7px 3px !important;
+    font-size:11px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v6-module-bar{
+    padding:8px 9px !important;
+    gap:6px !important;
+  }
+}
+@media(max-width:350px){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card{
+    min-height:210px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-card-footer strong{
+    font-size:19px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v61-section-heading small{
+    display:none !important;
+  }
+}
+@media(pointer:coarse){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card{
+    transform:none !important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  html#vetogram.vetogram-noir .screen[data-screen="media"] .v72-media-card,
+  html#vetogram.vetogram-noir .screen[data-screen="play"] :is(.vp-card,.v74-score,.v72-play-jump){
+    animation:none !important;
+    transition:none !important;
+    transform:none !important;
+  }
+}

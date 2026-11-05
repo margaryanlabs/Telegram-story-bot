@@ -38,6 +38,8 @@
   <link rel="stylesheet" href="/vetogram-showcase-v72.css?v=20261101-rebuild04" />
   <link rel="stylesheet" href="/vetogram-discovery-v75.css?v=20261101-rebuild04" />
   <link rel="stylesheet" href="/vetogram-editorial-80.css?v=20261102-media84" />
+  <link rel="stylesheet" href="/vetogram-reborn-foundation.css?v=20261105-rb1" />
+  <link rel="stylesheet" href="/vetogram-reborn-ui.css?v=20261105-rb12-01" />
 </head>
 <body>
   <div class="veto-stage-fx" aria-hidden="true">
@@ -170,20 +172,20 @@
 
     <section class="screen active control-home" data-screen="home">
       <section class="veto-command-home" aria-label="Vetogram Command Hub">
-        <div class="veto-command-home-top"><span>VETOGRAM / ЛИЧНЫЙ ЦЕНТР</span><i aria-hidden="true"></i><strong>Чаты · Истории · ИИ</strong></div>
+        <div class="veto-command-home-top"><span>VETOGRAM / ТВОЙ TELEGRAM</span><i aria-hidden="true"></i><strong>Чаты · Истории · Контроль</strong></div>
         <div class="vg33-hero-sigil" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" width="140" height="140" /></div>
-        <h1>VETOGRAM<br><em>Твоё пространство.</em></h1>
-        <p>Переписка, приватность, истории и ИИ — в одном ритме, без лишних экранов.</p>
+        <h1>Твои чаты.<br><em>Твой контроль.</em></h1>
+        <p>Переписки и истории — на первом месте. Дополнительный доступ для Anti-Delete включается отдельно, только по твоему выбору.</p>
         <div class="veto-command-home-actions">
-          <button type="button" class="veto-command-home-primary" id="vetoHomeChatsPrimary" data-open-screen="telegram"><span>▤</span><strong>Открыть мои чаты</strong><b>↗</b></button>
-          <button type="button" class="veto-command-home-connect" id="vetoHomeConnectPrimary"><span>⌁</span><strong>Подключение Telegram</strong><b>→</b></button>
+          <button type="button" class="veto-command-home-primary" id="vetoHomeChatsPrimary" data-open-screen="telegram"><span>▤</span><strong>Перейти к чатам</strong><b>↗</b></button>
+          <button type="button" class="veto-command-home-connect" id="vetoHomeConnectPrimary"><span>⌁</span><strong>Подключить Telegram</strong><b>→</b></button>
         </div>
 
       </section>
       <section class="vg27-mission" id="vg27Mission" aria-label="Состояние и быстрый старт Vetogram">
         <div class="vg27-mission-heading">
           <div>
-            <span class="vg27-eyebrow"><span class="vg27-pulse-dot" aria-hidden="true"></span> ПОДКЛЮЧЕНИЕ</span>
+            <span class="vg27-eyebrow"><span class="vg27-pulse-dot" aria-hidden="true"></span> СОСТОЯНИЕ ДОСТУПОВ</span>
             <h2 id="vg27MissionTitle">Проверяем подключение</h2>
             <p id="vg27MissionDetail">Без автоматических подключений и скрытых действий.</p>
           </div>
@@ -207,14 +209,14 @@
           </button>
         </div>
         <div class="vg27-mission-bottom">
-          <span><span aria-hidden="true">◈</span> Разрешения не означают, что сообщения уже восстановлены или история опубликована.</span>
+          <span><span aria-hidden="true">◈</span> Anti-Delete работает только для новых доступных событий после отдельной настройки Telegram Business. Ранее удалённые сообщения не восстановятся.</span>
           <button type="button" id="vg27MissionAction">Подключить Telegram →</button>
         </div>
       </section>
       <section class="vg33-tools-panel" aria-label="Возможности Vetogram">
-        <div class="vgx-tools-heading vg33-tools-heading"><strong>Твои инструменты</strong><span>Открой нужное в одно касание</span></div>
+        <div class="vgx-tools-heading vg33-tools-heading"><strong>Дополнительные возможности</strong><span>Открывай по необходимости</span></div>
         <div class="veto-command-home-grid" aria-label="Инструменты Vetogram">
-          <button type="button" data-open-screen="privacy"><span>↶</span><strong>Anti-Delete</strong><small>Удалённые и изменённые сообщения</small></button>
+          <button type="button" data-open-screen="privacy"><span>↶</span><strong>Anti-Delete</strong><small>Сохранение новых разрешённых событий</small></button>
           <button type="button" data-open-screen="viewers"><span>◉</span><strong>Просмотры историй</strong><small>Аудитория и активность</small></button>
           <button type="button" data-open-screen="story-engine"><span>✧</span><strong>Студия историй</strong><small>Шаблоны, ссылки и ремикс</small></button>
           <button type="button" data-open-screen="ai"><span>✦</span><strong>VETO AI</strong><small>Ответы, перевод и идеи</small></button>
@@ -253,8 +255,8 @@
       </section>
       <section class="control-activity">
         <div class="block-head compact">
-          <div><span class="kicker">СОБЫТИЯ</span><h2 data-ui-text="recentActivity">Последняя активность</h2></div>
-          <span class="tiny-note">live</span>
+          <div><span class="kicker">СОБЫТИЯ</span><h2 data-ui-text="recentActivity">История активности</h2></div>
+          <span class="tiny-note">После подключения</span>
         </div>
         <div class="control-activity-list" id="homeActivityList">
           <div class="control-activity-row activity-loading">
@@ -561,7 +563,7 @@
           
 
           <p class="veto-mirror-focus-hint">Локальная сортировка без отметок «прочитано» и изменения оригинальных чатов.</p>
-          <div class="veto-mirror-headline"><span>МОИ ДИАЛОГИ</span><span id="telegramMirrorUpdated">Обновление по запросу</span></div>
+          <div class="veto-mirror-headline"><span>Переписки</span><span id="telegramMirrorUpdated">Обновление по запросу</span></div>
           <div id="telegramMirrorNotice" class="veto-mirror-notice" hidden></div>
           <div class="veto-mirror-chat-list" id="telegramMirrorList" aria-live="polite">
             <div class="veto-mirror-empty"><span class="veto-mirror-loader"></span><strong>Открываю Telegram…</strong><small>Доступны чаты твоего подключённого аккаунта</small></div>
@@ -1228,7 +1230,7 @@
       <div class="page-head privacy-page-head">
         <span class="kicker">VETOGRAM · ПРИВАТНОСТЬ</span>
         <h1 data-ui-text="privacyCenterHead">Центр приватности</h1>
-        <p>Удалённые сообщения, история изменений, умные входящие и медиаархив — с отдельными переключателями, прозрачным статусом доступа и понятным хранением данных.</p>
+        <p>Проверяй доступ Telegram, управляй сохранёнными копиями и выбирай срок хранения. Защита новых событий требует отдельного согласия.</p>
       </div>
 
       <section class="ghost-command-card">
@@ -1333,7 +1335,9 @@
         <b>›</b>
       </button>
 
-      <section class="ghost-quick-grid" aria-label="Ghost быстрые действия">
+      <details class="rb10-advanced-tools" id="privacyAdvancedTools">
+        <summary><span class="rb10-tools-heading"><strong>Другие инструменты</strong><small>Удаления, медиаархив, студия и истории</small></span><span class="rb10-tools-chevron" aria-hidden="true">⌄</span></summary>
+      <section class="ghost-quick-grid" aria-label="Дополнительные инструменты защиты">
         <button type="button" data-ghost-jump="deleted"><span>↶</span><strong>Удалённые</strong><small>Сразу к сохранённым удалениям</small></button>
         <button type="button" data-ghost-jump="edited"><span>≋</span><strong>Изменённые</strong><small>История правок по чатам</small></button>
         <button type="button" data-ghost-jump="media"><span>▣</span><strong>Медиаархив</strong><small>Сохранённые вложения</small></button>
@@ -1341,6 +1345,7 @@
         <button type="button" data-open-screen="creator"><span>✦</span><strong>Студия стикеров</strong><small>Бренд-наборы · анимация</small></button>
         <button type="button" data-open-screen="publish"><span>＋</span><strong>Истории</strong><small>Публикация и точная аудитория</small></button>
       </section>
+      </details>
 
       <section class="ghost-access-strip" id="privacyAccessStrip">
         <div class="ghost-access-icon" id="privacyAccessIcon">◌</div>
@@ -2251,7 +2256,7 @@
           <div class="v72-hero-copy">
             <div class="v72-kicker"><span class="v72-kicker-dot" aria-hidden="true"></span> VETOGRAM <span class="v72-kicker-sep">/</span> MEDIA</div>
             <div class="v72-media-eyebrow">ВСЁ, ЧТО ТЫ ЛЮБИШЬ — ВНУТРИ</div>
-            <h1>Твоя<br><em>вселенная</em><span class="v72-h1-dot">.</span></h1>
+            <h1>Твой<br><em>мир медиа</em><span class="v72-h1-dot">.</span></h1>
             <p>Открывай музыку, кино, книги и игры. Не выходя из Vetogram.</p>
             <div class="v72-hero-actions">
               <button type="button" class="v72-hero-primary" data-v6-module="music"><span aria-hidden="true">▶</span> Слушать музыку</button>
@@ -2369,6 +2374,32 @@
     </section>
     <section class="screen v6-profile" data-screen="profile" aria-label="Профиль и настройки">
       <header class="v6-heading"><span class="v6-eyebrow">VETOGRAM / ЛИЧНОЕ</span><h1>Твоё пространство.</h1><p id="v6AccountName">Аккаунт, оформление и инструменты.</p></header>
+      <section class="rb11-account-overview" aria-labelledby="rb11AccountHeading">
+        <div class="rb11-account-overview-top">
+          <span class="rb11-account-emblem" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt="" /></span>
+          <div class="rb11-account-intro">
+            <span class="rb11-eyebrow">ТВОЙ TELEGRAM · СОСТОЯНИЕ ДОСТУПОВ</span>
+            <h2 id="rb11AccountHeading">Управление подключением</h2>
+            <p>Личная сессия, Telegram Business и вход через Mini App — разные уровни доступа.</p>
+          </div>
+        </div>
+        <div class="rb11-account-proof-grid" aria-label="Текущий статус подключений">
+          <div class="rb11-proof-row" id="v11MiniAppProof" data-state="checking">
+            <span class="rb11-proof-icon" aria-hidden="true">◈</span>
+            <span class="rb11-proof-copy"><strong>Вход в Mini App</strong><small id="v11MiniAppState" role="status">Проверяем</small></span>
+          </div>
+          <div class="rb11-proof-row" id="v11PersonalProof" data-state="checking">
+            <span class="rb11-proof-icon" aria-hidden="true">⌁</span>
+            <span class="rb11-proof-copy"><strong>Личная Telegram-сессия</strong><small id="v11SessionState" role="status">Проверяем</small></span>
+          </div>
+          <div class="rb11-proof-row" id="v11BusinessProof" data-state="checking">
+            <span class="rb11-proof-icon" aria-hidden="true">◎</span>
+            <span class="rb11-proof-copy"><strong>Telegram Business</strong><small id="v11BusinessState" role="status">Проверяем</small></span>
+          </div>
+        </div>
+        <p class="rb11-account-caveat" id="v11AccountNote">Статус личного входа уточняется. Права Business не включаются автоматически.</p>
+        <button type="button" class="rb11-account-primary" id="v11ProfileConnect">Проверить подключение <span aria-hidden="true">↗</span></button>
+      </section>
       <div class="v6-settings">
         <button type="button" id="v6Account"><span>◎</span><strong>Мой аккаунт<small>Подключение Telegram и статус сессии</small></strong><b>↗</b></button>
         <button type="button" id="v6Appearance"><span>◐</span><strong>Оформление<small>Общая тема для всех разделов</small></strong><b>↗</b></button>
@@ -2664,14 +2695,14 @@
 
   </main>
 
-  <nav class="bottom-nav" data-reborn-nav="five" aria-label="Основные разделы">
+  <nav class="bottom-nav" data-reborn-nav="four" aria-label="Основные разделы">
     <div class="v6-nav-brand" aria-hidden="true"><img src="/veto-telegram-mark.svg?v=20261019-brand-v2" alt=""><strong>VETOGRAM<small>ТВОЯ ВСЕЛЕННАЯ</small></strong></div>
     <button class="nav-item active" data-nav="telegram" type="button" aria-label="Чаты" data-ui-label="chats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8.5 8.5 0 0 1-12 7.7L3 21l1.5-5A8.5 8.5 0 1 1 20 11.5Z"/></svg><small data-ui-text="chats">Чаты</small></button>
     <button class="nav-item" data-nav="publish" type="button" aria-label="Истории" data-ui-label="stories"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg><small data-ui-text="stories">Истории</small></button>
-    <button class="nav-item" data-nav="play" type="button" aria-label="Игры"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8H5.5A3.5 3.5 0 0 0 2 11.5v3A3.5 3.5 0 0 0 5.5 18c1.1 0 2-.6 2.8-1.5L10 15h4l1.7 1.5c.8.9 1.7 1.5 2.8 1.5a3.5 3.5 0 0 0 3.5-3.5v-3A3.5 3.5 0 0 0 18.5 8H7Z"/><path d="M6 12h4M8 10v4M16 11.5h.01M19 13.5h.01"/></svg><small>Игры</small></button>
+
     <button class="nav-item" data-nav="media" type="button" aria-label="Медиа" data-ui-label="media"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M17.5 14v7m-3.5-3.5h7"/></svg><small data-ui-text="media">Медиа</small></button>
     <button class="nav-item" data-nav="privacy" type="button" aria-label="Защита" data-ui-label="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v5c0 5 3 8 8 11 5-3 8-6 8-11V6Z"/><path d="m9 12 2 2 4-4"/></svg><small data-ui-text="privacy">Защита</small></button>
-    <button class="nav-item" data-nav="profile" type="button" aria-label="Профиль" data-ui-label="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><small data-ui-text="profile">Профиль</small></button>
+
     <span class="v6-nav-foot">Личное. Всегда рядом.</span>
   </nav>
   <dialog class="vg26-command-dialog" id="vg26CommandDialog" aria-labelledby="vg26CommandTitle">

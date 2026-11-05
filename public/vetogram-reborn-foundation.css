@@ -1,0 +1,377 @@
+/* VETOGRAM REBORN / RB1 — restrained core shell, 2026-11-05.
+ * Applies only to the existing studio shell. Does NOT restyle Telegram
+ * conversations, user-selected light/linen themes, reader or media iframes.
+ * A final cascade layer while legacy styles are audited, not a new theme engine.
+ */
+:root {
+  --vgr-bg: #080b11;
+  --vgr-surface: #111722;
+  --vgr-surface-2: #171f2c;
+  --vgr-line: rgba(204, 215, 233, .12);
+  --vgr-ink: #f0f3f9;
+  --vgr-muted: #adb9ca;
+  --vgr-accent: #b9c9f0;
+  --vgr-radius: 18px;
+  --vgr-focus: #c5d2f6;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]) {
+  --vet-panel: var(--vgr-surface);
+  --vet-panel-raised: var(--vgr-surface-2);
+  --vet-border: var(--vgr-line);
+  --vet-ink: var(--vgr-ink);
+  --vet-muted: var(--vgr-muted);
+}
+/* No redesign is allowed to replace a chosen chat wallpaper. */
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+body:not(.veto-chat-active):not(.veto-chat-thread) {
+  background: var(--vgr-bg) !important;
+  background-image: none !important;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] .veto-command-home {
+  max-width: 920px;
+  margin-inline: auto;
+  border-radius: var(--vgr-radius);
+  text-wrap: pretty;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] .veto-command-home h1 {
+  letter-spacing: -.045em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] :is(
+  .vg27-mission, .vg33-tools-panel, .vg26-resume
+) {
+  max-width: 920px;
+  margin-inline: auto;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] :is(
+  .veto-command-home, .vg27-mission, .vg33-tools-panel, .vg26-resume
+) {
+  box-shadow: none !important;
+}
+/* Four true destinations rather than squeezing Games and Profile into the
+ * primary action rail. Both remain reachable by Media and the header. */
+#vetogram .bottom-nav[data-reborn-nav="four"] {
+  gap: 0;
+}
+#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+  min-width: 0;
+  min-height: 48px;
+  flex: 1 1 25%;
+  touch-action: manipulation;
+}
+#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item small {
+  white-space: nowrap;
+}
+#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item:focus-visible,
+#vetogram .screen[data-screen="home"] button:focus-visible {
+  outline: 2px solid var(--vgr-focus) !important;
+  outline-offset: -2px;
+}
+@media (max-width: 600px) {
+  #vetogram .bottom-nav[data-reborn-nav="four"] {
+    display: grid !important;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    align-items: stretch;
+    padding-left: max(8px,env(safe-area-inset-left));
+    padding-right: max(8px,env(safe-area-inset-right));
+  }
+  #vetogram .bottom-nav[data-reborn-nav="four"] :is(.v6-nav-brand,.v6-nav-foot) {
+    display: none !important;
+  }
+  #vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 52px;
+  }
+  #vetogram .screen[data-screen="home"] .veto-command-home {
+    margin-inline: 10px;
+  }
+  #vetogram .screen[data-screen="home"] .veto-command-home h1 {
+    font-size: clamp(27px, 9vw, 41px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+    transition: none !important;
+  }
+}
+
+
+/* RB2 — product-first home, truthful status, and four equal navigation cells.
+ * The existing login / message / archive controllers stay authoritative.
+ * Styling is specific to the studio shell, not embedded media documents.
+ */
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: stretch;
+}
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] :is(.v6-nav-brand,.v6-nav-foot) {
+  display: none !important;
+}
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 56px !important;
+  border-radius: 12px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item small {
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+}
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item[aria-current="page"] {
+  background: rgba(179, 191, 217, .08) !important;
+}
+
+/* The original V4 controller moves existing, live nodes into these details;
+ * no duplicated activity logs or client-side login state. */
+#vetogram.vetogram-noir .screen[data-screen="home"] > :is(
+  .v4-home-toolbox,.v4-home-recent,.v4-home-activity,.veto-command-advanced
+) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] > :is(
+  .v4-home-toolbox,.v4-home-recent,.v4-home-activity
+) > summary {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px 18px;
+  padding: 15px 18px;
+  cursor: pointer;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] > :is(
+  .v4-home-toolbox,.v4-home-recent,.v4-home-activity
+) > summary strong {
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] > :is(
+  .v4-home-toolbox,.v4-home-recent,.v4-home-activity
+) > summary small {
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 450;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] > :is(
+  .v4-home-toolbox,.v4-home-recent,.v4-home-activity
+) > .v4-disclosure-body {
+  padding: 4px 16px 16px;
+  min-width: 0;
+}
+#vetogram.vetogram-noir .screen[data-screen="home"] > :is(
+  .v4-home-toolbox,.v4-home-recent,.v4-home-activity
+):focus-within {
+  scroll-margin-bottom: 100px;
+}
+
+/* Dark variants only. Pearl and linen keep their existing independent theme. */
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"].active {
+  gap: 14px !important;
+  align-items: stretch;
+  padding-top: 14px;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home {
+  background: linear-gradient(145deg,#141b29 0%,#101621 58%,#0d121b 100%) !important;
+  border: 1px solid var(--vgr-line) !important;
+  border-radius: 22px !important;
+  box-shadow: none !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: clamp(22px,3.3vw,36px) !important;
+  min-height: 0 !important;
+  align-content: start;
+  gap: 17px !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home-top {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 10px !important;
+  letter-spacing: .11em !important;
+  color: #bac8df !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home-top strong {
+  display: none !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home h1 {
+  margin: 0 !important;
+  color: #f3f5fb !important;
+  font-size: clamp(33px,4.7vw,57px) !important;
+  font-weight: 760 !important;
+  letter-spacing: -.052em !important;
+  line-height: 1.06 !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home h1 em {
+  display: inline !important;
+  color: #c5d1e5 !important;
+  -webkit-text-fill-color: #c5d1e5 !important;
+  font-style: normal !important;
+  letter-spacing: inherit;
+  font-size: inherit !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home > p {
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  max-width: 52ch !important;
+  color: #b8c4d6 !important;
+  margin: 0 !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  flex-direction: row !important;
+  align-items: stretch;
+  gap: 10px !important;
+  margin-top: 7px !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home-actions > button {
+  min-height: 52px !important;
+  min-width: 160px;
+  border-radius: 13px !important;
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  line-height: 1.3;
+  font-weight: 720 !important;
+  box-shadow: none !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home-actions .veto-command-home-primary {
+  background: #c7d4ed !important;
+  color: #111a29 !important;
+  border: 1px solid #c7d4ed !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] .veto-command-home-actions .veto-command-home-connect {
+  background: rgba(255,255,255,.035) !important;
+  color: #ecf0f8 !important;
+  border: 1px solid rgba(196,209,229,.22) !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] #vg27Mission {
+  background: var(--vgr-surface) !important;
+  border: 1px solid var(--vgr-line) !important;
+  border-radius: 22px !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: clamp(18px,2.4vw,25px) !important;
+  box-shadow: none !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] #vg27Mission .vg27-mission-heading h2 {
+  font-size: clamp(18px,2.25vw,23px) !important;
+  line-height: 1.22 !important;
+  margin-block: 8px 5px !important;
+  letter-spacing: -.03em;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] #vg27Mission .vg27-mission-heading p {
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] #vg27Mission .vg27-mission-label {
+  font-size: 10px !important;
+  letter-spacing: .05em !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] #vg27Mission .vg27-mission-label strong {
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] #vg27Mission .vg27-mission-bottom > span {
+  font-size: 11px !important;
+  line-height: 1.55 !important;
+  color: #b5c2d5 !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] > :is(.v4-home-toolbox,.v4-home-recent,.v4-home-activity) {
+  background: #101621 !important;
+  border: 1px solid var(--vgr-line) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] > :is(.v4-home-toolbox,.v4-home-recent,.v4-home-activity) > summary {
+  color: #eff3fa !important;
+  background: none !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] > :is(.v4-home-toolbox,.v4-home-recent,.v4-home-activity) > summary small {
+  color: #a7b5c9 !important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+.screen[data-screen="home"] > :is(.v4-home-toolbox,.v4-home-recent,.v4-home-activity) .v4-disclosure-body {
+  color: #e5ebf4;
+}
+@media (min-width: 1000px) {
+  html#vetogram.vetogram-noir .screen[data-screen="home"].active {
+    grid-template-columns: minmax(0,1.2fr) minmax(300px,.8fr) !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="home"] .veto-command-home {
+    grid-column: 1 !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="home"] #vg27Mission {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+  }
+}
+@media (max-width: 999px) {
+  html#vetogram.vetogram-noir .screen[data-screen="home"].active {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="home"] :is(.veto-command-home,#vg27Mission) {
+    grid-column: 1 / -1 !important;
+  }
+}
+@media (max-width: 600px) {
+  html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+  .screen[data-screen="home"] .veto-command-home {
+    padding: 22px 18px !important;
+    gap: 14px !important;
+  }
+  html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+  .screen[data-screen="home"] .veto-command-home-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+  .screen[data-screen="home"] .veto-command-home-actions > button {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 50px !important;
+  }
+  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item {
+    min-height: 52px !important;
+  }
+  #vetogram.vetogram-noir .screen[data-screen="home"] > :is(
+    .v4-home-toolbox,.v4-home-recent,.v4-home-activity
+  ) > summary {
+    padding: 14px 12px;
+  }
+}

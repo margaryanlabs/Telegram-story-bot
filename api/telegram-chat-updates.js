@@ -33,7 +33,7 @@ export default async function handler(req,res){
   if(req.method!=='POST')return reply(res,405,{error:'POST required'});
   if(!BOT)return reply(res,503,{error:'Telegram не настроен'});
   const owner=validateTelegramMiniApp(String(req.headers['x-telegram-init-data']||''),BOT);
-  if(!owner?.id)return reply(res,401,{error:'Открой VETO внутри своего Telegram'});
+  if(!owner?.id)return reply(res,401,{error:'Открой Vetogram внутри своего Telegram'});
   let body={};
   try{body=typeof req.body==='string'?JSON.parse(req.body):req.body||{};}
   catch{return reply(res,400,{error:'Некорректный запрос'});}
@@ -53,9 +53,14 @@ export default async function handler(req,res){
     if(!decrypted?.session)return reply(res,409,{error:'Telegram-сессия недоступна'});
     // Archive evidence is a separate owner-scoped read. The archive is NOT
     // inferred from the live snapshot, and never fabricated on store outages.
-    const archive= listPrivacyMessages(userId,chatId,ACTIVE_LATEST_MESSAGES,0)
-      .then(result=>normalizePolledArchive(result?.messages))
-      .catch(()=>[]);
+    const archive=listPrivacyMessages(userId,chatId,ACTIVE_LATEST_MESSAGES,0)
+      .then(result=>({
+        available:Array.isArray(result?.messages),
+        messages:normalizePolledArchive(result?.messages),
+      }))
+      // Store failure is UNKNOWN coverage, not proof that no messages were
+      // archived. Keep live Telegram working but expose the real limitation.
+      .catch(()=>({available:false,messages:[]}));
     const live=await withBackupClient(decrypted.session,async client=>{
       await verifyTelegramClientOwner(client,userId);
       let dialogs=await client.getDialogs({limit:ACTIVE_DIALOG_SCAN});
@@ -75,7 +80,8 @@ export default async function handler(req,res){
       chatId,source:'owner-mtproto-poll',readReceiptsSent:false,
       // Archived evidence merges into new live messages; a missing live item
       // alone is NOT evidence of deletion or preservation.
-      messages:combineLiveAndPreserved(live.messages,saved),
+      messages:combineLiveAndPreserved(live.messages,saved.messages),
+      archiveAvailable:saved.available,
       verifiedAt:new Date().toISOString(),latestWindow:ACTIVE_LATEST_MESSAGES,
     });
   }catch(error){

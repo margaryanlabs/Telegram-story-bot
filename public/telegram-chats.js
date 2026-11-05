@@ -7,10 +7,10 @@
     filter:'all',search:'',generation:0,inboxOverlayEpoch:0,lastListFetchedAt:0,pendingLoginRefresh:false,
     thread:null,messages:[],threadLoading:false,threadLoadError:'',threadAuthRejected:false,
     threadHasMore:false,threadOffset:0,archiveHasMore:false,archiveOffset:0,liveHasMore:false,threadGeneration:0,threadRequestAbort:null,archiveRequestAbort:null,
-    connectionProof:null,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarMissing:new Set(),avatarRetryTimer:null,avatarBlockedUntil:0,avatarActive:0,avatarEpoch:0,
+    connectionProof:null,sessionDisconnected:false,ownerInitData:String(tg?.initData||''),mediaUrls:[],avatarUrls:new Map(),mediaPreviewUrls:new Map(),mediaMimeByUrl:new Map(),avatarQueue:[],avatarRequested:new Set(),avatarRetryAt:new Map(),avatarMissing:new Set(),avatarRetryTimer:null,avatarBlockedUntil:0,avatarActive:0,avatarEpoch:0,
     previewActive:0,previewEpoch:0,previewSeen:new Set(),previewInflight:new Set(),
     previewRetryCounts:new Map(),previewRetryTimers:new Map(),expandedAttachments:new Map(),expandedBytes:0,
-    drafts:new Map(),draftVersions:new Map(),sendInFlight:false,sendInFlightChatId:null,lastSendFailure:null,lastSendFailures:new Map(),
+    drafts:new Map(),draftVersions:new Map(),sessionEpoch:0,sendInFlight:false,sendInFlightChatId:null,lastSendFailure:null,lastSendFailures:new Map(),
     pendingAttachment:null,replyTo:null,lastRichFailures:new Map(),stickers:[],stickerSets:[],stickerPack:null,
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
     stickerPreviewUrls:new Map(),recording:null,voiceStarting:false,lastRichFailure:null,
@@ -204,7 +204,7 @@
     const message=field.value.trim();
     if(state.pendingAttachment){await sendRichOutgoing('send_media');return;}
     if(!message || message.length>4096)return;
-    const chatId=String(chat.id),ownerKey=state.ownerInitData;
+    const chatId=String(chat.id),ownerKey=state.ownerInitData,sessionEpoch=state.sessionEpoch;
     const replyToId=state.replyTo?.id||null;
     const savedRetry=state.lastSendFailures.get(chatId)||state.lastSendFailure;
     // A reply to a different message is a different send intent, even if the
@@ -229,6 +229,7 @@
     renderSendComposer();
     try{
       const delivered=await sendChatRequest(chatId,message,nonce,replyToId);
+      if(sessionEpoch!==state.sessionEpoch)return;
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       state.lastSendFailures.delete(chatId);
       if(state.lastSendFailure?.chatId===chatId)state.lastSendFailure=null;
@@ -269,6 +270,7 @@
       }
       try{tg?.HapticFeedback?.notificationOccurred('success');}catch{}
     }catch(error){
+      if(sessionEpoch!==state.sessionEpoch)return;
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       // A send can succeed even if the HTTP confirmation is lost.
       // Retain the SAME random_id on deliberate retry, preventing duplicates.
@@ -301,7 +303,7 @@
       // A delayed failure from chat A must not interrupt somebody typing in B.
       if(String(state.thread?.id)===chatId)toast(error.message);
     }finally{
-      if(ownerKey===state.ownerInitData){
+      if(sessionEpoch===state.sessionEpoch&&ownerKey===state.ownerInitData){
         state.sendInFlight=false;state.sendInFlightChatId=null;renderSendComposer();
       }
     }
@@ -465,9 +467,10 @@
   async function sendRichOutgoing(action,attachmentOrIndex=null){
     const chat=state.thread,field=$('telegramThreadCompose');
     if(!canSendInThread(chat)||state.sendInFlight)return;
-    const chatId=String(chat.id),ownerKey=state.ownerInitData;
+    const chatId=String(chat.id),ownerKey=state.ownerInitData,sessionEpoch=state.sessionEpoch;
     const generation=state.threadGeneration;
-    const current=()=>ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
+    const current=()=>sessionEpoch===state.sessionEpoch&&
+      ownerKey===state.ownerInitData&&ownerKey===String(tg?.initData||'')&&
       generation===state.threadGeneration&&String(state.thread?.id)===chatId;
     const submittedDraftVersion=state.draftVersions.get(chatId)||0;
     const replyTo=state.replyTo?.id||null;
@@ -504,6 +507,7 @@
       // A file read can outlive both the original thread and the Telegram owner.
       if(!current())throw new Error('Чат или аккаунт изменился. Отправка отменена.');
       await richRequest(action,request);
+      if(sessionEpoch!==state.sessionEpoch)return;
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       state.lastRichFailures.delete(chatId);
       const unchangedDraft=(state.draftVersions.get(chatId)||0)===submittedDraftVersion;
@@ -540,6 +544,7 @@
       }
       try{tg?.HapticFeedback?.notificationOccurred('success')}catch{}
     }catch(error){
+      if(sessionEpoch!==state.sessionEpoch)return;
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
       if(error?.uncertain===true){
         // A lost ACK may arrive after navigation. Keep the original nonce in
@@ -563,7 +568,7 @@
       }
       // Never automatically retry: server acknowledgement may be lost.
     }finally{
-      if(ownerKey===state.ownerInitData){
+      if(sessionEpoch===state.sessionEpoch&&ownerKey===state.ownerInitData){
         state.sendInFlight=false;state.sendInFlightChatId=null;renderSendComposer();
       }
     }
@@ -1218,6 +1223,10 @@
     const ready=state.connectionProof?.verified===true;
     $('telegramMirror')?.classList.toggle('veto-messenger-ready',ready);
     if($('vetoMessengerConnectCta'))$('vetoMessengerConnectCta').hidden=ready;
+    // A successful logout can happen without a fresh inbox API request.
+    // Never leave the previous green "LIVE" label on a revoked account.
+    if($('telegramMirrorAccessButton'))
+      $('telegramMirrorAccessButton').textContent=ready?'LIVE ✓':'Подключить ↗';
     renderPrivacyDiagnostics();
     $('telegramMirrorCount').textContent=String(state.chats.length);
     renderInboxPulse();
@@ -1232,7 +1241,8 @@
     const drawerStatus=$('telegramMirrorAccessDrawerStatus');
     if (drawerStatus) drawerStatus.textContent=state.connectionProof?.verified
       ? 'Telegram подключён · ↶ архив отдельно'
-      : 'Нужно подключить Telegram';
+      : state.sessionDisconnected ? 'Telegram отключён · подключи аккаунт снова'
+        : 'Нужно подключить Telegram';
     // Keep setup discoverable when login isn't verified, out of the way for
     // an already linked user reading chats on a small mobile screen.
     if (drawer && !drawer.dataset.userToggled) drawer.open=false; // on-demand setup, not the messenger's first screen
@@ -1242,16 +1252,20 @@
       proof.classList.toggle('archive-only',Boolean(p)&&!p.verified);
       proof.textContent=p?.verified
         ?'✓ Подтверждён Telegram '+(p.username?'@'+p.username:p.accountName||'владельца')+' · чаты только этого аккаунта'
-        :p ? '◈ Только собственный архив Vetogram · живой аккаунт не подтверждён' : '◌ Проверяю личный Telegram · чужие чаты не показываются';
+        :state.sessionDisconnected ? '○ Личный Telegram отключён · переписки скрыты'
+          :p ? '◈ Только собственный архив Vetogram · живой аккаунт не подтверждён'
+            : '◌ Проверяю личный Telegram · чужие чаты не показываются';
     }
     $('telegramMirrorUpdated').textContent=state.chats.length
       ?String(state.chats.length)+' чатов загружено · по запросу':'Обновление по запросу';
     if(!items.length){
       list.innerHTML=state.loading
         ?empty('Подключаюсь к Telegram','Загружаю настоящие чаты…','↻')
-        :state.search||state.filter!=='all'
-          ?empty('Ничего не найдено','Попробуй другой запрос или выбери «Все»','⌕')
-          :empty('Чаты пока не загружены','Нажми обновить, чтобы увидеть свои переписки');
+        :state.sessionDisconnected
+          ?empty('Telegram отключён','Для просмотра своих переписок подключи Telegram заново.')
+          :state.search||state.filter!=='all'
+            ?empty('Ничего не найдено','Попробуй другой запрос или выбери «Все»','⌕')
+            :empty('Чаты пока не загружены','Нажми обновить, чтобы увидеть свои переписки');
     }else{
       list.innerHTML=items.map(chat=>{
         const unread=Math.max(0,Number(chat.unreadCount||0));
@@ -1386,6 +1400,10 @@
         }
       });
       state.connectionProof=data.connection||null;
+      // An archive-only snapshot or an unverified reply is NOT a fresh
+      // personal Telegram session. Keep the explicit logout state until the
+      // server has verified the owner of an actual connected account.
+      if(data.connection?.verified===true)state.sessionDisconnected=false;
       if(data.connection?.verified)state.lastListFetchedAt=Date.now();
       if(data.archiveDeferred===true&&data.connection?.verified===true)
         void hydrateInboxOverlay(state.ownerInitData,state.inboxOverlayEpoch);
@@ -1435,6 +1453,7 @@
       $('telegramChatsView').hidden=false;
       $('telegramMirror')?.classList.remove('thread-mode');
       window.VetoThemeDock?.('inbox');
+      notifyThreadViewChanged();
       if(!authRejected)revokeMediaUrls();
       if($('telegramMirrorAccessButton')){
         $('telegramMirrorAccessButton').textContent = 'Подключить ↗';
@@ -1706,6 +1725,9 @@
     if(next<0||next>=ids.length)return;
     openPhotoViewer(ids[next]);
   }
+  function notifyPhotoViewChanged(){
+    window.dispatchEvent(new CustomEvent('vetogram:photo-view-changed'));
+  }
   function closePhotoViewer(){
     state.activePhotoId=null;
     const dialog=$('telegramThreadPhotoDialog');
@@ -1715,7 +1737,9 @@
     if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
     if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
     refreshPhotoNavigation();
+    notifyPhotoViewChanged();
   }
+  window.VetoTelegramPhotoBack=closePhotoViewer;
   function openPhotoViewer(messageId){
     if(resetOwner()||!state.thread||state.ownerInitData!==String(tg?.initData||''))return;
     const href=state.mediaPreviewUrls.get(String(messageId));
@@ -1733,6 +1757,7 @@
       if(typeof dialog.showModal==='function')dialog.showModal();
       else dialog.setAttribute('open','');
     }
+    notifyPhotoViewChanged();
   }
   function inlineImage(message){
     if(message?.media!=='photo')return '';
@@ -1918,6 +1943,7 @@
     cancelThreadRequest();
     closePhotoViewer();
     state.ownerInitData=current;
+    state.sessionEpoch++;
     state.deliveryStage=null;renderDeliveryStatus();
     state.generation++;state.inboxOverlayEpoch++;state.threadGeneration++;state.voicePermissionGeneration++;
     cancelVoiceCapture();
@@ -1930,7 +1956,7 @@
     closeVetoMessengerTools();
     clearIntelSearch({close:true});
     state.page=0;state.hasMore=true;state.autoPages=0;state.lastListFetchedAt=0;
-    state.connectionProof=null;state.loading=false;state.threadLoading=false;
+    state.connectionProof=null;state.sessionDisconnected=false;state.loading=false;state.threadLoading=false;
     state.sendInFlight=false;state.sendInFlightChatId=null;state.lastSendFailure=null;state.lastSendFailures.clear();state.lastRichFailure=null;state.lastRichFailures.clear();
     state.drafts.clear();state.draftVersions.clear();state.pendingAttachment=null;state.replyTo=null;
     state.stickers=[];state.stickerSets=[];state.stickerPack=null;
@@ -1965,7 +1991,8 @@
     if($('telegramThreadView'))$('telegramThreadView').hidden=true;
     if($('telegramChatsView'))$('telegramChatsView').hidden=false;
     $('telegramMirror')?.classList.remove('thread-mode');
-    // Restore the five-tab inbox after an identity switch; a stale fullscreen
+    notifyThreadViewChanged();
+    // Restore the primary inbox after an identity switch; a stale fullscreen
     // thread class must never strand the next Telegram owner without navigation.
     window.VetoThemeDock?.('inbox');
     state.avatarEpoch++;state.avatarQueue=[];state.avatarRequested.clear();
@@ -2360,7 +2387,18 @@
   function scheduleThreadSync(ms=26000){
     stopThreadSync();
     if(!maySyncThread())return;
-    state.syncTimer=setTimeout(()=>{void pollThread();},ms);
+    state.syncTimer=setTimeout(()=>{
+      // A failed first/history refresh must recover the real owner-verified
+      // thread before incremental polling. Poll only returns a small recent
+      // window; it cannot restore historical pagination or canSend rights.
+      // The same visibility/online guard also stops retries in background.
+      if(!maySyncThread())return;
+      if(state.threadLoadError){
+        if(!state.threadLoading)void loadMessages({reset:true});
+        return;
+      }
+      void pollThread();
+    },ms);
   }
   function rememberHotThread(){
     if(!state.thread||!state.messages.length)return;
@@ -2423,11 +2461,18 @@
     // session as a mere transport outage after this function returns.
     state.threadGeneration++;
     state.syncRunId++;
+    state.sessionEpoch++;
+    state.generation++;state.inboxOverlayEpoch++;
+    state.pendingLoginRefresh=false;state.loading=false;
+    state.inboxReturn=null;state.lastListFetchedAt=0;
     state.threadLoading=false;
     state.syncBusy=false;
+    state.sendInFlight=false;state.sendInFlightChatId=null;
+    state.deliveryStage=null;renderDeliveryStatus();
     stopThreadSync();cancelActivePoll();
     cancelThreadRequest();
     state.threadAuthRejected=true;
+    state.sessionDisconnected=true;
         // A genuine signed-session/ownership failure must not keep private
         // messages and previously downloaded media available in the UI.
         state.messages=[];state.chats=[];state.threadCache.clear();
@@ -2438,6 +2483,13 @@
         state.avatarUrls.forEach(url=>{try{URL.revokeObjectURL(url)}catch{}});
         state.avatarUrls.clear();
         $('telegramMirrorList')?.replaceChildren?.();
+        const oldThreadBox=$('telegramThreadMessages');
+        if(oldThreadBox){
+          delete oldThreadBox.dataset.mirrorOwnerId;
+          delete oldThreadBox.dataset.mirrorThreadId;
+          delete oldThreadBox.dataset.mirrorThreadGeneration;
+          oldThreadBox.replaceChildren();
+        }
         const name=$('telegramThreadTitle');
         if(name)name.textContent='Требуется подключение Telegram';
         const meta=$('telegramThreadMeta');
@@ -2520,9 +2572,17 @@
       state.syncFailures=0;
       state.lastSyncedAt=Date.now();
       const date=new Date(state.lastSyncedAt);
-      syncLabel(newItems&&!atBottom
-        ?newItems+' новых · '+two(date.getHours())+':'+two(date.getMinutes())+' · прокрути вниз'
-        :'Обновлено '+two(date.getHours())+':'+two(date.getMinutes())+' · без отметки «прочитано»');
+      if(data.archiveAvailable===false){
+        // Live Telegram can be healthy while optional Privacy storage fails.
+        // A missing saved snapshot is UNKNOWN, not an empty verified archive.
+        syncLabel(newItems&&!atBottom
+          ?newItems+' новых · архив Vetogram недоступен · прокрути вниз'
+          :'Telegram обновлён · архив Vetogram временно недоступен');
+      }else{
+        syncLabel(newItems&&!atBottom
+          ?newItems+' новых · '+two(date.getHours())+':'+two(date.getMinutes())+' · прокрути вниз'
+          :'Обновлено '+two(date.getHours())+':'+two(date.getMinutes())+' · без отметки «прочитано»');
+      }
     }catch(error){
       // A → B → A can reuse the same chat ID while the earlier poll is still
       // pending. Only the exact active request generation may invalidate this
@@ -2556,6 +2616,11 @@
     }
   }
 
+  // No personal payload: this signal only re-evaluates the native Back
+  // button after the chat view is shown, hidden or the owner is revoked.
+  function notifyThreadViewChanged(){
+    window.dispatchEvent(new CustomEvent('vetogram:chat-view-changed'));
+  }
   function setThread(chat){
     $('telegramChatsView')?.classList.remove('vg37-return');
     $('telegramChatsView').hidden=true;
@@ -2595,6 +2660,7 @@
     const shell=$('telegramMirror');
     shell?.classList.add('thread-mode');
     window.VetoThemeDock?.('thread');
+    notifyThreadViewChanged();
     window.scrollTo({top:0,behavior:'instant'});
   }
   async function openThread(chat){
@@ -2824,6 +2890,7 @@
     $('telegramChatsView')?.classList.add('vg37-return');
     $('telegramMirror')?.classList.remove('thread-mode');
     window.VetoThemeDock?.('inbox');
+    notifyThreadViewChanged();
     revokeMediaUrls();
     renderSendComposer();
     renderChats();
@@ -3396,17 +3463,36 @@
     state.activePhotoId=null;refreshPhotoNavigation();
     if($('telegramThreadPhotoFull'))$('telegramThreadPhotoFull').removeAttribute('src');
     if($('telegramThreadPhotoSave'))$('telegramThreadPhotoSave').removeAttribute('href');
+    notifyPhotoViewChanged();
   });
   $('telegramThreadConnectButton')?.addEventListener('click',()=>{
     window.VetoTelegramOpenAccountConnection?.();
   });
   window.addEventListener('vetogram:telegram-session-connected',()=>{
     if(resetOwner())return;
+    state.sessionDisconnected=false;
     // Archive cards from before login must be replaced with actual MTProto
     // dialogs after verification, even if the inbox is already nonempty.
     if(state.thread)back();
     void loadChats({reset:true});
   });
+  // A verified disconnect can keep the same signed Mini App identity. Owner
+  // changes alone are not sufficient: fail closed on *session* revocation too.
+  window.addEventListener('vetogram:telegram-session-disconnected',()=>{
+    if(resetOwner())return;
+    invalidateThreadAuthorization();
+    state.thread=null;state.threadLoading=false;
+    state.inboxReturn=null;
+    if($('telegramThreadView'))$('telegramThreadView').hidden=true;
+    if($('telegramChatsView'))$('telegramChatsView').hidden=false;
+    $('telegramMirror')?.classList.remove('thread-mode');
+    window.VetoThemeDock?.('inbox');
+    notifyThreadViewChanged();
+    renderChats();
+    showNotice('Личный Telegram отключён. Переписки скрыты. Подключи аккаунт снова.');
+  });
+  // A single owner-aware path for the on-screen ← and Telegram native Back.
+  window.VetoTelegramChatBack=back;
   $('telegramThreadBack')?.addEventListener('click',back);
   $('telegramThreadRefresh')?.addEventListener('click',()=>loadMessages({reset:true}));
   $('telegramThreadSyncNow')?.addEventListener('click',()=>{
