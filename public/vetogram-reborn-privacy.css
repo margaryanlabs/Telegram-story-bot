@@ -782,3 +782,250 @@ html#vetogram.vetogram-noir .screen[data-screen="privacy"]
     border:2px solid ButtonText !important;
   }
 }
+
+
+/* RB10B — the archived Smart Inbox is the same privacy journey, not a
+   second unrelated app. Its data, priority ranking and read status remain
+   supplied by the unchanged real Telegram archive controller. */
+html#vetogram.vetogram-noir .screen[data-screen="chats"]{
+  --p10-ink:#f2f6fd;
+  --p10-secondary:#b9c8df;
+  --p10-muted:#91a2bd;
+  --p10-accent:#bdd7fa;
+  --p10-surface:#111c2d;
+  --p10-surface-up:#18263b;
+  --p10-outline:rgba(168,200,245,.17);
+  --p10-outline-strong:rgba(188,217,253,.29);
+  --p10-pill:rgba(187,209,245,.075);
+  width:min(100%,1200px);
+  margin-inline:auto;
+  padding-inline:clamp(3px,1.7vw,19px);
+  min-width:0;
+  color:var(--p10-ink);
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
+.screen[data-screen="chats"]{
+  --p10-ink:#203750;
+  --p10-secondary:#4d637d;
+  --p10-muted:#657b94;
+  --p10-accent:#356497;
+  --p10-surface:#fff;
+  --p10-surface-up:#edf3fa;
+  --p10-outline:rgba(45,83,131,.17);
+  --p10-outline-strong:rgba(43,89,146,.29);
+  --p10-pill:rgba(67,110,175,.07);
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .chats-page-head{
+  padding:17px clamp(8px,2vw,26px) !important;
+  border-bottom:1px solid var(--p10-outline) !important;
+  margin:0 0 17px !important;
+  background:none !important;
+  box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .chats-page-head .kicker{
+  color:var(--p10-accent) !important;
+  font-size:10px !important;
+  letter-spacing:.14em !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .chats-page-head h1{
+  color:var(--p10-ink) !important;
+  font-weight:790 !important;
+  letter-spacing:-.052em !important;
+  font-size:clamp(29px,5.4vw,44px) !important;
+  margin:9px 0 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .chats-page-head p{
+  color:var(--p10-secondary) !important;
+  font-size:12px !important;
+  line-height:1.7 !important;
+  max-width:68ch;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"]
+:is(.smart-inbox-overview,.smart-brief-card,.privacy-inbox-card){
+  min-width:0;
+  border:1px solid var(--p10-outline) !important;
+  border-radius:19px !important;
+  padding:clamp(16px,2.7vw,26px) !important;
+  margin:11px 0 15px !important;
+  background:var(--p10-surface) !important;
+  box-shadow:none !important;
+  color:var(--p10-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"]
+:is(.smart-inbox-title,.smart-brief-head,.block-head){
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:13px;
+  margin-bottom:14px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"]
+:is(.smart-inbox-title,.smart-brief-head,.block-head) h2{
+  color:var(--p10-ink) !important;
+  font-size:clamp(20px,3vw,26px) !important;
+  letter-spacing:-.036em !important;
+  font-weight:750 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"]
+:is(.smart-inbox-title,.smart-brief-head,.block-head) .kicker{
+  color:var(--p10-accent) !important;
+  font-size:10px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid button{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  min-height:105px !important;
+  text-align:left;
+  align-items:flex-start;
+  gap:6px;
+  padding:15px !important;
+  border-radius:14px !important;
+  border:1px solid var(--p10-outline) !important;
+  background:var(--p10-surface-up) !important;
+  color:var(--p10-ink) !important;
+  box-shadow:none !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid button>span{
+  color:var(--p10-secondary) !important;
+  font-size:11px !important;
+  font-weight:690 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid button>strong{
+  color:var(--p10-ink) !important;
+  font-size:27px !important;
+  line-height:1.1;
+  font-weight:790;
+  font-variant-numeric:tabular-nums;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid button>small{
+  color:var(--p10-muted) !important;
+  font-size:10px !important;
+  line-height:1.45;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"]
+:is(.smart-inbox-note,#smartBriefDetail){
+  color:var(--p10-secondary) !important;
+  font-size:12px !important;
+  line-height:1.68 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-brief-status{
+  color:var(--p10-accent) !important;
+  border:1px solid var(--p10-outline) !important;
+  border-radius:999px !important;
+  background:var(--p10-pill) !important;
+  padding:6px 10px !important;
+  font-size:10px !important;
+  letter-spacing:.04em !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] #smartBriefPrimary:not([hidden]){
+  min-height:45px !important;
+  padding:10px 15px !important;
+  border-radius:12px !important;
+  color:var(--p10-ink) !important;
+  border:1px solid var(--p10-outline-strong) !important;
+  background:var(--p10-surface-up) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .privacy-search{
+  display:flex;
+  min-width:0;
+  align-items:center;
+  border-radius:13px !important;
+  min-height:51px !important;
+  padding-inline:12px !important;
+  border:1px solid var(--p10-outline) !important;
+  background:var(--p10-surface-up) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] #privacySearch{
+  background:transparent !important;
+  color:var(--p10-ink) !important;
+  font-size:16px !important;
+  min-height:43px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .privacy-search:focus-within{
+  border-color:var(--p10-accent) !important;
+  box-shadow:0 0 0 3px rgba(153,190,242,.12) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .privacy-filters{
+  display:flex;
+  flex-flow:row nowrap;
+  gap:7px !important;
+  width:100%;
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none;
+  margin:13px 0 !important;
+  padding:0 1px 7px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .privacy-filters::-webkit-scrollbar{display:none}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .privacy-filters button{
+  flex:0 0 auto;
+  min-height:38px !important;
+  padding:8px 12px !important;
+  border-radius:999px !important;
+  color:var(--p10-secondary) !important;
+  background:var(--p10-pill) !important;
+  border:1px solid var(--p10-outline) !important;
+  font-size:11px !important;
+  font-weight:680 !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] .privacy-filters button:is(.active,[aria-pressed="true"]){
+  color:var(--p10-ink) !important;
+  background:var(--p10-surface-up) !important;
+  border-color:var(--p10-outline-strong) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"]
+:is(.privacy-summary,.privacy-live-control){
+  color:var(--p10-muted) !important;
+  font-size:11px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] #privacyThreads{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] #privacyEmpty{
+  color:var(--p10-secondary) !important;
+  border:1px solid var(--p10-outline) !important;
+  border-radius:15px !important;
+  background:var(--p10-surface-up) !important;
+  padding:25px 15px !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] #privacyEmpty strong{
+  color:var(--p10-ink) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"]
+:is(.privacy-more-button,#privacyRefreshButton){
+  min-height:43px !important;
+  border-radius:11px !important;
+  border:1px solid var(--p10-outline) !important;
+  background:var(--p10-pill) !important;
+  color:var(--p10-accent) !important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="chats"] #privacySearch:focus-visible,
+html#vetogram.vetogram-noir .screen[data-screen="chats"] button:focus-visible{
+  outline:2px solid var(--p10-accent) !important;
+  outline-offset:3px !important;
+}
+@media(max-width:620px){
+  html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:6px !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid button{
+    min-height:104px !important;
+    padding:10px 8px !important;
+  }
+}
+@media(max-width:360px){
+  html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid{
+    grid-template-columns:1fr !important;
+  }
+  html#vetogram.vetogram-noir .screen[data-screen="chats"] .smart-inbox-grid button{
+    min-height:74px !important;
+  }
+}
