@@ -80,7 +80,7 @@ test('Self-hosted galaxy SVG is static, structured, text-safe and network-free',
   assert.match(galaxy,/translate\(955 345\) rotate\(-25\)/);
   assert.match(depth,/url\("v12-cinematic-galaxy\.svg"\)/);
   assert.match(depth,/pointer-events:none/);
-  assert.doesNotMatch(galaxy,/<script|<foreignObject|<image|https?:\/\//i);
+  assert.doesNotMatch(galaxy,/<script|<foreignObject|<image|(?:href|src)="https?:\/\//i);
 });
 test('Canvas fallback shows real clipped sphere with nebula and quality guard',()=>{
   assert.match(html,/ctx\.arc\(c\.x,c\.y,r,0,twoPi\);ctx\.clip\(\)/);
