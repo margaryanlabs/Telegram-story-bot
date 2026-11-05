@@ -8,7 +8,7 @@
   const LIBRARY_KEY="vetogram.cinema.library.v1:"+(window.VetogramMediaContext?.scope||"device");
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
-  const state={tab:"home",genre:"Все",seriesGenre:"Все",query:"",sort:"year",visible:100,showUnverified:false,foreignIncludeUnverified:false,selected:null,playing:null,request:0,
+  const state={tab:"home",genre:"Все",seriesGenre:"Все",query:"",sort:"year",visible:100,showUnverified:false,foreignIncludeUnverified:true,selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
@@ -99,6 +99,7 @@
       if(b.classList.contains("cinema-tab")){if(yes)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")}
     });
     $("cinemaHero").classList.toggle("hidden",tab!=="home");
+    if(tab==="foreign")$("cinemaForeignIncludeUnverified").checked=state.foreignIncludeUnverified;
     if(tab==="series")$("cinemaSearch").placeholder="Найти сериал по названию…";
     else if(tab==="foreign")$("cinemaSearch").placeholder="Найти зарубежный фильм с русской озвучкой…";
     else $("cinemaSearch").placeholder="Найти фильм, сериал, актёра или жанр…";
@@ -603,25 +604,21 @@
     }));
   }
   function renderPopularSeries(){
+    const section=document.querySelector(".cinema-series-popular");
     const rail=$("cinemaSeriesPopularRail");
-    const list=(window.VetogramCinemaPopularSeries||[]).filter(x=>x.seriesGroup==="global");
-    rail.replaceChildren(...list.map(item=>{
-      // Text-only editorial identity: no false cinema player and no borrowed poster licensing.
-      const card=node("article","cinema-popular-show");
-      card.style.setProperty("--film-hue",String(item.hue||210));
-      const artwork=node("div","cinema-popular-show-art");
-      const badge=node("small","cinema-popular-show-badge");badge.textContent="ВСТРОЕННЫЙ ПЛЕЕР НЕ ПОДКЛЮЧЁН";
-      const label=node("strong","cinema-popular-show-name");label.textContent=item.title;
-      artwork.append(badge,label);
-      const desc=node("span","cinema-popular-show-info");
-      desc.textContent=item.year+" · русская дорожка указана в каталоге";
-      card.append(artwork,desc);
-      return card;
-    }));
+    const q=state.query.trim().toLocaleLowerCase("ru");
+    const list=films.filter(f=>f.seriesPopular&&f.seriesGroup==="global"&&
+      (!q||(f.title+" "+(f.original||"")).toLocaleLowerCase("ru").includes(q)))
+      .sort((a,b)=>worldPriority(a)-worldPriority(b));
+    const visible=state.tab==="series"&&list.length>0;
+    section.classList.toggle("hidden",!visible);
+    section.setAttribute("aria-hidden",String(!visible));
+    if(visible)rail.replaceChildren(...list.map(filmCard));
   }
   function renderSeriesCollections(){
     const groups=groupedSeries();
     $("cinemaSeriesHub").classList.toggle("hidden",state.tab!=="series");
+    renderPopularSeries();
     if(state.tab==="series"){
       // Categories derive exclusively from real playable studio episodes.
       const genres=["Все",...new Set(groups.flatMap(group=>group.flatMap(f=>f.genres||[])))];
@@ -753,13 +750,13 @@
     renderWatchNow();
     $("cinemaBrowse").classList.toggle("hidden",state.tab==="series");
     $("cinemaGrid").replaceChildren(...list.slice(0,state.visible).map(filmCard));
-    $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
+    $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library"||state.tab==="series");
     $("cinemaMoreStudios").classList.toggle("hidden",state.tab!=="catalog");
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
       (f.player?.licensed===true||Boolean(f.file))).length;
     text("cinemaCount",state.tab==="home"&&!state.query.trim()?list.length+" зарубежных фильмов и сериалов · доступность зависит от источника":state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
-    $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library"||state.tab==="foreign");
+    $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library"||state.tab==="foreign"||state.tab==="series"||state.tab==="home");
     const russian=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&(f.spoken==="Русский"||f.spoken==="ru"));
     const showRussian=state.tab==="catalog"&&!state.query.trim()&&russian.length>0;
