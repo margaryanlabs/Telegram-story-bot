@@ -9,38 +9,38 @@
 
 /* --------- Visual tokens: no application-wide variable overwrite -------- */
 html#vetogram.vetogram-noir #telegramMirror {
-  --v8-ink: #f0f5ff;
-  --v8-sub: #b2bfd4;
-  --v8-dim: #8395b0;
-  --v8-line: rgba(177, 200, 232, .15);
-  --v8-line-strong: rgba(191, 211, 243, .27);
-  --v8-accent: #b6cbf4;
-  --v8-accent-soft: rgba(146, 184, 242, .15);
-  --v8-canvas: #080c15;
-  --v8-panel: #111a2a;
-  --v8-panel-up: #19263a;
-  --v8-chip: rgba(196, 216, 250, .065);
-  --v8-focus: #c5dcff;
+  --v8-ink: #f5f5f5;
+  --v8-sub: #bebebe;
+  --v8-dim: #939393;
+  --v8-line: rgba(197,197,197, .15);
+  --v8-line-strong: rgba(209,209,209, .27);
+  --v8-accent: #c9c9c9;
+  --v8-accent-soft: rgba(180,180,180, .15);
+  --v8-canvas: #0c0c0c;
+  --v8-panel: #191919;
+  --v8-panel-up: #252525;
+  --v8-chip: rgba(214,214,214, .065);
+  --v8-focus: #dadada;
   --v8-ease: cubic-bezier(.22,.76,.24,1);
-  --v8-depth: 0 18px 46px rgba(1, 8, 20, .26);
+  --v8-depth: 0 18px 46px rgba(7,7,7, .26);
   color: var(--v8-ink);
   font-feature-settings: "kern" 1;
 }
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] #telegramMirror,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] #telegramMirror {
-  --v8-ink: #203047;
-  --v8-sub: #465b74;
-  --v8-dim: #5d7288;
-  --v8-line: rgba(38, 66, 102, .16);
-  --v8-line-strong: rgba(39, 78, 120, .28);
-  --v8-accent: #375c91;
-  --v8-accent-soft: rgba(72, 111, 175, .11);
-  --v8-canvas: #f5f7fb;
+  --v8-ink: #2e2e2e;
+  --v8-sub: #585858;
+  --v8-dim: #6f6f6f;
+  --v8-line: rgba(63,63,63, .16);
+  --v8-line-strong: rgba(73,73,73, .28);
+  --v8-accent: #585858;
+  --v8-accent-soft: rgba(107,107,107, .11);
+  --v8-canvas: #f7f7f7;
   --v8-panel: #fff;
-  --v8-panel-up: #f1f5fa;
-  --v8-chip: rgba(53, 86, 133, .055);
-  --v8-focus: #325b91;
-  --v8-depth: 0 16px 35px rgba(32, 55, 83, .08);
+  --v8-panel-up: #f5f5f5;
+  --v8-chip: rgba(82,82,82, .055);
+  --v8-focus: #565656;
+  --v8-depth: 0 16px 35px rgba(52,52,52, .08);
 }
 
 /* --------- Inbox: a single visual hierarchy, not a dashboard --------- */
@@ -69,8 +69,8 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
   border-radius: 23px !important;
   background:
     radial-gradient(ellipse 75% 135% at 98% -15%,
-      rgba(129,167,245,.20),transparent 74%),
-    linear-gradient(116deg,#121d2f 0%,#10192a 58%,#1a2135 100%) !important;
+      rgba(165,165,165,.20),transparent 74%),
+    linear-gradient(116deg,#1c1c1c 0%,#181818 58%,#212121 100%) !important;
   box-shadow: var(--v8-depth), inset 0 1px rgba(255,255,255,.075) !important;
   overflow: visible !important;
 }
@@ -88,7 +88,7 @@ html#vetogram.vetogram-noir[data-veto-theme="pearl"] body.veto-chat-active:not(.
 #telegramMirror .veto-mirror-heading.vetogram-header,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] body.veto-chat-active:not(.veto-chat-thread)
 #telegramMirror .veto-mirror-heading.vetogram-header {
-  background: linear-gradient(115deg,#fff,#edf3fb) !important;
+  background: linear-gradient(115deg,#fff,#f2f2f2) !important;
   box-shadow: var(--v8-depth) !important;
 }
 html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
@@ -99,8 +99,8 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
   height: 48px !important;
   flex: 0 0 48px;
   border-radius: 15px !important;
-  border: 1px solid rgba(204,222,255,.23) !important;
-  background: linear-gradient(145deg,rgba(187,213,255,.17),rgba(104,135,190,.035)) !important;
+  border: 1px solid rgba(221,221,221,.23) !important;
+  background: linear-gradient(145deg,rgba(211,211,211,.17),rgba(132,132,132,.035)) !important;
   box-shadow: inset 0 1px rgba(255,255,255,.12),0 7px 16px rgba(0,0,0,.12) !important;
 }
 html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
@@ -125,7 +125,7 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
   letter-spacing: .07em !important;
   line-height: 1.05 !important;
   white-space: nowrap;
-  color: #eef4ff !important;
+  color: #f4f4f4 !important;
   -webkit-text-fill-color: currentColor !important;
   text-shadow: none !important;
 }
@@ -147,10 +147,10 @@ html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
   min-width: 43px !important;
   height: 43px !important;
   min-height: 43px !important;
-  border: 1px solid rgba(200,215,242,.16) !important;
+  border: 1px solid rgba(214,214,214,.16) !important;
   border-radius: 13px !important;
-  color: #ebf2ff !important;
-  background: rgba(178,203,248,.09) !important;
+  color: #f1f1f1 !important;
+  background: rgba(201,201,201,.09) !important;
   box-shadow: inset 0 1px rgba(255,255,255,.035) !important;
   transition: background-color 180ms var(--v8-ease),border-color 180ms var(--v8-ease),
               transform 180ms var(--v8-ease);
@@ -164,8 +164,8 @@ html#vetogram.vetogram-noir[data-veto-theme="linen"] #telegramMirror .veto-mirro
 @media (hover:hover) and (pointer:fine) {
   html#vetogram.vetogram-noir body.veto-chat-active:not(.veto-chat-thread)
   #telegramMirror .veto-mirror-header-actions .veto-mirror-icon-btn:hover {
-    background: rgba(187,211,253,.20) !important;
-    border-color: rgba(210,226,255,.34) !important;
+    background: rgba(209,209,209,.20) !important;
+    border-color: rgba(225,225,225,.34) !important;
     transform: translateY(-1px);
   }
 }
@@ -324,8 +324,8 @@ html#vetogram.vetogram-noir #telegramMirror .veto-mirror-chat .veto-mirror-chat-
   flex: 0 0 52px !important;
   border-radius: 18px !important;
   border: 1px solid var(--v8-line-strong) !important;
-  background: linear-gradient(135deg,#354765,#1d2d45) !important;
-  color: #edf5ff !important;
+  background: linear-gradient(135deg,#454545,#2b2b2b) !important;
+  color: #f4f4f4 !important;
   font-size: 17px !important;
   font-weight: 740 !important;
   box-shadow: inset 0 1px rgba(255,255,255,.09),0 5px 13px rgba(0,0,0,.11) !important;
@@ -363,11 +363,11 @@ html#vetogram.vetogram-noir #telegramMirror .veto-mirror-chat.unread .veto-mirro
   font-weight: 830 !important;
 }
 html#vetogram.vetogram-noir #telegramMirror .veto-mirror-unread {
-  background: #a8c4f0 !important;
-  color: #12213a !important;
+  background: #c1c1c1 !important;
+  color: #202020 !important;
   font-size: 11px !important;
   font-weight: 810 !important;
-  box-shadow: 0 0 0 3px rgba(146,179,230,.09) !important;
+  box-shadow: 0 0 0 3px rgba(176,176,176,.09) !important;
 }
 html#vetogram.vetogram-noir #telegramMirror .veto-mirror-chat-retained {
   border-radius: 7px;
@@ -501,18 +501,18 @@ html#vetogram.vetogram-noir body.veto-chat-thread
 html#vetogram.vetogram-noir body.veto-chat-thread
 #telegramMirror .veto-mirror-bubble.outgoing .veto-mirror-bubble-inner {
   border-radius: 18px 18px 7px 18px !important;
-  background: linear-gradient(143deg,#2a4264,#233553) !important;
-  border-color: rgba(174,205,250,.24) !important;
-  box-shadow: 0 5px 16px rgba(4,13,28,.20) !important;
-  color: #f0f5ff !important;
+  background: linear-gradient(143deg,#3f3f3f,#333333) !important;
+  border-color: rgba(202,202,202,.24) !important;
+  box-shadow: 0 5px 16px rgba(12,12,12,.20) !important;
+  color: #f5f5f5 !important;
 }
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] body.veto-chat-thread
 #telegramMirror .veto-mirror-bubble.outgoing .veto-mirror-bubble-inner,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] body.veto-chat-thread
 #telegramMirror .veto-mirror-bubble.outgoing .veto-mirror-bubble-inner {
-  background: #e0eafb !important;
-  border-color: rgba(39,90,148,.20) !important;
-  color: #203047 !important;
+  background: #e9e9e9 !important;
+  border-color: rgba(83,83,83,.20) !important;
+  color: #2e2e2e !important;
 }
 html#vetogram.vetogram-noir body.veto-chat-thread
 #telegramMirror .veto-mirror-bubble-inner p {
@@ -530,13 +530,13 @@ html#vetogram.vetogram-noir body.veto-chat-thread
 }
 html#vetogram.vetogram-noir body.veto-chat-thread
 #telegramMirror .veto-mirror-bubble.outgoing .veto-mirror-bubble-inner footer {
-  color: rgba(238,244,255,.8) !important;
+  color: rgba(244,244,244,.8) !important;
 }
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] body.veto-chat-thread
 #telegramMirror .veto-mirror-bubble.outgoing footer,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] body.veto-chat-thread
 #telegramMirror .veto-mirror-bubble.outgoing footer {
-  color: #465b74 !important;
+  color: #585858 !important;
 }
 html#vetogram.vetogram-noir body.veto-chat-thread
 #telegramMirror .veto-mirror-thread-footer {
@@ -565,11 +565,11 @@ html#vetogram.vetogram-noir body.veto-chat-thread
 }
 html#vetogram.vetogram-noir body.veto-chat-thread
 #telegramMirror .veto-mirror-send-button:not(:disabled) {
-  background: linear-gradient(143deg,#dbe8ff,#9cbceb) !important;
-  color: #0e1c31 !important;
+  background: linear-gradient(143deg,#e7e7e7,#b9b9b9) !important;
+  color: #1b1b1b !important;
   border: 1px solid rgba(255,255,255,.4) !important;
   border-radius: 14px !important;
-  box-shadow: 0 5px 16px rgba(67,112,184,.19) !important;
+  box-shadow: 0 5px 16px rgba(108,108,108,.19) !important;
 }
 html#vetogram.vetogram-noir body.veto-chat-thread
 #telegramMirror .veto-mirror-send-button:disabled {
@@ -586,7 +586,7 @@ html#vetogram.vetogram-noir #telegramMirror .veto-story-strip {
   border: 1px solid var(--v8-line) !important;
   border-radius: 20px !important;
   background:
-    radial-gradient(circle at 3% 0%,rgba(145,186,251,.11),transparent 58%),
+    radial-gradient(circle at 3% 0%,rgba(182,182,182,.11),transparent 58%),
     var(--v8-panel) !important;
   box-shadow: inset 0 1px rgba(255,255,255,.03) !important;
 }
@@ -637,12 +637,12 @@ html#vetogram.vetogram-noir #telegramMirror .veto-story-ring {
   height: 59px !important;
   padding: 3px !important;
   border-radius: 50%;
-  background: linear-gradient(145deg,#d3e3ff 0%,#93b8ec 48%,#485d98 100%) !important;
-  box-shadow: 0 0 0 1px rgba(151,189,240,.11),0 4px 10px rgba(0,0,0,.15);
+  background: linear-gradient(145deg,#e2e2e2 0%,#b4b4b4 48%,#5d5d5d 100%) !important;
+  box-shadow: 0 0 0 1px rgba(185,185,185,.11),0 4px 10px rgba(0,0,0,.15);
   transition: transform 160ms var(--v8-ease), box-shadow 160ms var(--v8-ease);
 }
 html#vetogram.vetogram-noir #telegramMirror .veto-story-person.is-viewed .veto-story-ring {
-  background: rgba(142,158,185,.27) !important;
+  background: rgba(157,157,157,.27) !important;
   box-shadow: none !important;
 }
 html#vetogram.vetogram-noir #telegramMirror .veto-story-ring.is-mine {
@@ -652,8 +652,8 @@ html#vetogram.vetogram-noir #telegramMirror .veto-story-ring.is-mine {
 }
 html#vetogram.vetogram-noir #telegramMirror .veto-story-face {
   border: 2px solid var(--v8-panel) !important;
-  background: linear-gradient(130deg,#283c5c,#1b2a40) !important;
-  color: #f0f5ff !important;
+  background: linear-gradient(130deg,#3a3a3a,#282828) !important;
+  color: #f5f5f5 !important;
 }
 html#vetogram.vetogram-noir #telegramMirror .veto-story-person small {
   color: var(--v8-sub) !important;
@@ -663,56 +663,56 @@ html#vetogram.vetogram-noir #telegramMirror .veto-story-person small {
 @media (hover:hover) and (pointer:fine) {
   html#vetogram.vetogram-noir #telegramMirror .veto-story-person:hover .veto-story-ring {
     transform: translateY(-2px) scale(1.035);
-    box-shadow: 0 0 0 1px rgba(192,213,250,.18),0 8px 15px rgba(0,0,0,.20);
+    box-shadow: 0 0 0 1px rgba(211,211,211,.18),0 8px 15px rgba(0,0,0,.20);
   }
 }
 
 /* Full-screen viewer: the media remains edge-to-edge, original and unfiltered;
    the new framing only affects controls, progress and text contrast. */
 html#vetogram .veto-story-viewer {
-  background: radial-gradient(ellipse 55% 75% at 50% 40%,#1b2940,#03060b 95%) !important;
+  background: radial-gradient(ellipse 55% 75% at 50% 40%,#282828,#060606 95%) !important;
 }
 html#vetogram .veto-story-stage {
-  background: #080d18 !important;
-  box-shadow: 0 0 0 1px rgba(218,229,249,.11),
-              0 0 110px rgba(7,24,54,.65) !important;
+  background: #0d0d0d !important;
+  box-shadow: 0 0 0 1px rgba(228,228,228,.11),
+              0 0 110px rgba(23,23,23,.65) !important;
 }
 html#vetogram .veto-story-progress {
   height: 3px !important;
   gap: 5px !important;
 }
 html#vetogram .veto-story-progress>span {
-  background: rgba(231,239,252,.26) !important;
+  background: rgba(238,238,238,.26) !important;
 }
 html#vetogram .veto-story-progress>span.completed,
 html#vetogram .veto-story-progress>span.current {
-  background: #eaf2ff !important;
+  background: #f1f1f1 !important;
 }
 html#vetogram .veto-story-stage-head {
   padding: 5px 3px !important;
   background: linear-gradient(to bottom,rgba(0,0,0,.12),transparent);
 }
 html#vetogram .veto-story-stage-avatar {
-  background: linear-gradient(120deg,#4d6e9e,#2d4566) !important;
-  border-color: rgba(232,241,255,.6) !important;
+  background: linear-gradient(120deg,#6a6a6a,#424242) !important;
+  border-color: rgba(240,240,240,.6) !important;
 }
 html#vetogram .veto-story-protection {
-  border: 1px solid rgba(196,225,255,.27) !important;
-  color: #e5efff !important;
-  background: rgba(15,30,52,.76) !important;
+  border: 1px solid rgba(221,221,221,.27) !important;
+  color: #eeeeee !important;
+  background: rgba(28,28,28,.76) !important;
 }
 html#vetogram .veto-story-close,
 html#vetogram .veto-story-stage-pin {
-  border: 1px solid rgba(231,239,252,.26) !important;
-  background: rgba(14,24,40,.70) !important;
-  color: #f5f8ff !important;
+  border: 1px solid rgba(238,238,238,.26) !important;
+  background: rgba(23,23,23,.70) !important;
+  color: #f8f8f8 !important;
 }
 html#vetogram .veto-story-caption {
   max-height: min(27dvh,180px) !important;
   padding: 12px 14px !important;
   border-radius: 14px !important;
-  background: rgba(5,10,18,.55);
-  color: #f5f8ff !important;
+  background: rgba(10,10,10,.55);
+  color: #f8f8f8 !important;
   font-size: 13px !important;
   font-weight: 560;
   line-height: 1.55 !important;
@@ -723,31 +723,31 @@ html#vetogram .veto-story-caption {
 
 /* ----------- Publish Stories, same identity, same product rhythm ---------- */
 html#vetogram.vetogram-noir .screen[data-screen="publish"] .v5-stories-head {
-  border: 1px solid var(--v8-line,rgba(184,203,231,.17)) !important;
+  border: 1px solid var(--v8-line,rgba(201,201,201,.17)) !important;
   border-radius: 23px !important;
   padding: clamp(21px,4.8vw,34px) !important;
   margin: 5px 0 14px !important;
   background:
-    radial-gradient(ellipse 65% 110% at 93% -5%,rgba(150,184,252,.19),transparent 77%),
-    linear-gradient(112deg,#111c30,#131b2a 74%,#1b2238) !important;
+    radial-gradient(ellipse 65% 110% at 93% -5%,rgba(182,182,182,.19),transparent 77%),
+    linear-gradient(112deg,#1b1b1b,#1a1a1a 74%,#222222) !important;
   box-shadow: 0 14px 34px rgba(0,0,0,.16) !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="publish"] .v5-stories-head h1 {
-  color: #f2f6ff !important;
+  color: #f6f6f6 !important;
   font-size: clamp(29px,6.4vw,43px) !important;
   letter-spacing: -.055em !important;
   font-weight: 790 !important;
   line-height: 1.06 !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="publish"] .v5-stories-head p {
-  color: #bccbe1 !important;
+  color: #c9c9c9 !important;
   font-size: 13px !important;
   line-height: 1.6 !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="publish"] .v5-story-switch {
   border-radius: 15px !important;
-  background: var(--v8-panel,#111a2a) !important;
-  border: 1px solid var(--v8-line,rgba(174,194,222,.15)) !important;
+  background: var(--v8-panel,#191919) !important;
+  border: 1px solid var(--v8-line,rgba(192,192,192,.15)) !important;
   padding: 5px !important;
   gap: 5px !important;
 }
@@ -758,38 +758,38 @@ html#vetogram.vetogram-noir .screen[data-screen="publish"] .v5-story-switch>butt
   font-weight: 700 !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="publish"] .v5-story-switch>button[aria-current="page"] {
-  background: rgba(154,187,244,.16) !important;
-  color: #f0f5ff !important;
-  border: 1px solid rgba(184,212,251,.23) !important;
+  background: rgba(184,184,184,.16) !important;
+  color: #f5f5f5 !important;
+  border: 1px solid rgba(209,209,209,.23) !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="publish"] .hero-card {
-  border: 1px solid rgba(177,200,233,.18) !important;
+  border: 1px solid rgba(197,197,197,.18) !important;
   border-radius: 22px !important;
   background:
-    radial-gradient(ellipse 65% 105% at 85% -5%,rgba(136,179,244,.13),transparent 78%),
-    #111a2a !important;
+    radial-gradient(ellipse 65% 105% at 85% -5%,rgba(175,175,175,.13),transparent 78%),
+    #191919 !important;
   box-shadow: none !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="publish"] .composer-card,
 html#vetogram.vetogram-noir .screen[data-screen="publish"] .connection-strip {
-  border-color: rgba(170,194,228,.19) !important;
+  border-color: rgba(191,191,191,.19) !important;
   border-radius: 19px !important;
   box-shadow: none !important;
 }
 
 /* ---------- Navigation: four equal, tactile, quiet and precise ---------- */
-html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] {
-  grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] {
+  grid-template-columns: repeat(5,minmax(0,1fr)) !important;
   gap: clamp(4px,1.4vw,11px) !important;
   align-items: stretch;
   padding: 8px max(10px,env(safe-area-inset-left)) calc(9px + var(--noir-safe-bottom,env(safe-area-inset-bottom,0px))) !important;
-  border-top: 1px solid rgba(170,198,240,.20) !important;
-  background: rgba(9,14,24,.96) !important;
+  border-top: 1px solid rgba(195,195,195,.20) !important;
+  background: rgba(14,14,14,.96) !important;
   box-shadow: 0 -9px 33px rgba(0,0,0,.22) !important;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
 }
-html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item {
+html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item {
   display: flex !important;
   flex-direction: column;
   align-items: center;
@@ -799,52 +799,52 @@ html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item {
   min-height: 53px !important;
   border-radius: 12px !important;
   border: 1px solid transparent !important;
-  color: #9caec6 !important;
+  color: #acacac !important;
   background: transparent !important;
   transition: color 180ms var(--v8-ease),background-color 180ms var(--v8-ease),
               border-color 180ms var(--v8-ease);
 }
-html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item[aria-current="page"] {
-  background: linear-gradient(140deg,rgba(151,183,235,.17),rgba(100,143,213,.07)) !important;
-  border-color: rgba(179,207,249,.23) !important;
-  color: #e6f0ff !important;
+html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item[aria-current="page"] {
+  background: linear-gradient(140deg,rgba(180,180,180,.17),rgba(139,139,139,.07)) !important;
+  border-color: rgba(204,204,204,.23) !important;
+  color: #efefef !important;
 }
-html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item :is(svg,img) {
+html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item :is(svg,img) {
   width: 23px !important;
   height: 23px !important;
   stroke-width: 1.8;
 }
-html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item small {
+html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item small {
   color: inherit !important;
   font-weight: 700 !important;
   font-size: 11px !important;
   letter-spacing: -.006em !important;
 }
-html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item:focus-visible {
-  outline: 2px solid #b7d4ff !important;
+html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item:focus-visible {
+  outline: 2px solid #d1d1d1 !important;
   outline-offset: -2px !important;
 }
 @media (hover:hover) and (pointer:fine) {
-  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item:hover {
-    color: #eff5ff !important;
-    background: rgba(174,205,255,.10) !important;
+  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item:hover {
+    color: #f4f4f4 !important;
+    background: rgba(202,202,202,.10) !important;
   }
 }
 /* Never force the user-selected app appearance to dark. */
-html#vetogram.vetogram-noir[data-veto-theme="pearl"] .bottom-nav[data-reborn-nav="four"],
-html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav="four"] {
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .bottom-nav[data-reborn-nav="five"],
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav="five"] {
   background: rgba(252,253,255,.95) !important;
-  border-color: rgba(52,79,113,.2) !important;
+  border-color: rgba(76,76,76,.2) !important;
 }
-html#vetogram.vetogram-noir[data-veto-theme="pearl"] .bottom-nav[data-reborn-nav="four"] .nav-item,
-html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav="four"] .nav-item {
-  color: #536782 !important;
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .bottom-nav[data-reborn-nav="five"] .nav-item,
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav="five"] .nav-item {
+  color: #656565 !important;
 }
-html#vetogram.vetogram-noir[data-veto-theme="pearl"] .bottom-nav[data-reborn-nav="four"] .nav-item[aria-current="page"],
-html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav="four"] .nav-item[aria-current="page"] {
-  color: #264f7f !important;
-  background: rgba(68,118,190,.11) !important;
-  border-color: rgba(59,104,170,.25) !important;
+html#vetogram.vetogram-noir[data-veto-theme="pearl"] .bottom-nav[data-reborn-nav="five"] .nav-item[aria-current="page"],
+html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav="five"] .nav-item[aria-current="page"] {
+  color: #4a4a4a !important;
+  background: rgba(113,113,113,.11) !important;
+  border-color: rgba(99,99,99,.25) !important;
 }
 
 @media(max-width:600px) {
@@ -909,7 +909,7 @@ html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav
     height: 43px !important;
     flex-basis: 43px !important;
   }
-  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item small {
+  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item small {
     font-size: 10px !important;
   }
 }
@@ -917,7 +917,7 @@ html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav
   html#vetogram.vetogram-noir #telegramMirror .veto-mirror-chat,
   html#vetogram.vetogram-noir #telegramMirror .veto-story-ring,
   html#vetogram.vetogram-noir #telegramMirror .veto-mirror-header-actions .veto-mirror-icon-btn,
-  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item {
+  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item {
     animation: none !important;
     transition: none !important;
     transform: none !important;
@@ -925,7 +925,7 @@ html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav
 }
 @media (forced-colors: active) {
   html#vetogram.vetogram-noir #telegramMirror .veto-mirror-chat:focus-visible,
-  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item:focus-visible {
+  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item:focus-visible {
     outline: 2px solid Highlight !important;
   }
 }
@@ -952,46 +952,46 @@ html#vetogram.vetogram-noir[data-veto-theme="linen"] .bottom-nav[data-reborn-nav
 /* -------- Theme continuity: publication must respect bright appearance ----- */
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-stories-head,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-stories-head {
-  background: linear-gradient(122deg,#fff,#e9f0fa) !important;
-  border-color: rgba(47,80,121,.2) !important;
-  box-shadow: 0 13px 29px rgba(50,77,110,.08) !important;
+  background: linear-gradient(122deg,#fff,#efefef) !important;
+  border-color: rgba(76,76,76,.2) !important;
+  box-shadow: 0 13px 29px rgba(74,74,74,.08) !important;
 }
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-stories-head h1,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-stories-head h1 {
-  color: #263b59 !important;
+  color: #393939 !important;
 }
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-stories-head p,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-stories-head p {
-  color: #526782 !important;
+  color: #646464 !important;
 }
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-story-switch,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-story-switch,
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .hero-card,
 html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .hero-card {
-  background: linear-gradient(130deg,#fff,#f0f5fb) !important;
-  border-color: rgba(43,80,122,.17) !important;
+  background: linear-gradient(130deg,#fff,#f4f4f4) !important;
+  border-color: rgba(75,75,75,.17) !important;
 }
 html#vetogram.vetogram-noir[data-veto-theme="pearl"] .screen[data-screen="publish"] .v5-story-switch>button[aria-current="page"],
 html#vetogram.vetogram-noir[data-veto-theme="linen"] .screen[data-screen="publish"] .v5-story-switch>button[aria-current="page"] {
-  background: rgba(69,112,184,.11) !important;
-  color: #294973 !important;
-  border-color: rgba(69,112,184,.25) !important;
+  background: rgba(108,108,108,.11) !important;
+  color: #454545 !important;
+  border-color: rgba(108,108,108,.25) !important;
 }
 
 /* The same discoverable contact-stories presentation in the "Смотреть"
    section, when its native content has been mounted there. */
 html#vetogram.vetogram-noir .screen[data-screen="publish"] #v5StoriesWatch .veto-story-strip {
-  border: 1px solid rgba(163,190,231,.19) !important;
+  border: 1px solid rgba(187,187,187,.19) !important;
   border-radius: 19px !important;
   padding: 14px 12px !important;
-  background: linear-gradient(130deg,rgba(132,171,230,.12),rgba(132,171,230,.02)) !important;
+  background: linear-gradient(130deg,rgba(167,167,167,.12),rgba(167,167,167,.02)) !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="publish"] #v5StoriesWatch .veto-story-ring {
-  background: linear-gradient(145deg,#d3e3ff,#93b8ec 54%,#526bad) !important;
-  box-shadow: 0 0 0 1px rgba(151,189,240,.16),0 4px 12px rgba(0,0,0,.15);
+  background: linear-gradient(145deg,#e2e2e2,#b4b4b4 54%,#6a6a6a) !important;
+  box-shadow: 0 0 0 1px rgba(185,185,185,.16),0 4px 12px rgba(0,0,0,.15);
 }
 html#vetogram.vetogram-noir .screen[data-screen="publish"] #v5StoriesWatch .veto-story-person.is-viewed .veto-story-ring {
-  background: rgba(152,171,201,.32) !important;
+  background: rgba(169,169,169,.32) !important;
   box-shadow: none;
 }
 /* Respect clear visible focus across touchscreen and external-keyboard paths. */
@@ -999,29 +999,29 @@ html#vetogram.vetogram-noir #telegramMirror
 :is(.veto-story-person,.veto-story-tools-toggle,.veto-story-refresh,.veto-mirror-icon-btn):focus-visible,
 html#vetogram.vetogram-noir .screen[data-screen="publish"]
 :is(.v5-story-switch button,.v4-story-entry button):focus-visible {
-  outline: 2px solid var(--v8-focus,#bed7ff) !important;
+  outline: 2px solid var(--v8-focus,#d5d5d5) !important;
   outline-offset: 3px !important;
 }
 html#vetogram.vetogram-noir #telegramMirror .veto-story-person:focus-visible .veto-story-ring {
-  box-shadow: 0 0 0 3px var(--v8-accent-soft,rgba(143,179,239,.19)) !important;
+  box-shadow: 0 0 0 3px var(--v8-accent-soft,rgba(176,176,176,.19)) !important;
 }
 @media (prefers-contrast: more) {
   html#vetogram.vetogram-noir #telegramMirror {
-    --v8-line: rgba(208,225,251,.43);
-    --v8-sub: #d1ddf0;
-    --v8-dim: #becce2;
+    --v8-line: rgba(223,223,223,.43);
+    --v8-sub: #dcdcdc;
+    --v8-dim: #cbcbcb;
   }
   html#vetogram.vetogram-noir[data-veto-theme="pearl"] #telegramMirror,
   html#vetogram.vetogram-noir[data-veto-theme="linen"] #telegramMirror {
-    --v8-line: rgba(39,67,102,.48);
-    --v8-sub: #334863;
-    --v8-dim: #405775;
+    --v8-line: rgba(64,64,64,.48);
+    --v8-sub: #454545;
+    --v8-dim: #545454;
   }
 }
 @media (pointer: coarse) {
   /* Blurring a full-width bottom dock is costly in embedded WebViews.
      Keep the high-contrast material without a continuous GPU backdrop. */
-  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] {
+  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
