@@ -2898,19 +2898,27 @@
     if (viewerQrAbortController) viewerQrAbortController.abort();
     viewerQrAbortController = new AbortController();
     const controller = viewerQrAbortController;
+    // QR authorization may outlive its modal or the signed Mini App owner.
+    // Only this request may update the visible sheet or navigate after success.
+    const signedOwner=String(tg.initData),ownerEpoch=viewerOwnerEpoch;
+    const sameOwner=()=>ownerEpoch===viewerOwnerEpoch&&
+      signedOwner===String(tg?.initData||'');
+    const isCurrent=()=>sameOwner()&&!controller.signal.aborted&&
+      viewerQrAbortController===controller&&!$('sheet')?.hidden;
     viewerQrSheet();
 
     try {
       const response = await fetch('/api/viewer-qr', {
         method: 'POST',
         headers: {
-          'x-telegram-init-data': tg.initData,
+          'x-telegram-init-data': signedOwner,
           'content-type': 'application/json',
         },
         body: '{}',
         signal: controller.signal,
       });
 
+      if(!isCurrent())return;
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'QR-подключение временно недоступно');
@@ -2924,12 +2932,14 @@
 
       while (!finished) {
         const { value, done } = await reader.read();
+        if(!isCurrent())return;
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
         for (const line of lines) {
+          if(!isCurrent())return;
           if (!line.trim()) continue;
           let event;
           try { event = JSON.parse(line); } catch { continue; }
@@ -2941,8 +2951,11 @@
             notify('success');
             showToast('Telegram подключён через QR');
             await refreshViewerSync({ silent: true });
+            if(!sameOwner())return;
             await refresh();
+            if(!sameOwner())return;
             await refreshViewerAnalytics({ silent: true });
+            if(!sameOwner())return;
             switchScreen('telegram');
             offerBusinessConsentAfterLogin();
             break;
@@ -2951,15 +2964,29 @@
           if (event.type === 'password_required') {
             finished = true;
             viewerQrAbortController = null;
+            // Server has persisted the QR + 2FA challenge. Keep only
+            // non-secret expiry metadata so closing this modal allows Resume.
+            viewerState.loginPending={
+              stage:'qr_password',
+              expiresAt:event.expiresAt || null,
+            };
+            renderViewerPendingLoginNotice();
             viewerPasswordSheet(event.hint || '');
             break;
           }
 
           updateViewerQr(event);
+          if(event.type==='error'||event.type==='expired'){
+            finished=true;
+            break;
+          }
         }
       }
+      if(!finished&&isCurrent())
+        updateViewerQr({type:'error',
+          error:'QR-соединение завершилось без подтверждения. Создай новый QR.'});
     } catch (error) {
-      if (controller.signal.aborted) return;
+      if(!isCurrent())return;
       updateViewerQr({ type:'error', error:error.message });
     } finally {
       if (viewerQrAbortController === controller) viewerQrAbortController = null;
