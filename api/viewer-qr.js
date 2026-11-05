@@ -1,4 +1,5 @@
 import { sessionCryptoReady } from '../lib/storage-provider.js';
+import { classifyTelegramQrFailure } from '../lib/telegram-auth-feedback.js';
 import QRCode from 'qrcode';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import { sealJson } from '../lib/viewer-sync-crypto.js';
@@ -184,8 +185,9 @@ export default async function handler(req, res) {
       status: 'active',
     }, {
       correlationKey: 'deep-intelligence',
-    }).catch(error => {
-      console.warn('Deep Intelligence QR session.created event skipped', error?.message || error);
+    }).catch(() => {
+      // Audit telemetry must never leak an upstream error's session/token.
+      console.warn('Vetogram QR session.created audit event unavailable');
     });
 
     send({
@@ -198,24 +200,15 @@ export default async function handler(req, res) {
     });
     res.end();
   } catch (error) {
-    const description = error?.errorMessage || error?.message || String(error);
-    if (
-      error?.name === 'AbortError'
-      || /aborted|QR.*cancel/i.test(description)
-    ) {
-      send({ type: 'expired', error: 'QR-код истёк. Создай новый.' });
-    } else {
-      console.warn('Deep Intelligence QR login failed', {
-        telegram_user_id: userId,
-        error: description,
-      });
-      send({
-        type: 'error',
-        error: /FLOOD|API_ID|AUTH_KEY/i.test(description)
-          ? 'Telegram временно не разрешил новое подключение. Попробуй позже.'
-          : 'Не удалось завершить QR-подключение Telegram.',
+    // The response is already streaming. Emit only a safe, classified event;
+    // never log the raw MTProto error (which can include auth secrets).
+    const event=classifyTelegramQrFailure(error);
+    if(event.type==='error') {
+      console.warn('Vetogram QR login did not complete', {
+        category:event.retryAfterSeconds ? 'rate-limited' : 'unverified',
       });
     }
+    send(event);
     res.end();
   } finally {
     clearTimeout(timer);
