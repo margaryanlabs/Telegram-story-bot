@@ -201,14 +201,15 @@
     });
     window.requestAnimationFrame(measure);
   }
-  function setMode(mode, update = true) {
+  function setMode(mode, update = true, afterCommit = null) {
     if (!['people','events','connections'].includes(mode)) return;
     const changingWorld=(state.mode==='people') !== (mode==='people');
     if(update && changingWorld && window.MarketWorldTransition?.run) {
-      window.MarketWorldTransition.run(state.mode,mode,()=>commitMode(mode,update));
+      window.MarketWorldTransition.run(state.mode,mode,()=>{commitMode(mode,update);afterCommit?.();});
       return;
     }
     commitMode(mode,update);
+    afterCommit?.();
   }
   function commitMode(mode, update = true) {
     const oldMode = state.mode;
@@ -248,11 +249,12 @@
   }
   function openPeopleTheme(theme) {
     if (!(theme in THEME_NAMES)) return;
-    setMode('people');
-    const lensPanel = document.getElementById('lensPanel');
-    if (lensPanel && lensPanel.hidden) document.getElementById('lensToggle')?.click();
-    const button = document.querySelector('#lensPanel [data-lens="' + theme + '"]');
-    button?.click();
+    setMode('people',true,()=>{
+      const lensPanel = document.getElementById('lensPanel');
+      if (lensPanel && lensPanel.hidden) document.getElementById('lensToggle')?.click();
+      const button = document.querySelector('#lensPanel [data-lens="' + theme + '"]');
+      button?.click();
+    });
   }
   // Prevent symbolic event beacons from also triggering the original globe's
   // pointer-to-story reader. Keep drag/zoom controls unchanged elsewhere.
