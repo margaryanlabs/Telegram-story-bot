@@ -111,32 +111,33 @@
       '</span><small>Истории этой темы ↗</small></button>').join('') + '</div>';
   }
   function eventMarkup(event) {
-    return '<div class="mh-panel-heading"><span>FINANCIAL EVENT / SOURCED</span><strong>' + escape(event.date) + '</strong></div>' +
-      '<h2>' + escape(event.name) + '</h2>' +
-      '<p class="mh-detail">' + escape(event.detail) + '</p>' +
-      '<div class="mh-mechanism"><small>МЕХАНИЗМ</small><p>' + escape(event.mechanism) + '</p></div>' +
-      '<div class="mh-takeaway"><small>УРОК ДЛЯ ТРЕЙДЕРА</small><p>' + escape(event.lesson) + '</p></div>' +
-      '<div class="mh-panel-actions"><button type="button" data-mh-go-connections>ИССЛЕДОВАТЬ СВЯЗИ ↗</button>' +
-      '<a href="' + escape(event.url) + '" target="_blank" rel="noopener noreferrer">ИСТОЧНИК ↗</a></div>';
+    const steps=event.mechanism.split('→').map((part,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
+    return '<div class="mh-v16-record">' +
+      '<div class="mh-v16-record-meta"><span>◈ VERIFIED CHRONICLE</span><time>'+escape(event.date)+'</time></div>' +
+      '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
+      '<section class="mh-v16-research-card mh-v16-context"><div class="mh-v16-card-icon">01</div><div><h3>ЧТО ПРОИЗОШЛО</h3><p>'+escape(event.detail)+'</p></div></section>' +
+      '<section class="mh-v16-research-card mh-v16-transmission"><div class="mh-v16-card-icon">02</div><div><h3>МЕХАНИЗМ ШОКА</h3><ol class="mh-v16-steps">'+steps+'</ol></div></section>' +
+      '<section class="mh-v16-research-card mh-v16-lesson"><div class="mh-v16-card-icon">03</div><div><h3>УРОК ДЛЯ ТРЕЙДЕРА</h3><p>'+escape(event.lesson)+'</p></div></section>' +
+      '<div class="mh-v16-card-footer"><button type="button" data-mh-go-connections>ИССЛЕДОВАТЬ СВЯЗИ <span aria-hidden="true">↗</span></button>' +
+      '<a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ПЕРВОИСТОЧНИК · '+escape(event.source)+' ↗</a></div></div>';
   }
   function connectionMarkup(event) {
-    const related = EVENTS.filter(e => e.id !== event.id && e.themes.some(t => event.themes.includes(t)));
-    return '<div class="mh-panel-heading"><span>THEMATIC MEMORY / DEMO STORIES</span><strong>' + escape(event.date) + '</strong></div>' +
-      '<h2>' + escape(event.name) + '</h2>' +
-      '<p class="mh-detail">Эти ссылки связывают историческое событие с темами историй, а не с конкретными участниками события. Демо-истории могут быть вымышленными.</p>' +
-      '<div class="mh-connections-title">ОБЩИЕ ТЕМЫ · ОТКРЫТЬ В СФЕРЕ ЛЮДЕЙ</div>' +
-      themeButtons(event) +
-      '<div class="mh-connections-title">СХОЖИЕ ТЕМЫ В ДРУГИЕ ЭПОХИ</div>' +
-      '<div class="mh-related">' + related.map(e =>
-      '<button type="button" data-mh-event="' + e.id + '"><span>' + e.year + ' · ' + escape(e.short) +
-      '</span><small>' + e.themes.filter(t => event.themes.includes(t)).map(t => escape(THEME_NAMES[t])).join(' · ') + '</small></button>'
-      ).join('') + '</div>' +
-      '<a class="mh-source" href="' + escape(event.url) + '" target="_blank" rel="noopener noreferrer">Проверить событие: ' + escape(event.source) + ' ↗</a>';
+    const related=EVENTS.filter(e=>e.id!==event.id&&e.themes.some(t=>event.themes.includes(t)));
+    return '<div class="mh-v16-record mh-v16-connection-record">' +
+      '<div class="mh-v16-record-meta"><span>◈ THEMATIC INTELLIGENCE</span><time>'+escape(event.date)+'</time></div>' +
+      '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
+      '<p class="mh-v16-connection-notice">Сопоставляем общие темы и механизмы. Эти связи не доказывают причинность и не означают, что авторы демо-историй участвовали в событии.</p>' +
+      '<div class="mh-v16-section-label"><span>01</span> ЧЕЛОВЕЧЕСКИЕ УРОКИ</div>'+themeButtons(event) +
+      '<div class="mh-v16-section-label"><span>02</span> ИСТОРИЧЕСКИЕ ПАРАЛЛЕЛИ</div>'+
+      '<div class="mh-v16-related-grid">'+related.map(e=>'<button type="button" class="mh-v16-related-card" data-mh-event="'+e.id+'"><b>'+escape(e.year)+'</b><strong>'+escape(e.short)+'</strong><small>'+e.themes.filter(t=>event.themes.includes(t)).map(t=>escape(THEME_NAMES[t])).join(' · ')+'</small><span aria-hidden="true">↗</span></button>').join('')+'</div>'+
+      '<a class="mh-v16-source-link" href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ИСТОЧНИК СОБЫТИЯ · '+escape(event.source)+' ↗</a></div>';
   }
+  
   let panelExpanded = false;
   function renderPanel() {
     const event = EVENT_BY_ID[state.activeEvent];
     panel.classList.toggle('is-expanded',panelExpanded);
+    window.MarketSignalDirector?.setEvent(event);
     panel.innerHTML = '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
       '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
@@ -200,6 +201,14 @@
   }
   function setMode(mode, update = true) {
     if (!['people','events','connections'].includes(mode)) return;
+    const changingWorld=(state.mode==='people') !== (mode==='people');
+    if(update && changingWorld && window.MarketWorldTransition?.run) {
+      window.MarketWorldTransition.run(state.mode,mode,()=>commitMode(mode,update));
+      return;
+    }
+    commitMode(mode,update);
+  }
+  function commitMode(mode, update = true) {
     const oldMode = state.mode;
     state.mode = mode;
     if (mode === 'people') panelExpanded = false;
@@ -232,6 +241,7 @@
     renderPanel();
     renderBeacons();
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
+    window.MarketSignalDirector?.setEvent(EVENT_BY_ID[id]);
     updateUrl();
   }
   function openPeopleTheme(theme) {
