@@ -118,7 +118,7 @@
     return '<div class="mh-v16-record">' +
       '<div class="mh-v19-context"><span>АРХИВ ФИНАНСОВОЙ ИСТОРИИ / '+escape(event.year)+'</span>'+
       '<strong>'+escape(event.short)+'</strong>'+
-      '<p>'+escape(event.detail)+'</p>'+
+      '<p>'+escape(event.mechanism)+'</p>'+
       '<small>Документированное событие · позиция метки на сфере символическая</small></div>' +
       '<div class="mh-v16-record-meta"><span>◈ VERIFIED CHRONICLE</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
@@ -251,12 +251,18 @@
   }
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
+    const origin=document.activeElement;
+    const fromTimeline=!!origin?.closest?.('.mh-timeline [data-mh-event]');
+    const fromBeacon=!!origin?.closest?.('[data-mh-beacon]');
     state.activeEvent = id;
     // Selecting a year must not immediately cover the sphere with a dossier.
     // The visitor explicitly expands "Подробнее" when ready to read.
     panelExpanded = false;
     renderPanel();
     renderBeacons();
+    // Re-rendering the panel replaces buttons: retain focus for keyboard users.
+    if(fromTimeline)panel.querySelector('.mh-timeline [data-mh-event="'+id+'"]')?.focus({preventScroll:true});
+    else if(fromBeacon)layer.querySelector('[data-mh-beacon="'+id+'"]')?.focus({preventScroll:true});
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
     window.MarketSignalDirector?.setEvent(EVENT_BY_ID[id]);
     updateUrl();
@@ -277,6 +283,14 @@
       if (event.target instanceof Element && event.target.closest('[data-mh-beacon]')) event.stopPropagation();
     });
   }
+  panel.addEventListener('keydown', event => {
+    const dateButton=event.target instanceof Element?event.target.closest('.mh-timeline [data-mh-event]'):null;
+    if(!dateButton||!['ArrowLeft','ArrowRight'].includes(event.key))return;
+    event.preventDefault();
+    const index=EVENTS.findIndex(item=>item.id===dateButton.dataset.mhEvent);
+    const direction=event.key==='ArrowRight'?1:-1;
+    selectEvent(EVENTS[(index+direction+EVENTS.length)%EVENTS.length].id);
+  });
   layer.addEventListener('click', event => {
     const beacon = event.target instanceof Element ? event.target.closest('[data-mh-beacon]') : null;
     if (!beacon) return;
