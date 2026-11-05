@@ -18,10 +18,10 @@ function unquotedCss(source){
   return source.replace(/\/\*[\s\S]*?\*\//g,'').replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,'""');
 }
 
-test('Atelier is the final stylesheet in the actual interactive studio',()=>{
+test('Atelier is preserved as the first module inside the final RB12 bundle',()=>{
   const links=[...html.matchAll(/<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"/g)].map(x=>x[1]);
   assert.ok(links.length>=20,'the existing layered stylesheets still exist');
-  assert.ok(links.at(-1).startsWith('/vetogram-reborn-atelier.css?v='));
+  assert.ok(links.at(-1).startsWith('/vetogram-reborn-ui.css?v='));
   assert.ok(links.some(x=>x.startsWith('/vetogram-reborn-foundation.css?v=')));
   assert.ok(html.includes('data-reborn-nav="four"'));
 });
@@ -120,6 +120,6 @@ test('Atelier keeps accessible focus treatment and contrasts',()=>{
 test('source is intentionally a CSS-only change, not a new message/OTP backend',()=>{
   assert.ok(legacy.includes('RB2'),'RB1+RB2 base was preserved');
   assert.doesNotMatch(css,/fetch\(|viewerApi\(|sessionStorage|localStorage|send_code/);
-  const styles=html.match(/vetogram-reborn-atelier\.css/g)||[];
+  const styles=html.match(/vetogram-reborn-ui\.css/g)||[];
   assert.equal(styles.length,1);
 });
