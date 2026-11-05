@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 const read=p=>readFileSync(new URL('../public/'+p,import.meta.url),'utf8');
 const html=read('cinema.html'),js=read('cinema.js'),style=read('vetogram-reborn-modules.css');
 
@@ -52,4 +53,40 @@ test('editorial global carousel is cinematic, reduced-motion and light-theme awa
   assert.match(style,/aspect-ratio:16\/10/);
   assert.match(style,/prefers-reduced-motion:reduce/);
   assert.match(style,/data-universe-theme="pearl"/);
+});
+
+test('featured overseas films are actual source-only metadata with HTTPS artwork, never embedded streams',()=>{
+  const window={};
+  runInNewContext(read('cinema-foreign-rutube.js'),{window});
+  const featured=window.VetogramCinemaForeignRutube.filter(f=>f.featuredForeign);
+  assert.ok(featured.length>=3,'editorial hero needs at least three real foreign source entries');
+  assert.ok(featured.every(f=>f.externalRutube&&f.discoveryOnly&&!f.player));
+  assert.ok(featured.every(f=>/^https:\/\//.test(f.poster)&&/^https:\/\//.test(f.sourcePage)));
+  assert.ok(new Set(featured.map(f=>f.id)).size===featured.length);
+});
+
+test('international series route exposes official provider metadata without fake playback',()=>{
+  const window={};
+  runInNewContext(read('cinema-popular-series.js'),{window});
+  const global=window.VetogramCinemaPopularSeries.filter(f=>f.seriesGroup==='global');
+  assert.ok(global.length>=8);
+  assert.ok(global.every(f=>f.seriesPopular&&f.discoveryOnly&&!f.player&&/^https:\/\//.test(f.sourcePage)));
+  assert.match(js,/function renderPopularSeries\(\)/);
+  assert.match(js,/renderPopularSeries\(\);/);
+  assert.match(js,/section\.classList\.toggle\("hidden",!visible\)/);
+  assert.match(js,/rail\.replaceChildren\(\.\.\.list\.map\(filmCard\)\)/);
+});
+
+test('foreign catalog opens all featured titles, regardless of unverified dubbing claims',()=>{
+  assert.match(js,/foreignIncludeUnverified:true,selected:null/);
+  assert.match(html,/id="cinemaForeignIncludeUnverified" type="checkbox" checked/);
+  assert.match(js,/state\.foreignIncludeUnverified\|\|f\.audioClaim/);
+  assert.match(js,/if\(tab==="foreign"\)\$\("cinemaForeignIncludeUnverified"\)\.checked=state\.foreignIncludeUnverified/);
+});
+
+test('Russian studio collections, watch-now and network load-more do not interrupt world home',()=>{
+  assert.match(js,/cinemaStudios"\)\.classList\.toggle\("hidden",tab!=="catalog"/);
+  assert.match(js,/cinemaMoreStudios"\)\.classList\.toggle\("hidden",state\.tab!=="catalog"/);
+  assert.match(js,/cinemaLoadMore"\)\.classList\.toggle\("hidden"[^\n]*state\.tab==="home"/);
+  assert.match(js,/section\.classList\.toggle\("hidden",state\.tab!=="catalog"/);
 });
