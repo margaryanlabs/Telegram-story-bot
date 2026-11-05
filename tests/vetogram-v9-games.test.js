@@ -72,6 +72,10 @@ test('real game controls remain visible in V9 inline focused mode',()=>{
   assert.match(legacy,/\.vp-screen:not\(\.v9-arcade-active\) \.vp-mini\[data-vp-game\]/);
   assert.match(css,/\.v9-arcade-active #vpQuickGames \.vp-mini>/);
   assert.match(css,/\.vp-open-game\{\s*display:none !important;/);
+  for(const selector of ['vp-memory-grid','vp-ttt-grid','vp-2048-grid','v73-mines-grid','v73-snake-grid'])assert.match(css,new RegExp(selector));
+  assert.match(css,/V7 card-preview CSS also hid native controls/);
+  assert.match(css,/display:grid !important/);
+  assert.match(css,/display:flex !important/);
   assert.match(play,/vetogram:game-close/);
 });
 test('enhanced catalog starts with six real games and no accidental autoplay',()=>{
@@ -146,4 +150,6 @@ test('responsive, reduced-motion and light themes preserve accessible controls',
   assert.match(html,/vetogram-v9-games\.css\?v=20261105-v9-games-01/);
   assert.match(html,/vetogram-play\.js\?v=20261105-v9-games-01/);
   assert.match(html,/vetogram-play\.css\?v=20261105-v9-games-01/);
+  assert.match(html,/vetogram-play-arcade\.js\?v=20261105-v9-games-01/);
+  assert.match(html,/vetogram-play-plus\.js\?v=20261105-v9-games-01/);
 });
