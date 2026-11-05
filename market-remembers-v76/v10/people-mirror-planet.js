@@ -354,8 +354,17 @@ wrapper.addEventListener('wheel',e=>{
  zoom=clamp(zoom+(e.deltaY>0?-.055:.055),.84,1.15);request();
 },{passive:false});
 mainCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;failToCanvas('context lost');if(active)request();});
-mainCanvas.addEventListener('webglcontextrestored',()=>{contextLost=false;initGL();size();if(active)request();});
-window.addEventListener('resize',()=>{size();place();if(active)request();},{passive:true});
+mainCanvas.addEventListener('webglcontextrestored',()=>{
+ contextLost=false;
+ // Don't rebuild a hidden GPU context. PEOPLE may still own the foreground GPU.
+ if(!active){rendererInitialized=false;return;}
+ initGL();size();request();
+});
+window.addEventListener('resize',()=>{
+ // Restoring EVENT calls size/place when it is opened again.
+ if(!active)return;
+ size();place();request();
+},{passive:true});
 document.addEventListener('visibilitychange',()=>{
  if(document.hidden){
    if(frame)cancelAnimationFrame(frame);frame=0;
