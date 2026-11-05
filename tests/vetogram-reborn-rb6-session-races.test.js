@@ -48,7 +48,7 @@ function fixture(getter){
   });
   vm.runInContext(code,scope,{timeout:1000});
   return {
-    scope,state,viewerState,tg,events,renders,qr,
+    scope,state,get viewerState(){return scope.viewerState;},tg,events,renders,qr,
     refresh:()=>vm.runInContext('refreshViewerSync({silent:true})',scope),
     logout:()=>{
       scope.viewerState.session=null; // confirmed server revoke
