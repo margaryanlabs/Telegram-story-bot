@@ -261,8 +261,12 @@
     renderPanel();
     renderBeacons();
     // Re-rendering the panel replaces buttons: retain focus for keyboard users.
-    if(fromTimeline)panel.querySelector('.mh-timeline [data-mh-event="'+id+'"]')?.focus({preventScroll:true});
-    else if(fromBeacon)layer.querySelector('[data-mh-beacon="'+id+'"]')?.focus({preventScroll:true});
+    if(fromTimeline){
+      const target=window.matchMedia('(max-width:819px)').matches
+        ?panel.querySelector('.mh-timeline [data-mh-event="'+id+'"]')
+        :panel.querySelector('.mh-panel-grip');
+      target?.focus({preventScroll:true});
+    }else if(fromBeacon)layer.querySelector('[data-mh-beacon="'+id+'"]')?.focus({preventScroll:true});
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
     window.MarketSignalDirector?.setEvent(EVENT_BY_ID[id]);
     updateUrl();
