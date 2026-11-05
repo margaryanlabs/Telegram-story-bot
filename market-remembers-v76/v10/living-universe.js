@@ -28,6 +28,16 @@ window.MarketV10.install = function(api) {
     syncArchive(sort=V.archive.getSort()) {
       if(router?.read().view==='archive')router.visit('archive',{...api.getArchive(),sort},true);
     },
+    // Crossing from a clearly fictional PEOPLE story into sourced financial
+    // history is a thematic research route, never an implied real-life link.
+    toEvent(year) {
+      const modes=window.MarketHistoryModes;
+      if(!modes||!modes.events.some(item=>item.id===String(year)))return;
+      api.base.closeDrawer(true);
+      modal();
+      router.visit('universe');
+      modes.setMode('events',true,()=>modes.selectEvent(String(year)));
+    },
     travel(record) {
       const index=api.stories.findIndex(item=>String(item.id)===String(record?.id));
       if(index>=0)wrappers.beginDive(index);
