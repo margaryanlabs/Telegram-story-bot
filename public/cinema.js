@@ -410,7 +410,8 @@
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
     div.style.setProperty("--film-hue",String(f.hue));
     div.dataset.filmId=String(f.id);
-    const badge=node("span","cinema-card-art-badge");badge.textContent=f.externalRutube?(f.audioClaim?"ЗАЯВЛЕН ДУБЛЯЖ":"ОЗВУЧКА НЕ ПРОВЕРЕНА"):f.discoveryOnly?(f.russianAudioStatus==="catalog-listed"?"РУССКАЯ ДОРОЖКА В КАТАЛОГЕ":"ОЗВУЧКА НЕ ПОДТВЕРЖДЕНА"):f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":(f.player?.licensed===true||Boolean(f.file))?"В ПЛЕЕРЕ":"ОПИСАНИЕ";div.append(badge);
+    if(f.seriesPopular&&f.seriesGroup==="global")div.classList.add("cinema-world-series-art");
+    const badge=node("span","cinema-card-art-badge");badge.textContent=f.seriesPopular&&f.seriesGroup==="global"?"МИРОВОЙ СЕРИАЛ · ИСТОЧНИК":f.externalRutube?(f.audioClaim?"ЗАЯВЛЕН ДУБЛЯЖ":"ОЗВУЧКА НЕ ПРОВЕРЕНА"):f.discoveryOnly?(f.russianAudioStatus==="catalog-listed"?"РУССКАЯ ДОРОЖКА В КАТАЛОГЕ":"ОЗВУЧКА НЕ ПОДТВЕРЖДЕНА"):f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":(f.player?.licensed===true||Boolean(f.file))?"В ПЛЕЕРЕ":"ОПИСАНИЕ";div.append(badge);
     const title=node("span","cinema-card-art-title");title.textContent=displayFilmTitle(f);div.append(title);
     const poster=[state.posters.get(f.id),f.poster].find(url=>url&&!failedPosterUrls.has(url));
     if(poster){const img=node("img");img.loading="lazy";img.decoding="async";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{failedPosterUrls.add(poster);img.remove();if(state.posters.get(f.id)===poster)state.posters.delete(f.id)};div.prepend(img)}
