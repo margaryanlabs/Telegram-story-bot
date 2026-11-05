@@ -18,10 +18,13 @@ test('RB1 has exactly four visible primary destinations and preserves secondary 
   assert.match(studio,/v6-world-play/);
 });
 
-test('RB1 core design is isolated to the studio and loaded last',()=>{
+test('RB1 foundation is preserved before the final Reborn CSS bundle',()=>{
   const styles=[...studio.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m=>m[1]);
   assert.ok(styles.length>=30,'previous layers must not be silently deleted');
-  assert.equal(styles.at(-1),'/vetogram-reborn-foundation.css?v=20261105-rb1');
+  const foundation=styles.indexOf('/vetogram-reborn-foundation.css?v=20261105-rb1');
+  assert.ok(foundation>=0,'RB1 foundation must remain linked');
+  assert.ok(styles.at(-1).startsWith('/vetogram-reborn-ui.css?v='),'RB12 is the last stylesheet');
+  assert.ok(foundation<styles.length-1,'foundation must precede the bundled RB8–RB11 layers');
   assert.match(css,/#vetogram\.vetogram-noir \.screen\[data-screen="home"\]/);
   assert.match(css,/data-reborn-nav="four"/);
   assert.match(css,/prefers-reduced-motion/);
