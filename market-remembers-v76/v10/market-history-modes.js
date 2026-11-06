@@ -395,6 +395,18 @@
       if (event.target instanceof Element && event.target.closest('[data-mh-beacon]')) event.stopPropagation();
     });
   }
+  // The time navigator is a sibling of the panel, not its descendant.
+  // Register keyboard events on the actual navigation surface.
+  chronosphere.addEventListener('keydown', event => {
+    const chronologyButton=event.target instanceof Element?event.target.closest('[data-mh-chrono-event]'):null;
+    if (!chronologyButton || !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
+    event.preventDefault();
+    const index=EVENTS.findIndex(item=>item.id===chronologyButton.dataset.mhChronoEvent);
+    const direction=['ArrowRight','ArrowDown'].includes(event.key)?1:-1;
+    const next=EVENTS[(index+direction+EVENTS.length)%EVENTS.length];
+    selectEvent(next.id);
+    chronosphere.querySelector('[data-mh-chrono-event="'+next.id+'"]')?.focus({preventScroll:true});
+  });
   panel.addEventListener('keydown', event => {
     // Escape closes the research document without navigating away from the world.
     if(event.key==='Escape'&&panelExpanded){
@@ -414,16 +426,6 @@
       const scroll=panel.scrollTop;
       renderPanel();panel.scrollTop=scroll;
       panel.querySelector('[data-mh-compare="'+compareEventId+'"]')?.focus({preventScroll:true});
-      return;
-    }
-    const chronologyButton=event.target instanceof Element?event.target.closest('[data-mh-chrono-event]'):null;
-    if (chronologyButton && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) {
-      event.preventDefault();
-      const index=EVENTS.findIndex(item=>item.id===chronologyButton.dataset.mhChronoEvent);
-      const direction=['ArrowRight','ArrowDown'].includes(event.key)?1:-1;
-      const next=EVENTS[(index+direction+EVENTS.length)%EVENTS.length];
-      selectEvent(next.id);
-      chronosphere.querySelector('[data-mh-chrono-event="'+next.id+'"]')?.focus({preventScroll:true});
       return;
     }
     const dateButton=event.target instanceof Element?event.target.closest('.mh-timeline [data-mh-event]'):null;
