@@ -250,3 +250,40 @@
   #app .mh-event-header .mh-event-brand{min-width:0;flex:1}
   #app .mh-event-header .mh-event-brand strong{overflow-wrap:normal}
 }
+
+/* V20 foundation / Event Core: the causal path is visible before opening
+   the dossier. Three short, source-supplied mechanisms replace repetitive
+   paragraphs in the compact presentation. The PEOPLE world is untouched. */
+#app .mh-v20-impact-strip{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
+  padding:0;margin:10px 0 2px;list-style:none;
+}
+#app .mh-v20-impact-strip li{
+  position:relative;min-width:0;min-height:62px;display:flex;
+  flex-direction:column;justify-content:center;gap:6px;
+  padding:10px 9px;border-radius:10px;
+  border:1px solid rgba(215,163,205,.22);
+  background:linear-gradient(150deg,rgba(105,49,81,.32),rgba(24,21,43,.83));
+  box-shadow:inset 0 1px rgba(255,234,247,.045);
+}
+#app .mh-v20-impact-strip li:not(:last-child):after{
+  content:'›';position:absolute;right:-7px;top:50%;
+  z-index:2;transform:translateY(-50%);
+  font:800 15px/1 Inter,system-ui,sans-serif;color:#e2b3d1;
+}
+#app .mh-v20-impact-strip li span{
+  font:750 9px/1 Inter,system-ui,sans-serif;
+  letter-spacing:.11em;color:#dcb4d8;
+}
+#app .mh-v20-impact-strip li strong{
+  font:550 10px/1.35 Inter,system-ui,sans-serif;
+  color:#f4eaf2;overflow-wrap:anywhere;
+}
+#app .mh-history-panel.is-expanded .mh-v20-impact-strip,
+#app[data-mh-mode="connections"] .mh-v20-impact-strip{display:none!important}
+@media(max-width:819px){
+  #app .mh-v20-impact-strip{gap:5px;margin:7px 0 1px}
+  #app .mh-v20-impact-strip li{min-height:57px;padding:7px 6px;border-radius:8px}
+  #app .mh-v20-impact-strip li strong{font-size:9px}
+  #app .mh-v20-impact-strip li span{font-size:8px}
+}
