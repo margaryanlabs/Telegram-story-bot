@@ -76,6 +76,13 @@
        if(cinemaNav&&hero&&cinemaNav.parentNode===hero.parentNode){
          hero.parentNode.insertBefore(cinemaNav,hero);
          cinemaNav.classList.add('v9-cinema-primary-menu');
+         // Reposition the actual search form, preserving its provider,
+         // state and search listeners. No duplicate input or query fetch.
+         const search=$('#cinemaSearchArea',anchor);
+         if(search&&search.parentNode===hero.parentNode){
+           hero.parentNode.insertBefore(search,hero);
+           search.classList.add('v9-cinema-search-front');
+         }
        }
      }
    }
