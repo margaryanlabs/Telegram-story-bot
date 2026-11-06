@@ -61,3 +61,63 @@ test('V20 presentation is loaded last, scoped and mobile / reduced-motion safe',
   }
   assert.equal(depth, 0, 'No unclosed CSS block');
 });
+
+
+test('V20 real browser-mode controller changes the globe event without auto-expanding dossier', () => {
+  class FakeElement {
+    constructor(id='') {
+      this.id=id;this.dataset={};this.hidden=false;this.innerHTML='';this.scrollTop=0;
+      this.children=[];this.listeners={};
+      this.classList={add(){},toggle(){}};
+    }
+    append(...nodes){this.children.push(...nodes);}
+    setAttribute(){}
+    addEventListener(type,handler){this.listeners[type]=handler;}
+    querySelector(){return new FakeElement();}
+    querySelectorAll(){return [];}
+    remove(){}
+    focus(){focusCount++;}
+    closest(){return null;}
+  }
+  let focusCount=0;
+  const app=new FakeElement('app'),scene=new FakeElement('scene'),main=new FakeElement('main');
+  app.querySelector=selector=>selector==='main'?main:new FakeElement();
+  const document={
+    activeElement:{closest:()=>null},
+    getElementById:id=>id==='app'?app:id==='scene'?scene:null,
+    createElement:()=>new FakeElement(),
+    createElementNS:()=>new FakeElement()
+  };
+  const eventFocus=[];
+  const window={
+    location:{href:'https://test.example/market/',search:''},
+    requestAnimationFrame:()=>0,
+    setTimeout:()=>0,
+    matchMedia:()=>({matches:false}),
+    addEventListener(){},
+    MarketEventPlanet:{setActive(){},focus(point){eventFocus.push(point);}},
+    MarketSignalDirector:{setEvent(){}}
+  };
+  const history={state:null,replaceState(){},pushState(){}};
+  new Script(modes).runInNewContext({document,window,history,Element:FakeElement,URL,URLSearchParams});
+  window.MarketHistoryModes.setMode('events',false);
+  let panel=main.children.find(node=>node.id==='mhHistoryPanel');
+  assert.ok(panel,'Event panel was installed');
+  assert.match(panel.innerHTML,/mh-v20-chronicle/);
+  assert.match(panel.innerHTML,/data-mh-v20-direction="next"/);
+  assert.match(panel.innerHTML,/aria-expanded="false"/);
+  window.MarketHistoryModes.selectEvent('1987');
+  assert.equal(window.MarketHistoryModes.activeEvent,'1987');
+  assert.match(panel.innerHTML,/02 <i>\/<\/i> 04/);
+  assert.match(panel.innerHTML,/aria-expanded="false"/);
+  assert.match(panel.innerHTML,/href="https:\/\/www\.federalreservehistory\.org\/essays\/stock-market-crash-of-1987"/);
+  assert.equal(eventFocus.length,1,'The actual event globe receives a focus request');
+  document.activeElement={closest:selector=>selector==='[data-mh-v20-direction]'?{dataset:{mhV20Direction:'next'}}:null};
+  window.MarketHistoryModes.selectEvent('2008');
+  assert.equal(window.MarketHistoryModes.activeEvent,'2008');
+  assert.ok(focusCount>0,'Focus survives rebuilding the quick-navigation card');
+  const clickTarget=new FakeElement();
+  clickTarget.closest=selector=>selector==='[data-mh-event]'?{dataset:{mhEvent:'2020'}}:null;
+  app.listeners.click({target:clickTarget});
+  assert.equal(window.MarketHistoryModes.activeEvent,'2020','Event buttons dispatch through actual UI handler');
+});
