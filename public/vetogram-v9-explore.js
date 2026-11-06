@@ -8,7 +8,7 @@
  if(media){
    const mode=media.dataset.v78Module;
    const nav=$('.v79-media-switcher',media);
-   const shell=mode==='cinema'?$('.cinema-shell'):mode==='books'?$('#booksMain'):$('.music-shell');
+   const shell=mode==='cinema'?$('.cinema-shell'):mode==='books'?$('#booksMain'):$('#main');
    const anchor=mode==='cinema'?$('main',shell):shell?.firstElementChild;
    if(nav&&shell&&anchor){
      const dock=document.createElement('div');
