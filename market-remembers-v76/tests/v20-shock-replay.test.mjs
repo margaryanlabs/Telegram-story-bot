@@ -99,6 +99,7 @@ test('V20.2 controller lives only in expanded 2008 research and disposes when hi
   assert.match(modes,/window\.MarketShockReplay2008\?\.unmount\(\)/);
   assert.match(modes,/window\.MarketShockReplay2008\?\.syncScene\(\)/);
   assert.match(modes,/if \(panelExpanded && state\.mode==='events' && event\.id==='2008'\)/);
+  assert.match(modes,/▶ 6 ЭТАПОВ/);
   assert.match(modes,/window\.MarketShockReplay2008\?\.mount\(panel\.querySelector\('#mhShockReplay2008'\)\)/);
   assert.match(modes,/if \(mode === 'people'\) \{\s*panelExpanded = false;\s*window\.MarketShockReplay2008\?\.unmount\(\)/);
   new Script(modes);
