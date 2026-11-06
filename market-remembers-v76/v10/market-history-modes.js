@@ -294,7 +294,10 @@
       panelExpanded = false;
       window.MarketShockReplay2008?.unmount();
     }
-    else if (oldMode !== 'people' && oldMode !== mode) panelExpanded = true;
+    // Compare needs an intentional research surface. Returning to the
+    // event globe must NOT unexpectedly cover the sphere with a full dossier.
+    else if (mode === 'connections' && oldMode !== 'connections') panelExpanded = true;
+    else if (mode === 'events' && oldMode === 'connections') panelExpanded = false;
     app.dataset.mhMode = mode;
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
       const active = mode === 'people' ? btn.dataset.mhMode === 'people' : btn.dataset.mhMode === 'events';
