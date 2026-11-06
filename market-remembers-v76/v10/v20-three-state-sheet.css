@@ -126,3 +126,32 @@
     animation:none!important;transition:none!important;
   }
 }
+
+
+/* Fullscreen is a modal reading surface: do not allow drag/scroll to reach
+   the canvas or old event navigation underneath. Touch stays native inside
+   the research scroll container and the horizontal replay date rail. */
+#app[data-mh-sheet-state="full"] .mh-planet-surface,
+#app[data-mh-sheet-state="full"] .mh-event-layer .mh-beacon,
+#app[data-mh-sheet-state="full"] .mh-chrono-nav,
+#app[data-mh-sheet-state="full"] .mh-chrono-entries button,
+#app[data-mh-sheet-state="full"] .mh-event-header,
+#app[data-mh-sheet-state="full"] .mh-mode-switch{
+  pointer-events:none!important;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-history-panel[data-mh-sheet-state="research"],
+#app.mh-v16[data-mh-mode="connections"] .mh-history-panel[data-mh-sheet-state="research"],
+#app.mh-v16[data-mh-mode="events"] .mh-history-panel[data-mh-sheet-state="full"],
+#app.mh-v16[data-mh-mode="connections"] .mh-history-panel[data-mh-sheet-state="full"]{
+  touch-action:pan-y;-webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;overflow-y:auto;
+  scroll-padding-top:72px;
+}
+#app .mh-history-panel .mh-replay-rail{
+  touch-action:pan-x;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#app .mh-history-panel .mh-v20-sheet-tools{
+  scroll-margin-top:0;
+}
