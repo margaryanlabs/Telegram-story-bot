@@ -1366,7 +1366,7 @@
     // Recover keyboard and screen-reader position after returning to library.
     const previous=readerReturnFocus;
     readerReturnFocus=null;
-    const target=previous?.isConnected?previous:($('continueAction')?.hidden?$('bookSearch'):$('continueAction'));
+    const target=previous?.isConnected?previous:(!$('continueShelf')?.hidden?$('continueAction'):$('bookSearch'));
     if(target?.isConnected&&typeof target.focus==='function'){
       try{target.focus({preventScroll:true});}catch{target.focus();}
     }
