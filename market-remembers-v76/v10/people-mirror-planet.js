@@ -136,14 +136,42 @@ function size(){
  if(gl){gl.viewport(0,0,mainCanvas.width,mainCanvas.height);buildMesh();buildParticles();}
  if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);
 }
+// Only the EVENT world has this layout calculation. The original PEOPLE
+// renderer and its camera/shader are never modified.
+let lastCompactPanel=null;
 function place(){
- const mobile=w<820;
- const dock=$('mhHistoryPanel')?.getBoundingClientRect(),rect=stage.getBoundingClientRect();
- const top=mobile?114:105,bottom=mobile&&dock&&!dock.width?125:mobile&&dock?Math.max(90,Math.min(h*.33,h-(dock.top-rect.top)+18)):110;
- const clear=Math.max(150,h-top-bottom);
- // Same PEOPLE screen-scale and camera composition, with clearance for date rail.
- const r=mobile?Math.min(w*.455,clear*.425):Math.min(w,h)*.385;
- planet={x:w*(mobile?.52:.56),y:mobile?top+clear*.49:h*.515,r};
+ const rect=stage.getBoundingClientRect();
+ const sceneRelative=element=>{
+  if(!element || element.hidden || typeof element.getBoundingClientRect!=='function')return null;
+  const box=element.getBoundingClientRect();
+  if(![box.left,box.top,box.right,box.bottom].every(Number.isFinite) ||
+     box.width<=0 || box.height<=0)return null;
+  return {left:box.left-rect.left,top:box.top-rect.top,
+   right:box.right-rect.left,bottom:box.bottom-rect.top};
+ };
+ const sheet=app.dataset.mhSheetState||'compact';
+ const actualPanel=sceneRelative($('mhHistoryPanel'));
+ if(sheet==='compact' && actualPanel)lastCompactPanel=actualPanel;
+ // Research/full only resize the evidence panel, not the globe's camera.
+ // Do not use a fullscreen panel rectangle as a sphere obstruction.
+ const dock=sheet==='compact'?actualPanel:(lastCompactPanel||actualPanel);
+ const frame=window.MarketSceneCompositionV20?.compose({
+  width:w,height:h,
+  chronosphere:sceneRelative($('mhChronosphere')),
+  panel:dock,
+  header:sceneRelative($('mhEventHeader'))
+ });
+ if(frame && frame.r>0) {
+  planet={x:frame.x,y:frame.y,r:frame.r};
+  app.dataset.mhComposition=frame.strategy;
+ } else {
+  // Fail open if the optional layout module is not loaded by an old build.
+  const mobile=w<820;
+  const top=mobile?114:105,bottom=mobile?125:110;
+  const clear=Math.max(150,h-top-bottom);
+  const r=mobile?Math.min(w*.455,clear*.425):Math.min(w,h)*.385;
+  planet={x:w*(mobile?.52:.56),y:mobile?top+clear*.49:h*.515,r};
+ }
  app.style.setProperty('--mh-core-x',planet.x+'px');
  app.style.setProperty('--mh-core-y',planet.y+'px');
  app.style.setProperty('--mh-core-radius',planet.r+'px');
@@ -369,7 +397,8 @@ mainCanvas.addEventListener('webglcontextrestored',()=>{
  initGL();size();request();
 });
 window.addEventListener('resize',()=>{
- // Restoring EVENT calls size/place when it is opened again.
+ // Never reuse compact-panel bounds from the previous viewport.
+ lastCompactPanel=null;
  if(!active)return;
  size();place();request();
 },{passive:true});

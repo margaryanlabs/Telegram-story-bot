@@ -1,0 +1,64 @@
+/* MARKET REMEMBERS V20.7 — RESPONSIVE CELESTIAL COMPOSITION
+   EVENT CORE only. Relayouts tablet's chronology into a slim history rail,
+   leaving the center-left for the original mirrored 3D event sphere.
+   The PEOPLE world never matches these selectors. */
+@media (min-width:820px) and (max-width:1199px) {
+  #app.mh-v16[data-mh-mode="events"] .mh-chrono-nav,
+  #app.mh-v16[data-mh-mode="connections"] .mh-chrono-nav {
+    top:91px;left:18px;right:18px;width:auto;
+    display:grid;grid-template-columns:minmax(152px,.33fr) minmax(0,1fr);
+    align-items:center;column-gap:18px;row-gap:0;
+    padding:11px 15px 12px;
+    border-radius:14px;
+    background:linear-gradient(145deg,rgba(16,18,32,.92),rgba(11,13,25,.79));
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  }
+  #app .mh-chrono-head{gap:5px;min-width:0}
+  #app .mh-chrono-overline{font-size:9px;letter-spacing:.11em}
+  #app .mh-chrono-head strong{font-size:19px;white-space:nowrap}
+  #app .mh-chrono-head p{display:none}
+  #app .mh-chrono-entries{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  #app .mh-chrono-entries:before{
+    left:11%;right:11%;top:10px;bottom:auto;width:auto;height:1px;
+  }
+  #app .mh-chrono-entries button{
+    min-width:0;min-height:49px;padding:5px 3px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    text-align:center;border-radius:9px;
+  }
+  #app .mh-chrono-year{font-size:13px}
+  #app .mh-chrono-dot{width:8px;height:8px}
+  #app .mh-chrono-event-label{display:none}
+  #app .mh-chrono-focus,#app .mh-chrono-note{display:none}
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel:not(.is-fullscreen),
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel:not(.is-fullscreen){
+    right:18px;bottom:18px;top:auto;
+    width:min(416px,42vw);
+    max-height:min(63dvh,520px);
+  }
+}
+/* For extremely low mobile screens prioritize legible year controls over
+   repeated ornamental captions. Fullscreen evidence reader is unaffected. */
+@media(max-width:819px) and (max-height:640px) and (orientation:portrait){
+  #app.mh-v16[data-mh-mode="events"] .mh-chrono-nav,
+  #app.mh-v16[data-mh-mode="connections"] .mh-chrono-nav{
+    padding:6px 8px 7px;gap:4px;
+    background:rgba(11,13,25,.90);
+  }
+  #app .mh-chrono-head strong{font-size:15px}
+  #app .mh-chrono-entries button{min-height:44px}
+}
+/* Keep the time bar visible as a truly horizontal index in low landscape;
+   research remains a right-side document as its legacy sheet rules intend. */
+@media(max-width:819px) and (orientation:landscape) and (max-height:650px){
+  #app.mh-v16[data-mh-mode="events"] .mh-chrono-nav,
+  #app.mh-v16[data-mh-mode="connections"] .mh-chrono-nav{
+    top:76px;left:12px;right:auto;width:min(216px,43vw);
+    grid-template-columns:1fr;
+  }
+  #app .mh-chrono-head strong{display:none}
+  #app .mh-chrono-entries button{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+  #app .mh-chrono-entries button{transition:none!important}
+}

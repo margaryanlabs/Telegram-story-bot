@@ -73,6 +73,25 @@
   intro.id = 'mhIntro';
   intro.hidden = true;
   intro.innerHTML = '<span class="mh-overline">THE MARKET REMEMBERS / FINANCIAL MEMORY</span><h1 id="mhHeadline"></h1><p id="mhSubtitle"></p>';
+  // A chronological *index*, not geographic coordinates or a metrically
+  // spaced time-axis. Remains operable when all globe markers face away.
+  const chronosphere = document.createElement('nav');
+  chronosphere.id = 'mhChronosphere';
+  chronosphere.className = 'mh-chrono-nav';
+  chronosphere.hidden = true;
+  chronosphere.setAttribute('aria-label', 'Хронология финансовых кризисов — выбрать год');
+  chronosphere.innerHTML =
+    '<div class="mh-chrono-head"><div><span class="mh-chrono-overline">CHRONOSPHERE / ARCHIVE</span>' +
+    '<strong>Время кризисов</strong></div><p>Выберите год — сфера сфокусируется на событии</p></div>' +
+    '<div class="mh-chrono-entries" role="group" aria-label="Годы по порядку, интервалы условные">' +
+    EVENTS.map(event => '<button type="button" data-mh-chrono-event="'+event.id+
+      '" aria-label="'+event.year+': '+escape(event.name)+'" aria-pressed="false">'+
+      '<i class="mh-chrono-dot" aria-hidden="true"></i><span class="mh-chrono-year">'+event.year+
+      '</span><span class="mh-chrono-event-label">'+escape(event.short)+'</span></button>').join('') +
+    '</div><div class="mh-chrono-focus" aria-live="polite"><span>В ФОКУСЕ</span>'+
+    '<strong></strong><small></small></div>'+
+    '<p class="mh-chrono-note">Порядок хронологический · расстояния между годами условные</p>';
+
   const layer = document.createElement('div');
   layer.className = 'mh-event-layer';
   layer.id = 'mhEventLayer';
@@ -88,7 +107,7 @@
   panel.hidden = true;
   panel.setAttribute('aria-label', 'События и тематические связи');
   panel.setAttribute('aria-live', 'polite');
-  scene.append(layer);
+  scene.append(layer, chronosphere);
   main.append(switcher, intro, panel);
 
   function updateUrl(method = 'replace') {
@@ -99,7 +118,7 @@
       // World changes are navigable with Android/system Back; individual year
       // focus updates avoid flooding the history stack with every star tap.
       const operation=method==='push'?'pushState':'replaceState';
-      history[operation](history.state, '', url.pathname + url.search + url.hash);
+      history[operation](sheetHistorySnapshot(0), '', url.pathname + url.search + url.hash);
     } catch (_) { /* URL state is optional; content remains usable. */ }
   }
   function timeline() {
@@ -136,19 +155,145 @@
       '<div class="mh-v16-card-footer"><button type="button" data-mh-go-connections>ИССЛЕДОВАТЬ СВЯЗИ <span aria-hidden="true">↗</span></button>' +
       '<a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ПЕРВОИСТОЧНИК · '+escape(event.source)+' ↗</a></div></div>';
   }
+  // Compare archival records, not price series. The globe remains on the
+  // selected event while a second sourced case is examined independently.
+  let compareEventId = null;
+  function comparisonMarkup(event) {
+    const candidates = EVENTS.filter(other => other.id !== event.id);
+    const compared = candidates.find(other => other.id === compareEventId) || candidates[0];
+    const shared = event.themes.filter(theme => compared.themes.includes(theme));
+    const leftOnly = event.themes.filter(theme => !compared.themes.includes(theme));
+    const rightOnly = compared.themes.filter(theme => !event.themes.includes(theme));
+    const themeLabels = values => values.length
+      ? values.map(theme => escape(THEME_NAMES[theme])).join(' · ')
+      : 'нет в выбранных тематических тегах';
+    const caseFile = (record, side) => {
+      const stages = record.mechanism.split('→').map((part,index) =>
+        '<li><span>'+String(index+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
+      return '<article class="mh-v20-compare-case" aria-label="'+escape(record.name)+'">' +
+        '<div class="mh-v20-compare-case-head"><span>ДОСЬЕ '+side+'</span><b>'+escape(record.year)+'</b></div>' +
+        '<h4>'+escape(record.name)+'</h4><time>'+escape(record.date)+'</time>' +
+        '<div class="mh-v20-compare-fact"><small>ЧТО ЗАДОКУМЕНТИРОВАНО</small><p>'+escape(record.detail)+'</p></div>' +
+        '<div class="mh-v20-compare-path"><small>ЦЕПОЧКА ШОКА</small><ol>'+stages+'</ol></div>' +
+        '<div class="mh-v20-compare-lesson"><small>ПРАКТИЧЕСКИЙ ВЫВОД · ИНТЕРПРЕТАЦИЯ</small><p>'+escape(record.lesson)+'</p></div>' +
+        '<a href="'+escape(record.url)+'" target="_blank" rel="noopener noreferrer">ПЕРВОИСТОЧНИК · '+escape(record.source)+' ↗</a></article>';
+    };
+    return '<section class="mh-v20-compare" aria-label="Сравнение исторических кризисов">' +
+      '<div class="mh-v20-compare-heading"><span>01 / CRISIS COMPARE</span>' +
+      '<h3>Два кризиса. Разные механизмы.</h3>' +
+      '<p>Первый кризис закреплён на сфере. Выберите второй для сопоставления архивных фактов и интерпретаций.</p></div>' +
+      '<div class="mh-v20-compare-picker" role="group" aria-label="Выбрать второй кризис">' +
+      candidates.map(other => '<button type="button" data-mh-compare="'+other.id+'" aria-pressed="'+(other.id===compared.id)+'" class="'+(other.id===compared.id?'is-active':'')+'">'+escape(other.year)+'</button>').join('')+'</div>' +
+      '<div class="mh-v20-compare-pair">'+caseFile(event,'A')+caseFile(compared,'B')+'</div>' +
+      '<div class="mh-v20-compare-synthesis"><h4>Тематическое пересечение</h4>' +
+      '<p><b>Общее:</b> '+themeLabels(shared)+'</p>' +
+      '<p><b>Только '+escape(event.year)+':</b> '+themeLabels(leftOnly)+'</p>' +
+      '<p><b>Только '+escape(compared.year)+':</b> '+themeLabels(rightOnly)+'</p>' +
+      '<small>Общие темы не доказывают причинность или одинаковую динамику цен. Схемы и уроки — краткая аналитическая интерпретация; факты проверяйте по двум первоисточникам.</small></div></section>';
+  }
   function connectionMarkup(event) {
     const related=EVENTS.filter(e=>e.id!==event.id&&e.themes.some(t=>event.themes.includes(t)));
     return '<div class="mh-v16-record mh-v16-connection-record">' +
       '<div class="mh-v16-record-meta"><span>◈ THEMATIC INTELLIGENCE</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
       '<p class="mh-v16-connection-notice">Сопоставляем общие темы и механизмы. Эти связи не доказывают причинность и не означают, что авторы демо-историй участвовали в событии.</p>' +
-      '<div class="mh-v16-section-label"><span>01</span> ЧЕЛОВЕЧЕСКИЕ УРОКИ</div>'+themeButtons(event) +
-      '<div class="mh-v16-section-label"><span>02</span> ИСТОРИЧЕСКИЕ ПАРАЛЛЕЛИ</div>'+
+      comparisonMarkup(event) +
+      '<div class="mh-v16-section-label"><span>02</span> ЧЕЛОВЕЧЕСКИЕ УРОКИ</div>'+themeButtons(event) +
+      '<div class="mh-v16-section-label"><span>03</span> ИСТОРИЧЕСКИЕ ПАРАЛЛЕЛИ</div>'+
       '<div class="mh-v16-related-grid">'+related.map(e=>'<button type="button" class="mh-v16-related-card" data-mh-event="'+e.id+'"><b>'+escape(e.year)+'</b><strong>'+escape(e.short)+'</strong><small>'+e.themes.filter(t=>event.themes.includes(t)).map(t=>escape(THEME_NAMES[t])).join(' · ')+'</small><span aria-hidden="true">↗</span></button>').join('')+'</div>'+
       '<a class="mh-v16-source-link" href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ИСТОЧНИК СОБЫТИЯ · '+escape(event.source)+' ↗</a></div>';
   }
   
   let panelExpanded = false;
+  let panelFullscreen = false;
+  const SHEET_HISTORY_KEY = '__marketRemembersV20Sheet';
+  let pendingCompactReturn = false;
+  function currentSheetState() {
+    return panelExpanded ? (panelFullscreen ? 'full' : 'research') : 'compact';
+  }
+  function sheetHistorySnapshot(depth = 0, sheet = currentSheetState()) {
+    // Preserve legacy history.state keys; store public year and UI only.
+    const old = history.state;
+    const safe = old && typeof old === 'object' && !Array.isArray(old) ? {...old} : {};
+    safe[SHEET_HISTORY_KEY] = {
+      mode: state.mode, event: state.activeEvent, sheet,
+      depth: Math.max(0, Math.min(2, depth))
+    };
+    return safe;
+  }
+  function recordSheetHistory(operation = 'replaceState', depth = 0, sheet = currentSheetState()) {
+    try {
+      if (typeof history[operation] !== 'function') return false;
+      history[operation](sheetHistorySnapshot(depth, sheet), '', window.location.href);
+      return true;
+    } catch (_) { return false; }
+  }
+  function currentSheetHistory() {
+    const entry=history.state && history.state[SHEET_HISTORY_KEY];
+    if (!entry || entry.mode !== state.mode || entry.event !== state.activeEvent ||
+        !['compact','research','full'].includes(entry.sheet)) return null;
+    return entry;
+  }
+  function pushSheetHistory() {
+    if (state.mode === 'people') return;
+    const previous=currentSheetHistory();
+    recordSheetHistory('pushState',Math.min(2,(previous?.depth || 0)+1));
+  }
+  function navigateSheetHistory(target) {
+    const entry=currentSheetHistory();
+    if (!entry || entry.depth < 1) return false;
+    if (target === 'research' && entry.sheet === 'full' && typeof history.back === 'function') {
+      try { history.back(); return true; } catch (_) { return false; }
+    }
+    if (target === 'compact' && typeof history.go === 'function') {
+      try {
+        pendingCompactReturn=true;
+        history.go(-entry.depth);
+        return true;
+      } catch (_) { pendingCompactReturn=false; }
+    }
+    return false;
+  }
+  function closeSheetToSphere() {
+    if (!panelExpanded) return;
+    if (navigateSheetHistory('compact')) return;
+    panelExpanded=false;panelFullscreen=false;
+    renderPanel();panel.scrollTop=0;
+    recordSheetHistory('replaceState',0);
+    panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
+    window.requestAnimationFrame(measure);
+  }
+
+  // Change sheet size in place: rendering it again would destroy a playing
+  // Shock Replay, reset its selected stage and lose the document scroll.
+  function updateSheetPresentation() {
+    const full=panelExpanded && panelFullscreen;
+    const sheet=full?'full':(panelExpanded?'research':'compact');
+    panel.classList.toggle('is-fullscreen',full);
+    panel.dataset.mhSheetState=sheet;
+    app.dataset.mhSheetState=sheet;
+    // The reader owns focus and touch in fullscreen; prevent accidental
+    // globe drags or keyboard tabs onto controls behind the document.
+    scene.inert=full;
+    switcher.inert=full;
+    const header=document.getElementById('mhEventHeader');
+    if (header) header.inert=full;
+    const control=panel.querySelector('[data-mh-sheet-size]');
+    if (control) {
+      control.setAttribute('aria-pressed',String(full));
+      control.setAttribute('aria-label',full?'Вернуться к панели исследования':'Открыть досье на весь экран');
+      control.textContent=full?'УМЕНЬШИТЬ':'НА ВЕСЬ ЭКРАН';
+    }
+  }
+  function setPanelFullscreen(next) {
+    if (!panelExpanded || panelFullscreen === !!next) return;
+    if (!next && navigateSheetHistory('research')) return;
+    panelFullscreen=!!next;
+    updateSheetPresentation();
+    if (next) pushSheetHistory();
+    else recordSheetHistory('replaceState',0);
+    window.requestAnimationFrame(measure);
+  }
   function renderPanel() {
     window.MarketShockReplay2008?.unmount();
     const event = EVENT_BY_ID[state.activeEvent];
@@ -170,7 +315,14 @@
     // research dossier: show source-supplied stages, never inferred trade data.
     const impact=event.mechanism.split('→').map((part,i)=>
       '<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
-    panel.innerHTML = chronicle + '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':(event.id==='2008' && state.mode==='events'?'▶ 6 ЭТАПОВ':'ПОДРОБНЕЕ ↑'))+'</em></button>' +
+    const sheetTools=panelExpanded
+      ? '<div class="mh-v20-sheet-tools" role="group" aria-label="Режим просмотра досье">' +
+        '<span class="mh-v20-sheet-eyebrow">ДОСЬЕ / '+escape(event.year)+'</span>' +
+        '<button type="button" data-mh-sheet-size aria-pressed="'+panelFullscreen+'">'+
+          (panelFullscreen?'УМЕНЬШИТЬ':'НА ВЕСЬ ЭКРАН')+'</button>' +
+        '<button type="button" data-mh-sheet-close aria-label="Вернуться к сфере">К СФЕРЕ ↓</button></div>'
+      : '';
+    panel.innerHTML = chronicle + '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':(event.id==='2008' && state.mode==='events'?'▶ 6 ЭТАПОВ':'ПОДРОБНЕЕ ↑'))+'</em></button>' + sheetTools +
       '<p class="mh-v19-preview" aria-label="Краткий контекст">'+escape(event.short)+' · '+escape(event.date)+'</p>' +
       '<ol class="mh-v20-impact-strip" aria-label="Схема механизма кризиса">'+impact+'</ol>' +
       '<div class="mh-v20-source-line"><span>ДОКУМЕНТИРОВАННОЕ СОБЫТИЕ</span><a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer" aria-label="Открыть первоисточник: '+escape(event.source)+'">ИСТОЧНИК ↗</a></div>' +
@@ -178,6 +330,7 @@
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
       timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
       '<p class="mh-disclaimer">Исторические факты снабжены источниками. Символические связи — тематические, не доказательство причинности и не свидетельства реальных трейдеров.</p>';
+    updateSheetPresentation();
     if (panelExpanded && state.mode==='events' && event.id==='2008') {
       window.MarketShockReplay2008?.mount(panel.querySelector('#mhShockReplay2008'));
     }
@@ -197,10 +350,30 @@
       const pos = window.MarketEventPlanet?.project(event.p);
       positions[event.id] = pos || {x: Math.max(18,Math.min(w-18,cx + event.p[0] * r)),y: Math.max(96,Math.min(h-85,cy + event.p[1] * r)),visible:true};
     });
+    // Projected globe markers stay anchored; only label placement is solved.
+    // Obstacles are measured in the same coordinate frame as the event scene.
+    const sceneBox=rect;
+    const obstacleRect=element=>{
+      if(!element || element.hidden || typeof element.getBoundingClientRect!=='function')return null;
+      const box=element.getBoundingClientRect();
+      if(![box.left,box.top,box.right,box.bottom].every(Number.isFinite))return null;
+      return {left:box.left-sceneBox.left,top:box.top-sceneBox.top,
+        right:box.right-sceneBox.left,bottom:box.bottom-sceneBox.top};
+    };
+    const labels=window.MarketBeaconLayoutV20?.arrange(
+      EVENTS.map(event=>({...positions[event.id],id:event.id,active:event.id===state.activeEvent})),
+      {width:w,height:h,mobile:w<820,
+        obstacles:[chronosphere,panel,switcher,document.getElementById('mhEventHeader')]
+          .map(obstacleRect).filter(Boolean)}
+    )||{};
     layer.querySelectorAll('[data-mh-beacon]').forEach(button => {
       const pos = positions[button.dataset.mhBeacon];
       button.style.left = pos.x + 'px';
       button.style.top = pos.y + 'px';
+      const label=labels[button.dataset.mhBeacon];
+      button.dataset.mhLabelSide = label?.side || (pos.x > w-(w<820?155:225)?'left':'right');
+      button.dataset.mhLabelPlacement = label?.placement || 'center';
+      button.classList.toggle('is-label-hidden',!!label?.hidden);
       const visible = pos.visible !== false;
       button.style.opacity = visible ? '1' : '0';
       button.style.pointerEvents = visible ? 'auto' : 'none';
@@ -225,6 +398,17 @@
     }
     window.MarketSignalDirector?.position(positions[state.activeEvent],rect,panel.getBoundingClientRect(),panelExpanded);
   }
+  function renderChronosphere() {
+    const event=EVENT_BY_ID[state.activeEvent];
+    if (!event) return;
+    chronosphere.querySelectorAll('[data-mh-chrono-event]').forEach(button => {
+      const current=button.dataset.mhChronoEvent===event.id;
+      button.classList.toggle('is-active',current);
+      button.setAttribute('aria-pressed',String(current));
+    });
+    chronosphere.querySelector('.mh-chrono-focus strong').textContent=event.name;
+    chronosphere.querySelector('.mh-chrono-focus small').textContent=event.date;
+  }
   function renderBeacons() {
     layer.querySelectorAll('[data-mh-beacon]').forEach(node=>node.remove());
     EVENTS.forEach(event => {
@@ -234,9 +418,11 @@
       button.dataset.mhBeacon = event.id;
       button.setAttribute('aria-label',event.year + ': ' + event.name + '. Выбрать историческое событие');
       button.setAttribute('aria-pressed',String(event.id === state.activeEvent));
-      button.innerHTML = '<span aria-hidden="true" class="mh-beacon-ring"></span><span class="mh-beacon-year">' + event.year + '</span>';
+      button.innerHTML = '<span aria-hidden="true" class="mh-beacon-ring"></span><span class="mh-beacon-year"><b>' +
+        event.year + '</b>' + (event.id===state.activeEvent ? '<small>'+escape(event.short)+'</small>' : '')+'</span>';
       layer.append(button);
     });
+    renderChronosphere();
     window.MarketShockReplay2008?.syncScene();
     window.requestAnimationFrame(measure);
   }
@@ -255,9 +441,19 @@
     state.mode = mode;
     if (mode === 'people') {
       panelExpanded = false;
+      panelFullscreen = false;
       window.MarketShockReplay2008?.unmount();
     }
-    else if (oldMode !== 'people' && oldMode !== mode) panelExpanded = true;
+    // Compare needs an intentional research surface. Returning to the
+    // event globe must NOT unexpectedly cover the sphere with a full dossier.
+    else if (mode === 'connections' && oldMode !== 'connections') {
+      panelExpanded = true;
+      panelFullscreen = false;
+    }
+    else if (mode === 'events' && oldMode === 'connections') {
+      panelExpanded = false;
+      panelFullscreen = false;
+    }
     app.dataset.mhMode = mode;
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
       const active = mode === 'people' ? btn.dataset.mhMode === 'people' : btn.dataset.mhMode === 'events';
@@ -266,7 +462,9 @@
     });
     intro.hidden = mode === 'people';
     panel.hidden = mode === 'people';
+    if (mode === 'people') updateSheetPresentation();
     layer.hidden = mode === 'people';
+    chronosphere.hidden = mode === 'people';
     if (mode !== 'people') {
       const title = TITLES[mode];
       intro.querySelector('h1').textContent = title.title;
@@ -289,6 +487,7 @@
     // Selecting a year must not immediately cover the sphere with a dossier.
     // The visitor explicitly expands "Подробнее" when ready to read.
     panelExpanded = false;
+    panelFullscreen = false;
     renderPanel();
     panel.scrollTop=0;
     renderBeacons();
@@ -321,13 +520,40 @@
       if (event.target instanceof Element && event.target.closest('[data-mh-beacon]')) event.stopPropagation();
     });
   }
+  // The time navigator is a sibling of the panel, not its descendant.
+  // Register keyboard events on the actual navigation surface.
+  chronosphere.addEventListener('keydown', event => {
+    const chronologyButton=event.target instanceof Element?event.target.closest('[data-mh-chrono-event]'):null;
+    if (!chronologyButton || !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
+    event.preventDefault();
+    const index=EVENTS.findIndex(item=>item.id===chronologyButton.dataset.mhChronoEvent);
+    const direction=['ArrowRight','ArrowDown'].includes(event.key)?1:-1;
+    const next=EVENTS[(index+direction+EVENTS.length)%EVENTS.length];
+    selectEvent(next.id);
+    chronosphere.querySelector('[data-mh-chrono-event="'+next.id+'"]')?.focus({preventScroll:true});
+  });
   panel.addEventListener('keydown', event => {
     // Escape closes the research document without navigating away from the world.
     if(event.key==='Escape'&&panelExpanded){
       event.preventDefault();event.stopPropagation();
-      panelExpanded=false;renderPanel();panel.scrollTop=0;
-      panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
-      window.requestAnimationFrame(measure);
+      if (panelFullscreen) {
+        setPanelFullscreen(false);
+        panel.querySelector('[data-mh-sheet-size]')?.focus({preventScroll:true});
+      } else {
+        closeSheetToSphere();
+      }
+      return;
+    }
+    const compareButton=event.target instanceof Element?event.target.closest('[data-mh-compare]'):null;
+    if(compareButton&&state.mode==='connections'&&['ArrowLeft','ArrowRight'].includes(event.key)){
+      event.preventDefault();
+      const candidates=EVENTS.filter(item=>item.id!==state.activeEvent);
+      const index=candidates.findIndex(item=>item.id===compareButton.dataset.mhCompare);
+      const direction=event.key==='ArrowRight'?1:-1;
+      compareEventId=candidates[(index+direction+candidates.length)%candidates.length].id;
+      const scroll=panel.scrollTop;
+      renderPanel();panel.scrollTop=scroll;
+      panel.querySelector('[data-mh-compare="'+compareEventId+'"]')?.focus({preventScroll:true});
       return;
     }
     const dateButton=event.target instanceof Element?event.target.closest('.mh-timeline [data-mh-event]'):null;
@@ -346,9 +572,17 @@
   app.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+    if(target.closest('[data-mh-sheet-size]')) {
+      setPanelFullscreen(!panelFullscreen);
+      panel.querySelector('[data-mh-sheet-size]')?.focus({preventScroll:true});
+      return;
+    }
+    if(target.closest('[data-mh-sheet-close]')) { closeSheetToSphere(); return; }
     if(target.closest('[data-mh-panel-toggle]')) {
-      panelExpanded=!panelExpanded;
+      if (panelExpanded) { closeSheetToSphere(); return; }
+      panelExpanded=true;panelFullscreen=false;
       renderPanel();panel.scrollTop=0;
+      pushSheetHistory();
       panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
       window.requestAnimationFrame(measure);
       return;
@@ -357,6 +591,16 @@
     if (modeBtn) { setMode(modeBtn.dataset.mhMode); return; }
     const beacon = target.closest('[data-mh-beacon]');
     if (beacon) { selectEvent(beacon.dataset.mhBeacon); return; }
+    const compareBtn = target.closest('[data-mh-compare]');
+    if (compareBtn && state.mode==='connections' && EVENT_BY_ID[compareBtn.dataset.mhCompare] && compareBtn.dataset.mhCompare!==state.activeEvent) {
+      compareEventId=compareBtn.dataset.mhCompare;
+      const scroll=panel.scrollTop;
+      renderPanel();panel.scrollTop=scroll;
+      panel.querySelector('[data-mh-compare="'+compareEventId+'"]')?.focus({preventScroll:true});
+      return;
+    }
+    const chronologyBtn = target.closest('[data-mh-chrono-event]');
+    if (chronologyBtn) { selectEvent(chronologyBtn.dataset.mhChronoEvent); return; }
     const eventBtn = target.closest('[data-mh-event]');
     if (eventBtn) { selectEvent(eventBtn.dataset.mhEvent); return; }
     if (target.closest('[data-mh-go-connections]')) { setMode('connections'); return; }
@@ -374,17 +618,36 @@
   window.addEventListener('resize',()=>window.requestAnimationFrame(measure),{passive:true});
   // The browser Back button restores the world selected in the URL.
   // Do not run an extra transition or write another history entry on replay.
-  window.addEventListener('popstate',()=>{
+  window.addEventListener('popstate',event=>{
     const parameters=new URLSearchParams(window.location.search);
     const requestedMode=parameters.get('mm');
     const nextMode=['events','connections'].includes(requestedMode)?requestedMode:'people';
     const nextId=parameters.get('event');
-    if(EVENT_BY_ID[nextId])state.activeEvent=nextId;
-    if(nextMode!==state.mode)setMode(nextMode,false);
-    else if(nextMode!=='people'){
-      panelExpanded=false;renderPanel();panel.scrollTop=0;renderBeacons();
-      window.MarketEventPlanet?.focus(EVENT_BY_ID[state.activeEvent].p);
+    const changedEvent=!!EVENT_BY_ID[nextId] && state.activeEvent!==nextId;
+    if (EVENT_BY_ID[nextId]) state.activeEvent=nextId;
+    const changedMode=nextMode!==state.mode;
+    if (changedMode) setMode(nextMode,false);
+
+    // Android system Back traverses UI history without remounting a running
+    // replay when only the presentation changes (full -> research).
+    const recorded=(event?.state || history.state)?.[SHEET_HISTORY_KEY];
+    const matches=recorded && recorded.mode===nextMode &&
+      recorded.event===state.activeEvent && ['compact','research','full'].includes(recorded.sheet);
+    let desired=matches?recorded.sheet:(nextMode==='connections'?'research':'compact');
+    if (pendingCompactReturn) {
+      desired='compact';pendingCompactReturn=false;
+      recordSheetHistory('replaceState',0,'compact');
     }
+    if (nextMode==='people') return;
+    const expanded=desired!=='compact',fullscreen=desired==='full';
+    const rebuild=changedMode || changedEvent || panelExpanded!==expanded;
+    panelExpanded=expanded;panelFullscreen=fullscreen;
+    if (rebuild) {
+      renderPanel();panel.scrollTop=0;renderBeacons();
+      if (changedEvent) window.MarketEventPlanet?.focus(EVENT_BY_ID[state.activeEvent].p);
+    } else updateSheetPresentation();
+    panel.querySelector(expanded?'[data-mh-sheet-size]':'.mh-panel-grip')?.focus({preventScroll:true});
+    window.requestAnimationFrame(measure);
   });
   const controls = document.getElementById('worldControls');
   controls?.addEventListener('click',()=>window.setTimeout(measure,140));
@@ -392,10 +655,14 @@
   if (EVENT_BY_ID[requested.get('event')]) state.activeEvent = requested.get('event');
   const initial = requested.get('mm');
   setMode(initial === 'events' || initial === 'connections' ? initial : 'people', false);
+  // Initial entry is the safe base for Android Back and browser forward.
+  recordSheetHistory('replaceState',0);
   window.MarketHistoryModes = Object.freeze({
     version: '13.0.0',
     get mode() { return state.mode; },
     get activeEvent() { return state.activeEvent; },
+    get sheetState() { return panelExpanded?(panelFullscreen?'full':'research'):'compact'; },
+    get comparedEvent() { return (EVENTS.find(item=>item.id===compareEventId&&item.id!==state.activeEvent)||EVENTS.find(item=>item.id!==state.activeEvent)).id; },
     get events() { return EVENTS.map(({id,year,date,name,themes,url,p})=>({id,year,date,name,themes:[...themes],url,p:[...p]})); },
     setMode, selectEvent, measure
   });

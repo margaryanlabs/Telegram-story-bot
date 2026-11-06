@@ -23,7 +23,7 @@ test('V20 crisis navigator links exact four sourced dates, previous/next and pro
 
 test('V20 switching a crisis never forces the full dossier or destroys keyboard focus', () => {
   assert.match(modes, /function selectEvent\(id\)/);
-  assert.match(modes, /panelExpanded = false;\s*renderPanel\(\);/);
+  assert.match(modes, /panelExpanded = false;\s*panelFullscreen = false;\s*renderPanel\(\);/);
   assert.match(modes, /const fromQuickNav=origin\?\.closest/);
   assert.match(modes, /if\(fromQuickNav\)\{\s*panel\.querySelector/);
   assert.match(modes, /data-mh-v20-direction="'\+fromQuickNav/);
