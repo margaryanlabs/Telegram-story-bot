@@ -375,6 +375,7 @@
     });
     intro.hidden = mode === 'people';
     panel.hidden = mode === 'people';
+    if (mode === 'people') updateSheetPresentation();
     layer.hidden = mode === 'people';
     chronosphere.hidden = mode === 'people';
     if (mode !== 'people') {
