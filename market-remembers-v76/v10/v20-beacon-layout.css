@@ -1,0 +1,28 @@
+/* Market Remembers V20.6 — collision-aware star labels.
+   Keep each source-based beacon anchored to its actual 3D projection.
+   Hidden labels do not hide the star or remove its accessible button. */
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-label-hidden .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-label-hidden .mh-beacon-year{
+  visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-label-placement="above"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-label-placement="above"] .mh-beacon-year{
+  top:auto!important;bottom:calc(100% + 4px)!important;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-label-placement="below"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-label-placement="below"] .mh-beacon-year{
+  top:calc(100% + 4px)!important;bottom:auto!important;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon[data-mh-label-placement="center"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon[data-mh-label-placement="center"] .mh-beacon-year{
+  top:10px!important;bottom:auto!important;
+}
+/* Even when every star label is obstructed, Chronosphere remains the
+   persistent keyboard/touch destination for every archival year. */
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-label-hidden:focus-visible,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-label-hidden:focus-visible{
+  outline:2px solid #f8d0e5!important;outline-offset:4px!important;
+}
+@media(prefers-reduced-motion:reduce){
+  #app .mh-beacon-year{transition:none!important;animation:none!important}
+}
