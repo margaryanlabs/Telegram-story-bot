@@ -85,3 +85,41 @@ test('Game deep link and V9 controller expose the same allowlisted focus route',
  assert.match(deepLink,/byId\.has\(incomingId\)/);
  assert.doesNotMatch(read('vetogram-v9-explore.js'),/XMLHttpRequest|fetch\(/);
 });
+
+test('Cinema native category tabs and search are ahead of hero, preserving their nodes',()=>{
+ const node=(name,selectors={})=>{
+  const el={name,children:[],parentNode:null,attrs:{},
+   classList:{add:key=>{el.attrs[key]=true}},
+   querySelector:s=>selectors[s]||null,
+   append(...items){for(const item of items){if(item.parentNode)item.parentNode.children=item.parentNode.children.filter(x=>x!==item);item.parentNode=this;this.children.push(item)}},
+   insertBefore(item,before){if(item.parentNode)item.parentNode.children=item.parentNode.children.filter(x=>x!==item);
+    const pos=this.children.indexOf(before);assert.ok(pos>=0);item.parentNode=this;this.children.splice(pos,0,item);},
+   setAttribute(key,value){this.attrs[key]=value;}
+  };return el;
+ };
+ const nativeNav=node('native-nav'),search=node('native-search'),hero=node('hero');
+ const main=node('main',{
+  '.cinema-section-nav':nativeNav,
+  '#cinemaSearchArea':search,
+  '#cinemaHero':hero
+ });
+ main.append(hero,nativeNav,search);
+ const header=node('header');
+ const shell=node('shell',{main});
+ shell.append(header,main);
+ const moduleNav=node('switcher');
+ const media=node('media',{'.v79-media-switcher':moduleNav});
+ media.dataset={v78Module:'cinema'};media.append(moduleNav);
+ const document={
+  createElement:tag=>node(tag),
+  querySelector:s=>s==='#v78MediaHub[data-v78-module]'?media:
+    s==='.cinema-shell'?shell:null
+ };
+ runInNewContext(read('vetogram-v9-explore.js'),{document,window:{}});
+ assert.equal(main.children[0],nativeNav);
+ assert.equal(main.children[1],search);
+ assert.equal(main.children[2],hero);
+ assert.equal(search.attrs['v9-cinema-search-front'],true);
+ assert.equal(nativeNav.attrs['v9-cinema-primary-menu'],true);
+ assert.equal(shell.children.length,3);
+});
