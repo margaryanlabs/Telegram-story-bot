@@ -73,7 +73,7 @@ test('Media quick links delegate to original modules without duplicating the men
   const calls={cinema:0,music:0,books:0};
   const buttons=Object.fromEntries(routes.map(name=>[name,{click(){calls[name]++;}}]));
   const grid={querySelector(selector){
-    const name=selector.match(/\\[data-v6-module="([^"]+)"\\]/)?.[1];
+    const name=selector.match(/\[data-v6-module="([^"]+)"\]/)?.[1];
     return buttons[name]||null;
   }};
   const home=new Element('div');
