@@ -1,0 +1,144 @@
+/* THE MARKET REMEMBERS / V11.4 STAR PASSAGE
+ * Lightweight narrative transition on the real projected star position.
+ * Existing 1.35s engine owns timing, navigation, skip, reduced motion and
+ * visibility suspension. No extra GPU surface, canvas, RAF or fake 3D scene.
+ */
+#app.obsidian .memory-dive{
+  --memory-accent:#a9d8e6;
+  background:radial-gradient(ellipse at var(--dx) var(--dy),
+     transparent 0 12%,#07121a24 39%,#050a12b5 83%);
+}
+#app.obsidian .memory-dive::before{
+  background:radial-gradient(circle at var(--dx) var(--dy),
+    transparent 0 8%,#13283541 24%,#050b14cd 63%,#04070def 100%);
+}
+#app.obsidian .memory-dive::after{
+  background:repeating-radial-gradient(circle at var(--dx) var(--dy),
+    transparent 0 37px,#a9d8e61e 38px,transparent 39px,transparent 59px);
+  mask-image:radial-gradient(circle at var(--dx) var(--dy),#000 0 14%,transparent 55%);
+}
+#app.obsidian .memory-dive .memory-dive-lock{
+  width:46px;height:46px;border:1px solid #a9d8e68a;
+  box-shadow:0 0 18px #a9d8e676,inset 0 0 11px #a9d8e625;
+}
+#app.obsidian .memory-dive .memory-dive-lock::before{inset:-25px;border-color:#a9d8e64d}
+#app.obsidian .memory-dive .memory-dive-lock::after{inset:-48px;border-color:#c8a99035}
+#app.obsidian .v114-star-gate{
+  position:absolute;z-index:2;left:var(--dx);top:var(--dy);
+  width:1px;height:1px;pointer-events:none;isolation:isolate;
+}
+#app.obsidian .v114-gate-core{
+  position:absolute;left:0;top:0;width:12px;height:12px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle,#fff8ed 0 19%,#d5edf6 38%,#a9d8e68c 62%,transparent 75%);
+  box-shadow:0 0 12px #fff8,0 0 29px #a9d8e6a1,0 0 66px var(--memory-accent);
+  opacity:0;
+}
+#app.obsidian .v114-gate-orbit{
+  position:absolute;left:0;top:0;width:86px;height:86px;
+  border:1px solid #a9d8e6b8;border-radius:50%;
+  box-shadow:0 0 22px #a9d8e624,inset 0 0 20px #c8a99020;
+  transform:translate(-50%,-50%) scale(.25);
+  opacity:0;
+}
+#app.obsidian .v114-gate-orbit-b{width:125px;height:125px;border-color:#c8a99079}
+#app.obsidian .memory-dive[data-phase="lock"] .v114-gate-core{
+  animation:v114-core-lock .24s ease-out both;
+}
+#app.obsidian .memory-dive[data-phase="flight"] .v114-gate-core{
+  animation:v114-core-flight .76s cubic-bezier(.18,.67,.28,1) both;
+}
+#app.obsidian .memory-dive[data-phase="flight"] .v114-gate-orbit{
+  animation:v114-orbit-flight .76s cubic-bezier(.12,.7,.18,1) both;
+}
+#app.obsidian .memory-dive[data-phase="flight"] .v114-gate-orbit-b{
+  animation-delay:70ms;
+}
+#app.obsidian .memory-dive[data-phase="reveal"] .v114-gate-core{
+  opacity:0;
+}
+@keyframes v114-core-lock{
+  from{opacity:0;transform:translate(-50%,-50%) scale(.45)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+@keyframes v114-core-flight{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  35%{opacity:1;transform:translate(-50%,-50%) scale(1.65)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(13)}
+}
+@keyframes v114-orbit-flight{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.22)}
+  14%{opacity:.72}
+  74%{opacity:.2}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(3.7)}
+}
+#app.obsidian .memory-dive .memory-dive-info{
+  width:min(560px,calc(100% - 38px));
+  bottom:clamp(72px,12vh,140px);
+  text-align:center;
+}
+#app.obsidian .memory-dive .memory-dive-eyebrow{
+  color:var(--memory-gold);font:500 10px/1.4 var(--font-interface);
+  letter-spacing:.17em;
+}
+#app.obsidian .memory-dive .memory-dive-name{
+  color:var(--warm-ivory);font:italic 400 clamp(33px,5.6vw,62px)/1.08 var(--font-literary);
+  margin:9px 0 8px;letter-spacing:-.03em;
+  text-shadow:0 0 19px #a9d8e63b;
+}
+#app.obsidian .memory-dive .v9-passage-status{
+  color:var(--stellar-ice);font:500 10px/1.5 var(--font-interface);
+  letter-spacing:.13em;margin-top:15px;
+}
+#app.obsidian .memory-dive .v114-passage-kind{
+  margin:7px auto 4px;color:var(--memory-gold);
+  font:500 10px/1.5 var(--font-interface);letter-spacing:.08em;
+  max-width:440px;overflow-wrap:anywhere;
+}
+#app.obsidian .memory-dive .v114-passage-quote{
+  margin:11px auto 15px;max-width:500px;
+  color:var(--warm-ivory);
+  font:italic 400 clamp(17px,2vw,23px)/1.45 var(--font-literary);
+  text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+#app.obsidian .memory-dive .memory-dive-progress{
+  width:min(300px,75%);height:2px;background:#a9d8e63a;
+}
+#app.obsidian .memory-dive .memory-dive-progress span{
+  background:linear-gradient(90deg,var(--memory-gold),var(--stellar-ice),#f9ece0);
+}
+#app.obsidian .memory-dive-close{
+  z-index:4;background:#0c1a27d9;border:1px solid #a9d8e666;
+  color:var(--warm-ivory);border-radius:10px;
+}
+#app.obsidian .memory-dive[data-phase="flight"] .v114-passage-quote{
+  animation:v114-copy-in .55s ease-out both;
+}
+@keyframes v114-copy-in{
+  from{opacity:.45;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+#app.obsidian .memory-dive[data-suspended="true"] .v114-star-gate *,
+#app.obsidian .memory-dive[data-suspended="true"] .v114-passage-quote{
+  animation-play-state:paused!important;
+}
+@media(max-width:819px){
+  #app.obsidian .memory-dive .memory-dive-info{
+    bottom:clamp(96px,14vh,140px);width:calc(100% - 34px);
+  }
+  #app.obsidian .memory-dive .memory-dive-name{font-size:clamp(31px,10vw,43px)}
+  #app.obsidian .memory-dive .v114-passage-kind{font-size:9px;letter-spacing:.035em}
+  #app.obsidian .memory-dive .v114-passage-quote{font-size:19px;line-height:1.34}
+  #app.obsidian .memory-dive-close{right:16px;top:calc(108px + env(safe-area-inset-top,0px));min-height:44px}
+  #app.obsidian .memory-dive .v9-passage-status{font-size:9px}
+}
+@media(max-width:819px) and (max-height:700px){
+  #app.obsidian .memory-dive .memory-dive-info{bottom:83px}
+  #app.obsidian .memory-dive .v114-passage-quote{font-size:17px;-webkit-line-clamp:2;margin:6px auto 10px}
+}
+@media(prefers-reduced-motion:reduce){
+  #app.obsidian .v114-star-gate{display:none!important}
+  #app.obsidian .v114-passage-quote{animation:none!important}
+  #app.obsidian .memory-dive .memory-dive-info{transition:none!important}
+}

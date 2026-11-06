@@ -1,0 +1,139 @@
+/* Market Remembers V11.5 — THE MEMORY ATLAS
+   An editorial index and navigable diagram of existing categories.
+   Lines join categories to the index only: no imaginary social graph.
+ */
+#app.obsidian .v10-archive .v79-archive-header{margin-bottom:20px}
+#app.obsidian .v10-archive .v79-archive-header h2{
+  font-size:clamp(40px,5vw,66px);
+  letter-spacing:-.045em;line-height:1.06
+}
+#app.obsidian .v10-archive .v79-archive-header p{
+  max-width:600px;line-height:1.7
+}
+#app.obsidian .v10-archive .v79-archive-ledger{
+  border-top:1px solid #a9d8e630;
+  border-bottom:1px solid #a9d8e630;
+  margin:21px 0;padding:17px 0
+}
+#app.obsidian .v115-atlas{
+  position:relative;isolation:isolate;
+  margin:27px 0 25px;padding:23px clamp(14px,3.2vw,28px) 20px;
+  border:1px solid #a9d8e633;border-radius:18px;
+  background:
+    radial-gradient(ellipse at 52% 55%,#27607127,transparent 69%),
+    linear-gradient(135deg,#101d2b,#0a111d);
+  color:#f3e9de;overflow:hidden;
+}
+#app.obsidian .v115-atlas::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,#b9dbe649 0 1px,transparent 1.6px);
+  background-size:45px 47px;opacity:.3;
+}
+#app.obsidian .v115-atlas-eyebrow{
+  position:relative;z-index:2;
+  color:#c8a990;letter-spacing:.16em;font:600 9px/1.4 var(--font-interface)
+}
+#app.obsidian .v115-atlas-head{position:relative;z-index:2;max-width:560px}
+#app.obsidian .v115-atlas-head h3{
+  color:#f3e9de;font:italic 400 clamp(25px,3.3vw,34px)/1.25 var(--font-literary);
+  margin:12px 0 8px;letter-spacing:-.02em
+}
+#app.obsidian .v115-atlas-head p{
+  color:#aebdc9;font:400 11px/1.7 var(--font-interface);
+  max-width:465px;margin:0
+}
+#app.obsidian .v115-atlas-map{
+  position:relative;isolation:isolate;height:275px;
+  width:min(100%,620px);margin:2px auto 0;
+}
+#app.obsidian .v115-atlas-lines{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;overflow:visible;
+}
+#app.obsidian .v115-atlas-lines line{
+  stroke:#8ec5d9;stroke-width:.21;stroke-opacity:.5;
+  stroke-dasharray:.8 1.7;vector-effect:non-scaling-stroke
+}
+#app.obsidian .v115-atlas-center{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font:400 37px/1 var(--font-literary);
+  color:#c8a990;text-shadow:0 0 22px #c8a99066;
+  pointer-events:none
+}
+#app.obsidian .v115-topic{
+  position:absolute;left:var(--x);top:var(--y);
+  transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:125px;min-height:76px;padding:8px 12px;
+  border:1px solid #a9d8e64a;border-radius:13px;
+  background:linear-gradient(135deg,#142935ef,#0b1928f4);
+  color:#e7f1f3;box-shadow:0 9px 27px #02070f66;
+  cursor:pointer;transition:border-color .2s,background .2s,transform .2s;
+}
+#app.obsidian .v115-topic:hover{border-color:#bde4eb;transform:translate(-50%,-50%) scale(1.035)}
+#app.obsidian .v115-topic[aria-pressed="true"]{
+  border-color:#c8a990;background:linear-gradient(135deg,#263442,#1c2432);
+  box-shadow:0 0 0 1px #c8a9902a,0 8px 28px #0a0f1c
+}
+#app.obsidian .v115-topic:focus-visible{outline:2px solid #b7e2ef;outline-offset:4px}
+#app.obsidian .v115-topic-symbol{font:400 19px/1 var(--font-literary);color:#a9d8e6}
+#app.obsidian .v115-topic[aria-pressed="true"] .v115-topic-symbol{color:#c8a990}
+#app.obsidian .v115-topic-name{font:500 12px/1.3 var(--font-interface);margin:3px 0 2px}
+#app.obsidian .v115-topic-count{font:500 10px/1.3 var(--font-interface);color:#a5c8d5}
+#app.obsidian .v115-atlas-actions{
+  position:relative;z-index:2;display:flex;gap:9px;flex-wrap:wrap;
+  border-top:1px solid #a9d8e630;padding-top:14px
+}
+#app.obsidian .v115-atlas-actions button{
+  border:1px solid #a9d8e65a;border-radius:10px;
+  background:#102431;color:#e1eff1;
+  min-height:44px;padding:10px 15px;
+  font:500 11px/1.4 var(--font-interface);
+}
+#app.obsidian .v115-atlas-actions button[aria-pressed="true"]{
+  color:#f8e6d0;border-color:#c8a99094
+}
+#app.obsidian .v115-atlas-actions button:hover:not(:disabled){background:#193444}
+#app.obsidian .v115-atlas-actions button:disabled{opacity:.45;cursor:not-allowed}
+#app.obsidian .v115-atlas-status{
+  position:relative;z-index:2;color:#96aebb;
+  font:400 10px/1.65 var(--font-interface);margin:11px 0 0
+}
+#app.obsidian .v10-archive .v10-archive-row{gap:11px;border-top:1px solid #a9d8e630}
+#app.obsidian .v10-archive .archive-card.v79-archive-record{
+  padding:22px 10px 23px;min-height:130px;gap:9px;
+}
+#app.obsidian .v10-archive .archive-card.v79-archive-record:hover{
+  background:linear-gradient(110deg,#1c354026,transparent)
+}
+#app.obsidian .v10-archive .v79-archive-record-quote{
+  font:italic 400 clamp(19px,2.5vw,26px)/1.42 var(--font-literary);
+  letter-spacing:-.02em;
+}
+#app.obsidian .v10-locate-star{
+  width:48px;min-width:48px;border-radius:13px;
+  color:#c5e6ef;background:#132636;
+}
+#app.obsidian .v10-locate-star:hover{background:#1a3947}
+@media(max-width:819px){
+  #app.obsidian .v115-atlas{margin:20px 0;padding:20px 12px 17px;border-radius:15px}
+  #app.obsidian .v115-atlas-head h3{font-size:27px}
+  #app.obsidian .v115-atlas-head p{font-size:10px}
+  #app.obsidian .v115-atlas-map{height:250px;margin-top:8px}
+  #app.obsidian .v115-topic{min-width:104px;min-height:74px;padding:8px 6px}
+  #app.obsidian .v115-topic-name{font-size:11px}
+  #app.obsidian .v115-topic-count{font-size:10px}
+  #app.obsidian .v115-atlas-actions{gap:7px}
+  #app.obsidian .v115-atlas-actions button{flex:1 1 130px}
+  #app.obsidian .v10-archive .archive-card.v79-archive-record{padding:17px 3px}
+  #app.obsidian .v10-archive .v79-archive-record-quote{font-size:20px;line-height:1.42}
+  #app.obsidian .v10-locate-star{width:44px;min-width:44px;height:44px}
+}
+@media(max-width:370px){
+  #app.obsidian .v115-atlas-map{height:232px}
+  #app.obsidian .v115-topic{min-width:89px;min-height:68px}
+  #app.obsidian .v115-topic-name{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  #app.obsidian .v115-topic{transition:none!important}
+}

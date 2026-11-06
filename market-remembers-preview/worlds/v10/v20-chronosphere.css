@@ -1,0 +1,153 @@
+/* MARKET REMEMBERS V20.3 — CHRONOSPHERE WAYFINDING
+ * The chronicle is an ordered index, NOT spatial or interval-proportional
+ * mapping. Four existing archived events; no invented coordinates or prices.
+ * Does not touch PEOPLE's WebGL/canvas pipeline. */
+#app .mh-chrono-nav[hidden]{display:none!important}
+#app .mh-chrono-nav{
+  position:absolute;top:clamp(138px,18vh,183px);left:clamp(20px,4.5vw,86px);
+  width:clamp(226px,21vw,282px);z-index:16;color:#f4e9ef;
+  pointer-events:auto;display:grid;gap:16px;
+  padding:18px 17px 17px;
+  border:1px solid rgba(229,186,208,.17);
+  border-radius:16px;
+  background:linear-gradient(160deg,rgba(13,16,29,.68),rgba(9,12,23,.36));
+  box-shadow:inset 0 1px rgba(250,222,233,.035);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+#app .mh-chrono-overline{
+  font:700 10px/1.3 Inter,system-ui,sans-serif;letter-spacing:.15em;
+  color:#d1a3bb;text-transform:uppercase;
+}
+#app .mh-chrono-head{display:grid;gap:6px}
+#app .mh-chrono-head strong{
+  font:500 clamp(22px,2vw,29px)/1.05 Georgia,"Times New Roman",serif;
+  letter-spacing:-.025em;color:#fbf1f4;
+}
+#app .mh-chrono-head p{
+  margin:0;line-height:1.48;font-size:11px;color:#a9aab9;
+}
+#app .mh-chrono-entries{display:grid;gap:5px;position:relative;isolation:isolate}
+#app .mh-chrono-entries:before{
+  content:"";position:absolute;left:17px;top:19px;bottom:19px;
+  width:1px;background:linear-gradient(180deg,rgba(225,159,186,.18),rgba(241,183,210,.60),rgba(202,159,204,.16));
+  pointer-events:none;z-index:-1;
+}
+#app .mh-chrono-entries button{
+  display:grid;grid-template-columns:34px 46px minmax(0,1fr);align-items:center;gap:7px;
+  width:100%;min-height:47px;min-width:0;padding:7px 8px 7px 0;
+  border:1px solid transparent;border-radius:10px;
+  color:#c1b6c8;background:transparent;text-align:left;cursor:pointer;
+  transition:background .17s ease,border-color .17s ease;
+}
+#app .mh-chrono-entries button:hover{background:rgba(131,83,110,.16)}
+#app .mh-chrono-entries button.is-active{
+  background:linear-gradient(100deg,rgba(133,65,104,.30),rgba(75,43,81,.10));
+  border-color:rgba(231,163,195,.38);
+  color:#ffe9f2;
+}
+#app .mh-chrono-entries button:focus-visible{outline:2px solid #ffdeeb;outline-offset:3px}
+#app .mh-chrono-dot{
+  position:relative;width:11px;height:11px;justify-self:center;
+  border-radius:50%;border:1px solid #caa5bd;
+  background:radial-gradient(circle,#e1bccd 0 12%,#784565 50%,#271d38 75%);
+  box-shadow:0 0 0 4px rgba(124,78,107,.19);
+}
+#app .mh-chrono-entries button.is-active .mh-chrono-dot{
+  border-color:#fff3f9;background:radial-gradient(circle,#fff 0 25%,#f2aeca 52%,#8b4269 86%);
+  box-shadow:0 0 0 5px rgba(232,141,184,.18),0 0 18px rgba(252,171,201,.52);
+}
+#app .mh-chrono-year{
+  font:700 13px/1.15 Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;
+  letter-spacing:.015em;color:inherit;
+}
+#app .mh-chrono-event-label{
+  font:550 11px/1.35 Inter,system-ui,sans-serif;color:#c6becc;
+  overflow-wrap:anywhere;
+}
+#app .mh-chrono-entries button.is-active .mh-chrono-event-label{color:#ffe1ec}
+#app .mh-chrono-focus{
+  display:grid;gap:5px;border-top:1px solid rgba(221,189,211,.16);
+  padding:13px 0 1px;
+}
+#app .mh-chrono-focus span{
+  color:#c6b5c7;font:750 10px/1.4 Inter,system-ui,sans-serif;
+  letter-spacing:.11em;
+}
+#app .mh-chrono-focus strong{
+  font:500 20px/1.18 Georgia,serif;color:#fbe9f0;letter-spacing:-.017em;
+}
+#app .mh-chrono-focus small{
+  font:450 11px/1.5 Inter,system-ui,sans-serif;color:#aeb1c0;
+}
+#app .mh-chrono-note{
+  margin:0;color:#858799;font:400 10px/1.45 Inter,system-ui,sans-serif;
+}
+/* A selected star has an identity; inactive stars remain compact year lights. */
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active .mh-beacon-year{
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  padding:7px 10px;border:1px solid rgba(251,186,216,.74);
+  border-radius:9px;background:linear-gradient(130deg,rgba(85,43,70,.97),rgba(24,23,43,.98));
+  box-shadow:0 10px 27px rgba(4,3,12,.36),0 0 13px rgba(218,135,175,.2);
+}
+#app .mh-beacon-year b{font-size:inherit;line-height:1.1;color:inherit}
+#app .mh-beacon.is-active .mh-beacon-year small{
+  display:block;max-width:156px;
+  color:#fae2ec;font:550 10px/1.35 Inter,system-ui,sans-serif;
+  letter-spacing:.015em;white-space:normal;
+}
+#app .mh-beacon[data-mh-label-side="left"] .mh-beacon-year{
+  left:auto!important;right:32px!important;
+  border-radius:9px!important;text-align:left;
+}
+@media(max-width:1090px) and (min-width:820px){
+  #app .mh-chrono-nav{
+    top:117px;left:19px;width:211px;gap:11px;padding:13px 11px 12px;
+  }
+  #app .mh-chrono-head strong{font-size:21px}
+  #app .mh-chrono-entries button{grid-template-columns:28px 41px minmax(0,1fr);gap:5px}
+  #app .mh-chrono-entries:before{left:14px}
+  #app .mh-chrono-event-label{font-size:10px}
+}
+@media(max-width:819px){
+  #app .mh-chrono-nav{
+    top:151px;left:12px;right:12px;width:auto;
+    padding:9px 11px 10px;gap:7px;border-radius:13px;
+    background:linear-gradient(160deg,rgba(13,16,29,.85),rgba(10,12,26,.68));
+  }
+  #app .mh-chrono-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+  #app .mh-chrono-head strong{font-size:17px}
+  #app .mh-chrono-head p{display:none}
+  #app .mh-chrono-overline{font-size:10px;letter-spacing:.08em}
+  #app .mh-chrono-entries{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  #app .mh-chrono-entries:before{left:12%;right:12%;top:10px;bottom:auto;width:auto;height:1px}
+  #app .mh-chrono-entries button{
+    min-height:45px;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:4px;padding:5px 2px;border-radius:8px;
+  }
+  #app .mh-chrono-dot{width:7px;height:7px}
+  #app .mh-chrono-year{font-size:12px}
+  #app .mh-chrono-event-label{display:none}
+  #app .mh-chrono-focus{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:7px 0 0}
+  #app .mh-chrono-focus span{display:none}
+  #app .mh-chrono-focus strong{font-size:14px;line-height:1.22}
+  #app .mh-chrono-focus small{font-size:10px;text-align:right;line-height:1.3;white-space:nowrap}
+  #app .mh-chrono-note{display:none}
+  #app.mh-v16 .mh-beacon.is-active .mh-beacon-year small{max-width:112px;font-size:10px}
+}
+@media(max-width:819px) and (max-height:750px){
+  #app .mh-chrono-focus{display:none}
+}
+@media(max-width:819px) and (max-height:660px){
+  /* Top 110px mode-switch remains above the time navigation. */
+  #app .mh-chrono-nav{top:149px;padding:7px 10px;gap:4px}
+  #app .mh-chrono-focus{display:none}
+}
+@media(max-width:819px) and (orientation:landscape) and (max-height:650px){
+  #app .mh-chrono-nav{top:76px;left:12px;right:auto;width:min(216px,45vw)}
+  #app .mh-chrono-head strong{display:none}
+  #app .mh-chrono-entries{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  #app .mh-chrono-entries button{transition:none!important}
+}

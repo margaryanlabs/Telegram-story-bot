@@ -1,0 +1,205 @@
+/* THE MARKET REMEMBERS — Living Universe / cinematic depth v2
+ * Purely optical layers behind the actual 3D globe and interactive stars.
+ * No new event listeners, animation loop, canvas, remote textures or timers.
+ */
+#app.obsidian .v127-space-field{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+  background:
+    radial-gradient(ellipse 34% 16% at 82% 26%,rgba(122,80,165,.14),transparent 97%),
+    radial-gradient(ellipse 50% 33% at 73% 58%,rgba(22,115,166,.12),transparent 90%),
+    radial-gradient(ellipse 39% 20% at 9% 82%,rgba(115,69,151,.11),transparent 92%);
+  opacity:1;isolation:isolate;
+}
+#app.obsidian .v127-space-field,
+#app.obsidian .v127-space-field *{
+  pointer-events:none!important;
+  user-select:none!important;
+}
+#app.obsidian .v127-space-field span{
+  display:block;position:absolute;pointer-events:none;
+}
+/* A genuine background landmark: a faint spiral-galaxy optical disc.
+   Multiple falloffs convey light/structure but preserve text contrast. */
+#app.obsidian .v127-galaxy{
+  width:56%;height:31%;right:-8%;top:15%;
+  transform:rotate(-27deg);
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse 17% 26% at 57% 49%,
+      rgba(255,219,198,.79) 0%,rgba(239,182,222,.48) 22%,
+      rgba(174,123,210,.22) 43%,transparent 91%),
+    radial-gradient(ellipse 37% 31% at 53% 52%,
+      transparent 12%,rgba(166,116,225,.23) 29%,
+      rgba(128,81,177,.20) 47%,transparent 83%),
+    radial-gradient(ellipse 62% 38% at 52% 51%,
+      transparent 34%,rgba(140,86,196,.25) 44%,
+      rgba(126,95,210,.10) 59%,transparent 82%),
+    radial-gradient(ellipse 83% 49% at 55% 52%,
+      transparent 43%,rgba(59,120,180,.11) 63%,transparent 99%);
+  -webkit-mask-image:radial-gradient(ellipse,#000 22%,#0009 43%,transparent 82%);
+  mask-image:radial-gradient(ellipse,#000 22%,#0009 43%,transparent 82%);
+  opacity:.97;
+}
+#app.obsidian .v127-galaxy::before{
+  content:"";position:absolute;inset:4% 0%;border-radius:50%;
+  background:
+    conic-gradient(from 47deg at 56% 51%,
+      transparent 0deg,rgba(162,119,223,.12) 31deg,
+      rgba(196,145,237,.23) 61deg,transparent 83deg,
+      transparent 135deg,rgba(121,171,226,.16) 157deg,
+      rgba(192,132,217,.19) 181deg,transparent 214deg,
+      transparent 285deg,rgba(211,169,221,.13) 312deg,transparent 350deg);
+  -webkit-mask-image:radial-gradient(ellipse,
+      transparent 18%,#000 32%,#000b 52%,transparent 76%);
+  mask-image:radial-gradient(ellipse,
+      transparent 18%,#000 32%,#000b 52%,transparent 76%);
+  filter:blur(5px);
+}
+#app.obsidian .v127-galaxy::after{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  background:
+    radial-gradient(circle at 57% 49%,#ffeff7 0 1px,rgba(236,188,241,.7) 2px,transparent 9px),
+    radial-gradient(circle at 24% 43%,rgba(220,208,255,.55) 0 .7px,transparent 2px),
+    radial-gradient(circle at 71% 36%,rgba(220,208,255,.47) 0 .7px,transparent 2px),
+    radial-gradient(circle at 35% 65%,rgba(207,184,250,.5) 0 .6px,transparent 2px);
+  opacity:.82;
+}
+/* A curved purple-blue aurora river crosses the far field, explicitly
+   beneath the planet. The left side stays nearly black for legible copy. */
+#app.obsidian .v127-nebula-river{
+  width:94%;height:47%;left:25%;top:14%;
+  transform:rotate(-27deg);
+  background:
+    radial-gradient(ellipse 60% 13% at 65% 43%,
+      rgba(113,85,192,.35),rgba(106,79,164,.14) 39%,transparent 96%),
+    radial-gradient(ellipse 47% 12% at 43% 58%,
+      rgba(60,125,189,.21),rgba(43,96,149,.09) 52%,transparent 99%),
+    radial-gradient(ellipse 32% 10% at 70% 62%,
+      rgba(184,104,172,.18),transparent 99%),
+    radial-gradient(ellipse 30% 13% at 33% 29%,
+      rgba(69,112,169,.12),transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#0009 26%,#000 63%,transparent 100%);
+  mask-image:linear-gradient(90deg,transparent,#0009 26%,#000 63%,transparent 100%);
+  opacity:.80;
+}
+#app.obsidian .v127-nebula-river::before{
+  content:"";position:absolute;inset:9% 4%;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse 62% 10% at 52% 58%,
+      rgba(119,152,222,.22),transparent 94%),
+    radial-gradient(ellipse 53% 7% at 58% 37%,
+      rgba(156,109,225,.18),transparent 96%),
+    radial-gradient(ellipse 34% 7% at 74% 68%,
+      rgba(194,139,193,.19),transparent 96%);
+  transform:rotate(5deg);
+  filter:blur(7px);
+}
+/* Lower-left counternebula echoes warm sunlight on the globe. */
+#app.obsidian .v127-nebula-crown{
+  left:-17%;bottom:-7%;width:85%;height:43%;
+  transform:rotate(20deg);
+  background:
+    radial-gradient(ellipse 50% 10% at 33% 59%,
+      rgba(225,155,141,.20),rgba(164,106,145,.16) 35%,transparent 95%),
+    radial-gradient(ellipse 58% 16% at 44% 46%,
+      rgba(132,86,189,.30),rgba(89,63,141,.15) 43%,transparent 96%),
+    radial-gradient(ellipse 64% 15% at 58% 74%,
+      rgba(66,126,184,.23),transparent 98%),
+    radial-gradient(ellipse 48% 10% at 48% 30%,
+      rgba(145,112,186,.13),transparent 96%);
+  -webkit-mask-image:radial-gradient(ellipse,#0008 8%,#000 30%,transparent 84%);
+  mask-image:radial-gradient(ellipse,#0008 8%,#000 30%,transparent 84%);
+  opacity:.88;
+}
+#app.obsidian .v127-nebula-crown::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 27% 53%,rgba(254,216,190,.58) 0 1.1px,transparent 4px),
+    radial-gradient(circle at 36% 68%,rgba(216,180,246,.52) 0 .7px,transparent 4px),
+    radial-gradient(circle at 65% 48%,rgba(169,211,254,.56) 0 .8px,transparent 4px);
+}
+/* Planet and text gain a more restrained, dense spatial field. */
+#app.obsidian .scene-shading{
+  background:
+    radial-gradient(ellipse 55% 56% at 62% 56%,
+      transparent 36%,rgba(1,5,14,.04) 67%,rgba(1,4,12,.50) 100%),
+    linear-gradient(90deg,rgba(3,7,17,.49),rgba(3,7,17,.12) 41%,transparent 73%);
+}
+/* The globe owns the rim: the CSS aura supports, never covers, its mesh. */
+#app.obsidian .v81-globe-aura::before{
+  border-color:rgba(132,224,243,.30);
+  box-shadow:
+    0 0 9px rgba(120,229,246,.15),
+    0 0 28px rgba(91,204,222,.11),
+    inset 0 0 24px rgba(113,217,238,.11);
+}
+#app.obsidian .v81-globe-aura::after{
+  opacity:.63;
+}
+@media(max-width:819px){
+  #app.obsidian .v127-space-field{
+    background:
+      radial-gradient(ellipse 43% 19% at 86% 31%,rgba(112,71,153,.15),transparent 97%),
+      radial-gradient(ellipse 54% 36% at 67% 61%,rgba(22,120,166,.09),transparent 92%),
+      radial-gradient(ellipse 53% 24% at 5% 84%,rgba(116,64,156,.11),transparent 95%);
+  }
+  #app.obsidian .v127-galaxy{
+    width:78%;height:29%;right:-16%;top:13%;
+    opacity:.95;
+  }
+  #app.obsidian .v127-nebula-river{
+    width:118%;height:43%;left:16%;top:20%;
+    opacity:.61;
+  }
+  #app.obsidian .v127-nebula-crown{
+    width:115%;height:38%;left:-30%;bottom:-4%;
+    opacity:.75;
+  }
+  #app.obsidian .scene-shading{
+    background:
+      radial-gradient(ellipse 58% 57% at 59% 55%,
+        transparent 31%,rgba(2,5,13,.11) 73%,rgba(2,5,13,.48) 100%),
+      linear-gradient(90deg,rgba(2,6,15,.29),transparent 70%);
+  }
+}
+@media(max-width:819px) and (max-height:650px){
+  #app.obsidian .v127-galaxy::before,
+  #app.obsidian .v127-nebula-river::before{filter:none}
+  #app.obsidian .v127-nebula-crown{opacity:.49}
+}
+@media(prefers-reduced-motion:reduce){
+  #app.obsidian .v127-space-field,
+  #app.obsidian .v127-space-field *{
+    animation:none!important;transition:none!important;
+  }
+}
+/* V3: a self-hosted, deterministic SVG spiral and fractal nebula replaces
+   the flat CSS galaxy silhouette. This is rasterized once by the browser,
+   stays behind the existing WebGL canvas and does not receive touches. */
+#app.obsidian .v127-space-field{
+  background-image:
+    url("v12-cinematic-galaxy.svg"),
+    radial-gradient(ellipse 55% 37% at 78% 54%,rgba(30,75,117,.13),transparent 88%);
+  background-repeat:no-repeat,no-repeat;
+  background-position:65% center,center;
+  background-size:cover,cover;
+  /* Header and tab navigation must never sit under the spiral core. */
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.24) 12%,#000 32%);
+  mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.24) 12%,#000 32%);
+}
+/* Avoid two superimposed spiral centres and the older purple blur overlay. */
+#app.obsidian .v127-galaxy{
+  opacity:.10!important;
+}
+#app.obsidian .v127-nebula-river{opacity:.27!important}
+#app.obsidian .v127-nebula-crown{opacity:.35!important}
+@media(max-width:819px){
+  #app.obsidian .v127-space-field{
+    background-position:66% center,center;
+    background-size:cover,cover;
+  }
+  #app.obsidian .v127-galaxy{opacity:.08!important}
+  #app.obsidian .v127-nebula-river{opacity:.17!important}
+  #app.obsidian .v127-nebula-crown{opacity:.23!important}
+}

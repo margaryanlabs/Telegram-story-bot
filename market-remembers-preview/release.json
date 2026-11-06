@@ -1,0 +1,18 @@
+{
+  "app": "Market Remembers",
+  "revision": "V22 Preview",
+  "canonical": "margaryanlabs/Marketremember",
+  "legacyBackup": "backup/market-remembers-universe-20261101-before-v22",
+  "worldsAvailable": [
+    "PEOPLE",
+    "EVENT CORE"
+  ],
+  "worldsPlanned": [
+    "DECISIONS",
+    "AGORA",
+    "MIRROR",
+    "GUILDS"
+  ],
+  "publishing": "demo, public client assets only",
+  "dataStorage": "browser only"
+}

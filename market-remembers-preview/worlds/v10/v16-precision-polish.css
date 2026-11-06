@@ -1,0 +1,272 @@
+/* MARKET REMEMBERS V16 — PRECISION POLISH
+ * Deliberate V16 refinement, not a redesign or V17 replacement.
+ * EVERY selector is scoped to the financial world. PEOPLE is unmodified.
+ * A small CSS-only layer is easy to remove/revert.
+ */
+#app.mh-v16[data-mh-mode="events"],
+#app.mh-v16[data-mh-mode="connections"]{
+  --v16p-ink:#f1eff5;
+  --v16p-silver:#c4d0e2;
+  --v16p-rose:#cf94ac;
+  --v16p-edge:rgba(175,187,213,.28);
+}
+/* 01 — Deep-space environment: more depth, not a bright wallpaper. */
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-cosmos,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-cosmos{
+  background:
+    radial-gradient(ellipse 43% 51% at 55% 48%,rgba(63,66,113,.22) 0%,rgba(42,26,58,.14) 58%,transparent 86%),
+    radial-gradient(ellipse 55% 43% at 84% 23%,rgba(75,37,69,.17),transparent 81%),
+    radial-gradient(ellipse 46% 34% at 15% 90%,rgba(44,66,105,.16),transparent 86%),
+    linear-gradient(138deg,#070913 0%,#0b0c18 48%,#05060e 100%);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-cosmos:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-cosmos:before{
+  opacity:.69;
+  background-image:
+    radial-gradient(1px 1px at 7% 16%,#efdee3ce 95%,transparent),
+    radial-gradient(1.2px 1.2px at 41% 67%,#bac5ddc0 95%,transparent),
+    radial-gradient(.7px .7px at 77% 24%,#dcc4d6b7 95%,transparent),
+    radial-gradient(1px 1px at 17% 93%,#b6cdeaaf 95%,transparent),
+    radial-gradient(.8px .8px at 96% 79%,#e8d5db8f 95%,transparent);
+  background-size:321px 401px,461px 351px,419px 477px,491px 337px,377px 439px;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-nebula,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-nebula{
+  opacity:.51;
+  filter:blur(40px);
+  background:
+    radial-gradient(ellipse 33% 25% at 72% 17%,rgba(126,54,97,.30),transparent 80%),
+    radial-gradient(ellipse 40% 33% at 13% 79%,rgba(55,79,125,.23),transparent 84%),
+    radial-gradient(ellipse 29% 21% at 53% 57%,rgba(114,87,126,.11),transparent 85%);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-aureole,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-aureole{
+  opacity:.57;filter:blur(19px);
+  background:radial-gradient(circle,transparent 52%,rgba(167,181,222,.12) 64%,rgba(149,82,119,.085) 70%,transparent 82%);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-crimson-orbit,
+#app.mh-v16[data-mh-mode="connections"] .mh-crimson-orbit{opacity:.13}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-ring,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-ring{border-color:rgba(202,208,230,.27);box-shadow:0 0 9px rgba(175,173,210,.07);opacity:.40}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-ring-b,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-ring-b{border-color:rgba(185,122,159,.25);opacity:.23}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-halo,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-halo{
+  background:radial-gradient(circle,transparent 53%,rgba(179,190,226,.11) 66%,transparent 76%);
+  filter:blur(13px);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-tick-arc,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-tick-arc{opacity:.49}
+#app.mh-v16[data-mh-mode="events"] .mh-v16-scan,
+#app.mh-v16[data-mh-mode="connections"] .mh-v16-scan{opacity:.39}
+/* 02 — Beacons stay instrument-sized, pinned to the actual sphere. */
+#app.mh-v16[data-mh-mode="events"] .mh-beacon,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon{
+  transition:opacity .22s ease;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon:before{
+  content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:13px;height:13px;border-radius:50%;
+  border:1px solid rgba(239,225,237,.75);
+  background:radial-gradient(circle at 41% 35%,#fff8f9 2%,#e6cade 20%,#b39ac1 38%,#5a4b6e 65%,transparent 82%);
+  box-shadow:0 0 0 3px rgba(187,155,193,.16),0 0 15px rgba(214,171,202,.37);
+  pointer-events:none;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active:before,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active:before{
+  border-color:#fff1f7;
+  background:radial-gradient(circle,#fff 0 17%,#ffe0eb 31%,#e08cae 52%,transparent 80%);
+  box-shadow:0 0 0 5px rgba(222,135,170,.29),0 0 26px rgba(235,159,185,.70);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon-year{
+  border-color:rgba(154,146,181,.38);
+  color:#d3d6e2;
+  background:linear-gradient(105deg,rgba(25,27,42,.89),rgba(13,16,30,.88));
+  box-shadow:0 5px 18px rgba(0,0,0,.40);
+  text-shadow:0 1px 4px rgba(0,0,0,.56);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active .mh-beacon-year{
+  color:#ffedf5;
+  border-color:rgba(234,165,189,.66);
+  background:linear-gradient(100deg,rgba(84,41,65,.93),rgba(29,24,43,.93));
+}
+#app.mh-v16[data-mh-mode="connections"] .mh-thematic-lines path{
+  stroke:rgba(202,175,198,.77);
+  stroke-opacity:.55;stroke-width:1.1;
+  stroke-dasharray:3 8;filter:none;
+}
+/* 03 — Compact research dock: layered glass, clean optical border, precise type. */
+#app.mh-v16[data-mh-mode="events"] .mh-history-panel,
+#app.mh-v16[data-mh-mode="connections"] .mh-history-panel{
+  background:linear-gradient(150deg,rgba(25,28,44,.95) 0%,rgba(11,14,26,.98) 78%);
+  border:1px solid rgba(161,155,183,.55);
+  box-shadow:0 20px 70px rgba(0,0,0,.66),inset 0 1px 0 rgba(226,219,239,.08),0 0 30px rgba(140,77,109,.09);
+}
+#app.mh-v16 .mh-history-panel .mh-panel-grip strong{
+  color:#f4eef5;letter-spacing:-.025em;line-height:1.22;
+}
+#app.mh-v16 .mh-history-panel .mh-panel-grip small{color:#c8a4b4}
+#app.mh-v16 .mh-history-panel .mh-panel-grip em{
+  color:#f1c4d6;letter-spacing:.10em;
+}
+#app.mh-v16 .mh-core-tabs{
+  border-color:rgba(145,132,164,.39);
+  background:linear-gradient(125deg,rgba(12,12,23,.92),rgba(20,19,34,.92));
+}
+#app.mh-v16 .mh-core-tabs button{transition:background .18s ease,color .18s ease,box-shadow .18s ease}
+#app.mh-v16 .mh-core-tabs button.is-active{
+  background:linear-gradient(115deg,#71384e,#512d46);
+  color:#fff4f8;box-shadow:inset 0 1px 0 rgba(255,218,233,.13),0 0 14px rgba(137,62,98,.11);
+}
+#app.mh-v16 .mh-timeline button{
+  background:linear-gradient(145deg,rgba(31,35,51,.88),rgba(18,20,33,.92));
+  border-color:rgba(117,128,154,.37);
+  transition:border-color .18s ease,background .18s ease;
+}
+#app.mh-v16 .mh-timeline button.is-active{border-color:rgba(232,152,176,.67);background:linear-gradient(110deg,rgba(101,48,72,.79),rgba(39,33,52,.90))}
+#app.mh-v16 .mh-timeline button:hover{border-color:rgba(207,169,190,.64)}
+/* 04 — Evidence is modular: 3 restrained, distinct research surfaces. */
+#app.mh-v16 .mh-v16-record{gap:12px}
+#app.mh-v16 .mh-v16-record-title{gap:11px}
+#app.mh-v16 .mh-v16-record-title h2{font-weight:500;color:#f6eef5}
+#app.mh-v16 .mh-v16-research-card{
+  position:relative;
+  border-radius:12px;
+  border:1px solid rgba(128,143,171,.36);
+  background:linear-gradient(128deg,rgba(35,43,63,.76),rgba(16,21,37,.79));
+  box-shadow:inset 0 1px 0 rgba(234,229,243,.046),0 8px 24px rgba(0,0,0,.12);
+  padding:14px 12px;gap:11px;
+}
+#app.mh-v16 .mh-v16-context{border-left:2px solid rgba(159,190,223,.57)}
+#app.mh-v16 .mh-v16-transmission{border-left:2px solid rgba(186,170,217,.57)}
+#app.mh-v16 .mh-v16-lesson{
+  border-color:rgba(172,117,147,.42);
+  border-left:2px solid rgba(218,130,160,.75);
+  background:linear-gradient(130deg,rgba(63,36,55,.53),rgba(22,24,39,.82));
+}
+#app.mh-v16 .mh-v16-card-icon{
+  background:linear-gradient(150deg,rgba(49,58,79,.97),rgba(26,30,49,.95));
+  border-color:rgba(160,173,201,.39);color:#d0d1e0;
+}
+#app.mh-v16 .mh-v16-research-card h3{color:#c5c7db;letter-spacing:.13em}
+#app.mh-v16 .mh-v16-lesson h3{color:#e8b0c4}
+#app.mh-v16 .mh-v16-research-card p{
+  color:#dce0ea;
+  line-height:1.55;
+}
+#app.mh-v16 .mh-v16-steps li>span{
+  background:rgba(40,44,65,.86);border-color:rgba(174,162,187,.51);color:#e0d8e5;
+}
+#app.mh-v16 .mh-v16-card-footer button{
+  background:linear-gradient(110deg,#6b384f,#46293f);
+  border-color:rgba(205,136,167,.62);
+  transition:filter .18s ease,transform .18s ease;
+}
+#app.mh-v16 .mh-v16-card-footer button:hover{filter:brightness(1.13)}
+#app.mh-v16 .mh-v16-related-card{
+  border-color:rgba(139,143,172,.49);
+  background:linear-gradient(141deg,rgba(39,43,62,.86),rgba(18,22,38,.92));
+  transition:border-color .18s ease,transform .18s ease;
+}
+#app.mh-v16 .mh-v16-related-card:hover{border-color:rgba(219,176,197,.69);transform:translateY(-1px)}
+/* 05 — Micro-interactions only. Browser-compatible, cheap transforms/opacity. */
+@media (prefers-reduced-motion:no-preference){
+  #app.mh-v16[data-mh-mode="events"] .mh-v16-ring-a,
+  #app.mh-v16[data-mh-mode="connections"] .mh-v16-ring-a{
+    animation:mhV16pOrbit 44s ease-in-out infinite alternate;
+  }
+  #app.mh-v16[data-mh-mode="events"] .mh-v16-scan,
+  #app.mh-v16[data-mh-mode="connections"] .mh-v16-scan{
+    animation:mhV16pScan 13s ease-in-out infinite alternate;
+  }
+  #app.mh-v16 .mh-history-panel .mh-panel-body{
+    animation:mhV16pAppear .24s cubic-bezier(.2,.7,.3,1) both;
+  }
+  #app.mh-v16 .mh-beacon.is-active .mh-beacon-ring{
+    animation:mhV16pNode 3.8s ease-in-out infinite;
+  }
+}
+@keyframes mhV16pOrbit{
+  from{transform:translate(-50%,-50%) rotate(-30deg) rotateX(72deg)}
+  to{transform:translate(-50%,-50%) rotate(-18deg) rotateX(70deg)}
+}
+@keyframes mhV16pScan{
+  from{opacity:.23;transform:translate(-50%,-50%) rotate(-3deg)}
+  to{opacity:.39;transform:translate(-50%,-50%) rotate(4deg)}
+}
+@keyframes mhV16pNode{
+  0%,100%{opacity:.44;transform:scale(1)}
+  50%{opacity:.76;transform:scale(1.11)}
+}
+@keyframes mhV16pAppear{
+  from{opacity:.50;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+/* 06 — Protect Samsung/Android composition and reading ergonomics. */
+@media(max-width:819px){
+  #app.mh-v16[data-mh-mode="events"] .mh-crimson-nebula,
+  #app.mh-v16[data-mh-mode="connections"] .mh-crimson-nebula{
+    opacity:.39;filter:blur(31px);
+  }
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel,
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel{
+    left:12px;right:12px;
+    background:linear-gradient(147deg,rgba(25,29,46,.974),rgba(12,15,27,.985));
+  }
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel.is-expanded,
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-expanded{
+    max-height:min(66dvh,535px);
+    overflow-y:auto;overscroll-behavior:contain;
+    scrollbar-width:thin;scrollbar-color:#785873 #111522;
+  }
+  #app.mh-v16 .mh-panel-grip{
+    min-height:42px;
+  }
+  #app.mh-v16 .mh-panel-grip strong{font-size:15px}
+  #app.mh-v16 .mh-v16-research-card{
+    padding:12px 11px;gap:10px;
+  }
+  #app.mh-v16 .mh-v16-research-card p{font-size:12px;line-height:1.5}
+  #app.mh-v16 .mh-v16-record-title h2{font-size:21px}
+  #app.mh-v16 .mh-v16-related-grid{gap:7px}
+  #app.mh-v16 .mh-v16-related-card{padding:10px}
+  #app.mh-v16 .mh-v16-tether{opacity:.33}
+}
+@media(max-width:819px) and (max-height:690px){
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel.is-expanded,
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-expanded{
+    max-height:64dvh;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #app.mh-v16 .mh-v16-ring-a,
+  #app.mh-v16 .mh-v16-scan,
+  #app.mh-v16 .mh-beacon-ring,
+  #app.mh-v16 .mh-history-panel .mh-panel-body{animation:none!important;transition:none!important}
+}
+
+
+/* V16 portal still uses its original cinematic sequence; only its optics
+   receive a warmer silver glint, so timing and the two-world logic are safe. */
+#app .mh-v16-portal-iris{
+  box-shadow:0 0 76px rgba(159,108,160,.24),0 0 19px rgba(213,212,235,.28),
+   inset 0 0 45px rgba(179,143,188,.24);
+  border-color:rgba(231,223,236,.69);
+}
+#app .mh-v16-portal-convergence span{
+  background:linear-gradient(90deg,transparent 0%,rgba(164,170,211,.14) 37%,
+   rgba(249,240,248,.70) 50%,rgba(172,100,140,.24) 67%,transparent 100%);
+}
+#app .mh-v16-portal-copy strong{letter-spacing:-.046em;text-shadow:0 0 36px rgba(212,178,212,.24)}
+@media(prefers-reduced-motion:no-preference){
+  #app.mh-v16[data-mh-mode="connections"] .mh-thematic-lines path{
+    animation:mhV16pSignalFlow 19s linear infinite;
+  }
+}
+@keyframes mhV16pSignalFlow{to{stroke-dashoffset:-88}}
+@media(prefers-reduced-motion:reduce){
+  #app.mh-v16 .mh-thematic-lines path{animation:none!important}
+}
