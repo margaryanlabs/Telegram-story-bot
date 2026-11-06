@@ -44,7 +44,7 @@ const chamber=document.createElement('section');
 chamber.id='v26Chamber';chamber.className='v26-chamber';chamber.hidden=true;
 chamber.setAttribute('aria-label','Лаборатория финансового мира');
 chamber.innerHTML=[
- '<header class="v26-chamber-header"><div class="v26-chamber-brand"><strong>VETO.</strong><small>MARKET REMEMBERS / FINANCIAL UNIVERSE</small></div><button type="button" class="v26-close" id="v26Back" aria-label="Вернуться к солнечной системе">← ВО ВСЕЛЕННУЮ</button></header>',
+ '<header class="v26-chamber-header"><div class="v26-chamber-brand"><img class="v27-veto-mark" src="v10/v27-veto-mark.svg" alt="" width="32" height="32"><span><strong>VETO</strong><small>MARKET REMEMBERS / FINANCIAL UNIVERSE</small></span></div><button type="button" class="v26-close" id="v26Back" aria-label="Вернуться к солнечной системе">← ВО ВСЕЛЕННУЮ</button></header>',
  '<div class="v26-chamber-content"><span class="v26-chamber-eyebrow" id="v26Tag"></span><h2 id="v26Title"></h2><p class="v26-chamber-description" id="v26Description"></p>',
  '<div class="v26-sheet" id="v26Tools"></div><p class="v26-note">Личный эксперимент: данные остаются только в этом браузере. Общих аккаунтов и публичных обсуждений пока нет.</p><p id="v26Status" class="v26-status" role="status" aria-live="polite"></p></div>'
 ].join('');

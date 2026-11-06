@@ -1,20 +1,26 @@
 {
-  "name": "Market Remembers",
-  "version": "26.0.0",
-  "source": "margaryanlabs/Marketremember",
-  "source_commit": "76d2e87451245a0c1f0c2f951e1b50589744d3be",
-  "design": "VETO red-black six-world universe",
-  "originals": [
-    "PEOPLE",
-    "EVENT CORE"
-  ],
-  "new_planets": [
-    "DECISIONS",
-    "AGORA",
-    "MIRROR",
-    "GUILDS"
-  ],
-  "chambers": "interactive browser-local research labs",
-  "status": "preview",
-  "warning": "No live community, authenticated accounts, real-money trading or verified P&L"
+  "product": "Market Remembers",
+  "version": "27.0.0",
+  "canonical": "margaryanlabs/Marketremember",
+  "brand_source": "margaryanlabs/decision-command",
+  "brand_source_commit": "d030c1d9c267e30d428dbf05b2862545aac36dc0",
+  "theme": {
+    "primary": "#ff553d",
+    "background": "#000000",
+    "font": "Inter",
+    "mark": "veto-mark.svg"
+  },
+  "worlds": {
+    "original": [
+      "PEOPLE",
+      "EVENT CORE"
+    ],
+    "local_experiments": [
+      "DECISIONS",
+      "AGORA",
+      "MIRROR",
+      "GUILDS"
+    ]
+  },
+  "preview_status": "design-review; mobile physical WebGL QA not certified"
 }
