@@ -25,6 +25,14 @@
      nav.setAttribute('aria-label','Перейти в раздел медиа');
      // V7.9 owns link routing; move its actual nodes, never clone their listeners.
      shell.insertBefore(dock,anchor);
+     if(mode==='cinema'){
+       const cinemaNav=$('.cinema-section-nav',anchor);
+       const hero=$('#cinemaHero',anchor);
+       if(cinemaNav&&hero&&cinemaNav.parentNode===hero.parentNode){
+         hero.parentNode.insertBefore(cinemaNav,hero);
+         cinemaNav.classList.add('v9-cinema-primary-menu');
+       }
+     }
    }
  }
  const gameScreen=$('.screen[data-screen="play"]');
