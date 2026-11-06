@@ -244,3 +244,26 @@
 1. Re-read PR HEAD, worklog and source. In a proper checkout execute `node --test tests/vetogram-v9-chat-poll-cooldown.test.js tests/vetogram-v9-telegram-auth-reliability.test.js tests/telegram-chat-send.test.js tests/telegram-live-chats.test.js`, `npm run check`, `npm run qa:preview:offline` and build; fix any failures before preview.
 2. Continue focused **message send reliability**: verify duplicate-safe random_id handling for uncertain send/owner switch, composer/draft/scroll behavior and Business explicit consent with mocks; never send real messages or request OTP without a test account and consent.
 3. Only after successful gates, deploy to isolated Render `srv-dbjhvdmtlv9c73d9f3t0` and verify LIVE SHA and actual HTML/CSS/JS; do not touch production/main/backups.
+
+
+## 2026-11-06 05:00–05:35 Asia/Tbilisi — overnight iteration 10 (CHAT SEND / UNCERTAIN NONCES)
+
+**PR:** draft #242, `feature/vetogram-v9-monochrome-nav-20261105`. **Starting HEAD verified via GitHub compare:** `cb706336030ac586fd3ac3c0b81a3037e7d397cb` (identical branch). **Code HEAD before this checkpoint:** `6b1e223f0f03d98c1cf219f3ba73035e17a348d5` (verified identical branch). Production/main/backups/credentials and Telegram user sessions unchanged.
+
+### Real changes committed
+- `16bb3bdb`: Fixed a duplicate-send hazard in `public/telegram-chats.js`. Previously, typing any different draft erased the old uncertain send nonce; a successful unrelated send erased it too, and a second uncertain send in the same chat overwrote the first. The new owner-scoped in-memory ledger uses a stable composite intent key (chat ID, exact message text, reply target), retains up to 16 independent uncertain nonces, and clears **only the exact nonce after a confirmed ACK**. Changing draft text or switching chats cannot silently discard deduplication evidence. It restores the original reply target only when the saved draft exactly matches; no automatic resend, no disk storage, owner-switch/logout clears all entries.
+- `c0f2bd2b`: A syntactically successful HTTP 2xx response without `ok:true`, `sent:true` and a positive safe Telegram message ID is **uncertain**, not a confirmed send. Malformed/truncated JSON, 5xx, and lost network response preserve retry identity. Definitive 400 remains a definite failure. This prevents generating a new nonce after a gateway returns malformed 200.
+- `f5e5b1ef`, `000d5ee4`, `a7b8c484`: Added `tests/vetogram-v9-chat-send-intents.test.js`, 11 native Node test definitions. Tests execute actual production intent helpers and the extracted actual `sendChatRequest` with a fake fetch/owner, covering multiple uncertain messages, different peers/replies, stale ACK, bounded RAM, navigation, valid 200, malformed 200, 400 and 503. Fixed test harness newline syntax during this run before checkpoint.
+- `d590ed08`: Registered the new test in existing `qa:preview:offline` gate, with no gates disabled.
+- `ae540c44`, `6b1e223f`: Bumped only the modified `telegram-chats.js` cache key to `20261106-v9-chat-send-02` and updated strict monochrome asset allowlist; old WebView JS will not be reused.
+
+### Verified, and NOT verified
+- Fresh GitHub source read after writes: **11/11 actual new test bodies executed in isolated V8 adapter** PASS, including real production request handler with mocked 200 valid, malformed 200, definite 400 and 503 responses; `public/telegram-chats.js` parses. Also **9/9 existing V9 monochrome navigation test bodies** executed in isolated V8 with all 9 dependent public files fetched: PASS. **Total 20/20 isolated tests**. These are **not native `node --test`**.
+- Container has Node v22.16.0, but `git ls-remote https://github.com/margaryanlabs/Telegram-story-bot.git HEAD` failed `Could not resolve host: github.com`; no real checkout available. **Native Node suite, `npm run check`, `npm run qa:preview:offline`, full build, actual Android Telegram WebView, live Telegram chat send and Business opt-in remain NOT VERIFIED**.
+- Combined GitHub status at code HEAD: three Vercel failures all target `build-rate-limit` upgrade URL (quota; not evidence of source compile failure); zero PR-triggered Actions runs returned. No Render deployment attempted. Last verified LIVE review is older V9.02 SHA `8a47b709dac5a63f46c598dc2d7556ad4ccb90af` and **does not contain these changes**.
+- No real messages sent, no SMS/OTP requested or logged, no automatic Telegram Business authorization.
+
+### First next step
+1. Freshly read current PR HEAD and checkpoint. In a real checkout run `node --test tests/vetogram-v9-chat-send-intents.test.js tests/vetogram-v9-chat-poll-cooldown.test.js tests/telegram-chat-send.test.js tests/telegram-live-chats.test.js`, `npm run check`, `npm run qa:preview:offline` and `npm run vercel-build`; fix real failures.
+2. Then review **Business consent and session recovery** with mock-only owner changes, revoked sessions, idempotent explicit permissions, and safe composer UX; test Android 360px and real chat send only with user-authorized test Telegram account.
+3. Publish only to isolated Render service `srv-dbjhvdmtlv9c73d9f3t0` after full gates pass, verify LIVE commit plus HTML/CSS/JS; production/main/backups stay untouched.
