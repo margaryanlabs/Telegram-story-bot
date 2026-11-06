@@ -198,6 +198,37 @@
     renderVoiceDraft();
   }
 
+  // Telegram random_id is stable per explicit send intent. A user may type
+  // another message, switch chats and return before an uncertain ACK arrives.
+  // Keep each unresolved intent separately in owner-scoped volatile RAM;
+  // never discard its nonce merely because the composer text changed.
+  function uncertainTextKey(chatId,message,replyTo=null){
+    return JSON.stringify([String(chatId),String(message),replyTo??null]);
+  }
+  function findUncertainTextSend(chatId,message,replyTo=undefined){
+    if(replyTo!==undefined)
+      return state.lastSendFailures.get(uncertainTextKey(chatId,message,replyTo))||null;
+    // The composer was restored without a reply target; recover the most
+    // recent matching draft, then restore its original reply explicitly.
+    for(const failure of [...state.lastSendFailures.values()].reverse())
+      if(failure.chatId===String(chatId)&&failure.message===String(message))return failure;
+    return null;
+  }
+  function rememberUncertainTextSend(failure){
+    const key=uncertainTextKey(failure.chatId,failure.message,failure.replyTo);
+    state.lastSendFailures.delete(key);
+    state.lastSendFailures.set(key,failure);
+    state.lastSendFailure=failure;
+    // Bound in-memory text/nonce retention. Never persist to disk or logs.
+    while(state.lastSendFailures.size>16)
+      state.lastSendFailures.delete(state.lastSendFailures.keys().next().value);
+  }
+  function clearConfirmedTextSend(chatId,message,replyTo,nonce){
+    const key=uncertainTextKey(chatId,message,replyTo);
+    if(state.lastSendFailures.get(key)?.nonce===nonce)state.lastSendFailures.delete(key);
+    if(state.lastSendFailure?.nonce===nonce)state.lastSendFailure=null;
+  }
+
   async function sendOutgoing(){
     const chat=state.thread,field=$('telegramThreadCompose');
     if(!field || !canSendInThread(chat) || state.sendInFlight)return;
@@ -206,7 +237,7 @@
     if(!message || message.length>4096)return;
     const chatId=String(chat.id),ownerKey=state.ownerInitData,sessionEpoch=state.sessionEpoch;
     const replyToId=state.replyTo?.id||null;
-    const savedRetry=state.lastSendFailures.get(chatId)||state.lastSendFailure;
+    const savedRetry=findUncertainTextSend(chatId,message,replyToId);
     // A reply to a different message is a different send intent, even if the
     // text matches. Never reuse Telegram's deduplication nonce across intents.
     const retry=savedRetry?.chatId===chatId &&
@@ -231,8 +262,7 @@
       const delivered=await sendChatRequest(chatId,message,nonce,replyToId);
       if(sessionEpoch!==state.sessionEpoch)return;
       if(ownerKey!==state.ownerInitData||ownerKey!==String(tg?.initData||'')){resetOwner();return;}
-      state.lastSendFailures.delete(chatId);
-      if(state.lastSendFailure?.chatId===chatId)state.lastSendFailure=null;
+      clearConfirmedTextSend(chatId,message,replyToId,nonce);
       settleCachedTextSend(chatId,provisionalId,message,delivered);
       // Also update the owner-verified inbox teaser when the owner has moved
       // to chat B. Do not claim read status or manufacture message delivery.
@@ -276,12 +306,7 @@
       // Retain the SAME random_id on deliberate retry, preventing duplicates.
       if(error.uncertain===true){
         const failure={chatId,message,nonce,replyTo:replyToId};
-        state.lastSendFailure=failure;
-        state.lastSendFailures.delete(chatId);
-        state.lastSendFailures.set(chatId,failure);
-        // Remember only a small number of uncertain sends in volatile RAM.
-        while(state.lastSendFailures.size>8)
-          state.lastSendFailures.delete(state.lastSendFailures.keys().next().value);
+        rememberUncertainTextSend(failure);
       }
       // A navigation can cache the original optimistic bubble. Reconcile that
       // cache even when the UI is currently displaying a different chat.
@@ -2713,7 +2738,8 @@
     // Restore ONLY the original reply intent when exactly the same unsent
     // text belongs to this owner and chat; otherwise do not attach a stale
     // reply to a fresh compose draft.
-    const failedSend=state.lastSendFailures.get(String(chat.id));
+    const failedSend=findUncertainTextSend(String(chat.id),
+      String(state.drafts.get(String(chat.id))||'').trim());
     const replyId=Number(failedSend?.replyTo||0);
     if(failedSend&&String(state.drafts.get(String(chat.id))||'').trim()===failedSend.message&&
        Number.isSafeInteger(replyId)&&replyId>0)
@@ -2738,7 +2764,8 @@
     const openedGeneration=state.threadGeneration;
     await historyLoad;
     if(openedGeneration!==state.threadGeneration)return;
-    const unresolved=state.lastSendFailures.get(String(chat.id));
+    const unresolved=findUncertainTextSend(String(chat.id),
+      String(state.drafts.get(String(chat.id))||'').trim());
     const uncertainMedia=state.lastRichFailures.get(String(chat.id));
     if(state.ownerInitData===String(tg?.initData||'')&&
        String(state.thread?.id)===String(chat.id)){
@@ -3160,12 +3187,10 @@
     if(chatId){
       state.drafts.set(chatId,event.target.value);
       state.draftVersions.set(chatId,(state.draftVersions.get(chatId)||0)+1);
-      const failed=state.lastSendFailures.get(chatId);
-      if(failed&&failed.message!==event.target.value.trim()){
-        state.lastSendFailures.delete(chatId);
-        if(state.lastSendFailure?.chatId===chatId)state.lastSendFailure=null;
-        // New content is a new send intent; it must receive a new nonce.
-      }
+      const failed=findUncertainTextSend(chatId,event.target.value.trim(),state.replyTo?.id||null);
+      if(failed)threadNotice('Этот текст мог уже дойти. Проверь Telegram: повтор использует прежний идентификатор.');
+      // Editing a draft never erases the nonce of another uncertain send.
+      // A different text or reply target always gets a new nonce.
     }
     renderSendComposer();
   });
