@@ -5,6 +5,7 @@ import { sameTelegramAccount } from '../lib/telegram-session-owner.js';
 import { verifyTelegramClientOwner,telegramOwnerError } from '../lib/telegram-owner-runtime.js';
 import { withBackupClient } from '../lib/telegram-history-backup.js';
 import { messageInfo,combineLiveAndPreserved } from './telegram-chats.js';
+import { classifyTelegramPollRateLimit } from '../lib/telegram-chat-poll-rate-limit.js';
 
 const BOT=String(process.env.TELEGRAM_BOT_TOKEN||'');
 export const ACTIVE_DIALOG_SCAN=70;
@@ -88,7 +89,11 @@ export default async function handler(req,res){
     const ownerError=telegramOwnerError(error);
     if(ownerError)return reply(res,ownerError.status,{error:ownerError.error});
     const raw=String(error?.errorMessage||error?.message||'');
-    if(/FLOOD_WAIT|429|SLOWMODE_WAIT/.test(raw))return reply(res,429,{error:'Telegram ограничил частоту обновления'});
+    const rateLimit=classifyTelegramPollRateLimit(error);
+    if(rateLimit){
+      res.setHeader('Retry-After',String(rateLimit.retryAfterSeconds));
+      return reply(res,429,rateLimit);
+    }
     if(/AUTH_KEY|SESSION_REVOKED|not authorized/i.test(raw))
       return reply(res,409,{error:'Сессия Telegram истекла. Подключи аккаунт заново'});
     return reply(res,503,{error:'Не удалось обновить сообщения. Повтори позже'});
