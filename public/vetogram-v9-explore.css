@@ -445,3 +445,30 @@ body.vetogram-editorial-books.vetogram-editorial-80:has(#reader[hidden]) .v97-bo
 @media(prefers-reduced-motion:reduce){
  body.vetogram-editorial-books .v97-books-resume{transition:none!important}
 }
+
+/* V9.7 — permission-aware Cinema filter, backed by real source metadata. */
+body.vetogram-editorial-cinema .v97-cinema-verified-filter{
+ display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;
+ min-height:44px;padding:10px 13px;border:1px solid #3a3a3a;
+ border-radius:10px;background:#1b1b1b;color:#e4e4e4;
+ font:730 11px/1.2 system-ui,sans-serif;cursor:pointer;
+}
+body.vetogram-editorial-cinema .v97-cinema-verified-filter input{
+ width:17px;height:17px;min-width:17px;margin:0;accent-color:#f5f5f5;
+}
+body.vetogram-editorial-cinema .v97-cinema-verified-filter:focus-within{
+ outline:2px solid #f7f7f7;outline-offset:2px;
+}
+body.vetogram-editorial-cinema .v97-cinema-verified-filter:has(input:checked){
+ background:#303030;border-color:#a4a4a4;color:#fff;
+}
+@media(max-width:850px){
+ body.vetogram-editorial-cinema .v97-cinema-verified-filter{
+  min-height:43px;flex:1 1 auto;justify-content:center;padding:10px 12px;
+ }
+}
+@media(max-width:650px){
+ body.vetogram-editorial-cinema .v97-cinema-verified-filter{
+  flex:1 1 auto;justify-content:flex-start;min-height:43px;font-size:11px;
+ }
+}
