@@ -936,6 +936,12 @@
       try{node.focus({preventScroll:true});}catch(_){node.focus();}
     }
   }
+  function detailPosterUrl(f){
+    // Prefer artwork already loaded; otherwise retain source-provided posters.
+    // Ignore non-HTTPS or already failed resources.
+    return [state.posters.get(f.id),f.poster].find(value=>
+      typeof value==="string"&&/^https:\/\//i.test(value)&&!failedPosterUrls.has(value))||null;
+  }
   function openDetails(f){
     // Preserve the true opener across asynchronous artwork and modal changes.
     if($("cinemaDetails").classList.contains("hidden"))detailReturnFocus=document.activeElement;
@@ -972,8 +978,7 @@
     art.style.background="radial-gradient(circle at 65% 30%,hsl("+f.hue+" 50% 45%),transparent 62%),linear-gradient(120deg,#29334f,#31223c)";
     // The catalog's own artwork is also valid here: discovery-only titles
     // often have a verified poster URL but no generated Commons thumbnail.
-    const poster=[state.posters.get(f.id),f.poster].find(value=>
-      typeof value==="string"&&/^https:\/\//i.test(value)&&!failedPosterUrls.has(value));
+    const poster=detailPosterUrl(f);
     if(poster){
       const image=node("img");
       image.alt="Постер: "+displayFilmTitle(f);
