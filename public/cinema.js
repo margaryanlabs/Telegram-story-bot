@@ -928,7 +928,17 @@
     state.library.history=[f.id,...state.library.history.filter(id=>id!==f.id)].slice(0,40);
     saveLibrary();
   }
+  let detailReturnFocus=null;
+  let playerReturnFocus=null;
+  function restoreFocus(target,fallback){
+    const node=target?.isConnected?target:$(fallback);
+    if(node?.isConnected&&typeof node.focus==="function"){
+      try{node.focus({preventScroll:true});}catch(_){node.focus();}
+    }
+  }
   function openDetails(f){
+    // Preserve the true opener across asynchronous artwork and modal changes.
+    if($("cinemaDetails").classList.contains("hidden"))detailReturnFocus=document.activeElement;
     state.selected=f;updateBack();buzz();
     if(typeof CustomEvent!=='undefined'&&typeof document.dispatchEvent==='function')document.dispatchEvent(new CustomEvent('vetogram:cinema-opened',{detail:{
       id:String(f.id),title:f.title,subtitle:f.contentType||'Фильм',
@@ -960,9 +970,25 @@
     $("cinemaDetailsFavorite").textContent=state.library.favorites.includes(f.id)?"♥ В избранном":"♡ В избранное";
     const art=$("cinemaDetailsArt");art.replaceChildren();
     art.style.background="radial-gradient(circle at 65% 30%,hsl("+f.hue+" 50% 45%),transparent 62%),linear-gradient(120deg,#29334f,#31223c)";
-    if(state.posters.has(f.id)){const image=node("img");image.alt="Кадр из фильма "+f.title;image.src=state.posters.get(f.id);image.onerror=()=>image.remove();art.prepend(image)}
-    else if(!f.discoveryOnly)requestPoster(f);
+    // The catalog's own artwork is also valid here: discovery-only titles
+    // often have a verified poster URL but no generated Commons thumbnail.
+    const poster=[state.posters.get(f.id),f.poster].find(value=>
+      typeof value==="string"&&/^https:\/\//i.test(value)&&!failedPosterUrls.has(value));
+    if(poster){
+      const image=node("img");
+      image.alt="Постер: "+displayFilmTitle(f);
+      image.decoding="async";
+      image.src=poster;
+      image.onerror=()=>{
+        failedPosterUrls.add(poster);
+        if(state.posters.get(f.id)===poster)state.posters.delete(f.id);
+        image.remove();
+        if(!f.discoveryOnly&&!f.externalRutube)requestPoster(f);
+      };
+      art.prepend(image);
+    }else if(!f.discoveryOnly&&!f.externalRutube)requestPoster(f);
     $("cinemaDetails").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
+    $("cinemaDetailsClose").focus?.({preventScroll:true});
     if(f.player)fetchApprovedSources(f);
     if(!f.player&&!f.discoveryOnly)getCommons(f).then(src=>{
       if(state.selected?.id!==f.id||!src.poster)return;
@@ -974,6 +1000,9 @@
     state.selected=null;$("cinemaDetails").classList.add("hidden");
     document.body.classList.toggle("cinema-modal-open",Boolean(state.playing));updateBack();
     if(!state.playing)try{history.replaceState({}, "", location.pathname+(window.VetogramMediaContext?.embedded?"?universe=1":""))}catch(_){}
+    const origin=detailReturnFocus;
+    detailReturnFocus=null;
+    if(!state.playing)restoreFocus(origin,"cinemaHeroWatch");
   }
   function toggleFavorite(f){
     const list=state.library.favorites;
@@ -1002,6 +1031,8 @@
     video.pause();video.removeAttribute("src");video.load();cleanupSubtitle();
     state.playing=null;state.activePlayerSource=null;$("cinemaPlayer").classList.add("hidden");
     document.body.classList.toggle("cinema-modal-open",Boolean(state.selected));updateBack();render();
+    restoreFocus(playerReturnFocus,state.selected?"cinemaDetailsWatch":"cinemaHeroWatch");
+    playerReturnFocus=null;
   }
   function saveProgress(force){
     const f=state.playing;if(!f||!Number.isFinite(video.duration)||video.duration<=0)return;
@@ -1035,6 +1066,7 @@
     finally{clearTimeout(timer)}
   }
   async function play(f, chosenSource){
+    if(!state.playing)playerReturnFocus=document.activeElement;
     // External movie discovery is never an embed grant, regardless of metadata.
     if(f.externalRutube||f.discoveryOnly){
       const official=filmPage(f);
