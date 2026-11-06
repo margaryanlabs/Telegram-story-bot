@@ -123,3 +123,53 @@ html#vetogram.vetogram-noir .screen[data-screen="play"].v9-arcade-active .v9-arc
   width:100%;grid-template-columns:minmax(0,1fr)!important;
  }
 }
+
+/* One visible Cinema navigation system, before the real hero content. */
+body.vetogram-editorial-cinema .v9-cinema-primary-menu{
+ margin:9px 0 15px!important;padding:0!important;
+ background:transparent!important;border:0!important;box-shadow:none!important;
+}
+body.vetogram-editorial-cinema .v9-cinema-primary-menu #cinemaTabs{
+ display:flex!important;flex-wrap:nowrap;gap:7px!important;overflow-x:auto;
+ padding:3px 0 6px!important;scrollbar-width:none;
+ overscroll-behavior-inline:contain;scroll-snap-type:x proximity;
+}
+body.vetogram-editorial-cinema .v9-cinema-primary-menu #cinemaTabs::-webkit-scrollbar{display:none}
+body.vetogram-editorial-cinema .v9-cinema-primary-menu .cinema-tab{
+ flex:1 0 auto;min-width:max-content;min-height:45px!important;
+ border:1px solid rgba(255,255,255,.14)!important;border-radius:11px!important;
+ background:#171717!important;color:#bfbfbf!important;
+ padding:10px 16px!important;font:750 12px/1.2 system-ui,sans-serif!important;
+ scroll-snap-align:start;box-shadow:none!important;
+}
+body.vetogram-editorial-cinema .v9-cinema-primary-menu .cinema-tab.active{
+ background:#ededed!important;color:#111!important;border-color:#ededed!important;
+}
+body.vetogram-editorial-cinema .v9-cinema-primary-menu .cinema-tab:focus-visible{
+ outline:2px solid #fafafa!important;outline-offset:2px!important;
+}
+body.vetogram-editorial-cinema .cinema-hero{margin-top:0!important}
+body.vetogram-editorial-cinema #cinemaBrowse,
+body.vetogram-editorial-cinema #cinemaSearchArea,
+body.vetogram-editorial-books #catalogSearch{
+ scroll-margin-top:88px;
+}
+/* Keep the real Books source modes readable without side-scrolling the page. */
+body.vetogram-editorial-books .books-main .source-tabs{
+ max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;
+ scrollbar-width:thin;gap:7px;padding:8px 2px 12px;
+}
+body.vetogram-editorial-books .books-main .source-tabs button{
+ flex:0 0 auto;min-height:44px;border-radius:11px!important;
+}
+body.vetogram-editorial-books .books-main :is(#bookSearch,#catalogGrid){
+ scroll-margin-top:88px;
+}
+@media(max-width:660px){
+ body.vetogram-editorial-cinema .v9-cinema-primary-menu #cinemaTabs{gap:5px!important}
+ body.vetogram-editorial-cinema .v9-cinema-primary-menu .cinema-tab{
+  min-height:43px!important;padding:10px 12px!important;font-size:11px!important;
+ }
+ body.vetogram-editorial-cinema .cinema-hero{border-radius:15px!important}
+ body.vetogram-editorial-books .books-main .source-tabs button{font-size:11px}
+}
