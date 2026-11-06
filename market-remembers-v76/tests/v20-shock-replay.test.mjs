@@ -117,3 +117,54 @@ test('V20.2 replay assets load in order, respond to mobile and reduced-motion co
   for(const char of css){if(char==='{')depth++;if(char==='}')depth--;assert.ok(depth>=0);}
   assert.equal(depth,0);
 });
+
+
+test('EVENT controller mounts 2008 replay only on explicit expansion and stops on world change',()=>{
+  class Node {
+    constructor(){this.children=[];this.listeners={};this.hidden=false;this.dataset={};this.innerHTML='';this.scrollTop=0;
+      this.classList={toggle(){},add(){}};}
+    append(...items){this.children.push(...items);}
+    addEventListener(type,handler){this.listeners[type]=handler;}
+    querySelector(){return new Node();}
+    querySelectorAll(){return [];}
+    setAttribute(){}
+    remove(){}
+    focus(){}
+    closest(){return null;}
+  }
+  const app=new Node(),scene=new Node(),main=new Node();
+  app.querySelector=selector=>selector==='main'?main:new Node();
+  const document={
+    activeElement:{closest:()=>null},
+    getElementById(id){return id==='app'?app:id==='scene'?scene:null;},
+    createElement(){return new Node();},
+    createElementNS(){return new Node();}
+  };
+  const calls={mount:0,unmount:0,sync:0};
+  const window={
+    location:{href:'https://test.example/',search:''},
+    addEventListener(){},setTimeout(){},requestAnimationFrame(){return 1;},matchMedia(){return {matches:false};},
+    MarketEventPlanet:{setActive(){},focus(){}},MarketSignalDirector:{setEvent(){}},
+    MarketShockReplay2008:{
+      mount(){calls.mount++;},unmount(){calls.unmount++;},syncScene(){calls.sync++;}
+    }
+  };
+  const history={state:null,pushState(){},replaceState(){}};
+  new Script(modes).runInNewContext({document,window,history,Element:Node,URL,URLSearchParams});
+  window.MarketHistoryModes.setMode('events',false);
+  const panel=main.children.find(child=>child.id==='mhHistoryPanel');
+  assert.ok(panel);
+  assert.equal(calls.mount,0,'Collapsed dossier never mounts the replay');
+  const toggle=new Node();
+  toggle.closest=selector=>selector==='[data-mh-panel-toggle]'?toggle:null;
+  app.listeners.click({target:toggle});
+  assert.equal(calls.mount,1,'Explicit expansion mounts the replay once');
+  assert.match(panel.innerHTML,/mhShockReplay2008/);
+  window.MarketHistoryModes.selectEvent('1987');
+  assert.equal(calls.mount,1,'Other event has no replay');
+  assert.ok(calls.unmount>=2,'Changing event disposes the prior replay');
+  window.MarketHistoryModes.selectEvent('2008');
+  window.MarketHistoryModes.setMode('people',false);
+  assert.equal(window.MarketHistoryModes.mode,'people');
+  assert.ok(calls.sync>=1,'Beacon recreation can re-sync the active replay stage');
+});
