@@ -118,7 +118,7 @@
       // World changes are navigable with Android/system Back; individual year
       // focus updates avoid flooding the history stack with every star tap.
       const operation=method==='push'?'pushState':'replaceState';
-      history[operation](history.state, '', url.pathname + url.search + url.hash);
+      history[operation](sheetHistorySnapshot(0), '', url.pathname + url.search + url.hash);
     } catch (_) { /* URL state is optional; content remains usable. */ }
   }
   function timeline() {
@@ -206,6 +206,63 @@
   
   let panelExpanded = false;
   let panelFullscreen = false;
+  const SHEET_HISTORY_KEY = '__marketRemembersV20Sheet';
+  let pendingCompactReturn = false;
+  function currentSheetState() {
+    return panelExpanded ? (panelFullscreen ? 'full' : 'research') : 'compact';
+  }
+  function sheetHistorySnapshot(depth = 0, sheet = currentSheetState()) {
+    // Preserve legacy history.state keys; store public year and UI only.
+    const old = history.state;
+    const safe = old && typeof old === 'object' && !Array.isArray(old) ? {...old} : {};
+    safe[SHEET_HISTORY_KEY] = {
+      mode: state.mode, event: state.activeEvent, sheet,
+      depth: Math.max(0, Math.min(2, depth))
+    };
+    return safe;
+  }
+  function recordSheetHistory(operation = 'replaceState', depth = 0, sheet = currentSheetState()) {
+    try {
+      if (typeof history[operation] !== 'function') return false;
+      history[operation](sheetHistorySnapshot(depth, sheet), '', window.location.href);
+      return true;
+    } catch (_) { return false; }
+  }
+  function currentSheetHistory() {
+    const entry=history.state && history.state[SHEET_HISTORY_KEY];
+    if (!entry || entry.mode !== state.mode || entry.event !== state.activeEvent ||
+        !['compact','research','full'].includes(entry.sheet)) return null;
+    return entry;
+  }
+  function pushSheetHistory() {
+    if (state.mode === 'people') return;
+    const previous=currentSheetHistory();
+    recordSheetHistory('pushState',Math.min(2,(previous?.depth || 0)+1));
+  }
+  function navigateSheetHistory(target) {
+    const entry=currentSheetHistory();
+    if (!entry || entry.depth < 1) return false;
+    if (target === 'research' && entry.sheet === 'full' && typeof history.back === 'function') {
+      try { history.back(); return true; } catch (_) { return false; }
+    }
+    if (target === 'compact' && typeof history.go === 'function') {
+      try {
+        pendingCompactReturn=true;
+        history.go(-entry.depth);
+        return true;
+      } catch (_) { pendingCompactReturn=false; }
+    }
+    return false;
+  }
+  function closeSheetToSphere() {
+    if (!panelExpanded) return;
+    if (navigateSheetHistory('compact')) return;
+    panelExpanded=false;panelFullscreen=false;
+    renderPanel();panel.scrollTop=0;
+    recordSheetHistory('replaceState',0);
+    panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
+    window.requestAnimationFrame(measure);
+  }
 
   // Change sheet size in place: rendering it again would destroy a playing
   // Shock Replay, reset its selected stage and lose the document scroll.
@@ -221,9 +278,12 @@
     }
   }
   function setPanelFullscreen(next) {
-    if (!panelExpanded) return;
+    if (!panelExpanded || panelFullscreen === !!next) return;
+    if (!next && navigateSheetHistory('research')) return;
     panelFullscreen=!!next;
     updateSheetPresentation();
+    if (next) pushSheetHistory();
+    else recordSheetHistory('replaceState',0);
     window.requestAnimationFrame(measure);
   }
   function renderPanel() {
@@ -453,9 +513,7 @@
         setPanelFullscreen(false);
         panel.querySelector('[data-mh-sheet-size]')?.focus({preventScroll:true});
       } else {
-        panelExpanded=false;renderPanel();panel.scrollTop=0;
-        panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
-        window.requestAnimationFrame(measure);
+        closeSheetToSphere();
       }
       return;
     }
@@ -492,18 +550,12 @@
       panel.querySelector('[data-mh-sheet-size]')?.focus({preventScroll:true});
       return;
     }
-    if(target.closest('[data-mh-sheet-close]')) {
-      panelExpanded=false;
-      panelFullscreen=false;
-      renderPanel();panel.scrollTop=0;
-      panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
-      window.requestAnimationFrame(measure);
-      return;
-    }
+    if(target.closest('[data-mh-sheet-close]')) { closeSheetToSphere(); return; }
     if(target.closest('[data-mh-panel-toggle]')) {
-      panelExpanded=!panelExpanded;
-      panelFullscreen=false;
+      if (panelExpanded) { closeSheetToSphere(); return; }
+      panelExpanded=true;panelFullscreen=false;
       renderPanel();panel.scrollTop=0;
+      pushSheetHistory();
       panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
       window.requestAnimationFrame(measure);
       return;
@@ -539,17 +591,36 @@
   window.addEventListener('resize',()=>window.requestAnimationFrame(measure),{passive:true});
   // The browser Back button restores the world selected in the URL.
   // Do not run an extra transition or write another history entry on replay.
-  window.addEventListener('popstate',()=>{
+  window.addEventListener('popstate',event=>{
     const parameters=new URLSearchParams(window.location.search);
     const requestedMode=parameters.get('mm');
     const nextMode=['events','connections'].includes(requestedMode)?requestedMode:'people';
     const nextId=parameters.get('event');
-    if(EVENT_BY_ID[nextId])state.activeEvent=nextId;
-    if(nextMode!==state.mode)setMode(nextMode,false);
-    else if(nextMode!=='people'){
-      panelExpanded=false;panelFullscreen=false;renderPanel();panel.scrollTop=0;renderBeacons();
-      window.MarketEventPlanet?.focus(EVENT_BY_ID[state.activeEvent].p);
+    const changedEvent=!!EVENT_BY_ID[nextId] && state.activeEvent!==nextId;
+    if (EVENT_BY_ID[nextId]) state.activeEvent=nextId;
+    const changedMode=nextMode!==state.mode;
+    if (changedMode) setMode(nextMode,false);
+
+    // Android system Back traverses UI history without remounting a running
+    // replay when only the presentation changes (full -> research).
+    const recorded=(event?.state || history.state)?.[SHEET_HISTORY_KEY];
+    const matches=recorded && recorded.mode===nextMode &&
+      recorded.event===state.activeEvent && ['compact','research','full'].includes(recorded.sheet);
+    let desired=matches?recorded.sheet:(nextMode==='connections'?'research':'compact');
+    if (pendingCompactReturn) {
+      desired='compact';pendingCompactReturn=false;
+      recordSheetHistory('replaceState',0,'compact');
     }
+    if (nextMode==='people') return;
+    const expanded=desired!=='compact',fullscreen=desired==='full';
+    const rebuild=changedMode || changedEvent || panelExpanded!==expanded;
+    panelExpanded=expanded;panelFullscreen=fullscreen;
+    if (rebuild) {
+      renderPanel();panel.scrollTop=0;renderBeacons();
+      if (changedEvent) window.MarketEventPlanet?.focus(EVENT_BY_ID[state.activeEvent].p);
+    } else updateSheetPresentation();
+    panel.querySelector(expanded?'[data-mh-sheet-size]':'.mh-panel-grip')?.focus({preventScroll:true});
+    window.requestAnimationFrame(measure);
   });
   const controls = document.getElementById('worldControls');
   controls?.addEventListener('click',()=>window.setTimeout(measure,140));
@@ -557,6 +628,8 @@
   if (EVENT_BY_ID[requested.get('event')]) state.activeEvent = requested.get('event');
   const initial = requested.get('mm');
   setMode(initial === 'events' || initial === 'connections' ? initial : 'people', false);
+  // Initial entry is the safe base for Android Back and browser forward.
+  recordSheetHistory('replaceState',0);
   window.MarketHistoryModes = Object.freeze({
     version: '13.0.0',
     get mode() { return state.mode; },
