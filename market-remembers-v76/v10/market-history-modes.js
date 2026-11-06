@@ -237,6 +237,7 @@
       button.innerHTML = '<span aria-hidden="true" class="mh-beacon-ring"></span><span class="mh-beacon-year">' + event.year + '</span>';
       layer.append(button);
     });
+    window.MarketShockReplay2008?.syncScene();
     window.requestAnimationFrame(measure);
   }
   function setMode(mode, update = true, afterCommit = null) {
