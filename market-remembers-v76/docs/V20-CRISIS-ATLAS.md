@@ -22,12 +22,12 @@ Baseline: V19 draft PR #247, commit `d3036a936adae66fce0788fdff4df1246fd79167`.
 ## Verified in current connected environment
 - GitHub file mutations committed and read back from the branch.
 - JavaScript parser check for the complete updated `market-history-modes.js` passed.
-- Source assertions passed for date controls, 4 events, sourced mechanism, focus restoration, CSS load order, mobile and reduced-motion breakpoints.
+- Five source-and-behavior regression checks passed in an isolated JavaScript harness, including an executed controller with a mocked browser DOM and real navigation/focus event handlers. Source assertions also covered date controls, four events, sourcing, CSS load order, mobile and reduced-motion breakpoints.
 
 ## Not verified yet
 - The complete `npm test`, `npm run lint`, `npm run build` and Playwright/browser suite were not executed in this environment (GitHub Actions billing/runner restrictions and no checkout in local tool runtime).
 - No live device GPU performance or 390px/desktop screenshots verified. These checks remain a release blocker.
-- A Vercel live V20 preview is not yet confirmed; do not present any older preview as V20.
+- An isolated Vercel V20 deployment was attempted but rejected by the account with HTTP 402 `api-deployments-free-per-day` (more than 100 deployments in 24 hours). **No V20 Vercel build URL exists.** Alternative Git-hosted HTML proxy shows an external-content consent page; its real 3D rendering was not visually validated. Do not present older previews as V20.
 
 ## Release boundaries
 Keep draft. Do not merge or promote to existing production or active Render/Vercel project without an explicit go-ahead. No changes to auth, payments, privacy, stored memories, historical sources or WebGL engine.
