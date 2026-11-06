@@ -8,7 +8,7 @@
   const LIBRARY_KEY="vetogram.cinema.library.v1:"+(window.VetogramMediaContext?.scope||"device");
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
-  const state={tab:"home",genre:"Все",seriesGenre:"Все",query:"",sort:"year",visible:100,showUnverified:false,foreignIncludeUnverified:true,selected:null,playing:null,request:0,
+  const state={tab:"home",genre:"Все",seriesGenre:"Все",query:"",sort:"year",visible:100,onlyPlayable:false,showUnverified:false,foreignIncludeUnverified:true,selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
@@ -87,7 +87,13 @@
   }
   function setTab(tab){
     if(!["home","foreign","catalog","series","search","library"].includes(tab))return;
-    buzz();state.tab=tab;state.genre="Все";state.visible=100;if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
+    buzz();state.tab=tab;state.genre="Все";state.visible=100;
+    if(["home","foreign"].includes(tab)){
+      state.onlyPlayable=false;
+      const checkbox=$("cinemaPlayableOnly");
+      if(checkbox)checkbox.checked=false;
+    }
+    if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
     clearTimeout(catalogDebounce);
     if(["foreign","series","library"].includes(tab)){
       ++catalogTicket;catalogController?.abort();catalogController=null;
@@ -397,6 +403,7 @@
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id)&&
       !f.externalRutube&&!f.discoveryOnly&&!failedEmbeds.has(f.id)&&
       (f.player?.licensed===true||Boolean(f.file)));
+    if(state.onlyPlayable)list=list.filter(f=>movieAccess(f).kind==="embedded");
     if(state.genre!=="Все")list=list.filter(f=>(f.genres||[]).includes(state.genre)||
       (state.genre==="Фильмы"&&!f.contentType&&Number(f.minutes)>30));
     const q=state.query.trim().toLocaleLowerCase("ru-RU");
@@ -805,7 +812,8 @@
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
       (f.player?.licensed===true||Boolean(f.file))).length;
-    text("cinemaCount",state.tab==="home"?(state.query.trim()?list.length+" результатов в зарубежном каталоге":list.length+" зарубежных фильмов и сериалов · доступность зависит от источника"):state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
+    const countPrefix=state.onlyPlayable?"Только встроенный плеер · ":"";
+    text("cinemaCount",countPrefix+(state.tab==="home"?(state.query.trim()?list.length+" результатов в зарубежном каталоге":list.length+" зарубежных фильмов и сериалов · доступность зависит от источника"):state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра"));
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library"||state.tab==="foreign"||state.tab==="series"||state.tab==="home");
     const russian=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&(f.spoken==="Русский"||f.spoken==="ru"));
@@ -1206,6 +1214,15 @@
   $("cinemaHeroNext").addEventListener("click",()=>setHeroSlide(discovery.index+1));
   $("cinemaSearch").addEventListener("input",e=>{state.query=e.target.value.slice(0,90);state.visible=100;if(state.tab==="library")setTab("search");else if(state.tab==="home"){$("cinemaHero").classList.add("hidden")}render();clearTimeout(catalogDebounce);catalogDebounce=setTimeout(()=>fetchCatalog(true),350)});
   $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";state.visible=100;render();fetchCatalog(true)});
+  $("cinemaPlayableOnly").addEventListener("change",event=>{
+    state.onlyPlayable=Boolean(event.target.checked);
+    state.visible=100;
+    if(state.onlyPlayable&&["home","foreign"].includes(state.tab)){
+      setTab("catalog");
+      return;
+    }
+    render();
+  });
   $("cinemaLoadMore").addEventListener("click",()=>fetchCatalog(false));
   $("cinemaStudioMore").addEventListener("click",()=>loadStudio(false));
   $("cinemaForeignAll").addEventListener("click",()=>setTab("foreign"));
