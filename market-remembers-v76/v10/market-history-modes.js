@@ -152,8 +152,13 @@
     const event = EVENT_BY_ID[state.activeEvent];
     panel.classList.toggle('is-expanded',panelExpanded);
     window.MarketSignalDirector?.setEvent(event);
+    // The selected crisis has a readable mechanism even without opening the
+    // research dossier: show source-supplied stages, never inferred trade data.
+    const impact=event.mechanism.split('→').map((part,i)=>
+      '<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
     panel.innerHTML = '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
-      '<p class="mh-v19-preview" aria-label="Краткий контекст">'+escape(event.short)+' · '+escape(event.mechanism)+'</p>' +
+      '<p class="mh-v19-preview" aria-label="Краткий контекст">'+escape(event.short)+' · '+escape(event.date)+'</p>' +
+      '<ol class="mh-v20-impact-strip" aria-label="Схема механизма кризиса">'+impact+'</ol>' +
       '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
       timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
