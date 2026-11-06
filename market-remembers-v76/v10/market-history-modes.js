@@ -268,8 +268,16 @@
   // Shock Replay, reset its selected stage and lose the document scroll.
   function updateSheetPresentation() {
     const full=panelExpanded && panelFullscreen;
+    const sheet=full?'full':(panelExpanded?'research':'compact');
     panel.classList.toggle('is-fullscreen',full);
-    panel.dataset.mhSheetState=full?'full':(panelExpanded?'research':'compact');
+    panel.dataset.mhSheetState=sheet;
+    app.dataset.mhSheetState=sheet;
+    // The reader owns focus and touch in fullscreen; prevent accidental
+    // globe drags or keyboard tabs onto controls behind the document.
+    scene.inert=full;
+    switcher.inert=full;
+    const header=document.getElementById('mhEventHeader');
+    if (header) header.inert=full;
     const control=panel.querySelector('[data-mh-sheet-size]');
     if (control) {
       control.setAttribute('aria-pressed',String(full));
