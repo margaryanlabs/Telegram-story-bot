@@ -4,6 +4,51 @@
 (()=>{
  'use strict';
  const $=(selector,root=document)=>root?.querySelector?.(selector);
+ // Home-level routes reuse the three real cards and their established navigation.
+ // This is an immediate-access menu, not a second media controller.
+ const mediaHome=$('#v6MediaHome');
+ if(mediaHome&&!$('#v9MediaQuickNav',mediaHome)){
+   const cardGrid=$('.v72-media-grid',mediaHome);
+   const destinations=[
+     {id:'cinema',label:'Кино',detail:'Фильмы и сериалы',glyph:'▶'},
+     {id:'music',label:'Музыка',detail:'Плеер и коллекция',glyph:'♫'},
+     {id:'books',label:'Книги',detail:'Тексты и читалка',glyph:'▤'}
+   ];
+   if(cardGrid&&destinations.every(item=>$('[data-v6-module="'+item.id+'"]',cardGrid))){
+     const shortcuts=document.createElement('nav');
+     shortcuts.id='v9MediaQuickNav';
+     shortcuts.className='v9-media-quick-nav';
+     shortcuts.setAttribute('aria-label','Быстрый переход к медиа');
+     for(const item of destinations){
+       const button=document.createElement('button');
+       button.type='button';
+       button.className='v9-media-quick-link';
+       button.dataset.v9Module=item.id;
+       const icon=document.createElement('span');
+       icon.className='v9-media-quick-icon';
+       icon.setAttribute('aria-hidden','true');
+       icon.textContent=item.glyph;
+       const copy=document.createElement('span');
+       const label=document.createElement('strong');
+       label.textContent=item.label;
+       const hint=document.createElement('small');
+       hint.textContent=item.detail;
+       copy.append(label,hint);
+       const arrow=document.createElement('span');
+       arrow.className='v9-media-quick-arrow';
+       arrow.setAttribute('aria-hidden','true');
+       arrow.textContent='↗';
+       button.append(icon,copy,arrow);
+       button.addEventListener('click',()=>{
+         // Delegate to the original media button. Its owner-scoped frame,
+         // Back handling, retained audio and iframe handshake stay intact.
+         $('[data-v6-module="'+item.id+'"]',cardGrid)?.click();
+       });
+       shortcuts.appendChild(button);
+     }
+     mediaHome.insertBefore(shortcuts,mediaHome.firstElementChild);
+   }
+ }
  const media=$('#v78MediaHub[data-v78-module]');
  if(media){
    const mode=media.dataset.v78Module;
