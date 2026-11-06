@@ -75,6 +75,36 @@ function skyPass(t){
   sky2d.beginPath();sky2d.arc(p.x,p.y,p.r*1.55,0,6.283);sky2d.fillStyle=grad;sky2d.fill();
   if(hover===item.id&&!flying){sky2d.beginPath();sky2d.arc(p.x,p.y,p.r+10,0,6.283);sky2d.strokeStyle=item.color+'95';sky2d.lineWidth=1;sky2d.stroke();}
  }
+ // Orbiting light markers and context arcs are decorative, not real market signals.
+ const orbitWidth=Math.min(W,H*1.7);
+ const angular=reduce?.48:t*.000115;
+ for(let j=0;j<3;j++){
+  const rr=[.39,.63,.89][j]*orbitWidth;
+  const th=angular*(1-j*.18)+j*2.14;
+  const px=x+Math.cos(th)*rr,py=y+Math.sin(th)*rr*.43;
+  sky2d.beginPath();sky2d.arc(px,py,j===1?1.9:1.2,0,6.283);
+  sky2d.fillStyle=j===1?'rgba(243,221,178,.83)':'rgba(181,214,255,.53)';sky2d.fill();
+ }
+ if(hover&&!flying){
+  const focus=loc(byId[hover]),center=loc(byId.people);
+  if(hover!=='people'){
+   sky2d.save();sky2d.setLineDash([3,8]);
+   sky2d.strokeStyle='rgba(162,196,229,.29)';sky2d.lineWidth=1;
+   sky2d.beginPath();sky2d.moveTo(center.x,center.y);
+   sky2d.quadraticCurveTo((center.x+focus.x)*.5,(center.y+focus.y)*.5-Math.min(56,H*.08),focus.x,focus.y);
+   sky2d.stroke();sky2d.restore();
+  }
+  const pulse=reduce?0:(Math.sin(t*.0025)+1)*.5;
+  sky2d.beginPath();sky2d.arc(focus.x,focus.y,focus.r+13+pulse*5,0,6.283);
+  sky2d.strokeStyle=byId[hover].color+'64';sky2d.lineWidth=1;sky2d.stroke();
+  for(let k=0;k<4;k++){
+   const a=k*Math.PI*.5,inner=focus.r+17,outer=focus.r+25;
+   sky2d.beginPath();
+   sky2d.moveTo(focus.x+Math.cos(a)*inner,focus.y+Math.sin(a)*inner);
+   sky2d.lineTo(focus.x+Math.cos(a)*outer,focus.y+Math.sin(a)*outer);
+   sky2d.strokeStyle='rgba(220,235,250,.62)';sky2d.stroke();
+  }
+ }
  if(!reduce){
   const phase=(t%18500)/18500;
   if(phase>.11&&phase<.23){
@@ -280,7 +310,16 @@ app.addEventListener('click',event=>{
 });
 document.getElementById('cosmosInfoClose').addEventListener('click',closeInfo);
 document.getElementById('cosmosInfoBack').addEventListener('click',closeInfo);
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!info.hidden)closeInfo();});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&!info.hidden){closeInfo();return;}
+ if(!info.hidden||flying||!['ArrowLeft','ArrowRight'].includes(event.key))return;
+ const focused=document.activeElement;
+ if(!focused?.classList?.contains('cosmos-world'))return;
+ const index=worlds.findIndex(w=>labels[w.id]===focused);
+ if(index<0)return;
+ const next=(index+(event.key==='ArrowRight'?1:-1)+worlds.length)%worlds.length;
+ event.preventDefault();labels[worlds[next].id].focus();
+});
 document.addEventListener('visibilitychange',()=>{
  paused=document.hidden;
  if(paused&&raf){cancelAnimationFrame(raf);raf=0;}
