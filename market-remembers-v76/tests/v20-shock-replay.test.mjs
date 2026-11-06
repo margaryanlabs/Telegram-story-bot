@@ -20,8 +20,12 @@ function fixture(){
   const clock=new Map();
   let nextId=1;
   let visibility=()=>{};
+  const app={dataset:{}};
+  const beacon={dataset:{},setAttribute(){},removeAttribute(){}};
   const document={
     hidden:false,
+    getElementById(id){return id==='app'?app:null;},
+    querySelector(selector){return selector.includes('data-mh-beacon="2008"')?beacon:null;},
     addEventListener(type,fn){if(type==='visibilitychange')visibility=fn;}
   };
   const window={
@@ -39,7 +43,7 @@ function fixture(){
     else button.dataset.mhReplayAction=action;
     host.listeners.click({target:button,stopPropagation(){}});
   };
-  return {document,window,host,clock,click,visibility:()=>visibility()};
+  return {document,window,host,app,beacon,clock,click,visibility:()=>visibility()};
 }
 
 test('V20.2 replay has six dated sourced events, with no synthetic market series',()=>{
@@ -59,6 +63,8 @@ test('V20.2 replay has six dated sourced events, with no synthetic market series
   assert.match(f.host.innerHTML,/data-mh-replay-index="5"/);
   assert.doesNotMatch(replayCode,/localStorage|XMLHttpRequest|fetch\(|Math\.random\(|sendBeacon/);
   assert.equal(f.clock.size,0,'Never autoplay on mount');
+  assert.equal(f.app.dataset.mhReplayStep,'1');
+  assert.equal(f.beacon.dataset.mhReplayStage,'07 СЕН');
 });
 
 test('V20.2 replay controls move through real archive stages and cleanup timers',()=>{
@@ -69,6 +75,7 @@ test('V20.2 replay controls move through real archive stages and cleanup timers'
   f.click(3,'stage');assert.equal(api.state.index,3);
   f.click('speed');assert.equal(api.state.speed,1.5);
   f.click('toggle');assert.equal(api.state.playing,true);
+  assert.equal(f.app.dataset.mhReplayPlaying,'true');
   assert.equal(f.clock.size,1);
   const scheduled=[...f.clock.values()][0];
   assert.ok(scheduled.ms>=3000&&scheduled.ms<=3300);
@@ -81,6 +88,8 @@ test('V20.2 replay controls move through real archive stages and cleanup timers'
   f.document.hidden=true;f.visibility();
   assert.equal(api.state.playing,false);assert.equal(f.clock.size,0);
   api.unmount();assert.equal(api.state.mounted,false);
+  assert.equal(f.app.dataset.mhReplayStep,undefined);
+  assert.equal(f.beacon.dataset.mhReplayStage,undefined);
   assert.equal(f.host.listeners.click,undefined);
   assert.equal(f.clock.size,0);
 });
@@ -88,6 +97,7 @@ test('V20.2 replay controls move through real archive stages and cleanup timers'
 test('V20.2 controller lives only in expanded 2008 research and disposes when hidden',()=>{
   assert.match(modes,/event\.id==='2008' \? '<section class="mh-shock-replay-host mh-shock-replay"/);
   assert.match(modes,/window\.MarketShockReplay2008\?\.unmount\(\)/);
+  assert.match(modes,/window\.MarketShockReplay2008\?\.syncScene\(\)/);
   assert.match(modes,/if \(panelExpanded && state\.mode==='events' && event\.id==='2008'\)/);
   assert.match(modes,/window\.MarketShockReplay2008\?\.mount\(panel\.querySelector\('#mhShockReplay2008'\)\)/);
   assert.match(modes,/if \(mode === 'people'\) \{\s*panelExpanded = false;\s*window\.MarketShockReplay2008\?\.unmount\(\)/);
@@ -100,6 +110,7 @@ test('V20.2 replay assets load in order, respond to mobile and reduced-motion co
   assert.match(css,/@media\(max-width:819px\)/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(css,/scroll-snap-type:x proximity/);
+  assert.match(css,/mhReplayBeaconFocus/);
   assert.match(css,/\.mh-replay-controls button:focus-visible/);
   assert.match(css,/min-height:45px/);
   let depth=0;
