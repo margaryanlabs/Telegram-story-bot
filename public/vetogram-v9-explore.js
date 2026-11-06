@@ -156,9 +156,36 @@
  const groups=[
    {id:'all',label:'Все игры',names:['reaction','pairs','tic','2048','mines','snake']},
    {id:'skill',label:'На скорость',names:['reaction','snake']},
-   {id:'logic',label:'На логику',names:['pairs','tic','2048','mines']}
+   {id:'logic',label:'На логику',names:['pairs','tic','2048','mines']},
+   {id:'saved',label:'Избранное',names:[]}
  ];
  const typeByGame=Object.freeze({reaction:'СКОРОСТЬ',snake:'АРКАДА',pairs:'ПАМЯТЬ',tic:'ТАКТИКА','2048':'ГОЛОВОЛОМКА',mines:'ЛОГИКА'});
+ const recordSpecs=Object.freeze({
+   reaction:['vetogram:play:reaction-best:v1','мс','Реакция'],
+   pairs:['vetogram:play:memory-best:v1','ходов','Пары'],
+   tic:['vetogram:play:tic-wins:v1','побед','Крестики-нолики'],
+   '2048':['vetogram:play:2048-best:v1','очков','2048'],
+   mines:['vetogram:play:mines-wins:v1','побед','Сапёр'],
+   snake:['vetogram:play:snake-best:v1','очков','Змейка']
+ });
+ const recordNodes=new Map();
+ function recordValue(key){
+   try{
+     const raw=window.localStorage?.getItem(key);
+     if(raw===null||raw===undefined||raw==='')return null;
+     const value=Number(raw);
+     if(!Number.isSafeInteger(value)||value<0||value>100000000)return null;
+     return value;
+   }catch{return null;}
+ }
+ const refreshRecords=()=>{
+   for(const [id,element] of recordNodes){
+     const [key,unit]=recordSpecs[id];
+     const value=recordValue(key);
+     element.textContent=value===null||(value===0&&id!=='reaction'&&id!=='pairs')
+       ?'Твой рекорд ещё впереди':'Личный рекорд · '+value.toLocaleString('ru-RU')+' '+unit;
+   }
+ };
  for(const card of cards){
    const id=card.dataset.v9Launch;
    if(!Object.hasOwn(typeByGame,id))return;
@@ -167,7 +194,13 @@
    badge.textContent=typeByGame[id];
    const art=$('.v9-cover-art',card);
    if(art)card.insertBefore(badge,art.nextSibling);
+   const record=document.createElement('span');
+   record.className='v9-arcade-record';
+   record.setAttribute('aria-live','off');
+   card.appendChild(record);
+   recordNodes.set(id,record);
  }
+ refreshRecords();
  const toolbar=document.createElement('div');
  toolbar.className='v9-arcade-filters';
  const tabs=document.createElement('div');
@@ -179,10 +212,26 @@
  counter.setAttribute('aria-live','polite');
  toolbar.append(tabs,counter);
  heading.insertAdjacentElement('afterend',toolbar);
+ const empty=document.createElement('div');
+ empty.className='v9-arcade-empty';
+ empty.hidden=true;
+ const emptyTitle=document.createElement('strong');
+ emptyTitle.textContent='Здесь появятся твои любимые игры';
+ const emptyHint=document.createElement('p');
+ emptyHint.textContent='Открой любую игру, нажми «☆ В избранное», и она появится здесь.';
+ const showAll=document.createElement('button');
+ showAll.type='button';
+ showAll.textContent='Посмотреть все игры';
+ empty.append(emptyTitle,emptyHint,showAll);
+ grid.insertAdjacentElement('afterend',empty);
+ const favorites=()=>window.VetogramPlayFavorites instanceof Set
+   ?window.VetogramPlayFavorites:new Set();
+ let activeFilter='all';
  const allButtons=[];
  function activate(id,{focus=false}={}){
    const selected=groups.find(item=>item.id===id)||groups[0];
-   const allowed=new Set(selected.names);
+   activeFilter=selected.id;
+   const allowed=selected.id==='saved'?favorites():new Set(selected.names);
    let count=0;
    for(const card of cards){
      const visible=allowed.has(card.dataset.v9Launch);
@@ -195,6 +244,7 @@
      button.classList.toggle('is-active',current);
      if(focus&&current)button.focus({preventScroll:true});
    }
+   empty.hidden=selected.id!=='saved'||count!==0;
    counter.textContent=count+' '+(count===1?'игра':count<5?'игры':'игр')+' · офлайн';
  }
  for(const group of groups){
@@ -216,6 +266,19 @@
    const next=event.key==='Home'?0:event.key==='End'?last:
      (current+(event.key==='ArrowRight'?1:-1)+allButtons.length)%allButtons.length;
    activate(allButtons[next].dataset.v9Filter,{focus:true});
+ });
+ showAll.addEventListener('click',()=>activate('all'));
+ window.addEventListener?.('vetogram:play-favorites-changed',()=>{
+   if(activeFilter==='saved')activate('saved');
+ });
+ for(const event of ['vetogram:game-close','storage','focus']){
+   window.addEventListener?.(event,refreshRecords);
+ }
+ window.addEventListener?.('veto:screen-changed',event=>{
+   if(event?.detail?.screen==='play'){
+     refreshRecords();
+     if(activeFilter==='saved')activate('saved');
+   }
  });
  activate('all');
 })();
