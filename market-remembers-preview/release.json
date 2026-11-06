@@ -1,19 +1,20 @@
 {
-  "project": "Market Remembers",
-  "release": "V24 native worlds + route hotfix",
-  "canonical": "margaryanlabs/Marketremember",
-  "worlds": {
-    "live": [
-      "PEOPLE",
-      "EVENT CORE"
-    ],
-    "planned": [
-      "DECISIONS",
-      "AGORA",
-      "MIRROR",
-      "GUILDS"
-    ]
-  },
-  "engine": "original V20 PEOPLE + original V18 mirror EVENT shader",
-  "notice": "visual preview, no live accounts or trading data"
+  "name": "Market Remembers",
+  "version": "26.0.0",
+  "source": "margaryanlabs/Marketremember",
+  "source_commit": "76d2e87451245a0c1f0c2f951e1b50589744d3be",
+  "design": "VETO red-black six-world universe",
+  "originals": [
+    "PEOPLE",
+    "EVENT CORE"
+  ],
+  "new_planets": [
+    "DECISIONS",
+    "AGORA",
+    "MIRROR",
+    "GUILDS"
+  ],
+  "chambers": "interactive browser-local research labs",
+  "status": "preview",
+  "warning": "No live community, authenticated accounts, real-money trading or verified P&L"
 }
