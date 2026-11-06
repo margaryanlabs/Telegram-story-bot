@@ -205,6 +205,27 @@
   }
   
   let panelExpanded = false;
+  let panelFullscreen = false;
+
+  // Change sheet size in place: rendering it again would destroy a playing
+  // Shock Replay, reset its selected stage and lose the document scroll.
+  function updateSheetPresentation() {
+    const full=panelExpanded && panelFullscreen;
+    panel.classList.toggle('is-fullscreen',full);
+    panel.dataset.mhSheetState=full?'full':(panelExpanded?'research':'compact');
+    const control=panel.querySelector('[data-mh-sheet-size]');
+    if (control) {
+      control.setAttribute('aria-pressed',String(full));
+      control.setAttribute('aria-label',full?'Вернуться к панели исследования':'Открыть досье на весь экран');
+      control.textContent=full?'УМЕНЬШИТЬ':'НА ВЕСЬ ЭКРАН';
+    }
+  }
+  function setPanelFullscreen(next) {
+    if (!panelExpanded) return;
+    panelFullscreen=!!next;
+    updateSheetPresentation();
+    window.requestAnimationFrame(measure);
+  }
   function renderPanel() {
     window.MarketShockReplay2008?.unmount();
     const event = EVENT_BY_ID[state.activeEvent];
@@ -226,7 +247,14 @@
     // research dossier: show source-supplied stages, never inferred trade data.
     const impact=event.mechanism.split('→').map((part,i)=>
       '<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
-    panel.innerHTML = chronicle + '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':(event.id==='2008' && state.mode==='events'?'▶ 6 ЭТАПОВ':'ПОДРОБНЕЕ ↑'))+'</em></button>' +
+    const sheetTools=panelExpanded
+      ? '<div class="mh-v20-sheet-tools" role="group" aria-label="Режим просмотра досье">' +
+        '<span class="mh-v20-sheet-eyebrow">ДОСЬЕ / '+escape(event.year)+'</span>' +
+        '<button type="button" data-mh-sheet-size aria-pressed="'+panelFullscreen+'">'+
+          (panelFullscreen?'УМЕНЬШИТЬ':'НА ВЕСЬ ЭКРАН')+'</button>' +
+        '<button type="button" data-mh-sheet-close aria-label="Вернуться к сфере">К СФЕРЕ ↓</button></div>'
+      : '';
+    panel.innerHTML = chronicle + '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':(event.id==='2008' && state.mode==='events'?'▶ 6 ЭТАПОВ':'ПОДРОБНЕЕ ↑'))+'</em></button>' + sheetTools +
       '<p class="mh-v19-preview" aria-label="Краткий контекст">'+escape(event.short)+' · '+escape(event.date)+'</p>' +
       '<ol class="mh-v20-impact-strip" aria-label="Схема механизма кризиса">'+impact+'</ol>' +
       '<div class="mh-v20-source-line"><span>ДОКУМЕНТИРОВАННОЕ СОБЫТИЕ</span><a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer" aria-label="Открыть первоисточник: '+escape(event.source)+'">ИСТОЧНИК ↗</a></div>' +
@@ -234,6 +262,7 @@
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
       timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
       '<p class="mh-disclaimer">Исторические факты снабжены источниками. Символические связи — тематические, не доказательство причинности и не свидетельства реальных трейдеров.</p>';
+    updateSheetPresentation();
     if (panelExpanded && state.mode==='events' && event.id==='2008') {
       window.MarketShockReplay2008?.mount(panel.querySelector('#mhShockReplay2008'));
     }
@@ -325,12 +354,19 @@
     state.mode = mode;
     if (mode === 'people') {
       panelExpanded = false;
+      panelFullscreen = false;
       window.MarketShockReplay2008?.unmount();
     }
     // Compare needs an intentional research surface. Returning to the
     // event globe must NOT unexpectedly cover the sphere with a full dossier.
-    else if (mode === 'connections' && oldMode !== 'connections') panelExpanded = true;
-    else if (mode === 'events' && oldMode === 'connections') panelExpanded = false;
+    else if (mode === 'connections' && oldMode !== 'connections') {
+      panelExpanded = true;
+      panelFullscreen = false;
+    }
+    else if (mode === 'events' && oldMode === 'connections') {
+      panelExpanded = false;
+      panelFullscreen = false;
+    }
     app.dataset.mhMode = mode;
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
       const active = mode === 'people' ? btn.dataset.mhMode === 'people' : btn.dataset.mhMode === 'events';
@@ -363,6 +399,7 @@
     // Selecting a year must not immediately cover the sphere with a dossier.
     // The visitor explicitly expands "Подробнее" when ready to read.
     panelExpanded = false;
+    panelFullscreen = false;
     renderPanel();
     panel.scrollTop=0;
     renderBeacons();
@@ -411,9 +448,14 @@
     // Escape closes the research document without navigating away from the world.
     if(event.key==='Escape'&&panelExpanded){
       event.preventDefault();event.stopPropagation();
-      panelExpanded=false;renderPanel();panel.scrollTop=0;
-      panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
-      window.requestAnimationFrame(measure);
+      if (panelFullscreen) {
+        setPanelFullscreen(false);
+        panel.querySelector('[data-mh-sheet-size]')?.focus({preventScroll:true});
+      } else {
+        panelExpanded=false;renderPanel();panel.scrollTop=0;
+        panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
+        window.requestAnimationFrame(measure);
+      }
       return;
     }
     const compareButton=event.target instanceof Element?event.target.closest('[data-mh-compare]'):null;
@@ -444,8 +486,22 @@
   app.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+    if(target.closest('[data-mh-sheet-size]')) {
+      setPanelFullscreen(!panelFullscreen);
+      panel.querySelector('[data-mh-sheet-size]')?.focus({preventScroll:true});
+      return;
+    }
+    if(target.closest('[data-mh-sheet-close]')) {
+      panelExpanded=false;
+      panelFullscreen=false;
+      renderPanel();panel.scrollTop=0;
+      panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
+      window.requestAnimationFrame(measure);
+      return;
+    }
     if(target.closest('[data-mh-panel-toggle]')) {
       panelExpanded=!panelExpanded;
+      panelFullscreen=false;
       renderPanel();panel.scrollTop=0;
       panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
       window.requestAnimationFrame(measure);
@@ -490,7 +546,7 @@
     if(EVENT_BY_ID[nextId])state.activeEvent=nextId;
     if(nextMode!==state.mode)setMode(nextMode,false);
     else if(nextMode!=='people'){
-      panelExpanded=false;renderPanel();panel.scrollTop=0;renderBeacons();
+      panelExpanded=false;panelFullscreen=false;renderPanel();panel.scrollTop=0;renderBeacons();
       window.MarketEventPlanet?.focus(EVENT_BY_ID[state.activeEvent].p);
     }
   });
@@ -504,6 +560,7 @@
     version: '13.0.0',
     get mode() { return state.mode; },
     get activeEvent() { return state.activeEvent; },
+    get sheetState() { return panelExpanded?(panelFullscreen?'full':'research'):'compact'; },
     get comparedEvent() { return (EVENTS.find(item=>item.id===compareEventId&&item.id!==state.activeEvent)||EVENTS.find(item=>item.id!==state.activeEvent)).id; },
     get events() { return EVENTS.map(({id,year,date,name,themes,url,p})=>({id,year,date,name,themes:[...themes],url,p:[...p]})); },
     setMode, selectEvent, measure
