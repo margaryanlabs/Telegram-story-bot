@@ -1,19 +1,15 @@
 {
   "app": "Market Remembers",
-  "version": "V23 NATIVE FINANCIAL UNIVERSE",
+  "version": "V24 / NATIVE LIVING UNIVERSE",
   "source": "margaryanlabs/Marketremember",
-  "renderers": {
-    "PEOPLE": "original V20 3D shader",
-    "EVENT_CORE": "original V18 PEOPLE-mirror + V20 history"
-  },
-  "mode": "in-page genuine-world selection",
-  "otherWorlds": [
-    "DECISIONS",
-    "AGORA",
-    "MIRROR",
-    "GUILDS"
+  "people": "original V20 live planet",
+  "eventCore": "original V18/V20 mirrored renderer + authentic shader satellite",
+  "remaining": [
+    "DECISIONS (planned)",
+    "AGORA (planned)",
+    "MIRROR (planned)",
+    "GUILDS (planned)"
   ],
-  "otherStatus": "not implemented",
-  "deprecatedToyPage": "redirects to native experience",
-  "clientData": "fictional examples + browser-local memories"
+  "archive": "old toy-sphere experiment retired",
+  "data": "fictional examples, browser-local notes"
 }
