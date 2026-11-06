@@ -152,7 +152,7 @@ test('Active globe beacon carries a sourced meaning, while inactive stars retain
   assert.match(active.innerHTML,/<b>2008<\/b><small>Кризис доверия<\/small>/);
   assert.match(inactive.innerHTML,/<b>1987<\/b>/);
   assert.doesNotMatch(inactive.innerHTML,/<small>/);
-  assert.match(modes,/button\.dataset\.mhLabelSide = pos\.x > w -/);
+  assert.match(modes,/button\.dataset\.mhLabelSide = label\?\.side \|\| \(pos\.x > w-/);
   f.window.MarketHistoryModes.selectEvent('1907');
   const selected=layer.children.filter(el=>el.dataset.mhBeacon==='1907').at(-1);
   assert.match(selected.innerHTML,/<small>Банковская паника<\/small>/);
