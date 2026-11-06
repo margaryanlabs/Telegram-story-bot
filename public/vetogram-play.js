@@ -268,6 +268,13 @@
       root.classList.add('v9-arcade-enhanced');
       v9Launcher.hidden=false;
       v9RefreshResume();
+      // All legacy game entrypoints may now delegate to one V9 controller.
+      // A strict allowlist prevents untrusted game identifiers from opening code.
+      window.VetogramV9GameOpen=name=>{
+        if(!v9Allowed.has(name))return false;
+        const launch=buttons.find(button=>button.dataset.v9Launch===name);
+        return v9Open(name,launch);
+      };
       window.VetogramV9GameIsOpen=()=>!!v9Active;
       window.VetogramV9GameBack=()=>{
         if(!v9Active)return false;
