@@ -64,6 +64,32 @@
   let timer = 0;
   const DELAY = 4700;
 
+  // Reuse the existing 2008 globe beacon. The timeline never invents
+  // spherical coordinates for events occurring on different days.
+  function syncScene() {
+    const app=document.getElementById('app');
+    if (!app || !host) return;
+    app.dataset.mhReplayStep=String(index+1);
+    app.dataset.mhReplayPlaying=String(playing);
+    const beacon=document.querySelector('#mhEventLayer [data-mh-beacon="2008"]');
+    if (beacon) {
+      beacon.dataset.mhReplayStage=STAGES[index].date;
+      beacon.setAttribute('title','2008 · '+STAGES[index].title);
+    }
+  }
+  function clearScene() {
+    const app=document.getElementById('app');
+    if (app) {
+      delete app.dataset.mhReplayStep;
+      delete app.dataset.mhReplayPlaying;
+    }
+    const beacon=document.querySelector('#mhEventLayer [data-mh-beacon="2008"]');
+    if (beacon) {
+      delete beacon.dataset.mhReplayStage;
+      beacon.removeAttribute('title');
+    }
+  }
+
   function clearTimer() {
     if (timer) window.clearTimeout(timer);
     timer = 0;
@@ -77,11 +103,13 @@
     clearTimer();
     playing = false;
     if (host) host.removeEventListener('click', onClick);
+    clearScene();
     host = null;
   }
   function render() {
     if (!host) return;
     const stage=STAGES[index];
+    syncScene();
     const progress=Math.round((index + 1)/STAGES.length*100);
     host.innerHTML =
       '<div class="mh-replay-header"><div><span class="mh-replay-eyebrow">◉ SHOCK REPLAY / 2008</span>'+
@@ -187,7 +215,7 @@
   }
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)pause();});
   window.MarketShockReplay2008=Object.freeze({
-    mount,unmount,pause,
+    mount,unmount,pause,syncScene,
     get stages(){return STAGES.map(({id,iso,title,source,url})=>({id,iso,title,source,url}));},
     get state(){return {index,speed,playing,mounted:!!host};}
   });
