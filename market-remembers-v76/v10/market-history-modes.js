@@ -73,6 +73,25 @@
   intro.id = 'mhIntro';
   intro.hidden = true;
   intro.innerHTML = '<span class="mh-overline">THE MARKET REMEMBERS / FINANCIAL MEMORY</span><h1 id="mhHeadline"></h1><p id="mhSubtitle"></p>';
+  // A chronological *index*, not geographic coordinates or a metrically
+  // spaced time-axis. Remains operable when all globe markers face away.
+  const chronosphere = document.createElement('nav');
+  chronosphere.id = 'mhChronosphere';
+  chronosphere.className = 'mh-chrono-nav';
+  chronosphere.hidden = true;
+  chronosphere.setAttribute('aria-label', 'Хронология финансовых кризисов — выбрать год');
+  chronosphere.innerHTML =
+    '<div class="mh-chrono-head"><div><span class="mh-chrono-overline">CHRONOSPHERE / ARCHIVE</span>' +
+    '<strong>Время кризисов</strong></div><p>Выберите год — сфера сфокусируется на событии</p></div>' +
+    '<div class="mh-chrono-entries" role="group" aria-label="Годы по порядку, интервалы условные">' +
+    EVENTS.map(event => '<button type="button" data-mh-chrono-event="'+event.id+
+      '" aria-label="'+event.year+': '+escape(event.name)+'" aria-pressed="false">'+
+      '<i class="mh-chrono-dot" aria-hidden="true"></i><span class="mh-chrono-year">'+event.year+
+      '</span><span class="mh-chrono-event-label">'+escape(event.short)+'</span></button>').join('') +
+    '</div><div class="mh-chrono-focus" aria-live="polite"><span>В ФОКУСЕ</span>'+
+    '<strong></strong><small></small></div>'+
+    '<p class="mh-chrono-note">Порядок хронологический · расстояния между годами условные</p>';
+
   const layer = document.createElement('div');
   layer.className = 'mh-event-layer';
   layer.id = 'mhEventLayer';
@@ -88,7 +107,7 @@
   panel.hidden = true;
   panel.setAttribute('aria-label', 'События и тематические связи');
   panel.setAttribute('aria-live', 'polite');
-  scene.append(layer);
+  scene.append(layer, chronosphere);
   main.append(switcher, intro, panel);
 
   function updateUrl(method = 'replace') {
@@ -238,6 +257,7 @@
       const pos = positions[button.dataset.mhBeacon];
       button.style.left = pos.x + 'px';
       button.style.top = pos.y + 'px';
+      button.dataset.mhLabelSide = pos.x > w - (w < 820 ? 155 : 225) ? 'left' : 'right';
       const visible = pos.visible !== false;
       button.style.opacity = visible ? '1' : '0';
       button.style.pointerEvents = visible ? 'auto' : 'none';
@@ -262,6 +282,17 @@
     }
     window.MarketSignalDirector?.position(positions[state.activeEvent],rect,panel.getBoundingClientRect(),panelExpanded);
   }
+  function renderChronosphere() {
+    const event=EVENT_BY_ID[state.activeEvent];
+    if (!event) return;
+    chronosphere.querySelectorAll('[data-mh-chrono-event]').forEach(button => {
+      const current=button.dataset.mhChronoEvent===event.id;
+      button.classList.toggle('is-active',current);
+      button.setAttribute('aria-pressed',String(current));
+    });
+    chronosphere.querySelector('.mh-chrono-focus strong').textContent=event.name;
+    chronosphere.querySelector('.mh-chrono-focus small').textContent=event.date;
+  }
   function renderBeacons() {
     layer.querySelectorAll('[data-mh-beacon]').forEach(node=>node.remove());
     EVENTS.forEach(event => {
@@ -271,9 +302,11 @@
       button.dataset.mhBeacon = event.id;
       button.setAttribute('aria-label',event.year + ': ' + event.name + '. Выбрать историческое событие');
       button.setAttribute('aria-pressed',String(event.id === state.activeEvent));
-      button.innerHTML = '<span aria-hidden="true" class="mh-beacon-ring"></span><span class="mh-beacon-year">' + event.year + '</span>';
+      button.innerHTML = '<span aria-hidden="true" class="mh-beacon-ring"></span><span class="mh-beacon-year"><b>' +
+        event.year + '</b>' + (event.id===state.activeEvent ? '<small>'+escape(event.short)+'</small>' : '')+'</span>';
       layer.append(button);
     });
+    renderChronosphere();
     window.MarketShockReplay2008?.syncScene();
     window.requestAnimationFrame(measure);
   }
@@ -307,6 +340,7 @@
     intro.hidden = mode === 'people';
     panel.hidden = mode === 'people';
     layer.hidden = mode === 'people';
+    chronosphere.hidden = mode === 'people';
     if (mode !== 'people') {
       const title = TITLES[mode];
       intro.querySelector('h1').textContent = title.title;
@@ -382,6 +416,16 @@
       panel.querySelector('[data-mh-compare="'+compareEventId+'"]')?.focus({preventScroll:true});
       return;
     }
+    const chronologyButton=event.target instanceof Element?event.target.closest('[data-mh-chrono-event]'):null;
+    if (chronologyButton && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) {
+      event.preventDefault();
+      const index=EVENTS.findIndex(item=>item.id===chronologyButton.dataset.mhChronoEvent);
+      const direction=['ArrowRight','ArrowDown'].includes(event.key)?1:-1;
+      const next=EVENTS[(index+direction+EVENTS.length)%EVENTS.length];
+      selectEvent(next.id);
+      chronosphere.querySelector('[data-mh-chrono-event="'+next.id+'"]')?.focus({preventScroll:true});
+      return;
+    }
     const dateButton=event.target instanceof Element?event.target.closest('.mh-timeline [data-mh-event]'):null;
     if(!dateButton||!['ArrowLeft','ArrowRight'].includes(event.key))return;
     event.preventDefault();
@@ -417,6 +461,8 @@
       panel.querySelector('[data-mh-compare="'+compareEventId+'"]')?.focus({preventScroll:true});
       return;
     }
+    const chronologyBtn = target.closest('[data-mh-chrono-event]');
+    if (chronologyBtn) { selectEvent(chronologyBtn.dataset.mhChronoEvent); return; }
     const eventBtn = target.closest('[data-mh-event]');
     if (eventBtn) { selectEvent(eventBtn.dataset.mhEvent); return; }
     if (target.closest('[data-mh-go-connections]')) { setMode('connections'); return; }
