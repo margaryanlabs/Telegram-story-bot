@@ -136,14 +136,51 @@
       '<div class="mh-v16-card-footer"><button type="button" data-mh-go-connections>ИССЛЕДОВАТЬ СВЯЗИ <span aria-hidden="true">↗</span></button>' +
       '<a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ПЕРВОИСТОЧНИК · '+escape(event.source)+' ↗</a></div></div>';
   }
+  // Compare archival records, not price series. The globe remains on the
+  // selected event while a second sourced case is examined independently.
+  let compareEventId = null;
+  function comparisonMarkup(event) {
+    const candidates = EVENTS.filter(other => other.id !== event.id);
+    const compared = candidates.find(other => other.id === compareEventId) || candidates[0];
+    const shared = event.themes.filter(theme => compared.themes.includes(theme));
+    const leftOnly = event.themes.filter(theme => !compared.themes.includes(theme));
+    const rightOnly = compared.themes.filter(theme => !event.themes.includes(theme));
+    const themeLabels = values => values.length
+      ? values.map(theme => escape(THEME_NAMES[theme])).join(' · ')
+      : 'нет в выбранных тематических тегах';
+    const caseFile = (record, side) => {
+      const stages = record.mechanism.split('→').map((part,index) =>
+        '<li><span>'+String(index+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
+      return '<article class="mh-v20-compare-case" aria-label="'+escape(record.name)+'">' +
+        '<div class="mh-v20-compare-case-head"><span>ДОСЬЕ '+side+'</span><b>'+escape(record.year)+'</b></div>' +
+        '<h4>'+escape(record.name)+'</h4><time>'+escape(record.date)+'</time>' +
+        '<div class="mh-v20-compare-fact"><small>ЧТО ЗАДОКУМЕНТИРОВАНО</small><p>'+escape(record.detail)+'</p></div>' +
+        '<div class="mh-v20-compare-path"><small>ЦЕПОЧКА ШОКА</small><ol>'+stages+'</ol></div>' +
+        '<div class="mh-v20-compare-lesson"><small>ПРАКТИЧЕСКИЙ ВЫВОД · ИНТЕРПРЕТАЦИЯ</small><p>'+escape(record.lesson)+'</p></div>' +
+        '<a href="'+escape(record.url)+'" target="_blank" rel="noopener noreferrer">ПЕРВОИСТОЧНИК · '+escape(record.source)+' ↗</a></article>';
+    };
+    return '<section class="mh-v20-compare" aria-label="Сравнение исторических кризисов">' +
+      '<div class="mh-v20-compare-heading"><span>01 / CRISIS COMPARE</span>' +
+      '<h3>Два кризиса. Разные механизмы.</h3>' +
+      '<p>Первый кризис закреплён на сфере. Выберите второй для сопоставления архивных фактов и интерпретаций.</p></div>' +
+      '<div class="mh-v20-compare-picker" role="group" aria-label="Выбрать второй кризис">' +
+      candidates.map(other => '<button type="button" data-mh-compare="'+other.id+'" aria-pressed="'+(other.id===compared.id)+'" class="'+(other.id===compared.id?'is-active':'')+'">'+escape(other.year)+'</button>').join('')+'</div>' +
+      '<div class="mh-v20-compare-pair">'+caseFile(event,'A')+caseFile(compared,'B')+'</div>' +
+      '<div class="mh-v20-compare-synthesis"><h4>Тематическое пересечение</h4>' +
+      '<p><b>Общее:</b> '+themeLabels(shared)+'</p>' +
+      '<p><b>Только '+escape(event.year)+':</b> '+themeLabels(leftOnly)+'</p>' +
+      '<p><b>Только '+escape(compared.year)+':</b> '+themeLabels(rightOnly)+'</p>' +
+      '<small>Общие темы не доказывают причинность или одинаковую динамику цен. Схемы и уроки — краткая аналитическая интерпретация; факты проверяйте по двум первоисточникам.</small></div></section>';
+  }
   function connectionMarkup(event) {
     const related=EVENTS.filter(e=>e.id!==event.id&&e.themes.some(t=>event.themes.includes(t)));
     return '<div class="mh-v16-record mh-v16-connection-record">' +
       '<div class="mh-v16-record-meta"><span>◈ THEMATIC INTELLIGENCE</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
       '<p class="mh-v16-connection-notice">Сопоставляем общие темы и механизмы. Эти связи не доказывают причинность и не означают, что авторы демо-историй участвовали в событии.</p>' +
-      '<div class="mh-v16-section-label"><span>01</span> ЧЕЛОВЕЧЕСКИЕ УРОКИ</div>'+themeButtons(event) +
-      '<div class="mh-v16-section-label"><span>02</span> ИСТОРИЧЕСКИЕ ПАРАЛЛЕЛИ</div>'+
+      comparisonMarkup(event) +
+      '<div class="mh-v16-section-label"><span>02</span> ЧЕЛОВЕЧЕСКИЕ УРОКИ</div>'+themeButtons(event) +
+      '<div class="mh-v16-section-label"><span>03</span> ИСТОРИЧЕСКИЕ ПАРАЛЛЕЛИ</div>'+
       '<div class="mh-v16-related-grid">'+related.map(e=>'<button type="button" class="mh-v16-related-card" data-mh-event="'+e.id+'"><b>'+escape(e.year)+'</b><strong>'+escape(e.short)+'</strong><small>'+e.themes.filter(t=>event.themes.includes(t)).map(t=>escape(THEME_NAMES[t])).join(' · ')+'</small><span aria-hidden="true">↗</span></button>').join('')+'</div>'+
       '<a class="mh-v16-source-link" href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ИСТОЧНИК СОБЫТИЯ · '+escape(event.source)+' ↗</a></div>';
   }
@@ -330,6 +367,18 @@
       window.requestAnimationFrame(measure);
       return;
     }
+    const compareButton=event.target instanceof Element?event.target.closest('[data-mh-compare]'):null;
+    if(compareButton&&state.mode==='connections'&&['ArrowLeft','ArrowRight'].includes(event.key)){
+      event.preventDefault();
+      const candidates=EVENTS.filter(item=>item.id!==state.activeEvent);
+      const index=candidates.findIndex(item=>item.id===compareButton.dataset.mhCompare);
+      const direction=event.key==='ArrowRight'?1:-1;
+      compareEventId=candidates[(index+direction+candidates.length)%candidates.length].id;
+      const scroll=panel.scrollTop;
+      renderPanel();panel.scrollTop=scroll;
+      panel.querySelector('[data-mh-compare="'+compareEventId+'"]')?.focus({preventScroll:true});
+      return;
+    }
     const dateButton=event.target instanceof Element?event.target.closest('.mh-timeline [data-mh-event]'):null;
     if(!dateButton||!['ArrowLeft','ArrowRight'].includes(event.key))return;
     event.preventDefault();
@@ -357,6 +406,14 @@
     if (modeBtn) { setMode(modeBtn.dataset.mhMode); return; }
     const beacon = target.closest('[data-mh-beacon]');
     if (beacon) { selectEvent(beacon.dataset.mhBeacon); return; }
+    const compareBtn = target.closest('[data-mh-compare]');
+    if (compareBtn && state.mode==='connections' && EVENT_BY_ID[compareBtn.dataset.mhCompare] && compareBtn.dataset.mhCompare!==state.activeEvent) {
+      compareEventId=compareBtn.dataset.mhCompare;
+      const scroll=panel.scrollTop;
+      renderPanel();panel.scrollTop=scroll;
+      panel.querySelector('[data-mh-compare="'+compareEventId+'"]')?.focus({preventScroll:true});
+      return;
+    }
     const eventBtn = target.closest('[data-mh-event]');
     if (eventBtn) { selectEvent(eventBtn.dataset.mhEvent); return; }
     if (target.closest('[data-mh-go-connections]')) { setMode('connections'); return; }
@@ -396,6 +453,7 @@
     version: '13.0.0',
     get mode() { return state.mode; },
     get activeEvent() { return state.activeEvent; },
+    get comparedEvent() { return (EVENTS.find(item=>item.id===compareEventId&&item.id!==state.activeEvent)||EVENTS.find(item=>item.id!==state.activeEvent)).id; },
     get events() { return EVENTS.map(({id,year,date,name,themes,url,p})=>({id,year,date,name,themes:[...themes],url,p:[...p]})); },
     setMode, selectEvent, measure
   });
