@@ -234,11 +234,12 @@
     movePuzzle(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));
   },{passive:true});
   document.addEventListener('keydown',event=>{
-    // The Play screen can have several games, but only the focused 2048
-    // dialog may own arrow keys. Otherwise Snake, inputs and page scrolling
-    // must not silently change the 2048 board.
+    // Keys belong only to the actual focused 2048 game: native dialog OR
+    // V9 inline arcade. Never steal arrows from Snake or the Play catalog.
+    const inline2048=root.classList?.contains('v9-arcade-active') &&
+      root.dataset?.v9ActiveGame==='2048';
     if(!root.classList?.contains('active') ||
-       !puzzleGrid?.closest?.('.vp-game-in-dialog'))return;
+       !(inline2048||puzzleGrid?.closest?.('.vp-game-in-dialog')))return;
     const target=event.target;
     if(target?.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(target?.tagName))return;
     const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};

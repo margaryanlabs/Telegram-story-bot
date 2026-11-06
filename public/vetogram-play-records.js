@@ -30,6 +30,10 @@
   }
   function openGame(id){
     if(!valid.has(id))return;
+    // V9 owns its own full-width focus and Back button. Avoid invoking the
+    // old modal when this entrypoint comes from Surprise/records/deep links.
+    if(typeof window.VetogramV9GameOpen==='function' &&
+      window.VetogramV9GameOpen(id)===true)return;
     // Filters can hide the selected card. Clear them through the catalog's
     // existing event listener before using the original native game runner.
     const search=root.querySelector('#vpGameSearch');

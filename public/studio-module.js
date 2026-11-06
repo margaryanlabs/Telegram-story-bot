@@ -21,6 +21,17 @@
     window.__ghostStudioToast = setTimeout(() => el.classList.remove('show'), 2800);
   }
 
+  function openTelegramPack(link) {
+    const safe=String(link||'');
+    if(!/^https:\/\/t\.me\/add(?:emoji|stickers)\/[A-Za-z0-9_]+$/.test(safe)){
+      toast('Ссылка на Telegram-набор недоступна');return;
+    }
+    if(typeof tg?.openTelegramLink==='function') {
+      try{tg.openTelegramLink(safe);return;}catch(_){}
+    }
+    window.open(safe,'_blank','noopener,noreferrer');
+  }
+
   function haptic(type = 'light') {
     try { tg?.HapticFeedback?.impactOccurred(type); } catch {}
   }
@@ -283,9 +294,7 @@
     $('studioCreateButton')?.addEventListener('click', () => publishPack(false));
     $('studioAddButton')?.addEventListener('click', () => publishPack(true));
     $('studioOpenPackButton')?.addEventListener('click', event => {
-      const link = event.currentTarget.dataset.link;
-      if (!link) return;
-      try { tg?.openTelegramLink?.(link); } catch { window.open(link, '_blank', 'noopener'); }
+      openTelegramPack(event.currentTarget.dataset.link);
     });
 
     $('studioSharePackButton')?.addEventListener('click', () => {
@@ -295,8 +304,8 @@
     });
 
     $('studioOpenDirectButton')?.addEventListener('click', () => {
-      if (!studio.packName) return toast('Сначала создай Telegram pack');
-      try { window.location.href = `tg://addemoji?set=${encodeURIComponent(studio.packName)}`; } catch {}
+      if (!studio.packLink) return toast('Сначала создай Telegram pack');
+      openTelegramPack(studio.packLink);
     });
 
     $('studioNewAssetButton')?.addEventListener('click', () => {

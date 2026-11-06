@@ -233,10 +233,12 @@
    },{passive:true});
  }
  document.addEventListener('keydown',e=>{
-   // Arrow keys belong to Snake only while its real dialog is open.
-   // Preserve page scrolling and keyboard entry elsewhere in Vetogram.
+   // Snake captures arrows only in its native dialog or the focused V9
+   // inline game. Never steal input from 2048, forms or page scrolling.
+   const inlineSnake=root.classList?.contains('v9-arcade-active') &&
+     root.dataset?.v9ActiveGame==='snake';
    if(phase!=='running'||document.hidden ||
-      !snakeGrid?.closest?.('.vp-game-in-dialog'))return;
+      !(inlineSnake||snakeGrid?.closest?.('.vp-game-in-dialog')))return;
    const target=e.target;
    if(target?.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(target?.tagName))return;
    const map={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'};

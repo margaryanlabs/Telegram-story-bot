@@ -4,33 +4,33 @@
  */
 html#vetogram.vetogram-noir .screen[data-screen="profile"],
 html#vetogram.vetogram-noir body.veto-sheet-open #sheet {
-  --a11-ink:#edf4ff;
-  --a11-muted:#afbed5;
-  --a11-dim:#8497b1;
-  --a11-line:rgba(172,200,240,.17);
-  --a11-strong:rgba(188,215,250,.30);
-  --a11-panel:#111a2b;
-  --a11-raised:#19283d;
-  --a11-soft:rgba(174,199,237,.075);
-  --a11-accent:#bfd7ff;
+  --a11-ink:#f3f3f3;
+  --a11-muted:#bcbcbc;
+  --a11-dim:#959595;
+  --a11-line:rgba(197,197,197,.17);
+  --a11-strong:rgba(212,212,212,.30);
+  --a11-panel:#191919;
+  --a11-raised:#262626;
+  --a11-soft:rgba(196,196,196,.075);
+  --a11-accent:#d5d5d5;
   --a11-ease:cubic-bezier(.22,.76,.23,1);
-  --a11-shadow:0 17px 43px rgba(1,8,19,.20);
+  --a11-shadow:0 17px 43px rgba(7,7,7,.20);
   color:var(--a11-ink);
 }
 html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
 .screen[data-screen="profile"],
 html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
 body.veto-sheet-open #sheet {
-  --a11-ink:#213752;
-  --a11-muted:#526680;
-  --a11-dim:#677b96;
-  --a11-line:rgba(47,81,125,.17);
-  --a11-strong:rgba(45,90,148,.3);
+  --a11-ink:#343434;
+  --a11-muted:#646464;
+  --a11-dim:#797979;
+  --a11-line:rgba(77,77,77,.17);
+  --a11-strong:rgba(85,85,85,.3);
   --a11-panel:#fff;
-  --a11-raised:#edf3fa;
-  --a11-soft:rgba(66,106,166,.07);
-  --a11-accent:#35639a;
-  --a11-shadow:0 14px 36px rgba(37,66,105,.09);
+  --a11-raised:#f2f2f2;
+  --a11-soft:rgba(102,102,102,.07);
+  --a11-accent:#5d5d5d;
+  --a11-shadow:0 14px 36px rgba(63,63,63,.09);
 }
 /* Profile is a first-class workspace with a real source-backed account
    overview, not a second marketing landing page. */
@@ -49,8 +49,8 @@ html#vetogram.vetogram-noir .screen[data-screen="profile"] .v6-heading {
   border:1px solid var(--a11-line) !important;
   border-radius:23px !important;
   background:
-    radial-gradient(ellipse 72% 95% at 94% 0%,rgba(133,177,245,.16),transparent 75%),
-    linear-gradient(117deg,#121d30,#171f31 67%,#1a273d) !important;
+    radial-gradient(ellipse 72% 95% at 94% 0%,rgba(173,173,173,.16),transparent 75%),
+    linear-gradient(117deg,#1c1c1c,#1f1f1f 67%,#262626) !important;
   box-shadow:var(--a11-shadow) !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="profile"] .v6-heading .v6-eyebrow {
@@ -58,10 +58,10 @@ html#vetogram.vetogram-noir .screen[data-screen="profile"] .v6-heading .v6-eyebr
   font-size:10px !important;
   font-weight:760 !important;
   letter-spacing:.14em !important;
-  color:#b9cee9 !important;
+  color:#cbcbcb !important;
 }
 html#vetogram.vetogram-noir .screen[data-screen="profile"] .v6-heading h1 {
-  color:#f0f6ff !important;
+  color:#f5f5f5 !important;
   font-weight:800 !important;
   font-size:clamp(31px,5.8vw,53px) !important;
   letter-spacing:-.057em !important;
@@ -70,14 +70,14 @@ html#vetogram.vetogram-noir .screen[data-screen="profile"] .v6-heading h1 {
   text-wrap:balance;
 }
 html#vetogram.vetogram-noir .screen[data-screen="profile"] .v6-heading p {
-  color:#becbe0 !important;
+  color:#cacaca !important;
   font-size:13px !important;
   line-height:1.5 !important;
   margin:0 !important;
 }
 html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
 .screen[data-screen="profile"] .v6-heading{
-  background:linear-gradient(118deg,#fff,#eaf2fc) !important;
+  background:linear-gradient(118deg,#fff,#f1f1f1) !important;
 }
 html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"])
 .screen[data-screen="profile"] .v6-heading :is(h1,p,.v6-eyebrow){
@@ -217,10 +217,10 @@ html#vetogram.vetogram-noir .screen[data-screen="profile"] .rb11-account-primary
   align-items:center;
   min-height:48px !important;
   padding:12px 19px !important;
-  border:1px solid rgba(222,237,255,.42) !important;
+  border:1px solid rgba(235,235,235,.42) !important;
   border-radius:13px !important;
-  background:linear-gradient(125deg,#e3eeff,#c3dafa) !important;
-  color:#17314e !important;
+  background:linear-gradient(125deg,#ededed,#d7d7d7) !important;
+  color:#2e2e2e !important;
   font-size:13px !important;
   font-weight:760 !important;
   box-shadow:none !important;
@@ -312,10 +312,10 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet{
   border:1px solid var(--a11-strong) !important;
   border-radius:25px 25px 0 0 !important;
   background:
-    radial-gradient(ellipse 95% 32% at 78% 0%,rgba(126,172,242,.12),transparent 75%),
+    radial-gradient(ellipse 95% 32% at 78% 0%,rgba(167,167,167,.12),transparent 75%),
     var(--a11-panel) !important;
   color:var(--a11-ink) !important;
-  box-shadow:0 -18px 75px rgba(1,7,17,.40) !important;
+  box-shadow:0 -18px 75px rgba(6,6,6,.40) !important;
   overscroll-behavior:contain;
   overflow-x:hidden !important;
   overflow-y:auto !important;
@@ -411,9 +411,9 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet .sheet-actions button{
   text-align:center !important;
 }
 html#vetogram.vetogram-noir body.veto-sheet-open #sheet .sheet-actions button.accent:not(:disabled){
-  border:1px solid rgba(221,235,253,.5) !important;
-  background:linear-gradient(128deg,#d9e8fd,#adc9ef) !important;
-  color:#132b48 !important;
+  border:1px solid rgba(233,233,233,.5) !important;
+  background:linear-gradient(128deg,#e6e6e6,#c6c6c6) !important;
+  color:#282828 !important;
 }
 html#vetogram.vetogram-noir body.veto-sheet-open #sheet button:disabled {
   opacity:.57 !important;
@@ -481,7 +481,7 @@ html#vetogram.vetogram-noir body.veto-sheet-open #sheet .veto-login-stage span{
 }
 html#vetogram.vetogram-noir body.veto-sheet-open #sheet .veto-login-stage span.active{
   border-color:var(--a11-strong) !important;
-  background:rgba(155,193,244,.16) !important;
+  background:rgba(189,189,189,.16) !important;
   color:var(--a11-ink) !important;
 }
 html#vetogram.vetogram-noir body.veto-sheet-open #sheet .veto-login-stage span.done{

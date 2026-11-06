@@ -56,7 +56,7 @@ test('source CSS is safe for same-directory concatenation and cache versioning',
     assert.doesNotMatch(src,/@import\s/i);
     assert.doesNotMatch(src,/@charset\s/i);
   }
-  assert.match(html,/vetogram-reborn-ui\.css\?v=20261105-rb12-01/);
+  assert.match(html,/vetogram-reborn-ui\.css\?v=20261105-v9-02/);
   assert.ok(foundation.length>1500);
 });
 
@@ -110,7 +110,7 @@ test('light themes and accessibility states survive bundled cascade',()=>{
 test('Media and Book iframe documents retain their independent styling',()=>{
   for(const name of ['music-module.html','cinema.html','books.html']){
     const page=read(name);
-    assert.ok(page.includes('/vetogram-reborn-modules.css?v=20261105-rb9-01'),name);
+    assert.ok(page.includes('/vetogram-reborn-modules.css?v=20261105-v9-02'),name);
   }
   assert.match(bundle,/\.screen\[data-screen="media"\]/);
   assert.match(bundle,/\.screen\[data-screen="profile"\]/);
@@ -138,12 +138,13 @@ test('no broken or unterminated CSS blocks in final output',()=>{
   assert.ok(bundle.length>130000);
 });
 
-test('existing four-tab app navigation and keyboard geometry are unmodified',()=>{
-  assert.match(html,/data-reborn-nav="four"/);
+test('V9 five-tab navigation restores Games and preserves keyboard geometry',()=>{
+  assert.match(html,/data-reborn-nav="five"/);
   assert.match(html,/data-nav="telegram"/);
   assert.match(html,/data-nav="publish"/);
   assert.match(html,/data-nav="media"/);
+  assert.match(html,/data-nav="play"/);
   assert.match(html,/data-nav="privacy"/);
-  assert.match(bundle,/grid-template-columns:\s*repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(bundle,/grid-template-columns:\s*repeat\(5,minmax\(0,1fr\)\)/);
   assert.match(device,/veto:screen-changed/);
 });

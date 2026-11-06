@@ -11,6 +11,14 @@
  if(context){
   document.documentElement.classList.add('v6-embedded');
   document.documentElement.dataset.universeTheme=context.theme;
+  // V9: keep embedded Music/Cinema/Books in the owner's chosen black/white theme.
+  // Accept only same-origin messages from the actual parent frame.
+  window.addEventListener('message',event=>{
+   if(event.origin!==location.origin||event.source!==parent)return;
+   if(event.data?.channel!=='vetogram-universe'||event.data.action!=='theme')return;
+   const next=String(event.data.theme||'');
+   if(['graphite','slate','pearl','linen'].includes(next))document.documentElement.dataset.universeTheme=next;
+  });
   // Child modules must not independently hide/register Telegram's global Back.
   const api=parent.Telegram?.WebApp;
   if(api)window.Telegram={WebApp:new Proxy(api,{get(target,key){

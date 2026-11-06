@@ -23,6 +23,17 @@
     window.__ghostBrandToast = setTimeout(() => el.classList.remove('show'), 3000);
   }
 
+  function openTelegramPack(link) {
+    const safe=String(link||'');
+    if(!/^https:\/\/t\.me\/add(?:emoji|stickers)\/[A-Za-z0-9_]+$/.test(safe)){
+      toast('Ссылка на Telegram-набор недоступна');return;
+    }
+    if(typeof tg?.openTelegramLink==='function'){
+      try{tg.openTelegramLink(safe);return;}catch(_){}
+    }
+    window.open(safe,'_blank','noopener,noreferrer');
+  }
+
   function haptic(type = 'light') {
     try { tg?.HapticFeedback?.impactOccurred(type); } catch {}
   }
@@ -422,7 +433,7 @@
       if ($('brandPackResultName')) $('brandPackResultName').textContent = data.pack?.name || '';
       if ($('brandPackOpenButton')) $('brandPackOpenButton').dataset.link = data.pack?.link || '';
       if ($('brandPackShareButton')) $('brandPackShareButton').dataset.link = data.pack?.link || '';
-      if ($('brandPackDirectButton')) $('brandPackDirectButton').dataset.name = data.pack?.name || '';
+      if ($('brandPackDirectButton')) $('brandPackDirectButton').dataset.link = data.pack?.link || '';
       $('brandPackStatus').textContent = 'Brand Pack опубликован. Для просмотра всех emoji открывай именно весь pack, а не отдельный emoji.';
       notify('success');
     } catch (error) {
@@ -469,9 +480,7 @@
     $('brandPackPublishButton')?.addEventListener('click', publishPack);
 
     $('brandPackOpenButton')?.addEventListener('click', event => {
-      const link = event.currentTarget.dataset.link;
-      if (!link) return;
-      try { tg?.openTelegramLink?.(link); } catch { window.open(link, '_blank', 'noopener'); }
+      openTelegramPack(event.currentTarget.dataset.link);
     });
 
     $('brandPackShareButton')?.addEventListener('click', event => {
@@ -482,9 +491,7 @@
     });
 
     $('brandPackDirectButton')?.addEventListener('click', event => {
-      const name = event.currentTarget.dataset.name;
-      if (!name) return;
-      try { window.location.href = `tg://addemoji?set=${encodeURIComponent(name)}`; } catch {}
+      openTelegramPack(event.currentTarget.dataset.link);
     });
   }
 

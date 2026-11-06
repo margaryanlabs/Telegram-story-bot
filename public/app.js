@@ -116,6 +116,7 @@
   let viewerSearchQuery = '';
   let viewerRegisteredKey = '';
   let viewerQrAbortController = null;
+  let viewerQrRetryTimer = null;
   let viewerAuthBusy = false;
   let viewerPendingPhone = '';
   let composerFile = null;
@@ -123,6 +124,9 @@
   let composerPreviewUrl = '';
   let composerNonce = '';
   let composerBusy = false;
+  // A lost publish response may mean Telegram already posted the Story.
+  // Keep this attachment blocked until the owner explicitly starts a new one.
+  let composerPublishUncertain = false;
   let composerGeneration = 0;
   let composerOwner = '';
   let composerSignedIdentity=String(tg?.initData||'');
@@ -351,6 +355,7 @@
     composerFile = null;
     composerDataUrl = '';
     composerNonce = '';
+    composerPublishUncertain = false;
     composerOwner = '';
     composerPendingFileName = '';
     composerBusy = false;
@@ -390,6 +395,7 @@
     viewerAuthBusy=false;
     viewerQrAbortController?.abort();
     viewerQrAbortController=null;
+    clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;
     // The sheet is shared with Privacy, account connection and MFA.
     // Never leave the previous owner's private dialog visible or restore
     // keyboard focus to its old, now-detached input element.
@@ -436,6 +442,7 @@
     composerFromStudio=false;
     composerPendingFileName=String(file.name||'');
     composerFile=null;composerDataUrl='';composerOwner='';composerNonce='';
+    composerPublishUncertain=false;
     if(composerPreviewUrl)URL.revokeObjectURL(composerPreviewUrl);
     composerPreviewUrl='';
     $('mediaPreviewImage').removeAttribute('src');
@@ -539,6 +546,10 @@
     const isPublishOwner=()=>publishEpoch===viewerOwnerEpoch &&
       signedOwner===String(tg?.initData||'');
     if (composerBusy || state.processing) return;
+    if(composerPublishUncertain){
+      showToast('Статус Story не подтверждён. Сначала проверь истории в Telegram; новую публикацию начни с нового фото.');
+      return;
+    }
     if(composerPortalHandoff &&
        composerPortalHandoff.signed!==signedOwner){
       resetComposer();
@@ -652,8 +663,13 @@
         </div>
       `);
     } catch (error) {
-      if(!isPublishOwner())return;
+      if(!isPublishOwner()||publishingGeneration!==composerGeneration)return;
       state.processing = false;
+      if(error?.uncertain===true){
+        // Never offer a second publish of the same attachment/nonce after
+        // timeout, 5xx, 409 processing or a missing Telegram Story ID.
+        composerPublishUncertain=true;
+      }
       notify('error');
       showToast(error.message);
       throw error;
@@ -1314,6 +1330,9 @@
     if (composerBusy || state.processing) {
       composerState.textContent = state.processing ? 'Публикую…' : 'Подготавливаю…';
       composerState.className = 'composer-state busy';
+    } else if (composerPublishUncertain) {
+      composerState.textContent = 'Статус не подтверждён';
+      composerState.className = 'composer-state warn';
     } else if (composerDataUrl) {
       composerState.textContent = composerFromStudio ? 'Кадр · 9:16' : 'Готово';
       composerState.className = 'composer-state ready';
@@ -1333,10 +1352,15 @@
     $('deleteStory').disabled = !state.lastStory || !state.ready;
     const mainLabel = $('mainButton').querySelector('b');
     const mainIcon = $('mainButton').querySelector('span');
-    $('mainButton').disabled = Boolean(composerBusy || state.processing);
+    const uncertainNotice=$('storyPublishUncertain');
+    if(uncertainNotice)uncertainNotice.hidden=!composerPublishUncertain;
+    $('mainButton').disabled = Boolean(composerBusy || state.processing || composerPublishUncertain);
     $('mainButton').setAttribute('aria-busy', state.processing || composerBusy ? 'true' : 'false');
 
-    if (!state.ready) {
+    if (composerPublishUncertain) {
+      mainIcon.textContent = '!';
+      mainLabel.textContent = 'Проверь Stories в Telegram';
+    } else if (!state.ready) {
       mainIcon.textContent = '↻';
       mainLabel.textContent = 'Проверить подключение';
     } else if (composerBusy || state.processing) {
@@ -1951,7 +1975,8 @@
     if($('v61Player')?.hidden===false)return 'media-player';
     if(currentScreen==='telegram'&&$('telegramThreadView')?.hidden===false)
       return 'thread';
-    if(!['home','telegram','publish','media','privacy'].includes(currentScreen))
+    if(currentScreen==='play'&&window.VetogramV9GameIsOpen?.())return 'game';
+    if(!['home','telegram','publish','media','play','privacy'].includes(currentScreen))
       return 'secondary';
     return null;
   }
@@ -1971,9 +1996,11 @@
     if(target==='story'){window.VetoTelegramStoryBack?.();return;}
     if(target==='media-player'){window.VetoTelegramMediaBack?.();return;}
     if(target==='thread'){window.VetoTelegramChatBack?.();return;}
+    if(target==='game'){window.VetogramV9GameBack?.();return;}
     if(target==='secondary')switchScreen('telegram');
   }
   for(const name of [
+    'vetogram:game-view-changed',
     'vetogram:chat-view-changed',
     'vetogram:story-view-changed',
     'vetogram:media-player-view-changed',
@@ -1982,7 +2009,7 @@
   ])window.addEventListener(name,syncNativeBackButton);
 
   // Pages without a bottom-tab button still belong to an existing tab.
-  const NAV_PARENT = {home:'profile',profile:'profile',media:'media',play:'media',chats:'privacy',telegram:'telegram',voice:'profile',archive:'publish',analytics:'profile',viewers:'publish',relay:'profile',ai:'profile',studio:'publish','story-engine':'publish'};
+  const NAV_PARENT = {home:'profile',profile:'profile',media:'media',play:'play',chats:'privacy',telegram:'telegram',voice:'profile',archive:'publish',analytics:'profile',viewers:'publish',relay:'profile',ai:'profile',studio:'publish','story-engine':'publish'};
   function switchScreen(name) {
     ensureComposerIdentity();
     const target = SCREEN_ALIASES[String(name || '').toLowerCase()] || 'home';
@@ -2958,6 +2985,7 @@
   }
 
   function viewerQrSheet() {
+    clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;
     openSheet(`
       <span class="kicker">ПОДКЛЮЧЕНИЕ ЧЕРЕЗ QR</span>
       <h2>Отсканируй QR со второго экрана</h2>
@@ -2981,6 +3009,7 @@
 
   function updateViewerQr(event) {
     if (!event || $('sheet')?.hidden) return;
+    clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;
     const image = $('viewerQrImage');
     const loader = $('viewerQrLoader');
     const status = $('viewerQrStatus');
@@ -3019,10 +3048,35 @@
       if (status) status.textContent = 'Не удалось подключить';
       if (meta) meta.textContent = event.error || 'Повтори попытку.';
       if (openButton) {
-        openButton.disabled = false;
         openButton.textContent = 'Повторить';
         openButton.dataset.sheetAction = 'viewer-start-qr';
         delete openButton.dataset.qrUri;
+        const retrySeconds=Number(event.retryAfterSeconds);
+        const wait=Number.isSafeInteger(retrySeconds)&&retrySeconds>0&&retrySeconds<=86400
+          ? retrySeconds : 0;
+        if(wait) {
+          // Respect Telegram FLOOD_WAIT even when the NDJSON stream ends.
+          // Never enable a second QR request until the server cooldown ends.
+          const until=Date.now()+wait*1000;
+          const signed=String(tg?.initData||''),epoch=viewerOwnerEpoch;
+          const tick=()=>{
+            if($('sheet')?.hidden || $('viewerQrOpenButton')!==openButton ||
+               signed!==String(tg?.initData||'') || epoch!==viewerOwnerEpoch) {
+              clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;return;
+            }
+            const left=Math.max(0,Math.ceil((until-Date.now())/1000));
+            openButton.disabled=left>0;
+            openButton.textContent=left>0?`Повтор через ${left} с`:'Повторить QR';
+            if(!left) {
+              clearInterval(viewerQrRetryTimer);viewerQrRetryTimer=null;
+              if(meta) meta.textContent='Ограничение Telegram завершилось. Можно создать новый QR.';
+            }
+          };
+          tick();
+          viewerQrRetryTimer=setInterval(tick,1000);
+        } else {
+          openButton.disabled=false;
+        }
       }
     }
   }
@@ -3089,15 +3143,26 @@
           if (event.type === 'connected') {
             finished = true;
             viewerQrAbortController = null;
-            closeSheet();
-            notify('success');
-            showToast('Telegram подключён через QR');
+            // A streamed MTProto success is not proof that the current
+            // signed Mini App owner can read the persisted viewer session.
+            // Recheck the exact owner before claiming success or offering
+            // optional Telegram Business consent.
             await refreshViewerSync({ silent: true });
             if(!sameOwner())return;
             await refresh();
             if(!sameOwner())return;
-            await refreshViewerAnalytics({ silent: true });
+            if(viewerState.session?.connected!==true ||
+               viewerState.session?.identityMismatch===true ||
+               viewerState.degraded===true){
+              closeSheet();
+              showToast('Telegram принял QR, но Vetogram ещё не подтвердил сессию. Обнови подключение; не запрашивай новый QR сразу.');
+              return;
+            }
+            await refreshViewerAnalytics({ silent: true }).catch(()=>{});
             if(!sameOwner())return;
+            closeSheet();
+            notify('success');
+            showToast('Telegram успешно подключён через QR');
             switchScreen('telegram');
             offerBusinessConsentAfterLogin();
             break;
@@ -4000,6 +4065,11 @@
   });
 
   $('removeStoryMedia').addEventListener('click', () => resetComposer({ keepCaption: true }));
+  $('storyUncertainNewDraft')?.addEventListener('click',()=>{
+    // A new file selection is an explicit action, not an automatic retry.
+    resetComposer({keepCaption:true});
+    $('storyFileInput').click();
+  });
 
   $('storyCaption').addEventListener('input', event => {
     $('captionCounter').textContent = `${event.target.value.length} / 2048`;

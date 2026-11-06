@@ -752,8 +752,14 @@ export default async function handler(req, res) {
         telegramSendMayHaveOccurred=false;
       } catch (error) {
         const feedback=classifyTelegramAuthError(error);
-        if (leaseToken && telegramSendMayHaveOccurred && feedback.retryAfterSeconds)
-          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds).catch(()=>{});
+        // A timeout or storage failure AFTER calling Telegram may have delivered
+        // a code. Never tell the user to retry immediately: preserve the
+        // owner-scoped Neon lease, and do not attempt an automatic second send.
+        const deliveryUncertain=telegramSendMayHaveOccurred && feedback.status>=500 &&
+          !/API_ID_INVALID|API_HASH_INVALID|API_ID_PUBLISHED_FLOOD/i.test(String(error?.errorMessage || error?.message || error || ''));
+        if (leaseToken && telegramSendMayHaveOccurred && (feedback.retryAfterSeconds || deliveryUncertain))
+          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds || 180).catch(()=>{});
+        if (deliveryUncertain) throw new Error('AUTH_DELIVERY_UNCERTAIN');
         throw error;
       } finally {
         if (leaseToken && !telegramSendMayHaveOccurred)
@@ -821,8 +827,14 @@ export default async function handler(req, res) {
           ...codeStatus(next),reused:false,expiresAt:stored.expires_at});
       } catch (error) {
         const feedback=classifyTelegramAuthError(error);
-        if (leaseToken && telegramSendMayHaveOccurred && feedback.retryAfterSeconds)
-          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds).catch(()=>{});
+        // A timeout or storage failure AFTER calling Telegram may have delivered
+        // a code. Never tell the user to retry immediately: preserve the
+        // owner-scoped Neon lease, and do not attempt an automatic second send.
+        const deliveryUncertain=telegramSendMayHaveOccurred && feedback.status>=500 &&
+          !/API_ID_INVALID|API_HASH_INVALID|API_ID_PUBLISHED_FLOOD/i.test(String(error?.errorMessage || error?.message || error || ''));
+        if (leaseToken && telegramSendMayHaveOccurred && (feedback.retryAfterSeconds || deliveryUncertain))
+          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds || 180).catch(()=>{});
+        if (deliveryUncertain) throw new Error('AUTH_DELIVERY_UNCERTAIN');
         throw error;
       } finally {
         if (leaseToken && !telegramSendMayHaveOccurred) await releaseLoginCodeLease(userId,leaseToken).catch(()=>{});

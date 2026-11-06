@@ -1,0 +1,202 @@
+/* V9 / Music World: native Audius stream discovery, premium monochrome.
+   Layered LAST; old home remains as no-JS fallback. */
+html.v9-world-ready .page[data-view="home"] #hero{display:none!important}
+html.v9-world-ready body{background:#050505;color:#f7f7f7}
+.v9-world[hidden]{display:none!important}
+.v9-world{
+  color:#f6f6f6;position:relative;isolation:isolate;
+  background:#0b0b0b;border:1px solid #303030;border-radius:25px;
+  padding:clamp(18px,3.3vw,38px);margin:8px 0 25px;overflow:hidden;
+}
+.v9-world::before{
+  content:"";position:absolute;inset:-35% -35% auto auto;width:65%;height:95%;
+  pointer-events:none;z-index:-1;
+  background:radial-gradient(ellipse,#ffffff08 0%,transparent 65%);
+}
+.v9-world-top{display:flex;justify-content:space-between;align-items:start;gap:16px;margin-bottom:22px}
+.v9-world-kicker{
+  display:block;color:#bdbdbd;font-size:10px;font-weight:850;letter-spacing:.18em;
+  text-transform:uppercase;margin-bottom:10px;
+}
+.v9-world-top h1{margin:0;color:#fff;font-size:clamp(33px,5vw,62px);font-weight:840;line-height:1.02;letter-spacing:-.065em}
+.v9-world-top h1 em{color:#9e9e9e;font-style:normal}
+.v9-world-top p{color:#aaa;font-size:12px;line-height:1.6;max-width:610px;margin:13px 0 0}
+.v9-world-top button,.v9-world-head button{
+  border:1px solid #4b4b4b;background:#191919;color:#f4f4f4;
+  border-radius:12px;padding:11px 14px;min-height:42px;font-size:11px;font-weight:750;
+}
+.v9-world-top button:hover,.v9-world-head button:hover{background:#292929;border-color:#8e8e8e}
+.v9-world-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:20px}
+.v9-world-featured{
+  min-width:0;display:grid;grid-template-columns:minmax(130px,45%) minmax(0,1fr);
+  align-items:center;gap:clamp(14px,2vw,28px);padding:clamp(14px,2vw,24px);
+  background:#171717;border:1px solid #303030;border-radius:19px;
+}
+.v9-world-cover{
+  width:100%;aspect-ratio:1;border-radius:15px;overflow:hidden;
+  background:linear-gradient(140deg,#343434,#101010);
+  display:grid;place-items:center;box-shadow:0 18px 38px #0007;
+}
+.v9-world-cover img,.v9-world-track-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.v9-world-fallback{font-size:clamp(62px,9vw,130px);font-weight:800;color:#888}
+.v9-world-feature-info{min-width:0}
+.v9-world-feature-info>small{font-size:10px;color:#aaa;letter-spacing:.12em;font-weight:800}
+.v9-world-feature-info h2{
+  font-size:clamp(25px,3vw,43px);font-weight:850;line-height:1.08;
+  letter-spacing:-.055em;margin:10px 0 7px;overflow-wrap:anywhere;color:#fff;
+}
+.v9-world-feature-info>p{font-size:13px;color:#bbb;line-height:1.5;margin:0 0 20px;overflow-wrap:anywhere}
+.v9-world-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.v9-world-controls button{
+  min-height:42px;border-radius:11px;padding:10px 14px;
+  background:#262626;border:1px solid #4b4b4b;color:#fff;font-size:12px;font-weight:800;
+}
+.v9-world-controls .v9-world-play{background:#f4f4f4;color:#101010;border-color:#f4f4f4}
+.v9-world-controls button:disabled{opacity:.35;cursor:not-allowed}
+.v9-world-nav{display:flex;align-items:center;gap:8px;margin-top:22px}
+.v9-world-nav button{
+  border:1px solid #4b4b4b;background:#222;color:#eee;
+  width:37px;height:37px;border-radius:10px;font-size:18px;
+}
+.v9-world-nav span{font-variant-numeric:tabular-nums;font-size:11px;color:#a5a5a5;margin-left:5px}
+.v9-world-collection{min-width:0;display:flex;flex-direction:column}
+.v9-world-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:0 0 10px}
+.v9-world-head strong{font-size:17px;font-weight:780;letter-spacing:-.03em;color:#f4f4f4}
+.v9-world-track-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;max-height:460px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#555 #161616;
+}
+.v9-world-track{
+  display:flex;align-items:center;text-align:left;gap:10px;min-width:0;min-height:83px;
+  border:1px solid #303030;background:#171717;color:#fff;border-radius:13px;padding:9px;
+  transition:border-color .18s,transform .18s,background .18s;
+}
+.v9-world-track:is(:hover,:focus-visible),.v9-world-track.is-selected{
+  border-color:#898989;background:#232323;
+}
+.v9-world-track-cover{
+  flex:0 0 60px;width:60px;height:60px;border-radius:9px;overflow:hidden;
+  background:#303030;display:grid;place-items:center;
+}
+.v9-world-track-fallback{font-size:28px;font-weight:800;color:#999}
+.v9-world-track-details{display:flex;flex-direction:column;min-width:0;flex:1;gap:4px}
+.v9-world-track-details strong,.v9-world-track-details small{
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block;
+}
+.v9-world-track-details strong{font-size:12px;font-weight:800;color:#f4f4f4}
+.v9-world-track-details small{font-size:11px;color:#aaa}
+.v9-world-track-arrow{font-size:15px;color:#999;align-self:flex-start}
+.v9-world-status{font-size:11px;line-height:1.55;color:#a9a9a9;min-height:18px;margin:17px 0 0}
+.v9-world-empty{font-size:12px;color:#bbb;padding:22px;border:1px dashed #555;border-radius:12px}
+.v9-world-skeleton{min-height:83px;border-radius:12px;background:linear-gradient(95deg,#1c1c1c,#292929,#1c1c1c)}
+.v9-world button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@media(max-width:1100px){
+  .v9-world-layout{grid-template-columns:1fr}
+  .v9-world-track-grid{max-height:260px;grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:720px){
+  .v9-world{border-radius:18px;padding:18px 14px;margin:8px 0 20px}
+  .v9-world-top{display:block}
+  .v9-world-top h1{font-size:clamp(36px,9vw,50px)}
+  .v9-world-top button{margin-top:14px}
+  .v9-world-featured{grid-template-columns:130px minmax(0,1fr);gap:14px;padding:12px}
+  .v9-world-feature-info h2{font-size:clamp(22px,5vw,30px)}
+  .v9-world-controls button{min-height:38px;padding:8px 11px}
+  .v9-world-track-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:280px}
+  .v9-world-track-cover{flex-basis:47px;width:47px;height:47px}
+  .v9-world-track{min-height:66px;padding:7px}
+}
+@media(max-width:420px){
+  .v9-world-featured{grid-template-columns:1fr}
+  .v9-world-cover{width:min(100%,245px);margin:0 auto}
+  .v9-world-feature-info h2{font-size:28px}
+  .v9-world-track-grid{grid-template-columns:1fr;max-height:305px}
+  .v9-world-track-cover{flex-basis:55px;width:55px;height:55px}
+}
+@media(prefers-reduced-motion:reduce){
+  .v9-world-track,.v9-world button{transition:none!important;animation:none!important}
+}
+/* The catalog is international by default; retain accessible RU/HY choices. */
+.page[data-view="catalog"] .catalog-hero{
+  background:#111!important;border-color:#383838!important;box-shadow:none!important;
+}
+.page[data-view="catalog"] .catalog-hero h1 em{background:none!important;color:#aaa!important;-webkit-text-fill-color:#aaa!important}
+.page[data-view="catalog"] .catalog-switch button.active,
+.page[data-view="catalog"] .catalog-pill.active,
+.page[data-view="catalog"] .catalog-search button{
+  background:#f2f2f2!important;color:#111!important;border-color:#f2f2f2!important;
+}
+.page[data-view="catalog"] .catalog-cover{
+  background:#292929!important;color:#eee!important;
+}
+.page[data-view="catalog"] .catalog-track{
+  background:#161616!important;border-color:#303030!important;
+}
+.page[data-view="catalog"] .catalog-track:hover{background:#242424!important;border-color:#666!important}
+.page[data-view="catalog"] .catalog-play{background:#eee!important;color:#111!important}
+
+/* Respect owner-selected Pearl/Linen instead of forcing the new dark surface. */
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world{
+  background:#f7f7f7!important;color:#171717!important;border-color:#d2d2d2!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world::before{background:none}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world :is(.v9-world-top h1,.v9-world-feature-info h2,.v9-world-head strong,.v9-world-track-details strong){
+  color:#171717!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world :is(.v9-world-top p,.v9-world-kicker,.v9-world-feature-info>small,.v9-world-feature-info>p,.v9-world-track-details small,.v9-world-status){
+  color:#595959!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world :is(.v9-world-featured,.v9-world-track){
+  background:#fff!important;border-color:#d4d4d4!important;color:#181818!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world .v9-world-track:is(:hover,:focus-visible,.is-selected){
+  background:#ededed!important;border-color:#888!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world :is(.v9-world-top button,.v9-world-head button,.v9-world-nav button,.v9-world-controls button:not(.v9-world-play)){
+  background:#fff!important;color:#171717!important;border-color:#b9b9b9!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world .v9-world-play{
+  background:#161616!important;color:#fff!important;border-color:#161616!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .v9-world button:focus-visible{
+  outline-color:#111!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .page[data-view="catalog"] .catalog-track{
+  background:#fff!important;border-color:#d0d0d0!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .page[data-view="catalog"] .catalog-track:hover{
+  background:#f0f0f0!important;border-color:#aaa!important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .page[data-view="catalog"] .catalog-cover{
+  background:#dedede!important;color:#333!important;
+}
+
+/* Black/white throughout existing Music sections, not just the new hero.
+   Keep original functional modules, sources and audio controls untouched. */
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="home"] :is(.native-home,.audio-home-panel,.charts-home-entry,.licensed-home-section,.social-invite,.feature-strip){
+  background:#101010!important;background-image:none!important;border-color:#353535!important;
+  box-shadow:none!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="home"] :is(.native-home-option,.audio-oneplay,.audio-more-stations,.licensed-home-card){
+  background:#191919!important;background-image:none!important;border-color:#3a3a3a!important;
+  color:#f0f0f0!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="home"] :is(.native-home h2 em,.audio-home-panel h2 em,.charts-home-entry strong){
+  background:none!important;color:#e5e5e5!important;-webkit-text-fill-color:#e5e5e5!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="charts"] :is(.charts-hero,.charts-block,.charts-regions,.charts-stations){
+  background:#101010!important;background-image:none!important;border-color:#383838!important;
+  box-shadow:none!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="charts"] :is(.charts-hero-copy h1 em,.charts-head h2 em){
+  background:none!important;color:#d5d5d5!important;-webkit-text-fill-color:#d5d5d5!important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+  .page[data-view="charts"] :is(.charts-filters button.active,.charts-genres button.active,.chart-radio-play){
+  background:#f2f2f2!important;color:#101010!important;border-color:#f2f2f2!important;
+}

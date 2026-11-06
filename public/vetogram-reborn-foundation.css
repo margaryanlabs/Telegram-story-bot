@@ -4,15 +4,15 @@
  * A final cascade layer while legacy styles are audited, not a new theme engine.
  */
 :root {
-  --vgr-bg: #080b11;
-  --vgr-surface: #111722;
-  --vgr-surface-2: #171f2c;
-  --vgr-line: rgba(204, 215, 233, .12);
-  --vgr-ink: #f0f3f9;
-  --vgr-muted: #adb9ca;
-  --vgr-accent: #b9c9f0;
+  --vgr-bg: #0b0b0b;
+  --vgr-surface: #171717;
+  --vgr-surface-2: #1e1e1e;
+  --vgr-line: rgba(214,214,214, .12);
+  --vgr-ink: #f3f3f3;
+  --vgr-muted: #b8b8b8;
+  --vgr-accent: #c8c8c8;
   --vgr-radius: 18px;
-  --vgr-focus: #c5d2f6;
+  --vgr-focus: #d2d2d2;
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]) {
   --vet-panel: var(--vgr-surface);
@@ -51,35 +51,35 @@ body:not(.veto-chat-active):not(.veto-chat-thread) {
 }
 /* Four true destinations rather than squeezing Games and Profile into the
  * primary action rail. Both remain reachable by Media and the header. */
-#vetogram .bottom-nav[data-reborn-nav="four"] {
+#vetogram .bottom-nav[data-reborn-nav="five"] {
   gap: 0;
 }
-#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+#vetogram .bottom-nav[data-reborn-nav="five"] .nav-item {
   min-width: 0;
   min-height: 48px;
   flex: 1 1 25%;
   touch-action: manipulation;
 }
-#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item small {
+#vetogram .bottom-nav[data-reborn-nav="five"] .nav-item small {
   white-space: nowrap;
 }
-#vetogram .bottom-nav[data-reborn-nav="four"] .nav-item:focus-visible,
+#vetogram .bottom-nav[data-reborn-nav="five"] .nav-item:focus-visible,
 #vetogram .screen[data-screen="home"] button:focus-visible {
   outline: 2px solid var(--vgr-focus) !important;
   outline-offset: -2px;
 }
 @media (max-width: 600px) {
-  #vetogram .bottom-nav[data-reborn-nav="four"] {
+  #vetogram .bottom-nav[data-reborn-nav="five"] {
     display: grid !important;
     grid-template-columns: repeat(4,minmax(0,1fr));
     align-items: stretch;
     padding-left: max(8px,env(safe-area-inset-left));
     padding-right: max(8px,env(safe-area-inset-right));
   }
-  #vetogram .bottom-nav[data-reborn-nav="four"] :is(.v6-nav-brand,.v6-nav-foot) {
+  #vetogram .bottom-nav[data-reborn-nav="five"] :is(.v6-nav-brand,.v6-nav-foot) {
     display: none !important;
   }
-  #vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+  #vetogram .bottom-nav[data-reborn-nav="five"] .nav-item {
     width: auto !important;
     min-width: 0 !important;
     min-height: 52px;
@@ -92,7 +92,7 @@ body:not(.veto-chat-active):not(.veto-chat-thread) {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  #vetogram .bottom-nav[data-reborn-nav="four"] .nav-item {
+  #vetogram .bottom-nav[data-reborn-nav="five"] .nav-item {
     transition: none !important;
   }
 }
@@ -102,14 +102,14 @@ body:not(.veto-chat-active):not(.veto-chat-thread) {
  * The existing login / message / archive controllers stay authoritative.
  * Styling is specific to the studio shell, not embedded media documents.
  */
-#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] {
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] {
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   align-items: stretch;
 }
-#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] :is(.v6-nav-brand,.v6-nav-foot) {
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] :is(.v6-nav-brand,.v6-nav-foot) {
   display: none !important;
 }
-#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item {
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item {
   width: 100% !important;
   min-width: 0 !important;
   min-height: 56px !important;
@@ -120,14 +120,14 @@ body:not(.veto-chat-active):not(.veto-chat-thread) {
   justify-content: center;
   gap: 5px;
 }
-#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item small {
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item small {
   font-size: 11px !important;
   font-weight: 650 !important;
   line-height: 1.2;
   letter-spacing: -.01em;
 }
-#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item[aria-current="page"] {
-  background: rgba(179, 191, 217, .08) !important;
+#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item[aria-current="page"] {
+  background: rgba(190,190,190, .08) !important;
 }
 
 /* The original V4 controller moves existing, live nodes into these details;
@@ -185,7 +185,7 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] .veto-command-home {
-  background: linear-gradient(145deg,#141b29 0%,#101621 58%,#0d121b 100%) !important;
+  background: linear-gradient(145deg,#1b1b1b 0%,#161616 58%,#121212 100%) !important;
   border: 1px solid var(--vgr-line) !important;
   border-radius: 22px !important;
   box-shadow: none !important;
@@ -203,7 +203,7 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
   align-items: center;
   font-size: 10px !important;
   letter-spacing: .11em !important;
-  color: #bac8df !important;
+  color: #c7c7c7 !important;
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] .veto-command-home-top strong {
@@ -212,7 +212,7 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] .veto-command-home h1 {
   margin: 0 !important;
-  color: #f3f5fb !important;
+  color: #f5f5f5 !important;
   font-size: clamp(33px,4.7vw,57px) !important;
   font-weight: 760 !important;
   letter-spacing: -.052em !important;
@@ -221,8 +221,8 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] .veto-command-home h1 em {
   display: inline !important;
-  color: #c5d1e5 !important;
-  -webkit-text-fill-color: #c5d1e5 !important;
+  color: #d0d0d0 !important;
+  -webkit-text-fill-color: #d0d0d0 !important;
   font-style: normal !important;
   letter-spacing: inherit;
   font-size: inherit !important;
@@ -232,7 +232,7 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
   font-size: 14px !important;
   line-height: 1.65 !important;
   max-width: 52ch !important;
-  color: #b8c4d6 !important;
+  color: #c3c3c3 !important;
   margin: 0 !important;
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
@@ -257,15 +257,15 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] .veto-command-home-actions .veto-command-home-primary {
-  background: #c7d4ed !important;
-  color: #111a29 !important;
-  border: 1px solid #c7d4ed !important;
+  background: #d3d3d3 !important;
+  color: #191919 !important;
+  border: 1px solid #d3d3d3 !important;
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] .veto-command-home-actions .veto-command-home-connect {
   background: rgba(255,255,255,.035) !important;
-  color: #ecf0f8 !important;
-  border: 1px solid rgba(196,209,229,.22) !important;
+  color: #f0f0f0 !important;
+  border: 1px solid rgba(208,208,208,.22) !important;
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] #vg27Mission {
@@ -304,11 +304,11 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
 .screen[data-screen="home"] #vg27Mission .vg27-mission-bottom > span {
   font-size: 11px !important;
   line-height: 1.55 !important;
-  color: #b5c2d5 !important;
+  color: #c1c1c1 !important;
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] > :is(.v4-home-toolbox,.v4-home-recent,.v4-home-activity) {
-  background: #101621 !important;
+  background: #161616 !important;
   border: 1px solid var(--vgr-line) !important;
   border-radius: 16px !important;
   box-shadow: none !important;
@@ -317,16 +317,16 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] > :is(.v4-home-toolbox,.v4-home-recent,.v4-home-activity) > summary {
-  color: #eff3fa !important;
+  color: #f3f3f3 !important;
   background: none !important;
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] > :is(.v4-home-toolbox,.v4-home-recent,.v4-home-activity) > summary small {
-  color: #a7b5c9 !important;
+  color: #b3b3b3 !important;
 }
 html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
 .screen[data-screen="home"] > :is(.v4-home-toolbox,.v4-home-recent,.v4-home-activity) .v4-disclosure-body {
-  color: #e5ebf4;
+  color: #eaeaea;
 }
 @media (min-width: 1000px) {
   html#vetogram.vetogram-noir .screen[data-screen="home"].active {
@@ -366,7 +366,7 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
     width: 100% !important;
     min-height: 50px !important;
   }
-  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="four"] .nav-item {
+  html#vetogram.vetogram-noir .bottom-nav[data-reborn-nav="five"] .nav-item {
     min-height: 52px !important;
   }
   #vetogram.vetogram-noir .screen[data-screen="home"] > :is(
@@ -374,4 +374,12 @@ html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme=
   ) > summary {
     padding: 14px 12px;
   }
+}
+
+
+/* V9 monochrome tokens: existing light themes and chat wallpapers retained. */
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]){
+  --v6-bg:#000;--v6-surface:#121212;--v6-text:#f4f4f4;
+  --v6-muted:#a5a5a5;--v6-accent:#f0f0f0;--vet-pink:#ededed;
+  --noir-bg:#000;--vet-panel:#131313;--vet-panel-raised:#1a1a1a;
 }
