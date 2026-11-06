@@ -53,7 +53,8 @@ test('a unified cache release prevents stale Android/WebView CSS and JS',()=>{
     ...['/studio-module.js','/brand-pack.js']
       .map(path=>[path,'20261106-v9-studio-01']),
     ...['/app.js','/vetogram-v9-story-engine.css']
-      .map(path=>[path,'20261106-v9-story-01'])
+      .map(path=>[path,'20261106-v9-story-01']),
+    ['/telegram-chats.js','20261106-v9-chat-poll-01']
   ]);
   assert.equal(new Set(assets.map(asset=>asset.path)).size,assets.length,
     'No JS/CSS path may be mounted twice with conflicting cache keys');
