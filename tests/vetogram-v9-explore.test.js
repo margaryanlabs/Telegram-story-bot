@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const edition='20261106-v9-04';
 const screens=['studio','cinema','books','music-module'];
@@ -56,4 +57,41 @@ test('Cinema and Books use their real native controllers and single media dock',
   assert.match(cinema,/id="cinemaHero"/);
   assert.match(books,/id="reader"/);
   assert.match(books,/id="bookSearch"/);
+});
+
+test('Media quick links delegate to original modules without duplicating the menu',()=>{
+  const js=read('public/vetogram-v9-explore.js');
+  class Element {
+    constructor(tag){this.tag=tag;this.dataset={};this.children=[];this.events={};this.attributes={};}
+    append(...elements){this.children.push(...elements);}
+    appendChild(element){this.append(element);}
+    setAttribute(name,value){this.attributes[name]=value;}
+    addEventListener(name,fn){this.events[name]=fn;}
+    click(){this.events.click?.();}
+  }
+  const routes=['cinema','music','books'];
+  const calls={cinema:0,music:0,books:0};
+  const buttons=Object.fromEntries(routes.map(name=>[name,{click(){calls[name]++;}}]));
+  const grid={querySelector(selector){
+    const name=selector.match(/\\[data-v6-module="([^"]+)"\\]/)?.[1];
+    return buttons[name]||null;
+  }};
+  const home=new Element('div');
+  home.firstElementChild={tag:'header'};
+  home.querySelector=selector=>selector==='.v72-media-grid'?grid:
+    selector==='#v9MediaQuickNav'?home.children.find(item=>item.id==='v9MediaQuickNav')||null:null;
+  home.insertBefore=element=>{home.children.unshift(element);};
+  const doc={
+    createElement:tag=>new Element(tag),
+    querySelector:selector=>selector==='#v6MediaHome'?home:null
+  };
+  const context={document:doc,window:{}};
+  runInNewContext(js,context);
+  runInNewContext(js,context);
+  assert.equal(home.children.length,1,'should not duplicate shortcut menu');
+  const nav=home.children[0];
+  assert.equal(nav.attributes['aria-label'],'Быстрый переход к медиа');
+  assert.deepEqual(nav.children.map(item=>item.dataset.v9Module),routes);
+  nav.children.forEach(item=>item.click());
+  assert.deepEqual(calls,{cinema:1,music:1,books:1});
 });
