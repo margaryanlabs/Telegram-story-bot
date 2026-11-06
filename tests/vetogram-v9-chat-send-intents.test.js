@@ -95,3 +95,47 @@ test('sending reuses nonce only for exact intent and never auto-retries',()=>{
   assert.match(send,/rememberUncertainTextSend\(failure\)/);
   assert.doesNotMatch(send,/setTimeout\([^)]*sendOutgoing\(/);
 });
+
+function requestHarness(response){
+  const start=source.indexOf('  async function sendChatRequest(');
+  const end=source.indexOf('  function canSendInThread(',start);
+  assert.ok(start>=0&&end>start);
+  let calls=0;
+  const fetch=async()=>{calls++;return response;};
+  const tg={initData:'signed-owner-test-only'};
+  const send=new Function('tg','resetOwner','fetch','AbortController','setTimeout','clearTimeout',
+    source.slice(start,end)+'\\nreturn sendChatRequest;')(
+    tg,()=>false,fetch,AbortController,()=>1,()=>{});
+  return {send,getCalls:()=>calls};
+}
+function mockResponse(status,body){
+  return {ok:status>=200&&status<300,status,
+    json:async()=>{if(body===null)throw new SyntaxError('bad JSON');return body;}};
+}
+const validMessageId=924;
+
+test('valid owner-confirmed Telegram message ID is accepted exactly once',async()=>{
+  const h=requestHarness(mockResponse(200,{ok:true,sent:true,messageId:validMessageId}));
+  const data=await h.send('101','Hello','nonce-A');
+  assert.equal(data.messageId,validMessageId);
+  assert.equal(h.getCalls(),1);
+});
+
+test('HTTP 200 with malformed JSON or missing message ID remains uncertain',async()=>{
+  for(const body of [null,{}, {ok:true,sent:true},{ok:true,sent:true,messageId:0},
+    {ok:true,sent:false,messageId:924}]){
+    const h=requestHarness(mockResponse(200,body));
+    await assert.rejects(()=>h.send('101','Hello','nonce-A'),
+      error=>error.uncertain===true);
+    assert.equal(h.getCalls(),1);
+  }
+});
+
+test('definitive HTTP 400 is not marked uncertain; HTTP 503 is',async()=>{
+  const bad=requestHarness(mockResponse(400,{ok:false,error:'Некорректный чат'}));
+  await assert.rejects(()=>bad.send('101','Hello','nonce-A'),
+    error=>error.uncertain!==true);
+  const outage=requestHarness(mockResponse(503,null));
+  await assert.rejects(()=>outage.send('101','Hello','nonce-A'),
+    error=>error.uncertain===true);
+});
