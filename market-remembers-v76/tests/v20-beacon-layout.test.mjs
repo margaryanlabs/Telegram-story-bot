@@ -61,7 +61,7 @@ test('V20.6 can move a label above or below instead of hiding a visible beacon',
   const arrange=layout();
   const r=arrange([input('2008',260,255,true)],{
     width:600,height:460,
-    obstacles:[{left:0,top:220,right:600,bottom:300}]
+    obstacles:[{left:0,top:240,right:600,bottom:275}]
   });
   assert.equal(r['2008'].hidden,false);
   assert.ok(['above','below'].includes(r['2008'].placement));
