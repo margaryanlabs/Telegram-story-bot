@@ -59,6 +59,9 @@ test('Cinema playable-only filter returns actual embedded records, not catalog c
  assert.match(html,/id="cinemaDetailsAvailability"/);
  assert.match(code,/cinemaDetailsSource"\);/);
  assert.match(code,/state\.onlyPlayable\)list=list\.filter/);
+ assert.match(code,/setTab\("search"\)/);
+ assert.match(code,/movieAccess\(f\)\.kind==="embedded"\?"В ПЛЕЕРЕ"/);
+ assert.match(code,/if\(movieAccess\(state\.selected\)\.kind==="unavailable"\)/);
 });
 
 test('Books resume appears only with real saved progress and delegates to native Continue',()=>{
