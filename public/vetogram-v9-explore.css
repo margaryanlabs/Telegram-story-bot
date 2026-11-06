@@ -453,6 +453,7 @@ body.vetogram-editorial-cinema .v97-cinema-verified-filter{
  border-radius:10px;background:#1b1b1b;color:#e4e4e4;
  font:730 11px/1.2 system-ui,sans-serif;cursor:pointer;
 }
+body.vetogram-editorial-cinema .v97-cinema-verified-filter[hidden]{display:none!important}
 body.vetogram-editorial-cinema .v97-cinema-verified-filter input{
  width:17px;height:17px;min-width:17px;margin:0;accent-color:#f5f5f5;
 }
