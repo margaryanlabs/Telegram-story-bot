@@ -88,7 +88,7 @@ test('Game deep link and V9 controller expose the same allowlisted focus route',
 
 test('Cinema native category tabs and search are ahead of hero, preserving their nodes',()=>{
  const node=(name,selectors={})=>{
-  const el={name,children:[],parentNode:null,attrs:{},
+  const el={name,children:[],parentNode:null,attrs:{},dataset:{},
    classList:{add:key=>{el.attrs[key]=true}},
    querySelector:s=>selectors[s]||null,
    append(...items){for(const item of items){if(item.parentNode)item.parentNode.children=item.parentNode.children.filter(x=>x!==item);item.parentNode=this;this.children.push(item)}},
