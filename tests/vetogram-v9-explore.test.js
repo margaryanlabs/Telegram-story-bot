@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const edition='20261106-v9-03';
+const edition='20261106-v9-04';
 const screens=['studio','cinema','books','music-module'];
 
 test('V9 explore assets exist, parse and respect reduced motion',()=>{
