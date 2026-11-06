@@ -125,7 +125,7 @@
       '<small>Документированное событие · позиция метки на сфере символическая</small></div>' +
       '<div class="mh-v16-record-meta"><span>◈ VERIFIED CHRONICLE</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
-      (event.id==='2008' ? '<section class="mh-shock-replay-host" id="mhShockReplay2008" aria-label="Управляемая хронология кризиса 2008 года"></section>' : '') +
+      (event.id==='2008' ? '<section class="mh-shock-replay-host mh-shock-replay" id="mhShockReplay2008" aria-label="Управляемая хронология кризиса 2008 года"></section>' : '') +
       '<section class="mh-v16-research-card mh-v16-context"><div class="mh-v16-card-icon">01</div><div><h3>ЧТО ПРОИЗОШЛО</h3><p>'+escape(event.detail)+'</p></div></section>' +
       '<section class="mh-v16-research-card mh-v16-transmission"><div class="mh-v16-card-icon">02</div><div><h3>МЕХАНИЗМ ШОКА</h3><ol class="mh-v16-steps">'+steps+'</ol></div></section>' +
       '<section class="mh-v16-research-card mh-v16-lesson"><div class="mh-v16-card-icon">03</div><div><h3>УРОК ДЛЯ ТРЕЙДЕРА</h3><p>'+escape(event.lesson)+'</p></div></section>' +
