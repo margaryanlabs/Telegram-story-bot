@@ -405,3 +405,43 @@ body.vetogram-editorial-cinema .cinema-sheet .v97-cinema-access-note[data-access
  body.vetogram-editorial-cinema .cinema-card .v97-cinema-access{font-size:9px;line-height:1.25;padding:5px 7px}
  body.vetogram-editorial-cinema .cinema-sheet .v97-cinema-access-note{padding:11px 12px;font-size:11px}
 }
+
+/* V9.7 — actual reading session access, displayed only for stored progress. */
+body.vetogram-editorial-books .v97-books-resume[hidden]{display:none!important}
+body.vetogram-editorial-books .v97-books-resume:not([hidden]){
+ width:100%;display:flex;align-items:center;justify-content:space-between;
+ gap:14px;min-height:65px;margin:0 0 11px;padding:12px 16px;
+ border:1px solid #676767;border-radius:13px;
+ background:#242424;color:#fff;text-align:left;cursor:pointer;
+}
+body.vetogram-editorial-books .v97-books-resume>span:first-child{
+ flex:none;font:800 10px/1.2 system-ui,sans-serif;letter-spacing:.10em;color:#b7b7b7;
+}
+body.vetogram-editorial-books .v97-books-resume>strong{
+ flex:1;min-width:0;font:760 15px/1.3 system-ui,sans-serif;
+ overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+body.vetogram-editorial-books .v97-books-resume>span:last-child{
+ flex:none;font-size:20px;color:#f3f3f3;
+}
+body.vetogram-editorial-books .v97-books-resume:focus-visible{
+ outline:2px solid #fff;outline-offset:3px;
+}
+body.vetogram-editorial-books:has(#reader:not([hidden])) .v97-books-resume{
+ display:none!important;
+}
+@media(max-width:650px){
+ body.vetogram-editorial-books .v97-books-resume:not([hidden]){
+  flex-wrap:wrap;min-height:57px;padding:11px 13px;gap:5px 9px;
+ }
+ body.vetogram-editorial-books .v97-books-resume>span:first-child{
+  flex:1 1 100%;font-size:9px;
+ }
+ body.vetogram-editorial-books .v97-books-resume>strong{font-size:13px}
+}
+body.vetogram-editorial-books.vetogram-editorial-80:has(#reader[hidden]) .v97-books-resume:hover{
+ border-color:#c4c4c4;background:#303030;
+}
+@media(prefers-reduced-motion:reduce){
+ body.vetogram-editorial-books .v97-books-resume{transition:none!important}
+}
