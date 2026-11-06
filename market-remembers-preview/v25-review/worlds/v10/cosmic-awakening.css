@@ -1,0 +1,139 @@
+/* MARKET REMEMBERS V11 / COSMIC AWAKENING
+ * Dedicated visual layer; no changes to legacy readers, storage or routes.
+ * Preserve physical 3D sphere and real star coordinates. */
+#app.obsidian.app{background:radial-gradient(ellipse at 65% 56%,#172d39 0%,#0b1621 39%,#080d16 77%,#050910 100%)}
+#app.obsidian .scene{background:radial-gradient(ellipse at 67% 57%,#8ccfe510,transparent 52%)}
+#app.obsidian .scene-grid{opacity:.035;background-size:190px 190px}
+#app.obsidian .scene-shading{background:radial-gradient(ellipse at 56% 40%,#99d9e50b,transparent 59%),radial-gradient(ellipse at 80% 74%,#c8a99007,transparent 50%)}
+#app.obsidian .lens-halo{opacity:.035!important}
+#app.obsidian .star-marker{border-color:#ddf4fa;background:radial-gradient(circle,#fff 0 15%,#b5e5ef 29%,#79acc488 49%,transparent 72%);box-shadow:0 0 11px #bdeafa,0 0 27px #8ec8dc60;transition:opacity .2s,box-shadow .2s}
+#app.obsidian .star-marker.is-selected{box-shadow:0 0 12px #fff,0 0 28px #98e2f4,0 0 46px #c8a99066!important}
+#app.obsidian .star-marker.is-selected::after{border-color:#e5c6a5}
+#app.obsidian .header{background:linear-gradient(180deg,#080d16ed,#080d1680);border-color:#a9d8e61b}
+#app.obsidian .hero h1{font-weight:540}
+#app.obsidian .hero h1 em{color:#b5e4f2}
+#app.obsidian .btn-primary{background:linear-gradient(115deg,#c9e7ec,#a4d3e0);border-color:#add9e4}
+#app.obsidian .btn-primary:hover{background:#e0f0f2}
+#app.obsidian .signal-dock{transition:border-color .22s,background-color .22s}
+#app.obsidian .signal-dock:focus-within{border-color:#a9d8e67a}
+#app.obsidian .world-controls button[aria-pressed="true"]{color:#e0f4f8}
+#app.obsidian .world-controls button:focus-visible{outline-offset:-3px}
+@media(max-width:819px){
+ #app.obsidian .header{height:56px;padding:0 16px}
+ #app.obsidian .brand-symbol{height:28px;width:28px}
+ #app.obsidian .brand-copy{font-size:10px}
+ #app.obsidian .brand-copy small{letter-spacing:.08em;font-size:6px}
+ #app.obsidian .version-compare{top:14px;right:16px}
+ #app.obsidian .mobile-nav{top:57px;left:16px;right:16px;height:41px;border-bottom-color:#a9d8e633}
+ #app.obsidian .mobile-nav button{min-height:41px;font-size:10px;letter-spacing:.04em}
+ #app.obsidian .hero{top:113px;left:18px;right:18px}
+ #app.obsidian .hero-kicker{font-size:7px;letter-spacing:.12em}
+ #app.obsidian .hero h1{font-size:clamp(34px,9vw,43px);line-height:1.03;margin:12px 0 10px}
+ #app.obsidian .hero p{font-size:11px;line-height:1.5;max-width:280px}
+ #app.obsidian .hero-actions{margin-top:11px}
+ #app.obsidian .hero-actions .btn{min-height:42px;font-size:9px;padding:0 17px;border-radius:9px}
+ #app.obsidian .signal-dock{left:14px;right:14px;bottom:calc(103px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-height:70px;border:1px solid #8dc4d255;border-radius:14px;background:linear-gradient(115deg,#10212fe2,#0a1420ed);box-shadow:0 12px 32px #050a12aa}
+ #app.obsidian .dock-copy>span{color:#c8a990;font-size:9px}
+ #app.obsidian .dock-copy strong{font-size:15px;line-height:1.28}
+ #app.obsidian .signal-dock button{width:45px;height:45px;min-height:45px;border-radius:11px}
+ #app.obsidian .signal-dock #dockOpen{background:#b4dbe6}
+ #app.obsidian .world-controls{bottom:calc(44px + env(safe-area-inset-bottom,0px));left:14px;right:14px;gap:7px}
+ #app.obsidian .world-controls button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:49px;padding:5px 3px!important;border-radius:12px!important;font-size:10px;line-height:1.2;letter-spacing:0;gap:2px;background:#0e1b29e8!important;border-color:#a9d8e632!important}
+ #app.obsidian .world-controls button:nth-child(-n+4){display:none!important}
+ #app.obsidian .world-controls button[aria-pressed="true"]{border-color:#a9d8e67a!important;background:#142735!important}
+ #app.obsidian #globeScale::before{content:"✧";font-size:18px;line-height:1;color:#a9d8e6}
+ #app.obsidian #toggleAtlas::before{content:"⌁";font-size:20px;line-height:1;color:#a9d8e6}
+ #app.obsidian #focusMode::before{content:"◎";font-size:18px;line-height:1;color:#a9d8e6}
+ #app.obsidian #lensToggle::before{content:"◈";font-size:17px;line-height:1;color:#a9d8e6}
+ #app.obsidian .scene-footer{height:calc(37px + env(safe-area-inset-bottom,0px));font-size:7px;padding:0 15px env(safe-area-inset-bottom,0px)}
+ #app.obsidian .scene-footer .soundless{font-size:7px}
+ #app.obsidian .star-marker{width:17px;height:17px}
+ #app.obsidian .star-marker.is-selected::after{inset:-12px}
+}
+@media(max-width:819px) and (max-height:700px) and (orientation:portrait){
+ #app.obsidian .hero{top:102px}
+ #app.obsidian .hero h1{font-size:clamp(29px,8.5vw,38px);margin:8px 0}
+ #app.obsidian .hero p{font-size:10px;line-height:1.35}
+ #app.obsidian .hero-actions{margin-top:7px}
+ #app.obsidian .hero-actions .btn{min-height:38px}
+ #app.obsidian .signal-dock{bottom:calc(93px + env(safe-area-inset-bottom,0px));min-height:60px;padding:6px 10px}
+ #app.obsidian .dock-copy strong{font-size:13px}
+ #app.obsidian .world-controls{bottom:calc(35px + env(safe-area-inset-bottom,0px))}
+ #app.obsidian .world-controls button{min-height:46px}
+ #app.obsidian .scene-footer{height:calc(31px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:819px) and (orientation:landscape){
+ #app.obsidian .hero{top:104px;left:18px;right:auto;max-width:275px}
+ #app.obsidian .hero h1{font-size:31px}
+ #app.obsidian .mobile-nav{left:16px;right:auto;width:300px;top:57px}
+ #app.obsidian .signal-dock{left:16px;right:auto;width:300px;bottom:71px;min-height:56px}
+ #app.obsidian .world-controls{left:16px;right:auto;width:300px;bottom:17px}
+ #app.obsidian .world-controls button{min-height:44px}
+ #app.obsidian .scene-footer{height:17px;min-height:17px}
+}
+@media(prefers-reduced-motion:reduce){
+ #app.obsidian .star-marker,#app.obsidian .signal-dock{transition:none!important}
+}
+
+/* V11.2 — the star itself is the selection reticle. Remove the obsolete
+ * floating SIGNAL LOCK HUD without changing marker hit-testing or routes. */
+#app.obsidian .signal-reticle{display:none!important}
+#app.obsidian .v112-onboarding{display:none}
+@media(max-width:819px) and (orientation:portrait){
+ #app.obsidian .v112-onboarding{
+  position:absolute;z-index:5;left:18px;top:clamp(275px,37vh,355px);
+  width:max-content;max-width:calc(100% - 36px);display:flex;align-items:center;
+  padding:8px 11px;border-radius:9px;background:#0b1925cf;
+  border:1px solid #a9d8e634;color:#bdd9e4;
+  font:500 10px/1.4 var(--font-interface);letter-spacing:.018em;
+  pointer-events:none;box-shadow:0 6px 20px #03091035
+ }
+ #app.obsidian .v112-onboarding[hidden]{display:none!important}
+}
+@media(max-width:819px) and (max-height:650px) and (orientation:portrait){
+ #app.obsidian .v112-onboarding{top:clamp(230px,35vh,285px);font-size:9px}
+}
+
+/* V11.3 — The Human Story. Typographic depth, not a new visual theme. */
+#app.obsidian .v10-reader .v10-story-abstract{
+ font-size:clamp(21px,2.9vw,31px);line-height:1.44;max-width:690px;
+ margin:12px 0 18px;color:#e9ddd0;text-wrap:pretty;
+}
+#app.obsidian .v113-story-overview{display:grid;gap:7px;margin:0 0 14px;padding:15px 0 13px;border-top:1px solid #c8a99044}
+#app.obsidian .v113-story-provenance{font:600 10px/1.6 var(--font-interface);letter-spacing:.08em;color:var(--memory-gold)}
+#app.obsidian .v113-story-context{margin:0;font:400 12px/1.65 var(--font-interface);color:var(--text-secondary)}
+#app.obsidian .v113-chapter-progress{display:grid;gap:9px;margin:13px 0 2px}
+#app.obsidian .v113-progress-label{font:600 10px/1.4 var(--font-interface);letter-spacing:.12em;color:var(--stellar-ice)}
+#app.obsidian .v113-progress-track{display:block;width:100%;height:3px;border-radius:4px;background:#a9d8e62b;overflow:hidden}
+#app.obsidian .v113-progress-fill{display:block;width:25%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--memory-gold),var(--stellar-ice));transition:width 180ms linear}
+#app.obsidian .v10-reader .v10-chapter-nav{margin:4px 0 18px}
+#app.obsidian .v10-reader .v10-chapter{border-top:1px solid #a9d8e625;padding:22px 0 34px}
+#app.obsidian .v10-reader .v10-chapter h3{font-size:clamp(26px,3vw,34px);margin:10px 0 18px}
+#app.obsidian .v10-reader .v10-chapter p{font-size:clamp(17px,1.7vw,19px);line-height:1.85}
+#app.obsidian .v113-next-chapter{display:flex;align-items:center;gap:12px;min-height:48px;margin:22px 0 0;padding:9px 0;border:0;border-bottom:1px solid #a9d8e663;background:transparent;color:var(--stellar-ice);font:500 12px/1.6 var(--font-interface);text-align:left}
+#app.obsidian .v113-next-chapter:hover{color:#ecf7fb;border-color:#d5ebf2}
+#app.obsidian .v113-story-ending{margin:20px 0 28px;padding:28px 22px;background:linear-gradient(125deg,#162934bb,#0b1824bb);border:1px solid #a9d8e62e;border-radius:13px}
+#app.obsidian .v113-story-ending h3{font:italic clamp(24px,3.1vw,34px)/1.25 var(--font-literary);color:var(--warm-ivory);margin:12px 0}
+#app.obsidian .v113-story-ending p{font:400 12px/1.7 var(--font-interface);margin:0;color:var(--text-secondary)}
+#app.obsidian .v113-related-action{display:block;min-height:48px;margin-top:18px;padding:10px 15px;border-radius:9px;border:1px solid #a9d8e67a;background:#a9d8e612;color:#d8edf3;text-align:left;font:500 12px/1.5 var(--font-interface)}
+#app.obsidian .v113-related-action:hover{background:#a9d8e621}
+@media(max-width:819px){
+ #app.obsidian .v10-reader .v10-story-abstract{font-size:24px;line-height:1.43;margin:12px 0}
+ #app.obsidian .v113-story-overview{padding:11px 0 9px}
+ #app.obsidian .v113-story-provenance{font-size:9px}
+ #app.obsidian .v113-story-context{font-size:11px}
+ #app.obsidian .v113-chapter-progress{gap:8px;margin:8px 0}
+ #app.obsidian .v10-reader .v10-chapter-nav{top:55px;gap:5px;padding:8px 0;margin:8px 0 14px}
+ #app.obsidian .v10-reader .v10-chapter-nav button{min-height:52px;gap:5px}
+ #app.obsidian .v10-reader .v10-chapter-nav button span{font-size:15px}
+ #app.obsidian .v10-reader .v10-chapter-nav button strong{font-size:9px;line-height:1.3}
+ #app.obsidian .v10-reader .v10-chapter{padding:17px 0 26px}
+ #app.obsidian .v10-reader .v10-chapter h3{font-size:27px}
+ #app.obsidian .v10-reader .v10-chapter p{font-size:17px;line-height:1.8}
+ #app.obsidian .v113-story-ending{padding:20px 16px}
+ #app.obsidian .v113-story-ending h3{font-size:25px}
+ #app.obsidian .v113-related-action{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ #app.obsidian .v113-progress-fill{transition:none!important}
+}

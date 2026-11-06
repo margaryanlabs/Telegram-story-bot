@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#02050b">
+<title>Market Remembers — The Living Financial Universe</title></head>
+<body style="margin:0;min-height:100vh;background:#03050a;color:#f1f5fc;font-family:system-ui;display:grid;place-items:center">
+<main><p>Входим в настоящую финансовую вселенную…</p>
+<a href="./worlds/index.html?cosmos=1" style="color:#bfdff9">Открыть интерактивную карту миров ↗</a></main>
+<script>
+const params=new URLSearchParams(location.search);
+if(!params.has('world')&&!params.has('mm')&&!params.has('cosmos'))params.set('cosmos','1');
+const search=params.toString();
+location.replace('./worlds/index.html'+(search?'?'+search:'')+location.hash);
+</script></body></html>

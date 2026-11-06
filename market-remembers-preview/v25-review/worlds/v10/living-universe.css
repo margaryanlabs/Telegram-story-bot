@@ -1,0 +1,209 @@
+/* The original sphere and responsive camera remain the visual foundation. */
+#app.obsidian{background:var(--obsidian);color:var(--warm-ivory)}
+#app.obsidian.app{background:radial-gradient(ellipse at 72% 50%,#132431 0%,#080d16 53%,#070b12 95%);min-height:0}
+#memorySky{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#app.obsidian .scene-grid{opacity:.07;background-size:160px 160px}
+#app.obsidian .scene-shading{background:radial-gradient(ellipse at 61% 34%,#a9d8e605,transparent 53%),radial-gradient(ellipse at 84% 74%,#e8d6ea05,transparent 46%)}
+#app.obsidian .header{height:88px;background:#080d1666;border-bottom:1px solid #a9d8e618}
+#app.obsidian .brand-copy{color:var(--warm-ivory)}
+#app.obsidian .brand-copy small{color:var(--text-muted)}
+#app.obsidian .header-nav{gap:30px}
+#app.obsidian .nav-link{min-height:44px;color:var(--text-secondary);letter-spacing:.08em;font-size:10px}
+#app.obsidian .nav-link.is-on{color:var(--stellar-ice)}
+#app.obsidian .header-cta{min-height:46px;color:var(--stellar-ice);background:transparent;border:1px solid #a9d8e64d;font-size:10px}
+#app.obsidian .version-compare{border:0;color:var(--text-muted);font-size:9px;right:270px}
+#app.obsidian .hero{top:19%;left:clamp(28px,4.5vw,86px);max-width:510px}
+#app.obsidian .hero-kicker{font-size:9px;letter-spacing:.2em;color:var(--memory-gold)}
+#app.obsidian .hero-kicker .line{background:var(--memory-gold);width:24px}
+#app.obsidian .hero h1{font-size:clamp(43px,4.65vw,76px);font-weight:550;line-height:1.08;letter-spacing:-.065em;margin:27px 0 24px;color:var(--warm-ivory)}
+#app.obsidian .hero h1 em{font-family:var(--font-literary);font-weight:400;color:var(--stellar-ice);background:none;-webkit-text-fill-color:currentColor;letter-spacing:-.065em}
+#app.obsidian .hero p{font-size:13px;line-height:1.85;color:var(--text-secondary);margin-bottom:25px}
+#app.obsidian .hero p strong{font-weight:400;color:var(--warm-ivory)}
+#app.obsidian .hero-actions{gap:10px}
+#app.obsidian .hero-actions .btn{font-size:9px;min-height:45px;padding:0 18px}
+#app.obsidian .micro-note{display:none;max-width:350px;margin-top:19px;color:var(--text-muted);font-size:10px}
+#app.obsidian .coordinate.top{color:var(--text-muted);font-size:8px}
+#app.obsidian #signalHint{color:var(--text-muted);font-size:9px}
+#app.obsidian .selected-card{left:clamp(28px,4.5vw,86px);right:auto;bottom:143px;width:min(365px,32vw);min-height:0;padding:20px 0 0;border:0;border-top:1px solid #c8a99050;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
+#app.obsidian .selected-card::before,#app.obsidian .selected-card::after{display:none}
+#app.obsidian .selected-card .card-line{border:0;padding:0;margin:0;color:var(--text-muted);font-size:8px;letter-spacing:.1em}
+#app.obsidian .selected-card .signal{color:var(--memory-gold)}
+#app.obsidian .fragment-chapter{display:none;margin-top:15px;padding:0;border:0;font-size:8px}
+#app.obsidian .selected-card #selectedQuote{font:italic 25px/1.45 var(--font-literary);color:var(--warm-ivory);margin:14px 0 19px;letter-spacing:-.02em}
+#app.obsidian .selected-bottom{border:0;padding:0;gap:10px;flex-wrap:wrap}
+#app.obsidian #selectedBy{font-size:9px;color:var(--text-secondary)}
+#app.obsidian .selected-actions{gap:8px}
+#app.obsidian #nextSignal{border:0;color:var(--text-muted);background:none;min-height:44px}
+#app.obsidian #openSelected{min-height:44px;border-radius:0;background:none;color:var(--stellar-ice);border:0;border-bottom:1px solid #a9d8e657;padding:0 0 0 12px;font-size:9px}
+#app.obsidian .world-controls{border:0;background:#0c1721df;border-radius:4px;bottom:76px;backdrop-filter:none;box-shadow:none}
+#app.obsidian .world-controls button{min-height:44px;color:var(--text-secondary);font-size:10px;letter-spacing:0;border-color:#a9d8e621}
+#app.obsidian .scene-footer{color:var(--text-muted);height:48px;background:#080d16;border-top:1px solid #a9d8e618;font-size:8px}
+#app.obsidian .scene-footer .soundless,#app.obsidian .scene-footer .scene-instruction{color:var(--text-muted)}
+#app.obsidian .globe-caption{letter-spacing:.2em;color:#a9d8e686}
+#app.obsidian .lens-panel{background:#0c1721f7;border:1px solid var(--hairline);box-shadow:none}
+.v10-motion-preference{display:flex;gap:12px;align-items:center;font-size:12px;line-height:1.6;color:var(--text-secondary);padding-top:20px}
+.v10-motion-preference input{width:19px;height:19px;accent-color:var(--stellar-ice);flex:none}
+#app.obsidian .drawer{background:#0b141ef9;border-left:1px solid var(--hairline);box-shadow:-32px 0 80px #080d1666;color:var(--warm-ivory)}
+#app.obsidian .drawer h2{color:var(--warm-ivory)}
+#app.obsidian .drawer h2 em{color:var(--memory-gold)}
+#app.obsidian .drawer p{color:var(--text-secondary)}
+#app.obsidian .drawer-head{position:sticky;top:-1px;z-index:5;background:#0b141ef5;margin-bottom:27px;padding:8px 0;border-bottom:1px solid var(--hairline)}
+#app.obsidian .drawer-tag{color:var(--text-muted);font-size:9px;letter-spacing:.09em}
+#app.obsidian .scrim{background:#03080f80;backdrop-filter:none}
+/* Reader: an open manuscript with four chapters, rather than a giant quote. */
+#app.obsidian .drawer.v10-reader{width:min(920px,92vw);padding:18px clamp(22px,4vw,65px) 55px}
+#app.obsidian .v10-reader .memory-experience{padding:0;background:none;border:0;box-shadow:none;max-width:740px;margin:auto}
+#app.obsidian .v10-reader .memory-topline{font-size:8px;color:var(--text-muted);letter-spacing:.1em}
+#app.obsidian .v10-reader .v93-observatory{margin:16px 0 28px;padding:0;background:transparent;border:0;border-bottom:1px solid var(--hairline);grid-template-columns:100px minmax(0,1fr);gap:18px;border-radius:0;min-height:125px}
+#app.obsidian .v10-reader .v93-observatory-motif{width:100px;min-height:108px;background:transparent;border:0;border-radius:0}
+#app.obsidian .v10-reader .v93-observatory-motif::before{inset:7%;opacity:.4}
+#app.obsidian .v10-reader .v93-observatory-alias{font-size:23px;font-family:var(--font-literary);color:var(--warm-ivory);letter-spacing:-.02em}
+#app.obsidian .v10-reader .v93-observatory-kicker{color:var(--text-muted);font-size:8px}
+#app.obsidian .v10-reader .v93-observatory-kind{font-size:9px;color:var(--memory-gold);line-height:1.7}
+#app.obsidian .v10-reader .v93-reader-stage{color:var(--text-muted);font-size:8px}
+#app.obsidian .v10-reader .v93-back-to-star{min-height:44px;color:var(--stellar-ice);border:0;background:none;padding:6px 0;font-size:9px}
+#app.obsidian .v10-reader .memory-title{font:400 clamp(32px,3.4vw,48px)/1.2 var(--font-literary);letter-spacing:-.03em;color:var(--warm-ivory);margin:16px 0}
+#app.obsidian .v10-reader.legend-detail .memory-title{font-size:clamp(24px,2.7vw,38px)}
+#app.obsidian .v10-story-abstract{font:italic 25px/1.55 var(--font-literary);color:var(--memory-gold);margin:0 0 30px;max-width:640px}
+.v10-chapter-nav{position:sticky;top:60px;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);background:#0b141ef7;padding:12px 0;gap:10px;margin:20px 0 35px;border-bottom:1px solid var(--hairline)}
+.v10-chapter-nav button{display:flex;align-items:flex-start;gap:7px;min-height:46px;padding:7px 0;background:none;border:0;border-bottom:1px solid #a9d8e633;color:var(--text-muted);text-align:left}
+.v10-chapter-nav button span{font:italic 18px/1 var(--font-literary);color:var(--memory-gold)}
+.v10-chapter-nav button strong{font-size:10px;line-height:1.5;font-weight:400}
+.v10-chapter-nav button.is-current{border-color:var(--stellar-ice);color:var(--warm-ivory)}
+.v10-chapter{padding:15px 0 45px;scroll-margin-top:130px;outline-offset:7px}
+.v10-chapter h3{font:400 31px/1.25 var(--font-literary);color:var(--warm-ivory);margin:13px 0 21px;letter-spacing:-.02em}
+#app.obsidian .v10-reader .v10-chapter p{font:400 18px/1.9 var(--font-literary);color:var(--warm-ivory);white-space:pre-wrap;overflow-wrap:anywhere;max-width:620px}
+#app.obsidian .v10-reader .v10-chapter .v10-missing{font:400 14px/1.8 var(--font-interface);color:var(--text-muted);padding-left:17px;border-left:1px solid var(--hairline)}
+.v10-source-note{font:400 11px/1.8 var(--font-interface);color:var(--text-muted);display:block;max-width:480px}
+#app.obsidian .v10-reader .memory-disclaimer{color:var(--text-muted);font-size:11px;line-height:1.8}
+#app.obsidian .v10-reader .save-lesson-btn{color:var(--stellar-ice);border-color:var(--hairline);background:none;min-height:46px}
+.v10-permalink{display:block;min-height:44px;margin:10px 0;border:0;background:none;color:var(--text-secondary);text-align:left;font-size:11px;text-decoration:underline;text-underline-offset:5px}
+/* Same deterministic topic data, spatial representation and accessible list. */
+#app.obsidian .v10-constellation{margin:40px 0 20px;border-top:1px solid var(--hairline);padding:30px 0 0}
+#app.obsidian .v10-constellation h3{font:400 30px/1.3 var(--font-literary);color:var(--warm-ivory);margin:12px 0}
+.v10-constellation-map{position:relative;height:290px;margin:10px 0 16px;isolation:isolate;background:radial-gradient(ellipse at 50% 35%,#a9d8e608,transparent 65%)}
+.v10-constellation-map svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.v10-constellation-map svg path{fill:none;stroke:#a9d8e655;stroke-width:1;vector-effect:non-scaling-stroke;stroke-dasharray:3 5}
+.v10-constellation-star{position:absolute;transform:translate(-50%,-25%);border:0;background:none;min-width:75px;min-height:70px;padding:4px;color:var(--stellar-ice);display:flex;align-items:center;flex-direction:column;gap:4px}
+.v10-node-glyph{display:grid;place-items:center;width:44px;height:44px;font-size:21px;text-shadow:0 0 15px #a9d8e66b;transition:transform .2s}
+.v10-constellation-star:hover .v10-node-glyph{transform:scale(1.18)}
+.v10-constellation-star strong{font-size:10px;line-height:1.6;font-weight:500;max-width:120px;overflow-wrap:anywhere}
+.v10-constellation-star small{font-size:10px;color:var(--text-muted)}
+.v10-constellation-origin{position:absolute;top:4%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--memory-gold);max-width:180px;text-align:center}
+.v10-constellation-origin span{font-size:36px;line-height:1.5;text-shadow:0 0 15px #c8a99055}
+.v10-constellation-origin strong{font-size:10px;overflow-wrap:anywhere}
+.v10-constellation-list{border-top:1px solid var(--hairline);padding:12px 0;color:var(--text-secondary)}
+.v10-constellation-list summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:12px}
+.v10-constellation-list ul{list-style:none;margin:0;padding:0}
+.v10-constellation-list li{padding:12px 0;border-top:1px solid var(--hairline)}
+.v10-constellation-list button{display:block;min-height:44px;background:none;border:0;text-align:left;color:var(--stellar-ice);font-size:12px;line-height:1.6;padding:0}
+.v10-constellation-list small{display:block;color:var(--text-muted);font-size:10px}
+/* Archive: editorial index rows, independent locate action. */
+#app.obsidian .drawer.v10-archive{width:min(850px,95vw);padding:20px clamp(22px,4vw,55px) 50px}
+#app.obsidian .v10-archive .v79-archive-header h2{font:400 clamp(38px,4vw,60px)/1.1 var(--font-literary);letter-spacing:-.04em}
+#app.obsidian .v10-archive .v79-archive-eyebrow{color:var(--memory-gold)}
+#app.obsidian .v10-archive .archive-grid{display:flex;flex-direction:column;gap:0}
+.v10-archive-row{display:flex;border-top:1px solid var(--hairline);align-items:stretch;gap:8px}
+#app.obsidian .v10-archive .archive-card.v79-archive-record{display:grid;grid-template-columns:1fr;flex:1;gap:9px;min-width:0;min-height:135px;padding:23px 0;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none}
+#app.obsidian .v10-archive .archive-card::before,#app.obsidian .v10-archive .archive-card::after{display:none}
+#app.obsidian .v10-archive .archive-card:hover{background:#a9d8e607;transform:none}
+#app.obsidian .v10-archive .v79-archive-record-quote{font:400 22px/1.5 var(--font-literary);color:var(--warm-ivory);display:block;-webkit-line-clamp:unset}
+#app.obsidian .v10-archive .v79-archive-record-identity{font-size:10px;color:var(--text-secondary)}
+#app.obsidian .v10-archive .archive-card-foot{margin:0;color:var(--text-muted);font-size:8px}
+#app.obsidian .v10-archive .v79-archive-filter{flex-wrap:wrap;overflow:visible}
+#app.obsidian .v10-archive .v79-archive-filter button{min-height:44px;color:var(--text-secondary);border-color:var(--hairline);background:none;border-radius:2px}
+#app.obsidian .v10-archive .v79-archive-filter button.is-on{color:var(--stellar-ice);background:#a9d8e611;border-color:var(--stellar-ice)}
+.v10-locate-star{flex:0 0 48px;align-self:center;height:48px;border:1px solid var(--hairline);border-radius:50%;background:none;color:var(--stellar-ice);font-size:23px}
+.v10-archive-sort{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:20px 0;color:var(--text-secondary);font-size:11px}
+#app.obsidian .v10-archive-sort select{width:auto;max-width:66%;font-size:12px;min-height:46px}
+/* Legacy: six short steps, explicit review and a confirmed local save. */
+#app.obsidian .drawer.v10-legacy{width:min(650px,100vw)}
+#app.obsidian .v10-legacy h2{font:400 42px/1.15 var(--font-literary);letter-spacing:-.035em;margin:14px 0}
+.v10-form-progress{display:grid;grid-template-columns:repeat(6,1fr);list-style:none;margin:30px 0 22px;padding:0;gap:6px;color:var(--text-muted)}
+.v10-form-progress li{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:9px;line-height:1.5;text-align:center}
+.v10-form-progress span{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;border:1px solid var(--hairline);font-size:11px}
+.v10-form-progress .is-current{color:var(--stellar-ice)}
+.v10-form-progress .is-current span{background:#a9d8e61a;border-color:var(--stellar-ice)}
+.v10-legacy fieldset{border:0;margin:30px 0 0;padding:0;min-width:0;scroll-margin-top:90px}
+.v10-legacy legend{color:var(--warm-ivory);font:400 24px/1.5 var(--font-literary);padding:0;margin-bottom:10px}
+#app.obsidian .v10-legacy .field-textarea{min-height:155px}
+.v10-form-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:30px 0 10px}
+.v10-capsule{margin:25px 0;color:var(--text-secondary);font-size:12px}
+.v10-capsule summary{min-height:44px;padding:12px 0;cursor:pointer}
+.v10-legacy-review{border-top:1px solid var(--hairline);padding:24px 0}
+.v10-legacy-review>strong{font:400 28px var(--font-literary);color:var(--memory-gold)}
+.v10-legacy-review blockquote{margin:20px 0;font:italic 22px/1.6 var(--font-literary);color:var(--warm-ivory);overflow-wrap:anywhere}
+.v10-legacy-review h3{font:400 19px/1.5 var(--font-literary);color:var(--memory-gold);margin:24px 0 8px}
+.v10-legacy-review p{white-space:pre-wrap;overflow-wrap:anywhere}
+.v10-honeypot{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+#v10FormError{padding:15px;border-left:2px solid var(--memory-gold);color:var(--warm-ivory)}
+#v10FormStatus{font-size:11px;color:var(--text-muted)}
+@media(min-width:820px) and (max-height:760px){
+ #app.obsidian .hero{top:18%}#app.obsidian .hero h1{font-size:52px;margin:18px 0}#app.obsidian .hero p{margin-bottom:17px}
+ #app.obsidian .selected-card{bottom:106px}#app.obsidian .selected-card #selectedQuote{font-size:21px;margin:10px 0}
+ #app.obsidian .fragment-chapter{display:none}#app.obsidian .micro-note{display:none}
+}
+@media(max-width:819px){
+ #app.obsidian .header{height:62px;padding:0 18px}#app.obsidian .brand-symbol{height:29px;width:29px}
+ #app.obsidian .brand-copy{font-size:10px}#app.obsidian .brand-copy small{font-size:5px}
+ #app.obsidian .version-compare{top:18px;right:18px;font-size:8px}
+ #app.obsidian .mobile-nav{top:67px;left:16px;right:16px;height:44px;border:0;border-bottom:1px solid var(--hairline);background:transparent;border-radius:0;padding:0;gap:12px;backdrop-filter:none}
+ #app.obsidian .mobile-nav button{border-radius:0;background:none;font-size:9px;min-height:44px;color:var(--text-muted);padding:0}
+ #app.obsidian .mobile-nav button.is-on{background:none;color:var(--stellar-ice);border-bottom:1px solid var(--stellar-ice);box-shadow:none}
+ #app.obsidian .hero{top:128px;left:21px;right:21px;max-width:unset}
+ #app.obsidian .hero-kicker{font-size:7px;letter-spacing:.17em}#app.obsidian .hero-kicker .line{width:17px}
+ #app.obsidian .hero h1{font-size:clamp(30px,8.7vw,44px);line-height:1.05;margin:15px 0 13px;letter-spacing:-.065em}
+ #app.obsidian .hero p{font-size:11px;line-height:1.65;margin:0;max-width:290px}
+ #app.obsidian .hero p span{display:inline}#app.obsidian .hero p span+span::before{content:' '}
+ #app.obsidian .hero p strong{display:none}#app.obsidian .hero-actions{margin-top:15px}
+ #app.obsidian .hero-actions .btn{font-size:8px;min-height:40px;padding:0 15px}
+ #app.obsidian .hero-actions #heroExplore{display:none}#app.obsidian .micro-note{display:none}
+ #app.obsidian .selected-card{display:none}
+ #app.obsidian .signal-dock{left:16px;right:16px;bottom:calc(109px + env(safe-area-inset-bottom,0px));min-height:70px;padding:11px 0;gap:10px;border:0;border-top:1px solid #c8a99066;border-radius:0;background:#080d16eb;box-shadow:none;backdrop-filter:none}
+ #app.obsidian .dock-copy{min-width:0}#app.obsidian .dock-copy>span{color:var(--memory-gold);font-size:9px}
+ #app.obsidian .dock-copy strong{font:italic 16px/1.35 var(--font-literary);color:var(--warm-ivory)}
+ #app.obsidian .signal-dock button{height:46px;width:44px;border-radius:2px;background:none;border:1px solid var(--hairline);color:var(--stellar-ice);flex:none}
+ #app.obsidian .signal-dock #dockOpen{background:var(--stellar-ice);color:var(--obsidian)}
+ #app.obsidian .world-controls{bottom:calc(57px + env(safe-area-inset-bottom,0px));left:16px;right:16px;width:auto;justify-content:space-between;max-width:none;overflow:visible;border:0;background:none;gap:3px;padding:0}
+ #app.obsidian .world-controls button{font-size:10px;min-height:44px;flex:1;padding:0 6px;border:1px solid #a9d8e62b!important;background:#0d1923!important;border-radius:2px;color:var(--text-secondary)}
+ #app.obsidian .scene-footer{height:calc(44px + env(safe-area-inset-bottom,0px));padding:0 16px env(safe-area-inset-bottom,0px);font-size:6px;letter-spacing:.05em;gap:8px}
+ #app.obsidian .scene-footer .soundless{font-size:7px}
+ #app.obsidian .focus-caption{top:128px}#app.obsidian .focus-caption small{color:var(--text-secondary)}
+ #app.obsidian .drawer.v10-reader,#app.obsidian .drawer.v10-archive,#app.obsidian .drawer.v10-legacy{inset:0;width:100%;height:100dvh;max-height:100dvh;max-width:none;padding:calc(8px + env(safe-area-inset-top,0px)) 22px calc(40px + env(safe-area-inset-bottom,0px));border:0;background:#0b141e}
+ #app.obsidian .drawer-head{top:calc(-8px - env(safe-area-inset-top,0px));padding:8px 0;margin-bottom:20px}
+ #app.obsidian .v10-reader .v93-observatory{grid-template-columns:68px minmax(0,1fr);gap:11px;min-height:115px;margin-top:8px}
+ #app.obsidian .v10-reader .v93-observatory-motif{width:68px;min-height:95px}
+ #app.obsidian .v10-reader .v93-observatory-alias{font-size:21px;overflow-wrap:anywhere}
+ #app.obsidian .v10-reader .v93-observatory-footer{flex-wrap:wrap;gap:6px}#app.obsidian .v10-reader .v93-reader-stage{display:none}
+ #app.obsidian .v10-reader .memory-title{font-size:32px}#app.obsidian .v10-story-abstract{font-size:23px;line-height:1.5}
+ .v10-chapter-nav{top:57px;gap:9px;margin-bottom:22px}.v10-chapter-nav button{flex-direction:column;gap:6px;min-height:65px}
+ .v10-chapter-nav button strong{font-size:9px}.v10-chapter-nav button span{font-size:17px}
+ .v10-chapter{padding:10px 0 33px}.v10-chapter h3{font-size:29px}
+ #app.obsidian .v10-reader .v10-chapter p{font-size:18px;line-height:1.85}
+ .v10-constellation-map{height:280px}.v10-constellation-star strong{font-size:9px;max-width:85px}
+ #app.obsidian .v10-constellation h3{font-size:27px}
+ #app.obsidian .v10-archive .archive-card.v79-archive-record{padding:20px 0;min-height:145px}
+ #app.obsidian .v10-archive .v79-archive-record-quote{font-size:21px}.v10-locate-star{flex-basis:44px;width:44px;height:44px}
+ .v10-form-progress{gap:3px}.v10-form-progress li{font-size:8px}#app.obsidian .v10-legacy h2{font-size:38px}
+ #app.obsidian .v10-legacy .legacy-consent{align-items:flex-start;background:transparent;border-color:var(--hairline);font-size:12px;line-height:1.8}
+}
+@media(max-width:819px) and (max-height:700px) and (orientation:portrait){
+ #app.obsidian .hero{top:119px}#app.obsidian .hero h1{font-size:clamp(28px,8vw,36px);margin:10px 0}
+ #app.obsidian .hero-kicker{font-size:6px}#app.obsidian .hero p{font-size:10px}#app.obsidian .hero-actions{margin-top:8px}
+ #app.obsidian .hero-actions .btn{min-height:34px}#app.obsidian .signal-dock{min-height:60px;bottom:calc(102px + env(safe-area-inset-bottom,0px));padding:8px 0}
+ #app.obsidian .dock-copy strong{font-size:14px}#app.obsidian .world-controls{bottom:calc(49px + env(safe-area-inset-bottom,0px))}
+ #app.obsidian .world-controls button{font-size:9px;padding:0 4px}#app.obsidian .scene-footer{height:calc(38px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:819px) and (orientation:landscape){
+ #app.obsidian .mobile-nav{left:16px;right:auto;width:300px;top:61px}
+ #app.obsidian .hero{top:115px;left:22px;width:310px;right:auto}#app.obsidian .hero h1{font-size:32px;margin:12px 0}
+ #app.obsidian .hero p{max-width:290px;font-size:10px}#app.obsidian .hero-actions{margin-top:10px}
+ #app.obsidian .signal-dock{left:22px;right:auto;width:300px;bottom:72px;min-height:54px;padding:6px 0}
+ #app.obsidian .dock-copy strong{font-size:13px}#app.obsidian .dock-copy>span{font-size:8px}
+ #app.obsidian .world-controls{left:22px;right:auto;width:300px;bottom:24px}#app.obsidian .world-controls button{font-size:8px;min-height:40px;padding:0 4px}
+ #app.obsidian .scene-footer{height:20px;min-height:20px;font-size:6px}#app.obsidian .scene-footer .soundless{font-size:6px}
+ #app.obsidian .signal-dock #dockNext{display:none}
+}
+
+/* Implementation diagnostics are available in ?qa=1, outside the normal scene. */
+#app.obsidian .coordinate.top{display:none}

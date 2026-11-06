@@ -1,0 +1,5 @@
+{
+  "preview": "V25 touchfix review",
+  "base": "V24 native originals",
+  "notes": "CSS-only overlay & navigation change; production / remains unchanged"
+}
