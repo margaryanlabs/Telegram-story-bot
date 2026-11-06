@@ -110,6 +110,14 @@
     else if(tab==="foreign")$("cinemaSearch").placeholder="Найти зарубежный фильм с русской озвучкой…";
     else $("cinemaSearch").placeholder="Найти фильм, сериал, актёра или жанр…";
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
+    const playableToggle=$("cinemaPlayableOnly");
+    if(playableToggle){
+      if(["series","library"].includes(tab)){
+        state.onlyPlayable=false;
+        playableToggle.checked=false;
+      }
+      if(playableToggle.parentElement)playableToggle.parentElement.hidden=["series","library"].includes(tab);
+    }
     $("cinemaStudios").classList.toggle("hidden",tab!=="catalog");
     $("cinemaSeriesHub").classList.toggle("hidden",tab!=="series");
     $("cinemaForeignHub").classList.toggle("hidden",tab!=="foreign");
@@ -813,7 +821,7 @@
     const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
       (f.player?.licensed===true||Boolean(f.file))).length;
     const countPrefix=state.onlyPlayable?"Только встроенный плеер · ":"";
-    text("cinemaCount",countPrefix+(state.tab==="home"?(state.query.trim()?list.length+" результатов в зарубежном каталоге":list.length+" зарубежных фильмов и сериалов · доступность зависит от источника"):state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра"));
+    text("cinemaCount",state.onlyPlayable?list.length+" записей со встроенным плеером":countPrefix+(state.tab==="home"?(state.query.trim()?list.length+" результатов в зарубежном каталоге":list.length+" зарубежных фильмов и сериалов · доступность зависит от источника"):state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра"));
     $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library"||state.tab==="foreign"||state.tab==="series"||state.tab==="home");
     const russian=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&(f.spoken==="Русский"||f.spoken==="ru"));
