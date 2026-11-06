@@ -170,7 +170,7 @@
     // research dossier: show source-supplied stages, never inferred trade data.
     const impact=event.mechanism.split('→').map((part,i)=>
       '<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
-    panel.innerHTML = chronicle + '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
+    panel.innerHTML = chronicle + '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':(event.id==='2008' && state.mode==='events'?'▶ 6 ЭТАПОВ':'ПОДРОБНЕЕ ↑'))+'</em></button>' +
       '<p class="mh-v19-preview" aria-label="Краткий контекст">'+escape(event.short)+' · '+escape(event.date)+'</p>' +
       '<ol class="mh-v20-impact-strip" aria-label="Схема механизма кризиса">'+impact+'</ol>' +
       '<div class="mh-v20-source-line"><span>ДОКУМЕНТИРОВАННОЕ СОБЫТИЕ</span><a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer" aria-label="Открыть первоисточник: '+escape(event.source)+'">ИСТОЧНИК ↗</a></div>' +
