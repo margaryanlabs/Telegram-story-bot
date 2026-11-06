@@ -11,7 +11,7 @@ function cinemaClassifier(){
  const end=code.indexOf('  function filmCard(f){',begin);
  assert.ok(begin>=0&&end>begin,'availability classification must precede film cards');
  const failedEmbeds=new Set(['bad-provider']);
- const approvedSources=f=>f.approvedSources||[];
+ const approvedSources=f=>(f.approvedSources||[]).filter(src=>src?.licensed===true);
  return {movieAccess:new Function('approvedSources','failedEmbeds',
   code.slice(begin,end)+';return movieAccess;')(approvedSources,failedEmbeds),
   failedEmbeds,code};
