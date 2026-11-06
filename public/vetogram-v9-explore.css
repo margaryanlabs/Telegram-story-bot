@@ -473,3 +473,59 @@ body.vetogram-editorial-cinema .v97-cinema-verified-filter:has(input:checked){
   flex:1 1 auto;justify-content:flex-start;min-height:43px;font-size:11px;
  }
 }
+
+/* V9.8 — cinematic detail art: show real publisher art without cropping faces. */
+body.vetogram-editorial-cinema .cinema-sheet{
+ background:#101011!important;border:1px solid #343434!important;
+ box-shadow:0 32px 95px rgba(0,0,0,.76)!important;
+}
+body.vetogram-editorial-cinema .cinema-sheet-art{
+ height:clamp(220px,35vw,350px)!important;
+ background:radial-gradient(ellipse at 50% 0%,#3a3a3a 0%,#151515 55%,#080808 100%);
+ display:flex;align-items:center;justify-content:center;
+}
+body.vetogram-editorial-cinema .cinema-sheet-art img{
+ position:relative;z-index:1;display:block;height:100%;width:100%;
+ object-fit:contain;object-position:center center;
+ filter:drop-shadow(0 13px 28px rgba(0,0,0,.45));
+}
+body.vetogram-editorial-cinema .cinema-sheet-art::after{
+ z-index:2;pointer-events:none;
+ background:linear-gradient(0deg,#101011 0%,rgba(16,16,17,0) 32%);
+}
+body.vetogram-editorial-cinema .cinema-sheet-info{
+ padding:clamp(17px,3vw,30px) clamp(17px,4vw,36px) 30px;
+}
+body.vetogram-editorial-cinema .cinema-sheet-info h2{
+ line-height:1.10;letter-spacing:-.046em;overflow-wrap:anywhere;
+}
+body.vetogram-editorial-cinema .cinema-sheet-actions{
+ display:flex;gap:9px;flex-wrap:wrap;
+}
+body.vetogram-editorial-cinema .cinema-sheet-actions button{
+ min-height:45px;max-width:100%;
+}
+body.vetogram-editorial-cinema .cinema-close{
+ z-index:4;min-width:44px;min-height:44px;
+}
+body.vetogram-editorial-cinema .cinema-close:focus-visible,
+body.vetogram-editorial-books #readerBack:focus-visible{
+ outline:2px solid #f9f9f9;outline-offset:3px;
+}
+@media(max-width:650px){
+ body.vetogram-editorial-cinema .cinema-overlay{
+  padding:calc(max(env(safe-area-inset-top),8px)) 8px calc(max(env(safe-area-inset-bottom),8px));
+ }
+ body.vetogram-editorial-cinema .cinema-sheet{
+  border-radius:16px!important;
+ }
+ body.vetogram-editorial-cinema .cinema-sheet-art{
+  height:clamp(180px,43vh,275px)!important;
+ }
+ body.vetogram-editorial-cinema .cinema-sheet-info{
+  padding:17px 16px 24px;
+ }
+ body.vetogram-editorial-cinema .cinema-sheet-info h2{
+  font-size:clamp(26px,7vw,38px);
+ }
+}
