@@ -350,11 +350,30 @@
       const pos = window.MarketEventPlanet?.project(event.p);
       positions[event.id] = pos || {x: Math.max(18,Math.min(w-18,cx + event.p[0] * r)),y: Math.max(96,Math.min(h-85,cy + event.p[1] * r)),visible:true};
     });
+    // Projected globe markers stay anchored; only label placement is solved.
+    // Obstacles are measured in the same coordinate frame as the event scene.
+    const sceneBox=rect;
+    const obstacleRect=element=>{
+      if(!element || element.hidden || typeof element.getBoundingClientRect!=='function')return null;
+      const box=element.getBoundingClientRect();
+      if(![box.left,box.top,box.right,box.bottom].every(Number.isFinite))return null;
+      return {left:box.left-sceneBox.left,top:box.top-sceneBox.top,
+        right:box.right-sceneBox.left,bottom:box.bottom-sceneBox.top};
+    };
+    const labels=window.MarketBeaconLayoutV20?.arrange(
+      EVENTS.map(event=>({...positions[event.id],id:event.id,active:event.id===state.activeEvent})),
+      {width:w,height:h,mobile:w<820,
+        obstacles:[chronosphere,panel,switcher,document.getElementById('mhEventHeader')]
+          .map(obstacleRect).filter(Boolean)}
+    )||{};
     layer.querySelectorAll('[data-mh-beacon]').forEach(button => {
       const pos = positions[button.dataset.mhBeacon];
       button.style.left = pos.x + 'px';
       button.style.top = pos.y + 'px';
-      button.dataset.mhLabelSide = pos.x > w - (w < 820 ? 155 : 225) ? 'left' : 'right';
+      const label=labels[button.dataset.mhBeacon];
+      button.dataset.mhLabelSide = label?.side || (pos.x > w-(w<820?155:225)?'left':'right');
+      button.dataset.mhLabelPlacement = label?.placement || 'center';
+      button.classList.toggle('is-label-hidden',!!label?.hidden);
       const visible = pos.visible !== false;
       button.style.opacity = visible ? '1' : '0';
       button.style.pointerEvents = visible ? 'auto' : 'none';
