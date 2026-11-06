@@ -1,0 +1,128 @@
+/* MARKET REMEMBERS V20.4 / THREE-STATE RESEARCH SHEET
+   COMPACT = globe-first, RESEARCH = readable bottom sheet, FULL = evidence reader.
+   No new WebGL contexts, price data, storage, or direct mutation of PEOPLE.
+*/
+#app .mh-history-panel[data-mh-sheet-state="compact"] .mh-v20-sheet-tools{display:none!important}
+#app .mh-history-panel .mh-v20-sheet-tools{
+  position:sticky;top:-1px;z-index:6;
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  min-height:49px;margin:5px 0 13px;padding:8px;
+  border:1px solid rgba(216,180,204,.27);border-radius:12px;
+  background:linear-gradient(110deg,rgba(31,25,42,.98),rgba(17,18,33,.98));
+  box-shadow:0 5px 15px rgba(0,0,0,.21);
+}
+#app .mh-v20-sheet-eyebrow{
+  flex:1;min-width:80px;
+  color:#d2b1c2;font:750 9px/1.3 Inter,system-ui,sans-serif;
+  letter-spacing:.10em;
+}
+#app .mh-v20-sheet-tools button{
+  min-height:44px;padding:9px 10px;
+  border:1px solid rgba(224,179,204,.40);
+  border-radius:9px;color:#f0dee9;background:rgba(63,44,67,.68);
+  font:700 10px/1.3 Inter,system-ui,sans-serif;letter-spacing:.035em;
+  cursor:pointer;
+}
+#app .mh-v20-sheet-tools button[data-mh-sheet-size]{
+  background:rgba(161,101,138,.24);border-color:rgba(231,179,201,.55);
+}
+#app .mh-v20-sheet-tools button:hover{background:rgba(121,77,105,.74)}
+#app .mh-v20-sheet-tools button:focus-visible{
+  outline:2px solid #ffe8f1;outline-offset:3px;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-history-panel.is-fullscreen,
+#app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-fullscreen{
+  position:fixed!important;z-index:80;
+  left:50%!important;right:auto!important;top:4dvh!important;bottom:auto!important;
+  transform:translateX(-50%);
+  width:min(1080px,calc(100vw - 60px))!important;
+  height:92dvh!important;max-height:92dvh!important;
+  padding:19px 26px 28px;
+  overflow:auto;overscroll-behavior:contain;
+  border:1px solid rgba(234,197,220,.36);border-radius:20px;
+  background:linear-gradient(160deg,#131522 0%,#0b0d17 100%);
+  box-shadow:0 32px 110px rgba(0,0,0,.86);
+}
+#app .mh-history-panel.is-fullscreen .mh-v20-sheet-tools{
+  top:-19px;margin-left:-10px;margin-right:-10px;
+}
+#app .mh-history-panel.is-fullscreen .mh-v16-record,
+#app .mh-history-panel.is-fullscreen .mh-v20-compare{
+  max-width:940px;margin-left:auto;margin-right:auto;
+}
+#app .mh-history-panel.is-fullscreen .mh-v20-compare-pair{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+#app .mh-history-panel.is-fullscreen .mh-shock-replay{
+  max-width:870px;margin:0 auto 18px;
+}
+#app .mh-history-panel.is-fullscreen .mh-v16-research-card p{
+  font-size:14px;line-height:1.8;
+}
+#app .mh-history-panel.is-fullscreen .mh-chrono-nav{display:none}
+@media(max-width:819px){
+  /* The short glance panel fits below the time navigator. It stays genuinely
+     compact: the mechanism can be read in the explicit research state. */
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel[data-mh-sheet-state="compact"],
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel[data-mh-sheet-state="compact"]{
+    max-height:min(34dvh,248px);overflow:auto;
+    border-radius:16px;
+  }
+  #app .mh-history-panel[data-mh-sheet-state="compact"]>.mh-v20-impact-strip{
+    display:none!important;
+  }
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel[data-mh-sheet-state="research"],
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel[data-mh-sheet-state="research"]{
+    max-height:min(64dvh,590px);
+    overflow:auto;overscroll-behavior:contain;
+  }
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel.is-fullscreen,
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-fullscreen{
+    left:0!important;right:0!important;top:0!important;bottom:0!important;
+    transform:none!important;width:100vw!important;
+    height:100dvh!important;max-height:100dvh!important;
+    padding:calc(11px + env(safe-area-inset-top,0px)) 13px
+            calc(24px + env(safe-area-inset-bottom,0px));
+    border:0;border-radius:0;
+    background:linear-gradient(155deg,#131421,#0b0c16);
+  }
+  #app .mh-history-panel.is-fullscreen .mh-v20-sheet-tools{
+    top:calc(-11px - env(safe-area-inset-top,0px));
+    margin-left:-4px;margin-right:-4px;
+  }
+  #app .mh-history-panel.is-fullscreen .mh-v20-compare-pair{
+    grid-template-columns:1fr;
+  }
+  #app .mh-history-panel .mh-v20-sheet-tools{
+    gap:6px;padding:7px;margin:5px 0 12px;
+  }
+  #app .mh-v20-sheet-eyebrow{font-size:9px;letter-spacing:.045em}
+  #app .mh-v20-sheet-tools button{font-size:10px;min-height:44px;padding:8px 9px}
+  #app .mh-history-panel.is-fullscreen .mh-v16-research-card p{
+    font-size:13px;line-height:1.7;
+  }
+}
+@media(max-width:390px){
+  #app .mh-v20-sheet-eyebrow{flex-basis:100%;min-width:0}
+  #app .mh-v20-sheet-tools button{flex:1}
+}
+@media(max-width:819px) and (orientation:landscape) and (max-height:650px){
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel.is-fullscreen,
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-fullscreen{
+    left:0!important;right:0!important;top:0!important;bottom:0!important;
+    transform:none!important;width:100vw!important;
+    height:100dvh!important;max-height:100dvh!important;
+    padding:calc(10px + env(safe-area-inset-top,0px)) 18px
+            calc(20px + env(safe-area-inset-bottom,0px));
+    border:0;border-radius:0;
+  }
+  #app .mh-history-panel.is-fullscreen .mh-v20-compare-pair{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #app .mh-history-panel.is-fullscreen .mh-v20-sheet-tools{top:-10px}
+}
+@media(prefers-reduced-motion:reduce){
+  #app .mh-v20-sheet-tools button{
+    animation:none!important;transition:none!important;
+  }
+}
