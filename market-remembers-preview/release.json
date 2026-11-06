@@ -1,15 +1,19 @@
 {
-  "app": "Market Remembers",
-  "version": "V24 / NATIVE LIVING UNIVERSE",
-  "source": "margaryanlabs/Marketremember",
-  "people": "original V20 live planet",
-  "eventCore": "original V18/V20 mirrored renderer + authentic shader satellite",
-  "remaining": [
-    "DECISIONS (planned)",
-    "AGORA (planned)",
-    "MIRROR (planned)",
-    "GUILDS (planned)"
-  ],
-  "archive": "old toy-sphere experiment retired",
-  "data": "fictional examples, browser-local notes"
+  "project": "Market Remembers",
+  "release": "V24 native worlds + route hotfix",
+  "canonical": "margaryanlabs/Marketremember",
+  "worlds": {
+    "live": [
+      "PEOPLE",
+      "EVENT CORE"
+    ],
+    "planned": [
+      "DECISIONS",
+      "AGORA",
+      "MIRROR",
+      "GUILDS"
+    ]
+  },
+  "engine": "original V20 PEOPLE + original V18 mirror EVENT shader",
+  "notice": "visual preview, no live accounts or trading data"
 }
