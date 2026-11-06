@@ -484,7 +484,7 @@
     text("cinemaHeroTitle",displayFilmTitle(f).length>85?displayFilmTitle(f).slice(0,82)+"…":displayFilmTitle(f));
     text("cinemaHeroDescription",f.synopsis?.slice(0,195)||"Смотрите историю в официальном видеоплеере.");
     text("cinemaHeroMeta",f.externalRutube?[f.year,f.minutes?f.minutes+" МИН":null,f.audioClaim?"ДУБЛЯЖ ЗАЯВЛЕН":"ОЗВУЧКА НЕ ПРОВЕРЕНА"].filter(Boolean).join(" · "):[f.year||"Кино",f.minutes?f.minutes+" МИН":null,f.contentType||f.genres?.[0],f.russianAudio===true?"РУССКАЯ ДОРОЖКА ЗАЯВЛЕНА":"ЯЗЫК У ИСТОЧНИКА"].filter(Boolean).join(" · "));
-    const licensedHere=Boolean(f.player?.licensed===true&&!f.discoveryOnly&&!f.externalRutube&&!failedEmbeds.has(f.id));
+    const licensedHere=movieAccess(f).kind==="embedded";
     text("cinemaHeroWatch",licensedHere?"▶ Смотреть":"Подробнее и источники");
     $("cinemaHeroWatch").setAttribute("aria-label",licensedHere?"Смотреть "+f.title:"Информация и источники: "+f.title);
     text("cinemaHeroCounter",String(discovery.index+1).padStart(2,"0")+" / "+String(length).padStart(2,"0"));
@@ -1181,10 +1181,26 @@
   $("cinemaPlayerClose").addEventListener("click",closePlayer);
   $("cinemaDetailsClose").addEventListener("click",closeDetails);
   $("cinemaDetails").addEventListener("click",e=>{if(e.target===$("cinemaDetails"))closeDetails()});
-  $("cinemaDetailsWatch").addEventListener("click",()=>{if(state.selected)play(state.selected)});
+  $("cinemaDetailsWatch").addEventListener("click",()=>{
+    if(!state.selected)return;
+    // A failed or unsupported player may not initiate a broken playback.
+    // Let the user open the original source with one explicit tap instead.
+    if(movieAccess(state.selected).kind==="unavailable"){
+      const link=$("cinemaDetailsSource");
+      if(link?.href?.startsWith("https://"))link.click();
+      else toast("Видеоплеер недоступен. Проверь страницу источника.");
+      return;
+    }
+    play(state.selected);
+  });
   $("cinemaDetailsFavorite").addEventListener("click",()=>{if(state.selected)toggleFavorite(state.selected)});
   $("cinemaDetailsShare").addEventListener("click",()=>{if(state.selected)shareFilm(state.selected)});
-  $("cinemaHeroWatch").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(!f)return;if(f.discoveryOnly||f.externalRutube)openDetails(f);else play(f)});
+  $("cinemaHeroWatch").addEventListener("click",()=>{
+    const f=discovery.slides[discovery.index];
+    if(!f)return;
+    if(movieAccess(f).kind!=="embedded"){openDetails(f);return;}
+    play(f);
+  });
   $("cinemaHeroDetails").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(f)openDetails(f)});
   $("cinemaHeroPrev").addEventListener("click",()=>setHeroSlide(discovery.index-1));
   $("cinemaHeroNext").addEventListener("click",()=>setHeroSlide(discovery.index+1));
