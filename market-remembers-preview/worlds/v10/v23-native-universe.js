@@ -30,6 +30,7 @@ hub.innerHTML=[
  '<div class="v23-flight" aria-hidden="true"><small>ENTERING THE ORIGINAL WORLD</small><strong id="v23FlightWorld">PEOPLE</strong></div>',
  '<div class="v23-detail" id="v23Detail" role="dialog" aria-modal="true" aria-labelledby="v23DetailTitle" hidden><button id="v23DetailClose" type="button" class="v23-detail-close" aria-label="Закрыть">×</button><span>WORLD IN DEVELOPMENT</span><h2 id="v23DetailTitle"></h2><p id="v23DetailBody"></p><button type="button" id="v23DetailBack">← К КАРТЕ МИРОВ</button></div>',
  '<footer class="v23-foot"><span>SIX WORLDS · TWO ORIGINAL ARCHIVES · FOUR LABS</span><span>EXPLORE · REMEMBER · CONNECT</span></footer>',
+ '<div class="v28-flight-guide" aria-hidden="true"><b>↻</b> ВРАЩАЙ PEOPLE · НАЖМИ НА ПЛАНЕТУ</div>',
  '<div class="v23-sr" id="v23Status" role="status" aria-live="polite"></div>'
 ].join('');
 app.append(hub);
