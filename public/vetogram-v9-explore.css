@@ -1,0 +1,93 @@
+/* Vetogram V9.3: mobile-first editorial menu and real game discovery. */
+.v9-explore-dock{position:sticky;top:0;z-index:65;display:flex;align-items:center;gap:20px;
+ margin:0 auto 14px;padding:12px clamp(12px,2vw,20px);
+ border:1px solid rgba(255,255,255,.15);border-top:0;border-radius:0 0 17px 17px;
+ background:rgba(10,10,11,.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+ color:#f1f1f1;box-shadow:0 12px 26px rgba(0,0,0,.16)}
+.v9-explore-dock-heading{display:grid;gap:3px;min-width:90px;flex:none}
+.v9-explore-dock-heading span{color:#909090;font:760 9px/1.3 system-ui,sans-serif;letter-spacing:.13em}
+.v9-explore-dock-heading strong{font:800 18px/1.15 system-ui,sans-serif;letter-spacing:-.045em}
+.v9-explore-dock .v79-media-switcher{display:flex;flex:1;min-width:0;gap:7px;overflow-x:auto;
+ scrollbar-width:none;overscroll-behavior-x:contain;margin:0!important;padding:1px 0!important;
+ border:0!important}
+.v9-explore-dock .v79-media-switcher::-webkit-scrollbar{display:none}
+.v9-explore-dock .v79-switch{display:inline-flex;align-items:center;justify-content:center;
+ flex:1 0 auto;min-width:max-content;min-height:44px;white-space:nowrap;
+ padding:10px 14px;border-radius:10px;border:1px solid #333;
+ background:#1b1b1b;color:#c6c6c6;text-decoration:none;
+ font:740 12px/1.2 system-ui,sans-serif;transition:background .18s,border-color .18s,color .18s}
+.v9-explore-dock .v79-switch.is-current{background:#f2f2f2;color:#111;border-color:#f2f2f2;cursor:default}
+.v9-explore-dock .v79-switch:not(.is-current):hover{border-color:#8c8c8c;background:#292929;color:#fff}
+.v9-explore-dock .v79-switch:focus-visible{outline:2px solid #fff;outline-offset:2px}
+body:has(#reader:not([hidden])) .v9-explore-dock{visibility:hidden;pointer-events:none}
+@media(max-width:680px){
+ .v9-explore-dock{gap:9px;padding:8px 11px;margin-bottom:9px;border-radius:0 0 12px 12px}
+ .v9-explore-dock-heading{min-width:0}
+ .v9-explore-dock-heading span{display:none}
+ .v9-explore-dock-heading strong{font-size:14px}
+ .v9-explore-dock .v79-media-switcher{gap:5px}
+ .v9-explore-dock .v79-switch{padding:10px 12px;font-size:11px;min-height:42px}
+}
+@media(max-width:390px){
+ .v9-explore-dock-heading{display:none}
+ .v9-explore-dock .v79-switch{font-size:10px;padding-inline:10px}
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filters{
+ display:flex;align-items:center;justify-content:space-between;gap:13px;
+ margin:0 0 20px;padding:0;color:#e8e8e8;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter-tabs{
+ display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter{
+ min-height:43px;padding:10px 16px;border:1px solid #3c3c3c;
+ border-radius:999px;background:#161616;color:#bbb;font:740 12px/1.2 system-ui,sans-serif;
+ cursor:pointer;transition:border-color .2s,background .2s,color .2s;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter.is-active{
+ background:#f3f3f3;color:#171717;border-color:#f3f3f3;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter:focus-visible{
+ outline:2px solid #fff;outline-offset:3px;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter-count{
+ flex:none;font:730 10px/1.2 system-ui,sans-serif;letter-spacing:.09em;color:#939393;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch[hidden]{
+ display:none!important;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-category{
+ align-self:flex-start;margin-top:12px;padding:5px 8px;border:1px solid #414141;
+ background:#242424;color:#c8c8c8;border-radius:5px;
+ font:800 9px/1.1 system-ui,sans-serif;letter-spacing:.13em;
+}
+html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-launch{
+ box-shadow:0 13px 26px rgba(0,0,0,.16)!important;
+}
+@media(max-width:620px){
+ html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filters{
+  flex-direction:column;align-items:stretch;margin-bottom:14px
+ }
+ html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter-tabs{
+  flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:2px 1px
+ }
+ html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter{
+  flex:1 0 auto;min-height:44px;padding:9px 12px;white-space:nowrap;font-size:11px
+ }
+ html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter-count{
+  padding-left:4px
+ }
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .v9-arcade-filter:not(.is-active){
+ background:#ececec;color:#343434;border-color:#c7c7c7
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .v9-arcade-filter.is-active{
+ background:#171717;color:#fff;border-color:#171717
+}
+html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen"]) .screen[data-screen="play"] .v9-arcade-filter-count{color:#555}
+@media(prefers-reduced-motion:reduce){
+ .v9-explore-dock .v79-switch,
+ html#vetogram.vetogram-noir .screen[data-screen="play"] .v9-arcade-filter{
+  transition:none!important
+ }
+}
