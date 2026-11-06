@@ -1,9 +1,15 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="refresh" content="0;url=./worlds/index.html"><title>Market Remembers — PEOPLE / EVENT CORE</title>
-<meta name="robots" content="noindex"></head>
-<body style="background:#04050a;color:#e1eaf9;font-family:system-ui;padding:30px">
-<p>Открываем оригинальный MARKET REMEMBERS — PEOPLE / EVENT CORE…</p>
-<p><a style="color:#9bdfff" href="./worlds/index.html">Открыть настоящие планеты</a> · <a style="color:#c8b2ff" href="./universe.html">Экспериментальная космическая карта</a></p>
-<script>location.replace('./worlds/index.html'+location.search+location.hash);</script>
-</body></html>
+<html lang="ru">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="0;url=./worlds/index.html?cosmos=1">
+<meta name="theme-color" content="#02050b">
+<title>Market Remembers — The Living Financial Universe</title></head>
+<body style="margin:0;min-height:100vh;background:#03050a;color:#f1f5fc;font-family:system-ui;display:grid;place-items:center">
+<main><p>Входим в настоящую финансовую вселенную…</p>
+<a href="./worlds/index.html?cosmos=1" style="color:#bfdff9">Открыть интерактивную карту миров ↗</a></main>
+<script>
+const params=new URLSearchParams(location.search);
+if(!params.has('world')&&!params.has('mm')&&!params.has('cosmos'))params.set('cosmos','1');
+const search=params.toString();
+location.replace('./worlds/index.html'+(search?'?'+search:'')+location.hash);
+</script></body></html>
