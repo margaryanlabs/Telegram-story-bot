@@ -218,3 +218,29 @@
 1. Re-read PR HEAD and checkpoint; execute native `node --test tests/vetogram-v9-telegram-auth-reliability.test.js tests/telegram-connect-navigation.test.js tests/telegram-login-resume.test.js tests/telegram-second-user-onboarding.test.js tests/telegram-business-wizard.test.js` plus `npm run check`, `npm run qa:preview:offline` and `npm run vercel-build` in an actual checkout; fix any failures.
 2. Test QR and phone code with a **user-authorized test Telegram account**, check actual SMS/app delivery without reading or logging OTP, validate FLOOD_WAIT, session re-entry, 2FA and explicit Business consent. Check chat composer/send/scroll on Android WebView; no false claims.
 3. If all build/test gates pass, deploy ONLY isolated Render service `srv-dbjhvdmtlv9c73d9f3t0`, then verify LIVE SHA and exact HTML/CSS/JS. Otherwise leave existing preview and production untouched.
+
+
+## 2026-11-06 04:03–04:25 Asia/Tbilisi — overnight iteration 9 (CHATS / POLL FLOOD SAFETY)
+
+**PR:** draft #242, `feature/vetogram-v9-monochrome-nav-20261105`. **Verified starting HEAD:** `06498857673d1309dca663739ad03457d698834b`; **code HEAD before this checkpoint:** `f29f150e1c5fe46374237b4f7d2318a7008b0c14`. Main, production, backups, credentials and server sessions untouched.
+
+### Real GitHub changes
+- `148d4a4d`: new pure `lib/telegram-chat-poll-rate-limit.js` classifies Telegram `FLOOD_WAIT_N`, `SLOWMODE_WAIT_N`, `FLOOD_PREMIUM_WAIT_N`, 429 and generic too-many-requests. Explicit waits clamped 30–86400 seconds; unknown 429 uses conservative 120 seconds. Raw MTProto exception (including potential tokens/phone) is **never** returned to the client.
+- `2c474d40`: `api/telegram-chat-updates.js` now emits safe HTTP 429 with structured `retryAfterSeconds` and `Retry-After` header after verifying owner/session; no raw RPC traces.
+- `7fd4a2eb`: real `public/telegram-chats.js` polling controller honors server-provided cooldown, blocks manual refresh during wait, preserves the wait across switching chats in the same signed Telegram account, clears it on owner switch, and schedules no premature background poll. Existing exponential network-error backoff retained.
+- `558a299d`: six native Node test definitions in `tests/vetogram-v9-chat-poll-cooldown.test.js`, including execution of the **actual extracted scheduler and poll functions** in a mocked JS context.
+- `83731634`: bumped only `telegram-chats.js` Android/WebView asset key to `20261106-v9-chat-poll-01`.
+- `797e8edf`: extended the existing strict V9 asset-cache allowlist, did not weaken release checks.
+- `f29f150e`: added the new test file to existing `qa:preview:offline` release gate.
+
+### Verification
+- Fresh connector fetch of all changed sources after writes: **6/6 actual new test bodies executed in isolated V8** PASS, including simulated manual refresh with *zero network requests* during a 50-second cooldown and scheduler delays 90/110/26 seconds. Client JS and classifier parsed; API syntax parsed after removing ESM imports/exports in the V8 adapter. This is not a native Node suite run.
+- **9/9 existing `vetogram-v9-monochrome-nav.test.js` test bodies** executed in isolated V8 PASS with all their actual GitHub source dependencies fetched (including games and media context); strict asset-key check passes. Combined 15/15 isolated tests.
+- Read-only `git ls-remote` attempt from container failed DNS resolution for github.com. Therefore native `node --test`, `npm run check`, `npm run qa:preview:offline`, full build, Android Telegram WebView, real live chat send, SMS/QR/2FA, Business opt-in and any actual Telegram flood-wait are **NOT VERIFIED**.
+- Combined GitHub status on code HEAD: three Vercel contexts `failure`, all targeting `build-rate-limit` upgrade URL; no PR-triggered GitHub Actions runs returned. These statuses do **not** establish a compilation failure or a successful build.
+- No Render deploy; last confirmed LIVE isolated review remains older V9.02 `8a47b709dac5a63f46c598dc2d7556ad4ccb90af`, not this code. No claim of production readiness.
+
+### First next step
+1. Re-read PR HEAD, worklog and source. In a proper checkout execute `node --test tests/vetogram-v9-chat-poll-cooldown.test.js tests/vetogram-v9-telegram-auth-reliability.test.js tests/telegram-chat-send.test.js tests/telegram-live-chats.test.js`, `npm run check`, `npm run qa:preview:offline` and build; fix any failures before preview.
+2. Continue focused **message send reliability**: verify duplicate-safe random_id handling for uncertain send/owner switch, composer/draft/scroll behavior and Business explicit consent with mocks; never send real messages or request OTP without a test account and consent.
+3. Only after successful gates, deploy to isolated Render `srv-dbjhvdmtlv9c73d9f3t0` and verify LIVE SHA and actual HTML/CSS/JS; do not touch production/main/backups.
