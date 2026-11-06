@@ -119,11 +119,17 @@
         body:JSON.stringify({action:'send_message',chatId,message,nonce,replyTo}),
         signal:abort.signal,
       });
-      const data=await response.json().catch(()=>({}));
+      // A 2xx response without a confirmed Telegram message ID is NOT a
+      // successful send. Retain the same nonce on a deliberate retry: the
+      // upstream MTProto operation may have succeeded before the response
+      // was truncated or the API gateway returned malformed JSON.
+      const data=await response.json().catch(()=>null);
       if(signed!==String(tg?.initData||'')){resetOwner();throw new Error('Telegram-аккаунт изменился. Не повторяй отправку без проверки.');}
-      if(!response.ok || !data.ok){
-        const error=new Error(data.error||'Telegram не подтвердил отправку.');
-        error.uncertain=data.uncertain===true;
+      const confirmed=Boolean(response.ok&&data?.ok===true&&data.sent===true&&
+        Number.isSafeInteger(Number(data.messageId))&&Number(data.messageId)>0);
+      if(!confirmed){
+        const error=new Error(data?.error||'Telegram не подтвердил отправку. Проверь чат перед повтором.');
+        error.uncertain=data?.uncertain===true||response.ok||response.status>=500;
         throw error;
       }
       return data;
