@@ -104,7 +104,7 @@ function requestHarness(response){
   const fetch=async()=>{calls++;return response;};
   const tg={initData:'signed-owner-test-only'};
   const send=new Function('tg','resetOwner','fetch','AbortController','setTimeout','clearTimeout',
-    source.slice(start,end)+'\\nreturn sendChatRequest;')(
+    source.slice(start,end)+'\nreturn sendChatRequest;')(
     tg,()=>false,fetch,AbortController,()=>1,()=>{});
   return {send,getCalls:()=>calls};
 }
